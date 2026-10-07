@@ -1,4 +1,5 @@
-import { MENU_PANEL_BORDER, MENU_PANEL_FILL, TOAST_RADIUS, ToastFrontProvider } from '@/components/ui/toast';
+import { TOAST_RADIUS, ToastFrontProvider } from '@/components/ui/toast';
+import { useColors } from '@/lib/theme/tokens';
 import { close as closeToast, useToastQueue, type ToastEntry } from '@/lib/toast/toast-queue';
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -144,6 +145,8 @@ function ToastSlot({
     // threw "Dimensions.get is not a function" on the first real swipe, which
     // no test could see. A plain number closes over fine.
     const { height: screenHeight } = useWindowDimensions();
+    // Also re-renders the cards on a theme change, so `entry.render` repaints.
+    const c = useColors();
     const translateY = useSharedValue(0);
     const opacity = useSharedValue(0);
     const dragY = useSharedValue(0);
@@ -307,10 +310,10 @@ function ToastSlot({
                                 height: PEEK_PT,
                                 borderBottomLeftRadius: TOAST_RADIUS,
                                 borderBottomRightRadius: TOAST_RADIUS,
-                                backgroundColor: MENU_PANEL_FILL,
+                                backgroundColor: c.panel,
                                 borderWidth: 1,
                                 borderTopWidth: 0,
-                                borderColor: MENU_PANEL_BORDER,
+                                borderColor: c.panelBorder,
                             }}
                         />
                     ) : null}

@@ -1,7 +1,7 @@
-import { Toast, TOAST_ACCENT } from '@/components/ui/toast';
+import { Toast, useToastAccent } from '@/components/ui/toast';
 import React from 'react';
 import { Pressable, Text } from 'react-native';
-import { TOAST_BODY_COLOR, TOAST_TITLE_COLOR } from './toast-text';
+import { useColors } from '@/lib/theme/tokens';
 
 /**
  * THE UNDO TOAST: the one look for every "done, with Undo" confirmation (the
@@ -33,11 +33,13 @@ export interface UndoToastProps {
 }
 
 export default function UndoToast({ title, body, undoLabel, undoTestID, onUndo }: UndoToastProps) {
+    const c = useColors();
+    const accent = useToastAccent();
     return (
         <Toast action="success" variant="solid">
-            <Text style={{ color: TOAST_TITLE_COLOR, fontWeight: '700', fontSize: 15 }}>{title}</Text>
+            <Text style={{ color: c.ink, fontWeight: '700', fontSize: 15 }}>{title}</Text>
             {body ? (
-                <Text style={{ color: TOAST_BODY_COLOR, fontSize: 13, paddingTop: 2 }}>{body}</Text>
+                <Text style={{ color: c.ink2, fontSize: 13, paddingTop: 2 }}>{body}</Text>
             ) : null}
             <Pressable
                 testID={undoTestID}
@@ -57,7 +59,7 @@ export default function UndoToast({ title, body, undoLabel, undoTestID, onUndo }
             >
                 <Text
                     style={{
-                        color: TOAST_ACCENT.success ?? TOAST_TITLE_COLOR,
+                        color: accent.success ?? c.ink,
                         fontWeight: '800',
                         textDecorationLine: 'underline',
                     }}

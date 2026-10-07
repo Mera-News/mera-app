@@ -17,15 +17,10 @@ type IMotionViewProps = React.ComponentProps<typeof View> &
 const MotionView = Motion.View as React.ComponentType<IMotionViewProps>;
 
 const menuStyle = tva({
-  // App customization: user-picked grey panel (matched to the app's frosted
-  // header tone) instead of the template's near-black bg-background-0. A
-  // glass (GlassPlate) version was tried and rejected — page text read
-  // through the item labels even at a denser scrim.
-  //
-  // THIS GREY IS DUPLICATED as `MENU_PANEL_FILL` in components/ui/toast/index.tsx
-  // — the toast surface was changed to match this menu, and a Tailwind arbitrary
-  // class cannot be referenced from TS. Change both or neither.
-  base: 'rounded-2xl bg-[#28262A] border border-white/[0.14] p-1 shadow-hard-5',
+  // The `panel` token, the same surface as the toasts. A glass (GlassPlate)
+  // version was tried and rejected: page text read through the item labels
+  // even at a denser scrim.
+  base: 'rounded-2xl bg-panel border border-panel-border p-1 shadow-hard-5',
 });
 
 const menuItemStyle = tva({

@@ -195,3 +195,10 @@ export function themedStyles<T>(factory: (c: ThemeColors, mode: ThemeMode) => T)
 export function useColors(): ThemeColors {
     return COLORS[useThemeMode()];
 }
+
+/** The current theme's colours outside a hook, for an element built with
+ *  createElement in a render callback (the toast manager). Read it at render
+ *  time, never at module scope. */
+export function currentColors(): ThemeColors {
+    return COLORS[THEME_SWITCH_LIVE ? useThemeStore.getState().mode : 'dark'];
+}

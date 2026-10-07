@@ -10,7 +10,7 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
-import { TOAST_BODY_COLOR } from './toast-text';
+import { useColors } from '@/lib/theme/tokens';
 
 /** One full sweep, left edge to past the right edge. */
 const SWEEP_MS = 1400;
@@ -40,7 +40,8 @@ export interface IndeterminateBarProps {
  * and the segment holds still in the middle of the track, which still reads as
  * "a bar" rather than an empty box. Lite mode holds it still the same way.
  */
-export default function IndeterminateBar({ width, height = 3, color = TOAST_BODY_COLOR, testID }: IndeterminateBarProps) {
+export default function IndeterminateBar({ width, height = 3, color, testID }: IndeterminateBarProps) {
+    const c = useColors();
     const liteMode = useDisplayPrefsStore((s) => s.liteMode);
     const reduceMotion = useReducedMotion() || liteMode;
     const segment = Math.round(width * SEGMENT_SHARE);
@@ -70,13 +71,13 @@ export default function IndeterminateBar({ width, height = 3, color = TOAST_BODY
                 height,
                 borderRadius: height / 2,
                 overflow: 'hidden',
-                backgroundColor: 'rgba(255,255,255,0.15)',
+                backgroundColor: c.surfaceRaised,
             }}
         >
             <Animated.View
                 testID={testID ? `${testID}-segment` : undefined}
                 style={[
-                    { width: segment, height, borderRadius: height / 2, backgroundColor: color },
+                    { width: segment, height, borderRadius: height / 2, backgroundColor: color ?? c.ink2 },
                     segmentStyle,
                 ]}
             />

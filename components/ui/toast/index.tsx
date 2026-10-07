@@ -15,7 +15,7 @@ import {
 } from '@gluestack-ui/utils/nativewind-utils';
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
 import { toastApi } from '@/lib/toast/toast-queue';
-import { COLORS } from '@/lib/theme/tokens';
+import { useColors, useThemeMode, type ThemeMode } from '@/lib/theme/tokens';
 
 const SCOPE = 'TOAST';
 
@@ -58,8 +58,8 @@ export const useIsToastFront = () => React.useContext(ToastFrontContext);
  * MOVED rather than disappearing: see `TOAST_ACCENT` / `TOAST_ICON` below.
  *
  * That neutral surface was briefly LIQUID GLASS. It is not any more — the owner
- * called it ugly, and it now uses the same flat grey panel as the feed's
- * importance-filter dropdown (`MENU_PANEL_FILL`). Do not reintroduce
+ * called it ugly, and it now uses the same flat panel as the menus (the
+ * `panel` token). Do not reintroduce
  * `GlassPlate` here; `components/ui/menu/index.tsx` records that a glass menu
  * was tried and rejected for the same surface, because page text read through
  * the labels even at a denser scrim.
@@ -95,25 +95,6 @@ export const TOAST_RADIUS = 16;
 /** Width of the leading severity bar. */
 const ACCENT_WIDTH = 4;
 
-/**
- * The panel fill, taken verbatim from the feed's importance-filter dropdown —
- * `menuStyle`'s `bg-[#45434A]` in `components/ui/menu/index.tsx`, the grey the
- * owner picked to match the app's frosted header tone.
- *
- * COPIED, not shared: the menu expresses it as a Tailwind arbitrary class, which
- * cannot reference a TS constant. So the two can drift, and the only thing
- * stopping them is the cross-reference in each file — if you change one grey,
- * change the other.
- *
- * Flat and opaque on every platform: no `GLASS_AVAILABLE` branch, so a toast
- * looks identical on iOS 26, iOS 25 and Android, and a `persistent` banner
- * costs nothing to keep on screen.
- */
-export const MENU_PANEL_FILL = COLORS.dark.panel;
-
-/** The FinalInbox notice hairline; the menu panel carries the same one. */
-export const MENU_PANEL_BORDER = COLORS.dark.panelBorder;
-
 export type ToastAction = 'error' | 'warning' | 'success' | 'info' | 'muted';
 
 /**
@@ -143,6 +124,20 @@ export const TOAST_ACCENT: Record<ToastAction, string | null> = {
   info: '#32B4F4', // info-500
   muted: null,
 };
+
+/** Light: the theme's own severity tokens, 3:1 or better on the white panel. */
+const TOAST_ACCENT_LIGHT: Record<ToastAction, string | null> = {
+  error: '#C03A3A',
+  warning: '#9A6200',
+  success: '#276B50',
+  info: '#2563A8',
+  muted: null,
+};
+
+const accentFor = (mode: ThemeMode) => (mode === 'light' ? TOAST_ACCENT_LIGHT : TOAST_ACCENT);
+
+/** The severity accents for the current theme. */
+export const useToastAccent = () => accentFor(useThemeMode());
 
 /** Glyph per severity. Shapes are deliberately distinct from one another
  *  (triangle vs circle, ! vs ✓ vs i) so the signal does not rest on hue. */
@@ -175,9 +170,7 @@ const styles = StyleSheet.create({
   surface: {
     borderRadius: TOAST_RADIUS,
     overflow: 'hidden',
-    backgroundColor: MENU_PANEL_FILL,
     borderWidth: 1,
-    borderColor: MENU_PANEL_BORDER,
   },
   accent: {
     position: 'absolute',
@@ -393,7 +386,9 @@ const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
   ) {
     const { width } = useWindowDimensions();
     const maxWidth = Math.round(width * (1 - 2 * TOAST_EDGE_INSET_RATIO));
-    const accent = TOAST_ACCENT[action as ToastAction] ?? null;
+    // Flat and opaque on every platform: the `panel` token, as the menus.
+    const c = useColors();
+    const accent = useToastAccent()[action as ToastAction] ?? null;
     const Glyph = TOAST_ICON[action as ToastAction] ?? null;
     // `persistent` is read only so it is not forwarded onto the host View as an
     // unknown prop; it no longer changes what is painted (see its doc above).
@@ -407,7 +402,10 @@ const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
         style={[styles.root, { maxWidth, borderRadius: TOAST_RADIUS }, style]}
         {...props}
       >
-        <View testID="toast-surface" style={styles.surface}>
+        <View
+          testID="toast-surface"
+          style={[styles.surface, { backgroundColor: c.panel, borderColor: c.panelBorder }]}
+        >
           {accent ? (
             <View
               testID="toast-accent-bar"

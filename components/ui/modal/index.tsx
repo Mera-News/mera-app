@@ -13,8 +13,7 @@ import React from 'react';
 import { Pressable, ScrollView, View, ViewStyle } from 'react-native';
 // Reaches UP into components/custom for the app's material. Deliberate: the
 // translucent fill and the hairline edge have exactly one definition, and the
-// alternative — copying the rgba into every primitive — is the drift the
-// MENU_PANEL_FILL note in components/ui/toast/index.tsx already warns about.
+// alternative, copying the rgba into every primitive, drifts.
 // No cycle: GlassSurface imports only components/ui/box.
 import { GLASS_EDGE } from '@/components/custom/GlassSurface';
 import ModalMaterial from '@/components/custom/ModalMaterial';
