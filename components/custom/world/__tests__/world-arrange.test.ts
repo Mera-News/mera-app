@@ -1,6 +1,6 @@
 import { addCountry, filterAddable, initialArrange, removePage, toDraft } from '@/components/custom/nav/arrange-model';
 
-import { commitWorldDraft, searchCountryOptions, toCountryOptions } from '../world-arrange';
+import { allCountryOptions, commitWorldDraft, searchCountryOptions, toCountryOptions } from '../world-arrange';
 
 describe('toCountryOptions', () => {
     it('maps the server alpha-3 list to alpha-2 options with English names, dropping GLOBAL and unmappable codes', () => {
@@ -10,6 +10,15 @@ describe('toCountryOptions', () => {
             { alpha2: 'PF', name: 'French Polynesia' },
             { alpha2: 'DE', name: 'Germany' },
         ]);
+    });
+});
+
+describe('allCountryOptions', () => {
+    it('is the whole ISO list on this phone, needing no server', () => {
+        const all = allCountryOptions();
+        expect(all.length).toBeGreaterThan(200);
+        expect(all.map((o) => o.alpha2)).toEqual(expect.arrayContaining(['FR', 'DE', 'NL', 'GB']));
+        expect(searchCountryOptions(all, 'Ger').map((o) => o.alpha2)).toContain('DE');
     });
 });
 

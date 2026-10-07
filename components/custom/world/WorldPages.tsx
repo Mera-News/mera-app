@@ -3,18 +3,16 @@ import { PAGE_META, alpha2OfPage } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type {
     ArrangeConfig,
-    ArrangeCountryOption,
     PagePill,
     PageRenderProps,
 } from '@/components/custom/nav/types';
-import AccountService from '@/lib/account-service';
 import { addWorldCountry, removeWorldCountry, useWorldPages } from '@/lib/explore/world-pages';
 import { setWorldPageOrder } from '@/lib/navigation/page-order';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { router } from 'expo-router';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { commitWorldDraft, searchCountryOptions, toCountryOptions } from './world-arrange';
+import { allCountryOptions, commitWorldDraft, searchCountryOptions } from './world-arrange';
 
 const DEFAULT_WINDOW: ExploreWindowHours = 24;
 
@@ -55,32 +53,16 @@ export function WorldPages() {
         [pages, t],
     );
 
-    // The add field's country list, fetched once Arrange first opens (it is a
-    // network call; offline it stays empty and the field finds nothing).
-    const [countryOptions, setCountryOptions] = useState<ArrangeCountryOption[]>([]);
-    const countriesRequested = useRef(false);
-    const loadCountries = useCallback(() => {
-        if (countriesRequested.current) return;
-        countriesRequested.current = true;
-        AccountService.getAllCountries()
-            .then((codes) => setCountryOptions(toCountryOptions(codes)))
-            .catch(() => {
-                // AccountService already reported it; allow a retry next open.
-                countriesRequested.current = false;
-            });
-    }, []);
-
     const arrange: ArrangeConfig = useMemo(() => {
         const byId = new Map(pages.map((p) => [p.id as string, p]));
         return {
-            onOpen: loadCountries,
             onSave: (draft) =>
                 commitWorldDraft(draft, {
                     addCountry: addWorldCountry,
                     removeCountry: removeWorldCountry,
                     saveOrder: setWorldPageOrder,
                 }),
-            search: (query) => searchCountryOptions(countryOptions, query),
+            search: (query) => searchCountryOptions(allCountryOptions(), query),
             footnoteFor: (id) => {
                 const page = byId.get(id);
                 return page?.origin === 'place'
@@ -89,7 +71,7 @@ export function WorldPages() {
             },
             removable: (id) => id !== 'world',
         };
-    }, [pages, countryOptions, loadCountries, t]);
+    }, [pages, t]);
 
     const openSearch = useCallback(() => router.push('/logged-in/search'), []);
 

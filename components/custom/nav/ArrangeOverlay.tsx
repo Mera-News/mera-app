@@ -153,16 +153,18 @@ const ArrangeChip: React.FC<ChipProps> = ({
     [index, onDrop, lifted, tx, ty],
   );
 
-  // The lift (drag only) moves and scales the whole chip. At rest nothing
-  // that affects layout animates.
-  const frameStyle = useAnimatedStyle(() => ({
-    zIndex: lifted.value ? 10 : 0,
-    transform: [
-      { translateX: tx.value },
-      { translateY: ty.value - 3 * lifted.value },
-      { scale: 1 + 0.06 * lifted.value },
-    ],
-  }));
+  // The lift moves and scales the whole chip (a transform, so nothing
+  // reflows).
+  // The page that opened the overlay sits lifted too, until its first drop:
+  // with the glow held still (Reduce Motion, Lite) every border is orange,
+  // so the lift is what tells it apart.
+  const frameStyle = useAnimatedStyle(() => {
+    const up = held ? 1 : lifted.value;
+    return {
+      zIndex: up ? 10 : 0,
+      transform: [{ translateX: tx.value }, { translateY: ty.value - 3 * up }, { scale: 1 + 0.06 * up }],
+    };
+  }, [held]);
   // The glow is the pill's OWN rounded border, colour only: a constant
   // width, so the row never reflows while it breathes.
   const ringStyle = useAnimatedStyle(
@@ -266,7 +268,6 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
   useEffect(() => {
     setArrangeOpen(true);
     if (initialLiftedId) void hapticLight();
-    arrange.onOpen?.();
     return () => setArrangeOpen(false);
     // Open once per overlay.
     // eslint-disable-next-line react-hooks/exhaustive-deps

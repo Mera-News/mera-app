@@ -10,11 +10,10 @@ import type { ArrangeCountryOption, ArrangeDraft } from '@/components/custom/nav
 import { getCountryName } from '@/lib/country-utils';
 
 /**
- * Countries the add field can offer, from the server's alpha-3 list (the one
- * Sources lists; `AccountService.getAllCountries`). The `GLOBAL` sentinel and
- * any code with no alpha-2 (World pages are keyed by alpha-2) are dropped.
- * Names are English: `lib/country-utils` registers `en` only, a known limit
- * shared with Sources' country search.
+ * Options from alpha-3 codes. The `GLOBAL` sentinel and any code with no
+ * alpha-2 (World pages are keyed by alpha-2) are dropped. Names are English:
+ * `lib/country-utils` registers `en` only, a known limit shared with Sources'
+ * country search.
  */
 export function toCountryOptions(alpha3s: readonly string[]): ArrangeCountryOption[] {
     const out: ArrangeCountryOption[] = [];
@@ -28,6 +27,19 @@ export function toCountryOptions(alpha3s: readonly string[]): ArrangeCountryOpti
         out.push({ alpha2: a2, name: getCountryName(a3) });
     }
     return out;
+}
+
+let allOptions: ArrangeCountryOption[] | null = null;
+
+/**
+ * Every country the add field can offer: the ISO list on this phone, so the
+ * field works offline and while Mera is unreachable (the server's list came
+ * back empty then, and every search said "No country found").
+ * ponytail: offers countries with no Mera sources too; their page shows the
+ * honest empty state. Filter by the server's list if that proves confusing.
+ */
+export function allCountryOptions(): readonly ArrangeCountryOption[] {
+    return (allOptions ??= toCountryOptions(Object.keys(countries.getAlpha3Codes())));
 }
 
 /**

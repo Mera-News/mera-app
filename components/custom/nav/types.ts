@@ -67,8 +67,6 @@ export interface ArrangeCountryOption {
  *  country, and the add field. */
 export interface ArrangeConfig {
   readonly onSave: (draft: ArrangeDraft) => void | Promise<void>;
-  /** The overlay opened (World loads its country list). */
-  readonly onOpen?: () => void;
   readonly search: (query: string) => readonly ArrangeCountryOption[];
   /** The note under the row for a page (place-derived countries), or null. */
   readonly footnoteFor: (id: PageId) => string | null;
