@@ -7,6 +7,7 @@ import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
 import { setTabDot, useTabDot } from '@/components/custom/nav/current-surface';
 import { observeUnreadCount } from '@/lib/database/services/notification-service';
+import { useColors } from '@/lib/theme/tokens';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -15,12 +16,9 @@ import { useTranslation } from 'react-i18next';
 //   - feed-sync-task.ts   — syncs the feed on a 60-second cadence + foreground
 //   - inference-recover-task.ts — calls recoverCycle on foreground
 
-// House dark-mode accent (components/ui/gluestack-ui-provider/config.ts dark
-// palette): primary-400 = rgb(231, 138, 83). Applied as the NativeTabs
-// `tintColor` so the selected tab picks up the app accent; everything else
-// (blur/liquid-glass on iOS 26, Material on Android) is left to the native
-// appearance — no custom tabBarStyle.
-const ACCENT = 'rgb(231, 138, 83)';
+// The house accent from the theme tokens is the NativeTabs `tintColor` (and
+// the dot's fill); everything else (blur/liquid-glass on iOS 26, Material on
+// Android) is left to the native appearance, no custom tabBarStyle.
 
 const { Badge, Icon, Label, VectorIcon } = NativeTabs.Trigger;
 
@@ -37,6 +35,7 @@ function tabA11y(label: string) {
 
 export default function AppLayout() {
     const { t } = useTranslation();
+    const colors = useColors();
     const dot = {
         feed: useTabDot('feed'),
         world: useTabDot('world'),
@@ -58,7 +57,7 @@ export default function AppLayout() {
     // trigger (`feed`) is selected on first mount, and Android Back on another
     // tab returns to it (backBehavior 'initialRoute').
     return (
-        <View style={{ flex: 1, backgroundColor: '#000' }}>
+        <View style={{ flex: 1, backgroundColor: colors.base }}>
             <ErrorBoundary
                 level="screen"
                 FallbackComponent={FullScreenErrorFallback}
@@ -67,7 +66,7 @@ export default function AppLayout() {
                     accessibility title (the string children) while suppressing the
                     visible caption. `hidden` on NativeTabsTriggerLabelProps is the
                     supported cross-platform mechanism (iOS + Android). */}
-                <NativeTabs tintColor={ACCENT} badgeBackgroundColor={ACCENT} minimizeBehavior="onScrollDown">
+                <NativeTabs tintColor={colors.accent} badgeBackgroundColor={colors.accent} minimizeBehavior="onScrollDown">
                     {/* navx: four tabs, Feed, World, Library, You, each a folder
                         with its own Stack. `disableScrollToTop` because each
                         page handles a re-tap in JS (use-tab-press-scroll-refresh:

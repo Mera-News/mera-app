@@ -6,11 +6,13 @@ import { Stack } from 'expo-router';
 import { View } from 'react-native';
 
 import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
+import { useColors } from '@/lib/theme/tokens';
 
 export default function FeedStackLayout() {
+  const colors = useColors();
   return (
     <View style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#000000' } }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base } }}>
         <Stack.Screen name="index" />
         <Stack.Screen
           name="interest"
