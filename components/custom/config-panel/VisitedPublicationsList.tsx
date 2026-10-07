@@ -14,7 +14,7 @@ import {
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import logger from '@/lib/logger';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
-import { hasClearLeader, mergeVisitedByName, subscribedNameSet } from '@/lib/stats/visited-publications';
+import { formatDayMonth, hasClearLeader, mergeVisitedByName, subscribedNameSet } from '@/lib/stats/visited-publications';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { normPublicationName } from '@/lib/feed-grouping/geo-language-priority';
 import {
@@ -74,15 +74,6 @@ interface Props {
     readonly listEndPadding?: number;
     /** Drawn after the footnote (the host's "How this page works" row). */
     readonly footer?: React.ReactElement | null;
-}
-
-/** "24 Sep" in the reader's own locale; never throws on a thin ICU build. */
-export function formatDayMonth(ms: number, locale?: string): string {
-    try {
-        return new Date(ms).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
-    } catch {
-        return new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    }
 }
 
 /** One publisher lookup per RENDERED row (FlatList windowing bounds it), cached

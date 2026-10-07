@@ -125,3 +125,26 @@ export function subscribedNameSet(items: readonly SubscriptionNames[]): Set<stri
   }
   return set;
 }
+
+/**
+ * Whole LOCAL calendar days between `ms` and `nowMs`: 0 today, 1 yesterday.
+ * Calendar days, not 24h spans, so a visit at 23:50 reads "Yesterday" at
+ * 00:10. Shared by the History table's "Last read" and the publication page's
+ * "Opened today / yesterday / 4 Oct", so the two can never disagree.
+ */
+export function calendarDaysAgo(ms: number, nowMs: number): number {
+  const day = (t: number) => {
+    const d = new Date(t);
+    return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+  return Math.round((day(nowMs) - day(ms)) / 86_400_000);
+}
+
+/** "24 Sep" in the reader's own locale; never throws on a thin ICU build. */
+export function formatDayMonth(ms: number, locale?: string): string {
+  try {
+    return new Date(ms).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+  } catch {
+    return new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+}

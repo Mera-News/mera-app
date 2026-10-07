@@ -108,3 +108,13 @@ describe('subscribedNameSet', () => {
     expect([...subscribedNameSet([{ publisherName: 'NOS', sourceNamesJson: '["no' }])]).toEqual(['nos']);
   });
 });
+
+describe('calendarDaysAgo', () => {
+  const { calendarDaysAgo } = require('../visited-publications') as typeof import('../visited-publications');
+  const at = (y: number, m: number, d: number, h: number, min = 0) => new Date(y, m, d, h, min).getTime();
+  it('counts calendar days, not 24h spans', () => {
+    expect(calendarDaysAgo(at(2026, 9, 6, 23, 50), at(2026, 9, 7, 0, 10))).toBe(1);
+    expect(calendarDaysAgo(at(2026, 9, 7, 0, 5), at(2026, 9, 7, 23, 55))).toBe(0);
+    expect(calendarDaysAgo(at(2026, 8, 28, 12), at(2026, 9, 7, 12))).toBe(9);
+  });
+});
