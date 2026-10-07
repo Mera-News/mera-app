@@ -19,7 +19,7 @@ import React, { useState } from 'react';
 import { I18nManager, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 
-import { COLORS, useColors } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 
 const PILL = 34;
 const FRAME = 44;
@@ -65,13 +65,13 @@ export default function InlineChoiceChip<T extends string | number>({
       <View style={[styles.frame, disabled ? styles.disabled : null]} testID={`${testID}-frame`}>
         <View pointerEvents="none" {...HIDDEN}>
           <GlassPanel radius={999}>
-            <View style={[styles.pill, styles.collapsed]}>
+            <View style={[styles.pill, styles.collapsed, { borderColor: colors.trackBorder }]}>
               <MaterialIcons
                 name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'}
                 size={14}
                 color={colors.muted}
               />
-              <Text size="sm" scaleTier="chrome" numberOfLines={1} className="text-white font-semibold">
+              <Text size="sm" scaleTier="chrome" numberOfLines={1} className="text-ink font-semibold">
                 {labelOf(value)}
               </Text>
             </View>
@@ -113,10 +113,12 @@ export default function InlineChoiceChip<T extends string | number>({
           >
             <View pointerEvents="none" {...HIDDEN}>
               {picked ? (
-                <View style={[styles.pill, styles.option, styles.picked]}>{label}</View>
+                <View style={[styles.pill, styles.option, { backgroundColor: colors.accent, borderColor: colors.accent }]}>
+                  {label}
+                </View>
               ) : (
                 <GlassPanel radius={999}>
-                  <View style={[styles.pill, styles.option]}>{label}</View>
+                  <View style={[styles.pill, styles.option, { borderColor: colors.trackBorder }]}>{label}</View>
                 </GlassPanel>
               )}
             </View>
@@ -138,9 +140,6 @@ export default function InlineChoiceChip<T extends string | number>({
   );
 }
 
-// P12 moves these onto useColors().
-const C = COLORS.dark;
-
 const styles = StyleSheet.create({
   frame: { height: FRAME, marginVertical: -(FRAME - PILL) / 2, justifyContent: 'center' },
   disabled: { opacity: DISABLED_OPACITY },
@@ -148,13 +147,11 @@ const styles = StyleSheet.create({
     height: PILL,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: C.trackBorder,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
   collapsed: { gap: 4, paddingLeft: 10, paddingRight: 12 },
   option: { minWidth: FRAME, paddingHorizontal: 10 },
-  picked: { backgroundColor: C.accent, borderColor: C.accent },
   options: { flexDirection: 'row', alignItems: 'center', gap: OPTION_GAP },
 });

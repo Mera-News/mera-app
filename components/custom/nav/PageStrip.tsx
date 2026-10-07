@@ -36,7 +36,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { inlineSign } from '@/lib/motion';
-import { COLORS, useColors } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 import { indicatorAt } from './tab-swipe';
 import type { PageId } from './page-registry';
 import type { PageDot, PagePill } from './types';
@@ -140,6 +140,7 @@ const Pill: React.FC<PillProps> = ({
   const flag = pill.flagAlpha2 ? flagEmoji(pill.flagAlpha2) : '';
   const colors = useColors();
   const ink = active ? colors.onAccent : segmented ? colors.muted : colors.ink;
+  const accentFill = { backgroundColor: colors.accent, borderColor: colors.accent };
 
   // World only: this pill's own place in the row, for its edge fade.
   const x = useSharedValue(0);
@@ -175,7 +176,7 @@ const Pill: React.FC<PillProps> = ({
       {dot.visible ? (
         <View
           testID={`page-pill-${pill.id}-dot`}
-          style={[styles.dot, active ? styles.dotOnActive : null]}
+          style={[styles.dot, { backgroundColor: colors.accent }, active ? [styles.dotOnActive, { borderColor: colors.onAccent }] : null]}
         />
       ) : null}
     </View>
@@ -185,7 +186,7 @@ const Pill: React.FC<PillProps> = ({
   if (segmented) {
     visual = (
       <View
-        style={[styles.pill, styles.segPill, active && !fillDrawnBehind ? styles.pillActive : null]}
+        style={[styles.pill, styles.segPill, active && !fillDrawnBehind ? accentFill : null]}
         testID={`page-pill-${pill.id}-chip`}
       >
         {inner}
@@ -193,14 +194,14 @@ const Pill: React.FC<PillProps> = ({
     );
   } else if (active) {
     visual = (
-      <View style={[styles.pill, styles.pillActive]} testID={`page-pill-${pill.id}-chip`}>
+      <View style={[styles.pill, accentFill]} testID={`page-pill-${pill.id}-chip`}>
         {inner}
       </View>
     );
   } else {
     visual = (
       <GlassPanel radius={999}>
-        <View style={styles.pill} testID={`page-pill-${pill.id}-chip`}>
+        <View style={[styles.pill, { borderColor: colors.trackBorder }]} testID={`page-pill-${pill.id}-chip`}>
           {inner}
         </View>
       </GlassPanel>
@@ -250,7 +251,7 @@ const SearchButton: React.FC<{ readonly onPress: () => void }> = ({ onPress }) =
     <View style={styles.searchFab} testID="page-strip-search-frame">
       <View pointerEvents="none" {...GLYPH_HIDDEN} style={styles.searchShadow}>
         <GlassPanel radius={22}>
-          <View style={styles.searchCircle}>
+          <View style={[styles.searchCircle, { borderColor: colors.trackBorder }]}>
             <MaterialIcons name="search" size={22} color={colors.ink} />
           </View>
         </GlassPanel>
@@ -277,6 +278,7 @@ const PageStrip: React.FC<PageStripProps> = ({
   leading,
   onLongPressPill,
 }) => {
+  const colors = useColors();
   const segmented = variant === 'segmented';
   const reduceMotion = useReducedMotion();
   const travelling = segmented && !!progress && !reduceMotion;
@@ -354,10 +356,14 @@ const PageStrip: React.FC<PageStripProps> = ({
         >
           {segmented ? (
             <View style={styles.track} accessibilityRole={ROLES.row} testID="page-strip-pills">
-              <View style={styles.trackPlate} pointerEvents="none" {...GLYPH_HIDDEN} />
+              <View
+                style={[styles.trackPlate, { borderColor: colors.trackBorder, backgroundColor: colors.trackFill }]}
+                pointerEvents="none"
+                {...GLYPH_HIDDEN}
+              />
               {travelling ? (
                 <Animated.View
-                  style={[styles.indicator, indicatorStyle]}
+                  style={[styles.indicator, { backgroundColor: colors.accent }, indicatorStyle]}
                   pointerEvents="none"
                   {...GLYPH_HIDDEN}
                   testID="page-strip-indicator"
@@ -382,9 +388,6 @@ const PageStrip: React.FC<PageStripProps> = ({
   );
 };
 
-// P12 moves these onto useColors().
-const C = COLORS.dark;
-
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
   sideSlot: { width: SIDE_SLOT, height: SIDE_SLOT, alignItems: 'center', justifyContent: 'center' },
@@ -404,8 +407,6 @@ const styles = StyleSheet.create({
     right: 0,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: C.trackBorder,
-    backgroundColor: C.trackFill,
   },
   indicator: {
     position: 'absolute',
@@ -413,22 +414,19 @@ const styles = StyleSheet.create({
     top: PILL_FRAME_PAD,
     height: PILL_HEIGHT,
     borderRadius: 999,
-    backgroundColor: C.accent,
   },
   pill: {
     height: PILL_HEIGHT,
     paddingHorizontal: 13,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: C.trackBorder,
     justifyContent: 'center',
   },
   segPill: { borderColor: 'transparent' },
-  pillActive: { backgroundColor: C.accent, borderColor: C.accent },
   pillInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   flag: { fontSize: 13, lineHeight: 16 },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.accent, marginLeft: -2 },
-  dotOnActive: { borderWidth: 1.5, borderColor: C.onAccent, width: 9, height: 9, borderRadius: 5 },
+  dot: { width: 7, height: 7, borderRadius: 4, marginLeft: -2 },
+  dotOnActive: { borderWidth: 1.5, width: 9, height: 9, borderRadius: 5 },
   searchFab: { position: 'absolute', right: 4, top: 0, width: 44, height: 44 },
   searchShadow: {
     borderRadius: 22,
@@ -442,7 +440,6 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: C.trackBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },

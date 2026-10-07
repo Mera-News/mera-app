@@ -22,7 +22,8 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticLight } from '@/lib/haptics';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
-import { COLORS } from '@/lib/theme/tokens';
+import { tint } from '@/lib/theme/tint';
+import { useColors, type ThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -65,14 +66,22 @@ import { alpha2OfPage, type PageId } from './page-registry';
 import { flagEmoji } from './PageStrip';
 import type { ArrangeConfig, PagePill } from './types';
 
-/** P12 moves this onto useColors(). */
-const C = COLORS.dark;
-const NAV_ACCENT = C.accent;
 const GLOW_PERIOD_MS = 1600;
 /** Constant: the glow animates colour only, never width. */
 export const PILL_BORDER_WIDTH = 1.5;
-const GLASS_BORDER = 'rgba(255,255,255,0.14)';
-const LIFTED_BORDER = 'rgba(255,255,255,0.32)';
+
+/** The overlay's theme colours, by part (layout stays in `styles`). */
+function inks(c: ThemeColors) {
+  return {
+    dim: { backgroundColor: c.scrim },
+    panel: { backgroundColor: c.modalBase, borderBottomColor: c.line },
+    roundCancel: { backgroundColor: c.glass, borderColor: c.trackBorder },
+    roundSave: { backgroundColor: c.accent, borderColor: c.accent },
+    results: { backgroundColor: c.modalBase, borderColor: c.line },
+    resultRow: { borderTopColor: c.line },
+    hint: { backgroundColor: c.modalBase, borderColor: tint(c.accent, 0.5) },
+  } as const;
+}
 /** A drag starts after this much travel, so a tap never moves a pill. */
 const DRAG_SLOP = 4;
 const MAX_RESULTS = 6;
@@ -126,6 +135,7 @@ const ArrangeChip: React.FC<ChipProps> = ({
   onRemove,
 }) => {
   const { t } = useTranslation();
+  const colors = useColors();
   const tx = useSharedValue(0);
   const ty = useSharedValue(0);
   const lifted = useSharedValue(0);
@@ -170,12 +180,12 @@ const ArrangeChip: React.FC<ChipProps> = ({
   const ringStyle = useAnimatedStyle(
     () => ({
       borderColor: held
-        ? NAV_ACCENT
+        ? colors.accent
         : lifted.value
-          ? LIFTED_BORDER
-          : interpolateColor(glow.value, [0, 1], [GLASS_BORDER, NAV_ACCENT]),
+          ? colors.helpRing
+          : interpolateColor(glow.value, [0, 1], [colors.trackBorder, colors.accent]),
     }),
-    [held],
+    [held, colors],
   );
 
   const actions = [
@@ -206,13 +216,13 @@ const ArrangeChip: React.FC<ChipProps> = ({
         >
           <GlassPanel radius={999}>
             <Animated.View
-              style={[styles.chip, held ? styles.heldFill : null, ringStyle]}
+              style={[styles.chip, held ? { backgroundColor: colors.surfaceRaised } : null, ringStyle]}
               testID={`arrange-chip-${id}-pill`}
             >
-              <MaterialIcons name="drag-indicator" size={16} color="rgba(255,255,255,0.6)" {...GLYPH_HIDDEN} />
-              {icon ? <MaterialIcons name={icon} size={14} color={C.ink} {...GLYPH_HIDDEN} /> : null}
+              <MaterialIcons name="drag-indicator" size={16} color={colors.ink3} {...GLYPH_HIDDEN} />
+              {icon ? <MaterialIcons name={icon} size={14} color={colors.ink} {...GLYPH_HIDDEN} /> : null}
               {flag ? <Text style={styles.flag}>{flag}</Text> : null}
-              <Text size="sm" scaleTier="chrome" numberOfLines={1} className="text-white">
+              <Text size="sm" scaleTier="chrome" numberOfLines={1} className="text-ink">
                 {label}
               </Text>
               {removable ? <View style={styles.xSpacer} /> : null}
@@ -223,8 +233,8 @@ const ArrangeChip: React.FC<ChipProps> = ({
       {removable ? (
         // A 44pt frame drawn over the chip's end; its own button for touch.
         <View style={styles.xFrame} testID={`arrange-remove-${id}-frame`}>
-          <View style={styles.xCircle} pointerEvents="none" {...GLYPH_HIDDEN}>
-            <MaterialIcons name="close" size={14} color="#FFFFFF" />
+          <View style={[styles.xCircle, { backgroundColor: colors.surfaceRaised }]} pointerEvents="none" {...GLYPH_HIDDEN}>
+            <MaterialIcons name="close" size={14} color={colors.ink} />
           </View>
           <Pressable
             onPress={() => onRemove(id)}
@@ -241,6 +251,8 @@ const ArrangeChip: React.FC<ChipProps> = ({
 
 const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrange, initialLiftedId, onClose }) => {
   const { t } = useTranslation();
+  const colors = useColors();
+  const ink = useMemo(() => inks(colors), [colors]);
   const insets = useSafeAreaInsets();
   const rtl = I18nManager.isRTL;
   const reduceMotion = useReducedMotion();
@@ -339,8 +351,8 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
 
   return (
     <View style={[StyleSheet.absoluteFill, styles.layer]} accessibilityViewIsModal testID="arrange-overlay">
-      <View style={styles.dim} pointerEvents="auto" {...GLYPH_HIDDEN} testID="arrange-dim" />
-      <View style={[styles.panel, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.dim, ink.dim]} pointerEvents="auto" {...GLYPH_HIDDEN} testID="arrange-dim" />
+      <View style={[styles.panel, ink.panel, { paddingTop: insets.top + 8 }]}>
         <View style={styles.chips} testID="arrange-chips">
           {state.order.map((id, i) => {
             const meta = labelOf.get(id) ?? { label: id, flag: '', icon: undefined };
@@ -375,8 +387,8 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
             testID="arrange-add-field"
           />
           <View style={styles.roundFrame}>
-            <View style={[styles.round, styles.roundCancel]} pointerEvents="none" {...GLYPH_HIDDEN}>
-              <MaterialIcons name="close" size={20} color="#FFFFFF" />
+            <View style={[styles.round, ink.roundCancel]} pointerEvents="none" {...GLYPH_HIDDEN}>
+              <MaterialIcons name="close" size={20} color={colors.ink} />
             </View>
             <Pressable
               onPress={onClose}
@@ -387,8 +399,8 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
             />
           </View>
           <View style={styles.roundFrame}>
-            <View style={[styles.round, styles.roundSave]} pointerEvents="none" {...GLYPH_HIDDEN}>
-              <MaterialIcons name="check" size={20} color="#121113" />
+            <View style={[styles.round, ink.roundSave]} pointerEvents="none" {...GLYPH_HIDDEN}>
+              <MaterialIcons name="check" size={20} color={colors.onAccent} />
             </View>
             <Pressable
               onPress={() => void save()}
@@ -402,20 +414,20 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
       </View>
 
       {query.trim() ? (
-        <View style={styles.results} testID="arrange-results">
+        <View style={[styles.results, ink.results]} testID="arrange-results">
           {results.length === 0 ? (
-            <Text size="sm" className="text-gray-300" style={styles.noMatch} testID="arrange-no-match">
+            <Text size="sm" className="text-ink" style={styles.noMatch} testID="arrange-no-match">
               {t('nav.arrange.noMatch', { query: query.trim() })}
             </Text>
           ) : (
             results.map((c) => (
-              <View key={c.alpha2} style={styles.resultRow}>
+              <View key={c.alpha2} style={[styles.resultRow, ink.resultRow]}>
                 <View style={styles.resultVisual} pointerEvents="none" {...GLYPH_HIDDEN}>
                   <Text style={styles.flag}>{flagEmoji(c.alpha2)}</Text>
-                  <Text size="md" className="text-white" style={{ flex: 1 }} numberOfLines={1}>
+                  <Text size="md" className="text-ink" style={{ flex: 1 }} numberOfLines={1}>
                     {c.name}
                   </Text>
-                  <Text size="sm" bold style={{ color: NAV_ACCENT }}>
+                  <Text size="sm" bold style={{ color: colors.accentText }}>
                     {t('nav.arrange.add')}
                   </Text>
                 </View>
@@ -435,8 +447,8 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
         </View>
       ) : null}
 
-      <View style={styles.hint} pointerEvents="none">
-        <Text size="sm" className="text-gray-300" testID="arrange-hint">
+      <View style={[styles.hint, ink.hint]} pointerEvents="none">
+        <Text size="sm" className="text-ink" testID="arrange-hint">
           {footnote ?? t('nav.arrange.hint', { tab: tabLabel })}
         </Text>
       </View>
@@ -445,16 +457,14 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
 };
 
 const styles = StyleSheet.create({
-  dim: { ...StyleSheet.absoluteFillObject, backgroundColor: C.scrim },
+  dim: StyleSheet.absoluteFillObject,
   // Above the tab header (zIndex 10).
   layer: { zIndex: 20 },
   panel: {
     paddingHorizontal: 14,
     paddingBottom: 14,
     gap: 12,
-    backgroundColor: 'rgba(18,17,19,0.94)',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chipFrame: { minHeight: 44, justifyContent: 'center', borderRadius: 999 },
@@ -475,12 +485,10 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  heldFill: { backgroundColor: C.surfaceRaised },
   heldShadow: {
     shadowColor: '#000000',
     shadowOpacity: 0.55,
@@ -489,18 +497,14 @@ const styles = StyleSheet.create({
   },
   roundFrame: { width: 44, height: 44 },
   round: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  roundCancel: { backgroundColor: 'rgba(40,39,42,0.82)', borderColor: 'rgba(255,255,255,0.14)' },
-  roundSave: { backgroundColor: NAV_ACCENT, borderColor: NAV_ACCENT },
   results: {
     marginHorizontal: 14,
     marginTop: 4,
     borderRadius: 16,
-    backgroundColor: 'rgba(18,17,19,0.97)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
     overflow: 'hidden',
   },
-  resultRow: { minHeight: 48, justifyContent: 'center', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.08)' },
+  resultRow: { minHeight: 48, justifyContent: 'center', borderTopWidth: StyleSheet.hairlineWidth },
   resultVisual: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 },
   noMatch: { padding: 14 },
   hint: {
@@ -508,9 +512,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 12,
     borderRadius: 14,
-    backgroundColor: 'rgba(18,17,19,0.94)',
     borderWidth: 1,
-    borderColor: 'rgba(231,138,83,0.5)',
   },
 });
 

@@ -32,7 +32,7 @@ export default function TabStackScreen({ surface, backdrop = false, testID, chil
   );
   if (!backdrop) return body;
   return (
-    <GluestackUIProvider mode="dark">
+    <GluestackUIProvider>
       <View style={{ flex: 1 }}>
         <AbstractGradientBackdrop />
         <SafeAreaView testID={testID} style={{ flex: 1 }}>

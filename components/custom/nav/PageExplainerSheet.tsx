@@ -19,7 +19,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
-import { COLORS, useColors } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 import type { PageExplainer } from './page-registry';
 
 export interface PageExplainerSheetProps {
@@ -64,7 +64,7 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
           <Pressable
             onPress={learnMore}
             accessibilityRole="button"
-            style={[styles.button, styles.outlined]}
+            style={[styles.button, styles.outlined, { borderColor: colors.helpRing }]}
             testID="page-explainer-learn-more"
           >
             <Text size="md" bold style={{ color: colors.ink }}>
@@ -74,7 +74,7 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
           <Pressable
             onPress={onClose}
             accessibilityRole="button"
-            style={[styles.button, styles.filled]}
+            style={[styles.button, { backgroundColor: colors.accent }]}
             testID="page-explainer-close"
           >
             <Text size="md" bold style={{ color: colors.onAccent }}>
@@ -87,9 +87,6 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
   );
 };
 
-// P12 moves these onto useColors().
-const C = COLORS.dark;
-
 const styles = StyleSheet.create({
   // Board: 22pt sides, 12pt between blocks; sizes set with their leading.
   content: { paddingHorizontal: 22, gap: 12 },
@@ -98,8 +95,7 @@ const styles = StyleSheet.create({
   paragraph: { fontSize: 15, lineHeight: 22 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 8 },
   button: { flex: 1, minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
-  outlined: { borderWidth: 1, borderColor: C.helpRing },
-  filled: { backgroundColor: C.accent },
+  outlined: { borderWidth: 1 },
 });
 
 export default PageExplainerSheet;

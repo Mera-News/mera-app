@@ -19,8 +19,7 @@
 //    reveals it and resets its scroll origin (pages keep their own offsets).
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import { GLASS_OVER_CONTENT_FILL } from '@/components/custom/GlassSurface';
-import { COLORS } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { hapticSelection } from '@/lib/haptics';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
@@ -60,6 +59,7 @@ const ARRIVAL_FADE_MS = 150;
 
 const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, arrange, leading, testID }) => {
   const { t } = useTranslation();
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
   const reduceMotion = useReducedMotion();
@@ -225,7 +225,7 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
         // box-none: the header must not swallow a pull-to-refresh that starts
         // under it; only its controls take touches.
         pointerEvents="box-none"
-        style={[styles.header, headerStyle]}
+        style={[styles.header, { backgroundColor: colors.modalBase, borderBottomColor: colors.line }, headerStyle]}
       >
         {/* Symmetric sides, so a segmented track centres on the SCREEN. */}
         <View pointerEvents="box-none" style={{ paddingTop: insets.top + 6, paddingBottom: 6, paddingHorizontal: HEADER_SIDE_PAD }}>
@@ -273,11 +273,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-    // Near black over the content (board .hdr), not a glass plate: a white
-    // tint over the header read as a grey slab. P12 moves it onto the theme.
-    backgroundColor: GLASS_OVER_CONTENT_FILL,
+    // The theme's modal base (near black / white) over the content, not a
+    // glass plate: a white tint over the header read as a grey slab.
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.dark.line,
   },
 });
 

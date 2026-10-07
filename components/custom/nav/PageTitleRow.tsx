@@ -13,7 +13,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { COLORS } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 
 const RING = 24;
 const FRAME = 44;
@@ -28,6 +28,7 @@ export interface PageTitleRowProps {
 
 const PageTitleRow: React.FC<PageTitleRowProps> = ({ title, onExplain, trailing, testID }) => {
   const { t } = useTranslation();
+  const colors = useColors();
   return (
     <View style={styles.row} testID={testID}>
       <Text
@@ -35,7 +36,7 @@ const PageTitleRow: React.FC<PageTitleRowProps> = ({ title, onExplain, trailing,
         bold
         numberOfLines={1}
         accessibilityRole="header"
-        style={styles.title}
+        style={[styles.title, { color: colors.ink }]}
       >
         {title}
       </Text>
@@ -46,9 +47,9 @@ const PageTitleRow: React.FC<PageTitleRowProps> = ({ title, onExplain, trailing,
             accessible={false}
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
-            style={styles.ring}
+            style={[styles.ring, { borderColor: colors.helpRing }]}
           >
-            <Text style={styles.q}>?</Text>
+            <Text style={[styles.q, { color: colors.muted }]}>?</Text>
           </View>
           <Pressable
             onPress={onExplain}
@@ -65,14 +66,11 @@ const PageTitleRow: React.FC<PageTitleRowProps> = ({ title, onExplain, trailing,
   );
 };
 
-// P12 moves these onto useColors().
-const C = COLORS.dark;
-
 const styles = StyleSheet.create({
   // Frames inside the row give their height back, so the row is the title's.
   row: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 34 },
   // 17/22 bold, set together (a fontSize without its lineHeight clips).
-  title: { fontSize: 17, lineHeight: 22, flexShrink: 1, color: C.ink },
+  title: { fontSize: 17, lineHeight: 22, flexShrink: 1 },
   helpFrame: {
     width: FRAME,
     height: FRAME,
@@ -87,11 +85,10 @@ const styles = StyleSheet.create({
     height: RING,
     borderRadius: RING / 2,
     borderWidth: 1.5,
-    borderColor: C.helpRing,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  q: { fontSize: 13, lineHeight: 16, fontWeight: '700', color: C.muted },
+  q: { fontSize: 13, lineHeight: 16, fontWeight: '700' },
   spacer: { flex: 1 },
 });
 

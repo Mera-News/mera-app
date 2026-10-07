@@ -23,6 +23,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
+import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -36,14 +37,13 @@ const GLYPH_HIDDEN = {
   importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-const MUTED = 'rgb(212, 212, 212)';
-
 export interface HowThisPageWorksProps {
   readonly pageId: PageId;
 }
 
 const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
   const { t } = useTranslation();
+  const colors = useColors();
   const [open, setOpen] = useState(false);
   const focused = useIsFocusedSafe();
   useEffect(() => {
@@ -59,12 +59,16 @@ const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
       {/* A hidden visual under a CHILDLESS labelled button: a glyph inside a
           button surfaces on iOS as its own StaticText. */}
       <View testID="how-this-page-works-frame" style={styles.row}>
-        <View pointerEvents="none" style={styles.visual} {...GLYPH_HIDDEN}>
-          <MaterialIcons name="info-outline" size={20} color={MUTED} />
-          <Text size="sm" style={styles.label}>
+        <View
+          pointerEvents="none"
+          style={[styles.visual, { borderColor: colors.trackBorder, backgroundColor: colors.surface }]}
+          {...GLYPH_HIDDEN}
+        >
+          <MaterialIcons name="info-outline" size={20} color={colors.muted} />
+          <Text size="sm" style={[styles.label, { color: colors.muted }]}>
             {label}
           </Text>
-          <MaterialIcons name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} size={20} color={MUTED} />
+          <MaterialIcons name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} size={20} color={colors.muted} />
         </View>
         <Pressable
           onPress={() => setOpen(true)}
@@ -78,7 +82,7 @@ const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
         <ModalBackdrop />
         <ModalContent testID={`how-this-page-works-${pageId}`}>
           <ModalHeader>
-            <Heading size="lg" className="text-white" accessibilityRole="header">
+            <Heading size="lg" className="text-ink" accessibilityRole="header">
               {t(explainer.titleKey)}
             </Heading>
           </ModalHeader>
@@ -86,7 +90,7 @@ const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
           <ModalBody>
             <VStack space="md">
               {explainer.paragraphKeys.map((key) => (
-                <Text key={key} size="sm" style={{ color: MUTED }}>
+                <Text key={key} size="sm" style={{ color: colors.muted }}>
                   {t(key)}
                 </Text>
               ))}
@@ -116,11 +120,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.14)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
     gap: 10,
   },
-  label: { flex: 1, color: MUTED },
+  label: { flex: 1 },
 });
 
 export default HowThisPageWorks;

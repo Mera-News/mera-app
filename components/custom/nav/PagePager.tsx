@@ -35,6 +35,7 @@ import Animated, {
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { Text } from '@/components/ui/text';
+import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 import {
@@ -89,6 +90,7 @@ const PagePager: React.FC<PagePagerProps> = ({
   contentOpacity,
   testID,
 }) => {
+  const colors = useColors();
   const [width, setWidth] = useState(0);
   const [moving, setMoving] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -246,13 +248,13 @@ const PagePager: React.FC<PagePagerProps> = ({
     >
       <View style={styles.edgeRow}>
         {side === 'prev' ? (
-          <MaterialIcons name={rtl ? 'chevron-right' : 'chevron-left'} size={22} color="#FFFFFF" />
+          <MaterialIcons name={rtl ? 'chevron-right' : 'chevron-left'} size={22} color={colors.ink} />
         ) : null}
-        <Text size="lg" bold className="text-white">
+        <Text size="lg" bold className="text-ink">
           {label}
         </Text>
         {side === 'next' ? (
-          <MaterialIcons name={rtl ? 'chevron-left' : 'chevron-right'} size={22} color="#FFFFFF" />
+          <MaterialIcons name={rtl ? 'chevron-left' : 'chevron-right'} size={22} color={colors.ink} />
         ) : null}
       </View>
     </View>
