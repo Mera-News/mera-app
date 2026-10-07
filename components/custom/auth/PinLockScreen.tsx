@@ -2,14 +2,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
-import {
-  Modal,
-  ModalBackdrop,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from '@/components/ui/modal';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -58,6 +51,8 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
   const [verifying, setVerifying] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const submittingRef = useRef(false);
+  // Sign in again was chosen: leave once the sheet is gone (BottomSheet.onClosed).
+  const forgotChosenRef = useRef(false);
 
   // Seed any active lockout on mount so a relaunch shows the remaining time.
   useEffect(() => {
@@ -137,12 +132,14 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
           <MeraLogo size={88} />
 
           <VStack className="items-center" space="xs">
+            {/* One line at launch ("Mera is locked"); a caller re-using the
+                screen (Change PIN) may pass its own title and subtitle. */}
             <Text className="text-white text-xl font-semibold">
               {title ?? t('pin.lockTitle')}
             </Text>
-            <Text className="text-typography-500 text-sm text-center">
-              {subtitle ?? t('pin.lockSubtitle')}
-            </Text>
+            {subtitle ? (
+              <Text className="text-typography-500 text-sm text-center">{subtitle}</Text>
+            ) : null}
           </VStack>
 
           <Box className="mt-6">
@@ -172,42 +169,48 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
           )}
         </VStack>
 
-        <Modal isOpen={showForgotModal} onClose={() => setShowForgotModal(false)} size="sm">
-          <ModalBackdrop />
-          <ModalContent>
-            <ModalHeader className="border-gray-700 pb-4">
-              <Text className="text-xl font-semibold text-white">{t('pin.forgotTitle')}</Text>
-            </ModalHeader>
-            <ModalBody className="py-6">
-              <Text className="text-gray-300 text-base leading-relaxed">
-                {isConnected ? t('pin.forgotBody') : t('pin.forgotOffline')}
-              </Text>
-            </ModalBody>
-            <ModalFooter className="border-t border-gray-700 pt-4">
-              <VStack className="w-full" space="md">
-                <Button
-                  action="primary"
-                  onPress={() => {
-                    setShowForgotModal(false);
-                    onForgot?.();
-                  }}
-                  isDisabled={!isConnected}
-                  className="w-full"
-                >
-                  <ButtonText>{t('pin.forgotConfirm')}</ButtonText>
-                </Button>
-                <Button
-                  variant="outline"
-                  action="secondary"
-                  onPress={() => setShowForgotModal(false)}
-                  className="w-full"
-                >
-                  <ButtonText>{t('common.cancel')}</ButtonText>
-                </Button>
-              </VStack>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+        {/* Forgot PIN (FinalStart #5): the sheet says what happens before it
+            happens. The route stays /login?reauth=pin, the only way to
+            /pin-setup, and that sign-in never offers "without email". */}
+        <BottomSheet
+          open={showForgotModal}
+          onClose={() => setShowForgotModal(false)}
+          onClosed={() => {
+            if (!forgotChosenRef.current) return;
+            forgotChosenRef.current = false;
+            onForgot?.();
+          }}
+          testID="pin-forgot-sheet"
+        >
+          <VStack className="px-5 pt-2" space="md">
+            <Text className="text-xl font-semibold text-white" accessibilityRole="header">
+              {t('pin.forgotTitle')}
+            </Text>
+            <Text className="text-gray-300 text-base leading-relaxed">
+              {isConnected ? t('pin.forgotBody') : t('pin.forgotOffline')}
+            </Text>
+            <Button
+              action="primary"
+              onPress={() => {
+                forgotChosenRef.current = true;
+                setShowForgotModal(false);
+              }}
+              isDisabled={!isConnected}
+              className="w-full"
+              testID="pin-forgot-confirm"
+            >
+              <ButtonText>{t('pin.forgotConfirm')}</ButtonText>
+            </Button>
+            <Button
+              variant="outline"
+              action="secondary"
+              onPress={() => setShowForgotModal(false)}
+              className="w-full"
+            >
+              <ButtonText>{t('common.cancel')}</ButtonText>
+            </Button>
+          </VStack>
+        </BottomSheet>
       </Box>
     </Box>
   );

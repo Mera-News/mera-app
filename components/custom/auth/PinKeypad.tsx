@@ -3,8 +3,11 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
+import React, { useEffect } from 'react';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue } from 'react-native-reanimated';
+
+import { hapticError } from '@/lib/haptics';
+import { shakeX as shake } from '@/lib/motion';
 
 interface PinKeypadProps {
   value: string;
@@ -34,18 +37,16 @@ const PinKeypad: React.FC<PinKeypadProps> = ({
   disabled = false,
   error = false,
 }) => {
-  const shakeX = useRef(new Animated.Value(0)).current;
-
+  // Wrong PIN (FinalMotion): the dots shake, decaying, with the error haptic.
+  // Reduce Motion: the red dots alone say it, nothing moves.
+  const reduceMotion = useReducedMotion();
+  const offset = useSharedValue(0);
   useEffect(() => {
     if (!error) return;
-    Animated.sequence([
-      Animated.timing(shakeX, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeX, { toValue: -10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeX, { toValue: 8, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeX, { toValue: -8, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeX, { toValue: 0, duration: 50, useNativeDriver: true }),
-    ]).start();
-  }, [error, shakeX]);
+    void hapticError();
+    if (!reduceMotion) offset.value = shake();
+  }, [error, reduceMotion, offset]);
+  const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }));
 
   const press = (key: string | 'backspace' | null) => {
     if (disabled || key === null) return;
@@ -60,7 +61,7 @@ const PinKeypad: React.FC<PinKeypadProps> = ({
   return (
     <Box className="items-center">
       {/* Dot indicators */}
-      <Animated.View style={{ transform: [{ translateX: shakeX }] }}>
+      <Animated.View style={shakeStyle}>
         <HStack space="lg" className="justify-center mb-10">
           {Array.from({ length }).map((_, i) => {
             const filled = i < value.length;
