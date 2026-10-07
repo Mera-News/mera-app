@@ -12,6 +12,7 @@
 // `fallbackClassName`, so the base has to be passed as a style.
 
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
+import type { ThemeColors } from '@/lib/theme/tokens';
 
 /** Pure text colours. `secondary` is the floor: rgb 163 only reaches 4.6:1
  *  over the worst modelled panel and rgb 140 reaches 3.5:1. */
@@ -34,6 +35,14 @@ export const STATUS_INK = {
 export const STATUS_PANEL_OPAQUE_BASE = 'rgb(18, 17, 19)';
 
 export const STATUS_PANEL_WORST_BG: readonly [number, number, number] = [57, 56, 57];
+
+/** The Feed's status icon, by mode: still and plain at rest, orange at the
+ *  daily limit, red on a problem (FinalFeedStatus). `deferred` rests like idle. */
+export function statusIconInk(mode: FeedStatusMode, c: ThemeColors): string {
+  if (mode === 'limited') return c.accent;
+  if (mode === 'error') return c.negative;
+  return c.ink;
+}
 
 function channel(v: number): number {
   const c = v / 255;

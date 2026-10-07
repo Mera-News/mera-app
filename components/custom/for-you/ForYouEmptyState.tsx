@@ -5,10 +5,17 @@
 //
 // Colour is in `style`, never a typography class: the dark ramp is inverted
 // and the old `text-typography-400` body was rgb 140.
+//
+// A page whose board names a tutorial hero (FinalMotion "Empty pages": Stories,
+// the Feed, Sources, Facts) passes `animationId` and the hero loops above the
+// message at 64pt instead of the icon. "Learn about..." is the one action
+// style: a white outline pill.
 
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import LoopScene from '@/components/custom/for-you/LoopScene';
+import { animationSourceFor } from '@/components/custom/tutorials/animation-registry';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 
@@ -18,8 +25,14 @@ export const EMPTY_STATE_INK = {
   icon: 'rgb(163, 163, 163)',
 } as const;
 
+const HERO_SIZE = 64;
+
 export interface ForYouEmptyStateProps {
-  readonly icon: keyof typeof MaterialIcons.glyphMap;
+  /** Drawn when there is no `animationId`. */
+  readonly icon?: keyof typeof MaterialIcons.glyphMap;
+  /** A tutorial animation id (`tutorials/animation-registry`), looped above
+   *  the message in place of the icon. */
+  readonly animationId?: string;
   readonly title?: string;
   readonly body: string;
   readonly action?: { readonly label: string; readonly onPress: () => void; readonly testID: string };
@@ -30,6 +43,7 @@ export interface ForYouEmptyStateProps {
 
 const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
   icon,
+  animationId,
   title,
   body,
   action,
@@ -42,7 +56,11 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
     space="sm"
   >
     {/* Decoration: hidden, or it surfaces as its own icon-font StaticText. */}
-    <MaterialIcons name={icon} size={compact ? 28 : 48} color={EMPTY_STATE_INK.icon} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+    {animationId ? (
+      <LoopScene source={animationSourceFor(animationId)} size={HERO_SIZE} testID={`${testID}-hero`} />
+    ) : icon ? (
+      <MaterialIcons name={icon} size={compact ? 28 : 48} color={EMPTY_STATE_INK.icon} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+    ) : null}
     {title ? (
       <Text size="lg" className="text-center font-semibold" style={{ color: EMPTY_STATE_INK.title }}>
         {title}
@@ -54,11 +72,12 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
     {action ? (
       <Button
         variant="outline"
-        className="rounded-full border-primary-500 mt-2"
+        className="rounded-full mt-2"
+        style={{ borderColor: EMPTY_STATE_INK.title }}
         onPress={action.onPress}
         testID={action.testID}
       >
-        <ButtonText className="text-primary-400">{action.label}</ButtonText>
+        <ButtonText style={{ color: EMPTY_STATE_INK.title }}>{action.label}</ButtonText>
       </Button>
     ) : null}
   </VStack>

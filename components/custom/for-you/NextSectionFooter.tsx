@@ -1,6 +1,8 @@
-// The fact feed's closing row (N13): the way to the NEXT section, drawn in that
-// section's own gradient so it reads as the next section arriving, or "Back to
-// Interests" on the last one.
+// The fact page's closing row (FinalFeed #7): the way to the NEXT interest,
+// drawn in that section's own gradient so it reads as the next section
+// arriving, or "Go to Feed" on the last one (its caller passes
+// `openSectionedFeed` from feed/feed-view-prefs). Props only: the fact page
+// (You area) imports it.
 //
 // ## Contrast is guaranteed by construction, not by luck of the hue
 //
@@ -41,9 +43,9 @@ export type NextSectionFooterProps =
       readonly kind: 'next';
       readonly factId: string;
       readonly title: string;
-      /** Stories in the next section. 0 for an empty interest section, which
-       *  then shows no count at all (never "0"). */
-      readonly count: number;
+      /** Ignored: the board shows no count. Kept optional until the fact
+       *  page stops passing it; delete with that caller's argument. */
+      readonly count?: number;
       /** Headline section titles are app copy; fact titles are user data and
        *  go through the translator. */
       readonly translateTitle: boolean;
@@ -60,22 +62,21 @@ const NextSectionFooter: React.FC<NextSectionFooterProps> = (props) => {
         <HStack className="items-center" space="xs" pointerEvents="none" {...HIDDEN}>
           <MaterialIcons name="arrow-back" size={18} color={NEXT_FOOTER_INK} {...HIDDEN} />
           <Text size="md" className="font-semibold" style={{ color: NEXT_FOOTER_INK }}>
-            {t('interests.backToInterests')}
+            {t('trackedStories.emptyCta')}
           </Text>
         </HStack>
         <Pressable
           testID="fact-feed-back-to-interests"
           onPress={props.onPress}
           accessibilityRole="button"
-          accessibilityLabel={t('interests.backToInterests')}
+          accessibilityLabel={t('trackedStories.emptyCta')}
           style={StyleSheet.absoluteFill}
         />
       </View>
     );
   }
 
-  const { factId, title, count, translateTitle, onPress } = props;
-  const countText = count > 0 ? t('trackedStories.articleCount', { count }) : null;
+  const { factId, title, translateTitle, onPress } = props;
   const label = t('forYou.nextSection', { title });
   return (
     <View className="mx-1 mt-4 mb-2">
@@ -100,11 +101,6 @@ const NextSectionFooter: React.FC<NextSectionFooterProps> = (props) => {
                   {title}
                 </Text>
               )}
-              {countText ? (
-                <Text size="xs" style={{ color: NEXT_FOOTER_INK }} testID="fact-feed-next-count">
-                  {countText}
-                </Text>
-              ) : null}
             </VStack>
             <MaterialIcons name="arrow-forward" size={22} color={NEXT_FOOTER_INK} {...HIDDEN} />
           </HStack>
@@ -114,7 +110,7 @@ const NextSectionFooter: React.FC<NextSectionFooterProps> = (props) => {
         testID="fact-feed-next"
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={countText ? `${label} · ${countText}` : label}
+        accessibilityLabel={label}
         style={StyleSheet.absoluteFill}
       />
     </View>
