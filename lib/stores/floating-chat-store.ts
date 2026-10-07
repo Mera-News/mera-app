@@ -54,7 +54,9 @@ export type MeraPageKey =
     | 'library'
     | 'profile'
     | 'facts'
-    | 'sources';
+    | 'sources'
+    // Settings, Search and the article page: the generic set (owner M5).
+    | 'settings';
 
 export type ChatContext =
     // `origin: 'profile'` marks a fact-editing chat (the Mera button on Profile,

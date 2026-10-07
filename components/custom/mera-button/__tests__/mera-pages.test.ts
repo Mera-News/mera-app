@@ -28,6 +28,7 @@ describe('pageKeyFor', () => {
     ['hygiene', 'profile'],
     ['not-interested', 'profile'],
     ['activity', 'profile'],
+    ['search', 'settings'],
   ])('%s -> %s', (surface, key) => {
     expect(pageKeyFor(surface as SurfaceId)).toBe(key);
   });
@@ -37,7 +38,6 @@ describe('pageKeyFor', () => {
     'settings:display',
     'settings:mera-protocol',
     'settings:notifications',
-    'search',
     '',
     'unknown',
   ])(
@@ -76,7 +76,7 @@ describe('hintKeys', () => {
   it('every pool has 2 or 3 hints with web search on', () => {
     for (const page of [
       'feed', 'interests', 'interest', 'stories', 'world',
-      'checks', 'library', 'profile', 'facts', 'sources',
+      'checks', 'library', 'profile', 'facts', 'sources', 'settings',
     ] as const) {
       const n = hintKeys(page, true).length;
       expect(n).toBeGreaterThanOrEqual(2);

@@ -1,13 +1,19 @@
-// Mounts the Mera button for one tab. L1 renders `<MeraButtonHost tab="…" />`
-// once per tab, as a sibling AFTER that tab's `<Stack>` in its `_layout.tsx`:
-// inside the tab it gets the tab's own insets (useMeraButtonBottom), it stays
-// over pages pushed inside the tab (One interest, All facts, Sources), and a
-// root push (article detail, Search) covers it natively.
+// Mounts the Mera button.
 //
-// Shows only while ALL hold: this tab is focused, the current surface belongs
-// to this tab and has a page key (none on Settings, its sub-screens or Search),
-// the chat is closed, Arrange is closed and the keyboard is down. On You it
-// fades with the swipe towards Settings.
+// In a TAB: `<MeraButtonHost tab="…" />` once per tab, as a sibling AFTER that
+// tab's `<Stack>` in its `_layout.tsx`: inside the tab it gets the tab's own
+// insets (useMeraButtonBottom) and stays over pages pushed inside the tab (One
+// interest, All facts, Sources). Shows only while ALL hold: this tab is
+// focused, the current surface belongs to this tab and has a page key, the
+// chat is closed, Arrange is closed and the keyboard is down. On You it fades
+// with the swipe towards Settings.
+//
+// On a ROOT push, which covers the tab's button natively: `<MeraButtonHost
+// root />` (Search) or `<MeraButtonHost root article={…} />` (the article
+// page, whose tap opens Mera on that article), as the screen's LAST child.
+// Plain insets (no tab bar), shown while that screen is focused and the chat
+// is closed, and a bottom-corner button rides above the keyboard instead of
+// hiding, because Search focuses its field on arrival.
 //
 // THE BUTTON MOVES (owner, navx): drag it and it snaps to the nearest of four
 // physical corners (corner.ts), shared by every tab and kept on this phone.
@@ -27,11 +33,17 @@ import { hapticLight } from '@/lib/haptics';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { usePageOrder } from '@/lib/navigation/page-order';
-import { MERA_BUTTON_SIZE, useMeraButtonBottom } from '@/lib/navigation/tab-bar';
-import { useFloatingChatIsExpanded, type MeraPageKey } from '@/lib/stores/floating-chat-store';
+import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE, useMeraButtonBottom } from '@/lib/navigation/tab-bar';
+import {
+  useFloatingChatIsExpanded,
+  type ChatContext,
+  type MeraPageKey,
+} from '@/lib/stores/floating-chat-store';
+import { articleChatContext, type AskMeraSubject } from '@/components/custom/floating-chat/ask-mera';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, StyleSheet } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -88,13 +100,21 @@ interface PlacedProps {
   readonly page: MeraPageKey;
   readonly mode: FeedStatusMode;
   readonly frame: CornerFrame;
+  readonly context?: ChatContext;
+  /** Root hosts: a bottom corner lifts above the keyboard. */
+  readonly rideKeyboard: boolean;
 }
 
 /** The button at its corner, with the drag. Its own component so the shared
  *  values live only while there is a measured frame to place it in. */
-const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame }) => {
+const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame, context, rideKeyboard }) => {
   const corner = useMeraCorner();
   const reduceMotion = useReducedMotion();
+  // The keyboard's top, as a negative translate (0 while it is down). Its
+  // height counts the home-indicator inset the frame's bottom already holds.
+  const keyboard = useReanimatedKeyboardAnimation();
+  const lift = rideKeyboard && (corner === 'bl' || corner === 'br');
+  const insetBottom = useSafeAreaInsets().bottom;
   const start = cornerPoint(corner, frame);
   const x = useSharedValue(start.x);
   const y = useSharedValue(start.y);
@@ -159,7 +179,10 @@ const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame }) => {
   );
 
   const moveStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: x.value }, { translateY: y.value }],
+    transform: [
+      { translateX: x.value },
+      { translateY: y.value + (lift ? Math.min(0, keyboard.height.value + insetBottom) : 0) },
+    ],
   }));
 
   return (
@@ -171,23 +194,35 @@ const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame }) => {
         tooltipSide={tooltipSide(corner)}
         pan={pan}
         dragging={dragging}
+        context={context}
       />
     </Animated.View>
   );
 };
 
-const MeraButtonHost: React.FC<{ tab: TabId }> = ({ tab }) => {
+export type MeraButtonHostProps =
+  | { readonly tab: TabId }
+  | { readonly root: true; readonly article?: AskMeraSubject };
+
+const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
+  const root = 'root' in props;
+  const tab = root ? null : props.tab;
   const focused = useIsFocusedSafe();
   const surface = useCurrentSurface();
   const arrangeOpen = useArrangeOpen();
   const chatOpen = useFloatingChatIsExpanded();
   const keyboardUp = useKeyboardUp();
   const mode = useFeedStatusMode();
-  const bottom = useMeraButtonBottom();
+  const tabBottom = useMeraButtonBottom();
   const insets = useSafeAreaInsets();
+  const bottom = root ? insets.bottom + MERA_BUTTON_BAR_GAP : tabBottom;
   // The SHOWN header's bottom: a top-corner button never follows a header
-  // that collapses on scroll (owner ruling: nothing jumps while reading).
-  const headerBottom = useHeaderBottom() ?? insets.top + HEADER_FALLBACK;
+  // that collapses on scroll (owner ruling: nothing jumps while reading). A
+  // root push reports none of its own, so it never reads a tab's.
+  const reportedHeader = useHeaderBottom();
+  const headerBottom = (root ? null : reportedHeader) ?? insets.top + HEADER_FALLBACK;
+  const article = root ? props.article : undefined;
+  const context = useMemo(() => (article ? articleChatContext(article) ?? undefined : undefined), [article]);
 
   // No flash on launch: nothing renders until the stored corner is known.
   // Idempotent, so hydrateAllStores reading it first only makes this instant.
@@ -210,23 +245,19 @@ const MeraButtonHost: React.FC<{ tab: TabId }> = ({ tab }) => {
     [size, headerBottom, bottom],
   );
 
-  const progress = tabSwipeProgress(tab);
+  const progress = tabSwipeProgress(tab ?? 'you');
   const settingsIndex = usePageOrder('you').indexOf('settings');
   const fadeOnYou = tab === 'you';
   const fadeStyle = useAnimatedStyle(() => ({
     opacity: fadeOnYou ? youFade(progress.value, settingsIndex) : 1,
   }));
 
-  const page = surface !== null && tabForSurface(surface) === tab ? pageKeyFor(surface) : null;
-  if (
-    !hydrated ||
-    !focused ||
-    surface === null ||
-    page === null ||
-    chatOpen ||
-    arrangeOpen ||
-    keyboardUp
-  ) {
+  const page: MeraPageKey | null = root
+    ? 'settings'
+    : surface !== null && tabForSurface(surface) === tab
+      ? pageKeyFor(surface)
+      : null;
+  if (!hydrated || !focused || page === null || chatOpen || (!root && (arrangeOpen || keyboardUp))) {
     return null;
   }
 
@@ -240,7 +271,16 @@ const MeraButtonHost: React.FC<{ tab: TabId }> = ({ tab }) => {
       }}
       testID="mera-button-overlay"
     >
-      {frame && <Placed surface={surface} page={page} mode={mode} frame={frame} />}
+      {frame && (
+        <Placed
+          surface={root ? (article ? 'article' : 'search') : (surface ?? '')}
+          page={page}
+          mode={mode}
+          frame={frame}
+          context={context}
+          rideKeyboard={root}
+        />
+      )}
     </Animated.View>
   );
 };

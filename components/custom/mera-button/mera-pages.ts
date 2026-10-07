@@ -51,6 +51,8 @@ const POOLS: Record<MeraPageKey, readonly HintDef[]> = {
   ],
   facts: [{ key: 'meraHints.facts.change' }, { key: 'meraHints.facts.remove' }],
   sources: [{ key: 'meraHints.sources.whoBehind', web: true }, { key: 'meraHints.sources.whatFollow' }],
+  // The generic set (owner M5). The second reuses an existing chip string.
+  settings: [{ key: 'meraHints.settings.whatCanYouDo' }, { key: 'floatingChat.chipDataHandlingMessage' }],
 };
 
 const DIRECT: Readonly<Record<string, MeraPageKey>> = {
@@ -71,6 +73,8 @@ const DIRECT: Readonly<Record<string, MeraPageKey>> = {
   hygiene: 'profile',
   'not-interested': 'profile',
   activity: 'profile',
+  // A root push: its own host (MeraButtonHost root) shows the generic set.
+  search: 'settings',
 };
 
 /** Pages whose chat edits facts: their close may owe the combination topic
@@ -85,8 +89,8 @@ const FACT_EDITING: ReadonlySet<MeraPageKey> = new Set([
 
 /**
  * The page key for a surface id, or null where the button does not show:
- * settings and its sub-screens, search, and anything this table does not know
- * (a hidden button beats one that opens the wrong chat).
+ * settings and its sub-screens, and anything this table does not know (a
+ * hidden button beats one that opens the wrong chat).
  */
 export function pageKeyFor(surface: SurfaceId | null | undefined): MeraPageKey | null {
   if (!surface) return null;
