@@ -528,9 +528,9 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                             />
                         )}
                         {/* Followed since, and the AI disclosure when the
-                            headline is Mera's (EU AI Act Art. 50): one line. */}
+                            headline is Mera's (EU AI Act Art. 50). Wraps, never truncates. */}
                         {followedSinceMs || isLlmHeadline ? (
-                            <Text size="xs" numberOfLines={1} style={{ color: colors.ink3, marginTop: 2 }}>
+                            <Text size="xs" style={{ color: colors.ink3, marginTop: 2 }}>
                                 {[
                                     followedSinceMs
                                         ? t('trackedStories.followedSince', {
