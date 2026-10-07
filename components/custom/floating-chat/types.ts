@@ -294,6 +294,9 @@ export type ChatThreadItem =
       interrupted: boolean;
       /** Turn touched persona data, so its settled line is kept in scroll-back. */
       changedData: boolean;
+      /** The most recent turn of the live conversation. Its folded box stays
+       *  ("Done in N steps") until the next message is sent. */
+      latest: boolean;
     }
   /**
    * 2 or 3 tap chips from an `ask_choice` call.

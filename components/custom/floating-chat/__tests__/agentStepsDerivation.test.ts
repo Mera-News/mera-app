@@ -303,16 +303,53 @@ describe('collapse, and what survives in scroll-back', () => {
     );
   });
 
-  it('drops a settled box even for a turn that changed data (ux2 M2: no empty Done row)', () => {
+  it('keeps the LATEST finished turn as its fold, changed data or not', () => {
+    for (const name of ['saveExtractedFacts', 'lookup_place']) {
+      const items = deriveThreadItems(
+        base({ live: [user('u1'), asst('a1', 'ok', [tool(name, 'done')])] }),
+      );
+      expect(boxes(items)).toHaveLength(1);
+      expect(boxes(items)[0]).toMatchObject({ collapsed: true, latest: true });
+    }
+  });
+
+  it('drops an older settled box once the next message is sent, even one that changed data (ux2 M2)', () => {
     const items = deriveThreadItems(
-      base({ live: [user('u1'), asst('a1', 'ok', [tool('saveExtractedFacts', 'done')])] }),
+      base({ live: [user('u1'), asst('a1', 'ok', [tool('saveExtractedFacts', 'done')]), user('u2')] }),
     );
     expect(boxes(items)).toHaveLength(0);
   });
 
-  it('SUPPRESSES a settled box for a pure-read turn', () => {
+  it('SUPPRESSES an older settled box for a pure-read turn', () => {
     const items = deriveThreadItems(
-      base({ live: [user('u1'), asst('a1', 'ok', [tool('lookup_place', 'done')])] }),
+      base({ live: [user('u1'), asst('a1', 'ok', [tool('lookup_place', 'done')]), user('u2')] }),
+    );
+    expect(boxes(items)).toHaveLength(0);
+  });
+
+  it('keeps an older settled box when something FAILED', () => {
+    const items = deriveThreadItems(
+      base({ live: [user('u1'), asst('a1', 'ok', [tool('lookup_place', 'error')]), user('u2')] }),
+    );
+    expect(boxes(items)).toHaveLength(1);
+    expect(boxes(items)[0]).toMatchObject({ failedCount: 1, latest: false });
+  });
+
+  it('never folds a box from an earlier conversation as the latest', () => {
+    const items = deriveThreadItems(
+      base({
+        history: [
+          { id: 'h1', role: 'user', content: 'x', createdAt: 1, conversationId: 'old' },
+          {
+            id: 'h2',
+            role: 'assistant',
+            content: 'ok',
+            createdAt: 2,
+            conversationId: 'old',
+            toolCalls: [tool('lookup_place', 'done')],
+          },
+        ] as never,
+      }),
     );
     expect(boxes(items)).toHaveLength(0);
   });

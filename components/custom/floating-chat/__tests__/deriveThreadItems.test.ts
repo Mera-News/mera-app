@@ -241,9 +241,9 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', 'Saved!', [tc])] }),
     );
 
-    // A settled turn with nothing failed shows no steps box (ux2 M2): the
-    // cards are the result. Pinned here rather than filtered blindly.
-    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(0);
+    // The latest finished turn keeps its folded box ("Done in N steps");
+    // an older one would drop it (ux2 M2). Pinned here rather than filtered.
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
 
     // message + fact-card + one topic-plan-card per saved fact (Wave 11).
     const only = cards(items);
@@ -308,8 +308,8 @@ describe('deriveThreadItems', () => {
     );
     expect(items.some((i) => i.kind === 'fact-card')).toBe(false);
     expect(cards(items)).toHaveLength(1); // just the message
-    // A settled turn with nothing failed shows no steps box (ux2 M2).
-    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(0);
+    // The latest finished turn keeps its fold, the only steps item.
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
   });
 
   it('derives a deleted card, preferring result.deletedStatements', () => {
@@ -432,9 +432,8 @@ describe('deriveThreadItems', () => {
     );
     // Message is skipped (empty content) but the fact-card + topic-plan survive.
     expect(keys(cards(items))).toEqual(['card-a1-0', 'topic-plan-a1-0-f1']);
-    // A settled box with nothing failed is not shown (ux2 M2): the cards are
-    // the result, and an empty "Done" row under them was noise.
-    expect(keys(items)).not.toContain('agent-steps-a1');
+    // The latest finished turn's box stays as its fold, next to the cards.
+    expect(keys(items)).toContain('agent-steps-a1');
   });
 
   it('produces stable, unique keys across history and live', () => {
@@ -791,7 +790,8 @@ describe('deriveThreadItems', () => {
     );
     expect(items.some((i) => i.kind === 'proposal-card')).toBe(false);
     expect(items.some((i) => i.kind === 'fact-card')).toBe(false);
-    expect(keys(items)).toEqual(['live-a1']);
+    // The message, then the latest turn's folded steps box, and no card.
+    expect(keys(items)).toEqual(['live-a1', 'agent-steps-a1']);
   });
 
   it('normalizes persisted toolCalls: null into undefined and derives cards from history', () => {
@@ -871,14 +871,24 @@ describe('turn terminals reach the steps box', () => {
     expect(box?.terminal).toBe('leg-cap');
   });
 
-  it('still drops a settled pure-read box with NO terminal, so the thread stays quiet', () => {
+  it('still drops an OLDER settled pure-read box with NO terminal, so the thread stays quiet', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', 'Sure.', [tc]), userMsg('u2')],
+        turnActive: false,
+      }),
+    );
+    expect(box).toBeUndefined();
+  });
+
+  it('keeps the LATEST settled pure-read box as its fold', () => {
     const box = boxFor(
       base({
         live: [userMsg('u1'), assistantMsg('a1', 'Sure.', [tc])],
         turnActive: false,
       }),
     );
-    expect(box).toBeUndefined();
+    expect(box).toMatchObject({ collapsed: true, latest: true, terminal: null });
   });
 });
 

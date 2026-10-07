@@ -87,12 +87,22 @@ describe('ux2 D7: a skipped card leaves once the user moves on', () => {
 });
 
 describe('ux2 D7: no empty Done row after an ordinary turn', () => {
-  it('a settled turn that staged a card shows the card and no steps box', () => {
+  it('an older settled turn that staged a card shows the card and no steps box', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Hoorn' },
+      { id: 'a1', role: 'assistant', content: 'Offered.', toolCalls: [staged('Lives in Hoorn', false)] },
+      { id: 'u2', role: 'user', content: 'Thanks' },
+    ]);
+    expect(kindsOf(items)).not.toContain('agent-steps');
+    expect(kindsOf(items)).toContain('fact-choice-card');
+  });
+
+  it('the latest settled turn keeps its folded box beside the card', () => {
     const items = derive([
       { id: 'u1', role: 'user', content: 'I live in Hoorn' },
       { id: 'a1', role: 'assistant', content: 'Offered.', toolCalls: [staged('Lives in Hoorn', false)] },
     ]);
-    expect(kindsOf(items)).not.toContain('agent-steps');
+    expect(kindsOf(items)).toContain('agent-steps');
     expect(kindsOf(items)).toContain('fact-choice-card');
   });
 

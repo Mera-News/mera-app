@@ -937,6 +937,7 @@ function buildTurnBoxes(
         isLast && !(agentTerminal === 'no-proposal' && turn.offered) ? (agentTerminal ?? null) : null,
       interrupted,
       changedData: changedDataFrom(full),
+      latest: isLast && !stale,
     });
   }
   return out;
@@ -1030,9 +1031,13 @@ function placeProposalCardsLast(items: ChatThreadItem[]): ChatThreadItem[] {
  */
 function keepBox(box: AgentStepsItem): boolean {
   if (!box.collapsed) return true;
-  // NOT `changedData` (ux2 M2): an ordinary settled turn that staged a card
-  // showed an empty "✓ Done" row after every message. The card is the result.
-  return box.failedCount > 0 || box.terminal !== null;
+  // The LATEST finished turn keeps its fold, "Done in N steps", which opens
+  // again on a tap (owner, navx2: FinalMeraChat #9 for the latest turn only).
+  // Once the next message is sent it is no longer the latest and the M2 rule
+  // applies: NOT `changedData` (ux2 M2), because an ordinary settled turn
+  // left a "Done" row after every message. Only a failed step or a terminal
+  // sentence keeps an older box.
+  return box.latest || box.failedCount > 0 || box.terminal !== null;
 }
 
 // ---------------------------------------------------------------------------
