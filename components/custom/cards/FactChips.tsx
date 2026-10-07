@@ -5,8 +5,20 @@ import { Text } from '@/components/ui/text';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
-import { reasonBoxColors } from '@/lib/relevance-utils';
+import { themedStyles, tint } from '@/lib/theme/tokens';
 import React, { useEffect, useState } from 'react';
+
+/**
+ * The note box's inks (SuggestionCard board), shared by the note and these
+ * chips. Dark: a neutral darkening, plain black at 25% with no hue to fight
+ * the gradient behind the card; light: a faint ink wash. The AI tag is ink-2
+ * so it stays subordinate to the note.
+ */
+export const useNoteInk = themedStyles((c, mode) => ({
+    box: mode === 'dark' ? tint(c.base, 0.25) : tint(c.ink, 0.06),
+    ink: c.ink,
+    ai: c.ink2,
+}));
 
 /**
  * The persona facts whose topics found a suggestion (`userTopicIds`). Queried
@@ -53,6 +65,7 @@ export function useMatchedFacts(topicIds: string[] | null | undefined): Fact[] {
  */
 const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicIds }) => {
     const facts = useMatchedFacts(topicIds);
+    const note = useNoteInk();
     if (facts.length === 0) return null;
     return (
         <HStack className="flex-wrap justify-end" space="xs" testID="fact-chips">
@@ -60,9 +73,9 @@ const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicI
                 <Box
                     key={fact.id}
                     className="px-2.5 py-1 rounded-full mb-1"
-                    style={{ backgroundColor: reasonBoxColors.backgroundColor }}
+                    style={{ backgroundColor: note.box }}
                 >
-                    <Text size="2xs" style={{ color: reasonBoxColors.textColor, fontWeight: '600' }} numberOfLines={1}>
+                    <Text size="2xs" style={{ color: note.ink, fontWeight: '600' }} numberOfLines={1}>
                         {primaryStatement(fact.statement)}
                     </Text>
                 </Box>

@@ -20,10 +20,8 @@ interface AiDisclosureCaptionProps {
      */
     variant?: AiDisclosureCaptionVariant;
     /**
-     * Icon + text colour. Defaults to the muted typography token, which reads
-     * on the dark card background. Inside the reason box pass a lighter value
-     * — that box hardcodes `#374151` (see `reasonBoxColors`), and the default
-     * muted grey does not clear 4.5:1 against it. `#D1D5DB` measures 7.0:1.
+     * Icon + text colour. Defaults to ink-3; the note box passes its own
+     * (`useNoteInk().ai` in cards/FactChips).
      */
     color?: string;
     /**

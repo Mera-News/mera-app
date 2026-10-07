@@ -2,13 +2,12 @@ import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import MeraLogo from '@/components/custom/MeraLogo';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import { useMatchedFacts } from '@/components/custom/cards/FactChips';
+import { useMatchedFacts, useNoteInk } from '@/components/custom/cards/FactChips';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { MOTION, SPRING } from '@/lib/motion';
-import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -107,7 +106,7 @@ function useWaitingFacts(topicIds?: string[] | null): string[] {
 /** The waiting line: the fact(s) that found the article, then the wait. */
 export const WaitingLine: React.FC<{ facts: string[] }> = ({ facts }) => {
     const { t } = useTranslation();
-    const ink = { color: reasonBoxColors.textColor };
+    const ink = { color: useNoteInk().ink };
     if (facts.length === 1) {
         return (
             <Text size={NOTE_TOKEN} style={ink}>
@@ -146,6 +145,7 @@ const WaitingFacts: React.FC<{ topicIds?: string[] | null }> = ({ topicIds }) =>
 
 /** The note's words rising in one by one over the laid-out (hidden) note. */
 const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxHeight }) => {
+    const note = useNoteInk();
     const words = text.split(' ').filter(Boolean);
     const stagger = Math.min(NOTE_REVEAL.stagger, (NOTE_REVEAL.total - NOTE_REVEAL.word) / Math.max(1, words.length));
     return (
@@ -162,7 +162,7 @@ const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxH
                         .delay(Math.round(i * stagger))
                         .withInitialValues({ opacity: 0, transform: [{ translateY: 2 }] })}
                 >
-                    <Text size={NOTE_TOKEN} bold style={{ color: reasonBoxColors.textColor }}>
+                    <Text size={NOTE_TOKEN} bold style={{ color: note.ink }}>
                         {`${w} `}
                     </Text>
                 </Animated.View>
@@ -201,6 +201,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     const lineHeight = useNoteLineHeight();
     const reduceMotion = useReducedMotion();
     const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const note = useNoteInk();
     const pending = !reason ? pendingMode : undefined;
 
     // An in-mount transition only: a box first drawn with its note never
@@ -238,7 +239,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
         : null;
 
     const boxStyle = {
-        backgroundColor: reasonBoxColors.backgroundColor,
+        backgroundColor: note.box,
         paddingTop: 12 - BADGE_ROW_PADDING,
         ...(boxHeight ? { height: boxHeight, overflow: 'hidden' as const } : null),
     };
@@ -252,7 +253,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                     testID={testID ? `${testID}-writing` : undefined}
                     {...hideSlot}
                 >
-                    <MeraLogo size={WAIT_LOGO_SIZE} animated scrollCards color={reasonBoxColors.textColor} />
+                    <MeraLogo size={WAIT_LOGO_SIZE} animated scrollCards color={note.ink} />
                     <View style={{ flex: 1 }}>
                         <WaitingFacts topicIds={topicIds} />
                     </View>
@@ -261,7 +262,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
         );
     }
 
-    const noteStyle = { color: reasonBoxColors.textColor, ...(wordByWord ? { opacity: 0 } : null) };
+    const noteStyle = { color: note.ink, ...(wordByWord ? { opacity: 0 } : null) };
     return (
         <Box testID={testID} className="rounded-lg px-3 pb-3" style={boxStyle}>
             <HStack
@@ -274,7 +275,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                     <RelevanceChip relevance={relevance} />
                 </Animated.View>
                 {reason ? (
-                    <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={aiDisclosureColor} />
+                    <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={note.ai} />
                 ) : pending === 'not-yet' ? (
                     <Animated.View
                         entering={sawWriting ? FadeIn.duration(250) : undefined}
@@ -282,7 +283,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                         testID={testID ? `${testID}-not-yet` : undefined}
                         {...hideSlot}
                     >
-                        <Text size={NOTE_TOKEN} style={{ color: reasonBoxColors.textColor, textAlign: 'right' }}>
+                        <Text size={NOTE_TOKEN} style={{ color: note.ink, textAlign: 'right' }}>
                             {t('feed.reasonNotYet')}
                         </Text>
                     </Animated.View>
