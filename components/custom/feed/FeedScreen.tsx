@@ -143,6 +143,7 @@ import { useForYouSuggestionsHydrated, type ForYouSuggestion } from '@/lib/store
 import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { MOTION } from '@/lib/motion';
+import { useColors } from '@/lib/theme/tokens';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
   useForYouLastProcessingRunFinishedAt,
@@ -164,7 +165,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 
-const REFRESH_TINT = '#EDA77E';
 
 /** Gap between the collapsing header's bottom edge and the first card.
  *  Matches the Interests page's (`DashboardSectionsFeed`, +12). */
@@ -321,6 +321,7 @@ export interface FeedScreenProps {
 
 const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) => {
   const { t } = useTranslation();
+  const colors = useColors();
   const listEndClearance = useListEndClearance();
   // "Focused" for everything this screen used to gate on the tab: the visible
   // page of the focused tab. Leaving the page is a blur (skips flush, ingest
@@ -1060,11 +1061,11 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     if (errorMessage) {
       return (
         <Box className="items-center justify-center py-20 px-6" testID="feed-error">
-          <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
-          <Text size="md" className="text-error-400 text-center font-semibold mb-1">
+          <Icon as={AlertCircleIcon} size="xl" className="text-negative mb-3" />
+          <Text size="md" className="text-negative text-center font-semibold mb-1">
             {t('errors.failedToLoad')}
           </Text>
-          <Text size="sm" className="text-typography-400 text-center">
+          <Text size="sm" className="text-ink-3 text-center">
             {errorMessage}
           </Text>
         </Box>
@@ -1179,8 +1180,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
             testID="feed-refresh"
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={REFRESH_TINT}
-            colors={[REFRESH_TINT]}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
             // Push the spinner below the absolute collapsing header so it isn't
             // hidden behind it (Android).
             progressViewOffset={headerHeight}

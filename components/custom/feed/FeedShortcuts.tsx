@@ -17,7 +17,7 @@ import { Text } from '@/components/ui/text';
 import type { PageId } from '@/components/custom/nav/page-registry';
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import { flagEmoji } from '@/components/custom/nav/PageStrip';
-import { COLORS } from '@/lib/theme/tokens';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 import { useWorldPages } from '@/lib/explore/world-pages';
 import { useForYouLastProcessingRunFinishedAt } from '@/lib/stores/selectors';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -92,6 +92,8 @@ interface Shortcut {
 
 const FeedShortcuts: React.FC = () => {
   const { t } = useTranslation();
+  const c = useColors();
+  const styles = useStyles();
   const { pages } = useWorldPages();
   const hasSaved = useHasSaved();
   const hasStories = useHasStories();
@@ -156,21 +158,21 @@ const FeedShortcuts: React.FC = () => {
               {r.flag ? (
                 <Text style={styles.flag}>{r.flag}</Text>
               ) : (
-                <MaterialIcons name={r.icon ?? 'public'} size={22} color={COLORS.dark.accent} />
+                <MaterialIcons name={r.icon ?? 'public'} size={22} color={c.accent} />
               )}
             </View>
             <View style={styles.texts}>
-              <Text size="xs" bold style={{ color: '#F2BFA0' }} numberOfLines={1}>
+              <Text size="xs" bold style={{ color: c.accentText }} numberOfLines={1}>
                 {r.title}
               </Text>
-              <Text size="md" className="text-white" numberOfLines={2}>
+              <Text size="md" className="text-ink" numberOfLines={2}>
                 {r.caption}
               </Text>
             </View>
             <MaterialIcons
               name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'}
               size={22}
-              color="rgb(163,163,163)"
+              color={c.ink2}
             />
           </View>
           <Pressable
@@ -186,15 +188,15 @@ const FeedShortcuts: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   wrap: { gap: 10, marginTop: 4, marginHorizontal: 2 },
-  header: { color: 'rgb(163,163,163)' },
+  header: { color: c.ink2 },
   row: {
     minHeight: 64,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderColor: c.line,
+    backgroundColor: c.surface,
     justifyContent: 'center',
   },
   visual: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
@@ -202,12 +204,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(231,138,83,0.16)',
+    backgroundColor: tint(c.accent, 0.16),
     alignItems: 'center',
     justifyContent: 'center',
   },
   flag: { fontSize: 20, lineHeight: 24 },
   texts: { flex: 1, gap: 2 },
-});
+}));
 
 export default FeedShortcuts;

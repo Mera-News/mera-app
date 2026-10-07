@@ -1,11 +1,10 @@
 import { CardGlassPlate } from '@/components/custom/cards/CardGlassPlate';
 import { Box } from '@/components/ui/box';
 import { HERO_IMAGE_CLASS } from '@/lib/layout/card-metrics';
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { View } from 'react-native';
 
-/** Placeholder bar tone: a faint lift over the card plate. */
-const BAR = 'rgba(255,255,255,0.08)';
 
 /**
  * Two card-shaped placeholders shown while the Feed's local cache is still
@@ -21,14 +20,17 @@ const BAR = 'rgba(255,255,255,0.08)';
  * Hidden from VoiceOver/TalkBack: grey bars mean nothing read aloud. The
  * caller announces "Loading your feed" once instead.
  */
-const FeedSkeleton: React.FC = () => (
+const FeedSkeleton: React.FC = () => {
+    // Placeholder bar tone: a faint lift over the card plate.
+    const BAR = useColors().trackFill;
+    return (
     <View
         testID="feed-skeleton"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
     >
         {[0, 1].map((i) => (
-            <Box key={i} className="mb-3 rounded-2xl overflow-hidden border border-white/10">
+            <Box key={i} className="mb-3 rounded-2xl overflow-hidden border border-line">
                 <CardGlassPlate />
                 <Box className={`w-full ${HERO_IMAGE_CLASS}`} style={{ backgroundColor: BAR }} />
                 <Box className="px-4 py-4">
@@ -41,5 +43,6 @@ const FeedSkeleton: React.FC = () => (
         ))}
     </View>
 );
+};
 
 export default FeedSkeleton;
