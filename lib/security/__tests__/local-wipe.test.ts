@@ -50,8 +50,10 @@ jest.mock('@/lib/auth-client', () => ({
 }));
 
 const mockDeleteSetting = jest.fn(async (key: string) => { calls.push(`deleteSetting:${key}`); });
+const mockSetSetting = jest.fn(async (key: string, _value: string) => { calls.push(`setSetting:${key}`); });
 jest.mock('@/lib/database/services/setting-service', () => ({
     deleteSetting: (k: string) => mockDeleteSetting(k),
+    setSetting: (k: string, v: string) => mockSetSetting(k, v),
 }));
 
 // expo-file-system, for the staged-backup step. `exists` is a getter on the
@@ -135,6 +137,17 @@ describe('wipeAllLocalUserData — the complete list', () => {
         expect(mockLogoutRevenueCat).toHaveBeenCalled();
         expect(mockPinSetState).toHaveBeenCalled();
         expect(mockClearAllStores).toHaveBeenCalled();
+    });
+
+    it('keepSession writes has_launched back AFTER the database reset, so the next launch keeps the session', async () => {
+        await wipeAllLocalUserData({ keepSession: true });
+        expect(mockSetSetting).toHaveBeenCalledWith('has_launched', '1');
+        expect(calls.indexOf('setSetting:has_launched')).toBeGreaterThan(calls.indexOf('clearAllStores'));
+    });
+
+    it('a full wipe (logout) leaves has_launched gone: that device is signed out', async () => {
+        await wipeAllLocalUserData();
+        expect(mockSetSetting).not.toHaveBeenCalled();
     });
 
     it('wipes the keychain BEFORE the database, so an interrupted wipe stays detectable', async () => {

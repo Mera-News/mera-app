@@ -20,6 +20,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import logger from '@/lib/logger';
+import { HAS_LAUNCHED_SETTING_KEY } from '@/lib/security/install-boundary';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
 
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
@@ -260,6 +261,15 @@ export async function wipeAllLocalUserData(
   // every in-memory Zustand store and the E2EE attestation cache.
   const { clearAllStores } = require('@/lib/stores');
   await clearAllStores();
+
+  // An account switch is the same install. The reset above took `has_launched`
+  // with it, and until the incoming account is stamped the next launch's
+  // install boundary would read "no has_launched, no cached_user_id" as a fresh
+  // install and delete the session this wipe just kept.
+  if (opts.keepSession) {
+    const { setSetting } = require('@/lib/database/services/setting-service');
+    await setSetting(HAS_LAUNCHED_SETTING_KEY, '1');
+  }
 }
 
 /**
