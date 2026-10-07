@@ -1,151 +1,205 @@
-// The Library's History page (FinalLibrary #7-10): the publications whose
-// sites the reader opened in the last 30 days as a table (flag, publication,
-// visits, last read), then the Stats as plain cards with their own ?, and one
-// floating Share above the Mera button. The page id stays `visited`.
-//
-// Visits are RAW visits (taps) summed across every name a publication is known
-// by (`mergeVisitedByName`); the publication page's "opened N times" counts the
-// same rows. Subscribe and Support live on the publication page only, so this
-// page makes no per-row network lookup.
-//
-// The Stats are gated per card (`availableCards`), never on `hasAnyData`:
-// "Clear viewing history" empties the table and the visit cards but not Right
-// now, which stays while there are saves or followed stories.
-
 import TapPressable from '@/components/custom/cards/TapPressable';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
-import PageExplainerSheet from '@/components/custom/nav/PageExplainerSheet';
-import type { PageExplainer } from '@/components/custom/nav/page-registry';
-import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
-import StatFigure, { statLabel } from '@/components/custom/share-stats/stat-figures';
-import { SourceFlag } from '@/components/custom/SourceFlag';
-import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
+import { monogramHueOf, monogramInks, monogramOf } from '@/components/custom/publication-page/publication-format';
+import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
+import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { getTopVisitedPublications, type VisitedPublication } from '@/lib/database/services/publication-visit-service';
+import {
+    getTopVisitedPublications,
+    type VisitedPublication,
+} from '@/lib/database/services/publication-visit-service';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import logger from '@/lib/logger';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
-import { availableCards, emptyReadingStats, type ReadingStats } from '@/lib/stats/reading-stats';
-import { loadReadingStats } from '@/lib/stats/reading-stats-source';
-import { calendarDaysAgo, formatDayMonth, mergeVisitedByName } from '@/lib/stats/visited-publications';
+import { formatDayMonth, hasClearLeader, mergeVisitedByName, subscribedNameSet } from '@/lib/stats/visited-publications';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
-import { COLORS, useColors } from '@/lib/theme/tokens';
+import { normPublicationName } from '@/lib/feed-grouping/geo-language-priority';
+import {
+    resolvePublisherForSourceName,
+    type ResolvedPublisher,
+} from '@/lib/subscriptions/publisher-lookup';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { I18nManager, type ListRenderItem, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { I18nManager, ListRenderItem, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 
-/** "How Stats works": the ? beside "Your last 30 days" (FinalLibrary #10). */
-export const STATS_EXPLAINER: PageExplainer = {
-    titleKey: 'library.explainer.stats.title',
-    paragraphKeys: ['library.explainer.stats.what', 'library.explainer.stats.how1', 'library.explainer.stats.how2'],
-    chapter: 'library',
-    slide: 'stats',
-};
+// The Library's Visited page: the publications the reader opened at the source
+// in the last 30 days, most opened first, with a way to support them.
+//
+// Every figure comes from `publication_visits`, which already exists to run
+// this list (invariant 9: nothing new is recorded). Rows are merged by
+// normalised name before ranking, so one outlet filed under two spellings or
+// countries cannot split the top card.
+//
+// Subscribe and Support open the publisher's own subscribe page through the
+// shared `useSubscribeFlow`, mounted ONCE here with ONE confirm dialog. They
+// render only for a publisher the lookup resolved WITH a `subscriptionUri`;
+// the lookup fails closed, so a wrong guess never sends anyone to somebody
+// else's paywall. "I already pay" is the same durable write the publication
+// page's Subscribed state reads (`confirmDirectly` -> `addSubscription`).
 
-const COL_VISITS = 56;
-const COL_LAST = 84;
-const SHARE_H = 44;
+const INK = {
+    body: 'rgb(212,212,212)',
+    muted: 'rgb(163,163,163)',
+    accent: '#E78A53',
+    onAccent: '#121113',
+    paid: '#A9DCC7',
+} as const;
+
+const ROW_SURFACE = {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(255,255,255,0.10)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
+} as const;
+
+/** Visible pill height and the 44pt frame it sits in (given back by margins). */
+const PILL_H = 34;
+const PILL_FRAME = 44;
 
 interface Props {
-    /** False while a warmed neighbour: reads once, then re-reads silently each
-     *  time it becomes visible. Unset = always active. */
+    /** False while a warmed neighbour in a swipe window: reads once, then
+     *  re-reads silently each time it becomes visible. Unset = always active. */
     readonly active?: boolean;
+    /** The host's collapsing-header scroll handler. Needs the Animated list. */
     readonly scrollHandler?: ReturnType<typeof useAnimatedScrollHandler>;
+    /** The host's header height, as the list's top padding. */
     readonly headerHeight?: number;
-    /** List-end padding: the tab bar and the Mera button. */
+    /** List-end padding. Defaults to the tab-bar clearance plus a gap. */
     readonly listEndPadding?: number;
-    /** Opens History's explainer (the ? beside the page title). */
-    readonly onExplain?: () => void;
+    /** Drawn after the footnote (the host's "How this page works" row). */
+    readonly footer?: React.ReactElement | null;
 }
 
-function lastReadLabel(t: (k: 'common.today' | 'common.yesterday') => string, ms: number, locale?: string): string {
-    const days = calendarDaysAgo(ms, Date.now());
-    if (days <= 0) return t('common.today');
-    if (days === 1) return t('common.yesterday');
-    return formatDayMonth(ms, locale);
+/** One publisher lookup per RENDERED row (FlatList windowing bounds it), cached
+ *  per session by the lookup itself. Null until it answers, and null when it
+ *  cannot say: every caller treats null as "offer nothing". */
+function useResolvedPublisher(name: string, countryCode: string | null): ResolvedPublisher | null {
+    const [resolved, setResolved] = useState<ResolvedPublisher | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        void resolvePublisherForSourceName(name, countryCode).then((r) => {
+            if (!cancelled) setResolved(r);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [name, countryCode]);
+    return resolved;
 }
 
-const TableRow: React.FC<{
-    readonly item: VisitedPublication;
-    readonly last: boolean;
-    readonly locale?: string;
-    readonly onOpen: (item: VisitedPublication) => void;
-}> = ({ item, last, locale, onOpen }) => {
-    const { t } = useTranslation();
-    const c = useColors();
-    const name = useDisplayPublication(item.publicationName);
-    const lastRead = lastReadLabel(t, item.lastVisitedAt, locale);
+const Monogram: React.FC<{ name: string; size: number }> = ({ name, size }) => {
+    const inks = monogramInks(monogramHueOf(name));
     return (
-        <TapPressable
-            onPress={() => onOpen(item)}
-            accessibilityRole="button"
-            accessibilityLabel={`${name}, ${t('library.history.colVisits')} ${item.visitCount}, ${t('library.history.colLastRead')} ${lastRead}`}
-            testID={`history-row-${item.publicationName}`}
-            style={[styles.row, { backgroundColor: c.surface, borderColor: c.line }, last ? styles.rowLast : null]}
+        <View
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{
+                width: size,
+                height: size,
+                borderRadius: 10,
+                backgroundColor: inks.fill,
+                borderColor: inks.border,
+                borderWidth: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
         >
-            <View style={styles.rowInner} pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                <SourceFlag countryCode={item.countryCode} size="sm" />
-                <Text numberOfLines={1} style={[styles.cellName, { color: c.ink }]}>
-                    {name}
-                </Text>
-                <Text style={[styles.cellNum, { color: c.ink, width: COL_VISITS }]}>{String(item.visitCount)}</Text>
-                <Text numberOfLines={1} style={[styles.cellNum, { color: c.ink2, width: COL_LAST }]}>
-                    {lastRead}
-                </Text>
-                <MaterialIcons name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} size={18} color={c.ink3} />
-            </View>
-        </TapPressable>
-    );
-};
-
-/** One Stats card as it sits on the page: its name, then its figure. */
-export const StatTile: React.FC<{ readonly id: ReturnType<typeof availableCards>[number]; readonly stats: ReadingStats }> = ({ id, stats }) => {
-    const { t } = useTranslation();
-    const c = useColors();
-    return (
-        <View style={[styles.tile, { backgroundColor: c.surface, borderColor: c.line }]} testID={`stat-tile-${id}`}>
-            <Text style={{ color: c.ink2, fontSize: 13, lineHeight: 18, marginBottom: 6 }}>{statLabel(t, id)}</Text>
-            <StatFigure id={id} stats={stats} variant="tile" />
+            <Text style={{ color: inks.letter, fontSize: 15, lineHeight: 20, fontWeight: '700' }}>
+                {monogramOf(name)}
+            </Text>
         </View>
     );
 };
+
+const RowGap: React.FC = () => <View style={{ height: 8 }} />;
+
+interface PillProps {
+    readonly label: string;
+    readonly a11yLabel: string;
+    readonly a11yHint?: string;
+    readonly filled: boolean;
+    readonly onPress: () => void;
+    readonly testID: string;
+}
+
+/** A 34pt pill inside a 44pt frame. Static styles only: a function `style`
+ *  on a Pressable is dropped on device in this app. */
+const Pill: React.FC<PillProps> = ({ label, a11yLabel, a11yHint, filled, onPress, testID }) => (
+    <Pressable
+        testID={testID}
+        onPress={onPress}
+        // Subscribe and Support leave the app, so they are links; the hint
+        // says where to. "I already pay" stays here and is a button.
+        accessibilityRole={a11yHint ? 'link' : 'button'}
+        accessibilityLabel={a11yLabel}
+        accessibilityHint={a11yHint}
+        style={{ minHeight: PILL_FRAME, justifyContent: 'center', marginVertical: -(PILL_FRAME - PILL_H) / 2 }}
+    >
+        <View
+            style={{
+                height: PILL_H,
+                paddingHorizontal: filled ? 14 : 12,
+                borderRadius: 999,
+                justifyContent: 'center',
+                backgroundColor: filled ? INK.accent : 'transparent',
+                borderWidth: filled ? 0 : 1,
+                borderColor: 'rgba(255,255,255,0.22)',
+            }}
+        >
+            <Text
+                numberOfLines={1}
+                style={{
+                    fontSize: 13,
+                    lineHeight: 18,
+                    fontWeight: filled ? '700' : '400',
+                    color: filled ? INK.onAccent : INK.body,
+                }}
+            >
+                {label}
+            </Text>
+        </View>
+    </Pressable>
+);
 
 const VisitedPublicationsList: React.FC<Props> = ({
     active = true,
     scrollHandler,
     headerHeight = 0,
     listEndPadding,
-    onExplain,
+    footer,
 }) => {
     const tabClearance = useTabBarClearance();
     const { t, i18n } = useTranslation();
-    const c = useColors();
     const [items, setItems] = useState<VisitedPublication[]>([]);
-    const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [statsExplainerOpen, setStatsExplainerOpen] = useState(false);
     const hasFetched = useRef(false);
+
+    const flow = useSubscribeFlow();
+    const { begin, confirmDirectly, isSubscribed } = flow;
+    const paidNames = useMemo(() => subscribedNameSet(flow.subscriptions.items), [flow.subscriptions.items]);
 
     const load = useCallback(async () => {
         try {
-            const [rows, loaded] = await Promise.all([getTopVisitedPublications(), loadReadingStats()]);
-            setItems(mergeVisitedByName(rows));
-            setStats(loaded);
+            const rows = mergeVisitedByName(await getTopVisitedPublications());
+            setItems(rows);
         } catch (error) {
-            logger.captureException(error, { tags: { screen: 'HistoryPage', method: 'load' } });
+            logger.captureException(error, {
+                tags: { screen: 'VisitedPublicationsList', method: 'load' },
+            });
         }
     }, []);
 
-    // Reload whenever the page becomes VISIBLE: a visit recorded meanwhile
-    // (open an article at its source, come back) must show without a pull.
+    // Reload whenever the page becomes VISIBLE (selected AND its tab focused):
+    // a visit recorded meanwhile (open an article at its source, come back)
+    // must show without the page changing.
     const isFocused = useIsFocusedSafe();
     const visible = active && isFocused;
     useEffect(() => {
@@ -164,65 +218,59 @@ const VisitedPublicationsList: React.FC<Props> = ({
         setRefreshing(false);
     }, [load]);
 
+    const showTopCard = hasClearLeader(items);
+    const rows = showTopCard ? items.slice(1) : items;
+
+    const isPaid = useCallback(
+        (item: VisitedPublication, publisher: ResolvedPublisher | null) =>
+            paidNames.has(normPublicationName(item.publicationName) ?? '') ||
+            (publisher != null && isSubscribed(publisher.publisherId)),
+        [paidNames, isSubscribed],
+    );
+
     const open = useCallback((item: VisitedPublication) => {
         openPublicationPage({ rawName: item.publicationName, countryCode: item.countryCode });
     }, []);
 
     const renderItem: ListRenderItem<VisitedPublication> = useCallback(
-        ({ item, index }) => <TableRow item={item} last={index === items.length - 1} locale={i18n?.language} onOpen={open} />,
-        [i18n?.language, open, items.length],
+        ({ item }) => (
+            <VisitedRow
+                item={item}
+                locale={i18n?.language}
+                isPaid={isPaid}
+                onOpen={open}
+                onSupport={(p) => void begin(p)}
+            />
+        ),
+        [i18n?.language, isPaid, open, begin],
     );
 
-    const cards = availableCards(stats);
-    const shareShown = active && cards.length > 0;
-    const listEnd = listEndPadding ?? tabClearance + 24;
-
-    const listHeader = (
-        <View>
-            <PageTitleRow title={t('library.history.title')} onExplain={onExplain} testID="history-title-row" />
-            {items.length > 0 ? (
-                <>
-                    <Text style={{ fontSize: 13, lineHeight: 18, color: c.ink2, marginBottom: 12 }} testID="history-intro">
-                        {t('library.history.intro')}
-                    </Text>
-                    <View style={[styles.row, styles.rowFirst, { backgroundColor: c.surface, borderColor: c.line }]}>
-                        <View style={styles.rowInner}>
-                            <Text style={[styles.headCell, { color: c.ink3, flex: 1 }]}>{t('library.history.colPublication')}</Text>
-                            <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_VISITS }]}>
-                                {t('library.history.colVisits')}
-                            </Text>
-                            <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_LAST + 18 }]}>
-                                {t('library.history.colLastRead')}
-                            </Text>
-                        </View>
-                    </View>
-                </>
-            ) : null}
-        </View>
-    );
+    const listHeader =
+        items.length > 0 ? (
+            <View style={{ gap: 12, marginBottom: 12 }}>
+                <Text style={{ fontSize: 14, lineHeight: 20, color: INK.body }} testID="visited-intro">
+                    {t('library.visited.intro')}
+                </Text>
+                {showTopCard ? (
+                    <TopCard
+                        item={items[0]}
+                        isPaid={isPaid}
+                        onOpen={open}
+                        onSubscribe={(p) => void begin(p)}
+                        onAlreadyPay={(p) => void confirmDirectly(p)}
+                    />
+                ) : null}
+            </View>
+        ) : null;
 
     const listFooter = (
-        <View style={{ gap: 12 }}>
+        <View style={{ marginTop: 4, gap: 16 }}>
             {items.length > 0 ? (
-                <Text style={{ fontSize: 12, lineHeight: 17, color: c.ink3, marginTop: 8 }} testID="history-footnote">
-                    {t('library.history.footnote')}
+                <Text style={{ fontSize: 12, lineHeight: 17, color: INK.muted }} testID="visited-footnote">
+                    {t('library.visited.footnote')}
                 </Text>
             ) : null}
-            {cards.length > 0 ? (
-                <View style={{ gap: 10, marginTop: 12 }} testID="history-stats">
-                    <PageTitleRow
-                        title={t('library.stats.title')}
-                        onExplain={() => setStatsExplainerOpen(true)}
-                        testID="stats-title-row"
-                    />
-                    {cards.map((id) => (
-                        <StatTile key={id} id={id} stats={stats} />
-                    ))}
-                    <Text style={{ fontSize: 12, lineHeight: 17, color: c.ink3, textAlign: 'center' }}>
-                        {t('library.stats.counted')}
-                    </Text>
-                </View>
-            ) : null}
+            {footer}
         </View>
     );
 
@@ -230,9 +278,10 @@ const VisitedPublicationsList: React.FC<Props> = ({
         <Box className="flex-1">
             <Animated.FlatList
                 testID="visited-publications-list"
-                data={items}
+                data={rows}
                 renderItem={renderItem}
-                keyExtractor={(item: VisitedPublication) => `${item.publicationName}::${item.countryCode ?? ''}`}
+                keyExtractor={(item: VisitedPublication) => item.publicationName}
+                ItemSeparatorComponent={RowGap}
                 ListHeaderComponent={listHeader}
                 ListFooterComponent={listFooter}
                 ListEmptyComponent={
@@ -240,92 +289,180 @@ const VisitedPublicationsList: React.FC<Props> = ({
                         <Box className="items-center justify-center py-20">
                             <Spinner size="large" />
                         </Box>
-                    ) : (
+                    ) : items.length === 0 ? (
                         <ForYouEmptyState
                             icon="history"
                             title={t('library.visited.emptyTitle')}
-                            body={t('library.history.emptyBody')}
-                            action={{
-                                label: t('library.history.learn'),
-                                onPress: () => openTutorial('library', 'history'),
-                                testID: 'history-learn',
-                            }}
+                            body={t('library.visited.emptyBody')}
                             testID="visited-publications-empty"
                         />
-                    )
+                    ) : null
                 }
                 contentContainerStyle={{
-                    paddingTop: headerHeight + 12,
-                    paddingHorizontal: 12,
-                    // Clear of the Mera button, and of the floating Share above it.
-                    paddingBottom: listEnd + (shareShown ? SHARE_H + 12 : 0),
+                    paddingTop: headerHeight + 14,
+                    paddingHorizontal: 14,
+                    paddingBottom: listEndPadding ?? tabClearance + 24,
                 }}
                 showsVerticalScrollIndicator={false}
                 onScroll={scrollHandler ?? notifyScrollTick}
-                onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor={COLORS.dark.accent}
-                        colors={[COLORS.dark.accent]}
+                        tintColor="#ffffff"
+                        colors={['#ffffff']}
                         progressViewOffset={headerHeight}
                     />
                 }
             />
-
-            {/* One Share for every card, above the Mera button (its top plus
-                the list-end gap, derived, never a literal). */}
-            {shareShown ? (
-                <Pressable
-                    onPress={() => router.push('/logged-in/app_container/library/share-stats')}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('library.stats.share')}
-                    testID="history-share"
-                    style={[styles.share, { bottom: listEnd, backgroundColor: c.accent }]}
-                >
-                    <MaterialIcons name="ios-share" size={17} color={c.onAccent} />
-                    <Text style={{ color: c.onAccent, fontSize: 14, lineHeight: 18, fontWeight: '700' }}>
-                        {t('library.stats.share')}
-                    </Text>
-                </Pressable>
-            ) : null}
-
-            <PageExplainerSheet
-                explainer={STATS_EXPLAINER}
-                open={statsExplainerOpen}
-                onClose={() => setStatsExplainerOpen(false)}
+            <SubscribeConfirmDialog
+                publisherName={flow.confirming?.publisherName ?? null}
+                onYes={flow.onYes}
+                onNo={flow.onNo}
+                onDismiss={flow.onDismiss}
             />
         </Box>
     );
 };
 
-const styles = StyleSheet.create({
-    row: {
-        borderLeftWidth: StyleSheet.hairlineWidth,
-        borderRightWidth: StyleSheet.hairlineWidth,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        minHeight: 44,
-        justifyContent: 'center',
-    },
-    rowFirst: { borderTopWidth: StyleSheet.hairlineWidth, borderTopLeftRadius: 14, borderTopRightRadius: 14 },
-    rowLast: { borderBottomLeftRadius: 14, borderBottomRightRadius: 14 },
-    rowInner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10 },
-    cellName: { flex: 1, fontSize: 15, lineHeight: 20, fontWeight: '600' },
-    cellNum: { fontSize: 14, lineHeight: 19, textAlign: 'right' },
-    headCell: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
-    tile: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 14 },
-    share: {
-        position: 'absolute',
-        right: 14,
-        height: SHARE_H,
-        paddingHorizontal: 16,
-        borderRadius: 999,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-});
+interface TopCardProps {
+    readonly item: VisitedPublication;
+    readonly isPaid: (item: VisitedPublication, publisher: ResolvedPublisher | null) => boolean;
+    readonly onOpen: (item: VisitedPublication) => void;
+    readonly onSubscribe: (publisher: ResolvedPublisher) => void;
+    readonly onAlreadyPay: (publisher: ResolvedPublisher) => void;
+}
+
+const TopCard: React.FC<TopCardProps> = ({ item, isPaid, onOpen, onSubscribe, onAlreadyPay }) => {
+    const { t } = useTranslation();
+    const shown = useDisplayPublication(item.publicationName);
+    const publisher = useResolvedPublisher(item.publicationName, item.countryCode);
+    const paid = isPaid(item, publisher);
+
+    return (
+        <View
+            testID="visited-top-card"
+            style={{
+                borderRadius: 18,
+                padding: 16,
+                gap: 12,
+                backgroundColor: 'rgba(231,138,83,0.12)',
+                borderWidth: 1,
+                borderColor: 'rgba(231,138,83,0.45)',
+            }}
+        >
+            <TapPressable
+                testID="visited-top-open"
+                onPress={() => onOpen(item)}
+                accessibilityRole="button"
+                accessibilityLabel={`${shown}, ${t('library.visited.topLine')}`}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+            >
+                <Monogram name={shown} size={48} />
+                <View style={{ flex: 1 }}>
+                    <Text numberOfLines={1} style={{ fontSize: 17, lineHeight: 22, fontWeight: '700', color: '#FFFFFF' }}>
+                        {shown}
+                    </Text>
+                    <Text style={{ fontSize: 13, lineHeight: 18, color: INK.muted }}>{t('library.visited.topLine')}</Text>
+                </View>
+            </TapPressable>
+            {paid ? (
+                <Text testID="visited-top-paid" style={{ fontSize: 13, lineHeight: 18, fontWeight: '600', color: INK.paid }}>
+                    {t('library.visited.youPay')}
+                </Text>
+            ) : publisher ? (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {publisher.subscriptionUri ? (
+                        <Pill
+                            testID="visited-top-subscribe"
+                            label={t('library.visited.subscribe')}
+                            a11yLabel={t('subscriptions.subscribeAt', { publisher: shown })}
+                            a11yHint={t('subscriptions.opensPublisherSite', { publisher: shown })}
+                            filled
+                            onPress={() => onSubscribe(publisher)}
+                        />
+                    ) : null}
+                    <Pill
+                        testID="visited-top-already"
+                        label={t('library.visited.alreadyPay')}
+                        a11yLabel={t('library.visited.alreadyPayA11y', { publisher: shown })}
+                        filled={false}
+                        onPress={() => onAlreadyPay(publisher)}
+                    />
+                </View>
+            ) : null}
+        </View>
+    );
+};
+
+interface VisitedRowProps {
+    readonly item: VisitedPublication;
+    readonly locale?: string;
+    readonly isPaid: (item: VisitedPublication, publisher: ResolvedPublisher | null) => boolean;
+    readonly onOpen: (item: VisitedPublication) => void;
+    readonly onSupport: (publisher: ResolvedPublisher) => void;
+}
+
+/** The row is the tap target for the publication page; Support sits BESIDE it,
+ *  never inside, so VoiceOver reaches both and a press on one is never a press
+ *  on the other. */
+const VisitedRow: React.FC<VisitedRowProps> = ({ item, locale, isPaid, onOpen, onSupport }) => {
+    const { t } = useTranslation();
+    const shown = useDisplayPublication(item.publicationName);
+    const publisher = useResolvedPublisher(item.publicationName, item.countryCode);
+    const paid = isPaid(item, publisher);
+    const subline = paid
+        ? t('library.visited.subscribed')
+        : t('library.visited.lastOpened', { date: formatDayMonth(item.lastVisitedAt, locale) });
+    const support = !paid && publisher?.subscriptionUri ? publisher : null;
+
+    return (
+        <View
+            testID={`visited-row-${item.publicationName}`}
+            style={[ROW_SURFACE, { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 14, gap: 12 }]}
+        >
+            <TapPressable
+                testID={`visited-row-open-${item.publicationName}`}
+                onPress={() => onOpen(item)}
+                accessibilityRole="button"
+                accessibilityLabel={`${shown}, ${subline}`}
+                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+            >
+                <Monogram name={shown} size={40} />
+                <View style={{ flex: 1 }}>
+                    <Text numberOfLines={1} style={{ fontSize: 15, lineHeight: 20, color: '#FFFFFF' }}>
+                        {shown}
+                    </Text>
+                    <Text style={{ fontSize: 12, lineHeight: 16, color: INK.muted }}>{subline}</Text>
+                </View>
+                {!paid && !support ? (
+                    <MaterialIcons
+                        name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'}
+                        size={20}
+                        color={INK.muted}
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                ) : null}
+            </TapPressable>
+            {paid ? (
+                <Text style={{ fontSize: 13, lineHeight: 18, fontWeight: '600', color: INK.paid }}>
+                    {t('library.visited.youPay')}
+                </Text>
+            ) : support ? (
+                <Pill
+                    testID={`visited-support-${item.publicationName}`}
+                    label={t('library.visited.support')}
+                    a11yLabel={t('library.visited.supportA11y', { publisher: shown })}
+                    a11yHint={t('subscriptions.opensPublisherSite', { publisher: shown })}
+                    filled
+                    onPress={() => onSupport(support)}
+                />
+            ) : null}
+        </View>
+    );
+};
 
 export default VisitedPublicationsList;
