@@ -3,11 +3,11 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type { LocationRole } from '@/lib/database/models/Location';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LOCATION_ROLES } from './location-display';
 
-const ACCENT = '#EDA77E';
 
 interface Props {
   readonly value: LocationRole;
@@ -17,6 +17,7 @@ interface Props {
 /** Icon+label single-select over the 5 locked persona roles. */
 const LocationRolePicker: React.FC<Props> = ({ value, onChange }) => {
   const { t } = useTranslation();
+  const colors = useColors();
   return (
     <HStack className="flex-wrap" space="sm">
       {LOCATION_ROLES.map((meta) => {
@@ -29,12 +30,12 @@ const LocationRolePicker: React.FC<Props> = ({ value, onChange }) => {
             accessibilityState={{ selected }}
             accessibilityLabel={t(`locations.roles.${meta.labelKey}`)}
             className={`flex-row items-center rounded-full border px-3 py-2 mb-2 ${
-              selected ? 'border-primary-500 bg-primary-500/10' : 'border-gray-700'
+              selected ? 'border-primary-500 bg-primary-500/10' : 'border-line'
             }`}
           >
-            <MaterialIcons name={meta.icon} size={16} color={selected ? ACCENT : '#999999'} />
+            <MaterialIcons name={meta.icon} size={16} color={selected ? colors.accentText : colors.ink3} />
             <Text
-              className={`ml-2 text-sm ${selected ? 'text-white' : 'text-gray-300'}`}
+              className={`ml-2 text-sm ${selected ? 'text-ink' : 'text-ink'}`}
             >
               {t(`locations.roles.${meta.labelKey}`)}
             </Text>

@@ -22,7 +22,7 @@ const WeightSegments: React.FC<Props> = ({ value, onChange, compact = false }) =
   const pad = compact ? 'py-1' : 'py-2';
   const textSize = compact ? 'text-xs' : 'text-sm';
   return (
-    <View className="flex-row rounded-full border border-gray-700 overflow-hidden">
+    <View className="flex-row rounded-full border border-line overflow-hidden">
       {WEIGHT_BUCKETS.map((b, i) => {
         const selected = b.bucket === value;
         return (
@@ -33,11 +33,11 @@ const WeightSegments: React.FC<Props> = ({ value, onChange, compact = false }) =
             accessibilityState={{ selected }}
             accessibilityLabel={t(`locations.weight.${b.bucket}` as never)}
             className={`flex-1 items-center ${pad} ${selected ? 'bg-primary-500' : 'bg-transparent'} ${
-              i > 0 ? 'border-l border-gray-700' : ''
+              i > 0 ? 'border-l border-line' : ''
             }`}
           >
             <Text
-              className={`${textSize} ${selected ? 'text-black font-semibold' : 'text-gray-300'}`}
+              className={`${textSize} ${selected ? 'text-on-accent font-semibold' : 'text-ink'}`}
             >
               {t(`locations.weight.${b.bucket}` as never)}
             </Text>

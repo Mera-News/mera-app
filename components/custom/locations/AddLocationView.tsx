@@ -17,6 +17,7 @@ import logger from '@/lib/logger';
 import { searchPlaces, type Place } from '@/lib/place-service';
 import { toastManager } from '@/lib/toast-manager';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native';
@@ -30,7 +31,6 @@ import {
 import LocationRolePicker from './LocationRolePicker';
 import WeightSegments from './WeightSegments';
 
-const ACCENT = '#EDA77E';
 
 /** A place resolved either from placeSearch or manual entry, ready to save. */
 interface ChosenPlace {
@@ -64,6 +64,8 @@ interface Props {
  */
 const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
   const { t } = useTranslation();
+  const colors = useColors();
+  const themeMode = useThemeMode();
 
   const [chosen, setChosen] = useState<ChosenPlace | null>(null);
   const [role, setRole] = useState<LocationRole>('home');
@@ -191,25 +193,25 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
       <Box className="flex-1">
         <DrillDownHeader title={t('locations.addTitle')} onBack={() => setChosen(null)} />
         <VStack className="flex-1 px-5 pt-4" space="lg">
-          <HStack className="items-center rounded-xl border border-gray-800 p-3" space="sm">
+          <HStack className="items-center rounded-xl border border-line p-3" space="sm">
             <Text className="text-xl">{flagForAlpha2(chosen.countryCode) || '📍'}</Text>
-            <Text className="text-white text-base flex-1" numberOfLines={2}>
+            <Text className="text-ink text-base flex-1" numberOfLines={2}>
               {chosen.label}
             </Text>
             <Pressable onPress={() => setChosen(null)} hitSlop={8} accessibilityRole="button">
-              <Text className="text-xs" style={{ color: ACCENT }}>
+              <Text className="text-xs" style={{ color: colors.accentText }}>
                 {t('locations.change')}
               </Text>
             </Pressable>
           </HStack>
 
           <VStack space="sm">
-            <Text className="text-gray-400 text-xs uppercase">{t('locations.roleLabel')}</Text>
+            <Text className="text-ink-2 text-xs uppercase">{t('locations.roleLabel')}</Text>
             <LocationRolePicker value={role} onChange={setRole} />
           </VStack>
 
           <VStack space="sm">
-            <Text className="text-gray-400 text-xs uppercase">{t('locations.weightLabel')}</Text>
+            <Text className="text-ink-2 text-xs uppercase">{t('locations.weightLabel')}</Text>
             <WeightSegments value={bucket} onChange={setBucket} />
           </VStack>
 
@@ -231,60 +233,62 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
         <DrillDownHeader title={t('locations.addManualTitle')} onBack={() => setManual(false)} />
         <VStack className="flex-1 px-5 pt-4" space="lg">
           <VStack space="xs">
-            <Text className="text-gray-400 text-xs uppercase">{t('locations.cityLabel')}</Text>
-            <Input variant="outline" size="md" className="border-gray-700">
+            <Text className="text-ink-2 text-xs uppercase">{t('locations.cityLabel')}</Text>
+            <Input variant="outline" size="md" className="border-line">
               <InputSlot className="pl-3">
-                <MaterialIcons name="location-city" size={18} color="#999999" />
+                <MaterialIcons name="location-city" size={18} color={colors.ink3} />
               </InputSlot>
               <InputField
                 placeholder={t('locations.cityPlaceholder')}
-                placeholderTextColor="#666666"
+                placeholderTextColor={colors.ink3}
+                keyboardAppearance={themeMode}
                 value={manualCity}
                 onChangeText={setManualCity}
-                className="text-white"
+                className="text-ink"
                 autoCorrect={false}
               />
             </Input>
           </VStack>
 
           <VStack space="xs">
-            <Text className="text-gray-400 text-xs uppercase">{t('locations.countryLabel')}</Text>
+            <Text className="text-ink-2 text-xs uppercase">{t('locations.countryLabel')}</Text>
             <Pressable
               onPress={() => setCountryPickerOpen((o) => !o)}
-              className="flex-row items-center justify-between rounded-lg border border-gray-700 px-3 py-3"
+              className="flex-row items-center justify-between rounded-lg border border-line px-3 py-3"
               accessibilityRole="button"
             >
               <HStack className="items-center" space="sm">
                 {selectedCountry ? (
                   <>
                     <Text className="text-xl">{selectedCountry.flag}</Text>
-                    <Text className="text-white text-base">{selectedCountry.name}</Text>
+                    <Text className="text-ink text-base">{selectedCountry.name}</Text>
                   </>
                 ) : (
-                  <Text className="text-gray-500 text-base">{t('locations.selectCountry')}</Text>
+                  <Text className="text-ink-3 text-base">{t('locations.selectCountry')}</Text>
                 )}
               </HStack>
               <MaterialIcons
                 name={countryPickerOpen ? 'expand-less' : 'expand-more'}
                 size={22}
-                color="#999999"
+                color={colors.ink3}
               />
             </Pressable>
           </VStack>
 
           {countryPickerOpen ? (
-            <Box className="flex-1 rounded-lg border border-gray-800">
+            <Box className="flex-1 rounded-lg border border-line">
               <Box className="p-2">
-                <Input variant="outline" size="sm" className="border-gray-700">
+                <Input variant="outline" size="sm" className="border-line">
                   <InputSlot className="pl-3">
-                    <MaterialIcons name="search" size={16} color="#999999" />
+                    <MaterialIcons name="search" size={16} color={colors.ink3} />
                   </InputSlot>
                   <InputField
                     placeholder={t('locations.searchCountries')}
-                    placeholderTextColor="#666666"
+                    placeholderTextColor={colors.ink3}
+                keyboardAppearance={themeMode}
                     value={countrySearch}
                     onChangeText={setCountrySearch}
-                    className="text-white"
+                    className="text-ink"
                     autoCorrect={false}
                   />
                 </Input>
@@ -300,10 +304,10 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
                       setCountryPickerOpen(false);
                       setCountrySearch('');
                     }}
-                    className="flex-row items-center px-3 py-3 border-b border-gray-800"
+                    className="flex-row items-center px-3 py-3 border-b border-line"
                   >
                     <Text className="text-xl mr-3">{item.flag}</Text>
-                    <Text className="text-white text-base">{item.name}</Text>
+                    <Text className="text-ink text-base">{item.name}</Text>
                   </Pressable>
                 )}
               />
@@ -332,16 +336,17 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
   return (
     <Box className="flex-1">
       <Box className="px-5 pt-4 pb-2">
-        <Input variant="outline" size="md" className="border-gray-700">
+        <Input variant="outline" size="md" className="border-line">
           <InputSlot className="pl-3">
-            <MaterialIcons name="search" size={18} color="#999999" />
+            <MaterialIcons name="search" size={18} color={colors.ink3} />
           </InputSlot>
           <InputField
             placeholder={t('locations.searchPlaceholder')}
-            placeholderTextColor="#666666"
+            placeholderTextColor={colors.ink3}
+                keyboardAppearance={themeMode}
             value={query}
             onChangeText={setQuery}
-            className="text-white"
+            className="text-ink"
             autoCorrect={false}
             autoFocus
           />
@@ -357,7 +362,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
                 accessibilityRole="button"
                 accessibilityLabel={t('common.cancel')}
               >
-                <MaterialIcons name="close" size={18} color="#999999" />
+                <MaterialIcons name="close" size={18} color={colors.ink3} />
               </Pressable>
             </InputSlot>
           )}
@@ -374,27 +379,27 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
           renderItem={({ item }) => (
             <Pressable
               onPress={() => handlePickPlace(item)}
-              className="flex-row items-center px-5 py-3 border-b border-gray-800"
+              className="flex-row items-center px-5 py-3 border-b border-line"
             >
               <Text className="text-xl mr-3">{flagForAlpha2(item.countryCode) || '📍'}</Text>
-              <Text className="text-white text-base flex-1" numberOfLines={1}>
+              <Text className="text-ink text-base flex-1" numberOfLines={1}>
                 {item.displayName}
               </Text>
-              <MaterialIcons name="add" size={20} color={ACCENT} />
+              <MaterialIcons name="add" size={20} color={colors.accentText} />
             </Pressable>
           )}
           ListEmptyComponent={
             showUnavailable ? (
               <VStack className="items-center px-8 py-10" space="sm">
-                <MaterialIcons name="cloud-off" size={40} color="#666666" />
-                <Text className="text-gray-400 text-center text-sm">
+                <MaterialIcons name="cloud-off" size={40} color={colors.ink3} />
+                <Text className="text-ink-2 text-center text-sm">
                   {t('locations.searchUnavailable')}
                 </Text>
               </VStack>
             ) : showNoMatches ? (
               <VStack className="items-center px-8 py-10" space="sm">
-                <MaterialIcons name="search-off" size={40} color="#666666" />
-                <Text className="text-gray-400 text-center text-sm">{t('locations.noMatches')}</Text>
+                <MaterialIcons name="search-off" size={40} color={colors.ink3} />
+                <Text className="text-ink-2 text-center text-sm">{t('locations.noMatches')}</Text>
               </VStack>
             ) : null
           }
@@ -407,8 +412,8 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
               className="flex-row items-center justify-center px-5 py-4"
               accessibilityRole="button"
             >
-              <MaterialIcons name="edit-location-alt" size={18} color={ACCENT} />
-              <Text className="ml-2 text-sm" style={{ color: ACCENT }}>
+              <MaterialIcons name="edit-location-alt" size={18} color={colors.accentText} />
+              <Text className="ml-2 text-sm" style={{ color: colors.accentText }}>
                 {t('locations.addManuallyCta')}
               </Text>
             </Pressable>
