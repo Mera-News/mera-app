@@ -1,6 +1,5 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
-import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
 import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
 import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
 import { Box } from '@/components/ui/box';
@@ -13,8 +12,10 @@ import { getCountryName } from '@/lib/country-utils';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
+import { useColors } from '@/lib/theme/tokens';
 import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
+import { calendarDaysAgo, formatDayMonth } from '@/lib/stats/visited-publications';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -59,7 +60,6 @@ const PAGE_HEADER_STYLE = {
     paddingBottom: PAGE_SPACING.bottom,
     gap: PAGE_SPACING.blockGap,
 } as const;
-const PILL_ACTIVE_FILL = 'rgb(96,165,250)';
 const PILL_FRAME_PAD = 5;
 
 export interface PublicationPageProps {
@@ -88,6 +88,76 @@ function switchRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 'button' | 
  * The news request starts as soon as a publisher id is known and does not
  * wait on the profile.
  */
+/**
+ * FinalLibrary #14: how often the reader opened this outlet, why support
+ * matters, then Subscribe and I already pay, or a green "You pay". Shown only
+ * when the outlet has a subscription page. ponytail: Subscribe only; the
+ * board's "Support" for donation-funded outlets needs a catalogue field that
+ * does not exist (owner default L2).
+ */
+const SupportBox: React.FC<{
+    readonly displayName: string;
+    readonly visitCount: number;
+    readonly subscribed: boolean;
+    readonly onSubscribe: () => void;
+    readonly onAlreadyPay: () => void;
+}> = ({ displayName, visitCount, subscribed, onSubscribe, onAlreadyPay }) => {
+    const { t } = useTranslation();
+    const c = useColors();
+    const line = { color: c.ink2, lineHeight: 20 } as const;
+    return (
+        <View style={[styles.supportBox, { backgroundColor: c.surface, borderColor: c.line }]} testID="publication-support">
+            <Text size="sm" style={line}>
+                {visitCount > 0
+                    ? `${t('publicationPage.openedCount', { count: visitCount, publisher: displayName })} `
+                    : ''}
+                {t('publicationPage.supportLine')}
+            </Text>
+            {subscribed ? (
+                <HStack space="xs" className="items-center" testID="publication-subscribed">
+                    <MaterialIcons
+                        name="check-circle"
+                        size={16}
+                        color={c.positive}
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Text size="sm" style={{ color: c.positive, fontWeight: '600' }}>
+                        {t('library.visited.youPay')}
+                    </Text>
+                </HStack>
+            ) : (
+                <View style={styles.supportRow}>
+                    <Pressable
+                        onPress={onSubscribe}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('subscriptions.subscribeAt', { publisher: displayName })}
+                        accessibilityHint={t('subscriptions.opensPublisherSite', { publisher: displayName })}
+                        testID="publication-subscribe"
+                        style={[styles.supportButton, { backgroundColor: c.accent }]}
+                    >
+                        <Text size="sm" style={{ color: c.onAccent, fontWeight: '600' }}>
+                            {t('library.visited.subscribe')}
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={onAlreadyPay}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('library.visited.alreadyPayA11y', { publisher: displayName })}
+                        testID="publication-already-pay"
+                        style={[styles.supportButton, { borderWidth: 1, borderColor: c.line }]}
+                    >
+                        <Text size="sm" style={{ color: c.ink, fontWeight: '600' }}>
+                            {t('library.visited.alreadyPay')}
+                        </Text>
+                    </Pressable>
+                </View>
+            )}
+        </View>
+    );
+};
+
 const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName, countryCode, order, onBack }) => {
     const { t, i18n } = useTranslation();
     const listRef = useRef<FlatList<NewsArticle>>(null);
@@ -153,8 +223,10 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     const openArticle = useOpenArticle();
 
     // History: the reader's visits to this publication, matched on every
-    // name it is known by. Read when History is shown on a focused page, so
-    // a visit recorded while away shows on return.
+    // name it is known by. Read whenever the page is focused (one local
+    // read): the support box's "opened N times" sums the same rows, so it
+    // always agrees with this list. A visit recorded while away shows on
+    // return.
     const isHistory = order === 'HISTORY';
     const focused = useIsFocusedSafe();
     const historyNames = useMemo(
@@ -164,7 +236,13 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
             ),
         [rawName, profile?.name, profile?.sourceNames, pref.names],
     );
-    const history = usePublicationHistory(historyNames, isHistory && focused);
+    const history = usePublicationHistory(historyNames, focused);
+    // Raw visits (taps), summed over every name: the History table's noun.
+    const visitCount = useMemo(
+        () => history.visits.reduce((sum, v) => sum + Math.max(1, v.visitCount || 0), 0),
+        [history.visits],
+    );
+    const colors = useColors();
     // A visit row without an article id cannot open the detail screen (its
     // URL is not an id), so it renders but its tap does nothing.
     const openableHistoryIds = useMemo(
@@ -228,12 +306,12 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                         paddingHorizontal: 14,
                         borderRadius: 999,
                         justifyContent: 'center',
-                        backgroundColor: selected ? PILL_ACTIVE_FILL : 'transparent',
+                        backgroundColor: selected ? colors.accent : 'transparent',
                         borderWidth: selected ? 0 : 1,
-                        borderColor: 'rgb(75,85,99)',
+                        borderColor: colors.line,
                     }}
                 >
-                    <Text size="sm" style={{ color: selected ? '#000000' : '#FFFFFF', fontWeight: '600' }}>
+                    <Text size="sm" style={{ color: selected ? colors.onAccent : colors.ink, fontWeight: '600' }}>
                         {label}
                     </Text>
                 </View>
@@ -292,28 +370,13 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
             ) : null}
 
             {subscribeTarget ? (
-                subscribed ? (
-                    <HStack space="xs" className="items-center" testID="publication-subscribed">
-                        <MaterialIcons
-                            name="check-circle"
-                            size={14}
-                            color="#10b981"
-                            accessible={false}
-                            accessibilityElementsHidden
-                            importantForAccessibility="no-hide-descendants"
-                        />
-                        <Text size="sm" className="text-gray-300">
-                            {t('publicationPage.subscribed', { publisher: displayName })}
-                        </Text>
-                    </HStack>
-                ) : (
-                    <SubscribeAction
-                        publisherName={displayName}
-                        variant="inline"
-                        testID="publication-subscribe"
-                        onOpen={() => void subscribeFlow.begin(subscribeTarget)}
-                    />
-                )
+                <SupportBox
+                    displayName={displayName}
+                    visitCount={visitCount}
+                    subscribed={subscribed}
+                    onSubscribe={() => void subscribeFlow.begin(subscribeTarget)}
+                    onAlreadyPay={() => void subscribeFlow.confirmDirectly(subscribeTarget)}
+                />
             ) : null}
 
             {/* A hairline above the switch: what the reader can do with the
@@ -340,16 +403,42 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 {newsAvailable ? pill('TOP_HEADLINES', t('sources.topHeadlines'), 'publication-order-top') : null}
                 {pill('HISTORY', t('publicationPage.history'), 'publication-order-history')}
             </HStack>
+            {isHistory ? (
+                <Text size="sm" style={{ color: MUTED, marginTop: -12 }} testID="publication-history-label">
+                    {t('publicationPage.visitsLabel')}
+                </Text>
+            ) : null}
         </View>
     );
 
     // ── The list: news, or History ───────────────────────────────────────
     const historyArticles = useMemo(() => history.visits.map(visitedToNewsArticle), [history.visits]);
+    // A History row says when the READER opened it (FinalLibrary #15), not
+    // the publish age: "Opened today", "Opened yesterday", "Opened 4 Oct".
+    const openedLabelById = useMemo(() => {
+        const now = Date.now();
+        const out = new Map<string, string>();
+        for (const v of history.visits) {
+            const id = v.articleId ?? v.articleUrl;
+            if (!id) continue;
+            const days = calendarDaysAgo(v.visitedAt, now);
+            out.set(
+                id,
+                days <= 0
+                    ? t('publicationPage.openedToday')
+                    : days === 1
+                      ? t('publicationPage.openedYesterday')
+                      : t('publicationPage.openedOn', { date: formatDayMonth(v.visitedAt, i18n?.language) }),
+            );
+        }
+        return out;
+    }, [history.visits, t, i18n?.language]);
     const articles: NewsArticle[] = isHistory ? historyArticles : newsAvailable ? news.articles : [];
     const renderItem: ListRenderItem<NewsArticle> = useCallback(
         ({ item }) => (
             <ArticleStandaloneCompactCard
                 article={item}
+                timeLabel={isHistory ? openedLabelById.get(item._id) : undefined}
                 onPress={() => {
                     if (isHistory && !openableHistoryIds.has(item._id)) return;
                     openArticle({ articleId: item._id });
@@ -357,7 +446,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 subjectExtras={{ surface: 'detail' }}
             />
         ),
-        [openArticle, isHistory, openableHistoryIds],
+        [openArticle, isHistory, openableHistoryIds, openedLabelById],
     );
 
     let listEmpty: React.ReactElement | null = null;
@@ -368,29 +457,9 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                     <Spinner size="small" />
                 </Box>
             ) : (
-                <VStack space="sm" className="items-center py-12 px-8" testID="publication-history-empty">
-                    <View
-                        accessible={false}
-                        accessibilityElementsHidden
-                        importantForAccessibility="no-hide-descendants"
-                        style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 24,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: 'rgba(255,255,255,0.06)',
-                        }}
-                    >
-                        <MaterialIcons name="history" size={22} color={MUTED} />
-                    </View>
-                    <Text size="md" className="text-center text-white font-semibold">
-                        {t('publicationPage.historyEmptyTitle')}
-                    </Text>
-                    <Text size="sm" className="text-center" style={{ color: MUTED, lineHeight: 20 }}>
-                        {t('publicationPage.historyEmptyBody')}
-                    </Text>
-                </VStack>
+                <Text size="sm" className="py-6" style={{ color: MUTED, lineHeight: 20 }} testID="publication-history-empty">
+                    {t('publicationPage.historyEmpty')}
+                </Text>
             );
     } else if (newsAvailable && (newsPublisherId || news.state === 'offline')) {
         if (news.state === 'idle' || news.state === 'loading') {
@@ -527,5 +596,11 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
         </Box>
     );
 };
+
+const styles = StyleSheet.create({
+    supportBox: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 14, gap: 12 },
+    supportRow: { flexDirection: 'row', gap: 8 },
+    supportButton: { flex: 1, minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+});
 
 export default PublicationPage;

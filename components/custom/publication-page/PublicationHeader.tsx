@@ -4,7 +4,6 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import logger from '@/lib/logger';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
-import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -21,7 +20,6 @@ export const PUBLICATION_HEADER_METRICS = {
     letterLineHeight: 34,
     nameSize: 22,
     nameLine: 28,
-    hostLine: 18,
     detailsLine: 18,
     /** Space between the name, the host and the details line. */
     lineGap: 4,
@@ -29,14 +27,14 @@ export const PUBLICATION_HEADER_METRICS = {
 } as const;
 
 const HOST_COLOR = 'rgb(156,163,175)';
-const DETAILS_COLOR = 'rgb(156,163,175)';
+const DETAILS_COLOR = HOST_COLOR;
 const SKELETON_FILL = 'rgba(255,255,255,0.08)';
 
 const LINK_FRAME = {
     minHeight: PUBLICATION_HEADER_METRICS.linkTarget,
-    marginVertical: -(PUBLICATION_HEADER_METRICS.linkTarget - PUBLICATION_HEADER_METRICS.hostLine) / 2,
+    marginVertical: -(PUBLICATION_HEADER_METRICS.linkTarget - PUBLICATION_HEADER_METRICS.detailsLine) / 2,
     justifyContent: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
 } as const;
 
 
@@ -94,7 +92,7 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
         });
     }, [url]);
 
-    const showDetails = !!details || !!badge;
+    const showDetails = !!details || !!badge || !!host;
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }} testID="publication-header">
@@ -136,36 +134,6 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                 >
                     {displayName}
                 </Text>
-                {host ? (
-                    // The glyph is drawn UNDER a childless labelled button: a
-                    // glyph inside a labelled pressable still surfaces on iOS
-                    // as its own StaticText holding the icon-font character.
-                    <View style={LINK_FRAME} testID="publication-website-frame">
-                        <HStack
-                            space="xs"
-                            className="items-center"
-                            accessible={false}
-                            accessibilityElementsHidden
-                            importantForAccessibility="no-hide-descendants"
-                        >
-                            <Text
-                                size="sm"
-                                numberOfLines={1}
-                                style={{ color: HOST_COLOR, flexShrink: 1, lineHeight: PUBLICATION_HEADER_METRICS.hostLine }}
-                            >
-                                {host}
-                            </Text>
-                            <MaterialIcons name="open-in-new" size={13} color={HOST_COLOR} />
-                        </HStack>
-                        <Pressable
-                            testID="publication-website"
-                            onPress={openWebsite}
-                            accessibilityRole="link"
-                            accessibilityLabel={t('publicationPage.websiteA11y', { host })}
-                            style={StyleSheet.absoluteFill}
-                        />
-                    </View>
-                ) : null}
                 {detailsLoading ? (
                     <View
                         testID="publication-profile-skeleton"
@@ -178,9 +146,8 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                     </View>
                 ) : showDetails ? (
                     <HStack
-                        space="sm"
                         className="items-center"
-                        style={{ minHeight: PUBLICATION_HEADER_METRICS.detailsLine }}
+                        style={{ minHeight: PUBLICATION_HEADER_METRICS.detailsLine, gap: 4 }}
                         testID="publication-details"
                     >
                         {badge ? (
@@ -198,6 +165,31 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                                 </Text>
                             </View>
                         ) : null}
+                        {host ? (
+                            // FinalLibrary #14: the host leads the data line. The
+                            // visual sits UNDER a childless labelled link (the
+                            // glyph-leak pattern); its 44pt frame is given back by
+                            // negative margins so the line keeps its height.
+                            <View style={LINK_FRAME} testID="publication-website-frame">
+                                <Text
+                                    size="xs"
+                                    numberOfLines={1}
+                                    accessible={false}
+                                    accessibilityElementsHidden
+                                    importantForAccessibility="no-hide-descendants"
+                                    style={{ color: HOST_COLOR, lineHeight: PUBLICATION_HEADER_METRICS.detailsLine }}
+                                >
+                                    {host}
+                                </Text>
+                                <Pressable
+                                    testID="publication-website"
+                                    onPress={openWebsite}
+                                    accessibilityRole="link"
+                                    accessibilityLabel={t('publicationPage.websiteA11y', { host })}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                            </View>
+                        ) : null}
                         {details ? (
                             <Text
                                 size="xs"
@@ -205,7 +197,7 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                                 style={{ color: DETAILS_COLOR, flexShrink: 1, lineHeight: PUBLICATION_HEADER_METRICS.detailsLine }}
                                 testID="publication-data-line"
                             >
-                                {details}
+                                {host ? `· ${details}` : details}
                             </Text>
                         ) : null}
                     </HStack>
