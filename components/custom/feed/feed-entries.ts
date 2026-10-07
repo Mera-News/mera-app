@@ -345,3 +345,30 @@ export function countUnviewed(
     feedPriorityFacts(it, cardStates, openedArticleIds, 0, representativeAwaitingNote),
   );
 }
+
+// ── "New" cards (FinalFeed #10-12: the halo, the bottom glow, the minimap) ──
+//
+// A card is NEW when it arrived on this phone after the reader last left the
+// Feed list and they have not seen it yet. `lastLeftAt` is memory only: stamped
+// when the list stops being active, and at a cold launch derived from the
+// newest seen-mark, since seen-marks are only ever written while the list is
+// active. No stored value. A visit that marked nothing seen leaves it at the
+// visit before; a phone with no seen-marks at all starts at `now`, so a first
+// launch glows nothing.
+
+/** When this row reached the phone: scored (it can render from then), else
+ *  created. NaN when neither parses, which never counts as new. */
+export function arrivedAtOf(s: Pick<ForYouSuggestion, 'scoredAt' | 'createdAt'>): number {
+  return s.scoredAt ?? Date.parse(s.createdAt);
+}
+
+/** The cold-launch `lastLeftAt`: the newest seen-mark, or `now` without one. */
+export function deriveLastLeftAt(cardStates: Record<string, CardStateRecord>, now: number): number {
+  let newest = -Infinity;
+  for (const id in cardStates) newest = Math.max(newest, cardStates[id].at);
+  return newest === -Infinity ? now : newest;
+}
+
+export function isNewCard(arrivedAt: number, seen: boolean, lastLeftAt: number): boolean {
+  return !seen && arrivedAt > lastLeftAt;
+}

@@ -13,8 +13,12 @@ import { PAGE_META } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import TrackedStoriesScreen from '@/components/custom/tracked-stories/TrackedStoriesScreen';
+import { setTabDot } from '@/components/custom/nav/current-surface';
 import { usePageOrder } from '@/lib/navigation/page-order';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { buildFeedList } from '@/lib/stores/feed-list-selector';
+import { useForYouSuggestions } from '@/lib/stores/selectors';
+import { useIsFocused } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
@@ -36,7 +40,35 @@ export function useStoriesDot(): PageDot {
   return { visible: unseen > 0 };
 }
 
+const NO_EXCLUSIONS: Set<string> = new Set();
+
+/**
+ * The Feed tab's dot (FinalFeed #13): the reader left while the Feed was still
+ * empty, and its first stories landed while they were elsewhere. Keyed on the
+ * candidate pool (the store, which fills without focus), not on the list,
+ * which ingests only while active. Cleared on opening the tab. Counted only
+ * while the tab is unfocused, so the Feed's own render pays nothing.
+ */
+function useFeedTabDot(): void {
+  const focused = useIsFocused();
+  const suggestions = useForYouSuggestions();
+  const emptyAtLeave = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!focused) return;
+    setTabDot('feed', false);
+    emptyAtLeave.current = null;
+  }, [focused]);
+  useEffect(() => {
+    if (focused) return;
+    const empty =
+      buildFeedList(suggestions, NO_EXCLUSIONS, Date.now(), null, { includeReasonPending: true }).length === 0;
+    if (emptyAtLeave.current === null) emptyAtLeave.current = empty;
+    else if (emptyAtLeave.current && !empty) setTabDot('feed', true);
+  }, [focused, suggestions]);
+}
+
 export function FeedPages() {
+  useFeedTabDot();
   const { t } = useTranslation();
   const order = usePageOrder('feed');
   const pills: PagePill[] = useMemo(

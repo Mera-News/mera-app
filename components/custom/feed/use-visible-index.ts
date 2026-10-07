@@ -106,6 +106,9 @@ export function useVisibleIndex(
   /** Live ref to the band getter (FeedScreen: header bottom .. window height
    *  minus the tab clearance). Absent: nothing is ever timed as seen. */
   bandRef?: { current: () => SeenBand },
+  /** Live ref to a listener told the on-screen ids after each change of the
+   *  1% pair (FeedScreen: is any new card still BELOW the screen?). */
+  onScreenChangedRef?: { current: (onScreen: ReadonlySet<string>) => void },
 ) {
   /** id → epoch ms its bottom edge entered the band (and has stayed since). */
   const enterAtRef = useRef<Map<string, number>>(new Map());
@@ -115,6 +118,7 @@ export function useVisibleIndex(
   const rowNodesRef = useRef<Map<string, MeasurableRow>>(new Map());
   /** Stable per-id ref callbacks, so a row's `ref` prop never churns. */
   const rowRefCallbacksRef = useRef<Map<string, (node: MeasurableRow | null) => void>>(new Map());
+  const onScreenChangedHolderRef = useRef(onScreenChangedRef);
   const bandHolderRef = useRef(bandRef);
   if (bandHolderRef.current === undefined) bandHolderRef.current = bandRef;
   /** The deepest story (by rendered position) that has been ≥75% visible this
@@ -304,6 +308,7 @@ export function useVisibleIndex(
         // TranslatableDynamic's retry ladder, because under Fabric a freshly
         // mounted cell's `measureInWindow` can return without ever calling back.
         measureLadderRef.current();
+        onScreenChangedHolderRef.current?.current(onScreenRef.current);
       },
     },
   ]);

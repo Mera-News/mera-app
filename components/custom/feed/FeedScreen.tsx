@@ -109,8 +109,13 @@ import {
   countUnviewed,
   extendPinnedIds,
   isAwaitingNote,
+  arrivedAtOf,
+  deriveLastLeftAt,
+  isNewCard,
   type FeedEntry,
 } from './feed-entries';
+import NewCardsGlow from './NewCardsGlow';
+import { useFeedMinimap } from './feed-view-prefs';
 import {
   useFeedbackSheet,
   type CardFeedbackHandlers,
@@ -136,6 +141,7 @@ import {
 import { useForYouSuggestionsHydrated, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
+import { MOTION } from '@/lib/motion';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
   useForYouLastProcessingRunFinishedAt,
@@ -147,7 +153,7 @@ import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, AppState, RefreshControl, useWindowDimensions } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
-  FadeIn,
+  FadeInDown,
   FadeOut,
   runOnJS,
   useAnimatedScrollHandler,
@@ -175,11 +181,22 @@ const CONTENT_TOP_GAP = 12;
 // animates rows that have been in the list for minutes every time they
 // re-enter the window, which reads as the feed twitching rather than as
 // anything arriving. `arrivingIdsRef` below is the difference.
-const ARRIVAL_DURATION_MS = 220;
-const ARRIVAL_STAGGER_MS = 45;
-/** Past this many rows the stagger stops growing: a full sync can prepend
- *  dozens, and a linear stagger would leave the last one waiting seconds. */
-const ARRIVAL_STAGGER_CAP = 5;
+// FinalMotion "Cards land": a 10pt fade-down, 60 ms apart. Past
+// `MOTION.cardsLand.max` rows the stagger stops growing: a full sync can
+// prepend dozens, and a linear stagger would leave the last one waiting.
+const ARRIVAL = MOTION.cardsLand;
+const ARRIVAL_ENTERING = (delay: number) =>
+  FadeInDown.duration(ARRIVAL.duration)
+    .delay(delay)
+    .withInitialValues({ opacity: 0, transform: [{ translateY: -ARRIVAL.rise }] });
+
+// "New" cards (FinalFeed #10-11): arrived on this phone after the reader last
+// left the Feed list, and not seen yet. Memory only, kept across a remount (a
+// view switch, a session reset): stamped when the list stops being active,
+// and derived from the newest seen-mark the first time (feed-entries).
+let lastLeftAtMs: number | null = null;
+/** "New stories below" is announced once per app session. */
+let announcedNewBelow = false;
 /** How long an id stays eligible after its commit. Comfortably past the last
  *  staggered start, and short enough that scrolling back to a row minutes later
  *  never re-animates it. */
@@ -213,6 +230,7 @@ const FeedRow = React.memo(function FeedRow({
   feedbackHandlers,
   enterDelay,
   registerRow,
+  newSince,
 }: {
   item: FeedListItem;
   /** What the card renders: the session-frozen representative's LIVE row
@@ -234,6 +252,8 @@ const FeedRow = React.memo(function FeedRow({
   /** `useVisibleIndex().registerRow`: the row's view, measured for the
    *  bottom-edge seen rule. Stable per id. */
   registerRow: (id: string) => (node: any) => void;
+  /** `lastLeftAt` for this visit; null until known (no halo). */
+  newSince: number | null;
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
   // ONE predicate decides both the read indicator and which block of the sort
@@ -247,6 +267,7 @@ const FeedRow = React.memo(function FeedRow({
   });
   const hasCardState = useFeedOrderStore((s) => !!s.cardStates[item.id]);
   const seen = openedExactly || hasCardState;
+  const isNew = newSince !== null && isNewCard(arrivedAtOf(suggestion), seen, newSince);
   // Whether "Writing a note" is true right now (reasons in flight, within the
   // backstop). Read here, not in the card: the store must stay out of the card
   // graph.
@@ -259,7 +280,7 @@ const FeedRow = React.memo(function FeedRow({
       entering={
         enterDelay === null
           ? undefined
-          : FadeIn.duration(ARRIVAL_DURATION_MS).delay(enterDelay)
+          : ARRIVAL_ENTERING(enterDelay)
       }
     >
     <ArticleSuggestionCard
@@ -281,6 +302,7 @@ const FeedRow = React.memo(function FeedRow({
       // Dimming is reserved for a recorded verdict (like/dislike).
       dimmed={verdict != null}
       read={seen}
+      halo={isNew}
       flat
     />
     </Animated.View>
@@ -363,6 +385,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   );
   // Live rows by suggestion id, for `resolveFeedRowDisplay` (see FeedRow).
   const liveById = useMemo(() => new Map(suggestions.map((s) => [s._id, s])), [suggestions]);
+
   // Per-session row display state: each row's frozen representative and
   // whether it has been pending (feed-row-display.ts). Replaced wholesale in
   // `resetSession`.
@@ -410,8 +433,59 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     left: 0,
     right: windowWidth,
   });
+  // ── New cards (FinalFeed #10-11) ──
+  // `newSince` is this visit's `lastLeftAt`: fixed while the list is active,
+  // so a card stays new until it is seen. Stamped on leaving (blur, unmount).
+  const orderHydratedForNew = useFeedOrderStore((s) => s.hydrated);
+  const [newSince, setNewSince] = useState<number | null>(null);
+  useEffect(() => {
+    if (!isFocused || !orderHydratedForNew) return;
+    if (lastLeftAtMs === null) {
+      lastLeftAtMs = deriveLastLeftAt(useFeedOrderStore.getState().cardStates, Date.now());
+    }
+    setNewSince(lastLeftAtMs);
+    return () => {
+      lastLeftAtMs = Date.now();
+    };
+  }, [isFocused, orderHydratedForNew]);
+  const newSinceRef = useRef(newSince);
+  newSinceRef.current = newSince;
+
+  // Is any new card still BELOW the screen? Re-read when the on-screen rows
+  // change and when the list changes; the boolean is set only when it flips.
+  // A card below the screen cannot become seen, so the store is read, not
+  // subscribed (a seen-mark flush must not re-render the whole screen).
+  const [newBelow, setNewBelow] = useState(false);
+  const onScreenIdsRef = useRef<ReadonlySet<string>>(new Set());
+  const recomputeNewBelowRef = useRef(() => {});
+  recomputeNewBelowRef.current = () => {
+    const since = newSinceRef.current;
+    let found = false;
+    if (since !== null) {
+      const rows = listDataRef.current;
+      const ids = renderedIdsRef.current;
+      let deepest = -1;
+      for (const id of onScreenIdsRef.current) deepest = Math.max(deepest, ids.indexOf(id));
+      const { cardStates } = useFeedOrderStore.getState();
+      const opened = useOpenedStoriesStore.getState().articleIds;
+      for (let i = deepest + 1; i < rows.length && !found; i += 1) {
+        const item = rows[i];
+        // `item.suggestion`, not the session-frozen display row: resolving a
+        // row that has not rendered yet would freeze its representative early.
+        const shown = item.suggestion;
+        const seen = !!cardStates[item.id] || (!!item.suggestion.articleId && opened.has(item.suggestion.articleId));
+        found = isNewCard(arrivedAtOf(shown), seen, since);
+      }
+    }
+    setNewBelow((prev) => (prev === found ? prev : found));
+  };
+  const onScreenChangedRef = useRef((ids: ReadonlySet<string>) => {
+    onScreenIdsRef.current = ids;
+    recomputeNewBelowRef.current();
+  });
+
   const { viewabilityConfigCallbackPairs, flushSkips, deepestSeenIdRef, resetDeepestSeen, registerRow } =
-    useVisibleIndex(renderedIdsRef, seenBandRef);
+    useVisibleIndex(renderedIdsRef, seenBandRef, onScreenChangedRef);
 
   // The list ref forwards to the underlying FlatList, so the re-tap's
   // scroll-to-top and the refresh reset can reach it. The raw offset mirror
@@ -645,6 +719,18 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     return () => clearTimeout(timer);
   }, [listData]);
 
+  // The glow re-reads when the list or the visit's `newSince` changes.
+  useEffect(() => {
+    recomputeNewBelowRef.current();
+  }, [listData, newSince]);
+  const minimapOn = useFeedMinimap();
+  const glowOn = isFocused && newBelow && !minimapOn;
+  useEffect(() => {
+    if (!glowOn || announcedNewBelow) return;
+    announcedNewBelow = true;
+    AccessibilityInfo.announceForAccessibility(t('feed.newStoriesBelowA11y'));
+  }, [glowOn, t]);
+
   // Seed the pin the first time the list is non-empty. This is NOT redundant
   // with the extend inside the ingest effect: on a cold launch the first ingest
   // fires while `listData` is still empty (order empty, candidates just landed),
@@ -861,14 +947,15 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
         feedbackHandlers={feedbackHandlers}
         enterDelay={
           arrivalMotion && arrivingIdsRef.current.has(item.id)
-            ? Math.min(index, ARRIVAL_STAGGER_CAP) * ARRIVAL_STAGGER_MS
+            ? Math.min(index, ARRIVAL.max - 1) * ARRIVAL.stagger
             : null
         }
         registerRow={registerRow}
+        newSince={newSince}
       />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
@@ -1097,6 +1184,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
         updateCellsBatchingPeriod={50}
         removeClippedSubviews={false}
       />
+      {/* After the list, so the list stays the first child. */}
+      <NewCardsGlow visible={glowOn} />
     </Box>
   );
 };
