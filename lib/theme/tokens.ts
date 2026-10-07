@@ -46,6 +46,9 @@ export interface ThemeColors {
     scrim: string;
     /** The opaque base under the modal material's glow. */
     modalBase: string;
+    /** A floating panel: toasts, notices and menus (FinalInbox). */
+    panel: string;
+    panelBorder: string;
 }
 
 export const COLORS: Record<ThemeMode, ThemeColors> = {
@@ -69,6 +72,8 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         helpRing: 'rgba(255,255,255,0.32)',
         scrim: 'rgba(0,0,0,0.78)',
         modalBase: 'rgb(11,10,12)',
+        panel: 'rgb(40,38,42)',
+        panelBorder: 'rgba(255,255,255,0.14)',
     },
     // From the FinalLight* boards. Contrast gates: 4.5:1 text, 3:1 marks.
     light: {
@@ -91,6 +96,8 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         helpRing: 'rgba(18,17,19,0.32)',
         scrim: 'rgba(18,17,19,0.78)',
         modalBase: '#FFFFFF',
+        panel: '#FFFFFF',
+        panelBorder: 'rgba(18,17,19,0.14)',
     },
 };
 

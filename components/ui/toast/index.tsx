@@ -15,6 +15,7 @@ import {
 } from '@gluestack-ui/utils/nativewind-utils';
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
 import { toastApi } from '@/lib/toast/toast-queue';
+import { COLORS } from '@/lib/theme/tokens';
 
 const SCOPE = 'TOAST';
 
@@ -108,11 +109,10 @@ const ACCENT_WIDTH = 4;
  * looks identical on iOS 26, iOS 25 and Android, and a `persistent` banner
  * costs nothing to keep on screen.
  */
-export const MENU_PANEL_FILL = '#45434A';
+export const MENU_PANEL_FILL = COLORS.dark.panel;
 
-/** `border-outline-100` in the dark ramp (rgb(65,65,65)) — the same hairline
- *  the menu panel carries. */
-export const MENU_PANEL_BORDER = 'rgb(65,65,65)';
+/** The FinalInbox notice hairline; the menu panel carries the same one. */
+export const MENU_PANEL_BORDER = COLORS.dark.panelBorder;
 
 export type ToastAction = 'error' | 'warning' | 'success' | 'info' | 'muted';
 
