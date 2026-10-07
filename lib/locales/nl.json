@@ -2853,7 +2853,9 @@
     "malformedChoiceSentence": "Mera kon de opties niet tonen. Vraag het opnieuw om verder te gaan.",
     "boxTitle": "Mera is aan het werk",
     "doneInSteps_one": "Klaar in {{count}} stap",
-    "doneInSteps_other": "Klaar in {{count}} stappen"
+    "doneInSteps_other": "Klaar in {{count}} stappen",
+    "doneInStepsShow_one": "Klaar in {{count}} stap, toon stappen",
+    "doneInStepsShow_other": "Klaar in {{count}} stappen, toon stappen"
   },
   "skillPhrase": {
     "residence": "waar je woont",

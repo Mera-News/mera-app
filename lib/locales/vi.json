@@ -2853,7 +2853,9 @@
     "malformedChoiceSentence": "Mera không thể hiển thị các lựa chọn. Hãy hỏi lại để tiếp tục.",
     "boxTitle": "Mera đang làm việc",
     "doneInSteps_one": "Hoàn tất sau {{count}} bước",
-    "doneInSteps_other": "Hoàn tất sau {{count}} bước"
+    "doneInSteps_other": "Hoàn tất sau {{count}} bước",
+    "doneInStepsShow_one": "Hoàn tất sau {{count}} bước, hiện các bước",
+    "doneInStepsShow_other": "Hoàn tất sau {{count}} bước, hiện các bước"
   },
   "skillPhrase": {
     "residence": "nơi bạn sống",

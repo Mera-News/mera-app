@@ -2852,7 +2852,9 @@
     "malformedChoiceSentence": "Mera tidak bisa menampilkan pilihannya. Tanya lagi untuk melanjutkan.",
     "boxTitle": "Mera sedang bekerja",
     "doneInSteps_one": "Selesai dalam {{count}} langkah",
-    "doneInSteps_other": "Selesai dalam {{count}} langkah"
+    "doneInSteps_other": "Selesai dalam {{count}} langkah",
+    "doneInStepsShow_one": "Selesai dalam {{count}} langkah, tampilkan langkah",
+    "doneInStepsShow_other": "Selesai dalam {{count}} langkah, tampilkan langkah"
   },
   "skillPhrase": {
     "residence": "tempat tinggalmu",

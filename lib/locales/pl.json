@@ -2903,7 +2903,11 @@
     "doneInSteps_one": "Gotowe w {{count}} kroku",
     "doneInSteps_few": "Gotowe w {{count}} krokach",
     "doneInSteps_many": "Gotowe w {{count}} krokach",
-    "doneInSteps_other": "Gotowe w {{count}} krokach"
+    "doneInSteps_other": "Gotowe w {{count}} krokach",
+    "doneInStepsShow_one": "Gotowe w {{count}} kroku, pokaż kroki",
+    "doneInStepsShow_few": "Gotowe w {{count}} krokach, pokaż kroki",
+    "doneInStepsShow_many": "Gotowe w {{count}} krokach, pokaż kroki",
+    "doneInStepsShow_other": "Gotowe w {{count}} krokach, pokaż kroki"
   },
   "skillPhrase": {
     "residence": "miejsce, w którym mieszkasz",

@@ -2853,7 +2853,9 @@
     "malformedChoiceSentence": "Não foi possível mostrar as opções. Pergunte de novo para continuar.",
     "boxTitle": "A Mera está trabalhando",
     "doneInSteps_one": "Concluído em {{count}} passo",
-    "doneInSteps_other": "Concluído em {{count}} passos"
+    "doneInSteps_other": "Concluído em {{count}} passos",
+    "doneInStepsShow_one": "Concluído em {{count}} passo, mostrar passos",
+    "doneInStepsShow_other": "Concluído em {{count}} passos, mostrar passos"
   },
   "skillPhrase": {
     "residence": "onde você mora",

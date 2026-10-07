@@ -2909,7 +2909,11 @@
     "doneInSteps_one": "Готово за {{count}} крок",
     "doneInSteps_few": "Готово за {{count}} кроки",
     "doneInSteps_many": "Готово за {{count}} кроків",
-    "doneInSteps_other": "Готово за {{count}} кроку"
+    "doneInSteps_other": "Готово за {{count}} кроків",
+    "doneInStepsShow_one": "Готово за {{count}} крок, показати кроки",
+    "doneInStepsShow_few": "Готово за {{count}} кроки, показати кроки",
+    "doneInStepsShow_many": "Готово за {{count}} кроків, показати кроки",
+    "doneInStepsShow_other": "Готово за {{count}} кроків, показати кроки"
   },
   "skillPhrase": {
     "residence": "місце, де ви живете",

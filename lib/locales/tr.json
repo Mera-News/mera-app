@@ -2855,7 +2855,9 @@
     "malformedChoiceSentence": "Mera seçenekleri gösteremedi. Devam etmek için tekrar sor.",
     "boxTitle": "Mera çalışıyor",
     "doneInSteps_one": "{{count}} adımda tamamlandı",
-    "doneInSteps_other": "{{count}} adımda tamamlandı"
+    "doneInSteps_other": "{{count}} adımda tamamlandı",
+    "doneInStepsShow_one": "{{count}} adımda tamamlandı, adımları göster",
+    "doneInStepsShow_other": "{{count}} adımda tamamlandı, adımları göster"
   },
   "skillPhrase": {
     "residence": "yaşadığın yeri",

@@ -2852,7 +2852,9 @@
     "malformedChoiceSentence": "Mera가 선택지를 보여 주지 못했어요. 계속하려면 다시 물어봐 주세요.",
     "boxTitle": "Mera가 작업 중입니다",
     "doneInSteps_one": "{{count}}단계 만에 완료",
-    "doneInSteps_other": "{{count}}단계 만에 완료"
+    "doneInSteps_other": "{{count}}단계 만에 완료",
+    "doneInStepsShow_one": "{{count}}단계 만에 완료, 단계 보기",
+    "doneInStepsShow_other": "{{count}}단계 만에 완료, 단계 보기"
   },
   "skillPhrase": {
     "residence": "사는 곳",

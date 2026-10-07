@@ -2860,7 +2860,9 @@
     "malformedChoiceSentence": "Mera n'a pas pu t'afficher les options. Repose la question pour continuer.",
     "boxTitle": "Mera travaille",
     "doneInSteps_one": "Terminé en {{count}} étape",
-    "doneInSteps_other": "Terminé en {{count}} étapes"
+    "doneInSteps_other": "Terminé en {{count}} étapes",
+    "doneInStepsShow_one": "Terminé en {{count}} étape, afficher les étapes",
+    "doneInStepsShow_other": "Terminé en {{count}} étapes, afficher les étapes"
   },
   "skillPhrase": {
     "residence": "l'endroit où tu vis",

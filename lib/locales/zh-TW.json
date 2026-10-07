@@ -2853,7 +2853,9 @@
     "malformedChoiceSentence": "Mera 沒能顯示選項。再問一次即可繼續。",
     "boxTitle": "Mera 正在工作",
     "doneInSteps_one": "已完成，共 {{count}} 步",
-    "doneInSteps_other": "已完成，共 {{count}} 步"
+    "doneInSteps_other": "已完成，共 {{count}} 步",
+    "doneInStepsShow_one": "已完成，共 {{count}} 步，顯示步驟",
+    "doneInStepsShow_other": "已完成，共 {{count}} 步，顯示步驟"
   },
   "skillPhrase": {
     "residence": "你居住的地方",

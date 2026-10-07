@@ -2905,7 +2905,11 @@
     "doneInSteps_one": "Готово за {{count}} шаг",
     "doneInSteps_few": "Готово за {{count}} шага",
     "doneInSteps_many": "Готово за {{count}} шагов",
-    "doneInSteps_other": "Готово за {{count}} шагов"
+    "doneInSteps_other": "Готово за {{count}} шагов",
+    "doneInStepsShow_one": "Готово за {{count}} шаг, показать шаги",
+    "doneInStepsShow_few": "Готово за {{count}} шага, показать шаги",
+    "doneInStepsShow_many": "Готово за {{count}} шагов, показать шаги",
+    "doneInStepsShow_other": "Готово за {{count}} шагов, показать шаги"
   },
   "skillPhrase": {
     "residence": "место, где вы живёте",

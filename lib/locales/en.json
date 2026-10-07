@@ -2853,7 +2853,9 @@
     "malformedChoiceSentence": "Mera couldn't show you the options. Ask again to carry on.",
     "boxTitle": "Mera is working",
     "doneInSteps_one": "Done in {{count}} step",
-    "doneInSteps_other": "Done in {{count}} steps"
+    "doneInSteps_other": "Done in {{count}} steps",
+    "doneInStepsShow_one": "Done in {{count}} step, show steps",
+    "doneInStepsShow_other": "Done in {{count}} steps, show steps"
   },
   "skillPhrase": {
     "residence": "where you live",

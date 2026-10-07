@@ -2852,7 +2852,9 @@
     "malformedChoiceSentence": "Mera は選択肢を表示できませんでした。続けるにはもう一度お尋ねください。",
     "boxTitle": "Meraが作業中です",
     "doneInSteps_one": "{{count}}ステップで完了",
-    "doneInSteps_other": "{{count}}ステップで完了"
+    "doneInSteps_other": "{{count}}ステップで完了",
+    "doneInStepsShow_one": "{{count}}ステップで完了、手順を表示",
+    "doneInStepsShow_other": "{{count}}ステップで完了、手順を表示"
   },
   "skillPhrase": {
     "residence": "お住まいの場所",

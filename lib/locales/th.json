@@ -2852,7 +2852,9 @@
     "malformedChoiceSentence": "Mera แสดงตัวเลือกไม่ได้ ถามอีกครั้งเพื่อดำเนินการต่อ",
     "boxTitle": "Mera กำลังทำงาน",
     "doneInSteps_one": "เสร็จใน {{count}} ขั้นตอน",
-    "doneInSteps_other": "เสร็จใน {{count}} ขั้นตอน"
+    "doneInSteps_other": "เสร็จใน {{count}} ขั้นตอน",
+    "doneInStepsShow_one": "เสร็จใน {{count}} ขั้นตอน แสดงขั้นตอน",
+    "doneInStepsShow_other": "เสร็จใน {{count}} ขั้นตอน แสดงขั้นตอน"
   },
   "skillPhrase": {
     "residence": "ที่ที่คุณอาศัยอยู่",

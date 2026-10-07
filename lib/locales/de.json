@@ -2853,7 +2853,9 @@
     "malformedChoiceSentence": "Mera konnte dir die Optionen nicht zeigen. Frag noch einmal, um fortzufahren.",
     "boxTitle": "Mera arbeitet",
     "doneInSteps_one": "In {{count}} Schritt erledigt",
-    "doneInSteps_other": "In {{count}} Schritten erledigt"
+    "doneInSteps_other": "In {{count}} Schritten erledigt",
+    "doneInStepsShow_one": "In {{count}} Schritt erledigt, Schritte anzeigen",
+    "doneInStepsShow_other": "In {{count}} Schritten erledigt, Schritte anzeigen"
   },
   "skillPhrase": {
     "residence": "deinen Wohnort",

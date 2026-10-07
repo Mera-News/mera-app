@@ -2963,7 +2963,13 @@
     "doneInSteps_two": "تم في خطوتين",
     "doneInSteps_few": "تم في {{count}} خطوات",
     "doneInSteps_many": "تم في {{count}} خطوة",
-    "doneInSteps_other": "تم في {{count}} خطوة"
+    "doneInSteps_other": "تم في {{count}} خطوة",
+    "doneInStepsShow_zero": "تم في {{count}} خطوة، أظهر الخطوات",
+    "doneInStepsShow_one": "تم في خطوة واحدة، أظهر الخطوات",
+    "doneInStepsShow_two": "تم في خطوتين، أظهر الخطوات",
+    "doneInStepsShow_few": "تم في {{count}} خطوات، أظهر الخطوات",
+    "doneInStepsShow_many": "تم في {{count}} خطوة، أظهر الخطوات",
+    "doneInStepsShow_other": "تم في {{count}} خطوة، أظهر الخطوات"
   },
   "skillPhrase": {
     "residence": "مكان إقامتك",

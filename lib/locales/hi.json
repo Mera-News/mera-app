@@ -2855,7 +2855,9 @@
     "malformedChoiceSentence": "Mera आपको विकल्प नहीं दिखा सका। आगे बढ़ने के लिए फिर पूछें।",
     "boxTitle": "Mera काम कर रहा है",
     "doneInSteps_one": "{{count}} चरण में हो गया",
-    "doneInSteps_other": "{{count}} चरणों में हो गया"
+    "doneInSteps_other": "{{count}} चरणों में हो गया",
+    "doneInStepsShow_one": "{{count}} चरण में हो गया, चरण दिखाएं",
+    "doneInStepsShow_other": "{{count}} चरणों में हो गया, चरण दिखाएं"
   },
   "skillPhrase": {
     "residence": "आप कहाँ रहते हैं",
