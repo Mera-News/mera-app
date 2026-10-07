@@ -10,6 +10,9 @@ import { authClient } from "@/lib/auth-client";
 import logger from "@/lib/logger";
 import { clearPreviousUserData } from "@/lib/stores";
 import { isOnboardingDone } from "@/components/custom/onboarding/onboarding-done";
+import AccountGateScreen, { type AccountGateVariant } from "@/components/custom/auth/AccountGateScreen";
+import { accountGateVerdict } from "@/components/custom/auth/account-gate";
+import { recheckSession, type RecheckOutcome } from "@/lib/auth-failure-breaker";
 import { readSupportIdFromUser } from "@/lib/support-id";
 import { getSetting, setSetting } from "@/lib/database/services/setting-service";
 import { assertPersonaOwner } from "@/lib/database/services/user-persona-service";
@@ -74,9 +77,12 @@ function LoggedInGate() {
     // routing; `retryNonce` is what its "Try again" bumps to re-run the effect.
     const [wipeFailed, setWipeFailed] = useState(false);
     const [retryNonce, setRetryNonce] = useState(0);
+    // The account gate (offline / unreachable), rendered in place.
+    const [gate, setGate] = useState<AccountGateVariant | null>(null);
 
     const handleRetry = useCallback(() => {
         setWipeFailed(false);
+        setGate(null);
         setRetryNonce((n) => n + 1);
     }, []);
 
@@ -113,6 +119,18 @@ function LoggedInGate() {
             }
 
             const userStore = useUserStore.getState();
+
+            // The launch account check, in PARALLEL and never awaited: a
+            // normal launch pays nothing for it. Whatever it has settled to by
+            // the time the route is decided is all it gets to say.
+            let accountCheck: RecheckOutcome | null = null;
+            void recheckSession()
+                .then((o) => {
+                    accountCheck = o;
+                })
+                .catch(() => {
+                    accountCheck = 'inconclusive';
+                });
 
             try {
                 // Resolve session <-> local-identity coherence BEFORE anything
@@ -315,6 +333,26 @@ function LoggedInGate() {
                 // PREVIOUS user's state and reports the incoming user as
                 // already onboarded. That is the leak, and this is the line it
                 // comes out of.
+                // Definite answers only (account-gate.ts): a dead session
+                // signs in again, a phone with no connection or a server
+                // already marked unreachable gets the gate; anything still
+                // running opens the app.
+                const network = useNetworkStore.getState();
+                const gateVerdict = accountGateVerdict({
+                    outcome: accountCheck,
+                    isConnected: network.isConnected,
+                    serverReachable: network.serverReachable,
+                });
+                if (cancelled) return;
+                if (gateVerdict === 'reauth') {
+                    router.replace({ pathname: '/login', params: { reauth: '1' } });
+                    return;
+                }
+                if (gateVerdict === 'offline' || gateVerdict === 'unreachable') {
+                    setGate(gateVerdict);
+                    return;
+                }
+
                 let done = false;
                 try {
                     done = await isOnboardingDone();
@@ -395,6 +433,10 @@ function LoggedInGate() {
     // is still mounted and is the only thing the user can see. It reads no
     // store and no persona — see its header for why that is a correctness rule
     // rather than a preference.
+    if (gate) {
+        return <AccountGateScreen variant={gate} onRetry={handleRetry} />;
+    }
+
     if (wipeFailed) {
         // Rendered in place on the gate's own pathname, so no route releases
         // the held splash (lib/splash-hold.ts). Release it here.

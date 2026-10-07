@@ -1,18 +1,16 @@
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/lib/theme/tokens';
 
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import FeedbackRequestAutoShowHost from '@/components/custom/feedback-request/FeedbackRequestAutoShowHost';
-import ReauthBanner from '@/components/custom/ReauthBanner';
+import ReauthOnReturn from '@/components/custom/auth/ReauthOnReturn';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import EmailCaptureHost from '@/components/custom/subscription/EmailCaptureSheet';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
 import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
 
 export default function LoggedInLayout() {
-  const insets = useSafeAreaInsets();
   const colors = useColors();
 
   return (
@@ -179,25 +177,9 @@ export default function LoggedInLayout() {
           }}
         />
       </Stack>
-      {/* Mounted once for the whole logged-in tree rather than per-screen. The
-          auth breaker no longer auto-resumes feed-sync while `needsReauth` is
-          set — a proven-dead session must be re-authenticated, not retried — so
-          this banner is the ONLY self-heal path. Previously it lived in the two
-          feed headers, which left a user sitting on Explore/Profile/Settings
-          with no visible way out. It self-gates on needsReauth + online, so it
-          renders nothing in the common case. */}
-      <View
-        pointerEvents="box-none"
-        style={{
-          position: 'absolute',
-          top: insets.top + 8,
-          left: 16,
-          right: 16,
-          zIndex: 20,
-        }}
-      >
-        <ReauthBanner />
-      </View>
+      {/* A session that died mid-use goes to the sign-in gate on the next
+          return to the app, never mid-read (renders nothing). */}
+      <ReauthOnReturn />
       <FloatingChatHost />
       <FeedbackWidgetModal />
       {/* Renders nothing. Pops a live feedback request up once per request

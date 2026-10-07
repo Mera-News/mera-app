@@ -5,10 +5,8 @@ import {
     probeInternetReachable,
     useIsConnected,
     useIsNetworkHealthy,
-    useIsOnline,
     useNetworkStore,
 } from '@/lib/stores/network-store';
-import { useUserStore } from '@/lib/stores/user-store';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -40,45 +38,29 @@ export const SHOW_DELAY_MS = 2_000;
  * open internet" — see `probeInternetReachable()` in network-store.ts.
  *
  * Not dismissible: it self-clears the instant connectivity returns, so a
- * dismiss control would only be a way to hide a true statement. (ReauthBanner
- * is dismissible because it is ACTIONABLE — this one is pure information.)
+ * dismiss control would only be a way to hide a true statement.
  *
- * Mounted once at the root layout so it covers /login and /pin-lock too — the
- * "Welcome back" screen this whole wave is about lives at /login, which the
- * /logged-in banner slot cannot reach.
+ * Mounted once at the root layout so it covers /login and /pin-lock too.
  */
 const OfflineBanner: React.FC = () => {
     const { t } = useTranslation();
     const healthy = useIsNetworkHealthy();
-    const reachable = useIsOnline();
     const isConnected = useIsConnected();
     const internetReachable = useNetworkStore((s) => s.internetReachable);
-    const needsReauth = useUserStore((s) => s.needsReauth);
     const [visible, setVisible] = useState(false);
 
-    // Collision guard. Both bands are absolutely positioned at the same
-    // coordinates (top: insets.top + 8, zIndex 20) and this one is mounted at the
-    // ROOT, so it paints over the /logged-in slot — it would hide ReauthBanner
-    // rather than sit beside it.
-    //
-    // Only suppress in the SLOW-ONLY case: connected + reachable, i.e. the sole
-    // reason we would paint is `serverSlow`. There, re-auth is perfectly
-    // completable and the actionable banner must win. When the server is
-    // genuinely unreachable, ReauthBanner hides itself (it gates on useIsOnline),
-    // so there is no collision and this band is the correct thing to show.
-    const yieldToReauthBanner = needsReauth && reachable;
 
     useEffect(() => {
         // Asymmetric on purpose: delayed show, INSTANT hide. Lingering on a
         // "we can't connect" message while the feed is visibly loading is worse
         // than never having shown it.
-        if (healthy || yieldToReauthBanner) {
+        if (healthy) {
             setVisible(false);
             return;
         }
         const timer = setTimeout(() => setVisible(true), SHOW_DELAY_MS);
         return () => clearTimeout(timer);
-    }, [healthy, yieldToReauthBanner]);
+    }, [healthy]);
 
     // Disambiguate WHY, once per unhealthy episode. A confirmed-offline device
     // already has its answer (`isConnected === false`) and isn't worth a round
@@ -124,8 +106,7 @@ const OfflineBanner: React.FC = () => {
  *
  * The insets hook lives HERE rather than in the root layout so that layout gains
  * no new subscription — a re-render of this slot can never re-render the route
- * tree above it. Same geometry as the /logged-in ReauthBanner slot, so the two
- * read as one system.
+ * tree above it.
  */
 export const OfflineBannerSlot: React.FC = () => {
     const insets = useSafeAreaInsets();
