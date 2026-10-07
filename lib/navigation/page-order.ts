@@ -26,7 +26,6 @@ import logger from '@/lib/logger';
 export type TabId = 'feed' | 'world' | 'library' | 'you';
 export type StaticPageId =
   | 'feed'
-  | 'interests'
   | 'stories'
   | 'saved'
   | 'checks'
@@ -44,7 +43,7 @@ export type StaticTabId = Exclude<TabId, 'world'>;
 /** The fixed page order of every tab but World. World's pages are derived at
  *  run time (lib/explore/world-pages.ts), with `world` first. */
 export const DEFAULT_PAGE_ORDER: Readonly<Record<StaticTabId, readonly StaticPageId[]>> = {
-  feed: ['feed', 'interests', 'stories'],
+  feed: ['feed', 'stories'],
   library: ['saved', 'checks', 'visited', 'stats'],
   you: ['profile', 'settings', 'notifications'],
 };

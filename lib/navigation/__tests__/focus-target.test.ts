@@ -101,12 +101,12 @@ describe('one-shot pending target', () => {
 
 describe('jump-origin Back', () => {
     it('returns to the page the jump started from', () => {
-        reportSurface('interests');
+        reportSurface('stories');
         navigateToSetting(FEED_SHAPERS);
         expect(mockBackListeners).toHaveLength(1);
         reportSurface('profile');
         expect(mockBackListeners[0]()).toBe(true);
-        expect(mockNavigateToPage).toHaveBeenLastCalledWith('interests');
+        expect(mockNavigateToPage).toHaveBeenLastCalledWith('stories');
         expect(mockBackListeners).toHaveLength(0);
     });
 

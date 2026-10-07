@@ -14,8 +14,8 @@ const FR = { alpha2: 'fr', name: 'France' };
 
 describe('arrange draft', () => {
   it('reorders without touching removed or added', () => {
-    const s = reorder(initialArrange(['feed', 'interests', 'stories']), 2, 0);
-    expect(toDraft(s)).toEqual({ order: ['stories', 'feed', 'interests'], removed: [], added: [] });
+    const s = reorder(initialArrange(['world', 'country:DE', 'country:FR']), 2, 0);
+    expect(toDraft(s)).toEqual({ order: ['country:FR', 'world', 'country:DE'], removed: [], added: [] });
   });
 
   it('records a removal and drops it from the order', () => {

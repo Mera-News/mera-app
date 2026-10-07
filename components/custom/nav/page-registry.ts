@@ -10,7 +10,7 @@
 // import components); this file re-exports them so shell code has one import.
 //
 // Page ids are stable strings used everywhere (order rows, hints, focus):
-// feed, interests, stories, world, country:<ALPHA2>, saved, checks, visited,
+// feed, stories, world, country:<ALPHA2>, saved, checks, visited,
 // stats, profile, settings, notifications. A country page id is ALWAYS alpha-2; the explore
 // scope ids stay `country:<ALPHA3>` and only lib/explore/world-pages.ts
 // converts between the two.
@@ -71,22 +71,6 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       titleKey: 'feed.forYouTitle',
       paragraphKeys: ['explainer.feed.p1', 'explainer.feed.p2', 'tabExplainer.feed.privacy'],
       chapter: 'feed',
-    },
-  },
-  interests: {
-    tab: 'feed',
-    labelKey: 'nav.page.interests',
-    keepMounted: false,
-    explainer: {
-      titleKey: 'tabExplainer.interests.title',
-      paragraphKeys: [
-        'tabExplainer.interests.what',
-        'tabExplainer.forYou.how1',
-        'tabExplainer.interests.how2',
-        'tabExplainer.interests.how3',
-      ],
-      chapter: 'feed',
-      slide: 'two-lists',
     },
   },
   stories: {

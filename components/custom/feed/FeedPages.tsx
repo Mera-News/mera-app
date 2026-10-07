@@ -41,8 +41,7 @@ export function FeedPages() {
   const order = usePageOrder('feed');
   const pills: PagePill[] = useMemo(
     () =>
-      // ponytail: drops 'interests' until S1 removes it from the fixed order.
-      order.filter((id) => id !== 'interests').map((id) => ({
+      order.map((id) => ({
         id,
         label: t(PAGE_META[id].labelKey),
         icon: id === 'feed' ? 'article' : id === 'stories' ? 'layers' : undefined,
