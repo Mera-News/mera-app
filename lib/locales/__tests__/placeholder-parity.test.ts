@@ -4,8 +4,9 @@
 // {{articleWord}}, which no caller passes). A locale may use FEWER (Arabic's
 // `_one` drops {{count}} and writes the word out), never different.
 //
-// Plural forms en has no key for (Arabic's `_few`, `_many`, ...) are checked
-// against en's `_other`. Pending `_*-fragments.json` blocks are laid over each
+// A plural form is checked against the union of its English family (every
+// form gets the same variables from the call site), which also covers forms en
+// has no key for (Arabic's `_few`, `_many`, ...). Pending `_*-fragments.json` blocks are laid over each
 // dictionary first, exactly as the splice applies them, so a fix waiting in a
 // fragment counts and a regression introduced by one is caught.
 import fs from 'fs';
@@ -47,9 +48,20 @@ describe.each(dictionaries.filter((f) => f !== 'en.json').map((f) => f.replace('
         for (const [key, text] of Object.entries(loc)) {
             const lv = varsOf(text);
             if (lv.size === 0) continue;
-            const enText = en[key] ?? (PLURAL.test(key) ? en[key.replace(PLURAL, '_other')] : undefined);
-            if (enText === undefined) continue;
-            const ev = varsOf(enText);
+            let ev: Set<string>;
+            if (PLURAL.test(key)) {
+                // A plural key is judged against its whole English FAMILY: the
+                // call site passes the same variables to every form, so ru's
+                // `_one` (which also covers 21, 31...) may print {{count}} where
+                // en's `_one` says "once".
+                const base = key.replace(PLURAL, '');
+                const family = Object.keys(en).filter((k) => k.replace(PLURAL, '') === base && PLURAL.test(k));
+                if (family.length === 0) continue;
+                ev = new Set(family.flatMap((k) => [...varsOf(en[k])]));
+            } else {
+                if (en[key] === undefined) continue;
+                ev = varsOf(en[key]);
+            }
             const extra = [...lv].filter((v) => !ev.has(v));
             if (extra.length) bad.push(`${key}: {{${extra.join('}}, {{')}}} not in en`);
         }

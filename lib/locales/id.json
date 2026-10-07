@@ -24,7 +24,11 @@
     "offlineBannerOffline": "Anda sedang offline. Menampilkan berita tersimpan dan kami akan terus mencoba.",
     "offlineBannerInternetDown": "Tidak ada akses internet. Menampilkan berita tersimpan dan kami akan terus mencoba.",
     "offlineBannerServerDown": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan dan kami akan terus mencoba.",
-    "beta": "Beta"
+    "beta": "Beta",
+    "confirm": "Konfirmasi",
+    "copy": "Salin",
+    "today": "Hari ini",
+    "yesterday": "Kemarin"
   },
   "auth": {
     "reauthBanner": "Masuk lagi untuk sinkronisasi",
@@ -85,15 +89,42 @@
     "signingYouIn": "Sedang masuk…",
     "signInWithoutEmail": "Masuk tanpa email",
     "differentAccount": {
-      "title": "Beralih ke akun ponsel ini?",
-      "body": "Masuk tanpa email akan membuka akun milik ponsel ini, bukan akun yang sedang Anda gunakan. Semua yang tersimpan di ponsel ini untuk akun tersebut akan dihapus. Tindakan ini tidak dapat dibatalkan. Akun Anda yang lain dan paketnya tetap aman, dan Anda dapat masuk kembali ke akun itu nanti.",
-      "continue": "Lanjutkan tanpa email",
-      "useEmail": "Kembali"
+      "title": "Masuk tanpa email?",
+      "body": "Kami akan menghapus semua data Mera untuk {{email}}. Yakin?",
+      "continue": "Hapus dan lanjutkan",
+      "useEmail": "Simpan akun saya",
+      "bodyGeneric": "Kami akan menghapus semua data Mera untuk akun ini. Yakin?"
     },
     "deviceSignInCaption": {
       "uninstall": "Akun Anda terikat ke ponsel ini. Jika Anda menghapus Mera atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda.",
       "reset": "Akun Anda terikat ke ponsel ini. Jika Anda mereset atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda.",
       "previousUser": "Membuka akun milik ponsel ini, terpisah dari {{email}}."
+    },
+    "track": {
+      "beforeYouStart": "Sebelum Anda mulai",
+      "beginCaption": "Mera memasukkan Anda dengan ponsel ini. Tidak ada yang perlu diingat.",
+      "beginMera": "Mulai Mera",
+      "beginTitle": "Bagaimana Anda ingin memulai?",
+      "beginWithoutEmail": "Mulai tanpa email",
+      "checkEmailTitle": "Periksa email Anda",
+      "chooseLanguage": "Pilih bahasa Anda",
+      "codeA11y": "Kode 6 digit",
+      "continueWithEmail": "Lanjutkan dengan email",
+      "downloadA11y": "Unduh {{language}}",
+      "emailBody": "Kami akan mengirim kode 6 digit ke email Anda. Tidak ada kata sandi yang perlu diingat.",
+      "gettingReadyIos": "iPhone Anda akan meminta untuk mengunduhnya. Biarkan Mera tetap terbuka.",
+      "gettingReadyOther": "Ini memakan waktu beberapa detik. Biarkan Mera tetap terbuka.",
+      "gettingReadyTitle": "Menyiapkan {{language}}",
+      "notHereBody": "Unduh paket bahasanya, atau gunakan salah satu bahasa yang sudah ada di sini.",
+      "notHereTitle": "{{language}} belum ada di ponsel ini",
+      "phoneLanguage": "Bahasa ponsel Anda",
+      "readyBody": "Mera sekarang dalam {{language}}.",
+      "readyTitle": "{{language}} siap",
+      "sendCode": "Kirim kode",
+      "sentTo": "Kami telah mengirim kode 6 digit ke {{email}}.",
+      "useDifferentEmail": "Gunakan email lain",
+      "welcome": "Selamat datang di Mera",
+      "wrongCode": "Kode itu tidak berhasil. Periksa lagi, atau kirim kode baru."
     }
   },
   "account": {
@@ -245,7 +276,25 @@
     "findingStories": "Mencari cerita untuk Anda",
     "findingStoriesBody": "Cerita akan muncul di sini begitu siap",
     "processingOffline": "Anda sedang offline. Cerita Anda akan datang setelah Anda online lagi.",
-    "worldCta": "Lihat berita utama di Dunia"
+    "worldCta": "Lihat berita utama di Dunia",
+    "forYouTitle": "Untuk Anda",
+    "newStoriesBelowA11y": "Cerita baru di bawah",
+    "noFactsBody": "Beri tahu Mera satu hal yang Anda ikuti dan beritanya mulai datang di sini. Ketuk tombol Mera untuk memulai.",
+    "noteSuggestedMany": "Disarankan untuk fakta Anda:",
+    "noteSuggestedOne": "Disarankan untuk fakta Anda: {{fact}}. Mohon tunggu sementara Mera menulis alasannya.",
+    "noteWait": "Mohon tunggu sementara Mera menulis alasannya.",
+    "opened": "Dibuka",
+    "statsSyncAnalysing_one": "{{formatted}} artikel sedang dianalisis untuk Anda,",
+    "statsSyncAnalysing_other": "{{formatted}} artikel sedang dianalisis untuk Anda,",
+    "statsSyncFrom_one": "dari {{formatted}} yang diterbitkan dalam 24 jam terakhir.",
+    "statsSyncFrom_other": "dari {{formatted}} yang diterbitkan dalam 24 jam terakhir.",
+    "statsSyncRelevant_one": "{{formatted}} terlihat relevan sejauh ini.",
+    "statsSyncRelevant_other": "{{formatted}} terlihat relevan sejauh ini.",
+    "view": {
+      "a11y": "Tampilan: {{view}}. Ubah tampilan",
+      "continuous": "Feed berkelanjutan",
+      "sectioned": "Feed per bagian"
+    }
   },
   "relevance": {
     "emergency": "Darurat",
@@ -262,11 +311,12 @@
   "aiDisclosure": {
     "caption": "Catatan yang dibuat oleh AI",
     "short": "Dibuat oleh AI",
-    "listNote": "Beberapa judul cerita di sini dibuat oleh AI"
+    "listNote": "Beberapa judul cerita di sini dibuat oleh AI",
+    "allStoryTitles": "Semua judul cerita ditulis oleh AI"
   },
   "articleDetail": {
     "readArticle": "Baca Artikel",
-    "relatedArticles": "Artikel Terkait",
+    "relatedArticles": "Liputan terkait",
     "articleUnavailable": "Artikel ini sudah tidak tersedia",
     "storyUnavailable": "Berita ini sudah tidak tersedia",
     "failedToLoad": "Gagal memuat artikel",
@@ -281,7 +331,12 @@
     "linkUnavailable": "Tautan ini tidak dapat dibuka dengan aman, jadi tidak tersedia di sini.",
     "relatedFromSubscriptions": "Dari langganan Anda",
     "relatedLoadFailed": "Tidak dapat memuat artikel terkait.",
-    "translateBlockedNote": "Beberapa situs memblokir Google Terjemahan. Jika halaman tidak termuat, buka di situsnya."
+    "translateBlockedNote": "Beberapa situs memblokir Google Terjemahan. Jika halaman tidak termuat, buka di situsnya.",
+    "aboutTranslation": "Tentang terjemahan",
+    "aboutTranslationBody": "Artikel ini dalam {{language}}. Ponsel Anda bisa menerjemahkannya saat Anda membaca.",
+    "aboutTranslationFallback": "Jika itu tidak berhasil, buka di Google Terjemahan, yang berarti menelusuri lewat Google.",
+    "translateBlockedOn": "Beberapa situs memblokir Google Terjemahan. Jika tidak termuat, buka di {{publication}}.",
+    "youCameFromHere": "Anda datang dari sini"
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -324,7 +379,22 @@
     "signedOutDescription": "Anda telah berhasil keluar.",
     "logoutFailedTitle": "Gagal Keluar",
     "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi.",
-    "loggingOut": "Keluar..."
+    "loggingOut": "Keluar...",
+    "chatIntro": "Ceritakan sedikit tentang diri Anda: tempat tinggal, pekerjaan, dan apa yang Anda ikuti. Ini tetap di ponsel ini.",
+    "composerPlaceholder": "Ceritakan tentang diri Anda kepada Mera",
+    "continueAnyway": "Tetap lanjutkan",
+    "factsCount_one": "{{count}} fakta tentang Anda",
+    "factsCount_other": "{{count}} fakta tentang Anda",
+    "noFactsBody": "Mera memilih berita Anda dari fakta Anda. Tanpa fakta, Feed Anda hanya menampilkan judul utama, dan Dunia tidak menampilkan negara apa pun sampai Anda menambahkannya.",
+    "noFactsTitle": "Lanjutkan tanpa fakta?",
+    "noNotifBody": "Anda tidak akan tahu saat berita Anda siap atau saat cerita yang Anda ikuti berkembang. Anda bisa menyalakannya nanti di Pengaturan.",
+    "noNotifTitle": "Gunakan Mera tanpa notifikasi?",
+    "notNow": "Nanti saja",
+    "notificationsOn": "Notifikasi aktif",
+    "remindBody": "Mera dibuat agar tidak mengganggu Anda tanpa alasan. Pilih kapan Anda ingin pengingat untuk membaca berita. Kami menyarankan waktu saat Anda bisa membacanya dengan tenang.",
+    "remindTitle": "Kapan Mera harus mengingatkan Anda?",
+    "turnOn": "Aktifkan notifikasi",
+    "turnThemOn": "Aktifkan"
   },
   "notifications": {
     "title": "Notifikasi",
@@ -358,8 +428,8 @@
   },
   "language": {
     "title": "Bahasa",
-    "appLanguage": "Bahasa Aplikasi",
-    "appLanguageDescription": "Digunakan untuk antarmuka aplikasi dan menerjemahkan konten berita",
+    "appLanguage": "Bahasa aplikasi",
+    "appLanguageDescription": "Untuk aplikasi dan untuk menerjemahkan berita.",
     "languagePacksIos": "Model terjemahan dikelola oleh perangkat Anda. Anda hanya perlu mengunduh model untuk bahasa yang dipilih. iOS mengurus sisanya.",
     "languagePacksIosPath": "Pengaturan → Umum → Bahasa & Wilayah → Bahasa Terjemahan",
     "languagePacksAndroid": "Model terjemahan (~30MB masing-masing) diunduh secara otomatis saat Anda pertama kali menerjemahkan ke bahasa baru.",
@@ -394,7 +464,9 @@
     "switchingNudge": "Perangkatmu sedang menyiapkan paket terjemahan {{language}}. Tetap buka layar ini sampai selesai — jika kamu keluar sekarang, artikel berita akan tetap dalam bahasa Inggris.",
     "switchingTitle": "Menyiapkan {{language}}…",
     "translationFailedTooltip": "Terjemahan gagal, coba buka ulang aplikasi atau periksa pengaturanmu",
-    "translationUnavailableOnThisDevice": "Perangkat ini tidak bisa menerjemahkan artikel berita ke {{language}}. Sebagai gantinya, artikel ditampilkan dalam bahasa Inggris."
+    "translationUnavailableOnThisDevice": "Perangkat ini tidak bisa menerjemahkan artikel berita ke {{language}}. Sebagai gantinya, artikel ditampilkan dalam bahasa Inggris.",
+    "oneParaAndroid": "Mera menampilkan aplikasi dalam bahasa ini menggunakan paket bahasa ponsel Anda. Jika ponsel Anda belum memilikinya, paket itu diunduh dengan sendirinya.",
+    "oneParaIos": "Mera menampilkan aplikasi dalam bahasa ini menggunakan paket bahasa iPhone Anda. Jika iPhone Anda belum memilikinya, iPhone akan meminta Anda mengunduhnya terlebih dahulu."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -514,7 +586,17 @@
     "bgRefreshTitle": "Penyegaran Latar Belakang",
     "bgRefreshCloudIos": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan dalam Mode Daya Rendah atau saat Penyegaran App Latar Belakang dimatikan. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
     "bgRefreshCloudAndroid": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan saat Penghemat Baterai aktif. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
-    "bgRefreshOnDevice": "Mera mendapatkan artikel baru saat aplikasi ditutup. Ponsel Anda mengurutkannya saat Anda membuka aplikasi. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan."
+    "bgRefreshOnDevice": "Mera mendapatkan artikel baru saat aplikasi ditutup. Ponsel Anda mengurutkannya saat Anda membuka aplikasi. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan.",
+    "cantRun": "Ponsel ini tidak bisa menjalankannya",
+    "chatGroup": "Obrolan",
+    "encrypted": "Terenkripsi. Mera tidak bisa membacanya.",
+    "explainerCan": "Di ponsel ini, Mera AI berjalan sepenuhnya offline. Cloud pribadi menjalankannya dalam keadaan terenkripsi, jadi Mera tidak bisa membacanya.",
+    "explainerCant": "Di ponsel ini, Mera AI berjalan sepenuhnya offline. Anda memerlukan ponsel yang mumpuni untuk menjalankan Mera AI di perangkat. Ponsel ini tidak mampu, jadi Mera memakai cloud pribadi.",
+    "staysPrivateBody": "Mera Protocol selalu aktif. Fakta Anda tidak pernah meninggalkan ponsel ini dalam keadaan tidak terenkripsi.",
+    "staysPrivateTitle": "Data Anda tetap pribadi",
+    "webSearchShort": "Hanya kata pencarian yang keluar dari ponsel Anda. Tidak ada yang menunjukkan siapa Anda.",
+    "whereReads": "Di mana Mera membaca berita Anda",
+    "whileClosed": "Saat Mera ditutup"
   },
   "manageData": {
     "deleting": "Menghapus...",
@@ -555,7 +637,17 @@
       "usage": "Hitungan harian artikel yang dianalisis, untuk menerapkan batas paket Anda. Proses masuk tidak menyimpan alamat IP atau detail browser.",
       "topics": "Frasa topik, disimpan hanya berdasarkan teksnya tanpa apa pun yang mengaitkannya dengan Anda, dan dihapus setelah 14 hari tidak dipakai.",
       "privacyLink": "Baca kebijakan privasi"
-    }
+    },
+    "backupHint": "Salinan terenkripsi, agar ponsel baru tidak mulai dari nol",
+    "clearHistoryHint": "Di ponsel ini",
+    "clearHistoryTitle": "Hapus riwayat baca",
+    "clearProfileHint": "Fakta Anda dan topiknya",
+    "clearProfileTitle": "Hapus profil",
+    "deleteAccountHint": "Akun Anda, paket Anda, dan semua yang Mera simpan di ponsel ini. Tindakan ini tidak dapat dibatalkan.",
+    "deleteGroup": "Hapus",
+    "exportHint": "30 hari terakhir, dalam JSON",
+    "intro": "Cadangkan apa yang Mera simpan di ponsel ini, lihat, bawa, atau hapus.",
+    "lookAndTake": "Lihat dan bawa"
   },
   "preferences": {
     "notifications": "Notifikasi",
@@ -564,7 +656,7 @@
     "privacyPolicy": "Kebijakan Privasi",
     "termsOfService": "Ketentuan Layanan",
     "support": "Hubungi dukungan",
-    "deleteAccount": "Hapus Akun",
+    "deleteAccount": "Hapus akun",
     "logout": "Keluar",
     "signOutModalTitle": "Keluar",
     "signOutConfirm": "Apakah Anda yakin ingin keluar dari akun Anda?",
@@ -768,7 +860,10 @@
     "factDeleteRemove": "Hapus",
     "factDeleteKeep": "Simpan",
     "factDeleteKept": "Tidak ada yang dihapus.",
-    "topicsSavedHint": "Topik tersimpan! Silakan terus tambahkan fakta, atau ketuk {{close}} untuk mulai menjelajah."
+    "topicsSavedHint": "Topik tersimpan! Silakan terus tambahkan fakta, atau ketuk {{close}} untuk mulai menjelajah.",
+    "guidelinesAfter": ". Jika Mera menemukan penyalahgunaan, akun Anda dijeda sampai Anda meminta peninjauan.",
+    "guidelinesBefore": "Anda sedang berbicara dengan Mera, AI, bukan orang. Mera mengikuti ",
+    "guidelinesLink": "pedoman konten"
   },
   "articleFeedback": {
     "thumbsUp": "Saya suka",
@@ -971,7 +1066,15 @@
     "trialEndsOn": "Uji coba gratis Anda berakhir {{date}}",
     "trialNoPaymentDetails": "Tidak ada detail pembayaran dalam file, jadi tidak ada yang perlu dibatalkan. Saat uji coba berakhir, Anda akan beralih ke paket gratis kecuali Anda memilih untuk berlangganan.",
     "starterFreeTitle": "Anda memakai Starter, gratis",
-    "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti."
+    "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti.",
+    "analysedForYou": "Dianalisis untuk Anda",
+    "articlesUsedToday": "Artikel yang dipakai hari ini",
+    "available24h": "Tersedia, 24 jam terakhir",
+    "discarded": "Dibuang",
+    "localOnly": "Dihitung di ponsel ini dari yang sudah disimpan Mera. Tidak ada yang dicatat tambahan.",
+    "ofLimit": "dari {{limit}}",
+    "promoEndsNoRenew": "Akses promo · berakhir {{date}}, tidak diperpanjang",
+    "relevantSoFar": "Relevan sejauh ini"
   },
   "tabs": {
     "deck": "Umpan",
@@ -1036,7 +1139,9 @@
       "none": "Belum ada berita yang cukup cocok untuk ditampilkan di sini."
     },
     "newInterest": "Minat baru",
-    "nextSection": "Berikutnya: {{title}}"
+    "nextSection": "Berikutnya: {{title}}",
+    "sectionStories_one": "{{count}} cerita",
+    "sectionStories_other": "{{count}} cerita"
   },
   "feedStatus": {
     "title": "Status feed",
@@ -1054,9 +1159,11 @@
     "deviceProgress": "Penilaian di perangkat",
     "published": "Dipublikasikan",
     "analysed": "Dianalisis",
-    "relevant": "Relevan untuk Anda",
+    "relevant": "Relevan sejauh ini",
     "lastProcessed": "Terakhir diproses",
-    "errorTitle": "Masalah penilaian"
+    "errorTitle": "Masalah penilaian",
+    "limitUpgrade": "Atau <0>tingkatkan paket Anda</0>.",
+    "tryNow": "Coba sekarang"
   },
   "trackedStories": {
     "emptyTitle": "Belum ada cerita yang diikuti",
@@ -1089,7 +1196,15 @@
     "timelineLoadFailed": "Tidak dapat memuat berita ini. Tarik ke bawah untuk mencoba lagi.",
     "deleteFailed": "Tidak dapat berhenti mengikuti berita ini. Coba lagi.",
     "removeFailed": "Tidak dapat menghapus artikel ini dari berita. Coba lagi.",
-    "emptyBodyMera": "Ikuti cerita yang sedang berkembang dan Mera akan terus memperbaruinya di sini. Ketuk tombol Mera untuk mengikuti satu cerita."
+    "emptyBodyMera": "Ikuti cerita yang sedang berkembang dan Mera akan terus memperbaruinya di sini. Ketuk tombol Mera untuk mengikuti satu cerita.",
+    "followedSince": "Diikuti sejak {{date}}",
+    "headlinesByMera": "Judul ditulis oleh Mera",
+    "learnAbout": "Pelajari tentang Cerita",
+    "nextNote": "Mera menambahkan liputan baru di sini saat cerita berkembang.",
+    "stopFollowing": "Berhenti mengikuti",
+    "stopFollowingConfirmBody": "Mera berhenti menambahkan liputan di sini dan menghapus apa yang sudah disimpannya untuk cerita ini.",
+    "stopFollowingConfirmTitle": "Berhenti mengikuti cerita ini?",
+    "updatedAgo": "diperbarui {{time}}"
   },
   "whatsNew": {
     "title": "Yang baru",
@@ -1125,7 +1240,9 @@
     "syncFailedTitle": "Tidak dapat menyegarkan feed Anda",
     "syncFailedBody": "Kami akan mencoba lagi sebentar lagi.",
     "dailyLimitTitle": "Batas berita harian tercapai",
-    "dailyLimitBody": "Anda telah mencapai batas artikel hari ini. Akan direset sebentar lagi."
+    "dailyLimitBody": "Anda telah mencapai batas artikel hari ini. Akan direset sebentar lagi.",
+    "emptyBody": "Apa pun yang membutuhkan Anda, seperti pembersihan profil atau pertanyaan dari Mera, muncul di sini.",
+    "settingsLink": "Pengaturan notifikasi"
   },
   "settings": {
     "groupPrivacy": "Privasi dan data",
@@ -1136,7 +1253,7 @@
   },
   "personaAudit": {
     "entryRow": "Log perubahan profil",
-    "title": "Log perubahan profil",
+    "title": "Perubahan pada profil Anda",
     "subtitle": "Setiap perubahan pada minat Anda",
     "empty": "Belum ada perubahan. Saat Mera menyempurnakan minat Anda, setiap perubahan akan muncul di sini.",
     "revert": "Kembalikan",
@@ -1296,9 +1413,9 @@
     "notificationBody_one": "Mera menemukan {{count}} pembersihan untuk profil Anda.",
     "notificationBody_other": "Mera menemukan {{count}} hal untuk dirapikan di profil Anda.",
     "reviewChip": "Tinjau",
-    "title": "Rapikan profil",
+    "title": "Rapikan profil Anda",
     "subtitle": "Saran perapian",
-    "intro": "Mera menemukan beberapa hal yang layak dirapikan. Terima yang Anda setujui.",
+    "intro": "Mera menemukan ini. Tidak ada yang berubah sampai Anda memilih.",
     "empty": "Profil Anda terlihat sehat",
     "accept": "Terima",
     "reject": "Tolak",
@@ -1314,10 +1431,21 @@
     "profileRow_one": "Rapikan profil · {{count}} saran",
     "profileRow_other": "Rapikan profil · {{count}} saran",
     "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini.",
-    "effectLocationConflict": "Menyimpan tempat yang lebih baru dan menghapus yang lama."
+    "effectLocationConflict": "Menyimpan tempat yang lebih baru dan menghapus yang lama.",
+    "emptyBody": "Mera menyarankan pembersihan di sini saat dua fakta tumpang tindih atau salah satunya tidak lagi relevan.",
+    "emptyTitle": "Tidak ada yang perlu dirapikan",
+    "keepBoth": "Simpan keduanya",
+    "merge": "Gabungkan",
+    "mergeNote": "Penggabungan menghapus fakta kedua. Tindakan ini tidak dapat dibatalkan.",
+    "titleDuplicate": "Dua fakta mengatakan hampir hal yang sama",
+    "titleIncoherentTopics": "Beberapa topik tidak cocok dengan fakta ini",
+    "titleLocationConflict": "Dua tempat tidak sesuai",
+    "titleStaleFact": "Sebuah fakta tidak punya topik aktif lagi",
+    "titleStaleTopic": "Sebuah topik sudah sepi",
+    "titleTooBroad": "Satu fakta membawa terlalu banyak"
   },
   "locations": {
-    "title": "Tempat Anda",
+    "title": "Tempat",
     "subtitle": "Lokasi yang membentuk feed Anda",
     "autoDetectDisclaimer": "Mera mendeteksi tempat Anda secara otomatis dari profil Anda. Anda dapat menambahkan lebih banyak di sini, tetapi memberitahu Mera secara langsung bekerja lebih baik, karena ia belajar bagaimana setiap tempat berhubungan dengan Anda dan menyesuaikan rekomendasi Anda.",
     "empty": "Tambahkan tempat yang Anda pedulikan",
@@ -1361,7 +1489,13 @@
     "deleteConfirmTitle": "Hapus tempat ini?",
     "deleteConfirmBody": "Tempat ini tidak akan lagi membentuk feed Anda atau muncul di Eksplor.",
     "deleteFailedTitle": "Tidak dapat menghapus tempat",
-    "deleteFailedBody": "Silakan coba lagi."
+    "deleteFailedBody": "Silakan coba lagi.",
+    "footnote": "Seberapa banyak berita lokal yang dibawa setiap tempat. Hapus atau ganti label tempat dari menu •••.",
+    "intro": "Tempat berasal dari fakta Anda. Tambahkan di sini, atau beri tahu Mera bagaimana tempat itu berhubungan dengan Anda.",
+    "menuA11y": "Pilihan untuk {{place}}",
+    "relabel": "Ganti label",
+    "remove": "Hapus",
+    "useForWeather": "Gunakan untuk cuaca"
   },
   "notInterested": {
     "title": "Tidak tertarik",
@@ -1457,15 +1591,46 @@
     "pleaseWait": "Harap tunggu"
   },
   "facts": {
-    "screenTitle": "Fakta Anda",
-    "screenSubtitle": "Apa yang Mera ketahui tentang Anda",
+    "screenTitle": "Fakta",
+    "screenSubtitle": "Mera memilih berita Anda dari ini. Setiap item menunjukkan jumlah topiknya. Ketuk satu untuk melihat topik dan ceritanya.",
     "influence": "Pengaruh",
     "moreInfluence": "Pengaruh lebih besar",
     "lessInfluence": "Pengaruh lebih kecil",
     "declinedTopicsTitle": "Topik yang Anda hapus",
     "allowAgain": "Izinkan lagi",
     "topicRemovalConsequence": "Topik yang dihapus tidak akan disarankan lagi kecuali Anda mengizinkannya kembali di Topik yang Anda hapus.",
-    "deleteFactA11y": "Hapus {{fact}}"
+    "deleteFactA11y": "Hapus {{fact}}",
+    "addFact": "Tambah fakta",
+    "page": {
+      "edit": "Ubah",
+      "emptyBody": "Saat Mera menemukan cerita lewat fakta ini dan menyingkirkannya, cerita itu muncul di sini.",
+      "emptyTitle": "Belum ada yang disingkirkan",
+      "howMuch": "Seberapa besar pengaruhnya",
+      "impactful": "Berpengaruh",
+      "impactfulEmpty": "Belum ada cerita untuk fakta ini dalam 48 jam terakhir.",
+      "impactfulHint": "Cerita yang Mera pilih untuk Anda karena fakta ini.",
+      "menuA11y": "Ubah atau hapus fakta ini",
+      "new": "Baru",
+      "nextInterest": "Minat berikutnya",
+      "notImpactful": "Tidak berpengaruh",
+      "notImpactfulHint": "Ditemukan lewat topik fakta ini dalam 48 jam terakhir, lalu disingkirkan. Disimpan di ponsel ini.",
+      "reach_one": "{{count}} cerita dalam 48 jam terakhir",
+      "reach_other": "{{count}} cerita dalam 48 jam terakhir",
+      "recentTab": "Artikel terbaru",
+      "removeChipA11y": "Hapus {{text}}",
+      "showLessHint": "Mera menampilkan lebih sedikit cerita tentang ini. Hapus satu untuk melihatnya seperti sebelumnya.",
+      "showLessOf": "Tampilkan lebih sedikit",
+      "showLessPlaceholder": "Tambah topik",
+      "showLessThis": "Tampilkan lebih sedikit tentang ini",
+      "stillLooking": "Mera sedang mencari topik lainnya",
+      "storyCount_one": "{{count}} cerita",
+      "storyCount_other": "{{count}} cerita",
+      "suggestMore": "Sarankan lebih banyak",
+      "thisWasRelevant": "Ini relevan",
+      "title": "Fakta",
+      "topicMenuA11y": "Pilihan untuk {{text}}",
+      "topicsTab": "Topik"
+    }
   },
   "publicationPrefs": {
     "kindBoost": "Naikkan",
@@ -1494,15 +1659,15 @@
     "empty": "Tidak ada yang perlu disesuaikan saat ini."
   },
   "pin": {
-    "lockTitle": "Masukkan PIN Anda",
+    "lockTitle": "Mera terkunci",
     "lockSubtitle": "Masukkan PIN 4 digit untuk membuka Mera",
     "incorrect": "PIN salah. Coba lagi.",
     "lockedTryAgain": "Terlalu banyak percobaan. Coba lagi dalam {{time}}",
     "forgot": "Lupa PIN?",
-    "forgotTitle": "Reset PIN Anda",
-    "forgotBody": "Untuk reset PIN, masuk lagi dengan kode email sekali pakai. Data tersimpan Anda tetap berada di perangkat ini.",
+    "forgotTitle": "Lupa PIN?",
+    "forgotBody": "Masuk lagi dengan akun Anda untuk mengatur PIN baru.",
     "forgotOffline": "Mereset PIN memerlukan koneksi internet untuk mengirim kode masuk. Hubungkan ke internet dan coba lagi.",
-    "forgotConfirm": "Masuk untuk reset",
+    "forgotConfirm": "Masuk lagi",
     "setupTitle": "Atur PIN",
     "setupSubtitle": "Pilih PIN 4 digit untuk melindungi aplikasi di perangkat ini",
     "confirmTitle": "Konfirmasi PIN Anda",
@@ -1511,7 +1676,7 @@
   },
   "security": {
     "title": "Keamanan",
-    "requirePinTitle": "Perlukan PIN untuk membuka",
+    "requirePinTitle": "Perlukan PIN",
     "requirePinDescription": "Minta PIN 4 digit saat membuka Mera",
     "setPinTitle": "Atur PIN",
     "setPinSubtitle": "Pilih PIN 4 digit untuk membuka Mera di perangkat ini",
@@ -1535,7 +1700,7 @@
     "sectionText": "Teks",
     "sectionVisuals": "Visual",
     "textSizeTitle": "Ukuran teks",
-    "textSizeDescription": "Berlaku di mana pun di Mera. Ini di atas pengaturan ukuran teks perangkat Anda sendiri.",
+    "textSizeDescription": "Berlaku di atas ukuran teks bawaan ponsel Anda.",
     "textSizePreviewLabel": "Pratinjau",
     "textSizePreviewHeadline": "Pasar stabil saat pembicaraan dilanjutkan",
     "textSizePreviewBody": "Sampel singkat teks body, ditampilkan pada ukuran yang Anda pilih.",
@@ -1545,12 +1710,21 @@
     "textSizeStepLarge": "Besar",
     "textSizeStepLarger": "Lebih besar",
     "deviceTextSizeHint": "Untuk teks yang lebih besar, gunakan Tampilan & Kecerahan di pengaturan perangkat Anda.",
-    "sectionStartup": "Tab Startup",
+    "sectionStartup": "Saat Mera dibuka",
     "startupTabA11y": "Tab Startup, {{label}}",
     "startupTabDescription": "Pilih tab mana yang dibuka Mera saat Anda meluncurkan aplikasi.",
     "startupTabTitle": "Buka saat diluncurkan",
     "liteModeTitle": "Mode Lite",
-    "liteModeDescription": "Menonaktifkan latar belakang bergerak dan animasi dekoratif. Lebih lancar di ponsel lama dan lebih hemat baterai."
+    "liteModeDescription": "Latar lebih tenang dan efek lebih sedikit. Lebih ringan untuk ponsel lama dan baterai.",
+    "appearanceDark": "Gelap",
+    "appearanceHint": "Mengikuti pengaturan ponsel Anda saat dibuka. Pilihan Anda tetap tersimpan.",
+    "appearanceLight": "Terang",
+    "appearanceTitle": "Tampilan",
+    "blurHint": "Melembutkan gambar artikel di seluruh aplikasi.",
+    "minimapHint": "Deretan garis pendek di sisi kiri Feed: putih untuk kartu yang sudah Anda lihat, oranye untuk yang baru. Seret untuk melompat.",
+    "minimapTitle": "Peta Feed",
+    "openOn": "Buka di",
+    "sectionFeed": "Feed"
   },
   "freeTier": {
     "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",
@@ -1639,7 +1813,7 @@
       "deleteA11y": "Hapus pemeriksaan fakta ini",
       "listSubtitle": "Cerita yang Anda minta Mera untuk memeriksa faktanya. Disimpan hanya di perangkat ini.",
       "listTitle": "Pemeriksaan fakta",
-      "pending": "Masih mencari",
+      "pending": "Memeriksa dengan pemeriksa fakta",
       "untitled": "Cerita tanpa judul",
       "openA11y": "Buka artikel ini",
       "articleGone": "Artikel telah kadaluarsa, sehingga tidak dapat dibuka. Pemeriksaan fakta yang kami temukan disimpan di sini.",
@@ -1754,7 +1928,7 @@
         "slides": {
           "what": {
             "headline": "Aplikasi berita yang dimulai dengan Anda",
-            "body": "Sebagian besar aplikasi berita dimulai dengan berita dan berharap beberapa cocok. Mera dimulai di ujung lain: ia belajar sedikit tentang hidup Anda, kemudian mencari cerita yang menyentuhnya."
+            "body": "Sebagian besar aplikasi berita dimulai dengan berita dan berharap sebagiannya cocok. Mera dimulai dengan Anda, lalu mencari cerita yang menyentuh hidup Anda."
           },
           "not-a-timeline": {
             "headline": "Bukan garis waktu",
@@ -1803,7 +1977,7 @@
           },
           "begin": {
             "headline": "Siap saat Anda siap",
-            "body": "Masuk dan Mera akan menanyakan Anda beberapa hal. Tidak ada jawaban yang salah dan Anda dapat mengubah apa pun nanti. Panduan lainnya menunggu di Pengaturan."
+            "body": "Mera akan menanyakan beberapa hal. Tidak ada jawaban yang salah, dan Anda bisa mengubah apa saja nanti."
           }
         }
       },
@@ -1849,6 +2023,28 @@
             "headline": "Beberapa fakta lebih penting dari yang lain",
             "body": "Di tab Anda, buka fakta Anda dan ketuk apa pun yang Mera ketahui tentang Anda untuk menaikkan atau menurunkan bobotnya, menulis ulang, atau menghapusnya. Menurunkan bobot lebih lembut daripada menghapus, dan biasanya langkah pertama yang lebih baik.",
             "ask": "Bagaimana cara saya mengubah seberapa penting salah satu fakta saya?"
+          },
+          "your-profile": {
+            "body": "Semua yang Mera gunakan untuk memilih berita Anda, di satu tempat. Ketuk masing-masing.",
+            "headline": "Profil Anda",
+            "reveal": {
+              "facts": {
+                "label": "Fakta",
+                "text": "Fakta-fakta benar tentang hidup Anda. Setiap fakta menemukan topiknya sendiri."
+              },
+              "places": {
+                "label": "Tempat",
+                "text": "Tempat Anda tinggal, bekerja, dan bepergian. Tempat-tempat ini membawa berita lokal dan menambahkan negaranya ke Dunia."
+              },
+              "show-less": {
+                "label": "Tampilkan lebih sedikit",
+                "text": "Topik yang Anda tolak di dalam sebuah fakta. Mera menampilkan lebih sedikit cerita tentang topik itu."
+              },
+              "sources": {
+                "label": "Sumber",
+                "text": "Publikasi yang ingin Anda lihat lebih banyak atau lebih sedikit, dan yang Anda bayar."
+              }
+            }
           }
         }
       },
@@ -1857,9 +2053,9 @@
         "subtitle": "Di mana cerita hari itu tinggal, dan bagaimana mereka bergerak.",
         "slides": {
           "two-lists": {
-            "headline": "Tiga halaman, satu tab",
-            "body": "Tab Umpan punya tiga halaman. Umpan adalah satu daftar panjang dengan yang paling relevan di dekat atas. Minat mengurutkan berita yang sama sesuai yang Anda katakan kepada Mera. Cerita menyimpan berita berkembang yang Anda ikuti. Geser ke samping untuk berpindah.",
-            "ask": "Apa bedanya Umpan dan Minat?"
+            "headline": "Dua tampilan, satu Feed",
+            "body": "Feed menampilkan cerita yang dipilih Mera untuk Anda. Feed berkelanjutan adalah satu daftar panjang, dengan yang paling relevan di bagian atas. Feed per bagian mengelompokkan cerita yang sama berdasarkan fakta. Cerita, cukup geser, menyimpan cerita yang berkembang dan Anda ikuti.",
+            "ask": "Apa bedanya antara Feed berkelanjutan dan Feed per bagian?"
           },
           "nothing-removed": {
             "headline": "Tidak ada yang pernah dihapus",
@@ -1907,7 +2103,7 @@
           },
           "quiet-by-design": {
             "headline": "Umpan yang sengaja dibuat tenang",
-            "body": "Mera tidak menghitung di depan Anda saat Anda membaca. Ketuk keduanya untuk melihat bagaimana tiap halaman tetap tenang.",
+            "body": "Mera tidak menghitung Anda saat Anda membaca. Ketuk keduanya untuk melihat bagaimana setiap tampilan tetap tenang.",
             "ask": "Mengapa Umpan tidak menampilkan berapa banyak berita yang masuk?",
             "reveal": {
               "feed": {
@@ -1917,6 +2113,14 @@
               "dashboard": {
                 "label": "Minat",
                 "text": "Hari yang sama diurutkan berdasarkan minat, dengan satu bagian untuk setiap hal yang Anda katakan kepada Mera dan berita yang belum dibaca di urutan pertama. Bagian diurutkan ulang saat Anda meninggalkan halaman, atau setiap 10 menit."
+              },
+              "continuous": {
+                "label": "Feed berkelanjutan",
+                "text": "Ikon Mera di bagian atas berubah warna saat Mera membaca dan tetap diam di waktu lainnya. Ini satu-satunya tanda bahwa sesuatu sedang diambil."
+              },
+              "sectioned": {
+                "label": "Feed per bagian",
+                "text": "Cerita yang sama dikelompokkan berdasarkan fakta, satu bagian untuk setiap hal yang Anda beri tahu Mera, dengan cerita yang belum dibaca di urutan pertama."
               }
             }
           }
@@ -2014,8 +2218,8 @@
             "headline": "Dua cara untuk memulai",
             "body": "Keduanya berakhir di tempat yang sama.",
             "steps": {
-              "0": "Buka cerita secara penuh dan ketuk ikon trek di baris tombol di bawahnya.",
-              "1": "Atau buka Cerita Diikuti, ketuk tombol ikuti, dan hanya katakan apa yang ingin Anda ikuti."
+              "0": "Pada artikel, buka menu ••• dan ketuk Ikuti cerita ini.",
+              "1": "Atau ketuk tombol Mera dan katakan apa yang ingin Anda ikuti."
             },
             "ask": "Bagaimana cara saya mengikuti cerita?"
           },
@@ -2071,11 +2275,11 @@
             "choose": {
               "places": {
                 "label": "Tempat Anda",
-                "feedback": "Tempat Anda menambahkan negaranya sendiri. Untuk negara lain, gunakan pena."
+                "feedback": "Tempat Anda menambahkan negaranya sendiri. Untuk negara lain, tekan lama nama halaman di header Dunia."
               },
               "sources": {
-                "label": "Pena di header Dunia",
-                "feedback": "Benar. Ketuk pena, lalu cari negaranya dan tambahkan."
+                "label": "Tekan lama nama halaman Dunia",
+                "feedback": "Benar. Tekan lama nama halaman, lalu cari negaranya dan tambahkan."
               },
               "settings": {
                 "label": "Pengaturan",
@@ -2089,7 +2293,7 @@
           },
           "hide-a-chip": {
             "headline": "Terlalu banyak negara",
-            "body": "Ketuk pena, lalu tanda x pada sebuah negara, untuk menyembunyikan halamannya. Jika negara itu berasal dari salah satu tempat Anda, tempatnya tetap ada di profil dan hanya halamannya yang hilang.",
+            "body": "Tekan lama nama halaman, lalu ketuk x pada sebuah negara untuk menyembunyikan halamannya. Jika negara itu berasal dari salah satu tempat Anda, tempat itu tetap ada di profil Anda dan hanya halamannya yang hilang.",
             "ask": "Bagaimana cara menghapus halaman negara dari Dunia?"
           }
         }
@@ -2316,6 +2520,28 @@
             "ask": "Bagaimana cara melihat apa yang telah mengubah profil saya?"
           }
         }
+      },
+      "library": {
+        "slides": {
+          "fact-checks": {
+            "body": "Mulai dari menu ••• pada artikel, atau minta Mera memeriksa sebuah klaim. Ini memakan waktu, dan titik pada Pustaka memberi tahu Anda saat sudah selesai.",
+            "headline": "Pemeriksaan fakta memakan waktu"
+          },
+          "history": {
+            "body": "Riwayat mencantumkan publikasi yang Anda buka di situsnya sendiri, dan seberapa sering Anda kembali. Ini tetap di ponsel ini.",
+            "headline": "Tempat Anda membaca"
+          },
+          "saved": {
+            "body": "Ketuk penanda di artikel mana pun untuk menyimpannya. Artikel tersimpan tetap di ponsel ini sampai Anda menghapusnya.",
+            "headline": "Tersimpan tetap di sini"
+          },
+          "stats": {
+            "body": "Statistik hanya menghitung apa yang sudah disimpan Mera di ponsel ini. Tidak ada yang dilacak untuk membuatnya.",
+            "headline": "30 hari terakhir Anda"
+          }
+        },
+        "subtitle": "Yang Anda simpan, periksa, dan buka.",
+        "title": "Pustaka Anda"
       }
     }
   },
@@ -2394,7 +2620,7 @@
     "icloudHiddenFolder": "Di penyimpanan iCloud pribadi milik aplikasi ini, bukan di file iCloud Drive Anda",
     "icloudReady": "Menggunakan penyimpanan iCloud Anda",
     "icloudUnavailable": "Masuk ke iCloud di perangkat ini untuk menggunakannya",
-    "offDescription": "Simpan salinan fakta, topik, chat, artikel tersimpan, dan riwayat baca Anda, sehingga ponsel baru tidak berarti mulai dari awal. Ini opsional dan tidak ada yang berjalan sampai Anda menyiapkannya.",
+    "offDescription": "Salinan terenkripsi dari profil, artikel tersimpan, dan riwayat Anda, agar ponsel baru tidak mulai dari nol. Hanya kode pemulihan Anda yang bisa membukanya.",
     "offPrivacy": "Salinan dienkripsi di perangkat ini sebelum dikirim ke mana pun. Pihak yang menyimpannya tidak dapat membacanya, begitu juga kami. Karena itulah kode pemulihan yang Anda dapatkan berikutnya adalah satu-satunya cara untuk membukanya kembali.",
     "onboardingIntro": "Jika Anda pernah menggunakan Mera sebelumnya, masukkan kode pemulihan Anda dan kami akan mengembalikan fakta, topik, dan pengaturan Anda. Anda bisa melewati ini dan mulai dari awal.",
     "onboardingSkip": "Lewati, saya baru di sini",
@@ -2407,7 +2633,7 @@
     "restoreHint": "Mengganti data di perangkat ini",
     "restoreLookHere": "Cari cadangan saya di sini",
     "restoreWhereDescription": "Pilih tempat Anda menyimpannya. Anda akan melihat isinya sebelum ada yang diganti.",
-    "restoreWhereTitle": "Di mana cadangan Anda?",
+    "restoreWhereTitle": "Di mana cadangan Anda",
     "restoredDescription_one": "{{count}} item dipulihkan ke perangkat ini.",
     "restoredDescription_other": "{{count}} item dipulihkan ke perangkat ini.",
     "restoredTitle": "Pemulihan selesai",
@@ -2438,7 +2664,24 @@
     "working": "Memproses…",
     "statusFromCloud": "Cadangan terakhir {{when}}, ditemukan di {{provider}}",
     "restoreOption": "Cadangan dari {{when}}",
-    "statusFailed": "Pencadangan terakhir gagal pada {{when}}"
+    "statusFailed": "Pencadangan terakhir gagal pada {{when}}",
+    "accepted": "Diterima",
+    "change": "Ubah",
+    "codeSavedHint": "Tersimpan. Ketuk Tampilkan untuk melihatnya lagi.",
+    "finish": "Selesaikan pengaturan",
+    "foundDate": "Cadangan dari {{date}}",
+    "foundIn": "Ditemukan di {{place}}",
+    "restoreBody": "Ponsel baru? Pulihkan cadangan yang pernah Anda buat. Anda memerlukan kode pemulihannya.",
+    "restoreCodeHint": "Kode yang Anda tulis saat mengatur cadangan.",
+    "restoreReplaces": "Mengganti profil, artikel tersimpan, dan riwayat di ponsel ini.",
+    "restoringHint": "Biarkan Mera tetap terbuka di Wi-Fi. Ini memakan waktu satu atau dua menit.",
+    "restoringProgress": "{{done}} dari {{total}} item",
+    "restoringTitle": "Memulihkan data Anda",
+    "schedule": "Jadwal: {{cadence}}",
+    "show": "Tampilkan",
+    "startRestoring": "Mulai pemulihan",
+    "stepSaved": "Tersimpan",
+    "where": "Lokasi"
   },
   "factChoice": {
     "titleSingle": "Tambahkan ini ke persona kamu?",
@@ -2529,7 +2772,21 @@
       "heatLegendLess": "sedikit",
       "heatLegendMore": "banyak",
       "rhythmWeekdays": "S,S,R,K,J,S,M",
-      "habitsTitle": "Cara saya membaca"
+      "habitsTitle": "Cara saya membaca",
+      "privacyMine": "Dihitung di ponsel saya. Tidak ada yang keluar darinya.",
+      "windowLine": "{{label}} · 30 hari terakhir"
+    },
+    "choose": {
+      "help": "Setiap yang Anda pilih menjadi gambarnya sendiri.",
+      "preview_one": "Pratinjau {{count}} gambar",
+      "preview_other": "Pratinjau {{count}} gambar",
+      "title": "Pilih yang akan dibagikan"
+    },
+    "preview": {
+      "dark": "Latar gelap",
+      "light": "Latar terang",
+      "position": "{{index}} dari {{total}}",
+      "title": "Pratinjau"
     }
   },
   "analytics": {
@@ -2587,7 +2844,10 @@
     "noRouteSentence": "Mera tidak bisa menangkap ini tentang apa. Coba katakan dengan cara lain.",
     "noProposalSentence": "Mera tidak menemukan apa pun untuk ditambahkan dari ini.",
     "unknownToolSentence": "Ada yang bermasalah di sisi Mera. Tanya lagi untuk melanjutkan.",
-    "malformedChoiceSentence": "Mera tidak bisa menampilkan pilihannya. Tanya lagi untuk melanjutkan."
+    "malformedChoiceSentence": "Mera tidak bisa menampilkan pilihannya. Tanya lagi untuk melanjutkan.",
+    "boxTitle": "Mera sedang bekerja",
+    "doneInSteps_one": "Selesai dalam {{count}} langkah",
+    "doneInSteps_other": "Selesai dalam {{count}} langkah"
   },
   "skillPhrase": {
     "residence": "tempat tinggalmu",
@@ -2711,7 +2971,7 @@
     "title": "Tindakan artikel",
     "askMera": "Tanya Mera soal ini",
     "following": "Mengikuti berita ini",
-    "checkFacts": "Cari cek fakta",
+    "checkFacts": "Pemeriksaan fakta",
     "openOn": "Buka di {{source}}",
     "openInTranslate": "Buka di Google Terjemahan",
     "fewerFrom": "Lebih sedikit dari {{source}}",
@@ -2721,7 +2981,13 @@
     "actionFailed": "Itu tidak berhasil. Coba lagi.",
     "removeLike": "Hapus suka",
     "removeDislike": "Hapus \"Bukan untuk saya\"",
-    "aboutSource": "Tentang sumber ini"
+    "aboutSource": "Tentang sumber ini",
+    "liveChat": "Obrolan langsung",
+    "liveChatSub": "Seseorang dari tim Mera",
+    "sourceSub": "Tentang, lebih sedikit dari {{source}}",
+    "support": "Dukungan",
+    "supportSub": "Laporkan bug, obrolan langsung, FAQ, tutorial",
+    "tutorial": "Tutorial"
   },
   "related": {
     "allCountries": "Semua negara",
@@ -2734,8 +3000,8 @@
     "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
   },
   "systemCheck": {
-    "title": "Menyiapkan Mera",
-    "subtitle": "Pemeriksaan cepat tentang bagaimana Mera akan berjalan di ponsel ini.",
+    "title": "Memeriksa ponsel Anda",
+    "subtitle": "Beberapa detik, agar Mera berjalan lancar di sini.",
     "phoneTitle": "Ponsel Anda",
     "phoneSupported": "Didukung: {{details}}",
     "memory": "Memori {{gb}} GB",
@@ -2754,7 +3020,12 @@
     "retry": "Coba Lagi",
     "useEnglish": "Gunakan Bahasa Inggris",
     "settingsTitle": "Pemeriksaan sistem",
-    "settingsDescription": "Lihat bagaimana Mera berjalan di ponsel ini dan periksa paket bahasa Anda."
+    "settingsDescription": "Lihat bagaimana Mera berjalan di ponsel ini dan periksa paket bahasa Anda.",
+    "aiCloud": "Belum ada di ponsel ini. Mera memakai cloud pribadi.",
+    "liteOff": "Mode ringan mati",
+    "liteOn": "Mode ringan aktif",
+    "phoneSupportedLine": "Ponsel ini didukung",
+    "translationFor": "Terjemahan tersedia untuk {{language}}"
   },
   "feedbackRequest": {
     "title": "Pertanyaan dari Mera",
@@ -2789,7 +3060,17 @@
     "prefFewerA11y": "Lebih sedikit dari sumber ini",
     "history": "Riwayat",
     "historyEmptyTitle": "Belum ada apa-apa di sini",
-    "historyEmptyBody": "Saat Anda membuka salah satu artikelnya di situs penerbit, artikel itu muncul di sini selama 30 hari."
+    "historyEmptyBody": "Saat Anda membuka salah satu artikelnya di situs penerbit, artikel itu muncul di sini selama 30 hari.",
+    "fewerFrom": "Lebih sedikit dari",
+    "historyEmpty": "Tidak ada kunjungan di sini dalam 30 hari terakhir.",
+    "moreFrom": "Lebih banyak dari",
+    "openedCount_one": "Anda membuka {{publisher}} sekali dalam 30 hari terakhir.",
+    "openedCount_other": "Anda membuka {{publisher}} {{count}} kali dalam 30 hari terakhir.",
+    "openedOn": "Dibuka {{date}}",
+    "openedToday": "Dibuka hari ini",
+    "openedYesterday": "Dibuka kemarin",
+    "supportLine": "Pelaporan yang baik bertahan saat pembacanya mendukungnya.",
+    "visitsLabel": "Kunjungan Anda dalam 30 hari terakhir"
   },
   "nav": {
     "page": {
@@ -2815,7 +3096,10 @@
       "add": "Tambah",
       "addA11y": "Tambah {{name}}",
       "noMatch": "Tidak ada negara untuk {{query}}"
-    }
+    },
+    "explainerA11y": "Tentang {{page}}",
+    "learnMore": "Pelajari lebih lanjut",
+    "tabNewA11y": "{{label}}, ada pembaruan baru"
   },
   "feedShortcuts": {
     "header": "Selagi Mera membaca",
@@ -2826,11 +3110,12 @@
     "saved1": "Lanjutkan artikel yang Anda simpan untuk nanti",
     "saved2": "Baca yang Anda simpan untuk nanti",
     "stories1": "Lihat yang terbaru dari cerita yang Anda ikuti",
-    "stories2": "Kejar perkembangan cerita yang Anda ikuti"
+    "stories2": "Kejar perkembangan cerita yang Anda ikuti",
+    "storiesInvite": "Ikuti cerita untuk tetap mengikuti"
   },
   "interests": {
     "emptyTitle": "Mera belum tahu minat Anda",
-    "emptyBody": "Beri tahu Mera satu hal yang Anda ikuti dan hal itu akan punya bagian sendiri di sini.",
+    "emptyBody": "Beri tahu Mera satu hal yang Anda ikuti dan hal itu mendapat bagiannya sendiri di sini. Ketuk tombol Mera untuk memulai.",
     "chipHome": "Tempat tinggal Anda",
     "chipWork": "Pekerjaan Anda",
     "chipTeam": "Tim yang Anda dukung",
@@ -2838,7 +3123,8 @@
     "draftWork": "Pekerjaan saya:",
     "draftTeam": "Tim yang saya dukung:",
     "findingStories": "Mera sedang mencari cerita untuk minat ini. Cerita pertama akan muncul di sini dalam beberapa detik.",
-    "backToInterests": "Kembali ke Minat"
+    "backToInterests": "Kembali ke Minat",
+    "learnAbout": "Pelajari tentang minat"
   },
   "world": {
     "windowRowLabel": "Berita utama dari",
@@ -2849,30 +3135,49 @@
     "showWider": "Tampilkan 48 jam",
     "offline": "Anda sedang offline. Halaman Dunia dan pencarian memerlukan koneksi.",
     "arrange": {
-      "placesNote": "{{country}} berasal dari tempat Anda. Menghapusnya menyembunyikan halamannya. Tempat Anda tetap ada."
+      "placesNote": "{{country}} berasal dari tempat Anda. Menghapusnya menyembunyikan halamannya. Tempat Anda tetap ada. Cari di sini untuk memunculkannya kembali."
     },
     "search": {
       "placeholder": "Cari semua berita",
       "empty": "Cari berita yang ditemukan Mera dalam 48 jam terakhir.",
       "count_other": "{{count}} cerita",
-      "errorRetry": "Tidak bisa mencari saat ini."
+      "errorRetry": "Tidak bisa mencari saat ini.",
+      "noMatch": "Tidak ada berita yang cocok dengan ini dalam 48 jam terakhir.",
+      "noMatchTry": "Periksa ejaannya, atau coba dengan lebih sedikit kata.",
+      "privacy": "Mera tidak menautkan pencarian Anda ke akun Anda."
     },
     "explainer": {
       "title": "Cara kerja Dunia",
       "what": "Dunia menampilkan cerita yang paling banyak diliput dalam 24 jam terakhir, untuk dunia dan untuk setiap negara yang Anda tambahkan. Pilih 6, 12, atau 48 jam di bagian atas halaman. Isinya sama untuk semua orang, bukan dipilih khusus untuk Anda.",
       "how1": "Berita utama Dunia mengurutkan cerita berdasarkan seberapa luas liputannya di berbagai negara.",
-      "how2": "Berita utama suatu negara berasal dari sumber berita yang berbasis di negara tersebut."
+      "how2": "Berita utama suatu negara berasal dari sumber berita yang berbasis di negara tersebut.",
+      "country1": "Cerita naik peringkat semakin banyak media di negara ini sendiri yang menulis tentangnya.",
+      "countrySame": "Halaman ini sama untuk semua orang. Tidak ada hal tentang Anda yang digunakan di sini.",
+      "same": "Dunia sama untuk semua orang. Tidak ada hal tentang Anda yang digunakan di sini.",
+      "top1": "Cerita yang diliput di banyak negara, oleh banyak penerbit berbeda, naik peringkat paling tinggi. Satu negara yang sibuk tidak bisa memenuhi halaman, dan banyak artikel dari satu penerbit dihitung sekali.",
+      "window": "Tombol waktu menentukan seberapa jauh halaman melihat ke belakang: 6, 12, 24 atau 48 jam. Setiap daftar hanya menghitung artikel yang terbit dalam rentang itu."
     }
   },
   "library": {
     "saved": {
       "exportRow_other": "{{count}} tersimpan · disimpan di ponsel ini sampai Anda menghapusnya",
       "export": "Ekspor",
-      "emptyBody": "Ketuk penanda di artikel mana pun untuk menyimpannya di sini. Artikel tersimpan tetap ada di ponsel ini sampai Anda menghapusnya."
+      "emptyBody": "Ketuk penanda di artikel mana pun untuk menyimpannya di sini. Artikel tersimpan tetap ada di ponsel ini sampai Anda menghapusnya.",
+      "count_one": "{{count}} tersimpan",
+      "count_other": "{{count}} tersimpan",
+      "learn": "Pelajari tentang Tersimpan"
     },
     "checks": {
-      "emptyTitle": "Belum ada pengecekan",
-      "emptyBodyAsk": "Ketuk tanda centang pada artikel, atau minta Mera memeriksa sebuah klaim. Pengecekan yang kamu minta akan muncul di sini."
+      "emptyTitle": "Belum ada pemeriksaan fakta",
+      "emptyBodyAsk": "Ketuk tanda centang pada artikel, atau minta Mera memeriksa sebuah klaim. Pengecekan yang kamu minta akan muncul di sini.",
+      "checkedAgo": "diperiksa {{age}} lalu",
+      "checking": "Memeriksa ini dengan pemeriksa fakta",
+      "claim": "Klaimnya",
+      "count_one": "{{count}} pemeriksaan fakta",
+      "count_other": "{{count}} pemeriksaan fakta",
+      "emptyBodyMenu": "Pada artikel mana pun, buka menu ••• dan ketuk Pemeriksaan fakta. Atau minta Mera memeriksa sebuah klaim. Hasilnya muncul di sini.",
+      "learn": "Pelajari tentang Pemeriksaan fakta",
+      "new": "Baru"
     },
     "visited": {
       "intro": "Publikasi yang paling sering Anda buka di sumbernya dalam 30 hari terakhir. Jurnalisme yang baik bertahan jika pembacanya mendukung.",
@@ -2892,34 +3197,66 @@
     "stats": {
       "emptyTitle": "Belum ada kartu",
       "emptyBody": "Buka artikel di situs penerbit dan Mera membuat kartu pertama Anda.",
-      "share": "Bagikan kartu ini"
+      "share": "Bagikan",
+      "counted": "Dihitung di ponsel ini. Tidak ada yang keluar darinya.",
+      "days": "Hari Anda membaca",
+      "daysLine": "dari {{days}} hari terakhir",
+      "followedLine_one": "cerita diikuti",
+      "followedLine_other": "cerita diikuti",
+      "fresh": "Seberapa baru",
+      "freshLine_one": "separuh dari yang Anda buka berusia di bawah {{count}} jam",
+      "freshLine_other": "separuh dari yang Anda buka berusia di bawah {{count}} jam",
+      "languages": "Bahasa",
+      "languagesLine": "bahasa yang Anda baca",
+      "now": "Saat ini",
+      "opened": "Dibuka di sumbernya",
+      "openedLine": "artikel dibuka di situsnya sendiri",
+      "publications": "Publikasi",
+      "pubsInCountries_one": "publikasi di {{count}} negara",
+      "pubsInCountries_other": "publikasi di {{count}} negara",
+      "savedLine_one": "artikel tersimpan",
+      "savedLine_other": "artikel tersimpan",
+      "title": "30 hari terakhir Anda",
+      "top": "Paling sering dibuka",
+      "topLine": "lalu {{second}} dan {{third}}",
+      "topLineOne": "lalu {{second}}"
     },
     "explainer": {
       "saved": {
-        "title": "Cara kerja Tersimpan",
-        "what": "Tersimpan menyimpan artikel yang Anda tandai, yang terbaru di atas.",
+        "title": "Tersimpan",
+        "what": "Ketuk penanda di artikel mana pun untuk menyimpannya di sini.",
         "how1": "Artikel tersimpan tetap ada di ponsel ini sampai Anda menghapusnya, bahkan setelah hilang dari Feed Anda.",
         "how2": "Ekspor mengirimnya sebagai daftar yang bisa dibaca atau sebagai data ke aplikasi apa pun yang Anda pilih."
       },
       "checks": {
-        "title": "Cara kerja Pengecekan",
-        "what": "Pengecekan mencantumkan cerita yang Anda minta Mera cari pemeriksaan faktanya.",
+        "title": "Pemeriksaan fakta",
+        "what": "Pemeriksaan fakta mencantumkan artikel yang Anda minta agar Mera mencari pemeriksaan faktanya.",
         "how1": "Setiap penilaian berasal dari organisasi pemeriksa fakta itu sendiri, ditampilkan seperti yang mereka terbitkan.",
         "how2": "Pengecekan tetap ada di ponsel ini. Menghapus satu hanya menghapusnya di sini."
       },
       "visited": {
-        "title": "Cara kerja Dikunjungi",
-        "what": "Dikunjungi mencantumkan publikasi yang situsnya Anda buka dari Mera dalam 30 hari terakhir, yang paling sering dibuka di atas.",
+        "title": "Riwayat",
+        "what": "Riwayat mencantumkan publikasi yang situsnya Anda buka dari Mera dalam 30 hari terakhir, yang paling sering dibuka di urutan pertama.",
         "how1": "Hanya artikel yang Anda buka di situs penerbit yang dihitung. Membaca di dalam Mera tidak dicantumkan.",
-        "how2": "Saya sudah berlangganan memberi tahu Mera bahwa Anda berlangganan, sehingga publikasi itu mendapat bobot lebih di feed Anda.",
+        "how2": "Ketuk satu untuk berlangganan atau mendukungnya, atau untuk melihat apa yang Anda baca di sana.",
         "privacy": "Daftar ini tetap ada di ponsel ini. Setiap kunjungan dihapus setelah 30 hari."
       },
       "stats": {
         "title": "Cara kerja Statistik",
-        "what": "Statistik mengubah bacaan 30 hari terakhir Anda menjadi kartu yang bisa dibagikan.",
+        "what": "Statistik Anda mengubah 30 hari terakhir membaca menjadi gambar yang bisa Anda bagikan.",
         "how1": "Kartu memakai yang sudah disimpan ponsel ini untuk menjalankan Mera: situs yang Anda buka serta yang Anda simpan atau ikuti. Tidak ada yang dicatat tambahan.",
-        "how2": "Sebelum berbagi, Anda memilih apakah nama publikasi muncul. Judul artikel tidak pernah muncul."
+        "how2": "Nama publikasi hanya muncul jika Anda memilih Paling sering dibuka. Judul artikel tidak pernah muncul."
       }
+    },
+    "history": {
+      "colLastRead": "Terakhir dibaca",
+      "colPublication": "Publikasi",
+      "colVisits": "Kunjungan",
+      "emptyBody": "Saat Anda membuka artikel di situsnya, publikasinya muncul di sini, beserta seberapa sering Anda kembali.",
+      "footnote": "Ketuk satu untuk melihat apa yang Anda baca di sana, dan untuk berlangganan atau mendukungnya.",
+      "intro": "Di sumbernya, dalam 30 hari terakhir, yang paling sering dikunjungi di urutan pertama. Disimpan di ponsel ini.",
+      "learn": "Pelajari tentang Riwayat",
+      "title": "Publikasi yang Anda buka"
     }
   },
   "you": {
@@ -2942,7 +3279,15 @@
       "placesEmpty": "Belum ada tempat",
       "addCity": "Tambah kota",
       "sourcesEmpty": "Tidak ada yang diatur. Mera memperlakukan semua sumber sama.",
-      "topicsDeclinedEmpty": "Belum ada topik yang ditolak."
+      "topicsDeclinedEmpty": "Belum ada topik yang ditolak.",
+      "adjusted_one": "{{count}} diubah",
+      "adjusted_other": "{{count}} diubah",
+      "changes": "Perubahan pada profil Anda",
+      "subtitle": "Apa yang Mera ketahui tentang Anda. Ini tetap di ponsel ini.",
+      "tidyUp": "Rapikan profil Anda",
+      "title": "Profil Anda",
+      "topicCount_one": "{{count}} topik",
+      "topicCount_other": "{{count}} topik"
     },
     "hints": {
       "facts": {
@@ -2976,9 +3321,9 @@
       }
     },
     "explainer": {
-      "title": "Cara kerja Profil",
-      "what": "Profil berisi yang dipakai Mera untuk memilih berita Anda: fakta Anda, tempat Anda, sumber yang Anda atur, dan topik yang Anda tolak.",
-      "how1": "Setiap fakta menjadi pencarian yang dijalankan Mera untuk Anda. Ubah sesuatu di sini dan halaman Feed, Minat, dan Dunia Anda ikut berubah.",
+      "title": "Profil Anda",
+      "what": "Semua yang Mera gunakan untuk memilih berita Anda: fakta, tempat, dan cara Anda mengatur sumber.",
+      "how1": "Ubah apa saja di sini, atau beri tahu Mera lewat tombol Mera. Setiap perubahan tercatat dan bisa dibatalkan.",
       "privacy": "Pencarian yang dibuat dari fakta Anda tidak pernah dikaitkan dengan akun Anda. Server hanya menyimpan teks pencariannya, dibagikan secara anonim ke semua pengguna, dan menghapusnya setelah 14 hari tanpa dipakai."
     },
     "sources": {
@@ -2999,9 +3344,29 @@
       "usage_other": "{{count}} dari {{limit}} artikel hari ini",
       "usageNoLimit_other": "{{count}} artikel hari ini",
       "usageOffline": "Penggunaan tampil saat Anda online",
-      "resetsAt": "diatur ulang pukul {{time}}",
+      "resetsAt": "Direset pada {{time}}",
       "displayValue": "Teks, mode Lite",
-      "backupAndData": "Cadangan dan data"
+      "backupAndData": "Cadangan dan data",
+      "addEmail": "Tambah email",
+      "addEmailHint": "Opsional. Hanya jika Anda ingin memindahkan akun dan paket ke ponsel lain, atau menerima email dari Mera.",
+      "appLock": "Kunci aplikasi",
+      "backupOff": "Cadangan mati",
+      "backupOn": "Cadangan aktif",
+      "developer": "Pengembang",
+      "developerHint": "Menampilkan Observability dan build di baris versi.",
+      "developerMode": "Mode pengembang",
+      "developerOn": "Mode pengembang aktif",
+      "groupGeneral": "Umum",
+      "groupPrivacy": "Privasi dan keamanan",
+      "noEmailNeeded": "Tidak perlu email.",
+      "observabilityHint": "Isi database di perangkat, untuk debugging",
+      "off": "Mati",
+      "on": "Aktif",
+      "onThisPhone": "Di ponsel ini",
+      "privateCloud": "Cloud pribadi",
+      "signedInPhone": "Masuk dengan ponsel ini",
+      "version": "Versi {{version}} · Mera Labs B.V.",
+      "yourData": "Data Anda"
     },
     "notifications": {
       "push": "Notifikasi push",
@@ -3014,7 +3379,9 @@
       "alreadyPicked": "{{time}} sudah dipilih",
       "remove": "Hapus {{time}}",
       "wheel": "Waktu yang ditambahkan",
-      "footnote": "Putar untuk memindahkan waktu yang diberi garis tepi. Mera hanya mengirim pemberitahuan pada waktu ini, sesuai zona waktu Anda."
+      "footnote": "Mera hanya mengirim pemberitahuan pada waktu ini, sesuai zona waktu Anda. Hingga tiga waktu.",
+      "offLine": "Mera tidak akan mengirim apa pun kepada Anda. Aktifkan ini untuk memilih hingga tiga waktu saat Mera bisa mengirim.",
+      "tapToSave": "Ketuk waktu untuk menyimpannya."
     }
   },
   "meraHints": {
@@ -3059,6 +3426,9 @@
     "sources": {
       "whoBehind": "Tanyakan siapa di balik sebuah publikasi",
       "whatFollow": "Beri tahu Mera apa yang Anda ikuti"
+    },
+    "settings": {
+      "whatCanYouDo": "Apa yang bisa Anda lakukan?"
     }
   },
   "meraButton": {
@@ -3066,10 +3436,13 @@
     "moveTopLeft": "Pindahkan ke kiri atas",
     "moveTopRight": "Pindahkan ke kanan atas",
     "moveBottomLeft": "Pindahkan ke kiri bawah",
-    "moveBottomRight": "Pindahkan ke kanan bawah"
+    "moveBottomRight": "Pindahkan ke kanan bawah",
+    "answerReady": "Mera, jawaban sudah siap",
+    "tooltipNew": "Ceritakan tentang diri Anda kepada Mera",
+    "working": "Mera sedang mengerjakan permintaan Anda"
   },
   "meraIntro": {
-    "feed": "Ini Feed Anda. Beri tahu saya berita apa yang ingin Anda lihat lebih banyak, atau tanyakan apa saja tentang berita.",
+    "feed": "Anda sedang di Feed. Beri tahu saya berita apa yang ingin Anda baca lebih banyak, atau tanyakan apa saja tentang berita.",
     "interests": "Ini minat Anda. Beri tahu saya yang baru, atau yang ingin Anda ubah atau hapus.",
     "interest": "Halaman ini mengikuti salah satu minat Anda. Anda bisa mengubah atau menghapusnya di sini.",
     "world": "Tanyakan tentang sebuah berita utama, atau sebutkan negara yang ingin Anda ikuti beritanya.",
@@ -3078,10 +3451,40 @@
     "library": "Tanyakan apa saja tentang berita, atau beri tahu saya apa yang suka Anda baca.",
     "profile": "Ini yang Mera ketahui tentang Anda. Beri tahu saya hal baru, atau perbaiki yang salah.",
     "facts": "Anda sedang melihat fakta Anda. Apa yang ingin Anda ubah?",
-    "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang Anda ikuti."
+    "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang Anda ikuti.",
+    "settings": "Tanyakan kepada saya apa yang bisa saya lakukan, atau bagaimana Mera menangani data Anda."
   },
   "meraDraft": {
     "changeInterest": "Ubah minat saya \"{{statement}}\" menjadi ",
     "removeInterest": "Hapus minat saya \"{{statement}}\""
+  },
+  "appLock": {
+    "forgot": "Lupa PIN? Masuk lagi dan atur PIN baru.",
+    "intro": "Minta PIN setiap kali Mera dibuka di ponsel ini."
+  },
+  "explainer": {
+    "feed": {
+      "p1": "Berita yang dipilih untuk Anda dari fakta yang Mera ketahui tentang Anda. Setiap kartu menunjukkan fakta mana yang membawanya ke sini dan alasannya.",
+      "p2": "Feed berkelanjutan menampilkan semua cerita dalam satu daftar. Feed per bagian mengelompokkan cerita yang sama berdasarkan fakta. Cerita menyimpan yang Anda ikuti."
+    },
+    "stories": {
+      "p1": "Cerita yang Anda pilih untuk diikuti. Setiap cerita terus mengumpulkan artikel baru saat berkembang, dan menampilkan apa yang baru sejak terakhir Anda melihatnya.",
+      "p2": "Ikuti cerita dari tombol Mera atau dari artikel. Berhenti mengikutinya di sini kapan saja."
+    }
+  },
+  "gate": {
+    "emailSupport": "Email dukungan",
+    "enterCode": "Masukkan kode",
+    "getHelp": "Minta bantuan",
+    "noEmailBody": "Silakan coba lagi nanti. Jika terus terjadi, kirim email kepada kami dan sertakan ID Dukungan Anda.",
+    "noEmailTitle": "Ada masalah dengan akun Anda",
+    "offlineBody": "Mera perlu koneksi untuk memeriksa akun Anda sebelum dibuka.",
+    "offlineTitle": "Anda sedang offline",
+    "opensByItself": "Terbuka sendiri saat Anda kembali online",
+    "reauthBody": "Sesi masuk Anda sudah berakhir. Kami akan mengirim kode ke email di akun ini.",
+    "reauthTitle": "Masuk untuk melanjutkan",
+    "sendNewCode": "Kirim kode baru",
+    "unreachableBody": "Masalahnya ada di pihak kami, bukan ponsel Anda. Mera terus mencoba dan akan terbuka saat kembali normal.",
+    "unreachableTitle": "Mera tidak dapat dihubungi"
   }
 }
