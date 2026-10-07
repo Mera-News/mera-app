@@ -27,11 +27,6 @@ const ASK_NEWS: HintDef = { key: 'meraHints.askNews', web: true };
 
 const POOLS: Record<MeraPageKey, readonly HintDef[]> = {
   feed: [{ key: 'meraHints.feed.moreNews' }, { key: 'meraHints.feed.addHome' }, ASK_NEWS],
-  interests: [
-    { key: 'meraHints.interests.add' },
-    { key: 'meraHints.interests.change' },
-    { key: 'meraHints.interests.remove' },
-  ],
   interest: [{ key: 'meraHints.interest.change' }, { key: 'meraHints.interest.remove' }],
   stories: [{ key: 'meraHints.stories.follow' }, { key: 'meraHints.stories.name' }],
   world: [
@@ -57,7 +52,6 @@ const POOLS: Record<MeraPageKey, readonly HintDef[]> = {
 
 const DIRECT: Readonly<Record<string, MeraPageKey>> = {
   feed: 'feed',
-  interests: 'interests',
   stories: 'stories',
   world: 'world',
   checks: 'checks',
@@ -81,7 +75,6 @@ const FACT_EDITING: ReadonlySet<MeraPageKey> = new Set([
   'profile',
   'facts',
   'sources',
-  'interests',
   'interest',
 ]);
 

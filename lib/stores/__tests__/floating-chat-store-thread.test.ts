@@ -73,15 +73,15 @@ it('collapse and toggle stamp closedAt only when they close', () => {
 });
 
 it('a draft rides expand and is consumed exactly once', () => {
-  store().expand({ kind: 'persona', page: 'interests' }, { draft: 'Add an interest' });
+  store().expand({ kind: 'persona', page: 'facts' }, { draft: 'Add an interest' });
   expect(store().pendingDraft).toBe('Add an interest');
   expect(store().consumePendingDraft()).toBe('Add an interest');
   expect(store().consumePendingDraft()).toBeNull();
 });
 
 it('an expand without a draft clears a stale one', () => {
-  store().expand({ kind: 'persona', page: 'interests' }, { draft: 'x' });
+  store().expand({ kind: 'persona', page: 'facts' }, { draft: 'x' });
   store().collapse();
-  store().expand({ kind: 'persona', page: 'interests' });
+  store().expand({ kind: 'persona', page: 'facts' });
   expect(store().pendingDraft).toBeNull();
 });

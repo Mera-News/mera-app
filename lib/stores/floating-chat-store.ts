@@ -46,7 +46,6 @@ export interface QuickFactCheckEntry {
  */
 export type MeraPageKey =
     | 'feed'
-    | 'interests'
     | 'interest'
     | 'stories'
     | 'world'
@@ -60,7 +59,7 @@ export type MeraPageKey =
 
 export type ChatContext =
     // `origin: 'profile'` marks a fact-editing chat (the Mera button on Profile,
-    // All facts, Sources, Interests and One interest). Only that chat is an
+    // All facts, Sources and One interest). Only that chat is an
     // editing session whose close may owe a combination pass (ux2 F2).
     // `subject` is the fact statement on One interest, for its starters.
     | { kind: 'persona'; origin?: 'profile'; page?: MeraPageKey; subject?: string }

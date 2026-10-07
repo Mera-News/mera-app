@@ -11,7 +11,6 @@ import {
 describe('pageKeyFor', () => {
   it.each([
     ['feed', 'feed'],
-    ['interests', 'interests'],
     ['stories', 'stories'],
     ['world', 'world'],
     ['country:DE', 'world'],
@@ -72,7 +71,7 @@ describe('hintKeys', () => {
 
   it('every pool has 2 or 3 hints with web search on', () => {
     for (const page of [
-      'feed', 'interests', 'interest', 'stories', 'world',
+      'feed', 'interest', 'stories', 'world',
       'checks', 'library', 'profile', 'facts', 'sources', 'settings',
     ] as const) {
       const n = hintKeys(page, true).length;
@@ -87,7 +86,7 @@ describe('chatContextFor', () => {
     expect(chatContextFor('stories')).toEqual({ kind: 'follow-story', page: 'stories' });
   });
 
-  it.each(['profile', 'facts', 'sources', 'interests', 'interest'] as const)(
+  it.each(['profile', 'facts', 'sources', 'interest'] as const)(
     '%s is a fact-editing chat (origin profile keeps the combination pass)',
     (page) => {
       expect(chatContextFor(page)).toMatchObject({ kind: 'persona', page, origin: 'profile' });
