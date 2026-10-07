@@ -8,6 +8,7 @@ import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
@@ -38,6 +39,7 @@ const PaginatedArticleList: React.FC<PaginatedArticleListProps> = ({
     logScope = 'PaginatedArticleList',
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -134,8 +136,8 @@ const PaginatedArticleList: React.FC<PaginatedArticleListProps> = ({
                 </Box>
             ) : articles.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
-                    <MaterialIcons name="article" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
+                    <MaterialIcons name="article" size={48} color={colors.ink3} />
+                    <Text size="md" className="text-ink-2 text-center">
                         {t('sources.noArticlesFound')}
                     </Text>
                 </VStack>

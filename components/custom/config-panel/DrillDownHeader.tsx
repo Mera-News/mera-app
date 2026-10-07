@@ -3,6 +3,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -55,8 +56,9 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({
     backDisabled = false,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     return (
-        <HStack className="px-4 py-3 items-center border-b border-gray-800">
+        <HStack className="px-4 py-3 items-center border-b border-line">
             {/* A numeric 44pt frame pulled back by negative margins to the old
                 29pt box (22pt glyph + 3.5pt padding, 3.5pt left of the row's
                 padding), so nothing reflows and the arrow does not move. The
@@ -72,7 +74,7 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({
                     <MaterialIcons
                         name="arrow-back"
                         size={BACK_GLYPH}
-                        color="#FFFFFF"
+                        color={colors.ink}
                         style={backDisabled ? { opacity: 0.4 } : undefined}
                         accessible={false}
                         accessibilityElementsHidden
@@ -91,14 +93,14 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({
             )}
             <VStack className={onBack ? 'ml-2 flex-1' : 'flex-1'}>
                 {subtitle && (
-                    <Text size="xs" className="text-gray-400" numberOfLines={1}>
+                    <Text size="xs" className="text-ink-2" numberOfLines={1}>
                         {subtitle}
                     </Text>
                 )}
                 {titleContent ?? (
                     <Text
                         size="lg"
-                        className="text-white font-semibold"
+                        className="text-ink font-semibold"
                         numberOfLines={titleNumberOfLines}
                         accessibilityRole="header"
                     >

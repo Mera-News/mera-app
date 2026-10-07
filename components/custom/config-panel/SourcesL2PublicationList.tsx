@@ -11,6 +11,7 @@ import logger from '@/lib/logger';
 import type { NewsPublisher } from '@/lib/source-service';
 import { SourceService } from '@/lib/source-service';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
@@ -33,6 +34,7 @@ interface SourcesL2PublisherListProps {
 
 const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ countryCode, countryName, onBack }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const [publishers, setPublishers] = useState<NewsPublisher[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -139,8 +141,8 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 </Box>
             ) : publishers.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
-                    <MaterialIcons name="newspaper" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
+                    <MaterialIcons name="newspaper" size={48} color={colors.ink3} />
+                    <Text size="md" className="text-ink-2 text-center">
                         {t('sources.noPublishers')}
                     </Text>
                 </VStack>
