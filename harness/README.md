@@ -46,12 +46,14 @@ Never navigate to a tab route that has no trigger: NativeTabs renders a trigger-
 
 **Pages inside a tab** are pills in the header strip: `press 'id=page-pill-<pageId>'` (`feed`,
 `interests`, `stories`, `world`, `country:DE`, `saved`, `checks`, `visited`, `stats`, `profile`,
-`settings`). A deep link cannot carry a page (no page state in URLs); open the tab, then press
-the pill. Pushed screens inside a tab's stack: `/logged-in/app_container/feed/interest?factId=…`
+`settings`, `notifications`). A deep link cannot carry a page (no page state in URLs); open the
+tab, then press the pill. Pushed screens inside a tab's stack: `/logged-in/app_container/feed/interest?factId=…`
 (One interest) and `/logged-in/app_container/you/<facts|locations|sources|hygiene-review|
-not-interested|activity|display|mera-protocol|notifications>`. Other header controls:
-`page-strip-rearrange` (the pen), `quick-settings`, `page-strip-search`, and the Arrange overlay's
-`arrange-cancel` / `arrange-save` / `arrange-chip-<pageId>`.
+not-interested|activity|display|mera-protocol|notifications>` (that last one is notification
+SETTINGS; the inbox is the `notifications` page). Other header controls: `page-strip-search`
+(World), a page title's `?`, and World's Arrange overlay, opened by a LONG PRESS on a World pill
+(`arrange-cancel` / `arrange-save` / `arrange-chip-<pageId>`). There is no pen, quick-settings
+button or bell.
 
 Prefer the symbol id over the accessibility label: labels come from `t('tabs.*')`, so they change
 with the app language while the symbol id does not. The labels themselves are correct — the Feed

@@ -1,13 +1,14 @@
-// Arrange a tab's pages in place: the pen turns the strip into an overlay
-// over the dimmed page. Each page is a glass pill with a grip and a slow
-// glowing outline; press and hold to lift it (light haptic), drag, let go.
-// ✕ cancels, ✓ saves. World adds an × per country and an add field.
+// Arrange World's pages in place (the only tab that arranges): a long press on
+// a page name turns the strip into an overlay over the dimmed page. Each page
+// is a glass pill with a grip and a slow glowing outline; press and hold to
+// lift it (light haptic), drag, let go.
+// ✕ cancels, ✓ saves. Each country has an ×, and an add field finds more.
 //
 // DRAFT-ONLY: nothing is written before ✓ (arrange-model.ts). ✕ and Android
 // Back discard every reorder, removal and addition.
 //
 // Accessibility: the overlay is modal to VoiceOver; each pill is one element
-// with "Move earlier" / "Move later" (and "Remove" in World) actions; the ×
+// with "Move earlier" / "Move later" (and "Remove" on a country) actions; the ×
 // is also its own button for touch. ✓ announces "Order saved".
 //
 // The glow is the pill's own rounded border changing COLOUR only (constant
@@ -20,6 +21,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticLight } from '@/lib/haptics';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
+import { COLORS } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -60,10 +62,11 @@ import {
 } from './arrange-model';
 import { setArrangeOpen } from './current-surface';
 import { alpha2OfPage, type PageId } from './page-registry';
-import { NAV_ACCENT } from './QuickSettingsButton';
 import { flagEmoji } from './PageStrip';
 import type { ArrangeConfig, PagePill } from './types';
 
+/** P12 moves this onto useColors(). */
+const NAV_ACCENT = COLORS.dark.accent;
 const GLOW_PERIOD_MS = 1600;
 /** Constant: the glow animates colour only, never width. */
 export const PILL_BORDER_WIDTH = 1.5;
@@ -301,11 +304,10 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
     onClose();
   }, [arrange, state, onClose, t]);
 
-  const world = arrange.world;
-  const results = world && query.trim() ? filterAddable(world.search(query.trim()), state).slice(0, MAX_RESULTS) : [];
+  const results = query.trim() ? filterAddable(arrange.search(query.trim()), state).slice(0, MAX_RESULTS) : [];
   const footnoteId =
-    lastRemoved ?? (world ? (state.order.find((id) => world.footnoteFor(id) !== null) ?? null) : null);
-  const footnote = world && footnoteId ? world.footnoteFor(footnoteId) : null;
+    lastRemoved ?? state.order.find((id) => arrange.footnoteFor(id) !== null) ?? null;
+  const footnote = footnoteId ? arrange.footnoteFor(footnoteId) : null;
 
   return (
     <View style={[StyleSheet.absoluteFill, styles.layer]} accessibilityViewIsModal testID="arrange-overlay">
@@ -322,7 +324,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
                 flag={meta.flag || (alpha2OfPage(id) ? flagEmoji(alpha2OfPage(id)!) : '')}
                 index={i}
                 count={state.order.length}
-                removable={!!world && world.removable(id)}
+                removable={arrange.removable(id)}
                 glow={glow}
                 onLayout={onChipLayout}
                 onDrop={onDrop}
@@ -333,22 +335,20 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
           })}
         </View>
 
-        {world ? (
-          <View style={styles.field} testID="arrange-add-field">
-            <MaterialIcons name="search" size={18} color="rgba(255,255,255,0.6)" {...GLYPH_HIDDEN} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t('nav.arrange.addPlaceholder')}
-              placeholderTextColor="rgba(255,255,255,0.5)"
-              aria-label={t('nav.arrange.addPlaceholder')}
-              autoCorrect={false}
-              autoCapitalize="words"
-              style={styles.input}
-              testID="arrange-add-input"
-            />
-          </View>
-        ) : null}
+        <View style={styles.field} testID="arrange-add-field">
+          <MaterialIcons name="search" size={18} color="rgba(255,255,255,0.6)" {...GLYPH_HIDDEN} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder={t('nav.arrange.addPlaceholder')}
+            placeholderTextColor="rgba(255,255,255,0.5)"
+            aria-label={t('nav.arrange.addPlaceholder')}
+            autoCorrect={false}
+            autoCapitalize="words"
+            style={styles.input}
+            testID="arrange-add-input"
+          />
+        </View>
 
         <View style={styles.actions}>
           <View style={styles.roundFrame}>
@@ -378,7 +378,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
         </View>
       </View>
 
-      {world && query.trim() ? (
+      {query.trim() ? (
         <View style={styles.results} testID="arrange-results">
           {results.length === 0 ? (
             <Text size="sm" className="text-gray-300" style={styles.noMatch} testID="arrange-no-match">

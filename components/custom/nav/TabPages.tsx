@@ -1,6 +1,7 @@
 // The tab shell: the page strip header, one collapsing header shared by the
 // tab's pages, the page swipe (PagePager) with its swipe into the next tab,
-// and the Arrange overlay. Content lanes render it from their page-set
+// the one explainer sheet behind every page title's ?, and World's Arrange
+// overlay. Content lanes render it from their page-set
 // component (FeedPages, WorldPages, LibraryPages, YouPages) and draw only
 // their pages.
 //
@@ -10,7 +11,7 @@
 //  - A page is `active` only while it is the visible page AND this screen is
 //    focused (tab focused, nothing pushed over it in the tab's stack).
 //  - Page requests arrive through navigate-to-page's one-shot pending store:
-//    `navigateToPage` (shortcuts, quick settings, redirect stubs, deep links)
+//    `navigateToPage` (shortcuts, redirect stubs, deep links)
 //    and the cross-tab swipe's edge landing. Both are taken on focus, or at
 //    once while focused. A plain tap on the tab keeps the page it was on.
 //  - The surface is reported for the Mera button and the jump-origin Back.
@@ -49,6 +50,7 @@ import {
   usePendingEdge,
   usePendingPageRequest,
 } from './navigate-to-page';
+import PageExplainerSheet from './PageExplainerSheet';
 import PagePager from './PagePager';
 import { survivingPage } from './tab-swipe';
 import PageStrip from './PageStrip';
@@ -60,7 +62,7 @@ export type { TabPagesProps } from './types';
 
 const ARRIVAL_FADE_MS = 150;
 
-const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, arrange, testID }) => {
+const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, arrange, leading, testID }) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
@@ -76,6 +78,10 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
   lastIndexRef.current = index;
   const [arrival, setArrival] = useState<{ id: PageId; params: Readonly<Record<string, string>> } | null>(null);
   const [arranging, setArranging] = useState(false);
+  // The ? beside a page title: ONE sheet per tab (not one per warm panel),
+  // closed whenever the tab loses focus (a sheet survives a tab switch).
+  const [explaining, setExplaining] = useState(false);
+  const openExplainer = useCallback(() => setExplaining(true), []);
 
   const select = useCallback(
     (id: PageId) => {
@@ -166,9 +172,12 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
   );
 
   const header: PageHeaderBinding = useMemo(
-    () => ({ scrollHandler, headerHeight, hidden, reveal }),
-    [scrollHandler, headerHeight, hidden, reveal],
+    () => ({ scrollHandler, headerHeight, hidden, reveal, openExplainer }),
+    [scrollHandler, headerHeight, hidden, reveal, openExplainer],
   );
+  useEffect(() => {
+    if (!focused) setExplaining(false);
+  }, [focused]);
   const keep = useMemo(
     () => ids.map((id, i) => (pageMeta(id).keepMounted ? i : -1)).filter((i) => i >= 0),
     [ids],
@@ -185,7 +194,6 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
   );
 
   const tabLabel = t(TAB_LABEL_KEYS[tab]);
-  const quickSettings = activeId ? pageMeta(activeId).quickSettings : null;
 
   if (!activeId) return <View style={styles.fill} testID={testID} />;
 
@@ -229,17 +237,25 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
             pages={pages}
             activeId={activeId}
             onSelect={pick}
-            // World arranges by a long press on a page name; the other tabs
-            // keep the pen until the shell drops it.
-            onRearrange={tab === 'world' ? undefined : () => setArranging(true)}
-            onLongPressPill={tab === 'world' ? () => setArranging(true) : undefined}
-            quickSettings={quickSettings}
-            trailing={trailing}
+            // World keeps a scrolling row (its countries can grow); every
+            // other tab is one centred track.
+            variant={tab === 'world' ? 'scroll' : 'segmented'}
+            progress={tabSwipeProgress(tab)}
+            leading={leading}
+            onSearch={onSearch}
+            // Only World arranges, by a long press on a page name.
+            onLongPressPill={arrange ? () => setArranging(true) : undefined}
           />
         </View>
       </Animated.View>
 
-      {arranging ? (
+      <PageExplainerSheet
+        explainer={pageMeta(activeId).explainer}
+        open={explaining}
+        onClose={() => setExplaining(false)}
+      />
+
+      {arranging && arrange ? (
         <ArrangeOverlay
           tabLabel={tabLabel}
           pages={pages}

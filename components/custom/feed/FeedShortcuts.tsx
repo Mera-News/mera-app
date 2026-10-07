@@ -17,7 +17,7 @@ import { Text } from '@/components/ui/text';
 import type { PageId } from '@/components/custom/nav/page-registry';
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import { flagEmoji } from '@/components/custom/nav/PageStrip';
-import { NAV_ACCENT } from '@/components/custom/nav/QuickSettingsButton';
+import { COLORS } from '@/lib/theme/tokens';
 import { useWorldPages } from '@/lib/explore/world-pages';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
@@ -150,7 +150,7 @@ const FeedShortcuts: React.FC = () => {
               {r.flag ? (
                 <Text style={styles.flag}>{r.flag}</Text>
               ) : (
-                <MaterialIcons name={r.icon ?? 'public'} size={22} color={NAV_ACCENT} />
+                <MaterialIcons name={r.icon ?? 'public'} size={22} color={COLORS.dark.accent} />
               )}
             </View>
             <View style={styles.texts}>

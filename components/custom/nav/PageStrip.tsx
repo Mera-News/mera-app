@@ -18,7 +18,6 @@
 //  - The active pill scrolls into view.
 
 import { GlassPanel } from '@/components/custom/GlassSurface';
-import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -36,12 +35,10 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { HEADER_ICON_COLOR } from '@/components/custom/for-you/HeaderIconButton';
 import { COLORS, useColors } from '@/lib/theme/tokens';
 import { indicatorAt } from './tab-swipe';
-import QuickSettingsButton from './QuickSettingsButton';
-import type { PageId, QuickSettingsFocusId } from './page-registry';
-import type { PageDot, PagePill, TabTrailing } from './types';
+import type { PageId } from './page-registry';
+import type { PageDot, PagePill } from './types';
 
 const GLYPH_HIDDEN = {
   accessible: false,
@@ -84,11 +81,8 @@ export interface PageStripProps {
   readonly pages: readonly PagePill[];
   readonly activeId: PageId;
   readonly onSelect: (id: PageId) => void;
-  /** The pen (Feed, Library, You until the shell drops it). */
-  readonly onRearrange?: () => void;
-  readonly quickSettings: readonly QuickSettingsFocusId[] | null;
-  /** Absent: nothing after the pills. */
-  readonly trailing?: TabTrailing;
+  /** World: the floating search button at the row's end. */
+  readonly onSearch?: () => void;
   /** Default `scroll`. */
   readonly variant?: 'segmented' | 'scroll';
   /** The pager's fractional page index; the segmented pill travels with it. */
@@ -271,15 +265,12 @@ const PageStrip: React.FC<PageStripProps> = ({
   pages,
   activeId,
   onSelect,
-  onRearrange,
-  quickSettings,
-  trailing,
+  onSearch,
   variant = 'scroll',
   progress,
   leading,
   onLongPressPill,
 }) => {
-  const { t } = useTranslation();
   const segmented = variant === 'segmented';
   const reduceMotion = useReducedMotion();
   const travelling = segmented && !!progress && !reduceMotion;
@@ -378,32 +369,7 @@ const PageStrip: React.FC<PageStripProps> = ({
       {/* Keeps a segmented track centred on the screen beside a leading icon. */}
       {leading && segmented ? <View style={styles.sideSlot} /> : null}
 
-      {onRearrange ? (
-        <View style={styles.penFrame} testID="page-strip-rearrange-frame">
-          <View pointerEvents="none" {...GLYPH_HIDDEN}>
-            <MaterialIcons name="edit" size={18} color={HEADER_ICON_COLOR} testID="page-strip-rearrange-glyph" />
-          </View>
-          <Pressable
-            onPress={onRearrange}
-            style={StyleSheet.absoluteFill}
-            accessibilityRole="button"
-            accessibilityLabel={t('nav.rearrangeA11y', { tab: tabLabel })}
-            testID="page-strip-rearrange"
-          />
-        </View>
-      ) : null}
-
-      {quickSettings ? (
-        <QuickSettingsButton targets={quickSettings} pageLabel={pages.find((p) => p.id === activeId)?.label ?? tabLabel} />
-      ) : null}
-
-      {trailing === 'bell' ? (
-        <View style={styles.trailingFrame}>
-          <NotificationBellButton />
-        </View>
-      ) : trailing ? (
-        <SearchButton onPress={trailing.onPress} />
-      ) : null}
+      {onSearch ? <SearchButton onPress={onSearch} /> : null}
     </View>
   );
 };
@@ -454,8 +420,6 @@ const styles = StyleSheet.create({
   flag: { fontSize: 13, lineHeight: 16 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.accent, marginLeft: -2 },
   dotOnActive: { borderWidth: 1.5, borderColor: C.onAccent, width: 9, height: 9, borderRadius: 5 },
-  penFrame: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
-  trailingFrame: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   searchFab: { position: 'absolute', right: 4, top: 0, width: 44, height: 44 },
   searchShadow: {
     borderRadius: 22,

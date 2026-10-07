@@ -64,11 +64,10 @@ function Strip({
         setActive(id);
         progress.value = pages.findIndex((p) => p.id === id);
       }}
-      quickSettings={null}
       variant={variant}
       progress={progress}
       leading={leading}
-      trailing={variant === 'scroll' ? { kind: 'search', onPress: noop } : undefined}
+      onSearch={variant === 'scroll' ? noop : undefined}
       onLongPressPill={variant === 'scroll' ? noop : undefined}
     />
   );
@@ -86,13 +85,13 @@ export default function KitGallery() {
   ];
   const library: PagePill[] = [
     { id: 'saved', label: t('nav.page.saved') },
-    { id: 'checks', label: t('nav.page.checks') },
-    { id: 'visited', label: t('nav.page.visited') },
+    { id: 'checks', label: t('factCheck.dashboard.listTitle') },
+    { id: 'visited', label: t('publicationPage.history') },
   ];
   const you: PagePill[] = [
     { id: 'profile', label: t('tabs.profile') },
     { id: 'settings', label: t('tabs.settings') },
-    { id: 'saved', label: t('notificationCenter.title') },
+    { id: 'notifications', label: t('notificationCenter.title') },
   ];
   const world: PagePill[] = [
     { id: 'world', label: t('tabs.world'), icon: 'public' },

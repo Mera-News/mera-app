@@ -24,13 +24,9 @@ describe('page-registry', () => {
     expect(kept).toEqual(['feed']);
   });
 
-  it('gives quick settings to Feed and Interests only (no fact-check setting)', () => {
-    const withButton = (Object.keys(PAGE_META) as FixedPageId[]).filter((id) => PAGE_META[id].quickSettings);
-    expect(withButton.sort()).toEqual(['feed', 'interests']);
-  });
-
-  it('has no explainer row on Settings', () => {
+  it('draws no ? on Settings or Notifications (the boards show none)', () => {
     expect(PAGE_META.settings.explainer).toBeNull();
+    expect(PAGE_META.notifications.explainer).toBeNull();
   });
 
   it('round-trips country page ids as uppercase alpha-2', () => {
@@ -42,9 +38,11 @@ describe('page-registry', () => {
     expect(alpha2OfPage('feed')).toBeNull();
   });
 
-  it('puts country pages in World with its meta', () => {
+  it('puts country pages in World with their own explainer', () => {
     expect(tabOfPage('country:FR')).toBe('world');
-    expect(pageMeta('country:FR')).toBe(PAGE_META.world);
+    expect(pageMeta('country:FR').tab).toBe('world');
+    expect(pageMeta('country:FR').explainer?.paragraphKeys).toContain('world.explainer.country1');
+    expect(pageMeta('world').explainer?.paragraphKeys).toContain('world.explainer.top1');
   });
 
   it('maps surfaces to tabs, Search to none', () => {

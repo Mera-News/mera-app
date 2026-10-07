@@ -1,14 +1,14 @@
-// The Feed tab's pages: Feed, Interests, Stories, in the reader's order
-// (page-order.ts). The Feed page is keep-mounted in the pager (PAGE_META), so
+// The Feed tab's pages: Feed, Interests, Stories, a fixed group (only World
+// is arranged). The Feed page is keep-mounted in the pager (PAGE_META), so
 // its reading session survives any swipe or reorder.
 
 import InterestsPage from '@/components/custom/for-you/InterestsPage';
 import FeedScreen from '@/components/custom/feed/FeedScreen';
 import { PAGE_META } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
-import type { ArrangeConfig, PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
+import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import TrackedStoriesScreen from '@/components/custom/tracked-stories/TrackedStoriesScreen';
-import { setPageOrder, usePageOrder } from '@/lib/navigation/page-order';
+import { usePageOrder } from '@/lib/navigation/page-order';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -30,10 +30,6 @@ export function useStoriesDot(): PageDot {
   return { visible: unseen > 0 };
 }
 
-const ARRANGE: ArrangeConfig = {
-  onSave: (draft) => setPageOrder('feed', draft.order),
-};
-
 export function FeedPages() {
   const { t } = useTranslation();
   const order = usePageOrder('feed');
@@ -42,6 +38,7 @@ export function FeedPages() {
       order.map((id) => ({
         id,
         label: t(PAGE_META[id].labelKey),
+        icon: id === 'feed' ? 'article' : id === 'stories' ? 'layers' : undefined,
         useDot: id === 'stories' ? useStoriesDot : undefined,
       })),
     [order, t],
@@ -67,7 +64,7 @@ export function FeedPages() {
     }
   }, []);
 
-  return <TabPages tab="feed" pages={pills} renderPage={renderPage} trailing="bell" arrange={ARRANGE} testID="feed-pages" />;
+  return <TabPages tab="feed" pages={pills} renderPage={renderPage} testID="feed-pages" />;
 }
 
 export default FeedPages;

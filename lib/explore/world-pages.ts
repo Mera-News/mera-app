@@ -210,7 +210,7 @@ export function useWorldPages(): { pages: WorldPage[]; loaded: boolean } {
     const [loaded, setLoaded] = useState(false);
     const [browseCountries, setBrowseCountries] = useState<string[]>([]);
     const [suppressedScopeIds, setSuppressedScopeIds] = useState<string[]>([]);
-    const storedOrder = usePageOrderStore((s) => s.stored.world);
+    const storedOrder = usePageOrderStore((s) => s.stored);
     const deviceCountryAlpha2 = useMemo(() => getDeviceCountryAlpha2(), []);
 
     const readSettings = useCallback(() => {

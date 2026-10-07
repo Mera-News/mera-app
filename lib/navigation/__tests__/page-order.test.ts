@@ -15,7 +15,7 @@ import {
   loadPageOrders,
   parsePageOrder,
   resetPageOrders,
-  setPageOrder,
+  setWorldPageOrder,
   usePageOrderStore,
 } from '../page-order';
 
@@ -62,15 +62,14 @@ describe('parsePageOrder', () => {
 });
 
 describe('store', () => {
-  it('loads every tab row once, however often it is asked', async () => {
+  it("loads World's row once, however often it is asked, and nothing else", async () => {
+    mockRows.set('nav_order_world', '["country:DE","world"]');
     mockRows.set('nav_order_you', '["settings","profile"]');
     await Promise.all([loadPageOrders(), loadPageOrders()]);
     await loadPageOrders();
-    expect(mockGetSetting).toHaveBeenCalledTimes(4);
-    expect(usePageOrderStore.getState()).toMatchObject({
-      hydrated: true,
-      stored: { feed: null, world: null, library: null, you: ['settings', 'profile'] },
-    });
+    expect(mockGetSetting).toHaveBeenCalledTimes(1);
+    expect(mockGetSetting).toHaveBeenCalledWith('nav_order_world');
+    expect(usePageOrderStore.getState()).toMatchObject({ hydrated: true, stored: ['country:DE', 'world'] });
   });
 
   it('marks hydrated even when the read fails', async () => {
@@ -79,18 +78,18 @@ describe('store', () => {
     expect(usePageOrderStore.getState().hydrated).toBe(true);
   });
 
-  it('setPageOrder updates the store at once and persists the row', async () => {
-    setPageOrder('world', ['country:DE', 'world', 'country:DE']);
-    expect(usePageOrderStore.getState().stored.world).toEqual(['country:DE', 'world']);
+  it('setWorldPageOrder updates the store at once and persists the row', async () => {
+    setWorldPageOrder(['country:DE', 'world', 'country:DE']);
+    expect(usePageOrderStore.getState().stored).toEqual(['country:DE', 'world']);
     await Promise.resolve();
     expect(mockSetSetting).toHaveBeenCalledWith('nav_order_world', '["country:DE","world"]');
   });
 
   it('a load started before a reset never writes the old account into the store', async () => {
-    mockRows.set('nav_order_feed', '["stories"]');
+    mockRows.set('nav_order_world', '["country:DE","world"]');
     const stale = loadPageOrders();
     resetPageOrders();
     await stale;
-    expect(usePageOrderStore.getState()).toMatchObject({ hydrated: false, stored: { feed: null } });
+    expect(usePageOrderStore.getState()).toMatchObject({ hydrated: false, stored: null });
   });
 });

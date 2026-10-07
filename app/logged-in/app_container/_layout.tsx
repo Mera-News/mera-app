@@ -5,6 +5,9 @@ import { View } from 'react-native';
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
+import { setTabDot, useTabDot } from '@/components/custom/nav/current-surface';
+import { observeUnreadCount } from '@/lib/database/services/notification-service';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // Foreground polling, AppState listening, and recoverCycle calls have moved
@@ -19,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 // appearance — no custom tabBarStyle.
 const ACCENT = 'rgb(231, 138, 83)';
 
-const { Icon, Label, VectorIcon } = NativeTabs.Trigger;
+const { Badge, Icon, Label, VectorIcon } = NativeTabs.Trigger;
 
 /**
  * D2: VoiceOver read the SF Symbol names ("list.bullet.rectangle.fill",
@@ -34,6 +37,22 @@ function tabA11y(label: string) {
 
 export default function AppLayout() {
     const { t } = useTranslation();
+    const dot = {
+        feed: useTabDot('feed'),
+        world: useTabDot('world'),
+        library: useTabDot('library'),
+        you: useTabDot('you'),
+    };
+    // The item label is the only thing VoiceOver reads (a blank badge adds
+    // nothing), so a dot is spoken there.
+    const label = (key: 'tabs.deck' | 'tabs.world' | 'tabs.library' | 'tabs.you', on: boolean) =>
+        on ? t('nav.tabNewA11y', { label: t(key) }) : t(key);
+
+    // You's dot: unread notices. The Notifications page marks them read.
+    useEffect(() => {
+        const sub = observeUnreadCount().subscribe((n) => setTabDot('you', n > 0));
+        return () => sub.unsubscribe();
+    }, []);
 
     // Trigger order defines both the tab order AND the initial route: the first
     // trigger (`feed`) is selected on first mount, and Android Back on another
@@ -48,7 +67,7 @@ export default function AppLayout() {
                     accessibility title (the string children) while suppressing the
                     visible caption. `hidden` on NativeTabsTriggerLabelProps is the
                     supported cross-platform mechanism (iOS + Android). */}
-                <NativeTabs tintColor={ACCENT} minimizeBehavior="onScrollDown">
+                <NativeTabs tintColor={ACCENT} badgeBackgroundColor={ACCENT} minimizeBehavior="onScrollDown">
                     {/* navx: four tabs, Feed, World, Library, You, each a folder
                         with its own Stack. `disableScrollToTop` because each
                         page handles a re-tap in JS (use-tab-press-scroll-refresh:
@@ -58,9 +77,10 @@ export default function AppLayout() {
                     <NativeTabs.Trigger
                         name="feed"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(t('tabs.deck'))}
+                        unstable_nativeProps={tabA11y(label('tabs.deck', dot.feed))}
                     >
                         <Label hidden>{t('tabs.deck')}</Label>
+                        <Badge hidden={!dot.feed} />
                         <Icon
                             sf="list.bullet.rectangle.fill"
                             src={<VectorIcon family={MaterialIcons} name="view-agenda" />}
@@ -69,31 +89,34 @@ export default function AppLayout() {
                     <NativeTabs.Trigger
                         name="world"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(t('tabs.world'))}
+                        unstable_nativeProps={tabA11y(label('tabs.world', dot.world))}
                     >
                         <Label hidden>{t('tabs.world')}</Label>
+                        <Badge hidden={!dot.world} />
                         <Icon sf="globe" src={<VectorIcon family={MaterialIcons} name="public" />} />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger
                         name="library"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(t('tabs.library'))}
+                        unstable_nativeProps={tabA11y(label('tabs.library', dot.library))}
                     >
                         <Label hidden>{t('tabs.library')}</Label>
+                        <Badge hidden={!dot.library} />
                         <Icon sf="bookmark.fill" src={<VectorIcon family={MaterialIcons} name="bookmark" />} />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger
                         name="you"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(t('tabs.you'))}
+                        unstable_nativeProps={tabA11y(label('tabs.you', dot.you))}
                     >
                         <Label hidden>{t('tabs.you')}</Label>
+                        <Badge hidden={!dot.you} />
                         <Icon sf="person.fill" src={<VectorIcon family={MaterialIcons} name="person" />} />
                     </NativeTabs.Trigger>
                 </NativeTabs>
             </ErrorBoundary>
-            {/* The bell lives in each tab's page strip (Feed, Library, You);
-                World has search there instead. */}
+            {/* No bell: notices live in You > Notifications, and a dot on
+                the You tab says one is unread. */}
             <ModelDownloadBanner />
         </View>
     );

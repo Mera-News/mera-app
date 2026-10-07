@@ -16,6 +16,8 @@ export interface PageHeaderBinding {
   readonly headerHeight: number;
   readonly hidden: SharedValue<number>;
   readonly reveal: () => void;
+  /** Opens the active page's explainer sheet (the ? in its PageTitleRow). */
+  readonly openExplainer: () => void;
 }
 
 export interface PageRenderProps {
@@ -61,8 +63,12 @@ export interface ArrangeCountryOption {
   readonly name: string;
 }
 
-/** World only: × per country and the add field. */
-export interface ArrangeWorldVariant {
+/** Arranging World's pages (the only tab that arranges): reorder, × per
+ *  country, and the add field. */
+export interface ArrangeConfig {
+  readonly onSave: (draft: ArrangeDraft) => void | Promise<void>;
+  /** The overlay opened (World loads its country list). */
+  readonly onOpen?: () => void;
   readonly search: (query: string) => readonly ArrangeCountryOption[];
   /** The note under the row for a page (place-derived countries), or null. */
   readonly footnoteFor: (id: PageId) => string | null;
@@ -70,22 +76,17 @@ export interface ArrangeWorldVariant {
   readonly removable: (id: PageId) => boolean;
 }
 
-export interface ArrangeConfig {
-  readonly onSave: (draft: ArrangeDraft) => void | Promise<void>;
-  /** The pen was tapped (World marks its intro line done). */
-  readonly onOpen?: () => void;
-  readonly world?: ArrangeWorldVariant;
-}
-
-export type TabTrailing = 'bell' | { readonly kind: 'search'; readonly onPress: () => void };
-
 export interface TabPagesProps {
   readonly tab: TabId;
   /** Ordered. Keys are page ids, so a reorder or a World add/remove never
    *  remounts a page that stays. */
   readonly pages: readonly PagePill[];
   readonly renderPage: (props: PageRenderProps) => React.ReactNode;
-  readonly trailing: TabTrailing;
-  readonly arrange: ArrangeConfig;
+  /** World: the floating search button at the strip's end. */
+  readonly onSearch?: () => void;
+  /** World: a long press on a page name opens the overlay. Absent: fixed pages. */
+  readonly arrange?: ArrangeConfig;
+  /** Drawn at the header row's start (the Feed's status icon). */
+  readonly leading?: React.ReactNode;
   readonly testID?: string;
 }

@@ -206,18 +206,15 @@ describe('clearAllStores', () => {
     // The page-order rows go with the database; the memory copy and the
     // memoised load must go too, or the next account opens in this one's order.
     it('forgets page orders and their memoised load', async () => {
-        const { usePageOrderStore, setPageOrder, loadPageOrders } = require('@/lib/navigation/page-order');
+        const { usePageOrderStore, setWorldPageOrder, loadPageOrders } = require('@/lib/navigation/page-order');
         const { getSetting } = require('@/lib/database/services/setting-service');
         await loadPageOrders();
-        setPageOrder('feed', ['stories', 'feed', 'interests']);
+        setWorldPageOrder(['country:DE', 'world']);
         await storeIndex.clearAllStores();
-        expect(usePageOrderStore.getState()).toMatchObject({
-            stored: { feed: null, world: null, library: null, you: null },
-            hydrated: false,
-        });
+        expect(usePageOrderStore.getState()).toMatchObject({ stored: null, hydrated: false });
         (getSetting as jest.Mock).mockClear();
         await loadPageOrders();
-        expect(getSetting).toHaveBeenCalledWith('nav_order_feed');
+        expect(getSetting).toHaveBeenCalledWith('nav_order_world');
     });
 
     it('clears the nav shell surface, any pending page jump and any pending focus target', async () => {

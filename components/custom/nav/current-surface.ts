@@ -1,4 +1,5 @@
-// Which surface the reader is on, and whether the Arrange overlay is open.
+// Which surface the reader is on, whether the Arrange overlay is open, and
+// which tabs show their "something new" dot in the tab bar.
 //
 // One small store because its readers sit OUTSIDE the tree that knows the
 // answer: the Mera button mounts once per tab beside the tab's Stack, the
@@ -17,7 +18,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 import { create } from 'zustand';
 
-import type { SurfaceId } from './page-registry';
+import type { SurfaceId, TabId } from './page-registry';
 
 interface HeaderBottom {
   /** Who reported it (`tab:<tab>`, `interest:<factId>`, ...); only they clear it. */
@@ -30,9 +31,17 @@ interface CurrentSurfaceState {
   surface: SurfaceId | null;
   arrangeOpen: boolean;
   headerBottom: HeaderBottom | null;
+  /** A tab's dot: new content there (Feed: articles arrived while away; You:
+   *  unread notices). Set by each tab's owner, drawn by the tab layout. */
+  tabDots: Readonly<Record<TabId, boolean>>;
 }
 
-const INITIAL: CurrentSurfaceState = { surface: null, arrangeOpen: false, headerBottom: null };
+const INITIAL: CurrentSurfaceState = {
+  surface: null,
+  arrangeOpen: false,
+  headerBottom: null,
+  tabDots: { feed: false, world: false, library: false, you: false },
+};
 
 export const useCurrentSurfaceStore = create<CurrentSurfaceState>()(() => INITIAL);
 
@@ -55,6 +64,15 @@ export function setArrangeOpen(open: boolean): void {
   if (useCurrentSurfaceStore.getState().arrangeOpen !== open) {
     useCurrentSurfaceStore.setState({ arrangeOpen: open });
   }
+}
+
+export function useTabDot(tab: TabId): boolean {
+  return useCurrentSurfaceStore((s) => s.tabDots[tab]);
+}
+
+export function setTabDot(tab: TabId, on: boolean): void {
+  const dots = useCurrentSurfaceStore.getState().tabDots;
+  if (dots[tab] !== on) useCurrentSurfaceStore.setState({ tabDots: { ...dots, [tab]: on } });
 }
 
 /** Set `surface`; a no-op when unchanged. Exported for tests and TabPages. */

@@ -18,7 +18,7 @@ import {
     useWorldIntroDone,
     useWorldPages,
 } from '@/lib/explore/world-pages';
-import { setPageOrder } from '@/lib/navigation/page-order';
+import { setWorldPageOrder } from '@/lib/navigation/page-order';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { router } from 'expo-router';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -89,25 +89,20 @@ export function WorldPages() {
                 commitWorldDraft(draft, {
                     addCountry: addWorldCountry,
                     removeCountry: removeWorldCountry,
-                    saveOrder: (ids) => setPageOrder('world', ids),
+                    saveOrder: setWorldPageOrder,
                 }),
-            world: {
-                search: (query) => searchCountryOptions(countryOptions, query, present),
-                footnoteFor: (id) => {
-                    const page = byId.get(id);
-                    return page?.origin === 'place'
-                        ? t('world.arrange.placesNote', { country: page.scope.label })
-                        : null;
-                },
-                removable: (id) => id !== 'world',
+            search: (query) => searchCountryOptions(countryOptions, query, present),
+            footnoteFor: (id) => {
+                const page = byId.get(id);
+                return page?.origin === 'place'
+                    ? t('world.arrange.placesNote', { country: page.scope.label })
+                    : null;
             },
+            removable: (id) => id !== 'world',
         };
     }, [pages, countryOptions, loadCountries, t]);
 
-    const trailing = useMemo(
-        () => ({ kind: 'search' as const, onPress: () => router.push('/logged-in/search') }),
-        [],
-    );
+    const openSearch = useCallback(() => router.push('/logged-in/search'), []);
 
     // World alone, and the pen never opened here: say what World is and
     // where countries come from. Derived; the only stored bit is "pen opened".
@@ -153,7 +148,7 @@ export function WorldPages() {
             tab="world"
             pages={pills}
             renderPage={renderPage}
-            trailing={trailing}
+            onSearch={openSearch}
             arrange={arrange}
             testID="world-pages"
         />
