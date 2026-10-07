@@ -29,6 +29,10 @@ import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 //   (y 304-720), so a rectangle at x 279-745 clips them exactly like the
 //   hexagon does; anything at its edge is under the 24-unit outline stroke.
 // - The cone stays inside the hexagon at +-15 degrees, so it needs no clip.
+//   It turns about its apex by translate-rotate-translate, NOT `transformOrigin`:
+//   on device a percentage origin ("83.88%") put the pivot several glyph
+//   heights below the mark, so the cone flew out of its box and left none
+//   in the hexagon at all.
 // - Cone and grid share the glyph's one ink colour, so drawing the cone above
 //   the opaque highlighted card and dot, and the 0.18 grid below the opaque
 //   outline, changes no pixel.
@@ -53,9 +57,10 @@ const CARD_SCROLL_MS = 3200;
 const SWEEP_HALF_MS = 2000;
 const SWEEP_DEG = 15;
 const SPOTLIGHT_D = 'M512 760 L450 485 L574 485 Z';
-/** The cone apex (512, 760) as a transform origin. `meet` centres the glyph
- *  horizontally, which puts x=512 at exactly 50% of a square view. */
-const CONE_ORIGIN = `50% ${(((760 - VB_Y) / VB_H) * 100).toFixed(3)}%`;
+/** How far below the view's centre the cone apex (512, 760) sits, as a
+ *  fraction of the view's size. `meet` centres the glyph horizontally, which
+ *  puts x=512 at exactly the centre of a square view, so only y is off. */
+const APEX_BELOW_CENTRE = (760 - VB_Y) / VB_H - 0.5;
 /** The cards' clip rectangle, in viewBox units. */
 const CLIP = { x0: 279, x1: 745, y0: 304, y1: 720 } as const;
 
@@ -167,15 +172,24 @@ interface LayeredProps {
     still: boolean;
 }
 
-const LayeredMark: React.FC<LayeredProps> = ({ size, color, cone, cards, still }) => {
+/** The layered mark. Exported only for the P2 kit gallery's frozen tile (it
+ *  passes `still`); everything else goes through `MeraLogo`. */
+export const LayeredMark: React.FC<LayeredProps> = ({ size, color, cone, cards, still }) => {
     const active = useAnimationsActive();
     const reduceMotion = useReducedMotion();
     const moving = active && !still && !reduceMotion;
     const angle = useClock(coneClock, -SWEEP_DEG, cone && moving);
     const offset = useClock(cardClock, 0, cards && moving);
 
+    // A view turns about its centre: shift the apex to the centre, turn, shift
+    // back.
+    const apex = APEX_BELOW_CENTRE * size;
     const coneStyle = useAnimatedStyle(() => ({
-        transform: [{ rotate: `${cone && moving ? angle.value : -SWEEP_DEG}deg` }],
+        transform: [
+            { translateY: apex },
+            { rotate: `${cone && moving ? angle.value : -SWEEP_DEG}deg` },
+            { translateY: -apex },
+        ],
     }));
     // viewBox units to points: `meet` scales by the taller side.
     const k = size / VB_H;
@@ -206,12 +220,17 @@ const LayeredMark: React.FC<LayeredProps> = ({ size, color, cone, cards, still }
             )}
             <Svg style={styles.abs} width={size} height={size} viewBox={VIEW_BOX}>
                 <Path d={HEX_D} fill="none" stroke={color} strokeWidth="24" strokeLinejoin="round" />
-                {!cards && <StillCards color={color} />}
-                {!cone && <StaticSpotlight color={color} />}
-                <Highlight color={color} />
+                <ClipPath id="hexB">
+                    <Path d={HEX_D} />
+                </ClipPath>
+                <G clipPath="url(#hexB)">
+                    {!cards && <StillCards color={color} />}
+                    {!cone && <StaticSpotlight color={color} />}
+                    <Highlight color={color} />
+                </G>
             </Svg>
             {cone && (
-                <Animated.View style={[styles.abs, box, { transformOrigin: CONE_ORIGIN }, coneStyle]}>
+                <Animated.View style={[styles.abs, box, coneStyle]}>
                     <Svg width={size} height={size} viewBox={VIEW_BOX}>
                         <Path d={SPOTLIGHT_D} fill={color} opacity="0.300" />
                     </Svg>

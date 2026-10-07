@@ -1,6 +1,6 @@
 // S4's section of the navx2 P2 kit gallery (app/dev-kit.tsx): every kit piece
 // this area owns, in every state. Dev only; deleted in P13.
-import MeraLogo from '@/components/custom/MeraLogo';
+import MeraLogo, { LayeredMark } from '@/components/custom/MeraLogo';
 import { COLORS, useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
@@ -8,13 +8,14 @@ import MeraButton from './MeraButton';
 
 const row: ViewStyle = { flexDirection: 'row', alignItems: 'center', gap: 24, padding: 16, borderRadius: 12 };
 
-/** Static (the one-Svg path) beside the layered moving path. With Reduce
- *  Motion on, the layered one sits frozen at -15 degrees: the pixel-parity
- *  pair for the P0 spike. */
+/** Static (the one-Svg path), the layered path forced still at -15 degrees
+ *  whatever the motion settings (the pixel-parity pair: these two must match),
+ *  then the layered path moving (still under Reduce Motion or Lite). */
 function LogoPair({ ink, ground }: { ink: string; ground: string }) {
     return (
-        <View style={[row, { backgroundColor: ground }]} testID="kit-mera-logo-pair">
+        <View style={[row, { backgroundColor: ground, gap: 16 }]} testID="kit-mera-logo-pair">
             <MeraLogo size={96} color={ink} />
+            <LayeredMark size={96} color={ink} cone cards still />
             <MeraLogo size={96} color={ink} animated scrollCards />
         </View>
     );
@@ -29,7 +30,7 @@ export default function KitGallery() {
     const colors = useColors();
     return (
         <View>
-            <Label>Mera mark, 96pt: static path, then layered path (dark, light ground)</Label>
+            <Label>Mera mark, 96pt: static, layered frozen at -15, layered moving</Label>
             <LogoPair ink={COLORS.dark.ink} ground={COLORS.dark.base} />
             <LogoPair ink={COLORS.light.ink} ground={COLORS.light.base} />
             <Label>Mera mark, status icon colours</Label>
