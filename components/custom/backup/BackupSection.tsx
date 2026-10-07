@@ -84,7 +84,7 @@ import { requestRestart, restartIsAvailable } from '@/lib/app-restart';
 import { showDialog } from '@/lib/dialog';
 import { hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
-import { useColors } from '@/lib/theme/tokens';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { toastManager } from '@/lib/toast-manager';
 
 /** Past this, the status card says the copy is old (FinalBackup #8: a week). */
@@ -128,6 +128,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
   const { t, i18n } = useTranslation();
   const language = i18n?.language;
   const colors = useColors();
+  const themeMode = useThemeMode();
   const reduceMotion = useReducedMotion();
   const tRef = useRef(t);
   tRef.current = t;
@@ -536,7 +537,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         ? choice(
             forRestore ? 'restore-pick-icloud' : 'backup-pick-icloud',
             t('backup.icloud'),
-            icloudReady ? t('backup.icloudReady') : t('backup.icloudUnavailable'),
+            !icloudReady ? t('backup.icloudUnavailable') : forRestore ? t('backup.restoreSourceIcloud') : t('backup.icloudReady'),
             selected === 'icloud',
             () => onPick('icloud'),
             !icloudReady,
@@ -546,7 +547,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         ? choice(
             forRestore ? 'restore-pick-drive' : 'backup-pick-drive',
             t('backup.drive'),
-            driveReady ? t('backup.driveReady') : t('backup.driveConnect'),
+            forRestore ? t('backup.restoreSourceDrive') : driveReady ? t('backup.driveReady') : t('backup.driveConnect'),
             selected === 'google-drive',
             () => onPick('google-drive'),
           )
@@ -729,6 +730,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
               placeholderTextColor={colors.ink3}
               autoCapitalize="characters"
               autoCorrect={false}
+              keyboardAppearance={themeMode}
               accessibilityLabel={t('backup.adoptTitle')}
               style={[styles.input, { color: colors.ink, backgroundColor: colors.surfaceRaised, borderColor: colors.line }]}
             />

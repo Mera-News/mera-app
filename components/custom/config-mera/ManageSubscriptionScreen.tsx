@@ -360,6 +360,12 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                                 <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('subscription.customerCenter')}</Text>
                             </Pressable>
                         ) : null}
+                        {/* Where it is billed, only for a store subscription. */}
+                        {isPremium && (activeEntitlement?.store === 'APP_STORE' || activeEntitlement?.store === 'PLAY_STORE') ? (
+                            <Text style={{ color: colors.ink3, fontSize: 13, lineHeight: 18, textAlign: 'center' }}>
+                                {activeEntitlement.store === 'APP_STORE' ? t('subscription.billedAppStore') : t('subscription.billedPlayStore')}
+                            </Text>
+                        ) : null}
                     </ScrollView>
                 )}
             </View>
