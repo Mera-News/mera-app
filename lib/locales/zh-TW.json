@@ -3492,6 +3492,9 @@
     "reauthTitle": "請登入以繼續",
     "sendNewCode": "寄送新的驗證碼",
     "unreachableBody": "問題出在我們這邊，而不是你的手機。Mera 會持續嘗試，恢復後就會開啟。",
-    "unreachableTitle": "無法連上 Mera"
+    "unreachableTitle": "無法連上 Mera",
+    "mismatchTitle": "這個電子郵件屬於其他帳號",
+    "mismatchBody": "請使用此帳號的電子郵件登入，或取得協助。",
+    "mismatchOtherEmail": "使用其他電子郵件"
   }
 }

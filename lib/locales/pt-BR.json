@@ -3496,6 +3496,9 @@
     "reauthTitle": "Entre para continuar",
     "sendNewCode": "Enviar um novo código",
     "unreachableBody": "O problema está do nosso lado, não no seu celular. A Mera continua tentando e abre quando voltar.",
-    "unreachableTitle": "Não foi possível acessar a Mera"
+    "unreachableTitle": "Não foi possível acessar a Mera",
+    "mismatchTitle": "Este e-mail pertence a outra conta",
+    "mismatchBody": "Entre com o e-mail desta conta ou peça ajuda.",
+    "mismatchOtherEmail": "Usar outro e-mail"
   }
 }

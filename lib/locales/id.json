@@ -3491,6 +3491,9 @@
     "reauthTitle": "Masuk untuk melanjutkan",
     "sendNewCode": "Kirim kode baru",
     "unreachableBody": "Masalahnya ada di pihak kami, bukan ponsel Anda. Mera terus mencoba dan akan terbuka saat kembali normal.",
-    "unreachableTitle": "Mera tidak dapat dihubungi"
+    "unreachableTitle": "Mera tidak dapat dihubungi",
+    "mismatchTitle": "Email ini milik akun lain",
+    "mismatchBody": "Masuk dengan email di akun ini, atau minta bantuan.",
+    "mismatchOtherEmail": "Gunakan email lain"
   }
 }

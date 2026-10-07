@@ -3496,6 +3496,9 @@
     "reauthTitle": "Inicia sesión para continuar",
     "sendNewCode": "Enviar un código nuevo",
     "unreachableBody": "El problema está de nuestro lado, no en tu teléfono. Mera sigue intentándolo y se abre cuando vuelva.",
-    "unreachableTitle": "No se puede acceder a Mera"
+    "unreachableTitle": "No se puede acceder a Mera",
+    "mismatchTitle": "Este correo pertenece a otra cuenta",
+    "mismatchBody": "Inicia sesión con el correo de esta cuenta o obtén ayuda.",
+    "mismatchOtherEmail": "Usar otro correo"
   }
 }

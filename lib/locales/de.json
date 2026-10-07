@@ -3496,6 +3496,9 @@
     "reauthTitle": "Melden Sie sich an, um fortzufahren",
     "sendNewCode": "Neuen Code senden",
     "unreachableBody": "Das Problem liegt bei uns, nicht bei Ihrem Telefon. Mera versucht es weiter und öffnet sich, sobald es wieder funktioniert.",
-    "unreachableTitle": "Mera ist nicht erreichbar"
+    "unreachableTitle": "Mera ist nicht erreichbar",
+    "mismatchTitle": "Diese E-Mail gehört zu einem anderen Konto",
+    "mismatchBody": "Melden Sie sich mit der E-Mail-Adresse an, die zu diesem Konto gehört, oder holen Sie sich Hilfe.",
+    "mismatchOtherEmail": "Andere E-Mail-Adresse verwenden"
   }
 }

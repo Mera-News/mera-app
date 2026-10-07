@@ -3572,6 +3572,9 @@
     "reauthTitle": "Zaloguj się, aby kontynuować",
     "sendNewCode": "Wyślij nowy kod",
     "unreachableBody": "Problem leży po naszej stronie, nie w Twoim telefonie. Mera wciąż próbuje i otworzy się, gdy wróci.",
-    "unreachableTitle": "Nie można połączyć się z Mera"
+    "unreachableTitle": "Nie można połączyć się z Mera",
+    "mismatchTitle": "Ten e-mail należy do innego konta",
+    "mismatchBody": "Zaloguj się e-mailem przypisanym do tego konta albo poproś o pomoc.",
+    "mismatchOtherEmail": "Użyj innego e-maila"
   }
 }

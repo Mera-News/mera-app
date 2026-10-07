@@ -3492,6 +3492,9 @@
     "reauthTitle": "Đăng nhập để tiếp tục",
     "sendNewCode": "Gửi mã mới",
     "unreachableBody": "Sự cố nằm ở phía chúng tôi, không phải điện thoại của bạn. Mera vẫn tiếp tục thử và sẽ mở khi hệ thống hoạt động trở lại.",
-    "unreachableTitle": "Không thể kết nối đến Mera"
+    "unreachableTitle": "Không thể kết nối đến Mera",
+    "mismatchTitle": "Email này thuộc về một tài khoản khác",
+    "mismatchBody": "Đăng nhập bằng email của tài khoản này, hoặc nhận trợ giúp.",
+    "mismatchOtherEmail": "Dùng email khác"
   }
 }

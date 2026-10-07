@@ -3503,6 +3503,9 @@
     "reauthTitle": "Connectez-vous pour continuer",
     "sendNewCode": "Envoyer un nouveau code",
     "unreachableBody": "Le problème vient de notre côté, pas de votre téléphone. Mera continue d'essayer et s'ouvrira dès que le service sera rétabli.",
-    "unreachableTitle": "Mera est injoignable"
+    "unreachableTitle": "Mera est injoignable",
+    "mismatchTitle": "Cet e-mail appartient à un autre compte",
+    "mismatchBody": "Connectez-vous avec l'e-mail de ce compte, ou obtenez de l'aide.",
+    "mismatchOtherEmail": "Utiliser un autre e-mail"
   }
 }

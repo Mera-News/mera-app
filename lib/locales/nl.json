@@ -3496,6 +3496,9 @@
     "reauthTitle": "Log in om door te gaan",
     "sendNewCode": "Een nieuwe code sturen",
     "unreachableBody": "Het probleem zit aan onze kant, niet op je telefoon. Mera blijft het proberen en opent zodra het weer kan.",
-    "unreachableTitle": "Mera is niet bereikbaar"
+    "unreachableTitle": "Mera is niet bereikbaar",
+    "mismatchTitle": "Dit e-mailadres hoort bij een ander account",
+    "mismatchBody": "Log in met het e-mailadres van dit account, of krijg hulp.",
+    "mismatchOtherEmail": "Gebruik een ander e-mailadres"
   }
 }

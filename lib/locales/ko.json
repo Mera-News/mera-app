@@ -3491,6 +3491,9 @@
     "reauthTitle": "계속하려면 로그인하세요",
     "sendNewCode": "새 코드 보내기",
     "unreachableBody": "문제는 회원님의 휴대폰이 아니라 저희 쪽에 있습니다. Mera가 계속 시도하며 복구되면 열립니다.",
-    "unreachableTitle": "Mera에 연결할 수 없습니다"
+    "unreachableTitle": "Mera에 연결할 수 없습니다",
+    "mismatchTitle": "이 이메일은 다른 계정에 연결되어 있습니다",
+    "mismatchBody": "이 계정에 등록된 이메일로 로그인하거나 도움을 받으세요.",
+    "mismatchOtherEmail": "다른 이메일 사용"
   }
 }

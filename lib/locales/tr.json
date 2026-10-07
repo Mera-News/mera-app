@@ -3498,6 +3498,9 @@
     "reauthTitle": "Devam etmek için giriş yapın",
     "sendNewCode": "Yeni kod gönder",
     "unreachableBody": "Sorun telefonunuzda değil, bizim tarafımızda. Mera denemeye devam eder ve geri geldiğinde açılır.",
-    "unreachableTitle": "Mera'ya ulaşılamıyor"
+    "unreachableTitle": "Mera'ya ulaşılamıyor",
+    "mismatchTitle": "Bu e-posta farklı bir hesaba ait",
+    "mismatchBody": "Bu hesapla ilişkili e-postayla giriş yapın veya yardım alın.",
+    "mismatchOtherEmail": "Başka bir e-posta kullan"
   }
 }

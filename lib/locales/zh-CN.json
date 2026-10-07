@@ -3492,6 +3492,9 @@
     "reauthTitle": "登录以继续",
     "sendNewCode": "发送新验证码",
     "unreachableBody": "问题出在我们这边，而不是你的手机。Mera 会持续尝试，恢复后即可打开。",
-    "unreachableTitle": "无法连接 Mera"
+    "unreachableTitle": "无法连接 Mera",
+    "mismatchTitle": "这个电子邮箱属于另一个账户",
+    "mismatchBody": "请使用此账户绑定的电子邮箱登录，或获取帮助。",
+    "mismatchOtherEmail": "使用其他电子邮件"
   }
 }

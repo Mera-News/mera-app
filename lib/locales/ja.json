@@ -3491,6 +3491,9 @@
     "reauthTitle": "続けるにはサインインしてください",
     "sendNewCode": "新しいコードを送信",
     "unreachableBody": "問題は電話ではなく当社側にあります。Meraは引き続き接続を試み、復旧すると開きます。",
-    "unreachableTitle": "Meraに接続できません"
+    "unreachableTitle": "Meraに接続できません",
+    "mismatchTitle": "このメールは別のアカウントのものです",
+    "mismatchBody": "このアカウントのメールでサインインするか、ヘルプをご利用ください。",
+    "mismatchOtherEmail": "別のメールアドレスを使う"
   }
 }
