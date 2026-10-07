@@ -12,6 +12,25 @@ export const getFlagEmoji = (alpha3Code: string | null | undefined): string => {
     return String.fromCodePoint(...codePoints);
 };
 
+/**
+ * Where the library's alias is an abbreviation or carries "The" (or, for
+ * Taiwan, where any other form would read "Province of China"), the plain
+ * short name. Every other country keeps its alias ("Russia", "Vietnam",
+ * "Iran"), which reads better than the official form.
+ */
+const NAME_OVERRIDES: Readonly<Record<string, string>> = {
+    GB: 'United Kingdom',
+    NL: 'Netherlands',
+    AE: 'United Arab Emirates',
+    GM: 'Gambia',
+    TW: 'Taiwan',
+};
+
 export const getCountryName = (alpha3Code: string): string => {
-    return countries.getName(alpha3Code, 'en', { select: 'alias' }) || alpha3Code;
+    const alpha2 = countries.alpha3ToAlpha2(alpha3Code);
+    return (
+        (alpha2 && NAME_OVERRIDES[alpha2]) ||
+        countries.getName(alpha3Code, 'en', { select: 'alias' }) ||
+        alpha3Code
+    );
 };

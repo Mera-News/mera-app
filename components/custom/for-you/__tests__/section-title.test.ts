@@ -45,11 +45,10 @@ describe('sectionTitle', () => {
   });
 
   it('resolves the display name from a lower-case code too', () => {
-    // `countryNameForAlpha2` is the app's existing authority and returns the
-    // aliased name, article included ("The Netherlands") — accepted as-is rather
-    // than post-processed, since any de-articling rule would be English-only.
+    // `countryNameForAlpha2` is the app's existing authority (getCountryName),
+    // which spells out abbreviated and "The" aliases ("Netherlands").
     expect(sectionTitle(t, row({ kind: 'headline-country', countryCode: 'nl' }))).toBe(
-      'forYou.headlineSectionCountry|{"country":"The Netherlands"}',
+      'forYou.headlineSectionCountry|{"country":"Netherlands"}',
     );
   });
 
