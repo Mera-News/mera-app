@@ -318,16 +318,17 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
     let body: React.ReactNode = null;
     switch (stage) {
         case 'intro':
-            body = (
-                <View style={[styles.introLine, { top: height * 0.3 + LOGO_FULL + 24 - bodyTop }]}>
-                    <Text accessibilityRole="header" style={[styles.introText, { color: colors.ink }]}>
-                        {t('auth.track.welcome')}
-                    </Text>
-                </View>
-            );
+            // The line itself is drawn beside the logo in the root (below).
+            body = null;
             break;
         case 'welcome':
-            body = <WelcomeStage onBegin={() => go('checks')} onLearn={() => setTourOpen(true)} />;
+            body = (
+                <WelcomeStage
+                    messageTop={insets.top + 8 - bodyTop}
+                    onBegin={() => go('checks')}
+                    onLearn={() => setTourOpen(true)}
+                />
+            );
             break;
         case 'checks':
             body = <SystemCheckStage withLogo={false} onContinue={() => go('begin')} testID="auth-checks" />;
@@ -472,6 +473,19 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
             <Animated.View pointerEvents="none" style={[styles.logo, logoStyle]}>
                 <MeraLogo size={LOGO_FULL} animated />
             </Animated.View>
+
+            {/* The welcome line under the held logo (Journey #3). In the root,
+                beside the logo, so both measure from the same unpadded box. */}
+            {stage === 'intro' ? (
+                <Animated.View
+                    exiting={FadeOut.duration(200)}
+                    style={[styles.introLine, { top: height * 0.3 + LOGO_FULL + 24 }]}
+                >
+                    <Text accessibilityRole="header" style={[styles.introText, { color: colors.ink }]}>
+                        {t('auth.track.welcome')}
+                    </Text>
+                </Animated.View>
+            ) : null}
 
             <Animated.View
                 key={stage}

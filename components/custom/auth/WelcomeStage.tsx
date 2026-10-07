@@ -2,7 +2,6 @@ import * as Device from 'expo-device';
 import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { FlatList, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useReducedMotion } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { LanguageRow } from '@/components/custom/auth/LanguageRow';
@@ -27,6 +26,9 @@ type Message = { kind: 'getting' | 'missing' | 'ready'; code: string } | null;
 const READY_MESSAGE_MS = 1500;
 
 interface WelcomeStageProps {
+    /** The message card's top in this view's coordinates: the screen top plus
+     *  a margin, less where this view starts (Journey #10: it drops from the top). */
+    messageTop: number;
     /** "Begin Mera": on to Checking your phone. */
     onBegin: () => void;
     /** "Learn about Mera": the tour sheet over this page. */
@@ -47,10 +49,9 @@ interface WelcomeStageProps {
  * (TranslationUnavailablePrompt): while that one runs, this page shows the same
  * "Getting X ready" message for the preselected language.
  */
-export default function WelcomeStage({ onBegin, onLearn }: WelcomeStageProps) {
+export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeStageProps) {
     const { t } = useTranslation();
     const colors = useColors();
-    const insets = useSafeAreaInsets();
     const reduceMotion = useReducedMotion();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const phone = useMemo(() => phoneLanguage(), []);
@@ -129,7 +130,7 @@ export default function WelcomeStage({ onBegin, onLearn }: WelcomeStageProps) {
                     entering={reduceMotion ? FadeIn.duration(150) : FadeInDown.duration(220)}
                     exiting={FadeOut.duration(220)}
                     accessibilityLiveRegion="polite"
-                    style={[styles.message, { top: insets.top + 8, backgroundColor: colors.panel, borderColor: colors.panelBorder }]}
+                    style={[styles.message, { top: messageTop, backgroundColor: colors.panel, borderColor: colors.panelBorder }]}
                     testID={`auth-language-message-${shown.kind}`}
                 >
                     {shown.kind === 'getting' ? <MeraLogo size={20} animated /> : null}
