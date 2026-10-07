@@ -1672,7 +1672,7 @@
     "setupSubtitle": "Damit öffnen Sie Mera auf diesem Telefon.",
     "confirmTitle": "Geben Sie sie erneut ein",
     "confirmSubtitle": "Geben Sie Ihre 4-stellige PIN erneut ein",
-    "mismatch": "PINs stimmten nicht überein. Anfangen Sie von vorne.",
+    "mismatch": "PINs stimmten nicht überein. Fangen Sie von vorne an.",
     "startOver": "Von vorne anfangen"
   },
   "security": {

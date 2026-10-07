@@ -1674,8 +1674,8 @@
     "setupSubtitle": "Bunu bu telefonda Mera'yı açmak için kullanacaksınız.",
     "confirmTitle": "PIN'inizi yeniden girin",
     "confirmSubtitle": "4 haneli PIN'ini yeniden gir",
-    "mismatch": "PIN'ler eşleşmedi. Baştan başla.",
-    "startOver": "Baştan başla"
+    "mismatch": "PIN'ler eşleşmedi. Baştan başlayın.",
+    "startOver": "Baştan başlayın"
   },
   "security": {
     "title": "Güvenlik",
