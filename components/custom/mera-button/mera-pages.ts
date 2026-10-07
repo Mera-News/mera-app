@@ -65,7 +65,6 @@ const DIRECT: Readonly<Record<string, MeraPageKey>> = {
   // hints fit them (they all edit what Mera knows).
   locations: 'profile',
   hygiene: 'profile',
-  'not-interested': 'profile',
   activity: 'profile',
 };
 

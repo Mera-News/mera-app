@@ -25,7 +25,6 @@ describe('pageKeyFor', () => {
     ['interest:abc123', 'interest'],
     ['locations', 'profile'],
     ['hygiene', 'profile'],
-    ['not-interested', 'profile'],
     ['activity', 'profile'],
     ['search', 'settings'],
   ])('%s -> %s', (surface, key) => {
