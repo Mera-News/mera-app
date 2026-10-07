@@ -19,9 +19,8 @@ export default function Onboarding() {
     // A failed or slow /get-session settles isPending=false with `session ===
     // undefined`, so that line fired for users who were perfectly signed in —
     // and login.tsx does not bounce back (the session is falsy there too), so
-    // AuthScreen read cached_user_email/cached_user_id and rendered
-    // PreviousUserView: the "Welcome back / We couldn't load your account just
-    // now" screen, shown because of a network blip. Identity is a LOCAL fact.
+    // AuthScreen read cached_user_email/cached_user_id and rendered the
+    // sign-in gate over a network blip. Identity is a LOCAL fact.
     const { data: session } = authClient.useSession();
     const [userId, setUserId] = useState<string | null>(null);
     const [resolved, setResolved] = useState(false);

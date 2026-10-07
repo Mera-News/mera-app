@@ -30,10 +30,26 @@ function normalizeCode(raw: string | null | undefined): string | null {
     return null;
 }
 
-function resolveDeviceLocale(): string {
+/** The phone's own language, as an app language code (the first-launch list
+ *  marks it "Your phone's language"). */
+export function phoneLanguage(): string {
     const locales = getLocales();
     const tag = locales[0]?.languageTag ?? 'en';
     return normalizeCode(tag) ?? 'en';
+}
+
+/**
+ * The default before anyone picks: the phone's language when this phone can
+ * translate into it, else English (FinalJourney #4). Defaulting to a language
+ * the phone cannot translate made the startup probe block it and put the
+ * "unavailable" notice on the very first screen. Lazy require: the
+ * translation service imports this store.
+ */
+function resolveDeviceLocale(): string {
+    const code = phoneLanguage();
+    if (code === 'en') return code;
+    const { canTranslateIntoLanguage } = require('@/lib/translation-service') as typeof import('@/lib/translation-service');
+    return canTranslateIntoLanguage(code) ? code : 'en';
 }
 
 interface AppLanguageState {

@@ -1,11 +1,12 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
-import { Spinner } from '@/components/ui/spinner';
-import { Text } from '@/components/ui/text';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text as RNText, View } from 'react-native';
+
+import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { VStack } from '@/components/ui/vstack';
+import { useColors } from '@/lib/theme/tokens';
 import { PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 
@@ -32,12 +33,14 @@ interface ConsentContentProps {
      *  `consent-accept`, which harness/README-android.md documents as a
      *  driving target. */
     acceptTestID?: string;
-    /** Rendered between the body and the legal buttons, so it is on screen
+    /** Shown IN PLACE OF the body, above the legal rows, so it is on screen
      *  BEFORE the commit tap. Only the pre-auth step passes one: the device
      *  sign-in notice (what signing in with this phone keeps), which is also
      *  the notice for reading the device ID. The re-consent gate never does,
      *  because it signs nobody in. */
     notice?: React.ReactNode;
+    /** The "What Mera keeps" row (the device sign-in path only). */
+    onWhatMeraKeeps?: () => void;
     /** Host-specific extras rendered below the CTA: the device sign-in failure
      *  cluster on the pre-auth step, the save-failed line on the gate. */
     children?: React.ReactNode;
@@ -71,88 +74,69 @@ const ConsentContent: React.FC<ConsentContentProps> = ({
     testIDPrefix,
     acceptTestID,
     notice,
+    onWhatMeraKeeps,
     children,
 }) => {
-    // Both hosts label the legal destinations with the SAME two keys; only
-    // the heading/body pair differs, which is why those are props and these
-    // are not.
     const { t } = useTranslation();
-    const termsLabel = t('consent.termsLink');
-    const privacyLabel = t('consent.privacyLink');
+    const colors = useColors();
     const blocked = busy || disabled;
+
+    const Row = ({ label, icon, onPress, testID, role }: { label: string; icon: 'chevron-right' | 'open-in-new'; onPress: () => void; testID: string; role: 'button' | 'link' }) => (
+        <Pressable
+            testID={testID}
+            accessible
+            accessibilityRole={role}
+            accessibilityLabel={label}
+            onPress={onPress}
+            style={[styles.row, { borderTopColor: colors.line }]}
+        >
+            <RNText style={[styles.rowLabel, { color: colors.ink }]}>{label}</RNText>
+            <MaterialIcons name={icon} size={18} color={colors.ink3} />
+        </Pressable>
+    );
 
     return (
         <VStack testID={`${testIDPrefix}-cluster`} accessible={false} space="md">
-            <VStack accessible={false} space="sm">
-                <Text size="2xl" className="text-white font-semibold text-center">
+            {/* One card on the backdrop (FinalJourney #7): title, what signing
+                in keeps (or the body), then the legal destinations as rows. */}
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+                <RNText accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
                     {title}
-                </Text>
-                <Text size="md" className="text-gray-300 text-center">
-                    {body}
-                </Text>
-            </VStack>
+                </RNText>
+                {notice ?? <RNText style={[styles.body, { color: colors.ink2 }]}>{body}</RNText>}
+                <View style={styles.rows}>
+                    {onWhatMeraKeeps ? (
+                        <Row label={t('consent.whatMeraKeeps')} icon="chevron-right" onPress={onWhatMeraKeeps} testID={`${testIDPrefix}-what-mera-keeps`} role="link" />
+                    ) : null}
+                    <Row label={t('consent.termsLink')} icon="open-in-new" onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))} testID={`${testIDPrefix}-terms`} role="link" />
+                    <Row label={t('consent.privacyLink')} icon="open-in-new" onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))} testID={`${testIDPrefix}-privacy`} role="link" />
+                </View>
+            </View>
 
-            {notice}
-
-            {/* Two outline buttons, half and half — the same primary outline the
-                welcome view's secondary actions wear, so the legal links read as
-                real destinations rather than fine print. `py-3` instead of a
-                fixed height: several locales run long here and must wrap without
-                clipping. Real padding, no hitSlop — overlapping slops resolve by
-                z-order and a tap in the gap would silently open the LATER
-                button. */}
-            <HStack accessible={false} space="md" className="items-stretch">
-                <Pressable
-                    testID={`${testIDPrefix}-terms`}
-                    accessible
-                    accessibilityRole="link"
-                    accessibilityLabel={termsLabel}
-                    onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}
-                    className="flex-1 rounded-full border border-primary-500 bg-transparent items-center justify-center py-3 px-3"
-                >
-                    <Text size="sm" className="text-primary-500 font-semibold text-center">
-                        {termsLabel}
-                    </Text>
-                </Pressable>
-                <Pressable
-                    testID={`${testIDPrefix}-privacy`}
-                    accessible
-                    accessibilityRole="link"
-                    accessibilityLabel={privacyLabel}
-                    onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}
-                    className="flex-1 rounded-full border border-primary-500 bg-transparent items-center justify-center py-3 px-3"
-                >
-                    <Text size="sm" className="text-primary-500 font-semibold text-center">
-                        {privacyLabel}
-                    </Text>
-                </Pressable>
-            </HStack>
-
-            <Pressable
+            <Button
+                action="primary"
                 testID={acceptTestID ?? `${testIDPrefix}-agree`}
                 onPress={onAccept}
-                disabled={blocked}
-                accessible
-                accessibilityRole="button"
+                isDisabled={blocked}
                 accessibilityLabel={busy && busyLabel ? busyLabel : ctaLabel}
                 accessibilityState={blocked ? { busy, disabled: true } : undefined}
-                className={`h-14 rounded-full items-center justify-center ${blocked ? 'bg-gray-700' : 'bg-primary-500'}`}
             >
-                {busy ? (
-                    <HStack space="sm" className="items-center">
-                        <Spinner size="small" color="white" />
-                        <Text className="text-white text-base font-semibold">
-                            {busyLabel ?? ctaLabel}
-                        </Text>
-                    </HStack>
-                ) : (
-                    <Text className="text-black text-base font-semibold">{ctaLabel}</Text>
-                )}
-            </Pressable>
+                {busy ? <ButtonSpinner /> : null}
+                <ButtonText>{busy && busyLabel ? busyLabel : ctaLabel}</ButtonText>
+            </Button>
 
             {children}
         </VStack>
     );
 };
+
+const styles = StyleSheet.create({
+    card: { borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, padding: 18, gap: 10 },
+    title: { fontSize: 20, fontWeight: '700' },
+    body: { fontSize: 15, lineHeight: 21 },
+    rows: { marginTop: 4 },
+    row: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: StyleSheet.hairlineWidth },
+    rowLabel: { fontSize: 15 },
+});
 
 export default ConsentContent;

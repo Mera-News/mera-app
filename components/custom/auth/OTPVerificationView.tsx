@@ -1,36 +1,59 @@
-import MeraLogo from '@/components/custom/MeraLogo';
-import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
-import { Input, InputField } from '@/components/ui/input';
-import { Pressable } from '@/components/ui/pressable';
-import { Spinner } from '@/components/ui/spinner';
-import { Text } from '@/components/ui/text';
-import { authClient, sendOTP } from '@/lib/auth-client';
-import logger from '@/lib/logger';
-import { setSetting } from '@/lib/database/services/setting-service';
-import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
-import { useUserStore } from '@/lib/stores/user-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+
+import { OtpBoxes, type OtpState } from '@/components/custom/auth/OtpBoxes';
+import { authClient, sendOTP } from '@/lib/auth-client';
+import { setSetting } from '@/lib/database/services/setting-service';
+import logger from '@/lib/logger';
+import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
+import { useUserStore } from '@/lib/stores/user-store';
+import { useColors } from '@/lib/theme/tokens';
+import { maskEmail } from '@/lib/utils/mask-email';
 
 interface OTPVerificationViewProps {
     email: string;
-    // Receives the verified userId so callers (e.g. the reauth flow) can compare
-    // against the locally cached user.
     onVerificationSuccess?: (userId: string) => void;
     onBack?: () => void;
+    /** "Check your email" on first launch; the sign-in gate says "Enter the code". */
+    title?: string;
+    /** First launch: "Use a different email" back to the address field. */
+    onUseDifferentEmail?: () => void;
+    /** Under the boxes (the gate's "Sign in without email"). */
+    footer?: React.ReactNode;
 }
 
-const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVerificationSuccess, onBack }) => {
-    const [otp, setOTP] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [resendLoading, setResendLoading] = useState(false);
-    const [resendCooldown, setResendCooldown] = useState(0);
-    const [resendMessage, setResendMessage] = useState('');
-    const hasSubmittedRef = useRef(false);
+const RESEND_COOLDOWN_S = 30;
+/** Long enough for the boxes to go green one by one (30 ms apart) first. */
+const RIGHT_CODE_HOLD_MS = 320;
+
+/**
+ * The code step (FinalJourney #22, #23; FinalStart #9): six boxes over one
+ * hidden field, filled by the iPhone's "From Mail" suggestion in one tap; the
+ * sixth digit submits by itself. A wrong code shakes the boxes red and clears
+ * nothing; a right one turns them green and moves on.
+ *
+ * Verification bookkeeping is unchanged and happens here, before anything
+ * navigates: the recorded user (identity gates read it while the session atom
+ * settles), the cached email, needsReauth off and the identity fault cleared.
+ */
+const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({
+    email,
+    onVerificationSuccess,
+    onBack,
+    title,
+    onUseDifferentEmail,
+    footer,
+}) => {
     const { t } = useTranslation();
+    const colors = useColors();
+    const [otp, setOtp] = useState('');
+    const [state, setState] = useState<OtpState>('idle');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [resendCooldown, setResendCooldown] = useState(RESEND_COOLDOWN_S);
+    const [resending, setResending] = useState(false);
+    const verifying = useRef(false);
 
     useEffect(() => {
         if (resendCooldown <= 0) return;
@@ -38,198 +61,132 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
         return () => clearInterval(timer);
     }, [resendCooldown]);
 
-    const handleResendOTP = async () => {
-        if (resendCooldown > 0 || resendLoading) return;
-        setResendLoading(true);
-        setResendMessage('');
+    const verify = async (code: string) => {
+        if (verifying.current) return;
+        verifying.current = true;
+        setErrorMessage('');
+        try {
+            const { data, error } = await authClient.signIn.emailOtp({ email, otp: code });
+            if (error || !data?.user) {
+                setState('wrong');
+                setErrorMessage(t('auth.track.wrongCode'));
+                return;
+            }
+            recordAuthenticatedUser(data.user.id);
+            setSetting('cached_user_email', email).catch(() => {});
+            useUserStore.getState().setNeedsReauth(false);
+            clearIdentityFault().catch(() => {});
+            setState('right');
+            const userId = data.user.id;
+            setTimeout(() => onVerificationSuccess?.(userId), RIGHT_CODE_HOLD_MS);
+        } catch (error) {
+            logger.captureException(error, { tags: { feature: 'otp', method: 'verify' } });
+            setState('wrong');
+            setErrorMessage(t('auth.otpError'));
+        } finally {
+            verifying.current = false;
+        }
+    };
+
+    const resend = async () => {
+        if (resendCooldown > 0 || resending) return;
+        setResending(true);
         setErrorMessage('');
         try {
             const result = await sendOTP(email);
             if (result.success) {
-                setOTP('');
-                hasSubmittedRef.current = false;
-                setResendCooldown(30);
-                setResendMessage(t('auth.resendSuccess'));
+                setOtp('');
+                setState('idle');
+                setResendCooldown(RESEND_COOLDOWN_S);
             } else {
                 setErrorMessage(result.error || t('common.tryAgain'));
             }
-        } catch (error: any) {
+        } catch (error) {
             logger.captureException(error, { tags: { feature: 'otp', method: 'resend' } });
-            setErrorMessage(error.message || t('common.tryAgain'));
+            setErrorMessage(t('common.tryAgain'));
         } finally {
-            setResendLoading(false);
+            setResending(false);
         }
     };
-
-    const handleVerifyOTP = async () => {
-        setErrorMessage('');
-
-        if (!otp || otp.length < 6) {
-            setErrorMessage(t('auth.invalidOtp'));
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const { data, error } = await authClient.signIn.emailOtp({
-                email,
-                otp,
-            });
-            if (error) {
-                setErrorMessage(error.message || t('auth.invalidOtpServer'));
-            } else if (data?.user) {
-                // WHO JUST SIGNED IN, recorded before anything navigates.
-                //
-                // The identity gates run the instant this screen hands off, and
-                // better-auth's session atom has NOT settled by then — it only
-                // nulls/fills `data` once /get-session round-trips. For that
-                // window `resolveIdentity` was being asked to compare against an
-                // `undefined` session, read it as the offline path, and return
-                // 'coherent'. That is how user B entered the shell on user A's
-                // device holding A's facts, reading history, saved items, chat
-                // and topics, skipped onboarding, and sent A's topic texts under
-                // B's session.
-                //
-                // In-memory module state, deliberately NOT a route param: the
-                // id it carries selects a DESTRUCTIVE WIPE target, /logged-in is
-                // reachable from the app's URL scheme, and an attacker-supplied
-                // target would let a crafted link erase the legitimate user.
-                //
-                // Recorded only HERE, after the call resolved with a user — an
-                // optimistic recording would let a device claim an identity it
-                // never proved.
-                recordAuthenticatedUser(data.user.id);
-                // Remember the email for the "previous user" view on the login
-                // screen if the session is ever cleared / the user lands back
-                // on /login (transient connectivity, expired cookie, etc.).
-                setSetting('cached_user_email', email).catch(() => {});
-                // A successful sign-in resolves any pending re-auth prompt.
-                useUserStore.getState().setNeedsReauth(false);
-                // ...including an identity fault (ownership-403). Cleared only
-                // where identity is RE-PROVED — here, and the device sign-in
-                // success handler (AuthScreen's WelcomeView), whose assertion
-                // is the same proof. The user has just re-proved which account
-                // they are, which is precisely what the fault could not
-                // determine locally. Deliberately not tied to the auth-failure
-                // breaker's success path — an unrelated query succeeding proves
-                // nothing about the userId argument the 403 was about.
-                clearIdentityFault().catch(() => {});
-                onVerificationSuccess?.(data.user.id);
-            } else {
-                setErrorMessage(t('auth.invalidOtpServer'));
-            }
-        } catch (error: any) {
-            logger.captureException(error, { tags: { feature: 'otp', method: 'verify' } });
-            setErrorMessage(error.message || t('auth.otpError'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Auto-submit when 6 digits are entered
-    useEffect(() => {
-        if (/^\d{6}$/.test(otp) && !hasSubmittedRef.current) {
-            hasSubmittedRef.current = true;
-            handleVerifyOTP();
-        } else if (otp.length < 6) {
-            hasSubmittedRef.current = false;
-        }
-        // Auto-submit reacts only to otp; handleVerifyOTP is excluded (re-created
-        // each render) and the ref guard prevents duplicate submissions.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [otp]);
 
     return (
-        <Box className="flex-1">
-            {/* Back Button */}
-            {onBack && (
-                <Box className="absolute top-16 left-5 z-10">
-                    <Pressable
-                        onPress={onBack}
-                        className="rounded-full bg-gray-900 p-3 shadow-hard-2"
-                    >
-                        <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                    </Pressable>
-                </Box>
-            )}
-            {/* Content */}
-            <Box className="flex-1 justify-center px-5">
-                {/* Logo */}
-                <Box className="items-center mb-4">
-                    <MeraLogo size={120} />
-                </Box>
+        <View style={styles.root} testID="auth-otp">
+            {onBack ? (
+                <Pressable
+                    onPress={onBack}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('common.back')}
+                    style={styles.back}
+                    testID="auth-otp-back"
+                >
+                    <MaterialIcons name="arrow-back" size={24} color={colors.ink} />
+                </Pressable>
+            ) : null}
+            <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
+                {title ?? t('auth.track.checkEmailTitle')}
+            </Text>
+            <Text style={[styles.body, { color: colors.ink2 }]}>
+                {t('auth.track.sentTo', { email: maskEmail(email) })}
+            </Text>
 
-                <Text size="md" className="text-center mb-2 text-typography-500">
-                    {t('auth.sentTo')} <Text size="md" className="font-bold">{email}</Text>
+            <View style={styles.boxes}>
+                <OtpBoxes
+                    value={otp}
+                    state={state}
+                    autoFocus
+                    editable={state !== 'right'}
+                    a11yLabel={t('auth.track.codeA11y')}
+                    onChange={(v) => {
+                        setOtp(v);
+                        if (state === 'wrong') {
+                            setState('idle');
+                            setErrorMessage('');
+                        }
+                    }}
+                    onComplete={(code) => void verify(code)}
+                    testID="auth-otp-boxes"
+                />
+            </View>
+
+            {errorMessage ? (
+                <Text accessibilityLiveRegion="polite" style={[styles.error, { color: colors.negative }]}>
+                    {errorMessage}
                 </Text>
+            ) : null}
 
-                <Box className="mb-8">
-                    <HStack className="items-center" space="md">
-                        <Box className="flex-1">
-                            <Input size="lg">
-                                <InputField
-                                    placeholder={t('auth.otpPlaceholder')}
-                                    value={otp}
-                                    onChangeText={(text) => {
-                                        setOTP(text);
-                                        setErrorMessage('');
-                                    }}
-                                    keyboardType="number-pad"
-                                    maxLength={6}
-                                    autoCapitalize="none"
-                                />
-                            </Input>
-                        </Box>
-                        <Pressable
-                            onPress={handleVerifyOTP}
-                            disabled={loading || otp.length < 6}
-                            className={`w-14 h-14 rounded-full items-center justify-center ${otp.length === 6 && !loading ? 'bg-primary-500' : 'bg-gray-700'
-                                }`}
-                        >
-                            {loading ? (
-                                <Spinner size="small" color="white" />
-                            ) : (
-                                <MaterialIcons
-                                    name="check"
-                                    size={28}
-                                    color={otp.length === 6 ? '#ffffff' : '#6B7280'}
-                                />
-                            )}
-                        </Pressable>
-                    </HStack>
-                    {errorMessage ? (
-                        <Text size="sm" className="text-error-500 mt-2">
-                            {errorMessage}
-                        </Text>
-                    ) : null}
-                    {resendMessage && !errorMessage ? (
-                        <Text size="sm" className="text-success-500 mt-2">
-                            {resendMessage}
-                        </Text>
-                    ) : null}
-                    <HStack className="items-center justify-center mt-4" space="xs">
-                        {resendLoading ? (
-                            <Spinner size="small" color="#6B7280" />
-                        ) : resendCooldown > 0 ? (
-                            <Text size="sm" className="text-typography-500">
-                                {t('auth.resendIn', { seconds: resendCooldown })}
-                            </Text>
-                        ) : (
-                            <Pressable
-                                onPress={handleResendOTP}
-                                className="border border-primary-400 rounded-lg px-4 py-2"
-                            >
-                                <Text size="sm" className="text-primary-400">
-                                    {t('auth.resendCode')}
-                                </Text>
-                            </Pressable>
-                        )}
-                    </HStack>
-                </Box>
-            </Box>
-        </Box>
+            <View style={styles.links}>
+                {resendCooldown > 0 ? (
+                    <Text style={[styles.muted, { color: colors.ink3 }]}>
+                        {t('auth.resendIn', { seconds: resendCooldown })}
+                    </Text>
+                ) : (
+                    <Pressable onPress={() => void resend()} disabled={resending} hitSlop={12} accessibilityRole="button">
+                        <Text style={[styles.link, { color: colors.accentText }]}>{t('auth.resendCode')}</Text>
+                    </Pressable>
+                )}
+                {onUseDifferentEmail ? (
+                    <Pressable onPress={onUseDifferentEmail} hitSlop={12} accessibilityRole="button">
+                        <Text style={[styles.link, { color: colors.accentText }]}>{t('auth.track.useDifferentEmail')}</Text>
+                    </Pressable>
+                ) : null}
+            </View>
+
+            {footer ? <View style={styles.footer}>{footer}</View> : null}
+        </View>
     );
 };
 
-export default OTPVerificationView;
+const styles = StyleSheet.create({
+    root: { flex: 1, paddingHorizontal: 20, paddingTop: 8 },
+    back: { width: 44, height: 44, justifyContent: 'center', marginBottom: 8 },
+    title: { fontSize: 26, fontWeight: '700' },
+    body: { fontSize: 15, lineHeight: 21, marginTop: 8 },
+    boxes: { marginTop: 24 },
+    error: { fontSize: 14, lineHeight: 20, marginTop: 14 },
+    links: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
+    muted: { fontSize: 14 },
+    link: { fontSize: 14, fontWeight: '600' },
+    footer: { marginTop: 28, gap: 12 },
+});
 
+export default OTPVerificationView;

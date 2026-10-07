@@ -291,7 +291,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                     // register provisionally here so silent wakes deliver.
                     await ensurePushTokenRegistered(userId);
                     // Now that the user is authenticated with a persona, push the
-                    // language they picked earlier (LanguageSelector, pre-auth)
+                    // language they picked earlier (the first-launch list)
                     // into language_codes. Fire-and-forget so it can't block nav.
                     void reconcileAppLanguageWithPersona({ userId });
                     await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]);

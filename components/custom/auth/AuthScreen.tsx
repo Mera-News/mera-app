@@ -1,28 +1,37 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
+import { router } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { BackHandler, Keyboard, Linking, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import Animated, {
+    FadeIn,
+    FadeOut,
+    SlideInLeft,
+    SlideInRight,
+    SlideOutLeft,
+    SlideOutRight,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withTiming,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import validator from 'validator';
+
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import MeraLogo from '@/components/custom/MeraLogo';
-import LanguageSelector from '@/components/custom/auth/LanguageSelector';
-import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
 import ConsentContent from '@/components/custom/auth/ConsentContent';
-import LegalFooter from '@/components/custom/auth/LegalFooter';
-import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
+import { consentNoticeKey, noEmailFaqUrl } from '@/components/custom/auth/device-sign-in-copy';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
-import PreviousUserView from '@/components/custom/auth/PreviousUserView';
-import {
-    consentNoticeKey,
-    deviceSignInCaptionKey,
-    noEmailFaqUrl,
-} from '@/components/custom/auth/device-sign-in-copy';
-import { getSetting } from '@/lib/database/services/setting-service';
-import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
-import { VStack } from '@/components/ui/vstack';
-import { Input, InputField } from '@/components/ui/input';
-import { Pressable } from '@/components/ui/pressable';
-import { ScrollView } from '@/components/ui/scroll-view';
-import { Spinner } from '@/components/ui/spinner';
-import { Text } from '@/components/ui/text';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import WelcomeStage from '@/components/custom/auth/WelcomeStage';
+import MeraLogo from '@/components/custom/MeraLogo';
+import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
+import TutorialModalHost from '@/components/custom/tutorials/TutorialModalHost';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
+import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { clearAuthStorage, sendOTP } from '@/lib/auth-client';
+import { SUPPORT_EMAIL } from '@/lib/config/branding';
+import { getSetting } from '@/lib/database/services/setting-service';
 import {
     deviceSignInAvailability,
     deviceSignInPath,
@@ -32,12 +41,11 @@ import {
     type DeviceSignInPath,
     type DeviceSignInResult,
 } from '@/lib/device-auth';
-
-/** The success variant — what the consent step hands its caller so the
- *  result can steer routing. */
-type DeviceSignInSuccess = Extract<DeviceSignInResult, { status: 'success' }>;
+import { showFeedback } from '@/lib/feedback';
 import { hapticLight } from '@/lib/haptics';
+import { useSupportAction } from '@/lib/intercom';
 import logger from '@/lib/logger';
+import { EASE, MOTION } from '@/lib/motion';
 import {
     clearIdentityFault,
     holdAccountSwitch,
@@ -45,606 +53,826 @@ import {
     releaseAccountSwitch,
 } from '@/lib/security/identity-gate';
 import { useUserStore } from '@/lib/stores/user-store';
+import { buildSupportMailtoUrl } from '@/lib/support-id';
+import { useColors } from '@/lib/theme/tokens';
+import { maskEmail } from '@/lib/utils/mask-email';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
-import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
-import validator from 'validator';
-import {
-    acceptLegal,
-    fetchLegalVersions,
-    markLegalAcceptedThisProcess,
-    silentlyAcceptLegal,
-} from './legal-consent';
+import { acceptLegal, fetchLegalVersions, markLegalAcceptedThisProcess, silentlyAcceptLegal } from './legal-consent';
+
+/** The success variant: what a device sign-in hands its caller. */
+type DeviceSignInSuccess = Extract<DeviceSignInResult, { status: 'success' }>;
 
 /**
  * The bookkeeping a device sign-in owes the account it signed in, before
  * anything navigates. Mirrors OTPVerificationView's post-verify steps, minus
- * the email cache (an anonymous account has no real address).
- *
- * Every step describes the INCOMING account, which is why it is a function the
- * consent step calls only once it knows this is the account the user meant:
- * when the phone opens a different account than the one on this device, it
- * runs only after the user confirms the switch (DifferentAccountView), so a
- * user who backs out leaves nothing recorded for an account they declined.
+ * the email cache (an anonymous account has no real address). Every step
+ * describes the INCOMING account, which is why it runs only once the user
+ * meant this account: when the phone opens a different account than the one
+ * on this device, it runs only after the user confirms the switch.
  */
 async function completeDeviceSignIn(result: DeviceSignInSuccess): Promise<void> {
-    // Recorded BEFORE anything navigates — the identity gates read it while
-    // better-auth's session atom is still settling.
     recordAuthenticatedUser(result.userId);
     useUserStore.getState().setNeedsReauth(false);
-    // Device sign-in re-proves which account this device holds, same as an
-    // OTP verify — the other site that clears the fault.
     clearIdentityFault().catch(() => {});
-    // Latch FIRST, unconditionally, and only then do the network work.
-    //
-    // Consent is a fact about what the user just did, not about whether a
-    // call succeeded: they tapped "Agree and continue" on the consent step.
-    // The latch records that fact so ConsentGate stands down for the rest of
-    // this process.
-    //
-    // This used to latch only on a landed stamp, on the reasoning that a
-    // failed one should let ConsentGate re-ask. It does re-ask — immediately,
-    // as a blocking screen, wearing "we've updated our terms" copy, to
-    // somebody who installed the app a minute ago. A failed WRITE is ours to
-    // retry, which ConsentGate now does silently; it is not grounds to
-    // re-interrogate the user. Same ordering as silentlyAcceptLegal on the
-    // email path, which is why that path never produced this bug.
+    // Consent is a fact about what the user just did (they tapped Agree, or
+    // already had an account): latch FIRST, then the network work. A failed
+    // write is ConsentGate's to retry silently, never grounds to re-ask.
     markLegalAcceptedThisProcess(result.userId);
-    // Fetched HERE, not prefetched at mount: appConfig requires a SESSION
-    // ("pre-paywall" in its schema doc means before entitlement, not before
-    // auth — the pre-auth fetch 401s, e2e-proven on staging).
     const versions = await fetchLegalVersions();
     if (versions) await acceptLegal(versions);
 }
 
-interface PreAuthFooterProps {
-    /** The email view keeps the tour pill; views that surface the tutorials
-     *  elsewhere (none currently — the welcome view has its own footer) may
-     *  hide it. */
-    showTutorialLaunch?: boolean;
+type PhoneSignIn =
+    | { kind: 'signed-in'; result: DeviceSignInSuccess }
+    | { kind: 'different'; result: DeviceSignInSuccess }
+    | { kind: 'unsupported' }
+    | { kind: 'failed'; reason: DeviceSignInFailureReason };
+
+/**
+ * ONE sign-in-with-this-phone path, used by Before you start and by the
+ * no-email gate's Try again: sign in, compare with the account on this device
+ * BEFORE any bookkeeping, and only then complete. A mismatch writes nothing;
+ * the caller takes holdAccountSwitch synchronously and asks (the session
+ * cookie is already set, and the watcher, the onboarding gate and login.tsx's
+ * shortcut would otherwise wipe this device's account unasked).
+ */
+async function signInWithPhone(expectedUserId: string | null): Promise<PhoneSignIn> {
+    // Every attempt re-enters the whole flow, so it always fetches a fresh nonce.
+    const result = await signInWithDevice();
+    if (result.status === 'success') {
+        if (expectedUserId && result.userId !== expectedUserId) return { kind: 'different', result };
+        await completeDeviceSignIn(result);
+        return { kind: 'signed-in', result };
+    }
+    if (result.status === 'unsupported') return { kind: 'unsupported' };
+    return { kind: 'failed', reason: result.reason };
+}
+
+type Stage =
+    | 'loading'
+    | 'intro'
+    | 'welcome'
+    | 'checks'
+    | 'begin'
+    | 'consent'
+    | 'email'
+    | 'otp'
+    | 'reauth-email'
+    | 'reauth-otp'
+    | 'reauth-no-email';
+
+/** Track position, for the slide direction (forward slides left). */
+const TRACK: Partial<Record<Stage, number>> = {
+    intro: 0,
+    welcome: 0,
+    checks: 1,
+    begin: 2,
+    consent: 3,
+    email: 4,
+    otp: 5,
+    'reauth-email': 0,
+    'reauth-no-email': 0,
+    'reauth-otp': 1,
+};
+
+/** The one logo: where and how big it sits on each stage (FinalJourney "One logo"). */
+const LOGO_FULL = 150;
+const LOGO_TOP = 56;
+const LOGO: Partial<Record<Stage, 'center' | 'top'>> = {
+    intro: 'center',
+    welcome: 'top',
+    checks: 'top',
+    begin: 'top',
+    consent: 'top',
+};
+
+/** The welcome line holds alone, then the list rises (Journey #3, #4). */
+const INTRO_MS = 1200;
+
+interface AuthScreenProps {
+    onLoginSuccess?: (userId: string) => void;
+    /**
+     * Whether device sign-in ("Sign in without email") may be offered. login.tsx
+     * passes false on Forgot PIN (`reauth=pin`): device sign-in proves only that
+     * someone holds the phone, which is exactly who the PIN guards against.
+     */
+    allowDeviceSignIn?: boolean;
 }
 
 /**
- * The pre-flight cluster for the EMAIL view: language selector, tutorial
- * entry, and the legal footer. The welcome view no longer shares this —
- * language is chosen on its own first-launch stage and the welcome view
- * renders LegalFooter directly — so this cluster now serves the users who
- * were routed straight to email (device sign-in unavailable) and never saw
- * the language stage.
+ * The first-launch track and the sign-in gate (FinalJourney, FinalStart #8 to
+ * #11): ONE backdrop and ONE logo hoisted above the stage switch, so no step is
+ * a hard cut. A device with no remembered account walks the track (welcome
+ * with the language list, checks, how to begin, before you start, email and
+ * code). A device whose account needs signing in again lands on the gate:
+ * reauth-email (a code to the account's own masked address) or reauth-no-email
+ * (the phone check again). Neither ever switches accounts on its own: moving to
+ * the phone's account always asks first.
  */
-const PreAuthFooter: React.FC<PreAuthFooterProps> = ({ showTutorialLaunch = true }) => {
-    return (
-        <>
-            {/* Language cluster. The word ticker, the selector and the tour
-                pill are ONE group and must read as one: 8pt between them, 24pt
-                to the legal footer below. Grouping is by proximity alone — no
-                card, no border — because this screen's only chrome is the
-                gradient backdrop, and a container here would compete with it.
-                Anchored at the bottom rather than floating in the middle: it
-                is a pre-flight setting, not the reason anyone opened this
-                screen. */}
-            <VStack space="sm" className="mb-6">
-                <LanguageSelector />
-
-                {/* The tour. Sits WITH the language cluster rather than above
-                    the legal footer because it belongs to the same pre-flight
-                    group: things you may want before signing in. It opens a
-                    full-screen Modal (not a route — this screen is outside the
-                    logged-in stack) and closes back to exactly this view. */}
-                {showTutorialLaunch && <TutorialLaunchButton />}
-            </VStack>
-
-            <LegalFooter />
-        </>
-    );
-};
-
-interface EmailInputViewProps {
-    onOTPSent: (email: string) => void;
-    initialEmail?: string;
-    /** Device sign-in, the phone's own account. Absent when the device cannot
-     *  attest, and on Forgot PIN. */
-    onSignInWithoutEmail?: () => void;
-    /** The attestation path in use: picks the caption saying what is lost
-     *  without an email, shown under the button and read as its hint. */
-    signInPath?: DeviceSignInPath;
-}
-
-const EmailInputView: React.FC<EmailInputViewProps> = ({
-    onOTPSent,
-    initialEmail,
-    onSignInWithoutEmail,
-    signInPath = 'unavailable',
-}) => {
-    const [email, setEmail] = useState(initialEmail ?? '');
-    const [loading, setLoading] = useState(false);
-    const toast = useToast();
+const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSignIn = true }) => {
     const { t } = useTranslation();
-    const captionKey = deviceSignInCaptionKey(signInPath);
-    const signInCaption = captionKey ? t(captionKey) : null;
+    const colors = useColors();
+    const insets = useSafeAreaInsets();
+    const { height } = useWindowDimensions();
+    const reduceMotion = useReducedMotion();
 
-    const handleSendOTP = async () => {
-        if (!email || !validator.isEmail(email)) {
-            toast.show({
-                placement: 'top',
-                render: ({ id }) => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('auth.invalidEmailTitle')}</ToastTitle>
-                        <ToastDescription>{t('auth.invalidEmailDescription')}</ToastDescription>
-                    </Toast>
-                ),
-            });
+    const [stage, setStage] = useState<Stage>('loading');
+    const [forward, setForward] = useState(true);
+    const [pendingEmail, setPendingEmail] = useState('');
+    const [cachedEmail, setCachedEmail] = useState<string | null>(null);
+    const [cachedUserId, setCachedUserId] = useState<string | null>(null);
+    const [supportId, setSupportId] = useState<string | null>(null);
+    const [availability, setAvailability] = useState<DeviceSignInAvailability>('unavailable');
+    const [signInPath, setSignInPath] = useState<DeviceSignInPath>('unavailable');
+    // Where Before you start was entered from: the track's begin, or the gate.
+    const [consentFrom, setConsentFrom] = useState<Stage>('begin');
+    // The track's Before you start: 'device' signs in on Agree; 'email' only
+    // records the agreement and moves on to the address (Q3).
+    const [consentFor, setConsentFor] = useState<'device' | 'email'>('device');
+    const [pendingSwitch, setPendingSwitch] = useState<DeviceSignInSuccess | null>(null);
+    const [tourOpen, setTourOpen] = useState(false);
+
+    const go = useCallback(
+        (next: Stage) => {
+            setForward((TRACK[next] ?? 0) >= (TRACK[stage] ?? 0));
+            setStage(next);
+        },
+        [stage],
+    );
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const [email, userId, sid, avail, path] = await Promise.all([
+                    getSetting('cached_user_email'),
+                    getSetting('cached_user_id'),
+                    getSetting('cached_support_id'),
+                    deviceSignInAvailability(),
+                    deviceSignInPath(),
+                ]);
+                if (cancelled) return;
+                setAvailability(avail);
+                setSignInPath(path);
+                setCachedUserId(userId ?? null);
+                setSupportId(sid ?? null);
+                if (email && userId) {
+                    setCachedEmail(email);
+                    setStage('reauth-email');
+                } else if (userId) {
+                    setStage('reauth-no-email');
+                } else {
+                    setStage('intro');
+                }
+            } catch {
+                if (!cancelled) setStage('intro');
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (stage !== 'intro') return;
+        const id = setTimeout(() => setStage('welcome'), INTRO_MS);
+        return () => clearTimeout(id);
+    }, [stage]);
+
+    // The gate leaves the app on Android Back (FinalStart #9): there is nothing
+    // behind it to go back to.
+    useEffect(() => {
+        if (!stage.startsWith('reauth')) return;
+        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+            if (stage === 'reauth-otp') {
+                go(cachedEmail ? 'reauth-email' : 'reauth-no-email');
+                return true;
+            }
+            BackHandler.exitApp();
+            return true;
+        });
+        return () => sub.remove();
+    }, [stage, go, cachedEmail]);
+
+    // ── The hoisted logo ──────────────────────────────────────────────────
+    const logoAt = LOGO[stage];
+    const logoScale = useSharedValue(1);
+    const logoY = useSharedValue(height * 0.3);
+    const logoOpacity = useSharedValue(0);
+    useEffect(() => {
+        const timing = { duration: reduceMotion ? 0 : 500, easing: EASE.arrive };
+        logoOpacity.value = withTiming(logoAt ? 1 : 0, { duration: reduceMotion ? 0 : 250 });
+        if (!logoAt) return;
+        logoScale.value = withTiming(logoAt === 'center' ? 1 : LOGO_TOP / LOGO_FULL, timing);
+        logoY.value = withTiming(logoAt === 'center' ? height * 0.3 : insets.top + 16 - (LOGO_FULL - LOGO_TOP) / 2, timing);
+    }, [logoAt, height, insets.top, reduceMotion, logoScale, logoY, logoOpacity]);
+    const logoStyle = useAnimatedStyle(() => ({
+        opacity: logoOpacity.value,
+        transform: [{ translateY: logoY.value }, { scale: logoScale.value }],
+    }));
+    const bodyTop = insets.top + (logoAt === 'top' ? 16 + LOGO_TOP + 16 : 16);
+
+    // ── Handlers ──────────────────────────────────────────────────────────
+    const canSignInWithoutEmail = allowDeviceSignIn && availability !== 'unavailable';
+
+    const finishDeviceSignIn = (result: DeviceSignInSuccess) => {
+        if (onLoginSuccess) {
+            onLoginSuccess(result.userId);
             return;
         }
-
-        setLoading(true);
-        try {
-            const result = await sendOTP(email);
-
-            if (result.success) {
-                toast.show({
-                    placement: 'top',
-                    render: ({ id }) => (
-                        <Toast action="success" variant="solid">
-                            <ToastTitle>{t('auth.codeSentTitle')}</ToastTitle>
-                            <ToastDescription>{t('auth.codeSentDescription')}</ToastDescription>
-                        </Toast>
-                    ),
-                });
-                onOTPSent(email);
-            } else {
-                toast.show({
-                    placement: 'top',
-                    render: ({ id }) => (
-                        <Toast action="error" variant="solid">
-                            <ToastTitle>{t('auth.failedToSendTitle')}</ToastTitle>
-                            <ToastDescription>{result.error || t('common.tryAgain')}</ToastDescription>
-                        </Toast>
-                    ),
-                });
-            }
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { screen: 'AuthScreen', method: 'handleSendOTP' },
-            });
-            toast.show({
-                placement: 'top',
-                render: ({ id }) => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('common.error')}</ToastTitle>
-                        <ToastDescription>{t('auth.networkError')}</ToastDescription>
-                    </Toast>
-                ),
-            });
-        } finally {
-            setLoading(false);
-        }
+        // better-auth's atom may settle late after a custom $fetch route, so
+        // navigate rather than wait on login.tsx's session Redirect.
+        router.replace('/logged-in');
     };
 
+    const askSwitch = (result: DeviceSignInSuccess) => {
+        // Synchronously, before the atom can settle on the phone's account.
+        holdAccountSwitch(result.userId);
+        setPendingSwitch(result);
+    };
+
+    const handleVerificationSuccess = (userId: string) => {
+        // The address step came after Before you start, so the agreement is
+        // the user's own; stamp it now that a session exists to stamp it with.
+        void silentlyAcceptLegal(userId);
+        setPendingEmail('');
+        onLoginSuccess?.(userId);
+    };
+
+    const handleSwitchContinue = async () => {
+        if (!pendingSwitch) return;
+        releaseAccountSwitch();
+        await completeDeviceSignIn(pendingSwitch);
+        finishDeviceSignIn(pendingSwitch);
+    };
+
+    // Declined: the phone's account signed in but nothing was recorded for
+    // it. Sign it out through the one sign-out path and stay where we were.
+    const handleSwitchKeep = async () => {
+        await clearAuthStorage();
+        setPendingSwitch(null);
+    };
+
+    // ── Stages ────────────────────────────────────────────────────────────
+    let body: React.ReactNode = null;
+    switch (stage) {
+        case 'intro':
+            body = (
+                <View style={[styles.introLine, { top: height * 0.3 + LOGO_FULL + 24 - bodyTop }]}>
+                    <Text accessibilityRole="header" style={[styles.introText, { color: colors.ink }]}>
+                        {t('auth.track.welcome')}
+                    </Text>
+                </View>
+            );
+            break;
+        case 'welcome':
+            body = <WelcomeStage onBegin={() => go('checks')} onLearn={() => setTourOpen(true)} />;
+            break;
+        case 'checks':
+            body = <SystemCheckStage withLogo={false} onContinue={() => go('begin')} testID="auth-checks" />;
+            break;
+        case 'begin':
+            body = (
+                <BeginStage
+                    canUsePhone={availability !== 'unavailable'}
+                    onWithoutEmail={() => {
+                        setConsentFor('device');
+                        setConsentFrom('begin');
+                        go('consent');
+                    }}
+                    onWithEmail={() => {
+                        setConsentFor('email');
+                        setConsentFrom('begin');
+                        go('consent');
+                    }}
+                />
+            );
+            break;
+        case 'consent':
+            body = (
+                <ConsentStage
+                    mode={consentFor}
+                    signInPath={signInPath}
+                    expectedUserId={cachedUserId}
+                    onAgreedForEmail={() => go('email')}
+                    onSignedIn={finishDeviceSignIn}
+                    onDifferentAccount={(r) => {
+                        askSwitch(r);
+                        go(consentFrom);
+                    }}
+                    onUseEmail={() => {
+                        setConsentFor('email');
+                        go(cachedEmail ? 'reauth-email' : 'email');
+                    }}
+                    onBack={() => go(consentFrom)}
+                />
+            );
+            break;
+        case 'email':
+            body = (
+                <EmailStage
+                    initialEmail={pendingEmail}
+                    onBack={() => go('begin')}
+                    onSent={(email) => {
+                        setPendingEmail(email);
+                        go('otp');
+                    }}
+                />
+            );
+            break;
+        case 'otp':
+            body = (
+                <OTPVerificationView
+                    email={pendingEmail}
+                    onVerificationSuccess={handleVerificationSuccess}
+                    onBack={() => go('email')}
+                    onUseDifferentEmail={() => go('email')}
+                />
+            );
+            break;
+        case 'reauth-email':
+            body = cachedEmail ? (
+                <ReauthEmailStage
+                    email={cachedEmail}
+                    onSent={() => {
+                        setPendingEmail(cachedEmail);
+                        go('reauth-otp');
+                    }}
+                    onWithoutEmail={
+                        canSignInWithoutEmail
+                            ? () => {
+                                  setConsentFor('device');
+                                  setConsentFrom('reauth-email');
+                                  go('consent');
+                              }
+                            : undefined
+                    }
+                />
+            ) : null;
+            break;
+        case 'reauth-otp':
+            body = (
+                <OTPVerificationView
+                    email={pendingEmail}
+                    title={t('gate.enterCode')}
+                    onVerificationSuccess={(userId) => onLoginSuccess?.(userId)}
+                    onBack={() => go('reauth-email')}
+                    footer={
+                        canSignInWithoutEmail ? (
+                            <Button
+                                variant="outline"
+                                action="secondary"
+                                onPress={() => {
+                                    setConsentFor('device');
+                                    setConsentFrom('reauth-email');
+                                    go('consent');
+                                }}
+                                testID="reauth-otp-without-email"
+                            >
+                                <ButtonText>{t('auth.signInWithoutEmail')}</ButtonText>
+                            </Button>
+                        ) : null
+                    }
+                />
+            );
+            break;
+        case 'reauth-no-email':
+            body = (
+                <ReauthNoEmailStage
+                    supportId={supportId}
+                    onTryAgain={async () => {
+                        const outcome = await signInWithPhone(cachedUserId);
+                        if (outcome.kind === 'signed-in') finishDeviceSignIn(outcome.result);
+                        else if (outcome.kind === 'different') askSwitch(outcome.result);
+                        else return false;
+                        return true;
+                    }}
+                />
+            );
+            break;
+        default:
+            body = null;
+    }
+
+    const entering = reduceMotion
+        ? FadeIn.duration(200)
+        : stage === 'welcome'
+          ? FadeIn.duration(500)
+          : (forward ? SlideInRight : SlideInLeft).duration(MOTION.stage.duration).easing(EASE.across);
+    const exiting = reduceMotion
+        ? FadeOut.duration(200)
+        : stage === 'welcome'
+          ? FadeOut.duration(200)
+          : (forward ? SlideOutLeft : SlideOutRight).duration(MOTION.stage.duration).easing(EASE.across);
+
     return (
-        // Three bands, top to bottom: the logo's air, the email row, and the
-        // language cluster sitting on the legal footer. The two <Box>es with
-        // a raw `flex` split ALL the slack the cluster and footer leave over,
-        // 5:1 — that ratio, not a hardcoded offset, is what puts the mark in
-        // the upper half and the input near the vertical centre, and it holds
-        // on any screen height. Measured on a 874pt screen: logo 114–264,
-        // input 383–422 (screen centre 437). On an SE-height 667pt screen the
-        // same ratio gives logo ~52–202 and input ~254–310 — the logo keeps
-        // its full 150pt (RN flexShrink defaults to 0) and nothing clips.
-        // Raw style flex, not `flex-[5]`: no arbitrary flex class exists
-        // anywhere else in this app, so it is unproven under NativeWind here.
-        <Box className="flex-1 px-5">
-            {/* Upper band — the logo owns it and is centred in it. */}
-            <Box className="items-center justify-center" style={{ flex: 5 }}>
-                <MeraLogo size={150} animated />
-            </Box>
+        <View style={[styles.root, { backgroundColor: colors.base }]} testID="auth-screen">
+            <AbstractGradientBackdrop />
+            <Animated.View pointerEvents="none" style={[styles.logo, logoStyle]}>
+                <MeraLogo size={LOGO_FULL} animated />
+            </Animated.View>
 
-            {/* The primary action. Intrinsic height: the bands above and below
-                are what position it. */}
-            <HStack className="items-center" space="md">
-                <Box className="flex-1">
-                    <Input size="lg">
-                        <InputField
-                            testID="auth-email-input"
-                            placeholder={t('auth.emailPlaceholder')}
-                            value={email}
-                            onChangeText={setEmail}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
-                    </Input>
-                </Box>
-                <Pressable
-                    testID="auth-send-otp"
-                    onPress={handleSendOTP}
-                    disabled={loading || !email || !validator.isEmail(email)}
-                    className={`w-14 h-14 rounded-full items-center justify-center ${email && validator.isEmail(email) && !loading ? 'bg-primary-500' : 'bg-gray-700'
-                        }`}
-                >
-                    {loading ? (
-                        <Spinner size="small" color="white" />
-                    ) : (
-                        <MaterialIcons
-                            name="arrow-forward"
-                            size={28}
-                            color="#000000"
-                        />
-                    )}
-                </Pressable>
-            </HStack>
-
-            {/* The phone's own account, always reachable: an email is one way
-                in, never the only one. Outline pill, so the email row above
-                stays the primary action of this view. */}
-            {onSignInWithoutEmail ? (
-                <VStack accessible={false} space="sm" className="mt-4 items-center">
-                    <Pressable
-                        testID="auth-email-device-sign-in"
-                        onPress={() => {
-                            void hapticLight();
-                            onSignInWithoutEmail();
-                        }}
-                        disabled={loading}
-                        accessible
-                        accessibilityRole="button"
-                        accessibilityLabel={t('auth.signInWithoutEmail')}
-                        accessibilityHint={signInCaption ?? undefined}
-                        className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
-                    >
-                        <Text size="sm" className="text-primary-500 font-semibold text-center">
-                            {t('auth.signInWithoutEmail')}
-                        </Text>
-                    </Pressable>
-                    {/* The consequence, in plain sight before the tap. sm and
-                        gray-300 (never xs or a dimmer gray), no font-size cap.
-                        Screen readers get it as the button's hint instead. */}
-                    {signInCaption ? (
-                        <Text
-                            testID="auth-email-device-sign-in-caption"
-                            accessible={false}
-                            size="sm"
-                            className="text-gray-300 text-center"
-                        >
-                            {signInCaption}
-                        </Text>
-                    ) : null}
-                </VStack>
-            ) : null}
-
-            {/* Lower band — the gap between the input and the cluster. */}
-            <Box style={{ flex: 1 }} />
-
-            <PreAuthFooter />
-        </Box>
-    );
-};
-
-interface WelcomeViewProps {
-    /** Switch to the email view — the existing-user path. */
-    onUseEmail: () => void;
-    /** Advance to the consent step; sign-in itself runs there. */
-    onGetStarted: () => void;
-}
-
-/**
- * The guided welcome for new users: three actions, each introduced by one
- * short hint line so a first-time reader knows which button is theirs
- * without reading anything else. Sign-in machinery lives on the consent
- * step now — "Get started" only advances the stage.
- */
-const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onGetStarted }) => {
-    const { t } = useTranslation();
-
-    return (
-        // ── ACCESSIBILITY SCOPING (F2) ──────────────────────────────────────
-        // The band wrappers are layout only, and they are explicitly
-        // `accessible={false}`: left implicit, the full-screen containers were
-        // surfaced to VoiceOver/XCUITest as phantom "Get started" elements
-        // claiming the whole screen (label aggregation from the one labelled
-        // descendant). Accessibility lives ONLY on the pressables, each with
-        // its own role and label.
-        //
-        // The hint lines grew this stack past the email view's input line, so
-        // the old CTA-to-input register between the two views is deliberately
-        // gone (S13); the 5:1 band ratio itself still holds the cluster in
-        // the lower half on any screen height.
-        <Box testID="auth-welcome-root" accessible={false} className="flex-1 px-5">
-            {/* Upper band — the logo owns it and is centred in it. */}
-            <Box
-                testID="auth-welcome-logo-band"
-                accessible={false}
-                className="items-center justify-center"
-                style={{ flex: 5 }}
+            <Animated.View
+                key={stage}
+                entering={stage === 'intro' ? undefined : entering}
+                exiting={exiting}
+                style={[styles.stage, { paddingTop: bodyTop, paddingBottom: insets.bottom }]}
             >
-                <MeraLogo size={150} animated />
-            </Box>
+                {body}
+            </Animated.View>
 
-            <VStack testID="auth-welcome-actions" accessible={false} space="lg">
-                {/* First-timers first: learning what Mera is comes before
-                    committing to it. Outline, same geometry as the CTA — a
-                    sibling action, not the primary. Opens the tutorials MENU
-                    (top-level /tutorials, deliberately outside the session
-                    gate) so the reader picks any chapter, not just the first. */}
-                <VStack accessible={false} space="sm">
-                    <Text size="sm" className="text-gray-400 text-center">
-                        {t('auth.firstTimeHint')}
-                    </Text>
-                    <Pressable
-                        testID="auth-learn-mera"
-                        onPress={() => {
-                            void hapticLight();
-                            router.push('/tutorials');
-                        }}
-                        accessible
-                        accessibilityRole="button"
-                        accessibilityLabel={t('auth.learnAboutMera')}
-                        className="h-14 rounded-full items-center justify-center border border-primary-500 bg-transparent"
-                    >
-                        <Text className="text-primary-500 text-base font-semibold">
-                            {t('auth.learnAboutMera')}
-                        </Text>
-                    </Pressable>
-                </VStack>
+            <TutorialModalHost
+                visible={tourOpen}
+                onClose={() => setTourOpen(false)}
+                finishLabel={t('auth.track.beginMera')}
+                onFinish={() => {
+                    setTourOpen(false);
+                    go('checks');
+                }}
+            />
 
-                <VStack accessible={false} space="sm">
-                    <Text size="sm" className="text-gray-400 text-center">
-                        {t('auth.readyHint')}
-                    </Text>
-                    <Pressable
-                        testID="auth-get-started"
-                        onPress={() => {
-                            void hapticLight();
-                            onGetStarted();
-                        }}
-                        accessible
-                        accessibilityRole="button"
-                        accessibilityLabel={t('auth.getStarted')}
-                        className="h-14 rounded-full items-center justify-center bg-primary-500"
-                    >
-                        <Text className="text-black text-base font-semibold">
-                            {t('auth.getStarted')}
-                        </Text>
-                    </Pressable>
-                </VStack>
-
-                {/* The existing-user path, framed for the people it is really
-                    for since the auth wave: paid users signed in with the email
-                    they verified at checkout. Outline like Learn about Mera —
-                    the filled CTA between them stays the only primary. */}
-                <VStack accessible={false} space="sm">
-                    <Text size="xs" className="text-gray-500 text-center">
-                        {t('auth.paidUserHint')}
-                    </Text>
-                    <Pressable
-                        testID="auth-use-email"
-                        onPress={onUseEmail}
-                        accessible
-                        accessibilityRole="button"
-                        accessibilityLabel={t('auth.signIn')}
-                        className="h-14 rounded-full items-center justify-center border border-primary-500 bg-transparent"
-                    >
-                        <Text className="text-primary-500 text-base font-semibold">
-                            {t('auth.signIn')}
-                        </Text>
-                    </Pressable>
-                </VStack>
-            </VStack>
-
-            {/* Lower band — the gap between the actions and the footer. */}
-            <Box style={{ flex: 1 }} />
-
-            <LegalFooter />
-        </Box>
+            <BottomSheet
+                open={pendingSwitch !== null}
+                onClose={() => void handleSwitchKeep()}
+                testID="auth-different-account"
+            >
+                <DifferentAccountSheet
+                    email={cachedEmail}
+                    onKeep={handleSwitchKeep}
+                    onContinue={handleSwitchContinue}
+                />
+            </BottomSheet>
+        </View>
     );
 };
 
-interface ConsentStepViewProps {
-    /** Switch to the email view — the fallback every failure state offers. */
-    onUseEmail: () => void;
-    /** Device sign-in completed and the identity bookkeeping is done. The full
-     *  success result travels so the caller can route on it. */
-    onSuccess: (result: DeviceSignInSuccess) => void;
-    /** The account this device already holds (`cached_user_id`), when any. */
-    expectedUserId?: string | null;
-    /** The phone opened a DIFFERENT account than `expectedUserId`. Called with
-     *  NO bookkeeping done, so the caller can ask before switching. */
-    onDifferentAccount?: (result: DeviceSignInSuccess) => void;
-    /** The attestation path the sign-in will take; picks the notice. */
-    signInPath: DeviceSignInPath;
+// ── 4 · How do you want to begin? ────────────────────────────────────────────
+
+function BeginStage({
+    canUsePhone,
+    onWithoutEmail,
+    onWithEmail,
+}: {
+    canUsePhone: boolean;
+    onWithoutEmail: () => void;
+    onWithEmail: () => void;
+}) {
+    const { t } = useTranslation();
+    const colors = useColors();
+    return (
+        <View style={styles.pad} testID="auth-begin">
+            <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
+                {t('auth.track.beginTitle')}
+            </Text>
+            <View style={styles.flex} />
+            {canUsePhone ? (
+                <View style={styles.gap8}>
+                    <Button action="primary" onPress={onWithoutEmail} testID="auth-begin-without-email">
+                        <ButtonText>{t('auth.track.beginWithoutEmail')}</ButtonText>
+                    </Button>
+                    <Text style={[styles.caption, { color: colors.ink3 }]}>{t('auth.track.beginCaption')}</Text>
+                </View>
+            ) : null}
+            <Button
+                variant={canUsePhone ? 'outline' : 'solid'}
+                action={canUsePhone ? 'secondary' : 'primary'}
+                onPress={onWithEmail}
+                className="mt-4"
+                testID="auth-begin-with-email"
+            >
+                <ButtonText>{t('auth.track.continueWithEmail')}</ButtonText>
+            </Button>
+        </View>
+    );
 }
 
-/**
- * Step 2 after "Get started": the one-decision consent page (WhatsApp's
- * welcome-consent shape — a sentence, the two links, one button). "Agree and
- * continue" runs the whole device sign-in; acceptance is POSTed right after
- * the session exists, because /accept-legal is an authenticated route. If the
- * versions fetch or the POST fails we proceed anyway — ConsentGate is the
- * fail-open safety net and will simply ask again.
- *
- * Email sign-ins NEVER pass through here: they accepted at their original
- * sign-up and are stamped silently (silentlyAcceptLegal).
- */
-const ConsentStepView: React.FC<ConsentStepViewProps> = ({
-    onUseEmail,
-    onSuccess,
-    expectedUserId,
-    onDifferentAccount,
+// ── 5 · Before you start ─────────────────────────────────────────────────────
+
+function ConsentStage({
+    mode,
     signInPath,
-}) => {
+    expectedUserId,
+    onAgreedForEmail,
+    onSignedIn,
+    onDifferentAccount,
+    onUseEmail,
+    onBack,
+}: {
+    mode: 'device' | 'email';
+    signInPath: DeviceSignInPath;
+    expectedUserId: string | null;
+    onAgreedForEmail: () => void;
+    onSignedIn: (result: DeviceSignInSuccess) => void;
+    onDifferentAccount: (result: DeviceSignInSuccess) => void;
+    onUseEmail: () => void;
+    onBack: () => void;
+}) {
     const { t } = useTranslation();
+    const colors = useColors();
     const [working, setWorking] = useState(false);
     const [failure, setFailure] = useState<DeviceSignInFailureReason | null>(null);
 
-    const handleAgree = async () => {
+    const agree = async () => {
         if (working) return;
+        if (mode === 'email') {
+            onAgreedForEmail();
+            return;
+        }
         setWorking(true);
         setFailure(null);
-        // Every attempt re-enters the WHOLE flow: signInWithDevice fetches a
-        // fresh nonce each time, so a retry can never resubmit a consumed one.
-        const result = await signInWithDevice();
-        if (result.status === 'success') {
-            // Compare BEFORE any bookkeeping. The phone's account is the one
-            // its key is bound to, and for an account made with an email code
-            // that is a different account. Nothing is recorded, latched or
-            // persisted for it until the user confirms the switch.
-            if (expectedUserId && result.userId !== expectedUserId && onDifferentAccount) {
-                onDifferentAccount(result);
-                return;
-            }
-            await completeDeviceSignIn(result);
-            onSuccess(result);
-            // Leave `working` true: the caller replaces this screen.
+        const outcome = await signInWithPhone(expectedUserId);
+        if (outcome.kind === 'signed-in') {
+            onSignedIn(outcome.result); // leave `working`: this screen is replaced
             return;
         }
         setWorking(false);
-        if (result.status === 'unsupported') {
-            // Support vanished mid-flow (should not happen — the mount check
-            // routed here because it existed). Email is the honest fallback.
-            onUseEmail();
-            return;
-        }
-        setFailure(result.reason);
+        if (outcome.kind === 'different') onDifferentAccount(outcome.result);
+        else if (outcome.kind === 'unsupported') onUseEmail();
+        else setFailure(outcome.reason);
     };
 
+    const noticeKey = mode === 'device' ? consentNoticeKey(signInPath) : null;
     const failureText =
         failure === 'attestation-denied'
             ? t('auth.deviceSignInDenied')
             : failure === 'attestation-unavailable'
-                ? t('auth.deviceSignInUnavailable')
-                : t('auth.deviceSignInFailed');
-
-    // What signing in with this phone keeps, on screen before the tap. It is
-    // also the notice for reading the device ID, so it may never hide behind
-    // the link below it.
-    const noticeKey = consentNoticeKey(signInPath);
-    const notice = noticeKey ? (
-        <VStack accessible={false} space="xs" className="items-center">
-            <Text testID="auth-consent-device-notice" size="sm" className="text-gray-300 text-center">
-                {t(noticeKey)}
-            </Text>
-            <Pressable
-                testID="auth-consent-what-mera-keeps"
-                onPress={() => openInAppBrowser(noEmailFaqUrl())}
-                accessible
-                accessibilityRole="link"
-                accessibilityLabel={t('consent.whatMeraKeeps')}
-                className="items-center justify-center px-3"
-                style={{ minHeight: 44 }}
-            >
-                <Text size="sm" className="text-primary-500 font-semibold text-center">
-                    {t('consent.whatMeraKeeps')}
-                </Text>
-            </Pressable>
-        </VStack>
-    ) : null;
+              ? t('auth.deviceSignInUnavailable')
+              : t('auth.deviceSignInFailed');
 
     return (
-        // Scrolls rather than clips: the notice, a long locale, large Dynamic
-        // Type or the failure cluster can outgrow a small screen, and "Agree
-        // and continue" must stay reachable. flexGrow keeps the three bands
-        // splitting the spare space whenever everything fits.
-        <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ flexGrow: 1 }}
-            keyboardShouldPersistTaps="handled"
-        >
-        {/* Same three-band skeleton and F2 scoping as the sibling views. */}
-        <Box testID="auth-consent-root" accessible={false} className="flex-1 px-5">
-            {/* Upper band, smaller logo: this page is about the sentences, not
-                the mark. The floor keeps the band from collapsing under the
-                logo once the content scrolls. */}
-            <Box
-                accessible={false}
-                className="items-center justify-center"
-                style={{ flex: 5, minHeight: 120 }}
-            >
-                <MeraLogo size={96} animated />
-            </Box>
-
+        <View style={styles.pad} testID="auth-consent">
+            <BackArrow onPress={onBack} />
+            <View style={styles.flex} />
             <ConsentContent
                 testIDPrefix="auth-consent"
-                title={t('consent.welcomeTitle')}
+                title={t('auth.track.beforeYouStart')}
                 body={t('consent.welcomeBody')}
+                notice={
+                    noticeKey ? (
+                        <Text testID="auth-consent-device-notice" style={[styles.text, { color: colors.ink2 }]}>
+                            {t(noticeKey)}
+                        </Text>
+                    ) : undefined
+                }
+                onWhatMeraKeeps={mode === 'device' ? () => openInAppBrowser(noEmailFaqUrl()) : undefined}
                 ctaLabel={t('consent.accept')}
                 busyLabel={t('auth.deviceSignInWorking')}
                 busy={working}
-                onAccept={handleAgree}
-                notice={notice}
+                onAccept={() => void agree()}
             >
-                {failure !== null && (
-                    <VStack space="sm" className="items-center">
-                        <Text size="sm" className="text-error-500 text-center" testID="auth-device-failure">
+                {failure !== null ? (
+                    <View style={styles.gap8}>
+                        <Text testID="auth-device-failure" style={[styles.text, { color: colors.negative, textAlign: 'center' }]}>
                             {failureText}
                         </Text>
-                        <Pressable
-                            testID="auth-device-retry"
-                            onPress={handleAgree}
-                            accessible
-                            accessibilityRole="button"
-                            accessibilityLabel={t('auth.tryAgain')}
-                            className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
-                        >
-                            <HStack space="xs" className="items-center">
-                                <MaterialIcons name="refresh" size={18} color="rgb(237, 167, 126)" />
-                                <Text size="sm" className="text-primary-500 font-semibold">
-                                    {t('auth.tryAgain')}
-                                </Text>
-                            </HStack>
-                        </Pressable>
-                        {/* The key name is historical: this is NOT an
-                            existing-user-only path. A new user whose device
-                            cannot attest (non-GMS Android, simulator) reaches
-                            email OTP through here and has an account MINTED,
-                            so the label no longer asks whether they have one.
-                            It is worded to echo the failure sentence directly
-                            above it in every locale, which is where each
-                            translation was taken from. */}
-                        <Pressable
-                            testID="auth-use-email-failure"
-                            onPress={onUseEmail}
-                            accessible
-                            accessibilityRole="button"
-                            accessibilityLabel={t('auth.alreadyHaveAccount')}
-                            className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
-                        >
-                            <Text size="sm" className="text-primary-500 font-semibold text-center">
-                                {t('auth.alreadyHaveAccount')}
-                            </Text>
-                        </Pressable>
-                    </VStack>
-                )}
+                        <Button variant="outline" action="secondary" onPress={() => void agree()} testID="auth-device-retry">
+                            <ButtonText>{t('auth.tryAgain')}</ButtonText>
+                        </Button>
+                        {/* A new user whose device cannot attest gets an account
+                            minted through email here: never account-ownership
+                            framing (the key name is historical). */}
+                        <Button variant="outline" action="secondary" onPress={onUseEmail} testID="auth-use-email-failure">
+                            <ButtonText>{t('auth.alreadyHaveAccount')}</ButtonText>
+                        </Button>
+                    </View>
+                ) : null}
             </ConsentContent>
-
-            {/* Lower band — the gap between the action and the footer. */}
-            <Box style={{ flex: 1, minHeight: 16 }} />
-
-            <LegalFooter />
-        </Box>
-        </ScrollView>
+        </View>
     );
-};
-
-interface DifferentAccountViewProps {
-    /** Switch: the caller finishes the sign-in and routes. */
-    onContinue: () => Promise<void>;
-    /** Decline: the caller signs the phone's account out and goes back. */
-    onGoBack: () => Promise<void>;
 }
 
-/**
- * The phone opened a different account than the one on this device. Moving
- * between accounts erases this device's data (the identity gate's full wipe
- * runs on arrival), so the user decides here, after sign-in and before any of
- * its bookkeeping. Same shape as PreviousUserView's switch confirmation.
- */
-const DifferentAccountView: React.FC<DifferentAccountViewProps> = ({ onContinue, onGoBack }) => {
-    const { t } = useTranslation();
-    const [busy, setBusy] = useState(false);
+// ── Continue with email ──────────────────────────────────────────────────────
 
+function EmailStage({
+    initialEmail,
+    onBack,
+    onSent,
+}: {
+    initialEmail: string;
+    onBack: () => void;
+    onSent: (email: string) => void;
+}) {
+    const { t } = useTranslation();
+    const colors = useColors();
+    const [email, setEmail] = useState(initialEmail);
+    const [sending, setSending] = useState(false);
+    const [error, setError] = useState('');
+    const valid = validator.isEmail(email.trim());
+
+    const send = async () => {
+        if (!valid || sending) return;
+        setSending(true);
+        setError('');
+        const address = email.trim();
+        try {
+            const result = await sendOTP(address);
+            if (result.success) onSent(address);
+            else setError(result.error || t('common.tryAgain'));
+        } catch (err) {
+            logger.captureException(err, { tags: { screen: 'AuthScreen', method: 'sendOTP' } });
+            setError(t('auth.networkError'));
+        } finally {
+            setSending(false);
+        }
+    };
+
+    return (
+        <View style={styles.pad} testID="auth-email">
+            <BackArrow onPress={onBack} />
+            <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
+                {t('auth.track.continueWithEmail')}
+            </Text>
+            <Text style={[styles.text, { color: colors.ink2, marginTop: 8 }]}>{t('auth.track.emailBody')}</Text>
+            <TextInput
+                testID="auth-email-input"
+                value={email}
+                onChangeText={(v) => {
+                    setEmail(v);
+                    if (error) setError('');
+                }}
+                placeholder={t('auth.emailPlaceholder')}
+                placeholderTextColor={colors.ink3}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+                returnKeyType="send"
+                onSubmitEditing={() => void send()}
+                style={[styles.field, { color: colors.ink, borderColor: colors.line, backgroundColor: colors.surface }]}
+            />
+            {error ? <Text style={[styles.text, { color: colors.negative, marginTop: 10 }]}>{error}</Text> : null}
+            <Button action="primary" onPress={() => void send()} isDisabled={!valid || sending} className="mt-4" testID="auth-send-otp">
+                {sending ? <ButtonSpinner /> : null}
+                <ButtonText>{t('auth.track.sendCode')}</ButtonText>
+            </Button>
+        </View>
+    );
+}
+
+// ── The gate: an account with an email ──────────────────────────────────────
+
+function ReauthEmailStage({
+    email,
+    onSent,
+    onWithoutEmail,
+}: {
+    email: string;
+    onSent: () => void;
+    onWithoutEmail?: () => void;
+}) {
+    const { t } = useTranslation();
+    const colors = useColors();
+    const [sending, setSending] = useState(false);
+    const [error, setError] = useState('');
+
+    const send = async () => {
+        if (sending) return;
+        setSending(true);
+        setError('');
+        try {
+            const result = await sendOTP(email);
+            if (result.success) onSent();
+            else setError(result.error || t('common.tryAgain'));
+        } catch (err) {
+            logger.captureException(err, { tags: { screen: 'AuthScreen', method: 'reauthSendOTP' } });
+            setError(t('auth.networkError'));
+        } finally {
+            setSending(false);
+        }
+    };
+
+    return (
+        <View style={[styles.pad, styles.center]} testID="auth-reauth-email">
+            <GateIcon name="lock-outline" />
+            <Text accessibilityRole="header" style={[styles.title, styles.centerText, { color: colors.ink }]}>
+                {t('gate.reauthTitle')}
+            </Text>
+            <Text style={[styles.text, styles.centerText, { color: colors.ink2 }]}>{t('gate.reauthBody')}</Text>
+            <View style={[styles.pill, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+                <MaterialIcons name="account-circle" size={18} color={colors.ink3} />
+                <Text style={[styles.pillText, { color: colors.ink }]}>{maskEmail(email)}</Text>
+            </View>
+            {error ? <Text style={[styles.text, styles.centerText, { color: colors.negative }]}>{error}</Text> : null}
+            <View style={styles.flex} />
+            <View style={styles.actions}>
+                <Button action="primary" onPress={() => void send()} isDisabled={sending} testID="reauth-send-code">
+                    {sending ? <ButtonSpinner /> : null}
+                    <ButtonText>{t('auth.track.sendCode')}</ButtonText>
+                </Button>
+                {onWithoutEmail ? (
+                    <Button variant="outline" action="secondary" onPress={onWithoutEmail} testID="reauth-without-email">
+                        <ButtonText>{t('auth.signInWithoutEmail')}</ButtonText>
+                    </Button>
+                ) : null}
+            </View>
+        </View>
+    );
+}
+
+// ── The gate: an account without an email ───────────────────────────────────
+
+function ReauthNoEmailStage({
+    supportId,
+    onTryAgain,
+}: {
+    supportId: string | null;
+    /** True when it led somewhere (signed in, or the switch question). */
+    onTryAgain: () => Promise<boolean>;
+}) {
+    const { t } = useTranslation();
+    const colors = useColors();
+    const { openSupport } = useSupportAction();
+    const [working, setWorking] = useState(false);
+    const [failed, setFailed] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const mounted = useRef(true);
+    useEffect(() => () => {
+        mounted.current = false;
+    }, []);
+
+    const tryAgain = async () => {
+        if (working) return;
+        setWorking(true);
+        setFailed(false);
+        const ok = await onTryAgain().catch(() => false);
+        if (!mounted.current) return;
+        setWorking(false);
+        if (!ok) setFailed(true);
+    };
+
+    const copy = async () => {
+        if (!supportId) return;
+        await Clipboard.setStringAsync(supportId).catch(() => undefined);
+        void hapticLight();
+        setCopied(true);
+    };
+
+    return (
+        <View style={[styles.pad, styles.center]} testID="auth-reauth-no-email">
+            <GateIcon name="error-outline" />
+            <Text accessibilityRole="header" style={[styles.title, styles.centerText, { color: colors.ink }]}>
+                {t('gate.noEmailTitle')}
+            </Text>
+            <Text style={[styles.text, styles.centerText, { color: colors.ink2 }]}>{t('gate.noEmailBody')}</Text>
+            {supportId ? (
+                <View style={[styles.pill, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+                    <Text style={[styles.pillText, { color: colors.ink }]} selectable>
+                        {t('support.supportId', { id: supportId })}
+                    </Text>
+                    <Pressable
+                        onPress={() => void copy()}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('support.copySupportId')}
+                        style={styles.copy}
+                        testID="reauth-copy-support-id"
+                    >
+                        <Text style={[styles.pillAction, { color: colors.accentText }]}>
+                            {copied ? t('support.copied') : t('common.copy')}
+                        </Text>
+                    </Pressable>
+                </View>
+            ) : null}
+            {failed ? (
+                <Text style={[styles.text, styles.centerText, { color: colors.negative }]}>{t('auth.deviceSignInFailed')}</Text>
+            ) : null}
+            <View style={styles.flex} />
+            <View style={styles.actions}>
+                <Button action="primary" onPress={() => void tryAgain()} isDisabled={working} testID="reauth-try-again">
+                    {working ? <ButtonSpinner /> : null}
+                    <ButtonText>{t('auth.tryAgain')}</ButtonText>
+                </Button>
+                <View style={styles.iconRow}>
+                    <IconAction icon="support-agent" label={t('account.contactSupport')} onPress={() => void openSupport()} testID="reauth-talk-to-support" />
+                    <IconAction icon="bug-report" label={t('preferences.reportBug')} onPress={() => showFeedback()} testID="reauth-report-bug" />
+                    <IconAction
+                        icon="mail-outline"
+                        label={t('gate.emailSupport')}
+                        onPress={() => void Linking.openURL(buildSupportMailtoUrl(SUPPORT_EMAIL, supportId)).catch(() => undefined)}
+                        testID="reauth-email-support"
+                    />
+                </View>
+            </View>
+        </View>
+    );
+}
+
+// ── Sign in without email? ──────────────────────────────────────────────────
+
+function DifferentAccountSheet({
+    email,
+    onKeep,
+    onContinue,
+}: {
+    email: string | null;
+    onKeep: () => Promise<void>;
+    onContinue: () => Promise<void>;
+}) {
+    const { t } = useTranslation();
+    const colors = useColors();
+    const [busy, setBusy] = useState(false);
     const run = async (action: () => Promise<void>) => {
         if (busy) return;
         setBusy(true);
@@ -654,381 +882,136 @@ const DifferentAccountView: React.FC<DifferentAccountViewProps> = ({ onContinue,
             setBusy(false);
         }
     };
-
     return (
-        // Same three-band skeleton and F2 scoping as the sibling views.
-        <Box testID="auth-different-account-root" accessible={false} className="flex-1 px-5">
-            <Box accessible={false} className="items-center justify-center" style={{ flex: 5 }}>
-                <MeraLogo size={120} animated />
-            </Box>
-
-            <VStack accessible={false} space="lg">
-                <Text size="2xl" className="text-white font-semibold text-center">
-                    {t('auth.differentAccount.title')}
-                </Text>
-                <Text size="sm" className="text-red-400 leading-relaxed text-center">
-                    {t('auth.differentAccount.body')}
-                </Text>
-
-                <Pressable
-                    testID="auth-different-account-continue"
-                    onPress={() => run(onContinue)}
-                    disabled={busy}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={t('auth.differentAccount.continue')}
-                    accessibilityState={busy ? { busy: true, disabled: true } : undefined}
-                    className={`h-14 rounded-full items-center justify-center ${busy ? 'bg-gray-700' : 'bg-error-500'}`}
-                >
-                    {busy ? (
-                        <Spinner size="small" color="white" />
-                    ) : (
-                        <Text className="text-white text-base font-semibold">
-                            {t('auth.differentAccount.continue')}
-                        </Text>
-                    )}
-                </Pressable>
-                <Pressable
-                    testID="auth-different-account-back"
-                    onPress={() => run(onGoBack)}
-                    disabled={busy}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={t('auth.differentAccount.useEmail')}
-                    className="h-14 rounded-full items-center justify-center border border-primary-500 bg-transparent"
-                >
-                    <Text className="text-primary-500 text-base font-semibold">
-                        {t('auth.differentAccount.useEmail')}
-                    </Text>
-                </Pressable>
-            </VStack>
-
-            {/* Lower band — keeps the actions off the home indicator. */}
-            <Box style={{ flex: 1 }} />
-        </Box>
+        <View style={styles.sheet}>
+            <Text accessibilityRole="header" style={[styles.sheetTitle, { color: colors.ink }]}>
+                {t('auth.differentAccount.title')}
+            </Text>
+            <Text style={[styles.text, { color: colors.ink2 }]}>
+                {email
+                    ? t('auth.differentAccount.body', { email: maskEmail(email) })
+                    : t('auth.differentAccount.bodyGeneric')}
+            </Text>
+            <View style={styles.sheetActions}>
+                <Button variant="outline" action="secondary" onPress={() => void run(onKeep)} isDisabled={busy} className="flex-1" testID="auth-different-account-back">
+                    <ButtonText>{t('auth.differentAccount.useEmail')}</ButtonText>
+                </Button>
+                <Button action="negative" onPress={() => void run(onContinue)} isDisabled={busy} className="flex-1" testID="auth-different-account-continue">
+                    {busy ? <ButtonSpinner /> : null}
+                    <ButtonText>{t('auth.differentAccount.continue')}</ButtonText>
+                </Button>
+            </View>
+        </View>
     );
-};
-
-interface AuthScreenProps {
-    onLoginSuccess?: (userId: string) => void;
-    /**
-     * Whether device sign-in ("Sign in without email") may be offered on the
-     * previous-user and email views. login.tsx passes false on Forgot PIN
-     * (`reauth=pin`): device sign-in proves only that someone holds the phone,
-     * which is exactly who the PIN guards against, so resetting it there needs
-     * the email code.
-     */
-    allowDeviceSignIn?: boolean;
 }
 
-type ViewMode =
-    | 'loading'
-    | 'previous'
-    | 'language'
-    | 'welcome'
-    | 'consent'
-    | 'different-account'
-    | 'email'
-    | 'otp';
+// ── Small pieces ─────────────────────────────────────────────────────────────
 
-const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSignIn = true }) => {
-    const [currentView, setCurrentView] = useState<ViewMode>('loading');
-    const [pendingEmail, setPendingEmail] = useState<string>('');
-    const [cachedEmail, setCachedEmail] = useState<string | null>(null);
-    // The account whose data is on this device, email or not. The consent step
-    // compares a device sign-in against it.
-    const [cachedUserId, setCachedUserId] = useState<string | null>(null);
-    const [availability, setAvailability] = useState<DeviceSignInAvailability>('unavailable');
-    // Which attestation path a device sign-in would take. Only the copy reads
-    // it (notice, caption); routing keeps reading `availability`.
-    const [signInPath, setSignInPath] = useState<DeviceSignInPath>('unavailable');
-    // Where the consent step was entered from, so its email fallback and the
-    // different-account back-out return the user to the view they left.
-    const [consentReturnView, setConsentReturnView] = useState<ViewMode>('welcome');
-    const [pendingSwitch, setPendingSwitch] = useState<DeviceSignInSuccess | null>(null);
-
-    // On mount, check whether a previous user is remembered on this device.
-    // We only need both the email and the user id present — they're written
-    // at OTP-verify and post-auth-routing respectively, and both are cleared
-    // on logout / "Login with other user".
-    //
-    // Fresh devices land on the LANGUAGE stage the very first time (no
-    // `app_language` settings row yet — the row is only ever written by an
-    // explicit choice, so its absence means "never picked"), then on the
-    // WELCOME view every time after, when attestation — or the staging dev
-    // bypass — is available. Unsupported devices fall straight through to the
-    // email view so they never see a dead CTA. Email stays mounted forever as
-    // the path for existing users.
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const [email, userId, appLanguageRow, availability, path] = await Promise.all([
-                    getSetting('cached_user_email'),
-                    getSetting('cached_user_id'),
-                    getSetting('app_language'),
-                    deviceSignInAvailability(),
-                    deviceSignInPath(),
-                ]);
-                if (cancelled) return;
-                setAvailability(availability);
-                setSignInPath(path);
-                setCachedUserId(userId ?? null);
-                if (email && userId) {
-                    setCachedEmail(email);
-                    setCurrentView('previous');
-                } else if (availability !== 'unavailable') {
-                    setCurrentView(appLanguageRow ? 'welcome' : 'language');
-                } else {
-                    setCurrentView('email');
-                }
-            } catch {
-                if (!cancelled) setCurrentView('email');
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
-    const handleOTPSent = (email: string) => {
-        setPendingEmail(email);
-        setCurrentView('otp');
-    };
-
-    const handleVerificationSuccess = (userId: string) => {
-        // Email users accepted the terms at their original sign-up, so the
-        // consent page never prompts them — stamp the current versions
-        // silently instead (fire-and-forget; fail-open by contract).
-        void silentlyAcceptLegal(userId);
-        setPendingEmail('');
-        onLoginSuccess?.(userId);
-    };
-
-    const handleBackToEmail = () => {
-        setCurrentView('email');
-    };
-
-    const handleUseDifferentUser = () => {
-        setCachedEmail(null);
-        setCachedUserId(null);
-        setCurrentView('email');
-    };
-
-    const handleUseEmail = () => {
-        setCurrentView('email');
-    };
-
-    // The consent step's email fallback. Entered from the previous-user view,
-    // "Sign in with email" means that user's own email, so go back there.
-    const handleConsentUseEmail = () => {
-        setCurrentView(consentReturnView === 'previous' ? 'previous' : 'email');
-    };
-
-    // "Sign in without email": the phone's own account, offered to every user
-    // (an email account included) unless the device cannot attest or this is
-    // Forgot PIN. Runs through the consent step, whose "Agree and continue" is
-    // the sign-in, so a newly minted account has seen the terms it is stamped
-    // with (the server stamps consent at mint on that premise).
-    const canSignInWithoutEmail = allowDeviceSignIn && availability !== 'unavailable';
-    const signInWithoutEmailFrom = (view: ViewMode) => () => {
-        setConsentReturnView(view);
-        setCurrentView('consent');
-    };
-
-    const handleLanguageChosen = () => {
-        setCurrentView('welcome');
-    };
-
-    const handleGetStarted = () => {
-        setConsentReturnView('welcome');
-        setCurrentView('consent');
-    };
-
-    // Device sign-in completed. Reauth mode gets the same callback the OTP
-    // path uses; the normal path navigates itself — better-auth's session atom
-    // is not guaranteed to settle promptly after a custom $fetch route, so
-    // waiting on login.tsx's session Redirect could strand a signed-in user on
-    // this screen. Either way the identity gates key on the recorded
-    // pendingAuthUserId, not on the atom.
-    //
-    // Every successful device sign-in lands on /logged-in. A denied mint used
-    // to divert to a screen explaining why there was no fresh trial; there is
-    // no trial now, and the account it diverted already holds the full Starter
-    // experience, so the diversion had nothing left to say.
-    const handleDeviceSignInSuccess = (result: DeviceSignInSuccess) => {
-        if (onLoginSuccess) {
-            onLoginSuccess(result.userId);
-            return;
-        }
-        router.replace('/logged-in');
-    };
-
-    const handleDifferentAccount = (result: DeviceSignInSuccess) => {
-        // Synchronously, before better-auth's atom can settle on this account:
-        // the identity gates, the watcher and login.tsx's shortcut all react to
-        // that atom, and each would wipe this device's account unasked.
-        holdAccountSwitch(result.userId);
-        setPendingSwitch(result);
-        setCurrentView('different-account');
-    };
-
-    // Switch confirmed. The bookkeeping the consent step withheld runs now,
-    // then the normal routing: /logged-in's identity gate sees a new user id
-    // and runs the full wipe of the previous account before anything renders.
-    const handleSwitchContinue = async () => {
-        if (!pendingSwitch) return;
-        releaseAccountSwitch();
-        await completeDeviceSignIn(pendingSwitch);
-        handleDeviceSignInSuccess(pendingSwitch);
-    };
-
-    // Switch declined. The phone's account signed in but nothing was recorded
-    // for it; sign it out through the one sign-out path (bounded, local truth
-    // wins) and return. `cached_user_id` / `cached_user_email` are untouched,
-    // so the previous-user view renders exactly as before.
-    const handleSwitchGoBack = async () => {
-        await clearAuthStorage();
-        setPendingSwitch(null);
-        setCurrentView(consentReturnView);
-    };
-
-    if (currentView === 'loading') {
-        return (
-            // No opaque fill: the AbstractGradientBackdrop below is the page background.
-            <Box className="flex-1 justify-center items-center">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-
-                <Spinner size="large" />
-            </Box>
-        );
-    }
-
-    if (currentView === 'previous' && cachedEmail && cachedUserId) {
-        return (
-            // No opaque fill: the AbstractGradientBackdrop below is the page background.
-            <Box className="flex-1">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-
-                <PreviousUserView
-                    email={cachedEmail}
-                    userId={cachedUserId}
-                    onUseDifferentUser={handleUseDifferentUser}
-                    onOTPSent={handleOTPSent}
-                    onSignInWithoutEmail={
-                        canSignInWithoutEmail ? signInWithoutEmailFrom('previous') : undefined
-                    }
-                />
-            </Box>
-        );
-    }
-
-    if (currentView === 'language') {
-        return (
-            // No opaque fill: the AbstractGradientBackdrop below is the page background.
-            <Box testID="auth-language-screen" accessible={false} className="flex-1">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-
-                {/* The system check replaced the bare language stage: same slot,
-                    same once-per-install signal (the `app_language` row), plus
-                    the phone, Full or Lite, on-device AI and the language pack. */}
-                <SystemCheckStage onContinue={handleLanguageChosen} testID="auth-language" />
-            </Box>
-        );
-    }
-
-    if (currentView === 'welcome') {
-        return (
-            // No opaque fill: the AbstractGradientBackdrop below is the page background.
-            // accessible={false}: plain full-screen container views otherwise
-            // answer an AGGREGATED accessibility label (the first labelled
-            // descendant, "Get started") and surface as full-screen phantom
-            // elements to XCUITest — see the F2 spec in the welcome test.
-            <Box testID="auth-welcome-screen" accessible={false} className="flex-1">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-
-                <WelcomeView onUseEmail={handleUseEmail} onGetStarted={handleGetStarted} />
-            </Box>
-        );
-    }
-
-    if (currentView === 'consent') {
-        return (
-            // No opaque fill: the AbstractGradientBackdrop below is the page background.
-            <Box testID="auth-consent-screen" accessible={false} className="flex-1">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-
-                <ConsentStepView
-                    onUseEmail={handleConsentUseEmail}
-                    onSuccess={handleDeviceSignInSuccess}
-                    expectedUserId={cachedUserId}
-                    onDifferentAccount={handleDifferentAccount}
-                    signInPath={signInPath}
-                />
-            </Box>
-        );
-    }
-
-    if (currentView === 'different-account' && pendingSwitch) {
-        return (
-            // No opaque fill: the AbstractGradientBackdrop below is the page background.
-            <Box testID="auth-different-account-screen" accessible={false} className="flex-1">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-
-                <DifferentAccountView
-                    onContinue={handleSwitchContinue}
-                    onGoBack={handleSwitchGoBack}
-                />
-            </Box>
-        );
-    }
-
-    if (currentView === 'otp' && pendingEmail) {
-        return (
-            // No opaque fill: the AbstractGradientBackdrop below is the page background.
-            <Box className="flex-1">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-
-                <OTPVerificationView
-                    email={pendingEmail}
-                    onVerificationSuccess={handleVerificationSuccess}
-                    onBack={handleBackToEmail}
-                />
-            </Box>
-        );
-    }
-
+function BackArrow({ onPress }: { onPress: () => void }) {
+    const { t } = useTranslation();
+    const colors = useColors();
     return (
-        // No opaque fill: the AbstractGradientBackdrop below is the page background.
-        <Box className="flex-1">
-            {/* Page background. Must be the FIRST child so it paints behind
-                everything else on the page. */}
-            <AbstractGradientBackdrop />
-
-            <EmailInputView
-                onOTPSent={handleOTPSent}
-                initialEmail={pendingEmail}
-                onSignInWithoutEmail={
-                    canSignInWithoutEmail ? signInWithoutEmailFrom('email') : undefined
-                }
-                signInPath={signInPath}
-            />
-        </Box>
+        <Pressable
+            onPress={() => {
+                Keyboard.dismiss();
+                onPress();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+            style={styles.back}
+            testID="auth-back"
+        >
+            <MaterialIcons name="arrow-back" size={24} color={colors.ink} />
+        </Pressable>
     );
-};
+}
+
+function GateIcon({ name }: { name: React.ComponentProps<typeof MaterialIcons>['name'] }) {
+    const colors = useColors();
+    return (
+        <View style={[styles.gateIcon, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+            <MaterialIcons name={name} size={28} color={colors.ink2} />
+        </View>
+    );
+}
+
+function IconAction({
+    icon,
+    label,
+    onPress,
+    testID,
+}: {
+    icon: React.ComponentProps<typeof MaterialIcons>['name'];
+    label: string;
+    onPress: () => void;
+    testID: string;
+}) {
+    const colors = useColors();
+    return (
+        <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            style={[styles.iconAction, { borderColor: colors.line }]}
+            testID={testID}
+        >
+            <MaterialIcons name={icon} size={22} color={colors.ink2} />
+        </Pressable>
+    );
+}
+
+const styles = StyleSheet.create({
+    root: { flex: 1 },
+    logo: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center' },
+    stage: { flex: 1 },
+    introLine: { position: 'absolute', left: 24, right: 24 },
+    introText: { fontSize: 28, fontWeight: '700', textAlign: 'center' },
+    pad: { flex: 1, paddingHorizontal: 20, paddingBottom: 16 },
+    center: { alignItems: 'center' },
+    centerText: { textAlign: 'center' },
+    flex: { flex: 1 },
+    gap8: { gap: 8 },
+    title: { fontSize: 26, fontWeight: '700' },
+    text: { fontSize: 15, lineHeight: 21 },
+    caption: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
+    field: { height: 52, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, fontSize: 16, marginTop: 20 },
+    back: { width: 44, height: 44, justifyContent: 'center', marginBottom: 8 },
+    pill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        borderRadius: 999,
+        borderWidth: StyleSheet.hairlineWidth,
+        paddingHorizontal: 14,
+        minHeight: 40,
+        marginTop: 16,
+    },
+    pillText: { fontSize: 14 },
+    pillAction: { fontSize: 14, fontWeight: '600' },
+    copy: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
+    actions: { alignSelf: 'stretch', gap: 12 },
+    iconRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 4 },
+    iconAction: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        borderWidth: StyleSheet.hairlineWidth,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    gateIcon: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        borderWidth: StyleSheet.hairlineWidth,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 24,
+        marginBottom: 16,
+    },
+    sheet: { paddingHorizontal: 20, paddingTop: 4, gap: 12 },
+    sheetTitle: { fontSize: 20, fontWeight: '700' },
+    sheetActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
+});
 
 export default AuthScreen;

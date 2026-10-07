@@ -11,12 +11,12 @@ import { previewLanguage } from '@/lib/i18n';
 import logger from '@/lib/logger';
 
 /**
- * The language-switch state machine, shared by both pickers.
+ * The language-switch state machine, shared by Settings > Language and the
+ * first-launch list (`components/custom/auth/WelcomeStage.tsx`).
  *
  * WHY A SHARED HOOK AND NOT TWO COPIES. This is a five-state machine with a
  * cancellation token, a modal-dismissal handshake, a navigation lock and a
- * revert path — and the pre-auth picker
- * (`components/custom/auth/LanguageSelector.tsx`) had a copy of the *previous*
+ * revert path, and an earlier pre-auth picker had a copy of the *previous*
  * version of this logic that was one line different from the Settings one.
  * That line was the whole bug: both fired a native translation call while an
  * RN `<Modal presentationStyle="pageSheet">` was still animating away. Two

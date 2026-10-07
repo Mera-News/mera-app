@@ -1,7 +1,7 @@
 // S6's section of the navx2 P2 kit gallery (app/dev-kit.tsx): the shared kit
 // in every state. Dev only, English literals on purpose; deleted in P13.
 import React, { useState } from 'react';
-import { Appearance, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { LanguageRow } from '@/components/custom/auth/LanguageRow';
 import { OtpBoxes, type OtpState } from '@/components/custom/auth/OtpBoxes';
@@ -18,6 +18,7 @@ import { showDialog } from '@/lib/dialog';
 import { hapticError, hapticLight, hapticMedium, hapticSelection, hapticSuccess } from '@/lib/haptics';
 import { useColors } from '@/lib/theme/tokens';
 import { toastApi } from '@/lib/toast/toast-queue';
+import { Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
 
 function Label({ children }: { children: string }) {
     const colors = useColors();
@@ -143,19 +144,6 @@ export default function KitGallery() {
                 />
             </View>
 
-            <Label>Spike 5: native light under the plist Dark pin</Label>
-            <View style={styles.wrap}>
-                <Small title="Native light" onPress={() => Appearance.setColorScheme('light')} />
-                <Small title="Native dark" onPress={() => Appearance.setColorScheme('dark')} />
-                <Small title="Alert-free check: dialog" onPress={() => setDialog('info')} />
-            </View>
-            <TextInput
-                placeholder="Focus me: is the keyboard light?"
-                placeholderTextColor={colors.ink3}
-                style={[styles.input, { color: colors.ink, borderColor: colors.line }]}
-                testID="kit-spike5-input"
-            />
-
             <Label>StepsAccordion (tap Next step, Change reopens)</Label>
             <StepsAccordion
                 testID="kit-steps"
@@ -215,8 +203,33 @@ export default function KitGallery() {
 
             <Label>Toasts (notice panel, a never-expiring one, close all)</Label>
             <View style={styles.wrap}>
-                <Small title="Notice 4 s" onPress={() => toastApi.show({ duration: 4000, render: () => <Text style={{ color: colors.ink, padding: 14 }}>Tidy up your profile</Text> })} />
-                <Small title="Stays (duration null)" onPress={() => toastApi.show({ duration: null, render: () => <Text style={{ color: colors.ink, padding: 14 }}>Stays until closed</Text> })} />
+                <Small
+                    title="Notice 4 s"
+                    onPress={() =>
+                        toastApi.show({
+                            duration: 4000,
+                            render: () => (
+                                <Toast action="muted">
+                                    <ToastTitle>Tidy up your profile</ToastTitle>
+                                    <ToastDescription>Two facts say almost the same thing.</ToastDescription>
+                                </Toast>
+                            ),
+                        })
+                    }
+                />
+                <Small
+                    title="Stays (duration null)"
+                    onPress={() =>
+                        toastApi.show({
+                            duration: null,
+                            render: () => (
+                                <Toast action="muted">
+                                    <ToastTitle>Stays until closed</ToastTitle>
+                                </Toast>
+                            ),
+                        })
+                    }
+                />
                 <Small title="Close all" onPress={() => toastApi.closeAll()} />
             </View>
 
@@ -235,7 +248,6 @@ export default function KitGallery() {
 const styles = StyleSheet.create({
     swatch: { height: 200, borderRadius: 24, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
     wrap: { flexDirection: 'row', flexWrap: 'wrap' },
-    input: { borderWidth: 1, borderRadius: 10, padding: 12, marginTop: 4 },
     pressCard: { padding: 20, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth },
     list: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 4 },
 });
