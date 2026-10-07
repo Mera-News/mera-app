@@ -28,8 +28,6 @@ const TOP_HEADLINES: PageExplainer = {
   paragraphKeys: ['world.explainer.top1', 'world.explainer.window', 'world.explainer.same'],
   chapter: 'explore',
 };
-/** A chapter that does not exist yet: the sheet shows Got it alone. */
-const NO_CHAPTER: PageExplainer = { ...TOP_HEADLINES, chapter: 'library' };
 
 function Label({ children }: { readonly children: string }) {
   const colors = useColors();
@@ -145,8 +143,6 @@ export default function KitGallery() {
         }
         testID="kit-title"
       />
-      <Label>Title row, ? opens a sheet with no tutorial yet (Got it alone)</Label>
-      <PageTitleRow title={t('tabs.library')} onExplain={() => setSheet(NO_CHAPTER)} testID="kit-title-nochapter" />
       <PageExplainerSheet explainer={sheet} open={sheet !== null} onClose={() => setSheet(null)} />
 
       <Label>Expanding chip, disabled (first load)</Label>
