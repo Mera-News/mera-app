@@ -17,7 +17,6 @@ describe('pageKeyFor', () => {
     ['country:XK', 'world'],
     ['saved', 'library'],
     ['visited', 'library'],
-    ['stats', 'library'],
     ['checks', 'checks'],
     ['profile', 'profile'],
     ['facts', 'facts'],

@@ -41,7 +41,7 @@ export interface QuickFactCheckEntry {
 
 /**
  * The page the Mera button was tapped on, as a chat-pool key (World and every
- * country share `world`; Saved, Visited and Stats share `library`). Drives the
+ * country share `world`; Saved and Visited share `library`). Drives the
  * client-side intro and starters only: it never reaches the model.
  */
 export type MeraPageKey =

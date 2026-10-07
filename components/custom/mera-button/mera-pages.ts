@@ -57,7 +57,6 @@ const DIRECT: Readonly<Record<string, MeraPageKey>> = {
   checks: 'checks',
   saved: 'library',
   visited: 'library',
-  stats: 'library',
   profile: 'profile',
   facts: 'facts',
   sources: 'sources',
