@@ -1,172 +1,138 @@
-import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
-import { Spinner } from '@/components/ui/spinner';
-import { Text } from '@/components/ui/text';
-import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { VStack } from '@/components/ui/vstack';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, Text as RNText, View } from 'react-native';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AccountService } from '../../../lib/account-service';
-import { OnboardingStage } from '../../../lib/generated/graphql-types';
-import { authClient, clearAuthStorage } from '../../../lib/auth-client';
-import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '../../../lib/notificationSlotUtils';
-import { ensurePushTokenRegistered } from '../../../lib/notification-service';
-import { reconcileAppLanguageWithPersona } from '../../../lib/language-sync';
+import { useTranslation } from 'react-i18next';
+
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import MeraLogo from '@/components/custom/MeraLogo';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Spinner } from '@/components/ui/spinner';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { AccountService } from '@/lib/account-service';
+import { authClient, clearAuthStorage } from '@/lib/auth-client';
+import { observeFacts } from '@/lib/database/services/fact-service';
+import { OnboardingStage } from '@/lib/generated/graphql-types';
+import { reconcileAppLanguageWithPersona } from '@/lib/language-sync';
+import { SPRING } from '@/lib/motion';
+import { ensurePushTokenRegistered } from '@/lib/notification-service';
+import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/notificationSlotUtils';
+import {
+    useFloatingChatHasUnresolvedTopicPlans,
+    useFloatingChatStore,
+    useFloatingChatUnresolvedCounts,
+} from '@/lib/stores/floating-chat-store';
+import { isOnline, useIsOnline } from '@/lib/stores/network-store';
 import {
     useOnboardingIsInitializing,
     useOnboardingPreferences,
     useOnboardingStep,
     useOnboardingStore,
-} from '../../../lib/stores/onboarding-store';
-import {
-    useFloatingChatHasUnresolvedTopicPlans,
-    useFloatingChatUnresolvedCounts,
-    useFloatingChatStore,
-} from '../../../lib/stores/floating-chat-store';
-import { isOnline, useIsOnline } from '../../../lib/stores/network-store';
-import { useTranslation } from 'react-i18next';
-import OnboardingNavBar from '../chat/OnboardingNavBar';
-import PersonaUpdateChatStep from './PersonaUpdateChatStep';
-import { markOnboardingDone } from './onboarding-done';
+} from '@/lib/stores/onboarding-store';
+import { useColors } from '@/lib/theme/tokens';
+
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
+import { NextGuardBox } from './NextGuardBox';
+import { markOnboardingDone } from './onboarding-done';
+import PersonaUpdateChatStep from './PersonaUpdateChatStep';
 
-// 2-step wizard: 0 = Notifications, 1 = PersonaChat. The server OnboardingStage
-// picks which step to RESUME at on mount; it never decides whether the wizard
-// runs at all — that gate is the local fact count (OnboardingScreen /
-// app/logged-in/index.tsx).
-//
-// FINISHED maps to step 1 on purpose, and it is a reachable entry state, not a
-// defensive fallback: a user whose stage is FINISHED but who has zero local
-// facts (they tapped Next through the persona chat) is deliberately sent back
-// in, and the step that captures facts is step 1. The wizard must never
-// auto-advance to completion off the server stage — only the user pressing Next
-// on step 1 calls onComplete().
-const STAGE_TO_STEP: Record<OnboardingStage, number> = {
-    [OnboardingStage.Notifications]: 0,
-    [OnboardingStage.ProcessingMode]: 1,
-    [OnboardingStage.PersonaChat]: 1,
-    [OnboardingStage.Finished]: 1,
-};
-
+// Two steps (FinalJourney #8, #24): 0 = tell Mera (the persona chat), 1 =
+// notifications. Chat comes first so the reader's first minute is spent on
+// what makes the Feed, and notifications are asked only once there is news to
+// be told about. It always opens at the chat: whether the wizard runs at all is
+// the local `onboarding_done` gate (onboarding-done.ts), and the server stage
+// is written for the record only.
 const TOTAL_STEPS = 2;
-
-// Stage to advance to when the user clicks Next on a given step.
 const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
     0: OnboardingStage.PersonaChat,
     1: OnboardingStage.Finished,
 };
 
-// OnboardingWizard now uses Zustand store for state persistence
-
-/** Bound on the mount-time session lookup. See initializeUserId below. */
+/** Bound on the mount-time session lookup. */
 const SESSION_LOOKUP_TIMEOUT_MS = 3_000;
+
+type Guard = 'no-facts' | 'no-notifications' | null;
 
 interface OnboardingWizardProps {
     /**
      * Effective owner, resolved locally by the caller (session id, else the
-     * persisted `cached_user_id`). Seeds the wizard synchronously so the persona
-     * step has an owner even when the session lookup below yields nothing.
+     * persisted `cached_user_id`). Seeds the wizard synchronously so the chat
+     * step has an owner even when the session lookup yields nothing.
      */
     userId?: string;
     onComplete: () => void;
 }
 
-
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUserId, onComplete }) => {
     const { t } = useTranslation();
-    // Use Zustand store for persistent state
+    const colors = useColors();
+    const insets = useSafeAreaInsets();
+    const toast = useToast();
+    const reduceMotion = useReducedMotion();
+
     const currentStep = useOnboardingStep();
     const userPreferences = useOnboardingPreferences();
     const isInitializing = useOnboardingIsInitializing();
-
-    // Get actions from store
     const { setStep, updatePreferences, setIsInitializing, resetOnboarding } = useOnboardingStore();
 
-    const toast = useToast();
-    const insets = useSafeAreaInsets();
-
-    // Server error modal state
-    const [showServerErrorModal, setShowServerErrorModal] = useState(false);
+    const [showServerError, setShowServerError] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    // Reactive so the destructive action reappears the moment connectivity does.
     const offline = !useIsOnline();
+    const [guard, setGuard] = useState<Guard>(null);
+    const [notificationsOn, setNotificationsOn] = useState(false);
+    const [enableRequest, setEnableRequest] = useState(0);
+    const [busy, setBusy] = useState(false);
 
-    // r14 — SECOND HALF of the topic-plan gate. ChatSessionView disables the
-    // chat input while a "Topics I'll track" card is unresolved, but step 1
-    // renders that chat UNDER this wizard's own nav bar: leave Next live and the
-    // block is bypassed by the most obvious tap on the screen. The count is
-    // published by ChatSessionView (which owns the resolution logic) and is 0
-    // whenever no chat session is mounted, so this can only bite on step 1.
+    // The chat step's input is locked while a "Topics I'll track" or a fact
+    // choice card is unresolved (ChatSessionView); Next must honour the same
+    // lock or the block is bypassed by the most obvious tap on the screen.
     const hasUnresolvedTopicPlans = useFloatingChatHasUnresolvedTopicPlans();
     const unresolvedCounts = useFloatingChatUnresolvedCounts();
 
-    // Initialize userId and pre-populate with existing user data on mount
+    // The facts counter (Journey #8): the counter is the progress.
+    const [factCount, setFactCount] = useState(0);
+    const pop = useSharedValue(1);
     useEffect(() => {
-        const initializeUserId = async () => {
-            try {
-                // Seed the owner from the locally-resolved prop FIRST, so the
-                // persona step (which takes userPreferences.userId) has one even
-                // if the lookup below returns nothing. Previously the id was set
-                // only inside the `if (sessionData?.data …)` branch, so offline
-                // it was never set at all.
-                if (initialUserId) updatePreferences('userId', initialUserId);
+        const sub = observeFacts().subscribe((rows) => setFactCount(rows.length));
+        return () => sub.unsubscribe();
+    }, []);
+    useEffect(() => {
+        if (factCount === 0 || reduceMotion) return;
+        pop.value = withSequence(withSpring(1.12, SPRING.like), withSpring(1, SPRING.like));
+    }, [factCount, reduceMotion, pop]);
+    const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
 
-                // Bounded. authClient uses better-auth's own transport, NOT
-                // Apollo's HttpLink, so the slow/abort thresholds in
-                // lib/apollo-fetch.ts do not apply to it — an unreachable server
-                // that accepts the socket and never answers would otherwise hang
-                // this promise forever and pin the "Loading…" spinner, because
-                // the `finally` that clears isInitializing never runs.
+    useEffect(() => {
+        const init = async () => {
+            try {
+                if (initialUserId) updatePreferences('userId', initialUserId);
+                // Bounded: better-auth's transport has no timeout of its own.
                 const sessionData = await Promise.race([
                     authClient.getSession(),
-                    new Promise<null>((resolve) =>
-                        setTimeout(() => resolve(null), SESSION_LOOKUP_TIMEOUT_MS),
-                    ),
+                    new Promise<null>((resolve) => setTimeout(() => resolve(null), SESSION_LOOKUP_TIMEOUT_MS)),
                 ]);
-                if (sessionData?.data && sessionData.data.user?.id) {
-                    const userId = sessionData.data.user.id;
+                const userId = sessionData?.data?.user?.id;
+                if (userId) {
                     updatePreferences('userId', userId);
-
-                    // Fetch existing user persona to pre-populate form
-                    const userPersona = await AccountService.getUserPersona(userId);
-
-                    let serverStep = STAGE_TO_STEP[OnboardingStage.Notifications];
-                    if (userPersona) {
-                        // Pre-populate notification hours (convert from UTC to local)
-                        if (userPersona.preferredNotificationWindow && userPersona.preferredNotificationWindow.length > 0) {
-                            const localHours = convertUTCHoursToLocal(userPersona.preferredNotificationWindow);
-                            updatePreferences('notificationHours', localHours);
-                        }
-
-                        // Server stage picks the RESUME step only. FINISHED is a
-                        // legitimate entry state now (stage FINISHED + 0 local
-                        // facts re-enters the wizard) and maps to step 1, the
-                        // persona chat — the step that actually captures facts.
-                        // Deliberately no completion shortcut here.
-                        const serverStage = userPersona.onboardingStage ?? OnboardingStage.Notifications;
-                        serverStep = STAGE_TO_STEP[serverStage] ?? 0;
+                    const persona = await AccountService.getUserPersona(userId);
+                    if (persona?.preferredNotificationWindow?.length) {
+                        updatePreferences('notificationHours', convertUTCHoursToLocal(persona.preferredNotificationWindow));
                     }
-
-                    setStep(serverStep);
                 }
             } catch {
-                // Error initializing - silently handle
+                // The wizard works without the prefill.
             } finally {
+                setStep(0);
                 setIsInitializing(false);
             }
         };
-
-        initializeUserId();
+        void init();
     }, [initialUserId, updatePreferences, setIsInitializing, setStep]);
 
-    // The persona step is now an inline chat (PersonaUpdateChatStep), so the
-    // wizard no longer orchestrates the floating bubble/popover. This defensive
-    // unmount-restore effect stays: if some earlier flow left the floating chat
-    // suppressed or expanded, leaving onboarding restores the default state.
+    // Leaving onboarding restores the floating chat's default state.
     useEffect(() => {
         return () => {
             const store = useFloatingChatStore.getState();
@@ -175,44 +141,22 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         };
     }, []);
 
-    // Helper function to get current user ID. Falls back to the locally-resolved
-    // owner: a session lookup that fails for network reasons is not proof the
-    // user is unauthenticated, and treating it as such is what used to raise the
-    // "server error" modal below. Safe because handleNext only ever calls this
-    // once it has established the network is believed up.
+    // A failed lookup is not proof of being signed out; fall back to the
+    // locally resolved owner (only called once the network is believed up).
     const getCurrentUserId = async (): Promise<string> => {
         const sessionData = await authClient.getSession().catch(() => null);
-        const resolved =
-            sessionData?.data?.user?.id ?? userPreferences.userId ?? initialUserId;
-        if (!resolved) {
-            throw new Error('User not authenticated');
-        }
+        const resolved = sessionData?.data?.user?.id ?? userPreferences.userId ?? initialUserId;
+        if (!resolved) throw new Error('User not authenticated');
         return resolved;
     };
 
     const handleServerErrorLogout = async () => {
         try {
             setIsLoggingOut(true);
-            setShowServerErrorModal(false);
-
-            // clearAuthStorage() owns the (guarded, bounded) server sign-out.
-            // This path fires precisely when the server is erroring, so a
-            // direct unguarded signOut here was near-guaranteed to abort the
-            // eject with nothing cleared.
+            setShowServerError(false);
+            // clearAuthStorage() owns the guarded, bounded server sign-out.
             await clearAuthStorage();
-
-            // Note: no dismissAll() here — onboarding is already at the top of the stack
             router.replace('/');
-
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('onboarding.signedOutTitle')}</ToastTitle>
-                        <ToastDescription>{t('onboarding.signedOutDescription')}</ToastDescription>
-                    </Toast>
-                ),
-            });
         } catch {
             toast.show({
                 placement: 'top',
@@ -228,218 +172,207 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         }
     };
 
-    // --- Nav handlers for OnboardingNavBar (steps 0 and 1) ---
-    const handleBack = useCallback(() => setStep(currentStep - 1), [currentStep, setStep]);
-
-    const handleNext = useCallback(async () => {
-        // Topic-plan gate BEFORE anything else, including the offline check: a
-        // pending card is a local-state problem and advancing the server stage
-        // for it would be wrong even online. `skipDisabled` on the nav bar
-        // already prevents the tap; this is the programmatic backstop, and it
-        // surfaces WHY rather than looking like a dead button.
-        if (hasUnresolvedTopicPlans) {
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="warning" variant="solid">
-                        <ToastDescription>
-                            {/* The two cards ask different things, so the toast
-                                must not offer to "save or discard the topics"
-                                over a card that shows no topics yet. */}
-                            {unresolvedCounts.factChoices > 0
-                                ? t('factChoice.resolveBeforeContinuing')
-                                : t('topicPlan.resolveBeforeContinuing')}
-                        </ToastDescription>
-                    </Toast>
-                ),
-            });
-            return;
-        }
-
-        // Offline check FIRST, before getCurrentUserId and before any mutation.
-        //
-        // Putting this in the catch below would still fire
-        // updateNotificationPreferences → ensurePushTokenRegistered →
-        // advanceOnboardingStage against a server we already know we cannot
-        // reach. This function has no busy state and OnboardingNavBar's onSkip
-        // is not disabled while it awaits, so against a hanging server the user
-        // gets no feedback and can re-tap, stacking duplicate mutations.
-        //
-        // It also makes getCurrentUserId's local fallback safe rather than
-        // merely probably-safe: the fallback can now only supply an id on a path
-        // where the network is believed up.
+    /** Move on from the current step, past its guard. */
+    const advance = useCallback(async () => {
+        setGuard(null);
+        // Offline FIRST: every step below talks to the server.
         if (!isOnline()) {
-            setShowServerErrorModal(true);
+            setShowServerError(true);
             return;
         }
-
+        setBusy(true);
         try {
             const userId = await getCurrentUserId();
-            switch (currentStep) {
-                case 0:
-                    if (userPreferences.notificationHours.length > 0) {
-                        await AccountService.updateNotificationPreferences(
-                            userId,
-                            convertLocalHoursToUTC(userPreferences.notificationHours),
-                        );
-                    }
-                    // Register the Expo push token regardless of the visible-
-                    // notification switch — the silent-push background cycle
-                    // needs the token to wake the device. Enabling the switch
-                    // already handled the full permission request and token
-                    // registration; if the user left the switch off we still
-                    // register provisionally here so silent wakes deliver.
-                    await ensurePushTokenRegistered(userId);
-                    // Now that the user is authenticated with a persona, push the
-                    // language they picked earlier (the first-launch list)
-                    // into language_codes. Fire-and-forget so it can't block nav.
-                    void reconcileAppLanguageWithPersona({ userId });
-                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]);
-                    setStep(1);
-                    break;
-                case 1: {
-                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
-                    // The gate (onboarding-done.ts): this device is through.
-                    await markOnboardingDone();
-                    resetOnboarding();
-                    onComplete();
-                    break;
-                }
+            if (currentStep === 0) {
+                await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]);
+                setStep(1);
+                return;
             }
+            if (userPreferences.notificationHours.length > 0) {
+                await AccountService.updateNotificationPreferences(
+                    userId,
+                    convertLocalHoursToUTC(userPreferences.notificationHours),
+                );
+            }
+            // The push token registers regardless of the visible switch: the
+            // silent-push background cycle needs it.
+            await ensurePushTokenRegistered(userId);
+            void reconcileAppLanguageWithPersona({ userId });
+            await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
+            await markOnboardingDone();
+            resetOnboarding();
+            onComplete();
         } catch {
-            setShowServerErrorModal(true);
+            setShowServerError(true);
+        } finally {
+            setBusy(false);
         }
-    }, [
-        currentStep,
-        userPreferences,
-        setStep,
-        resetOnboarding,
-        onComplete,
-        hasUnresolvedTopicPlans,
-        toast,
-        t,
-    ]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStep, userPreferences, setStep, resetOnboarding, onComplete]);
 
-    const renderStep = () => {
-        switch (currentStep) {
-            case 0:
-                return (
-                    <NotificationSettingsScreen
-                        isOnboarding={true}
-                        initialHours={userPreferences.notificationHours}
-                        onHoursChange={(hours) => updatePreferences('notificationHours', hours)}
-                    />
-                );
-            case 1:
-                return (
-                    <PersonaUpdateChatStep userId={userPreferences.userId} />
-                );
-            default:
-                return null;
+    const handleNext = useCallback(() => {
+        if (busy) return;
+        if (currentStep === 0) {
+            if (hasUnresolvedTopicPlans) {
+                toast.show({
+                    placement: 'top',
+                    render: () => (
+                        <Toast action="warning" variant="solid">
+                            <ToastDescription>
+                                {unresolvedCounts.factChoices > 0
+                                    ? t('factChoice.resolveBeforeContinuing')
+                                    : t('topicPlan.resolveBeforeContinuing')}
+                            </ToastDescription>
+                        </Toast>
+                    ),
+                });
+                return;
+            }
+            if (factCount === 0) {
+                setGuard('no-facts');
+                return;
+            }
+        } else if (!notificationsOn) {
+            setGuard('no-notifications');
+            return;
         }
-    };
+        void advance();
+    }, [busy, currentStep, hasUnresolvedTopicPlans, unresolvedCounts, factCount, notificationsOn, advance, toast, t]);
 
-    // Show loading spinner while initializing userId
     if (isInitializing) {
         return (
-            // No opaque fill: the AbstractGradientBackdrop below is the page background.
             <Box className="flex-1 justify-center items-center">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
                 <AbstractGradientBackdrop />
-
                 <Spinner size="large" />
-                <Text className="text-white mt-4">{t('common.loading')}</Text>
             </Box>
         );
     }
 
+    const nextButton = (
+        <Button action="primary" onPress={handleNext} isDisabled={busy} style={styles.next} testID="onboarding-next">
+            <ButtonText>{t('common.next')}</ButtonText>
+        </Button>
+    );
+
     return (
-        // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
-        // below, so it spans the FULL screen including the safe areas — an
-        // absolute fill resolves against its parent's CONTENT box, so mounting it
-        // inside the padded box left a black strip in the inset.
-        <Box className="flex-1">
-            {/* Page background. Must be the FIRST child so it paints behind
-                everything else on the page. */}
+        <View style={styles.root}>
             <AbstractGradientBackdrop />
+            <View testID="onboarding-screen" style={[styles.root, { paddingTop: insets.top + 8, paddingBottom: insets.bottom }]}>
+                <View style={styles.header}>
+                    <View style={styles.who}>
+                        <MeraLogo size={28} animated />
+                        <RNText style={[styles.name, { color: colors.ink }]}>Mera</RNText>
+                    </View>
+                    <RNText style={[styles.step, { color: colors.ink3 }]}>
+                        {t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
+                    </RNText>
+                </View>
 
-            {/* No opaque fill: the backdrop above is the page background. */}
-            <Box testID="onboarding-screen" className="flex-1" style={{ paddingBottom: insets.bottom }}>
+                {currentStep === 0 ? (
+                    <>
+                        <Animated.View style={[styles.counter, { backgroundColor: colors.surface, borderColor: colors.line }, popStyle]}>
+                            <RNText style={[styles.counterText, { color: colors.ink }]} testID="onboarding-facts-count">
+                                {t('onboarding.factsCount', { count: factCount })}
+                            </RNText>
+                        </Animated.View>
+                        <View style={styles.flex}>
+                            <PersonaUpdateChatStep
+                                userId={userPreferences.userId}
+                                composerTrailing={nextButton}
+                                composerPlaceholder={t('onboarding.composerPlaceholder')}
+                            />
+                        </View>
+                    </>
+                ) : (
+                    <>
+                        <View style={styles.remind}>
+                            <RNText accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
+                                {t('onboarding.remindTitle')}
+                            </RNText>
+                            <RNText style={[styles.body, { color: colors.ink2 }]}>{t('onboarding.remindBody')}</RNText>
+                        </View>
+                        <View style={styles.flex}>
+                            <NotificationSettingsScreen
+                                isOnboarding
+                                initialHours={userPreferences.notificationHours}
+                                onHoursChange={(hours) => updatePreferences('notificationHours', hours)}
+                                onEnabledChange={setNotificationsOn}
+                                enableRequest={enableRequest}
+                            />
+                        </View>
+                        <View style={styles.footer}>{nextButton}</View>
+                    </>
+                )}
 
-            {/* Progress Indicator */}
-            <Box className="pb-5 px-5" style={{ paddingTop: insets.top + 16 }}>
-                <Progress value={((currentStep + 1) / TOTAL_STEPS) * 100} size="sm">
-                    <ProgressFilledTrack />
-                </Progress>
-            </Box>
+                <View style={[styles.guard, { bottom: insets.bottom + 72 }]} pointerEvents="box-none">
+                    <NextGuardBox
+                        open={guard === 'no-facts'}
+                        title={t('onboarding.noFactsTitle')}
+                        body={t('onboarding.noFactsBody')}
+                        primaryLabel={t('facts.addFact')}
+                        onPrimary={() => setGuard(null)}
+                        secondaryLabel={t('onboarding.continueAnyway')}
+                        onSecondary={() => void advance()}
+                        testID="onboarding-guard-facts"
+                    />
+                    <NextGuardBox
+                        open={guard === 'no-notifications'}
+                        title={t('onboarding.noNotifTitle')}
+                        body={t('onboarding.noNotifBody')}
+                        primaryLabel={t('onboarding.turnThemOn')}
+                        onPrimary={() => {
+                            setGuard(null);
+                            setEnableRequest((n) => n + 1);
+                        }}
+                        secondaryLabel={t('onboarding.notNow')}
+                        onSecondary={() => void advance()}
+                        testID="onboarding-guard-notifications"
+                    />
+                </View>
+            </View>
 
-            {/* Step 0 has no prior step to return to; step 1 can go back to it. */}
-            <OnboardingNavBar
-                onBack={currentStep > 0 ? handleBack : undefined}
-                onSkip={handleNext}
-                skipLabel={t('common.next')}
-                skipDisabled={hasUnresolvedTopicPlans}
-                stepLabel={t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
+            {/* A failed request on Next. Log out is destructive (clearAuthStorage),
+                so it is offered only when the server answered and rejected us,
+                never for a connectivity blip. */}
+            <ConfirmDialog
+                open={showServerError}
+                title={t('onboarding.connectionIssue')}
+                body={t('onboarding.connectionDescription')}
+                confirmLabel={offline ? t('onboarding.close') : t('onboarding.logout')}
+                destructive={!offline}
+                busy={isLoggingOut}
+                onConfirm={() => (offline ? setShowServerError(false) : void handleServerErrorLogout())}
+                onCancel={offline ? undefined : () => setShowServerError(false)}
+                cancelLabel={t('onboarding.close')}
+                testID="onboarding-server-error"
             />
-
-            {renderStep()}
-
-            {/* Server Error Modal */}
-            <Modal
-                isOpen={showServerErrorModal}
-                onClose={() => setShowServerErrorModal(false)}
-                size="sm"
-            >
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-white">{t('onboarding.connectionIssue')}</Text>
-                    </ModalHeader>
-                    <ModalBody className="py-6">
-                        <Text className="text-gray-300 text-base leading-relaxed">
-                            {t('onboarding.connectionDescription')}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
-                        <VStack className="w-full" space="md">
-                            {/* Log out is DESTRUCTIVE — handleServerErrorLogout
-                                calls clearAuthStorage(). Offer it only when the
-                                server actually answered and rejected us, never
-                                when the cause is connectivity: this modal is
-                                raised by a failed request, so an offline user
-                                pressing Next was being handed "wipe your
-                                credentials" as the primary remedy for a network
-                                blip. Offline they get Close only, and the global
-                                offline band explains why. */}
-                            {!offline && (
-                                <Button
-                                    action="negative"
-                                    onPress={handleServerErrorLogout}
-                                    disabled={isLoggingOut}
-                                    className="w-full"
-                                    testID="onboarding-server-error-logout"
-                                >
-                                    <ButtonText>
-                                        {isLoggingOut ? t('onboarding.loggingOut') : t('onboarding.logout')}
-                                    </ButtonText>
-                                </Button>
-                            )}
-                            <Button
-                                variant="outline"
-                                action="secondary"
-                                onPress={() => setShowServerErrorModal(false)}
-                                className="w-full"
-                            >
-                                <ButtonText>{t('onboarding.close')}</ButtonText>
-                            </Button>
-                        </VStack>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </Box>
-        </Box>
+        </View>
     );
 };
+
+const styles = StyleSheet.create({
+    root: { flex: 1 },
+    flex: { flex: 1 },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, minHeight: 44 },
+    who: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    name: { fontSize: 16, fontWeight: '700' },
+    step: { fontSize: 13 },
+    counter: {
+        alignSelf: 'center',
+        marginTop: 8,
+        marginBottom: 4,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 999,
+        borderWidth: StyleSheet.hairlineWidth,
+    },
+    counterText: { fontSize: 13, fontWeight: '600' },
+    remind: { paddingHorizontal: 20, paddingTop: 16, gap: 10, marginBottom: 12 },
+    title: { fontSize: 26, fontWeight: '700' },
+    body: { fontSize: 15, lineHeight: 22 },
+    footer: { paddingHorizontal: 20, paddingBottom: 12 },
+    next: { height: 44, paddingHorizontal: 20 },
+    guard: { position: 'absolute', left: 16, right: 16 },
+});
 
 export default OnboardingWizard;

@@ -1,6 +1,6 @@
-// PersonaUpdateChatStep — the persona chat rendered inline as onboarding wizard
-// step 1 (full-bleed under the OnboardingNavBar), replacing the old floating
-// bubble/popover flow.
+// PersonaUpdateChatStep: the persona chat rendered inline as the first step of
+// the onboarding wizard ("Tell Mera"), with the wizard's Next beside the
+// composer.
 //
 // CLOUD-ONLY BY DESIGN. This deliberately does NOT reuse MeraChatSession:
 //
@@ -43,10 +43,15 @@ interface PersonaUpdateChatStepProps {
   /** Authenticated user id (from the wizard's preferences). Falls back to a
    *  session fetch if empty so the step is robust to an unpopulated prop. */
   userId: string;
+  /** Beside the composer: the wizard's Next (FinalJourney #8). */
+  composerTrailing?: React.ReactNode;
+  composerPlaceholder?: string;
 }
 
 export default function PersonaUpdateChatStep({
   userId: userIdProp,
+  composerTrailing,
+  composerPlaceholder,
 }: PersonaUpdateChatStepProps) {
   const { t } = useTranslation();
   const [isInitLoading, setIsInitLoading] = useState(true);
@@ -178,6 +183,8 @@ export default function PersonaUpdateChatStep({
         resumeMessages={resumeMessages}
         isLoading={false}
         loadingMessage={t('chat.startingChat')}
+        composerTrailing={composerTrailing}
+        composerPlaceholder={composerPlaceholder}
       />
     </KeyboardAvoidingView>
   );
