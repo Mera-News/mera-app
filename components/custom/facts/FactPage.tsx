@@ -12,6 +12,7 @@ import { StatusIndicator } from '@/components/custom/chat/StatusIndicator';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import MeraLogo from '@/components/custom/MeraLogo';
@@ -641,6 +642,12 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 keyExtractor={(item) => (item.kind === 'topic' ? item.topic.id : item.story.data._id)}
                 renderItem={renderItem}
                 ListHeaderComponent={header}
+                ListEmptyComponent={
+                    tab === 'topics' && !suggesting && status !== 'pending' ? (
+                        // The tutorial hero over an empty topic list (FinalMotion, Lottie moments).
+                        <ForYouEmptyState testID="fact-topics-empty" compact animationId="facts-a-fact-is" body="" />
+                    ) : null
+                }
                 ListFooterComponent={
                     <>
                         {tab === 'topics' ? topicsFooter : recentFooter}
