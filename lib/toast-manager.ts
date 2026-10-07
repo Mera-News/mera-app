@@ -3,7 +3,7 @@ import { AccessibilityInfo } from 'react-native';
 import type React from 'react';
 import logger from './logger';
 import { TOAST_MIN_DURATION_MS } from './toast/toast-queue';
-import { TOAST_BODY_COLOR, TOAST_TITLE_COLOR } from '@/components/custom/toast/toast-text';
+import { toastBodyColor, toastTitleColor } from '@/components/custom/toast/toast-text';
 
 // The readable floor for any toast's lifetime lives with the queue.
 // Re-exported so this module stays its public home.
@@ -155,7 +155,7 @@ class ToastManager {
     /**
      * Shared renderer for the simple title+body toasts. Plain RN `Text` with
      * explicit styles, NOT ToastTitle/ToastDescription — see the note on
-     * TOAST_TITLE_COLOR above (createElement bypasses className styling).
+     * toastTitleColor() above (createElement bypasses className styling).
      */
     private showPlainToast(
         action: 'error' | 'success' | 'info',
@@ -175,13 +175,13 @@ class ToastManager {
                     { action, variant: 'solid' },
                     React.createElement(
                         Text,
-                        { style: { color: TOAST_TITLE_COLOR, fontWeight: '700', fontSize: 15 } },
+                        { style: { color: toastTitleColor(), fontWeight: '700', fontSize: 15 } },
                         title,
                     ),
                     message
                         ? React.createElement(
                               Text,
-                              { style: { color: TOAST_BODY_COLOR, fontSize: 13, paddingTop: 2 } },
+                              { style: { color: toastBodyColor(), fontSize: 13, paddingTop: 2 } },
                               message,
                           )
                         : null,
