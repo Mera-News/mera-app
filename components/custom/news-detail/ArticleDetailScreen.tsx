@@ -9,6 +9,8 @@ import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateA
 import RelatedCoverage from '@/components/custom/news-detail/RelatedCoverage';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
+import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
@@ -70,6 +72,10 @@ interface ArticleDetailScreenProps {
 }
 
 const SCROLL_THRESHOLD = 300;
+/** The page ends 12pt above the Mera button's bottom-corner position. */
+const LIST_END_ABOVE_MERA = MERA_BUTTON_BAR_GAP + MERA_BUTTON_SIZE + 12;
+/** ScrollToTopFab adds its own 20 to this. */
+const ABOVE_MERA_BUTTON = LIST_END_ABOVE_MERA - 20;
 
 // Map a sibling ArticleSummary to the NewsArticle shape ArticleStandaloneCompactCard
 // expects (same mapping the suggestion-detail screen uses).
@@ -255,6 +261,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         () => related.map((entry) => ({ id: entry._id, article: summaryToNewsArticle(entry) })),
         [related],
     );
+
+    // What the Mera button asks about. Stable per article, so the button's
+    // chat context is not rebuilt on every render.
+    const meraTitle = article?.title_en_internal_only ?? article?.title ?? undefined;
+    const meraSubject = useMemo(() => ({ articleId, title: meraTitle }), [articleId, meraTitle]);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -675,7 +686,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 onScrollPositionChange={handleScrollPositionChange}
                 onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
-                contentBottomInset={insets.bottom + 20}
+                contentBottomInset={insets.bottom + LIST_END_ABOVE_MERA}
                 aboveReason={
                     <>
                         {/* Only the 'saved' snapshot gets a banner. That one is
@@ -812,7 +823,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                     </>
                 }
             />
-            <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
+            {/* Above the Mera button's bottom corner, never under it. */}
+            <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} bottomInset={ABOVE_MERA_BUTTON + insets.bottom} />
+            {/* The Mera button, always shown (FinalRead #7): asks about this
+                article; a nested page asks about its own story. */}
+            <MeraButtonHost root article={meraSubject} />
         </Box>
     );
 };

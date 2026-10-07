@@ -9,6 +9,8 @@ import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateA
 import RelatedCoverage from '@/components/custom/news-detail/RelatedCoverage';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
+import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
@@ -72,6 +74,10 @@ interface ArticleSuggestionScreenProps {
 }
 
 const SCROLL_THRESHOLD = 300;
+/** The page ends 12pt above the Mera button's bottom-corner position. */
+const LIST_END_ABOVE_MERA = MERA_BUTTON_BAR_GAP + MERA_BUTTON_SIZE + 12;
+/** ScrollToTopFab adds its own 20 to this. */
+const ABOVE_MERA_BUTTON = LIST_END_ABOVE_MERA - 20;
 
 // Map ArticleSummary → NewsArticle-shaped object for ArticleStandaloneCompactCard
 // (the existing card type works against NewsArticle fields). Hoisted to module
@@ -337,6 +343,15 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const relatedEntries = useMemo<RelatedEntry[]>(
         () => mergeRelatedEntries(localEntries, serverEntries, suggestion?.articleId),
         [localEntries, serverEntries, suggestion?.articleId],
+    );
+
+    // What the Mera button asks about. Stable per article, so the button's
+    // chat context is not rebuilt on every render.
+    const meraArticleId = suggestion?.articleId;
+    const meraTitle = suggestion?.title_en ?? suggestion?.title_original ?? undefined;
+    const meraSubject = useMemo(
+        () => (meraArticleId ? { articleId: meraArticleId, suggestionId: articleSuggestionId, title: meraTitle } : undefined),
+        [meraArticleId, articleSuggestionId, meraTitle],
     );
 
     const handleScrollPositionChange = useCallback((y: number) => {
@@ -608,7 +623,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 onScrollPositionChange={handleScrollPositionChange}
                 onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
-                contentBottomInset={insets.bottom + 20}
+                contentBottomInset={insets.bottom + LIST_END_ABOVE_MERA}
                 aboveReason={
                     <PublicationVisitBadge
                         publicationName={suggestion.publication_name}
@@ -732,7 +747,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                     </>
                 }
             />
-            <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
+            {/* Above the Mera button's bottom corner, never under it. */}
+            <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} bottomInset={ABOVE_MERA_BUTTON + insets.bottom} />
+            {/* The Mera button, always shown (FinalRead #7): asks about this
+                article; a nested page asks about its own story. */}
+            <MeraButtonHost root article={meraSubject} />
         </Box>
     );
 };
