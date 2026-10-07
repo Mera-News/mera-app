@@ -34,7 +34,6 @@ const POOLS: Record<MeraPageKey, readonly HintDef[]> = {
   interest: [{ key: 'meraHints.interest.change' }, { key: 'meraHints.interest.remove' }],
   stories: [{ key: 'meraHints.stories.follow' }, { key: 'meraHints.stories.name' }],
   world: [
-    { key: 'meraHints.world.countryFeed' },
     { key: 'meraHints.world.family' },
     { key: 'meraHints.world.behind', web: true },
   ],
@@ -73,8 +72,6 @@ const DIRECT: Readonly<Record<string, MeraPageKey>> = {
   hygiene: 'profile',
   'not-interested': 'profile',
   activity: 'profile',
-  // A root push: its own host (MeraButtonHost root) shows the generic set.
-  search: 'settings',
 };
 
 /** Pages whose chat edits facts: their close may owe the combination topic
@@ -88,15 +85,16 @@ const FACT_EDITING: ReadonlySet<MeraPageKey> = new Set([
 ]);
 
 /**
- * The page key for a surface id, or null where the button does not show:
- * settings and its sub-screens, and anything this table does not know (a
- * hidden button beats one that opens the wrong chat).
+ * The page key for a surface id. The button is ALWAYS shown (owner): every
+ * surface this table does not name (Settings and its sub-screens, Search, the
+ * inbox, a page added later) gets the generic set, which opens a plain persona
+ * chat. Null only while no surface is reported yet.
  */
 export function pageKeyFor(surface: SurfaceId | null | undefined): MeraPageKey | null {
   if (!surface) return null;
   if (surface.startsWith('country:')) return 'world';
   if (surface.startsWith('interest:')) return 'interest';
-  return DIRECT[surface] ?? null;
+  return DIRECT[surface] ?? 'settings';
 }
 
 /** The fact id of a One interest surface (`interest:<factId>`), else null. */

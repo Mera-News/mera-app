@@ -115,6 +115,10 @@ interface FloatingChatState {
      *  since: the Mera button's ring. Memory only, never persisted, never
      *  counted (invariant 9). */
     answerUnread: boolean;
+    /** The chat panel is on screen, including its open and close motion
+     *  (ChatPopover's phase is not 'closed'). The Mera button hides on it, so
+     *  the panel's riding mark and the button are never both shown. */
+    chatShown: boolean;
     suppressed: boolean;
     factMutationVersion: number;
     // Article-feedback flow. `pendingInitialMessage` is auto-sent once by
@@ -228,6 +232,7 @@ interface FloatingChatState {
     toggle: () => void;
     setBubbleCenter: (c: { x: number; y: number }) => void;
     setGenerating: (v: boolean) => void;
+    setChatShown: (v: boolean) => void;
     setSuppressed: (v: boolean) => void;
     notifyFactMutation: () => void;
     setConversationId: (id: string | null) => void;
@@ -248,6 +253,7 @@ const initialState = {
     pendingDraft: null as string | null,
     isGenerating: false,
     answerUnread: false,
+    chatShown: false,
     suppressed: false,
     factMutationVersion: 0,
     pendingInitialMessage: null as string | null,
@@ -498,6 +504,8 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             answerUnread: nextAnswerUnread(state, v),
         })),
 
+    setChatShown: (v) => set({ chatShown: v }),
+
     setSuppressed: (v) => set({ suppressed: v }),
 
     notifyFactMutation: () => set((state) => ({ factMutationVersion: state.factMutationVersion + 1 })),
@@ -524,6 +532,9 @@ export const useFloatingChatFactMutationVersion = () =>
     useFloatingChatStore((state) => state.factMutationVersion);
 export const useFloatingChatIsGenerating = () => useFloatingChatStore((state) => state.isGenerating);
 export const useFloatingChatAnswerUnread = () => useFloatingChatStore((state) => state.answerUnread);
+/** The chat is open or still moving: the Mera button stays hidden. */
+export const useFloatingChatShown = () =>
+    useFloatingChatStore((state) => state.isExpanded || state.chatShown);
 export const useFloatingChatSuppressed = () => useFloatingChatStore((state) => state.suppressed);
 export const useFloatingChatConversationId = () => useFloatingChatStore((state) => state.conversationId);
 export const useFloatingChatProposal = () => useFloatingChatStore((state) => state.proposal);

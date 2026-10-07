@@ -186,6 +186,12 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         }
     }, [isExpanded, phase, originX, originY, progress, finishOpen, startClosing]);
 
+    // The Mera button hides for as long as the panel is on screen, motion
+    // included, so its mark and the panel's are never both shown.
+    useEffect(() => {
+        useFloatingChatStore.getState().setChatShown(phase !== 'closed');
+    }, [phase]);
+
     const backdropStyle = useAnimatedStyle(() => ({
         opacity: progress.value,
     }));

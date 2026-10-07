@@ -33,19 +33,16 @@ describe('pageKeyFor', () => {
     expect(pageKeyFor(surface as SurfaceId)).toBe(key);
   });
 
-  it.each([
-    'settings',
-    'settings:display',
-    'settings:mera-protocol',
-    'settings:notifications',
-    '',
-    'unknown',
-  ])(
-    'no button on %s',
+  it.each(['settings', 'settings:display', 'settings:mera-protocol', 'settings:notifications', 'notifications', 'unknown'])(
+    'the generic set on %s (the button is always shown)',
     (surface) => {
-      expect(pageKeyFor(surface as SurfaceId)).toBeNull();
+      expect(pageKeyFor(surface as SurfaceId)).toBe('settings');
     },
   );
+
+  it('no button before a surface is reported', () => {
+    expect(pageKeyFor('' as SurfaceId)).toBeNull();
+  });
 
   it('no button with no surface', () => {
     expect(pageKeyFor(null)).toBeNull();

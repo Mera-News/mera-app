@@ -4,9 +4,14 @@
 // tab's `<Stack>` in its `_layout.tsx`: inside the tab it gets the tab's own
 // insets (useMeraButtonBottom) and stays over pages pushed inside the tab (One
 // interest, All facts, Sources). Shows only while ALL hold: this tab is
-// focused, the current surface belongs to this tab and has a page key, the
-// chat is closed, Arrange is closed and the keyboard is down. On You it fades
-// with the swipe towards Settings.
+// focused, the current surface belongs to this tab, the chat is closed,
+// Arrange is closed and the keyboard is down. Every page has a page key
+// (unknown ones get the generic set), so it never fades or hides on a page.
+//
+// STATES (FinalMeraChat #10-11), both memory-only: the logo grows while the
+// chat session is busy with the chat closed, and an orange ring shows while
+// an answer that landed with the chat closed is unread. Mera reading the news
+// changes nothing here; the Feed's status icon shows that.
 //
 // On a ROOT push, which covers the tab's button natively: `<MeraButtonHost
 // root />` (Search) or `<MeraButtonHost root article={…} />` (the article
@@ -27,21 +32,22 @@ import {
   useHeaderBottom,
 } from '@/components/custom/nav/current-surface';
 import { tabForSurface, type TabId } from '@/components/custom/nav/page-registry';
-import { tabSwipeProgress } from '@/components/custom/nav/swipe-progress';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
-import { hapticLight } from '@/lib/haptics';
+import { hapticLight, hapticMedium } from '@/lib/haptics';
+import { SPRING } from '@/lib/motion';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
-import { usePageOrder } from '@/lib/navigation/page-order';
 import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE, useMeraButtonBottom } from '@/lib/navigation/tab-bar';
 import {
-  useFloatingChatIsExpanded,
+  useFloatingChatAnswerUnread,
+  useFloatingChatIsGenerating,
+  useFloatingChatShown,
   type ChatContext,
   type MeraPageKey,
 } from '@/lib/stores/floating-chat-store';
 import { articleChatContext, type AskMeraSubject } from '@/components/custom/floating-chat/ask-mera';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, StyleSheet } from 'react-native';
+import { Keyboard, StyleSheet, View } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, {
@@ -72,7 +78,7 @@ const TOP_GAP = 12;
 /** Height of a page header below the safe area, for a surface that reports
  *  no header bottom (the You-stack screens). */
 const HEADER_FALLBACK = 52;
-const SNAP_SPRING = { damping: 18, stiffness: 220 };
+const SNAP_SPRING = SPRING.drag;
 
 function useKeyboardUp(): boolean {
   const [up, setUp] = useState(false);
@@ -87,14 +93,6 @@ function useKeyboardUp(): boolean {
   return up;
 }
 
-/** Opacity on You: 1 on Profile, 0 on Settings, following the swipe. 1 on
- *  every other tab. Settings is wherever the reader put it in the order. */
-export function youFade(progress: number, settingsIndex: number): number {
-  'worklet';
-  if (settingsIndex < 0) return 1;
-  return Math.min(1, Math.abs(progress - settingsIndex));
-}
-
 interface PlacedProps {
   readonly surface: string;
   readonly page: MeraPageKey;
@@ -103,11 +101,13 @@ interface PlacedProps {
   readonly context?: ChatContext;
   /** Root hosts: a bottom corner lifts above the keyboard. */
   readonly rideKeyboard: boolean;
+  readonly working: boolean;
+  readonly unread: boolean;
 }
 
 /** The button at its corner, with the drag. Its own component so the shared
  *  values live only while there is a measured frame to place it in. */
-const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame, context, rideKeyboard }) => {
+const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame, context, rideKeyboard, working, unread }) => {
   const corner = useMeraCorner();
   const reduceMotion = useReducedMotion();
   // The keyboard's top, as a negative translate (0 while it is down). Its
@@ -149,6 +149,8 @@ const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame, context, ri
         .onStart(() => {
           fromX.value = x.value;
           fromY.value = y.value;
+          // It lifts under the finger (FinalMotion: medium haptic).
+          runOnJS(hapticMedium)();
           runOnJS(setDragging)(true);
         })
         .onUpdate((e) => {
@@ -195,6 +197,8 @@ const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame, context, ri
         pan={pan}
         dragging={dragging}
         context={context}
+        working={working}
+        unread={unread}
       />
     </Animated.View>
   );
@@ -210,7 +214,9 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
   const focused = useIsFocusedSafe();
   const surface = useCurrentSurface();
   const arrangeOpen = useArrangeOpen();
-  const chatOpen = useFloatingChatIsExpanded();
+  const chatOpen = useFloatingChatShown();
+  const working = useFloatingChatIsGenerating();
+  const unread = useFloatingChatAnswerUnread();
   const keyboardUp = useKeyboardUp();
   const mode = useFeedStatusMode();
   const tabBottom = useMeraButtonBottom();
@@ -245,13 +251,6 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
     [size, headerBottom, bottom],
   );
 
-  const progress = tabSwipeProgress(tab ?? 'you');
-  const settingsIndex = usePageOrder('you').indexOf('settings');
-  const fadeOnYou = tab === 'you';
-  const fadeStyle = useAnimatedStyle(() => ({
-    opacity: fadeOnYou ? youFade(progress.value, settingsIndex) : 1,
-  }));
-
   const page: MeraPageKey | null = root
     ? 'settings'
     : surface !== null && tabForSurface(surface) === tab
@@ -262,9 +261,9 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
   }
 
   return (
-    <Animated.View
+    <View
       pointerEvents="box-none"
-      style={[StyleSheet.absoluteFill, styles.physical, fadeStyle]}
+      style={[StyleSheet.absoluteFill, styles.physical]}
       onLayout={(e) => {
         const { width, height } = e.nativeEvent.layout;
         setSize((prev) => (prev?.width === width && prev?.height === height ? prev : { width, height }));
@@ -279,9 +278,11 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
           frame={frame}
           context={context}
           rideKeyboard={root}
+          working={working}
+          unread={unread}
         />
       )}
-    </Animated.View>
+    </View>
   );
 };
 
