@@ -158,7 +158,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
                                 entering={reduceMotion ? undefined : FadeIn.duration(MOTION.status.open)}
                                 exiting={reduceMotion ? undefined : FadeOut.duration(MOTION.status.close)}
                             >
-                                <FeedStatusDetails />
+                                <FeedStatusDetails mode={mode} />
                                 {processing ? <AnalysingProgress /> : null}
                             </Animated.View>
                         ) : null}

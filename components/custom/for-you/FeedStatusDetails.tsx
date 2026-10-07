@@ -61,8 +61,9 @@ function StatRow({ label, value, testID }: { label: string; value: string; testI
     );
 }
 
-/** Level 2: the details inside the card. */
-const FeedStatusDetails: React.FC = () => {
+/** Level 2: the details inside the card. `mode` is the card's own, so the
+ *  Stage row can never say "Up to date" under "Updating your feed". */
+const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }) => {
     const { t } = useTranslation();
     const tAny = t as unknown as (key: string) => string;
     const appLanguage = useAppLanguage();
@@ -93,7 +94,9 @@ const FeedStatusDetails: React.FC = () => {
                 ? t('feed.syncToast.onDeviceTitle')
                 : isSyncActive && syncStatusMessage?.headlineKey
                   ? tAny(syncStatusMessage.headlineKey)
-                  : t('feedStatus.idle');
+                  : mode === 'processing'
+                    ? t('feedStatus.modeProcessing')
+                    : t('feedStatus.idle');
 
     // ONE scoring figure, shared with the "Analysing X of Y" line.
     const cloud = pickScoringProgress(batchProgress, asyncDone, asyncTotal);
@@ -167,11 +170,14 @@ export const FeedStatusNotice: React.FC<{
 
     if (mode === 'limited') {
         // Device timezone from an absolute instant: the cap resets at 00:00
-        // UTC, so "tomorrow" would be false west of UTC. The sync machine always
-        // supplies a reset instant; the gallery's injected mode may not.
-        const time = dailyLimitResetAt
-            ? new Date(dailyLimitResetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-            : '';
+        // UTC, so "tomorrow" would be false west of UTC. The sync machine
+        // always stores a reset instant; without one (an injected mode, a
+        // cleared store) the next UTC midnight IS the reset, so the sentence
+        // never reads "unlock at .".
+        const now = new Date();
+        const resetAt =
+            dailyLimitResetAt ?? Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+        const time = new Date(resetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         return (
             <VStack testID="feed-status-daily-limit">
                 <Text style={[ROW_TYPE, { color: colors.accentText, fontWeight: '600' }]}>
