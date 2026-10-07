@@ -19,11 +19,11 @@ import { create } from 'zustand';
 import type { ThemeMode } from './tokens';
 
 /**
- * While false the app renders dark whatever is stored, and the Appearance
- * controls stay hidden: light needs every area swept onto tokens first
- * (navx2 P12). Flip it in the commit that lands the last sweep.
+ * Light is live: every area reads its colours from the tokens. Setting this
+ * false renders dark whatever is stored and hides the Appearance controls, the
+ * one switch to pull light back without a code sweep.
  */
-export const THEME_SWITCH_LIVE = false;
+export const THEME_SWITCH_LIVE = true;
 
 export const THEME_STORAGE_KEY = 'app_theme';
 

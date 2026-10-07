@@ -158,8 +158,8 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
             </View>
 
             {/* The theme row (Journey #20): the same Appearance control as
-                Settings > Display, starting at the phone's look. Hidden until
-                light ships (THEME_SWITCH_LIVE). */}
+                Settings > Display, starting at the phone's look. Hidden while
+                THEME_SWITCH_LIVE is off. */}
             {appearance.live ? (
                 <View style={[styles.themeRow, { backgroundColor: colors.surface, borderColor: colors.line }]}>
                     <View style={styles.rowText}>

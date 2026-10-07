@@ -1,8 +1,9 @@
 // The app's colours, by meaning, for both themes. One place, so the light
 // theme (navx2 P12) swaps every consumer at once.
 //
-// Components read `useColors()`. Worklets and StyleSheet.create read
-// `COLORS.dark` for now; P12 moves those onto the hook.
+// Components read `useColors()`; module-level StyleSheets use `themedStyles`;
+// code outside React (a toast built with createElement) reads `currentColors()`
+// at render time.
 //
 // Literal white and black are NOT tokens: text on the orange accent, logos and
 // photo scrims stay literal in both themes (the reverted 2026-09-11 chain
@@ -134,8 +135,7 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
     },
 };
 
-/** The current theme (lib/theme/theme-store.ts). Dark while the switch is not
- *  live, so every screen renders as today until the areas are swept. */
+/** The current theme (lib/theme/theme-store.ts); dark whenever the switch is off. */
 export function useThemeMode(): ThemeMode {
     const mode = useThemeStore((st) => st.mode);
     return THEME_SWITCH_LIVE ? mode : 'dark';
