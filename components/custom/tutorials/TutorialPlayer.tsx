@@ -36,6 +36,12 @@ interface TutorialPlayerProps {
      * remembering not to author `hasAsk` on chapter one.
      */
     readonly enableAskMera?: boolean;
+    /** Open at this slide (a page's ? or "Learn about" link); unknown ids open slide 0. */
+    readonly initialSlideId?: string;
+    /** The last slide's button label, in place of "Done" (the tour's "Begin Mera"). */
+    readonly finishLabel?: string;
+    /** The last slide's button, in place of `onClose`. Skip and the X still close. */
+    readonly onFinish?: () => void;
 }
 
 /**
@@ -60,6 +66,9 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     chapterId,
     onClose,
     enableAskMera = true,
+    initialSlideId,
+    finishLabel,
+    onFinish,
 }) => {
     const t = useTutorialCopy();
     const insets = useSafeAreaInsets();
@@ -67,7 +76,9 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
 
     const chapter = useMemo(() => getChapter(chapterId), [chapterId]);
 
-    const [index, setIndex] = useState(0);
+    const [index, setIndex] = useState(() =>
+        Math.max(0, chapter?.slides.findIndex((s) => s.id === initialSlideId) ?? 0),
+    );
     const [unlocked, setUnlocked] = useState(true);
     const [timedOut, setTimedOut] = useState(false);
     // Completion is written once per mount, not once per Done tap — a double tap
@@ -98,13 +109,17 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
         return () => clearTimeout(timer);
     }, [gated, unlocked, index]);
 
-    const finish = useCallback(() => {
+    const markDone = useCallback(() => {
         if (chapter && !completedRef.current) {
             completedRef.current = true;
             markCompleted(chapter.id);
         }
-        onClose();
-    }, [chapter, markCompleted, onClose]);
+    }, [chapter, markCompleted]);
+
+    const finish = useCallback(() => {
+        markDone();
+        (onFinish ?? onClose)();
+    }, [markDone, onFinish, onClose]);
 
     const handleNext = useCallback(() => {
         void hapticLight();
@@ -125,8 +140,9 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     // this chapter, and leaving it un-ticked would nag them from the menu forever.
     const handleSkip = useCallback(() => {
         void hapticLight();
-        finish();
-    }, [finish]);
+        markDone();
+        onClose();
+    }, [markDone, onClose]);
 
     /**
      * Right half tapped.
@@ -180,7 +196,7 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     }
 
     const nextLabel = isLast
-        ? t('tutorials.done')
+        ? finishLabel ?? t('tutorials.done')
         : canAdvance && !unlocked && gated
             ? t('tutorials.continueAnyway')
             : t('tutorials.next');

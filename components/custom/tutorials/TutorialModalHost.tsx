@@ -9,6 +9,11 @@ import TutorialPlayer from './TutorialPlayer';
 interface TutorialModalHostProps {
     readonly visible: boolean;
     readonly onClose: () => void;
+    /** Defaults to the pre-auth chapter, `welcome`. */
+    readonly chapterId?: string;
+    /** The last slide's button (the first-launch tour: "Begin Mera"). */
+    readonly finishLabel?: string;
+    readonly onFinish?: () => void;
 }
 
 /**
@@ -35,7 +40,7 @@ interface TutorialModalHostProps {
  * `SlideView` does, and a slide that will not scroll on Android is a silent
  * failure on exactly the devices least likely to be tested first.
  */
-const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose }) => (
+const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose, chapterId, finishLabel, onFinish }) => (
     <Modal
         visible={visible}
         animationType="fade"
@@ -49,8 +54,10 @@ const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose 
                 <View style={styles.page}>
                     {visible ? (
                         <TutorialPlayer
-                            chapterId={PRE_AUTH_CHAPTER_ID}
+                            chapterId={chapterId ?? PRE_AUTH_CHAPTER_ID}
                             onClose={onClose}
+                            finishLabel={finishLabel}
+                            onFinish={onFinish}
                             enableAskMera={false}
                         />
                     ) : null}

@@ -36,7 +36,7 @@ import { View } from 'react-native';
  * lay out identically.
  */
 export default function TutorialPlayerRoute() {
-    const params = useLocalSearchParams<{ chapter?: string }>();
+    const params = useLocalSearchParams<{ chapter?: string; slide?: string }>();
 
     return (
         <GluestackUIProvider mode="dark">
@@ -46,6 +46,7 @@ export default function TutorialPlayerRoute() {
                 <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                     <TutorialPlayer
                         chapterId={params.chapter ?? PRE_AUTH_CHAPTER_ID}
+                        initialSlideId={params.slide}
                         onClose={() => router.back()}
                     />
                 </ErrorBoundary>

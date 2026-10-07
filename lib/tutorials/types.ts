@@ -32,6 +32,7 @@ export type ChapterId =
   | 'privacy'
   | 'following'
   | 'explore'
+  | 'library'
   // level: 'advanced'
   | 'sources'
   | 'filters'

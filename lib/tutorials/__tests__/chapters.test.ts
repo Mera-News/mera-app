@@ -35,9 +35,9 @@ import { animationIdFor, keysForChapter, lookupKey } from '../keys';
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 
 describe('TUTORIAL_CHAPTERS', () => {
-  it('has eleven chapters split across the two levels', () => {
-    expect(TUTORIAL_CHAPTERS).toHaveLength(11);
-    expect(chaptersAtLevel('basic')).toHaveLength(7);
+  it('has twelve chapters split across the two levels', () => {
+    expect(TUTORIAL_CHAPTERS).toHaveLength(12);
+    expect(chaptersAtLevel('basic')).toHaveLength(8);
     expect(chaptersAtLevel('advanced')).toHaveLength(4);
   });
 

@@ -12,17 +12,21 @@
 //
 // ── Levels ──────────────────────────────────────────────────────────────────
 // Basic and advanced are SEPARATE chapters, not dual tracks inside one chapter.
-// Seven basics teach the app; five advanced chapters teach the controls, and
+// Eight basics teach the app; four advanced chapters teach the controls, and
 // the menu hides them until three basics are done (`lib/tutorials/menu.ts`).
+// A chapter opens at one slide from a page's ? or "Learn about" link
+// (`components/custom/tutorials/open-tutorial.ts`); a direct open ignores the
+// advanced lock, which only shapes the menu.
 //
 // ── Accuracy ────────────────────────────────────────────────────────────────
 // Every factual claim in the copy was verified against current source before it
 // was written. The load-bearing ones, with where they were checked:
-//   • Tabs are icon-only — teach glyphs and positions, never names. Four tabs
-//     since navx: Feed (Feed, Interests, Stories), World (World and one page
-//     per country), Library and You (Profile, Settings). The chapter id
-//     `explore` and its slide ids are kept: hero animation ids and stored
-//     progress derive from them; its copy teaches World.
+//   • Tabs are icon-only — teach glyphs and positions, never names. Four tabs:
+//     Feed (the Feed, with a Continuous and a Sectioned view, and Stories),
+//     World (World and one page per country), Library (Saved, Fact checks,
+//     History) and You (Profile, Settings). The chapter id `explore` and its
+//     slide ids are kept: hero animation ids and stored progress derive from
+//     them; its copy teaches World.
 //   • The Feed has NO in-list dividers any more — nothing is ever removed, and a
 //     read card SINKS to the bottom of a single unbroken list instead of being
 //     cut off by a labelled boundary (`components/custom/feed/feed-entries.ts:1-34`).
@@ -42,17 +46,17 @@
 //     the MEDIUM band is dropped at score-persist time
 //     (`lib/feed-ordering/importance-filter.ts`), and topic-matched stories
 //     are never dropped that way.
-//   • The Feed tab's header is the page strip (Feed, Interests, Stories), the
-//     pen, quick settings and the bell; no title, no counts, no progress bar,
-//     and Feed cards carry no timestamp and no NEW badge (`FeedScreen` passes
-//     `showRecency={false}`). There is no status panel anywhere: the Mera
-//     button moves while Mera reads and rests otherwise. Chapter `feed` must
-//     not teach a counter or a bar, and must not claim a story's age is
+//   • The Feed tab's header is the page strip (Feed, Stories); there is no pen,
+//     no quick settings and no bell. Feed cards carry no timestamp and no NEW
+//     badge. Mera's reading shows only in the Mera icon's colour at the top
+//     of the Feed; tapping it shows the counts card. Chapter `feed` must not
+//     teach a permanent counter or a bar, and must not claim a story's age is
 //     visible on the Feed.
 //   • "Read" = opened, or ≥75% on screen for 1.5s
 //     (`components/custom/feed/use-visible-index.ts` DWELL_READ_SECONDS = 1.5).
-//   • A country page is added with the pen in the World header (Arrange,
-//     `components/custom/nav/ArrangeOverlay.tsx`), and hidden with its x there.
+//   • A country page is added by pressing and holding a page name in the World
+//     header (Arrange, `components/custom/nav/ArrangeOverlay.tsx`), and hidden
+//     with its x there. Only World is arranged.
 //   • Source badges come from `publication_type` and there are exactly two:
 //     `government` → "Government source", `regulator` → "Official agency"
 //     (`components/custom/config-panel/SourcesL2PublicationList.tsx:55-72`).
@@ -177,6 +181,20 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
         visual: { placeholder: { kind: 'icon', name: 'tune' } },
         hasAsk: true,
       },
+      {
+        // The Profile page's ? opens here (openTutorial('facts', 'your-profile')).
+        id: 'your-profile',
+        visual: { placeholder: { kind: 'icon', name: 'person' } },
+        interaction: {
+          kind: 'tap-to-reveal',
+          targets: [
+            { id: 'facts', icon: 'sticky-note-2' },
+            { id: 'places', icon: 'place' },
+            { id: 'sources', icon: 'newspaper' },
+            { id: 'show-less', icon: 'remove-circle-outline' },
+          ],
+        },
+      },
     ],
   },
 
@@ -224,8 +242,8 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
         interaction: {
           kind: 'tap-to-reveal',
           targets: [
-            { id: 'feed', icon: 'view-agenda' },
-            { id: 'dashboard', icon: 'grid-view' },
+            { id: 'continuous', icon: 'view-agenda' },
+            { id: 'sectioned', icon: 'grid-view' },
           ],
         },
         hasAsk: true,
@@ -388,7 +406,22 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
     ],
   },
 
-  // ───────────────────────────── 8 · sources (advanced) ────────────────────
+  // ───────────────────────────── 8 · library (basic) ───────────────────────
+  // One chapter for the Library tab's three pages and Stats, opened at the
+  // slide a page's ? or empty state names (openTutorial('library', slide)).
+  {
+    id: 'library',
+    level: 'basic',
+    icon: 'local-library',
+    slides: [
+      { id: 'saved', visual: { placeholder: { kind: 'icon', name: 'bookmark' } } },
+      { id: 'fact-checks', visual: { placeholder: { kind: 'icon', name: 'fact-check' } } },
+      { id: 'history', visual: { placeholder: { kind: 'icon', name: 'history' } } },
+      { id: 'stats', visual: { placeholder: { kind: 'icon', name: 'bar-chart' } } },
+    ],
+  },
+
+  // ───────────────────────────── 9 · sources (advanced) ────────────────────
   {
     id: 'sources',
     level: 'advanced',
@@ -434,7 +467,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
     ],
   },
 
-  // ───────────────────────────── 9 · filters (advanced) ────────────────────
+  // ───────────────────────────── 10 · filters (advanced) ───────────────────
   {
     id: 'filters',
     level: 'advanced',
@@ -474,7 +507,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
     ],
   },
 
-  // ───────────────────────────── 10 · chat (advanced) ──────────────────────
+  // ───────────────────────────── 11 · chat (advanced) ──────────────────────
   {
     id: 'chat',
     level: 'advanced',
@@ -528,7 +561,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
     ],
   },
 
-  // ───────────────────────────── 11 · protocol (advanced) ──────────────────
+  // ───────────────────────────── 12 · protocol (advanced) ──────────────────
   {
     id: 'protocol',
     level: 'advanced',
