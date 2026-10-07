@@ -9,6 +9,7 @@ import { Text } from '@/components/ui/text';
 import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { useColors } from '@/lib/theme/tokens';
 
 /**
  * Full-screen, non-dismissible mandatory-update screen. Rendered by
@@ -18,6 +19,7 @@ import { openInAppBrowser } from '@/lib/web-browser-utils';
  */
 export default function ForceUpdateScreen({ storeUrl }: { storeUrl: string | null }) {
   const { t } = useTranslation();
+  const c = useColors();
 
   // Swallow the Android hardware back button so the user can't escape the gate.
   useEffect(() => {
@@ -37,27 +39,27 @@ export default function ForceUpdateScreen({ storeUrl }: { storeUrl: string | nul
 
   return (
     // No opaque fill: this replaces the ENTIRE app tree, so there is no page
-    // background above it — it mounts its own. `bg-black` made it the one
+    // background above it — it mounts its own. `bg-page` made it the one
     // full-screen surface in the app with no backdrop at all.
     <View className="flex-1 items-center justify-center px-8">
       {/* Page background. Must be the FIRST child so it paints behind
           everything else on the page. */}
       <AbstractGradientBackdrop />
 
-      <MaterialIcons name="system-update" size={64} color="#FFFFFF" />
-      <Text className="text-white text-2xl font-bold mt-6 text-center">
+      <MaterialIcons name="system-update" size={64} color={c.ink} />
+      <Text className="text-ink text-2xl font-bold mt-6 text-center">
         {t('nativeUpdate.updateRequiredTitle')}
       </Text>
-      <Text className="text-gray-400 text-base mt-3 text-center">
+      <Text className="text-ink-2 text-base mt-3 text-center">
         {t('nativeUpdate.updateRequiredBody')}
       </Text>
       <Button
         onPress={onUpdate}
         isDisabled={!storeUrl}
-        className="mt-8 bg-white rounded-full px-8"
+        className="mt-8 bg-ink rounded-full px-8"
         size="lg"
       >
-        <ButtonText className="text-black">{t('nativeUpdate.updateCta')}</ButtonText>
+        <ButtonText className="text-page">{t('nativeUpdate.updateCta')}</ButtonText>
       </Button>
     </View>
   );

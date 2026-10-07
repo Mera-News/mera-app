@@ -14,20 +14,15 @@
 //
 // With the header hidden, a section title scrolled up behind the clock read
 // straight through this strip's 0.42 scrim. The strip is then over CONTENT, so
-// it wants the over-content base (GLASS_OVER_CONTENT_FILL). But the strip is
+// it wants the over-content base (the `chrome` token). But the strip is
 // mounted at ALL times and the translucent header samples it at rest, so a
 // permanent dark base would darken the top of every header. A host with a
 // collapsing header therefore passes its `hidden` value as `coverProgress`,
 // and the base (plus a short fade below the strip) follows it: invisible at
 // rest, full when the header is out of the way. Without the prop the strip is
 // exactly what it always was.
-import {
-  GLASS_HEADER_SCRIM,
-  GLASS_HEADER_TINT,
-  GLASS_OVER_CONTENT_FILL,
-  GlassHeaderAndroidBackdrop,
-  GlassPlate,
-} from '@/components/custom/GlassSurface';
+import { GlassHeaderAndroidBackdrop, GlassPlate, useGlassHeader } from '@/components/custom/GlassSurface';
+import { tint, useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
@@ -77,9 +72,10 @@ export interface StatusBarScrimProps {
 
 const CoverBase: React.FC<{ progress: SharedValue<number>; top: number }> = ({ progress, top }) => {
   const style = useAnimatedStyle(() => ({ opacity: progress.value }));
+  const c = useColors();
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, style]} testID="status-bar-scrim-cover">
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: GLASS_OVER_CONTENT_FILL }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: c.chrome }]} />
       {STATUS_BAR_SCRIM_FADE.map((alpha, i) => (
         <View
           key={alpha}
@@ -90,7 +86,7 @@ const CoverBase: React.FC<{ progress: SharedValue<number>; top: number }> = ({ p
             right: 0,
             top: top + i * FADE_BAND_PT,
             height: FADE_BAND_PT,
-            backgroundColor: `rgba(18,17,19,${alpha})`,
+            backgroundColor: tint(c.chrome, alpha),
           }}
         />
       ))}
@@ -100,6 +96,7 @@ const CoverBase: React.FC<{ progress: SharedValue<number>; top: number }> = ({ p
 
 const StatusBarScrim: React.FC<StatusBarScrimProps> = ({ coverProgress, overHero = false }) => {
   const insets = useSafeAreaInsets();
+  const header = useGlassHeader();
   if (overHero) {
     return (
       <View
@@ -144,7 +141,7 @@ const StatusBarScrim: React.FC<StatusBarScrimProps> = ({ coverProgress, overHero
         // degrades to a flat translucent fill, so this strip reads as the same
         // material on every platform instead of a black slab across the top of
         // Android.
-        backgroundColor: GLASS_HEADER_SCRIM,
+        backgroundColor: header.scrim,
         zIndex: 5,
       }}
     >
@@ -154,7 +151,7 @@ const StatusBarScrim: React.FC<StatusBarScrimProps> = ({ coverProgress, overHero
           iOS. */}
       {coverProgress ? <CoverBase progress={coverProgress} top={insets.top} /> : null}
       <GlassHeaderAndroidBackdrop />
-      <GlassPlate tint={GLASS_HEADER_TINT} />
+      <GlassPlate tint={header.tint} />
     </View>
   );
 };

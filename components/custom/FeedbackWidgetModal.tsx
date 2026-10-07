@@ -25,6 +25,7 @@ import { readSupportIdFromUser } from '@/lib/support-id';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useFeedbackStore, useFeedbackVisible } from '@/lib/stores/feedback-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { themedStyles } from '@/lib/theme/tokens';
 
 // Set the feedback identifier so a submitted report can be tied back to the
 // account that filed it. captureFeedback applies the current scope's user.
@@ -70,6 +71,7 @@ const FeedbackWidgetModal: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const { height: screenHeight } = useWindowDimensions();
+    const styles = useStyles();
     const visible = useFeedbackVisible();
     const hide = useFeedbackStore((s) => s.hide);
     // Set only by a report that carries something extra (the chat bug button).
@@ -208,13 +210,13 @@ const FeedbackWidgetModal: React.FC = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 16,
-        backgroundColor: 'rgba(0, 0, 0, 0.78)',
+        backgroundColor: c.scrim,
     },
     // Unpadded (the padding lives on `header` and `widgetContainer`), clipping
     // and radius-owning, so the gradient and the plate fill it edge to edge.
@@ -224,8 +226,8 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-        backgroundColor: 'rgb(18, 17, 19)',
+        borderColor: c.line,
+        backgroundColor: c.modalBase,
     },
     header: {
         flexDirection: 'row',
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
     attachmentNote: {
         paddingHorizontal: 20,
         paddingBottom: 4,
-        color: 'rgb(200, 200, 200)',
+        color: c.ink2,
         fontSize: 13,
         lineHeight: 18,
     },
@@ -266,6 +268,6 @@ const styles = StyleSheet.create({
     hiddenCancel: {
         display: 'none',
     },
-});
+}));
 
 export default FeedbackWidgetModal;

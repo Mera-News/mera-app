@@ -40,7 +40,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ visible, uri, onClo
             statusBarTranslucent
             onRequestClose={onClose}
         >
-            <GluestackUIProvider mode="dark">
+            <GluestackUIProvider>
                 {visible ? <PlayerContent uri={uri} onClose={onClose} /> : null}
             </GluestackUIProvider>
         </Modal>

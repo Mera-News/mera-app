@@ -3,11 +3,8 @@ import React from 'react';
 import { View, Pressable, ScrollView, ViewStyle } from 'react-native';
 // See the note in components/ui/modal/index.tsx on reaching into
 // components/custom for the app's shared material.
-import {
-  GLASS_EDGE,
-  GLASS_OVER_CONTENT_FILL,
-  TranslucentPlate,
-} from '@/components/custom/GlassSurface';
+import { GLASS_EDGE, TranslucentPlate } from '@/components/custom/GlassSurface';
+import { useColors } from '@/lib/theme/tokens';
 import {
   Motion,
   createMotionAnimatedComponent,
@@ -205,6 +202,7 @@ const PopoverContent = React.forwardRef<
   IPopoverContentProps
 >(function PopoverContent({ className, size, children, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
+  const c = useColors();
 
   return (
     <UIPopover.Content
@@ -230,7 +228,7 @@ const PopoverContent = React.forwardRef<
       })}
       pointerEvents="auto"
     >
-      <View className={POPOVER_SURFACE_CLASS} style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}>
+      <View className={POPOVER_SURFACE_CLASS} style={{ backgroundColor: c.chrome }}>
         <TranslucentPlate />
         <View
           className={popoverInnerStyle({

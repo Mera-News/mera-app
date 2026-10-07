@@ -9,6 +9,7 @@ import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import { getAppVersion, isVersionOlder } from '@/lib/version';
 import { releaseSplash } from '@/lib/splash-hold';
+import { useColors } from '@/lib/theme/tokens';
 
 type GateStatus = 'checking' | 'allowed' | 'blocked';
 
@@ -46,6 +47,7 @@ export default function NativeUpdateGate({ children }: { children: ReactNode }) 
     // Once blocked we never re-check — the screen stays static and no further
     // queries/state updates fire (the user can only resolve this by updating).
     const blockedRef = useRef(false);
+    const c = useColors();
 
     const checkVersion = useCallback(async () => {
         if (blockedRef.current) return;
@@ -117,8 +119,8 @@ export default function NativeUpdateGate({ children }: { children: ReactNode }) 
         // + svg animation for the few hundred ms of a version check would pull
         // that graph in ahead of the app itself. Not an oversight; don't "fix" it.
         return (
-            <View className="flex-1 bg-black items-center justify-center">
-                <ActivityIndicator size="small" color="#FFFFFF" />
+            <View className="flex-1 bg-page items-center justify-center">
+                <ActivityIndicator size="small" color={c.ink} />
             </View>
         );
     }

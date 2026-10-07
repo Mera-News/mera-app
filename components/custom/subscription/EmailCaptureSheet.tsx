@@ -10,7 +10,7 @@
  *
  * A full PAGE since 2026-08-19 (user call), not a dialog: a full-screen RN
  * Modal styled like the email/OTP login screens (TutorialModalHost's recipe —
- * overFullScreen + transparent, own dark GluestackUIProvider; NOT a route, so
+ * overFullScreen + transparent, own GluestackUIProvider; NOT a route, so
  * the promise-based checkout gate and the single host mount stay untouched).
  *
  * Exits and outcomes:
@@ -35,6 +35,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { useColors } from '@/lib/theme/tokens';
 import { HStack } from '@/components/ui/hstack';
 import { Input, InputField } from '@/components/ui/input';
 import { Pressable } from '@/components/ui/pressable';
@@ -73,6 +74,7 @@ interface EmailCaptureSheetProps {
 export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailCaptureSheetProps) {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const c = useColors();
     const [step, setStep] = useState<Step>('email');
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
@@ -255,7 +257,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
             onRequestClose={handleSheetClose}
             onDismiss={flushPendingOutcome}
         >
-            <GluestackUIProvider mode="dark">
+            <GluestackUIProvider>
                 {/* OPAQUE BASE, load-bearing: AbstractGradientBackdrop is
                     translucent everywhere (alpha-only blobs), and this modal
                     floats over a live logged-in tree — without the fill the
@@ -263,7 +265,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                     ConsentGate. */}
                 <View
                     testID="email-capture-backdrop-fill"
-                    style={[StyleSheet.absoluteFill, { backgroundColor: '#000000' }]}
+                    style={[StyleSheet.absoluteFill, { backgroundColor: c.base }]}
                 />
                 <AbstractGradientBackdrop />
 
@@ -284,10 +286,10 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'email' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-white font-semibold text-center">
+                                <Text size="2xl" className="text-ink font-semibold text-center">
                                     {t('emailCapture.title')}
                                 </Text>
-                                <Text size="md" className="text-gray-300 text-center">
+                                <Text size="md" className="text-ink text-center">
                                     {t('emailCapture.subtitle')}
                                 </Text>
                                 <Input size="lg" className="mt-2">
@@ -316,12 +318,12 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessible
                                     accessibilityRole="button"
                                     accessibilityLabel={t('emailCapture.continue')}
-                                    className={`h-14 rounded-full items-center justify-center ${busy ? 'bg-gray-700' : 'bg-primary-500'}`}
+                                    className={`h-14 rounded-full items-center justify-center ${busy ? 'bg-surface-raised' : 'bg-primary-500'}`}
                                 >
                                     {busy ? (
-                                        <Spinner size="small" color="black" />
+                                        <Spinner size="small" color={c.onAccent} />
                                     ) : (
-                                        <Text className="text-black text-base font-semibold">
+                                        <Text className="text-on-accent text-base font-semibold">
                                             {t('emailCapture.continue')}
                                         </Text>
                                     )}
@@ -351,7 +353,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('emailCapture.notNow')}
                                     className="py-2 items-center"
                                 >
-                                    <Text size="sm" className="text-gray-400">
+                                    <Text size="sm" className="text-ink-2">
                                         {t('emailCapture.notNow')}
                                     </Text>
                                 </Pressable>
@@ -360,12 +362,12 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'otp' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-white font-semibold text-center">
+                                <Text size="2xl" className="text-ink font-semibold text-center">
                                     {t('emailCapture.title')}
                                 </Text>
-                                <Text size="md" className="text-gray-300 text-center">
+                                <Text size="md" className="text-ink text-center">
                                     {t('auth.sentTo')}{' '}
-                                    <Text size="md" className="text-gray-300 font-bold">
+                                    <Text size="md" className="text-ink font-bold">
                                         {email.trim()}
                                     </Text>
                                 </Text>
@@ -415,12 +417,12 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessible
                                     accessibilityRole="button"
                                     accessibilityLabel={t('emailCapture.confirm')}
-                                    className={`h-14 rounded-full items-center justify-center ${otp.length === 6 && !busy ? 'bg-primary-500' : 'bg-gray-700'}`}
+                                    className={`h-14 rounded-full items-center justify-center ${otp.length === 6 && !busy ? 'bg-primary-500' : 'bg-surface-raised'}`}
                                 >
                                     {busy ? (
-                                        <Spinner size="small" color="black" />
+                                        <Spinner size="small" color={c.onAccent} />
                                     ) : (
-                                        <Text className="text-black text-base font-semibold">
+                                        <Text className="text-on-accent text-base font-semibold">
                                             {t('emailCapture.confirm')}
                                         </Text>
                                     )}
@@ -436,7 +438,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('common.back')}
                                     className="py-2 items-center"
                                 >
-                                    <Text size="sm" className="text-gray-400">
+                                    <Text size="sm" className="text-ink-2">
                                         {t('common.back')}
                                     </Text>
                                 </Pressable>
@@ -445,13 +447,13 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'skip-confirm' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-white font-semibold text-center">
+                                <Text size="2xl" className="text-ink font-semibold text-center">
                                     {t('emailCapture.skipTitle')}
                                 </Text>
-                                <Text size="md" className="text-gray-300 text-center">
+                                <Text size="md" className="text-ink text-center">
                                     {t('emailCapture.skipBody1')}
                                 </Text>
-                                <Text size="md" className="text-gray-300 text-center">
+                                <Text size="md" className="text-ink text-center">
                                     {t('emailCapture.skipBody2')}
                                 </Text>
 
@@ -460,11 +462,11 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                         <HStack
                                             accessible={false}
                                             space="md"
-                                            className="items-center border border-gray-700 rounded-full px-5 py-2.5"
+                                            className="items-center border border-line rounded-full px-5 py-2.5"
                                         >
                                             <Text
                                                 size="md"
-                                                className="text-white font-semibold"
+                                                className="text-ink font-semibold"
                                                 testID="email-capture-support-id"
                                             >
                                                 {t('support.supportId', { id: supportId })}
@@ -484,11 +486,11 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                                         {t('support.copied')}
                                                     </Text>
                                                 ) : (
-                                                    <MaterialIcons name="content-copy" size={18} color="#9ca3af" />
+                                                    <MaterialIcons name="content-copy" size={18} color={c.ink2} />
                                                 )}
                                             </Pressable>
                                         </HStack>
-                                        <Text size="xs" className="text-gray-500 text-center">
+                                        <Text size="xs" className="text-ink-3 text-center">
                                             {t('support.saveHint')}
                                         </Text>
                                     </VStack>
@@ -502,7 +504,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('emailCapture.skipConfirm')}
                                     className="h-14 rounded-full items-center justify-center bg-primary-500 mt-2"
                                 >
-                                    <Text className="text-black text-base font-semibold">
+                                    <Text className="text-on-accent text-base font-semibold">
                                         {t('emailCapture.skipConfirm')}
                                     </Text>
                                 </Pressable>
@@ -514,7 +516,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('common.back')}
                                     className="py-2 items-center"
                                 >
-                                    <Text size="sm" className="text-gray-400">
+                                    <Text size="sm" className="text-ink-2">
                                         {t('common.back')}
                                     </Text>
                                 </Pressable>
@@ -523,10 +525,10 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'done' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-white font-semibold text-center">
+                                <Text size="2xl" className="text-ink font-semibold text-center">
                                     {t('emailCapture.added')}
                                 </Text>
-                                <Text size="md" className="text-gray-300 text-center">
+                                <Text size="md" className="text-ink text-center">
                                     {t('emailCapture.addedDetail', { email: email.trim() })}
                                 </Text>
                                 <Pressable
@@ -537,7 +539,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('common.done')}
                                     className="h-14 rounded-full items-center justify-center bg-primary-500 mt-2"
                                 >
-                                    <Text className="text-black text-base font-semibold">
+                                    <Text className="text-on-accent text-base font-semibold">
                                         {t('common.done')}
                                     </Text>
                                 </Pressable>

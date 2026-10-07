@@ -70,11 +70,10 @@ import logger from '@/lib/logger';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { isFeedbackRequestId } from '@/lib/stores/pending-notification-route';
 import { useUserStore } from '@/lib/stores/user-store';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { consentBlocksFeedbackRequest } from './feedback-request-consent';
 
-const ACCENT = '#EDA77E';
 const CLOSE_RED = '#ef4444'; // same close affordance as FeedbackWidgetModal
-const SECONDARY = 'rgb(190,190,190)';
 /** The counter appears once the answer is this close to the limit. */
 const COUNTER_FROM = FEEDBACK_RESPONSE_MAX_CHARS - 200;
 
@@ -102,6 +101,7 @@ const FeedbackRequestModal: React.FC<FeedbackRequestModalProps> = ({ id, onClose
     // and the persisted id is still the signed-in account.
     const localUserId = useUserStore((s) => s.userId);
     const userId = session?.user?.id ?? localUserId ?? null;
+    const styles = useStyles();
     const sessionUser = session?.user as ConsentSessionUser | undefined;
     const [consent, setConsent] = useState<ConsentPhase>('checking');
 
@@ -145,6 +145,8 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const { height: screenHeight } = useWindowDimensions();
+    const styles = useStyles();
+    const c = useColors();
     const [phase, setPhase] = useState<Phase>({ kind: 'loading' });
     const [question, setQuestion] = useState<string | null>(null);
     const [answer, setAnswer] = useState('');
@@ -276,7 +278,7 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                 <View style={styles.header}>
                     <View style={styles.headerTitle}>
                         <MeraLogo size={30} />
-                        <Text size="md" bold className="text-white flex-1" accessibilityRole="header">
+                        <Text size="md" bold className="text-ink flex-1" accessibilityRole="header">
                             {t('feedbackRequest.title')}
                         </Text>
                     </View>
@@ -300,14 +302,14 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                     {phase.kind === 'loading' ? (
                         <ActivityIndicator
                             testID="feedback-request-loading"
-                            color={ACCENT}
+                            color={c.accentMark}
                             style={styles.spinner}
                             accessibilityLabel={t('common.loading')}
                         />
                     ) : null}
 
                     {question && phase.kind !== 'loading' && phase.kind !== 'load-error' ? (
-                        <Text testID="feedback-request-question" size="lg" className="text-white">
+                        <Text testID="feedback-request-question" size="lg" className="text-ink">
                             {question}
                         </Text>
                     ) : null}
@@ -326,7 +328,7 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                                     textAlignVertical="top"
                                     maxLength={FEEDBACK_RESPONSE_MAX_CHARS}
                                     editable={!submitting}
-                                    className="py-3 text-white"
+                                    className="py-3 text-ink"
                                 />
                             </Input>
                             {answer.length >= COUNTER_FROM ? (
@@ -361,7 +363,7 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                                 style={[styles.primaryButton, !canSubmit && styles.buttonDisabled]}
                             >
                                 {submitting ? (
-                                    <ActivityIndicator color="#000" />
+                                    <ActivityIndicator color={c.onAccent} />
                                 ) : (
                                     <Text size="md" bold style={styles.primaryButtonText}>
                                         {t('feedbackRequest.submit')}
@@ -415,13 +417,13 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 16,
-        backgroundColor: 'rgba(0, 0, 0, 0.78)',
+        backgroundColor: c.scrim,
     },
     card: {
         width: '100%',
@@ -429,8 +431,8 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-        backgroundColor: 'rgb(18, 17, 19)',
+        borderColor: c.line,
+        backgroundColor: c.modalBase,
     },
     header: {
         flexDirection: 'row',
@@ -464,17 +466,17 @@ const styles = StyleSheet.create({
         marginVertical: 24,
     },
     counter: {
-        color: SECONDARY,
+        color: c.ink2,
         textAlign: 'right',
         marginTop: 6,
     },
     disclaimer: {
-        color: SECONDARY,
+        color: c.ink2,
         marginTop: 12,
         lineHeight: 18,
     },
     message: {
-        color: 'rgb(220,220,220)',
+        color: c.ink,
         marginTop: 12,
         lineHeight: 22,
     },
@@ -486,7 +488,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         paddingHorizontal: 20,
         paddingVertical: 12,
-        backgroundColor: ACCENT,
+        backgroundColor: c.accent,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -494,9 +496,9 @@ const styles = StyleSheet.create({
         opacity: 0.4,
     },
     primaryButtonText: {
-        color: '#000',
+        color: c.onAccent,
         textAlign: 'center',
     },
-});
+}));
 
 export default FeedbackRequestModal;

@@ -95,7 +95,7 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ compact = false }) =>
             <Text
                 testID="all-caught-up-headline"
                 size={compact ? 'lg' : 'xl'}
-                className={`text-white text-center font-semibold ${compact ? 'mb-2' : 'mb-4'}`}
+                className={`text-ink text-center font-semibold ${compact ? 'mb-2' : 'mb-4'}`}
             >
                 {t('feed.allCaughtUp')}
             </Text>
@@ -103,7 +103,7 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ compact = false }) =>
             {/* Cycling mindfulness message — the "put the phone down" nudge. */}
             <Text
                 size={compact ? 'sm' : 'md'}
-                className="text-gray-400 text-center"
+                className="text-ink-2 text-center"
             >
                 {messages[currentIndex]}
             </Text>
@@ -129,8 +129,8 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ compact = false }) =>
             <Box
                 className={
                     CARDS_USE_GLASS
-                        ? 'rounded-2xl overflow-hidden border border-white/10'
-                        : 'rounded-2xl overflow-hidden bg-background-0 border border-white/10'
+                        ? 'rounded-2xl overflow-hidden border border-line'
+                        : 'rounded-2xl overflow-hidden bg-background-0 border border-line'
                 }
             >
                 <CardGlassPlate />

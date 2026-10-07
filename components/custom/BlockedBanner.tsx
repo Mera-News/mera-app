@@ -4,6 +4,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { useSupportAction } from '@/lib/intercom';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,16 +16,18 @@ interface BlockedBannerProps {
 const BlockedBanner: React.FC<BlockedBannerProps> = ({ reason }) => {
     const { t } = useTranslation();
     const { busy: supportBusy, openSupport } = useSupportAction();
+    const c = useColors();
+    const light = useThemeMode() === 'light';
 
     return (
-        <Box className="mx-4 my-2 p-4 rounded-xl bg-red-900/30 border border-red-800/50">
+        <Box className={`mx-4 my-2 p-4 rounded-xl border ${light ? 'bg-red-50 border-red-200' : 'bg-red-900/30 border-red-800/50'}`}>
             <HStack className="items-center" space="sm">
-                <MaterialIcons name="block" size={20} color="#F87171" />
+                <MaterialIcons name="block" size={20} color={c.negative} />
                 <Box className="flex-1">
-                    <Text className="text-red-400 font-semibold" size="sm">
+                    <Text className="text-negative font-semibold" size="sm">
                         {t('errors.accountRestricted')}
                     </Text>
-                    <Text className="text-red-300/80 mt-1" size="xs">
+                    <Text className={`mt-1 ${light ? 'text-ink-2' : 'text-red-300/80'}`} size="xs">
                         {reason || t('errors.accountRestrictedDescription')}
                     </Text>
 
@@ -62,7 +65,7 @@ const BlockedBanner: React.FC<BlockedBannerProps> = ({ reason }) => {
                         {supportBusy ? (
                             <Spinner size="small" />
                         ) : (
-                            <Text className="text-red-300 font-medium" size="xs">
+                            <Text className={`font-medium ${light ? 'text-negative' : 'text-red-300'}`} size="xs">
                                 {t('errors.accountRestrictedContact')}
                             </Text>
                         )}

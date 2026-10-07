@@ -3,6 +3,8 @@ import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import React from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { tint as alpha, useColors, useThemeMode, type ThemeMode } from '@/lib/theme/tokens';
+
 /**
  * The app's shared Liquid Glass primitives — one place to tune how glass looks
  * across cards, headers, and list rows.
@@ -24,7 +26,7 @@ import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'reac
  *
  * Glass refracts what is BEHIND it. This app is dark-mode only, and behind most
  * chrome is near-black, so untinted glass renders as black and the surface
- * dissolves into the page. The faint white lift in `GLASS_TINT` restores a
+ * dissolves into the page. The faint white lift in the default tint restores a
  * readable surface tone while still letting the animated backdrop
  * (`AbstractGradientBackdrop`) and any scrolling content show through.
  */
@@ -49,8 +51,8 @@ import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'reac
  */
 export const GLASS_AVAILABLE = isLiquidGlassAvailable();
 
-/** The default tint, used by cards and list rows. */
-const GLASS_TINT = 'rgba(255,255,255,0.10)';
+/** The default tint, used by cards and list rows: ink at 10%. */
+const glassTint = (ink: string) => alpha(ink, 0.1);
 
 /**
  * Denser tint for headers, plus the scrim that goes with it.
@@ -58,13 +60,29 @@ const GLASS_TINT = 'rgba(255,255,255,0.10)';
  * A header is the one glass surface with content moving underneath it at speed,
  * and it carries the smallest text in the app. At the card tint its titles were
  * hard to read against whatever happened to be scrolling past. These two work as
- * a pair: `GLASS_HEADER_SCRIM` is a translucent dark layer painted BEHIND the
+ * a pair: the header scrim is a translucent dark layer painted BEHIND the
  * plate, which is what the glass then samples — that is what actually reduces
  * see-through, since raising the white tint alone just washes the header out and
  * makes light text worse. The stronger tint then lifts the surface back up.
  */
-export const GLASS_HEADER_TINT = 'rgba(255,255,255,0.16)';
-export const GLASS_HEADER_SCRIM = 'rgba(0,0,0,0.42)';
+const GLASS_HEADER: Record<ThemeMode, { tint: string; scrim: string; androidGradient: string }> = {
+  dark: {
+    tint: 'rgba(255,255,255,0.16)',
+    scrim: 'rgba(0,0,0,0.42)',
+    androidGradient:
+      'linear-gradient(180deg, rgba(8,8,10,0.95) 0%, rgba(8,8,10,0.88) 55%, rgba(8,8,10,0.68) 100%)',
+  },
+  // ponytail: light mirrors dark with a white scrim, not yet tuned on device.
+  light: {
+    tint: 'rgba(255,255,255,0.16)',
+    scrim: 'rgba(255,255,255,0.46)',
+    androidGradient:
+      'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.88) 55%, rgba(255,255,255,0.68) 100%)',
+  },
+};
+
+/** The header tint and scrim for the current theme. */
+export const useGlassHeader = () => GLASS_HEADER[useThemeMode()];
 
 /**
  * Android-only opaque-ish gradient that stands in for the missing blur behind
@@ -74,12 +92,12 @@ export const GLASS_HEADER_SCRIM = 'rgba(0,0,0,0.42)';
  *
  * `GlassPlate`'s non-glass branch (below) is a flat 16% white fill with no
  * blur — there is no `UIVisualEffectView` off iOS 26, so nothing diffuses
- * what's behind it. Composited with `GLASS_HEADER_SCRIM`, transmission works
+ * what's behind it. Composited with the header scrim, transmission works
  * out to `(1 − 0.42) × (1 − 0.16) ≈ 0.49`: on Android roughly half of
  * whatever is scrolling behind a header shows straight through it, which
  * reads as a bug rather than "frosted." On iOS 26 the identical two numbers
  * sit under real glass, so the see-through is diffused and reads as
- * intentional. Raising `GLASS_HEADER_SCRIM` itself would fix Android but
+ * intentional. Raising the header scrim itself would fix Android but
  * also darken the iOS 26 glass sample, so the fix is a layer that renders on
  * Android alone.
  *
@@ -94,9 +112,6 @@ export const GLASS_HEADER_SCRIM = 'rgba(0,0,0,0.42)';
  * NativeWind 4.2.1 emits nothing at all for gradient classes, so a Tailwind
  * gradient class would silently do nothing.
  */
-export const GLASS_HEADER_ANDROID_GRADIENT =
-  'linear-gradient(180deg, rgba(8,8,10,0.95) 0%, rgba(8,8,10,0.88) 55%, rgba(8,8,10,0.68) 100%)';
-
 /** True only on Android — mirrors `AbstractGradientBackdrop.tsx`'s
  *  `ANDROID_STATIC_CSS`, resolved once at module load so nothing downstream
  *  branches on the platform. */
@@ -110,32 +125,30 @@ const IS_ANDROID = Platform.OS === 'android';
  * centralising this in one file is that the five sites cannot drift apart.
  *
  * MUST be mounted BEFORE `GlassPlate`, not after: this layer is meant to cut
- * the see-through the same way `GLASS_HEADER_SCRIM` does on iOS 26 — behind
+ * the see-through the same way the header scrim does on iOS 26 — behind
  * the plate, which then lifts it back to a readable surface tone with
- * `GLASS_HEADER_TINT`. Mounting it after `GlassPlate` would paint a
+ * the header tint. Mounting it after `GlassPlate` would paint a
  * near-opaque layer OVER that 16% white lift and cancel it, producing exactly
  * the flat near-black slab this file's own history (see `GlassPlate`'s doc
  * comment) already identifies as the wrong Android fallback.
  */
-export const GlassHeaderAndroidBackdrop: React.FC = () =>
-  IS_ANDROID ? (
+export const GlassHeaderAndroidBackdrop: React.FC = () => {
+  const { androidGradient } = useGlassHeader();
+  return IS_ANDROID ? (
     <View
       pointerEvents="none"
       style={[
         StyleSheet.absoluteFill,
-        { experimental_backgroundImage: GLASS_HEADER_ANDROID_GRADIENT } as unknown as ViewStyle,
+        { experimental_backgroundImage: androidGradient } as unknown as ViewStyle,
       ]}
     />
   ) : null;
-
-/** Fill for `TranslucentPlate`. Matches the default glass tint's lift so a
- *  content surface and a chrome surface read as the same material. */
-const TRANSLUCENT_FILL = 'rgba(255,255,255,0.07)';
+};
 
 /** Hairline edge that gives a glass surface a defined boundary. Glass alone has
  *  no outline against a dark page, so without this the surface reads as a smudge
  *  rather than a panel. */
-export const GLASS_EDGE = 'border border-white/10';
+export const GLASS_EDGE = 'border border-line';
 
 /**
  * Base fill for a translucent surface that sits over ARBITRARY APP CONTENT
@@ -149,7 +162,7 @@ export const GLASS_EDGE = 'border border-white/10';
  * or a bottom sheet is over headlines, photographs and chips.
  *
  * Measured on device, not guessed: with only the 0.78 scrim and
- * `TRANSLUCENT_FILL`'s white lift, a Feed-status modal over the Dashboard had
+ * `TranslucentPlate`'s lift, a Feed-status modal over the Dashboard had
  * article headlines and a face legible straight through the panel, colliding
  * with the modal's own labels. A scrim alone cannot fix it — it would have to
  * go near-opaque, and then the whole screen is black rather than the panel
@@ -168,7 +181,7 @@ export const GLASS_EDGE = 'border border-white/10';
  * blocks behind are still visible, which is what keeps it a surface rather than
  * a slab. Anything at or above ~0.94 is an opaque panel with extra steps.
  */
-export const GLASS_OVER_CONTENT_FILL = 'rgba(18,17,19,0.90)';
+// The value is the `chrome` token (lib/theme/tokens.ts); read it with useColors().chrome.
 
 /**
  * ONE SURFACE KIND CAN NEVER TAKE ANY OF THIS: a `react-native` Modal opened
@@ -216,9 +229,12 @@ export const GLASS_OVER_CONTENT_FILL = 'rgba(18,17,19,0.90)';
  * a rounded fill too.)
  */
 export const GlassPlate: React.FC<{ tint?: string; style?: StyleProp<ViewStyle> }> = ({
-  tint = GLASS_TINT,
+  tint,
   style,
 }) => {
+  const c = useColors();
+  const mode = useThemeMode();
+  tint ??= glassTint(c.ink);
   if (!GLASS_AVAILABLE) {
     return (
       <View
@@ -232,9 +248,8 @@ export const GlassPlate: React.FC<{ tint?: string; style?: StyleProp<ViewStyle> 
     <GlassView
       // `regular` over `clear`: on a near-black page `clear` is nearly invisible.
       glassEffectStyle="regular"
-      // The app has no theme toggle — it is always dark — so pin the glass
-      // rather than letting it follow the system appearance.
-      colorScheme="dark"
+      // The app's theme, never the system appearance.
+      colorScheme={mode}
       tintColor={tint}
       style={[StyleSheet.absoluteFill, style]}
       // Purely decorative: never intercept a tap meant for the surface.
@@ -266,9 +281,11 @@ export const GlassPlate: React.FC<{ tint?: string; style?: StyleProp<ViewStyle> 
  * everywhere, with no iOS 26 gate, because it is just a background colour.
  */
 export const TranslucentPlate: React.FC<{ style?: StyleProp<ViewStyle> }> = ({ style }) => (
+  // The `surface` token: the same lift as the default glass tint, so a content
+  // surface and a chrome surface read as the same material.
   <View
     pointerEvents="none"
-    style={[StyleSheet.absoluteFill, { backgroundColor: TRANSLUCENT_FILL }, style]}
+    style={[StyleSheet.absoluteFill, { backgroundColor: useColors().surface }, style]}
   />
 );
 

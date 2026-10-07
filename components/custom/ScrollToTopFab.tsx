@@ -1,4 +1,5 @@
-import { GLASS_OVER_CONTENT_FILL, GlassPlate } from '@/components/custom/GlassSurface';
+import { GlassPlate } from '@/components/custom/GlassSurface';
+import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -35,6 +36,7 @@ const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({
     bottomInset,
 }) => {
     const insets = useSafeAreaInsets();
+    const c = useColors();
 
     if (!visible) return null;
 
@@ -58,10 +60,10 @@ const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({
             <View
                 testID="feed-scroll-top-fab-base"
                 pointerEvents="none"
-                style={[StyleSheet.absoluteFill, styles.base]}
+                style={[StyleSheet.absoluteFill, styles.base, { backgroundColor: c.chrome }]}
             />
             <GlassPlate style={{ borderRadius: FAB_RADIUS }} />
-            <MaterialIcons name="keyboard-arrow-up" size={28} color="#e5e7eb" />
+            <MaterialIcons name="keyboard-arrow-up" size={28} color={c.ink} />
         </AnimatedPressable>
     );
 };
@@ -85,7 +87,6 @@ const styles = StyleSheet.create({
     },
     base: {
         borderRadius: FAB_RADIUS,
-        backgroundColor: GLASS_OVER_CONTENT_FILL,
     },
 });
 

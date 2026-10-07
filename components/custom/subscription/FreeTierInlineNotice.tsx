@@ -7,6 +7,7 @@ import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-pay
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 
 export type FreeTierNoticeSurface = 'stories-header';
 
@@ -45,6 +46,7 @@ const FreeTierInlineNotice: React.FC<FreeTierInlineNoticeProps> = ({
 }) => {
     const { t } = useTranslation();
     const aiAccess = useAiAccess();
+    const c = useColors();
 
     const handleSeePlans = useCallback(async () => {
         if (onSeePlans) {
@@ -60,16 +62,16 @@ const FreeTierInlineNotice: React.FC<FreeTierInlineNoticeProps> = ({
         <HStack
             testID={`free-tier-notice-${surface}`}
             space="sm"
-            className="items-start px-4 py-3 rounded-xl border border-white/10 bg-white/5"
+            className="items-start px-4 py-3 rounded-xl border border-line bg-surface"
         >
             <MaterialIcons
                 name="auto-awesome"
                 size={18}
-                color="rgb(231, 138, 83)"
+                color={c.accentMark}
                 style={{ marginTop: 2 }}
             />
             <VStack space="xs" className="flex-1">
-                <Text size="sm" className="text-gray-300">
+                <Text size="sm" className="text-ink">
                     {t(NOTICE_KEY[surface])}
                 </Text>
                 <Pressable onPress={handleSeePlans} hitSlop={8}>

@@ -13,6 +13,7 @@ import type { FeedbackTree, FeedbackTreeNode } from '@/lib/news-harness/feedback
 import type { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 
 export interface FeedbackTreeLevelProps {
     /** The loaded tree. The host resolves it (and the context) BEFORE pushing
@@ -51,6 +52,7 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
 }) => {
     const { t } = useTranslation();
     const c = useChrome();
+    const colors = useColors();
     // Synchronous: the level's rows are final on its first render.
     const { nodes: currentChildren, hasVisibleChildren } = resolveTreeLevel(tree, root, pathIds, context);
 
@@ -84,7 +86,7 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
     const atRoot = pathIds.length === 0;
     // D15: said at the tree's root only, and gone once the reader goes deeper.
     const caption = atRoot ? (
-        <Text testID="feedback-caption" size="2xs" className="px-4 pt-1" style={{ color: 'rgb(163,163,163)' }}>
+        <Text testID="feedback-caption" size="2xs" className="px-4 pt-1" style={{ color: colors.ink2 }}>
             {t('swipeFeed.feedbackCaption')}
         </Text>
     ) : null;
@@ -94,7 +96,7 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
             {currentChildren.length > 0 ? (
                 currentChildren.map(rowFor)
             ) : (
-                <Text className="text-center py-4" style={{ color: 'rgb(163,163,163)' }}>
+                <Text className="text-center py-4" style={{ color: colors.ink2 }}>
                     {c('empty', 'No options here')}
                 </Text>
             )}
