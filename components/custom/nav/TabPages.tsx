@@ -225,7 +225,7 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
         // box-none: the header must not swallow a pull-to-refresh that starts
         // under it; only its controls take touches.
         pointerEvents="box-none"
-        style={[styles.header, { backgroundColor: colors.modalBase, borderBottomColor: colors.line }, headerStyle]}
+        style={[styles.header, { backgroundColor: colors.chrome, borderBottomColor: colors.line }, headerStyle]}
       >
         {/* Symmetric sides, so a segmented track centres on the SCREEN. */}
         <View pointerEvents="box-none" style={{ paddingTop: insets.top + 6, paddingBottom: 6, paddingHorizontal: HEADER_SIDE_PAD }}>
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-    // The theme's modal base (near black / white) over the content, not a
+    // The theme's translucent chrome over the content (board .hdr), not a
     // glass plate: a white tint over the header read as a grey slab.
     borderBottomWidth: StyleSheet.hairlineWidth,
   },

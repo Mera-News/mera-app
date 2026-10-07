@@ -23,7 +23,7 @@ import { Text } from '@/components/ui/text';
 import { hapticLight } from '@/lib/haptics';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { tint } from '@/lib/theme/tint';
-import { useColors, type ThemeColors } from '@/lib/theme/tokens';
+import { useColors, useThemeMode, type ThemeColors, type ThemeMode } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -71,9 +71,10 @@ const GLOW_PERIOD_MS = 1600;
 export const PILL_BORDER_WIDTH = 1.5;
 
 /** The overlay's theme colours, by part (layout stays in `styles`). */
-function inks(c: ThemeColors) {
+function inks(c: ThemeColors, mode: ThemeMode) {
   return {
-    dim: { backgroundColor: c.scrim },
+    // The light board dims far less than a sheet's scrim.
+    dim: { backgroundColor: mode === 'light' ? tint('#000', 0.28) : c.scrim },
     panel: { backgroundColor: c.modalBase, borderBottomColor: c.line },
     roundCancel: { backgroundColor: c.glass, borderColor: c.trackBorder },
     roundSave: { backgroundColor: c.accent, borderColor: c.accent },
@@ -252,7 +253,8 @@ const ArrangeChip: React.FC<ChipProps> = ({
 const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrange, initialLiftedId, onClose }) => {
   const { t } = useTranslation();
   const colors = useColors();
-  const ink = useMemo(() => inks(colors), [colors]);
+  const mode = useThemeMode();
+  const ink = useMemo(() => inks(colors, mode), [colors, mode]);
   const insets = useSafeAreaInsets();
   const rtl = I18nManager.isRTL;
   const reduceMotion = useReducedMotion();
