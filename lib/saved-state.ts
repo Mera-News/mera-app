@@ -68,6 +68,19 @@ export function useSavedOverride(id: string): boolean | undefined {
   );
 }
 
+/**
+ * How many of `ids` are still saved, reactive. Saved's "N saved" count, so it
+ * drops the moment a row is removed from the ••• menu. A number, so the
+ * snapshot is stable.
+ */
+export function useSavedCount(ids: readonly string[]): number {
+  return useSyncExternalStore(
+    subscribe,
+    () => ids.reduce((n, id) => (overrides.get(id) === false ? n : n + 1), 0),
+    () => ids.length,
+  );
+}
+
 /** Test-only reset — the map is module state and would leak across cases. */
 export function __resetSavedStateForTests(): void {
   overrides.clear();

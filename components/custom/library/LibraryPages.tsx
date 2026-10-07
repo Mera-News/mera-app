@@ -43,7 +43,7 @@ export function LibraryPages() {
                             headerHeight={header.headerHeight}
                             hidden={header.hidden}
                             listEndPadding={listEnd}
-                            footer={footer}
+                            onExplain={header.openExplainer}
                         />
                     );
                 case 'checks':
