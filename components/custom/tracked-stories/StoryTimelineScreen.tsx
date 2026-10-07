@@ -1,5 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
+import { ActionSheetRow } from '@/components/custom/cards/ArticleOverflowMenu';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import type { ExportFormat } from '@/components/custom/saved-suggestions/export-and-share';
 import ExportWizardModal, {
@@ -8,18 +8,10 @@ import ExportWizardModal, {
 } from '@/components/custom/saved-suggestions/ExportWizardModal';
 import { getLocalizedLanguageName } from '@/lib/language-names';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Heading } from '@/components/ui/heading';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { HStack } from '@/components/ui/hstack';
-import {
-    Modal,
-    ModalBackdrop,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-} from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -34,8 +26,9 @@ import {
     markSeen,
     type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
-import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight } from '@/lib/haptics';
+import { calendarDaysAgo, formatDayMonth } from '@/lib/stats/visited-publications';
+import { useColors } from '@/lib/theme/tokens';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { exportDay } from '@/lib/saved-articles-export';
 import {
@@ -56,6 +49,9 @@ import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
+/** A 44pt header button, numeric (never hitSlop). */
+const HEADER_BUTTON = { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' } as const;
+
 /** Pull-to-refresh spinner tint — matches FeedScreen's. */
 const REFRESH_TINT = '#EDA77E';
 
@@ -63,6 +59,10 @@ interface StoryTimelineScreenProps {
     trackedStoryId: string;
     onBack: () => void;
 }
+
+/** The list: a date heading over each day's coverage, even for one item
+ *  (FinalRead #16). Export reads `cards`, never these rows. */
+type TimelineRow = { kind: 'day'; key: string; label: string } | { kind: 'card'; card: TimelineCard };
 
 /** Cap on the quota-free per-article title lookups fired to backfill blank-title
  *  cards from pre-fix archives (Part E stopgap). */
@@ -139,6 +139,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const { t, i18n } = useTranslation();
     const appLanguage = i18n?.language ?? 'en';
     const insets = useSafeAreaInsets();
+    const colors = useColors();
     const [headline, setHeadline] = useState<string>('');
     // EU AI Act Art. 50 transparency label (Group C1) — tracked separately from
     // `headline` because that state merges `llmHeadline ?? fallbackTitle` into
@@ -153,6 +154,10 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     // that threw and a story deleted elsewhere both used to show the quiet
     // "no new coverage" note, which reads as a working story with nothing new.
     const [emptyReason, setEmptyReason] = useState<'quiet' | 'load-failed' | 'gone'>('quiet');
+    const [followedSinceMs, setFollowedSinceMs] = useState<number | null>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
+    // Stop following was picked: its confirm opens once the sheet has gone.
+    const stopPicked = useRef(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
     // The card the user long-pressed and is being asked about. Holding the CARD
     // (not just its id) keeps the confirm addressable after the list re-renders.
@@ -244,6 +249,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 setEmptyReason('quiet');
                 setHeadline(story.llmHeadline ?? story.fallbackTitle ?? '');
                 setIsLlmHeadline(!!story.llmHeadline);
+                setFollowedSinceMs(story.createdAt ? story.createdAt.getTime() : null);
 
                 const localSnapshots = story.memberSnapshots ?? [];
                 setStableClusterId(story.stableClusterId ?? null);
@@ -387,8 +393,31 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         toastManager.showError(t('savedExport.failedTitle'), t('savedExport.failedMessage'));
     }, [t]);
 
-    const renderItem: ListRenderItem<TimelineCard> = useCallback(
-        ({ item }) => {
+    const rows = useMemo<TimelineRow[]>(() => {
+        const now = Date.now();
+        const out: TimelineRow[] = [];
+        let lastLabel = '';
+        cards.forEach((card, i) => {
+            if (card.pubDateMs) {
+                const days = calendarDaysAgo(card.pubDateMs, now);
+                const label =
+                    days <= 0
+                        ? t('common.today')
+                        : days === 1
+                          ? t('common.yesterday')
+                          : formatDayMonth(card.pubDateMs, appLanguage);
+                if (label !== lastLabel) {
+                    out.push({ kind: 'day', key: `day-${i}-${label}`, label });
+                    lastLabel = label;
+                }
+            }
+            out.push({ kind: 'card', card });
+        });
+        return out;
+    }, [cards, t, appLanguage]);
+
+    const renderCard = useCallback(
+        (item: TimelineCard) => {
             const article = timelineCardToArticle(item);
             const askRemove = () => {
                 hapticLight();
@@ -422,9 +451,36 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         [handleArticlePress, stableClusterId, t],
     );
 
+    const renderItem: ListRenderItem<TimelineRow> = useCallback(
+        ({ item }) =>
+            item.kind === 'day' ? (
+                <Text
+                    accessibilityRole="header"
+                    style={{ color: colors.ink3, fontSize: 13, fontWeight: '600', marginTop: 8, marginBottom: 8 }}
+                >
+                    {item.label}
+                </Text>
+            ) : (
+                renderCard(item.card)
+            ),
+        [renderCard, colors.ink3],
+    );
+
     const keyExtractor = useCallback(
-        (item: TimelineCard, index: number) => item.articleId || `snap-${index}`,
+        (item: TimelineRow, index: number) =>
+            item.kind === 'day' ? item.key : item.card.articleId || `snap-${index}`,
         [],
+    );
+
+    // What comes next (FinalRead #16): under the coverage, and on its own
+    // when there is none yet.
+    const nextNote = (
+        <HStack className="items-center px-1 py-4" space="sm" testID="story-timeline-next">
+            <MaterialIcons name="history" size={18} color={colors.ink3} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            <Text size="sm" style={{ color: colors.ink3, flex: 1 }}>
+                {t('trackedStories.nextNote')}
+            </Text>
+        </HStack>
     );
 
     const ListEmpty = isLoading ? (
@@ -432,12 +488,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
             <Spinner size="large" />
         </Box>
     ) : emptyReason === 'quiet' ? (
-        <Box className="items-center justify-center py-20 px-8">
-            <MaterialIcons name="hourglass-empty" size={40} color="#6B7280" />
-            <Text size="sm" className="text-typography-400 text-center mt-4">
-                {t('trackedStories.timelineQuietNote')}
-            </Text>
-        </Box>
+        nextNote
     ) : (
         <Box className="items-center justify-center py-20 px-8" testID={`story-timeline-${emptyReason}`}>
             <MaterialIcons name="error-outline" size={40} color="#9CA3AF" />
@@ -462,10 +513,9 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                         onPress={onBack}
                         accessibilityRole="button"
                         accessibilityLabel={t('common.back')}
-                        hitSlop={8}
-                        className="p-2"
+                        style={HEADER_BUTTON}
                     >
-                        <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                        <MaterialIcons name="arrow-back" size={24} color={colors.ink} />
                     </Pressable>
                     <Box className="flex-1 min-w-0 pr-3">
                         {!!headline && (
@@ -477,22 +527,22 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                 className="text-white"
                             />
                         )}
-                        {/* Short copy — see TrackedStoriesScreen: this is a followed-
-                            story heading, and the header box is a narrow flex-1 slot
-                            between the back and delete buttons.
-
-                            `align="left"` so the caption sits flush under the START of
-                            the title rather than drifting to the far right of the
-                            header slot. The title is left-aligned; a right-hugging
-                            caption read as belonging to the delete button beside it
-                            instead of to the heading it discloses. */}
-                        {isLlmHeadline && (
-                            <AiDisclosureCaption
-                                variant="compact"
-                                text={t('aiDisclosure.short')}
-                                align="left"
-                            />
-                        )}
+                        {/* Followed since, and the AI disclosure when the
+                            headline is Mera's (EU AI Act Art. 50): one line. */}
+                        {followedSinceMs || isLlmHeadline ? (
+                            <Text size="xs" numberOfLines={1} style={{ color: colors.ink3, marginTop: 2 }}>
+                                {[
+                                    followedSinceMs
+                                        ? t('trackedStories.followedSince', {
+                                              date: formatDayMonth(followedSinceMs, appLanguage),
+                                          })
+                                        : null,
+                                    isLlmHeadline ? t('trackedStories.headlinesByMera') : null,
+                                ]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                            </Text>
+                        ) : null}
                     </Box>
                     {/* Export. Hidden until there is something to export, so
                         it never opens an empty wizard. */}
@@ -502,98 +552,72 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                             onPress={() => setExportOpen(true)}
                             accessibilityRole="button"
                             accessibilityLabel={t('storyExport.shareA11y')}
-                            hitSlop={8}
-                            className="p-2"
+                            style={HEADER_BUTTON}
                         >
-                            <MaterialIcons name="ios-share" size={24} color="#ffffff" />
+                            <MaterialIcons name="ios-share" size={24} color={colors.ink} />
                         </Pressable>
                     )}
-                    {/* Delete is the ONLY way to stop following a story (Q13):
-                        the track button no longer untracks, because doing so
-                        destroys everything saved here. Hence the confirm. */}
+                    {/* Stopping is the ONLY way to unfollow a story (Q13): it
+                        destroys everything saved here, hence the confirm. */}
                     <Pressable
-                        testID="story-timeline-delete"
-                        onPress={() => setConfirmDelete(true)}
+                        testID="story-timeline-more"
+                        onPress={() => setMenuOpen(true)}
                         accessibilityRole="button"
-                        accessibilityLabel={t('trackedStories.deleteStoryAction')}
-                        hitSlop={8}
-                        className="p-2"
+                        accessibilityLabel={t('articleMenu.openA11y')}
+                        style={HEADER_BUTTON}
                     >
-                        <MaterialIcons name="delete-outline" size={24} color="#ffffff" />
+                        <MaterialIcons name="more-horiz" size={24} color={colors.ink} />
                     </Pressable>
                 </HStack>
             </VStack>
 
-            {/* Delete confirmation — the same Gluestack Modal pattern the Saved
-                list's delete uses. */}
-            <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)}>
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader>
-                        <Heading size="lg" className="text-white">
-                            {t('trackedStories.deleteStoryConfirmTitle')}
-                        </Heading>
-                    </ModalHeader>
-                    <ModalBody>
-                        <Text size="sm" className="text-typography-300">
-                            {t('trackedStories.deleteStoryConfirmBody')}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button
-                            variant="outline"
-                            action="secondary"
-                            onPress={() => setConfirmDelete(false)}
-                            className="mr-3"
-                        >
-                            <ButtonText>{t('common.cancel')}</ButtonText>
-                        </Button>
-                        <Button
-                            action="negative"
-                            onPress={handleConfirmDelete}
-                            testID="story-timeline-delete-confirm"
-                        >
-                            <ButtonText>{t('trackedStories.deleteStoryAction')}</ButtonText>
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <BottomSheet
+                open={menuOpen}
+                onClose={() => setMenuOpen(false)}
+                // The confirm opens once the sheet has fully gone: iOS refuses
+                // a second modal over one still leaving.
+                onClosed={() => {
+                    if (!stopPicked.current) return;
+                    stopPicked.current = false;
+                    setConfirmDelete(true);
+                }}
+                testID="story-timeline-menu"
+            >
+                <ActionSheetRow
+                    testID="story-timeline-stop"
+                    label={t('trackedStories.stopFollowing')}
+                    icon="remove-circle-outline"
+                    destructive
+                    onPress={() => {
+                        stopPicked.current = true;
+                        setMenuOpen(false);
+                    }}
+                />
+            </BottomSheet>
 
-            {/* "Not part of this story" confirm — same Modal shape as the delete
-                above, one step less drastic: this drops ONE article and leaves
-                the story followed. */}
-            <Modal isOpen={!!confirmRemove} onClose={() => setConfirmRemove(null)}>
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader>
-                        <Heading size="lg" className="text-white">
-                            {t('trackedStories.removeMemberConfirmTitle')}
-                        </Heading>
-                    </ModalHeader>
-                    <ModalBody>
-                        <Text size="sm" className="text-typography-300">
-                            {t('trackedStories.removeMemberConfirmBody')}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button
-                            variant="outline"
-                            action="secondary"
-                            onPress={() => setConfirmRemove(null)}
-                            className="mr-3"
-                        >
-                            <ButtonText>{t('common.cancel')}</ButtonText>
-                        </Button>
-                        <Button
-                            action="negative"
-                            onPress={handleConfirmRemove}
-                            testID="story-timeline-card-remove"
-                        >
-                            <ButtonText>{t('trackedStories.removeMemberAction')}</ButtonText>
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <ConfirmDialog
+                open={confirmDelete}
+                title={t('trackedStories.stopFollowingConfirmTitle')}
+                body={t('trackedStories.stopFollowingConfirmBody')}
+                confirmLabel={t('trackedStories.stopFollowing')}
+                destructive
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setConfirmDelete(false)}
+                testID="story-timeline-delete"
+            />
+
+            {/* "Not part of this story": drops ONE article and leaves the
+                story followed. */}
+            <ConfirmDialog
+                open={!!confirmRemove}
+                title={t('trackedStories.removeMemberConfirmTitle')}
+                body={t('trackedStories.removeMemberConfirmBody')}
+                confirmLabel={t('trackedStories.removeMemberAction')}
+                destructive
+                onConfirm={handleConfirmRemove}
+                onCancel={() => setConfirmRemove(null)}
+                testID="story-timeline-card-remove"
+            />
 
             <ExportWizardModal
                 isOpen={exportOpen}
@@ -614,10 +638,11 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 onScroll={notifyScrollTick}
                 scrollEventThrottle={16}
                 onContentSizeChange={notifyScrollTick}
-                data={cards}
+                data={rows}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 ListEmptyComponent={ListEmpty}
+                ListFooterComponent={cards.length > 0 ? nextNote : null}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
