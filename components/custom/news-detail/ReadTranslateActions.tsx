@@ -7,9 +7,11 @@ import {
     getArticleTranslationSupport,
 } from '@/lib/translation-service';
 import { appendReferrer, openInAppBrowser } from '@/lib/web-browser-utils';
+import { useMeraCorner } from '@/components/custom/mera-button/corner';
+import { MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 
@@ -18,6 +20,10 @@ const BUTTON_HEIGHT = 48;
 const ICON_SIZE = 18;
 const HELP_TARGET = 44;
 const HELP_RING = 26;
+/** The Google Translate row keeps clear of the Mera button's column on the
+ *  side its corner is on: the button sits 14pt from the screen edge and the
+ *  page is padded 17.5pt, so its far edge plus an 8pt gap is this far in. */
+const MERA_COLUMN_CLEARANCE = 14 + MERA_BUTTON_SIZE + 8 - 17.5;
 const HIDDEN = {
     accessible: false,
     accessibilityElementsHidden: true,
@@ -80,6 +86,10 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     const colors = useColors();
     const appLanguage = useAppLanguage();
     const [aboutOpen, setAboutOpen] = useState(false);
+    // Corners are PHYSICAL; RN swaps left/right padding in RTL, so a physical
+    // right edge is paddingLeft there.
+    const meraOnRight = useMeraCorner().endsWith('r');
+    const meraSide = meraOnRight !== I18nManager.isRTL ? 'paddingRight' : 'paddingLeft';
 
     const support = getArticleTranslationSupport(sourceLanguage, appLanguage);
     // Wrap the article URL with Mera's UTM referrer params BEFORE handing it to
@@ -110,7 +120,9 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                     style={{
                         flex: 1,
                         borderRadius: BUTTON_HEIGHT / 2,
-                        paddingHorizontal: 20,
+                        // The glass button shares its row with the ? and the
+                        // Mera button's clearance, so it pads a little less.
+                        paddingHorizontal: primary ? 20 : 14,
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -153,7 +165,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                 )}
             </View>
             {sameLanguage ? null : (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, [meraSide]: MERA_COLUMN_CLEARANCE }}>
                     {route(
                         'detail-read-google-translate',
                         'g-translate',
