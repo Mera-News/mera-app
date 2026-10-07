@@ -1,11 +1,14 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
+import { sentenceCase } from '@/components/custom/facts/sentence-case';
+import { Group, Row } from '@/components/custom/you/rows';
+import { useActiveTopicTexts, useHubFacts } from '@/components/custom/you/use-hub-data';
+import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
+import { showDialog } from '@/lib/dialog';
+import type { Fact } from '@/lib/mera-protocol-toolkit/types';
+import { useColors } from '@/lib/theme/tokens';
 import {
     acceptProposal,
     getPendingProposals,
@@ -19,39 +22,32 @@ import type {
     HygieneProposal,
     HygieneProposalKind,
 } from '@/lib/news-harness/persona-management/fact-hygiene';
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { FlatList, View } from 'react-native';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
-const ACCENT = '#EDA77E';
-const SUBTLE = 'rgb(163,163,163)';
 
 interface HygieneReviewScreenProps {
     readonly onBack: () => void;
 }
 
-type GlyphName = keyof typeof MaterialIcons.glyphMap;
-
-/** Leading icon per proposal kind. */
-function iconForKind(kind: HygieneProposalKind): GlyphName {
+/** What each kind of suggestion is, in a title (FinalProfile #14). */
+function titleForKind(kind: HygieneProposalKind, t: TFunction): string {
     switch (kind) {
         case 'duplicate_facts':
-            return 'content-copy';
+            return t('hygiene.titleDuplicate');
         case 'too_broad_fact':
-            return 'zoom-out-map';
+            return t('hygiene.titleTooBroad');
         case 'stale_topic':
-            return 'history-toggle-off';
+            return t('hygiene.titleStaleTopic');
         case 'stale_fact':
-            return 'delete-sweep';
-        case 'incoherent_topics':
-            return 'wrong-location';
+            return t('hygiene.titleStaleFact');
         case 'location_conflict':
-            return 'edit-location-alt';
+            return t('hygiene.titleLocationConflict');
         default:
-            return 'cleaning-services';
+            return t('hygiene.titleIncoherentTopics');
     }
 }
 
@@ -59,9 +55,8 @@ function iconForKind(kind: HygieneProposalKind): GlyphName {
 function effectPreview(kind: HygieneProposalKind, t: TFunction): string {
     switch (kind) {
         case 'duplicate_facts':
-            return t('hygiene.effectDuplicate', {
-                defaultValue: 'Removes the duplicate and keeps the stronger one.',
-            });
+            // C2: the second fact is deleted; no topics move and there is no undo.
+            return t('hygiene.mergeNote');
         case 'too_broad_fact':
             return t('hygiene.effectTooBroad', {
                 defaultValue: 'Lowers this interest’s weight so it pulls in fewer off-topic stories.',
@@ -85,20 +80,74 @@ function effectPreview(kind: HygieneProposalKind, t: TFunction): string {
     }
 }
 
+/** The facts a suggestion is about, as rows with their topic counts. */
+const FactLine: React.FC<{ readonly fact: Fact }> = ({ fact }) => {
+    const { t } = useTranslation();
+    const count = useActiveTopicTexts(fact.id).length;
+    return <Row title={sentenceCase(fact.statement)} translatable value={t('you.profile.topicCount', { count })} />;
+};
+
+const ActionButton: React.FC<{
+    readonly label: string;
+    readonly onPress: () => void;
+    readonly filled?: boolean;
+    readonly disabled: boolean;
+    readonly testID: string;
+}> = ({ label, onPress, filled = false, disabled, testID }) => {
+    const colors = useColors();
+    return (
+        <Pressable
+            testID={testID}
+            onPress={onPress}
+            disabled={disabled}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            style={{
+                flex: 1,
+                height: 44,
+                borderRadius: 999,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: filled ? colors.accent : 'transparent',
+                borderWidth: filled ? 0 : 1,
+                borderColor: colors.trackBorder,
+                opacity: disabled ? 0.5 : 1,
+            }}
+        >
+            <Text style={{ color: filled ? colors.onAccent : colors.ink, fontSize: 15, fontWeight: '600' }}>{label}</Text>
+        </Pressable>
+    );
+};
+
+/** The fact a suggestion would delete goes last ("removes the second fact"). */
+function orderedFacts(item: HygieneProposal, byId: Map<string, Fact>): Fact[] {
+    const deleted = new Set(item.ops.flatMap((op) => (op.type === 'delete_fact' ? [op.factId] : [])));
+    return item.targetFactIds
+        .map((id) => byId.get(id))
+        .filter((f): f is Fact => f !== undefined)
+        .sort((a, b) => Number(deleted.has(a.id)) - Number(deleted.has(b.id)));
+}
+
+/**
+ * Tidy up your profile (FinalProfile #14, #15). Each suggestion says what it
+ * is and what it would do; nothing changes until the reader chooses. A
+ * duplicate offers Merge (behind a confirm: it deletes the second fact for
+ * good) or Keep both.
+ */
 const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const [items, setItems] = useState<HygieneProposal[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [actingId, setActingId] = useState<string | null>(null);
+    const facts = useHubFacts();
+    const factsById = useMemo(() => new Map((facts ?? []).map((f) => [f.id, f])), [facts]);
 
     const load = useCallback(async () => {
         try {
-            const proposals = await getPendingProposals();
-            setItems(proposals);
+            setItems(await getPendingProposals());
         } catch (error) {
-            logger.captureException(error, {
-                tags: { component: 'HygieneReviewScreen', method: 'load' },
-            });
+            logger.captureException(error, { tags: { component: 'HygieneReviewScreen', method: 'load' } });
         } finally {
             setIsLoading(false);
         }
@@ -106,13 +155,22 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
 
     useEffect(() => {
         void load();
-        const unsubscribe = subscribeHygieneChange(() => void load());
-        return unsubscribe;
+        return subscribeHygieneChange(() => void load());
     }, [load]);
 
     const handleAccept = useCallback(
         async (proposal: HygieneProposal) => {
             if (actingId) return;
+            if (proposal.kind === 'duplicate_facts') {
+                const ok = await showDialog({
+                    title: t('hygiene.titleDuplicate'),
+                    body: t('hygiene.mergeNote'),
+                    confirmLabel: t('hygiene.merge'),
+                    cancelLabel: t('common.cancel'),
+                    destructive: true,
+                });
+                if (!ok) return;
+            }
             setActingId(proposal.id);
             void hapticLight();
             // Optimistic: drop the card immediately.
@@ -120,17 +178,9 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
             try {
                 const res = await acceptProposal(proposal.id);
                 if (res.applied && res.ok) {
-                    toastManager.showSuccess(
-                        t('hygiene.appliedTitle', { defaultValue: 'Cleanup applied' }),
-                        t('hygiene.appliedBody', {
-                            defaultValue: 'Your profile was tidied up. See the change log to review.',
-                        }),
-                    );
+                    toastManager.showSuccess(t('hygiene.appliedTitle'), t('hygiene.appliedBody'));
                 } else {
-                    toastManager.showError(
-                        t('hygiene.applyFailedTitle', { defaultValue: 'Couldn’t apply cleanup' }),
-                        t('hygiene.applyFailedBody', { defaultValue: 'Please try again later.' }),
-                    );
+                    toastManager.showError(t('hygiene.applyFailedTitle'), t('hygiene.applyFailedBody'));
                     void load(); // restore truth from storage
                 }
             } catch (error) {
@@ -168,92 +218,59 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
     const renderItem = useCallback(
         ({ item }: { item: HygieneProposal }) => {
             const inFlight = actingId === item.id;
+            const duplicate = item.kind === 'duplicate_facts';
+            const factRows = orderedFacts(item, factsById);
             return (
-                <Box className="mx-4 mb-3 border border-gray-700 rounded-lg overflow-hidden">
-                    <HStack className="px-4 pt-4 pb-2 items-start">
-                        <MaterialIcons
-                            name={iconForKind(item.kind)}
-                            size={22}
-                            color={ACCENT}
-                            style={{ marginTop: 2 }}
-                        />
-                        <VStack className="flex-1 ml-3" space="xs">
-                            <TranslatableDynamic
-                                text={item.summary}
-                                size="md"
-                                className="text-white"
-                                numberOfLines={4}
-                            />
-                            <Text className="text-sm" style={{ color: SUBTLE }} numberOfLines={3}>
-                                {effectPreview(item.kind, t)}
-                            </Text>
-                            {item.invertible ? (
-                                <HStack className="items-center" space="xs">
-                                    <MaterialIcons name="undo" size={13} color="#6b7280" />
-                                    <Text className="text-xs text-gray-500">
-                                        {t('hygiene.reversibleNote', {
-                                            defaultValue: 'You can undo this in the change log.',
-                                        })}
-                                    </Text>
-                                </HStack>
-                            ) : null}
-                        </VStack>
-                    </HStack>
-                    <HStack className="px-4 pb-4 pt-1" space="sm">
-                        <Button
-                            action="primary"
-                            size="sm"
-                            className="flex-1"
+                <View testID={`hygiene-card-${item.id}`} style={{ marginHorizontal: 14, marginBottom: 12, gap: 10 }}>
+                    <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '700', marginHorizontal: 4 }}>
+                        {titleForKind(item.kind, t)}
+                    </Text>
+                    {factRows.length > 0 ? (
+                        <Group>
+                            {factRows.map((fact) => (
+                                <FactLine key={fact.id} fact={fact} />
+                            ))}
+                        </Group>
+                    ) : (
+                        // Topic kinds name their topics in the summary (fact-hygiene.ts).
+                        <TranslatableDynamic text={item.summary} size="md" style={{ color: colors.ink, marginHorizontal: 4 }} numberOfLines={4} />
+                    )}
+                    <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, marginHorizontal: 4 }}>
+                        {effectPreview(item.kind, t)}
+                    </Text>
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                        <ActionButton
+                            testID={`hygiene-accept-${item.id}`}
+                            label={duplicate ? t('hygiene.merge') : t('hygiene.accept')}
                             onPress={() => handleAccept(item)}
+                            filled
                             disabled={inFlight}
-                        >
-                            {inFlight ? (
-                                <Spinner size="small" />
-                            ) : (
-                                <ButtonText>
-                                    {t('hygiene.accept', { defaultValue: 'Accept' })}
-                                </ButtonText>
-                            )}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            action="secondary"
-                            size="sm"
-                            className="flex-1"
+                        />
+                        <ActionButton
+                            testID={`hygiene-reject-${item.id}`}
+                            label={duplicate ? t('hygiene.keepBoth') : t('hygiene.reject')}
                             onPress={() => handleReject(item)}
                             disabled={inFlight}
-                        >
-                            <ButtonText>
-                                {t('hygiene.reject', { defaultValue: 'Dismiss' })}
-                            </ButtonText>
-                        </Button>
-                    </HStack>
-                </Box>
+                        />
+                    </View>
+                </View>
             );
         },
-        [actingId, handleAccept, handleReject, t],
+        [actingId, factsById, colors, handleAccept, handleReject, t],
     );
 
     return (
-        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
-        // its SafeAreaView, so the page background spans the safe areas.
-        <Box className="flex-1">
-            <DrillDownHeader
-                title={t('hygiene.title', { defaultValue: 'Profile cleanup' })}
-                subtitle={t('hygiene.subtitle', { defaultValue: 'Suggested cleanups' })}
-                onBack={onBack}
-            />
+        <View style={{ flex: 1 }}>
+            <DrillDownHeader title={t('hygiene.title')} onBack={onBack} />
             {isLoading ? (
-                <Box className="flex-1 items-center justify-center">
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                     <Spinner size="large" />
-                </Box>
+                </View>
             ) : items.length === 0 ? (
-                <VStack className="flex-1 items-center justify-center px-8" space="md">
-                    <MaterialIcons name="cleaning-services" size={56} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
-                        {t('hygiene.empty', { defaultValue: 'Your persona looks healthy' })}
-                    </Text>
-                </VStack>
+                <View testID="hygiene-empty" style={{ paddingHorizontal: 18, paddingTop: 16, gap: 6 }}>
+                    <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('hygiene.emptyTitle')}</Text>
+                    <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('hygiene.emptyBody')}</Text>
+                </View>
             ) : (
                 <FlatList
                     // Rows below the first screen ask for their translation only
@@ -264,21 +281,16 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                     data={items}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingTop: 12, paddingBottom: 48 }}
+                    contentContainerStyle={{ paddingTop: 4, paddingBottom: 120 }}
                     showsVerticalScrollIndicator={false}
                     ListHeaderComponent={
-                        <View className="px-4 pb-2">
-                            <Text className="text-sm" style={{ color: SUBTLE }}>
-                                {t('hygiene.intro', {
-                                    defaultValue:
-                                        'Mera found a few things worth tidying up. Accept the ones you agree with.',
-                                })}
-                            </Text>
-                        </View>
+                        <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginHorizontal: 18, marginBottom: 12 }}>
+                            {t('hygiene.intro')}
+                        </Text>
                     }
                 />
             )}
-        </Box>
+        </View>
     );
 };
 
