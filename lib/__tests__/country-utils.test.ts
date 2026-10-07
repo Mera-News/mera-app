@@ -29,6 +29,12 @@ describe('getCountryName', () => {
     expect(getCountryName('GMB')).toBe('Gambia');
   });
 
+  it('uses plain short names where the alias reads like an official form', () => {
+    expect(getCountryName('KOR')).toBe('South Korea');
+    expect(getCountryName('LAO')).toBe('Laos');
+    expect(getCountryName('SYR')).toBe('Syria');
+  });
+
   it('never names Taiwan a province', () => {
     expect(getCountryName('TWN')).toBe('Taiwan');
   });

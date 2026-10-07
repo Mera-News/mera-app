@@ -13,9 +13,9 @@ export const getFlagEmoji = (alpha3Code: string | null | undefined): string => {
 };
 
 /**
- * Where the library's alias is an abbreviation or carries "The" (or, for
- * Taiwan, where any other form would read "Province of China"), the plain
- * short name. Every other country keeps its alias ("Russia", "Vietnam",
+ * Where the library's alias is an abbreviation, carries "The" or reads like
+ * an official form (or, for Taiwan, where any other form would read
+ * "Province of China"), the plain short name. Every other country keeps its alias ("Russia", "Vietnam",
  * "Iran"), which reads better than the official form.
  */
 const NAME_OVERRIDES: Readonly<Record<string, string>> = {
@@ -24,6 +24,10 @@ const NAME_OVERRIDES: Readonly<Record<string, string>> = {
     AE: 'United Arab Emirates',
     GM: 'Gambia',
     TW: 'Taiwan',
+    // Aliases that read like official forms.
+    KR: 'South Korea',
+    LA: 'Laos',
+    SY: 'Syria',
 };
 
 export const getCountryName = (alpha3Code: string): string => {
