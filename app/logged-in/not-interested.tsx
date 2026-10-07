@@ -1,7 +1,7 @@
-// Moved into the You tab's stack (navx). Kept so old links and restored
-// screens still open it there.
-import { TabScreenRedirect } from '@/components/custom/nav/LegacyRedirect';
+// The Not interested page is gone: turning topics down lives in each fact's
+// page (Show less of). Kept so old links and restored screens land on Profile.
+import { PageRedirect } from '@/components/custom/nav/LegacyRedirect';
 
 export default function LegacyRoute() {
-  return <TabScreenRedirect tab="you" screen="not-interested" />;
+  return <PageRedirect page="profile" />;
 }
