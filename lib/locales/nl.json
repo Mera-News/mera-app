@@ -3386,7 +3386,8 @@
       "wheel": "Tijd om toe te voegen",
       "footnote": "Mera stuurt alleen een melding op deze tijden, in jouw tijdzone. Maximaal drie.",
       "offLine": "Mera stuurt je niets. Zet dit aan om maximaal drie tijden te kiezen waarop het dat kan.",
-      "tapToSave": "Tik op een tijd om hem op te slaan."
+      "tapToSave": "Tik op een tijd om hem op te slaan.",
+      "footnoteNoCap": "Mera stuurt alleen een melding op deze tijden, in jouw tijdzone."
     }
   },
   "meraHints": {

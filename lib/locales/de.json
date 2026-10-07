@@ -3386,7 +3386,8 @@
       "wheel": "Zeit zum Hinzufügen",
       "footnote": "Mera sendet nur zu diesen Zeiten eine Mitteilung, in Ihrer Zeitzone. Bis zu drei.",
       "offLine": "Mera schickt Ihnen nichts. Schalten Sie dies ein, um bis zu drei Zeiten auszuwählen, zu denen es das tun darf.",
-      "tapToSave": "Tippen Sie auf eine Zeit, um sie zu speichern."
+      "tapToSave": "Tippen Sie auf eine Zeit, um sie zu speichern.",
+      "footnoteNoCap": "Mera sendet nur zu diesen Zeiten eine Mitteilung, in Ihrer Zeitzone."
     }
   },
   "meraHints": {

@@ -3386,7 +3386,8 @@
       "wheel": "Hora para añadir",
       "footnote": "Mera solo envía un aviso a estas horas, en tu zona horaria. Hasta tres.",
       "offLine": "Mera no te enviará nada. Actívalo para elegir hasta tres horas en las que puede hacerlo.",
-      "tapToSave": "Toca una hora para guardarla."
+      "tapToSave": "Toca una hora para guardarla.",
+      "footnoteNoCap": "Mera solo envía un aviso a estas horas, en tu zona horaria."
     }
   },
   "meraHints": {

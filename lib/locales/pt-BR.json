@@ -3386,7 +3386,8 @@
       "wheel": "Horário para adicionar",
       "footnote": "A Mera só envia um aviso nestes horários, no seu fuso. Até três.",
       "offLine": "A Mera não vai enviar nada. Ative para escolher até três horários em que isso pode acontecer.",
-      "tapToSave": "Toque em um horário para salvá-lo."
+      "tapToSave": "Toque em um horário para salvá-lo.",
+      "footnoteNoCap": "A Mera só envia um aviso nestes horários, no seu fuso."
     }
   },
   "meraHints": {

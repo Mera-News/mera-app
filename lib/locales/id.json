@@ -3381,7 +3381,8 @@
       "wheel": "Waktu yang ditambahkan",
       "footnote": "Mera hanya mengirim pemberitahuan pada waktu ini, sesuai zona waktu Anda. Hingga tiga waktu.",
       "offLine": "Mera tidak akan mengirim apa pun kepada Anda. Aktifkan ini untuk memilih hingga tiga waktu saat Mera bisa mengirim.",
-      "tapToSave": "Ketuk waktu untuk menyimpannya."
+      "tapToSave": "Ketuk waktu untuk menyimpannya.",
+      "footnoteNoCap": "Mera hanya mengirim pemberitahuan pada waktu ini, sesuai zona waktu Anda."
     }
   },
   "meraHints": {

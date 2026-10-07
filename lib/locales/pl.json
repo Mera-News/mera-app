@@ -3462,7 +3462,8 @@
       "wheel": "Godzina do dodania",
       "footnote": "Mera wysyła powiadomienia tylko o tych porach, w Twojej strefie czasowej. Do trzech.",
       "offLine": "Mera nic Ci nie wyśle. Włącz to, aby wybrać do trzech pór, w których może.",
-      "tapToSave": "Stuknij porę, aby ją zapisać."
+      "tapToSave": "Stuknij porę, aby ją zapisać.",
+      "footnoteNoCap": "Mera wysyła powiadomienia tylko o tych porach, w Twojej strefie czasowej."
     }
   },
   "meraHints": {

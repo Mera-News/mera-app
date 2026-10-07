@@ -3386,7 +3386,8 @@
       "wheel": "Time to add",
       "footnote": "Mera only sends a notice at these times, in your time zone. Up to three.",
       "offLine": "Mera won't send you anything. Turn this on to pick up to three times when it can.",
-      "tapToSave": "Tap a time to save it."
+      "tapToSave": "Tap a time to save it.",
+      "footnoteNoCap": "Mera only sends a notice at these times, in your time zone."
     }
   },
   "meraHints": {

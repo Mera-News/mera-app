@@ -3388,7 +3388,8 @@
       "wheel": "Eklenecek saat",
       "footnote": "Mera bildirimi yalnızca bu saatlerde, saat diliminizde gönderir. En fazla üç tane.",
       "offLine": "Mera size hiçbir şey göndermez. Mümkün olduğunda en fazla üç saat seçmek için bunu açın.",
-      "tapToSave": "Kaydetmek için bir saate dokunun."
+      "tapToSave": "Kaydetmek için bir saate dokunun.",
+      "footnoteNoCap": "Mera bildirimi yalnızca bu saatlerde, saat diliminizde gönderir."
     }
   },
   "meraHints": {

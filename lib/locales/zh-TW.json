@@ -3382,7 +3382,8 @@
       "wheel": "要新增的時間",
       "footnote": "Mera 只會在這些時間發送通知，並以你的時區為準。最多三個。",
       "offLine": "Mera 不會傳送任何通知給你。開啟此功能，即可選擇最多三個時段。",
-      "tapToSave": "點按一個時間即可儲存。"
+      "tapToSave": "點按一個時間即可儲存。",
+      "footnoteNoCap": "Mera 只會在這些時間發送通知，並以你的時區為準。"
     }
   },
   "meraHints": {

@@ -3393,7 +3393,8 @@
       "wheel": "Horaire à ajouter",
       "footnote": "Mera n'envoie un avis qu'à ces heures, dans votre fuseau horaire. Jusqu'à trois.",
       "offLine": "Mera ne vous enverra rien. Activez cette option pour choisir jusqu'à trois moments où cela peut arriver.",
-      "tapToSave": "Touchez une heure pour l'enregistrer."
+      "tapToSave": "Touchez une heure pour l'enregistrer.",
+      "footnoteNoCap": "Mera n'envoie un avis qu'à ces heures, dans votre fuseau horaire."
     }
   },
   "meraHints": {

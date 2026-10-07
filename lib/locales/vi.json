@@ -3382,7 +3382,8 @@
       "wheel": "Giờ cần thêm",
       "footnote": "Mera chỉ gửi thông báo vào các thời điểm này, theo múi giờ của bạn. Tối đa ba thời điểm.",
       "offLine": "Mera sẽ không gửi bất cứ điều gì cho bạn. Bật lên để chọn tối đa ba thời điểm có thể gửi.",
-      "tapToSave": "Chạm vào một thời điểm để lưu."
+      "tapToSave": "Chạm vào một thời điểm để lưu.",
+      "footnoteNoCap": "Mera chỉ gửi thông báo vào các thời điểm này, theo múi giờ của bạn."
     }
   },
   "meraHints": {
