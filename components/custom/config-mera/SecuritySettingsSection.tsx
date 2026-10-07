@@ -107,8 +107,6 @@ const SecuritySettingsSection: React.FC = () => {
                 <PinSetupScreen
                     onComplete={handleEnableComplete}
                     onCancel={() => setFlow('none')}
-                    title={t('security.setPinTitle')}
-                    subtitle={t('security.setPinSubtitle')}
                 />
             );
         }
@@ -141,8 +139,6 @@ const SecuritySettingsSection: React.FC = () => {
                 <PinSetupScreen
                     onComplete={handleNewPinComplete}
                     onCancel={() => setFlow('none')}
-                    title={t('security.newPinTitle')}
-                    subtitle={t('security.newPinSubtitle')}
                 />
             );
         }
