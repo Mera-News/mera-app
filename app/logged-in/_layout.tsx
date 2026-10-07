@@ -8,6 +8,7 @@ import ReauthBanner from '@/components/custom/ReauthBanner';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import EmailCaptureHost from '@/components/custom/subscription/EmailCaptureSheet';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
+import { CardGrowHost } from '@/components/custom/cards/card-grow';
 import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
 
 export default function LoggedInLayout() {
@@ -45,10 +46,12 @@ export default function LoggedInLayout() {
         />
         <Stack.Screen
           name="suggestion-detail"
-          options={{
+          // A page that grew out of its card (card-grow) is pushed with no
+          // animation of its own; every other way in keeps the slide.
+          options={({ route }) => ({
             headerShown: false,
-            animation: 'slide_from_right'
-          }}
+            animation: (route.params as { grow?: string } | undefined)?.grow ? 'none' : 'slide_from_right',
+          })}
         />
         <Stack.Screen
           name="sources-publishers"
@@ -177,6 +180,9 @@ export default function LoggedInLayout() {
           }}
         />
       </Stack>
+      {/* The card growing into an article page: above the tabs and every
+          pushed screen, below the banner, chat and the gates. */}
+      <CardGrowHost />
       {/* Mounted once for the whole logged-in tree rather than per-screen. The
           auth breaker no longer auto-resumes feed-sync while `needsReauth` is
           set — a proven-dead session must be re-authenticated, not retried — so

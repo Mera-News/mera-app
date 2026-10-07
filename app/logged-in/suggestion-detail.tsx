@@ -1,9 +1,11 @@
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ArticleSuggestionScreen from '@/components/custom/news-detail/ArticleSuggestionScreen';
+import { cardGrowLanded, growBack } from '@/components/custom/cards/card-grow';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
+import { View } from 'react-native';
 
 export default function SuggestionDetail() {
     const params = useLocalSearchParams<{
@@ -25,7 +27,7 @@ export default function SuggestionDetail() {
 
     const handleBack = () => {
         if (canGoBack) {
-            router.back();
+            growBack(articleSuggestionId, () => router.back());
         } else {
             router.replace('/logged-in/app_container/feed');
         }
@@ -33,14 +35,16 @@ export default function SuggestionDetail() {
 
     return (
         <GluestackUIProvider mode="dark">
-            <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                <ArticleSuggestionScreen
-                    key={articleSuggestionId}
-                    articleSuggestionId={articleSuggestionId}
-                    onBack={handleBack}
-                    backIcon={canGoBack ? 'back' : 'home'}
-                />
-            </ErrorBoundary>
+            <View style={{ flex: 1 }} onLayout={cardGrowLanded}>
+                <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+                    <ArticleSuggestionScreen
+                        key={articleSuggestionId}
+                        articleSuggestionId={articleSuggestionId}
+                        onBack={handleBack}
+                        backIcon={canGoBack ? 'back' : 'home'}
+                    />
+                </ErrorBoundary>
+            </View>
         </GluestackUIProvider>
     );
 }

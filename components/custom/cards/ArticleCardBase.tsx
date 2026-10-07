@@ -11,11 +11,12 @@ import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import PressableCard from '@/components/custom/cards/PressableCard';
+import { noteCardPress } from '@/components/custom/cards/card-grow';
 import FlatCardSurface from '@/components/custom/cards/FlatCardSurface';
 import { composeSpokenLabel, useArticleMetaStrings } from '@/components/custom/article-meta-strings';
 import { VStack } from '@/components/ui/vstack';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import type { AccessibilityActionEvent } from 'react-native';
+import type { AccessibilityActionEvent, View } from 'react-native';
 import React from 'react';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
@@ -118,6 +119,9 @@ export interface ArticleCardBaseProps {
   /** What the card's children say, read last in the root's label (the
    *  filtered-but-shown notice, the AI-note flag, the note as displayed). */
   spokenTail?: readonly (string | null | undefined | false)[];
+  /** The id a tap opens through `useOpenSuggestion`: the card measures itself
+   *  at press-in so the page can grow out of it (`card-grow`). */
+  growId?: string;
 }
 
 /** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
@@ -151,6 +155,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   onAccessibilityAction,
   spokenPriority,
   spokenTail,
+  growId,
 }) => {
   const { t } = useTranslation();
   const blurImages = useBlurImagesStore((s) => s.blurImages);
@@ -183,6 +188,11 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   // Unchanged meaning: a real image, not the placeholder. The h-48/h-28 band
   // split and metaRowRightReserve depend on it.
   const showImage = !!imageUrl && !heroImage.failed;
+  const pressRef = React.useRef<React.ComponentRef<typeof PressableCard>>(null);
+  // gluestack types the ref as its component; at runtime it is RN's host View.
+  const onPressIn = growId
+    ? () => noteCardPress(growId, pressRef.current as unknown as View | null, showImage ? heroImage.uri ?? null : null)
+    : undefined;
 
   const innerContent = (
     <>
@@ -279,8 +289,10 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
 
   return (
     <PressableCard
+      ref={pressRef}
       testID={testID}
       onPress={onPress}
+      onPressIn={onPressIn}
       dimmed={!!dimmed}
       accessibilityLabel={spokenLabel}
       accessibilityActions={accessibilityActions}
