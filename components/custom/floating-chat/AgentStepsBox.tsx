@@ -6,11 +6,15 @@
 // "still working" line that appears when a step has been pending a while.
 
 import StatusIndicator from '@/components/custom/chat/StatusIndicator';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { useColors } from '@/lib/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, withTiming } from 'react-native-reanimated';
+import { GlyphSafeButton } from './glyph-safe';
 import { useTranslation } from 'react-i18next';
 import type { AgentStep, AgentTerminal } from './types';
 
@@ -45,6 +49,24 @@ function boxEntering() {
   };
 }
 
+/** A new step slides up 8pt and fades in (FinalMeraChat #7). */
+function stepEntering() {
+  'worklet';
+  const duration = 180;
+  return {
+    initialValues: { opacity: 0, transform: [{ translateY: 8 }] },
+    animations: {
+      opacity: withTiming(1, { duration }),
+      transform: [{ translateY: withTiming(0, { duration }) }],
+    },
+  };
+}
+
+/** A finished step behind the live one. */
+const DONE_DIM = 0.6;
+/** The fold opening again on a tap. */
+const REOPEN_MS = 220;
+
 export interface AgentStepsBoxProps {
   steps: AgentStep[];
   collapsed: boolean;
@@ -69,6 +91,10 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   interrupted,
 }) => {
   const { t } = useTranslation();
+  const colors = useColors();
+  // A folded box opens again on a tap (FinalMeraChat #9). Local: it is a view
+  // of a finished turn, nothing about the turn changes.
+  const [reopened, setReopened] = useState(false);
 
   /** Step labels with no interpolation. A key absent here renders the generic
    *  line, which is what keeps an unmapped tool from showing a dot-path. */
@@ -162,22 +188,47 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
       ? t('agentSteps.interrupted')
       : failedCount > 0
         ? t('agentSteps.summaryFailed')
-        : t('agentSteps.summaryDone');
+        : t('agentSteps.doneInSteps', { count: doneCount });
   // `no-proposal` is the one terminal that is not an error: Mera understood the
   // turn and had nothing to add, which is a normal answer.
   const terminalIsError = terminal !== null && terminal !== 'no-proposal';
 
-  const body = collapsed ? (
-    <StatusIndicator
-      status={failedCount > 0 || interrupted || terminalIsError ? 'error' : 'done'}
-      label={summary}
+  const live = !collapsed;
+  const fold = (
+    <GlyphSafeButton
+      onPress={() => setReopened((v) => !v)}
+      accessibilityLabel={summary}
+      accessibilityState={{ expanded: reopened }}
+      visualStyle={styles.foldRow}
       testID="agent-steps-summary"
-    />
-  ) : (
+    >
+      <View style={styles.foldStatus}>
+        <StatusIndicator status={failedCount > 0 || interrupted || terminalIsError ? 'error' : 'done'} label={summary} />
+      </View>
+      <MaterialIcons
+        {...DECORATIVE_ICON_A11Y}
+        name={reopened ? 'expand-less' : 'expand-more'}
+        size={18}
+        color={colors.ink3}
+      />
+    </GlyphSafeButton>
+  );
+
+  const stepRows = (
     <>
+      {live && (
+        <Text size="xs" style={[styles.title, { color: colors.ink3 }]} testID="agent-steps-title">
+          {t('agentSteps.boxTitle')}
+        </Text>
+      )}
       {steps.map((step) => (
-        <View key={step.id}>
+        <Animated.View
+          key={step.id}
+          entering={live && animationsActive ? stepEntering : undefined}
+          style={live && step.status === 'done' && step.id !== steps[steps.length - 1]?.id ? styles.dim : undefined}
+        >
           <StatusIndicator
+            live={live}
             status={step.status}
             label={labelFor(step)}
             errorText={
@@ -193,7 +244,7 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
               {t('agentSteps.slow')}
             </Text>
           )}
-        </View>
+        </Animated.View>
       ))}
       {/* An interrupted or capped turn states it even while expanded: the
           terminal sentence is the part that tells the user what to do next. */}
@@ -203,6 +254,19 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
         </Text>
       )}
     </>
+  );
+
+  const body = collapsed ? (
+    <>
+      {fold}
+      {reopened && (
+        <Animated.View entering={animationsActive ? FadeIn.duration(REOPEN_MS) : undefined}>
+          {stepRows}
+        </Animated.View>
+      )}
+    </>
+  ) : (
+    stepRows
   );
 
   return (
@@ -229,6 +293,10 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   slow: { color: 'rgb(150, 150, 150)', marginLeft: 24, marginTop: 1 },
+  title: { marginBottom: 4 },
+  dim: { opacity: DONE_DIM },
+  foldRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  foldStatus: { flex: 1 },
   terminal: { color: 'rgb(176, 176, 176)', marginTop: 4 },
 });
 

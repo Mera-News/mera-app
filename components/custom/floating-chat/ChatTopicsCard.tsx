@@ -45,7 +45,8 @@ import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated, { withTiming, ZoomIn } from 'react-native-reanimated';
+import { SPRING } from '@/lib/motion';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)';
@@ -89,6 +90,10 @@ export interface ChatTopicsCardProps {
   topicSkillId?: string;
 }
 
+/** New chips land one after another, 60 ms apart, the first few only. */
+const CHIP_STAGGER_MS = 60;
+const CHIP_STAGGER_MAX = 4;
+
 const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, topicSkillId }) => {
   const { t } = useTranslation();
 
@@ -110,6 +115,9 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   const userToggledRef = useRef(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isFindingMore, setIsFindingMore] = useState(false);
+  /** The topics the first read found. Only a chip that arrives AFTER it pops
+   *  in, so a reopened chat or a recycled list row never replays the spring. */
+  const baselineIds = useRef<ReadonlySet<string> | null>(null);
 
   // One live subscription per fact; rows are merged into a single list keyed by
   // fact so the round-robin below can see each fact's own order.
@@ -118,11 +126,11 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
     // re-inserted from `pendingDelete` below; `retired` is no longer a state
     // this card can produce.
     const sub = observeByFact(factId).subscribe((models: TopicModel[]) => {
-      setRows(
-        models
-          .filter((m) => m.status === 'active')
-          .map((m) => ({ id: m.id, text: m.text, factId })),
-      );
+      const next = models
+        .filter((m) => m.status === 'active')
+        .map((m) => ({ id: m.id, text: m.text, factId }));
+      baselineIds.current ??= new Set(next.map((c) => c.id));
+      setRows(next);
     });
     return () => sub.unsubscribe();
   }, [factId]);
@@ -438,8 +446,20 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             <View style={styles.chips}>
               {visible.map((chip) => {
                 const removing = isPendingDelete(chip.id);
+                // New chips spring in one after another (FinalMeraChat #8).
+                const fresh = baselineIds.current !== null && !baselineIds.current.has(chip.id);
+                const entering = fresh
+                  ? ZoomIn.springify()
+                      .damping(SPRING.like.damping)
+                      .stiffness(SPRING.like.stiffness)
+                      .delay(Math.min(visible.indexOf(chip), CHIP_STAGGER_MAX) * CHIP_STAGGER_MS)
+                  : undefined;
                 return (
-                  <View key={chip.id} style={[styles.chip, removing && styles.chipRemoving]}>
+                  <Animated.View
+                    key={chip.id}
+                    entering={entering}
+                    style={[styles.chip, removing && styles.chipRemoving]}
+                  >
                     {/* The removed chip KEEPS its text, dimmed and struck. A
                         blank "Removed" slot makes the user guess what they
                         just deleted, at the one moment they may want it back.
@@ -469,7 +489,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
                         color={removing ? ACCENT : 'rgb(190, 190, 190)'}
                       />
                     </GlyphSafeButton>
-                  </View>
+                  </Animated.View>
                 );
               })}
             </View>
