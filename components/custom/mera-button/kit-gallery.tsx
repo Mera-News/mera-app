@@ -42,9 +42,9 @@ export default function KitGallery() {
             </View>
             <Label>Mera button: rest, working, unread</Label>
             <View style={[row, { backgroundColor: colors.base, gap: 40, paddingHorizontal: 28 }]}>
-                <MeraButton surface="kit" page="feed" mode="idle" />
-                <MeraButton surface="kit" page="feed" mode="idle" working />
-                <MeraButton surface="kit" page="feed" mode="idle" unread />
+                <MeraButton surface="kit" page="feed" />
+                <MeraButton surface="kit" page="feed" working />
+                <MeraButton surface="kit" page="feed" unread />
             </View>
         </View>
     );

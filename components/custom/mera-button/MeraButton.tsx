@@ -1,29 +1,27 @@
-// The one Mera button: a 62pt white circle in one of four corners (see
-// corner.ts; MeraButtonHost places and drags it), with a hint tooltip on the
-// side facing the screen's middle. Tapping opens the Mera chat on this page.
+// The one Mera button: a 62pt disc in one of four corners (see corner.ts;
+// MeraButtonHost places and drags it). Tapping opens the Mera chat on this
+// page. The cone sweeps at rest; Mera reading the news changes nothing here
+// (the Feed's status icon shows that).
 //
-// Presentational over its inputs: MeraButtonHost decides WHETHER it shows and
-// passes the feed status in, because `useFeedStatusMode` loads the scheduler
-// and SQLite at import and this file must stay testable without them.
+// THE ONE HINT (FinalMeraChat #1): while the person has told Mera no fact at
+// all, a tooltip "Tell Mera about you" points at the button. It is DERIVED
+// from the facts table (no timer, no rotation, no stored "dismissed" flag) and
+// goes for good with the first fact.
 //
-// Accessibility: the label always carries the hint (the tooltip is hidden from
-// screen readers and fades), and the value is the feed status in the same four
-// words the old header mark used. Only "updating" and "up to date" are
-// announced here; FeedScreen already announces the capped and error states.
+// Accessibility: the label says what the button does or what it is showing
+// (working, an answer ready); the tooltip is hidden from screen readers and
+// rides on the label as a hint instead.
 
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Text } from '@/components/ui/text';
-import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { hapticLight } from '@/lib/haptics';
 import { EASE, MOTION } from '@/lib/motion';
-import { takeHintIndex } from '@/lib/navigation/hint-cursor';
 import { MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
-import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
 import { useColors } from '@/lib/theme/tokens';
 import { useFloatingChatStore, type ChatContext, type MeraPageKey } from '@/lib/stores/floating-chat-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector, type PanGesture } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
@@ -34,9 +32,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { DRAG_ACTIVATION, MERA_CORNERS, setMeraCorner, useMeraCorner, type MeraCorner } from './corner';
-import { chatContextFor, hintKeys, interestFactId, statusKey } from './mera-pages';
+import { chatContextFor, interestFactId } from './mera-pages';
 import { openMeraChat } from './open-mera-chat';
-import { tooltipRemainingMs } from './tooltip-visit';
 
 // The disc is the theme's ink and the mark is the page colour, so the mark
 // reads as a cut-out: white disc and dark mark in dark, the reverse in light.
@@ -51,7 +48,7 @@ const RING_WIDTH = 2;
 const TOOLTIP_BG = 'rgba(52,50,55,0.97)';
 const TOOLTIP_BORDER = 'rgba(255,255,255,0.12)';
 const TOOLTIP_MAX_WIDTH = 190;
-const TOOLTIP_GAP = 12;
+const TOOLTIP_GAP = 10;
 
 /** The statement of a One interest fact, read lazily: fact-service reaches
  *  WatermelonDB, which must stay out of every suite that renders the button. */
@@ -65,11 +62,33 @@ async function factStatement(factId: string): Promise<string | undefined> {
   }
 }
 
+/**
+ * True while the facts table is empty. Starts false, so a returning person
+ * never sees the tooltip flash before the first read lands. The live query is
+ * required lazily (fact-service reaches WatermelonDB) and observed rather than
+ * read once: onboarding, a restore and chat all add facts, and not every path
+ * bumps a mutation counter.
+ */
+function useHasNoFacts(): boolean {
+  const [none, setNone] = useState(false);
+  useEffect(() => {
+    let sub: { unsubscribe: () => void } | undefined;
+    try {
+      const { observeFacts } =
+        require('@/lib/database/services/fact-service') as typeof import('@/lib/database/services/fact-service');
+      sub = observeFacts().subscribe((facts) => setNone(facts.length === 0));
+    } catch {
+      setNone(false);
+    }
+    return () => sub?.unsubscribe();
+  }, []);
+  return none;
+}
+
 export interface MeraButtonProps {
   /** The surface showing (`interest:<id>`, `country:DE`, `facts`…). */
   readonly surface: string;
   readonly page: MeraPageKey;
-  readonly mode: FeedStatusMode;
   /** Which side of the button the tooltip sits on (the side facing the
    *  screen's middle). Physical: the host lays this subtree out LTR. */
   readonly tooltipSide?: 'left' | 'right';
@@ -91,7 +110,6 @@ export interface MeraButtonProps {
 const MeraButton: React.FC<MeraButtonProps> = ({
   surface,
   page,
-  mode,
   tooltipSide = 'left',
   pan,
   dragging = false,
@@ -101,51 +119,8 @@ const MeraButton: React.FC<MeraButtonProps> = ({
 }) => {
   const colors = useColors();
   const { t } = useTranslation();
-  // Computed keys (pools, status), so `t` takes them untyped; the en.json
-  // presence test in mera-button covers every one.
-  const tKey = t as unknown as (key: string, opts?: Record<string, string>) => string;
   const reduceMotion = useReducedMotion();
-  const webSearch = useWebSearchInChat();
-
-  // ── hint: one per app session per pool, from L4's cursor ────────────────
-  const keys = useMemo(() => hintKeys(page, webSearch), [page, webSearch]);
-  const [index, setIndex] = useState<number | null>(null);
-  useEffect(() => {
-    setIndex(null);
-    if (keys.length === 0) return;
-    let alive = true;
-    void takeHintIndex(page, keys.length).then((i) => {
-      if (alive) setIndex(i);
-    });
-    return () => {
-      alive = false;
-    };
-  }, [page, keys.length]);
-  const hint = index !== null && keys.length > 0 ? tKey(keys[index % keys.length]) : null;
-
-  // ── tooltip: the first 10 s of each visit, never restarted by a remount ──
-  const [tooltipOn, setTooltipOn] = useState(false);
-  useEffect(() => {
-    const remaining = tooltipRemainingMs(surface);
-    if (hint === null || remaining === 0) {
-      setTooltipOn(false);
-      return;
-    }
-    setTooltipOn(true);
-    const timer = setTimeout(() => setTooltipOn(false), remaining);
-    return () => clearTimeout(timer);
-  }, [surface, hint]);
-
-  // ── reading status: announce updating / up to date on change ─────────────
-  const prevMode = useRef(mode);
-  useEffect(() => {
-    const was = prevMode.current;
-    prevMode.current = mode;
-    if (was === mode) return;
-    if (mode === 'processing' || (was === 'processing' && mode === 'idle')) {
-      AccessibilityInfo.announceForAccessibility(tKey(statusKey(mode)));
-    }
-  }, [mode, tKey]);
+  const tooltipOn = useHasNoFacts() && !working && !unread;
 
   // ── working: the logo grows on the UI thread ─────────────────────────────
   const scale = useSharedValue(working ? 1 : REST_SCALE);
@@ -210,7 +185,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   const pointsLeft = tooltipSide === 'right';
   return (
     <View style={styles.box} pointerEvents="box-none">
-      {tooltipOn && hint !== null && !dragging && (
+      {tooltipOn && !dragging && (
         <View
           pointerEvents="none"
           style={[styles.tooltipLane, pointsLeft ? styles.laneRight : styles.laneLeft]}
@@ -224,7 +199,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
             testID="mera-button-tooltip"
           >
             <Text style={styles.tooltipText} maxFontSizeMultiplier={1.4}>
-              {hint}
+              {t('meraButton.tooltipNew')}
             </Text>
             <View style={[styles.pointer, pointsLeft ? styles.pointerLeft : styles.pointerRight]} />
           </Animated.View>
@@ -238,9 +213,9 @@ const MeraButton: React.FC<MeraButtonProps> = ({
           accessible
           accessibilityRole="button"
           accessibilityLabel={
-            hint !== null ? tKey('meraButton.a11yLabel', { hint }) : t('floatingChat.title')
+            working ? t('meraButton.working') : unread ? t('meraButton.answerReady') : t('tutorials.askMera')
           }
-          accessibilityValue={{ text: tKey(statusKey(mode)) }}
+          accessibilityHint={tooltipOn ? t('meraButton.tooltipNew') : undefined}
           accessibilityActions={actions}
           onAccessibilityAction={(e) => {
             const name = e.nativeEvent.actionName;
@@ -308,9 +283,9 @@ const styles = StyleSheet.create({
   },
   tooltip: {
     maxWidth: TOOLTIP_MAX_WIDTH,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 12,
     backgroundColor: TOOLTIP_BG,
     borderWidth: 1,
     borderColor: TOOLTIP_BORDER,
@@ -321,8 +296,8 @@ const styles = StyleSheet.create({
   },
   tooltipText: {
     color: '#E5E5E5',
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
   },
   // A rotated square half-tucked under the bubble's edge nearest the button.
   pointer: {

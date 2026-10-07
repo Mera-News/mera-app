@@ -32,10 +32,8 @@ import {
   useHeaderBottom,
 } from '@/components/custom/nav/current-surface';
 import { tabForSurface, type TabId } from '@/components/custom/nav/page-registry';
-import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import { SPRING } from '@/lib/motion';
-import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE, useMeraButtonBottom } from '@/lib/navigation/tab-bar';
 import {
@@ -96,7 +94,6 @@ function useKeyboardUp(): boolean {
 interface PlacedProps {
   readonly surface: string;
   readonly page: MeraPageKey;
-  readonly mode: FeedStatusMode;
   readonly frame: CornerFrame;
   readonly context?: ChatContext;
   /** Root hosts: a bottom corner lifts above the keyboard. */
@@ -107,7 +104,7 @@ interface PlacedProps {
 
 /** The button at its corner, with the drag. Its own component so the shared
  *  values live only while there is a measured frame to place it in. */
-const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame, context, rideKeyboard, working, unread }) => {
+const Placed: React.FC<PlacedProps> = ({ surface, page, frame, context, rideKeyboard, working, unread }) => {
   const corner = useMeraCorner();
   const reduceMotion = useReducedMotion();
   // The keyboard's top, as a negative translate (0 while it is down). Its
@@ -192,7 +189,6 @@ const Placed: React.FC<PlacedProps> = ({ surface, page, mode, frame, context, ri
       <MeraButton
         surface={surface}
         page={page}
-        mode={mode}
         tooltipSide={tooltipSide(corner)}
         pan={pan}
         dragging={dragging}
@@ -218,7 +214,6 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
   const working = useFloatingChatIsGenerating();
   const unread = useFloatingChatAnswerUnread();
   const keyboardUp = useKeyboardUp();
-  const mode = useFeedStatusMode();
   const tabBottom = useMeraButtonBottom();
   const insets = useSafeAreaInsets();
   const bottom = root ? insets.bottom + MERA_BUTTON_BAR_GAP : tabBottom;
@@ -274,7 +269,6 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
         <Placed
           surface={root ? (article ? 'article' : 'search') : (surface ?? '')}
           page={page}
-          mode={mode}
           frame={frame}
           context={context}
           rideKeyboard={root}

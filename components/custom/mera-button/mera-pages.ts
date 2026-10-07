@@ -1,7 +1,9 @@
-// What the Mera button says and opens on each page.
+// What the Mera button opens on each page: the chat context, its intro and
+// its starter chips.
 //
-// Pure: page id in, i18n keys and a ChatContext out. The hint pools live here
-// and not in nav/page-registry so the one lane that writes chat copy owns them.
+// Pure: page id in, i18n keys and a ChatContext out. The starter pools live
+// here and not in nav/page-registry so the one lane that writes chat copy owns
+// them.
 //
 // EVERY HINT IS SOMETHING THE ROUTED AGENT CAN DO TODAY, on cloud and on
 // device (owner ruling, navx). The persona agent saves, changes and removes
@@ -10,11 +12,10 @@
 // (countries, source mutes, topic weights) come back with
 // plans/ready_to_implement/mera-settings-proposals.
 //
-// A hint marked `web` needs "Web search in chat". While that setting is off it
-// is skipped, and a pool it empties shows no tooltip (owner ruling).
+// A starter marked `web` needs "Web search in chat". While that setting is off
+// it is skipped.
 
 import type { SurfaceId } from '@/components/custom/nav/page-registry';
-import type { FeedStatusMode } from '@/lib/feed-status-mode';
 import type { ChatContext, MeraPageKey } from '@/lib/stores/floating-chat-store';
 
 interface HintDef {
@@ -104,7 +105,7 @@ export function interestFactId(surface: string | null | undefined): string | nul
   return id.length > 0 ? id : null;
 }
 
-/** The page's hint keys, in rotation order, minus web hints while web search is off. */
+/** The page's starter keys, minus web ones while web search is off. */
 export function hintKeys(page: MeraPageKey, webSearch: boolean): string[] {
   return POOLS[page].filter((h) => webSearch || !h.web).map((h) => h.key);
 }
@@ -155,21 +156,6 @@ export function pageStarters(
     }
     return { labelKey, draftKey: labelKey };
   });
-}
-
-/** The button's accessibility value: the four status strings the header mark
- *  used (feedStatus.*). Deferred reads as up to date, as it always has. */
-export function statusKey(mode: FeedStatusMode): string {
-  switch (mode) {
-    case 'processing':
-      return 'feedStatus.modeProcessing';
-    case 'error':
-      return 'feedStatus.modeError';
-    case 'limited':
-      return 'feedStatus.modeLimited';
-    default:
-      return 'feedStatus.idle';
-  }
 }
 
 /** Every i18n key this module can return, for the en.json presence test. */
