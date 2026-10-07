@@ -45,8 +45,6 @@ const REST_SCALE = LOGO_REST / LOGO_WORKING;
 /** The unread ring: 2pt, 5pt clear of the disc (FinalMeraChat #11). */
 const RING_GAP = 5;
 const RING_WIDTH = 2;
-const TOOLTIP_BG = 'rgba(52,50,55,0.97)';
-const TOOLTIP_BORDER = 'rgba(255,255,255,0.12)';
 const TOOLTIP_MAX_WIDTH = 190;
 const TOOLTIP_GAP = 10;
 
@@ -183,6 +181,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   ];
 
   const pointsLeft = tooltipSide === 'right';
+  const tooltipColours = { backgroundColor: colors.panel, borderColor: colors.panelBorder };
   return (
     <View style={styles.box} pointerEvents="box-none">
       {tooltipOn && !dragging && (
@@ -195,13 +194,13 @@ const MeraButton: React.FC<MeraButtonProps> = ({
             exiting={reduceMotion ? undefined : FadeOut.duration(400)}
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
-            style={styles.tooltip}
+            style={[styles.tooltip, tooltipColours]}
             testID="mera-button-tooltip"
           >
-            <Text style={styles.tooltipText} maxFontSizeMultiplier={1.4}>
+            <Text style={[styles.tooltipText, { color: colors.ink }]} maxFontSizeMultiplier={1.4}>
               {t('meraButton.tooltipNew')}
             </Text>
-            <View style={[styles.pointer, pointsLeft ? styles.pointerLeft : styles.pointerRight]} />
+            <View style={[styles.pointer, tooltipColours, pointsLeft ? styles.pointerLeft : styles.pointerRight]} />
           </Animated.View>
         </View>
       )}
@@ -286,16 +285,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 7,
     borderRadius: 12,
-    backgroundColor: TOOLTIP_BG,
     borderWidth: 1,
-    borderColor: TOOLTIP_BORDER,
     shadowColor: '#000',
     shadowOpacity: 0.45,
     shadowRadius: 9,
     shadowOffset: { width: 0, height: 6 },
   },
   tooltipText: {
-    color: '#E5E5E5',
     fontSize: 13,
     lineHeight: 17,
   },
@@ -306,8 +302,6 @@ const styles = StyleSheet.create({
     marginTop: -5,
     width: 10,
     height: 10,
-    backgroundColor: TOOLTIP_BG,
-    borderColor: TOOLTIP_BORDER,
     transform: [{ rotate: '45deg' }],
   },
   pointerRight: { right: -6, borderTopWidth: 1, borderRightWidth: 1, borderTopRightRadius: 2 },
