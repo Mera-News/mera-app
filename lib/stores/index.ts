@@ -118,6 +118,8 @@ export const clearAllStores = async () => {
     // The Mera button's corner: its row went with the database, so the next
     // account starts in the default corner.
     resetMeraButtonCorner();
+    // The Feed view and minimap: their rows went with the database.
+    require('@/components/custom/feed/feed-view-prefs').resetFeedViewPrefs();
     clearAttestationCache();
     // Its settings row went with the reset above; the memory must go too, or
     // the next record writes the previous account's publishers into the new

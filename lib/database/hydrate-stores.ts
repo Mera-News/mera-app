@@ -76,6 +76,10 @@ export function hydrateAllStores(): Promise<void> {
     // the button never paints in the default corner and then jumps. Never
     // rejects.
     require('@/components/custom/mera-button/corner').hydrateMeraButtonCorner(),
+    // The Feed's view (Continuous or Sectioned) and minimap rows, the same
+    // memoised load the startup gate awaits, so the Feed never opens in one
+    // view and jumps to the other. Never rejects.
+    require('@/components/custom/feed/feed-view-prefs').loadFeedViewPrefs(),
     // Not a Zustand store: a synchronous mirror of the backup preferences,
     // read by the settings section and by the background task's guards.
     require('../backup/backup-settings')

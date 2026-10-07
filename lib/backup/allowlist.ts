@@ -123,10 +123,10 @@ export const BACKUP_SETTING_KEYS: readonly string[] = [
   'explore_browse_countries',
   'explore_suppressed_scopes',
   'mera_selected_model_id',
-  'nav_order_feed',
+  // Only World is arranged; Feed, Library and You have fixed pages.
   'nav_order_world',
-  'nav_order_library',
-  'nav_order_you',
+  'feed_view',
+  'feed_minimap',
 ];
 
 /**
@@ -179,6 +179,9 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   backup_last_failed_at: 'Records when THIS device last failed to upload; says nothing about another device.',
   backup_recovery_code_confirmed:
     'Records that THIS device showed the user their code. Restoring it onto a new device would assert a confirmation that never happened and let a backup upload under a key nobody has written down.',
+  library_checks_seen_at:
+    'When THIS device last opened Fact checks; drives its dot. Local by design (invariant 9).',
+  developer_mode: 'A developer switch on THIS device. Never carried to another one.',
   [RESTORE_IN_PROGRESS_KEY]:
     'Torn-restore marker for THIS device. Backing it up would restore a permanent "a restore is in progress" state onto the next device.',
 };

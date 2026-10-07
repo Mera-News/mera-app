@@ -177,6 +177,10 @@ const mockHydrateMeraButtonCorner = jest.fn(() => Promise.resolve());
 jest.mock('@/components/custom/mera-button/corner', () => ({
   hydrateMeraButtonCorner: () => mockHydrateMeraButtonCorner(),
 }));
+// The Feed view and minimap rows (lazy settings read; mocked like the others).
+jest.mock('@/components/custom/feed/feed-view-prefs', () => ({
+  loadFeedViewPrefs: () => Promise.resolve(),
+}));
 
 import { hydrateAllStores } from '../hydrate-stores';
 import { pruneStaleVisits } from '../services/publication-visit-service';

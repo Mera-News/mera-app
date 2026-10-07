@@ -24,6 +24,7 @@ import { loginRevenueCat } from "@/lib/revenuecat";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { readStartupTab } from "@/lib/navigation/startup-tab";
 import { loadPageOrders } from "@/lib/navigation/page-order";
+import { loadFeedViewPrefs } from "@/components/custom/feed/feed-view-prefs";
 import { releaseSplash } from "@/lib/splash-hold";
 import {
     consumePendingNotificationRoute,
@@ -323,10 +324,14 @@ function LoggedInGate() {
                     // than the Zustand store: hydrateAllStores() is
                     // fire-and-forget, so the store may not be hydrated yet
                     // (see lib/navigation/startup-tab.ts).
-                    // Page orders load beside the startup tab, so a tab never
-                    // opens on its default page and then jumps (memoised; never
-                    // rejects).
-                    const [startupTab] = await Promise.all([readStartupTab(), loadPageOrders()]);
+                    // Page orders and the Feed view load beside the startup
+                    // tab, so a tab never opens on its default page or view and
+                    // then jumps (memoised; never reject).
+                    const [startupTab] = await Promise.all([
+                        readStartupTab(),
+                        loadPageOrders(),
+                        loadFeedViewPrefs(),
+                    ]);
                     if (cancelled) return;
                     router.replace(`/logged-in/app_container/${startupTab}`);
                     await openPendingNotificationRoute(userId, () => cancelled);
