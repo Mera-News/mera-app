@@ -52,8 +52,6 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 /** A 44pt header button, numeric (never hitSlop). */
 const HEADER_BUTTON = { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' } as const;
 
-/** Pull-to-refresh spinner tint — matches FeedScreen's. */
-const REFRESH_TINT = '#EDA77E';
 
 interface StoryTimelineScreenProps {
     trackedStoryId: string;
@@ -491,7 +489,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         nextNote
     ) : (
         <Box className="items-center justify-center py-20 px-8" testID={`story-timeline-${emptyReason}`}>
-            <MaterialIcons name="error-outline" size={40} color="#9CA3AF" />
+            <MaterialIcons name="error-outline" size={40} color={colors.ink2} />
             <Text size="sm" className="text-typography-400 text-center mt-4">
                 {emptyReason === 'gone'
                     ? t('articleDetail.storyUnavailable')
@@ -524,7 +522,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                 as="heading"
                                 size="xl"
                                 numberOfLines={2}
-                                className="text-white"
+                                className="text-ink"
                             />
                         )}
                         {/* Followed since, and the AI disclosure when the
@@ -647,8 +645,8 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={() => load({ isRefresh: true })}
-                        tintColor={REFRESH_TINT}
-                        colors={[REFRESH_TINT]}
+                        tintColor={colors.accent}
+                        colors={[colors.accent]}
                     />
                 }
                 contentContainerStyle={{
