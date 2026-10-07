@@ -1,8 +1,12 @@
 // S6's section of the navx2 P2 kit gallery (app/dev-kit.tsx): the shared kit
 // in every state. Dev only, English literals on purpose; deleted in P13.
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import ConsentContent from '@/components/custom/auth/ConsentContent';
+import { consentNoticeKey } from '@/components/custom/auth/device-sign-in-copy';
 import { LanguageRow } from '@/components/custom/auth/LanguageRow';
 import { OtpBoxes, type OtpState } from '@/components/custom/auth/OtpBoxes';
 import ModalMaterial from '@/components/custom/ModalMaterial';
@@ -34,6 +38,7 @@ function Small({ title, onPress }: { title: string; onPress: () => void }) {
 }
 
 export default function KitGallery() {
+    const { t } = useTranslation();
     const colors = useColors();
     const [sheet, setSheet] = useState(false);
     const [dialog, setDialog] = useState<'none' | 'confirm' | 'destructive' | 'info' | 'busy'>('none');
@@ -193,6 +198,26 @@ export default function KitGallery() {
                 <Small title="Next" onPress={() => setGuard(true)} />
             </View>
 
+            <Label>Before you start, device path (FinalJourney #7; static, never signs in)</Label>
+            <View style={styles.consent}>
+                <AbstractGradientBackdrop />
+                <View style={{ padding: 20 }}>
+                    <ConsentContent
+                        testIDPrefix="kit-consent"
+                        title={t('auth.track.beforeYouStart')}
+                        body={t('consent.welcomeBody')}
+                        notice={
+                            <Text style={{ color: colors.ink2, fontSize: 15, lineHeight: 21 }}>
+                                {t(consentNoticeKey('app-attest') ?? 'consent.deviceNotice.generic')}
+                            </Text>
+                        }
+                        onWhatMeraKeeps={() => undefined}
+                        ctaLabel={t('consent.accept')}
+                        onAccept={() => undefined}
+                    />
+                </View>
+            </View>
+
             <Label>LanguageRow (picked, download, busy, plain)</Label>
             <View style={[styles.list, { backgroundColor: colors.surface, borderColor: colors.line }]}>
                 <LanguageRow endonym="English" english="English" isPhoneLanguage picked={picked === 'en'} accessory="none" onPress={() => setPicked('en')} downloadA11yLabel="Download English" phoneLanguageLabel="Your phone's language" />
@@ -246,6 +271,7 @@ export default function KitGallery() {
 }
 
 const styles = StyleSheet.create({
+    consent: { borderRadius: 24, overflow: 'hidden' },
     swatch: { height: 200, borderRadius: 24, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
     wrap: { flexDirection: 'row', flexWrap: 'wrap' },
     pressCard: { padding: 20, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth },
