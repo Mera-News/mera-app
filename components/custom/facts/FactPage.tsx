@@ -16,7 +16,7 @@ import { useSectionSnapshots } from '@/components/custom/for-you/use-section-sna
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { clearHeaderBottom, reportHeaderBottom } from '@/components/custom/nav/current-surface';
-import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
+import { openSectionedFeed } from '@/components/custom/feed/feed-view-prefs';
 import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Pressable } from '@/components/ui/pressable';
@@ -603,6 +603,13 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 />
             </Group>
         </View>
+    ) : from === 'feed' ? (
+        // The last interest: the way back is the sectioned Feed.
+        <View style={{ paddingHorizontal: 14, paddingTop: 16 }}>
+            <Group>
+                <Row testID="fact-back-to-feed" title={t('trackedStories.emptyCta')} onPress={openSectionedFeed} />
+            </Group>
+        </View>
     ) : null;
 
     return (
@@ -614,7 +621,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
             >
                 <DrillDownHeader
                     title={t('facts.page.title')}
-                    onBack={() => (from === 'feed' && !router.canGoBack() ? navigateToPage('feed') : router.back())}
+                    onBack={() => (from === 'feed' && !router.canGoBack() ? openSectionedFeed() : router.back())}
                     rightAction={
                         <Pressable
                             testID="fact-menu"

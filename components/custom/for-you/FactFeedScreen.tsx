@@ -11,7 +11,7 @@ import {
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import NextSectionFooter from '@/components/custom/for-you/NextSectionFooter';
-import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
+import { openSectionedFeed } from '@/components/custom/feed/feed-view-prefs';
 import { clearHeaderBottom, reportHeaderBottom } from '@/components/custom/nav/current-surface';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
@@ -185,7 +185,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
 
   // Back to the Interests page: pops the Feed stack (this screen) and selects
   // the page, however the reader got here.
-  const backToInterests = useCallback(() => navigateToPage('interests'), []);
+  const backToInterests = useCallback(() => openSectionedFeed(), []);
 
   // Screen-reader focus moves to the new section's title after a "Next" hop,
   // so VoiceOver does not stay on a footer that no longer exists.
