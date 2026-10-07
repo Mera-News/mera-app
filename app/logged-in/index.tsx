@@ -57,6 +57,21 @@ async function openPendingNotificationRoute(
     if (href && !isCancelled()) router.push(href);
 }
 
+/**
+ * One account-switch wipe at a time. The gate re-runs whenever the session atom
+ * changes, and it changes while a wipe is running (OTP lands, then the atom
+ * settles), so two runs could each reset the database and the second reset
+ * could take the first run's `cached_user_id` stamp with it. A re-run awaits
+ * the wipe in flight instead of starting its own.
+ */
+let wipeInFlight: Promise<void> | null = null;
+function wipeOnce(newUserId: string): Promise<void> {
+    wipeInFlight ??= clearPreviousUserData(newUserId).finally(() => {
+        wipeInFlight = null;
+    });
+    return wipeInFlight;
+}
+
 /** S7: a render crash on the gate stays on the gate's own fallback. The async
  *  routing failures are handled by the effect's own narrowed catch. */
 export default function LoggedInIndex() {
@@ -223,7 +238,7 @@ function LoggedInGate() {
                     // one and then stamping its stale owner over the live one.
                     if (cancelled) return;
                     try {
-                        await clearPreviousUserData(effective);
+                        await wipeOnce(effective);
                     } catch (error) {
                         // ── FAIL CLOSED ──────────────────────────────────
                         // The previous owner's facts, reading history, saved
@@ -243,9 +258,24 @@ function LoggedInGate() {
 
                 if (cancelled) return;
                 if (effective) {
-                    // A PROVEN identity — persist it. This is the only writer
-                    // of `cached_user_id` on this path.
-                    userStore.setUserId(effective);
+                    // A PROVEN identity — persist it, and wait until it is on
+                    // disk. This is the only writer of `cached_user_id` on this
+                    // path, and a stamp that silently failed after a wipe leaves
+                    // no `cached_user_id` and no `has_launched`, which the next
+                    // launch's install boundary reads as a fresh install and
+                    // signs the user out. Not landed: the failed-wipe screen,
+                    // whose Try again re-runs this.
+                    try {
+                        await setSetting('cached_user_id', effective);
+                        if ((await getSetting('cached_user_id')) !== effective) throw new Error('stamp did not land');
+                    } catch (error) {
+                        logger.captureException(error, {
+                            tags: { component: 'LoggedInIndex', method: 'stampIdentity' },
+                        });
+                        if (!cancelled) setWipeFailed(true);
+                        return;
+                    }
+                    userStore.adoptLocalUserId(effective);
                     // Consumed. The stamp is the durable form of the same fact,
                     // so keeping the recording could only let a stale value mask
                     // a later switch.
