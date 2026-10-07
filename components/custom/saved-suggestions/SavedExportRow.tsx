@@ -9,7 +9,7 @@
 import { GlassPlate } from '@/components/custom/GlassSurface';
 import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import { Text } from '@/components/ui/text';
-import { COLORS } from '@/lib/theme/tokens';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +35,8 @@ interface Props {
 
 const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExplain, onExport }) => {
     const { t } = useTranslation();
+    const colors = useColors();
+    const styles = useStyles();
 
     const ride = useAnimatedStyle(
         () => ({
@@ -55,7 +57,7 @@ const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExplai
                     importantForAccessibility="no-hide-descendants"
                 >
                     <GlassPlate />
-                    <MaterialIcons name="ios-share" size={17} color={COLORS.dark.ink} />
+                    <MaterialIcons name="ios-share" size={17} color={colors.ink} />
                     <Text style={styles.label}>{t('library.saved.export')}</Text>
                 </View>
                 <Pressable
@@ -81,7 +83,7 @@ const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExplai
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     row: {
         position: 'absolute',
         left: 0,
@@ -90,7 +92,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         justifyContent: 'center',
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: COLORS.dark.line,
+        borderBottomColor: c.line,
         overflow: 'hidden',
         zIndex: 5,
     },
@@ -100,13 +102,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         borderRadius: 999,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: COLORS.dark.trackBorder,
+        borderColor: c.trackBorder,
         overflow: 'hidden',
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
     },
-    label: { fontSize: 14, lineHeight: 18, fontWeight: '600', color: COLORS.dark.ink },
-});
+    label: { fontSize: 14, lineHeight: 18, fontWeight: '600', color: c.ink },
+}));
 
 export default SavedExportRow;

@@ -18,14 +18,13 @@ import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 import { FlatList, useWindowDimensions, type ListRenderItem } from 'react-native';
 import { exportAndShare, type ExportFormat } from './export-and-share';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Dark-mode `--color-primary-500`. A literal because MaterialIcons takes a
  *  colour prop, not a class, and the app mounts dark-only. */
-const ACCENT = '#EDA77E';
-const MUTED = 'rgb(140, 140, 140)';
 
 const TOTAL_STEPS = 3;
 
@@ -85,13 +84,16 @@ interface ExportWizardModalProps {
 
 /** A checkbox row: the glyph pair this repo uses in place of a checkbox
  *  primitive, which does not exist in `components/ui`. */
-const CheckGlyph: React.FC<{ checked: boolean }> = ({ checked }) => (
-    <MaterialIcons
-        name={checked ? 'check-box' : 'check-box-outline-blank'}
-        size={22}
-        color={checked ? ACCENT : MUTED}
-    />
-);
+const CheckGlyph: React.FC<{ checked: boolean }> = ({ checked }) => {
+    const c = useColors();
+    return (
+        <MaterialIcons
+            name={checked ? 'check-box' : 'check-box-outline-blank'}
+            size={22}
+            color={checked ? c.accent : c.ink3}
+        />
+    );
+};
 
 /**
  * The three-step export wizard: choose articles, include Mera's reason and/or
@@ -112,6 +114,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
     fileBaseName,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const { height: windowHeight } = useWindowDimensions();
 
     const [step, setStep] = useState(1);
@@ -230,7 +233,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                     onPress={() => toggleOne(item.id)}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked }}
-                    className="flex-row items-center py-3 px-1 border-b border-gray-800"
+                    className="flex-row items-center py-3 px-1 border-b border-line"
                 >
                     <Box className="flex-1 pr-3">
                         <TranslatableDynamic
@@ -278,18 +281,18 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                                 accessibilityLabel={t('common.back')}
                                 className="p-1 rounded-full"
                             >
-                                <MaterialIcons name="arrow-back" size={20} color="#FFFFFF" />
+                                <MaterialIcons name="arrow-back" size={20} color={colors.ink} />
                             </Pressable>
                         ) : (
                             <Box className="w-7" />
                         )}
 
                         <VStack className="flex-1 items-center">
-                            <Text size="xs" className="text-gray-500">
+                            <Text size="xs" className="text-ink-3">
                                 {t('onboarding.stepOf', { current: step, total: TOTAL_STEPS })}
                             </Text>
                             <Text
-                                className="text-base font-semibold text-white text-center"
+                                className="text-base font-semibold text-ink text-center"
                                 numberOfLines={2}
                             >
                                 {stepHeading}
@@ -311,8 +314,8 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                                     size="sm"
                                     className={
                                         canAdvance
-                                            ? 'font-semibold text-primary-500'
-                                            : 'font-semibold text-gray-600'
+                                            ? 'font-semibold text-accent-text'
+                                            : 'font-semibold text-ink-3'
                                     }
                                 >
                                     {t('common.next')}
@@ -355,16 +358,16 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                             onPress={toggleAll}
                             accessibilityRole="checkbox"
                             accessibilityState={{ checked: allSelected }}
-                            className="flex-row items-center justify-between py-3 px-1 border-b border-gray-700"
+                            className="flex-row items-center justify-between py-3 px-1 border-b border-line"
                         >
                             <VStack className="flex-1 pr-3">
-                                <Text size="sm" className="text-white font-semibold">
+                                <Text size="sm" className="text-ink font-semibold">
                                     {t('savedExport.selectAll')}
                                 </Text>
                                 <Text
                                     testID={`${testIDPrefix}-count`}
                                     size="xs"
-                                    className="text-gray-500"
+                                    className="text-ink-3"
                                 >
                                     {t('savedExport.selectedCount', {
                                         count: selected.size,
@@ -401,10 +404,10 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                                     className="flex-row items-center py-3 px-1"
                                 >
                                     <VStack className="flex-1 pr-3">
-                                        <Text size="sm" className="text-white">
+                                        <Text size="sm" className="text-ink">
                                             {t('savedExport.includeReason')}
                                         </Text>
-                                        <Text size="xs" className="text-gray-500 mt-0.5">
+                                        <Text size="xs" className="text-ink-3 mt-0.5">
                                             {reasonHint}
                                         </Text>
                                     </VStack>
@@ -418,10 +421,10 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                                     className="flex-row items-center py-3 px-1"
                                 >
                                     <VStack className="flex-1 pr-3">
-                                        <Text size="sm" className="text-white">
+                                        <Text size="sm" className="text-ink">
                                             {t('savedExport.includeImage')}
                                         </Text>
-                                        <Text size="xs" className="text-gray-500 mt-0.5">
+                                        <Text size="xs" className="text-ink-3 mt-0.5">
                                             {t('savedExport.includeImageHint')}
                                         </Text>
                                     </VStack>
@@ -444,13 +447,13 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                                             onPress={() => handleShare(format)}
                                             disabled={sharingFormat !== null}
                                             accessibilityRole="button"
-                                            className="flex-row items-center border border-gray-700 rounded-lg px-3 py-3"
+                                            className="flex-row items-center border border-line rounded-lg px-3 py-3"
                                         >
                                             <VStack className="flex-1 pr-3">
-                                                <Text size="sm" className="text-white font-semibold">
+                                                <Text size="sm" className="text-ink font-semibold">
                                                     {t(`savedExport.${labelKey}`)}
                                                 </Text>
-                                                <Text size="xs" className="text-gray-500 mt-0.5">
+                                                <Text size="xs" className="text-ink-3 mt-0.5">
                                                     {t(`savedExport.${hintKey}`)}
                                                 </Text>
                                             </VStack>
@@ -460,7 +463,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                                                 <MaterialIcons
                                                     name="ios-share"
                                                     size={20}
-                                                    color={ACCENT}
+                                                    color={colors.accent}
                                                 />
                                             )}
                                         </Pressable>
@@ -471,7 +474,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                     </ModalBody>
                 )}
 
-                <ModalFooter className="border-t border-gray-700 pt-4">
+                <ModalFooter className="border-t border-line pt-4">
                     <Button
                         testID={`${testIDPrefix}-cancel`}
                         variant="outline"
