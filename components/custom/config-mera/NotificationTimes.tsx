@@ -36,7 +36,7 @@ export function initialCursorHour(picked: readonly number[]): number {
 }
 
 /** 24h vs AM/PM follows the phone's own clock setting; there is no toggle. */
-function deviceUses24h(): boolean {
+export function deviceUses24h(): boolean {
     try {
         return getCalendars()[0]?.uses24hourClock !== false;
     } catch {

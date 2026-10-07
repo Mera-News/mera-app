@@ -1,17 +1,14 @@
 import PinLockScreen from '@/components/custom/auth/PinLockScreen';
 import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
-import { GlassPanel } from '@/components/custom/GlassSurface';
+import { Group, Help, Row } from '@/components/custom/you/rows';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { VStack } from '@/components/ui/vstack';
 import logger from '@/lib/logger';
 import { usePinStore } from '@/lib/stores/pin-store';
-import { MaterialIcons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, StyleSheet, View } from 'react-native';
@@ -151,60 +148,34 @@ const SecuritySettingsSection: React.FC = () => {
     };
 
     return (
-        <VStack>
-            <GlassPanel radius={8} className="mb-3" fallbackClassName="border border-gray-700 bg-transparent">
-                <HStack className="items-center justify-between py-3 px-4">
-                    <HStack space="md" className="items-center flex-1 pr-3">
-                        {/* Decoration: the row's text says it. A standalone glyph
-                            surfaced as its own StaticText (captured). */}
-                        <MaterialIcons
-                            name={lockEnabled ? 'lock' : 'lock-open'}
-                            size={20}
-                            color={lockEnabled ? '#10b981' : '#9ca3af'}
-                            accessible={false}
-                            accessibilityElementsHidden
-                            importantForAccessibility="no-hide-descendants"
-                        />
-                        <VStack className="flex-1">
-                            <Text className="text-base text-white">{t('security.requirePinTitle')}</Text>
-                            <Text size="sm" className="text-gray-400 mt-0.5">
-                                {t('security.requirePinDescription')}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                    {lockBusy ? (
-                        <Spinner size="small" />
-                    ) : (
-                        <Switch
-                            testID="lock-switch"
-                            value={lockEnabled}
-                            onToggle={handleLockToggle}
-                            size="md"
-                        />
-                    )}
-                </HStack>
-            </GlassPanel>
-
-            {/* Only meaningful while the lock is on; with it off there is no
-                record to change. */}
-            {lockEnabled && (
-                <GlassPanel radius={8} className="mb-3" fallbackClassName="border border-gray-700 bg-transparent">
-                    <Pressable
+        <View style={{ gap: 10 }}>
+            <Help>{t('appLock.intro')}</Help>
+            <Group>
+                <Row
+                    title={t('security.requirePinTitle')}
+                    trailing={
+                        lockBusy ? (
+                            <Spinner size="small" />
+                        ) : (
+                            <Switch testID="lock-switch" value={lockEnabled} onToggle={handleLockToggle} size="md" />
+                        )
+                    }
+                />
+                {/* Only meaningful while the lock is on: with it off there is
+                    no record to change. */}
+                {lockEnabled ? (
+                    <Row
                         testID="settings-row-change-pin"
-                        accessibilityRole="button"
-                        // Explicit, or the chevron's icon-font glyph leaks into it.
-                        accessibilityLabel={t('security.changePin')}
-                        className="flex-row items-center justify-between py-3 px-4"
+                        title={t('security.changePin')}
                         onPress={() => {
                             changePinStartRef.current = Date.now();
                             setFlow('verify');
                         }}
-                    >
-                        <Text className="text-base text-white">{t('security.changePin')}</Text>
-                        <MaterialIcons name="chevron-right" size={20} color="#999999" />
-                    </Pressable>
-                </GlassPanel>
-            )}
+                    />
+                ) : null}
+            </Group>
+            {/* Static text, never a route to /pin-setup (invariant 7). C3 copy. */}
+            <Help>{t('appLock.forgot')}</Help>
 
             {/* An RN Modal is a separate native window: it gets its own dark
                 provider and an opaque page, the TutorialModalHost recipe. */}
@@ -220,7 +191,7 @@ const SecuritySettingsSection: React.FC = () => {
                     <View style={styles.page}>{flowScreen()}</View>
                 </GluestackUIProvider>
             </Modal>
-        </VStack>
+        </View>
     );
 };
 

@@ -122,17 +122,20 @@ export const Row: React.FC<RowProps> = ({
     );
 };
 
-/** A small rounded count or label in the accent (Tidy up "1", a place's role). */
-export const Badge: React.FC<{ readonly label: string; readonly icon?: keyof typeof MaterialIcons.glyphMap }> = ({
-    label,
-    icon,
-}) => {
+/** A small rounded count or label (Tidy up "1", a place's role); `positive`
+ *  is the green privacy pill (Mera Protocol's value). */
+export const Badge: React.FC<{
+    readonly label: string;
+    readonly icon?: keyof typeof MaterialIcons.glyphMap;
+    readonly tone?: 'accent' | 'positive';
+}> = ({ label, icon, tone = 'accent' }) => {
     const colors = useColors();
+    const ink = tone === 'positive' ? colors.positive : colors.accentText;
     return (
         <View style={styles.badge}>
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.accent, opacity: 0.16 }]} />
-            {icon ? <MaterialIcons name={icon} size={13} color={colors.accentText} /> : null}
-            <Text scaleTier="chrome" style={{ color: colors.accentText, fontSize: 12, fontWeight: '600' }}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: tone === 'positive' ? colors.positive : colors.accent, opacity: 0.16 }]} />
+            {icon ? <MaterialIcons name={icon} size={13} color={ink} /> : null}
+            <Text scaleTier="chrome" style={{ color: ink, fontSize: 12, fontWeight: '600' }}>
                 {label}
             </Text>
         </View>

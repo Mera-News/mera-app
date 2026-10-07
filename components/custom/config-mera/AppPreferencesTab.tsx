@@ -1,141 +1,86 @@
-import { GlassPanel } from '@/components/custom/GlassSurface';
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
+import { Group, GroupLabel, Row, Badge } from '@/components/custom/you/rows';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
-import { HStack } from '@/components/ui/hstack';
+import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
-import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
-import { deleteSetting } from '@/lib/database/services/setting-service';
-import { usePinStore } from '@/lib/stores/pin-store';
-import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { backupCadence, backupProviderId } from '@/lib/backup/backup-settings';
+import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
+import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
+import { showDialog } from '@/lib/dialog';
 import { showFeedback } from '@/lib/feedback';
-import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
-import { useUserStore } from '@/lib/stores/user-store';
-import { getAppVersionLabel } from '@/lib/version';
-import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
-import React, { useCallback } from 'react';
-import { useSupportAction } from '@/lib/intercom';
-import { resolveAccountEmailView } from '@/lib/subscription/email-capture';
-import { readSupportIdFromUser } from '@/lib/support-id';
-import * as Clipboard from 'expo-clipboard';
-import { hapticLight } from '@/lib/haptics';
-import { useTranslation } from 'react-i18next';
-import { useAppLanguageStore } from '@/lib/stores/app-language-store';
-import { getNativeLanguageName } from '@/lib/translation-service';
-import { backupCadence, backupLastRunAt, backupProviderId } from '@/lib/backup/backup-settings';
-import PolicyPill from '@/components/custom/PolicyPill';
-import SecuritySettingsSection from './SecuritySettingsSection';
-import SettingsUsageCard from './SettingsUsageCard';
-import { ForwardChevron } from '@/components/custom/you/rows';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { useSupportAction } from '@/lib/intercom';
+import { convertUTCHoursToLocal } from '@/lib/notificationSlotUtils';
+import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { usePinStore } from '@/lib/stores/pin-store';
+import { useTextScaleStore } from '@/lib/stores/text-scale-store';
+import { useUIStore } from '@/lib/stores/ui-store';
+import { useUserStore } from '@/lib/stores/user-store';
+import { requestEmailCapture, resolveAccountEmailView } from '@/lib/subscription/email-capture';
+import { useColors } from '@/lib/theme/tokens';
+import { toastManager } from '@/lib/toast-manager';
+import { getNativeLanguageName } from '@/lib/translation-service';
+import { TEXT_SCALE_STEPS } from '@/lib/typography/scale';
+import { maskEmail } from '@/lib/utils/mask-email';
+import { getAppVersion, getGitCommit } from '@/lib/version';
+import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
+import { formatHourLabel } from '@/components/custom/NotificationHourWheel';
+import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
+import React, { useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
+import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
+import { deviceUses24h } from './NotificationTimes';
+import SettingsUsageCard from './SettingsUsageCard';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
-type YouSettingsScreen = 'display' | 'notifications' | 'mera-protocol';
+type YouSettingsScreen = 'display' | 'notifications' | 'mera-protocol' | 'app-lock' | 'data';
 const youScreen = (screen: YouSettingsScreen) => `/logged-in/app_container/you/${screen}` as Href;
 
-interface PreferenceOption {
-    id: string;
-    title: string;
-    icon: keyof typeof MaterialIcons.glyphMap;
-    onPress: () => void;
-    /** Current value, shown right-aligned before the chevron. */
-    value?: string | null;
-    /** Replaces the chevron with a spinner while an action is starting. */
-    busy?: boolean;
-}
+/** Developer mode: a plain settings row (wiped with the settings table on an
+ *  account switch; never backed up). It shows Observability and the build. */
+const DEVELOPER_MODE_KEY = 'developer_mode';
+/** Three taps on the version line within this long toggle developer mode. */
+const DEV_TAP_WINDOW_MS = 1500;
 
 /** How long the FAQ row shows its spinner. The in-app browser gives no
  *  "presented" event (openBrowserAsync resolves on DISMISS), so this covers the
  *  tap-to-sheet interval and blocks a double tap, and no more. */
 const FAQ_OPENING_MS = 1000;
 
+/**
+ * You > Settings (FinalSettings #1-#3): the plan card, then General, Privacy
+ * and security, Help, Account, Developer (only in developer mode), and a
+ * footer of four text links and the version line. Every value is read from
+ * the setting it names; a few re-read on focus (the tab stays mounted).
+ */
 const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
     const toast = useToast();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const colors = useColors();
     // Shared with the paywall footer and BlockedBanner. `busy` drives the
     // spinner in the chevron slot; every fallback decision lives in the hook.
     const { busy: supportBusy, openSupport } = useSupportAction();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const processingMode = useMeraProtocolStore((s) => s.processingMode);
+    const textScale = useTextScaleStore((s) => s.scale);
+    const lockEnabled = usePinStore((s) => s.lockEnabled);
+    const userPersona = useUserStore((s) => s.userPersona);
     const { data: session } = authClient.useSession();
-    // LOCAL first. This used to be `session?.user?.email` alone, so any window
-    // where better-auth could not produce a session — offline, a keychain-locked
-    // background wake, a 401 blip — dropped the email row entirely and made a
-    // still-signed-in user look logged out. The store's copy comes from the
-    // `cached_user_email` row written at sign-in and is cleared only by an
-    // explicit logout. Session is kept as the fallback for installs that signed
-    // in before that row was hydrated here.
+    // LOCAL first: the stored email survives offline and auth blips; the
+    // session is the fallback. One derivation, shared with email-capture.
     const cachedEmail = useUserStore((s) => s.userEmail);
-    // ONE derivation for the identity footer and the "Add email address" row,
-    // shared with the email-capture module so precedence cannot drift. The
-    // rule that matters (F1): a real STORED email wins over the session,
-    // because the store flips the instant an in-session attach confirms while
-    // the session atom can stay stale until its next refetch. The fabricated
-    // @anon.mera.news address is never displayed as the user's.
-    // S11: the "Add email address" row is gone — email attach happens at
-    // checkout (required) and via the post-purchase fallback only. Settings
-    // keeps the Support ID block and the masked email for accounts that have
-    // one; isAnonAccount is no longer consumed here (displayEmail is already
-    // null for anonymous accounts).
     const { displayEmail } = resolveAccountEmailView({
         storedEmail: cachedEmail,
         sessionUser: session?.user ?? null,
     });
-    // The support handle minted for device sign-in accounts; it survives an
-    // email attach, so it shows for anonymous AND email-attached accounts.
-    // Session-only by design: absent (null) simply hides the row.
-    const supportId = readSupportIdFromUser(session?.user);
 
-    // Copy-to-clipboard feedback: no copy idiom existed in the app before this,
-    // so the shape is the smallest honest one — haptic plus a brief localized
-    // "Copied" swap that reverts on its own. Copies ONLY the numeric id.
-    const [supportIdCopied, setSupportIdCopied] = React.useState(false);
-    const supportIdCopyTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-    React.useEffect(
-        () => () => {
-            if (supportIdCopyTimer.current) clearTimeout(supportIdCopyTimer.current);
-        },
-        [],
-    );
-    const handleCopySupportId = async () => {
-        if (!supportId) return;
-        try {
-            await Clipboard.setStringAsync(supportId);
-        } catch {
-            // Clipboard unavailable — no feedback state, nothing to undo.
-            return;
-        }
-        void hapticLight();
-        setSupportIdCopied(true);
-        if (supportIdCopyTimer.current) clearTimeout(supportIdCopyTimer.current);
-        supportIdCopyTimer.current = setTimeout(() => setSupportIdCopied(false), 1800);
-    };
-    const maskedEmail = React.useMemo(() => {
-        if (!displayEmail) return null;
-        const atIdx = displayEmail.lastIndexOf('@');
-        if (atIdx <= 0) return displayEmail;
-        const local = displayEmail.slice(0, atIdx);
-        const domain = displayEmail.slice(atIdx);
-        const visibleCount = Math.ceil(local.length / 2);
-        return local.slice(0, visibleCount) + '•'.repeat(local.length - visibleCount) + domain;
-    }, [displayEmail]);
-
-    // UI Store for modal state management
-    const logoutModal = useLogoutModal();
-    const { openModal, closeModal, setModalProcessing } = useUIStore();
-
-    // Derived modal visibility states
-    const showLogoutModal = logoutModal.isOpen;
-    const isLoggingOut = logoutModal.isProcessing;
+    const { closeModal, setModalProcessing } = useUIStore();
 
     // Function that performs the actual logout
     const handleActualLogout = async () => {
@@ -247,21 +192,67 @@ const AppPreferencesTab: React.FC = () => {
         }
     };
 
-    // The backup row reads the synchronous mirror (hydrated at startup), so it
-    // re-renders on focus to pick up a backup or a setting changed on the
-    // Manage data screen a moment ago.
+    const confirmLogout = async () => {
+        const ok = await showDialog({
+            title: t('preferences.signOutModalTitle'),
+            body: t('preferences.signOutConfirm'),
+            confirmLabel: t('preferences.signOut'),
+            cancelLabel: t('common.cancel'),
+            destructive: true,
+        });
+        if (ok) await handleActualLogout();
+    };
+
+    // Values read from synchronous mirrors or rows (backup, developer mode)
+    // re-render on focus: a change made a moment ago on a pushed screen is
+    // otherwise invisible here.
     const [, setFocusTick] = React.useState(0);
-    useFocusEffect(useCallback(() => setFocusTick((n) => n + 1), []));
-    const backupValue = (() => {
-        if (backupCadence() === 'off' || backupProviderId() === null) return t('backup.cadence.off');
-        const last = backupLastRunAt();
-        if (last === null) return t('settings.backupRowNever');
-        try {
-            return new Date(last).toLocaleDateString(appLanguage, { month: 'short', day: 'numeric' });
-        } catch {
-            return new Date(last).toLocaleDateString();
+    const [devMode, setDevMode] = React.useState(false);
+    useFocusEffect(
+        useCallback(() => {
+            setFocusTick((n) => n + 1);
+            getSetting(DEVELOPER_MODE_KEY)
+                .then((v) => setDevMode(v === '1'))
+                .catch(() => { /* off */ });
+        }, []),
+    );
+    const setDeveloperMode = useCallback(
+        async (on: boolean) => {
+            setDevMode(on);
+            try {
+                if (on) await setSetting(DEVELOPER_MODE_KEY, '1');
+                else await deleteSetting(DEVELOPER_MODE_KEY);
+            } catch {
+                // The row stays as it was; the switch shows it on the next focus.
+            }
+            if (on) toastManager.showInfo(t('you.settings.developerOn'));
+        },
+        [t],
+    );
+    const versionTaps = useRef<number[]>([]);
+    const onVersionTap = () => {
+        const now = Date.now();
+        versionTaps.current = [...versionTaps.current.filter((at) => now - at < DEV_TAP_WINDOW_MS), now];
+        if (versionTaps.current.length >= 3) {
+            versionTaps.current = [];
+            void setDeveloperMode(!devMode);
         }
+    };
+
+    const backupOn = backupCadence() !== 'off' && backupProviderId() !== null;
+
+    // Notifications: the picked times in the phone's clock, or Off.
+    const notificationsValue = (() => {
+        const hours = userPersona?.preferredNotificationWindow ?? [];
+        if (!userPersona?.notificationsEnabled || hours.length === 0) return t('you.settings.off');
+        const use24h = deviceUses24h();
+        return convertUTCHoursToLocal(hours)
+            .sort((a, b) => a - b)
+            .map((h) => formatHourLabel(h, use24h, i18n?.language))
+            .join(', ');
     })();
+
+    const textStep = Math.max(0, TEXT_SCALE_STEPS.indexOf(textScale as never));
 
     const [faqOpening, setFaqOpening] = React.useState(false);
     const faqTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -275,356 +266,188 @@ const AppPreferencesTab: React.FC = () => {
         void openInAppBrowser(withAppLanguage(FAQ_URL));
     };
 
-    // Plan card, then App, Privacy and data, Security, Help, Account. The
-    // harness drives these rows by testID.
-    const general: PreferenceOption[] = [
-        {
-            id: 'language',
-            title: t('settings.languageRow'),
-            icon: 'translate',
-            // The CURRENT language, in its own script. The row used to cycle
-            // the word "Language" through 19 scripts and never said which one
-            // was on; a frame of that ticker is how "언어" showed up on an
-            // English phone.
-            value: getNativeLanguageName(appLanguage),
-            onPress: () => routerHook.push('/logged-in/preferences/language' as any),
-        },
-        {
-            id: 'display',
-            title: t('display.screenTitle'),
-            icon: 'palette',
-            value: t('you.settings.displayValue'),
-            onPress: () => routerHook.push(youScreen('display')),
-        },
-        {
-            id: 'notifications',
-            title: t('preferences.notifications'),
-            icon: 'notifications',
-            onPress: () => routerHook.push(youScreen('notifications')),
-        },
-    ];
+    const busy = <Spinner size="small" />;
+    const version = getAppVersion();
+    const versionText = t('you.settings.version', {
+        version: devMode ? `${version} (${getGitCommit()})` : version,
+    });
 
-    const privacy: PreferenceOption[] = [
-        {
-            id: 'mera-protocol',
-            title: t('preferences.meraProtocol'),
-            icon: 'security',
-            value: t(processingMode === ProcessingMode.OnDevice ? 'meraProtocol.onDeviceMode' : 'meraProtocol.cloudMode'),
-            onPress: () => routerHook.push(youScreen('mera-protocol')),
-        },
-        {
-            // ONE row for backup and data: Manage data opens with the backup
-            // section first. The restore deep link (`manage-data?restore=1`)
-            // still works for the harness and old links.
-            id: 'backup',
-            title: t('you.settings.backupAndData'),
-            icon: 'settings-backup-restore',
-            value: backupValue,
-            onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
-        },
-    ];
-
-    const help: PreferenceOption[] = [
-        {
-            // The one home for "How Mera works". Top-level route, deliberately
-            // outside `/logged-in`: the same guides are reachable signed out.
-            id: 'tutorials',
-            title: t('tutorials.entryRow'),
-            icon: 'school',
-            onPress: () => routerHook.push('/tutorials' as any),
-        },
-        {
-            id: 'faq',
-            title: t('preferences.faq'),
-            icon: 'help-outline',
-            busy: faqOpening,
-            onPress: openFaq,
-        },
-    ];
-
-    // Account holds only Log out: plan management is the usage card's
-    // "Manage plan" button at the top of this list (SettingsUsageCard).
-
-    const sectionLabel = (id: string, text: string) => (
-        <Text
-            testID={`settings-group-${id}`}
-            className="mt-4 mb-2"
-            style={{ color: '#A3A3A3', fontSize: 13, fontWeight: '700' }}
-            accessibilityRole="header"
+    const link = (label: string, url: string, testID: string) => (
+        <Pressable
+            key={testID}
+            testID={testID}
+            onPress={() => void openInAppBrowser(url)}
+            accessibilityRole="link"
+            accessibilityLabel={label}
+            style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 }}
         >
-            {text}
-        </Text>
+            <Text style={{ color: colors.ink2, fontSize: 13 }}>{label}</Text>
+        </Pressable>
     );
-
-    const renderOption = (option: PreferenceOption) => {
-        // Liquid Glass row: GlassPanel owns the rounded/clipped outer surface
-        // (glass fill on iOS 26+, nothing otherwise); the Pressable inside
-        // keeps its padding and layout.
-        return (
-            <GlassPanel
-                key={option.id}
-                radius={8}
-                className="mb-3"
-                fallbackClassName="border border-gray-700 bg-transparent"
-            >
-                <Pressable
-                    // One line, every row: the harness taps rows by testID.
-                    testID={`settings-row-${option.id}`}
-                    className="flex-row items-center justify-between py-3 px-4"
-                    onPress={option.onPress}
-                    accessibilityRole="button"
-                    accessibilityLabel={option.value ? `${option.title}, ${option.value}` : option.title}
-                    accessibilityState={option.busy ? { busy: true } : undefined}
-                >
-                    <Text className="text-base text-white flex-1 mr-3" numberOfLines={2}>
-                        {option.title}
-                    </Text>
-                    {option.value ? (
-                        <Text
-                            testID={`settings-row-${option.id}-value`}
-                            size="sm"
-                            className="text-gray-400 mr-2"
-                            numberOfLines={1}
-                        >
-                            {option.value}
-                        </Text>
-                    ) : null}
-                    <Box className="w-5 h-5 items-center justify-center">
-                        {option.busy ? (
-                            <Spinner size="small" />
-                        ) : (
-                            <ForwardChevron size={20} color="#999999" />
-                        )}
-                    </Box>
-                </Pressable>
-            </GlassPanel>
-        );
-    };
 
     return (
-        // No `bg-black`: the You tab draws AbstractGradientBackdrop
-        // behind this content — an opaque fill here would fully block it,
-        // leaving the glass rows below with nothing to refract (a solid
-        // background over glass cancels it).
-        //
-        // No `flex-1` here (or on the Box below): this screen is mounted
-        // inside SettingsPage's ScrollView (you/YouPages.tsx), which reserves
-        // `useTabBarClearance() + 24` of bottom padding. A `flex-1`
-        // wrapper here can consume the
-        // reserved padding, leaving the user/version/copyright footer behind
-        // the floating tab bar — let content size to its natural height so
-        // the ScrollView's own padding is what clears the tab bar.
-        <Box>
-            <Box className="px-5">
-                {/* The plan and today's usage, first (owner call). Its Manage
-                    plan button is the only plan entry in Settings. */}
-                <Box className="mt-2">
-                    <SettingsUsageCard />
-                </Box>
+        // No flex-1 and no fill: mounted inside SettingsPage's ScrollView
+        // (you/YouPages.tsx), whose bottom padding clears the tab bar.
+        <View style={{ paddingHorizontal: 14 }}>
+            <View style={{ marginTop: 4 }}>
+                <SettingsUsageCard />
+            </View>
 
-                {sectionLabel('general', t('you.settings.groupApp'))}
-                <VStack>{general.map(renderOption)}</VStack>
+            <GroupLabel testID="settings-group-general">{t('you.settings.groupGeneral')}</GroupLabel>
+            <Group>
+                <Row
+                    testID="settings-row-language"
+                    leadingIcon="translate"
+                    title={t('settings.languageRow')}
+                    value={getNativeLanguageName(appLanguage) ?? undefined}
+                    onPress={() => routerHook.push('/logged-in/preferences/language' as Href)}
+                />
+                <Row
+                    testID="settings-row-display"
+                    leadingIcon="text-fields"
+                    title={t('display.screenTitle')}
+                    value={t(TEXT_SIZE_LABEL_KEYS[textStep])}
+                    onPress={() => routerHook.push(youScreen('display'))}
+                />
+                <Row
+                    testID="settings-row-notifications"
+                    leadingIcon="notifications-none"
+                    title={t('preferences.notifications')}
+                    value={notificationsValue}
+                    onPress={() => routerHook.push(youScreen('notifications'))}
+                />
+            </Group>
 
-                {sectionLabel('privacy', t('settings.groupPrivacy'))}
-                <VStack>{privacy.map(renderOption)}</VStack>
+            <GroupLabel testID="settings-group-privacy">{t('you.settings.groupPrivacy')}</GroupLabel>
+            <Group>
+                <Row
+                    testID="settings-row-mera-protocol"
+                    leadingIcon="verified-user"
+                    title={t('preferences.meraProtocol')}
+                    trailing={
+                        <Badge
+                            tone="positive"
+                            label={processingMode === ProcessingMode.OnDevice ? t('you.settings.onThisPhone') : t('you.settings.privateCloud')}
+                        />
+                    }
+                    onPress={() => routerHook.push(youScreen('mera-protocol'))}
+                />
+                <Row
+                    testID="settings-row-app-lock"
+                    leadingIcon="lock-outline"
+                    title={t('you.settings.appLock')}
+                    value={lockEnabled ? t('you.settings.on') : t('you.settings.off')}
+                    onPress={() => routerHook.push(youScreen('app-lock'))}
+                />
+                <Row
+                    testID="settings-row-backup"
+                    leadingIcon="folder-open"
+                    title={t('you.settings.yourData')}
+                    value={backupOn ? t('you.settings.backupOn') : t('you.settings.backupOff')}
+                    onPress={() => routerHook.push(youScreen('data'))}
+                />
+            </Group>
 
-                {sectionLabel('security', t('security.title'))}
-                <SecuritySettingsSection />
+            <GroupLabel testID="settings-group-help">{t('settings.groupHelp')}</GroupLabel>
+            <Group>
+                <Row
+                    testID="settings-row-tutorials"
+                    leadingIcon="school"
+                    title={t('tutorials.entryRow')}
+                    onPress={() => routerHook.push('/tutorials' as Href)}
+                />
+                <Row
+                    testID="settings-row-faq"
+                    leadingIcon="help-outline"
+                    title={t('preferences.faq')}
+                    trailing={faqOpening ? busy : null}
+                    onPress={openFaq}
+                />
+                {/* Never disabled while support opens: re-entry is guarded in useSupportAction. */}
+                <Row
+                    testID="settings-row-support"
+                    leadingIcon="support-agent"
+                    title={supportBusy ? t('support.opening') : t('preferences.support')}
+                    trailing={supportBusy ? busy : null}
+                    onPress={() => { void openSupport(); }}
+                />
+                {/* Every build; inert in dev (Sentry is off). */}
+                <Row
+                    testID="settings-row-report-bug"
+                    leadingIcon="bug-report"
+                    title={t('preferences.reportBug')}
+                    onPress={() => showFeedback()}
+                />
+            </Group>
 
-                {sectionLabel('help', t('settings.groupHelp'))}
-                <VStack>{help.map(renderOption)}</VStack>
-                {/* Talk to support and Report a bug share one row. Report a
-                    bug renders in every build but is inert in dev (Sentry is
-                    off). Rows are never disabled while support opens: re-entry
-                    is guarded inside useSupportAction. */}
-                <HStack space="sm" className="mb-3">
-                    <GlassPanel
-                        radius={8}
-                        className="flex-1"
-                        fallbackClassName="border border-gray-700 bg-transparent"
-                    >
-                        <Pressable
-                            testID="settings-row-support"
-                            className="flex-row items-center justify-center py-3 px-2"
-                            onPress={() => { void openSupport(); }}
-                            accessibilityRole="button"
-                            accessibilityState={supportBusy ? { busy: true } : undefined}
-                            accessibilityLabel={
-                                supportBusy ? t('support.opening') : t('preferences.support')
-                            }
-                        >
-                            {supportBusy ? (
-                                <Spinner size="small" />
-                            ) : (
-                                <HStack space="xs" className="items-center">
-                                    <MaterialIcons name="support-agent" size={18} color="rgb(237, 167, 126)" />
-                                    <Text className="text-base text-white" numberOfLines={1}>
-                                        {t('preferences.support')}
-                                    </Text>
-                                </HStack>
-                            )}
-                        </Pressable>
-                    </GlassPanel>
-                    <GlassPanel
-                        radius={8}
-                        className="flex-1"
-                        fallbackClassName="border border-primary-400/50 bg-transparent"
-                    >
-                        <Pressable
-                            testID="settings-row-report-bug"
-                            className="flex-row items-center justify-center py-3 px-2"
-                            onPress={() => showFeedback()}
-                            accessibilityRole="button"
-                            // Explicit, or the icon font's glyph leaks into it.
-                            accessibilityLabel={t('preferences.reportBug')}
-                        >
-                            <HStack space="xs" className="items-center">
-                                <MaterialIcons name="bug-report" size={18} color="rgb(237, 167, 126)" />
-                                <Text className="text-base text-primary-400" numberOfLines={1}>
-                                    {t('preferences.reportBug')}
-                                </Text>
-                            </HStack>
-                        </Pressable>
-                    </GlassPanel>
-                </HStack>
+            <GroupLabel testID="settings-group-account">{t('settings.groupAccount')}</GroupLabel>
+            <Group>
+                {displayEmail ? (
+                    <Row testID="settings-row-email" leadingIcon="mail-outline" title={maskEmail(displayEmail)} />
+                ) : (
+                    <Row
+                        testID="settings-row-phone"
+                        leadingIcon="smartphone"
+                        title={t('you.settings.signedInPhone')}
+                        subtitle={t('you.settings.noEmailNeeded')}
+                    />
+                )}
+                {/* Optional, says what it is for, never nudged (owner). */}
+                {displayEmail ? null : (
+                    <Row
+                        testID="settings-row-add-email"
+                        leadingIcon="alternate-email"
+                        title={t('you.settings.addEmail')}
+                        subtitle={t('you.settings.addEmailHint')}
+                        onPress={() => requestEmailCapture('settings')}
+                    />
+                )}
+                <Row
+                    testID="settings-row-logout"
+                    leadingIcon="logout"
+                    title={t('preferences.logout')}
+                    titleColor={colors.negative}
+                    onPress={() => { void confirmLogout(); }}
+                    hideChevron
+                />
+            </Group>
 
-                {sectionLabel('account', t('settings.groupAccount'))}
-                {/* Log out is LAST, an ordinary row inside Account and behind
-                    its confirmation, no longer a full-width red button right
-                    above the tab bar. */}
-                <GlassPanel
-                    radius={8}
-                    className="mb-3"
-                    fallbackClassName="border border-gray-700 bg-transparent"
-                >
-                    <Pressable
-                        testID="settings-row-logout"
-                        className="flex-row items-center py-3 px-4"
-                        onPress={() => openModal('logout')}
-                        accessibilityRole="button"
-                        // Explicit, or the icon font's glyph leaks into it.
-                        accessibilityLabel={t('preferences.logout')}
-                    >
-                        <MaterialIcons name="logout" size={18} color="#fca5a5" />
-                        <Text className="text-base text-red-300 ml-3">
-                            {t('preferences.logout')}
-                        </Text>
-                    </Pressable>
-                </GlassPanel>
-                <Box className="items-center py-4">
-                    <HStack space="sm" className="items-center justify-center flex-wrap mb-4">
-                        <PolicyPill label={t('preferences.privacyPolicy')} onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))} />
-                        <PolicyPill label={t('preferences.termsOfService')} onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))} />
-                        <PolicyPill label={t('preferences.contentPolicy')} onPress={() => openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL))} />
-                    </HStack>
-                    <HStack space="lg" className="items-center mb-3">
-                        <Pressable
-                            onPress={() => openInAppBrowser(GITHUB_URL)}
-                            hitSlop={8}
-                            // Icon-only links: existing copy names them.
-                            accessibilityRole="link"
-                            accessibilityLabel={t('auth.sourceCode')}
-                            testID="settings-link-source-code"
-                        >
-                            <FontAwesome name="github" size={22} color="#9ca3af" />
-                        </Pressable>
-                        <Pressable
-                            onPress={() => openInAppBrowser(WEBSITE_URL)}
-                            hitSlop={8}
-                            accessibilityRole="link"
-                            accessibilityLabel={t('auth.website')}
-                            testID="settings-link-website"
-                        >
-                            <MaterialIcons name="language" size={24} color="#9ca3af" />
-                        </Pressable>
-                    </HStack>
-                    {/* displayEmail is already null for anonymous accounts, so
-                        no extra isAnonAccount guard is needed here. */}
-                    {maskedEmail && (
-                        <Text size="xs" className="text-gray-500 mb-1">
-                            {t('preferences.user', { email: maskedEmail })}
-                        </Text>
-                    )}
-                    {supportId && (
-                        // accessible={false} on the row wrapper (F2 discipline):
-                        // the text and the button carry their own semantics.
-                        <HStack space="xs" className="items-center mb-1" accessible={false}>
-                            <Text size="xs" className="text-gray-500" testID="settings-support-id">
-                                {t('support.supportId', { id: supportId })}
-                            </Text>
-                            <Pressable
-                                testID="settings-support-id-copy"
-                                onPress={() => { void handleCopySupportId(); }}
-                                hitSlop={8}
-                                accessible
-                                accessibilityRole="button"
-                                accessibilityLabel={
-                                    supportIdCopied ? t('support.copied') : t('support.copySupportId')
-                                }
-                            >
-                                {supportIdCopied ? (
-                                    <Text size="xs" className="text-primary-400">
-                                        {t('support.copied')}
-                                    </Text>
-                                ) : (
-                                    <MaterialIcons name="content-copy" size={14} color="#9ca3af" />
-                                )}
-                            </Pressable>
-                        </HStack>
-                    )}
-                    {supportId && (
-                        <Text size="xs" className="text-gray-500 mb-1 text-center" testID="settings-support-id-hint">
-                            {t('support.saveHint')}
-                        </Text>
-                    )}
-                    <Text size="xs" className="text-gray-500">
-                        {t('preferences.appVersion', { version: getAppVersionLabel() })}
-                    </Text>
-                    <Text size="xs" className="text-gray-500 mt-1">
-                        © {new Date().getFullYear()} Mera Labs B.V.
-                    </Text>
-                </Box>
-            </Box>
+            {devMode ? (
+                <>
+                    <GroupLabel testID="settings-group-developer">{t('you.settings.developer')}</GroupLabel>
+                    <Group>
+                        <Row
+                            testID="settings-row-developer-mode"
+                            leadingIcon="code"
+                            title={t('you.settings.developerMode')}
+                            subtitle={t('you.settings.developerHint')}
+                            trailing={<Switch value={devMode} onToggle={(on: boolean) => void setDeveloperMode(on)} size="md" />}
+                        />
+                        <Row
+                            testID="settings-row-observability"
+                            leadingIcon="storage"
+                            title={t('observability.title')}
+                            subtitle={t('you.settings.observabilityHint')}
+                            onPress={() => router.push('/logged-in/preferences/observability' as Href)}
+                        />
+                    </Group>
+                </>
+            ) : null}
 
-            {/* Logout Confirmation Modal */}
-            <Modal isOpen={showLogoutModal} onClose={() => closeModal('logout')} size="sm">
-                <ModalBackdrop />
-                <ModalContent >
-                    <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-white">{t('preferences.signOutModalTitle')}</Text>
-                    </ModalHeader>
-                    <ModalBody className="py-6">
-                        <Text className="text-gray-300 text-base leading-relaxed">
-                            {t('preferences.signOutConfirm')}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
-                        <VStack className="w-full" space="md">
-                            <Button
-                                action="negative"
-                                onPress={handleActualLogout}
-                                disabled={isLoggingOut}
-                                className="w-full"
-                            >
-                                <ButtonText>
-                                    {isLoggingOut ? t('preferences.signingOut') : t('preferences.signOut')}
-                                </ButtonText>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                action="secondary"
-                                onPress={() => closeModal('logout')}
-                                className="w-full"
-                            >
-                                <ButtonText>{t('common.cancel')}</ButtonText>
-                            </Button>
-                        </VStack>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </Box>
+            <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {link(t('preferences.privacyPolicy'), withAppLanguage(PRIVACY_URL), 'settings-link-privacy')}
+                    {link(t('preferences.termsOfService'), withAppLanguage(TERMS_URL), 'settings-link-terms')}
+                    {link(t('preferences.contentPolicy'), withAppLanguage(CONTENT_POLICY_URL), 'settings-link-content')}
+                    {link(t('auth.sourceCode'), GITHUB_URL, 'settings-link-source-code')}
+                </View>
+                {/* Three taps here within 1.5 s toggle developer mode. */}
+                <Pressable testID="settings-version" onPress={onVersionTap} accessible={false} style={{ minHeight: 44, justifyContent: 'center' }}>
+                    <Text style={{ color: colors.ink3, fontSize: 12 }}>{versionText}</Text>
+                </Pressable>
+            </View>
+        </View>
     );
 };
-
 
 export default AppPreferencesTab;

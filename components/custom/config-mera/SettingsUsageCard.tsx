@@ -4,13 +4,12 @@ import { fetchUserBilling } from '@/lib/billing-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import { getActiveTier } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { useColors } from '@/lib/theme/tokens';
 import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-
-const ACCENT = '#E78A53';
 
 /** "02:00" in the reader's own time and locale; null when unusable. */
 export function formatResetTime(resetAt: string | null | undefined, language?: string): string | null {
@@ -25,8 +24,9 @@ export function formatResetTime(resetAt: string | null | undefined, language?: s
 }
 
 /**
- * The plan card at the TOP of Settings: plan name, Manage plan (the only plan
- * entry in Settings), and one usage line.
+ * The plan card at the TOP of Settings (FinalSettings #1): plan name, Manage
+ * plan (the only plan entry in Settings), the usage line with the reset time
+ * on the right, and a thin meter.
  *
  * The usage figure is `articlesUsedToday`: articles DELIVERED in the current
  * UTC day. Say "articles today", never "analysed": no analysed-count ledger
@@ -38,6 +38,7 @@ export function formatResetTime(resetAt: string | null | undefined, language?: s
  */
 const SettingsUsageCard: React.FC = () => {
     const { t, i18n } = useTranslation();
+    const colors = useColors();
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
 
     const refreshBilling = useCallback(() => {
@@ -92,53 +93,67 @@ const SettingsUsageCard: React.FC = () => {
                 return planDisplay.pending ? t('subscription.planPending', { plan: name }) : name;
             })();
 
-    const usageLine = (() => {
-        if (!billing) return t('you.settings.usageOffline');
-        const used = billing.articlesUsedToday ?? 0;
-        const limit = billing.dailyArticleLimit;
-        const usage =
-            typeof limit === 'number' && limit > 0
-                ? t('you.settings.usage', { count: used, limit })
-                : t('you.settings.usageNoLimit', { count: used });
-        const reset = formatResetTime(billing.resetAt, i18n?.language);
-        return reset ? `${usage} · ${t('you.settings.resetsAt', { time: reset })}` : usage;
-    })();
+    const used = billing?.articlesUsedToday ?? 0;
+    const limit = billing?.dailyArticleLimit;
+    const hasLimit = typeof limit === 'number' && limit > 0;
+    const usageLine = !billing
+        ? t('you.settings.usageOffline')
+        : hasLimit
+            ? t('you.settings.usage', { count: used, limit })
+            : t('you.settings.usageNoLimit', { count: used });
+    const reset = billing ? formatResetTime(billing.resetAt, i18n?.language) : null;
 
     return (
         <View
             testID="settings-plan-card"
             style={{
                 gap: 10,
-                paddingVertical: 12,
-                paddingHorizontal: 14,
-                borderRadius: 14,
-                backgroundColor: 'rgba(255,255,255,0.07)',
+                padding: 16,
+                borderRadius: 16,
+                backgroundColor: colors.surface,
                 borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.10)',
+                borderColor: colors.line,
             }}
         >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ flex: 1 }}>
                     {planLabel ? (
-                        <Text testID="settings-plan-name" style={{ color: '#ffffff', fontSize: 15 }}>
+                        <Text testID="settings-plan-name" style={{ color: colors.ink, fontSize: 16, fontWeight: '700' }}>
                             {planLabel}
                         </Text>
                     ) : null}
-                    <Text style={{ color: '#A3A3A3', fontSize: 13 }}>{t('you.settings.yourPlan')}</Text>
+                    <Text style={{ color: colors.ink2, fontSize: 13 }}>{t('you.settings.yourPlan')}</Text>
                 </View>
                 <Pressable
                     testID="settings-manage-plan"
                     onPress={() => router.push('/logged-in/preferences/manage-subscription')}
                     accessibilityRole="button"
                     accessibilityLabel={t('subscription.managePlan')}
-                    style={{ minHeight: 44, paddingHorizontal: 16, borderRadius: 999, backgroundColor: ACCENT, justifyContent: 'center' }}
+                    style={{
+                        minHeight: 44,
+                        paddingHorizontal: 14,
+                        borderRadius: 999,
+                        borderWidth: 1,
+                        borderColor: colors.trackBorder,
+                        justifyContent: 'center',
+                    }}
                 >
-                    <Text style={{ color: '#121113', fontSize: 14, fontWeight: '600' }}>{t('subscription.managePlan')}</Text>
+                    <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '600' }}>{t('subscription.managePlan')}</Text>
                 </Pressable>
             </View>
-            <Text testID="settings-usage-line" style={{ color: '#D4D4D4', fontSize: 13 }}>
-                {usageLine}
-            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+                <Text testID="settings-usage-line" style={{ color: colors.muted, fontSize: 13, flexShrink: 1 }}>
+                    {usageLine}
+                </Text>
+                {reset ? (
+                    <Text style={{ color: colors.ink2, fontSize: 13 }}>{t('you.settings.resetsAt', { time: reset })}</Text>
+                ) : null}
+            </View>
+            {hasLimit ? (
+                <View style={{ height: 4, borderRadius: 2, backgroundColor: colors.trackFill, overflow: 'hidden' }}>
+                    <View style={{ width: `${Math.min(100, (used / (limit as number)) * 100)}%`, height: 4, backgroundColor: colors.accent }} />
+                </View>
+            ) : null}
         </View>
     );
 };
