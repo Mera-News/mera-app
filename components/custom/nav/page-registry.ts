@@ -214,7 +214,6 @@ export type SurfaceId =
   | 'locations'
   | 'sources'
   | 'hygiene'
-  | 'not-interested'
   | 'activity'
   | 'settings:display'
   | 'settings:mera-protocol'
@@ -226,7 +225,6 @@ const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
   'locations',
   'sources',
   'hygiene',
-  'not-interested',
   'activity',
   'settings:display',
   'settings:mera-protocol',
