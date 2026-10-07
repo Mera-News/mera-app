@@ -1669,11 +1669,12 @@
     "forgotBody": "Hãy đăng nhập lại bằng tài khoản của bạn để đặt mã PIN mới.",
     "forgotOffline": "Đặt lại PIN cần kết nối internet để gửi mã đăng nhập. Kết nối với internet và thử lại.",
     "forgotConfirm": "Đăng nhập lại",
-    "setupTitle": "Đặt PIN",
-    "setupSubtitle": "Chọn PIN 4 chữ số để bảo vệ ứng dụng trên thiết bị này",
-    "confirmTitle": "Xác nhận PIN của bạn",
+    "setupTitle": "Chọn PIN gồm 4 chữ số",
+    "setupSubtitle": "Bạn sẽ dùng PIN này để mở Mera trên điện thoại này.",
+    "confirmTitle": "Nhập lại PIN",
     "confirmSubtitle": "Nhập lại PIN 4 chữ số của bạn",
-    "mismatch": "PIN không khớp. Bắt đầu lại."
+    "mismatch": "PIN không khớp. Bắt đầu lại.",
+    "startOver": "Bắt đầu lại"
   },
   "security": {
     "title": "Bảo mật",

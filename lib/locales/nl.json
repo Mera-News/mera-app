@@ -1668,11 +1668,12 @@
     "forgotBody": "Log opnieuw in met je account om een nieuwe PIN in te stellen.",
     "forgotOffline": "Het opnieuw instellen van je PIN heeft een internetverbinding nodig om een inlogcode te sturen. Maak verbinding en probeer het opnieuw.",
     "forgotConfirm": "Opnieuw inloggen",
-    "setupTitle": "PIN instellen",
-    "setupSubtitle": "Kies een 4-cijferige PIN om de app op dit apparaat te beveiligen",
-    "confirmTitle": "Bevestig je PIN",
+    "setupTitle": "Kies een PIN van 4 cijfers",
+    "setupSubtitle": "Die gebruik je om Mera op deze telefoon te openen.",
+    "confirmTitle": "Voer hem opnieuw in",
     "confirmSubtitle": "Voer je 4-cijferige PIN opnieuw in",
-    "mismatch": "PIN's kwamen niet overeen. Begin opnieuw."
+    "mismatch": "PIN's kwamen niet overeen. Begin opnieuw.",
+    "startOver": "Begin opnieuw"
   },
   "security": {
     "title": "Beveiliging",

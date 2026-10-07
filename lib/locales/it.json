@@ -1668,11 +1668,12 @@
     "forgotBody": "Accedi di nuovo con il tuo account per impostare un nuovo PIN.",
     "forgotOffline": "La reimpostazione del PIN richiede una connessione internet per inviare un codice di accesso. Connettiti a internet e riprova.",
     "forgotConfirm": "Accedi di nuovo",
-    "setupTitle": "Imposta un PIN",
-    "setupSubtitle": "Scegli un PIN a 4 cifre per proteggere l'app su questo dispositivo",
-    "confirmTitle": "Conferma il tuo PIN",
+    "setupTitle": "Scegli un PIN a 4 cifre",
+    "setupSubtitle": "Lo userai per aprire Mera su questo telefono.",
+    "confirmTitle": "Inseriscilo di nuovo",
     "confirmSubtitle": "Reinserisci il tuo PIN a 4 cifre",
-    "mismatch": "I PIN non corrispondono. Ricomincia."
+    "mismatch": "I PIN non corrispondono. Ricomincia.",
+    "startOver": "Ricomincia"
   },
   "security": {
     "title": "Sicurezza",

@@ -1669,11 +1669,12 @@
     "forgotBody": "请使用你的账户重新登录，以设置新的 PIN。",
     "forgotOffline": "重置 PIN 需要网络连接来发送登录代码。连接到网络后重试。",
     "forgotConfirm": "重新登录",
-    "setupTitle": "设置 PIN",
-    "setupSubtitle": "选择一个 4 位 PIN 来保护此设备上的应用",
-    "confirmTitle": "确认您的 PIN",
+    "setupTitle": "选择 4 位 PIN",
+    "setupSubtitle": "你将用它在这部手机上打开 Mera。",
+    "confirmTitle": "请再输入一次",
     "confirmSubtitle": "重新输入您的 4 位 PIN",
-    "mismatch": "PIN 不匹配。请重新开始。"
+    "mismatch": "PIN 不匹配。请重新开始。",
+    "startOver": "重新开始"
   },
   "security": {
     "title": "安全",

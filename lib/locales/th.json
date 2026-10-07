@@ -1668,11 +1668,12 @@
     "forgotBody": "ลงชื่อเข้าใช้อีกครั้งด้วยบัญชีของคุณเพื่อตั้ง PIN ใหม่",
     "forgotOffline": "ตั้ง PIN ใหม่ต้องอินเทอร์เน็ต เชื่อมต่อแล้วลองอีก",
     "forgotConfirm": "ลงชื่อเข้าใช้อีกครั้ง",
-    "setupTitle": "ตั้ง PIN",
-    "setupSubtitle": "เลือก PIN 4 หลักปกป้องแอปอุปกรณ์นี้",
-    "confirmTitle": "ยืนยัน PIN",
+    "setupTitle": "เลือก PIN 4 หลัก",
+    "setupSubtitle": "คุณจะใช้ PIN นี้เพื่อเปิด Mera บนโทรศัพท์เครื่องนี้",
+    "confirmTitle": "กรอก PIN อีกครั้ง",
     "confirmSubtitle": "กรอก PIN 4 หลักอีกครั้ง",
-    "mismatch": "PIN ไม่ตรง เริ่มใหม่"
+    "mismatch": "PIN ไม่ตรง เริ่มใหม่",
+    "startOver": "เริ่มใหม่"
   },
   "security": {
     "title": "ความปลอดภัย",

@@ -1668,11 +1668,12 @@
     "forgotBody": "Melden Sie sich mit Ihrem Konto erneut an, um eine neue PIN festzulegen.",
     "forgotOffline": "Das Zurücksetzen der PIN benötigt eine Internetverbindung, um einen Anmeldecode zu versenden. Stellen Sie eine Verbindung her und versuchen Sie es erneut.",
     "forgotConfirm": "Erneut anmelden",
-    "setupTitle": "PIN einrichten",
-    "setupSubtitle": "Wählen Sie eine 4-stellige PIN, um die App auf diesem Gerät zu schützen",
-    "confirmTitle": "Bestätigen Sie Ihre PIN",
+    "setupTitle": "4-stellige PIN wählen",
+    "setupSubtitle": "Damit öffnen Sie Mera auf diesem Telefon.",
+    "confirmTitle": "Geben Sie sie erneut ein",
     "confirmSubtitle": "Geben Sie Ihre 4-stellige PIN erneut ein",
-    "mismatch": "PINs stimmten nicht überein. Anfangen Sie von vorne."
+    "mismatch": "PINs stimmten nicht überein. Anfangen Sie von vorne.",
+    "startOver": "Von vorne anfangen"
   },
   "security": {
     "title": "Sicherheit",

@@ -1668,11 +1668,12 @@
     "forgotBody": "Entre de novo com sua conta para criar um novo PIN.",
     "forgotOffline": "Redefinir o PIN precisa de uma conexão com a internet para enviar um código de login. Conecte-se à internet e tente novamente.",
     "forgotConfirm": "Entrar de novo",
-    "setupTitle": "Definir um PIN",
-    "setupSubtitle": "Escolha um PIN de 4 dígitos para proteger o app neste dispositivo",
-    "confirmTitle": "Confirme seu PIN",
+    "setupTitle": "Escolha um PIN de 4 dígitos",
+    "setupSubtitle": "Você vai usá-lo para abrir a Mera neste celular.",
+    "confirmTitle": "Digite novamente",
     "confirmSubtitle": "Re-digite seu PIN de 4 dígitos",
-    "mismatch": "Os PINs não corresponderam. Comece novamente."
+    "mismatch": "Os PINs não corresponderam. Comece novamente.",
+    "startOver": "Comece novamente"
   },
   "security": {
     "title": "Segurança",

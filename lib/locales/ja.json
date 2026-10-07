@@ -1668,11 +1668,12 @@
     "forgotBody": "アカウントでもう一度サインインして、新しいPINを設定してください。",
     "forgotOffline": "PINをリセットするには、サインインコードを送信するためにインターネット接続が必要です。インターネットに接続してもう一度お試しください。",
     "forgotConfirm": "もう一度サインイン",
-    "setupTitle": "PINを設定",
-    "setupSubtitle": "このデバイスでアプリを保護するために4桁のPINを選択してください",
-    "confirmTitle": "PINを確認",
+    "setupTitle": "4桁のPINを選んでください",
+    "setupSubtitle": "この電話でMeraを開くときに使います。",
+    "confirmTitle": "もう一度入力してください",
     "confirmSubtitle": "4桁のPINをもう一度入力してください",
-    "mismatch": "PINが一致しません。やり直してください。"
+    "mismatch": "PINが一致しません。やり直してください。",
+    "startOver": "やり直す"
   },
   "security": {
     "title": "セキュリティ",

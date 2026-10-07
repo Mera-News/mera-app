@@ -1670,11 +1670,12 @@
     "forgotBody": "Yeni bir PIN belirlemek için hesabınızla tekrar giriş yapın.",
     "forgotOffline": "PIN'i sıfırlamak için oturum açma kodu göndermek açısından internet bağlantısı gerekli. İnternet'e bağlan ve tekrar dene.",
     "forgotConfirm": "Tekrar giriş yap",
-    "setupTitle": "PIN ayarla",
-    "setupSubtitle": "Bu cihazda uygulamayı korumak için 4 haneli bir PIN seç",
-    "confirmTitle": "PIN'ini onayla",
+    "setupTitle": "4 haneli bir PIN seçin",
+    "setupSubtitle": "Bunu bu telefonda Mera'yı açmak için kullanacaksınız.",
+    "confirmTitle": "PIN'inizi yeniden girin",
     "confirmSubtitle": "4 haneli PIN'ini yeniden gir",
-    "mismatch": "PIN'ler eşleşmedi. Baştan başla."
+    "mismatch": "PIN'ler eşleşmedi. Baştan başla.",
+    "startOver": "Baştan başla"
   },
   "security": {
     "title": "Güvenlik",

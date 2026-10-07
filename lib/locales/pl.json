@@ -1706,11 +1706,12 @@
     "forgotBody": "Zaloguj się ponownie swoim kontem, aby ustawić nowy PIN.",
     "forgotOffline": "Resetowanie PINu wymaga połączenia internetowego do wysłania kodu logowania. Połącz się z internetem i spróbuj ponownie.",
     "forgotConfirm": "Zaloguj się ponownie",
-    "setupTitle": "Ustaw PIN",
-    "setupSubtitle": "Wybierz 4-cyfrowy PIN, aby chronić aplikację na tym urządzeniu",
-    "confirmTitle": "Potwierdź PIN",
+    "setupTitle": "Wybierz 4-cyfrowy PIN",
+    "setupSubtitle": "Będziesz go używać, aby otworzyć Merę na tym telefonie.",
+    "confirmTitle": "Wpisz go ponownie",
     "confirmSubtitle": "Ponownie wpisz swój 4-cyfrowy PIN",
-    "mismatch": "PINy się nie zgadzały. Zacznij od nowa."
+    "mismatch": "PINy się nie zgadzały. Zacznij od nowa.",
+    "startOver": "Zacznij od nowa"
   },
   "security": {
     "title": "Bezpieczeństwo",

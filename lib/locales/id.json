@@ -1668,11 +1668,12 @@
     "forgotBody": "Masuk lagi dengan akun Anda untuk mengatur PIN baru.",
     "forgotOffline": "Mereset PIN memerlukan koneksi internet untuk mengirim kode masuk. Hubungkan ke internet dan coba lagi.",
     "forgotConfirm": "Masuk lagi",
-    "setupTitle": "Atur PIN",
-    "setupSubtitle": "Pilih PIN 4 digit untuk melindungi aplikasi di perangkat ini",
-    "confirmTitle": "Konfirmasi PIN Anda",
+    "setupTitle": "Pilih PIN 4 digit",
+    "setupSubtitle": "Anda akan memakainya untuk membuka Mera di ponsel ini.",
+    "confirmTitle": "Masukkan lagi",
     "confirmSubtitle": "Masukkan kembali PIN 4 digit Anda",
-    "mismatch": "PIN tidak cocok. Mulai lagi."
+    "mismatch": "PIN tidak cocok. Mulai lagi.",
+    "startOver": "Mulai lagi"
   },
   "security": {
     "title": "Keamanan",

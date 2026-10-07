@@ -1668,11 +1668,12 @@
     "forgotBody": "새 PIN을 설정하려면 계정으로 다시 로그인하세요.",
     "forgotOffline": "PIN을 재설정하려면 로그인 코드를 보내기 위해 인터넷 연결이 필요합니다. 인터넷에 연결하고 다시 시도해 주세요.",
     "forgotConfirm": "다시 로그인",
-    "setupTitle": "PIN 설정",
-    "setupSubtitle": "이 기기에서 앱을 보호할 4자리 PIN을 선택하세요",
-    "confirmTitle": "PIN 확인",
+    "setupTitle": "4자리 PIN을 선택하세요",
+    "setupSubtitle": "이 휴대폰에서 Mera를 열 때 사용합니다.",
+    "confirmTitle": "PIN을 다시 입력하세요",
     "confirmSubtitle": "4자리 PIN을 다시 입력하세요",
-    "mismatch": "PIN이 일치하지 않습니다. 다시 시작하세요."
+    "mismatch": "PIN이 일치하지 않습니다. 다시 시작하세요.",
+    "startOver": "다시 시작"
   },
   "security": {
     "title": "보안",

@@ -1675,11 +1675,12 @@
     "forgotBody": "Reconnectez-vous avec votre compte pour définir un nouveau code PIN.",
     "forgotOffline": "La réinitialisation de votre PIN nécessite une connexion internet pour envoyer un code de connexion. Connectez-vous à internet et réessayez.",
     "forgotConfirm": "Se reconnecter",
-    "setupTitle": "Définir un PIN",
-    "setupSubtitle": "Choisissez un code PIN de 4 chiffres pour protéger l'application sur cet appareil",
-    "confirmTitle": "Confirmez votre PIN",
+    "setupTitle": "Choisissez un code PIN de 4 chiffres",
+    "setupSubtitle": "Vous l'utiliserez pour ouvrir Mera sur ce téléphone.",
+    "confirmTitle": "Entrez-le à nouveau",
     "confirmSubtitle": "Réentrez votre code PIN de 4 chiffres",
-    "mismatch": "Les PINs ne correspondent pas. Recommencez."
+    "mismatch": "Les PINs ne correspondent pas. Recommencez.",
+    "startOver": "Recommencer"
   },
   "security": {
     "title": "Sécurité",
