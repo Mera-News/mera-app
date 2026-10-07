@@ -68,6 +68,7 @@ export const clearAllStores = async () => {
     const { useMeraProtocolStore } = require('./mera-protocol-store');
     const { useTopicSyncStore } = require('./topic-sync-store');
     const { useCloudChatStore } = require('./cloud-chat-store');
+    const { resetChatSession } = require('../chat-session/chat-session');
     const { useSubscriptionStore } = require('./subscription-store');
     const { useFeedOrderStore } = require('./feed-order-store');
     const { useRelatedSortStore } = require('./related-sort-store');
@@ -98,6 +99,9 @@ export const clearAllStores = async () => {
     useMeraProtocolStore.getState().reset();
     useTopicSyncStore.getState().reset();
     useCloudChatStore.getState().reset();
+    // The on-device chat thread lives in the session service's memory, not a
+    // store: drop it, or the next account reads the previous one's turns.
+    resetChatSession();
     useSubscriptionStore.getState().reset();
     useFeedOrderStore.getState().reset();
     useRelatedSortStore.getState().reset();
