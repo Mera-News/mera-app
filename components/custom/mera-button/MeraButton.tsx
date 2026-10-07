@@ -20,7 +20,7 @@ import { takeHintIndex } from '@/lib/navigation/hint-cursor';
 import { MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
 import { useColors } from '@/lib/theme/tokens';
-import { useFloatingChatStore, type MeraPageKey } from '@/lib/stores/floating-chat-store';
+import { useFloatingChatStore, type ChatContext, type MeraPageKey } from '@/lib/stores/floating-chat-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
@@ -83,6 +83,9 @@ export interface MeraButtonProps {
   readonly working?: boolean;
   /** Mera's answer is waiting unread: an orange ring circles the button. */
   readonly unread?: boolean;
+  /** The chat a tap opens, when not the page's own (the article page opens
+   *  Mera on its article). */
+  readonly context?: ChatContext;
 }
 
 const MeraButton: React.FC<MeraButtonProps> = ({
@@ -94,6 +97,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   dragging = false,
   working = false,
   unread = false,
+  context,
 }) => {
   const colors = useColors();
   const { t } = useTranslation();
@@ -167,10 +171,14 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   const onPress = useCallback(async () => {
     void hapticLight();
     publishCenter();
+    if (context) {
+      openMeraChat(context);
+      return;
+    }
     const factId = interestFactId(surface);
     const subject = factId ? await factStatement(factId) : undefined;
     openMeraChat(chatContextFor(page, subject));
-  }, [page, surface, publishCenter]);
+  }, [page, surface, context, publishCenter]);
 
   // Tap and drag on ONE detector: the drag activates past DRAG_ACTIVATION, the
   // tap fails past it, so neither ever does the other's job. The tap runs on

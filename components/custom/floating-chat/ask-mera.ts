@@ -11,7 +11,7 @@
 // actions sheet) and the shared `•••` menu is about to add a third. One helper
 // keeps the context shape in one place, so a new field reaches every surface.
 
-import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
 
 export interface AskMeraSubject {
   /** At least one of articleId / suggestionId must be set; the agent resolves
@@ -21,15 +21,23 @@ export interface AskMeraSubject {
   title?: string;
 }
 
-/** Opens the Mera chat on this article. Returns false when there is no id to
- *  open it on, so a caller can tell a no-op from an open. */
-export function askMeraAbout(subject: AskMeraSubject): boolean {
-  if (!subject.articleId && !subject.suggestionId) return false;
-  useFloatingChatStore.getState().expand({
+/** The chat context for an article, or null when there is no id to open it
+ *  on. The article page's Mera button opens the same context. */
+export function articleChatContext(subject: AskMeraSubject): ChatContext | null {
+  if (!subject.articleId && !subject.suggestionId) return null;
+  return {
     kind: 'article-suggestion',
     articleId: subject.articleId,
     suggestionId: subject.suggestionId,
     articleTitle: subject.title,
-  });
+  };
+}
+
+/** Opens the Mera chat on this article. Returns false when there is no id to
+ *  open it on, so a caller can tell a no-op from an open. */
+export function askMeraAbout(subject: AskMeraSubject): boolean {
+  const context = articleChatContext(subject);
+  if (!context) return false;
+  useFloatingChatStore.getState().expand(context);
   return true;
 }
