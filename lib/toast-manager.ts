@@ -9,6 +9,13 @@ import { TOAST_BODY_COLOR, TOAST_TITLE_COLOR } from '@/components/custom/toast/t
 // Re-exported so this module stays its public home.
 export { TOAST_MIN_DURATION_MS };
 
+/**
+ * Notice types that are no longer kept (owner Y11): the daily limit, a failed
+ * sync and a finished migration. The Feed's Mera icon carries the first two;
+ * the third needs nothing. Old rows of these types are hidden in the inbox.
+ */
+export const NOT_KEPT_NOTICE_TYPES: ReadonlySet<string> = new Set(['feed_info', 'sync_event', 'migration_done']);
+
 /** Options for a notification-center-backed toast (see showNotifiedToast). */
 export interface NotifiedToastOptions {
     type: string;
@@ -303,6 +310,8 @@ class ToastManager {
      * genuinely distinct event.
      */
     async showNotifiedToast(opts: NotifiedToastOptions) {
+        // Not a notice any more: no row, no toast, no dot.
+        if (NOT_KEPT_NOTICE_TYPES.has(opts.type)) return;
         // 1. Persist the row (raw keys). Dynamic import avoids a load-time cycle
         // (notification-service → database → …). Failure is non-fatal.
         try {

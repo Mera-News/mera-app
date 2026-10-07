@@ -29,6 +29,7 @@ import { router } from 'expo-router';
 import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import { NOT_KEPT_NOTICE_TYPES } from '@/lib/toast-manager';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -190,9 +191,10 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack, heade
         [t],
     );
 
-    // Reactive newest-first list — drives the screen body.
+    // Reactive newest-first list: drives the screen body. Rows of types no
+    // longer kept (written before Y11, alive for 90 days) stay hidden.
     useEffect(() => {
-        const sub = observeAll().subscribe(setItems);
+        const sub = observeAll().subscribe((rows) => setItems(rows.filter((n) => !NOT_KEPT_NOTICE_TYPES.has(n.type))));
         return () => sub.unsubscribe();
     }, []);
 
