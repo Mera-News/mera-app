@@ -1016,7 +1016,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         );
     }
 
-    // Onboarding mode — nav buttons are rendered by OnboardingNavBar
+    // Onboarding mode: the wizard draws its own buttons.
     if (isOnboarding) {
         return (
             <Box className="flex-1">

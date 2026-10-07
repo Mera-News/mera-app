@@ -226,7 +226,7 @@ const NotificationTimes: React.FC<NotificationTimesProps> = ({ hours, onChange }
             {/* One helper line: with the wheel open it starts with how to pick. */}
             <Text size="xs" className="mx-4 mb-2" style={{ color: colors.ink3, lineHeight: 17 }}>
                 {none || wheelOpen
-                    ? `${t('you.notifications.tapToSave')} ${t('you.notifications.footnote')}`
+                    ? `${t('you.notifications.tapToSave')} ${t('you.notifications.footnoteNoCap')}`
                     : t('you.notifications.footnote')}
             </Text>
         </VStack>

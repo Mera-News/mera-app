@@ -453,8 +453,8 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         </ScrollView>
     );
 
-    // Onboarding: no provider, no header, no backdrop. The wizard renders the
-    // nav buttons (OnboardingNavBar).
+    // Onboarding: no provider, no header, no backdrop. The wizard draws its
+    // own title and buttons.
     if (isOnboarding) {
         if (isLoading) {
             return (
