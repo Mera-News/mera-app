@@ -1,10 +1,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
 import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
@@ -14,42 +11,16 @@ import { holdRestartAcrossPurchase } from '@/lib/subscriptions/subscribe-flow';
 import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
-import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { formatPackagePrice, resolvePricePackage } from '@/lib/subscription/plan-price';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import UsageWidget from '../UsageWidget';
-import { humanizeKey } from './observability-labels';
+import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
+import { useColors } from '@/lib/theme/tokens';
+import { formatResetTime } from './SettingsUsageCard';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-
-const GREEN = '#10b981';
-const AMBER = '#f59e0b';
-
-const SectionHeader = ({ title }: { title: string }) => (
-    <Box className="pt-6 pb-2">
-        <Text size="xs" className="text-gray-500 uppercase tracking-widest font-semibold">
-            {title}
-        </Text>
-    </Box>
-);
-
-const StatusPill = ({ text, color }: { text: string; color: string }) => (
-    <HStack space="xs" className="items-center self-start bg-black/40 rounded-full px-2.5 py-1 mt-3">
-        <Box style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
-        <Text size="xs" className="text-gray-300">{text}</Text>
-    </HStack>
-);
-
-const InfoRow = ({ icon, label, value, isLast }: { icon: keyof typeof MaterialIcons.glyphMap; label: string; value: string; isLast?: boolean }) => (
-    <HStack className={`items-center px-4 py-3 ${isLast ? '' : 'border-b border-gray-800'}`}>
-        <MaterialIcons name={icon} size={16} color="#9ca3af" />
-        <Text size="sm" className="text-gray-400 ml-3 flex-1">{label}</Text>
-        <Text size="sm" className="text-white" numberOfLines={1}>{value}</Text>
-    </HStack>
-);
 
 interface ManageSubscriptionScreenProps {
     onBack?: () => void;
@@ -65,6 +36,8 @@ interface ManageSubscriptionScreenProps {
  */
 const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onBack }) => {
     const { t, i18n } = useTranslation();
+    const colors = useColors();
+    const counts = useFeedCounts();
     const insets = useSafeAreaInsets();
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
     const [priceString, setPriceString] = useState<string | null>(null);
@@ -245,28 +218,6 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         return t('subscription.planPromo');
     };
 
-    // r13: the TRIAL and INTRO cases are gone with the store's introductory
-    // offers. `humanizeKey` still renders anything unmapped, so a legacy
-    // entitlement that somehow reports one degrades to "Trial" rather than to a
-    // blank row — it just no longer has a translated string standing ready for
-    // a state the product does not offer.
-    const periodTypeLabel = (periodType: string): string => {
-        switch (periodType) {
-            case 'NORMAL': return t('subscription.periodNormal');
-            case 'PROMOTIONAL': return t('subscription.periodPromotional');
-            default: return humanizeKey(periodType);
-        }
-    };
-
-    const storeLabel = (store: string): string => {
-        switch (store) {
-            case 'APP_STORE': return t('subscription.storeAppStore');
-            case 'PLAY_STORE': return t('subscription.storePlayStore');
-            case 'PROMOTIONAL': return t('subscription.storePromotional');
-            default: return humanizeKey(store);
-        }
-    };
-
     // ONE rule, shared with the Settings plan card — see plan-display.ts. The optimistic
     // RevenueCat fallback is kept (a fresh purchase should show its plan name
     // immediately), but it is now MARKED pending rather than asserted as fact,
@@ -289,194 +240,137 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
             : name;
     };
 
-    // Glanceable status pill for the hero card.
-    const statusPill: { text: string; color: string } | null = activeEntitlement
-        ? (() => {
-            const date = formatDate(activeEntitlement.expirationDate);
-            if (!date) return { text: t('subscription.lifetime'), color: GREEN };
-            const prefix = activeEntitlement.willRenew
-                ? t('subscription.renewsOn')
-                : t('subscription.expiresOn');
-            return { text: `${prefix} ${date}`, color: activeEntitlement.willRenew ? GREEN : AMBER };
-        })()
-        : isPaid
-            ? { text: t('subscription.active'), color: GREEN }
-            : null;
+    // The plan's one line: "Promo access · ends 17 Oct, won't renew", "Renews
+    // on ...", or "Expires on ..." (FinalSettings #4).
+    const planLine: string | null = (() => {
+        if (!activeEntitlement) return isPaid ? t('subscription.active') : null;
+        const date = formatDate(activeEntitlement.expirationDate);
+        if (!date) return t('subscription.lifetime');
+        if (activeEntitlement.store === 'PROMOTIONAL' && !activeEntitlement.willRenew) {
+            return t('subscription.promoEndsNoRenew', { date });
+        }
+        return `${activeEntitlement.willRenew ? t('subscription.renewsOn') : t('subscription.expiresOn')} ${date}`;
+    })();
 
     const usedToday = billing?.articlesUsedToday ?? 0;
     const dailyLimit = billing?.dailyArticleLimit ?? 0;
+    const reset = billing ? formatResetTime(billing.resetAt, i18n?.language) : null;
+    const discarded = Math.max(0, counts.analysedCount - counts.relevantCount);
+    const number = (n: number) => n.toLocaleString(i18n?.language);
 
-    const detailRows: { icon: keyof typeof MaterialIcons.glyphMap; label: string; value: string }[] = activeEntitlement
-        ? [
-            {
-                icon: activeEntitlement.willRenew ? 'event-available' : 'event-busy',
-                label: activeEntitlement.willRenew ? t('subscription.renewsOn') : t('subscription.expiresOn'),
-                value: formatDate(activeEntitlement.expirationDate) ?? t('subscription.lifetime'),
-            },
-            {
-                icon: 'autorenew',
-                label: t('subscription.autoRenew'),
-                value: activeEntitlement.willRenew ? t('common.yes') : t('common.no'),
-            },
-            { icon: 'schedule', label: t('subscription.periodLabel'), value: periodTypeLabel(activeEntitlement.periodType) },
-            { icon: 'store', label: t('subscription.storeLabel'), value: storeLabel(activeEntitlement.store) },
-        ]
-        : [];
+    const tile = (value: number, label: string, testID: string) => (
+        <View testID={testID} style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+            <Text style={{ color: colors.ink, fontSize: 24, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{number(value)}</Text>
+            <Text style={{ color: colors.ink2, fontSize: 13 }}>{label}</Text>
+        </View>
+    );
 
     return (
-        // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
-        // below, so it spans the FULL screen including the safe areas — an
-        // absolute fill resolves against its parent's CONTENT box, so mounting it
-        // inside the padded box left a black strip in the inset.
-        <Box className="flex-1">
-            {/* Page background. Must be the FIRST child so it paints behind
-                everything else on the page. */}
+        <View style={{ flex: 1 }}>
             <AbstractGradientBackdrop />
-
-            {/* No opaque fill: the backdrop above is the page background. */}
-            <Box className="flex-1" style={{ paddingTop: insets.top }}>
-
-            <DrillDownHeader title={t('subscription.managePlan')} onBack={onBack} />
-
-            {loading ? (
-                <Box className="flex-1 items-center justify-center">
-                    <Spinner size="large" />
-                </Box>
-            ) : (
-                <ScrollView
-                    className="flex-1"
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
-                    showsVerticalScrollIndicator={false}
-                >
-                    {/* The purchase went through but our server has not caught
-                        up. Shown INSTEAD of committing the pre-purchase plan to
-                        the panels below. Always clears. */}
-                    {activationPending ? (
-                        <Text
-                            testID="manage-activation-pending"
-                            size="sm"
-                            className="text-primary-400 mt-4"
-                        >
-                            {t('subscription.activationDelayed')}
-                        </Text>
-                    ) : null}
-
-                    {/* ── STARTER IS FREE ──────────────────────────────────
-                        Shown to anyone without a PAID subscription. This is the
-                        durable home for the message: a one-time sheet is seen
-                        once and gone, and the place a user asks what plan they
-                        are on is where the answer should live permanently.
-
-                        Keyed on `isPremium` (a real RevenueCat entitlement) and
-                        NOT on the tier string, because the server reports
-                        `starter` for a granted account exactly as it does for a
-                        bought one, so the tier alone cannot tell them apart. */}
-                    {!isPremium ? (
-                        <Box
-                            testID="manage-starter-free"
-                            className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mt-4"
-                        >
-                            <Text className="text-white font-semibold text-base">
-                                {t('subscription.starterFreeTitle')}
+            <View style={{ flex: 1, paddingTop: insets.top }}>
+                <DrillDownHeader title={t('subscription.managePlan')} onBack={onBack} />
+                {loading ? (
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                        <Spinner size="large" />
+                    </View>
+                ) : (
+                    <ScrollView
+                        contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: insets.bottom + 24, gap: 12 }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {/* The purchase went through but our server has not
+                            caught up. Always clears. */}
+                        {activationPending ? (
+                            <Text testID="manage-activation-pending" style={{ color: colors.accentText, fontSize: 14 }}>
+                                {t('subscription.activationDelayed')}
                             </Text>
-                            <Text size="sm" className="text-gray-400 mt-2 leading-relaxed">
-                                {t('subscription.starterFreeBody')}
-                            </Text>
-                        </Box>
-                    ) : null}
+                        ) : null}
 
-                    {/* Hero plan card */}
-                    <Box className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mt-4">
-                        <HStack className="items-center">
-                            <Box className="bg-black/40 rounded-full p-2.5">
-                                <MaterialIcons
-                                    name={isPaid ? 'workspace-premium' : 'person-outline'}
-                                    size={22}
-                                    color={isPaid ? AMBER : '#9ca3af'}
-                                />
-                            </Box>
-                            <VStack className="ml-3 flex-1">
-                                <Text size="xs" className="text-gray-500">{t('subscription.planLabel')}</Text>
-                                {/* No `leading-8`: this renders a TRANSLATED plan
-                                    name, and 32px on 24px type (1.33) sliced the
-                                    top off Devanagari/Thai marks. `text-2xl` now
-                                    carries a script-safe 36px line box. */}
-                                <Text className="text-white font-bold text-2xl">
-                                    {planLabelText()}
-                                </Text>
-                            </VStack>
-                            {priceString ? (
-                                <Text className="text-white font-semibold text-lg">{priceString}</Text>
-                            ) : null}
-                        </HStack>
-                        {statusPill ? <StatusPill text={statusPill.text} color={statusPill.color} /> : null}
-                    </Box>
+                        {/* Keyed on `isPremium` (a real store entitlement), NOT
+                            the tier: the server reports `starter` for a granted
+                            account exactly as for a bought one. */}
+                        {!isPremium ? (
+                            <View testID="manage-starter-free" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+                                <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('subscription.starterFreeTitle')}</Text>
+                                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('subscription.starterFreeBody')}</Text>
+                            </View>
+                        ) : null}
 
-                    {/* Usage */}
-                    {billing && (
-                        <>
-                            <SectionHeader title={t('subscription.usageSection')} />
-                            <UsageWidget
-                                used={usedToday}
-                                limit={dailyLimit}
-                                usedLabel={t('subscription.usedToday')}
-                                planLabel={planLabelText()}
-                                onUpgrade={effectiveTier === 'professional' ? undefined : handleViewPlans}
-                                upgradeLabel={t('subscription.upgrade')}
-                                resetAt={billing.resetAt}
-                                resetLabel={t('subscription.resetsOn')}
-                            />
-                        </>
-                    )}
+                        {/* The plan, named once. */}
+                        <View style={{ gap: 2, marginHorizontal: 4 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+                                {/* A script-safe line box: tight leading clipped Devanagari and Thai marks. */}
+                                <Text style={{ flex: 1, color: colors.ink, fontSize: 24, lineHeight: 34, fontWeight: '700' }}>{planLabelText()}</Text>
+                                {priceString ? <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{priceString}</Text> : null}
+                            </View>
+                            {planLine ? <Text style={{ color: colors.ink2, fontSize: 14 }}>{planLine}</Text> : null}
+                        </View>
 
+                        {billing ? (
+                            <View testID="manage-usage" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+                                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+                                    <Text style={{ color: colors.ink, fontSize: 28, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{number(usedToday)}</Text>
+                                    {dailyLimit > 0 ? (
+                                        <Text style={{ color: colors.ink2, fontSize: 15 }}>{t('subscription.ofLimit', { limit: number(dailyLimit) })}</Text>
+                                    ) : null}
+                                    <View style={{ flex: 1 }} />
+                                    {reset ? <Text style={{ color: colors.ink2, fontSize: 13 }}>{t('you.settings.resetsAt', { time: reset })}</Text> : null}
+                                </View>
+                                {dailyLimit > 0 ? (
+                                    <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.trackFill, overflow: 'hidden' }}>
+                                        <View style={{ width: `${Math.min(100, (usedToday / dailyLimit) * 100)}%`, height: 6, backgroundColor: colors.accent }} />
+                                    </View>
+                                ) : null}
+                                <Text style={{ color: colors.ink2, fontSize: 13 }}>{t('subscription.articlesUsedToday')}</Text>
+                            </View>
+                        ) : null}
 
-                    {/* Subscription details */}
-                    {detailRows.length > 0 && (
-                        <>
-                            <SectionHeader title={t('subscription.detailsSection')} />
-                            <Box className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
-                                {detailRows.map((row, i) => (
-                                    <InfoRow
-                                        key={row.label}
-                                        icon={row.icon}
-                                        label={row.label}
-                                        value={row.value}
-                                        isLast={i === detailRows.length - 1}
-                                    />
-                                ))}
-                            </Box>
-                        </>
-                    )}
+                        {/* The last 24 hours: the same four numbers the Feed's
+                            status card uses (useFeedCounts), so no new counter. */}
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                            {tile(counts.articleCount, t('subscription.available24h'), 'manage-available')}
+                            {tile(counts.analysedCount, t('subscription.analysedForYou'), 'manage-analysed')}
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                            {tile(discarded, t('subscription.discarded'), 'manage-discarded')}
+                            {tile(counts.relevantCount, t('subscription.relevantSoFar'), 'manage-relevant')}
+                        </View>
+                        <Text style={{ color: colors.ink3, fontSize: 13, lineHeight: 18, marginHorizontal: 4 }}>{t('subscription.localOnly')}</Text>
 
-                    <VStack space="md" className="mt-8">
-                        <Button onPress={handleViewPlans} className="w-full">
-                            <MaterialIcons name="upgrade" size={18} color="#000000" />
-                            <ButtonText>{t('subscription.viewPlans')}</ButtonText>
-                        </Button>
-                        {/* Hidden for a user whose access comes from the
-                            server's free 14-day Starter grant. They hold no
-                            RevenueCat entitlement at all, so the Customer
-                            Center — which manages a store subscription —
-                            opens onto nothing. `!isPremium` rather than a tier
-                            check because every account without a purchase
-                            reports `starter`, so the tier alone cannot tell a
-                            granted user from a paying one; the store's own view
-                            can. This used to also require `grantExpiresAt`,
-                            which meant an unpaid account OUTSIDE the promo
-                            window was offered a Customer Center that opens onto
-                            nothing. */}
-                        {!isPremium ? null : (
-                            <Button variant="outline" action="secondary" onPress={handleCustomerCenter} className="w-full">
-                                <MaterialIcons name="settings" size={18} color="#ffffff" />
-                                <ButtonText>{t('subscription.customerCenter')}</ButtonText>
-                            </Button>
-                        )}
-                    </VStack>
-                </ScrollView>
-            )}
-        </Box>
-        </Box>
+                        <Pressable
+                            testID="manage-view-plans"
+                            onPress={() => void handleViewPlans()}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('subscription.viewPlans')}
+                            style={[styles.button, { backgroundColor: colors.accent }]}
+                        >
+                            <Text style={{ color: colors.onAccent, fontSize: 16, fontWeight: '600' }}>{t('subscription.viewPlans')}</Text>
+                        </Pressable>
+                        {/* Only with a store subscription: the Customer Center
+                            opens onto nothing for a granted Starter account. */}
+                        {isPremium ? (
+                            <Pressable
+                                testID="manage-customer-center"
+                                onPress={() => void handleCustomerCenter()}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('subscription.customerCenter')}
+                                style={[styles.button, { borderWidth: 1, borderColor: colors.trackBorder }]}
+                            >
+                                <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('subscription.customerCenter')}</Text>
+                            </Pressable>
+                        ) : null}
+                    </ScrollView>
+                )}
+            </View>
+        </View>
     );
 };
+
+const styles = StyleSheet.create({
+    card: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 10 },
+    tile: { flex: 1, borderRadius: 14, borderWidth: 1, padding: 12, gap: 2 },
+    button: { height: 48, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+});
 
 export default ManageSubscriptionScreen;
