@@ -24,6 +24,7 @@ import { fetchMessagesForConversation } from '@/lib/database/services/conversati
 import logger from '@/lib/logger';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useThemeMode } from '@/lib/theme/tokens';
 
 export interface RequestUnblockModalProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export default function RequestUnblockModal({
   userId,
   onSubmitted,
 }: RequestUnblockModalProps) {
+  const themeMode = useThemeMode();
   const { t } = useTranslation();
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -120,6 +122,7 @@ export default function RequestUnblockModal({
               </Text>
               <Input className="min-h-24">
                 <InputField
+                  keyboardAppearance={themeMode}
                   placeholder={t('floatingChat.requestUnblock.feedbackPlaceholder')}
                   value={feedback}
                   onChangeText={setFeedback}

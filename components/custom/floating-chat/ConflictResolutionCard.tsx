@@ -35,7 +35,7 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
+import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens';
 
 
 function cardEntering() {
@@ -65,6 +65,7 @@ const STATUS_LABEL_KEY = {
 } as const satisfies Record<ConflictResolution, string>;
 
 const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflict }) => {
+  const themeMode = useThemeMode();
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -213,6 +214,7 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
               handed straight to updateFact — this is a WRITE path, and the
               stored fact must stay English. */}
           <TextInput
+            keyboardAppearance={themeMode}
             value={mergeText}
             onChangeText={setMergeText}
             multiline
