@@ -1,3 +1,4 @@
+import { usePathname } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { InteractionManager, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -46,6 +47,9 @@ const TranslationUnavailablePrompt: React.FC = () => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
     const blocked = useTranslationBlocked(appLanguage);
+    // The first-launch language list (AuthScreen, /login) says the same thing
+    // in place and falls back to English, so the card stays off that screen.
+    const onLanguageList = usePathname() === '/login';
     const toast = useToast();
     const shownToastIdRef = useRef<string | null>(null);
     const startupProbedRef = useRef<string | null>(null);
@@ -89,7 +93,7 @@ const TranslationUnavailablePrompt: React.FC = () => {
 
         // Unblocked again (a retry landed, or the language changed) — take the
         // prompt away rather than leaving a stale claim on screen.
-        if (!blocked) {
+        if (!blocked || onLanguageList) {
             if (openId && toast.isActive(openId)) toast.close(openId);
             shownToastIdRef.current = null;
             return;
@@ -153,7 +157,7 @@ const TranslationUnavailablePrompt: React.FC = () => {
                     </Pressable>
                 ),
         });
-    }, [blocked, permanent, appLanguage, toast, t]);
+    }, [blocked, permanent, appLanguage, toast, t, onLanguageList]);
 
     return null;
 };
