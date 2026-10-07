@@ -4,23 +4,19 @@ import { feedbackNodeLabel, type FeedbackLabelContext } from '@/components/custo
 import { leafNeedsConfirm, performFeedbackLeaf } from '@/components/custom/feedback-tree/perform-feedback-leaf';
 import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { VerdictSentiment } from '@/lib/database/services/article-feedback-service';
-import {
-    isForeignLanguage,
-    openInGoogleTranslate,
-    openOnSource,
-    type VisitInput,
-} from '@/components/custom/cards/article-actions';
+import type { VisitInput } from '@/components/custom/cards/article-actions';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import type { InlineAccessibilityAction } from '@/components/custom/cards/use-article-actions';
-import { askMeraAbout } from '@/components/custom/floating-chat/ask-mera';
-import MeraLogo from '@/components/custom/MeraLogo';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
+import { FAQ_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
+import { COLORS } from '@/lib/theme/tokens';
+import { router } from 'expo-router';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -31,31 +27,18 @@ import { Platform, type AccessibilityActionEvent } from 'react-native';
  *  this long. A safety net only: the real signal is the dismissal itself. */
 export const MENU_DISMISS_FALLBACK_MS = 1200;
 
-export type ArticleMenuSurface = 'card' | 'detail';
-
 export interface UseArticleMenuInput {
-    /** Where the menu opens from. On `detail`, "Open on source" is omitted: it
-     *  is the screen's primary call to action already. */
-    surface: ArticleMenuSurface;
     /** The article the actions are about. */
     subject: FeedbackSubject;
-    /** Raw publisher URL (the https guard is applied at open time). */
-    articleUrl?: string | null;
-    /** The article's own language, for the Google Translate item and the
-     *  sheet title's language (see `titleOriginal`). */
-    languageCode?: string | null;
-    /** The publisher's own headline. The sheet title chooses between it and
-     *  `subject.title` exactly as the card title does. */
-    titleOriginal?: string | null;
-    /** What a publisher visit records ("Open on source" backs History). */
+    /** The publication fallback when the subject names none. */
     visit?: VisitInput;
     /** The publisher id when the surface has one (GraphQL articles). Without
      *  it the publication page is opened by name plus `subject.countryCode`. */
     publisherId?: string | null;
     /** Starts a fact check. Omitted: the item is not offered. */
     onCheckFacts?: () => void | boolean | Promise<void | boolean>;
-    /** Surface-specific items (e.g. "Not part of this story"), listed before
-     *  "Report a bug". */
+    /** Surface-specific items (e.g. "Not part of this story"), on the main
+     *  level after Follow. */
     extraItems?: readonly ArticleMenuItem[];
     /** The surface's own inline buttons (see `inlineAccessibilityActions`),
      *  listed FIRST in the card's VoiceOver custom actions. The card root is one
@@ -101,9 +84,9 @@ export interface UseArticleMenuInput {
  *  in the sheet's muted text, above its rows. */
 const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) => (
     <VStack space="xs" className="px-4 pb-2" testID="sheet-note">
-        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '700' }}>{title}</Text>
+        <Text style={{ color: COLORS.dark.ink, fontSize: 15, fontWeight: '700' }}>{title}</Text>
         {body ? (
-            <Text size="sm" style={{ color: 'rgb(163,163,163)' }}>
+            <Text size="sm" style={{ color: COLORS.dark.ink3 }}>
                 {body}
             </Text>
         ) : null}
@@ -113,6 +96,8 @@ const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) 
 /** One level of the sheet's navigation stack. */
 export type SheetLevel =
     | { kind: 'main' }
+    | { kind: 'source' }
+    | { kind: 'support' }
     | { kind: 'tree'; root: VerdictSentiment; pathIds: string[] }
     | { kind: 'tree-confirm'; root: VerdictSentiment; node: FeedbackTreeNode; pathIds: string[] }
     | { kind: 'follow-tracked' }
@@ -145,20 +130,41 @@ export interface UseArticleMenu {
     onAccessibilityAction: (e: AccessibilityActionEvent) => void;
 }
 
+/** Live chat is offered only where Intercom is configured. Read once, at
+ *  call time: lib/intercom loads a native SDK, and this hook sits under every
+ *  card. */
+let liveChatOn: boolean | null = null;
+/** Main-level rows that open a level: not actions themselves. */
+const LEVEL_SOURCE = 'level-source';
+const LEVEL_SUPPORT = 'level-support';
+function liveChatEnabled(): boolean {
+    if (liveChatOn === null) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        liveChatOn = (require('@/lib/intercom') as typeof import('@/lib/intercom')).isIntercomEnabled();
+    }
+    return liveChatOn;
+}
+
 /**
  * ONE source of the ••• menu's items for every article surface (D3). Each
  * surface keeps its four inline actions (like, not for me, save, share) and
  * puts everything else here, so a new action is added once and appears
  * everywhere.
  *
- * Every item runs AFTER the sheet's Modal has finished dismissing: on
- * `onDismiss` on iOS, when the sheet's slide-down ends on Android (RN has no
- * `onDismiss` there), with a MENU_DISMISS_FALLBACK_MS fallback and a flush on
- * unmount, exactly once. Never on a timer guess: iOS silently drops native UI
- * presented while a Modal is dismissing (SFSafariViewController for "Open on
- * source" and Google Translate, the feedback form), and the await never
- * resolves, so the item did nothing and said nothing. A failed item says so
- * with a retry.
+ * The main level (FinalRead #14): [compact rows: Like, Not for me, Save,
+ * Share], Fact check, Follow this story, the surface's extra items, then two
+ * rows that open their own level: the publisher (About, Fewer from) and
+ * Support (Report a bug, Live chat, FAQ, Tutorial). Open on source, Google
+ * Translate and Ask Mera are not here: the article page and its Mera button
+ * do them. The card's VoiceOver custom actions are every LEAF of every level,
+ * so moving an item into a level never takes it away from VoiceOver.
+ *
+ * Every item runs AFTER the sheet has fully gone (BottomSheet `onClosed`),
+ * with a MENU_DISMISS_FALLBACK_MS fallback and a flush on unmount, exactly
+ * once. Never on a timer guess: iOS silently drops native UI presented while
+ * a Modal is dismissing (the FAQ browser, Intercom, the feedback form), and
+ * the await never resolves, so the item did nothing and said nothing. A failed
+ * item says so with a retry.
  *
  * Report a bug NEVER attaches the article's id or URL: that would be a record
  * of which article this user read, which invariant 9 rules out.
@@ -167,9 +173,8 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // The app language from i18n, which the language store keeps in step. Read
     // here rather than through the store hook: that store pulls the settings
     // service (and the database) into every card's import graph.
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const toast = useToast();
-    const appLanguage = i18n?.language ?? 'en';
     const [visible, setVisible] = useState(false);
     // The follow state is read only once the menu has been opened (or a
     // VoiceOver action used): a DB read per mounted card, just to label an item
@@ -178,9 +183,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const [engaged, setEngaged] = useState(false);
     const {
         subject,
-        surface,
-        articleUrl,
-        languageCode,
         visit,
         publisherId,
         onCheckFacts,
@@ -420,26 +422,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 });
             }
         }
-        list.push({
-            key: 'ask',
-            label: t('articleMenu.askMera'),
-            icon: <MeraLogo size={22} animated={false} />,
-            testID: 'card-action-mera',
-            run: () =>
-                askMeraAbout({
-                    articleId: subject.articleId,
-                    suggestionId: subject.suggestionId,
-                    title: subject.title,
-                }),
-        });
-        list.push({
-            key: 'follow',
-            label: tracked ? t('articleMenu.following') : t('feedbackTree.followStory'),
-            icon: 'track-changes',
-            testID: 'card-action-track',
-            staysOpen: true,
-            run: () => openFollowRef.current(),
-        });
         if (onCheckFacts) {
             list.push({
                 key: 'check-facts',
@@ -449,26 +431,43 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 run: onCheckFacts,
             });
         }
-        if (surface !== 'detail' && articleUrl) {
+        list.push({
+            key: 'follow',
+            label: tracked ? t('articleMenu.following') : t('feedbackTree.followStory'),
+            icon: 'track-changes',
+            testID: 'card-action-track',
+            staysOpen: true,
+            run: () => openFollowRef.current(),
+        });
+        if (extraItems) list.push(...extraItems);
+        if (publication || publisherId) {
             list.push({
-                key: 'open-source',
-                label: publication
-                    ? t('articleMenu.openOn', { source: publicationShown })
-                    : t('articleDetail.readArticle'),
-                icon: 'open-in-new',
-                testID: 'menu-open-source',
-                run: () => openOnSource(articleUrl, visit),
+                key: LEVEL_SOURCE,
+                label: publicationShown || publication,
+                subtitle: t('articleMenu.sourceSub', { source: publicationShown || publication }),
+                icon: 'article',
+                testID: 'menu-source',
+                staysOpen: true,
+                opensLevel: true,
+                run: () => showLevel({ kind: 'source' }),
             });
         }
-        if (articleUrl && isForeignLanguage(languageCode, appLanguage)) {
-            list.push({
-                key: 'open-translate',
-                label: t('articleMenu.openInTranslate'),
-                icon: 'translate',
-                testID: 'menu-open-translate',
-                run: () => openInGoogleTranslate(articleUrl, appLanguage),
-            });
-        }
+        list.push({
+            key: LEVEL_SUPPORT,
+            label: t('articleMenu.support'),
+            subtitle: t('articleMenu.supportSub'),
+            icon: 'help-outline',
+            testID: 'menu-support',
+            staysOpen: true,
+            opensLevel: true,
+            run: () => showLevel({ kind: 'support' }),
+        });
+        return list;
+    }, [t, publication, publicationShown, tracked, enterTree, onCheckFacts, publisherId, extraItems, rowActions, showLevel]);
+
+    /** The publisher's level: About this source, Fewer from. */
+    const sourceItems = useMemo<ArticleMenuItem[]>(() => {
+        const list: ArticleMenuItem[] = [];
         if (publication || publisherId) {
             list.push({
                 key: 'about-source',
@@ -490,7 +489,14 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 run: () => fewerFromSource(publication, publicationShown),
             });
         }
-        if (extraItems) list.push(...extraItems);
+        return list;
+    }, [t, publication, publicationShown, publisherId, openPublication, fewerFromSource]);
+
+    /** Support: report a bug, a person from the Mera team, the FAQ, the
+     *  tutorial. Each presents native UI or navigates, so each runs after the
+     *  sheet has gone. */
+    const supportItems = useMemo<ArticleMenuItem[]>(() => {
+        const list: ArticleMenuItem[] = [];
         if (SENTRY_ENABLED) {
             list.push({
                 key: 'report-bug',
@@ -501,28 +507,41 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 run: () => showFeedback(),
             });
         }
+        if (liveChatEnabled()) {
+            list.push({
+                key: 'live-chat',
+                label: t('articleMenu.liveChat'),
+                subtitle: t('articleMenu.liveChatSub'),
+                icon: 'chat-bubble-outline',
+                testID: 'menu-live-chat',
+                run: () =>
+                    // eslint-disable-next-line @typescript-eslint/no-require-imports
+                    (require('@/lib/intercom') as typeof import('@/lib/intercom')).presentIntercomMessenger(),
+            });
+        }
+        list.push(
+            {
+                key: 'faq',
+                label: t('preferences.faq'),
+                icon: 'quiz',
+                testID: 'menu-faq',
+                run: async () => {
+                    // Required at call time: it reads the language store.
+                    // eslint-disable-next-line @typescript-eslint/no-require-imports
+                    const { openInAppBrowser, withAppLanguage } = require('@/lib/web-browser-utils') as typeof import('@/lib/web-browser-utils');
+                    await openInAppBrowser(withAppLanguage(FAQ_URL));
+                },
+            },
+            {
+                key: 'tutorial',
+                label: t('articleMenu.tutorial'),
+                icon: 'school',
+                testID: 'menu-tutorial',
+                run: () => router.push('/tutorials'),
+            },
+        );
         return list;
-    }, [
-        t,
-        subject.articleId,
-        subject.suggestionId,
-        subject.title,
-        publication,
-        publicationShown,
-        tracked,
-        enterTree,
-        onCheckFacts,
-        surface,
-        articleUrl,
-        visit,
-        languageCode,
-        appLanguage,
-        fewerFromSource,
-        openPublication,
-        publisherId,
-        extraItems,
-        rowActions,
-    ]);
+    }, [t]);
 
     // The sheet stays mounted while its Modal dismisses; `pending` holds the
     // picked item until the dismissal is reported. See the header.
@@ -604,12 +623,18 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // closed) still runs what the reader picked, once.
     useEffect(() => () => flushPending(), [flushPending]);
 
+    // Every LEAF of every level, so an item moved into a level stays a
+    // VoiceOver custom action on the card.
+    const leaves = useMemo(
+        () => [...items.filter((i) => i.key !== LEVEL_SOURCE && i.key !== LEVEL_SUPPORT), ...sourceItems, ...supportItems],
+        [items, sourceItems, supportItems],
+    );
     const accessibilityActions = useMemo(
         () => [
             ...(inlineActions ?? []).map((i) => ({ name: `inline-${i.key}`, label: i.label })),
-            ...items.map((i) => ({ name: i.key, label: i.a11yLabel ?? i.label })),
+            ...leaves.map((i) => ({ name: i.key, label: i.a11yLabel ?? i.label })),
         ],
-        [items, inlineActions],
+        [leaves, inlineActions],
     );
     const onAccessibilityAction = useCallback(
         (e: AccessibilityActionEvent) => {
@@ -620,10 +645,10 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 return;
             }
             setEngaged(true);
-            const item = items.find((i) => i.key === name);
+            const item = leaves.find((i) => i.key === name);
             if (item) runItem(item);
         },
-        [items, runItem, inlineActions],
+        [leaves, runItem, inlineActions],
     );
 
     // ── The levels ─────────────────────────────────────────────────────────
@@ -688,19 +713,26 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     );
 
     const top = stack[stack.length - 1];
+    const rows = (list: ArticleMenuItem[]) =>
+        list.map((item) => (
+            <ActionSheetRow
+                key={item.key}
+                testID={item.testID}
+                label={item.label}
+                subtitle={item.subtitle}
+                icon={item.icon}
+                opensLevel={item.opensLevel}
+                onPress={() => pick(item)}
+            />
+        ));
     const renderLevel = (level: SheetLevel): React.ReactNode => {
         switch (level.kind) {
             case 'main':
-                return items.map((item) => (
-                    <ActionSheetRow
-                        key={item.key}
-                        testID={item.testID}
-                        label={item.label}
-                        icon={item.icon}
-                        opensLevel={item.opensLevel}
-                        onPress={() => pick(item)}
-                    />
-                ));
+                return rows(items);
+            case 'source':
+                return rows(sourceItems);
+            case 'support':
+                return rows(supportItems);
             case 'tree':
                 return tree ? (
                     <FeedbackTreeLevel
@@ -776,9 +808,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // Android has no `onDismiss`: the sheet has gone once its slide-down
             // finishes and the Modal is hidden.
             onExited={Platform.OS === 'ios' ? undefined : onDismissed}
-            title={subject.title}
-            titleOriginal={input.titleOriginal}
-            titleLanguage={languageCode}
             onClose={close}
             levelKey={top ? levelKey(stack.length, top) : 'none'}
             direction={direction}

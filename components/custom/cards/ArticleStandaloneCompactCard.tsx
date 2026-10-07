@@ -100,11 +100,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
     [actions.likeState, actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
   );
   const menu = useArticleMenu({
-    surface: 'card',
     subject,
-    articleUrl: article.article_url ?? article.source_uri,
-    languageCode: article.original_language_code,
-    titleOriginal: article.title,
     visit,
     publisherId: article.publicationSource?.newsPublisherId ?? null,
     // Answered on the detail screen, so the row opens it after asking.

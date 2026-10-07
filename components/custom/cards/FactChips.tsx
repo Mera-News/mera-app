@@ -4,16 +4,16 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
+import { primaryStatement } from '@/lib/stores/fact-rows-selector';
 import { reasonBoxColors } from '@/lib/relevance-utils';
 import React, { useEffect, useState } from 'react';
 
 /**
- * The facts a complete, note-less suggestion matched, as chips. ONE component
- * for the Feed card and the detail screen, so the two show the same chips.
- * Mount it only where the chips can appear: it queries on mount, and the
- * module-level LRU cache lets rows sharing a topic set skip the query (A5).
+ * The persona facts whose topics found a suggestion (`userTopicIds`). Queried
+ * on mount; the module-level LRU cache lets rows sharing a topic set skip the
+ * query (A5). Shared by the fact chips and the note's waiting line.
  */
-const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicIds }) => {
+export function useMatchedFacts(topicIds: string[] | null | undefined): Fact[] {
     const [facts, setFacts] = useState<Fact[]>([]);
     // Primitive dep: `userTopicIds` is a fresh array on every render.
     const topicIdsKey = JSON.stringify(topicIds ?? []);
@@ -43,7 +43,16 @@ const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicI
             cancelled = true;
         };
     }, [topicIdsKey]);
+    return facts;
+}
 
+/**
+ * The facts a complete, note-less suggestion matched, as chips. ONE component
+ * for the Feed card and the detail screen, so the two show the same chips.
+ * Mount it only where the chips can appear: it queries on mount.
+ */
+const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicIds }) => {
+    const facts = useMatchedFacts(topicIds);
     if (facts.length === 0) return null;
     return (
         <HStack className="flex-wrap justify-end" space="xs" testID="fact-chips">
@@ -54,7 +63,7 @@ const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicI
                     style={{ backgroundColor: reasonBoxColors.backgroundColor }}
                 >
                     <Text size="2xs" style={{ color: reasonBoxColors.textColor, fontWeight: '600' }} numberOfLines={1}>
-                        {fact.statement}
+                        {primaryStatement(fact.statement)}
                     </Text>
                 </Box>
             ))}

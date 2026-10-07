@@ -228,7 +228,13 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     ) : null;
 
     const reasonBoxEl = isSuggestion && relevanceReady && (reason || pendingMode) ? (
-        <ReasonNote relevance={relevance} reason={reason} pendingMode={pendingMode} testID="detail-reason" />
+        <ReasonNote
+            relevance={relevance}
+            reason={reason}
+            pendingMode={pendingMode}
+            topicIds={suggestion?.userTopicIds}
+            testID="detail-reason"
+        />
     ) : null;
 
     if (isCard) {

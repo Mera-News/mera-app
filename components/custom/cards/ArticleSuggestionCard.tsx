@@ -85,14 +85,17 @@ interface ArticleCardProps {
    *  land under the reader. A card complete at first render keeps its natural
    *  height. */
   reserveNoteSpace?: boolean;
+  /** A new card's halo (FinalMotion "Signals"): on while the card is unseen,
+   *  fades away when it turns false. Omitted: no halo. */
+  halo?: boolean;
 }
 
 export type { ArticleCardProps };
 
-/** Lines a Feed card's note area reserves once it has been pending, so a note
- *  landing under the reader does not change the card's height (up to two
- *  lines of note). */
-export const FEED_NOTE_RESERVED_LINES = 2;
+/** A card's note is clamped to this many lines, and a Feed card that was
+ *  pending this session sizes its note box for them up front, so the note
+ *  landing under the reader never changes the card's height. */
+export const FEED_NOTE_LINES = 4;
 
 /**
  * The suggestion (personalized) full-size card. Owns the suggestion-specific
@@ -119,6 +122,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   metaRowRightReserve,
   reasonWriting,
   reserveNoteSpace = false,
+  halo,
 }) => {
   const { t } = useTranslation();
 
@@ -180,6 +184,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const tapThumb = (v: Verdict) => {
     if (!onVerdict) return;
     const opensTree = verdict !== v && !!feedbackHandlers;
+    if (verdict !== v) hapticLight();
     onVerdict(suggestion, v);
     if (opensTree) menuRef.current?.openFeedback(v);
   };
@@ -195,11 +200,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       })
     : undefined;
   const menu = useArticleMenu({
-    surface: 'card',
     subject: menuSubject,
-    articleUrl: suggestion.article_url,
-    languageCode: suggestion.language_code,
-    titleOriginal: suggestion.title_original,
     visit: menuVisit,
     // A check started from a card is answered on the detail screen, directly
     // under the action row there, so the card opens it after asking.
@@ -278,7 +279,9 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       onNoteDisplayChange={setShownReason}
       pendingMode={pendingMode}
       pendingSpokenByHost
-      reserveNoteLines={reserveNoteSpace ? FEED_NOTE_RESERVED_LINES : undefined}
+      topicIds={suggestion.userTopicIds}
+      maxNoteLines={FEED_NOTE_LINES}
+      reserveNoteLines={reserveNoteSpace ? FEED_NOTE_LINES : undefined}
     />
   ) : null;
   // What the card root reads after the meta strings: the chip's priority
@@ -287,7 +290,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const spokenPriority = reasonBoxEl ? relevanceSpokenLabel(t, relevance) : null;
   const spokenTail = [
     hardFilterLabelEl && hardFilterLabel ? t('notInterested.cardExemptLabel', { filter: hardFilterLabel }) : null,
-    reason ? t('aiDisclosure.caption') : null,
+    reason ? t('aiDisclosure.short') : null,
     reason ? shownReason ?? reason : null,
     // The indicator is hidden from screen readers; the root says it instead.
     // No live region: the label simply reads the note once it has landed.
@@ -344,6 +347,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       showRecency={showRecency}
       flat={flat}
       onPress={() => onPress(suggestion)}
+      halo={halo}
       metaAccessory={metaAccessory}
       metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}

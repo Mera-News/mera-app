@@ -88,11 +88,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
     [actions.likeState, actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
   );
   const menu = useArticleMenu({
-    surface: 'card',
     subject,
-    articleUrl: suggestion.article_url,
-    languageCode: suggestion.language_code,
-    titleOriginal: suggestion.title_original,
     visit,
     // Answered on the detail screen, so the row opens it after asking.
     onCheckFacts: () => {

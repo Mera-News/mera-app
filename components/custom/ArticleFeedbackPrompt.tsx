@@ -232,11 +232,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     }, [ensureResolved]);
 
     const menu = useArticleMenu({
-        surface: 'detail',
         subject: menuSubject,
-        articleUrl: share?.url,
-        languageCode: share?.sourceLanguage,
-        titleOriginal: share?.titleOriginal,
         onCheckFacts:
             factCheck && factCheck.state !== 'done'
                 ? () => {
