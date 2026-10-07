@@ -24,6 +24,7 @@ import { I18nManager, StyleSheet, View, type LayoutChangeEvent } from 'react-nat
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -40,7 +41,6 @@ import {
   SWIPE_ACTIVATE_PX,
   SWIPE_DAMPING,
   SWIPE_VERTICAL_FAIL_PX,
-  fractionalIndex,
   swipeOutcome,
   swipeWindow,
 } from './tab-swipe';
@@ -137,8 +137,17 @@ const PagePager: React.FC<PagePagerProps> = ({
     [onIndexChange],
   );
 
+  // `progress` follows the row itself, so a reader (the segmented strip's
+  // orange pill, the Mera button's fade) tracks the drag AND the slide after
+  // it, never jumping to the landing index.
+  useAnimatedReaction(
+    () => offset.value,
+    (o) => {
+      if (widthSV.value > 0) progress.value = (-dir * o) / widthSV.value;
+    },
+  );
+
   const springBack = useCallback(() => {
-    progress.value = index;
     if (reduceMotion) {
       offset.value = base;
       setMoving(false);
@@ -147,7 +156,7 @@ const PagePager: React.FC<PagePagerProps> = ({
     offset.value = withSpring(base, undefined, (finished) => {
       if (finished) runOnJS(settle)();
     });
-  }, [reduceMotion, base, offset, settle, progress, index]);
+  }, [reduceMotion, base, offset, settle]);
 
   const finish = useCallback(
     (dx: number, vx: number) => {
@@ -168,13 +177,11 @@ const PagePager: React.FC<PagePagerProps> = ({
       if (outcome.kind === 'tab') {
         // The next tab takes over; this one is left as it was.
         offset.value = base;
-        progress.value = index;
         setMoving(false);
         onTabStep(outcome.step);
         return;
       }
       const target = -dir * outcome.index * width;
-      progress.value = outcome.index;
       if (reduceMotion || width <= 0) {
         offset.value = target;
         land(outcome.index);
@@ -184,7 +191,7 @@ const PagePager: React.FC<PagePagerProps> = ({
         if (finished) runOnJS(land)(outcome.index);
       });
     },
-    [width, index, count, rtl, prevTabLabel, nextTabLabel, springBack, offset, base, progress, onTabStep, dir, reduceMotion, land],
+    [width, index, count, rtl, prevTabLabel, nextTabLabel, springBack, offset, base, onTabStep, dir, reduceMotion, land],
   );
 
   // The JS side of the end of a drag always runs the LATEST `finish`.
@@ -203,7 +210,6 @@ const PagePager: React.FC<PagePagerProps> = ({
           runOnJS(setMoving)(true);
         })
         .onUpdate((e) => {
-          progress.value = fractionalIndex(indexSV.value, e.translationX, widthSV.value, rtl);
           if (!reduceMotionSV.value) {
             offset.value = -dir * indexSV.value * widthSV.value + e.translationX * SWIPE_DAMPING;
           }
@@ -211,7 +217,7 @@ const PagePager: React.FC<PagePagerProps> = ({
         .onEnd((e) => {
           runOnJS(onDragEnd)(e.translationX, e.velocityX);
         }),
-    [enabled, rtl, dir, progress, indexSV, widthSV, reduceMotionSV, offset, onDragEnd],
+    [enabled, dir, indexSV, widthSV, reduceMotionSV, offset, onDragEnd],
   );
 
   const rowStyle = useAnimatedStyle(() => ({

@@ -2,8 +2,8 @@ import {
   PAGE_COMMIT_FRACTION,
   SWIPE_DAMPING,
   TAB_HANDOFF_FRACTION,
-  fractionalIndex,
   swipeOutcome,
+  indicatorAt,
   survivingPage,
   swipeWindow,
 } from '../tab-swipe';
@@ -83,13 +83,6 @@ describe('swipeWindow', () => {
   });
 });
 
-describe('fractionalIndex', () => {
-  it('moves toward the next page on a leftward drag, mirrored in RTL', () => {
-    expect(fractionalIndex(1, -W / SWIPE_DAMPING / 2, W, false)).toBeCloseTo(1.5);
-    expect(fractionalIndex(1, -W / SWIPE_DAMPING / 2, W, true)).toBeCloseTo(0.5);
-  });
-});
-
 describe('survivingPage', () => {
   const pages = ['world', 'country:DE', 'country:NL'];
   it('keeps the active page while it exists, wherever it moved', () => {
@@ -101,5 +94,24 @@ describe('survivingPage', () => {
   it('falls back to the first page', () => {
     expect(survivingPage(pages, null, 0)).toBe('world');
     expect(survivingPage([], 'world', 0)).toBeNull();
+  });
+});
+
+describe('indicatorAt', () => {
+  const xs = [4, 90, 200];
+  const widths = [80, 100, 60];
+  it('sits on a page at a whole index', () => {
+    expect(indicatorAt(1, xs, widths)).toEqual({ x: 90, width: 100 });
+    expect(indicatorAt(2, xs, widths)).toEqual({ x: 200, width: 60 });
+  });
+  it('travels between two pages mid-swipe', () => {
+    expect(indicatorAt(0.5, xs, widths)).toEqual({ x: 47, width: 90 });
+  });
+  it('clamps a pull past either end', () => {
+    expect(indicatorAt(-0.3, xs, widths)).toEqual({ x: 4, width: 80 });
+    expect(indicatorAt(2.4, xs, widths)).toEqual({ x: 200, width: 60 });
+  });
+  it('draws nothing before the pills are measured', () => {
+    expect(indicatorAt(0, [], [])).toEqual({ x: 0, width: 0 });
   });
 });

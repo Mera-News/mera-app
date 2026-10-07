@@ -25,6 +25,7 @@ import {
   GlassPlate,
 } from '@/components/custom/GlassSurface';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
+import { hapticSelection } from '@/lib/haptics';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useIsFocused } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -84,6 +85,16 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
       resetScrollOrigin();
     },
     [reveal, resetScrollOrigin],
+  );
+
+  // The reader moved to another page (pill tap or swipe): a selection tick.
+  // Requests from elsewhere land silently.
+  const pick = useCallback(
+    (id: PageId) => {
+      if (id !== activeId) void hapticSelection();
+      select(id);
+    },
+    [activeId, select],
   );
 
   // ── Requests from elsewhere: a page, or a cross-tab edge ──
@@ -189,7 +200,7 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
           keyOf={(i) => ids[i]}
           renderPanel={renderPanel}
           keep={keep}
-          onIndexChange={(i) => select(ids[i])}
+          onIndexChange={(i) => pick(ids[i])}
           onTabStep={onTabStep}
           prevTabLabel={prevTab ? t(TAB_LABEL_KEYS[prevTab]) : undefined}
           nextTabLabel={nextTab ? t(TAB_LABEL_KEYS[nextTab]) : undefined}
@@ -217,8 +228,11 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
             tabLabel={tabLabel}
             pages={pages}
             activeId={activeId}
-            onSelect={select}
-            onRearrange={() => setArranging(true)}
+            onSelect={pick}
+            // World arranges by a long press on a page name; the other tabs
+            // keep the pen until the shell drops it.
+            onRearrange={tab === 'world' ? undefined : () => setArranging(true)}
+            onLongPressPill={tab === 'world' ? () => setArranging(true) : undefined}
             quickSettings={quickSettings}
             trailing={trailing}
           />

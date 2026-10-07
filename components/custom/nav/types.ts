@@ -2,6 +2,7 @@
 // one page-set component (WorldPages, LibraryPages, YouPages; FeedPages here)
 // that renders <TabPages> with its pages and a `renderPage`.
 
+import type { MaterialIcons } from '@expo/vector-icons';
 import type React from 'react';
 import type { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
@@ -40,6 +41,8 @@ export interface PagePill {
   readonly label: string;
   /** Flag on a country pill; hidden from accessibility (the label names it). */
   readonly flagAlpha2?: string;
+  /** A 14pt glyph before the label (Feed, Stories, World). */
+  readonly icon?: keyof typeof MaterialIcons.glyphMap;
   /** Called inside a per-pill component keyed by `id`, so reordering never
    *  changes hook order. Must be a hook (named use...). */
   readonly useDot?: () => PageDot;
