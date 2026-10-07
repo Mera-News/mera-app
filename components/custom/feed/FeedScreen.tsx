@@ -115,6 +115,7 @@ import {
   type FeedEntry,
 } from './feed-entries';
 import NewCardsGlow from './NewCardsGlow';
+import FeedMinimap, { MINIMAP_LIST_INSET } from './FeedMinimap';
 import { useFeedMinimap } from './feed-view-prefs';
 import {
   useFeedbackSheet,
@@ -479,9 +480,25 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     }
     setNewBelow((prev) => (prev === found ? prev : found));
   };
+  // The minimap's frame: the index range on screen, as shared values.
+  const minimapFirst = useSharedValue(0);
+  const minimapLast = useSharedValue(0);
   const onScreenChangedRef = useRef((ids: ReadonlySet<string>) => {
     onScreenIdsRef.current = ids;
     recomputeNewBelowRef.current();
+    const order = renderedIdsRef.current;
+    let lo = Infinity;
+    let hi = -1;
+    for (const id of ids) {
+      const i = order.indexOf(id);
+      if (i < 0) continue;
+      lo = Math.min(lo, i);
+      hi = Math.max(hi, i);
+    }
+    if (hi >= 0) {
+      minimapFirst.value = lo;
+      minimapLast.value = hi;
+    }
   });
 
   const { viewabilityConfigCallbackPairs, flushSkips, deepestSeenIdRef, resetDeepestSeen, registerRow } =
@@ -724,6 +741,22 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     recomputeNewBelowRef.current();
   }, [listData, newSince]);
   const minimapOn = useFeedMinimap();
+  const minimapRows = useMemo(
+    () => (minimapOn ? listData.map((it) => ({ id: it.id, suggestion: it.suggestion })) : []),
+    [minimapOn, listData],
+  );
+  const jumpToRow = useCallback((index: number) => {
+    listRef.current?.scrollToIndex({ index, animated: false, viewPosition: 0 });
+  }, []);
+  // Rows far off screen have no measured layout yet: land near by the average
+  // row height, then retry once the window renders there.
+  const onScrollToIndexFailed = useCallback(
+    (info: { index: number; averageItemLength: number }) => {
+      listRef.current?.scrollToOffset({ offset: info.index * info.averageItemLength, animated: false });
+      requestAnimationFrame(() => listRef.current?.scrollToIndex({ index: info.index, animated: false }));
+    },
+    [],
+  );
   const glowOn = isFocused && newBelow && !minimapOn;
   useEffect(() => {
     if (!glowOn || announcedNewBelow) return;
@@ -1092,6 +1125,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}
+        onScrollToIndexFailed={onScrollToIndexFailed}
         // Anchoring is now a HEIGHT-CHANGE guard, not an insertion guard: the
         // pinned prefix means nothing is ever inserted above the deepest row the
         // user has seen, but rows still CHANGE HEIGHT above the viewport (images
@@ -1160,6 +1194,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
           // identical at the top.
           paddingTop: headerHeight + CONTENT_TOP_GAP,
           paddingHorizontal: 12,
+          // Clear of the minimap strip while it is on (Settings > Display).
+          paddingLeft: minimapOn ? MINIMAP_LIST_INSET : 12,
           // Clear of the Mera button (derived; see tab-bar.ts).
           paddingBottom: listEndClearance,
           flexGrow: 1,
@@ -1186,6 +1222,17 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
       />
       {/* After the list, so the list stays the first child. */}
       <NewCardsGlow visible={glowOn} />
+      {minimapOn ? (
+        <FeedMinimap
+          rows={minimapRows}
+          newSince={newSince}
+          first={minimapFirst}
+          last={minimapLast}
+          top={headerHeight + CONTENT_TOP_GAP}
+          bottom={windowHeight - listEndClearance}
+          onJump={jumpToRow}
+        />
+      ) : null}
     </Box>
   );
 };
