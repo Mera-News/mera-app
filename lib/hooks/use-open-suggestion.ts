@@ -13,7 +13,6 @@ import type { ImpressionSurface } from '@/lib/database/models/StoryImpression';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import { growOpen } from '@/components/custom/cards/card-grow';
 
 /**
  * Returns a stable callback that opens a `ForYouSuggestion`: mark-opened +
@@ -28,19 +27,14 @@ export function useOpenSuggestion(surface: ImpressionSurface) {
         suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null;
 
       const userPersonaId = useUserStore.getState().userPersona?._id || '';
-      // Grows out of the pressed card when there is one (card-grow); the
-      // `grow` param then pushes the page with no animation of its own.
-      growOpen(suggestion._id, (grew) =>
-        router.push({
-          pathname: '/logged-in/suggestion-detail',
-          params: {
-            articleSuggestionId: suggestion._id,
-            userId: session?.user?.id || '',
-            userPersonaId,
-            ...(grew ? { grow: '1' } : null),
-          },
-        }),
-      );
+      router.push({
+        pathname: '/logged-in/suggestion-detail',
+        params: {
+          articleSuggestionId: suggestion._id,
+          userId: session?.user?.id || '',
+          userPersonaId,
+        },
+      });
 
       // Defer the dim + impression bookkeeping past navigation so the
       // synchronous markOpened (which triggers Dashboard's buildFactRows

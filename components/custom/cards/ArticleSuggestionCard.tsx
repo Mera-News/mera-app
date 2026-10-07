@@ -344,7 +344,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       showRecency={showRecency}
       flat={flat}
       onPress={() => onPress(suggestion)}
-      growId={suggestion._id}
       metaAccessory={metaAccessory}
       metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
