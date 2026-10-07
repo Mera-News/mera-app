@@ -36,16 +36,12 @@ import Markdown from 'react-native-markdown-display';
 import { useTranslation } from 'react-i18next';
 import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/typography/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
-import { useThemeMode } from '@/lib/theme/tokens';
+import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens';
 
 const ACCENT = 'rgb(231, 138, 83)';
 // Bubble surfaces float on the #1a1a1a panel: assistant slightly lighter than
 // the panel, user lighter still, so the two roles read apart without borders.
-const ASSISTANT_SURFACE = '#232323';
-const USER_SURFACE = '#2e2e2e';
 // Input field surface (kept distinct from the user bubble tone).
-const INPUT_SURFACE = '#262626';
-const TEXT_COLOR = 'rgb(210, 210, 210)';
 // The transient bubble's outline, at rest and at the top of its pulse. NEUTRAL,
 // not ACCENT: the panel keeps the only orange outline in the chat, and a second
 // one competes with it rather than reading as a different kind of thing.
@@ -75,6 +71,7 @@ const Conversation = forwardRef<View, ConversationProps>(function Conversation(
   { children, style },
   ref,
 ) {
+  const styles = useStyles();
   return (
     <View ref={ref} style={[styles.conversation, style]}>
       {children}
@@ -119,6 +116,7 @@ function ConversationContentInner<T extends { key: string }>(
     onContentSizeChange,
   }: ConversationContentProps<T>,
 ) {
+  const styles = useStyles();
   // Inverted FlatList renders data[0] at the bottom. Reverse so the newest item
   // (last in `items`) sits at index 0 and therefore at the bottom of the view.
   const data = React.useMemo(() => [...items].reverse(), [items]);
@@ -189,6 +187,7 @@ export interface MessageProps {
 }
 
 const Message = forwardRef<View, MessageProps>(function Message({ role, children }, ref) {
+  const styles = useStyles();
   return (
     <View
       ref={ref}
@@ -238,6 +237,7 @@ const MessageContent = forwardRef<View, MessageContentProps>(function MessageCon
   { role, variant = 'solid', testID, as: Container = View, style, children },
   ref,
 ) {
+  const styles = useStyles();
   // Spread rather than written inline: `React.ComponentType<any>` erases the
   // forwardRef-ness of whatever is passed, so JSX refuses `ref` as a literal
   // attribute even though both View and Animated.View accept one.
@@ -266,6 +266,7 @@ const MessageResponse = forwardRef<View, MessageResponseProps>(function MessageR
   { children },
   ref,
 ) {
+  const markdownStyles = useMarkdownStyles();
   return (
     <View ref={ref}>
       <Markdown style={markdownStyles}>{children}</Markdown>
@@ -329,6 +330,8 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
 ) {
   const { t } = useTranslation();
   const keyboard = useThemeMode();
+  const colors = useColors();
+  const styles = useStyles();
   const [text, setText] = useState('');
   const inputRef = useRef<TextInput>(null);
 
@@ -372,7 +375,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         value={text}
         onChangeText={setText}
         placeholder={placeholder}
-        placeholderTextColor="#6B7280"
+        placeholderTextColor={colors.ink3}
         editable={!disabled}
         // `editable={false}` alone does not tell a screen reader WHY the field
         // is inert. VoiceOver/TalkBack read `accessibilityState.disabled`, and
@@ -444,7 +447,9 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
+// Colours come from the theme (lib/theme/tokens.ts): bubbles and the input are
+// tints of ink over the panel, text is ink.
+const useStyles = themedStyles((c) => StyleSheet.create({
   conversation: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -482,12 +487,12 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   bubbleUser: {
-    backgroundColor: USER_SURFACE,
+    backgroundColor: tint(c.ink, 0.18),
   },
   bubbleAssistant: {
     // No border — the panel keeps the only orange outline. Role is signaled by
     // surface tone + alignment instead.
-    backgroundColor: ASSISTANT_SURFACE,
+    backgroundColor: c.surfaceRaised,
   },
   // Applied AFTER the role style, so it overrides the fill and the shadow.
   // Deliberately not a dashed border: RN falls back to solid on Android as
@@ -498,12 +503,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     // Both are overridden every frame by the glow; these are the resting
     // values a non-animated render (and every style assertion) sees.
-    borderColor: GLOW_DIM,
+    borderColor: tint(c.ink, 0.14),
     shadowOpacity: 0,
     // A HALO, not a drop shadow: zero offset, so it blooms evenly outward
     // instead of implying the bubble is raised off the panel. `elevation`
     // stays 0 so Android never draws the grey drop shadow that would.
-    shadowColor: '#FFFFFF',
+    shadowColor: c.ink,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 10,
     elevation: 0,
@@ -541,9 +546,9 @@ const styles = StyleSheet.create({
   sendDiscDisabled: { opacity: 0.4 },
   textInput: {
     flex: 1,
-    backgroundColor: INPUT_SURFACE,
+    backgroundColor: tint(c.ink, 0.15),
     borderRadius: 20,
-    color: TEXT_COLOR,
+    color: c.ink,
     fontSize: CHAT_FONT_SIZE,
     lineHeight: CHAT_LINE_HEIGHT,
     paddingHorizontal: 14,
@@ -553,11 +558,11 @@ const styles = StyleSheet.create({
     // see `composerMaxHeight`. Leaving it here would pin it at 1x.
     textAlignVertical: 'top',
   },
-});
+}));
 
-const markdownStyles = StyleSheet.create({
+const useMarkdownStyles = themedStyles((c) => StyleSheet.create({
   body: {
-    color: TEXT_COLOR,
+    color: c.ink,
     fontSize: CHAT_FONT_SIZE,
     lineHeight: CHAT_LINE_HEIGHT,
     textAlign: 'left',
@@ -582,7 +587,7 @@ const markdownStyles = StyleSheet.create({
   list_item: {
     marginVertical: 1,
   },
-});
+}));
 
 export {
   Conversation,
