@@ -6,8 +6,8 @@ import { hapticLight } from '@/lib/haptics';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { StarterChip } from './types';
+import { themedStyles } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
 
 export interface StarterChipsProps {
   chips: StarterChip[];
@@ -15,6 +15,7 @@ export interface StarterChipsProps {
 }
 
 const StarterChips: React.FC<StarterChipsProps> = ({ chips, onChipPress }) => {
+  const styles = useStyles();
   if (chips.length === 0) return null;
 
   return (
@@ -37,7 +38,7 @@ const StarterChips: React.FC<StarterChipsProps> = ({ chips, onChipPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -47,18 +48,18 @@ const styles = StyleSheet.create({
   },
   chip: {
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
     borderRadius: 20,
     backgroundColor: 'transparent',
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
   chipText: {
-    color: ACCENT,
+    color: c.accentText,
     // Slightly smaller than the uniform chat body (15) so chips read as chrome.
     fontSize: 13,
     lineHeight: 18,
   },
-});
+}));
 
 export default StarterChips;

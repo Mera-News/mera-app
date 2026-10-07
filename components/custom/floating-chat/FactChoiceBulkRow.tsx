@@ -30,6 +30,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { resolveGroups } from './fact-choice-actions';
+import { themedStyles } from '@/lib/theme/tokens';
 
 export interface FactChoiceBulkRowProps {
   resultKey: string;
@@ -51,6 +52,7 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
   baseResult,
   groups,
 }) => {
+  const styles = useStyles();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
@@ -204,7 +206,7 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -214,7 +216,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   tapTarget: { minHeight: 48, paddingHorizontal: 18 },
-  replaceText: { color: 'rgb(248, 113, 113)' },
-});
+  replaceText: { color: c.negative },
+}));
 
 export default FactChoiceBulkRow;

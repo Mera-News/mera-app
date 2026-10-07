@@ -103,14 +103,14 @@ export default function RequestUnblockModal({
     <Modal isOpen={isOpen} onClose={resetAndClose} size="md">
       <ModalBackdrop />
       <ModalContent>
-        <ModalHeader className="border-gray-700 pb-4">
+        <ModalHeader className="border-line pb-4">
           <Text className="text-xl font-semibold text-red-400">
             {t('floatingChat.requestUnblock.modalTitle')}
           </Text>
         </ModalHeader>
         <ModalBody className="py-4">
           {submitted ? (
-            <Text className="text-gray-300 text-base leading-relaxed">
+            <Text className="text-ink text-base leading-relaxed">
               {errorMessage ?? t('floatingChat.requestUnblock.submittedConfirmation')}
             </Text>
           ) : (
@@ -136,7 +136,7 @@ export default function RequestUnblockModal({
             </VStack>
           )}
         </ModalBody>
-        <ModalFooter className="border-t border-gray-700 pt-4">
+        <ModalFooter className="border-t border-line pt-4">
           <VStack className="w-full" space="md">
             {submitted ? (
               <Button onPress={resetAndClose} className="w-full">

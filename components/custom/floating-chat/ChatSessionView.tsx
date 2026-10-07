@@ -36,6 +36,7 @@ import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
 import { renderableTerminal } from './types';
+import { themedStyles } from '@/lib/theme/tokens';
 
 const noop = () => {};
 
@@ -92,6 +93,7 @@ export default function ChatSessionView({
   composerTrailing,
   composerPlaceholder,
 }: ChatSessionViewProps) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const isStreaming = status === 'streaming';
 
@@ -650,7 +652,7 @@ export default function ChatSessionView({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -659,7 +661,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   loadingText: {
-    color: 'rgb(160, 160, 160)',
+    color: c.ink2,
     textAlign: 'center',
   },
-});
+}));

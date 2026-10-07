@@ -36,8 +36,8 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
 
 // Mirror FactCard's entering (fade + slide + slight scale) so a freshly-staged
 // proposal lands with the same motion vocabulary as the fact cards.
@@ -346,6 +346,8 @@ export function actionToRow(action: ProposalAction): ActionRow {
 }
 
 const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
+  const styles = useStyles();
+  const colors = useColors();
   const { t } = useTranslation();
   // Action label keys are resolved dynamically; casting to a single known-valid
   // key literal satisfies the typed-`t` overloads without widening the arg type.
@@ -439,7 +441,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                 : 'auto-fix-high'
           }
           size={18}
-          color={ACCENT}
+          color={colors.accentMark}
         />
         <Text size="sm" bold style={styles.title}>
           {isTrackProposal
@@ -493,7 +495,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
             : row.icon;
           const body = (
             <>
-              <MaterialIcons {...DECORATIVE_ICON_A11Y} name={rowIcon} size={16} color={ACCENT} style={styles.actionIcon} />
+              <MaterialIcons {...DECORATIVE_ICON_A11Y} name={rowIcon} size={16} color={colors.accentMark} style={styles.actionIcon} />
               <View style={styles.actionBody}>
                 {showLabel && (
                   <Text size="xs" bold style={styles.actionLabel}>
@@ -631,7 +633,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
             {...DECORATIVE_ICON_A11Y}
             name={resolved === 'applied' ? 'check-circle' : 'cancel'}
             size={16}
-            color={resolved === 'applied' ? ACCENT : 'rgb(150, 150, 150)'}
+            color={resolved === 'applied' ? colors.accentMark : colors.ink3}
           />
           <Text size="xs" style={styles.statusText}>
             {resolved === 'applied'
@@ -650,12 +652,12 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(231, 138, 83, 0.08)',
+    backgroundColor: tint(c.accent, 0.08),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
@@ -669,13 +671,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    color: ACCENT,
+    color: c.accentText,
   },
   explanation: {
-    color: 'rgb(210, 210, 210)',
+    color: c.ink,
   },
   hint: {
-    color: 'rgb(180, 180, 180)',
+    color: c.ink2,
     fontStyle: 'italic',
   },
   actions: {
@@ -699,8 +701,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   actionRowSelected: {
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(231, 138, 83, 0.10)',
+    borderColor: c.accentMark,
+    backgroundColor: tint(c.accent, 0.1),
   },
   actionIcon: {
     marginTop: 2,
@@ -710,33 +712,33 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   actionLabel: {
-    color: ACCENT,
+    color: c.accentText,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   actionHeading: {
-    color: 'rgb(220, 220, 220)',
+    color: c.ink,
   },
   actionDetail: {
-    color: 'rgb(193, 193, 193)',
+    color: c.ink2,
   },
   chip: {
     alignSelf: 'flex-start',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(231, 138, 83, 0.5)',
+    borderColor: tint(c.accent, 0.5),
     paddingHorizontal: 6,
     paddingVertical: 1,
   },
   chipText: {
-    color: ACCENT,
+    color: c.accentText,
     letterSpacing: 0.3,
   },
   effects: {
-    color: 'rgb(180, 180, 180)',
+    color: c.ink2,
   },
   effectsLabel: {
-    color: 'rgb(200, 200, 200)',
+    color: c.ink,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -749,12 +751,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statusText: {
-    color: 'rgb(180, 180, 180)',
+    color: c.ink2,
   },
   expiredText: {
-    color: 'rgb(140, 140, 140)',
+    color: c.ink3,
     fontStyle: 'italic',
   },
-});
+}));
 
 export default ProposalCard;

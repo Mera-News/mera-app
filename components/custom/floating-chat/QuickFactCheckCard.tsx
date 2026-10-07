@@ -23,6 +23,7 @@ import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
 
 // ── Locale keys that land with agent A1's `en.json` splice ────────────────────
@@ -34,7 +35,6 @@ import { useTranslation } from 'react-i18next';
 type PendingLocaleKey = 'factCheck.disclaimer';
 const k = (key: string) => key as PendingLocaleKey;
 
-const ACCENT = 'rgb(231, 138, 83)';
 /** Sources shown inline. The rest are in the summary's citation numbers. */
 const MAX_SOURCES = 5;
 
@@ -49,6 +49,8 @@ export function sourceLabel(uri: string): string {
 }
 
 const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
+  const styles = useStyles();
+  const colors = useColors();
   const { t } = useTranslation();
 
   // --- The whole-article (server) pill -------------------------------------
@@ -59,7 +61,7 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
     return (
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="cloud-upload" size={16} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="cloud-upload" size={16} color={colors.accentMark} />
           <Text size="xs" bold style={styles.title}>
             {entry.label}
           </Text>
@@ -80,7 +82,7 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
     return (
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="travel-explore" size={16} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="travel-explore" size={16} color={colors.accentMark} />
           <Text size="xs" bold style={styles.title}>
             {entry.label}
           </Text>
@@ -103,7 +105,7 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="travel-explore" size={16} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="travel-explore" size={16} color={colors.accentMark} />
         <Text size="xs" bold style={styles.title}>
           {entry.label}
         </Text>
@@ -164,12 +166,12 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(231, 138, 83, 0.06)',
+    backgroundColor: tint(c.accent, 0.06),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(231, 138, 83, 0.55)',
+    borderColor: tint(c.accent, 0.55),
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 8,
@@ -180,35 +182,35 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    color: ACCENT,
+    color: c.accentText,
     flex: 1,
   },
   verdict: {
-    color: 'rgb(232, 232, 232)',
+    color: c.ink,
   },
   verdictDetail: {
-    color: 'rgb(178, 178, 178)',
+    color: c.ink2,
   },
   body: {
-    color: 'rgb(210, 210, 210)',
+    color: c.ink,
   },
   sources: {
     gap: 4,
     marginTop: 2,
   },
   sourcesHeading: {
-    color: 'rgb(190, 190, 190)',
+    color: c.ink2,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   sourceLine: {
-    color: 'rgb(150, 190, 235)',
+    color: c.info,
     textDecorationLine: 'underline',
   },
   disclaimer: {
-    color: 'rgb(150, 150, 150)',
+    color: c.ink3,
     fontStyle: 'italic',
   },
-});
+}));
 
 export default QuickFactCheckCard;

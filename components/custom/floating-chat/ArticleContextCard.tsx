@@ -14,8 +14,8 @@ import { getSuggestionByServerId } from '@/lib/database/services/article-suggest
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 
-const ACCENT = '#EDA77E';
 
 export interface ArticleContextCardProps {
   title: string;
@@ -24,6 +24,7 @@ export interface ArticleContextCardProps {
 }
 
 const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggestionId }) => {
+  const colors = useColors();
   const { t } = useTranslation();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
@@ -51,7 +52,7 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
   return (
     <Box
       className="mx-3 mt-2 mb-1 rounded-2xl overflow-hidden"
-      style={{ backgroundColor: '#1a1a1a', borderColor: '#2e2e2e', borderWidth: 1 }}
+      style={{ backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1 }}
     >
       <HStack className="items-center p-2.5" space="md">
         {showImage ? (
@@ -71,8 +72,8 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
           // every card surface (ArticleCardBase, ArticleCompactCardBase). Two
           // things made this an easy call rather than a "deliberately keep
           // it" case: (1) the placeholder is now a monochrome translucent
-          // black wash + white glyph, which sits naturally on this card's own
-          // hardcoded `#1a1a1a` surface — the old warm off-white version
+          // black wash + white glyph, which sits naturally on this card's
+          // surface; the old warm off-white version
           // would have clashed here, which is presumably why this card never
           // adopted it originally; (2) one fewer "no image" visual language
           // for a user to learn. `size={28}` (default is 40) — this thumbnail
@@ -85,16 +86,12 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
         <VStack className="flex-1" space="xs">
           {/* `size="2xs"` rather than a pinned 11px: same rendered size, but on
               the scale, so it grows with Dynamic Type and the in-app control. */}
-          <Text size="2xs" style={{ color: ACCENT, fontWeight: '700', letterSpacing: 0.4 }}>
+          <Text size="2xs" style={{ color: colors.accentText, fontWeight: '700', letterSpacing: 0.4 }}>
             {t('floatingChat.aboutThisStory')}
           </Text>
-          {/* Explicit light value, NOT a `typography-*` class. This card paints
-              its own hardcoded dark surface (#1a1a1a) in every theme, so it needs
-              a colour that is readable against THAT, not against the app
-              background. `text-typography-0` resolves to rgb(23,23,23) under the
-              inverted dark ramp — near-black glyphs on a near-black card, ~1.03:1
-              contrast, i.e. invisible. Matches ChatThread's convention of
-              explicit rgb() values on this surface. */}
+          {/* The theme's ink, NOT a `typography-*` class: `text-typography-0`
+              resolves to near-black under the inverted dark ramp, invisible
+              on this card. */}
           {/* The headline is RUNTIME content (title_en — English by this app's
               design), so i18next can never reach it: it goes through the same
               on-device translator the feed cards use. No `originalText` is
@@ -112,7 +109,7 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
             text={title}
             size="sm"
             style={{
-              color: 'rgb(245, 245, 245)',
+              color: colors.ink,
               fontWeight: '600',
             }}
             numberOfLines={2}

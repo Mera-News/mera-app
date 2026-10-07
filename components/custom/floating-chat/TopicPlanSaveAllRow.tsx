@@ -25,6 +25,7 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { discardTopicPlan, saveTopicPlan } from './topic-plan-actions';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
+import { themedStyles } from '@/lib/theme/tokens';
 
 export interface TopicPlanSaveAllRowProps {
   /** factIds of every topic-plan card currently in the thread. */
@@ -32,6 +33,7 @@ export interface TopicPlanSaveAllRowProps {
 }
 
 const TopicPlanSaveAllRow: React.FC<TopicPlanSaveAllRowProps> = ({ factIds }) => {
+  const styles = useStyles();
   const { t } = useTranslation();
   const { unresolved } = useTopicPlanResolutions(factIds);
   const [busy, setBusy] = useState(false);
@@ -104,7 +106,7 @@ const TopicPlanSaveAllRow: React.FC<TopicPlanSaveAllRowProps> = ({ factIds }) =>
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   row: {
     alignItems: 'center',
     paddingVertical: 6,
@@ -116,10 +118,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   warning: {
-    color: 'rgb(200, 200, 200)',
+    color: c.ink,
     textAlign: 'center',
     paddingHorizontal: 16,
   },
-});
+}));
 
 export default TopicPlanSaveAllRow;

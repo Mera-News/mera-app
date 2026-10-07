@@ -12,8 +12,8 @@ import { Button, ButtonText } from '@/components/ui/button';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import type { FactCardAction, PendingDelete } from './types';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
 
 // Fade + slide up with a slight scale-up (0.97 → 1). Custom entering builder so
 // the scale rides the same ~280ms curve as the fade/slide (FadeInDown alone
@@ -60,6 +60,8 @@ const TITLE_KEY_BY_ACTION = {
 } as const satisfies Record<FactCardAction, string>;
 
 const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }) => {
+  const styles = useStyles();
+  const colors = useColors();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
@@ -89,7 +91,7 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }
   return (
     <Animated.View entering={factCardEntering} style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons {...DECORATIVE_ICON_A11Y} name={ICON_BY_ACTION[action]} size={18} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name={ICON_BY_ACTION[action]} size={18} color={colors.accentMark} />
         <Text size="sm" bold style={styles.title}>
           {t(TITLE_KEY_BY_ACTION[action])}
         </Text>
@@ -148,12 +150,12 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(231, 138, 83, 0.08)',
+    backgroundColor: tint(c.accent, 0.08),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 8,
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    color: ACCENT,
+    color: c.accentText,
   },
   statements: {
     gap: 4,
@@ -178,19 +180,19 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: ACCENT,
+    backgroundColor: c.accent,
     marginTop: 8,
   },
   statementText: {
     flex: 1,
-    color: 'rgb(193, 193, 193)',
+    color: c.ink2,
   },
   buttonStack: { gap: 4, marginTop: 4 },
   tapTarget: { minHeight: 44 },
-  removeText: { color: '#F87171' },
+  removeText: { color: c.negative },
   keepButton: { minHeight: 44, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 16 },
-  keepText: { color: 'rgb(200, 200, 200)' },
-  keptLine: { color: 'rgb(150, 150, 150)', paddingHorizontal: 4 },
-});
+  keepText: { color: c.ink },
+  keptLine: { color: c.ink3, paddingHorizontal: 4 },
+}));
 
 export default FactCard;

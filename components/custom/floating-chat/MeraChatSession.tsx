@@ -51,8 +51,10 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import CloudPersonaChat from '../persona-chat/CloudPersonaChat';
 import LocalPersonaChat from '../persona-chat/LocalPersonaChat';
+import { themedStyles } from '@/lib/theme/tokens';
 
 export default function MeraChatSession() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const [isInitLoading, setIsInitLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -280,7 +282,7 @@ export default function MeraChatSession() {
     : <CloudPersonaChat key={conversationId} {...sharedProps} />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -289,7 +291,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   loadingText: {
-    color: 'rgb(160, 160, 160)',
+    color: c.ink2,
     textAlign: 'center',
   },
-});
+}));

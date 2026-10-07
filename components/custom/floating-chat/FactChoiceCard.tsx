@@ -43,8 +43,8 @@ import {
 import { resolveGroup } from './fact-choice-actions';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
 
 /**
  * Would keeping both facts leave the persona contradicting itself? Two home
@@ -60,10 +60,8 @@ function contradicts(a: string | null, b: string | null): boolean {
 }
 // The red already used by the blocked banner in ChatThread. Paired with the
 // word "Replace" and the no-undo sentence: never colour alone.
-const DESTRUCTIVE = '#F87171';
 // The overlap label on a Keep both card: readable (~9:1 on the card) and
 // deliberately not the destructive tint.
-const NEUTRAL_LABEL = 'rgb(200, 200, 200)';
 
 function cardEntering() {
   'worklet';
@@ -111,6 +109,8 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   replacesFactId = null,
   topicSkillId = null,
 }) => {
+  const styles = useStyles();
+  const colors = useColors();
   const { t } = useTranslation();
   // Index 0 is Mera's preferred reading, preselected — so the unambiguous case
   // (one option) really is one tap.
@@ -304,7 +304,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
         testID={`fact-choice-dismissed-${groupIndex}`}
       >
         <View style={styles.headerRow}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={18} color={colors.accentMark} />
           <Text ref={cardRef} size="sm" bold style={styles.title}>
             {t('factChoice.dismissedTitle')}
           </Text>
@@ -345,7 +345,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           {...DECORATIVE_ICON_A11Y}
           name={isReplace ? 'swap-horiz' : 'help-outline'}
           size={18}
-          color={ACCENT}
+          color={colors.accentMark}
         />
         <Text size="sm" bold style={styles.title}>
           {isReplace
@@ -381,7 +381,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
                   {...DECORATIVE_ICON_A11Y}
                   name={isSel ? 'radio-button-checked' : 'radio-button-unchecked'}
                   size={18}
-                  color={isSel ? ACCENT : 'rgb(150, 150, 150)'}
+                  color={isSel ? colors.accentMark : colors.ink3}
                 />
               )}
               {/* Statements are English by the agent's LANGUAGE rule and are what
@@ -405,7 +405,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
       {canKeepBoth && !stale && replaces && (
         <View style={styles.replaceBox} testID={`fact-choice-overlaps-${groupIndex}`}>
           <View style={styles.replaceHeader}>
-            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={16} color={NEUTRAL_LABEL} />
+            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={16} color={colors.ink} />
             <Text size="xs" bold style={styles.overlapLabel}>
               {t('factChoice.overlapsLabel')}
             </Text>
@@ -425,7 +425,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
       {isReplace && !canKeepBoth && !stale && (
         <View style={styles.replaceBox} testID={`fact-choice-replaces-${groupIndex}`}>
           <View style={styles.replaceHeader}>
-            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="warning-amber" size={16} color={DESTRUCTIVE} />
+            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="warning-amber" size={16} color={colors.negative} />
             <Text size="xs" bold style={styles.replaceLabel}>
               {replaces ? t('factChoice.replacesLabel') : null}
             </Text>
@@ -527,25 +527,25 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(231, 138, 83, 0.08)',
+    backgroundColor: tint(c.accent, 0.08),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
   },
   // Opacity alone would drag the body text under 4.5:1 on the dark ground, so a
   // settled card dims its CHROME and the text below keeps its own contrast.
-  cardSettled: { gap: 6, borderColor: 'rgba(231, 138, 83, 0.45)' },
+  cardSettled: { gap: 6, borderColor: tint(c.accent, 0.45) },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: ACCENT, flex: 1 },
+  title: { color: c.accentText, flex: 1 },
   // 'rgb(170,170,170)' on this card's ground measures ~4.1:1 — under the 4.5:1
   // floor for body text. This is the settled state's only prose, so it is the
   // one place that mattered.
-  settledSub: { color: 'rgb(200, 200, 200)' },
+  settledSub: { color: c.ink },
   // A number, not a class: NativeWind rem is 14.
   undoFrame: { minHeight: 44, justifyContent: 'center', marginVertical: -6 },
   undoButton: {
@@ -553,21 +553,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
   },
-  undoText: { color: ACCENT },
+  undoText: { color: c.accentText },
   replaceBox: {
     gap: 3,
     paddingTop: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+    borderTopColor: c.surfaceRaised,
   },
   replaceHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  replaceLabel: { color: DESTRUCTIVE },
-  overlapLabel: { color: NEUTRAL_LABEL },
-  replaceStatement: { color: 'rgb(210, 210, 210)', marginLeft: 22 },
-  replaceDetail: { color: 'rgb(190, 190, 190)', marginLeft: 22 },
-  replaceWarning: { color: DESTRUCTIVE, marginLeft: 22, marginTop: 2 },
+  replaceLabel: { color: c.negative },
+  overlapLabel: { color: c.ink },
+  replaceStatement: { color: c.ink, marginLeft: 22 },
+  replaceDetail: { color: c.ink2, marginLeft: 22 },
+  replaceWarning: { color: c.negative, marginLeft: 22, marginTop: 2 },
   rows: { gap: 6 },
   optionRow: {
     flexDirection: 'row',
@@ -580,15 +580,15 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   optionRowSelected: {
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(231, 138, 83, 0.10)',
+    borderColor: c.accentMark,
+    backgroundColor: tint(c.accent, 0.1),
   },
-  optionText: { flex: 1, color: 'rgb(210, 210, 210)' },
+  optionText: { flex: 1, color: c.ink },
   buttonRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
   buttonStack: { gap: 8, marginTop: 2 },
-  replaceButtonText: { color: DESTRUCTIVE },
+  replaceButtonText: { color: c.negative },
   skipText: { alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 16, minHeight: 44, justifyContent: 'center' },
-  skipLabel: { color: 'rgb(200, 200, 200)' },
-});
+  skipLabel: { color: c.ink },
+}));
 
 export default FactChoiceCard;

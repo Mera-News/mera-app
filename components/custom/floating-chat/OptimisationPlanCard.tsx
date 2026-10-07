@@ -31,8 +31,8 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
 
 function cardEntering() {
   'worklet';
@@ -52,6 +52,8 @@ function cardEntering() {
 type LoadState = 'loading' | 'ready' | 'empty';
 
 const OptimisationPlanCard: React.FC = () => {
+  const styles = useStyles();
+  const colors = useColors();
   const { t } = useTranslation();
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [plan, setPlan] = useState<PendingPlan | null>(null);
@@ -150,7 +152,7 @@ const OptimisationPlanCard: React.FC = () => {
     return (
       <Animated.View entering={cardEntering} style={[styles.card, styles.cardSettled]}>
         <View style={styles.headerRow}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={18} color={colors.accentMark} />
           <Text size="sm" bold style={styles.title}>
             {t('optimisationPlan.appliedTitle')}
           </Text>
@@ -167,7 +169,7 @@ const OptimisationPlanCard: React.FC = () => {
   return (
     <Animated.View entering={cardEntering} style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="auto-fix-high" size={18} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="auto-fix-high" size={18} color={colors.accentMark} />
         <Text size="sm" bold style={styles.title}>
           {t('optimisationPlan.cardTitle')}
         </Text>
@@ -200,7 +202,7 @@ const OptimisationPlanCard: React.FC = () => {
                   {...DECORATIVE_ICON_A11Y}
                   name={checked ? 'check-box' : 'check-box-outline-blank'}
                   size={18}
-                  color={checked ? ACCENT : 'rgb(140, 140, 140)'}
+                  color={checked ? colors.accentMark : colors.ink3}
                   style={styles.rowIcon}
                 />
                 {/* Every runtime string on this card is English: the plan LLM
@@ -277,7 +279,7 @@ const OptimisationPlanCard: React.FC = () => {
                         {...DECORATIVE_ICON_A11Y}
                         name={selected ? 'radio-button-checked' : 'radio-button-unchecked'}
                         size={18}
-                        color={selected ? ACCENT : 'rgb(140, 140, 140)'}
+                        color={selected ? colors.accentMark : colors.ink3}
                         style={styles.rowIcon}
                       />
                       <TranslatableDynamic
@@ -351,12 +353,12 @@ const OptimisationPlanCard: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(231, 138, 83, 0.08)',
+    backgroundColor: tint(c.accent, 0.08),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
@@ -370,20 +372,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    color: ACCENT,
+    color: c.accentText,
   },
   subtitle: {
-    color: 'rgb(190, 190, 190)',
+    color: c.ink2,
   },
   emptyText: {
-    color: 'rgb(180, 180, 180)',
+    color: c.ink2,
     fontStyle: 'italic',
   },
   section: {
     gap: 8,
   },
   sectionLabel: {
-    color: 'rgb(200, 200, 200)',
+    color: c.ink,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
@@ -397,39 +399,39 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     flex: 1,
-    color: 'rgb(215, 215, 215)',
+    color: c.ink,
   },
   reviewItem: {
     gap: 6,
     paddingVertical: 6,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+    borderTopColor: c.surfaceRaised,
   },
   question: {
-    color: 'rgb(225, 225, 225)',
+    color: c.ink,
   },
   rationale: {
-    color: 'rgb(165, 165, 165)',
+    color: c.ink2,
   },
   conflictBox: {
     gap: 2,
     padding: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(248, 113, 113, 0.10)',
+    backgroundColor: tint(c.negative, 0.1),
   },
   conflictLabel: {
-    color: '#F0A38A',
+    color: c.negative,
   },
   conflictRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   conflictText: {
-    color: 'rgb(200, 180, 175)',
+    color: c.ink2,
   },
   conflictTitle: {
     flex: 1,
-    color: 'rgb(200, 180, 175)',
+    color: c.ink2,
   },
   optionRow: {
     borderRadius: 10,
@@ -439,8 +441,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   optionRowSelected: {
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(231, 138, 83, 0.10)',
+    borderColor: c.accentMark,
+    backgroundColor: tint(c.accent, 0.1),
   },
   buttonRow: {
     flexDirection: 'row',
@@ -452,17 +454,17 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   discardLinkText: {
-    color: 'rgb(140, 140, 140)',
+    color: c.ink3,
     textDecorationLine: 'underline',
   },
   discardConfirmRow: {
     gap: 8,
     padding: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: c.surface,
   },
   discardConfirmText: {
-    color: 'rgb(190, 190, 190)',
+    color: c.ink2,
   },
   discardConfirmButtons: {
     flexDirection: 'row',
@@ -474,12 +476,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   discardKeepText: {
-    color: 'rgb(180, 180, 180)',
+    color: c.ink2,
   },
   discardYesText: {
-    color: '#F87171',
+    color: c.negative,
     fontWeight: '600',
   },
-});
+}));
 
 export default OptimisationPlanCard;

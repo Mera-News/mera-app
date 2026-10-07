@@ -21,8 +21,8 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import { themedStyles, tint } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
 
 function cardEntering() {
   'worklet';
@@ -59,6 +59,7 @@ export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
   onSend,
   onSaveAsWritten = null,
 }) => {
+  const styles = useStyles();
   const { t } = useTranslation();
 
   return (
@@ -145,9 +146,9 @@ export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   wrap: { gap: 8, paddingVertical: 2 },
-  question: { color: 'rgb(210, 210, 210)' },
+  question: { color: c.ink },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     // 48dp target: long options wrap to two lines, so this is a floor.
@@ -157,8 +158,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: ACCENT,
-    backgroundColor: 'rgba(231, 138, 83, 0.10)',
+    borderColor: c.accentMark,
+    backgroundColor: tint(c.accent, 0.1),
     maxWidth: '100%',
   },
   // Spent, not gone: the thread keeps the record of what was offered.
@@ -168,10 +169,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   // Save all: the one filled chip, so it reads as the main action.
-  chipPrimary: { backgroundColor: ACCENT },
-  chipText: { color: 'rgb(226, 226, 226)', flexShrink: 1 },
-  chipTextPrimary: { color: 'rgb(24, 24, 24)', fontWeight: '600' },
-  chipTextAnswered: { color: 'rgb(170, 170, 170)', flexShrink: 1 },
-});
+  chipPrimary: { backgroundColor: c.accent },
+  chipText: { color: c.ink, flexShrink: 1 },
+  chipTextPrimary: { color: c.onAccent, fontWeight: '600' },
+  chipTextAnswered: { color: c.ink2, flexShrink: 1 },
+}));
 
 export default AskChoiceCard;

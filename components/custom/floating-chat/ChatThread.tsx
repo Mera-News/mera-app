@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/chat-ai';
 import { CONTENT_POLICY_URL } from '@/lib/config/branding';
 import { hapticLight } from '@/lib/haptics';
-import { useColors } from '@/lib/theme/tokens';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import {
@@ -87,6 +87,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   composerTrailing,
   composerPlaceholder,
 }) => {
+  const styles = useStyles();
   const { t } = useTranslation();
   const colors = useColors();
 
@@ -347,7 +348,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
               accessibilityLabel={t('floatingChat.viewPreviousMessages')}
               testID="chat-view-previous-messages"
             >
-              <MaterialIcons {...DECORATIVE_ICON_A11Y} name="history" size={16} color="rgb(160, 160, 160)" />
+              <MaterialIcons {...DECORATIVE_ICON_A11Y} name="history" size={16} color={colors.ink2} />
               <Text size="xs" style={styles.historyButtonText}>
                 {t('floatingChat.viewPreviousMessages')}
               </Text>
@@ -445,7 +446,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
               <View style={styles.header}>
                 {!hasRealMessage && usageNotice && (
                   <View style={styles.noticeRow}>
-                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color="rgb(140, 140, 140)" />
+                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color={colors.ink3} />
                     <Text size="xs" style={styles.noticeText}>
                       {usageNotice}
                     </Text>
@@ -462,7 +463,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       {blockedMessage && (
         <View style={styles.blockedBanner}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="block" size={20} color="#F87171" />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="block" size={20} color={colors.negative} />
           <View style={styles.blockedBody}>
             <Text size="sm" style={styles.blockedText}>
               {blockedMessage}
@@ -472,7 +473,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 {unblockPending ? (
                   <>
                     <View style={styles.pendingPill}>
-                      <MaterialIcons {...DECORATIVE_ICON_A11Y} name="hourglass-empty" size={14} color="rgb(180, 180, 180)" />
+                      <MaterialIcons {...DECORATIVE_ICON_A11Y} name="hourglass-empty" size={14} color={colors.ink2} />
                       <Text size="xs" style={styles.pendingText}>
                         {t('floatingChat.requestUnblock.pendingButton')}
                       </Text>
@@ -488,7 +489,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                       accessibilityLabel={t('floatingChat.requestUnblock.refreshButton')}
                       testID="chat-unblock-refresh"
                     >
-                      <MaterialIcons {...DECORATIVE_ICON_A11Y} name="refresh" size={14} color="#F87171" />
+                      <MaterialIcons {...DECORATIVE_ICON_A11Y} name="refresh" size={14} color={colors.negative} />
                       <Text size="xs" style={styles.refreshText}>
                         {t('floatingChat.requestUnblock.refreshButton')}
                       </Text>
@@ -542,7 +543,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   // Avatar gutter. `Message` aligns its children but does not lay them out in
   // a row, so without this the mark sits ABOVE the bubble rather than beside
   // it — which is what shipped, despite both call sites saying "beside".
@@ -589,17 +590,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderColor: c.panelBorder,
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 7,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: c.surface,
   },
   historyButtonText: {
-    color: 'rgb(160, 160, 160)',
+    color: c.ink2,
   },
   userText: {
-    color: 'rgb(210, 210, 210)',
+    color: c.ink,
     // Match the assistant markdown / input type scale for a uniform chat UI.
     fontSize: 15,
     lineHeight: 21,
@@ -613,10 +614,10 @@ const styles = StyleSheet.create({
   hairline: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: c.surfaceRaised,
   },
   dividerLabel: {
-    color: 'rgb(120, 120, 120)',
+    color: c.ink3,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   hintText: {
-    color: 'rgb(185, 185, 185)',
+    color: c.ink2,
   },
   blockedBanner: {
     flexDirection: 'row',
@@ -637,14 +638,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    backgroundColor: tint(c.negative, 0.12),
   },
   blockedBody: {
     flex: 1,
     gap: 10,
   },
   blockedText: {
-    color: '#F87171',
+    color: c.negative,
   },
   unblockRow: {
     flexDirection: 'row',
@@ -656,12 +657,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 16,
-    backgroundColor: 'rgba(248, 113, 113, 0.18)',
+    backgroundColor: tint(c.negative, 0.18),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(248, 113, 113, 0.5)',
+    borderColor: tint(c.negative, 0.5),
   },
   requestText: {
-    color: '#F87171',
+    color: c.negative,
     fontWeight: '600',
   },
   pendingPill: {
@@ -671,10 +672,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: c.surface,
   },
   pendingText: {
-    color: 'rgb(180, 180, 180)',
+    color: c.ink2,
   },
   refreshPill: {
     flexDirection: 'row',
@@ -684,10 +685,10 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(248, 113, 113, 0.5)',
+    borderColor: tint(c.negative, 0.5),
   },
   refreshText: {
-    color: '#F87171',
+    color: c.negative,
   },
   noticeRow: {
     flexDirection: 'row',
@@ -698,9 +699,9 @@ const styles = StyleSheet.create({
   },
   noticeText: {
     flex: 1,
-    color: 'rgb(140, 140, 140)',
+    color: c.ink3,
     lineHeight: 16,
   },
-});
+}));
 
 export default ChatThread;

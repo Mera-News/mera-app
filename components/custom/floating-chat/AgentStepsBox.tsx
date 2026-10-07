@@ -9,7 +9,7 @@ import StatusIndicator from '@/components/custom/chat/StatusIndicator';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { useColors } from '@/lib/theme/tokens';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -90,6 +90,7 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   terminal,
   interrupted,
 }) => {
+  const styles = useStyles();
   const { t } = useTranslation();
   const colors = useColors();
   // A folded box opens again on a tap (FinalMeraChat #9). Local: it is a view
@@ -282,22 +283,22 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   box: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: c.line,
+    backgroundColor: c.surface,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 2,
   },
-  slow: { color: 'rgb(150, 150, 150)', marginLeft: 24, marginTop: 1 },
+  slow: { color: c.ink3, marginLeft: 24, marginTop: 1 },
   title: { marginBottom: 4 },
   dim: { opacity: DONE_DIM },
   foldRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   foldStatus: { flex: 1 },
-  terminal: { color: 'rgb(176, 176, 176)', marginTop: 4 },
-});
+  terminal: { color: c.ink2, marginTop: 4 },
+}));
 
 export default AgentStepsBox;

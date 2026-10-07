@@ -45,8 +45,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
 
 function cardEntering() {
   'worklet';
@@ -75,6 +75,8 @@ export interface TopicPlanCardProps {
 }
 
 const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) => {
+  const styles = useStyles();
+  const colors = useColors();
   const { t } = useTranslation();
   // Shared with the thread-level gate and the Save-all/Discard-all row, so a
   // card can never consider itself settled while the gate still counts it.
@@ -238,7 +240,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         testID={`topic-plan-discarded-${factId}`}
       >
         <View style={styles.headerRow}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="delete-outline" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="delete-outline" size={18} color={colors.accentMark} />
           <Text size="sm" bold style={styles.title}>
             {t('topicPlan.discardedTitle')}
           </Text>
@@ -261,7 +263,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         testID={`topic-plan-saved-${factId}`}
       >
         <View style={styles.headerRow}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={18} color={colors.accentMark} />
           <Text size="sm" bold style={styles.title}>
             {t('topicPlan.settledTitle')}
           </Text>
@@ -289,7 +291,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
   return (
     <Animated.View entering={cardEntering} style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="account-tree" size={18} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="account-tree" size={18} color={colors.accentMark} />
         <Text size="sm" bold style={styles.title}>
           {t('topicPlan.title')}
         </Text>
@@ -308,7 +310,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
 
       {showFailed ? (
         <View style={styles.failedRow} testID="topic-plan-failed">
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="error-outline" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="error-outline" size={18} color={colors.accentMark} />
           <Text size="xs" style={styles.failedText}>
             {t('floatingChat.topicGenFailed')}
           </Text>
@@ -328,7 +330,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         </View>
       ) : showGenerating ? (
         <View style={styles.generatingRow}>
-          <ActivityIndicator size="small" color={ACCENT} />
+          <ActivityIndicator size="small" color={colors.accentMark} />
           <Text size="xs" style={styles.generatingText}>
             {loaded ? t('topicPlan.generating') : t('topicPlan.loading')}
           </Text>
@@ -360,7 +362,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
                     visualStyle={styles.iconButton}
                     accessibilityLabel={t('topicPlan.undo')}
                   >
-                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="undo" size={18} color={ACCENT} />
+                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="undo" size={18} color={colors.accentMark} />
                   </GlyphSafeButton>
                 ) : (
                   <GlyphSafeButton
@@ -370,7 +372,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
                     visualStyle={styles.iconButton}
                     accessibilityLabel={t('topicPlan.delete')}
                   >
-                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={18} color="rgb(150, 150, 150)" />
+                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={18} color={colors.ink3} />
                   </GlyphSafeButton>
                 )}
               </View>
@@ -411,12 +413,12 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(231, 138, 83, 0.08)',
+    backgroundColor: tint(c.accent, 0.08),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
@@ -426,25 +428,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: ACCENT },
+  title: { color: c.accentText },
   // `fontStyle` moved to TranslatableDynamic's `italic` PROP — the wrapper
   // resolves it to a class, and leaving it as a raw style depends on gluestack
   // merging `style` after its className-derived styles.
-  factLine: { color: 'rgb(180, 180, 180)' },
-  settledSub: { color: 'rgb(170, 170, 170)' },
-  discardWarning: { color: 'rgb(200, 200, 200)' },
+  factLine: { color: c.ink2 },
+  settledSub: { color: c.ink2 },
+  discardWarning: { color: c.ink },
   generatingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
-  generatingText: { color: 'rgb(170, 170, 170)' },
+  generatingText: { color: c.ink2 },
   failedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
-  failedText: { flex: 1, color: 'rgb(200, 200, 200)' },
+  failedText: { flex: 1, color: c.ink },
   retryButton: {
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
   },
-  retryText: { color: ACCENT },
+  retryText: { color: c.accentText },
   rows: { gap: 6 },
   topicRow: {
     flexDirection: 'row',
@@ -454,10 +456,10 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   topicRowRetired: { opacity: 0.55 },
-  topicText: { flex: 1, color: 'rgb(210, 210, 210)' },
-  topicTextRetired: { textDecorationLine: 'line-through', color: 'rgb(150, 150, 150)' },
+  topicText: { flex: 1, color: c.ink },
+  topicTextRetired: { textDecorationLine: 'line-through', color: c.ink3 },
   iconButton: { padding: 4 },
   buttonRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
-});
+}));
 
 export default TopicPlanCard;

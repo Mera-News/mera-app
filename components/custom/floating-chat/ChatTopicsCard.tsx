@@ -48,8 +48,8 @@ import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, View } fro
 import Animated, { withTiming, ZoomIn } from 'react-native-reanimated';
 import { SPRING } from '@/lib/motion';
 import { useTranslation } from 'react-i18next';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
 
 /**
  * How long a still-PENDING generation runs before the card offers a way out.
@@ -95,6 +95,8 @@ const CHIP_STAGGER_MS = 60;
 const CHIP_STAGGER_MAX = 4;
 
 const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, topicSkillId }) => {
+  const styles = useStyles();
+  const colors = useColors();
   const { t } = useTranslation();
 
   const [rows, setRows] = useState<Chip[]>([]);
@@ -333,7 +335,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
               {...DECORATIVE_ICON_A11Y}
               name={expanded ? 'expand-more' : 'chevron-right'}
               size={18}
-              color={ACCENT}
+              color={colors.accentMark}
             />
 
             <Text size="sm" bold style={styles.title}>
@@ -362,7 +364,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             {status === 'pending' && (
               <ActivityIndicator
                 size="small"
-                color={ACCENT}
+                color={colors.accentMark}
                 testID={`chat-topics-spinner-${factId}`}
               />
             )}
@@ -372,7 +374,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
                 {...DECORATIVE_ICON_A11Y}
                 name="check"
                 size={14}
-                color="rgb(150, 150, 150)"
+                color={colors.ink3}
                 testID={`chat-topics-done-${factId}`}
               />
             )}
@@ -486,7 +488,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
                         {...DECORATIVE_ICON_A11Y}
                         name={removing ? 'undo' : 'close'}
                         size={14}
-                        color={removing ? ACCENT : 'rgb(190, 190, 190)'}
+                        color={removing ? colors.accentMark : colors.ink2}
                       />
                     </GlyphSafeButton>
                   </Animated.View>
@@ -536,12 +538,12 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(231, 138, 83, 0.08)',
+    backgroundColor: tint(c.accent, 0.08),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
@@ -556,35 +558,35 @@ const styles = StyleSheet.create({
   tombstone: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: c.line,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  savedHint: { color: 'rgb(200, 200, 200)' },
+  savedHint: { color: c.ink },
   moreButton: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   morePill: {
     borderWidth: 1,
-    borderColor: 'rgb(150, 150, 150)',
+    borderColor: c.line,
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   // Neutral, the same grey as the outline and the done tick.
-  moreText: { color: 'rgb(150, 150, 150)' },
-  title: { color: ACCENT, flexShrink: 0 },
-  factLine: { flex: 1, color: 'rgb(190, 190, 190)' },
+  moreText: { color: c.ink3 },
+  title: { color: c.accentText, flexShrink: 0 },
+  factLine: { flex: 1, color: c.ink2 },
   section: { gap: 6 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
-  statusText: { flex: 1, color: 'rgb(200, 200, 200)' },
+  statusText: { flex: 1, color: c.ink },
   retryButton: {
     minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: 14,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: c.accentMark,
   },
-  retryText: { color: ACCENT },
+  retryText: { color: c.accentText },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     flexDirection: 'row',
@@ -595,15 +597,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(231, 138, 83, 0.45)',
-    backgroundColor: 'rgba(231, 138, 83, 0.10)',
+    borderColor: tint(c.accent, 0.45),
+    backgroundColor: tint(c.accent, 0.1),
     maxWidth: '100%',
   },
   chipRemoving: { opacity: 0.6, borderStyle: 'dashed' },
-  chipText: { color: 'rgb(220, 220, 220)', flexShrink: 1 },
+  chipText: { color: c.ink, flexShrink: 1 },
   chipTextRemoving: { textDecorationLine: 'line-through' },
   // 16pt hitSlop around a 26pt box clears the 48dp target on both platforms.
   chipButton: { padding: 6, minWidth: 26, minHeight: 26, alignItems: 'center', justifyContent: 'center' },
-});
+}));
 
 export default ChatTopicsCard;

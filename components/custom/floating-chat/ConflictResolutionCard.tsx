@@ -35,9 +35,8 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
-const WARN = 'rgb(233, 179, 83)';
 
 function cardEntering() {
   'worklet';
@@ -66,6 +65,8 @@ const STATUS_LABEL_KEY = {
 } as const satisfies Record<ConflictResolution, string>;
 
 const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflict }) => {
+  const styles = useStyles();
+  const colors = useColors();
   const { t } = useTranslation();
   const conflictKey = `${conflict.newFactId}:${conflict.existingFactId}`;
   const resolvedMap = useFloatingChatResolvedConflicts();
@@ -127,7 +128,7 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
   return (
     <Animated.View entering={cardEntering} style={[styles.card, dimmed && styles.cardDimmed]}>
       <View style={styles.headerRow}>
-        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={18} color={WARN} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={18} color={colors.warning} />
         <Text size="sm" bold style={styles.title}>
           {t('conflict.title')}
         </Text>
@@ -217,7 +218,7 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
             multiline
             style={styles.mergeInput}
             placeholder={t('conflict.mergePlaceholder')}
-            placeholderTextColor="rgb(120, 120, 120)"
+            placeholderTextColor={colors.ink3}
           />
           <View style={styles.mergeButtons}>
             <Pressable
@@ -244,7 +245,7 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
 
       {resolved !== null && (
         <View style={styles.statusRow}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={16} color={WARN} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={16} color={colors.warning} />
           <Text size="xs" style={styles.statusText}>
             {t(STATUS_LABEL_KEY[resolved])}
           </Text>
@@ -264,7 +265,10 @@ interface VerbRowProps {
 
 // Childless button over a hidden visual (ux2 batch 26): the verb glyph inside
 // the labelled row surfaced as its own StaticText.
-const VerbRow: React.FC<VerbRowProps> = ({ icon, label, preview, onPress, disabled }) => (
+const VerbRow: React.FC<VerbRowProps> = ({ icon, label, preview, onPress, disabled }) => {
+  const styles = useStyles();
+  const colors = useColors();
+  return (
   <GlyphSafeButton
     onPress={onPress}
     disabled={disabled}
@@ -272,7 +276,7 @@ const VerbRow: React.FC<VerbRowProps> = ({ icon, label, preview, onPress, disabl
     accessibilityState={{ disabled: !!disabled }}
     accessibilityLabel={`${label}. ${preview}`}
   >
-    <MaterialIcons {...DECORATIVE_ICON_A11Y} name={icon} size={18} color={WARN} style={styles.verbIcon} />
+    <MaterialIcons {...DECORATIVE_ICON_A11Y} name={icon} size={18} color={colors.warning} style={styles.verbIcon} />
     <View style={styles.verbBody}>
       <Text size="sm" bold style={styles.verbLabel}>
         {label}
@@ -282,55 +286,56 @@ const VerbRow: React.FC<VerbRowProps> = ({ icon, label, preview, onPress, disabl
       </Text>
     </View>
   </GlyphSafeButton>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(233, 179, 83, 0.09)',
+    backgroundColor: tint(c.warning, 0.09),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: WARN,
+    borderColor: c.warning,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
   },
   cardDimmed: { opacity: 0.6 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: WARN },
+  title: { color: c.warning },
   statements: { gap: 8 },
   statementBlock: { gap: 2 },
   statementLabel: {
-    color: 'rgb(180, 180, 180)',
+    color: c.ink2,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  statementText: { color: 'rgb(215, 215, 215)' },
+  statementText: { color: c.ink },
   verbs: { gap: 6 },
   verbRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 4 },
   verbIcon: { marginTop: 2 },
   verbBody: { flex: 1, gap: 1 },
-  verbLabel: { color: WARN },
-  verbPreview: { color: 'rgb(170, 170, 170)' },
+  verbLabel: { color: c.warning },
+  verbPreview: { color: c.ink2 },
   mergeBox: { gap: 8 },
   mergeInput: {
     minHeight: 56,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(233, 179, 83, 0.5)',
+    borderColor: tint(c.warning, 0.5),
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    color: 'rgb(225, 225, 225)',
+    color: c.ink,
     fontSize: 15,
     textAlignVertical: 'top',
   },
   mergeButtons: { flexDirection: 'row', gap: 10, justifyContent: 'flex-end' },
   pill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
-  pillGhost: { backgroundColor: 'rgba(255, 255, 255, 0.06)' },
-  pillGhostText: { color: 'rgb(190, 190, 190)' },
-  pillPrimary: { backgroundColor: WARN },
-  pillPrimaryText: { color: 'rgb(20, 20, 20)', fontWeight: '600' },
+  pillGhost: { backgroundColor: c.surface },
+  pillGhostText: { color: c.ink2 },
+  pillPrimary: { backgroundColor: c.warning },
+  pillPrimaryText: { color: c.onAccent, fontWeight: '600' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statusText: { color: 'rgb(180, 180, 180)' },
-});
+  statusText: { color: c.ink2 },
+}));
 
 export default ConflictResolutionCard;
