@@ -66,6 +66,9 @@ interface ArticleMetaRowProps {
      * button, read "About {source}", with a trailing ⓘ.
      */
     onPublicationPress?: () => void;
+    /** Replaces the computed age, same slot and clock glyph ("Opened today"
+     *  on a History row). */
+    ageText?: string | null;
 }
 
 export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
@@ -80,6 +83,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     showRecency = true,
     centerAccessory,
     onPublicationPress,
+    ageText,
 }) => {
     const { t } = useTranslation();
     // The shared 60s clock (lib/time-tick.ts). THIS is what keeps the age
@@ -118,7 +122,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                 <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-age-slot">
                     <MaterialIcons name="schedule" size={14} color={iconColor} {...DECORATIVE_ICON_A11Y} />
                     <Text size="sm" className={ageColor}>
-                        {age}
+                        {ageText ?? age}
                     </Text>
                     {/* No read indicator is drawn. `read` still SUPPRESSES the NEW
                         badge below — the seen mechanism is intact end to end (card

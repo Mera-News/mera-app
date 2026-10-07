@@ -160,6 +160,8 @@ export interface ArticleCompactCardBaseProps {
   spokenPriority?: string | null;
   /** A short state after the publisher ("Opened", "You came from here"). */
   statusLabel?: string | null;
+  /** Replaces the age in the meta row ("Opened today" on a History row). */
+  timeLabel?: string | null;
 }
 
 const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
@@ -186,6 +188,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   onAccessibilityAction,
   spokenPriority,
   statusLabel,
+  timeLabel,
 }) => {
   const { t } = useTranslation();
   const moreLabel = t('articleMenu.openA11y');
@@ -199,7 +202,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   const spokenLabel = composeSpokenLabel([
     shownTitle ?? displayTitle,
     meta.publication,
-    meta.age,
+    timeLabel ?? meta.age,
     spokenPriority,
     meta.language,
     statusLabel,
@@ -262,6 +265,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 countryCode={countryCode}
                 showFlag
                 centerAccessory={priorityAccessory}
+                ageText={timeLabel}
               />
             </Box>
             {metaAccessory}

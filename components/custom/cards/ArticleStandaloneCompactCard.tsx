@@ -24,6 +24,10 @@ interface ArticleStandaloneCompactCardProps {
   menuExtraItems?: readonly ArticleMenuItem[];
   /** Root testID passthrough (skill invariant 10). No visual effect. */
   testID?: string;
+  /** Replaces the age in the meta row ("Opened today" on a History row). */
+  timeLabel?: string | null;
+  /** A short state after the publisher ("Opened", "You came from here"). */
+  statusLabel?: string | null;
 }
 
 /**
@@ -44,6 +48,8 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
   onLongPress,
   menuExtraItems,
   testID,
+  timeLabel,
+  statusLabel,
 }) => {
   const publisherName =
     article.publicationSource?.publication_name ||
@@ -143,6 +149,8 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
         onPublicationPress={subject.publicationName ? menu.openPublication : undefined}
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
+        timeLabel={timeLabel}
+        statusLabel={statusLabel}
       />
       {menu.element}
     </>
