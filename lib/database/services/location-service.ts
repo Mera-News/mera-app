@@ -119,6 +119,44 @@ export async function setPinnedForWeather(locationId: string): Promise<void> {
   });
 }
 
+/**
+ * Relabels a place (Places ••• > Relabel). (city, country, role) stays unique:
+ * when the new role already has a twin for the same place, this row goes and
+ * the twin stays, taking over the weather pin if this row held it. Not a
+ * change-log row (owner: unlogged relabel).
+ */
+export async function setRole(locationId: string, role: LocationRole): Promise<void> {
+  const record = await locationsCollection.find(locationId);
+  if (record.role === role) return;
+  const twin = (await locationsCollection.query(Q.where('country_code', record.countryCode)).fetch()).find(
+    (l) =>
+      l.id !== locationId &&
+      l.role === role &&
+      l.countryCode === record.countryCode &&
+      normalizePlacePart(l.city) === normalizePlacePart(record.city),
+  );
+  await database.write(async () => {
+    const now = new Date();
+    if (!twin) {
+      await record.update((l) => {
+        l.role = role;
+        l.updatedAt = now;
+      });
+      return;
+    }
+    const ops = [record.prepareDestroyPermanently()];
+    if (record.pinnedForWeather && !twin.pinnedForWeather) {
+      ops.push(
+        twin.prepareUpdate((l) => {
+          l.pinnedForWeather = true;
+          l.updatedAt = now;
+        }),
+      );
+    }
+    await database.batch(ops);
+  });
+}
+
 export async function deleteLocation(locationId: string): Promise<void> {
   const record = await locationsCollection.find(locationId);
   await database.write(async () => {
