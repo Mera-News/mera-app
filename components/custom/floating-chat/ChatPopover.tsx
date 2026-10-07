@@ -1,14 +1,22 @@
-// ChatPopover — the morphing shell for the floating chat. Expands out of the
-// floating bubble's current position into a near-full-screen panel and
-// collapses back into it. Owns only the shell (backdrop, panel chrome, header,
-// keyboard avoidance) — the conversation itself is passed in as children and
-// is mounted fresh on every open (unmount on close guarantees a fresh session).
+// ChatPopover: the chat's shell. The panel grows out of the Mera button
+// wherever it sits and shrinks back into it (FinalMotion "Chat opens out of
+// the button": 320 ms arrive, 200 ms leave, a fade under Reduce Motion). Owns
+// only the shell (backdrop, material, header, keyboard avoidance); the
+// conversation is passed in as children and unmounts on close, which costs a
+// running turn nothing: turns live in the chat session (lib/chat-session).
+//
+// ONE MERA MARK ON SCREEN: the button hides while the panel shows, and a
+// riding mark carries the button's disc and logo from the button up to the
+// header's avatar slot on the same progress, and back down on close.
 
 import MeraLogo from '@/components/custom/MeraLogo';
-import ChatBugReportButton from './ChatBugReportButton';
+import ModalMaterial from '@/components/custom/ModalMaterial';
 import { GlyphSafeIconButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { hapticLight } from '@/lib/haptics';
+import { EASE, MOTION } from '@/lib/motion';
+import { MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
+import { useColors } from '@/lib/theme/tokens';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -22,26 +30,29 @@ import Animated, {
     interpolate,
     runOnJS,
     useAnimatedStyle,
+    useReducedMotion,
     useSharedValue,
     withSpring,
     withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ACCENT = 'rgb(231,138,83)';
-const PANEL_BG = '#1a1a1a';
-// Neutral, not red: a filled red circle read as a destructive action (audit
-// M15). Closing is not destructive; the reply keeps running either way.
-const CLOSE_ICON = 'rgb(210, 210, 210)';
-const BUBBLE_SIZE = 64; // diameter of the floating bubble the panel morphs from
+/** The header's avatar slot, where the riding mark lands (FinalMeraChat #5). */
+const AVATAR = 24;
+const HEADER_PAD_TOP = 14;
+const HEADER_PAD_LEFT = 16;
+/** The header row is as tall as its 44pt buttons. */
+const HEADER_ROW = 44;
+/** The button's logo at rest (MeraButton draws it at 38 pt). */
+const BUTTON_LOGO = 38;
+const PANEL_INSET = 10;
 
 // Swipe-down-to-close thresholds (header grab zone only).
 const SWIPE_CLOSE_DISTANCE = 90; // px of downward travel that commits a close
 const SWIPE_CLOSE_VELOCITY = 900; // px/s downward fling that commits a close
 
-// Near-critically damped (ζ ≈ 0.9): snappy settle with no visible overshoot at
-// the clipped panel edges (overflow: hidden makes any overshoot read as a
-// glitch). damping 22 vs the critical ~24 for stiffness 160 / mass 0.9.
+// A header drag released under the threshold springs back: near-critically
+// damped, so the clipped panel edge never overshoots.
 const SPRING_CONFIG = { damping: 22, stiffness: 160, mass: 0.9 };
 
 // Local lifecycle so children mount when opening begins and unmount only after
@@ -59,6 +70,8 @@ interface ChatPopoverProps {
 
 const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
     const { t } = useTranslation();
+    const colors = useColors();
+    const reduceMotion = useReducedMotion();
     const insets = useSafeAreaInsets();
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
     const isExpanded = useFloatingChatIsExpanded();
@@ -83,7 +96,7 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
     // Panel geometry — background must visibly peek at every edge.
     const panelTop = insets.top + 24;
     const panelBottom = insets.bottom + 10;
-    const panelWidth = screenWidth - 20; // left: 10, right: 10
+    const panelWidth = screenWidth - 2 * PANEL_INSET;
     const panelHeight = screenHeight - panelTop - panelBottom;
     const panelCenterX = screenWidth / 2;
     const panelCenterY = panelTop + panelHeight / 2;
@@ -104,10 +117,16 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         originX.value = bubbleCenter.x;
         originY.value = bubbleCenter.y;
         setPhase('closing');
-        progress.value = withSpring(0, SPRING_CONFIG, (finished) => {
-            if (finished) runOnJS(finishClose)();
-        });
-    }, [originX, originY, progress, finishClose]);
+        progress.value = withTiming(
+            0,
+            reduceMotion
+                ? { duration: MOTION.chat.reduce }
+                : { duration: MOTION.chat.close, easing: EASE.leave },
+            (finished) => {
+                if (finished) runOnJS(finishClose)();
+            },
+        );
+    }, [originX, originY, progress, finishClose, reduceMotion]);
 
     // User-initiated close (backdrop tap or X). Must work mid-stream — nothing
     // here is gated on generation state.
@@ -175,16 +194,22 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
             originX.value = bubbleCenter.x;
             originY.value = bubbleCenter.y;
             setPhase('opening');
-            progress.value = withSpring(1, SPRING_CONFIG, (finished) => {
-                if (finished) runOnJS(finishOpen)();
-            });
+            progress.value = withTiming(
+                1,
+                reduceMotion
+                    ? { duration: MOTION.chat.reduce }
+                    : { duration: MOTION.chat.open, easing: EASE.arrive },
+                (finished) => {
+                    if (finished) runOnJS(finishOpen)();
+                },
+            );
         } else if (!isExpanded && (phase === 'open' || phase === 'opening')) {
             // Collapse initiated outside this component (e.g. store.collapse()
             // from navigation) — still animate back into the bubble.
             Keyboard.dismiss();
             startClosing();
         }
-    }, [isExpanded, phase, originX, originY, progress, finishOpen, startClosing]);
+    }, [isExpanded, phase, originX, originY, progress, finishOpen, startClosing, reduceMotion]);
 
     // The Mera button hides for as long as the panel is on screen, motion
     // included, so its mark and the panel's are never both shown.
@@ -198,7 +223,7 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
 
     const panelStyle = useAnimatedStyle(() => {
         const p = progress.value;
-        const collapsedScale = BUBBLE_SIZE / panelWidth;
+        const collapsedScale = MERA_BUTTON_SIZE / panelWidth;
         // Shrink the panel's bottom edge up to sit just above the keyboard so the
         // input row is anchored on top of it. `panelBottom` already includes the
         // safe-area inset, so subtract it out of the keyboard height to avoid
@@ -208,6 +233,13 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         // to panelBottom as the panel collapses into the bubble.
         const keyboardHeight = -keyboard.height.value;
         const extraBottom = Math.max(0, keyboardHeight - insets.bottom);
+        if (reduceMotion) {
+            return {
+                opacity: p,
+                bottom: panelBottom + extraBottom,
+                transform: [{ translateY: dragTranslateY.value }],
+            };
+        }
         return {
             opacity: interpolate(p, [0, 0.35], [0, 1], Extrapolation.CLAMP),
             bottom: panelBottom + extraBottom,
@@ -219,12 +251,37 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         };
     });
 
+    // The riding mark: centred on the button at 0, on the header's avatar
+    // slot at 1. Its disc and dark logo fade out as it rises and the light
+    // logo fades in, so it lands as the avatar. Under Reduce Motion it does
+    // not travel: it sits on the slot and fades with the panel.
+    const slotX = PANEL_INSET + HEADER_PAD_LEFT + AVATAR / 2;
+    const slotY = panelTop + HEADER_PAD_TOP + HEADER_ROW / 2;
+    const riderStyle = useAnimatedStyle(() => {
+        const p = progress.value;
+        const travel = reduceMotion ? 1 : p;
+        const x = originX.value + (slotX - originX.value) * travel;
+        const y = originY.value + (slotY - originY.value) * travel + dragTranslateY.value;
+        return {
+            opacity: reduceMotion ? p : 1,
+            transform: [
+                { translateX: x - MERA_BUTTON_SIZE / 2 },
+                { translateY: y - MERA_BUTTON_SIZE / 2 },
+                { scale: 1 + (AVATAR / BUTTON_LOGO - 1) * travel },
+            ],
+        };
+    });
+    const discStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? 0 : 1 - progress.value }));
+    const lightMarkStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? 1 : progress.value }));
+
     if (phase === 'closed') return null;
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-            {/* Backdrop — always tappable, even mid-morph or mid-stream */}
-            <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>
+            {/* Backdrop: always tappable, even mid-morph or mid-stream */}
+            <Animated.View
+                style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }, backdropStyle]}
+            >
                 <Pressable
                     style={StyleSheet.absoluteFill}
                     onPress={requestClose}
@@ -237,110 +294,115 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
             <Animated.View
                 style={[
                     styles.panel,
-                    {
-                        top: panelTop,
-                        left: 10,
-                        right: 10,
-                    },
+                    { top: panelTop, left: PANEL_INSET, right: PANEL_INSET, borderColor: colors.line },
                     panelStyle,
                 ]}
             >
+                <ModalMaterial />
                 {/* The header arrives WITH the panel, on the panel's own morph.
                     A separate reveal after the morph settled made it pop in
                     220ms after the body (audit F10). */}
-                <View style={styles.header}>
-                    {/* Grab zone (logo + title) — pans down to close. Kept off the X
-                        so a swipe-down never eats a tap on the close button. */}
+                <View style={[styles.header, { borderBottomColor: colors.line }]}>
+                    {/* Grab zone (avatar slot + title): pans down to close.
+                        Kept off the buttons so a swipe never eats a tap. The
+                        slot is empty: the riding mark sits over it. */}
                     <GestureDetector gesture={swipeDownGesture}>
                         <View style={styles.headerGrab}>
-                            <MeraLogo size={28} />
-                            <Text style={styles.title}>{t('floatingChat.title')}</Text>
+                            <View style={styles.avatarSlot} />
+                            <Text style={[styles.title, { color: colors.ink }]}>{t('floatingChat.title')}</Text>
                         </View>
                     </GestureDetector>
-                    {/* Left of New chat (ux2 H): the whole chat, attached to a
-                        report the user chooses to send. */}
-                    <ChatBugReportButton />
                     {/* Real 44pt frames (ux2 batch 26): a childless labelled
-                        Pressable sized by NUMBER, the 36pt disc laid over it.
-                        `w-11 h-11` measured 38.5pt (NativeWind rem is 14), and an
-                        icon inside the button surfaced as its own StaticText. */}
+                        Pressable sized by NUMBER with the icon laid over it, or
+                        the icon surfaces as its own StaticText. */}
                     <GlyphSafeIconButton
                         onPress={onNewChatPress}
                         accessibilityLabel={t('floatingChat.newChat')}
                         testID="chat-header-new-chat"
                     >
-                        <View style={[styles.headerDisc, styles.newChatDisc]}>
-                            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="add-comment" size={20} color={ACCENT} />
-                        </View>
+                        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="add-comment" size={22} color={colors.ink} />
                     </GlyphSafeIconButton>
                     <GlyphSafeIconButton
                         onPress={onClosePress}
                         accessibilityLabel={t('floatingChat.close')}
                         testID="chat-header-close"
                     >
-                        <View style={[styles.headerDisc, styles.neutralDisc]}>
-                            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={22} color={CLOSE_ICON} />
-                        </View>
+                        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={22} color={colors.ink} />
                     </GlyphSafeIconButton>
                 </View>
 
                 {/* The panel itself shrinks above the keyboard (see panelStyle), so
-                    no KeyboardAvoidingView is needed — it was redundant here and
-                    couldn't measure reliably inside the morph transform. */}
+                    no KeyboardAvoidingView is needed: it couldn't measure
+                    reliably inside the morph transform. */}
                 <View style={styles.body}>
                     <PopoverPhaseContext.Provider value={phase}>{children}</PopoverPhaseContext.Provider>
                 </View>
+            </Animated.View>
+
+            {/* The riding mark, above the panel, never a touch target. */}
+            <Animated.View
+                pointerEvents="none"
+                {...DECORATIVE_ICON_A11Y}
+                style={[styles.rider, riderStyle]}
+                testID="chat-riding-mark"
+            >
+                <Animated.View style={[styles.riderDisc, { backgroundColor: colors.ink }, discStyle]}>
+                    <MeraLogo size={BUTTON_LOGO} color={colors.base} animated />
+                </Animated.View>
+                <Animated.View style={[styles.riderDisc, lightMarkStyle]}>
+                    <MeraLogo size={BUTTON_LOGO} color={colors.ink} animated />
+                </Animated.View>
             </Animated.View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    backdrop: {
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    },
     panel: {
         position: 'absolute',
         borderRadius: 24,
-        backgroundColor: PANEL_BG,
         borderWidth: 1,
-        borderColor: ACCENT,
         overflow: 'hidden',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 2,
-        paddingLeft: 16,
-        paddingRight: 12,
-        paddingVertical: 8,
+        paddingTop: HEADER_PAD_TOP,
+        paddingBottom: 10,
+        paddingLeft: HEADER_PAD_LEFT,
+        paddingRight: 10,
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: 'rgba(255, 255, 255, 0.12)',
         zIndex: 2, // keep header (and its tappable X) above the body content
     },
-    headerDisc: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    newChatDisc: { backgroundColor: 'rgba(231, 138, 83, 0.25)' },
-    neutralDisc: { backgroundColor: 'rgb(51, 51, 51)' }, // dark background-100
     headerGrab: {
         flex: 1,
+        height: HEADER_ROW,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
     },
+    avatarSlot: { width: AVATAR, height: AVATAR },
     title: {
         flex: 1,
-        color: '#fff',
         fontSize: 17,
         fontWeight: '600',
     },
     body: {
         flex: 1,
+    },
+    rider: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: MERA_BUTTON_SIZE,
+        height: MERA_BUTTON_SIZE,
+    },
+    riderDisc: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: MERA_BUTTON_SIZE / 2,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
 
