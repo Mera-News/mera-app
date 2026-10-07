@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 // Via the ui layer rather than `react-native` directly. It is a bare re-export of
 // the same component (`components/ui/scroll-view/index.tsx`), and it exists so a
 // test can stub one module path instead of partially mocking react-native.
@@ -29,6 +30,9 @@ interface SlideViewProps {
     readonly onTapPrev: () => void;
     /** Right half tapped. The player applies the same gate as the Next button. */
     readonly onTapNext: () => void;
+    /** The card's swipe offset (the tour sheet): the scene moves at 0.6x of it,
+     *  the text at 1x (FinalJourney #15). */
+    readonly dragX?: SharedValue<number>;
 }
 
 /**
@@ -65,9 +69,8 @@ interface SlideViewProps {
  *    content stays top-aligned) makes the zones cover the whole viewport on a
  *    short slide rather than only the height of the copy.
  *
- * Tap-based `Pressable`s only — no pan/gesture handlers. Gesture handling is
- * unreliable inside the pre-auth Modal host, and this component renders in both
- * hosts unchanged.
+ * Tap-based `Pressable`s only here. The swipe lives on the player, around
+ * this view, and only in the tour sheet.
  */
 const SlideView: React.FC<SlideViewProps> = ({
     chapterId,
@@ -76,8 +79,11 @@ const SlideView: React.FC<SlideViewProps> = ({
     onUnlockedChange,
     onTapPrev,
     onTapNext,
+    dragX,
 }) => {
     const styles = useStyles();
+    // The card moves with the finger; pulling the scene back by 0.4x leaves it at 0.6x.
+    const sceneStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX ? dragX.value * -0.4 : 0 }] }));
     const t = useTutorialCopy();
 
     // The `steps` placeholder is the one kind that renders copy, so its labels
@@ -124,13 +130,13 @@ const SlideView: React.FC<SlideViewProps> = ({
                 from OUTSIDE rather than given a prop: the placeholders inside
                 call `useSharedValue`, and `reactCompiler: true` means they must
                 never branch on a variant. */}
-            <View testID="tutorial-slide-scene" pointerEvents="none">
+            <Animated.View testID="tutorial-slide-scene" pointerEvents="none" style={sceneStyle}>
                 <SceneView
                     visual={slide.visual}
                     animationId={animationIdFor(chapterId, slide.id)}
                     stepLabels={stepLabels}
                 />
-            </View>
+            </Animated.View>
 
             <View testID="tutorial-slide-copy" pointerEvents="none" style={styles.copy}>
                 <Text style={styles.headline}>

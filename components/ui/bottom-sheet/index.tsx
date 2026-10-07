@@ -31,6 +31,9 @@ export interface BottomSheetProps {
     testID?: string;
     /** The scrim's screen-reader label. Defaults to Cancel. */
     scrimLabel?: string;
+    /** Fill the screen to just under the status bar (the first-launch tour,
+     *  FinalJourney #15); children get the whole height with `flex: 1`. */
+    fullHeight?: boolean;
 }
 
 const SHEET_INSET = 8;
@@ -55,7 +58,7 @@ const PRESENT_FALLBACK_MS = 150;
  * Content does not scroll for you: wrap a long body in a ScrollView with a
  * max height.
  */
-export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLabel }: BottomSheetProps) {
+export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLabel, fullHeight }: BottomSheetProps) {
     const { t } = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
@@ -172,14 +175,21 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
                         testID={testID}
                         accessibilityViewIsModal
                         onLayout={() => setLaidOut(true)}
-                        style={[styles.sheet, { marginBottom: SHEET_INSET }, sheetStyle]}
+                        style={[
+                            styles.sheet,
+                            { marginBottom: SHEET_INSET },
+                            fullHeight && { height: windowHeight - insets.top - 2 * SHEET_INSET },
+                            sheetStyle,
+                        ]}
                     >
-                        <View style={[styles.sheetClip, { borderColor: colors.line }]}>
+                        <View style={[styles.sheetClip, fullHeight && styles.grow, { borderColor: colors.line }]}>
                             <ModalMaterial />
                             <View style={styles.handleRow}>
                                 <View style={[styles.handle, { backgroundColor: colors.ink3 }]} />
                             </View>
-                            <View style={{ paddingBottom: Math.max(insets.bottom - SHEET_INSET, 0) + 12 }}>{children}</View>
+                            <View style={[fullHeight && styles.grow, { paddingBottom: Math.max(insets.bottom - SHEET_INSET, 0) + 12 }]}>
+                                {children}
+                            </View>
                         </View>
                     </Animated.View>
                 </GestureDetector>
@@ -208,4 +218,5 @@ const styles = StyleSheet.create({
     },
     handleRow: { alignItems: 'center', paddingTop: 8, paddingBottom: 4 },
     handle: { width: 36, height: 5, borderRadius: 3 },
+    grow: { flex: 1 },
 });

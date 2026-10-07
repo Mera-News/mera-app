@@ -1,10 +1,8 @@
 import React from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { PRE_AUTH_CHAPTER_ID } from '@/lib/tutorials/chapters';
-import { useColors } from '@/lib/theme/tokens';
 
 import TutorialPlayer from './TutorialPlayer';
 
@@ -19,64 +17,33 @@ interface TutorialModalHostProps {
 }
 
 /**
- * The PRE-AUTH host. `app/login.tsx` sits outside the logged-in stack, so there
- * is no route to push — and a Modal closes back to the exact `AuthScreen` view
- * mode (email entry or previous-user) the reader was in.
+ * The PRE-AUTH host: the tour rises over the language page as a full-height
+ * sheet and drops back to it, and the page under it never moves (FinalJourney
+ * #15). The kit BottomSheet, so it rises and leaves like every other sheet and
+ * a drag down closes it too. `app/login.tsx` sits outside the logged-in stack,
+ * so there is no route to push.
  *
- * Cloned from `components/custom/VideoPlayerModal.tsx:37` for the flags that
- * matter: `presentationStyle="overFullScreen"` + `transparent` +
- * `statusBarTranslucent`, and its own `GluestackUIProvider mode="dark"` because
- * an RN Modal is a SEPARATE NATIVE WINDOW and does not inherit context styling
- * from the tree that rendered it.
+ * The POST-auth host is a pushed route instead (`app/tutorials/player.tsx`):
+ * `FloatingChatHost` is a sibling after the logged-in `<Stack>`, so a Modal
+ * would paint above it and "Ask Mera" would open behind the tutorial. Nothing
+ * here needs that: the player is mounted with `enableAskMera={false}` (no
+ * session before login, so no agent to ask).
  *
- * ⚠️ That same separate-window fact is why the POST-auth host is a pushed route
- * instead: `FloatingChatHost` is mounted as a sibling after the logged-in
- * `<Stack>`, so a Modal would paint above it and "Ask Mera" would expand the
- * popover invisibly behind the tutorial. Nothing here needs to handle that,
- * because the player is mounted with `enableAskMera={false}` — there is no
- * session before login, so there is no agent to ask.
- *
- * ⚠️ The `GestureHandlerRootView` is not decoration. Gesture handling does not
- * reach modal content on Android without one. The interactions are all
- * tap-based precisely so nothing depends on it, but the `ScrollView` inside
- * `SlideView` does, and a slide that will not scroll on Android is a silent
- * failure on exactly the devices least likely to be tested first.
+ * The provider is inside the sheet because the sheet is its own native window.
  */
-const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose, chapterId, finishLabel, onFinish }) => {
-    const colors = useColors();
-    return (
-    <Modal
-        visible={visible}
-        animationType="fade"
-        presentationStyle="overFullScreen"
-        transparent
-        statusBarTranslucent
-        onRequestClose={onClose}
-    >
+const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose, chapterId, finishLabel, onFinish }) => (
+    <BottomSheet open={visible} onClose={onClose} fullHeight testID="tutorial-sheet">
         <GluestackUIProvider>
-            <GestureHandlerRootView style={styles.root}>
-                <View style={[styles.page, { backgroundColor: colors.base }]}>
-                    {visible ? (
-                        <TutorialPlayer
-                            chapterId={chapterId ?? PRE_AUTH_CHAPTER_ID}
-                            onClose={onClose}
-                            finishLabel={finishLabel}
-                            onFinish={onFinish}
-                            enableAskMera={false}
-                        />
-                    ) : null}
-                </View>
-            </GestureHandlerRootView>
+            <TutorialPlayer
+                chapterId={chapterId ?? PRE_AUTH_CHAPTER_ID}
+                onClose={onClose}
+                finishLabel={finishLabel}
+                onFinish={onFinish}
+                enableAskMera={false}
+                inSheet
+            />
         </GluestackUIProvider>
-    </Modal>
-    );
-};
-
-const styles = StyleSheet.create({
-    root: { flex: 1 },
-    // The app is dark-only; an opaque page under a `transparent` Modal is what
-    // stops the login screen showing through the copy.
-    page: { flex: 1 },
-});
+    </BottomSheet>
+);
 
 export default TutorialModalHost;

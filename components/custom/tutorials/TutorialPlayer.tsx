@@ -1,9 +1,18 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+    runOnJS,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hapticLight } from '@/lib/haptics';
+import { EASE } from '@/lib/motion';
 import { getChapter } from '@/lib/tutorials/chapters';
 import { chapterTitleKey } from '@/lib/tutorials/keys';
 import { useTutorialsStore } from '@/lib/stores/tutorials-store';
@@ -25,6 +34,13 @@ import { themedStyles, useColors } from '@/lib/theme/tokens';
  */
 export const UNGATE_AFTER_MS = 6000;
 
+/** Card to card (FinalJourney #15): the outgoing card leaves, the next one
+ *  settles in 300 ms. A swipe past a quarter of the width, or a flick, turns. */
+const CARD_OUT_MS = 150;
+const CARD_IN_MS = 300;
+const TURN_FRACTION = 0.25;
+const TURN_VELOCITY = 500;
+
 interface TutorialPlayerProps {
     readonly chapterId: string;
     readonly onClose: () => void;
@@ -40,15 +56,22 @@ interface TutorialPlayerProps {
     readonly finishLabel?: string;
     /** The last slide's button, in place of `onClose`. Skip and the X still close. */
     readonly onFinish?: () => void;
+    /**
+     * Hosted in the first-launch tour sheet: the sheet owns the safe areas,
+     * and cards follow a horizontal swipe. Off in the pushed route, where a
+     * swipe from the left edge is the stack's back gesture.
+     */
+    readonly inSheet?: boolean;
 }
 
 /**
  * Host-agnostic chapter player. The pushed route and the pre-auth Modal render
  * the identical component; only `enableAskMera` differs.
  *
- * ⚠️ Exactly ONE slide is mounted at a time — no carousel. A carousel would drag
- * gesture handling into the pre-auth Modal (where it misbehaves on Android) and
- * would keep several animated scenes alive at once for no visible gain.
+ * ⚠️ Exactly ONE slide is mounted at a time, no carousel: several animated
+ * scenes alive at once cost for no visible gain, and a kept slide would carry
+ * its interaction state. So a swipe (in the sheet) drags the current card, and
+ * the next one slides in after release rather than riding beside the finger.
  *
  * Navigation has THREE routes in and they all funnel through `handleNext` /
  * `handleBack`: the footer buttons, the header Skip, and the stories-style tap
@@ -67,11 +90,14 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     initialSlideId,
     finishLabel,
     onFinish,
+    inSheet = false,
 }) => {
     const styles = useStyles();
     const colors = useColors();
     const t = useTutorialCopy();
     const insets = useSafeAreaInsets();
+    const { width } = useWindowDimensions();
+    const reduceMotion = useReducedMotion();
     const markCompleted = useTutorialsStore((s) => s.markCompleted);
 
     const chapter = useMemo(() => getChapter(chapterId), [chapterId]);
@@ -121,19 +147,48 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
         (onFinish ?? onClose)();
     }, [markDone, onFinish, onClose]);
 
+    // The card's horizontal offset: the finger while dragging, then the turn.
+    const dragX = useSharedValue(0);
+    const slideStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX.value }] }));
+
+    const landStep = useCallback(
+        (dir: 1 | -1) => {
+            setIndex((i) => Math.min(Math.max(0, i + dir), total - 1));
+            // The new card starts on the side it comes from and settles.
+            dragX.value = dir * width;
+            dragX.value = withTiming(0, { duration: CARD_IN_MS, easing: EASE.arrive });
+        },
+        [dragX, width, total],
+    );
+
+    const turn = useCallback(
+        (dir: 1 | -1) => {
+            if (reduceMotion) {
+                dragX.value = 0;
+                setIndex((i) => Math.min(Math.max(0, i + dir), total - 1));
+                return;
+            }
+            dragX.value = withTiming(-dir * width, { duration: CARD_OUT_MS, easing: EASE.leave }, (done) => {
+                if (done) runOnJS(landStep)(dir);
+            });
+        },
+        [reduceMotion, dragX, width, total, landStep],
+    );
+
     const handleNext = useCallback(() => {
         void hapticLight();
         if (isLast) {
             finish();
             return;
         }
-        setIndex((i) => i + 1);
-    }, [isLast, finish]);
+        turn(1);
+    }, [isLast, finish, turn]);
 
     const handleBack = useCallback(() => {
+        if (index === 0) return;
         void hapticLight();
-        setIndex((i) => Math.max(0, i - 1));
-    }, []);
+        turn(-1);
+    }, [index, turn]);
 
     // Skip jumps to the END of the chapter and marks it done. Deliberately not
     // "close without completing": someone who skips has decided they do not need
@@ -182,6 +237,28 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
         handleBack();
     }, [index, handleBack]);
 
+    // Swipe card to card in the sheet. Same rule as the buttons: forward only
+    // when Next would work and there is a next card (the last card finishes
+    // only from its button), back only past the first. Anything else gives a
+    // little and springs back. Horizontal only, so the slide still scrolls.
+    const canSwipeNext = canAdvance && !isLast;
+    const canSwipeBack = index > 0;
+    const swipe = Gesture.Pan()
+        .enabled(inSheet)
+        .activeOffsetX([-15, 15])
+        .failOffsetY([-15, 15])
+        .onUpdate((e) => {
+            const allowed = e.translationX < 0 ? canSwipeNext : canSwipeBack;
+            dragX.value = allowed ? e.translationX : e.translationX * 0.25;
+        })
+        .onEnd((e) => {
+            const forward = e.translationX < 0;
+            const far = Math.abs(e.translationX) > width * TURN_FRACTION || Math.abs(e.velocityX) > TURN_VELOCITY;
+            if (far && forward && canSwipeNext) runOnJS(handleNext)();
+            else if (far && !forward && canSwipeBack) runOnJS(handleBack)();
+            else dragX.value = withTiming(0, { duration: CARD_IN_MS, easing: EASE.arrive });
+        });
+
     if (!chapter || !slide) {
         // Unknown chapter id (a stale deep link, a renamed slug). Render the
         // empty line rather than crashing the route.
@@ -202,7 +279,7 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
             : t('tutorials.next');
 
     return (
-        <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
+        <View style={[styles.root, { paddingTop: inSheet ? 4 : insets.top + 8 }]}>
             <View style={styles.header}>
                 <Pressable
                     testID="tutorial-close"
@@ -247,19 +324,24 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
                 ))}
             </View>
 
-            <SlideView
-                // Mounting ONE slide, keyed on its id: the previous slide (and
-                // every shared value it owns) unmounts before the next mounts.
-                key={slide.id}
-                chapterId={chapter.id}
-                slide={slide}
-                enableAskMera={enableAskMera}
-                onUnlockedChange={setUnlocked}
-                onTapPrev={handleTapPrev}
-                onTapNext={handleTapNext}
-            />
+            <GestureDetector gesture={swipe}>
+                <Animated.View style={[styles.card, slideStyle]}>
+                    <SlideView
+                        // Mounting ONE slide, keyed on its id: the previous slide (and
+                        // every shared value it owns) unmounts before the next mounts.
+                        key={slide.id}
+                        chapterId={chapter.id}
+                        slide={slide}
+                        enableAskMera={enableAskMera}
+                        onUnlockedChange={setUnlocked}
+                        onTapPrev={handleTapPrev}
+                        onTapNext={handleTapNext}
+                        dragX={dragX}
+                    />
+                </Animated.View>
+            </GestureDetector>
 
-            <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+            <View style={[styles.footer, { paddingBottom: inSheet ? 0 : insets.bottom + 12 }]}>
                 <Pressable
                     testID="tutorial-back"
                     onPress={handleBack}
@@ -288,6 +370,7 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
 
 const useStyles = themedStyles((c) => StyleSheet.create({
     root: { flex: 1 },
+    card: { flex: 1 },
     empty: {
         alignItems: 'center',
         justifyContent: 'center',
