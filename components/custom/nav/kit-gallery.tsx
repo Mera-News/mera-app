@@ -13,13 +13,23 @@ import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 
 import InlineChoiceChip from './InlineChoiceChip';
+import PageExplainerSheet from './PageExplainerSheet';
 import PageStrip from './PageStrip';
-import type { PageId } from './page-registry';
+import PageTitleRow from './PageTitleRow';
+import type { PageExplainer, PageId } from './page-registry';
 import type { PagePill } from './types';
 
 const HOURS = [6, 12, 24, 48] as const;
 const NEW_DOT = () => ({ visible: true });
 const noop = () => undefined;
+
+const TOP_HEADLINES: PageExplainer = {
+  titleKey: 'sources.topHeadlines',
+  paragraphKeys: ['world.explainer.top1', 'world.explainer.window', 'world.explainer.same'],
+  chapter: 'explore',
+};
+/** A chapter that does not exist yet: the sheet shows Got it alone. */
+const NO_CHAPTER: PageExplainer = { ...TOP_HEADLINES, chapter: 'library' };
 
 function Label({ children }: { readonly children: string }) {
   const colors = useColors();
@@ -68,6 +78,7 @@ export default function KitGallery() {
   const { t } = useTranslation();
   const colors = useColors();
   const [hours, setHours] = useState<(typeof HOURS)[number]>(24);
+  const [sheet, setSheet] = useState<PageExplainer | null>(null);
 
   const feed: PagePill[] = [
     { id: 'feed', label: t('tabs.deck'), icon: 'article' },
@@ -119,6 +130,26 @@ export default function KitGallery() {
           testID="kit-chip"
         />
       </View>
+      <Label>Title row: title, ?, trailing chip (tap ? for the sheet)</Label>
+      <PageTitleRow
+        title={t('sources.topHeadlines')}
+        onExplain={() => setSheet(TOP_HEADLINES)}
+        trailing={
+          <InlineChoiceChip
+            options={HOURS}
+            value={hours}
+            labelOf={(h) => t(`explore.window.label${h}`)}
+            a11yLabelOf={(h) => t(`explore.window.a11y${h}`)}
+            onChange={setHours}
+            testID="kit-title-chip"
+          />
+        }
+        testID="kit-title"
+      />
+      <Label>Title row, ? opens a sheet with no tutorial yet (Got it alone)</Label>
+      <PageTitleRow title={t('tabs.library')} onExplain={() => setSheet(NO_CHAPTER)} testID="kit-title-nochapter" />
+      <PageExplainerSheet explainer={sheet} open={sheet !== null} onClose={() => setSheet(null)} />
+
       <Label>Expanding chip, disabled (first load)</Label>
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', minHeight: 44, alignItems: 'center' }}>
         <InlineChoiceChip

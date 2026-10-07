@@ -54,6 +54,11 @@ export type QuickSettingsFocusId =
 export interface PageExplainer {
   readonly titleKey: I18nKey;
   readonly paragraphKeys: readonly I18nKey[];
+  /** The tutorial chapter Learn more opens (lib/tutorials). A chapter that
+   *  does not exist yet hides Learn more rather than opening nothing. */
+  readonly chapter: string;
+  /** Optional slide in that chapter. */
+  readonly slide?: string;
 }
 
 export interface PageMeta {
@@ -92,6 +97,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
         'tabExplainer.feed.how3',
         'tabExplainer.feed.privacy',
       ],
+      chapter: 'feed',
     },
   },
   interests: {
@@ -107,6 +113,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
         'tabExplainer.interests.how2',
         'tabExplainer.interests.how3',
       ],
+      chapter: 'facts',
     },
   },
   stories: {
@@ -121,6 +128,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
         'tabExplainer.stories.how1',
         'tabExplainer.stories.privacy',
       ],
+      chapter: 'following',
     },
   },
   world: {
@@ -131,6 +139,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
     explainer: {
       titleKey: 'world.explainer.title',
       paragraphKeys: ['world.explainer.what', 'world.explainer.how1', 'world.explainer.how2'],
+      chapter: 'explore',
     },
   },
   saved: {
@@ -141,6 +150,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
     explainer: {
       titleKey: 'library.explainer.saved.title',
       paragraphKeys: ['library.explainer.saved.what', 'library.explainer.saved.how1', 'library.explainer.saved.how2'],
+      chapter: 'library',
     },
   },
   checks: {
@@ -151,6 +161,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
     explainer: {
       titleKey: 'library.explainer.checks.title',
       paragraphKeys: ['library.explainer.checks.what', 'library.explainer.checks.how1', 'library.explainer.checks.how2'],
+      chapter: 'library',
     },
   },
   visited: {
@@ -161,6 +172,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
     explainer: {
       titleKey: 'library.explainer.visited.title',
       paragraphKeys: ['library.explainer.visited.what', 'library.explainer.visited.how1', 'library.explainer.visited.how2', 'library.explainer.visited.privacy'],
+      chapter: 'library',
     },
   },
   stats: {
@@ -171,6 +183,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
     explainer: {
       titleKey: 'library.explainer.stats.title',
       paragraphKeys: ['library.explainer.stats.what', 'library.explainer.stats.how1', 'library.explainer.stats.how2'],
+      chapter: 'library',
     },
   },
   profile: {
@@ -181,6 +194,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
     explainer: {
       titleKey: 'you.explainer.title',
       paragraphKeys: ['you.explainer.what', 'you.explainer.how1', 'you.explainer.privacy'],
+      chapter: 'facts',
     },
   },
   settings: { tab: 'you', labelKey: 'tabs.settings', quickSettings: null, keepMounted: false, explainer: null },
