@@ -15,11 +15,10 @@ import {
 } from '@/lib/fact-check/fact-check-state';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
-
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 /**
  * Tone → classes, for the per-claim assessment badges only. The header chip
@@ -32,7 +31,7 @@ const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 const TONE_CLASSES: Record<FactCheckTone, { chip: string; text: string }> = {
     positive: { chip: 'bg-success-900', text: 'text-success-400' },
     caution: { chip: 'bg-warning-900', text: 'text-warning-400' },
-    neutral: { chip: 'bg-gray-800', text: 'text-gray-300' },
+    neutral: { chip: 'bg-surface-raised', text: 'text-ink' },
 };
 
 interface FactCheckPanelProps {
@@ -90,6 +89,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     startedByReader = false,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const { phase, showProgress, rows } = useFactCheck(articleId);
 
     /**
@@ -141,9 +141,9 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                 <VStack
                     space="xs"
                     testID={`${testIDPrefix}-stalled`}
-                    className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
+                    className="rounded-lg border border-line bg-surface p-3"
                 >
-                    <Text size="sm" className="text-gray-300">{t('factCheck.stillChecking')}</Text>
+                    <Text size="sm" className="text-ink">{t('factCheck.stillChecking')}</Text>
                 </VStack>
             )}
 
@@ -151,20 +151,20 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                 <VStack
                     space="xs"
                     testID={`${testIDPrefix}-working`}
-                    className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
+                    className="rounded-lg border border-line bg-surface p-3"
                 >
                     <HStack space="sm" className="items-center">
                         <Spinner size="small" />
                         <VStack className="flex-1">
-                            <Text size="sm" className="text-gray-300">{t('factCheck.checking')}</Text>
-                            <Text size="xs" className="text-gray-400">{t('factCheck.explainer')}</Text>
+                            <Text size="sm" className="text-ink">{t('factCheck.checking')}</Text>
+                            <Text size="xs" className="text-ink-2">{t('factCheck.explainer')}</Text>
                         </VStack>
                     </HStack>
                     {/* Device-driven reassurance: the job survives navigation
                         (module-level queue) and a kill (F2's recovery task), so
                         there is genuinely nothing to wait here for. */}
-                    <Text size="xs" className="text-gray-400">{t('factCheck.queued')}</Text>
-                    <Text size="xs" className="text-gray-500">{t('factCheck.queuedHint')}</Text>
+                    <Text size="xs" className="text-ink-2">{t('factCheck.queued')}</Text>
+                    <Text size="xs" className="text-ink-3">{t('factCheck.queuedHint')}</Text>
                 </VStack>
             )}
 
@@ -232,7 +232,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                             hitSlop={8}
                         >
                             <HStack space="xs" className="items-start">
-                                <SearchCheck size={16} strokeWidth={2} color={ACCENT} style={{ marginTop: 2 }} />
+                                <SearchCheck size={16} strokeWidth={2} color={colors.accent} style={{ marginTop: 2 }} />
                                 {/* `row.claim` is the STORED column — populated
                                     only on a legacy per-claim row (pre-pivot
                                     on-device checks). A server (whole-article)
@@ -244,11 +244,11 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                     <TranslatableDynamic
                                         text={row.claim}
                                         size="sm"
-                                        className="text-gray-300 font-semibold ml-1 flex-1"
+                                        className="text-ink font-semibold ml-1 flex-1"
                                         numberOfLines={2}
                                     />
                                 ) : (
-                                    <Text size="sm" className="text-gray-300 font-semibold ml-1 flex-1" numberOfLines={2}>
+                                    <Text size="sm" className="text-ink font-semibold ml-1 flex-1" numberOfLines={2}>
                                         {t('factCheck.title')}
                                     </Text>
                                 )}
@@ -268,7 +268,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                 <MaterialIcons
                                     name={isOpen ? 'expand-less' : 'expand-more'}
                                     size={20}
-                                    color="#9CA3AF"
+                                    color={colors.ink2}
                                 />
                             </HStack>
                         </Pressable>
@@ -300,24 +300,24 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                     see F2's honest complete/every-array-empty
                                     outcome, covered in the tests. */}
                                 <VStack space="sm" testID={`${rowPrefix}-own-reading`}>
-                                    <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                                    <Text size="xs" className="text-ink-2 font-semibold uppercase">
                                         {t('factCheck.searchFoundHeading')}
                                     </Text>
                                     {payload?.summary ? (
                                         <TranslatableDynamic
                                             text={payload.summary}
                                             size="sm"
-                                            className="text-gray-300"
+                                            className="text-ink"
                                         />
                                     ) : (
-                                        <Text size="sm" className="text-gray-300">
+                                        <Text size="sm" className="text-ink">
                                             {t('factCheck.searchFoundEmpty')}
                                         </Text>
                                     )}
 
                                     {claims.length > 0 && (
                                         <VStack space="xs" className="mt-1">
-                                            <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                                            <Text size="xs" className="text-ink-2 font-semibold uppercase">
                                                 {t('factCheck.claimsHeading')}
                                             </Text>
                                             {claims.map((claim, claimIndex) => {
@@ -327,12 +327,12 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                                         key={`claim-${claimIndex}`}
                                                         space="xs"
                                                         testID={`${rowPrefix}-claim-${claimIndex}`}
-                                                        className="border-l-2 border-gray-700 pl-2 py-1"
+                                                        className="border-l-2 border-line pl-2 py-1"
                                                     >
                                                         <TranslatableDynamic
                                                             text={claim.claim}
                                                             size="sm"
-                                                            className="text-gray-200"
+                                                            className="text-ink"
                                                         />
                                                         <Text
                                                             size="xs"
@@ -344,7 +344,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                                             <TranslatableDynamic
                                                                 text={claim.note}
                                                                 size="xs"
-                                                                className="text-gray-400"
+                                                                className="text-ink-2"
                                                             />
                                                         ) : null}
                                                     </VStack>
@@ -361,7 +361,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                     testIDPrefix={rowPrefix}
                                 />
 
-                                <Text size="xs" className="text-gray-400 mt-1">
+                                <Text size="xs" className="text-ink-2 mt-1">
                                     {t('factCheck.disclaimer')}
                                 </Text>
                             </VStack>

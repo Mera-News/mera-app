@@ -50,6 +50,7 @@ import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
@@ -139,25 +140,25 @@ const SubscribedCoverageBlock: React.FC<{ readonly articleId: string }> = ({ art
 
     return (
         <VStack space="md">
-            <Heading size="lg" className="text-gray-300">
+            <Heading size="lg" className="text-ink">
                 {t('articleDetail.relatedFromSubscriptions')}
             </Heading>
             <VStack space="sm">
                 {coverage.publicationName ? (
-                    <Text size="sm" className="text-gray-400">
+                    <Text size="sm" className="text-ink-2">
                         <DisplayPublicationName name={coverage.publicationName} />
                     </Text>
                 ) : null}
                 {coverage.titleEn ? (
-                    <Text size="md" className="text-white">
+                    <Text size="md" className="text-ink">
                         {coverage.titleEn}
                     </Text>
                 ) : null}
-                <Text size="sm" className="text-gray-400">
+                <Text size="sm" className="text-ink-2">
                     {t('subscriptions.coversThisStory')}
                 </Text>
                 {coverage.read ? (
-                    <Text size="sm" className="text-gray-300">
+                    <Text size="sm" className="text-ink">
                         {coverage.read}
                     </Text>
                 ) : null}
@@ -175,6 +176,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 }) => {
     const { t } = useTranslation();
     const toast = useToast();
+    const colors = useColors();
     const [article, setArticle] = useState<NewsArticle | null>(null);
     const [savedFromDb, setSavedFromDb] = useState(false);
     // See lib/saved-state — a save/delete on any other surface (notably the
@@ -557,15 +559,15 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 <MaterialIcons
                     name="wifi-off"
                     size={48}
-                    color="#9CA3AF"
+                    color={colors.ink2}
                     accessibilityElementsHidden={true}
                     importantForAccessibility="no-hide-descendants"
                 />
-                <Text size="lg" className="text-white mt-4 text-center">
+                <Text size="lg" className="text-ink mt-4 text-center">
                     {t('articleDetail.offlineUnavailable')}
                 </Text>
-                <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                <Pressable onPress={onBack} className="mt-6 bg-surface-raised rounded-lg px-6 py-3">
+                    <Text size="md" className="text-ink">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );
@@ -599,11 +601,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                     <MaterialIcons
                         name="error-outline"
                         size={48}
-                        color="#EF4444"
+                        color={colors.negative}
                         accessibilityElementsHidden={true}
                         importantForAccessibility="no-hide-descendants"
                     />
-                    <Text size="lg" className="text-white mt-4 text-center">
+                    <Text size="lg" className="text-ink mt-4 text-center">
                         {error || t('articleDetail.articleNotFound')}
                     </Text>
 
@@ -635,8 +637,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         </Box>
                     )}
 
-                    <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                        <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                    <Pressable onPress={onBack} className="mt-6 bg-surface-raised rounded-lg px-6 py-3">
+                        <Text size="md" className="text-ink">{t('common.goBack')}</Text>
                     </Pressable>
                 </ScrollView>
             </Box>

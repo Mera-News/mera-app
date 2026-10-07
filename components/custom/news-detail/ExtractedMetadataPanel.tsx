@@ -5,6 +5,7 @@ import { VStack } from '@/components/ui/vstack';
 import { SHOW_EXTRACTED_METADATA } from '@/lib/config/endpoints';
 import { supranationalName } from '@/lib/news-harness/scoring-engine';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -74,6 +75,7 @@ const ExtractedMetadataPanel: React.FC<ExtractedMetadataPanelProps> = ({
     geoTags,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     if (!SHOW_EXTRACTED_METADATA) return null;
 
     const places = (geoTags ?? [])
@@ -88,11 +90,11 @@ const ExtractedMetadataPanel: React.FC<ExtractedMetadataPanelProps> = ({
 
     return (
         <Box
-            className="rounded-lg p-3 border border-gray-800 bg-background-50"
+            className="rounded-lg p-3 border border-line bg-background-50"
             testID="article-detail-extracted-metadata"
         >
             <HStack space="sm" className="items-center mb-2">
-                <MaterialIcons name="sell" size={16} color="#9ca3af" />
+                <MaterialIcons name="sell" size={16} color={colors.ink2} />
                 <Text className="text-typography-400 text-xs font-semibold uppercase">
                     {t('meraProtocol.extractedMetadataPanelHeading')}
                 </Text>

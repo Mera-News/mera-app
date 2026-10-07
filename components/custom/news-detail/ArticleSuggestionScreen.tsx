@@ -59,6 +59,7 @@ import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { InteractionManager } from 'react-native';
@@ -173,6 +174,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 }) => {
     const { t } = useTranslation();
     const toast = useToast();
+    const colors = useColors();
     const storeSuggestion = useForYouStore((s) =>
         s.suggestions.find((sg) => sg._id === articleSuggestionId),
     );
@@ -566,15 +568,15 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 <MaterialIcons
                     name="error-outline"
                     size={48}
-                    color="#EF4444"
+                    color={colors.negative}
                     accessibilityElementsHidden={true}
                     importantForAccessibility="no-hide-descendants"
                 />
-                <Text size="lg" className="text-white mt-4 text-center">
+                <Text size="lg" className="text-ink mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
                 </Text>
-                <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                <Pressable onPress={onBack} className="mt-6 bg-surface-raised rounded-lg px-6 py-3">
+                    <Text size="md" className="text-ink">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );
