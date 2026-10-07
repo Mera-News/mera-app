@@ -121,7 +121,6 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     ]
                         .filter(Boolean)
                         .join(', ')}
-                    className="mx-3"
                 >
                     <FlatCardSurface className="mb-3">
                         <VStack className="px-4 py-3" style={{ gap: 4 }}>
@@ -213,6 +212,9 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 }
                 contentContainerStyle={{
                     paddingTop: headerHeight + 12,
+                    // The same inset as the Feed's list, so the title row
+                    // lines up with the rows under it.
+                    paddingHorizontal: 12,
                     paddingBottom: listEndClearance,
                     flexGrow: 1,
                 }}
