@@ -198,6 +198,19 @@ export default function KitGallery() {
                 <Small title="Next" onPress={() => setGuard(true)} />
             </View>
 
+            <Label>Theme token classes (P12 probe: each line must match its style twin)</Label>
+            <View className="bg-surface border border-line rounded-2xl p-3 gap-1" testID="kit-token-classes">
+                <Text className="text-ink">text-ink (white)</Text>
+                <Text style={{ color: colors.ink }}>style ink (white)</Text>
+                <Text className="text-ink-2">text-ink-2 (70% white)</Text>
+                <Text style={{ color: colors.ink2 }}>style ink2 (70% white)</Text>
+                <Text className="text-ink-3">text-ink-3 (50% white)</Text>
+                <Text className="text-accent-text">text-accent-text (orange)</Text>
+                <View className="bg-page border border-edge rounded-lg p-2">
+                    <Text className="text-ink">bg-page + border-edge</Text>
+                </View>
+            </View>
+
             <Label>Before you start, device path (FinalJourney #7; static, never signs in)</Label>
             <View style={styles.consent}>
                 <AbstractGradientBackdrop />
