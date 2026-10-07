@@ -46,7 +46,8 @@ export interface NotifiedToastOptions {
  * method here joins the one stack behind whatever card is already showing.
  */
 export interface ToastShowOptions {
-    duration?: number;
+    /** null = persistent lane: stays until dismissed (toast-queue). */
+    duration?: number | null;
     render: (props: { id: string }) => React.ReactNode;
 }
 
@@ -67,6 +68,8 @@ class ToastManager {
     // singleton, no hooks). Kicked off in the constructor and refreshed lazily
     // on each notified toast so it tracks the setting without a subscription.
     private reduceMotion = false;
+    // Same for a running screen reader: a notice then never leaves on a timer.
+    private screenReader = false;
 
     constructor() {
         this.refreshReduceMotion();
@@ -79,6 +82,13 @@ class ToastManager {
             })
             .catch(() => {
                 /* default: motion enabled */
+            });
+        AccessibilityInfo.isScreenReaderEnabled()
+            .then((enabled) => {
+                this.screenReader = enabled;
+            })
+            .catch(() => {
+                /* default: no screen reader */
             });
     }
 
@@ -331,6 +341,10 @@ class ToastManager {
         const title = this.resolveI18n(opts.title, opts.context);
         const body = this.resolveI18n(opts.body, opts.context);
         const reduceMotion = this.reduceMotion;
+        // With a screen reader on, a notice is spoken when it appears and stays
+        // until dismissed: a timed exit can take it away mid-sentence.
+        const persistent = this.screenReader;
+        if (persistent) AccessibilityInfo.announceForAccessibility(body ? `${title}. ${body}` : title);
         // Whether the toast will fly to You or just fade: the two legs have
         // different lengths, and the component derives the same flag.
         const canFly = !reduceMotion;
@@ -340,13 +354,14 @@ class ToastManager {
             // holds fully opaque (so it can be READ) and only then leaves. Too
             // short and it is torn off mid-flight; too long and an invisible
             // toast stays mounted over the UI after the animation has finished.
-            duration: notifiedToastModule.notifiedToastDurationMs(canFly),
+            duration: persistent ? null : notifiedToastModule.notifiedToastDurationMs(canFly),
             render: () =>
                 React.createElement(NotifiedToast, {
                     title,
                     body,
                     action: opts.action ?? 'info',
                     reduceMotion,
+                    persistent,
                 }),
         });
     }

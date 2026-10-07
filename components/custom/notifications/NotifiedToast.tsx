@@ -37,6 +37,8 @@ export interface NotifiedToastProps {
     body: string;
     action?: 'info' | 'success' | 'error';
     reduceMotion: boolean;
+    /** Screen reader on: no timed exit; it leaves only when dismissed. */
+    persistent?: boolean;
 }
 
 /**
@@ -55,6 +57,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     body,
     action = 'info',
     reduceMotion,
+    persistent = false,
 }) => {
     const progress = useSharedValue(0);
     // The deck can hold this card BEHIND another one. Its lifetime is sized to
@@ -81,7 +84,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     const deltaY = canFly ? target.y - startY : 0;
 
     useEffect(() => {
-        if (!isFront) return;
+        if (!isFront || persistent) return;
         // HOLD fully opaque first so the notification is actually readable, then
         // leave: fly to You (translate + shrink + fade), or a plain slower fade
         // when motion is reduced.
@@ -91,7 +94,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
                 duration: canFly ? NOTIFIED_TOAST_FLY_MS : NOTIFIED_TOAST_FADE_MS,
             }),
         );
-    }, [progress, canFly, isFront]);
+    }, [progress, canFly, isFront, persistent]);
 
     const animatedStyle = useAnimatedStyle(() => {
         const p = progress.value;
