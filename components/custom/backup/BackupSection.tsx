@@ -1,83 +1,68 @@
-// Backup and restore, as a section inside Manage Data.
+// Backup and restore, one screen (FinalBackup #1-#12, You > Settings > Your
+// data > Backup). Two cards, each a stack of steps that open one below the
+// other (the kit's StepsAccordion): Backup on top, Restore always last.
 //
 // **Backup is optional and stays off.** `backup_cadence` defaults to `off` and
-// `backup_provider` to null, so `scheduledBackupEnabled()` is false and the
-// scheduler's condition never passes. Someone who wants no backups should be
-// able to read the first paragraph once and never think about this again; the
-// resting state is an offer, not an unfinished setup.
+// `backup_provider` to null, so nothing runs until the reader turns it on.
 //
-// **Setup reveals one step at a time, in place**, and the RECOVERY CODE COMES
-// FIRST. That order is not cosmetic: `runBackup` refuses until the code is
-// acknowledged, because a backup taken before then is written under a key that
-// exists only in the keychain — and the next logout
-// wipes the keychain, leaving a file nobody can ever open that the user
-// believes is their backup. A provider-first flow would end at a button the
-// service declines.
+// **The RECOVERY CODE COMES FIRST.** `runBackup` refuses until the code is
+// acknowledged, because a backup taken before then is written under a key
+// that exists only in the keychain, and the next logout wipes the keychain,
+// leaving a file nobody can ever open. A provider-first order would end at a
+// button the service declines.
 //
-// **Every destination here can be written to unattended.** A "save to a file"
-// destination was built and removed on 2026-08-18: a share sheet needs a human,
-// so it could never be automated, and a backup nobody remembers to take is not
-// a backup. Anything added here has to clear that bar first.
+// **Every destination can be written to unattended.** A save-to-a-file
+// destination was built and removed: a share sheet needs a human, so it could
+// never be automated, and a backup nobody remembers to take is not a backup.
 //
-// **The backup itself does NOT run here.** It runs in an OS background task
-// (`lib/background/backup-task.ts`), so the compression, encryption and upload
-// never compete with the app the user is actually using. This screen reads
-// `backup_last_run_at` and offers a button; that button is the only foreground
-// path that does real work, and it is a deliberate tap.
+// **The backup itself does NOT run here.** It runs in the OS background task
+// (`lib/background/backup-task.ts`). Back up now is the only foreground path
+// that does real work. Every path that runs a backup stamps it
+// (`recordBackupRun` / `recordBackupFailure`): the status line reads nothing
+// else.
 //
-// The system decides when the background task runs, and on iOS that is usually
-// overnight. It can also decline entirely — Background App Refresh off, or Low
-// Power Mode — so the status is READ and said out loud rather than assumed.
+// **Restore** (its own card, always on screen): where the backup is (Mera
+// lists it there first), then the recovery code (adopted as this phone's
+// key; the importer refuses a wrong key before touching any data), then a
+// confirm (a restore REPLACES), then progress. It never turns backup on for
+// this phone (owner, FinalBackup #12). After it the app restarts so every
+// store re-hydrates; the toast before the restart may not survive it.
 //
-// **`useToast()` and `useTranslation()` are read through refs.** Neither
-// guarantees a stable identity, and when they were in the load effect's
-// dependency list the effect re-ran on every render and re-set the stage,
-// snapping the wizard back to its first screen and making every later step
-// unreachable. Measured, not theoretical.
+// `useTranslation()`'s `t` is read through a ref in callbacks: an unstable
+// identity in a dependency list once re-ran the load effect on every render
+// and snapped setup back to its first step.
 
+import LottieView from 'lottie-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Share } from 'react-native';
+import { Share, StyleSheet, TextInput, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Input, InputField } from '@/components/ui/input';
-import {
-  Modal,
-  ModalBackdrop,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from '@/components/ui/modal';
+import { Group, Help, Row } from '@/components/custom/you/rows';
+import { gameAnimationFor } from '@/components/custom/game-ui/animation-registry';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
+import { StepsAccordion, type AccordionStep } from '@/components/ui/steps-accordion';
+import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { VStack } from '@/components/ui/vstack';
 
 import {
   backupCadence,
   backupLastFailedAt,
   backupLastRunAt,
   backupProviderId,
-  backupWifiOnly,
   hydrateBackupSettings,
   recordBackupFailure,
   recordBackupRun,
   setBackupCadence,
   setBackupProviderId,
-  setBackupWifiOnly,
   type BackupProviderId,
 } from '@/lib/backup/backup-settings';
+import { listBackups, runBackup, runRestore, verifyProviderAccess } from '@/lib/backup/backup-service';
 import {
-  listBackups,
-  runBackup,
-  runRestore,
-  verifyProviderAccess,
-} from '@/lib/backup/backup-service';
-import {
+  adoptRecoveryCode,
   clearBackupKey,
   ensureBackupKey,
   getBackupKey,
@@ -93,25 +78,23 @@ import {
 } from '@/lib/backup/providers/google-drive';
 import { icloudProvider, isICloudSupported } from '@/lib/backup/providers/icloud';
 import { createdAtFromRemoteFilename } from '@/lib/backup/remote-names';
-import BackupRecoveryFlow from '@/components/custom/backup/BackupRecoveryFlow';
 import { backgroundBackupIsAvailable } from '@/lib/background/backup-task';
 import type { BackupCadence, BackupProvider } from '@/lib/backup/types';
 import { requestRestart, restartIsAvailable } from '@/lib/app-restart';
+import { showDialog } from '@/lib/dialog';
+import { hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
+import { useColors } from '@/lib/theme/tokens';
+import { toastManager } from '@/lib/toast-manager';
 
-/** Past this, the "save a new copy" nudge turns amber. */
-export const STALE_BACKUP_MS = 30 * 24 * 60 * 60 * 1000;
-
-/**
- * `where` and `restoreWhere` ask DIFFERENT questions and must stay separate.
- * `where` is "where should backups go" (setup). `restoreWhere` is "where is my
- * existing backup" (recovery). Wiring the recovery path to `where` — which is
- * what shipped first — meant entering a recovery code silently configured
- * backup and never restored anything.
- */
-type Stage = 'loading' | 'off' | 'code' | 'where' | 'when' | 'on' | 'recover';
+/** Past this, the status card says the copy is old (FinalBackup #8: a week). */
+export const STALE_BACKUP_MS = 7 * 24 * 60 * 60 * 1000;
 
 const CADENCES: Exclude<BackupCadence, 'off'>[] = ['daily', 'weekly', 'manual'];
+
+type BackupState = 'loading' | 'off' | 'setup' | 'on';
+type BackupStep = 'code' | 'where' | 'when';
+type RestoreStep = 'idle' | 'where' | 'code' | 'restoring';
 
 function cloudProviderFor(id: BackupProviderId): BackupProvider | null {
   if (id === 'icloud') return icloudProvider;
@@ -119,23 +102,7 @@ function cloudProviderFor(id: BackupProviderId): BackupProvider | null {
   return null;
 }
 
-export interface BackupSectionProps {
-  /**
-   * Open the recovery-code flow straight away. Set by Settings > "Restore from
-   * a backup" (`manage-data?restore=1`), which exists because the code path
-   * used to be reachable only as a small link inside the OFF state — and,
-   * before that, as an automatic pre-wizard screen that most people did not
-   * understand.
-   */
-  autoOpenRecover?: boolean;
-}
-
-/**
- * Date and time in the APP language, not the device locale: someone reading
- * Mera in German on an English phone should not get an English date here.
- * `toLocaleString` throws on a malformed tag in some Hermes builds, so the bare
- * default is the fallback rather than a crash on the status line.
- */
+/** Date and time in the APP language; the bare default if the tag throws. */
 function formatWhen(ms: number, language: string | undefined): string {
   try {
     return new Date(ms).toLocaleString(language, { dateStyle: 'medium', timeStyle: 'short' });
@@ -144,61 +111,54 @@ function formatWhen(ms: number, language: string | undefined): string {
   }
 }
 
+function formatDay(ms: number, language: string | undefined): string {
+  try {
+    return new Date(ms).toLocaleDateString(language, { day: 'numeric', month: 'short' });
+  } catch {
+    return new Date(ms).toLocaleDateString();
+  }
+}
+
+export interface BackupSectionProps {
+  /** Open the Restore steps at once (`you/backup?restore=1`, old links). */
+  autoOpenRecover?: boolean;
+}
+
 const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }) => {
-  const toast = useToast();
   const { t, i18n } = useTranslation();
   const language = i18n?.language;
+  const colors = useColors();
+  const reduceMotion = useReducedMotion();
+  const tRef = useRef(t);
+  tRef.current = t;
 
-  const [stage, setStage] = useState<Stage>('loading');
+  // ── backup state ──────────────────────────────────────────────────────────
+  const [state, setState] = useState<BackupState>('loading');
+  const [step, setStep] = useState<BackupStep>('code');
+  /** A folded step reopened from the on state ("Change"). */
+  const [editing, setEditing] = useState<'where' | 'when' | null>(null);
   const [code, setCode] = useState<string | null>(null);
   const [codeSaved, setCodeSaved] = useState(false);
+  const [pickedProvider, setPickedProvider] = useState<BackupProviderId | null>(null);
+  const [pickedCadence, setPickedCadence] = useState<Exclude<BackupCadence, 'off'>>('daily');
   const [busy, setBusy] = useState<string | null>(null);
   const [icloudReady, setIcloudReady] = useState(false);
-  const [bgAvailable, setBgAvailable] = useState(true);
   const [driveReady, setDriveReady] = useState(false);
+  const [bgAvailable, setBgAvailable] = useState(true);
   const [showCode, setShowCode] = useState(false);
-  const [restoreOptions, setRestoreOptions] = useState<readonly string[] | null>(null);
-  const [restoreTarget, setRestoreTarget] = useState<string | null>(null);
-  const [confirmOff, setConfirmOff] = useState(false);
-  // Newest backup found in the cloud, for a device that has never stamped one
-  // itself (a new phone after restore, or a code adopted from another device).
-  // `backup_last_run_at` is device state and never travels in a backup.
+  const [earned, setEarned] = useState(false);
+  // Newest backup in the cloud, for a device that never stamped one itself.
   const [cloudLastAt, setCloudLastAt] = useState<number | null>(null);
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
 
-  // See the header: stable identities, or the load effect re-runs forever.
-  const toastRef = useRef(toast);
-  toastRef.current = toast;
-  const tRef = useRef(t);
-  tRef.current = t;
+  const fail = useCallback((err: unknown, where: string) => {
+    logger.captureException(err, { tags: { screen: 'backup', action: where } });
+    toastManager.showError(tRef.current('backup.errorTitle'), tRef.current('backup.errorDescription'));
+  }, []);
 
-  const notify = useCallback(
-    (action: 'success' | 'error', title: string, description: string) => {
-      toastRef.current.show({
-        placement: 'top',
-        render: () => (
-          <Toast action={action} variant="solid">
-            <ToastTitle>{title}</ToastTitle>
-            <ToastDescription>{description}</ToastDescription>
-          </Toast>
-        ),
-      });
-    },
-    [],
-  );
-
-  const fail = useCallback(
-    (err: unknown, where: string) => {
-      logger.captureException(err, { tags: { screen: 'backup', action: where } });
-      notify('error', tRef.current('backup.errorTitle'), tRef.current('backup.errorDescription'));
-    },
-    [notify],
-  );
-
-  // Provider availability is a RUNTIME question, re-asked on every entry.
-  // iCloud reports unavailable for a window right after launch, so a value
-  // cached at startup would be wrong for exactly the people who look here first.
+  // Provider availability is a RUNTIME question, re-asked on every entry:
+  // iCloud reports unavailable for a window right after launch.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -213,33 +173,27 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         setIcloudReady(ic);
         setDriveReady(gd);
         setBgAvailable(bg);
-        // The KEY too, not just the confirmation row: with a provider set and the
-        // key gone, every scheduled run fails `no-key` while this read "on"
-        // (MERA-APP-7Z). `getBackupKey`, the same read `runBackup` refuses on.
-        // Off offers both setup and "I already have a backup".
+        // The KEY too, not just the confirmation row: with a provider set and
+        // the key gone, every scheduled run fails `no-key` while this read
+        // "on" (MERA-APP-7Z). `getBackupKey` is the read `runBackup` refuses on.
         const configured =
-          backupProviderId() !== null &&
-          (await isRecoveryCodeConfirmed()) &&
-          (await getBackupKey()) !== null;
+          backupProviderId() !== null && (await isRecoveryCodeConfirmed()) && (await getBackupKey()) !== null;
         if (cancelled) return;
-        setStage(configured ? 'on' : 'off');
-        // Only when this device has no stamp of its own, and never blocking the
-        // stage: one list call, and a failure just leaves "No backup saved yet".
+        setState((prev) => (prev === 'setup' && !configured ? prev : configured ? 'on' : 'off'));
         const id = backupProviderId();
         const cloud = id ? cloudProviderFor(id) : null;
         if (configured && cloud && backupLastRunAt() === null) {
           listBackups(cloud)
             .then((paths) => {
               if (cancelled) return;
-              const newest = paths.map(createdAtFromRemoteFilename).find((ms) => ms !== null);
-              setCloudLastAt(newest ?? null);
+              setCloudLastAt(paths.map(createdAtFromRemoteFilename).find((ms) => ms !== null) ?? null);
             })
             .catch(() => {});
         }
       } catch (err) {
         if (!cancelled) {
           fail(err, 'load');
-          setStage('off');
+          setState('off');
         }
       }
     })();
@@ -248,77 +202,28 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
     };
   }, [fail, version]);
 
-  // Deep-linked straight into the recovery flow. Waits for the real stage (the
-  // load above is async) and fires ONCE — without the latch, cancelling out of
-  // the flow would immediately reopen it.
-  const autoOpened = useRef(false);
-  useEffect(() => {
-    if (!autoOpenRecover || autoOpened.current || stage === 'loading') return;
-    autoOpened.current = true;
-    setStage('recover');
-  }, [autoOpenRecover, stage]);
-
-  // ---- setup ---------------------------------------------------------------
-
-  const beginSetup = useCallback(async () => {
-    try {
-      setBusy('setup');
-      // Idempotent: a second run must not mint a new key and orphan every blob
-      // written under the old one.
-      setCode(await ensureBackupKey());
-      setCodeSaved(false);
-      setStage('code');
-    } catch (err) {
-      fail(err, 'begin-setup');
-    } finally {
-      setBusy(null);
+  /** Connect (if needed) and prove the credential really works, so a Drive
+   *  scope problem surfaces as an error and never as "no backups". */
+  const reportDriveFailure = useCallback((result: Exclude<DriveConnectResult, { ok: true }>) => {
+    if (result.reason === 'cancelled') return; // a choice, not an error
+    const key =
+      result.reason === 'play-services'
+        ? 'backup.drivePlayServices'
+        : result.reason === 'misconfigured'
+          ? 'backup.driveMisconfigured'
+          : 'backup.driveFailed';
+    const detail = 'detail' in result ? result.detail : '';
+    if (detail) {
+      logger.captureException(new Error(`Drive connect failed: ${detail}`), {
+        tags: { screen: 'backup', action: 'connect-drive', reason: result.reason },
+      });
     }
-  }, [fail]);
+    toastManager.showError(
+      tRef.current('backup.driveFailedTitle'),
+      __DEV__ && detail ? `${tRef.current(key)} (${detail})` : tRef.current(key),
+    );
+  }, []);
 
-  const acknowledgeCode = useCallback(async () => {
-    try {
-      await markRecoveryCodeConfirmed();
-      setStage('where');
-    } catch (err) {
-      fail(err, 'acknowledge-code');
-    }
-  }, [fail]);
-
-  /** Maps a failed connect onto copy. `cancelled` is silent: it is a choice. */
-  const reportDriveFailure = useCallback(
-    (result: Exclude<DriveConnectResult, { ok: true }>) => {
-      if (result.reason === 'cancelled') return;
-      const key =
-        result.reason === 'play-services'
-          ? 'backup.drivePlayServices'
-          : result.reason === 'misconfigured'
-            ? 'backup.driveMisconfigured'
-            : 'backup.driveFailed';
-      // A misconfigured build can only ever be a developer's problem, and they
-      // are the only ones who can act on the detail, so it is shown in dev and
-      // logged always.
-      const detail = 'detail' in result ? result.detail : '';
-      if (detail) {
-        logger.captureException(new Error(`Drive connect failed: ${detail}`), {
-          tags: { screen: 'backup', action: 'connect-drive', reason: result.reason },
-        });
-      }
-      notify(
-        'error',
-        tRef.current('backup.driveFailedTitle'),
-        __DEV__ && detail ? `${tRef.current(key)} (${detail})` : tRef.current(key),
-      );
-    },
-    [notify],
-  );
-
-  /**
-   * Connect (if needed) and prove the credential really works. Shared by both
-   * pickers so the recovery path gets the same round trip as setup: without it
-   * a Drive scope problem would surface as an empty backup list rather than an
-   * error, which reads as "you have no backups" — the worst possible lie to
-   * tell someone who is restoring.
-   */
   const reachProvider = useCallback(
     async (id: BackupProviderId): Promise<BackupProvider | null> => {
       if (id === 'google-drive' && !driveReady) {
@@ -336,42 +241,103 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
     [driveReady, reportDriveFailure],
   );
 
+  // ── backup actions ────────────────────────────────────────────────────────
+  const turnOn = useCallback(async () => {
+    try {
+      setBusy('setup');
+      // Idempotent: a second run must not mint a new key and orphan every blob.
+      setCode(await ensureBackupKey());
+      setCodeSaved(false);
+      setPickedProvider(null);
+      setStep('code');
+      setState('setup');
+    } catch (err) {
+      fail(err, 'begin-setup');
+    } finally {
+      setBusy(null);
+    }
+  }, [fail]);
 
-  const chooseProvider = useCallback(
-    async (id: BackupProviderId) => {
-      try {
-        setBusy(id);
-        // Returns null when the user cancelled or the connect failed; the
-        // failure has already been reported. `!result.ok` matters here — an
-        // earlier version compared the result OBJECT with `!result`, which is
-        // always false, and advanced on failure.
-        if (!(await reachProvider(id))) return;
-        await setBackupProviderId(id);
-        setStage('when');
-      } catch (err) {
-        fail(err, 'choose-provider');
-      } finally {
-        setBusy(null);
-      }
-    },
-    [fail, reachProvider],
-  );
+  const turnOff = useCallback(async () => {
+    const ok = await showDialog({
+      title: tRef.current('backup.turnOff'),
+      body: tRef.current('backup.turnOffConfirm'),
+      confirmLabel: tRef.current('backup.turnOffAction'),
+      cancelLabel: tRef.current('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      setBusy('off');
+      await setBackupCadence('off');
+      // The key goes too. Copies already saved stay where they are and stay
+      // readable only with the written-down code.
+      await clearBackupKey();
+      setEditing(null);
+      setState('off');
+      refresh();
+    } catch (err) {
+      fail(err, 'turn-off');
+    } finally {
+      setBusy(null);
+    }
+  }, [fail, refresh]);
 
-  const chooseCadence = useCallback(
-    async (cadence: BackupCadence) => {
-      try {
-        await setBackupCadence(cadence);
-        setStage('on');
+  const onSwitch = (on: boolean) => {
+    if (busy) return;
+    if (on) void turnOn();
+    else if (state === 'on') void turnOff();
+    else {
+      // Setup not finished: nothing runs yet, so off is just leaving it.
+      setState('off');
+      refresh();
+    }
+  };
+
+  const acknowledgeCode = useCallback(async () => {
+    try {
+      await markRecoveryCodeConfirmed();
+      setStep('where');
+    } catch (err) {
+      fail(err, 'acknowledge-code');
+    }
+  }, [fail]);
+
+  const confirmProvider = useCallback(async () => {
+    const id = pickedProvider;
+    if (!id) return;
+    try {
+      setBusy(id);
+      if (!(await reachProvider(id))) return; // reported (or cancelled)
+      await setBackupProviderId(id);
+      if (state === 'on') {
+        setEditing(null);
         refresh();
-      } catch (err) {
-        fail(err, 'choose-cadence');
+      } else {
+        setStep('when');
       }
-    },
-    [fail, refresh],
-  );
+    } catch (err) {
+      fail(err, 'choose-provider');
+    } finally {
+      setBusy(null);
+    }
+  }, [pickedProvider, reachProvider, state, fail, refresh]);
 
-
-  // ---- actions -------------------------------------------------------------
+  const finishCadence = useCallback(async () => {
+    try {
+      await setBackupCadence(pickedCadence);
+      const firstTime = state !== 'on';
+      setEditing(null);
+      setState('on');
+      if (firstTime) {
+        void hapticSuccess();
+        setEarned(true);
+      }
+      refresh();
+    } catch (err) {
+      fail(err, 'choose-cadence');
+    }
+  }, [pickedCadence, state, fail, refresh]);
 
   const backUpNow = useCallback(async () => {
     const id = backupProviderId();
@@ -380,15 +346,9 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
       setBusy('run');
       const result = await runBackup(cloudProviderFor(id) as BackupProvider);
       const rows = result.header.tables.reduce((n, tb) => n + tb.rows, 0);
-      notify(
-        'success',
-        tRef.current('backup.doneTitle'),
-        tRef.current('backup.doneDescription', { count: rows }),
-      );
-      // Stamp it. Only the background task used to, so a manual backup that
-      // had just uploaded still read "No backup saved yet". Its own catch: the
-      // upload DID happen, and a failed settings write must not paint "Something
-      // went wrong" over it.
+      toastManager.showSuccess(tRef.current('backup.doneTitle'), tRef.current('backup.doneDescription', { count: rows }));
+      // Its own catch: the upload DID happen; a failed stamp must not read as
+      // a failed backup.
       try {
         await recordBackupRun(result.header.createdAt ?? Date.now());
       } catch (err) {
@@ -400,13 +360,13 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
       try {
         await recordBackupFailure(Date.now());
       } catch {
-        // The toast above already told the user; the status line is best effort.
+        // The toast already told the user; the status line is best effort.
       }
       refresh();
     } finally {
       setBusy(null);
     }
-  }, [fail, notify, refresh]);
+  }, [fail, refresh]);
 
   const openRecoveryCode = useCallback(async () => {
     try {
@@ -426,539 +386,492 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
     }
   }, [code]);
 
-  const openCloudRestore = useCallback(async () => {
-    const id = backupProviderId();
-    const cloud = id ? cloudProviderFor(id) : null;
-    if (!cloud) return;
+  // ── restore ───────────────────────────────────────────────────────────────
+  const [rstep, setRstep] = useState<RestoreStep>('idle');
+  const [rsource, setRsource] = useState<BackupProviderId | null>(null);
+  const [found, setFound] = useState<{ source: BackupProviderId; path: string; at: number | null } | null>(null);
+  const [typedCode, setTypedCode] = useState('');
+  const [restored, setRestored] = useState(0);
+
+  // `?restore=1` opens the restore steps once the load settled, ONCE.
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (!autoOpenRecover || autoOpened.current || state === 'loading') return;
+    autoOpened.current = true;
+    setRstep('where');
+  }, [autoOpenRecover, state]);
+
+  const lookForBackup = useCallback(async () => {
+    const id = rsource;
+    if (!id) return;
     try {
       setBusy('list');
-      setRestoreOptions(await listBackups(cloud));
+      const cloud = await reachProvider(id);
+      if (!cloud) return;
+      const paths = await listBackups(cloud); // newest first
+      if (paths.length === 0) {
+        toastManager.showInfo(tRef.current('backup.restoreEmpty'));
+        return;
+      }
+      setFound({ source: id, path: paths[0], at: createdAtFromRemoteFilename(paths[0]) });
+      setRstep('code');
     } catch (err) {
-      fail(err, 'list-backups');
+      fail(err, 'choose-source');
     } finally {
       setBusy(null);
     }
-  }, [fail]);
+  }, [rsource, reachProvider, fail]);
 
-  /**
-   * Restart the JS runtime so every store re-hydrates from the restored
-   * database. Through `lib/app-restart.ts`, the one restart authority, rather
-   * than a bare `Updates.reloadAsync()` — so a restore cannot reload the app
-   * out from under a purchase or a credential write that is mid-flight.
-   *
-   * If the build cannot restart at all (a dev client, or any build without
-   * expo-updates) there is nothing clever to do — the data IS restored, the app
-   * is just showing stale state — so the user is told to reopen it rather than
-   * left with a success message and an unchanged screen.
-   *
-   * `restartIsAvailable()` and not "did requestRestart return": `reloadAsync()`
-   * resolves a promise that can settle before the JS context is torn down, so
-   * reading the fallback off control flow would paint "reopen the app" over a
-   * restart that IS happening, on every successful restore.
-   */
-  const reloadApp = useCallback(async () => {
-    if (!restartIsAvailable()) {
-      notify(
-        'success',
-        tRef.current('backup.restoredTitle'),
-        tRef.current('backup.restartNeeded'),
-      );
-      return;
-    }
-    await requestRestart('restore');
-  }, [notify]);
-
-  const doCloudRestore = useCallback(async () => {
-    // Always the configured provider here: this path is only reachable from
-    // the configured state, where the key is already on the device. The
-    // code-first recovery path lives in BackupRecoveryFlow.
-    const id = backupProviderId();
-    const cloud = id ? cloudProviderFor(id) : null;
-    if (!cloud || !restoreTarget) return;
-    const target = restoreTarget;
-    setRestoreTarget(null);
-    setRestoreOptions(null);
+  const restore = useCallback(async () => {
+    const target = found;
+    const cloud = target ? cloudProviderFor(target.source) : null;
+    if (!target || !cloud) return;
     try {
-      setBusy('restore');
-      const result = await runRestore(cloud, target);
-
-      notify(
-        'success',
+      setBusy('adopt');
+      // Crockford already forgives case, hyphens and I/L/O, so a refusal really
+      // means the code is wrong.
+      const ok = await adoptRecoveryCode(typedCode);
+      if (!ok) {
+        toastManager.showError(tRef.current('backup.codeWrongTitle'), tRef.current('backup.codeWrong'));
+        return;
+      }
+    } catch (err) {
+      fail(err, 'adopt-code');
+      return;
+    } finally {
+      setBusy(null);
+    }
+    const confirmed = await showDialog({
+      title: tRef.current('backup.restoreConfirmTitle'),
+      body: tRef.current('backup.restoreConfirmDescription'),
+      confirmLabel: tRef.current('backup.restoreConfirmAction'),
+      cancelLabel: tRef.current('common.cancel'),
+      destructive: true,
+    });
+    if (!confirmed) return;
+    setTypedCode('');
+    setRestored(0);
+    setRstep('restoring');
+    try {
+      const result = await runRestore(cloud, target.path, (p) => setRestored(p.rowsRestored));
+      toastManager.showSuccess(
         tRef.current('backup.restoredTitle'),
         tRef.current('backup.restoredDescription', { count: result.rowsRestored }),
       );
-
-      // RELOAD, do not try to re-hydrate. The restore replaced rows underneath
-      // every Zustand store in the app, and those stores hydrated once at
-      // startup — without this the user is told "13 items restored" and then
-      // sees exactly the empty persona they had a moment ago, until they kill
-      // the app themselves. Re-hydrating each store individually would mean
-      // enumerating them here and getting it wrong the next time one is added.
-      await reloadApp();
+      // The card folds back; backup for this phone stays off until turned on.
+      setRstep('idle');
+      setFound(null);
+      // RELOAD rather than re-hydrate: the restore replaced rows under every
+      // store. Through the one restart authority; a build that cannot restart
+      // says so instead.
+      if (restartIsAvailable()) await requestRestart('restore');
+      else toastManager.showSuccess(tRef.current('backup.restoredTitle'), tRef.current('backup.restartNeeded'));
     } catch (err) {
       fail(err, 'run-restore');
-    } finally {
-      setBusy(null);
+      setRstep('code');
     }
-  }, [fail, notify, reloadApp, restoreTarget]);
+  }, [found, typedCode, fail]);
 
-
-  const turnOff = useCallback(async () => {
-    setConfirmOff(false);
-    try {
-      setBusy('off');
-      await setBackupCadence('off');
-      // The key goes too. Anything already saved stays where it is and stays
-      // readable only with the written-down code: turning backup off must not
-      // silently destroy backups the user already has.
-      await clearBackupKey();
-      setStage('off');
-      refresh();
-    } catch (err) {
-      fail(err, 'turn-off');
-    } finally {
-      setBusy(null);
-    }
-  }, [fail, refresh]);
-
-  // ---- rendering -----------------------------------------------------------
-
-  const row = (
-    icon: React.ComponentProps<typeof MaterialIcons>['name'],
+  // ── rendering ─────────────────────────────────────────────────────────────
+  const choice = (
+    id: string,
     title: string,
-    description: string,
+    hint: string,
+    selected: boolean,
     onPress: () => void,
-    options: { destructive?: boolean; disabled?: boolean; testID?: string } = {},
+    disabled = false,
   ) => (
     <Pressable
-      key={options.testID ?? title}
-      testID={options.testID}
-      className="flex-row items-center py-3 px-4 border border-gray-700 rounded-lg"
+      key={id}
+      testID={id}
       onPress={onPress}
-      disabled={options.disabled || busy !== null}
+      disabled={disabled}
+      accessibilityRole="radio"
+      accessibilityState={{ selected, checked: selected, disabled }}
+      accessibilityLabel={`${title}, ${hint}`}
+      style={[
+        styles.choice,
+        { borderColor: selected ? colors.accent : colors.trackBorder, opacity: disabled ? 0.45 : 1 },
+      ]}
     >
       <MaterialIcons
-        name={icon}
+        name={selected ? 'radio-button-checked' : 'radio-button-unchecked'}
         size={20}
-        color={options.disabled ? '#4b5563' : options.destructive ? '#ef4444' : '#ffffff'}
+        color={selected ? colors.accent : colors.ink3}
       />
-      <VStack className="ml-3 flex-1">
-        <Text
-          className={
-            options.disabled
-              ? 'text-base text-gray-600'
-              : options.destructive
-                ? 'text-base text-red-400'
-                : 'text-base text-white'
-          }
-        >
-          {title}
-        </Text>
-        <Text size="xs" className="text-gray-500">
-          {description}
-        </Text>
-      </VStack>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{title}</Text>
+        <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{hint}</Text>
+      </View>
+    </Pressable>
+  );
+
+  const primary = (label: string, onPress: () => void, disabled: boolean, testID: string, spin = false) => (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      style={[styles.primary, { backgroundColor: colors.accent, opacity: disabled ? 0.4 : 1 }]}
+    >
+      {spin ? <Spinner size="small" /> : <Text style={{ color: colors.onAccent, fontSize: 16, fontWeight: '600' }}>{label}</Text>}
     </Pressable>
   );
 
   const codeBox = () => (
-    <Box className="bg-gray-900 border border-gray-700 rounded-lg p-4">
-      <Text className="text-white text-center" style={{ fontFamily: 'monospace', lineHeight: 26 }}>
+    <View style={[styles.codeBox, { backgroundColor: colors.surfaceRaised, borderColor: colors.line }]}>
+      <Text selectable style={{ color: colors.ink, textAlign: 'center', fontFamily: 'monospace', lineHeight: 26 }}>
         {code ?? ''}
       </Text>
-    </Box>
+    </View>
   );
 
-  /** Where the backup actually lives, because neither is visible to the user. */
-  const destinationHint = (id: BackupProviderId): string =>
-    t(id === 'google-drive' ? 'backup.driveHiddenFolder' : 'backup.icloudHiddenFolder');
+  const providerChoices = (selected: BackupProviderId | null, onPick: (id: BackupProviderId) => void, forRestore: boolean) => (
+    <>
+      {/* iCloud on Android is not an option at all; iCloud signed out shows
+          greyed with what to do (FinalBackup #7). */}
+      {isICloudSupported()
+        ? choice(
+            forRestore ? 'restore-pick-icloud' : 'backup-pick-icloud',
+            t('backup.icloud'),
+            icloudReady ? t('backup.icloudReady') : t('backup.icloudUnavailable'),
+            selected === 'icloud',
+            () => onPick('icloud'),
+            !icloudReady,
+          )
+        : null}
+      {isGoogleDriveConfigured()
+        ? choice(
+            forRestore ? 'restore-pick-drive' : 'backup-pick-drive',
+            t('backup.drive'),
+            driveReady ? t('backup.driveReady') : t('backup.driveConnect'),
+            selected === 'google-drive',
+            () => onPick('google-drive'),
+          )
+        : null}
+    </>
+  );
 
-  const stalenessLine = (id: BackupProviderId) => {
+  const providerName = (id: BackupProviderId | null) => (id === 'icloud' ? t('backup.icloud') : t('backup.drive'));
+  const cadenceName = (c: BackupCadence) => t(`backup.cadence.${c}`);
+
+  const backupSteps = (): AccordionStep[] => {
+    const on = state === 'on';
+    const statusOf = (s: BackupStep): AccordionStep['status'] => {
+      if (on) return editing === s ? 'open' : 'done';
+      const order: BackupStep[] = ['code', 'where', 'when'];
+      const i = order.indexOf(s);
+      const cur = order.indexOf(step);
+      return i < cur ? 'done' : i === cur ? 'open' : 'hidden';
+    };
+    return [
+      {
+        id: 'code',
+        title: t('backup.codeTitle'),
+        hint: t('backup.codeDescription'),
+        summary: on ? t('backup.codeSavedHint') : t('backup.stepSaved'),
+        status: statusOf('code'),
+        actionLabel: on ? t('backup.show') : undefined,
+        onAction: on ? () => void openRecoveryCode() : undefined,
+        children: (
+          <View style={{ gap: 10 }}>
+            {codeBox()}
+            <Pressable testID="backup-share-code" onPress={shareCode} accessibilityRole="button" style={styles.link}>
+              <MaterialIcons name="ios-share" size={18} color={colors.accentText} />
+              <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('backup.shareCode')}</Text>
+            </Pressable>
+            <Pressable
+              testID="backup-code-saved"
+              onPress={() => setCodeSaved((s) => !s)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: codeSaved }}
+              style={styles.check}
+            >
+              <MaterialIcons
+                name={codeSaved ? 'check-box' : 'check-box-outline-blank'}
+                size={22}
+                color={codeSaved ? colors.accent : colors.ink3}
+              />
+              <Text style={{ flex: 1, color: colors.ink }}>{t('backup.codeSaved')}</Text>
+            </Pressable>
+            {primary(t('backup.continue'), () => void acknowledgeCode(), !codeSaved, 'backup-code-continue')}
+          </View>
+        ),
+      },
+      {
+        id: 'where',
+        title: on || statusOf('where') === 'done' ? t('backup.where') : t('backup.whereTitle'),
+        hint: t('backup.whereDescription'),
+        summary: providerName(backupProviderId() ?? pickedProvider),
+        status: statusOf('where'),
+        actionLabel: on ? t('backup.change') : undefined,
+        onAction: on
+          ? () => {
+              setPickedProvider(backupProviderId());
+              setEditing('where');
+            }
+          : undefined,
+        children: (
+          <View style={{ gap: 10 }}>
+            {providerChoices(pickedProvider, setPickedProvider, false)}
+            {primary(t('backup.continue'), () => void confirmProvider(), !pickedProvider || busy !== null, 'backup-where-continue', busy === pickedProvider)}
+          </View>
+        ),
+      },
+      {
+        id: 'when',
+        title: t('backup.whenTitle'),
+        summary: cadenceName(backupCadence()),
+        status: statusOf('when'),
+        actionLabel: on ? t('backup.change') : undefined,
+        onAction: on
+          ? () => {
+              const c = backupCadence();
+              setPickedCadence(c === 'off' ? 'daily' : c);
+              setEditing('when');
+            }
+          : undefined,
+        children: (
+          <View style={{ gap: 10 }}>
+            {CADENCES.map((c) =>
+              choice(`backup-cadence-${c}`, cadenceName(c), t(`backup.cadenceHint.${c}`), pickedCadence === c, () => setPickedCadence(c)),
+            )}
+            {primary(on ? t('common.done') : t('backup.finish'), () => void finishCadence(), false, 'backup-finish')}
+          </View>
+        ),
+      },
+    ];
+  };
+
+  const statusCard = () => {
+    const id = backupProviderId() as BackupProviderId;
     const last = backupLastRunAt();
     const failedAt = backupLastFailedAt();
-    const failedLine =
-      failedAt !== null ? (
-        <Text size="sm" className="text-amber-400" testID="backup-status-failed">
-          {t('backup.statusFailed', { when: formatWhen(failedAt, language) })}
-        </Text>
-      ) : null;
-    if (last === null) {
-      if (cloudLastAt !== null) {
-        return (
-          <>
-            {failedLine}
-            <Text size="sm" className="text-gray-400">
-              {t('backup.statusFromCloud', {
-                when: formatWhen(cloudLastAt, language),
-                provider: t(id === 'icloud' ? 'backup.icloud' : 'backup.drive'),
-              })}
-            </Text>
-          </>
-        );
-      }
-      return (
-        <>
-          {failedLine}
-          <Text size="sm" className="text-amber-400">
-            {t('backup.statusNever')}
-          </Text>
-        </>
-      );
-    }
-    const age = Date.now() - last;
-    // A scheduled backup can still go stale, because the schedule only advances
-    // while the app is OPEN. Someone who does not launch the app for a month
-    // has a month-old backup and no reason to suspect it.
-    const stale = age > STALE_BACKUP_MS;
+    const age = last !== null ? Date.now() - last : null;
+    const warn = { color: colors.warning, fontSize: 13, lineHeight: 18 } as const;
+    const plain = { color: colors.ink2, fontSize: 13, lineHeight: 18 } as const;
     return (
-      <>
-        {failedLine}
-        <Text size="sm" className={stale ? 'text-amber-400' : 'text-gray-400'}>
-          {stale
-            ? t('backup.statusStale', { days: Math.floor(age / (24 * 60 * 60 * 1000)) })
-            : t('backup.statusLast', { when: formatWhen(last, language) })}
+      <View testID="backup-status" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+        <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>
+          {t('backup.statusProvider', { provider: providerName(id) })}
         </Text>
-      </>
+        <Text style={plain}>{t(id === 'google-drive' ? 'backup.driveHiddenFolder' : 'backup.icloudHiddenFolder')}</Text>
+        {/* Each warning only when true (FinalBackup #8). */}
+        {failedAt !== null ? (
+          <Text testID="backup-status-failed" style={warn}>
+            {t('backup.statusFailed', { when: formatWhen(failedAt, language) })}
+          </Text>
+        ) : null}
+        {last === null ? (
+          cloudLastAt !== null ? (
+            <Text style={plain}>
+              {t('backup.statusFromCloud', { when: formatWhen(cloudLastAt, language), provider: providerName(id) })}
+            </Text>
+          ) : (
+            <Text style={plain}>{t('backup.statusNever')}</Text>
+          )
+        ) : age !== null && age > STALE_BACKUP_MS ? (
+          <Text style={warn}>{t('backup.statusStale', { days: Math.floor(age / (24 * 60 * 60 * 1000)) })}</Text>
+        ) : (
+          <Text style={plain}>{t('backup.statusLast', { when: formatWhen(last, language) })}</Text>
+        )}
+        {/* Restricted has to be a SENTENCE: with Background App Refresh off,
+            backups never run on their own. */}
+        {bgAvailable ? null : <Text style={warn}>{t('backup.backgroundRestricted')}</Text>}
+        <Text style={plain}>{t('backup.schedule', { cadence: cadenceName(backupCadence()) })}</Text>
+      </View>
     );
   };
 
-  const body = () => {
-    if (stage === 'loading') {
-      return (
-        <Box className="items-center py-6">
-          <Spinner size="small" />
-        </Box>
-      );
-    }
-
-    if (stage === 'off') {
-      return (
-        <VStack space="sm">
-          <Text size="sm" className="text-gray-400">
-            {t('backup.offDescription')}
-          </Text>
-          <Text size="sm" className="text-gray-400">
-            {t('backup.offPrivacy')}
-          </Text>
-          <Button onPress={beginSetup} isDisabled={busy !== null} testID="backup-set-up">
-            <ButtonText>{t('backup.setUp')}</ButtonText>
-          </Button>
-          {/* The new-phone path. Reachable with backup off, because a fresh
-              install has no key and nothing yet to configure. */}
-          <Pressable
-            testID="backup-already-have"
-            className="py-2"
-            onPress={() => setStage('recover')}
-            disabled={busy !== null}
-          >
-            <Text size="sm" className="text-blue-400 text-center">
-              {t('backup.alreadyHave')}
-            </Text>
-          </Pressable>
-        </VStack>
-      );
-    }
-
-    if (stage === 'recover') {
-      // This section is the flow's ONLY caller now — `OnboardingScreen` used to
-      // run it as a pre-wizard step and no longer does.
-      return (
-        <BackupRecoveryFlow
-          skipLabel={t('common.cancel')}
-          // `refresh()`, never `setStage('off')`. Cancelling is reachable from a
-          // device with backup CONFIGURED (the settings row below, and the
-          // Settings deep link), and hardcoding 'off' told that user their
-          // backup was switched off. The load effect re-derives the real stage.
-          onSkip={refresh}
-          onRestoredWithoutReload={refresh}
-        />
-      );
-    }
-
-
-    if (stage === 'code') {
-      return (
-        <VStack space="sm">
-          <Text className="text-white font-semibold">{t('backup.codeTitle')}</Text>
-          <Text size="sm" className="text-gray-400">
-            {t('backup.codeDescription')}
-          </Text>
-          {codeBox()}
-          <Button variant="outline" onPress={shareCode} testID="backup-share-code">
-            <ButtonText>{t('backup.shareCode')}</ButtonText>
-          </Button>
-          <Pressable
-            className="flex-row items-center py-2"
-            onPress={() => setCodeSaved((s) => !s)}
-            testID="backup-code-saved"
-          >
-            <MaterialIcons
-              name={codeSaved ? 'check-box' : 'check-box-outline-blank'}
-              size={22}
-              color={codeSaved ? '#22c55e' : '#9ca3af'}
+  const restoreSteps = (): AccordionStep[] => {
+    const order: RestoreStep[] = ['where', 'code', 'restoring'];
+    const cur = order.indexOf(rstep);
+    const statusOf = (s: RestoreStep): AccordionStep['status'] => {
+      const i = order.indexOf(s);
+      return i < cur ? 'done' : i === cur ? 'open' : 'hidden';
+    };
+    const foundSummary = found
+      ? [t('backup.foundIn', { place: providerName(found.source) }), found.at !== null ? t('backup.foundDate', { date: formatDay(found.at, language) }) : null]
+          .filter(Boolean)
+          .join(' · ')
+      : '';
+    return [
+      {
+        id: 'where',
+        title: t('backup.restoreWhereTitle'),
+        hint: t('backup.restoreWhereDescription'),
+        summary: foundSummary,
+        status: statusOf('where'),
+        actionLabel: rstep === 'code' ? t('backup.change') : undefined,
+        onAction: rstep === 'code' ? () => setRstep('where') : undefined,
+        children: (
+          <View style={{ gap: 10 }}>
+            {providerChoices(rsource, setRsource, true)}
+            {primary(t('backup.continue'), () => void lookForBackup(), !rsource || busy !== null, 'restore-where-continue', busy === 'list')}
+          </View>
+        ),
+      },
+      {
+        id: 'code',
+        title: t('backup.adoptTitle'),
+        hint: t('backup.restoreCodeHint'),
+        summary: t('backup.accepted'),
+        status: statusOf('code'),
+        children: (
+          <View style={{ gap: 10 }}>
+            <TextInput
+              testID="restore-code-input"
+              value={typedCode}
+              onChangeText={setTypedCode}
+              placeholder={t('backup.adoptPlaceholder')}
+              placeholderTextColor={colors.ink3}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              accessibilityLabel={t('backup.adoptTitle')}
+              style={[styles.input, { color: colors.ink, backgroundColor: colors.surfaceRaised, borderColor: colors.line }]}
             />
-            <Text className="ml-3 flex-1 text-gray-300">{t('backup.codeSaved')}</Text>
-          </Pressable>
-          <Button onPress={acknowledgeCode} isDisabled={!codeSaved} testID="backup-code-continue">
-            <ButtonText>{t('backup.continue')}</ButtonText>
-          </Button>
-        </VStack>
-      );
-    }
-
-    if (stage === 'where') {
-      return (
-        <VStack space="sm">
-          <Text className="text-white font-semibold">{t('backup.whereTitle')}</Text>
-          <Text size="sm" className="text-gray-400">
-            {t('backup.whereDescription')}
-          </Text>
-
-
-          {/* A provider the platform cannot ever support is not rendered at
-              all: iCloud on Android is noise, not an option. One that IS
-              supported but blocked outside the app renders with a hint,
-              because there is something the user can go and do. */}
-          {isICloudSupported() &&
-            (icloudReady
-              ? row('cloud', t('backup.icloud'), t('backup.icloudReady'), () =>
-                  chooseProvider('icloud'), { testID: 'backup-pick-icloud' })
-              : row('cloud-off', t('backup.icloud'), t('backup.icloudUnavailable'), () => {}, {
-                  disabled: true,
-                  testID: 'backup-pick-icloud',
-                }))}
-
-          {isGoogleDriveConfigured() &&
-            row(
-              'add-to-drive',
-              t('backup.drive'),
-              driveReady ? t('backup.driveReady') : t('backup.driveConnect'),
-              () => chooseProvider('google-drive'),
-              { testID: 'backup-pick-drive' },
-            )}
-        </VStack>
-      );
-    }
-
-
-    if (stage === 'when') {
-      return (
-        <VStack space="sm">
-          <Text className="text-white font-semibold">{t('backup.whenTitle')}</Text>
-          {CADENCES.map((c) =>
-            row(
-              c === 'manual' ? 'touch-app' : 'schedule',
-              t(`backup.cadence.${c}`),
-              t(`backup.cadenceHint.${c as Exclude<BackupCadence, 'off'>}`),
-              () => chooseCadence(c),
-              { testID: `backup-cadence-${c}` },
-            ),
-          )}
-        </VStack>
-      );
-    }
-
-    const id = backupProviderId() as BackupProviderId;
-    return (
-      <VStack space="sm">
-        <Box className="bg-gray-900 border border-gray-700 rounded-lg p-4">
-          <Text className="text-white">
-            {t('backup.statusProvider', {
-              provider: t(id === 'icloud' ? 'backup.icloud' : 'backup.drive'),
-            })}
-          </Text>
-          <Text size="xs" className="text-gray-500 mt-1">
-            {destinationHint(id)}
-          </Text>
-          <Box className="mt-2">{stalenessLine(id)}</Box>
-          <Text size="sm" className="text-gray-400 mt-1">
-            {t('backup.statusCadence', { cadence: t(`backup.cadence.${backupCadence()}`) })}
-          </Text>
-          {/* Restricted has to be a SENTENCE. Background App Refresh off or Low
-              Power Mode means backups never run on their own, and silence would
-              leave the user believing in a schedule they do not have. */}
-          <Text size="xs" className={bgAvailable ? 'text-gray-500 mt-1' : 'text-amber-400 mt-1'}>
-            {t(bgAvailable ? 'backup.runsInBackground' : 'backup.backgroundRestricted')}
-          </Text>
-        </Box>
-
-        {row('backup', t('backup.runNow'), t('backup.runNowHint'), backUpNow, {
-          testID: 'backup-run-now',
-        })}
-
-        {row(
-            backupWifiOnly() ? 'wifi' : 'signal-cellular-alt',
-            t('backup.wifiOnly'),
-            backupWifiOnly() ? t('backup.wifiOnlyOn') : t('backup.wifiOnlyOff'),
-            async () => {
-              await setBackupWifiOnly(!backupWifiOnly());
-              refresh();
-            },
-          { testID: 'backup-wifi-toggle' },
-        )}
-
-        {/* Without this the cadence chosen during setup was permanent: the
-            picker only existed in the setup flow. */}
-        {row(
-          'schedule',
-          t('backup.changeSchedule'),
-          t(`backup.cadence.${backupCadence()}`),
-          () => setStage('when'),
-          { testID: 'backup-change-schedule' },
-        )}
-
-        {row('vpn-key', t('backup.showCode'), t('backup.showCodeHint'), openRecoveryCode, {
-          testID: 'backup-show-code',
-        })}
-
-        {row('settings-backup-restore', t('backup.restore'), t('backup.restoreHint'),
-          openCloudRestore, { destructive: true, testID: 'backup-restore' })}
-
-        {/* The OTHER-DEVICE path, and deliberately distinct from the row above:
-            that one restores with the provider and key already on this phone,
-            this one takes a code the user carries from somewhere else. It used
-            to exist only in the OFF state, so once backup was configured typing
-            a recovery code was unreachable. */}
-        {row('devices', t('backup.alreadyHave'), t('backup.adoptTitle'),
-          () => setStage('recover'), { testID: 'backup-already-have-on' })}
-
-
-        {row('cloud-off', t('backup.turnOff'), t('backup.turnOffHint'), () => setConfirmOff(true), {
-          destructive: true,
-          testID: 'backup-turn-off',
-        })}
-      </VStack>
-    );
+            {primary(t('backup.restoreConfirmAction'), () => void restore(), typedCode.trim().length === 0 || busy !== null, 'restore-run', busy === 'adopt')}
+          </View>
+        ),
+      },
+      {
+        id: 'restoring',
+        title: t('backup.restoringTitle'),
+        status: statusOf('restoring'),
+        children: (
+          <View style={{ gap: 6 }} accessibilityLiveRegion="polite">
+            <Spinner size="small" />
+            <Text style={{ color: colors.ink, fontSize: 14 }}>{t('backup.restoredDescription', { count: restored })}</Text>
+            <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('backup.restoringHint')}</Text>
+          </View>
+        ),
+      },
+    ];
   };
+
+  if (state === 'loading') {
+    return (
+      <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+        <Spinner size="small" />
+      </View>
+    );
+  }
+
+  const switchOn = state !== 'off';
+  const earnSource = gameAnimationFor('game-mark-earn');
 
   return (
-    <Box className="border border-gray-700 rounded-lg p-4 mb-5" testID="backup-section">
-      <Box className="flex-row items-center mb-3">
-        <MaterialIcons name="cloud-upload" size={22} color="#ffffff" />
-        <Text className="ml-3 text-base text-white flex-1">{t('backup.title')}</Text>
-      </Box>
+    <View testID="backup-section" style={{ gap: 12 }}>
+      <Group>
+        <Row
+          testID="backup-switch-row"
+          title={t('backup.title')}
+          trailing={
+            busy === 'setup' || busy === 'off' ? (
+              <Spinner size="small" />
+            ) : (
+              <Switch testID="backup-switch" value={switchOn} onToggle={onSwitch} size="md" />
+            )
+          }
+        />
+      </Group>
+      <Help>{t('backup.offDescription')}</Help>
 
-      {body()}
+      {earned && !reduceMotion && earnSource ? (
+        // The one earned moment: backup turned on for the first time.
+        <View pointerEvents="none" accessible={false} style={{ alignItems: 'center' }}>
+          <LottieView
+            source={earnSource as never}
+            autoPlay
+            loop={false}
+            style={{ width: 64, height: 64 }}
+            onAnimationFinish={() => setEarned(false)}
+          />
+        </View>
+      ) : null}
 
-      {busy !== null && (
-        <Box className="items-center py-4">
-          <Spinner size="small" />
-          <Text size="xs" className="text-gray-500 mt-2">
-            {t(busy === 'restore' ? 'backup.restoring' : 'backup.working')}
-          </Text>
-        </Box>
-      )}
+      {state === 'on' ? statusCard() : null}
+      {state !== 'off' ? <StepsAccordion testID="backup-steps" steps={backupSteps()} /> : null}
+      {state === 'on' ? (
+        <Group>
+          <Row
+            testID="backup-run-now"
+            title={busy === 'run' ? t('backup.working') : t('backup.runNow')}
+            subtitle={t('backup.runNowHint')}
+            trailing={busy === 'run' ? <Spinner size="small" /> : null}
+            onPress={() => void backUpNow()}
+          />
+        </Group>
+      ) : null}
 
-      <Modal isOpen={showCode} onClose={() => setShowCode(false)}>
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader>
-            <Text className="text-lg font-semibold text-white">{t('backup.codeTitle')}</Text>
-          </ModalHeader>
-          <ModalBody>
-            <VStack space="md">
-              <Text className="text-gray-300">{t('backup.codeDescription')}</Text>
-              {codeBox()}
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="outline" onPress={shareCode} className="mr-2">
-              <ButtonText>{t('backup.shareCode')}</ButtonText>
-            </Button>
-            <Button onPress={() => setShowCode(false)}>
-              <ButtonText>{t('common.done')}</ButtonText>
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {/* Restore: its own card, always on screen and always last. */}
+      <View testID="restore-card" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line, marginTop: 8 }]}>
+        <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>
+          {t('backup.restore')}
+        </Text>
+        {rstep === 'idle' ? (
+          <>
+            <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('backup.restoreBody')}</Text>
+            <Pressable
+              testID="restore-start"
+              onPress={() => setRstep('where')}
+              accessibilityRole="button"
+              accessibilityLabel={t('backup.startRestoring')}
+              style={[styles.secondary, { borderColor: colors.trackBorder }]}
+            >
+              <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{t('backup.startRestoring')}</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('backup.restoreReplaces')}</Text>
+            <StepsAccordion testID="restore-steps" steps={restoreSteps()} />
+            {rstep !== 'restoring' ? (
+              <Pressable
+                testID="restore-cancel"
+                onPress={() => {
+                  setRstep('idle');
+                  setFound(null);
+                  setTypedCode('');
+                  // Re-derive the real backup state; never assume off.
+                  refresh();
+                }}
+                accessibilityRole="button"
+                style={styles.link}
+              >
+                <Text style={{ color: colors.ink2, fontSize: 15 }}>{t('common.cancel')}</Text>
+              </Pressable>
+            ) : null}
+          </>
+        )}
+      </View>
 
-      <Modal isOpen={restoreOptions !== null} onClose={() => setRestoreOptions(null)}>
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader>
-            <Text className="text-lg font-semibold text-white">{t('backup.restore')}</Text>
-          </ModalHeader>
-          <ModalBody>
-            <VStack space="sm">
-              {(restoreOptions ?? []).length === 0 ? (
-                <Text className="text-gray-300">{t('backup.restoreEmpty')}</Text>
-              ) : (
-                (restoreOptions ?? []).map((path) => {
-                  // A date the user recognises, not the blob's file name. A
-                  // name we cannot parse is not ours to relabel, so it shows
-                  // as it is.
-                  const at = createdAtFromRemoteFilename(path);
-                  return (
-                    <Pressable
-                      key={path}
-                      className="py-3 px-3 border border-gray-700 rounded-lg"
-                      onPress={() => setRestoreTarget(path)}
-                    >
-                      <Text className="text-white">
-                        {at !== null
-                          ? t('backup.restoreOption', { when: formatWhen(at, language) })
-                          : path.split('/').pop()}
-                      </Text>
-                    </Pressable>
-                  );
-                })
-              )}
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="outline" onPress={() => setRestoreOptions(null)}>
-              <ButtonText>{t('common.cancel')}</ButtonText>
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Both restore confirmations say REPLACE rather than leaning on the word
-          "restore" to imply it. */}
-      <Modal isOpen={restoreTarget !== null} onClose={() => setRestoreTarget(null)}>
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader>
-            <Text className="text-lg font-semibold text-red-400">
-              {t('backup.restoreConfirmTitle')}
-            </Text>
-          </ModalHeader>
-          <ModalBody>
-            <Text className="text-gray-300">{t('backup.restoreConfirmDescription')}</Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="outline" onPress={() => setRestoreTarget(null)} className="mr-2">
-              <ButtonText>{t('common.cancel')}</ButtonText>
-            </Button>
-            <Button action="negative" onPress={doCloudRestore} testID="backup-restore-confirm">
-              <ButtonText>{t('backup.restoreConfirmAction')}</ButtonText>
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-
-      <Modal isOpen={confirmOff} onClose={() => setConfirmOff(false)}>
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader>
-            <Text className="text-lg font-semibold text-red-400">{t('backup.turnOff')}</Text>
-          </ModalHeader>
-          <ModalBody>
-            <Text className="text-gray-300">{t('backup.turnOffConfirm')}</Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="outline" onPress={() => setConfirmOff(false)} className="mr-2">
-              <ButtonText>{t('common.cancel')}</ButtonText>
-            </Button>
-            <Button action="negative" onPress={turnOff} testID="backup-turn-off-confirm">
-              <ButtonText>{t('backup.turnOffAction')}</ButtonText>
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Box>
+      <BottomSheet testID="backup-code-sheet" open={showCode} onClose={() => setShowCode(false)}>
+        <View style={{ gap: 12 }}>
+          <Text style={{ color: colors.ink, fontSize: 17, fontWeight: '600' }}>{t('backup.codeTitle')}</Text>
+          <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('backup.codeDescription')}</Text>
+          {codeBox()}
+          <Pressable onPress={shareCode} accessibilityRole="button" style={styles.link}>
+            <MaterialIcons name="ios-share" size={18} color={colors.accentText} />
+            <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('backup.shareCode')}</Text>
+          </Pressable>
+        </View>
+      </BottomSheet>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  card: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 8 },
+  choice: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 12, padding: 12, minHeight: 56 },
+  primary: { height: 48, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  secondary: { height: 44, borderRadius: 999, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  link: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, alignSelf: 'flex-start' },
+  check: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
+  codeBox: { borderRadius: 12, borderWidth: 1, padding: 14 },
+  input: { minHeight: 48, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, fontFamily: 'monospace', fontSize: 15 },
+});
 
 export default BackupSection;
