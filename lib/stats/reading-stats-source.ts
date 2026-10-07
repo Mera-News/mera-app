@@ -44,7 +44,6 @@
 
 import { getAllVisitedArticles } from '@/lib/database/services/publication-visit-service';
 import { loadSavedItems } from '@/lib/database/services/saved-article-suggestion-service';
-import { getAll as getAllImpressions } from '@/lib/database/services/story-impression-service';
 import { observeActive as observeActiveTrackedStories } from '@/lib/database/services/tracked-story-service';
 import logger from '@/lib/logger';
 import { firstValueFrom } from 'rxjs';
@@ -52,18 +51,7 @@ import {
   computeReadingStats,
   emptyReadingStats,
   type ReadingStats,
-  type StatsImpression,
 } from './reading-stats';
-
-/** `@date` columns surface as `Date`, but a partially-written row can be null
- *  and the test mock hands back raw numbers. Same normaliser the impression
- *  service uses internally, repeated rather than exported across the boundary:
- *  three lines beat reaching into another service's private helper. */
-function toMs(value: Date | number | null | undefined): number | null {
-  if (value == null) return null;
-  const ms = value instanceof Date ? value.getTime() : Number(value);
-  return Number.isFinite(ms) ? ms : null;
-}
 
 export interface LoadReadingStatsOptions {
   /** Injectable for tests and for keeping one card render consistent with
@@ -85,9 +73,8 @@ export async function loadReadingStats(
 ): Promise<ReadingStats> {
   const nowMs = options.nowMs ?? Date.now();
   try {
-    const [visits, impressionRows, savedItems, trackedStories] = await Promise.all([
+    const [visits, savedItems, trackedStories] = await Promise.all([
       getAllVisitedArticles(),
-      getAllImpressions(),
       loadSavedItems(),
       // `observeActive` is a live query, and a WatermelonDB observable emits its
       // current rows on subscribe rather than waiting for a change, so the first
@@ -97,15 +84,8 @@ export async function loadReadingStats(
       firstValueFrom(observeActiveTrackedStories()),
     ]);
 
-    const impressions: StatsImpression[] = impressionRows.map((row) => ({
-      articleId: row.articleId,
-      opened: row.opened === true,
-      firstSeenAtMs: toMs(row.firstSeenAt),
-    }));
-
     return computeReadingStats({
       visits,
-      impressions,
       nowMs,
       keptNow: {
         savedArticles: savedItems.length,

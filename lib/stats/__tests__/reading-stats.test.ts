@@ -14,7 +14,6 @@ import {
   peakDayCount,
   STATS_CARD_IDS,
   type ReadingStats,
-  type StatsImpression,
 } from '../reading-stats';
 
 const NOW = Date.UTC(2026, 8, 15, 12, 0, 0);
@@ -39,19 +38,13 @@ function visit(overrides: Partial<VisitedArticle> = {}): VisitedArticle {
   };
 }
 
-function impression(overrides: Partial<StatsImpression> = {}): StatsImpression {
-  return { articleId: 'a1', opened: true, firstSeenAtMs: NOW - HOUR, ...overrides };
-}
-
 describe('computeReadingStats', () => {
   it('returns a clean zero shape for an empty device, with no divide by zero', () => {
-    const stats = computeReadingStats({ visits: [], impressions: [], nowMs: NOW });
+    const stats = computeReadingStats({ visits: [], nowMs: NOW });
 
     expect(stats.publicationCount).toBe(0);
     expect(stats.countryCount).toBe(0);
-    expect(stats.articlesOpened).toBe(0);
     expect(stats.topPublications).toEqual([]);
-    expect(stats.hasAnyData).toBe(false);
     // null, never 0: zero would read as "published and read in the same
     // instant" rather than "we have no publish times".
     expect(stats.publishToRead.averageHours).toBeNull();
@@ -68,13 +61,11 @@ describe('computeReadingStats', () => {
         visit({ articleId: 'a3', publicationName: 'Le Monde', countryCode: 'FR' }),
         visit({ articleId: 'a4', publicationName: 'NHK', countryCode: 'JP' }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
 
     expect(stats.publicationCount).toBe(2 + 1);
     expect(stats.countryCount).toBe(3);
-    expect(stats.hasAnyData).toBe(true);
   });
 
   it('ignores blank and whitespace-only publication names and country codes', () => {
@@ -83,7 +74,6 @@ describe('computeReadingStats', () => {
         visit({ articleId: 'a1', publicationName: '   ', countryCode: '  ' }),
         visit({ articleId: 'a2', publicationName: 'Le Monde', countryCode: null }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -100,7 +90,6 @@ describe('computeReadingStats', () => {
         visit({ articleId: 'fresh', publicationName: 'Le Monde', visitedAt: NOW - DAY }),
         visit({ articleId: 'stale', publicationName: 'NHK', visitedAt: NOW - WINDOW_MS - 1 }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -111,7 +100,6 @@ describe('computeReadingStats', () => {
   it('keeps a visit exactly on the window boundary', () => {
     const stats = computeReadingStats({
       visits: [visit({ visitedAt: NOW - WINDOW_MS })],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -121,7 +109,6 @@ describe('computeReadingStats', () => {
   it('keeps a visit with a future timestamp rather than silently narrowing the count', () => {
     const stats = computeReadingStats({
       visits: [visit({ visitedAt: NOW + DAY })],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -137,7 +124,6 @@ describe('computeReadingStats', () => {
           visit({ articleId: 'a3', visitedAt: NOW, pubDate: null }),
           visit({ articleId: 'a4', visitedAt: NOW, pubDate: null }),
         ],
-        impressions: [],
         nowMs: NOW,
       });
 
@@ -150,7 +136,6 @@ describe('computeReadingStats', () => {
     it('returns a null average when no row has a known publish time', () => {
       const stats = computeReadingStats({
         visits: [visit({ pubDate: null }), visit({ articleId: 'a2', pubDate: null })],
-        impressions: [],
         nowMs: NOW,
       });
 
@@ -165,94 +150,12 @@ describe('computeReadingStats', () => {
           visit({ articleId: 'fresh', visitedAt: NOW, pubDate: NOW - 2 * HOUR }),
           visit({ articleId: 'stale', visitedAt: NOW - WINDOW_MS - 1, pubDate: NOW - 5 * HOUR }),
         ],
-        impressions: [],
         nowMs: NOW,
       });
 
       expect(stats.publishToRead.totalArticles).toBe(1);
       expect(stats.publishToRead.sampledArticles).toBe(1);
       expect(stats.publishToRead.averageHours).toBe(2);
-    });
-  });
-
-  describe('articlesOpened', () => {
-    it('counts opened impressions only', () => {
-      const stats = computeReadingStats({
-        visits: [],
-        impressions: [
-          impression({ articleId: 'a1', opened: true }),
-          impression({ articleId: 'a2', opened: false }),
-        ],
-        nowMs: NOW,
-      });
-
-      expect(stats.articlesOpened).toBe(1);
-      // Impressions alone do NOT make a shareable card: three of the four
-      // figures come from visits, so this device has one number and three
-      // blanks. It is also what makes "Clear viewing history" visibly work,
-      // since that action wipes visits and deliberately leaves impressions
-      // alone (they run feed dedup and the read-story filter).
-      expect(stats.hasAnyData).toBe(false);
-    });
-
-    it('applies the 30-day window itself, because the impressions table does not', () => {
-      // story_impressions is pruned by a SWEEP (deleteOlderThan from
-      // data-cleanup-task), not at query level, so getAll() can hand back rows
-      // older than the window whenever that sweep is behind. Counting them would
-      // put a false "last 30 days" label on the figure.
-      const stats = computeReadingStats({
-        visits: [],
-        impressions: [
-          impression({ articleId: 'fresh', firstSeenAtMs: NOW - DAY }),
-          impression({ articleId: 'unswept', firstSeenAtMs: NOW - WINDOW_MS - 1 }),
-        ],
-        nowMs: NOW,
-      });
-
-      expect(stats.articlesOpened).toBe(1);
-    });
-
-    it('drops a row whose first_seen_at cannot be placed in the window', () => {
-      const stats = computeReadingStats({
-        visits: [],
-        impressions: [
-          impression({ articleId: 'a1', firstSeenAtMs: null }),
-          impression({ articleId: 'a2', firstSeenAtMs: Number.NaN }),
-        ],
-        nowMs: NOW,
-      });
-
-      expect(stats.articlesOpened).toBe(0);
-      expect(stats.hasAnyData).toBe(false);
-    });
-
-    it('stays empty after a visit clear, even with impressions left behind', () => {
-      // The exact state the simulator hit: Manage Data cleared publication_visits
-      // and story_impressions survived, so the screen kept showing a numeric
-      // card after a dialog that promised to empty it.
-      const stats = computeReadingStats({
-        visits: [],
-        impressions: [impression({ articleId: 'survivor' })],
-        nowMs: NOW,
-      });
-
-      expect(stats.articlesOpened).toBe(1);
-      expect(stats.publicationCount).toBe(0);
-      expect(stats.hasAnyData).toBe(false);
-    });
-
-    it('dedupes by article id and ignores blank ids', () => {
-      const stats = computeReadingStats({
-        visits: [],
-        impressions: [
-          impression({ articleId: 'a1' }),
-          impression({ articleId: 'a1' }),
-          impression({ articleId: '  ' }),
-        ],
-        nowMs: NOW,
-      });
-
-      expect(stats.articlesOpened).toBe(1);
     });
   });
 
@@ -265,7 +168,6 @@ describe('computeReadingStats', () => {
           visit({ articleId: 'a3', publicationName: 'Le Monde', countryCode: 'FR', visitCount: 5 }),
           visit({ articleId: 'a4', publicationName: 'The Hindu', countryCode: 'IN', visitCount: 1 }),
         ],
-        impressions: [],
         nowMs: NOW,
         topPublicationLimit: 3,
       });
@@ -283,7 +185,6 @@ describe('computeReadingStats', () => {
           visit({ articleId: 'a1', publicationName: 'The Times', countryCode: 'GB', visitCount: 2 }),
           visit({ articleId: 'a2', publicationName: 'The Times', countryCode: 'IN', visitCount: 1 }),
         ],
-        impressions: [],
         nowMs: NOW,
       });
 
@@ -300,9 +201,9 @@ describe('computeReadingStats', () => {
         visit({ articleId: id, publicationName: `Pub ${id}`, visitCount: 10 - i }),
       );
 
-      expect(computeReadingStats({ visits, impressions: [], nowMs: NOW }).topPublications).toHaveLength(3);
+      expect(computeReadingStats({ visits, nowMs: NOW }).topPublications).toHaveLength(3);
       expect(
-        computeReadingStats({ visits, impressions: [], nowMs: NOW, topPublicationLimit: 0 })
+        computeReadingStats({ visits, nowMs: NOW, topPublicationLimit: 0 })
           .topPublications,
       ).toEqual([]);
     });
@@ -313,7 +214,6 @@ describe('computeReadingStats', () => {
           visit({ articleId: 'a1', publicationName: 'NHK', visitCount: 0 }),
           visit({ articleId: 'a2', publicationName: 'NHK', visitCount: Number.NaN }),
         ],
-        impressions: [],
         nowMs: NOW,
       });
 
@@ -334,7 +234,6 @@ describe('emptyReadingStats', () => {
     const { days: _d, daysReadCount: _c, ...emptyRest } = emptyReadingStats();
     const { days: _d2, daysReadCount: _c2, ...coreRest } = computeReadingStats({
       visits: [],
-      impressions: [],
       nowMs: NOW,
     });
     expect(emptyRest).toEqual(coreRest);
@@ -347,7 +246,7 @@ describe('emptyReadingStats', () => {
     expect(emptyReadingStats().days).toEqual([]);
     expect(emptyReadingStats().daysReadCount).toBe(0);
 
-    const core = computeReadingStats({ visits: [], impressions: [], nowMs: NOW });
+    const core = computeReadingStats({ visits: [], nowMs: NOW });
     expect(core.days).toHaveLength(WINDOW_DAYS);
     expect(core.days.every((d) => d.count === 0)).toBe(true);
     expect(core.daysReadCount).toBe(0);
@@ -392,7 +291,6 @@ describe('the country list', () => {
         visit({ articleId: 'a3', publicationName: 'Le Monde', countryCode: 'FR', visitCount: 4 }),
         visit({ articleId: 'a4', publicationName: 'Le Figaro', countryCode: 'FR', visitCount: 3 }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -412,7 +310,6 @@ describe('the country list', () => {
         visit({ articleId: 'a1', countryCode: 'IN', visitCount: 0 }),
         visit({ articleId: 'a2', countryCode: 'IN', visitCount: Number.NaN }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -429,7 +326,6 @@ describe('the country list', () => {
     // and the one `cleaned()` exists to catch.
     const stats = computeReadingStats({
       visits: [visit({ publicationName: '  ', countryCode: 'JP' })],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -445,7 +341,6 @@ describe('the country list', () => {
         visit({ articleId: 'a3', countryCode: '   ' }),
         visit({ articleId: 'a4', countryCode: null }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -458,7 +353,6 @@ describe('the country list', () => {
         visit({ articleId: 'a1', countryCode: 'ZA', publicationName: 'P1' }),
         visit({ articleId: 'a2', countryCode: 'AU', publicationName: 'P2' }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -477,7 +371,6 @@ describe('the present-tense figures', () => {
   it('passes the injected counts straight through', () => {
     const stats = computeReadingStats({
       visits: [],
-      impressions: [],
       nowMs: NOW,
       keptNow: { savedArticles: 28, followedStories: 6 },
     });
@@ -491,7 +384,6 @@ describe('the present-tense figures', () => {
     // artefact of two unrelated rules rather than a fact about reading.
     const windowed = computeReadingStats({
       visits: [visit({ visitedAt: NOW - WINDOW_MS - DAY })],
-      impressions: [],
       nowMs: NOW,
       keptNow: { savedArticles: 12, followedStories: 3 },
     });
@@ -503,7 +395,6 @@ describe('the present-tense figures', () => {
   it('floors nonsense to zero rather than rendering it', () => {
     const stats = computeReadingStats({
       visits: [],
-      impressions: [],
       nowMs: NOW,
       keptNow: { savedArticles: -4, followedStories: Number.NaN },
     });
@@ -512,7 +403,7 @@ describe('the present-tense figures', () => {
   });
 
   it('defaults to zero when a caller omits them entirely', () => {
-    const stats = computeReadingStats({ visits: [], impressions: [], nowMs: NOW });
+    const stats = computeReadingStats({ visits: [], nowMs: NOW });
     expect(stats.keptNow).toEqual({ savedArticles: 0, followedStories: 0 });
   });
 });
@@ -530,7 +421,6 @@ describe('cardHasData', () => {
     // A reader who cleared their viewing history still has real saves.
     const stats = withStats({ keptNow: { savedArticles: 3, followedStories: 0 } });
     expect(availableCards(stats)).toEqual(['now']);
-    expect(stats.hasAnyData).toBe(false);
   });
 
   it('offers How fresh from a MEDIAN, never from an average alone', () => {
@@ -542,8 +432,7 @@ describe('cardHasData', () => {
     ).toEqual(['fresh']);
   });
 
-  it('offers Opened at the source from visits, never from suggestion-card taps', () => {
-    expect(availableCards(withStats({ articlesOpened: 5 }))).toEqual([]);
+  it('offers Opened at the source from visits', () => {
     expect(availableCards(withStats({ openedAtSourceCount: 2 }))).toEqual(['opened']);
   });
 
@@ -586,7 +475,6 @@ describe('openedAtSourceCount', () => {
     // Two rows, one opened three times: two articles, never four.
     const stats = computeReadingStats({
       visits: [visit({ articleId: 'a1', visitCount: 3 }), visit({ articleId: 'a2', visitCount: 1 })],
-      impressions: [],
       nowMs: NOW,
     });
     expect(stats.openedAtSourceCount).toBe(2);
@@ -639,7 +527,6 @@ describe('languages', () => {
         visit({ articleId: 'a2', publicationName: 'SRF', countryCode: 'CH', languageCode: 'fr' }),
         visit({ articleId: 'a3', publicationName: 'SRF', countryCode: 'CH', languageCode: 'it' }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
 
@@ -655,7 +542,6 @@ describe('languages', () => {
         visit({ articleId: 'a3', languageCode: 'hi', visitCount: 7 }),
         visit({ articleId: 'a4', languageCode: 'fr', visitCount: 7 }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
     expect(stats.languages).toEqual([
@@ -674,7 +560,6 @@ describe('languages', () => {
         visit({ articleId: 'a2', languageCode: null }),
         visit({ articleId: 'a3', languageCode: '  ' }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
     expect(stats.languages).toEqual([{ languageCode: 'ja', visitCount: 1 }]);
@@ -688,7 +573,6 @@ describe('dailyReads', () => {
     // must not do.
     const stats = computeReadingStats({
       visits: [visit({ articleId: 'a1', visitedAt: NOW - 2 * DAY })],
-      impressions: [],
       nowMs: NOW,
     });
     expect(stats.days).toHaveLength(WINDOW_DAYS);
@@ -707,7 +591,6 @@ describe('dailyReads', () => {
         visit({ articleId: 'a1', visitedAt: NOW - DAY, visitCount: 9 }),
         visit({ articleId: 'a2', visitedAt: NOW - DAY, visitCount: 1 }),
       ],
-      impressions: [],
       nowMs: NOW,
     });
     expect(stats.days.find((d) => d.count > 0)?.count).toBe(2);

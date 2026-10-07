@@ -45,37 +45,17 @@
 //      alongside the average, because `pub_date` is optional and only populated
 //      from schema v23 onward. A bare average over the covered subset presented
 //      as the whole is the specific bug that rule exists to prevent.
-//   3. `articlesOpened` is PARTIAL and named so. It counts suggestion-card taps
-//      only: `use-open-article.ts` deliberately does not call `recordOpen`,
-//      because an impression evicts the story from the Dashboard, so Explore,
-//      search and detail opens are invisible BY DESIGN. Widening the count by
-//      changing that would trade feed behaviour for a vanity number.
+//   3. "Opened at the source" is the windowed `publication_visits` rows, one
+//      per article. Suggestion-card taps (`story_impressions.opened`) are
+//      partial by design and are not read here at all.
 
 import type { VisitedArticle } from '@/lib/database/services/publication-visit-service';
 import { computePublishToReadStats, type PublishToReadStats } from '@/lib/reading-history-export';
 
 /** Mirrors `DEFAULT_WINDOW_MS` in publication-visit-service.ts. The visits query
- *  already enforces it; impressions do NOT (see `StatsImpression`), so this
- *  module applies it to both rather than trusting either. */
+ *  already enforces it; this module applies it again rather than trusting it. */
 export const WINDOW_DAYS = 30;
 export const WINDOW_MS = WINDOW_DAYS * 24 * 60 * 60 * 1000;
-
-/**
- * One `story_impressions` row, flattened.
- *
- * `story_impressions` does NOT enforce its 30-day TTL at query level the way
- * `publication_visits` does: the table is pruned by `deleteOlderThan` from
- * data-cleanup-task, so between sweeps `getAll()` can return rows older than the
- * window. A "last 30 days" label over an unfiltered impression read would be a
- * false claim whenever that sweep is behind, which is why `computeReadingStats`
- * filters on `firstSeenAtMs` itself.
- */
-export interface StatsImpression {
-  articleId: string;
-  opened: boolean;
-  /** Epoch ms, or null for a partially-written or unparseable row. */
-  firstSeenAtMs: number | null;
-}
 
 /** One row of the opt-in "top publications" list. Name plus country only —
  *  article titles are never included under any setting. */
@@ -194,15 +174,9 @@ export interface ReadingStats {
   /** Days in `days` with a count above zero. */
   daysReadCount: number;
   /**
-   * Distinct articles OPENED inside the window. Partial by construction — see
-   * the module header. Never label this "articles read".
-   */
-  articlesOpened: number;
-  /**
    * Distinct articles opened AT THE SOURCE inside the window: the windowed
    * `publication_visits` rows, which `getAllVisitedArticles` already dedupes
-   * one per article. The Stats card "Opened at the source" reads this, never
-   * `articlesOpened` (suggestion-card taps, partial, a different claim).
+   * one per article. Never suggestion-card taps (partial, a different claim).
    */
   openedAtSourceCount: number;
   /** Publish-to-read LATENCY, with its coverage denominator. This is not
@@ -215,29 +189,6 @@ export interface ReadingStats {
   /** NOT windowed. See `KeptNow` for why, before rendering it under a heading
    *  that mentions 30 days. */
   keptNow: KeptNow;
-  /**
-   * False when there is nothing worth sharing, so the caller shows an empty
-   * state instead of a card full of zeroes.
-   *
-   * Keyed on VISITS ALONE, deliberately. Three of the card's four figures
-   * (publications, countries, publish-to-read latency) come from
-   * `publication_visits`, so a device with impressions but no visits has one
-   * number and three blanks, which is not a card. It also makes Settings then
-   * Manage Data then "Clear viewing history" visibly work: that action calls
-   * `clearAllVisits()` and wipes ONLY `publication_visits`, so keying on
-   * impressions too left the screen showing a numeric card after a clear that
-   * had promised to empty it.
-   *
-   * `story_impressions` is deliberately NOT cleared by that action and must not
-   * be: it runs feed dedup and the read-story filter, so wiping it would
-   * resurrect already-read stories in the feed. Trading feed behaviour for a
-   * share-card number is the same mistake the plan forbids around
-   * `use-open-article.ts`. The residual is small and documented: right after a
-   * clear, the first new visit brings the card back with an `articlesOpened`
-   * that still counts pre-clear taps. The figure is labelled partial on the
-   * card, which is exactly the claim that stays true.
-   */
-  hasAnyData: boolean;
 }
 
 export interface ComputeReadingStatsInput {
@@ -245,8 +196,6 @@ export interface ComputeReadingStatsInput {
    *  windowed at query level; re-filtered here so the core is correct on any
    *  input, including a test fixture or a future wider query. */
   visits: VisitedArticle[];
-  /** From `getAll()` on story-impression-service, flattened. */
-  impressions: StatsImpression[];
   /** Reference "now", epoch ms. INJECTED, never read from the clock here. */
   nowMs: number;
   /** How many rows the opt-in list may show. */
@@ -274,13 +223,12 @@ function cleaned(value: string | null | undefined): string | null {
 }
 
 /**
- * The whole card, from rows to figures. Total: zero visits, zero impressions and
+ * Every figure, from rows. Total: zero visits and
  * zero rows with a known publish time all return cleanly, and there is no
  * division anywhere that is not guarded by its own count.
  */
 export function computeReadingStats({
   visits,
-  impressions,
   nowMs,
   topPublicationLimit = DEFAULT_TOP_PUBLICATION_LIMIT,
   keptNow,
@@ -356,18 +304,6 @@ export function computeReadingStats({
     })
     .slice(0, Math.max(0, topPublicationLimit));
 
-  // Opened only, inside the window, deduped by article id. A row with no
-  // parseable `first_seen_at` cannot be placed in the window and is dropped:
-  // counting it would be exactly the "last 30 days" overclaim this guards.
-  const openedArticleIds = new Set<string>();
-  for (const impression of impressions) {
-    if (impression.opened !== true) continue;
-    if (impression.firstSeenAtMs === null || !Number.isFinite(impression.firstSeenAtMs)) continue;
-    if (impression.firstSeenAtMs < cutoff) continue;
-    const id = cleaned(impression.articleId);
-    if (id) openedArticleIds.add(id);
-  }
-
   // Reused rather than reimplemented — this is the same quantity the reading
   // history export reports, and a second implementation would be free to drift
   // into calling it something it is not.
@@ -382,7 +318,6 @@ export function computeReadingStats({
     languageCount: languages.length,
     days,
     daysReadCount: days.filter((d) => d.count > 0).length,
-    articlesOpened: openedArticleIds.size,
     openedAtSourceCount: windowedVisits.length,
     publishToRead,
     topPublications,
@@ -390,7 +325,6 @@ export function computeReadingStats({
       savedArticles: nonNegative(keptNow?.savedArticles),
       followedStories: nonNegative(keptNow?.followedStories),
     },
-    hasAnyData: publications.size > 0,
   };
 }
 
@@ -412,12 +346,10 @@ export function emptyReadingStats(): ReadingStats {
     languageCount: 0,
     days: [],
     daysReadCount: 0,
-    articlesOpened: 0,
     openedAtSourceCount: 0,
     publishToRead: { averageHours: null, medianHours: null, sampledArticles: 0, totalArticles: 0 },
     topPublications: [],
     keptNow: { savedArticles: 0, followedStories: 0 },
-    hasAnyData: false,
   };
 }
 
