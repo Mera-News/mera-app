@@ -1,12 +1,12 @@
-// MeraChatSession — session container for the floating chat.
-//
-// Owns everything that must happen once per chat session (i.e. per mount):
+// MeraChatSession: the view's preparation for the floating chat, once per
+// mount. The turns themselves are NOT here: they run in the chat session
+// (lib/chat-session), which no component owns, so closing the chat unmounts
+// this freely while a turn keeps going.
 // - auth session → userId
 // - surface detection (facts present → CONFIG, else ONBOARDING)
 // - persona fetch → processing-mode sync
 // - on-device model load with progress + stuck-loading watchdog
-// - cloud-chat store reset (fresh conversation — cloud state survives
-//   remounts by design, so it must be cleared explicitly)
+// - a fresh thread (`resetChatSession`) when a conversation is created
 //
 // Conversation-row creation is NOT part of init: it's driven by a separate
 // level-triggered effect that watches the store's conversationId. A null id
@@ -15,8 +15,8 @@
 // this component was mounted or before it (re)mounted with the popover closed.
 //
 // Children (Local/CloudPersonaChat → ChatSessionView) are NOT rendered until
-// the conversation row exists, which also guarantees the cloud store reset in
-// the ensure-conversation effect runs before any child hook touches that store.
+// the conversation row exists, which also guarantees the thread reset in the
+// ensure-conversation effect runs before any child attaches to the session.
 
 import { AccountService } from '@/lib/account-service';
 import { authClient } from '@/lib/auth-client';
@@ -33,7 +33,7 @@ import {
   initBaseModel,
   isModelDownloaded,
 } from '@/lib/mera-protocol-toolkit/core/modelManager';
-import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
+import { resetChatSession } from '@/lib/chat-session/chat-session';
 import {
   useFloatingChatConversationId,
   useFloatingChatStore,
@@ -166,7 +166,7 @@ export default function MeraChatSession() {
     creatingConversationRef.current = true;
     void (async () => {
       try {
-        useCloudChatStore.getState().reset();
+        resetChatSession();
         const cid = await createConversation(surfaceRef.current);
         // Store-only write — safe across unmount, and never clobbers an id
         // that landed some other way meanwhile.

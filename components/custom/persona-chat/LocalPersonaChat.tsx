@@ -1,11 +1,13 @@
-// LocalPersonaChat — on-device inference path for the floating chat session.
-// Creates the context-appropriate agent, calls useLocalLLM, renders
-// ChatSessionView.
+// LocalPersonaChat: the on-device path's view. Creates the context-appropriate
+// agent, attaches it to the chat session and draws the local chat store's
+// state with ChatSessionView. The turn runs in the session, not here.
 
 import ChatSessionView from '@/components/custom/floating-chat/ChatSessionView';
 import { createAgentForContext } from '@/components/custom/floating-chat/agent-registry';
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
-import { useLocalLLM } from '@/lib/llm/useLocalLLM';
+import { useChatSession } from '@/lib/chat-session/use-chat-session';
+import { useLocalChatStore } from '@/lib/chat-session/local-chat-store';
+import { useShallow } from 'zustand/react/shallow';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import React, { useMemo } from 'react';
 
@@ -32,15 +34,23 @@ export default function LocalPersonaChat({
     () => createAgentForContext(context, userId, surface),
     [context, userId, surface],
   );
-  const chat = useLocalLLM(agent);
+  const session = useChatSession('local', agent, conversationId, resumeMessages);
+  const chat = useLocalChatStore(
+    useShallow((st) => ({
+      messages: st.messages,
+      status: st.status,
+      isBlocked: st.isBlocked,
+      blockedReason: st.blockedReason,
+      error: st.error,
+    })),
+  );
 
   return (
     <ChatSessionView
       messages={chat.messages}
       status={chat.status}
-      localTurnBusy={chat.turnBusy}
-      sendMessage={chat.sendMessage}
-      sendHiddenTurn={chat.sendHiddenTurn}
+      sendMessage={session.send}
+      sendHiddenTurn={session.sendHidden}
       isBlocked={chat.isBlocked}
       blockedReason={chat.blockedReason}
       error={chat.error}

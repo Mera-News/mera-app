@@ -1,13 +1,12 @@
-// ChatSessionView — bridges an inference hook result (useLocalLLM /
-// useCloudPersonaChat) to the presentational ChatThread. Owns the glue only:
-// thread-item derivation, starter chips, intro message, haptics, the
-// isGenerating store flag, persistence, and lazy upward history.
+// ChatSessionView: the chat session's state (lib/chat-session, read through
+// CloudPersonaChat / LocalPersonaChat) drawn by the presentational ChatThread.
+// A view only: thread-item derivation, starter chips, intro message, haptics
+// and lazy upward history. It may unmount mid-turn.
 
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { AccountService } from '@/lib/account-service';
 import { useChatHistory } from '@/lib/hooks/useChatHistory';
-import { useChatPersistence } from '@/lib/hooks/useChatPersistence';
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
 import { loadUserPersona } from '@/lib/database/services/user-persona-service';
 import { hapticMedium, hapticSuccess } from '@/lib/haptics';
@@ -23,7 +22,6 @@ import {
 import { useIsOnDeviceProcessing, useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
 import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-pages';
 import { useUserStore } from '@/lib/stores/user-store';
-import { holdRestart } from '@/lib/app-restart';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -49,22 +47,9 @@ const noop = () => {};
 type PendingLocaleKey = 'factCheck.chatSeed';
 
 export interface ChatSessionViewProps {
-  // Inference hook result (shared shape of useLocalLLM / useCloudPersonaChat)
+  // The engine's state, from its store
   messages: ConversationMessage[];
   status: 'idle' | 'streaming';
-  /**
-   * The ON-DEVICE engine's turn-busy signal (`useLocalLLM`'s `turnBusy`).
-   * Optional and local-engine-only: `CloudPersonaChat` renders this same
-   * component with no on-device turn to report, and the cloud path's
-   * equivalent (`agentTurnState.turnActive`) is read directly off its own
-   * store instead of threaded as a prop, so `undefined` here must read as
-   * "no local engine, therefore not busy" rather than as anything else.
-   * `useLocalLLM`'s own `status` goes idle BEFORE its tool-execution loop
-   * runs ("Release input before tool execution" in that file) so the
-   * composer can re-enable while facts are still being saved; this is the
-   * signal that stays true through that window.
-   */
-  localTurnBusy?: boolean;
   sendMessage: (text: string) => void;
   /** Starts a turn the user never sees. Used by the topic-plan discard reply. */
   sendHiddenTurn: (text: string) => void;
@@ -89,7 +74,6 @@ export interface ChatSessionViewProps {
 export default function ChatSessionView({
   messages,
   status,
-  localTurnBusy,
   sendMessage,
   sendHiddenTurn,
   isBlocked,
@@ -115,47 +99,9 @@ export default function ChatSessionView({
   const agentTerminal = useCloudChatStore((st) => renderableTerminal(st.agentTerminal));
   const resume = useMemo(() => resumeMessages ?? [], [resumeMessages]);
 
-  // Hold a restart while a response is actually arriving. `isStreaming` alone
-  // is a proxy, not the authoritative signal, on EITHER engine: on the cloud
-  // path `status` goes idle EARLY, while a forced-extraction or continuation
-  // pass is still writing facts (see the `turnActive` comment above and
-  // useCloudPersonaChat's `setTurnBusy` — "turnBusyRef, not isStreamingRef"),
-  // so `turnActive` covers that tail. On-device chat has the identical shape
-  // of gap for the identical reason: `useLocalLLM`'s own `status` goes idle
-  // before its tool-execution loop runs ("Release input before tool
-  // execution" in that file), so `localTurnBusy` is on-device's twin of
-  // `turnActive` — a flag that stays true through that loop and is cleared
-  // only once the whole turn settles. `localTurnBusy` is `undefined` on the
-  // cloud path (no on-device engine to report) and `turnActive` is
-  // `undefined` on the local path (no cloud loop state); neither engine's
-  // "authoritative" signal exists on the other, so `isStreaming` stays in the
-  // union to cover a turn's initial streaming phase on whichever engine is
-  // live. Any one of the three being true means a turn is still in flight.
-  const responseInFlight = isStreaming || turnActive === true || localTurnBusy === true;
-
-  // The floating chat is an OVERLAY, open on top of whatever route is
-  // current. `lib/app-restart.ts`'s route gate only blocks a restart for a
-  // fixed list of routes (`RESTART_BLOCKED_ROUTES` — login, OTP, PIN,
-  // onboarding) and chat can be mid-turn over any OTHER route, so that gate
-  // has no way to see it; this hold is the only thing that does. It is not a
-  // split between "plain returns" and "everything else" any more: a plain
-  // foreground return is not a restart trigger at all now, only a pending OTA
-  // (or an explicit language-change/restore) is, and the route gate applies
-  // to every one of those reasons — this hold and that gate are two
-  // independent block reasons `blockedBy()` checks together, not two
-  // mechanisms covering two different triggers. The effect's cleanup is the
-  // ONE release path and it is
-  // unconditional: it fires the moment `responseInFlight` flips back to false
-  // (normal completion, a user cancel, or an error — all three resolve every
-  // one of `isStreaming` / `turnActive` / `localTurnBusy` to false) and it
-  // fires on unmount regardless of `responseInFlight`, so a popover close
-  // mid-stream can never leave the hold engaged. `holdRestart`'s release is
-  // idempotent, so this never double-releases.
-  useEffect(() => {
-    if (!responseInFlight) return;
-    const release = holdRestart('chat-stream');
-    return () => release();
-  }, [responseInFlight]);
+  // The turn's lifecycle (the restart hold, persistence, the busy and
+  // unread flags) lives in the chat session (lib/chat-session), not here:
+  // this view may unmount mid-turn.
 
   // Intro copy depends on the context: the article-feedback surfaces open with a
   // "what can I do for you" line (article vs. suggestion variant); everything
@@ -193,12 +139,7 @@ export default function ChatSessionView({
   // Intro pseudo-message until the first send of this session.
   const [introMessage, setIntroMessage] = useState<string | null>(introText);
 
-  // Seed persistence with the resumed ids so retained cloud-store messages
-  // aren't re-persisted on reopen. Stable across renders for the same session.
-  const seedIds = useMemo(() => resume.map((m) => m.id), [resume]);
-
-  // Persist the live session; lazily page in older history on scroll-up.
-  useChatPersistence(messages, status, conversationId, seedIds);
+  // Lazily page in older history on scroll-up.
   const { history, loadOlder, hasOlder, isLoadingOlder } = useChatHistory(
     conversationId ?? undefined,
   );
@@ -343,15 +284,6 @@ export default function ChatSessionView({
     [],
   );
 
-
-  // Mirror generation state into the floating-chat store (bubble shimmer etc).
-  // Store writes must never happen inline during render.
-  useEffect(() => {
-    useFloatingChatStore.getState().setGenerating(isStreaming);
-    return () => {
-      useFloatingChatStore.getState().setGenerating(false);
-    };
-  }, [isStreaming]);
 
   // Success haptic when a new fact card lands in the LIVE session. History
   // cards are excluded so paging in old conversations doesn't buzz.

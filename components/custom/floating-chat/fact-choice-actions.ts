@@ -33,7 +33,7 @@ import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
  *
  * The durable half is fire-and-forget on purpose: a missing message row is NOT
  * an error (an assistant message persists only once the turn finalises, so a
- * fast tap can land first) and `useChatPersistence` merges the store override in
+ * fast tap can land first) and the chat session (lib/chat-session) merges the store override in
  * at write time to close that race. Failing the tap because the row is not there
  * yet would be a regression against a race the persistence layer already
  * handles.

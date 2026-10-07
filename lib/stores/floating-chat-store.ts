@@ -106,7 +106,13 @@ interface FloatingChatState {
     // Text a starter put in the composer. Level-triggered: ChatThread consumes
     // it once the composer exists, so a fresh conversation cannot swallow it.
     pendingDraft: string | null;
+    /** A chat turn is busy, the WHOLE turn on either engine. Written only by
+     *  the chat session (lib/chat-session). */
     isGenerating: boolean;
+    /** A turn finished while the chat was closed and nobody has opened it
+     *  since: the Mera button's ring. Memory only, never persisted, never
+     *  counted (invariant 9). */
+    answerUnread: boolean;
     suppressed: boolean;
     factMutationVersion: number;
     // Article-feedback flow. `pendingInitialMessage` is auto-sent once by
@@ -239,6 +245,7 @@ const initialState = {
     closedAt: null as number | null,
     pendingDraft: null as string | null,
     isGenerating: false,
+    answerUnread: false,
     suppressed: false,
     factMutationVersion: 0,
     pendingInitialMessage: null as string | null,
@@ -256,6 +263,22 @@ const initialState = {
     quickFactChecks: [] as QuickFactCheckEntry[],
     conversationId: null as string | null,
 };
+
+/** The open must keep the current thread: a turn is busy or its answer is
+ *  unread. */
+function threadHeld(state: { isGenerating: boolean; answerUnread: boolean }): boolean {
+    return state.isGenerating || state.answerUnread;
+}
+
+/** Unread is set when a turn ends while the chat is closed, and kept until
+ *  the chat opens. */
+export function nextAnswerUnread(
+    state: { isGenerating: boolean; isExpanded: boolean; answerUnread: boolean },
+    generating: boolean,
+): boolean {
+    if (state.isGenerating && !generating && !state.isExpanded) return true;
+    return state.answerUnread && !state.isExpanded;
+}
 
 /** True if two contexts differ in kind, target id or (persona) page. */
 function contextDiffers(a: ChatContext, b: ChatContext): boolean {
@@ -283,6 +306,13 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
         // ChatSessionView refuses to dispatch a turn and mounts no engine — so
         // there is nothing left for this chokepoint to protect.
         set((state) => {
+            // A turn still running, or an answer nobody has read: the open
+            // shows THAT thread, whatever the page, kind or elapsed time. A
+            // new context here would start a new conversation under a turn
+            // still writing to this one, and the ring would point at nothing.
+            if (threadHeld(state)) {
+                return { isExpanded: true, answerUnread: false, pendingDraft: opts?.draft ?? null };
+            }
             // Switching to a different context must start a fresh thread so a
             // stale persona chat never bleeds into an article-feedback session.
             // Nulling conversationId is the level-triggered "create a
@@ -305,6 +335,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
                 context !== undefined && contextDiffers(context, state.context) && !keepsThread;
             return {
                 isExpanded: true,
+                answerUnread: false,
                 context: context ?? state.context,
                 pendingDraft: opts?.draft ?? null,
                 ...(switching
@@ -322,6 +353,11 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     },
 
     openArticleFeedback: (context, initialMessage) => {
+        // A held thread opens as it is and the seed is dropped (see `expand`).
+        if (threadHeld(get())) {
+            set({ isExpanded: true, answerUnread: false });
+            return;
+        }
         set(() => ({
             context,
             pendingInitialMessage: initialMessage,
@@ -340,6 +376,10 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     },
 
     openOptimisationPlan: () => {
+        if (threadHeld(get())) {
+            set({ isExpanded: true, answerUnread: false });
+            return;
+        }
         // Opens on the free tier too (see `expand`); the plan card itself
         // loads nothing for a locked user and the opener explains why.
         set(() => ({
@@ -443,12 +483,18 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
 
     toggle: () =>
         set((state) =>
-            state.isExpanded ? { isExpanded: false, closedAt: Date.now() } : { isExpanded: true },
+            state.isExpanded
+                ? { isExpanded: false, closedAt: Date.now() }
+                : { isExpanded: true, answerUnread: false },
         ),
 
     setBubbleCenter: (c) => set({ bubbleCenter: c }),
 
-    setGenerating: (v) => set({ isGenerating: v }),
+    setGenerating: (v) =>
+        set((state) => ({
+            isGenerating: v,
+            answerUnread: nextAnswerUnread(state, v),
+        })),
 
     setSuppressed: (v) => set({ suppressed: v }),
 
@@ -475,6 +521,7 @@ export const useFloatingChatIsExpanded = () => useFloatingChatStore((state) => s
 export const useFloatingChatFactMutationVersion = () =>
     useFloatingChatStore((state) => state.factMutationVersion);
 export const useFloatingChatIsGenerating = () => useFloatingChatStore((state) => state.isGenerating);
+export const useFloatingChatAnswerUnread = () => useFloatingChatStore((state) => state.answerUnread);
 export const useFloatingChatSuppressed = () => useFloatingChatStore((state) => state.suppressed);
 export const useFloatingChatConversationId = () => useFloatingChatStore((state) => state.conversationId);
 export const useFloatingChatProposal = () => useFloatingChatStore((state) => state.proposal);

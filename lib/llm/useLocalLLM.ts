@@ -1,8 +1,10 @@
-// useLocalLLM — on-device chat hook for persona update (local path).
-// Direct llama.rn inference via inferStream. No engine abstraction.
-// One-shot only: no tool-call loop, no retry, ephemeral conversations.
+// The on-device chat engine (persona update, local path). The file keeps its
+// old name; it is no longer a hook. `createLocalEngine` is owned by the chat
+// session (lib/chat-session), so a turn survives the chat being closed.
+// Direct llama.rn inference via inferStream. No tool-call loop, no retry.
 
-import { useCallback, useRef, useState } from 'react';
+import type { ChatEngine } from '@/lib/chat-session/engine';
+import { useLocalChatStore, type LocalChatState } from '@/lib/chat-session/local-chat-store';
 import { CHAT_MAX_OUTPUT_TOKENS } from './constants';
 import { getModelState, inferStream, initBaseModel } from '../mera-protocol-toolkit';
 import { inferenceQueue } from '../inference/InferenceQueue';
@@ -66,37 +68,13 @@ let toolCallCounter = 0;
 // Local types
 // ---------------------------------------------------------------------------
 
-type LocalLLMStatus = 'idle' | 'streaming';
+type LocalLLMStatus = LocalChatState['status'];
 
 type InferenceEvent =
   | { type: 'text-delta'; delta: string }
   | { type: 'tool-call'; id: string; name: string; input: unknown }
   | { type: 'finish'; reason: 'stop' | 'error' }
   | { type: 'error'; message: string };
-
-export interface UseLocalLLMResult {
-  messages: ConversationMessage[];
-  status: LocalLLMStatus;
-  /**
-   * True from `startTurn` until the WHOLE turn settles, including the
-   * tool-execution loop that runs after `status` has already gone back to
-   * `'idle'` (see the "Release input before tool execution" comment in
-   * `runInference`). `status` is a UI-input concern — it says whether the
-   * composer should re-enable, and re-enabling it before tools finish is
-   * deliberate. `turnBusy` says whether the turn is still doing real work,
-   * which is a different question with a different answer during that same
-   * window. A caller that needs "is anything still in flight" (e.g. holding a
-   * restart off) wants this, not `status`.
-   */
-  turnBusy: boolean;
-  sendMessage: (text: string) => void;
-  /** Runs a turn the user never sees. See startTurn's `hidden` argument. */
-  sendHiddenTurn: (text: string) => void;
-  latestAssistantContent: string;
-  isBlocked: boolean;
-  blockedReason: string | null;
-  error: string | null;
-}
 
 // ---------------------------------------------------------------------------
 // Helper functions (absorbed from LocalInferenceEngine)
@@ -278,26 +256,33 @@ function* extractBareJsonToolCalls(text: string, known: string[]): Iterable<Infe
 }
 
 // ---------------------------------------------------------------------------
-// Hook
+// Engine
 // ---------------------------------------------------------------------------
 
-export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [status, setStatus] = useState<LocalLLMStatus>('idle');
-  // Deliberately NOT cleared at the same point as `status` — see the
-  // interface doc on `turnBusy`. Cleared only in `runInference`'s outer
-  // `finally`, which is the one place the whole turn (stream AND tools) is
-  // actually done.
-  const [turnBusy, setTurnBusy] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
-  const [blockedReason, setBlockedReason] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export function createLocalEngine(initialAgent: IAgent): ChatEngine {
+  // State lives in useLocalChatStore so it outlives every component. Writes
+  // stop once the engine is replaced (a new chat), so a turn still finishing
+  // in the background can never touch the next conversation's thread.
+  let alive = true;
+  const st = useLocalChatStore.getState;
+  const put = (patch: Partial<LocalChatState>): void => {
+    if (alive) useLocalChatStore.setState(patch);
+  };
+  const setMessages = (
+    next: ConversationMessage[] | ((prev: ConversationMessage[]) => ConversationMessage[]),
+  ): void => put({ messages: typeof next === 'function' ? next(st().messages) : next });
+  const setStatus = (status: LocalLLMStatus): void => put({ status });
+  // Deliberately NOT cleared at the same point as `status`: see the store's
+  // doc on `turnBusy`. Cleared only in `runInference`'s outer `finally`, the
+  // one place the whole turn (stream AND tools) is actually done.
+  const setTurnBusy = (turnBusy: boolean): void => put({ turnBusy });
+  const setIsBlocked = (isBlocked: boolean): void => put({ isBlocked });
+  const setBlockedReason = (blockedReason: string | null): void => put({ blockedReason });
+  const setError = (error: string | null): void => put({ error });
 
-  const messagesRef = useRef<ConversationMessage[]>([]);
-  messagesRef.current = messages;
-
-  const isStreamingRef = useRef(false);
-  const initializedRef = useRef(false);
+  const agentRef = { current: initialAgent };
+  const isStreamingRef = { current: false };
+  const initializedRef = { current: false };
 
   /**
    * The wait line's sink for the turn in flight.
@@ -307,10 +292,9 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
    * encryption or a server. Nothing leaves the phone on this path and a line
    * implying otherwise is a false claim, not a cosmetic slip.
    */
-  const phaseSinkRef = useRef<PhaseSink | null>(null);
+  const phaseSinkRef: { current: PhaseSink | null } = { current: null };
 
-  const runInference = useCallback(
-    async (conversationMessages: ConversationMessage[]): Promise<void> => {
+  const runInference = async (conversationMessages: ConversationMessage[]): Promise<void> => {
       // Chosen SYNCHRONOUSLY, before the first await. `inferenceQueue.pause()`
       // waits for whatever job holds llama.rn's single context to finish, and
       // on a cold turn `initBaseModel` follows it: both are real seconds the
@@ -338,7 +322,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         // Build system prompt (needsToolFormatInPrompt=true for local LLM)
         let systemPrompt: string;
         try {
-          systemPrompt = await agent.buildSystemPrompt(true);
+          systemPrompt = await agentRef.current.buildSystemPrompt(true);
           logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
           logger.debug(`${TAG} system prompt content`, { content: systemPrompt });
         } catch (err) {
@@ -347,9 +331,9 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
 
         // Build context and inject into prompt
         let context: string | undefined;
-        if (agent.buildContext) {
+        if (agentRef.current.buildContext) {
           try {
-            context = await agent.buildContext();
+            context = await agentRef.current.buildContext();
             logger.debug(`${TAG} context built`, { length: context.length });
             logger.debug(`${TAG} context content`, { content: context });
           } catch (err) {
@@ -497,7 +481,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         // split across tokens. Split on the open tag to reliably find all blocks.
         logger.debug(`${TAG} LLM output — fullResponse`, { fullResponse });
         logger.debug(`${TAG} stream complete`, { responseLength: fullResponse.length, toolCallsSoFar: accToolCalls.length });
-        const known = knownToolNames(agent);
+        const known = knownToolNames(agentRef.current);
         const detectedInputs = new Set(accToolCalls.map(tc => JSON.stringify(tc.input)));
         const segments = fullResponse.split(TOOL_CALL_OPEN).slice(1); // each segment starts after a <tool_call>
         for (const segment of segments) {
@@ -566,7 +550,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         for (const tc of accToolCalls) {
           try {
             logger.debug(`${TAG} executing tool`, { name: tc.name, inputKeys: Object.keys(tc.input as Record<string, unknown>) });
-            const { result, sideEffects } = await agent.executeTool(tc.name, tc.input);
+            const { result, sideEffects } = await agentRef.current.executeTool(tc.name, tc.input);
             logger.debug(`${TAG} tool result`, { name: tc.name, result: JSON.stringify(result).slice(0, 200), sideEffects });
 
             if (sideEffects?.blocked) {
@@ -636,9 +620,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         // that early release IS the gap this flag exists to cover.
         setTurnBusy(false);
       }
-    },
-    [agent],
-  );
+    };
 
   /**
    * One turn. `hidden` makes it invisible to the user and unpersisted, while the
@@ -649,9 +631,8 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
    * turn, so a prompt ending on `Assistant:` makes a 4B model continue its own
    * previous message.
    */
-  const startTurn = useCallback(
-    (text: string, hidden: boolean) => {
-      if (isStreamingRef.current || isBlocked) return;
+  const startTurn = (text: string, hidden: boolean): void => {
+      if (isStreamingRef.current || st().isBlocked) return;
       const trimmed = text.trim();
       if (!trimmed) return;
 
@@ -665,8 +646,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         createdAt: Date.now(),
         ...(hidden ? { hidden: true } : {}),
       };
-      const newMessages = [...messagesRef.current, userMsg];
-      messagesRef.current = newMessages;
+      const newMessages = [...st().messages, userMsg];
       setMessages(newMessages);
 
       isStreamingRef.current = true;
@@ -679,27 +659,16 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
       phaseSinkRef.current = makePhaseSink(applyChatPhase);
 
       void runInference(newMessages);
-    },
-    [isBlocked, runInference],
-  );
-
-  const sendMessage = useCallback((text: string) => startTurn(text, false), [startTurn]);
-  const sendHiddenTurn = useCallback((text: string) => startTurn(text, true), [startTurn]);
-
-  const latestAssistantContent = (() => {
-    const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant');
-    return lastAssistant?.content ?? '';
-  })();
+  };
 
   return {
-    messages,
-    status,
-    turnBusy,
-    sendMessage,
-    sendHiddenTurn,
-    latestAssistantContent,
-    isBlocked,
-    blockedReason,
-    error,
+    send: (text) => startTurn(text, false),
+    sendHidden: (text) => startTurn(text, true),
+    setAgent: (agent) => {
+      agentRef.current = agent;
+    },
+    dispose: () => {
+      alive = false;
+    },
   };
 }

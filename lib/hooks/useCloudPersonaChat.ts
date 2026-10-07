@@ -1,10 +1,10 @@
-// useCloudPersonaChat — cloud chat hook for persona update.
-// Single-shot: streams one SSE response from backend proxy, executes
-// tools locally via agent.executeTool(). No re-send loop — mirrors local LLM flow.
-// State is stored in Zustand (cloud-chat-store) so it survives component remounts.
+// The cloud chat engine (persona update and every other cloud agent). The
+// file keeps its old name; it is no longer a hook. `createCloudEngine` is
+// owned by the chat session (lib/chat-session), so a turn survives the chat
+// being closed. State is in cloud-chat-store; the turn bookkeeping is closure
+// state here.
 
-import { useCallback, useRef } from 'react';
-import { useShallow } from 'zustand/react/shallow';
+import type { ChatEngine } from '@/lib/chat-session/engine';
 import logger from '../logger';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
@@ -146,18 +146,6 @@ function wireMessageTokens(m: WireMessage): number {
   return estimateTokens(content) + estimateTokens(calls);
 }
 
-export interface UseCloudPersonaChatResult {
-  messages: ConversationMessage[];
-  status: 'idle' | 'streaming';
-  sendMessage: (text: string) => void;
-  /** Runs a turn the user never sees. See startTurn's `visible` argument. */
-  sendHiddenTurn: (text: string) => void;
-  latestAssistantContent: string;
-  isBlocked: boolean;
-  blockedReason: string | null;
-  error: string | null;
-}
-
 // ---------------------------------------------------------------------------
 // Accumulate tool-call deltas by index into complete tool calls
 // ---------------------------------------------------------------------------
@@ -231,24 +219,14 @@ function isEmptyExtractionCall(tc: { name: string; input: unknown }): boolean {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
-  // Read state from Zustand store (survives remounts)
-  const { messages, status, isBlocked, blockedReason, error } = useCloudChatStore(
-    useShallow((s) => ({
-      messages: s.messages,
-      status: s.status,
-      isBlocked: s.isBlocked,
-      blockedReason: s.blockedReason,
-      error: s.error,
-    })),
-  );
-
-  const isStreamingRef = useRef(false);
+export function createCloudEngine(initialAgent: IAgent): ChatEngine {
+  let alive = true;
+  const isStreamingRef = { current: false };
   /** Covers the WHOLE turn including the fire-and-forget forced-extraction tail,
    *  which outlives isStreamingRef. See startTurn. */
-  const turnBusyRef = useRef(false);
+  const turnBusyRef = { current: false };
   /** True while the forced pass owns the busy release. */
-  const forcedPassRef = useRef(false);
+  const forcedPassRef = { current: false };
 
   /**
    * Sets `turnBusyRef` AND mirrors it onto the store's `agentTurnState`, so the
@@ -263,7 +241,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
    * from streaming state renders a live turn as interrupted, which is exactly
    * the failure the interruption state exists to report.
    */
-  const setTurnBusy = useCallback((next: boolean) => {
+  const setTurnBusy = (next: boolean): void => {
     if (turnBusyRef.current === next) return;
     turnBusyRef.current = next;
     const store = useCloudChatStore.getState();
@@ -277,28 +255,27 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
     // No loop state yet (a turn before the agent loop drives this hook). Mint
     // the minimum the thread needs rather than leaving the flag unreadable.
     store.setAgentTurnState({ ...createAgentTurnState(), turnActive: next });
-  }, []);
+  };
   /** A hidden turn that arrived mid-turn, waiting for the current one to settle. */
-  const pendingHiddenTurnRef = useRef<string | null>(null);
+  const pendingHiddenTurnRef: { current: string | null } = { current: null };
 
   /** Held in a ref so `flushPendingHiddenTurn` can re-enter `startTurn` without
-   *  the two useCallbacks depending on each other. */
-  const startTurnRef = useRef<((text: string, visible: boolean) => void) | null>(null);
+   *  the two depending on each other. */
+  const startTurnRef: { current: ((text: string, visible: boolean) => void) | null } = { current: null };
 
-  const flushPendingHiddenTurn = useCallback(() => {
+  const flushPendingHiddenTurn = (): void => {
     const pending = pendingHiddenTurnRef.current;
     if (!pending) return;
     pendingHiddenTurnRef.current = null;
     startTurnRef.current?.(pending, false);
-  }, []);
+  };
 
-  const agentRef = useRef(agent);
-  agentRef.current = agent;
+  const agentRef = { current: initialAgent };
 
   /** The loop's state, threaded turn to turn. In a ref rather than rebuilt per
    *  turn: `pendingChoice` has to survive to the turn that answers it, or a tap
    *  arrives as a bare display string and the place is looked up twice. */
-  const agentStateRef = useRef<AgentState | null>(null);
+  const agentStateRef: { current: AgentState | null } = { current: null };
 
   /**
    * The wait line's sink for the turn in flight, or null when no turn owns it.
@@ -309,7 +286,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
    * pass calls `runSingleShot` directly, outside any turn, and a hidden pass
    * must not narrate a wait nobody is watching.
    */
-  const phaseSinkRef = useRef<PhaseSink | null>(null);
+  const phaseSinkRef: { current: PhaseSink | null } = { current: null };
 
   /**
    * ONE TURN through the agent loop. This is the shipped cloud path for the
@@ -319,8 +296,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
    * which is the point: a harness green is evidence about the app rather than
    * about a parallel implementation.
    */
-  const runAgentLoopTurn = useCallback(
-    async (assistantId: string, userMessage: string): Promise<void> => {
+  const runAgentLoopTurn = async (assistantId: string, userMessage: string): Promise<void> => {
       const store = useCloudChatStore.getState();
       const persona = await buildAgentPersona(agentRef.current.id);
       // NEW CHAT clears the store's agentTurnState, and this ref has to follow
@@ -478,12 +454,9 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         // owner. This block runs inside that try, and a second release here
         // would only make the ownership ambiguous for the next reader.
       }
-    },
-    [],
-  );
+    };
 
-  const runSingleShot = useCallback(
-    async (
+  const runSingleShot = async (
       systemPrompt: string,
       tools: ToolDefinition[],
       assistantId: string,
@@ -871,7 +844,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // most once — 'required' obliges ≥1 tool call, so there is no recursion.
       // Targets the VISIBLE assistant bubble (not a throwaway hidden id) with
       // text suppressed, so the tool calls it produces actually render as fact /
-      // conflict cards and get captured by useChatPersistence. The previous
+      // conflict cards and get captured by the chat session's persistence. The previous
       // hidden id was never inserted into `messages`, so every setMessages
       // against it was a silent no-op: the user saw nothing and nothing
       // persisted.
@@ -1044,18 +1017,15 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       }
 
       if (needsForcedExtraction) startForcedExtraction();
-    },
-    [flushPendingHiddenTurn, setTurnBusy],
-  );
+    };
 
   /**
    * One turn. `visible: false` runs it without ever appending a
-   * `ConversationMessage`, so nothing is drawn and — because useChatPersistence
+   * `ConversationMessage`, so nothing is drawn and — because the session's persistence
    * reads `messages`, not the wire — nothing is stored either. The model still
    * sees an ordinary trailing `user` turn with fresh <context> on it.
    */
-  const startTurn = useCallback(
-    (text: string, visible: boolean) => {
+  const startTurn = (text: string, visible: boolean) => {
       const store = useCloudChatStore.getState();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
       // turnBusyRef, not isStreamingRef: startForcedExtraction dispatches with
@@ -1163,31 +1133,22 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           }
         }
       })();
-    },
-    [runSingleShot, runAgentLoopTurn, flushPendingHiddenTurn, setTurnBusy],
-  );
+    };
 
   startTurnRef.current = startTurn;
 
-  const sendMessage = useCallback((text: string) => startTurn(text, true), [startTurn]);
-  const sendHiddenTurn = useCallback((text: string) => startTurn(text, false), [startTurn]);
-
-  const latestAssistantContent = (() => {
-    // Skip empty assistant placeholders (e.g. from tool-call rounds that returned no text)
-    const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant' && m.content.length > 0);
-    if (!lastAssistant) return '';
-    // Strip "Options: [...]" that the model sometimes echoes in text despite prompt instructions
-    return lastAssistant.content.replace(/\n?\s*Options:\s*\[.*?\]\s*/gs, '').trim();
-  })();
-
   return {
-    messages,
-    status,
-    sendMessage,
-    sendHiddenTurn,
-    latestAssistantContent,
-    isBlocked,
-    blockedReason,
-    error,
+    send: (text) => {
+      if (alive) startTurn(text, true);
+    },
+    sendHidden: (text) => {
+      if (alive) startTurn(text, false);
+    },
+    setAgent: (agent) => {
+      agentRef.current = agent;
+    },
+    dispose: () => {
+      alive = false;
+    },
   };
 }
