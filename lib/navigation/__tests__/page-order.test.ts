@@ -29,24 +29,24 @@ describe('applyPageOrder', () => {
   const defaults = DEFAULT_PAGE_ORDER.library;
 
   it('returns the defaults when nothing is stored', () => {
-    expect(applyPageOrder(null, defaults)).toEqual(['saved', 'checks', 'visited', 'stats']);
+    expect(applyPageOrder(null, defaults)).toEqual(['saved', 'checks', 'visited']);
   });
 
   it('applies a stored order', () => {
-    expect(applyPageOrder(['stats', 'visited', 'checks', 'saved'], defaults)).toEqual([
-      'stats', 'visited', 'checks', 'saved',
+    expect(applyPageOrder(['visited', 'checks', 'saved'], defaults)).toEqual([
+      'visited', 'checks', 'saved',
     ]);
   });
 
   it('drops unknown ids and appends missing ones in default order', () => {
     expect(applyPageOrder(['visited', 'country:DE', 'gone', 'saved'], defaults)).toEqual([
-      'visited', 'saved', 'checks', 'stats',
+      'visited', 'saved', 'checks',
     ]);
   });
 
   it('drops duplicates', () => {
-    expect(applyPageOrder(['stats', 'stats', 'saved'], defaults)).toEqual([
-      'stats', 'saved', 'checks', 'visited',
+    expect(applyPageOrder(['visited', 'visited', 'saved'], defaults)).toEqual([
+      'visited', 'saved', 'checks',
     ]);
   });
 });

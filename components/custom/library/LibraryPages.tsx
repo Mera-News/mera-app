@@ -35,8 +35,7 @@ export function LibraryPages() {
 
     const pills: PagePill[] = useMemo(
         () =>
-            // ponytail: drops 'stats' until S1 removes it from the fixed order.
-            order.filter((id) => id !== 'stats').map((id) => ({
+            order.map((id) => ({
                 id,
                 label: t(pageMeta(id).labelKey),
                 useDot: id === 'checks' ? useChecksDot : undefined,
