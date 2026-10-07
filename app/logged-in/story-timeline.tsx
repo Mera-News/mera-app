@@ -27,7 +27,7 @@ export default function StoryTimeline() {
     };
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                 <StoryTimelineScreen
                     key={trackedStoryId}

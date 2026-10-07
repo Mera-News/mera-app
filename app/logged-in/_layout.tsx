@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColors } from '@/lib/theme/tokens';
 
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import FeedbackRequestAutoShowHost from '@/components/custom/feedback-request/FeedbackRequestAutoShowHost';
@@ -12,13 +13,14 @@ import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatche
 
 export default function LoggedInLayout() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   return (
     <View style={{ flex: 1 }}>
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#000000' },
+          contentStyle: { backgroundColor: colors.base },
           animation: 'slide_from_right',
         }}
       >
