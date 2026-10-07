@@ -85,12 +85,18 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
         listRef.current?.scrollToOffset({ offset: topIndex * WHEEL_ROW_HEIGHT, animated });
     }, []);
 
-    // initialScrollIndex alone has landed off by a row on first layout; one
-    // frame later the offset is set explicitly (kept from the old wheel).
-    useEffect(() => {
-        const id = requestAnimationFrame(() => scrollToTop(topIndexRef.current, false));
-        return () => cancelAnimationFrame(id);
-    }, [scrollToTop]);
+    // initialScrollIndex alone has landed a row off on first layout (seen on
+    // the simulator: 07 outlined where 08 was asked for), and a frame-later
+    // fix raced it. Set the offset once the list has its size instead.
+    const onListLayout = useCallback(() => scrollToTop(topIndexRef.current, false), [scrollToTop]);
+
+    // Only a finger moves the cursor. A scroll end that follows a programmatic
+    // scroll (the layout fix above, a tap, a reset) is ignored, or a list that
+    // landed a row off would report that row as the reader's choice.
+    const draggingRef = useRef(false);
+    const onDragBegin = useCallback(() => {
+        draggingRef.current = true;
+    }, []);
 
     // A cursor moved from outside (accessibility action, a reset) scrolls the
     // wheel there, by the shortest way round from where it rests.
@@ -105,6 +111,8 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
 
     const settle = useCallback(
         (y: number) => {
+            if (!draggingRef.current) return;
+            draggingRef.current = false;
             let topIndex = Math.round(y / WHEEL_ROW_HEIGHT);
             const middle = CENTER_REPEAT * HOURS;
             if (Math.abs(topIndex - middle) > RECENTER_GUARD) {
@@ -223,6 +231,8 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
                 getItemLayout={getItemLayout}
                 initialScrollIndex={topIndexRef.current}
                 showsVerticalScrollIndicator={false}
+                onLayout={onListLayout}
+                onScrollBeginDrag={onDragBegin}
                 onMomentumScrollEnd={onMomentumEnd}
                 onScrollEndDrag={onDragEnd}
                 snapToInterval={WHEEL_ROW_HEIGHT}

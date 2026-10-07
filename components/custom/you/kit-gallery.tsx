@@ -23,6 +23,8 @@ export default function KitGallery() {
             <TimesState title="Notification times: none picked (wheel open, tap saves)" initial={[]} />
             <TimesState title="Notification times: two picked (Add a time)" initial={[8, 18]} />
             <TimesState title="Notification times: three picked (Add hidden)" initial={[7, 12, 20]} />
+            {/* Room below the last tile, so its pills never sit at the screen's edge in a capture. */}
+            <View style={{ height: 120 }} />
         </View>
     );
 }
