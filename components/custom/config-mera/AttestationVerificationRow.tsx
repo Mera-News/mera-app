@@ -17,6 +17,7 @@
  * enforced. The notice text says so rather than letting the user infer a
  * protection that isn't there yet.
  */
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useState } from 'react';
 import { Pressable } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -78,6 +79,7 @@ type RunState =
 
 export function AttestationVerificationRow() {
   const { t } = useTranslation();
+  const colors = useColors();
   const [expanded, setExpanded] = useState(false);
   const [state, setState] = useState<RunState>({ phase: 'idle' });
 
@@ -122,12 +124,12 @@ export function AttestationVerificationRow() {
 
   const summaryColor =
     verdict === 'failed' || state.phase === 'error'
-      ? '#ef4444'
+      ? colors.negative
       : verdict === 'verified'
-        ? '#10b981'
+        ? colors.positive
         : verdict === 'incomplete'
-          ? '#eab308'
-          : '#9ca3af';
+          ? colors.warning
+          : colors.ink2;
 
   return (
     <Box className="px-5 mb-6" testID="mera-protocol-attestation">
@@ -139,10 +141,10 @@ export function AttestationVerificationRow() {
           <HStack space="md" className="items-start">
             <MaterialIcons name="verified-user" size={24} color={summaryColor} style={{ marginTop: 2 }} />
             <VStack className="flex-1">
-              <Text className="text-typography-400 text-base font-semibold mb-1">
+              <Text className="text-ink-2 text-base font-semibold mb-1">
                 {t('meraProtocol.attestationTitle')}
               </Text>
-              <Text className="text-typography-400 text-sm">
+              <Text className="text-ink-2 text-sm">
                 {t('meraProtocol.attestationSubtitle')}
               </Text>
               <Text className="text-sm mt-1 font-semibold" style={{ color: summaryColor }}>
@@ -152,14 +154,14 @@ export function AttestationVerificationRow() {
             <MaterialIcons
               name={expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
               size={24}
-              color="#9ca3af"
+              color={colors.ink2}
               style={{ marginTop: 2 }}
             />
           </HStack>
         </Pressable>
 
         {expanded && (
-          <VStack space="sm" className="mt-4 pt-4 border-t" style={{ borderTopColor: '#374151' }}>
+          <VStack space="sm" className="mt-4 pt-4 border-t" style={{ borderTopColor: colors.line }}>
             {state.phase === 'done' &&
               CHECK_ORDER.map(id => {
                 const check = state.report.checks.find(c => c.id === id);
@@ -173,10 +175,10 @@ export function AttestationVerificationRow() {
                       // whole point is that it must not read as a pass.
                       name={isPass ? 'check-circle' : isFail ? 'cancel' : 'remove'}
                       size={16}
-                      color={isPass ? '#10b981' : isFail ? '#ef4444' : '#6b7280'}
+                      color={isPass ? colors.positive : isFail ? colors.negative : colors.ink3}
                       style={{ marginTop: 2 }}
                     />
-                    <Text className="text-typography-400 text-sm flex-1">
+                    <Text className="text-ink-2 text-sm flex-1">
                       {t(CHECK_LABEL_KEYS[id])}
                       {check.status === 'not-checked'
                         ? ` — ${t('meraProtocol.attestationNotCheckedLabel')}`
@@ -187,7 +189,7 @@ export function AttestationVerificationRow() {
               })}
 
             {state.phase === 'done' && (
-              <Text className="text-typography-500 text-xs mt-2">
+              <Text className="text-ink-3 text-xs mt-2">
                 {verdict === 'failed'
                   ? t('meraProtocol.attestationVerdictFailedDetail')
                   : t('meraProtocol.attestationVerdictIncompleteDetail')}
@@ -201,14 +203,14 @@ export function AttestationVerificationRow() {
                 over-claim in exactly the way the rest of this feature exists
                 to avoid. */}
             {state.phase === 'done' && (
-              <Text className="text-typography-500 text-xs mt-2" testID="attestation-scope-notice">
+              <Text className="text-ink-3 text-xs mt-2" testID="attestation-scope-notice">
                 {t('meraProtocol.attestationModelLabel')}: {SMALL_MODEL}
                 {'\n'}
                 {t('meraProtocol.attestationScopeNotice')}
               </Text>
             )}
 
-            <Text className="text-typography-500 text-xs mt-2">
+            <Text className="text-ink-3 text-xs mt-2">
               {t('meraProtocol.attestationFailOpenNotice')}
             </Text>
 

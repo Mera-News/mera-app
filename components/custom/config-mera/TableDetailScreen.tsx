@@ -1,4 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Q } from '@nozbe/watermelondb';
@@ -45,6 +46,7 @@ interface TableDetailScreenProps {
 
 const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const insets = useSafeAreaInsets();
 
     const tableInfo = dbSchema.tables[tableName];
@@ -116,28 +118,28 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
             <Box className="flex-1" style={{ paddingTop: insets.top }}>
 
             <HStack className="px-4 py-3 items-center justify-between">
-                <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
-                    <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
+                <Pressable onPress={onBack} className="bg-surface rounded-full p-2" hitSlop={8}>
+                    <MaterialIcons name="arrow-back" size={20} color={colors.ink} />
                 </Pressable>
                 <VStack className="items-center flex-1 mx-4">
-                    <Text className="text-white font-semibold text-base" numberOfLines={1}>
+                    <Text className="text-ink font-semibold text-base" numberOfLines={1}>
                         {tableLabel(tableName)}
                     </Text>
-                    <Text size="xs" className="text-gray-500">{subtitle}</Text>
+                    <Text size="xs" className="text-ink-3">{subtitle}</Text>
                 </VStack>
                 <Pressable
                     onPress={() => void initialLoad()}
-                    className="bg-gray-900 rounded-full p-2"
+                    className="bg-surface rounded-full p-2"
                     hitSlop={8}
                     disabled={loading}
                 >
-                    <MaterialIcons name="refresh" size={20} color={loading ? '#6b7280' : '#ffffff'} />
+                    <MaterialIcons name="refresh" size={20} color={loading ? colors.ink3 : colors.ink} />
                 </Pressable>
             </HStack>
 
             {!loading && rows.length === 0 ? (
                 <Box className="flex-1 items-center justify-center">
-                    <Text className="text-gray-500">{t('tableDetail.tableEmpty')}</Text>
+                    <Text className="text-ink-3">{t('tableDetail.tableEmpty')}</Text>
                 </Box>
             ) : (
                 <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -149,12 +151,12 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                                         <TableHead
                                             key={col}
                                             useRNView
-                                            className="border border-gray-800 bg-gray-950 px-3 py-2"
+                                            className="border border-line bg-surface px-3 py-2"
                                             style={{ minWidth: 110 }}
                                         >
                                             <Text
                                                 size="xs"
-                                                className="text-gray-400 font-semibold"
+                                                className="text-ink-2 font-semibold"
                                                 numberOfLines={1}
                                             >
                                                 {col}
@@ -167,16 +169,16 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                                 {rows.map((row, i) => (
                                     <TableRow
                                         key={String(row.id ?? i)}
-                                        className={i % 2 === 0 ? 'bg-black' : 'bg-gray-950'}
+                                        className={i % 2 === 0 ? 'bg-page' : 'bg-surface'}
                                     >
                                         {columns.map((col) => (
                                             <TableData
                                                 key={col}
                                                 useRNView
-                                                className="border border-gray-800 px-3 py-2"
+                                                className="border border-line px-3 py-2"
                                                 style={{ minWidth: 110 }}
                                             >
-                                                <Text size="xs" className="text-white">
+                                                <Text size="xs" className="text-ink">
                                                     {formatCellValue(row[col])}
                                                 </Text>
                                             </TableData>
@@ -193,14 +195,14 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                             <Pressable
                                 onPress={() => void loadMore()}
                                 disabled={loadingMore}
-                                className="bg-gray-900 border border-gray-700 rounded-lg px-5 py-2.5"
+                                className="bg-surface border border-line rounded-lg px-5 py-2.5"
                             >
-                                <Text size="xs" className={loadingMore ? 'text-gray-600' : 'text-gray-300'}>
+                                <Text size="xs" className={loadingMore ? 'text-ink-3' : 'text-ink'}>
                                     {loadingMore ? t('common.loading') : t('tableDetail.loadMore', { count: PAGE_SIZE })}
                                 </Text>
                             </Pressable>
                         ) : !loading && rows.length > 0 ? (
-                            <Text size="xs" className="text-gray-700">{t('tableDetail.allRowsLoaded', { count: totalCount })}</Text>
+                            <Text size="xs" className="text-ink-3">{t('tableDetail.allRowsLoaded', { count: totalCount })}</Text>
                         ) : null}
                     </Box>
                 </ScrollView>

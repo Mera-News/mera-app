@@ -13,6 +13,7 @@ import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-languag
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
 import LanguageDownloadHint from '@/components/custom/config-mera/LanguageDownloadHint';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useState } from 'react';
 import { FlatList, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { showDialog } from '@/lib/dialog';
@@ -31,6 +32,7 @@ const RTL_CODES = new Set(['ar', 'he']);
 const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack, onBusyChange }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
+    const colors = useColors();
 
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
 
@@ -120,7 +122,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
     };
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <Box className="flex-1">
                 {/* Page background. Must be the FIRST child so it paints behind
                     everything else on the page. */}
@@ -169,16 +171,16 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                 // a hard native crash — see lib/hooks/use-language-switch.ts.
                 onDismiss={notifyPickerDismissed}
             >
-                <GluestackUIProvider mode="dark">
-                    <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+                <GluestackUIProvider>
+                    <Box className="flex-1 bg-page" style={{ paddingTop: insets.top + 16 }}>
                         {/* The modal material (components/ui/modal). */}
                         <AbstractGradientBackdrop seed="mera-modal" frame={0} />
                         <HStack className="items-center justify-between px-5 pb-4">
-                            <Text className="text-white text-xl font-semibold">
+                            <Text className="text-ink text-xl font-semibold">
                                 {t('language.appLanguage')}
                             </Text>
                             <Pressable onPress={() => setShowLangPicker(false)}>
-                                <MaterialIcons name="close" size={24} color="#ffffff" />
+                                <MaterialIcons name="close" size={24} color={colors.ink} />
                             </Pressable>
                         </HStack>
                         <FlatList
@@ -196,21 +198,21 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                             paddingVertical: 14,
                                             paddingHorizontal: 20,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#1f2937',
+                                            borderBottomColor: colors.line,
                                         }}
                                     >
                                         <VStack>
                                             <Text
-                                                className={isSelected ? 'text-violet-400 font-semibold' : 'text-white'}
+                                                className={isSelected ? 'text-accent font-semibold' : 'text-ink'}
                                             >
                                                 {item.name}
                                             </Text>
-                                            <Text className="text-gray-400 text-sm">
+                                            <Text className="text-ink-2 text-sm">
                                                 {item.native}
                                             </Text>
                                         </VStack>
                                         {isSelected && (
-                                            <MaterialIcons name="check" size={20} color="#a78bfa" />
+                                            <MaterialIcons name="check" size={20} color={colors.accent} />
                                         )}
                                     </TouchableOpacity>
                                 );

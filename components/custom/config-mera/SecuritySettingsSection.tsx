@@ -1,6 +1,7 @@
 import PinLockScreen from '@/components/custom/auth/PinLockScreen';
 import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
 import { Group, Help, Row } from '@/components/custom/you/rows';
+import { useColors } from '@/lib/theme/tokens';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
@@ -32,6 +33,7 @@ type Flow = 'none' | 'enable' | 'verify' | 'set';
 
 const SecuritySettingsSection: React.FC = () => {
     const { t } = useTranslation();
+    const colors = useColors();
     const toast = useToast();
     const insets = useSafeAreaInsets();
     const lockEnabled = usePinStore((s) => s.lockEnabled);
@@ -115,7 +117,7 @@ const SecuritySettingsSection: React.FC = () => {
             // and inside a Modal there is no swipe back on iOS, so without this
             // a user who cannot recall the current PIN is stuck here.
             return (
-                <View style={styles.page}>
+                <View style={[styles.page, { backgroundColor: colors.base }]}>
                     <PinLockScreen
                         onUnlock={() => setFlow('set')}
                         showForgot={false}
@@ -129,7 +131,7 @@ const SecuritySettingsSection: React.FC = () => {
                         hitSlop={12}
                         style={[styles.cancel, { top: insets.top + 12 }]}
                     >
-                        <Text className="text-base text-white">{t('common.cancel')}</Text>
+                        <Text className="text-base text-ink">{t('common.cancel')}</Text>
                     </Pressable>
                 </View>
             );
@@ -187,8 +189,8 @@ const SecuritySettingsSection: React.FC = () => {
                 statusBarTranslucent
                 onRequestClose={() => setFlow('none')}
             >
-                <GluestackUIProvider mode="dark">
-                    <View style={styles.page}>{flowScreen()}</View>
+                <GluestackUIProvider>
+                    <View style={[styles.page, { backgroundColor: colors.base }]}>{flowScreen()}</View>
                 </GluestackUIProvider>
             </Modal>
         </View>
@@ -196,7 +198,7 @@ const SecuritySettingsSection: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    page: { flex: 1, backgroundColor: '#000000' },
+    page: { flex: 1 },
     cancel: {
         position: 'absolute',
         left: 20,

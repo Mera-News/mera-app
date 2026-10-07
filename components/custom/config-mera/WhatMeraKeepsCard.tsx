@@ -12,6 +12,7 @@ import { readSupportIdFromUser } from '@/lib/support-id';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
@@ -93,6 +94,7 @@ export function keepsLineKeys(kind: KeepsAccountKind, platform: string): KeepsLi
  */
 const WhatMeraKeepsCard: React.FC = () => {
     const { t } = useTranslation();
+    const colors = useColors();
     const [expanded, setExpanded] = useState(false);
     const storedEmail = useUserStore((s) => s.userEmail);
     const { data: session } = authClient.useSession();
@@ -126,7 +128,7 @@ const WhatMeraKeepsCard: React.FC = () => {
     const title = t('manageData.keeps.title');
 
     return (
-        <Box testID="manage-data-keeps" className="mb-4 rounded-lg border border-gray-700">
+        <Box testID="manage-data-keeps" className="mb-4 rounded-lg border border-line">
             <Pressable
                 testID="manage-data-keeps-toggle"
                 onPress={() => setExpanded((v) => !v)}
@@ -138,13 +140,13 @@ const WhatMeraKeepsCard: React.FC = () => {
                 style={{ minHeight: 44 }}
             >
                 <HStack space="md" className="items-center flex-1">
-                    <MaterialIcons name="privacy-tip" size={22} color="#9ca3af" />
-                    <Text className="text-base text-white flex-1">{title}</Text>
+                    <MaterialIcons name="privacy-tip" size={22} color={colors.ink2} />
+                    <Text className="text-base text-ink flex-1">{title}</Text>
                 </HStack>
                 <MaterialIcons
                     name={expanded ? 'expand-less' : 'expand-more'}
                     size={22}
-                    color="#999999"
+                    color={colors.ink3}
                 />
             </Pressable>
 
@@ -155,7 +157,7 @@ const WhatMeraKeepsCard: React.FC = () => {
                             key={key}
                             testID={`manage-data-keeps-line-${key.split('.').pop()}`}
                             size="sm"
-                            className="text-gray-300"
+                            className="text-ink"
                         >
                             {t(key)}
                         </Text>
@@ -163,7 +165,7 @@ const WhatMeraKeepsCard: React.FC = () => {
 
                     {supportId ? (
                         <HStack accessible={false} space="sm" className="items-center">
-                            <Text testID="manage-data-keeps-support-id" size="sm" className="text-gray-300">
+                            <Text testID="manage-data-keeps-support-id" size="sm" className="text-ink">
                                 {t('support.supportId', { id: supportId })}
                             </Text>
                             <Pressable
@@ -182,7 +184,7 @@ const WhatMeraKeepsCard: React.FC = () => {
                                         {t('support.copied')}
                                     </Text>
                                 ) : (
-                                    <MaterialIcons name="content-copy" size={16} color="#9ca3af" />
+                                    <MaterialIcons name="content-copy" size={16} color={colors.ink2} />
                                 )}
                             </Pressable>
                         </HStack>

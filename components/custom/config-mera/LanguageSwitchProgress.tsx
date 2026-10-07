@@ -1,3 +1,4 @@
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { ActivityIndicator, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -43,6 +44,7 @@ interface LanguageSwitchProgressProps {
  */
 const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, onCancel }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const language = getNativeLanguageName(code) ?? code;
 
     // The language the user is REALLY still on. The store does not move until
@@ -61,36 +63,36 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
     return (
         <Box
             testID="language-switch-progress"
-            className="mt-2 p-4 bg-gray-800 rounded-lg border border-gray-700"
+            className="mt-2 p-4 bg-surface-raised rounded-lg border border-line"
         >
             <VStack space="sm">
                 <HStack space="md" className="items-center">
-                    <ActivityIndicator size="small" color="#a78bfa" />
-                    <Text className="text-white text-base font-medium flex-1">
+                    <ActivityIndicator size="small" color={colors.accent} />
+                    <Text className="text-ink text-base font-medium flex-1">
                         {t('language.switchingTitle', { language })}
                     </Text>
                 </HStack>
                 {Platform.OS === 'ios' ? (
                     <Text
                         testID="language-switch-download-hint"
-                        className="text-typography-300 text-sm font-medium"
+                        className="text-ink text-sm font-medium"
                     >
                         {t('language.downloadHintNowPrefix')}{' '}
                         <MaterialCommunityIcons
                             name="arrow-down-circle-outline"
                             size={15}
-                            color="#a78bfa"
+                            color={colors.accent}
                         />
                         {' '}{t('language.downloadHintNowSuffix')}
                     </Text>
                 ) : null}
-                <Text className="text-typography-400 text-sm">
+                <Text className="text-ink-2 text-sm">
                     {t('language.switchingNudge', { language })}
                 </Text>
                 <Pressable
                     testID="language-switch-cancel"
                     onPress={onCancel}
-                    className="flex-row items-center justify-center mt-1 py-3 px-4 bg-gray-700 rounded-lg"
+                    className="flex-row items-center justify-center mt-1 py-3 px-4 bg-surface-raised rounded-lg"
                 >
                     {/* THE ONE STRING ON THIS CARD THAT IS NOT IN THE TARGET
                         LANGUAGE, and it is deliberate. Everything else here
@@ -103,7 +105,7 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
                         cannot read, which turns the nudge into the trap this
                         whole feature exists to remove. Do not "tidy" this into
                         a bare t() call. */}
-                    <Text className="text-white text-sm font-medium">
+                    <Text className="text-ink text-sm font-medium">
                         {t('language.switchingCancel', { lng: previousLocale })}
                     </Text>
                 </Pressable>

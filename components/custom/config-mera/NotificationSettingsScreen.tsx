@@ -467,7 +467,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     }
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <Box className="flex-1">
                 {/* Page background. Must be the FIRST child so it paints behind
                     everything else on the page. */}

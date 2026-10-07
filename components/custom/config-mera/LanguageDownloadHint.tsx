@@ -1,3 +1,4 @@
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -39,19 +40,20 @@ const LanguageDownloadHint: React.FC<LanguageDownloadHintProps> = ({
     className = '',
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
 
     if (Platform.OS !== 'ios') return null;
 
     return (
         <Text
             testID={testID}
-            className={`text-typography-400 text-xs ${className}`}
+            className={`text-ink-2 text-xs ${className}`}
         >
             {t('language.downloadHintBeforePrefix')}{' '}
             <MaterialCommunityIcons
                 name="arrow-down-circle-outline"
                 size={14}
-                color="#a78bfa"
+                color={colors.accent}
             />
             {' '}{t('language.downloadHintBeforeSuffix')}
         </Text>
