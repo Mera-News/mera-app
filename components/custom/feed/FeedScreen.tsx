@@ -1193,9 +1193,10 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
           // kind of gap; matching Interests keeps the Feed tab's pages
           // identical at the top.
           paddingTop: headerHeight + CONTENT_TOP_GAP,
-          paddingHorizontal: 12,
-          // Clear of the minimap strip while it is on (Settings > Display).
+          // Sides set separately, never with paddingHorizontal: the minimap
+          // inset must not depend on which of the two Yoga lets win.
           paddingLeft: minimapOn ? MINIMAP_LIST_INSET : 12,
+          paddingRight: 12,
           // Clear of the Mera button (derived; see tab-bar.ts).
           paddingBottom: listEndClearance,
           flexGrow: 1,
