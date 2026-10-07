@@ -90,9 +90,6 @@ export const SCREEN_HEADER_HEIGHT = 240;
 const BACK_BUTTON_TOP_OFFSET = DETAIL_BACK_TOP_OFFSET;
 const BACK_BUTTON_SIZE = DETAIL_BACK_SIZE;
 const NO_IMAGE_BREATHING_ROOM = 16;
-/** Tint for the meta band's glass plate — dark so the band recedes into the
- *  page instead of reading as a lighter slab. See its call site. */
-const META_BAND_TINT = 'rgba(0,0,0,0.30)';
 
 const NO_IMAGE_META_CLEARANCE =
     BACK_BUTTON_TOP_OFFSET + BACK_BUTTON_SIZE + NO_IMAGE_BREATHING_ROOM; // 72
@@ -215,7 +212,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             originalText={titleOriginal}
             originalLanguage={sourceLanguage}
             size={isCard ? 'lg' : '2xl'}
-            className={isCard ? '' : 'text-white'}
+            className={isCard ? '' : 'text-ink'}
             style={isCard ? undefined : { paddingTop: 8 }}
             showToggle={!isCard}
             onDisplayChange={onTitleDisplayChange}

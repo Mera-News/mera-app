@@ -7,6 +7,7 @@ import { Text } from '@/components/ui/text';
 import { useArticleMetaStrings } from '@/components/custom/article-meta-strings';
 import { MaterialIcons } from '@expo/vector-icons';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -100,9 +101,10 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     // derivation, which must NOT move on a clock tick.
 
     const isCard = variant === 'card';
-    const ageColor = isCard ? 'text-typography-600' : 'text-gray-400';
-    const secondaryColor = isCard ? 'text-typography-500' : 'text-gray-400';
-    const iconColor = isCard ? '#6B7280' : '#9CA3AF';
+    const ageColor = isCard ? 'text-typography-600' : 'text-ink-2';
+    const secondaryColor = isCard ? 'text-typography-500' : 'text-ink-2';
+    const colors = useColors();
+    const iconColor = isCard ? colors.ink3 : colors.ink2;
 
     // Publication (exactly as stored, owner decision), age (the shared 60s
     // clock) and language (named in the reader's language), from the SAME
@@ -162,7 +164,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     {isCard ? (
                         <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
                     ) : (
-                        <SourceCountryFlag countryCode={countryCode} iconClassName="text-gray-400" />
+                        <SourceCountryFlag countryCode={countryCode} iconClassName="text-ink-2" />
                     )}
                 </Box>
             ) : null;

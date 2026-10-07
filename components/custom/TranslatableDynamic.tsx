@@ -8,6 +8,7 @@ import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dimensions, View } from 'react-native';
@@ -146,6 +147,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     onDisplayChange,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
 
     // Keep the latest callback in a ref so the notify-effect can depend only on
@@ -461,7 +463,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                 <Text
                     size="xs"
                     testID="translatable-pending"
-                    style={{ color: '#9ca3af', fontWeight: '400', fontStyle: 'normal' }}
+                    style={{ color: colors.ink2, fontWeight: '400', fontStyle: 'normal' }}
                 >
                     {'  '}
                     {t('feed.translatingCaption')}
@@ -516,11 +518,11 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                         paddingHorizontal: 10,
                         paddingVertical: 4,
                         borderRadius: 999,
-                        backgroundColor: '#1f2937',
+                        backgroundColor: colors.surfaceRaised,
                     }}
                 >
-                    <MaterialIcons name="translate" size={12} color="#9ca3af" />
-                    <Text size="xs" style={{ color: '#9ca3af', marginLeft: 4 }}>
+                    <MaterialIcons name="translate" size={12} color={colors.ink2} />
+                    <Text size="xs" style={{ color: colors.ink2, marginLeft: 4 }}>
                         {localShowOriginal
                             ? t('clusterDetail.showTranslation')
                             : t('clusterDetail.showOriginal')}

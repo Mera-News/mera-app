@@ -2,6 +2,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
+import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -61,16 +62,16 @@ interface AiDisclosureCaptionProps {
  * meaning and is the one element a screen reader lands on. The row is not
  * accessible: an accessible row put the icon glyph back as a StaticText.
  */
-const DEFAULT_COLOR = 'rgb(148, 148, 148)';
-
 const AiDisclosureCaption: React.FC<AiDisclosureCaptionProps> = ({
     variant = 'caption',
     text,
-    color = DEFAULT_COLOR,
+    color,
     align = 'right',
     className,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
+    const ink = color ?? colors.ink3;
     const message = text ?? t('aiDisclosure.caption');
     const compact = variant === 'compact';
     const left = align === 'left';
@@ -90,7 +91,7 @@ const AiDisclosureCaption: React.FC<AiDisclosureCaptionProps> = ({
             <MaterialIcons
                 name="auto-awesome"
                 size={compact ? 11 : 13}
-                color={color}
+                color={ink}
                 // Decorative: the caption's own label already says it.
                 {...DECORATIVE_ICON_A11Y}
             />
@@ -98,7 +99,7 @@ const AiDisclosureCaption: React.FC<AiDisclosureCaptionProps> = ({
                 size={compact ? '2xs' : 'xs'}
                 italic={!compact}
                 className={left ? 'text-left' : 'text-right'}
-                style={{ color }}
+                style={{ color: ink }}
                 accessibilityLabel={message}
             >
                 {message}
