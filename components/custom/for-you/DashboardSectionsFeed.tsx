@@ -1,16 +1,17 @@
-import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
-import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
-import SectionDenominatorLine from '@/components/custom/for-you/SectionDenominatorLine';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
+import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
+import { useColors } from '@/lib/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
 import {
-  isHeadlineRow,
   isSuggestionOpened,
   type FactRow,
   type FactRowGroup,
@@ -19,9 +20,9 @@ import { Text } from '@/components/ui/text';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshControl } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
@@ -42,7 +43,7 @@ const REFRESH_TINT = '#EDA77E';
 // after.
 //
 // Cost to list performance is small and bounded: a section is at most
-// 1 header + SECTION_PREVIEW_COUNT (3) cards + 1 pill ≈ 5 subviews, so the
+// 1 header band + SECTION_PREVIEW_COUNT (3) cards ≈ 4 subviews, so the
 // virtualization window still measures and recycles at roughly the same
 // granularity it did before — it just counts sections instead of rows.
 interface SectionItem {
@@ -50,15 +51,64 @@ interface SectionItem {
   row: FactRow;
   /** The section's top-N preview groups, already priority-ordered. */
   preview: FactRowGroup[];
-  /** TOTAL articles in the section (header pill + closing row). */
+  /** TOTAL stories in the section (the header's count). */
   total: number;
-  /** Resolved display title — the fact statement, or the localized headline
-   *  scope title. Computed once here so the header, the "View all" route param
-   *  and the destination screen all show the same string. */
+  /** The fact statement, computed once so the header, the route param and
+   *  the fact page show the same string. */
   title: string;
-  /** True for the two headline section kinds: adds the denominator line and
-   *  drops the "News about:" prefix / dynamic translation of the title. */
-  headline: boolean;
+}
+
+const HIDDEN = {
+  accessible: false,
+  accessibilityElementsHidden: true,
+  importantForAccessibility: 'no-hide-descendants',
+} as const;
+
+/**
+ * A section's header (FinalFeed #5): ONE link band, the fact then
+ * "· N stories ›", opening that interest's fact page. The title is a fact
+ * statement, user data, so it is translated. A hidden visual under a childless
+ * labelled button (the glyph-leak pattern); the label is the title as SHOWN.
+ */
+function SectionLinkBand({
+  factId,
+  title,
+  total,
+  onPress,
+}: {
+  readonly factId: string;
+  readonly title: string;
+  readonly total: number;
+  readonly onPress: () => void;
+}) {
+  const { t } = useTranslation();
+  const c = useColors();
+  const [shown, setShown] = useState(title);
+  const count = t('forYou.sectionStories', { count: total });
+  return (
+    <View>
+      <View pointerEvents="none" {...HIDDEN} style={styles.band}>
+        <TranslatableDynamic
+          text={title}
+          bold
+          numberOfLines={3}
+          style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}
+          onDisplayChange={(d) => setShown(d.displayedText)}
+        />
+        <HStack className="items-center">
+          <Text style={{ color: c.accentText, fontSize: 14, lineHeight: 20, fontWeight: '600' }}>{`· ${count}`}</Text>
+          <MaterialIcons name="chevron-right" size={18} color={c.accentText} {...HIDDEN} />
+        </HStack>
+      </View>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${shown}, ${count}`}
+        testID={`section-open-${factId}`}
+        style={StyleSheet.absoluteFill}
+      />
+    </View>
+  );
 }
 
 interface DashboardSectionsFeedProps {
@@ -173,7 +223,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         preview: ordered.slice(0, SECTION_PREVIEW_COUNT),
         total: row.groups.length,
         title: sectionTitle(t, row),
-        headline: isHeadlineRow(row),
       });
     }
     return data;
@@ -207,30 +256,13 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 
   const renderItem = useCallback(
     ({ item }: { item: SectionItem }) => {
-      const { row, preview, total, title, headline } = item;
-      const open = () => openFactFeed(row, title);
-      const showViewAll = total > SECTION_PREVIEW_COUNT;
+      const { row, preview, total, title } = item;
       return (
-        // ONE gradient panel per section, wrapping header + cards + closing
-        // pill, so the pastel ink groups the whole section and the next section
-        // visibly starts its own. `dashboard-section-${factId}` lives on this
-        // container (SectionGradientPanel sets it), which is where the driver
-        // already expected it.
+        // ONE gradient panel per section, so the pastel groups the band and
+        // its cards and the next section visibly starts its own.
         <SectionGradientPanel factId={row.factId} style={{ marginTop: 16, marginBottom: 8 }}>
-          <FactSectionHeader
-            title={title}
-            eventType={row.groups[0]?.data.eventType ?? null}
-            total={total}
-            onPress={open}
-            // A headline section is not "News about:" anything, and its title is
-            // app copy that is already in the reader's language.
-            prefix={headline ? null : undefined}
-            translateTitle={!headline}
-          />
-          {headline && (
-            <SectionDenominatorLine read={row.headlineReadCount ?? 0} shown={total} />
-          )}
-          <Box className={showViewAll ? 'px-2' : 'px-2 pb-2'}>
+          <SectionLinkBand factId={row.factId} title={title} total={total} onPress={() => openFactFeed(row, title)} />
+          <Box className="px-2 pb-2">
             {preview.map((group) => (
               <ArticleSuggestionCompactCard
                 key={group.data._id}
@@ -241,13 +273,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
               />
             ))}
           </Box>
-          {/* Closing row, only when the section holds MORE than the preview
-              shows. "View all 1 article" under the one article it named was a
-              larger, bolder line than the headline itself and duplicated the
-              header's open button (M4). The header button still opens every
-              section; the small bottom padding above keeps a short section
-              from looking cut off. */}
-          {showViewAll && <SectionViewAllText total={total} onPress={open} />}
         </SectionGradientPanel>
       );
     },
@@ -323,5 +348,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     </Box>
   );
 };
+
+const styles = StyleSheet.create({
+  band: { paddingHorizontal: 12, paddingVertical: 10, gap: 2 },
+});
 
 export default DashboardSectionsFeed;
