@@ -102,6 +102,18 @@ interface UseLanguageSwitchOptions {
     readonly onCommitted?: (code: string, previousCode: string) => void;
     /** Fired once the attempt ends in anything other than a plain commit. */
     readonly onResult?: (result: LanguageSwitchResult) => void;
+    /**
+     * Show the UI in the new language while it is being checked (default).
+     * The first-launch list passes false: its page turns only once the
+     * language is ready (FinalJourney "In your language").
+     */
+    readonly preview?: boolean;
+    /**
+     * Probe at once, never waiting for a picker modal to dismiss. For a caller
+     * with no modal (the first-launch inline list), which would otherwise sit
+     * on the 1.2 s fallback timer on iOS.
+     */
+    readonly immediate?: boolean;
 }
 
 export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
@@ -247,7 +259,7 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
             // leaving them where they were. Every code the picker offers has a
             // bundle, so this guard should never fire.
             const uiLocale = resolveUiLocale(code);
-            if (uiLocale) {
+            if (uiLocale && optionsRef.current.preview !== false) {
                 previewActiveRef.current = true;
                 previewLanguage(uiLocale);
             }
@@ -255,7 +267,7 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
             // English needs no probe (it is the source language) and Android's
             // ML Kit presents no system UI at all, so neither has a dismissal
             // race to wait out. Commit straight away.
-            if (code === 'en' || Platform.OS !== 'ios') {
+            if (code === 'en' || Platform.OS !== 'ios' || optionsRef.current.immediate) {
                 phaseRef.current = 'probing';
                 setPhase('probing');
                 void runProbe(code, generation);

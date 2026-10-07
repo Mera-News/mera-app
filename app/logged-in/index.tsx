@@ -7,8 +7,9 @@ import IdentitySwitchFailedScreen from "@/components/custom/auth/IdentitySwitchF
 import { authClient } from "@/lib/auth-client";
 import logger from "@/lib/logger";
 import { clearPreviousUserData } from "@/lib/stores";
-import { hasAnyFacts } from "@/lib/database/services/fact-service";
-import { getSetting } from "@/lib/database/services/setting-service";
+import { isOnboardingDone } from "@/components/custom/onboarding/onboarding-done";
+import { readSupportIdFromUser } from "@/lib/support-id";
+import { getSetting, setSetting } from "@/lib/database/services/setting-service";
 import { assertPersonaOwner } from "@/lib/database/services/user-persona-service";
 import {
     clearPendingAuthUserId,
@@ -294,30 +295,33 @@ function LoggedInGate() {
                     }
                 }
 
-                // Onboarding is gated on LOCAL FACTS, never on the server's
-                // onboardingStage. The stage flag lies — the wizard's Next
-                // button writes FINISHED even when the persona chat captured
-                // nothing — and it needs the network to be trusted. Facts are
-                // what the app actually needs to build a feed, and counting
-                // them is local, so this branch is offline-safe by
-                // construction. Zero facts ALWAYS re-enters onboarding.
+                // The Support ID, kept for the no-email account gate, which
+                // shows exactly when the session (its only other source) is
+                // dead. Written only past the identity stamp, for this user.
+                const supportId = readSupportIdFromUser(session?.user ?? null);
+                if (supportId) void setSetting('cached_support_id', supportId).catch(() => undefined);
+
+                // Onboarding is gated on the LOCAL `onboarding_done` row (the
+                // wizard writes it on finish; a device with facts migrates to
+                // done), never on the server's onboardingStage, which lies and
+                // needs the network. Offline-safe by construction.
                 //
-                // COUPLING, stated because it is invisible: `facts` has no user
-                // column, so this count is device-GLOBAL. It is a safe gate if
+                // COUPLING, stated because it is invisible: the row and the
+                // facts its migration counts are device-GLOBAL. A safe gate if
                 // and only if the wipe above is correct AND fails closed. The
                 // day something routes past a failed wipe, this line reads the
-                // PREVIOUS user's facts and reports the incoming user as
+                // PREVIOUS user's state and reports the incoming user as
                 // already onboarded. That is the leak, and this is the line it
                 // comes out of.
-                let hasFacts = false;
+                let done = false;
                 try {
-                    hasFacts = await hasAnyFacts();
+                    done = await isOnboardingDone();
                 } catch {
-                    hasFacts = false;
+                    done = false;
                 }
 
                 if (cancelled) return;
-                if (hasFacts) {
+                if (done) {
                     // Still pays for none of the entitlement wait below — the
                     // startup-tab lookup is a plain local settings read, not a
                     // network round trip. Reads the setting directly rather
@@ -338,7 +342,7 @@ function LoggedInGate() {
                     return;
                 }
 
-                // ── ZERO FACTS ⇒ THE WIZARD ─────────────────────────────
+                // ── NOT DONE ⇒ THE WIZARD ────────────────────────────────
                 //
                 // This used to resolve entitlement first and hold the splash
                 // for up to 8 seconds deciding between the wizard and a

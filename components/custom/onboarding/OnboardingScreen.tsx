@@ -2,7 +2,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import OnboardingWizard from "@/components/custom/onboarding/OnboardingWizard";
 import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
-import { hasAnyFacts } from "@/lib/database/services/fact-service";
+import { isOnboardingDone } from "@/components/custom/onboarding/onboarding-done";
 import { getSetting } from "@/lib/database/services/setting-service";
 import IdentitySwitchFailedScreen from "@/components/custom/auth/IdentitySwitchFailedScreen";
 import logger from "@/lib/logger";
@@ -214,23 +214,21 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 });
             }
 
-            // COUPLING, stated because it is invisible: `facts` has no user
-            // column, so this count is device-GLOBAL. It is a safe gate if and
-            // only if the wipe above is correct AND fails closed. Anything that
-            // routes past a failed wipe makes this line read the PREVIOUS
-            // user's facts and report the incoming user as already onboarded.
-            let hasFacts = false;
+            // COUPLING, stated because it is invisible: the `onboarding_done`
+            // row and the facts its migration counts are device-GLOBAL. A safe
+            // gate if and only if the wipe above is correct AND fails closed.
+            let done = false;
             try {
-                hasFacts = await hasAnyFacts();
+                done = await isOnboardingDone();
             } catch {
-                // Can't read the local DB → treat as no facts (onboarding is
+                // Can't read the local DB → not done (onboarding is
                 // recoverable; a persona-less feed is not).
-                hasFacts = false;
+                done = false;
             }
 
             if (cancelled) return;
 
-            if (hasFacts) {
+            if (done) {
                 // Leave the spinner mounted: onComplete() replaces this route,
                 // so rendering `null` here would only flash a blank screen.
                 handlersRef.current.onComplete();

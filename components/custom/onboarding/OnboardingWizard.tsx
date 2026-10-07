@@ -31,6 +31,7 @@ import { isOnline, useIsOnline } from '../../../lib/stores/network-store';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
+import { markOnboardingDone } from './onboarding-done';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 
 // 2-step wizard: 0 = Notifications, 1 = PersonaChat. The server OnboardingStage
@@ -298,6 +299,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                     break;
                 case 1: {
                     await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
+                    // The gate (onboarding-done.ts): this device is through.
+                    await markOnboardingDone();
                     resetOnboarding();
                     onComplete();
                     break;

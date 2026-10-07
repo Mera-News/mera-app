@@ -182,6 +182,10 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   library_checks_seen_at:
     'When THIS device last opened Fact checks; drives its dot. Local by design (invariant 9).',
   developer_mode: 'A developer switch on THIS device. Never carried to another one.',
+  onboarding_done:
+    'Whether THIS device finished the first-launch wizard. A new device goes through its own (notifications are per device).',
+  cached_support_id:
+    "The signed-in account's Support ID, kept for the no-email account gate. Identity, like cached_user_id.",
   [RESTORE_IN_PROGRESS_KEY]:
     'Torn-restore marker for THIS device. Backing it up would restore a permanent "a restore is in progress" state onto the next device.',
 };

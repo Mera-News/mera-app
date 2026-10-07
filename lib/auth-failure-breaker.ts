@@ -74,7 +74,7 @@ let lastRecheckDetail: {
 // request, not the session. Kept distinct from 'inconclusive' because that one
 // still reports (see the trip callback): only 'alive' and 'no-credential'
 // return without a Sentry event.
-type RecheckOutcome = 'alive' | 'dead' | 'inconclusive' | 'no-credential';
+export type RecheckOutcome = 'alive' | 'dead' | 'inconclusive' | 'no-credential';
 
 // Why a 'dead' verdict was reached. 'rejected' is the server explicitly
 // refusing the credential we sent; 'no-session' is a 200 that simply carried
@@ -664,6 +664,17 @@ function triggerRecheck(): Promise<RecheckOutcome> {
 
   pendingRecheck = run;
   return run;
+}
+
+/**
+ * The launch account check (LoggedInGate) asks the same server-truth question
+ * through the same deduped run, so a launch never fires a second /get-session
+ * beside the breaker's own. Start it in parallel and never await it on the
+ * routing path: `dead` before routing goes to sign-in, anything else opens the
+ * tabs (no added cold-launch latency).
+ */
+export function recheckSession(): Promise<RecheckOutcome> {
+  return triggerRecheck();
 }
 
 let taskAuthScopeDepth = 0;
