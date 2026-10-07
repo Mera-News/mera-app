@@ -53,8 +53,8 @@ const GlassPanel: React.FC<GlassPanelProps> = ({
             <Box
                 className={
                     CARDS_USE_GLASS
-                        ? `${roundedClass} overflow-hidden border border-white/10`
-                        : `${roundedClass} overflow-hidden bg-background-0 border border-white/10`
+                        ? `${roundedClass} overflow-hidden border border-line`
+                        : `${roundedClass} overflow-hidden bg-background-0 border border-line`
                 }
             >
                 <CardGlassPlate />

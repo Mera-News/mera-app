@@ -4,6 +4,7 @@ import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useColors } from '@/lib/theme/tokens';
 
 /** Held before the pressed look shows, so a finger that starts a scroll on
  *  the name does not flash it. Same order as ScrollView's own touch delay. */
@@ -53,11 +54,12 @@ const PublicationNameButton: React.FC<PublicationNameButtonProps> = ({
     hitBelow,
     variant,
     a11yLabel,
-    infoColor = 'rgb(156,163,175)',
+    infoColor,
     testID,
     style,
 }) => {
     const [pressed, setPressed] = useState(false);
+    const colors = useColors();
     const frame: ViewStyle = {
         flexShrink: 1,
         minWidth: 0,
@@ -104,7 +106,7 @@ const PublicationNameButton: React.FC<PublicationNameButtonProps> = ({
                 importantForAccessibility="no-hide-descendants"
             >
                 <View style={{ flexShrink: 1, minWidth: 0 }}>{children}</View>
-                <MaterialIcons name="info-outline" size={13} color={infoColor} {...DECORATIVE_ICON_A11Y} />
+                <MaterialIcons name="info-outline" size={13} color={infoColor ?? colors.ink2} {...DECORATIVE_ICON_A11Y} />
             </HStack>
             <Pressable
                 testID={testID}

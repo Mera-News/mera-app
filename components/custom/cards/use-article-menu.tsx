@@ -15,7 +15,7 @@ import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/t
 import { VStack } from '@/components/ui/vstack';
 import { FAQ_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
-import { COLORS } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 import { router } from 'expo-router';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
@@ -82,16 +82,19 @@ export interface UseArticleMenuInput {
 
 /** A level's own heading and explanation (the confirm and follow levels),
  *  in the sheet's muted text, above its rows. */
-const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) => (
-    <VStack space="xs" className="px-4 pb-2" testID="sheet-note">
-        <Text style={{ color: COLORS.dark.ink, fontSize: 15, fontWeight: '700' }}>{title}</Text>
-        {body ? (
-            <Text size="sm" style={{ color: COLORS.dark.ink3 }}>
-                {body}
-            </Text>
-        ) : null}
-    </VStack>
-);
+const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) => {
+    const colors = useColors();
+    return (
+        <VStack space="xs" className="px-4 pb-2" testID="sheet-note">
+            <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '700' }}>{title}</Text>
+            {body ? (
+                <Text size="sm" style={{ color: colors.ink3 }}>
+                    {body}
+                </Text>
+            ) : null}
+        </VStack>
+    );
+};
 
 /** One level of the sheet's navigation stack. */
 export type SheetLevel =

@@ -23,11 +23,12 @@ import { recordHeroLoad } from '@/lib/images/image-resolution-stats';
 import { useTranslation } from 'react-i18next';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { MOTION } from '@/lib/motion';
-import { COLORS } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 
 /** A new card's orange edge (FinalMotion "Signals"): fades away over 600 ms
  *  once the card counts as seen; Reduce Motion switches it off at once. */
 const CardHalo: React.FC<{ on: boolean; radius: number }> = ({ on, radius }) => {
+  const colors = useColors();
   const opacity = useSharedValue(on ? 1 : 0);
   React.useEffect(() => {
     opacity.value = withTiming(on ? 1 : 0, { duration: MOTION.halo.fade, easing: Easing.out(Easing.ease) });
@@ -45,7 +46,7 @@ const CardHalo: React.FC<{ on: boolean; radius: number }> = ({ on, radius }) => 
           bottom: 0,
           borderRadius: radius,
           borderWidth: 1.5,
-          borderColor: COLORS.dark.accent,
+          borderColor: colors.accent,
         },
         style,
       ]}

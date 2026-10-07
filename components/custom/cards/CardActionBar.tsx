@@ -41,17 +41,9 @@ import { Platform } from 'react-native';
 import React, { useEffect, useRef } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import { SPRING } from '@/lib/motion';
-import { COLORS } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 import { useTranslation } from 'react-i18next';
 
-// ponytail: dark tokens read statically; P12 moves this row to useColors().
-const WHITE = COLORS.dark.ink;
-/** Like, Not for me, Save, Follow: one picked colour, the app's orange. */
-const SAVE_ACCENT = COLORS.dark.accent;
-const LIKE = SAVE_ACCENT;
-const DISLIKE = SAVE_ACCENT;
-/** Disabled ink for a control that has already done its job. */
-const MUTED = COLORS.dark.ink3;
 /** A 44pt target around a 27pt glyph, given back by negative margins so the
  *  row keeps its spacing (never hitSlop: QA measures that as the glyph). */
 const FRAME = { width: 44, height: 44, margin: -8, alignItems: 'center', justifyContent: 'center' } as const;
@@ -139,6 +131,14 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   onOverflow,
 }) => {
   const { t } = useTranslation();
+  const colors = useColors();
+  const WHITE = colors.ink;
+  /** Like, Not for me, Save, Follow: one picked colour, the app's orange. */
+  const SAVE_ACCENT = colors.accent;
+  const LIKE = SAVE_ACCENT;
+  const DISLIKE = SAVE_ACCENT;
+  /** Disabled ink for a control that has already done its job. */
+  const MUTED = colors.ink3;
   const iconSize = ICON_SIZE;
   const liked = verdict === 'like';
   const disliked = verdict === 'dislike';

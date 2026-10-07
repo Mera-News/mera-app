@@ -29,8 +29,8 @@ const FlatCardSurface: React.FC<FlatCardSurfaceProps> = ({ className, children }
                 CARDS_USE_GLASS
                     ? // The opaque `bg-background-0` has to go, not just sit under
                       // the glass: a solid background over the plate cancels it.
-                      'rounded-2xl overflow-hidden border border-white/10'
-                    : 'rounded-2xl overflow-hidden bg-background-0 border border-white/10'
+                      'rounded-2xl overflow-hidden border border-line'
+                    : 'rounded-2xl overflow-hidden bg-background-0 border border-line'
             }
         >
             <CardGlassPlate />

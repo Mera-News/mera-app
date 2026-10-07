@@ -22,6 +22,7 @@ import { Ellipsis } from 'lucide-react-native';
 import type { AccessibilityActionEvent } from 'react-native';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { COMPACT_TARGET_PX } from '@/lib/images/upgrade-image-url';
+import { useColors } from '@/lib/theme/tokens';
 
 /**
  * ArticleCompactCardBase — the compact card CHROME. Purely presentational:
@@ -101,10 +102,7 @@ const MORE_BUTTON_STYLE = {
   alignItems: 'center',
   justifyContent: 'center',
 } as const;
-const MORE_GLYPH_COLOR = 'rgb(156, 163, 175)';
 
-/** The loading tile behind a compact image (F39). */
-export const COMPACT_IMAGE_TILE = 'rgba(255,255,255,0.06)';
 
 export const COMPACT_IMAGE_SIZE =
   COMPACT_HEADLINE_LINES * HEADLINE_LINE_BOX + FOOTER_GAP + FOOTER_LINE_BOX;
@@ -191,6 +189,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   timeLabel,
 }) => {
   const { t } = useTranslation();
+  const colors = useColors();
   const moreLabel = t('articleMenu.openA11y');
   const displayTitle = titleEnglish || titleOriginal || '';
   // The headline as displayed, and the row root's EXPLICIT label: without one
@@ -370,7 +369,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                     // STATIC style (a function style is dropped on device).
                     style={MORE_BUTTON_STYLE}
                   >
-                    <Ellipsis size={16} strokeWidth={2} color={MORE_GLYPH_COLOR} />
+                    <Ellipsis size={16} strokeWidth={2} color={colors.ink2} />
                   </RNPressable>
                 ) : null}
               </HStack>
@@ -392,7 +391,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   marginLeft: 14,
                   // F39: a quiet tile holds the square while the image
                   // decodes, instead of the picture popping into a blank hole.
-                  backgroundColor: COMPACT_IMAGE_TILE,
+                  backgroundColor: colors.surface,
                 }}
               >
                 <Image

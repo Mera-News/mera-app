@@ -4,24 +4,20 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { inlineSign, MOTION } from '@/lib/motion';
-import { COLORS } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, Easing, LayoutAnimation, Platform, Pressable, View, useWindowDimensions } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
-/** Every icon and label in the sheet (owner, ux2 B6: uniformity). Only a
- *  destructive row differs. */
-const SHEET_WHITE = COLORS.dark.ink;
-const DESTRUCTIVE = COLORS.dark.negative;
 /** One slide between levels, both ways (FinalRead #15). */
 export const SHEET_SLIDE_MS = MOTION.supportSubList.duration;
 const ROW_STYLE = { minHeight: 48, justifyContent: 'center' } as const;
 /** The row label: the SAME class and style on every level of every sheet, so a
  *  pushed level cannot drift from the main ••• rows (batch 11: the old tree
  *  overlay's labels rendered at about a fifth of normal brightness). */
-export const SHEET_ROW_LABEL_CLASS = 'text-white';
+export const SHEET_ROW_LABEL_CLASS = 'text-ink';
 export const SHEET_ROW_LABEL_STYLE = { fontSize: 15, fontWeight: '600' } as const;
 const CANCEL_STYLE = {
     minHeight: 48,
@@ -30,7 +26,6 @@ const CANCEL_STYLE = {
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.10)',
 } as const;
 
 export interface ArticleMenuItem {
@@ -83,7 +78,10 @@ export const ActionSheetRow: React.FC<ActionSheetRowProps> = ({
     description,
     subtitle,
 }) => {
-    const color = destructive ? DESTRUCTIVE : SHEET_WHITE;
+    const colors = useColors();
+    // Every icon and label in the sheet is the ink (owner, ux2 B6:
+    // uniformity); only a destructive row differs.
+    const color = destructive ? colors.negative : colors.ink;
     const row = (
         <Pressable
             testID={testID}
@@ -103,17 +101,17 @@ export const ActionSheetRow: React.FC<ActionSheetRowProps> = ({
                     <VStack className="flex-1">
                         <Text
                             className={SHEET_ROW_LABEL_CLASS}
-                            style={destructive ? [SHEET_ROW_LABEL_STYLE, { color: DESTRUCTIVE }] : SHEET_ROW_LABEL_STYLE}
+                            style={destructive ? [SHEET_ROW_LABEL_STYLE, { color: colors.negative }] : SHEET_ROW_LABEL_STYLE}
                         >
                             {label}
                         </Text>
                         {subtitle ? (
-                            <Text size="xs" numberOfLines={1} style={{ color: COLORS.dark.ink3 }}>
+                            <Text size="xs" numberOfLines={1} style={{ color: colors.ink3 }}>
                                 {subtitle}
                             </Text>
                         ) : null}
                     </VStack>
-                    {opensLevel ? <MaterialIcons name="chevron-right" size={22} color={SHEET_WHITE} /> : null}
+                    {opensLevel ? <MaterialIcons name="chevron-right" size={22} color={colors.ink} /> : null}
                 </HStack>
             </View>
         </Pressable>
@@ -121,7 +119,7 @@ export const ActionSheetRow: React.FC<ActionSheetRowProps> = ({
     if (!description) return row;
     return (
         <VStack space="xs">
-            <Text size="xs" className="px-4" style={{ color: COLORS.dark.ink3 }}>
+            <Text size="xs" className="px-4" style={{ color: colors.ink3 }}>
                 {description}
             </Text>
             {row}
@@ -182,6 +180,7 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     children,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const { width } = useWindowDimensions();
     const reduceMotion = useReducedMotion();
 
@@ -289,8 +288,8 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                 >
                     {/* A visible full-width button inside the sheet's inset,
                         label centred. */}
-                    <View testID="article-menu-cancel-plate" style={CANCEL_STYLE}>
-                        <Text className="text-white" style={{ fontSize: 15, fontWeight: '600', textAlign: 'center' }}>
+                    <View testID="article-menu-cancel-plate" style={[CANCEL_STYLE, { backgroundColor: colors.surfaceRaised }]}>
+                        <Text className="text-ink" style={{ fontSize: 15, fontWeight: '600', textAlign: 'center' }}>
                             {t('common.cancel')}
                         </Text>
                     </View>
