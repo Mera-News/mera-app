@@ -10,7 +10,7 @@ import Animated, {
 
 import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { shakeX } from '@/lib/motion';
-import { useColors } from '@/lib/theme/tokens';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 
 export type OtpState = 'idle' | 'wrong' | 'right';
 
@@ -40,6 +40,7 @@ const RIGHT_STAGGER_MS = 30;
  */
 export function OtpBoxes({ value, onChange, onComplete, state, a11yLabel, autoFocus, editable = true, testID }: OtpBoxesProps) {
     const colors = useColors();
+    const keyboard = useThemeMode();
     const reduceMotion = useReducedMotion();
     const shake = useSharedValue(0);
     const prev = useRef<OtpState>(state);
@@ -84,6 +85,7 @@ export function OtpBoxes({ value, onChange, onComplete, state, a11yLabel, autoFo
                 value={value}
                 onChangeText={handle}
                 keyboardType="number-pad"
+                keyboardAppearance={keyboard}
                 textContentType="oneTimeCode"
                 autoComplete="one-time-code"
                 autoFocus={autoFocus}

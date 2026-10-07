@@ -13,6 +13,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
+import { useThemeMode } from '@/lib/theme/tokens';
 
 /**
  * The app-wide background for the five tab pages: a slowly drifting,
@@ -697,7 +698,12 @@ const Field = ANDROID_STATIC_CSS ? CssBlobField : BlobField;
  */
 const BASE_HIDDEN = { opacity: 0 } as const;
 
+/** Light theme (FinalLight boards): the same field at about half strength over
+ *  white, one opacity on the whole backdrop (GPU only, every layer follows). */
+const LIGHT_FIELD = { opacity: 0.5 } as const;
+
 const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed, frame }) => {
+  const light = useThemeMode() === 'light';
   const reduceMotion = useReducedMotion();
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
 
@@ -926,7 +932,7 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   // the prop — and this is an absolute fill over the ENTIRE screen, so a
   // swallowed touch would make every tab untappable.
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, light ? LIGHT_FIELD : null]}>
       {/* Mounted UNCONDITIONALLY, even though its opacity only ever moves during
           a fade. Wrapping it in `fading ? ... : ...` would unmount and remount
           the whole `Svg` subtree at the END of every fade — three full-screen

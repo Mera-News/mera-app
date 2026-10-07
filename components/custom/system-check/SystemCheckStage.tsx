@@ -7,6 +7,8 @@ import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Button, ButtonText } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { useAppearanceSetting } from '@/lib/theme/theme-store';
 import { hapticLight } from '@/lib/haptics';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
@@ -80,6 +82,7 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
     const { t } = useTranslation();
     const colors = useColors();
     const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const appearance = useAppearanceSetting();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
 
     const english = appLanguage === 'en';
@@ -154,6 +157,28 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
                 )}
             </View>
 
+            {/* The theme row (Journey #20): the same Appearance control as
+                Settings > Display, starting at the phone's look. Hidden until
+                light ships (THEME_SWITCH_LIVE). */}
+            {appearance.live ? (
+                <View style={[styles.themeRow, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+                    <View style={styles.rowText}>
+                        <Text style={[styles.rowTitle, { color: colors.ink }]}>{t('display.appearanceTitle')}</Text>
+                        <Text style={[styles.rowDetail, { color: colors.ink3 }]}>{t('display.appearanceHint')}</Text>
+                    </View>
+                    <SegmentedControl
+                        accessibilityLabel={t('display.appearanceTitle')}
+                        value={appearance.mode}
+                        onChange={appearance.setMode}
+                        options={[
+                            { value: 'light', label: t('display.appearanceLight'), icon: 'light-mode' },
+                            { value: 'dark', label: t('display.appearanceDark'), icon: 'dark-mode' },
+                        ]}
+                        testID={`${testID}-theme`}
+                    />
+                </View>
+            ) : null}
+
             <View style={styles.spacer} />
             <Button action="primary" onPress={handleContinue} isDisabled={!ready || saving} testID={`${testID}-continue`}>
                 <ButtonText>{t('auth.continue')}</ButtonText>
@@ -174,4 +199,5 @@ const styles = StyleSheet.create({
     rowTitle: { fontSize: 15 },
     rowDetail: { fontSize: 13, lineHeight: 18 },
     spacer: { flex: 1 },
+    themeRow: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 14, marginTop: 12, gap: 12 },
 });

@@ -54,7 +54,7 @@ import {
 } from '@/lib/security/identity-gate';
 import { useUserStore } from '@/lib/stores/user-store';
 import { buildSupportMailtoUrl } from '@/lib/support-id';
-import { useColors } from '@/lib/theme/tokens';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { maskEmail } from '@/lib/utils/mask-email';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 
@@ -655,6 +655,7 @@ function EmailStage({
 }) {
     const { t } = useTranslation();
     const colors = useColors();
+    const keyboard = useThemeMode();
     const [email, setEmail] = useState(initialEmail);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState('');
@@ -694,6 +695,7 @@ function EmailStage({
                 placeholder={t('auth.emailPlaceholder')}
                 placeholderTextColor={colors.ink3}
                 keyboardType="email-address"
+                keyboardAppearance={keyboard}
                 textContentType="emailAddress"
                 autoComplete="email"
                 autoCapitalize="none"

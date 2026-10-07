@@ -19,6 +19,26 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Semantic colours (lib/theme/tokens.ts, set as CSS variables by the
+        // root provider for the current theme). Use these for page, surface,
+        // ink and line; literal white and black stay literal (text on the
+        // accent, logos). No `/alpha` modifier: the variables are full colours.
+        page: 'var(--color-page)',
+        surface: 'var(--color-surface)',
+        'surface-raised': 'var(--color-surface-raised)',
+        line: 'var(--color-line)',
+        ink: 'var(--color-ink)',
+        'ink-2': 'var(--color-ink-2)',
+        'ink-3': 'var(--color-ink-3)',
+        accent: 'var(--color-accent)',
+        'on-accent': 'var(--color-on-accent)',
+        'accent-text': 'var(--color-accent-text)',
+        'accent-mark': 'var(--color-accent-mark)',
+        positive: 'var(--color-positive)',
+        negative: 'var(--color-negative)',
+        muted: 'var(--color-muted)',
+        panel: 'var(--color-panel)',
+        'panel-border': 'var(--color-panel-border)',
         primary: {
           0: 'rgb(var(--color-primary-0)/<alpha-value>)',
           50: 'rgb(var(--color-primary-50)/<alpha-value>)',

@@ -1,8 +1,11 @@
 'use client';
 import { vars } from 'nativewind';
 
+import { themeCssVars } from '@/lib/theme/tokens';
+
 export const config = {
   light: vars({
+    ...themeCssVars('light'),
     /* Primary - shadcn primary: rgb(216, 121, 67) warm orange */
     '--color-primary-0': '253 248 246',
     '--color-primary-50': '251 242 236',
@@ -156,6 +159,7 @@ export const config = {
     '--color-indicator-error': '185 28 28',
   }),
   dark: vars({
+    ...themeCssVars('dark'),
     /* Primary - shadcn dark primary: rgb(231, 138, 83) warm orange */
     '--color-primary-0': '69 41 25',
     '--color-primary-50': '104 62 37',

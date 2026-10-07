@@ -8,6 +8,8 @@
 // photo scrims stay literal in both themes (the reverted 2026-09-11 chain
 // remapped them and flipped labels on orange).
 
+import { THEME_SWITCH_LIVE, useThemeStore } from './theme-store';
+
 export type ThemeMode = 'dark' | 'light';
 
 export interface ThemeColors {
@@ -110,9 +112,39 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
     },
 };
 
-/** The current theme. Dark until the theme store lands (P12). */
+/** The current theme (lib/theme/theme-store.ts). Dark while the switch is not
+ *  live, so every screen renders as today until the areas are swept. */
 export function useThemeMode(): ThemeMode {
-    return 'dark';
+    const mode = useThemeStore((st) => st.mode);
+    return THEME_SWITCH_LIVE ? mode : 'dark';
+}
+
+/**
+ * The semantic colours as CSS variables, for the Tailwind classes
+ * (`bg-surface`, `text-ink`, `border-line`...) through the root provider. Full
+ * colour strings, so these classes take no `/alpha` modifier. Literal white and
+ * black are not here: text on the accent and logos stay literal.
+ */
+export function themeCssVars(mode: ThemeMode): Record<string, string> {
+    const c = COLORS[mode];
+    return {
+        '--color-page': c.base,
+        '--color-surface': c.surface,
+        '--color-surface-raised': c.surfaceRaised,
+        '--color-line': c.line,
+        '--color-ink': c.ink,
+        '--color-ink-2': c.ink2,
+        '--color-ink-3': c.ink3,
+        '--color-accent': c.accent,
+        '--color-on-accent': c.onAccent,
+        '--color-accent-text': c.accentText,
+        '--color-accent-mark': c.accentMark,
+        '--color-positive': c.positive,
+        '--color-negative': c.negative,
+        '--color-muted': c.muted,
+        '--color-panel': c.panel,
+        '--color-panel-border': c.panelBorder,
+    };
 }
 
 /** The current theme's colours. */

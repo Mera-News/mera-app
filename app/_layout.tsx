@@ -11,7 +11,6 @@ import { ApolloProvider } from '@apollo/client/react';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
 import { ThemeProvider } from '@react-navigation/native';
 import { router, Stack, useNavigationContainerRef, usePathname } from 'expo-router';
-import { useColorScheme } from 'nativewind';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -31,6 +30,9 @@ import FactsComboToast from '@/components/custom/toast/FactsComboToast';
 import ToastDeck from '@/components/custom/toast/ToastDeck';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { DialogHost } from '@/components/ui/confirm-dialog';
+import { ThemeCrossfade } from '@/components/ui/theme-crossfade';
+import { COLORS, useThemeMode } from '@/lib/theme/tokens';
+import { hydrateTheme } from '@/lib/theme/theme-store';
 import LaunchLogoHandoff from '@/components/custom/auth/LaunchLogoHandoff';
 import { TextScaleProvider } from '@/lib/typography/TextScaleProvider';
 import '@/global.css';
@@ -108,12 +110,11 @@ function AppRoot() {
     })();
   }, []);
 
-  // react-navigation theme, tracked to the app's color scheme (pinned dark
-  // today via GluestackUIProvider mode="dark"). Supplies dark surfaces so the
-  // NativeTabs per-tab wrapper never paints react-navigation's default light
-  // background — the white flash on tab switch.
-  const { colorScheme } = useColorScheme();
-  const navigationTheme = getNavigationTheme(colorScheme === 'light' ? 'light' : 'dark');
+  // react-navigation theme, from the app's theme store (never the OS scheme).
+  // Supplies the page colour so the NativeTabs per-tab wrapper never paints
+  // react-navigation's default background: the flash on tab switch.
+  const themeMode = useThemeMode();
+  const navigationTheme = getNavigationTheme(themeMode);
 
   // Mirror the current route into a module variable so non-React code (the
   // Apollo error link) can avoid redundant navigations to the paywall.
@@ -347,7 +348,7 @@ function AppRoot() {
     >
       <DatabaseProvider database={database}>
         <ApolloProvider client={client}>
-          <StatusBar style="light" backgroundColor="#000000" />
+          <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} backgroundColor={COLORS[themeMode].base} />
           <ThemeProvider value={navigationTheme}>
             <View style={{ flex: 1 }}>
             <Stack
@@ -422,6 +423,10 @@ function AppRoot() {
 // expo-router's own first-render auto-hide.
 holdSplash();
 
+// The theme choice is a device preference in AsyncStorage: read it before the
+// first screen so a light device never paints dark first. Never rejects.
+void hydrateTheme();
+
 // Root layout: providers + the mandatory-update gate ONLY. Deliberately holds no
 // store subscriptions or boot logic of its own, so background activity can never
 // re-render the gate / update screen — when blocked, the screen is static.
@@ -450,6 +455,8 @@ export default Sentry.wrap(function RootLayout() {
               <ToastDeck />
               {/* The app's dialogs from plain code (lib/dialog.ts); no native alerts. */}
               <DialogHost />
+              {/* The 300 ms crossfade when the theme changes. Renders nothing at rest. */}
+              <ThemeCrossfade />
             </NativeUpdateGate>
             </TextScaleProvider>
           </GluestackUIProvider>

@@ -36,6 +36,7 @@ import Markdown from 'react-native-markdown-display';
 import { useTranslation } from 'react-i18next';
 import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/typography/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
+import { useThemeMode } from '@/lib/theme/tokens';
 
 const ACCENT = 'rgb(231, 138, 83)';
 // Bubble surfaces float on the #1a1a1a panel: assistant slightly lighter than
@@ -327,6 +328,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
   ref,
 ) {
   const { t } = useTranslation();
+  const keyboard = useThemeMode();
   const [text, setText] = useState('');
   const inputRef = useRef<TextInput>(null);
 
@@ -366,6 +368,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
       <TextInput
         ref={inputRef}
         multiline
+        keyboardAppearance={keyboard}
         value={text}
         onChangeText={setText}
         placeholder={placeholder}
@@ -378,7 +381,6 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         // explanation. The placeholder is not a reliable substitute: it is not
         // announced consistently once a field is non-editable.
         accessibilityState={{ disabled }}
-        keyboardAppearance="dark"
         returnKeyType="send"
         // Return sends instead of inserting a newline, and keeps the keyboard up
         // so the user can keep typing. handleSend already ignores empty/disabled.
