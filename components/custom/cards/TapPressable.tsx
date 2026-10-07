@@ -1,6 +1,6 @@
 // The app's Pressable, opening on a TAP only (`useTapGuard`): a release after
 // a sideways drag is not a press. For rows and cards that are not
-// `PressableCard` (which does the same and adds the held-state opacity), so
+// `PressableCard` (which does the same and adds the press dip), so
 // their look is unchanged.
 
 import { Pressable } from '@/components/ui/pressable';

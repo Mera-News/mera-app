@@ -22,6 +22,37 @@ import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
 import { recordHeroLoad } from '@/lib/images/image-resolution-stats';
 import { useTranslation } from 'react-i18next';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { MOTION } from '@/lib/motion';
+import { COLORS } from '@/lib/theme/tokens';
+
+/** A new card's orange edge (FinalMotion "Signals"): fades away over 600 ms
+ *  once the card counts as seen; Reduce Motion switches it off at once. */
+const CardHalo: React.FC<{ on: boolean; radius: number }> = ({ on, radius }) => {
+  const opacity = useSharedValue(on ? 1 : 0);
+  React.useEffect(() => {
+    opacity.value = withTiming(on ? 1 : 0, { duration: MOTION.halo.fade, easing: Easing.out(Easing.ease) });
+  }, [on, opacity]);
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: radius,
+          borderWidth: 1.5,
+          borderColor: COLORS.dark.accent,
+        },
+        style,
+      ]}
+    />
+  );
+};
 
 /**
  * ArticleCardBase — the full-size feed card CHROME, extracted verbatim from
@@ -122,6 +153,8 @@ export interface ArticleCardBaseProps {
   /** The id a tap opens through `useOpenSuggestion`: the card measures itself
    *  at press-in so the page can grow out of it (`card-grow`). */
   growId?: string;
+  /** The new-card halo: on while unseen, fades away when it turns false. */
+  halo?: boolean;
 }
 
 /** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
@@ -156,6 +189,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   spokenPriority,
   spokenTail,
   growId,
+  halo,
 }) => {
   const { t } = useTranslation();
   const blurImages = useBlurImagesStore((s) => s.blurImages);
@@ -284,6 +318,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
         </VStack>
       </Box>
       {footer ? <Box className="px-4 pb-4 pt-2">{footer}</Box> : null}
+      {halo !== undefined ? <CardHalo on={halo} radius={flat ? 14 : 6} /> : null}
     </>
   );
 

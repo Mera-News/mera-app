@@ -9,9 +9,8 @@
 //   - ArticleActionsRow — the standalone card (Saved list).
 // The latter two used to hand-roll their own row of 48pt round,
 // primary-orange-outlined buttons. They were converted to this component
-// for card parity. A liked article reads GREEN on the detail screens rather
-// than orange for the same reason: all-white cannot distinguish recorded from
-// not-recorded.
+// for card parity. A picked Like and a picked Not for me both fill the
+// app's orange (FinalMotion "Touch"), and pop once to 118% as they do.
 //
 // A recorded verdict is FILLED at once, on every surface (owner: one
 // behaviour). There is no hollow "no reason yet" state: the feedback tree the
@@ -39,15 +38,38 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share, Share2, SearchCheck, Ellipsis } from 'lucide-react-native';
 import { Platform } from 'react-native';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
+import { SPRING } from '@/lib/motion';
+import { COLORS } from '@/lib/theme/tokens';
 import { useTranslation } from 'react-i18next';
 
-const WHITE = '#FFFFFF';
-const LIKE = '#22C55E';
-const DISLIKE = '#EF4444';
-const SAVE_ACCENT = 'rgb(231,138,83)';
+// ponytail: dark tokens read statically; P12 moves this row to useColors().
+const WHITE = COLORS.dark.ink;
+/** Like, Not for me, Save, Follow: one picked colour, the app's orange. */
+const SAVE_ACCENT = COLORS.dark.accent;
+const LIKE = SAVE_ACCENT;
+const DISLIKE = SAVE_ACCENT;
 /** Disabled ink for a control that has already done its job. */
-const MUTED = '#6B7280';
+const MUTED = COLORS.dark.ink3;
+/** A 44pt target around a 27pt glyph, given back by negative margins so the
+ *  row keeps its spacing (never hitSlop: QA measures that as the glyph). */
+const FRAME = { width: 44, height: 44, margin: -8, alignItems: 'center', justifyContent: 'center' } as const;
+
+/** The one small bounce: pops to 118% and settles when `on` turns true while
+ *  mounted (never on mount). Reduce Motion: the fill only. */
+const Pop: React.FC<{ on: boolean; children: React.ReactNode }> = ({ on, children }) => {
+  const scale = useSharedValue(1);
+  const was = useRef(on);
+  useEffect(() => {
+    if (on && !was.current) {
+      scale.value = withSequence(withSpring(1.18, SPRING.like), withSpring(1, SPRING.like));
+    }
+    was.current = on;
+  }, [on, scale]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Animated.View style={style}>{children}</Animated.View>;
+};
 const ICON_SIZE = 27;
 const STROKE = 1.8;
 
@@ -118,8 +140,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
 }) => {
   const { t } = useTranslation();
   const iconSize = ICON_SIZE;
-  // 10pt of slop around a 27pt glyph: a ~47pt target.
-  const hitSlop = 10;
   const liked = verdict === 'like';
   const disliked = verdict === 'dislike';
   // A recorded verdict is coloured AND filled, at once (see the header).
@@ -139,7 +159,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-mera"
           onPress={onAskMera}
-          hitSlop={hitSlop}
+          style={FRAME}
           accessibilityRole="button"
           accessibilityLabel={t('swipeFeed.askMera')}
         >
@@ -150,40 +170,34 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       <Pressable
         testID="card-action-like"
         onPress={onLike}
-        hitSlop={hitSlop}
+        style={FRAME}
         accessibilityRole="button"
         accessibilityState={{ selected: liked }}
         accessibilityLabel={t('articleFeedback.likeLabel')}
       >
-        <ThumbsUp
-          size={iconSize}
-          strokeWidth={STROKE}
-          color={liked ? LIKE : WHITE}
-          fill={likeFill}
-        />
+        <Pop on={liked}>
+          <ThumbsUp size={iconSize} strokeWidth={STROKE} color={liked ? LIKE : WHITE} fill={likeFill} />
+        </Pop>
       </Pressable>
 
       <Pressable
         testID="card-action-dislike"
         onPress={onDislike}
-        hitSlop={hitSlop}
+        style={FRAME}
         accessibilityRole="button"
         accessibilityState={{ selected: disliked }}
         accessibilityLabel={t('articleFeedback.dislikeLabel')}
       >
-        <ThumbsDown
-          size={iconSize}
-          strokeWidth={STROKE}
-          color={disliked ? DISLIKE : WHITE}
-          fill={dislikeFill}
-        />
+        <Pop on={disliked}>
+          <ThumbsDown size={iconSize} strokeWidth={STROKE} color={disliked ? DISLIKE : WHITE} fill={dislikeFill} />
+        </Pop>
       </Pressable>
 
       {onToggleSave ? (
         <Pressable
           testID="card-action-save"
           onPress={onToggleSave}
-          hitSlop={hitSlop}
+          style={FRAME}
           accessibilityRole="button"
           accessibilityState={{ selected: saved }}
           accessibilityLabel={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
@@ -201,7 +215,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-track"
           onPress={onTrack}
-          hitSlop={hitSlop}
+          style={FRAME}
           accessibilityRole="button"
           accessibilityState={{ selected: tracked }}
           accessibilityLabel={t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction')}
@@ -232,7 +246,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           // their request landed.
           onPress={factCheckState === 'done' ? undefined : onFactCheck}
           disabled={factCheckState === 'done'}
-          hitSlop={hitSlop}
+          style={FRAME}
           accessibilityRole="button"
           accessibilityState={{
             selected: factCheckState !== 'none',
@@ -271,7 +285,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-share"
           onPress={onShare}
-          hitSlop={hitSlop}
+          style={FRAME}
           accessibilityRole="button"
           accessibilityLabel={t('articleDetail.share')}
         >
@@ -290,7 +304,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-more"
           onPress={onOverflow}
-          hitSlop={hitSlop}
+          style={FRAME}
           accessibilityRole="button"
           accessibilityLabel={t('articleMenu.openA11y')}
         >

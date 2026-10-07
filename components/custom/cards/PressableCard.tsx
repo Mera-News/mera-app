@@ -1,7 +1,9 @@
-import { DIMMED_OPACITY, PRESSED_OPACITY } from '@/components/custom/cards/press-style';
+import { DIMMED_OPACITY } from '@/components/custom/cards/press-style';
 import { Pressable } from '@/components/ui/pressable';
-import React, { useCallback, useState } from 'react';
+import { EASE, MOTION } from '@/lib/motion';
+import React, { useCallback } from 'react';
 import type { GestureResponderEvent } from 'react-native';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useTapGuard } from './use-tap-guard';
 
 type PressableProps = React.ComponentProps<typeof Pressable>;
@@ -11,36 +13,43 @@ export interface PressableCardProps extends Omit<PressableProps, 'style'> {
     dimmed?: boolean;
 }
 
+/** A card dips a little less than a button (FinalRead: "the card lifts a
+ *  little, scale 0.98"; buttons use MOTION.press.scale). */
+const CARD_PRESS_SCALE = 0.98;
+
 /**
- * A card or row that visibly reacts while held (pressed state is OPT-IN, see
- * press-style.ts). The pressed state is tracked in React and applied as a
- * STATIC style: a function `style={({ pressed }) => ...}` on a Pressable is
- * dropped on device in this app (the css-interop wrapper), which silently
- * removed both the pressed feedback and the dimmed treatment of read cards.
+ * A card or row that visibly reacts while held: it dips to 98% and 88%
+ * opacity on the UI thread (100 ms in, 150 ms back; Reduce Motion: opacity
+ * only). Never a function `style={({ pressed }) => ...}`: that is dropped on
+ * device in this app (the css-interop wrapper).
  *
  * It opens on a TAP only (`useTapGuard`): a release after a sideways drag is
  * not a press, or the tab swipe and any stray drag opened the article.
  */
 const PressableCard = React.forwardRef<React.ComponentRef<typeof Pressable>, PressableCardProps>(
-    function PressableCard({ dimmed = false, onPressIn, onPressOut, onPress, ...rest }, ref) {
-        const [pressed, setPressed] = useState(false);
+    function PressableCard({ dimmed = false, onPressIn, onPressOut, onPress, children, ...rest }, ref) {
+        const reduceMotion = useReducedMotion();
+        const held = useSharedValue(0);
         const markIn = useCallback(
             (e: GestureResponderEvent) => {
-                setPressed(true);
+                held.value = withTiming(1, { duration: MOTION.press.in, easing: EASE.arrive });
                 onPressIn?.(e);
             },
-            [onPressIn],
+            [held, onPressIn],
         );
         const tap = useTapGuard(onPress, markIn);
         const handleOut = useCallback(
             (e: GestureResponderEvent) => {
-                setPressed(false);
+                held.value = withTiming(0, { duration: MOTION.press.out, easing: EASE.arrive });
                 onPressOut?.(e);
             },
-            [onPressOut],
+            [held, onPressOut],
         );
-        const base = dimmed ? DIMMED_OPACITY : 1;
-        const opacity = pressed ? base * PRESSED_OPACITY : base;
+        const pressedScale = reduceMotion ? 1 : CARD_PRESS_SCALE;
+        const pressStyle = useAnimatedStyle(() => ({
+            opacity: 1 - held.value * (1 - MOTION.press.opacity),
+            transform: [{ scale: 1 - held.value * (1 - pressedScale) }],
+        }));
         return (
             <Pressable
                 ref={ref}
@@ -48,8 +57,10 @@ const PressableCard = React.forwardRef<React.ComponentRef<typeof Pressable>, Pre
                 onPress={tap.onPress}
                 onPressIn={tap.onPressIn}
                 onPressOut={handleOut}
-                style={opacity === 1 ? undefined : { opacity }}
-            />
+                style={dimmed ? { opacity: DIMMED_OPACITY } : undefined}
+            >
+                <Animated.View style={pressStyle}>{children as React.ReactNode}</Animated.View>
+            </Pressable>
         );
     },
 );

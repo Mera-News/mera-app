@@ -158,6 +158,8 @@ export interface ArticleCompactCardBaseProps {
   /** The row's spoken priority (the chip's own label), read between the age
    *  and the language in the root's explicit label. */
   spokenPriority?: string | null;
+  /** A short state after the publisher ("Opened", "You came from here"). */
+  statusLabel?: string | null;
 }
 
 const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
@@ -183,6 +185,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   accessibilityActions,
   onAccessibilityAction,
   spokenPriority,
+  statusLabel,
 }) => {
   const { t } = useTranslation();
   const moreLabel = t('articleMenu.openA11y');
@@ -199,6 +202,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
     meta.age,
     spokenPriority,
     meta.language,
+    statusLabel,
   ]);
   const blurImages = useBlurImagesStore((s) => s.blurImages);
   // The same line count the image is sized against — see COMPACT_IMAGE_SIZE.
@@ -347,6 +351,12 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 ) : (
                   <Box />
                 )}
+                {statusLabel ? (
+                  <Text size="xs" className="text-typography-500" numberOfLines={1} style={{ flexShrink: 0 }}>
+                    {`· ${statusLabel}`}
+                  </Text>
+                ) : null}
+                <Box style={{ flex: 1 }} />
                 {onOverflow ? (
                   <RNPressable
                     testID="compact-card-more"
