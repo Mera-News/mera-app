@@ -58,7 +58,7 @@ const NotificationTimes: React.FC<NotificationTimesProps> = ({ hours, onChange }
     const [cursorHour, setCursorHour] = useState(() => initialCursorHour(hours));
     const card = {
         borderRadius: 16,
-        backgroundColor: colors.surfaceRaised,
+        backgroundColor: colors.glass,
         borderWidth: 1,
         borderColor: colors.trackBorder,
     } as const;
@@ -91,9 +91,9 @@ const NotificationTimes: React.FC<NotificationTimesProps> = ({ hours, onChange }
             style={{ ...card, paddingTop: 14, paddingHorizontal: 14, paddingBottom: 10, gap: 10 }}
         >
             <View style={{ height: 4, borderRadius: 2, flexDirection: 'row', overflow: 'visible' }}>
-                <View style={{ flex: 6, backgroundColor: colors.trackBorder, borderTopLeftRadius: 2, borderBottomLeftRadius: 2 }} />
+                <View style={{ flex: 6, backgroundColor: colors.night, borderTopLeftRadius: 2, borderBottomLeftRadius: 2 }} />
                 <View style={{ flex: 13, backgroundColor: colors.accent, opacity: 0.35 }} />
-                <View style={{ flex: 5, backgroundColor: colors.trackBorder, borderTopRightRadius: 2, borderBottomRightRadius: 2 }} />
+                <View style={{ flex: 5, backgroundColor: colors.night, borderTopRightRadius: 2, borderBottomRightRadius: 2 }} />
                 {hours.map((h) => (
                     <View
                         key={h}
@@ -137,7 +137,7 @@ const NotificationTimes: React.FC<NotificationTimesProps> = ({ hours, onChange }
                         marginVertical: (REMOVE_FRAME - PILL_HEIGHT) / 2,
                         paddingLeft: 14,
                         borderRadius: 999,
-                        backgroundColor: colors.surfaceRaised,
+                        backgroundColor: colors.glass,
                         borderWidth: 1,
                         borderColor: colors.trackBorder,
                     }}
