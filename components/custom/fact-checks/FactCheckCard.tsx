@@ -23,19 +23,13 @@ import { VStack } from '@/components/ui/vstack';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
 import { describeCheckedBy, describeOrganisationVerdict } from '@/lib/fact-check/fact-check-state';
 import type { FactCheckedByEntry } from '@/lib/fact-check/fact-check-types';
+import { isFactCheckDone } from '@/lib/stores/fact-checks-store';
 import { useColors } from '@/lib/theme/tokens';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-
-/** The stored statuses a check never leaves (fact-check-record-service). */
-export const TERMINAL_FACT_CHECK_STATUSES: ReadonlySet<string> = new Set(['complete', 'blocked']);
-
-export function isFactCheckDone(item: Pick<StoredFactCheck, 'status'>): boolean {
-    return TERMINAL_FACT_CHECK_STATUSES.has(String(item.status ?? '').trim().toLowerCase());
-}
 
 interface FactCheckCardProps {
     readonly item: StoredFactCheck;

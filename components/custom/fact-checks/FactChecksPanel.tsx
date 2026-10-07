@@ -1,10 +1,8 @@
 import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
 import { Box } from '@/components/ui/box';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
-import { HStack } from '@/components/ui/hstack';
-import { Spinner } from '@/components/ui/spinner';
-import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
+import PageTitleRow from '@/components/custom/nav/PageTitleRow';
+import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { hapticLight } from '@/lib/haptics';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
@@ -13,10 +11,11 @@ import {
     useFactChecksHydrated,
     useFactChecksRefreshing,
     useFactChecksStore,
+    isUnseenDone,
 } from '@/lib/stores/fact-checks-store';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
 import { reconcileAskedFactChecks } from '@/lib/fact-check/fact-check-graphql-client';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -24,8 +23,6 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 
 const REFRESH_TINT = '#EDA77E';
 
-/** The stored statuses a check never leaves (fact-check-record-service). */
-const TERMINAL_STATUSES: ReadonlySet<string> = new Set(['complete', 'blocked']);
 
 interface FactChecksPanelProps {
     /** True while this is the visible Library page. Drives the re-read on
@@ -43,8 +40,8 @@ interface FactChecksPanelProps {
     /** List-end padding (the host's clearance for the tab bar and the Mera
      *  button). Defaults to the tab-bar clearance plus a gap. */
     readonly listEndPadding?: number;
-    /** Drawn after the last row (the host's "How this page works" row). */
-    readonly footer?: React.ReactElement | null;
+    /** Opens the page's explainer (the ? beside the title). */
+    readonly onExplain?: () => void;
 }
 
 /**
@@ -79,7 +76,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     scrollHandler,
     headerHeight = 0,
     listEndPadding,
-    footer,
+    onExplain,
 }) => {
     const { t } = useTranslation();
     // Inside a tab on iOS the inset already includes the tab bar; measured on
@@ -91,6 +88,17 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     const refresh = useFactChecksStore((s) => s.refresh);
     const load = useFactChecksStore((s) => s.load);
     const remove = useFactChecksStore((s) => s.remove);
+    const markSeen = useFactChecksStore((s) => s.markSeen);
+
+    // "New" on this visit: finished after the page was last seen. Snapshot
+    // the seen time BEFORE marking, so the pills stay for the whole visit while
+    // the dots clear at once.
+    const [seenBefore, setSeenBefore] = useState<number | null>(null);
+    useEffect(() => {
+        if (!active) return;
+        setSeenBefore(useFactChecksStore.getState().seenAt);
+        markSeen();
+    }, [active, markSeen]);
 
     // The reconcile-then-refresh sequence, shared by the activation effect
     // below and the pull-to-refresh control: sweep BEFORE reading, awaited, so
@@ -124,13 +132,6 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Checks still in flight. Each pending row already says "Still searching"
-    // on its own card, but nothing at the top of the list said work was under
-    // way, so a reader who had just asked saw a static list.
-    const checkingCount = items.filter(
-        (i) => !TERMINAL_STATUSES.has(String(i.status ?? '').trim().toLowerCase()),
-    ).length;
-
     const handleDelete = useCallback((id: string) => {
         void hapticLight();
         void remove(id);
@@ -153,13 +154,14 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
             <Box className="mb-3">
                 <FactCheckCard
                     item={item}
+                    isNew={isUnseenDone(item, seenBefore)}
                     onPress={handleOpen}
                     onDelete={handleDelete}
                     testIDPrefix="fact-check-list"
                 />
             </Box>
         ),
-        [handleDelete, handleOpen],
+        [handleDelete, handleOpen, seenBefore],
     );
 
     return (
@@ -170,23 +172,11 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 renderItem={renderItem as any}
                 testID="fact-checks-list"
                 ListHeaderComponent={
-                    // No second large title: the tab header and the
-                    // selected pill already name this list (M3).
-                    <VStack className="pb-2 mb-1" style={{ paddingTop: 8 }} space="sm">
-                        {items.length > 0 ? (
-                            <Text size="sm" style={{ color: 'rgb(212, 212, 212)' }}>
-                                {t('factCheck.dashboard.listSubtitle')}
-                            </Text>
-                        ) : null}
-                        {checkingCount > 0 ? (
-                            <HStack className="items-center" space="sm" testID="fact-checks-checking-row">
-                                <Spinner size="small" color={REFRESH_TINT} />
-                                <Text size="sm" className="font-semibold" style={{ color: '#FFFFFF' }}>
-                                    {t('factCheck.dashboard.pending')}
-                                </Text>
-                            </HStack>
-                        ) : null}
-                    </VStack>
+                    <PageTitleRow
+                        title={items.length > 0 ? t('library.checks.count', { count: items.length }) : t('factCheck.dashboard.listTitle')}
+                        onExplain={onExplain}
+                        testID="fact-checks-title-row"
+                    />
                 }
                 // The manual path: a reader who suspects the list is stale can
                 // always ask directly rather than waiting for the next arrival.
@@ -205,8 +195,8 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     />
                 }
                 contentContainerStyle={{
-                    paddingTop: headerHeight,
-                    paddingHorizontal: 16,
+                    paddingTop: headerHeight + 12,
+                    paddingHorizontal: 12,
                     // Clear of the tab bar and the Mera button.
                     paddingBottom: listEndPadding ?? tabClearance + 24,
                 }}
@@ -217,7 +207,6 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 // Only the active panel feeds the translation scheduler.
                 onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
-                ListFooterComponent={footer ?? null}
                 ListEmptyComponent={
                     // Only once a read has completed, or the empty state
                     // flashes for a frame on every open before the rows land.
@@ -226,7 +215,12 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                         <ForYouEmptyState
                             icon="fact-check"
                             title={t('library.checks.emptyTitle')}
-                            body={t('library.checks.emptyBodyAsk')}
+                            body={t('library.checks.emptyBodyMenu')}
+                            action={{
+                                label: t('library.checks.learn'),
+                                onPress: () => openTutorial('library', 'fact-checks'),
+                                testID: 'fact-checks-learn',
+                            }}
                             testID="fact-checks-empty"
                         />
                     ) : null

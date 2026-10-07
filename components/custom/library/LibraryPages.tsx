@@ -3,12 +3,14 @@ import FactChecksPanel from '@/components/custom/fact-checks/FactChecksPanel';
 import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
 import { pageMeta } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
-import type { PagePill, PageRenderProps } from '@/components/custom/nav/types';
+import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import StatsPage from '@/components/custom/share-stats/StatsPage';
+import { setTabDot } from '@/components/custom/nav/current-surface';
 import { usePageOrder } from '@/lib/navigation/page-order';
+import { useChecksUnseen, watchFactChecks } from '@/lib/stores/fact-checks-store';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -21,13 +23,30 @@ import { useTranslation } from 'react-i18next';
  * "How this page works" row as its list footer. Stats takes the one-shot
  * `card` arrival param (the old share-stats deep link).
  */
+/** The Fact checks pill's dot: a check finished since the page was seen. */
+function useChecksDot(): PageDot {
+    return { visible: useChecksUnseen() };
+}
+
 export function LibraryPages() {
+    // The Library tab is mounted for the app's life, so it keeps the fact
+    // checks mirror live: a check finishing elsewhere lights both dots
+    // (FinalLibrary #5); opening Fact checks clears them (markSeen).
+    useEffect(() => watchFactChecks(), []);
+    const checksUnseen = useChecksUnseen();
+    useEffect(() => setTabDot('library', checksUnseen), [checksUnseen]);
+
     const { t } = useTranslation();
     const order = usePageOrder('library');
     const listEnd = useListEndClearance();
 
     const pills: PagePill[] = useMemo(
-        () => order.map((id) => ({ id, label: t(pageMeta(id).labelKey) })),
+        () =>
+            order.map((id) => ({
+                id,
+                label: t(pageMeta(id).labelKey),
+                useDot: id === 'checks' ? useChecksDot : undefined,
+            })),
         [order, t],
     );
 
@@ -53,7 +72,7 @@ export function LibraryPages() {
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}
                             listEndPadding={listEnd}
-                            footer={footer}
+                            onExplain={header.openExplainer}
                         />
                     );
                 case 'visited':

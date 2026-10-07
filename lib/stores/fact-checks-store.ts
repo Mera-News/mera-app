@@ -13,6 +13,13 @@
 // explicit `load()` on each (re)selection is three lines against a
 // subscription lifecycle to manage. Revisit if a third reader appears.
 //
+// The Library's Fact checks dot (FinalLibrary #5) is the third reader:
+// `watchFactChecks` re-reads on every change to the table, so a check that
+// finishes while the reader is elsewhere lights the dot. `seenAt` is the one
+// settings row the dot needs (`library_checks_seen_at`, device-local,
+// forbidden from backup): operational state, not a counter. Read with the
+// items in `load`, so it lives and dies with them.
+//
 // `refresh` used to also RECONCILE every unresolved row against the server —
 // that pipeline is gone. There is nothing left to reconcile against: the
 // on-device runner writes straight to this table (via `fact-check-queue.ts`),
@@ -28,6 +35,38 @@ import {
 } from '../database/services/fact-check-record-service';
 import { releaseFactCheckRetention } from '../database/services/saved-article-suggestion-service';
 
+/** Lazy: a module-scope import of the settings service or the database
+ *  singleton opens SQLite at import, in every suite that loads this store. */
+function settings(): typeof import('../database/services/setting-service') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('../database/services/setting-service');
+}
+
+export const CHECKS_SEEN_AT_SETTING_KEY = 'library_checks_seen_at';
+
+/** The stored statuses a check never leaves (fact-check-record-service). */
+const TERMINAL_STATUSES: ReadonlySet<string> = new Set(['complete', 'blocked']);
+
+export function isFactCheckDone(item: Pick<StoredFactCheck, 'status'>): boolean {
+    return TERMINAL_STATUSES.has(String(item.status ?? '').trim().toLowerCase());
+}
+
+/** A finished check the reader has not seen since it finished. */
+export function isUnseenDone(item: Pick<StoredFactCheck, 'status' | 'resolvedAt'>, seenAt: number | null): boolean {
+    return seenAt !== null && isFactCheckDone(item) && (item.resolvedAt ?? 0) > seenAt;
+}
+
+async function readSeenAt(): Promise<number> {
+    const raw = await settings().getSetting(CHECKS_SEEN_AT_SETTING_KEY).catch(() => null);
+    const n = raw ? Number(raw) : NaN;
+    if (Number.isFinite(n)) return n;
+    // First read on this phone: today is the baseline, so years-old checks
+    // never light the dot.
+    const now = Date.now();
+    void settings().setSetting(CHECKS_SEEN_AT_SETTING_KEY, String(now)).catch(() => undefined);
+    return now;
+}
+
 /** How many the Dashboard block shows before "View all". */
 export const DASHBOARD_FACT_CHECK_PREVIEW = 3;
 
@@ -40,6 +79,10 @@ interface FactChecksState {
     hydrated: boolean;
     /** A read is in flight — drives the list's pull-to-refresh spinner. */
     refreshing: boolean;
+    /** When the Fact checks page was last seen; null until the first load. */
+    seenAt: number | null;
+    /** The page turned active: everything finished so far is seen. */
+    markSeen: () => void;
     /** Read the local table. Cheap, offline, no network — this is the ONLY
      *  read there is now. */
     load: () => Promise<void>;
@@ -53,10 +96,17 @@ export const useFactChecksStore = create<FactChecksState>((set, get) => ({
     items: [],
     hydrated: false,
     refreshing: false,
+    seenAt: null,
 
     load: async () => {
-        const items = await listFactChecks();
-        set({ items, hydrated: true });
+        const [items, seenAt] = await Promise.all([listFactChecks(), readSeenAt()]);
+        set({ items, hydrated: true, seenAt });
+    },
+
+    markSeen: () => {
+        const now = Date.now();
+        set({ seenAt: now });
+        void settings().setSetting(CHECKS_SEEN_AT_SETTING_KEY, String(now)).catch(() => undefined);
     },
 
     refresh: async () => {
@@ -97,3 +147,20 @@ export const useFactCheckItems = () => useFactChecksStore((state) => state.items
 export const useFactChecksHydrated = () => useFactChecksStore((state) => state.hydrated);
 export const useFactChecksRefreshing = () =>
     useFactChecksStore((state) => state.refreshing);
+
+/** Some finished check is unseen: the Fact checks pill dot and the Library
+ *  tab dot. */
+export const useChecksUnseen = () =>
+    useFactChecksStore((state) => state.items.some((it) => isUnseenDone(it, state.seenAt)));
+
+/** Re-read on every change to the fact_checks table. Started once by the
+ *  Library tab (mounted for the app's life); returns its stop. */
+export function watchFactChecks(): () => void {
+    void useFactChecksStore.getState().load();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const database = (require('../database') as typeof import('../database')).default;
+    const sub = database.withChangesForTables(['fact_checks']).subscribe(() => {
+        void useFactChecksStore.getState().load();
+    });
+    return () => sub.unsubscribe();
+}
