@@ -190,6 +190,11 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
       : failedCount > 0
         ? t('agentSteps.summaryFailed')
         : t('agentSteps.doneInSteps', { count: doneCount });
+  // The fold is a button, so a finished turn's label says what a tap does.
+  // One plural key (not a comma join) so every locale words it whole. A
+  // failed, interrupted or terminal turn keeps its sentence as the label.
+  const finished = !terminal && !interrupted && failedCount === 0;
+  const foldLabel = finished ? t('agentSteps.doneInStepsShow', { count: doneCount }) : summary;
   // `no-proposal` is the one terminal that is not an error: Mera understood the
   // turn and had nothing to add, which is a normal answer.
   const terminalIsError = terminal !== null && terminal !== 'no-proposal';
@@ -198,7 +203,7 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   const fold = (
     <GlyphSafeButton
       onPress={() => setReopened((v) => !v)}
-      accessibilityLabel={summary}
+      accessibilityLabel={foldLabel}
       accessibilityState={{ expanded: reopened }}
       visualStyle={styles.foldRow}
       testID="agent-steps-summary"
