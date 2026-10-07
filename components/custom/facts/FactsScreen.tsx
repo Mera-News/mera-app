@@ -1,234 +1,102 @@
-import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
-import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
+import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
+import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
+import { Group, Row } from '@/components/custom/you/rows';
+import { useActiveTopicTexts, useHubFacts } from '@/components/custom/you/use-hub-data';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
-import { authClient } from '@/lib/auth-client';
-import { PRIVACY_URL } from '@/lib/config/branding';
-import { createTopics } from '@/lib/database/services/topic-service';
-import { listDeclinedTopics, removeDecline } from '@/lib/database/services/topic-decline-service';
-import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
-import { useUserStore } from '@/lib/stores/user-store';
-import { notifyScrollTick } from '@/lib/visibility-tick';
-import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { RefreshControl, ScrollView } from 'react-native';
-import DeclinedTopicsSection, { type DeclinedTopicItem } from './DeclinedTopicsSection';
-import FactsList, { type FactsListHandle } from './FactsList';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
+import { useColors } from '@/lib/theme/tokens';
+import { notifyScrollTick } from '@/lib/visibility-tick';
+import { MaterialIcons } from '@expo/vector-icons';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { ScrollView, View } from 'react-native';
+import { openFactPage } from './open-fact-page';
+import { sentenceCase } from './sentence-case';
 
-interface FactsScreenProps {
-    readonly onBack: () => void;
-}
+const FactRow: React.FC<{ readonly fact: Fact }> = ({ fact }) => {
+    const { t } = useTranslation();
+    const count = useActiveTopicTexts(fact.id).length;
+    return (
+        <Row
+            testID={`facts-row-${fact.id}`}
+            title={sentenceCase(fact.statement)}
+            translatable
+            titleLines={3}
+            value={t('you.profile.topicCount', { count })}
+            onPress={() => openFactPage(fact)}
+        />
+    );
+};
 
 /**
- * Facts sub-screen (Wave 12). The entire fact-management UX that used to live in
- * PersonaL1MeraProtocol's megascroll — delete fact, per-topic article counts →
- * persona-articles, delete topic, add topic, generate more — moved verbatim to
- * a dedicated pushed route off the Profile hub. Services, params, and routes are
- * unchanged; only the surrounding hub chrome (usage widget, audit/hygiene rows,
- * refresh-suggestions button) was left behind on the hub.
- *
- * Wave r6b: the row-rendering/delete/expansion/topic-management logic was
- * extracted into `FactsList` — this
- * screen now owns only the header, initial-load/empty-state chrome, the
- * "Your facts" heading + privacy notice, and the pull-to-refresh wiring.
+ * Profile > Facts (FinalProfile #5): facts only, newest first, each with its
+ * topic count, each opening the fact page (where topics, deleting and turning
+ * things down live). Add a fact opens the Mera chat.
  */
-const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
-    // Identity is a LOCAL fact (lib/security/launch-route.ts). Facts live on
-    // this device and ARE the product, so nothing here may wait on a server
-    // session: reading the id off the session meant pull-to-refresh silently
-    // did nothing (see `onRefresh`) whenever /get-session could not be reached.
-    // The persisted id survives that; the session is only the fallback for the
-    // window before hydrateFromDb() has run.
-    const { data: session } = authClient.useSession();
-    const localUserId = useUserStore((s) => s.userId);
-    const userId = localUserId ?? session?.user?.id;
-    const { fetchUserPersona } = useUserStore();
+const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
     const { t } = useTranslation();
-    const isOnDeviceProcessing = useIsOnDeviceProcessing();
-
-    const [refreshing, setRefreshing] = useState(false);
-    const [screenFacts, setScreenFacts] = useState<Fact[] | null>(null);
-    const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
-    // F46: delete lives behind Edit, as on the Profile tab.
-    const [editing, setEditing] = useState(false);
-    const [declinedTopics, setDeclinedTopics] = useState<DeclinedTopicItem[]>([]);
-
-    const factsListRef = useRef<FactsListHandle>(null);
-
-    useEffect(() => {
-        if (userId) fetchUserPersona(userId).catch(() => { /* offline */ });
-    }, [userId, fetchUserPersona]);
-
-    // "Topics you removed" — live, newest first. Round-2 review item (10):
-    // this ships in the same commit as the facts-screen delete-topic wiring
-    // (FactsList.tsx / FactAccordion.tsx), because that delete now records a
-    // PERMANENT decline (B3) and this is the only visible way back.
-    useEffect(() => {
-        const sub = listDeclinedTopics().subscribe((rows) => {
-            setDeclinedTopics(
-                rows.map((r) => ({ id: r.id, text: r.text, sourceFactId: r.sourceFactId })),
-            );
-        });
-        return () => sub.unsubscribe();
-    }, []);
-
-    const handleAllowAgain = useCallback(async (item: DeclinedTopicItem) => {
-        // Forgets the decline only — the underlying topic row was already
-        // destroyed when the delete committed, so there is nothing to
-        // restore by forgetting alone (topic-decline-service's own doc
-        // comment). Re-minting immediately when we CAN is this screen's own
-        // choice, not a side effect of removeDecline: without it, "Allow
-        // this again" would only ever remove a row from this list and change
-        // nothing else visible, which reads as broken.
-        await removeDecline(item.id);
-        if (item.sourceFactId) {
-            // WEIGHT IS LOAD-BEARING: a topic at 0 is dropped by
-            // buildRetrievalProfile and never queried, so a hand-added topic
-            // used to render with its own row and fetch nothing, forever. Same
-            // weight as a generated one, because a topic the user typed is at
-            // least as strong a signal as one Mera inferred.
-await createTopics([{ factId: item.sourceFactId, text: item.text , weight: DEFAULT_HARNESS_CONFIG.topicGen.llmTopicWeight }]);
-        }
-    }, []);
-
-    // The facts reload is unconditional — it reads the local DB and owes the
-    // server nothing. Only the persona refresh needs an id, so an unknown
-    // identity degrades this to a local-only refresh instead of a no-op
-    // spinner that never even reloads the list.
-    const onRefresh = useCallback(async () => {
-        setRefreshing(true);
-        await Promise.all([
-            factsListRef.current?.refresh() ?? Promise.resolve(),
-            userId ? fetchUserPersona(userId, true) : Promise.resolve(null),
-        ]);
-        setRefreshing(false);
-    }, [userId, fetchUserPersona]);
-
-    const isLoading = screenFacts === null;
-    const isEmpty = screenFacts !== null && screenFacts.length === 0;
+    const colors = useColors();
+    const facts = useHubFacts();
+    const addFact = () => openMeraChat({ kind: 'persona' });
 
     return (
-        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
-        // its SafeAreaView, so the page background spans the safe areas.
-        <Box className="flex-1">
-            <DrillDownHeader
-                title={t('facts.screenTitle', { defaultValue: 'Your facts' })}
-                subtitle={t('facts.screenSubtitle', { defaultValue: 'What Mera knows about you' })}
-                onBack={onBack}
-                rightAction={
-                    isEmpty || isLoading ? undefined : (
-                        <Pressable
-                            testID="facts-edit"
-                            onPress={() => setEditing((e) => !e)}
-                            accessibilityRole="button"
-                            hitSlop={8}
-                            style={{ minWidth: 44, minHeight: 44 }}
-                            className="px-2 items-center justify-center"
-                        >
-                            <Text className="text-primary-400 font-semibold" size="sm">
-                                {editing ? t('common.done') : t('profile.editFacts')}
-                            </Text>
-                        </Pressable>
-                    )
-                }
-            />
-
-            <Box className="flex-1">
-                {isLoading && (
-                    <Box className="absolute inset-0 items-center justify-center">
-                        <Spinner size="large" />
-                    </Box>
-                )}
-                {isEmpty && (
-                    <VStack className="absolute inset-0 items-center justify-center p-6" space="md">
-                        <MaterialIcons name="chat" size={48} color="#666666" />
-                        <Text size="md" className="text-gray-400 text-center">
-                            {t('configPanel.emptyStateMessage')}
-                        </Text>
-                    </VStack>
-                )}
-
-                {/* FactsList stays mounted regardless of the loading/empty chrome above
-                    so it keeps reacting to real-time fact mutations (e.g. a chat adding
-                    the first fact while this screen is showing the empty state). */}
+        <View style={{ flex: 1 }}>
+            <DrillDownHeader title={t('facts.screenTitle')} onBack={onBack} />
+            {facts === null ? (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <Spinner size="large" />
+                </View>
+            ) : facts.length === 0 ? (
+                <ForYouEmptyState
+                    testID="facts-empty"
+                    animationId="facts-a-fact-is"
+                    body={t('you.profile.factsEmpty')}
+                    action={{ label: t('nav.learnMore'), onPress: () => openTutorial('facts'), testID: 'facts-empty-learn' }}
+                />
+            ) : (
                 <ScrollView
+                    testID="facts-list"
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: 12, paddingBottom: 96 }}
                     onScroll={notifyScrollTick}
+                    onContentSizeChange={notifyScrollTick}
                     scrollEventThrottle={16}
-                    style={{ opacity: isLoading || isEmpty ? 0 : 1 }}
-                    pointerEvents={isLoading || isEmpty ? 'none' : 'auto'}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            tintColor="#ffffff"
-                            colors={['#ffffff']}
-                        />
-                    }
+                    contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 120, gap: 14 }}
                 >
-                    {/* Facts heading */}
-                    <HStack className="mx-4 mb-2 items-center justify-between">
-                        <Text size="sm" className="text-gray-400 font-medium">{t('configPanel.factsHeading')}</Text>
-                        <Pressable
-                            onPress={() => setShowPrivacyInfo(true)}
-                            hitSlop={8}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('configPanel.privacyNoticeTitle')}
-                            className="w-8 h-8 rounded-full items-center justify-center"
-                        >
-                            <MaterialIcons name="help-outline" size={18} color="rgb(231, 138, 83)" />
-                        </Pressable>
-                    </HStack>
-
-                    <FactsList ref={factsListRef} onFactsChange={setScreenFacts} editing={editing} />
-                    <DeclinedTopicsSection items={declinedTopics} onAllowAgain={handleAllowAgain} />
+                    <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginHorizontal: 4 }}>
+                        {t('facts.screenSubtitle')}
+                    </Text>
+                    <Group>
+                        {facts.map((fact) => (
+                            <FactRow key={fact.id} fact={fact} />
+                        ))}
+                    </Group>
+                    <Pressable
+                        testID="facts-add"
+                        onPress={addFact}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('facts.addFact')}
+                        style={{
+                            alignSelf: 'center',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                            height: 44,
+                            paddingHorizontal: 18,
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderColor: colors.trackBorder,
+                        }}
+                    >
+                        <MaterialIcons name="add" size={18} color={colors.ink} />
+                        <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{t('facts.addFact')}</Text>
+                    </Pressable>
                 </ScrollView>
-            </Box>
-
-
-            {/* Privacy notice */}
-            <Modal isOpen={showPrivacyInfo} onClose={() => setShowPrivacyInfo(false)} size="sm">
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader className="pb-3">
-                        <HStack className="items-center" space="xs">
-                            <MaterialIcons name="shield" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-white">{t('configPanel.privacyNoticeTitle')}</Text>
-                        </HStack>
-                    </ModalHeader>
-                    <ModalBody className="py-4">
-                        <Text className="text-gray-300 text-sm leading-relaxed">
-                            {isOnDeviceProcessing
-                                ? t('configPanel.privacyOnDevice')
-                                : t('configPanel.privacyCloud')}{' '}
-                            <Text className="text-primary-400 underline text-sm" onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}>
-                                {t('configPanel.privacyPolicy')}
-                            </Text>
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
-                        <Button
-                            variant="outline"
-                            action="secondary"
-                            onPress={() => setShowPrivacyInfo(false)}
-                            className="w-full"
-                        >
-                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </Box>
+            )}
+        </View>
     );
 };
 

@@ -1,4 +1,5 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
+import { openFactPage } from '@/components/custom/facts/open-fact-page';
 import { sentenceCase } from '@/components/custom/facts/sentence-case';
 import { composeLocationLabel, roleMeta } from '@/components/custom/locations/location-display';
 import PageTitleRow from '@/components/custom/nav/PageTitleRow';
@@ -21,13 +22,6 @@ import { useActiveTopicTexts, useHubCleanup, useHubFacts, useHubPlaces } from '.
 /** Screens pushed inside the You stack. */
 type YouScreen = 'facts' | 'locations' | 'sources' | 'hygiene-review' | 'activity';
 const openYou = (screen: YouScreen) => router.push(`/logged-in/app_container/you/${screen}` as Href);
-
-export function openFactPage(fact: Pick<Fact, 'id' | 'statement'>): void {
-    router.push({
-        pathname: '/logged-in/app_container/you/fact',
-        params: { factId: fact.id, statement: fact.statement },
-    } as Href);
-}
 
 const SHOWN = 2;
 
