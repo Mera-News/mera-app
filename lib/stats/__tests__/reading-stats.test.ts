@@ -4,16 +4,14 @@ import {
   WINDOW_MS,
   computeReadingStats,
   emptyReadingStats,
-  roundedAverageHours,
+  roundedMedianHours,
   availableCards,
   cardHasData,
   countryBands,
-  resolveStatsCardParam,
   dailyReads,
   heatGridRows,
   mondayIndex,
   peakDayCount,
-  DEFAULT_STATS_CARD,
   STATS_CARD_IDS,
   type ReadingStats,
   type StatsImpression,
@@ -356,19 +354,17 @@ describe('emptyReadingStats', () => {
   });
 });
 
-describe('roundedAverageHours', () => {
-  it('rounds a real average', () => {
-    expect(roundedAverageHours({ averageHours: 8.6, sampledArticles: 3, totalArticles: 5 })).toBe(9);
+describe('roundedMedianHours', () => {
+  it('rounds the median, not the average', () => {
+    expect(roundedMedianHours({ averageHours: 20, medianHours: 8.6, sampledArticles: 3, totalArticles: 5 })).toBe(9);
   });
 
   it('passes null through rather than turning it into zero', () => {
-    expect(roundedAverageHours({ averageHours: null, sampledArticles: 0, totalArticles: 5 })).toBeNull();
+    expect(roundedMedianHours({ averageHours: null, medianHours: null, sampledArticles: 0, totalArticles: 5 })).toBeNull();
   });
 
-  it('floors a negative average at zero', () => {
-    // A publish date in the future (a feed with a bad pubDate) would otherwise
-    // render "minus 3 hours", which reads as a bug rather than as bad data.
-    expect(roundedAverageHours({ averageHours: -3.2, sampledArticles: 1, totalArticles: 1 })).toBe(0);
+  it('floors a negative median at zero', () => {
+    expect(roundedMedianHours({ averageHours: -3, medianHours: -3.2, sampledArticles: 1, totalArticles: 1 })).toBe(0);
   });
 });
 
@@ -530,39 +526,42 @@ describe('cardHasData', () => {
     expect(availableCards(emptyReadingStats())).toEqual([]);
   });
 
-  it('offers keep from saved articles alone, with no visits at all', () => {
-    // The case hasAnyData cannot answer: a reader who cleared their viewing
-    // history still has a real keep card, and three of the other figures are
-    // genuinely gone.
+  it('offers Right now from saved articles alone, with no visits at all', () => {
+    // A reader who cleared their viewing history still has real saves.
     const stats = withStats({ keptNow: { savedArticles: 3, followedStories: 0 } });
-
-    expect(availableCards(stats)).toEqual(['keep']);
+    expect(availableCards(stats)).toEqual(['now']);
     expect(stats.hasAnyData).toBe(false);
   });
 
-  it('offers habits from a latency average even when nothing was opened', () => {
-    const stats = withStats({
-      publishToRead: { averageHours: 9, sampledArticles: 4, totalArticles: 9 },
-    });
-    expect(availableCards(stats)).toEqual(['habits']);
+  it('offers How fresh from a MEDIAN, never from an average alone', () => {
+    expect(
+      availableCards(withStats({ publishToRead: { averageHours: 9, medianHours: null, sampledArticles: 0, totalArticles: 9 } })),
+    ).toEqual([]);
+    expect(
+      availableCards(withStats({ publishToRead: { averageHours: 9, medianHours: 4, sampledArticles: 4, totalArticles: 9 } })),
+    ).toEqual(['fresh']);
   });
 
-  it('keeps theme order rather than data order', () => {
+  it('offers Opened at the source from visits, never from suggestion-card taps', () => {
+    expect(availableCards(withStats({ articlesOpened: 5 }))).toEqual([]);
+    expect(availableCards(withStats({ openedAtSourceCount: 2 }))).toEqual(['opened']);
+  });
+
+  it('keeps page order rather than data order', () => {
     const stats = withStats({
-      countries: [{ countryCode: 'IN', visitCount: 2 }],
+      topPublications: [{ publicationName: 'NOS', countryCode: 'NL', visitCount: 2 }],
+      keptNow: { savedArticles: 1, followedStories: 1 },
       publicationCount: 1,
       languages: [{ languageCode: 'en', visitCount: 2 }],
-      articlesOpened: 5,
-      keptNow: { savedArticles: 1, followedStories: 1 },
-      days: [{ dateKey: '2026-09-15', count: 2, weekday: 1 }],
+      languageCount: 1,
       daysReadCount: 1,
+      openedAtSourceCount: 2,
+      publishToRead: { averageHours: 3, medianHours: 3, sampledArticles: 2, totalArticles: 2 },
     });
-    expect(availableCards(stats)).toEqual(['reach', 'habits', 'keep']);
+    expect(availableCards(stats)).toEqual(['publications', 'languages', 'days', 'opened', 'fresh', 'now', 'top']);
   });
 
-  it('offers habits for reading days only when a day was actually READ', () => {
-    // The calendar is always 30 cells long for any device with a clock, so
-    // keying on days.length would offer a card of empty squares to everyone.
+  it('offers Days you read only when a day was actually READ', () => {
     const calendarButNoReading = withStats({
       days: Array.from({ length: 30 }, (_, i) => ({
         dateKey: `2026-09-${String(i + 1).padStart(2, '0')}`,
@@ -574,19 +573,23 @@ describe('cardHasData', () => {
     expect(availableCards(calendarButNoReading)).toEqual([]);
   });
 
-  it('offers reach from languages alone, independently of countries', () => {
-    expect(availableCards(withStats({ languages: [{ languageCode: 'ta', visitCount: 1 }] })))
-      .toEqual(['reach']);
-  });
-
   it('covers every id in the union, so a new card cannot be forgotten here', () => {
-    // Non-vacuity: if STATS_CARD_IDS grows and cardHasData does not, this fails
-    // rather than silently returning undefined for the new one.
     for (const id of STATS_CARD_IDS) {
       expect(typeof cardHasData(emptyReadingStats(), id)).toBe('boolean');
     }
-    expect(STATS_CARD_IDS).toHaveLength(3);
-    expect(STATS_CARD_IDS).toContain(DEFAULT_STATS_CARD);
+    expect(STATS_CARD_IDS).toHaveLength(7);
+  });
+});
+
+describe('openedAtSourceCount', () => {
+  it('counts distinct articles opened at the source inside the window, not taps', () => {
+    // Two rows, one opened three times: two articles, never four.
+    const stats = computeReadingStats({
+      visits: [visit({ articleId: 'a1', visitCount: 3 }), visit({ articleId: 'a2', visitCount: 1 })],
+      impressions: [],
+      nowMs: NOW,
+    });
+    expect(stats.openedAtSourceCount).toBe(2);
   });
 });
 
@@ -623,63 +626,6 @@ describe('countryBands', () => {
     const bands = countryBands(reach([['IN', 9], ['FR', 1]]));
     expect(bands[0].share).toBeCloseTo(0.9, 10);
     expect(bands[1].share).toBeCloseTo(0.1, 10);
-  });
-});
-
-describe('resolveStatsCardParam', () => {
-  const full: ReadingStats = {
-    ...emptyReadingStats(),
-    countries: [{ countryCode: 'IN', visitCount: 3 }],
-    countryCount: 1,
-    publicationCount: 2,
-    articlesOpened: 9,
-    keptNow: { savedArticles: 4, followedStories: 1 },
-  };
-
-  it('honours a named card', () => {
-    expect(resolveStatsCardParam('habits', full)).toBe('habits');
-    expect(resolveStatsCardParam('keep', full)).toBe('keep');
-  });
-
-  it('lands a retired card id on the card that now carries its figures', () => {
-    // Old links named five cards; three remain.
-    expect(resolveStatsCardParam('pace', full)).toBe('habits');
-    expect(resolveStatsCardParam('rhythm', full)).toBe('habits');
-    expect(resolveStatsCardParam('languages', full)).toBe('reach');
-  });
-
-  it('does not treat an inherited property name as a legacy id', () => {
-    expect(resolveStatsCardParam('toString', full)).toBe(DEFAULT_STATS_CARD);
-  });
-
-  it('lands the shipped no-param deep link on the default', () => {
-    // com.mera.news://logged-in/share-stats carries no param and must keep
-    // working exactly as it did.
-    expect(resolveStatsCardParam(undefined, full)).toBe(DEFAULT_STATS_CARD);
-  });
-
-  it('treats garbage as "no card named" rather than trusting the URL', () => {
-    // A URL param's TypeScript type is a claim about nothing.
-    for (const raw of ['foo', '', '../reach', 42, null, {}, ['reach']]) {
-      expect(resolveStatsCardParam(raw, full)).toBe(DEFAULT_STATS_CARD);
-    }
-  });
-
-  it('falls through a valid id whose card is empty', () => {
-    // Landing a share link on a card of zeroes is the same dead end as landing
-    // on a crash, only quieter.
-    const keepOnly: ReadingStats = {
-      ...emptyReadingStats(),
-      keptNow: { savedArticles: 2, followedStories: 0 },
-    };
-    expect(resolveStatsCardParam('reach', keepOnly)).toBe('keep');
-    expect(resolveStatsCardParam('habits', keepOnly)).toBe('keep');
-    expect(resolveStatsCardParam('pace', keepOnly)).toBe('keep');
-  });
-
-  it('returns null only when the device has no card at all', () => {
-    expect(resolveStatsCardParam('reach', emptyReadingStats())).toBeNull();
-    expect(resolveStatsCardParam(undefined, emptyReadingStats())).toBeNull();
   });
 });
 

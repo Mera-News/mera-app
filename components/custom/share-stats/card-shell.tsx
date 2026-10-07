@@ -39,7 +39,7 @@
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
-import { ink } from '@/components/custom/share-stats/card-theme';
+import { useCardInk } from '@/components/custom/share-stats/card-theme';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -105,18 +105,9 @@ export const SHELL_METRICS = {
   wordmark: 18,
   title: 13,
   titleGap: 5,
-  windowLine: 9.5,
-  windowGap: 2,
-  /** The made-on date, top right. Same size and tone family as the window
-   *  line, because it does the same job: it makes the card's claim checkable
-   *  by whoever sees it later instead of leaving it floating. */
-  stampDate: 9.5,
   /** 9.5 is the text floor: 28.5px at the 1080px export, where ~28px is the
    *  smallest a shared story image stays readable. */
   qualifier: 9.5,
-  qualifierGap: 2,
-  footerGap: 4,
-  footerDomain: 10,
 } as const;
 
 /** Host size in POINTS for a given device scale. EXPORT path only. */
@@ -176,61 +167,20 @@ export function type(
   return { fontSize, lineHeight: Math.ceil(fontSize * leading) };
 }
 
-/**
- * The date the card was MADE, formatted by the platform in the reader's own
- * locale and timezone.
- *
- * No format string, no per-locale ordering table, no composed string: date
- * order is not universal and `toLocaleDateString` already knows all twenty.
- * Same approach the daily-cap copy takes for its reset time, and for the same
- * reason a UTC date is wrong there, the DEVICE timezone is what is used here.
- *
- * Falls back to the ISO date rather than throwing: an exotic locale tag on a
- * device with a thin ICU build can reject the options bag, and a card that
- * renders without a date is better than a card that does not render.
- */
-export function formatStampDate(ms: number, locale?: string): string {
-  try {
-    return new Date(ms).toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  } catch {
-    return new Date(ms).toLocaleDateString('en-CA');
-  }
-}
-
 export interface CardShellProps {
-  /** The card's own heading. First person, matching the existing card. */
+  /** "{Card} · last 30 days", or "Right now" alone (FinalLibrary #12): ONE
+   *  window statement per image, never two. */
   title: string;
-  /** "Last 30 days" or "Right now". ONE window statement per card, never two. */
-  windowLine: string;
   privacyLine: string;
   pixelRatio: number;
   /**
-   * When the card was made, epoch ms. INJECTED rather than read from the clock
-   * here, and on the share path it is stamped when the CAPTURE starts, not at
-   * mount: a card left on screen across midnight must not go out carrying
-   * yesterday.
-   */
-  stampedAtMs: number;
-  /** BCP-47 tag for the date format. Undefined means the platform default. */
-  locale?: string;
-  /**
-   * Explicit host size in POINTS, for the ON-SCREEN path.
+   * Explicit host size in POINTS, for the ON-SCREEN path (the Preview pager).
    *
    * Omitted means the EXPORT path: the host is `hostSizeForScale(pixelRatio)`,
    * 360x640 at 3x, with the two 250px reserves drawn as padding so the captured
-   * PNG carries them. Supplied means the card is being shown on a page rather
-   * than rasterised, so it is fitted to the content-box ratio and the reserves
-   * are not drawn — there is no social chrome on a phone screen to keep clear
-   * of, and drawing them would waste a fifth of the height on blank bands and
-   * make the on-screen card a differently proportioned preview of the file.
-   *
-   * Either way the CONTENT is identical and its budget is the same one:
-   * `share-stats-locale-budget` measures the 1080x1420 box, which is exactly
-   * what both paths lay the content into.
+   * PNG carries them. Supplied means the card is shown rather than rasterised,
+   * fitted to the content-box ratio, with no reserves (no social chrome on a
+   * phone screen to keep clear of). The CONTENT is identical either way.
    */
   hostSize?: { width: number; height: number };
   testID: string;
@@ -238,9 +188,10 @@ export interface CardShellProps {
 }
 
 const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
-  { title, windowLine, privacyLine, pixelRatio, stampedAtMs, locale, hostSize, testID, children },
+  { title, privacyLine, pixelRatio, hostSize, testID, children },
   ref,
 ) {
+  const { palette, ink } = useCardInk();
   const onScreen = hostSize !== undefined;
   const host = hostSize ?? hostSizeForScale(pixelRatio);
   const k = host.width / DESIGN_WIDTH;
@@ -254,24 +205,18 @@ const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
   return (
     // `collapsable={false}` keeps Android from flattening the host out of the
     // view hierarchy, which would leave captureRef nothing to snapshot.
-    <View
-      ref={ref}
-      collapsable={false}
-      testID={testID}
-      style={{ width: host.width, height: host.height }}
-    >
-      {/* The app's own background, not a flat fill: a share that looks like the
-          app is the point. INSIDE the captured host, so it reaches the PNG edge
-          to edge including both reserves.
-
-          `frame={0}` is what makes a capture reproducible, and the seed alone
-          would NOT be enough: the seed fixes the colour SEQUENCE while a shared
-          time-driven step picks the position in it, so a seeded-only backdrop
-          drifts every 45 seconds. Pinned, two shares of the same stats produce
-          identical files. */}
-      <Box className="absolute inset-0 bg-background-0">
-        <AbstractGradientBackdrop seed="mera-stats-card" frame={0} />
-      </Box>
+    <View ref={ref} collapsable={false} testID={testID} style={{ width: host.width, height: host.height }}>
+      {/* Dark: the app's own background, pinned (`frame={0}`, the seed alone
+          drifts every 45 s) so two shares of the same stats are identical.
+          Light: the light theme's base. Inside the captured host, so it reaches
+          the PNG edge to edge including both reserves. */}
+      {palette.base === null ? (
+        <Box className="absolute inset-0 bg-background-0">
+          <AbstractGradientBackdrop seed="mera-stats-card" frame={0} />
+        </Box>
+      ) : (
+        <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: palette.base }} />
+      )}
 
       <Box
         className="flex-1"
@@ -284,76 +229,30 @@ const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
       >
         <VStack className="flex-1 justify-between">
           <VStack>
-            {/* Two columns. The brand-and-title column is `flex: 1` and the
-                date column `flexShrink: 0`, so a long German title WRAPS
-                rather than pushing the date off the card. `alignItems` is
-                flex-start so the date sits on the wordmark's line whatever the
-                title does below it. */}
-            <HStack style={{ alignItems: 'flex-start', columnGap: 10 * k, marginTop: logoMargin }}>
-              <VStack style={{ flex: 1 }}>
-                <HStack className="items-center" style={{ columnGap: 8 * k }}>
-                  <MeraLogo size={m.logoSize * k} />
-                  <Text
-                    allowFontScaling={false}
-                    className="font-semibold"
-                    style={[type(m.wordmark, k, m.numeralLeading), ink('primary')]}
-                  >
-                    Mera News
-                  </Text>
-                </HStack>
-                <Text
-                  allowFontScaling={false}
-                  className="font-semibold"
-                  style={[type(m.title, k), { marginTop: m.titleGap * k }, ink('primary')]}
-                >
-                  {title}
-                </Text>
-              </VStack>
+            <HStack className="items-center" style={{ columnGap: 8 * k, marginTop: logoMargin }}>
+              <MeraLogo size={m.logoSize * k} color={palette.primary} />
               <Text
                 allowFontScaling={false}
-                testID={`${testID}-stamp`}
-                numberOfLines={1}
-                style={[
-                  type(m.stampDate, k),
-                  { flexShrink: 0, marginTop: (m.logoSize - m.stampDate * 1.4) * 0.5 * k },
-                  ink('muted'),
-                ]}
+                className="font-semibold"
+                style={[type(m.wordmark, k, m.numeralLeading), ink('primary')]}
               >
-                {formatStampDate(stampedAtMs, locale)}
+                mera.news
               </Text>
             </HStack>
-            {/* The window statement sits directly under the title, never in a
-                collected footnote, because a footnote is what a screenshot
-                crops off. Exactly one per card. */}
             <Text
               allowFontScaling={false}
               testID={`${testID}-window`}
-              style={[type(m.windowLine, k), { marginTop: m.windowGap * k }, ink('muted')]}
+              style={[type(m.title, k), { marginTop: m.titleGap * 3 * k }, ink('secondary')]}
             >
-              {windowLine}
+              {title}
             </Text>
+            <View style={{ marginTop: m.titleGap * 3 * k }}>{children}</View>
           </VStack>
 
-          {children}
-
-          {/* Inside the safe band, never in the bottom reserve. A store badge
-              belongs on this line; both stores publish clear-space and minimum
-              size rules and forbid recolouring, neither of which the reserve
-              can guarantee. The artwork is not in this repo yet. */}
-          <VStack>
-            <Text
-              allowFontScaling={false}
-              style={[type(m.qualifier, k), ink('muted')]}
-            >
-              {privacyLine}
-            </Text>
-            <Text
-              allowFontScaling={false}
-              style={[type(m.footerDomain, k), { marginTop: m.footerGap * k }, ink('secondary')]}
-            >
-              mera.news
-            </Text>
-          </VStack>
+          {/* Inside the safe band, never in the bottom reserve. */}
+          <Text allowFontScaling={false} style={[type(m.qualifier, k), ink('muted')]}>
+            {privacyLine}
+          </Text>
         </VStack>
       </Box>
     </View>

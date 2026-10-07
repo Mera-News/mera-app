@@ -42,7 +42,7 @@
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
-import { inkColor } from '@/components/custom/share-stats/card-theme';
+import { CARD_PALETTES, type CardPalette, useCardInk } from '@/components/custom/share-stats/card-theme';
 import React from 'react';
 import { View, type TextStyle } from 'react-native';
 
@@ -158,6 +158,7 @@ export const FlagGrid: React.FC<FlagGridProps> = ({
   maxCells,
   testID,
 }) => {
+  const { inkColor } = useCardInk();
   const { shown, remaining } = splitFlagGrid(countryCodes, maxCells ?? CHART_METRICS.flagMaxCells);
   const cell = CHART_METRICS.flagCell * k;
 
@@ -240,13 +241,14 @@ export interface ProportionBarProps {
  * legend does not explain.
  */
 export const ProportionBar: React.FC<ProportionBarProps> = ({ segments, k, testID }) => {
+  const { inkColor, palette } = useCardInk();
   if (segments.length === 0) return null;
 
   // Stepped white for the non-accent bands, so the order is readable without a
   // legend lookup. One accent per card is the house rule.
   const tone = (index: number, accent?: boolean): string => {
     if (accent) return inkColor('accent');
-    const steps = ['rgba(255, 255, 255, 0.55)', 'rgba(255, 255, 255, 0.34)', 'rgba(255, 255, 255, 0.18)'];
+    const steps = palette.steps;
     return steps[Math.min(index - 1, steps.length - 1)] ?? steps[steps.length - 1];
   };
 
@@ -328,6 +330,7 @@ export const DotArray: React.FC<DotArrayProps> = ({
   maxDots,
   testID,
 }) => {
+  const { inkColor } = useCardInk();
   const { drawn } = dotsFor(count, maxDots ?? CHART_METRICS.dotMax);
   const size = CHART_METRICS.dotSize * k;
   const colour = accent ? inkColor('accent') : inkColor('primary');
@@ -393,6 +396,7 @@ export const RuledScale: React.FC<RuledScaleProps> = ({
   endLabel,
   testID,
 }) => {
+  const { inkColor, palette } = useCardInk();
   const fraction = scalePosition(value, min, max);
   const marker = CHART_METRICS.scaleMarker * k;
 
@@ -403,7 +407,7 @@ export const RuledScale: React.FC<RuledScaleProps> = ({
           style={{
             height: CHART_METRICS.scaleRule * k,
             borderRadius: CHART_METRICS.scaleRule * k,
-            backgroundColor: 'rgba(255, 255, 255, 0.24)',
+            backgroundColor: palette.rule,
           }}
         />
         {/* Positioned as a percentage of the row and pulled back by half its
@@ -490,14 +494,8 @@ export function heatLevel(count: number, peak: number): 0 | 1 | 2 | 3 | 4 {
 
 /** The tone for each level. Level 0 is an outlined empty cell rather than a
  *  filled one, so "no reading" reads as absence and not as a dark value. */
-export function heatTone(level: 0 | 1 | 2 | 3 | 4): string {
-  return [
-    'rgba(255, 255, 255, 0.07)',
-    'rgba(231, 138, 83, 0.30)',
-    'rgba(231, 138, 83, 0.52)',
-    'rgba(231, 138, 83, 0.76)',
-    'rgb(231, 138, 83)',
-  ][level];
+export function heatTone(level: 0 | 1 | 2 | 3 | 4, palette: CardPalette = CARD_PALETTES.dark): string {
+  return palette.heat[level];
 }
 
 /**
@@ -526,6 +524,7 @@ export const HeatGrid: React.FC<HeatGridProps> = ({
   legendMore,
   testID,
 }) => {
+  const { inkColor, palette } = useCardInk();
   const rows = heatRows(days);
   if (rows.length === 0) return null;
 
@@ -565,7 +564,7 @@ export const HeatGrid: React.FC<HeatGridProps> = ({
                   // slot is a day outside the window, and showing it at the
                   // same tone as an unread day inside the window would add
                   // days the card is not claiming to cover.
-                  backgroundColor: day ? heatTone(heatLevel(day.count, peak)) : 'transparent',
+                  backgroundColor: day ? heatTone(heatLevel(day.count, peak), palette) : 'transparent',
                 }}
               />
             ))}
@@ -590,7 +589,7 @@ export const HeatGrid: React.FC<HeatGridProps> = ({
               width: CHART_METRICS.heatLegendSwatch * k,
               height: CHART_METRICS.heatLegendSwatch * k,
               borderRadius: 2 * k,
-              backgroundColor: heatTone(level),
+              backgroundColor: heatTone(level, palette),
             }}
           />
         ))}

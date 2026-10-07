@@ -37,7 +37,7 @@ function makeVisit(overrides: Partial<VisitedArticle> = {}): VisitedArticle {
 describe('computePublishToReadStats', () => {
   it('returns null average with zero sample size for an empty history', () => {
     const result = computePublishToReadStats([]);
-    expect(result).toEqual({ averageHours: null, sampledArticles: 0, totalArticles: 0 });
+    expect(result).toEqual({ averageHours: null, medianHours: null, sampledArticles: 0, totalArticles: 0 });
   });
 
   it('returns null average when every row has a null pubDate', () => {
@@ -63,6 +63,16 @@ describe('computePublishToReadStats', () => {
     expect(result.totalArticles).toBe(3); // denominator still reflects ALL rows
   });
 
+  it('reports the MEDIAN beside the average, and they differ on a skewed set', () => {
+    // 1h, 2h, 3h, 50h: the average (14) would make "half was under N hours" false.
+    const odd = [1, 2, 50].map((h, i) => makeVisit({ articleId: `o${i}`, pubDate: NOW - h * HOUR, visitedAt: NOW }));
+    expect(computePublishToReadStats(odd).medianHours).toBe(2);
+    const even = [50, 1, 3, 2].map((h, i) => makeVisit({ articleId: `e${i}`, pubDate: NOW - h * HOUR, visitedAt: NOW }));
+    const result = computePublishToReadStats(even);
+    expect(result.medianHours).toBe(2.5);
+    expect(result.averageHours).toBe(14);
+  });
+
   it('computes a single-article average correctly', () => {
     const visits = [makeVisit({ pubDate: NOW - 10 * HOUR, visitedAt: NOW })];
     const result = computePublishToReadStats(visits);
@@ -85,7 +95,7 @@ describe('buildReadingHistoryExport', () => {
     expect(result.totalArticles).toBe(0);
     expect(result.earliestVisit).toBeNull();
     expect(result.latestVisit).toBeNull();
-    expect(result.publishToReadStats).toEqual({ averageHours: null, sampledArticles: 0, totalArticles: 0 });
+    expect(result.publishToReadStats).toEqual({ averageHours: null, medianHours: null, sampledArticles: 0, totalArticles: 0 });
     expect(result.byPublication).toEqual([]);
     expect(result.byCountry).toEqual([]);
     expect(result.byLanguage).toEqual([]);
@@ -176,6 +186,6 @@ describe('buildReadingHistoryExport', () => {
       makeVisit({ articleId: 'a2', pubDate: null }),
     ];
     const result = buildReadingHistoryExport(visits, { now });
-    expect(result.publishToReadStats).toEqual({ averageHours: 4, sampledArticles: 1, totalArticles: 2 });
+    expect(result.publishToReadStats).toEqual({ averageHours: 4, medianHours: 4, sampledArticles: 1, totalArticles: 2 });
   });
 });

@@ -10,8 +10,9 @@ describe('normalizeLegacyHref', () => {
     [`${TABS}/profile`, { pathname: `${TABS}/you`, page: 'profile' }],
     [`${TABS}/settings`, { pathname: `${TABS}/you`, page: 'settings' }],
     // The six root stubs.
-    ['/logged-in/share-stats', { pathname: `${TABS}/library`, page: 'stats' }],
-    ['/logged-in/share-stats?card=keep', { pathname: `${TABS}/library`, page: 'stats', params: { card: 'keep' } }],
+    ['/logged-in/share-stats', { pathname: `${TABS}/library`, page: 'visited' }],
+    // The Stats live under History now; an old card id has nowhere to land.
+    ['/logged-in/share-stats?card=keep', { pathname: `${TABS}/library`, page: 'visited' }],
     ['/logged-in/saved-suggestions', { pathname: `${TABS}/library`, page: 'saved' }],
     ['/logged-in/visited-publications', { pathname: `${TABS}/library`, page: 'visited' }],
     ['/logged-in/profile-advanced', { pathname: `${TABS}/you`, page: 'profile' }],
@@ -27,7 +28,7 @@ describe('normalizeLegacyHref', () => {
   it('drops params the destination does not read', () => {
     expect(normalizeLegacyHref(`${TABS}/for_you?subTab=factChecks`)).toEqual({ pathname: `${TABS}/feed` });
     expect(normalizeLegacyHref('/logged-in/share-stats?card=reach&x=1')).toEqual({
-      pathname: `${TABS}/library`, page: 'stats', params: { card: 'reach' },
+      pathname: `${TABS}/library`, page: 'visited',
     });
   });
 
@@ -48,8 +49,8 @@ describe('normalizeLegacyHref', () => {
   );
 
   it('drops a malformed escape, not the link', () => {
-    expect(normalizeLegacyHref('/logged-in/share-stats?card=%E0%A4%A&x')).toEqual({
-      pathname: `${TABS}/library`, page: 'stats',
+    expect(normalizeLegacyHref('/logged-in/fact-feed?factId=%E0%A4%A&via=next')).toEqual({
+      pathname: `${TABS}/feed/interest`, params: { via: 'next' },
     });
   });
 });
