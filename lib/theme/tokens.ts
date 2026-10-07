@@ -94,7 +94,12 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
     },
 };
 
-/** The current theme's colours. Dark until the theme store lands (P12). */
+/** The current theme. Dark until the theme store lands (P12). */
+export function useThemeMode(): ThemeMode {
+    return 'dark';
+}
+
+/** The current theme's colours. */
 export function useColors(): ThemeColors {
-    return COLORS.dark;
+    return COLORS[useThemeMode()];
 }

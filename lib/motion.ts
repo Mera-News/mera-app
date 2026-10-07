@@ -48,7 +48,11 @@ export const MOTION = {
     glow: { fade: 400 },
     shimmer: { loop: 1600, delay: 200, contentFade: 150 },
     chat: { open: 320, close: 200, reduce: 200 },
+    /** Chat answer words fading in. */
     wordFade: { duration: 120 },
+    /** The card note's reason resolving word by word (FinalRead #3); its chip
+     *  pops in on SPRING.like. */
+    noteReveal: { word: 250, stagger: 40 },
     stage: { duration: 600 },
 } as const;
 

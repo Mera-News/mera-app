@@ -16,8 +16,9 @@ import { Pressable, ScrollView, View, ViewStyle } from 'react-native';
 // alternative — copying the rgba into every primitive — is the drift the
 // MENU_PANEL_FILL note in components/ui/toast/index.tsx already warns about.
 // No cycle: GlassSurface imports only components/ui/box.
-import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import { GLASS_EDGE, TranslucentPlate } from '@/components/custom/GlassSurface';
+import { GLASS_EDGE } from '@/components/custom/GlassSurface';
+import ModalMaterial from '@/components/custom/ModalMaterial';
+import { MOTION } from '@/lib/motion';
 
 type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
@@ -64,41 +65,22 @@ const modalBackdropStyle = tva({
 });
 
 /**
- * ## Why the modal is a translucent PLATE, and why the backdrop had to darken
+ * ## The material (Modals board)
  *
- * A translucent panel was tried on the app's other small surfaces and rejected
- * TWICE, for one reason both times: page text read through the labels even at a
- * denser scrim. `components/ui/menu/index.tsx` records the menu version;
- * `components/ui/toast/index.tsx` records the toast version, which the owner
- * called ugly. A modal is a BIGGER translucent surface over BUSIER content than
- * either, so it would have failed harder.
- *
- * What makes it work here is not the plate, it is WHAT IS BEHIND IT. Cards and
- * `GlassPanel` read well because they float over the gradient backdrop; a modal
- * floats over a live screen full of text. So the BACKDROP does the work — it
- * animates to 0.78, not gluestack's 0.5 — and the plate is then translucent
- * against an already-darkened field rather than against raw page text.
- *
- * ## The gradient (owner: modals did not look like the rest of the app)
- *
- * The surface is the app's own material, not a grey slab: an OPAQUE dark base,
- * the gradient backdrop on it, then the translucent plate, the same stack as
- * EmailCaptureSheet. Opaque because nothing behind a modal may read through its
- * copy; the gradient gives back what the old 0.90 fill took away. The backdrop
- * is seeded and pinned to one frame, so every modal shows the same colours and
- * none of them runs the shared cross-fade.
+ * Every sheet and dialog wears `ModalMaterial`: an opaque base with the warm
+ * orange, violet and blue glow. Opaque because nothing behind a modal may read
+ * through its copy. The dim behind is 78% black (the backdrop below).
  *
  * ## The three-layer split, which is load-bearing
  *
- * 1. `UIModal.Content` owns the width and the shadow, and must NOT clip — RN
+ * 1. `UIModal.Content` owns the width and the shadow, and must NOT clip: RN
  *    drops a view's shadow the moment that view sets `overflow: hidden`. It
  *    carries the radius anyway, or the shadow is cast as a square.
  * 2. An inner UNPADDED box owns the radius, the clip and the edge. Unpadded is
  *    not a style preference: Yoga resolves an absolute child's insets against
- *    the parent's CONTENT box, so hanging the plate off a padded view leaves an
- *    unplated frame (see `GlassSurface.tsx`).
- * 3. The padding that used to live on Content moved inward, onto the box that
- *    wraps `children`.
+ *    the parent's CONTENT box, so an absolute-fill material on a padded view
+ *    leaves an unpainted frame (see `GlassSurface.tsx`).
+ * 3. The padding lives on the box that wraps `children`.
  */
 const modalContentStyle = tva({
   base: 'rounded-2xl shadow-hard-2',
@@ -117,10 +99,8 @@ const modalContentStyle = tva({
 // invoked with no argument throws "Cannot read property 'parentVariants' of
 // undefined" — a render error no test here can see, because nothing renders a
 // ModalContent in jest.
-/** Layer 2: the clipping, radius-owning, UNPADDED host for the plate. */
+/** Layer 2: the clipping, radius-owning, UNPADDED host for the material. */
 const MODAL_SURFACE_CLASS = `rounded-2xl overflow-hidden ${GLASS_EDGE}`;
-/** The opaque base under the gradient (gluestack dark `--color-background-0`). */
-const MODAL_BASE = 'rgb(18, 17, 19)';
 /** Layer 3: the padding gluestack had on Content. */
 const MODAL_INNER_CLASS = 'p-6';
 
@@ -184,9 +164,7 @@ const ModalBackdrop = React.forwardRef<
         opacity: 0,
       }}
       animate={{
-        // 0.78, not gluestack's 0.5 — see the note on modalContentStyle. The
-        // plate above this is translucent, so this is what keeps the page's
-        // text from reading through the panel.
+        // The Modals board's dim: 78% black, not gluestack's 0.5.
         opacity: 0.78,
       }}
       exit={{
@@ -218,9 +196,12 @@ const ModalContent = React.forwardRef<
   return (
     <UIModal.Content
       ref={ref}
+      // Small modals (FinalMotion): fade in from 96%, out to 98%.
+      // ponytail: one timing for both ways (220 ms; the board's exit is 160),
+      // because Legend Motion keeps a single transition per element.
       initial={{
         opacity: 0,
-        scale: 0.9,
+        scale: MOTION.smallModal.fromScale,
       }}
       animate={{
         opacity: 1,
@@ -228,15 +209,11 @@ const ModalContent = React.forwardRef<
       }}
       exit={{
         opacity: 0,
+        scale: MOTION.smallModal.toScale,
       }}
       transition={{
-        type: 'spring',
-        damping: 18,
-        stiffness: 250,
-        opacity: {
-          type: 'timing',
-          duration: 250,
-        },
+        type: 'timing',
+        duration: MOTION.smallModal.in,
       }}
       {...props}
       className={modalContentStyle({
@@ -249,9 +226,8 @@ const ModalContent = React.forwardRef<
       pointerEvents="auto"
     >
       {/* Three layers, and the order matters — see modalContentStyle. */}
-      <View className={MODAL_SURFACE_CLASS} style={{ backgroundColor: MODAL_BASE }}>
-        <AbstractGradientBackdrop seed="mera-modal" frame={0} />
-        <TranslucentPlate />
+      <View className={MODAL_SURFACE_CLASS}>
+        <ModalMaterial />
         <View className={MODAL_INNER_CLASS}>{children}</View>
       </View>
     </UIModal.Content>
