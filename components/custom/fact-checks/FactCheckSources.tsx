@@ -8,20 +8,15 @@ import {
     describeCheckedBy,
     describeOrganisationVerdict,
     shouldShowMultipleOrganisationsCaveat,
-    type FactCheckTone,
 } from '@/lib/fact-check/fact-check-state';
 import logger from '@/lib/logger';
 import { isSecureUrl } from '@/lib/secure-url';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 
 /** Same rule as everywhere else in this feature: no red. See FactCheckPanel. */
-const TONE_CLASSES: Record<FactCheckTone, { text: string }> = {
-    positive: { text: 'text-success-400' },
-    caution: { text: 'text-warning-400' },
-    neutral: { text: 'text-gray-300' },
-};
 
 interface FactCheckSourcesProps {
     /** Which half to render — see the file header. */
@@ -75,6 +70,9 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
     testIDPrefix,
 }) => {
     const { t } = useTranslation();
+    const c = useColors();
+    // An organisation's own rating, by tone. Warning is a JS-only token.
+    const toneInk = { positive: c.positive, caution: c.warning, neutral: c.ink } as const;
 
     // The single way this feature opens a URL. `openInAppBrowser`, not
     // `openArticleInAppBrowser`: these are third-party pages, not our
@@ -103,20 +101,20 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                     // stored before this field existed) is the normal,
                     // honest outcome — most stories are never fact-checked.
                     checkedByStatus === 'unavailable' ? (
-                        <Text size="xs" className="text-gray-400" testID={`${testIDPrefix}-checked-by-unavailable`}>
+                        <Text size="xs" className="text-ink-3" testID={`${testIDPrefix}-checked-by-unavailable`}>
                             {t('factCheck.checkedByUnavailable')}
                         </Text>
                     ) : (
-                        <Text size="xs" className="text-gray-400">
+                        <Text size="xs" className="text-ink-3">
                             {t('factCheck.noCheckedBy')}
                         </Text>
                     )
                 ) : (
                     <>
-                        <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                        <Text size="xs" className="text-ink-3 font-semibold uppercase">
                             {t('factCheck.checkedByHeading')}
                         </Text>
-                        <Text size="xs" className="text-gray-400">
+                        <Text size="xs" className="text-ink-3">
                             {t('factCheck.checkedByRelatedNote')}
                         </Text>
                         {/* Never a synthesised consensus — each rating below
@@ -125,7 +123,7 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                         {shouldShowMultipleOrganisationsCaveat(organisations.length) && (
                             <Text
                                 size="xs"
-                                className="text-gray-400 italic"
+                                className="text-ink-3 italic"
                                 testID={`${testIDPrefix}-multiple-organisations-note`}
                             >
                                 {t('factCheck.checkedByMultipleNote')}
@@ -145,14 +143,15 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                                     <Text
                                         size="sm"
                                         className={tappable
-                                            ? 'text-primary-400 underline font-semibold'
-                                            : 'text-gray-200 font-semibold'}
+                                            ? 'text-accent-text underline font-semibold'
+                                            : 'text-ink font-semibold'}
                                     >
                                         {org}
                                     </Text>
                                     <Text
                                         size="xs"
-                                        className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
+                                        className="font-semibold"
+                                        style={{ color: toneInk[info.tone] }}
                                     >
                                         {ratingText}
                                     </Text>
@@ -169,11 +168,11 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                                         <TranslatableDynamic
                                             text={entry.summary}
                                             size="xs"
-                                            className="text-gray-400"
+                                            className="text-ink-3"
                                         />
                                     ) : null}
                                     {!tappable ? (
-                                        <Text size="xs" className="text-gray-500 italic">
+                                        <Text size="xs" className="text-ink-3 italic">
                                             {t('factCheck.noLink')}
                                         </Text>
                                     ) : null}
@@ -189,7 +188,7 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                                         rating: ratingText,
                                     })}
                                     testID={`${testIDPrefix}-org-${index}`}
-                                    className="border-l-2 border-gray-700 pl-2 py-1"
+                                    className="border-l-2 border-line pl-2 py-1"
                                 >
                                     {body}
                                 </Pressable>
@@ -197,7 +196,7 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                                 <Box
                                     key={`org-${index}`}
                                     testID={`${testIDPrefix}-org-${index}`}
-                                    className="border-l-2 border-gray-700 pl-2 py-1"
+                                    className="border-l-2 border-line pl-2 py-1"
                                 >
                                     {body}
                                 </Box>
@@ -220,14 +219,14 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
             {sources.length === 0 ? (
                 <Text
                     size="xs"
-                    className="text-gray-400"
+                    className="text-ink-3"
                     testID={`${testIDPrefix}-no-citations`}
                 >
                     {t('factCheck.noCitations')}
                 </Text>
             ) : (
                 <>
-                    <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                    <Text size="xs" className="text-ink-3 font-semibold uppercase">
                         {t('factCheck.citationsHeading')}
                     </Text>
                     {sources.map((citation, index) => {
@@ -239,8 +238,8 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                                 <Text
                                     size="sm"
                                     className={tappable
-                                        ? 'text-primary-400 underline'
-                                        : 'text-gray-400'}
+                                        ? 'text-accent-text underline'
+                                        : 'text-ink-3'}
                                 >
                                     {label}
                                 </Text>
@@ -248,12 +247,12 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                                     <TranslatableDynamic
                                         text={citation.snippet}
                                         size="xs"
-                                        className="text-gray-400"
+                                        className="text-ink-3"
                                         numberOfLines={3}
                                     />
                                 ) : null}
                                 {!tappable ? (
-                                    <Text size="xs" className="text-gray-500 italic">
+                                    <Text size="xs" className="text-ink-3 italic">
                                         {t('factCheck.noLink')}
                                     </Text>
                                 ) : null}

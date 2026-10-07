@@ -144,20 +144,20 @@ export const FactCheckBadge: React.FC<FactCheckBadgeProps> = ({
     switch (copy.outcome) {
         case 'pending':
             return (
-                <Text size={size} className="text-gray-400" testID={`${testIDPrefix}-pending`}>
+                <Text size={size} className="text-ink-3" testID={`${testIDPrefix}-pending`}>
                     {t('factCheck.dashboard.pending')}
                 </Text>
             );
         case 'blocked':
             return (
-                <Text size={size} className="text-gray-400">
+                <Text size={size} className="text-ink-3">
                     {t('factCheck.blocked')}
                 </Text>
             );
         case 'published':
             return (
                 <VStack space="xs" testID={id('organisation')}>
-                    <Box className="self-start rounded-full bg-gray-800 px-3 py-1">
+                    <Box className="self-start rounded-full bg-surface-raised px-3 py-1">
                         {/* Verbatim, on that organisation's own scale — see
                             the file header. NOT always a short word: a real
                             prod row had Full Fact's `verdict` as a full
@@ -172,12 +172,12 @@ export const FactCheckBadge: React.FC<FactCheckBadgeProps> = ({
                             (FactCheckSources) has no such cap on purpose —
                             it has room, and a reader who opened it asked for
                             the whole sentence. */}
-                        <Text size={size} className="font-semibold text-gray-200" numberOfLines={1}>
+                        <Text size={size} className="font-semibold text-ink" numberOfLines={1}>
                             {copy.leadText}
                         </Text>
                     </Box>
                     {(copy.count ?? 0) > 1 && (
-                        <Text size={size} className="text-gray-400" testID={id('count')}>
+                        <Text size={size} className="text-ink-3" testID={id('count')}>
                             {t('factCheck.dashboard.factChecksFound', { count: copy.count })}
                         </Text>
                     )}
@@ -187,7 +187,7 @@ export const FactCheckBadge: React.FC<FactCheckBadgeProps> = ({
             return (
                 <Text
                     size={size}
-                    className="text-gray-400"
+                    className="text-ink-3"
                     testID={id('unavailable')}
                     numberOfLines={2}
                 >
@@ -196,7 +196,7 @@ export const FactCheckBadge: React.FC<FactCheckBadgeProps> = ({
             );
         case 'none-published':
             return (
-                <Text size={size} className="text-gray-400" testID={id('none-found')}>
+                <Text size={size} className="text-ink-3" testID={id('none-found')}>
                     {t('factCheck.dashboard.noneFound')}
                 </Text>
             );

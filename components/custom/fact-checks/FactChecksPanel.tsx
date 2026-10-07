@@ -17,11 +17,11 @@ import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-
 import { reconcileAskedFactChecks } from '@/lib/fact-check/fact-check-graphql-client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 import { RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
-const REFRESH_TINT = '#EDA77E';
 
 
 interface FactChecksPanelProps {
@@ -79,6 +79,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     onExplain,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     // Inside a tab on iOS the inset already includes the tab bar; measured on
     // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
     const tabClearance = useTabBarClearance();
@@ -186,8 +187,8 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={() => { void reconcileAndRefresh(); }}
-                        tintColor={REFRESH_TINT}
-                        colors={[REFRESH_TINT]}
+                        tintColor={colors.accent}
+                        colors={[colors.accent]}
                         // Push the spinner below the absolute collapsing header
                         // so it isn't hidden behind it (Android). Same as every
                         // other Library page.
