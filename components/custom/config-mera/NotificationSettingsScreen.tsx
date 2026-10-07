@@ -21,18 +21,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import NotificationHourWheel, { formatHourLabel } from '@/components/custom/NotificationHourWheel';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import { useColors } from '@/lib/theme/tokens';
 
 /** Quiet period after the last change before the hours are saved. */
 const AUTO_SAVE_DELAY_MS = 800;
 
-const ACCENT = '#E78A53';
-const ACCENT_SOFT = '#F2BFA0';
-const CARD = {
-    borderRadius: 16,
-    backgroundColor: 'rgba(40,39,42,0.82)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-} as const;
+/** Up to three times (owner). More stored before the cap stay, untrimmed. */
+const MAX_TIMES = 3;
 /** The picked-hour pill is 36pt; its remove control is a 44pt frame that
  *  bleeds 4pt above and below and 12pt each side of its 20pt glyph. */
 const PILL_HEIGHT = 36;
@@ -50,7 +45,7 @@ interface NotificationSettingsScreenProps {
 }
 
 /** Where the wheel starts: 08:00 when it is free, else the first free hour
- *  after the latest pick, so "Add a time" is ready to use. */
+ *  after the latest pick. */
 export function initialCursorHour(picked: readonly number[]): number {
     if (!picked.includes(8)) return 8;
     const last = Math.max(...picked);
@@ -61,7 +56,7 @@ export function initialCursorHour(picked: readonly number[]): number {
     return 8;
 }
 
-/** 24h vs AM/PM starts at the phone's own setting and is not stored. */
+/** 24h vs AM/PM follows the phone's own clock setting; there is no toggle. */
 function deviceUses24h(): boolean {
     try {
         return getCalendars()[0]?.uses24hourClock !== false;
@@ -72,10 +67,10 @@ function deviceUses24h(): boolean {
 
 /**
  * Settings > Notifications, and the first onboarding step (same component,
- * `isOnboarding`). Two controls: the push switch, and when Mera may notify.
- * Picked hours show three ways: a decorative 24-hour strip, removable pills,
- * and the accent colour on the wheel. The wheel only moves a cursor; the add
- * button picks the outlined hour.
+ * `isOnboarding`). Two controls: the push switch, and when Mera may notify
+ * (up to three times). Picked hours show three ways: dots on a decorative
+ * 24-hour strip, removable pills, and the accent colour on the wheel. Tapping
+ * a wheel row saves it; "Add a time" reopens the wheel.
  */
 const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     onBack,
@@ -93,7 +88,15 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     const [osRefused, setOsRefused] = useState(false);
     const [selectedHours, setSelectedHours] = useState<number[]>(initialHours);
     const [cursorHour, setCursorHour] = useState(() => initialCursorHour(initialHours));
-    const [use24h, setUse24h] = useState(deviceUses24h);
+    const [use24h] = useState(deviceUses24h);
+    const [wheelOpen, setWheelOpen] = useState(false);
+    const colors = useColors();
+    const card = {
+        borderRadius: 16,
+        backgroundColor: colors.surfaceRaised,
+        borderWidth: 1,
+        borderColor: colors.trackBorder,
+    } as const;
     const toast = useToast();
     const insets = useSafeAreaInsets();
 
@@ -344,12 +347,21 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         }, AUTO_SAVE_DELAY_MS);
     };
 
-    const cursorPicked = selectedHours.includes(cursorHour);
-    const addCursorHour = () => {
-        if (cursorPicked) return;
-        handleHoursChange([...selectedHours, cursorHour].sort((a, b) => a - b));
+    // Tapping a wheel row saves that hour; the wheel then closes until
+    // "Add a time" reopens it. A pick past MAX_TIMES is ignored, but nobody's
+    // stored extra hours are trimmed (Add simply stays hidden).
+    const pickHour = (hour: number) => {
+        if (!selectedHours.includes(hour)) {
+            if (selectedHours.length >= MAX_TIMES) return;
+            handleHoursChange([...selectedHours, hour].sort((a, b) => a - b));
+        }
+        setWheelOpen(false);
     };
     const removeHour = (hour: number) => handleHoursChange(selectedHours.filter((h) => h !== hour));
+    const openWheel = () => {
+        setCursorHour(initialCursorHour(selectedHours));
+        setWheelOpen(true);
+    };
 
     const saveStatusLine = () => {
         if (saveState !== 'saving' && saveState !== 'saved') return null;
@@ -357,7 +369,8 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             <Text
                 testID="notifications-save-status"
                 size="sm"
-                className="text-gray-400 text-center"
+                className="text-center"
+                style={{ color: colors.ink3 }}
                 accessibilityLiveRegion="polite"
             >
                 {saveState === 'saving' ? t('common.saving') : t('notifications.savedInline')}
@@ -371,13 +384,13 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                 className="items-center justify-between px-4 py-3"
                 style={{
                     borderRadius: 14,
-                    backgroundColor: 'rgba(255,255,255,0.07)',
+                    backgroundColor: colors.surface,
                     borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.10)',
+                    borderColor: colors.line,
                     minHeight: 52,
                 }}
             >
-                <Text className="text-white text-base flex-1 mr-3">{t('you.notifications.push')}</Text>
+                <Text className="text-base flex-1 mr-3" style={{ color: colors.ink }}>{t('you.notifications.push')}</Text>
                 {(isEnabling || isDisabling) ? (
                     <Spinner size="small" />
                 ) : (
@@ -399,7 +412,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             {/* Only when the PHONE refused: phone settings is the one way back. */}
             {!notificationsEnabled && osRefused ? (
                 <VStack space="sm" testID="notifications-os-refused">
-                    <Text size="sm" className="text-gray-400">
+                    <Text size="sm" style={{ color: colors.ink3 }}>
                         {t('notifications.permissionDenied')}
                     </Text>
                     <Pressable
@@ -407,105 +420,59 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                         onPress={() => Linking.openSettings()}
                         accessibilityRole="button"
                         accessibilityLabel={t('notifications.openDeviceSettings')}
-                        className="self-start flex-row items-center rounded-full border border-gray-600 px-4"
-                        style={{ minHeight: 44 }}
+                        className="self-start flex-row items-center rounded-full px-4"
+                        style={{ minHeight: 44, borderWidth: 1, borderColor: colors.trackBorder }}
                     >
-                        <Text size="sm" className="text-white">{t('notifications.openDeviceSettings')}</Text>
+                        <Text size="sm" style={{ color: colors.ink }}>{t('notifications.openDeviceSettings')}</Text>
                     </Pressable>
                 </VStack>
             ) : null}
         </VStack>
     );
 
-    const formatToggle = () => (
-        <HStack
-            className="items-center"
-            style={{ borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.08)', padding: 3 }}
-            accessibilityRole="radiogroup"
+    // Decorative: the pills below carry the same information to a screen
+    // reader. Night (before 06, after 19) and day on one thin track, a dot
+    // per picked hour.
+    const hourStrip = () => (
+        <View
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            className="mx-4 mb-3"
+            style={{ ...card, paddingTop: 14, paddingHorizontal: 14, paddingBottom: 10, gap: 10 }}
         >
-            {[true, false].map((is24) => {
-                const active = use24h === is24;
-                const label = is24 ? t('notifications.format24h') : t('notifications.formatAmPm');
-                return (
-                    <Pressable
-                        key={label}
-                        testID={is24 ? 'notifications-format-24h' : 'notifications-format-ampm'}
-                        onPress={() => setUse24h(is24)}
-                        accessibilityRole="radio"
-                        accessibilityState={{ selected: active, checked: active }}
-                        accessibilityLabel={label}
-                        // 44pt frame around a 28pt segment.
-                        style={{ height: 44, marginVertical: -8, justifyContent: 'center' }}
+            <View style={{ height: 4, borderRadius: 2, flexDirection: 'row', overflow: 'visible' }}>
+                <View style={{ flex: 6, backgroundColor: colors.trackBorder, borderTopLeftRadius: 2, borderBottomLeftRadius: 2 }} />
+                <View style={{ flex: 13, backgroundColor: colors.accent, opacity: 0.35 }} />
+                <View style={{ flex: 5, backgroundColor: colors.trackBorder, borderTopRightRadius: 2, borderBottomRightRadius: 2 }} />
+                {selectedHours.map((h) => (
+                    <View
+                        key={h}
+                        style={{
+                            position: 'absolute',
+                            left: `${(h / 24) * 100}%`,
+                            top: -8,
+                            width: 20,
+                            height: 20,
+                            marginLeft: -10,
+                            borderRadius: 10,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
                     >
-                        <View
-                            style={{
-                                paddingHorizontal: 10,
-                                paddingVertical: 5,
-                                borderRadius: 999,
-                                backgroundColor: active ? ACCENT : 'transparent',
-                            }}
-                        >
-                            <Text
-                                size="xs"
-                                scaleTier="chrome"
-                                style={{ color: active ? '#121113' : '#D4D4D4', fontWeight: active ? '600' : '400' }}
-                            >
-                                {label}
-                            </Text>
-                        </View>
-                    </Pressable>
-                );
-            })}
-        </HStack>
-    );
-
-    // Decorative: the pills below carry the same information to a screen reader.
-    const hourStrip = () => {
-        const ticks = [0, 6, 12, 18];
-        const labels = [...ticks, ...selectedHours.filter((h) => ticks.every((tk) => Math.abs(tk - h) >= 2))];
-        return (
-            <View
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-                className="mx-4 mb-3"
-                style={{ ...CARD, paddingTop: 14, paddingHorizontal: 14, paddingBottom: 10 }}
-            >
-                <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 22, gap: 2 }}>
-                    {Array.from({ length: 24 }, (_, h) => {
-                        const picked = selectedHours.includes(h);
-                        return (
-                            <View
-                                key={h}
-                                style={{
-                                    flex: 1,
-                                    height: picked ? 22 : 8,
-                                    borderRadius: picked ? 3 : 2,
-                                    backgroundColor: picked ? ACCENT : 'rgba(255,255,255,0.14)',
-                                }}
-                            />
-                        );
-                    })}
-                </View>
-                <View style={{ height: 16, marginTop: 4 }}>
-                    {labels.map((h) => (
-                        <Text
-                            key={h}
-                            size="2xs"
-                            scaleTier="locked"
-                            style={{
-                                position: 'absolute',
-                                left: `${(h / 24) * 100}%`,
-                                color: selectedHours.includes(h) ? ACCENT_SOFT : '#A3A3A3',
-                                fontWeight: selectedHours.includes(h) ? '700' : '400',
-                            }}
-                        >
-                            {use24h ? h.toString().padStart(2, '0') : format(h)}
-                        </Text>
-                    ))}
-                </View>
+                        <View style={{ position: 'absolute', width: 20, height: 20, borderRadius: 10, backgroundColor: colors.accent, opacity: 0.25 }} />
+                        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: colors.accent }} />
+                    </View>
+                ))}
             </View>
-        );
-    };
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                {['00', '06', '12', '18', '24'].map((label) => (
+                    <Text key={label} size="2xs" scaleTier="locked" style={{ color: colors.ink3 }}>
+                        {label}
+                    </Text>
+                ))}
+            </View>
+        </View>
+    );
 
     const pills = () => (
         <View className="mx-4 mb-3" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -520,12 +487,12 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                         marginVertical: (REMOVE_FRAME - PILL_HEIGHT) / 2,
                         paddingLeft: 14,
                         borderRadius: 999,
-                        backgroundColor: 'rgba(40,39,42,0.82)',
+                        backgroundColor: colors.surfaceRaised,
                         borderWidth: 1,
-                        borderColor: 'rgba(255,255,255,0.14)',
+                        borderColor: colors.trackBorder,
                     }}
                 >
-                    <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: '600' }}>{format(h)}</Text>
+                    <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{format(h)}</Text>
                     <Pressable
                         testID={`notifications-pill-remove-${h}`}
                         onPress={() => removeHour(h)}
@@ -546,106 +513,79 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                                 width: 20,
                                 height: 20,
                                 borderRadius: 10,
-                                backgroundColor: 'rgba(255,255,255,0.16)',
+                                backgroundColor: colors.surfaceRaised,
                                 alignItems: 'center',
                                 justifyContent: 'center',
                             }}
                         >
-                            <MaterialIcons name="close" size={14} color="#ffffff" />
+                            <MaterialIcons name="close" size={12} color={colors.ink} />
                         </View>
                     </Pressable>
                 </View>
             ))}
-            <Pressable
-                testID="notifications-add-time"
-                onPress={addCursorHour}
-                accessibilityRole="button"
-                accessibilityLabel={
-                    cursorPicked
-                        ? t('you.notifications.alreadyPicked', { time: format(cursorHour) })
-                        : t('you.notifications.addHour', { time: format(cursorHour) })
-                }
-                style={{ height: REMOVE_FRAME, justifyContent: 'center' }}
-            >
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        height: PILL_HEIGHT,
-                        paddingHorizontal: 14,
-                        borderRadius: 999,
-                        borderWidth: 1,
-                        borderStyle: 'dashed',
-                        borderColor: 'rgba(231,138,83,0.8)',
-                    }}
+            {!wheelOpen && selectedHours.length < MAX_TIMES ? (
+                <Pressable
+                    testID="notifications-add-time"
+                    onPress={openWheel}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('you.notifications.add')}
+                    style={{ height: REMOVE_FRAME, justifyContent: 'center' }}
                 >
-                    {cursorPicked ? null : <MaterialIcons name="add" size={16} color={ACCENT_SOFT} />}
-                    <Text style={{ color: ACCENT_SOFT, fontSize: 14, fontWeight: '600', marginLeft: cursorPicked ? 0 : 4 }}>
-                        {cursorPicked
-                            ? t('you.notifications.alreadyPicked', { time: format(cursorHour) })
-                            : t('you.notifications.add')}
-                    </Text>
-                </View>
-            </Pressable>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            height: PILL_HEIGHT,
+                            paddingHorizontal: 14,
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderStyle: 'dashed',
+                            borderColor: colors.accent,
+                        }}
+                    >
+                        <MaterialIcons name="add" size={16} color={colors.accentText} />
+                        <Text style={{ color: colors.accentText, fontSize: 14, fontWeight: '600', marginLeft: 4 }}>
+                            {t('you.notifications.add')}
+                        </Text>
+                    </View>
+                </Pressable>
+            ) : null}
         </View>
     );
 
     const hoursSection = () => {
         const none = selectedHours.length === 0;
+        // With nothing picked the wheel is always open: the first tap saves.
+        const showWheel = none || wheelOpen;
         return (
             <VStack>
-                <Text className="mx-4 mb-1 text-white font-semibold" size="md" accessibilityRole="header">
+                <Text className="mx-4 mb-1 font-semibold" size="md" style={{ color: colors.ink }} accessibilityRole="header">
                     {t('you.notifications.when')}
                 </Text>
                 {isOnboarding ? (
                     <VStack className="mx-4 mb-2" space="xs">
-                        <Text size="sm" className="text-gray-400">{t('notifications.timeDescriptionOnboarding')}</Text>
-                        <Text size="sm" className="text-typography-500">{t('notifications.timeNudge')}</Text>
+                        <Text size="sm" style={{ color: colors.ink3 }}>{t('notifications.timeDescriptionOnboarding')}</Text>
+                        <Text size="sm" style={{ color: colors.ink3 }}>{t('notifications.timeNudge')}</Text>
                     </VStack>
                 ) : null}
-                <HStack className="mx-4 mb-2 items-center justify-between">
-                    <Text size="xs" className="text-gray-400">
-                        {none ? t('you.notifications.noneYet') : t('you.notifications.yourTimes')}
-                    </Text>
-                    {formatToggle()}
-                </HStack>
-                {none ? (
-                    <Text
-                        testID="notifications-zero-times"
-                        size="sm"
-                        className="mx-4 mb-3 text-amber-400"
-                        accessibilityLiveRegion="polite"
-                    >
-                        {t('you.notifications.zeroTimes')}
-                    </Text>
-                ) : null}
+                <Text size="xs" className="mx-4 mb-2" style={{ color: colors.ink3 }}>
+                    {none ? t('you.notifications.noneYet') : t('you.notifications.yourTimes')}
+                </Text>
                 {hourStrip()}
                 {none ? null : pills()}
-                <View className="mx-4 mb-3" style={{ ...CARD, borderRadius: 18, paddingVertical: 6 }}>
-                    <NotificationHourWheel
-                        cursorHour={cursorHour}
-                        onCursorChange={setCursorHour}
-                        pickedHours={selectedHours}
-                        format={format}
-                        accessibilityLabel={t('you.notifications.wheel')}
-                    />
-                </View>
-                {none ? (
-                    // First pick: one obvious button for the outlined hour.
-                    <Pressable
-                        testID="notifications-add-first"
-                        onPress={addCursorHour}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('you.notifications.addHour', { time: format(cursorHour) })}
-                        className="mx-4 mb-3 items-center justify-center rounded-full"
-                        style={{ minHeight: 44, backgroundColor: ACCENT }}
-                    >
-                        <Text style={{ color: '#121113', fontWeight: '700', fontSize: 15 }}>
-                            {t('you.notifications.addHour', { time: format(cursorHour) })}
-                        </Text>
-                    </Pressable>
+                {showWheel ? (
+                    <View className="mx-4 mb-3" style={{ ...card, borderRadius: 18, paddingVertical: 6 }}>
+                        <NotificationHourWheel
+                            cursorHour={cursorHour}
+                            onCursorChange={setCursorHour}
+                            onPickHour={pickHour}
+                            pickedHours={selectedHours}
+                            format={format}
+                            accessibilityLabel={t('you.notifications.wheel')}
+                        />
+                    </View>
                 ) : null}
-                <Text size="xs" className="mx-4 mb-2 text-gray-400">
+                <Text size="xs" className="mx-4 mb-2" style={{ color: colors.ink3 }}>
                     {t('you.notifications.footnote')}
                 </Text>
                 <Box className="mx-4" style={{ minHeight: 24 }}>{saveStatusLine()}</Box>
