@@ -10,6 +10,8 @@
 
 import { THEME_SWITCH_LIVE, useThemeStore } from './theme-store';
 
+export { tint } from './tint';
+
 export type ThemeMode = 'dark' | 'light';
 
 export interface ThemeColors {
@@ -55,6 +57,12 @@ export interface ThemeColors {
     night: string;
     /** A frosted pill over content (FinalSettings tab pills). */
     glass: string;
+    /** The outlined button's 1px edge (Modals board `.sec`). */
+    edge: string;
+    /** Amber for "needs attention" (the daily limit). */
+    warning: string;
+    /** Blue for information. */
+    info: string;
 }
 
 export const COLORS: Record<ThemeMode, ThemeColors> = {
@@ -82,6 +90,9 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         panelBorder: 'rgba(255,255,255,0.14)',
         night: 'rgba(120,140,200,0.35)',
         glass: 'rgba(40,39,42,0.82)',
+        edge: 'rgba(255,255,255,0.3)',
+        warning: 'rgb(233,179,83)',
+        info: 'rgb(150,190,235)',
     },
     // From the FinalLight* boards. Contrast gates: 4.5:1 text, 3:1 marks.
     light: {
@@ -109,6 +120,11 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         // FinalLightSettings carries the dark values for these two; P12 tunes.
         night: 'rgba(120,140,200,0.35)',
         glass: 'rgba(40,39,42,0.82)',
+        edge: 'rgba(18,17,19,0.3)',
+        // The light boards draw no warning or info colour: #9A6200 is the
+        // boards' own dark amber; #2563A8 is a derived blue at 4.5:1 on white.
+        warning: '#9A6200',
+        info: '#2563A8',
     },
 };
 
@@ -144,6 +160,27 @@ export function themeCssVars(mode: ThemeMode): Record<string, string> {
         '--color-muted': c.muted,
         '--color-panel': c.panel,
         '--color-panel-border': c.panelBorder,
+        '--color-edge': c.edge,
+        '--color-warning': c.warning,
+        '--color-info': c.info,
+    };
+}
+
+/**
+ * A StyleSheet per theme, for module-level styles that carry colour (a module
+ * StyleSheet cannot call a hook). Built once per theme and cached:
+ *
+ *   const useStyles = themedStyles((c, mode) => StyleSheet.create({ title: { color: c.ink } }));
+ *   // in the component:
+ *   const styles = useStyles();
+ *
+ * `mode` is there for the rare value that differs by more than its token.
+ */
+export function themedStyles<T>(factory: (c: ThemeColors, mode: ThemeMode) => T): () => T {
+    const cache: Partial<Record<ThemeMode, T>> = {};
+    return function useThemedStyles(): T {
+        const mode = useThemeMode();
+        return (cache[mode] ??= factory(COLORS[mode], mode));
     };
 }
 

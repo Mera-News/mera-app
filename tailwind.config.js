@@ -39,6 +39,7 @@ module.exports = {
         muted: 'var(--color-muted)',
         panel: 'var(--color-panel)',
         'panel-border': 'var(--color-panel-border)',
+        edge: 'var(--color-edge)',
         primary: {
           0: 'rgb(var(--color-primary-0)/<alpha-value>)',
           50: 'rgb(var(--color-primary-50)/<alpha-value>)',
