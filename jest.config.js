@@ -29,12 +29,15 @@ module.exports = {
   // to a component here failed in the copy while passing in the original. That
   // is a false red by construction, not coverage.
   testPathIgnorePatterns: ['/node_modules/', '/harness-local/', '/.claude/worktrees/'],
-  // Coverage spans the whole logic layer (lib/**). Excluded: generated GraphQL
-  // types, locale data, the native DB singleton (instantiates SQLiteAdapter at
-  // import — every consumer mocks it), and the three thin llama.rn/react-native-fs
-  // native toolkit wrappers (no meaningful pure logic to unit-test).
+  // Owner rule: unit tests cover plain, non-React logic only (no render,
+  // snapshot, hook or e2e tests). So coverage measures plain `.ts` under lib/,
+  // minus hooks. Also excluded: generated GraphQL types, locale data, the
+  // native DB singleton (instantiates SQLiteAdapter at import; every consumer
+  // mocks it), and the three thin llama.rn/react-native-fs native toolkit
+  // wrappers (no meaningful pure logic to unit-test).
   collectCoverageFrom: [
-    'lib/**/*.{ts,tsx}',
+    'lib/**/*.ts',
+    '!lib/hooks/**',
     '!lib/generated/**',
     '!lib/locales/**',
     '!lib/database/index.ts',
@@ -47,16 +50,15 @@ module.exports = {
     '!**/node_modules/**',
     '!**/__tests__/**',
   ],
-  // Gate set just below the current measured aggregate so `test:coverage` passes
-  // with headroom. Statements/functions/lines clear 90%; branches sits at ~87%
-  // (the async-job-reconciler dynamic-import paths are the main remaining gap —
-  // see pending-mera-app-test-plan.md). Ratchet these up as that gap closes.
+  // Floor of the aggregate measured after the navx2 P0 test cleanup (83.46 /
+  // 77.75 / 78.29 / 85.42). Only `test:coverage` checks it; plain `jest` does
+  // not. Ratchet up as plain-logic tests are added.
   coverageThreshold: {
     global: {
-      branches: 85,
-      functions: 92,
-      lines: 92,
-      statements: 92,
+      branches: 77,
+      functions: 78,
+      lines: 85,
+      statements: 83,
     },
   },
   moduleNameMapper: {
