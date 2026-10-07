@@ -6,6 +6,7 @@ import type PublicationPreferenceModel from '@/lib/database/models/PublicationPr
 import type { SourceScopeKind } from '@/lib/database/models/PublicationPreference';
 import { weightToPrefKind, type PublicationPrefKind } from '@/lib/database/services/publication-preference-service';
 import { MaterialIcons } from '@expo/vector-icons';
+import { COLORS, tint, useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -24,9 +25,9 @@ interface KindMeta {
 /** Icon + color + i18n label for each preference kind. The publication page's
  *  feed control reads this; the Sources screen says More / Fewer / Mute. */
 export const PREF_KIND_META: Record<PublicationPrefKind, KindMeta> = {
-    boost: { icon: 'thumb-up', color: '#10b981', labelKey: 'publicationPrefs.kindBoost', labelDefault: 'Boost' },
-    deprioritize: { icon: 'thumb-down', color: '#f59e0b', labelKey: 'publicationPrefs.kindDeprioritize', labelDefault: 'Downrank' },
-    mute: { icon: 'volume-off', color: '#ef4444', labelKey: 'publicationPrefs.kindMute', labelDefault: 'Mute' },
+    boost: { icon: 'thumb-up', color: COLORS.dark.positive, labelKey: 'publicationPrefs.kindBoost', labelDefault: 'Boost' },
+    deprioritize: { icon: 'thumb-down', color: COLORS.dark.warning, labelKey: 'publicationPrefs.kindDeprioritize', labelDefault: 'Downrank' },
+    mute: { icon: 'volume-off', color: COLORS.dark.negative, labelKey: 'publicationPrefs.kindMute', labelDefault: 'Mute' },
 };
 
 const KIND_ORDER: PublicationPrefKind[] = ['boost', 'deprioritize', 'mute'];
@@ -44,7 +45,6 @@ const CHOICE_LABEL = {
 const SCOPE_KIND_CHIPS: Record<SourceScopeKind, { key: string; default: string }> = {
     country: { key: 'publicationPrefs.scopeKindCountry', default: 'Country' },
 };
-const CHIP_ACCENT = 'rgb(231, 138, 83)';
 
 /** Stable, kebab-cased testID segment for a publication name (harness/QA). */
 export function normalizeForTestId(name: string): string {
@@ -65,6 +65,7 @@ export const SourceKindChoices: React.FC<{
     readonly onClear?: () => void;
 }> = ({ idBase, current, busy, allowMute, onPick, onClear }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     return (
         <HStack space="sm" className="items-center">
             {KIND_ORDER.filter((k) => allowMute || k !== 'mute').map((kind) => {
@@ -78,10 +79,10 @@ export const SourceKindChoices: React.FC<{
                         accessibilityRole="button"
                         accessibilityState={{ selected: active, disabled: busy }}
                         accessibilityLabel={t(CHOICE_LABEL[kind])}
-                        className={`flex-1 items-center justify-center rounded-full border ${active ? 'border-primary-400 bg-primary-400/15' : 'border-gray-700'}`}
+                        className={`flex-1 items-center justify-center rounded-full border ${active ? 'border-primary-400 bg-primary-400/15' : 'border-line'}`}
                         style={{ minHeight: 44 }}
                     >
-                        <Text size="sm" style={{ color: active ? CHIP_ACCENT : '#D4D4D4', fontWeight: active ? '600' : '400' }}>
+                        <Text size="sm" style={{ color: active ? colors.accent : colors.ink, fontWeight: active ? '600' : '400' }}>
                             {t(CHOICE_LABEL[kind])}
                         </Text>
                     </Pressable>
@@ -98,7 +99,7 @@ export const SourceKindChoices: React.FC<{
                     className="items-center justify-center px-3"
                     style={{ minHeight: 44 }}
                 >
-                    <Text size="sm" className="text-gray-400">{t('you.sources.clear')}</Text>
+                    <Text size="sm" className="text-ink-2">{t('you.sources.clear')}</Text>
                 </Pressable>
             ) : null}
         </HStack>
@@ -121,6 +122,7 @@ interface PublicationPrefRowProps {
  */
 const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, isOpen, onToggle, onSetKind, onClear }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const currentKind = weightToPrefKind(pref.weight);
     // Scope rows are keyed by scopeValue (stable, ISO alpha-3), not the label,
     // which can collide with a real publication name.
@@ -133,7 +135,7 @@ const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, isO
         <VStack
             testID={idBase}
             className="mx-4 mb-2 px-4 py-1"
-            style={{ borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)' }}
+            style={{ borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line }}
         >
             <Pressable
                 testID={`${idBase}-toggle`}
@@ -144,15 +146,15 @@ const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, isO
                 style={{ minHeight: 44 }}
             >
                 <VStack className="flex-1 mr-2" space="xs">
-                    <Text size="md" className="text-white" numberOfLines={2}>
+                    <Text size="md" className="text-ink" numberOfLines={2}>
                         {scopeChip ? pref.publicationName : <DisplayPublicationName name={pref.publicationName} />}
                     </Text>
                     {scopeChip ? (
                         <View
                             testID={`${idBase}-kind-chip`}
-                            style={{ alignSelf: 'flex-start', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(231, 138, 83, 0.5)', paddingHorizontal: 6, paddingVertical: 1 }}
+                            style={{ alignSelf: 'flex-start', borderRadius: 6, borderWidth: 1, borderColor: tint(colors.accent, 0.5), paddingHorizontal: 6, paddingVertical: 1 }}
                         >
-                            <Text size="xs" style={{ color: CHIP_ACCENT, letterSpacing: 0.3 }}>
+                            <Text size="xs" style={{ color: colors.accent, letterSpacing: 0.3 }}>
                                 {t(scopeChip.key, { defaultValue: scopeChip.default })}
                             </Text>
                         </View>
@@ -160,12 +162,12 @@ const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, isO
                 </VStack>
                 {currentKind ? <SourceKindChip kind={currentKind} testID={`${idBase}-chip`} /> : null}
                 {/* Expands in place, so a down chevron, never a forward one. */}
-                <MaterialIcons name={isOpen ? 'expand-less' : 'expand-more'} size={20} color="#9ca3af" style={{ marginLeft: 6 }} />
+                <MaterialIcons name={isOpen ? 'expand-less' : 'expand-more'} size={20} color={colors.ink2} style={{ marginLeft: 6 }} />
             </Pressable>
             {isOpen ? (
                 <VStack space="sm" className="pb-3">
                     {currentKind === 'mute' ? (
-                        <Text size="xs" className="text-gray-400">{t('notInterested.mutedPubHint')}</Text>
+                        <Text size="xs" className="text-ink-2">{t('notInterested.mutedPubHint')}</Text>
                     ) : null}
                     <SourceKindChoices
                         idBase={idBase}

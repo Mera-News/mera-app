@@ -10,6 +10,7 @@ import { useDebouncedValue } from '@/lib/hooks/use-debounced-value';
 import logger from '@/lib/logger';
 import SourceService from '@/lib/source-service';
 import type { PublisherSearchHit } from '@/lib/generated/graphql-types';
+import { useThemeMode } from '@/lib/theme/tokens';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -44,6 +45,7 @@ interface Props {
  */
 const AddSubscriptionView: React.FC<Props> = ({ onChoose, disabled }) => {
   const { t } = useTranslation();
+  const themeMode = useThemeMode();
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query, 300);
   const [results, setResults] = useState<PublisherSearchHit[]>([]);
@@ -94,6 +96,7 @@ const AddSubscriptionView: React.FC<Props> = ({ onChoose, disabled }) => {
     <VStack space="sm" className="px-4 pb-2">
       <Input isDisabled={disabled}>
         <InputField
+              keyboardAppearance={themeMode}
           value={query}
           onChangeText={setQuery}
           placeholder={t('subscriptions.searchPlaceholder')}
@@ -104,7 +107,7 @@ const AddSubscriptionView: React.FC<Props> = ({ onChoose, disabled }) => {
       </Input>
 
       {tooShort && (
-        <Text size="sm" className="text-gray-400">
+        <Text size="sm" className="text-ink-2">
           {t('subscriptions.searchTooShort')}
         </Text>
       )}
@@ -112,20 +115,20 @@ const AddSubscriptionView: React.FC<Props> = ({ onChoose, disabled }) => {
       {!tooShort && searching && (
         <HStack space="sm" className="items-center">
           <Spinner size="small" />
-          <Text size="sm" className="text-gray-400">
+          <Text size="sm" className="text-ink-2">
             {t('subscriptions.searchInFlight')}
           </Text>
         </HStack>
       )}
 
       {failed && !searching && (
-        <Text size="sm" className="text-gray-400">
+        <Text size="sm" className="text-ink-2">
           {t('subscriptions.searchError')}
         </Text>
       )}
 
       {showNoResults && (
-        <Text size="sm" className="text-gray-400">
+        <Text size="sm" className="text-ink-2">
           {t('subscriptions.searchNoResults')}
         </Text>
       )}
@@ -154,7 +157,7 @@ const AddSubscriptionView: React.FC<Props> = ({ onChoose, disabled }) => {
               <Box className="py-3">
                 <HStack space="sm" className="items-center">
                   <Text size="md">{flagForAlpha2(alpha3ToAlpha2(hit.country_code))}</Text>
-                  <Text size="md" className="text-white flex-1">
+                  <Text size="md" className="text-ink flex-1">
                     {hit.name}
                   </Text>
                 </HStack>

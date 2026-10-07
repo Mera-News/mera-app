@@ -168,7 +168,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                         <VStack>
                             <SourceSearch />
                             {rows.length > 0 ? (
-                                <Text size="sm" className="text-gray-400 font-bold px-4 pt-3 pb-2" accessibilityRole="header">
+                                <Text size="sm" className="text-ink-2 font-bold px-4 pt-3 pb-2" accessibilityRole="header">
                                     {t('you.sources.adjusted')}
                                 </Text>
                             ) : (
@@ -186,7 +186,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                     ListFooterComponent={
                         <VStack space="md">
                             {rows.length > 0 ? (
-                                <Text size="xs" className="text-gray-400 px-4">
+                                <Text size="xs" className="text-ink-2 px-4">
                                     {t('you.sources.footnote')}
                                 </Text>
                             ) : null}

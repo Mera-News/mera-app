@@ -9,6 +9,7 @@ import type UserPublicationSubscriptionModel from '@/lib/database/models/UserPub
 import { hapticLight } from '@/lib/haptics';
 import { toastManager } from '@/lib/toast-manager';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +27,7 @@ import { type ChosenPublisher } from './use-subscriptions';
  */
 const SubscriptionsSection: React.FC = () => {
   const { t } = useTranslation();
+  const colors = useColors();
   /**
    * The open-page / detect-return / confirm / record machine lives in
    * `use-subscribe-flow` now, shared with the publication-history card and
@@ -59,7 +61,7 @@ const SubscriptionsSection: React.FC = () => {
   return (
     <VStack space="xs" className="pt-2">
       <HStack className="items-center justify-between px-4 pb-1">
-        <Text size="sm" className="text-gray-400 uppercase">
+        <Text size="sm" className="text-ink-2 uppercase">
           {t('subscriptions.sectionTitle')}
         </Text>
         <Pressable
@@ -74,7 +76,7 @@ const SubscriptionsSection: React.FC = () => {
           }}
           className="p-2"
         >
-          <MaterialIcons name={picking ? 'close' : 'add'} size={22} color="#ffffff" />
+          <MaterialIcons name={picking ? 'close' : 'add'} size={22} color={colors.ink} />
         </Pressable>
       </HStack>
 
@@ -85,7 +87,7 @@ const SubscriptionsSection: React.FC = () => {
           <Spinner size="small" />
         </Box>
       ) : items.length === 0 ? (
-        <Text size="sm" className="text-gray-400 px-4 pb-2">
+        <Text size="sm" className="text-ink-2 px-4 pb-2">
           {t('subscriptions.empty')}
         </Text>
       ) : (
@@ -93,7 +95,7 @@ const SubscriptionsSection: React.FC = () => {
           <HStack key={row.id} className="items-center justify-between px-4 py-3">
             <HStack space="sm" className="items-center flex-1">
               <Text size="md">{flagForAlpha2(alpha3ToAlpha2(row.countryCode))}</Text>
-              <Text size="md" className="text-white flex-1">
+              <Text size="md" className="text-ink flex-1">
                 {row.publisherName}
               </Text>
             </HStack>
@@ -108,7 +110,7 @@ const SubscriptionsSection: React.FC = () => {
               onPress={() => handleRemove(row)}
               className="px-2 py-1"
             >
-              <Text size="sm" className="text-gray-300">
+              <Text size="sm" className="text-ink">
                 {t('subscriptions.remove')}
               </Text>
             </Pressable>

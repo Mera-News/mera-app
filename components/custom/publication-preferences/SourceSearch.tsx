@@ -13,6 +13,7 @@ import logger from '@/lib/logger';
 import SourceService from '@/lib/source-service';
 import { resolveSubscriptionSourceNames } from '@/lib/subscriptions/publisher-sources';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { normalizeForTestId, SourceKindChoices } from './PublicationPrefRow';
@@ -41,6 +42,8 @@ async function namesForHit(hit: PublisherSearchHit): Promise<string[]> {
  */
 const SourceSearch: React.FC = () => {
     const { t } = useTranslation();
+    const colors = useColors();
+    const themeMode = useThemeMode();
     const [query, setQuery] = useState('');
     const debounced = useDebouncedValue(query, 300);
     const [results, setResults] = useState<PublisherSearchHit[]>([]);
@@ -98,11 +101,12 @@ const SourceSearch: React.FC = () => {
 
     return (
         <VStack space="sm" className="px-4 pb-2">
-            <Input className="rounded-full border-white/10 bg-white/5" style={{ height: 42 }}>
+            <Input className="rounded-full border-line bg-surface" style={{ height: 42 }}>
                 <InputSlot className="pl-3.5">
-                    <MaterialIcons name="search" size={18} color="#A3A3A3" />
+                    <MaterialIcons name="search" size={18} color={colors.ink2} />
                 </InputSlot>
                 <InputField
+                    keyboardAppearance={themeMode}
                     testID="sources-search"
                     value={query}
                     onChangeText={setQuery}
@@ -113,16 +117,16 @@ const SourceSearch: React.FC = () => {
                 />
             </Input>
 
-            {tooShort ? <Text size="sm" className="text-gray-400">{t('subscriptions.searchTooShort')}</Text> : null}
+            {tooShort ? <Text size="sm" className="text-ink-2">{t('subscriptions.searchTooShort')}</Text> : null}
             {!tooShort && searching ? (
                 <HStack space="sm" className="items-center">
                     <Spinner size="small" />
-                    <Text size="sm" className="text-gray-400">{t('subscriptions.searchInFlight')}</Text>
+                    <Text size="sm" className="text-ink-2">{t('subscriptions.searchInFlight')}</Text>
                 </HStack>
             ) : null}
-            {failed && !searching ? <Text size="sm" className="text-gray-400">{t('subscriptions.searchError')}</Text> : null}
+            {failed && !searching ? <Text size="sm" className="text-ink-2">{t('subscriptions.searchError')}</Text> : null}
             {!failed && !searching && searched && results.length === 0 ? (
-                <Text size="sm" className="text-gray-400">{t('subscriptions.searchNoResults')}</Text>
+                <Text size="sm" className="text-ink-2">{t('subscriptions.searchNoResults')}</Text>
             ) : null}
 
             {!tooShort && !searching
@@ -141,8 +145,8 @@ const SourceSearch: React.FC = () => {
                                 style={{ minHeight: 44 }}
                             >
                                 <Text size="md">{flagForAlpha2(alpha3ToAlpha2(hit.country_code))}</Text>
-                                <Text size="md" className="text-white flex-1 ml-2" numberOfLines={1}>{hit.name}</Text>
-                                <MaterialIcons name={open ? 'expand-less' : 'expand-more'} size={20} color="#9ca3af" />
+                                <Text size="md" className="text-ink flex-1 ml-2" numberOfLines={1}>{hit.name}</Text>
+                                <MaterialIcons name={open ? 'expand-less' : 'expand-more'} size={20} color={colors.ink2} />
                             </Pressable>
                             {open ? (
                                 <SourceKindChoices

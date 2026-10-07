@@ -62,17 +62,17 @@ const SubscribeConfirmDialog: React.FC<Props> = ({
         accessibilityViewIsModal
         accessibilityLabel={t('subscriptions.confirmTitle', { publisher: publisherName })}
       >
-        <ModalHeader className="border-gray-700 pb-4">
-          <Text className="text-xl font-semibold text-white">
+        <ModalHeader className="border-line pb-4">
+          <Text className="text-xl font-semibold text-ink">
             {t('subscriptions.confirmTitle', { publisher: publisherName })}
           </Text>
         </ModalHeader>
         <ModalBody className="py-6">
-          <Text className="text-gray-300 text-base leading-relaxed">
+          <Text className="text-ink text-base leading-relaxed">
             {t('subscriptions.confirmBody', { publisher: publisherName })}
           </Text>
         </ModalBody>
-        <ModalFooter className="border-t border-gray-700 pt-4">
+        <ModalFooter className="border-t border-line pt-4">
           <VStack className="w-full" space="md">
             <Button onPress={onYes} className="w-full">
               <ButtonText>{t('subscriptions.confirmYes')}</ButtonText>
