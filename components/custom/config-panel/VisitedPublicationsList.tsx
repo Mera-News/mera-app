@@ -32,7 +32,7 @@ import { availableCards, emptyReadingStats, type ReadingStats } from '@/lib/stat
 import { loadReadingStats } from '@/lib/stats/reading-stats-source';
 import { calendarDaysAgo, formatDayMonth, mergeVisitedByName } from '@/lib/stats/visited-publications';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
-import { COLORS, useColors } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -268,8 +268,8 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor={COLORS.dark.accent}
-                        colors={[COLORS.dark.accent]}
+                        tintColor={c.accent}
+                        colors={[c.accent]}
                         progressViewOffset={headerHeight}
                     />
                 }
