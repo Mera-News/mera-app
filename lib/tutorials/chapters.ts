@@ -113,6 +113,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
           ],
           mustBeCorrect: false,
         },
+        optional: true,
       },
       {
         id: 'you-first',
@@ -132,6 +133,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
             { id: 'what-leaves', icon: 'cloud-upload' },
           ],
         },
+        optional: true,
       },
       {
         id: 'begin',

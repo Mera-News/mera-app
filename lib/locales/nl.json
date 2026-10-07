@@ -1262,7 +1262,7 @@
     "revertedBadge": "Teruggedraaid",
     "revertConfirmTitle": "Deze wijziging terugdraaien?",
     "revertConfirmBody": "Je profiel wordt teruggezet naar hoe het was voor deze wijziging.",
-    "revertConfirmCta": "Terugdraaien",
+    "revertConfirmCta": "Ongedaan maken",
     "revertSuccessTitle": "Wijziging teruggedraaid",
     "revertSuccessBody": "Je profiel is weer zoals het was.",
     "revertFailedTitle": "Kon niet terugdraaien",

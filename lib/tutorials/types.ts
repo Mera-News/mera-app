@@ -152,6 +152,9 @@ export interface TutorialSlide {
    * no session before login, so there is no agent.
    */
   readonly hasAsk?: boolean;
+  /** The interaction is an invitation, not a gate: Next works from the start
+   *  (the first-launch tour, FinalJourney #17 and #18). */
+  readonly optional?: boolean;
 }
 
 export interface TutorialChapter {

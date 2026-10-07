@@ -1262,7 +1262,7 @@
     "revertedBadge": "되돌림",
     "revertConfirmTitle": "이 변경 사항을 되돌릴까요?",
     "revertConfirmBody": "이 작업으로 프로필이 변경 전 상태로 돌아갑니다.",
-    "revertConfirmCta": "되돌리기",
+    "revertConfirmCta": "실행 취소",
     "revertSuccessTitle": "변경 사항이 되돌려졌습니다",
     "revertSuccessBody": "프로필이 이전 상태로 돌아갔습니다.",
     "revertFailedTitle": "되돌릴 수 없습니다",

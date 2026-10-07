@@ -1262,7 +1262,7 @@
     "revertedBadge": "Revertido",
     "revertConfirmTitle": "Reverter esta alteração?",
     "revertConfirmBody": "Isso restaura seu perfil ao estado anterior à alteração.",
-    "revertConfirmCta": "Reverter",
+    "revertConfirmCta": "Desfazer",
     "revertSuccessTitle": "Alteração revertida",
     "revertSuccessBody": "Seu perfil voltou ao que era.",
     "revertFailedTitle": "Não foi possível reverter",

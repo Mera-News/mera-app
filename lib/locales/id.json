@@ -1262,7 +1262,7 @@
     "revertedBadge": "Dikembalikan",
     "revertConfirmTitle": "Kembalikan perubahan ini?",
     "revertConfirmBody": "Ini akan membatalkan perubahan dan memulihkan profil Anda seperti sebelumnya.",
-    "revertConfirmCta": "Kembalikan",
+    "revertConfirmCta": "Urungkan",
     "revertSuccessTitle": "Perubahan dikembalikan",
     "revertSuccessBody": "Profil Anda telah dipulihkan.",
     "revertFailedTitle": "Tidak dapat mengembalikan",

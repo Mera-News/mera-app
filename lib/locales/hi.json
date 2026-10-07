@@ -1264,7 +1264,7 @@
     "revertedBadge": "पूर्ववत किया गया",
     "revertConfirmTitle": "यह बदलाव पूर्ववत करें?",
     "revertConfirmBody": "इससे आपकी प्रोफ़ाइल उस स्थिति में वापस आ जाएगी जैसी वह इस बदलाव से पहले थी।",
-    "revertConfirmCta": "पूर्ववत करें",
+    "revertConfirmCta": "पहले जैसा करें",
     "revertSuccessTitle": "बदलाव पूर्ववत किया गया",
     "revertSuccessBody": "आपकी प्रोफ़ाइल पहले जैसी हो गई है।",
     "revertFailedTitle": "पूर्ववत नहीं हो सका",

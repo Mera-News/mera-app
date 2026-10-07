@@ -1262,7 +1262,7 @@
     "revertedBadge": "Rückgängig gemacht",
     "revertConfirmTitle": "Diese Änderung rückgängig machen?",
     "revertConfirmBody": "Ihr Profil wird auf den Stand vor dieser Änderung zurückgesetzt.",
-    "revertConfirmCta": "Rückgängig machen",
+    "revertConfirmCta": "Rückgängig",
     "revertSuccessTitle": "Änderung rückgängig gemacht",
     "revertSuccessBody": "Ihr Profil ist wieder so, wie es war.",
     "revertFailedTitle": "Rückgängig machen fehlgeschlagen",

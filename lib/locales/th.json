@@ -1262,7 +1262,7 @@
     "revertedBadge": "ย้อนกลับแล้ว",
     "revertConfirmTitle": "ย้อนกลับการเปลี่ยนแปลงนี้?",
     "revertConfirmBody": "การดำเนินการนี้จะคืนโปรไฟล์ของคุณให้กลับไปเป็นอย่างที่เคยเป็นก่อนการเปลี่ยนแปลงนี้",
-    "revertConfirmCta": "ย้อนกลับ",
+    "revertConfirmCta": "เลิกทำ",
     "revertSuccessTitle": "ย้อนกลับการเปลี่ยนแปลงแล้ว",
     "revertSuccessBody": "โปรไฟล์ของคุณกลับมาเป็นเหมือนเดิมแล้ว",
     "revertFailedTitle": "ไม่สามารถย้อนกลับได้",

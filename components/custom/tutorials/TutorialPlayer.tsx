@@ -114,7 +114,7 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     const slide = chapter?.slides[index];
     const total = chapter?.slides.length ?? 0;
     const isLast = index >= total - 1;
-    const gated = Boolean(slide?.interaction);
+    const gated = Boolean(slide?.interaction) && !slide?.optional;
     // Hoisted above the early return so the tap-zone handlers below (which are
     // hooks, and must run unconditionally) can apply the SAME rule the Next
     // button applies. A right-half tap that ignored this would walk straight

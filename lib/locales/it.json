@@ -1262,7 +1262,7 @@
     "revertedBadge": "Ripristinato",
     "revertConfirmTitle": "Ripristinare questa modifica?",
     "revertConfirmBody": "Questo riporta il tuo profilo a come era prima della modifica.",
-    "revertConfirmCta": "Ripristina",
+    "revertConfirmCta": "Annulla",
     "revertSuccessTitle": "Modifica ripristinata",
     "revertSuccessBody": "Il tuo profilo è tornato com'era.",
     "revertFailedTitle": "Impossibile ripristinare",
