@@ -354,7 +354,7 @@ function AppRoot() {
             <Stack
               screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: '#000000' },
+                contentStyle: { backgroundColor: COLORS[themeMode].base },
                 animation: 'slide_from_right',
               }}
             >
@@ -435,7 +435,7 @@ export default Sentry.wrap(function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <SafeAreaProvider>
-          <GluestackUIProvider mode="dark">
+          <GluestackUIProvider>
             {/* Publishes the user's in-app text size to every <Text>/<Heading>.
                 Outermost of the content providers so the update gate and the
                 toasts scale too — and it holds the ONE store subscription, so

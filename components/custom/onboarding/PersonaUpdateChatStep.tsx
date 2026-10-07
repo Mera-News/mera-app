@@ -28,6 +28,7 @@ import { getFacts } from '@/lib/database/services/fact-service';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import logger from '@/lib/logger';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
+import { useColors } from '@/lib/theme/tokens';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -54,6 +55,7 @@ export default function PersonaUpdateChatStep({
   composerPlaceholder,
 }: PersonaUpdateChatStepProps) {
   const { t } = useTranslation();
+  const colors = useColors();
   const [isInitLoading, setIsInitLoading] = useState(true);
   const [surface, setSurface] = useState<'ONBOARDING' | 'CONFIG'>('ONBOARDING');
   const [userId, setUserId] = useState<string | null>(userIdProp || null);
@@ -162,7 +164,7 @@ export default function PersonaUpdateChatStep({
     return (
       <View style={styles.loadingContainer}>
         <Spinner size="large" />
-        <Text size="sm" style={styles.loadingText}>
+        <Text size="sm" style={[styles.loadingText, { color: colors.ink2 }]}>
           {t('chat.startingChat')}
         </Text>
       </View>
@@ -202,7 +204,6 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   loadingText: {
-    color: 'rgb(160, 160, 160)',
     textAlign: 'center',
   },
 });

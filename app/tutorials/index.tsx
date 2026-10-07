@@ -32,7 +32,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
  */
 export default function Tutorials() {
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <View style={{ flex: 1 }}>
                 {/* Unpadded wrapper so the backdrop spans the safe areas; the
                     content below keeps its insets. Same shape as every other

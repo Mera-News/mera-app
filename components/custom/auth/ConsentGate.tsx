@@ -8,6 +8,7 @@ import ConsentContent from '@/components/custom/auth/ConsentContent';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Text } from '@/components/ui/text';
 import { authClient } from '@/lib/auth-client';
+import { useColors } from '@/lib/theme/tokens';
 import {
     acceptLegal,
     fetchLegalVersions,
@@ -41,6 +42,7 @@ import {
  * successful check, never a stranded user.
  */
 export default function ConsentGate() {
+    const colors = useColors();
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const { data: session, isPending } = authClient.useSession();
@@ -170,7 +172,7 @@ export default function ConsentGate() {
 
                 Black specifically: the app is dark-mode only on a pure-black
                 page, which is the ground the backdrop's alphas were tuned for. */}
-            <View testID="consent-backdrop-fill" style={[StyleSheet.absoluteFill, { backgroundColor: '#000000' }]} />
+            <View testID="consent-backdrop-fill" style={[StyleSheet.absoluteFill, { backgroundColor: colors.base }]} />
             <AbstractGradientBackdrop />
 
             {/* The ScrollView is what keeps this a page at large Dynamic Type

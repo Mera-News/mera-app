@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 // sees before sign-in; Continue returns to Settings.
 export default function SystemCheck() {
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <View style={{ flex: 1 }}>
                 <AbstractGradientBackdrop />
                 <SafeAreaView style={{ flex: 1 }}>

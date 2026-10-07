@@ -3,7 +3,7 @@ import React, { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import MeraLogo from '@/components/custom/MeraLogo';
-import { useColors } from '@/lib/theme/tokens';
+import { tint, useColors } from '@/lib/theme/tokens';
 
 export type LanguageRowAccessory = 'none' | 'download' | 'busy';
 
@@ -48,7 +48,7 @@ export const LanguageRow = memo(function LanguageRow({
     const colors = useColors();
     const sub = isPhoneLanguage ? phoneLanguageLabel : english !== endonym ? english : null;
     return (
-        <View style={[styles.row, picked && { backgroundColor: PICKED_FILL }]}>
+        <View style={[styles.row, picked && { backgroundColor: tint(colors.accent, 0.14) }]}>
             <Pressable
                 onPress={onPress}
                 accessibilityRole="radio"
@@ -71,7 +71,7 @@ export const LanguageRow = memo(function LanguageRow({
                     testID={testID ? `${testID}-download` : undefined}
                     style={styles.accessory}
                 >
-                    <View style={styles.downloadDisc}>
+                    <View style={[styles.downloadDisc, { borderColor: tint(colors.ink, 0.18) }]}>
                         <MaterialIcons name="file-download" size={18} color={colors.ink2} />
                     </View>
                 </Pressable>
@@ -87,9 +87,6 @@ export const LanguageRow = memo(function LanguageRow({
         </View>
     );
 });
-
-/** The picked row (FinalJourney #4): the accent at 14%. */
-const PICKED_FILL = 'rgba(231,138,83,0.14)';
 
 const styles = StyleSheet.create({
     row: { minHeight: 52, borderRadius: 12, justifyContent: 'center' },
@@ -110,7 +107,6 @@ const styles = StyleSheet.create({
         height: 34,
         borderRadius: 17,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.18)',
         alignItems: 'center',
         justifyContent: 'center',
     },

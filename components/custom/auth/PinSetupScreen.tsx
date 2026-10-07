@@ -128,7 +128,7 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
             <Text testID="pin-setup-step" className="text-typography-500 text-xs">
               {t('onboarding.stepOf', { current: phase === 'enter' ? 1 : 2, total: 2 })}
             </Text>
-            <Text className="text-white text-xl font-semibold">{heading}</Text>
+            <Text className="text-ink text-xl font-semibold">{heading}</Text>
             {sub ? <Text className="text-typography-500 text-sm text-center">{sub}</Text> : null}
           </VStack>
 

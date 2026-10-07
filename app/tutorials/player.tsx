@@ -39,7 +39,7 @@ export default function TutorialPlayerRoute() {
     const params = useLocalSearchParams<{ chapter?: string; slide?: string }>();
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <View style={{ flex: 1 }}>
                 <AbstractGradientBackdrop />
 

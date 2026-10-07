@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
 import { hapticError } from '@/lib/haptics';
+import { useColors } from '@/lib/theme/tokens';
 import { shakeX as shake } from '@/lib/motion';
 
 interface PinKeypadProps {
@@ -39,6 +40,7 @@ const PinKeypad: React.FC<PinKeypadProps> = ({
 }) => {
   // Wrong PIN (FinalMotion): the dots shake, decaying, with the error haptic.
   // Reduce Motion: the red dots alone say it, nothing moves.
+  const colors = useColors();
   const reduceMotion = useReducedMotion();
   const offset = useSharedValue(0);
   useEffect(() => {
@@ -69,7 +71,7 @@ const PinKeypad: React.FC<PinKeypadProps> = ({
               ? 'bg-error-500 border-error-500'
               : filled
                 ? 'bg-primary-500 border-primary-500'
-                : 'bg-transparent border-gray-600';
+                : 'bg-transparent border-line';
             return (
               <Box key={i} className={`w-4 h-4 rounded-full border-2 ${dotColor}`} />
             );
@@ -90,13 +92,13 @@ const PinKeypad: React.FC<PinKeypadProps> = ({
                   key={col}
                   onPress={() => press(key)}
                   disabled={disabled}
-                  className={`w-20 h-20 rounded-full items-center justify-center border border-gray-700 ${disabled ? 'opacity-40' : 'active:bg-gray-800'
+                  className={`w-20 h-20 rounded-full items-center justify-center border border-line ${disabled ? 'opacity-40' : 'active:bg-surface-raised'
                     }`}
                 >
                   {key === 'backspace' ? (
-                    <MaterialIcons name="backspace" size={24} color="#ffffff" />
+                    <MaterialIcons name="backspace" size={24} color={colors.ink} />
                   ) : (
-                    <Text className="text-white text-2xl font-semibold">{key}</Text>
+                    <Text className="text-ink text-2xl font-semibold">{key}</Text>
                   )}
                 </Pressable>
               );

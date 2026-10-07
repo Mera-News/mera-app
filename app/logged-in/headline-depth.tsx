@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HeadlineDepth() {
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <View style={{ flex: 1 }}>
                 {/* Unpadded wrapper. The page backdrop is mounted HERE, not inside the
                     SafeAreaView and not inside the screen component, so it spans the

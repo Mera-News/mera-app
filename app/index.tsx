@@ -85,7 +85,7 @@ export default function Index() {
   // all mount the same unseeded backdrop, sharing one colour sequence) is not
   // a flat-black splash followed by a jump to colour.
   return (
-    <Box className="flex-1 justify-center items-center bg-black">
+    <Box className="flex-1 justify-center items-center bg-page">
       {/* Mera starts (FinalStart #2): the gradient fades in behind the
           logo, which sits exactly where the gate hands it to the Mera button
           (LaunchLogoHandoff). No progress torch: Lite and Reduce Motion

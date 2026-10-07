@@ -27,7 +27,7 @@ export default function Publication() {
     }
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <View style={{ flex: 1 }}>
                 <AbstractGradientBackdrop />
                 <SafeAreaView style={{ flex: 1 }}>

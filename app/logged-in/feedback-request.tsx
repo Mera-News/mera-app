@@ -33,7 +33,7 @@ export default function FeedbackRequestRoute() {
     }, [duplicate, close]);
     if (duplicate) return null;
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                 <FeedbackRequestModal id={typeof id === 'string' ? id : undefined} onClose={close} />
             </ErrorBoundary>

@@ -134,7 +134,7 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
           <VStack className="items-center" space="xs">
             {/* One line at launch ("Mera is locked"); a caller re-using the
                 screen (Change PIN) may pass its own title and subtitle. */}
-            <Text className="text-white text-xl font-semibold">
+            <Text className="text-ink text-xl font-semibold">
               {title ?? t('pin.lockTitle')}
             </Text>
             {subtitle ? (
@@ -183,10 +183,10 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
           testID="pin-forgot-sheet"
         >
           <VStack className="px-5 pt-2" space="md">
-            <Text className="text-xl font-semibold text-white" accessibilityRole="header">
+            <Text className="text-xl font-semibold text-ink" accessibilityRole="header">
               {t('pin.forgotTitle')}
             </Text>
-            <Text className="text-gray-300 text-base leading-relaxed">
+            <Text className="text-ink text-base leading-relaxed">
               {isConnected ? t('pin.forgotBody') : t('pin.forgotOffline')}
             </Text>
             <Button
