@@ -48,11 +48,12 @@ import { AttestationVerificationRow } from '@/components/custom/config-mera/Atte
 import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Linking, Platform, ScrollView } from 'react-native';
+import { Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import ProcessingModePill from './ProcessingModePill';
+import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
+import { useColors } from '@/lib/theme/tokens';
 import {
     BG_REFRESH_TITLE_KEY,
     bgRefreshDescriptionKey,
@@ -75,6 +76,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     onModeChange,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const [isLoading, setIsLoading] = useState(!isOnboarding);
     const [isUpdatingMode, setIsUpdatingMode] = useState(false);
     const [requirementsResult, setRequirementsResult] = useState<SystemRequirementsResult | null>(null);
@@ -513,16 +515,36 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         }
     };
 
-    const renderModePill = (mode: ProcessingMode) => {
-        const onDevicePill = mode === ProcessingMode.OnDevice;
+    // "Where Mera reads your news" (FinalSettings #11): On this phone is
+    // always shown, for transparency, and disabled with the reason when the
+    // phone can't run it; Private cloud says what it is. Beta stays on
+    // On this phone (owner Y8).
+    const modeRow = (mode: ProcessingMode) => {
+        const onDevice = mode === ProcessingMode.OnDevice;
+        const selected = onDevice ? onDeviceIntent : !onDeviceIntent;
+        const cantRun = onDevice && deviceSupported === false;
+        const title = onDevice ? t('you.settings.onThisPhone') : t('you.settings.privateCloud');
+        const subtitle = onDevice ? (cantRun ? t('meraProtocol.cantRun') : undefined) : t('meraProtocol.encrypted');
         return (
-            <ProcessingModePill
+            <Pressable
                 key={mode}
-                mode={mode}
-                selected={onDevicePill ? onDeviceIntent : !onDeviceIntent}
-                disabled={isUpdatingMode}
+                testID={onDevice ? 'mode-on-device' : 'mode-cloud'}
                 onPress={() => selectMode(mode)}
-            />
+                disabled={isUpdatingMode || cantRun}
+                accessibilityRole="radio"
+                accessibilityState={{ selected, checked: selected, disabled: isUpdatingMode || cantRun }}
+                accessibilityLabel={[title, onDevice ? t('common.beta') : null, subtitle].filter(Boolean).join(', ')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16, opacity: cantRun ? 0.45 : 1 }}
+            >
+                <MaterialIcons name={selected ? 'radio-button-checked' : 'radio-button-unchecked'} size={22} color={selected ? colors.accent : colors.ink3} />
+                <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={{ color: colors.ink, fontSize: 16 }}>{title}</Text>
+                        {onDevice ? <BetaBadge /> : null}
+                    </View>
+                    {subtitle ? <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{subtitle}</Text> : null}
+                </View>
+            </Pressable>
         );
     };
 
@@ -537,19 +559,21 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </VStack>
             )}
 
-            {/* Processing Mode Segmented Control */}
-            <Box className="px-5 mb-6">
-                <HStack className="items-center justify-between mb-3">
-                    <Text className="text-white text-lg font-semibold">
-                        {t('meraProtocol.processingModeTitle')}
-                    </Text>
-                    {isUpdatingMode && <Spinner size="small" />}
-                </HStack>
-                <HStack space="sm">
-                    {renderModePill(ProcessingMode.OnDevice)}
-                    {renderModePill(ProcessingMode.Cloud)}
-                </HStack>
-            </Box>
+            <View style={{ paddingHorizontal: 14, marginBottom: 20 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flex: 1 }}>
+                        <GroupLabel>{t('meraProtocol.whereReads')}</GroupLabel>
+                    </View>
+                    {isUpdatingMode ? <Spinner size="small" /> : null}
+                </View>
+                <Group>
+                    {modeRow(ProcessingMode.OnDevice)}
+                    {modeRow(ProcessingMode.Cloud)}
+                </Group>
+                <View style={{ marginTop: 8 }}>
+                    <Help>{deviceSupported === false ? t('meraProtocol.explainerCant') : t('meraProtocol.explainerCan')}</Help>
+                </View>
+            </View>
 
             {/* Model Management Section — only relevant when the user wants
                 on-device AND the device can actually run it. Otherwise this
@@ -732,31 +756,23 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 screen: it only means something once the reader is set up. The
                 copy follows the mode the run will actually use. */}
             {!isOnboarding && (
-                <Box className="px-5 mb-6" testID="mera-protocol-bg-refresh">
-                    <HStack space="md" className="items-center justify-between">
-                        <HStack space="md" className="items-center flex-1">
-                            <MaterialIcons
-                                name="sync"
-                                size={24}
-                                color={bgRefreshEnabled ? "#10b981" : "#9ca3af"}
-                            />
-                            <VStack className="flex-1">
-                                <Text className="text-white text-base font-semibold">
-                                    {t(BG_REFRESH_TITLE_KEY)}
-                                </Text>
-                                <Text className="text-typography-500 text-sm mt-0.5">
-                                    {t(bgRefreshDescriptionKey(processingMode === ProcessingMode.OnDevice, Platform.OS))}
-                                </Text>
-                            </VStack>
-                        </HStack>
-                        <Switch
-                            value={bgRefreshEnabled}
-                            onToggle={toggleBgRefresh}
-                            size="md"
-                            testID="mera-protocol-bg-refresh-switch"
+                <View style={{ paddingHorizontal: 14, marginBottom: 6 }} testID="mera-protocol-bg-refresh">
+                    <GroupLabel>{t('meraProtocol.whileClosed')}</GroupLabel>
+                    <Group>
+                        <Row
+                            title={t(BG_REFRESH_TITLE_KEY)}
+                            subtitle={t(bgRefreshDescriptionKey(processingMode === ProcessingMode.OnDevice, Platform.OS))}
+                            trailing={
+                                <Switch
+                                    value={bgRefreshEnabled}
+                                    onToggle={toggleBgRefresh}
+                                    size="md"
+                                    testID="mera-protocol-bg-refresh-switch"
+                                />
+                            }
                         />
-                    </HStack>
-                </Box>
+                    </Group>
+                </View>
             )}
 
             {/* Web search in chat (item 13) — ON by default since the
@@ -773,55 +789,37 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 read-only flag, because turning a privacy setting OFF must never
                 sit behind a paywall. That flag is gone now, so the exception
                 has nothing left to be an exception to. */}
-            <Box className="px-5 mb-6" testID="mera-protocol-web-search">
-                <HStack space="md" className="items-center justify-between">
-                    <HStack space="md" className="items-center flex-1">
-                        <MaterialIcons
-                            name="travel-explore"
-                            size={24}
-                            color={webSearchInChat ? "#10b981" : "#9ca3af"}
-                        />
-                        <VStack className="flex-1">
-                            <HStack space="xs" className="items-center">
-                                <Text className="text-white text-base font-semibold">
-                                    {t('meraProtocol.webSearchTitle')}
-                                </Text>
+            <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-web-search">
+                <GroupLabel>{t('meraProtocol.chatGroup')}</GroupLabel>
+                <Group>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, paddingHorizontal: 16 }}>
+                        <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={{ color: colors.ink, fontSize: 16 }}>{t('meraProtocol.webSearchTitle')}</Text>
                                 <BetaBadge />
-                            </HStack>
-                            <Text className="text-typography-500 text-sm mt-0.5">
-                                {webSearchInChat
-                                    ? t('meraProtocol.webSearchOn')
-                                    : t('meraProtocol.webSearchOff')}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                    <Switch
-                        value={webSearchInChat}
-                        onToggle={() => store.setWebSearchInChat(!webSearchInChat)}
-                        size="md"
-                        testID="mera-protocol-web-search-switch"
-                    />
-                </HStack>
-                <Text className="text-typography-500 text-xs mt-2">
-                    {t('meraProtocol.webSearchDescription')}
-                </Text>
-            </Box>
+                            </View>
+                            <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{t('meraProtocol.webSearchShort')}</Text>
+                        </View>
+                        <Switch
+                            value={webSearchInChat}
+                            onToggle={() => store.setWebSearchInChat(!webSearchInChat)}
+                            size="md"
+                            testID="mera-protocol-web-search-switch"
+                        />
+                    </View>
+                </Group>
+            </View>
 
             {/* Privacy Explainer */}
-            <Box className="px-5 mb-6">
-                <Box className="p-4 rounded-lg border border-primary-400">
-                    <HStack space="md" className="items-start">
-                        <VStack className="flex-1">
-                            <Text className="text-typography-400 text-base font-semibold mb-1">
-                                {t('meraProtocol.privacyTitle')}
-                            </Text>
-                            <Text className="text-typography-400 text-sm">
-                                {t('meraProtocol.privacyDescription')}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                </Box>
-            </Box>
+            {/* Privacy shows in green (FinalSettings #11). */}
+            <View style={{ marginHorizontal: 14, marginBottom: 20, borderRadius: 16, padding: 16, gap: 4, overflow: 'hidden' }} testID="mera-protocol-private">
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.positive, opacity: 0.12 }]} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <MaterialIcons name="verified-user" size={18} color={colors.positive} />
+                    <Text style={{ color: colors.positive, fontSize: 16, fontWeight: '600' }}>{t('meraProtocol.staysPrivateTitle')}</Text>
+                </View>
+                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('meraProtocol.staysPrivateBody')}</Text>
+            </View>
 
             {/* Verify attestation — UNCONDITIONAL. This sits with the privacy
                 explainer rather than under the on-device section because it is
