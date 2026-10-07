@@ -218,6 +218,9 @@ export type SurfaceId =
   | 'settings:display'
   | 'settings:mera-protocol'
   | 'settings:notifications'
+  | 'settings:app-lock'
+  | 'settings:data'
+  | 'settings:backup'
   | 'search';
 
 const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
@@ -229,6 +232,9 @@ const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
   'settings:display',
   'settings:mera-protocol',
   'settings:notifications',
+  'settings:app-lock',
+  'settings:data',
+  'settings:backup',
 ]);
 
 /** The tab a surface lives in, or null for a root push (Search). */

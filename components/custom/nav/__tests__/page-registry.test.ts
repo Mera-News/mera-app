@@ -50,6 +50,7 @@ describe('page-registry', () => {
     expect(tabForSurface('interest:abc')).toBe('feed');
     expect(tabForSurface('sources')).toBe('you');
     expect(tabForSurface('settings:notifications')).toBe('you');
+    expect(tabForSurface('settings:backup')).toBe('you');
     expect(tabForSurface('checks')).toBe('library');
     expect(tabForSurface('country:NL')).toBe('world');
   });
