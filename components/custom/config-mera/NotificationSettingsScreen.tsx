@@ -33,6 +33,11 @@ interface NotificationSettingsScreenProps {
     // Onboarding state sync
     initialHours?: number[];
     onHoursChange?: (hours: number[]) => void;
+    /** Called whenever the on/off state settles (first launch's Next guard). */
+    onEnabledChange?: (on: boolean) => void;
+    /** A nonce: each new value runs this screen's own turn-on flow
+     *  (permission, refusal, toasts), e.g. from the Next guard's Turn them on. */
+    enableRequest?: number;
 }
 
 /**
@@ -47,6 +52,8 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     isOnboarding = false,
     initialHours = [],
     onHoursChange,
+    onEnabledChange,
+    enableRequest,
 }) => {
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(!isOnboarding);
@@ -57,6 +64,8 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     // The phone refused notifications for Mera: only phone settings can undo it.
     const [osRefused, setOsRefused] = useState(false);
     const [selectedHours, setSelectedHours] = useState<number[]>(initialHours);
+    // The first status read has landed (before it, "off" is only a default).
+    const [statusKnown, setStatusKnown] = useState(false);
     const colors = useColors();
     const toast = useToast();
     const insets = useSafeAreaInsets();
@@ -98,6 +107,8 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             void readOsRefused(!!userPersona?.notificationsEnabled);
         } catch {
             // Silently handle
+        } finally {
+            setStatusKnown(true);
         }
     };
 
@@ -127,6 +138,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             });
         } finally {
             setIsLoading(false);
+            setStatusKnown(true);
         }
     };
 
@@ -238,6 +250,23 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         }
     };
 
+    // Report every settled on/off state (not while a toggle is in flight).
+    const onEnabledChangeRef = useRef(onEnabledChange);
+    onEnabledChangeRef.current = onEnabledChange;
+    useEffect(() => {
+        if (statusKnown && !isEnabling && !isDisabling) onEnabledChangeRef.current?.(notificationsEnabled);
+    }, [statusKnown, isEnabling, isDisabling, notificationsEnabled]);
+
+    // A new nonce value asks for the turn-on flow; the first value is not a request.
+    const lastEnableRequest = useRef(enableRequest);
+    useEffect(() => {
+        if (enableRequest === lastEnableRequest.current) return;
+        lastEnableRequest.current = enableRequest;
+        if (!notificationsEnabled && !isEnabling) void handleEnableNotifications();
+        // handleEnableNotifications is re-created per render; the nonce alone triggers this.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enableRequest]);
+
     // ── Auto-save (preferences mode) ────────────────────────────────────
     //
     // The hours save on their own, AUTO_SAVE_DELAY_MS after the last change.
@@ -317,6 +346,32 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         );
     };
 
+    const turnOnButton = () => (
+        <VStack className="mx-4 mb-5" space="md">
+            <Pressable
+                testID="notifications-turn-on"
+                onPress={() => {
+                    if (!isEnabling) void handleEnableNotifications();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('onboarding.turnOn')}
+                accessibilityState={{ busy: isEnabling }}
+                style={{ height: 48, borderRadius: 999, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' }}
+            >
+                {isEnabling ? (
+                    <Spinner size="small" color={colors.onAccent} />
+                ) : (
+                    <Text style={{ color: colors.onAccent, fontSize: 16, fontWeight: '600' }}>{t('onboarding.turnOn')}</Text>
+                )}
+            </Pressable>
+            {osRefused ? (
+                <Text size="sm" style={{ color: colors.ink3 }}>
+                    {t('notifications.permissionDenied')}
+                </Text>
+            ) : null}
+        </VStack>
+    );
+
     const pushRow = () => (
         <VStack className="mx-4 mb-5" space="md">
             <HStack
@@ -377,14 +432,8 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     const hoursSection = () => (
         <VStack>
             <Text className="mx-4 mb-1 font-semibold" size="md" style={{ color: colors.ink }} accessibilityRole="header">
-                {t('you.notifications.when')}
+                {isOnboarding ? t('onboarding.notificationsOn') : t('you.notifications.when')}
             </Text>
-            {isOnboarding ? (
-                <VStack className="mx-4 mb-2" space="xs">
-                    <Text size="sm" style={{ color: colors.ink3 }}>{t('notifications.timeDescriptionOnboarding')}</Text>
-                    <Text size="sm" style={{ color: colors.ink3 }}>{t('notifications.timeNudge')}</Text>
-                </VStack>
-            ) : null}
             <NotificationTimes hours={selectedHours} onChange={handleHoursChange} />
             <Text size="xs" className="mx-4 mb-2" style={{ color: colors.ink3 }}>
                 {t('you.notifications.footnote')}
@@ -400,17 +449,9 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             contentContainerStyle={{ paddingTop: 4, paddingBottom: insets.bottom + 24 }}
             showsVerticalScrollIndicator={false}
         >
-            {isOnboarding ? (
-                <VStack className="mx-5 mb-6">
-                    <Text className="text-3xl font-bold text-white text-center mb-3">
-                        {t('notifications.title')}
-                    </Text>
-                    <Text className="text-base text-typography-400 text-center">
-                        {t('notifications.enableDescription')}
-                    </Text>
-                </VStack>
-            ) : null}
-            {pushRow()}
+            {/* First launch: the wizard draws the title and the why. Off is one
+                primary button; on drops straight into the times. */}
+            {isOnboarding ? (notificationsEnabled ? null : turnOnButton()) : pushRow()}
             {notificationsEnabled ? hoursSection() : null}
         </ScrollView>
     );
