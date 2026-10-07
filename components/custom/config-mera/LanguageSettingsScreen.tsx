@@ -17,7 +17,8 @@ import LanguageDownloadHint from '@/components/custom/config-mera/LanguageDownlo
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useState } from 'react';
-import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { showDialog } from '@/lib/dialog';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
@@ -93,20 +94,17 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
     const handleCommitted = useCallback(
         (code: string, previousCode: string) => {
             if (RTL_CODES.has(previousCode) === RTL_CODES.has(code)) return;
-            Alert.alert(
-                t('language.restartRequired'),
-                t('language.restartDescription'),
-                [
-                    { text: t('language.later'), style: 'cancel' },
-                    {
-                        text: t('language.restart'),
-                        // Through the one restart authority, not a bare
-                        // reloadAsync(): lib/app-restart.ts holds this off while
-                        // a purchase or a credential write is mid-flight.
-                        onPress: () => { void requestRestart('language'); },
-                    },
-                ],
-            );
+            void showDialog({
+                title: t('language.restartRequired'),
+                body: t('language.restartDescription'),
+                cancelLabel: t('language.later'),
+                confirmLabel: t('language.restart'),
+            }).then((restart) => {
+                // Through the one restart authority, not a bare
+                // reloadAsync(): lib/app-restart.ts holds this off while a
+                // purchase or a credential write is mid-flight.
+                if (restart) void requestRestart('language');
+            });
         },
         [t],
     );
@@ -131,10 +129,11 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
             // Read AFTER the hook applied it, so `current` is already English
             // here — the body names the landing spot rather than re-deriving it.
             if (fellBackToEnglish) {
-                Alert.alert(
-                    t('language.switchFailedTitle', { language }),
-                    t('language.switchDeviceUnsupportedBody', { language }),
-                );
+                void showDialog({
+                    title: t('language.switchFailedTitle', { language }),
+                    body: t('language.switchDeviceUnsupportedBody', { language }),
+                    confirmLabel: t('common.ok'),
+                });
                 return;
             }
             const body = outcome === 'timeout'
@@ -142,7 +141,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                 : outcome === 'language-unsupported'
                     ? t('language.switchUnsupportedBody', { language, previous: current })
                     : t('language.switchFailedBody', { language, previous: current });
-            Alert.alert(t('language.switchFailedTitle', { language }), body);
+            void showDialog({ title: t('language.switchFailedTitle', { language }), body, confirmLabel: t('common.ok') });
         },
         [t],
     );
