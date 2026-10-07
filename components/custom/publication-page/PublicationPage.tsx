@@ -41,8 +41,6 @@ import {
 import { visitedToNewsArticle } from './visited-article';
 import { formatCategories, SOURCE_KIND_META, sourceKindOf } from './publication-format';
 
-const MUTED = 'rgb(156,163,175)';
-const DIVIDER = 'rgba(255,255,255,0.10)';
 
 /** The page body's vertical rhythm, in points (NativeWind space tokens are
  *  rem-scaled at 14pt, so plain numbers keep this exact). Identity, then the
@@ -325,7 +323,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 displayName={displayName}
                 homepageUrl={profile?.homepageUrl}
                 details={dataLine || null}
-                badge={kind ? { label: t(SOURCE_KIND_META[kind].key), color: SOURCE_KIND_META[kind].color } : null}
+                badge={kind ? { label: t(SOURCE_KIND_META[kind].key), color: colors[SOURCE_KIND_META[kind].color] } : null}
                 detailsLoading={state === 'loading'}
             />
 
@@ -339,20 +337,20 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
             ) : null}
 
             {state === 'offline' ? (
-                <Text size="sm" style={{ color: MUTED }} testID="publication-offline">
+                <Text size="sm" style={{ color: colors.ink3 }} testID="publication-offline">
                     {t('publicationPage.offlineHint')}
                 </Text>
             ) : null}
 
             {state === 'notFound' ? (
-                <Text size="sm" style={{ color: MUTED }} testID="publication-not-found">
+                <Text size="sm" style={{ color: colors.ink3 }} testID="publication-not-found">
                     {t('publicationPage.notFound')}
                 </Text>
             ) : null}
 
             {state === 'error' ? (
                 <HStack space="md" className="items-center" testID="publication-error">
-                    <Text size="sm" className="text-white flex-1">
+                    <Text size="sm" className="text-ink flex-1">
                         {t('publicationPage.loadError')}
                     </Text>
                     <Pressable
@@ -362,7 +360,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                         accessibilityLabel={t('common.retry')}
                         style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 }}
                     >
-                        <Text size="sm" className="text-white font-semibold underline">
+                        <Text size="sm" className="text-ink font-semibold underline">
                             {t('common.retry')}
                         </Text>
                     </Pressable>
@@ -392,7 +390,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 style={{
                     flexWrap: 'wrap',
                     borderTopWidth: StyleSheet.hairlineWidth,
-                    borderTopColor: DIVIDER,
+                    borderTopColor: colors.line,
                     paddingTop: PAGE_SPACING.switchTop,
                     marginTop: PAGE_SPACING.sectionGap - PAGE_SPACING.blockGap,
                 }}
@@ -404,7 +402,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 {pill('HISTORY', t('publicationPage.history'), 'publication-order-history')}
             </HStack>
             {isHistory ? (
-                <Text size="sm" style={{ color: MUTED, marginTop: -12 }} testID="publication-history-label">
+                <Text size="sm" style={{ color: colors.ink3, marginTop: -12 }} testID="publication-history-label">
                     {t('publicationPage.visitsLabel')}
                 </Text>
             ) : null}
@@ -457,7 +455,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                     <Spinner size="small" />
                 </Box>
             ) : (
-                <Text size="sm" className="py-6" style={{ color: MUTED, lineHeight: 20 }} testID="publication-history-empty">
+                <Text size="sm" className="py-6" style={{ color: colors.ink3, lineHeight: 20 }} testID="publication-history-empty">
                     {t('publicationPage.historyEmpty')}
                 </Text>
             );
@@ -471,7 +469,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
         } else if (news.state === 'error') {
             listEmpty = (
                 <VStack space="sm" className="items-center py-8 px-6" testID="publication-news-error">
-                    <Text size="sm" className="text-gray-300 text-center">
+                    <Text size="sm" className="text-ink text-center">
                         {t('publicationPage.newsLoadError')}
                     </Text>
                     <Pressable
@@ -481,7 +479,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                         accessibilityLabel={t('common.retry')}
                         style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }}
                     >
-                        <Text size="sm" className="text-white font-semibold underline">
+                        <Text size="sm" className="text-ink font-semibold underline">
                             {t('common.retry')}
                         </Text>
                     </Pressable>
@@ -500,12 +498,12 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                             borderRadius: 24,
                             alignItems: 'center',
                             justifyContent: 'center',
-                            backgroundColor: 'rgba(255,255,255,0.06)',
+                            backgroundColor: colors.surface,
                         }}
                     >
-                        <MaterialIcons name="article" size={22} color={MUTED} />
+                        <MaterialIcons name="article" size={22} color={colors.ink3} />
                     </View>
-                    <Text size="sm" className="text-center" style={{ color: MUTED, lineHeight: 20 }}>
+                    <Text size="sm" className="text-center" style={{ color: colors.ink3, lineHeight: 20 }}>
                         {shownOrder === 'TOP_HEADLINES'
                             ? t('publicationPage.noTopHeadlines')
                             : t('publicationPage.noLatest')}
@@ -534,7 +532,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                     accessibilityLabel={t('common.retry')}
                     style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }}
                 >
-                    <Text size="sm" className="text-white font-semibold underline">
+                    <Text size="sm" className="text-ink font-semibold underline">
                         {t('common.retry')}
                     </Text>
                 </Pressable>
@@ -583,7 +581,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                     <RefreshControl
                         refreshing={isHistory ? false : news.refreshing}
                         onRefresh={onRefresh}
-                        tintColor="#FFFFFF"
+                        tintColor={colors.accent}
                     />
                 }
             />

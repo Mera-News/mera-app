@@ -14,6 +14,7 @@ import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 import { useWindowDimensions } from 'react-native';
 
 interface Props {
@@ -23,6 +24,7 @@ interface Props {
 
 const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const { width: screenWidth } = useWindowDimensions();
     const [count, setCount] = useState<number | null>(null);
     const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -76,11 +78,11 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
                     {...triggerProps}
                     onPress={openTooltip}
                     accessibilityLabel={t('publicationVisits.tooltipA11y')}
-                    className="rounded-lg p-3 bg-black border border-white"
+                    className="rounded-lg p-3 bg-page border border-ink"
                 >
                     <HStack className="items-center" space="sm">
-                        <MaterialIcons name="visibility" size={16} color="#ffffff" />
-                        <Text size="xs" italic className="flex-1 text-white">
+                        <MaterialIcons name="visibility" size={16} color={colors.ink} />
+                        <Text size="xs" italic className="flex-1 text-ink">
                             {t('publicationVisits.badge', {
                                 publication: publicationShown,
                                 count,
@@ -92,10 +94,10 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
         >
             <PopoverBackdrop />
             {/* No surface classes: the popover primitive owns the material.
-                bg-black + border-white here would paint a frame around the
+                bg-page + border-ink here would paint a frame around the
                 plate rather than replacing it. */}
             <PopoverContent style={{ maxWidth: screenWidth - 32 }}>
-                <PopoverArrow className="bg-background-0 border border-white/10" />
+                <PopoverArrow className="bg-page border border-line" />
                 <PopoverBody
                     testID="publication-visit-bubble"
                     // VoiceOver's escape (two-finger scrub) closes the bubble.
@@ -110,9 +112,9 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
                         accessibilityLabel={`${t('publicationVisits.tooltipIntro')} ${t('publicationVisits.tooltipLink')}`}
                         onPress={openHistory}
                     >
-                        <Text size="xs" className="text-white">
+                        <Text size="xs" className="text-ink">
                             {t('publicationVisits.tooltipIntro')}{' '}
-                            <Text size="xs" bold className="text-white underline">
+                            <Text size="xs" bold className="text-ink underline">
                                 {t('publicationVisits.tooltipLink')}
                             </Text>
                         </Text>

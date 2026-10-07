@@ -7,11 +7,9 @@ import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 import { I18nManager, StyleSheet, View } from 'react-native';
 
-const MORE_COLOR = '#10b981';
-const FEWER_COLOR = '#f59e0b';
-const CHEVRON_COLOR = '#999999';
 const PRESSED_OPACITY = 0.6;
 export const PRESS_DELAY_MS = 130;
 
@@ -47,6 +45,7 @@ const PublicationListRow: React.FC<PublicationListRowProps> = ({
     testID,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const shown = useDisplayPublication(rawName.trim()) || rawName;
     const [pressed, setPressed] = useState(false);
 
@@ -59,7 +58,7 @@ const PublicationListRow: React.FC<PublicationListRowProps> = ({
     const label = [shown, subtitle, prefLabel].filter(Boolean).join(', ');
 
     return (
-        <View className="mx-4 mb-3 rounded-lg border border-gray-700" testID={`${testID}-frame`}>
+        <View className="mx-4 mb-3 rounded-lg border border-line" testID={`${testID}-frame`}>
             <HStack
                 space="md"
                 className="items-center px-4 py-3"
@@ -70,11 +69,11 @@ const PublicationListRow: React.FC<PublicationListRowProps> = ({
             >
                 {flag ? <Text className="text-2xl">{flag}</Text> : null}
                 <VStack className="flex-1" space="xs">
-                    <Text className="text-base text-white" numberOfLines={2}>
+                    <Text className="text-base text-ink" numberOfLines={2}>
                         {shown}
                     </Text>
                     {subtitle ? (
-                        <Text size="xs" className="text-gray-500" numberOfLines={1}>
+                        <Text size="xs" className="text-ink-3" numberOfLines={1}>
                             {subtitle}
                         </Text>
                     ) : null}
@@ -84,13 +83,13 @@ const PublicationListRow: React.FC<PublicationListRowProps> = ({
                         testID={`${testID}-pref-${prefLevel}`}
                         name={prefLevel === 'prioritised' ? 'arrow-upward' : 'arrow-downward'}
                         size={16}
-                        color={prefLevel === 'prioritised' ? MORE_COLOR : FEWER_COLOR}
+                        color={prefLevel === 'prioritised' ? colors.positive : colors.warning}
                     />
                 ) : null}
                 <MaterialIcons
                     name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'}
                     size={20}
-                    color={CHEVRON_COLOR}
+                    color={colors.ink3}
                 />
             </HStack>
             <TapPressable

@@ -80,9 +80,9 @@ export function monogramInks(hue: number): { fill: string; border: string; lette
 // government outlets); do not reintroduce one.
 export type SourceKind = 'government' | 'regulator';
 
-export const SOURCE_KIND_META: Record<SourceKind, { key: 'sources.badgeGovernment' | 'sources.badgeRegulator'; color: string }> = {
-    government: { key: 'sources.badgeGovernment', color: '#60a5fa' },
-    regulator: { key: 'sources.badgeRegulator', color: '#34d399' },
+export const SOURCE_KIND_META: Record<SourceKind, { key: 'sources.badgeGovernment' | 'sources.badgeRegulator'; color: 'info' | 'positive' }> = {
+    government: { key: 'sources.badgeGovernment', color: 'info' },
+    regulator: { key: 'sources.badgeRegulator', color: 'positive' },
 };
 
 export function sourceKindOf(publicationType: string | null | undefined): SourceKind | null {

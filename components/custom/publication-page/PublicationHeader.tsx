@@ -6,6 +6,7 @@ import logger from '@/lib/logger';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 import { StyleSheet, View } from 'react-native';
 
 import { homepageUrlOf, hostOf, monogramHueOf, monogramInks, monogramOf } from './publication-format';
@@ -26,9 +27,6 @@ export const PUBLICATION_HEADER_METRICS = {
     linkTarget: 44,
 } as const;
 
-const HOST_COLOR = 'rgb(156,163,175)';
-const DETAILS_COLOR = HOST_COLOR;
-const SKELETON_FILL = 'rgba(255,255,255,0.08)';
 
 const LINK_FRAME = {
     minHeight: PUBLICATION_HEADER_METRICS.linkTarget,
@@ -81,6 +79,7 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
     detailsLoading = false,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const url = homepageUrlOf(homepageUrl);
     const host = url ? hostOf(url) : null;
     const inks = monogramInks(monogramHueOf(displayName));
@@ -126,7 +125,7 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
             </View>
             <VStack className="flex-1" style={{ gap: PUBLICATION_HEADER_METRICS.lineGap }}>
                 <Text
-                    className="text-white font-semibold"
+                    className="text-ink font-semibold"
                     style={{ fontSize: PUBLICATION_HEADER_METRICS.nameSize, lineHeight: PUBLICATION_HEADER_METRICS.nameLine }}
                     numberOfLines={3}
                     accessibilityRole="header"
@@ -142,7 +141,7 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                         importantForAccessibility="no-hide-descendants"
                         style={{ minHeight: PUBLICATION_HEADER_METRICS.detailsLine, justifyContent: 'center' }}
                     >
-                        <View style={{ height: 10, width: '62%', borderRadius: 5, backgroundColor: SKELETON_FILL }} />
+                        <View style={{ height: 10, width: '62%', borderRadius: 5, backgroundColor: colors.trackFill }} />
                     </View>
                 ) : showDetails ? (
                     <HStack
@@ -177,7 +176,7 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                                     accessible={false}
                                     accessibilityElementsHidden
                                     importantForAccessibility="no-hide-descendants"
-                                    style={{ color: HOST_COLOR, lineHeight: PUBLICATION_HEADER_METRICS.detailsLine }}
+                                    style={{ color: colors.ink3, lineHeight: PUBLICATION_HEADER_METRICS.detailsLine }}
                                 >
                                     {host}
                                 </Text>
@@ -194,7 +193,7 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                             <Text
                                 size="xs"
                                 numberOfLines={1}
-                                style={{ color: DETAILS_COLOR, flexShrink: 1, lineHeight: PUBLICATION_HEADER_METRICS.detailsLine }}
+                                style={{ color: colors.ink3, flexShrink: 1, lineHeight: PUBLICATION_HEADER_METRICS.detailsLine }}
                                 testID="publication-data-line"
                             >
                                 {host ? `· ${details}` : details}
