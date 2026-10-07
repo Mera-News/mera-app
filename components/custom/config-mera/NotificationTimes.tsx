@@ -223,6 +223,11 @@ const NotificationTimes: React.FC<NotificationTimesProps> = ({ hours, onChange }
                     />
                 </View>
             ) : null}
+            {none || wheelOpen ? (
+                <Text size="xs" className="mx-4 mb-1" style={{ color: colors.ink3 }}>
+                    {t('you.notifications.tapToSave')}
+                </Text>
+            ) : null}
         </VStack>
     );
 };

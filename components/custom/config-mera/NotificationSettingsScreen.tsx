@@ -348,6 +348,11 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     />
                 )}
             </HStack>
+            {!notificationsEnabled && !osRefused ? (
+                <Text size="sm" style={{ color: colors.ink3 }} testID="notifications-off-line">
+                    {t('you.notifications.offLine')}
+                </Text>
+            ) : null}
             {/* Only when the PHONE refused: phone settings is the one way back. */}
             {!notificationsEnabled && osRefused ? (
                 <VStack space="sm" testID="notifications-os-refused">
