@@ -233,7 +233,8 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
       >
         <GlassHeaderAndroidBackdrop />
         <GlassPlate tint={GLASS_HEADER_TINT} />
-        <View pointerEvents="box-none" style={{ paddingTop: insets.top + 6, paddingBottom: 6, paddingRight: 6 }}>
+        {/* Symmetric sides, so a segmented track centres on the SCREEN. */}
+        <View pointerEvents="box-none" style={{ paddingTop: insets.top + 6, paddingBottom: 6, paddingHorizontal: 6 }}>
           <PageStrip
             tabLabel={tabLabel}
             pages={pages}

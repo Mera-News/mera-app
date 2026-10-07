@@ -65,7 +65,8 @@ const LONG_PRESS_MS = 400;
 const LEAD_FADE = 44;
 const TRAIL_FADE_START = 58;
 const TRAIL_FADE_END = 96;
-const SCROLL_PAD_LEFT = 16;
+/** 16pt from the screen edge, after the header's 6pt side padding. */
+const SCROLL_PAD_LEFT = 10;
 /** Room for the floating search button at the scroll row's end. */
 const SCROLL_PAD_RIGHT = 60;
 
