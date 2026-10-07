@@ -68,6 +68,11 @@ export interface ChatSessionViewProps {
   resumeMessages?: PersistedMessage[];
   isLoading: boolean;
   loadingMessage?: string;
+  /** Drawn right of the composer on its row (onboarding's Next button).
+   *  Absent: the composer has the row to itself. */
+  composerTrailing?: React.ReactNode;
+  /** The composer's placeholder. Absent: "Type a message...". */
+  composerPlaceholder?: string;
 }
 
 export default function ChatSessionView({
@@ -84,6 +89,8 @@ export default function ChatSessionView({
   resumeMessages,
   isLoading,
   loadingMessage,
+  composerTrailing,
+  composerPlaceholder,
 }: ChatSessionViewProps) {
   const { t } = useTranslation();
   const isStreaming = status === 'streaming';
@@ -626,6 +633,8 @@ export default function ChatSessionView({
         onSend={handleSend}
         isInputDisabled={isStreaming || effectiveBlocked}
         composerHint={composerHint}
+        composerTrailing={composerTrailing}
+        composerPlaceholder={composerPlaceholder}
         usageNotice={context.kind === 'persona' ? undefined : t('floatingChat.aiUsageNoticeGeneral')}
       />
       {!!userId && conversationId && (

@@ -84,6 +84,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   isInputDisabled,
   usageNotice,
   composerHint = null,
+  composerTrailing,
+  composerPlaceholder,
 }) => {
   const { t } = useTranslation();
   const colors = useColors();
@@ -521,16 +523,21 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         </View>
       ) : null}
 
-      <PromptInput
-        ref={promptRef}
-        onSubmit={send}
-        placeholder={t('floatingChat.inputPlaceholder')}
-        // NOT `blockedMessage !== null`. A transport error sets that banner
-        // too, and the error is only cleared by starting a turn — so gating on
-        // the banner meant a failed turn disabled the composer permanently,
-        // with the banner telling the user to try again.
-        disabled={isInputDisabled || bannerBlocksInput}
-      />
+      <View style={composerTrailing ? styles.composerRow : undefined}>
+        <View style={composerTrailing ? styles.composerFill : undefined}>
+          <PromptInput
+            ref={promptRef}
+            onSubmit={send}
+            placeholder={composerPlaceholder ?? t('floatingChat.inputPlaceholder')}
+            // NOT `blockedMessage !== null`. A transport error sets that banner
+            // too, and the error is only cleared by starting a turn, so gating
+            // on the banner meant a failed turn disabled the composer for good,
+            // with the banner telling the user to try again.
+            disabled={isInputDisabled || bannerBlocksInput}
+          />
+        </View>
+        {composerTrailing}
+      </View>
     </Conversation>
   );
 };
@@ -555,6 +562,8 @@ const styles = StyleSheet.create({
   },
   // 16pt sides like the rest of the panel; at 4 the notice ran into the
   // panel's rounded edge (audit F9).
+  composerRow: { flexDirection: 'row', alignItems: 'center' },
+  composerFill: { flex: 1 },
   aiInteractionRow: {
     paddingHorizontal: 16,
     paddingVertical: 8,

@@ -19,6 +19,9 @@ export interface CloudPersonaChatProps {
   resumeMessages?: PersistedMessage[];
   isLoading: boolean;
   loadingMessage?: string;
+  /** Passed to ChatSessionView (onboarding's Next button and placeholder). */
+  composerTrailing?: React.ReactNode;
+  composerPlaceholder?: string;
 }
 
 export default function CloudPersonaChat({
@@ -29,6 +32,8 @@ export default function CloudPersonaChat({
   resumeMessages,
   isLoading,
   loadingMessage,
+  composerTrailing,
+  composerPlaceholder,
 }: CloudPersonaChatProps) {
   const agent = useMemo(
     () => createAgentForContext(context, userId, surface),
@@ -60,6 +65,8 @@ export default function CloudPersonaChat({
       resumeMessages={resumeMessages}
       isLoading={isLoading}
       loadingMessage={loadingMessage}
+      composerTrailing={composerTrailing}
+      composerPlaceholder={composerPlaceholder}
     />
   );
 }

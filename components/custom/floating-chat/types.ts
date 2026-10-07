@@ -4,6 +4,7 @@
 // util, the ChatThread component, and the (parallel) data/store layer that
 // feeds it. Everything here is presentational — no data fetching, no stores.
 
+import type { ReactNode } from 'react';
 import type { AgentTurnResult } from '@/lib/mera-harness';
 import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
@@ -404,4 +405,9 @@ export interface ChatThreadProps {
    * leaves the card pending (audit F7).
    */
   composerHint?: string | null;
+  /** Drawn right of the composer on its row (onboarding's Next button).
+   *  Absent: the composer has the row to itself. */
+  composerTrailing?: ReactNode;
+  /** The composer's placeholder. Absent: "Type a message...". */
+  composerPlaceholder?: string;
 }
