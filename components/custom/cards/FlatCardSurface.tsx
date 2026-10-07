@@ -14,8 +14,8 @@ export interface FlatCardSurfaceProps {
  * (TrackedStoriesScreen) both draw it, so they cannot drift apart (owner:
  * "make these cards similar to the translucent cards like the article cards").
  *
- * The translucent plate sits over the page BACKDROP, so it takes no dark
- * over-content base (see GlassSurface's GLASS_OVER_CONTENT_FILL rule).
+ * The translucent plate sits over the page BACKDROP, never over other
+ * content, so it needs no opaque base under it.
  *
  * Shadow lives on the outer, non-clipping Box: RN drops a view's shadow the
  * moment that same view also sets `overflow: hidden`, so the rounded, clipped
