@@ -35,6 +35,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
+import { inlineSign } from '@/lib/motion';
 import { COLORS, useColors } from '@/lib/theme/tokens';
 import { indicatorAt } from './tab-swipe';
 import type { PageId } from './page-registry';
@@ -60,15 +61,18 @@ const PILL_GAP = 6;
 const TRACK_PAD = 4;
 const SIDE_SLOT = 44;
 const LONG_PRESS_MS = 400;
-/** World's strip: where the leading fade runs out, and where the trailing
- *  fade starts and ends measured back from the search button's edge. */
-const LEAD_FADE = 44;
+/** The tab header's side padding (TabPages). World's row cancels it, so its
+ *  scroller spans the screen and a pill fades out before the screen edge. */
+export const HEADER_SIDE_PAD = 6;
+/** World's row starts 16pt in; a pill is fully faded once its start edge
+ *  reaches the screen edge, so it is never cut square. */
+const ROW_START = 16;
+/** Trailing fade: from fully clear to full, measured back from the row end,
+ *  where the floating search button sits. */
 const TRAIL_FADE_START = 58;
 const TRAIL_FADE_END = 96;
-/** 16pt from the screen edge, after the header's 6pt side padding. */
-const SCROLL_PAD_LEFT = 10;
-/** Room for the floating search button at the scroll row's end. */
-const SCROLL_PAD_RIGHT = 60;
+/** Room for the floating search button at the row's end. */
+const ROW_END = 60;
 
 /** Regional-indicator flag from ISO alpha-2 (XK included); '' when invalid. */
 export function flagEmoji(alpha2: string): string {
@@ -109,7 +113,7 @@ interface PillProps {
   readonly onSelect: (id: PageId) => void;
   readonly onLongPress?: (id: PageId) => void;
   readonly onLayout: (id: PageId, x: number, width: number) => void;
-  readonly fade?: { scrollX: SharedValue<number>; viewport: SharedValue<number> };
+  readonly fade?: { scrollX: SharedValue<number>; viewport: SharedValue<number>; rtl: boolean };
 }
 
 /** One pill. Its own component, keyed by page id, so the page's dot hook is
@@ -142,15 +146,16 @@ const Pill: React.FC<PillProps> = ({
   const w = useSharedValue(0);
   const fadeStyle = useAnimatedStyle(() => {
     if (!fade || w.value === 0) return { opacity: 1 };
-    // x is inside the row's content, after its leading padding.
-    const centre = SCROLL_PAD_LEFT + x.value + w.value / 2 - fade.scrollX.value;
-    const lead = interpolate(centre, [0, LEAD_FADE], [0, 1], Extrapolation.CLAMP);
-    const trail = interpolate(
-      fade.viewport.value - centre,
-      [TRAIL_FADE_START, TRAIL_FADE_END],
-      [0, 1],
-      Extrapolation.CLAMP,
-    );
+    // Physical on-screen edges (layout x and the scroll offset are both
+    // physical); the row's START is the right edge in RTL.
+    const left = x.value - fade.scrollX.value;
+    const right = left + w.value;
+    const centre = left + w.value / 2;
+    const view = fade.viewport.value;
+    const toStart = fade.rtl ? view - right : left;
+    const toEnd = fade.rtl ? centre : view - centre;
+    const lead = interpolate(toStart, [0, ROW_START], [0, 1], Extrapolation.CLAMP);
+    const trail = interpolate(toEnd, [TRAIL_FADE_START, TRAIL_FADE_END], [0, 1], Extrapolation.CLAMP);
     return { opacity: Math.min(lead, trail) };
   });
 
@@ -307,11 +312,11 @@ const PageStrip: React.FC<PageStripProps> = ({
       scrollX.value = e.contentOffset.x;
     },
   });
-  const fade = segmented ? undefined : { scrollX, viewport };
+  const fade = segmented ? undefined : { scrollX, viewport, rtl: inlineSign() === -1 };
 
   useEffect(() => {
     const l = layouts.current[activeId];
-    if (l) scrollRef.current?.scrollTo({ x: Math.max(0, l.x), animated: true });
+    if (l) scrollRef.current?.scrollTo({ x: Math.max(0, l.x - ROW_START), animated: true });
   }, [activeId, scrollRef]);
 
   const pills = pages.map((p, i) => (
@@ -334,12 +339,12 @@ const PageStrip: React.FC<PageStripProps> = ({
   return (
     <View style={styles.row} pointerEvents="box-none" testID="page-strip">
       {leading ? <View style={styles.sideSlot}>{leading}</View> : null}
-      <View style={styles.scrollerWrap} pointerEvents="box-none">
+      <View style={[styles.scrollerWrap, segmented ? null : styles.fullBleed]} pointerEvents="box-none">
         <Animated.ScrollView
           ref={scrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={segmented ? styles.segContent : styles.scrollContent}
+          contentContainerStyle={segmented ? styles.segContent : undefined}
           onScroll={segmented ? undefined : onScroll}
           scrollEventThrottle={16}
           onLayout={(e) => {
@@ -361,7 +366,9 @@ const PageStrip: React.FC<PageStripProps> = ({
               {pills}
             </View>
           ) : (
-            <View style={styles.pills} accessibilityRole={ROLES.row} testID="page-strip-pills">
+            // The row's own padding (not the scroller's), so each pill's
+            // layout x is its place in the scrolled content.
+            <View style={[styles.pills, styles.rowPad]} accessibilityRole={ROLES.row} testID="page-strip-pills">
               {pills}
             </View>
           )}
@@ -382,7 +389,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
   sideSlot: { width: SIDE_SLOT, height: SIDE_SLOT, alignItems: 'center', justifyContent: 'center' },
   scrollerWrap: { flex: 1, marginVertical: -PILL_FRAME_PAD },
-  scrollContent: { paddingLeft: SCROLL_PAD_LEFT, paddingRight: SCROLL_PAD_RIGHT },
+  fullBleed: { marginHorizontal: -HEADER_SIDE_PAD },
+  rowPad: { paddingLeft: ROW_START, paddingRight: ROW_END },
   // Centred while it fits, scrolls once it does not.
   segContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 8 },
   pills: { flexDirection: 'row', alignItems: 'center', gap: PILL_GAP },

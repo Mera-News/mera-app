@@ -19,12 +19,8 @@
 //    reveals it and resets its scroll origin (pages keep their own offsets).
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import {
-  GLASS_HEADER_SCRIM,
-  GLASS_HEADER_TINT,
-  GlassHeaderAndroidBackdrop,
-  GlassPlate,
-} from '@/components/custom/GlassSurface';
+import { GLASS_OVER_CONTENT_FILL } from '@/components/custom/GlassSurface';
+import { COLORS } from '@/lib/theme/tokens';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { hapticSelection } from '@/lib/haptics';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
@@ -53,7 +49,7 @@ import {
 import PageExplainerSheet from './PageExplainerSheet';
 import PagePager from './PagePager';
 import { survivingPage } from './tab-swipe';
-import PageStrip from './PageStrip';
+import PageStrip, { HEADER_SIDE_PAD } from './PageStrip';
 import { pageMeta, TAB_LABEL_KEYS, TAB_ORDER, type PageId } from './page-registry';
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
@@ -231,10 +227,8 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
         pointerEvents="box-none"
         style={[styles.header, headerStyle]}
       >
-        <GlassHeaderAndroidBackdrop />
-        <GlassPlate tint={GLASS_HEADER_TINT} />
         {/* Symmetric sides, so a segmented track centres on the SCREEN. */}
-        <View pointerEvents="box-none" style={{ paddingTop: insets.top + 6, paddingBottom: 6, paddingHorizontal: 6 }}>
+        <View pointerEvents="box-none" style={{ paddingTop: insets.top + 6, paddingBottom: 6, paddingHorizontal: HEADER_SIDE_PAD }}>
           <PageStrip
             tabLabel={tabLabel}
             pages={pages}
@@ -279,9 +273,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-    backgroundColor: GLASS_HEADER_SCRIM,
+    // Near black over the content (board .hdr), not a glass plate: a white
+    // tint over the header read as a grey slab. P12 moves it onto the theme.
+    backgroundColor: GLASS_OVER_CONTENT_FILL,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255,255,255,0.10)',
+    borderBottomColor: COLORS.dark.line,
   },
 });
 
