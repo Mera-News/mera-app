@@ -16,10 +16,10 @@ import { getSetting, setSetting } from '@/lib/database/services/setting-service'
 import { loadFeedMetadata } from '@/lib/database/services/article-suggestion-service';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
+import { tint, useColors } from '@/lib/theme/tokens';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 /** Settings KV flag gating the one-time sheet (existing setting-service pattern,
  *  same as `tabs_tooltip_seen`).
@@ -70,6 +70,7 @@ export function isWhatsNewSheetActive(): boolean {
 
 const WhatsNewSheet: React.FC = () => {
   const { t } = useTranslation();
+  const c = useColors();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -125,28 +126,28 @@ const WhatsNewSheet: React.FC = () => {
       <ModalBackdrop />
       <ModalContent>
         <ModalHeader>
-          <Heading size="xl" className="text-white">
+          <Heading size="xl" className="text-ink">
             {t('whatsNew.starterTitle')}
           </Heading>
         </ModalHeader>
         <ModalBody>
           <VStack space="lg" className="py-1">
-            <Text size="sm" className="text-typography-400">
+            <Text size="sm" className="text-ink-3">
               {t('whatsNew.starterIntro')}
             </Text>
             {ROWS.map((row) => (
               <HStack key={row.key} className="items-start" space="md">
                 <Box
                   className="rounded-full p-2"
-                  style={{ backgroundColor: 'rgba(231,138,83,0.15)' }}
+                  style={{ backgroundColor: tint(c.accent, 0.15) }}
                 >
-                  <MaterialIcons name={row.icon} size={20} color={ACCENT} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+                  <MaterialIcons name={row.icon} size={20} color={c.accent} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
                 </Box>
                 <VStack className="flex-1 min-w-0">
-                  <Text size="sm" bold className="text-white">
+                  <Text size="sm" bold className="text-ink">
                     {t(row.titleKey as any)}
                   </Text>
-                  <Text size="xs" className="text-typography-400">
+                  <Text size="xs" className="text-ink-3">
                     {t(row.bodyKey as any)}
                   </Text>
                 </VStack>
@@ -155,7 +156,7 @@ const WhatsNewSheet: React.FC = () => {
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button className="flex-1 bg-primary-400" onPress={dismiss}>
+          <Button className="flex-1 bg-accent" onPress={dismiss}>
             <ButtonText>{t('whatsNew.gotIt')}</ButtonText>
           </Button>
         </ModalFooter>

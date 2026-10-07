@@ -35,8 +35,8 @@ import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp, useReducedMotion } from 'react-native-reanimated';
-import { COLORS, useColors } from '@/lib/theme/tokens';
-import { pickScoringProgress, STATUS_INK } from './status-ink';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
+import { pickScoringProgress } from './status-ink';
 import { useLastProcessedLabel } from './use-last-processed-label';
 
 /** Explicit size AND line height: an inline fontSize on the ui Text keeps the
@@ -45,15 +45,16 @@ const ROW_TYPE = { fontSize: 14, lineHeight: 20 } as const;
 
 function StatRow({ label, value, testID }: { label: string; value: string; testID?: string }) {
     const reduceMotion = useReducedMotion();
+    const c = useColors();
     return (
         <HStack className="items-center justify-between py-1" testID={testID}>
-            <Text style={[ROW_TYPE, { color: STATUS_INK.secondary }]}>{label}</Text>
+            <Text style={[ROW_TYPE, { color: c.ink }]}>{label}</Text>
             {/* Keyed by value, so a change mounts a new node that rolls in. */}
             <Animated.Text
                 key={value}
                 entering={reduceMotion ? undefined : FadeInDown.duration(220)}
                 exiting={reduceMotion ? undefined : FadeOutUp.duration(160)}
-                style={[ROW_TYPE, { color: STATUS_INK.primary, fontWeight: '600' }]}
+                style={[ROW_TYPE, { color: c.ink, fontWeight: '600' }]}
             >
                 {value}
             </Animated.Text>
@@ -75,6 +76,7 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
     const asyncDone = useForYouAsyncJobProcessedCount();
     const asyncTotal = useForYouAsyncJobTotalCount();
     const { isDeviceProcessing, deviceProcessedCount, deviceTotalCount } = useForYouDeviceProcessing();
+    const styles = useStyles();
 
     const isSyncActive =
         syncStatusMessage !== null &&
@@ -137,9 +139,10 @@ export function AnalysingProgress() {
     const asyncDone = useForYouAsyncJobProcessedCount();
     const asyncTotal = useForYouAsyncJobTotalCount();
     const progress = pickScoringProgress(batchProgress, asyncDone, asyncTotal);
+    const c = useColors();
     if (!batchProgress || batchProgress.total <= 0 || !progress) return null;
     return (
-        <Text style={{ fontSize: 12, lineHeight: 17, color: STATUS_INK.secondary, marginTop: 4 }}>
+        <Text style={{ fontSize: 12, lineHeight: 17, color: c.ink, marginTop: 4 }}>
             {t('feed.analysingProgress', { done: progress.done, total: progress.total })}
         </Text>
     );
@@ -158,6 +161,7 @@ export const FeedStatusNotice: React.FC<{
     const scoringError = useForYouScoringError();
     const { onRefresh } = useFeedSyncRefresh();
     const colors = useColors();
+    const styles = useStyles();
     if (mode !== 'limited' && mode !== 'error') return null;
 
     const managePlan = () => {
@@ -183,7 +187,7 @@ export const FeedStatusNotice: React.FC<{
                 <Text style={[ROW_TYPE, { color: colors.accentText, fontWeight: '600' }]}>
                     {t('feed.dailyLimit.title')}
                 </Text>
-                <Text style={[ROW_TYPE, { color: STATUS_INK.secondary, marginTop: 4 }]}>
+                <Text style={[ROW_TYPE, { color: colors.ink, marginTop: 4 }]}>
                     {t('feed.dailyLimit.bodyWithTime', { time })}{' '}
                     <Trans
                         i18nKey="feedStatus.limitUpgrade"
@@ -221,7 +225,7 @@ export const FeedStatusNotice: React.FC<{
     return (
         <VStack testID="feed-status-error">
             <Text style={[ROW_TYPE, { color: colors.negative, fontWeight: '600' }]}>{t(keys.title)}</Text>
-            <Text style={[ROW_TYPE, { color: STATUS_INK.secondary, marginTop: 4 }]}>
+            <Text style={[ROW_TYPE, { color: colors.ink, marginTop: 4 }]}>
                 {t(keys.message)}{' '}
                 <Text
                     onPress={() => onRefresh()}
@@ -237,13 +241,13 @@ export const FeedStatusNotice: React.FC<{
     );
 };
 
-const styles = StyleSheet.create({
-    track: { height: 4, borderRadius: 2, backgroundColor: STATUS_INK.divider, marginBottom: 4 },
-    bar: { height: 4, borderRadius: 2, backgroundColor: COLORS.dark.accent },
+const useStyles = themedStyles((c) => StyleSheet.create({
+    track: { height: 4, borderRadius: 2, backgroundColor: c.line, marginBottom: 4 },
+    bar: { height: 4, borderRadius: 2, backgroundColor: c.accent },
     // A 44pt frame around a 30pt pill, margins given back so the row keeps its
     // height (never hitSlop: QA measures a hitSlop target as its glyph box).
     pillFrame: { minHeight: 44, justifyContent: 'center', marginVertical: -7 },
-    pill: { backgroundColor: COLORS.dark.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
-});
+    pill: { backgroundColor: c.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+}));
 
 export default FeedStatusDetails;

@@ -34,7 +34,7 @@ import { useColors } from '@/lib/theme/tokens';
 import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
-import { a11yStateKey, STATUS_INK } from './status-ink';
+import { a11yStateKey } from './status-ink';
 
 const HIDDEN = {
     accessible: false,
@@ -120,7 +120,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
                                     <MaterialIcons
                                         name={expanded ? 'expand-less' : 'expand-more'}
                                         size={20}
-                                        color={STATUS_INK.secondary}
+                                        color={colors.ink}
                                         {...HIDDEN}
                                     />
                                 </HStack>
@@ -136,7 +136,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
                                         <View style={{ flex: 1, minWidth: 0 }}>
                                             <FeedStatsSentence
                                                 syncing={processing}
-                                                className="text-typography-700 font-medium"
+                                                className="text-ink font-medium"
                                             />
                                         </View>
                                     </HStack>

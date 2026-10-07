@@ -31,7 +31,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 /** Pull-to-refresh spinner tint — same value the Feed tab uses. */
-const REFRESH_TINT = '#EDA77E';
 
 // ONE list item per section (was three kinds of row: header / card / footer).
 //
@@ -168,6 +167,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
   const listEndClearance = useListEndClearance();
   const { t } = useTranslation();
+  const colors = useColors();
 
   // Re-tap the Feed tab icon while this page shows: scroll to top, tap again
   // at the top: refresh. Wired HERE because this is where the list ref lives.
@@ -294,8 +294,8 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
             <RefreshControl
               refreshing={!!refreshing}
               onRefresh={onRefresh}
-              tintColor={REFRESH_TINT}
-              colors={[REFRESH_TINT]}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
               // Push the spinner below the absolute collapsing header so it
               // isn't hidden behind it (Android). Mirrors FeedScreen.
               progressViewOffset={headerHeight}

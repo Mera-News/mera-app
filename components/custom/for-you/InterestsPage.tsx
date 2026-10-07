@@ -149,10 +149,10 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
   } else if (errorMessage) {
     empty = (
       <View style={{ paddingVertical: 48, paddingHorizontal: 24 }} testID="interests-error">
-        <Text size="md" className="text-error-400 text-center font-semibold">
+        <Text size="md" className="text-negative text-center font-semibold">
           {t('errors.failedToLoad')}
         </Text>
-        <Text size="sm" className="text-typography-400 text-center">
+        <Text size="sm" className="text-ink-3 text-center">
           {t('feed.pullDownToRetry')}
         </Text>
       </View>

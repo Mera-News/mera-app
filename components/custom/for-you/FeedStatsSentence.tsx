@@ -43,7 +43,7 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   // No `leading-6`: 21px on 16px type (1.31) is a Latin-sized line box. This
   // sentence is translated into 20 languages, and Devanagari/Thai marks sit
   // above it. The `md` token's own 24px line box applies instead.
-  className = 'text-typography-400',
+  className = 'text-ink-3',
   syncing = false,
 }) => {
   const { t } = useTranslation();

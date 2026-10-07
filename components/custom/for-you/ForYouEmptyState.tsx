@@ -3,8 +3,7 @@
 // layouts on one screen: different icon sizes and greys, a title on one and
 // not the others, and a stray button on another.
 //
-// Colour is in `style`, never a typography class: the dark ramp is inverted
-// and the old `text-typography-400` body was rgb 140.
+// Colour comes from the theme tokens (useColors), in `style`.
 //
 // A page whose board names a tutorial hero (FinalMotion "Empty pages": Stories,
 // the Feed, Sources, Facts) passes `animationId` and the hero loops above the
@@ -20,12 +19,7 @@ import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-
-export const EMPTY_STATE_INK = {
-  title: '#FFFFFF',
-  body: 'rgb(212, 212, 212)',
-  icon: 'rgb(163, 163, 163)',
-} as const;
+import { useColors } from '@/lib/theme/tokens';
 
 const HERO_SIZE = 64;
 
@@ -51,7 +45,9 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
   action,
   compact = false,
   testID,
-}) => (
+}) => {
+  const c = useColors();
+  return (
   <VStack
     testID={testID}
     className={compact ? 'items-center px-4 py-4' : 'items-center justify-center px-8 py-16'}
@@ -61,29 +57,30 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
     {animationId ? (
       <LoopScene source={animationSourceFor(animationId)} size={HERO_SIZE} testID={`${testID}-hero`} />
     ) : icon ? (
-      <MaterialIcons name={icon} size={compact ? 28 : 48} color={EMPTY_STATE_INK.icon} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      <MaterialIcons name={icon} size={compact ? 28 : 48} color={c.ink2} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
     ) : null}
     {title ? (
-      <Text size="lg" className="text-center font-semibold" style={{ color: EMPTY_STATE_INK.title }}>
+      <Text size="lg" className="text-center font-semibold" style={{ color: c.ink }}>
         {title}
       </Text>
     ) : null}
-    <Text size="sm" className="text-center" style={{ color: EMPTY_STATE_INK.body }}>
+    <Text size="sm" className="text-center" style={{ color: c.ink }}>
       {body}
     </Text>
     {action ? (
       <Button
         variant="outline"
         className="rounded-full mt-2"
-        style={{ borderColor: EMPTY_STATE_INK.title }}
+        style={{ borderColor: c.ink }}
         onPress={action.onPress}
         testID={action.testID}
       >
-        <ButtonText style={{ color: EMPTY_STATE_INK.title }}>{action.label}</ButtonText>
+        <ButtonText style={{ color: c.ink }}>{action.label}</ButtonText>
       </Button>
     ) : null}
   </VStack>
-);
+  );
+};
 
 /**
  * The Feed's "No facts yet" block (FinalFeed #8, #9): the same block in both

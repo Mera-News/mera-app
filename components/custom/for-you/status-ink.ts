@@ -8,14 +8,6 @@
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
 import type { ThemeColors } from '@/lib/theme/tokens';
 
-/** Pure text colours. `secondary` is the floor: rgb 163 only reaches 4.6:1
- *  over the worst modelled panel and rgb 140 reaches 3.5:1. */
-export const STATUS_INK = {
-  primary: '#FFFFFF',
-  secondary: 'rgb(212, 212, 212)',
-  divider: 'rgba(255, 255, 255, 0.12)',
-} as const;
-
 /** The Feed's status icon, by mode: still and plain at rest, orange at the
  *  daily limit, red on a problem (FinalFeedStatus). `deferred` rests like idle. */
 export function statusIconInk(mode: FeedStatusMode, c: ThemeColors): string {
