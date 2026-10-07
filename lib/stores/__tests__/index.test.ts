@@ -217,18 +217,15 @@ describe('clearAllStores', () => {
         expect(getSetting).toHaveBeenCalledWith('nav_order_world');
     });
 
-    it('clears the nav shell surface, any pending page jump and any pending focus target', async () => {
+    it('clears the nav shell surface and any pending page jump', async () => {
         const { useCurrentSurfaceStore } = require('@/components/custom/nav/current-surface');
         const { usePendingPageStore } = require('@/components/custom/nav/navigate-to-page');
         const initialSurface = useCurrentSurfaceStore.getState();
         useCurrentSurfaceStore.setState({ arrangeOpen: true });
-        const { useFocusTargetStore } = require('@/lib/navigation/focus-target');
         usePendingPageStore.setState({ request: { page: 'stats', at: 1 } });
-        useFocusTargetStore.setState({ pending: { ids: ['profile.facts'] }, jump: { from: 'feed' } });
         await storeIndex.clearAllStores();
         expect(useCurrentSurfaceStore.getState()).toEqual(initialSurface);
         expect(usePendingPageStore.getState().request).toBeNull();
-        expect(useFocusTargetStore.getState()).toMatchObject({ pending: null, jump: null });
     });
 
     it('puts the Mera button back in the default corner', async () => {

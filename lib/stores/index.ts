@@ -79,7 +79,6 @@ export const clearAllStores = async () => {
     const { resetPageOrders } = require('../navigation/page-order');
     const { resetCurrentSurface } = require('../../components/custom/nav/current-surface');
     const { resetPendingPage } = require('../../components/custom/nav/navigate-to-page');
-    const { resetPendingFocus } = require('../navigation/focus-target');
     const { resetMeraButtonCorner } = require('@/components/custom/mera-button/corner');
 
     // Wipe all WatermelonDB data (drops and recreates all tables)
@@ -111,12 +110,10 @@ export const clearAllStores = async () => {
     // Page orders: the rows went with the database, so the memory copy and the
     // memoised load go too, or the next account opens tabs in this one's order.
     resetPageOrders();
-    // The nav shell's memory: which page is on screen, a page jump still
-    // waiting for its tab, and a jump-to-setting target still waiting to be
-    // highlighted. None may carry over to the next account.
+    // The nav shell's memory: which page is on screen and a page jump still
+    // waiting for its tab. Neither may carry over to the next account.
     resetCurrentSurface();
     resetPendingPage();
-    resetPendingFocus();
     // The Mera button's corner: its row went with the database, so the next
     // account starts in the default corner.
     resetMeraButtonCorner();
