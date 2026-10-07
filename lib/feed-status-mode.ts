@@ -23,9 +23,8 @@ export type FeedStatusMode = 'processing' | 'error' | 'limited' | 'deferred' | '
 // anything?" (true for processing/error/limited, false for idle/deferred). It is
 // GONE ON PURPOSE, not merely unused.
 //
-// The status now rides on the Mera button (components/custom/mera-button), which
-// is on screen in every mode: it moves while Mera reads, and every mode is its
-// accessibility value (`statusKey` in mera-pages.ts, read by MeraButtonHost's
-// button). Nothing decides visibility from the mode, and a predicate exported
-// here would invite exactly that wiring back: a status surface that appears and
-// vanishes with each sync.
+// The status lives in the Feed tab's status icon (for-you/FeedStatusIcon), which
+// is on screen in every mode: still, moving, orange or red, and every mode is
+// its accessibility label. Nothing decides visibility from the mode, and a
+// predicate exported here would invite exactly that wiring back: a status
+// surface that appears and vanishes with each sync.

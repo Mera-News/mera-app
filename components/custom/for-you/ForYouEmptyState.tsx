@@ -16,8 +16,10 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import LoopScene from '@/components/custom/for-you/LoopScene';
 import { animationSourceFor } from '@/components/custom/tutorials/animation-registry';
+import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const EMPTY_STATE_INK = {
   title: '#FFFFFF',
@@ -82,5 +84,28 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
     ) : null}
   </VStack>
 );
+
+/**
+ * The Feed's "No facts yet" block (FinalFeed #8, #9): the same block in both
+ * views, below the title row. Continuous keeps the top headlines under it
+ * (OWNER_QUESTIONS C4: a phone with no facts still gets headlines); Sectioned
+ * shows it alone. The Mera button starts the interview.
+ */
+export const FeedNoFacts: React.FC<{ readonly view: 'continuous' | 'sectioned' }> = ({ view }) => {
+  const { t } = useTranslation();
+  return (
+    <ForYouEmptyState
+      animationId="feed-two-lists"
+      title={t('interests.emptyTitle')}
+      body={view === 'sectioned' ? t('interests.emptyBody') : t('feed.noFactsBody')}
+      action={{
+        label: t('interests.learnAbout'),
+        onPress: () => openTutorial('feed', 'two-lists'),
+        testID: 'feed-no-facts-learn',
+      }}
+      testID={`feed-no-facts-${view}`}
+    />
+  );
+};
 
 export default ForYouEmptyState;

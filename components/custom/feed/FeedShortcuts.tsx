@@ -19,6 +19,7 @@ import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import { flagEmoji } from '@/components/custom/nav/PageStrip';
 import { COLORS } from '@/lib/theme/tokens';
 import { useWorldPages } from '@/lib/explore/world-pages';
+import { useForYouLastProcessingRunFinishedAt } from '@/lib/stores/selectors';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -94,6 +95,9 @@ const FeedShortcuts: React.FC = () => {
   const { pages } = useWorldPages();
   const hasSaved = useHasSaved();
   const hasStories = useHasStories();
+  // A first open (no run has finished yet) with nothing followed: the Stories
+  // row is an invitation instead (FinalFeed #1).
+  const firstOpen = useForYouLastProcessingRunFinishedAt() === null;
 
   const country = pages.find((p) => p.id !== 'world');
   const worldCaptions = [t('feedShortcuts.world1'), t('feedShortcuts.world2')];
@@ -129,11 +133,13 @@ const FeedShortcuts: React.FC = () => {
       icon: 'bookmark',
     });
   }
-  if (hasStories) {
+  if (hasStories || firstOpen) {
     rows.push({
       page: 'stories',
       title: t('nav.page.stories'),
-      caption: storyCaptions[captionIndex('stories', storyCaptions.length)],
+      caption: hasStories
+        ? storyCaptions[captionIndex('stories', storyCaptions.length)]
+        : t('feedShortcuts.storiesInvite'),
       icon: 'auto-awesome',
     });
   }

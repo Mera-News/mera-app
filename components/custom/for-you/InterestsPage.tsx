@@ -10,10 +10,11 @@
 // relevance band, incoming index, and only `viewed` is frozen).
 
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
-import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import { useFeedSyncRefresh, useIsFeedProcessing } from '@/components/custom/FeedSyncIndicator';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
-import InterestsEmptyState from '@/components/custom/for-you/InterestsEmptyState';
+import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
+import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
+import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
@@ -43,6 +44,7 @@ import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, View } from 'react-native';
+import Animated, { FadeOut } from 'react-native-reanimated';
 
 interface SortSnapshot {
   cardStates: Record<string, unknown>;
@@ -156,9 +158,19 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
       </View>
     );
   } else if (snapshots.facts.size === 0) {
-    empty = <InterestsEmptyState />;
-  } else if (statusMode === 'limited') {
-    empty = <DailyLimitCard />;
+    // Sectioned shows the block alone (no headline rows here, C4).
+    empty = <FeedNoFacts view="sectioned" />;
+  } else if (
+    lastProcessingRunFinishedAt !== null &&
+    (isFeedProcessing || statusMode === 'limited' || statusMode === 'error')
+  ) {
+    // The empty Feed after a long gap, the same as Continuous (FinalFeed #1).
+    empty = (
+      <Animated.View exiting={FadeOut.duration(200)}>
+        <DashboardStatsCard initiallyExpanded testID="feed-status-inline" />
+        <FeedShortcuts />
+      </Animated.View>
+    );
   } else if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
     empty = <FeedProcessingCard />;
   } else {

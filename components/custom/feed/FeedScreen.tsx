@@ -79,13 +79,14 @@
 
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
-import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
-import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
+import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
+import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
+import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
@@ -137,7 +138,6 @@ import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
-  useForYouHasGeneratedTopics,
   useForYouLastProcessingRunFinishedAt,
   useForYouSuggestions,
 } from '@/lib/stores/selectors';
@@ -148,6 +148,7 @@ import { AccessibilityInfo, AppState, RefreshControl, useWindowDimensions } from
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   FadeIn,
+  FadeOut,
   runOnJS,
   useAnimatedScrollHandler,
   useComposedEventHandler,
@@ -890,7 +891,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   );
 
   // ── Empty-state chain (the same priority as the Interests page's) ──
-  const hasGeneratedInterests = useForYouHasGeneratedTopics();
+  const hasFacts = useHasFacts();
+  const noFacts = hasFacts === false;
   const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
   // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
   // for the empty-state chain and the header auto-reveal. The header indicator
@@ -906,11 +908,11 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   useEffect(() => {
     const isEmptyState =
       data.length === 0 &&
-      (!hasGeneratedInterests || isFeedProcessing || lastProcessingRunFinishedAt === null);
+      (noFacts || isFeedProcessing || lastProcessingRunFinishedAt === null);
     if (errorMessage || isEmptyState) {
       reveal();
     }
-  }, [errorMessage, data.length, hasGeneratedInterests, isFeedProcessing, lastProcessingRunFinishedAt, reveal]);
+  }, [errorMessage, data.length, noFacts, isFeedProcessing, lastProcessingRunFinishedAt, reveal]);
 
   // F2: while the local cache is still loading on launch, the list is empty for
   // a reason that is NOT "nothing to show". Draw nothing for 200ms, then a
@@ -948,32 +950,24 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
         </Box>
       );
     }
-    if (!hasGeneratedInterests) {
-      return <NoGeneratedInterestsCard />;
+    // No facts: the block sits in the list header (above any top headlines,
+    // C4), so the empty list itself says nothing more.
+    if (noFacts) return null;
+    // The empty Feed after a long gap (FinalFeed #1): the counts card open,
+    // then the shortcuts. It says why (syncing, the daily limit or a problem)
+    // and folds away when the first rows land. The cap and the error come
+    // BEFORE "caught up": a capped or failing reader must never read that
+    // everything is fine. The first run after setup (no run has finished)
+    // keeps the processing scene.
+    const stateful = isFeedProcessing || statusMode === 'limited' || statusMode === 'error';
+    if (stateful && lastProcessingRunFinishedAt !== null) {
+      return (
+        <Animated.View exiting={FadeOut.duration(200)}>
+          <DashboardStatsCard initiallyExpanded testID="feed-status-inline" />
+          <FeedShortcuts />
+        </Animated.View>
+      );
     }
-    // Caught-up flash guard: only show AllCaughtUpCard once hydrated AND not
-    // processing; otherwise the feed is still preparing.
-    //
-    // A sweep that JUST emptied the list short-circuits it. A force sweep
-    // triggers a sync on the same tick, so `isFeedProcessing` is true and this
-    // would otherwise tell a user who read everything and pulled to refresh
-    // that their feed is being "prepared". The gate is deliberately the recent
-    // sweep and NOT "has this device ever built a feed" — the latter also fires
-    // on the morning cold start, where the overnight rows aged out of the
-    // window and the running sync genuinely will bring content back.
-    // The cap comes BEFORE the processing branch, and the order is the whole
-    // point. `useFeedStatusMode` ranks processing above limited, so a run that
-    // is genuinely in flight still reports 'processing' and still reaches the
-    // card below. What this catches is the opposite case: capped with nothing
-    // running, which used to fall through to "Mera is preparing your feed"
-    // because the chain never looked at the status mode at all. That told a
-    // capped reader work was happening while the indicator in the same header
-    // told them the limit was reached.
-    if (statusMode === 'limited') {
-      return <DailyLimitCard />;
-    }
-    // The rare empty open: the shortcuts to the reader's other pages fill the
-    // wait, below the card (the card's fixed height is never touched).
     if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
       return (
         <>
@@ -989,6 +983,17 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
       </>
     );
   };
+
+  // The title row, then (no facts yet) the empty block, both first in the list.
+  const headerNode = useMemo(
+    () => (
+      <>
+        {listHeader}
+        {noFacts ? <FeedNoFacts view="continuous" /> : null}
+      </>
+    ),
+    [listHeader, noFacts],
+  );
 
   return (
     // No backdrop and no header: the tab (TabPages) draws both.
@@ -1072,7 +1077,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
           paddingBottom: listEndClearance,
           flexGrow: 1,
         }}
-        ListHeaderComponent={listHeader}
+        ListHeaderComponent={headerNode}
         ListEmptyComponent={renderEmpty()}
         ListFooterComponent={listFooter}
         initialNumToRender={4}
