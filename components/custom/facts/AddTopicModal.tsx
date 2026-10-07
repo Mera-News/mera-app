@@ -3,6 +3,7 @@ import { Input, InputField } from '@/components/ui/input';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { useThemeMode } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -25,19 +26,21 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({
     onCancel,
 }) => {
     const { t } = useTranslation();
+    const themeMode = useThemeMode();
     return (
         <Modal isOpen={isOpen} onClose={onCancel} size="sm">
             <ModalBackdrop />
             <ModalContent>
                 <ModalHeader className="pb-4">
-                    <Text className="text-xl font-semibold text-white">{t('configPanel.addTopic')}</Text>
+                    <Text className="text-xl font-semibold text-ink">{t('configPanel.addTopic')}</Text>
                 </ModalHeader>
                 <ModalBody className="py-4">
-                    <Text className="text-gray-400 text-sm mb-4">
+                    <Text className="text-ink-2 text-sm mb-4">
                         {t('configPanel.addTopicDescription')}
                     </Text>
                     <Input>
                         <InputField
+                keyboardAppearance={themeMode}
                             placeholder={t('configPanel.addTopicPlaceholder')}
                             value={value}
                             onChangeText={onChangeText}
@@ -47,7 +50,7 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({
                         />
                     </Input>
                 </ModalBody>
-                <ModalFooter className="border-t border-gray-700 pt-4">
+                <ModalFooter className="border-t border-line pt-4">
                     <VStack className="w-full" space="md">
                         <Button
                             onPress={onConfirm}

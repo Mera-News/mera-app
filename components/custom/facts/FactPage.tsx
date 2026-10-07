@@ -43,7 +43,7 @@ import { buildFactRows, isSuggestionOpened, type FactRowGroup } from '@/lib/stor
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
-import { useColors } from '@/lib/theme/tokens';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { toastManager } from '@/lib/toast-manager';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -96,6 +96,7 @@ type Item =
 const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => {
     const { t } = useTranslation();
     const colors = useColors();
+    const themeMode = useThemeMode();
     const insets = useSafeAreaInsets();
     const reduceMotion = useReducedMotion();
     const active = useIsFocusedSafe();
@@ -553,6 +554,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
             </View>
             <TextInput
                 testID="fact-show-less-input"
+                keyboardAppearance={themeMode}
                 value={phrase}
                 onChangeText={setPhrase}
                 onSubmitEditing={addPhrase}
