@@ -39,7 +39,8 @@
 // and the copy needs a plural fan-out in every locale. `card-charts.test.tsx`
 // pins the invariant for exactly that reason.
 
-import { SourceFlag } from '@/components/custom/SourceFlag';
+import { getFlagEmoji } from '@/lib/country-utils';
+import { MaterialIcons } from '@expo/vector-icons';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { CARD_PALETTES, type CardPalette, useCardInk } from '@/components/custom/share-stats/card-theme';
@@ -178,21 +179,17 @@ export const FlagGrid: React.FC<FlagGridProps> = ({
           testID={testID ? `${testID}-cell-${code}` : undefined}
           style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center' }}
         >
-          {/* SourceFlag falls back to an SVG globe for a code it does not know,
-              which is the branch that is PROVEN to rasterise. The fixed cell
-              around it means either outcome occupies the same box.
-
-              `iconClassName` is overridden because SourceFlag's default is
-              `text-typography-500`, a palette token: mid-ramp and legible, but
-              off-system on a card whose every other colour is white at a stated
-              opacity. The wrapper carries an explicit colour too, since a flag
-              emoji supplies its own but the globe and any tofu fallback do not. */}
-          <Text
-            allowFontScaling={false}
-            style={[chartType(CHART_METRICS.flagGlyph, k, 1.15), { color: inkColor('primary') }]}
-          >
-            <SourceFlag countryCode={code} size="lg" iconClassName="text-white" />
-          </Text>
+          {/* A country with no flag gets a globe drawn in the PALETTE's ink,
+              so it stays visible on a Light share image (SourceFlag's own
+              fallback is a class colour that follows the app theme, not the
+              image). The fixed cell means either outcome occupies the same box. */}
+          {getFlagEmoji(code) ? (
+            <Text allowFontScaling={false} style={chartType(CHART_METRICS.flagGlyph, k, 1.15)}>
+              {getFlagEmoji(code)}
+            </Text>
+          ) : (
+            <MaterialIcons name="public" size={CHART_METRICS.flagGlyph * k} color={inkColor('primary')} />
+          )}
         </View>
       ))}
       {remaining > 0 ? (
