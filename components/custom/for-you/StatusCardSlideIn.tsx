@@ -185,7 +185,6 @@ const StatusCardSlideIn: React.FC<StatusCardSlideInProps> = ({ visible, onHide, 
                         >
                             <DashboardStatsCard
                                 mode={modeOverride}
-                                expandInPlace
                                 overContent
                                 onBeforeNavigate={onHide}
                                 testID="status-slide-in-card"

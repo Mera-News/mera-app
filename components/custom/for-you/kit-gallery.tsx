@@ -48,7 +48,7 @@ export default function KitGallery() {
             {MODES.map((m) => (
                 <View key={m}>
                     <Label>{`Counts card: ${m}${m === 'processing' ? ', details open' : ''}`}</Label>
-                    <DashboardStatsCard mode={m} expandInPlace initiallyExpanded={m === 'processing'} testID={`kit-card-${m}`} />
+                    <DashboardStatsCard mode={m} initiallyExpanded={m === 'processing'} testID={`kit-card-${m}`} />
                 </View>
             ))}
 

@@ -86,8 +86,6 @@ import {
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
-import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
@@ -998,7 +996,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
 
   return (
     // No backdrop and no header: the tab (TabPages) draws both.
-    <StatusDropdownProvider>
     <Box className="flex-1" testID="feed-screen">
       <Animated.FlatList
         ref={listRef}
@@ -1079,10 +1076,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           paddingBottom: listEndClearance,
           flexGrow: 1,
         }}
-        // The status card heads the list, above the empty state too. Its
-        // height changes (the count sentence appearing, rewrapping) are held
-        // by the anchoring above, and its status line never comes and goes.
-        ListHeaderComponent={DashboardStatsCard}
         ListEmptyComponent={renderEmpty()}
         ListFooterComponent={listFooter}
         initialNumToRender={4}
@@ -1105,9 +1098,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
 
       {/* One-time "What's new" sheet, only on the visible page. */}
       {active ? <WhatsNewSheet /> : null}
-      <StatusDropdownLayer testIDPrefix="feed-stats" />
     </Box>
-    </StatusDropdownProvider>
   );
 };
 

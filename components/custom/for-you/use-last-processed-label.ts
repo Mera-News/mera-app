@@ -1,11 +1,9 @@
-// "Last processed 4 minutes ago" for the status panel body.
+// "Last processed 4 minutes ago" for the counts card.
 //
-// Read by the body itself rather than handed in by a screen, so every mount of
-// the status body shows the same rows. It used to be a prop only the Dashboard
-// passed, which is how the Feed's panel came to lack the row.
-//
-// The tick needs no focus gate: the body mounts only while its panel is open,
-// and an open panel closes itself after STATUS_PANEL_AUTO_COLLAPSE_MS.
+// Read by the card's bodies themselves rather than handed in by a screen, so
+// every mount shows the same rows. The 30 s tick has no focus gate: the card is
+// mounted only while it is open (slid in, or on an empty Feed), and one label
+// re-render per tick is cheap.
 
 import { useForYouLastProcessingRunFinishedAt } from '@/lib/stores/selectors';
 import { formatTimeAgo } from '@/lib/utils/time-ago';

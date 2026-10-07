@@ -1,7 +1,7 @@
-// The feed's counts card (FinalFeed #1, FinalFeedStatus #1-5). One card, three
-// homes: open at the top of an empty Feed (`initiallyExpanded`), slid in over
-// the list from the status icon (StatusCardSlideIn), and, until the status
-// icon replaces it, at the head of the Feed and Interests lists.
+// The feed's counts card (FinalFeed #1, FinalFeedStatus #1-5). Two homes: open
+// at the top of an empty Feed (`initiallyExpanded`), and slid in over the list
+// from the status icon (StatusCardSlideIn). Never a permanent card in a list.
+// The chevron opens the details INSIDE the card.
 //
 // Level 1: the status line (a light sweeps across it while a sync runs) and a
 // chevron, then the count sentence ("being analysed" while syncing, with the
@@ -24,7 +24,7 @@ import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { ShimmerText } from '@/components/ui/shimmer';
@@ -34,8 +34,6 @@ import { useColors } from '@/lib/theme/tokens';
 import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
-import { measureAnchor } from './stats-card-dropdown';
-import { useStatusDropdown } from './status-dropdown';
 import { a11yStateKey, STATUS_INK } from './status-ink';
 
 const HIDDEN = {
@@ -49,9 +47,6 @@ const SCENE_SIZE = 20;
 export interface DashboardStatsCardProps {
     /** Injected by the kit gallery; the live mode otherwise. */
     readonly mode?: FeedStatusMode;
-    /** The chevron opens the details inside this card (the slide-in and the
-     *  empty Feed). Without it, the legacy dropdown opens. */
-    readonly expandInPlace?: boolean;
     /** Details open from the first frame (the empty Feed, FinalFeed #1). */
     readonly initiallyExpanded?: boolean;
     /** Drawn over list content: an opaque base, or the cards read through. */
@@ -79,7 +74,6 @@ function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
 
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
     mode: modeOverride,
-    expandInPlace = false,
     initiallyExpanded = false,
     overContent = false,
     onBeforeNavigate,
@@ -91,27 +85,19 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
     const liveMode = useFeedStatusMode();
     const mode = modeOverride ?? liveMode;
     const { articleCount } = useFeedCounts();
-    const dropdown = useStatusDropdown();
-    const [ownExpanded, setOwnExpanded] = useState(initiallyExpanded);
-    const expanded = expandInPlace ? ownExpanded : dropdown.expanded;
+    const [expanded, setExpanded] = useState(initiallyExpanded);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
 
     const reduceMotion = useReducedMotion();
     const colors = useColors();
 
-    const anchorRef = useRef<View>(null);
-    const toggle = useCallback(() => {
-        if (expandInPlace) setOwnExpanded((v) => !v);
-        else if (dropdown.expanded) dropdown.collapse();
-        else measureAnchor(anchorRef.current, dropdown.open);
-    }, [expandInPlace, dropdown]);
+    const toggle = useCallback(() => setExpanded((v) => !v), []);
 
     const notice = mode === 'limited' || mode === 'error';
 
     return (
-        // `collapsable={false}`: a flattened view has nothing native to measure.
-        <View ref={anchorRef} collapsable={false} className="mb-2" testID={`${testID}-anchor`}>
+        <View className="mb-2" testID={`${testID}-anchor`}>
             <GlassPanel
                 radius={12}
                 contentClassName="px-4 py-3"
@@ -167,7 +153,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
                                 style={StyleSheet.absoluteFill}
                             />
                         </View>
-                        {expandInPlace && expanded ? (
+                        {expanded ? (
                             <Animated.View
                                 entering={reduceMotion ? undefined : FadeIn.duration(MOTION.status.open)}
                                 exiting={reduceMotion ? undefined : FadeOut.duration(MOTION.status.close)}

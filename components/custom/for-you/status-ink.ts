@@ -1,15 +1,9 @@
-// Ink and surface for the feed-status panel and sheet, in ONE place.
+// Ink for the feed's counts card and status icon, in ONE place.
 //
-// Colours live in `style`, never in a NativeWind class. The dark ramp here is an
-// inversion (`typography-300` is rgb 115, darker than `-400`), and a component
-// test asserting a class name cannot see the colour it resolves to. The labels
-// on the old panel were `typography-400` (rgb 140) on a 7% white tint over
-// scrolling content: 1.9:1 measured on a device screenshot.
-//
-// The panel drops down over list content, so it is a surface over content and
-// takes an OPAQUE dark base (`STATUS_PANEL_OPAQUE_BASE`; the 0.90
-// `GLASS_OVER_CONTENT_FILL` let section text through). `GlassPanel` IGNORES its
-// `fallbackClassName`, so the base has to be passed as a style.
+// Colours live in `style`, never in a NativeWind class: the dark ramp is an
+// inversion (`typography-300` is darker than `-400`), and a class-name
+// assertion cannot see the colour it resolves to. The card is drawn over list
+// content when it slides in, so it takes the opaque `modalBase` token there.
 
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
 import type { ThemeColors } from '@/lib/theme/tokens';
@@ -22,56 +16,12 @@ export const STATUS_INK = {
   divider: 'rgba(255, 255, 255, 0.12)',
 } as const;
 
-/**
- * The panel's effective colour in its WORST case, for the contrast test: white
- * content under the 0.90 dark base, then the 7% white lift of
- * `TranslucentPlate`. Brighter content behind cannot make it lighter than this.
- */
-/**
- * `GLASS_OVER_CONTENT_FILL` (rgba 18,17,19 at 0.90) at full opacity: the
- * status panel floats over list content, and at 0.90 the text behind it read
- * through.
- */
-export const STATUS_PANEL_OPAQUE_BASE = 'rgb(18, 17, 19)';
-
-export const STATUS_PANEL_WORST_BG: readonly [number, number, number] = [57, 56, 57];
-
 /** The Feed's status icon, by mode: still and plain at rest, orange at the
  *  daily limit, red on a problem (FinalFeedStatus). `deferred` rests like idle. */
 export function statusIconInk(mode: FeedStatusMode, c: ThemeColors): string {
   if (mode === 'limited') return c.accent;
   if (mode === 'error') return c.negative;
   return c.ink;
-}
-
-function channel(v: number): number {
-  const c = v / 255;
-  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-}
-
-/** WCAG relative luminance of an sRGB triple. */
-export function luminance([r, g, b]: readonly [number, number, number]): number {
-  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-}
-
-/** WCAG contrast ratio between two sRGB triples. */
-export function contrastRatio(
-  a: readonly [number, number, number],
-  b: readonly [number, number, number],
-): number {
-  const la = luminance(a);
-  const lb = luminance(b);
-  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
-}
-
-/** Parses `#RRGGBB` or `rgb(r, g, b)`; throws on anything else so a test
- *  cannot pass by failing to read a colour. */
-export function parseRgb(color: string): [number, number, number] {
-  const hex = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
-  if (hex) return [parseInt(hex[1], 16), parseInt(hex[2], 16), parseInt(hex[3], 16)];
-  const rgb = /^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/.exec(color);
-  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
-  throw new Error(`unparseable colour: ${color}`);
 }
 
 /**
