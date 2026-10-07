@@ -1,5 +1,7 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import ExploreSearchBar from '@/components/custom/explore/ExploreSearchBar';
 import ExploreSearchResults from '@/components/custom/explore/ExploreSearchResults';
+import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
 import { tabRoute } from '@/components/custom/nav/page-registry';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -21,10 +23,11 @@ const CANCEL_STYLE = { minHeight: 44, justifyContent: 'center', paddingLeft: 12 
  * Stack push, so the World page underneath stays mounted and Cancel (or
  * Android Back, the Stack's own pop) lands on it scrolled where it was.
  *
- * Nothing typed is stored: the query lives in `useNewsSearch`'s state and
- * dies with this screen. No Mera button here (it hides on the `search`
- * surface). Results cover every source and country, not the page the reader
- * came from.
+ * Nothing typed is stored on this phone: the query lives in `useNewsSearch`'s
+ * state and dies with this screen. The server keeps the raw text briefly to
+ * serve the search, never linked to the account, which is what the idle
+ * line says. Results cover every source and country, not the page the reader
+ * came from. The Mera button rides above the keyboard (its root host, LAST).
  */
 const SearchScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -44,12 +47,14 @@ const SearchScreen: React.FC = () => {
     );
 
     return (
-        <Box className="flex-1 bg-black" testID="search-screen">
+        <Box className="flex-1" testID="search-screen">
+            <AbstractGradientBackdrop />
             <HStack className="items-center px-4 pb-2" style={{ paddingTop: insets.top + 8 }}>
                 <ExploreSearchBar
                     query={search.query}
                     onChangeQuery={search.setQuery}
                     placeholder={t('world.search.placeholder')}
+                    autoFocus
                 />
                 <Pressable
                     testID="search-cancel"
@@ -73,6 +78,7 @@ const SearchScreen: React.FC = () => {
                     offline={!isConnected}
                 />
             </Box>
+            <MeraButtonHost root />
         </Box>
     );
 };

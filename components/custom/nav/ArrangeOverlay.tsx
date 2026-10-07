@@ -1,7 +1,7 @@
 // Arrange World's pages in place (the only tab that arranges): a long press on
-// a page name turns the strip into an overlay over the dimmed page. Each page
-// is a glass pill with a grip and a slow glowing outline; press and hold to
-// lift it (light haptic), drag, let go.
+// a page name turns the strip into an overlay over the dimmed page, with the
+// pressed page already lifted (light haptic). Each page is a glass pill with
+// a grip and a slow glowing outline; drag one, let go.
 // ✕ cancels, ✓ saves. Each country has an ×, and an add field finds more.
 //
 // DRAFT-ONLY: nothing is written before ✓ (arrange-model.ts). ✕ and Android
@@ -16,6 +16,7 @@
 // Reduce Motion and Lite mode it holds a static orange border. Not a Modal: the overlay belongs to this tab and must
 // leave the tab bar where it is.
 
+import ExploreSearchBar from '@/components/custom/explore/ExploreSearchBar';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -30,7 +31,6 @@ import {
   BackHandler,
   I18nManager,
   StyleSheet,
-  TextInput,
   View,
   type AccessibilityActionEvent,
 } from 'react-native';
@@ -66,13 +66,15 @@ import { flagEmoji } from './PageStrip';
 import type { ArrangeConfig, PagePill } from './types';
 
 /** P12 moves this onto useColors(). */
-const NAV_ACCENT = COLORS.dark.accent;
+const C = COLORS.dark;
+const NAV_ACCENT = C.accent;
 const GLOW_PERIOD_MS = 1600;
 /** Constant: the glow animates colour only, never width. */
 export const PILL_BORDER_WIDTH = 1.5;
 const GLASS_BORDER = 'rgba(255,255,255,0.14)';
 const LIFTED_BORDER = 'rgba(255,255,255,0.32)';
-const LIFT_DELAY_MS = 220;
+/** A drag starts after this much travel, so a tap never moves a pill. */
+const DRAG_SLOP = 4;
 const MAX_RESULTS = 6;
 const GLYPH_HIDDEN = {
   accessible: false,
@@ -84,6 +86,10 @@ export interface ArrangeOverlayProps {
   readonly tabLabel: string;
   readonly pages: readonly PagePill[];
   readonly arrange: ArrangeConfig;
+  /** The page whose long press opened the overlay: drawn lifted until its
+   *  first drop. The SAME touch cannot carry over from the strip (RNGH cannot
+   *  adopt a touch that began on another view); the next one drags at once. */
+  readonly initialLiftedId?: PageId | null;
   readonly onClose: () => void;
 }
 
@@ -91,9 +97,12 @@ interface ChipProps {
   readonly id: PageId;
   readonly label: string;
   readonly flag: string;
+  readonly icon?: PagePill['icon'];
   readonly index: number;
   readonly count: number;
   readonly removable: boolean;
+  /** Drawn lifted at rest (the page that opened the overlay). */
+  readonly held: boolean;
   readonly glow: SharedValue<number>;
   readonly onLayout: (id: PageId, rect: PillRect) => void;
   readonly onDrop: (from: number, dx: number, dy: number) => void;
@@ -105,9 +114,11 @@ const ArrangeChip: React.FC<ChipProps> = ({
   id,
   label,
   flag,
+  icon,
   index,
   count,
   removable,
+  held,
   glow,
   onLayout,
   onDrop,
@@ -122,7 +133,7 @@ const ArrangeChip: React.FC<ChipProps> = ({
   const lift = useMemo(
     () =>
       Gesture.Pan()
-        .activateAfterLongPress(LIFT_DELAY_MS)
+        .minDistance(DRAG_SLOP)
         .onStart(() => {
           lifted.value = 1;
           runOnJS(hapticLight)();
@@ -154,11 +165,16 @@ const ArrangeChip: React.FC<ChipProps> = ({
   }));
   // The glow is the pill's OWN rounded border, colour only: a constant
   // width, so the row never reflows while it breathes.
-  const ringStyle = useAnimatedStyle(() => ({
-    borderColor: lifted.value
-      ? LIFTED_BORDER
-      : interpolateColor(glow.value, [0, 1], [GLASS_BORDER, NAV_ACCENT]),
-  }));
+  const ringStyle = useAnimatedStyle(
+    () => ({
+      borderColor: held
+        ? NAV_ACCENT
+        : lifted.value
+          ? LIFTED_BORDER
+          : interpolateColor(glow.value, [0, 1], [GLASS_BORDER, NAV_ACCENT]),
+    }),
+    [held],
+  );
 
   const actions = [
     ...(index > 0 ? [{ name: 'earlier', label: t('nav.arrange.moveEarlier') }] : []),
@@ -179,7 +195,7 @@ const ArrangeChip: React.FC<ChipProps> = ({
     >
       <GestureDetector gesture={lift}>
         <View
-          style={styles.chipFrame}
+          style={[styles.chipFrame, held ? styles.heldShadow : null]}
           accessible
           accessibilityLabel={t('nav.pillA11y', { label, index: index + 1, count })}
           accessibilityActions={actions}
@@ -187,8 +203,12 @@ const ArrangeChip: React.FC<ChipProps> = ({
           testID={`arrange-chip-${id}`}
         >
           <GlassPanel radius={999}>
-            <Animated.View style={[styles.chip, ringStyle]} testID={`arrange-chip-${id}-pill`}>
+            <Animated.View
+              style={[styles.chip, held ? styles.heldFill : null, ringStyle]}
+              testID={`arrange-chip-${id}-pill`}
+            >
               <MaterialIcons name="drag-indicator" size={16} color="rgba(255,255,255,0.6)" {...GLYPH_HIDDEN} />
+              {icon ? <MaterialIcons name={icon} size={14} color={C.ink} {...GLYPH_HIDDEN} /> : null}
               {flag ? <Text style={styles.flag}>{flag}</Text> : null}
               <Text size="sm" scaleTier="chrome" numberOfLines={1} className="text-white">
                 {label}
@@ -217,7 +237,7 @@ const ArrangeChip: React.FC<ChipProps> = ({
   );
 };
 
-const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrange, onClose }) => {
+const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrange, initialLiftedId, onClose }) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const rtl = I18nManager.isRTL;
@@ -228,18 +248,24 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
   const [state, setState] = useState<ArrangeState>(() => initialArrange(pages.map((p) => p.id)));
   const [query, setQuery] = useState('');
   const [lastRemoved, setLastRemoved] = useState<PageId | null>(null);
+  const [heldId, setHeldId] = useState<PageId | null>(initialLiftedId ?? null);
   const rects = useRef<Partial<Record<string, PillRect>>>({});
 
   // Labels for pages in the draft, existing or added in it.
   const labelOf = useMemo(() => {
-    const m = new Map<string, { label: string; flag: string }>();
-    for (const p of pages) m.set(p.id, { label: p.label, flag: p.flagAlpha2 ? flagEmoji(p.flagAlpha2) : '' });
-    for (const c of state.added) m.set(`country:${c.alpha2.toUpperCase()}`, { label: c.name, flag: flagEmoji(c.alpha2) });
+    const m = new Map<string, { label: string; flag: string; icon: PagePill['icon'] }>();
+    for (const p of pages) {
+      m.set(p.id, { label: p.label, flag: p.flagAlpha2 ? flagEmoji(p.flagAlpha2) : '', icon: p.icon });
+    }
+    for (const c of state.added) {
+      m.set(`country:${c.alpha2.toUpperCase()}`, { label: c.name, flag: flagEmoji(c.alpha2), icon: undefined });
+    }
     return m;
   }, [pages, state.added]);
 
   useEffect(() => {
     setArrangeOpen(true);
+    if (initialLiftedId) void hapticLight();
     arrange.onOpen?.();
     return () => setArrangeOpen(false);
     // Open once per overlay.
@@ -278,6 +304,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
 
   const onDrop = useCallback(
     (from: number, dx: number, dy: number) => {
+      setHeldId(null);
       setState((s) => {
         const r = rects.current[s.order[from]];
         if (!r) return s;
@@ -315,16 +342,18 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
       <View style={[styles.panel, { paddingTop: insets.top + 8 }]}>
         <View style={styles.chips} testID="arrange-chips">
           {state.order.map((id, i) => {
-            const meta = labelOf.get(id) ?? { label: id, flag: '' };
+            const meta = labelOf.get(id) ?? { label: id, flag: '', icon: undefined };
             return (
               <ArrangeChip
                 key={id}
                 id={id}
                 label={meta.label}
                 flag={meta.flag || (alpha2OfPage(id) ? flagEmoji(alpha2OfPage(id)!) : '')}
+                icon={meta.icon}
                 index={i}
                 count={state.order.length}
                 removable={arrange.removable(id)}
+                held={id === heldId}
                 glow={glow}
                 onLayout={onChipLayout}
                 onDrop={onDrop}
@@ -335,22 +364,15 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
           })}
         </View>
 
-        <View style={styles.field} testID="arrange-add-field">
-          <MaterialIcons name="search" size={18} color="rgba(255,255,255,0.6)" {...GLYPH_HIDDEN} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t('nav.arrange.addPlaceholder')}
-            placeholderTextColor="rgba(255,255,255,0.5)"
-            aria-label={t('nav.arrange.addPlaceholder')}
-            autoCorrect={false}
-            autoCapitalize="words"
-            style={styles.input}
-            testID="arrange-add-input"
-          />
-        </View>
-
+        {/* The add field sits left of ✕ and ✓ in one 44pt row. */}
         <View style={styles.actions}>
+          <ExploreSearchBar
+            query={query}
+            onChangeQuery={setQuery}
+            placeholder={t('nav.arrange.addPlaceholder')}
+            autoCapitalize="words"
+            testID="arrange-add-field"
+          />
           <View style={styles.roundFrame}>
             <View style={[styles.round, styles.roundCancel]} pointerEvents="none" {...GLYPH_HIDDEN}>
               <MaterialIcons name="close" size={20} color="#FFFFFF" />
@@ -422,7 +444,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
 };
 
 const styles = StyleSheet.create({
-  dim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
+  dim: { ...StyleSheet.absoluteFillObject, backgroundColor: C.scrim },
   // Above the tab header (zIndex 10).
   layer: { zIndex: 20 },
   panel: {
@@ -456,19 +478,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  field: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    height: 40,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(231,138,83,0.8)',
-    backgroundColor: 'rgba(255,255,255,0.10)',
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  heldFill: { backgroundColor: C.surfaceRaised },
+  heldShadow: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.55,
+    shadowRadius: 11,
+    shadowOffset: { width: 0, height: 10 },
   },
-  input: { flex: 1, color: '#FFFFFF', fontSize: 15, height: 40 },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
   roundFrame: { width: 44, height: 44 },
   round: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   roundCancel: { backgroundColor: 'rgba(40,39,42,0.82)', borderColor: 'rgba(255,255,255,0.14)' },

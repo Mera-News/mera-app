@@ -9,9 +9,6 @@ import { alpha2OfPage, countryPageId } from '@/components/custom/nav/page-regist
 import type { ArrangeCountryOption, ArrangeDraft } from '@/components/custom/nav/types';
 import { getCountryName } from '@/lib/country-utils';
 
-/** How many matches drop under the add field. */
-export const COUNTRY_SEARCH_LIMIT = 6;
-
 /**
  * Countries the add field can offer, from the server's alpha-3 list (the one
  * Sources lists; `AccountService.getAllCountries`). The `GLOBAL` sentinel and
@@ -36,21 +33,23 @@ export function toCountryOptions(alpha3s: readonly string[]): ArrangeCountryOpti
 /**
  * Matches for the add field: names containing the query (case-insensitive),
  * those STARTING with it first ("Fra": France, French Polynesia, before
- * "Saint Pierre and Miquelon"), then by name. Countries that already have a
- * page are left out. An empty query offers nothing.
+ * "Saint Pierre and Miquelon"), then by name. An empty query offers nothing.
+ *
+ * Every country, saved pages included, and no limit: the overlay drops what
+ * is still in its draft (`filterAddable`) and only then cuts the list.
+ * Excluding SAVED pages here made a country × 'd in the same draft impossible
+ * to find again, and a limit applied first let drafted countries eat the
+ * slots.
  */
 export function searchCountryOptions(
     options: readonly ArrangeCountryOption[],
     query: string,
-    exclude: ReadonlySet<string>,
 ): ArrangeCountryOption[] {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    const hits = options.filter((o) => !exclude.has(o.alpha2) && o.name.toLowerCase().includes(q));
+    const hits = options.filter((o) => o.name.toLowerCase().includes(q));
     const rank = (o: ArrangeCountryOption) => (o.name.toLowerCase().startsWith(q) ? 0 : 1);
-    return hits
-        .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
-        .slice(0, COUNTRY_SEARCH_LIMIT);
+    return hits.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
 }
 
 export interface WorldEditPorts {

@@ -86,6 +86,11 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
                 <Text size="md" className="text-gray-400 text-center">
                     {offline ? t('world.offline') : t('world.search.empty')}
                 </Text>
+                {offline ? null : (
+                    <Text size="sm" className="text-gray-500 text-center" testID="explore-search-privacy">
+                        {t('world.search.privacy')}
+                    </Text>
+                )}
             </VStack>
         );
     }
@@ -129,10 +134,13 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     // status === 'success'
     if (hits.length === 0) {
         return (
-            <VStack testID="explore-search-empty" className="items-center justify-center py-16 p-6" space="md">
-                <MaterialIcons name="search-off" size={40} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-                <Text size="md" className="text-gray-400 text-center">
-                    {t('explore.searchEmpty')}
+            // One plain line and what to try; the words stay in the field.
+            <VStack testID="explore-search-empty" className="items-center justify-center py-16 p-6" space="xs">
+                <Text size="md" bold className="text-white text-center">
+                    {t('world.search.noMatch')}
+                </Text>
+                <Text size="sm" className="text-gray-400 text-center">
+                    {t('world.search.noMatchTry')}
                 </Text>
             </VStack>
         );

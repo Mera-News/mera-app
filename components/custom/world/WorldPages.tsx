@@ -1,6 +1,4 @@
-import type { ExploreWindowHours } from '@/components/custom/explore/ExploreWindowToggle';
-import ScopeArticleList from '@/components/custom/explore/ScopeArticleList';
-import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
+import ScopeArticleList, { type ExploreWindowHours } from '@/components/custom/explore/ScopeArticleList';
 import { PAGE_META, alpha2OfPage } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type {
@@ -9,15 +7,8 @@ import type {
     PagePill,
     PageRenderProps,
 } from '@/components/custom/nav/types';
-import { Text } from '@/components/ui/text';
 import AccountService from '@/lib/account-service';
-import {
-    addWorldCountry,
-    markWorldIntroDone,
-    removeWorldCountry,
-    useWorldIntroDone,
-    useWorldPages,
-} from '@/lib/explore/world-pages';
+import { addWorldCountry, removeWorldCountry, useWorldPages } from '@/lib/explore/world-pages';
 import { setWorldPageOrder } from '@/lib/navigation/page-order';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { router } from 'expo-router';
@@ -33,8 +24,11 @@ const DEFAULT_WINDOW: ExploreWindowHours = 24;
  * `ScopeArticleList` (direct server-paginated top headlines, nothing scored
  * or stored) led by its own 6/12/24/48h window, session state per page.
  *
- * Arrange (the pen) adds a country through the overlay's search, removes one
- * with its ×, and reorders; nothing is written before ✓ (`commitWorldDraft`).
+ * Arrange (a long press on a page name) adds a country through the overlay's
+ * search, removes one with its ×, and reorders; nothing is written before ✓
+ * (`commitWorldDraft`). The add search offers every country, saved pages
+ * included: the overlay's draft filter hides what is still in the draft, so a
+ * country × 'd in this draft can be found and brought back.
  * Removing a place-derived country only hides its page; the place stays.
  *
  * The search icon in the header opens the full-screen Search route, a root
@@ -43,7 +37,6 @@ const DEFAULT_WINDOW: ExploreWindowHours = 24;
 export function WorldPages() {
     const { t } = useTranslation();
     const { pages, loaded } = useWorldPages();
-    const introDone = useWorldIntroDone();
     const listEndClearance = useListEndClearance();
 
     // Session-only, per page; a page keeps its window while warm in the pager.
@@ -56,13 +49,13 @@ export function WorldPages() {
         () =>
             pages.map((p) =>
                 p.id === 'world'
-                    ? { id: p.id, label: t(PAGE_META.world.labelKey) }
+                    ? { id: p.id, label: t(PAGE_META.world.labelKey), icon: 'public' as const }
                     : { id: p.id, label: p.scope.label, flagAlpha2: alpha2OfPage(p.id) ?? undefined },
             ),
         [pages, t],
     );
 
-    // The add field's country list, fetched once the pen first opens (it is a
+    // The add field's country list, fetched once Arrange first opens (it is a
     // network call; offline it stays empty and the field finds nothing).
     const [countryOptions, setCountryOptions] = useState<ArrangeCountryOption[]>([]);
     const countriesRequested = useRef(false);
@@ -78,20 +71,16 @@ export function WorldPages() {
     }, []);
 
     const arrange: ArrangeConfig = useMemo(() => {
-        const present = new Set(pages.map((p) => alpha2OfPage(p.id)).filter((a): a is string => !!a));
         const byId = new Map(pages.map((p) => [p.id as string, p]));
         return {
-            onOpen: () => {
-                void markWorldIntroDone();
-                loadCountries();
-            },
+            onOpen: loadCountries,
             onSave: (draft) =>
                 commitWorldDraft(draft, {
                     addCountry: addWorldCountry,
                     removeCountry: removeWorldCountry,
                     saveOrder: setWorldPageOrder,
                 }),
-            search: (query) => searchCountryOptions(countryOptions, query, present),
+            search: (query) => searchCountryOptions(countryOptions, query),
             footnoteFor: (id) => {
                 const page = byId.get(id);
                 return page?.origin === 'place'
@@ -103,10 +92,6 @@ export function WorldPages() {
     }, [pages, countryOptions, loadCountries, t]);
 
     const openSearch = useCallback(() => router.push('/logged-in/search'), []);
-
-    // World alone, and the pen never opened here: say what World is and
-    // where countries come from. Derived; the only stored bit is "pen opened".
-    const showIntro = pages.length === 1 && introDone === false;
 
     const renderPage = useCallback(
         ({ pageId, active, header }: PageRenderProps) => {
@@ -121,13 +106,7 @@ export function WorldPages() {
                     scope={page.scope}
                     windowHours={hours}
                     onWindowChange={(next) => setWindowFor(pageId, next)}
-                    listHeaderExtra={
-                        page.id === 'world' && showIntro ? (
-                            <Text size="md" className="text-gray-300" testID="world-intro">
-                                {t('world.newStateLine')}
-                            </Text>
-                        ) : undefined
-                    }
+                    onExplain={header.openExplainer}
                     active={active}
                     // Gate the QUERY, not the mount: before locations emit, the
                     // country pages are the device-country fallback.
@@ -135,12 +114,10 @@ export function WorldPages() {
                     headerHeight={header.headerHeight}
                     scrollHandler={header.scrollHandler}
                     bottomClearance={listEndClearance}
-                    // Country pages get World's copy (pageMeta).
-                    footer={<HowThisPageWorks pageId={pageId} />}
                 />
             );
         },
-        [pages, windows, setWindowFor, showIntro, loaded, listEndClearance, t],
+        [pages, windows, setWindowFor, loaded, listEndClearance],
     );
 
     return (

@@ -139,56 +139,6 @@ export async function removeWorldCountry(alpha2: string): Promise<void> {
     }
 }
 
-// ── The World-alone intro line ──────────────────────────────────────────────
-// Shown while World is the only page and the pen has never been opened on
-// World. Local only, not backed up, records nothing about reading.
-
-export const WORLD_INTRO_DONE_SETTING_KEY = 'nav_world_intro_done';
-
-function settings(): typeof import('@/lib/database/services/setting-service') {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('@/lib/database/services/setting-service');
-}
-
-export async function readWorldIntroDone(): Promise<boolean> {
-    try {
-        return (await settings().getSetting(WORLD_INTRO_DONE_SETTING_KEY)) === '1';
-    } catch {
-        return false;
-    }
-}
-
-/** Called when the pen opens on World (ArrangeConfig.onOpen). */
-export async function markWorldIntroDone(): Promise<void> {
-    try {
-        await settings().setSetting(WORLD_INTRO_DONE_SETTING_KEY, '1');
-    } catch (err) {
-        logger.captureException(err, { tags: { module: 'world-pages', method: 'markWorldIntroDone' } });
-    } finally {
-        notify();
-    }
-}
-
-/** null until read. */
-export function useWorldIntroDone(): boolean | null {
-    const [done, setDone] = useState<boolean | null>(null);
-    useEffect(() => {
-        let alive = true;
-        const read = () => {
-            void readWorldIntroDone().then((v) => {
-                if (alive) setDone(v);
-            });
-        };
-        read();
-        listeners.add(read);
-        return () => {
-            alive = false;
-            listeners.delete(read);
-        };
-    }, []);
-    return done;
-}
-
 // ── The hook ────────────────────────────────────────────────────────────────
 
 /** Keep the previous state when a re-read found nothing new, so equal re-reads

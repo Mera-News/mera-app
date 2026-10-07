@@ -9,6 +9,7 @@ import Animated, {
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { TOAST_BODY_COLOR } from './toast-text';
 
 /** One full sweep, left edge to past the right edge. */
@@ -25,6 +26,8 @@ export interface IndeterminateBarProps {
      */
     width: number;
     height?: number;
+    /** The moving segment's colour. Default: the toast's body ink. */
+    color?: string;
     /** No default: a reusable primitive's shared id would collide. The moving
      *  segment takes `${testID}-segment`. */
     testID?: string;
@@ -35,10 +38,11 @@ export interface IndeterminateBarProps {
  * forever, on the UI thread (reanimated `withRepeat`, a transform only, so no
  * layout per frame). Under the OS Reduce Motion setting the loop never starts
  * and the segment holds still in the middle of the track, which still reads as
- * "a bar" rather than an empty box.
+ * "a bar" rather than an empty box. Lite mode holds it still the same way.
  */
-export default function IndeterminateBar({ width, height = 3, testID }: IndeterminateBarProps) {
-    const reduceMotion = useReducedMotion();
+export default function IndeterminateBar({ width, height = 3, color = TOAST_BODY_COLOR, testID }: IndeterminateBarProps) {
+    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const reduceMotion = useReducedMotion() || liteMode;
     const segment = Math.round(width * SEGMENT_SHARE);
     const restX = Math.round((width - segment) / 2);
     const x = useSharedValue(reduceMotion ? restX : -segment);
@@ -72,7 +76,7 @@ export default function IndeterminateBar({ width, height = 3, testID }: Indeterm
             <Animated.View
                 testID={testID ? `${testID}-segment` : undefined}
                 style={[
-                    { width: segment, height, borderRadius: height / 2, backgroundColor: TOAST_BODY_COLOR },
+                    { width: segment, height, borderRadius: height / 2, backgroundColor: color },
                     segmentStyle,
                 ]}
             />

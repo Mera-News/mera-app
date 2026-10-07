@@ -1,4 +1,6 @@
-import { commitWorldDraft, searchCountryOptions, toCountryOptions, COUNTRY_SEARCH_LIMIT } from '../world-arrange';
+import { addCountry, filterAddable, initialArrange, removePage, toDraft } from '@/components/custom/nav/arrange-model';
+
+import { commitWorldDraft, searchCountryOptions, toCountryOptions } from '../world-arrange';
 
 describe('toCountryOptions', () => {
     it('maps the server alpha-3 list to alpha-2 options with English names, dropping GLOBAL and unmappable codes', () => {
@@ -15,18 +17,26 @@ describe('searchCountryOptions', () => {
     const all = toCountryOptions(['FRA', 'PYF', 'SPM', 'DEU', 'AFG', 'ZAF']);
 
     it('puts names starting with the query first, then names containing it', () => {
-        const names = searchCountryOptions(all, 'Fr', new Set()).map((o) => o.name);
+        const names = searchCountryOptions(all, 'Fr').map((o) => o.name);
         expect(names).toEqual(['France', 'French Polynesia', 'South Africa']);
     });
 
-    it('leaves out countries that already have a page', () => {
-        expect(searchCountryOptions(all, 'fr', new Set(['FR'])).map((o) => o.alpha2)).toEqual(['PF', 'ZA']);
+    it('offers nothing for an empty query', () => {
+        expect(searchCountryOptions(all, '  ')).toEqual([]);
     });
 
-    it('offers nothing for an empty query and caps the list', () => {
-        expect(searchCountryOptions(all, '  ', new Set())).toEqual([]);
-        const many = toCountryOptions(['AFG', 'ALB', 'DZA', 'AND', 'AGO', 'ATG', 'ARG', 'ARM']);
-        expect(searchCountryOptions(many, 'a', new Set())).toHaveLength(COUNTRY_SEARCH_LIMIT);
+    it('finds a country removed in this draft again, and re-adding it cancels the removal', () => {
+        let draft = initialArrange(['world', 'country:DE', 'country:FR']);
+        draft = removePage(draft, 'country:DE');
+        const offered = filterAddable(searchCountryOptions(all, 'Ger'), draft);
+        expect(offered.map((o) => o.alpha2)).toEqual(['DE']);
+        draft = addCountry(draft, offered[0]);
+        expect(toDraft(draft)).toEqual({ order: ['world', 'country:FR', 'country:DE'], removed: [], added: [] });
+    });
+
+    it('never offers a country still in the draft', () => {
+        const draft = initialArrange(['world', 'country:FR']);
+        expect(filterAddable(searchCountryOptions(all, 'fr'), draft).map((o) => o.alpha2)).toEqual(['PF', 'ZA']);
     });
 });
 

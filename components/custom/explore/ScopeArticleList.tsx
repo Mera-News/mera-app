@@ -1,8 +1,9 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
-import ExploreWindowToggle, { type ExploreWindowHours } from '@/components/custom/explore/ExploreWindowToggle';
+import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
+import PageTitleRow from '@/components/custom/nav/PageTitleRow';
+import IndeterminateBar from '@/components/custom/toast/IndeterminateBar';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -14,11 +15,12 @@ import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refre
 import logger from '@/lib/logger';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useIsConnected, useIsOnline } from '@/lib/stores/network-store';
+import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshControl, type ListRenderItem } from 'react-native';
+import { RefreshControl, View, type ListRenderItem } from 'react-native';
 import Animated, {
     runOnJS,
     useAnimatedScrollHandler,
@@ -27,6 +29,30 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const PAGE_SIZE = 10;
+
+/** A World page's time window: the stories most covered in the last 6, 12,
+ *  24 or 48 hours (the server's `windowHours`), 24 to start. */
+export const EXPLORE_WINDOWS_HOURS = [6, 12, 24, 48] as const;
+export type ExploreWindowHours = (typeof EXPLORE_WINDOWS_HOURS)[number];
+
+/** A country page's first load: a 4pt bar under the title row. The bar needs
+ *  an explicit width (IndeterminateBar), so the row measures itself once. */
+function GatheringBar({ label }: { readonly label: string }) {
+    const colors = useColors();
+    const [width, setWidth] = useState(0);
+    return (
+        <View
+            onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+            style={{ height: 4, marginTop: 6, marginHorizontal: 2 }}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={label}
+            testID="explore-gathering"
+        >
+            {width > 0 ? <IndeterminateBar width={width} height={4} color={colors.accent} /> : null}
+        </View>
+    );
+}
 
 /** A first load still running after this is treated as hung: the page says
  *  Mera can't be reached instead of promising stories "in a few seconds".
@@ -149,13 +175,11 @@ interface ScopeArticleListProps {
      *  and a fresh first page. Absent: the server default (24). */
     readonly windowHours?: number;
     /** World pages: the reader picked a window here. When given, the list
-     *  leads with the "Top stories from the last" row, and an empty answer
-     *  under 48h offers a one-tap 48 hours. */
+     *  leads with the "Top headlines" title row and its time chip, and an
+     *  empty answer under 48h offers a one-tap 48 hours. */
     readonly onWindowChange?: (next: ExploreWindowHours) => void;
-    /** Drawn above the window row (World's one-time intro line). */
-    readonly listHeaderExtra?: React.ReactNode;
-    /** Drawn once the list has nothing more to page in ("How this page works"). */
-    readonly footer?: React.ReactNode;
+    /** The ? beside "Top headlines" (the tab's explainer sheet). */
+    readonly onExplain?: () => void;
     /** List-end clear space from the host. Default: the tab bar plus a tail. */
     readonly bottomClearance?: number;
 }
@@ -198,8 +222,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     active = true,
     windowHours,
     onWindowChange,
-    listHeaderExtra,
-    footer,
+    onExplain,
     bottomClearance,
 }) => {
     const { t } = useTranslation();
@@ -418,35 +441,46 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         [],
     );
 
-    const ListFooterComponent = useCallback(() => {
-        if (isLoadingMore) {
-            return (
+    const ListFooterComponent = useCallback(
+        () =>
+            isLoadingMore ? (
                 <Box className="items-center py-4">
                     <Spinner size="small" />
                 </Box>
-            );
-        }
-        // The page's end: nothing more to page in and nothing still loading.
-        if (footer && !isLoading && !hasNextPage) return <>{footer}</>;
-        return null;
-    }, [isLoadingMore, footer, isLoading, hasNextPage]);
+            ) : null,
+        [isLoadingMore],
+    );
 
+    // The title row and, on a country page's first load, its bar: INSIDE the
+    // list (react-native-screens walks `subviews[0]` for the scroll view). The
+    // chip waits for the first stories; an answer (even an empty one) frees it.
+    const firstLoad = (!enabled || isLoading) && headlines.length === 0;
     const ListHeaderComponent = useMemo(() => {
-        if (!onWindowChange && !listHeaderExtra) return null;
+        if (!onWindowChange) return null;
         return (
-            <VStack space="md" className="mb-3">
-                {listHeaderExtra}
-                {onWindowChange ? (
-                    <HStack className="items-center justify-between" testID="explore-window-row">
-                        <Text size="sm" className="text-gray-300 flex-shrink mr-3">
-                            {t('world.windowRowLabel')}
-                        </Text>
-                        <ExploreWindowToggle value={hours} onChange={onWindowChange} />
-                    </HStack>
+            <View style={{ marginBottom: 12 }}>
+                <PageTitleRow
+                    title={t('sources.topHeadlines')}
+                    onExplain={onExplain}
+                    trailing={
+                        <InlineChoiceChip
+                            options={EXPLORE_WINDOWS_HOURS}
+                            value={hours}
+                            labelOf={(h) => t(`explore.window.label${h}`)}
+                            a11yLabelOf={(h) => t(`explore.window.a11y${h}`)}
+                            onChange={onWindowChange}
+                            disabled={firstLoad}
+                            testID="explore-window"
+                        />
+                    }
+                    testID="explore-title"
+                />
+                {countryName && firstLoad && !loadHung ? (
+                    <GatheringBar label={t('world.gathering', { country: countryName })} />
                 ) : null}
-            </VStack>
+            </View>
         );
-    }, [onWindowChange, listHeaderExtra, hours, t]);
+    }, [onWindowChange, onExplain, hours, firstLoad, countryName, loadHung, t]);
 
     // Skeleton-or-empty-state, decided INSIDE the list. Previously these were two
     // early returns that replaced the list entirely — see the component note.
@@ -454,11 +488,6 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         if (!enabled || (isLoading && !loadHung)) {
             return (
                 <VStack testID="explore-loading" space="md">
-                    {countryName ? (
-                        <Text size="md" className="text-gray-300" testID="explore-gathering">
-                            {t('world.gathering', { country: countryName })}
-                        </Text>
-                    ) : null}
                     <SkeletonRows />
                 </VStack>
             );
