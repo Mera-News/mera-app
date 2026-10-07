@@ -1,7 +1,6 @@
 import i18next from 'i18next';
 import { AccessibilityInfo } from 'react-native';
 import type React from 'react';
-import { getBellAnchor } from './notifications/bell-anchor';
 import logger from './logger';
 import { TOAST_MIN_DURATION_MS } from './toast/toast-queue';
 import { TOAST_BODY_COLOR, TOAST_TITLE_COLOR } from '@/components/custom/toast/toast-text';
@@ -277,8 +276,8 @@ class ToastManager {
 
     /**
      * Notification-center-backed toast. First writes a persistent notification
-     * row (so the bell badge increments via the reactive observeUnreadCount),
-     * then shows a transient toast that flies toward the bell.
+     * row (so the You tab dot lights via the reactive observeUnreadCount),
+     * then shows a transient toast that flies into the You tab.
      *
      * The RAW i18n key strings are stored in the notification row so the panel
      * re-resolves them with the current locale; the toast itself resolves them
@@ -331,11 +330,10 @@ class ToastManager {
         // 'No published fact checks yet for "{{title}}".' shows its braces.
         const title = this.resolveI18n(opts.title, opts.context);
         const body = this.resolveI18n(opts.body, opts.context);
-        const anchor = getBellAnchor();
         const reduceMotion = this.reduceMotion;
-        // Whether the toast will fly to the bell or just fade — the two legs
-        // have different lengths, and the component derives the same flag.
-        const canFly = !reduceMotion && anchor != null;
+        // Whether the toast will fly to You or just fade: the two legs have
+        // different lengths, and the component derives the same flag.
+        const canFly = !reduceMotion;
 
         this.toastInstance.show({
             // Match the toast's lifetime to the animation EXACTLY. NotifiedToast
@@ -349,7 +347,6 @@ class ToastManager {
                     body,
                     action: opts.action ?? 'info',
                     reduceMotion,
-                    anchor,
                 }),
         });
     }

@@ -10,7 +10,6 @@ jest.mock('../logger', () => ({
     __esModule: true,
     default: { warn: jest.fn(), info: jest.fn(), error: jest.fn(), captureException: jest.fn() },
 }));
-jest.mock('../notifications/bell-anchor', () => ({ getBellAnchor: () => null }));
 jest.mock('@/lib/database/services/notification-service', () => ({ notify: jest.fn(async () => {}) }));
 const mockNotified = jest.fn((..._a: any[]) => null);
 jest.mock('@/components/custom/notifications/NotifiedToast', () => ({
