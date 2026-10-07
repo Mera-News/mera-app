@@ -1,113 +1,132 @@
 import React, { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, ClipPath, G, Path, Rect } from 'react-native-svg';
 import Animated, {
     cancelAnimation,
-    useSharedValue,
-    useAnimatedProps,
+    Easing,
+    makeMutable,
+    useAnimatedStyle,
+    useReducedMotion,
     withRepeat,
-    withTiming,
     withSequence,
-    Easing
+    withTiming,
+    type SharedValue,
 } from 'react-native-reanimated';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 
-// Create animated version of G component for SVG transforms
-const AnimatedG = Animated.createAnimatedComponent(G);
+// The Mera mark. Static callers get ONE Svg, exactly as before. A mark that
+// moves (`animated` cone, `scrollCards` grid) is drawn as three layers so the
+// motion is a VIEW transform composited on the UI thread, never a per-frame
+// SVG redraw (RNSVG rasterises on the CPU, so animating a <G> re-drew the whole
+// glyph every frame):
+//   1. the card grid, in a rectangular clip, translated as a view;
+//   2. one still Svg: hexagon, highlighted card, focus dot;
+//   3. the cone, in its own Svg, rotated as a view about its apex.
+// Why the layers look identical to the single Svg:
+// - The cards' rows (y 330-710) sit inside the hexagon's vertical edges
+//   (y 304-720), so a rectangle at x 279-745 clips them exactly like the
+//   hexagon does; anything at its edge is under the 24-unit outline stroke.
+// - The cone stays inside the hexagon at +-15 degrees, so it needs no clip.
+// - Cone and grid share the glyph's one ink colour, so drawing the cone above
+//   the opaque highlighted card and dot, and the 0.18 grid below the opaque
+//   outline, changes no pixel.
+
+const VB_X = 255;
+const VB_Y = 146;
+const VB_W = 514;
+const VB_H = 732;
+const VIEW_BOX = `${VB_X} ${VB_Y} ${VB_W} ${VB_H}`;
+const HEX_D = 'M512 170 L745 304 L745 720 L512 854 L279 720 L279 304 Z';
 /** The background card grid: 150x110 cards on a 170 pitch, three rows. */
 const CARD_ROWS = [330, 465, 600] as const;
 const CARD_PITCH = 170;
 /** Still grid: the three columns the static glyph has always drawn. */
 const STILL_CARD_COLUMNS = [320, 490, 660] as const;
-/** Scrolling grid: one extra column each side, so translating the whole grid
- *  one pitch to the left lands exactly on the starting picture and the loop
- *  wraps without a seam. The hexagon clip hides the columns entering at the
- *  right and leaving at the left. */
+/** Scrolling grid: one extra column each side, so moving it one pitch left
+ *  lands on the starting picture and the loop wraps without a seam. */
 const SCROLL_CARD_COLUMNS = [150, 320, 490, 660, 830] as const;
-/** One card pitch every 3.2s: calm, and deliberately not a multiple of the
- *  torch's 4s sweep so the two never lock into a visible beat. */
+/** One card pitch every 3.2s: deliberately not a multiple of the cone's 4s
+ *  sweep, so the two never lock into a visible beat. */
 const CARD_SCROLL_MS = 3200;
-
-// Spotlight cone geometry — shared by both the static and animated renders so
-// the frozen frame and the animation start from the identical shape.
+const SWEEP_HALF_MS = 2000;
+const SWEEP_DEG = 15;
 const SPOTLIGHT_D = 'M512 760 L450 485 L574 485 Z';
+/** The cone apex (512, 760) as a transform origin. `meet` centres the glyph
+ *  horizontally, which puts x=512 at exactly 50% of a square view. */
+const CONE_ORIGIN = `50% ${(((760 - VB_Y) / VB_H) * 100).toFixed(3)}%`;
+/** The cards' clip rectangle, in viewBox units. */
+const CLIP = { x0: 279, x1: 745, y0: 304, y1: 720 } as const;
 
-/** The frozen −15° frame. One definition, rendered by the static call path AND
- *  by `AnimatedSpotlight` whenever its gate is closed, so the two can never
- *  drift apart. */
-const StaticSpotlight: React.FC<{ color: string }> = ({ color }) => (
-    <G transform="rotate(-15 512 760)">
-        <Path d={SPOTLIGHT_D} fill={color} opacity="0.300" />
-    </G>
-);
+// ── One clock for every mark ────────────────────────────────────────────────
+// Every moving mark reads the SAME two shared values, so all marks on screen
+// are in phase and a remount (a tab switch) never restarts the sweep. The
+// clock runs only while at least one mark that may move is on screen: each
+// one holds a reference while its gate is open (focused, foregrounded, not
+// Lite, not Reduce Motion). The last release pauses it where it is and the
+// next first acquire resumes from there. Created lazily: suites that mock
+// reanimated without `makeMutable` only meet it when a moving mark mounts.
 
-/**
- * Animated spotlight cone. Owns every reanimated hook (useSharedValue /
- * useEffect / useAnimatedProps) so the hooks stay unconditional — this
- * subcomponent is only mounted when `MeraLogo` is rendered with `animated`,
- * keeping the static path completely free of reanimated. Infinite left/right
- * sweep about the cone apex (512, 760).
- *
- * ## Why it is gated on focus + foreground
- *
- * This animates an SVG `<G transform>`, and RNSVG rasterises on the CPU — so
- * every frame RE-DRAWS the cone rather than compositing a cached layer (the
- * same trap documented at AbstractGradientBackdrop.tsx:336-342, which is why
- * the backdrop's own drift was removed). `AllCaughtUpCard` puts an animated
- * logo at the bottom of the Feed, and tabs stay mounted, so without this gate
- * it keeps re-rasterising on the CPU forever while the user reads Settings.
- *
- * When the gate closes the animated node UNMOUNTS in favour of the frozen
- * frame — cheaper than merely pausing it, and visually identical at rest.
- * `cancelAnimation` is required on that path: `withRepeat` runs on the UI
- * thread and would otherwise keep driving a shared value nothing reads.
- */
-const AnimatedSpotlight: React.FC<{ color: string }> = ({ color }) => {
-    const active = useAnimationsActive();
-    // Use shared value for rotation angle (Reanimated)
-    const rotation = useSharedValue(-15);
+type Clock = { value: SharedValue<number> | null; users: number; start: (v: SharedValue<number>) => void };
 
-    useEffect(() => {
-        if (!active) {
-            cancelAnimation(rotation);
-            rotation.value = -15;
-            return;
-        }
-        // Create a looping animation that rotates left and right smoothly
-        rotation.value = withRepeat(
-            withSequence(
-                withTiming(15, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
-                withTiming(-15, { duration: 2000, easing: Easing.inOut(Easing.ease) })
-            ),
-            -1, // infinite repeat
-            false // don't reverse
+const sweepEase = Easing.inOut(Easing.ease);
+
+const coneClock: Clock = {
+    value: null,
+    users: 0,
+    start: (v) => {
+        // Finish the half-sweep it was paused in, then loop.
+        const to = v.value <= 0 ? SWEEP_DEG : -SWEEP_DEG;
+        const rest = (Math.abs(to - v.value) / (2 * SWEEP_DEG)) * SWEEP_HALF_MS;
+        const back = withTiming(-to, { duration: SWEEP_HALF_MS, easing: sweepEase });
+        const forth = withTiming(to, { duration: SWEEP_HALF_MS, easing: sweepEase });
+        v.value = withSequence(
+            withTiming(to, { duration: rest, easing: sweepEase }),
+            withRepeat(withSequence(back, forth), -1),
         );
-        return () => cancelAnimation(rotation);
-    }, [rotation, active]);
-
-    // Use animatedProps for SVG transform (Reanimated pattern)
-    // The rotation center is at (512, 760), so we translate to center, rotate, translate back
-    const animatedProps = useAnimatedProps(() => {
-        return {
-            transform: [
-                { translateX: 512 },
-                { translateY: 760 },
-                { rotate: `${rotation.value}deg` },
-                { translateX: -512 },
-                { translateY: -760 },
-            ],
-        };
-    });
-
-    if (!active) return <StaticSpotlight color={color} />;
-
-    return (
-        <AnimatedG animatedProps={animatedProps}>
-            <Path d={SPOTLIGHT_D} fill={color} opacity="0.300" />
-        </AnimatedG>
-    );
+    },
 };
+
+const cardClock: Clock = {
+    value: null,
+    users: 0,
+    start: (v) => {
+        const rest = ((CARD_PITCH + v.value) / CARD_PITCH) * CARD_SCROLL_MS;
+        v.value = withSequence(
+            withTiming(-CARD_PITCH, { duration: rest, easing: Easing.linear }),
+            withRepeat(
+                withSequence(
+                    withTiming(0, { duration: 0 }),
+                    withTiming(-CARD_PITCH, { duration: CARD_SCROLL_MS, easing: Easing.linear }),
+                ),
+                -1,
+            ),
+        );
+    },
+};
+
+function clockValue(clock: Clock, initial: number): SharedValue<number> {
+    if (!clock.value) clock.value = makeMutable(initial);
+    return clock.value;
+}
+
+/** Holds the clock while `on`; returns its shared value. */
+function useClock(clock: Clock, initial: number, on: boolean): SharedValue<number> {
+    const value = clockValue(clock, initial);
+    useEffect(() => {
+        if (!on) return;
+        clock.users += 1;
+        if (clock.users === 1) clock.start(value);
+        return () => {
+            clock.users -= 1;
+            if (clock.users === 0) cancelAnimation(value);
+        };
+    }, [clock, value, on]);
+    return value;
+}
+
+// ── Static pieces ───────────────────────────────────────────────────────────
 
 const CardGrid: React.FC<{ columns: readonly number[] }> = ({ columns }) => (
     <>
@@ -117,88 +136,117 @@ const CardGrid: React.FC<{ columns: readonly number[] }> = ({ columns }) => (
     </>
 );
 
-/**
- * The background cards scrolling right to left, like news passing under the
- * torch. Owns its reanimated hooks, like `AnimatedSpotlight`, so every other
- * render stays free of them, and is gated the same way (RNSVG re-rasterises
- * on the CPU every frame): when nobody is looking it unmounts to the still
- * grid. Translating by exactly one pitch per loop over the five-column grid is
- * what makes the wrap seamless.
- */
-const ScrollingCards: React.FC<{ color: string }> = ({ color }) => {
+const StillCards: React.FC<{ color: string }> = ({ color }) => (
+    <G fill="none" stroke={color} strokeOpacity="0.18" strokeWidth="10">
+        <CardGrid columns={STILL_CARD_COLUMNS} />
+    </G>
+);
+
+/** The frozen -15 degree cone. */
+const StaticSpotlight: React.FC<{ color: string }> = ({ color }) => (
+    <G transform="rotate(-15 512 760)">
+        <Path d={SPOTLIGHT_D} fill={color} opacity="0.300" />
+    </G>
+);
+
+const Highlight: React.FC<{ color: string }> = ({ color }) => (
+    <>
+        <Rect x="490" y="465" width="150" height="110" rx="14" fill="none" stroke={color} strokeWidth="16" />
+        <Circle cx="512" cy="748" r="16" fill={color} />
+    </>
+);
+
+// ── The layered, moving mark ────────────────────────────────────────────────
+
+interface LayeredProps {
+    size: number;
+    color: string;
+    cone: boolean;
+    cards: boolean;
+    /** Lite mode (and not `showsProgress`): the loops hold still. */
+    still: boolean;
+}
+
+const LayeredMark: React.FC<LayeredProps> = ({ size, color, cone, cards, still }) => {
     const active = useAnimationsActive();
-    const offset = useSharedValue(0);
+    const reduceMotion = useReducedMotion();
+    const moving = active && !still && !reduceMotion;
+    const angle = useClock(coneClock, -SWEEP_DEG, cone && moving);
+    const offset = useClock(cardClock, 0, cards && moving);
 
-    useEffect(() => {
-        if (!active) {
-            cancelAnimation(offset);
-            offset.value = 0;
-            return;
-        }
-        offset.value = 0;
-        offset.value = withRepeat(
-            withTiming(-CARD_PITCH, { duration: CARD_SCROLL_MS, easing: Easing.linear }),
-            -1,
-            false,
-        );
-        return () => cancelAnimation(offset);
-    }, [offset, active]);
+    const coneStyle = useAnimatedStyle(() => ({
+        transform: [{ rotate: `${cone && moving ? angle.value : -SWEEP_DEG}deg` }],
+    }));
+    // viewBox units to points: `meet` scales by the taller side.
+    const k = size / VB_H;
+    const padX = (size - VB_W * k) / 2;
+    const clip = {
+        left: padX + (CLIP.x0 - VB_X) * k,
+        top: (CLIP.y0 - VB_Y) * k,
+        width: (CLIP.x1 - CLIP.x0) * k,
+        height: (CLIP.y1 - CLIP.y0) * k,
+    };
+    const cardsStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: cards && moving ? offset.value * k : 0 }],
+    }));
+    const box = { width: size, height: size };
 
-    const animatedProps = useAnimatedProps(() => ({ transform: [{ translateX: offset.value }] }));
-
-    if (!active) {
-        return (
-            <G fill="none" stroke={color} strokeOpacity="0.18" strokeWidth="10">
-                <CardGrid columns={STILL_CARD_COLUMNS} />
-            </G>
-        );
-    }
     return (
-        <G fill="none" stroke={color} strokeOpacity="0.18" strokeWidth="10">
-            <AnimatedG animatedProps={animatedProps} testID="mera-logo-cards">
-                <CardGrid columns={SCROLL_CARD_COLUMNS} />
-            </AnimatedG>
-        </G>
+        <View style={box}>
+            {cards && (
+                <View style={[styles.abs, styles.clip, clip]}>
+                    <Animated.View style={[{ width: size, height: size, left: -clip.left, top: -clip.top }, cardsStyle]}>
+                        <Svg width={size} height={size} viewBox={VIEW_BOX}>
+                            <G fill="none" stroke={color} strokeOpacity="0.18" strokeWidth="10">
+                                <CardGrid columns={moving ? SCROLL_CARD_COLUMNS : STILL_CARD_COLUMNS} />
+                            </G>
+                        </Svg>
+                    </Animated.View>
+                </View>
+            )}
+            <Svg style={styles.abs} width={size} height={size} viewBox={VIEW_BOX}>
+                <Path d={HEX_D} fill="none" stroke={color} strokeWidth="24" strokeLinejoin="round" />
+                {!cards && <StillCards color={color} />}
+                {!cone && <StaticSpotlight color={color} />}
+                <Highlight color={color} />
+            </Svg>
+            {cone && (
+                <Animated.View style={[styles.abs, box, { transformOrigin: CONE_ORIGIN }, coneStyle]}>
+                    <Svg width={size} height={size} viewBox={VIEW_BOX}>
+                        <Path d={SPOTLIGHT_D} fill={color} opacity="0.300" />
+                    </Svg>
+                </Animated.View>
+            )}
+        </View>
     );
 };
 
 interface MeraLogoProps {
     size?: number;
     /**
-     * When true, the spotlight cone sweeps left/right on an infinite loop.
-     * Default false — a frozen frame of the same glyph with zero reanimated
-     * involvement (used by every action-row / sheet / branding call site; only
-     * the floating bubble and loading states pass `animated`).
+     * The cone sweeps left and right on the shared clock. Default false: one
+     * still Svg with no reanimated involvement (every icon, sheet and brand
+     * call site). Holds still while off screen, in Lite mode (unless
+     * `showsProgress`) and under Reduce Motion.
      */
     animated?: boolean;
-    /**
-     * Ink colour for every stroke/fill in the glyph. Defaults to white, which is
-     * what every chrome call site wants against the dark theme. Overridden only
-     * where the glyph sits on a LIGHT ground — currently the article image
-     * placeholder, which is a near-white panel.
-     */
+    /** Ink for every stroke and fill. White suits the dark chrome; pass the
+     *  ink for a light ground (the article image placeholder, the button). */
     color?: string;
-    /**
-     * Scroll the background cards right to left in a loop (the Feed's status
-     * mark while a sync runs, together with `animated`: the torch sweeping
-     * over news passing by). Default false, and with it off the render is
-     * byte-identical to before the prop existed (snapshot in
-     * MeraLogo.test.tsx). The highlighted card and the focus dot stay put.
-     */
+    /** Scroll the background cards right to left on the shared clock (news
+     *  passing under the torch). Same gates as `animated`. */
     scrollCards?: boolean;
     /**
      * The loop tells the reader work is in progress (a launch gate, a chat
-     * reply streaming), so it keeps moving in Lite mode. Everything else is
-     * decoration and freezes there: RNSVG re-rasterises the glyph on the CPU
-     * every frame, which a weak phone pays for on its UI thread.
+     * reply streaming), so it keeps moving in Lite mode. Reduce Motion still
+     * stills it: the motion is decoration, the state is told elsewhere.
      */
     showsProgress?: boolean;
 }
 
-// Mera Logo Component. Static by default; opt into the animated spotlight.
-// The viewBox is tightened to the glyph bounds (hexagon x 279–745 / y 170–854
+// The viewBox is tightened to the glyph bounds (hexagon x 279-745 / y 170-854
 // plus the 24-unit stroke outset) so a given `size` renders at a visual height
-// consistent with neighboring lucide icons instead of leaving ~33% padding.
+// consistent with neighbouring lucide icons.
 const MeraLogo: React.FC<MeraLogoProps> = ({
     size = 80,
     animated = false,
@@ -207,46 +255,35 @@ const MeraLogo: React.FC<MeraLogoProps> = ({
     showsProgress = false,
 }) => {
     const liteMode = useDisplayPrefsStore((s) => s.liteMode);
-    const loops = showsProgress || !liteMode;
-    const moves = animated && loops;
-    const cardsMove = scrollCards && loops;
+    if (animated || scrollCards) {
+        return (
+            <LayeredMark
+                size={size}
+                color={color}
+                cone={animated}
+                cards={scrollCards}
+                still={liteMode && !showsProgress}
+            />
+        );
+    }
     return (
-        <Svg width={size} height={size} viewBox="255 146 514 732">
-            {/* Hexagon outline */}
-            <Path d="M512 170 L745 304 L745 720 L512 854 L279 720 L279 304 Z" fill="none" stroke={color} strokeWidth="24" strokeLinejoin="round" />
+        <Svg width={size} height={size} viewBox={VIEW_BOX}>
+            <Path d={HEX_D} fill="none" stroke={color} strokeWidth="24" strokeLinejoin="round" />
             <ClipPath id="hexB">
-                <Path d="M512 170 L745 304 L745 720 L512 854 L279 720 L279 304 Z" />
+                <Path d={HEX_D} />
             </ClipPath>
             <G clipPath="url(#hexB)">
-                {/* Grid cards: still, or scrolling right to left under the torch. */}
-                {cardsMove ? (
-                    <ScrollingCards color={color} />
-                ) : (
-                    <G fill="none" stroke={color} strokeOpacity="0.18" strokeWidth="10">
-                        <Rect x="320" y="330" width="150" height="110" rx="14" />
-                        <Rect x="490" y="330" width="150" height="110" rx="14" />
-                        <Rect x="660" y="330" width="150" height="110" rx="14" />
-                        <Rect x="320" y="465" width="150" height="110" rx="14" />
-                        <Rect x="490" y="465" width="150" height="110" rx="14" />
-                        <Rect x="660" y="465" width="150" height="110" rx="14" />
-                        <Rect x="320" y="600" width="150" height="110" rx="14" />
-                        <Rect x="490" y="600" width="150" height="110" rx="14" />
-                        <Rect x="660" y="600" width="150" height="110" rx="14" />
-                    </G>
-                )}
-                {/* Spotlight cone — animated sweep or a frozen −15° frame. */}
-                {moves ? (
-                    <AnimatedSpotlight color={color} />
-                ) : (
-                    <StaticSpotlight color={color} />
-                )}
-                {/* Highlighted card */}
-                <Rect x="490" y="465" width="150" height="110" rx="14" fill="none" stroke={color} strokeWidth="16" />
-                {/* Focus dot */}
-                <Circle cx="512" cy="748" r="16" fill={color} />
+                <StillCards color={color} />
+                <StaticSpotlight color={color} />
+                <Highlight color={color} />
             </G>
         </Svg>
     );
 };
+
+const styles = StyleSheet.create({
+    abs: { position: 'absolute', left: 0, top: 0 },
+    clip: { overflow: 'hidden' },
+});
 
 export default MeraLogo;
