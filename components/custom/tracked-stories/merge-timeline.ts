@@ -80,3 +80,21 @@ export function timelineCardToArticle(card: TimelineCard): NewsArticle {
         : undefined,
   } as NewsArticle;
 }
+
+/**
+ * A Stories row's latest headline (FinalFeedStatus #6): the newest snapshot
+ * among the story's CURRENT members (`memberArticleIds`, the same filter its
+ * count uses, so a disowned article never resurfaces here). Null when none.
+ */
+export function latestMember(
+  snapshots: readonly TrackedStoryMemberSnapshot[] | undefined,
+  memberIds: readonly string[] | undefined,
+): TrackedStoryMemberSnapshot | null {
+  const ids = new Set(memberIds ?? []);
+  let best: TrackedStoryMemberSnapshot | null = null;
+  for (const s of snapshots ?? []) {
+    if (!ids.has(s.articleId)) continue;
+    if (!best || s.pubDateMs > best.pubDateMs) best = s;
+  }
+  return best;
+}

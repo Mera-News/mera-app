@@ -126,3 +126,16 @@ describe('timelineCardToArticle', () => {
     expect(article.title_en_internal_only).toBe('Tokyo rain');
   });
 });
+
+describe('latestMember', () => {
+  const { latestMember } = require('../merge-timeline') as typeof import('../merge-timeline');
+  const snap = (articleId: string, pubDateMs: number) => ({ articleId, title: articleId, pubDateMs });
+  it('picks the newest CURRENT member, skipping a newer disowned one', () => {
+    const snaps = [snap('a', 1), snap('b', 3), snap('gone', 9), snap('c', 2)];
+    expect(latestMember(snaps, ['a', 'b', 'c'])?.articleId).toBe('b');
+  });
+  it('is null with no current member', () => {
+    expect(latestMember([snap('a', 1)], [])).toBeNull();
+    expect(latestMember(undefined, undefined)).toBeNull();
+  });
+});
