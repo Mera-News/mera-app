@@ -1,79 +1,63 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import BackupSection from '@/components/custom/backup/BackupSection';
 import WhatMeraKeepsCard from '@/components/custom/config-mera/WhatMeraKeepsCard';
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
-import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
+import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
+import { Spinner } from '@/components/ui/spinner';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
-import { clearDeviceAuthCredentials } from '@/lib/device-auth';
+import { backupCadence, backupProviderId } from '@/lib/backup/backup-settings';
 import database from '@/lib/database';
+import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
+import { clearDeviceAuthCredentials } from '@/lib/device-auth';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
+import { showDialog } from '@/lib/dialog';
 import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
-import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
 import * as scoringPipeline from '@/lib/services/scoring-pipeline';
 import { clearAllStores, useForYouStore } from '@/lib/stores';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
-import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
-import { useDeleteAccountModal, useUIStore } from '@/lib/stores/ui-store';
-import { MaterialIcons } from '@expo/vector-icons';
+import { useUIStore } from '@/lib/stores/ui-store';
+import { useColors } from '@/lib/theme/tokens';
+import { toastManager } from '@/lib/toast-manager';
 import { Q } from '@nozbe/watermelondb';
-import { router } from 'expo-router';
+import { router, useFocusEffect, type Href } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import { ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useExportHistory } from './use-export-history';
 
-type DataAction =
-    | 'feedCache'
-    | 'factsTopics'
-    | 'viewingHistory'
-    | 'wipeAll'
-    | null;
-
-// Where the data an action clears actually lives. Surfaced as a chip on each
-// row so the on-device vs server distinction is unmistakable.
-type DataLocation = 'device' | 'server';
+// Facts hold the user's topics, and the feed cache is built from those topics,
+// so clearing facts must also clear the derived cache (and its topic-gen jobs)
+// to avoid leaving stale or orphaned rows behind.
+const FACTS_AND_TOPICS_TABLES = ['facts', 'article_suggestions', 'article_suggestion_facts', 'inference_jobs'];
 
 interface ManageDataScreenProps {
     onBack?: () => void;
-    /** Open the backup recovery-code flow on arrival. The `?restore=1` deep
-     *  link sets it; Settings itself opens this screen plainly from its
-     *  "Backup and restore" row, with the backup section first. */
-    autoOpenRecover?: boolean;
 }
 
-// Local-only tables that make up the ephemeral article feed cache. Rebuilt
-// from the server on the next sync.
-const FEED_CACHE_TABLES = [
-    'article_suggestions',
-    'article_suggestion_facts',
-    'inference_jobs',
-];
-
-// Facts hold the user's topics in `metadata_json`, and the feed cache is built
-// from those topics — so clearing facts must also clear the derived cache (and
-// its topic-gen jobs) to avoid leaving stale or orphaned rows behind.
-const FACTS_AND_TOPICS_TABLES = ['facts', ...FEED_CACHE_TABLES];
-
-const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRecover }) => {
+/**
+ * Settings > Your data (FinalSettings #15): Backup as one row to its own
+ * screen, then look at it and take it (What Mera keeps, Export reading
+ * history), then Delete (Clear profile, Clear reading history, and Delete
+ * account last, in red, asking twice). No "Clear article cache" (it clears
+ * itself) and no "Wipe all" (owner Y10).
+ */
+const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
     const toast = useToast();
     const { t } = useTranslation();
-    const [confirmAction, setConfirmAction] = useState<DataAction>(null);
+    const colors = useColors();
     const [isProcessing, setIsProcessing] = useState(false);
+    const { closeModal, setModalProcessing } = useUIStore();
+    const { exporting, exportHistory } = useExportHistory('ManageDataScreen');
 
-    const deleteAccountModal = useDeleteAccountModal();
-    const { openModal, closeModal, setDeleteAccountStep, setModalProcessing } = useUIStore();
-    const showDeleteInitial = deleteAccountModal.isOpen && deleteAccountModal.step === 'initial';
-    const showDeleteConfirm = deleteAccountModal.isOpen && deleteAccountModal.step === 'confirm';
-    const isDeletingAccount = deleteAccountModal.isProcessing;
+    // The backup value reads the synchronous mirror; re-read on focus so a
+    // change made on the Backup screen shows on return.
+    const [, setFocusTick] = useState(0);
+    useFocusEffect(useCallback(() => setFocusTick((n) => n + 1), []));
+    const backupOn = backupCadence() !== 'off' && backupProviderId() !== null;
 
     const deleteTables = useCallback(async (tableNames: string[]) => {
         await database.write(async () => {
@@ -87,93 +71,44 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRec
         });
     }, []);
 
-    const showErrorToast = useCallback(() => {
-        toast.show({
-            placement: 'top',
-            render: () => (
-                <Toast action="error" variant="solid">
-                    <ToastTitle>{t('manageData.errorTitle')}</ToastTitle>
-                    <ToastDescription>{t('manageData.errorDescription')}</ToastDescription>
-                </Toast>
-            ),
-        });
-    }, [toast, t]);
-
-    const showSuccessToast = useCallback(() => {
-        toast.show({
-            placement: 'top',
-            render: () => (
-                <Toast action="success" variant="solid">
-                    <ToastTitle>{t('manageData.deletedTitle')}</ToastTitle>
-                    <ToastDescription>{t('manageData.deletedDescription')}</ToastDescription>
-                </Toast>
-            ),
-        });
-    }, [toast, t]);
-
-    const handleConfirm = useCallback(async () => {
-        const action = confirmAction;
-        setConfirmAction(null);
-        setIsProcessing(true);
-
-        // Re-anchor the DEV cold-start timeline: this clear is the new t0, so
-        // the repopulation that follows gets its own clean set of deltas.
-        if (action === 'feedCache' || action === 'factsTopics' || action === 'wipeAll') {
-            coldstartTimeline.arm(`cache-clear:${action}`);
-        }
-
-        try {
-            switch (action) {
-                case 'feedCache': {
-                    await deleteTables(FEED_CACHE_TABLES);
-                    await useForYouStore.getState().clearData();
-                    // The persisted feed order points at now-gone suggestions —
-                    // clear it so the feed rebuilds cleanly from the re-sync.
-                    useFeedOrderStore.getState().reset();
-                    // Deleting article_suggestions leaves the persisted scoring
-                    // run pointing at now-gone rows; without clearing it, its
-                    // stuck batches keep getPipelineStatus()==='running' forever
-                    // and every feed-sync bails (the clear-feed deadlock). Abort
-                    // AFTER clearData so its markProcessingRunFinished stamp is
-                    // not reset to null (clearData nulls it), and BEFORE the sync
-                    // so the pipeline reads idle.
-                    await scoringPipeline.abortRun('cache-clear');
-                    if (!useSchedulerStore.getState().isRunning('feed-sync')) {
-                        void AppScheduler.trigger('feed-sync');
-                    }
-                    break;
-                }
-                case 'factsTopics': {
+    const clear = useCallback(
+        async (kind: 'factsTopics' | 'viewingHistory') => {
+            const ok = await showDialog({
+                title: kind === 'factsTopics' ? t('manageData.clearProfileTitle') : t('manageData.clearHistoryTitle'),
+                body: kind === 'factsTopics' ? t('manageData.factsModalDescription') : t('manageData.viewingHistoryModalDescription'),
+                confirmLabel: t('common.delete'),
+                cancelLabel: t('common.cancel'),
+                destructive: true,
+            });
+            if (!ok) return;
+            setIsProcessing(true);
+            try {
+                if (kind === 'factsTopics') {
+                    // Re-anchor the DEV cold-start timeline: this clear is the new t0.
+                    coldstartTimeline.arm('cache-clear:factsTopics');
                     await deleteTables(FACTS_AND_TOPICS_TABLES);
                     await useForYouStore.getState().clearData();
-                    // The persisted feed order points at now-gone suggestions —
-                    // clear it so the feed rebuilds cleanly from the re-sync.
+                    // The persisted feed order points at now-gone suggestions.
                     useFeedOrderStore.getState().reset();
-                    // Same clear-feed deadlock guard as the feedCache case — the
-                    // orphaned run must be force-cleared before re-syncing.
+                    // The orphaned scoring run must be force-cleared before the
+                    // re-sync (the clear-feed deadlock), AFTER clearData so its
+                    // finished stamp is not nulled.
                     await scoringPipeline.abortRun('cache-clear');
                     if (!useSchedulerStore.getState().isRunning('feed-sync')) {
                         void AppScheduler.trigger('feed-sync');
                     }
-                    break;
-                }
-                case 'viewingHistory': {
+                } else {
                     await clearAllVisits();
-                    break;
                 }
-                case 'wipeAll': {
-                    await clearAllStores();
-                    break;
-                }
+                toastManager.showSuccess(t('manageData.deletedTitle'), t('manageData.deletedDescription'));
+            } catch {
+                toastManager.showError(t('manageData.errorTitle'), t('manageData.errorDescription'));
+            } finally {
+                setIsProcessing(false);
             }
-
-            showSuccessToast();
-        } catch {
-            showErrorToast();
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [confirmAction, deleteTables, showSuccessToast, showErrorToast]);
+        },
+        [deleteTables, t],
+    );
 
     const handleDeleteAccount = useCallback(async () => {
         let serverDeleteSucceeded = false;
@@ -251,296 +186,89 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRec
         }
     }, [closeModal, setModalProcessing, toast, t]);
 
-    type OptionEntry = {
-        id: Exclude<DataAction, null>;
-        title: string;
-        description: string;
-        modalDescription: string;
-        icon: keyof typeof MaterialIcons.glyphMap;
-        location: DataLocation;
-    };
-
-    type AccountEntry = {
-        id: 'deleteAccount';
-        title: string;
-        description: string;
-        icon: keyof typeof MaterialIcons.glyphMap;
-        location: DataLocation;
-        onPress: () => void;
-    };
-
-    const options: (OptionEntry | AccountEntry)[] = [
-        {
-            id: 'feedCache',
-            title: t('manageData.feedCacheTitle'),
-            description: t('manageData.feedCacheDescription'),
-            modalDescription: t('manageData.feedCacheModalDescription'),
-            icon: 'article',
-            location: 'device',
-        },
-        {
-            id: 'factsTopics',
-            title: t('manageData.factsTitle'),
-            description: t('manageData.factsDescription'),
-            modalDescription: t('manageData.factsModalDescription'),
-            icon: 'psychology',
-            location: 'device',
-        },
-        {
-            id: 'viewingHistory',
-            title: t('manageData.viewingHistoryTitle'),
-            description: t('manageData.viewingHistoryDescription'),
-            modalDescription: t('manageData.viewingHistoryModalDescription'),
-            icon: 'visibility-off',
-            location: 'device',
-        },
-        {
-            id: 'wipeAll',
-            title: t('manageData.wipeAllTitle'),
-            description: t('manageData.wipeAllDescription'),
-            modalDescription: t('manageData.wipeAllModalDescription'),
-            icon: 'delete-sweep',
-            location: 'device',
-        },
-        {
-            id: 'deleteAccount',
+    // Delete account asks twice before it does anything (App Store 5.1.1(v)).
+    const confirmDeleteAccount = useCallback(async () => {
+        const first = await showDialog({
             title: t('preferences.deleteAccount'),
-            description: t('preferences.deleteAccountConfirmGrace'),
-            icon: 'delete-forever',
-            location: 'server',
-            onPress: () => openModal('deleteAccount'),
-        },
-    ];
-
-    const renderLocationChip = (location: DataLocation) => {
-        const isServer = location === 'server';
-        return (
-            <Box
-                className={`ml-2 px-2 py-0.5 rounded-full border ${
-                    isServer
-                        ? 'bg-amber-950 border-amber-700'
-                        : 'bg-green-950 border-green-800'
-                }`}
-            >
-                <Text
-                    size="2xs"
-                    className={isServer ? 'text-amber-300' : 'text-green-300'}
-                >
-                    {t(isServer ? 'manageData.locationServer' : 'manageData.locationDevice')}
-                </Text>
-            </Box>
-        );
-    };
-
-    const renderOption = (
-        option: OptionEntry | AccountEntry,
-    ) => {
-        const isAccount = option.id === 'deleteAccount';
-        return (
-            <Pressable
-                key={option.id}
-                className="flex-row items-center py-4 px-4 border border-gray-700 rounded-lg"
-                onPress={
-                    isAccount
-                        ? (option as AccountEntry).onPress
-                        : () => setConfirmAction((option as OptionEntry).id)
-                }
-                disabled={isProcessing || isDeletingAccount}
-            >
-                <Box className="flex-row items-center flex-1">
-                    <MaterialIcons name={option.icon} size={22} color="#ef4444" />
-                    <VStack className="ml-3 flex-1">
-                        <Box className="flex-row items-center">
-                            <Text className="text-base text-red-400">
-                                {option.title}
-                            </Text>
-                            {renderLocationChip(option.location)}
-                        </Box>
-                        <Text size="xs" className="text-gray-500">{option.description}</Text>
-                    </VStack>
-                </Box>
-            </Pressable>
-        );
-    };
-
-    const activeOption = confirmAction
-        ? options.find((o) => o.id === confirmAction)
-        : null;
+            body: t('preferences.deleteAccountConfirmGrace'),
+            warning: t('preferences.deleteAccountWarningGrace'),
+            confirmLabel: t('preferences.continue'),
+            cancelLabel: t('common.cancel'),
+            destructive: true,
+        });
+        if (!first) return;
+        const second = await showDialog({
+            title: t('preferences.finalConfirmation'),
+            body: t('preferences.finalConfirmationBodyGrace'),
+            warning: t('preferences.absolutelySure'),
+            confirmLabel: t('preferences.yesDeleteAccount'),
+            cancelLabel: t('common.cancel'),
+            destructive: true,
+        });
+        if (second) await handleDeleteAccount();
+    }, [handleDeleteAccount, t]);
 
     return (
-        <GluestackUIProvider mode="dark">
-            <Box className="flex-1">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
+        <View style={{ flex: 1 }}>
+            <AbstractGradientBackdrop />
+            <View style={{ paddingTop: insets.top }}>
+                <DrillDownHeader title={t('you.settings.yourData')} onBack={onBack} />
+            </View>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: insets.bottom + 32 }}>
+                <Help>{t('manageData.intro')}</Help>
+                <View style={{ height: 12 }} />
+                <Group>
+                    <Row
+                        testID="manage-data-backup"
+                        leadingIcon="cloud-upload"
+                        title={t('backup.title')}
+                        subtitle={t('manageData.backupHint')}
+                        value={backupOn ? t('you.settings.on') : t('you.settings.off')}
+                        onPress={() => router.push('/logged-in/app_container/you/backup' as Href)}
+                    />
+                </Group>
 
-                <Box style={{ paddingTop: insets.top }}>
-                    <DrillDownHeader title={t('manageData.title')} onBack={onBack} />
-                </Box>
+                <GroupLabel>{t('manageData.lookAndTake')}</GroupLabel>
+                <WhatMeraKeepsCard />
+                <Group>
+                    <Row
+                        testID="manage-data-export"
+                        leadingIcon="ios-share"
+                        title={t('manageData.exportHistoryTitle')}
+                        subtitle={t('manageData.exportHint')}
+                        trailing={exporting ? <Spinner size="small" /> : null}
+                        onPress={() => void exportHistory()}
+                    />
+                </Group>
 
-                <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-                    <Text size="sm" className="text-gray-400 mb-5">
-                        {t('manageData.description')}
-                    </Text>
-
-                    {/* Backup is the one CONSTRUCTIVE thing on this screen, so it
-                        sits above the destructive list and is deliberately not
-                        drawn in the red every row below uses. It holds its own
-                        state: lifting that into this component would also mean
-                        every module it reaches had to be mocked in
-                        ManageDataScreen.test.tsx, breaking a passing suite for
-                        reasons that have nothing to do with backup. */}
-                    <BackupSection autoOpenRecover={autoOpenRecover} />
-
-                    {/* What the server keeps for this account, collapsed to one
-                        row. Below backup on purpose: `?restore=1` opens the
-                        recovery step inline in the section above, and that
-                        must stay at the top. Neutral, like observability. */}
-                    <WhatMeraKeepsCard />
-
-                    {/* Observability lives here since 2026-08-19 (user call):
-                        a diagnostics surface belongs with the data tools, not
-                        among everyday preferences. Neutral row, deliberately
-                        outside the red destructive list below. */}
-                    <Pressable
-                        testID="manage-data-observability"
-                        onPress={() => router.push('/logged-in/preferences/observability' as any)}
-                        accessibilityRole="button"
-                        className="flex-row items-center justify-between py-3 px-4 mb-4 rounded-lg border border-gray-700 bg-transparent"
-                    >
-                        <Box className="flex-row items-center" style={{ gap: 12 }}>
-                            <MaterialIcons name="monitor-heart" size={22} color="#9ca3af" />
-                            <Text className="text-base text-white">
-                                {t('observability.title')}
-                            </Text>
-                        </Box>
-                        <MaterialIcons name="chevron-right" size={20} color="#999999" />
-                    </Pressable>
-
-                    <VStack space="md">
-                        {options.map(renderOption)}
-                    </VStack>
-                </ScrollView>
-
-                {/* Generic confirmation modal — covers every option except delete-account, which has its own two-step flow. */}
-                {confirmAction && activeOption && activeOption.id !== 'deleteAccount' && (
-                    <Modal isOpen={!!confirmAction} onClose={() => setConfirmAction(null)} size="sm">
-                        <ModalBackdrop />
-                        <ModalContent>
-                            <ModalHeader className="border-gray-700 pb-4">
-                                <Text className="text-xl font-semibold text-red-400">
-                                    {activeOption.title}
-                                </Text>
-                            </ModalHeader>
-                            <ModalBody className="py-6">
-                                <Text className="text-gray-300 text-base leading-relaxed">
-                                    {(activeOption as OptionEntry).modalDescription}
-                                </Text>
-                            </ModalBody>
-                            <ModalFooter className="border-t border-gray-700 pt-4">
-                                <VStack className="w-full" space="md">
-                                    <Button
-                                        action="negative"
-                                        onPress={handleConfirm}
-                                        disabled={isProcessing}
-                                        className="w-full"
-                                    >
-                                        <ButtonText>
-                                            {isProcessing ? t('manageData.deleting') : t('common.delete')}
-                                        </ButtonText>
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        action="secondary"
-                                        onPress={() => setConfirmAction(null)}
-                                        className="w-full"
-                                    >
-                                        <ButtonText>{t('common.cancel')}</ButtonText>
-                                    </Button>
-                                </VStack>
-                            </ModalFooter>
-                        </ModalContent>
-                    </Modal>
-                )}
-
-                {/* Delete Account First Confirmation Modal */}
-                <Modal isOpen={showDeleteInitial} onClose={() => closeModal('deleteAccount')} size="sm">
-                    <ModalBackdrop />
-                    <ModalContent>
-                        <ModalHeader className="border-gray-700 pb-4">
-                            <Text className="text-xl font-semibold text-red-400">{t('preferences.deleteAccount')}</Text>
-                        </ModalHeader>
-                        <ModalBody className="py-6">
-                            <Text className="text-gray-300 text-base leading-relaxed mb-4">
-                                {t('preferences.deleteAccountConfirmGrace')}
-                            </Text>
-                            <Text className="text-red-400 text-sm font-medium">
-                                {t('preferences.deleteAccountWarningGrace')}
-                            </Text>
-                        </ModalBody>
-                        <ModalFooter className="border-t border-gray-700 pt-4">
-                            <VStack className="w-full" space="md">
-                                <Button
-                                    action="negative"
-                                    onPress={() => setDeleteAccountStep('confirm')}
-                                    className="w-full"
-                                >
-                                    <ButtonText>{t('preferences.continue')}</ButtonText>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    action="secondary"
-                                    onPress={() => closeModal('deleteAccount')}
-                                    className="w-full"
-                                >
-                                    <ButtonText>{t('common.cancel')}</ButtonText>
-                                </Button>
-                            </VStack>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
-
-                {/* Delete Account Final Confirmation Modal */}
-                <Modal isOpen={showDeleteConfirm} onClose={() => closeModal('deleteAccount')} size="sm">
-                    <ModalBackdrop />
-                    <ModalContent>
-                        <ModalHeader className="border-gray-700 pb-4">
-                            <Text className="text-xl font-semibold text-red-400">{t('preferences.finalConfirmation')}</Text>
-                        </ModalHeader>
-                        <ModalBody className="py-6">
-                            <Text className="text-gray-300 text-base leading-relaxed mb-4">
-                                {t('preferences.finalConfirmationBodyGrace')}
-                            </Text>
-                            <Text className="text-red-400 text-base font-semibold">
-                                {t('preferences.absolutelySure')}
-                            </Text>
-                        </ModalBody>
-                        <ModalFooter className="border-t border-gray-700 pt-4">
-                            <VStack className="w-full" space="md">
-                                <Button
-                                    action="negative"
-                                    onPress={handleDeleteAccount}
-                                    disabled={isDeletingAccount}
-                                    className="w-full"
-                                >
-                                    <ButtonText>
-                                        {isDeletingAccount ? t('preferences.deleting') : t('preferences.yesDeleteAccount')}
-                                    </ButtonText>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    action="secondary"
-                                    onPress={() => closeModal('deleteAccount')}
-                                    className="w-full"
-                                >
-                                    <ButtonText>{t('common.cancel')}</ButtonText>
-                                </Button>
-                            </VStack>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
-            </Box>
-        </GluestackUIProvider>
+                <GroupLabel>{t('manageData.deleteGroup')}</GroupLabel>
+                <Group>
+                    <Row
+                        testID="manage-data-clear-profile"
+                        leadingIcon="psychology"
+                        title={t('manageData.clearProfileTitle')}
+                        subtitle={t('manageData.clearProfileHint')}
+                        trailing={isProcessing ? <Spinner size="small" /> : null}
+                        onPress={() => void clear('factsTopics')}
+                    />
+                    <Row
+                        testID="manage-data-clear-history"
+                        leadingIcon="history"
+                        title={t('manageData.clearHistoryTitle')}
+                        subtitle={t('manageData.clearHistoryHint')}
+                        onPress={() => void clear('viewingHistory')}
+                    />
+                    <Row
+                        testID="manage-data-delete-account"
+                        leadingIcon="delete-forever"
+                        title={t('preferences.deleteAccount')}
+                        titleColor={colors.negative}
+                        subtitle={t('manageData.deleteAccountHint')}
+                        onPress={() => void confirmDeleteAccount()}
+                    />
+                </Group>
+            </ScrollView>
+        </View>
     );
 };
 

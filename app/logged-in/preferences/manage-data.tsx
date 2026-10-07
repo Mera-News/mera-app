@@ -1,24 +1,14 @@
-import ErrorBoundary from '@/components/custom/ErrorBoundary';
-import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
-import ManageDataScreen from '@/components/custom/config-mera/ManageDataScreen';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+// Your data and Backup live in the You stack now. Kept so old links still
+// work: `manage-data?restore=1` (emails, the site) opens Backup on its
+// restore steps; anything else opens Your data.
+import { TabScreenRedirect } from '@/components/custom/nav/LegacyRedirect';
+import { useLocalSearchParams } from 'expo-router';
 
-export default function ManageDataPage() {
-    const router = useRouter();
-    const { restore } = useLocalSearchParams<{ restore?: string }>();
-
-    // Latched on FIRST read, because the param stays on the route: without this
-    // a user who cancels out of the recovery flow and navigates back here would
-    // be dropped straight into it again. Settings > "Restore from a backup" is
-    // what sets it.
-    const [autoOpenRecover] = useState(restore === '1');
-
-    return (
-        // S7: a crash here stays on this page instead of reaching the root
-        // boundary, which swaps the whole app for a fallback.
-        <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-            <ManageDataScreen onBack={() => router.back()} autoOpenRecover={autoOpenRecover} />
-        </ErrorBoundary>
-    );
+export default function ManageDataRedirect() {
+  const { restore } = useLocalSearchParams<{ restore?: string }>();
+  return restore === '1' ? (
+    <TabScreenRedirect tab="you" screen="backup" params={{ restore: '1' }} />
+  ) : (
+    <TabScreenRedirect tab="you" screen="data" />
+  );
 }

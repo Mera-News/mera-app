@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 
 export default function YourDataRoute() {
   return (
-    <TabStackScreen surface="settings" backdrop testID="your-data-screen">
+    <TabStackScreen surface="settings:data" testID="your-data-screen">
       <ManageDataScreen onBack={() => router.back()} />
     </TabStackScreen>
   );

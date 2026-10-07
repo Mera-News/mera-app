@@ -10,7 +10,7 @@ import { ScrollView } from 'react-native';
 export default function AppLockRoute() {
   const { t } = useTranslation();
   return (
-    <TabStackScreen surface="settings" backdrop testID="app-lock-screen">
+    <TabStackScreen surface="settings:app-lock" backdrop testID="app-lock-screen">
       <DrillDownHeader title={t('you.settings.appLock')} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 48 }}>
         <SecuritySettingsSection />
