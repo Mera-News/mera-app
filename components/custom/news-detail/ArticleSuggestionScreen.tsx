@@ -1,21 +1,18 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
-import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import { requestArticleFactCheck } from '@/lib/fact-check/request-article-fact-check';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
-import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
-import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
+import RelatedCoverage from '@/components/custom/news-detail/RelatedCoverage';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
-import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { AlertCircleIcon, Icon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
@@ -55,13 +52,11 @@ import {
 import { useRelatedPagination } from './use-related-pagination';
 import { mergeRelatedEntries } from './merge-related-entries';
 import { useIsConnected } from '@/lib/stores/network-store';
-import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { InteractionManager } from 'react-native';
@@ -71,6 +66,9 @@ interface ArticleSuggestionScreenProps {
     articleSuggestionId: string;
     onBack: () => void;
     backIcon?: 'back' | 'home';
+    /** The article this page was opened from (a Related row): its own Related
+     *  list leads with it. */
+    fromArticleId?: string;
 }
 
 const SCROLL_THRESHOLD = 300;
@@ -165,6 +163,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     articleSuggestionId,
     onBack,
     backIcon = 'back',
+    fromArticleId,
 }) => {
     const { t } = useTranslation();
     const toast = useToast();
@@ -266,11 +265,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
 
-    // How the reader wants the related list ordered. ONE persisted setting
-    // shared with the article-detail route — see related-sort-store.
-    const relatedSortMode = useRelatedSortStore((s) => s.mode);
-    const setRelatedSortMode = useRelatedSortStore((s) => s.setMode);
-
     // The related list is now TWO blocks, not one merged ordering.
     //
     // Local siblings lead, ordered here over just that set. They are the
@@ -300,9 +294,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             entries,
             suggestion.country_code ?? null,
             userCtx,
-            relatedSortMode,
+            'relevance',
         );
-    }, [localSiblings, suggestion, userCtx, relatedSortMode]);
+    }, [localSiblings, suggestion, userCtx]);
 
     // Excluded SERVER-side, before ordering. Filtering the dedupe client-side
     // after the server counted these toward `first: 10` would short-change every
@@ -322,7 +316,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         retry: retryRelated,
     } = useRelatedPagination({
         articleId: suggestion?.articleId ?? null,
-        sortMode: relatedSortMode,
         ctx: userCtx,
         excludeIds,
         isConnected,
@@ -727,49 +720,15 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             Renders unvirtualized (`.map`), which is why the page
                             size is the render budget as much as the network
                             one. */}
-                        {(relatedEntries.length > 0 || isLoadingRelated || relatedError) && (
-                            <VStack space="md">
-                                <HStack className="items-center justify-between" space="sm">
-                                    <Heading size="lg" className="text-gray-300 flex-1">
-                                        {t('articleDetail.relatedArticles')}
-                                    </Heading>
-                                    <RelatedSortDropdown
-                                        value={relatedSortMode}
-                                        onChange={setRelatedSortMode}
-                                        testIDPrefix="related-sort"
-                                    />
-                                </HStack>
-                                {relatedEntries.map((entry) => (
-                                    <ArticleStandaloneCompactCard
-                                        key={entry.id}
-                                        article={entry.article}
-                                        // `push`, not `replace`: chaining into a
-                                        // related story adds a stack entry so
-                                        // back returns here, not to the feed.
-                                        onPress={() => router.push(
-                                            entry.suggestionId
-                                                ? {
-                                                    pathname: '/logged-in/suggestion-detail',
-                                                    params: { articleSuggestionId: entry.suggestionId },
-                                                }
-                                                : {
-                                                    pathname: '/logged-in/article-detail',
-                                                    params: { articleId: entry.id },
-                                                },
-                                        )}
-                                        subjectExtras={{ surface: 'detail' }}
-                                    />
-                                ))}
-                                {(isLoadingRelated || isLoadingMoreRelated) && (
-                                    <Box className="items-center justify-center py-4">
-                                        <Spinner size="small" />
-                                    </Box>
-                                )}
-                                {relatedError && !isLoadingRelated && !isLoadingMoreRelated && (
-                                    <RelatedErrorRow onRetry={retryRelated} />
-                                )}
-                            </VStack>
-                        )}
+                        <RelatedCoverage
+                            rows={relatedEntries}
+                            selfArticleId={suggestion.articleId}
+                            fromArticleId={fromArticleId}
+                            loading={isLoadingRelated}
+                            loadingMore={isLoadingMoreRelated}
+                            error={!!relatedError}
+                            onRetry={retryRelated}
+                        />
                     </>
                 }
             />

@@ -1,47 +1,23 @@
-import TranslationNotice, { TRANSLATABLE_COLOR } from '@/components/custom/news-detail/TranslationNotice';
-import { Box } from '@/components/ui/box';
+import AboutTranslationModal from '@/components/custom/news-detail/AboutTranslationModal';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
+import { useColors } from '@/lib/theme/tokens';
 import {
     buildGoogleTranslateUrl,
     getArticleTranslationSupport,
 } from '@/lib/translation-service';
 import { appendReferrer, openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 
-/** A route that will NOT get the reader something they can read as-is. */
-const ROUTE_COLOR = '#FFFFFF';
-/** A route that WILL: the same green as the translation notice's
- *  "can translate" hint (green-300), about 12:1 against the dark page. Used
- *  as an OUTLINE and label only, never a fill (owner: equal-looking buttons,
- *  the colour is the only signal). */
-const READABLE_COLOR = TRANSLATABLE_COLOR;
-// Owner: "reduce these button sizes by 20%". Each value is the old one x0.8
-// (old: the gluestack `md` Button, h-10 / px-5 = 35 / 17.5pt at NativeWind's
-// rem 14, a text-base 16/24 label, an 18pt icon, `ml-2` = 7pt, a 12pt gap).
-/** Space between the two buttons, across and down. */
-const ROUTE_GAP = 10;
-/** The visible pill. */
-const PILL_HEIGHT = 28;
-const PILL_PADDING_X = 14;
-const LABEL_FONT = 13;
-const LABEL_LINE = 20;
-const ICON_SIZE = 14;
-const ICON_GAP = 6;
-/** The touch target stays 44pt: a transparent frame, pulled back to the
- *  pill's height by negative margins so the layout sees 28pt (never hitSlop). */
-const TOUCH_TARGET = 44;
-const FRAME_BLEED = (TOUCH_TARGET - PILL_HEIGHT) / 2;
-/** What the old gluestack `md` Button root drew around the pill: its `px-5`
- *  resolved to paddingLeft/paddingRight 17.5pt, which beat the inline
- *  `paddingHorizontal: 0` (a side wins over the shorthand in React Native).
- *  It decides when the pair wraps: the English pair STACKS at 402pt. */
-const FRAME_PAD_X = 17.5;
+/** Both read routes: a 48pt pill (FinalRead #7). */
+const BUTTON_HEIGHT = 48;
+const ICON_SIZE = 18;
+const HELP_TARGET = 44;
+const HELP_RING = 26;
 const HIDDEN = {
     accessible: false,
     accessibilityElementsHidden: true,
@@ -82,30 +58,17 @@ interface ReadTranslateActionsProps {
 }
 
 /**
- * Shared read/translate call-to-action block for the article detail screens
- * (`ArticleSuggestionScreen`, `ArticleDetailScreen`).
+ * Shared read/translate block for the article detail screens
+ * (`ArticleSuggestionScreen`, `ArticleDetailScreen`), FinalRead #7:
  *
- * N8: both read routes are the same size and shape, OUTLINES only; the only
- * signal is colour. GREEN = this route gets the reader something readable:
+ *   [ Read on <publication> ]            filled orange, always
+ *   [ Read on Google Translate ] (?)     glass, only for another language
  *
- * | article language          | Read on {publication} | Read on Google Translate |
- * |---------------------------|-----------------------|--------------------------|
- * | same as the reader's      | green outline         | not shown                |
- * | other, device CAN translate | green outline       | green outline            |
- * | other, device CANNOT      | white outline         | green outline            |
- *
- * `TranslationNotice` (names the source language) sits above the buttons and a
- * one-line "some sites block Google Translate" note below them.
- *
- * Side by side when both labels fit, stacked when they do not: the row WRAPS,
- * each button sized by its own label and growing to fill its line, so the
- * choice is made by the real text width in each language and text size, not
- * by a character count. At 375pt the English pair already stacks; wider
- * screens and short publisher names get the row.
- *
- * Colours are stated as a class AND as the matching inline style: gluestack's
- * `buttonTextStyle` tva sets a label colour of its own per variant, and which
- * of className/style wins differs between the Pressable root and the Text.
+ * The ? opens About translation: whether this phone can translate the article
+ * while you read, what Google Translate means, and that some sites block it.
+ * Render order is VoiceOver order. The publisher's primary label and icon are
+ * a hidden visual under a childless labelled button (an icon glyph inside a
+ * button surfaces on iOS as its own StaticText).
  */
 const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     articleUrl,
@@ -114,7 +77,9 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     onOpenUrl,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const appLanguage = useAppLanguage();
+    const [aboutOpen, setAboutOpen] = useState(false);
 
     const support = getArticleTranslationSupport(sourceLanguage, appLanguage);
     // Wrap the article URL with Mera's UTM referrer params BEFORE handing it to
@@ -128,76 +93,45 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     const publication = publicationShown ? titleCasePublication(publicationShown) : null;
     const sameLanguage = support.status === 'same-language';
 
-    // Green marks a route that gets the reader something readable: the
-    // publisher page when the article is in their language or the device can
-    // translate it, and Google Translate always. White is the publisher page
-    // the device cannot translate. Outline + label only, same size either way.
-    const publisherReadable = sameLanguage || support.status === 'translatable';
-    const routeButton = (
+    const route = (
         testID: string,
         icon: keyof typeof MaterialIcons.glyphMap,
         label: string,
         onPress: () => void,
-        readable: boolean,
+        primary: boolean,
     ) => {
-        const color = readable ? READABLE_COLOR : ROUTE_COLOR;
+        const ink = primary ? colors.onAccent : colors.ink;
         return (
-            // A transparent 44pt FRAME pulled back to the pill's height; the
-            // outline is the pill inside it (see TOUCH_TARGET). The pill is a
-            // hidden visual and a CHILDLESS labelled button is laid over it: a
-            // glyph inside a button surfaced on iOS as its own StaticText
-            // (captured, open-in-new after "Read on ..."), hidden props or not.
-            <View
-                testID={`${testID}-frame`}
-                style={{
-                    flexGrow: 1,
-                    flexShrink: 1,
-                    height: TOUCH_TARGET,
-                    marginVertical: -FRAME_BLEED,
-                    paddingLeft: FRAME_PAD_X,
-                    paddingRight: FRAME_PAD_X,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-            >
+            <View testID={`${testID}-frame`} style={{ flex: 1, height: BUTTON_HEIGHT }}>
                 <View
                     testID={`${testID}-pill`}
                     pointerEvents="none"
                     {...HIDDEN}
-                    // Class AND style, see the header: gluestack's tva sets its
-                    // own colours, and which one wins differs between root and label.
-                    className={`rounded-full ${readable ? 'border-green-300' : 'border-white'}`}
                     style={{
-                        flexGrow: 1,
-                        flexShrink: 1,
-                        height: PILL_HEIGHT,
-                        paddingHorizontal: PILL_PADDING_X,
-                        borderWidth: 1,
-                        borderColor: color,
-                        borderRadius: PILL_HEIGHT / 2,
-                        backgroundColor: 'transparent',
+                        flex: 1,
+                        borderRadius: BUTTON_HEIGHT / 2,
+                        paddingHorizontal: 20,
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        gap: 8,
+                        backgroundColor: primary ? colors.accent : colors.trackFill,
+                        borderWidth: primary ? 0 : 1,
+                        borderColor: colors.trackBorder,
                     }}
                 >
-                    <MaterialIcons name={icon} size={ICON_SIZE} color={color} {...HIDDEN} />
-                    {/* What ButtonText resolved to: semibold body face, chrome
-                        text scaling; size and colour come from the style. */}
+                    <MaterialIcons name={icon} size={ICON_SIZE} color={ink} {...HIDDEN} />
                     <Text
                         numberOfLines={1}
                         ellipsizeMode="tail"
                         scaleTier="chrome"
-                        className={`font-semibold font-body ${readable ? 'text-green-300' : 'text-white'}`}
-                        style={{ flexShrink: 1, color, fontSize: LABEL_FONT, lineHeight: LABEL_LINE, marginLeft: ICON_GAP }}
+                        style={{ flexShrink: 1, color: ink, fontSize: 16, lineHeight: 22, fontWeight: primary ? '700' : '600' }}
                     >
                         {label}
                     </Text>
                 </View>
                 <Pressable
                     testID={testID}
-                    // Exactly the visible text.
                     accessibilityRole="button"
                     accessibilityLabel={label}
                     onPress={onPress}
@@ -208,53 +142,61 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     };
 
     return (
-        // `md` and not `xs`: the action row above, the notice, the buttons and
-        // the note read as one evenly spaced stack. The parent VStack on both
-        // detail screens uses the SAME token for exactly that reason.
-        <VStack space="md">
-            {/* Hidden for a same-language article; it names the source
-                language, so the buttons don't. */}
-            <TranslationNotice
-                sourceLanguage={sourceLanguage}
-                support={support}
-                showGuideLink={support.status === 'translatable'}
-            />
-            <Box
-                testID="detail-read-routes"
-                style={{ flexDirection: 'row', flexWrap: 'wrap', gap: ROUTE_GAP }}
-            >
-                {/* Owner: Google Translate ABOVE the original (first when the two
-                    share a line). Render order is also VoiceOver order. */}
-                {sameLanguage
-                    ? null
-                    : routeButton(
-                          'detail-read-google-translate',
-                          'g-translate',
-                          t('articleDetail.readOnGoogleTranslate'),
-                          () => openInAppBrowser(googleTranslateUrl),
-                          true,
-                      )}
-                {routeButton(
+        <View style={{ gap: 10 }} testID="detail-read-routes">
+            <View style={{ flexDirection: 'row' }}>
+                {route(
                     'detail-read-publisher',
                     'open-in-new',
                     publication ? t('articleDetail.readOn', { publication }) : t('articleDetail.readArticle'),
                     () => onOpenUrl(articleUrl),
-                    publisherReadable,
+                    true,
                 )}
-            </Box>
+            </View>
             {sameLanguage ? null : (
-                // Not a failure we can detect: a publisher that refuses to be
-                // framed gives Google Translate a blank page, so the reader is
-                // told the way out up front.
-                <Text
-                    testID="detail-translate-blocked-note"
-                    size="xs"
-                    className="text-typography-400 text-center"
-                >
-                    {t('articleDetail.translateBlockedNote')}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {route(
+                        'detail-read-google-translate',
+                        'g-translate',
+                        t('articleDetail.readOnGoogleTranslate'),
+                        () => openInAppBrowser(googleTranslateUrl),
+                        false,
+                    )}
+                    <View style={{ width: HELP_TARGET, height: HELP_TARGET }}>
+                        <View
+                            pointerEvents="none"
+                            {...HIDDEN}
+                            style={{
+                                margin: (HELP_TARGET - HELP_RING) / 2,
+                                width: HELP_RING,
+                                height: HELP_RING,
+                                borderRadius: HELP_RING / 2,
+                                borderWidth: 1.5,
+                                borderColor: colors.helpRing,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '700' }}>?</Text>
+                        </View>
+                        <Pressable
+                            testID="detail-about-translation"
+                            accessibilityRole="button"
+                            accessibilityLabel={t('articleDetail.aboutTranslation')}
+                            onPress={() => setAboutOpen(true)}
+                            style={StyleSheet.absoluteFill}
+                        />
+                    </View>
+                </View>
             )}
-        </VStack>
+            <AboutTranslationModal
+                open={aboutOpen}
+                onClose={() => setAboutOpen(false)}
+                support={support}
+                sourceLanguage={sourceLanguage}
+                appLanguage={appLanguage}
+                publication={publication}
+            />
+        </View>
     );
 };
 

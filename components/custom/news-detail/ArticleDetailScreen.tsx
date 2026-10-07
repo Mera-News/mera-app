@@ -2,13 +2,11 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
-import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import { requestArticleFactCheck } from '@/lib/fact-check/request-article-fact-check';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
-import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
-import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
+import RelatedCoverage from '@/components/custom/news-detail/RelatedCoverage';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
@@ -45,14 +43,12 @@ import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useRelatedPagination } from './use-related-pagination';
-import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,6 +64,9 @@ interface ArticleDetailScreenProps {
     /** Stable story id from nav params, when the caller already knows it. When
      *  absent, the track flow resolves it lazily via getNewsClusterForArticle. */
     stableClusterId?: string;
+    /** The article this page was opened from (a Related row): its own Related
+     *  list leads with it. */
+    fromArticleId?: string;
 }
 
 const SCROLL_THRESHOLD = 300;
@@ -101,9 +100,8 @@ const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
  * not by partitioning the server-paged related list. Two consequences worth
  * knowing before changing it:
  *
- *  - It never removes anything from "Related articles" below. The two lists are
- *    independent, so an entry can legitimately appear in both, and
- *    `RelatedSortDropdown` has no effect in here by design.
+ *  - It never removes anything from "Related coverage" below. The two lists
+ *    are independent, so an entry can legitimately appear in both.
  *  - It inherits no ordering from `orderRelatedArticles`, so it states its own:
  *    newest publication first, chosen in `findSubscribedSiblings`.
  *
@@ -167,6 +165,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     onBack,
     backIcon = 'back',
     stableClusterId,
+    fromArticleId,
 }) => {
     const { t } = useTranslation();
     const toast = useToast();
@@ -232,11 +231,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [retryNonce, setRetryNonce] = useState(0);
     const hadOfflineFailureRef = useRef(false);
 
-    // How the reader wants the related list ordered. ONE persisted setting
-    // shared with the suggestion-detail route — see related-sort-store.
-    const relatedSortMode = useRelatedSortStore((s) => s.mode);
-    const setRelatedSortMode = useRelatedSortStore((s) => s.setMode);
-
     // Related coverage, ordered and paged BY THE SERVER, 10 rows at a time.
     // The ordering cannot live here any more: country blocks are ranked by their
     // size across the whole candidate set, so a page's order depends on rows
@@ -252,10 +246,15 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     } = useRelatedPagination({
         articleId: article?._id ?? null,
         stableClusterId,
-        sortMode: relatedSortMode,
         ctx: userCtx,
         isConnected,
     });
+    // Server order is final, no client re-sort; the hook dedupes by `_id` on
+    // every page, so the id alone is a unique key.
+    const relatedRows = useMemo(
+        () => related.map((entry) => ({ id: entry._id, article: summaryToNewsArticle(entry) })),
+        [related],
+    );
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -517,21 +516,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         }
     };
 
-    // `push`, not `replace`: chaining from one article into a related one must
-    // add a stack entry so back returns to the article the user came from
-    // rather than jumping straight out to the feed.
-    //
-    // `stableClusterId` is deliberately NOT forwarded. The next hop is a member
-    // of the same cluster, so passing it would look right — but it's also the
-    // read-dimming key (`isOpenedId` matches article id OR cluster id, and
-    // `markOpened` puts the opened article's cluster id in the set), so the
-    // chained article would render as already-read the moment it opens.
-    const handleRelatedPress = useCallback((relatedArticleId: string) => {
-        router.push({
-            pathname: '/logged-in/article-detail',
-            params: { articleId: relatedArticleId },
-        });
-    }, []);
 
     if (isLoading) {
         return (
@@ -816,48 +800,15 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
                         <SubscribedCoverageBlock articleId={article._id ?? articleId} />
 
-                        {(isLoadingRelated || related.length > 0 || relatedError) && (
-                            <VStack space="md">
-                                <HStack className="items-center justify-between" space="sm">
-                                    <Heading size="lg" className="text-gray-300 flex-1">
-                                        {t('articleDetail.relatedArticles')}
-                                    </Heading>
-                                    <RelatedSortDropdown
-                                        value={relatedSortMode}
-                                        onChange={setRelatedSortMode}
-                                        testIDPrefix="related-sort"
-                                    />
-                                </HStack>
-                                {isLoadingRelated ? (
-                                    <Box className="items-center justify-center py-4">
-                                        <Spinner size="small" />
-                                    </Box>
-                                ) : (
-                                    <>
-                                        {/* Server order is final — no client
-                                            re-sort. See useRelatedPagination. */}
-                                        {/* The hook dedupes by `_id` on every
-                                            page, so the id alone is a unique key. */}
-                                        {related.map((entry) => (
-                                            <ArticleStandaloneCompactCard
-                                                key={entry._id}
-                                                article={summaryToNewsArticle(entry)}
-                                                onPress={() => handleRelatedPress(entry._id)}
-                                                subjectExtras={{ surface: 'detail' }}
-                                            />
-                                        ))}
-                                        {isLoadingMoreRelated ? (
-                                            <Box className="items-center justify-center py-4">
-                                                <Spinner size="small" />
-                                            </Box>
-                                        ) : null}
-                                        {relatedError && !isLoadingMoreRelated ? (
-                                            <RelatedErrorRow onRetry={retryRelated} />
-                                        ) : null}
-                                    </>
-                                )}
-                            </VStack>
-                        )}
+                        <RelatedCoverage
+                            rows={relatedRows}
+                            selfArticleId={article._id ?? articleId}
+                            fromArticleId={fromArticleId}
+                            loading={isLoadingRelated}
+                            loadingMore={isLoadingMoreRelated}
+                            error={!!relatedError}
+                            onRetry={retryRelated}
+                        />
                     </>
                 }
             />

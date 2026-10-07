@@ -9,6 +9,7 @@ export default function ArticleDetail() {
     const params = useLocalSearchParams<{
         articleId?: string;
         stableClusterId?: string;
+        from?: string;
     }>();
 
     const articleId = params.articleId;
@@ -43,6 +44,7 @@ export default function ArticleDetail() {
                     stableClusterId={stableClusterId}
                     onBack={handleBack}
                     backIcon={canGoBack ? 'back' : 'home'}
+                    fromArticleId={typeof params.from === 'string' ? params.from : undefined}
                 />
             </ErrorBoundary>
         </GluestackUIProvider>

@@ -1,4 +1,4 @@
-import { mergeRelatedEntries } from '../merge-related-entries';
+import { leadWithOrigin, mergeRelatedEntries } from '../merge-related-entries';
 
 type E = { id: string; from: 'local' | 'server' };
 const l = (id: string): E => ({ id, from: 'local' });
@@ -23,5 +23,18 @@ describe('mergeRelatedEntries', () => {
     it('produces ids that are unique React keys', () => {
         const out = mergeRelatedEntries([l('6ab2'), l('b')], [s('6ab2'), s('6ab2'), s('c')], null);
         expect(new Set(out.map((e) => e.id)).size).toBe(out.length);
+    });
+});
+
+describe('leadWithOrigin', () => {
+    it('moves the article you came from to the top, the rest in order', () => {
+        expect(leadWithOrigin([s('a'), s('b'), s('o'), s('c')], 'o').map((e) => e.id)).toEqual(['o', 'a', 'b', 'c']);
+    });
+
+    it('leaves the list alone when the origin is absent, already first, or unknown', () => {
+        const list = [s('a'), s('b')];
+        expect(leadWithOrigin(list, 'x')).toBe(list);
+        expect(leadWithOrigin(list, 'a')).toBe(list);
+        expect(leadWithOrigin(list, null)).toBe(list);
     });
 });

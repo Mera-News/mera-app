@@ -8,6 +8,7 @@ import React from 'react';
 export default function SuggestionDetail() {
     const params = useLocalSearchParams<{
         articleSuggestionId?: string;
+        from?: string;
     }>();
 
     const articleSuggestionId = params.articleSuggestionId;
@@ -39,6 +40,7 @@ export default function SuggestionDetail() {
                     articleSuggestionId={articleSuggestionId}
                     onBack={handleBack}
                     backIcon={canGoBack ? 'back' : 'home'}
+                    fromArticleId={typeof params.from === 'string' ? params.from : undefined}
                 />
             </ErrorBoundary>
         </GluestackUIProvider>

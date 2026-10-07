@@ -25,3 +25,14 @@ export function mergeRelatedEntries<T extends { id: string }>(
     }
     return out;
 }
+
+/**
+ * A page opened from a related row lists the article it came from FIRST
+ * (FinalRead #11: "You came from here"; tapping it goes back, never to a
+ * copy). Absent from the list: the order is left alone.
+ */
+export function leadWithOrigin<T extends { id: string }>(entries: readonly T[], originId: string | null | undefined): T[] {
+    const i = originId ? entries.findIndex((e) => e.id === originId) : -1;
+    if (i <= 0) return entries as T[];
+    return [entries[i], ...entries.slice(0, i), ...entries.slice(i + 1)];
+}
