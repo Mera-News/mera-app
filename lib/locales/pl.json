@@ -2760,8 +2760,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Twoje subskrypcje",
-    "empty": "Powiedz Merze, za które tytuły płacisz. Nadamy im większą wagę w Twoim strumieniu i pokażemy ich materiały przy tematach, które opisują.",
-    "add": "Dodaj subskrypcję",
+    "empty": "Powiedz Merze, za których wydawców płacisz. Będą mieli większą wagę w Twoim Kanale.",
+    "add": "Dodaj wydawcę, za którego płacisz",
     "close": "Zamknij",
     "remove": "Usuń",
     "removeA11y": "Usuń {{publisher}}",
@@ -3410,8 +3410,8 @@
       "muted": "Wyciszono",
       "mute": "Wycisz",
       "clear": "Wyczyść",
-      "footnote": "Stuknij jedno, aby je zmienić. „Mniej z” w menu artykułu też trafia tutaj.",
-      "empty": "Nie zmieniłeś jeszcze żadnych źródeł. Wyszukaj wydawcę, aby zobaczyć więcej, mniej lub wcale jego treści. „Mniej z” w menu artykułu też trafia tutaj."
+      "footnote": "Stuknij jedno, aby je zmienić. „Mniej z” w menu ••• artykułu też trafia tutaj.",
+      "empty": "Nie zmieniłeś jeszcze żadnych źródeł. Wyszukaj wydawcę, aby zobaczyć więcej, mniej lub wcale z niego. „Mniej z” w menu ••• artykułu też trafia tutaj."
     },
     "settings": {
       "groupApp": "Aplikacja",

@@ -2723,8 +2723,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",
-    "empty": "Indiquez à Mera les publications auxquelles vous êtes abonné. Nous leur donnerons plus de poids dans votre fil et afficherons leur couverture des sujets qu'elles traitent.",
-    "add": "Ajouter un abonnement",
+    "empty": "Indiquez à Mera les publications que vous payez. Elles auront plus de poids dans votre fil.",
+    "add": "Ajouter une publication que vous payez",
     "close": "Fermer",
     "remove": "Retirer",
     "removeA11y": "Retirer {{publisher}}",
@@ -3345,8 +3345,8 @@
       "muted": "Mis en sourdine",
       "mute": "Masquer",
       "clear": "Effacer",
-      "footnote": "Touchez-en une pour la modifier. « Moins de » dans le menu d'un article arrive ici aussi.",
-      "empty": "Vous n'avez ajusté aucune source. Cherchez une publication pour en voir plus, moins ou plus du tout. « Moins de » dans le menu d'un article arrive ici aussi."
+      "footnote": "Touchez-en une pour la modifier. « Moins de » dans le menu ••• d'un article aboutit aussi ici.",
+      "empty": "Vous n'avez modifié aucune source. Recherchez une publication pour en voir plus, moins, ou aucune. « Moins de » dans le menu ••• d'un article aboutit aussi ici."
     },
     "settings": {
       "groupApp": "Appli",

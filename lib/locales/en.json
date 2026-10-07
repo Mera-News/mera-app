@@ -2716,8 +2716,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Your subscriptions",
-    "empty": "Tell Mera which publications you pay for. We'll give them more weight in your feed and show their coverage on stories they report.",
-    "add": "Add a subscription",
+    "empty": "Tell Mera which publications you pay for. They get more weight in your feed.",
+    "add": "Add a publication you pay for",
     "close": "Close",
     "remove": "Remove",
     "removeA11y": "Remove {{publisher}}",
@@ -3338,8 +3338,8 @@
       "muted": "Muted",
       "mute": "Mute",
       "clear": "Clear",
-      "footnote": "Tap one to change it. \"Fewer from\" in an article's menu lands here too.",
-      "empty": "You haven't adjusted any sources. Search for a publication to see more, fewer or none of it. \"Fewer from\" in an article's menu lands here too."
+      "footnote": "Tap one to change it. \"Fewer from\" in an article's ••• menu lands here too.",
+      "empty": "You haven't adjusted any sources. Search for a publication to see more, fewer or none of it. \"Fewer from\" in an article's ••• menu lands here too."
     },
     "settings": {
       "groupApp": "App",

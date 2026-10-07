@@ -2716,8 +2716,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Langganan Anda",
-    "empty": "Beri tahu Mera publikasi mana yang Anda bayar. Kami akan memberi bobot lebih pada publikasi itu di feed Anda dan menampilkan liputan mereka untuk berita yang mereka tulis.",
-    "add": "Tambah langganan",
+    "empty": "Beri tahu Mera publikasi mana yang Anda bayar. Publikasi itu akan mendapat bobot lebih besar di feed Anda.",
+    "add": "Tambahkan publikasi yang Anda bayar",
     "close": "Tutup",
     "remove": "Hapus",
     "removeA11y": "Hapus {{publisher}}",
@@ -3335,8 +3335,8 @@
       "muted": "Senyap",
       "mute": "Bisukan",
       "clear": "Hapus",
-      "footnote": "Ketuk satu untuk mengubahnya. \"Lebih sedikit dari\" di menu artikel juga berakhir di sini.",
-      "empty": "Anda belum mengatur sumber apa pun. Cari publikasi untuk melihat lebih banyak, lebih sedikit, atau tidak sama sekali. \"Lebih sedikit dari\" di menu artikel juga berakhir di sini."
+      "footnote": "Ketuk satu untuk mengubahnya. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini.",
+      "empty": "Anda belum mengatur sumber apa pun. Cari publikasi untuk melihat lebih banyak, lebih sedikit, atau tidak sama sekali. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini."
     },
     "settings": {
       "groupApp": "Aplikasi",

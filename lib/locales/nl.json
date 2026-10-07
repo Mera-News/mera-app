@@ -2716,8 +2716,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Je abonnementen",
-    "empty": "Vertel Mera voor welke titels je betaalt. We geven ze meer gewicht in je feed en tonen hun berichtgeving bij nieuws waarover ze schrijven.",
-    "add": "Abonnement toevoegen",
+    "empty": "Vertel Mera voor welke publicaties je betaalt. Die krijgen meer gewicht in je feed.",
+    "add": "Voeg een publicatie toe waarvoor je betaalt",
     "close": "Sluiten",
     "remove": "Verwijderen",
     "removeA11y": "{{publisher}} verwijderen",
@@ -3338,8 +3338,8 @@
       "muted": "Gedempt",
       "mute": "Dempen",
       "clear": "Wissen",
-      "footnote": "Tik op een bron om hem te wijzigen. “Minder van” in het menu van een artikel komt hier ook terecht.",
-      "empty": "Je hebt nog geen bronnen aangepast. Zoek een uitgever om meer, minder of niets van hem te zien. “Minder van” in het menu van een artikel komt hier ook terecht."
+      "footnote": "Tik op een publicatie om die aan te passen. „Minder van” in het •••-menu van een artikel komt hier ook terecht.",
+      "empty": "Je hebt nog geen bronnen aangepast. Zoek een publicatie om meer, minder of niets van haar te zien. „Minder van” in het •••-menu van een artikel komt hier ook terecht."
     },
     "settings": {
       "groupApp": "App",

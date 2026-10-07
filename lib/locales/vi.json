@@ -2717,8 +2717,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",
-    "empty": "Hãy cho Mera biết bạn trả phí cho những báo nào. Chúng tôi sẽ dành nhiều trọng số hơn cho họ trong bảng tin của bạn và hiển thị bài của họ ở những tin mà họ đưa.",
-    "add": "Thêm gói đăng ký",
+    "empty": "Hãy cho Mera biết bạn trả phí cho những ấn phẩm nào. Các ấn phẩm này sẽ được ưu tiên hơn trong bảng tin của bạn.",
+    "add": "Thêm một ấn phẩm bạn trả phí",
     "close": "Đóng",
     "remove": "Xóa",
     "removeA11y": "Xóa {{publisher}}",
@@ -3336,8 +3336,8 @@
       "muted": "Tắt tiếng",
       "mute": "Tắt tiếng",
       "clear": "Xóa",
-      "footnote": "Chạm vào một mục để thay đổi. Mục \"Ít hơn từ\" trong menu của bài báo cũng nằm ở đây.",
-      "empty": "Bạn chưa điều chỉnh nguồn nào. Hãy tìm một ấn phẩm để xem nhiều hơn, ít hơn hoặc không xem nữa. Mục \"Ít hơn từ\" trong menu của bài báo cũng nằm ở đây."
+      "footnote": "Chạm vào một mục để thay đổi. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây.",
+      "empty": "Bạn chưa điều chỉnh nguồn nào. Hãy tìm một ấn phẩm để xem nhiều hơn, ít hơn hoặc không xem nữa. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây."
     },
     "settings": {
       "groupApp": "Ứng dụng",

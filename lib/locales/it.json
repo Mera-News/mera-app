@@ -2716,8 +2716,8 @@
   },
   "subscriptions": {
     "sectionTitle": "I tuoi abbonamenti",
-    "empty": "Indica a Mera le testate per cui paghi. Daremo loro più peso nel tuo feed e mostreremo la loro copertura sulle notizie di cui si occupano.",
-    "add": "Aggiungi un abbonamento",
+    "empty": "Indica a Mera le testate per cui paghi. Avranno più peso nel tuo feed.",
+    "add": "Aggiungi una testata per cui paghi",
     "close": "Chiudi",
     "remove": "Rimuovi",
     "removeA11y": "Rimuovi {{publisher}}",
@@ -3338,8 +3338,8 @@
       "muted": "Muto",
       "mute": "Silenzia",
       "clear": "Cancella",
-      "footnote": "Tocca una per cambiarla. Anche \"Meno da\" nel menu di un articolo finisce qui.",
-      "empty": "Non hai modificato nessuna fonte. Cerca una testata per vederne di più, di meno o per niente. Anche \"Meno da\" nel menu di un articolo finisce qui."
+      "footnote": "Tocca una testata per cambiarla. Anche «Meno da» nel menu ••• di un articolo arriva qui.",
+      "empty": "Non hai ancora modificato nessuna fonte. Cerca una testata per vederne di più, di meno o non vederne affatto. «Meno da» nel menu ••• di un articolo arriva qui anche questo."
     },
     "settings": {
       "groupApp": "App",

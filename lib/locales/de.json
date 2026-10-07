@@ -2716,8 +2716,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Deine Abos",
-    "empty": "Sag Mera, für welche Publikationen du bezahlst. Wir gewichten sie in deinem Feed stärker und zeigen ihre Berichterstattung zu Themen, über die sie schreiben.",
-    "add": "Abo hinzufügen",
+    "empty": "Sagen Sie Mera, für welche Publikationen Sie bezahlen. Diese bekommen in Ihrem Feed mehr Gewicht.",
+    "add": "Eine Publikation hinzufügen, für die Sie bezahlen",
     "close": "Schließen",
     "remove": "Entfernen",
     "removeA11y": "{{publisher}} entfernen",
@@ -3338,8 +3338,8 @@
       "muted": "Stummgeschaltet",
       "mute": "Stummschalten",
       "clear": "Löschen",
-      "footnote": "Tippe auf eine, um sie zu ändern. „Weniger von“ im Menü eines Artikels landet auch hier.",
-      "empty": "Du hast noch keine Quellen angepasst. Suche nach einem Medium, um mehr, weniger oder nichts davon zu sehen. „Weniger von“ im Menü eines Artikels landet auch hier."
+      "footnote": "Tippen Sie auf eine, um sie zu ändern. „Weniger von“ im Menü ••• eines Artikels landet auch hier.",
+      "empty": "Sie haben noch keine Quellen angepasst. Suchen Sie nach einem Medium, um mehr, weniger oder nichts davon zu sehen. „Weniger von“ im Menü ••• eines Artikels landet auch hier."
     },
     "settings": {
       "groupApp": "App",

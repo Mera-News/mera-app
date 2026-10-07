@@ -2716,8 +2716,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Tus suscripciones",
-    "empty": "Dile a Mera a qué publicaciones estás suscrito. Les daremos más peso en tu feed y mostraremos su cobertura de las noticias que publican.",
-    "add": "Añadir una suscripción",
+    "empty": "Dile a Mera qué publicaciones pagas. Tendrán más peso en tu feed.",
+    "add": "Añadir una publicación que pagas",
     "close": "Cerrar",
     "remove": "Quitar",
     "removeA11y": "Quitar {{publisher}}",
@@ -3338,8 +3338,8 @@
       "muted": "Silenciado",
       "mute": "Silenciar",
       "clear": "Borrar",
-      "footnote": "Toca una para cambiarla. \"Menos de\" en el menú de un artículo también llega aquí.",
-      "empty": "No has ajustado ninguna fuente. Busca una publicación para ver más, menos o nada de ella. \"Menos de\" en el menú de un artículo también llega aquí."
+      "footnote": "Toca una para cambiarla. «Menos de» en el menú ••• de un artículo también llega aquí.",
+      "empty": "No has ajustado ninguna fuente. Busca una publicación para ver más, menos o ninguna de ella. «Menos de» en el menú ••• de un artículo también llega aquí."
     },
     "settings": {
       "groupApp": "App",

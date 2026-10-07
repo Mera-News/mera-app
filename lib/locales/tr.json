@@ -2718,8 +2718,8 @@
   },
   "subscriptions": {
     "sectionTitle": "Abonelikleriniz",
-    "empty": "Hangi yayınlara abone olduğunuzu Mera'ya söyleyin. Akışınızda onlara daha fazla ağırlık verir ve haberini yaptıkları konularda kendi haberlerini gösteririz.",
-    "add": "Abonelik ekle",
+    "empty": "Ödediğiniz yayınları Mera'ya söyleyin. Bu yayınlar akışınızda daha fazla ağırlık alır.",
+    "add": "Ödediğiniz bir yayın ekle",
     "close": "Kapat",
     "remove": "Kaldır",
     "removeA11y": "{{publisher}} yayınını kaldır",
@@ -3340,8 +3340,8 @@
       "muted": "Sessize alındı",
       "mute": "Sustur",
       "clear": "Temizle",
-      "footnote": "Değiştirmek için birine dokunun. Bir makalenin menüsündeki \"daha az\" seçeneği de buraya düşer.",
-      "empty": "Henüz hiçbir kaynağı ayarlamadınız. Bir yayından daha fazla, daha az veya hiç görmek için yayın arayın. Bir makalenin menüsündeki \"daha az\" seçeneği de buraya düşer."
+      "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer.",
+      "empty": "Henüz hiçbir kaynağı ayarlamadınız. Bir yayının daha fazlasını, daha azını veya hiçbirini görmek için yayın arayın. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer."
     },
     "settings": {
       "groupApp": "Uygulama",
