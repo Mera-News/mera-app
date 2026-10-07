@@ -8,6 +8,9 @@ import { Text } from '@/components/ui/text';
 import { settleDialog, useDialogQueue } from '@/lib/dialog';
 import { useColors } from '@/lib/theme/tokens';
 
+/** 44pt, as the Modals board; the size tiers render short in this app. */
+const BUTTON = { height: 44 } as const;
+
 export interface ConfirmDialogProps {
     open: boolean;
     title: string;
@@ -70,6 +73,7 @@ export function ConfirmDialog({
                         action={destructive ? 'negative' : 'primary'}
                         onPress={onConfirm}
                         isDisabled={busy}
+                        style={BUTTON}
                         testID={testID ? `${testID}-confirm` : undefined}
                     >
                         {busy ? <ButtonSpinner /> : null}
@@ -81,6 +85,7 @@ export function ConfirmDialog({
                             action="secondary"
                             onPress={onCancel}
                             isDisabled={busy}
+                            style={BUTTON}
                             testID={testID ? `${testID}-cancel` : undefined}
                         >
                             <ButtonText>{cancelLabel ?? t('common.cancel')}</ButtonText>

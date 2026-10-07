@@ -25,31 +25,37 @@ interface Glow {
     cy: string;
     rx: number;
     ry: number;
+    /** Opaque hex; the alpha rides in `opacity`. RNSVG does not reliably apply
+     *  an rgba() alpha inside stopColor, which drew the glow about 4x too
+     *  strong (design review). */
     color: string;
+    opacity: number;
 }
 
-const GLOWS: Record<ThemeMode, { wash: string; glows: Glow[] }> = {
+const GLOWS: Record<ThemeMode, { wash: string; washOpacity: number; glows: Glow[] }> = {
     dark: {
-        wash: 'rgba(255,255,255,0.02)',
+        wash: '#FFFFFF',
+        washOpacity: 0.02,
         glows: [
-            { id: 'mm-orange', cx: '10%', cy: '8%', rx: 220, ry: 240, color: 'rgba(231,138,83,0.20)' },
-            { id: 'mm-violet', cx: '96%', cy: '72%', rx: 240, ry: 240, color: 'rgba(150,120,220,0.14)' },
-            { id: 'mm-blue', cx: '40%', cy: '112%', rx: 260, ry: 200, color: 'rgba(13,166,242,0.12)' },
+            { id: 'mm-orange', cx: '10%', cy: '8%', rx: 220, ry: 240, color: '#E78A53', opacity: 0.2 },
+            { id: 'mm-violet', cx: '96%', cy: '72%', rx: 240, ry: 240, color: '#9678DC', opacity: 0.14 },
+            { id: 'mm-blue', cx: '40%', cy: '112%', rx: 260, ry: 200, color: '#0DA6F2', opacity: 0.12 },
         ],
     },
     light: {
-        wash: 'rgba(18,17,19,0.07)',
+        wash: '#121113',
+        washOpacity: 0.07,
         glows: [
-            { id: 'mm-orange', cx: '10%', cy: '8%', rx: 220, ry: 240, color: 'rgba(231,138,83,0.34)' },
-            { id: 'mm-violet', cx: '96%', cy: '72%', rx: 240, ry: 240, color: 'rgba(150,120,220,0.26)' },
-            { id: 'mm-blue', cx: '40%', cy: '112%', rx: 260, ry: 200, color: 'rgba(13,166,242,0.22)' },
+            { id: 'mm-orange', cx: '10%', cy: '8%', rx: 220, ry: 240, color: '#E78A53', opacity: 0.34 },
+            { id: 'mm-violet', cx: '96%', cy: '72%', rx: 240, ry: 240, color: '#9678DC', opacity: 0.26 },
+            { id: 'mm-blue', cx: '40%', cy: '112%', rx: 260, ry: 200, color: '#0DA6F2', opacity: 0.22 },
         ],
     },
 };
 
 export default function ModalMaterial({ style }: { style?: StyleProp<ViewStyle> }) {
     const colors = useColors();
-    const { wash, glows } = GLOWS[useThemeMode()];
+    const { wash, washOpacity, glows } = GLOWS[useThemeMode()];
     return (
         <View
             pointerEvents="none"
@@ -69,7 +75,7 @@ export default function ModalMaterial({ style }: { style?: StyleProp<ViewStyle> 
                             ry={g.ry}
                             gradientUnits="userSpaceOnUse"
                         >
-                            <Stop offset="0" stopColor={g.color} />
+                            <Stop offset="0" stopColor={g.color} stopOpacity={g.opacity} />
                             <Stop offset="1" stopColor={g.color} stopOpacity={0} />
                         </RadialGradient>
                     ))}
@@ -77,7 +83,7 @@ export default function ModalMaterial({ style }: { style?: StyleProp<ViewStyle> 
                 {glows.map((g) => (
                     <Rect key={g.id} width="100%" height="100%" fill={`url(#${g.id})`} />
                 ))}
-                <Rect width="100%" height="100%" fill={wash} />
+                <Rect width="100%" height="100%" fill={wash} fillOpacity={washOpacity} />
             </Svg>
         </View>
     );

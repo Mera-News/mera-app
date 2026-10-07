@@ -48,7 +48,7 @@ export const LanguageRow = memo(function LanguageRow({
     const colors = useColors();
     const sub = isPhoneLanguage ? phoneLanguageLabel : english !== endonym ? english : null;
     return (
-        <View style={[styles.row, picked && { backgroundColor: colors.surfaceRaised }]}>
+        <View style={[styles.row, picked && { backgroundColor: PICKED_FILL }]}>
             <Pressable
                 onPress={onPress}
                 accessibilityRole="radio"
@@ -57,12 +57,12 @@ export const LanguageRow = memo(function LanguageRow({
                 testID={testID}
                 style={styles.main}
             >
-                <View style={styles.names}>
-                    <Text style={[styles.endonym, { color: colors.ink }]}>{endonym}</Text>
-                    {sub ? <Text style={[styles.sub, { color: colors.ink3 }]}>{sub}</Text> : null}
-                </View>
-                {picked ? <MaterialIcons name="check" size={20} color={colors.accentMark} /> : null}
+                <Text style={[styles.endonym, { color: colors.ink }]}>{endonym}</Text>
+                {sub ? <Text style={[styles.sub, { color: colors.ink3 }]}>{sub}</Text> : null}
             </Pressable>
+            {/* The trailing mark sits 14pt from the end. The download button is
+                a SIBLING of the row's press area (painted over it), never
+                nested in it. */}
             {accessory === 'download' ? (
                 <Pressable
                     onPress={onDownload}
@@ -71,31 +71,46 @@ export const LanguageRow = memo(function LanguageRow({
                     testID={testID ? `${testID}-download` : undefined}
                     style={styles.accessory}
                 >
-                    <View style={[styles.downloadDisc, { borderColor: colors.line }]}>
+                    <View style={styles.downloadDisc}>
                         <MaterialIcons name="file-download" size={18} color={colors.ink2} />
                     </View>
                 </Pressable>
             ) : accessory === 'busy' ? (
-                <View style={styles.accessory} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                <View style={styles.accessory} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                     <MeraLogo size={20} animated />
+                </View>
+            ) : picked ? (
+                <View style={styles.accessory} pointerEvents="none">
+                    <MaterialIcons name="check" size={20} color={colors.accentMark} />
                 </View>
             ) : null}
         </View>
     );
 });
 
+/** The picked row (FinalJourney #4): the accent at 14%. */
+const PICKED_FILL = 'rgba(231,138,83,0.14)';
+
 const styles = StyleSheet.create({
-    row: { flexDirection: 'row', alignItems: 'center', minHeight: 52, borderRadius: 12 },
-    main: { flex: 1, flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 16, gap: 12 },
-    names: { flex: 1, gap: 2 },
-    endonym: { fontSize: 16, fontWeight: '600' },
-    sub: { fontSize: 13 },
-    accessory: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginEnd: 6 },
+    row: { minHeight: 52, borderRadius: 12, justifyContent: 'center' },
+    main: { minHeight: 52, paddingHorizontal: 60, paddingVertical: 8, alignItems: 'center', justifyContent: 'center', gap: 2 },
+    endonym: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
+    sub: { fontSize: 13, textAlign: 'center' },
+    // 44pt hit area whose centre sits 14 + 17pt from the end edge.
+    accessory: {
+        position: 'absolute',
+        end: 14 - (44 - 34) / 2,
+        width: 44,
+        height: 44,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     downloadDisc: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.18)',
         alignItems: 'center',
         justifyContent: 'center',
     },

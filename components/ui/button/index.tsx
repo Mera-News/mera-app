@@ -63,14 +63,16 @@ const buttonStyle = tva({
   base: 'group/button rounded-full bg-primary-500 flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40 gap-2',
   variants: {
     action: {
+      // Modals board `.pri`: solid #E78A53, no overlay (the old primary-500 read washed out).
       primary:
-        'bg-primary-500 data-[hover=true]:bg-primary-600 data-[active=true]:bg-primary-700 border-primary-300 data-[hover=true]:border-primary-400 data-[active=true]:border-primary-500 data-[focus-visible=true]:web:ring-indicator-info',
+        'bg-[#E78A53] data-[hover=true]:bg-[#E78A53] data-[active=true]:bg-[#D97A43] border-[#E78A53] data-[focus-visible=true]:web:ring-indicator-info',
       secondary:
         'bg-secondary-500 border-secondary-300 data-[hover=true]:bg-secondary-600 data-[hover=true]:border-secondary-400 data-[active=true]:bg-secondary-700 data-[active=true]:border-secondary-700 data-[focus-visible=true]:web:ring-indicator-info',
       positive:
         'bg-success-500 border-success-300 data-[hover=true]:bg-success-600 data-[hover=true]:border-success-400 data-[active=true]:bg-success-700 data-[active=true]:border-success-500 data-[focus-visible=true]:web:ring-indicator-info',
+      // Modals board `.neg`: #E5484D with a white label.
       negative:
-        'bg-error-500 border-error-300 data-[hover=true]:bg-error-600 data-[hover=true]:border-error-400 data-[active=true]:bg-error-700 data-[active=true]:border-error-500 data-[focus-visible=true]:web:ring-indicator-info',
+        'bg-[#E5484D] border-[#E5484D] data-[hover=true]:bg-[#E5484D] data-[active=true]:bg-[#D13D42] data-[focus-visible=true]:web:ring-indicator-info',
       default:
         'bg-transparent data-[hover=true]:bg-background-50 data-[active=true]:bg-transparent',
     },
@@ -121,10 +123,11 @@ const buttonStyle = tva({
         'bg-transparent data-[hover=true]:bg-background-50 data-[active=true]:bg-transparent',
     },
     {
+      // Modals board `.sec`: a 1px 30% white edge.
       action: 'secondary',
       variant: 'outline',
       class:
-        'bg-transparent data-[hover=true]:bg-background-50 data-[active=true]:bg-transparent',
+        'bg-transparent border-white/30 data-[hover=true]:bg-background-50 data-[active=true]:bg-transparent',
     },
     {
       action: 'positive',
@@ -173,7 +176,7 @@ const buttonTextStyle = tva({
       variant: 'solid',
       action: 'primary',
       class:
-        'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
+        'text-[#121113] font-bold text-[15px] data-[hover=true]:text-[#121113] data-[active=true]:text-[#121113]',
     },
     {
       variant: 'solid',
@@ -191,7 +194,7 @@ const buttonTextStyle = tva({
       variant: 'solid',
       action: 'negative',
       class:
-        'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
+        'text-white font-bold text-[15px] data-[hover=true]:text-white data-[active=true]:text-white',
     },
     {
       variant: 'outline',
@@ -203,7 +206,7 @@ const buttonTextStyle = tva({
       variant: 'outline',
       action: 'secondary',
       class:
-        'text-typography-500 data-[hover=true]:text-primary-600 data-[active=true]:text-typography-700',
+        'text-white font-semibold text-[15px] data-[hover=true]:text-white data-[active=true]:text-white',
     },
     {
       variant: 'outline',
@@ -253,7 +256,7 @@ const buttonIconStyle = tva({
       variant: 'solid',
       action: 'primary',
       class:
-        'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
+        'text-[#121113] data-[hover=true]:text-[#121113] data-[active=true]:text-[#121113]',
     },
     {
       variant: 'solid',
@@ -271,7 +274,7 @@ const buttonIconStyle = tva({
       variant: 'solid',
       action: 'negative',
       class:
-        'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
+        'text-white data-[hover=true]:text-white data-[active=true]:text-white',
     },
   ],
 });

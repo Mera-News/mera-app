@@ -33,6 +33,9 @@ export interface BottomSheetProps {
     scrimLabel?: string;
 }
 
+const SHEET_INSET = 8;
+const SHEET_RADIUS = 28;
+
 /** Drag this far, or flick this fast, to dismiss. */
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 800;
@@ -162,17 +165,22 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
                     testID={testID ? `${testID}-scrim` : undefined}
                 />
                 <GestureDetector gesture={pan}>
+                    {/* Two layers: the outer one casts the shadow (a view that
+                        clips drops its shadow), the inner one clips the material
+                        to the 28pt corners. */}
                     <Animated.View
                         testID={testID}
                         accessibilityViewIsModal
                         onLayout={() => setLaidOut(true)}
-                        style={[styles.sheet, { borderColor: colors.line }, sheetStyle]}
+                        style={[styles.sheet, { marginBottom: SHEET_INSET }, sheetStyle]}
                     >
-                        <ModalMaterial />
-                        <View style={styles.handleRow}>
-                            <View style={[styles.handle, { backgroundColor: colors.ink3 }]} />
+                        <View style={[styles.sheetClip, { borderColor: colors.line }]}>
+                            <ModalMaterial />
+                            <View style={styles.handleRow}>
+                                <View style={[styles.handle, { backgroundColor: colors.ink3 }]} />
+                            </View>
+                            <View style={{ paddingBottom: Math.max(insets.bottom - SHEET_INSET, 0) + 12 }}>{children}</View>
                         </View>
-                        <View style={{ paddingBottom: insets.bottom + 12 }}>{children}</View>
                     </Animated.View>
                 </GestureDetector>
             </GestureHandlerRootView>
@@ -182,11 +190,20 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
 
 const styles = StyleSheet.create({
     fill: { flex: 1, justifyContent: 'flex-end' },
+    // Modals #1 / FinalWorld #7: 8pt from the sides and the bottom, 28pt
+    // corners all round, a 1pt edge and a soft drop shadow.
     sheet: {
-        width: '100%',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        borderTopWidth: StyleSheet.hairlineWidth,
+        marginHorizontal: SHEET_INSET,
+        borderRadius: SHEET_RADIUS,
+        shadowColor: '#000',
+        shadowOpacity: 0.6,
+        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 18 },
+        elevation: 16,
+    },
+    sheetClip: {
+        borderRadius: SHEET_RADIUS,
+        borderWidth: 1,
         overflow: 'hidden',
     },
     handleRow: { alignItems: 'center', paddingTop: 8, paddingBottom: 4 },

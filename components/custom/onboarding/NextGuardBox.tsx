@@ -65,6 +65,7 @@ export function NextGuardBox({
                         action="secondary"
                         onPress={onSecondary}
                         className="flex-1"
+                        style={BUTTON}
                         testID={testID ? `${testID}-secondary` : undefined}
                     >
                         <ButtonText>{secondaryLabel}</ButtonText>
@@ -73,6 +74,7 @@ export function NextGuardBox({
                         action="primary"
                         onPress={onPrimary}
                         className="flex-1"
+                        style={BUTTON}
                         testID={testID ? `${testID}-primary` : undefined}
                     >
                         <ButtonText>{primaryLabel}</ButtonText>
@@ -82,6 +84,9 @@ export function NextGuardBox({
         </Animated.View>
     );
 }
+
+/** 44pt, as the board; the size tiers render short in this app. */
+const BUTTON = { height: 44 } as const;
 
 const styles = StyleSheet.create({
     box: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },

@@ -24,8 +24,11 @@ export interface SegmentedControlProps<T extends string> {
     testID?: string;
 }
 
-const HEIGHT = 32;
-const PAD = 2;
+/** FinalSettings #6: 36pt options inside a 3pt padded, 1pt bordered track,
+ *  44pt overall. */
+const OPTION_HEIGHT = 36;
+const PAD = 3;
+const BORDER = 1;
 
 /**
  * Two or three choices on one track; the chosen side is filled orange and the
@@ -94,8 +97,7 @@ export function SegmentedControl<T extends string>({
                         accessibilityState={{ checked: on }}
                         accessibilityLabel={o.label}
                         testID={testID ? `${testID}-${o.value}` : undefined}
-                        hitSlop={{ top: 6, bottom: 6 }}
-                        onLayout={(e) => {
+                                    onLayout={(e) => {
                             const { x: ox, width: w } = e.nativeEvent.layout;
                             setFrames((f) => ({ ...f, [o.value]: { x: ox, width: w } }));
                         }}
@@ -120,26 +122,26 @@ export function SegmentedControl<T extends string>({
 const styles = StyleSheet.create({
     track: {
         flexDirection: 'row',
-        height: HEIGHT,
-        borderRadius: HEIGHT / 2,
-        borderWidth: StyleSheet.hairlineWidth,
+        borderRadius: (OPTION_HEIGHT + PAD * 2 + BORDER * 2) / 2,
+        borderWidth: BORDER,
         padding: PAD,
         alignSelf: 'flex-start',
     },
     fill: {
         position: 'absolute',
         top: PAD,
-        bottom: PAD,
-        left: 0,
-        borderRadius: (HEIGHT - PAD * 2) / 2,
+        height: OPTION_HEIGHT,
+        // An absolute child starts inside the border; onLayout's x includes it.
+        left: -BORDER,
+        borderRadius: OPTION_HEIGHT / 2,
     },
     option: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 4,
-        paddingHorizontal: 12,
-        minWidth: 64,
+        gap: 6,
+        height: OPTION_HEIGHT,
+        paddingHorizontal: 14,
     },
-    label: { fontSize: 13, fontWeight: '600' },
+    label: { fontSize: 14, fontWeight: '600' },
 });

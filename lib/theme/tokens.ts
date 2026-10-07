@@ -49,6 +49,10 @@ export interface ThemeColors {
     /** A floating panel: toasts, notices and menus (FinalInbox). */
     panel: string;
     panelBorder: string;
+    /** Night hours on the notification strip (FinalSettings). */
+    night: string;
+    /** A frosted pill over content (FinalSettings tab pills). */
+    glass: string;
 }
 
 export const COLORS: Record<ThemeMode, ThemeColors> = {
@@ -74,6 +78,8 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         modalBase: 'rgb(11,10,12)',
         panel: 'rgb(40,38,42)',
         panelBorder: 'rgba(255,255,255,0.14)',
+        night: 'rgba(120,140,200,0.35)',
+        glass: 'rgba(40,39,42,0.82)',
     },
     // From the FinalLight* boards. Contrast gates: 4.5:1 text, 3:1 marks.
     light: {
@@ -98,6 +104,9 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         modalBase: '#FFFFFF',
         panel: '#FFFFFF',
         panelBorder: 'rgba(18,17,19,0.14)',
+        // FinalLightSettings carries the dark values for these two; P12 tunes.
+        night: 'rgba(120,140,200,0.35)',
+        glass: 'rgba(40,39,42,0.82)',
     },
 };
 
