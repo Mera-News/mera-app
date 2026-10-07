@@ -1,89 +1,82 @@
-import { Box } from '@/components/ui/box';
-import { SearchCheck } from 'lucide-react-native';
-import FactCheckBadge from '@/components/custom/fact-checks/FactCheckBadge';
+// One stored fact check (FinalLibrary #5, #6): the article it came from and
+// when it was checked, a New pill until the Library's Fact checks page has
+// been seen since, the title, the claim in its own box, then ONE ROW PER
+// ORGANISATION with that organisation's own rating in its own words. A check
+// still running says so in the same place.
+//
+// EXTERNALS ARE THE AUTHORITY (invariant 13): every rating here is an
+// established fact-checking organisation's own, verbatim when we do not know
+// the token. Mera's own verdict is never shown, in any state.
+//
+// The delete control is a SIBLING of the tappable body, absolutely positioned
+// over its top-right corner, never a child: nested, a delete could also
+// navigate. Its 44pt frame is the frame itself, never hitSlop (QA measures a
+// hitSlop target as its glyph box). The header row keeps clear of it.
+
+import { useTapGuard } from '@/components/custom/cards/use-tap-guard';
 import { GLASS_EDGE, GlassPlate } from '@/components/custom/GlassSurface';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import type { CheckedByStatus, FactCheckedByEntry } from '@/lib/fact-check/fact-check-types';
-import { describeCheckedBy } from '@/lib/fact-check/fact-check-state';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
+import { describeCheckedBy, describeOrganisationVerdict } from '@/lib/fact-check/fact-check-state';
+import type { FactCheckedByEntry } from '@/lib/fact-check/fact-check-types';
+import { useColors } from '@/lib/theme/tokens';
+import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { useTapGuard } from '@/components/custom/cards/use-tap-guard';
-import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+/** The stored statuses a check never leaves (fact-check-record-service). */
+export const TERMINAL_FACT_CHECK_STATUSES: ReadonlySet<string> = new Set(['complete', 'blocked']);
+
+export function isFactCheckDone(item: Pick<StoredFactCheck, 'status'>): boolean {
+    return TERMINAL_FACT_CHECK_STATUSES.has(String(item.status ?? '').trim().toLowerCase());
+}
 
 interface FactCheckCardProps {
     readonly item: StoredFactCheck;
-    /** Tapping the card body. Omit to render a non-interactive card (the
-     *  article-detail "no longer available" state passes nothing — the reader
-     *  is already as far in as the story goes). */
+    /** Tapping the card body. Omit for a non-interactive card. */
     readonly onPress?: (item: StoredFactCheck) => void;
-    /** Rendered top-right, over the body. The list passes a delete control. */
+    /** The list passes a delete control (owner default L3: a check must never
+     *  get stuck). */
     readonly onDelete?: (id: string) => void;
+    /** Finished after the Fact checks page was last seen. */
+    readonly isNew?: boolean;
     readonly testIDPrefix?: string;
 }
 
-/**
- * One stored fact check, as it appears on the Dashboard block and the
- * /logged-in/fact-checks list.
- *
- * The card's job is to answer "who checked this story, and what did they
- * say" — the badge carries the lead organisation's own rating, and every
- * OTHER gated organisation's NAME is listed below it in plain text, so the
- * data stays reachable even though this surface has no expandable body.
- * Ratings and links for the non-lead organisations live one tap away, on the
- * article screen this row opens.
- *
- * A row whose check has not finished yet renders as "still searching" rather
- * than being hidden — the user asked for it, and a request that vanishes from
- * every surface until it completes is indistinguishable from one that was
- * dropped.
- *
- * EXTERNALS ARE THE AUTHORITY (fc-relevance wave). The badge is
- * externals-only in every state — see `FactCheckBadge`'s file header — so
- * this card never derives or displays a verdict of Mera's own.
- */
+const DELETE_FRAME = 44;
+const LINE = { fontSize: 14, lineHeight: 20 } as const;
+const SMALL = { fontSize: 12, lineHeight: 17 } as const;
+
 const FactCheckCard: React.FC<FactCheckCardProps> = ({
     item,
     onPress,
     onDelete,
+    isNew = false,
     testIDPrefix = 'fact-check-card',
 }) => {
     const { t } = useTranslation();
-    // Opens on a TAP only: a release after a sideways drag (the tab swipe) is
-    // not a press.
+    const c = useColors();
+    // Opens on a TAP only: a release after a sideways drag is not a press.
     const tap = useTapGuard(onPress ? () => onPress(item) : undefined);
+    const done = isFactCheckDone(item);
 
-    const checkedBy = (item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy;
-    const checkedByStatus = (item.payload as { checkedByStatus?: CheckedByStatus } | null)?.checkedByStatus;
-    // Unique names only, comma-joined, in first-appearance order. The same
-    // organisation can legitimately appear more than once in `checkedBy` (one
-    // entry per claim it ruled on) — this line exists purely so every gated
-    // organisation stays reachable by name on a surface with no expandable
-    // body, not to enumerate individual claims.
-    const organisationNames = Array.from(
-        new Set(describeCheckedBy(checkedBy).map((entry) => entry.organisation.trim())),
-    );
+    const payload = item.payload as { checkedBy?: FactCheckedByEntry[]; publicationName?: string | null } | null;
+    const organisations = describeCheckedBy(payload?.checkedBy);
+    const publication = payload?.publicationName?.trim() || null;
+    const checkedAt = item.resolvedAt ?? item.requestedAt;
+    const meta = [publication, t('library.checks.checkedAgo', { age: formatTimeAgo(t, checkedAt) })]
+        .filter(Boolean)
+        .join(' · ');
+    const toneInk = { positive: c.positive, caution: c.accentText, neutral: c.ink2 } as const;
 
     return (
-        // The delete control is a SIBLING of the tappable body, absolutely
-        // positioned over its top-right corner — not a child of it.
-        //
-        // Nesting it inside the card's Pressable is the classic bug in this
-        // pattern: RN's responder system usually lets the inner Pressable win,
-        // but "usually" is doing real work there, and the failure mode (delete
-        // ALSO navigates, so the row vanishes as a detail screen opens over it)
-        // is both destructive and confusing. Sibling + absolute makes it
-        // structural rather than a behaviour to hope for. The title row carries
-        // `pr-8` so a long headline can never run under the icon, and hitSlop
-        // keeps the target at ~44pt on a narrow screen.
-        <Box testID={`${testIDPrefix}-${item.id}`} className="relative">
+        <View testID={`${testIDPrefix}-${item.id}`}>
             <Pressable
                 onPress={tap.onPress}
                 onPressIn={tap.onPressIn}
@@ -91,84 +84,81 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 accessibilityRole={onPress ? 'button' : undefined}
                 accessibilityLabel={onPress ? t('factCheck.dashboard.openA11y') : undefined}
                 testID={`${testIDPrefix}-open-${item.id}`}
-                // UNPADDED and clipping, because `GlassPlate` is an absolute
-                // fill and Yoga resolves its insets against the CONTENT box —
-                // padding here would leave an unglassed frame. The padding
-                // moves to the inner VStack. The platform branch is the
-                // primitive's: real Liquid Glass where expo reports it
-                // available, a flat fill at the same tint everywhere else.
+                // Unpadded and clipping: GlassPlate is an absolute fill.
                 className={`rounded-lg overflow-hidden ${GLASS_EDGE}`}
             >
                 <GlassPlate />
                 <VStack space="sm" className="p-3">
-            <HStack space="xs" className="items-start pr-8">
-                    <SearchCheck
-                        size={16}
-                        strokeWidth={2}
-                        color={ACCENT}
-                        style={{ marginTop: 2 }}
-                    />
+                    <HStack className="items-center" style={{ paddingRight: onDelete ? DELETE_FRAME - 8 : 0, gap: 8 }}>
+                        <Text numberOfLines={1} style={[SMALL, { color: c.ink3, flex: 1 }]}>
+                            {meta}
+                        </Text>
+                        {isNew ? (
+                            <View style={[styles.newPill, { backgroundColor: c.accent }]} testID={`${testIDPrefix}-new-${item.id}`}>
+                                <Text style={[SMALL, { color: c.onAccent, fontWeight: '700' }]}>{t('library.checks.new')}</Text>
+                            </View>
+                        ) : null}
+                    </HStack>
+
                     {item.articleTitle?.trim() ? (
                         <TranslatableDynamic
                             text={item.articleTitle.trim()}
-                            size="sm"
-                            className="text-gray-100 font-semibold flex-1 ml-1"
+                            size="md"
+                            className="font-semibold"
+                            style={{ color: c.ink }}
                             numberOfLines={3}
                         />
                     ) : (
-                        <Text size="sm" className="text-gray-100 font-semibold flex-1 ml-1" numberOfLines={3}>
+                        <Text size="md" className="font-semibold" style={{ color: c.ink }} numberOfLines={3}>
                             {t('factCheck.dashboard.untitled')}
                         </Text>
                     )}
-            </HStack>
 
-            {/* The claim this ROW is about. An article can carry several rows
-                post-v52 (one per claim the user picked) — without this line
-                two rows for the same headline are indistinguishable except by
-                their verdict. Absent on a legacy (pre-v52) whole-article row. */}
-            {item.claim ? (
-                <TranslatableDynamic
-                    text={item.claim}
-                    size="xs"
-                    className="text-gray-400"
-                    italic
-                    numberOfLines={2}
-                />
-            ) : null}
+                    {item.claim ? (
+                        <View style={[styles.box, { backgroundColor: c.surface, borderColor: c.line }]}>
+                            <Text style={[SMALL, { color: c.ink3, fontWeight: '600' }]}>{t('library.checks.claim')}</Text>
+                            <TranslatableDynamic text={item.claim} size="sm" style={{ color: c.ink2 }} numberOfLines={3} />
+                        </View>
+                    ) : null}
 
-            {/* One status line, and which one is a correctness question — see
-                FactCheckBadge. Shared with the article panel's collapsed
-                header so the two surfaces cannot drift. */}
-            <FactCheckBadge
-                status={item.status}
-                checkedBy={checkedBy}
-                checkedByStatus={checkedByStatus}
-                testIDPrefix={testIDPrefix}
-                testIDSuffix={item.id}
-            />
-
-            {organisationNames.length > 0 && (
-                <Text
-                    size="xs"
-                    className="text-gray-500"
-                    numberOfLines={2}
-                    testID={`${testIDPrefix}-org-names-${item.id}`}
-                >
-                    {organisationNames.join(', ')}
-                </Text>
-            )}
+                    {!done ? (
+                        <View style={[styles.box, { backgroundColor: c.surface, borderColor: c.line }]} testID={`${testIDPrefix}-checking-${item.id}`}>
+                            <Text style={[LINE, { color: c.ink2 }]}>{t('library.checks.checking')}</Text>
+                        </View>
+                    ) : (
+                        organisations.map((entry, index) => {
+                            // Verbatim when unrecognised: a rating is the
+                            // organisation's own editorial copy (never translated).
+                            const info = describeOrganisationVerdict(entry.verdict);
+                            const rating = info.isKey ? (t as unknown as (k: string) => string)(info.label) : info.label;
+                            return (
+                                <HStack
+                                    key={`${entry.organisation}-${index}`}
+                                    className="items-center justify-between"
+                                    style={{ gap: 12 }}
+                                    testID={`${testIDPrefix}-org-${item.id}-${index}`}
+                                >
+                                    <Text numberOfLines={1} style={[LINE, { color: c.ink2, flexShrink: 1 }]}>
+                                        {entry.organisation.trim()}
+                                    </Text>
+                                    <Text numberOfLines={1} style={[LINE, { color: toneInk[info.tone], fontWeight: '600', maxWidth: '55%' }]}>
+                                        {rating}
+                                    </Text>
+                                </HStack>
+                            );
+                        })
+                    )}
                 </VStack>
             </Pressable>
 
             {onDelete ? (
-                // The box holds the glyph and a CHILDLESS labelled button filling
-                // it: a glyph inside a button surfaces on iOS as its own
-                // StaticText (captured, one per card).
-                <View className="absolute top-2 right-2 p-1">
+                // A childless labelled button over the glyph (the glyph-leak
+                // pattern), the 44pt frame being the box itself.
+                <View style={styles.deleteFrame}>
                     <MaterialIcons
                         name="delete-outline"
                         size={20}
-                        color="#9ca3af"
+                        color={c.ink3}
                         accessible={false}
                         accessibilityElementsHidden
                         importantForAccessibility="no-hide-descendants"
@@ -178,13 +168,26 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                         accessibilityRole="button"
                         accessibilityLabel={t('factCheck.dashboard.deleteA11y')}
                         testID={`${testIDPrefix}-delete-${item.id}`}
-                        hitSlop={12}
                         style={StyleSheet.absoluteFill}
                     />
                 </View>
             ) : null}
-        </Box>
+        </View>
     );
 };
+
+const styles = StyleSheet.create({
+    newPill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 },
+    box: { borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, padding: 10, gap: 2 },
+    deleteFrame: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: DELETE_FRAME,
+        height: DELETE_FRAME,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+});
 
 export default FactCheckCard;
