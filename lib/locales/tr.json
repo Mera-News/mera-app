@@ -1074,7 +1074,9 @@
     "localOnly": "Mera'nın zaten tuttuklarından bu telefonda hesaplandı. Ayrıca hiçbir şey kaydedilmez.",
     "ofLimit": "{{limit}} üzerinden",
     "promoEndsNoRenew": "Promosyon erişimi · {{date}} tarihinde biter, yenilenmez",
-    "relevantSoFar": "Şimdiye kadar ilgili"
+    "relevantSoFar": "Şimdiye kadar ilgili",
+    "billedAppStore": "Ödeme App Store üzerinden alınır. İstediğiniz zaman Apple hesabınızdan iptal edebilirsiniz.",
+    "billedPlayStore": "Ödeme Google Play üzerinden alınır. İstediğiniz zaman Google hesabınızdan iptal edebilirsiniz."
   },
   "tabs": {
     "deck": "Akış",
@@ -2684,7 +2686,9 @@
     "show": "Göster",
     "startRestoring": "Geri yüklemeyi başlat",
     "stepSaved": "Kaydedildi",
-    "where": "Nerede"
+    "where": "Nerede",
+    "restoreSourceIcloud": "Bu iCloud hesabına giriş yapılmış bir iPhone'da alınan yedekler",
+    "restoreSourceDrive": "iPhone veya Android olmak üzere herhangi bir telefonda alınan yedekler"
   },
   "factChoice": {
     "titleSingle": "Bunu kişiliğine eklensin mi?",

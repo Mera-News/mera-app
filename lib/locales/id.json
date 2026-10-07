@@ -1074,7 +1074,9 @@
     "localOnly": "Dihitung di ponsel ini dari yang sudah disimpan Mera. Tidak ada yang dicatat tambahan.",
     "ofLimit": "dari {{limit}}",
     "promoEndsNoRenew": "Akses promo · berakhir {{date}}, tidak diperpanjang",
-    "relevantSoFar": "Relevan sejauh ini"
+    "relevantSoFar": "Relevan sejauh ini",
+    "billedAppStore": "Ditagih melalui App Store. Batalkan kapan saja di akun Apple Anda.",
+    "billedPlayStore": "Ditagih melalui Google Play. Batalkan kapan saja di akun Google Anda."
   },
   "tabs": {
     "deck": "Umpan",
@@ -2682,7 +2684,9 @@
     "show": "Tampilkan",
     "startRestoring": "Mulai pemulihan",
     "stepSaved": "Tersimpan",
-    "where": "Lokasi"
+    "where": "Lokasi",
+    "restoreSourceIcloud": "Cadangan yang dibuat di iPhone yang masuk ke iCloud ini",
+    "restoreSourceDrive": "Cadangan yang dibuat di ponsel mana pun, iPhone atau Android"
   },
   "factChoice": {
     "titleSingle": "Tambahkan ini ke persona kamu?",

@@ -1074,7 +1074,9 @@
     "localOnly": "Calculado neste celular a partir do que a Mera já guarda. Nada extra é registrado.",
     "ofLimit": "de {{limit}}",
     "promoEndsNoRenew": "Acesso promocional · termina em {{date}}, não renova",
-    "relevantSoFar": "Relevantes até agora"
+    "relevantSoFar": "Relevantes até agora",
+    "billedAppStore": "Cobrado pela App Store. Cancele quando quiser na sua conta da Apple.",
+    "billedPlayStore": "Cobrado pelo Google Play. Cancele quando quiser na sua conta do Google."
   },
   "tabs": {
     "deck": "Feed",
@@ -2682,7 +2684,9 @@
     "show": "Mostrar",
     "startRestoring": "Começar a restaurar",
     "stepSaved": "Salvo",
-    "where": "Onde"
+    "where": "Onde",
+    "restoreSourceIcloud": "Backups feitos em um iPhone com login neste iCloud",
+    "restoreSourceDrive": "Backups feitos em qualquer celular, iPhone ou Android"
   },
   "factChoice": {
     "titleSingle": "Adicionar isto ao seu persona?",

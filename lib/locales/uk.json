@@ -1098,7 +1098,9 @@
     "localOnly": "Підраховано на цьому телефоні з того, що Mera вже зберігає. Нічого додаткового не записується.",
     "ofLimit": "з {{limit}}",
     "promoEndsNoRenew": "Промодоступ · закінчується {{date}}, не поновлюється",
-    "relevantSoFar": "Поки що релевантно"
+    "relevantSoFar": "Поки що релевантно",
+    "billedAppStore": "Оплачується через App Store. Скасувати можна будь-коли в обліковому записі Apple.",
+    "billedPlayStore": "Оплачується через Google Play. Скасувати можна будь-коли в обліковому записі Google."
   },
   "tabs": {
     "deck": "Стрічка",
@@ -2732,7 +2734,9 @@
     "show": "Показати",
     "startRestoring": "Почати відновлення",
     "stepSaved": "Збережено",
-    "where": "Де"
+    "where": "Де",
+    "restoreSourceIcloud": "Копії, створені на iPhone з цим обліковим записом iCloud",
+    "restoreSourceDrive": "Копії, створені на будь-якому телефоні, iPhone або Android"
   },
   "factChoice": {
     "titleSingle": "Додати це до твоєї персони?",

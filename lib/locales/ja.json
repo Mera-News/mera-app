@@ -1074,7 +1074,9 @@
     "localOnly": "Meraがすでに保持しているものから、この電話上で算出しています。それ以外は記録されません。",
     "ofLimit": "/ {{limit}}",
     "promoEndsNoRenew": "プロモ利用・{{date}}に終了、更新はされません",
-    "relevantSoFar": "今のところ関連あり"
+    "relevantSoFar": "今のところ関連あり",
+    "billedAppStore": "請求は App Store を通じて行われます。いつでも Apple アカウントから解約できます。",
+    "billedPlayStore": "請求は Google Play を通じて行われます。いつでも Google アカウントから解約できます。"
   },
   "tabs": {
     "deck": "フィード",
@@ -2682,7 +2684,9 @@
     "show": "表示",
     "startRestoring": "復元を開始",
     "stepSaved": "保存済み",
-    "where": "場所"
+    "where": "場所",
+    "restoreSourceIcloud": "このiCloudにサインインしたiPhoneで作成したバックアップ",
+    "restoreSourceDrive": "iPhoneでもAndroidでも、どの電話で作成したバックアップも"
   },
   "factChoice": {
     "titleSingle": "これをあなたのペルソナに追加しますか",

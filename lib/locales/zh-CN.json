@@ -1074,7 +1074,9 @@
     "localOnly": "根据 Mera 已保存的内容在这部手机上计算。不记录任何额外信息。",
     "ofLimit": "共 {{limit}}",
     "promoEndsNoRenew": "促销权益 · {{date}}结束，不会续订",
-    "relevantSoFar": "目前相关"
+    "relevantSoFar": "目前相关",
+    "billedAppStore": "通过 App Store 扣费。你可以随时在 Apple 账号中取消。",
+    "billedPlayStore": "通过 Google Play 扣费。你可以随时在 Google 账号中取消。"
   },
   "tabs": {
     "deck": "信息流",
@@ -2683,7 +2685,9 @@
     "show": "显示",
     "startRestoring": "开始恢复",
     "stepSaved": "已保存",
-    "where": "位置"
+    "where": "位置",
+    "restoreSourceIcloud": "在已登录此 iCloud 的 iPhone 上创建的备份",
+    "restoreSourceDrive": "在任何手机上创建的备份，包括 iPhone 和 Android"
   },
   "factChoice": {
     "titleSingle": "把这条加入你的画像吗",

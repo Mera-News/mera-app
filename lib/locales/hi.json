@@ -1074,7 +1074,9 @@
     "localOnly": "इसी फ़ोन पर Mera के पहले से रखे डेटा से गणना की गई। कुछ अतिरिक्त रिकॉर्ड नहीं होता।",
     "ofLimit": "{{limit}} में से",
     "promoEndsNoRenew": "प्रोमो एक्सेस · {{date}} को खत्म, नवीनीकरण नहीं होगा",
-    "relevantSoFar": "अभी तक काम की"
+    "relevantSoFar": "अभी तक काम की",
+    "billedAppStore": "App Store के ज़रिए बिलिंग होती है। आप अपने Apple खाते में कभी भी रद्द कर सकते हैं।",
+    "billedPlayStore": "Google Play के ज़रिए बिलिंग होती है। आप अपने Google खाते में कभी भी रद्द कर सकते हैं।"
   },
   "tabs": {
     "deck": "फीड",
@@ -2684,7 +2686,9 @@
     "show": "दिखाएं",
     "startRestoring": "वापस लाना शुरू करें",
     "stepSaved": "सहेजा गया",
-    "where": "कहां"
+    "where": "कहां",
+    "restoreSourceIcloud": "इस iCloud में साइन इन किए iPhone पर बनाए गए बैकअप",
+    "restoreSourceDrive": "किसी भी फ़ोन पर बनाए गए बैकअप, iPhone या Android"
   },
   "factChoice": {
     "titleSingle": "इसे अपने पर्सोना में जोड़ें?",

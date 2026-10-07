@@ -1074,7 +1074,9 @@
     "localOnly": "Được tính trên điện thoại này từ những gì Mera vốn đã lưu. Không ghi thêm gì.",
     "ofLimit": "trên {{limit}}",
     "promoEndsNoRenew": "Quyền truy cập khuyến mãi · kết thúc {{date}}, sẽ không gia hạn",
-    "relevantSoFar": "Có liên quan cho đến lúc này"
+    "relevantSoFar": "Có liên quan cho đến lúc này",
+    "billedAppStore": "Thanh toán qua App Store. Bạn có thể hủy bất cứ lúc nào trong tài khoản Apple của mình.",
+    "billedPlayStore": "Thanh toán qua Google Play. Bạn có thể hủy bất cứ lúc nào trong tài khoản Google của mình."
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -2683,7 +2685,9 @@
     "show": "Hiện",
     "startRestoring": "Bắt đầu khôi phục",
     "stepSaved": "Đã lưu",
-    "where": "Vị trí"
+    "where": "Vị trí",
+    "restoreSourceIcloud": "Bản sao lưu được tạo trên iPhone đã đăng nhập vào iCloud này",
+    "restoreSourceDrive": "Bản sao lưu được tạo trên bất kỳ điện thoại nào, iPhone hoặc Android"
   },
   "factChoice": {
     "titleSingle": "Thêm điều này vào persona của bạn?",

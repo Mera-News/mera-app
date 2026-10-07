@@ -1122,7 +1122,9 @@
     "localOnly": "يُحسب على هذا الهاتف من البيانات التي يحتفظ بها Mera أصلًا. لا يُسجَّل أي شيء إضافي.",
     "ofLimit": "من {{limit}}",
     "promoEndsNoRenew": "وصول ترويجي · ينتهي في {{date}}، ولن يتجدد",
-    "relevantSoFar": "ذات صلة حتى الآن"
+    "relevantSoFar": "ذات صلة حتى الآن",
+    "billedAppStore": "تُحاسَب عبر App Store. يمكنك الإلغاء في أي وقت من حساب Apple الخاص بك.",
+    "billedPlayStore": "تُحاسَب عبر Google Play. يمكنك الإلغاء في أي وقت من حساب Google الخاص بك."
   },
   "tabs": {
     "deck": "الخلاصة",
@@ -2780,7 +2782,9 @@
     "show": "إظهار",
     "startRestoring": "ابدأ الاستعادة",
     "stepSaved": "تم الحفظ",
-    "where": "المكان"
+    "where": "المكان",
+    "restoreSourceIcloud": "نسخ احتياطية من iPhone مسجّل الدخول فيه إلى حساب iCloud هذا",
+    "restoreSourceDrive": "نسخ احتياطية من أي هاتف، iPhone أو Android"
   },
   "factChoice": {
     "titleSingle": "هل نضيف هذا إلى شخصيتك؟",

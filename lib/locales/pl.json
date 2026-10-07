@@ -1096,7 +1096,9 @@
     "localOnly": "Obliczone na tym telefonie z tego, co Mera już przechowuje. Nic dodatkowego nie jest zapisywane.",
     "ofLimit": "z {{limit}}",
     "promoEndsNoRenew": "Dostęp promocyjny · kończy się {{date}}, nie odnowi się",
-    "relevantSoFar": "Na razie trafne"
+    "relevantSoFar": "Na razie trafne",
+    "billedAppStore": "Opłata pobierana przez App Store. Możesz anulować w dowolnym momencie na swoim koncie Apple.",
+    "billedPlayStore": "Opłata pobierana przez Google Play. Możesz anulować w dowolnym momencie na swoim koncie Google."
   },
   "tabs": {
     "deck": "Strumień",
@@ -2726,7 +2728,9 @@
     "show": "Pokaż",
     "startRestoring": "Rozpocznij przywracanie",
     "stepSaved": "Zapisano",
-    "where": "Gdzie"
+    "where": "Gdzie",
+    "restoreSourceIcloud": "Kopie wykonane na iPhonie zalogowanym do tego iCloud",
+    "restoreSourceDrive": "Kopie wykonane na dowolnym telefonie, iPhonie lub Androidzie"
   },
   "factChoice": {
     "titleSingle": "Dodać to do twojej persony?",

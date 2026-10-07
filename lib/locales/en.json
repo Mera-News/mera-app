@@ -196,7 +196,9 @@
     "localOnly": "Worked out on this phone from what Mera already keeps. Nothing extra is recorded.",
     "ofLimit": "of {{limit}}",
     "promoEndsNoRenew": "Promo access · ends {{date}}, won't renew",
-    "relevantSoFar": "Relevant so far"
+    "relevantSoFar": "Relevant so far",
+    "billedAppStore": "Billed through the App Store. Cancel any time in your Apple account.",
+    "billedPlayStore": "Billed through Google Play. Cancel any time in your Google account."
   },
   "feed": {
     "updatedAt": "Updated {{time}}",
@@ -1092,7 +1094,9 @@
     "show": "Show",
     "startRestoring": "Start restoring",
     "stepSaved": "Saved",
-    "where": "Where"
+    "where": "Where",
+    "restoreSourceIcloud": "Backups made on an iPhone signed in to this iCloud",
+    "restoreSourceDrive": "Backups made on any phone, iPhone or Android"
   },
   "preferences": {
     "notifications": "Notifications",

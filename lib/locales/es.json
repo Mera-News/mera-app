@@ -1074,7 +1074,9 @@
     "localOnly": "Calculado en este teléfono a partir de lo que Mera ya guarda. No se registra nada extra.",
     "ofLimit": "de {{limit}}",
     "promoEndsNoRenew": "Acceso de promoción · termina el {{date}}, no se renovará",
-    "relevantSoFar": "Relevante por ahora"
+    "relevantSoFar": "Relevante por ahora",
+    "billedAppStore": "Facturado a través de App Store. Cancela en cualquier momento desde tu cuenta de Apple.",
+    "billedPlayStore": "Facturado a través de Google Play. Cancela en cualquier momento desde tu cuenta de Google."
   },
   "tabs": {
     "deck": "Noticias",
@@ -2682,7 +2684,9 @@
     "show": "Mostrar",
     "startRestoring": "Empezar a restaurar",
     "stepSaved": "Guardado",
-    "where": "Dónde"
+    "where": "Dónde",
+    "restoreSourceIcloud": "Copias hechas en un iPhone con sesión iniciada en esta cuenta de iCloud",
+    "restoreSourceDrive": "Copias hechas en cualquier teléfono, iPhone o Android"
   },
   "factChoice": {
     "titleSingle": "¿Añadir esto a tu persona?",

@@ -1098,7 +1098,9 @@
     "localOnly": "Считается на этом телефоне из того, что Mera уже хранит. Ничего дополнительно не записывается.",
     "ofLimit": "из {{limit}}",
     "promoEndsNoRenew": "Промодоступ · до {{date}}, не продлевается",
-    "relevantSoFar": "Пока актуально"
+    "relevantSoFar": "Пока актуально",
+    "billedAppStore": "Оплата через App Store. Отменить можно в любое время в вашем аккаунте Apple.",
+    "billedPlayStore": "Оплата через Google Play. Отменить можно в любое время в вашем аккаунте Google."
   },
   "tabs": {
     "deck": "Лента",
@@ -2728,7 +2730,9 @@
     "show": "Показать",
     "startRestoring": "Начать восстановление",
     "stepSaved": "Сохранено",
-    "where": "Где"
+    "where": "Где",
+    "restoreSourceIcloud": "Резервные копии, созданные на iPhone, где выполнен вход в этот iCloud",
+    "restoreSourceDrive": "Резервные копии с любого телефона, iPhone или Android"
   },
   "factChoice": {
     "titleSingle": "Добавить это в твою персону?",

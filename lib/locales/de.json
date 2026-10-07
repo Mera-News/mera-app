@@ -1074,7 +1074,9 @@
     "localOnly": "Auf diesem Telefon aus dem berechnet, was Mera ohnehin speichert. Es wird nichts Zusätzliches erfasst.",
     "ofLimit": "von {{limit}}",
     "promoEndsNoRenew": "Aktionszugang · endet am {{date}}, verlängert sich nicht",
-    "relevantSoFar": "Bisher relevant"
+    "relevantSoFar": "Bisher relevant",
+    "billedAppStore": "Abgerechnet über den App Store. Sie können jederzeit in Ihrem Apple-Konto kündigen.",
+    "billedPlayStore": "Abgerechnet über Google Play. Sie können jederzeit in Ihrem Google-Konto kündigen."
   },
   "tabs": {
     "deck": "Nachrichten",
@@ -2682,7 +2684,9 @@
     "show": "Anzeigen",
     "startRestoring": "Wiederherstellung starten",
     "stepSaved": "Gespeichert",
-    "where": "Wo"
+    "where": "Wo",
+    "restoreSourceIcloud": "Backups von einem iPhone, das bei dieser iCloud angemeldet ist",
+    "restoreSourceDrive": "Backups von jedem Telefon, iPhone oder Android"
   },
   "factChoice": {
     "titleSingle": "Das zu deiner Persona hinzufügen?",

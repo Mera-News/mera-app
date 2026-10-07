@@ -1074,7 +1074,9 @@
     "localOnly": "คำนวณบนโทรศัพท์เครื่องนี้จากสิ่งที่ Mera เก็บอยู่แล้ว ไม่มีการบันทึกข้อมูลเพิ่มเติม",
     "ofLimit": "จาก {{limit}}",
     "promoEndsNoRenew": "สิทธิ์โปรโมชัน · สิ้นสุด {{date}} จะไม่ต่ออายุ",
-    "relevantSoFar": "เกี่ยวข้องในตอนนี้"
+    "relevantSoFar": "เกี่ยวข้องในตอนนี้",
+    "billedAppStore": "เรียกเก็บเงินผ่าน App Store ยกเลิกได้ตลอดเวลาในบัญชี Apple ของคุณ",
+    "billedPlayStore": "เรียกเก็บเงินผ่าน Google Play ยกเลิกได้ตลอดเวลาในบัญชี Google ของคุณ"
   },
   "tabs": {
     "deck": "ฟีด",
@@ -2682,7 +2684,9 @@
     "show": "แสดง",
     "startRestoring": "เริ่มกู้คืน",
     "stepSaved": "บันทึกแล้ว",
-    "where": "ที่ไหน"
+    "where": "ที่ไหน",
+    "restoreSourceIcloud": "ข้อมูลสำรองที่ทำบน iPhone ซึ่งลงชื่อเข้าใช้ iCloud นี้",
+    "restoreSourceDrive": "ข้อมูลสำรองที่ทำบนโทรศัพท์เครื่องใดก็ได้ ทั้ง iPhone และ Android"
   },
   "factChoice": {
     "titleSingle": "เพิ่มสิ่งนี้ลงในเพอร์โซนาของคุณไหม",

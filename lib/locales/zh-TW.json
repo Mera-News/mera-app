@@ -1074,7 +1074,9 @@
     "localOnly": "根據 Mera 已保存的內容在這支手機上計算。不會額外記錄任何資料。",
     "ofLimit": "上限 {{limit}}",
     "promoEndsNoRenew": "促銷權限 · {{date}} 結束，不會續訂",
-    "relevantSoFar": "目前相關"
+    "relevantSoFar": "目前相關",
+    "billedAppStore": "透過 App Store 計費。你可以隨時在你的 Apple 帳戶中取消。",
+    "billedPlayStore": "透過 Google Play 計費。你可以隨時在你的 Google 帳戶中取消。"
   },
   "tabs": {
     "deck": "資訊流",
@@ -2683,7 +2685,9 @@
     "show": "顯示",
     "startRestoring": "開始還原",
     "stepSaved": "已儲存",
-    "where": "位置"
+    "where": "位置",
+    "restoreSourceIcloud": "在已登入此 iCloud 的 iPhone 上建立的備份",
+    "restoreSourceDrive": "在任何手機上建立的備份，iPhone 或 Android 皆可"
   },
   "factChoice": {
     "titleSingle": "把這條加入你的人物設定嗎",

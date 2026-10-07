@@ -1074,7 +1074,9 @@
     "localOnly": "Berekend op deze telefoon uit wat Mera al bewaart. Er wordt niets extra vastgelegd.",
     "ofLimit": "van {{limit}}",
     "promoEndsNoRenew": "Promotietoegang · eindigt op {{date}}, wordt niet verlengd",
-    "relevantSoFar": "Tot nu toe relevant"
+    "relevantSoFar": "Tot nu toe relevant",
+    "billedAppStore": "Betaald via de App Store. Je kunt op elk moment opzeggen in je Apple-account.",
+    "billedPlayStore": "Betaald via Google Play. Je kunt op elk moment opzeggen in je Google-account."
   },
   "tabs": {
     "deck": "Feed",
@@ -2682,7 +2684,9 @@
     "show": "Tonen",
     "startRestoring": "Terugzetten starten",
     "stepSaved": "Opgeslagen",
-    "where": "Waar"
+    "where": "Waar",
+    "restoreSourceIcloud": "Back-ups gemaakt op een iPhone die is ingelogd op deze iCloud",
+    "restoreSourceDrive": "Back-ups gemaakt op elke telefoon, iPhone of Android"
   },
   "factChoice": {
     "titleSingle": "Dit aan je persona toevoegen?",
