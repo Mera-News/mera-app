@@ -626,11 +626,7 @@ export default function ChatSessionView({
         onSend={handleSend}
         isInputDisabled={isStreaming || effectiveBlocked}
         composerHint={composerHint}
-        usageNotice={
-          context.kind === 'persona'
-            ? t('floatingChat.aiUsageNotice')
-            : t('floatingChat.aiUsageNoticeGeneral')
-        }
+        usageNotice={context.kind === 'persona' ? undefined : t('floatingChat.aiUsageNoticeGeneral')}
       />
       {!!userId && conversationId && (
         <RequestUnblockModal

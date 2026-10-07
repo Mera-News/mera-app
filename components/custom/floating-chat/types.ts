@@ -393,9 +393,9 @@ export interface ChatThreadProps {
   onSend: (text: string) => void;
   isInputDisabled: boolean;
   /**
-   * The line under the AI notice on an empty thread. It differs by chat:
-   * the settings assistant's warning about misuse is wrong in an article
-   * chat (audit F12). Omitted means the persona notice.
+   * A line in the empty thread's header, under the fixed guidelines line.
+   * Omitted (the persona chat) shows none: the guidelines line already says
+   * what misuse costs. Other chats pass the general caveat (audit F12).
    */
   usageNotice?: string;
   /**

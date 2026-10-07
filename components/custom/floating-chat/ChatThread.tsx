@@ -3,7 +3,6 @@
 // prompt input. Everything comes in via props (ChatThreadProps) — no data
 // fetching, no stores.
 
-import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import MeraStreamAvatar, { AVATAR_GUTTER_WIDTH } from '@/components/custom/chat/MeraStreamAvatar';
 import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
 import { WAIT_ROW_TEXT_HEIGHT } from '@/components/custom/chat/chat-phases';
@@ -18,7 +17,10 @@ import {
   PromptInput,
   type PromptInputHandle,
 } from '@/components/ui/chat-ai';
+import { CONTENT_POLICY_URL } from '@/lib/config/branding';
 import { hapticLight } from '@/lib/haptics';
+import { useColors } from '@/lib/theme/tokens';
+import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import {
   useFloatingChatPendingDraft,
@@ -84,6 +86,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   composerHint = null,
 }) => {
   const { t } = useTranslation();
+  const colors = useColors();
 
   // Autofocus the input once the popover's open morph fully settles. Focusing
   // mid-morph fights the scale transform and janks the keyboard slide-up, so we
@@ -404,7 +407,22 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           / LocalPersonaChat, onboarding step 1 → PersonaUpdateChatStep →
           CloudPersonaChat — all of which mount this ChatThread). */}
       <View style={styles.aiInteractionRow}>
-        <AiDisclosureCaption text={t('floatingChat.aiInteractionNotice')} />
+        {/* One sentence in three keys, joined as they are: each locale
+            carries its own spacing (ja/zh/th join with none). The middle
+            part is the link. Nested Text keeps it one sentence that wraps
+            as one; the app has no <Trans>. */}
+        <Text size="xs" style={[styles.guidelines, { color: colors.ink2 }]} testID="chat-guidelines">
+          {t('floatingChat.guidelinesBefore')}
+          <Text
+            size="xs"
+            accessibilityRole="link"
+            onPress={() => void openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL))}
+            style={[styles.guidelinesLink, { color: colors.accentText }]}
+          >
+            {t('floatingChat.guidelinesLink')}
+          </Text>
+          {t('floatingChat.guidelinesAfter')}
+        </Text>
       </View>
       <View style={styles.listWrap}>
         <ConversationContent
@@ -423,11 +441,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           header={
             showChips || !hasRealMessage ? (
               <View style={styles.header}>
-                {!hasRealMessage && (
+                {!hasRealMessage && usageNotice && (
                   <View style={styles.noticeRow}>
                     <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color="rgb(140, 140, 140)" />
                     <Text size="xs" style={styles.noticeText}>
-                      {usageNotice ?? t('floatingChat.aiUsageNotice')}
+                      {usageNotice}
                     </Text>
                   </View>
                 )}
@@ -539,8 +557,13 @@ const styles = StyleSheet.create({
   // panel's rounded edge (audit F9).
   aiInteractionRow: {
     paddingHorizontal: 16,
-    paddingVertical: 6,
-    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  guidelines: {
+    lineHeight: 17,
+  },
+  guidelinesLink: {
+    textDecorationLine: 'underline',
   },
   replySlotStreaming: {
     minHeight: WAIT_ROW_TEXT_HEIGHT,
