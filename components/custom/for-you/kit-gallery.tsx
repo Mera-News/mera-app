@@ -3,8 +3,8 @@
 //
 // The status icon and the counts card in each mode (the daily limit and the
 // problem states are reachable on a simulator only here), the counts card
-// sliding in (tap Show), the empty-state block with its hero and "Learn
-// about", and the fact page's Next and last rows.
+// sliding in (tap Show), and the empty-state block with its hero and "Learn
+// about".
 
 import { Text } from '@/components/ui/text';
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
@@ -16,7 +16,6 @@ import { Pressable, View } from 'react-native';
 import DashboardStatsCard from './DashboardStatsCard';
 import FeedStatusIcon from './FeedStatusIcon';
 import ForYouEmptyState from './ForYouEmptyState';
-import NextSectionFooter from './NextSectionFooter';
 import StatusCardSlideIn from './StatusCardSlideIn';
 
 const MODES: readonly FeedStatusMode[] = ['idle', 'processing', 'limited', 'error'];
@@ -91,10 +90,6 @@ export default function KitGallery() {
                 action={{ label: t('library.saved.learn'), onPress: noop, testID: 'kit-empty-saved-learn' }}
                 testID="kit-empty-saved"
             />
-
-            <Label>Fact page: Next row, then the last row</Label>
-            <NextSectionFooter kind="next" factId="kit-fact" title="Follows the German housing market" translateTitle={false} onPress={noop} />
-            <NextSectionFooter kind="back" onPress={noop} />
         </View>
     );
 }
