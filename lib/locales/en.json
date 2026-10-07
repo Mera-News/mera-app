@@ -3496,6 +3496,9 @@
     "reauthTitle": "Sign in to continue",
     "sendNewCode": "Send a new code",
     "unreachableBody": "The problem is on our side, not your phone. Mera keeps trying and opens when it's back.",
-    "unreachableTitle": "Mera can't be reached"
+    "unreachableTitle": "Mera can't be reached",
+    "mismatchTitle": "This email belongs to a different account",
+    "mismatchBody": "Sign in with the email on this account, or get help.",
+    "mismatchOtherEmail": "Use another email"
   }
 }

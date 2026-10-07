@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { OtpBoxes, type OtpState } from '@/components/custom/auth/OtpBoxes';
-import { authClient, sendOTP } from '@/lib/auth-client';
+import { signInWithEmailCode } from '@/components/custom/auth/email-code-sign-in';
+import { sendOTP } from '@/lib/auth-client';
 import { setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
@@ -22,6 +23,11 @@ interface OTPVerificationViewProps {
     onUseDifferentEmail?: () => void;
     /** Under the boxes (the gate's "Sign in without email"). */
     footer?: React.ReactNode;
+    /** The sign-in gate: the account this device holds. A code for any other
+     *  account is refused (signed out again, nothing wiped). */
+    expectedUserId?: string | null;
+    /** The code was right but for a different account (the gate only). */
+    onAccountMismatch?: () => void;
 }
 
 const RESEND_COOLDOWN_S = 30;
@@ -45,6 +51,8 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({
     title,
     onUseDifferentEmail,
     footer,
+    expectedUserId,
+    onAccountMismatch,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
@@ -66,18 +74,24 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({
         verifying.current = true;
         setErrorMessage('');
         try {
-            const { data, error } = await authClient.signIn.emailOtp({ email, otp: code });
-            if (error || !data?.user) {
+            const result = await signInWithEmailCode(email, code, expectedUserId);
+            if (result.kind === 'mismatch') {
+                setOtp('');
+                setState('idle');
+                onAccountMismatch?.();
+                return;
+            }
+            if (result.kind === 'wrong') {
                 setState('wrong');
                 setErrorMessage(t('auth.track.wrongCode'));
                 return;
             }
-            recordAuthenticatedUser(data.user.id);
+            const userId = result.userId;
+            recordAuthenticatedUser(userId);
             setSetting('cached_user_email', email).catch(() => {});
             useUserStore.getState().setNeedsReauth(false);
             clearIdentityFault().catch(() => {});
             setState('right');
-            const userId = data.user.id;
             setTimeout(() => onVerificationSuccess?.(userId), RIGHT_CODE_HOLD_MS);
         } catch (error) {
             logger.captureException(error, { tags: { feature: 'otp', method: 'verify' } });

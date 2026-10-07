@@ -120,7 +120,9 @@ type Stage =
     | 'otp'
     | 'reauth-email'
     | 'reauth-otp'
-    | 'reauth-no-email';
+    | 'reauth-no-email'
+    | 'reauth-mismatch'
+    | 'reauth-other-email';
 
 /** Track position, for the slide direction (forward slides left). */
 const TRACK: Partial<Record<Stage, number>> = {
@@ -134,6 +136,8 @@ const TRACK: Partial<Record<Stage, number>> = {
     'reauth-email': 0,
     'reauth-no-email': 0,
     'reauth-otp': 1,
+    'reauth-mismatch': 2,
+    'reauth-other-email': 3,
 };
 
 /** The one logo: where and how big it sits on each stage (FinalJourney "One logo"). */
@@ -245,8 +249,12 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
     useEffect(() => {
         if (!stage.startsWith('reauth')) return;
         const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-            if (stage === 'reauth-otp') {
+            if (stage === 'reauth-otp' || stage === 'reauth-mismatch') {
                 go(cachedEmail ? 'reauth-email' : 'reauth-no-email');
+                return true;
+            }
+            if (stage === 'reauth-other-email') {
+                go('reauth-mismatch');
                 return true;
             }
             BackHandler.exitApp();
@@ -417,6 +425,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                 <OTPVerificationView
                     email={pendingEmail}
                     title={t('gate.enterCode')}
+                    expectedUserId={cachedUserId}
+                    onAccountMismatch={() => go('reauth-mismatch')}
                     onVerificationSuccess={(userId) => onLoginSuccess?.(userId)}
                     onBack={() => go('reauth-email')}
                     footer={
@@ -435,6 +445,21 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                             </Button>
                         ) : null
                     }
+                />
+            );
+            break;
+        case 'reauth-mismatch':
+            body = <ReauthMismatchStage onOtherEmail={() => go('reauth-other-email')} />;
+            break;
+        case 'reauth-other-email':
+            body = (
+                <EmailStage
+                    initialEmail=""
+                    onBack={() => go('reauth-mismatch')}
+                    onSent={(email) => {
+                        setPendingEmail(email);
+                        go('reauth-otp');
+                    }}
                 />
             );
             break;
@@ -870,6 +895,37 @@ function ReauthNoEmailStage({
                         testID="reauth-email-support"
                     />
                 </View>
+            </View>
+        </View>
+    );
+}
+
+// ── The gate: a code for a different account ─────────────────────────────────
+
+/**
+ * The emailed code signed in an account other than this device's. Nothing was
+ * wiped and the session was signed out again (email-code-sign-in.ts): the way
+ * on is the email on this account, or help.
+ */
+function ReauthMismatchStage({ onOtherEmail }: { onOtherEmail: () => void }) {
+    const { t } = useTranslation();
+    const colors = useColors();
+    const { openSupport } = useSupportAction();
+    return (
+        <View style={[styles.pad, styles.center]} testID="auth-reauth-mismatch">
+            <GateIcon name="error-outline" />
+            <Text accessibilityRole="header" style={[styles.title, styles.centerText, { color: colors.ink }]}>
+                {t('gate.mismatchTitle')}
+            </Text>
+            <Text style={[styles.text, styles.centerText, { color: colors.ink2 }]}>{t('gate.mismatchBody')}</Text>
+            <View style={styles.flex} />
+            <View style={styles.actions}>
+                <Button action="primary" onPress={onOtherEmail} testID="reauth-mismatch-other-email">
+                    <ButtonText>{t('gate.mismatchOtherEmail')}</ButtonText>
+                </Button>
+                <Button variant="outline" action="secondary" onPress={() => void openSupport()} testID="reauth-mismatch-help">
+                    <ButtonText>{t('account.contactSupport')}</ButtonText>
+                </Button>
             </View>
         </View>
     );
