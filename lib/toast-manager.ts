@@ -314,9 +314,10 @@ class ToastManager {
         if (NOT_KEPT_NOTICE_TYPES.has(opts.type)) return;
         // 1. Persist the row (raw keys). Dynamic import avoids a load-time cycle
         // (notification-service → database → …). Failure is non-fatal.
+        let row: unknown = null;
         try {
             const { notify } = await import('@/lib/database/services/notification-service');
-            await notify({
+            row = await notify({
                 type: opts.type,
                 title: opts.title,
                 body: opts.body,
@@ -358,7 +359,24 @@ class ToastManager {
         // different lengths, and the component derives the same flag.
         const canFly = !reduceMotion;
 
-        this.toastInstance.show({
+        // The notice's one button runs its inbox row's first action (one handler
+        // for both, components/custom/notifications/notification-actions.ts).
+        const first = opts.actions?.[0];
+        let toastId = '';
+        const button =
+            row && first
+                ? {
+                      label: this.resolveI18n(first.labelKey ?? first.label ?? first.id),
+                      onPress: () => {
+                          // eslint-disable-next-line @typescript-eslint/no-require-imports
+                          const actions = require('@/components/custom/notifications/notification-actions');
+                          void actions.runNotificationAction(row, first);
+                          if (toastId) this.toastInstance?.close(toastId);
+                      },
+                  }
+                : undefined;
+
+        toastId = this.toastInstance.show({
             // Match the toast's lifetime to the animation EXACTLY. NotifiedToast
             // holds fully opaque (so it can be READ) and only then leaves. Too
             // short and it is torn off mid-flight; too long and an invisible
@@ -371,6 +389,7 @@ class ToastManager {
                     action: opts.action ?? 'info',
                     reduceMotion,
                     persistent,
+                    button,
                 }),
         });
     }
