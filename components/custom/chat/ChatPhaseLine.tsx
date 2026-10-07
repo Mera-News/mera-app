@@ -53,12 +53,14 @@ import {
   WAIT_LINE_MAX_LINES,
   WAIT_ROW_TEXT_HEIGHT,
 } from './chat-phases';
+import { useColors } from '@/lib/theme/tokens';
 
 export interface ChatPhaseLineProps {
   testID?: string;
 }
 
 export const ChatPhaseLine: React.FC<ChatPhaseLineProps> = ({ testID = 'chat-phase-line' }) => {
+  const colors = useColors();
   const { t } = useTranslation();
   const tAny = t as unknown as (key: string, opts?: object) => string | string[];
   const view = useChatPhaseStore((s) => s.view);
@@ -119,7 +121,7 @@ export const ChatPhaseLine: React.FC<ChatPhaseLineProps> = ({ testID = 'chat-pha
     <Animated.View style={lineStyle}>
       <Text
         size="sm"
-        style={styles.line}
+        style={[styles.line, { color: colors.ink2 }]}
         // ONE polite live region. The mark beside it is decorative, so the
         // wait is announced once rather than twice.
         accessibilityLiveRegion="polite"
@@ -138,7 +140,7 @@ export const ChatPhaseLine: React.FC<ChatPhaseLineProps> = ({ testID = 'chat-pha
 };
 
 const styles = StyleSheet.create({
-  line: { color: 'rgb(190, 190, 190)', fontSize: 15, lineHeight: WAIT_LINE_HEIGHT, minHeight: WAIT_ROW_TEXT_HEIGHT },
+  line: { fontSize: 15, lineHeight: WAIT_LINE_HEIGHT, minHeight: WAIT_ROW_TEXT_HEIGHT },
 });
 
 export default ChatPhaseLine;

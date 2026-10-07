@@ -23,9 +23,6 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-const ACCENT = 'rgb(231, 138, 83)';
-const FAILED = '#F87171';
-const BODY = 'rgb(200, 200, 200)';
 
 export type IndicatorStatus = 'pending' | 'done' | 'error';
 
@@ -84,7 +81,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
           // Not an element of its own: the state word is in the label beside it.
           <ActivityIndicator
             size="small"
-            color={ACCENT}
+            color={colors.accentMark}
             accessible={false}
             testID={testID && `${testID}-spinner`}
           />
@@ -94,7 +91,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
               {...DECORATIVE_ICON_A11Y}
               name={status === 'done' ? 'check' : 'block'}
               size={glyph}
-              color={status === 'done' ? ACCENT : FAILED}
+              color={status === 'done' ? colors.accentMark : colors.negative}
               testID={testID && `${testID}-${status}`}
             />
           </Animated.View>
@@ -110,14 +107,14 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
         {label !== undefined && (
           // Two lines, tail-truncated. German and Dutch run long and a
           // mid-word cut is worse than a wrap.
-          <Text size={size === 'md' ? 'sm' : 'xs'} style={styles.label} numberOfLines={2}>
+          <Text size={size === 'md' ? 'sm' : 'xs'} style={{ color: colors.ink }} numberOfLines={2}>
             {label}
           </Text>
         )}
         {failureLine !== undefined && (
           <Text
             size="xs"
-            style={styles.failure}
+            style={{ color: colors.ink2 }}
             numberOfLines={2}
             testID={testID && `${testID}-consequence`}
           >
@@ -133,9 +130,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingVertical: 3 },
   glyph: { alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   body: { flex: 1, gap: 1 },
-  label: { color: BODY },
-  // Dimmer than the label but still above the 4.5:1 floor on this ground.
-  failure: { color: 'rgb(176, 176, 176)' },
 });
 
 export default StatusIndicator;

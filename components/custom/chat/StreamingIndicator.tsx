@@ -15,6 +15,7 @@ import Animated, {
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
+import { useColors } from '@/lib/theme/tokens';
 
 const STREAMING_LABEL_KEYS = [
     'chat.streamingLabels.understanding',
@@ -48,8 +49,6 @@ const STREAMING_LABEL_CYCLE_MS = 2000;
 // other inside the fixed-height labelRow.
 const LABEL_FADE_MS = 220;
 
-const DEFAULT_LABEL_COLOR = 'rgb(156, 163, 175)';
-const DEFAULT_DOT_COLOR = 'rgb(231, 138, 83)';
 
 // ── ONE shared clock for every mounted indicator ─────────────────────────────
 //
@@ -143,8 +142,9 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     label,
 }) => {
     const { t } = useTranslation();
-    const labelColor = color ?? DEFAULT_LABEL_COLOR;
-    const dotColor = color ?? DEFAULT_DOT_COLOR;
+    const colors = useColors();
+    const labelColor = color ?? colors.ink2;
+    const dotColor = color ?? colors.accentMark;
 
     // `useAnimationsActive` is false only when this screen is blurred or the
     // app is backgrounded, i.e. when nobody is looking. Its own header warns
@@ -203,7 +203,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                     <Text
                         testID="streaming-caption"
                         size="sm"
-                        style={[streamingIndicatorStyles.label, { color: labelColor }]}
+                        style={{ color: labelColor }}
                     >
                         {label ?? t(STREAMING_LABEL_KEYS[shownIndex % STREAMING_LABEL_KEYS.length])}
                     </Text>
@@ -241,9 +241,8 @@ const streamingIndicatorStyles = StyleSheet.create({
     // No `fontSize` here: the `size="sm"` token owns it, so this label is on
     // the type scale (and honours the in-app text-size control) instead of
     // being pinned at 13px outside it.
-    label: { color: 'rgb(156, 163, 175)' },
     dotsRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 2, marginBottom: -1 },
-    dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgb(231, 138, 83)' },
+    dot: { width: 4, height: 4, borderRadius: 2 },
 });
 
 export default StreamingIndicator;

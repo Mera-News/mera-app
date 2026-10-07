@@ -17,6 +17,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { useColors } from '@/lib/theme/tokens';
 
 /** Gutter width. Fixed, so the bubble's left edge does not shift when the
  *  avatar appears at the start of a turn and goes at the end of it. */
@@ -34,6 +35,7 @@ export const MeraStreamAvatar: React.FC<MeraStreamAvatarProps> = ({
   testID = 'mera-stream-avatar',
 }) => {
   const animationsActive = useAnimationsActive();
+  const colors = useColors();
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export const MeraStreamAvatar: React.FC<MeraStreamAvatarProps> = ({
       <Animated.View style={style}>
         {/* Decorative: the bubble beside it already carries the live region,
             and two announcements for one wait is worse than none. */}
-        <MeraLogo size={AVATAR_SIZE} animated={animationsActive} showsProgress color="rgb(231, 138, 83)" />
+        <MeraLogo size={AVATAR_SIZE} animated={animationsActive} showsProgress color={colors.accentMark} />
       </Animated.View>
     </View>
   );
