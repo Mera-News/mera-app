@@ -1,4 +1,4 @@
-import { useColors } from '@/lib/theme/tokens';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
@@ -43,6 +43,7 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({
     testID = 'explore-search-input',
 }) => {
     const colors = useColors();
+    const keyboard = useThemeMode();
     const [focused, setFocused] = useState(autoFocus);
     return (
         <View
@@ -64,6 +65,7 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({
                 autoCorrect={false}
                 autoCapitalize={autoCapitalize}
                 returnKeyType="search"
+                keyboardAppearance={keyboard}
                 autoFocus={autoFocus}
                 // Our only clear control (iOS; Android keyboards carry their own).
                 clearButtonMode="while-editing"

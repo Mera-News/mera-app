@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, type ListRenderItem } from 'react-native';
+import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface ExploreSearchResultsProps {
@@ -50,6 +51,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     offline = false,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
 
     const handleSeePlans = useCallback(() => {
         void presentFreeTierPaywall('explore-search');
@@ -78,16 +80,16 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
                 <MaterialIcons
                     name={offline ? 'cloud-off' : 'search'}
                     size={40}
-                    color="#666666"
+                    color={colors.ink3}
                     accessible={false}
                     accessibilityElementsHidden
                     importantForAccessibility="no-hide-descendants"
                 />
-                <Text size="md" className="text-gray-400 text-center">
+                <Text size="md" className="text-ink-2 text-center">
                     {offline ? t('world.offline') : t('world.search.empty')}
                 </Text>
                 {offline ? null : (
-                    <Text size="sm" className="text-gray-500 text-center" testID="explore-search-privacy">
+                    <Text size="sm" className="text-ink-3 text-center" testID="explore-search-privacy">
                         {t('world.search.privacy')}
                     </Text>
                 )}
@@ -111,8 +113,8 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
                 className="items-center justify-center py-16 p-6"
                 space="md"
             >
-                <MaterialIcons name="error-outline" size={40} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-                <Text size="md" className="text-gray-400 text-center">
+                <MaterialIcons name="error-outline" size={40} color={colors.ink3} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+                <Text size="md" className="text-ink-2 text-center">
                     {isNotSubscribed
                         ? t('explore.searchNotSubscribed')
                         : offline
@@ -136,10 +138,10 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
         return (
             // One plain line and what to try; the words stay in the field.
             <VStack testID="explore-search-empty" className="items-center justify-center py-16 p-6" space="xs">
-                <Text size="md" bold className="text-white text-center">
+                <Text size="md" bold className="text-ink text-center">
                     {t('world.search.noMatch')}
                 </Text>
-                <Text size="sm" className="text-gray-400 text-center">
+                <Text size="sm" className="text-ink-2 text-center">
                     {t('world.search.noMatchTry')}
                 </Text>
             </VStack>
@@ -158,7 +160,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             ListHeaderComponent={
-                <Text size="sm" className="text-gray-400 font-semibold mb-2" testID="explore-search-count">
+                <Text size="sm" className="text-ink-2 font-semibold mb-2" testID="explore-search-count">
                     {t('world.search.count', { count: hits.length })}
                 </Text>
             }

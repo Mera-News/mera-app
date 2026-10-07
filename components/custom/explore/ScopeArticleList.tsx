@@ -61,11 +61,11 @@ export const HUNG_LOAD_MS = 15_000;
 
 const SKELETON_ROWS = 3;
 const SKELETON_THUMB = 64;
-const skeletonBar = (width: `${number}%`, alpha: number, height = 12) => ({
+const skeletonBar = (width: `${number}%`, fill: string, height = 12) => ({
     height,
     borderRadius: height / 2,
     width,
-    backgroundColor: `rgba(255,255,255,${alpha})`,
+    backgroundColor: fill,
 });
 const SKELETON_ROW_STYLE = {
     flexDirection: 'row',
@@ -74,13 +74,12 @@ const SKELETON_ROW_STYLE = {
     marginBottom: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
 } as const;
 
 /** Static placeholder rows for a first load (no pulse: nothing moves on a
  *  World page unless the reader moves it, and Lite mode needs no branch). */
 function SkeletonRows() {
+    const colors = useColors();
     return (
         <Box
             testID="explore-skeleton"
@@ -89,19 +88,19 @@ function SkeletonRows() {
             importantForAccessibility="no-hide-descendants"
         >
             {Array.from({ length: SKELETON_ROWS }, (_, i) => (
-                <Box key={i} style={SKELETON_ROW_STYLE}>
+                <Box key={i} style={[SKELETON_ROW_STYLE, { borderColor: colors.line, backgroundColor: colors.surface }]}>
                     <Box
                         style={{
                             width: SKELETON_THUMB,
                             height: SKELETON_THUMB,
                             borderRadius: 10,
-                            backgroundColor: 'rgba(255,255,255,0.08)',
+                            backgroundColor: colors.surface,
                         }}
                     />
                     <VStack style={{ flex: 1, gap: 8, paddingTop: 4 }}>
-                        <Box style={skeletonBar('90%', 0.12)} />
-                        <Box style={skeletonBar('65%', 0.1)} />
-                        <Box style={skeletonBar('35%', 0.07, 10)} />
+                        <Box style={skeletonBar('90%', colors.surfaceRaised)} />
+                        <Box style={skeletonBar('65%', colors.line)} />
+                        <Box style={skeletonBar('35%', colors.surface, 10)} />
                     </VStack>
                 </Box>
             ))}
@@ -109,9 +108,6 @@ function SkeletonRows() {
     );
 }
 
-// Matches FeedScreen / DashboardSectionsFeed / StoryTimelineScreen, which each
-// declare it locally. A fourth copy beats a shared constant for one hex value.
-const REFRESH_TINT = '#EDA77E';
 
 /**
  * Append `next` to `previous`, dropping any headline whose article id is
@@ -226,6 +222,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     bottomClearance,
 }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const hours: ExploreWindowHours = (windowHours as ExploreWindowHours | undefined) ?? 24;
     const countryName = scope.kind === 'world' ? null : scope.label;
     const isOnline = useIsOnline();
@@ -497,8 +494,8 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         const answeredEmpty = isConnected && isOnline && !loadFailed && !isLoading;
         return (
             <VStack className="items-center justify-center py-20 p-6" space="md" testID="explore-empty">
-                <MaterialIcons name="article" size={48} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-                <Text size="md" className="text-gray-400 text-center">
+                <MaterialIcons name="article" size={48} color={colors.ink3} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+                <Text size="md" className="text-ink-2 text-center">
                     {/* Explore is server-paginated with no local cache, so an
                         offline OR Mera-unreachable visit produces an empty list
                         rather than an error. Saying "no articles found" there
@@ -526,7 +523,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 ) : null}
             </VStack>
         );
-    }, [isLoading, enabled, loadHung, isOnline, isConnected, loadFailed, t, countryName, hours, onWindowChange]);
+    }, [isLoading, enabled, loadHung, isOnline, isConnected, loadFailed, t, countryName, hours, onWindowChange, colors]);
 
     // Compose the collapsible-header handler (from TabPages) with a
     // scroll-tick notifier (drives deferred TranslatableDynamic translation as
@@ -577,8 +574,8 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                     testID="explore-refresh"
                     refreshing={isRefreshing}
                     onRefresh={onRefresh}
-                    tintColor={REFRESH_TINT}
-                    colors={[REFRESH_TINT]}
+                    tintColor={colors.accent}
+                    colors={[colors.accent]}
                     // The header/chips are a PINNED OVERLAY on this screen, not
                     // stacked chrome — without this the spinner spins behind
                     // them and reads as nothing happening.

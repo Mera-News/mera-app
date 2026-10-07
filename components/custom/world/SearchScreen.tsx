@@ -63,7 +63,7 @@ const SearchScreen: React.FC = () => {
                     accessibilityLabel={t('common.cancel')}
                     style={CANCEL_STYLE}
                 >
-                    <Text size="md" className="text-primary-400 font-semibold">
+                    <Text size="md" className="text-accent-text font-semibold">
                         {t('common.cancel')}
                     </Text>
                 </Pressable>
