@@ -43,6 +43,28 @@ export async function hapticMedium(): Promise<void> {
     }
 }
 
+/** Selection tick: page, switch and checkbox changes. */
+export async function hapticSelection(): Promise<void> {
+    try {
+        const Haptics = getHaptics();
+        if (!Haptics) return;
+        await Haptics.selectionAsync();
+    } catch {
+        // Swallow: haptics are best-effort feedback, never critical.
+    }
+}
+
+/** Error notification: a wrong PIN or code. */
+export async function hapticError(): Promise<void> {
+    try {
+        const Haptics = getHaptics();
+        if (!Haptics) return;
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } catch {
+        // Swallow: haptics are best-effort feedback, never critical.
+    }
+}
+
 /** Success notification — for confirmations (fact saved, action completed). */
 export async function hapticSuccess(): Promise<void> {
     try {
