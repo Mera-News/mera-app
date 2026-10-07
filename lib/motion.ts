@@ -7,7 +7,7 @@
 // and opacity on the UI thread, never layout.
 
 import { I18nManager } from 'react-native';
-import { Easing } from 'react-native-reanimated';
+import { Easing, withSequence, withTiming } from 'react-native-reanimated';
 
 export const EASE = {
     /** Things arriving: cubic-bezier(0.16, 1, 0.3, 1). */
@@ -55,6 +55,15 @@ export const MOTION = {
     noteReveal: { word: 250, stagger: 40 },
     stage: { duration: 600 },
 } as const;
+
+/** The wrong-PIN / wrong-code shake (FinalMotion): left and right, decaying,
+ *  300 ms in all. Assign it to a translateX shared value. */
+export function shakeX(): number {
+    const { offsets, duration } = MOTION.pinShake;
+    const step = duration / offsets.length;
+    const [first, ...rest] = offsets.map((o) => withTiming(o, { duration: step }));
+    return withSequence(first, ...rest);
+}
 
 /**
  * 'logical' follows the reading direction; 'physical' never mirrors. The Mera
