@@ -27,9 +27,13 @@ import { isFeedbackRequestId } from '@/lib/stores/pending-notification-route';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
+import type { PageHeaderBinding } from '@/components/custom/nav/types';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 const ACCENT = '#EDA77E';
 
@@ -109,7 +113,13 @@ function parseJson<T>(raw: string | null): T | null {
 }
 
 interface NotificationsScreenProps {
-    readonly onBack: () => void;
+    /** Standalone route only: the header's back button. */
+    readonly onBack?: () => void;
+    /** Embedded as the You tab's Notifications page: the shell draws the
+     *  title row, so there is no header or back button here. */
+    readonly header?: PageHeaderBinding;
+    /** The visible page of the focused tab. Standalone: always seen. */
+    readonly active?: boolean;
 }
 
 /**
@@ -119,8 +129,9 @@ interface NotificationsScreenProps {
  * row rendering/interaction logic (mark-read, chip actions, chat hand-off),
  * ported here as a virtualized FlatList instead of a ScrollView + .map.
  */
-const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => {
+const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack, header, active = true }) => {
     const { t } = useTranslation();
+    const endClearance = useListEndClearance();
     const [items, setItems] = useState<NotificationModel[]>([]);
     /**
      * The cleanups waiting RIGHT NOW. A hygiene row stamps its count when it is
@@ -185,13 +196,15 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
         return () => sub.unsubscribe();
     }, []);
 
-    // Unread dots stay visible while the user reads the list; the bell badge
-    // (observeUnreadCount) is cleared only on leave — mark everything read here.
+    // Seeing the page clears the dots (the You tab's and the pill's, both
+    // from observeUnreadCount): mark read while the page is the one on screen,
+    // and again when a row lands while it is. Never on unmount: a warmed
+    // neighbour page that was never shown must not clear anything. Keyed on
+    // "any unread", so the write's own re-emit cannot loop.
+    const hasUnread = items.some((n) => n.status === 'unread');
     useEffect(() => {
-        return () => {
-            void markAllRead();
-        };
-    }, []);
+        if (active && hasUnread) void markAllRead();
+    }, [active, hasUnread]);
 
     /** Opens the floating Mera chat pre-staged with a synthesized message. */
     const openChatWith = useCallback((message: string) => {
@@ -399,6 +412,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
         // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
         // its SafeAreaView, so the page background spans the safe areas.
         <Box className="flex-1">
+            {header ? null : (
             <DrillDownHeader
                 title={t('notificationCenter.title')}
                 onBack={onBack}
@@ -428,21 +442,37 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                     ) : undefined
                 }
             />
+            )}
             {items.length === 0 ? (
-                <VStack className="flex-1 items-center justify-center px-6" space="md">
+                <VStack
+                    className="flex-1 items-center justify-center px-6"
+                    space="md"
+                    style={header ? { paddingTop: header.headerHeight } : undefined}
+                >
                     <MeraLogo size={72} />
                     <Text className="text-center" style={{ color: 'rgb(163,163,163)' }}>
                         {t('notificationCenter.empty')}
                     </Text>
                 </VStack>
             ) : (
-                <FlatList
+                <Animated.FlatList
                     data={items}
                     keyExtractor={keyExtractor}
                     renderItem={renderItem}
                     initialNumToRender={12}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: 48 }}
+                    onScroll={header?.scrollHandler}
+                    scrollEventThrottle={16}
+                    // Rows that land with no scroll still need a tick to be
+                    // measured (scroll-tick-coverage guard).
+                    onContentSizeChange={() => {
+                        if (active) notifyScrollTick();
+                    }}
+                    contentContainerStyle={
+                        header
+                            ? { paddingTop: header.headerHeight + 8, paddingBottom: endClearance }
+                            : { paddingBottom: 48 }
+                    }
                 />
             )}
         </Box>
