@@ -1,5 +1,5 @@
-// The Feed tab's pages: Feed, Interests, Stories, a fixed group (only World
-// is arranged). The Feed page is keep-mounted in the pager (PAGE_META), so
+// The Feed tab's pages: Feed (two views, FeedPage) and Stories, a fixed group
+// (only World is arranged). The Feed page is keep-mounted in the pager (PAGE_META), so
 // its reading session survives any swipe or reorder.
 //
 // The status icon sits in the header's leading slot on every page of the tab;
@@ -7,9 +7,8 @@
 // here once, OUTSIDE TabPages (which all four tabs share).
 
 import FeedStatusIcon from '@/components/custom/for-you/FeedStatusIcon';
-import InterestsPage from '@/components/custom/for-you/InterestsPage';
 import StatusCardSlideIn from '@/components/custom/for-you/StatusCardSlideIn';
-import FeedScreen from '@/components/custom/feed/FeedScreen';
+import FeedPage from '@/components/custom/feed/FeedPage';
 import { PAGE_META } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
@@ -42,7 +41,8 @@ export function FeedPages() {
   const order = usePageOrder('feed');
   const pills: PagePill[] = useMemo(
     () =>
-      order.map((id) => ({
+      // ponytail: drops 'interests' until S1 removes it from the fixed order.
+      order.filter((id) => id !== 'interests').map((id) => ({
         id,
         label: t(PAGE_META[id].labelKey),
         icon: id === 'feed' ? 'article' : id === 'stories' ? 'layers' : undefined,
@@ -54,9 +54,7 @@ export function FeedPages() {
   const renderPage = useCallback(({ pageId, active, header }: PageRenderProps) => {
     switch (pageId) {
       case 'feed':
-        return <FeedScreen active={active} header={header} />;
-      case 'interests':
-        return <InterestsPage active={active} header={header} />;
+        return <FeedPage active={active} header={header} />;
       case 'stories':
         return (
           <TrackedStoriesScreen

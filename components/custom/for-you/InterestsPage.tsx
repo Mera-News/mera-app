@@ -53,9 +53,11 @@ interface SortSnapshot {
 export interface InterestsPageProps {
   readonly active: boolean;
   readonly header: PageHeaderBinding;
+  /** The Feed page's title row (FeedPage), the list's first item. */
+  readonly listHeader?: React.ReactElement;
 }
 
-const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
+const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeader }) => {
   const { t } = useTranslation();
   const { isLoading, errorMessage } = useFeedBootstrap();
   const handleSuggestionPress = useOpenSuggestion('sectioned');
@@ -172,6 +174,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
         onPressSuggestion={handleSuggestionPress}
         scrollHandler={header.scrollHandler}
         headerHeight={header.headerHeight}
+        ListHeaderComponent={listHeader}
         ListEmptyComponent={empty}
         refreshing={refreshing}
         onRefresh={onRefresh}

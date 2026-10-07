@@ -6,7 +6,6 @@ import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
@@ -79,6 +78,8 @@ interface DashboardSectionsFeedProps {
   /** The Interests page's nothing-yet state: shown when no section has a story (the
    *  empty sections themselves are never drawn). */
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
+  /** The Feed page's title row, the list's first item. */
+  ListHeaderComponent?: React.ReactElement;
   /** Pull-to-refresh spinner state. Driven by the scheduler's feed-sync flag
    *  (see `useFeedSyncRefresh`), NOT by local state — so it rises on the same
    *  frame as the pull and stays up for the real duration of the sync. */
@@ -108,6 +109,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   scrollHandler,
   headerHeight,
   ListEmptyComponent,
+  ListHeaderComponent,
   refreshing,
   onRefresh,
   active = true,
@@ -260,7 +262,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         data={sectionData}
         keyExtractor={(it) => it.key}
         renderItem={renderItem}
-        ListFooterComponent={<HowThisPageWorks pageId="interests" />}
+        ListHeaderComponent={ListHeaderComponent}
         ListEmptyComponent={ListEmptyComponent}
         refreshControl={
           onRefresh ? (

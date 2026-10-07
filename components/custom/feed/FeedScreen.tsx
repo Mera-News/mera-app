@@ -87,10 +87,8 @@ import {
 } from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
-import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
-import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useReasonWriting } from '@/components/custom/cards/use-reason-in-flight';
@@ -293,9 +291,11 @@ export interface FeedScreenProps {
   readonly active: boolean;
   /** The tab's one collapsing header. */
   readonly header: PageHeaderBinding;
+  /** The page's title row (FeedPage), the list's first item. */
+  readonly listHeader?: React.ReactElement;
 }
 
-const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
+const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) => {
   const { t } = useTranslation();
   const listEndClearance = useListEndClearance();
   // "Focused" for everything this screen used to gate on the tab: the visible
@@ -880,16 +880,12 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
   // AllCaughtUpCard twice (the empty-state chain in `renderEmpty` already owns
   // that case, and still does).
   const listFooter = useMemo(
-    () => (
-      <>
-        {listData.length > 0 ? (
-          <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-            <AllCaughtUpCard compact />
-          </Box>
-        ) : null}
-        <HowThisPageWorks pageId="feed" />
-      </>
-    ),
+    () =>
+      listData.length > 0 ? (
+        <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
+          <AllCaughtUpCard compact />
+        </Box>
+      ) : null,
     [listData.length],
   );
 
@@ -1076,6 +1072,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           paddingBottom: listEndClearance,
           flexGrow: 1,
         }}
+        ListHeaderComponent={listHeader}
         ListEmptyComponent={renderEmpty()}
         ListFooterComponent={listFooter}
         initialNumToRender={4}
@@ -1095,9 +1092,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
         updateCellsBatchingPeriod={50}
         removeClippedSubviews={false}
       />
-
-      {/* One-time "What's new" sheet, only on the visible page. */}
-      {active ? <WhatsNewSheet /> : null}
     </Box>
   );
 };
