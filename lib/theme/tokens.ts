@@ -63,6 +63,8 @@ export interface ThemeColors {
     warning: string;
     /** Blue for information. */
     info: string;
+    /** A translucent header over scrolling content (board header). */
+    chrome: string;
 }
 
 export const COLORS: Record<ThemeMode, ThemeColors> = {
@@ -93,6 +95,7 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         edge: 'rgba(255,255,255,0.3)',
         warning: 'rgb(233,179,83)',
         info: 'rgb(150,190,235)',
+        chrome: 'rgba(18,17,19,0.90)',
     },
     // From the FinalLight* boards. Contrast gates: 4.5:1 text, 3:1 marks.
     light: {
@@ -113,7 +116,9 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         trackFill: 'rgba(18,17,19,0.07)',
         trackBorder: 'rgba(18,17,19,0.14)',
         helpRing: 'rgba(18,17,19,0.32)',
-        scrim: 'rgba(18,17,19,0.78)',
+        // The Modals board's light dim (World's arranging overlay uses a lighter
+        // rgba(0,0,0,0.28) of its own; sheets and dialogs follow Modals).
+        scrim: 'rgba(18,17,19,0.35)',
         modalBase: '#FFFFFF',
         panel: '#FFFFFF',
         panelBorder: 'rgba(18,17,19,0.14)',
@@ -125,6 +130,7 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         // boards' own dark amber; #2563A8 is a derived blue at 4.5:1 on white.
         warning: '#9A6200',
         info: '#2563A8',
+        chrome: 'rgba(255,255,255,0.62)',
     },
 };
 
@@ -161,6 +167,7 @@ export function themeCssVars(mode: ThemeMode): Record<string, string> {
         '--color-panel': c.panel,
         '--color-panel-border': c.panelBorder,
         '--color-edge': c.edge,
+        '--color-chrome': c.chrome,
         '--color-warning': c.warning,
         '--color-info': c.info,
     };
