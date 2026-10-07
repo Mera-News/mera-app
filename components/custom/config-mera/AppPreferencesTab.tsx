@@ -33,7 +33,7 @@ import { backupCadence, backupLastRunAt, backupProviderId } from '@/lib/backup/b
 import PolicyPill from '@/components/custom/PolicyPill';
 import SecuritySettingsSection from './SecuritySettingsSection';
 import SettingsUsageCard from './SettingsUsageCard';
-import { ForwardChevron } from '@/components/custom/you/HubCard';
+import { ForwardChevron } from '@/components/custom/you/rows';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 
