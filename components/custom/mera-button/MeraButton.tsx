@@ -15,29 +15,39 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import { Text } from '@/components/ui/text';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { hapticLight } from '@/lib/haptics';
+import { EASE, MOTION } from '@/lib/motion';
 import { takeHintIndex } from '@/lib/navigation/hint-cursor';
 import { MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
+import { useColors } from '@/lib/theme/tokens';
 import { useFloatingChatStore, type MeraPageKey } from '@/lib/stores/floating-chat-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector, type PanGesture } from 'react-native-gesture-handler';
-import Animated, { FadeOut, useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { DRAG_ACTIVATION, MERA_CORNERS, setMeraCorner, useMeraCorner, type MeraCorner } from './corner';
 import { chatContextFor, hintKeys, interestFactId, statusKey } from './mera-pages';
 import { openMeraChat } from './open-mera-chat';
 import { tooltipRemainingMs } from './tooltip-visit';
 
-// White circle, dark mark (owner restyle). INK is the app's dark surface
-// (gluestack dark `--color-background-0`, rgb 18 17 19; also HEADER_INK in
-// nav/QuickSettingsButton), so the mark reads as a cut-out of the page.
-const FILL = '#FFFFFF';
-const INK = '#121113';
-// Only the Reduce Motion "reading" ring: orange reads on the white circle and
-// against the dark page, where a dark ring would vanish.
-const ORANGE = '#E78A53';
-const LOGO_SIZE = 34;
+// The disc is the theme's ink and the mark is the page colour, so the mark
+// reads as a cut-out: white disc and dark mark in dark, the reverse in light.
+// The logo is DRAWN at the working size and scaled down at rest, so it stays
+// sharp while it grows (FinalMeraChat #10: 38 to 52 pt).
+const LOGO_REST = 38;
+const LOGO_WORKING = 52;
+const REST_SCALE = LOGO_REST / LOGO_WORKING;
+/** The unread ring: 2pt, 5pt clear of the disc (FinalMeraChat #11). */
+const RING_GAP = 5;
+const RING_WIDTH = 2;
 const TOOLTIP_BG = 'rgba(52,50,55,0.97)';
 const TOOLTIP_BORDER = 'rgba(255,255,255,0.12)';
 const TOOLTIP_MAX_WIDTH = 190;
@@ -68,6 +78,11 @@ export interface MeraButtonProps {
   readonly pan?: PanGesture;
   /** True while the button is being dragged: the tooltip steps aside. */
   readonly dragging?: boolean;
+  /** Mera is working on the reader's request with the chat closed: the logo
+   *  grows and its cards scroll. */
+  readonly working?: boolean;
+  /** Mera's answer is waiting unread: an orange ring circles the button. */
+  readonly unread?: boolean;
 }
 
 const MeraButton: React.FC<MeraButtonProps> = ({
@@ -77,7 +92,10 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   tooltipSide = 'left',
   pan,
   dragging = false,
+  working = false,
+  unread = false,
 }) => {
+  const colors = useColors();
   const { t } = useTranslation();
   // Computed keys (pools, status), so `t` takes them untyped; the en.json
   // presence test in mera-button covers every one.
@@ -124,7 +142,19 @@ const MeraButton: React.FC<MeraButtonProps> = ({
       AccessibilityInfo.announceForAccessibility(tKey(statusKey(mode)));
     }
   }, [mode, tKey]);
-  const reading = mode === 'processing';
+
+  // ── working: the logo grows on the UI thread ─────────────────────────────
+  const scale = useSharedValue(working ? 1 : REST_SCALE);
+  useEffect(() => {
+    const to = working ? 1 : REST_SCALE;
+    scale.value = reduceMotion
+      ? to
+      : withTiming(to, {
+          duration: working ? MOTION.status.open : MOTION.status.close,
+          easing: working ? EASE.arrive : EASE.leave,
+        });
+  }, [working, reduceMotion, scale]);
+  const growStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   // ── tap ──────────────────────────────────────────────────────────────────
   const circleRef = useRef<View>(null);
@@ -210,18 +240,21 @@ const MeraButton: React.FC<MeraButtonProps> = ({
             else if (name.startsWith('move-')) setMeraCorner(name.slice(5) as MeraCorner);
           }}
           hitSlop={4}
-          style={styles.circle}
+          style={[styles.circle, { backgroundColor: colors.ink }]}
           testID="mera-button"
         >
-          {/* Reduce Motion: a still ring says "reading" instead of the motion. */}
-          {reading && reduceMotion && <View style={styles.ring} testID="mera-button-ring" />}
-          <MeraLogo
-            size={LOGO_SIZE}
-            color={INK}
-            animated={reading && !reduceMotion}
-            scrollCards={reading && !reduceMotion}
-            showsProgress
-          />
+          {unread && (
+            <Animated.View
+              entering={reduceMotion ? undefined : FadeIn.duration(MOTION.status.open)}
+              style={[styles.ring, { borderColor: colors.accentMark }]}
+              testID="mera-button-ring"
+            />
+          )}
+          {/* The cone sweeps at rest; the mark itself holds it still off
+              screen, in Lite mode and under Reduce Motion. */}
+          <Animated.View style={growStyle}>
+            <MeraLogo size={LOGO_WORKING} color={colors.base} animated scrollCards={working} />
+          </Animated.View>
         </View>
       </GestureDetector>
     </View>
@@ -248,7 +281,6 @@ const styles = StyleSheet.create({
     width: MERA_BUTTON_SIZE,
     height: MERA_BUTTON_SIZE,
     borderRadius: MERA_BUTTON_SIZE / 2,
-    backgroundColor: FILL,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -259,13 +291,12 @@ const styles = StyleSheet.create({
   },
   ring: {
     position: 'absolute',
-    top: -5,
-    left: -5,
-    right: -5,
-    bottom: -5,
-    borderRadius: MERA_BUTTON_SIZE / 2 + 5,
-    borderWidth: 2,
-    borderColor: ORANGE,
+    top: -(RING_GAP + RING_WIDTH),
+    left: -(RING_GAP + RING_WIDTH),
+    right: -(RING_GAP + RING_WIDTH),
+    bottom: -(RING_GAP + RING_WIDTH),
+    borderRadius: MERA_BUTTON_SIZE / 2 + RING_GAP + RING_WIDTH,
+    borderWidth: RING_WIDTH,
   },
   tooltip: {
     maxWidth: TOOLTIP_MAX_WIDTH,
