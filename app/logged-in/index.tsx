@@ -3,6 +3,8 @@ import AbstractGradientBackdrop from "@/components/custom/AbstractGradientBackdr
 import ErrorBoundary from "@/components/custom/ErrorBoundary";
 import { FullScreenErrorFallback } from "@/components/custom/ErrorFallback";
 import MeraLogo from "@/components/custom/MeraLogo";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { StyleSheet } from "react-native";
 import IdentitySwitchFailedScreen from "@/components/custom/auth/IdentitySwitchFailedScreen";
 import { authClient } from "@/lib/auth-client";
 import logger from "@/lib/logger";
@@ -406,8 +408,14 @@ function LoggedInGate() {
     // Never on the fail-closed branch above: that screen reads nothing.
     return (
         <Box className="flex-1 justify-center items-center bg-black">
-            <AbstractGradientBackdrop />
-            <MeraLogo size={96} animated showsProgress />
+            {/* Mera starts (FinalStart #2): the gradient fades in behind the
+                logo, which sits exactly where the gate hands it to the Mera button
+                (LaunchLogoHandoff). No progress torch: Lite and Reduce Motion
+                hold the mark still. */}
+            <Animated.View entering={FadeIn.duration(300)} style={StyleSheet.absoluteFill}>
+                <AbstractGradientBackdrop />
+            </Animated.View>
+            <MeraLogo size={96} animated />
         </Box>
     );
 }

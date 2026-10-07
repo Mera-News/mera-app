@@ -1,6 +1,8 @@
 import { Box } from "@/components/ui/box";
 import AbstractGradientBackdrop from "@/components/custom/AbstractGradientBackdrop";
 import MeraLogo from "@/components/custom/MeraLogo";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { StyleSheet } from "react-native";
 import { authClient } from "@/lib/auth-client";
 import { enforceInstallBoundary, wasInstallBoundaryReset } from "@/lib/security/install-boundary";
 import { readLocalIdentityState, resolveLaunchRoute, type LaunchRoute } from "@/lib/security/launch-route";
@@ -84,8 +86,14 @@ export default function Index() {
   // a flat-black splash followed by a jump to colour.
   return (
     <Box className="flex-1 justify-center items-center bg-black">
-      <AbstractGradientBackdrop />
-      <MeraLogo size={96} animated showsProgress />
+      {/* Mera starts (FinalStart #2): the gradient fades in behind the
+          logo, which sits exactly where the gate hands it to the Mera button
+          (LaunchLogoHandoff). No progress torch: Lite and Reduce Motion
+          hold the mark still. */}
+      <Animated.View entering={FadeIn.duration(300)} style={StyleSheet.absoluteFill}>
+          <AbstractGradientBackdrop />
+      </Animated.View>
+      <MeraLogo size={96} animated />
     </Box>
   );
 }

@@ -31,6 +31,7 @@ import FactsComboToast from '@/components/custom/toast/FactsComboToast';
 import ToastDeck from '@/components/custom/toast/ToastDeck';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { DialogHost } from '@/components/ui/confirm-dialog';
+import LaunchLogoHandoff from '@/components/custom/auth/LaunchLogoHandoff';
 import { TextScaleProvider } from '@/lib/typography/TextScaleProvider';
 import '@/global.css';
 import database from '@/lib/database';
@@ -405,6 +406,8 @@ function AppRoot() {
             {/* F1: releases the held splash on the first route past the
                 startup gates (lib/splash-hold.ts). Renders nothing. */}
             <SplashReleaser />
+            {/* Into the Feed: the launch logo flies into the Mera button. */}
+            <LaunchLogoHandoff />
             </View>
           </ThemeProvider>
         </ApolloProvider>

@@ -8,8 +8,16 @@ import { authClient } from "@/lib/auth-client";
 import { getSetting } from "@/lib/database/services/setting-service";
 import { AppScheduler } from "@/lib/scheduler/AppScheduler";
 import { effectiveSessionUserId, readPendingAuthUserId } from "@/lib/security/identity-gate";
+import { requestRestart } from "@/lib/app-restart";
+import { useAppLanguageStore } from "@/lib/stores/app-language-store";
 import { Redirect, router } from "expo-router";
+import { I18nManager } from "react-native";
 import { useCallback, useEffect, useState } from "react";
+
+/** The languages lib/i18n lays out right to left. */
+const RTL_LANGUAGES = new Set(["ar", "he"]);
+/** Long enough for the Feed route to commit, so the restart is not blocked. */
+const RTL_RESTART_AFTER_MS = 1000;
 
 export default function Onboarding() {
     // useSession is a non-blocking ENHANCEMENT, never a gate — the same contract
@@ -103,6 +111,15 @@ export default function Onboarding() {
     const handleComplete = useCallback(() => {
         void AppScheduler.trigger("feed-sync", { bypassDebounce: true });
         router.replace("/logged-in/app_container/feed");
+        // A right-to-left language picked on the first-launch track needs a
+        // reload to flip the layout, and no restart can happen on /login or
+        // here (RESTART_BLOCKED_ROUTES). So the first moment it can is the Feed:
+        // once, after the replace has committed. Until then Arabic reads in a
+        // left-to-right layout.
+        const rtl = RTL_LANGUAGES.has(useAppLanguageStore.getState().appLanguage);
+        if (I18nManager.isRTL !== rtl) {
+            setTimeout(() => void requestRestart("language"), RTL_RESTART_AFTER_MS);
+        }
     }, []);
 
     if (!resolved) {
