@@ -435,9 +435,6 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                 {isOnboarding ? t('onboarding.notificationsOn') : t('you.notifications.when')}
             </Text>
             <NotificationTimes hours={selectedHours} onChange={handleHoursChange} />
-            <Text size="xs" className="mx-4 mb-2" style={{ color: colors.ink3 }}>
-                {t('you.notifications.footnote')}
-            </Text>
             <Box className="mx-4" style={{ minHeight: 24 }}>{saveStatusLine()}</Box>
         </VStack>
     );
