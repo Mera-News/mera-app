@@ -1,4 +1,6 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
+import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { alpha3ToAlpha2 } from '@/components/custom/locations/location-display';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
@@ -170,9 +172,14 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                                     {t('you.sources.adjusted')}
                                 </Text>
                             ) : (
-                                <Text testID="sources-empty" size="sm" className="text-gray-300 px-4 py-3">
-                                    {t('you.sources.empty')}
-                                </Text>
+                                // The tutorial hero over the empty message (FinalMotion, Lottie moments).
+                                <ForYouEmptyState
+                                    testID="sources-empty"
+                                    compact
+                                    animationId="sources-where-it-lives"
+                                    body={t('you.sources.empty')}
+                                    action={{ label: t('nav.learnMore'), onPress: () => openTutorial('sources'), testID: 'sources-empty-learn' }}
+                                />
                             )}
                         </VStack>
                     }
