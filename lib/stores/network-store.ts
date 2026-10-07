@@ -390,8 +390,8 @@ export function stopNetworkListener(): void {
 export const useIsConnected = () => useNetworkStore((s) => s.isConnected);
 
 /**
- * "We can reach Mera and it answers." Feeds the identity gate, ReauthBanner and
- * the onboarding offline guard. Excludes `serverSlow` on purpose — a slow server
+ * "We can reach Mera and it answers." Feeds the identity gate and the
+ * onboarding offline guard. Excludes `serverSlow` on purpose — a slow server
  * can still complete an OTP or a mutation.
  */
 export const useIsOnline = () =>

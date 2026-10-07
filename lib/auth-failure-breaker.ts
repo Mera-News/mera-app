@@ -491,7 +491,8 @@ function maybeVerifyReauthState(): void {
  *
  * Mirrors onAppForeground exactly, INCLUDING its proven-dead early return: a
  * confirmed-dead session must not self-heal, or we buy AUTH_FAILURE_THRESHOLD
- * more 401s and an immediate re-trip. ReauthBanner stays the only path out of
+ * more 401s and an immediate re-trip. The sign-in gate (ReauthOnReturn sends
+ * the user there on the next return to the app) stays the only path out of
  * that state.
  */
 export function onNetworkReconnect(): void {

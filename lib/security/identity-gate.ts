@@ -219,12 +219,11 @@ export function isIdentitySwitchBlocked(): boolean {
 // "Sign in without email" can open the phone's own account, a DIFFERENT one
 // from the account on this device. The sign-in has already set that account's
 // cookie, so better-auth's session atom settles on it while AuthScreen is still
-// asking whether to switch. /login?reauth=1 is PUSHED over a mounted /logged-in
-// tree (ReauthBanner), so three things react to that atom underneath: the
-// watcher in the logged-in layout, OnboardingScreen's gate (sessionUserId is in
-// its deps) and login.tsx's session shortcut. Each would reach the cross-user
-// wipe and erase this device's account before the user answered (seen on the
-// staging simulator).
+// asking whether to switch. Anything mounted that reacts to that atom would
+// reach the cross-user wipe and erase this device's account before the user
+// answered (seen on the staging simulator): login.tsx's session shortcut, and,
+// whenever /logged-in is still mounted under /login, the watcher in the
+// logged-in layout and OnboardingScreen's gate (sessionUserId is in its deps).
 //
 // So the id is HELD: every gate reads it as an unresolved session (through
 // effectiveSessionUserId, the one door the session id enters by), the watcher
@@ -329,8 +328,8 @@ function writeFaultFlag(value: '1' | null): void {
  * Deliberately does NOT navigate and does NOT wipe: a forced mid-session eject
  * on a match we cannot A/B is worse than a banner, and which side of the
  * mismatch is stale is exactly what we cannot know locally. It flips the
- * existing needs-reauth flow instead — ReauthBanner appears, AppScheduler stops
- * feed-sync — and persists a marker so the NEXT cold start resolves it before
+ * existing needs-reauth flow instead — AppScheduler stops feed-sync and the
+ * next return to the app meets the sign-in gate (ReauthOnReturn) — and persists a marker so the NEXT cold start resolves it before
  * the app shell is entered.
  */
 export function recordOwnershipFault(context: { operationName?: string } = {}): void {
