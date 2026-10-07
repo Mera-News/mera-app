@@ -17,8 +17,8 @@ import {
     TUTORIAL_ACCENT,
     TUTORIAL_ACCENT_EDGE,
     TUTORIAL_ACCENT_SOFT,
-    TUTORIAL_MUTED_EDGE,
 } from '../theme';
+import { themedStyles } from '@/lib/theme/tokens';
 
 const ORBIT_MS = 9000;
 const RADIUS = 76;
@@ -36,6 +36,7 @@ const DOTS = 5;
  * ⚠️ No branching on `placeholder.kind` here — see `IconPlaceholder`.
  */
 const OrbitPlaceholder: React.FC<{ readonly name: MaterialIconName }> = ({ name }) => {
+    const styles = useStyles();
     const spin = useSharedValue(0);
     const active = useAnimationsActive();
 
@@ -88,7 +89,7 @@ const OrbitPlaceholder: React.FC<{ readonly name: MaterialIconName }> = ({ name 
 const CORE = 84;
 const DOT = 10;
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: {
         height: SCENE_HEIGHT,
         alignItems: 'center',
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
         height: RADIUS * 2,
         borderRadius: RADIUS,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        borderColor: c.trackBorder,
     },
     ring: {
         position: 'absolute',
@@ -126,6 +127,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: TUTORIAL_ACCENT_EDGE,
     },
-});
+}));
 
 export default OrbitPlaceholder;

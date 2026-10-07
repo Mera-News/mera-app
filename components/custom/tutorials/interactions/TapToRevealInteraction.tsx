@@ -9,11 +9,9 @@ import {
     TUTORIAL_ACCENT,
     TUTORIAL_ACCENT_EDGE,
     TUTORIAL_ACCENT_SOFT,
-    TUTORIAL_MUTED,
-    TUTORIAL_MUTED_EDGE,
-    TUTORIAL_TEXT_DIM,
 } from '../theme';
 import { useTutorialCopy } from '../use-tutorial-copy';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 
 interface Props {
     readonly chapterId: ChapterId;
@@ -39,6 +37,8 @@ const TapToRevealInteraction: React.FC<Props> = ({
     requiredReveals,
     onUnlockedChange,
 }) => {
+    const styles = useStyles();
+    const colors = useColors();
     const t = useTutorialCopy();
     const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
 
@@ -86,7 +86,7 @@ const TapToRevealInteraction: React.FC<Props> = ({
                             <MaterialIcons
                                 name={target.icon}
                                 size={18}
-                                color={isOpen ? TUTORIAL_ACCENT : TUTORIAL_TEXT_DIM}
+                                color={isOpen ? TUTORIAL_ACCENT : colors.ink2}
                             />
                             <Text style={styles.label}>
                                 {t(revealLabelKey(chapterId, slideId, target.id))}
@@ -94,7 +94,7 @@ const TapToRevealInteraction: React.FC<Props> = ({
                             <MaterialIcons
                                 name={isOpen ? 'expand-less' : 'expand-more'}
                                 size={18}
-                                color={TUTORIAL_TEXT_DIM}
+                                color={colors.ink2}
                             />
                         </View>
                         {isOpen ? (
@@ -109,10 +109,10 @@ const TapToRevealInteraction: React.FC<Props> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: { gap: 8 },
     hint: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 12,
         marginBottom: 2,
     },
@@ -124,8 +124,8 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     rowClosed: {
-        backgroundColor: TUTORIAL_MUTED,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        backgroundColor: c.trackFill,
+        borderColor: c.trackBorder,
     },
     rowOpen: {
         backgroundColor: TUTORIAL_ACCENT_SOFT,
@@ -138,15 +138,15 @@ const styles = StyleSheet.create({
     },
     label: {
         flex: 1,
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 14,
         fontWeight: '600',
     },
     text: {
-        color: 'rgb(212,212,212)',
+        color: c.muted,
         fontSize: 13,
         lineHeight: 19,
     },
-});
+}));
 
 export default TapToRevealInteraction;

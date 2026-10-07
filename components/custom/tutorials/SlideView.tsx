@@ -17,6 +17,7 @@ import AskMeraButton from './AskMeraButton';
 import SceneView from './SceneView';
 import InteractionRenderer from './interactions';
 import { useTutorialCopy } from './use-tutorial-copy';
+import { themedStyles } from '@/lib/theme/tokens';
 
 interface SlideViewProps {
     readonly chapterId: ChapterId;
@@ -76,6 +77,7 @@ const SlideView: React.FC<SlideViewProps> = ({
     onTapPrev,
     onTapNext,
 }) => {
+    const styles = useStyles();
     const t = useTutorialCopy();
 
     // The `steps` placeholder is the one kind that renders copy, so its labels
@@ -164,7 +166,7 @@ const SlideView: React.FC<SlideViewProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     scroll: { flex: 1 },
     content: {
         // `flexGrow` and NOT `justifyContent`: the zones need to reach the
@@ -185,13 +187,13 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     headline: {
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 22,
         lineHeight: 28,
         fontWeight: '700',
     },
     body: {
-        color: 'rgb(212,212,212)',
+        color: c.muted,
         fontSize: 15,
         lineHeight: 23,
     },
@@ -201,6 +203,6 @@ const styles = StyleSheet.create({
     ask: {
         marginTop: 22,
     },
-});
+}));
 
 export default SlideView;

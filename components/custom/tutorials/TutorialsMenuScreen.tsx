@@ -15,11 +15,9 @@ import {
     TUTORIAL_ACCENT,
     TUTORIAL_ACCENT_EDGE,
     TUTORIAL_ACCENT_SOFT,
-    TUTORIAL_MUTED,
-    TUTORIAL_MUTED_EDGE,
-    TUTORIAL_TEXT_DIM,
 } from './theme';
 import { useTutorialCopy } from './use-tutorial-copy';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 
 interface TutorialsMenuScreenProps {
     readonly onBack: () => void;
@@ -38,6 +36,8 @@ const TutorialsMenuScreen: React.FC<TutorialsMenuScreenProps> = ({
     onBack,
     onOpenChapter,
 }) => {
+    const styles = useStyles();
+    const colors = useColors();
     const t = useTutorialCopy();
     const completed = useTutorialsStore((s) => s.completed);
     const hydrated = useTutorialsStore((s) => s.hydrated);
@@ -99,7 +99,7 @@ const TutorialsMenuScreen: React.FC<TutorialsMenuScreenProps> = ({
                                     <MaterialIcons
                                         name={chapter.icon}
                                         size={20}
-                                        color={isDone ? TUTORIAL_ACCENT : TUTORIAL_TEXT_DIM}
+                                        color={isDone ? TUTORIAL_ACCENT : colors.ink2}
                                     />
                                 </View>
 
@@ -133,7 +133,7 @@ const TutorialsMenuScreen: React.FC<TutorialsMenuScreenProps> = ({
                                     <MaterialIcons
                                         name="chevron-right"
                                         size={18}
-                                        color={TUTORIAL_TEXT_DIM}
+                                        color={colors.ink2}
                                     />
                                 </View>
                             </Pressable>
@@ -143,7 +143,7 @@ const TutorialsMenuScreen: React.FC<TutorialsMenuScreenProps> = ({
 
                 {model.advancedRemaining > 0 ? (
                     <View testID="tutorials-advanced-locked" style={styles.lockedCard}>
-                        <MaterialIcons name="lock-outline" size={16} color={TUTORIAL_TEXT_DIM} />
+                        <MaterialIcons name="lock-outline" size={16} color={colors.ink2} />
                         <View style={styles.lockedBody}>
                             <Text style={styles.lockedTitle}>
                                 {t('tutorials.advancedLockedTitle')}
@@ -161,7 +161,7 @@ const TutorialsMenuScreen: React.FC<TutorialsMenuScreenProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: { flex: 1 },
     content: {
         paddingHorizontal: 16,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     intro: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 13,
         lineHeight: 19,
         marginBottom: 8,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     sectionTitle: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 11,
         fontWeight: '700',
         letterSpacing: 0.8,
@@ -193,8 +193,8 @@ const styles = StyleSheet.create({
         gap: 12,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: TUTORIAL_MUTED_EDGE,
-        backgroundColor: TUTORIAL_MUTED,
+        borderColor: c.trackBorder,
+        backgroundColor: c.trackFill,
         paddingHorizontal: 12,
         paddingVertical: 12,
     },
@@ -204,9 +204,9 @@ const styles = StyleSheet.create({
         borderRadius: 19,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: c.surface,
         borderWidth: 1,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        borderColor: c.trackBorder,
     },
     rowIconDone: {
         backgroundColor: TUTORIAL_ACCENT_SOFT,
@@ -214,12 +214,12 @@ const styles = StyleSheet.create({
     },
     rowBody: { flex: 1, gap: 3 },
     rowTitle: {
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 15,
         fontWeight: '600',
     },
     rowSubtitle: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 12,
         lineHeight: 17,
     },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     rowCount: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 11,
     },
     lockedCard: {
@@ -237,22 +237,22 @@ const styles = StyleSheet.create({
         gap: 10,
         borderRadius: 12,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        borderColor: c.trackBorder,
         paddingHorizontal: 12,
         paddingVertical: 12,
         marginTop: 4,
     },
     lockedBody: { flex: 1, gap: 3 },
     lockedTitle: {
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 13,
         fontWeight: '600',
     },
     lockedText: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 12,
         lineHeight: 17,
     },
-});
+}));
 
 export default TutorialsMenuScreen;

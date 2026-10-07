@@ -9,11 +9,9 @@ import {
     TUTORIAL_ACCENT,
     TUTORIAL_ACCENT_EDGE,
     TUTORIAL_ACCENT_SOFT,
-    TUTORIAL_MUTED,
-    TUTORIAL_MUTED_EDGE,
-    TUTORIAL_TEXT_DIM,
 } from '../theme';
 import { useTutorialCopy } from '../use-tutorial-copy';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 
 interface Props {
     readonly chapterId: ChapterId;
@@ -40,6 +38,8 @@ const BeforeAfterInteraction: React.FC<Props> = ({
     requiredToggles,
     onUnlockedChange,
 }) => {
+    const styles = useStyles();
+    const colors = useColors();
     const t = useTutorialCopy();
     const [showAfter, setShowAfter] = useState(false);
     const [toggles, setToggles] = useState(0);
@@ -71,12 +71,12 @@ const BeforeAfterInteraction: React.FC<Props> = ({
                     <MaterialIcons
                         name={showAfter ? 'lightbulb' : 'help-outline'}
                         size={16}
-                        color={showAfter ? TUTORIAL_ACCENT : TUTORIAL_TEXT_DIM}
+                        color={showAfter ? TUTORIAL_ACCENT : colors.ink2}
                     />
                     <Text style={styles.sideLabel}>
                         {showAfter ? t('tutorials.afterLabel') : t('tutorials.beforeLabel')}
                     </Text>
-                    <MaterialIcons name="flip" size={16} color={TUTORIAL_TEXT_DIM} />
+                    <MaterialIcons name="flip" size={16} color={colors.ink2} />
                 </View>
                 <Text style={styles.body}>
                     {t(beforeAfterKey(chapterId, slideId, showAfter ? 'after' : 'before'))}
@@ -86,10 +86,10 @@ const BeforeAfterInteraction: React.FC<Props> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: { gap: 8 },
     hint: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 12,
     },
     card: {
@@ -101,8 +101,8 @@ const styles = StyleSheet.create({
         minHeight: 118,
     },
     cardBefore: {
-        backgroundColor: TUTORIAL_MUTED,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        backgroundColor: c.trackFill,
+        borderColor: c.trackBorder,
     },
     cardAfter: {
         backgroundColor: TUTORIAL_ACCENT_SOFT,
@@ -115,17 +115,17 @@ const styles = StyleSheet.create({
     },
     sideLabel: {
         flex: 1,
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 12,
         fontWeight: '700',
         textTransform: 'uppercase',
         letterSpacing: 0.6,
     },
     body: {
-        color: 'rgb(212,212,212)',
+        color: c.muted,
         fontSize: 13,
         lineHeight: 20,
     },
-});
+}));
 
 export default BeforeAfterInteraction;

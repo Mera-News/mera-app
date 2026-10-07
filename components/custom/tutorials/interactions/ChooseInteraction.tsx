@@ -9,11 +9,9 @@ import {
     TUTORIAL_ACCENT,
     TUTORIAL_ACCENT_EDGE,
     TUTORIAL_ACCENT_SOFT,
-    TUTORIAL_MUTED,
-    TUTORIAL_MUTED_EDGE,
-    TUTORIAL_TEXT_DIM,
 } from '../theme';
 import { useTutorialCopy } from '../use-tutorial-copy';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 
 interface Props {
     readonly chapterId: ChapterId;
@@ -41,6 +39,8 @@ const ChooseInteraction: React.FC<Props> = ({
     mustBeCorrect,
     onUnlockedChange,
 }) => {
+    const styles = useStyles();
+    const colors = useColors();
     const t = useTutorialCopy();
     const [pickedId, setPickedId] = useState<string | null>(null);
 
@@ -81,7 +81,7 @@ const ChooseInteraction: React.FC<Props> = ({
                                         : 'radio-button-unchecked'
                                 }
                                 size={18}
-                                color={isPicked ? TUTORIAL_ACCENT : TUTORIAL_TEXT_DIM}
+                                color={isPicked ? TUTORIAL_ACCENT : colors.ink2}
                             />
                             <Text style={styles.label}>
                                 {t(chooseLabelKey(chapterId, slideId, option.id))}
@@ -99,10 +99,10 @@ const ChooseInteraction: React.FC<Props> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: { gap: 8 },
     hint: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 12,
         marginBottom: 2,
     },
@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     rowIdle: {
-        backgroundColor: TUTORIAL_MUTED,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        backgroundColor: c.trackFill,
+        borderColor: c.trackBorder,
     },
     rowPicked: {
         backgroundColor: TUTORIAL_ACCENT_SOFT,
@@ -128,15 +128,15 @@ const styles = StyleSheet.create({
     },
     label: {
         flex: 1,
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 14,
     },
     feedback: {
-        color: 'rgb(212,212,212)',
+        color: c.muted,
         fontSize: 13,
         lineHeight: 19,
         paddingLeft: 28,
     },
-});
+}));
 
 export default ChooseInteraction;

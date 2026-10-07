@@ -11,11 +11,9 @@ import SlideView from './SlideView';
 import {
     TUTORIAL_ACCENT,
     TUTORIAL_ACCENT_EDGE,
-    TUTORIAL_MUTED,
-    TUTORIAL_MUTED_EDGE,
-    TUTORIAL_TEXT_DIM,
 } from './theme';
 import { useTutorialCopy } from './use-tutorial-copy';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 
 /**
  * How long a gated slide waits before offering "Continue anyway".
@@ -70,6 +68,8 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     finishLabel,
     onFinish,
 }) => {
+    const styles = useStyles();
+    const colors = useColors();
     const t = useTutorialCopy();
     const insets = useSafeAreaInsets();
     const markCompleted = useTutorialsStore((s) => s.markCompleted);
@@ -212,7 +212,7 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
                     accessibilityLabel={t('tutorials.close')}
                     style={styles.iconButton}
                 >
-                    <MaterialIcons name="close" size={22} color={TUTORIAL_TEXT_DIM} />
+                    <MaterialIcons name="close" size={22} color={colors.ink2} />
                 </Pressable>
 
                 <Text style={styles.title} numberOfLines={1}>
@@ -286,7 +286,7 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: { flex: 1 },
     empty: {
         alignItems: 'center',
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
         gap: 16,
     },
     emptyText: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 14,
     },
     header: {
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     },
     title: {
         flex: 1,
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 15,
         fontWeight: '600',
         textAlign: 'center',
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
     },
     skipLabel: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 13,
         fontWeight: '600',
     },
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 3,
         borderRadius: 2,
-        backgroundColor: TUTORIAL_MUTED_EDGE,
+        backgroundColor: c.trackBorder,
     },
     progressCellDone: {
         backgroundColor: TUTORIAL_ACCENT,
@@ -351,13 +351,13 @@ const styles = StyleSheet.create({
     ghostButton: {
         borderRadius: 999,
         borderWidth: 1,
-        borderColor: TUTORIAL_MUTED_EDGE,
-        backgroundColor: TUTORIAL_MUTED,
+        borderColor: c.trackBorder,
+        backgroundColor: c.trackFill,
         paddingHorizontal: 20,
         paddingVertical: 12,
     },
     ghostLabel: {
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 14,
         fontWeight: '600',
     },
@@ -378,6 +378,6 @@ const styles = StyleSheet.create({
     disabled: {
         opacity: 0.4,
     },
-});
+}));
 
 export default TutorialPlayer;

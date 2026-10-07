@@ -16,9 +16,8 @@ import {
     SCENE_HEIGHT,
     TUTORIAL_ACCENT_EDGE,
     TUTORIAL_ACCENT_SOFT,
-    TUTORIAL_MUTED,
-    TUTORIAL_MUTED_EDGE,
 } from '../theme';
+import { themedStyles, tint } from '@/lib/theme/tokens';
 
 /**
  * One card skeleton. Its own component so each card owns its own shared value —
@@ -29,6 +28,7 @@ const DriftingCard: React.FC<{
     readonly accent: boolean;
     readonly active: boolean;
 }> = ({ index, accent, active }) => {
+    const styles = useStyles();
     const drift = useSharedValue(0);
 
     useEffect(() => {
@@ -75,6 +75,7 @@ const DriftingCard: React.FC<{
  * ⚠️ No branching on `placeholder.kind` here — see `IconPlaceholder`.
  */
 const CardsPlaceholder: React.FC<{ readonly count?: number }> = ({ count = 3 }) => {
+    const styles = useStyles();
     const active = useAnimationsActive();
     // Clamp: the scene block is a fixed height and four cards is already tight.
     const total = Math.max(1, Math.min(4, count));
@@ -88,7 +89,7 @@ const CardsPlaceholder: React.FC<{ readonly count?: number }> = ({ count = 3 }) 
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: {
         height: SCENE_HEIGHT,
         alignItems: 'center',
@@ -108,19 +109,19 @@ const styles = StyleSheet.create({
         borderColor: TUTORIAL_ACCENT_EDGE,
     },
     cardMuted: {
-        backgroundColor: TUTORIAL_MUTED,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        backgroundColor: c.trackFill,
+        borderColor: c.trackBorder,
     },
     line: {
         height: 6,
         borderRadius: 3,
-        backgroundColor: 'rgba(255,255,255,0.22)',
+        backgroundColor: tint(c.ink, 0.22),
     },
     lineAccent: {
         backgroundColor: TUTORIAL_ACCENT_EDGE,
     },
     lineWide: { width: '82%' },
     lineNarrow: { width: '48%' },
-});
+}));
 
 export default CardsPlaceholder;

@@ -9,11 +9,9 @@ import {
     TUTORIAL_ACCENT,
     TUTORIAL_ACCENT_EDGE,
     TUTORIAL_ACCENT_SOFT,
-    TUTORIAL_MUTED,
-    TUTORIAL_MUTED_EDGE,
-    TUTORIAL_TEXT_DIM,
 } from '../theme';
 import { useTutorialCopy } from '../use-tutorial-copy';
+import { themedStyles, tint } from '@/lib/theme/tokens';
 
 interface Props {
     readonly chapterId: ChapterId;
@@ -42,6 +40,7 @@ const SortInteraction: React.FC<Props> = ({
     buckets,
     onUnlockedChange,
 }) => {
+    const styles = useStyles();
     const t = useTutorialCopy();
     const [placed, setPlaced] = useState<Readonly<Record<string, string>>>({});
     const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -153,10 +152,10 @@ const SortInteraction: React.FC<Props> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: { gap: 10 },
     hint: {
-        color: TUTORIAL_TEXT_DIM,
+        color: c.ink2,
         fontSize: 12,
     },
     tray: {
@@ -171,15 +170,15 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
     },
     cardIdle: {
-        backgroundColor: TUTORIAL_MUTED,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        backgroundColor: c.trackFill,
+        borderColor: c.trackBorder,
     },
     cardSelected: {
         backgroundColor: TUTORIAL_ACCENT_SOFT,
         borderColor: TUTORIAL_ACCENT,
     },
     cardText: {
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 13,
     },
     buckets: {
@@ -192,13 +191,13 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderStyle: 'dashed',
-        borderColor: TUTORIAL_MUTED_EDGE,
-        backgroundColor: TUTORIAL_MUTED,
+        borderColor: c.trackBorder,
+        backgroundColor: c.trackFill,
         padding: 10,
         gap: 8,
     },
     bucketWrong: {
-        borderColor: 'rgba(248,113,113,0.7)',
+        borderColor: tint(c.negative, 0.7),
     },
     bucketHead: {
         flexDirection: 'row',
@@ -207,7 +206,7 @@ const styles = StyleSheet.create({
     },
     bucketLabel: {
         flex: 1,
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 12,
         fontWeight: '600',
     },
@@ -224,9 +223,9 @@ const styles = StyleSheet.create({
     },
     placedText: {
         flex: 1,
-        color: 'rgb(229,229,229)',
+        color: c.ink,
         fontSize: 11,
     },
-});
+}));
 
 export default SortInteraction;

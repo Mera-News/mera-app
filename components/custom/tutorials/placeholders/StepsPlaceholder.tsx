@@ -17,8 +17,8 @@ import {
     TUTORIAL_ACCENT,
     TUTORIAL_ACCENT_EDGE,
     TUTORIAL_ACCENT_SOFT,
-    TUTORIAL_MUTED_EDGE,
 } from '../theme';
+import { themedStyles } from '@/lib/theme/tokens';
 
 const STEP_MS = 900;
 const HOLD_MS = 1800;
@@ -32,6 +32,7 @@ const StepRow: React.FC<{
     readonly label: string;
     readonly active: boolean;
 }> = ({ index, total, label, active }) => {
+    const styles = useStyles();
     const lit = useSharedValue(0);
 
     useEffect(() => {
@@ -90,6 +91,7 @@ const StepRow: React.FC<{
  * ⚠️ No branching on `placeholder.kind` here — see `IconPlaceholder`.
  */
 const StepsPlaceholder: React.FC<{ readonly labels: readonly string[] }> = ({ labels }) => {
+    const styles = useStyles();
     const active = useAnimationsActive();
     const rows = labels.slice(0, 4);
 
@@ -110,7 +112,7 @@ const StepsPlaceholder: React.FC<{ readonly labels: readonly string[] }> = ({ la
 
 const BADGE = 26;
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => StyleSheet.create({
     root: {
         minHeight: SCENE_HEIGHT,
         justifyContent: 'center',
@@ -141,15 +143,15 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: 10,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: TUTORIAL_MUTED_EDGE,
+        borderColor: c.trackBorder,
         paddingHorizontal: 12,
         paddingVertical: 10,
     },
     label: {
-        color: '#ffffff',
+        color: c.ink,
         fontSize: 13,
         lineHeight: 18,
     },
-});
+}));
 
 export default StepsPlaceholder;

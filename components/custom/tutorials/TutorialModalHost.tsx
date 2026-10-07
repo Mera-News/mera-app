@@ -4,6 +4,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { PRE_AUTH_CHAPTER_ID } from '@/lib/tutorials/chapters';
+import { useColors } from '@/lib/theme/tokens';
+
 import TutorialPlayer from './TutorialPlayer';
 
 interface TutorialModalHostProps {
@@ -40,7 +42,9 @@ interface TutorialModalHostProps {
  * `SlideView` does, and a slide that will not scroll on Android is a silent
  * failure on exactly the devices least likely to be tested first.
  */
-const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose, chapterId, finishLabel, onFinish }) => (
+const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose, chapterId, finishLabel, onFinish }) => {
+    const colors = useColors();
+    return (
     <Modal
         visible={visible}
         animationType="fade"
@@ -49,9 +53,9 @@ const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose,
         statusBarTranslucent
         onRequestClose={onClose}
     >
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <GestureHandlerRootView style={styles.root}>
-                <View style={styles.page}>
+                <View style={[styles.page, { backgroundColor: colors.base }]}>
                     {visible ? (
                         <TutorialPlayer
                             chapterId={chapterId ?? PRE_AUTH_CHAPTER_ID}
@@ -65,13 +69,14 @@ const TutorialModalHost: React.FC<TutorialModalHostProps> = ({ visible, onClose,
             </GestureHandlerRootView>
         </GluestackUIProvider>
     </Modal>
-);
+    );
+};
 
 const styles = StyleSheet.create({
     root: { flex: 1 },
     // The app is dark-only; an opaque page under a `transparent` Modal is what
     // stops the login screen showing through the copy.
-    page: { flex: 1, backgroundColor: '#000000' },
+    page: { flex: 1 },
 });
 
 export default TutorialModalHost;
