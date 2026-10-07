@@ -98,7 +98,16 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
   };
 
   const heading = phase === 'enter' ? (title ?? t('pin.setupTitle')) : t('pin.confirmTitle');
-  const sub = phase === 'enter' ? (subtitle ?? t('pin.setupSubtitle')) : t('pin.confirmSubtitle');
+  // Step 2 has no subtitle (FinalSettings PIN setup).
+  const sub = phase === 'enter' ? (subtitle ?? t('pin.setupSubtitle')) : null;
+
+  const startOver = () => {
+    if (saving) return;
+    setError(false);
+    setPin('');
+    setFirstPin('');
+    setPhase('enter');
+  };
 
   return (
     // Unpadded wrapper. The backdrop hangs off THIS box rather than the padded
@@ -116,8 +125,11 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
           <MeraLogo size={88} />
 
           <VStack className="items-center" space="xs">
+            <Text testID="pin-setup-step" className="text-typography-500 text-xs">
+              {t('onboarding.stepOf', { current: phase === 'enter' ? 1 : 2, total: 2 })}
+            </Text>
             <Text className="text-white text-xl font-semibold">{heading}</Text>
-            <Text className="text-typography-500 text-sm text-center">{sub}</Text>
+            {sub ? <Text className="text-typography-500 text-sm text-center">{sub}</Text> : null}
           </VStack>
 
           <Box className="mt-6">
@@ -138,15 +150,19 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
             ) : null}
           </Box>
 
-          {onCancel && (
+          {/* Step 2 offers Start over (back to step 1) in place of Cancel. */}
+          {(phase === 'confirm' || onCancel) && (
             <Pressable
-              testID="pin-setup-cancel-button"
-              onPress={onCancel}
+              testID={phase === 'confirm' ? 'pin-setup-start-over-button' : 'pin-setup-cancel-button'}
+              onPress={phase === 'confirm' ? startOver : onCancel}
+              disabled={saving}
               accessibilityRole="button"
               // A 44pt frame, not text-sized: C-SEC measured 45x21pt.
               style={{ minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' }}
             >
-              <Text className="text-primary-400 text-sm">{t('common.cancel')}</Text>
+              <Text className="text-primary-400 text-sm">
+                {phase === 'confirm' ? t('pin.startOver') : t('common.cancel')}
+              </Text>
             </Pressable>
           )}
         </VStack>
