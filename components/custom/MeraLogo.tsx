@@ -15,6 +15,7 @@ import Animated, {
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
+import { useColors } from '@/lib/theme/tokens';
 
 // The Mera mark. Static callers get ONE Svg, exactly as before. A mark that
 // moves (`animated` cone, `scrollCards` grid) is drawn as three layers so the
@@ -249,8 +250,9 @@ interface MeraLogoProps {
      * `showsProgress`) and under Reduce Motion.
      */
     animated?: boolean;
-    /** Ink for every stroke and fill. White suits the dark chrome; pass the
-     *  ink for a light ground (the article image placeholder, the button). */
+    /** Ink for every stroke and fill. Default: the theme's ink (white in dark,
+     *  near-black in light). Pass one for a ground that is not the page (the
+     *  Mera button's disc, the article image placeholder). */
     color?: string;
     /** Scroll the background cards right to left on the shared clock (news
      *  passing under the torch). Same gates as `animated`. */
@@ -269,16 +271,18 @@ interface MeraLogoProps {
 const MeraLogo: React.FC<MeraLogoProps> = ({
     size = 80,
     animated = false,
-    color = '#fff',
+    color,
     scrollCards = false,
     showsProgress = false,
 }) => {
+    const colors = useColors();
+    const mark = color ?? colors.ink;
     const liteMode = useDisplayPrefsStore((s) => s.liteMode);
     if (animated || scrollCards) {
         return (
             <LayeredMark
                 size={size}
-                color={color}
+                color={mark}
                 cone={animated}
                 cards={scrollCards}
                 still={liteMode && !showsProgress}
@@ -287,14 +291,14 @@ const MeraLogo: React.FC<MeraLogoProps> = ({
     }
     return (
         <Svg width={size} height={size} viewBox={VIEW_BOX}>
-            <Path d={HEX_D} fill="none" stroke={color} strokeWidth="24" strokeLinejoin="round" />
+            <Path d={HEX_D} fill="none" stroke={mark} strokeWidth="24" strokeLinejoin="round" />
             <ClipPath id="hexB">
                 <Path d={HEX_D} />
             </ClipPath>
             <G clipPath="url(#hexB)">
-                <StillCards color={color} />
-                <StaticSpotlight color={color} />
-                <Highlight color={color} />
+                <StillCards color={mark} />
+                <StaticSpotlight color={mark} />
+                <Highlight color={mark} />
             </G>
         </Svg>
     );
