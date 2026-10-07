@@ -141,7 +141,7 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
                 testID="processing-stage-label"
                 size="md"
                 numberOfLines={1}
-                className="text-white text-center"
+                className="text-ink text-center"
                 style={{ fontSize: 16, lineHeight: M.labelLineHeight, marginTop: M.labelGap }}
             >
                 {t(def.labelKey)}
@@ -161,7 +161,7 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
                         testID="processing-headline"
                         size="sm"
                         numberOfLines={2}
-                        className="text-gray-400 text-center"
+                        className="text-ink-2 text-center"
                         style={{ fontSize: 13, lineHeight: M.headlineLineHeight }}
                     >
                         {headlines[index] ?? ''}
@@ -202,7 +202,7 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
                 testID="processing-progress-line"
                 size="xs"
                 numberOfLines={1}
-                className="text-gray-500 text-center"
+                className="text-ink-3 text-center"
                 style={{ fontSize: 12, lineHeight: M.progressLineHeight }}
             >
                 {progressLine}

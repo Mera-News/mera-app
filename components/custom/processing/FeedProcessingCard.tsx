@@ -77,10 +77,10 @@ const FeedProcessingCard: React.FC = () => {
                     <Box className="mb-6">
                         <IdleScene testID="feed-preparing-idle-scene" />
                     </Box>
-                    <Text size="md" numberOfLines={2} className="text-gray-300 text-center" testID="feed-preparing-title">
+                    <Text size="md" numberOfLines={2} className="text-ink text-center" testID="feed-preparing-title">
                         {t('feed.findingStories')}
                     </Text>
-                    <Text size="sm" numberOfLines={2} className="text-gray-500 text-center mt-2" testID="feed-preparing-body">
+                    <Text size="sm" numberOfLines={2} className="text-ink-3 text-center mt-2" testID="feed-preparing-body">
                         {isConnected ? t('feed.findingStoriesBody') : t('feed.processingOffline')}
                     </Text>
                 </View>

@@ -8,6 +8,7 @@ import Animated, {
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
+import { useColors } from '@/lib/theme/tokens';
 
 import { PROCESSING_SCENE_SIZE, type StageFallbackKind } from './types';
 
@@ -31,8 +32,11 @@ import { PROCESSING_SCENE_SIZE, type StageFallbackKind } from './types';
  */
 
 const SIZE = PROCESSING_SCENE_SIZE;
-const ACCENT = 'rgb(231, 138, 83)';
-const DIM = 'rgba(255, 255, 255, 0.22)';
+/** The scene's two inks: the accent, and a dim track it moves over. */
+function useInk() {
+    const c = useColors();
+    return { ACCENT: c.accent, DIM: c.trackBorder };
+}
 
 /** One shared loop driver. Each kind owns exactly one of these. */
 function useLoop(active: boolean, durationMs: number) {
@@ -64,6 +68,7 @@ const dotStyle = (size: number, colour: string) => ({
 
 /** fetching — marks arriving from the rim toward one centre. */
 const ConvergeFallback: React.FC<{ active: boolean }> = ({ active }) => {
+    const { ACCENT } = useInk();
     const t = useLoop(active, 3200);
     const style = useAnimatedStyle(() => ({
         opacity: 0.35 + t.value * 0.55,
@@ -91,6 +96,7 @@ const ConvergeFallback: React.FC<{ active: boolean }> = ({ active }) => {
 
 /** downloading — articles landing on a shelf that is already partly full. */
 const DescendFallback: React.FC<{ active: boolean }> = ({ active }) => {
+    const { ACCENT, DIM } = useInk();
     const t = useLoop(active, 2400);
     const style = useAnimatedStyle(() => ({
         opacity: t.value < 0.15 || t.value > 0.85 ? 0 : 0.95,
@@ -114,6 +120,7 @@ const DescendFallback: React.FC<{ active: boolean }> = ({ active }) => {
 
 /** grouping — many marks becoming fewer. */
 const MergeFallback: React.FC<{ active: boolean }> = ({ active }) => {
+    const { ACCENT, DIM } = useInk();
     const t = useLoop(active, 3000);
     const style = useAnimatedStyle(() => ({
         opacity: t.value < 0.1 || t.value > 0.9 ? 0 : 0.9,
@@ -142,6 +149,7 @@ const MergeFallback: React.FC<{ active: boolean }> = ({ active }) => {
 
 /** analysing — a reading sweep crossing a still field. */
 const SweepFallback: React.FC<{ active: boolean }> = ({ active }) => {
+    const { ACCENT, DIM } = useInk();
     const t = useLoop(active, 2600);
     const style = useAnimatedStyle(() => ({
         opacity: t.value < 0.08 || t.value > 0.92 ? 0 : 0.7,
@@ -166,6 +174,7 @@ const SweepFallback: React.FC<{ active: boolean }> = ({ active }) => {
 
 /** summarising — a line writing itself inside a note. */
 const WriteFallback: React.FC<{ active: boolean }> = ({ active }) => {
+    const { ACCENT, DIM } = useInk();
     const t = useLoop(active, 2800);
     const style = useAnimatedStyle(() => ({
         opacity: t.value > 0.9 ? 0 : 1,
@@ -196,6 +205,7 @@ const WriteFallback: React.FC<{ active: boolean }> = ({ active }) => {
 
 /** preparing — cards squaring up into a deck. */
 const StackFallback: React.FC<{ active: boolean }> = ({ active }) => {
+    const { ACCENT, DIM } = useInk();
     const t = useLoop(active, 2600);
     const style = useAnimatedStyle(() => ({
         opacity: t.value < 0.12 || t.value > 0.88 ? 0 : 0.95,
