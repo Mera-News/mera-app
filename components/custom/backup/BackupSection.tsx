@@ -516,9 +516,14 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
-      style={[styles.primary, { backgroundColor: colors.accent, opacity: disabled ? 0.4 : 1 }]}
+      // Disabled is neutral grey, never a dimmed accent (components/ui/button).
+      style={[styles.primary, { backgroundColor: disabled ? colors.surfaceRaised : colors.accent }]}
     >
-      {spin ? <Spinner size="small" /> : <Text style={{ color: colors.onAccent, fontSize: 16, fontWeight: '600' }}>{label}</Text>}
+      {spin ? (
+        <Spinner size="small" />
+      ) : (
+        <Text style={{ color: disabled ? colors.ink3 : colors.onAccent, fontSize: 16, fontWeight: '600' }}>{label}</Text>
+      )}
     </Pressable>
   );
 

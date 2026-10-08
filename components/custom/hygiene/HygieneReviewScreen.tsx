@@ -103,19 +103,22 @@ const ActionButton: React.FC<{
             disabled={disabled}
             accessibilityRole="button"
             accessibilityLabel={label}
+            accessibilityState={{ disabled }}
+            // Disabled is neutral grey, never a dimmed accent (components/ui/button).
             style={{
                 flex: 1,
                 height: 44,
                 borderRadius: 999,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: filled ? colors.accent : 'transparent',
+                backgroundColor: filled ? (disabled ? colors.surfaceRaised : colors.accent) : 'transparent',
                 borderWidth: filled ? 0 : 1,
-                borderColor: colors.trackBorder,
-                opacity: disabled ? 0.5 : 1,
+                borderColor: disabled ? colors.line : colors.trackBorder,
             }}
         >
-            <Text style={{ color: filled ? colors.onAccent : colors.ink, fontSize: 15, fontWeight: '600' }}>{label}</Text>
+            <Text style={{ color: disabled ? colors.ink3 : filled ? colors.onAccent : colors.ink, fontSize: 15, fontWeight: '600' }}>
+                {label}
+            </Text>
         </Pressable>
     );
 };

@@ -59,8 +59,12 @@ cssInterop(PrimitiveIcon, {
  * one is good — `components/custom/subscription/EmailCaptureSheet.tsx` shipped
  * `h-14 rounded-full` by hand and it stayed.
  */
+// DISABLED IS NEUTRAL GREY (owner), never a dimmed accent: a solid button
+// takes the quiet `surface-raised` fill, an outline the `line` edge, and every
+// label and icon `ink-3`, in both themes. No opacity. The disabled state still
+// reaches VoiceOver through the primitive's accessibilityState.
 const buttonStyle = tva({
-  base: 'group/button rounded-full bg-primary-500 flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40 gap-2',
+  base: 'group/button rounded-full bg-primary-500 flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 gap-2',
   variants: {
     action: {
       // Modals board `.pri`: solid #E78A53, no overlay (the old primary-500 read washed out).
@@ -79,8 +83,8 @@ const buttonStyle = tva({
     variant: {
       link: 'px-0',
       outline:
-        'bg-transparent border data-[hover=true]:bg-background-50 data-[active=true]:bg-transparent',
-      solid: '',
+        'bg-transparent border data-[hover=true]:bg-background-50 data-[active=true]:bg-transparent data-[disabled=true]:border-line',
+      solid: 'data-[disabled=true]:bg-surface-raised data-[disabled=true]:border-surface-raised',
     },
 
     size: {
@@ -145,7 +149,7 @@ const buttonStyle = tva({
 });
 
 const buttonTextStyle = tva({
-  base: 'text-typography-0 font-semibold font-body web:select-none',
+  base: 'text-typography-0 font-semibold font-body web:select-none data-[disabled=true]:text-ink-3',
   parentVariants: {
     action: {
       primary:
@@ -224,7 +228,7 @@ const buttonTextStyle = tva({
 });
 
 const buttonIconStyle = tva({
-  base: 'fill-none',
+  base: 'fill-none data-[disabled=true]:text-ink-3',
   parentVariants: {
     variant: {
       link: 'data-[hover=true]:underline data-[active=true]:underline',
