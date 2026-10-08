@@ -7,8 +7,9 @@ import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
 import { setTabDot, useTabDot } from '@/components/custom/nav/current-surface';
 import { observeUnreadCount } from '@/lib/database/services/notification-service';
+import { useChecksUnseen } from '@/lib/stores/fact-checks-store';
 import { useColors } from '@/lib/theme/tokens';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // Foreground polling, AppState listening, and recoverCycle calls have moved
@@ -47,11 +48,16 @@ export default function AppLayout() {
     const label = (key: 'tabs.deck' | 'tabs.world' | 'tabs.library' | 'tabs.you', on: boolean) =>
         on ? t('nav.tabNewA11y', { label: t(key) }) : t(key);
 
-    // You's dot: unread notices. The Notifications page marks them read.
+    // Library's dot: unread notices (its Notifications page marks them read)
+    // or a fact check finished since Fact checks was seen. One writer, so
+    // neither source clears the other's dot.
+    const [unread, setUnread] = useState(false);
     useEffect(() => {
-        const sub = observeUnreadCount().subscribe((n) => setTabDot('you', n > 0));
+        const sub = observeUnreadCount().subscribe((n) => setUnread(n > 0));
         return () => sub.unsubscribe();
     }, []);
+    const checksUnseen = useChecksUnseen();
+    useEffect(() => setTabDot('library', unread || checksUnseen), [unread, checksUnseen]);
 
     // Trigger order defines both the tab order AND the initial route: the first
     // trigger (`feed`) is selected on first mount, and Android Back on another

@@ -15,6 +15,7 @@ describe('normalizeLegacyHref', () => {
     ['/logged-in/share-stats?card=keep', { pathname: `${TABS}/library`, page: 'stats' }],
     ['/logged-in/saved-suggestions', { pathname: `${TABS}/library`, page: 'saved' }],
     ['/logged-in/visited-publications', { pathname: `${TABS}/library`, page: 'visited' }],
+    ['/logged-in/notifications', { pathname: `${TABS}/library`, page: 'notifications' }],
     ['/logged-in/profile-advanced', { pathname: `${TABS}/you`, page: 'profile' }],
     ['/logged-in/config-panel', { pathname: `${TABS}/you`, page: 'profile' }],
     [

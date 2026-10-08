@@ -11,7 +11,6 @@ jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException
 
 import {
   applyPageOrder,
-  DEFAULT_PAGE_ORDER,
   loadPageOrders,
   parsePageOrder,
   resetPageOrders,
@@ -26,7 +25,8 @@ beforeEach(() => {
 });
 
 describe('applyPageOrder', () => {
-  const defaults = DEFAULT_PAGE_ORDER.library;
+  // A fixed list: these test the merge, not the registry's current order.
+  const defaults = ['saved', 'checks', 'visited', 'stats'] as const;
 
   it('returns the defaults when nothing is stored', () => {
     expect(applyPageOrder(null, defaults)).toEqual(['saved', 'checks', 'visited', 'stats']);

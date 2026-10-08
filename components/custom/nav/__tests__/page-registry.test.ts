@@ -32,6 +32,12 @@ describe('page-registry', () => {
     }
   });
 
+  it('keeps the inbox in Library and Settings in You', () => {
+    expect(DEFAULT_PAGE_ORDER.library).toEqual(['saved', 'checks', 'visited', 'stats', 'notifications']);
+    expect(DEFAULT_PAGE_ORDER.you).toEqual(['profile', 'settings']);
+    expect(tabOfPage('notifications')).toBe('library');
+  });
+
   it('round-trips country page ids as uppercase alpha-2', () => {
     expect(countryPageId('de')).toBe('country:DE');
     expect(isCountryPage('country:DE')).toBe(true);

@@ -42,16 +42,16 @@ function relativeTime(date: Date): string {
 }
 
 interface NotificationsScreenProps {
-    /** The You tab's shell header (title row, scroll handler). */
+    /** The Library tab's shell header (scroll handler, header height). */
     readonly header: PageHeaderBinding;
     /** The visible page of the focused tab. */
     readonly active: boolean;
 }
 
 /**
- * You > Notifications (FinalInbox #4, #5): only things that need you, each
- * with its age and ONE button. Seeing the page clears both dots (the You tab
- * and this pill), and the seen state never leaves this phone. Empty: one
+ * Library > Notifications (FinalInbox #4, #5): only things that need you,
+ * each with its age and ONE button. Seeing the page clears both dots (the
+ * Library tab's, unless a fact check also lit it, and this pill), and the seen state never leaves this phone. Empty: one
  * line on what lands here, and the way to its settings.
  */
 const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, active }) => {

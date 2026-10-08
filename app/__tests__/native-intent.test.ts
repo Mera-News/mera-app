@@ -36,6 +36,14 @@ describe('+native-intent', () => {
     expect(consumePendingPage('library')).toMatchObject({ page: 'stats' });
   });
 
+  it('lands the inbox link on Library > Notifications', () => {
+    expect(redirectSystemPath({ path: '/logged-in/notifications', initial: true })).toBe(
+      '/logged-in/app_container/library',
+    );
+    expect(consumePendingPage('you')).toBeNull();
+    expect(consumePendingPage('library')).toMatchObject({ page: 'notifications' });
+  });
+
   it('keeps One interest params in the URL (a pushed screen, not a page)', () => {
     expect(
       redirectSystemPath({ path: '/logged-in/fact-feed?factId=f1&statement=Lives%20in%20Berlin', initial: true }),

@@ -44,8 +44,8 @@ export type StaticTabId = Exclude<TabId, 'world'>;
  *  run time (lib/explore/world-pages.ts), with `world` first. */
 export const DEFAULT_PAGE_ORDER: Readonly<Record<StaticTabId, readonly StaticPageId[]>> = {
   feed: ['feed', 'stories'],
-  library: ['saved', 'checks', 'visited', 'stats'],
-  you: ['profile', 'settings', 'notifications'],
+  library: ['saved', 'checks', 'visited', 'stats', 'notifications'],
+  you: ['profile', 'settings'],
 };
 
 export const WORLD_ORDER_SETTING_KEY = 'nav_order_world';
