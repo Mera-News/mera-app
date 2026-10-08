@@ -713,12 +713,16 @@ function callNativeWithTimeout(
         requireCharging: false,
     });
 
-    let settled = false;
+    let timedOut = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     call.then(
         (result) => {
-            if (settled) return;
+            // Keyed on the timer firing, not on the race below settling: this
+            // handler is attached first, so on an ordinary success it runs
+            // BEFORE the race settles, and that check logged every instant
+            // success as late.
+            if (!timedOut) return;
             // Landed after we gave up. Record the verification, drop the text.
             if (typeof result?.translatedTexts === 'string') {
                 logger.info('[TranslationService] Late translation success after timeout', {
@@ -733,19 +737,20 @@ function callNativeWithTimeout(
     );
 
     const timeout = new Promise<never>((_resolve, reject) => {
-        timer = setTimeout(() => reject(new TranslationTimeoutError(timeoutMs)), timeoutMs);
+        timer = setTimeout(() => {
+            timedOut = true;
+            reject(new TranslationTimeoutError(timeoutMs));
+        }, timeoutMs);
     });
 
     return Promise.race([call, timeout]).then(
         (result) => {
-            settled = true;
             if (timer) clearTimeout(timer);
             return typeof (result as { translatedTexts?: unknown }).translatedTexts === 'string'
                 ? ((result as { translatedTexts: string }).translatedTexts)
                 : null;
         },
         (err) => {
-            settled = true;
             if (timer) clearTimeout(timer);
             throw err;
         },

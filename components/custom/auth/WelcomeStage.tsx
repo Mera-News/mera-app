@@ -1,6 +1,6 @@
 import * as Device from 'expo-device';
-import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { FlatList, Platform, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { AppState, FlatList, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useReducedMotion } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
@@ -9,7 +9,7 @@ import RotatingLanguageHeading from '@/components/custom/auth/RotatingLanguageHe
 import DownloadPressIllustration from '@/components/custom/auth/DownloadPressIllustration';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { useLanguageSwitch, useProbingLanguage, type LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
+import { useCurrentProbe, useLanguageSwitch, type LanguageSwitchResult, type Probe } from '@/lib/hooks/use-language-switch';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { languageCheckStatus } from '@/lib/system-check/system-check';
 import i18n from '@/lib/i18n';
@@ -34,6 +34,13 @@ const NOTICE_BASE = COLORS.light.base;
  */
 const NOTICE_DELAY_MS = 300;
 
+/**
+ * A probe this far in with no sign of Apple's sheet is not going to show one
+ * (a call left over from an earlier attempt can hold the native host). The
+ * reader is let go; the call itself keeps its real 90s / 20s timeout.
+ */
+const NO_SHEET_MS = 8000;
+
 interface WelcomeStageProps {
     /** The message card's top in this view's coordinates: the screen top plus
      *  a margin, less where this view starts (Journey #10: it drops from the top). */
@@ -54,7 +61,9 @@ interface WelcomeStageProps {
  *
  * Owner rule: the download notice shows ONLY while Apple's sheet is up. JS gets
  * no sheet event, so it rides the probe call (`useProbingLanguage`): iOS only,
- * after NOTICE_DELAY_MS, gone the moment the call settles.
+ * after NOTICE_DELAY_MS, gone the moment the call settles. If no sheet shows by
+ * NO_SHEET_MS the page lets the reader go: notice off, list unlocked, pick
+ * snapped back, and a toast pointing at iOS Settings.
  *
  * Owner rule: a language the phone cannot translate into is never offered, and
  * one that turns out missing falls back to English, with no continue-anyway;
@@ -69,26 +78,33 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
     const phone = useMemo(() => phoneLanguage(), []);
     const toast = useToast();
 
-    const showMissing = useCallback(
-        (code: string) => {
-            const id = `auth-language-missing-${code}`;
+    const notify = useCallback(
+        (id: string, title: string, body: string) => {
             if (toast.isActive(id)) return;
-            const language = getNativeLanguageName(code) ?? code;
             toast.show({
                 id,
                 placement: 'top',
                 render: () => (
                     <Toast action="info" variant="solid">
-                        <ToastTitle>{t('auth.track.notHereTitle', { language })}</ToastTitle>
-                        <ToastDescription>{t('auth.track.notHereBody')}</ToastDescription>
+                        <ToastTitle>{title}</ToastTitle>
+                        <ToastDescription>{body}</ToastDescription>
                     </Toast>
                 ),
             });
         },
-        [toast, t],
+        [toast],
+    );
+    const showMissing = useCallback(
+        (code: string) => {
+            const language = getNativeLanguageName(code) ?? code;
+            notify(`auth-language-missing-${code}`, t('auth.track.notHereTitle', { language }), t('auth.track.notHereBody'));
+        },
+        [notify, t],
     );
     const onResult = useCallback((r: LanguageSwitchResult) => showMissing(r.code), [showMissing]);
-    const { requestSwitch, busy, pendingCode } = useLanguageSwitch({ preview: false, immediate: true, onResult });
+    const { requestSwitch, busy, pendingCode, cancel } = useLanguageSwitch({ preview: false, immediate: true, onResult });
+    const cancelRef = useRef(cancel);
+    cancelRef.current = cancel;
 
     // The startup probe for the preselected language (never a second probe).
     const blocked = useTranslationBlocked(appLanguage) != null;
@@ -103,19 +119,55 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
         void useAppLanguageStore.getState().setAppLanguage('en');
     }, [startup, appLanguage, busy, showMissing]);
 
+    const probe = useCurrentProbe();
+    // The probe the page gave up on (no sheet came). Its call may stay open
+    // natively for its whole timeout; the page no longer waits on it.
+    const [gaveUp, setGaveUp] = useState<Probe | null>(null);
+    const live = Platform.OS === 'ios' && probe && probe !== gaveUp ? probe.code : null;
+
     // The list locks at once, with no delay: a second tap inside the notice
     // delay would start a second probe, i.e. a second sheet.
-    const waiting = busy || startup === 'checking';
-    const probing = useProbingLanguage();
+    const waiting = busy || (startup === 'checking' && gaveUp?.code !== appLanguage);
+
     const [noticeCode, setNoticeCode] = useState<string | null>(null);
     useEffect(() => {
-        if (Platform.OS !== 'ios' || !probing) {
+        if (!live) {
             setNoticeCode(null);
             return;
         }
-        const id = setTimeout(() => setNoticeCode(probing), NOTICE_DELAY_MS);
+        const id = setTimeout(() => setNoticeCode(live), NOTICE_DELAY_MS);
         return () => clearTimeout(id);
-    }, [probing]);
+    }, [live, probe]);
+
+    // No-sheet fallback. Apple's sheet sends JS no event; iOS reporting the app
+    // inactive is the one outside sign of a system sheet, and a probe that has
+    // seen it is waiting on the reader, so it is never cut short.
+    useEffect(() => {
+        if (!live || !probe) return;
+        let sheetSeen = AppState.currentState !== 'active';
+        const sub = AppState.addEventListener('change', (state) => {
+            if (state !== 'active') sheetSeen = true;
+        });
+        const id = setTimeout(() => {
+            if (sheetSeen) return;
+            setGaveUp(probe);
+            cancelRef.current();
+            const language = getNativeLanguageName(live) ?? live;
+            notify(
+                `auth-language-nosheet-${live}`,
+                t('auth.track.noSheetTitle', { defaultValue: "Your iPhone didn't open the download" }),
+                t('auth.track.noSheetBody', {
+                    language,
+                    defaultValue:
+                        'Try again, or download {{language}} in Settings › General › Language & Region › Translation Languages.',
+                }),
+            );
+        }, NO_SHEET_MS);
+        return () => {
+            clearTimeout(id);
+            sub.remove();
+        };
+    }, [live, probe, notify, t]);
 
     const languages = useMemo(() => {
         const offered = SUPPORTED_LANGUAGES.filter((l) => l.code === 'en' || canTranslateIntoLanguage(l.code));

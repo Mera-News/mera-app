@@ -71,23 +71,30 @@ import logger from '@/lib/logger';
  */
 
 /**
- * The languages whose probe call is in flight right now, oldest first. This is
- * the ONLY signal JS has for Apple's download sheet: expo-translate-text sends
- * no presented or dismissed event, it just holds the promise open while the
- * sheet is up. The first-launch download notice reads it, so every probe the
- * app fires goes through `probeLanguage`, never `probeTranslationLanguage`.
+ * The probe calls in flight right now, in start order. This is the ONLY signal
+ * JS has for Apple's download sheet: expo-translate-text sends no presented or
+ * dismissed event, it just holds the promise open while the sheet is up. The
+ * first-launch download notice reads it, so every probe the app fires goes
+ * through `probeLanguage`, never `probeTranslationLanguage`.
+ *
+ * Each call is its own object, not just its code: a retry of the same language
+ * while an abandoned call is still open must count as a new probe.
  */
-const probesInFlight: string[] = [];
+export interface Probe {
+    readonly code: string;
+}
+const probesInFlight: Probe[] = [];
 const probeListeners = new Set<() => void>();
 const emitProbes = () => probeListeners.forEach((l) => l());
 
 export async function probeLanguage(code: string, timeoutMs?: number): Promise<TranslationProbeOutcome> {
-    probesInFlight.push(code);
+    const probe: Probe = { code };
+    probesInFlight.push(probe);
     emitProbes();
     try {
         return await probeTranslationLanguage(code, timeoutMs);
     } finally {
-        probesInFlight.splice(probesInFlight.indexOf(code), 1);
+        probesInFlight.splice(probesInFlight.indexOf(probe), 1);
         emitProbes();
     }
 }
@@ -97,11 +104,15 @@ const subscribeProbes = (l: () => void) => {
     return () => probeListeners.delete(l);
 };
 
-/** The language whose probe has been running longest, or null. */
-export const probingLanguage = (): string | null => probesInFlight[0] ?? null;
+/**
+ * The NEWEST probe in flight, or null. Newest, because a probe whose sheet never
+ * came can stay open natively for its whole timeout, and the reader's next pick
+ * must get its own notice and its own no-sheet fallback (WelcomeStage).
+ */
+export const currentProbe = (): Probe | null => probesInFlight[probesInFlight.length - 1] ?? null;
 
-export function useProbingLanguage(): string | null {
-    return useSyncExternalStore(subscribeProbes, probingLanguage);
+export function useCurrentProbe(): Probe | null {
+    return useSyncExternalStore(subscribeProbes, currentProbe);
 }
 
 export type LanguageSwitchPhase =
