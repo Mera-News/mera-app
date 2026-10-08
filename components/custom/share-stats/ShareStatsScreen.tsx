@@ -19,7 +19,7 @@ import { CARD_PALETTES, CardPaletteContext } from '@/components/custom/share-sta
 import CardShell, { DESIGN_WIDTH, fitCardToPage, hostSizeForScale } from '@/components/custom/share-stats/card-shell';
 import { captureAndShare } from '@/components/custom/share-stats/capture-and-share';
 import StatFigure, { statLabel, statWindowTitle } from '@/components/custom/share-stats/stat-figures';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Pressable } from '@/components/ui/pressable';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Spinner } from '@/components/ui/spinner';
@@ -160,7 +160,7 @@ const ShareStatsScreen: React.FC = () => {
                     }
                     backDisabled
                 />
-                <ScrollView contentContainerStyle={{ padding: 12, gap: 10 }}>
+                <ScrollView contentContainerStyle={{ padding: 12, paddingTop: SUBPAGE_TOP_GAP, gap: 10 }}>
                     <Text style={{ color: c.ink2, fontSize: 13, lineHeight: 18 }}>{t('shareStats.choose.help')}</Text>
                     {cards.map((id) => {
                         const on = picked.includes(id);
@@ -222,7 +222,7 @@ const ShareStatsScreen: React.FC = () => {
                     showsHorizontalScrollIndicator={false}
                     snapToInterval={itemW + 12}
                     decelerationRate="fast"
-                    contentContainerStyle={{ paddingHorizontal: 32, gap: 12, paddingTop: 12 }}
+                    contentContainerStyle={{ paddingHorizontal: 32, gap: 12, paddingTop: SUBPAGE_TOP_GAP }}
                     onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / (itemW + 12)))}
                     renderItem={({ item }) => (
                         <View style={{ width: itemW, alignItems: 'center' }}>

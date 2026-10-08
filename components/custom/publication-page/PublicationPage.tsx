@@ -1,4 +1,4 @@
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
 import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
@@ -46,7 +46,7 @@ import { formatCategories, SOURCE_KIND_META, sourceKindOf } from './publication-
  *  rem-scaled at 14pt, so plain numbers keep this exact). Identity, then the
  *  reader's controls, then a hairline and the news. */
 export const PAGE_SPACING = {
-    top: 20,
+    top: SUBPAGE_TOP_GAP,
     blockGap: 24,
     sectionGap: 28,
     switchTop: 16,

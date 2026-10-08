@@ -1,4 +1,4 @@
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -154,7 +154,7 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
             ) : (
                 <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: 8, paddingBottom: 64 }}
+                    contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 64 }}
                 >
                     <HStack className="mx-4 mt-2 mb-3 items-start" space="xs">
                         <MaterialIcons
