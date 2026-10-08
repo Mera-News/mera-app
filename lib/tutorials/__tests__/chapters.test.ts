@@ -146,7 +146,6 @@ describe('tutorial copy', () => {
       // context is reachable only from a tutorial slide, so its intro line lives
       // in this namespace and is checked here.
       'chatIntro',
-      'launchButton',
       'hintReveal',
       'hintRevealSome',
       'hintChoose',
