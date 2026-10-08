@@ -12,9 +12,9 @@
 // problem the whole card is FeedStatusNotice instead: no chevron, no counts.
 //
 // A zero count leads with its reason instead (zero-state.ts): nothing
-// fetched, nothing analysed, nothing relevant, or offline. Those sentences
-// carry links (contact support, Review your profile), so that row is real
-// text with its own chevron button, not the hidden visual under one press.
+// fetched, nothing analysed, nothing relevant, or offline. Only the
+// relevant one carries a link (Review your profile), so only that row is
+// live text with its own chevron button; the others are the one-press row.
 //
 // No announcement here: FeedScreen announces the capped and error states.
 
@@ -27,7 +27,6 @@ import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
-import { useSupportAction } from '@/lib/intercom';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { formatCount } from '@/lib/utils/format-count';
@@ -44,7 +43,7 @@ import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanim
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { zeroState, type ZeroState } from './zero-state';
+import { zeroHasLink, zeroState, type ZeroState } from './zero-state';
 
 const HIDDEN = {
     accessible: false,
@@ -76,38 +75,40 @@ function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
 
 const TABULAR = { fontVariant: ['tabular-nums' as const] };
 
-/** The sentence a zero count leads with, its links live. */
-function ZeroSentence({ kind }: { kind: ZeroState }) {
+/** A zero's sentence as plain text: every kind but 'relevant'. */
+function useZeroText(kind: ZeroState | null): string | null {
+    const { t } = useTranslation();
+    const appLanguage = useAppLanguage();
+    const { articleCount } = useFeedCounts();
+    if (kind === 'offline') return t('common.offlineBannerOffline');
+    if (kind === 'fetched') return t('feed.statsZeroFetched');
+    if (kind === 'analysed')
+        return `${t('feed.statsPublished', { count: articleCount, formatted: formatCount(articleCount, appLanguage) })} ${t('feed.statsZeroAnalysedTail')}`;
+    return null;
+}
+
+/** "n published, x analysed, but none look relevant yet. Review your
+ *  profile (a link) or contact support." */
+function ZeroRelevantSentence() {
     const { t } = useTranslation();
     const colors = useColors();
     const appLanguage = useAppLanguage();
     const { articleCount, analysedCount } = useFeedCounts();
-    const { openSupport } = useSupportAction();
     const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
-    const link = (key: string, onPress: () => void) => (
-        <Text key={key} onPress={onPress} accessibilityRole="link" style={{ color: colors.accentText }} />
-    );
-    const support = link('support', () => void openSupport());
-    const profile = link('profile', () => navigateToPage('profile'));
-    const body =
-        kind === 'offline' ? (
-            t('common.offlineBannerOffline')
-        ) : kind === 'fetched' ? (
-            <Trans i18nKey="feed.statsZeroFetched" components={[support]} />
-        ) : kind === 'analysed' ? (
-            <>
-                {t('feed.statsPublished', fmt(articleCount))}{' '}
-                <Trans i18nKey="feed.statsZeroAnalysedTail" components={[support]} />
-            </>
-        ) : (
-            <>
-                {t('feed.statsPublished', fmt(articleCount))} {t('feed.statsAnalysed', fmt(analysedCount))}{' '}
-                <Trans i18nKey="feed.statsZeroRelevantTail" components={[profile, support]} />
-            </>
-        );
     return (
         <Text size="sm" className="text-ink font-medium" style={TABULAR} testID="dashboard-stats-card-zero">
-            {body}
+            {t('feed.statsPublished', fmt(articleCount))} {t('feed.statsAnalysed', fmt(analysedCount))}{' '}
+            <Trans
+                i18nKey="feed.statsZeroRelevantTail"
+                components={[
+                    <Text
+                        key="profile"
+                        onPress={() => navigateToPage('profile')}
+                        accessibilityRole="link"
+                        style={{ color: colors.accentText }}
+                    />,
+                ]}
+            />
         </Text>
     );
 }
@@ -124,6 +125,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     const noFacts = useHasFacts() === false;
     const offline = useIsConnected() === false;
     const zero = zeroState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount });
+    const zeroText = useZeroText(zero);
     // The icon reads whether a card is showing from this count.
     useEffect(() => registerStatusCard(), []);
     const stateLabel = tAny(a11yStateKey(mode));
@@ -158,11 +160,11 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
             >
                 {notice ? (
                     <FeedStatusNotice mode={mode} />
-                ) : zero ? (
+                ) : zero && zeroHasLink(zero) ? (
                     <>
                         <HStack className="items-start" space="sm">
                             <View style={{ flex: 1, minWidth: 0 }}>
-                                <ZeroSentence kind={zero} />
+                                <ZeroRelevantSentence />
                             </View>
                             <Pressable
                                 onPress={toggle}
@@ -187,7 +189,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                 {/* The day's counts sentence leads (owner), wrapping
                                     beside the ⌄; the status line only when there
                                     is nothing to count. */}
-                                <HStack className={countsTop ? 'items-start' : 'items-center'} space="sm">
+                                <HStack className={countsTop || zeroText ? 'items-start' : 'items-center'} space="sm">
                                     {countsTop && processing ? (
                                         <LoopScene
                                             source={processingAnimationFor('analysing')}
@@ -196,7 +198,16 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                         />
                                     ) : null}
                                     <View style={{ flex: 1, minWidth: 0 }}>
-                                        {countsTop ? (
+                                        {zeroText ? (
+                                            <Text
+                                                size="sm"
+                                                className="text-ink font-medium"
+                                                style={TABULAR}
+                                                testID="dashboard-stats-card-zero"
+                                            >
+                                                {zeroText}
+                                            </Text>
+                                        ) : countsTop ? (
                                             <FeedStatsSentence syncing={processing} className="text-ink font-medium" />
                                         ) : (
                                             <StatusLine label={stateLabel} syncing={processing} />
@@ -214,7 +225,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                 onPress={toggle}
                                 accessibilityRole="button"
                                 accessibilityState={{ expanded }}
-                                accessibilityLabel={`${stateLabel}. ${t(
+                                accessibilityLabel={`${zeroText ?? stateLabel}. ${t(
                                     expanded ? 'feedStatus.collapseA11y' : 'feedStatus.expandA11y',
                                 )}`}
                                 testID={`${testID}-toggle`}

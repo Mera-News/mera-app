@@ -297,9 +297,9 @@
     "statsSyncFrom_other": "from {{formatted}} published in the last 24 hours.",
     "statsSyncRelevant_one": "{{formatted}} looks relevant so far.",
     "statsSyncRelevant_other": "{{formatted}} look relevant so far.",
-    "statsZeroFetched": "Mera couldn't fetch any articles yet. It will keep trying. If this keeps happening, <0>contact support</0>.",
-    "statsZeroAnalysedTail": "but Mera couldn't analyse any for you yet. It will keep trying. If this keeps happening, <0>contact support</0>.",
-    "statsZeroRelevantTail": "but none look relevant yet. <0>Review your profile</0> or <1>contact support</1>.",
+    "statsZeroFetched": "Mera couldn't fetch any articles yet. It will keep trying. If this keeps happening, contact support.",
+    "statsZeroAnalysedTail": "but Mera couldn't analyse any for you yet. It will keep trying. If this keeps happening, contact support.",
+    "statsZeroRelevantTail": "but none look relevant yet. <0>Review your profile</0> or contact support.",
     "view": {
       "a11y": "View: {{view}}. Change the view",
       "continuous": "Continuous feed",

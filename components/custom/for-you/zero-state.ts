@@ -16,6 +16,13 @@ import type { FeedStatusMode } from '@/lib/feed-status-mode';
 
 export type ZeroState = 'fetched' | 'analysed' | 'relevant' | 'offline';
 
+/** Only 'relevant' carries a link (Review your profile), so only its row is
+ *  live text beside its own chevron; the rest are the card's one-press row.
+ *  "contact support" is plain text everywhere (owner). */
+export function zeroHasLink(z: ZeroState): boolean {
+  return z === 'relevant';
+}
+
 export interface ZeroStateInput {
   readonly mode: FeedStatusMode;
   readonly noFacts: boolean;
