@@ -1,39 +1,28 @@
-// use-feed-counts — the shared "N published / M analysed / K relevant" counters
-// for the last 48h, extracted from ForYouScreen so every surface that quotes
-// them reads ONE source of truth: the Dashboard's stats sentence and status
-// sheet, and the status detail panel on both tabs. (The Feed tab's own stats
-// sentence was removed — the Feed does not show counts any more; its only
-// route to these numbers is opening the status panel.)
+// use-feed-counts — the shared "N published / M analysed / K relevant / R
+// read" counters, ONE source of truth for every surface that quotes them: the
+// Feed's stats card (sentence and details), Manage subscription's tiles and
+// the observability screen.
 //
-// `articleCount` (total published this cycle) comes from the for-you store
-// (written by the FeedSyncMachine). `analysedCount`/`relevantCount` are derived
-// from the live scored suggestions in the 48h window (P5c — widened from 24h
-// to match the 48h storage TTL and score-propagation lookback below).
+// ALL FOUR ARE THE LAST 24 HOURS (owner), so the sentence is true as read.
+// `articleCount` is the SERVER's recentArticleCount, a hard 24h count
+// (CUTOFF_HOURS = 24 in mera-server articles-for-topics.service.ts), written
+// by the FeedSyncMachine into the for-you store. `analysedCount`,
+// `relevantCount` and `readCount` are derived here from the live scored
+// suggestions published in the same 24h (COUNTS_WINDOW_MS).
 //
-// NOTE: the two windows differ ON PURPOSE and the UI copy reflects only the
-// first. `articleCount` is the SERVER's recentArticleCount, a hard 24h count
-// (CUTOFF_HOURS = 24 in mera-server articles-for-topics.service.ts), so the
-// "…published in the last 24 hours" in feed.analysedArticles is correct and
-// qualifies that number alone. Do not "fix" that string to 48h to match the
-// constant below — analysed/relevant carry no stated window.
-
+// The FEED itself keeps its 48h window (storage TTL SUGGESTION_TTL_MS and the
+// score-propagation lookback): rows 24-48h old are still listed, they are
+// just not in these counts. Do not widen this window back to 48h to "match"
+// the feed: the copy says 24 hours.
 import { useSyncExternalStore } from 'react';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/feed-grouping/story-grouping';
 import { relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useForYouCounts, useForYouSuggestions } from '@/lib/stores/selectors';
 
-// Was 24h; storage TTL (SUGGESTION_TTL_MS, lib/scheduler/tasks/data-cleanup-task.ts)
-// and score-propagation lookback (SCORE_PROPAGATION_LOOKBACK_MS, imported below)
-// are both 48h, so a 24h counter window made anything in the 24-48h band that
-// storage kept invisible to the "N analysed" count — part of why a user saw
-// "4 articles were analysed for you" despite far more sitting in local
-// storage. Reusing the already-exported SCORE_PROPAGATION_LOOKBACK_MS keeps
-// this window in step with that constant without a second hardcoded copy;
-// keep it in step with SUGGESTION_TTL_MS too (not exported, currently 48h).
-const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
+/** The counts' window: the same 24 hours as the server's published count. */
+export const COUNTS_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** A scored suggestion counts as "relevant" at or above this bar. Imported
  *  rather than copied: this header number sits next to the feed's own count in
  *  the funnel diagnostic, and a silently-diverged private copy would make that
@@ -54,9 +43,9 @@ const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
 export interface FeedCounts {
   /** Total articles published this cycle (store-tracked). */
   articleCount: number;
-  /** Scored suggestions in the last 48h. */
+  /** Scored suggestions published in the last 24h. */
   analysedCount: number;
-  /** Scored suggestions in the last 48h with relevance above the gate. */
+  /** Scored suggestions published in the last 24h that pass the render gate. */
   relevantCount: number;
   /** Of those relevant ones, how many the reader has actually opened. A subset
    *  of `relevantCount` by construction — a row the user opened but which never
@@ -100,7 +89,7 @@ export function computeFeedCounts(
   suggestions: FeedCountsRow[],
   opts?: ComputeFeedCountsOptions,
 ): { analysedCount: number; relevantCount: number; readCount: number } {
-  const cutoffMs = (opts?.nowMs ?? Date.now()) - FEED_WINDOW_MS;
+  const cutoffMs = (opts?.nowMs ?? Date.now()) - COUNTS_WINDOW_MS;
   const opened = opts?.openedArticleIds;
   let analysed = 0;
   let relevant = 0;
@@ -132,12 +121,12 @@ export function computeFeedCounts(
 // The header sentence, the status panel and the status sheet each call this
 // hook. Each used to memoise `computeFeedCounts` against its OWN `Date.now()`,
 // taken whenever that instance happened to mount, so two surfaces on screen
-// together could draw the 48h window's edge a minute apart and disagree on
+// together could draw the 24h window's edge a minute apart and disagree on
 // the same suggestions. Now every instance reads ONE minute-floored clock and
 // the result is memoised at module level on (suggestions, opened set, minute),
 // so any two instances rendered in the same minute return the same object.
 //
-// A minute is fine-grained enough: the only thing the clock moves is the 48h
+// A minute is fine-grained enough: the only thing the clock moves is the 24h
 // window's edge, and the counts may fall by design as rows age out.
 const MINUTE_MS = 60_000;
 
