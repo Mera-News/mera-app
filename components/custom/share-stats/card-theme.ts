@@ -1,42 +1,18 @@
-// card-theme — the ink the share cards are drawn with.
+// card-theme — the ink the share images are drawn with.
 //
-// ## Why this file exists
+// A share image is a fixed raster with its OWN background, picked on Preview
+// (Dark or Light) whatever the app theme. So its colours never come from a
+// theme class or the app tokens at render: every colour on an image comes from
+// the palette in CardPaletteContext, through `useCardInk()`, and lands in the
+// `style` prop beside the fontSize/lineHeight pair from `type()`. A class
+// colour follows the app theme, not the image, and a class-name assertion
+// cannot see what colour it resolves to (the dark ramp is an inversion:
+// `text-typography-0` is near-black in dark), which is how the first card
+// shipped its figures invisible.
 //
-// The card shipped every one of its primary text nodes as
-// `className="text-typography-0"` and rasterised them NEAR-BLACK on the dark
-// gradient, so the headline figures were invisible while the small print was
-// not. The cause is not the rasteriser and it is not the capture: the Gluestack
-// dark palette is an INVERSION of the light one, so `typography-0` is the DARK
-// end of the ramp and `typography-950` is the white end.
-//
-//   light  --color-typography-0    254 254 255   (white)
-//   dark   --color-typography-0     23  23  23   (near-black)  <-- what it got
-//   dark   --color-typography-950  254 254 255   (white)
-//
-// `app/_layout.tsx` mounts `<GluestackUIProvider mode="dark">`, so the card was
-// always asking for the dark end. The on-screen preview was black too;
-// `react-native-view-shot` snapshots the existing layer tree rather than
-// re-rendering, so a capture cannot differ from the screen for a colour reason.
-//
-// What let it sit there for so long is the shape worth remembering: a component
-// test asserting `className="text-typography-0"` passes no matter what that
-// class resolves to, because a class string carries no colour. Same shape as a
-// per-string size budget that cannot see a layout overflow. The guard that CAN
-// fail is the static one in `share-stats-card.test.tsx`, which reads the source
-// of every file in this directory and refuses the token outright.
-//
-// ## Why the colour is a style and not a class
-//
-// Every colour on these cards comes from `ink()` and lands in the `style` prop,
-// beside the `fontSize`/`lineHeight` pair from `type()`. That is deliberate:
-// a palette token can be inverted by a theme the card does not control, and the
-// card is a fixed raster that has exactly one background it will ever be drawn
-// on. A literal cannot be inverted by anything.
-//
-// The scale is the house rule for this app: ONE accent, everything else white
-// at reduced opacity. Opacity rather than a grey literal because the card sits
-// over a live gradient, so white-at-alpha keeps a constant relationship to
-// whatever is behind it while a fixed grey drifts against it.
+// The scale is the house rule: ONE accent, everything else the palette's ink
+// at reduced strength. The Library's own page cards draw with the app theme
+// instead (StatTile), through the dark palette by default.
 
 import React from 'react';
 import type { TextStyle } from 'react-native';
