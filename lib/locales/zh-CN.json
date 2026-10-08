@@ -2688,7 +2688,8 @@
   "nav": {
     "page": {
       "stories": "报道",
-      "saved": "已保存"
+      "saved": "已保存",
+      "stats": "统计"
     },
     "rearrangeA11y": "重新排列{{tab}}的页面",
     "pillA11y": "{{label}}，第 {{index}} 个，共 {{count}} 个",
@@ -2800,7 +2801,10 @@
       "title": "你过去30天",
       "top": "打开最多",
       "topLine": "然后是{{second}}和{{third}}",
-      "topLineOne": "然后是{{second}}"
+      "topLineOne": "然后是{{second}}",
+      "emptyTitle": "还没有可统计的内容",
+      "emptyBody": "在来源处打开文章、收藏文章或关注报道，你过去30天的数据就会显示在这里。",
+      "learn": "了解统计"
     },
     "explainer": {
       "saved": {

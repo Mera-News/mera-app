@@ -2687,7 +2687,8 @@
   "nav": {
     "page": {
       "stories": "Verhalen",
-      "saved": "Opgeslagen"
+      "saved": "Opgeslagen",
+      "stats": "Statistieken"
     },
     "rearrangeA11y": "Pagina's van {{tab}} herschikken",
     "pillA11y": "{{label}}, {{index}} van {{count}}",
@@ -2800,7 +2801,10 @@
       "title": "Je afgelopen 30 dagen",
       "top": "Meest geopend",
       "topLine": "dan {{second}} en {{third}}",
-      "topLineOne": "dan {{second}}"
+      "topLineOne": "dan {{second}}",
+      "emptyTitle": "Nog niets om te tellen",
+      "emptyBody": "Open artikelen bij de bron, bewaar ze of volg verhalen, en je afgelopen 30 dagen verschijnen hier.",
+      "learn": "Meer over statistieken"
     },
     "explainer": {
       "saved": {

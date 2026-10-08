@@ -8,12 +8,13 @@ import { setTabDot } from '@/components/custom/nav/current-surface';
 import { usePageOrder } from '@/lib/navigation/page-order';
 import { useChecksUnseen, watchFactChecks } from '@/lib/stores/fact-checks-store';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import StatsPage from '@/components/custom/library/StatsPage';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
- * The Library tab: Saved, Fact checks, History (FinalLibrary), a fixed group.
- * Page ids stay `saved`, `checks`, `visited`; the Stats live under History.
+ * The Library tab: Saved, Fact checks, History, Stats, a fixed group.
+ * Page ids `saved`, `checks`, `visited`, `stats`.
  * Each page draws its own title row with the ?, as its list's first item.
  */
 /** The Fact checks pill's dot: a check finished since the page was seen. */
@@ -70,6 +71,16 @@ export function LibraryPages() {
                 case 'visited':
                     return (
                         <VisitedPublicationsList
+                            active={active}
+                            scrollHandler={header.scrollHandler}
+                            headerHeight={header.headerHeight}
+                            listEndPadding={listEnd}
+                            onExplain={header.openExplainer}
+                        />
+                    );
+                case 'stats':
+                    return (
+                        <StatsPage
                             active={active}
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}

@@ -11,8 +11,8 @@
 // shipped its figures invisible.
 //
 // The scale is the house rule: ONE accent, everything else the palette's ink
-// at reduced strength. The Library's own page cards draw with the app theme
-// instead (StatTile), through the dark palette by default.
+// at reduced strength. The Library's Stats page cards (StatTile) draw with
+// the app theme instead.
 
 import React from 'react';
 import type { TextStyle } from 'react-native';

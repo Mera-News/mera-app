@@ -2731,7 +2731,8 @@
   "nav": {
     "page": {
       "stories": "historie",
-      "saved": "Zapisane"
+      "saved": "Zapisane",
+      "stats": "Statystyki"
     },
     "rearrangeA11y": "Zmień kolejność stron w {{tab}}",
     "pillA11y": "{{label}}, {{index}} z {{count}}",
@@ -2858,7 +2859,10 @@
       "title": "Twoje ostatnie 30 dni",
       "top": "Najczęściej otwierane",
       "topLine": "potem {{second}} i {{third}}",
-      "topLineOne": "potem {{second}}"
+      "topLineOne": "potem {{second}}",
+      "emptyTitle": "Nie ma jeszcze czego liczyć",
+      "emptyBody": "Otwieraj artykuły u źródła, zapisuj je lub obserwuj historie, a Twoje ostatnie 30 dni pojawią się tutaj.",
+      "learn": "Dowiedz się o statystykach"
     },
     "explainer": {
       "saved": {

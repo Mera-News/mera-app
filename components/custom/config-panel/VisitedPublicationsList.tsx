@@ -1,24 +1,17 @@
-// The Library's History page (FinalLibrary #7-10): the publications whose
+// The Library's History page (FinalLibrary #7-9): the publications whose
 // sites the reader opened in the last 30 days as a table (flag, publication,
-// visits, last read), then the Stats as plain cards with their own ?, and one
-// floating Share above the Mera button. The page id stays `visited`.
+// visits, last read), the column headings above it. The page id stays
+// `visited`. The Stats are their own page (library/StatsPage).
 //
 // Visits are RAW visits (taps) summed across every name a publication is known
 // by (`mergeVisitedByName`); the publication page's "opened N times" counts the
 // same rows. Subscribe and Support live on the publication page only, so this
 // page makes no per-row network lookup.
-//
-// The Stats are gated per card (`availableCards`), never on `hasAnyData`:
-// "Clear viewing history" empties the table and the visit cards but not Right
-// now, which stays while there are saves or followed stories.
 
 import TapPressable from '@/components/custom/cards/TapPressable';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
-import PageExplainerSheet from '@/components/custom/nav/PageExplainerSheet';
-import type { PageExplainer } from '@/components/custom/nav/page-registry';
 import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
-import StatFigure, { statLabel } from '@/components/custom/share-stats/stat-figures';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { Box } from '@/components/ui/box';
@@ -28,31 +21,19 @@ import { getTopVisitedPublications, type VisitedPublication } from '@/lib/databa
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import logger from '@/lib/logger';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
-import { availableCards, emptyReadingStats, type ReadingStats } from '@/lib/stats/reading-stats';
-import { loadReadingStats } from '@/lib/stats/reading-stats-source';
 import { calendarDaysAgo, formatDayMonth, mergeVisitedByName } from '@/lib/stats/visited-publications';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { I18nManager, type ListRenderItem, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { I18nManager, type ListRenderItem, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 
-/** "How Stats works": the ? beside "Your last 30 days" (FinalLibrary #10). */
-export const STATS_EXPLAINER: PageExplainer = {
-    titleKey: 'library.explainer.stats.title',
-    paragraphKeys: ['library.explainer.stats.what', 'library.explainer.stats.how1', 'library.explainer.stats.how2'],
-    chapter: 'library',
-    slide: 'stats',
-};
-
 const COL_VISITS = 56;
 const COL_LAST = 84;
-const SHARE_H = 44;
 
 interface Props {
     /** False while a warmed neighbour: reads once, then re-reads silently each
@@ -75,10 +56,11 @@ function lastReadLabel(t: (k: 'common.today' | 'common.yesterday') => string, ms
 
 const TableRow: React.FC<{
     readonly item: VisitedPublication;
+    readonly first: boolean;
     readonly last: boolean;
     readonly locale?: string;
     readonly onOpen: (item: VisitedPublication) => void;
-}> = ({ item, last, locale, onOpen }) => {
+}> = ({ item, first, last, locale, onOpen }) => {
     const { t } = useTranslation();
     const c = useColors();
     const name = useDisplayPublication(item.publicationName);
@@ -89,7 +71,7 @@ const TableRow: React.FC<{
             accessibilityRole="button"
             accessibilityLabel={`${name}, ${t('library.history.colVisits')} ${item.visitCount}, ${t('library.history.colLastRead')} ${lastRead}`}
             testID={`history-row-${item.publicationName}`}
-            style={[styles.row, styles.rowData, { backgroundColor: c.surface, borderColor: c.line }, last ? styles.rowLast : null]}
+            style={[styles.row, { backgroundColor: c.surface, borderColor: c.line }, first ? styles.rowFirst : null, last ? styles.rowLast : null]}
         >
             <View style={styles.rowInner} pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                 <SourceFlag countryCode={item.countryCode} size="sm" />
@@ -106,18 +88,6 @@ const TableRow: React.FC<{
     );
 };
 
-/** One Stats card as it sits on the page: its name, then its figure. */
-export const StatTile: React.FC<{ readonly id: ReturnType<typeof availableCards>[number]; readonly stats: ReadingStats }> = ({ id, stats }) => {
-    const { t } = useTranslation();
-    const c = useColors();
-    return (
-        <View style={[styles.tile, { backgroundColor: c.surface, borderColor: c.line }]} testID={`stat-tile-${id}`}>
-            <Text style={{ color: c.ink2, fontSize: 13, lineHeight: 18, marginBottom: 6 }}>{statLabel(t, id)}</Text>
-            <StatFigure id={id} stats={stats} variant="tile" />
-        </View>
-    );
-};
-
 const VisitedPublicationsList: React.FC<Props> = ({
     active = true,
     scrollHandler,
@@ -129,17 +99,13 @@ const VisitedPublicationsList: React.FC<Props> = ({
     const { t, i18n } = useTranslation();
     const c = useColors();
     const [items, setItems] = useState<VisitedPublication[]>([]);
-    const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [statsExplainerOpen, setStatsExplainerOpen] = useState(false);
     const hasFetched = useRef(false);
 
     const load = useCallback(async () => {
         try {
-            const [rows, loaded] = await Promise.all([getTopVisitedPublications(), loadReadingStats()]);
-            setItems(mergeVisitedByName(rows));
-            setStats(loaded);
+            setItems(mergeVisitedByName(await getTopVisitedPublications()));
         } catch (error) {
             logger.captureException(error, { tags: { screen: 'HistoryPage', method: 'load' } });
         }
@@ -172,12 +138,10 @@ const VisitedPublicationsList: React.FC<Props> = ({
     }, []);
 
     const renderItem: ListRenderItem<VisitedPublication> = useCallback(
-        ({ item, index }) => <TableRow item={item} last={index === items.length - 1} locale={i18n?.language} onOpen={open} />,
+        ({ item, index }) => <TableRow item={item} first={index === 0} last={index === items.length - 1} locale={i18n?.language} onOpen={open} />,
         [i18n?.language, open, items.length],
     );
 
-    const cards = availableCards(stats);
-    const shareShown = active && cards.length > 0;
     const listEnd = listEndPadding ?? tabClearance + 24;
 
     const listHeader = (
@@ -193,46 +157,27 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     >
                         {t('library.history.intro')}
                     </Text>
-                    <View style={[styles.row, styles.rowFirst, { backgroundColor: c.surface, borderColor: c.line }]}>
-                        <View style={styles.rowInner}>
-                            <Text style={[styles.headCell, { color: c.ink3, flex: 1 }]}>{t('library.history.colPublication')}</Text>
-                            <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_VISITS }]}>
-                                {t('library.history.colVisits')}
-                            </Text>
-                            <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_LAST + 18 }]}>
-                                {t('library.history.colLastRead')}
-                            </Text>
-                        </View>
+                    {/* Column headings above the card (FinalLibrary: padding 0 14 6). */}
+                    <View style={styles.headRow}>
+                        <Text style={[styles.headCell, { color: c.ink3, flex: 1 }]}>{t('library.history.colPublication')}</Text>
+                        <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_VISITS }]}>
+                            {t('library.history.colVisits')}
+                        </Text>
+                        <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_LAST + 18 }]}>
+                            {t('library.history.colLastRead')}
+                        </Text>
                     </View>
                 </>
             ) : null}
         </View>
     );
 
-    const listFooter = (
-        <View style={{ gap: 12 }}>
-            {items.length > 0 ? (
-                <Text style={{ fontSize: 12, lineHeight: 17, color: c.ink3, marginTop: 8 }} testID="history-footnote">
-                    {t('library.history.footnote')}
-                </Text>
-            ) : null}
-            {cards.length > 0 ? (
-                <View style={{ gap: 10, marginTop: 12 }} testID="history-stats">
-                    <PageTitleRow
-                        title={t('library.stats.title')}
-                        onExplain={() => setStatsExplainerOpen(true)}
-                        testID="stats-title-row"
-                    />
-                    {cards.map((id) => (
-                        <StatTile key={id} id={id} stats={stats} />
-                    ))}
-                    <Text style={{ fontSize: 12, lineHeight: 17, color: c.ink3, textAlign: 'center' }}>
-                        {t('library.stats.counted')}
-                    </Text>
-                </View>
-            ) : null}
-        </View>
-    );
+    const listFooter =
+        items.length > 0 ? (
+            <Text style={{ fontSize: 12, lineHeight: 17, color: c.ink3, marginTop: 8 }} testID="history-footnote">
+                {t('library.history.footnote')}
+            </Text>
+        ) : null;
 
     return (
         <Box className="flex-1">
@@ -266,7 +211,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     paddingTop: headerHeight + PAGE_CONTENT_GAP,
                     paddingHorizontal: PAGE_SIDE_INSET,
                     // Clear of the Mera button, and of the floating Share above it.
-                    paddingBottom: listEnd + (shareShown ? SHARE_H + 12 : 0),
+                    paddingBottom: listEnd,
                 }}
                 showsVerticalScrollIndicator={false}
                 onScroll={scrollHandler ?? notifyScrollTick}
@@ -283,60 +228,27 @@ const VisitedPublicationsList: React.FC<Props> = ({
                 }
             />
 
-            {/* One Share for every card, above the Mera button (its top plus
-                the list-end gap, derived, never a literal). */}
-            {shareShown ? (
-                <Pressable
-                    onPress={() => router.push('/logged-in/app_container/library/share-stats')}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('library.stats.share')}
-                    testID="history-share"
-                    style={[styles.share, { bottom: listEnd, backgroundColor: c.accent }]}
-                >
-                    <MaterialIcons name="ios-share" size={17} color={c.onAccent} />
-                    <Text style={{ color: c.onAccent, fontSize: 14, lineHeight: 18, fontWeight: '700' }}>
-                        {t('library.stats.share')}
-                    </Text>
-                </Pressable>
-            ) : null}
-
-            <PageExplainerSheet
-                explainer={STATS_EXPLAINER}
-                open={statsExplainerOpen}
-                onClose={() => setStatsExplainerOpen(false)}
-            />
         </Box>
     );
 };
 
 const styles = StyleSheet.create({
+    // The board's History table (FinalLibrary): radius 16, rows 52pt with 8/14
+    // padding, the column headings above the card (padding 0 14 6).
     row: {
         borderLeftWidth: StyleSheet.hairlineWidth,
         borderRightWidth: StyleSheet.hairlineWidth,
         borderBottomWidth: StyleSheet.hairlineWidth,
-        minHeight: 44,
+        minHeight: 52,
         justifyContent: 'center',
     },
-    // The board's History table (FinalLibrary): radius 16, rows 52pt with 8/14
-    // padding; the column heading row keeps 44.
     rowFirst: { borderTopWidth: StyleSheet.hairlineWidth, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
-    rowData: { minHeight: 52 },
+    headRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingBottom: 6 },
     rowLast: { borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
     rowInner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 8 },
     cellName: { flex: 1, fontSize: 15, lineHeight: 20, fontWeight: '600' },
     cellNum: { fontSize: 14, lineHeight: 19, textAlign: 'right' },
     headCell: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
-    tile: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 14 },
-    share: {
-        position: 'absolute',
-        right: 14,
-        height: SHARE_H,
-        paddingHorizontal: 16,
-        borderRadius: 999,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
 });
 
 export default VisitedPublicationsList;

@@ -2693,7 +2693,8 @@
   "nav": {
     "page": {
       "stories": "Actualités",
-      "saved": "Enregistrés"
+      "saved": "Enregistrés",
+      "stats": "Statistiques"
     },
     "rearrangeA11y": "Réorganiser les pages de {{tab}}",
     "pillA11y": "{{label}}, {{index}} sur {{count}}",
@@ -2806,7 +2807,10 @@
       "title": "Vos 30 derniers jours",
       "top": "Les plus ouverts",
       "topLine": "puis {{second}} et {{third}}",
-      "topLineOne": "puis {{second}}"
+      "topLineOne": "puis {{second}}",
+      "emptyTitle": "Rien à compter pour l'instant",
+      "emptyBody": "Ouvrez des articles à leur source, enregistrez-les ou suivez des histoires, et vos 30 derniers jours apparaîtront ici.",
+      "learn": "Découvrir les statistiques"
     },
     "explainer": {
       "saved": {

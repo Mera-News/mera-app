@@ -29,11 +29,11 @@ describe('+native-intent', () => {
     expect(consumePendingPage('you')?.page).toBe('settings');
   });
 
-  it('lands an old Stats link on History, where the Stats live now', () => {
+  it('lands an old Stats link on the Stats page', () => {
     expect(redirectSystemPath({ path: '/logged-in/share-stats?card=keep', initial: true })).toBe(
       '/logged-in/app_container/library',
     );
-    expect(consumePendingPage('library')).toMatchObject({ page: 'visited' });
+    expect(consumePendingPage('library')).toMatchObject({ page: 'stats' });
   });
 
   it('keeps One interest params in the URL (a pushed screen, not a page)', () => {

@@ -2688,7 +2688,8 @@
   "nav": {
     "page": {
       "stories": "Câu chuyện",
-      "saved": "Đã lưu"
+      "saved": "Đã lưu",
+      "stats": "Thống kê"
     },
     "rearrangeA11y": "Sắp xếp lại các trang của {{tab}}",
     "pillA11y": "{{label}}, {{index}} trên {{count}}",
@@ -2800,7 +2801,10 @@
       "title": "30 ngày gần nhất của bạn",
       "top": "Mở nhiều nhất",
       "topLine": "rồi {{second}} và {{third}}",
-      "topLineOne": "rồi {{second}}"
+      "topLineOne": "rồi {{second}}",
+      "emptyTitle": "Chưa có gì để thống kê",
+      "emptyBody": "Mở bài viết tại nguồn, lưu bài hoặc theo dõi câu chuyện, và 30 ngày gần nhất của bạn sẽ hiện ở đây.",
+      "learn": "Tìm hiểu về Thống kê"
     },
     "explainer": {
       "saved": {

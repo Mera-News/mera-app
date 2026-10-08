@@ -10,7 +10,7 @@
 // import components); this file re-exports them so shell code has one import.
 //
 // Page ids are stable strings used everywhere (order rows, hints, focus):
-// feed, stories, world, country:<ALPHA2>, saved, checks, visited, profile,
+// feed, stories, world, country:<ALPHA2>, saved, checks, visited, stats, profile,
 // settings, notifications. A country page id is ALWAYS alpha-2; the explore
 // scope ids stay `country:<ALPHA3>` and only lib/explore/world-pages.ts
 // converts between the two.
@@ -146,6 +146,17 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       ],
       chapter: 'library',
       slide: 'history',
+    },
+  },
+  stats: {
+    tab: 'library',
+    labelKey: 'nav.page.stats',
+    keepMounted: false,
+    explainer: {
+      titleKey: 'library.explainer.stats.title',
+      paragraphKeys: ['library.explainer.stats.what', 'library.explainer.stats.how1', 'library.explainer.stats.how2'],
+      chapter: 'library',
+      slide: 'stats',
     },
   },
   profile: {

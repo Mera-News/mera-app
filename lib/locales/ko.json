@@ -2687,7 +2687,8 @@
   "nav": {
     "page": {
       "stories": "스토리",
-      "saved": "저장됨"
+      "saved": "저장됨",
+      "stats": "통계"
     },
     "rearrangeA11y": "{{tab}} 페이지 순서 바꾸기",
     "pillA11y": "{{label}}, {{count}}개 중 {{index}}번째",
@@ -2799,7 +2800,10 @@
       "title": "지난 30일",
       "top": "가장 많이 연 곳",
       "topLine": "그다음 {{second}}, {{third}}",
-      "topLineOne": "그다음 {{second}}"
+      "topLineOne": "그다음 {{second}}",
+      "emptyTitle": "아직 집계할 내용이 없습니다",
+      "emptyBody": "기사를 원래 출처에서 열고, 저장하거나 스토리를 팔로우하면 지난 30일이 여기에 표시됩니다.",
+      "learn": "통계 알아보기"
     },
     "explainer": {
       "saved": {

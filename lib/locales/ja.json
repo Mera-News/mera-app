@@ -2687,7 +2687,8 @@
   "nav": {
     "page": {
       "stories": "ストーリー",
-      "saved": "保存済み"
+      "saved": "保存済み",
+      "stats": "統計"
     },
     "rearrangeA11y": "{{tab}}のページを並べ替える",
     "pillA11y": "{{label}}、{{count}}件中{{index}}件目",
@@ -2799,7 +2800,10 @@
       "title": "過去30日間",
       "top": "最もよく開いた",
       "topLine": "次に{{second}}と{{third}}",
-      "topLineOne": "次に{{second}}"
+      "topLineOne": "次に{{second}}",
+      "emptyTitle": "まだ集計するものがありません",
+      "emptyBody": "記事を公開元で開いたり、保存したり、ストーリーをフォローしたりすると、過去30日間がここに表示されます。",
+      "learn": "統計について学ぶ"
     },
     "explainer": {
       "saved": {

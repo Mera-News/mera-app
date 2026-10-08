@@ -2689,7 +2689,8 @@
   "nav": {
     "page": {
       "stories": "Haberler",
-      "saved": "Kaydedilenler"
+      "saved": "Kaydedilenler",
+      "stats": "İstatistik"
     },
     "rearrangeA11y": "{{tab}} sayfalarını yeniden düzenle",
     "pillA11y": "{{label}}, {{count}} içinde {{index}}",
@@ -2802,7 +2803,10 @@
       "title": "Son 30 gününüz",
       "top": "En çok açılan",
       "topLine": "sonra {{second}} ve {{third}}",
-      "topLineOne": "sonra {{second}}"
+      "topLineOne": "sonra {{second}}",
+      "emptyTitle": "Henüz sayılacak bir şey yok",
+      "emptyBody": "Haberleri kaynağında açın, kaydedin ya da hikayeleri takip edin; son 30 gününüz burada görünür.",
+      "learn": "İstatistikleri keşfet"
     },
     "explainer": {
       "saved": {

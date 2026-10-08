@@ -2687,7 +2687,8 @@
   "nav": {
     "page": {
       "stories": "Cerita",
-      "saved": "Tersimpan"
+      "saved": "Tersimpan",
+      "stats": "Statistik"
     },
     "rearrangeA11y": "Atur ulang halaman {{tab}}",
     "pillA11y": "{{label}}, {{index}} dari {{count}}",
@@ -2799,7 +2800,10 @@
       "title": "30 hari terakhir Anda",
       "top": "Paling sering dibuka",
       "topLine": "lalu {{second}} dan {{third}}",
-      "topLineOne": "lalu {{second}}"
+      "topLineOne": "lalu {{second}}",
+      "emptyTitle": "Belum ada yang dihitung",
+      "emptyBody": "Buka artikel di sumbernya, simpan, atau ikuti cerita, dan 30 hari terakhir Anda akan muncul di sini.",
+      "learn": "Pelajari Statistik"
     },
     "explainer": {
       "saved": {

@@ -2687,7 +2687,8 @@
   "nav": {
     "page": {
       "stories": "Histórias",
-      "saved": "Salvos"
+      "saved": "Salvos",
+      "stats": "Estatísticas"
     },
     "rearrangeA11y": "Reorganizar as páginas de {{tab}}",
     "pillA11y": "{{label}}, {{index}} de {{count}}",
@@ -2800,7 +2801,10 @@
       "title": "Seus últimos 30 dias",
       "top": "Mais abertos",
       "topLine": "depois {{second}} e {{third}}",
-      "topLineOne": "depois {{second}}"
+      "topLineOne": "depois {{second}}",
+      "emptyTitle": "Nada para contar ainda",
+      "emptyBody": "Abra os artigos na fonte, salve-os ou siga histórias, e seus últimos 30 dias aparecem aqui.",
+      "learn": "Conheça as estatísticas"
     },
     "explainer": {
       "saved": {

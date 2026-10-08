@@ -38,7 +38,7 @@ const RULES: Readonly<Record<string, Rule>> = {
   [`${TABS}/profile`]: () => ({ pathname: `${TABS}/you`, page: 'profile' }),
   [`${TABS}/settings`]: () => ({ pathname: `${TABS}/you`, page: 'settings' }),
   // The six root stubs.
-  '/logged-in/share-stats': () => ({ pathname: `${TABS}/library`, page: 'visited' }),
+  '/logged-in/share-stats': () => ({ pathname: `${TABS}/library`, page: 'stats' }),
   '/logged-in/saved-suggestions': () => ({ pathname: `${TABS}/library`, page: 'saved' }),
   '/logged-in/visited-publications': () => ({ pathname: `${TABS}/library`, page: 'visited' }),
   '/logged-in/profile-advanced': () => ({ pathname: `${TABS}/you`, page: 'profile' }),

@@ -2687,7 +2687,8 @@
   "nav": {
     "page": {
       "stories": "Geschichten",
-      "saved": "Gespeichert"
+      "saved": "Gespeichert",
+      "stats": "Statistik"
     },
     "rearrangeA11y": "Seiten von {{tab}} neu anordnen",
     "pillA11y": "{{label}}, {{index}} von {{count}}",
@@ -2800,7 +2801,10 @@
       "title": "Deine letzten 30 Tage",
       "top": "Am meisten geöffnet",
       "topLine": "dann {{second}} und {{third}}",
-      "topLineOne": "dann {{second}}"
+      "topLineOne": "dann {{second}}",
+      "emptyTitle": "Noch nichts zum Zählen",
+      "emptyBody": "Öffne Artikel bei der Quelle, speichere sie oder folge Geschichten, und deine letzten 30 Tage erscheinen hier.",
+      "learn": "Statistik kennenlernen"
     },
     "explainer": {
       "saved": {

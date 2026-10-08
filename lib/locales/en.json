@@ -2687,7 +2687,8 @@
   "nav": {
     "page": {
       "stories": "Stories",
-      "saved": "Saved"
+      "saved": "Saved",
+      "stats": "Stats"
     },
     "rearrangeA11y": "Rearrange {{tab}} pages",
     "pillA11y": "{{label}}, {{index}} of {{count}}",
@@ -2800,7 +2801,10 @@
       "title": "Your last 30 days",
       "top": "Most opened",
       "topLine": "then {{second}} and {{third}}",
-      "topLineOne": "then {{second}}"
+      "topLineOne": "then {{second}}",
+      "emptyTitle": "Nothing to count yet",
+      "emptyBody": "Open articles at their source, save them or follow stories, and your last 30 days show up here.",
+      "learn": "Learn about Stats"
     },
     "explainer": {
       "saved": {

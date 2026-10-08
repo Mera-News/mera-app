@@ -2688,7 +2688,8 @@
   "nav": {
     "page": {
       "stories": "報導",
-      "saved": "已儲存"
+      "saved": "已儲存",
+      "stats": "統計"
     },
     "rearrangeA11y": "重新排列{{tab}}的頁面",
     "pillA11y": "{{label}}，第 {{index}} 個，共 {{count}} 個",
@@ -2800,7 +2801,10 @@
       "title": "你的過去 30 天",
       "top": "最常開啟",
       "topLine": "接著是 {{second}} 和 {{third}}",
-      "topLineOne": "接著是 {{second}}"
+      "topLineOne": "接著是 {{second}}",
+      "emptyTitle": "還沒有可統計的內容",
+      "emptyBody": "在來源開啟文章、儲存文章或追蹤報導，你的過去 30 天就會顯示在這裡。",
+      "learn": "了解統計"
     },
     "explainer": {
       "saved": {

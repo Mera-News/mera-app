@@ -2781,7 +2781,8 @@
   "nav": {
     "page": {
       "stories": "القصص",
-      "saved": "المحفوظات"
+      "saved": "المحفوظات",
+      "stats": "إحصائيات"
     },
     "rearrangeA11y": "إعادة ترتيب صفحات {{tab}}",
     "pillA11y": "{{label}}، {{index}} من {{count}}",
@@ -2922,7 +2923,10 @@
       "title": "آخر 30 يومًا",
       "top": "الأكثر فتحًا",
       "topLine": "ثم {{second}} و{{third}}",
-      "topLineOne": "ثم {{second}}"
+      "topLineOne": "ثم {{second}}",
+      "emptyTitle": "لا شيء لإحصائه بعد",
+      "emptyBody": "افتح المقالات عند مصدرها، واحفظها أو تابع القصص، وستظهر آخر 30 يومًا هنا.",
+      "learn": "تعرّف على الإحصائيات"
     },
     "explainer": {
       "saved": {
