@@ -1,15 +1,13 @@
-// A page's explainer: the sheet the ? beside a page title opens. Title, the
+// A page's explainer: the help card the ? beside a page title opens, growing
+// out of that ? (HelpModal; the ? marks itself with `markHelpOrigin`). The
 // page's paragraphs, then Learn more (outlined, opens the tutorial chapter)
-// and Got it (filled orange). Got it, a scrim tap or a drag down closes it.
+// and Got it (filled orange). Got it, the X, a scrim tap or Back closes it.
 //
-// The surface, scrim, rise and drag-to-dismiss are BottomSheet's; this file is
-// only the content. A sheet opened from inside a tab survives a tab switch,
-// so its host (TabPages) closes it on blur. Learn more closes the sheet and
-// pushes the tutorial only once it is fully gone (`onClosed`): an RN Modal
-// paints above a root push.
-//
-// Content insets are this file's: BottomSheet draws the surface, handle and
-// bottom inset only (board: 22pt sides, 12pt between blocks).
+// The surface, title, X, scrim and motion are HelpModal's; this file is only
+// the content. A card opened from inside a tab survives a tab switch, so its
+// host (TabPages) closes it on blur. Learn more closes the card and pushes the
+// tutorial only once it is fully gone (`onClosed`): an RN Modal paints above a
+// root push.
 
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -17,7 +15,7 @@ import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { BottomSheet } from '@/components/ui/bottom-sheet';
+import { HelpModal } from '@/components/ui/help-modal';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { useColors } from '@/lib/theme/tokens';
 import type { PageExplainer } from './page-registry';
@@ -48,11 +46,8 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} onClosed={onClosed} testID="page-explainer">
+    <HelpModal open={open} onClose={onClose} onClosed={onClosed} title={t(shown.titleKey)} testID="page-explainer">
       <View style={styles.content}>
-        <Text bold accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
-          {t(shown.titleKey)}
-        </Text>
         <View style={styles.body}>
           {shown.paragraphKeys.map((key) => (
             <Text key={key} style={[styles.paragraph, { color: colors.ink2 }]}>
@@ -83,14 +78,13 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
           </Pressable>
         </View>
       </View>
-    </BottomSheet>
+    </HelpModal>
   );
 };
 
 const styles = StyleSheet.create({
-  // Board: 22pt sides, 12pt between blocks; sizes set with their leading.
-  content: { paddingHorizontal: 22, gap: 12 },
-  title: { fontSize: 22, lineHeight: 28 },
+  // 12pt between blocks; sizes set with their leading. The card owns the sides.
+  content: { gap: 12 },
   body: { gap: 12 },
   paragraph: { fontSize: 15, lineHeight: 22 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 8 },

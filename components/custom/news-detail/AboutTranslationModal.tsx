@@ -1,12 +1,12 @@
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Modal, ModalBackdrop, ModalBody, ModalContent } from '@/components/ui/modal';
+import { HelpModal } from '@/components/ui/help-modal';
 import { Text } from '@/components/ui/text';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
 import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useColors } from '@/lib/theme/tokens';
 import type { ArticleTranslationSupport } from '@/lib/translation-service';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 
@@ -38,6 +38,9 @@ const AboutTranslationModal: React.FC<AboutTranslationModalProps> = ({
     const { t } = useTranslation();
     const colors = useColors();
     const [guideOpen, setGuideOpen] = useState(false);
+    // The guide opens once the card is fully gone: iOS will not present a
+    // second Modal over one still leaving.
+    const wantsGuide = useRef(false);
     if (support.status === 'same-language') return null;
 
     const language = getLocalizedLanguageName(sourceLanguage, appLanguage) ?? t('clusterDetail.unknownLanguage');
@@ -55,13 +58,17 @@ const AboutTranslationModal: React.FC<AboutTranslationModalProps> = ({
 
     return (
         <>
-            <Modal isOpen={open} onClose={onClose} size="md">
-                <ModalBackdrop />
-                <ModalContent testID="about-translation">
-                    <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 20, fontWeight: '700' }}>
-                        {t('articleDetail.aboutTranslation')}
-                    </Text>
-                    <ModalBody>
+            <HelpModal
+                open={open}
+                onClose={onClose}
+                onClosed={() => {
+                    if (!wantsGuide.current) return;
+                    wantsGuide.current = false;
+                    setGuideOpen(true);
+                }}
+                title={t('articleDetail.aboutTranslation')}
+                testID="about-translation"
+            >
                         <View style={{ gap: 10 }}>
                             <Text style={line}>{body}</Text>
                             {translatable ? <Text style={line}>{t('articleDetail.aboutTranslationFallback')}</Text> : null}
@@ -77,8 +84,8 @@ const AboutTranslationModal: React.FC<AboutTranslationModalProps> = ({
                                     accessibilityLabel={t('clusterDetail.translationGuideLink')}
                                     // One modal at a time: this one closes, then the guide opens.
                                     onPress={() => {
+                                        wantsGuide.current = true;
                                         onClose();
-                                        setGuideOpen(true);
                                     }}
                                     style={{ minHeight: 44, justifyContent: 'center' }}
                                 >
@@ -88,14 +95,12 @@ const AboutTranslationModal: React.FC<AboutTranslationModalProps> = ({
                                 </Pressable>
                             ) : null}
                         </View>
-                    </ModalBody>
-                    <View style={{ borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 16 }}>
+                    <View style={{ borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 16, marginTop: 24 }}>
                         <Button action="primary" onPress={onClose} testID="about-translation-close">
                             <ButtonText>{t('tabExplainer.close')}</ButtonText>
                         </Button>
                     </View>
-                </ModalContent>
-            </Modal>
+            </HelpModal>
             <VideoPlayerModal visible={guideOpen} uri={TRANSLATION_GUIDE_URL} onClose={() => setGuideOpen(false)} />
         </>
     );
