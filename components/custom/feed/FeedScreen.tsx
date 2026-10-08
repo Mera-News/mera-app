@@ -129,7 +129,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
-import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
@@ -907,12 +907,10 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
   // `onRefreshSync` and not the scheduler: routing around it would skip
   // flushSkips + the partition-snapshot refresh, and a scheduler-level call can
   // be swallowed by conditions that only gate the SCHEDULED path.
-  useTabPressScrollRefresh({
-    listRef,
+  usePageScrollTarget(listRef, {
     getOffset: () => lastOffsetShared.value,
     onRefresh,
     isRefreshing: refreshing,
-    enabled: active,
   });
 
   // Reset to the top AFTER the re-sorted list has committed. Scrolling inside

@@ -85,9 +85,10 @@ export default function AppLayout() {
                     minimizeBehavior="onScrollDown"
                 >
                     {/* navx: four tabs, Feed, World, Library, You, each a folder
-                        with its own Stack. `disableScrollToTop` because each
-                        page handles a re-tap in JS (use-tab-press-scroll-refresh:
-                        scroll up, then refresh); popToRoot stays ON, so a re-tap
+                        with its own Stack. `disableScrollToTop` because the
+                        tab's visible page handles a re-tap in JS (TabPages +
+                        nav/page-scroll: scroll up, then refresh where the page
+                        has one); popToRoot stays ON, so a re-tap
                         with a screen pushed in the tab's stack (One interest,
                         a View-all) pops back to the pages. */}
                     <NativeTabs.Trigger

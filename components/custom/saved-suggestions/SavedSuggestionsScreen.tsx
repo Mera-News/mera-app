@@ -28,6 +28,7 @@ import SavedExportModal from './SavedExportModal';
 import SavedExportRow, { SAVED_EXPORT_ROW_HEIGHT } from './SavedExportRow';
 import { savedItemId } from './saved-item-id';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
 interface SavedSuggestionsScreenProps {
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
@@ -123,6 +124,8 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const keyExtractor = useCallback((item: SavedItem, index: number) => savedItemId(item) || `saved-${index}`, []);
 
     const listRef = useRef<any>(null);
+    // The tab's re-tap scrolls this page to the top (nav/page-scroll).
+    usePageScrollTarget(listRef);
     const viewportH = useRef(0);
     const settleIfShort = useCallback(
         (_w: number, contentH: number) => {

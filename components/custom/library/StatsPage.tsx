@@ -42,6 +42,7 @@ import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } 
 import { useTranslation } from 'react-i18next';
 import { BackHandler, Pressable, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
 const SHARE_H = 44;
 /** Under the page strip's pill track (safe area + 47): the preview's top. */
@@ -120,6 +121,9 @@ const StatTile: React.FC<{
 
 const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listEndPadding }) => {
     const { t } = useTranslation();
+    // The tab's re-tap scrolls this page to the top (nav/page-scroll).
+    const listRef = useRef<Animated.FlatList<StatsCardId>>(null);
+    usePageScrollTarget(listRef);
     const c = useColors();
     const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
     const [isLoading, setIsLoading] = useState(true);
@@ -217,6 +221,7 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
     return (
         <View ref={rootRef} style={{ flex: 1 }} onLayout={measureRoot} collapsable={false}>
             <Animated.FlatList
+                ref={listRef}
                 testID="stats-page"
                 data={cards}
                 keyExtractor={(id: StatsCardId) => id}

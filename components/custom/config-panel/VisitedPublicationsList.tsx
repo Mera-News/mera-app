@@ -30,6 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { I18nManager, type ListRenderItem, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
 const COL_VISITS = 56;
 const COL_LAST = 84;
@@ -92,6 +93,9 @@ const VisitedPublicationsList: React.FC<Props> = ({
     listEndPadding,
 }) => {
     const tabClearance = useTabBarClearance();
+    // The tab's re-tap scrolls this page to the top (nav/page-scroll).
+    const listRef = useRef<Animated.FlatList<VisitedPublication>>(null);
+    usePageScrollTarget(listRef);
     const { t, i18n } = useTranslation();
     const c = useColors();
     const [items, setItems] = useState<VisitedPublication[]>([]);
@@ -180,6 +184,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
     return (
         <Box className="flex-1">
             <Animated.FlatList
+                ref={listRef}
                 testID="visited-publications-list"
                 data={items}
                 renderItem={renderItem}

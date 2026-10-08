@@ -21,7 +21,15 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { hapticSelection } from '@/lib/haptics';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
+import { scrollToTopWithRetry } from '@/components/custom/feed/scroll-to-top-with-retry';
+import {
+  decideTabPressAction,
+  findTabAncestor,
+  tabRouteKeyContaining,
+  type TabNavLike,
+} from './tab-press';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -41,6 +49,7 @@ import { consumePendingPage, usePendingPageRequest } from './navigate-to-page';
 import PageExplainerSheet from './PageExplainerSheet';
 import PagePager from './PagePager';
 import { survivingPage } from './tab-swipe';
+import { PageScrollContext, retapTarget, scrollListToTop, type PageScrollTarget, type RegisterPageScroll } from './page-scroll';
 import PageStrip, { HEADER_BOTTOM_PAD, HEADER_SIDE_PAD, HEADER_TOP_PAD } from './PageStrip';
 import { pageMeta, TAB_LABEL_KEYS, type PageId } from './page-registry';
 import { tabSwipeProgress } from './swipe-progress';
@@ -171,14 +180,72 @@ const TabPages: React.FC<TabPagesProps> = ({
     () => ids.map((id, i) => (pageMeta(id).keepMounted ? i : -1)).filter((i) => i >= 0),
     [ids],
   );
+  // ── A re-tap of this tab scrolls the visible page to the top (page-scroll.ts) ──
+  // Each panel registers its list through the context; the tab's `tabPress`
+  // goes to the visible page's. With a screen pushed in the tab's stack this
+  // root is not focused: the native bar pops it, and this stays out.
+  const scrollTargets = useRef(new Map<PageId, PageScrollTarget>());
+  const registers = useRef(new Map<PageId, RegisterPageScroll>());
+  const registerFor = useCallback((id: PageId): RegisterPageScroll => {
+    let r = registers.current.get(id);
+    if (!r) {
+      r = (target) => {
+        scrollTargets.current.set(id, target);
+        return () => {
+          if (scrollTargets.current.get(id) === target) scrollTargets.current.delete(id);
+        };
+      };
+      registers.current.set(id, r);
+    }
+    return r;
+  }, []);
+  const motionAllowed = useMotionAllowed();
+  const navigation = useNavigation();
+  const route = useRoute();
+  const retap = useRef({ activeId, arranging, reveal, motionAllowed });
+  retap.current = { activeId, arranging, reveal, motionAllowed };
+  useEffect(() => {
+    const own = navigation as unknown as TabNavLike;
+    const tabs = findTabAncestor(own);
+    if (!tabs) return undefined;
+    return tabs.addListener('tabPress', (event) => {
+      const { activeId: active, arranging: arr, reveal: show, motionAllowed: moving } = retap.current;
+      const target = retapTarget(scrollTargets.current, active, arr);
+      if (!target) return;
+      const opts = target.options.current ?? {};
+      const read = opts.getOffset;
+      const action = decideTabPressAction({
+        isForThisTab: !!event?.target && event.target === tabRouteKeyContaining(tabs.getState?.(), route.key),
+        isFocused: own.isFocused(),
+        // Unknown offset: a re-tap always scrolls.
+        offset: read ? read() : Number.POSITIVE_INFINITY,
+        canRefresh: !!opts.onRefresh,
+        isRefreshing: !!opts.isRefreshing,
+      });
+      if (action === 'scroll-to-top') {
+        show();
+        // A list that reports its offset gets the verified, retried scroll;
+        // Reduce Motion and Lite jump.
+        const ref = target.ref as Parameters<typeof scrollToTopWithRetry>[0];
+        if (read && moving && target.ref.current?.scrollToOffset) scrollToTopWithRetry(ref, read);
+        else scrollListToTop(target.ref, moving);
+      } else if (action === 'refresh') {
+        opts.onRefresh?.();
+      }
+    });
+  }, [navigation, route.key]);
+
   const renderPanel = useCallback(
-    (i: number, pageActive: boolean) =>
-      renderPage({
-        pageId: ids[i],
-        active: pageActive && focused && !arranging,
-        header: pageActive ? header : idleHeader,
-      }),
-    [renderPage, ids, focused, arranging, header, idleHeader],
+    (i: number, pageActive: boolean) => (
+      <PageScrollContext.Provider value={registerFor(ids[i])}>
+        {renderPage({
+          pageId: ids[i],
+          active: pageActive && focused && !arranging,
+          header: pageActive ? header : idleHeader,
+        })}
+      </PageScrollContext.Provider>
+    ),
+    [renderPage, ids, focused, arranging, header, idleHeader, registerFor],
   );
 
   const tabLabel = t(TAB_LABEL_KEYS[tab]);

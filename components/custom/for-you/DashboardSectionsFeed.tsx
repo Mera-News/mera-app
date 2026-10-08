@@ -20,7 +20,7 @@ import {
 import { Text } from '@/components/ui/text';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
-import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, StyleSheet, View } from 'react-native';
@@ -181,14 +181,10 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   // (useFeedSyncRefresh), so the two paths are literally the same function.
   const listRef = useRef<Animated.FlatList<SectionItem>>(null);
   const lastOffsetShared = useSharedValue(0);
-  // Only the active panel may act on a tab re-tap (an off-screen one reads as
-  // "at the top" with nothing to refresh).
-  useTabPressScrollRefresh({
-    listRef,
-    getOffset: () => (active ? lastOffsetShared.value : 0),
-    onRefresh: active ? onRefresh : undefined,
+  usePageScrollTarget(listRef, {
+    getOffset: () => lastOffsetShared.value,
+    onRefresh,
     isRefreshing: !!refreshing,
-    enabled: active,
   });
 
   // Section content order: the SAME rule the Feed tab uses

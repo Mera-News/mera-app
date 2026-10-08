@@ -12,12 +12,13 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { router, type Href } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import { Badge, Group, Help, Row, ViewAll } from './rows';
 import { useActiveTopicTexts, useHubCleanup, useHubFacts, useHubPlaces } from './use-hub-data';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
 /** Screens pushed inside the You stack. */
 type YouScreen = 'facts' | 'locations' | 'sources' | 'hygiene-review' | 'activity';
@@ -56,6 +57,9 @@ interface ProfileHubProps {
  */
 const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
     const { t } = useTranslation();
+    // The tab's re-tap scrolls this page to the top (nav/page-scroll).
+    const listRef = useRef<Animated.ScrollView>(null);
+    usePageScrollTarget(listRef);
     const colors = useColors();
     const endClearance = useListEndClearance();
 
@@ -78,6 +82,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
 
     return (
         <Animated.ScrollView
+            ref={listRef}
             testID="profile-hub"
             // The header's handler sends a tick per scroll; rows that land
             // with no scroll (data arriving) need one too, or they stay in

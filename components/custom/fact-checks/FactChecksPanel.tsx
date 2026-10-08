@@ -15,7 +15,7 @@ import {
 } from '@/lib/stores/fact-checks-store';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
 import { reconcileAskedFactChecks } from '@/lib/fact-check/fact-check-graphql-client';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
 import { ShieldCheck } from 'lucide-react-native';
@@ -23,6 +23,7 @@ import { RefreshControl, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
 
 
@@ -78,6 +79,9 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     listEndPadding,
 }) => {
     const { t } = useTranslation();
+    // The tab's re-tap scrolls this page to the top (nav/page-scroll).
+    const listRef = useRef<Animated.FlatList<StoredFactCheck>>(null);
+    usePageScrollTarget(listRef);
     const colors = useColors();
     // Inside a tab on iOS the inset already includes the tab bar; measured on
     // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
@@ -167,6 +171,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     return (
         <Box className="flex-1" testID="fact-checks-panel">
             <Animated.FlatList
+                ref={listRef}
                 data={items}
                 keyExtractor={(item: StoredFactCheck) => item.id}
                 renderItem={renderItem as any}

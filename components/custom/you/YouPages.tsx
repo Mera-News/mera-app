@@ -4,17 +4,22 @@ import TabPages from '@/components/custom/nav/TabPages';
 import type { PageHeaderBinding, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import { DEFAULT_PAGE_ORDER } from '@/lib/navigation/page-order';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import ProfileHub from './ProfileHub';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
 /** You > Settings: app settings only, plan card first. No Mera button here,
  *  so the list ends above the tab bar, not above the button. */
 const SettingsPage: React.FC<{ readonly header: PageHeaderBinding }> = ({ header }) => {
     const bottom = useTabBarClearance();
+    // The tab's re-tap scrolls this page to the top (nav/page-scroll).
+    const listRef = useRef<Animated.ScrollView>(null);
+    usePageScrollTarget(listRef);
     return (
         <Animated.ScrollView
+            ref={listRef}
             testID="settings-page"
             onScroll={header.scrollHandler}
             scrollEventThrottle={16}

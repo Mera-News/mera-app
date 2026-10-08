@@ -15,7 +15,7 @@ import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { router, type Href } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -30,6 +30,7 @@ import {
     type NotificationAction,
 } from './notification-actions';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
 /** "now" / "5m" / "2h" / "3d", as the board draws it. */
 function relativeTime(date: Date): string {
@@ -56,6 +57,9 @@ interface NotificationsScreenProps {
  */
 const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, active }) => {
     const { t } = useTranslation();
+    // The tab's re-tap scrolls this page to the top (nav/page-scroll).
+    const listRef = useRef<Animated.FlatList<NotificationModel>>(null);
+    usePageScrollTarget(listRef);
     const colors = useColors();
     const endClearance = useListEndClearance();
     const [items, setItems] = useState<NotificationModel[]>([]);
@@ -205,6 +209,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
 
     return (
         <Animated.FlatList
+            ref={listRef}
             testID="notifications-list"
             data={items}
             keyExtractor={(item) => item.id}

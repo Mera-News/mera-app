@@ -1,10 +1,10 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { useEffect, useRef } from 'react';
-
-import {
-  scrollToTopWithRetry,
-  type ScrollToOffsetRef,
-} from '@/components/custom/feed/scroll-to-top-with-retry';
+// The tab bar's re-tap, pure: is this `tabPress` a re-tap of MY tab, and
+// does it scroll or refresh. TabPages listens (page-scroll.ts sends it to the
+// visible page). Mechanism, verified in the sources: expo-router's native
+// tabs emit a react-navigation `tabPress` (target: the tab route's key) from
+// `onNativeFocusChange`, which react-native-screens' tab-bar delegate calls
+// even when the tapped tab is already selected; the `tabPress` comes BEFORE
+// the `JUMP_TO`, so `isFocused()` is true only for a re-tap.
 
 /**
  * How far from the top the list must be before a re-tap counts as "scroll me up"
@@ -70,24 +70,8 @@ export function decideTabPressAction({
   return 'ignore';
 }
 
-export interface UseTabPressScrollRefreshOptions {
-  /** The screen's list ref (FlatList / Animated.FlatList). */
-  readonly listRef: ScrollToOffsetRef;
-  /** Reads the list's current offset. Cheap — a shared-value or plain ref read. */
-  readonly getOffset: () => number;
-  /** The screen's pull-to-refresh handler. MUST be the same function the
-   *  RefreshControl calls, not the scheduler underneath it. Omit to make the
-   *  screen scroll-to-top-only (no screen does today). */
-  readonly onRefresh?: () => void;
-  /** Live refresh-in-flight flag, so consecutive taps don't stack refreshes. */
-  readonly isRefreshing?: boolean;
-  /** False for a page that is not the visible one (a warmed pager neighbour):
-   *  a re-tap then belongs to the active page, never to this one. */
-  readonly enabled?: boolean;
-}
-
-interface NavLike {
-  getParent?: () => NavLike | undefined;
+export interface TabNavLike {
+  getParent?: () => TabNavLike | undefined;
   getState?: () => NavStateLike | undefined;
   addListener: (type: 'tabPress', callback: (event: { target?: string }) => void) => () => void;
   isFocused: () => boolean;
@@ -102,8 +86,8 @@ interface NavStateLike {
 /** The nearest TAB navigator above this screen, or null. A screen inside a
  *  tab's Stack (navx) does not see the tab's `tabPress` on its own
  *  navigation object; only the tab navigator emits it. */
-export function findTabAncestor(navigation: NavLike): NavLike | null {
-  let n: NavLike | undefined = navigation;
+export function findTabAncestor(navigation: TabNavLike): TabNavLike | null {
+  let n: TabNavLike | undefined = navigation;
   while (n) {
     if (n.getState?.()?.type === 'tab') return n;
     n = n.getParent?.();
@@ -120,73 +104,4 @@ export function tabRouteKeyContaining(tabState: NavStateLike | undefined, routeK
     if (r.key === routeKey || holds(r.state)) return r.key;
   }
   return null;
-}
-
-/**
- * Re-tapping the icon of the tab you are already on scrolls its list to the top;
- * tapping again once at the top triggers that screen's pull-to-refresh.
- *
- * Mechanism (verified, not guessed): expo-router's native tabs navigator emits a
- * react-navigation `tabPress` with `target: <tab route key>` from
- * `onNativeFocusChange`, and react-native-screens' tab-bar delegate calls that
- * even when the tapped tab is already selected
- * (`RNSTabBarControllerDelegate.shouldSelectViewController` →
- * `emitOnNativeFocusChangeRequestSelectedTabScreen:` runs unconditionally).
- *
- * Pair this with `disableScrollToTop` on the corresponding `NativeTabs.Trigger`
- * so UIKit's own repeated-selection scroll-to-top special effect does not race
- * this handler.
- */
-export function useTabPressScrollRefresh({
-  listRef,
-  getOffset,
-  onRefresh,
-  isRefreshing = false,
-  enabled = true,
-}: UseTabPressScrollRefreshOptions): void {
-  const navigation = useNavigation();
-  const route = useRoute();
-
-  // Everything the handler reads goes through a ref so the subscription is
-  // established once per tab and never torn down/re-added on a refresh-state
-  // flip or a new inline closure.
-  const latest = useRef({ listRef, getOffset, onRefresh, isRefreshing, enabled });
-  latest.current = { listRef, getOffset, onRefresh, isRefreshing, enabled };
-
-  useEffect(() => {
-    // `tabPress` is emitted by the TAB navigator only. A page inside a tab's
-    // Stack listens there and matches the event against the tab route that
-    // holds it. `isFocused()` stays this SCREEN's: with a screen pushed on top
-    // (One interest) it is false, the re-tap is the native pop to root, and
-    // this handler stays out of it.
-    const own = navigation as unknown as NavLike;
-    const tabs = findTabAncestor(own);
-    if (!tabs) return undefined;
-
-    return tabs.addListener('tabPress', (event) => {
-      const {
-        listRef: ref,
-        getOffset: read,
-        onRefresh: refresh,
-        isRefreshing: busy,
-        enabled: on,
-      } = latest.current;
-      if (!on) return;
-      const action = decideTabPressAction({
-        isForThisTab: !!event?.target && event.target === tabRouteKeyContaining(tabs.getState?.(), route.key),
-        isFocused: own.isFocused(),
-        offset: read(),
-        canRefresh: !!refresh,
-        isRefreshing: busy,
-      });
-      if (action === 'scroll-to-top') {
-        // Reuse the Feed's verified-and-retried scroll rather than a bare
-        // scrollToOffset — a scroll issued while something else is touching
-        // this list's layout can be silently absorbed.
-        scrollToTopWithRetry(ref, read);
-      } else if (action === 'refresh') {
-        refresh?.();
-      }
-    });
-  }, [navigation, route.key]);
 }

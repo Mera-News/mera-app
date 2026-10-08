@@ -39,6 +39,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { latestMember } from './merge-timeline';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
 interface TrackedStoriesScreenProps {
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
@@ -58,6 +59,9 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     listHeader,
 }) => {
     const { t } = useTranslation();
+    // The tab's re-tap scrolls this page to the top (nav/page-scroll).
+    const listRef = useRef<Animated.FlatList<TrackedStoryModel>>(null);
+    usePageScrollTarget(listRef);
     const c = useColors();
     const listEndClearance = useListEndClearance();
     const [stories, setStories] = useState<TrackedStoryModel[]>([]);
@@ -203,6 +207,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     return (
         <View style={{ flex: 1 }}>
             <Animated.FlatList
+                ref={listRef}
                 testID="tracked-stories-list"
                 data={stories}
                 renderItem={renderItem}

@@ -9,7 +9,7 @@ import ArticleService from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
-import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
+import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 import logger from '@/lib/logger';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useIsConnected, useIsOnline } from '@/lib/stores/network-store';
@@ -360,12 +360,10 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     // UI-thread shared value (not a plain ref) — set inside the worklet tick
     // handler below, same as DashboardSectionsFeed's `lastOffsetShared`.
     const lastOffsetShared = useSharedValue(0);
-    // Every mounted scope hears the tab press: only the active one may act
-    // (an off-screen one reads as "at the top" with nothing to refresh).
-    useTabPressScrollRefresh({
-        listRef,
-        getOffset: () => (active ? lastOffsetShared.value : 0),
-        onRefresh: active ? onRefresh : undefined,
+    // The tab's re-tap reaches only the visible page (TabPages, page-scroll).
+    usePageScrollTarget(listRef, {
+        getOffset: () => lastOffsetShared.value,
+        onRefresh,
         isRefreshing,
     });
 
