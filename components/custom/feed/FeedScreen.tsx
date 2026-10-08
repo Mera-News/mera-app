@@ -84,7 +84,7 @@ import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
-import { setEmptyWantsCard } from '@/components/custom/for-you/feed-status-card';
+import { setEmptyWantsCard, setFeedHasRows } from '@/components/custom/for-you/feed-status-card';
 import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
@@ -1108,9 +1108,13 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     !errorMessage &&
     !noFacts &&
     lastProcessingRunFinishedAt !== null;
+  const hasRows = listData.length > 0;
   useEffect(() => {
     if (active) setEmptyWantsCard(emptyWantsCard);
   }, [active, emptyWantsCard]);
+  useEffect(() => {
+    if (active) setFeedHasRows(hasRows);
+  }, [active, hasRows]);
 
   return (
     // No backdrop and no header: the tab (TabPages) draws both.

@@ -41,7 +41,7 @@ import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, View } from 'react-native';
-import { setEmptyWantsCard } from '@/components/custom/for-you/feed-status-card';
+import { setEmptyWantsCard, setFeedHasRows } from '@/components/custom/for-you/feed-status-card';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
 interface SortSnapshot {
@@ -146,6 +146,9 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   useEffect(() => {
     if (active) setEmptyWantsCard(emptyWantsCard);
   }, [active, emptyWantsCard]);
+  useEffect(() => {
+    if (active) setFeedHasRows(hasStories);
+  }, [active, hasStories]);
 
   // ── Nothing to show yet ──
   let empty: React.ReactElement | null;

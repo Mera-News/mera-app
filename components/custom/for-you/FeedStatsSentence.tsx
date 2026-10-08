@@ -1,6 +1,8 @@
 // FeedStatsSentence — the presentational "N published / M analysed / K relevant
-// / R read" line. Reads the shared `useFeedCounts()` hook. Mounted in ONE
-// place: the Dashboard's Overview stats card (DashboardStatsCard).
+// / R read" line. Reads the shared `useFeedCounts()` hook, live. Mounted in ONE
+// place, the Feed's counts card (DashboardStatsCard): the collapsed card is
+// this sentence alone. Tabular figures, so a count ticking up never shifts
+// the line.
 //
 // PLURALS: each clause is its own i18next key with a `count` option, so the
 // library picks the right plural form per language (`_one`/`_other` in en, and
@@ -38,6 +40,8 @@ type StatsClauseKey =
   | 'feed.statsSyncAnalysing'
   | 'feed.statsSyncFrom'
   | 'feed.statsSyncRelevant';
+
+const TABULAR = { fontVariant: ['tabular-nums' as const] };
 
 const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   // No `leading-6`: 21px on 16px type (1.31) is a Latin-sized line box. This
@@ -89,7 +93,7 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
         ].join(' ');
 
   return (
-    <Text size="sm" className={className}>
+    <Text size="sm" className={className} style={TABULAR}>
       {sentence}
     </Text>
   );

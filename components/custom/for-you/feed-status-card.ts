@@ -1,7 +1,8 @@
 // The Feed's ONE counts card (owner) lives in the Feed tab's HEADER
-// accessory, under the View chip, and hides with the header. It shows for an
-// empty Feed (the view says so through `emptyWants`), at the daily limit, or
-// when the Mera status icon asks for it. Its open/closed state lives here so
+// accessory, under the View chip, and hides with the header. It shows
+// COLLAPSED (the day's counts sentence) whenever the Feed has suggestions
+// (`hasRows`), EXPANDED for an empty Feed (`emptyWants`), at the daily limit,
+// or when the Mera status icon asks for it. Its open/closed state lives here so
 // the icon can act on it; the icon first reveals the header, then:
 //   open      -> nothing more
 //   collapsed -> expand it
@@ -26,23 +27,35 @@ interface FeedStatusCardState {
     readonly expanded: boolean;
     /** Counts cards currently mounted (0 or 1 by construction). */
     readonly mounted: number;
-    /** The mounted Feed view is empty and its state needs the card. */
+    /** The mounted Feed view is empty and its state needs the card (open). */
     readonly emptyWants: boolean;
+    /** The mounted Feed view has suggestions: the card shows, collapsed. */
+    readonly hasRows: boolean;
     /** Bumped to ask the Feed page to reveal its header. */
     readonly revealSignal: number;
 }
 
 export const useFeedStatusCard = create<FeedStatusCardState>()(() => ({
     requested: false,
-    expanded: true,
+    expanded: false,
     mounted: 0,
     emptyWants: false,
+    hasRows: false,
     revealSignal: 0,
 }));
 
-/** The mounted Feed view says whether its empty state needs the card. */
+/** The mounted Feed view says whether its empty state needs the card. An
+ *  empty Feed shows it open (each time the view reports it, i.e. on arrival);
+ *  when the first suggestions land it folds back to the collapsed counts. */
 export function setEmptyWantsCard(emptyWants: boolean): void {
-    if (useFeedStatusCard.getState().emptyWants !== emptyWants) useFeedStatusCard.setState({ emptyWants });
+    const was = useFeedStatusCard.getState().emptyWants;
+    if (emptyWants) useFeedStatusCard.setState({ emptyWants, expanded: true });
+    else if (was) useFeedStatusCard.setState({ emptyWants, expanded: false });
+}
+
+/** The mounted Feed view says whether it has suggestions. */
+export function setFeedHasRows(hasRows: boolean): void {
+    if (useFeedStatusCard.getState().hasRows !== hasRows) useFeedStatusCard.setState({ hasRows });
 }
 
 /** A counts card mounts / unmounts. Returns the unregister. */
@@ -67,7 +80,8 @@ export function tapStatusIcon(): void {
     });
 }
 
-/** The reader left the Feed page: drop a requested card, reopen the next. */
+/** The reader left the Feed page: drop a requested card; over suggestions
+ *  the card comes back collapsed (an empty Feed reopens it on arrival). */
 export function resetStatusCard(): void {
-    useFeedStatusCard.setState({ requested: false, expanded: true });
+    useFeedStatusCard.setState({ requested: false, expanded: false });
 }

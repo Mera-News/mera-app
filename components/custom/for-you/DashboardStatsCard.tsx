@@ -81,6 +81,9 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     const toggle = useCallback(() => setStatusCardExpanded(!useFeedStatusCard.getState().expanded), []);
 
     const notice = mode === 'limited' || mode === 'error';
+    // Collapsed with counts to show: the sentence alone (FeedStatsSentence says
+    // nothing at zero, so then the status line stays).
+    const collapsedCounts = !expanded && articleCount > 0;
 
     return (
         <View className="mb-2" testID={`${testID}-anchor`}>
@@ -98,9 +101,23 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                             StaticText (captured class, ux2). */}
                         <View>
                             <View pointerEvents="none" {...HIDDEN}>
-                                <HStack className="items-center" space="sm">
+                                {/* Collapsed over counts (owner): the day's counts
+                                    sentence IS the card, wrapping beside the ⌄.
+                                    Otherwise the status line, then the sentence. */}
+                                <HStack className={collapsedCounts ? 'items-start' : 'items-center'} space="sm">
+                                    {collapsedCounts && processing ? (
+                                        <LoopScene
+                                            source={processingAnimationFor('analysing')}
+                                            size={SCENE_SIZE}
+                                            testID={`${testID}-scene`}
+                                        />
+                                    ) : null}
                                     <View style={{ flex: 1, minWidth: 0 }}>
-                                        <StatusLine label={stateLabel} syncing={processing} />
+                                        {collapsedCounts ? (
+                                            <FeedStatsSentence syncing={processing} className="text-ink font-medium" />
+                                        ) : (
+                                            <StatusLine label={stateLabel} syncing={processing} />
+                                        )}
                                     </View>
                                     <MaterialIcons
                                         name={expanded ? 'expand-less' : 'expand-more'}
@@ -109,7 +126,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                         {...HIDDEN}
                                     />
                                 </HStack>
-                                {articleCount > 0 ? (
+                                {!collapsedCounts && articleCount > 0 ? (
                                     <HStack className="items-start mt-1" space="sm">
                                         {processing ? (
                                             <LoopScene

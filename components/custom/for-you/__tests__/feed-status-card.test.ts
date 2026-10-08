@@ -1,4 +1,11 @@
-import { registerStatusCard, resetStatusCard, statusIconTap, tapStatusIcon, useFeedStatusCard } from '../feed-status-card';
+import {
+    registerStatusCard,
+    resetStatusCard,
+    setEmptyWantsCard,
+    statusIconTap,
+    tapStatusIcon,
+    useFeedStatusCard,
+} from '../feed-status-card';
 
 describe('statusIconTap', () => {
     it('an open card: only reveal the header', () => {
@@ -14,7 +21,7 @@ describe('statusIconTap', () => {
 
 describe('tapStatusIcon', () => {
     beforeEach(() => {
-        useFeedStatusCard.setState({ requested: false, expanded: true, mounted: 0, emptyWants: false, revealSignal: 0 });
+        useFeedStatusCard.setState({ requested: false, expanded: true, mounted: 0, emptyWants: false, hasRows: false, revealSignal: 0 });
     });
 
     it('with no card mounted, requests one, open, and reveals the header', () => {
@@ -28,6 +35,14 @@ describe('tapStatusIcon', () => {
         tapStatusIcon();
         expect(useFeedStatusCard.getState()).toMatchObject({ requested: false, expanded: true, revealSignal: 1 });
         unregister();
+    });
+
+    it('an empty Feed opens the card; leaving collapses it for a Feed with suggestions', () => {
+        useFeedStatusCard.setState({ expanded: false });
+        setEmptyWantsCard(true);
+        expect(useFeedStatusCard.getState().expanded).toBe(true);
+        resetStatusCard();
+        expect(useFeedStatusCard.getState().expanded).toBe(false);
     });
 
     it('leaving the page drops a requested card', () => {

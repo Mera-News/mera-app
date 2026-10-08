@@ -1,8 +1,9 @@
 // The Feed page's header accessory (TabPages `renderAccessory`): under the
 // Feed | Stories | Notifications track, hiding with the header. The View chip
 // (icon-only: the chosen style's glyph and ⌄; its menu titled "View"), right-aligned,
-// then the ONE counts card whenever it shows (feed-status-card.ts): an empty
-// Feed whose state needs it, the daily limit, or the status icon's request.
+// then the ONE counts card whenever it shows (feed-status-card.ts): collapsed
+// over suggestions, open for an empty Feed whose state needs it, the daily
+// limit, or the status icon's request.
 
 import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
 import { useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
@@ -26,6 +27,7 @@ const FeedHeaderAccessory: React.FC = () => {
   const limited = useFeedStatusMode() === 'limited';
   const requested = useFeedStatusCard((s) => s.requested);
   const emptyWants = useFeedStatusCard((s) => s.emptyWants);
+  const hasRows = useFeedStatusCard((s) => s.hasRows);
   const labelOf = useCallback(
     (v: FeedView) => (v === 'sectioned' ? t('feed.view.sectioned') : t('feed.view.continuous')),
     [t],
@@ -44,7 +46,7 @@ const FeedHeaderAccessory: React.FC = () => {
           testID="feed-view-chip"
         />
       </View>
-      {limited || requested || emptyWants ? <DashboardStatsCard testID="feed-status-card" /> : null}
+      {limited || requested || emptyWants || hasRows ? <DashboardStatsCard testID="feed-status-card" /> : null}
     </View>
   );
 };
