@@ -2482,7 +2482,7 @@
     },
     "preview": {
       "position": "{{index}} з {{total}}",
-      "title": "Попередній перегляд"
+      "title": "Перегляд"
     }
   },
   "chatTopics": {
