@@ -23,8 +23,8 @@ export type FeedStatusMode = 'processing' | 'error' | 'limited' | 'deferred' | '
 // anything?" (true for processing/error/limited, false for idle/deferred). It is
 // GONE ON PURPOSE, not merely unused.
 //
-// The status lives in the Feed tab's status icon (for-you/FeedStatusIcon), which
-// is on screen in every mode: still, moving, orange or red, and every mode is
-// its accessibility label. Nothing decides visibility from the mode, and a
-// predicate exported here would invite exactly that wiring back: a status
-// surface that appears and vanishes with each sync.
+// The status lives in the Feed's counts card (for-you/DashboardStatsCard), the
+// Feed list's first item: its Mera mark moves while a run is in flight, and at
+// the limit or on a problem the card is the notice. Nothing decides
+// visibility from the mode, and a predicate exported here would invite exactly
+// that wiring back: a status surface that appears and vanishes with each sync.

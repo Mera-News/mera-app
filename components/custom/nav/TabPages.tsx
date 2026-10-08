@@ -29,6 +29,7 @@ import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ArrangeOverlay from './ArrangeOverlay';
+import HeaderGlass from './HeaderGlass';
 import {
   clearHeaderBottom,
   clearSurface,
@@ -203,8 +204,10 @@ const TabPages: React.FC<TabPagesProps> = ({
           testID={testID ? `${testID}-pager` : undefined}
         />
 
-      {/* The header is TRANSPARENT (owner), and nothing covers the status
-          bar: content runs up under the clock and the Dynamic Island. */}
+      {/* Feed and Explore: a frosted header (HeaderGlass), status bar
+          included, so content scrolling under it never makes it unreadable.
+          Library and You: TRANSPARENT (owner), content runs up under the
+          clock. Either way it slides away with the header. */}
 
       <Animated.View
         testID={testID ? `${testID}-header` : undefined}
@@ -214,6 +217,7 @@ const TabPages: React.FC<TabPagesProps> = ({
         pointerEvents="box-none"
         style={[styles.header, headerStyle]}
       >
+        {tab === 'feed' || tab === 'world' ? <HeaderGlass /> : null}
         {/* Symmetric sides, so a segmented track centres on the SCREEN. */}
         <View
           pointerEvents="box-none"
