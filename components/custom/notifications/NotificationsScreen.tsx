@@ -4,12 +4,6 @@ import { Text } from '@/components/ui/text';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { deleteNotification, markAllRead, observeAll } from '@/lib/database/services/notification-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
-import {
-    isFeedbackRequestEnded,
-    readFeedbackRequestsState,
-    subscribeFeedbackRequestsState,
-    type FeedbackRequestsState,
-} from '@/lib/feedback-requests/feedback-request-state';
 import { hapticLight } from '@/lib/haptics';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
@@ -49,13 +43,19 @@ interface NotificationsScreenProps {
     readonly active: boolean;
 }
 
-/** The delete control's hit area. */
+/** The delete control's hit area and glyph (the Settings row icon size). */
 const DELETE_FRAME = 44;
+const DELETE_GLYPH = 20;
+/** One line, at least this tall. */
+const ROW_MIN_HEIGHT = 48;
+/** The time column, wide enough for the widest short form ("23h", "now"). */
+const TIME_COLUMN = 32;
 
 /**
  * Feed > Notifications: a plain list in one grouped panel (the Settings list
- * idiom, you/rows): an unread dot, the title, a two-line preview and its age,
- * and a delete at the end. A tap opens the row as before; delete removes it
+ * idiom, you/rows), ONE line per row: the age in a fixed column, the title
+ * (semibold while unread; the body's first line when there is no title), and
+ * a delete at the end. A tap opens the row as before; delete removes it
  * from this phone at once, no confirm. Seeing the page clears both dots (the
  * Library tab's, unless a fact check also lit it, and this pill), and the seen state never leaves this phone. Empty: one
  * line on what lands here, and the way to its settings.
@@ -89,24 +89,6 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
         };
     }, []);
 
-    // Feedback-request rows read their question and Answered / Closed state
-    // from the device state row, kept live so a submit shows at once.
-    const [feedbackRequests, setFeedbackRequests] = useState<FeedbackRequestsState>({});
-    useEffect(() => {
-        let cancelled = false;
-        const refresh = () => {
-            readFeedbackRequestsState()
-                .then((s) => { if (!cancelled) setFeedbackRequests(s); })
-                .catch(() => {});
-        };
-        refresh();
-        const unsubscribe = subscribeFeedbackRequestsState(refresh);
-        return () => {
-            cancelled = true;
-            unsubscribe();
-        };
-    }, []);
-
     // Newest first. Rows of types no longer kept (written before Y11, alive
     // for 90 days) stay hidden.
     useEffect(() => {
@@ -128,26 +110,15 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
             const stored = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
             const params =
                 n.type === 'hygiene' && hygienePending !== null && hygienePending > 0 ? { ...stored, count: hygienePending } : stored;
-            const title = resolveText(n.title, params);
-            // A feedback request's body is free text: never through t(), whose
-            // key and namespace separators would mangle a question.
-            let body: string;
-            let status: string | null = null;
-            if (n.type === FEEDBACK_REQUEST) {
-                const id = stored?.feedbackRequestId;
-                const entry = typeof id === 'string' ? feedbackRequests[id] : undefined;
-                body = entry?.question ?? n.body;
-                const endsAt = entry?.endsAt ?? (typeof stored?.endsAt === 'number' ? stored.endsAt : null);
-                if (entry?.answeredAt !== undefined || n.status === 'actioned') status = t('feedbackRequest.drawerAnswered');
-                else if (endsAt !== null && isFeedbackRequestEnded({ endsAt })) status = t('feedbackRequest.drawerClosed');
-            } else {
-                body = resolveText(n.body, params);
-            }
+            // Just the title; a row without one shows its body's first line, so
+            // a row is never blank. A feedback request's body is free text:
+            // never through t(), whose separators would mangle a question.
+            const body = n.type === FEEDBACK_REQUEST ? n.body : resolveText(n.body, params);
+            const title = resolveText(n.title, params).trim() || (body ?? '').split('\n')[0].trim();
             const age = relativeTime(n.createdAt);
             const unread = n.status === 'unread';
             const first = index === 0;
             const last = index === items.length - 1;
-            const preview = [body, status].filter(Boolean).join(' · ');
             return (
                 <Animated.View
                     exiting={motion ? FadeOut.duration(180) : undefined}
@@ -174,28 +145,21 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                             void tapNotification(n);
                         }}
                         accessibilityRole="button"
-                        accessibilityLabel={[title, preview, age].filter(Boolean).join(', ')}
-                        style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 12, paddingLeft: 16, gap: 10 }}
+                        accessibilityLabel={`${title}, ${age}`}
+                        style={{ flex: 1, minHeight: ROW_MIN_HEIGHT, flexDirection: 'row', alignItems: 'center', paddingLeft: 16, gap: 12 }}
                     >
-                        {/* The unread dot keeps its column, so titles line up. */}
-                        <View style={{ width: 8, paddingTop: 7 }}>
-                            {unread ? (
-                                <View testID={`notification-unread-${n.id}`} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accentMark }} />
-                            ) : null}
-                        </View>
-                        <View style={{ flex: 1, gap: 3 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-                                <Text style={{ flex: 1, color: colors.ink, fontSize: 16, fontWeight: '600' }} numberOfLines={1}>
-                                    {title}
-                                </Text>
-                                <Text style={{ color: colors.ink3, fontSize: 13 }}>{age}</Text>
-                            </View>
-                            {preview ? (
-                                <Text testID={`notification-preview-${n.id}`} style={{ color: colors.ink2, fontSize: 14, lineHeight: 19 }} numberOfLines={2}>
-                                    {preview}
-                                </Text>
-                            ) : null}
-                        </View>
+                        {/* Time first, in a fixed column so the titles line up. */}
+                        <Text style={{ width: TIME_COLUMN, color: colors.ink3, fontSize: 13, fontVariant: ['tabular-nums'] }} numberOfLines={1}>
+                            {age}
+                        </Text>
+                        {/* Unread reads as a semibold title; read is regular. */}
+                        <Text
+                            testID={unread ? `notification-unread-${n.id}` : undefined}
+                            style={{ flex: 1, color: colors.ink, fontSize: 16, fontWeight: unread ? '600' : '400' }}
+                            numberOfLines={1}
+                        >
+                            {title}
+                        </Text>
                     </Pressable>
                     {/* A sibling of the row's press area, never inside it, so a
                         delete never opens the row. */}
@@ -209,14 +173,15 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                         }}
                         accessibilityRole="button"
                         accessibilityLabel={t('common.delete')}
-                        style={{ width: DELETE_FRAME, height: DELETE_FRAME, marginRight: 4, alignItems: 'center', justifyContent: 'center' }}
+                        // The 20pt glyph centred 16pt from the edge, as a Settings row.
+                        style={{ width: DELETE_FRAME, height: DELETE_FRAME, marginRight: 16 - (DELETE_FRAME - DELETE_GLYPH) / 2, alignItems: 'center', justifyContent: 'center' }}
                     >
-                        <MaterialIcons name="delete-outline" size={22} color={colors.ink3} />
+                        <MaterialIcons name="delete-outline" size={DELETE_GLYPH} color={colors.ink3} />
                     </Pressable>
                 </Animated.View>
             );
         },
-        [hygienePending, feedbackRequests, colors, t, items.length, motion],
+        [hygienePending, colors, t, items.length, motion],
     );
 
     const empty = (
