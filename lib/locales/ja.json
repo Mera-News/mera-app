@@ -93,7 +93,7 @@
       "continueWithEmail": "メールで続ける",
       "downloadA11y": "{{language}}をダウンロード",
       "emailBody": "6桁のコードをメールでお送りします。覚えるパスワードはありません。",
-      "gettingReadyIos": "iPhoneがダウンロードするか確認してきます。Meraを開いたままにしてください。",
+      "gettingReadyIos": "下のシートで各言語の横にある↓をタップして、そのままお待ちください。Meraを開いたままにしてください。",
       "gettingReadyOther": "数秒かかります。Meraを開いたままにしてください。",
       "gettingReadyTitle": "{{language}}を準備しています",
       "notHereBody": "言語パックをダウンロードするか、すでにここにある言語からお選びください。",

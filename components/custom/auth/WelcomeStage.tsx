@@ -1,7 +1,19 @@
 import * as Device from 'expo-device';
 import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { FlatList, Platform, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+    cancelAnimation,
+    Easing,
+    FadeIn,
+    FadeInDown,
+    FadeOut,
+    FadeOutDown,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withRepeat,
+    withTiming,
+} from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 import { LanguageRow } from '@/components/custom/auth/LanguageRow';
@@ -12,7 +24,7 @@ import { useLanguageSwitch, type LanguageSwitchResult } from '@/lib/hooks/use-la
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { languageCheckStatus } from '@/lib/system-check/system-check';
 import i18n from '@/lib/i18n';
-import { tint, useColors } from '@/lib/theme/tokens';
+import { COLORS, useColors } from '@/lib/theme/tokens';
 import {
     canTranslateIntoLanguage,
     getNativeLanguageName,
@@ -25,6 +37,13 @@ import {
 type Message = { kind: 'getting' | 'missing' | 'ready'; code: string } | null;
 
 const RTL_CODES = new Set(['ar', 'he']);
+/** The notice is the light theme's card in both themes. */
+const NOTICE_INK = COLORS.light.ink;
+const NOTICE_BASE = COLORS.light.base;
+/** The orange glow's alpha range; it breathes slowly unless Reduce Motion. */
+const GLOW_LOW = 0.3;
+const GLOW_HIGH = 0.5;
+const GLOW_BREATH_MS = 1600;
 
 /** "X is ready" stays this long, then fades (Journey #13). */
 const READY_MESSAGE_MS = 1500;
@@ -57,6 +76,8 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
     const { t } = useTranslation();
     const colors = useColors();
     const reduceMotion = useReducedMotion();
+    const glow = useSharedValue((GLOW_LOW + GLOW_HIGH) / 2);
+    const glowStyle = useAnimatedStyle(() => ({ shadowOpacity: glow.value }));
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const phone = useMemo(() => phoneLanguage(), []);
     const [message, setMessage] = useState<Message>(null);
@@ -92,6 +113,18 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
     const gettingCode = busy && pendingCode ? pendingCode : startup === 'checking' ? appLanguage : null;
     const shown: Message = gettingCode ? { kind: 'getting', code: gettingCode } : message;
     const waiting = gettingCode !== null;
+
+    // The notice's glow breathes only while a notice shows, never under Reduce Motion.
+    const noticeShown = shown !== null;
+    useEffect(() => {
+        if (!noticeShown || reduceMotion) {
+            cancelAnimation(glow);
+            glow.value = (GLOW_LOW + GLOW_HIGH) / 2;
+            return;
+        }
+        glow.value = GLOW_LOW;
+        glow.value = withRepeat(withTiming(GLOW_HIGH, { duration: GLOW_BREATH_MS, easing: Easing.inOut(Easing.ease) }), -1, true);
+    }, [noticeShown, reduceMotion, glow]);
 
     const languages = useMemo(() => {
         const offered = SUPPORTED_LANGUAGES.filter((l) => l.code === 'en' || canTranslateIntoLanguage(l.code));
@@ -139,15 +172,29 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
                     entering={reduceMotion ? FadeIn.duration(150) : FadeInDown.duration(220)}
                     exiting={FadeOut.duration(220)}
                     accessibilityLiveRegion="polite"
-                    // Opaque and edged, at full ink: iOS's download sheet dims
-                    // everything behind it, and this card has to read through that.
-                    style={[styles.message, { top: messageTop, backgroundColor: colors.modalBase, borderColor: tint(colors.ink, 0.7) }]}
+                    // A white card with dark ink in BOTH themes, an orange edge
+                    // and a soft orange glow: iOS's download sheet dims
+                    // everything behind it, and this card has to read through it.
+                    style={[styles.message, { top: messageTop, borderColor: colors.accent, shadowColor: colors.accent }, glowStyle]}
                     testID={`auth-language-message-${shown.kind}`}
                 >
-                    {shown.kind === 'getting' ? <MeraLogo size={32} animated /> : null}
+                    {shown.kind === 'getting' ? <MeraLogo size={32} animated color={NOTICE_INK} /> : null}
                     <View style={styles.messageText}>
-                        <Text style={[styles.messageTitle, { color: colors.ink, writingDirection: messageDir }]}>{messageTitle}</Text>
-                        <Text style={[styles.messageBody, { color: colors.ink, writingDirection: messageDir }]}>{messageBody}</Text>
+                        <Text style={[styles.messageTitle, { color: NOTICE_INK, writingDirection: messageDir }]}>{messageTitle}</Text>
+                        <Text style={[styles.messageBody, { color: NOTICE_INK, writingDirection: messageDir }]}>
+                            {/* The ↓ stands for iOS's download button: drawn in the
+                                light theme's orange text colour so it stands out. */}
+                            {messageBody.split('↓').map((part, i) =>
+                                i === 0 ? (
+                                    part
+                                ) : (
+                                    <React.Fragment key={i}>
+                                        <Text style={styles.downArrow}>↓</Text>
+                                        {part}
+                                    </React.Fragment>
+                                ),
+                            )}
+                        </Text>
                     </View>
                 </Animated.View>
             ) : null}
@@ -218,11 +265,16 @@ const styles = StyleSheet.create({
         gap: 14,
         padding: 20,
         borderRadius: 20,
-        borderWidth: 1.5,
+        borderWidth: 2,
+        backgroundColor: NOTICE_BASE,
+        shadowOffset: { width: 0, height: 0 },
+        shadowRadius: 14,
+        elevation: 12,
     },
     messageText: { flex: 1, gap: 6 },
     messageTitle: { fontSize: 22, lineHeight: 28, fontWeight: '700' },
     messageBody: { fontSize: 17, lineHeight: 24, fontWeight: '600' },
+    downArrow: { color: COLORS.light.accentText, fontWeight: '800' },
     title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
     label: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
     labelBox: { marginTop: 8, marginBottom: 12 },

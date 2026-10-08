@@ -93,7 +93,7 @@
       "continueWithEmail": "使用電子郵件繼續",
       "downloadA11y": "下載{{language}}",
       "emailBody": "我們會寄出 6 位數驗證碼給你，不需要記住密碼。",
-      "gettingReadyIos": "你的 iPhone 會詢問是否下載。請保持 Mera 開啟。",
+      "gettingReadyIos": "在下方面板中點一下每種語言旁邊的 ↓，然後在此等待。請保持 Mera 開啟。",
       "gettingReadyOther": "這需要幾秒鐘。請保持 Mera 開啟。",
       "gettingReadyTitle": "正在準備{{language}}",
       "notHereBody": "請下載語言包，或使用這裡已有的其他語言。",

@@ -93,7 +93,7 @@
       "continueWithEmail": "Continue with email",
       "downloadA11y": "Download {{language}}",
       "emailBody": "We'll email you a 6-digit code. No password to remember.",
-      "gettingReadyIos": "Your iPhone will ask to download it. Keep Mera open.",
+      "gettingReadyIos": "Tap ↓ next to each language on the sheet below, then wait here. Keep Mera open.",
       "gettingReadyOther": "This takes a few seconds. Keep Mera open.",
       "gettingReadyTitle": "Getting {{language}} ready",
       "notHereBody": "Download the language pack, or use one of the languages already here.",
