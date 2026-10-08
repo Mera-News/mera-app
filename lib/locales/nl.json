@@ -1,31 +1,23 @@
 {
   "common": {
     "home": "Home",
-    "yes": "Ja",
-    "no": "Nee",
     "cancel": "Annuleren",
     "delete": "Verwijderen",
     "save": "Opslaan",
     "back": "Terug",
-    "error": "Fout",
     "loading": "Laden...",
     "tryAgain": "Probeer het opnieuw",
     "next": "Volgende",
     "done": "Klaar",
     "retry": "Opnieuw proberen",
     "ok": "OK",
-    "checking": "Controleren...",
-    "updating": "Bijwerken...",
     "goBack": "Ga terug",
     "articles": "Artikelen",
-    "loggingOut": "Uitloggen...",
-    "never": "Nooit",
     "saving": "Opslaan...",
     "offlineBannerOffline": "Je bent offline. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
     "offlineBannerInternetDown": "Geen internetverbinding. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
     "offlineBannerServerDown": "Langzame of geen verbinding met Mera. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
     "beta": "Beta",
-    "confirm": "Bevestigen",
     "copy": "Kopiëren",
     "today": "Vandaag",
     "yesterday": "Gisteren",
@@ -34,20 +26,14 @@
   "auth": {
     "emailPlaceholder": "Voer je e-mailadres in",
     "otpPlaceholder": "Voer 6-cijferige code in",
-    "invalidEmailTitle": "Ongeldig e-mailadres",
     "invalidEmailDescription": "Voer een geldig e-mailadres in",
-    "failedToSendTitle": "Code verzenden mislukt",
     "networkError": "Netwerkfout. Probeer het opnieuw.",
-    "privacyPolicy": "Privacybeleid",
-    "termsOfService": "Servicevoorwaarden",
     "sentTo": "We hebben een code gestuurd naar",
     "invalidOtp": "Voer een geldige 6-cijferige OTP-code in",
     "invalidOtpServer": "Ongeldige OTP-code. Probeer het opnieuw.",
     "otpError": "Er is een fout opgetreden tijdens de verificatie. Probeer het opnieuw.",
     "resendCode": "Code opnieuw sturen",
     "resendIn": "Opnieuw sturen over {{seconds}}s",
-    "resendSuccess": "Een nieuwe code is verstuurd.",
-    "contentPolicy": "Inhoudsbeleid",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "We konden het wisselen van account niet afronden",
     "identitySwitchFailedBody": "Er staan nog gegevens van een ander account op dit apparaat. Mera moet die wissen voordat je verder kunt, en het wissen is deze keer niet gelukt.",
@@ -61,10 +47,8 @@
     "deviceSignInUnavailable": "Inloggen is nu even niet mogelijk. Probeer het over een paar minuten opnieuw of log in met e-mail.",
     "tryAgain": "Opnieuw proberen",
     "learnAboutMera": "Maak kennis met Mera",
-    "startReading": "Beginnen met lezen",
     "alreadyHaveAccount": "Inloggen met e-mail",
     "continue": "Doorgaan",
-    "aboutLegal": "Over Mera & juridisch",
     "sourceCode": "Broncode",
     "failedToSendBody": "Kan OTP niet verzenden",
     "signingYouIn": "Je wordt ingelogd…",
@@ -78,8 +62,7 @@
     },
     "deviceSignInCaption": {
       "uninstall": "Je account is gekoppeld aan deze telefoon. Als je Mera verwijdert of de telefoon kwijtraakt, begin je met een nieuw account. Back-up en herstel in Instellingen kan je gegevens bewaren.",
-      "reset": "Je account is gekoppeld aan deze telefoon. Als je de telefoon reset of kwijtraakt, begin je met een nieuw account. Back-up en herstel in Instellingen kan je gegevens bewaren.",
-      "previousUser": "Opent het eigen account van deze telefoon, los van {{email}}."
+      "reset": "Je account is gekoppeld aan deze telefoon. Als je de telefoon reset of kwijtraakt, begin je met een nieuw account. Back-up en herstel in Instellingen kan je gegevens bewaren."
     },
     "track": {
       "beforeYouStart": "Voordat je begint",
@@ -108,22 +91,11 @@
     }
   },
   "account": {
-    "pendingTitle": "Account wacht op goedkeuring",
-    "pendingDescription": "We zijn blij dat je onze app wilt uitproberen. Zodra je account is goedgekeurd, ontvang je een e-mail. Daarna kun je de app blijven gebruiken.",
-    "enquiries": "Voor vragen kun je een e-mail sturen naar",
-    "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Vernieuwen 🔄",
     "contactSupport": "Praat met support"
   },
   "feed": {
-    "updatedAt": "Bijgewerkt {{time}}",
     "allCaughtUp": "Je bent helemaal bij met wat voor jou relevant is.",
-    "preparingFeed": "Mera bereidt je feed voor.",
     "pullDownToRetry": "Trek omlaag om opnieuw te proberen",
-    "readArticleToast": "Je hebt dit artikel gelezen",
-    "stuckTitle": "Feed kon niet worden geladen",
-    "stuckDescription": "Er is iets misgegaan aan onze kant.",
-    "stuckHint": "Open de app opnieuw over een paar minuten.",
     "offlineCached": "Offline: gecachte inhoud wordt weergegeven",
     "newBadge": "NIEUW",
     "newsCluster": "Nieuwscluster",
@@ -149,8 +121,6 @@
       "Je telefoon is er straks nog. Wees nu aanwezig."
     ],
     "processing": {
-      "doneFlash": "Alles klaar: hier is je nieuws",
-      "errorFlash": "We konden de nieuwste inhoud niet laden. Probeer het opnieuw.",
       "stages": {
         "fetching": {
           "headlines": [
@@ -226,8 +196,6 @@
       "completedMessage": "Je feed is gereed"
     },
     "analysingProgress": "{{done}} van {{total}} artikelen analyseren",
-    "waitingForNextBatch_one": "{{count}} nieuw artikel wacht op de volgende analysebatch",
-    "waitingForNextBatch_other": "{{count}} nieuwe artikelen wachten op de volgende analysebatch",
     "dailyLimit": {
       "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden morgen ontgrendeld.",
       "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden om {{time}} ontgrendeld.",
@@ -247,7 +215,6 @@
     "statsRead_other": "en je hebt {{formatted}} gelezen.",
     "loadingA11y": "Je feed wordt geladen",
     "translatingCaption": "Vertalen…",
-    "updatedJustNow": "Zojuist bijgewerkt",
     "reasonWritingA11y": "notitie schrijven",
     "reasonNotYet": "Nog geen notitie voor dit artikel.",
     "findingStories": "Je verhalen worden gezocht",
@@ -315,20 +282,11 @@
     "translateBlockedOn": "Sommige sites blokkeren Google Translate. Laadt het niet? Open het dan op {{publication}}.",
     "youCameFromHere": "Je kwam hiervandaan"
   },
-  "newsCluster": {
-    "failedToLoad": "Clusterdetails laden mislukt",
-    "clusterNotFound": "Cluster niet gevonden",
-    "coverage": "Dekking",
-    "noArticles": "Geen artikelen beschikbaar in dit cluster"
-  },
   "sources": {
-    "searchCountries": "Landen zoeken...",
     "publishers": "Uitgevers",
     "noPublishers": "Geen uitgevers voor dit land",
     "noArticlesFound": "Geen artikelen gevonden",
     "topHeadlines": "Topnieuws",
-    "addToLocations": "Toevoegen aan jouw plaatsen",
-    "addedToLocations": "Toegevoegd aan jouw plaatsen",
     "badgeGovernment": "Overheidsbron",
     "badgeRegulator": "Officiële instelling"
   },
@@ -346,13 +304,8 @@
     "connectionDescription": "We hebben problemen met de verbinding naar de server. Je kunt de app sluiten en het later opnieuw proberen. Als het probleem aanhoudt, raden we aan om uit te loggen en opnieuw in te loggen.",
     "logout": "Uitloggen",
     "close": "Sluiten",
-    "notificationLow": "Laag",
-    "notificationMedium": "Gemiddeld",
-    "notificationHigh": "Hoog",
     "logoutFailedTitle": "Uitloggen mislukt",
     "logoutFailedDescription": "Er was een probleem bij het uitloggen. Probeer het opnieuw.",
-    "loggingOut": "Uitloggen...",
-    "chatIntro": "Vertel me iets over jezelf: waar je woont, wat je doet, wat je volgt. Het blijft op deze telefoon.",
     "composerPlaceholder": "Vertel Mera iets over jou",
     "continueAnyway": "Toch doorgaan",
     "factsCount_one": "{{count}} feit over jou",
@@ -644,8 +597,6 @@
     "loadingModel": "AI-model laden...",
     "loadingModelProgress": "AI-model laden... {{percent}}%",
     "reloadingModel": "AI-model herladen... {{percent}}%",
-    "waitingForResponse": "Wachten op antwoord...",
-    "typeMessage": "Typ een bericht...",
     "inferenceError": "We hebben momenteel problemen om de Mera-inferentieservice te bereiken. Probeer het over een moment opnieuw.",
     "send": "Verzenden",
     "streamingLabels": {
@@ -682,12 +633,9 @@
     "title": "Mera",
     "aboutThisStory": "OVER DIT VERHAAL",
     "earlierConversation": "Eerder gesprek",
-    "loadingHistory": "Eerdere berichten laden…",
     "factSavedTitle": "Opgeslagen in je profiel",
     "factDeletedTitle": "Verwijderd uit je profiel",
     "factUpdatedTitle": "Voorkeuren bijgewerkt",
-    "factCardUndo": "Ongedaan maken",
-    "factCardDelete": "Verwijderen",
     "chipAddLocation": "Voeg toe waar ik woon",
     "chipAddLocationMessage": "Ik wil je vertellen waar ik woon",
     "chipShowFacts": "Toon mijn gegevens",
@@ -696,7 +644,6 @@
     "chipHelpSetupMessage": "Help me mijn profiel in te stellen",
     "chipDataHandlingMessage": "Hoe verwerkt Mera mijn gegevens?",
     "chipDataHandling": "Hoe worden mijn gegevens verwerkt?",
-    "thinking": "Aan het denken…",
     "newChat": "Nieuwe chat",
     "inputPlaceholder": "Typ een bericht...",
     "viewPreviousMessages": "Eerdere berichten bekijken",
@@ -731,14 +678,10 @@
     "mayMistakes": "Mera kan fouten maken, dus controleer belangrijk nieuws bij de bron."
   },
   "articleFeedback": {
-    "thumbsUp": "Ik vind het leuk",
-    "thumbsDown": "Niets voor mij",
     "thumbsUpMessage": "Ik vond dit artikel leuk: \"{{title}}\". Ik zou graag meer van dit soort suggesties zien.",
     "thumbsDownMessage": "Ik wil geen artikelen zoals dit: \"{{title}}\". Help me mijn suggesties aan te passen.",
     "likeLabel": "Ik vind het leuk",
-    "improveLabel": "Kan beter",
     "dislikeLabel": "Niets voor mij",
-    "improveMessage": "Deze suggestie kan beter: \"{{title}}\". Help me mijn suggesties te verbeteren.",
     "intro": "Wat kan ik voor je doen? Ik kan uitleggen waarom je deze suggestie hebt gekregen, of je helpen betere suggesties te krijgen.",
     "introArticle": "Wat kan ik voor je doen? Ik kan je helpen je nieuwssuggesties aan te passen op basis van dit artikel.",
     "introLikeTuning": "Je vond dit verhaal leuk. Vertel me meer en ik pas je feed aan.",
@@ -765,7 +708,6 @@
     "actionShowLessTopic": "Minder van een onderwerp tonen",
     "actionShowMoreTopic": "Meer van een onderwerp tonen",
     "actionDownRank": "Een onderwerp naar beneden plaatsen",
-    "actionPublicationPref": "Een publicatie aanpassen",
     "actionPublicationBoost": "Meer van een publicatie tonen",
     "actionPublicationDeprioritize": "Minder van een publicatie tonen",
     "actionPublicationMute": "Een publicatie dempen",
@@ -791,12 +733,9 @@
     "updateCta": "Bijwerken"
   },
   "feedback": {
-    "fabLabel": "Bug melden",
     "formTitle": "Bug Melden",
     "submitButtonLabel": "Verzenden",
     "cancelButtonLabel": "Annuleren",
-    "nameLabel": "Naam",
-    "namePlaceholder": "Je naam",
     "emailLabel": "Email",
     "emailPlaceholder": "your.email@example.org",
     "messageLabel": "Beschrijving",
@@ -909,29 +848,21 @@
     "deck": "Feed",
     "profile": "Profiel",
     "settings": "Instellingen",
-    "gotIt": "Begrepen",
     "world": "Wereld",
     "library": "Bibliotheek",
     "you": "Jij",
     "exploreTitle": "Verkennen"
   },
   "swipeFeed": {
-    "moreLikeThis": "Meer zoals dit",
-    "lessLikeThis": "Minder zoals dit",
     "askMera": "Vraag het Mera",
-    "closeTree": "Sluiten",
-    "treeThanks": "Bedankt, genoteerd.",
     "feedbackCaption": "Op zichzelf vertelt een duim Mera niet genoeg — dus wordt het verworpen om je feed gezond te houden. Kies een reden en je feed verandert meteen.",
-    "tapAgainToConfirm": "Tik opnieuw om te bevestigen",
     "chatHandoffLike": "Ik vond dit verhaal leuk, meer zoals dit: {{path}}.",
     "chatHandoffLikeNoPath": "Ik vond dit verhaal leuk. Ik wil graag meer zoals dit.",
     "chatHandoffDislike": "Ik vond dit verhaal niet leuk, {{path}}.",
     "chatHandoffDislikeNoPath": "Ik vond dit verhaal niet leuk. Help me minder van dit soort verhalen te krijgen."
   },
   "explore": {
-    "addPlaces": "Plaatsen toevoegen",
     "serverUnavailable": "Mera kan momenteel niet worden bereikt. Probeer het over een moment opnieuw.",
-    "clearSearch": "Zoekopdracht wissen",
     "searchNotSubscribed": "Zoeken vereist een actief abonnement",
     "window": {
       "label24": "24 u",
@@ -945,26 +876,15 @@
     }
   },
   "forYou": {
-    "breaking": "Breaking",
-    "showMore": "Toon {{count}} meer",
     "headlineSectionGlobal": "Nieuws uit de wereld",
     "headlineSectionCountry": "Nieuws uit {{country}}",
-    "nextFactPrefix": "Volgende",
-    "subTabAnalytics": "Analyse",
-    "emptySection": {
-      "awaiting": "Mera zoekt verhalen hierover. Ze verschijnen na de volgende verversing.",
-      "none": "Nog geen verhaal past hier goed genoeg bij om te tonen."
-    },
-    "newInterest": "Nieuwe interesse",
     "sectionStories_one": "{{count}} verhaal",
     "sectionStories_other": "{{count}} verhalen"
   },
   "feedStatus": {
-    "title": "Feedstatus",
     "idle": "Actueel",
     "stage": "Fase",
     "cloudProgress": "Cloudscoring",
-    "close": "Sluiten",
     "expandA11y": "Feedstatus-details tonen",
     "modeProcessing": "Je feed wordt bijgewerkt",
     "modeError": "Probleem met de feed",
@@ -984,7 +904,6 @@
     "title": "Gevolgde verhalen",
     "trackAction": "Verhaal volgen",
     "untrackAction": "Verhaal niet meer volgen",
-    "trackedToast": "Je volgt dit verhaal nu",
     "updatesBadge": "{{count}} nieuw",
     "endedLabel": "Beëindigd",
     "emptyCta": "Naar Feed gaan",
@@ -1013,16 +932,7 @@
     "articlesCount_other": "{{count}} artikelen"
   },
   "whatsNew": {
-    "title": "Wat is er nieuw",
     "gotIt": "Begrepen",
-    "sectionsTitle": "Een feed georganiseerd rond jou",
-    "sectionsBody": "Voor Jou groepeert verhalen nu in secties die zijn opgebouwd rond wat voor jou belangrijk is.",
-    "storiesTitle": "Verhalen blijven bij elkaar",
-    "storiesBody": "Hetzelfde verhaal van meerdere bronnen wordt in één kaart gegroepeerd, ook als het zich verder ontwikkelt.",
-    "tabsTitle": "Tabbladen Profiel & Instellingen",
-    "tabsBody": "Je profiel en instellingen staan nu in hun eigen tabbladen onderaan.",
-    "resyncTitle": "Je feed wordt opnieuw gesynchroniseerd",
-    "resyncBody": "We bouwen je feed opnieuw op met de nieuwe engine. Het wordt binnenkort aangevuld.",
     "starterTitle": "Starter krijg je van ons",
     "starterIntro": "Zodat je ziet waar Mera voor is, bevat elk account nu het volledige Starter-plan zonder kosten.",
     "starterArticlesTitle": "250 artikelen per dag",
@@ -1114,7 +1024,6 @@
     "moreAboutTopicNamed": "Meer over: {{topic}}",
     "moreAboutTopicNamedWithCount": "Meer over: {{topic}} en {{extra}} meer",
     "title": "Vertel ons meer",
-    "contextFor": "Over: {{title}}",
     "back": "Terug",
     "dismiss": "Sluiten",
     "empty": "Geen opties beschikbaar",
@@ -1307,28 +1216,6 @@
     "saveFailedBody": "Je wijziging is niet opgeslagen. Probeer het opnieuw."
   },
   "profile": {
-    "talkToMera": "Praat met Mera",
-    "talkToMeraSubtitle": "Zo zie ik jou. Tik om het gesprek voort te zetten.",
-    "continueTalking": "Verder",
-    "emptyTitle": "Ik ken je nog niet",
-    "emptyBody": "Vertel me iets over jezelf, zodat ik nieuws kan vinden dat voor jou belangrijk is.",
-    "startTalking": "Begin een gesprek",
-    "gettingToKnowYou": "Ik ben je nog aan het leren kennen, kom zo weer terug.",
-    "updating": "Bijwerken…",
-    "advanced": "Geavanceerd",
-    "advancedSubtitle": "Feiten, bronnen, opgeslagen items, activiteit en meer",
-    "sheet": {
-      "importance": "Belang",
-      "moreImportant": "Belangrijker",
-      "lessImportant": "Minder belangrijk",
-      "refine": "Verfijnen met Mera",
-      "refineSeed": "Laten we het hierover hebben: \"{{text}}\"",
-      "remove": "Verwijderen",
-      "removeConfirm": "Tik nogmaals om te verwijderen",
-      "limitReached": "Dagelijkse aanpassingslimiet bereikt: wijzigingen gaan morgen door."
-    },
-    "editFacts": "Bewerken",
-    "planUsage": "{{used}} van {{limit}} vandaag geanalyseerd",
     "updatingAllFacts": "Alle feiten bijwerken",
     "pleaseWait": "Even geduld"
   },
@@ -1451,36 +1338,10 @@
     "meraButtonHint": "Kies de kleur van de zwevende Mera-knop. Die blijft hetzelfde in de lichte en donkere modus."
   },
   "freeTier": {
-    "cardBody": "Het AI-deel van Mera is voor nu uitgeschakeld. Alles wat je hebt opgeslagen, gevolgd of gelezen blijft op dit apparaat, en Verkennen toont nog steeds vandaags nieuws. Zonder een plan zal Mera je feed niet opbouwen, je vragen niet beantwoorden en geen nieuwe verhalen niet volgen. Start een plan en alles komt terug.",
-    "cardTitle": "Je bent op Mera News Free",
-    "chatBubble": "Alles wat ik over je weet, blijft op dit apparaat. Met het gratis abonnement blijf ik je feed opbouwen uit twee van je interesses. Chatten, feitencontroles en gevolgde verhalen vereisen een abonnement.",
-    "chatNotice": "Mera chat hoort bij een plan. Je persona en feiten blijven toch op dit apparaat.",
-    "continueWithoutPlan": "Doorgaan zonder plan",
-    "lapseBody": "Er is niets weggehaald. Alles wat je hebt opgeslagen, gevolgd of gelezen is van jou, op dit apparaat, altijd. Je bent op Mera News Free. Wat pauzeert is de AI-laag zelf, dus je persoonlijke feed, dashboard, volgen van nieuwe verhalen en Mera chat blijven uit totdat je weer een plan start.",
-    "lapseTitle": "Je Mera-plan is afgelopen",
-    "readOnlyBanner": "Alles hier kun je lezen, plan of geen plan. Deze instellingen veranderen alleen wat Mera doet terwijl een plan actief is.",
     "seePlans": "Zie plannen",
     "storiesNotice": "De verhalen die je al volgt houden alles wat ze hebben verzameld. Een nieuw verhaal starten heeft een actief plan nodig.",
     "trackBody": "De verhalen die je al volgt houden alles wat ze hebben verzameld. Een nieuw verhaal starten heeft een actief plan nodig.",
-    "trackDismiss": "Niet nu",
-    "trackTitle": "Verhaalvolging hoort bij een plan",
-    "factsPausedHeader": "Gepauzeerd",
-    "factsPausedSubtitle": "Deze blijven bewaard. Een plan zet ze allemaal aan.",
-    "pausedBadge": "Gepauzeerd",
-    "pausedRowHint": "Gepauzeerd. Tik om te zien waarom.",
-    "explainerTitle": "Je eerste twee interesses",
-    "explainerBody": "Mera News Free volgt de twee interesses die je als eerste hebt toegevoegd. Al het andere blijft op dit apparaat bewaard, precies zoals je het hebt achtergelaten.",
-    "explainerBody2": "Een plan zet ze allemaal weer aan.",
-    "explainerDismiss": "Niet nu",
-    "chatIntro": {
-      "followStory": "Verhalen volgen vereist een abonnement. Mera zou dit verhaal in de gaten houden en je laten weten wanneer er iets gebeurt.",
-      "articleFeedback": "Je feed bijstellen op basis van feedback vereist een abonnement. Je feed blijft hoe dan ook werken.",
-      "persona": "Met Mera praten vereist een abonnement. Je interesses en gegevens blijven op dit apparaat.",
-      "optimisationPlan": "Het dagelijkse overzicht vereist een abonnement. Mera zou je feed elke dag bekijken en voorstellen wat je kunt aanpassen.",
-      "tutorialHelp": "Mera iets over de app vragen vereist een abonnement. De handleidingen in Help behandelen het meeste.",
-      "factCheck": "Feitencontroles vereisen een abonnement. Mera zou dit opzoeken en je laten zien wie er nog meer over bericht heeft.",
-      "default": "Chatten vereist een abonnement. Je feed blijft werken."
-    }
+    "trackTitle": "Verhaalvolging hoort bij een plan"
   },
   "factCheck": {
     "actionA11y": "Zoeken naar gepubliceerde feitchecks op dit artikel",
@@ -1534,8 +1395,6 @@
       "openA11y": "Dit artikel openen",
       "articleGone": "Het artikel is verlopen en kan niet worden geopend. De feitencontrole die we hebben gevonden, blijft hier behouden.",
       "couldNotCheck": "We konden niet nagaan wie hierover iets heeft gepubliceerd. Tik om te zien wat de zoekopdracht wel vond.",
-      "moreOrganisations_one": "+{{count}} meer",
-      "moreOrganisations_other": "+{{count}} meer",
       "noneFound": "Geen gepubliceerde feitchecks gevonden",
       "factChecksFound_one": "{{count}} feitencheck gevonden. Tik om te lezen",
       "factChecksFound_other": "{{count}} feitchecks gevonden. Tik om te lezen"
@@ -1567,7 +1426,6 @@
     "quickRunning": "Het web wordt doorzocht…",
     "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd, kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
     "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie, ze zijn het niet altijd met elkaar eens.",
-    "ownReadingHeading": "Mera's eigen kijk, ondergeschikt aan het oordeel hierboven",
     "collapseA11y": "Deze factcheck verbergen",
     "expandA11y": "Deze factcheck tonen",
     "checkedByRelatedNote": "Deze zijn afkomstig van een trefwoord zoeking en kunnen over een ander artikel gaan. Open er een om te controleren.",
@@ -1592,17 +1450,14 @@
     "privacyLink": "Privacybeleid",
     "accept": "Akkoord en doorgaan",
     "accepting": "Opslaan...",
-    "errorTitle": "Kon je acceptatie niet opslaan",
     "errorDescription": "Controleer je verbinding en probeer het opnieuw.",
     "retry": "Opnieuw proberen",
-    "welcomeTitle": "Welkom bij Mera",
     "welcomeBody": "Tik op \"Akkoord en doorgaan\" om onze Servicevoorwaarden en ons Privacybeleid te accepteren.",
     "deviceNotice": {
       "appAttest": "Geen e-mail nodig. Mera logt je in met deze telefoon. Apple bevestigt dat dit de echte Mera app is op een echte iPhone, om nepaccounts tegen te houden. We bewaren een inlogregistratie zolang je een account hebt.",
       "playIntegrity": "Geen e-mail nodig. Mera logt je in met deze telefoon. Google bevestigt dat dit de echte Mera app is op een echte Android-telefoon, om nepaccounts tegen te houden. We bewaren een inlogregistratie, niet de ID van je telefoon.",
       "generic": "Geen e-mail nodig. Mera logt je in met deze telefoon. We bewaren een inlogregistratie voor deze telefoon zolang je een account hebt."
-    },
-    "whatMeraKeeps": "Wat Mera bewaart"
+    }
   },
   "tutorials": {
     "entryRow": "Hoe Mera werkt",
@@ -2285,11 +2140,6 @@
     "skipBody2": "Support kan je aankoop alleen vinden met je support-ID. Kopieer het en bewaar het op een veilige plek.",
     "skipConfirm": "Doorgaan naar betaling"
   },
-  "welcomeBack": {
-    "title": "Welkom terug bij Mera",
-    "body": "Het lijkt erop dat Mera al eerder op dit apparaat stond, dus de gratis proefperiode is al gebruikt. Je kunt blijven lezen met je nieuwe account, of op elk moment een abonnement kiezen voor de volledige ervaring.",
-    "continue": "Doorgaan"
-  },
   "videoPlayer": {
     "closeA11y": "Video sluiten",
     "openInBrowser": "Openen in browser",
@@ -2512,23 +2362,6 @@
     "answeredA11y": "al beantwoord",
     "saveAll": "Alles opslaan"
   },
-  "streamingWords": {
-    "w1": "Denken",
-    "w2": "Analyseren",
-    "w3": "Overwegen",
-    "w4": "Peinzen",
-    "w5": "Herkauwen",
-    "w6": "Puzzelen",
-    "w7": "Laten bezinken",
-    "w8": "Doordenken",
-    "w9": "Afwegen",
-    "w10": "Ziften",
-    "w11": "Verbinden",
-    "w12": "Opstellen",
-    "w13": "Sleutelen",
-    "w14": "Bijschaven",
-    "w15": "Broeden"
-  },
   "chatPhases": {
     "preparing": [
       "Mera verzamelt wat ze al over je weet.",
@@ -2617,11 +2450,6 @@
     "support": "Support",
     "supportSub": "Een bug melden, live chat, FAQ, tutorial",
     "tutorial": "Tutorial"
-  },
-  "related": {
-    "allCountries": "Alle landen",
-    "allLanguages": "Alle talen",
-    "noMatches": "Geen gerelateerde artikelen passen bij deze filters."
   },
   "storyExport": {
     "shareA11y": "Dit verhaal exporteren",
@@ -2834,7 +2662,6 @@
       "changes": "Wijzigingen in je profiel",
       "subtitle": "Wat Mera over je weet. Het blijft op deze telefoon.",
       "tidyUp": "Ruim je profiel op",
-      "title": "Je profiel",
       "topicCount_one": "{{count}} onderwerp",
       "topicCount_other": "{{count}} onderwerpen"
     },
@@ -2972,7 +2799,6 @@
     "opensByItself": "Opent vanzelf zodra je weer online bent",
     "reauthBody": "Je inlogsessie is verlopen. We sturen een code naar het e-mailadres van dit account.",
     "reauthTitle": "Log in om door te gaan",
-    "sendNewCode": "Een nieuwe code sturen",
     "unreachableBody": "Het probleem zit aan onze kant, niet op je telefoon. Mera blijft het proberen en opent zodra het weer kan.",
     "unreachableTitle": "Mera is niet bereikbaar",
     "mismatchTitle": "Dit e-mailadres hoort bij een ander account",

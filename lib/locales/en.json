@@ -5,27 +5,19 @@
     "offlineBannerServerDown": "Slow or no connection to Mera. Showing saved news, and we'll keep trying.",
     "home": "Home",
     "beta": "Beta",
-    "yes": "Yes",
-    "no": "No",
     "cancel": "Cancel",
     "delete": "Delete",
     "save": "Save",
     "back": "Back",
-    "error": "Error",
     "loading": "Loading...",
     "tryAgain": "Please try again",
     "next": "Next",
     "done": "Done",
     "retry": "Retry",
     "ok": "OK",
-    "checking": "Checking...",
-    "updating": "Updating...",
     "goBack": "Go Back",
     "articles": "Articles",
-    "loggingOut": "Logging Out...",
-    "never": "Never",
     "saving": "Saving...",
-    "confirm": "Confirm",
     "copy": "Copy",
     "today": "Today",
     "yesterday": "Yesterday",
@@ -34,13 +26,8 @@
   "auth": {
     "emailPlaceholder": "Enter your email address",
     "otpPlaceholder": "Enter 6-digit code",
-    "invalidEmailTitle": "Invalid Email",
     "invalidEmailDescription": "Please enter a valid email address",
-    "failedToSendTitle": "Failed to Send Code",
     "networkError": "Network error. Please try again.",
-    "privacyPolicy": "Privacy Policy",
-    "termsOfService": "Terms of Service",
-    "contentPolicy": "Content Policy",
     "faq": "FAQ",
     "sentTo": "We've sent a code to",
     "invalidOtp": "Please enter a valid 6-digit OTP code",
@@ -48,7 +35,6 @@
     "otpError": "An error occurred during verification. Please try again.",
     "resendCode": "Resend code",
     "resendIn": "Resend in {{seconds}}s",
-    "resendSuccess": "A new code has been sent.",
     "identitySwitchFailedTitle": "We couldn't finish switching accounts",
     "identitySwitchFailedBody": "Another account's data is still on this device. Mera has to clear it before you can go any further, and clearing it did not work this time.",
     "identitySwitchFailedWhy": "Nothing is lost. That data belongs to the other account and stays in their Mera account. Yours starts fresh once this device is clear.",
@@ -61,10 +47,8 @@
     "deviceSignInUnavailable": "Sign-in isn't available right now. Try again in a few minutes, or sign in with email.",
     "tryAgain": "Try again",
     "learnAboutMera": "Learn about Mera",
-    "startReading": "Start reading",
     "alreadyHaveAccount": "Sign in with email",
     "continue": "Continue",
-    "aboutLegal": "About Mera & legal",
     "sourceCode": "Source code",
     "failedToSendBody": "Failed to send OTP",
     "signingYouIn": "Signing you in…",
@@ -78,8 +62,7 @@
     },
     "deviceSignInCaption": {
       "uninstall": "Your account is tied to this phone. If you delete Mera or lose the phone, you'll start a new account. Backup and restore in Settings can keep your data.",
-      "reset": "Your account is tied to this phone. If you reset or lose the phone, you'll start a new account. Backup and restore in Settings can keep your data.",
-      "previousUser": "Opens this phone's own account, separate from {{email}}."
+      "reset": "Your account is tied to this phone. If you reset or lose the phone, you'll start a new account. Backup and restore in Settings can keep your data."
     },
     "track": {
       "beforeYouStart": "Before you start",
@@ -108,11 +91,6 @@
     }
   },
   "account": {
-    "pendingTitle": "Subscribe to Mera",
-    "pendingDescription": "Mera News runs on a subscription. A plan switches on the AI layer; without one, Explore stays open and free and everything already on this device stays yours.",
-    "enquiries": "For any enquiries you can send a mail to",
-    "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Refresh",
     "contactSupport": "Talk to support"
   },
   "subscription": {
@@ -147,14 +125,8 @@
     "billedPlayStore": "Billed through Google Play. Cancel any time in your Google account."
   },
   "feed": {
-    "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
-    "preparingFeed": "Mera is preparing your feed.",
     "pullDownToRetry": "Pull down to retry",
-    "readArticleToast": "You have read this article",
-    "stuckTitle": "Couldn't load your feed",
-    "stuckDescription": "Something went wrong on our end.",
-    "stuckHint": "Reopen the app in a few minutes.",
     "offlineCached": "Offline: showing cached content",
     "dailyLimit": {
       "title": "Daily article limit reached",
@@ -187,8 +159,6 @@
       "Your phone will be here later. Be present now."
     ],
     "processing": {
-      "doneFlash": "All set: here’s your news",
-      "errorFlash": "We couldn’t load the latest content. Please try again.",
       "stages": {
         "fetching": {
           "headlines": [
@@ -264,8 +234,6 @@
       "completedMessage": "Your feed is ready"
     },
     "analysingProgress": "Analysing {{done}} of {{total}} articles",
-    "waitingForNextBatch_one": "{{count}} new article waiting for the next analysis batch",
-    "waitingForNextBatch_other": "{{count}} new articles waiting for the next analysis batch",
     "statsPublishedPending_one": "{{formatted}} article was published in the last 24 hours.",
     "statsPublishedPending_other": "{{formatted}} articles were published in the last 24 hours.",
     "statsPublished_one": "{{formatted}} article was published in the last 24 hours,",
@@ -278,7 +246,6 @@
     "statsRead_other": "and you've read {{formatted}}.",
     "loadingA11y": "Loading your feed",
     "translatingCaption": "Translating…",
-    "updatedJustNow": "Updated just now",
     "reasonWritingA11y": "note being written",
     "reasonNotYet": "No note for this article yet.",
     "findingStories": "Finding your stories",
@@ -380,7 +347,6 @@
     "checkedByMultipleNote": "These are independent ratings, each on that organisation's own scale, and they don't always agree.",
     "searchFoundHeading": "What our search found",
     "searchFoundEmpty": "There wasn't enough from the search for Mera to summarise here.",
-    "ownReadingHeading": "Mera's own reading, secondary to the ruling above",
     "organisationA11y": "Open {{organisation}}'s fact check, rated {{rating}}, in the in-app browser",
     "citationA11y": "Open the source {{source}} in the in-app browser",
     "noLink": "No link available",
@@ -402,9 +368,7 @@
       "couldNotCheck": "We couldn't check who has published on this. Tap to see what the search did find.",
       "noneFound": "No published fact checks found",
       "factChecksFound_one": "{{count}} fact check found. Tap to read",
-      "factChecksFound_other": "{{count}} fact checks found. Tap to read",
-      "moreOrganisations_one": "+{{count}} more",
-      "moreOrganisations_other": "+{{count}} more"
+      "factChecksFound_other": "{{count}} fact checks found. Tap to read"
     },
     "verdict": {
       "supported": {
@@ -452,20 +416,11 @@
       "bodyUnavailableUntitled": "Mera couldn't finish checking the article you asked about."
     }
   },
-  "newsCluster": {
-    "failedToLoad": "Failed to load cluster details",
-    "clusterNotFound": "Cluster not found",
-    "coverage": "Coverage",
-    "noArticles": "No articles available in this cluster"
-  },
   "sources": {
-    "searchCountries": "Search countries...",
     "publishers": "Publishers",
     "noPublishers": "No publishers for this country",
     "noArticlesFound": "No articles found",
     "topHeadlines": "Top headlines",
-    "addToLocations": "Add to your places",
-    "addedToLocations": "Added to your places",
     "badgeGovernment": "Government source",
     "badgeRegulator": "Official agency"
   },
@@ -473,20 +428,14 @@
     "deck": "Feed",
     "profile": "Profile",
     "settings": "Settings",
-    "gotIt": "Got it",
     "world": "World",
     "library": "Library",
     "you": "You",
     "exploreTitle": "Explore"
   },
   "swipeFeed": {
-    "moreLikeThis": "More like this",
-    "lessLikeThis": "Less like this",
     "askMera": "Ask Mera",
-    "closeTree": "Close",
-    "treeThanks": "Thanks, noted.",
     "feedbackCaption": "On its own, a thumb doesn't tell Mera enough, so it's discarded to keep your feed healthy. Pick a reason and your feed changes right away.",
-    "tapAgainToConfirm": "Tap again to confirm",
     "chatHandoffLike": "I liked this story. More like this: {{path}}.",
     "chatHandoffLikeNoPath": "I liked this story. I'd like more like this.",
     "chatHandoffDislike": "I didn't like this story: {{path}}.",
@@ -494,8 +443,6 @@
   },
   "explore": {
     "serverUnavailable": "Mera can't be reached right now: try again in a moment.",
-    "addPlaces": "Add places",
-    "clearSearch": "Clear search",
     "searchNotSubscribed": "Search needs an active plan",
     "window": {
       "label24": "24h",
@@ -509,27 +456,16 @@
     }
   },
   "forYou": {
-    "breaking": "Breaking",
-    "showMore": "Show {{count}} more",
     "headlineSectionGlobal": "Headlines from the world",
     "headlineSectionCountry": "Headlines from {{country}}",
-    "nextFactPrefix": "Next",
-    "subTabAnalytics": "Analytics",
-    "emptySection": {
-      "awaiting": "Looking for stories about this. They show up after the next refresh.",
-      "none": "No story here yet fits this closely enough to show."
-    },
-    "newInterest": "New interest",
     "sectionStories_one": "{{count}} story",
     "sectionStories_other": "{{count}} stories"
   },
   "feedStatus": {
-    "title": "Feed status",
     "idle": "Up to date",
     "stage": "Stage",
     "cloudProgress": "Cloud scoring",
     "expandA11y": "Show feed status details",
-    "close": "Close",
     "modeProcessing": "Updating your feed",
     "modeError": "Feed problem",
     "modeLimited": "Daily article limit reached",
@@ -549,7 +485,6 @@
     "title": "Followed stories",
     "trackAction": "Follow story",
     "untrackAction": "Stop following",
-    "trackedToast": "Now following this story",
     "updatesBadge": "{{count}} new",
     "endedLabel": "Ended",
     "emptyCta": "Go to Feed",
@@ -577,16 +512,7 @@
     "articlesCount_other": "{{count}} articles"
   },
   "whatsNew": {
-    "title": "What's new",
     "gotIt": "Got it",
-    "sectionsTitle": "A feed organized around you",
-    "sectionsBody": "For You now groups stories into sections built from what matters to you.",
-    "storiesTitle": "Stories stay together",
-    "storiesBody": "The same story from multiple sources is grouped into one card, even as it develops.",
-    "tabsTitle": "Profile & Settings tabs",
-    "tabsBody": "Your profile and settings now live in their own tabs at the bottom.",
-    "resyncTitle": "Your feed is re-syncing",
-    "resyncBody": "We're rebuilding your feed with the new engine; it'll fill in shortly.",
     "starterTitle": "Starter is on us",
     "starterIntro": "To help you see what Mera is for, every account now includes the full Starter plan at no cost.",
     "starterArticlesTitle": "250 articles a day",
@@ -627,14 +553,9 @@
     "connectionIssue": "Connection Issue",
     "connectionDescription": "We're having some issues connecting to the server. You can close the app and try again later. If the issue persists, we recommend you logout and login again.",
     "logout": "Logout",
-    "loggingOut": "Logging Out...",
     "close": "Close",
-    "notificationLow": "Low",
-    "notificationMedium": "Medium",
-    "notificationHigh": "High",
     "logoutFailedTitle": "Logout Failed",
     "logoutFailedDescription": "There was an issue signing out. Please try again.",
-    "chatIntro": "Tell me a bit about you: where you live, what you do, what you follow. It stays on this phone.",
     "composerPlaceholder": "Tell Mera about you",
     "continueAnyway": "Continue anyway",
     "factsCount_one": "{{count}} fact about you",
@@ -1023,8 +944,6 @@
     "loadingModel": "Loading AI model...",
     "loadingModelProgress": "Loading AI model... {{percent}}%",
     "reloadingModel": "Reloading AI model... {{percent}}%",
-    "waitingForResponse": "Waiting for response...",
-    "typeMessage": "Type a message...",
     "inferenceError": "We're having trouble reaching the Mera inference service right now. Please try again in a moment.",
     "send": "Send",
     "streamingLabels": {
@@ -1063,12 +982,9 @@
     "title": "Mera",
     "aboutThisStory": "ABOUT THIS STORY",
     "earlierConversation": "Earlier conversation",
-    "loadingHistory": "Loading earlier messages…",
     "factSavedTitle": "Saved to your persona",
     "factDeletedTitle": "Removed from your persona",
     "factUpdatedTitle": "Preferences updated",
-    "factCardUndo": "Undo",
-    "factCardDelete": "Delete",
     "chipAddLocation": "Add where I live",
     "chipAddLocationMessage": "I want to tell you where I live",
     "chipShowFacts": "Show my facts",
@@ -1077,7 +993,6 @@
     "chipHelpSetupMessage": "Help me set up my persona",
     "chipDataHandling": "How is my data handled?",
     "chipDataHandlingMessage": "How does Mera handle my data?",
-    "thinking": "Thinking…",
     "newChat": "New chat",
     "inputPlaceholder": "Type a message...",
     "viewPreviousMessages": "View previous messages",
@@ -1112,14 +1027,10 @@
     "mayMistakes": "Mera may make mistakes, so check important news at the source."
   },
   "articleFeedback": {
-    "thumbsUp": "I like it",
-    "thumbsDown": "Not for me",
     "likeLabel": "I like it",
-    "improveLabel": "Could be better",
     "dislikeLabel": "Not for me",
     "thumbsUpMessage": "I liked this article: \"{{title}}\". I'd like to see more suggestions like this.",
     "thumbsDownMessage": "I don't want articles like this: \"{{title}}\". Help me adjust my suggestions.",
-    "improveMessage": "This suggestion could be better: \"{{title}}\". Help me tune my suggestions.",
     "intro": "What can I do for you? I can explain why you received this suggestion, or help you get better ones.",
     "introArticle": "What can I do for you? I can help you tune your news suggestions based on this article.",
     "introLikeTuning": "You liked this story. Tell me more and I'll tune your feed.",
@@ -1146,7 +1057,6 @@
     "actionShowLessTopic": "Show less of a topic",
     "actionShowMoreTopic": "Show more of a topic",
     "actionDownRank": "Down-rank a topic",
-    "actionPublicationPref": "Adjust a publication",
     "actionPublicationBoost": "Show more from a publication",
     "actionPublicationDeprioritize": "Show less from a publication",
     "actionPublicationMute": "Mute a publication",
@@ -1181,12 +1091,9 @@
     "updateCta": "Update"
   },
   "feedback": {
-    "fabLabel": "Report a bug",
     "formTitle": "Report a Bug",
     "submitButtonLabel": "Send",
     "cancelButtonLabel": "Cancel",
-    "nameLabel": "Name",
-    "namePlaceholder": "Your Name",
     "emailLabel": "Email",
     "emailPlaceholder": "your.email@example.org",
     "messageLabel": "Description",
@@ -1338,7 +1245,6 @@
     "moreAboutTopicNamed": "More about: {{topic}}",
     "moreAboutTopicNamedWithCount": "More about: {{topic}} and {{extra}} more",
     "title": "Tell us more",
-    "contextFor": "About: {{title}}",
     "back": "Back",
     "dismiss": "Dismiss",
     "empty": "No options here",
@@ -1572,28 +1478,6 @@
     "saveFailedBody": "Your change wasn't stored. Try again."
   },
   "profile": {
-    "talkToMera": "Talk to Mera",
-    "talkToMeraSubtitle": "This is how I see you. Tap to keep the conversation going.",
-    "continueTalking": "Continue",
-    "emptyTitle": "I don't know you yet",
-    "emptyBody": "Tell me about yourself so I can find news that matters to you.",
-    "startTalking": "Start talking",
-    "gettingToKnowYou": "I'm still getting to know you: check back in a moment.",
-    "updating": "Updating…",
-    "advanced": "Advanced",
-    "advancedSubtitle": "Facts, sources, saved, activity and more",
-    "sheet": {
-      "importance": "Importance",
-      "moreImportant": "More important",
-      "lessImportant": "Less important",
-      "refine": "Refine with Mera",
-      "refineSeed": "Let's talk about this: \"{{text}}\"",
-      "remove": "Remove this",
-      "removeConfirm": "Tap again to remove",
-      "limitReached": "Daily adjustment limit reached: changes continue tomorrow."
-    },
-    "editFacts": "Edit",
-    "planUsage": "{{used}} of {{limit}} analysed today",
     "updatingAllFacts": "Updating all facts",
     "pleaseWait": "Please wait"
   },
@@ -1718,36 +1602,10 @@
     "meraButtonHint": "Pick the colour of the floating Mera button. It stays the same in light and dark mode."
   },
   "freeTier": {
-    "cardTitle": "You're on Mera News Free",
-    "cardBody": "The AI part of Mera is switched off for now. Anything you've saved, followed or read stays on this device, and Explore still has today's headlines. Without a plan, Mera won't build your feed, answer your questions, or follow new stories. Start a plan and it all comes back.",
     "seePlans": "See plans",
     "trackTitle": "Story tracking comes with a plan",
     "trackBody": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
-    "trackDismiss": "Not now",
-    "readOnlyBanner": "Everything here is yours to read, plan or no plan. These settings only change what Mera does while a plan is active.",
-    "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
-    "chatBubble": "Everything I know about you stays on this device. On the free plan I keep building your feed from two of your interests. Chat, fact checks and followed stories need a plan.",
-    "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
-    "lapseTitle": "Your Mera plan has ended",
-    "lapseBody": "Nothing has been taken away. Anything you've saved, followed or read is yours, on this device, always. You're on Mera News Free from here. What pauses is the AI layer itself, so your personalized feed, dashboard, new story tracking and Mera chat stay off until you start a plan again.",
-    "continueWithoutPlan": "Continue without a plan",
-    "factsPausedHeader": "Paused",
-    "factsPausedSubtitle": "These stay saved. A plan turns them all on.",
-    "pausedBadge": "Paused",
-    "pausedRowHint": "Paused. Tap to see why.",
-    "explainerTitle": "Your first two interests",
-    "explainerBody": "Mera News Free follows the two interests you added first. Everything else stays saved on this device, exactly as you left it.",
-    "explainerBody2": "A plan turns them all back on.",
-    "explainerDismiss": "Not now",
-    "chatIntro": {
-      "followStory": "Followed stories need a plan. Mera would watch this one and tell you when it moves.",
-      "articleFeedback": "Tuning your feed from feedback needs a plan. Your feed keeps running either way.",
-      "persona": "Talking to Mera needs a plan. Your interests and facts stay on this device.",
-      "optimisationPlan": "The daily review needs a plan. Mera would look at your feed each day and suggest what to change.",
-      "tutorialHelp": "Asking Mera about the app needs a plan. The guides in Help cover most of it.",
-      "factCheck": "Fact checks need a plan. Mera would look this up and show you who else reported it.",
-      "default": "Chat needs a plan. Your feed keeps running."
-    }
+    "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan."
   },
   "consent": {
     "title": "Before you continue",
@@ -1756,17 +1614,14 @@
     "privacyLink": "Privacy Policy",
     "accept": "Agree and continue",
     "accepting": "Saving…",
-    "errorTitle": "Couldn't save your acceptance",
     "errorDescription": "Please check your connection and try again.",
     "retry": "Try again",
-    "welcomeTitle": "Welcome to Mera",
     "welcomeBody": "Tap \"Agree and continue\" to accept our Terms of Service and Privacy Policy.",
     "deviceNotice": {
       "appAttest": "No email needed. Mera signs you in with this phone. Apple confirms it's the real Mera app on a real iPhone, to stop fake accounts. We keep a sign-in record while you have an account.",
       "playIntegrity": "No email needed. Mera signs you in with this phone. Google confirms it's the real Mera app on a real Android phone, to stop fake accounts. We keep a sign-in record, not your phone's ID.",
       "generic": "No email needed. Mera signs you in with this phone. We keep a sign-in record for this phone while you have an account."
-    },
-    "whatMeraKeeps": "What Mera keeps"
+    }
   },
   "tutorials": {
     "entryRow": "How Mera works",
@@ -2449,11 +2304,6 @@
     "skipBody2": "Support can only find your purchase with your Support ID. Copy it and keep it somewhere safe.",
     "skipConfirm": "Continue to payment"
   },
-  "welcomeBack": {
-    "title": "Welcome back to Mera",
-    "body": "It looks like Mera has been on this device before, so the free trial has already been used. You can keep browsing with your new account, or pick a plan anytime for the full experience.",
-    "continue": "Continue"
-  },
   "videoPlayer": {
     "closeA11y": "Close video",
     "openInBrowser": "Open in browser",
@@ -2559,23 +2409,6 @@
     "answeredA11y": "already answered",
     "saveAll": "Save all"
   },
-  "streamingWords": {
-    "w1": "Thinking",
-    "w2": "Analysing",
-    "w3": "Contemplating",
-    "w4": "Pondering",
-    "w5": "Mulling",
-    "w6": "Noodling",
-    "w7": "Percolating",
-    "w8": "Cogitating",
-    "w9": "Weighing",
-    "w10": "Sifting",
-    "w11": "Connecting",
-    "w12": "Composing",
-    "w13": "Finagling",
-    "w14": "Tinkering",
-    "w15": "Brewing"
-  },
   "chatPhases": {
     "preparing": [
       "Gathering what Mera already knows about you.",
@@ -2664,11 +2497,6 @@
     "support": "Support",
     "supportSub": "Report a bug, live chat, FAQ, tutorial",
     "tutorial": "Tutorial"
-  },
-  "related": {
-    "allCountries": "All countries",
-    "allLanguages": "All languages",
-    "noMatches": "No related articles match these filters."
   },
   "storyExport": {
     "shareA11y": "Export this story",
@@ -2881,7 +2709,6 @@
       "changes": "Changes to your profile",
       "subtitle": "What Mera knows about you. It stays on this phone.",
       "tidyUp": "Tidy up your profile",
-      "title": "Your profile",
       "topicCount_one": "{{count}} topic",
       "topicCount_other": "{{count}} topics"
     },
@@ -3019,7 +2846,6 @@
     "opensByItself": "Opens by itself when you're back online",
     "reauthBody": "Your sign-in expired. We'll send a code to the email on this account.",
     "reauthTitle": "Sign in to continue",
-    "sendNewCode": "Send a new code",
     "unreachableBody": "The problem is on our side, not your phone. Mera keeps trying and opens when it's back.",
     "unreachableTitle": "Mera can't be reached",
     "mismatchTitle": "This email belongs to a different account",

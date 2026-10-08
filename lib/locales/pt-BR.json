@@ -5,27 +5,19 @@
     "delete": "Excluir",
     "save": "Salvar",
     "back": "Voltar",
-    "error": "Erro",
     "loading": "Carregando...",
     "tryAgain": "Por favor, tente novamente",
     "next": "Próximo",
     "done": "Concluído",
     "retry": "Tentar novamente",
     "ok": "OK",
-    "checking": "Verificando...",
-    "updating": "Atualizando...",
     "goBack": "Voltar",
     "articles": "Artigos",
-    "loggingOut": "Saindo...",
-    "never": "Nunca",
-    "yes": "Sim",
-    "no": "Não",
     "saving": "Salvando...",
     "offlineBannerOffline": "Você está offline. Exibindo notícias salvas, e continuaremos tentando.",
     "offlineBannerInternetDown": "Sem acesso à internet. Exibindo notícias salvas, e continuaremos tentando.",
     "offlineBannerServerDown": "Conexão lenta ou ausente com Mera. Exibindo notícias salvas, e continuaremos tentando.",
     "beta": "Beta",
-    "confirm": "Confirmar",
     "copy": "Copiar",
     "today": "Hoje",
     "yesterday": "Ontem",
@@ -34,20 +26,14 @@
   "auth": {
     "emailPlaceholder": "Digite seu endereço de e-mail",
     "otpPlaceholder": "Digite o código de 6 dígitos",
-    "invalidEmailTitle": "E-mail Inválido",
     "invalidEmailDescription": "Por favor, insira um endereço de e-mail válido",
-    "failedToSendTitle": "Falha ao Enviar Código",
     "networkError": "Erro de rede. Por favor, tente novamente.",
-    "privacyPolicy": "Política de Privacidade",
-    "termsOfService": "Termos de Serviço",
     "sentTo": "Enviamos um código para",
     "invalidOtp": "Por favor, insira um código OTP válido de 6 dígitos",
     "invalidOtpServer": "Código OTP inválido. Por favor, tente novamente.",
     "otpError": "Ocorreu um erro durante a verificação. Por favor, tente novamente.",
     "resendCode": "Reenviar código",
     "resendIn": "Reenviar em {{seconds}}s",
-    "resendSuccess": "Um novo código foi enviado.",
-    "contentPolicy": "Política de conteúdo",
     "faq": "Perguntas frequentes",
     "identitySwitchFailedTitle": "Não foi possível concluir a troca de conta",
     "identitySwitchFailedBody": "Os dados de outra conta ainda estão neste aparelho. O Mera precisa apagá-los antes de você continuar, e desta vez não foi possível apagar.",
@@ -61,10 +47,8 @@
     "deviceSignInUnavailable": "O login não está disponível no momento. Tente novamente em alguns minutos ou entre com e-mail.",
     "tryAgain": "Tentar novamente",
     "learnAboutMera": "Conheça o Mera",
-    "startReading": "Começar a ler",
     "alreadyHaveAccount": "Entrar com e-mail",
     "continue": "Continuar",
-    "aboutLegal": "Sobre o Mera e informações legais",
     "sourceCode": "Código-fonte",
     "failedToSendBody": "Falha ao enviar o código OTP",
     "signingYouIn": "Fazendo login…",
@@ -78,8 +62,7 @@
     },
     "deviceSignInCaption": {
       "uninstall": "Sua conta está ligada a este celular. Se você apagar o Mera ou perder o celular, vai começar uma conta nova. Backup e restauração, em Configurações, pode guardar seus dados.",
-      "reset": "Sua conta está ligada a este celular. Se você redefinir ou perder o celular, vai começar uma conta nova. Backup e restauração, em Configurações, pode guardar seus dados.",
-      "previousUser": "Abre a conta própria deste celular, separada de {{email}}."
+      "reset": "Sua conta está ligada a este celular. Se você redefinir ou perder o celular, vai começar uma conta nova. Backup e restauração, em Configurações, pode guardar seus dados."
     },
     "track": {
       "beforeYouStart": "Antes de começar",
@@ -108,22 +91,11 @@
     }
   },
   "account": {
-    "pendingTitle": "Conta Pendente de Aprovação",
-    "pendingDescription": "Estamos muito felizes que você queira experimentar nosso app. Assim que sua conta for aprovada, você receberá um e-mail. Então poderá continuar usando o app.",
-    "enquiries": "Para qualquer dúvida, você pode enviar um e-mail para",
-    "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Atualizar 🔄",
     "contactSupport": "Falar com o suporte"
   },
   "feed": {
-    "updatedAt": "Atualizado {{time}}",
     "allCaughtUp": "Você está por dentro de tudo que te impacta.",
-    "preparingFeed": "Mera está preparando seu feed.",
     "pullDownToRetry": "Puxe para baixo para tentar novamente",
-    "readArticleToast": "Você já leu este artigo",
-    "stuckTitle": "Não foi possível carregar seu feed",
-    "stuckDescription": "Algo deu errado do nosso lado.",
-    "stuckHint": "Reabra o app em alguns minutos.",
     "offlineCached": "Offline: exibindo conteúdo em cache",
     "newBadge": "NOVO",
     "newsCluster": "Grupo de Notícias",
@@ -149,8 +121,6 @@
       "Seu celular estará aqui depois. Esteja presente agora."
     ],
     "processing": {
-      "doneFlash": "Tudo pronto: aqui estão suas notícias",
-      "errorFlash": "Não conseguimos carregar o conteúdo mais recente. Por favor, tente novamente.",
       "stages": {
         "fetching": {
           "headlines": [
@@ -233,8 +203,6 @@
       "freeBodyWithTime": "Você tem tudo o que a Mera enviou hoje. Veja o que está no seu dispositivo. Mais chegam às {{time}}."
     },
     "analysingProgress": "Analisando {{done}} de {{total}} artigos",
-    "waitingForNextBatch_one": "{{count}} novo artigo aguardando o próximo lote de análise",
-    "waitingForNextBatch_other": "{{count}} novos artigos aguardando o próximo lote de análise",
     "statsPublishedPending_one": "{{formatted}} artigo foi publicado nas últimas 24 horas.",
     "statsPublishedPending_other": "{{formatted}} artigos foram publicados nas últimas 24 horas.",
     "statsPublished_one": "{{formatted}} artigo foi publicado nas últimas 24 horas,",
@@ -247,7 +215,6 @@
     "statsRead_other": "e você leu {{formatted}}.",
     "loadingA11y": "Carregando seu feed",
     "translatingCaption": "Traduzindo…",
-    "updatedJustNow": "Atualizado agora mesmo",
     "reasonWritingA11y": "nota sendo escrita",
     "reasonNotYet": "Ainda não há nota para este artigo.",
     "findingStories": "Buscando suas histórias",
@@ -315,20 +282,11 @@
     "translateBlockedOn": "Alguns sites bloqueiam o Google Tradutor. Se não carregar, abra em {{publication}}.",
     "youCameFromHere": "Você veio daqui"
   },
-  "newsCluster": {
-    "failedToLoad": "Falha ao carregar detalhes do grupo",
-    "clusterNotFound": "Grupo não encontrado",
-    "coverage": "Cobertura",
-    "noArticles": "Nenhum artigo disponível neste grupo"
-  },
   "sources": {
-    "searchCountries": "Pesquisar países...",
     "publishers": "Publicadores",
     "noPublishers": "Nenhum publicador para este país",
     "noArticlesFound": "Nenhum artigo encontrado",
     "topHeadlines": "Principais manchetes",
-    "addToLocations": "Adicionar aos seus lugares",
-    "addedToLocations": "Adicionado aos seus lugares",
     "badgeGovernment": "Fonte governamental",
     "badgeRegulator": "Agência oficial"
   },
@@ -346,13 +304,8 @@
     "connectionDescription": "Estamos tendo alguns problemas ao conectar com o servidor. Você pode fechar o app e tentar novamente mais tarde. Se o problema persistir, recomendamos que faça logout e login novamente.",
     "logout": "Sair",
     "close": "Fechar",
-    "notificationLow": "Baixa",
-    "notificationMedium": "Média",
-    "notificationHigh": "Alta",
     "logoutFailedTitle": "Falha ao Sair",
     "logoutFailedDescription": "Houve um problema ao encerrar a sessão. Por favor, tente novamente.",
-    "loggingOut": "Saindo...",
-    "chatIntro": "Me conte um pouco sobre você: onde mora, o que faz, o que acompanha. Isso fica neste celular.",
     "composerPlaceholder": "Conte à Mera sobre você",
     "continueAnyway": "Continuar mesmo assim",
     "factsCount_one": "{{count}} fato sobre você",
@@ -644,8 +597,6 @@
     "loadingModel": "Carregando modelo de IA...",
     "loadingModelProgress": "Carregando modelo de IA... {{percent}}%",
     "reloadingModel": "Recarregando modelo de IA... {{percent}}%",
-    "waitingForResponse": "Aguardando resposta...",
-    "typeMessage": "Digite uma mensagem...",
     "inferenceError": "Estamos com dificuldades para alcançar o serviço de inferência do Mera agora. Por favor, tente novamente em instantes.",
     "send": "Enviar",
     "streamingLabels": {
@@ -682,12 +633,9 @@
     "title": "Mera",
     "aboutThisStory": "SOBRE ESTA HISTÓRIA",
     "earlierConversation": "Conversa anterior",
-    "loadingHistory": "Carregando mensagens anteriores…",
     "factSavedTitle": "Salvo no seu perfil",
     "factDeletedTitle": "Removido do seu perfil",
     "factUpdatedTitle": "Preferências atualizadas",
-    "factCardUndo": "Desfazer",
-    "factCardDelete": "Excluir",
     "chipAddLocation": "Adicionar onde eu moro",
     "chipAddLocationMessage": "Quero dizer onde eu moro",
     "chipShowFacts": "Mostrar minhas informações",
@@ -696,7 +644,6 @@
     "chipHelpSetupMessage": "Ajude-me a configurar meu perfil",
     "chipDataHandlingMessage": "Como a Mera trata meus dados?",
     "chipDataHandling": "Como meus dados são tratados?",
-    "thinking": "Pensando…",
     "newChat": "Nova conversa",
     "inputPlaceholder": "Digite uma mensagem...",
     "viewPreviousMessages": "Ver mensagens anteriores",
@@ -731,14 +678,10 @@
     "mayMistakes": "A Mera pode cometer erros, então confira as notícias importantes na fonte original."
   },
   "articleFeedback": {
-    "thumbsUp": "Gostei",
-    "thumbsDown": "Não é para mim",
     "thumbsUpMessage": "Gostei deste artigo: \"{{title}}\". Gostaria de ver mais sugestões como essa.",
     "thumbsDownMessage": "Não quero artigos como este: \"{{title}}\". Me ajude a ajustar minhas sugestões.",
     "likeLabel": "Gostei",
-    "improveLabel": "Poderia ser melhor",
     "dislikeLabel": "Não é para mim",
-    "improveMessage": "Esta sugestão poderia ser melhor: \"{{title}}\". Me ajude a ajustar minhas sugestões.",
     "intro": "O que posso fazer por você? Posso explicar por que você recebeu esta sugestão, ou ajudar a conseguir sugestões melhores.",
     "introArticle": "O que posso fazer por você? Posso ajudar a ajustar suas sugestões de notícias com base neste artigo.",
     "introLikeTuning": "Você gostou desta história. Me conte mais e vou ajustar seu feed.",
@@ -765,7 +708,6 @@
     "actionShowLessTopic": "Mostrar menos de um tópico",
     "actionShowMoreTopic": "Mostrar mais de um tópico",
     "actionDownRank": "Diminuir a prioridade de um tópico",
-    "actionPublicationPref": "Ajustar uma publicação",
     "actionPublicationBoost": "Mostrar mais de uma publicação",
     "actionPublicationDeprioritize": "Mostrar menos de uma publicação",
     "actionPublicationMute": "Silenciar uma publicação",
@@ -791,12 +733,9 @@
     "updateCta": "Atualizar"
   },
   "feedback": {
-    "fabLabel": "Relatar um problema",
     "formTitle": "Relatar um problema",
     "submitButtonLabel": "Enviar",
     "cancelButtonLabel": "Cancelar",
-    "nameLabel": "Nome",
-    "namePlaceholder": "Seu nome",
     "emailLabel": "E-mail",
     "emailPlaceholder": "your.email@example.org",
     "messageLabel": "Descrição",
@@ -909,29 +848,21 @@
     "deck": "Feed",
     "profile": "Perfil",
     "settings": "Configurações",
-    "gotIt": "Entendi",
     "world": "Mundo",
     "library": "Biblioteca",
     "you": "Você",
     "exploreTitle": "Explorar"
   },
   "swipeFeed": {
-    "moreLikeThis": "Mais como este",
-    "lessLikeThis": "Menos como este",
     "askMera": "Perguntar à Mera",
-    "closeTree": "Fechar",
-    "treeThanks": "Obrigado, anotado.",
     "feedbackCaption": "Um polegar sozinho não diz ao Mera o suficiente — então é descartado, para manter seu feed saudável. Escolha um motivo e seu feed muda na hora.",
-    "tapAgainToConfirm": "Toque novamente para confirmar",
     "chatHandoffLike": "Gostei desta história, mais assim: {{path}}.",
     "chatHandoffLikeNoPath": "Gostei desta história. Gostaria de ver mais assim.",
     "chatHandoffDislike": "Não gostei desta história, {{path}}.",
     "chatHandoffDislikeNoPath": "Não gostei desta história. Me ajude a receber menos assim."
   },
   "explore": {
-    "addPlaces": "Adicionar lugares",
     "serverUnavailable": "Mera não pode ser alcançado agora; tente novamente em um momento.",
-    "clearSearch": "Limpar pesquisa",
     "searchNotSubscribed": "Pesquisa requer um plano ativo",
     "window": {
       "label24": "24 h",
@@ -945,26 +876,15 @@
     }
   },
   "forYou": {
-    "breaking": "Urgente",
-    "showMore": "Mostrar mais {{count}}",
     "headlineSectionGlobal": "Notícias do mundo",
     "headlineSectionCountry": "Notícias de {{country}}",
-    "nextFactPrefix": "Próximo",
-    "subTabAnalytics": "Análises",
-    "emptySection": {
-      "awaiting": "Procurando notícias sobre isso. Elas aparecem depois da próxima atualização.",
-      "none": "Ainda nenhuma notícia combina o bastante com isso para aparecer."
-    },
-    "newInterest": "Novo interesse",
     "sectionStories_one": "{{count}} história",
     "sectionStories_other": "{{count}} histórias"
   },
   "feedStatus": {
-    "title": "Status do feed",
     "idle": "Atualizado",
     "stage": "Etapa",
     "cloudProgress": "Pontuação na nuvem",
-    "close": "Fechar",
     "expandA11y": "Mostrar detalhes do status do feed",
     "modeProcessing": "Atualizando seu feed",
     "modeError": "Problema no feed",
@@ -984,7 +904,6 @@
     "title": "Histórias seguidas",
     "trackAction": "Seguir história",
     "untrackAction": "Deixar de seguir",
-    "trackedToast": "Agora você está seguindo esta história",
     "updatesBadge": "{{count}} novos",
     "endedLabel": "Encerrada",
     "emptyCta": "Ir para Feed",
@@ -1013,16 +932,7 @@
     "articlesCount_other": "{{count}} artigos"
   },
   "whatsNew": {
-    "title": "Novidades",
     "gotIt": "Entendi",
-    "sectionsTitle": "Um feed organizado em torno de você",
-    "sectionsBody": "O Para Você agora agrupa notícias em seções construídas com base no que é importante para você.",
-    "storiesTitle": "As histórias ficam juntas",
-    "storiesBody": "A mesma história de várias fontes é agrupada em um único card, mesmo enquanto se desenvolve.",
-    "tabsTitle": "Abas Perfil e Configurações",
-    "tabsBody": "Seu perfil e configurações agora ficam em abas próprias na parte inferior.",
-    "resyncTitle": "Seu feed está sendo ressincronizado",
-    "resyncBody": "Estamos reconstruindo seu feed com o novo mecanismo. Ele será preenchido em breve.",
     "starterTitle": "Starter é por nossa conta",
     "starterIntro": "Para você ver para que serve o Mera, toda conta agora inclui o plano Starter completo sem custo.",
     "starterArticlesTitle": "250 artigos por dia",
@@ -1114,7 +1024,6 @@
     "moreAboutTopicNamed": "Mais sobre: {{topic}}",
     "moreAboutTopicNamedWithCount": "Mais sobre: {{topic}} e {{extra}} mais",
     "title": "Conte mais",
-    "contextFor": "Sobre: {{title}}",
     "back": "Voltar",
     "dismiss": "Dispensar",
     "empty": "Nenhuma opção aqui",
@@ -1307,28 +1216,6 @@
     "saveFailedBody": "Sua mudança não foi armazenada. Tente novamente."
   },
   "profile": {
-    "talkToMera": "Fale com a Mera",
-    "talkToMeraSubtitle": "É assim que eu vejo você. Toque para continuar a conversa.",
-    "continueTalking": "Continuar",
-    "emptyTitle": "Ainda não te conheço",
-    "emptyBody": "Me conte sobre você para eu encontrar notícias que importam para você.",
-    "startTalking": "Começar a conversar",
-    "gettingToKnowYou": "Ainda estou te conhecendo, volte a checar em instantes.",
-    "updating": "Atualizando…",
-    "advanced": "Avançado",
-    "advancedSubtitle": "Fatos, fontes, salvos, atividade e mais",
-    "sheet": {
-      "importance": "Importância",
-      "moreImportant": "Mais importante",
-      "lessImportant": "Menos importante",
-      "refine": "Refinar com a Mera",
-      "refineSeed": "Vamos falar sobre isso: \"{{text}}\"",
-      "remove": "Remover isto",
-      "removeConfirm": "Toque novamente para remover",
-      "limitReached": "Limite diário de ajustes atingido: as alterações continuarão amanhã."
-    },
-    "editFacts": "Editar",
-    "planUsage": "{{used}} de {{limit}} analisados hoje",
     "updatingAllFacts": "Atualizando todos os fatos",
     "pleaseWait": "Aguarde"
   },
@@ -1451,36 +1338,10 @@
     "meraButtonHint": "Escolha a cor do botão flutuante da Mera. Ela fica a mesma no modo claro e no modo escuro."
   },
   "freeTier": {
-    "cardBody": "A parte de IA do Mera está desativada por enquanto. Tudo que você salvou, seguiu ou leu fica neste dispositivo, e Explorar ainda mostra as manchetes de hoje. Sem um plano, Mera não monta seu feed, não responde suas perguntas e não acompanha novas histórias. Comece um plano e tudo volta.",
-    "cardTitle": "Você está no Mera News Free",
-    "chatBubble": "Tudo o que sei sobre você fica neste aparelho. No plano gratuito eu continuo montando seu feed a partir de dois dos seus interesses. Chat, checagens de fatos e histórias acompanhadas precisam de um plano.",
-    "chatNotice": "Chat Mera vem com um plano. Seu perfil e fatos ficam neste dispositivo de qualquer forma.",
-    "continueWithoutPlan": "Continuar sem plano",
-    "lapseBody": "Nada foi removido. Tudo que você salvou, seguiu ou leu é seu, neste dispositivo, sempre. Você está no Mera News Free daqui para frente. O que pausa é a camada de IA em si, então seu feed personalizado, painel, acompanhamento de novas histórias e chat Mera ficam desativados até você começar um plano novamente.",
-    "lapseTitle": "Seu plano Mera expirou",
-    "readOnlyBanner": "Tudo aqui é seu para ler, com plano ou sem plano. Essas configurações só mudam o que Mera faz enquanto um plano está ativo.",
     "seePlans": "Ver planos",
     "storiesNotice": "As histórias que você já segue mantêm tudo que coletaram. Começar uma nova requer um plano ativo.",
     "trackBody": "As histórias que você já segue mantêm tudo que coletaram. Começar uma nova requer um plano ativo.",
-    "trackDismiss": "Depois",
-    "trackTitle": "Acompanhamento de histórias vem com um plano",
-    "factsPausedHeader": "Pausados",
-    "factsPausedSubtitle": "Eles continuam salvos. Um plano ativa todos.",
-    "pausedBadge": "Pausado",
-    "pausedRowHint": "Pausado. Toque para saber por quê.",
-    "explainerTitle": "Seus dois primeiros interesses",
-    "explainerBody": "O Mera News Free segue os dois interesses que você adicionou primeiro. Todo o resto continua salvo neste dispositivo, exatamente como você deixou.",
-    "explainerBody2": "Um plano ativa todos de novo.",
-    "explainerDismiss": "Agora não",
-    "chatIntro": {
-      "followStory": "Acompanhar histórias precisa de um plano. A Mera ficaria de olho nesta e avisaria quando houvesse novidades.",
-      "articleFeedback": "Ajustar seu feed a partir dos seus comentários precisa de um plano. Seu feed continua funcionando de todo jeito.",
-      "persona": "Falar com a Mera precisa de um plano. Seus interesses e informações ficam neste aparelho.",
-      "optimisationPlan": "A revisão diária precisa de um plano. A Mera olharia seu feed todo dia e sugeriria o que mudar.",
-      "tutorialHelp": "Perguntar à Mera sobre o app precisa de um plano. Os guias na Ajuda cobrem quase tudo.",
-      "factCheck": "As checagens de fatos precisam de um plano. A Mera pesquisaria isso e mostraria quem mais noticiou.",
-      "default": "O chat precisa de um plano. Seu feed continua funcionando."
-    }
+    "trackTitle": "Acompanhamento de histórias vem com um plano"
   },
   "factCheck": {
     "actionA11y": "Pesquisar verificações de fatos publicadas nesta história",
@@ -1534,8 +1395,6 @@
       "openA11y": "Abrir este artigo",
       "articleGone": "O artigo expirou, então não pode ser aberto. A verificação de fatos que encontramos é mantida aqui.",
       "couldNotCheck": "Não conseguimos verificar quem publicou sobre isso. Toque para ver o que a busca encontrou.",
-      "moreOrganisations_one": "+{{count}} outra",
-      "moreOrganisations_other": "+{{count}} outras",
       "noneFound": "Nenhuma verificação de fatos publicada encontrada",
       "factChecksFound_one": "{{count}} verificação de fatos encontrada. Toque para ler",
       "factChecksFound_other": "{{count}} verificações de fatos encontradas. Toque para ler"
@@ -1567,7 +1426,6 @@
     "quickRunning": "Buscando na web…",
     "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano, verifique depois ou procure em Verificações de fatos no seu Painel.",
     "checkedByMultipleNote": "Estas são avaliações independentes, cada uma na escala própria da organização, nem sempre concordam entre si.",
-    "ownReadingHeading": "Leitura própria da Mera, secundária ao parecer acima",
     "collapseA11y": "Ocultar esta checagem",
     "expandA11y": "Mostrar esta checagem",
     "checkedByRelatedNote": "Vêm de uma busca por palavras-chave e podem ser sobre uma história diferente. Abra uma para verificar.",
@@ -1592,17 +1450,14 @@
     "privacyLink": "Política de Privacidade",
     "accept": "Concordar e continuar",
     "accepting": "Salvando…",
-    "errorTitle": "Não foi possível salvar sua aceitação",
     "errorDescription": "Por favor, verifique sua conexão e tente novamente.",
     "retry": "Tentar novamente",
-    "welcomeTitle": "Boas-vindas ao Mera",
     "welcomeBody": "Toque em \"Concordar e continuar\" para aceitar nossos Termos de Serviço e nossa Política de Privacidade.",
     "deviceNotice": {
       "appAttest": "Sem precisar de e-mail. O Mera faz seu login com este celular. A Apple confirma que é o app Mera de verdade em um iPhone de verdade, para barrar contas falsas. Guardamos um registro de acesso enquanto você tiver uma conta.",
       "playIntegrity": "Sem precisar de e-mail. O Mera faz seu login com este celular. O Google confirma que é o app Mera de verdade em um celular Android de verdade, para barrar contas falsas. Guardamos um registro de acesso, não o ID do seu celular.",
       "generic": "Sem precisar de e-mail. O Mera faz seu login com este celular. Guardamos um registro de acesso deste celular enquanto você tiver uma conta."
-    },
-    "whatMeraKeeps": "O que o Mera guarda"
+    }
   },
   "tutorials": {
     "entryRow": "Como o Mera funciona",
@@ -2285,11 +2140,6 @@
     "skipBody2": "O suporte só consegue encontrar sua compra pelo seu ID de suporte. Copie e guarde em um lugar seguro.",
     "skipConfirm": "Continuar para o pagamento"
   },
-  "welcomeBack": {
-    "title": "Que bom ter você de volta ao Mera",
-    "body": "Parece que o Mera já esteve neste aparelho, então o teste gratuito já foi usado. Você pode continuar lendo com sua nova conta ou escolher um plano a qualquer momento para ter a experiência completa.",
-    "continue": "Continuar"
-  },
   "videoPlayer": {
     "closeA11y": "Fechar vídeo",
     "openInBrowser": "Abrir no navegador",
@@ -2512,23 +2362,6 @@
     "answeredA11y": "já respondido",
     "saveAll": "Salvar tudo"
   },
-  "streamingWords": {
-    "w1": "Pensando",
-    "w2": "Analisando",
-    "w3": "Contemplando",
-    "w4": "Refletindo",
-    "w5": "Ruminando",
-    "w6": "Matutando",
-    "w7": "Macerando",
-    "w8": "Raciocinando",
-    "w9": "Ponderando",
-    "w10": "Peneirando",
-    "w11": "Conectando",
-    "w12": "Redigindo",
-    "w13": "Ajustando",
-    "w14": "Lapidando",
-    "w15": "Fermentando"
-  },
   "chatPhases": {
     "preparing": [
       "Reunindo o que a Mera já sabe sobre você.",
@@ -2617,11 +2450,6 @@
     "support": "Suporte",
     "supportSub": "Relatar um bug, chat ao vivo, perguntas frequentes, tutorial",
     "tutorial": "Tutorial"
-  },
-  "related": {
-    "allCountries": "Todos os países",
-    "allLanguages": "Todos os idiomas",
-    "noMatches": "Nenhum artigo relacionado corresponde a esses filtros."
   },
   "storyExport": {
     "shareA11y": "Exportar esta história",
@@ -2834,7 +2662,6 @@
       "changes": "Mudanças no seu perfil",
       "subtitle": "O que a Mera sabe sobre você. Fica neste celular.",
       "tidyUp": "Organize seu perfil",
-      "title": "Seu perfil",
       "topicCount_one": "{{count}} tema",
       "topicCount_other": "{{count}} temas"
     },
@@ -2972,7 +2799,6 @@
     "opensByItself": "Abre sozinha quando você voltar a ficar online",
     "reauthBody": "Seu login expirou. Vamos enviar um código para o e-mail desta conta.",
     "reauthTitle": "Entre para continuar",
-    "sendNewCode": "Enviar um novo código",
     "unreachableBody": "O problema está do nosso lado, não no seu celular. A Mera continua tentando e abre quando voltar.",
     "unreachableTitle": "Não foi possível acessar a Mera",
     "mismatchTitle": "Este e-mail pertence a outra conta",

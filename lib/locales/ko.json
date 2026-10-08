@@ -4,28 +4,20 @@
     "delete": "삭제",
     "save": "저장",
     "back": "뒤로",
-    "error": "오류",
     "loading": "로딩 중...",
     "tryAgain": "다시 시도해 주세요",
     "next": "다음",
     "done": "완료",
     "retry": "재시도",
     "ok": "확인",
-    "checking": "확인 중...",
-    "updating": "업데이트 중...",
     "goBack": "뒤로 가기",
     "articles": "기사",
-    "loggingOut": "로그아웃 중...",
-    "never": "없음",
-    "yes": "예",
-    "no": "아니요",
     "saving": "저장 중...",
     "home": "홈",
     "offlineBannerOffline": "오프라인 상태입니다. 저장된 뉴스를 표시하는 중이며, 계속 연결을 시도하고 있습니다.",
     "offlineBannerInternetDown": "인터넷 연결이 없습니다. 저장된 뉴스를 표시하는 중이며, 계속 연결을 시도하고 있습니다.",
     "offlineBannerServerDown": "Mera 연결이 느리거나 없습니다. 저장된 뉴스를 표시하는 중이며, 계속 연결을 시도하고 있습니다.",
     "beta": "베타",
-    "confirm": "확인",
     "copy": "복사",
     "today": "오늘",
     "yesterday": "어제",
@@ -34,20 +26,14 @@
   "auth": {
     "emailPlaceholder": "이메일 주소를 입력하세요",
     "otpPlaceholder": "6자리 코드를 입력하세요",
-    "invalidEmailTitle": "유효하지 않은 이메일",
     "invalidEmailDescription": "올바른 이메일 주소를 입력해 주세요",
-    "failedToSendTitle": "코드 발송 실패",
     "networkError": "네트워크 오류가 발생했습니다. 다시 시도해 주세요.",
-    "privacyPolicy": "개인정보 처리방침",
-    "termsOfService": "서비스 이용약관",
     "sentTo": "다음 주소로 코드를 발송했습니다",
     "invalidOtp": "유효한 6자리 OTP 코드를 입력해 주세요",
     "invalidOtpServer": "OTP 코드가 올바르지 않습니다. 다시 시도해 주세요.",
     "otpError": "인증 중 오류가 발생했습니다. 다시 시도해 주세요.",
     "resendCode": "코드 재발송",
     "resendIn": "{{seconds}}초 후 재발송",
-    "resendSuccess": "새 코드가 발송되었습니다.",
-    "contentPolicy": "콘텐츠 정책",
     "faq": "자주 묻는 질문",
     "identitySwitchFailedTitle": "계정 전환을 완료할 수 없습니다",
     "identitySwitchFailedBody": "이 기기에 아직 다른 계정의 데이터가 있습니다. 계속하려면 Mera가 이를 삭제해야 하는데 이번에는 삭제하지 못했습니다.",
@@ -61,10 +47,8 @@
     "deviceSignInUnavailable": "지금은 로그인할 수 없습니다. 몇 분 후에 다시 시도하거나 이메일로 로그인하세요.",
     "tryAgain": "다시 시도",
     "learnAboutMera": "Mera 알아보기",
-    "startReading": "읽기 시작",
     "alreadyHaveAccount": "이메일로 로그인",
     "continue": "계속",
-    "aboutLegal": "Mera 정보 및 법적 고지",
     "sourceCode": "소스 코드",
     "failedToSendBody": "OTP를 보내지 못했습니다",
     "signingYouIn": "로그인하는 중…",
@@ -78,8 +62,7 @@
     },
     "deviceSignInCaption": {
       "uninstall": "계정이 이 휴대폰에 연결되어 있습니다. Mera를 삭제하거나 휴대폰을 잃어버리면 새 계정으로 시작하게 됩니다. 설정의 백업 및 복원으로 데이터를 지킬 수 있습니다.",
-      "reset": "계정이 이 휴대폰에 연결되어 있습니다. 휴대폰을 초기화하거나 잃어버리면 새 계정으로 시작하게 됩니다. 설정의 백업 및 복원으로 데이터를 지킬 수 있습니다.",
-      "previousUser": "{{email}}과 별개인, 이 휴대폰 자체의 계정을 엽니다."
+      "reset": "계정이 이 휴대폰에 연결되어 있습니다. 휴대폰을 초기화하거나 잃어버리면 새 계정으로 시작하게 됩니다. 설정의 백업 및 복원으로 데이터를 지킬 수 있습니다."
     },
     "track": {
       "beforeYouStart": "시작하기 전에",
@@ -108,22 +91,11 @@
     }
   },
   "account": {
-    "pendingTitle": "계정 승인 대기 중",
-    "pendingDescription": "앱을 사용해 보고 싶으신 마음에 감사드립니다. 계정이 승인되면 이메일로 알려드리겠습니다. 이후 앱을 계속 사용하실 수 있습니다.",
-    "enquiries": "문의 사항이 있으시면 다음 주소로 이메일을 보내 주세요",
-    "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "새로고침 🔄",
     "contactSupport": "지원팀에 문의"
   },
   "feed": {
-    "updatedAt": "{{time}} 업데이트됨",
     "allCaughtUp": "나와 관련된 모든 소식을 다 확인하셨습니다.",
-    "preparingFeed": "Mera가 피드를 준비하고 있습니다.",
     "pullDownToRetry": "아래로 당겨서 재시도",
-    "readArticleToast": "이 기사를 읽었습니다",
-    "stuckTitle": "피드를 불러올 수 없습니다",
-    "stuckDescription": "서버에서 문제가 발생했습니다.",
-    "stuckHint": "몇 분 후에 앱을 다시 열어 주세요.",
     "offlineCached": "오프라인: 캐시된 콘텐츠 표시 중",
     "newBadge": "새글",
     "newsCluster": "뉴스 클러스터",
@@ -149,8 +121,6 @@
       "폰은 나중에도 있습니다. 지금 이 순간에 집중하세요."
     ],
     "processing": {
-      "doneFlash": "준비 완료. 맞춤 뉴스를 확인하세요",
-      "errorFlash": "최신 콘텐츠를 불러올 수 없습니다. 다시 시도해 주세요.",
       "stages": {
         "fetching": {
           "headlines": [
@@ -226,8 +196,6 @@
       "completedMessage": "피드가 준비되었습니다"
     },
     "analysingProgress": "{{total}}개 중 {{done}}개 기사 분석 중",
-    "waitingForNextBatch_one": "{{count}}개의 새 기사가 다음 분석 배치를 기다리고 있습니다",
-    "waitingForNextBatch_other": "새 기사 {{count}}건이 다음 분석 배치를 기다리고 있습니다",
     "dailyLimit": {
       "body": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 내일 잠금 해제됩니다.",
       "bodyWithTime": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 {{time}}에 잠금 해제됩니다.",
@@ -247,7 +215,6 @@
     "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,",
     "loadingA11y": "피드를 불러오는 중",
     "translatingCaption": "번역 중…",
-    "updatedJustNow": "방금 업데이트됨",
     "reasonWritingA11y": "메모 작성 중",
     "reasonNotYet": "이 기사에 대한 메모가 아직 없습니다.",
     "findingStories": "내 스토리를 찾는 중",
@@ -315,20 +282,11 @@
     "translateBlockedOn": "일부 사이트는 구글 번역을 차단합니다. 열리지 않으면 {{publication}}에서 여세요.",
     "youCameFromHere": "여기서 오셨습니다"
   },
-  "newsCluster": {
-    "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
-    "clusterNotFound": "클러스터를 찾을 수 없습니다",
-    "coverage": "보도 현황",
-    "noArticles": "이 클러스터에 이용 가능한 기사가 없습니다"
-  },
   "sources": {
-    "searchCountries": "국가 검색...",
     "publishers": "발행사",
     "noPublishers": "이 국가에 발행사가 없습니다",
     "noArticlesFound": "기사를 찾을 수 없습니다",
     "topHeadlines": "주요 뉴스",
-    "addToLocations": "내 장소에 추가",
-    "addedToLocations": "내 장소에 추가됨",
     "badgeGovernment": "정부 출처",
     "badgeRegulator": "공식 기관"
   },
@@ -346,13 +304,8 @@
     "connectionDescription": "서버 연결에 문제가 발생했습니다. 앱을 닫고 나중에 다시 시도해 주세요. 문제가 지속되면 로그아웃 후 다시 로그인하시기를 권장합니다.",
     "logout": "로그아웃",
     "close": "닫기",
-    "notificationLow": "낮음",
-    "notificationMedium": "보통",
-    "notificationHigh": "높음",
     "logoutFailedTitle": "로그아웃 실패",
     "logoutFailedDescription": "로그아웃 중 문제가 발생했습니다. 다시 시도해 주세요.",
-    "loggingOut": "로그아웃 중...",
-    "chatIntro": "회원님에 대해 알려 주세요. 사는 곳, 하는 일, 팔로우하는 것들을요. 모든 내용은 이 휴대폰에 남습니다.",
     "composerPlaceholder": "Mera에게 나에 대해 알려 주세요",
     "continueAnyway": "그래도 계속",
     "factsCount_one": "회원님에 대한 사실 {{count}}개",
@@ -644,8 +597,6 @@
     "loadingModel": "AI 모델 로딩 중...",
     "loadingModelProgress": "AI 모델 로딩 중... {{percent}}%",
     "reloadingModel": "AI 모델 다시 로딩 중... {{percent}}%",
-    "waitingForResponse": "응답 대기 중...",
-    "typeMessage": "메시지를 입력하세요...",
     "inferenceError": "현재 Mera 추론 서비스에 연결하는 데 문제가 있습니다. 잠시 후 다시 시도해 주세요.",
     "send": "보내기",
     "streamingLabels": {
@@ -682,12 +633,9 @@
     "title": "Mera",
     "aboutThisStory": "이 소식에 대해",
     "earlierConversation": "이전 대화",
-    "loadingHistory": "이전 메시지를 불러오는 중…",
     "factSavedTitle": "프로필에 저장됨",
     "factDeletedTitle": "프로필에서 제거됨",
     "factUpdatedTitle": "환경설정이 업데이트됨",
-    "factCardUndo": "실행 취소",
-    "factCardDelete": "삭제",
     "chipAddLocation": "거주지 추가",
     "chipAddLocationMessage": "제가 사는 곳을 알려드리고 싶어요",
     "chipShowFacts": "내 정보 보기",
@@ -696,7 +644,6 @@
     "chipHelpSetupMessage": "제 프로필 설정을 도와주세요",
     "chipDataHandlingMessage": "Mera는 내 데이터를 어떻게 처리하나요?",
     "chipDataHandling": "내 데이터는 어떻게 처리되나요?",
-    "thinking": "생각 중…",
     "newChat": "새 채팅",
     "inputPlaceholder": "메시지를 입력하세요...",
     "viewPreviousMessages": "이전 메시지 보기",
@@ -731,14 +678,10 @@
     "mayMistakes": "Mera는 실수할 수 있으니 중요한 뉴스는 원문에서 확인하세요."
   },
   "articleFeedback": {
-    "thumbsUp": "좋아요",
-    "thumbsDown": "관심 없어요",
     "thumbsUpMessage": "이 기사가 마음에 들었어요: \"{{title}}\". 이런 추천을 더 보고 싶어요.",
     "thumbsDownMessage": "이런 기사는 원하지 않아요: \"{{title}}\". 추천을 조정하도록 도와주세요.",
     "likeLabel": "좋아요",
-    "improveLabel": "더 나아질 수 있어요",
     "dislikeLabel": "관심 없어요",
-    "improveMessage": "이 추천은 더 나아질 수 있어요: \"{{title}}\". 추천을 조정하도록 도와주세요.",
     "intro": "무엇을 도와드릴까요? 이 추천을 받은 이유를 설명하거나, 더 나은 추천을 받도록 도와드릴 수 있어요.",
     "introArticle": "무엇을 도와드릴까요? 이 기사를 바탕으로 뉴스 추천을 조정하도록 도와드릴 수 있어요.",
     "introLikeTuning": "이 소식이 마음에 드셨군요. 더 알려주시면 피드를 조정해 드릴게요.",
@@ -765,7 +708,6 @@
     "actionShowLessTopic": "주제 덜 보기",
     "actionShowMoreTopic": "주제 더 보기",
     "actionDownRank": "주제 순위 낮추기",
-    "actionPublicationPref": "발행사 조정",
     "actionPublicationBoost": "출판사에서 더 보기",
     "actionPublicationDeprioritize": "출판사에서 덜 보기",
     "actionPublicationMute": "출판사 음소거",
@@ -791,12 +733,9 @@
     "updateCta": "업데이트"
   },
   "feedback": {
-    "fabLabel": "버그 신고",
     "formTitle": "버그 신고",
     "submitButtonLabel": "보내기",
     "cancelButtonLabel": "취소",
-    "nameLabel": "이름",
-    "namePlaceholder": "이름을 입력하세요",
     "emailLabel": "이메일",
     "emailPlaceholder": "your.email@example.org",
     "messageLabel": "설명",
@@ -909,29 +848,21 @@
     "deck": "피드",
     "profile": "프로필",
     "settings": "설정",
-    "gotIt": "확인",
     "world": "전 세계",
     "library": "보관함",
     "you": "내 정보",
     "exploreTitle": "탐색"
   },
   "swipeFeed": {
-    "moreLikeThis": "이런 소식 더 보기",
-    "lessLikeThis": "이런 소식 덜 보기",
     "askMera": "Mera에게 묻기",
-    "closeTree": "닫기",
-    "treeThanks": "감사합니다. 반영했어요.",
     "feedbackCaption": "엄지손가락만으로는 Mera에게 충분한 정보를 전달하지 못합니다. 따라서 피드를 건강하게 유지하기 위해 버려집니다. 이유를 하나 선택하면 피드가 즉시 변합니다.",
-    "tapAgainToConfirm": "다시 한 번 탭하여 확인하세요",
     "chatHandoffLike": "이 소식이 마음에 들었어요. 이런 소식 더 보고 싶어요: {{path}}.",
     "chatHandoffLikeNoPath": "이 소식이 마음에 들었어요. 이런 소식을 더 보고 싶어요.",
     "chatHandoffDislike": "이 소식이 마음에 들지 않았어요: {{path}}.",
     "chatHandoffDislikeNoPath": "이 소식이 마음에 들지 않았어요. 이런 소식을 줄이도록 도와주세요."
   },
   "explore": {
-    "addPlaces": "위치 추가",
     "serverUnavailable": "지금은 Mera에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-    "clearSearch": "검색 지우기",
     "searchNotSubscribed": "검색하려면 활성 요금제가 필요합니다",
     "window": {
       "label24": "24시간",
@@ -945,26 +876,15 @@
     }
   },
   "forYou": {
-    "breaking": "속보",
-    "showMore": "{{count}}개 더 보기",
     "headlineSectionGlobal": "전 세계 뉴스",
     "headlineSectionCountry": "{{country}} 뉴스",
-    "nextFactPrefix": "다음",
-    "subTabAnalytics": "분석",
-    "emptySection": {
-      "awaiting": "이 주제의 기사를 찾고 있습니다. 다음 새로고침 후에 표시됩니다.",
-      "none": "아직 이 주제와 충분히 맞는 기사가 없습니다."
-    },
-    "newInterest": "새 관심사",
     "sectionStories_one": "스토리 {{count}}개",
     "sectionStories_other": "스토리 {{count}}개"
   },
   "feedStatus": {
-    "title": "피드 상태",
     "idle": "최신 상태입니다",
     "stage": "단계",
     "cloudProgress": "클라우드 채점",
-    "close": "닫기",
     "expandA11y": "피드 상태 세부 정보 표시",
     "modeProcessing": "피드를 업데이트하는 중",
     "modeError": "피드 문제",
@@ -984,7 +904,6 @@
     "title": "팔로우한 스토리",
     "trackAction": "스토리 팔로우",
     "untrackAction": "팔로우 취소",
-    "trackedToast": "이 스토리를 팔로우했습니다",
     "updatesBadge": "새 소식 {{count}}개",
     "endedLabel": "종료됨",
     "emptyCta": "피드로 이동",
@@ -1013,16 +932,7 @@
     "articlesCount_other": "기사 {{count}}개"
   },
   "whatsNew": {
-    "title": "새로운 기능",
     "gotIt": "확인",
-    "sectionsTitle": "나를 중심으로 구성된 피드",
-    "sectionsBody": "이제 '맞춤 뉴스'는 회원님에게 중요한 내용을 기준으로 기사를 섹션별로 묶어 보여드립니다.",
-    "storiesTitle": "같은 스토리는 하나로 묶입니다",
-    "storiesBody": "여러 출처에서 다룬 같은 스토리는 계속 업데이트되더라도 하나의 카드로 묶여 표시됩니다.",
-    "tabsTitle": "프로필 및 설정 탭",
-    "tabsBody": "이제 프로필과 설정이 하단의 별도 탭에 있습니다.",
-    "resyncTitle": "피드를 다시 동기화하는 중입니다",
-    "resyncBody": "새로운 엔진으로 피드를 다시 구성하고 있습니다. 곧 채워질 예정입니다.",
     "starterTitle": "Starter는 무료입니다",
     "starterIntro": "Mera가 무엇을 위한 것인지 직접 보실 수 있도록, 이제 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다.",
     "starterArticlesTitle": "하루 250개 기사",
@@ -1114,7 +1024,6 @@
     "moreAboutTopicNamed": "더 알아보기: {{topic}}",
     "moreAboutTopicNamedWithCount": "더 알아보기: {{topic}} 및 {{extra}} 개 더",
     "title": "더 알려주세요",
-    "contextFor": "관련 항목: {{title}}",
     "back": "뒤로",
     "dismiss": "닫기",
     "empty": "선택할 항목이 없습니다",
@@ -1307,28 +1216,6 @@
     "saveFailedBody": "변경사항이 저장되지 않았습니다. 다시 시도해 주세요."
   },
   "profile": {
-    "talkToMera": "Mera와 대화하기",
-    "talkToMeraSubtitle": "이것이 제가 보는 당신의 모습이에요. 탭해서 대화를 이어가 보세요.",
-    "continueTalking": "계속하기",
-    "emptyTitle": "아직 당신에 대해 잘 몰라요",
-    "emptyBody": "자신에 대해 알려 주시면 당신에게 중요한 뉴스를 찾아 드릴게요.",
-    "startTalking": "대화 시작하기",
-    "gettingToKnowYou": "아직 당신을 알아가는 중이에요. 잠시 후 다시 확인해 주세요.",
-    "updating": "업데이트 중…",
-    "advanced": "고급 설정",
-    "advancedSubtitle": "정보, 소스, 저장됨, 활동 등",
-    "sheet": {
-      "importance": "중요도",
-      "moreImportant": "더 중요하게",
-      "lessImportant": "덜 중요하게",
-      "refine": "Mera와 함께 다듬기",
-      "refineSeed": "이것에 대해 이야기해 봐요: \"{{text}}\"",
-      "remove": "삭제",
-      "removeConfirm": "다시 탭하면 삭제됩니다",
-      "limitReached": "일일 조정 한도에 도달했습니다. 변경 사항은 내일 계속됩니다."
-    },
-    "editFacts": "편집",
-    "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석",
     "updatingAllFacts": "모든 정보 업데이트 중",
     "pleaseWait": "잠시 기다려 주세요"
   },
@@ -1451,36 +1338,10 @@
     "meraButtonHint": "떠 있는 Mera 버튼의 색을 고르세요. 라이트 모드와 다크 모드에서도 같은 색을 유지합니다."
   },
   "freeTier": {
-    "cardBody": "Mera의 AI 기능이 지금 꺼져 있습니다. 저장했거나 팔로우한 기사, 읽은 기사는 이 기기에 그대로 남아 있으며 탐색에서 오늘의 헤드라인을 확인할 수 있습니다. 플랜이 없으면 Mera가 피드를 만들거나 질문에 답하거나 새로운 기사를 팔로우하지 않습니다. 플랜을 시작하면 모든 기능이 다시 작동합니다.",
-    "cardTitle": "Mera News 무료를 사용 중입니다",
-    "chatBubble": "당신에 대해 제가 아는 모든 것은 이 기기에 남아 있습니다. 무료 플랜에서도 관심사 두 가지로 피드를 계속 만들어 드립니다. 채팅, 팩트 체크, 팔로우한 스토리에는 플랜이 필요합니다.",
-    "chatNotice": "Mera 채팅은 플랜에 포함됩니다. 페르소나와 정보는 어떤 경우든 이 기기에 남아 있습니다.",
-    "continueWithoutPlan": "플랜 없이 계속",
-    "lapseBody": "아무것도 사라지지 않았습니다. 저장했거나 팔로우한 기사, 읽은 기사는 모두 이 기기에 있으며 항상 당신의 것입니다. 이제부터 Mera News 무료를 사용하게 됩니다. 일시 중지되는 것은 AI 레이어 자체이므로 맞춤 피드, 대시보드, 새로운 기사 추적, Mera 채팅은 다시 플랜을 시작할 때까지 꺼진 상태입니다.",
-    "lapseTitle": "Mera 플랜이 종료되었습니다",
-    "readOnlyBanner": "여기의 모든 콘텐츠는 플랜 여부와 관계없이 읽을 수 있습니다. 이 설정은 플랜이 활성일 때 Mera가 하는 일만 바꿉니다.",
     "seePlans": "플랜 보기",
     "storiesNotice": "이미 팔로우하고 있는 스토리는 수집한 모든 정보를 유지합니다. 새로운 스토리를 시작하려면 활성 플랜이 필요합니다.",
     "trackBody": "이미 팔로우하고 있는 스토리는 수집한 모든 정보를 유지합니다. 새로운 스토리를 시작하려면 활성 플랜이 필요합니다.",
-    "trackDismiss": "나중에",
-    "trackTitle": "스토리 추적은 플랜에 포함됩니다",
-    "factsPausedHeader": "일시 중지됨",
-    "factsPausedSubtitle": "저장된 상태로 유지됩니다. 플랜을 시작하면 모두 켜집니다.",
-    "pausedBadge": "일시 중지됨",
-    "pausedRowHint": "일시 중지됨. 이유를 보려면 탭하세요.",
-    "explainerTitle": "처음 추가한 관심사 두 개",
-    "explainerBody": "Mera News Free는 처음 추가한 관심사 두 개를 팔로우합니다. 나머지는 모두 남겨둔 그대로 이 기기에 저장되어 있습니다.",
-    "explainerBody2": "플랜을 시작하면 모두 다시 켜집니다.",
-    "explainerDismiss": "나중에",
-    "chatIntro": {
-      "followStory": "스토리 팔로우에는 플랜이 필요합니다. Mera가 이 스토리를 지켜보고 진전이 있으면 알려드립니다.",
-      "articleFeedback": "피드백으로 피드를 조정하려면 플랜이 필요합니다. 피드는 그대로 작동합니다.",
-      "persona": "Mera와의 대화에는 플랜이 필요합니다. 관심사와 정보는 이 기기에 남아 있습니다.",
-      "optimisationPlan": "일일 리뷰에는 플랜이 필요합니다. Mera가 매일 피드를 살펴보고 바꿀 점을 제안합니다.",
-      "tutorialHelp": "앱에 대해 Mera에게 물어보려면 플랜이 필요합니다. 도움말의 가이드가 대부분을 다룹니다.",
-      "factCheck": "팩트 체크에는 플랜이 필요합니다. Mera가 찾아보고 어디에서 또 보도했는지 보여드립니다.",
-      "default": "채팅에는 플랜이 필요합니다. 피드는 그대로 작동합니다."
-    }
+    "trackTitle": "스토리 추적은 플랜에 포함됩니다"
   },
   "factCheck": {
     "actionA11y": "이 기사에 대해 발표된 팩트 체크 찾기",
@@ -1534,8 +1395,6 @@
       "openA11y": "이 기사 열기",
       "articleGone": "이 기사는 만료되어 열 수 없습니다. 찾은 팩트체크는 여기에 유지됩니다.",
       "couldNotCheck": "누가 이에 대해 발표했는지 확인하지 못했습니다. 검색에서 찾은 내용을 보려면 탭하세요.",
-      "moreOrganisations_one": "외 {{count}}곳",
-      "moreOrganisations_other": "외 {{count}}곳",
       "noneFound": "발표된 팩트 체크를 찾을 수 없음",
       "factChecksFound_one": "{{count}}개의 팩트 체크를 찾았습니다. 탭하여 읽기",
       "factChecksFound_other": "{{count}}개의 팩트 체크를 찾았습니다. 탭하여 읽기"
@@ -1567,7 +1426,6 @@
     "quickRunning": "웹을 검색 중…",
     "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다, 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
     "checkedByMultipleNote": "이는 각 기관이 독자적인 기준으로 독립적으로 평가한 결과이며, 서로 항상 일치하지는 않습니다.",
-    "ownReadingHeading": "메라의 자체 해석, 위 판정에 대해 부차적인 견해",
     "collapseA11y": "이 팩트 체크 숨기기",
     "expandA11y": "이 팩트 체크 보기",
     "checkedByRelatedNote": "이들은 키워드 검색에서 나온 것이며 다른 기사에 관한 것일 수 있습니다. 확인하려면 하나를 열어보세요.",
@@ -1592,17 +1450,14 @@
     "privacyLink": "개인정보 처리방침",
     "accept": "동의하고 계속",
     "accepting": "저장 중…",
-    "errorTitle": "동의를 저장할 수 없습니다",
     "errorDescription": "연결을 확인하고 다시 시도해 주세요.",
     "retry": "다시 시도",
-    "welcomeTitle": "Mera에 오신 것을 환영합니다",
     "welcomeBody": "\"동의하고 계속\"을 탭하면 서비스 약관과 개인정보 처리방침에 동의하게 됩니다.",
     "deviceNotice": {
       "appAttest": "이메일이 필요 없습니다. Mera가 이 휴대폰으로 로그인해 드립니다. 가짜 계정을 막기 위해 Apple이 실제 iPhone의 진짜 Mera 앱인지 확인합니다. 계정이 있는 동안 로그인 기록을 보관합니다.",
       "playIntegrity": "이메일이 필요 없습니다. Mera가 이 휴대폰으로 로그인해 드립니다. 가짜 계정을 막기 위해 Google이 실제 Android 휴대폰의 진짜 Mera 앱인지 확인합니다. 휴대폰 ID가 아닌 로그인 기록만 보관합니다.",
       "generic": "이메일이 필요 없습니다. Mera가 이 휴대폰으로 로그인해 드립니다. 계정이 있는 동안 이 휴대폰의 로그인 기록을 보관합니다."
-    },
-    "whatMeraKeeps": "Mera가 보관하는 정보"
+    }
   },
   "tutorials": {
     "entryRow": "Mera 작동 방식",
@@ -2285,11 +2140,6 @@
     "skipBody2": "지원팀은 지원 ID로만 구매 내역을 찾을 수 있습니다. 복사해서 안전한 곳에 보관하세요.",
     "skipConfirm": "결제 계속하기"
   },
-  "welcomeBack": {
-    "title": "Mera에 다시 오신 것을 환영합니다",
-    "body": "이 기기에서 이전에 Mera를 사용한 것으로 보여 무료 체험은 이미 사용되었습니다. 새 계정으로 계속 이용하거나, 언제든지 요금제를 선택해 모든 기능을 사용할 수 있습니다.",
-    "continue": "계속"
-  },
   "videoPlayer": {
     "closeA11y": "동영상 닫기",
     "openInBrowser": "브라우저에서 열기",
@@ -2512,23 +2362,6 @@
     "answeredA11y": "이미 답변함",
     "saveAll": "모두 저장"
   },
-  "streamingWords": {
-    "w1": "생각 중",
-    "w2": "분석 중",
-    "w3": "숙고 중",
-    "w4": "궁리 중",
-    "w5": "저울질 중",
-    "w6": "만지작거리는 중",
-    "w7": "묵히는 중",
-    "w8": "추론 중",
-    "w9": "가늠하는 중",
-    "w10": "추리는 중",
-    "w11": "연결하는 중",
-    "w12": "정리하는 중",
-    "w13": "손보는 중",
-    "w14": "다듬는 중",
-    "w15": "우려내는 중"
-  },
   "chatPhases": {
     "preparing": [
       "Mera가 이미 알고 있는 내용을 모으고 있어요.",
@@ -2617,11 +2450,6 @@
     "support": "지원",
     "supportSub": "버그 신고, 실시간 채팅, 자주 묻는 질문, 튜토리얼",
     "tutorial": "튜토리얼"
-  },
-  "related": {
-    "allCountries": "모든 국가",
-    "allLanguages": "모든 언어",
-    "noMatches": "이 필터에 맞는 관련 기사가 없어요."
   },
   "storyExport": {
     "shareA11y": "이 스토리 내보내기",
@@ -2833,7 +2661,6 @@
       "changes": "프로필 변경 사항",
       "subtitle": "Mera가 회원님에 대해 아는 것입니다. 이 휴대폰에 보관됩니다.",
       "tidyUp": "프로필 정리",
-      "title": "회원님의 프로필",
       "topicCount_one": "토픽 {{count}}개",
       "topicCount_other": "토픽 {{count}}개"
     },
@@ -2969,7 +2796,6 @@
     "opensByItself": "온라인 상태가 되면 자동으로 열립니다",
     "reauthBody": "로그인이 만료되었습니다. 이 계정의 이메일로 코드를 보내 드리겠습니다.",
     "reauthTitle": "계속하려면 로그인하세요",
-    "sendNewCode": "새 코드 보내기",
     "unreachableBody": "문제는 회원님의 휴대폰이 아니라 저희 쪽에 있습니다. Mera가 계속 시도하며 복구되면 열립니다.",
     "unreachableTitle": "Mera에 연결할 수 없습니다",
     "mismatchTitle": "이 이메일은 다른 계정에 연결되어 있습니다",

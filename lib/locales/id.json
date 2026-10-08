@@ -5,27 +5,19 @@
     "delete": "Hapus",
     "save": "Simpan",
     "back": "Kembali",
-    "error": "Kesalahan",
     "loading": "Memuat...",
     "tryAgain": "Silakan coba lagi",
     "next": "Berikutnya",
     "done": "Selesai",
     "retry": "Coba Lagi",
     "ok": "OK",
-    "checking": "Memeriksa...",
-    "updating": "Memperbarui...",
     "goBack": "Kembali",
     "articles": "Artikel",
-    "loggingOut": "Sedang Keluar...",
-    "never": "Tidak pernah",
-    "yes": "Ya",
-    "no": "Tidak",
     "saving": "Menyimpan...",
     "offlineBannerOffline": "Anda sedang offline. Menampilkan berita tersimpan dan kami akan terus mencoba.",
     "offlineBannerInternetDown": "Tidak ada akses internet. Menampilkan berita tersimpan dan kami akan terus mencoba.",
     "offlineBannerServerDown": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan dan kami akan terus mencoba.",
     "beta": "Beta",
-    "confirm": "Konfirmasi",
     "copy": "Salin",
     "today": "Hari ini",
     "yesterday": "Kemarin",
@@ -34,20 +26,14 @@
   "auth": {
     "emailPlaceholder": "Masukkan alamat email Anda",
     "otpPlaceholder": "Masukkan kode 6 digit",
-    "invalidEmailTitle": "Email Tidak Valid",
     "invalidEmailDescription": "Silakan masukkan alamat email yang valid",
-    "failedToSendTitle": "Gagal Mengirim Kode",
     "networkError": "Kesalahan jaringan. Silakan coba lagi.",
-    "privacyPolicy": "Kebijakan Privasi",
-    "termsOfService": "Ketentuan Layanan",
     "sentTo": "Kami telah mengirim kode ke",
     "invalidOtp": "Silakan masukkan kode OTP 6 digit yang valid",
     "invalidOtpServer": "Kode OTP tidak valid. Silakan coba lagi.",
     "otpError": "Terjadi kesalahan saat verifikasi. Silakan coba lagi.",
     "resendCode": "Kirim ulang kode",
     "resendIn": "Kirim ulang dalam {{seconds}}d",
-    "resendSuccess": "Kode baru telah dikirim.",
-    "contentPolicy": "Kebijakan Konten",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Kami tidak dapat menyelesaikan pergantian akun",
     "identitySwitchFailedBody": "Data akun lain masih ada di perangkat ini. Mera harus menghapusnya sebelum Anda dapat melanjutkan, dan penghapusan kali ini tidak berhasil.",
@@ -61,10 +47,8 @@
     "deviceSignInUnavailable": "Login tidak tersedia saat ini. Coba lagi dalam beberapa menit atau masuk dengan email.",
     "tryAgain": "Coba lagi",
     "learnAboutMera": "Pelajari Mera",
-    "startReading": "Mulai membaca",
     "alreadyHaveAccount": "Masuk dengan email",
     "continue": "Lanjutkan",
-    "aboutLegal": "Tentang Mera & legal",
     "sourceCode": "Kode sumber",
     "failedToSendBody": "Gagal mengirim kode OTP",
     "signingYouIn": "Sedang masuk…",
@@ -78,8 +62,7 @@
     },
     "deviceSignInCaption": {
       "uninstall": "Akun Anda terikat ke ponsel ini. Jika Anda menghapus Mera atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda.",
-      "reset": "Akun Anda terikat ke ponsel ini. Jika Anda mereset atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda.",
-      "previousUser": "Membuka akun milik ponsel ini, terpisah dari {{email}}."
+      "reset": "Akun Anda terikat ke ponsel ini. Jika Anda mereset atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda."
     },
     "track": {
       "beforeYouStart": "Sebelum Anda mulai",
@@ -108,22 +91,11 @@
     }
   },
   "account": {
-    "pendingTitle": "Akun Menunggu Persetujuan",
-    "pendingDescription": "Kami sangat senang Anda ingin mencoba aplikasi kami. Setelah akun Anda disetujui, Anda akan menerima email. Kemudian Anda dapat melanjutkan menggunakan aplikasi.",
-    "enquiries": "Untuk pertanyaan, Anda dapat mengirim email ke",
-    "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Muat Ulang 🔄",
     "contactSupport": "Hubungi dukungan"
   },
   "feed": {
-    "updatedAt": "Diperbarui {{time}}",
     "allCaughtUp": "Anda sudah membaca semua berita yang relevan untuk Anda.",
-    "preparingFeed": "Mera sedang menyiapkan feed Anda.",
     "pullDownToRetry": "Tarik ke bawah untuk mencoba lagi",
-    "readArticleToast": "Anda telah membaca artikel ini",
-    "stuckTitle": "Tidak dapat memuat feed Anda",
-    "stuckDescription": "Terjadi kesalahan di pihak kami.",
-    "stuckHint": "Buka kembali aplikasi dalam beberapa menit.",
     "offlineCached": "Offline: menampilkan konten tersimpan",
     "newBadge": "BARU",
     "newsCluster": "Klaster Berita",
@@ -149,8 +121,6 @@
       "Ponsel Anda akan tetap di sini nanti. Hadirlah sekarang."
     ],
     "processing": {
-      "doneFlash": "Siap. Ini berita Anda",
-      "errorFlash": "Kami tidak dapat memuat konten terbaru. Silakan coba lagi.",
       "stages": {
         "fetching": {
           "headlines": [
@@ -233,8 +203,6 @@
       "freeBodyWithTime": "Anda punya semua yang Mera kirim hari ini. Jelajahi yang ada di perangkat Anda. Lainnya datang pukul {{time}}."
     },
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
-    "waitingForNextBatch_one": "{{count}} artikel baru menunggu batch analisis berikutnya",
-    "waitingForNextBatch_other": "{{count}} artikel baru menunggu batch analisis berikutnya",
     "statsPublishedPending_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
     "statsPublished_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
     "statsAnalysed_other": "{{formatted}} dianalisis untuk Anda,",
@@ -247,7 +215,6 @@
     "statsRelevant_one": "{{formatted}} terlihat relevan,",
     "loadingA11y": "Memuat feed kamu",
     "translatingCaption": "Menerjemahkan…",
-    "updatedJustNow": "Baru saja diperbarui",
     "reasonWritingA11y": "menulis catatan",
     "reasonNotYet": "Belum ada catatan untuk artikel ini.",
     "findingStories": "Mencari cerita untuk Anda",
@@ -315,20 +282,11 @@
     "translateBlockedOn": "Beberapa situs memblokir Google Terjemahan. Jika tidak termuat, buka di {{publication}}.",
     "youCameFromHere": "Anda datang dari sini"
   },
-  "newsCluster": {
-    "failedToLoad": "Gagal memuat detail klaster",
-    "clusterNotFound": "Klaster tidak ditemukan",
-    "coverage": "Liputan",
-    "noArticles": "Tidak ada artikel yang tersedia di klaster ini"
-  },
   "sources": {
-    "searchCountries": "Cari negara...",
     "publishers": "Penerbit",
     "noPublishers": "Tidak ada penerbit untuk negara ini",
     "noArticlesFound": "Tidak ada artikel yang ditemukan",
     "topHeadlines": "Berita utama",
-    "addToLocations": "Tambahkan ke tempat Anda",
-    "addedToLocations": "Ditambahkan ke tempat Anda",
     "badgeGovernment": "Sumber pemerintah",
     "badgeRegulator": "Lembaga resmi"
   },
@@ -346,13 +304,8 @@
     "connectionDescription": "Kami mengalami masalah koneksi ke server. Anda dapat menutup aplikasi dan mencoba lagi nanti. Jika masalah berlanjut, kami sarankan Anda keluar dan masuk kembali.",
     "logout": "Keluar",
     "close": "Tutup",
-    "notificationLow": "Rendah",
-    "notificationMedium": "Sedang",
-    "notificationHigh": "Tinggi",
     "logoutFailedTitle": "Gagal Keluar",
     "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi.",
-    "loggingOut": "Keluar...",
-    "chatIntro": "Ceritakan sedikit tentang diri Anda: tempat tinggal, pekerjaan, dan apa yang Anda ikuti. Ini tetap di ponsel ini.",
     "composerPlaceholder": "Ceritakan tentang diri Anda kepada Mera",
     "continueAnyway": "Tetap lanjutkan",
     "factsCount_one": "{{count}} fakta tentang Anda",
@@ -644,8 +597,6 @@
     "loadingModel": "Memuat AI model...",
     "loadingModelProgress": "Memuat AI model... {{percent}}%",
     "reloadingModel": "Memuat ulang AI model... {{percent}}%",
-    "waitingForResponse": "Menunggu respons...",
-    "typeMessage": "Ketik pesan...",
     "inferenceError": "Kami mengalami masalah dalam menjangkau layanan inferensi Mera saat ini. Silakan coba lagi sesaat lagi.",
     "send": "Kirim",
     "streamingLabels": {
@@ -682,12 +633,9 @@
     "title": "Mera",
     "aboutThisStory": "TENTANG CERITA INI",
     "earlierConversation": "Percakapan sebelumnya",
-    "loadingHistory": "Memuat pesan sebelumnya…",
     "factSavedTitle": "Disimpan ke profil Anda",
     "factDeletedTitle": "Dihapus dari profil Anda",
     "factUpdatedTitle": "Preferensi diperbarui",
-    "factCardUndo": "Urungkan",
-    "factCardDelete": "Hapus",
     "chipAddLocation": "Tambahkan tempat tinggal saya",
     "chipAddLocationMessage": "Saya ingin memberi tahu tempat tinggal saya",
     "chipShowFacts": "Tampilkan info saya",
@@ -696,7 +644,6 @@
     "chipHelpSetupMessage": "Bantu saya menyiapkan profil saya",
     "chipDataHandlingMessage": "Bagaimana Mera menangani dataku?",
     "chipDataHandling": "Bagaimana dataku ditangani?",
-    "thinking": "Berpikir…",
     "newChat": "Obrolan baru",
     "inputPlaceholder": "Ketik pesan...",
     "viewPreviousMessages": "Lihat pesan sebelumnya",
@@ -731,14 +678,10 @@
     "mayMistakes": "Mera bisa membuat kesalahan, jadi periksa berita penting di sumbernya."
   },
   "articleFeedback": {
-    "thumbsUp": "Saya suka",
-    "thumbsDown": "Bukan untuk saya",
     "thumbsUpMessage": "Saya suka artikel ini: \"{{title}}\". Saya ingin melihat lebih banyak saran seperti ini.",
     "thumbsDownMessage": "Saya tidak ingin artikel seperti ini: \"{{title}}\". Bantu saya menyesuaikan saran saya.",
     "likeLabel": "Saya suka",
-    "improveLabel": "Bisa lebih baik",
     "dislikeLabel": "Bukan untuk saya",
-    "improveMessage": "Saran ini bisa lebih baik: \"{{title}}\". Bantu saya menyesuaikan saran saya.",
     "intro": "Apa yang bisa saya bantu? Saya bisa menjelaskan mengapa kamu menerima saran ini, atau membantu kamu mendapatkan saran yang lebih baik.",
     "introArticle": "Apa yang bisa saya bantu? Saya bisa membantu menyesuaikan saran berita kamu berdasarkan artikel ini.",
     "introLikeTuning": "Anda menyukai cerita ini. Beri tahu saya lebih lanjut dan saya akan menyesuaikan feed Anda.",
@@ -765,7 +708,6 @@
     "actionShowLessTopic": "Tampilkan lebih sedikit dari suatu topik",
     "actionShowMoreTopic": "Tampilkan lebih banyak dari suatu topik",
     "actionDownRank": "Turunkan peringkat suatu topik",
-    "actionPublicationPref": "Sesuaikan suatu publikasi",
     "actionPublicationBoost": "Tampilkan lebih banyak dari penerbit",
     "actionPublicationDeprioritize": "Tampilkan lebih sedikit dari penerbit",
     "actionPublicationMute": "Senyapkan penerbit",
@@ -791,12 +733,9 @@
     "updateCta": "Perbarui"
   },
   "feedback": {
-    "fabLabel": "Laporkan bug",
     "formTitle": "Laporkan Bug",
     "submitButtonLabel": "Kirim",
     "cancelButtonLabel": "Batal",
-    "nameLabel": "Nama",
-    "namePlaceholder": "Nama Anda",
     "emailLabel": "Email",
     "emailPlaceholder": "your.email@example.org",
     "messageLabel": "Deskripsi",
@@ -909,29 +848,21 @@
     "deck": "Umpan",
     "profile": "Profil",
     "settings": "Pengaturan",
-    "gotIt": "Mengerti",
     "world": "Dunia",
     "library": "Pustaka",
     "you": "Anda",
     "exploreTitle": "Jelajahi"
   },
   "swipeFeed": {
-    "moreLikeThis": "Lebih banyak seperti ini",
-    "lessLikeThis": "Lebih sedikit seperti ini",
     "askMera": "Tanya Mera",
-    "closeTree": "Tutup",
-    "treeThanks": "Terima kasih, dicatat.",
     "feedbackCaption": "Dengan sendirinya, thumb tidak memberitahu Mera cukup banyak — jadi itu dibuang, untuk menjaga feed Anda tetap sehat. Pilih alasan dan feed Anda berubah seketika.",
-    "tapAgainToConfirm": "Ketuk lagi untuk mengonfirmasi",
     "chatHandoffLike": "Saya suka cerita ini, lebih banyak seperti ini: {{path}}.",
     "chatHandoffLikeNoPath": "Saya suka cerita ini. Saya ingin lebih banyak seperti ini.",
     "chatHandoffDislike": "Saya tidak suka cerita ini, {{path}}.",
     "chatHandoffDislikeNoPath": "Saya tidak suka cerita ini. Bantu saya agar mendapat lebih sedikit yang seperti ini."
   },
   "explore": {
-    "addPlaces": "Tambah tempat",
     "serverUnavailable": "Mera tidak dapat dijangkau sekarang: coba lagi dalam sebentar.",
-    "clearSearch": "Hapus pencarian",
     "searchNotSubscribed": "Pencarian memerlukan paket aktif",
     "window": {
       "label24": "24 jam",
@@ -945,26 +876,15 @@
     }
   },
   "forYou": {
-    "breaking": "Berita terbaru",
-    "showMore": "Tampilkan {{count}} lagi",
     "headlineSectionGlobal": "Berita dari seluruh dunia",
     "headlineSectionCountry": "Berita dari {{country}}",
-    "nextFactPrefix": "Berikutnya",
-    "subTabAnalytics": "Analitik",
-    "emptySection": {
-      "awaiting": "Mencari berita tentang ini. Berita akan muncul setelah penyegaran berikutnya.",
-      "none": "Belum ada berita yang cukup cocok untuk ditampilkan di sini."
-    },
-    "newInterest": "Minat baru",
     "sectionStories_one": "{{count}} cerita",
     "sectionStories_other": "{{count}} cerita"
   },
   "feedStatus": {
-    "title": "Status feed",
     "idle": "Terkini",
     "stage": "Tahap",
     "cloudProgress": "Penilaian cloud",
-    "close": "Tutup",
     "expandA11y": "Tampilkan detail status feed",
     "modeProcessing": "Memperbarui feed Anda",
     "modeError": "Masalah pada feed",
@@ -984,7 +904,6 @@
     "title": "Cerita yang diikuti",
     "trackAction": "Ikuti cerita",
     "untrackAction": "Berhenti mengikuti cerita",
-    "trackedToast": "Kini mengikuti cerita ini",
     "updatesBadge": "{{count}} baru",
     "endedLabel": "Berakhir",
     "emptyCta": "Ke Umpan",
@@ -1013,16 +932,7 @@
     "articlesCount_other": "{{count}} artikel"
   },
   "whatsNew": {
-    "title": "Yang baru",
     "gotIt": "Mengerti",
-    "sectionsTitle": "Feed yang disusun di sekitar Anda",
-    "sectionsBody": "Untuk Anda kini mengelompokkan cerita ke dalam bagian yang dibuat dari apa yang penting bagi Anda.",
-    "storiesTitle": "Cerita tetap bersama",
-    "storiesBody": "Cerita yang sama dari beberapa sumber dikelompokkan menjadi satu kartu, bahkan saat terus berkembang.",
-    "tabsTitle": "Tab Profil & Pengaturan",
-    "tabsBody": "Profil dan pengaturan Anda kini berada di tab masing-masing di bagian bawah.",
-    "resyncTitle": "Feed Anda sedang disinkronkan ulang",
-    "resyncBody": "Kami sedang membangun ulang feed Anda dengan mesin baru. Akan terisi sebentar lagi.",
     "starterTitle": "Starter dari kami",
     "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
     "starterArticlesTitle": "250 artikel sehari",
@@ -1114,7 +1024,6 @@
     "moreAboutTopicNamed": "Lebih lanjut tentang: {{topic}}",
     "moreAboutTopicNamedWithCount": "Lebih lanjut tentang: {{topic}} dan {{extra}} lainnya",
     "title": "Beri tahu kami lebih lanjut",
-    "contextFor": "Tentang: {{title}}",
     "back": "Kembali",
     "dismiss": "Tutup",
     "empty": "Tidak ada opsi di sini",
@@ -1307,28 +1216,6 @@
     "saveFailedBody": "Perubahan Anda tidak disimpan. Coba lagi."
   },
   "profile": {
-    "talkToMera": "Bicara dengan Mera",
-    "talkToMeraSubtitle": "Begini cara saya melihat Anda. Ketuk untuk melanjutkan percakapan.",
-    "continueTalking": "Lanjutkan",
-    "emptyTitle": "Saya belum mengenal Anda",
-    "emptyBody": "Ceritakan tentang diri Anda agar saya bisa menemukan berita yang penting bagi Anda.",
-    "startTalking": "Mulai bicara",
-    "gettingToKnowYou": "Saya masih dalam proses mengenal Anda. Coba lagi sebentar lagi.",
-    "updating": "Memperbarui…",
-    "advanced": "Lanjutan",
-    "advancedSubtitle": "Fakta, sumber, tersimpan, aktivitas, dan lainnya",
-    "sheet": {
-      "importance": "Tingkat kepentingan",
-      "moreImportant": "Lebih penting",
-      "lessImportant": "Kurang penting",
-      "refine": "Sempurnakan bersama Mera",
-      "refineSeed": "Mari kita bahas ini: \"{{text}}\"",
-      "remove": "Hapus ini",
-      "removeConfirm": "Ketuk lagi untuk menghapus",
-      "limitReached": "Batas penyesuaian harian tercapai: perubahan akan berlanjut besok."
-    },
-    "editFacts": "Edit",
-    "planUsage": "{{used}} dari {{limit}} dianalisis hari ini",
     "updatingAllFacts": "Memperbarui semua fakta",
     "pleaseWait": "Harap tunggu"
   },
@@ -1451,36 +1338,10 @@
     "meraButtonHint": "Pilih warna tombol Mera yang mengambang. Warnanya tetap sama di mode terang dan mode gelap."
   },
   "freeTier": {
-    "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",
-    "cardTitle": "Anda menggunakan Mera News Free",
-    "chatBubble": "Semua yang saya ketahui tentang Anda tetap di perangkat ini. Pada paket gratis saya terus menyusun feed Anda dari dua minat Anda. Obrolan, pemeriksaan fakta, dan cerita yang diikuti memerlukan paket.",
-    "chatNotice": "Obrolan Mera memerlukan paket. Persona dan fakta Anda tetap di perangkat ini, bagaimanapun.",
-    "continueWithoutPlan": "Lanjutkan tanpa paket",
-    "lapseBody": "Tidak ada yang diambil. Apa pun yang telah Anda simpan, ikuti, atau baca adalah milik Anda, di perangkat ini, selamanya. Anda menggunakan Mera News Free sekarang. Yang berhenti adalah lapisan AI itu sendiri, jadi feed personal Anda, dasbor, pelacakan cerita baru, dan obrolan Mera tetap tidak aktif sampai Anda memulai paket lagi.",
-    "lapseTitle": "Paket Anda telah berakhir",
-    "readOnlyBanner": "Semuanya di sini milik Anda untuk dibaca, dengan atau tanpa paket. Pengaturan ini hanya mengubah apa yang dilakukan Mera saat paket aktif.",
     "seePlans": "Lihat paket",
     "storiesNotice": "Cerita yang sudah Anda ikuti tetap menyimpan semua yang telah dikumpulkan. Mengikuti cerita baru memerlukan paket aktif.",
     "trackBody": "Cerita yang sudah Anda ikuti tetap menyimpan semua yang telah dikumpulkan. Mengikuti cerita baru memerlukan paket aktif.",
-    "trackDismiss": "Nanti saja",
-    "trackTitle": "Pelacakan cerita memerlukan paket",
-    "factsPausedHeader": "Dijeda",
-    "factsPausedSubtitle": "Ini tetap tersimpan. Paket mengaktifkan semuanya.",
-    "pausedBadge": "Dijeda",
-    "pausedRowHint": "Dijeda. Ketuk untuk tahu alasannya.",
-    "explainerTitle": "Dua minat pertama Anda",
-    "explainerBody": "Mera News Free mengikuti dua minat yang pertama Anda tambahkan. Selebihnya tetap tersimpan di perangkat ini, persis seperti yang Anda tinggalkan.",
-    "explainerBody2": "Paket mengaktifkan semuanya kembali.",
-    "explainerDismiss": "Nanti saja",
-    "chatIntro": {
-      "followStory": "Mengikuti cerita memerlukan paket. Mera akan memantau cerita ini dan memberi tahu Anda saat ada perkembangan.",
-      "articleFeedback": "Menyesuaikan feed Anda dari masukan memerlukan paket. Feed Anda tetap berjalan.",
-      "persona": "Berbicara dengan Mera memerlukan paket. Minat dan data Anda tetap di perangkat ini.",
-      "optimisationPlan": "Tinjauan harian memerlukan paket. Mera akan melihat feed Anda setiap hari dan menyarankan apa yang perlu diubah.",
-      "tutorialHelp": "Bertanya kepada Mera tentang aplikasi memerlukan paket. Panduan di Bantuan mencakup sebagian besar.",
-      "factCheck": "Pemeriksaan fakta memerlukan paket. Mera akan mencarinya dan menunjukkan siapa lagi yang memberitakannya.",
-      "default": "Obrolan memerlukan paket. Feed Anda tetap berjalan."
-    }
+    "trackTitle": "Pelacakan cerita memerlukan paket"
   },
   "factCheck": {
     "actionA11y": "Cari pemeriksaan fakta yang dipublikasikan pada cerita ini",
@@ -1534,8 +1395,6 @@
       "openA11y": "Buka artikel ini",
       "articleGone": "Artikel telah kadaluarsa, sehingga tidak dapat dibuka. Pemeriksaan fakta yang kami temukan disimpan di sini.",
       "couldNotCheck": "Kami tidak bisa memeriksa siapa yang sudah menerbitkan soal ini. Ketuk untuk melihat hasil pencariannya.",
-      "moreOrganisations_one": "+{{count}} lagi",
-      "moreOrganisations_other": "+{{count}} lagi",
       "noneFound": "Tidak ada pemeriksaan fakta yang dipublikasikan ditemukan",
       "factChecksFound_one": "{{count}} pemeriksaan fakta ditemukan. Ketuk untuk membaca",
       "factChecksFound_other": "{{count}} pemeriksaan fakta ditemukan. Ketuk untuk membaca"
@@ -1567,7 +1426,6 @@
     "quickRunning": "Mencari di web…",
     "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang, periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda.",
     "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri, sehingga tidak selalu sejalan satu sama lain.",
-    "ownReadingHeading": "Pembacaan Mera sendiri, bersifat sekunder terhadap putusan di atas",
     "collapseA11y": "Sembunyikan cek fakta ini",
     "expandA11y": "Tampilkan cek fakta ini",
     "checkedByRelatedNote": "Ini berasal dari pencarian kata kunci dan mungkin tentang cerita yang berbeda. Buka salah satu untuk memeriksa.",
@@ -1592,17 +1450,14 @@
     "privacyLink": "Kebijakan Privasi",
     "accept": "Setuju dan lanjutkan",
     "accepting": "Menyimpan…",
-    "errorTitle": "Tidak dapat menyimpan penerimaan Anda",
     "errorDescription": "Silakan periksa koneksi Anda dan coba lagi.",
     "retry": "Coba lagi",
-    "welcomeTitle": "Selamat datang di Mera",
     "welcomeBody": "Ketuk \"Setuju dan lanjutkan\" untuk menerima Ketentuan Layanan dan Kebijakan Privasi kami.",
     "deviceNotice": {
       "appAttest": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Apple memastikan ini aplikasi Mera asli di iPhone asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk selama Anda punya akun.",
       "playIntegrity": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Google memastikan ini aplikasi Mera asli di ponsel Android asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk, bukan ID ponsel Anda.",
       "generic": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Kami menyimpan catatan masuk untuk ponsel ini selama Anda punya akun."
-    },
-    "whatMeraKeeps": "Yang disimpan Mera"
+    }
   },
   "tutorials": {
     "entryRow": "Cara kerja Mera",
@@ -2285,11 +2140,6 @@
     "skipBody2": "Dukungan hanya dapat menemukan pembelian Anda dengan ID dukungan Anda. Salin dan simpan di tempat yang aman.",
     "skipConfirm": "Lanjutkan ke pembayaran"
   },
-  "welcomeBack": {
-    "title": "Selamat datang kembali di Mera",
-    "body": "Sepertinya Mera pernah ada di perangkat ini, jadi uji coba gratisnya sudah terpakai. Anda tetap bisa membaca dengan akun baru, atau memilih paket kapan saja untuk pengalaman lengkap.",
-    "continue": "Lanjutkan"
-  },
   "videoPlayer": {
     "closeA11y": "Tutup video",
     "openInBrowser": "Buka di browser",
@@ -2512,23 +2362,6 @@
     "answeredA11y": "sudah dijawab",
     "saveAll": "Simpan semua"
   },
-  "streamingWords": {
-    "w1": "Berpikir",
-    "w2": "Menganalisis",
-    "w3": "Merenung",
-    "w4": "Menimbang",
-    "w5": "Mengunyah ide",
-    "w6": "Mengutak-atik",
-    "w7": "Mendiamkan dulu",
-    "w8": "Menalar",
-    "w9": "Membobot",
-    "w10": "Menyaring",
-    "w11": "Menghubungkan",
-    "w12": "Menyusun",
-    "w13": "Menyetel",
-    "w14": "Memoles",
-    "w15": "Meramu"
-  },
   "chatPhases": {
     "preparing": [
       "Mengumpulkan apa yang sudah Mera ketahui tentang kamu.",
@@ -2617,11 +2450,6 @@
     "support": "Dukungan",
     "supportSub": "Laporkan bug, obrolan langsung, FAQ, tutorial",
     "tutorial": "Tutorial"
-  },
-  "related": {
-    "allCountries": "Semua negara",
-    "allLanguages": "Semua bahasa",
-    "noMatches": "Tidak ada artikel terkait yang cocok dengan filter ini."
   },
   "storyExport": {
     "shareA11y": "Ekspor cerita ini",
@@ -2833,7 +2661,6 @@
       "changes": "Perubahan pada profil Anda",
       "subtitle": "Apa yang Mera ketahui tentang Anda. Ini tetap di ponsel ini.",
       "tidyUp": "Rapikan profil Anda",
-      "title": "Profil Anda",
       "topicCount_one": "{{count}} topik",
       "topicCount_other": "{{count}} topik"
     },
@@ -2969,7 +2796,6 @@
     "opensByItself": "Terbuka sendiri saat Anda kembali online",
     "reauthBody": "Sesi masuk Anda sudah berakhir. Kami akan mengirim kode ke email di akun ini.",
     "reauthTitle": "Masuk untuk melanjutkan",
-    "sendNewCode": "Kirim kode baru",
     "unreachableBody": "Masalahnya ada di pihak kami, bukan ponsel Anda. Mera terus mencoba dan akan terbuka saat kembali normal.",
     "unreachableTitle": "Mera tidak dapat dihubungi",
     "mismatchTitle": "Email ini milik akun lain",

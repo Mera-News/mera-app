@@ -5,27 +5,19 @@
     "delete": "Xóa",
     "save": "Lưu",
     "back": "Quay lại",
-    "error": "Lỗi",
     "loading": "Đang tải...",
     "tryAgain": "Vui lòng thử lại",
     "next": "Tiếp theo",
     "done": "Xong",
     "retry": "Thử lại",
     "ok": "OK",
-    "checking": "Đang kiểm tra...",
-    "updating": "Đang cập nhật...",
     "goBack": "Quay lại",
     "articles": "Bài viết",
-    "loggingOut": "Đang đăng xuất...",
-    "never": "Chưa bao giờ",
-    "yes": "Có",
-    "no": "Không",
     "saving": "Đang lưu...",
     "offlineBannerOffline": "Bạn đang ngoại tuyến. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
     "offlineBannerInternetDown": "Không có kết nối Internet. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
     "offlineBannerServerDown": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
     "beta": "Beta",
-    "confirm": "Xác nhận",
     "copy": "Sao chép",
     "today": "Hôm nay",
     "yesterday": "Hôm qua",
@@ -34,20 +26,14 @@
   "auth": {
     "emailPlaceholder": "Nhập địa chỉ email của bạn",
     "otpPlaceholder": "Nhập mã 6 chữ số",
-    "invalidEmailTitle": "Email không hợp lệ",
     "invalidEmailDescription": "Vui lòng nhập địa chỉ email hợp lệ",
-    "failedToSendTitle": "Gửi mã thất bại",
     "networkError": "Lỗi mạng. Vui lòng thử lại.",
-    "privacyPolicy": "Chính sách bảo mật",
-    "termsOfService": "Điều khoản dịch vụ",
     "sentTo": "Chúng tôi đã gửi mã đến",
     "invalidOtp": "Vui lòng nhập mã OTP 6 chữ số hợp lệ",
     "invalidOtpServer": "Mã OTP không hợp lệ. Vui lòng thử lại.",
     "otpError": "Đã xảy ra lỗi trong quá trình xác minh. Vui lòng thử lại.",
     "resendCode": "Gửi lại mã",
     "resendIn": "Gửi lại sau {{seconds}}s",
-    "resendSuccess": "Một mã mới đã được gửi.",
-    "contentPolicy": "Chính sách nội dung",
     "faq": "Câu hỏi thường gặp",
     "identitySwitchFailedTitle": "Không thể hoàn tất việc chuyển tài khoản",
     "identitySwitchFailedBody": "Dữ liệu của một tài khoản khác vẫn còn trên thiết bị này. Mera phải xóa dữ liệu đó trước khi bạn tiếp tục, và lần này việc xóa không thành công.",
@@ -61,10 +47,8 @@
     "deviceSignInUnavailable": "Hiện không thể đăng nhập. Hãy thử lại sau vài phút hoặc đăng nhập bằng email.",
     "tryAgain": "Thử lại",
     "learnAboutMera": "Tìm hiểu về Mera",
-    "startReading": "Bắt đầu đọc",
     "alreadyHaveAccount": "Đăng nhập bằng email",
     "continue": "Tiếp tục",
-    "aboutLegal": "Về Mera và pháp lý",
     "sourceCode": "Mã nguồn",
     "failedToSendBody": "Gửi mã OTP thất bại",
     "signingYouIn": "Đang đăng nhập cho bạn…",
@@ -78,8 +62,7 @@
     },
     "deviceSignInCaption": {
       "uninstall": "Tài khoản của bạn gắn với điện thoại này. Nếu bạn xóa Mera hoặc mất điện thoại, bạn sẽ bắt đầu một tài khoản mới. Sao lưu và khôi phục trong Cài đặt có thể giữ dữ liệu của bạn.",
-      "reset": "Tài khoản của bạn gắn với điện thoại này. Nếu bạn đặt lại hoặc mất điện thoại, bạn sẽ bắt đầu một tài khoản mới. Sao lưu và khôi phục trong Cài đặt có thể giữ dữ liệu của bạn.",
-      "previousUser": "Mở tài khoản riêng của điện thoại này, tách biệt với {{email}}."
+      "reset": "Tài khoản của bạn gắn với điện thoại này. Nếu bạn đặt lại hoặc mất điện thoại, bạn sẽ bắt đầu một tài khoản mới. Sao lưu và khôi phục trong Cài đặt có thể giữ dữ liệu của bạn."
     },
     "track": {
       "beforeYouStart": "Trước khi bắt đầu",
@@ -108,22 +91,11 @@
     }
   },
   "account": {
-    "pendingTitle": "Tài khoản đang chờ phê duyệt",
-    "pendingDescription": "Chúng tôi rất vui vì bạn muốn dùng thử ứng dụng của chúng tôi. Khi tài khoản của bạn được phê duyệt, bạn sẽ nhận được email. Sau đó bạn có thể tiếp tục sử dụng ứng dụng.",
-    "enquiries": "Nếu có thắc mắc, bạn có thể gửi email đến",
-    "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Làm mới 🔄",
     "contactSupport": "Trò chuyện với bộ phận hỗ trợ"
   },
   "feed": {
-    "updatedAt": "Cập nhật lúc {{time}}",
     "allCaughtUp": "Bạn đã cập nhật hết những tin tức liên quan đến bạn.",
-    "preparingFeed": "Mera đang chuẩn bị bảng tin của bạn.",
     "pullDownToRetry": "Kéo xuống để thử lại",
-    "readArticleToast": "Bạn đã đọc bài viết này",
-    "stuckTitle": "Không thể tải bản tin",
-    "stuckDescription": "Đã xảy ra sự cố ở phía chúng tôi.",
-    "stuckHint": "Hãy mở lại ứng dụng sau vài phút.",
     "offlineCached": "Ngoại tuyến: đang hiển thị nội dung đã lưu",
     "newBadge": "MỚI",
     "newsCluster": "Cụm tin tức",
@@ -149,8 +121,6 @@
       "Điện thoại sẽ vẫn ở đây sau. Hãy sống trong hiện tại."
     ],
     "processing": {
-      "doneFlash": "Xong rồi, đây là tin tức của bạn",
-      "errorFlash": "Chúng tôi không thể tải nội dung mới nhất. Vui lòng thử lại.",
       "stages": {
         "fetching": {
           "headlines": [
@@ -233,8 +203,6 @@
       "freeBodyWithTime": "Bạn đã có mọi thứ Mera gửi hôm nay. Hãy xem những gì có trên thiết bị của bạn. Sẽ có thêm vào lúc {{time}}."
     },
     "analysingProgress": "Đang phân tích {{done}}/{{total}} bài viết",
-    "waitingForNextBatch_one": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
-    "waitingForNextBatch_other": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
     "statsPublishedPending_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
     "statsPublished_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
     "statsAnalysed_other": "phân tích {{formatted}} cho bạn,",
@@ -247,7 +215,6 @@
     "statsRelevant_one": "{{formatted}} có vẻ phù hợp,",
     "loadingA11y": "Đang tải bảng tin của bạn",
     "translatingCaption": "Đang dịch…",
-    "updatedJustNow": "Vừa cập nhật",
     "reasonWritingA11y": "đang viết ghi chú",
     "reasonNotYet": "Chưa có ghi chú cho bài viết này.",
     "findingStories": "Đang tìm câu chuyện cho bạn",
@@ -315,20 +282,11 @@
     "translateBlockedOn": "Một số trang chặn Google Dịch. Nếu trang không tải, hãy mở trên {{publication}}.",
     "youCameFromHere": "Bạn đến từ đây"
   },
-  "newsCluster": {
-    "failedToLoad": "Không thể tải thông tin cụm",
-    "clusterNotFound": "Không tìm thấy cụm",
-    "coverage": "Phạm vi đưa tin",
-    "noArticles": "Không có bài viết nào trong cụm này"
-  },
   "sources": {
-    "searchCountries": "Tìm kiếm quốc gia...",
     "publishers": "Nhà xuất bản",
     "noPublishers": "Không có nhà xuất bản nào cho quốc gia này",
     "noArticlesFound": "Không tìm thấy bài viết nào",
     "topHeadlines": "Tin nổi bật",
-    "addToLocations": "Thêm vào địa điểm của bạn",
-    "addedToLocations": "Đã thêm vào địa điểm của bạn",
     "badgeGovernment": "Nguồn chính phủ",
     "badgeRegulator": "Cơ quan chính thức"
   },
@@ -346,13 +304,8 @@
     "connectionDescription": "Chúng tôi gặp một số sự cố khi kết nối đến máy chủ. Bạn có thể đóng ứng dụng và thử lại sau. Nếu sự cố vẫn tiếp diễn, chúng tôi khuyên bạn nên đăng xuất và đăng nhập lại.",
     "logout": "Đăng xuất",
     "close": "Đóng",
-    "notificationLow": "Thấp",
-    "notificationMedium": "Trung bình",
-    "notificationHigh": "Cao",
     "logoutFailedTitle": "Đăng xuất thất bại",
     "logoutFailedDescription": "Đã xảy ra sự cố khi đăng xuất. Vui lòng thử lại.",
-    "loggingOut": "Đang đăng xuất...",
-    "chatIntro": "Kể cho mình nghe đôi chút về bạn: bạn sống ở đâu, làm nghề gì, theo dõi điều gì. Thông tin này chỉ nằm trên điện thoại này.",
     "composerPlaceholder": "Kể cho Mera về bạn",
     "continueAnyway": "Vẫn tiếp tục",
     "factsCount_one": "{{count}} dữ kiện về bạn",
@@ -644,8 +597,6 @@
     "loadingModel": "Đang tải AI Model...",
     "loadingModelProgress": "Đang tải AI Model... {{percent}}%",
     "reloadingModel": "Đang tải lại AI Model... {{percent}}%",
-    "waitingForResponse": "Đang chờ phản hồi...",
-    "typeMessage": "Nhập tin nhắn...",
     "inferenceError": "Chúng tôi đang gặp sự cố khi kết nối đến dịch vụ suy luận Mera. Vui lòng thử lại sau ít phút.",
     "send": "Gửi",
     "streamingLabels": {
@@ -682,12 +633,9 @@
     "title": "Mera",
     "aboutThisStory": "VỀ CÂU CHUYỆN NÀY",
     "earlierConversation": "Cuộc trò chuyện trước đó",
-    "loadingHistory": "Đang tải tin nhắn trước đó…",
     "factSavedTitle": "Đã lưu vào hồ sơ của bạn",
     "factDeletedTitle": "Đã xóa khỏi hồ sơ của bạn",
     "factUpdatedTitle": "Đã cập nhật tùy chọn",
-    "factCardUndo": "Hoàn tác",
-    "factCardDelete": "Xóa",
     "chipAddLocation": "Thêm nơi tôi sống",
     "chipAddLocationMessage": "Tôi muốn cho bạn biết tôi sống ở đâu",
     "chipShowFacts": "Hiển thị thông tin của tôi",
@@ -696,7 +644,6 @@
     "chipHelpSetupMessage": "Giúp tôi thiết lập hồ sơ của tôi",
     "chipDataHandlingMessage": "Mera xử lý dữ liệu của tôi như thế nào?",
     "chipDataHandling": "Dữ liệu của tôi được xử lý như thế nào?",
-    "thinking": "Đang suy nghĩ…",
     "newChat": "Trò chuyện mới",
     "inputPlaceholder": "Nhập tin nhắn...",
     "viewPreviousMessages": "Xem tin nhắn trước đó",
@@ -731,14 +678,10 @@
     "mayMistakes": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra các tin quan trọng tại nguồn gốc."
   },
   "articleFeedback": {
-    "thumbsUp": "Tôi thích",
-    "thumbsDown": "Không dành cho tôi",
     "thumbsUpMessage": "Tôi thích bài viết này: \"{{title}}\". Tôi muốn xem thêm gợi ý như thế này.",
     "thumbsDownMessage": "Tôi không muốn bài viết như thế này: \"{{title}}\". Hãy giúp tôi điều chỉnh gợi ý của mình.",
     "likeLabel": "Tôi thích",
-    "improveLabel": "Có thể tốt hơn",
     "dislikeLabel": "Không dành cho tôi",
-    "improveMessage": "Gợi ý này có thể tốt hơn: \"{{title}}\". Hãy giúp tôi điều chỉnh gợi ý của mình.",
     "intro": "Tôi có thể giúp gì cho bạn? Tôi có thể giải thích tại sao bạn nhận được gợi ý này, hoặc giúp bạn có được gợi ý tốt hơn.",
     "introArticle": "Tôi có thể giúp gì cho bạn? Tôi có thể giúp điều chỉnh gợi ý tin tức của bạn dựa trên bài viết này.",
     "introLikeTuning": "Bạn đã thích câu chuyện này: hãy nói thêm để mình tinh chỉnh bản tin của bạn.",
@@ -765,7 +708,6 @@
     "actionShowLessTopic": "Hiện ít hơn về một chủ đề",
     "actionShowMoreTopic": "Hiện nhiều hơn về một chủ đề",
     "actionDownRank": "Giảm ưu tiên một chủ đề",
-    "actionPublicationPref": "Điều chỉnh một ấn phẩm",
     "actionPublicationBoost": "Hiện thêm từ một ấn phẩm",
     "actionPublicationDeprioritize": "Hiện ít hơn từ một ấn phẩm",
     "actionPublicationMute": "Tắt tiếng ấn phẩm",
@@ -791,12 +733,9 @@
     "updateCta": "Cập nhật"
   },
   "feedback": {
-    "fabLabel": "Báo cáo lỗi",
     "formTitle": "Báo cáo lỗi",
     "submitButtonLabel": "Gửi",
     "cancelButtonLabel": "Hủy",
-    "nameLabel": "Tên",
-    "namePlaceholder": "Tên của bạn",
     "emailLabel": "Email",
     "emailPlaceholder": "your.email@example.org",
     "messageLabel": "Mô tả",
@@ -909,29 +848,21 @@
     "deck": "Bảng tin",
     "profile": "Hồ sơ",
     "settings": "Cài đặt",
-    "gotIt": "Đã hiểu",
     "world": "Thế giới",
     "library": "Thư viện",
     "you": "Bạn",
     "exploreTitle": "Khám phá"
   },
   "swipeFeed": {
-    "moreLikeThis": "Thêm như thế này",
-    "lessLikeThis": "Bớt như thế này",
     "askMera": "Hỏi Mera",
-    "closeTree": "Đóng",
-    "treeThanks": "Cảm ơn, đã ghi nhận.",
     "feedbackCaption": "Một mình cái thumbs không cho Mera đủ thông tin — nên nó bị bỏ đi để bảo vệ bản tin của bạn. Chọn một lý do và bản tin của bạn thay đổi ngay lập tức.",
-    "tapAgainToConfirm": "Chạm lại để xác nhận",
     "chatHandoffLike": "Tôi thích câu chuyện này, thêm nội dung như: {{path}}.",
     "chatHandoffLikeNoPath": "Tôi thích câu chuyện này, tôi muốn xem thêm nội dung như thế này.",
     "chatHandoffDislike": "Tôi không thích câu chuyện này, {{path}}.",
     "chatHandoffDislikeNoPath": "Tôi không thích câu chuyện này. Hãy giúp tôi giảm bớt nội dung như thế này."
   },
   "explore": {
-    "addPlaces": "Thêm địa điểm",
     "serverUnavailable": "Mera không thể kết nối được ngay bây giờ: hãy thử lại trong chốc lát.",
-    "clearSearch": "Xóa tìm kiếm",
     "searchNotSubscribed": "Tìm kiếm cần có gói hoạt động",
     "window": {
       "label24": "24 giờ",
@@ -945,26 +876,15 @@
     }
   },
   "forYou": {
-    "breaking": "Nóng",
-    "showMore": "Hiện thêm {{count}}",
     "headlineSectionGlobal": "Tin tức từ khắp thế giới",
     "headlineSectionCountry": "Tin tức từ {{country}}",
-    "nextFactPrefix": "Tiếp theo",
-    "subTabAnalytics": "Phân tích",
-    "emptySection": {
-      "awaiting": "Đang tìm tin về chủ đề này. Tin sẽ xuất hiện sau lần làm mới tiếp theo.",
-      "none": "Chưa có tin nào đủ khớp với chủ đề này để hiển thị."
-    },
-    "newInterest": "Mối quan tâm mới",
     "sectionStories_one": "{{count}} câu chuyện",
     "sectionStories_other": "{{count}} câu chuyện"
   },
   "feedStatus": {
-    "title": "Trạng thái bản tin",
     "idle": "Đã cập nhật",
     "stage": "Giai đoạn",
     "cloudProgress": "Chấm điểm trên đám mây",
-    "close": "Đóng",
     "expandA11y": "Hiển thị chi tiết trạng thái bản tin",
     "modeProcessing": "Đang cập nhật bảng tin của bạn",
     "modeError": "Sự cố bảng tin",
@@ -984,7 +904,6 @@
     "title": "Câu chuyện đang theo dõi",
     "trackAction": "Theo dõi câu chuyện",
     "untrackAction": "Bỏ theo dõi câu chuyện",
-    "trackedToast": "Đã bắt đầu theo dõi câu chuyện này",
     "updatesBadge": "{{count}} mới",
     "endedLabel": "Đã kết thúc",
     "emptyCta": "Đi tới Bảng tin",
@@ -1013,16 +932,7 @@
     "articlesCount_other": "{{count}} bài viết"
   },
   "whatsNew": {
-    "title": "Có gì mới",
     "gotIt": "Đã hiểu",
-    "sectionsTitle": "Bản tin được tổ chức xoay quanh bạn",
-    "sectionsBody": "Dành cho bạn giờ đây nhóm các tin tức thành các mục được xây dựng từ những gì quan trọng với bạn.",
-    "storiesTitle": "Các câu chuyện được gộp lại với nhau",
-    "storiesBody": "Cùng một câu chuyện từ nhiều nguồn được gộp vào một thẻ duy nhất, ngay cả khi nó tiếp tục phát triển.",
-    "tabsTitle": "Các tab Hồ sơ & Cài đặt",
-    "tabsBody": "Hồ sơ và cài đặt của bạn giờ đây nằm trong các tab riêng ở phía dưới.",
-    "resyncTitle": "Bản tin của bạn đang đồng bộ lại",
-    "resyncBody": "Chúng tôi đang xây dựng lại bản tin của bạn với công cụ mới: nó sẽ sớm được lấp đầy.",
     "starterTitle": "Starter do chúng tôi mời",
     "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
     "starterArticlesTitle": "250 bài mỗi ngày",
@@ -1115,7 +1025,6 @@
     "moreAboutTopicNamed": "Thêm về: {{topic}}",
     "moreAboutTopicNamedWithCount": "Thêm về: {{topic}} và {{extra}} chủ đề khác",
     "title": "Cho chúng tôi biết thêm",
-    "contextFor": "Về: {{title}}",
     "back": "Quay lại",
     "dismiss": "Bỏ qua",
     "empty": "Không có tùy chọn nào ở đây",
@@ -1308,28 +1217,6 @@
     "saveFailedBody": "Thay đổi của bạn chưa được lưu. Thử lại."
   },
   "profile": {
-    "talkToMera": "Trò chuyện với Mera",
-    "talkToMeraSubtitle": "Đây là cách tôi nhìn nhận về bạn. Chạm để tiếp tục cuộc trò chuyện.",
-    "continueTalking": "Tiếp tục",
-    "emptyTitle": "Tôi chưa biết gì về bạn",
-    "emptyBody": "Hãy kể cho tôi nghe về bạn để tôi có thể tìm tin tức phù hợp với bạn.",
-    "startTalking": "Bắt đầu trò chuyện",
-    "gettingToKnowYou": "Tôi vẫn đang tìm hiểu về bạn, hãy quay lại sau một chút.",
-    "updating": "Đang cập nhật…",
-    "advanced": "Nâng cao",
-    "advancedSubtitle": "Thông tin, nguồn, đã lưu, hoạt động và hơn thế nữa",
-    "sheet": {
-      "importance": "Mức độ quan trọng",
-      "moreImportant": "Quan trọng hơn",
-      "lessImportant": "Ít quan trọng hơn",
-      "refine": "Tinh chỉnh cùng Mera",
-      "refineSeed": "Hãy nói về điều này: \"{{text}}\"",
-      "remove": "Xóa mục này",
-      "removeConfirm": "Chạm lại để xóa",
-      "limitReached": "Đã đạt giới hạn điều chỉnh hàng ngày, các thay đổi sẽ tiếp tục vào ngày mai."
-    },
-    "editFacts": "Sửa",
-    "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay",
     "updatingAllFacts": "Đang cập nhật tất cả thông tin",
     "pleaseWait": "Vui lòng đợi"
   },
@@ -1452,36 +1339,10 @@
     "meraButtonHint": "Chọn màu cho nút Mera nổi. Nút giữ nguyên màu ở chế độ sáng và chế độ tối."
   },
   "freeTier": {
-    "cardBody": "Phần AI của Mera đã bị tắt tạm thời. Mọi thứ bạn đã lưu, theo dõi hoặc đọc vẫn ở trên thiết bị này, và Khám phá vẫn có tin tức hôm nay. Nếu không có gói, Mera sẽ không tạo bảng tin, trả lời câu hỏi hoặc theo dõi câu chuyện mới. Hãy bắt đầu một gói và mọi thứ sẽ quay trở lại.",
-    "cardTitle": "Bạn đang dùng Mera News Free",
-    "chatBubble": "Mọi điều tôi biết về bạn đều nằm trên thiết bị này. Ở gói miễn phí, tôi vẫn xây dựng bảng tin của bạn từ hai mối quan tâm của bạn. Trò chuyện, kiểm chứng thông tin và câu chuyện đang theo dõi cần có gói dịch vụ.",
-    "chatNotice": "Trò chuyện Mera đi kèm với một gói. Hồ sơ và dữ kiện của bạn vẫn ở trên thiết bị này dù có gói hay không.",
-    "continueWithoutPlan": "Tiếp tục mà không cần gói",
-    "lapseBody": "Không có gì bị lấy đi. Mọi thứ bạn đã lưu, theo dõi hoặc đọc là của bạn, trên thiết bị này, luôn luôn. Từ đây bạn đang dùng Mera News Free. Điều bị dừng lại là lớp AI, vì vậy bảng tin cá nhân, bảng điều khiển, theo dõi câu chuyện mới và trò chuyện Mera vẫn tắt cho đến khi bạn bắt đầu một gói lần nữa.",
-    "lapseTitle": "Gói Mera của bạn đã hết hạn",
-    "readOnlyBanner": "Mọi thứ ở đây là của bạn để đọc, có gói hay không. Các cài đặt này chỉ thay đổi những gì Mera làm khi có gói hoạt động.",
     "seePlans": "Xem gói",
     "storiesNotice": "Những câu chuyện bạn đã theo dõi sẽ giữ mọi thứ chúng đã thu thập. Để bắt đầu một câu chuyện mới, bạn cần có một gói hoạt động.",
     "trackBody": "Những câu chuyện bạn đã theo dõi sẽ giữ mọi thứ chúng đã thu thập. Để bắt đầu một câu chuyện mới, bạn cần có một gói hoạt động.",
-    "trackDismiss": "Để sau",
-    "trackTitle": "Theo dõi câu chuyện đi kèm với một gói",
-    "factsPausedHeader": "Đã tạm dừng",
-    "factsPausedSubtitle": "Chúng vẫn được lưu. Một gói sẽ bật tất cả.",
-    "pausedBadge": "Đã tạm dừng",
-    "pausedRowHint": "Đã tạm dừng. Chạm để xem lý do.",
-    "explainerTitle": "Hai mối quan tâm đầu tiên của bạn",
-    "explainerBody": "Mera News Free theo dõi hai mối quan tâm bạn đã thêm đầu tiên. Mọi thứ khác vẫn được lưu trên thiết bị này, đúng như bạn đã để lại.",
-    "explainerBody2": "Một gói sẽ bật lại tất cả.",
-    "explainerDismiss": "Để sau",
-    "chatIntro": {
-      "followStory": "Theo dõi câu chuyện cần có gói dịch vụ. Mera sẽ theo dõi câu chuyện này và báo cho bạn khi có diễn biến mới.",
-      "articleFeedback": "Điều chỉnh bảng tin từ phản hồi của bạn cần có gói dịch vụ. Bảng tin của bạn vẫn hoạt động bình thường.",
-      "persona": "Trò chuyện với Mera cần có gói dịch vụ. Sở thích và thông tin của bạn vẫn nằm trên thiết bị này.",
-      "optimisationPlan": "Bản đánh giá hằng ngày cần có gói dịch vụ. Mera sẽ xem bảng tin của bạn mỗi ngày và đề xuất điều cần thay đổi.",
-      "tutorialHelp": "Hỏi Mera về ứng dụng cần có gói dịch vụ. Các hướng dẫn trong phần Trợ giúp bao quát hầu hết.",
-      "factCheck": "Kiểm chứng thông tin cần có gói dịch vụ. Mera sẽ tra cứu và cho bạn biết những ai khác đã đưa tin.",
-      "default": "Trò chuyện cần có gói dịch vụ. Bảng tin của bạn vẫn hoạt động."
-    }
+    "trackTitle": "Theo dõi câu chuyện đi kèm với một gói"
   },
   "factCheck": {
     "actionA11y": "Tìm kiếm các kiểm chứng sự kiện được công bố về câu chuyện này",
@@ -1535,8 +1396,6 @@
       "openA11y": "Mở bài viết này",
       "articleGone": "Bài viết đã hết hạn, nên không thể mở được. Kiểm tra sự thật mà chúng tôi tìm thấy được giữ lại ở đây.",
       "couldNotCheck": "Chúng tôi không kiểm tra được ai đã đăng về việc này. Chạm để xem kết quả tìm kiếm.",
-      "moreOrganisations_one": "+{{count}} nữa",
-      "moreOrganisations_other": "+{{count}} nữa",
       "noneFound": "Không tìm thấy kiểm chứng được công bố",
       "factChecksFound_one": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc",
       "factChecksFound_other": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc"
@@ -1568,7 +1427,6 @@
     "quickRunning": "Đang tìm kiếm web…",
     "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra, quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
     "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó, chúng không phải lúc nào cũng thống nhất với nhau.",
-    "ownReadingHeading": "Nhận định riêng của Mera, thứ yếu so với kết luận ở trên",
     "collapseA11y": "Ẩn phần kiểm chứng này",
     "expandA11y": "Hiện phần kiểm chứng này",
     "checkedByRelatedNote": "Những điều này xuất phát từ tìm kiếm từ khóa và có thể về một câu chuyện khác. Mở một trong những điều đó để kiểm tra.",
@@ -1593,17 +1451,14 @@
     "privacyLink": "Chính sách bảo mật",
     "accept": "Đồng ý và tiếp tục",
     "accepting": "Đang lưu...",
-    "errorTitle": "Không thể lưu chấp nhận của bạn",
     "errorDescription": "Vui lòng kiểm tra kết nối của bạn và thử lại.",
     "retry": "Thử lại",
-    "welcomeTitle": "Chào mừng bạn đến với Mera",
     "welcomeBody": "Nhấn \"Đồng ý và tiếp tục\" để chấp nhận Điều khoản dịch vụ và Chính sách quyền riêng tư của chúng tôi.",
     "deviceNotice": {
       "appAttest": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Apple xác nhận đây là ứng dụng Mera thật trên iPhone thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập khi bạn còn tài khoản.",
       "playIntegrity": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Google xác nhận đây là ứng dụng Mera thật trên điện thoại Android thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập, không phải ID điện thoại của bạn.",
       "generic": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Chúng tôi giữ một bản ghi đăng nhập cho điện thoại này khi bạn còn tài khoản."
-    },
-    "whatMeraKeeps": "Mera giữ những gì"
+    }
   },
   "tutorials": {
     "entryRow": "Cách Mera hoạt động",
@@ -2286,11 +2141,6 @@
     "skipBody2": "Bộ phận hỗ trợ chỉ có thể tìm thấy giao dịch mua của bạn bằng Support ID. Hãy sao chép và lưu ở nơi an toàn.",
     "skipConfirm": "Tiếp tục thanh toán"
   },
-  "welcomeBack": {
-    "title": "Chào mừng bạn quay lại Mera",
-    "body": "Có vẻ Mera đã từng được cài trên thiết bị này, nên bản dùng thử miễn phí đã được sử dụng. Bạn vẫn có thể tiếp tục đọc với tài khoản mới, hoặc chọn một gói bất cứ lúc nào để có trải nghiệm đầy đủ.",
-    "continue": "Tiếp tục"
-  },
   "videoPlayer": {
     "closeA11y": "Đóng video",
     "openInBrowser": "Mở trong trình duyệt",
@@ -2513,23 +2363,6 @@
     "answeredA11y": "đã trả lời",
     "saveAll": "Lưu tất cả"
   },
-  "streamingWords": {
-    "w1": "Đang nghĩ",
-    "w2": "Đang phân tích",
-    "w3": "Đang ngẫm",
-    "w4": "Đang suy xét",
-    "w5": "Đang cân nhắc",
-    "w6": "Đang mày mò",
-    "w7": "Đang ủ ý",
-    "w8": "Đang lập luận",
-    "w9": "Đang đong đếm",
-    "w10": "Đang sàng lọc",
-    "w11": "Đang kết nối",
-    "w12": "Đang soạn",
-    "w13": "Đang chỉnh",
-    "w14": "Đang gọt giũa",
-    "w15": "Đang pha trộn"
-  },
   "chatPhases": {
     "preparing": [
       "Đang tập hợp những gì Mera đã biết về bạn.",
@@ -2618,11 +2451,6 @@
     "support": "Hỗ trợ",
     "supportSub": "Báo lỗi, trò chuyện trực tiếp, câu hỏi thường gặp, hướng dẫn",
     "tutorial": "Hướng dẫn"
-  },
-  "related": {
-    "allCountries": "Tất cả quốc gia",
-    "allLanguages": "Tất cả ngôn ngữ",
-    "noMatches": "Không có bài liên quan nào khớp với bộ lọc này."
   },
   "storyExport": {
     "shareA11y": "Xuất câu chuyện này",
@@ -2834,7 +2662,6 @@
       "changes": "Thay đổi đối với hồ sơ của bạn",
       "subtitle": "Những gì Mera biết về bạn. Thông tin này được lưu trên điện thoại này.",
       "tidyUp": "Dọn dẹp hồ sơ của bạn",
-      "title": "Hồ sơ của bạn",
       "topicCount_one": "{{count}} chủ đề",
       "topicCount_other": "{{count}} chủ đề"
     },
@@ -2970,7 +2797,6 @@
     "opensByItself": "Sẽ tự mở khi bạn trực tuyến trở lại",
     "reauthBody": "Phiên đăng nhập của bạn đã hết hạn. Chúng tôi sẽ gửi mã đến email trên tài khoản này.",
     "reauthTitle": "Đăng nhập để tiếp tục",
-    "sendNewCode": "Gửi mã mới",
     "unreachableBody": "Sự cố nằm ở phía chúng tôi, không phải điện thoại của bạn. Mera vẫn tiếp tục thử và sẽ mở khi hệ thống hoạt động trở lại.",
     "unreachableTitle": "Không thể kết nối đến Mera",
     "mismatchTitle": "Email này thuộc về một tài khoản khác",

@@ -6,9 +6,7 @@
 //
 // A plural form is checked against the union of its English family (every
 // form gets the same variables from the call site), which also covers forms en
-// has no key for (Arabic's `_few`, `_many`, ...). Pending `_*-fragments.json` blocks are laid over each
-// dictionary first, exactly as the splice applies them, so a fix waiting in a
-// fragment counts and a regression introduced by one is caught.
+// has no key for (Arabic's `_few`, `_many`, ...).
 import fs from 'fs';
 import path from 'path';
 
@@ -28,22 +26,14 @@ const varsOf = (s: string) => new Set([...s.matchAll(VAR)].map((m) => m[1]));
 const read = (f: string) => JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8'));
 
 const dictionaries = fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
-const fragments = fs.readdirSync(DIR).filter((f) => f.startsWith('_') && f.endsWith('-fragments.json')).sort();
-const withFragments = (lang: string): Record<string, string> => {
-    const merged = flat(read(`${lang}.json`));
-    for (const f of fragments) {
-        const block = read(f)[lang];
-        if (block && typeof block === 'object') Object.assign(merged, flat(block));
-    }
-    return merged;
-};
+const dictionary = (lang: string): Record<string, string> => flat(read(`${lang}.json`));
 
-const en = withFragments('en');
+const en = dictionary('en');
 const PLURAL = /_(zero|one|two|few|many|other)$/;
 
 describe.each(dictionaries.filter((f) => f !== 'en.json').map((f) => f.replace('.json', '')))('%s placeholders', (lang) => {
     it('never uses a placeholder English does not have for the same key', () => {
-        const loc = withFragments(lang);
+        const loc = dictionary(lang);
         const bad: string[] = [];
         for (const [key, text] of Object.entries(loc)) {
             const lv = varsOf(text);

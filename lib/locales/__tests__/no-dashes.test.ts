@@ -2,9 +2,8 @@
 // AI-written punctuation).
 //
 // English is held to zero. Other locales are a RATCHET, not a sweep: each one's
-// count may only go down, and every value a `_ux1-*-fragments.json` file writes
-// must be dash-free. ja, zh-CN, zh-TW, ru and uk are exempt because a dash is
-// ordinary punctuation there (owner decision, ux1 Q10).
+// count may only go down. ja, zh-CN, zh-TW, ru and uk are exempt because a dash
+// is ordinary punctuation there (owner decision, ux1 Q10).
 //
 // Lower a baseline when a locale improves; never raise one.
 import fs from 'node:fs';
@@ -34,14 +33,6 @@ const BASELINE: Record<string, number> = {
  * list must only shrink.
  */
 const EN_PENDING = new Set<string>([]);
-
-/**
- * Fragment keys still carrying the OLD dashed translations in non-exempt
- * locales, waiting for their owner's corrected fragment. Keyed by fragment
- * file. Same contract as EN_PENDING: it may only shrink, and an entry whose
- * dashes are gone fails the next test until it is deleted here.
- */
-const FRAGMENT_PENDING: Record<string, Set<string>> = {};
 
 function leaves(obj: unknown, prefix = '', out: [string, string][] = []): [string, string][] {
   if (typeof obj === 'string') {
@@ -112,40 +103,5 @@ describe('locale dash rule', () => {
   it('every non-exempt locale has a baseline', () => {
     const missing = dictionaries.filter((l) => l !== 'en' && !EXEMPT.has(l) && !(l in BASELINE));
     expect(missing).toEqual([]);
-  });
-
-  it('ux1 fragments write no dashes outside exempt locales', () => {
-    const fragments = fs.readdirSync(LOCALES_DIR).filter((f) => /^_ux1-.*-fragments\.json$/.test(f));
-    const offenders: string[] = [];
-    for (const file of fragments) {
-      const frag = read(file) as Record<string, unknown>;
-      const pending = FRAGMENT_PENDING[file] ?? new Set<string>();
-      for (const [locale, body] of Object.entries(frag)) {
-        if (locale === '_comment' || EXEMPT.has(locale)) continue;
-        for (const [k, v] of leaves(body)) {
-          if (HAS_DASH.test(v) && !pending.has(k)) offenders.push(`${file} ${locale} ${k}`);
-        }
-      }
-    }
-    expect(offenders).toEqual([]);
-  });
-
-  it('every pending fragment key still needs its rewrite', () => {
-    const stale: string[] = [];
-    for (const [file, keys] of Object.entries(FRAGMENT_PENDING)) {
-      if (!fs.existsSync(path.join(LOCALES_DIR, file))) {
-        stale.push(`${file} (file gone)`);
-        continue;
-      }
-      const frag = read(file) as Record<string, unknown>;
-      const dashed = new Set<string>();
-      for (const [locale, body] of Object.entries(frag)) {
-        if (locale === '_comment' || EXEMPT.has(locale)) continue;
-        for (const [k, v] of leaves(body)) if (HAS_DASH.test(v)) dashed.add(k);
-      }
-      for (const k of keys) if (!dashed.has(k)) stale.push(`${file} ${k}`);
-    }
-    // A key listed here that no longer carries a dash must be removed.
-    expect(stale).toEqual([]);
   });
 });

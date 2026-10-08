@@ -5,27 +5,19 @@
     "delete": "Usuń",
     "save": "Zapisz",
     "back": "Wstecz",
-    "error": "Błąd",
     "loading": "Ładowanie...",
     "tryAgain": "Spróbuj ponownie",
     "next": "Dalej",
     "done": "Gotowe",
     "retry": "Ponów",
     "ok": "OK",
-    "checking": "Sprawdzanie...",
-    "updating": "Aktualizowanie...",
     "goBack": "Wróć",
     "articles": "Artykuły",
-    "loggingOut": "Wylogowywanie...",
-    "never": "Nigdy",
-    "yes": "Tak",
-    "no": "Nie",
     "saving": "Zapisywanie...",
     "offlineBannerOffline": "Jesteś offline. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
     "offlineBannerInternetDown": "Brak dostępu do internetu. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
     "offlineBannerServerDown": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
     "beta": "Beta",
-    "confirm": "Potwierdź",
     "copy": "Kopiuj",
     "today": "Dzisiaj",
     "yesterday": "Wczoraj",
@@ -34,20 +26,14 @@
   "auth": {
     "emailPlaceholder": "Wpisz swój adres e-mail",
     "otpPlaceholder": "Wpisz 6-cyfrowy kod",
-    "invalidEmailTitle": "Nieprawidłowy adres e-mail",
     "invalidEmailDescription": "Proszę podać prawidłowy adres e-mail",
-    "failedToSendTitle": "Nie udało się wysłać kodu",
     "networkError": "Błąd sieci. Spróbuj ponownie.",
-    "privacyPolicy": "Polityka prywatności",
-    "termsOfService": "Warunki korzystania z usługi",
     "sentTo": "Wysłaliśmy kod na adres",
     "invalidOtp": "Proszę wpisać prawidłowy 6-cyfrowy kod OTP",
     "invalidOtpServer": "Nieprawidłowy kod OTP. Spróbuj ponownie.",
     "otpError": "Podczas weryfikacji wystąpił błąd. Spróbuj ponownie.",
     "resendCode": "Wyślij kod ponownie",
     "resendIn": "Wyślij ponownie za {{seconds}}s",
-    "resendSuccess": "Nowy kod został wysłany.",
-    "contentPolicy": "Zasady dotyczące treści",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Nie udało się dokończyć przełączania kont",
     "identitySwitchFailedBody": "Na tym urządzeniu wciąż są dane innego konta. Mera musi je usunąć, zanim przejdziesz dalej, a tym razem usuwanie się nie powiodło.",
@@ -61,10 +47,8 @@
     "deviceSignInUnavailable": "Logowanie jest teraz niedostępne. Spróbuj ponownie za kilka minut lub zaloguj się e-mailem.",
     "tryAgain": "Spróbuj ponownie",
     "learnAboutMera": "Poznaj aplikację Mera",
-    "startReading": "Zacznij czytać",
     "alreadyHaveAccount": "Zaloguj się e-mailem",
     "continue": "Kontynuuj",
-    "aboutLegal": "O Mera i informacje prawne",
     "sourceCode": "Kod źródłowy",
     "failedToSendBody": "Nie udało się wysłać kodu OTP",
     "signingYouIn": "Logujemy Cię…",
@@ -78,8 +62,7 @@
     },
     "deviceSignInCaption": {
       "uninstall": "Twoje konto jest powiązane z tym telefonem. Jeśli usuniesz Mera lub zgubisz telefon, zaczniesz od nowego konta. Kopia zapasowa i przywracanie w Ustawieniach może zachować Twoje dane.",
-      "reset": "Twoje konto jest powiązane z tym telefonem. Jeśli zresetujesz lub zgubisz telefon, zaczniesz od nowego konta. Kopia zapasowa i przywracanie w Ustawieniach może zachować Twoje dane.",
-      "previousUser": "Otwiera własne konto tego telefonu, oddzielne od {{email}}."
+      "reset": "Twoje konto jest powiązane z tym telefonem. Jeśli zresetujesz lub zgubisz telefon, zaczniesz od nowego konta. Kopia zapasowa i przywracanie w Ustawieniach może zachować Twoje dane."
     },
     "track": {
       "beforeYouStart": "Zanim zaczniesz",
@@ -108,22 +91,11 @@
     }
   },
   "account": {
-    "pendingTitle": "Konto oczekuje na zatwierdzenie",
-    "pendingDescription": "Cieszymy się, że chcesz wypróbować naszą aplikację. Po zatwierdzeniu konta otrzymasz e-mail. Następnie możesz kontynuować korzystanie z aplikacji.",
-    "enquiries": "W przypadku pytań możesz napisać na adres",
-    "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Odśwież 🔄",
     "contactSupport": "Porozmawiaj z pomocą"
   },
   "feed": {
-    "updatedAt": "Zaktualizowano {{time}}",
     "allCaughtUp": "Jesteś na bieżąco z tym, co Cię dotyczy.",
-    "preparingFeed": "Mera przygotowuje Twój kanał.",
     "pullDownToRetry": "Pociągnij w dół, aby ponowić",
-    "readArticleToast": "Przeczytałeś ten artykuł",
-    "stuckTitle": "Nie udało się załadować kanału",
-    "stuckDescription": "Coś poszło nie tak po naszej stronie.",
-    "stuckHint": "Otwórz ponownie aplikację za kilka minut.",
     "offlineCached": "Tryb offline: wyświetlanie zapisanych treści",
     "newBadge": "NOWE",
     "newsCluster": "Klaster wiadomości",
@@ -149,8 +121,6 @@
       "Twój telefon tu będzie. Bądź teraz obecny."
     ],
     "processing": {
-      "doneFlash": "Gotowe: oto Twoje wiadomości",
-      "errorFlash": "Nie udało się załadować najnowszych treści. Spróbuj ponownie.",
       "stages": {
         "fetching": {
           "headlines": [
@@ -233,10 +203,6 @@
       "freeBodyWithTime": "Masz wszystko, co Mera wysłała dzisiaj. Przejrzyj to, co jest na urządzeniu. Więcej pojawi się o {{time}}."
     },
     "analysingProgress": "Analizowanie {{done}} z {{total}} artykułów",
-    "waitingForNextBatch_one": "{{count}} nowy artykuł czeka na kolejną turę analizy",
-    "waitingForNextBatch_few": "{{count}} nowe artykuły czekają na kolejną turę analizy",
-    "waitingForNextBatch_many": "{{count}} nowych artykułów czeka na kolejną turę analizy",
-    "waitingForNextBatch_other": "{{count}} nowe artykuły czekają na kolejną turę analizy",
     "statsPublishedPending_one": "{{formatted}} artykuł został opublikowany w ciągu ostatnich 24 godzin.",
     "statsPublishedPending_few": "{{formatted}} artykuły zostały opublikowane w ciągu ostatnich 24 godzin.",
     "statsPublishedPending_many": "{{formatted}} artykułów zostało opublikowanych w ciągu ostatnich 24 godzin.",
@@ -259,7 +225,6 @@
     "statsRead_other": "i przeczytałeś {{formatted}}.",
     "loadingA11y": "Wczytywanie Twojego kanału",
     "translatingCaption": "Tłumaczenie…",
-    "updatedJustNow": "Zaktualizowano przed chwilą",
     "reasonWritingA11y": "notatka jest pisana",
     "reasonNotYet": "Do tego artykułu nie ma jeszcze notatki.",
     "findingStories": "Szukamy Twoich historii",
@@ -333,20 +298,11 @@
     "translateBlockedOn": "Niektóre strony blokują Google Translate. Jeśli strona się nie wczytuje, otwórz ją w {{publication}}.",
     "youCameFromHere": "Przyszedłeś stąd"
   },
-  "newsCluster": {
-    "failedToLoad": "Nie udało się załadować szczegółów klastra",
-    "clusterNotFound": "Nie znaleziono klastra",
-    "coverage": "Pokrycie",
-    "noArticles": "Brak artykułów w tym klastrze"
-  },
   "sources": {
-    "searchCountries": "Szukaj krajów...",
     "publishers": "Wydawcy",
     "noPublishers": "Brak wydawców dla tego kraju",
     "noArticlesFound": "Nie znaleziono artykułów",
     "topHeadlines": "Najważniejsze nagłówki",
-    "addToLocations": "Dodaj do swoich miejsc",
-    "addedToLocations": "Dodano do Twoich miejsc",
     "badgeGovernment": "Źródło rządowe",
     "badgeRegulator": "Agencja oficjalna"
   },
@@ -364,13 +320,8 @@
     "connectionDescription": "Mamy problemy z połączeniem z serwerem. Możesz zamknąć aplikację i spróbować ponownie później. Jeśli problem będzie się powtarzał, zalecamy wylogowanie i ponowne logowanie.",
     "logout": "Wyloguj",
     "close": "Zamknij",
-    "notificationLow": "Niskie",
-    "notificationMedium": "Średnie",
-    "notificationHigh": "Wysokie",
     "logoutFailedTitle": "Wylogowanie nieudane",
     "logoutFailedDescription": "Wystąpił problem podczas wylogowywania. Spróbuj ponownie.",
-    "loggingOut": "Wylogowywanie...",
-    "chatIntro": "Opowiedz mi trochę o sobie: gdzie mieszkasz, czym się zajmujesz, co śledzisz. Zostaje na tym telefonie.",
     "composerPlaceholder": "Opowiedz Mera o sobie",
     "continueAnyway": "Kontynuuj mimo to",
     "factsCount_one": "{{count}} fakt o Tobie",
@@ -664,8 +615,6 @@
     "loadingModel": "Ładowanie modelu AI...",
     "loadingModelProgress": "Ładowanie modelu AI... {{percent}}%",
     "reloadingModel": "Ponowne ładowanie modelu AI... {{percent}}%",
-    "waitingForResponse": "Oczekiwanie na odpowiedź...",
-    "typeMessage": "Wpisz wiadomość...",
     "inferenceError": "Mamy teraz problemy z dotarciem do usługi wnioskowania Mera. Spróbuj ponownie za chwilę.",
     "send": "Wyślij",
     "streamingLabels": {
@@ -702,12 +651,9 @@
     "title": "Mera",
     "aboutThisStory": "O TEJ HISTORII",
     "earlierConversation": "Wcześniejsza rozmowa",
-    "loadingHistory": "Ładowanie wcześniejszych wiadomości…",
     "factSavedTitle": "Zapisano w Twoim profilu",
     "factDeletedTitle": "Usunięto z Twojego profilu",
     "factUpdatedTitle": "Zaktualizowano preferencje",
-    "factCardUndo": "Cofnij",
-    "factCardDelete": "Usuń",
     "chipAddLocation": "Dodaj, gdzie mieszkam",
     "chipAddLocationMessage": "Chcę Ci powiedzieć, gdzie mieszkam",
     "chipShowFacts": "Pokaż moje informacje",
@@ -716,7 +662,6 @@
     "chipHelpSetupMessage": "Pomóż mi skonfigurować mój profil",
     "chipDataHandlingMessage": "Jak Mera obsługuje moje dane?",
     "chipDataHandling": "Jak są obsługiwane moje dane?",
-    "thinking": "Myślę…",
     "newChat": "Nowy czat",
     "inputPlaceholder": "Wpisz wiadomość...",
     "viewPreviousMessages": "Zobacz poprzednie wiadomości",
@@ -751,14 +696,10 @@
     "mayMistakes": "Mera może popełniać błędy, dlatego sprawdzaj ważne wiadomości u źródła."
   },
   "articleFeedback": {
-    "thumbsUp": "Podoba mi się",
-    "thumbsDown": "To nie dla mnie",
     "thumbsUpMessage": "Podobał mi się ten artykuł: \"{{title}}\". Chciałbym widzieć więcej takich sugestii.",
     "thumbsDownMessage": "Nie chcę artykułów takich jak ten: \"{{title}}\". Pomóż mi dostosować moje sugestie.",
     "likeLabel": "Podoba mi się",
-    "improveLabel": "Mogłoby być lepsze",
     "dislikeLabel": "To nie dla mnie",
-    "improveMessage": "Ta sugestia mogłaby być lepsza: \"{{title}}\". Pomóż mi dostosować moje sugestie.",
     "intro": "Co mogę dla ciebie zrobić? Mogę wyjaśnić, dlaczego otrzymałeś tę sugestię, albo pomóc ci otrzymywać lepsze.",
     "introArticle": "Co mogę dla ciebie zrobić? Mogę pomóc dostosować twoje sugestie newsów na podstawie tego artykułu.",
     "introLikeTuning": "Podobała ci się ta historia. Powiedz mi więcej, a dostroję twój kanał.",
@@ -785,7 +726,6 @@
     "actionShowLessTopic": "Pokazuj mniej danego tematu",
     "actionShowMoreTopic": "Pokazuj więcej danego tematu",
     "actionDownRank": "Obniż rangę tematu",
-    "actionPublicationPref": "Dostosuj publikację",
     "actionPublicationBoost": "Pokażę więcej z tej publikacji",
     "actionPublicationDeprioritize": "Pokażę mniej z tej publikacji",
     "actionPublicationMute": "Wyciszę publikację",
@@ -811,12 +751,9 @@
     "updateCta": "Aktualizuj"
   },
   "feedback": {
-    "fabLabel": "Zgłoś błąd",
     "formTitle": "Zgłoś błąd",
     "submitButtonLabel": "Wyślij",
     "cancelButtonLabel": "Anuluj",
-    "nameLabel": "Imię",
-    "namePlaceholder": "Twoje imię",
     "emailLabel": "E-mail",
     "emailPlaceholder": "your.email@example.org",
     "messageLabel": "Opis",
@@ -929,29 +866,21 @@
     "deck": "Strumień",
     "profile": "Profil",
     "settings": "Ustawienia",
-    "gotIt": "Rozumiem",
     "world": "Świat",
     "library": "Biblioteka",
     "you": "Ty",
     "exploreTitle": "Odkrywaj"
   },
   "swipeFeed": {
-    "moreLikeThis": "Więcej takich",
-    "lessLikeThis": "Mniej takich",
     "askMera": "Zapytaj Mera",
-    "closeTree": "Zamknij",
-    "treeThanks": "Dzięki, zanotowane.",
     "feedbackCaption": "Same naciśnięcie nie wystarczy Merze — dlatego je odrzucamy, aby Twój kanał był zdrowy. Wybierz powód, a kanał zmieni się od razu.",
-    "tapAgainToConfirm": "Dotknij ponownie, aby potwierdzić",
     "chatHandoffLike": "Podobała mi się ta historia, więcej takich: {{path}}.",
     "chatHandoffLikeNoPath": "Podobała mi się ta historia. Chciałbym więcej takich.",
     "chatHandoffDislike": "Nie podobała mi się ta historia, {{path}}.",
     "chatHandoffDislikeNoPath": "Nie podobała mi się ta historia. Pomóż mi otrzymywać mniej takich."
   },
   "explore": {
-    "addPlaces": "Dodaj miejsca",
     "serverUnavailable": "Nie można teraz dotrzeć do Mera: spróbuj za chwilę.",
-    "clearSearch": "Wyczyść wyszukiwanie",
     "searchNotSubscribed": "Wyszukiwanie wymaga aktywnego planu",
     "window": {
       "label24": "24 godz.",
@@ -965,28 +894,17 @@
     }
   },
   "forYou": {
-    "breaking": "Pilne",
-    "showMore": "Pokaż {{count}} więcej",
     "headlineSectionGlobal": "Wiadomości ze świata",
     "headlineSectionCountry": "Wiadomości z {{country}}",
-    "nextFactPrefix": "Dalej",
-    "subTabAnalytics": "Analiza",
-    "emptySection": {
-      "awaiting": "Szukamy artykułów na ten temat. Pojawią się po następnym odświeżeniu.",
-      "none": "Żaden artykuł nie pasuje jeszcze na tyle dobrze, by go tu pokazać."
-    },
-    "newInterest": "Nowe zainteresowanie",
     "sectionStories_one": "{{count}} historia",
     "sectionStories_few": "{{count}} historie",
     "sectionStories_many": "{{count}} historii",
     "sectionStories_other": "{{count}} historii"
   },
   "feedStatus": {
-    "title": "Stan kanału",
     "idle": "Aktualne",
     "stage": "Etap",
     "cloudProgress": "Ocenianie w chmurze",
-    "close": "Zamknij",
     "expandA11y": "Pokaż szczegóły stanu kanału",
     "modeProcessing": "Aktualizowanie kanału",
     "modeError": "Problem z kanałem",
@@ -1006,7 +924,6 @@
     "title": "Śledzone historie",
     "trackAction": "Śledź historię",
     "untrackAction": "Przestań śledzić",
-    "trackedToast": "Teraz śledzisz tę historię",
     "updatesBadge": "{{count}} nowych",
     "endedLabel": "Zakończona",
     "emptyCta": "Przejdź do Strumienia",
@@ -1037,16 +954,7 @@
     "articlesCount_other": "{{count}} artykułu"
   },
   "whatsNew": {
-    "title": "Co nowego",
     "gotIt": "Rozumiem",
-    "sectionsTitle": "Kanał zorganizowany wokół Ciebie",
-    "sectionsBody": "Dla Ciebie grupuje teraz wiadomości w sekcje zbudowane na podstawie tego, co jest dla Ciebie ważne.",
-    "storiesTitle": "Historie pozostają razem",
-    "storiesBody": "Ta sama historia z wielu źródeł jest grupowana w jedną kartę, nawet w miarę jej rozwoju.",
-    "tabsTitle": "Zakładki Profil i Ustawienia",
-    "tabsBody": "Twój profil i ustawienia znajdują się teraz we własnych zakładkach na dole.",
-    "resyncTitle": "Twój kanał jest ponownie synchronizowany",
-    "resyncBody": "Odbudowujemy Twój kanał za pomocą nowego silnika. Wkrótce zostanie uzupełniony.",
     "starterTitle": "Starter na nasz koszt",
     "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
     "starterArticlesTitle": "250 artykułów dziennie",
@@ -1138,7 +1046,6 @@
     "moreAboutTopicNamed": "Więcej o: {{topic}}",
     "moreAboutTopicNamedWithCount": "Więcej o: {{topic}} i {{extra}} więcej",
     "title": "Powiedz nam więcej",
-    "contextFor": "Dotyczy: {{title}}",
     "back": "Wstecz",
     "dismiss": "Zamknij",
     "empty": "Brak opcji",
@@ -1335,28 +1242,6 @@
     "saveFailedBody": "Zmiana nie została zapisana. Spróbuj ponownie."
   },
   "profile": {
-    "talkToMera": "Porozmawiaj z Mera",
-    "talkToMeraSubtitle": "Tak Cię widzę. Dotknij, aby kontynuować rozmowę.",
-    "continueTalking": "Kontynuuj",
-    "emptyTitle": "Jeszcze Cię nie znam",
-    "emptyBody": "Opowiedz mi o sobie, abym mogła znaleźć wiadomości, które mają dla Ciebie znaczenie.",
-    "startTalking": "Zacznij rozmowę",
-    "gettingToKnowYou": "Wciąż Cię poznaję, zajrzyj tu za chwilę.",
-    "updating": "Aktualizowanie…",
-    "advanced": "Zaawansowane",
-    "advancedSubtitle": "Fakty, źródła, zapisane, aktywność i więcej",
-    "sheet": {
-      "importance": "Ważność",
-      "moreImportant": "Ważniejsze",
-      "lessImportant": "Mniej ważne",
-      "refine": "Dopracuj z Mera",
-      "refineSeed": "Porozmawiajmy o tym: \"{{text}}\"",
-      "remove": "Usuń to",
-      "removeConfirm": "Dotknij ponownie, aby usunąć",
-      "limitReached": "Osiągnięto limit dzienny regulacji: zmiany będą kontynuowane jutro."
-    },
-    "editFacts": "Edytuj",
-    "planUsage": "{{used}} z {{limit}} przeanalizowanych dziś",
     "updatingAllFacts": "Aktualizowanie wszystkich faktów",
     "pleaseWait": "Proszę czekać"
   },
@@ -1483,36 +1368,10 @@
     "meraButtonHint": "Wybierz kolor pływającego przycisku Mera. Pozostaje taki sam w jasnym i ciemnym trybie."
   },
   "freeTier": {
-    "cardBody": "Część AI w Mera jest teraz wyłączona. Wszystko, co zapisałeś, śledziłeś lub czytałeś, zostaje na tym urządzeniu, a zakładka Odkrywaj wciąż zawiera dzisiejsze nagłówki. Bez planu Mera nie będzie budować Twojego kanału, odpowiadać na Twoje pytania ani śledzić nowych historii. Zacznij plan, a wszystko wróci do normy.",
-    "cardTitle": "Jesteś na Mera News Darmowa",
-    "chatBubble": "Wszystko, co o tobie wiem, zostaje na tym urządzeniu. W darmowym planie nadal buduję twój kanał na podstawie dwóch twoich zainteresowań. Czat, sprawdzanie faktów i śledzone historie wymagają planu.",
-    "chatNotice": "Chat Mera jest dostępny z planem. Twoja persona i fakty pozostają na tym urządzeniu w każdym przypadku.",
-    "continueWithoutPlan": "Kontynuuj bez planu",
-    "lapseBody": "Nic nie zostało odebrane. Wszystko, co zapisałeś, śledziłeś lub czytałeś, jest Twoje, na tym urządzeniu, zawsze. Od teraz jesteś na Mera News Darmowa. To, co się wstrzymuje, to warstwa AI, dlatego Twój spersonalizowany kanał, pulpit, śledzenie nowych historii i chat Mera pozostają wyłączone, dopóki znowu nie zaczniesz planu.",
-    "lapseTitle": "Twój plan się skończył",
-    "readOnlyBanner": "Wszystko tutaj jest Twoje do przeczytania, z planem lub bez. Te ustawienia zmieniają tylko to, co robi Mera, gdy plan jest aktywny.",
     "seePlans": "Pokaż plany",
     "storiesNotice": "Historie, które już śledzisz, zachowują wszystko, co zebrały. Aby śledzić nową, potrzebujesz aktywnego planu.",
     "trackBody": "Historie, które już śledzisz, zachowują wszystko, co zebrały. Aby śledzić nową, potrzebujesz aktywnego planu.",
-    "trackDismiss": "Nie teraz",
-    "trackTitle": "Śledzenie historii wymaga planu",
-    "factsPausedHeader": "Wstrzymane",
-    "factsPausedSubtitle": "Pozostają zapisane. Plan włącza je wszystkie.",
-    "pausedBadge": "Wstrzymane",
-    "pausedRowHint": "Wstrzymane. Dotknij, aby zobaczyć dlaczego.",
-    "explainerTitle": "Twoje pierwsze dwa zainteresowania",
-    "explainerBody": "Mera News Free śledzi dwa zainteresowania, które dodałeś jako pierwsze. Cała reszta pozostaje zapisana na tym urządzeniu, dokładnie tak, jak ją zostawiłeś.",
-    "explainerBody2": "Plan włącza je wszystkie z powrotem.",
-    "explainerDismiss": "Nie teraz",
-    "chatIntro": {
-      "followStory": "Śledzenie historii wymaga planu. Mera obserwowałaby tę historię i dawała znać, gdy coś się zmieni.",
-      "articleFeedback": "Dostrajanie kanału na podstawie opinii wymaga planu. Twój kanał i tak działa dalej.",
-      "persona": "Rozmowa z Merą wymaga planu. Twoje zainteresowania i dane zostają na tym urządzeniu.",
-      "optimisationPlan": "Codzienny przegląd wymaga planu. Mera codziennie sprawdzałaby twój kanał i proponowała zmiany.",
-      "tutorialHelp": "Pytanie Mery o aplikację wymaga planu. Poradniki w Pomocy obejmują większość tematów.",
-      "factCheck": "Sprawdzanie faktów wymaga planu. Mera wyszukałaby to i pokazała, kto jeszcze o tym pisał.",
-      "default": "Czat wymaga planu. Twój kanał działa dalej."
-    }
+    "trackTitle": "Śledzenie historii wymaga planu"
   },
   "factCheck": {
     "actionA11y": "Wyszukaj opublikowane weryfikacje faktów dla tego artykułu",
@@ -1566,8 +1425,6 @@
       "openA11y": "Otwórz ten artykuł",
       "articleGone": "Artykuł wygasł, dlatego nie można go otworzyć. Znaleziona weryfikacja faktów jest przechowywana tutaj.",
       "couldNotCheck": "Nie udało się sprawdzić, kto o tym pisał. Dotknij, aby zobaczyć, co znalazło wyszukiwanie.",
-      "moreOrganisations_one": "+{{count}} więcej",
-      "moreOrganisations_other": "+{{count}} więcej",
       "noneFound": "Nie znaleziono opublikowanych weryfikacji faktów",
       "factChecksFound_one": "Znaleziono {{count}} weryfikację faktów. Dotknij, aby przeczytać",
       "factChecksFound_few": "Znaleziono {{count}} weryfikacje faktów. Dotknij, aby przeczytać",
@@ -1601,7 +1458,6 @@
     "quickRunning": "Przeszukiwanie sieci…",
     "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle, wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie.",
     "checkedByMultipleNote": "To niezależne oceny, każda w skali danej organizacji, nie zawsze są ze sobą zgodne.",
-    "ownReadingHeading": "Ocena własna Mera, drugorzędna wobec werdyktu powyżej",
     "collapseA11y": "Ukryj to sprawdzenie faktów",
     "expandA11y": "Pokaż to sprawdzenie faktów",
     "checkedByRelatedNote": "Pochodzą z wyszukiwania słów kluczowych i mogą dotyczyć innego artykułu. Otwórz jeden, aby sprawdzić.",
@@ -1626,17 +1482,14 @@
     "privacyLink": "Polityka Prywatności",
     "accept": "Zgadzam się i kontynuuję",
     "accepting": "Zapisywanie…",
-    "errorTitle": "Nie można zapisać Twojej akceptacji",
     "errorDescription": "Sprawdź połączenie i spróbuj ponownie.",
     "retry": "Spróbuj ponownie",
-    "welcomeTitle": "Witamy w Mera",
     "welcomeBody": "Dotknij \"Zgadzam się i kontynuuję\", aby zaakceptować nasz Regulamin i Politykę prywatności.",
     "deviceNotice": {
       "appAttest": "Bez e-maila. Mera loguje Cię tym telefonem. Apple potwierdza, że to prawdziwa aplikacja Mera na prawdziwym iPhonie, aby blokować fałszywe konta. Przechowujemy zapis logowania, dopóki masz konto.",
       "playIntegrity": "Bez e-maila. Mera loguje Cię tym telefonem. Google potwierdza, że to prawdziwa aplikacja Mera na prawdziwym telefonie z Androidem, aby blokować fałszywe konta. Przechowujemy zapis logowania, a nie identyfikator Twojego telefonu.",
       "generic": "Bez e-maila. Mera loguje Cię tym telefonem. Przechowujemy zapis logowania dla tego telefonu, dopóki masz konto."
-    },
-    "whatMeraKeeps": "Co przechowuje Mera"
+    }
   },
   "tutorials": {
     "entryRow": "Jak działa Mera",
@@ -2319,11 +2172,6 @@
     "skipBody2": "Pomoc techniczna może znaleźć Twój zakup tylko po identyfikatorze pomocy. Skopiuj go i zapisz w bezpiecznym miejscu.",
     "skipConfirm": "Przejdź do płatności"
   },
-  "welcomeBack": {
-    "title": "Witamy ponownie w Mera",
-    "body": "Wygląda na to, że Mera była już na tym urządzeniu, więc bezpłatny okres próbny został już wykorzystany. Możesz dalej czytać na nowym koncie lub w każdej chwili wybrać plan, aby korzystać z pełni możliwości.",
-    "continue": "Dalej"
-  },
   "videoPlayer": {
     "closeA11y": "Zamknij film",
     "openInBrowser": "Otwórz w przeglądarce",
@@ -2556,23 +2404,6 @@
     "answeredA11y": "już odpowiedziano",
     "saveAll": "Zapisz wszystko"
   },
-  "streamingWords": {
-    "w1": "Myślę",
-    "w2": "Analizuję",
-    "w3": "Rozważam",
-    "w4": "Zastanawiam się",
-    "w5": "Przetrawiam",
-    "w6": "Dłubię",
-    "w7": "Odstawiam",
-    "w8": "Przemyśliwam",
-    "w9": "Ważę",
-    "w10": "Przesiewam",
-    "w11": "Łączę",
-    "w12": "Redaguję",
-    "w13": "Dopasowuję",
-    "w14": "Dopieszczam",
-    "w15": "Warzę"
-  },
   "chatPhases": {
     "preparing": [
       "Mera zbiera to, co już o tobie wie.",
@@ -2661,11 +2492,6 @@
     "support": "Pomoc",
     "supportSub": "Zgłoś błąd, czat na żywo, FAQ, samouczek",
     "tutorial": "Samouczek"
-  },
-  "related": {
-    "allCountries": "Wszystkie kraje",
-    "allLanguages": "Wszystkie języki",
-    "noMatches": "Żaden powiązany artykuł nie pasuje do tych filtrów."
   },
   "storyExport": {
     "shareA11y": "Eksportuj tę historię",
@@ -2904,7 +2730,6 @@
       "changes": "Zmiany w Twoim profilu",
       "subtitle": "Co Mera o Tobie wie. Zostaje na tym telefonie.",
       "tidyUp": "Uporządkuj swój profil",
-      "title": "Twój profil",
       "topicCount_one": "{{count}} temat",
       "topicCount_few": "{{count}} tematy",
       "topicCount_many": "{{count}} tematów",
@@ -3048,7 +2873,6 @@
     "opensByItself": "Otworzy się sama, gdy wrócisz online",
     "reauthBody": "Twoje logowanie wygasło. Wyślemy kod na e-mail przypisany do tego konta.",
     "reauthTitle": "Zaloguj się, aby kontynuować",
-    "sendNewCode": "Wyślij nowy kod",
     "unreachableBody": "Problem leży po naszej stronie, nie w Twoim telefonie. Mera wciąż próbuje i otworzy się, gdy wróci.",
     "unreachableTitle": "Nie można połączyć się z Mera",
     "mismatchTitle": "Ten e-mail należy do innego konta",

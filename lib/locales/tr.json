@@ -5,27 +5,19 @@
     "delete": "Sil",
     "save": "Kaydet",
     "back": "Geri",
-    "error": "Hata",
     "loading": "Yükleniyor...",
     "tryAgain": "Lütfen tekrar deneyin",
     "next": "İleri",
     "done": "Tamam",
     "retry": "Tekrar Dene",
     "ok": "Tamam",
-    "checking": "Kontrol ediliyor...",
-    "updating": "Güncelleniyor...",
     "goBack": "Geri Dön",
     "articles": "Makaleler",
-    "loggingOut": "Çıkış Yapılıyor...",
-    "never": "Hiçbir zaman",
-    "yes": "Evet",
-    "no": "Hayır",
     "saving": "Kaydediliyor...",
     "offlineBannerOffline": "Çevrimdışısın. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
     "offlineBannerInternetDown": "İnternet bağlantısı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
     "offlineBannerServerDown": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
     "beta": "Beta",
-    "confirm": "Onayla",
     "copy": "Kopyala",
     "today": "Bugün",
     "yesterday": "Dün",
@@ -34,20 +26,14 @@
   "auth": {
     "emailPlaceholder": "E-posta adresinizi girin",
     "otpPlaceholder": "6 haneli kodu girin",
-    "invalidEmailTitle": "Geçersiz E-posta",
     "invalidEmailDescription": "Lütfen geçerli bir e-posta adresi girin",
-    "failedToSendTitle": "Kod Gönderilemedi",
     "networkError": "Ağ hatası. Lütfen tekrar deneyin.",
-    "privacyPolicy": "Gizlilik Politikası",
-    "termsOfService": "Hizmet Şartları",
     "sentTo": "Şu adrese bir kod gönderdik:",
     "invalidOtp": "Lütfen geçerli bir 6 haneli OTP kodu girin",
     "invalidOtpServer": "Geçersiz OTP kodu. Lütfen tekrar deneyin.",
     "otpError": "Doğrulama sırasında bir hata oluştu. Lütfen tekrar deneyin.",
     "resendCode": "Kodu yeniden gönder",
     "resendIn": "{{seconds}} saniye sonra yeniden gönder",
-    "resendSuccess": "Yeni bir kod gönderildi.",
-    "contentPolicy": "İçerik Politikası",
     "faq": "SSS",
     "identitySwitchFailedTitle": "Hesap değişimi tamamlanamadı",
     "identitySwitchFailedBody": "Bu cihazda hâlâ başka bir hesabın verileri var. Devam edebilmen için Mera'nın bunları silmesi gerekiyor ve silme işlemi bu kez başarısız oldu.",
@@ -61,10 +47,8 @@
     "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
     "tryAgain": "Tekrar dene",
     "learnAboutMera": "Mera'yı tanıyın",
-    "startReading": "Okumaya başla",
     "alreadyHaveAccount": "E-posta ile giriş yap",
     "continue": "Devam et",
-    "aboutLegal": "Mera hakkında ve yasal bilgiler",
     "sourceCode": "Kaynak kodu",
     "failedToSendBody": "OTP gönderilemedi",
     "signingYouIn": "Giriş yapılıyor…",
@@ -78,8 +62,7 @@
     },
     "deviceSignInCaption": {
       "uninstall": "Hesabınız bu telefona bağlıdır. Mera'yı silerseniz veya telefonu kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir.",
-      "reset": "Hesabınız bu telefona bağlıdır. Telefonu sıfırlarsanız veya kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir.",
-      "previousUser": "Bu telefonun kendi hesabını açar, {{email}} hesabından ayrıdır."
+      "reset": "Hesabınız bu telefona bağlıdır. Telefonu sıfırlarsanız veya kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir."
     },
     "track": {
       "beforeYouStart": "Başlamadan önce",
@@ -108,22 +91,11 @@
     }
   },
   "account": {
-    "pendingTitle": "Hesap Onay Bekliyor",
-    "pendingDescription": "Uygulamamızı denemek istemenize çok sevindik. Hesabınız onaylandığında bir e-posta alacaksınız. Ardından uygulamayı kullanmaya devam edebilirsiniz.",
-    "enquiries": "Sorularınız için şu adrese e-posta gönderebilirsiniz:",
-    "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Yenile 🔄",
     "contactSupport": "Destek ekibiyle görüşün"
   },
   "feed": {
-    "updatedAt": "{{time}} güncellendi",
     "allCaughtUp": "Seni etkileyen tüm haberleri okudun.",
-    "preparingFeed": "Mera haber akışını hazırlıyor.",
     "pullDownToRetry": "Tekrar denemek için aşağı çek",
-    "readArticleToast": "Bu makaleyi okudun",
-    "stuckTitle": "Haber akışın yüklenemedi",
-    "stuckDescription": "Bizim tarafımızda bir şeyler ters gitti.",
-    "stuckHint": "Birkaç dakika sonra uygulamayı yeniden aç.",
     "offlineCached": "Çevrimdışı: önbelleğe alınmış içerik gösteriliyor",
     "newBadge": "YENİ",
     "newsCluster": "Haber Kümesi",
@@ -149,8 +121,6 @@
       "Telefonun sonra da burada olacak. Şimdi anın içinde ol."
     ],
     "processing": {
-      "doneFlash": "Her şey hazır, işte haberlerin",
-      "errorFlash": "En son içerik yüklenemedi. Lütfen tekrar dene.",
       "stages": {
         "fetching": {
           "headlines": [
@@ -233,8 +203,6 @@
       "freeBodyWithTime": "Mera'nın bugün gönderdiği her şey elinizde. Cihazınızdakilere göz atın. Yenileri {{time}} saatinde geliyor."
     },
     "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
-    "waitingForNextBatch_one": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
-    "waitingForNextBatch_other": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
     "statsPublishedPending_one": "{{formatted}} makale son 24 saatte yayınlandı.",
     "statsPublishedPending_other": "{{formatted}} makale son 24 saatte yayınlandı.",
     "statsPublished_one": "{{formatted}} makale son 24 saatte yayınlandı,",
@@ -247,7 +215,6 @@
     "statsRead_other": "ve {{formatted}} okumuşsun.",
     "loadingA11y": "Akışın yükleniyor",
     "translatingCaption": "Çevriliyor…",
-    "updatedJustNow": "Az önce güncellendi",
     "reasonWritingA11y": "not yazılıyor",
     "reasonNotYet": "Bu makale için henüz not yok.",
     "findingStories": "Hikayeleriniz aranıyor",
@@ -315,20 +282,11 @@
     "translateBlockedOn": "Bazı siteler Google Çeviri'yi engeller. Yüklenmezse, {{publication}} üzerinden açın.",
     "youCameFromHere": "Buradan geldiniz"
   },
-  "newsCluster": {
-    "failedToLoad": "Küme ayrıntıları yüklenemedi",
-    "clusterNotFound": "Küme bulunamadı",
-    "coverage": "Kapsam",
-    "noArticles": "Bu kümede mevcut makale yok"
-  },
   "sources": {
-    "searchCountries": "Ülkeleri ara...",
     "publishers": "Yayıncılar",
     "noPublishers": "Bu ülke için yayıncı yok",
     "noArticlesFound": "Makale bulunamadı",
     "topHeadlines": "Öne çıkan başlıklar",
-    "addToLocations": "Yerlerine ekle",
-    "addedToLocations": "Yerlerine eklendi",
     "badgeGovernment": "Hükümet kaynağı",
     "badgeRegulator": "Resmi kurum"
   },
@@ -346,13 +304,8 @@
     "connectionDescription": "Sunucuya bağlanırken bazı sorunlar yaşıyoruz. Uygulamayı kapatıp daha sonra tekrar deneyebilirsin. Sorun devam ederse, çıkış yapıp tekrar giriş yapmanı öneririz.",
     "logout": "Çıkış Yap",
     "close": "Kapat",
-    "notificationLow": "Düşük",
-    "notificationMedium": "Orta",
-    "notificationHigh": "Yüksek",
     "logoutFailedTitle": "Çıkış Başarısız",
     "logoutFailedDescription": "Çıkış yaparken bir sorun oluştu. Lütfen tekrar dene.",
-    "loggingOut": "Çıkış yapılıyor...",
-    "chatIntro": "Biraz kendinizden bahsedin: nerede yaşıyorsunuz, ne iş yapıyorsunuz, neyi takip ediyorsunuz. Bu telefonda kalır.",
     "composerPlaceholder": "Mera'ya kendinizden bahsedin",
     "continueAnyway": "Yine de devam et",
     "factsCount_one": "Hakkınızda {{count}} bilgi",
@@ -644,8 +597,6 @@
     "loadingModel": "AI modeli yükleniyor...",
     "loadingModelProgress": "AI modeli yükleniyor... {{percent}}%",
     "reloadingModel": "AI modeli yeniden yükleniyor... {{percent}}%",
-    "waitingForResponse": "Yanıt bekleniyor...",
-    "typeMessage": "Bir mesaj yaz...",
     "inferenceError": "Şu anda Mera çıkarım hizmetine ulaşmakta sorun yaşıyoruz. Lütfen bir süre sonra tekrar dene.",
     "send": "Gönder",
     "streamingLabels": {
@@ -682,12 +633,9 @@
     "title": "Mera",
     "aboutThisStory": "BU HABER HAKKINDA",
     "earlierConversation": "Önceki konuşma",
-    "loadingHistory": "Önceki mesajlar yükleniyor…",
     "factSavedTitle": "Profiline kaydedildi",
     "factDeletedTitle": "Profilinden kaldırıldı",
     "factUpdatedTitle": "Tercihler güncellendi",
-    "factCardUndo": "Geri al",
-    "factCardDelete": "Sil",
     "chipAddLocation": "Yaşadığım yeri ekle",
     "chipAddLocationMessage": "Nerede yaşadığımı söylemek istiyorum",
     "chipShowFacts": "Bilgilerimi göster",
@@ -696,7 +644,6 @@
     "chipHelpSetupMessage": "Profilimi kurmama yardım et",
     "chipDataHandlingMessage": "Mera verilerimle nasıl çalışıyor?",
     "chipDataHandling": "Verilerim nasıl işleniyor?",
-    "thinking": "Düşünüyor…",
     "newChat": "Yeni sohbet",
     "inputPlaceholder": "Bir mesaj yaz...",
     "viewPreviousMessages": "Önceki mesajları görüntüle",
@@ -731,14 +678,10 @@
     "mayMistakes": "Mera hata yapabilir, bu yüzden önemli haberleri kaynağından kontrol edin."
   },
   "articleFeedback": {
-    "thumbsUp": "Beğendim",
-    "thumbsDown": "Bana göre değil",
     "thumbsUpMessage": "Bu makaleyi beğendim: \"{{title}}\". Bunun gibi daha fazla öneri görmek isterim.",
     "thumbsDownMessage": "Bunun gibi makaleler istemiyorum: \"{{title}}\". Önerilerimi ayarlamama yardım et.",
     "likeLabel": "Beğendim",
-    "improveLabel": "Daha iyi olabilir",
     "dislikeLabel": "Bana göre değil",
-    "improveMessage": "Bu öneri daha iyi olabilir: \"{{title}}\". Önerilerimi ayarlamama yardım et.",
     "intro": "Senin için ne yapabilirim? Bu öneriyi neden aldığını açıklayabilir veya daha iyi öneriler almana yardımcı olabilirim.",
     "introArticle": "Senin için ne yapabilirim? Bu makaleye dayanarak haber önerilerini ayarlamana yardımcı olabilirim.",
     "introLikeTuning": "Bu haberi beğendin: biraz daha anlat, akışını ayarlayayım.",
@@ -765,7 +708,6 @@
     "actionShowLessTopic": "Konuyu daha az göster",
     "actionShowMoreTopic": "Konuyu daha çok göster",
     "actionDownRank": "Konunun önceliğini düşür",
-    "actionPublicationPref": "Bir yayını ayarla",
     "actionPublicationBoost": "Bu yayından daha fazla göster",
     "actionPublicationDeprioritize": "Bu yayından daha az göster",
     "actionPublicationMute": "Yayını sessize al",
@@ -791,12 +733,9 @@
     "updateCta": "Güncelle"
   },
   "feedback": {
-    "fabLabel": "Hata bildir",
     "formTitle": "Hata Bildir",
     "submitButtonLabel": "Gönder",
     "cancelButtonLabel": "İptal",
-    "nameLabel": "Ad",
-    "namePlaceholder": "Adınız",
     "emailLabel": "E-posta",
     "emailPlaceholder": "your.email@example.org",
     "messageLabel": "Açıklama",
@@ -909,29 +848,21 @@
     "deck": "Akış",
     "profile": "Profil",
     "settings": "Ayarlar",
-    "gotIt": "Anladım",
     "world": "Dünya",
     "library": "Kitaplık",
     "you": "Siz",
     "exploreTitle": "Keşfet"
   },
   "swipeFeed": {
-    "moreLikeThis": "Bunun gibi daha fazlası",
-    "lessLikeThis": "Bunun gibi daha azı",
     "askMera": "Mera'ya Sor",
-    "closeTree": "Kapat",
-    "treeThanks": "Teşekkürler, not edildi.",
     "feedbackCaption": "Tek başına bir dokunuş Mera'ya yeterli bilgi vermez — o yüzden atıyoruz, haber akışını sağlıklı tutmak için. Bir sebep seç, haber akışın hemen değişecek.",
-    "tapAgainToConfirm": "Onaylamak için tekrar dokunun",
     "chatHandoffLike": "Bu haberi beğendim, bunun gibi daha fazlası: {{path}}.",
     "chatHandoffLikeNoPath": "Bu haberi beğendim, bunun gibi daha fazlasını istiyorum.",
     "chatHandoffDislike": "Bu haberi beğenmedim, {{path}}.",
     "chatHandoffDislikeNoPath": "Bu haberi beğenmedim. Bunun gibi daha azını görmeme yardım et."
   },
   "explore": {
-    "addPlaces": "Yerleri ekle",
     "serverUnavailable": "Mera şu anda erişilemiyor: biraz sonra tekrar dene.",
-    "clearSearch": "Aramayı temizle",
     "searchNotSubscribed": "Arama aktif bir plan gereklidir",
     "window": {
       "label24": "24 sa",
@@ -945,26 +876,15 @@
     }
   },
   "forYou": {
-    "breaking": "Son dakika",
-    "showMore": "{{count}} tane daha göster",
     "headlineSectionGlobal": "Dünya haberleri",
     "headlineSectionCountry": "{{country}} haberleri",
-    "nextFactPrefix": "Sonraki",
-    "subTabAnalytics": "Analiz",
-    "emptySection": {
-      "awaiting": "Bununla ilgili haberler aranıyor. Bir sonraki yenilemeden sonra görünecekler.",
-      "none": "Henüz buraya yeterince uyan bir haber yok."
-    },
-    "newInterest": "Yeni ilgi alanı",
     "sectionStories_one": "{{count}} haber",
     "sectionStories_other": "{{count}} haber"
   },
   "feedStatus": {
-    "title": "Akış durumu",
     "idle": "Güncel",
     "stage": "Aşama",
     "cloudProgress": "Bulut puanlama",
-    "close": "Kapat",
     "expandA11y": "Akış durumu ayrıntılarını göster",
     "modeProcessing": "Akışınız güncelleniyor",
     "modeError": "Akış sorunu",
@@ -984,7 +904,6 @@
     "title": "Takip edilen haberler",
     "trackAction": "Haberi takip et",
     "untrackAction": "Haberi takipten çık",
-    "trackedToast": "Artık bu haberi takip ediyorsun",
     "updatesBadge": "{{count}} yeni",
     "updatesBadge_one": "{{count}} yeni",
     "updatesBadge_other": "{{count}} yeni",
@@ -1015,16 +934,7 @@
     "articlesCount_other": "{{count}} makale"
   },
   "whatsNew": {
-    "title": "Yenilikler",
     "gotIt": "Anladım",
-    "sectionsTitle": "Sana göre düzenlenmiş bir akış",
-    "sectionsBody": "Senin İçin artık haberleri senin için önemli olan şeylere göre bölümlere ayırıyor.",
-    "storiesTitle": "Haberler bir arada kalır",
-    "storiesBody": "Aynı haber birden fazla kaynaktan gelse de, gelişse bile tek bir kartta gruplanır.",
-    "tabsTitle": "Profil ve Ayarlar sekmeleri",
-    "tabsBody": "Profilin ve ayarların artık altta kendi sekmelerinde.",
-    "resyncTitle": "Akışın yeniden senkronize ediliyor",
-    "resyncBody": "Akışını yeni motorla yeniden oluşturuyoruz: kısa süre içinde dolacak.",
     "starterTitle": "Starter bizden",
     "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
     "starterArticlesTitle": "Günde 250 haber",
@@ -1116,7 +1026,6 @@
     "moreAboutTopicNamed": "Daha fazlası: {{topic}}",
     "moreAboutTopicNamedWithCount": "Daha fazlası: {{topic}} ve {{extra}} daha fazla",
     "title": "Bize daha fazlasını anlat",
-    "contextFor": "Hakkında: {{title}}",
     "back": "Geri",
     "dismiss": "Kapat",
     "empty": "Burada seçenek yok",
@@ -1309,28 +1218,6 @@
     "saveFailedBody": "Değişiklik kaydedilmedi. Tekrar dene."
   },
   "profile": {
-    "talkToMera": "Mera ile konuş",
-    "talkToMeraSubtitle": "Seni böyle görüyorum. Sohbete devam etmek için dokun.",
-    "continueTalking": "Devam et",
-    "emptyTitle": "Seni henüz tanımıyorum",
-    "emptyBody": "Senin için önemli olan haberleri bulabilmem için kendinden bahset.",
-    "startTalking": "Konuşmaya başla",
-    "gettingToKnowYou": "Seni hâlâ tanıyorum, birazdan tekrar bak.",
-    "updating": "Güncelleniyor…",
-    "advanced": "Gelişmiş",
-    "advancedSubtitle": "Bilgiler, kaynaklar, kaydedilenler, etkinlik ve daha fazlası",
-    "sheet": {
-      "importance": "Önem",
-      "moreImportant": "Daha önemli",
-      "lessImportant": "Daha az önemli",
-      "refine": "Mera ile netleştir",
-      "refineSeed": "Bunun hakkında konuşalım: \"{{text}}\"",
-      "remove": "Bunu kaldır",
-      "removeConfirm": "Kaldırmak için tekrar dokun",
-      "limitReached": "Günlük ayarlama sınırına ulaşıldı, değişiklikler yarın devam edecek."
-    },
-    "editFacts": "Düzenle",
-    "planUsage": "Bugün {{limit}} içinden {{used}} analiz edildi",
     "updatingAllFacts": "Tüm bilgiler güncelleniyor",
     "pleaseWait": "Lütfen bekleyin"
   },
@@ -1453,36 +1340,10 @@
     "meraButtonHint": "Yüzen Mera düğmesinin rengini seçin. Açık ve koyu modda aynı kalır."
   },
   "freeTier": {
-    "cardBody": "Mera'nın yapay zeka kısmı şu an kapalı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey bu cihazda kalıyor ve Keşfet sekmesinde hâlâ bugünün haberlerine erişebilirsiniz. Bir plan olmadan Mera sizin akışınızı oluşturamaz, sorularınızı cevaplayamaz ya da yeni haberleri takip edemez. Bir plan başlatın ve her şey geri gelir.",
-    "cardTitle": "Mera News Free'desiniz",
-    "chatBubble": "Senin hakkında bildiğim her şey bu cihazda kalır. Ücretsiz planda ilgi alanlarından ikisini kullanarak akışını oluşturmaya devam ediyorum. Sohbet, doğruluk kontrolleri ve takip edilen haberler bir plan gerektirir.",
-    "chatNotice": "Mera sohbeti bir plan ile birlikte geliyor. Profiliniz ve gerçekleriniz her zaman bu cihazda kalıyor.",
-    "continueWithoutPlan": "Plan olmadan devam edin",
-    "lapseBody": "Hiçbir şey alınmadı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey sizindir, bu cihazda, daima. Buradan itibaren Mera News Free'desiniz. Yapay zeka katmanı duruyor, yani kişiselleştirilmiş akışınız, paneliniz, haber takibiniz ve Mera sohbetiniz yeni bir plan başlatana kadar kapalı kalacak.",
-    "lapseTitle": "Mera planınız sona erdi",
-    "readOnlyBanner": "Buradaki her şey sizindir ve okuyabilirsiniz, plan olsun ya da olmasın. Bu ayarlar sadece bir plan aktif olduğunda Mera'nın ne yaptığını değiştirir.",
     "seePlans": "Planları görün",
     "storiesNotice": "Zaten takip ettiğiniz haberler, topladıkları her şeyi koruyor. Yenisini başlatmak aktif bir plan gerektirir.",
     "trackBody": "Zaten takip ettiğiniz haberler, topladıkları her şeyi koruyor. Yenisini başlatmak aktif bir plan gerektirir.",
-    "trackDismiss": "Şimdi değil",
-    "trackTitle": "Haber takibi bir plan ile birlikte geliyor",
-    "factsPausedHeader": "Duraklatıldı",
-    "factsPausedSubtitle": "Bunlar kayıtlı kalır. Bir plan hepsini açar.",
-    "pausedBadge": "Duraklatıldı",
-    "pausedRowHint": "Duraklatıldı. Nedenini görmek için dokunun.",
-    "explainerTitle": "İlk iki ilgi alanınız",
-    "explainerBody": "Mera News Free, ilk eklediğiniz iki ilgi alanını takip eder. Geri kalan her şey bıraktığınız gibi bu cihazda kayıtlı kalır.",
-    "explainerBody2": "Bir plan hepsini yeniden açar.",
-    "explainerDismiss": "Şimdi değil",
-    "chatIntro": {
-      "followStory": "Haber takibi bir plan gerektirir. Mera bunu izler ve geliştiğinde sana haber verirdi.",
-      "articleFeedback": "Geri bildirimlerinle akışını ayarlamak bir plan gerektirir. Akışın her durumda çalışmaya devam eder.",
-      "persona": "Mera ile konuşmak bir plan gerektirir. İlgi alanların ve bilgilerin bu cihazda kalır.",
-      "optimisationPlan": "Günlük değerlendirme bir plan gerektirir. Mera her gün akışına bakar ve neyi değiştireceğini önerirdi.",
-      "tutorialHelp": "Mera'ya uygulamayı sormak bir plan gerektirir. Yardım bölümündeki rehberler çoğunu kapsıyor.",
-      "factCheck": "Doğruluk kontrolleri bir plan gerektirir. Mera bunu araştırır ve başka kimlerin haber yaptığını gösterirdi.",
-      "default": "Sohbet bir plan gerektirir. Akışın çalışmaya devam eder."
-    }
+    "trackTitle": "Haber takibi bir plan ile birlikte geliyor"
   },
   "factCheck": {
     "actionA11y": "Bu haber hakkında yayımlanmış doğruluk kontrolleri ara",
@@ -1536,8 +1397,6 @@
       "openA11y": "Bu makaleyi aç",
       "articleGone": "Makale süresi dolmuş, bu nedenle açılamıyor. Bulduğumuz gerçek kontrolü burada saklıyoruz.",
       "couldNotCheck": "Bu konuda kimin yayın yaptığını kontrol edemedik. Aramanın ne bulduğunu görmek için dokunun.",
-      "moreOrganisations_one": "+{{count}} tane daha",
-      "moreOrganisations_other": "+{{count}} tane daha",
       "noneFound": "Yayınlanmış gerçek kontrolü bulunamadı",
       "factChecksFound_one": "{{count}} gerçek kontrolü bulundu. Okumak için dokunun",
       "factChecksFound_other": "{{count}} gerçek kontrolü bulundu. Okumak için dokunun"
@@ -1569,7 +1428,6 @@
     "quickRunning": "Web aranıyor…",
     "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor, daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
     "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir, her zaman birbiriyle uyuşmayabilir.",
-    "ownReadingHeading": "Mera'nın kendi değerlendirmesi, yukarıdaki karara ikincil",
     "collapseA11y": "Bu doğrulamayı gizle",
     "expandA11y": "Bu doğrulamayı göster",
     "checkedByRelatedNote": "Bunlar anahtar sözcük aramasından gelir ve farklı bir hikaye hakkında olabilir. Kontrol etmek için birini açın.",
@@ -1594,17 +1452,14 @@
     "privacyLink": "Gizlilik Politikası",
     "accept": "Kabul et ve devam et",
     "accepting": "Kaydediliyor...",
-    "errorTitle": "Kabulün kaydedilemedi",
     "errorDescription": "Lütfen bağlantını kontrol et ve tekrar dene.",
     "retry": "Tekrar Dene",
-    "welcomeTitle": "Mera'ya hoş geldiniz",
     "welcomeBody": "Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmek için \"Kabul et ve devam et\"e dokunun.",
     "deviceNotice": {
       "appAttest": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Apple, bunun gerçek bir iPhone'daki gerçek Mera uygulaması olduğunu onaylar. Hesabınız olduğu sürece bir giriş kaydı saklarız.",
       "playIntegrity": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Google, bunun gerçek bir Android telefondaki gerçek Mera uygulaması olduğunu onaylar. Telefonunuzun kimliğini değil, bir giriş kaydı saklarız.",
       "generic": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Hesabınız olduğu sürece bu telefon için bir giriş kaydı saklarız."
-    },
-    "whatMeraKeeps": "Mera neleri saklar"
+    }
   },
   "tutorials": {
     "entryRow": "Mera nasıl çalışır",
@@ -2287,11 +2142,6 @@
     "skipBody2": "Destek, satın alımınızı yalnızca destek kimliğinizle bulabilir. Kopyalayın ve güvenli bir yerde saklayın.",
     "skipConfirm": "Ödemeye devam et"
   },
-  "welcomeBack": {
-    "title": "Mera'ya tekrar hoş geldiniz",
-    "body": "Görünüşe göre Mera bu cihazda daha önce kullanılmış, bu yüzden ücretsiz deneme zaten kullanılmış durumda. Yeni hesabınızla okumaya devam edebilir veya tam deneyim için istediğiniz zaman bir plan seçebilirsiniz.",
-    "continue": "Devam"
-  },
   "videoPlayer": {
     "closeA11y": "Videoyu kapat",
     "openInBrowser": "Tarayıcıda aç",
@@ -2514,23 +2364,6 @@
     "answeredA11y": "zaten yanıtlandı",
     "saveAll": "Tümünü kaydet"
   },
-  "streamingWords": {
-    "w1": "Düşünüyorum",
-    "w2": "Çözümlüyorum",
-    "w3": "Derinleşiyorum",
-    "w4": "Kafa yoruyorum",
-    "w5": "Evirip çeviriyorum",
-    "w6": "Kurcalıyorum",
-    "w7": "Demleniyorum",
-    "w8": "Muhakeme ediyorum",
-    "w9": "Tartıyorum",
-    "w10": "Eliyorum",
-    "w11": "Bağlantı kuruyorum",
-    "w12": "Kaleme alıyorum",
-    "w13": "Ayarlıyorum",
-    "w14": "İnce işçilik",
-    "w15": "Mayalanıyor"
-  },
   "chatPhases": {
     "preparing": [
       "Mera senin hakkında bildiklerini topluyor.",
@@ -2619,11 +2452,6 @@
     "support": "Destek",
     "supportSub": "Hata bildir, canlı sohbet, SSS, eğitim",
     "tutorial": "Eğitim"
-  },
-  "related": {
-    "allCountries": "Tüm ülkeler",
-    "allLanguages": "Tüm diller",
-    "noMatches": "Bu filtrelere uyan ilgili makale yok."
   },
   "storyExport": {
     "shareA11y": "Bu haberi dışa aktar",
@@ -2836,7 +2664,6 @@
       "changes": "Profilinizdeki değişiklikler",
       "subtitle": "Mera hakkınızda ne biliyor. Bu telefonda kalır.",
       "tidyUp": "Profilinizi düzenleyin",
-      "title": "Profiliniz",
       "topicCount_one": "{{count}} konu",
       "topicCount_other": "{{count}} konu"
     },
@@ -2974,7 +2801,6 @@
     "opensByItself": "Tekrar çevrimiçi olduğunuzda kendiliğinden açılır",
     "reauthBody": "Oturumunuzun süresi doldu. Bu hesapta kayıtlı e-postaya bir kod göndereceğiz.",
     "reauthTitle": "Devam etmek için giriş yapın",
-    "sendNewCode": "Yeni kod gönder",
     "unreachableBody": "Sorun telefonunuzda değil, bizim tarafımızda. Mera denemeye devam eder ve geri geldiğinde açılır.",
     "unreachableTitle": "Mera'ya ulaşılamıyor",
     "mismatchTitle": "Bu e-posta farklı bir hesaba ait",
