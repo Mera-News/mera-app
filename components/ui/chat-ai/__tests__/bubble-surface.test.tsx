@@ -46,3 +46,29 @@ describe('chat bubble surfaces', () => {
     expect(mera.borderWidth).toBeUndefined();
   });
 });
+
+describe('send disc', () => {
+  it('disabled is neutral grey in both themes, enabled is the accent, Stop stays accent', () => {
+    const { PromptInput } = require('../index');
+    const { render } = require('@testing-library/react-native');
+    const { Keyboard } = require('react-native');
+    jest
+      .spyOn(Keyboard, 'addListener')
+      .mockImplementation((() => ({ remove: jest.fn() })) as never);
+    for (const mode of ['dark', 'light'] as const) {
+      useThemeStore.setState({ mode });
+      const idle = render(<PromptInput onSubmit={() => {}} />);
+      const disc = idle.getByTestId('chat-send-disc', { includeHiddenElements: true });
+      const style = StyleSheet.flatten(disc.props.style);
+      expect(style.backgroundColor).toBe(COLORS[mode].surfaceRaised);
+      expect(style.opacity).toBeUndefined();
+      idle.unmount();
+      const stop = render(<PromptInput onSubmit={() => {}} busy onStop={() => {}} />);
+      const stopDisc = stop.getByTestId('chat-send-disc', { includeHiddenElements: true });
+      expect(StyleSheet.flatten(stopDisc.props.style).backgroundColor).not.toBe(
+        COLORS[mode].surfaceRaised,
+      );
+      stop.unmount();
+    }
+  });
+});

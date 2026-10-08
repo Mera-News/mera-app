@@ -494,6 +494,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
           style={styles.sendOverlay}
         >
           <View
+            testID="chat-send-disc"
             style={[
               styles.sendDisc,
               sendPressed && !isSendDisabled && styles.sendDiscPressed,
@@ -504,7 +505,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
               <MaterialIcons
                 name="arrow-upward"
                 size={20}
-                color="#FFFFFF"
+                color={isSendDisabled ? colors.ink3 : '#FFFFFF'}
                 accessible={false}
                 accessibilityElementsHidden
                 importantForAccessibility="no-hide-descendants"
@@ -643,7 +644,9 @@ const useStyles = themedStyles((c, mode) => StyleSheet.create({
   },
   stopIcon: { alignItems: 'center', justifyContent: 'center' },
   sendDiscPressed: { backgroundColor: 'rgb(203, 121, 73)', transform: [{ scale: 0.9 }] }, // primary-300
-  sendDiscDisabled: { opacity: 0.4 },
+  // Neutral grey like every disabled button (surface-raised fill, ink-3 glyph):
+  // no opacity over the accent.
+  sendDiscDisabled: { backgroundColor: c.surfaceRaised },
   textInput: {
     flex: 1,
     backgroundColor: tint(c.ink, 0.15),
