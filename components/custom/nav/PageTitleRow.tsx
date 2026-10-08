@@ -7,6 +7,7 @@
 // The ? is a 24pt ring in a 44pt frame given back by negative margins (never
 // hitSlop), a hidden visual under a childless labelled button.
 
+import { markHelpOrigin } from '@/components/ui/help-modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import React from 'react';
@@ -54,7 +55,7 @@ const PageTitleRow: React.FC<PageTitleRowProps> = ({ title, onExplain, trailing,
             <Text style={[styles.q, { color: colors.muted }]}>?</Text>
           </View>
           <Pressable
-            onPress={onExplain}
+            onPress={(e) => { markHelpOrigin(e.currentTarget); onExplain(); }}
             style={StyleSheet.absoluteFill}
             accessibilityRole="button"
             accessibilityLabel={t('nav.explainerA11y', { page: title })}
