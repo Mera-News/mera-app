@@ -1284,7 +1284,6 @@
       "publication": "ソース",
       "topic": "トピック"
     },
-    "mutedPubHint": "除外済み（大きなニュースを除く）",
     "cardExemptLabel": "「{{filter}}」をフィルターしました。大きなニュースのため表示しています"
   },
   "headlineDepth": {
@@ -1362,9 +1361,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "ブースト",
-    "kindDeprioritize": "格下げ",
-    "kindMute": "ミュート",
     "clearA11y": "設定をクリア",
     "scopeKindCountry": "国"
   },
@@ -2405,13 +2401,6 @@
     "keepAllA11y": "今の情報を残して {{count}} 件の候補をすべて追加"
   },
   "subscriptions": {
-    "sectionTitle": "購読中のメディア",
-    "empty": "お金を払って読んでいるメディアを Mera に教えてください。それらのメディアはフィードで優先されます。",
-    "add": "購読しているメディアを追加",
-    "close": "閉じる",
-    "remove": "削除",
-    "removeA11y": "{{publisher}}を削除",
-    "searchPlaceholder": "メディアを検索",
     "searchTooShort": "2文字以上入力してください",
     "searchInFlight": "検索中",
     "searchNoResults": "このメディアはまだ登録されていません",
@@ -2769,10 +2758,6 @@
       "new": "新着"
     },
     "visited": {
-      "subscribe": "登録する",
-      "alreadyPay": "すでに支払っています",
-      "alreadyPayA11y": "{{publisher}}にはすでに支払っています",
-      "youPay": "支払い中",
       "emptyTitle": "メディアはまだありません"
     },
     "stats": {
@@ -2871,7 +2856,6 @@
     "sources": {
       "title": "ソース",
       "find": "メディアを探す",
-      "adjusted": "調整済み",
       "more": "増やす",
       "fewer": "減らす",
       "muted": "ミュート",

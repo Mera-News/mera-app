@@ -1284,7 +1284,6 @@
       "publication": "Fonte",
       "topic": "Tópico"
     },
-    "mutedPubHint": "Mantido fora, exceto para notícias importantes",
     "cardExemptLabel": "Você filtrou \"{{filter}}\" — mostrando porque é notícia importante"
   },
   "headlineDepth": {
@@ -1362,9 +1361,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Impulsionar",
-    "kindDeprioritize": "Reduzir",
-    "kindMute": "Silenciar",
     "clearA11y": "Limpar preferência",
     "scopeKindCountry": "País"
   },
@@ -2405,13 +2401,6 @@
     "keepAllA11y": "Manter seus fatos e adicionar as {{count}} sugestões"
   },
   "subscriptions": {
-    "sectionTitle": "Suas assinaturas",
-    "empty": "Diga ao Mera quais publicações você assina. Elas ganham mais peso no seu feed.",
-    "add": "Adicionar uma publicação que você assina",
-    "close": "Fechar",
-    "remove": "Remover",
-    "removeA11y": "Remover {{publisher}}",
-    "searchPlaceholder": "Buscar publicações",
     "searchTooShort": "Digite pelo menos 2 caracteres",
     "searchInFlight": "Buscando",
     "searchNoResults": "Ainda não temos esta publicação",
@@ -2770,10 +2759,6 @@
       "new": "Novo"
     },
     "visited": {
-      "subscribe": "Assinar",
-      "alreadyPay": "Eu já pago",
-      "alreadyPayA11y": "Eu já pago por {{publisher}}",
-      "youPay": "Você paga",
       "emptyTitle": "Nenhuma publicação ainda"
     },
     "stats": {
@@ -2872,7 +2857,6 @@
     "sources": {
       "title": "Fontes",
       "find": "Encontrar uma publicação",
-      "adjusted": "Ajustadas",
       "more": "Mais",
       "fewer": "Menos",
       "muted": "Silenciado",

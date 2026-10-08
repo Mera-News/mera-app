@@ -1290,7 +1290,6 @@
       "publication": "Source",
       "topic": "Sujet"
     },
-    "mutedPubHint": "Tenu dehors, sauf pour les grandes actualités",
     "cardExemptLabel": "Vous avez filtré « {{filter}} » — l'affichage parce que c'est une grande actualité"
   },
   "headlineDepth": {
@@ -1368,9 +1367,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Booster",
-    "kindDeprioritize": "Rétrograder",
-    "kindMute": "Masquer",
     "clearA11y": "Effacer la préférence",
     "scopeKindCountry": "Pays"
   },
@@ -2411,13 +2407,6 @@
     "keepAllA11y": "Garder vos faits et ajouter les {{count}} suggestions"
   },
   "subscriptions": {
-    "sectionTitle": "Vos abonnements",
-    "empty": "Indiquez à Mera les publications que vous payez. Elles auront plus de poids dans votre fil.",
-    "add": "Ajouter une publication que vous payez",
-    "close": "Fermer",
-    "remove": "Retirer",
-    "removeA11y": "Retirer {{publisher}}",
-    "searchPlaceholder": "Rechercher des publications",
     "searchTooShort": "Saisissez au moins 2 caractères",
     "searchInFlight": "Recherche en cours",
     "searchNoResults": "Nous n'avons pas encore cet éditeur",
@@ -2776,10 +2765,6 @@
       "new": "Nouveau"
     },
     "visited": {
-      "subscribe": "S'abonner",
-      "alreadyPay": "Je paie déjà",
-      "alreadyPayA11y": "Je paie déjà pour {{publisher}}",
-      "youPay": "Vous payez",
       "emptyTitle": "Aucune publication pour l'instant"
     },
     "stats": {
@@ -2878,7 +2863,6 @@
     "sources": {
       "title": "Sources",
       "find": "Trouver une publication",
-      "adjusted": "Ajustées",
       "more": "Plus",
       "fewer": "Moins",
       "muted": "Mis en sourdine",

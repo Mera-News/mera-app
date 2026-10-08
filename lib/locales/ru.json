@@ -1310,7 +1310,6 @@
       "publication": "Издание",
       "topic": "Тема"
     },
-    "mutedPubHint": "Скрыто, кроме главных новостей",
     "cardExemptLabel": "Вы скрыли «{{filter}}» — показываем, потому что это важно"
   },
   "headlineDepth": {
@@ -1392,9 +1391,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Продвигать",
-    "kindDeprioritize": "Понижать",
-    "kindMute": "Заглушить",
     "clearA11y": "Очистить настройку",
     "scopeKindCountry": "Страна"
   },
@@ -2441,13 +2437,6 @@
     "keepAllA11y": "Оставить ваши факты и добавить все {{count}} предложения"
   },
   "subscriptions": {
-    "sectionTitle": "Ваши подписки",
-    "empty": "Расскажите Mera, на какие издания вы подписаны. Они будут получать больше веса в вашей ленте.",
-    "add": "Добавить издание, на которое вы подписаны",
-    "close": "Закрыть",
-    "remove": "Удалить",
-    "removeA11y": "Удалить {{publisher}}",
-    "searchPlaceholder": "Поиск изданий",
     "searchTooShort": "Введите не менее 2 символов",
     "searchInFlight": "Идёт поиск",
     "searchNoResults": "Этого издателя у нас пока нет",
@@ -2820,10 +2809,6 @@
       "new": "Новое"
     },
     "visited": {
-      "subscribe": "Подписаться",
-      "alreadyPay": "Я уже плачу",
-      "alreadyPayA11y": "Я уже плачу за {{publisher}}",
-      "youPay": "Вы платите",
       "emptyTitle": "Изданий пока нет"
     },
     "stats": {
@@ -2936,7 +2921,6 @@
     "sources": {
       "title": "Источники",
       "find": "Найти издание",
-      "adjusted": "Изменено",
       "more": "Больше",
       "fewer": "Меньше",
       "muted": "Приглушено",

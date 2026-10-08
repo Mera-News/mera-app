@@ -1285,7 +1285,6 @@
       "publication": "Nguồn",
       "topic": "Chủ đề"
     },
-    "mutedPubHint": "Loại trừ, trừ tin tức lớn",
     "cardExemptLabel": "Bạn đã lọc \"{{filter}}\" — hiển thị vì đó là tin tức lớn"
   },
   "headlineDepth": {
@@ -1363,9 +1362,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Tăng",
-    "kindDeprioritize": "Giảm",
-    "kindMute": "Tắt tiếng",
     "clearA11y": "Xóa tùy chọn",
     "scopeKindCountry": "Quốc gia"
   },
@@ -2406,13 +2402,6 @@
     "keepAllA11y": "Giữ thông tin của bạn và thêm tất cả {{count}} gợi ý"
   },
   "subscriptions": {
-    "sectionTitle": "Gói đăng ký của bạn",
-    "empty": "Hãy cho Mera biết bạn trả phí cho những ấn phẩm nào. Các ấn phẩm này sẽ được ưu tiên hơn trong bảng tin của bạn.",
-    "add": "Thêm một ấn phẩm bạn trả phí",
-    "close": "Đóng",
-    "remove": "Xóa",
-    "removeA11y": "Xóa {{publisher}}",
-    "searchPlaceholder": "Tìm báo",
     "searchTooShort": "Nhập ít nhất 2 ký tự",
     "searchInFlight": "Đang tìm",
     "searchNoResults": "Chúng tôi chưa có báo này",
@@ -2770,10 +2759,6 @@
       "new": "Mới"
     },
     "visited": {
-      "subscribe": "Đăng ký",
-      "alreadyPay": "Tôi đã trả phí",
-      "alreadyPayA11y": "Tôi đã trả phí cho {{publisher}}",
-      "youPay": "Bạn đã trả phí",
       "emptyTitle": "Chưa có ấn phẩm nào"
     },
     "stats": {
@@ -2872,7 +2857,6 @@
     "sources": {
       "title": "Nguồn",
       "find": "Tìm một ấn phẩm",
-      "adjusted": "Đã điều chỉnh",
       "more": "Nhiều hơn",
       "fewer": "Ít hơn",
       "muted": "Tắt tiếng",

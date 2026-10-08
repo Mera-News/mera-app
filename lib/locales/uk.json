@@ -1314,7 +1314,6 @@
       "publication": "Видання",
       "topic": "Тема"
     },
-    "mutedPubHint": "Приховано, окрім важливих новин",
     "cardExemptLabel": "Ви приховали «{{filter}}» — показуємо, тому що це важливо"
   },
   "headlineDepth": {
@@ -1396,9 +1395,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Підвищити",
-    "kindDeprioritize": "Знизити",
-    "kindMute": "Заглушити",
     "clearA11y": "Очистити налаштування",
     "scopeKindCountry": "Країна"
   },
@@ -2445,13 +2441,6 @@
     "keepAllA11y": "Залишити ваші факти й додати всі {{count}} пропозиції"
   },
   "subscriptions": {
-    "sectionTitle": "Ваші передплати",
-    "empty": "Розкажіть Mera, які видання ви передплачуєте. Ми надамо їм більше ваги у вашій стрічці.",
-    "add": "Додати видання, яке ви передплачуєте",
-    "close": "Закрити",
-    "remove": "Видалити",
-    "removeA11y": "Видалити {{publisher}}",
-    "searchPlaceholder": "Пошук видань",
     "searchTooShort": "Введіть щонайменше 2 символи",
     "searchInFlight": "Триває пошук",
     "searchNoResults": "Цього видавця в нас поки немає",
@@ -2824,10 +2813,6 @@
       "new": "Нове"
     },
     "visited": {
-      "subscribe": "Підписатися",
-      "alreadyPay": "Я вже плачу",
-      "alreadyPayA11y": "Я вже плачу за {{publisher}}",
-      "youPay": "Ви платите",
       "emptyTitle": "Видань поки немає"
     },
     "stats": {
@@ -2940,7 +2925,6 @@
     "sources": {
       "title": "Джерела",
       "find": "Знайти видання",
-      "adjusted": "Змінено",
       "more": "Більше",
       "fewer": "Менше",
       "muted": "Приглушено",

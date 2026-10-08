@@ -1284,7 +1284,6 @@
       "publication": "Bron",
       "topic": "Onderwerp"
     },
-    "mutedPubHint": "Verborgen, behalve voor belangrijk nieuws",
     "cardExemptLabel": "Je hebt \"{{filter}}\" gefilterd — toont omdat het belangrijk nieuws is"
   },
   "headlineDepth": {
@@ -1362,9 +1361,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Boost",
-    "kindDeprioritize": "Verlagen",
-    "kindMute": "Dempen",
     "clearA11y": "Voorkeur wissen",
     "scopeKindCountry": "Land"
   },
@@ -2405,13 +2401,6 @@
     "keepAllA11y": "Je feiten houden en alle {{count}} suggesties toevoegen"
   },
   "subscriptions": {
-    "sectionTitle": "Je abonnementen",
-    "empty": "Vertel Mera voor welke publicaties je betaalt. Die krijgen meer gewicht in je feed.",
-    "add": "Voeg een publicatie toe waarvoor je betaalt",
-    "close": "Sluiten",
-    "remove": "Verwijderen",
-    "removeA11y": "{{publisher}} verwijderen",
-    "searchPlaceholder": "Zoek titels",
     "searchTooShort": "Typ minstens 2 tekens",
     "searchInFlight": "Bezig met zoeken",
     "searchNoResults": "Deze uitgever hebben we nog niet",
@@ -2770,10 +2759,6 @@
       "new": "Nieuw"
     },
     "visited": {
-      "subscribe": "Abonneren",
-      "alreadyPay": "Ik betaal al",
-      "alreadyPayA11y": "Ik betaal al voor {{publisher}}",
-      "youPay": "Jij betaalt",
       "emptyTitle": "Nog geen uitgevers"
     },
     "stats": {
@@ -2872,7 +2857,6 @@
     "sources": {
       "title": "Bronnen",
       "find": "Zoek een uitgever",
-      "adjusted": "Aangepast",
       "more": "Meer",
       "fewer": "Minder",
       "muted": "Gedempt",

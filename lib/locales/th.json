@@ -1284,7 +1284,6 @@
       "publication": "แหล่ง",
       "topic": "หัวข้อ"
     },
-    "mutedPubHint": "ออก ยกเว้นข่าวสำคัญ",
     "cardExemptLabel": "คุณกรองเนื้อหา \"{{filter}}\" — แสดงเพราะข่าวสำคัญ"
   },
   "headlineDepth": {
@@ -1362,9 +1361,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "เพิ่ม",
-    "kindDeprioritize": "ลดลำดับ",
-    "kindMute": "ปิดเสียง",
     "clearA11y": "ล้างการตั้งค่า",
     "scopeKindCountry": "ประเทศ"
   },
@@ -2405,13 +2401,6 @@
     "keepAllA11y": "เก็บข้อมูลเดิมไว้และเพิ่มข้อเสนอทั้ง {{count}} รายการ"
   },
   "subscriptions": {
-    "sectionTitle": "การสมัครสมาชิกของคุณ",
-    "empty": "บอก Mera ว่าคุณจ่ายเงินให้สำนักพิมพ์ใดบ้าง เราจะให้น้ำหนักกับสำนักพิมพ์เหล่านั้นมากขึ้นในฟีดของคุณ",
-    "add": "เพิ่มสำนักพิมพ์ที่คุณจ่ายเงินให้",
-    "close": "ปิด",
-    "remove": "นำออก",
-    "removeA11y": "นำ {{publisher}} ออก",
-    "searchPlaceholder": "ค้นหาสำนักข่าว",
     "searchTooShort": "พิมพ์อย่างน้อย 2 ตัวอักษร",
     "searchInFlight": "กำลังค้นหา",
     "searchNoResults": "เรายังไม่มีสำนักข่าวนี้",
@@ -2769,10 +2758,6 @@
       "new": "ใหม่"
     },
     "visited": {
-      "subscribe": "สมัครสมาชิก",
-      "alreadyPay": "ฉันสมัครอยู่แล้ว",
-      "alreadyPayA11y": "ฉันสมัครสมาชิก {{publisher}} อยู่แล้ว",
-      "youPay": "คุณจ่ายอยู่",
       "emptyTitle": "ยังไม่มีสำนักพิมพ์"
     },
     "stats": {
@@ -2871,7 +2856,6 @@
     "sources": {
       "title": "แหล่งข่าว",
       "find": "ค้นหาสำนักพิมพ์",
-      "adjusted": "ที่ปรับแล้ว",
       "more": "มากขึ้น",
       "fewer": "น้อยลง",
       "muted": "ปิดเสียง",

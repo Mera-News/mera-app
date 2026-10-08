@@ -1284,7 +1284,6 @@
       "publication": "Fonte",
       "topic": "Argomento"
     },
-    "mutedPubHint": "Tenuto fuori, tranne per le notizie importanti",
     "cardExemptLabel": "Hai filtrato \"{{filter}}\" — lo mostro perché è una notizia importante"
   },
   "headlineDepth": {
@@ -1362,9 +1361,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Aumenta",
-    "kindDeprioritize": "Declassa",
-    "kindMute": "Silenzia",
     "clearA11y": "Cancella preferenza",
     "scopeKindCountry": "Paese"
   },
@@ -2405,13 +2401,6 @@
     "keepAllA11y": "Tieni i tuoi fatti e aggiungi tutti i {{count}} suggerimenti"
   },
   "subscriptions": {
-    "sectionTitle": "I tuoi abbonamenti",
-    "empty": "Indica a Mera le testate per cui paghi. Avranno più peso nel tuo feed.",
-    "add": "Aggiungi una testata per cui paghi",
-    "close": "Chiudi",
-    "remove": "Rimuovi",
-    "removeA11y": "Rimuovi {{publisher}}",
-    "searchPlaceholder": "Cerca testate",
     "searchTooShort": "Scrivi almeno 2 caratteri",
     "searchInFlight": "Ricerca in corso",
     "searchNoResults": "Non abbiamo ancora questo editore",
@@ -2770,10 +2759,6 @@
       "new": "Nuova"
     },
     "visited": {
-      "subscribe": "Abbonati",
-      "alreadyPay": "Pago già",
-      "alreadyPayA11y": "Pago già per {{publisher}}",
-      "youPay": "Paghi",
       "emptyTitle": "Ancora nessuna testata"
     },
     "stats": {
@@ -2872,7 +2857,6 @@
     "sources": {
       "title": "Fonti",
       "find": "Trova una testata",
-      "adjusted": "Modificate",
       "more": "Di più",
       "fewer": "Meno",
       "muted": "Muto",

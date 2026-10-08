@@ -1342,7 +1342,6 @@
       "publication": "مصدر",
       "topic": "موضوع"
     },
-    "mutedPubHint": "مستبعد، باستثناء الأخبار الرئيسية",
     "cardExemptLabel": "صفّيت \"{{filter}}\" — عرضه لأنه خبر رئيسي"
   },
   "headlineDepth": {
@@ -1428,9 +1427,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "تعزيز",
-    "kindDeprioritize": "خفض الأولوية",
-    "kindMute": "كتم",
     "clearA11y": "مسح التفضيل",
     "scopeKindCountry": "دولة"
   },
@@ -2483,13 +2479,6 @@
     "keepAllA11y": "الإبقاء على حقائقك وإضافة كل الاقتراحات الـ {{count}}"
   },
   "subscriptions": {
-    "sectionTitle": "اشتراكاتك",
-    "empty": "أخبر ميرا بالمنشورات التي تدفع مقابلها. ستحظى بوزن أكبر في موجزك.",
-    "add": "إضافة منشور تدفع مقابله",
-    "close": "إغلاق",
-    "remove": "إزالة",
-    "removeA11y": "إزالة {{publisher}}",
-    "searchPlaceholder": "ابحث عن منشورات",
     "searchTooShort": "اكتب حرفين على الأقل",
     "searchInFlight": "جارٍ البحث",
     "searchNoResults": "لا يتوفر هذا الناشر لدينا بعد",
@@ -2876,10 +2865,6 @@
       "new": "جديد"
     },
     "visited": {
-      "subscribe": "اشترك",
-      "alreadyPay": "أنا مشترك بالفعل",
-      "alreadyPayA11y": "أنا مشترك بالفعل في {{publisher}}",
-      "youPay": "أنت مشترك",
       "emptyTitle": "لا توجد منشورات بعد"
     },
     "stats": {
@@ -3006,7 +2991,6 @@
     "sources": {
       "title": "المصادر",
       "find": "ابحث عن منشور",
-      "adjusted": "المعدَّلة",
       "more": "أكثر",
       "fewer": "أقل",
       "muted": "مكتوم",

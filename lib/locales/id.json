@@ -1284,7 +1284,6 @@
       "publication": "Sumber",
       "topic": "Topik"
     },
-    "mutedPubHint": "Dijauhkan, kecuali berita penting",
     "cardExemptLabel": "Anda menyaring \"{{filter}}\" — menampilkannya karena berita penting"
   },
   "headlineDepth": {
@@ -1362,9 +1361,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Naikkan",
-    "kindDeprioritize": "Turunkan",
-    "kindMute": "Bisukan",
     "clearA11y": "Hapus preferensi",
     "scopeKindCountry": "Negara"
   },
@@ -2405,13 +2401,6 @@
     "keepAllA11y": "Simpan fakta Anda dan tambahkan semua {{count}} saran"
   },
   "subscriptions": {
-    "sectionTitle": "Langganan Anda",
-    "empty": "Beri tahu Mera publikasi mana yang Anda bayar. Publikasi itu akan mendapat bobot lebih besar di feed Anda.",
-    "add": "Tambahkan publikasi yang Anda bayar",
-    "close": "Tutup",
-    "remove": "Hapus",
-    "removeA11y": "Hapus {{publisher}}",
-    "searchPlaceholder": "Cari publikasi",
     "searchTooShort": "Ketik minimal 2 karakter",
     "searchInFlight": "Mencari",
     "searchNoResults": "Kami belum punya penerbit ini",
@@ -2769,10 +2758,6 @@
       "new": "Baru"
     },
     "visited": {
-      "subscribe": "Berlangganan",
-      "alreadyPay": "Saya sudah berlangganan",
-      "alreadyPayA11y": "Saya sudah membayar untuk {{publisher}}",
-      "youPay": "Anda membayar",
       "emptyTitle": "Belum ada publikasi"
     },
     "stats": {
@@ -2871,7 +2856,6 @@
     "sources": {
       "title": "Sumber",
       "find": "Cari publikasi",
-      "adjusted": "Diatur",
       "more": "Lebih banyak",
       "fewer": "Lebih sedikit",
       "muted": "Senyap",

@@ -1285,7 +1285,6 @@
       "publication": "來源",
       "topic": "主題"
     },
-    "mutedPubHint": "已排除，重大新聞除外",
     "cardExemptLabel": "您篩選了 {{filter}} ——因為這是重大新聞所以顯示"
   },
   "headlineDepth": {
@@ -1363,9 +1362,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "提升",
-    "kindDeprioritize": "降權",
-    "kindMute": "靜音",
     "clearA11y": "清除偏好",
     "scopeKindCountry": "國家"
   },
@@ -2406,13 +2402,6 @@
     "keepAllA11y": "保留你的資訊並新增全部 {{count}} 則建議"
   },
   "subscriptions": {
-    "sectionTitle": "您的訂閱",
-    "empty": "告訴 Mera 您訂閱了哪些媒體。我們會在您的資訊流中提高它們的權重。",
-    "add": "新增您訂閱的媒體",
-    "close": "關閉",
-    "remove": "移除",
-    "removeA11y": "移除 {{publisher}}",
-    "searchPlaceholder": "搜尋媒體",
     "searchTooShort": "請至少輸入 2 個字元",
     "searchInFlight": "正在搜尋",
     "searchNoResults": "我們尚未收錄這家媒體",
@@ -2770,10 +2759,6 @@
       "new": "新"
     },
     "visited": {
-      "subscribe": "訂閱",
-      "alreadyPay": "我已付費",
-      "alreadyPayA11y": "我已為{{publisher}}付費",
-      "youPay": "你已付費",
       "emptyTitle": "還沒有出版物"
     },
     "stats": {
@@ -2872,7 +2857,6 @@
     "sources": {
       "title": "來源",
       "find": "尋找出版物",
-      "adjusted": "已調整",
       "more": "更多",
       "fewer": "更少",
       "muted": "已靜音",

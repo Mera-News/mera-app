@@ -1286,7 +1286,6 @@
       "publication": "Kaynak",
       "topic": "Konu"
     },
-    "mutedPubHint": "Gizlendi, önemli haberler hariç",
     "cardExemptLabel": "\"{{filter}}\" filtrelemişsin — önemli haber olduğu için gösteriyorum"
   },
   "headlineDepth": {
@@ -1364,9 +1363,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Öne çıkar",
-    "kindDeprioritize": "Önceliği düşür",
-    "kindMute": "Sustur",
     "clearA11y": "Tercihi temizle",
     "scopeKindCountry": "Ülke"
   },
@@ -2407,13 +2403,6 @@
     "keepAllA11y": "Bilgilerini tut ve {{count}} önerinin tümünü ekle"
   },
   "subscriptions": {
-    "sectionTitle": "Abonelikleriniz",
-    "empty": "Ödediğiniz yayınları Mera'ya söyleyin. Bu yayınlar akışınızda daha fazla ağırlık alır.",
-    "add": "Ödediğiniz bir yayın ekle",
-    "close": "Kapat",
-    "remove": "Kaldır",
-    "removeA11y": "{{publisher}} yayınını kaldır",
-    "searchPlaceholder": "Yayın ara",
     "searchTooShort": "En az 2 karakter yazın",
     "searchInFlight": "Aranıyor",
     "searchNoResults": "Bu yayıncı henüz bizde yok",
@@ -2772,10 +2761,6 @@
       "new": "Yeni"
     },
     "visited": {
-      "subscribe": "Abone ol",
-      "alreadyPay": "Zaten ödüyorum",
-      "alreadyPayA11y": "{{publisher}} için zaten ödüyorum",
-      "youPay": "Ödüyorsunuz",
       "emptyTitle": "Henüz yayın yok"
     },
     "stats": {
@@ -2874,7 +2859,6 @@
     "sources": {
       "title": "Kaynaklar",
       "find": "Yayın bul",
-      "adjusted": "Ayarlananlar",
       "more": "Daha fazla",
       "fewer": "Daha az",
       "muted": "Sessize alındı",

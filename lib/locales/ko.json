@@ -1284,7 +1284,6 @@
       "publication": "소스",
       "topic": "주제"
     },
-    "mutedPubHint": "제외됨(주요 뉴스 제외)",
     "cardExemptLabel": "\"{{filter}}\"를 필터링했습니다 — 주요 뉴스이므로 표시합니다"
   },
   "headlineDepth": {
@@ -1362,9 +1361,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "부스트",
-    "kindDeprioritize": "낮추기",
-    "kindMute": "음소거",
     "clearA11y": "선호도 지우기",
     "scopeKindCountry": "국가"
   },
@@ -2405,13 +2401,6 @@
     "keepAllA11y": "기존 정보를 유지하고 {{count}}개 제안 모두 추가"
   },
   "subscriptions": {
-    "sectionTitle": "구독 중인 매체",
-    "empty": "구독 중인 매체를 Mera에 알려 주세요. 피드에서 더 큰 비중을 둡니다.",
-    "add": "구독 중인 매체 추가",
-    "close": "닫기",
-    "remove": "삭제",
-    "removeA11y": "{{publisher}} 삭제",
-    "searchPlaceholder": "매체 검색",
     "searchTooShort": "2자 이상 입력하세요",
     "searchInFlight": "검색 중",
     "searchNoResults": "아직 등록되지 않은 매체입니다",
@@ -2769,10 +2758,6 @@
       "new": "새로"
     },
     "visited": {
-      "subscribe": "구독하기",
-      "alreadyPay": "이미 구독 중이에요",
-      "alreadyPayA11y": "{{publisher}}을(를) 이미 구독 중이에요",
-      "youPay": "구독 중",
       "emptyTitle": "아직 매체가 없어요"
     },
     "stats": {
@@ -2871,7 +2856,6 @@
     "sources": {
       "title": "소스",
       "find": "매체 찾기",
-      "adjusted": "조정됨",
       "more": "늘리기",
       "fewer": "줄이기",
       "muted": "음소거됨",

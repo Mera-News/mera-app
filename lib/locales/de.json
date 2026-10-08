@@ -1284,7 +1284,6 @@
       "publication": "Quelle",
       "topic": "Thema"
     },
-    "mutedPubHint": "Ausgeblendet, außer für wichtige Nachrichten",
     "cardExemptLabel": "Du hast \"{{filter}}\" gefiltert. Wir zeigen es trotzdem, weil es wichtige Nachrichten sind"
   },
   "headlineDepth": {
@@ -1362,9 +1361,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Hervorheben",
-    "kindDeprioritize": "Herabstufen",
-    "kindMute": "Stummschalten",
     "clearA11y": "Präferenz löschen",
     "scopeKindCountry": "Land"
   },
@@ -2405,13 +2401,6 @@
     "keepAllA11y": "Deine Fakten behalten und alle {{count}} Vorschläge hinzufügen"
   },
   "subscriptions": {
-    "sectionTitle": "Deine Abos",
-    "empty": "Sag Mera, für welche Publikationen du bezahlst. Diese bekommen in deinem Feed mehr Gewicht.",
-    "add": "Eine Publikation hinzufügen, für die du bezahlst",
-    "close": "Schließen",
-    "remove": "Entfernen",
-    "removeA11y": "{{publisher}} entfernen",
-    "searchPlaceholder": "Publikationen suchen",
     "searchTooShort": "Gib mindestens 2 Zeichen ein",
     "searchInFlight": "Suche läuft",
     "searchNoResults": "Diesen Anbieter haben wir noch nicht",
@@ -2770,10 +2759,6 @@
       "new": "Neu"
     },
     "visited": {
-      "subscribe": "Abonnieren",
-      "alreadyPay": "Ich bezahle bereits",
-      "alreadyPayA11y": "Ich bezahle bereits für {{publisher}}",
-      "youPay": "Du zahlst",
       "emptyTitle": "Noch keine Medien"
     },
     "stats": {
@@ -2872,7 +2857,6 @@
     "sources": {
       "title": "Quellen",
       "find": "Medium finden",
-      "adjusted": "Angepasst",
       "more": "Mehr",
       "fewer": "Weniger",
       "muted": "Stummgeschaltet",

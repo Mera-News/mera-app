@@ -1310,7 +1310,6 @@
       "publication": "Źródło",
       "topic": "Temat"
     },
-    "mutedPubHint": "Ukryto, oprócz ważnych wiadomości",
     "cardExemptLabel": "Filtruj \"{{filter}}\" — pokazuję, bo to ważne wiadomości"
   },
   "headlineDepth": {
@@ -1392,9 +1391,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Podbij",
-    "kindDeprioritize": "Obniż",
-    "kindMute": "Wycisz",
     "clearA11y": "Wyczyść preferencję",
     "scopeKindCountry": "Kraj"
   },
@@ -2441,13 +2437,6 @@
     "keepAllA11y": "Zachowaj swoje fakty i dodaj wszystkie {{count}} propozycje"
   },
   "subscriptions": {
-    "sectionTitle": "Twoje subskrypcje",
-    "empty": "Powiedz Merze, za których wydawców płacisz. Będą mieli większą wagę w Twoim Kanale.",
-    "add": "Dodaj wydawcę, za którego płacisz",
-    "close": "Zamknij",
-    "remove": "Usuń",
-    "removeA11y": "Usuń {{publisher}}",
-    "searchPlaceholder": "Szukaj tytułów",
     "searchTooShort": "Wpisz co najmniej 2 znaki",
     "searchInFlight": "Szukam",
     "searchNoResults": "Nie mamy jeszcze tego wydawcy",
@@ -2820,10 +2809,6 @@
       "new": "Nowe"
     },
     "visited": {
-      "subscribe": "Subskrybuj",
-      "alreadyPay": "Już płacę",
-      "alreadyPayA11y": "Już płacę za {{publisher}}",
-      "youPay": "Płacisz",
       "emptyTitle": "Brak wydawców"
     },
     "stats": {
@@ -2936,7 +2921,6 @@
     "sources": {
       "title": "Źródła",
       "find": "Znajdź wydawcę",
-      "adjusted": "Zmienione",
       "more": "Więcej",
       "fewer": "Mniej",
       "muted": "Wyciszono",

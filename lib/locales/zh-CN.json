@@ -1285,7 +1285,6 @@
       "publication": "来源",
       "topic": "话题"
     },
-    "mutedPubHint": "已排除，重大新闻除外",
     "cardExemptLabel": "您过滤了\"{{filter}}\"——因为这是重大新闻所以显示"
   },
   "headlineDepth": {
@@ -1363,9 +1362,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "提升",
-    "kindDeprioritize": "降权",
-    "kindMute": "屏蔽",
     "clearA11y": "清除偏好",
     "scopeKindCountry": "国家"
   },
@@ -2406,13 +2402,6 @@
     "keepAllA11y": "保留你的信息并添加全部 {{count}} 条建议"
   },
   "subscriptions": {
-    "sectionTitle": "你的订阅",
-    "empty": "告诉 Mera 你付费订阅了哪些出版物。它们在你的信息流中会获得更高的权重。",
-    "add": "添加你付费订阅的出版物",
-    "close": "关闭",
-    "remove": "移除",
-    "removeA11y": "移除 {{publisher}}",
-    "searchPlaceholder": "搜索媒体",
     "searchTooShort": "请至少输入 2 个字符",
     "searchInFlight": "正在搜索",
     "searchNoResults": "我们还没有收录这家媒体",
@@ -2770,10 +2759,6 @@
       "new": "新"
     },
     "visited": {
-      "subscribe": "订阅",
-      "alreadyPay": "我已付费",
-      "alreadyPayA11y": "我已为{{publisher}}付费",
-      "youPay": "你已付费",
       "emptyTitle": "还没有出版物"
     },
     "stats": {
@@ -2872,7 +2857,6 @@
     "sources": {
       "title": "来源",
       "find": "查找出版物",
-      "adjusted": "已调整",
       "more": "更多",
       "fewer": "更少",
       "muted": "已屏蔽",

@@ -1286,7 +1286,6 @@
       "publication": "स्रोत",
       "topic": "विषय"
     },
-    "mutedPubHint": "रखा हुआ, सिवाय प्रमुख खबरों के",
     "cardExemptLabel": "आपने \"{{filter}}\" फ़िल्टर किया — दिखा रहे हैं क्योंकि यह प्रमुख खबर है"
   },
   "headlineDepth": {
@@ -1364,9 +1363,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "बूस्ट",
-    "kindDeprioritize": "डाउनरैंक",
-    "kindMute": "म्यूट",
     "clearA11y": "प्राथमिकता हटाएं",
     "scopeKindCountry": "देश"
   },
@@ -2407,13 +2403,6 @@
     "keepAllA11y": "अपने तथ्य रखें और सभी {{count}} सुझाव जोड़ें"
   },
   "subscriptions": {
-    "sectionTitle": "आपकी सदस्यताएँ",
-    "empty": "मेरा को बताएँ कि आप किन प्रकाशनों के लिए भुगतान करते हैं। उन्हें आपकी फ़ीड में ज़्यादा महत्व मिलेगा।",
-    "add": "वह प्रकाशन जोड़ें जिसके लिए आप भुगतान करते हैं",
-    "close": "बंद करें",
-    "remove": "हटाएँ",
-    "removeA11y": "{{publisher}} को हटाएँ",
-    "searchPlaceholder": "प्रकाशन खोजें",
     "searchTooShort": "कम से कम 2 अक्षर लिखें",
     "searchInFlight": "खोज जारी है",
     "searchNoResults": "यह प्रकाशक अभी हमारे पास नहीं है",
@@ -2772,10 +2761,6 @@
       "new": "नया"
     },
     "visited": {
-      "subscribe": "सब्सक्राइब करें",
-      "alreadyPay": "मैं पहले से भुगतान करता हूं",
-      "alreadyPayA11y": "मैं {{publisher}} के लिए पहले से भुगतान करता हूं",
-      "youPay": "आप भुगतान करते हैं",
       "emptyTitle": "अभी कोई प्रकाशन नहीं"
     },
     "stats": {
@@ -2874,7 +2859,6 @@
     "sources": {
       "title": "स्रोत",
       "find": "कोई प्रकाशन खोजें",
-      "adjusted": "बदले गए",
       "more": "ज़्यादा",
       "fewer": "कम",
       "muted": "म्यूट किया",

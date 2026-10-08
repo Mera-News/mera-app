@@ -1504,7 +1504,6 @@
       "publication": "Source",
       "topic": "Topic"
     },
-    "mutedPubHint": "Kept out, except for major news",
     "cardExemptLabel": "You filtered \"{{filter}}\". Showing it because it's major news"
   },
   "headlineDepth": {
@@ -1582,9 +1581,6 @@
     }
   },
   "publicationPrefs": {
-    "kindBoost": "Boost",
-    "kindDeprioritize": "Downrank",
-    "kindMute": "Mute",
     "clearA11y": "Clear preference",
     "scopeKindCountry": "Country"
   },
@@ -2405,13 +2401,6 @@
     "playbackError": "Could not play the video."
   },
   "subscriptions": {
-    "sectionTitle": "Your subscriptions",
-    "empty": "Tell Mera which publications you pay for. They get more weight in your feed.",
-    "add": "Add a publication you pay for",
-    "close": "Close",
-    "remove": "Remove",
-    "removeA11y": "Remove {{publisher}}",
-    "searchPlaceholder": "Search publications",
     "searchTooShort": "Type at least 2 characters",
     "searchInFlight": "Searching",
     "searchNoResults": "We don't have this publisher yet",
@@ -2770,10 +2759,6 @@
       "new": "New"
     },
     "visited": {
-      "subscribe": "Subscribe",
-      "alreadyPay": "I already pay",
-      "alreadyPayA11y": "I already pay for {{publisher}}",
-      "youPay": "You pay",
       "emptyTitle": "No publications yet"
     },
     "stats": {
@@ -2872,7 +2857,6 @@
     "sources": {
       "title": "Sources",
       "find": "Find a publication",
-      "adjusted": "Adjusted",
       "more": "More",
       "fewer": "Fewer",
       "muted": "Muted",
