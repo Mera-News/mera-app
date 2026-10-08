@@ -49,7 +49,7 @@ const DELETE_FRAME = 44;
 const DELETE_GLYPH = 20;
 /** One line, at least this tall. */
 const ROW_MIN_HEIGHT = 48;
-/** The time column, wide enough for the widest short form ("23h", "now"). */
+/** The time column's floor: the widest English short form ("23h", "now"). */
 const TIME_COLUMN = 32;
 
 /**
@@ -75,6 +75,9 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     // A hygiene row stamps its count when written, and later sweeps add to the
     // same review list: the live count wins while there is anything left.
     const [hygienePending, setHygienePending] = useState<number | null>(null);
+    // Every row's time column is as wide as the widest age laid out so far, so a
+    // longer localized short form never clips and the titles still line up.
+    const [timeWidth, setTimeWidth] = useState(TIME_COLUMN);
     useEffect(() => {
         let cancelled = false;
         const refresh = () => {
@@ -149,8 +152,15 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                         accessibilityLabel={`${title}, ${age}`}
                         style={{ flex: 1, minHeight: ROW_MIN_HEIGHT, flexDirection: 'row', alignItems: 'center', paddingLeft: 16, gap: 12 }}
                     >
-                        {/* Time first, in a fixed column so the titles line up. */}
-                        <Text style={{ width: TIME_COLUMN, color: colors.ink3, fontSize: 13, fontVariant: ['tabular-nums'] }} numberOfLines={1}>
+                        {/* Time first, in a shared column so the titles line up. */}
+                        <Text
+                            style={{ minWidth: timeWidth, color: colors.ink3, fontSize: 13, fontVariant: ['tabular-nums'] }}
+                            numberOfLines={1}
+                            onLayout={(e) => {
+                                const w = Math.ceil(e.nativeEvent.layout.width);
+                                setTimeWidth((cur) => Math.max(cur, w));
+                            }}
+                        >
                             {age}
                         </Text>
                         {/* Unread reads as a semibold title; read is regular. */}
@@ -182,7 +192,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                 </Animated.View>
             );
         },
-        [hygienePending, colors, t, items.length, motion],
+        [hygienePending, colors, t, items.length, motion, timeWidth],
     );
 
     const empty = (
