@@ -61,6 +61,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   DRAG_ACTIVATION,
+  clampToFrame,
   cornerPoint,
   hydrateMeraButtonCorner,
   nearestCorner,
@@ -153,9 +154,11 @@ const Placed: React.FC<PlacedProps> = ({ surface, page, frame, context, rideKeyb
           runOnJS(hapticMedium)();
           runOnJS(setDragging)(true);
         })
+        // Only between the header and the tab bar (owner): never over either.
         .onUpdate((e) => {
-          x.value = fromX.value + e.translationX;
-          y.value = fromY.value + e.translationY;
+          const p = clampToFrame(fromX.value + e.translationX, fromY.value + e.translationY, frame);
+          x.value = p.x;
+          y.value = p.y;
         })
         .onEnd(() => {
           const half = frame.size / 2;

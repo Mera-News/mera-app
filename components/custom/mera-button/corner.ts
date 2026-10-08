@@ -50,6 +50,19 @@ export function cornerPoint(corner: MeraCorner, f: CornerFrame): { x: number; y:
   };
 }
 
+/**
+ * A dragged button's top-left point, kept inside the box the four corners
+ * span: below the page header, above the tab bar (or the home indicator off
+ * the tabs), the side insets as at rest. It never rides over either bar.
+ */
+export function clampToFrame(x: number, y: number, f: CornerFrame): { x: number; y: number } {
+  'worklet';
+  const minY = f.top;
+  const maxY = Math.max(minY, f.height - f.bottom - f.size);
+  const maxX = Math.max(f.inset, f.width - f.inset - f.size);
+  return { x: Math.min(maxX, Math.max(f.inset, x)), y: Math.min(maxY, Math.max(minY, y)) };
+}
+
 /** The tooltip sits on the side of the button facing the screen's middle. */
 export function tooltipSide(corner: MeraCorner): 'left' | 'right' {
   return corner === 'tl' || corner === 'bl' ? 'right' : 'left';

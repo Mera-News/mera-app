@@ -11,6 +11,7 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 }));
 
 import {
+  clampToFrame,
   cornerPoint,
   hydrateMeraButtonCorner,
   MERA_BUTTON_CORNER_KEY,
@@ -105,5 +106,31 @@ describe('persistence', () => {
     setMeraCorner('tl');
     resetMeraButtonCorner();
     expect(useMeraCornerStore.getState()).toMatchObject({ corner: 'br', hydrated: false });
+  });
+});
+
+describe('clampToFrame', () => {
+  // 402 x 800 overlay; header ends at 118 (+12 gap), tab bar top + 13 = 96 from the bottom.
+  const f = { width: 402, height: 800, top: 130, bottom: 96, inset: 16, size: 62 };
+
+  it('leaves a point inside the box alone', () => {
+    expect(clampToFrame(100, 300, f)).toEqual({ x: 100, y: 300 });
+  });
+
+  it('never goes over the header or the tab bar', () => {
+    expect(clampToFrame(100, 20, f).y).toBe(130);
+    expect(clampToFrame(100, 790, f).y).toBe(800 - 96 - 62);
+  });
+
+  it('keeps the side insets', () => {
+    expect(clampToFrame(-50, 300, f).x).toBe(16);
+    expect(clampToFrame(999, 300, f).x).toBe(402 - 16 - 62);
+  });
+
+  it('spans exactly the four corner points', () => {
+    for (const c of ['tl', 'tr', 'bl', 'br'] as const) {
+      const p = cornerPoint(c, f);
+      expect(clampToFrame(p.x, p.y, f)).toEqual(p);
+    }
   });
 });
