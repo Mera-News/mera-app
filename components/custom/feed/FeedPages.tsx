@@ -1,5 +1,7 @@
-// The Feed tab's pages: Feed (two views, FeedPage) and Stories, a fixed group
-// (only World is arranged). The Feed page is keep-mounted in the pager (PAGE_META), so
+// The Feed tab's pages, everything new for the reader: Feed (two views,
+// FeedPage), Stories and Notifications (the inbox), a fixed group (only World
+// is arranged). The track is icon-only with the selected page's name
+// (`iconsOnly`), whatever the width. The Feed page is keep-mounted in the pager (PAGE_META), so
 // its reading session survives any swipe or reorder.
 //
 // The status icon sits in the header's leading slot on every page of the tab;
@@ -22,6 +24,8 @@ import { usePageOrder } from '@/lib/navigation/page-order';
 import { buildFeedList } from '@/lib/stores/feed-list-selector';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useIsFocused } from '@react-navigation/native';
+import NotificationsScreen from '@/components/custom/notifications/NotificationsScreen';
+import { observeUnreadCount } from '@/lib/database/services/notification-service';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -45,6 +49,24 @@ export function useStoriesDot(): PageDot {
 }
 
 const NO_EXCLUSIONS: Set<string> = new Set();
+
+/** Each page's icon on the (icon-only) track. */
+const ICONS: Readonly<Record<string, NonNullable<PagePill['icon']>>> = {
+  feed: 'article',
+  stories: 'layers',
+  notifications: 'notifications-none',
+};
+
+/** The Notifications pill's dot: lit while anything is unread. Seeing the
+ *  page marks rows read, which clears it (and the Feed tab dot's share). */
+function useNotificationsDot(): PageDot {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const sub = observeUnreadCount().subscribe((n) => setVisible(n > 0));
+    return () => sub.unsubscribe();
+  }, []);
+  return { visible };
+}
 
 /**
  * The Feed tab's dot (FinalFeed #13): the reader left while the Feed was still
@@ -80,8 +102,10 @@ export function FeedPages() {
       order.map((id) => ({
         id,
         label: t(PAGE_META[id].labelKey),
-        icon: id === 'feed' ? 'article' : id === 'stories' ? 'layers' : undefined,
-        useDot: id === 'stories' ? useStoriesDot : undefined,
+        icon: ICONS[id],
+        // Feed's own pill has no dot: no on-device "new since seen" signal
+        // exists for it outside the list (the tab dot covers its first stories).
+        useDot: id === 'stories' ? useStoriesDot : id === 'notifications' ? useNotificationsDot : undefined,
       })),
     [order, t],
   );
@@ -98,6 +122,8 @@ export function FeedPages() {
             headerHeight={header.headerHeight}
           />
         );
+      case 'notifications':
+        return <NotificationsScreen header={header} active={active} />;
       default:
         return null;
     }
@@ -120,6 +146,7 @@ export function FeedPages() {
         renderPage={renderPage}
         leading={leading}
         renderAccessory={renderAccessory}
+        iconsOnly
         testID="feed-pages"
       />
     </View>

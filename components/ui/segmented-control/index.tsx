@@ -62,6 +62,9 @@ export interface SegmentedControlProps<T extends string> {
     availableWidth?: number | null;
     /** Header size only: names alone when they all fit, no icons (fit.ts). */
     namesFirst?: boolean;
+    /** Header size only: icons, with only the selected option's name, at any
+     *  width (the fit rule is skipped). */
+    iconsOnly?: boolean;
 }
 
 /** FinalSettings #6: 36pt options inside a 3pt padded, 1pt bordered track,
@@ -197,6 +200,7 @@ function HeaderTrack<T extends string>({
     testID,
     availableWidth = null,
     namesFirst = false,
+    iconsOnly = false,
 }: SegmentedControlProps<T>) {
     const colors = useColors();
     const reduceMotion = useReducedMotion();
@@ -207,7 +211,7 @@ function HeaderTrack<T extends string>({
         const w = Math.ceil(e.nativeEvent.lines[0]?.width ?? 0);
         setWidths((prev) => (prev[key] === w ? prev : { ...prev, [key]: w }));
     }, []);
-    const mode = useMemo(
+    const fitMode = useMemo(
         () =>
             headerTrackMode(
                 options.map((o) => widths[o.label]),
@@ -218,6 +222,7 @@ function HeaderTrack<T extends string>({
             ),
         [options, widths, availableWidth, namesFirst],
     );
+    const mode = iconsOnly ? 'compact' : fitMode;
     return (
         // The track glides to its new width with its options.
         <Animated.View

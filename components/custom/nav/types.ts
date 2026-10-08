@@ -83,6 +83,9 @@ export interface TabPagesProps {
   readonly leading?: React.ReactNode;
   /** The track shows its page NAMES alone when they all fit (Library, You). */
   readonly namesFirst?: boolean;
+  /** The track shows ICONS only, plus the selected page's name, whatever the
+   *  width (the Feed: Feed | Stories | Notifications). */
+  readonly iconsOnly?: boolean;
   /**
    * The ACTIVE page's header accessory (the Feed's View chip and stats card):
    * drawn under the track row INSIDE the collapsing header, so it hides and

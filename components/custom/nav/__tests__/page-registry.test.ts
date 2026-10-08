@@ -24,18 +24,19 @@ describe('page-registry', () => {
     expect(kept).toEqual(['feed']);
   });
 
-  it("gives the ? only to Feed and World pages; Library and You have none", () => {
+  it("gives the ? only to Feed and World pages (not the inbox); Library and You have none", () => {
     for (const id of Object.keys(PAGE_META) as FixedPageId[]) {
       const tab = PAGE_META[id].tab;
       const hasHelp = PAGE_META[id].explainer !== null;
-      expect(hasHelp).toBe(tab === 'feed' || tab === 'world');
+      expect(hasHelp).toBe((tab === 'feed' && id !== 'notifications') || tab === 'world');
     }
   });
 
-  it('keeps the inbox in Library and Settings in You', () => {
-    expect(DEFAULT_PAGE_ORDER.library).toEqual(['saved', 'checks', 'visited', 'stats', 'notifications']);
+  it('keeps the inbox last in the Feed, Library static and Settings in You', () => {
+    expect(DEFAULT_PAGE_ORDER.feed).toEqual(['feed', 'stories', 'notifications']);
+    expect(DEFAULT_PAGE_ORDER.library).toEqual(['saved', 'checks', 'visited', 'stats']);
     expect(DEFAULT_PAGE_ORDER.you).toEqual(['profile', 'settings']);
-    expect(tabOfPage('notifications')).toBe('library');
+    expect(tabOfPage('notifications')).toBe('feed');
   });
 
   it('round-trips country page ids as uppercase alpha-2', () => {

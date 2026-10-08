@@ -55,6 +55,7 @@ const TabPages: React.FC<TabPagesProps> = ({
   arrange,
   leading,
   namesFirst,
+  iconsOnly,
   renderAccessory,
   title,
   renderTitleChip,
@@ -240,6 +241,7 @@ const TabPages: React.FC<TabPagesProps> = ({
             variant={tab === 'world' ? 'scroll' : 'segmented'}
             leading={leading}
             namesFirst={namesFirst}
+            iconsOnly={iconsOnly}
             onSearch={onSearch}
             onHelp={hasExplainer ? openExplainer : undefined}
             helpLabel={t('nav.explainerA11y', { page: activeLabel })}

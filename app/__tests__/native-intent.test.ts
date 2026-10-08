@@ -36,12 +36,12 @@ describe('+native-intent', () => {
     expect(consumePendingPage('library')).toMatchObject({ page: 'stats' });
   });
 
-  it('lands the inbox link on Library > Notifications', () => {
+  it('lands the inbox link on Feed > Notifications', () => {
     expect(redirectSystemPath({ path: '/logged-in/notifications', initial: true })).toBe(
-      '/logged-in/app_container/library',
+      '/logged-in/app_container/feed',
     );
-    expect(consumePendingPage('you')).toBeNull();
-    expect(consumePendingPage('library')).toMatchObject({ page: 'notifications' });
+    expect(consumePendingPage('library')).toBeNull();
+    expect(consumePendingPage('feed')).toMatchObject({ page: 'notifications' });
   });
 
   it('keeps One interest params in the URL (a pushed screen, not a page)', () => {

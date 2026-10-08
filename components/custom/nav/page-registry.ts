@@ -116,10 +116,10 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
   stats: { tab: 'library', labelKey: 'nav.page.stats', keepMounted: false, explainer: null },
   profile: { tab: 'you', labelKey: 'tabs.profile', keepMounted: false, explainer: null },
   settings: { tab: 'you', labelKey: 'tabs.settings', keepMounted: false, explainer: null },
-  // The inbox (NotificationsScreen embedded), in Library (owner). Not
-  // `settings:notifications`, the notification SETTINGS screen pushed in the
-  // You stack, which stays there.
-  notifications: { tab: 'library', labelKey: 'notificationCenter.title', keepMounted: false, explainer: null },
+  // The inbox (NotificationsScreen embedded), the Feed tab's last page (owner:
+  // the Feed is everything new). Not `settings:notifications`, the
+  // notification SETTINGS screen pushed in the You stack, which stays there.
+  notifications: { tab: 'feed', labelKey: 'notificationCenter.title', keepMounted: false, explainer: null },
 };
 
 /** A country page: World's shape, its own explainer. */

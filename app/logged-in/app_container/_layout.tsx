@@ -48,16 +48,19 @@ export default function AppLayout() {
     const label = (key: 'tabs.deck' | 'tabs.world' | 'tabs.library' | 'tabs.you', on: boolean) =>
         on ? t('nav.tabNewA11y', { label: t(key) }) : t(key);
 
-    // Library's dot: unread notices (its Notifications page marks them read)
-    // or a fact check finished since Fact checks was seen. One writer, so
-    // neither source clears the other's dot.
+    // The Feed's dot (everything new): its own (first stories landed while
+    // away, FeedPages) OR unread notices (its Notifications page marks them
+    // read). Combined here, so neither source clears the other.
     const [unread, setUnread] = useState(false);
     useEffect(() => {
         const sub = observeUnreadCount().subscribe((n) => setUnread(n > 0));
         return () => sub.unsubscribe();
     }, []);
+    const feedDot = dot.feed || unread;
+    // Library's dot: a fact check finished since Fact checks was seen (the
+    // reader's own request, so it stays here).
     const checksUnseen = useChecksUnseen();
-    useEffect(() => setTabDot('library', unread || checksUnseen), [unread, checksUnseen]);
+    useEffect(() => setTabDot('library', checksUnseen), [checksUnseen]);
 
     // Trigger order defines both the tab order AND the initial route: the first
     // trigger (`feed`) is selected on first mount, and Android Back on another
@@ -90,10 +93,10 @@ export default function AppLayout() {
                     <NativeTabs.Trigger
                         name="feed"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(label('tabs.deck', dot.feed))}
+                        unstable_nativeProps={tabA11y(label('tabs.deck', feedDot))}
                     >
                         <Label hidden>{t('tabs.deck')}</Label>
-                        <Badge hidden={!dot.feed} />
+                        <Badge hidden={!feedDot} />
                         <Icon
                             sf={{ default: 'newspaper', selected: 'newspaper' }}
                             src={<VectorIcon family={MaterialIcons} name="newspaper" />}
@@ -124,7 +127,9 @@ export default function AppLayout() {
                     >
                         <Label hidden>{t('tabs.you')}</Label>
                         <Badge hidden={!dot.you} />
-                        <Icon sf={{ default: 'person', selected: 'person' }} src={<VectorIcon family={MaterialIcons} name="person-outline" />} />
+                        {/* You is configuration now (owner): the gear, an SF Symbol and the
+                            Material font glyph, so no native asset (OTA-able). */}
+                        <Icon sf={{ default: 'gearshape', selected: 'gearshape' }} src={<VectorIcon family={MaterialIcons} name="settings" />} />
                     </NativeTabs.Trigger>
                 </NativeTabs>
             </ErrorBoundary>

@@ -43,8 +43,8 @@ export type StaticTabId = Exclude<TabId, 'world'>;
 /** The fixed page order of every tab but World. World's pages are derived at
  *  run time (lib/explore/world-pages.ts), with `world` first. */
 export const DEFAULT_PAGE_ORDER: Readonly<Record<StaticTabId, readonly StaticPageId[]>> = {
-  feed: ['feed', 'stories'],
-  library: ['saved', 'checks', 'visited', 'stats', 'notifications'],
+  feed: ['feed', 'stories', 'notifications'],
+  library: ['saved', 'checks', 'visited', 'stats'],
   you: ['profile', 'settings'],
 };
 

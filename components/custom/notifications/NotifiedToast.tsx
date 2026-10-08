@@ -11,7 +11,7 @@ import Animated, {
     withDelay,
     withTiming,
 } from 'react-native-reanimated';
-import { youTabTarget } from './you-tab-target';
+import { inboxTabTarget } from './inbox-tab-target';
 
 /**
  * How long the toast sits FULLY OPAQUE before it starts leaving.
@@ -22,9 +22,9 @@ import { youTabTarget } from './you-tab-target';
  * whole point: the flight is the epilogue, not the message. FinalInbox #1: 4 s.
  */
 export const NOTIFIED_TOAST_HOLD_MS = 4000;
-/** Fly-to-You leg (FinalInbox #2: 450 ms). */
+/** Fly-to-the-inbox leg (FinalInbox #2: 450 ms). */
 export const NOTIFIED_TOAST_FLY_MS = 450;
-/** Shrink and fade only in the flight's last 30%: a near miss on the You icon
+/** Shrink and fade only in the flight's last 30%: a near miss on the Feed icon
  *  (the floating bar, RTL) is then invisible. */
 const FADE_FROM = 0.7;
 /** Plain fade-out leg (reduce motion). */
@@ -50,14 +50,14 @@ export interface NotifiedToastProps {
 
 /**
  * The animated body of the "notified" toast. After the hold it flies toward
- * the You tab icon while scaling down and fading out: the notice now lives in
- * You > Notifications.
+ * the Feed tab icon while scaling down and fading out: the notice now lives in
+ * Feed > Notifications.
  *
  * Reduce motion: a plain fade with no translate.
  *
  * The toast's true start position is unknown to this component (it's placed by
  * the toast overlay), so the fly translate is approximated from the top-center
- * of the screen toward the You icon (see you-tab-target).
+ * of the screen toward the Feed icon (see inbox-tab-target).
  */
 const NotifiedToast: React.FC<NotifiedToastProps> = ({
     title,
@@ -81,7 +81,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     const startX = screenWidth / 2;
     const startY = 80;
     const canFly = !reduceMotion;
-    const target = youTabTarget(
+    const target = inboxTabTarget(
         screenWidth,
         screenHeight,
         initialWindowMetrics?.insets.bottom ?? 0,

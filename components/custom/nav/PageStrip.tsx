@@ -4,7 +4,8 @@
 //  - `segmented` (Feed, Library, You): one track centred in the space the
 //    side controls leave, the shared `SegmentedControl` at its header size.
 //    Every option has an icon; all labels show when they all fit that MEASURED
-//    space, else only the selected one's. It never scrolls. The selected fill
+//    space, else only the selected one's. The Feed (`iconsOnly`) always shows
+//    icons with only the selected one's name. It never scrolls. The selected fill
 //    is drawn INSIDE the selected tab and crossfades on a page change.
 //  - `scroll` (World): TWO rows. The top row carries the tab's title, the
 //    title chip (World's time window), then search and the ? at the end; the
@@ -107,6 +108,8 @@ export interface PageStripProps {
   readonly leading?: React.ReactNode;
   /** `segmented`: names alone when they all fit (Library, You). */
   readonly namesFirst?: boolean;
+  /** `segmented`: icons only plus the selected name, at any width (Feed). */
+  readonly iconsOnly?: boolean;
   /** A long press on a pill (World: opens Arrange with that page lifted). */
   readonly onLongPressPill?: (id: PageId) => void;
   /** World: the edit button after the last pill (opens Arrange). Absent while
@@ -297,6 +300,7 @@ const PageStrip: React.FC<PageStripProps> = ({
   onSelect,
   onSearch,
   namesFirst = false,
+  iconsOnly = false,
   onHelp,
   helpLabel,
   title,
@@ -425,6 +429,7 @@ const PageStrip: React.FC<PageStripProps> = ({
           size="header"
           availableWidth={trackSpace}
           namesFirst={namesFirst}
+          iconsOnly={iconsOnly}
           value={activeId}
           onChange={onSelect}
           accessibilityLabel={tabLabel}
