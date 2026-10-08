@@ -10,13 +10,14 @@
 import type { MaterialIcons } from '@expo/vector-icons';
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import type { PersonaChangeLogSource } from '@/lib/database/models/PersonaChangeLog';
+import type en from '@/lib/locales/en.json';
 
 type GlyphName = keyof typeof MaterialIcons.glyphMap;
 
 export interface ActionDisplay {
     readonly icon: GlyphName;
     /** i18n key under `personaAudit.actionLabels`. */
-    readonly labelKey: string;
+    readonly labelKey: keyof typeof en.personaAudit.actionLabels;
 }
 
 const ACTION_DISPLAY: Record<string, ActionDisplay> = {

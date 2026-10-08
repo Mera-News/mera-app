@@ -56,7 +56,7 @@ function targetName(target: ChangeTarget | undefined): string {
 
 /** The row's action label, e.g. "Removed topic": the fallback when nothing can be named. */
 export function actionLabel(t: Translate, actionType: string): string {
-    return t(`personaAudit.actionLabels.${actionDisplay(actionType).labelKey}` as never);
+    return t(`personaAudit.actionLabels.${actionDisplay(actionType).labelKey}`);
 }
 
 export function changeSummary(t: Translate, row: ChangeRow, ctx: ChangeContext): string {
