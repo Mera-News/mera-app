@@ -64,7 +64,9 @@ export function YouPages() {
         }
     }, []);
 
-    return <TabPages tab="you" namesFirst pages={pills} renderPage={renderPage} testID="you-pages" />;
+    // Icons and names (the default fit rule): Profile the person, Settings the
+    // gear, as on the You tab icon.
+    return <TabPages tab="you" pages={pills} renderPage={renderPage} testID="you-pages" />;
 }
 
 export default YouPages;
