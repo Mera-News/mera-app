@@ -46,11 +46,11 @@ export function cardState(i: CardStateInput): CardState | null {
 }
 
 /** The mark's colour (owner): orange (`accentMark`) when Mera is stuck
- *  (nothing fetched, the daily limit, nothing analysed); the theme's ink in
- *  every other state, the scoring error included (as the owner listed). */
+ *  (nothing fetched, the daily limit, nothing analysed, a scoring error); the
+ *  theme's ink in every other state. */
 export type MarkTone = 'alert' | 'normal';
 export function markTone(state: CardState | null): MarkTone {
-  return state === 'fetched' || state === 'limited' || state === 'analysed' ? 'alert' : 'normal';
+  return state === 'fetched' || state === 'limited' || state === 'analysed' || state === 'error' ? 'alert' : 'normal';
 }
 
 /** The lead row's Mera mark, by the sentence block's height (owner: about

@@ -58,9 +58,9 @@ describe('markSizeFor', () => {
 
 describe('markTone', () => {
   it('is orange only when Mera is stuck', () => {
-    for (const s of ['fetched', 'limited', 'analysed'] as const) expect(markTone(s)).toBe('alert');
+    for (const s of ['fetched', 'limited', 'analysed', 'error'] as const) expect(markTone(s)).toBe('alert');
   });
-  it('keeps the ink everywhere else, the scoring error included', () => {
-    for (const s of ['relevant', 'offline', 'error', null] as const) expect(markTone(s)).toBe('normal');
+  it('keeps the ink everywhere else', () => {
+    for (const s of ['relevant', 'offline', null] as const) expect(markTone(s)).toBe('normal');
   });
 });
