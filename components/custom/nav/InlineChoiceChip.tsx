@@ -10,7 +10,6 @@
 //  - Open state is local, so the host list never re-renders for it.
 //  - Options fade in on the UI thread; still under Reduce Motion or Lite mode.
 
-import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
@@ -64,18 +63,16 @@ export default function InlineChoiceChip<T extends string | number>({
     return (
       <View style={[styles.frame, disabled ? styles.disabled : null]} testID={`${testID}-frame`}>
         <View pointerEvents="none" {...HIDDEN}>
-          <GlassPanel radius={999}>
-            <View style={[styles.pill, styles.collapsed, { borderColor: colors.trackBorder }]}>
+          <View style={[styles.pill, styles.collapsed, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
               <MaterialIcons
                 name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'}
                 size={14}
                 color={colors.muted}
               />
-              <Text size="sm" scaleTier="chrome" numberOfLines={1} className="text-ink font-semibold">
+              <Text numberOfLines={1} maxFontSizeMultiplier={1} style={[styles.label, { color: colors.ink, fontWeight: '600' }]}>
                 {labelOf(value)}
               </Text>
-            </View>
-          </GlassPanel>
+          </View>
         </View>
         <Pressable
           onPress={() => setOpen(true)}
@@ -96,11 +93,9 @@ export default function InlineChoiceChip<T extends string | number>({
         const picked = option === value;
         const label = (
           <Text
-            size="sm"
-            scaleTier="chrome"
             numberOfLines={1}
-            style={{ color: picked ? colors.onAccent : colors.muted }}
-            className={picked ? 'font-semibold' : undefined}
+            maxFontSizeMultiplier={1}
+            style={[styles.label, { color: picked ? colors.onAccent : colors.muted, fontWeight: picked ? '600' : '400' }]}
           >
             {labelOf(option)}
           </Text>
@@ -117,9 +112,9 @@ export default function InlineChoiceChip<T extends string | number>({
                   {label}
                 </View>
               ) : (
-                <GlassPanel radius={999}>
-                  <View style={[styles.pill, styles.option, { borderColor: colors.trackBorder }]}>{label}</View>
-                </GlassPanel>
+                <View style={[styles.pill, styles.option, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
+                  {label}
+                </View>
               )}
             </View>
             <Pressable
@@ -143,6 +138,8 @@ export default function InlineChoiceChip<T extends string | number>({
 const styles = StyleSheet.create({
   frame: { height: FRAME, marginVertical: -(FRAME - PILL) / 2, justifyContent: 'center' },
   disabled: { opacity: DISABLED_OPACITY },
+  // Board .wchip / .wo: 13pt in a fixed 34pt pill.
+  label: { fontSize: 13, lineHeight: 16 },
   pill: {
     height: PILL,
     borderRadius: 999,
@@ -151,7 +148,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  collapsed: { gap: 4, paddingLeft: 10, paddingRight: 12 },
+  collapsed: { gap: 5, paddingLeft: 10, paddingRight: 12 },
   option: { minWidth: FRAME, paddingHorizontal: 10 },
   options: { flexDirection: 'row', alignItems: 'center', gap: OPTION_GAP },
 });

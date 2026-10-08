@@ -121,7 +121,9 @@ export function useCollapsibleHeader(): CollapsibleHeader {
         // Scrolling down — accumulate, reset the opposite direction.
         downAccum.value += dy;
         upAccum.value = 0;
-        if (downAccum.value > DOWN_THRESHOLD && y > headerH.value) {
+        // The tab header is transparent, so it clears as soon as content would
+        // pass under it, not only once the list is a header's height down.
+        if (downAccum.value > DOWN_THRESHOLD && y > DOWN_THRESHOLD) {
           hidden.value = withTiming(1, { duration: DURATION });
         }
       } else if (dy < 0) {

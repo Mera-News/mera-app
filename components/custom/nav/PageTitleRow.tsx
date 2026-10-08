@@ -36,6 +36,8 @@ const PageTitleRow: React.FC<PageTitleRowProps> = ({ title, onExplain, trailing,
         bold
         numberOfLines={1}
         accessibilityRole="header"
+        // Larger Text may grow the page title a little, never past 1.2x.
+        maxFontSizeMultiplier={1.2}
         style={[styles.title, { color: colors.ink }]}
       >
         {title}

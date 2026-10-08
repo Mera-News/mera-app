@@ -20,14 +20,13 @@
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { useColors } from '@/lib/theme/tokens';
-import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { hapticSelection } from '@/lib/haptics';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useIsFocused } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ArrangeOverlay from './ArrangeOverlay';
@@ -164,6 +163,8 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
     [nextTab, prevTab],
   );
 
+  const coverStyle = useAnimatedStyle(() => ({ opacity: hidden.value }));
+
   const header: PageHeaderBinding = useMemo(
     () => ({ scrollHandler, headerHeight, hidden, reveal, openExplainer }),
     [scrollHandler, headerHeight, hidden, reveal, openExplainer],
@@ -210,8 +211,14 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
           testID={testID ? `${testID}-pager` : undefined}
         />
 
-      {/* Covers the status bar once the header slides away. */}
-      <StatusBarScrim coverProgress={hidden} />
+      {/* The header is TRANSPARENT (owner): the page's own gradient shows
+          through it, with no status-bar band at rest. Only once it slides
+          away does a chrome band cover the status bar, so the list never
+          scrolls behind the clock. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.statusCover, { height: insets.top, backgroundColor: colors.chrome }, coverStyle]}
+      />
 
       <Animated.View
         testID={testID ? `${testID}-header` : undefined}
@@ -219,7 +226,7 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
         // box-none: the header must not swallow a pull-to-refresh that starts
         // under it; only its controls take touches.
         pointerEvents="box-none"
-        style={[styles.header, { backgroundColor: colors.chrome, borderBottomColor: colors.line }, headerStyle]}
+        style={[styles.header, headerStyle]}
       >
         {/* Symmetric sides, so a segmented track centres on the SCREEN. */}
         <View pointerEvents="box-none" style={{ paddingTop: insets.top + 6, paddingBottom: 6, paddingHorizontal: HEADER_SIDE_PAD }}>
@@ -267,10 +274,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-    // The theme's translucent chrome over the content (board .hdr), not a
-    // glass plate: a white tint over the header read as a grey slab.
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  statusCover: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5 },
 });
 
 export default TabPages;

@@ -17,7 +17,6 @@
 //    container and its label carries "2 of 5"; Android gets real tab roles.
 //  - The active pill scrolls into view.
 
-import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -165,11 +164,11 @@ const Pill: React.FC<PillProps> = ({
       {pill.icon ? <MaterialIcons name={pill.icon} size={14} color={ink} /> : null}
       {flag ? <Text style={styles.flag}>{flag}</Text> : null}
       <Text
-        size="sm"
-        scaleTier="chrome"
         numberOfLines={1}
-        style={{ color: ink }}
-        className={active ? 'font-semibold' : undefined}
+        // Board .tb: 14pt, 500 (700 picked), in a fixed 34pt pill, so it never
+        // grows with Dynamic Type.
+        maxFontSizeMultiplier={1}
+        style={[styles.label, { color: ink, fontWeight: active ? '700' : '500' }]}
       >
         {pill.label}
       </Text>
@@ -200,11 +199,13 @@ const Pill: React.FC<PillProps> = ({
     );
   } else {
     visual = (
-      <GlassPanel radius={999}>
-        <View style={[styles.pill, { borderColor: colors.trackBorder }]} testID={`page-pill-${pill.id}-chip`}>
-          {inner}
-        </View>
-      </GlassPanel>
+      // A flat fill, not liquid glass (whose native shadow made a heavy pill).
+      <View
+        style={[styles.pill, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}
+        testID={`page-pill-${pill.id}-chip`}
+      >
+        {inner}
+      </View>
     );
   }
 
@@ -250,11 +251,9 @@ const SearchButton: React.FC<{ readonly onPress: () => void }> = ({ onPress }) =
   return (
     <View style={styles.searchFab} testID="page-strip-search-frame">
       <View pointerEvents="none" {...GLYPH_HIDDEN} style={styles.searchShadow}>
-        <GlassPanel radius={22}>
-          <View style={[styles.searchCircle, { borderColor: colors.trackBorder }]}>
-            <MaterialIcons name="search" size={22} color={colors.ink} />
-          </View>
-        </GlassPanel>
+        <View style={[styles.searchCircle, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
+          <MaterialIcons name="search" size={22} color={colors.ink} />
+        </View>
       </View>
       <Pressable
         onPress={onPress}
@@ -424,6 +423,7 @@ const styles = StyleSheet.create({
   },
   segPill: { borderColor: 'transparent' },
   pillInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  label: { fontSize: 14, lineHeight: 18 },
   flag: { fontSize: 13, lineHeight: 16 },
   dot: { width: 7, height: 7, borderRadius: 4, marginLeft: -2 },
   dotOnActive: { borderWidth: 1.5, width: 9, height: 9, borderRadius: 5 },
