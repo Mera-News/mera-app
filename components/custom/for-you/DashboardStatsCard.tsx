@@ -81,9 +81,10 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     const toggle = useCallback(() => setStatusCardExpanded(!useFeedStatusCard.getState().expanded), []);
 
     const notice = mode === 'limited' || mode === 'error';
-    // Collapsed with counts to show: the sentence alone (FeedStatsSentence says
-    // nothing at zero, so then the status line stays).
-    const collapsedCounts = !expanded && articleCount > 0;
+    // With counts to show, the card LEADS with the sentence, collapsed and
+    // expanded (the details' Stage row already says the state). At zero the
+    // sentence says nothing, so then the status line leads.
+    const countsTop = articleCount > 0;
 
     return (
         <View className="mb-2" testID={`${testID}-anchor`}>
@@ -101,11 +102,11 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                             StaticText (captured class, ux2). */}
                         <View>
                             <View pointerEvents="none" {...HIDDEN}>
-                                {/* Collapsed over counts (owner): the day's counts
-                                    sentence IS the card, wrapping beside the ⌄.
-                                    Otherwise the status line, then the sentence. */}
-                                <HStack className={collapsedCounts ? 'items-start' : 'items-center'} space="sm">
-                                    {collapsedCounts && processing ? (
+                                {/* The day's counts sentence leads (owner), wrapping
+                                    beside the ⌄; the status line only when there
+                                    is nothing to count. */}
+                                <HStack className={countsTop ? 'items-start' : 'items-center'} space="sm">
+                                    {countsTop && processing ? (
                                         <LoopScene
                                             source={processingAnimationFor('analysing')}
                                             size={SCENE_SIZE}
@@ -113,7 +114,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                         />
                                     ) : null}
                                     <View style={{ flex: 1, minWidth: 0 }}>
-                                        {collapsedCounts ? (
+                                        {countsTop ? (
                                             <FeedStatsSentence syncing={processing} className="text-ink font-medium" />
                                         ) : (
                                             <StatusLine label={stateLabel} syncing={processing} />
@@ -126,23 +127,6 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                         {...HIDDEN}
                                     />
                                 </HStack>
-                                {!collapsedCounts && articleCount > 0 ? (
-                                    <HStack className="items-start mt-1" space="sm">
-                                        {processing ? (
-                                            <LoopScene
-                                                source={processingAnimationFor('analysing')}
-                                                size={SCENE_SIZE}
-                                                testID={`${testID}-scene`}
-                                            />
-                                        ) : null}
-                                        <View style={{ flex: 1, minWidth: 0 }}>
-                                            <FeedStatsSentence
-                                                syncing={processing}
-                                                className="text-ink font-medium"
-                                            />
-                                        </View>
-                                    </HStack>
-                                ) : null}
                             </View>
                             <Pressable
                                 onPress={toggle}
