@@ -18,6 +18,13 @@ export const FACT_CHECK_DONE = 'fact_check_done';
  *  body is the question itself (free text, never an i18n key). */
 export const FEEDBACK_REQUEST = 'feedback_request';
 
+/**
+ * Row types no longer written (owner Y11): the daily limit, a failed sync and
+ * a finished migration. Rows written before live up to 90 days; the inbox
+ * hides them.
+ */
+export const NOT_KEPT_NOTICE_TYPES: ReadonlySet<string> = new Set(['feed_info', 'sync_event', 'migration_done']);
+
 /** Safe JSON.parse to an object; null on failure or empty. */
 export function parseJson<T>(raw: string | null): T | null {
     if (!raw) return null;

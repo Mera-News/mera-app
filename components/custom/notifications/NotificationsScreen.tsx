@@ -13,7 +13,6 @@ import {
 import { hapticLight } from '@/lib/haptics';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
-import { NOT_KEPT_NOTICE_TYPES } from '@/lib/toast-manager';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { router, type Href } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -23,6 +22,7 @@ import Animated from 'react-native-reanimated';
 import {
     actionLabel,
     FEEDBACK_REQUEST,
+    NOT_KEPT_NOTICE_TYPES,
     openNotification,
     parseJson,
     resolveText,
