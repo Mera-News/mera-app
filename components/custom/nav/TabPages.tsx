@@ -78,8 +78,14 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
   const index = activeId ? Math.max(0, ids.indexOf(activeId)) : 0;
   lastIndexRef.current = index;
   // World's overlay: open, with the long-pressed page lifted.
+  // World's overlay: open (from a long press, with that page lifted, or from
+  // the row's edit button, with none).
+  const [arranging, setArranging] = useState(false);
   const [arrangeLift, setArrangeLift] = useState<PageId | null>(null);
-  const arranging = arrangeLift !== null;
+  const openArrange = useCallback((lift: PageId | null) => {
+    setArrangeLift(lift);
+    setArranging(true);
+  }, []);
   // The ? beside a page title: ONE sheet per tab (not one per warm panel),
   // closed whenever the tab loses focus (a sheet survives a tab switch).
   const [explaining, setExplaining] = useState(false);
@@ -263,7 +269,8 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
             leading={leading}
             onSearch={onSearch}
             // Only World arranges, by a long press on a page name.
-            onLongPressPill={arrange ? setArrangeLift : undefined}
+            onLongPressPill={arrange ? openArrange : undefined}
+            onEdit={arrange && !arranging ? () => openArrange(null) : undefined}
           />
         </View>
       </Animated.View>
@@ -280,7 +287,10 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
           pages={pages}
           arrange={arrange}
           initialLiftedId={arrangeLift}
-          onClose={() => setArrangeLift(null)}
+          onClose={() => {
+            setArranging(false);
+            setArrangeLift(null);
+          }}
         />
       ) : null}
     </View>

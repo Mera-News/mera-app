@@ -281,7 +281,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
 
   useEffect(() => {
     setArrangeOpen(true);
-    if (initialLiftedId) void hapticLight();
+    void hapticLight();
     return () => setArrangeOpen(false);
     // Open once per overlay.
     // eslint-disable-next-line react-hooks/exhaustive-deps

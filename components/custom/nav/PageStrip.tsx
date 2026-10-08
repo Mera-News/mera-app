@@ -95,6 +95,9 @@ export interface PageStripProps {
   readonly leading?: React.ReactNode;
   /** A long press on a pill (World: opens Arrange with that page lifted). */
   readonly onLongPressPill?: (id: PageId) => void;
+  /** World: the edit button after the last pill (opens Arrange). Absent while
+   *  Arrange is open, which has its own ✓. */
+  readonly onEdit?: () => void;
 }
 
 const NO_DOT: PageDot = { visible: false };
@@ -109,8 +112,66 @@ interface PillProps {
   readonly onSelect: (id: PageId) => void;
   readonly onLongPress?: (id: PageId) => void;
   readonly onLayout: (id: PageId, x: number, width: number) => void;
-  readonly fade?: { scrollX: SharedValue<number>; viewport: SharedValue<number>; rtl: boolean };
+  readonly fade?: RowFade;
 }
+
+type RowFade = { scrollX: SharedValue<number>; viewport: SharedValue<number>; rtl: boolean };
+
+/** World's per-item edge fade, on the UI thread: an item fades to clear as its
+ *  start edge reaches the screen edge, and before the floating search button.
+ *  Write the item's layout x and width into `x` and `w`. */
+function useEdgeFade(fade: RowFade | undefined) {
+  const x = useSharedValue(0);
+  const w = useSharedValue(0);
+  const fadeStyle = useAnimatedStyle(() => {
+    if (!fade || w.value === 0) return { opacity: 1 };
+    // Physical on-screen edges (layout x and the scroll offset are both
+    // physical); the row's START is the right edge in RTL.
+    const left = x.value - fade.scrollX.value;
+    const right = left + w.value;
+    const centre = left + w.value / 2;
+    const view = fade.viewport.value;
+    const toStart = fade.rtl ? view - right : left;
+    const toEnd = fade.rtl ? centre : view - centre;
+    const lead = interpolate(toStart, [0, ROW_START], [0, 1], Extrapolation.CLAMP);
+    const trail = interpolate(toEnd, [TRAIL_FADE_START, TRAIL_FADE_END], [0, 1], Extrapolation.CLAMP);
+    return { opacity: Math.min(lead, trail) };
+  });
+  return { x, w, fadeStyle };
+}
+
+/** World's edit button: the last item of the row, opening Arrange. The same
+ *  flat glass circle as the search button. */
+const EditButton: React.FC<{ readonly onPress: () => void; readonly label: string; readonly fade?: RowFade }> = ({
+  onPress,
+  label,
+  fade,
+}) => {
+  const colors = useColors();
+  const { x, w, fadeStyle } = useEdgeFade(fade);
+  return (
+    <Animated.View
+      style={[styles.editFrame, fade ? fadeStyle : null]}
+      onLayout={(e) => {
+        x.value = e.nativeEvent.layout.x;
+        w.value = e.nativeEvent.layout.width;
+      }}
+    >
+      <View pointerEvents="none" {...GLYPH_HIDDEN}>
+        <View style={[styles.searchCircle, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
+          <MaterialIcons name="edit" size={22} color={colors.ink} />
+        </View>
+      </View>
+      <Pressable
+        onPress={onPress}
+        style={StyleSheet.absoluteFill}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        testID="world-edit-pages"
+      />
+    </Animated.View>
+  );
+};
 
 /** One pill. Its own component, keyed by page id, so the page's dot hook is
  *  called in a stable place however the pages are reordered. */
@@ -136,23 +197,7 @@ const Pill: React.FC<PillProps> = ({
   const ink = active ? colors.onAccent : colors.ink;
   const accentFill = { backgroundColor: colors.accent, borderColor: colors.accent };
 
-  // World only: this pill's own place in the row, for its edge fade.
-  const x = useSharedValue(0);
-  const w = useSharedValue(0);
-  const fadeStyle = useAnimatedStyle(() => {
-    if (!fade || w.value === 0) return { opacity: 1 };
-    // Physical on-screen edges (layout x and the scroll offset are both
-    // physical); the row's START is the right edge in RTL.
-    const left = x.value - fade.scrollX.value;
-    const right = left + w.value;
-    const centre = left + w.value / 2;
-    const view = fade.viewport.value;
-    const toStart = fade.rtl ? view - right : left;
-    const toEnd = fade.rtl ? centre : view - centre;
-    const lead = interpolate(toStart, [0, ROW_START], [0, 1], Extrapolation.CLAMP);
-    const trail = interpolate(toEnd, [TRAIL_FADE_START, TRAIL_FADE_END], [0, 1], Extrapolation.CLAMP);
-    return { opacity: Math.min(lead, trail) };
-  });
+  const { x, w, fadeStyle } = useEdgeFade(fade);
 
   const inner = (
     <View style={styles.pillInner}>
@@ -262,6 +307,7 @@ const PageStrip: React.FC<PageStripProps> = ({
   variant = 'scroll',
   leading,
   onLongPressPill,
+  onEdit,
 }) => {
   const { t } = useTranslation();
   const segmented = variant === 'segmented';
@@ -339,6 +385,9 @@ const PageStrip: React.FC<PageStripProps> = ({
             // layout x is its place in the scrolled content.
             <View style={[styles.pills, styles.rowPad]} accessibilityRole={ROLES.row} testID="page-strip-pills">
               {pills}
+              {onEdit ? (
+                <EditButton onPress={onEdit} label={t('nav.rearrangeA11y', { tab: tabLabel })} fade={fade} />
+              ) : null}
             </View>
           )}
         </Animated.ScrollView>
@@ -376,6 +425,7 @@ const styles = StyleSheet.create({
   dot: { width: 7, height: 7, borderRadius: 4, marginLeft: -2 },
   dotOnActive: { borderWidth: 1.5, width: 9, height: 9, borderRadius: 5 },
   searchFab: { position: 'absolute', right: 4, top: -1, width: 44, height: 44 },
+  editFrame: { width: 44, height: 44 },
   searchCircle: {
     width: 44,
     height: 44,
