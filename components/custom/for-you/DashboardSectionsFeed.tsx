@@ -129,7 +129,7 @@ interface DashboardSectionsFeedProps {
   /** The Interests page's nothing-yet state: shown when no section has a story (the
    *  empty sections themselves are never drawn). */
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
-  /** The Feed page's title row, the list's first item. */
+  /** The list's first item: the Feed's counts card. */
   ListHeaderComponent?: React.ReactElement;
   /** Pull-to-refresh spinner state. Driven by the scheduler's feed-sync flag
    *  (see `useFeedSyncRefresh`), NOT by local state — so it rises on the same
@@ -190,6 +190,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     isRefreshing: !!refreshing,
     enabled: active,
   });
+
   // Section content order: the SAME rule the Feed tab uses
   // (lib/feed-ordering/priority-order) — unviewed high→med→low, then viewed
   // high→med→low — so a story cannot be ranked differently on the two screens.

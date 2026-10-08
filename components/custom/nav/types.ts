@@ -86,13 +86,6 @@ export interface TabPagesProps {
   /** The track shows ICONS only, plus the selected page's name, whatever the
    *  width (the Feed: Feed | Stories | Notifications). */
   readonly iconsOnly?: boolean;
-  /**
-   * The ACTIVE page's header accessory (the Feed's View chip and stats card):
-   * drawn under the track row INSIDE the collapsing header, so it hides and
-   * reveals with it, and measured into `headerHeight`, so lists pad below it.
-   * Return null for a page without one.
-   */
-  readonly renderAccessory?: (pageId: PageId) => React.ReactNode;
   /** World: the header's top row title ("Explore") and the control right
    *  after it (the active page's time window). */
   readonly title?: string;

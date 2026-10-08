@@ -970,7 +970,6 @@
     "modeError": "フィードの問題",
     "modeLimited": "1日の記事上限に達しました",
     "syncDoneA11y": "フィードは最新の状態です。",
-    "openA11y": "フィードの状態を開く",
     "collapseA11y": "フィード状態の詳細を隠す",
     "deviceProgress": "端末でのスコアリング",
     "published": "公開",

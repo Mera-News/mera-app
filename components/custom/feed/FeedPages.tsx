@@ -8,16 +8,11 @@
 // a tap brings the Feed page forward, reveals the header and opens the ONE
 // counts card in the Feed page's header accessory (feed-status-card.ts).
 
-import FeedStatusIcon from '@/components/custom/for-you/FeedStatusIcon';
-import { tapStatusIcon } from '@/components/custom/for-you/feed-status-card';
-import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
-import { useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
 import FeedPage from '@/components/custom/feed/FeedPage';
-import FeedHeaderAccessory from '@/components/custom/feed/FeedHeaderAccessory';
+import FeedViewChip from '@/components/custom/feed/FeedViewChip';
 import { PAGE_META } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
-import type { PageId } from '@/components/custom/nav/page-registry';
 import TrackedStoriesScreen from '@/components/custom/tracked-stories/TrackedStoriesScreen';
 import { setTabDot } from '@/components/custom/nav/current-surface';
 import { usePageOrder } from '@/lib/navigation/page-order';
@@ -129,14 +124,10 @@ export function FeedPages() {
     }
   }, [t]);
 
-  const onStatus = useCallback(() => {
-    // From Stories, bring the Feed page forward first; the card lives there.
-    if (useCurrentSurfaceStore.getState().surface !== 'feed') navigateToPage('feed');
-    tapStatusIcon();
-  }, []);
-  const leading = useMemo(() => <FeedStatusIcon onPress={onStatus} />, [onStatus]);
-  // The Feed page's View chip and counts card ride in the header.
-  const renderAccessory = useCallback((pageId: PageId) => (pageId === 'feed' ? <FeedHeaderAccessory /> : null), []);
+  // The View chip in the header's left slot, the Feed page's only (it fades
+  // out with the swipe to Stories and Notifications).
+  const feedIndex = Math.max(0, pills.findIndex((p) => p.id === 'feed'));
+  const leading = useMemo(() => <FeedViewChip pageIndex={feedIndex} />, [feedIndex]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -145,7 +136,6 @@ export function FeedPages() {
         pages={pills}
         renderPage={renderPage}
         leading={leading}
-        renderAccessory={renderAccessory}
         iconsOnly
         testID="feed-pages"
       />

@@ -7,15 +7,15 @@
 // keep-mounted in the pager (PAGE_META.feed), so the chosen list survives
 // swipes and tab switches.
 //
-// The View chip and the counts card live in the tab header's accessory
-// (FeedHeaderAccessory, from FeedPages), not in either list.
+// The counts card is each list's first item (useStatsCardItem); the View
+// chip sits in the tab header, by the ?.
 
 import InterestsPage from '@/components/custom/for-you/InterestsPage';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import React, { useEffect } from 'react';
 import { useIsFocused } from '@react-navigation/native';
-import { resetStatusCard, useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
+import { resetStatusCard } from '@/components/custom/for-you/feed-status-card';
 
 import FeedScreen from './FeedScreen';
 import { useFeedView } from './feed-view-prefs';
@@ -32,14 +32,6 @@ const FeedPage: React.FC<FeedPageProps> = ({ active, header }) => {
     if (!(active && focused)) resetStatusCard();
   }, [active, focused]);
   const view = useFeedView();
-  const { reveal } = header;
-  // The status icon reveals the header (the counts card lives in it).
-  const revealSignal = useFeedStatusCard((s) => s.revealSignal);
-  useEffect(() => {
-    if (revealSignal > 0 && active) reveal();
-    // Fires on the signal only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealSignal]);
 
   return (
     <>

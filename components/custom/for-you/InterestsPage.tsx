@@ -41,7 +41,8 @@ import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, View } from 'react-native';
-import { setEmptyWantsCard, setFeedHasRows } from '@/components/custom/for-you/feed-status-card';
+import { setEmptyWantsCard } from '@/components/custom/for-you/feed-status-card';
+import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
 interface SortSnapshot {
@@ -132,23 +133,23 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
 
   const { refreshing, onRefresh } = useFeedSyncRefresh(header.reveal);
   const isFeedProcessing = useIsFeedProcessing();
-  // An empty Sectioned view past its first run needs the header's counts
-  // card (FeedHeaderAccessory), the same branch that shows the shortcuts.
+  // An empty Sectioned view past its first run opens the counts card, the
+  // same branch that shows the shortcuts. Without `active`, so the card is
+  // already there as the page slides in.
   const hasStories = rows.some((r) => r.groups.length > 0);
-  const emptyWantsCard =
-    active &&
+  const emptyHere =
     !hasStories &&
     !isLoading &&
     snapshots !== null &&
     !errorMessage &&
     snapshots.facts.size > 0 &&
     lastProcessingRunFinishedAt !== null;
+  const emptyWantsCard = active && emptyHere;
+  // The list's first item.
+  const cardItem = useStatsCardItem(emptyHere, hasStories);
   useEffect(() => {
     if (active) setEmptyWantsCard(emptyWantsCard);
   }, [active, emptyWantsCard]);
-  useEffect(() => {
-    if (active) setFeedHasRows(hasStories);
-  }, [active, hasStories]);
 
   // ── Nothing to show yet ──
   let empty: React.ReactElement | null;
@@ -174,7 +175,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
     empty = <FeedNoFacts view="sectioned" />;
   } else if (lastProcessingRunFinishedAt !== null) {
     // Nothing to show, the same as Continuous (FinalFeed "Feed, empty after
-    // a long gap"): the counts card is in the header; the shortcuts here.
+    // a long gap"): the counts card leads the list; the shortcuts here.
     empty = (
       <Animated.View exiting={FadeOut.duration(200)}>
         <FeedShortcuts reading={isFeedProcessing} />
@@ -198,7 +199,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
         onPressSuggestion={handleSuggestionPress}
         scrollHandler={header.scrollHandler}
         headerHeight={header.headerHeight}
-
+        ListHeaderComponent={cardItem ?? undefined}
         ListEmptyComponent={empty}
         refreshing={refreshing}
         onRefresh={onRefresh}

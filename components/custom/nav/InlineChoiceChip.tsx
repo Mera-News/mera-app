@@ -32,6 +32,8 @@ import Animated, { FadeIn, Keyframe, useReducedMotion } from 'react-native-reani
 
 const PILL = 34;
 const FRAME = 44;
+/** The icon-only chip's ⌄. */
+const ICON_CARET = 14;
 const DISABLED_OPACITY = 0.4;
 const MENU_GAP = 6;
 const ROW = 44;
@@ -66,6 +68,10 @@ export interface InlineChoiceChipProps<T extends string | number> {
   readonly iconOf?: (option: T) => keyof typeof MaterialIcons.glyphMap;
   /** A small muted title over the menu's rows ("View"). */
   readonly menuTitle?: string;
+  /** Which chip edge the menu hangs from: `trailing` (default; World's time
+   *  chip at the row's end) or `leading` (the Feed's View chip at the row's
+   *  start). Mirrored in RTL. */
+  readonly menuAlign?: 'leading' | 'trailing';
 }
 
 /** A floating menu's surface: the same material as every modal and bottom
@@ -100,6 +106,7 @@ export default function InlineChoiceChip<T extends string | number>({
   testID,
   iconOf,
   menuTitle,
+  menuAlign = 'trailing',
 }: InlineChoiceChipProps<T>) {
   const colors = useColors();
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
@@ -179,8 +186,10 @@ export default function InlineChoiceChip<T extends string | number>({
     </ChoiceMenuPanel>
   );
   const [pressed, setPressed] = useState(false);
-  // Hangs from the chip's trailing edge: the right in LTR, the left in RTL.
-  const side = anchor ? (rtl ? { left: anchor.left } : { right: anchor.right }) : null;
+  // Hangs from the chip's trailing edge (the right in LTR, the left in RTL),
+  // or its leading edge with `menuAlign="leading"`.
+  const fromLeft = (menuAlign === 'leading') !== rtl;
+  const side = anchor ? (fromLeft ? { left: anchor.left } : { right: anchor.right }) : null;
 
   return (
     <View style={[styles.frame, disabled ? styles.disabled : null]} testID={`${testID}-frame`}>
@@ -209,7 +218,7 @@ export default function InlineChoiceChip<T extends string | number>({
           )}
           <MaterialIcons
             name={anchor ? 'expand-less' : 'expand-more'}
-            size={16}
+            size={iconOf ? ICON_CARET : 16}
             color={colors.muted}
           />
         </View>
@@ -314,7 +323,9 @@ const styles = StyleSheet.create({
   },
   check: { width: 20, alignItems: 'center' },
   // The icon-only chip: a round 34pt glyph + ⌄, the glass only while pressed
-  // or open; the 44pt frame around it is the target.
+  // or open; the 44pt frame around it is the target. 44pt wide in all
+  // (1 + 5 + 20 + 14 + 3 + 1): it fills the header's 44pt side slot, and its
+  // glyphs do not scale with text size.
   iconPill: {
     height: PILL,
     minWidth: PILL,
@@ -324,9 +335,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    paddingLeft: 8,
-    paddingRight: 6,
+    paddingLeft: 5,
+    paddingRight: 3,
   },
   menuTitle: { fontSize: 12, lineHeight: 16, fontWeight: '600', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   rowLabel: { fontSize: 15, lineHeight: 20 },

@@ -1,9 +1,11 @@
-// The feed's ONE counts card (FinalFeed #1, FinalFeedStatus #1-5): in an empty
-// Feed's empty chain, at the head of the list at the daily limit, or at the
-// head of the list when the Mera status icon asks for it (feed-status-card.ts,
-// which also holds its open/closed state, so the icon can expand it). There
+// The feed's ONE counts card (FinalFeed #1, FinalFeedStatus #1-5): the FIRST
+// item of the Feed list in both views (`useStatsCardItem`, the list header),
+// so a page swipe carries it like any card. When it shows and whether it is
+// open live in feed-status-card.ts, so the status icon can expand it. There
 // is never an overlay and never two. The chevron opens the details INSIDE the
-// card.
+// card, their height animated on the UI thread (`ExpandingDetails`). The Mera
+// mark leads the sentence (`StatusMark`), moving while a run is in flight: the
+// Feed header has no status icon any more, so this is the Feed's "working".
 //
 // Level 1: the status line (a light sweeps across it while a sync runs) and a
 // chevron, then the count sentence ("being analysed" while syncing, with the
@@ -18,8 +20,6 @@
 // No announcement here: FeedScreen announces the capped and error states.
 
 import { GlassPanel } from '@/components/custom/GlassSurface';
-import LoopScene from '@/components/custom/for-you/LoopScene';
-import { processingAnimationFor } from '@/components/custom/processing/animation-registry';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
@@ -29,15 +29,16 @@ import { useIsConnected } from '@/lib/stores/network-store';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { formatCount } from '@/lib/utils/format-count';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect } from 'react';
-import { registerStatusCard, setStatusCardExpanded, useFeedStatusCard } from './feed-status-card';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { setStatusCardExpanded, statsCardShown, useFeedStatusCard } from './feed-status-card';
+import MeraLogo from '@/components/custom/MeraLogo';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { ShimmerText } from '@/components/ui/shimmer';
 import { Text } from '@/components/ui/text';
-import { MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
-import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
@@ -49,7 +50,7 @@ const HIDDEN = {
     importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-const SCENE_SIZE = 20;
+const MARK_SIZE = 20;
 
 export interface DashboardStatsCardProps {
     readonly testID?: string;
@@ -88,6 +89,68 @@ function useZeroText(kind: ZeroState | null): string | null {
     return null;
 }
 
+/** Expanding and collapsing the details. */
+const DETAILS_MOTION = { duration: 250, easing: Easing.out(Easing.cubic) };
+
+/**
+ * The details under the chevron. Always mounted, so a tap never pays a mount;
+ * laid out at their natural height in an absolute body, and the clip's height
+ * runs from 0 to that height on the UI thread with the opacity, so the list
+ * under the card slides instead of jumping. Instant in Lite and Reduce Motion.
+ */
+function ExpandingDetails({ open, children }: { open: boolean; children: React.ReactNode }) {
+    const motionAllowed = useMotionAllowed();
+    // Written from onLayout and never read back on JS.
+    const bodyHeight = useSharedValue(0);
+    const shown = useSharedValue(open ? 1 : 0);
+    useEffect(() => {
+        shown.value = motionAllowed ? withTiming(open ? 1 : 0, DETAILS_MOTION) : open ? 1 : 0;
+    }, [open, motionAllowed, shown]);
+    const clip = useAnimatedStyle(() => ({ height: bodyHeight.value * shown.value, opacity: shown.value }));
+    return (
+        <Animated.View
+            style={[styles.detailsClip, clip]}
+            pointerEvents={open ? 'box-none' : 'none'}
+            accessibilityElementsHidden={!open}
+            importantForAccessibility={open ? 'auto' : 'no-hide-descendants'}
+            testID="dashboard-stats-card-details"
+        >
+            <View
+                style={styles.detailsBody}
+                onLayout={(e) => {
+                    bodyHeight.value = e.nativeEvent.layout.height;
+                }}
+            >
+                {children}
+            </View>
+        </Animated.View>
+    );
+}
+
+/** The Mera mark, always at the sentence's start (owner): moving while a run
+ *  is in flight, a still frame when idle. MeraLogo itself holds still in Lite,
+ *  under Reduce Motion and off screen. */
+export function StatusMark({ working }: { working: boolean }) {
+    const colors = useColors();
+    return (
+        <View {...HIDDEN} style={styles.mark} testID="dashboard-stats-card-mark">
+            <MeraLogo size={MARK_SIZE} color={colors.ink} animated={working} />
+        </View>
+    );
+}
+
+/**
+ * The Feed list's first item: the card when it shows (`statsCardShown`), else
+ * null. `emptyWants` and `hasRows` are the list's own state, so the card is
+ * there the moment the page slides in, not after it lands.
+ */
+export function useStatsCardItem(emptyWants: boolean, hasRows: boolean): React.ReactElement | null {
+    const limited = useFeedStatusMode() === 'limited';
+    const shown = statsCardShown({ limited, emptyWants, hasRows });
+    // One element per state, so the list header is not re-rendered per render.
+    return useMemo(() => (shown ? <DashboardStatsCard testID="feed-status-card" /> : null), [shown]);
+}
+
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {
     const { t } = useTranslation();
     // `a11yStateKey` is computed from the mode; see its own note on `tAny`.
@@ -101,12 +164,9 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     const offline = useIsConnected() === false;
     const zero = zeroState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount });
     const zeroText = useZeroText(zero);
-    // The icon reads whether a card is showing from this count.
-    useEffect(() => registerStatusCard(), []);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
 
-    const reduceMotion = useReducedMotion();
     const colors = useColors();
 
     const toggle = useCallback(() => setStatusCardExpanded(!useFeedStatusCard.getState().expanded), []);
@@ -116,15 +176,12 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     // expanded (the details' Stage row already says the state). At zero the
     // sentence says nothing, so then the status line leads.
     const countsTop = articleCount > 0;
-    const details = expanded ? (
-        <Animated.View
-            entering={reduceMotion ? undefined : FadeIn.duration(MOTION.status.open)}
-            exiting={reduceMotion ? undefined : FadeOut.duration(MOTION.status.close)}
-        >
+    const details = (
+        <ExpandingDetails open={expanded}>
             <FeedStatusDetails mode={mode} />
             {processing ? <AnalysingProgress /> : null}
-        </Animated.View>
-    ) : null;
+        </ExpandingDetails>
+    );
 
     return (
         <View className="mb-2" testID={`${testID}-anchor`}>
@@ -146,13 +203,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                     beside the ⌄; the status line only when there
                                     is nothing to count. */}
                                 <HStack className={countsTop || zeroText ? 'items-start' : 'items-center'} space="sm">
-                                    {countsTop && processing ? (
-                                        <LoopScene
-                                            source={processingAnimationFor('analysing')}
-                                            size={SCENE_SIZE}
-                                            testID={`${testID}-scene`}
-                                        />
-                                    ) : null}
+                                    <StatusMark working={processing} />
                                     <View style={{ flex: 1, minWidth: 0 }}>
                                         {zeroText ? (
                                             <Text
@@ -199,6 +250,9 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
 const styles = StyleSheet.create({
     // fontSize with its own lineHeight (the ui Text clipping trap).
     line: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
+    detailsClip: { overflow: 'hidden' },
+    mark: { width: MARK_SIZE, height: 20, alignItems: 'center', justifyContent: 'center' },
+    detailsBody: { position: 'absolute', top: 0, left: 0, right: 0 },
 });
 
 export default DashboardStatsCard;

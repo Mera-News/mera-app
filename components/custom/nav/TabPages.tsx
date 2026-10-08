@@ -41,7 +41,7 @@ import PageExplainerSheet from './PageExplainerSheet';
 import PagePager from './PagePager';
 import { survivingPage } from './tab-swipe';
 import PageStrip, { HEADER_BOTTOM_PAD, HEADER_SIDE_PAD, HEADER_TOP_PAD } from './PageStrip';
-import { PAGE_SIDE_INSET, pageMeta, TAB_LABEL_KEYS, type PageId } from './page-registry';
+import { pageMeta, TAB_LABEL_KEYS, type PageId } from './page-registry';
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
 
@@ -56,7 +56,6 @@ const TabPages: React.FC<TabPagesProps> = ({
   leading,
   namesFirst,
   iconsOnly,
-  renderAccessory,
   title,
   renderTitleChip,
   testID,
@@ -130,9 +129,7 @@ const TabPages: React.FC<TabPagesProps> = ({
   // The root is measured, never the header, which translates when collapsed.
   const rootRef = useRef<View>(null);
   const [rootY, setRootY] = useState<number | null>(null);
-  // The track row's block alone (status inset included), WITHOUT the page's
-  // accessory: the Mera button's top bound must not move when the Feed's
-  // stats card opens.
+  // The track row's block (status inset included).
   const [stripHeight, setStripHeight] = useState(0);
   const measureRoot = useCallback(() => {
     rootRef.current?.measureInWindow((_x, y) => {
@@ -184,7 +181,6 @@ const TabPages: React.FC<TabPagesProps> = ({
   );
 
   const tabLabel = t(TAB_LABEL_KEYS[tab]);
-  const accessory = activeId ? renderAccessory?.(activeId) : null;
   const activeLabel = pages.find((p) => p.id === activeId)?.label ?? tabLabel;
   const hasExplainer = activeId !== null && pageMeta(activeId).explainer !== null;
 
@@ -253,11 +249,6 @@ const TabPages: React.FC<TabPagesProps> = ({
             onEdit={arrange && !arranging ? () => openArrange(null) : undefined}
           />
         </View>
-        {accessory ? (
-          <View pointerEvents="box-none" style={styles.accessory} testID={testID ? `${testID}-accessory` : undefined}>
-            {accessory}
-          </View>
-        ) : null}
       </Animated.View>
 
       <PageExplainerSheet
@@ -285,7 +276,6 @@ const TabPages: React.FC<TabPagesProps> = ({
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   // On the page's side inset; the header's own bottom pad stays under it.
-  accessory: { paddingHorizontal: PAGE_SIDE_INSET, paddingBottom: HEADER_BOTTOM_PAD },
   header: {
     position: 'absolute',
     top: 0,

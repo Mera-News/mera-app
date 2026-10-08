@@ -84,7 +84,8 @@ import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
-import { setEmptyWantsCard, setFeedHasRows } from '@/components/custom/for-you/feed-status-card';
+import { setEmptyWantsCard } from '@/components/custom/for-you/feed-status-card';
+import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
 import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
@@ -1076,7 +1077,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     // C4), so the empty list itself says nothing more.
     if (noFacts) return null;
     // Nothing to show (FinalFeed "Feed, empty after a long gap"): the counts
-    // card (in the HEADER accessory, `emptyWantsCard` below) says which state
+    // card (the list's first item, open: `emptyHere` below) says which state
     // this is; the list shows the shortcuts. They fold away when the first rows
     // land. The first run after setup (no run has finished) keeps the
     // processing scene.
@@ -1095,12 +1096,10 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     );
   };
 
-  // No facts yet: the empty block is the list's first item.
-  const headerNode = useMemo(() => (noFacts ? <FeedNoFacts view="continuous" /> : null), [noFacts]);
-  // An empty Feed past its first run needs the header's counts card (the
-  // same branch of the empty chain that shows the shortcuts).
-  const emptyWantsCard =
-    active &&
+  // An empty Feed past its first run opens the counts card (the same branch
+  // of the empty chain that shows the shortcuts). Without `active`, so the
+  // card is already there as the page slides in.
+  const emptyHere =
     listData.length === 0 &&
     warmup !== 'blank' &&
     warmup !== 'skeleton' &&
@@ -1108,13 +1107,14 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     !errorMessage &&
     !noFacts &&
     lastProcessingRunFinishedAt !== null;
+  const emptyWantsCard = active && emptyHere;
   const hasRows = listData.length > 0;
+  // The list's first item: the no-facts block, or the counts card.
+  const cardItem = useStatsCardItem(emptyHere, hasRows);
+  const headerNode = useMemo(() => (noFacts ? <FeedNoFacts view="continuous" /> : cardItem), [noFacts, cardItem]);
   useEffect(() => {
     if (active) setEmptyWantsCard(emptyWantsCard);
   }, [active, emptyWantsCard]);
-  useEffect(() => {
-    if (active) setFeedHasRows(hasRows);
-  }, [active, hasRows]);
 
   return (
     // No backdrop and no header: the tab (TabPages) draws both.

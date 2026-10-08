@@ -1,4 +1,4 @@
-// Ink for the feed's counts card and status icon, in ONE place.
+// The feed's counts card's status helpers, in ONE place.
 //
 // Colours live in `style`, never in a NativeWind class: the dark ramp is an
 // inversion (`typography-300` is darker than `-400`), and a class-name
@@ -6,15 +6,6 @@
 // content when it slides in, so it takes the opaque `modalBase` token there.
 
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
-import type { ThemeColors } from '@/lib/theme/tokens';
-
-/** The Feed's status icon, by mode: still and plain at rest, orange at the
- *  daily limit, red on a problem (FinalFeedStatus). `deferred` rests like idle. */
-export function statusIconInk(mode: FeedStatusMode, c: ThemeColors): string {
-  if (mode === 'limited') return c.accent;
-  if (mode === 'error') return c.negative;
-  return c.ink;
-}
 
 /**
  * ONE scoring progress figure. The panel used to show the cloud sweep's

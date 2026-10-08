@@ -534,7 +534,6 @@
     "modeError": "Feed problem",
     "modeLimited": "Daily article limit reached",
     "syncDoneA11y": "Your feed is up to date.",
-    "openA11y": "Open feed status",
     "collapseA11y": "Hide feed status details",
     "deviceProgress": "On-device scoring",
     "published": "Published",

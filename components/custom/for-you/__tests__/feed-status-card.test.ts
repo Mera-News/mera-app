@@ -1,53 +1,30 @@
-import {
-    registerStatusCard,
-    resetStatusCard,
-    setEmptyWantsCard,
-    statusIconTap,
-    tapStatusIcon,
-    useFeedStatusCard,
-} from '../feed-status-card';
+import { resetStatusCard, setEmptyWantsCard, statsCardShown, useFeedStatusCard } from '../feed-status-card';
 
-describe('statusIconTap', () => {
-    it('an open card: only reveal the header', () => {
-        expect(statusIconTap('open')).toBe('reveal');
-    });
-    it('a collapsed card: expand it', () => {
-        expect(statusIconTap('collapsed')).toBe('expand');
-    });
-    it('no card: show one', () => {
-        expect(statusIconTap('absent')).toBe('show');
-    });
-});
-
-describe('tapStatusIcon', () => {
+describe('the counts card state', () => {
     beforeEach(() => {
-        useFeedStatusCard.setState({ requested: false, expanded: true, mounted: 0, emptyWants: false, hasRows: false, revealSignal: 0 });
+        useFeedStatusCard.setState({ expanded: false, emptyWants: false });
     });
 
-    it('with no card mounted, requests one, open, and reveals the header', () => {
-        tapStatusIcon();
-        expect(useFeedStatusCard.getState()).toMatchObject({ requested: true, expanded: true, revealSignal: 1 });
-    });
-
-    it('with a collapsed card mounted, expands it and never requests a second', () => {
-        const unregister = registerStatusCard();
-        useFeedStatusCard.setState({ expanded: false });
-        tapStatusIcon();
-        expect(useFeedStatusCard.getState()).toMatchObject({ requested: false, expanded: true, revealSignal: 1 });
-        unregister();
-    });
-
-    it('an empty Feed opens the card; leaving collapses it for a Feed with suggestions', () => {
-        useFeedStatusCard.setState({ expanded: false });
+    it('an empty Feed opens the card; leaving collapses it', () => {
         setEmptyWantsCard(true);
         expect(useFeedStatusCard.getState().expanded).toBe(true);
         resetStatusCard();
         expect(useFeedStatusCard.getState().expanded).toBe(false);
     });
 
-    it('leaving the page drops a requested card', () => {
-        tapStatusIcon();
-        resetStatusCard();
-        expect(useFeedStatusCard.getState().requested).toBe(false);
+    it('the first suggestions fold an empty Feed card back', () => {
+        setEmptyWantsCard(true);
+        setEmptyWantsCard(false);
+        expect(useFeedStatusCard.getState().expanded).toBe(false);
+    });
+});
+
+describe('statsCardShown', () => {
+    const none = { limited: false, emptyWants: false, hasRows: false };
+    it('leads the list with suggestions, an empty Feed past a run, or the limit', () => {
+        expect(statsCardShown(none)).toBe(false);
+        for (const k of ['limited', 'emptyWants', 'hasRows'] as const) {
+            expect(statsCardShown({ ...none, [k]: true })).toBe(true);
+        }
     });
 });
