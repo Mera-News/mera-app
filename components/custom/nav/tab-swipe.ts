@@ -1,5 +1,6 @@
-// The page swipe's pure decisions: where a finished drag lands (a page, the
-// next or previous TAB, or back where it was) and which panels stay mounted.
+// The page swipe's pure decisions: where a finished drag lands (a page of
+// THIS tab, or back where it was) and which panels stay mounted. A swipe
+// never leaves its tab (owner): bottom tabs change only from the tab bar.
 // The gesture wiring is PagePager.tsx.
 
 /** A page change commits once the (damped) row has moved this much of the width. */
@@ -8,19 +9,16 @@ export const PAGE_COMMIT_FRACTION = 0.3;
 export const PAGE_COMMIT_VELOCITY = 600;
 /** The row follows the finger at this fraction: a short drag reads as "springs back". */
 export const SWIPE_DAMPING = 0.6;
-/** Past a tab's last (or before its first) page, the next tab takes over only
- *  after this much damped travel, and NEVER on a flick: a fast swipe through
- *  the pages must not throw the reader into another tab. */
-export const TAB_HANDOFF_FRACTION = 0.35;
+/** Past the first or last page the row follows the finger only this much:
+ *  the edge's resistance, then it springs back. */
+export const SWIPE_EDGE_DAMPING = 0.2;
 /** Sideways travel (pt) before the page swipe takes the touch. */
 export const SWIPE_ACTIVATE_PX = 25;
 /** Vertical travel (pt) that hands the touch to the page's list instead. */
 export const SWIPE_VERTICAL_FAIL_PX = 12;
 
-export type SwipeOutcome =
-  | { readonly kind: 'page'; readonly index: number }
-  | { readonly kind: 'tab'; readonly step: 1 | -1 }
-  | null;
+/** The page a finished drag lands on, or null: it springs back. */
+export type SwipeOutcome = { readonly kind: 'page'; readonly index: number } | null;
 
 export interface SwipeInput {
   /** Finger travel, points (negative = leftward). */
@@ -32,9 +30,6 @@ export interface SwipeInput {
   readonly count: number;
   /** Right-to-left layout: the direction mirrors. */
   readonly rtl: boolean;
-  /** Whether a tab exists before / after this one to hand off to. */
-  readonly hasPrevTab: boolean;
-  readonly hasNextTab: boolean;
 }
 
 /**
@@ -43,18 +38,26 @@ export interface SwipeInput {
  * way with a flick the other springs back.
  */
 export function swipeOutcome(input: SwipeInput): SwipeOutcome {
-  const { dx, vx, width, index, count, rtl, hasPrevTab, hasNextTab } = input;
+  const { dx, vx, width, index, count, rtl } = input;
   if (width <= 0 || dx === 0) return null;
   const travelled = Math.abs(dx) * SWIPE_DAMPING;
   const fast = Math.abs(vx) >= PAGE_COMMIT_VELOCITY;
   if (fast && Math.sign(vx) !== Math.sign(dx)) return null;
   const step: 1 | -1 = dx < 0 !== rtl ? 1 : -1;
   const next = index + step;
-  if (next >= 0 && next < count) {
-    return travelled >= width * PAGE_COMMIT_FRACTION || fast ? { kind: 'page', index: next } : null;
-  }
-  const canLeave = step === 1 ? hasNextTab : hasPrevTab;
-  return canLeave && travelled >= width * TAB_HANDOFF_FRACTION ? { kind: 'tab', step } : null;
+  if (next < 0 || next >= count) return null;
+  return travelled >= width * PAGE_COMMIT_FRACTION || fast ? { kind: 'page', index: next } : null;
+}
+
+/**
+ * How far the row follows a drag `dx` from page `index`: damped, and damped
+ * much harder toward a page that does not exist (past the first or last).
+ */
+export function dragFollow(dx: number, index: number, count: number, rtl: boolean): number {
+  'worklet';
+  const step = dx < 0 !== rtl ? 1 : -1;
+  const next = index + step;
+  return dx * (next < 0 || next >= count ? SWIPE_EDGE_DAMPING : SWIPE_DAMPING);
 }
 
 /**

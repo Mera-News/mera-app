@@ -1,14 +1,15 @@
 import {
   PAGE_COMMIT_FRACTION,
   SWIPE_DAMPING,
-  TAB_HANDOFF_FRACTION,
+  SWIPE_EDGE_DAMPING,
+  dragFollow,
   swipeOutcome,
   survivingPage,
   swipeWindow,
 } from '../tab-swipe';
 
 const W = 400;
-const base = { width: W, index: 1, count: 3, rtl: false, hasPrevTab: true, hasNextTab: true, vx: 0 };
+const base = { width: W, index: 1, count: 3, rtl: false, vx: 0 };
 /** Finger travel that moves the damped row by `fraction` of the width. */
 const travel = (fraction: number) => (fraction * W) / SWIPE_DAMPING;
 
@@ -34,35 +35,36 @@ describe('swipeOutcome: pages', () => {
   });
 });
 
-describe('swipeOutcome: tab handoff', () => {
+describe('swipeOutcome: the ends of a tab', () => {
   const last = { ...base, index: 2 };
   const first = { ...base, index: 0 };
 
-  it('hands off to the next tab past the last page only after the handoff travel', () => {
-    expect(swipeOutcome({ ...last, dx: -travel(TAB_HANDOFF_FRACTION) })).toEqual({ kind: 'tab', step: 1 });
-    expect(swipeOutcome({ ...last, dx: -travel(TAB_HANDOFF_FRACTION) + 1 })).toBeNull();
+  it('stays on the last page, and so on this tab, however far or fast the swipe', () => {
+    expect(swipeOutcome({ ...last, dx: -travel(0.9) })).toBeNull();
+    expect(swipeOutcome({ ...last, dx: -W * 3, vx: -3000 })).toBeNull();
   });
 
-  it('never hands off on a flick alone', () => {
-    expect(swipeOutcome({ ...last, dx: -60, vx: -3000 })).toBeNull();
+  it('stays on the first page', () => {
+    expect(swipeOutcome({ ...first, dx: travel(0.9), vx: 3000 })).toBeNull();
   });
 
-  it('hands off to the previous tab before the first page', () => {
-    expect(swipeOutcome({ ...first, dx: travel(0.4) })).toEqual({ kind: 'tab', step: -1 });
+  it('mirrors in RTL: a rightward drag on the last page stays', () => {
+    expect(swipeOutcome({ ...last, rtl: true, dx: travel(0.9) })).toBeNull();
   });
 
-  it('stays when there is no tab that way (Feed has none before it)', () => {
-    expect(swipeOutcome({ ...first, hasPrevTab: false, dx: travel(0.6) })).toBeNull();
-  });
-
-  it('mirrors in RTL: a rightward drag past the last page is the next tab', () => {
-    expect(swipeOutcome({ ...last, rtl: true, dx: travel(0.4) })).toEqual({ kind: 'tab', step: 1 });
-  });
-
-  it('a single-page tab hands off both ways', () => {
+  it('a single-page tab never moves', () => {
     const only = { ...base, index: 0, count: 1 };
-    expect(swipeOutcome({ ...only, dx: -travel(0.4) })).toEqual({ kind: 'tab', step: 1 });
-    expect(swipeOutcome({ ...only, dx: travel(0.4) })).toEqual({ kind: 'tab', step: -1 });
+    expect(swipeOutcome({ ...only, dx: -travel(0.9) })).toBeNull();
+    expect(swipeOutcome({ ...only, dx: travel(0.9) })).toBeNull();
+  });
+});
+
+describe('dragFollow', () => {
+  it('follows at the page damping toward a real page, and resists past the ends', () => {
+    expect(dragFollow(-100, 1, 3, false)).toBeCloseTo(-100 * SWIPE_DAMPING);
+    expect(dragFollow(-100, 2, 3, false)).toBeCloseTo(-100 * SWIPE_EDGE_DAMPING);
+    expect(dragFollow(100, 0, 3, false)).toBeCloseTo(100 * SWIPE_EDGE_DAMPING);
+    expect(dragFollow(100, 2, 3, true)).toBeCloseTo(100 * SWIPE_EDGE_DAMPING);
   });
 });
 

@@ -1,6 +1,6 @@
-// The page swipe: one row of full-size panels a finger drags sideways, and,
-// past a tab's last (or before its first) page, an edge label naming the
-// next tab that takes over once pulled far enough.
+// The page swipe: one row of full-size panels a finger drags sideways,
+// between THIS tab's pages only. Past the first or last page the row resists
+// and springs back; a swipe never changes the bottom tab (owner).
 //
 //  - Windowed: the active panel, its neighbours and any keep-mounted page
 //    (`swipeWindow`), the ACTIVE ONE FIRST (react-native-screens and UIKit walk
@@ -32,19 +32,10 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import { MaterialIcons } from '@expo/vector-icons';
 
-import { Text } from '@/components/ui/text';
-import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
-import {
-  SWIPE_ACTIVATE_PX,
-  SWIPE_DAMPING,
-  SWIPE_VERTICAL_FAIL_PX,
-  swipeOutcome,
-  swipeWindow,
-} from './tab-swipe';
+import { dragFollow, SWIPE_ACTIVATE_PX, SWIPE_VERTICAL_FAIL_PX, swipeOutcome, swipeWindow } from './tab-swipe';
 
 /** Leaves the screen edges to the system back gesture. */
 const EDGE_INSET = 24;
@@ -60,18 +51,10 @@ export interface PagePagerProps {
   /** Indices never unmounted (the Feed). */
   readonly keep: readonly number[];
   readonly onIndexChange: (next: number) => void;
-  /** Called past the ends; omit a label for "no tab that way". */
-  readonly onTabStep: (step: 1 | -1) => void;
-  readonly prevTabLabel?: string;
-  readonly nextTabLabel?: string;
   /** False while the Arrange overlay is open: no page swipe. */
   readonly enabled: boolean;
   /** Fractional page index, for readers outside the tree (Mera button). */
   readonly progress: SharedValue<number>;
-  /** Opacity of the page row (the cross-tab arrival fade). Applied on the
-   *  row itself, so the pager adds no wrapper view: the native scroll-view
-   *  walks (`subviews[0]`) see the same depth the old SwipeTabs had. */
-  readonly contentOpacity?: SharedValue<number>;
   readonly testID?: string;
 }
 
@@ -82,15 +65,10 @@ const PagePager: React.FC<PagePagerProps> = ({
   renderPanel,
   keep,
   onIndexChange,
-  onTabStep,
-  prevTabLabel,
-  nextTabLabel,
   enabled,
   progress,
-  contentOpacity,
   testID,
 }) => {
-  const colors = useColors();
   const [width, setWidth] = useState(0);
   const [moving, setMoving] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -107,14 +85,16 @@ const PagePager: React.FC<PagePagerProps> = ({
   // captured). The pan is therefore built once and reads these.
   const indexSV = useSharedValue(index);
   const widthSV = useSharedValue(width);
+  const countSV = useSharedValue(count);
   const reduceMotionSV = useSharedValue(!!reduceMotion);
   useLayoutEffect(() => {
     offset.value = base;
     progress.value = index;
     indexSV.value = index;
     widthSV.value = width;
+    countSV.value = count;
     reduceMotionSV.value = !!reduceMotion;
-  }, [base, offset, progress, index, width, indexSV, widthSV, reduceMotion, reduceMotionSV]);
+  }, [base, offset, progress, index, width, count, indexSV, widthSV, countSV, reduceMotion, reduceMotionSV]);
 
   // The arriving panel's translated titles were measured a width away (off
   // screen), and nothing ticks on arrival until the reader scrolls.
@@ -162,25 +142,9 @@ const PagePager: React.FC<PagePagerProps> = ({
 
   const finish = useCallback(
     (dx: number, vx: number) => {
-      const outcome = swipeOutcome({
-        dx,
-        vx,
-        width,
-        index,
-        count,
-        rtl,
-        hasPrevTab: prevTabLabel !== undefined,
-        hasNextTab: nextTabLabel !== undefined,
-      });
+      const outcome = swipeOutcome({ dx, vx, width, index, count, rtl });
       if (outcome === null) {
         springBack();
-        return;
-      }
-      if (outcome.kind === 'tab') {
-        // The next tab takes over; this one is left as it was.
-        offset.value = base;
-        setMoving(false);
-        onTabStep(outcome.step);
         return;
       }
       const target = -dir * outcome.index * width;
@@ -193,7 +157,7 @@ const PagePager: React.FC<PagePagerProps> = ({
         if (finished) runOnJS(land)(outcome.index);
       });
     },
-    [width, index, count, rtl, prevTabLabel, nextTabLabel, springBack, offset, base, onTabStep, dir, reduceMotion, land],
+    [width, index, count, rtl, springBack, offset, dir, reduceMotion, land],
   );
 
   // The JS side of the end of a drag always runs the LATEST `finish`.
@@ -213,51 +177,22 @@ const PagePager: React.FC<PagePagerProps> = ({
         })
         .onUpdate((e) => {
           if (!reduceMotionSV.value) {
-            offset.value = -dir * indexSV.value * widthSV.value + e.translationX * SWIPE_DAMPING;
+            offset.value =
+              -dir * indexSV.value * widthSV.value + dragFollow(e.translationX, indexSV.value, countSV.value, dir === -1);
           }
         })
         .onEnd((e) => {
           runOnJS(onDragEnd)(e.translationX, e.velocityX);
         }),
-    [enabled, dir, indexSV, widthSV, reduceMotionSV, offset, onDragEnd],
+    [enabled, dir, indexSV, widthSV, countSV, reduceMotionSV, offset, onDragEnd],
   );
 
-  const rowStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: offset.value }],
-    opacity: contentOpacity ? contentOpacity.value : 1,
-  }));
+  const rowStyle = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }));
 
   // Until the width is known a neighbour would land on top of the active
   // panel, so only the active one (and kept pages) is drawn.
   const mounted = swipeWindow(index, count, keep).filter(
     (i) => width > 0 || i === index || keep.includes(i),
-  );
-
-  const edgeLabel = (at: number, label: string, side: 'prev' | 'next') => (
-    <View
-      key={`edge-${side}`}
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      testID={testID ? `${testID}-edge-${side}` : undefined}
-      style={[
-        StyleSheet.absoluteFill,
-        styles.edge,
-        { transform: [{ translateX: dir * at * width }], alignItems: side === 'next' ? 'flex-start' : 'flex-end' },
-      ]}
-    >
-      <View style={styles.edgeRow}>
-        {side === 'prev' ? (
-          <MaterialIcons name={rtl ? 'chevron-right' : 'chevron-left'} size={22} color={colors.ink} />
-        ) : null}
-        <Text size="lg" bold className="text-ink">
-          {label}
-        </Text>
-        {side === 'next' ? (
-          <MaterialIcons name={rtl ? 'chevron-left' : 'chevron-right'} size={22} color={colors.ink} />
-        ) : null}
-      </View>
-    </View>
   );
 
   return (
@@ -280,8 +215,6 @@ const PagePager: React.FC<PagePagerProps> = ({
                 </View>
               );
             })}
-            {width > 0 && index === count - 1 && nextTabLabel ? edgeLabel(count, nextTabLabel, 'next') : null}
-            {width > 0 && index === 0 && prevTabLabel ? edgeLabel(-1, prevTabLabel, 'prev') : null}
           </Animated.View>
         </View>
       </GestureDetector>
@@ -290,8 +223,6 @@ const PagePager: React.FC<PagePagerProps> = ({
 
 const styles = StyleSheet.create({
   viewport: { flex: 1, overflow: 'hidden' },
-  edge: { justifyContent: 'center', paddingHorizontal: 20 },
-  edgeRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
 });
 
 export default PagePager;

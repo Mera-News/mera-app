@@ -1,5 +1,5 @@
 // The tab shell: the page strip header, one collapsing header shared by the
-// tab's pages, the page swipe (PagePager) with its swipe into the next tab,
+// tab's pages, the page swipe (PagePager, within this tab only),
 // the one explainer sheet behind the header's ?, and World's Arrange
 // overlay. Content lanes render it from their page-set
 // component (FeedPages, WorldPages, LibraryPages, YouPages) and draw only
@@ -10,10 +10,10 @@
 //    away (its country removed), its left neighbour takes over.
 //  - A page is `active` only while it is the visible page AND this screen is
 //    focused (tab focused, nothing pushed over it in the tab's stack).
-//  - Page requests arrive through navigate-to-page's one-shot pending store:
-//    `navigateToPage` (shortcuts, redirect stubs, deep links)
-//    and the cross-tab swipe's edge landing. Both are taken on focus, or at
-//    once while focused. A plain tap on the tab keeps the page it was on.
+//  - Page requests arrive through navigate-to-page's one-shot pending store
+//    (`navigateToPage`: shortcuts, redirect stubs, deep links), taken on
+//    focus, or at once while focused. A plain tap on the tab keeps the page
+//    it was on.
 //  - The surface is reported for the Mera button and the jump-origin Back.
 //  - One collapsing header for all pages, as the Dashboard had: a page change
 //    reveals it and resets its scroll origin (pages keep their own offsets).
@@ -25,12 +25,7 @@ import { useIsFocused } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import Animated, {
-  useAnimatedScrollHandler,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ArrangeOverlay from './ArrangeOverlay';
@@ -41,24 +36,16 @@ import {
   reportHeaderBottom,
   reportSurface,
 } from './current-surface';
-import {
-  consumePendingEdge,
-  consumePendingPage,
-  navigateToTabEdge,
-  usePendingEdge,
-  usePendingPageRequest,
-} from './navigate-to-page';
+import { consumePendingPage, usePendingPageRequest } from './navigate-to-page';
 import PageExplainerSheet from './PageExplainerSheet';
 import PagePager from './PagePager';
 import { survivingPage } from './tab-swipe';
 import PageStrip, { HEADER_BOTTOM_PAD, HEADER_SIDE_PAD, HEADER_TOP_PAD } from './PageStrip';
-import { pageMeta, TAB_LABEL_KEYS, TAB_ORDER, type PageId } from './page-registry';
+import { pageMeta, TAB_LABEL_KEYS, type PageId } from './page-registry';
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
 
 export type { TabPagesProps } from './types';
-
-const ARRIVAL_FADE_MS = 150;
 
 const TabPages: React.FC<TabPagesProps> = ({
   tab,
@@ -74,7 +61,6 @@ const TabPages: React.FC<TabPagesProps> = ({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
-  const reduceMotion = useReducedMotion();
   const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal, resetScrollOrigin, hidden } =
     useCollapsibleHeader();
 
@@ -118,25 +104,13 @@ const TabPages: React.FC<TabPagesProps> = ({
     [activeId, select],
   );
 
-  // ── Requests from elsewhere: a page, or a cross-tab edge ──
-  const opacity = useSharedValue(1);
-  const fadeIn = useCallback(() => {
-    if (reduceMotion) return;
-    opacity.value = 0;
-    opacity.value = withTiming(1, { duration: ARRIVAL_FADE_MS });
-  }, [reduceMotion, opacity]);
+  // ── Requests from elsewhere: a page ──
   const request = usePendingPageRequest();
-  const edge = usePendingEdge();
   useEffect(() => {
     if (!focused || ids.length === 0) return;
-    const landing = consumePendingEdge(tab);
-    if (landing) {
-      select(landing === 'first' ? ids[0] : ids[ids.length - 1]);
-      fadeIn();
-    }
     const req = consumePendingPage(tab);
     if (req && ids.includes(req.page)) select(req.page);
-  }, [focused, request, edge, ids, tab, select, fadeIn]);
+  }, [focused, request, ids, tab, select]);
 
   // ── Surface for the Mera button and the jump-origin Back ──
   useEffect(() => {
@@ -170,18 +144,6 @@ const TabPages: React.FC<TabPagesProps> = ({
     if (!focused) return undefined;
     return () => clearHeaderBottom(`tab:${tab}`);
   }, [focused, tab]);
-
-  // ── Neighbouring tabs for the edge labels ──
-  const tabIndex = TAB_ORDER.indexOf(tab);
-  const prevTab = TAB_ORDER[tabIndex - 1];
-  const nextTab = TAB_ORDER[tabIndex + 1];
-  const onTabStep = useCallback(
-    (step: 1 | -1) => {
-      const target = step === 1 ? nextTab : prevTab;
-      if (target) navigateToTabEdge(target, step === 1 ? 'first' : 'last');
-    },
-    [nextTab, prevTab],
-  );
 
 
   const header: PageHeaderBinding = useMemo(
@@ -232,12 +194,8 @@ const TabPages: React.FC<TabPagesProps> = ({
           renderPanel={renderPanel}
           keep={keep}
           onIndexChange={(i) => pick(ids[i])}
-          onTabStep={onTabStep}
-          prevTabLabel={prevTab ? t(TAB_LABEL_KEYS[prevTab]) : undefined}
-          nextTabLabel={nextTab ? t(TAB_LABEL_KEYS[nextTab]) : undefined}
           enabled={!arranging}
           progress={tabSwipeProgress(tab)}
-          contentOpacity={opacity}
           testID={testID ? `${testID}-pager` : undefined}
         />
 
