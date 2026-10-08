@@ -1,7 +1,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import ExploreSearchBar from '@/components/custom/explore/ExploreSearchBar';
 import ExploreSearchResults from '@/components/custom/explore/ExploreSearchResults';
-import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
+import { useReportSurface } from '@/components/custom/nav/current-surface';
 import { tabRoute } from '@/components/custom/nav/page-registry';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -35,6 +35,8 @@ const SearchScreen: React.FC = () => {
     const search = useNewsSearch();
     const openArticle = useOpenArticle();
     const isConnected = useIsConnected();
+    // The app-wide Mera button opens its generic chat here.
+    useReportSurface('search');
 
     const handleCancel = useCallback(() => {
         // A cold deep link has nothing under it: land on the Feed tab.
@@ -78,7 +80,6 @@ const SearchScreen: React.FC = () => {
                     offline={!isConnected}
                 />
             </Box>
-            <MeraButtonHost root />
         </Box>
     );
 };

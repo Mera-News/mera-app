@@ -9,7 +9,7 @@ import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateA
 import RelatedCoverage from '@/components/custom/news-detail/RelatedCoverage';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
-import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
+import { useReportArticleSurface } from '@/components/custom/nav/current-surface';
 import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
@@ -276,6 +276,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // chat context is not rebuilt on every render.
     const meraTitle = article?.title_en_internal_only ?? article?.title ?? undefined;
     const meraSubject = useMemo(() => ({ articleId, title: meraTitle }), [articleId, meraTitle]);
+    // The app-wide Mera button opens Mera on this article while it shows.
+    useReportArticleSurface(meraSubject);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -847,7 +849,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} bottomInset={ABOVE_MERA_BUTTON + insets.bottom} />
             {/* The Mera button, always shown (FinalRead #7): asks about this
                 article; a nested page asks about its own story. */}
-            <MeraButtonHost root article={meraSubject} />
         </Box>
     );
 };

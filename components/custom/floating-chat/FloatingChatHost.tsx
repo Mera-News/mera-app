@@ -8,9 +8,9 @@ import { StyleSheet, View } from 'react-native';
 /**
  * Absolute-fill overlay hosting ONLY the chat popover.
  *
- * The Mera button is NOT here: it mounts once per tab, after that tab's
- * `<Stack>` (components/custom/mera-button), so it gets the tab's own insets
- * and root pushes such as article detail cover it natively.
+ * The Mera button is NOT here: it is its own single host (MeraButtonHost),
+ * mounted just before this one in app/logged-in/_layout.tsx so the chat panel
+ * draws over it.
  *
  * The POPOVER stays app-level here so it remains the topmost popup (above every
  * card screen) and keeps a single conversation alive across navigations — both

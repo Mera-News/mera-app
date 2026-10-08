@@ -1,41 +1,45 @@
-// Mounts the Mera button.
+// The ONE Mera button of the app, mounted once in app/logged-in/_layout.tsx
+// before FloatingChatHost (so the chat panel draws over it). It never
+// unmounts on a tab switch, so it never blinks: one instance, whose props and
+// position change.
 //
-// In a TAB: `<MeraButtonHost tab="…" />` once per tab, as a sibling AFTER that
-// tab's `<Stack>` in its `_layout.tsx`: inside the tab it gets the tab's own
-// insets (useMeraButtonBottom) and stays over pages pushed inside the tab (One
-// interest, All facts, Sources). Shows only while ALL hold: this tab is
-// focused, the current surface belongs to this tab, the chat is closed,
-// Arrange is closed and the keyboard is down. Every page has a page key
-// (unknown ones get the generic set), so it never fades or hides on a page.
+// WHERE IT SHOWS is decided by the ROUTE (expo-router segments, host-rules.ts),
+// never by focus or by which tab reported a surface; those lag a switch by a
+// few frames, which is what made four per-tab buttons blink. Allowlist: every
+// screen under app_container, Search and the two article pages. It hides while
+// the chat is open, before the stored corner loads, and on a tab while the
+// keyboard is up or World's Arrange is open; on Search and an article a
+// bottom-corner button rides above the keyboard instead.
+//
+// WHAT A TAP OPENS: the current page's chat (the last reported surface, held
+// while the next one is in flight, so it never goes blank), or on an article
+// page Mera on that article (`useReportArticleSurface`).
+//
+// WHERE IT SITS: above the tab bar on a tab (each tab layout measures and
+// publishes the bar's top, `useReportTabBarClearance`; the bar is not in the
+// root's safe area), above the home indicator elsewhere. A frame change
+// springs to the new spot instead of remounting.
 //
 // STATES (FinalMeraChat #10-11), both memory-only: the logo grows while the
 // chat session is busy with the chat closed, and an orange ring shows while
-// an answer that landed with the chat closed is unread. Mera reading the news
-// changes nothing here; the Feed's status icon shows that.
-//
-// On a ROOT push, which covers the tab's button natively: `<MeraButtonHost
-// root />` (Search) or `<MeraButtonHost root article={…} />` (the article
-// page, whose tap opens Mera on that article), as the screen's LAST child.
-// Plain insets (no tab bar), shown while that screen is focused and the chat
-// is closed, and a bottom-corner button rides above the keyboard instead of
-// hiding, because Search focuses its field on arrival.
+// an answer that landed with the chat closed is unread, on any screen.
 //
 // THE BUTTON MOVES (owner, navx): drag it and it snaps to the nearest of four
-// physical corners (corner.ts), shared by every tab and kept on this phone.
-// The drag lives on the button's own detector, a sibling of the tab's Stack
-// and outside every pager, so a touch that starts on the button never swipes a
-// page. The overlay is box-none: only the 62pt circle takes touches.
+// physical corners (corner.ts), kept on this phone. The drag lives on the
+// button's own detector, outside every pager, so a touch that starts on the
+// button never swipes a page. The overlay is box-none: only the 62pt circle
+// takes touches.
 
 import {
   useArrangeOpen,
+  useArticleSubject,
   useCurrentSurface,
   useHeaderBottom,
 } from '@/components/custom/nav/current-surface';
-import { tabForSurface, type TabId } from '@/components/custom/nav/page-registry';
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import { SPRING } from '@/lib/motion';
-import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
-import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_EDGE, MERA_BUTTON_SIZE, useMeraButtonBottom } from '@/lib/navigation/tab-bar';
+import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_EDGE, MERA_BUTTON_SIZE, useTabBarTop } from '@/lib/navigation/tab-bar';
+import { useSegments } from 'expo-router';
 import {
   useFloatingChatAnswerUnread,
   useFloatingChatIsGenerating,
@@ -43,7 +47,6 @@ import {
   type ChatContext,
   type MeraPageKey,
 } from '@/lib/stores/floating-chat-store';
-import { articleChatContext, type AskMeraSubject } from '@/components/custom/floating-chat/ask-mera';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
@@ -69,6 +72,7 @@ import {
   type MeraCorner,
 } from './corner';
 import MeraButton from './MeraButton';
+import { buttonContextFor, lastKnown, meraButtonVisible, routeKindFor } from './host-rules';
 import { pageKeyFor } from './mera-pages';
 
 const TOP_GAP = 12;
@@ -95,7 +99,7 @@ interface PlacedProps {
   readonly page: MeraPageKey;
   readonly frame: CornerFrame;
   readonly context?: ChatContext;
-  /** Root hosts: a bottom corner lifts above the keyboard. */
+  /** Off the tabs: a bottom corner lifts above the keyboard. */
   readonly rideKeyboard: boolean;
   readonly working: boolean;
   readonly unread: boolean;
@@ -199,30 +203,37 @@ const Placed: React.FC<PlacedProps> = ({ surface, page, frame, context, rideKeyb
   );
 };
 
-export type MeraButtonHostProps =
-  | { readonly tab: TabId }
-  | { readonly root: true; readonly article?: AskMeraSubject };
-
-const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
-  const root = 'root' in props;
-  const tab = root ? null : props.tab;
-  const focused = useIsFocusedSafe();
-  const surface = useCurrentSurface();
+const MeraButtonHost: React.FC = () => {
+  const route = routeKindFor(useSegments());
+  const onTab = route === 'tab';
   const arrangeOpen = useArrangeOpen();
   const chatOpen = useFloatingChatShown();
   const working = useFloatingChatIsGenerating();
   const unread = useFloatingChatAnswerUnread();
   const keyboardUp = useKeyboardUp();
-  const tabBottom = useMeraButtonBottom();
   const insets = useSafeAreaInsets();
-  const bottom = root ? insets.bottom + MERA_BUTTON_BAR_GAP : tabBottom;
-  // The SHOWN header's bottom: a top-corner button never follows a header
-  // that collapses on scroll (owner ruling: nothing jumps while reading). A
-  // root push reports none of its own, so it never reads a tab's.
+  const tabBarTop = useTabBarTop();
+
+  // The page and the header it sits under, HELD while a switch is in flight:
+  // the old page clears its report on blur a few frames before the new one
+  // reports, and the button must not go blank or jump in between.
+  const reportedSurface = useCurrentSurface();
+  const [heldSurface, setHeldSurface] = useState(reportedSurface);
+  if (reportedSurface !== null && reportedSurface !== heldSurface) setHeldSurface(reportedSurface);
+  const surface = lastKnown(heldSurface, reportedSurface);
   const reportedHeader = useHeaderBottom();
-  const headerBottom = (root ? null : reportedHeader) ?? insets.top + HEADER_FALLBACK;
-  const article = root ? props.article : undefined;
-  const context = useMemo(() => (article ? articleChatContext(article) ?? undefined : undefined), [article]);
+  const [heldHeader, setHeldHeader] = useState(reportedHeader);
+  if (reportedHeader !== null && reportedHeader !== heldHeader) setHeldHeader(reportedHeader);
+
+  const article = useArticleSubject();
+  const context = useMemo(() => buttonContextFor(route, article), [route, article]);
+
+  // Above the tab bar on a tab, above the home indicator elsewhere. The tab
+  // inset stands in until the first tab has measured the bar.
+  const bottom = (onTab ? (tabBarTop ?? insets.bottom) : insets.bottom) + MERA_BUTTON_BAR_GAP;
+  // A top corner sits under the SHOWN header (it never follows a header that
+  // collapses on scroll); off the tabs, under the plain fallback.
+  const headerBottom = (onTab ? lastKnown(heldHeader, reportedHeader) : null) ?? insets.top + HEADER_FALLBACK;
 
   // No flash on launch: nothing renders until the stored corner is known.
   // Idempotent, so hydrateAllStores reading it first only makes this instant.
@@ -245,14 +256,9 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
     [size, headerBottom, bottom],
   );
 
-  const page: MeraPageKey | null = root
-    ? 'settings'
-    : surface !== null && tabForSurface(surface) === tab
-      ? pageKeyFor(surface)
-      : null;
-  if (!hydrated || !focused || page === null || chatOpen || (!root && (arrangeOpen || keyboardUp))) {
-    return null;
-  }
+  if (!meraButtonVisible({ route, hydrated, chatOpen, arrangeOpen, keyboardUp })) return null;
+  // Search and the article pages carry no page of their own: the generic set.
+  const page: MeraPageKey = (onTab ? pageKeyFor(surface) : null) ?? 'settings';
 
   return (
     <View
@@ -266,11 +272,11 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
     >
       {frame && (
         <Placed
-          surface={root ? (article ? 'article' : 'search') : (surface ?? '')}
+          surface={onTab ? (surface ?? '') : route}
           page={page}
           frame={frame}
           context={context}
-          rideKeyboard={root}
+          rideKeyboard={!onTab}
           working={working}
           unread={unread}
         />

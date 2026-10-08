@@ -6,6 +6,7 @@ import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import FeedbackRequestAutoShowHost from '@/components/custom/feedback-request/FeedbackRequestAutoShowHost';
 import ReauthOnReturn from '@/components/custom/auth/ReauthOnReturn';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
+import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
 import EmailCaptureHost from '@/components/custom/subscription/EmailCaptureSheet';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
 import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
@@ -180,6 +181,9 @@ export default function LoggedInLayout() {
       {/* A session that died mid-use goes to the sign-in gate on the next
           return to the app, never mid-read (renders nothing). */}
       <ReauthOnReturn />
+      {/* The one Mera button, before the chat so the panel draws over it.
+          It decides from the route where it shows (MeraButtonHost). */}
+      <MeraButtonHost />
       <FloatingChatHost />
       <FeedbackWidgetModal />
       {/* Renders nothing. Pops a live feedback request up once per request
