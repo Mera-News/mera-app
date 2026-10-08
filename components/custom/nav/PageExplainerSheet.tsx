@@ -41,7 +41,7 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
   const onClosed = () => {
     if (!wantsTutorial.current) return;
     wantsTutorial.current = false;
-    openTutorial(shown.chapter, shown.slide);
+    if (shown.chapter) openTutorial(shown.chapter, shown.slide);
   };
 
   return (
@@ -61,16 +61,18 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
           ))}
         </View>
         <View style={styles.actions}>
-          <Pressable
-            onPress={learnMore}
-            accessibilityRole="button"
-            style={[styles.button, styles.outlined, { borderColor: colors.helpRing }]}
-            testID="page-explainer-learn-more"
-          >
-            <Text size="md" bold style={{ color: colors.ink }}>
-              {t('nav.learnMore')}
-            </Text>
-          </Pressable>
+          {shown.chapter ? (
+            <Pressable
+              onPress={learnMore}
+              accessibilityRole="button"
+              style={[styles.button, styles.outlined, { borderColor: colors.helpRing }]}
+              testID="page-explainer-learn-more"
+            >
+              <Text size="md" bold style={{ color: colors.ink }}>
+                {t('nav.learnMore')}
+              </Text>
+            </Pressable>
+          ) : null}
           <Pressable
             onPress={onClose}
             accessibilityRole="button"

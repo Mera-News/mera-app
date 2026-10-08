@@ -1041,7 +1041,11 @@
     "dailyLimitTitle": "Batas berita harian tercapai",
     "dailyLimitBody": "Anda telah mencapai batas artikel hari ini. Akan direset sebentar lagi.",
     "emptyBody": "Apa pun yang membutuhkan Anda, seperti pembersihan profil atau pertanyaan dari Mera, muncul di sini.",
-    "settingsLink": "Pengaturan notifikasi"
+    "settingsLink": "Pengaturan notifikasi",
+    "help": {
+      "title": "Tentang notifikasi",
+      "body": "Mera menulis catatan di sini tentang feed Anda: pemeriksaan fakta yang Anda minta sudah siap, penyesuaian feed harian, tips untuk merapikan atau menyetel minat Anda, dan pertanyaan dari tim Mera. Catatan hanya disimpan di ponsel ini selama 90 hari, dan titik berarti ada yang belum dibaca. Notifikasi berita tidak muncul di sini. Waktunya bisa Anda atur di Pengaturan, di bagian Notifikasi."
+    }
   },
   "settings": {
     "groupHelp": "Bantuan",

@@ -1041,7 +1041,11 @@
     "dailyLimitTitle": "Dagelijkse nieuwslimiet bereikt",
     "dailyLimitBody": "Je hebt de daglimiet voor artikelen bereikt. Deze wordt binnenkort gereset.",
     "emptyBody": "Alles wat jouw aandacht vraagt, zoals een opruiming van je profiel of een vraag van Mera, verschijnt hier.",
-    "settingsLink": "Meldingsinstellingen"
+    "settingsLink": "Meldingsinstellingen",
+    "help": {
+      "title": "Over meldingen",
+      "body": "Mera zet hier notities over je feed: een factcheck die je hebt gevraagd is klaar, je dagelijkse feedcheck, tips om je interesses op te ruimen of bij te stellen, en vragen van het Mera-team. Ze blijven alleen op deze telefoon, 90 dagen lang, en een stip betekent dat er iets ongelezen is. Nieuwsmeldingen verschijnen hier niet. Je stelt de tijden in bij Instellingen, onder Meldingen."
+    }
   },
   "settings": {
     "groupHelp": "Hulp",

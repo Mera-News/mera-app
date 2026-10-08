@@ -1043,7 +1043,11 @@
     "dailyLimitTitle": "Günlük haber sınırına ulaşıldı",
     "dailyLimitBody": "Bugünkü makale sınırına ulaştın. Yakında sıfırlanacak.",
     "emptyBody": "Profil temizliği ya da Mera'dan bir soru gibi sizden bir şey isteyen her şey burada görünür.",
-    "settingsLink": "Bildirim ayarları"
+    "settingsLink": "Bildirim ayarları",
+    "help": {
+      "title": "Bildirimler hakkında",
+      "body": "Mera burada haber akışın hakkında notlar bırakır: istediğin doğruluk kontrolü hazır olduğunda, günlük haber akışı bakımın, ilgi alanlarını düzenlemek ya da toparlamak için ipuçları ve Mera ekibinden sorular. Bunlar yalnızca bu telefonda 90 gün saklanır ve okunmamış bir not varsa bir nokta görünür. Haber uyarıları burada görünmez. Zamanlarını Ayarlar'da, Bildirimler altından ayarlarsın."
+    }
   },
   "settings": {
     "groupHelp": "Yardım",

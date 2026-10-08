@@ -1065,7 +1065,11 @@
     "dailyLimitTitle": "Osiągnięto dzienny limit wiadomości",
     "dailyLimitBody": "Osiągnięto dzisiejszy limit artykułów. Wkrótce zostanie zresetowany.",
     "emptyBody": "Wszystko, co wymaga Twojej uwagi, na przykład porządki w profilu albo pytanie od Mera, pojawi się tutaj.",
-    "settingsLink": "Ustawienia powiadomień"
+    "settingsLink": "Ustawienia powiadomień",
+    "help": {
+      "title": "O powiadomieniach",
+      "body": "Mera zostawia tutaj notatki o Twoim kanale: gotową weryfikację faktów, o którą prosiłeś, codzienny przegląd kanału, wskazówki, jak uporządkować lub dostroić zainteresowania, i pytania od zespołu Mera. Notatki są przechowywane tylko na tym telefonie przez 90 dni, a kropka oznacza, że coś czeka na przeczytanie. Alerty o wiadomościach tutaj się nie pojawiają. Ich godziny ustawisz w Ustawieniach, w sekcji Powiadomienia."
+    }
   },
   "settings": {
     "groupHelp": "Pomoc",

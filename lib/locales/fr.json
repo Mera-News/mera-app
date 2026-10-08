@@ -1046,7 +1046,11 @@
     "dailyLimitTitle": "Limite quotidienne d'actualités atteinte",
     "dailyLimitBody": "Vous avez atteint la limite d'articles du jour. Elle se réinitialise bientôt.",
     "emptyBody": "Tout ce qui demande votre attention, comme un nettoyage de profil ou une question de Mera, apparaît ici.",
-    "settingsLink": "Paramètres des notifications"
+    "settingsLink": "Paramètres des notifications",
+    "help": {
+      "title": "À propos des notifications",
+      "body": "Mera laisse ici des notes sur votre fil : une vérification de faits que vous avez demandée est prête, votre mise au point quotidienne du fil, des conseils pour ranger ou ajuster vos centres d'intérêt, et des questions de l'équipe Mera. Elles ne sont conservées que sur ce téléphone pendant 90 jours, et un point signale une note non lue. Les alertes d'actualité n'apparaissent pas ici. Vous en réglez les horaires dans Paramètres, sous Notifications."
+    }
   },
   "settings": {
     "groupHelp": "Aide",

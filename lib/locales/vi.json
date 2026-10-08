@@ -1041,7 +1041,11 @@
     "dailyLimitTitle": "Đã đạt giới hạn tin tức hằng ngày",
     "dailyLimitBody": "Bạn đã đạt giới hạn bài viết hôm nay. Giới hạn này sẽ sớm được đặt lại.",
     "emptyBody": "Mọi việc cần bạn, như dọn dẹp hồ sơ hay một câu hỏi từ Mera, sẽ hiện ở đây.",
-    "settingsLink": "Cài đặt thông báo"
+    "settingsLink": "Cài đặt thông báo",
+    "help": {
+      "title": "Về thông báo",
+      "body": "Mera ghi chú ở đây về bảng tin của bạn: kết quả kiểm chứng bạn đã yêu cầu đã sẵn sàng, lời nhắc tinh chỉnh bảng tin mỗi ngày, gợi ý giúp bạn dọn dẹp hoặc điều chỉnh sở thích, và các câu hỏi từ nhóm Mera. Những ghi chú này chỉ được giữ trên điện thoại này trong 90 ngày. Chấm tròn nghĩa là có mục chưa đọc. Thông báo tin tức sẽ không hiện ở đây. Bạn đặt giờ nhận các thông báo đó trong Cài đặt, ở mục Thông báo."
+    }
   },
   "settings": {
     "groupHelp": "Trợ giúp",

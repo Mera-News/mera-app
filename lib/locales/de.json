@@ -1041,7 +1041,11 @@
     "dailyLimitTitle": "Tägliches Nachrichtenlimit erreicht",
     "dailyLimitBody": "Du hast das heutige Artikellimit erreicht. Es wird bald zurückgesetzt.",
     "emptyBody": "Alles, was deine Aufmerksamkeit braucht, etwa eine Profilbereinigung oder eine Frage von Mera, erscheint hier.",
-    "settingsLink": "Benachrichtigungseinstellungen"
+    "settingsLink": "Benachrichtigungseinstellungen",
+    "help": {
+      "title": "Über Benachrichtigungen",
+      "body": "Mera hinterlässt hier Hinweise zu deinem Feed. Dazu gehören ein Faktencheck, den du angefordert hast und der fertig ist, dein täglicher Feed-Check, Tipps, um deine Interessen aufzuräumen oder anzupassen, und Fragen vom Mera-Team. Die Hinweise bleiben nur auf diesem Telefon, 90 Tage lang. Ein Punkt zeigt an, dass etwas ungelesen ist. Nachrichten-Alarme erscheinen hier nicht. Die Zeiten dafür stellst du unter Einstellungen bei Benachrichtigungen ein."
+    }
   },
   "settings": {
     "groupHelp": "Hilfe",

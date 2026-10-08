@@ -602,7 +602,11 @@
     "dailyLimitTitle": "Daily news limit reached",
     "dailyLimitBody": "You've reached today's article limit. It resets soon.",
     "emptyBody": "Anything that needs you, like a profile cleanup or a question from Mera, shows up here.",
-    "settingsLink": "Notification settings"
+    "settingsLink": "Notification settings",
+    "help": {
+      "title": "About notifications",
+      "body": "Mera leaves notes here about your feed: a fact check you asked for is ready, your daily feed tune-up, tips to tidy up or tune your interests, and questions from the Mera team. They're kept only on this phone for 90 days, and a dot means something is unread. News alerts don't appear here. You set their times in Settings, under Notifications."
+    }
   },
   "clusterDetail": {
     "notTranslatable": "This article is in {{language}}. Your device can't translate it. Use Google Translate to read it in your language.",

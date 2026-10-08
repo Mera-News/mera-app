@@ -1041,7 +1041,11 @@
     "dailyLimitTitle": "Límite diario de noticias alcanzado",
     "dailyLimitBody": "Has alcanzado el límite de artículos de hoy. Se reinicia pronto.",
     "emptyBody": "Todo lo que te necesite, como una limpieza del perfil o una pregunta de Mera, aparecerá aquí.",
-    "settingsLink": "Ajustes de notificaciones"
+    "settingsLink": "Ajustes de notificaciones",
+    "help": {
+      "title": "Sobre las notificaciones",
+      "body": "Mera deja aquí notas sobre tu feed: una verificación de hechos que pediste ya está lista, tu revisión diaria del feed, consejos para ordenar o afinar tus intereses y preguntas del equipo de Mera. Se guardan solo en este teléfono durante 90 días, y un punto indica que hay algo sin leer. Las alertas de noticias no aparecen aquí. Sus horarios se configuran en Ajustes, en Notificaciones."
+    }
   },
   "settings": {
     "groupHelp": "Ayuda",

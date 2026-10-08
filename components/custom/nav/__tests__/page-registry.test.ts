@@ -24,11 +24,11 @@ describe('page-registry', () => {
     expect(kept).toEqual(['feed']);
   });
 
-  it("gives the ? only to Feed and World pages (not the inbox); Library and You have none", () => {
+  it("gives the ? only to Feed and World pages; Library and You have none", () => {
     for (const id of Object.keys(PAGE_META) as FixedPageId[]) {
       const tab = PAGE_META[id].tab;
       const hasHelp = PAGE_META[id].explainer !== null;
-      expect(hasHelp).toBe((tab === 'feed' && id !== 'notifications') || tab === 'world');
+      expect(hasHelp).toBe(tab === 'feed' || tab === 'world');
     }
   });
 

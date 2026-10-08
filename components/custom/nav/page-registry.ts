@@ -60,8 +60,9 @@ export type FixedPageId = StaticPageId | 'world';
 export interface PageExplainer {
   readonly titleKey: I18nKey;
   readonly paragraphKeys: readonly I18nKey[];
-  /** The tutorial chapter Learn more opens (`openTutorial`). */
-  readonly chapter: ChapterId;
+  /** The tutorial chapter Learn more opens (`openTutorial`). Absent: the card
+   *  has no Learn more (no chapter covers the page, e.g. the inbox). */
+  readonly chapter?: ChapterId;
   /** The card in that chapter; absent: its first. */
   readonly slide?: string;
 }
@@ -119,7 +120,13 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
   // The inbox (NotificationsScreen embedded), the Feed tab's last page (owner:
   // the Feed is everything new). Not `settings:notifications`, the
   // notification SETTINGS screen pushed in the You stack, which stays there.
-  notifications: { tab: 'feed', labelKey: 'notificationCenter.title', keepMounted: false, explainer: null },
+  notifications: {
+    tab: 'feed',
+    labelKey: 'notificationCenter.title',
+    keepMounted: false,
+    // What lands in the inbox, from the producers' truth; no chapter covers it.
+    explainer: { titleKey: 'notificationCenter.help.title', paragraphKeys: ['notificationCenter.help.body'] },
+  },
 };
 
 /** A country page: World's shape, its own explainer. */
