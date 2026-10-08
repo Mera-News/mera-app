@@ -11,6 +11,7 @@
 // registry and validates every op before it touches the persona. This card only
 // collects the user's checkbox/radio selections.
 
+import { genericOptionLabel } from './plan-option-label';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -55,6 +56,7 @@ const OptimisationPlanCard: React.FC = () => {
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
+  const tPlain = (key: 'optimisationPlan.optionApply' | 'optimisationPlan.optionSkip') => t(key);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [plan, setPlan] = useState<PendingPlan | null>(null);
 
@@ -269,7 +271,7 @@ const OptimisationPlanCard: React.FC = () => {
                       key={idx}
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
-                      accessibilityLabel={opt.label}
+                      accessibilityLabel={genericOptionLabel(opt, tPlain) ?? opt.label}
                       onPress={() =>
                         setReviewChoice((prev) => ({ ...prev, [item.fingerprint]: idx }))
                       }
@@ -282,11 +284,16 @@ const OptimisationPlanCard: React.FC = () => {
                         color={selected ? colors.accentMark : colors.ink3}
                         style={styles.rowIcon}
                       />
-                      <TranslatableDynamic
-                        text={opt.label}
-                        size="sm"
-                        style={styles.rowLabel}
-                      />
+                      {/* The plan service's own Apply / Skip fallbacks are static UI
+                          text: pre-translated, not sent to the runtime translator.
+                          Only an LLM-written label is runtime content. */}
+                      {genericOptionLabel(opt, tPlain) ? (
+                        <Text size="sm" style={styles.rowLabel}>
+                          {genericOptionLabel(opt, tPlain)}
+                        </Text>
+                      ) : (
+                        <TranslatableDynamic text={opt.label} size="sm" style={styles.rowLabel} />
+                      )}
                     </GlyphSafeButton>
                   );
                 })}

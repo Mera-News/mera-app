@@ -619,12 +619,18 @@ export interface RunAgentTurnParams {
    *  three-leg turn takes ~10s: without this the steps box would sit empty for
    *  the whole turn and then fill at once. */
   onLeg?: (leg: AgentLeg) => void;
+  /** The two lines a reply is REPLACED with (leak, narration), in the reader's
+   *  language. The harness cannot import i18n, so the app translates them at the
+   *  call site; omitted (the eval), the English constants are used. */
+  fallbacks?: { leak: string; process: string };
 }
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {
   const { state, userMessage, deps } = params;
   let maxLegsThisTurn = params.maxLegs ?? MAX_AGENT_LEGS;
   const model = params.model ?? 'BIG';
+  const leakFallback = params.fallbacks?.leak ?? REPLY_LEAK_FALLBACK;
+  const processFallback = params.fallbacks?.process ?? REPLY_PROCESS_FALLBACK;
   const loadSkillFn = deps.loadSkill ?? defaultLoadSkill;
   /** OFF only on the `pre-enforcement` control arm, which reproduces the loop
    *  as measured: a route leg that produced no route ends the turn, and the
@@ -1878,7 +1884,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // A card on screen speaks for itself: the fallback's "anything else?"
         // beside a choice still waiting asked for more at the wrong moment
         // (ux1 C4).
-        reply = proposedSomething ? '' : REPLY_LEAK_FALLBACK;
+        reply = proposedSomething ? '' : leakFallback;
         replyLeakUnfixed = true;
       } else {
         replyClaimUnfixed = true;
@@ -2173,12 +2179,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // re-ask failed. A save claim is left alone here for the same reason it is
   // left alone above.
   if (leaksInternals(cleanProse(reply))) {
-    reply = proposedSomething ? '' : REPLY_LEAK_FALLBACK;
+    reply = proposedSomething ? '' : leakFallback;
     replyLeakUnfixed = true;
   } else if (narratesProcess(cleanProse(reply))) {
     // Same placement rule as the leak check: every exit, not just the settle
     // break. A card on screen needs no words; otherwise one plain line.
-    reply = proposedSomething ? '' : REPLY_PROCESS_FALLBACK;
+    reply = proposedSomething ? '' : processFallback;
     replyProcessUnfixed = true;
   } else if (
     // NEVER SILENT ON A QUESTION (ux2 batch 26 D6). A conversation leg that
@@ -2194,7 +2200,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     && skillLoaded !== null
     && skillLoaded.startsWith('conversation/')
   ) {
-    reply = REPLY_PROCESS_FALLBACK;
+    reply = processFallback;
     replyProcessUnfixed = true;
   }
   // The acknowledgement is rendered too, so it gets the same two checks. It is

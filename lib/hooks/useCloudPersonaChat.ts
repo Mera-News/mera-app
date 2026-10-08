@@ -114,6 +114,12 @@ function parseToolArgs(raw: string): Record<string, unknown> {
   }
 }
 
+/** Required lazily: lib/i18n pulls the OS translator's native module at load. */
+function i18nInstance(): typeof import('../i18n').default {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return (require('../i18n') as typeof import('../i18n')).default;
+}
+
 const TAG = '[CloudChat]';
 
 /** Next-frame scheduler for the streaming bubble. RN provides
@@ -427,6 +433,11 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             stopRef.current.signal,
           )),
           onLeg,
+          // Mera's two replacement lines, in the reader's language.
+          fallbacks: {
+            leak: i18nInstance().t('chat.replyLeakFallback'),
+            process: i18nInstance().t('chat.replyProcessFallback'),
+          },
         });
         if (queued) flush();
         if (stopRef.current.signal.aborted) {

@@ -450,7 +450,7 @@ export default function ChatSessionView({
   }, [userId]);
 
   const effectiveBlocked = isBlocked || personaBlock.blocked;
-  const effectiveBlockedReason = blockedReason ?? personaBlock.reason;
+  const effectiveBlockedReason = blockedReason || personaBlock.reason;
 
   // --- Discard → Mera replies ------------------------------------------------
   //
@@ -610,7 +610,7 @@ export default function ChatSessionView({
   const composerHint = unresolvedFactChoices > 0 ? t('factChoice.pendingHint') : null;
 
   const blockedMessage = effectiveBlocked
-    ? (effectiveBlockedReason ?? t('errors.accountRestricted'))
+    ? (effectiveBlockedReason || t('errors.accountRestricted'))
     : error
       ? // The raw error string is NOT appended. It is a bare string with no class
         // to branch on, and what it carried was the provider's own English JSON

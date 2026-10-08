@@ -921,6 +921,20 @@ describe('ux2 batch 26 D6: a question turn is never left on its acknowledgement'
     expect(out.reply).toBe(REPLY_PROCESS_FALLBACK);
   });
 
+  it('the app can hand in the reader-language fallbacks, and they replace the English ones', async () => {
+    const h = harness([
+      res({ content: 'One moment.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: '' }),
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(NOBODY),
+      userMessage: 'what is porto santo',
+      deps: h.deps,
+      fallbacks: { leak: 'LEAK-DE', process: 'PROCESS-DE' },
+    });
+    expect(out.reply).toBe('PROCESS-DE');
+  });
+
   it('an answered question keeps its answer', async () => {
     const h = harness([
       res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),

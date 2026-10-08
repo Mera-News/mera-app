@@ -497,19 +497,21 @@ describe('PersonaUpdateAgent', () => {
         mockHandleIssueWarning.mockResolvedValue({
           blocked: true,
           message: 'User is blocked',
+          blockedReason: 'Server says so',
         });
         const agent = makeAgent();
         const result = await agent.executeTool('issueWarning', { reason: 'spam' });
 
-        expect(result.sideEffects?.blocked?.reason).toBe('User is blocked');
+        // The banner reads the server's own reason, never the model-facing sentence.
+        expect(result.sideEffects?.blocked?.reason).toBe('Server says so');
       });
 
-      it('uses fallback message when result.message is undefined', async () => {
+      it('passes an empty reason when the server sent none, so the view shows its translated key', async () => {
         mockHandleIssueWarning.mockResolvedValue({ blocked: true });
         const agent = makeAgent();
         const result = await agent.executeTool('issueWarning', {});
 
-        expect(result.sideEffects?.blocked?.reason).toBe('Blocked due to repeated warnings');
+        expect(result.sideEffects?.blocked?.reason).toBe('');
       });
     });
 

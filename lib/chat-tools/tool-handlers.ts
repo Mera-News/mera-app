@@ -473,9 +473,12 @@ export async function handleIssueWarning(
       return {
         blocked: true,
         warningCount: persona.llmWarningCount,
+        // The model reads `message` (English); the banner reads `blockedReason`,
+        // the server's own text, and falls back to its translated key when empty.
         message:
           persona.blockedByLlmReason ??
           'User has been blocked due to repeated warnings.',
+        blockedReason: persona.blockedByLlmReason ?? '',
       };
     }
 

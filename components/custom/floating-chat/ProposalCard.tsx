@@ -68,7 +68,6 @@ export interface ProposalCardProps {
 export interface ActionRow {
   icon: keyof typeof MaterialIcons.glyphMap;
   labelKey: string;
-  labelDefault?: string;
   /** Optional detail line(s) beneath the label. */
   detail?: string;
   /** Optional bold heading above the detail (feature-request title). */
@@ -87,20 +86,20 @@ export interface ActionRow {
   /** Optional small pill rendered before the detail — currently the structured
    *  suppression KIND ("Category", "Publication", …). Absent for a plain
    *  keyword filter, whose label already says "phrase". */
-  chip?: { key: string; default: string };
+  chip?: { key: string };
 }
 
 /** Display label for a structured suppression kind — deliberately the SAME keys
  *  the Not-interested screen uses, so a filter reads identically where it is
  *  confirmed and where it is later managed. `keyword` is absent on purpose: it
  *  is the default, and the row label already reads "a phrase". */
-const SUPPRESSION_KIND_CHIPS: Record<string, { key: string; default: string }> = {
-  category: { key: 'notInterested.kinds.category', default: 'Category' },
-  event_type: { key: 'notInterested.kinds.event_type', default: 'Kind of story' },
-  entity: { key: 'notInterested.kinds.entity', default: 'Person or thing' },
-  publication: { key: 'notInterested.kinds.publication', default: 'Source' },
-  place: { key: 'notInterested.kinds.place', default: 'Place' },
-  topic: { key: 'notInterested.kinds.topic', default: 'Topic' },
+const SUPPRESSION_KIND_CHIPS: Record<string, { key: string }> = {
+  category: { key: 'notInterested.kinds.category' },
+  event_type: { key: 'notInterested.kinds.event_type' },
+  entity: { key: 'notInterested.kinds.entity' },
+  publication: { key: 'notInterested.kinds.publication' },
+  place: { key: 'notInterested.kinds.place' },
+  topic: { key: 'notInterested.kinds.topic' },
 };
 
 /**
@@ -168,7 +167,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
       return {
         icon: 'send',
         labelKey: 'articleFeedback.actionFeatureRequest',
-        labelDefault: 'Send feature request to the Mera team',
         heading: action.title,
         detail: action.summary,
         translateHeading: true,
@@ -185,7 +183,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
       return {
         icon: 'track-changes',
         labelKey: 'trackedStories.trackAction',
-        labelDefault: 'Follow story',
         heading: action.label,
         translateHeading: true,
       };
@@ -225,7 +222,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
           action.delta < 0
             ? 'articleFeedback.actionShowLessTopic'
             : 'articleFeedback.actionShowMoreTopic',
-        labelDefault: action.delta < 0 ? 'Show less of a topic' : 'Show more of a topic',
         detail: action.topicText,
         translateDetail: true,
       };
@@ -233,7 +229,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
       return {
         icon: 'thumb-down',
         labelKey: 'articleFeedback.actionDownRank',
-        labelDefault: 'Down-rank a topic',
         detail: action.topicText,
         translateDetail: true,
       };
@@ -256,12 +251,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
             : action.publicationPref === 'boost'
               ? 'articleFeedback.actionPublicationBoost'
               : 'articleFeedback.actionPublicationDeprioritize',
-        labelDefault:
-          action.publicationPref === 'mute'
-            ? 'Mute a publication'
-            : action.publicationPref === 'boost'
-              ? 'Show more from a publication'
-              : 'Show less from a publication',
         // NOT translated: this is the outlet's NAME. It is the same string the
         // publication-preferences screen and the article meta row show, and
         // machine-translating a masthead invents an outlet that does not exist.
@@ -277,10 +266,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
           action.publicationPref === 'boost'
             ? 'articleFeedback.actionSourceScopeBoost'
             : 'articleFeedback.actionSourceScopeDeprioritize',
-        labelDefault:
-          action.publicationPref === 'boost'
-            ? 'Show more from sources in a country'
-            : 'Show less from sources in a country',
         // A closed-vocabulary English COUNTRY name resolved by
         // `resolveCountryScope`. The persisted value is `scopeValue` (an ISO
         // code), so translating the label for display cannot drift the scope.
@@ -291,7 +276,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
       return {
         icon: 'block',
         labelKey: 'articleFeedback.actionSuppress',
-        labelDefault: 'Filter out a phrase',
         // NOT translated: a literal MATCH string. Showing a Hindi rendering
         // would promise a filter the English-corpus matcher does not implement.
         detail: action.suppressionPattern,
@@ -305,7 +289,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
       return {
         icon: 'filter-alt-off',
         labelKey: 'articleFeedback.actionRetireSuppression',
-        labelDefault: 'Remove a filter',
         // Empty on a resumed card — the sanitizer resolves `pattern` from our
         // own filter list and it is not echoed into the persisted tool result.
         // NOT translated, for the same reason as add_suppression: it is the
@@ -319,7 +302,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
         labelKey: action.highPriority
           ? 'articleFeedback.actionPinTopic'
           : 'articleFeedback.actionUnpinTopic',
-        labelDefault: action.highPriority ? 'Pin a topic' : 'Unpin a topic',
         detail: action.topicText,
         translateDetail: true,
       };
@@ -327,7 +309,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
       return {
         icon: 'do-not-disturb-on',
         labelKey: 'articleFeedback.actionRetireTopic',
-        labelDefault: 'Retire a topic',
         detail: action.topicText,
         translateDetail: true,
       };
@@ -336,7 +317,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
       return {
         icon: 'tune',
         labelKey: 'calibration.actionRecalibrate',
-        labelDefault: 'Re-tune relevance scoring',
         detail: undefined,
       };
     default:
@@ -351,8 +331,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   const { t } = useTranslation();
   // Action label keys are resolved dynamically; casting to a single known-valid
   // key literal satisfies the typed-`t` overloads without widening the arg type.
-  // (All keys are valid at runtime — `actionFeatureRequest` may still be landing
-  // via the concurrent i18n change, hence the defaultValue fallback.)
+  // (All keys exist in every locale.)
   type TKey = 'articleFeedback.proposalTitle';
   const storeProposal = useFloatingChatProposal();
   const resolvedProposals = useFloatingChatResolvedProposals();
@@ -445,7 +424,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
         />
         <Text size="sm" bold style={styles.title}>
           {isTrackProposal
-            ? t('trackedStories.trackProposalTitle', { defaultValue: 'Follow this story?' })
+            ? t('trackedStories.trackProposalTitle')
             : isFactCheckProposal
               ? t('factCheck.claimProposalTitle')
               : t('articleFeedback.proposalTitle')}
@@ -456,7 +435,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
         <Text size="xs" style={styles.hint}>
           {isTrackProposal
             ? t('floatingChat.trackChooseHint')
-            : t('articleFeedback.chooseOneHint', { defaultValue: 'Pick one option' })}
+            : t('articleFeedback.chooseOneHint')}
         </Text>
       )}
 
@@ -499,9 +478,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
               <View style={styles.actionBody}>
                 {showLabel && (
                   <Text size="xs" bold style={styles.actionLabel}>
-                    {row.labelDefault
-                      ? t(row.labelKey as TKey, { defaultValue: row.labelDefault })
-                      : t(row.labelKey as TKey)}
+                    {t(row.labelKey as TKey)}
                   </Text>
                 )}
                 {row.heading &&
@@ -521,7 +498,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                 {row.chip && (
                   <View style={styles.chip}>
                     <Text size="xs" style={styles.chipText}>
-                      {t(row.chip.key as TKey, { defaultValue: row.chip.default })}
+                      {t(row.chip.key as TKey)}
                     </Text>
                   </View>
                 )}
@@ -553,13 +530,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
                 accessibilityLabel={[
-                  showLabel
-                    ? row.labelDefault
-                      ? t(row.labelKey as TKey, { defaultValue: row.labelDefault })
-                      : t(row.labelKey as TKey)
-                    : null,
+                  showLabel ? t(row.labelKey as TKey) : null,
                   row.heading ? (shownText[`h${idx}`] ?? row.heading) : null,
-                  row.chip ? t(row.chip.key as TKey, { defaultValue: row.chip.default }) : null,
+                  row.chip ? t(row.chip.key as TKey) : null,
                   row.detail ? (shownText[`d${idx}`] ?? row.detail) : null,
                 ]
                   .filter(Boolean)

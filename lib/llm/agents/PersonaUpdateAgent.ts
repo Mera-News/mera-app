@@ -397,7 +397,7 @@ export class PersonaUpdateAgent implements IAgent {
             result.blocked === true
               ? {
                   blocked: {
-                    reason: (result.message as string) ?? 'Blocked due to repeated warnings',
+                    reason: (result.blockedReason as string) ?? '',
                   },
                 }
               : undefined,
