@@ -108,9 +108,26 @@ export function tabBarTopFromBottom(
   return Math.max(0, windowHeight - contentBottomInWindow) + tabBarClearance(os, insetsBottom);
 }
 
-/** The last value a tab reported: the same for every tab, so it is stable
- *  once the first tab has mounted. Null until then. */
-export const useTabBarTopStore = create<{ top: number | null }>(() => ({ top: null }));
+export interface TabBarTopState {
+  readonly top: number | null;
+  /** The window height the value was measured in. */
+  readonly windowHeight: number | null;
+}
+
+/**
+ * Folds one tab's report into the stored bar top: the LARGEST value seen for
+ * this window height. Every tab mount first reports the bare home-indicator
+ * inset (34 on iOS) before its own safe area, which holds the bar, arrives
+ * (83), so a later small report is that early one, never a lower bar. A new
+ * window height (rotation, split view) starts over.
+ */
+export function foldTabBarTop(prev: TabBarTopState, top: number, windowHeight: number): TabBarTopState {
+  if (prev.windowHeight !== windowHeight || prev.top === null) return { top, windowHeight };
+  return top > prev.top ? { top, windowHeight } : prev;
+}
+
+/** Null until a tab has measured. */
+export const useTabBarTopStore = create<TabBarTopState>(() => ({ top: null, windowHeight: null }));
 
 export function useTabBarTop(): number | null {
   return useTabBarTopStore((s) => s.top);
@@ -136,7 +153,9 @@ export function useReportTabBarClearance(): { ref: RefObject<View | null>; onLay
       if (__DEV__) {
         logger.info('[tab-bar] measured', { windowHeight, contentBottom: y + h, insetsBottom, barTopFromBottom: top });
       }
-      if (useTabBarTopStore.getState().top !== top) useTabBarTopStore.setState({ top });
+      const prev = useTabBarTopStore.getState();
+      const next = foldTabBarTop(prev, top, windowHeight);
+      if (next !== prev) useTabBarTopStore.setState(next);
     });
   }, [windowHeight, insetsBottom]);
   useEffect(() => {

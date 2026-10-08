@@ -6,6 +6,7 @@ import {
   listEndClearance,
   meraButtonBottom,
   tabBarClearance,
+  foldTabBarTop,
   tabBarTopFromBottom,
 } from '../tab-bar';
 
@@ -73,5 +74,24 @@ describe('tabBarTopFromBottom', () => {
 
   it('never goes negative for a measure past the window', () => {
     expect(tabBarTopFromBottom(874, 880, 'android', 0)).toBe(0);
+  });
+});
+
+describe('foldTabBarTop', () => {
+  const empty = { top: null, windowHeight: null };
+
+  it('keeps the largest report for a window height (the early inset-only report loses)', () => {
+    let s = foldTabBarTop(empty, 34, 844);
+    expect(s.top).toBe(34);
+    s = foldTabBarTop(s, 83, 844);
+    expect(s.top).toBe(83);
+    const kept = foldTabBarTop(s, 34, 844);
+    expect(kept).toBe(s);
+    expect(kept.top).toBe(83);
+  });
+
+  it('starts over when the window changes size', () => {
+    const s = foldTabBarTop(foldTabBarTop(empty, 83, 844), 40, 390);
+    expect(s).toEqual({ top: 40, windowHeight: 390 });
   });
 });
