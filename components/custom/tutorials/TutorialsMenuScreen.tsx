@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 // exists so tests can stub one module path. Same reason as `SlideView`.
 import { ScrollView } from '@/components/ui/scroll-view';
 
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { hapticLight } from '@/lib/haptics';
 import { buildMenuModel } from '@/lib/tutorials/menu';
 import { chapterSubtitleKey, chapterTitleKey } from '@/lib/tutorials/keys';
@@ -166,7 +166,7 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     content: {
         paddingHorizontal: 16,
         paddingBottom: 32,
-        paddingTop: 12,
+        paddingTop: SUBPAGE_TOP_GAP,
         gap: 8,
     },
     intro: {
