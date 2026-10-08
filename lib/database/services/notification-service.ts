@@ -187,6 +187,16 @@ export async function markAllRead(): Promise<number> {
   return unread.length;
 }
 
+/** Permanently deletes one notification (the inbox's delete). A row already
+ *  gone is not an error. */
+export async function deleteNotification(notificationId: string): Promise<void> {
+  const row = await notificationsCollection.find(notificationId).catch(() => null);
+  if (!row) return;
+  await database.write(async () => {
+    await row.destroyPermanently();
+  });
+}
+
 /** Permanently deletes every notification row. Returns the number removed. */
 export async function clearAll(): Promise<number> {
   const all = await notificationsCollection.query().fetch();

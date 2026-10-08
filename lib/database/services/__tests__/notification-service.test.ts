@@ -30,6 +30,11 @@ jest.mock('@/lib/database/index', () => ({
         fetch: jest.fn(async () => mockRows),
       })),
       create: (builder: (n: any) => void) => mockCreate(builder),
+      find: jest.fn(async (id: string) => {
+        const row = mockRows.find((r) => r.id === id);
+        if (!row) throw new Error(`no ${id}`);
+        return row;
+      }),
     })),
     write: (fn: () => any) => mockWrite(fn),
     batch: (...ops: any[]) => mockBatch(...ops),
@@ -38,7 +43,7 @@ jest.mock('@/lib/database/index', () => ({
 
 import { Q } from '@nozbe/watermelondb';
 import database from '@/lib/database/index';
-import { clearAll, markActionedBySource, markAllRead, notify, observeUnreadCount } from '../notification-service';
+import { clearAll, deleteNotification, markActionedBySource, markAllRead, notify, observeUnreadCount } from '../notification-service';
 
 beforeEach(() => {
   mockRows = [];
@@ -236,6 +241,26 @@ describe('clearAll', () => {
     expect(removed).toBe(0);
     expect(mockWrite).not.toHaveBeenCalled();
     expect(mockBatch).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleteNotification', () => {
+  it('destroys that one row for good', async () => {
+    const keep = makeRecord({ id: 'n1', status: 'read' });
+    const gone = makeRecord({ id: 'n2', status: 'unread' });
+    mockRows = [keep, gone];
+
+    await deleteNotification('n2');
+
+    expect(mockWrite).toHaveBeenCalledTimes(1);
+    expect(gone.destroyPermanently).toHaveBeenCalledTimes(1);
+    expect(keep.destroyPermanently).not.toHaveBeenCalled();
+  });
+
+  it('a row already gone is not an error and writes nothing', async () => {
+    mockRows = [];
+    await expect(deleteNotification('nope')).resolves.toBeUndefined();
+    expect(mockWrite).not.toHaveBeenCalled();
   });
 });
 

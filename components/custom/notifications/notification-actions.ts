@@ -109,3 +109,18 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
             openChatWith(actionLabel(action));
     }
 }
+
+/**
+ * An inbox row tap: exactly what the row's button did when rows were cards
+ * (its FIRST action: hygiene opens Tidy up, calibration the recalibration
+ * chat, a finished fact check its article, an optimisation plan the plan);
+ * a row with no action (a feedback question) opens as before.
+ */
+export async function tapNotification(n: NotificationModel): Promise<void> {
+    const action = (parseJson<NotificationAction[]>(n.actionsJson) ?? [])[0];
+    if (action) {
+        await runNotificationAction(n, action);
+        return;
+    }
+    await openNotification(n);
+}

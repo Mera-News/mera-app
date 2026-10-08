@@ -2,7 +2,7 @@ import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type NotificationModel from '@/lib/database/models/Notification';
-import { markAllRead, observeAll } from '@/lib/database/services/notification-service';
+import { deleteNotification, markAllRead, observeAll } from '@/lib/database/services/notification-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import {
     isFeedbackRequestEnded,
@@ -14,20 +14,20 @@ import { hapticLight } from '@/lib/haptics';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
+import logger from '@/lib/logger';
+import { useMotionAllowed } from '@/lib/motion-gate';
+import { MaterialIcons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
+import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 import {
-    actionLabel,
     FEEDBACK_REQUEST,
     NOT_KEPT_NOTICE_TYPES,
-    openNotification,
+    tapNotification,
     parseJson,
     resolveText,
-    runNotificationAction,
-    type NotificationAction,
 } from './notification-actions';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
@@ -49,9 +49,14 @@ interface NotificationsScreenProps {
     readonly active: boolean;
 }
 
+/** The delete control's hit area. */
+const DELETE_FRAME = 44;
+
 /**
- * Library > Notifications (FinalInbox #4, #5): only things that need you,
- * each with its age and ONE button. Seeing the page clears both dots (the
+ * Feed > Notifications: a plain list in one grouped panel (the Settings list
+ * idiom, you/rows): an unread dot, the title, a two-line preview and its age,
+ * and a delete at the end. A tap opens the row as before; delete removes it
+ * from this phone at once, no confirm. Seeing the page clears both dots (the
  * Library tab's, unless a fact check also lit it, and this pill), and the seen state never leaves this phone. Empty: one
  * line on what lands here, and the way to its settings.
  */
@@ -62,6 +67,8 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     usePageScrollTarget(listRef);
     const colors = useColors();
     const endClearance = useListEndClearance();
+    // Lite / Reduce Motion: a deleted row leaves at once.
+    const motion = useMotionAllowed();
     const [items, setItems] = useState<NotificationModel[]>([]);
 
     // A hygiene row stamps its count when written, and later sweeps add to the
@@ -117,7 +124,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     }, [active, hasUnread]);
 
     const renderItem = useCallback(
-        ({ item: n }: { item: NotificationModel }) => {
+        ({ item: n, index }: { item: NotificationModel; index: number }) => {
             const stored = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
             const params =
                 n.type === 'hygiene' && hygienePending !== null && hygienePending > 0 ? { ...stored, count: hygienePending } : stored;
@@ -136,60 +143,80 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
             } else {
                 body = resolveText(n.body, params);
             }
-            const action = (parseJson<NotificationAction[]>(n.actionsJson) ?? [])[0];
             const age = relativeTime(n.createdAt);
+            const unread = n.status === 'unread';
+            const first = index === 0;
+            const last = index === items.length - 1;
+            const preview = [body, status].filter(Boolean).join(' · ');
             return (
-                <View
-                    style={{ marginHorizontal: PAGE_SIDE_INSET, marginBottom: 10, borderRadius: 16, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, padding: 16, gap: 10 }}
+                <Animated.View
+                    exiting={motion ? FadeOut.duration(180) : undefined}
+                    style={{
+                        marginHorizontal: PAGE_SIDE_INSET,
+                        backgroundColor: colors.surface,
+                        borderColor: colors.line,
+                        borderLeftWidth: 1,
+                        borderRightWidth: 1,
+                        borderTopWidth: first ? 1 : StyleSheet.hairlineWidth,
+                        borderBottomWidth: last ? 1 : 0,
+                        borderTopLeftRadius: first ? 16 : 0,
+                        borderTopRightRadius: first ? 16 : 0,
+                        borderBottomLeftRadius: last ? 16 : 0,
+                        borderBottomRightRadius: last ? 16 : 0,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                    }}
                 >
                     <Pressable
                         testID={`notification-row-${n.id}`}
                         onPress={() => {
                             void hapticLight();
-                            void openNotification(n);
+                            void tapNotification(n);
                         }}
                         accessibilityRole="button"
-                        // The button is a separate stop on its own; the row reads once.
-                        accessibilityLabel={[title, body, status, age].filter(Boolean).join(', ')}
-                        style={{ gap: 6 }}
+                        accessibilityLabel={[title, preview, age].filter(Boolean).join(', ')}
+                        style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 12, paddingLeft: 16, gap: 10 }}
                     >
-                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                            <Text style={{ flex: 1, color: colors.ink, fontSize: 16, fontWeight: '600' }} numberOfLines={2}>
-                                {title}
-                            </Text>
-                            <Text style={{ color: colors.ink3, fontSize: 13 }}>{age}</Text>
+                        {/* The unread dot keeps its column, so titles line up. */}
+                        <View style={{ width: 8, paddingTop: 7 }}>
+                            {unread ? (
+                                <View testID={`notification-unread-${n.id}`} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accentMark }} />
+                            ) : null}
                         </View>
-                        {body ? (
-                            <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }} numberOfLines={3}>
-                                {body}
-                            </Text>
-                        ) : null}
-                        {status ? (
-                            <Text testID={`notification-status-${n.id}`} style={{ color: colors.accentText, fontSize: 13, fontWeight: '600' }}>
-                                {status}
-                            </Text>
-                        ) : null}
-                    </Pressable>
-                    {action ? (
-                        <Pressable
-                            testID={`notification-action-${n.id}`}
-                            onPress={() => {
-                                void hapticLight();
-                                void runNotificationAction(n, action);
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel={actionLabel(action)}
-                            style={{ alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' }}
-                        >
-                            <View style={{ borderRadius: 999, borderWidth: 1, borderColor: colors.accent, paddingHorizontal: 14, paddingVertical: 7 }}>
-                                <Text style={{ color: colors.accentText, fontSize: 14, fontWeight: '600' }}>{actionLabel(action)}</Text>
+                        <View style={{ flex: 1, gap: 3 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+                                <Text style={{ flex: 1, color: colors.ink, fontSize: 16, fontWeight: '600' }} numberOfLines={1}>
+                                    {title}
+                                </Text>
+                                <Text style={{ color: colors.ink3, fontSize: 13 }}>{age}</Text>
                             </View>
-                        </Pressable>
-                    ) : null}
-                </View>
+                            {preview ? (
+                                <Text testID={`notification-preview-${n.id}`} style={{ color: colors.ink2, fontSize: 14, lineHeight: 19 }} numberOfLines={2}>
+                                    {preview}
+                                </Text>
+                            ) : null}
+                        </View>
+                    </Pressable>
+                    {/* A sibling of the row's press area, never inside it, so a
+                        delete never opens the row. */}
+                    <Pressable
+                        testID={`notification-delete-${n.id}`}
+                        onPress={() => {
+                            void hapticLight();
+                            deleteNotification(n.id).catch((err: unknown) =>
+                                logger.captureException(err, { tags: { component: 'NotificationsScreen', method: 'delete' } }),
+                            );
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.delete')}
+                        style={{ width: DELETE_FRAME, height: DELETE_FRAME, marginRight: 4, alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <MaterialIcons name="delete-outline" size={22} color={colors.ink3} />
+                    </Pressable>
+                </Animated.View>
             );
         },
-        [hygienePending, feedbackRequests, colors, t],
+        [hygienePending, feedbackRequests, colors, t, items.length, motion],
     );
 
     const empty = (
@@ -214,6 +241,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
             data={items}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
+            itemLayoutAnimation={motion ? LinearTransition.duration(180) : undefined}
             ListEmptyComponent={empty}
             initialNumToRender={12}
             showsVerticalScrollIndicator={false}
