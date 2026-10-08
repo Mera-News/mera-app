@@ -929,7 +929,8 @@
     "gotIt": "Rozumiem",
     "world": "Świat",
     "library": "Biblioteka",
-    "you": "Ty"
+    "you": "Ty",
+    "exploreTitle": "Odkrywaj"
   },
   "swipeFeed": {
     "moreLikeThis": "Więcej takich",
@@ -3050,6 +3051,18 @@
     "stories": {
       "p1": "Historie, które wybrałeś do obserwowania. Każda dalej zbiera nowe artykuły w miarę rozwoju i pokazuje, co nowego pojawiło się od Twojej ostatniej wizyty.",
       "p2": "Obserwuj historię z przycisku Mera albo z artykułu. Przestań ją obserwować tutaj w dowolnym momencie."
+    },
+    "settings": {
+      "title": "Ustawienia",
+      "p1": "Wybierz, jak Mera działa na tym telefonie: język, wyświetlanie, powiadomienia i blokadę aplikacji.",
+      "p2": "Mera Protocol określa, gdzie działa AI Mery: na tym telefonie czy w prywatnej chmurze Mery. Twoje dane są tam, gdzie zapisywane są kopie zapasowe i eksporty.",
+      "p3": "Pomoc, logowanie i strony prawne są na dole."
+    },
+    "notifications": {
+      "title": "Powiadomienia",
+      "p1": "Wszystko, co wymaga twojej uwagi, pojawia się tutaj, na przykład porządki w profilu czy pytanie od Mery.",
+      "p2": "Stuknij powiadomienie, by je otworzyć. Otwarcie tej strony oznacza wszystko jako przeczytane.",
+      "p3": "Zostają na tym telefonie i są usuwane po 90 dniach. Co pojawia się na ekranie blokady, wybierzesz w Ustawieniach powiadomień."
     }
   },
   "gate": {

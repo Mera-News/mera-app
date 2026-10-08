@@ -909,7 +909,8 @@
     "gotIt": "Begrepen",
     "world": "Wereld",
     "library": "Bibliotheek",
-    "you": "Jij"
+    "you": "Jij",
+    "exploreTitle": "Verkennen"
   },
   "swipeFeed": {
     "moreLikeThis": "Meer zoals dit",
@@ -2982,6 +2983,18 @@
     "stories": {
       "p1": "Verhalen die je hebt gekozen om te volgen. Elk verzamelt nieuwe artikelen naarmate het zich ontwikkelt, en laat zien wat er nieuw is sinds je het voor het laatst bekeek.",
       "p2": "Volg een verhaal via de Mera-knop of vanuit een artikel. Je kunt hier op elk moment stoppen met volgen."
+    },
+    "settings": {
+      "title": "Instellingen",
+      "p1": "Bepaal hoe Mera op deze telefoon werkt: taal, weergave, meldingen en app-vergrendeling.",
+      "p2": "Met Mera Protocol bepaal je waar de AI van Mera draait: op deze telefoon of in de privécloud van Mera. Je gegevens staan waar back-ups en exports worden bewaard.",
+      "p3": "Hulp, inloggen en de juridische pagina's staan onderaan."
+    },
+    "notifications": {
+      "title": "Meldingen",
+      "p1": "Alles wat jouw aandacht nodig heeft, verschijnt hier, zoals een opschoning van je profiel of een vraag van Mera.",
+      "p2": "Tik op een melding om die te openen. Als je deze pagina opent, worden alle meldingen als gelezen gemarkeerd.",
+      "p3": "Ze blijven op deze telefoon en worden na 90 dagen verwijderd. Kies wat op je vergrendelscherm komt via Meldingsinstellingen."
     }
   },
   "gate": {

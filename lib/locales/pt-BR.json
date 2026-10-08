@@ -909,7 +909,8 @@
     "gotIt": "Entendi",
     "world": "Mundo",
     "library": "Biblioteca",
-    "you": "Você"
+    "you": "Você",
+    "exploreTitle": "Explorar"
   },
   "swipeFeed": {
     "moreLikeThis": "Mais como este",
@@ -2982,6 +2983,18 @@
     "stories": {
       "p1": "Histórias que você escolheu seguir. Cada uma continua reunindo artigos novos conforme se desenvolve e mostra o que há de novo desde a última vez que você olhou.",
       "p2": "Siga uma história pelo botão da Mera ou por um artigo. Pare de seguir aqui a qualquer momento."
+    },
+    "settings": {
+      "title": "Configurações",
+      "p1": "Escolha como o Mera funciona neste celular: idioma, exibição, notificações e bloqueio do app.",
+      "p2": "O Mera Protocol define onde a IA do Mera roda, neste celular ou na nuvem privada do Mera. Seus dados ficam onde estão os backups e as exportações.",
+      "p3": "Ajuda, seu login e as páginas legais estão no final."
+    },
+    "notifications": {
+      "title": "Notificações",
+      "p1": "Tudo o que precisa de você aparece aqui, como uma limpeza do seu perfil ou uma pergunta do Mera.",
+      "p2": "Toque em uma para abri-la. Ao abrir esta página, tudo é marcado como lido.",
+      "p3": "Elas ficam neste celular e são removidas após 90 dias. Escolha o que aparece na tela de bloqueio em Configurações de notificação."
     }
   },
   "gate": {

@@ -909,7 +909,8 @@
     "gotIt": "Đã hiểu",
     "world": "Thế giới",
     "library": "Thư viện",
-    "you": "Bạn"
+    "you": "Bạn",
+    "exploreTitle": "Khám phá"
   },
   "swipeFeed": {
     "moreLikeThis": "Thêm như thế này",
@@ -2980,6 +2981,18 @@
     "stories": {
       "p1": "Các câu chuyện bạn chọn theo dõi. Mỗi câu chuyện tiếp tục nhận bài viết mới khi nó phát triển, và cho thấy những gì mới kể từ lần cuối bạn xem.",
       "p2": "Theo dõi một câu chuyện từ nút Mera hoặc từ một bài viết. Bạn có thể ngừng theo dõi ở đây bất cứ lúc nào."
+    },
+    "settings": {
+      "title": "Cài đặt",
+      "p1": "Chọn cách Mera hoạt động trên điện thoại này: ngôn ngữ, hiển thị, thông báo và khóa ứng dụng.",
+      "p2": "Mera Protocol quyết định nơi AI của Mera chạy: trên điện thoại này hoặc trên đám mây riêng của Mera. Dữ liệu của bạn nằm ở nơi lưu bản sao lưu và xuất dữ liệu.",
+      "p3": "Trợ giúp, đăng nhập và các trang pháp lý nằm ở cuối trang."
+    },
+    "notifications": {
+      "title": "Thông báo",
+      "p1": "Mọi việc cần bạn chú ý sẽ hiện ở đây, chẳng hạn như dọn dẹp hồ sơ hoặc câu hỏi từ Mera.",
+      "p2": "Chạm vào một thông báo để mở. Mở trang này sẽ đánh dấu tất cả là đã đọc.",
+      "p3": "Thông báo được lưu trên điện thoại này và bị xóa sau 90 ngày. Chọn thông báo nào hiện trên màn hình khóa trong Cài đặt thông báo."
     }
   },
   "gate": {

@@ -67,6 +67,7 @@ const TabPages: React.FC<TabPagesProps> = ({
   onSearch,
   arrange,
   leading,
+  title,
   renderTitleChip,
   testID,
 }) => {
@@ -272,7 +273,7 @@ const TabPages: React.FC<TabPagesProps> = ({
             onSearch={onSearch}
             onHelp={hasExplainer ? openExplainer : undefined}
             helpLabel={t('nav.explainerA11y', { page: activeLabel })}
-            title={renderTitleChip ? tabLabel : undefined}
+            title={title}
             titleChip={renderTitleChip?.(activeId)}
             // Only World arranges, by a long press on a page name.
             onLongPressPill={arrange ? openArrange : undefined}

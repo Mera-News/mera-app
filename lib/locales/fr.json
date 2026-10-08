@@ -914,7 +914,8 @@
     "gotIt": "Compris",
     "world": "Monde",
     "library": "Bibliothèque",
-    "you": "Vous"
+    "you": "Vous",
+    "exploreTitle": "Explorer"
   },
   "swipeFeed": {
     "moreLikeThis": "Plus comme ceci",
@@ -2988,6 +2989,18 @@
     "stories": {
       "p1": "Les histoires que vous avez choisi de suivre. Chacune continue de réunir de nouveaux articles à mesure qu'elle évolue, et montre ce qui est nouveau depuis votre dernière visite.",
       "p2": "Suivez une histoire depuis le bouton Mera ou depuis un article. Vous pouvez arrêter de la suivre ici à tout moment."
+    },
+    "settings": {
+      "title": "Paramètres",
+      "p1": "Choisissez le fonctionnement de Mera sur ce téléphone : langue, affichage, notifications et verrouillage de l'app.",
+      "p2": "Mera Protocol définit où tourne l'IA de Mera, sur ce téléphone ou dans le cloud privé de Mera. Vos données se trouvent là où sont enregistrées les sauvegardes et les exportations.",
+      "p3": "L'aide, votre connexion et les mentions légales sont en bas."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "p1": "Tout ce qui demande votre attention apparaît ici, comme un nettoyage de votre profil ou une question de Mera.",
+      "p2": "Touchez-en une pour l'ouvrir. Ouvrir cette page marque tout comme lu.",
+      "p3": "Elles restent sur ce téléphone et sont supprimées après 90 jours. Choisissez ce qui s'affiche sur l'écran verrouillé dans les Paramètres des notifications."
     }
   },
   "gate": {

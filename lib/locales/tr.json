@@ -909,7 +909,8 @@
     "gotIt": "Anladım",
     "world": "Dünya",
     "library": "Kitaplık",
-    "you": "Siz"
+    "you": "Siz",
+    "exploreTitle": "Keşfet"
   },
   "swipeFeed": {
     "moreLikeThis": "Bunun gibi daha fazlası",
@@ -2984,6 +2985,18 @@
     "stories": {
       "p1": "Takip etmeyi seçtiğiniz haberler. Her biri geliştikçe yeni makaleler toplamaya devam eder ve son bakışınızdan beri neyin yeni olduğunu gösterir.",
       "p2": "Mera düğmesinden ya da bir makaleden bir haberi takip edin. Buradan istediğiniz zaman takibi bırakabilirsiniz."
+    },
+    "settings": {
+      "title": "Ayarlar",
+      "p1": "Mera'nın bu telefondaki çalışma şeklini seçin: dil, görünüm, bildirimler ve uygulama kilidi.",
+      "p2": "Mera Protocol, Mera'nın yapay zekasının nerede çalışacağını belirler: bu telefonda ya da Mera'nın özel bulutunda. Verileriniz yedeklerin ve dışa aktarımların saklandığı yerdedir.",
+      "p3": "Yardım, oturum açma ve yasal sayfalar en altta."
+    },
+    "notifications": {
+      "title": "Bildirimler",
+      "p1": "Dikkatinizi gerektiren her şey burada görünür, örneğin profil temizliği ya da Mera'dan bir soru.",
+      "p2": "Açmak için birine dokunun. Bu sayfayı açmak her şeyi okundu olarak işaretler.",
+      "p3": "Bunlar bu telefonda kalır ve 90 gün sonra silinir. Kilit ekranında neyin görüneceğini Bildirim ayarları'ndan seçin."
     }
   },
   "gate": {

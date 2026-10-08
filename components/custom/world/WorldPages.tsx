@@ -124,6 +124,7 @@ export function WorldPages() {
             renderPage={renderPage}
             onSearch={openSearch}
             arrange={arrange}
+            title={t('tabs.exploreTitle')}
             renderTitleChip={renderTitleChip}
             testID="world-pages"
         />

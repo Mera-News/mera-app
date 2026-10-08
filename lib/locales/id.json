@@ -909,7 +909,8 @@
     "gotIt": "Mengerti",
     "world": "Dunia",
     "library": "Pustaka",
-    "you": "Anda"
+    "you": "Anda",
+    "exploreTitle": "Jelajahi"
   },
   "swipeFeed": {
     "moreLikeThis": "Lebih banyak seperti ini",
@@ -2979,6 +2980,18 @@
     "stories": {
       "p1": "Cerita yang Anda pilih untuk diikuti. Setiap cerita terus mengumpulkan artikel baru saat berkembang, dan menampilkan apa yang baru sejak terakhir Anda melihatnya.",
       "p2": "Ikuti cerita dari tombol Mera atau dari artikel. Berhenti mengikutinya di sini kapan saja."
+    },
+    "settings": {
+      "title": "Pengaturan",
+      "p1": "Atur cara Mera bekerja di ponsel ini: bahasa, tampilan, notifikasi, dan kunci aplikasi.",
+      "p2": "Mera Protocol menentukan tempat AI Mera berjalan, di ponsel ini atau di cloud pribadi Mera. Data Anda ada di tempat cadangan dan ekspor disimpan.",
+      "p3": "Bantuan, cara masuk, dan halaman hukum ada di bagian bawah."
+    },
+    "notifications": {
+      "title": "Notifikasi",
+      "p1": "Apa pun yang membutuhkan perhatian Anda muncul di sini, misalnya pembersihan profil atau pertanyaan dari Mera.",
+      "p2": "Ketuk salah satu untuk membukanya. Membuka halaman ini menandai semuanya sudah dibaca.",
+      "p3": "Notifikasi disimpan di ponsel ini dan dihapus setelah 90 hari. Pilih notifikasi yang muncul di layar kunci di Pengaturan notifikasi."
     }
   },
   "gate": {

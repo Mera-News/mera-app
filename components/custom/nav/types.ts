@@ -81,8 +81,9 @@ export interface TabPagesProps {
   readonly arrange?: ArrangeConfig;
   /** Drawn at the header row's start (the Feed's status icon). */
   readonly leading?: React.ReactNode;
-  /** World: the control after the tab's title in the header's top row (the
-   *  active page's time window). Its presence puts the title there. */
+  /** World: the header's top row title ("Explore") and the control right
+   *  after it (the active page's time window). */
+  readonly title?: string;
   readonly renderTitleChip?: (activeId: PageId) => React.ReactNode;
   readonly testID?: string;
 }
