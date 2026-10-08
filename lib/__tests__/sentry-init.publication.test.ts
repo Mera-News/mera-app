@@ -7,6 +7,7 @@ jest.mock('@sentry/react-native', () => ({
   setContext: jest.fn(),
   setTag: jest.fn(),
   feedbackIntegration: jest.fn(() => ({ name: 'FeedbackIntegration' })),
+  breadcrumbsIntegration: jest.fn(() => ({ name: 'Breadcrumbs' })),
 }));
 jest.mock('expo-application', () => ({ nativeApplicationVersion: '1', nativeBuildVersion: '1' }));
 jest.mock('expo-updates', () => ({ updateId: 'u', channel: 'production', runtimeVersion: '1', isEmbeddedLaunch: false }));

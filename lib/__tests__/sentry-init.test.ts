@@ -11,6 +11,7 @@ jest.mock('@sentry/react-native', () => ({
   setContext: mockSetContext,
   setTag: mockSetTag,
   feedbackIntegration: mockFeedbackIntegration,
+  breadcrumbsIntegration: jest.fn(() => ({ name: 'Breadcrumbs' })),
   captureException: jest.fn(),
 }));
 
@@ -80,6 +81,40 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
         graphql: 'https://gql.example',
         inference: 'https://infer.example',
       }),
+    );
+  });
+
+  // Hard invariant 9: no behavioural instrumentation. Any number in a sample
+  // rate key turns the feature on, so the keys must be ABSENT, not 0.
+  it('tracks no sessions and turns on no tracing, profiling or replay', () => {
+    require('../sentry-init');
+    const [config] = mockSentryInit.mock.calls[0];
+    expect(config).toEqual(
+      expect.objectContaining({
+        enableAutoSessionTracking: false,
+        enableAutoPerformanceTracing: false,
+        enableAppStartTracking: false,
+        enableNativeFramesTracking: false,
+        enableStallTracking: false,
+        enableUserInteractionTracing: false,
+        enableAutoBreadcrumbTracking: false,
+        enableNetworkBreadcrumbs: false,
+      }),
+    );
+    for (const key of ['tracesSampleRate', 'tracesSampler', 'profilesSampleRate', 'replaysSessionSampleRate', 'replaysOnErrorSampleRate']) {
+      expect(config).not.toHaveProperty(key);
+    }
+  });
+
+  it('drops crumbs that record what the reader did, keeps the app logger crumbs', () => {
+    require('../sentry-init');
+    const [config] = mockSentryInit.mock.calls[0];
+    for (const category of ['touch', 'navigation', 'ui.click', 'http', 'xhr', 'fetch', 'app.lifecycle', 'device.event']) {
+      expect(config.beforeBreadcrumb({ category, message: 'x' })).toBeNull();
+    }
+    expect(config.beforeBreadcrumb({ type: 'navigation', category: 'x' })).toBeNull();
+    expect(config.beforeBreadcrumb({ category: 'info', message: 'feed sync done' })).toEqual(
+      expect.objectContaining({ category: 'info' }),
     );
   });
 

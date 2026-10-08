@@ -14,6 +14,7 @@ jest.mock('@sentry/react-native', () => ({
   setTag: mockSetTag,
   setContext: mockSetContext,
   feedbackIntegration: jest.fn(() => ({})),
+  breadcrumbsIntegration: jest.fn(() => ({})),
   captureException: jest.fn(),
 }));
 

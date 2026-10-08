@@ -182,6 +182,28 @@ export function scrubPublicationPageCrumb<T extends ScrubbableCrumb>(crumb: T): 
   return crumb;
 }
 
+// ---------------------------------------------------------------------------
+// No behavioural instrumentation (hard invariant 9). Sentry is for errors and
+// crashes only: no sessions (each would report an app open with the user id),
+// no tracing, profiling or replay, and no crumb that records what the reader
+// did or opened. Every off switch below is passed to the native SDK at init
+// (the JS options reach RNSentry.initNativeSdk), so this file governs native
+// too, except Android's own lifecycle/system/network crumbs, which only the
+// native manifest can switch off.
+// ---------------------------------------------------------------------------
+
+/** Crumb categories that describe what the reader did: taps (Sentry.wrap's
+ *  TouchEventBoundary), screens, native UI events, app foreground/background,
+ *  and network requests (an image or article URL is reading history). */
+const BEHAVIOUR_CRUMB = /^(touch|navigation|ui\.|http|xhr|fetch|app\.lifecycle|device\.)/;
+
+/** Exported for tests. Null drops the crumb. */
+export function keepBreadcrumb<T extends ScrubbableCrumb & { type?: string }>(crumb: T): T | null {
+  if (!crumb) return crumb;
+  if (BEHAVIOUR_CRUMB.test(crumb.category ?? '') || crumb.type === 'navigation' || crumb.type === 'http') return null;
+  return scrubPublicationPageCrumb(crumb);
+}
+
 // Sentry is production-only by default. Set EXPO_PUBLIC_SENTRY_IN_DEV=true in a
 // local .env to force-initialise it in a dev build — needed to exercise the
 // User Feedback widget (showFeedbackWidget) and other Sentry UI from `expo start`.
@@ -228,8 +250,28 @@ if (SENTRY_ENABLED) {
     // push token, or an ad identifier — and nothing derived from persona facts,
     // topics, interests, locations or reading history, in tags or contexts
     // either. See the note above on why beforeSend cannot be the control here.
+    // It rides error, crash and user-sent feedback events ONLY: support turns a
+    // Support ID into this id to find a reader's crash. With sessions off,
+    // nothing reports an app open.
     sendDefaultPii: false,
+    // Behavioural telemetry, all off (see "No behavioural instrumentation"
+    // above). tracesSampleRate, profilesSampleRate and the replays*SampleRate
+    // keys are deliberately ABSENT: any number at all turns those features on.
+    enableAutoSessionTracking: false,
+    enableAutoPerformanceTracing: false,
+    enableAppStartTracking: false,
+    enableNativeFramesTracking: false,
+    enableStallTracking: false,
+    enableUserInteractionTracing: false,
+    // iOS-only native keys, absent from the RN option types; the native SDK
+    // reads them from the same options dictionary. They stop UI, lifecycle and
+    // network crumbs recorded natively, which never pass through JS.
+    ...({ enableAutoBreadcrumbTracking: false, enableNetworkBreadcrumbs: false } as object),
     integrations: [
+      // Replaces the default by name: no network crumbs (URLs are reading
+      // history) and no console crumbs (console text is not scrubbed). The
+      // app's own logger crumbs stay, scrubbed in beforeSend.
+      Sentry.breadcrumbsIntegration({ console: false, dom: false, fetch: false, history: false, xhr: false, sentry: true }),
       // We render the feedback form ourselves via the <FeedbackWidget> component
       // (components/custom/FeedbackWidgetModal.tsx) so its labels can be
       // localized — the native showFeedbackWidget() freezes English labels at
@@ -254,7 +296,7 @@ if (SENTRY_ENABLED) {
     // Record-time scrub: a crumb is clean before it can ride on anything,
     // including a native crash that never passes through beforeSend.
     beforeBreadcrumb(breadcrumb) {
-      return scrubPublicationPageCrumb(breadcrumb);
+      return keepBreadcrumb(breadcrumb);
     },
     beforeSend(event) {
       // Keep `user.id` (the join key — see the sendDefaultPii note above) and
