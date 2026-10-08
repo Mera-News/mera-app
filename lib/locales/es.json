@@ -554,7 +554,9 @@
     "deleteGroup": "Eliminar",
     "exportHint": "Últimos 30 días, en JSON",
     "intro": "Haz una copia de seguridad de lo que Mera guarda en este teléfono, revísalo, llévatelo o elimínalo.",
-    "lookAndTake": "Revisar y llevarte"
+    "lookAndTake": "Revisar y llevarte",
+    "askBeforeTopicDelete": "Preguntar antes de eliminar un tema",
+    "askBeforeTopicDeleteHint": "Mera te pide confirmación cada vez que eliminas un tema de uno de tus hechos."
   },
   "preferences": {
     "notifications": "Notificaciones",

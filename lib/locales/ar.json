@@ -594,7 +594,9 @@
     "deleteGroup": "حذف",
     "exportHint": "آخر 30 يومًا، بصيغة JSON",
     "intro": "انسخ احتياطيًا ما يحتفظ به Mera على هذا الهاتف، أو تفقّده، أو خذه معك، أو احذفه.",
-    "lookAndTake": "تفقّد وخذ"
+    "lookAndTake": "تفقّد وخذ",
+    "askBeforeTopicDelete": "اطلب التأكيد قبل حذف موضوع",
+    "askBeforeTopicDeleteHint": "يطلب منك Mera التأكيد في كل مرة تحذف فيها موضوعًا من إحدى حقائقك."
   },
   "preferences": {
     "notifications": "الإشعارات",

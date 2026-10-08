@@ -554,7 +554,9 @@
     "deleteGroup": "刪除",
     "exportHint": "過去 30 天，JSON 格式",
     "intro": "備份 Mera 在這支手機上保存的內容，查看、帶走或刪除。",
-    "lookAndTake": "查看與帶走"
+    "lookAndTake": "查看與帶走",
+    "askBeforeTopicDelete": "刪除主題前詢問",
+    "askBeforeTopicDeleteHint": "每次你從某個事實中刪除主題時，Mera 都會要求你確認。"
   },
   "preferences": {
     "notifications": "通知",

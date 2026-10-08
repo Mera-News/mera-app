@@ -826,7 +826,9 @@
     "deleteGroup": "Delete",
     "exportHint": "Last 30 days, as JSON",
     "intro": "Back up what Mera keeps on this phone, look at it, take it with you, or delete it.",
-    "lookAndTake": "Look and take"
+    "lookAndTake": "Look and take",
+    "askBeforeTopicDelete": "Ask before deleting a topic",
+    "askBeforeTopicDeleteHint": "Mera asks you to confirm each time you delete a topic from one of your facts."
   },
   "backup": {
     "title": "Backup",

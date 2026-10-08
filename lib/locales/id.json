@@ -554,7 +554,9 @@
     "deleteGroup": "Hapus",
     "exportHint": "30 hari terakhir, dalam JSON",
     "intro": "Cadangkan apa yang Mera simpan di ponsel ini, lihat, bawa, atau hapus.",
-    "lookAndTake": "Lihat dan bawa"
+    "lookAndTake": "Lihat dan bawa",
+    "askBeforeTopicDelete": "Tanyakan sebelum menghapus topik",
+    "askBeforeTopicDeleteHint": "Mera meminta Anda mengonfirmasi setiap kali Anda menghapus topik dari salah satu fakta Anda."
   },
   "preferences": {
     "notifications": "Notifikasi",

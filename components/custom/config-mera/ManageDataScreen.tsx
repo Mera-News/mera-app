@@ -21,6 +21,8 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExportHistory } from './use-export-history';
+import { setConfirmTopicDelete, shouldConfirmTopicDelete } from '@/components/custom/facts/topic-delete-confirm';
+import { Switch } from '@/components/ui/switch';
 
 // Facts hold the user's topics, and the feed cache is built from those topics,
 // so clearing facts must also clear the derived cache (and its topic-gen jobs)
@@ -49,6 +51,18 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const [, setFocusTick] = useState(0);
     useFocusEffect(useCallback(() => setFocusTick((n) => n + 1), []));
     const backupOn = backupCadence() !== 'off' && backupProviderId() !== null;
+    // Ask before deleting a topic: on until the delete dialog's "Don't ask
+    // again"; re-read on focus so that choice shows here.
+    const [askTopicDelete, setAskTopicDelete] = useState(true);
+    useFocusEffect(
+        useCallback(() => {
+            void shouldConfirmTopicDelete().then(setAskTopicDelete);
+        }, []),
+    );
+    const toggleAskTopicDelete = useCallback((on: boolean) => {
+        setAskTopicDelete(on);
+        void setConfirmTopicDelete(on);
+    }, []);
 
     const deleteTables = useCallback(async (tableNames: string[]) => {
         await database.write(async () => {
@@ -150,6 +164,14 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                         title={t('manageData.clearHistoryTitle')}
                         subtitle={t('manageData.clearHistoryHint')}
                         onPress={() => void clear('viewingHistory')}
+                    />
+                    <Row
+                        testID="manage-data-ask-topic-delete"
+                        leadingIcon="help-outline"
+                        title={t('manageData.askBeforeTopicDelete')}
+                        subtitle={t('manageData.askBeforeTopicDeleteHint')}
+                        trailing={<Switch value={askTopicDelete} onToggle={toggleAskTopicDelete} size="md" />}
+                        hideChevron
                     />
                 </Group>
             </ScrollView>

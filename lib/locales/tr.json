@@ -554,7 +554,9 @@
     "deleteGroup": "Sil",
     "exportHint": "Son 30 gün, JSON olarak",
     "intro": "Mera'nın bu telefonda tuttuğu her şeyi yedekleyin, inceleyin, yanınıza alın ya da silin.",
-    "lookAndTake": "İncele ve al"
+    "lookAndTake": "İncele ve al",
+    "askBeforeTopicDelete": "Konu silmeden önce onay iste",
+    "askBeforeTopicDeleteHint": "Bilgilerinizden birinden bir konuyu her sildiğinizde Mera sizden onay ister."
   },
   "preferences": {
     "notifications": "Bildirimler",

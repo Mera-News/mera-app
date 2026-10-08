@@ -554,7 +554,9 @@
     "deleteGroup": "Apagar",
     "exportHint": "Últimos 30 dias, em JSON",
     "intro": "Faça backup do que a Mera guarda neste celular, veja, leve com você ou apague.",
-    "lookAndTake": "Ver e levar"
+    "lookAndTake": "Ver e levar",
+    "askBeforeTopicDelete": "Perguntar antes de apagar um tópico",
+    "askBeforeTopicDeleteHint": "A Mera pede que você confirme sempre que apagar um tópico de um dos seus fatos."
   },
   "preferences": {
     "notifications": "Notificações",

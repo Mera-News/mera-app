@@ -554,7 +554,9 @@
     "deleteGroup": "Elimina",
     "exportHint": "Ultimi 30 giorni, in JSON",
     "intro": "Salva una copia di ciò che Mera conserva su questo telefono, guardalo, portalo con te o eliminalo.",
-    "lookAndTake": "Guarda e porta via"
+    "lookAndTake": "Guarda e porta via",
+    "askBeforeTopicDelete": "Chiedi conferma prima di eliminare un argomento",
+    "askBeforeTopicDeleteHint": "Mera ti chiede di confermare ogni volta che elimini un argomento da uno dei tuoi fatti."
   },
   "preferences": {
     "notifications": "Notifiche",

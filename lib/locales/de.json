@@ -554,7 +554,9 @@
     "deleteGroup": "Löschen",
     "exportHint": "Die letzten 30 Tage, als JSON",
     "intro": "Sichere, was Mera auf diesem Telefon speichert, sieh es dir an, nimm es mit oder lösche es.",
-    "lookAndTake": "Ansehen und mitnehmen"
+    "lookAndTake": "Ansehen und mitnehmen",
+    "askBeforeTopicDelete": "Vor dem Löschen eines Themas nachfragen",
+    "askBeforeTopicDeleteHint": "Mera bittet dich jedes Mal um Bestätigung, wenn du ein Thema aus einem deiner Fakten löschst."
   },
   "preferences": {
     "notifications": "Benachrichtigungen",

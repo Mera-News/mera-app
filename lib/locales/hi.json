@@ -554,7 +554,9 @@
     "deleteGroup": "हटाएं",
     "exportHint": "पिछले 30 दिन, JSON में",
     "intro": "Mera इस फ़ोन पर जो रखता है उसका बैकअप लें, उसे देखें, अपने साथ ले जाएं, या हटाएं।",
-    "lookAndTake": "देखें और ले जाएं"
+    "lookAndTake": "देखें और ले जाएं",
+    "askBeforeTopicDelete": "विषय हटाने से पहले पूछें",
+    "askBeforeTopicDeleteHint": "जब भी आप किसी तथ्य से कोई विषय हटाते हैं, Mera हर बार पुष्टि माँगता है।"
   },
   "preferences": {
     "notifications": "नोटिफिकेशन",

@@ -554,7 +554,9 @@
     "deleteGroup": "Verwijderen",
     "exportHint": "Afgelopen 30 dagen, als JSON",
     "intro": "Maak een back-up van wat Mera op deze telefoon bewaart, bekijk het, neem het mee of verwijder het.",
-    "lookAndTake": "Bekijken en meenemen"
+    "lookAndTake": "Bekijken en meenemen",
+    "askBeforeTopicDelete": "Vragen voordat u een onderwerp verwijdert",
+    "askBeforeTopicDeleteHint": "Mera vraagt u elke keer om te bevestigen als u een onderwerp uit een van uw feiten verwijdert."
   },
   "preferences": {
     "notifications": "Meldingen",

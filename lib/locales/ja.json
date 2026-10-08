@@ -554,7 +554,9 @@
     "deleteGroup": "削除",
     "exportHint": "過去30日分、JSON形式",
     "intro": "Meraがこの電話に保存しているものをバックアップしたり、確認したり、持ち出したり、削除したりできます。",
-    "lookAndTake": "確認と持ち出し"
+    "lookAndTake": "確認と持ち出し",
+    "askBeforeTopicDelete": "トピックを削除する前に確認する",
+    "askBeforeTopicDeleteHint": "ファクトからトピックを削除するたびに、Meraが確認を求めます。"
   },
   "preferences": {
     "notifications": "通知",

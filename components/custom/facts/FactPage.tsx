@@ -34,7 +34,6 @@ import { deleteTopicWithDecline, listDeclinedTopics, recordDecline, removeDeclin
 import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
 import { createTopics, normalizeTopicText, observeByFact, reactivate, retire } from '@/lib/database/services/topic-service';
 import { showDialog } from '@/lib/dialog';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { hapticSuccess } from '@/lib/haptics';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
@@ -58,6 +57,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, TextInput, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { setConfirmTopicDelete, shouldConfirmTopicDelete } from './topic-delete-confirm';
 import { filterStories, isLeftOut, leftOutStories, storiesPerTopic, type Story, type StoryFilter } from './fact-page-model';
 import AddTopicModal from './AddTopicModal';
 import { sentenceCase } from './sentence-case';
@@ -82,8 +82,6 @@ const GENERATE_MORE_TOPIC_COUNT = 10;
 const SOFT_STRENGTH = 0.5;
 
 type Tab = 'topics' | 'recent';
-/** Per device: the reader ticked "Don't ask again" on a topic delete. */
-const SKIP_TOPIC_DELETE_CONFIRM_KEY = 'fact_topic_delete_skip_confirm';
 const STORY_FILTERS: readonly StoryFilter[] = ['all', 'suggested', 'discarded'];
 interface TopicRow {
     readonly id: string;
@@ -230,18 +228,10 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
     );
 
     // ── Topics: turn down, add, suggest more, retry ────────────────────────
-    // A topic's delete is one tap; the first one asks, with "Don't ask again"
-    // kept per device (AsyncStorage, so an account switch keeps it).
+    // A topic's delete is one tap; it asks first until "Don't ask again" is
+    // ticked (topic-delete-confirm.ts; Settings › Your data turns it back on).
     const [confirmTopic, setConfirmTopic] = useState<TopicRow | null>(null);
     const [dontAsk, setDontAsk] = useState(false);
-    const skipConfirm = useRef(false);
-    useEffect(() => {
-        AsyncStorage.getItem(SKIP_TOPIC_DELETE_CONFIRM_KEY)
-            .then((v) => {
-                skipConfirm.current = v === '1';
-            })
-            .catch(() => undefined);
-    }, []);
     const deleteTopic = useCallback(
         (topic: TopicRow) => {
             // A permanent decline: the persona agent never proposes it again
@@ -253,8 +243,8 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
         [factId],
     );
     const askDeleteTopic = useCallback(
-        (topic: TopicRow) => {
-            if (skipConfirm.current) {
+        async (topic: TopicRow) => {
+            if (!(await shouldConfirmTopicDelete())) {
                 deleteTopic(topic);
                 return;
             }
@@ -267,10 +257,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
         const topic = confirmTopic;
         setConfirmTopic(null);
         if (!topic) return;
-        if (dontAsk) {
-            skipConfirm.current = true;
-            AsyncStorage.setItem(SKIP_TOPIC_DELETE_CONFIRM_KEY, '1').catch(() => undefined);
-        }
+        if (dontAsk) void setConfirmTopicDelete(false);
         deleteTopic(topic);
     }, [confirmTopic, dontAsk, deleteTopic]);
 
@@ -431,7 +418,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                         </View>
                         <Pressable
                             testID={`topic-delete-${item.topic.id}`}
-                            onPress={() => askDeleteTopic(item.topic)}
+                            onPress={() => void askDeleteTopic(item.topic)}
                             accessibilityRole="button"
                             accessibilityLabel={t('facts.page.deleteTopicA11y', { topic: item.topic.text })}
                             style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}

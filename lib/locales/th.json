@@ -554,7 +554,9 @@
     "deleteGroup": "ลบ",
     "exportHint": "30 วันที่ผ่านมา เป็นไฟล์ JSON",
     "intro": "สำรองสิ่งที่ Mera เก็บไว้บนโทรศัพท์เครื่องนี้ ดูข้อมูล นำติดตัวไป หรือลบ",
-    "lookAndTake": "ดูและนำไป"
+    "lookAndTake": "ดูและนำไป",
+    "askBeforeTopicDelete": "ถามก่อนลบหัวข้อ",
+    "askBeforeTopicDeleteHint": "Mera จะขอให้คุณยืนยันทุกครั้งที่ลบหัวข้อออกจากข้อเท็จจริงข้อใดข้อหนึ่งของคุณ"
   },
   "preferences": {
     "notifications": "การแจ้งเตือน",

@@ -554,7 +554,9 @@
     "deleteGroup": "Xóa",
     "exportHint": "30 ngày gần nhất, dưới dạng JSON",
     "intro": "Sao lưu những gì Mera lưu trên điện thoại này, xem lại, mang theo hoặc xóa.",
-    "lookAndTake": "Xem và mang theo"
+    "lookAndTake": "Xem và mang theo",
+    "askBeforeTopicDelete": "Hỏi trước khi xóa chủ đề",
+    "askBeforeTopicDeleteHint": "Mera yêu cầu bạn xác nhận mỗi lần bạn xóa một chủ đề khỏi một trong các dữ kiện của mình."
   },
   "preferences": {
     "notifications": "Thông báo",

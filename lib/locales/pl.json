@@ -574,7 +574,9 @@
     "deleteGroup": "Usuń",
     "exportHint": "Ostatnie 30 dni, jako JSON",
     "intro": "Zrób kopię tego, co Mera trzyma na tym telefonie, przejrzyj to, zabierz ze sobą albo usuń.",
-    "lookAndTake": "Przejrzyj i zabierz"
+    "lookAndTake": "Przejrzyj i zabierz",
+    "askBeforeTopicDelete": "Pytaj przed usunięciem tematu",
+    "askBeforeTopicDeleteHint": "Mera prosi Cię o potwierdzenie za każdym razem, gdy usuwasz temat z jednego z Twoich faktów."
   },
   "preferences": {
     "notifications": "Powiadomienia",

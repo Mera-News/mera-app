@@ -554,7 +554,9 @@
     "deleteGroup": "삭제",
     "exportHint": "지난 30일, JSON 형식",
     "intro": "Mera가 이 휴대폰에 보관하는 데이터를 백업하고, 살펴보고, 가져가거나, 삭제할 수 있습니다.",
-    "lookAndTake": "살펴보기 및 가져가기"
+    "lookAndTake": "살펴보기 및 가져가기",
+    "askBeforeTopicDelete": "토픽을 삭제하기 전에 확인",
+    "askBeforeTopicDeleteHint": "사실에서 토픽을 삭제할 때마다 Mera가 확인을 요청합니다."
   },
   "preferences": {
     "notifications": "알림",

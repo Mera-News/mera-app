@@ -559,7 +559,9 @@
     "deleteGroup": "Supprimer",
     "exportHint": "30 derniers jours, au format JSON",
     "intro": "Sauvegardez ce que Mera conserve sur ce téléphone, consultez-le, emportez-le ou supprimez-le.",
-    "lookAndTake": "Consulter et emporter"
+    "lookAndTake": "Consulter et emporter",
+    "askBeforeTopicDelete": "Demander avant de supprimer un sujet",
+    "askBeforeTopicDeleteHint": "Mera vous demande de confirmer chaque fois que vous supprimez un sujet de l'un de vos faits."
   },
   "preferences": {
     "notifications": "Notifications",
