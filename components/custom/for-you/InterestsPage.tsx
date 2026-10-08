@@ -11,7 +11,6 @@
 
 import { useFeedSyncRefresh, useIsFeedProcessing } from '@/components/custom/FeedSyncIndicator';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
-import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
 import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
@@ -42,9 +41,7 @@ import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, View } from 'react-native';
-import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
-import { useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
-import { PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
+import { setEmptyWantsCard } from '@/components/custom/for-you/feed-status-card';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
 interface SortSnapshot {
@@ -56,11 +53,9 @@ interface SortSnapshot {
 export interface InterestsPageProps {
   readonly active: boolean;
   readonly header: PageHeaderBinding;
-  /** The Feed page's title row (FeedPage), the list's first item. */
-  readonly listHeader?: React.ReactElement;
 }
 
-const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeader }) => {
+const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   const { t } = useTranslation();
   const { isLoading, errorMessage } = useFeedBootstrap();
   const handleSuggestionPress = useOpenSuggestion('sectioned');
@@ -137,24 +132,20 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
 
   const { refreshing, onRefresh } = useFeedSyncRefresh(header.reveal);
   const isFeedProcessing = useIsFeedProcessing();
-  // At the daily limit the list leads with the limit card, as in Continuous;
-  // only over sections with stories (the empty chain shows it otherwise).
-  // The ONE counts card leads the list at the daily limit or when the status
-  // icon asked for it; over no sections the empty chain shows it instead.
-  const limited = useFeedStatusMode() === 'limited';
-  const statusRequested = useFeedStatusCard((s) => s.requested);
-  const statusScroll = useFeedStatusCard((s) => s.scrollSignal);
-  const limitCard = (limited || statusRequested) && rows.some((r) => r.groups.length > 0);
-  const listHeaderNode = limitCard ? (
-    <>
-      {listHeader}
-      <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-        <DashboardStatsCard testID="interests-limit-card" />
-      </View>
-    </>
-  ) : (
-    listHeader
-  );
+  // An empty Sectioned view past its first run needs the header's counts
+  // card (FeedHeaderAccessory), the same branch that shows the shortcuts.
+  const hasStories = rows.some((r) => r.groups.length > 0);
+  const emptyWantsCard =
+    active &&
+    !hasStories &&
+    !isLoading &&
+    snapshots !== null &&
+    !errorMessage &&
+    snapshots.facts.size > 0 &&
+    lastProcessingRunFinishedAt !== null;
+  useEffect(() => {
+    if (active) setEmptyWantsCard(emptyWantsCard);
+  }, [active, emptyWantsCard]);
 
   // ── Nothing to show yet ──
   let empty: React.ReactElement | null;
@@ -180,10 +171,9 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
     empty = <FeedNoFacts view="sectioned" />;
   } else if (lastProcessingRunFinishedAt !== null) {
     // Nothing to show, the same as Continuous (FinalFeed "Feed, empty after
-    // a long gap"): the counts card open, then the shortcuts.
+    // a long gap"): the counts card is in the header; the shortcuts here.
     empty = (
       <Animated.View exiting={FadeOut.duration(200)}>
-        <DashboardStatsCard testID="feed-status-inline" />
         <FeedShortcuts reading={isFeedProcessing} />
       </Animated.View>
     );
@@ -205,8 +195,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
         onPressSuggestion={handleSuggestionPress}
         scrollHandler={header.scrollHandler}
         headerHeight={header.headerHeight}
-        ListHeaderComponent={listHeaderNode}
-        scrollToTopSignal={statusScroll}
+
         ListEmptyComponent={empty}
         refreshing={refreshing}
         onRefresh={onRefresh}

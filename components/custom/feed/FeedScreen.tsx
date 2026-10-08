@@ -84,8 +84,7 @@ import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
-import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
-import { useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
+import { setEmptyWantsCard } from '@/components/custom/for-you/feed-status-card';
 import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
@@ -164,7 +163,7 @@ import Animated, {
   useComposedEventHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 
 /** Gap between the collapsing header's bottom edge and the first card.
@@ -316,11 +315,9 @@ export interface FeedScreenProps {
   readonly active: boolean;
   /** The tab's one collapsing header. */
   readonly header: PageHeaderBinding;
-  /** The page's title row (FeedPage), the list's first item. */
-  readonly listHeader?: React.ReactElement;
 }
 
-const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) => {
+const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
   const { t } = useTranslation();
   const colors = useColors();
   const listEndClearance = useListEndClearance();
@@ -1079,14 +1076,13 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     // C4), so the empty list itself says nothing more.
     if (noFacts) return null;
     // Nothing to show (FinalFeed "Feed, empty after a long gap"): the counts
-    // card open, then the shortcuts, whatever the mode (syncing, caught up,
-    // the daily limit or a problem; the card says which). It folds away when
-    // the first rows land. The first run after setup (no run has finished)
-    // keeps the processing scene.
+    // card (in the HEADER accessory, `emptyWantsCard` below) says which state
+    // this is; the list shows the shortcuts. They fold away when the first rows
+    // land. The first run after setup (no run has finished) keeps the
+    // processing scene.
     if (lastProcessingRunFinishedAt !== null) {
       return (
         <Animated.View exiting={FadeOut.duration(200)}>
-          <DashboardStatsCard testID="feed-status-inline" />
           <FeedShortcuts reading={isFeedProcessing} />
         </Animated.View>
       );
@@ -1099,35 +1095,22 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     );
   };
 
-  // The title row, then (no facts yet) the empty block, both first in the list.
-  // Over rows, the list leads with the ONE counts card at the daily limit
-  // (its limit layout) or when the Mera status icon asked for it
-  // (feed-status-card.ts). An empty Feed shows it in the empty chain instead.
-  const statusRequested = useFeedStatusCard((s) => s.requested);
-  const limitCard = listData.length > 0 && (statusMode === 'limited' || statusRequested);
-  const headerNode = useMemo(
-    () => (
-      <>
-        {listHeader ? <View style={{ marginBottom: PAGE_TITLE_GAP }}>{listHeader}</View> : null}
-        {noFacts ? <FeedNoFacts view="continuous" /> : null}
-        {limitCard ? (
-          <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-            <DashboardStatsCard testID="feed-limit-card" />
-          </View>
-        ) : null}
-      </>
-    ),
-    [listHeader, noFacts, limitCard],
-  );
-  // The status icon asks for the card: bring the list's head into view.
-  const motionAllowed = useMotionAllowed();
-  const statusScroll = useFeedStatusCard((s) => s.scrollSignal);
+  // No facts yet: the empty block is the list's first item.
+  const headerNode = useMemo(() => (noFacts ? <FeedNoFacts view="continuous" /> : null), [noFacts]);
+  // An empty Feed past its first run needs the header's counts card (the
+  // same branch of the empty chain that shows the shortcuts).
+  const emptyWantsCard =
+    active &&
+    listData.length === 0 &&
+    warmup !== 'blank' &&
+    warmup !== 'skeleton' &&
+    !isLoading &&
+    !errorMessage &&
+    !noFacts &&
+    lastProcessingRunFinishedAt !== null;
   useEffect(() => {
-    if (statusScroll === 0 || !active) return;
-    listRef.current?.scrollToOffset({ offset: 0, animated: motionAllowed });
-    // Fires on the signal only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusScroll]);
+    if (active) setEmptyWantsCard(emptyWantsCard);
+  }, [active, emptyWantsCard]);
 
   return (
     // No backdrop and no header: the tab (TabPages) draws both.

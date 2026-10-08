@@ -3,17 +3,19 @@
 // its reading session survives any swipe or reorder.
 //
 // The status icon sits in the header's leading slot on every page of the tab;
-// a tap acts on the Feed's ONE counts card (feed-status-card.ts: expand it, or
-// show it at the head of the list) and brings the Feed page forward.
+// a tap brings the Feed page forward, reveals the header and opens the ONE
+// counts card in the Feed page's header accessory (feed-status-card.ts).
 
 import FeedStatusIcon from '@/components/custom/for-you/FeedStatusIcon';
 import { tapStatusIcon } from '@/components/custom/for-you/feed-status-card';
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import { useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
 import FeedPage from '@/components/custom/feed/FeedPage';
+import FeedHeaderAccessory from '@/components/custom/feed/FeedHeaderAccessory';
 import { PAGE_META } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
+import type { PageId } from '@/components/custom/nav/page-registry';
 import TrackedStoriesScreen from '@/components/custom/tracked-stories/TrackedStoriesScreen';
 import { setTabDot } from '@/components/custom/nav/current-surface';
 import { usePageOrder } from '@/lib/navigation/page-order';
@@ -107,10 +109,19 @@ export function FeedPages() {
     tapStatusIcon();
   }, []);
   const leading = useMemo(() => <FeedStatusIcon onPress={onStatus} />, [onStatus]);
+  // The Feed page's View chip and counts card ride in the header.
+  const renderAccessory = useCallback((pageId: PageId) => (pageId === 'feed' ? <FeedHeaderAccessory /> : null), []);
 
   return (
     <View style={{ flex: 1 }}>
-      <TabPages tab="feed" pages={pills} renderPage={renderPage} leading={leading} testID="feed-pages" />
+      <TabPages
+        tab="feed"
+        pages={pills}
+        renderPage={renderPage}
+        leading={leading}
+        renderAccessory={renderAccessory}
+        testID="feed-pages"
+      />
     </View>
   );
 }

@@ -7,25 +7,18 @@
 // keep-mounted in the pager (PAGE_META.feed), so the chosen list survives
 // swipes and tab switches.
 //
-// Each list draws the View chip's row (right-aligned, nothing at its start;
-// the page's ? is in the tab header) as the FIRST item of its own list, never
-// as a sibling before it (react-native-screens walks to the first child scroll
-// view). The row never changes height, open or closed.
+// The View chip and the counts card live in the tab header's accessory
+// (FeedHeaderAccessory, from FeedPages), not in either list.
 
 import InterestsPage from '@/components/custom/for-you/InterestsPage';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
-import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useIsFocused } from '@react-navigation/native';
-import { resetStatusCard } from '@/components/custom/for-you/feed-status-card';
-import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { resetStatusCard, useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
 
 import FeedScreen from './FeedScreen';
-import { type FeedView, setFeedView, useFeedView } from './feed-view-prefs';
-
-const VIEWS: readonly FeedView[] = ['continuous', 'sectioned'];
+import { useFeedView } from './feed-view-prefs';
 
 export interface FeedPageProps {
   readonly active: boolean;
@@ -38,45 +31,22 @@ const FeedPage: React.FC<FeedPageProps> = ({ active, header }) => {
   useEffect(() => {
     if (!(active && focused)) resetStatusCard();
   }, [active, focused]);
-  const { t } = useTranslation();
   const view = useFeedView();
   const { reveal } = header;
-
-  const labelOf = useCallback(
-    (v: FeedView) => (v === 'sectioned' ? t('feed.view.sectioned') : t('feed.view.continuous')),
-    [t],
-  );
-  const onChange = useCallback(
-    (next: FeedView) => {
-      setFeedView(next);
-      // The new list mounts at its top; bring the header back with it.
-      reveal();
-    },
-    [reveal],
-  );
-
-  const titleRow = useMemo(
-    () => (
-      <View style={styles.chipRow} testID="feed-title-row">
-        <InlineChoiceChip
-          options={VIEWS}
-          value={view}
-          labelOf={labelOf}
-          a11yLabelOf={(v) => t('feed.view.a11y', { view: labelOf(v) })}
-          onChange={onChange}
-          testID="feed-view-chip"
-        />
-      </View>
-    ),
-    [t, view, labelOf, onChange],
-  );
+  // The status icon reveals the header (the counts card lives in it).
+  const revealSignal = useFeedStatusCard((s) => s.revealSignal);
+  useEffect(() => {
+    if (revealSignal > 0 && active) reveal();
+    // Fires on the signal only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealSignal]);
 
   return (
     <>
       {view === 'sectioned' ? (
-        <InterestsPage active={active} header={header} listHeader={titleRow} />
+        <InterestsPage active={active} header={header} />
       ) : (
-        <FeedScreen active={active} header={header} listHeader={titleRow} />
+        <FeedScreen active={active} header={header} />
       )}
       {/* One-time "What's new" sheet: gated on the PAGE being active, so a
           reader who keeps Sectioned still gets it decided. After the list, so
@@ -85,10 +55,5 @@ const FeedPage: React.FC<FeedPageProps> = ({ active, header }) => {
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  // PageTitleRow's height, so the first card does not move.
-  chipRow: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', minHeight: 34 },
-});
 
 export default FeedPage;

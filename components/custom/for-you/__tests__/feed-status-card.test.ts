@@ -1,8 +1,8 @@
 import { registerStatusCard, resetStatusCard, statusIconTap, tapStatusIcon, useFeedStatusCard } from '../feed-status-card';
 
 describe('statusIconTap', () => {
-    it('an open card: nothing but a scroll', () => {
-        expect(statusIconTap('open')).toBe('scroll');
+    it('an open card: only reveal the header', () => {
+        expect(statusIconTap('open')).toBe('reveal');
     });
     it('a collapsed card: expand it', () => {
         expect(statusIconTap('collapsed')).toBe('expand');
@@ -14,19 +14,19 @@ describe('statusIconTap', () => {
 
 describe('tapStatusIcon', () => {
     beforeEach(() => {
-        useFeedStatusCard.setState({ requested: false, expanded: true, mounted: 0, scrollSignal: 0 });
+        useFeedStatusCard.setState({ requested: false, expanded: true, mounted: 0, emptyWants: false, revealSignal: 0 });
     });
 
-    it('with no card mounted, requests one, open, and scrolls', () => {
+    it('with no card mounted, requests one, open, and reveals the header', () => {
         tapStatusIcon();
-        expect(useFeedStatusCard.getState()).toMatchObject({ requested: true, expanded: true, scrollSignal: 1 });
+        expect(useFeedStatusCard.getState()).toMatchObject({ requested: true, expanded: true, revealSignal: 1 });
     });
 
     it('with a collapsed card mounted, expands it and never requests a second', () => {
         const unregister = registerStatusCard();
         useFeedStatusCard.setState({ expanded: false });
         tapStatusIcon();
-        expect(useFeedStatusCard.getState()).toMatchObject({ requested: false, expanded: true, scrollSignal: 1 });
+        expect(useFeedStatusCard.getState()).toMatchObject({ requested: false, expanded: true, revealSignal: 1 });
         unregister();
     });
 

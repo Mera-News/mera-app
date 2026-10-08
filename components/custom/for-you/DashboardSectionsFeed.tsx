@@ -21,8 +21,7 @@ import { Text } from '@/components/ui/text';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useMotionAllowed } from '@/lib/motion-gate';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -132,8 +131,6 @@ interface DashboardSectionsFeedProps {
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
   /** The Feed page's title row, the list's first item. */
   ListHeaderComponent?: React.ReactElement;
-  /** Bumped to scroll the list to its top (the Mera status icon). */
-  scrollToTopSignal?: number;
   /** Pull-to-refresh spinner state. Driven by the scheduler's feed-sync flag
    *  (see `useFeedSyncRefresh`), NOT by local state — so it rises on the same
    *  frame as the pull and stays up for the real duration of the sync. */
@@ -171,7 +168,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   onRefresh,
   rankingCtx = null,
   active = true,
-  scrollToTopSignal = 0,
 }) => {
   // Inside a tab on iOS the inset already includes the tab bar; measured on
   // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
@@ -187,14 +183,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   const lastOffsetShared = useSharedValue(0);
   // Only the active panel may act on a tab re-tap (an off-screen one reads as
   // "at the top" with nothing to refresh).
-  // The status icon asked for the counts card at the list's head.
-  const motionAllowed = useMotionAllowed();
-  useEffect(() => {
-    if (scrollToTopSignal === 0 || !active) return;
-    listRef.current?.scrollToOffset({ offset: 0, animated: motionAllowed });
-    // Fires on the signal only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollToTopSignal]);
   useTabPressScrollRefresh({
     listRef,
     getOffset: () => (active ? lastOffsetShared.value : 0),
