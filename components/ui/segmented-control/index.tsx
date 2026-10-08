@@ -16,6 +16,7 @@ import {
 import Animated, {
     Easing,
     LinearTransition,
+    ReduceMotion,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -30,7 +31,6 @@ import { MAX_FONT_SCALE } from '@/lib/typography/policy';
 
 import { HEADER_METRICS, headerOptionParts, headerTrackMode } from './fit';
 import { fillAt, settleFill, type OptionBox } from './fill';
-import { useMotionAllowed } from '@/lib/motion-gate';
 
 export interface SegmentedOption<T extends string> {
     value: T;
@@ -204,11 +204,16 @@ const noDot = () => false;
 /** A page change in the header: the pager's tap slide (PagePager
  *  TAP_SLIDE_MS) and its ease-out, so labels, reflow, fill and page land
  *  together. */
-const PAGE_MOTION = { duration: 300, easing: Easing.out(Easing.cubic) };
-const optionReflow = LinearTransition.duration(PAGE_MOTION.duration).easing(PAGE_MOTION.easing);
+// LITE KEEPS THESE (owner exception to the Lite rule: the fill's slide and
+// the labels' scale are part of a tab's page change). The system's Reduce
+// Motion still lands them at once, gated by `useReducedMotion` (the system
+// flag); `ReduceMotion.Never` stops LiteMotionConfig from doing it in Lite.
+const PAGE_MOTION = { duration: 300, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.Never };
+const optionReflow = LinearTransition.duration(PAGE_MOTION.duration)
+    .easing(PAGE_MOTION.easing)
+    .reduceMotion(ReduceMotion.Never);
 /** A label leaving scales to 0 into its own leading edge (next to its icon)
- *  as it fades; one arriving grows from there. The default ReduceMotion
- *  (System) lets LiteMotionConfig land both at once. */
+ *  as it fades; one arriving grows from there. */
 function labelIn() {
     'worklet';
     return {
@@ -243,7 +248,8 @@ function HeaderTrack<T extends string>({
 }: SegmentedControlProps<T>) {
     const colors = useColors();
     const reduceMotion = useReducedMotion();
-    const motionAllowed = useMotionAllowed();
+    // The system flag only: Lite keeps the fill's slide (owner).
+    const motionAllowed = !reduceMotion;
     // ONE selected fill under the options, moving between their MEASURED
     // boxes (x and width) by the driver: the pager's progress when given,
     // else its own slide to the picked index. All on the UI thread.

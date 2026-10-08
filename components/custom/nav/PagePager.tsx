@@ -27,7 +27,11 @@
 //    where React and the row disagree. The old page stays mounted until then.
 //    `progress` maps the one-width slide onto from -> to (transitProgress),
 //    so the track's fill moves straight from option to option.
-//  - Reduce Motion or Lite (useMotionAllowed): no drag follow and no slide; a
+//  - LITE KEEPS THESE MOTIONS (owner exception to the Lite rule: a tab's
+//    page change still slides); only the system's Reduce Motion snaps. Every
+//    timing here says ReduceMotion.Never, because LiteMotionConfig forces
+//    Reanimated's own reduce-motion on in Lite and would land them at once.
+//  - Reduce Motion: no drag follow and no slide; a
 //    change snaps. A second tap mid-slide snaps too.
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -35,6 +39,7 @@ import { I18nManager, StyleSheet, View, type LayoutChangeEvent } from 'react-nat
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
+  ReduceMotion,
   runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
@@ -45,7 +50,6 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { useMotionAllowed } from '@/lib/motion-gate';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 import {
@@ -97,10 +101,9 @@ const PagePager: React.FC<PagePagerProps> = ({
 }) => {
   const [width, setWidth] = useState(0);
   const [moving, setMoving] = useState(false);
-  const systemReduceMotion = useReducedMotion();
-  const motionAllowed = useMotionAllowed();
-  // One gate for every slide here: Reduce Motion OR Lite keeps it instant.
-  const reduceMotion = !!systemReduceMotion || !motionAllowed;
+  // The system setting only (Reanimated's hook ignores LiteMotionConfig):
+  // Lite keeps the tab transitions (owner).
+  const reduceMotion = !!useReducedMotion();
   const rtl = I18nManager.isRTL;
   const dir = rtl ? -1 : 1;
   const base = -dir * index * width;
@@ -162,7 +165,7 @@ const PagePager: React.FC<PagePagerProps> = ({
     transit.value = t;
     offset.value = withTiming(
       -dir * t[2] * width,
-      { duration: TAP_SLIDE_MS, easing: Easing.out(Easing.cubic) },
+      { duration: TAP_SLIDE_MS, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.Never },
       (finished) => {
         // Landed: the picked page back in its own slot and the row moved to
         // it, in this ONE UI-thread callback. Cut short: the snap that cut
@@ -227,7 +230,7 @@ const PagePager: React.FC<PagePagerProps> = ({
       setMoving(false);
       return;
     }
-    offset.value = withSpring(base, undefined, (finished) => {
+    offset.value = withSpring(base, { reduceMotion: ReduceMotion.Never }, (finished) => {
       if (finished) runOnJS(settle)();
     });
   }, [reduceMotion, base, offset, settle]);
@@ -246,7 +249,7 @@ const PagePager: React.FC<PagePagerProps> = ({
         land(outcome.index);
         return;
       }
-      offset.value = withTiming(target, { duration: SLIDE_MS }, (finished) => {
+      offset.value = withTiming(target, { duration: SLIDE_MS, reduceMotion: ReduceMotion.Never }, (finished) => {
         if (finished) runOnJS(land)(outcome.index);
       });
     },
