@@ -11,10 +11,12 @@
 //    undimmed: a tap outside or Android back closes it, VoiceOver's escape
 //    too. It is NOT gluestack's Menu: its PopoverContent hard-codes
 //    `accessible`, so VoiceOver would read every option as one element.
-//  - Placed from the chip's measured window position; the panel itself is the
-//    opaque `panel` token, so it reads over any content.
+//  - Placed from the chip's measured window position; the panel wears the
+//    modals' and sheets' own material (`ChoiceMenuPanel`: ModalMaterial in a
+//    clipped, edged container), opaque, so it reads over any content.
 //  - Opens with a 150ms fade from 96% scale; Reduce Motion or Lite: fade only.
 
+import ModalMaterial from '@/components/custom/ModalMaterial';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticSelection } from '@/lib/haptics';
@@ -56,6 +58,19 @@ export interface InlineChoiceChipProps<T extends string | number> {
   readonly testID: string;
 }
 
+/** A floating menu's surface: the same material as every modal and bottom
+ *  sheet (ModalMaterial in a clipped container with the theme's edge). The
+ *  caller positions it and gives it its shadow. */
+export function ChoiceMenuPanel({ children }: { readonly children: React.ReactNode }) {
+  const colors = useColors();
+  return (
+    <View style={[styles.clip, { borderColor: colors.line }]}>
+      <ModalMaterial />
+      {children}
+    </View>
+  );
+}
+
 interface Anchor {
   readonly top: number;
   readonly left: number;
@@ -90,7 +105,9 @@ export default function InlineChoiceChip<T extends string | number>({
   return (
     <View style={[styles.frame, disabled ? styles.disabled : null]} testID={`${testID}-frame`}>
       <View ref={chipRef} collapsable={false} pointerEvents="none" {...HIDDEN}>
-        <View style={[styles.pill, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
+        <View
+          style={[styles.pill, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}
+        >
           <Text
             numberOfLines={1}
             maxFontSizeMultiplier={1}
@@ -98,7 +115,11 @@ export default function InlineChoiceChip<T extends string | number>({
           >
             {labelOf(value)}
           </Text>
-          <MaterialIcons name={anchor ? 'expand-less' : 'expand-more'} size={16} color={colors.muted} />
+          <MaterialIcons
+            name={anchor ? 'expand-less' : 'expand-more'}
+            size={16}
+            color={colors.muted}
+          />
         </View>
       </View>
       <Pressable
@@ -113,7 +134,12 @@ export default function InlineChoiceChip<T extends string | number>({
 
       <Modal visible={anchor !== null} transparent animationType="none" onRequestClose={close}>
         {/* Undimmed: a tap anywhere outside the panel closes the menu. */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessible={false} testID={`${testID}-outside`} />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={close}
+          accessible={false}
+          testID={`${testID}-outside`}
+        />
         {anchor ? (
           <Animated.View
             entering={still ? FadeIn.duration(OPEN_MS) : OPEN}
@@ -123,48 +149,50 @@ export default function InlineChoiceChip<T extends string | number>({
             testID={`${testID}-options`}
             style={[
               styles.panel,
-              {
-                top: anchor.top,
-                minWidth: anchor.width,
-                backgroundColor: colors.panel,
-                borderColor: colors.panelBorder,
-              },
+              { top: anchor.top, minWidth: anchor.width },
               // Hangs from the chip's trailing edge: the right in LTR, the left in RTL.
               rtl ? { left: anchor.left } : { right: anchor.right },
             ]}
           >
-            {options.map((option) => {
-              const picked = option === value;
-              return (
-                <Pressable
-                  key={String(option)}
-                  onPress={() => {
-                    close();
-                    if (!picked) {
-                      void hapticSelection();
-                      onChange(option);
-                    }
-                  }}
-                  accessibilityRole="menuitem"
-                  accessibilityLabel={a11yLabelOf(option)}
-                  accessibilityState={{ checked: picked }}
-                  testID={`${testID}-${option}`}
-                  style={styles.row}
-                >
-                  <View style={styles.check} {...HIDDEN}>
-                    {picked ? <MaterialIcons name="check" size={18} color={colors.accent} /> : null}
-                  </View>
-                  <Text
-                    numberOfLines={1}
-                    maxFontSizeMultiplier={1}
-                    style={[styles.rowLabel, { color: colors.ink, fontWeight: picked ? '600' : '400' }]}
-                    {...HIDDEN}
+            <ChoiceMenuPanel>
+              {options.map((option) => {
+                const picked = option === value;
+                return (
+                  <Pressable
+                    key={String(option)}
+                    onPress={() => {
+                      close();
+                      if (!picked) {
+                        void hapticSelection();
+                        onChange(option);
+                      }
+                    }}
+                    accessibilityRole="menuitem"
+                    accessibilityLabel={a11yLabelOf(option)}
+                    accessibilityState={{ checked: picked }}
+                    testID={`${testID}-${option}`}
+                    style={styles.row}
                   >
-                    {labelOf(option)}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <View style={styles.check} {...HIDDEN}>
+                      {picked ? (
+                        <MaterialIcons name="check" size={18} color={colors.accentMark} />
+                      ) : null}
+                    </View>
+                    <Text
+                      numberOfLines={1}
+                      maxFontSizeMultiplier={1}
+                      style={[
+                        styles.rowLabel,
+                        { color: colors.ink, fontWeight: picked ? '600' : '400' },
+                      ]}
+                      {...HIDDEN}
+                    >
+                      {labelOf(option)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ChoiceMenuPanel>
           </Animated.View>
         ) : null}
       </Modal>
@@ -188,18 +216,24 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
     paddingRight: 8,
   },
+  // The material brings no shadow of its own (BottomSheet adds one too).
   panel: {
     position: 'absolute',
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 4,
     shadowColor: '#000000',
     shadowOpacity: 0.35,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
   },
-  row: { minHeight: ROW, flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 16, gap: 6 },
+  clip: { borderRadius: 14, borderWidth: 1, overflow: 'hidden', paddingVertical: 4 },
+  row: {
+    minHeight: ROW,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 10,
+    paddingRight: 16,
+    gap: 6,
+  },
   check: { width: 20, alignItems: 'center' },
   rowLabel: { fontSize: 15, lineHeight: 20 },
 });
-
