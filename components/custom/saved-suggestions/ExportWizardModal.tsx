@@ -270,7 +270,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                 <ModalHeader className="pb-3">
                     {/* Three slots, and the two outer ones keep a placeholder
                         when empty so the heading never slides sideways between
-                        steps. Same shape as OnboardingNavBar. */}
+                        steps. */}
                     <HStack className="w-full items-center justify-between" space="sm">
                         {step > 1 ? (
                             <Pressable

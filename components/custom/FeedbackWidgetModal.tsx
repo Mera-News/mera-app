@@ -11,7 +11,6 @@ import {
     Pressable,
     ScrollView,
     StyleSheet,
-    Text,
     View,
     useWindowDimensions,
 } from 'react-native';
@@ -74,8 +73,6 @@ const FeedbackWidgetModal: React.FC = () => {
     const styles = useStyles();
     const visible = useFeedbackVisible();
     const hide = useFeedbackStore((s) => s.hide);
-    // Set only by a report that carries something extra (the chat bug button).
-    const attachmentNote = useFeedbackStore((s) => s.attachmentNote);
 
     // Local-first, same rule as Settings (config-mera/AppPreferencesTab) and the
     // launch gate. A bug report is most likely to be filed when something is
@@ -148,14 +145,6 @@ const FeedbackWidgetModal: React.FC = () => {
                             <MaterialIcons name="close" size={22} color="#fff" />
                         </Pressable>
                     </View>
-
-                    {/* What leaves the device with this report, said BEFORE the
-                        fields: the chat is end-to-end encrypted everywhere else. */}
-                    {attachmentNote ? (
-                        <Text style={styles.attachmentNote} testID="feedback-attachment-note">
-                            {attachmentNote}
-                        </Text>
-                    ) : null}
 
                     <ScrollView
                         keyboardShouldPersistTaps="handled"
@@ -247,13 +236,6 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     },
     scrollContent: {
         flexGrow: 1,
-    },
-    attachmentNote: {
-        paddingHorizontal: 20,
-        paddingBottom: 4,
-        color: c.ink2,
-        fontSize: 13,
-        lineHeight: 18,
     },
     // Override for the widget's root View: no flex (so it sizes to content inside
     // the ScrollView) and transparent so the card's background shows through.
