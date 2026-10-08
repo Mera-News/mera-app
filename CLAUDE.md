@@ -1,7 +1,8 @@
 # CLAUDE.md
 
 Mera is a React Native / Expo news app for iOS and Android, bundle id and package `com.mera.news`.
-Expo SDK 55, React Native 0.83, React 19, TypeScript, dark mode only. Its own package.json and CI.
+Expo SDK 55, React Native 0.83, React 19, TypeScript. Light and dark themes through the theme provider
+(`lib/theme`); iOS keeps its native Dark pin (`UIUserInterfaceStyle`) until native plan N4. Its own package.json and CI.
 
 ## Layout
 
