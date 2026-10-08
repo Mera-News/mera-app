@@ -312,7 +312,8 @@
     "aboutTranslationBody": "Artikel ini dalam {{language}}. Ponsel Anda bisa menerjemahkannya saat Anda membaca.",
     "aboutTranslationFallback": "Jika itu tidak berhasil, buka di Google Terjemahan, yang berarti menelusuri lewat Google.",
     "translateBlockedOn": "Beberapa situs memblokir Google Terjemahan. Jika tidak termuat, buka di {{publication}}.",
-    "youCameFromHere": "Anda datang dari sini"
+    "youCameFromHere": "Anda datang dari sini",
+    "googleTranslate": "Google Terjemahan"
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",

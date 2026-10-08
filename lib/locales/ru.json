@@ -330,7 +330,8 @@
     "aboutTranslationBody": "Язык статьи: {{language}}. Ваш телефон может перевести её во время чтения.",
     "aboutTranslationFallback": "Если это не помогает, откройте статью в Google Translate. Тогда вы будете читать её через Google.",
     "translateBlockedOn": "Некоторые сайты блокируют Google Translate. Если страница не открывается, откройте её на {{publication}}.",
-    "youCameFromHere": "Вы пришли отсюда"
+    "youCameFromHere": "Вы пришли отсюда",
+    "googleTranslate": "Google Переводчик"
   },
   "newsCluster": {
     "failedToLoad": "Не удалось загрузить детали кластера",

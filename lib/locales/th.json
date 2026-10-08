@@ -312,7 +312,8 @@
     "aboutTranslationBody": "บทความนี้เป็นภาษา{{language}} โทรศัพท์ของคุณแปลให้ได้ขณะอ่าน",
     "aboutTranslationFallback": "หากใช้ไม่ได้ ให้เปิดในแอป Google Translate ซึ่งหมายถึงการเรียกดูผ่าน Google",
     "translateBlockedOn": "บางเว็บไซต์บล็อก Google Translate หากโหลดไม่ขึ้น ให้เปิดที่ {{publication}}",
-    "youCameFromHere": "คุณมาจากตรงนี้"
+    "youCameFromHere": "คุณมาจากตรงนี้",
+    "googleTranslate": "Google แปลภาษา"
   },
   "newsCluster": {
     "failedToLoad": "โหลดรายละเอียดกลุ่มข่าวไม่สำเร็จ",

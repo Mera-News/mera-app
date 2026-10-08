@@ -312,7 +312,8 @@
     "aboutTranslationBody": "这篇文章是{{language}}内容。你的手机可以在阅读时为你翻译。",
     "aboutTranslationFallback": "如果这样不行，可以用谷歌翻译打开。这意味着你将通过谷歌浏览内容。",
     "translateBlockedOn": "有些网站会屏蔽谷歌翻译。如果页面无法加载，请在{{publication}}上打开。",
-    "youCameFromHere": "你是从这里进入的"
+    "youCameFromHere": "你是从这里进入的",
+    "googleTranslate": "Google 翻译"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",

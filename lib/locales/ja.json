@@ -312,7 +312,8 @@
     "aboutTranslationBody": "この記事は{{language}}で書かれています。読んでいる間、お使いの電話で翻訳できます。",
     "aboutTranslationFallback": "うまくいかない場合は、Google 翻訳で開いてください。その場合はGoogleを経由して閲覧することになります。",
     "translateBlockedOn": "一部のサイトはGoogle 翻訳をブロックします。読み込めない場合は、{{publication}}で開いてください。",
-    "youCameFromHere": "ここから来ました"
+    "youCameFromHere": "ここから来ました",
+    "googleTranslate": "Google 翻訳"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",

@@ -312,7 +312,8 @@
     "aboutTranslationBody": "이 기사는 {{language}}(으)로 작성되었습니다. 읽는 동안 휴대폰이 번역해 드릴 수 있습니다.",
     "aboutTranslationFallback": "그래도 안 되면 구글 번역으로 여세요. 구글을 통해 열람하게 됩니다.",
     "translateBlockedOn": "일부 사이트는 구글 번역을 차단합니다. 열리지 않으면 {{publication}}에서 여세요.",
-    "youCameFromHere": "여기서 오셨습니다"
+    "youCameFromHere": "여기서 오셨습니다",
+    "googleTranslate": "Google 번역"
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",

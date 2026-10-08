@@ -330,7 +330,8 @@
     "aboutTranslationBody": "Ця стаття мовою: {{language}}. Ваш телефон може перекласти її, поки ви читаєте.",
     "aboutTranslationFallback": "Якщо це не спрацювало, відкрийте статтю в Google Перекладачі. Так ви читатимете її через Google.",
     "translateBlockedOn": "Деякі сайти блокують Google Перекладач. Якщо сторінка не завантажується, відкрийте її на {{publication}}.",
-    "youCameFromHere": "Ви прийшли звідси"
+    "youCameFromHere": "Ви прийшли звідси",
+    "googleTranslate": "Google Перекладач"
   },
   "newsCluster": {
     "failedToLoad": "Не вдалося завантажити деталі кластера",

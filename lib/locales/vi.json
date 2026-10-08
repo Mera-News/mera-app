@@ -312,7 +312,8 @@
     "aboutTranslationBody": "Bài viết này bằng {{language}}. Điện thoại của bạn có thể dịch trong lúc bạn đọc.",
     "aboutTranslationFallback": "Nếu cách đó không được, hãy mở bài bằng Google Dịch, tức là đọc qua Google.",
     "translateBlockedOn": "Một số trang chặn Google Dịch. Nếu trang không tải, hãy mở trên {{publication}}.",
-    "youCameFromHere": "Bạn đến từ đây"
+    "youCameFromHere": "Bạn đến từ đây",
+    "googleTranslate": "Google Dịch"
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",

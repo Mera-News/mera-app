@@ -312,7 +312,8 @@
     "aboutTranslationBody": "這篇文章是{{language}}內容。你的手機可以在你閱讀時為你翻譯。",
     "aboutTranslationFallback": "如果無法使用，請用 Google 翻譯開啟，這表示你會透過 Google 瀏覽內容。",
     "translateBlockedOn": "有些網站會封鎖 Google 翻譯。如果無法載入，請到{{publication}}開啟。",
-    "youCameFromHere": "你是從這裡來的"
+    "youCameFromHere": "你是從這裡來的",
+    "googleTranslate": "Google 翻譯"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",

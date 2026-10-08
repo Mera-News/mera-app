@@ -330,7 +330,8 @@
     "aboutTranslationBody": "Język tego artykułu to {{language}}. Twój telefon może go przetłumaczyć podczas czytania.",
     "aboutTranslationFallback": "Jeśli to nie zadziała, otwórz go w Google Translate. Oznacza to przeglądanie strony przez Google.",
     "translateBlockedOn": "Niektóre strony blokują Google Translate. Jeśli strona się nie wczytuje, otwórz ją w {{publication}}.",
-    "youCameFromHere": "Przyszedłeś stąd"
+    "youCameFromHere": "Przyszedłeś stąd",
+    "googleTranslate": "Tłumacz Google"
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",
