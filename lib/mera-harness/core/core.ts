@@ -1035,6 +1035,27 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             },
           ]
         : []),
+      // THE EARLIER EXCHANGE, on `conversation/*` turns only. Slim context sends
+      // no history, which is right for fact turns (a fact from an earlier
+      // message must never leak into this one) and wrong for a follow-up: "In
+      // one sentence, which institution proposed it?" reached the model with no
+      // "it". What the reader can see is context, so a conversation turn gets
+      // the one previous exchange, bounded, under the same no-facts guard.
+      ...(!resumedSkill &&
+      lastQuestion === null &&
+      skillLoaded?.startsWith('conversation/') &&
+      turn.lastUserMessage
+        ? [
+            {
+              role: 'user' as const,
+              content:
+                'Earlier in this chat, so a follow-up such as "it" or "that" can be read. Use it only to '
+                + 'understand the message below; never offer or save a fact from it that the message does '
+                + `not ask for. They said: ${escapeUntrusted(turn.lastUserMessage, 500)}`
+                + (turn.lastReply ? ` You replied: ${escapeUntrusted(turn.lastReply, 900)}` : ''),
+            },
+          ]
+        : []),
       { role: 'user', content: escapeUntrusted(userMessage, 2000) },
     ];
     // LAST, so it is the final thing read before the model answers. Not
@@ -2240,6 +2261,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   turn.lastSkill = skillLoaded;
   // Held for the turn that answers, which arrives carrying only a chip label.
   turn.lastUserMessage = userMessage;
+  turn.lastReply = (reply.trim() || acknowledgement.trim()) || null;
   // CONSUMED. `resolvedChoice` was set and never cleared, so it stayed true for
   // the rest of the conversation and everything gated on it silently widened
   // from "the user confirmed this turn" to "the user has confirmed something,

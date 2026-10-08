@@ -91,3 +91,21 @@ it('the reader can send again at once after a stop', async () => {
   const texts = useCloudChatStore.getState().messages.map((m) => m.content);
   expect(texts.some((c) => c.includes('Second answer'))).toBe(true);
 });
+
+it('what the reader saw before Stop is history for the next turn', async () => {
+  mockStream.mockImplementationOnce(async function* (req: { signal?: AbortSignal }) {
+    yield { type: 'text-delta', delta: 'The AI Act sorts systems by risk' };
+    await new Promise<void>((_, reject) =>
+      req.signal?.addEventListener('abort', () => reject(new CallerAbortError('stopped'))),
+    );
+  });
+  const engine = createCloudEngine(agent);
+  engine.send('Explain the EU AI Act');
+  await flush();
+  engine.stop();
+  await flush();
+
+  const wire = useCloudChatStore.getState().wireMessages;
+  expect(wire.map((m) => m.role)).toEqual(['user', 'assistant']);
+  expect(wire[1].content).toContain('sorts systems by risk');
+});

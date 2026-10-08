@@ -432,6 +432,21 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         if (stopRef.current.signal.aborted) {
           // STOPPED: the partial acknowledgement stays as the reply, and nothing
           // else the turn produced is kept (no cards, no terminal, no state).
+          // What the reader SAW still counts as context: their message and the
+          // partial text go in as the earlier exchange. The question, choice,
+          // skill and offers of the half-run turn do not carry over.
+          Object.assign(agentStateRef.current.turn, {
+            pendingChoice: null,
+            resolvedChoice: null,
+            lastTurnAskedQuestion: false,
+            lastQuestion: null,
+            lastRoute: null,
+            lastSkill: null,
+            confirmedPlace: null,
+            offeredStatements: [],
+            lastUserMessage: userMessage,
+            lastReply: replaceClauseDashes(acc).trim() || null,
+          });
           useCloudChatStore.getState().setMessages((prev) =>
             prev.map((m) =>
               m.id === ackId
@@ -1195,7 +1210,20 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             useCloudChatStore.getState().setError(msg);
           }
         } finally {
-          if (turnStop.signal.aborted) markStopped(assistantId);
+          if (turnStop.signal.aborted) {
+            // The single-shot agents read history from the wire: the visible
+            // partial reply belongs there (the persona loop keeps its own state).
+            if (!isPersonaAgent(agentRef.current.id)) {
+              const state = useCloudChatStore.getState();
+              const partial = state.messages.find((m) => m.id === assistantId)?.content.trim();
+              // Only when nothing of this turn reached the wire yet (it still
+              // ends on the user's message): a later pass pushed its own.
+              if (partial && state.wireMessages[state.wireMessages.length - 1]?.role === 'user') {
+                useCloudChatStore.getState().pushWireMessage({ role: 'assistant', content: partial });
+              }
+            }
+            markStopped(assistantId);
+          }
           logger.debug(`${TAG} startTurn done, setting idle`);
           // THE ONE RELEASE, and it is in a `finally` on purpose: it has to run
           // on the throw path too, or a 429 leaves the line reassuring the user

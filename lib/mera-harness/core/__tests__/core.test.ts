@@ -1374,6 +1374,44 @@ describe('TestFlight regressions', () => {
     expect(firstLeg).not.toContain('my parents live in bhopal');
   });
 
+  it('a conversation follow-up reads the earlier exchange, a fact turn still does not', async () => {
+    const state = createAgentState(PERSONA);
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'conversation/question' })] }),
+      modelResult({ content: 'The AI Act is an EU law that sorts AI systems by risk.' }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'Explain how the EU AI Act works', deps: t1 });
+    expect(state.turn.lastReply).toContain('sorts AI systems by risk');
+
+    const { deps: t2, calls } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'conversation/question' })] }),
+      modelResult({ content: 'The European Commission.' }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'In one sentence, which institution proposed it?', deps: t2 });
+
+    const route = calls[0].messages.map((m) => m.content).join('\n');
+    const answer = calls[1].messages.map((m) => m.content).join('\n');
+    // The route leg stays slim; the conversation leg gets the exchange.
+    expect(route).not.toContain('Earlier in this chat');
+    expect(answer).toContain('Earlier in this chat');
+    expect(answer).toContain('Explain how the EU AI Act works');
+    expect(answer).toContain('sorts AI systems by risk');
+  });
+
+  it('a facts turn after a conversation turn never sees the earlier exchange', async () => {
+    const state = createAgentState(PERSONA);
+    state.turn.lastUserMessage = 'Explain how the EU AI Act works';
+    state.turn.lastReply = 'The AI Act is an EU law.';
+    const { deps, calls } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
+      modelResult({ content: 'Noted.' }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'I work as a software engineer', deps });
+    for (const c of calls) {
+      expect(c.messages.map((m) => m.content).join('\n')).not.toContain('Earlier in this chat');
+    }
+  });
+
   it('the choice is CONSUMED, so the turn after it routes normally again', async () => {
     // `resolvedChoice` was set and never cleared, so it stayed true for the
     // rest of the conversation. Everything gated on it widened from "the user

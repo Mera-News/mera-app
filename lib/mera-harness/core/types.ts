@@ -185,6 +185,11 @@ export interface AgentTurnState {
    *  as the bare place name and the family skill, seeing no relative, proposes
    *  the user's own residence. */
   lastUserMessage: string | null;
+  /** What the reader SAW Mera say last turn (the answer, else the
+   *  acknowledgement; for a stopped turn, the partial text on screen). With
+   *  `lastUserMessage` it is the one earlier exchange a `conversation/*` turn
+   *  reads, so "which institution proposed it?" has an "it". */
+  lastReply: string | null;
   /**
    * The place a chip tap resolved, carried across the turns that RESUME the
    * skill which asked. Without it a resumed residence turn looked the city up
@@ -211,6 +216,7 @@ export function createAgentTurnState(): AgentTurnState {
     lastRoute: null,
     lastSkill: null,
     lastUserMessage: null,
+    lastReply: null,
     confirmedPlace: null,
     offeredStatements: [],
   };
