@@ -758,11 +758,20 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                     <>
                         <SheetNote
                             title={chrome('confirmMuteTitle', 'Never show this publication?')}
-                            body={chrome(
-                                'confirmMuteBody',
-                                "You won't see articles from {{publication}} again. You can undo this anytime.",
-                                { publication: treePublicationShown || 'this publication' },
-                            )}
+                            // Unnamed: its own whole sentence, never an English
+                            // phrase spliced into a translated one.
+                            body={
+                                treePublicationShown
+                                    ? chrome(
+                                          'confirmMuteBody',
+                                          "You won't see articles from {{publication}} again. You can undo this anytime.",
+                                          { publication: treePublicationShown },
+                                      )
+                                    : chrome(
+                                          'confirmMuteBodyUnnamed',
+                                          "You won't see articles from this publication again. You can undo this anytime.",
+                                      )
+                            }
                         />
                         <ActionSheetRow
                             testID="tree-confirm-destructive"

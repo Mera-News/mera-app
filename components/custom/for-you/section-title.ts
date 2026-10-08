@@ -52,3 +52,11 @@ export function sectionTitle(t: Translate, row: FactRow): string {
       return primaryStatement(row.statement);
   }
 }
+
+/** Whether a section's title is the reader's own content (a fact statement,
+ *  translated at run time) or app copy already in the reader's language (the
+ *  headline sections' i18n titles), which must never be re-translated. */
+export function sectionTitleIsContent(row: FactRow): boolean {
+  const kind = sectionKindOf(row);
+  return kind !== 'headline-global' && kind !== 'headline-country';
+}

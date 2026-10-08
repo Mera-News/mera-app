@@ -1,4 +1,4 @@
-import { sectionTitle, type Translate } from '../section-title';
+import { sectionTitle, sectionTitleIsContent, type Translate } from '../section-title';
 import type { FactRow } from '@/lib/stores/fact-rows-selector';
 
 // Stub `t`: echoes the key plus any interpolation, so the assertions pin BOTH
@@ -67,5 +67,14 @@ describe('sectionTitle', () => {
     expect(sectionTitle(t, row({ kind: 'headline-country', countryCode: 'ZZ' }))).toBe(
       'forYou.headlineSectionCountry|{"country":"ZZ"}',
     );
+  });
+});
+
+describe('sectionTitleIsContent', () => {
+  it('runtime-translates only a fact statement, never the headline sections\' i18n titles', () => {
+    expect(sectionTitleIsContent(row({ kind: 'fact', statement: 'Lives in Amsterdam' }))).toBe(true);
+    expect(sectionTitleIsContent(row({ statement: 'Lives in Amsterdam' }))).toBe(true);
+    expect(sectionTitleIsContent(row({ kind: 'headline-global' }))).toBe(false);
+    expect(sectionTitleIsContent(row({ kind: 'headline-country', countryCode: 'NL' }))).toBe(false);
   });
 });

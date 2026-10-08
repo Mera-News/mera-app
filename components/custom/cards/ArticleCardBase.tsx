@@ -8,6 +8,7 @@ import {
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
+import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import PressableCard from '@/components/custom/cards/PressableCard';
@@ -295,16 +296,22 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               <HStack className="self-end mt-1">{metaAccessory}</HStack>
             ) : null}
           </Box>
-          <TranslatableDynamic
-            as="heading"
-            text={displayTitle}
-            originalText={titleOriginal}
-            originalLanguage={sourceLanguage}
-            size="lg"
-            className=""
-            showToggle={false}
-            onDisplayChange={(d) => setShownTitle(d.displayedText)}
-          />
+          {/* No title at all: the app's own fallback copy, already in the
+              reader's language, never runtime-translated. */}
+          {titleEnglish || titleOriginal ? (
+            <TranslatableDynamic
+              as="heading"
+              text={displayTitle}
+              originalText={titleOriginal}
+              originalLanguage={sourceLanguage}
+              size="lg"
+              className=""
+              showToggle={false}
+              onDisplayChange={(d) => setShownTitle(d.displayedText)}
+            />
+          ) : (
+            <Heading size="lg">{displayTitle}</Heading>
+          )}
           {children}
         </VStack>
       </Box>

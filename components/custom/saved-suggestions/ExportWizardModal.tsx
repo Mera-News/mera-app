@@ -236,13 +236,19 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                     className="flex-row items-center py-3 px-1 border-b border-line"
                 >
                     <Box className="flex-1 pr-3">
-                        <TranslatableDynamic
-                            text={item.title || t('feed.newsCluster')}
-                            originalText={item.titleOriginal}
-                            originalLanguage={item.language}
-                            size="sm"
-                            showToggle={false}
-                        />
+                        {/* No title at all: the app's own fallback copy, already
+                            in the reader's language, never runtime-translated. */}
+                        {item.title || item.titleOriginal ? (
+                            <TranslatableDynamic
+                                text={item.title || t('feed.newsCluster')}
+                                originalText={item.titleOriginal}
+                                originalLanguage={item.language}
+                                size="sm"
+                                showToggle={false}
+                            />
+                        ) : (
+                            <Text size="sm">{t('feed.newsCluster')}</Text>
+                        )}
                     </Box>
                     <CheckGlyph checked={checked} />
                 </Pressable>

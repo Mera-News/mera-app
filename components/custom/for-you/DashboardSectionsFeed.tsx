@@ -1,6 +1,6 @@
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import { sectionTitle } from '@/components/custom/for-you/section-title';
+import { sectionTitle, sectionTitleIsContent } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -67,18 +67,22 @@ const HIDDEN = {
 
 /**
  * A section's header (FinalFeed #5): ONE link band, the fact then
- * "· N stories ›", opening that interest's fact page. The title is a fact
- * statement, user data, so it is translated. A hidden visual under a childless
+ * "· N stories ›", opening that interest's fact page. A fact statement is
+ * user data, so it is translated at run time; a headline section's title is
+ * app copy (i18n), shown as is. A hidden visual under a childless
  * labelled button (the glyph-leak pattern); the label is the title as SHOWN.
  */
 function SectionLinkBand({
   factId,
   title,
+  content,
   total,
   onPress,
 }: {
   readonly factId: string;
   readonly title: string;
+  /** A fact statement (runtime-translated); false for an i18n title. */
+  readonly content: boolean;
   readonly total: number;
   readonly onPress: () => void;
 }) {
@@ -89,13 +93,19 @@ function SectionLinkBand({
   return (
     <View>
       <View pointerEvents="none" {...HIDDEN} style={styles.band}>
-        <TranslatableDynamic
-          text={title}
-          bold
-          numberOfLines={3}
-          style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}
-          onDisplayChange={(d) => setShown(d.displayedText)}
-        />
+        {content ? (
+          <TranslatableDynamic
+            text={title}
+            bold
+            numberOfLines={3}
+            style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}
+            onDisplayChange={(d) => setShown(d.displayedText)}
+          />
+        ) : (
+          <Text bold numberOfLines={3} style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}>
+            {title}
+          </Text>
+        )}
         <HStack className="items-center">
           <Text style={{ color: c.accentText, fontSize: 14, lineHeight: 20, fontWeight: '600' }}>{`· ${count}`}</Text>
           <MaterialIcons name="chevron-right" size={18} color={c.accentText} {...HIDDEN} />
@@ -104,7 +114,7 @@ function SectionLinkBand({
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${shown}, ${count}`}
+        accessibilityLabel={`${content ? shown : title}, ${count}`}
         testID={`section-open-${factId}`}
         style={StyleSheet.absoluteFill}
       />
@@ -267,7 +277,13 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         // its cards and the next section visibly starts its own.
         // Sections stack PAGE_TITLE_GAP apart, as the board's `.body` gap.
         <SectionGradientPanel factId={row.factId} style={{ marginBottom: PAGE_TITLE_GAP }}>
-          <SectionLinkBand factId={row.factId} title={title} total={total} onPress={() => openFactFeed(row, title)} />
+          <SectionLinkBand
+            factId={row.factId}
+            title={title}
+            content={sectionTitleIsContent(row)}
+            total={total}
+            onPress={() => openFactFeed(row, title)}
+          />
           <Box className="px-2 pb-2">
             {preview.map((group) => (
               <ArticleSuggestionCompactCard
