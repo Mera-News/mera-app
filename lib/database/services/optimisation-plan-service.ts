@@ -28,6 +28,7 @@ import {
 import { getAllTopicSnapshots, getAllByNormalizedText } from './topic-service';
 import { applyPersonaAction, type PersonaAction } from './persona-action-executor';
 import { cloudComplete } from '../../llm/cloudComplete';
+import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { SMALL_MODEL } from '../../llm/constants';
 import { toastManager } from '../../toast-manager';
 import logger from '../../logger';
@@ -111,7 +112,7 @@ export interface PendingPlan {
 
 export interface CycleResult {
   ran: boolean;
-  reason?: 'cooldown' | 'too_few_signals' | 'no_candidates';
+  reason?: 'cooldown' | 'too_few_signals' | 'no_candidates' | 'on_device';
   autoCount: number;
   reviewCount: number;
 }
@@ -238,6 +239,12 @@ export async function runOptimisationCycle(opts?: {
   force?: boolean;
 }): Promise<CycleResult> {
   const now = opts?.now ?? Date.now();
+
+  // On-device mode never calls the cloud AI: the plan is organised by one cloud
+  // call, so the whole cycle is skipped (nothing stamped, nothing consumed).
+  if (await isOnDeviceMode()) {
+    return { ran: false, reason: 'on_device', autoCount: 0, reviewCount: 0 };
+  }
 
   if (!opts?.force) {
     const last = Number(await getSetting(LAST_RUN_KEY));

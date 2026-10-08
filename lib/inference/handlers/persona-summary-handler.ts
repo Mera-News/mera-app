@@ -8,6 +8,7 @@ import { getFacts, getFactSectionSnapshots } from '../../database/services/fact-
 import { getActiveTopicSnapshots } from '../../database/services/topic-service';
 import { replaceAllSummaryStrings } from '../../database/services/persona-summary-service';
 import { cloudComplete } from '../../llm/cloudComplete';
+import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocal } from '../../llm/completeLocal';
 import {
   assemblePersonaSummaryStrings,
@@ -76,7 +77,8 @@ export async function handlePersonaSummaryJob(
 
   let raw = '';
   try {
-    if (payload.useCloud) {
+    // A job queued in cloud mode runs locally if the mode has since changed.
+    if (payload.useCloud && !(await isOnDeviceMode())) {
       raw = await cloudComplete({
         systemPrompt: system,
         prompt: user,

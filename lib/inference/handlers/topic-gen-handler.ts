@@ -20,6 +20,7 @@ import {
 } from '../../database/services/topic-generation-status-service';
 import { generateTopicsForFact as generateViaSkill, topicSkillForAttribute } from '@/lib/mera-harness';
 import { cloudComplete } from '../../llm/cloudComplete';
+import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { SMALL_MODEL } from '../../llm/constants';
 import logger from '../../logger';
 import type { Fact } from '../../mera-protocol-toolkit/types';
@@ -184,7 +185,8 @@ export async function handleTopicGenJob(
   const { ownTopics, declined } = await readExclusionsNow(payload.factId);
   const append = payload.mode === 'append';
 
-  if (payload.useCloud) {
+  // A job queued in cloud mode runs the on-device branch if the mode has since changed.
+  if (payload.useCloud && !(await isOnDeviceMode())) {
     try {
       const run = await runSkillGuided(payload, fact, ownTopics, declined);
       const topics = freshTopics(run.topics, ownTopics, declined);

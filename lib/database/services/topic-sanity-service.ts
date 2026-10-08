@@ -17,6 +17,7 @@ import type TopicModel from '../models/Topic';
 import type TrackedStoryModel from '../models/TrackedStory';
 import logger from '../../logger';
 import { cloudBatchComplete } from '../../llm/cloudComplete';
+import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
   planSanityBatches,
@@ -89,6 +90,10 @@ export async function runSanityAudit(opts?: {
   maxTopics?: number;
 }): Promise<SanityAuditResult> {
   try {
+    // On-device mode never calls the cloud AI. Reported as `skipped`, so the
+    // sweep does not stamp its cooldown off a run that never happened.
+    if (await isOnDeviceMode()) return SKIPPED;
+
     const facts = opts?.facts ?? [];
     if (facts.length === 0) return EMPTY;
 

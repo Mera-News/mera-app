@@ -22,6 +22,7 @@
 // Killed midway ⇒ next idle foreground resumes at the cursor. Never re-runs from
 // scratch; never claims completion having processed half the corpus.
 
+import { isOnDeviceMode } from '../../llm/on-device-gate';
 import logger from '../../logger';
 import { getSetting, setSetting } from './setting-service';
 import { getFacts } from './fact-service';
@@ -43,7 +44,7 @@ export const SANITY_BACKFILL_MAX_TOPICS = 600;
 
 export interface BackfillRunResult {
   ran: boolean;
-  reason?: 'already_done' | 'no_facts';
+  reason?: 'already_done' | 'no_facts' | 'on_device';
   audited: number;
   proposalsAdded: number;
   done: boolean;
@@ -76,6 +77,9 @@ export async function runSanityBackfillChunk(opts?: {
 }): Promise<BackfillRunResult> {
   try {
     if (await isBackfillDone()) return SKIPPED('already_done');
+    // On-device mode never calls the cloud AI. Checked BEFORE the cursor reset
+    // and the started stamp, so switching back to cloud resumes cleanly.
+    if (await isOnDeviceMode()) return SKIPPED('on_device');
 
     const now = opts?.now ?? Date.now();
 

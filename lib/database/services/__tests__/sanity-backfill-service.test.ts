@@ -21,6 +21,9 @@ jest.mock('../setting-service', () => ({
   }),
 }));
 
+const mockOnDevice = jest.fn(async () => false);
+jest.mock('@/lib/llm/on-device-gate', () => ({ isOnDeviceMode: () => mockOnDevice() }));
+
 const mockGetFacts = jest.fn(async () => [{ id: 'f1', statement: 'Follows cricket' }]);
 jest.mock('../fact-service', () => ({ getFacts: () => mockGetFacts() }));
 
@@ -50,6 +53,7 @@ import {
 beforeEach(() => {
   mockKv.clear();
   jest.clearAllMocks();
+  mockOnDevice.mockResolvedValue(false);
   mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Follows cricket' }]);
   mockAddSanityProposals.mockResolvedValue(0);
   mockRunSanityAudit.mockResolvedValue({ incoherentFacts: [], audited: 60 });
@@ -187,5 +191,22 @@ describe('proposals and notification', () => {
   it('skips the queue entirely when a chunk finds nothing wrong', async () => {
     await runSanityBackfillChunk();
     expect(mockAddSanityProposals).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('on-device mode', () => {
+  it('skips the chunk before touching the cursor, the started stamp or the audit, and does not finish the pass', async () => {
+    mockOnDevice.mockResolvedValue(true);
+    const out = await runSanityBackfillChunk();
+    expect(out).toMatchObject({ ran: false, reason: 'on_device', done: false });
+    expect(mockResetSanityCursor).not.toHaveBeenCalled();
+    expect(mockRunSanityAudit).not.toHaveBeenCalled();
+    expect(mockKv.size).toBe(0);
+    expect(await isBackfillDone()).toBe(false);
+
+    // Back on cloud, the pass starts normally.
+    mockOnDevice.mockResolvedValue(false);
+    expect((await runSanityBackfillChunk()).ran).toBe(true);
   });
 });

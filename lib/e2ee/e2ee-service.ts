@@ -13,6 +13,7 @@
  *  fetchModelPublicKey) and threaded through the E2EEContext + persisted async
  *  jobs so response decryption picks the matching curve.
  */
+import { assertCloudAllowed } from '../llm/on-device-gate';
 import { ed25519, x25519 } from '@noble/curves/ed25519.js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { hkdf } from '@noble/hashes/hkdf.js';
@@ -444,6 +445,7 @@ export async function prepareE2EEContext(
   lane: gatewayRateLimiter.GatewayLane = 'background',
   opts: AttestationFetchOptions = {},
 ): Promise<E2EEContext> {
+  await assertCloudAllowed();
   const attestation = await fetchModelPublicKey(model, lane, opts);
   const { algo } = attestation;
 
@@ -514,6 +516,7 @@ export async function rebuildE2EEContext(
   lane: gatewayRateLimiter.GatewayLane = 'background',
   opts: AttestationFetchOptions = {},
 ): Promise<E2EEContext> {
+  await assertCloudAllowed();
   const attestation = await fetchModelPublicKey(model, lane, opts);
   if (attestation.algo !== algo) {
     throw new ModelKeyAlgoMismatchError(

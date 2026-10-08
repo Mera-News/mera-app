@@ -47,6 +47,9 @@ jest.mock('../../../llm/cloudComplete', () => ({
   }),
 }));
 
+const mockOnDevice = jest.fn(async () => false);
+jest.mock('@/lib/llm/on-device-gate', () => ({ isOnDeviceMode: () => mockOnDevice() }));
+
 import {
   runOptimisationCycle,
   getPendingPlan,
@@ -316,3 +319,17 @@ describe('acceptPlan — structured suppression passthrough', () => {
 });
 
 export {};
+
+
+describe('on-device mode', () => {
+  afterEach(() => mockOnDevice.mockResolvedValue(false));
+
+  it('skips the whole cycle: no cloud call, nothing stamped, not even with force', async () => {
+    mockOnDevice.mockResolvedValue(true);
+    (cloudComplete as jest.Mock).mockClear();
+    const out = await runOptimisationCycle({ force: true });
+    expect(out).toEqual({ ran: false, reason: 'on_device', autoCount: 0, reviewCount: 0 });
+    expect(cloudComplete).not.toHaveBeenCalled();
+    expect(mockKv.size).toBe(0);
+  });
+});

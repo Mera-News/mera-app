@@ -88,6 +88,13 @@ jest.mock('@/lib/config/endpoints', () => ({
 const mockRateLimiterAcquire = jest.fn().mockResolvedValue(undefined);
 const mockRateLimiterPauseFor = jest.fn();
 const mockInteractiveWaitMs = jest.fn((): number => 0);
+// The on-device gate: real module, but its backstop is switchable per test.
+const mockAssertCloudAllowed = jest.fn(async () => {});
+jest.mock('../on-device-gate', () => ({
+  ...jest.requireActual('../on-device-gate'),
+  assertCloudAllowed: () => mockAssertCloudAllowed(),
+}));
+
 jest.mock('../gateway-rate-limiter', () => ({
   acquire: (...args: unknown[]) => mockRateLimiterAcquire(...args),
   pauseFor: (...args: unknown[]) => mockRateLimiterPauseFor(...args),
@@ -3132,4 +3139,41 @@ describe('hedged requests', () => {
     expect(bodyModel(2)).toBe(FALLBACK_MODEL);
     expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
   }, 10_000);
+});
+
+
+// ON-DEVICE MODE NEVER CALLS THE CLOUD AI: every entry point refuses before it
+// builds a request, so nothing leaves the device.
+describe('on-device mode refuses every cloud entry point', () => {
+  const { OnDeviceModeError } = jest.requireActual('../on-device-gate');
+
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockAssertCloudAllowed.mockReset();
+    mockAssertCloudAllowed.mockRejectedValue(new OnDeviceModeError());
+  });
+  afterEach(() => {
+    mockAssertCloudAllowed.mockReset();
+    mockAssertCloudAllowed.mockResolvedValue(undefined);
+  });
+
+  it('cloudComplete', async () => {
+    await expect(cloudComplete({ systemPrompt: 's', prompt: 'p' })).rejects.toMatchObject({
+      name: 'OnDeviceModeError',
+    });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('cloudBatchComplete', async () => {
+    await expect(
+      cloudBatchComplete([{ id: 'a', systemPrompt: 's', userMessage: 'u' } as never]),
+    ).rejects.toMatchObject({ name: 'OnDeviceModeError' });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('cloudChatStream', async () => {
+    const stream = cloudChatStream({ messages: [{ role: 'user', content: 'hi' }] });
+    await expect(stream.next()).rejects.toMatchObject({ name: 'OnDeviceModeError' });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });

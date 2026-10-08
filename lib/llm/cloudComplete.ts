@@ -4,6 +4,7 @@
 // responses are decrypted locally. There is no plaintext path — if E2EE
 // fails, the call fails and the user sees an error.
 
+import { assertCloudAllowed } from './on-device-gate';
 import { fetch as expoFetch } from 'expo/fetch';
 import { getJwtToken, invalidateJwtCache } from '../auth-client';
 import {
@@ -934,6 +935,7 @@ export async function cloudComplete(
   request: CloudCompleteRequest,
   options: CloudCallOptions = {},
 ): Promise<string> {
+  await assertCloudAllowed();
   const temperature = request.temperature ?? 0.3;
   const primary = request.model ?? SMALL_MODEL;
   const model = resolveModel(primary);
@@ -1002,6 +1004,7 @@ export async function cloudBatchComplete(
   options: CloudCallOptions = {},
 ): Promise<BatchCompletionResult[]> {
   if (calls.length === 0) return [];
+  await assertCloudAllowed();
   const primary = model ?? SMALL_MODEL;
   const resolvedModel = resolveModel(primary);
 
@@ -1249,6 +1252,7 @@ export async function* cloudChatStream(
   request: CloudChatStreamRequest,
 ): AsyncGenerator<SseEvent> {
   logger.debug(`${TAG} cloudChatStream ENTER`, { messageCount: request.messages.length });
+  await assertCloudAllowed();
 
   // ONE CALL, ONE MARK. An agent turn is a loop of up to MAX_AGENT_LEGS
   // sequential calls and each genuinely re-encrypts and re-sends, so the wait

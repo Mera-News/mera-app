@@ -7,6 +7,7 @@
 
 import { setLlmHeadline } from '../../database/services/tracked-story-service';
 import { cloudComplete } from '../../llm/cloudComplete';
+import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocal } from '../../llm/completeLocal';
 import {
   buildStoryHeadlinePrompt,
@@ -53,7 +54,8 @@ export async function handleStoryHeadlineJob(
 
   let raw = '';
   try {
-    if (payload.useCloud) {
+    // A job queued in cloud mode runs locally if the mode has since changed.
+    if (payload.useCloud && !(await isOnDeviceMode())) {
       raw = await cloudComplete({
         systemPrompt: system,
         prompt: user,

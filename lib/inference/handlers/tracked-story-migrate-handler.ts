@@ -14,6 +14,7 @@ import {
   setLlmHeadline,
 } from '../../database/services/tracked-story-service';
 import { cloudComplete } from '../../llm/cloudComplete';
+import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocal } from '../../llm/completeLocal';
 import { buildStoryScopePrompt, parseStoryScopeOutput } from '../../news-harness/story-scope';
 import logger from '../../logger';
@@ -63,7 +64,8 @@ export async function handleTrackedStoryMigrateJob(
 
   let raw = '';
   try {
-    if (payload.useCloud) {
+    // A job queued in cloud mode runs locally if the mode has since changed.
+    if (payload.useCloud && !(await isOnDeviceMode())) {
       raw = await cloudComplete({
         systemPrompt: system,
         prompt: user,

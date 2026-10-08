@@ -71,7 +71,7 @@ AppScheduler.register({
 
     const result = await runHygieneSweep();
     if (result.sanitySkipped) {
-      ctx.log('sanity audit skipped — no E2EE credential; cooldown not stamped');
+      ctx.log('sanity audit skipped — no E2EE credential, or on-device mode; cooldown not stamped');
     }
     if (!result.ran) {
       ctx.log(`hygiene sweep skipped — ${result.reason ?? 'not-eligible'}`);
