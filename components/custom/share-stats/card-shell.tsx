@@ -168,8 +168,9 @@ export function type(
 }
 
 export interface CardShellProps {
-  /** "{Card} · last 30 days", or "Right now" alone (FinalLibrary #12): ONE
-   *  window statement per image, never two. */
+  /** "{Card} · last 30 days" or "Right now" alone for a one-figure image; a
+   *  packed image is titled "Your last 30 days" and each figure carries its
+   *  own label, Right now included (owner: like the Stats page). */
   title: string;
   privacyLine: string;
   pixelRatio: number;
@@ -185,10 +186,13 @@ export interface CardShellProps {
   hostSize?: { width: number; height: number };
   testID: string;
   children: React.ReactNode;
+  /** Reports the height the figures may fill (between the title and the
+   *  privacy line), in this host's points. The packing measure reads it. */
+  onBodyLayout?: (height: number) => void;
 }
 
 const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
-  { title, privacyLine, pixelRatio, hostSize, testID, children },
+  { title, privacyLine, pixelRatio, hostSize, testID, children, onBodyLayout },
   ref,
 ) {
   const { palette, ink } = useCardInk();
@@ -228,7 +232,7 @@ const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
         }}
       >
         <VStack className="flex-1 justify-between">
-          <VStack>
+          <VStack className="flex-1">
             <HStack className="items-center" style={{ columnGap: 8 * k, marginTop: logoMargin }}>
               <MeraLogo size={m.logoSize * k} color={palette.primary} />
               <Text
@@ -246,7 +250,12 @@ const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
             >
               {title}
             </Text>
-            <View style={{ marginTop: m.titleGap * 3 * k }}>{children}</View>
+            <View
+              style={{ flex: 1, marginTop: m.titleGap * 3 * k }}
+              onLayout={onBodyLayout ? (e) => onBodyLayout(e.nativeEvent.layout.height) : undefined}
+            >
+              {children}
+            </View>
           </VStack>
 
           {/* Inside the safe band, never in the bottom reserve. */}

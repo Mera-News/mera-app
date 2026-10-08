@@ -55,6 +55,8 @@ export const MERA_BUTTON_SIZE = 62;
 /** Gap between the tab bar's top edge and the button's bottom edge. 13 until
  *  spike 3 measures it on iOS 26 and Android. */
 export const MERA_BUTTON_BAR_GAP = 13;
+/** The Mera button's distance from the screen's left or right edge. */
+export const MERA_BUTTON_EDGE = 14;
 /** Clear space between a list's last item and the button's top edge. */
 export const LIST_END_CONTENT_GAP = 12;
 /** What every list ends with ABOVE the tab bar, so nothing sits under the

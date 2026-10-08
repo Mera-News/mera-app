@@ -2518,19 +2518,7 @@
       "privacyMine": "عُدّ على هاتفي. لم يغادره شيء.",
       "windowLine": "{{label}} · آخر 30 يومًا"
     },
-    "choose": {
-      "help": "كل خيار تختاره يصبح صورة مستقلة.",
-      "preview_zero": "معاينة {{count}} صورة",
-      "preview_one": "معاينة صورة واحدة",
-      "preview_two": "معاينة صورتين",
-      "preview_few": "معاينة {{count}} صور",
-      "preview_many": "معاينة {{count}} صورة",
-      "preview_other": "معاينة {{count}} صورة",
-      "title": "اختر ما تشاركه"
-    },
     "preview": {
-      "dark": "خلفية داكنة",
-      "light": "خلفية فاتحة",
       "position": "{{index}} من {{total}}",
       "title": "معاينة"
     }

@@ -2441,15 +2441,7 @@
       "privacyMine": "在我的手机上统计。没有任何数据离开。",
       "windowLine": "{{label}} · 过去30天"
     },
-    "choose": {
-      "help": "你选择的每一项都会生成一张单独的图片。",
-      "preview_one": "预览 {{count}} 张图片",
-      "preview_other": "预览 {{count}} 张图片",
-      "title": "选择要分享的内容"
-    },
     "preview": {
-      "dark": "深色背景",
-      "light": "浅色背景",
       "position": "第 {{index}} 张，共 {{total}} 张",
       "title": "预览"
     }

@@ -2440,15 +2440,7 @@
       "privacyMine": "Dihitung di ponsel saya. Tidak ada yang keluar darinya.",
       "windowLine": "{{label}} · 30 hari terakhir"
     },
-    "choose": {
-      "help": "Setiap yang Anda pilih menjadi gambarnya sendiri.",
-      "preview_one": "Pratinjau {{count}} gambar",
-      "preview_other": "Pratinjau {{count}} gambar",
-      "title": "Pilih yang akan dibagikan"
-    },
     "preview": {
-      "dark": "Latar gelap",
-      "light": "Latar terang",
       "position": "{{index}} dari {{total}}",
       "title": "Pratinjau"
     }

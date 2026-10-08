@@ -2440,15 +2440,7 @@
       "privacyMine": "Contado no meu celular. Nada saiu daqui.",
       "windowLine": "{{label}} · últimos 30 dias"
     },
-    "choose": {
-      "help": "Cada um que você escolher vira uma imagem própria.",
-      "preview_one": "Pré-visualizar {{count}} imagem",
-      "preview_other": "Pré-visualizar {{count}} imagens",
-      "title": "Escolha o que compartilhar"
-    },
     "preview": {
-      "dark": "Fundo escuro",
-      "light": "Fundo claro",
       "position": "{{index}} de {{total}}",
       "title": "Pré-visualização"
     }

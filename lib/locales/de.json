@@ -2440,15 +2440,7 @@
       "privacyMine": "Auf meinem Telefon gezählt. Nichts hat es verlassen.",
       "windowLine": "{{label}} · letzte 30 Tage"
     },
-    "choose": {
-      "help": "Jede Auswahl wird zu einem eigenen Bild.",
-      "preview_one": "{{count}} Bild anzeigen",
-      "preview_other": "{{count}} Bilder anzeigen",
-      "title": "Auswählen, was geteilt werden soll"
-    },
     "preview": {
-      "dark": "Dunkler Hintergrund",
-      "light": "Heller Hintergrund",
       "position": "{{index}} von {{total}}",
       "title": "Vorschau"
     }

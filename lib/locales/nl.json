@@ -2440,15 +2440,7 @@
       "privacyMine": "Geteld op mijn telefoon. Niets heeft hem verlaten.",
       "windowLine": "{{label}} · afgelopen 30 dagen"
     },
-    "choose": {
-      "help": "Elke keuze wordt een eigen afbeelding.",
-      "preview_one": "Voorbeeld van {{count}} afbeelding",
-      "preview_other": "Voorbeeld van {{count}} afbeeldingen",
-      "title": "Kies wat je wilt delen"
-    },
     "preview": {
-      "dark": "Donkere achtergrond",
-      "light": "Lichte achtergrond",
       "position": "{{index}} van {{total}}",
       "title": "Voorbeeld"
     }

@@ -2446,15 +2446,7 @@
       "privacyMine": "Compté sur mon téléphone. Rien n'en est sorti.",
       "windowLine": "{{label}} · 30 derniers jours"
     },
-    "choose": {
-      "help": "Chaque élément choisi devient sa propre image.",
-      "preview_one": "Aperçu de {{count}} image",
-      "preview_other": "Aperçu de {{count}} images",
-      "title": "Choisissez ce que vous partagez"
-    },
     "preview": {
-      "dark": "Fond sombre",
-      "light": "Fond clair",
       "position": "{{index}} sur {{total}}",
       "title": "Aperçu"
     }

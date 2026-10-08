@@ -76,9 +76,8 @@ describe('no native import sits at module scope anywhere in the share path', () 
   // Every file in the share path, not a sample, DERIVED from the directories
   // rather than kept by hand: a hand list silently stops covering the feature
   // the moment someone adds a file. `share-stats/` is the feature; `library/`
-  // mounts it inside the Library tab, so it is reachable from every route that
-  // reaches the tab. The share route and the History page (which draws the
-  // Stats) are listed explicitly.
+  // mounts it (the Stats page shares in place) inside the Library tab, so it is
+  // reachable from every route that reaches the tab.
   const ROOT = path.join(__dirname, '..', '..', '..', '..');
   const sourcesIn = (dir: string): string[] => {
     const abs = path.join(ROOT, dir);
@@ -89,18 +88,17 @@ describe('no native import sits at module scope anywhere in the share path', () 
       .map((f) => `${dir}/${f}`);
   };
   const FILES = [
-    'app/logged-in/app_container/library/share-stats.tsx',
-    'components/custom/config-panel/VisitedPublicationsList.tsx',
     ...sourcesIn('components/custom/share-stats'),
     ...sourcesIn('components/custom/library'),
   ];
 
-  it('derives a non-empty list that includes the capture module and the share screen', () => {
+  it('derives a non-empty list that includes the capture module and the share modal', () => {
     // The one failure a derived list can have is coming back empty.
     expect(FILES).toEqual(
       expect.arrayContaining([
         'components/custom/share-stats/capture-and-share.ts',
-        'components/custom/share-stats/ShareStatsScreen.tsx',
+        'components/custom/share-stats/StatsShareModal.tsx',
+        'components/custom/library/StatsPage.tsx',
       ]),
     );
   });

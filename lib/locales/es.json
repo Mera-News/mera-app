@@ -2440,15 +2440,7 @@
       "privacyMine": "Contado en mi teléfono. Nada salió de él.",
       "windowLine": "{{label}} · últimos 30 días"
     },
-    "choose": {
-      "help": "Cada una que elijas se convierte en su propia imagen.",
-      "preview_one": "Vista previa de {{count}} imagen",
-      "preview_other": "Vista previa de {{count}} imágenes",
-      "title": "Elige qué compartir"
-    },
     "preview": {
-      "dark": "Fondo oscuro",
-      "light": "Fondo claro",
       "position": "{{index}} de {{total}}",
       "title": "Vista previa"
     }

@@ -1,6 +1,6 @@
 // The seven Stats figures (FinalLibrary #9, #11-13), ONE body per card id,
-// drawn three ways: a plain card on the History page, a pickable card on
-// Choose, and the shared image (inside CardShell) on Preview. One body is
+// drawn two ways: a card on the Stats page (pickable in select mode) and the
+// shared image (inside CardShell, alone or packed with others). One body is
 // what keeps the page and the image from ever disagreeing.
 //
 // Colour comes only from the palette in force (CardPaletteContext); sizes

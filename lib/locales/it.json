@@ -2440,15 +2440,7 @@
       "privacyMine": "Conteggiato sul mio telefono. Nulla ne è uscito.",
       "windowLine": "{{label}} · ultimi 30 giorni"
     },
-    "choose": {
-      "help": "Ognuno che scegli diventa un'immagine a sé.",
-      "preview_one": "Anteprima di {{count}} immagine",
-      "preview_other": "Anteprima di {{count}} immagini",
-      "title": "Scegli cosa condividere"
-    },
     "preview": {
-      "dark": "Sfondo scuro",
-      "light": "Sfondo chiaro",
       "position": "{{index}} di {{total}}",
       "title": "Anteprima"
     }

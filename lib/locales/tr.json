@@ -2442,15 +2442,7 @@
       "privacyMine": "Telefonumda sayıldı. Hiçbir şey dışarı çıkmadı.",
       "windowLine": "{{label}} · son 30 gün"
     },
-    "choose": {
-      "help": "Seçtiğiniz her biri kendi görseli olur.",
-      "preview_one": "{{count}} görseli önizle",
-      "preview_other": "{{count}} görseli önizle",
-      "title": "Ne paylaşılacağını seçin"
-    },
     "preview": {
-      "dark": "Koyu arka plan",
-      "light": "Açık arka plan",
       "position": "{{total}} içinde {{index}}",
       "title": "Önizleme"
     }

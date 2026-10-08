@@ -2476,17 +2476,7 @@
       "privacyMine": "Policzone na moim telefonie. Nic go nie opuściło.",
       "windowLine": "{{label}} · ostatnie 30 dni"
     },
-    "choose": {
-      "help": "Każdy wybrany staje się osobnym obrazem.",
-      "preview_one": "Podgląd: {{count}} obraz",
-      "preview_few": "Podgląd: {{count}} obrazy",
-      "preview_many": "Podgląd: {{count}} obrazów",
-      "preview_other": "Podgląd: {{count}} obrazów",
-      "title": "Wybierz, co udostępnić"
-    },
     "preview": {
-      "dark": "Ciemne tło",
-      "light": "Jasne tło",
       "position": "{{index}} z {{total}}",
       "title": "Podgląd"
     }

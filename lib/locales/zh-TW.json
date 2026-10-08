@@ -2441,15 +2441,7 @@
       "privacyMine": "在我的手機上計算。沒有任何資料離開。",
       "windowLine": "{{label}} · 過去 30 天"
     },
-    "choose": {
-      "help": "你選擇的每一項都會成為一張獨立的圖片。",
-      "preview_one": "預覽 {{count}} 張圖片",
-      "preview_other": "預覽 {{count}} 張圖片",
-      "title": "選擇要分享的內容"
-    },
     "preview": {
-      "dark": "深色背景",
-      "light": "淺色背景",
       "position": "第 {{index}} 項，共 {{total}} 項",
       "title": "預覽"
     }

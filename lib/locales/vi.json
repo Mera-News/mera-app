@@ -2441,15 +2441,7 @@
       "privacyMine": "Được đếm trên điện thoại của tôi. Không có gì rời khỏi máy.",
       "windowLine": "{{label}} · 30 ngày gần nhất"
     },
-    "choose": {
-      "help": "Mỗi mục bạn chọn sẽ thành một hình ảnh riêng.",
-      "preview_one": "Xem trước {{count}} hình ảnh",
-      "preview_other": "Xem trước {{count}} hình ảnh",
-      "title": "Chọn những gì để chia sẻ"
-    },
     "preview": {
-      "dark": "Nền tối",
-      "light": "Nền sáng",
       "position": "{{index}} trên {{total}}",
       "title": "Xem trước"
     }

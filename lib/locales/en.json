@@ -2440,15 +2440,7 @@
       "privacyMine": "Counted on my phone. Nothing left it.",
       "windowLine": "{{label}} · last 30 days"
     },
-    "choose": {
-      "help": "Each one you pick becomes its own image.",
-      "preview_one": "Preview {{count}} image",
-      "preview_other": "Preview {{count}} images",
-      "title": "Choose what to share"
-    },
     "preview": {
-      "dark": "Dark background",
-      "light": "Light background",
       "position": "{{index}} of {{total}}",
       "title": "Preview"
     }

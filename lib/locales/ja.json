@@ -2440,15 +2440,7 @@
       "privacyMine": "私の電話で集計しています。外に出るものは何もありません。",
       "windowLine": "{{label}} · 過去30日間"
     },
-    "choose": {
-      "help": "選んだものはそれぞれ、独立した画像になります。",
-      "preview_one": "{{count}}枚の画像をプレビュー",
-      "preview_other": "{{count}}枚の画像をプレビュー",
-      "title": "共有する内容を選ぶ"
-    },
     "preview": {
-      "dark": "ダーク背景",
-      "light": "ライト背景",
       "position": "{{index}} / {{total}}",
       "title": "プレビュー"
     }
