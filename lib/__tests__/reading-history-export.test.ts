@@ -8,6 +8,8 @@ import {
 } from '../reading-history-export';
 import type { VisitedArticle } from '../database/services/publication-visit-service';
 
+const NOTE = 'covers the last 30 days';
+
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 const NOW = 1700000000000;
@@ -90,7 +92,7 @@ describe('buildReadingHistoryExport', () => {
   const now = new Date(NOW);
 
   it('handles the empty-history path: zero articles, null date range, null average', () => {
-    const result = buildReadingHistoryExport([], { now });
+    const result = buildReadingHistoryExport([], { now, windowNote: NOTE });
 
     expect(result.totalArticles).toBe(0);
     expect(result.earliestVisit).toBeNull();
@@ -103,20 +105,20 @@ describe('buildReadingHistoryExport', () => {
   });
 
   it('always reports the 30-day hard ceiling regardless of what data is passed in', () => {
-    const result = buildReadingHistoryExport([makeVisit()], { now });
+    const result = buildReadingHistoryExport([makeVisit()], { now, windowNote: NOTE });
     expect(result.windowDays).toBe(READING_HISTORY_WINDOW_DAYS);
     expect(result.windowDays).toBe(30);
-    expect(result.windowNote).toMatch(/30 days/);
+    expect(result.windowNote).toBe(NOTE);
   });
 
   it('stamps exportedAt from the injected clock', () => {
-    const result = buildReadingHistoryExport([], { now });
+    const result = buildReadingHistoryExport([], { now, windowNote: NOTE });
     expect(result.exportedAt).toBe(now.toISOString());
   });
 
   it('defaults exportedAt to the real clock when no `now` is injected', () => {
     const before = Date.now();
-    const result = buildReadingHistoryExport([]);
+    const result = buildReadingHistoryExport([], { windowNote: NOTE });
     const after = Date.now();
     const stamped = new Date(result.exportedAt).getTime();
     expect(stamped).toBeGreaterThanOrEqual(before);
@@ -128,7 +130,7 @@ describe('buildReadingHistoryExport', () => {
     const newer = makeVisit({ articleId: 'a2', visitedAt: NOW, pubDate: NOW - HOUR });
     const middle = makeVisit({ articleId: 'a3', visitedAt: NOW - DAY, pubDate: null });
 
-    const result = buildReadingHistoryExport([older, newer, middle], { now });
+    const result = buildReadingHistoryExport([older, newer, middle], { now, windowNote: NOTE });
 
     expect(result.articles.map((a) => a.readAt)).toEqual([
       new Date(NOW).toISOString(),
@@ -141,14 +143,14 @@ describe('buildReadingHistoryExport', () => {
 
   it('maps publishedAt/publishToReadHours to null for rows with an unknown pubDate', () => {
     const visit = makeVisit({ pubDate: null });
-    const result = buildReadingHistoryExport([visit], { now });
+    const result = buildReadingHistoryExport([visit], { now, windowNote: NOTE });
     expect(result.articles[0].publishedAt).toBeNull();
     expect(result.articles[0].publishToReadHours).toBeNull();
   });
 
   it('computes publishToReadHours per article when pubDate is known', () => {
     const visit = makeVisit({ pubDate: NOW - 3 * HOUR, visitedAt: NOW });
-    const result = buildReadingHistoryExport([visit], { now });
+    const result = buildReadingHistoryExport([visit], { now, windowNote: NOTE });
     expect(result.articles[0].publishToReadHours).toBe(3);
     expect(result.articles[0].publishedAt).toBe(new Date(NOW - 3 * HOUR).toISOString());
   });
@@ -159,7 +161,7 @@ describe('buildReadingHistoryExport', () => {
       makeVisit({ articleId: 'a2', publicationName: 'BBC', countryCode: 'GB', languageCode: 'en' }),
       makeVisit({ articleId: 'a3', publicationName: 'Le Monde', countryCode: 'FR', languageCode: 'fr' }),
     ];
-    const result = buildReadingHistoryExport(visits, { now });
+    const result = buildReadingHistoryExport(visits, { now, windowNote: NOTE });
 
     expect(result.byPublication[0]).toEqual({ publicationName: 'BBC', countryCode: 'GB', count: 2 });
     expect(result.byPublication[1]).toEqual({ publicationName: 'Le Monde', countryCode: 'FR', count: 1 });
@@ -173,7 +175,7 @@ describe('buildReadingHistoryExport', () => {
 
   it('omits null countryCode/languageCode rows from their respective breakdowns', () => {
     const visits = [makeVisit({ countryCode: null, languageCode: null })];
-    const result = buildReadingHistoryExport(visits, { now });
+    const result = buildReadingHistoryExport(visits, { now, windowNote: NOTE });
     expect(result.byCountry).toEqual([]);
     expect(result.byLanguage).toEqual([]);
     // The publication itself is still counted even with a null country.
@@ -185,7 +187,7 @@ describe('buildReadingHistoryExport', () => {
       makeVisit({ articleId: 'a1', pubDate: NOW - 4 * HOUR, visitedAt: NOW }),
       makeVisit({ articleId: 'a2', pubDate: null }),
     ];
-    const result = buildReadingHistoryExport(visits, { now });
+    const result = buildReadingHistoryExport(visits, { now, windowNote: NOTE });
     expect(result.publishToReadStats).toEqual({ averageHours: 4, medianHours: 4, sampledArticles: 1, totalArticles: 2 });
   });
 });

@@ -530,7 +530,8 @@ async function applyIncoherentTopicsProposal(
         actionType: ACTION_NAMES.RETIRE_TOPIC,
         action: { targetId: topicId },
         source: 'digest',
-        summary: proposal.summary,
+        // Not shown: the audit screen renders the row from its action type.
+        summary: proposal.kind,
       })
       .catch(() => {
         /* audit only — never fails the applied change */
@@ -582,12 +583,15 @@ export async function acceptProposal(id: string): Promise<AcceptResult> {
       if (op.type === 'generate_replacements') {
         continue; // already handled in phase 1
       } else if (op.type === 'delete_fact') {
+        // Read the statement first, like the executor's DISCARD_FACT: the
+        // fact is gone after this, and the audit row names it from the log.
+        const statement = (await getFacts()).find((f) => f.id === op.factId)?.statement;
         await deleteFact(op.factId);
         await changeLogService.append({
           actionType: ACTION_NAMES.HYGIENE_DELETE_FACT,
-          action: { targetId: op.factId },
+          action: { targetId: op.factId, ...(statement ? { statement } : {}) },
           source: 'digest',
-          summary: proposal.summary,
+          summary: proposal.kind,
         });
       } else {
         // Structurally compatible with the executor's PersonaAction.

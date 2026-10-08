@@ -228,20 +228,23 @@ describe('acceptProposal', () => {
     const proposal = {
       id: 'stale_fact:fx',
       kind: 'stale_fact',
-      summary: 'Removed defunct fact',
+      subject: { facts: ['Likes chess'], topics: [] },
       targetFactIds: ['fx'],
       targetTopicIds: [],
       ops: [{ type: 'delete_fact', factId: 'fx' }],
       invertible: false,
     };
     mockKv.set('hygiene_pending_proposals', JSON.stringify([proposal]));
+    (factService.getFacts as jest.Mock).mockResolvedValue([{ id: 'fx', statement: 'Likes chess' }]);
 
     const res = await acceptProposal('stale_fact:fx');
     expect(res.applied).toBe(true);
     expect(factService.deleteFact).toHaveBeenCalledWith('fx');
+    // The statement is logged before the delete: the audit row names it from the log.
     expect(changeLog.append).toHaveBeenCalledWith(
       expect.objectContaining({
         actionType: ACTION_NAMES.HYGIENE_DELETE_FACT,
+        action: { targetId: 'fx', statement: 'Likes chess' },
         source: 'digest',
       }),
     );

@@ -51,7 +51,7 @@ jest.mock('../../../stores/mera-protocol-store', () => ({
   useMeraProtocolStore: { getState: () => mockState },
 }));
 
-import { cancelModelDownload, isDownloadInProgress, startModelDownload } from '../downloadService';
+import { cancelModelDownload, downloadFailureBody, isDownloadInProgress, startModelDownload } from '../downloadService';
 import { activeHolds } from '../../../app-restart';
 
 const flush = () => new Promise((r) => setImmediate(r));
@@ -137,5 +137,13 @@ describe('downloadService cancel', () => {
     resolveDownload();
     await flush();
     expect(mockState.modelState).toBe('downloaded');
+  });
+});
+
+describe('downloadFailureBody', () => {
+  it('maps the developer error to a reader key, never the raw message', () => {
+    expect(downloadFailureBody('Download failed with HTTP status 503')).toBe('download.failedServer');
+    expect(downloadFailureBody('Checksum mismatch: expected a, got b')).toBe('download.failedDamaged');
+    expect(downloadFailureBody('Network request failed')).toBe('download.failedConnection');
   });
 });

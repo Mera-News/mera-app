@@ -14,6 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 import {
@@ -26,14 +27,14 @@ import {
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
-/** "now" / "5m" / "2h" / "3d", as the board draws it. */
-function relativeTime(date: Date): string {
+/** "now" / "5m" / "2h" / "3d", as the board draws it, in the app language. */
+function relativeTime(t: TFunction<'translation'>, date: Date): string {
     const mins = Math.floor((Date.now() - date.getTime()) / 60_000);
-    if (mins < 1) return 'now';
-    if (mins < 60) return `${mins}m`;
+    if (mins < 1) return t('notificationCenter.ageNow');
+    if (mins < 60) return t('notificationCenter.ageMinutes', { n: mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
-    return `${Math.floor(hours / 24)}d`;
+    if (hours < 24) return t('notificationCenter.ageHours', { n: hours });
+    return t('notificationCenter.ageDays', { n: Math.floor(hours / 24) });
 }
 
 interface NotificationsScreenProps {
@@ -115,7 +116,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
             // never through t(), whose separators would mangle a question.
             const body = n.type === FEEDBACK_REQUEST ? n.body : resolveText(n.body, params);
             const title = resolveText(n.title, params).trim() || (body ?? '').split('\n')[0].trim();
-            const age = relativeTime(n.createdAt);
+            const age = relativeTime(t, n.createdAt);
             const unread = n.status === 'unread';
             const first = index === 0;
             const last = index === items.length - 1;

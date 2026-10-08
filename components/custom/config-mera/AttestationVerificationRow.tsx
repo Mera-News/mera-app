@@ -181,7 +181,7 @@ export function AttestationVerificationRow() {
                     <Text className="text-ink-2 text-sm flex-1">
                       {t(CHECK_LABEL_KEYS[id])}
                       {check.status === 'not-checked'
-                        ? ` — ${t('meraProtocol.attestationNotCheckedLabel')}`
+                        ? ` · ${t('meraProtocol.attestationNotCheckedLabel')}`
                         : ''}
                     </Text>
                   </HStack>

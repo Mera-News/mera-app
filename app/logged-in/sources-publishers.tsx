@@ -5,6 +5,7 @@ import SourcesL2PublisherList from '@/components/custom/config-panel/SourcesL2Pu
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,6 +14,7 @@ export default function SourcesPublishers() {
         countryCode: string;
         countryName: string;
     }>();
+    const { t } = useTranslation();
 
     // A missing param means a malformed deep link, often with no history to go
     // back to. Navigating during render is a side effect in render; a
@@ -34,7 +36,7 @@ export default function SourcesPublishers() {
                     <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                         <SourcesL2PublisherList
                             countryCode={params.countryCode}
-                            countryName={params.countryName ?? 'Publishers'}
+                            countryName={params.countryName ?? t('sources.publishers')}
                             onBack={() => router.back()}
                         />
                     </ErrorBoundary>

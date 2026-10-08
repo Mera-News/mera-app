@@ -133,12 +133,20 @@ export type HygieneOp =
   // is never retired unless its replacement is already committed.
   | { type: 'generate_replacements'; factId: string; fillTo: number };
 
+export interface HygieneSubject {
+  facts: string[];
+  topics: string[];
+}
+
 export interface HygieneProposal {
   /** Stable fingerprint (kind + sorted target ids). Dedup + rejected-memory key. */
   id: string;
   kind: HygieneProposalKind;
-  /** Human summary (English; the UI may translate it). */
-  summary: string;
+  /** What the card names: shortened fact statements and topic texts. The UI
+   *  words it per `kind` (hygiene.summary.*), in the app language; this pure
+   *  module never builds copy. Facts are ordered as the kind reads them
+   *  (the duplicate before the one it repeats, the older place first). */
+  subject: HygieneSubject;
   targetFactIds: string[];
   targetTopicIds: string[];
   /** Ops an accept applies, in order. */
@@ -214,7 +222,7 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     proposals.push({
       id,
       kind: 'duplicate_facts',
-      summary: p.summary,
+      subject: { facts: [p.deleteStatement, p.keepStatement].map((x) => shorten(x)), topics: [] },
       targetFactIds: [loser, other].sort(),
       targetTopicIds: [],
       ops: [{ type: 'delete_fact', factId: loser }],
@@ -231,7 +239,7 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     proposals.push({
       id,
       kind: 'location_conflict',
-      summary: `"${shorten(p.olderStatement)}" and "${shorten(p.newerStatement)}" name different places. Keep the newer one?`,
+      subject: { facts: [shorten(p.olderStatement), shorten(p.newerStatement)], topics: [] },
       targetFactIds: [p.olderFactId, p.newerFactId].sort(),
       targetTopicIds: [],
       ops: [{ type: 'delete_fact', factId: p.olderFactId }],
@@ -252,7 +260,7 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     proposals.push({
       id,
       kind: 'stale_fact',
-      summary: `"${shorten(f.statement)}" has no active topics left. Remove it?`,
+      subject: { facts: [shorten(f.statement)], topics: [] },
       targetFactIds: [f.id],
       targetTopicIds: [],
       ops: [{ type: 'delete_fact', factId: f.id }],
@@ -272,13 +280,10 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     if (!tooBroad && !tooGeneric) continue;
     const id = `too_broad_fact:${f.id}`;
     if (rejected.has(id)) continue;
-    const reason = tooBroad
-      ? `spans ${fanout} active topics`
-      : `is very broad ("${shorten(f.statement)}")`;
     proposals.push({
       id,
       kind: 'too_broad_fact',
-      summary: `"${shorten(f.statement)}" ${reason}. Lower its weight so it pulls fewer off-topic stories?`,
+      subject: { facts: [shorten(f.statement)], topics: [] },
       targetFactIds: [f.id],
       targetTopicIds: [],
       ops: [
@@ -307,7 +312,7 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     proposals.push({
       id,
       kind: 'stale_topic',
-      summary: `Topic "${shorten(t.text)}" has been quiet for weeks. Retire it?`,
+      subject: { facts: [], topics: [shorten(t.text)] },
       targetFactIds: t.factId ? [t.factId] : [],
       targetTopicIds: [t.id],
       ops: [
@@ -347,20 +352,12 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     const textById = new Map(
       (activeTopicsByFact.get(inc.factId) ?? []).map((t) => [t.id, t.text]),
     );
-    const preview = topicIds
-      .slice(0, 3)
-      .map((tid) => `"${shorten(textById.get(tid) ?? '', 32)}"`)
-      .join(', ');
-    const more = topicIds.length > 3 ? ` and ${topicIds.length - 3} more` : '';
+    const topicTexts = topicIds.map((tid) => shorten(textById.get(tid) ?? '', 32)).filter(Boolean);
 
     proposals.push({
       id,
       kind: 'incoherent_topics',
-      summary:
-        (topicIds.length === 1
-          ? `1 topic under "${shorten(fact.statement)}" doesn't match it`
-          : `${topicIds.length} topics under "${shorten(fact.statement)}" don't match it`) +
-        ` (${preview}${more}). Replace ${topicIds.length === 1 ? 'it' : 'them'} with better ones?`,
+      subject: { facts: [shorten(fact.statement)], topics: topicTexts },
       targetFactIds: [inc.factId],
       targetTopicIds: [...topicIds].sort(),
       // generate_replacements FIRST, then the retires. The executor holds both
@@ -399,7 +396,8 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
 interface DuplicatePair {
   keepFactId: string;
   deleteFactId: string;
-  summary: string;
+  keepStatement: string;
+  deleteStatement: string;
 }
 
 /**
@@ -416,7 +414,7 @@ function detectDuplicateFacts(
   th: HygieneThresholds,
 ): DuplicatePair[] {
   const factById = new Map(facts.map((f) => [f.id, f]));
-  const flagged = new Map<string, { a: string; b: string; reason: string }>();
+  const flagged = new Map<string, { a: string; b: string }>();
 
   // (a) statement near-dupes — O(facts²) over a small pool.
   const tokenSets = facts.map((f) => ({ id: f.id, set: new Set(tokenize(f.statement)) }));
@@ -426,7 +424,7 @@ function detectDuplicateFacts(
       if (sim >= th.duplicateStatementJaccard) {
         const key = pairKey(tokenSets[i].id, tokenSets[j].id);
         if (!flagged.has(key)) {
-          flagged.set(key, { a: tokenSets[i].id, b: tokenSets[j].id, reason: 'similar wording' });
+          flagged.set(key, { a: tokenSets[i].id, b: tokenSets[j].id });
         }
       }
     }
@@ -450,11 +448,11 @@ function detectDuplicateFacts(
     if (count < th.duplicateSharedTopicTexts) continue;
     if (flagged.has(key)) continue; // statement dupe already covers this pair
     const [a, b] = key.split('|');
-    flagged.set(key, { a, b, reason: `${count} shared topics` });
+    flagged.set(key, { a, b });
   }
 
   const out: DuplicatePair[] = [];
-  for (const { a, b, reason } of flagged.values()) {
+  for (const { a, b } of flagged.values()) {
     const fa = factById.get(a);
     const fb = factById.get(b);
     if (!fa || !fb) continue;
@@ -470,7 +468,8 @@ function detectDuplicateFacts(
     out.push({
       keepFactId: keep.id,
       deleteFactId: del.id,
-      summary: `"${shorten(del.statement)}" duplicates "${shorten(keep.statement)}" (${reason}). Remove the duplicate?`,
+      keepStatement: keep.statement,
+      deleteStatement: del.statement,
     });
   }
   // Deterministic order by delete-target id.

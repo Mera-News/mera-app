@@ -293,32 +293,17 @@ describe('incoherent_topics', () => {
     expect(out[0].targetFactIds).toEqual(['f1']);
   });
 
-  it('names the fact and previews the topics in the summary', () => {
-    const [p] = run({
-      facts: [cricket],
-      topics: [good, bad1],
-      incoherentFacts: incoherent(['t-bad1']),
-    }).filter((x) => x.kind === 'incoherent_topics');
-
-    expect(p.summary).toContain('Follows the Indian national cricket team');
-    // Topic previews are truncated for the card, so match the visible prefix.
-    expect(p.summary).toContain('Amsterdam cricket festival musi');
-    // Singular reads correctly — "1 topic ... doesn't match it".
-    expect(p.summary).toContain("1 topic");
-    expect(p.summary).toContain("doesn't match it");
-    expect(p.summary).not.toContain("don't match it");
-  });
-
-  it('pluralises correctly for multiple topics', () => {
+  it('names the fact and the mismatched topics in the subject, not in copy', () => {
     const [p] = run({
       facts: [cricket],
       topics: [good, bad1, bad2],
       incoherentFacts: incoherent(['t-bad1', 't-bad2']),
     }).filter((x) => x.kind === 'incoherent_topics');
 
-    expect(p.summary).toContain('2 topics');
-    expect(p.summary).toContain("don't match it");
-    expect(p.summary).toContain('Replace them');
+    expect(p.subject.facts).toEqual(['Follows the Indian national cricket team']);
+    expect(p.subject.topics).toHaveLength(2);
+    // Topic texts are shortened for the card, so match the visible prefix.
+    expect(p.subject.topics[0]).toMatch(/^Amsterdam cricket festival musi/);
   });
 
   it('orders generate_replacements FIRST, then the retires', () => {
@@ -465,8 +450,8 @@ describe('incoherent_topics never touches the user\'s own downrank', () => {
   });
 });
 
-describe('hygiene summaries are dash-free user copy', () => {
-  it('no summary carries an em dash', () => {
+describe('hygiene subjects', () => {
+  it('every proposal names what its card is about', () => {
     const facts = [
       fact('d1', 'Follows German housing market news'),
       fact('d2', 'Follows German housing market news closely'),
@@ -481,6 +466,6 @@ describe('hygiene summaries are dash-free user copy', () => {
     ];
     const out = run({ facts, topics });
     expect(out.length).toBeGreaterThan(2);
-    for (const p of out) expect(p.summary).not.toMatch(/[\u2014\u2013]/);
+    for (const p of out) expect(p.subject.facts.length + p.subject.topics.length).toBeGreaterThan(0);
   });
 });

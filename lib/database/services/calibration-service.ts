@@ -230,7 +230,9 @@ export async function runCalibration(): Promise<CalibrationOutcome> {
       actionType: 'set_scoring_override',
       action: { before: prevOverrides, after: nextOverrides, delta: undefined },
       source: 'user',
-      summary: `Recalibrated scoring engine (${Object.keys(clamped).length} constants tuned)`,
+      // Not shown: the audit screen renders the row from its action type
+      // (persona-audit/change-summary.ts), in the app language.
+      summary: `set_scoring_override (${Object.keys(clamped).length} constants)`,
     });
     changeLogId = row.id;
   } catch (err) {

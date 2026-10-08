@@ -42,7 +42,7 @@ import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import { buildFactRows, isSuggestionOpened, type FactRowGroup } from '@/lib/stores/fact-rows-selector';
+import { buildFactRows, isSuggestionOpened, sectionKindOf, type FactRowGroup } from '@/lib/stores/fact-rows-selector';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
@@ -632,7 +632,9 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 <Row
                     testID="fact-next-interest"
                     title={sectionTitle(t, nextFact)}
-                    translatable
+                    // A headline section's title is app copy, already in the app
+                    // language; only a fact statement is data for the translator.
+                    translatable={sectionKindOf(nextFact) === 'fact'}
                     subtitle={t('facts.page.nextInterest')}
                     onPress={() =>
                         router.replace({

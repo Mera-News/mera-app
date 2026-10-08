@@ -879,7 +879,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                 className="w-full"
                             >
                                 <ButtonText>
-                                    {isDeletingModel ? 'Deleting...' : t('meraProtocol.deleteButton')}
+                                    {isDeletingModel ? t('meraProtocol.deleting') : t('meraProtocol.deleteButton')}
                                 </ButtonText>
                             </Button>
                             <Button

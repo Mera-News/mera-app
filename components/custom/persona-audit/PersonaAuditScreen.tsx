@@ -1,22 +1,23 @@
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
-import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Group, GroupLabel } from '@/components/custom/you/rows';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import type PersonaChangeLogModel from '@/lib/database/models/PersonaChangeLog';
-import { observeRecent, revertChange } from '@/lib/database/services/persona-change-log-service';
+import { getChangeTargets, observeRecent, revertChange, type ChangeTarget } from '@/lib/database/services/persona-change-log-service';
+import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
+import { usePublicationDisplayStore } from '@/lib/stores/publication-display-store';
 import { showDialog } from '@/lib/dialog';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { useColors } from '@/lib/theme/tokens';
 import { toastManager } from '@/lib/toast-manager';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
-import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, View } from 'react-native';
-import { actionDisplay, isRevertible, sourceLabelKey } from './action-display';
+import { isRevertible, sourceLabelKey } from './action-display';
+import { changeSummary, type ChangeContext } from './change-summary';
 import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
 
 interface PersonaAuditScreenProps {
@@ -52,6 +53,8 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
     const [rows, setRows] = useState<PersonaChangeLogModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [revertingId, setRevertingId] = useState<string | null>(null);
+    const [targets, setTargets] = useState<ReadonlyMap<string, ChangeTarget>>(new Map());
+    const displayNames = usePublicationDisplayStore((s) => s.names);
 
     // Reactive newest-first log. revertChange flips `reverted` and appends a
     // `revert_change` row, both of which arrive through this same subscription.
@@ -62,6 +65,39 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
         });
         return () => sub.unsubscribe();
     }, []);
+
+    // What the rows' target ids name (topics, facts, filters, places), re-read
+    // whenever the list changes. Publication rows key by name instead: ask the
+    // display store for each, so they read in the app language.
+    useEffect(() => {
+        let live = true;
+        const ids: string[] = [];
+        for (const row of rows) {
+            try {
+                const id = (JSON.parse(row.actionJson) as { targetId?: unknown }).targetId;
+                if (typeof id !== 'string' || !id) continue;
+                if (row.actionType === ACTION_NAMES.SET_PUBLICATION_PREF) usePublicationDisplayStore.getState().request(id);
+                else ids.push(id);
+            } catch {
+                // A row with unreadable JSON renders as its action label.
+            }
+        }
+        getChangeTargets(ids)
+            .then((next) => live && setTargets(next))
+            .catch((error) => logger.captureException(error, { tags: { component: 'PersonaAuditScreen', method: 'getChangeTargets' } }));
+        return () => {
+            live = false;
+        };
+    }, [rows]);
+
+    const ctx: ChangeContext = useMemo(
+        () => ({
+            targets,
+            publication: (name) => displayNames[name] ?? name,
+            rowsById: new Map(rows.map((r) => [r.id, r])),
+        }),
+        [targets, displayNames, rows],
+    );
 
     const days: Day[] = useMemo(() => {
         const out: Day[] = [];
@@ -78,7 +114,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
         async (row: PersonaChangeLogModel) => {
             const ok = await showDialog({
                 title: t('personaAudit.revertConfirmTitle'),
-                body: row.summary ? `${t('personaAudit.revertConfirmBody')}\n\n${row.summary}` : t('personaAudit.revertConfirmBody'),
+                body: `${t('personaAudit.revertConfirmBody')}\n\n${changeSummary(t, row, ctx)}`,
                 confirmLabel: t('personaAudit.revertConfirmCta'),
                 cancelLabel: t('common.cancel'),
             });
@@ -100,7 +136,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                 setRevertingId(null);
             }
         },
-        [t],
+        [t, ctx],
     );
 
     const renderRow = (row: PersonaChangeLogModel) => {
@@ -117,12 +153,13 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 16 }}
             >
                 <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                    <TranslatableDynamic
-                        text={row.summary || t(`personaAudit.actionLabels.${actionDisplay(row.actionType).labelKey}` as never)}
+                    <Text
                         size="md"
                         style={{ color: reverted ? colors.ink3 : colors.ink, textDecorationLine: reverted ? 'line-through' : 'none' }}
                         numberOfLines={3}
-                    />
+                    >
+                        {changeSummary(t, row, ctx)}
+                    </Text>
                     <Text style={{ color: colors.ink2, fontSize: 13 }}>{meta}</Text>
                 </View>
                 {canUndo ? (
@@ -164,11 +201,6 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                 </Text>
             ) : (
                 <FlatList
-                    // Rows below the first screen ask for their translation only
-                    // when a scroll tick finds them on screen (lib/visibility-tick).
-                    onScroll={notifyScrollTick}
-                    scrollEventThrottle={16}
-                    onContentSizeChange={notifyScrollTick}
                     data={days}
                     keyExtractor={(day) => day.label}
                     renderItem={renderDay}

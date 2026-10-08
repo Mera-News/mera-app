@@ -14,6 +14,9 @@ import database from '../index';
 import type PersonaChangeLogModel from '../models/PersonaChangeLog';
 import type { PersonaChangeLogSource } from '../models/PersonaChangeLog';
 import type FactModel from '../models/Fact';
+import type LocationModel from '../models/Location';
+import type PersonaSuppressionModel from '../models/PersonaSuppression';
+import type TopicModel from '../models/Topic';
 import * as topicService from './topic-service';
 import * as locationService from './location-service';
 import * as suppressionService from './suppression-service';
@@ -86,6 +89,33 @@ export function observeRecent(limit = 100) {
   return changeLogCollection
     .query(Q.sortBy('created_at', Q.desc), Q.take(limit))
     .observe();
+}
+
+/** What a change-log `targetId` names: a topic, fact or filter by its text, a place by city + country. */
+export type ChangeTarget = { readonly text: string } | { readonly city: string | null; readonly countryCode: string };
+
+/**
+ * Names for the ids the audit rows point at, in one read per table. Most rows
+ * store only `targetId`; the audit screen renders "Removed {{name}}" from this.
+ * Retired topics and filters keep their rows, so they still resolve; a deleted
+ * fact or place does not, and its row falls back to the action label.
+ */
+export async function getChangeTargets(ids: readonly string[]): Promise<Map<string, ChangeTarget>> {
+  const out = new Map<string, ChangeTarget>();
+  const unique = [...new Set(ids)].filter(Boolean);
+  if (unique.length === 0) return out;
+  const where = Q.where('id', Q.oneOf(unique));
+  const [topics, facts, filters, places] = await Promise.all([
+    database.get<TopicModel>('topics').query(where).fetch(),
+    factsCollection.query(where).fetch(),
+    database.get<PersonaSuppressionModel>('persona_suppressions').query(where).fetch(),
+    database.get<LocationModel>('locations').query(where).fetch(),
+  ]);
+  for (const r of topics) out.set(r.id, { text: r.text });
+  for (const r of facts) out.set(r.id, { text: r.statement });
+  for (const r of filters) out.set(r.id, { text: r.pattern });
+  for (const r of places) out.set(r.id, { city: r.city, countryCode: r.countryCode });
+  return out;
 }
 
 export async function getRecent(limit = 100): Promise<PersonaChangeLogModel[]> {

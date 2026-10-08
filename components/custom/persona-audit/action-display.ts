@@ -54,6 +54,10 @@ const ACTION_DISPLAY: Record<string, ActionDisplay> = {
     [ACTION_NAMES.ADD_LOCATION]: { icon: 'add-location-alt', labelKey: 'addLocation' },
     [ACTION_NAMES.DELETE_LOCATION]: { icon: 'wrong-location', labelKey: 'deleteLocation' },
     [ACTION_NAMES.REVERT_CHANGE]: { icon: 'undo', labelKey: 'revertChange' },
+    // Written outside ACTION_NAMES: the v3 persona migration and calibration.
+    // Neither has an inverse in persona-change-log-service, so both are deny-listed below.
+    migrate_fact: { icon: 'history', labelKey: 'migrateFact' },
+    set_scoring_override: { icon: 'tune', labelKey: 'setScoringOverride' },
 };
 
 const FALLBACK: ActionDisplay = { icon: 'history', labelKey: 'unknown' };
@@ -81,7 +85,9 @@ export function isRevertible(actionType: string): boolean {
         actionType !== ACTION_NAMES.HYGIENE_DELETE_FACT &&
         actionType !== ACTION_NAMES.DISCARD_FACT &&
         actionType !== ACTION_NAMES.ADD_LOCATION &&
-        actionType !== ACTION_NAMES.DELETE_LOCATION
+        actionType !== ACTION_NAMES.DELETE_LOCATION &&
+        actionType !== 'migrate_fact' &&
+        actionType !== 'set_scoring_override'
     );
 }
 

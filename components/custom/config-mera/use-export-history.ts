@@ -4,7 +4,7 @@
 // Your data and by Observability.
 import { getAllVisitedArticles } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
-import { buildReadingHistoryExport } from '@/lib/reading-history-export';
+import { buildReadingHistoryExport, READING_HISTORY_WINDOW_DAYS } from '@/lib/reading-history-export';
 import { toastManager } from '@/lib/toast-manager';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +23,9 @@ export function useExportHistory(screen: string): { readonly exporting: boolean;
                 return;
             }
             await Share.share(
-                { message: JSON.stringify(buildReadingHistoryExport(visits), null, 2) },
+                { message: JSON.stringify(buildReadingHistoryExport(visits, {
+                    windowNote: t('manageData.exportHistoryWindowNote', { count: READING_HISTORY_WINDOW_DAYS }),
+                }), null, 2) },
                 { subject: t('manageData.exportHistorySubject') },
             );
         } catch (error) {

@@ -3,7 +3,8 @@ import { Box } from '@/components/ui/box';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import LanguageDownloadNotice, { useLanguageDownloadNotice } from '@/components/custom/auth/LanguageDownloadNotice';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
-import { getLanguageName, getNativeLanguageName } from '@/lib/translation-service';
+import { getNativeLanguageName } from '@/lib/translation-service';
+import { getLocalizedLanguageName } from '@/lib/language-names';
 import { toastManager } from '@/lib/toast-manager';
 import { requestRestart } from '@/lib/app-restart';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -55,18 +56,15 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
     // being fixed here.
     const handleResult = useCallback(
         ({ code, outcome, fellBackToEnglish }: LanguageSwitchResult) => {
-            // ENGLISH names here, not endonyms — these strings are prose in the
-            // reader's CURRENT language, explaining that the switch did not
-            // happen. `getNativeLanguageName` gave "Couldn't switch to العربية",
-            // which drops RTL script into the middle of an LTR sentence, and
-            // names the language in a script the reader may not read (the exact
-            // reasoning ArticleMetaRow already follows). The spinner TITLE keeps
-            // the endonym on purpose: there it is a label for what you are
-            // getting, not a word inside a sentence.
-            const language = getLanguageName(code) ?? code;
-            const current = getLanguageName(
-                useAppLanguageStore.getState().appLanguage,
-            ) ?? 'English';
+            // Names in the reader's CURRENT language, not endonyms: these strings
+            // are prose explaining that the switch did not happen.
+            // `getNativeLanguageName` gave "Couldn't switch to العربية", which
+            // drops RTL script into an LTR sentence in a script the reader may
+            // not read (the reasoning ArticleMetaRow follows). The spinner TITLE
+            // keeps the endonym on purpose: there it labels what you are getting.
+            const appLanguage = useAppLanguageStore.getState().appLanguage;
+            const language = getLocalizedLanguageName(code, appLanguage) ?? code;
+            const current = getLocalizedLanguageName(appLanguage, appLanguage) ?? 'English';
             // Read AFTER the hook applied it, so `current` is already English
             // here — the body names the landing spot rather than re-deriving it.
             if (fellBackToEnglish) {

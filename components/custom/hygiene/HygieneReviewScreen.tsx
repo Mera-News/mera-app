@@ -1,5 +1,4 @@
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
-import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { sentenceCase } from '@/components/custom/facts/sentence-case';
 import { Group, Row } from '@/components/custom/you/rows';
 import { useActiveTopicTexts, useHubFacts } from '@/components/custom/you/use-hub-data';
@@ -78,6 +77,37 @@ function effectPreview(kind: HygieneProposalKind, t: TFunction): string {
             return t('hygiene.effectLocationConflict');
         default:
             return '';
+    }
+}
+
+/**
+ * The suggestion in one line, for a card with no fact rows to show (topic
+ * kinds, or facts deleted since the sweep). Null for a proposal saved before
+ * `subject` existed: the title and effect line still say what it is.
+ */
+function summaryFor(item: HygieneProposal, t: TFunction): string | null {
+    const subject = item.subject as HygieneProposal['subject'] | undefined;
+    if (!subject) return null;
+    const [fact = '', other = ''] = subject.facts;
+    switch (item.kind) {
+        case 'duplicate_facts':
+            return t('hygiene.summary.duplicate', { fact, other });
+        case 'location_conflict':
+            return t('hygiene.summary.locationConflict', { fact, other });
+        case 'stale_fact':
+            return t('hygiene.summary.staleFact', { fact });
+        case 'too_broad_fact':
+            return t('hygiene.summary.tooBroad', { fact });
+        case 'stale_topic':
+            return t('hygiene.summary.staleTopic', { topic: subject.topics[0] ?? '' });
+        case 'incoherent_topics':
+            return t('hygiene.summary.incoherentTopics', {
+                count: subject.topics.length,
+                fact,
+                topics: subject.topics.join(', '),
+            });
+        default:
+            return null;
     }
 }
 
@@ -225,6 +255,7 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
             const inFlight = actingId === item.id;
             const duplicate = item.kind === 'duplicate_facts';
             const factRows = orderedFacts(item, factsById);
+            const summary = factRows.length > 0 ? null : summaryFor(item, t);
             return (
                 <View testID={`hygiene-card-${item.id}`} style={{ marginHorizontal: 14, marginBottom: 12, gap: 10 }}>
                     <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '700', marginHorizontal: 4 }}>
@@ -236,10 +267,12 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                                 <FactLine key={fact.id} fact={fact} />
                             ))}
                         </Group>
-                    ) : (
-                        // Topic kinds name their topics in the summary (fact-hygiene.ts).
-                        <TranslatableDynamic text={item.summary} size="md" style={{ color: colors.ink, marginHorizontal: 4 }} numberOfLines={4} />
-                    )}
+                    ) : summary ? (
+                        // Topic kinds name their topics here (fact-hygiene.ts `subject`).
+                        <Text size="md" style={{ color: colors.ink, marginHorizontal: 4 }} numberOfLines={4}>
+                            {summary}
+                        </Text>
+                    ) : null}
                     <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, marginHorizontal: 4 }}>
                         {effectPreview(item.kind, t)}
                     </Text>
@@ -278,8 +311,8 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                 </View>
             ) : (
                 <FlatList
-                    // Rows below the first screen ask for their translation only
-                    // when a scroll tick finds them on screen (lib/visibility-tick).
+                    // FactLine rows ask for their translation only when a scroll
+                    // tick finds them on screen (lib/visibility-tick).
                     onScroll={notifyScrollTick}
                     scrollEventThrottle={16}
                     onContentSizeChange={notifyScrollTick}

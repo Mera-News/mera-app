@@ -217,7 +217,7 @@ function feedFunnelRows(
         // Labels are literal here rather than in observability-labels.ts so the
         // two "not interested" rows stay next to the report fields they read.
         [
-            'Filtered out — you said not interested',
+            'Filtered out: you said not interested',
             String(r.totals.status.excluded),
             'funnel-row-status-excluded',
         ],
@@ -226,14 +226,14 @@ function feedFunnelRows(
         // while this is simply a story you already opened. Collapsing them
         // would make the feed's size unexplainable.
         [
-            'Skipped — you already read these',
+            'Skipped: you already read these',
             alreadyReadCount === null ? '—' : String(alreadyReadCount),
             'funnel-row-already-read',
         ],
         [L.headerRelevant, String(r.header.relevantCount)],
         [L.visible, String(r.visibleCount)],
         [
-            'Held back — a “not interested” filter',
+            'Held back: a “not interested” filter',
             String(r.dropped.excluded),
             'funnel-row-dropped-excluded',
         ],
@@ -263,7 +263,7 @@ function feedFunnelRows(
         );
         if (r.scoring.unknown > 0) {
             rows.push([
-                'Scored — path not recorded',
+                'Scored: path not recorded',
                 String(r.scoring.unknown),
                 'funnel-row-scored-unknown',
             ]);
@@ -1053,7 +1053,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                     size="sm"
                                     className={probe.allPassed ? 'text-positive' : 'text-negative'}
                                 >
-                                    {probe.allPassed ? 'ALL PASSED' : 'FAILED'} — {probe.platform}
+                                    {probe.allPassed ? 'ALL PASSED' : 'FAILED'} · {probe.platform}
                                 </Text>
                                 {probe.error ? (
                                     <Text size="xs" className="text-negative">threw: {probe.error}</Text>

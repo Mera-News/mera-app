@@ -71,13 +71,24 @@ async function showCompletionNotification(): Promise<void> {
   }
 }
 
+/**
+ * The failure in words the reader can act on. modelManager throws English
+ * developer messages ("Download failed with HTTP status 503", "Checksum
+ * mismatch: ..."); those stay in the logs and the store.
+ */
+export function downloadFailureBody(message: string): string {
+  if (/HTTP status/i.test(message)) return i18next.t('download.failedServer');
+  if (/checksum/i.test(message)) return i18next.t('download.failedDamaged');
+  return i18next.t('download.failedConnection');
+}
+
 async function showErrorNotification(message: string): Promise<void> {
   try {
     await Notifications.scheduleNotificationAsync({
       identifier: 'model-download-error',
       content: {
         title: i18next.t('download.failedTitle'),
-        body: message,
+        body: downloadFailureBody(message),
         data: { type: 'model-download-error' },
       },
       trigger: null,
