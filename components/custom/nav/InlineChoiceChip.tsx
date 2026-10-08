@@ -1,30 +1,41 @@
-// One expanding choice chip: World's time chip and the Feed's View chip.
-// Collapsed, a 34pt glass pill "‹ 24h". Tapped, it grows from its trailing
-// edge into every option (the picked one orange); a pick closes it. The row
-// never changes height, so the list under it never moves.
+// One choice chip: World's time chip and the Feed's View chip. A 34pt flat
+// glass pill "24h ⌄"; tapped, a floating menu opens under it, right-aligned
+// to it (left-aligned in RTL), with the chosen option checked. The title row
+// never moves or reflows, and nothing behind the menu is dimmed.
 //
-//  - Each pill draws 34pt inside a 44pt frame given back by negative margins
-//    (never hitSlop: QA measures a hitSlop target as its glyph box).
-//  - Hidden visual under a CHILDLESS labelled button: a glyph inside a button
-//    surfaces on iOS as its own StaticText.
-//  - Open state is local, so the host list never re-renders for it.
-//  - Options fade in on the UI thread; still under Reduce Motion or Lite mode.
+//  - The chip draws 34pt inside a 44pt frame given back by negative margins
+//    (never hitSlop: QA measures a hitSlop target as its glyph box), a hidden
+//    visual under a CHILDLESS labelled button (a glyph inside a button
+//    surfaces on iOS as its own StaticText).
+//  - The menu is an RN Modal (it must paint over the tab bar), transparent and
+//    undimmed: a tap outside or Android back closes it, VoiceOver's escape
+//    too. It is NOT gluestack's Menu: its PopoverContent hard-codes
+//    `accessible`, so VoiceOver would read every option as one element.
+//  - Placed from the chip's measured window position; the panel itself is the
+//    opaque `panel` token, so it reads over any content.
+//  - Opens with a 150ms fade from 96% scale; Reduce Motion or Lite: fade only.
 
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
+import { hapticSelection } from '@/lib/haptics';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { I18nManager, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
-
 import { useColors } from '@/lib/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
+import React, { useCallback, useRef, useState } from 'react';
+import { I18nManager, Modal, StyleSheet, View, useWindowDimensions } from 'react-native';
+import Animated, { FadeIn, Keyframe, useReducedMotion } from 'react-native-reanimated';
 
 const PILL = 34;
 const FRAME = 44;
-const OPTION_GAP = 6;
-const OPTION_FADE_MS = 150;
 const DISABLED_OPACITY = 0.4;
+const MENU_GAP = 6;
+const ROW = 44;
+const OPEN_MS = 150;
+/** FinalMotion "Small modals": fade in from 96% scale. */
+const OPEN = new Keyframe({
+  0: { opacity: 0, transform: [{ scale: 0.96 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }] },
+}).duration(OPEN_MS);
 
 const HIDDEN = {
   accessible: false,
@@ -35,14 +46,21 @@ const HIDDEN = {
 export interface InlineChoiceChipProps<T extends string | number> {
   readonly options: readonly T[];
   readonly value: T;
-  /** The pill's visible text ("24h"). */
+  /** The pill's and the menu row's visible text ("24h"). */
   readonly labelOf: (option: T) => string;
   /** The spoken name ("Stories from the last 24 hours"). */
   readonly a11yLabelOf: (option: T) => string;
   readonly onChange: (next: T) => void;
   readonly disabled?: boolean;
-  /** Collapsed: `${testID}-toggle`; options: `${testID}-${option}`. */
+  /** Chip: `${testID}-toggle`; menu: `${testID}-options`; rows: `${testID}-${option}`. */
   readonly testID: string;
+}
+
+interface Anchor {
+  readonly top: number;
+  readonly left: number;
+  readonly right: number;
+  readonly width: number;
 }
 
 export default function InlineChoiceChip<T extends string | number>({
@@ -54,83 +72,102 @@ export default function InlineChoiceChip<T extends string | number>({
   disabled = false,
   testID,
 }: InlineChoiceChipProps<T>) {
-  const [open, setOpen] = useState(false);
   const colors = useColors();
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
   const still = useReducedMotion() || liteMode;
+  const window = useWindowDimensions();
+  const chipRef = useRef<View>(null);
+  const [anchor, setAnchor] = useState<Anchor | null>(null);
+  const rtl = I18nManager.isRTL;
 
-  if (!open) {
-    return (
-      <View style={[styles.frame, disabled ? styles.disabled : null]} testID={`${testID}-frame`}>
-        <View pointerEvents="none" {...HIDDEN}>
-          <View style={[styles.pill, styles.collapsed, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
-              <MaterialIcons
-                name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'}
-                size={14}
-                color={colors.muted}
-              />
-              <Text numberOfLines={1} maxFontSizeMultiplier={1} style={[styles.label, { color: colors.ink, fontWeight: '600' }]}>
-                {labelOf(value)}
-              </Text>
-          </View>
-        </View>
-        <Pressable
-          onPress={() => setOpen(true)}
-          disabled={disabled}
-          style={StyleSheet.absoluteFill}
-          accessibilityRole="button"
-          accessibilityLabel={a11yLabelOf(value)}
-          accessibilityState={{ expanded: false, disabled }}
-          testID={`${testID}-toggle`}
-        />
-      </View>
-    );
-  }
+  const open = useCallback(() => {
+    chipRef.current?.measureInWindow((x, y, width, height) => {
+      setAnchor({ top: y + height + MENU_GAP, left: x, right: window.width - (x + width), width });
+    });
+  }, [window.width]);
+  const close = useCallback(() => setAnchor(null), []);
 
   return (
-    <View style={styles.options} testID={`${testID}-options`}>
-      {options.map((option) => {
-        const picked = option === value;
-        const label = (
+    <View style={[styles.frame, disabled ? styles.disabled : null]} testID={`${testID}-frame`}>
+      <View ref={chipRef} collapsable={false} pointerEvents="none" {...HIDDEN}>
+        <View style={[styles.pill, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
           <Text
             numberOfLines={1}
             maxFontSizeMultiplier={1}
-            style={[styles.label, { color: picked ? colors.onAccent : colors.muted, fontWeight: picked ? '600' : '400' }]}
+            style={[styles.label, { color: colors.ink, fontWeight: '600' }]}
           >
-            {labelOf(option)}
+            {labelOf(value)}
           </Text>
-        );
-        return (
+          <MaterialIcons name={anchor ? 'expand-less' : 'expand-more'} size={16} color={colors.muted} />
+        </View>
+      </View>
+      <Pressable
+        onPress={open}
+        disabled={disabled}
+        style={StyleSheet.absoluteFill}
+        accessibilityRole="button"
+        accessibilityLabel={a11yLabelOf(value)}
+        accessibilityState={{ expanded: anchor !== null, disabled }}
+        testID={`${testID}-toggle`}
+      />
+
+      <Modal visible={anchor !== null} transparent animationType="none" onRequestClose={close}>
+        {/* Undimmed: a tap anywhere outside the panel closes the menu. */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessible={false} testID={`${testID}-outside`} />
+        {anchor ? (
           <Animated.View
-            key={String(option)}
-            entering={still ? undefined : FadeIn.duration(OPTION_FADE_MS)}
-            style={styles.frame}
+            entering={still ? FadeIn.duration(OPEN_MS) : OPEN}
+            accessibilityRole="menu"
+            accessibilityViewIsModal
+            onAccessibilityEscape={close}
+            testID={`${testID}-options`}
+            style={[
+              styles.panel,
+              {
+                top: anchor.top,
+                minWidth: anchor.width,
+                backgroundColor: colors.panel,
+                borderColor: colors.panelBorder,
+              },
+              // Hangs from the chip's trailing edge: the right in LTR, the left in RTL.
+              rtl ? { left: anchor.left } : { right: anchor.right },
+            ]}
           >
-            <View pointerEvents="none" {...HIDDEN}>
-              {picked ? (
-                <View style={[styles.pill, styles.option, { backgroundColor: colors.accent, borderColor: colors.accent }]}>
-                  {label}
-                </View>
-              ) : (
-                <View style={[styles.pill, styles.option, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
-                  {label}
-                </View>
-              )}
-            </View>
-            <Pressable
-              onPress={() => {
-                setOpen(false);
-                if (!picked) onChange(option);
-              }}
-              style={StyleSheet.absoluteFill}
-              accessibilityRole="button"
-              accessibilityLabel={a11yLabelOf(option)}
-              accessibilityState={{ selected: picked }}
-              testID={`${testID}-${option}`}
-            />
+            {options.map((option) => {
+              const picked = option === value;
+              return (
+                <Pressable
+                  key={String(option)}
+                  onPress={() => {
+                    close();
+                    if (!picked) {
+                      void hapticSelection();
+                      onChange(option);
+                    }
+                  }}
+                  accessibilityRole="menuitem"
+                  accessibilityLabel={a11yLabelOf(option)}
+                  accessibilityState={{ checked: picked }}
+                  testID={`${testID}-${option}`}
+                  style={styles.row}
+                >
+                  <View style={styles.check} {...HIDDEN}>
+                    {picked ? <MaterialIcons name="check" size={18} color={colors.accent} /> : null}
+                  </View>
+                  <Text
+                    numberOfLines={1}
+                    maxFontSizeMultiplier={1}
+                    style={[styles.rowLabel, { color: colors.ink, fontWeight: picked ? '600' : '400' }]}
+                    {...HIDDEN}
+                  >
+                    {labelOf(option)}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </Animated.View>
-        );
-      })}
+        ) : null}
+      </Modal>
     </View>
   );
 }
@@ -138,7 +175,7 @@ export default function InlineChoiceChip<T extends string | number>({
 const styles = StyleSheet.create({
   frame: { height: FRAME, marginVertical: -(FRAME - PILL) / 2, justifyContent: 'center' },
   disabled: { opacity: DISABLED_OPACITY },
-  // Board .wchip / .wo: 13pt in a fixed 34pt pill.
+  // Board .wchip: 13pt in a fixed 34pt pill.
   label: { fontSize: 13, lineHeight: 16 },
   pill: {
     height: PILL,
@@ -147,8 +184,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 4,
+    paddingLeft: 12,
+    paddingRight: 8,
   },
-  collapsed: { gap: 5, paddingLeft: 10, paddingRight: 12 },
-  option: { minWidth: FRAME, paddingHorizontal: 10 },
-  options: { flexDirection: 'row', alignItems: 'center', gap: OPTION_GAP },
+  panel: {
+    position: 'absolute',
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 4,
+    shadowColor: '#000000',
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  row: { minHeight: ROW, flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 16, gap: 6 },
+  check: { width: 20, alignItems: 'center' },
+  rowLabel: { fontSize: 15, lineHeight: 20 },
 });
+
