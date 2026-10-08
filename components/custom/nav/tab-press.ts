@@ -80,7 +80,7 @@ export interface TabNavLike {
 interface NavStateLike {
   type?: string;
   key?: string;
-  routes?: readonly { key: string; state?: NavStateLike }[];
+  routes?: readonly { key: string; name?: string; state?: NavStateLike }[];
 }
 
 /** The nearest TAB navigator above this screen, or null. A screen inside a
@@ -95,8 +95,23 @@ export function findTabAncestor(navigation: TabNavLike): TabNavLike | null {
   return null;
 }
 
+/** The key of THIS tab's route, which `tabPress` targets: the tab route
+ *  NAMED `tabName` (expo-router names a tab route after its folder: `feed`,
+ *  `world`, `library`, `you`; keys look like `world-VXa_1Fq…`). Matched by
+ *  name first because the tab navigator's state does NOT reliably carry a
+ *  tab's nested stack state, so looking for the screen's own key in its
+ *  subtree found nothing on device and every re-tap was ignored. */
+export function tabRouteKeyFor(
+  tabState: NavStateLike | undefined,
+  tabName: string,
+  routeKey: string,
+): string | null {
+  const named = tabState?.routes?.find((r) => r.name === tabName);
+  return named ? named.key : tabRouteKeyContaining(tabState, routeKey);
+}
+
 /** The key of the tab route whose subtree holds `routeKey` (the screen itself
- *  when it IS the tab route), or null. `tabPress` targets that key. */
+ *  when it IS the tab route), or null. Only when the nested state is there. */
 export function tabRouteKeyContaining(tabState: NavStateLike | undefined, routeKey: string): string | null {
   const holds = (state: NavStateLike | undefined): boolean =>
     !!state?.routes?.some((r) => r.key === routeKey || holds(r.state));

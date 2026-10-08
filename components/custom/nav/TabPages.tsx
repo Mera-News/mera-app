@@ -26,7 +26,7 @@ import { scrollToTopWithRetry } from '@/components/custom/feed/scroll-to-top-wit
 import {
   decideTabPressAction,
   findTabAncestor,
-  tabRouteKeyContaining,
+  tabRouteKeyFor,
   type TabNavLike,
 } from './tab-press';
 import { useMotionAllowed } from '@/lib/motion-gate';
@@ -215,7 +215,7 @@ const TabPages: React.FC<TabPagesProps> = ({
       const opts = target.options.current ?? {};
       const read = opts.getOffset;
       const action = decideTabPressAction({
-        isForThisTab: !!event?.target && event.target === tabRouteKeyContaining(tabs.getState?.(), route.key),
+        isForThisTab: !!event?.target && event.target === tabRouteKeyFor(tabs.getState?.(), tab, route.key),
         isFocused: own.isFocused(),
         // Unknown offset: a re-tap always scrolls.
         offset: read ? read() : Number.POSITIVE_INFINITY,
@@ -233,7 +233,7 @@ const TabPages: React.FC<TabPagesProps> = ({
         opts.onRefresh?.();
       }
     });
-  }, [navigation, route.key]);
+  }, [navigation, route.key, tab]);
 
   const renderPanel = useCallback(
     (i: number, pageActive: boolean) => (

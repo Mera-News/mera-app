@@ -1,6 +1,6 @@
 import type { PageId } from '../page-registry';
 import { retapTarget, scrollListToTop } from '../page-scroll';
-import { decideTabPressAction, tabRouteKeyContaining, TAB_PRESS_TOP_EPSILON } from '../tab-press';
+import { decideTabPressAction, tabRouteKeyContaining, tabRouteKeyFor, TAB_PRESS_TOP_EPSILON } from '../tab-press';
 
 describe('retapTarget', () => {
   const targets = new Map<PageId, string>([
@@ -57,5 +57,36 @@ describe('tabRouteKeyContaining', () => {
     expect(tabRouteKeyContaining(tabs, 'library-index')).toBe('library-k');
     expect(tabRouteKeyContaining(tabs, 'feed-k')).toBe('feed-k');
     expect(tabRouteKeyContaining(tabs, 'nowhere')).toBeNull();
+  });
+});
+
+describe('tabRouteKeyFor', () => {
+  // The device's real tab state (Explore, 4 re-taps all ignored): the tab
+  // routes carry NO nested stack state, and the key is `<name>-<id>`.
+  const deviceTabs = {
+    type: 'tab',
+    routes: [
+      { name: 'feed', key: 'feed-Qm3uS0aPZt' },
+      { name: 'world', key: 'world-VXa_1FqDYVhqwsw8afzH6' },
+      { name: 'library', key: 'library-8xw1' },
+      { name: 'you', key: 'you-Lp0' },
+    ],
+  };
+  it("finds this tab's route by name when the nested state is missing", () => {
+    expect(tabRouteKeyContaining(deviceTabs, 'index-a1')).toBeNull();
+    expect(tabRouteKeyFor(deviceTabs, 'world', 'index-a1')).toBe('world-VXa_1FqDYVhqwsw8afzH6');
+    expect(tabRouteKeyFor(deviceTabs, 'feed', 'index-b2')).toBe('feed-Qm3uS0aPZt');
+  });
+  it('so a re-tap of Explore while scrolled down scrolls', () => {
+    const target = 'world-VXa_1FqDYVhqwsw8afzH6';
+    expect(
+      decideTabPressAction({
+        isForThisTab: target === tabRouteKeyFor(deviceTabs, 'world', 'index-a1'),
+        isFocused: true,
+        offset: 997.33,
+        canRefresh: true,
+        isRefreshing: false,
+      }),
+    ).toBe('scroll-to-top');
   });
 });
