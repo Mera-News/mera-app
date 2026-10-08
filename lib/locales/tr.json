@@ -2681,7 +2681,8 @@
     "openedToday": "Bugün açıldı",
     "openedYesterday": "Dün açıldı",
     "supportLine": "İyi haberciliğin devamı, okurlar destek olduğunda gelir.",
-    "visitsLabel": "Son 30 gündeki ziyaretleriniz"
+    "visitsLabel": "Son 30 gündeki ziyaretleriniz",
+    "subscribed": "Abonesiniz"
   },
   "nav": {
     "page": {
@@ -3018,7 +3019,6 @@
     "mismatchOtherEmail": "Başka bir e-posta kullan"
   },
   "relatedSort": {
-    "a11yLabel": "İlgili makaleleri sırala",
     "relevance": "En iyi eşleşme",
     "oldest": "Eski olanlar ilk",
     "newest": "Yeni olanlar ilk"

@@ -2679,7 +2679,8 @@
     "openedToday": "Opened today",
     "openedYesterday": "Opened yesterday",
     "supportLine": "Good reporting lasts when readers support it.",
-    "visitsLabel": "Your visits in the last 30 days"
+    "visitsLabel": "Your visits in the last 30 days",
+    "subscribed": "Subscribed"
   },
   "nav": {
     "page": {
@@ -3016,7 +3017,6 @@
     "mismatchOtherEmail": "Use another email"
   },
   "relatedSort": {
-    "a11yLabel": "Sort related articles",
     "relevance": "Best match",
     "oldest": "Oldest first",
     "newest": "Newest first"

@@ -2721,7 +2721,8 @@
     "openedToday": "Otwarte dzisiaj",
     "openedYesterday": "Otwarte wczoraj",
     "supportLine": "Dobre dziennikarstwo przetrwa, gdy czytelnicy je wspierają.",
-    "visitsLabel": "Twoje wizyty w ciągu ostatnich 30 dni"
+    "visitsLabel": "Twoje wizyty w ciągu ostatnich 30 dni",
+    "subscribed": "Subskrybowane"
   },
   "nav": {
     "page": {
@@ -3080,7 +3081,6 @@
     "mismatchOtherEmail": "Użyj innego e-maila"
   },
   "relatedSort": {
-    "a11yLabel": "Sortuj powiązane artykuły",
     "relevance": "Najlepsze dopasowanie",
     "oldest": "Najstarsze pierwsze",
     "newest": "Najnowsze pierwsze"

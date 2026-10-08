@@ -45,8 +45,9 @@ import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useRelatedPagination } from './use-related-pagination';
-import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
-import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
+import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
+import { RELATED_SORT_LABEL } from '@/components/custom/news-detail/RelatedCoverage';
+import { RELATED_SORT_MODES, useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -829,10 +830,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             error={!!relatedError}
                             onRetry={retryRelated}
                             headerAccessory={
-                                <RelatedSortDropdown
+                                <InlineChoiceChip
+                                    options={RELATED_SORT_MODES}
                                     value={relatedSortMode}
+                                    labelOf={(m) => t(RELATED_SORT_LABEL[m])}
+                                    a11yLabelOf={(m) => t(RELATED_SORT_LABEL[m])}
                                     onChange={setRelatedSortMode}
-                                    testIDPrefix="related-sort"
+                                    testID="related-sort"
                                 />
                             }
                         />

@@ -2679,7 +2679,8 @@
     "openedToday": "Aperto oggi",
     "openedYesterday": "Aperto ieri",
     "supportLine": "Il buon giornalismo dura quando i lettori lo sostengono.",
-    "visitsLabel": "Le tue visite negli ultimi 30 giorni"
+    "visitsLabel": "Le tue visite negli ultimi 30 giorni",
+    "subscribed": "Abbonato"
   },
   "nav": {
     "page": {
@@ -3016,7 +3017,6 @@
     "mismatchOtherEmail": "Usa un'altra email"
   },
   "relatedSort": {
-    "a11yLabel": "Ordina articoli correlati",
     "relevance": "Miglior corrispondenza",
     "oldest": "Meno recente prima",
     "newest": "Più recente prima"

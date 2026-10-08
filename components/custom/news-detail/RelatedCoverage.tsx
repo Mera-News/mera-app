@@ -54,6 +54,14 @@ function SkeletonCard() {
     );
 }
 
+/** The sort's user-facing labels: what the reader gets, not the mode's
+ *  internal name ("relevance" describes the algorithm). */
+export const RELATED_SORT_LABEL = {
+    relevance: 'relatedSort.relevance',
+    oldest: 'relatedSort.oldest',
+    newest: 'relatedSort.newest',
+} as const;
+
 interface RelatedCoverageProps {
     rows: readonly RelatedRow[];
     /** The article on screen: what a page opened from here came from. */
@@ -65,7 +73,7 @@ interface RelatedCoverageProps {
     loadingMore: boolean;
     error: boolean;
     onRetry: () => void;
-    /** Drawn at the end of the heading row: the sort menu. */
+    /** Drawn at the end of the heading row: the sort chip (InlineChoiceChip). */
     headerAccessory?: React.ReactNode;
 }
 

@@ -2680,7 +2680,8 @@
     "openedToday": "今天打开",
     "openedYesterday": "昨天打开",
     "supportLine": "好的报道需要读者的支持才能持续。",
-    "visitsLabel": "过去30天你的访问次数"
+    "visitsLabel": "过去30天你的访问次数",
+    "subscribed": "已订阅"
   },
   "nav": {
     "page": {
@@ -3014,7 +3015,6 @@
     "mismatchOtherEmail": "使用其他电子邮件"
   },
   "relatedSort": {
-    "a11yLabel": "对相关文章排序",
     "relevance": "最佳匹配",
     "oldest": "最早优先",
     "newest": "最新优先"

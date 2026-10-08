@@ -52,8 +52,9 @@ import {
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
 import { useRelatedPagination } from './use-related-pagination';
-import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
-import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
+import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
+import { RELATED_SORT_LABEL } from '@/components/custom/news-detail/RelatedCoverage';
+import { RELATED_SORT_MODES, useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { mergeRelatedEntries } from './merge-related-entries';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
@@ -753,10 +754,13 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             error={!!relatedError}
                             onRetry={retryRelated}
                             headerAccessory={
-                                <RelatedSortDropdown
+                                <InlineChoiceChip
+                                    options={RELATED_SORT_MODES}
                                     value={relatedSortMode}
+                                    labelOf={(m) => t(RELATED_SORT_LABEL[m])}
+                                    a11yLabelOf={(m) => t(RELATED_SORT_LABEL[m])}
                                     onChange={setRelatedSortMode}
-                                    testIDPrefix="related-sort"
+                                    testID="related-sort"
                                 />
                             }
                         />

@@ -2680,7 +2680,8 @@
     "openedToday": "今天開啟",
     "openedYesterday": "昨天開啟",
     "supportLine": "優質報導需要讀者支持才能持續。",
-    "visitsLabel": "過去 30 天的造訪紀錄"
+    "visitsLabel": "過去 30 天的造訪紀錄",
+    "subscribed": "已訂閱"
   },
   "nav": {
     "page": {
@@ -3014,7 +3015,6 @@
     "mismatchOtherEmail": "使用其他電子郵件"
   },
   "relatedSort": {
-    "a11yLabel": "排序相關文章",
     "relevance": "最符合",
     "oldest": "最舊的優先",
     "newest": "最新的優先"

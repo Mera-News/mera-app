@@ -2680,7 +2680,8 @@
     "openedToday": "Đã mở hôm nay",
     "openedYesterday": "Đã mở hôm qua",
     "supportLine": "Báo chí chất lượng tồn tại được khi độc giả ủng hộ.",
-    "visitsLabel": "Lượt mở của bạn trong 30 ngày qua"
+    "visitsLabel": "Lượt mở của bạn trong 30 ngày qua",
+    "subscribed": "Đã đăng ký"
   },
   "nav": {
     "page": {
@@ -3014,7 +3015,6 @@
     "mismatchOtherEmail": "Dùng email khác"
   },
   "relatedSort": {
-    "a11yLabel": "Sắp xếp bài viết liên quan",
     "relevance": "Khớp tốt nhất",
     "oldest": "Cũ nhất trước",
     "newest": "Mới nhất trước"

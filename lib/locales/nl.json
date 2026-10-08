@@ -2679,7 +2679,8 @@
     "openedToday": "Vandaag geopend",
     "openedYesterday": "Gisteren geopend",
     "supportLine": "Goede journalistiek blijft bestaan als lezers het steunen.",
-    "visitsLabel": "Je bezoeken in de afgelopen 30 dagen"
+    "visitsLabel": "Je bezoeken in de afgelopen 30 dagen",
+    "subscribed": "Geabonneerd"
   },
   "nav": {
     "page": {
@@ -3016,7 +3017,6 @@
     "mismatchOtherEmail": "Gebruik een ander e-mailadres"
   },
   "relatedSort": {
-    "a11yLabel": "Gerelateerde artikelen sorteren",
     "relevance": "Best match",
     "oldest": "Oudste eerst",
     "newest": "Nieuwste eerst"

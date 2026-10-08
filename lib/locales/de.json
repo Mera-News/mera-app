@@ -2679,7 +2679,8 @@
     "openedToday": "Heute geöffnet",
     "openedYesterday": "Gestern geöffnet",
     "supportLine": "Guter Journalismus hält sich, wenn Leser ihn unterstützen.",
-    "visitsLabel": "Deine Besuche in den letzten 30 Tagen"
+    "visitsLabel": "Deine Besuche in den letzten 30 Tagen",
+    "subscribed": "Abonniert"
   },
   "nav": {
     "page": {
@@ -2873,7 +2874,7 @@
       "more": "Mehr",
       "fewer": "Weniger",
       "muted": "Stummgeschaltet",
-      "mute": "Stummschalten",
+      "mute": "Ausblenden",
       "clear": "Löschen",
       "footnote": "Tippe auf eine, um sie zu ändern. „Weniger von“ im Menü ••• eines Artikels landet auch hier.",
       "empty": "Du hast noch keine Quellen angepasst. Suche nach einem Medium, um mehr, weniger oder nichts davon zu sehen. „Weniger von“ im Menü ••• eines Artikels landet auch hier."
@@ -3016,7 +3017,6 @@
     "mismatchOtherEmail": "Andere E-Mail-Adresse verwenden"
   },
   "relatedSort": {
-    "a11yLabel": "Verwandte Artikel sortieren",
     "relevance": "Beste Übereinstimmung",
     "oldest": "Älteste zuerst",
     "newest": "Neueste zuerst"

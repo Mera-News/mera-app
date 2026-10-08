@@ -2670,16 +2670,17 @@
     "prefMoreA11y": "Lebih banyak dari sumber ini",
     "prefFewerA11y": "Lebih sedikit dari sumber ini",
     "history": "Riwayat",
-    "fewerFrom": "Lebih sedikit dari",
+    "fewerFrom": "Lebih sedikit",
     "historyEmpty": "Tidak ada kunjungan di sini dalam 30 hari terakhir.",
-    "moreFrom": "Lebih banyak dari",
+    "moreFrom": "Lebih banyak",
     "openedCount_one": "Anda membuka {{publisher}} sekali dalam 30 hari terakhir.",
     "openedCount_other": "Anda membuka {{publisher}} {{count}} kali dalam 30 hari terakhir.",
     "openedOn": "Dibuka {{date}}",
     "openedToday": "Dibuka hari ini",
     "openedYesterday": "Dibuka kemarin",
     "supportLine": "Pelaporan yang baik bertahan saat pembacanya mendukungnya.",
-    "visitsLabel": "Kunjungan Anda dalam 30 hari terakhir"
+    "visitsLabel": "Kunjungan Anda dalam 30 hari terakhir",
+    "subscribed": "Berlangganan"
   },
   "nav": {
     "page": {
@@ -3013,7 +3014,6 @@
     "mismatchOtherEmail": "Gunakan email lain"
   },
   "relatedSort": {
-    "a11yLabel": "Urutkan artikel terkait",
     "relevance": "Kecocokan terbaik",
     "oldest": "Paling lama pertama",
     "newest": "Terbaru pertama"

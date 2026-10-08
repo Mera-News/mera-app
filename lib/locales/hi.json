@@ -2674,14 +2674,15 @@
     "history": "इतिहास",
     "fewerFrom": "इनसे कम",
     "historyEmpty": "पिछले 30 दिनों में यहां कोई विज़िट नहीं।",
-    "moreFrom": "इनसे ज़्यादा",
+    "moreFrom": "ज़्यादा",
     "openedCount_one": "आपने पिछले 30 दिनों में {{publisher}} को एक बार खोला।",
     "openedCount_other": "आपने पिछले 30 दिनों में {{publisher}} को {{count}} बार खोला।",
     "openedOn": "{{date}} को खोला गया",
     "openedToday": "आज खोला गया",
     "openedYesterday": "कल खोला गया",
     "supportLine": "अच्छी रिपोर्टिंग तब टिकती है जब पाठक उसका साथ दें।",
-    "visitsLabel": "पिछले 30 दिनों में आपकी विज़िट"
+    "visitsLabel": "पिछले 30 दिनों में आपकी विज़िट",
+    "subscribed": "सदस्यता ली"
   },
   "nav": {
     "page": {
@@ -3018,7 +3019,6 @@
     "mismatchOtherEmail": "कोई दूसरा ईमेल इस्तेमाल करें"
   },
   "relatedSort": {
-    "a11yLabel": "संबंधित लेखों को क्रमांकित करें",
     "relevance": "सबसे अच्छी मेल",
     "oldest": "सबसे पुराना पहले",
     "newest": "सबसे नया पहले"

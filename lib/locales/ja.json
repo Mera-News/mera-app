@@ -2679,7 +2679,8 @@
     "openedToday": "今日開きました",
     "openedYesterday": "昨日開きました",
     "supportLine": "良い報道は、読者が支えることで続きます。",
-    "visitsLabel": "過去30日間のあなたの訪問"
+    "visitsLabel": "過去30日間のあなたの訪問",
+    "subscribed": "購読中"
   },
   "nav": {
     "page": {
@@ -3013,7 +3014,6 @@
     "mismatchOtherEmail": "別のメールアドレスを使う"
   },
   "relatedSort": {
-    "a11yLabel": "関連記事を並べ替える",
     "relevance": "最も一致したもの",
     "oldest": "古い順",
     "newest": "新しい順"
