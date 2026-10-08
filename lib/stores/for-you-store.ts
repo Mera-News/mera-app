@@ -518,9 +518,11 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
         const deletedCount = await pruneOrphanedSuggestions();
 
         if (deletedCount === -1) {
-            // No active topics — full clear.
-            const hasGeneratedTopics = get().hasGeneratedTopics;
-            set({ ...initialState, hasGeneratedTopics });
+            // No active topics: full clear. `articleCount` survives: it is the
+            // SERVER's 24h published count (FeedSyncMachine's setCounts), not a
+            // count of local rows, so clearing the rows says nothing about it.
+            const { hasGeneratedTopics, articleCount } = get();
+            set({ ...initialState, hasGeneratedTopics, articleCount });
             await persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
                 tags: { store: 'for-you-store', method: 'pruneOrphanedData:fullClear' },
             }));
@@ -533,9 +535,11 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             const relevantCount = rows.filter(
                 (s) => s.status !== ArticleSuggestionStatus.Unscored && relevancePassesGate(s),
             ).length;
+            // Never `articleCount: rows.length`: that is the server's published
+            // count; local rows are a different noun ("0 published" after the
+            // 48h prune emptied the Feed).
             set({
                 suggestions: rows,
-                articleCount: rows.length,
                 relevantArticleCount: relevantCount,
             });
             await persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {

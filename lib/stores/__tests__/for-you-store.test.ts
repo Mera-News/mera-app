@@ -558,7 +558,7 @@ describe('useForYouStore', () => {
 
     // ── pruneOrphanedData ────────────────────────────────────────────────────
 
-    it('pruneOrphanedData with deletedCount=-1 clears all state', async () => {
+    it('pruneOrphanedData with deletedCount=-1 clears the rows but keeps the published count', async () => {
         mockPruneOrphanedSuggestions.mockResolvedValueOnce(-1);
         useForYouStore.setState({
             suggestions: [makeSuggestion()],
@@ -570,10 +570,10 @@ describe('useForYouStore', () => {
 
         const state = useForYouStore.getState();
         expect(state.suggestions).toEqual([]);
-        expect(state.articleCount).toBe(0);
+        expect(state.articleCount).toBe(5); // the server's count, not local rows
         expect(state.hasGeneratedTopics).toBe(false); // preserved
         expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
-            expect.objectContaining({ articleCount: 0, hasGeneratedTopics: false }),
+            expect.objectContaining({ articleCount: 5, hasGeneratedTopics: false }),
         );
     });
 
@@ -587,6 +587,7 @@ describe('useForYouStore', () => {
 
     it('pruneOrphanedData with deletedCount>0 reloads, sorts, and persists', async () => {
         mockPruneOrphanedSuggestions.mockResolvedValueOnce(2);
+        useForYouStore.setState({ articleCount: 269317 });
         const scored = makeSuggestion({ _id: 's1', relevance: 0.8, relevanceGenerationCompleted: true });
         const unscored = makeSuggestion({ _id: 's2', relevance: 0, relevanceGenerationCompleted: false });
         mockLoadSuggestions.mockResolvedValueOnce([unscored, scored]);
@@ -595,10 +596,12 @@ describe('useForYouStore', () => {
 
         const state = useForYouStore.getState();
         expect(state.suggestions[0]._id).toBe('s1'); // sorted by relevance desc
-        expect(state.articleCount).toBe(2);
+        // The published count is the server's: pruning local rows never
+        // rewrites it with their number.
+        expect(state.articleCount).toBe(269317);
         expect(state.relevantArticleCount).toBe(1); // only scored >= RENDER_GATE (0.4)
         expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
-            expect.objectContaining({ articleCount: 2, relevantArticleCount: 1 }),
+            expect.objectContaining({ articleCount: 269317, relevantArticleCount: 1 }),
         );
     });
 
