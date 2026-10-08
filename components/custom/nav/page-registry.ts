@@ -61,8 +61,9 @@ export type FixedPageId = StaticPageId | 'world';
 export interface PageExplainer {
   readonly titleKey: I18nKey;
   readonly paragraphKeys: readonly I18nKey[];
-  /** The tutorial chapter Learn more opens (`openTutorial`). */
-  readonly chapter: ChapterId;
+  /** The tutorial chapter Learn more opens (`openTutorial`). Absent: no
+   *  Learn more. */
+  readonly chapter?: ChapterId;
   /** The card in that chapter; absent: its first. */
   readonly slide?: string;
 }
@@ -74,8 +75,8 @@ export interface PageMeta {
   /** Never unmounted by the pager window. Feed only: its reading session
    *  (pinned prefix, partition snapshot, row session) lives in the screen. */
   readonly keepMounted: boolean;
-  /** What the ? beside the page's title opens. Null: the board draws no ?
-   *  there (Settings, Notifications). */
+  /** What the ? at the end of the tab header opens while this page is
+   *  active. Null: no ?. */
   readonly explainer: PageExplainer | null;
 }
 
@@ -170,10 +171,27 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       slide: 'your-profile',
     },
   },
-  settings: { tab: 'you', labelKey: 'tabs.settings', keepMounted: false, explainer: null },
+  settings: {
+    tab: 'you',
+    labelKey: 'tabs.settings',
+    keepMounted: false,
+    explainer: {
+      titleKey: 'explainer.settings.title',
+      paragraphKeys: ['explainer.settings.p1', 'explainer.settings.p2', 'explainer.settings.p3'],
+      chapter: 'privacy',
+    },
+  },
   // The inbox (NotificationsScreen embedded). Not `settings:notifications`,
   // which is the notification SETTINGS screen pushed in the You stack.
-  notifications: { tab: 'you', labelKey: 'notificationCenter.title', keepMounted: false, explainer: null },
+  notifications: {
+    tab: 'you',
+    labelKey: 'notificationCenter.title',
+    keepMounted: false,
+    explainer: {
+      titleKey: 'explainer.notifications.title',
+      paragraphKeys: ['explainer.notifications.p1', 'explainer.notifications.p2', 'explainer.notifications.p3'],
+    },
+  },
 };
 
 /** A country page: World's shape, its own explainer. */

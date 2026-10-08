@@ -42,8 +42,6 @@ interface FactChecksPanelProps {
     /** List-end padding (the host's clearance for the tab bar and the Mera
      *  button). Defaults to the tab-bar clearance plus a gap. */
     readonly listEndPadding?: number;
-    /** Opens the page's explainer (the ? beside the title). */
-    readonly onExplain?: () => void;
 }
 
 /**
@@ -78,7 +76,6 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     scrollHandler,
     headerHeight = 0,
     listEndPadding,
-    onExplain,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
@@ -174,14 +171,13 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 keyExtractor={(item: StoredFactCheck) => item.id}
                 renderItem={renderItem as any}
                 testID="fact-checks-list"
+                // The count says more than the pill; the bare name would only repeat it.
                 ListHeaderComponent={
-                    <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-                        <PageTitleRow
-                            title={items.length > 0 ? t('library.checks.count', { count: items.length }) : t('factCheck.dashboard.listTitle')}
-                            onExplain={onExplain}
-                            testID="fact-checks-title-row"
-                        />
-                    </View>
+                    items.length > 0 ? (
+                        <View style={{ marginBottom: PAGE_TITLE_GAP }}>
+                            <PageTitleRow title={t('library.checks.count', { count: items.length })} testID="fact-checks-title-row" />
+                        </View>
+                    ) : null
                 }
                 // The manual path: a reader who suspects the list is stale can
                 // always ask directly rather than waiting for the next arrival.

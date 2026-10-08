@@ -16,8 +16,6 @@ export interface PageHeaderBinding {
   readonly headerHeight: number;
   readonly hidden: SharedValue<number>;
   readonly reveal: () => void;
-  /** Opens the active page's explainer sheet (the ? in the tab header). */
-  readonly openExplainer: () => void;
 }
 
 export interface PageRenderProps {

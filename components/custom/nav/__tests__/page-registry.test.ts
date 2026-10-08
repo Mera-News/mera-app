@@ -24,9 +24,18 @@ describe('page-registry', () => {
     expect(kept).toEqual(['feed']);
   });
 
-  it('draws no ? on Settings or Notifications (the boards show none)', () => {
-    expect(PAGE_META.settings.explainer).toBeNull();
-    expect(PAGE_META.notifications.explainer).toBeNull();
+  it("gives every page an explainer for the header's ?", () => {
+    for (const id of Object.keys(PAGE_META) as FixedPageId[]) {
+      expect(PAGE_META[id].explainer?.paragraphKeys.length).toBeGreaterThan(0);
+    }
+    expect(PAGE_META.settings.explainer?.titleKey).toBe('explainer.settings.title');
+    expect(PAGE_META.notifications.explainer?.titleKey).toBe('explainer.notifications.title');
+  });
+
+  it('offers Learn more only where a chapter is named', () => {
+    expect(PAGE_META.settings.explainer?.chapter).toBe('privacy');
+    expect(PAGE_META.notifications.explainer?.chapter).toBeUndefined();
+    expect(PAGE_META.saved.explainer?.chapter).toBe('library');
   });
 
   it('round-trips country page ids as uppercase alpha-2', () => {

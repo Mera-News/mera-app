@@ -43,8 +43,6 @@ interface Props {
     readonly headerHeight?: number;
     /** List-end padding: the tab bar and the Mera button. */
     readonly listEndPadding?: number;
-    /** Opens History's explainer (the ? beside the page title). */
-    readonly onExplain?: () => void;
 }
 
 function lastReadLabel(t: (k: 'common.today' | 'common.yesterday') => string, ms: number, locale?: string): string {
@@ -93,7 +91,6 @@ const VisitedPublicationsList: React.FC<Props> = ({
     scrollHandler,
     headerHeight = 0,
     listEndPadding,
-    onExplain,
 }) => {
     const tabClearance = useTabBarClearance();
     const { t, i18n } = useTranslation();
@@ -147,7 +144,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
     const listHeader = (
         <View>
             <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-                <PageTitleRow title={t('library.history.title')} onExplain={onExplain} testID="history-title-row" />
+                <PageTitleRow title={t('library.history.title')} testID="history-title-row" />
             </View>
             {items.length > 0 ? (
                 <>

@@ -1,6 +1,6 @@
 // The tab shell: the page strip header, one collapsing header shared by the
 // tab's pages, the page swipe (PagePager) with its swipe into the next tab,
-// the one explainer sheet behind every page title's ?, and World's Arrange
+// the one explainer sheet behind the header's ?, and World's Arrange
 // overlay. Content lanes render it from their page-set
 // component (FeedPages, WorldPages, LibraryPages, YouPages) and draw only
 // their pages.
@@ -184,8 +184,8 @@ const TabPages: React.FC<TabPagesProps> = ({
 
 
   const header: PageHeaderBinding = useMemo(
-    () => ({ scrollHandler, headerHeight, hidden, reveal, openExplainer }),
-    [scrollHandler, headerHeight, hidden, reveal, openExplainer],
+    () => ({ scrollHandler, headerHeight, hidden, reveal }),
+    [scrollHandler, headerHeight, hidden, reveal],
   );
   // Only the VISIBLE page drives the header. The warm neighbours share the
   // pager window and would otherwise feed it their own offsets: a neighbour's
@@ -216,7 +216,6 @@ const TabPages: React.FC<TabPagesProps> = ({
   const tabLabel = t(TAB_LABEL_KEYS[tab]);
   const activeLabel = pages.find((p) => p.id === activeId)?.label ?? tabLabel;
   const hasExplainer = activeId !== null && pageMeta(activeId).explainer !== null;
-  const showHelp = hasExplainer && tab === 'world';
 
   if (!activeId) return <View style={styles.fill} testID={testID} />;
 
@@ -271,7 +270,7 @@ const TabPages: React.FC<TabPagesProps> = ({
             variant={tab === 'world' ? 'scroll' : 'segmented'}
             leading={leading}
             onSearch={onSearch}
-            onHelp={showHelp ? openExplainer : undefined}
+            onHelp={hasExplainer ? openExplainer : undefined}
             helpLabel={t('nav.explainerA11y', { page: activeLabel })}
             title={renderTitleChip ? tabLabel : undefined}
             titleChip={renderTitleChip?.(activeId)}

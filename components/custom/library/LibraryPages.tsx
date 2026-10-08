@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 /**
  * The Library tab: Saved, Fact checks, History, Stats, a fixed group.
  * Page ids `saved`, `checks`, `visited`, `stats`.
- * Each page draws its own title row with the ?, as its list's first item.
+ * The ? in the tab header opens the active page's explainer.
  */
 /** The Fact checks pill's dot: a check finished since the page was seen. */
 function useChecksDot(): PageDot {
@@ -55,7 +55,6 @@ export function LibraryPages() {
                             headerHeight={header.headerHeight}
                             hidden={header.hidden}
                             listEndPadding={listEnd}
-                            onExplain={header.openExplainer}
                         />
                     );
                 case 'checks':
@@ -65,7 +64,6 @@ export function LibraryPages() {
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}
                             listEndPadding={listEnd}
-                            onExplain={header.openExplainer}
                         />
                     );
                 case 'visited':
@@ -75,7 +73,6 @@ export function LibraryPages() {
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}
                             listEndPadding={listEnd}
-                            onExplain={header.openExplainer}
                         />
                     );
                 case 'stats':
@@ -85,7 +82,6 @@ export function LibraryPages() {
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}
                             listEndPadding={listEnd}
-                            onExplain={header.openExplainer}
                         />
                     );
                 default:

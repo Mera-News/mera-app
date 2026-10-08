@@ -5,8 +5,7 @@
 // beneath it. Only while something is saved (#3: the empty page has no pinned
 // row; its "Saved ?" title scrolls with the list).
 //
-// The title and ? are the shell's PageTitleRow, so Saved's ? is the same
-// control as every other page's.
+// The count is the shell's PageTitleRow; Saved's ? is in the tab header.
 
 import { GlassPlate } from '@/components/custom/GlassSurface';
 import PageTitleRow from '@/components/custom/nav/PageTitleRow';
@@ -31,12 +30,10 @@ interface Props {
     readonly headerHeight: number;
     /** The host header's 0..1 collapse value; the row rides with it. */
     readonly hidden?: SharedValue<number>;
-    /** Opens Saved's explainer (the ? beside the count). */
-    readonly onExplain?: () => void;
     readonly onExport: () => void;
 }
 
-const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExplain, onExport }) => {
+const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExport }) => {
     const { t } = useTranslation();
     const colors = useColors();
     const styles = useStyles();
@@ -76,7 +73,6 @@ const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExplai
         <Animated.View testID="saved-export-row" style={[styles.row, { top: headerHeight }, ride]}>
             <PageTitleRow
                 title={t('library.saved.count', { count })}
-                onExplain={onExplain}
                 trailing={exportButton}
                 testID="saved-title-row"
             />

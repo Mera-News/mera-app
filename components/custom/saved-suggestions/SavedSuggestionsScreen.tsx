@@ -10,7 +10,6 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
-import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
@@ -23,12 +22,12 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, type ListRenderItem } from 'react-native';
+import { type ListRenderItem } from 'react-native';
 import Animated, { type SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import SavedExportModal from './SavedExportModal';
 import SavedExportRow, { SAVED_EXPORT_ROW_HEIGHT } from './SavedExportRow';
 import { savedItemId } from './saved-item-id';
-import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 interface SavedSuggestionsScreenProps {
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
@@ -39,8 +38,6 @@ interface SavedSuggestionsScreenProps {
     hidden?: SharedValue<number>;
     /** List-end padding (the tab bar and the Mera button). */
     listEndPadding?: number;
-    /** Opens Saved's explainer (the ? beside the count). */
-    onExplain?: () => void;
     /** False while Saved is a warmed neighbour: no scroll ticks. */
     active?: boolean;
 }
@@ -72,7 +69,6 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     headerHeight = 0,
     hidden,
     listEndPadding,
-    onExplain,
     active = true,
 }) => {
     const { t } = useTranslation();
@@ -169,13 +165,6 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 onContentSizeChange={settleIfShort}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                ListHeaderComponent={
-                    showRow || isLoading ? null : (
-                        <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-                            <PageTitleRow title={t('nav.page.saved')} onExplain={onExplain} testID="saved-title-row" />
-                        </View>
-                    )
-                }
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     // 12pt below the pinned row.
@@ -195,7 +184,6 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     count={savedCount}
                     headerHeight={headerHeight}
                     hidden={hidden}
-                    onExplain={onExplain}
                     onExport={() => setExportOpen(true)}
                 />
             ) : null}

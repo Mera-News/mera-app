@@ -7,17 +7,18 @@
 // keep-mounted in the pager (PAGE_META.feed), so the chosen list survives
 // swipes and tab switches.
 //
-// Each list draws the title row ("For you", ?, View chip) as the FIRST item of
-// its own list, never as a sibling before it (react-native-screens walks to the
-// first child scroll view). The row never changes height, open or closed.
+// Each list draws the View chip's row (right-aligned, nothing at its start;
+// the page's ? is in the tab header) as the FIRST item of its own list, never
+// as a sibling before it (react-native-screens walks to the first child scroll
+// view). The row never changes height, open or closed.
 
 import InterestsPage from '@/components/custom/for-you/InterestsPage';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
-import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 
 import FeedScreen from './FeedScreen';
 import { type FeedView, setFeedView, useFeedView } from './feed-view-prefs';
@@ -32,7 +33,7 @@ export interface FeedPageProps {
 const FeedPage: React.FC<FeedPageProps> = ({ active, header }) => {
   const { t } = useTranslation();
   const view = useFeedView();
-  const { reveal, openExplainer } = header;
+  const { reveal } = header;
 
   const labelOf = useCallback(
     (v: FeedView) => (v === 'sectioned' ? t('feed.view.sectioned') : t('feed.view.continuous')),
@@ -49,23 +50,18 @@ const FeedPage: React.FC<FeedPageProps> = ({ active, header }) => {
 
   const titleRow = useMemo(
     () => (
-      <PageTitleRow
-        title={t('feed.forYouTitle')}
-        onExplain={openExplainer}
-        trailing={
-          <InlineChoiceChip
-            options={VIEWS}
-            value={view}
-            labelOf={labelOf}
-            a11yLabelOf={(v) => t('feed.view.a11y', { view: labelOf(v) })}
-            onChange={onChange}
-            testID="feed-view-chip"
-          />
-        }
-        testID="feed-title-row"
-      />
+      <View style={styles.chipRow} testID="feed-title-row">
+        <InlineChoiceChip
+          options={VIEWS}
+          value={view}
+          labelOf={labelOf}
+          a11yLabelOf={(v) => t('feed.view.a11y', { view: labelOf(v) })}
+          onChange={onChange}
+          testID="feed-view-chip"
+        />
+      </View>
     ),
-    [t, openExplainer, view, labelOf, onChange],
+    [t, view, labelOf, onChange],
   );
 
   return (
@@ -82,5 +78,10 @@ const FeedPage: React.FC<FeedPageProps> = ({ active, header }) => {
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  // PageTitleRow's height, so the first card does not move.
+  chipRow: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', minHeight: 34 },
+});
 
 export default FeedPage;

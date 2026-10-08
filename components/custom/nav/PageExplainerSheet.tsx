@@ -1,7 +1,7 @@
-// A page's explainer: the help card the ? beside a page title opens, growing
+// A page's explainer: the help card the ? in the tab header opens, growing
 // out of that ? (HelpModal; the ? marks itself with `markHelpOrigin`). The
-// page's paragraphs, then Learn more (outlined, opens the tutorial chapter)
-// and Got it (filled orange). Got it, the X, a scrim tap or Back closes it.
+// page's paragraphs, then Learn more (outlined, opens the tutorial chapter;
+// absent when the page names none) and Got it (filled orange). Got it, the X, a scrim tap or Back closes it.
 //
 // The surface, title, X, scrim and motion are HelpModal's; this file is only
 // the content. A card opened from inside a tab survives a tab switch, so its
@@ -42,11 +42,17 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
   const onClosed = () => {
     if (!wantsTutorial.current) return;
     wantsTutorial.current = false;
-    openTutorial(shown.chapter, shown.slide);
+    if (shown.chapter) openTutorial(shown.chapter, shown.slide);
   };
 
   return (
-    <HelpModal open={open} onClose={onClose} onClosed={onClosed} title={t(shown.titleKey)} testID="page-explainer">
+    <HelpModal
+      open={open}
+      onClose={onClose}
+      onClosed={onClosed}
+      title={t(shown.titleKey)}
+      testID="page-explainer"
+    >
       <View style={styles.content}>
         <View style={styles.body}>
           {shown.paragraphKeys.map((key) => (
@@ -56,16 +62,18 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
           ))}
         </View>
         <View style={styles.actions}>
-          <Pressable
-            onPress={learnMore}
-            accessibilityRole="button"
-            style={[styles.button, styles.outlined, { borderColor: colors.helpRing }]}
-            testID="page-explainer-learn-more"
-          >
-            <Text size="md" bold style={{ color: colors.ink }}>
-              {t('nav.learnMore')}
-            </Text>
-          </Pressable>
+          {shown.chapter ? (
+            <Pressable
+              onPress={learnMore}
+              accessibilityRole="button"
+              style={[styles.button, styles.outlined, { borderColor: colors.helpRing }]}
+              testID="page-explainer-learn-more"
+            >
+              <Text size="md" bold style={{ color: colors.ink }}>
+                {t('nav.learnMore')}
+              </Text>
+            </Pressable>
+          ) : null}
           <Pressable
             onPress={onClose}
             accessibilityRole="button"
@@ -88,7 +96,13 @@ const styles = StyleSheet.create({
   body: { gap: 12 },
   paragraph: { fontSize: 15, lineHeight: 22 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 8 },
-  button: { flex: 1, minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  button: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   outlined: { borderWidth: 1 },
 });
 

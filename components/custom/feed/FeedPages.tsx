@@ -10,7 +10,6 @@ import FeedStatusIcon from '@/components/custom/for-you/FeedStatusIcon';
 import StatusCardSlideIn from '@/components/custom/for-you/StatusCardSlideIn';
 import FeedPage from '@/components/custom/feed/FeedPage';
 import { PAGE_META } from '@/components/custom/nav/page-registry';
-import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import TabPages from '@/components/custom/nav/TabPages';
 import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import TrackedStoriesScreen from '@/components/custom/tracked-stories/TrackedStoriesScreen';
@@ -93,9 +92,6 @@ export function FeedPages() {
             active={active}
             scrollHandler={header.scrollHandler}
             headerHeight={header.headerHeight}
-            listHeader={
-              <PageTitleRow title={t('trackedStories.title')} onExplain={header.openExplainer} testID="stories-title-row" />
-            }
           />
         );
       default:

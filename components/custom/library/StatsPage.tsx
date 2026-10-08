@@ -62,8 +62,6 @@ interface Props {
     readonly headerHeight: number;
     /** List-end padding: the tab bar and the Mera button. */
     readonly listEndPadding: number;
-    /** Opens the Stats explainer (the ? beside the page title). */
-    readonly onExplain: () => void;
 }
 
 /** One Stats card as it sits on the page: its name, then its figure. In
@@ -121,7 +119,7 @@ const StatTile: React.FC<{
     );
 };
 
-const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listEndPadding, onExplain }) => {
+const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listEndPadding }) => {
     const { t } = useTranslation();
     const c = useColors();
     const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
@@ -237,7 +235,6 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                     <View style={{ marginBottom: PAGE_TITLE_GAP }}>
                         <PageTitleRow
                             title={t('library.stats.title')}
-                            onExplain={onExplain}
                             testID="stats-title-row"
                         />
                     </View>

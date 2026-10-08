@@ -2,7 +2,6 @@ import BlockedBanner from '@/components/custom/BlockedBanner';
 import { openFactPage } from '@/components/custom/facts/open-fact-page';
 import { sentenceCase } from '@/components/custom/facts/sentence-case';
 import { composeLocationLabel, roleMeta } from '@/components/custom/locations/location-display';
-import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import { useAdjustedSources } from '@/components/custom/publication-preferences/use-adjusted-sources';
 import { Text } from '@/components/ui/text';
@@ -91,7 +90,6 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingHorizontal: PAGE_SIDE_INSET, paddingBottom: endClearance, gap: 10 }}
         >
-            <PageTitleRow title={t('you.profile.title')} onExplain={header.openExplainer} testID="profile-title" />
             <Help>{t('you.profile.subtitle')}</Help>
             {userPersona?.blockedByLlm ? <BlockedBanner reason={userPersona.blockedByLlmReason} /> : null}
 

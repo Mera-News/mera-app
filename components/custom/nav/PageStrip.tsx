@@ -27,7 +27,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, ScrollView, StyleSheet, View, type AccessibilityActionEvent } from 'react-native';
+import { Platform, StyleSheet, View, type AccessibilityActionEvent } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,

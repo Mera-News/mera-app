@@ -2982,6 +2982,18 @@
     "stories": {
       "p1": "Stories you chose to follow. Each one keeps collecting new articles as it develops, and shows what is new since you last looked.",
       "p2": "Follow a story from the Mera button or from an article. Stop following it here at any time."
+    },
+    "settings": {
+      "title": "Settings",
+      "p1": "Choose how Mera works on this phone: language, display, notifications and app lock.",
+      "p2": "Mera Protocol sets where Mera's AI runs, on this phone or in Mera's private cloud. Your data is where backups and exports live.",
+      "p3": "Help, your sign-in and the legal pages are at the bottom."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "p1": "Anything that needs you shows up here, like a profile cleanup or a question from Mera.",
+      "p2": "Tap one to open it. Opening this page marks everything as read.",
+      "p3": "They stay on this phone and are removed after 90 days. Choose what reaches your lock screen in Notification settings."
     }
   },
   "gate": {
