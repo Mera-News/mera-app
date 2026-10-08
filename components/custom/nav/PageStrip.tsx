@@ -21,6 +21,7 @@
 //    container and its label carries "2 of 5"; Android gets real tab roles.
 //  - The active pill scrolls into view.
 
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { HEADER_TRACK_HEIGHT, SegmentedControl } from '@/components/ui/segmented-control';
@@ -139,8 +140,8 @@ function useEdgeFade(fade: RowFade | undefined) {
   return { x, w, fadeStyle };
 }
 
-/** World's edit button: the last item of the row, opening Arrange. The same
- *  flat glass circle as the search button. */
+/** World's edit button: the last item of the row, opening Arrange, in the
+ *  country chips' glass. */
 const EditButton: React.FC<{ readonly onPress: () => void; readonly label: string; readonly fade?: RowFade }> = ({
   onPress,
   label,
@@ -157,9 +158,11 @@ const EditButton: React.FC<{ readonly onPress: () => void; readonly label: strin
       }}
     >
       <View pointerEvents="none" {...GLYPH_HIDDEN}>
-        <View style={[styles.searchCircle, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
-          <MaterialIcons name="edit" size={22} color={colors.ink} />
-        </View>
+        <GlassPanel radius={22}>
+          <View style={[styles.searchCircle, { borderColor: colors.trackBorder }]}>
+            <MaterialIcons name="edit" size={22} color={colors.ink} />
+          </View>
+        </GlassPanel>
       </View>
       <Pressable
         onPress={onPress}
@@ -229,13 +232,12 @@ const Pill: React.FC<PillProps> = ({
     );
   } else {
     visual = (
-      // A flat fill, not liquid glass (whose native shadow made a heavy pill).
-      <View
-        style={[styles.pill, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}
-        testID={`page-pill-${pill.id}-chip`}
-      >
-        {inner}
-      </View>
+      // The glass chip (owner): GlassPanel's translucent plate and edge.
+      <GlassPanel radius={999}>
+        <View style={[styles.pill, { borderColor: colors.trackBorder }]} testID={`page-pill-${pill.id}-chip`}>
+          {inner}
+        </View>
+      </GlassPanel>
     );
   }
 
