@@ -43,7 +43,8 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    paddingHorizontal: 12,
+    // No side padding: the list already insets 12, so the chips start on the
+    // bubble's left edge (a second 12 pushed them in).
     paddingVertical: 8,
   },
   chip: {

@@ -500,7 +500,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
 
 // Colours come from the theme (lib/theme/tokens.ts): bubbles and the input are
 // tints of ink over the panel, text is ink.
-const useStyles = themedStyles((c) => StyleSheet.create({
+const useStyles = themedStyles((c, mode) => StyleSheet.create({
   conversation: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -542,8 +542,12 @@ const useStyles = themedStyles((c) => StyleSheet.create({
   },
   bubbleAssistant: {
     // No border — the panel keeps the only orange outline. Role is signaled by
-    // surface tone + alignment instead.
-    backgroundColor: c.surfaceRaised,
+    // surface tone + alignment instead. Light: the white card surface with a
+    // hairline (a translucent grey read as dirty on the light panel); dark keeps
+    // the raised tint.
+    ...(mode === 'light'
+      ? { backgroundColor: c.panel, borderWidth: StyleSheet.hairlineWidth, borderColor: c.panelBorder }
+      : { backgroundColor: c.surfaceRaised }),
   },
   // Applied AFTER the role style, so it overrides the fill and the shadow.
   // Deliberately not a dashed border: RN falls back to solid on Android as
