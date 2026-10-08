@@ -99,12 +99,14 @@ import type { ForYouSuggestion } from './for-you-store';
  * Dashboard, and the swipe stack all gate on this one constant.
  *
  * 48h, and deliberately not a second hardcoded copy: it IS
- * `SCORE_PROPAGATION_LOOKBACK_MS`, which is also what the header sentence
- * counts over (see lib/hooks/use-feed-counts.ts) and what the storage TTL keeps
- * (`SUGGESTION_TTL_MS` in lib/scheduler/tasks/data-cleanup-task.ts). Binding
- * them together is the point: this was 24h while the header counted 48h, so the
- * header advertised a pile of articles the feed then silently refused to render,
- * and there was no way to tell that apart from a bug.
+ * `SCORE_PROPAGATION_LOOKBACK_MS`, which is also what the storage TTL keeps
+ * (`SUGGESTION_TTL_MS` in lib/scheduler/tasks/data-cleanup-task.ts). The stats
+ * card's counts are NOT this window: every count there is the last 24 hours
+ * (`COUNTS_WINDOW_MS` in lib/hooks/use-feed-counts.ts, owner), a subset of
+ * what the feed lists. The direction matters: this window was once 24h while
+ * the header counted 48h, so the header advertised a pile of articles the feed
+ * then silently refused to render. Counts narrower than the list can never do
+ * that.
  *
  * Widening it also simply gives the user more to read — rows in the 24-48h band
  * were already on the device, already scored, and already being kept alive as
