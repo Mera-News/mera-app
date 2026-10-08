@@ -35,6 +35,9 @@ import { COLORS, useThemeMode } from '@/lib/theme/tokens';
 import { hydrateTheme } from '@/lib/theme/theme-store';
 import LaunchLogoHandoff from '@/components/custom/auth/LaunchLogoHandoff';
 import { TextScaleProvider } from '@/lib/typography/TextScaleProvider';
+import { useMotionAllowed } from '@/lib/motion-gate';
+import { ReduceMotion, ReducedMotionConfig } from 'react-native-reanimated';
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import '@/global.css';
 import database from '@/lib/database';
 import { hydrateAllStores } from '@/lib/database/hydrate-stores';
@@ -98,6 +101,8 @@ import '@/lib/scheduler/tasks/fact-check-reconcile-task';
 // truly quiescent (nothing in the background).
 function AppRoot() {
   const navigationRef = useNavigationContainerRef();
+  // Lite: every stack push and pop is instant (no motion, owner rule).
+  const motion = useMotionAllowed();
 
   // Install-boundary safety net (S12): app/index.tsx awaits this before its
   // identity reads on the normal path, but a deep link can mount a different
@@ -355,35 +360,35 @@ function AppRoot() {
               screenOptions={{
                 headerShown: false,
                 contentStyle: { backgroundColor: COLORS[themeMode].base },
-                animation: 'slide_from_right',
+                animation: motion ? 'slide_from_right' : 'none',
               }}
             >
               <Stack.Screen
                 name="index"
                 options={{
                   headerShown: false,
-                  animation: 'fade'
+                  animation: motion ? 'fade' : 'none'
                 }}
               />
               <Stack.Screen
                 name="login"
                 options={{
                   headerShown: false,
-                  animation: 'slide_from_left'
+                  animation: motion ? 'slide_from_left' : 'none'
                 }}
               />
               <Stack.Screen
                 name="logged-in"
                 options={{
                   headerShown: false,
-                  animation: 'fade'
+                  animation: motion ? 'fade' : 'none'
                 }}
               />
               <Stack.Screen
                 name="pin-lock"
                 options={{
                   headerShown: false,
-                  animation: 'fade',
+                  animation: motion ? 'fade' : 'none',
                   gestureEnabled: false,
                 }}
               />
@@ -391,7 +396,7 @@ function AppRoot() {
                 name="pin-setup"
                 options={{
                   headerShown: false,
-                  animation: 'fade',
+                  animation: motion ? 'fade' : 'none',
                   gestureEnabled: false,
                 }}
               />
@@ -427,12 +432,26 @@ holdSplash();
 // first screen so a light device never paints dark first. Never rejects.
 void hydrateTheme();
 
+/**
+ * Lite = no motion (lib/motion-gate.ts, layer 1): Reanimated's reduce-motion
+ * switch forced on, so every Reanimated animation started from now on lands at
+ * once. Rendered only in Lite: unmounting restores the system value, so a Full
+ * user's Reduce Motion is never touched. Its own component so the store
+ * subscription never re-renders the root.
+ */
+function LiteMotionConfig() {
+  const lite = useDisplayPrefsStore((s) => s.liteMode);
+  return lite ? <ReducedMotionConfig mode={ReduceMotion.Always} /> : null;
+}
+
 // Root layout: providers + the mandatory-update gate ONLY. Deliberately holds no
 // store subscriptions or boot logic of its own, so background activity can never
 // re-render the gate / update screen — when blocked, the screen is static.
 export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* First, so Lite's no-motion switch is set before anything animates. */}
+      <LiteMotionConfig />
       <KeyboardProvider>
         <SafeAreaProvider>
           <GluestackUIProvider>
