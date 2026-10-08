@@ -1,11 +1,12 @@
-// The feed status card's two bodies (DashboardStatsCard):
+// The feed status card's level 2, under the chevron (DashboardStatsCard; the
+// card has ONE layout, its lead row saying the state):
 //
-// - `FeedStatusDetails`, level 2 under the chevron: Stage, scoring progress
-//   with its bar, Published / Analysed / Relevant so far, Last processed.
-//   Values roll to a new number (FinalFeedStatus #2); Reduce Motion swaps.
-// - `FeedStatusNotice`, the whole card at the daily limit or on a problem
-//   (FinalFeedStatus #4, #5): what happened, when it clears, one action, and
-//   Last processed. No count sentence and no stage rows there.
+// - `FeedStatusDetails`: Stage (at the daily limit or on a problem, that
+//   state's title), scoring progress with its bar, Published / Analysed /
+//   Relevant so far, Last processed. Values roll to a new number
+//   (FinalFeedStatus #2); Reduce Motion swaps.
+// - `FeedStatusActions`: the limit's "Or upgrade your plan." and Manage plan,
+//   or a problem's Try now. Nothing in any other mode.
 //
 // The counts come from the shared minute-clock `useFeedCounts`, so they match
 // the sentence on level 1.
@@ -24,7 +25,6 @@ import {
     useForYouAsyncJobProcessedCount,
     useForYouAsyncJobTotalCount,
     useForYouBatchProgress,
-    useForYouDailyLimitResetAt,
     useForYouDeviceProcessing,
     useForYouScoringError,
     useForYouSyncStatusMessage,
@@ -76,6 +76,7 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
     const asyncDone = useForYouAsyncJobProcessedCount();
     const asyncTotal = useForYouAsyncJobTotalCount();
     const { isDeviceProcessing, deviceProcessedCount, deviceTotalCount } = useForYouDeviceProcessing();
+    const scoringError = useForYouScoringError();
     const styles = useStyles();
 
     const isSyncActive =
@@ -87,7 +88,9 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
 
     // Cloud/device phases take precedence over the raw sync-machine state.
     // `headlineKey` is computed, hence `tAny`.
-    const stageMessage =
+    const dailyLimitStage = mode === 'limited' ? t('feed.dailyLimit.title') : null;
+    const errorStage = mode === 'error' ? t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].title) : null;
+    const stageMessage = dailyLimitStage ?? errorStage ?? (
         asyncJobPhase === 'relevance'
             ? t('feed.syncToast.relevanceTitle')
             : asyncJobPhase === 'reasons'
@@ -98,7 +101,7 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
                   ? tAny(syncStatusMessage.headlineKey)
                   : mode === 'processing'
                     ? t('feedStatus.modeProcessing')
-                    : t('feedStatus.idle');
+                    : t('feedStatus.idle'));
 
     // ONE scoring figure, shared with the "Analysing X of Y" line.
     const cloud = pickScoringProgress(batchProgress, asyncDone, asyncTotal);
@@ -148,47 +151,38 @@ export function AnalysingProgress() {
     );
 }
 
-/** The daily-limit and problem cards. Renders nothing in any other mode. */
-export const FeedStatusNotice: React.FC<{
-    readonly mode: FeedStatusMode;
-    /** Called before "Manage plan" or the upgrade link navigates. */
-    readonly onBeforeNavigate?: () => void;
-}> = ({ mode, onBeforeNavigate }) => {
+/** When new articles unlock, in the device's own clock. The cap resets at
+ *  00:00 UTC, so "tomorrow" would be false west of UTC. The sync machine
+ *  always stores a reset instant; without one (an injected mode, a cleared
+ *  store) the next UTC midnight IS the reset, so the sentence never reads
+ *  "unlock at .". */
+export function limitUnlockTime(resetAt: number | null, now: Date = new Date()): string {
+    const at = resetAt ?? Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+    return new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+/** The daily limit's and the error's actions, under the details (the lead
+ *  row says the state): "Or upgrade your plan." and Manage plan at the limit,
+ *  Try now on a problem. Nothing in any other mode. */
+export const FeedStatusActions: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }) => {
     const { t } = useTranslation();
     const router = useRouter();
-    const lastProcessedLabel = useLastProcessedLabel();
-    const dailyLimitResetAt = useForYouDailyLimitResetAt();
-    const scoringError = useForYouScoringError();
     const { onRefresh } = useFeedSyncRefresh();
     const colors = useColors();
     const styles = useStyles();
     if (mode !== 'limited' && mode !== 'error') return null;
-
-    const managePlan = () => {
-        onBeforeNavigate?.();
-        router.push('/logged-in/preferences/manage-subscription' as never);
-    };
-    const lastRow = lastProcessedLabel ? (
-        <StatRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} />
-    ) : null;
-
+    const managePlan = () => router.push('/logged-in/preferences/manage-subscription' as never);
+    const pill = (label: string, onPress: () => void, testID: string) => (
+        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} testID={testID} style={styles.pillFrame}>
+            <View style={styles.pill}>
+                <Text style={[ROW_TYPE, { color: colors.onAccent, fontWeight: '600' }]}>{label}</Text>
+            </View>
+        </Pressable>
+    );
     if (mode === 'limited') {
-        // Device timezone from an absolute instant: the cap resets at 00:00
-        // UTC, so "tomorrow" would be false west of UTC. The sync machine
-        // always stores a reset instant; without one (an injected mode, a
-        // cleared store) the next UTC midnight IS the reset, so the sentence
-        // never reads "unlock at .".
-        const now = new Date();
-        const resetAt =
-            dailyLimitResetAt ?? Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-        const time = new Date(resetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         return (
-            <VStack testID="feed-status-daily-limit">
-                <Text style={[ROW_TYPE, { color: colors.accentText, fontWeight: '600' }]}>
-                    {t('feed.dailyLimit.title')}
-                </Text>
-                <Text style={[ROW_TYPE, { color: colors.ink, marginTop: 4 }]}>
-                    {t('feed.dailyLimit.bodyWithTime', { time })}{' '}
+            <VStack className="mt-2" testID="feed-status-daily-limit">
+                <Text style={[ROW_TYPE, { color: colors.ink }]}>
                     <Trans
                         i18nKey="feedStatus.limitUpgrade"
                         components={[
@@ -202,42 +196,15 @@ export const FeedStatusNotice: React.FC<{
                     />
                 </Text>
                 <HStack className="justify-end mt-2">
-                    <Pressable
-                        onPress={managePlan}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('subscription.managePlan')}
-                        testID="feed-status-manage-subscription"
-                        style={styles.pillFrame}
-                    >
-                        <View style={styles.pill}>
-                            <Text style={[ROW_TYPE, { color: colors.onAccent, fontWeight: '600' }]}>
-                                {t('subscription.managePlan')}
-                            </Text>
-                        </View>
-                    </Pressable>
+                    {pill(t('subscription.managePlan'), managePlan, 'feed-status-manage-subscription')}
                 </HStack>
-                {lastRow}
             </VStack>
         );
     }
-
-    const keys = SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'];
     return (
-        <VStack testID="feed-status-error">
-            <Text style={[ROW_TYPE, { color: colors.negative, fontWeight: '600' }]}>{t(keys.title)}</Text>
-            <Text style={[ROW_TYPE, { color: colors.ink, marginTop: 4 }]}>
-                {t(keys.message)}{' '}
-                <Text
-                    onPress={() => onRefresh()}
-                    accessibilityRole="button"
-                    testID="feed-status-try-now"
-                    style={[ROW_TYPE, { color: colors.accentText }]}
-                >
-                    {t('feedStatus.tryNow')}
-                </Text>
-            </Text>
-            <View style={{ marginTop: 6 }}>{lastRow}</View>
-        </VStack>
+        <HStack className="justify-end mt-2" testID="feed-status-error">
+            {pill(t('feedStatus.tryNow'), () => onRefresh(), 'feed-status-try-now')}
+        </HStack>
     );
 };
 

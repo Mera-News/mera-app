@@ -1,21 +1,21 @@
 // The feed's ONE counts card (FinalFeed #1, FinalFeedStatus #1-5): the FIRST
 // item of the Feed list in both views (`useStatsCardItem`, the list header),
 // so a page swipe carries it like any card. When it shows and whether it is
-// open live in feed-status-card.ts, so the status icon can expand it. There
+// open live in feed-status-card.ts. There
 // is never an overlay and never two. The chevron opens the details INSIDE the
 // card, their height animated on the UI thread (`ExpandingDetails`). The Mera
 // mark leads the sentence (`StatusMark`), moving while a run is in flight: the
 // Feed header has no status icon any more, so this is the Feed's "working".
 //
-// Level 1: the status line (a light sweeps across it while a sync runs) and a
-// chevron, then the count sentence ("being analysed" while syncing, with the
-// 20pt processing scene beside it). Level 2, under the chevron
-// and INSIDE the same card: FeedStatusDetails. At the daily limit or on a
-// problem the whole card is FeedStatusNotice instead: no chevron, no counts.
-//
-// A zero count leads with its reason instead (zero-state.ts): nothing
-// fetched, nothing analysed, nothing relevant, or offline, as plain text in
-// the card's one-press row (no links, owner).
+// ONE layout for every state (owner). Level 1, the lead row: the Mera mark,
+// a sentence and the ⌄. The sentence is the day's counts ("being analysed"
+// while syncing), or the status line at zero articles (a light sweeps across
+// it while a sync runs), or a state's own sentence (card-state.ts): the daily
+// limit (when articles unlock), a scoring problem, nothing fetched, nothing
+// analysed, nothing relevant, or offline, as plain text (no links, owner).
+// Level 2, under the ⌄ and INSIDE the card: FeedStatusDetails (its Stage row
+// names the limit or the problem), then FeedStatusActions (upgrade and Manage
+// plan at the limit, Try now on a problem).
 //
 // No announcement here: FeedScreen announces the capped and error states.
 
@@ -40,9 +40,11 @@ import { Text } from '@/components/ui/text';
 import { useColors } from '@/lib/theme/tokens';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import FeedStatsSentence from './FeedStatsSentence';
-import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
+import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { zeroState, type ZeroState } from './zero-state';
+import { cardState, type CardState } from './card-state';
+import { useForYouDailyLimitResetAt, useForYouScoringError } from '@/lib/stores/selectors';
+import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 
 const HIDDEN = {
     accessible: false,
@@ -74,13 +76,18 @@ function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
 
 const TABULAR = { fontVariant: ['tabular-nums' as const] };
 
-/** A zero's sentence, plain text (owner: no links; the reader finds
- *  Settings and their profile themselves). */
-function useZeroText(kind: ZeroState | null): string | null {
+/** A state's lead sentence, plain text (owner: no links; the reader finds
+ *  Settings and their profile themselves; the limit's and the error's actions
+ *  are in the details). */
+function useStateText(kind: CardState | null): string | null {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
     const { articleCount, analysedCount } = useFeedCounts();
+    const resetAt = useForYouDailyLimitResetAt();
+    const scoringError = useForYouScoringError();
     const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
+    if (kind === 'limited') return t('feed.dailyLimit.bodyWithTime', { time: limitUnlockTime(resetAt) });
+    if (kind === 'error') return t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].message);
     if (kind === 'offline') return t('common.offlineBannerOffline');
     if (kind === 'fetched') return t('feed.statsZeroFetched');
     if (kind === 'analysed') return `${t('feed.statsPublished', fmt(articleCount))} ${t('feed.statsZeroAnalysedTail')}`;
@@ -162,8 +169,8 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     // explaining): with no facts at all the no-facts card owns the Feed.
     const noFacts = useHasFacts() === false;
     const offline = useIsConnected() === false;
-    const zero = zeroState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount });
-    const zeroText = useZeroText(zero);
+    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount });
+    const zeroText = useStateText(state);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
 
@@ -171,7 +178,6 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
 
     const toggle = useCallback(() => setStatusCardExpanded(!useFeedStatusCard.getState().expanded), []);
 
-    const notice = mode === 'limited' || mode === 'error';
     // With counts to show, the card LEADS with the sentence, collapsed and
     // expanded (the details' Stage row already says the state). At zero the
     // sentence says nothing, so then the status line leads.
@@ -180,6 +186,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
         <ExpandingDetails open={expanded}>
             <FeedStatusDetails mode={mode} />
             {processing ? <AnalysingProgress /> : null}
+            <FeedStatusActions mode={mode} />
         </ExpandingDetails>
     );
 
@@ -190,9 +197,6 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                 contentClassName="px-4 py-3"
                 testID={testID}
             >
-                {notice ? (
-                    <FeedStatusNotice mode={mode} />
-                ) : (
                     <>
                         {/* A hidden visual under a CHILDLESS labelled button: a
                             glyph inside a button surfaces on iOS as its own
@@ -241,7 +245,6 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                         </View>
                         {details}
                     </>
-                )}
             </GlassPanel>
         </View>
     );
