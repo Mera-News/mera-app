@@ -1317,7 +1317,6 @@
       "removeConfirm": "再次点按即可移除",
       "limitReached": "每日调整上限已达 — 更改将在明天继续。"
     },
-    "meraInviteReturning": "告诉我一些新的兴趣，我会把它加入你的信息流。",
     "editFacts": "编辑",
     "planUsage": "今日已分析 {{used}}/{{limit}}",
     "updatingAllFacts": "正在更新所有事实",
@@ -2944,10 +2943,6 @@
     "library": {
       "likeToRead": "告诉 Mera 你喜欢读什么"
     },
-    "profile": {
-      "fixFact": "纠正 Mera 弄错的事实",
-      "whatKnows": "问问 Mera 对你了解多少"
-    },
     "facts": {
       "change": "更改你的事实",
       "remove": "移除一条事实"
@@ -2977,7 +2972,6 @@
     "checks": "告诉我你看到的某个说法，我会在网上查一查。",
     "checksNoWeb": "聊天中的网页搜索已关闭，所以我现在无法查证说法。你可以在设置中开启它。",
     "library": "问我任何新闻相关的问题，或者告诉我你喜欢读什么。",
-    "profile": "这是 Mera 对你的了解。告诉我新的内容，或纠正不对的地方。",
     "facts": "你正在查看你的事实。你想更改什么？",
     "sources": "问我某个出版物的情况，或者告诉我你关注什么。",
     "settings": "问我能做什么，或问 Mera 如何处理你的数据。"

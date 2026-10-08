@@ -1316,7 +1316,6 @@
       "removeConfirm": "Tocca di nuovo per rimuovere",
       "limitReached": "Limite di regolazione giornaliero raggiunto: le modifiche continueranno domani."
     },
-    "meraInviteReturning": "Raccontami qualcosa di nuovo e lo aggiungerò al tuo feed.",
     "editFacts": "Modifica",
     "planUsage": "{{used}} di {{limit}} analizzati oggi",
     "updatingAllFacts": "Aggiornamento di tutti i fatti",
@@ -2946,10 +2945,6 @@
     "library": {
       "likeToRead": "Dì a Mera cosa ti piace leggere"
     },
-    "profile": {
-      "fixFact": "Correggi un fatto che Mera ha sbagliato",
-      "whatKnows": "Chiedi cosa sa Mera di te"
-    },
     "facts": {
       "change": "Cambia i tuoi fatti",
       "remove": "Rimuovi un fatto"
@@ -2979,7 +2974,6 @@
     "checks": "Dimmi un'affermazione che hai visto e la cerco sul web.",
     "checksNoWeb": "La ricerca web nella chat è disattivata, quindi ora non posso cercare le affermazioni. Puoi attivarla in Impostazioni.",
     "library": "Chiedimi qualsiasi cosa sulle notizie, oppure dimmi cosa ti piace leggere.",
-    "profile": "Questo è ciò che Mera sa di te. Dimmi qualcosa di nuovo, o correggi ciò che è sbagliato.",
     "facts": "Stai guardando i tuoi fatti. Cosa vuoi cambiare?",
     "sources": "Chiedimi di una testata, oppure dimmi cosa segui.",
     "settings": "Chiedimi cosa so fare, o come Mera gestisce i tuoi dati."

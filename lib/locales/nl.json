@@ -1316,7 +1316,6 @@
       "removeConfirm": "Tik nogmaals om te verwijderen",
       "limitReached": "Dagelijkse aanpassingslimiet bereikt: wijzigingen gaan morgen door."
     },
-    "meraInviteReturning": "Vertel me iets nieuws, dan voeg ik het toe aan je feed.",
     "editFacts": "Bewerken",
     "planUsage": "{{used}} van {{limit}} vandaag geanalyseerd",
     "updatingAllFacts": "Alle feiten bijwerken",
@@ -2946,10 +2945,6 @@
     "library": {
       "likeToRead": "Vertel Mera wat je graag leest"
     },
-    "profile": {
-      "fixFact": "Herstel een feit dat Mera fout had",
-      "whatKnows": "Vraag wat Mera over je weet"
-    },
     "facts": {
       "change": "Wijzig je feiten",
       "remove": "Verwijder een feit"
@@ -2979,7 +2974,6 @@
     "checks": "Vertel me een bewering die je hebt gezien en ik zoek hem op het web op.",
     "checksNoWeb": "Zoeken op het web in de chat staat uit, dus ik kan nu geen beweringen opzoeken. Je kunt het aanzetten in Instellingen.",
     "library": "Vraag me naar alles in het nieuws, of vertel me wat je graag leest.",
-    "profile": "Dit weet Mera over je. Vertel me iets nieuws, of herstel wat niet klopt.",
     "facts": "Je bekijkt je feiten. Wat wil je wijzigen?",
     "sources": "Vraag me naar een uitgever, of vertel me wat je volgt.",
     "settings": "Vraag me wat ik kan doen, of hoe Mera met je gegevens omgaat."

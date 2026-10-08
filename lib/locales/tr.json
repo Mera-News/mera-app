@@ -1318,7 +1318,6 @@
       "removeConfirm": "Kaldırmak için tekrar dokun",
       "limitReached": "Günlük ayarlama sınırına ulaşıldı, değişiklikler yarın devam edecek."
     },
-    "meraInviteReturning": "Bana yeni bir şeyden bahset, akışına ekleyeyim.",
     "editFacts": "Düzenle",
     "planUsage": "Bugün {{limit}} içinden {{used}} analiz edildi",
     "updatingAllFacts": "Tüm bilgiler güncelleniyor",
@@ -2948,10 +2947,6 @@
     "library": {
       "likeToRead": "Mera'ya ne okumayı sevdiğinizi söyleyin"
     },
-    "profile": {
-      "fixFact": "Mera'nın yanlış bildiği bir gerçeği düzeltin",
-      "whatKnows": "Mera'nın sizin hakkınızda ne bildiğini sorun"
-    },
     "facts": {
       "change": "Gerçeklerinizi değiştirin",
       "remove": "Bir gerçeği kaldırın"
@@ -2981,7 +2976,6 @@
     "checks": "Gördüğünüz bir iddiayı söyleyin, ben de web'de arayayım.",
     "checksNoWeb": "Sohbette web araması kapalı, bu yüzden şu an iddiaları arayamıyorum. Bunu Ayarlar'dan açabilirsiniz.",
     "library": "Bana haberlerdeki herhangi bir şeyi sorun veya ne okumayı sevdiğinizi söyleyin.",
-    "profile": "Mera'nın sizin hakkınızda bildikleri bunlar. Bana yeni bir şey söyleyin veya yanlış olanı düzeltin.",
     "facts": "Gerçeklerinize bakıyorsunuz. Neyi değiştirmek istersiniz?",
     "sources": "Bana bir yayını sorun veya neyi takip ettiğinizi söyleyin.",
     "settings": "Neler yapabileceğimi ya da Mera'nın verilerinizi nasıl ele aldığını sorun."

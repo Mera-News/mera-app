@@ -1342,7 +1342,6 @@
       "removeConfirm": "Dotknij ponownie, aby usunąć",
       "limitReached": "Osiągnięto limit dzienny regulacji: zmiany będą kontynuowane jutro."
     },
-    "meraInviteReturning": "Opowiedz mi o czymś nowym, a dodam to do Twojego kanału.",
     "editFacts": "Edytuj",
     "planUsage": "{{used}} z {{limit}} przeanalizowanych dziś",
     "updatingAllFacts": "Aktualizowanie wszystkich faktów",
@@ -3012,10 +3011,6 @@
     "library": {
       "likeToRead": "Powiedz Merze, co lubisz czytać"
     },
-    "profile": {
-      "fixFact": "Popraw fakt, który Mera źle zapisała",
-      "whatKnows": "Zapytaj, co Mera o Tobie wie"
-    },
     "facts": {
       "change": "Zmień swoje fakty",
       "remove": "Usuń fakt"
@@ -3045,7 +3040,6 @@
     "checks": "Powiedz mi, jakie twierdzenie widziałeś, a poszukam go w sieci.",
     "checksNoWeb": "Wyszukiwanie w sieci w czacie jest wyłączone, więc teraz nie mogę sprawdzać twierdzeń. Możesz je włączyć w Ustawieniach.",
     "library": "Zapytaj mnie o cokolwiek z wiadomości albo powiedz, co lubisz czytać.",
-    "profile": "Oto, co Mera o Tobie wie. Powiedz mi coś nowego albo popraw to, co jest błędne.",
     "facts": "Oglądasz swoje fakty. Co chcesz zmienić?",
     "sources": "Zapytaj mnie o wydawcę albo powiedz, co śledzisz.",
     "settings": "Zapytaj mnie, co potrafię, albo jak Mera obchodzi się z Twoimi danymi."

@@ -1536,7 +1536,6 @@
       "removeConfirm": "Tap again to remove",
       "limitReached": "Daily adjustment limit reached: changes continue tomorrow."
     },
-    "meraInviteReturning": "Tell me about something new and I'll add it to your feed.",
     "editFacts": "Edit",
     "planUsage": "{{used}} of {{limit}} analysed today",
     "updatingAllFacts": "Updating all facts",
@@ -2946,10 +2945,6 @@
     "library": {
       "likeToRead": "Tell Mera what you like to read"
     },
-    "profile": {
-      "fixFact": "Fix a fact Mera got wrong",
-      "whatKnows": "Ask what Mera knows about you"
-    },
     "facts": {
       "change": "Change your facts",
       "remove": "Remove a fact"
@@ -2979,7 +2974,6 @@
     "checks": "Tell me a claim you've seen and I'll look it up on the web.",
     "checksNoWeb": "Web search in chat is off, so I can't look claims up right now. You can turn it on in Settings.",
     "library": "Ask me about anything in the news, or tell me what you like to read.",
-    "profile": "This is what Mera knows about you. Tell me something new, or fix what's wrong.",
     "facts": "You're looking at your facts. What would you like to change?",
     "sources": "Ask me about a publication, or tell me what you follow.",
     "settings": "Ask me what I can do, or how Mera handles your data."

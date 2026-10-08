@@ -1316,7 +1316,6 @@
       "removeConfirm": "Ketuk lagi untuk menghapus",
       "limitReached": "Batas penyesuaian harian tercapai: perubahan akan berlanjut besok."
     },
-    "meraInviteReturning": "Ceritakan hal baru, nanti saya tambahkan ke feed Anda.",
     "editFacts": "Edit",
     "planUsage": "{{used}} dari {{limit}} dianalisis hari ini",
     "updatingAllFacts": "Memperbarui semua fakta",
@@ -2943,10 +2942,6 @@
     "library": {
       "likeToRead": "Beri tahu Mera apa yang suka Anda baca"
     },
-    "profile": {
-      "fixFact": "Perbaiki fakta yang salah dari Mera",
-      "whatKnows": "Tanyakan apa yang Mera tahu tentang Anda"
-    },
     "facts": {
       "change": "Ubah fakta Anda",
       "remove": "Hapus fakta"
@@ -2976,7 +2971,6 @@
     "checks": "Sebutkan klaim yang pernah Anda lihat dan saya akan mencarinya di web.",
     "checksNoWeb": "Pencarian web di chat sedang nonaktif, jadi saya tidak bisa mencari klaim saat ini. Anda bisa mengaktifkannya di Pengaturan.",
     "library": "Tanyakan apa saja tentang berita, atau beri tahu saya apa yang suka Anda baca.",
-    "profile": "Ini yang Mera ketahui tentang Anda. Beri tahu saya hal baru, atau perbaiki yang salah.",
     "facts": "Anda sedang melihat fakta Anda. Apa yang ingin Anda ubah?",
     "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang Anda ikuti.",
     "settings": "Tanyakan kepada saya apa yang bisa saya lakukan, atau bagaimana Mera menangani data Anda."

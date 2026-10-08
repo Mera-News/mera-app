@@ -1317,7 +1317,6 @@
       "removeConfirm": "Chạm lại để xóa",
       "limitReached": "Đã đạt giới hạn điều chỉnh hàng ngày, các thay đổi sẽ tiếp tục vào ngày mai."
     },
-    "meraInviteReturning": "Hãy kể cho tôi điều gì mới, tôi sẽ thêm vào bảng tin của bạn.",
     "editFacts": "Sửa",
     "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay",
     "updatingAllFacts": "Đang cập nhật tất cả thông tin",
@@ -2944,10 +2943,6 @@
     "library": {
       "likeToRead": "Cho Mera biết bạn thích đọc gì"
     },
-    "profile": {
-      "fixFact": "Sửa thông tin Mera hiểu sai",
-      "whatKnows": "Hỏi Mera biết gì về bạn"
-    },
     "facts": {
       "change": "Đổi thông tin của bạn",
       "remove": "Xóa một thông tin"
@@ -2977,7 +2972,6 @@
     "checks": "Hãy nói với tôi một nhận định bạn đã thấy và tôi sẽ tra cứu trên web.",
     "checksNoWeb": "Tìm kiếm web trong trò chuyện đang tắt, nên tôi chưa thể tra cứu nhận định lúc này. Bạn có thể bật nó trong Cài đặt.",
     "library": "Hãy hỏi tôi về bất cứ điều gì trong tin tức, hoặc cho tôi biết bạn thích đọc gì.",
-    "profile": "Đây là những gì Mera biết về bạn. Hãy cho tôi biết điều mới, hoặc sửa điều chưa đúng.",
     "facts": "Bạn đang xem thông tin của mình. Bạn muốn đổi gì?",
     "sources": "Hãy hỏi tôi về một ấn phẩm, hoặc cho tôi biết bạn theo dõi gì.",
     "settings": "Hãy hỏi mình xem mình làm được gì, hoặc Mera xử lý dữ liệu của bạn như thế nào."

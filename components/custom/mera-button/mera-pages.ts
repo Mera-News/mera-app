@@ -25,7 +25,9 @@ interface HintDef {
 
 const ASK_NEWS: HintDef = { key: 'meraHints.askNews', web: true };
 
-const POOLS: Record<MeraPageKey, readonly HintDef[]> = {
+// No `profile` entry: Profile opens with the original welcome and its own chips
+// (floating-chat/profile-welcome.ts).
+const POOLS: Partial<Record<MeraPageKey, readonly HintDef[]>> = {
   feed: [{ key: 'meraHints.feed.moreNews' }, { key: 'meraHints.feed.addHome' }, ASK_NEWS],
   interest: [{ key: 'meraHints.interest.change' }, { key: 'meraHints.interest.remove' }],
   stories: [{ key: 'meraHints.stories.follow' }, { key: 'meraHints.stories.name' }],
@@ -38,12 +40,6 @@ const POOLS: Record<MeraPageKey, readonly HintDef[]> = {
     { key: 'meraHints.checks.quote', web: true },
   ],
   library: [ASK_NEWS, { key: 'meraHints.library.likeToRead' }],
-  profile: [
-    // Exact owner text, reused so its 20 translations survive.
-    { key: 'profile.meraInviteReturning' },
-    { key: 'meraHints.profile.fixFact' },
-    { key: 'meraHints.profile.whatKnows' },
-  ],
   facts: [{ key: 'meraHints.facts.change' }, { key: 'meraHints.facts.remove' }],
   sources: [{ key: 'meraHints.sources.whoBehind', web: true }, { key: 'meraHints.sources.whatFollow' }],
   // The generic set (owner M5). The second reuses an existing chip string.
@@ -98,7 +94,7 @@ export function interestFactId(surface: string | null | undefined): string | nul
 
 /** The page's starter keys, minus web ones while web search is off. */
 export function hintKeys(page: MeraPageKey, webSearch: boolean): string[] {
-  return POOLS[page].filter((h) => webSearch || !h.web).map((h) => h.key);
+  return (POOLS[page] ?? []).filter((h) => webSearch || !h.web).map((h) => h.key);
 }
 
 /** The chat the button opens. `subject` is the fact statement on One interest. */
@@ -152,7 +148,7 @@ export function pageStarters(
 /** Every i18n key this module can return, for the en.json presence test. */
 export function allKeys(): string[] {
   const keys = new Set<string>();
-  for (const pool of Object.values(POOLS)) for (const h of pool) keys.add(h.key);
+  for (const pool of Object.values(POOLS)) for (const h of pool ?? []) keys.add(h.key);
   for (const page of Object.keys(POOLS) as MeraPageKey[]) {
     keys.add(introKeyFor(page, true));
     keys.add(introKeyFor(page, false));

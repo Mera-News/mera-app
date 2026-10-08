@@ -53,10 +53,6 @@ it('interestFactId reads the fact id', () => {
 });
 
 describe('hintKeys', () => {
-  it('keeps the owner Profile line first, as the existing key', () => {
-    expect(hintKeys('profile', true)[0]).toBe('profile.meraInviteReturning');
-  });
-
   it('drops web-search hints while web search is off', () => {
     expect(hintKeys('feed', true)).toContain('meraHints.askNews');
     expect(hintKeys('feed', false)).not.toContain('meraHints.askNews');
@@ -70,7 +66,7 @@ describe('hintKeys', () => {
   it('every pool has 2 or 3 hints with web search on', () => {
     for (const page of [
       'feed', 'interest', 'stories', 'world',
-      'checks', 'library', 'profile', 'facts', 'sources', 'settings',
+      'checks', 'library', 'facts', 'sources', 'settings',
     ] as const) {
       const n = hintKeys(page, true).length;
       expect(n).toBeGreaterThanOrEqual(2);

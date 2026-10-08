@@ -1316,7 +1316,6 @@
       "removeConfirm": "Zum Entfernen erneut tippen",
       "limitReached": "Tägliches Anpassungslimit erreicht: Änderungen werden morgen fortgesetzt"
     },
-    "meraInviteReturning": "Erzähl mir von etwas Neuem, dann nehme ich es in deinen Feed auf.",
     "editFacts": "Bearbeiten",
     "planUsage": "{{used}} von {{limit}} heute analysiert",
     "updatingAllFacts": "Alle Fakten werden aktualisiert",
@@ -2946,10 +2945,6 @@
     "library": {
       "likeToRead": "Sag Mera, was du gern liest"
     },
-    "profile": {
-      "fixFact": "Einen falschen Fakt korrigieren",
-      "whatKnows": "Frag, was Mera über dich weiß"
-    },
     "facts": {
       "change": "Deine Fakten ändern",
       "remove": "Einen Fakt entfernen"
@@ -2979,7 +2974,6 @@
     "checks": "Nenne mir eine Behauptung, die du gesehen hast, und ich suche sie im Web.",
     "checksNoWeb": "Die Websuche im Chat ist aus, daher kann ich Behauptungen gerade nicht nachschlagen. Du kannst sie in den Einstellungen aktivieren.",
     "library": "Frag mich zu allem, was in den Nachrichten ist, oder sag mir, was du gern liest.",
-    "profile": "Das weiß Mera über dich. Sag mir etwas Neues oder korrigiere, was nicht stimmt.",
     "facts": "Du siehst deine Fakten. Was möchtest du ändern?",
     "sources": "Frag mich zu einem Medium oder sag mir, wem oder was du folgst.",
     "settings": "Frag mich, was ich kann oder wie Mera mit deinen Daten umgeht."

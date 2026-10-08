@@ -1316,7 +1316,6 @@
       "removeConfirm": "다시 탭하면 삭제됩니다",
       "limitReached": "일일 조정 한도에 도달했습니다. 변경 사항은 내일 계속됩니다."
     },
-    "meraInviteReturning": "새로운 관심사를 알려 주시면 피드에 추가할게요.",
     "editFacts": "편집",
     "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석",
     "updatingAllFacts": "모든 정보 업데이트 중",
@@ -2943,10 +2942,6 @@
     "library": {
       "likeToRead": "읽고 싶은 글을 Mera에게 알려 주기"
     },
-    "profile": {
-      "fixFact": "Mera가 잘못 안 사실 고치기",
-      "whatKnows": "Mera가 나에 대해 아는 것 물어보기"
-    },
     "facts": {
       "change": "내 사실 바꾸기",
       "remove": "사실 제거하기"
@@ -2976,7 +2971,6 @@
     "checks": "본 적 있는 주장을 알려 주세요. 웹에서 찾아볼게요.",
     "checksNoWeb": "채팅의 웹 검색이 꺼져 있어서 지금은 주장을 찾아볼 수 없어요. 설정에서 켤 수 있어요.",
     "library": "뉴스에 대해 무엇이든 물어보세요. 읽고 싶은 글도 알려 주세요.",
-    "profile": "이게 Mera가 아는 내 정보예요. 새로운 것을 알려 주세요. 틀린 것은 고쳐 주세요.",
     "facts": "내 사실을 보고 있어요. 무엇을 바꾸고 싶으세요?",
     "sources": "매체에 대해 물어보세요. 팔로우하는 것을 알려 주세요.",
     "settings": "제가 할 수 있는 일이나 Mera가 데이터를 다루는 방식을 물어보세요."
