@@ -52,8 +52,6 @@ import {
   pruneOrphanedSuggestions,
   persistFeedMetadata,
   loadFeedMetadata,
-  getArticleCountByTopicTexts,
-  getRenderableArticleCountByTopicTexts,
   getArticleSuggestionsByTopicTexts,
   getTotalArticleSuggestionCount,
   persistAndLinkV2Suggestions,
@@ -158,89 +156,34 @@ beforeEach(() => {
 //  toForYouSuggestion are internal but exercised through public API)
 // ===========================================================================
 
-describe('parseTopicIds (via loadSuggestions / getArticleCountByTopicTexts)', () => {
-  it('returns empty array for null matchedTopicTextsJson', async () => {
+describe('parseTopicIds (via getArticleSuggestionsByTopicTexts)', () => {
+  it('matches nothing for null matchedTopicTextsJson', async () => {
     db._setRows('article_suggestions', [
       makeSuggestion({ id: 's1', matchedTopicTextsJson: null }),
     ]);
-    const counts = await getArticleCountByTopicTexts();
-    expect(counts.size).toBe(0);
+    expect(await getArticleSuggestionsByTopicTexts(['valid'])).toHaveLength(0);
   });
 
-  it('returns empty array for invalid JSON', async () => {
+  it('matches nothing for invalid JSON', async () => {
     db._setRows('article_suggestions', [
       makeSuggestion({ id: 's1', matchedTopicTextsJson: 'not-json' }),
     ]);
-    const counts = await getArticleCountByTopicTexts();
-    expect(counts.size).toBe(0);
+    expect(await getArticleSuggestionsByTopicTexts(['not-json'])).toHaveLength(0);
   });
 
-  it('returns empty array when JSON is a non-array value', async () => {
+  it('matches nothing when JSON is a non-array value', async () => {
     db._setRows('article_suggestions', [
       makeSuggestion({ id: 's1', matchedTopicTextsJson: '"just-a-string"' }),
     ]);
-    const counts = await getArticleCountByTopicTexts();
-    expect(counts.size).toBe(0);
+    expect(await getArticleSuggestionsByTopicTexts(['just-a-string'])).toHaveLength(0);
   });
 
-  it('filters out empty strings and non-strings from the topic array', async () => {
+  it('keeps the valid strings and drops empty strings and non-strings', async () => {
     db._setRows('article_suggestions', [
       makeSuggestion({ id: 's1', matchedTopicTextsJson: '["valid", "", 42, null]' }),
     ]);
-    const counts = await getArticleCountByTopicTexts();
-    expect(counts.has('valid')).toBe(true);
-    expect(counts.size).toBe(1);
-  });
-});
-
-// Q13: the Profile/Facts counts must show only stories that can actually
-// appear. The raw count also counted sub-gate and unfinished rows, which is how
-// a fact read "40 articles" while For You had no section for it.
-describe('getRenderableArticleCountByTopicTexts', () => {
-  it('counts only complete rows at or above their render gate', async () => {
-    db._setRows('article_suggestions', [
-      makeSuggestion({ id: 'ok', status: 'complete', relevance: 0.6, matchedTopicTextsJson: '["berlin"]' }),
-      makeSuggestion({ id: 'at-gate', status: 'complete', relevance: 0.4, matchedTopicTextsJson: '["berlin"]' }),
-      makeSuggestion({ id: 'sub-gate', status: 'complete', relevance: 0.32, matchedTopicTextsJson: '["berlin"]' }),
-      makeSuggestion({ id: 'pending', status: 'reason_pending', relevance: 0.9, matchedTopicTextsJson: '["berlin"]' }),
-      makeSuggestion({ id: 'unscored', status: 'unscored', relevance: 0, matchedTopicTextsJson: '["berlin"]' }),
-      makeSuggestion({ id: 'excluded', status: 'excluded', relevance: 0.9, matchedTopicTextsJson: '["berlin"]' }),
-      makeSuggestion({ id: 'read', status: 'already_read', relevance: 0.9, matchedTopicTextsJson: '["berlin"]' }),
-      makeSuggestion({ id: 'skipped', status: 'reason_skipped', relevance: 0.9, matchedTopicTextsJson: '["berlin"]' }),
-    ]);
-
-    const counts = await getRenderableArticleCountByTopicTexts();
-
-    expect(counts.get('berlin')).toBe(2);
-  });
-
-  // A v3-vintage row is judged at its OWN gate (0.55), never the current one.
-  it('applies the per-row scorer-vintage gate', async () => {
-    db._setRows('article_suggestions', [
-      makeSuggestion({ id: 'v3-low', status: 'complete', relevance: 0.5, scoredWithV3: true, matchedTopicTextsJson: '["leverkusen"]' }),
-      makeSuggestion({ id: 'v3-ok', status: 'complete', relevance: 0.56, scoredWithV3: true, matchedTopicTextsJson: '["leverkusen"]' }),
-    ]);
-
-    const counts = await getRenderableArticleCountByTopicTexts();
-
-    expect(counts.get('leverkusen')).toBe(1);
-  });
-
-  it('omits a topic with no renderable rows (the caller shows zero)', async () => {
-    db._setRows('article_suggestions', [
-      makeSuggestion({ id: 'x', status: 'complete', relevance: 0.1, matchedTopicTextsJson: '["cooking"]' }),
-    ]);
-
-    const counts = await getRenderableArticleCountByTopicTexts();
-
-    expect(counts.has('cooking')).toBe(false);
-  });
-
-  it('leaves the raw count unchanged', async () => {
-    db._setRows('article_suggestions', [
-      makeSuggestion({ id: 'x', status: 'complete', relevance: 0.1, matchedTopicTextsJson: '["cooking"]' }),
-    ]);
-    expect((await getArticleCountByTopicTexts()).get('cooking')).toBe(1);
+    expect(await getArticleSuggestionsByTopicTexts(['valid'])).toHaveLength(1);
+    expect(await getArticleSuggestionsByTopicTexts([''])).toHaveLength(0);
   });
 });
 
@@ -1414,36 +1357,6 @@ describe('loadFeedMetadata', () => {
     mockGetSetting.mockResolvedValueOnce(null);
     await loadFeedMetadata();
     expect(mockGetSetting).toHaveBeenCalledWith('feed_metadata');
-  });
-});
-
-// ===========================================================================
-// getArticleCountByTopicTexts
-// ===========================================================================
-
-describe('getArticleCountByTopicTexts', () => {
-  it('returns empty map when no suggestions exist', async () => {
-    db._setRows('article_suggestions', []);
-    const result = await getArticleCountByTopicTexts();
-    expect(result.size).toBe(0);
-  });
-
-  it('counts articles per topic text', async () => {
-    db._setRows('article_suggestions', [
-      makeSuggestion({ id: 's1', matchedTopicTextsJson: '["berlin","germany"]' }),
-      makeSuggestion({ id: 's2', matchedTopicTextsJson: '["berlin"]' }),
-    ]);
-    const result = await getArticleCountByTopicTexts();
-    expect(result.get('berlin')).toBe(2);
-    expect(result.get('germany')).toBe(1);
-  });
-
-  it('ignores suggestions with null matchedTopicTextsJson', async () => {
-    db._setRows('article_suggestions', [
-      makeSuggestion({ id: 's1', matchedTopicTextsJson: null }),
-    ]);
-    const result = await getArticleCountByTopicTexts();
-    expect(result.size).toBe(0);
   });
 });
 
