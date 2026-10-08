@@ -102,7 +102,9 @@
       "sentTo": "Kami telah mengirim kode 6 digit ke {{email}}.",
       "useDifferentEmail": "Gunakan email lain",
       "welcome": "Selamat datang di Mera",
-      "wrongCode": "Kode itu tidak berhasil. Periksa lagi, atau kirim kode baru."
+      "wrongCode": "Kode itu tidak berhasil. Periksa lagi, atau kirim kode baru.",
+      "noSheetTitle": "iPhone Anda tidak membuka unduhan",
+      "noSheetBody": "Coba lagi, atau unduh {{language}} di Pengaturan › Umum › Bahasa & Wilayah › Bahasa Terjemahan."
     }
   },
   "account": {

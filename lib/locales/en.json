@@ -102,7 +102,9 @@
       "sentTo": "We sent a 6-digit code to {{email}}.",
       "useDifferentEmail": "Use a different email",
       "welcome": "Welcome to Mera",
-      "wrongCode": "That code didn't work. Check it, or resend a new one."
+      "wrongCode": "That code didn't work. Check it, or resend a new one.",
+      "noSheetTitle": "Your iPhone didn't open the download",
+      "noSheetBody": "Try again, or download {{language}} in Settings › General › Language & Region › Translation Languages."
     }
   },
   "account": {

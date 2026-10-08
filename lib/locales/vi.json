@@ -102,7 +102,9 @@
       "sentTo": "Chúng tôi đã gửi mã 6 chữ số đến {{email}}.",
       "useDifferentEmail": "Dùng email khác",
       "welcome": "Chào mừng bạn đến với Mera",
-      "wrongCode": "Mã này không đúng. Hãy kiểm tra lại, hoặc gửi mã mới."
+      "wrongCode": "Mã này không đúng. Hãy kiểm tra lại, hoặc gửi mã mới.",
+      "noSheetTitle": "iPhone của bạn chưa mở được bản tải xuống",
+      "noSheetBody": "Hãy thử lại, hoặc tải {{language}} trong Cài đặt › Cài đặt chung › Ngôn ngữ & Vùng › Ngôn ngữ dịch."
     }
   },
   "account": {

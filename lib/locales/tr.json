@@ -102,7 +102,9 @@
       "sentTo": "{{email}} adresine 6 haneli bir kod gönderdik.",
       "useDifferentEmail": "Başka bir e-posta kullan",
       "welcome": "Mera'ya hoş geldiniz",
-      "wrongCode": "Bu kod işe yaramadı. Kontrol edin ya da yeni bir kod isteyin."
+      "wrongCode": "Bu kod işe yaramadı. Kontrol edin ya da yeni bir kod isteyin.",
+      "noSheetTitle": "iPhone'unuz indirmeyi açamadı",
+      "noSheetBody": "Tekrar deneyin veya Ayarlar › Genel › Dil ve Bölge › Çeviri Dilleri bölümünden {{language}} dilini indirin."
     }
   },
   "account": {

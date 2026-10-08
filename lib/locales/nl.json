@@ -102,7 +102,9 @@
       "sentTo": "We hebben een code van 6 cijfers naar {{email}} gestuurd.",
       "useDifferentEmail": "Gebruik een ander e-mailadres",
       "welcome": "Welkom bij Mera",
-      "wrongCode": "Die code werkte niet. Controleer hem of vraag een nieuwe aan."
+      "wrongCode": "Die code werkte niet. Controleer hem of vraag een nieuwe aan.",
+      "noSheetTitle": "Je iPhone heeft de download niet geopend",
+      "noSheetBody": "Probeer het opnieuw of download {{language}} in Instellingen › Algemeen › Taal en regio › Vertaaltalen."
     }
   },
   "account": {

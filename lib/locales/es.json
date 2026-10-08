@@ -102,7 +102,9 @@
       "sentTo": "Enviamos un código de 6 dígitos a {{email}}.",
       "useDifferentEmail": "Usar otro correo",
       "welcome": "Bienvenido a Mera",
-      "wrongCode": "Ese código no funcionó. Revísalo o pide uno nuevo."
+      "wrongCode": "Ese código no funcionó. Revísalo o pide uno nuevo.",
+      "noSheetTitle": "Tu iPhone no abrió la descarga",
+      "noSheetBody": "Vuelve a intentarlo o descarga {{language}} en Ajustes › General › Idioma y región › Idiomas de traducción."
     }
   },
   "account": {

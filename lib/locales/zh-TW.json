@@ -102,7 +102,9 @@
       "sentTo": "我們已將 6 位數驗證碼寄到 {{email}}。",
       "useDifferentEmail": "使用其他電子郵件",
       "welcome": "歡迎使用 Mera",
-      "wrongCode": "驗證碼無效。請檢查後再輸入，或重新寄送新的驗證碼。"
+      "wrongCode": "驗證碼無效。請檢查後再輸入，或重新寄送新的驗證碼。",
+      "noSheetTitle": "你的 iPhone 未能開始下載",
+      "noSheetBody": "請再試一次，或到 設定 › 一般 › 語言與地區 › 翻譯語言 下載 {{language}}。"
     }
   },
   "account": {

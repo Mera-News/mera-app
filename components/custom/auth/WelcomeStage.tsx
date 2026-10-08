@@ -155,12 +155,8 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
             const language = getNativeLanguageName(live) ?? live;
             notify(
                 `auth-language-nosheet-${live}`,
-                t('auth.track.noSheetTitle', { defaultValue: "Your iPhone didn't open the download" }),
-                t('auth.track.noSheetBody', {
-                    language,
-                    defaultValue:
-                        'Try again, or download {{language}} in Settings › General › Language & Region › Translation Languages.',
-                }),
+                t('auth.track.noSheetTitle'),
+                t('auth.track.noSheetBody', { language }),
             );
         }, NO_SHEET_MS);
         return () => {

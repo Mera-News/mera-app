@@ -102,7 +102,9 @@
       "sentTo": "Abbiamo inviato un codice a 6 cifre a {{email}}.",
       "useDifferentEmail": "Usa un'altra email",
       "welcome": "Benvenuto in Mera",
-      "wrongCode": "Il codice non funziona. Controllalo, oppure richiedine uno nuovo."
+      "wrongCode": "Il codice non funziona. Controllalo, oppure richiedine uno nuovo.",
+      "noSheetTitle": "Il tuo iPhone non ha aperto il download",
+      "noSheetBody": "Riprova oppure scarica {{language}} in Impostazioni › Generali › Lingua e regione › Lingue di traduzione."
     }
   },
   "account": {

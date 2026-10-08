@@ -102,7 +102,9 @@
       "sentTo": "{{email}}(으)로 6자리 코드를 보냈습니다.",
       "useDifferentEmail": "다른 이메일 사용",
       "welcome": "Mera에 오신 것을 환영합니다",
-      "wrongCode": "코드가 맞지 않습니다. 확인하시거나 새 코드를 다시 보내 주세요."
+      "wrongCode": "코드가 맞지 않습니다. 확인하시거나 새 코드를 다시 보내 주세요.",
+      "noSheetTitle": "iPhone에서 다운로드를 열지 못했습니다",
+      "noSheetBody": "다시 시도하거나 설정 › 일반 › 언어 및 지역 › 번역 언어에서 {{language}}을(를) 다운로드하세요."
     }
   },
   "account": {
