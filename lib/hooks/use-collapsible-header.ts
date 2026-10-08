@@ -92,8 +92,13 @@ export function useCollapsibleHeader(): CollapsibleHeader {
       // Every list this drives scrolls translatable rows, and a row asks for
       // its translation only once a tick finds it on screen (visibility-tick).
       runOnJS(notifyScrollTick)();
-      // Ignore iOS rubber-band overscroll above the top.
+      // Ignore iOS rubber-band overscroll above the top AND past the end. The
+      // rebound from a bottom overscroll reads as an upward scroll and revealed
+      // the header on any list scrolled to its end (a short page like Settings
+      // gets there in one swipe).
       if (y < 0) return;
+      const maxY = e.contentSize.height - e.layoutMeasurement.height;
+      if (maxY > 0 && y > maxY) return;
 
       // A different list is now driving this handler (Dashboard sub-tab switch).
       // Adopt its offset as the baseline and read NO travel from this event —

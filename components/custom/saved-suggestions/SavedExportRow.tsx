@@ -17,6 +17,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** The row's height. The list pads by it so its first card starts below. */
 export const SAVED_EXPORT_ROW_HEIGHT = 56;
@@ -89,7 +90,7 @@ const useStyles = themedStyles((c) => StyleSheet.create({
         left: 0,
         right: 0,
         height: SAVED_EXPORT_ROW_HEIGHT,
-        paddingHorizontal: 12,
+        paddingHorizontal: PAGE_SIDE_INSET,
         justifyContent: 'center',
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: c.line,

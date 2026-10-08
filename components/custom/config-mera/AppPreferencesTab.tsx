@@ -36,6 +36,7 @@ import { View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import { deviceUses24h } from './NotificationTimes';
 import SettingsUsageCard from './SettingsUsageCard';
+import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
 type YouSettingsScreen = 'display' | 'notifications' | 'mera-protocol' | 'app-lock' | 'data';
@@ -288,10 +289,10 @@ const AppPreferencesTab: React.FC = () => {
     return (
         // No flex-1 and no fill: mounted inside SettingsPage's ScrollView
         // (you/YouPages.tsx), whose bottom padding clears the tab bar.
-        <View style={{ paddingHorizontal: 14 }}>
-            <View style={{ marginTop: 4 }}>
-                <SettingsUsageCard />
-            </View>
+        <View style={{ paddingHorizontal: PAGE_SIDE_INSET }}>
+            {/* First content at the page baseline (header + PAGE_CONTENT_GAP),
+                like every tab page: no extra top margin. */}
+            <SettingsUsageCard />
 
             <GroupLabel testID="settings-group-general">{t('you.settings.groupGeneral')}</GroupLabel>
             <Group>

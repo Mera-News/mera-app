@@ -193,7 +193,8 @@ const FeedShortcuts: React.FC<{ readonly reading: boolean }> = ({ reading }) => 
 };
 
 const useStyles = themedStyles((c) => StyleSheet.create({
-  wrap: { gap: 10, marginTop: 4, marginHorizontal: 2 },
+  // No side margin of its own: the column's edges are the list's inset.
+  wrap: { gap: 10, marginTop: 4 },
   header: { color: c.ink2 },
   row: {
     minHeight: 64,

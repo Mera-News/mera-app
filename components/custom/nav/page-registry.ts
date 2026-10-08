@@ -40,6 +40,14 @@ export type { CountryPageId, PageId, StaticPageId, StaticTabId, TabId };
  */
 export const PAGE_CONTENT_GAP = 14;
 
+/** A tab page's side inset, LEFT AND RIGHT alike: the board's `.body`
+ *  padding (14). Every element in a page's column shares these edges. */
+export const PAGE_SIDE_INSET = 14;
+
+/** The space under a page's title row before its first content: the board's
+ *  `.body` gap (10). */
+export const PAGE_TITLE_GAP = 10;
+
 /** Bottom-tab order. Also the cross-tab swipe order. */
 export const TAB_ORDER: readonly TabId[] = ['feed', 'world', 'library', 'you'];
 

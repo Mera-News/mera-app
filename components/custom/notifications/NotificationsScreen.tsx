@@ -29,7 +29,7 @@ import {
     runNotificationAction,
     type NotificationAction,
 } from './notification-actions';
-import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** "now" / "5m" / "2h" / "3d", as the board draws it. */
 function relativeTime(date: Date): string {
@@ -136,7 +136,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
             const age = relativeTime(n.createdAt);
             return (
                 <View
-                    style={{ marginHorizontal: 14, marginBottom: 10, borderRadius: 16, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, padding: 16, gap: 10 }}
+                    style={{ marginHorizontal: PAGE_SIDE_INSET, marginBottom: 10, borderRadius: 16, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, padding: 16, gap: 10 }}
                 >
                     <Pressable
                         testID={`notification-row-${n.id}`}
@@ -189,7 +189,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     );
 
     const empty = (
-        <View testID="notifications-empty" style={{ marginHorizontal: 18, gap: 6 }}>
+        <View testID="notifications-empty" style={{ marginHorizontal: PAGE_SIDE_INSET, gap: 6 }}>
             <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('notificationCenter.empty')}</Text>
             <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('notificationCenter.emptyBody')}</Text>
             <Pressable

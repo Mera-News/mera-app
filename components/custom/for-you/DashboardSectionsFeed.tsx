@@ -29,7 +29,7 @@ import Animated, {
   useComposedEventHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 
 /** Pull-to-refresh spinner tint — same value the Feed tab uses. */
 
@@ -263,7 +263,8 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
       return (
         // ONE gradient panel per section, so the pastel groups the band and
         // its cards and the next section visibly starts its own.
-        <SectionGradientPanel factId={row.factId} style={{ marginTop: 16, marginBottom: 8 }}>
+        // Sections stack PAGE_TITLE_GAP apart, as the board's `.body` gap.
+        <SectionGradientPanel factId={row.factId} style={{ marginBottom: PAGE_TITLE_GAP }}>
           <SectionLinkBand factId={row.factId} title={title} total={total} onPress={() => openFactFeed(row, title)} />
           <Box className="px-2 pb-2">
             {preview.map((group) => (
@@ -290,7 +291,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         data={sectionData}
         keyExtractor={(it) => it.key}
         renderItem={renderItem}
-        ListHeaderComponent={ListHeaderComponent}
+        ListHeaderComponent={
+          ListHeaderComponent ? <View style={{ marginBottom: PAGE_TITLE_GAP }}>{ListHeaderComponent}</View> : null
+        }
         ListEmptyComponent={ListEmptyComponent}
         refreshControl={
           onRefresh ? (
@@ -307,7 +310,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         }
         contentContainerStyle={{
           paddingTop: headerHeight + PAGE_CONTENT_GAP,
-          paddingHorizontal: 12,
+          paddingHorizontal: PAGE_SIDE_INSET,
           // Bottom clearance for the tab bar plus a breathing-room tail. The
           // helper, never insets.bottom + TAB_BAR_HEIGHT (see tab-bar.ts).
           paddingBottom: listEndClearance,

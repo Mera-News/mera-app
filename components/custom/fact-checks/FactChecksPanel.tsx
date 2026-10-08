@@ -19,10 +19,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
 import { ShieldCheck } from 'lucide-react-native';
-import { RefreshControl } from 'react-native';
+import { RefreshControl, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 
 
 
@@ -175,11 +175,13 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 renderItem={renderItem as any}
                 testID="fact-checks-list"
                 ListHeaderComponent={
-                    <PageTitleRow
-                        title={items.length > 0 ? t('library.checks.count', { count: items.length }) : t('factCheck.dashboard.listTitle')}
-                        onExplain={onExplain}
-                        testID="fact-checks-title-row"
-                    />
+                    <View style={{ marginBottom: PAGE_TITLE_GAP }}>
+                        <PageTitleRow
+                            title={items.length > 0 ? t('library.checks.count', { count: items.length }) : t('factCheck.dashboard.listTitle')}
+                            onExplain={onExplain}
+                            testID="fact-checks-title-row"
+                        />
+                    </View>
                 }
                 // The manual path: a reader who suspects the list is stale can
                 // always ask directly rather than waiting for the next arrival.
@@ -199,7 +201,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 }
                 contentContainerStyle={{
                     paddingTop: headerHeight + PAGE_CONTENT_GAP,
-                    paddingHorizontal: 12,
+                    paddingHorizontal: PAGE_SIDE_INSET,
                     // Clear of the tab bar and the Mera button.
                     paddingBottom: listEndPadding ?? tabClearance + 24,
                 }}

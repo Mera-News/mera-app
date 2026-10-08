@@ -40,7 +40,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { I18nManager, type ListRenderItem, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 
 /** "How Stats works": the ? beside "Your last 30 days" (FinalLibrary #10). */
 export const STATS_EXPLAINER: PageExplainer = {
@@ -180,7 +180,9 @@ const VisitedPublicationsList: React.FC<Props> = ({
 
     const listHeader = (
         <View>
-            <PageTitleRow title={t('library.history.title')} onExplain={onExplain} testID="history-title-row" />
+            <View style={{ marginBottom: PAGE_TITLE_GAP }}>
+                <PageTitleRow title={t('library.history.title')} onExplain={onExplain} testID="history-title-row" />
+            </View>
             {items.length > 0 ? (
                 <>
                     <Text style={{ fontSize: 13, lineHeight: 18, color: c.ink2, marginBottom: 12 }} testID="history-intro">
@@ -257,7 +259,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                 }
                 contentContainerStyle={{
                     paddingTop: headerHeight + PAGE_CONTENT_GAP,
-                    paddingHorizontal: 12,
+                    paddingHorizontal: PAGE_SIDE_INSET,
                     // Clear of the Mera button, and of the floating Share above it.
                     paddingBottom: listEnd + (shareShown ? SHARE_H + 12 : 0),
                 }}

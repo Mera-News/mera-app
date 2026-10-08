@@ -152,7 +152,7 @@ import {
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, AppState, RefreshControl, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, AppState, RefreshControl, View, useWindowDimensions } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   FadeInDown,
@@ -164,7 +164,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
-import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 
 
 /** Gap between the collapsing header's bottom edge and the first card.
@@ -742,7 +742,9 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   useEffect(() => {
     recomputeNewBelowRef.current();
   }, [listData, newSince]);
-  const minimapOn = useFeedMinimap();
+  const minimapSetting = useFeedMinimap();
+  // Drawn only with rows to map: an empty Feed keeps equal side margins.
+  const minimapOn = minimapSetting && listData.length > 0;
   const minimapRows = useMemo(
     () => (minimapOn ? listData.map((it) => ({ id: it.id, suggestion: it.suggestion })) : []),
     [minimapOn, listData],
@@ -1102,7 +1104,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   const headerNode = useMemo(
     () => (
       <>
-        {listHeader}
+        {listHeader ? <View style={{ marginBottom: PAGE_TITLE_GAP }}>{listHeader}</View> : null}
         {noFacts ? <FeedNoFacts view="continuous" /> : null}
       </>
     ),
@@ -1196,9 +1198,11 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
           // identical at the top.
           paddingTop: headerHeight + CONTENT_TOP_GAP,
           // Sides set separately, never with paddingHorizontal: the minimap
-          // inset must not depend on which of the two Yoga lets win.
-          paddingLeft: minimapOn ? MINIMAP_LIST_INSET : 12,
-          paddingRight: 12,
+          // inset must not depend on which of the two Yoga lets win. The
+          // minimap's left reserve applies only while the minimap is drawn
+          // (setting on AND rows to show); otherwise both sides are equal.
+          paddingLeft: minimapOn ? MINIMAP_LIST_INSET : PAGE_SIDE_INSET,
+          paddingRight: PAGE_SIDE_INSET,
           // Clear of the Mera button (derived; see tab-bar.ts).
           paddingBottom: listEndClearance,
           flexGrow: 1,

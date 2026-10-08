@@ -27,7 +27,7 @@ import Animated, {
     useComposedEventHandler,
     useSharedValue,
 } from 'react-native-reanimated';
-import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 
 const PAGE_SIZE = 10;
 
@@ -456,7 +456,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     const ListHeaderComponent = useMemo(() => {
         if (!onWindowChange) return null;
         return (
-            <View style={{ marginBottom: 12 }}>
+            <View style={{ marginBottom: PAGE_TITLE_GAP }}>
                 <PageTitleRow
                     title={t('sources.topHeadlines')}
                     onExplain={onExplain}
@@ -562,7 +562,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             // one-shot native flip happened to run.
             contentInsetAdjustmentBehavior="never"
             contentContainerStyle={{
-                padding: 16,
+                paddingHorizontal: PAGE_SIDE_INSET,
                 // Clear the pinned header overlay (measured by TabPages) —
                 // the list scrolls underneath it.
                 paddingTop: headerHeight + PAGE_CONTENT_GAP,

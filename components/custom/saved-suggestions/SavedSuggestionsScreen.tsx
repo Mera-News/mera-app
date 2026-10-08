@@ -23,12 +23,12 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ListRenderItem } from 'react-native';
+import { View, type ListRenderItem } from 'react-native';
 import Animated, { type SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import SavedExportModal from './SavedExportModal';
 import SavedExportRow, { SAVED_EXPORT_ROW_HEIGHT } from './SavedExportRow';
 import { savedItemId } from './saved-item-id';
-import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 
 interface SavedSuggestionsScreenProps {
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
@@ -171,14 +171,16 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 keyExtractor={keyExtractor}
                 ListHeaderComponent={
                     showRow || isLoading ? null : (
-                        <PageTitleRow title={t('nav.page.saved')} onExplain={onExplain} testID="saved-title-row" />
+                        <View style={{ marginBottom: PAGE_TITLE_GAP }}>
+                            <PageTitleRow title={t('nav.page.saved')} onExplain={onExplain} testID="saved-title-row" />
+                        </View>
                     )
                 }
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     // 12pt below the pinned row.
                     paddingTop: headerHeight + (showRow ? SAVED_EXPORT_ROW_HEIGHT : 0) + PAGE_CONTENT_GAP,
-                    paddingHorizontal: 12,
+                    paddingHorizontal: PAGE_SIDE_INSET,
                     paddingBottom: listEndPadding ?? tabClearance + 24,
                     flexGrow: 1,
                 }}
