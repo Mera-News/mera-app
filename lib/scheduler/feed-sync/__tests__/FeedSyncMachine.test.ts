@@ -704,16 +704,13 @@ describe('FeedSyncMachine — error handling', () => {
     expect(mockDeactivateKeepAwake).toHaveBeenCalledWith('mera-feed-sync');
   });
 
-  it('opts the sync-failed toast into notify()\'s same-day dedupe (dedupeDaily: true)', async () => {
+  it('a failed sync writes no notice or inbox row (Y11: the Feed icon carries it)', async () => {
     const { toastManager } = require('@/lib/toast-manager');
     mockStepFetchTopicIds.mockRejectedValue(new Error('fail'));
 
-    const ctx = makeCtx();
-    await expect(feedSyncMachine.start('persona-1', ctx)).rejects.toThrow();
+    await expect(feedSyncMachine.start('persona-1', makeCtx())).rejects.toThrow();
 
-    expect(toastManager.showNotifiedToast).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'sync_event', source: 'feed-sync', dedupeDaily: true }),
-    );
+    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
   });
 
   it('swallows clearMachineSnapshot errors on success path', async () => {
@@ -789,12 +786,10 @@ describe('FeedSyncMachine — daily-limit is a normal terminal outcome', () => {
     expect(feedSyncMachine.state).toBe('idle');
   });
 
-  it('opts the daily-limit toast into notify()\'s same-day dedupe (dedupeDaily: true)', async () => {
+  it('writes no notice or inbox row (Y11: the Feed icon carries the limit)', async () => {
     const { toastManager } = require('@/lib/toast-manager');
     await feedSyncMachine.start('persona-1', makeCtx());
-    expect(toastManager.showNotifiedToast).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'feed_info', source: 'feed-sync', dedupeDaily: true }),
-    );
+    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
   });
 
   it('sets the sticky daily-limit reset time for the banner', async () => {
@@ -830,72 +825,6 @@ describe('FeedSyncMachine — daily-limit is a normal terminal outcome', () => {
     expect(d.getUTCHours()).toBe(0);
     expect(d.getUTCMinutes()).toBe(0);
     expect(arg).toBeGreaterThan(Date.now());
-  });
-
-  // Regression coverage for "daily limit keeps popping once reached" — the
-  // toast/notification-center row must fire once per UTC day, not once per
-  // 60s task-gate re-arm / 5s foreground-gap.
-  describe('once-per-UTC-day notice gate', () => {
-    const { toastManager } = require('@/lib/toast-manager');
-    const today = new Date().toISOString().slice(0, 10);
-
-    it('fires the notice on the first hit and records today as the notice day', async () => {
-      await feedSyncMachine.start('persona-1', makeCtx());
-
-      expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
-      expect(toastManager.showNotifiedToast).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'feed_info', source: 'feed-sync' }),
-      );
-      expect(mockForYouStoreState.setDailyLimitNoticeDay).toHaveBeenCalledWith(today);
-    });
-
-    it('does not re-fire on a repeated run within the same UTC day', async () => {
-      // Simulate the notice already having fired earlier today (a previous
-      // cycle, or a rehydrated value from a prior app session).
-      mockForYouStoreState.dailyLimitNoticeDay = today;
-
-      await feedSyncMachine.start('persona-1', makeCtx());
-
-      expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
-      expect(mockForYouStoreState.setDailyLimitNoticeDay).not.toHaveBeenCalled();
-    });
-
-    it('does not re-fire across several repeated runs the same day (the reported bug)', async () => {
-      await feedSyncMachine.start('persona-1', makeCtx());
-      expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
-
-      // Further cycles within the same day (60s task re-arm / 5s foreground
-      // gap) must not add more toasts.
-      await feedSyncMachine.start('persona-1', makeCtx());
-      await feedSyncMachine.start('persona-1', makeCtx());
-      await feedSyncMachine.start('persona-1', makeCtx());
-
-      expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
-    });
-
-    it('re-arms and fires again once the stored marker is a previous UTC day (day rollover)', async () => {
-      mockForYouStoreState.dailyLimitNoticeDay = '2020-01-01'; // stale/previous day
-
-      await feedSyncMachine.start('persona-1', makeCtx());
-
-      expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
-      expect(mockForYouStoreState.setDailyLimitNoticeDay).toHaveBeenCalledWith(today);
-    });
-
-    it('does not re-notify after a simulated app restart (marker survives via persisted state)', async () => {
-      // First run persists the marker (setDailyLimitNoticeDay mock mirrors
-      // the real store's write into mockForYouStoreState, standing in for
-      // the FeedMetadata row surviving a restart and being rehydrated).
-      await feedSyncMachine.start('persona-1', makeCtx());
-      expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
-
-      // "Restart": a fresh machine cycle reads the (still-persisted) marker —
-      // nothing in the store is reset, exactly as hydrateMetadataFromDb would
-      // rehydrate `dailyLimitNoticeDay` from FeedMetadata at boot.
-      await feedSyncMachine.start('persona-1', makeCtx());
-
-      expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
-    });
   });
 });
 

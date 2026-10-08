@@ -7,7 +7,6 @@ import {
 } from '@/lib/services/SuggestionSyncService';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { ArticleService } from '@/lib/article-service';
-import { toastManager } from '@/lib/toast-manager';
 import type { TaskContext } from '../scheduler-types';
 import * as feedPersistence from './feed-sync-persistence';
 import * as steps from './feed-sync-steps';
@@ -54,14 +53,6 @@ function nextUtcMidnightMs(): number {
     0,
     0,
   );
-}
-
-/** Today's date as `YYYY-MM-DD` (UTC) — gates the daily-limit notice (toast +
- *  notification-center row) to once per UTC day via the persisted
- *  `dailyLimitNoticeDay` marker on for-you-store. A new UTC day naturally
- *  re-arms it since the stored value no longer matches. */
-function todayUtcDateString(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 const VALID_TRANSITIONS: Partial<Record<FeedSyncState, FeedSyncState[]>> = {
@@ -618,7 +609,7 @@ class FeedSyncMachine {
         // statuses each polling cycle publishes, so the "limit reached" notice
         // stays visible until a sync delivers articles again or the reset
         // passes. Fall back to the next UTC midnight if the server omitted it.
-        // `setDailyLimitResetAt` and the notice below are deliberately NOT
+        // `setDailyLimitResetAt` is deliberately NOT
         // ownership-gated: the cap really was hit, and that is a global fact
         // about the user's day, not per-run state. Only the header status is
         // gated, because it reads `this._state` as `failedAtState` and would
@@ -626,8 +617,7 @@ class FeedSyncMachine {
         store.setDailyLimitResetAt(resetAt ?? nextUtcMidnightMs());
         if (bg) {
           // Nothing was delivered. Close background for the rest of the UTC
-          // day; the notice and its once-a-day stamp are the foreground's, so
-          // the reader still sees it the next time they open the app.
+          // day; the reader sees the limit on the Feed icon at the next open.
           await bg.onHydrated({ meteredDelivered: 0, dailyLimitReached: true });
           this._forceIdle(runId);
           try {
@@ -641,30 +631,8 @@ class FeedSyncMachine {
           publishSyncError('daily-limit', resetAt, this._state);
         }
 
-        // Gate the repeating toast/notification-center row to once per UTC
-        // day. Without this, the 60s task-gate re-arm and the 5s
-        // foreground-gap check (AppScheduler) both hit this branch again on
-        // every subsequent cycle, firing a fresh notice every time until
-        // 00:00 UTC — the reported "daily limit keeps popping" bug.
-        // `dailyLimitNoticeDay` is persisted (unlike `dailyLimitResetAt`), so
-        // this also survives an app restart within the same UTC day.
-        const today = todayUtcDateString();
-        if (store.dailyLimitNoticeDay !== today) {
-          void toastManager.showNotifiedToast({
-            type: 'feed_info',
-            source: 'feed-sync',
-            title: 'notificationCenter.dailyLimitTitle',
-            body: 'notificationCenter.dailyLimitBody',
-            action: 'info',
-            icon: 'hourglass-empty',
-            // Belt-and-braces: the dailyLimitNoticeDay check above already
-            // gates this whole call to once/UTC-day, but this call site is
-            // genuinely repeat-prone (60s scheduler re-arm), so opt the
-            // persisted row into notify()'s same-day dedupe too.
-            dedupeDaily: true,
-          });
-          store.setDailyLimitNoticeDay(today);
-        }
+        // No notice and no inbox row (owner Y11): the Feed's Mera icon
+        // carries the limit state.
         this._forceIdle(runId); // bypasses the transition guard — valid from any state
         try {
           await feedPersistence.clearMachineSnapshot();
@@ -703,24 +671,8 @@ class FeedSyncMachine {
         // three `_forceIdle` branches above.
         this._state = 'failed';
         publishSyncError(errorCode, undefined, failedAtState);
-        // Generic (non-terminal, non-daily-limit) sync failure — surface a
-        // notification-center-backed toast. The `no-topics-configured` and
-        // `daily-limit` outcomes returned earlier, so this only fires for real
-        // failures.
-        void toastManager.showNotifiedToast({
-          type: 'sync_event',
-          source: 'feed-sync',
-          title: 'notificationCenter.syncFailedTitle',
-          body: 'notificationCenter.syncFailedBody',
-          action: 'error',
-          icon: 'sync-problem',
-          // Unlike daily-limit, this branch has no persisted once-per-day
-          // marker of its own — a repeated sync failure on the 60s
-          // scheduler re-arm hits this every cycle. Opt the persisted row
-          // into notify()'s same-day dedupe so the notification centre
-          // doesn't fill with duplicate rows (the toast itself is unaffected).
-          dedupeDaily: true,
-        });
+        // No notice and no inbox row for a failed sync (owner Y11): the
+        // Feed's Mera icon turns red and its counts card says what happened.
         await feedPersistence.saveMachineSnapshot({
           state: 'failed',
           startedAt: Date.now(),
