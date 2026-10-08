@@ -6,6 +6,7 @@ import {
   listEndClearance,
   meraButtonBottom,
   tabBarClearance,
+  tabBarTopFromBottom,
 } from '../tab-bar';
 
 describe('tabBarClearance', () => {
@@ -58,5 +59,19 @@ describe('listEndClearance', () => {
       const buttonTop = meraButtonBottom(os, inset) + MERA_BUTTON_SIZE;
       expect(listEndClearance(os, inset) - buttonTop).toBe(12);
     }
+  });
+});
+
+describe('tabBarTopFromBottom', () => {
+  it('on iOS: content runs under the bar, so the tab inset alone (bar + home indicator)', () => {
+    expect(tabBarTopFromBottom(874, 874, 'ios', 83)).toBe(83);
+  });
+
+  it('on Android: content ends at the bar, so the gap under it (bar + nav inset)', () => {
+    expect(tabBarTopFromBottom(915, 810.6, 'android', 24)).toBeCloseTo(104.4);
+  });
+
+  it('never goes negative for a measure past the window', () => {
+    expect(tabBarTopFromBottom(874, 880, 'android', 0)).toBe(0);
   });
 });

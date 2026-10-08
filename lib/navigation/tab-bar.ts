@@ -1,5 +1,7 @@
-import { Platform } from 'react-native';
+import { useCallback, useRef, type RefObject } from 'react';
+import { Platform, useWindowDimensions, type View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { create } from 'zustand';
 
 /**
  * Height of the bottom tab bar's own content area, excluding the device's
@@ -50,7 +52,7 @@ export function useTabBarClearance(): number {
   return tabBarClearance(Platform.OS, insets.bottom);
 }
 
-/** The Mera button's diameter (L6 mounts it once per tab, beside the Stack). */
+/** The Mera button's diameter (one app-wide button, mounted in app/logged-in/_layout). */
 export const MERA_BUTTON_SIZE = 62;
 /** Gap between the tab bar's top edge and the button's bottom edge. 13 until
  *  spike 3 measures it on iOS 26 and Android. */
@@ -85,4 +87,47 @@ export function meraButtonBottom(os: string, insetsBottom: number): number {
 export function useMeraButtonBottom(): number {
   const insets = useSafeAreaInsets();
   return meraButtonBottom(Platform.OS, insets.bottom);
+}
+
+/**
+ * How far the tab bar's top sits above the WINDOW's bottom edge, measured from
+ * inside a tab: the gap between the tab's content and the window bottom (0 on
+ * iOS, where content runs under the bar; the bar and the nav inset on Android)
+ * plus the clearance the tab's insets already carry (the bar itself on iOS).
+ * The one Mera button lives at the app root, where the bar is not in the
+ * safe area, so it needs this from a tab.
+ */
+export function tabBarTopFromBottom(
+  windowHeight: number,
+  contentBottomInWindow: number,
+  os: string,
+  insetsBottom: number,
+): number {
+  return Math.max(0, windowHeight - contentBottomInWindow) + tabBarClearance(os, insetsBottom);
+}
+
+/** The last value a tab reported: the same for every tab, so it is stable
+ *  once the first tab has mounted. Null until then. */
+export const useTabBarTopStore = create<{ top: number | null }>(() => ({ top: null }));
+
+export function useTabBarTop(): number | null {
+  return useTabBarTopStore((s) => s.top);
+}
+
+/**
+ * Called in each tab's layout: measures that tab's content box and publishes
+ * `tabBarTopFromBottom`. Returns the ref and onLayout for the layout's root view.
+ */
+export function useReportTabBarClearance(): { ref: RefObject<View | null>; onLayout: () => void } {
+  const ref = useRef<View | null>(null);
+  const windowHeight = useWindowDimensions().height;
+  const insetsBottom = useSafeAreaInsets().bottom;
+  const onLayout = useCallback(() => {
+    ref.current?.measureInWindow((_x, y, _w, h) => {
+      if (!Number.isFinite(y) || !Number.isFinite(h) || h <= 0) return;
+      const top = Math.round(tabBarTopFromBottom(windowHeight, y + h, Platform.OS, insetsBottom));
+      if (useTabBarTopStore.getState().top !== top) useTabBarTopStore.setState({ top });
+    });
+  }, [windowHeight, insetsBottom]);
+  return { ref, onLayout };
 }

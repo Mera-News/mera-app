@@ -238,7 +238,8 @@ export type SurfaceId =
   | 'settings:app-lock'
   | 'settings:data'
   | 'settings:backup'
-  | 'search';
+  | 'search'
+  | 'article';
 
 const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
   'facts',
@@ -254,9 +255,9 @@ const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
   'settings:backup',
 ]);
 
-/** The tab a surface lives in, or null for a root push (Search). */
+/** The tab a surface lives in, or null for a root push (Search, an article). */
 export function tabForSurface(surface: SurfaceId): TabId | null {
-  if (surface === 'search') return null;
+  if (surface === 'search' || surface === 'article') return null;
   if (surface.startsWith('interest:')) return 'feed';
   if (YOU_STACK_SURFACES.has(surface)) return 'you';
   return tabOfPage(surface as PageId);

@@ -18,6 +18,8 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 import { create } from 'zustand';
 
+import type { AskMeraSubject } from '@/components/custom/floating-chat/ask-mera';
+
 import type { SurfaceId, TabId } from './page-registry';
 
 interface HeaderBottom {
@@ -34,6 +36,8 @@ interface CurrentSurfaceState {
   /** A tab's dot: new content there (Feed: articles arrived while away; You:
    *  unread notices). Set by each tab's owner, drawn by the tab layout. */
   tabDots: Readonly<Record<TabId, boolean>>;
+  /** The article an `article` surface is about (the Mera button opens on it). */
+  article: AskMeraSubject | null;
 }
 
 const INITIAL: CurrentSurfaceState = {
@@ -41,6 +45,7 @@ const INITIAL: CurrentSurfaceState = {
   arrangeOpen: false,
   headerBottom: null,
   tabDots: { feed: false, world: false, library: false, you: false },
+  article: null,
 };
 
 export const useCurrentSurfaceStore = create<CurrentSurfaceState>()(() => INITIAL);
@@ -101,6 +106,29 @@ export function useReportSurface(id: SurfaceId, enabled: boolean = true): void {
       return () => clearSurface(id);
     }, [id, enabled]),
   );
+}
+
+/**
+ * An article page: reports the `article` surface and its subject while
+ * focused, and clears both on blur if still its own (a nested article page
+ * reports over its parent and the parent's report returns on Back).
+ */
+export function useReportArticleSurface(subject: AskMeraSubject | undefined): void {
+  useFocusEffect(
+    useCallback(() => {
+      const article = subject ?? null;
+      useCurrentSurfaceStore.setState({ surface: 'article', article });
+      return () => {
+        if (useCurrentSurfaceStore.getState().article === article) {
+          useCurrentSurfaceStore.setState({ surface: null, article: null });
+        }
+      };
+    }, [subject]),
+  );
+}
+
+export function useArticleSubject(): AskMeraSubject | null {
+  return useCurrentSurfaceStore((s) => s.article);
 }
 
 /**
