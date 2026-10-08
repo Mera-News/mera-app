@@ -14,8 +14,10 @@ import { StyleSheet, View } from 'react-native';
 import { type FeedView, setFeedView, useFeedView } from './feed-view-prefs';
 
 const VIEWS: readonly FeedView[] = ['continuous', 'sectioned'];
-/** The style glyphs: rows for the stream, grouped blocks for sections. */
-const VIEW_ICON = { continuous: 'view-stream', sectioned: 'view-agenda' } as const;
+/** The style glyphs, distinct at chip size: one card in a running stream
+ *  (`view-day`) for Continuous; blocks of different sizes, grouped
+ *  (`dashboard`), for Sectioned. The menu rows use the same pair. */
+const VIEW_ICON = { continuous: 'view-day', sectioned: 'dashboard' } as const;
 const iconOf = (v: FeedView) => VIEW_ICON[v];
 
 const FeedHeaderAccessory: React.FC = () => {
