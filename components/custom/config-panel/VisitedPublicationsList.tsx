@@ -166,7 +166,9 @@ const VisitedPublicationsList: React.FC<Props> = ({
     }, [load]);
 
     const open = useCallback((item: VisitedPublication) => {
-        openPublicationPage({ rawName: item.publicationName, countryCode: item.countryCode });
+        // History lands on the publication's own History view (owner); every
+        // other entry point keeps the default.
+        openPublicationPage({ rawName: item.publicationName, countryCode: item.countryCode }, 'HISTORY');
     }, []);
 
     const renderItem: ListRenderItem<VisitedPublication> = useCallback(
