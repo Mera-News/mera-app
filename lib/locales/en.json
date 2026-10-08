@@ -2715,7 +2715,9 @@
     "saved2": "Read what you kept for later",
     "stories1": "See what's new in the stories you follow",
     "stories2": "Catch up on the stories you follow",
-    "storiesInvite": "Follow a story to keep up"
+    "storiesInvite": "Follow a story to keep up",
+    "tutorials": "Tutorials",
+    "tutorials1": "See how Mera works in a few short slides"
   },
   "interests": {
     "emptyTitle": "Mera doesn't know your interests yet",

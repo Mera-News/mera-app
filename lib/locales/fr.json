@@ -2721,7 +2721,9 @@
     "saved2": "Lisez ce que vous avez gardé pour plus tard",
     "stories1": "Voir les nouveautés des histoires que vous suivez",
     "stories2": "Rattrapez les histoires que vous suivez",
-    "storiesInvite": "Suivez une histoire pour rester informé"
+    "storiesInvite": "Suivez une histoire pour rester informé",
+    "tutorials": "Guides",
+    "tutorials1": "Découvrez le fonctionnement de Mera en quelques courtes cartes"
   },
   "interests": {
     "emptyTitle": "Mera ne connaît pas encore vos centres d'intérêt",

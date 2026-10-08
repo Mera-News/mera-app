@@ -2715,7 +2715,9 @@
     "saved2": "Lee lo que dejaste para más tarde",
     "stories1": "Mira qué hay de nuevo en las historias que sigues",
     "stories2": "Ponte al día con las historias que sigues",
-    "storiesInvite": "Sigue una historia para mantenerte al día"
+    "storiesInvite": "Sigue una historia para mantenerte al día",
+    "tutorials": "Tutoriales",
+    "tutorials1": "Mira cómo funciona Mera en unas breves diapositivas"
   },
   "interests": {
     "emptyTitle": "Mera aún no conoce tus intereses",

@@ -75,12 +75,19 @@ export function worldPageId(scope: ExploreScope): WorldPageId {
     return scope.kind === 'world' ? 'world' : `country:${scope.countryCodeAlpha2 ?? ''}`;
 }
 
-/** World pages in display order. Pure. */
+/** World pages in display order. Pure.
+ *
+ *  Only countries the READER chose make pages (owner): their Places (location
+ *  rows, including those derived from what they told Mera, visible and
+ *  removable there) and the countries they added. Never the device region:
+ *  that fallback is passed as null here, so a phone set to India with nothing
+ *  chosen shows World alone. The device region still ranks and suggests
+ *  elsewhere (`electPrimaryCountry` callers outside this function). */
 export function deriveWorldPages(input: WorldPageInputs): WorldPage[] {
     const suppressed = new Set(input.suppressedScopeIds);
-    const places = placeAlpha3s(input.locations, input.deviceCountryAlpha2);
+    const places = placeAlpha3s(input.locations, null);
     const pages: WorldPage[] = [];
-    for (const scope of deriveExploreScopes(input.locations, input.deviceCountryAlpha2, input.browseCountries)) {
+    for (const scope of deriveExploreScopes(input.locations, null, input.browseCountries)) {
         if (scope.kind === 'world') {
             pages.push({ id: 'world', scope, origin: 'world' });
         } else if (scope.kind === 'country' && scope.countryCodeAlpha2 && !suppressed.has(scope.id)) {

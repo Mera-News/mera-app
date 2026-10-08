@@ -1,0 +1,123 @@
+{
+  "_comment": "navx2-fu: the Tutorials row in the Feed's shortcuts. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "ar": {
+    "feedShortcuts": {
+      "tutorials": "الدروس",
+      "tutorials1": "شاهد كيف يعمل Mera في بضع بطاقات قصيرة"
+    }
+  },
+  "de": {
+    "feedShortcuts": {
+      "tutorials": "Anleitungen",
+      "tutorials1": "Sieh in ein paar kurzen Karten, wie Mera funktioniert"
+    }
+  },
+  "en": {
+    "feedShortcuts": {
+      "tutorials": "Tutorials",
+      "tutorials1": "See how Mera works in a few short slides"
+    }
+  },
+  "es": {
+    "feedShortcuts": {
+      "tutorials": "Tutoriales",
+      "tutorials1": "Mira cómo funciona Mera en unas breves diapositivas"
+    }
+  },
+  "fr": {
+    "feedShortcuts": {
+      "tutorials": "Guides",
+      "tutorials1": "Découvrez le fonctionnement de Mera en quelques courtes cartes"
+    }
+  },
+  "hi": {
+    "feedShortcuts": {
+      "tutorials": "ट्यूटोरियल",
+      "tutorials1": "कुछ छोटी स्लाइड्स में देखें कि Mera कैसे काम करता है"
+    }
+  },
+  "id": {
+    "feedShortcuts": {
+      "tutorials": "Tutorial",
+      "tutorials1": "Lihat cara kerja Mera dalam beberapa kartu singkat"
+    }
+  },
+  "it": {
+    "feedShortcuts": {
+      "tutorials": "Tutorial",
+      "tutorials1": "Scopri come funziona Mera in poche brevi schede"
+    }
+  },
+  "ja": {
+    "feedShortcuts": {
+      "tutorials": "チュートリアル",
+      "tutorials1": "Meraの仕組みを数枚の短いスライドで見る"
+    }
+  },
+  "ko": {
+    "feedShortcuts": {
+      "tutorials": "튜토리얼",
+      "tutorials1": "짧은 카드 몇 장으로 Mera가 어떻게 작동하는지 알아보세요"
+    }
+  },
+  "nl": {
+    "feedShortcuts": {
+      "tutorials": "Handleidingen",
+      "tutorials1": "Bekijk in een paar korte dia's hoe Mera werkt"
+    }
+  },
+  "pl": {
+    "feedShortcuts": {
+      "tutorials": "Samouczki",
+      "tutorials1": "Zobacz w kilku krótkich slajdach, jak działa Mera"
+    }
+  },
+  "pt-BR": {
+    "feedShortcuts": {
+      "tutorials": "Tutoriais",
+      "tutorials1": "Veja como o Mera funciona em alguns slides curtos"
+    }
+  },
+  "ru": {
+    "feedShortcuts": {
+      "tutorials": "Обучение",
+      "tutorials1": "Посмотрите в нескольких коротких слайдах, как работает Mera"
+    }
+  },
+  "th": {
+    "feedShortcuts": {
+      "tutorials": "บทแนะนำ",
+      "tutorials1": "ดูวิธีการทำงานของ Mera ในสไลด์สั้นๆ ไม่กี่แผ่น"
+    }
+  },
+  "tr": {
+    "feedShortcuts": {
+      "tutorials": "Eğitimler",
+      "tutorials1": "Mera'nın nasıl çalıştığını birkaç kısa slaytta görün"
+    }
+  },
+  "uk": {
+    "feedShortcuts": {
+      "tutorials": "Навчання",
+      "tutorials1": "Перегляньте в кількох коротких слайдах, як працює Mera"
+    }
+  },
+  "vi": {
+    "feedShortcuts": {
+      "tutorials": "Hướng dẫn",
+      "tutorials1": "Xem Mera hoạt động thế nào qua vài thẻ ngắn"
+    }
+  },
+  "zh-CN": {
+    "feedShortcuts": {
+      "tutorials": "教程",
+      "tutorials1": "用几张简短的卡片了解 Mera 如何运作"
+    }
+  },
+  "zh-TW": {
+    "feedShortcuts": {
+      "tutorials": "教學",
+      "tutorials1": "用幾張簡短的卡片了解 Mera 如何運作"
+    }
+  }
+}

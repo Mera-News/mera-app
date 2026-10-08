@@ -2717,7 +2717,9 @@
     "saved2": "Sonra için sakladıklarınızı okuyun",
     "stories1": "Takip ettiğiniz hikayelerdeki yenilikleri gör",
     "stories2": "Takip ettiğiniz hikayelere yetişin",
-    "storiesInvite": "Güncel kalmak için bir haberi takip edin"
+    "storiesInvite": "Güncel kalmak için bir haberi takip edin",
+    "tutorials": "Eğitimler",
+    "tutorials1": "Mera'nın nasıl çalıştığını birkaç kısa slaytta görün"
   },
   "interests": {
     "emptyTitle": "Mera ilgi alanlarınızı henüz bilmiyor",

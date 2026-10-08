@@ -21,6 +21,7 @@ import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 import { useWorldPages } from '@/lib/explore/world-pages';
 import { useForYouLastProcessingRunFinishedAt } from '@/lib/stores/selectors';
 import { MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { I18nManager, StyleSheet, View } from 'react-native';
@@ -83,7 +84,8 @@ function useHasStories(): boolean {
 }
 
 interface Shortcut {
-  readonly page: PageId;
+  /** A page id, or 'tutorials' for the tutorials menu. */
+  readonly page: PageId | 'tutorials';
   readonly title: string;
   readonly caption: string;
   readonly icon?: keyof typeof MaterialIcons.glyphMap;
@@ -148,6 +150,14 @@ const FeedShortcuts: React.FC<{ readonly reading: boolean }> = ({ reading }) => 
     });
   }
 
+  // Always last: how Mera works, a few short slides (owner).
+  rows.push({
+    page: 'tutorials',
+    title: t('feedShortcuts.tutorials'),
+    caption: t('feedShortcuts.tutorials1'),
+    icon: 'school',
+  });
+
   return (
     <View style={styles.wrap} testID="feed-shortcuts">
       {reading ? (
@@ -180,7 +190,7 @@ const FeedShortcuts: React.FC<{ readonly reading: boolean }> = ({ reading }) => 
             />
           </View>
           <Pressable
-            onPress={() => navigateToPage(r.page)}
+            onPress={() => (r.page === 'tutorials' ? router.push('/tutorials') : navigateToPage(r.page))}
             style={StyleSheet.absoluteFill}
             accessibilityRole="button"
             accessibilityLabel={`${r.title}, ${r.caption}`}

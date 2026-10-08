@@ -2715,7 +2715,9 @@
     "saved2": "나중에 읽으려고 모아 둔 글 읽기",
     "stories1": "팔로우하는 스토리의 새 소식 보기",
     "stories2": "팔로우하는 스토리 따라잡기",
-    "storiesInvite": "스토리를 팔로우하고 놓치지 마세요"
+    "storiesInvite": "스토리를 팔로우하고 놓치지 마세요",
+    "tutorials": "튜토리얼",
+    "tutorials1": "짧은 카드 몇 장으로 Mera가 어떻게 작동하는지 알아보세요"
   },
   "interests": {
     "emptyTitle": "Mera가 아직 내 관심사를 몰라요",

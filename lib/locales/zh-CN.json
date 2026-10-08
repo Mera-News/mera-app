@@ -2716,7 +2716,9 @@
     "saved2": "读读你留到以后看的内容",
     "stories1": "看看你关注的报道有什么新动态",
     "stories2": "跟进你关注的报道",
-    "storiesInvite": "关注一条报道，保持同步"
+    "storiesInvite": "关注一条报道，保持同步",
+    "tutorials": "教程",
+    "tutorials1": "用几张简短的卡片了解 Mera 如何运作"
   },
   "interests": {
     "emptyTitle": "Mera 还不了解你的兴趣",

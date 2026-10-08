@@ -2716,7 +2716,9 @@
     "saved2": "Đọc những gì bạn đã giữ lại để đọc sau",
     "stories1": "Xem có gì mới trong các câu chuyện bạn theo dõi",
     "stories2": "Cập nhật các câu chuyện bạn theo dõi",
-    "storiesInvite": "Theo dõi một câu chuyện để luôn cập nhật"
+    "storiesInvite": "Theo dõi một câu chuyện để luôn cập nhật",
+    "tutorials": "Hướng dẫn",
+    "tutorials1": "Xem Mera hoạt động thế nào qua vài thẻ ngắn"
   },
   "interests": {
     "emptyTitle": "Mera chưa biết bạn quan tâm đến điều gì",
