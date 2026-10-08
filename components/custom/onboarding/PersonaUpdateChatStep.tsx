@@ -34,7 +34,10 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { keyboardLift } from './keyboard-lift';
 import { useTranslation } from 'react-i18next';
 import CloudPersonaChat from '../persona-chat/CloudPersonaChat';
 
@@ -56,6 +59,14 @@ export default function PersonaUpdateChatStep({
 }: PersonaUpdateChatStepProps) {
   const { t } = useTranslation();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
+  // Full-screen page, no panel: only this content area shrinks by the keyboard
+  // (the wizard pads the inset itself), so the header stays put and the input
+  // pins above the keyboard. Measurement-free, frame by frame on the UI thread.
+  const keyboard = useReanimatedKeyboardAnimation();
+  const liftStyle = useAnimatedStyle(() => ({
+    paddingBottom: keyboardLift(keyboard.height.value, insets.bottom),
+  }));
   const [isInitLoading, setIsInitLoading] = useState(true);
   const [surface, setSurface] = useState<'ONBOARDING' | 'CONFIG'>('ONBOARDING');
   const [userId, setUserId] = useState<string | null>(userIdProp || null);
@@ -172,10 +183,7 @@ export default function PersonaUpdateChatStep({
   }
 
   return (
-    // Full-screen surface with the input pinned to the window bottom — unlike the
-    // floating popover (which translates itself with the keyboard), this step must
-    // lift the input above the keyboard or it gets covered entirely.
-    <KeyboardAvoidingView behavior="padding" style={styles.container}>
+    <Animated.View style={[styles.container, liftStyle]} testID="onboarding-chat-lift">
       <CloudPersonaChat
         key={conversationId}
         userId={userId ?? ''}
@@ -188,7 +196,7 @@ export default function PersonaUpdateChatStep({
         composerTrailing={composerTrailing}
         composerPlaceholder={composerPlaceholder}
       />
-    </KeyboardAvoidingView>
+    </Animated.View>
   );
 }
 
