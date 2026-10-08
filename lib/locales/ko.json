@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "{{language}} 언어 팩이 아직 다운로드 중일 수 있습니다. 지금은 영어로 표시하고 있습니다. 다시 시도하려면 탭하세요.",
     "translationUnavailableTitle": "번역을 사용할 수 없습니다",
     "translationUnsupportedOnThisIos": "사용 중인 iOS 버전은 {{language}}(으)로 번역할 수 없습니다. 대신 영어를 표시하고 있습니다 — iOS를 업데이트하면 가능해집니다.",
-    "downloadHintBeforePrefix": "언어를 선택하면 iOS가 다운로드할지 물어볼 수 있어요. 그 목록에서 각 언어 옆에 있는",
-    "downloadHintBeforeSuffix": "아이콘을 누르세요 — 누르기 전까지는 아무것도 다운로드되지 않아요.",
     "downloadHintNowPrefix": "아래 목록에서 각 언어 옆에 있는",
     "downloadHintNowSuffix": "아이콘을 눌러 다운로드를 시작하세요.",
     "switchDeviceUnsupportedBody": "이 기기는 어떤 언어로도 뉴스 기사를 번역할 수 없어서 앱이 영어를 사용하고 있어요. {{language}}(으)로 설정하면 기사가 번역되지 않은 채로 남아요.",
@@ -413,9 +411,7 @@
     "switchingCancel": "언어 전환 중단",
     "switchingNudge": "잠시만 기다려 주세요. 기기가 {{language}} 번역 팩을 준비하고 있어요. 완료될 때까지 이 화면을 벗어나지 마세요 — 지금 나가면 기사가 영어로만 보여요.",
     "switchingTitle": "{{language}} 설정 중…",
-    "translationUnavailableOnThisDevice": "이 기기는 뉴스 기사를 {{language}}(으)로 번역할 수 없어요. 대신 영어로 보여드려요.",
-    "oneParaAndroid": "Mera는 휴대폰의 언어 팩을 이용해 이 언어로 앱을 표시합니다. 휴대폰에 언어 팩이 없으면 자동으로 내려받습니다.",
-    "oneParaIos": "Mera는 iPhone의 언어 팩을 이용해 이 언어로 앱을 표시합니다. iPhone에 언어 팩이 없으면 먼저 내려받을지 묻습니다."
+    "translationUnavailableOnThisDevice": "이 기기는 뉴스 기사를 {{language}}(으)로 번역할 수 없어요. 대신 영어로 보여드려요."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

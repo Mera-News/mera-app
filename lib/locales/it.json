@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "Il pacchetto linguistico {{language}} potrebbe essere ancora in download. Al momento viene mostrato l'inglese. Tocca per riprovare.",
     "translationUnavailableTitle": "Traduzione non disponibile",
     "translationUnsupportedOnThisIos": "La Sua versione di iOS non può tradurre in {{language}}. Mostrando inglese invece — aggiornare iOS lo renderà possibile.",
-    "downloadHintBeforePrefix": "Dopo aver scelto una lingua, iOS potrebbe chiederti di scaricarla. Tocca l'icona",
-    "downloadHintBeforeSuffix": "accanto a ogni lingua in quella scheda — non si scarica nulla finché non lo fai.",
     "downloadHintNowPrefix": "Tocca l'icona",
     "downloadHintNowSuffix": "accanto a ogni lingua nell'elenco qui sotto per avviare il download.",
     "switchDeviceUnsupportedBody": "Questo dispositivo non può tradurre gli articoli di notizie in nessuna lingua, quindi l'app sta usando l'inglese. Con {{language}} gli articoli resterebbero non tradotti.",
@@ -413,9 +411,7 @@
     "switchingCancel": "Interrompi il cambio lingua",
     "switchingNudge": "Il tuo dispositivo sta preparando il pacchetto di traduzione per {{language}}. Tieni aperta questa schermata finché non ha finito — se esci ora, gli articoli resteranno in inglese.",
     "switchingTitle": "Configurazione di {{language}} in corso…",
-    "translationUnavailableOnThisDevice": "Questo dispositivo non può tradurre gli articoli di notizie in {{language}}. Al loro posto viene mostrato l'inglese.",
-    "oneParaAndroid": "Mera mostra l'app in questa lingua usando il pacchetto linguistico del tuo telefono. Se il telefono non ce l'ha ancora, lo scarica da solo.",
-    "oneParaIos": "Mera mostra l'app in questa lingua usando il pacchetto linguistico del tuo iPhone. Se l'iPhone non ce l'ha ancora, ti chiede prima di scaricarlo."
+    "translationUnavailableOnThisDevice": "Questo dispositivo non può tradurre gli articoli di notizie in {{language}}. Al loro posto viene mostrato l'inglese."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

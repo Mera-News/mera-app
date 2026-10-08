@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "แพ็กเกจภาษา {{language}} อาจยังดาวน์โหลดอยู่ ตอนนี้แสดงเป็นภาษาอังกฤษ แตะเพื่อลองใหม่",
     "translationUnavailableTitle": "การแปลภาษาไม่พร้อมใช้งาน",
     "translationUnsupportedOnThisIos": "เวอร์ชัน iOS ของคุณไม่สามารถแปลเป็น {{language}} ได้ แสดง English — อัปเดต iOS จะเปิดใช้งานได้",
-    "downloadHintBeforePrefix": "หลังจากที่คุณเลือกภาษา iOS อาจขอให้คุณดาวน์โหลดภาษานั้น แตะที่",
-    "downloadHintBeforeSuffix": "ที่อยู่ข้างแต่ละภาษาในหน้าต่างนั้น จะไม่มีการดาวน์โหลดใด ๆ จนกว่าคุณจะแตะ",
     "downloadHintNowPrefix": "แตะที่",
     "downloadHintNowSuffix": "ที่อยู่ข้างแต่ละภาษาในหน้าต่างด้านล่างเพื่อเริ่มดาวน์โหลด",
     "switchDeviceUnsupportedBody": "อุปกรณ์นี้ไม่สามารถแปลบทความข่าวเป็นภาษาใดได้เลย แอปจึงใช้ภาษาอังกฤษแทน หากเลือก {{language}} บทความจะไม่ถูกแปล",
@@ -413,9 +411,7 @@
     "switchingCancel": "หยุดการสลับภาษา",
     "switchingNudge": "อุปกรณ์ของคุณกำลังเตรียมชุดข้อมูลแปลภาษา {{language}} กรุณาเปิดหน้าจอนี้ค้างไว้จนกว่าจะเสร็จ หากออกตอนนี้ บทความข่าวจะยังคงเป็นภาษาอังกฤษต่อไป",
     "switchingTitle": "กำลังตั้งค่า {{language}}…",
-    "translationUnavailableOnThisDevice": "อุปกรณ์นี้ไม่สามารถแปลบทความข่าวเป็น {{language}} ได้ จึงแสดงเป็นภาษาอังกฤษแทน",
-    "oneParaAndroid": "Mera แสดงแอปในภาษานี้โดยใช้ชุดภาษาของโทรศัพท์ หากโทรศัพท์ยังไม่มีชุดภาษานี้ ระบบจะดาวน์โหลดให้เอง",
-    "oneParaIos": "Mera แสดงแอปในภาษานี้โดยใช้ชุดภาษาของ iPhone หากไอโฟนยังไม่มีชุดภาษานี้ ระบบจะขอให้คุณดาวน์โหลดก่อน"
+    "translationUnavailableOnThisDevice": "อุปกรณ์นี้ไม่สามารถแปลบทความข่าวเป็น {{language}} ได้ จึงแสดงเป็นภาษาอังกฤษแทน"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

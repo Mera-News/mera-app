@@ -1,16 +1,16 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import LanguageDownloadNotice, { useLanguageDownloadNotice } from '@/components/custom/auth/LanguageDownloadNotice';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
-import { Help } from '@/components/custom/you/rows';
-import { getLanguageName } from '@/lib/translation-service';
+import { getLanguageName, getNativeLanguageName } from '@/lib/translation-service';
+import { toastManager } from '@/lib/toast-manager';
 import { requestRestart } from '@/lib/app-restart';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
-import LanguageDownloadHint from '@/components/custom/config-mera/LanguageDownloadHint';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { showDialog } from '@/lib/dialog';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -95,6 +95,13 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
         immediate: true,
     });
 
+    // The first-launch download notice and its sheet guards: shown only while
+    // Apple's download sheet is up; with no sheet by 8s the switch is let go.
+    const { noticeCode } = useLanguageDownloadNotice(cancel, (code) => {
+        const language = getNativeLanguageName(code) ?? code;
+        toastManager.showInfo(t('auth.track.noSheetTitle'), t('auth.track.noSheetBody', { language }));
+    });
+
     React.useEffect(() => {
         onBusyChange?.(busy);
     }, [busy, onBusyChange]);
@@ -128,12 +135,9 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                 </Box>
 
                 {/* The first-launch selector itself (auth/LanguageSelector), applied
-                    on pick. Above it: one line for the phone it is on, the
-                    iOS download hint (read before Apple's sheet covers the lower
-                    half), and the switch's progress. The list scrolls in its box. */}
+                    on pick, under the switch's progress. The list scrolls in
+                    its box. */}
                 <View style={{ flex: 1, minHeight: 0, paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 16, gap: 12 }}>
-                    <Help>{Platform.OS === 'ios' ? t('language.oneParaIos') : t('language.oneParaAndroid')}</Help>
-                    <LanguageDownloadHint />
                     {busy && pendingCode ? <LanguageSwitchProgress code={pendingCode} onCancel={cancel} /> : null}
                     <LanguageSelector
                         appLanguage={appLanguage}
@@ -146,6 +150,8 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                         keepCurrent
                     />
                 </View>
+                {/* Last, so it paints over the page while Apple's sheet is up. */}
+                <LanguageDownloadNotice code={noticeCode} top={insets.top + 8} />
             </Box>
         </GluestackUIProvider>
     );

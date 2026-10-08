@@ -441,8 +441,6 @@
     "translationUnavailableTapToRetry": "قد تكون حزمة اللغة {{language}} لا تزال قيد التنزيل. يتم عرض الإنجليزية الآن. اضغط لإعادة المحاولة.",
     "translationUnavailableTitle": "الترجمة غير متاحة",
     "translationUnsupportedOnThisIos": "إصدار iOS الخاص بك لا يمكنه الترجمة إلى {{language}}. عرض الإنجليزية بدلاً من ذلك — تحديث iOS سيجعل ذلك ممكناً.",
-    "downloadHintBeforePrefix": "بعد اختيار لغة، قد يطلب منك iOS تنزيلها. اضغط على",
-    "downloadHintBeforeSuffix": "بجانب كل لغة في تلك القائمة — لن يبدأ أي تنزيل حتى تفعل ذلك.",
     "downloadHintNowPrefix": "اضغط على",
     "downloadHintNowSuffix": "بجانب كل لغة في القائمة أدناه لبدء التنزيل.",
     "switchDeviceUnsupportedBody": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى أي لغة، لذا يستخدم التطبيق الإنجليزية. مع {{language}} ستبقى المقالات دون ترجمة.",
@@ -453,9 +451,7 @@
     "switchingCancel": "إيقاف تغيير اللغة",
     "switchingNudge": "يقوم جهازك بتجهيز حزمة ترجمة {{language}}. يرجى إبقاء هذه الشاشة مفتوحة حتى ينتهي الأمر — إذا غادرت الآن، ستبقى المقالات الإخبارية بالإنجليزية.",
     "switchingTitle": "جارٍ إعداد {{language}}…",
-    "translationUnavailableOnThisDevice": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى {{language}}. سيتم عرضها بالإنجليزية بدلاً من ذلك.",
-    "oneParaAndroid": "يعرض Mera التطبيق بهذه اللغة باستخدام حزمة اللغة في هاتفك. إذا لم تكن موجودة فيه بعد، فسيُنزّلها تلقائيًا.",
-    "oneParaIos": "يعرض Mera التطبيق بهذه اللغة باستخدام حزمة اللغة في iPhone. إذا لم تكن موجودة فيه بعد، فسيطلب منك تنزيلها أولًا."
+    "translationUnavailableOnThisDevice": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى {{language}}. سيتم عرضها بالإنجليزية بدلاً من ذلك."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "Das {{language}}-Sprachpaket wird möglicherweise noch heruntergeladen. Momentan wird Englisch angezeigt. Tippen, um es erneut zu versuchen.",
     "translationUnavailableTitle": "Übersetzung nicht verfügbar",
     "translationUnsupportedOnThisIos": "Deine iOS-Version kann nicht ins {{language}} übersetzen. Zeigt vorerst Englisch. iOS aktualisieren ermöglicht es.",
-    "downloadHintBeforePrefix": "Nachdem du eine Sprache ausgewählt hast, fragt iOS dich möglicherweise, ob du sie herunterladen möchtest. Tippe auf das",
-    "downloadHintBeforeSuffix": "neben der jeweiligen Sprache in diesem Menü – heruntergeladen wird erst, wenn du das tust.",
     "downloadHintNowPrefix": "Tippe auf das",
     "downloadHintNowSuffix": "neben der jeweiligen Sprache im Menü unten, um den Download zu starten.",
     "switchDeviceUnsupportedBody": "Dieses Gerät kann Nachrichtenartikel in keine Sprache übersetzen, daher verwendet die App Englisch. Bei {{language}} blieben Artikel unübersetzt.",
@@ -413,9 +411,7 @@
     "switchingCancel": "Sprachwechsel abbrechen",
     "switchingNudge": "Dein Gerät bereitet gerade das Übersetzungspaket für {{language}} vor. Bitte lass diesen Bildschirm geöffnet, bis der Vorgang abgeschlossen ist – verlässt du ihn jetzt, bleiben die Nachrichtenartikel auf Englisch.",
     "switchingTitle": "{{language}} wird eingerichtet …",
-    "translationUnavailableOnThisDevice": "Dieses Gerät kann Nachrichtenartikel nicht in {{language}} übersetzen. Es wird stattdessen Englisch angezeigt.",
-    "oneParaAndroid": "Mera zeigt die App in dieser Sprache mit dem Sprachpaket deines Telefons. Hat dein Telefon es noch nicht, lädt Mera es selbstständig herunter.",
-    "oneParaIos": "Mera zeigt die App in dieser Sprache mit dem Sprachpaket deines iPhones. Hat dein iPhone es noch nicht, fragt es dich zuerst, ob du es herunterladen möchtest."
+    "translationUnavailableOnThisDevice": "Dieses Gerät kann Nachrichtenartikel nicht in {{language}} übersetzen. Es wird stattdessen Englisch angezeigt."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

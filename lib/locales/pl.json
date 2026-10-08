@@ -421,8 +421,6 @@
     "translationUnavailableTapToRetry": "Pakiet językowy {{language}} może wciąż być pobierany. Obecnie wyświetlany jest angielski. Stuknij, aby spróbować ponownie.",
     "translationUnavailableTitle": "Tłumaczenie niedostępne",
     "translationUnsupportedOnThisIos": "Twoja wersja iOS nie potrafi tłumaczyć na {{language}}. Wyświetlamy angielski — aktualizacja iOS to umożliwi.",
-    "downloadHintBeforePrefix": "Po wybraniu języka iOS może poprosić o jego pobranie. Stuknij w",
-    "downloadHintBeforeSuffix": "obok każdego języka na tej liście — nic się nie pobierze, dopóki tego nie zrobisz.",
     "downloadHintNowPrefix": "Stuknij w",
     "downloadHintNowSuffix": "obok każdego języka na liście poniżej, aby rozpocząć pobieranie.",
     "switchDeviceUnsupportedBody": "To urządzenie nie może tłumaczyć artykułów na żaden język, więc aplikacja używa angielskiego. Język {{language}} sprawiłby, że artykuły pozostałyby nieprzetłumaczone.",
@@ -433,9 +431,7 @@
     "switchingCancel": "Anuluj zmianę języka",
     "switchingNudge": "Twoje urządzenie przygotowuje pakiet tłumaczeniowy na język {{language}}. Zostań na tym ekranie, aż proces się zakończy — jeśli wyjdziesz teraz, artykuły pozostaną w języku angielskim.",
     "switchingTitle": "Trwa konfigurowanie: {{language}}…",
-    "translationUnavailableOnThisDevice": "To urządzenie nie potrafi tłumaczyć artykułów na język {{language}}. Zamiast tego pokazujemy je w języku angielskim.",
-    "oneParaAndroid": "Mera pokazuje aplikację w tym języku, korzystając z pakietu językowego Twojego telefonu. Jeśli telefon go jeszcze nie ma, pobiera go sam.",
-    "oneParaIos": "Mera pokazuje aplikację w tym języku, korzystając z pakietu językowego Twojego iPhone'a. Jeśli iPhone go jeszcze nie ma, najpierw poprosi Cię o pobranie."
+    "translationUnavailableOnThisDevice": "To urządzenie nie potrafi tłumaczyć artykułów na język {{language}}. Zamiast tego pokazujemy je w języku angielskim."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

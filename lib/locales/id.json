@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "Paket bahasa {{language}} mungkin masih diunduh. Menampilkan bahasa Inggris untuk saat ini. Ketuk untuk mencoba lagi.",
     "translationUnavailableTitle": "Terjemahan tidak tersedia",
     "translationUnsupportedOnThisIos": "Versi iOS Anda tidak dapat menerjemahkan ke {{language}}. Menampilkan bahasa Inggris sebagai gantinya — memperbarui iOS akan mengaktifkannya.",
-    "downloadHintBeforePrefix": "Setelah kamu memilih bahasa, iOS mungkin akan meminta kamu mengunduhnya. Ketuk ikon",
-    "downloadHintBeforeSuffix": "di samping setiap bahasa pada lembar tersebut — tidak ada yang akan diunduh sampai kamu melakukannya.",
     "downloadHintNowPrefix": "Ketuk ikon",
     "downloadHintNowSuffix": "di samping setiap bahasa pada lembar di bawah untuk mulai mengunduh.",
     "switchDeviceUnsupportedBody": "Perangkat ini tidak bisa menerjemahkan artikel berita ke bahasa apa pun, jadi aplikasi ini menggunakan bahasa Inggris. Dengan {{language}}, artikel akan tetap tidak diterjemahkan.",
@@ -413,9 +411,7 @@
     "switchingCancel": "Hentikan pergantian bahasa",
     "switchingNudge": "Perangkatmu sedang menyiapkan paket terjemahan {{language}}. Tetap buka layar ini sampai selesai — jika kamu keluar sekarang, artikel berita akan tetap dalam bahasa Inggris.",
     "switchingTitle": "Menyiapkan {{language}}…",
-    "translationUnavailableOnThisDevice": "Perangkat ini tidak bisa menerjemahkan artikel berita ke {{language}}. Sebagai gantinya, artikel ditampilkan dalam bahasa Inggris.",
-    "oneParaAndroid": "Mera menampilkan aplikasi dalam bahasa ini menggunakan paket bahasa ponsel Anda. Jika ponsel Anda belum memilikinya, paket itu diunduh dengan sendirinya.",
-    "oneParaIos": "Mera menampilkan aplikasi dalam bahasa ini menggunakan paket bahasa iPhone Anda. Jika iPhone Anda belum memilikinya, iPhone akan meminta Anda mengunduhnya terlebih dahulu."
+    "translationUnavailableOnThisDevice": "Perangkat ini tidak bisa menerjemahkan artikel berita ke {{language}}. Sebagai gantinya, artikel ditampilkan dalam bahasa Inggris."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "Gói ngôn ngữ {{language}} có thể vẫn đang tải xuống. Hiện đang hiển thị tiếng Anh. Chạm để thử lại.",
     "translationUnavailableTitle": "Bản dịch không khả dụng",
     "translationUnsupportedOnThisIos": "Phiên bản iOS của bạn không thể dịch sang {{language}}. Hiển thị tiếng Anh — cập nhật iOS sẽ bật tính năng này.",
-    "downloadHintBeforePrefix": "Sau khi bạn chọn một ngôn ngữ, iOS có thể sẽ yêu cầu bạn tải ngôn ngữ đó xuống. Hãy nhấn vào",
-    "downloadHintBeforeSuffix": "bên cạnh mỗi ngôn ngữ trong bảng đó — sẽ không có gì được tải xuống cho tới khi bạn làm vậy.",
     "downloadHintNowPrefix": "Nhấn vào",
     "downloadHintNowSuffix": "bên cạnh mỗi ngôn ngữ trong bảng bên dưới để bắt đầu tải xuống.",
     "switchDeviceUnsupportedBody": "Thiết bị này không thể dịch bài viết tin tức sang bất kỳ ngôn ngữ nào, vì vậy ứng dụng đang dùng tiếng Anh. Nếu chọn {{language}}, các bài viết sẽ không được dịch.",
@@ -413,9 +411,7 @@
     "switchingCancel": "Dừng chuyển ngôn ngữ",
     "switchingNudge": "Thiết bị của bạn đang chuẩn bị gói dịch {{language}}. Vui lòng giữ màn hình này mở cho đến khi hoàn tất — nếu bạn rời đi bây giờ, các bài viết tin tức sẽ vẫn hiển thị bằng tiếng Anh.",
     "switchingTitle": "Đang thiết lập {{language}}…",
-    "translationUnavailableOnThisDevice": "Thiết bị này không thể dịch bài viết tin tức sang {{language}}. Đang hiển thị bằng tiếng Anh thay thế.",
-    "oneParaAndroid": "Mera hiển thị ứng dụng bằng ngôn ngữ này nhờ gói ngôn ngữ trên điện thoại của bạn. Nếu điện thoại chưa có gói đó, nó sẽ tự tải về.",
-    "oneParaIos": "Mera hiển thị ứng dụng bằng ngôn ngữ này nhờ gói ngôn ngữ trên iPhone của bạn. Nếu iPhone chưa có gói đó, nó sẽ hỏi bạn tải về trước."
+    "translationUnavailableOnThisDevice": "Thiết bị này không thể dịch bài viết tin tức sang {{language}}. Đang hiển thị bằng tiếng Anh thay thế."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

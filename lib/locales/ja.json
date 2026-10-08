@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "{{language}}言語パックはまだダウンロード中の可能性があります。現在は英語を表示しています。もう一度試すにはタップしてください。",
     "translationUnavailableTitle": "翻訳は利用できません",
     "translationUnsupportedOnThisIos": "お使いのiOSバージョンは{{language}}に翻訳できません。代わりに英語を表示しています — iOSを更新するとこれが有効になります。",
-    "downloadHintBeforePrefix": "言語を選択すると、iOSがダウンロードを求めることがあります。そのシートで各言語の横にある",
-    "downloadHintBeforeSuffix": "をタップしてください。タップするまでは何もダウンロードされません。",
     "downloadHintNowPrefix": "下のシートで各言語の横にある",
     "downloadHintNowSuffix": "をタップすると、ダウンロードが始まります。",
     "switchDeviceUnsupportedBody": "この端末はニュース記事をどの言語にも翻訳できないため、アプリは英語を使用しています。{{language}}にすると、記事は翻訳されないままになります。",
@@ -413,9 +411,7 @@
     "switchingCancel": "言語の切り替えを中止",
     "switchingNudge": "お使いの端末が{{language}}の翻訳パックを準備しています。完了するまでこの画面を閉じずにお待ちください。今ここを離れると、記事は英語のまま表示されてしまいます。",
     "switchingTitle": "{{language}}を設定中…",
-    "translationUnavailableOnThisDevice": "この端末はニュース記事を{{language}}に翻訳できません。代わりに英語で表示しています。",
-    "oneParaAndroid": "Meraは、お使いの電話の言語パックを使ってこの言語でアプリを表示します。電話にまだない場合は、自動的にダウンロードされます。",
-    "oneParaIos": "Meraは、お使いのiPhoneの言語パックを使ってこの言語でアプリを表示します。iPhoneにまだない場合は、先にダウンロードするよう求められます。"
+    "translationUnavailableOnThisDevice": "この端末はニュース記事を{{language}}に翻訳できません。代わりに英語で表示しています。"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

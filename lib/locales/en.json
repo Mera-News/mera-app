@@ -673,8 +673,6 @@
     "translationUnavailableTitle": "Translation unavailable",
     "translationUnavailableTapToRetry": "The {{language}} language pack may still be downloading. Showing English for now. Tap to try again.",
     "translationUnsupportedOnThisIos": "Your version of iOS can't translate into {{language}}, so English is shown instead. Updating iOS will enable it.",
-    "downloadHintBeforePrefix": "After you pick a language, iOS may ask you to download it. Tap the",
-    "downloadHintBeforeSuffix": "next to each language in that sheet. Nothing downloads until you do.",
     "downloadHintNowPrefix": "Tap the",
     "downloadHintNowSuffix": "next to each language in the sheet below to start the download.",
     "switchingTitle": "Setting up {{language}}…",
@@ -685,9 +683,7 @@
     "switchTimedOutBody": "Preparing {{language}} is taking too long, so you're still using {{previous}}. The download may finish in the background. Try again shortly.",
     "switchUnsupportedBody": "This version of iOS can't translate into {{language}}, so you're still using {{previous}}.",
     "switchDeviceUnsupportedBody": "This device can't translate news articles into any language, so the app is using English. {{language}} would leave articles untranslated.",
-    "translationUnavailableOnThisDevice": "This device can't translate news articles into {{language}}. Showing English instead.",
-    "oneParaAndroid": "Mera shows the app in this language using your phone's language pack. If your phone doesn't have it yet, it downloads it on its own.",
-    "oneParaIos": "Mera shows the app in this language using your iPhone's language pack. If your iPhone doesn't have it yet, it asks you to download it first."
+    "translationUnavailableOnThisDevice": "This device can't translate news articles into {{language}}. Showing English instead."
   },
   "meraProtocol": {
     "attestationTitle": "Verify attestation",

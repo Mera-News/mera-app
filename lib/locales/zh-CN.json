@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "{{language}}语言包可能仍在下载。目前显示英文。点击重试。",
     "translationUnavailableTitle": "翻译不可用",
     "translationUnsupportedOnThisIos": "您的 iOS 版本无法翻译为{{language}}。显示英文——更新iOS可启用。",
-    "downloadHintBeforePrefix": "选择语言后,iOS 可能会提示你下载该语言包。请点按该弹窗中每种语言旁的",
-    "downloadHintBeforeSuffix": "图标——点了才会开始下载。",
     "downloadHintNowPrefix": "点按下方列表中每种语言旁的",
     "downloadHintNowSuffix": "图标即可开始下载。",
     "switchDeviceUnsupportedBody": "此设备无法将新闻文章翻译成任何语言,因此应用目前使用英语显示。切换到{{language}}会导致文章无法翻译。",
@@ -413,9 +411,7 @@
     "switchingCancel": "停止切换语言",
     "switchingNudge": "设备正在准备{{language}}翻译包。请保持此页面打开,直到准备完成——如果现在离开,新闻文章将继续以英语显示。",
     "switchingTitle": "正在设置{{language}}…",
-    "translationUnavailableOnThisDevice": "此设备无法将新闻文章翻译成{{language}},将改为显示英语。",
-    "oneParaAndroid": "Mera 使用你手机的语言包以该语言显示应用。如果你的手机还没有该语言包，会自动下载。",
-    "oneParaIos": "Mera 使用你 iPhone 的语言包以该语言显示应用。如果你的 iPhone 还没有该语言包，会先提示你下载。"
+    "translationUnavailableOnThisDevice": "此设备无法将新闻文章翻译成{{language}},将改为显示英语。"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

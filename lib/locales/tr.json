@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "{{language}} dil paketi hâlâ indiriliyor olabilir. Şimdilik İngilizce gösteriliyor. Tekrar denemek için dokunun.",
     "translationUnavailableTitle": "Çeviri kullanılamıyor",
     "translationUnsupportedOnThisIos": "iOS sürümünüz {{language}} dilinde çeviremiyor. İngilizce gösteriliyor — iOS'u güncellemek bunu etkinleştirecektir.",
-    "downloadHintBeforePrefix": "Bir dil seçtiğinde iOS onu indirmeni isteyebilir. O listede her dilin yanındaki",
-    "downloadHintBeforeSuffix": "simgesine dokun — sen dokunana kadar hiçbir şey inmez.",
     "downloadHintNowPrefix": "İndirmeyi başlatmak için aşağıdaki listede her dilin yanındaki",
     "downloadHintNowSuffix": "simgesine dokun.",
     "switchDeviceUnsupportedBody": "Bu cihaz haber makalelerini hiçbir dile çeviremiyor, bu yüzden uygulama İngilizce kullanıyor. {{language}} makaleleri çevrilmeden bırakır.",
@@ -413,9 +411,7 @@
     "switchingCancel": "Dil değiştirmeyi durdur",
     "switchingNudge": "Cihazın {{language}} çeviri paketini hazırlıyor. Lütfen işlem bitene kadar bu ekranı açık tut — şimdi ayrılırsan haberler İngilizce kalmaya devam eder.",
     "switchingTitle": "{{language}} dili ayarlanıyor…",
-    "translationUnavailableOnThisDevice": "Bu cihaz haber makalelerini {{language}} diline çeviremiyor. Bunun yerine İngilizce gösteriliyor.",
-    "oneParaAndroid": "Mera uygulamayı bu dilde, telefonunuzun dil paketini kullanarak gösterir. Telefonunuzda yoksa, paketi kendiliğinden indirir.",
-    "oneParaIos": "Mera uygulamayı bu dilde, iPhone'unuzun dil paketini kullanarak gösterir. iPhone'unuzda yoksa, önce indirmenizi ister."
+    "translationUnavailableOnThisDevice": "Bu cihaz haber makalelerini {{language}} diline çeviremiyor. Bunun yerine İngilizce gösteriliyor."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "O pacote de idioma {{language}} ainda pode estar sendo baixado. Mostrando inglês por enquanto. Toque para tentar novamente.",
     "translationUnavailableTitle": "Tradução indisponível",
     "translationUnsupportedOnThisIos": "Sua versão do iOS não consegue traduzir para {{language}}. Mostrando inglês — atualizar iOS habilitará isso.",
-    "downloadHintBeforePrefix": "Depois de escolher um idioma, o iOS pode pedir para baixá-lo. Toque no",
-    "downloadHintBeforeSuffix": "ícone ao lado de cada idioma nessa lista — nada é baixado até você fazer isso.",
     "downloadHintNowPrefix": "Toque no",
     "downloadHintNowSuffix": "ícone ao lado de cada idioma na lista abaixo para iniciar o download.",
     "switchDeviceUnsupportedBody": "Este dispositivo não consegue traduzir artigos de notícias para nenhum idioma, então o app está usando inglês. Com {{language}}, os artigos ficariam sem tradução.",
@@ -413,9 +411,7 @@
     "switchingCancel": "Parar a troca de idioma",
     "switchingNudge": "Seu dispositivo está preparando o pacote de tradução de {{language}}. Mantenha esta tela aberta até terminar — se você sair agora, as notícias vão continuar em inglês.",
     "switchingTitle": "Configurando {{language}}…",
-    "translationUnavailableOnThisDevice": "Este dispositivo não consegue traduzir artigos de notícias para {{language}}. Mostrando em inglês.",
-    "oneParaAndroid": "A Mera mostra o app neste idioma usando o pacote de idiomas do seu celular. Se o celular ainda não tiver, ele baixa sozinho.",
-    "oneParaIos": "A Mera mostra o app neste idioma usando o pacote de idiomas do seu iPhone. Se o iPhone ainda não tiver, ele pede para você baixar primeiro."
+    "translationUnavailableOnThisDevice": "Este dispositivo não consegue traduzir artigos de notícias para {{language}}. Mostrando em inglês."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

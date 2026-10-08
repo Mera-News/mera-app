@@ -406,8 +406,6 @@
     "translationUnavailableTapToRetry": "Le pack de langue {{language}} est peut-être encore en téléchargement. Affichage de l'anglais pour l'instant. Appuyez pour réessayer.",
     "translationUnavailableTitle": "Traduction indisponible",
     "translationUnsupportedOnThisIos": "Votre version iOS ne peut pas traduire vers {{language}}. Affichage de l'anglais à la place — la mise à jour iOS le permettra.",
-    "downloadHintBeforePrefix": "Une fois que tu as choisi une langue, iOS peut te demander de la télécharger. Appuie sur le",
-    "downloadHintBeforeSuffix": "à côté de chaque langue dans cette liste — rien ne se télécharge tant que tu ne l'as pas fait.",
     "downloadHintNowPrefix": "Appuie sur le",
     "downloadHintNowSuffix": "à côté de chaque langue dans la liste ci-dessous pour lancer le téléchargement.",
     "switchDeviceUnsupportedBody": "Cet appareil ne peut traduire les articles d'actualité dans aucune langue, donc l'application utilise l'anglais. Avec {{language}}, les articles resteraient non traduits.",
@@ -418,9 +416,7 @@
     "switchingCancel": "Arrêter le changement de langue",
     "switchingNudge": "Ton appareil prépare le pack de traduction {{language}}. Merci de garder cet écran ouvert jusqu'à la fin — si tu quittes maintenant, les articles resteront en anglais.",
     "switchingTitle": "Configuration de {{language}}…",
-    "translationUnavailableOnThisDevice": "Cet appareil ne peut pas traduire les articles d'actualité en {{language}}. Affichage en anglais à la place.",
-    "oneParaAndroid": "Mera affiche l'application dans cette langue grâce au pack de langue de votre téléphone. Si votre téléphone ne l'a pas encore, il le télécharge automatiquement.",
-    "oneParaIos": "Mera affiche l'application dans cette langue grâce au pack de langue de votre iPhone. Si votre iPhone ne l'a pas encore, il vous demande de le télécharger d'abord."
+    "translationUnavailableOnThisDevice": "Cet appareil ne peut pas traduire les articles d'actualité en {{language}}. Affichage en anglais à la place."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

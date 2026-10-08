@@ -401,8 +401,6 @@
     "translationUnavailableTapToRetry": "Het {{language}}-taalpakket wordt mogelijk nog steeds gedownload. Toont voorlopig Engels. Tik om het opnieuw te proberen.",
     "translationUnavailableTitle": "Vertaling niet beschikbaar",
     "translationUnsupportedOnThisIos": "Uw iOS-versie kan niet naar {{language}} vertalen. Toont momenteel Engels — iOS bijwerken maakt dit mogelijk.",
-    "downloadHintBeforePrefix": "Nadat je een taal kiest, kan iOS vragen om deze te downloaden. Tik op het",
-    "downloadHintBeforeSuffix": "icoontje naast elke taal in dat venster — er wordt pas iets gedownload als je dat doet.",
     "downloadHintNowPrefix": "Tik op het",
     "downloadHintNowSuffix": "icoontje naast elke taal in het venster hieronder om de download te starten.",
     "switchDeviceUnsupportedBody": "Dit toestel kan nieuwsartikelen niet vertalen naar welke taal dan ook, dus de app gebruikt Engels. Met {{language}} zouden artikelen onvertaald blijven.",
@@ -413,9 +411,7 @@
     "switchingCancel": "Taalwijziging annuleren",
     "switchingNudge": "Je toestel bereidt het vertaalpakket voor {{language}} voor. Laat dit scherm open staan tot het klaar is — als je nu weggaat, blijven nieuwsartikelen in het Engels.",
     "switchingTitle": "{{language}} instellen…",
-    "translationUnavailableOnThisDevice": "Dit toestel kan nieuwsartikelen niet naar {{language}} vertalen. In plaats daarvan tonen we Engels.",
-    "oneParaAndroid": "Mera toont de app in deze taal met het taalpakket van je telefoon. Heeft je telefoon het nog niet, dan downloadt Mera het zelf.",
-    "oneParaIos": "Mera toont de app in deze taal met het taalpakket van je iPhone. Heeft je iPhone het nog niet, dan vraagt Mera je het eerst te downloaden."
+    "translationUnavailableOnThisDevice": "Dit toestel kan nieuwsartikelen niet naar {{language}} vertalen. In plaats daarvan tonen we Engels."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
