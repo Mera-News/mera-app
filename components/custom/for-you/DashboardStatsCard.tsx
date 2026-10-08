@@ -25,6 +25,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
+import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import { useSupportAction } from '@/lib/intercom';
 import { useIsConnected } from '@/lib/stores/network-store';
@@ -118,7 +119,9 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     const mode = useFeedStatusMode();
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const expanded = useFeedStatusCard((s) => s.expanded);
-    const noFacts = useFeedStatusCard((s) => s.emptyWants);
+    // Not `emptyWants` (an empty Feed past a run, exactly where a zero needs
+    // explaining): with no facts at all the no-facts card owns the Feed.
+    const noFacts = useHasFacts() === false;
     const offline = useIsConnected() === false;
     const zero = zeroState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount });
     // The icon reads whether a card is showing from this count.
