@@ -7,8 +7,8 @@
 // would not change the URL, so nothing would fire.
 //
 // Redirect stubs (share-stats, saved-suggestions, ...) and the shortcuts on
-// the Feed's empty state go through here too; `params` carries what a page
-// needs on arrival (no page reads any today).
+// the Feed's empty state go through here too. A request names the page only;
+// a pushed tab SCREEN (`navigateToTabScreen`) is the path that carries params.
 //
 // Navigation order: a root push above app_container (article detail, Search,
 // a stub) is dismissed first, and only then, so the origin tab's own stack is
@@ -30,8 +30,6 @@ import { tabForSurface, tabOfPage, tabRoute, type PageId, type SurfaceId, type T
 
 export interface PageRequest {
   readonly page: PageId;
-  /** One-shot arrival params for the page. */
-  readonly params: Readonly<Record<string, string>> | null;
   /** Where the jump started, for the jump-origin Back. Null: unknown. */
   readonly origin: SurfaceId | null;
   /** Epoch ms of the request. */
@@ -73,10 +71,14 @@ export function usePendingPageRequest(): PageRequest | null {
 }
 
 export interface NavigateToPageOptions {
-  readonly params?: Readonly<Record<string, string>>;
   /** A redirect stub opened cold (nothing under it to dismiss): replace the
    *  stub with the tab instead of pushing the tab on top of it. */
   readonly replace?: boolean;
+}
+
+export interface NavigateToTabScreenOptions extends NavigateToPageOptions {
+  /** The pushed screen's route params. */
+  readonly params?: Readonly<Record<string, string>>;
 }
 
 /** Pops a tab's stack to its root; registered by the tab's root screen. */
@@ -109,9 +111,9 @@ export function useRegisterTabStack(tab: TabId): void {
 
 /** Set the pending request without navigating (`+native-intent`, which
  *  returns the path itself). */
-export function setPendingPage(page: PageId, params: Readonly<Record<string, string>> | null = null): void {
+export function setPendingPage(page: PageId): void {
   usePendingPageStore.setState({
-    request: { page, params, origin: useCurrentSurface.getState(), at: Date.now() },
+    request: { page, origin: useCurrentSurface.getState(), at: Date.now() },
   });
 }
 
@@ -130,7 +132,7 @@ function openTab(tab: TabId, origin: SurfaceId | null, replace: boolean | undefi
 export function navigateToPage(page: PageId, opts: NavigateToPageOptions = {}): void {
   const origin = useCurrentSurface.getState();
   usePendingPageStore.setState({
-    request: { page, params: opts.params ?? null, origin, at: Date.now() },
+    request: { page, origin, at: Date.now() },
   });
   openTab(tabOfPage(page), origin, opts.replace);
 }
@@ -143,7 +145,7 @@ export function navigateToPage(page: PageId, opts: NavigateToPageOptions = {}): 
 export function navigateToTabScreen(
   tab: TabId,
   screen: string,
-  opts: NavigateToPageOptions = {},
+  opts: NavigateToTabScreenOptions = {},
 ): void {
   openTab(tab, useCurrentSurface.getState(), opts.replace);
   // Built at run time from a screen name, so typed routes cannot check it;

@@ -72,7 +72,6 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
   const activeId = survivingPage(ids, chosenId ?? ids[0] ?? null, lastIndexRef.current);
   const index = activeId ? Math.max(0, ids.indexOf(activeId)) : 0;
   lastIndexRef.current = index;
-  const [arrival, setArrival] = useState<{ id: PageId; params: Readonly<Record<string, string>> } | null>(null);
   // World's overlay: open, with the long-pressed page lifted.
   const [arrangeLift, setArrangeLift] = useState<PageId | null>(null);
   const arranging = arrangeLift !== null;
@@ -84,7 +83,6 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
   const select = useCallback(
     (id: PageId) => {
       setChosenId(id);
-      setArrival((a) => (a && a.id === id ? a : null));
       reveal();
       resetScrollOrigin();
     },
@@ -118,10 +116,7 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
       fadeIn();
     }
     const req = consumePendingPage(tab);
-    if (req && ids.includes(req.page)) {
-      select(req.page);
-      if (req.params) setArrival({ id: req.page, params: req.params });
-    }
+    if (req && ids.includes(req.page)) select(req.page);
   }, [focused, request, edge, ids, tab, select, fadeIn]);
 
   // ── Surface for the Mera button and the jump-origin Back ──
@@ -186,9 +181,8 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
         pageId: ids[i],
         active: pageActive && focused && !arranging,
         header,
-        params: arrival && arrival.id === ids[i] ? arrival.params : null,
       }),
-    [renderPage, ids, focused, arranging, header, arrival],
+    [renderPage, ids, focused, arranging, header],
   );
 
   const tabLabel = t(TAB_LABEL_KEYS[tab]);

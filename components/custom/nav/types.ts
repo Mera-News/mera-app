@@ -27,9 +27,6 @@ export interface PageRenderProps {
    *  or tab-press handling. */
   readonly active: boolean;
   readonly header: PageHeaderBinding;
-  /** One-shot arrival params from `navigateToPage`. Non-null
-   *  only on the render that lands the request; copy what you need. */
-  readonly params: Readonly<Record<string, string>> | null;
 }
 
 /** "Something new" on a pill: a dot, never a count. */

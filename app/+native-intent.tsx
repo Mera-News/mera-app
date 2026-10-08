@@ -11,7 +11,7 @@ export function redirectSystemPath({ path }: { path: string; initial: boolean })
     const target = normalizeLegacyHref(path);
     if (!target) return path;
     if (target.page) {
-      setPendingPage(target.page, target.params ?? null);
+      setPendingPage(target.page);
       return target.pathname;
     }
     const query = target.params ? new URLSearchParams(target.params).toString() : '';

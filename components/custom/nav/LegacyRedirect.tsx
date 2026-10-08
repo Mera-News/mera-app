@@ -25,14 +25,8 @@ function useOnce(run: () => void): void {
   }, []);
 }
 
-export function PageRedirect({
-  page,
-  params,
-}: {
-  page: PageId;
-  params?: Readonly<Record<string, string>>;
-}): null {
-  useOnce(() => navigateToPage(page, { params, replace: !router.canDismiss() }));
+export function PageRedirect({ page }: { page: PageId }): null {
+  useOnce(() => navigateToPage(page, { replace: !router.canDismiss() }));
   return null;
 }
 
