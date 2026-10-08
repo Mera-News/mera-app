@@ -15,6 +15,8 @@ jest.mock('../../stores/floating-chat-store', () => ({
 jest.mock('../tool-handlers', () => ({
   triggerTopicGeneration: jest.fn(),
 }));
+const mockBlock = jest.fn(async () => false);
+jest.mock('../../llm/cloud-only-notice', () => ({ blockIfOnDevice: () => mockBlock() }));
 jest.mock('../../logger', () => ({
   __esModule: true,
   default: { warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
@@ -472,7 +474,19 @@ describe('executeProposalActions — track_story (follow-in-chat)', () => {
 // PersonaUpdateAgent.applyProposal strips the action before delegating here, so
 // this path is unreachable from a model tool call — see PersonaUpdateAgent.test.
 describe('run_calibration', () => {
-  beforeEach(() => mockRunCalibration.mockReset());
+  beforeEach(() => {
+    mockRunCalibration.mockReset();
+    mockBlock.mockReset();
+    mockBlock.mockResolvedValue(false);
+  });
+
+  it('on-device: explains instead of running, and reports no error', async () => {
+    mockBlock.mockResolvedValue(true);
+    const result = await executeProposalActions([{ type: 'run_calibration' }], { confirmedByUser: true });
+    expect(mockRunCalibration).not.toHaveBeenCalled();
+    expect(result.applied).toBe(0);
+    expect(result.errors).toHaveLength(0);
+  });
 
   it('recalibrates and summarises when tweaks were applied', async () => {
     mockRunCalibration.mockResolvedValue({ status: 'applied', applied: { W_TOPIC: 0.1 } });

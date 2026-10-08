@@ -39,6 +39,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { keyboardLift } from './keyboard-lift';
 import { useTranslation } from 'react-i18next';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import CloudPersonaChat from '../persona-chat/CloudPersonaChat';
 
 const PERSONA_CONTEXT: ChatContext = { kind: 'persona' };
@@ -59,6 +60,7 @@ export default function PersonaUpdateChatStep({
 }: PersonaUpdateChatStepProps) {
   const { t } = useTranslation();
   const colors = useColors();
+  const onDevice = useIsOnDeviceProcessing();
   const insets = useSafeAreaInsets();
   // Full-screen page, no panel: only this content area shrinks by the keyboard
   // (the wizard pads the inset itself), so the header stays put and the input
@@ -168,6 +170,20 @@ export default function PersonaUpdateChatStep({
       cancelled = true;
     };
   }, [conversationId]);
+
+  // On-device mode never calls the cloud AI, and this step is cloud-only by
+  // design (no local model yet). Say so, and keep Next reachable: it is the
+  // composer's trailing button, so without it the reader would be stuck here.
+  if (onDevice) {
+    return (
+      <View style={styles.loadingContainer} testID="onboarding-cloud-only">
+        <Text size="sm" style={[styles.loadingText, { color: colors.ink2 }]}>
+          {t('chat.cloudOnlyNotice')}
+        </Text>
+        {composerTrailing}
+      </View>
+    );
+  }
 
   // Gate the chat until a conversation row exists and its resume load has landed
   // for THAT id — so the thread never renders against a stale/empty resume set.

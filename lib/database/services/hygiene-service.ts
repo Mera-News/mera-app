@@ -10,6 +10,7 @@
 // No analysis math lives here — it is glue over the pure core + the existing
 // per-collection services.
 
+import { isOnDeviceMode } from '../../llm/on-device-gate';
 import logger from '../../logger';
 import { toastManager } from '../../toast-manager';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
@@ -549,6 +550,9 @@ async function applyIncoherentTopicsProposal(
 }
 
 export interface AcceptResult {
+  /** The proposal needs the cloud AI and the app is on-device: nothing ran and
+   *  the proposal stays pending. The caller explains it to the reader. */
+  needsCloud?: boolean;
   applied: boolean;
   /** True when the proposal was found + all ops ran without a hard error. */
   ok: boolean;
@@ -567,6 +571,9 @@ export async function acceptProposal(id: string): Promise<AcceptResult> {
   // `incoherent_topics` is generate-then-retire and needs its ops applied as a
   // single atomic unit, which the generic per-op loop below cannot provide.
   if (proposal.kind === 'incoherent_topics') {
+    // Its replacement topics come from one cloud call. On-device: change
+    // nothing and keep the proposal for when the reader is back on the cloud.
+    if (await isOnDeviceMode()) return { applied: false, ok: false, needsCloud: true };
     try {
       return await applyIncoherentTopicsProposal(proposal);
     } catch (error) {

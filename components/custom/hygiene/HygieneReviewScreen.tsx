@@ -1,3 +1,4 @@
+import { showCloudOnlyNotice } from '@/lib/llm/cloud-only-notice';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { sentenceCase } from '@/components/custom/facts/sentence-case';
 import { Group, Row } from '@/components/custom/you/rows';
@@ -212,7 +213,11 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
             setItems((prev) => prev.filter((p) => p.id !== proposal.id));
             try {
                 const res = await acceptProposal(proposal.id);
-                if (res.applied && res.ok) {
+                if (res.needsCloud) {
+                    // On-device: nothing ran, the proposal stays. Say why, once.
+                    void showCloudOnlyNotice();
+                    void load();
+                } else if (res.applied && res.ok) {
                     toastManager.showSuccess(t('hygiene.appliedTitle'), t('hygiene.appliedBody'));
                 } else {
                     toastManager.showError(t('hygiene.applyFailedTitle'), t('hygiene.applyFailedBody'));

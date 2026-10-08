@@ -44,6 +44,9 @@ const mockRunSanityAudit: jest.Mock<
   }>,
   []
 > = jest.fn(async () => ({ incoherentFacts: [], audited: 0, skipped: false }));
+const mockOnDevice = jest.fn(async () => false);
+jest.mock('@/lib/llm/on-device-gate', () => ({ isOnDeviceMode: () => mockOnDevice() }));
+
 jest.mock('../topic-sanity-service', () => ({
   runSanityAudit: (...a: unknown[]) => mockRunSanityAudit(...(a as [])),
   resetSanityCursor: jest.fn(async () => {}),
@@ -624,6 +627,19 @@ describe('acceptProposal — incoherent_topics happy path (K-P5)', () => {
     // second, non-atomic write of the same removal.
     expect(executor.applyPersonaAction).not.toHaveBeenCalled();
     expect(await getPendingProposals()).toEqual([]);
+  });
+
+  it('on-device: nothing runs, the proposal stays pending and the caller is told it needs the cloud', async () => {
+    mockOnDevice.mockResolvedValue(true);
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    const res = await acceptProposal(proposal.id);
+    mockOnDevice.mockResolvedValue(false);
+
+    expect(res).toEqual({ applied: false, ok: false, needsCloud: true });
+    expect(mockGenerateAndReplace).not.toHaveBeenCalled();
+    expect(await getPendingProposals()).toHaveLength(1);
   });
 
   it('logs the retire so it stays reversible from the change log', async () => {
