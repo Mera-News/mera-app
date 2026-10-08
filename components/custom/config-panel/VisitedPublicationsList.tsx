@@ -89,7 +89,7 @@ const TableRow: React.FC<{
             accessibilityRole="button"
             accessibilityLabel={`${name}, ${t('library.history.colVisits')} ${item.visitCount}, ${t('library.history.colLastRead')} ${lastRead}`}
             testID={`history-row-${item.publicationName}`}
-            style={[styles.row, { backgroundColor: c.surface, borderColor: c.line }, last ? styles.rowLast : null]}
+            style={[styles.row, styles.rowData, { backgroundColor: c.surface, borderColor: c.line }, last ? styles.rowLast : null]}
         >
             <View style={styles.rowInner} pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                 <SourceFlag countryCode={item.countryCode} size="sm" />
@@ -187,7 +187,10 @@ const VisitedPublicationsList: React.FC<Props> = ({
             </View>
             {items.length > 0 ? (
                 <>
-                    <Text style={{ fontSize: 13, lineHeight: 18, color: c.ink2, marginBottom: 12 }} testID="history-intro">
+                    <Text
+                        style={{ fontSize: 13, lineHeight: 18, color: c.ink2, marginHorizontal: 4, marginBottom: PAGE_TITLE_GAP }}
+                        testID="history-intro"
+                    >
                         {t('library.history.intro')}
                     </Text>
                     <View style={[styles.row, styles.rowFirst, { backgroundColor: c.surface, borderColor: c.line }]}>
@@ -314,9 +317,12 @@ const styles = StyleSheet.create({
         minHeight: 44,
         justifyContent: 'center',
     },
-    rowFirst: { borderTopWidth: StyleSheet.hairlineWidth, borderTopLeftRadius: 14, borderTopRightRadius: 14 },
-    rowLast: { borderBottomLeftRadius: 14, borderBottomRightRadius: 14 },
-    rowInner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10 },
+    // The board's History table (FinalLibrary): radius 16, rows 52pt with 8/14
+    // padding; the column heading row keeps 44.
+    rowFirst: { borderTopWidth: StyleSheet.hairlineWidth, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
+    rowData: { minHeight: 52 },
+    rowLast: { borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
+    rowInner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 8 },
     cellName: { flex: 1, fontSize: 15, lineHeight: 20, fontWeight: '600' },
     cellNum: { fontSize: 14, lineHeight: 19, textAlign: 'right' },
     headCell: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
