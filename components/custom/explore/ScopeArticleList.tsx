@@ -1,6 +1,4 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
-import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
-import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import IndeterminateBar from '@/components/custom/toast/IndeterminateBar';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -171,12 +169,9 @@ interface ScopeArticleListProps {
      *  header menu). The parent keys this list by it, so a change is a fresh mount
      *  and a fresh first page. Absent: the server default (24). */
     readonly windowHours?: number;
-    /** World pages: the reader picked a window here. When given, the list
-     *  leads with the "Top headlines" title row and its time chip, and an
-     *  empty answer under 48h offers a one-tap 48 hours. */
+    /** World pages: a new window. When given, an empty answer under 48h
+     *  offers a one-tap 48 hours. */
     readonly onWindowChange?: (next: ExploreWindowHours) => void;
-    /** The ? beside "Top headlines" (the tab's explainer sheet). */
-    readonly onExplain?: () => void;
     /** List-end clear space from the host. Default: the tab bar plus a tail. */
     readonly bottomClearance?: number;
 }
@@ -219,7 +214,6 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     active = true,
     windowHours,
     onWindowChange,
-    onExplain,
     bottomClearance,
 }) => {
     const { t } = useTranslation();
@@ -449,36 +443,19 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         [isLoadingMore],
     );
 
-    // The title row and, on a country page's first load, its bar: INSIDE the
-    // list (react-native-screens walks `subviews[0]` for the scroll view). The
-    // chip waits for the first stories; an answer (even an empty one) frees it.
+    // On a country page's first load, its bar: INSIDE the list
+    // (react-native-screens walks `subviews[0]` for the scroll view). The
+    // title and the window chip live in the tab header (WorldPages).
     const firstLoad = (!enabled || isLoading) && headlines.length === 0;
-    const ListHeaderComponent = useMemo(() => {
-        if (!onWindowChange) return null;
-        return (
-            <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-                <PageTitleRow
-                    title={t('sources.topHeadlines')}
-                    onExplain={onExplain}
-                    trailing={
-                        <InlineChoiceChip
-                            options={EXPLORE_WINDOWS_HOURS}
-                            value={hours}
-                            labelOf={(h) => t(`explore.window.label${h}`)}
-                            a11yLabelOf={(h) => t(`explore.window.a11y${h}`)}
-                            onChange={onWindowChange}
-                            disabled={firstLoad}
-                            testID="explore-window"
-                        />
-                    }
-                    testID="explore-title"
-                />
-                {countryName && firstLoad && !loadHung ? (
+    const ListHeaderComponent = useMemo(
+        () =>
+            countryName && firstLoad && !loadHung ? (
+                <View style={{ marginBottom: PAGE_TITLE_GAP }}>
                     <GatheringBar label={t('world.gathering', { country: countryName })} />
-                ) : null}
-            </View>
-        );
-    }, [onWindowChange, onExplain, hours, firstLoad, countryName, loadHung, t]);
+                </View>
+            ) : null,
+        [firstLoad, countryName, loadHung, t],
+    );
 
     // Skeleton-or-empty-state, decided INSIDE the list. Previously these were two
     // early returns that replaced the list entirely — see the component note.

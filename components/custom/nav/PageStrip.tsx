@@ -6,9 +6,13 @@
 //    the selected tab (exactly its bounds) and crossfades on a page change; it
 //    does not follow the finger. The track scrolls instead of centring when a
 //    long locale makes it wider than the screen.
-//  - `scroll` (World): a scrolling row of glass pills. Pills fade by distance
-//    from the leading edge and from the floating search button, per pill on
-//    the UI thread (no JS per scroll frame).
+//  - `scroll` (World): TWO rows. The top row carries the tab's title, the
+//    title chip (World's time window), then search and the ? at the end; the
+//    page pills sit below it in one scrolling row of glass pills that fade
+//    by distance from either screen edge, per pill on the UI thread (no JS
+//    per scroll frame).
+//  - The ? (`onHelp`) is the row's last control on every tab: it opens the
+//    ACTIVE page's explainer.
 //  - New content is a 7pt dot, never a count, so the strip never changes
 //    width.
 //  - Pills draw 34pt tall in a 44pt frame (padding given back by the row's
@@ -34,7 +38,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { inlineSign } from '@/lib/motion';
+import HelpButton from './HelpButton';
 import { useColors } from '@/lib/theme/tokens';
 import type { PageId } from './page-registry';
 import type { PageDot, PagePill } from './types';
@@ -65,15 +69,9 @@ export const HEADER_SIDE_PAD = 6;
 export const HEADER_TOP_PAD = 5;
 export const HEADER_ROW_HEIGHT = 42;
 export const HEADER_BOTTOM_PAD = 5;
-/** World's row starts 16pt in; a pill is fully faded once its start edge
- *  reaches the screen edge, so it is never cut square. */
+/** World's rows start 16pt in; a pill is fully faded once an edge reaches
+ *  the screen edge, so it is never cut square. */
 const ROW_START = 16;
-/** Trailing fade: from fully clear to full, measured back from the row end,
- *  where the floating search button sits. */
-const TRAIL_FADE_START = 58;
-const TRAIL_FADE_END = 96;
-/** Room for the floating search button at the row's end. */
-const ROW_END = 60;
 
 /** Regional-indicator flag from ISO alpha-2 (XK included); '' when invalid. */
 export function flagEmoji(alpha2: string): string {
@@ -87,8 +85,16 @@ export interface PageStripProps {
   readonly pages: readonly PagePill[];
   readonly activeId: PageId;
   readonly onSelect: (id: PageId) => void;
-  /** World: the floating search button at the row's end. */
+  /** World: the search button, before the ? at the top row's end. */
   readonly onSearch?: () => void;
+  /** The ?: opens the active page's explainer. */
+  readonly onHelp?: () => void;
+  /** The ?'s spoken name ("About Saved"). */
+  readonly helpLabel?: string;
+  /** `scroll` only: the top row's title (the tab's name) and the control
+   *  right after it (World's time window). */
+  readonly title?: string;
+  readonly titleChip?: React.ReactNode;
   /** Default `scroll`. */
   readonly variant?: 'segmented' | 'scroll';
   /** Drawn in a 44pt frame at the row's start (the Feed's status icon). */
@@ -115,27 +121,23 @@ interface PillProps {
   readonly fade?: RowFade;
 }
 
-type RowFade = { scrollX: SharedValue<number>; viewport: SharedValue<number>; rtl: boolean };
+type RowFade = { scrollX: SharedValue<number>; viewport: SharedValue<number> };
 
-/** World's per-item edge fade, on the UI thread: an item fades to clear as its
- *  start edge reaches the screen edge, and before the floating search button.
- *  Write the item's layout x and width into `x` and `w`. */
+/** World's per-item edge fade, on the UI thread: an item fades to clear as
+ *  either edge reaches the screen edge. Write the item's layout x and width
+ *  into `x` and `w`. */
 function useEdgeFade(fade: RowFade | undefined) {
   const x = useSharedValue(0);
   const w = useSharedValue(0);
   const fadeStyle = useAnimatedStyle(() => {
     if (!fade || w.value === 0) return { opacity: 1 };
     // Physical on-screen edges (layout x and the scroll offset are both
-    // physical); the row's START is the right edge in RTL.
+    // physical), so the fade needs no RTL case.
     const left = x.value - fade.scrollX.value;
     const right = left + w.value;
-    const centre = left + w.value / 2;
-    const view = fade.viewport.value;
-    const toStart = fade.rtl ? view - right : left;
-    const toEnd = fade.rtl ? centre : view - centre;
-    const lead = interpolate(toStart, [0, ROW_START], [0, 1], Extrapolation.CLAMP);
-    const trail = interpolate(toEnd, [TRAIL_FADE_START, TRAIL_FADE_END], [0, 1], Extrapolation.CLAMP);
-    return { opacity: Math.min(lead, trail) };
+    const toLeft = interpolate(left, [0, ROW_START], [0, 1], Extrapolation.CLAMP);
+    const toRight = interpolate(fade.viewport.value - right, [0, ROW_START], [0, 1], Extrapolation.CLAMP);
+    return { opacity: Math.min(toLeft, toRight) };
   });
   return { x, w, fadeStyle };
 }
@@ -275,12 +277,12 @@ const Pill: React.FC<PillProps> = ({
   );
 };
 
-/** The floating round search button at the end of World's strip. */
+/** World's round search button, before the ? at the top row's end. */
 const SearchButton: React.FC<{ readonly onPress: () => void }> = ({ onPress }) => {
   const { t } = useTranslation();
   const colors = useColors();
   return (
-    <View style={styles.searchFab} testID="page-strip-search-frame">
+    <View style={styles.sideSlot} testID="page-strip-search-frame">
       {/* The same flat glass as the World pills, no shadow, in both themes. */}
       <View pointerEvents="none" {...GLYPH_HIDDEN}>
         <View style={[styles.searchCircle, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
@@ -304,12 +306,17 @@ const PageStrip: React.FC<PageStripProps> = ({
   activeId,
   onSelect,
   onSearch,
+  onHelp,
+  helpLabel,
+  title,
+  titleChip,
   variant = 'scroll',
   leading,
   onLongPressPill,
   onEdit,
 }) => {
   const { t } = useTranslation();
+  const colors = useColors();
   const segmented = variant === 'segmented';
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -326,7 +333,7 @@ const PageStrip: React.FC<PageStripProps> = ({
       scrollX.value = e.contentOffset.x;
     },
   });
-  const fade = segmented ? undefined : { scrollX, viewport, rtl: inlineSign() === -1 };
+  const fade = segmented ? undefined : { scrollX, viewport };
 
   useEffect(() => {
     const l = layouts.current[activeId];
@@ -348,67 +355,103 @@ const PageStrip: React.FC<PageStripProps> = ({
     />
   ));
 
-  return (
-    <View style={styles.row} pointerEvents="box-none" testID="page-strip">
-      {leading ? <View style={styles.sideSlot}>{leading}</View> : null}
-      <View style={[styles.scrollerWrap, segmented ? null : [styles.rowBleed, styles.fullBleed]]} pointerEvents="box-none">
-        <Animated.ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={segmented ? styles.segContent : undefined}
-          onScroll={segmented ? undefined : onScroll}
-          scrollEventThrottle={16}
-          onLayout={(e) => {
-            viewport.value = e.nativeEvent.layout.width;
-          }}
-          testID="page-strip-scroll"
-        >
-          {segmented ? (
-            <SegmentedControl
-              size="header"
-              value={activeId}
-              onChange={onSelect}
-              accessibilityLabel={tabLabel}
-              testID="page-pill"
-              options={pages.map((p, i) => ({
-                value: p.id,
-                label: p.label,
-                icon: p.icon,
-                useDot: p.useDot ? () => (p.useDot ?? noDot)().visible : undefined,
-                accessibilityLabelFor: (dot: boolean) =>
-                  t(dot ? 'nav.pillNewA11y' : 'nav.pillA11y', { label: p.label, index: i + 1, count: pages.length }),
-              }))}
-            />
-          ) : (
-            // The row's own padding (not the scroller's), so each pill's
-            // layout x is its place in the scrolled content.
+  const help =
+    onHelp && helpLabel ? <HelpButton onPress={onHelp} label={helpLabel} testID="page-strip-help" /> : null;
+
+  if (!segmented) {
+    return (
+      <View pointerEvents="box-none" testID="page-strip">
+        <View style={styles.row} pointerEvents="box-none">
+          {title ? (
+            <Text
+              numberOfLines={1}
+              maxFontSizeMultiplier={1}
+              accessibilityRole="header"
+              style={[styles.label, styles.title, { color: colors.ink }]}
+              testID="page-strip-title"
+            >
+              {title}
+            </Text>
+          ) : null}
+          {titleChip}
+          <View style={styles.spacer} />
+          {onSearch ? <SearchButton onPress={onSearch} /> : null}
+          {help}
+        </View>
+        <View style={[styles.pillRow, styles.fullBleed]} pointerEvents="box-none">
+          <Animated.ScrollView
+            ref={scrollRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+            onLayout={(e) => {
+              viewport.value = e.nativeEvent.layout.width;
+            }}
+            testID="page-strip-scroll"
+          >
+            {/* The row's own padding (not the scroller's), so each pill's
+                layout x is its place in the scrolled content. */}
             <View style={[styles.pills, styles.rowPad]} accessibilityRole={ROLES.row} testID="page-strip-pills">
               {pills}
               {onEdit ? (
                 <EditButton onPress={onEdit} label={t('nav.rearrangeA11y', { tab: tabLabel })} fade={fade} />
               ) : null}
             </View>
-          )}
+          </Animated.ScrollView>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.row} pointerEvents="box-none" testID="page-strip">
+      {leading ? <View style={styles.sideSlot}>{leading}</View> : null}
+      <View style={styles.scrollerWrap} pointerEvents="box-none">
+        <Animated.ScrollView
+          ref={scrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.segContent}
+          testID="page-strip-scroll"
+        >
+          <SegmentedControl
+            size="header"
+            value={activeId}
+            onChange={onSelect}
+            accessibilityLabel={tabLabel}
+            testID="page-pill"
+            options={pages.map((p, i) => ({
+              value: p.id,
+              label: p.label,
+              icon: p.icon,
+              useDot: p.useDot ? () => (p.useDot ?? noDot)().visible : undefined,
+              accessibilityLabelFor: (dot: boolean) =>
+                t(dot ? 'nav.pillNewA11y' : 'nav.pillA11y', { label: p.label, index: i + 1, count: pages.length }),
+            }))}
+          />
         </Animated.ScrollView>
       </View>
-      {/* Keeps a segmented track centred on the screen beside a leading icon. */}
-      {leading && segmented ? <View style={styles.sideSlot} /> : null}
-
-      {onSearch ? <SearchButton onPress={onSearch} /> : null}
+      {/* Keeps the track centred on the screen beside a leading icon when
+          there is no ? to balance it. */}
+      {leading && !help ? <View style={styles.sideSlot} /> : null}
+      {help}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  // A fixed row: the segmented track (42pt) fills it exactly; World's 44pt
-  // pill frames reach 5pt past it through `rowBleed`.
+  // A fixed row: the segmented track (42pt) fills it exactly.
   row: { flexDirection: 'row', alignItems: 'center', height: HEADER_ROW_HEIGHT },
+  // World's pill row under the title row: 34pt pills in 44pt frames.
+  pillRow: { height: PILL_HEIGHT + 2 * PILL_FRAME_PAD },
+  // The title starts on the pills' 16pt line.
+  title: { marginStart: ROW_START - HEADER_SIDE_PAD, marginEnd: 8, fontWeight: '700', flexShrink: 1 },
+  spacer: { flex: 1 },
   sideSlot: { width: SIDE_SLOT, height: HEADER_ROW_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   scrollerWrap: { flex: 1, height: HEADER_ROW_HEIGHT },
-  rowBleed: { height: HEADER_ROW_HEIGHT + 2 * PILL_FRAME_PAD, marginVertical: -PILL_FRAME_PAD },
   fullBleed: { marginHorizontal: -HEADER_SIDE_PAD },
-  rowPad: { paddingLeft: ROW_START, paddingRight: ROW_END },
+  rowPad: { paddingHorizontal: ROW_START },
   // Centred while it fits, scrolls once it does not.
   segContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 8 },
   pills: { flexDirection: 'row', alignItems: 'center', gap: PILL_GAP },
@@ -424,7 +467,6 @@ const styles = StyleSheet.create({
   flag: { fontSize: 13, lineHeight: 16 },
   dot: { width: 7, height: 7, borderRadius: 4, marginLeft: -2 },
   dotOnActive: { borderWidth: 1.5, width: 9, height: 9, borderRadius: 5 },
-  searchFab: { position: 'absolute', right: 4, top: -1, width: 44, height: 44 },
   editFrame: { width: 44, height: 44 },
   searchCircle: {
     width: 44,

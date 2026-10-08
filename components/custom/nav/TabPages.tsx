@@ -60,7 +60,16 @@ export type { TabPagesProps } from './types';
 
 const ARRIVAL_FADE_MS = 150;
 
-const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, arrange, leading, testID }) => {
+const TabPages: React.FC<TabPagesProps> = ({
+  tab,
+  pages,
+  renderPage,
+  onSearch,
+  arrange,
+  leading,
+  renderTitleChip,
+  testID,
+}) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
@@ -83,8 +92,9 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
     setArrangeLift(lift);
     setArranging(true);
   }, []);
-  // The ? beside a page title: ONE sheet per tab (not one per warm panel),
-  // closed whenever the tab loses focus (a sheet survives a tab switch).
+  // The ? in the header: ONE sheet per tab (not one per warm panel), showing
+  // the ACTIVE page's explainer, closed whenever the tab loses focus (a sheet
+  // survives a tab switch).
   const [explaining, setExplaining] = useState(false);
   const openExplainer = useCallback(() => setExplaining(true), []);
 
@@ -204,6 +214,9 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
   );
 
   const tabLabel = t(TAB_LABEL_KEYS[tab]);
+  const activeLabel = pages.find((p) => p.id === activeId)?.label ?? tabLabel;
+  const hasExplainer = activeId !== null && pageMeta(activeId).explainer !== null;
+  const showHelp = hasExplainer && tab === 'world';
 
   if (!activeId) return <View style={styles.fill} testID={testID} />;
 
@@ -258,6 +271,10 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
             variant={tab === 'world' ? 'scroll' : 'segmented'}
             leading={leading}
             onSearch={onSearch}
+            onHelp={showHelp ? openExplainer : undefined}
+            helpLabel={t('nav.explainerA11y', { page: activeLabel })}
+            title={renderTitleChip ? tabLabel : undefined}
+            titleChip={renderTitleChip?.(activeId)}
             // Only World arranges, by a long press on a page name.
             onLongPressPill={arrange ? openArrange : undefined}
             onEdit={arrange && !arranging ? () => openArrange(null) : undefined}

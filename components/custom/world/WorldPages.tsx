@@ -1,4 +1,5 @@
-import ScopeArticleList, { type ExploreWindowHours } from '@/components/custom/explore/ScopeArticleList';
+import ScopeArticleList, { EXPLORE_WINDOWS_HOURS, type ExploreWindowHours } from '@/components/custom/explore/ScopeArticleList';
+import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import { PAGE_META, alpha2OfPage } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type {
@@ -20,7 +21,8 @@ const DEFAULT_WINDOW: ExploreWindowHours = 24;
  * The World tab: World, then one page per country, in the reader's order
  * (`useWorldPages`, lib/explore/world-pages). Each page is a
  * `ScopeArticleList` (direct server-paginated top headlines, nothing scored
- * or stored) led by its own 6/12/24/48h window, session state per page.
+ * or stored). The header's top row carries the ACTIVE page's 6/12/24/48h
+ * window chip, session state per page.
  *
  * Arrange (a long press on a page name) adds a country through the overlay's
  * search, removes one with its ×, and reorders; nothing is written before ✓
@@ -88,7 +90,6 @@ export function WorldPages() {
                     scope={page.scope}
                     windowHours={hours}
                     onWindowChange={(next) => setWindowFor(pageId, next)}
-                    onExplain={header.openExplainer}
                     active={active}
                     // Gate the QUERY, not the mount: before locations emit, the
                     // country pages are the device-country fallback.
@@ -102,6 +103,20 @@ export function WorldPages() {
         [pages, windows, setWindowFor, loaded, listEndClearance],
     );
 
+    const renderTitleChip = useCallback(
+        (pageId: string) => (
+            <InlineChoiceChip
+                options={EXPLORE_WINDOWS_HOURS}
+                value={windows[pageId] ?? DEFAULT_WINDOW}
+                labelOf={(h) => t(`explore.window.label${h}`)}
+                a11yLabelOf={(h) => t(`explore.window.a11y${h}`)}
+                onChange={(next) => setWindowFor(pageId, next)}
+                testID="explore-window"
+            />
+        ),
+        [windows, setWindowFor, t],
+    );
+
     return (
         <TabPages
             tab="world"
@@ -109,6 +124,7 @@ export function WorldPages() {
             renderPage={renderPage}
             onSearch={openSearch}
             arrange={arrange}
+            renderTitleChip={renderTitleChip}
             testID="world-pages"
         />
     );

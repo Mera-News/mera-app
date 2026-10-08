@@ -16,7 +16,7 @@ export interface PageHeaderBinding {
   readonly headerHeight: number;
   readonly hidden: SharedValue<number>;
   readonly reveal: () => void;
-  /** Opens the active page's explainer sheet (the ? in its PageTitleRow). */
+  /** Opens the active page's explainer sheet (the ? in the tab header). */
   readonly openExplainer: () => void;
 }
 
@@ -77,11 +77,14 @@ export interface TabPagesProps {
    *  remounts a page that stays. */
   readonly pages: readonly PagePill[];
   readonly renderPage: (props: PageRenderProps) => React.ReactNode;
-  /** World: the floating search button at the strip's end. */
+  /** World: the search button, before the ? at the header row's end. */
   readonly onSearch?: () => void;
   /** World: a long press on a page name opens the overlay. Absent: fixed pages. */
   readonly arrange?: ArrangeConfig;
   /** Drawn at the header row's start (the Feed's status icon). */
   readonly leading?: React.ReactNode;
+  /** World: the control after the tab's title in the header's top row (the
+   *  active page's time window). Its presence puts the title there. */
+  readonly renderTitleChip?: (activeId: PageId) => React.ReactNode;
   readonly testID?: string;
 }
