@@ -47,13 +47,11 @@ const mockForYouStoreState = {
   setCounts: jest.fn(),
   setLastSyncAt: jest.fn(),
   setDailyLimitResetAt: jest.fn(),
-  setDailyLimitNoticeDay: jest.fn(),
   markProcessingRunFinished: jest.fn(),
   markNewArticlesArrived: jest.fn(),
   resetHydrationProgress: jest.fn(),
   setScoringError: jest.fn(),
   relevantArticleCount: 0,
-  dailyLimitNoticeDay: null as string | null,
 };
 
 jest.mock('@/lib/stores/network-store', () => ({
@@ -198,14 +196,6 @@ beforeEach(() => {
   mockForYouStoreState.setLastSyncAt.mockReturnValue(undefined);
   mockForYouStoreState.markProcessingRunFinished.mockReturnValue(undefined);
   mockForYouStoreState.resetHydrationProgress.mockReturnValue(undefined);
-  mockForYouStoreState.dailyLimitNoticeDay = null;
-  // Mirrors the real store's persistence: setting the marker updates the
-  // same state object subsequent getState() calls (and the daily-limit
-  // branch itself) read from — simulating both "later this run" and "next
-  // cycle after a restart" reads of the persisted value.
-  mockForYouStoreState.setDailyLimitNoticeDay.mockImplementation((day: string | null) => {
-    mockForYouStoreState.dailyLimitNoticeDay = day;
-  });
 
   const ArticleService = require('@/lib/article-service').ArticleService;
   ArticleService.getRecentArticleCount.mockResolvedValue(10);
@@ -1764,7 +1754,6 @@ describe('FeedSyncMachine — background mode', () => {
 
     expect(hooks.onHydrated).toHaveBeenCalledWith({ meteredDelivered: 0, dailyLimitReached: true });
     expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
-    expect(mockForYouStoreState.setDailyLimitNoticeDay).not.toHaveBeenCalled();
     expect(mockPublishSyncError).not.toHaveBeenCalled();
   });
 
