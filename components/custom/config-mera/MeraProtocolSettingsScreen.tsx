@@ -63,21 +63,14 @@ import {
 
 interface MeraProtocolSettingsScreenProps {
     onBack?: () => void;
-    isOnboarding?: boolean;
-    onNext?: () => void;
-    initialMode?: ProcessingMode;
-    onModeChange?: (mode: ProcessingMode) => void;
 }
 
 const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     onBack,
-    isOnboarding = false,
-    initialMode = ProcessingMode.Cloud,
-    onModeChange,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
-    const [isLoading, setIsLoading] = useState(!isOnboarding);
+    const [isLoading, setIsLoading] = useState(true);
     const [isUpdatingMode, setIsUpdatingMode] = useState(false);
     const [requirementsResult, setRequirementsResult] = useState<SystemRequirementsResult | null>(null);
     const [showRequirements, setShowRequirements] = useState(false);
@@ -127,11 +120,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         if (deviceSupported !== true) return;
         if (!modelDownloaded) return;
 
-        if (isOnboarding) {
-            store.setProcessingMode(ProcessingMode.OnDevice);
-            onModeChange?.(ProcessingMode.OnDevice);
-            return;
-        }
         (async () => {
             try {
                 const userId = await getCurrentUserId();
@@ -152,7 +140,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     // settings, not a store, because the OS task reads the same row.
     const [bgRefreshEnabled, setBgRefreshEnabled] = useState(true);
     useEffect(() => {
-        if (isOnboarding) return;
         let alive = true;
         void loadBgRefreshToggle().then((enabled) => {
             if (alive) setBgRefreshEnabled(enabled);
@@ -160,7 +147,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         return () => {
             alive = false;
         };
-    }, [isOnboarding]);
+    }, []);
     const toggleBgRefresh = useCallback(() => {
         const next = !bgRefreshEnabled;
         setBgRefreshEnabled(next);
@@ -171,16 +158,10 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     }, [bgRefreshEnabled]);
 
     useEffect(() => {
-        if (isOnboarding) {
-            store.setProcessingMode(initialMode);
-            checkModelStatus();
-            return;
-        }
         loadSettings();
-        // Run-once-on-mount branch keyed by isOnboarding; the loader/status
-        // helpers are stable and excluded to keep this a mount-time effect.
+        // Mount-time load; the loader is stable and excluded on purpose.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOnboarding]);
+    }, []);
 
     const getCurrentUserId = async (): Promise<string> => {
         const sessionData = await authClient.getSession();
@@ -237,13 +218,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         // of the device-compatibility banner and the model-download section.
         setOnDeviceIntent(wantsOnDevice);
 
-        // In onboarding, also bubble intent up so the wizard can gate the
-        // "Next" button: tapping on-device must block progression until the
-        // model is actually downloaded (or the user reverts to Cloud).
-        if (isOnboarding) {
-            onModeChange?.(mode);
-        }
-
         // If on-device isn't runnable yet, the contextual UI we just revealed
         // (banner or download section) is the feedback. Don't persist or toast.
         if (wantsOnDevice && !onDeviceAvailable) return;
@@ -251,14 +225,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
         setIsUpdatingMode(true);
         try {
-            if (isOnboarding) {
-                store.setProcessingMode(mode);
-                // onModeChange already fired above to bubble intent up.
-            } else {
-                const userId = await getCurrentUserId();
-                await AccountService.updateProcessingMode(userId, mode);
-                store.setProcessingMode(mode);
-            }
+            const userId = await getCurrentUserId();
+            await AccountService.updateProcessingMode(userId, mode);
+            store.setProcessingMode(mode);
 
             toast.show({
                 placement: 'top',
@@ -370,19 +339,14 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             // they relied on is gone. Non-onboarding only; during onboarding
             // the server mutation hasn't fired yet.
             if (processingMode === ProcessingMode.OnDevice) {
-                if (isOnboarding) {
-                    store.setProcessingMode(ProcessingMode.Cloud);
-                    onModeChange?.(ProcessingMode.Cloud);
-                } else {
-                    try {
-                        const userId = await getCurrentUserId();
-                        await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
-                    } catch {
-                        // Server mutation failed — still update locally so the
-                        // UI reflects reality. Next settings load will reconcile.
-                    }
-                    store.setProcessingMode(ProcessingMode.Cloud);
+                try {
+                    const userId = await getCurrentUserId();
+                    await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
+                } catch {
+                    // Server mutation failed: still update locally so the UI
+                    // reflects reality. The next settings load reconciles.
                 }
+                store.setProcessingMode(ProcessingMode.Cloud);
             }
             // Also clear on-device intent so the download section collapses.
             setOnDeviceIntent(false);
@@ -409,17 +373,12 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         } finally {
             setIsDeletingModel(false);
         }
-    }, [store, toast, selectedModelId, t, processingMode, isOnboarding, onModeChange]);
+    }, [store, toast, selectedModelId, t, processingMode]);
 
     // Mirrors confirmDeleteModel: the model the user relied on is leaving the
     // device, so on-device processing falls back to cloud until a new one lands.
     const fallBackToCloud = useCallback(async () => {
         if (processingMode !== ProcessingMode.OnDevice) return;
-        if (isOnboarding) {
-            store.setProcessingMode(ProcessingMode.Cloud);
-            onModeChange?.(ProcessingMode.Cloud);
-            return;
-        }
         try {
             const userId = await getCurrentUserId();
             await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
@@ -432,7 +391,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         // Reacts only to the inputs listed; `store` and the async helpers are
         // stable module/singleton refs.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [processingMode, isOnboarding, onModeChange]);
+    }, [processingMode]);
 
     const selectModel = useCallback((entry: ModelCatalogEntry) => {
         if (entry.modelId === selectedModelId) return;
@@ -550,15 +509,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
     const renderContent = () => (
         <>
-            {/* Header text for onboarding */}
-            {isOnboarding && (
-                <VStack className="mb-8 px-5">
-                    <Text className="text-3xl font-bold text-ink text-center mb-3">
-                        {t('meraProtocol.title')}
-                    </Text>
-                </VStack>
-            )}
-
             <View style={{ paddingHorizontal: 14, marginBottom: 20 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={{ flex: 1 }}>
@@ -752,28 +702,25 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </>
             )}
 
-            {/* Background refresh. Hidden during onboarding, which reuses this
-                screen: it only means something once the reader is set up. The
-                copy follows the mode the run will actually use. */}
-            {!isOnboarding && (
-                <View style={{ paddingHorizontal: 14, marginBottom: 6 }} testID="mera-protocol-bg-refresh">
-                    <GroupLabel>{t('meraProtocol.whileClosed')}</GroupLabel>
-                    <Group>
-                        <Row
-                            title={t(BG_REFRESH_TITLE_KEY)}
-                            subtitle={t(bgRefreshDescriptionKey(processingMode === ProcessingMode.OnDevice, Platform.OS))}
-                            trailing={
-                                <Switch
-                                    value={bgRefreshEnabled}
-                                    onToggle={toggleBgRefresh}
-                                    size="md"
-                                    testID="mera-protocol-bg-refresh-switch"
-                                />
-                            }
-                        />
-                    </Group>
-                </View>
-            )}
+            {/* Background refresh. The copy follows the mode the run will
+                actually use. */}
+            <View style={{ paddingHorizontal: 14, marginBottom: 6 }} testID="mera-protocol-bg-refresh">
+                <GroupLabel>{t('meraProtocol.whileClosed')}</GroupLabel>
+                <Group>
+                    <Row
+                        title={t(BG_REFRESH_TITLE_KEY)}
+                        subtitle={t(bgRefreshDescriptionKey(processingMode === ProcessingMode.OnDevice, Platform.OS))}
+                        trailing={
+                            <Switch
+                                value={bgRefreshEnabled}
+                                onToggle={toggleBgRefresh}
+                                size="md"
+                                testID="mera-protocol-bg-refresh-switch"
+                            />
+                        }
+                    />
+                </Group>
+            </View>
 
             {/* Web search in chat (item 13) — ON by default since the
                 web-search wave, and forced on once for every existing device
@@ -989,13 +936,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
     // Loading state
     if (isLoading) {
-        if (isOnboarding) {
-            return (
-                <VStack className="flex-1 justify-center items-center">
-                    <Spinner size="large" />
-                </VStack>
-            );
-        }
         return (
             <GluestackUIProvider>
                 <Box className="flex-1">
@@ -1011,17 +951,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     </VStack>
                 </Box>
             </GluestackUIProvider>
-        );
-    }
-
-    // Onboarding mode: the wizard draws its own buttons.
-    if (isOnboarding) {
-        return (
-            <Box className="flex-1">
-                <ScrollView className="flex-1">
-                    {renderContent()}
-                </ScrollView>
-            </Box>
         );
     }
 
