@@ -1,7 +1,9 @@
-import { useCallback, useRef, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, type RefObject } from 'react';
 import { Platform, useWindowDimensions, type View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
+
+import logger from '@/lib/logger';
 
 /**
  * Height of the bottom tab bar's own content area, excluding the device's
@@ -117,6 +119,11 @@ export function useTabBarTop(): number | null {
 /**
  * Called in each tab's layout: measures that tab's content box and publishes
  * `tabBarTopFromBottom`. Returns the ref and onLayout for the layout's root view.
+ *
+ * It measures again whenever the insets or the window change, not only on
+ * layout: on iOS the tab's own safe area (which holds the bar) lands AFTER the
+ * first layout, and a value published from the earlier, smaller inset put the
+ * Mera button over the bar with no later layout to correct it.
  */
 export function useReportTabBarClearance(): { ref: RefObject<View | null>; onLayout: () => void } {
   const ref = useRef<View | null>(null);
@@ -126,8 +133,14 @@ export function useReportTabBarClearance(): { ref: RefObject<View | null>; onLay
     ref.current?.measureInWindow((_x, y, _w, h) => {
       if (!Number.isFinite(y) || !Number.isFinite(h) || h <= 0) return;
       const top = Math.round(tabBarTopFromBottom(windowHeight, y + h, Platform.OS, insetsBottom));
+      if (__DEV__) {
+        logger.info('[tab-bar] measured', { windowHeight, contentBottom: y + h, insetsBottom, barTopFromBottom: top });
+      }
       if (useTabBarTopStore.getState().top !== top) useTabBarTopStore.setState({ top });
     });
   }, [windowHeight, insetsBottom]);
+  useEffect(() => {
+    onLayout();
+  }, [onLayout]);
   return { ref, onLayout };
 }

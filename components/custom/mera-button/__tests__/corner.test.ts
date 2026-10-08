@@ -127,6 +127,17 @@ describe('clampToFrame', () => {
     expect(clampToFrame(999, 300, f).x).toBe(402 - 16 - 62);
   });
 
+  it('keeps the bottom edge 13pt above an iOS tab bar, dragging or snapped', () => {
+    // iPhone 17 Pro: window 874, the tab's inset (bar + home indicator) 83.
+    const windowH = 874;
+    const barTop = windowH - 83;
+    const ios = { width: 402, height: windowH, top: 130, bottom: 83 + 13, inset: 16, size: 62 };
+    for (const dragY of [700, 760, 800, 874, 2000]) {
+      expect(clampToFrame(300, dragY, ios).y + ios.size).toBeLessThanOrEqual(barTop - 13);
+    }
+    expect(cornerPoint('br', ios).y + ios.size).toBe(barTop - 13);
+  });
+
   it('spans exactly the four corner points', () => {
     for (const c of ['tl', 'tr', 'bl', 'br'] as const) {
       const p = cornerPoint(c, f);
