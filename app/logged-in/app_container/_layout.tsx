@@ -89,8 +89,8 @@ export default function AppLayout() {
                         <Label hidden>{t('tabs.deck')}</Label>
                         <Badge hidden={!dot.feed} />
                         <Icon
-                            sf={{ default: 'doc.text', selected: 'doc.text' }}
-                            src={<VectorIcon family={MaterialIcons} name="article" />}
+                            sf={{ default: 'newspaper', selected: 'newspaper' }}
+                            src={<VectorIcon family={MaterialIcons} name="newspaper" />}
                         />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger
@@ -109,7 +109,7 @@ export default function AppLayout() {
                     >
                         <Label hidden>{t('tabs.library')}</Label>
                         <Badge hidden={!dot.library} />
-                        <Icon sf={{ default: 'bookmark', selected: 'bookmark' }} src={<VectorIcon family={MaterialIcons} name="bookmark-border" />} />
+                        <Icon sf={{ default: 'books.vertical', selected: 'books.vertical' }} src={<VectorIcon family={MaterialIcons} name="menu-book" />} />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger
                         name="you"
