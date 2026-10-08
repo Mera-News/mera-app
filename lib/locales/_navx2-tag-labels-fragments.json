@@ -1,0 +1,222 @@
+{
+  "ar": {
+    "publicationPage": {
+      "moreFrom": "المزيد من",
+      "fewerFrom": "عدد أقل من"
+    },
+    "you": {
+      "sources": {
+        "mute": "كتم"
+      }
+    }
+  },
+  "de": {
+    "publicationPage": {
+      "moreFrom": "Mehr von",
+      "fewerFrom": "Weniger von"
+    },
+    "you": {
+      "sources": {
+        "mute": "Ausblenden"
+      }
+    }
+  },
+  "en": {
+    "publicationPage": {
+      "moreFrom": "More from",
+      "fewerFrom": "Fewer from"
+    },
+    "you": {
+      "sources": {
+        "mute": "Mute"
+      }
+    }
+  },
+  "es": {
+    "publicationPage": {
+      "moreFrom": "Más de",
+      "fewerFrom": "Menos de"
+    },
+    "you": {
+      "sources": {
+        "mute": "Silenciar"
+      }
+    }
+  },
+  "fr": {
+    "publicationPage": {
+      "moreFrom": "Plus de",
+      "fewerFrom": "Moins de"
+    },
+    "you": {
+      "sources": {
+        "mute": "Masquer"
+      }
+    }
+  },
+  "hi": {
+    "publicationPage": {
+      "moreFrom": "ज़्यादा",
+      "fewerFrom": "इनसे कम"
+    },
+    "you": {
+      "sources": {
+        "mute": "म्यूट"
+      }
+    }
+  },
+  "id": {
+    "publicationPage": {
+      "moreFrom": "Lebih banyak",
+      "fewerFrom": "Lebih sedikit"
+    },
+    "you": {
+      "sources": {
+        "mute": "Bisukan"
+      }
+    }
+  },
+  "it": {
+    "publicationPage": {
+      "moreFrom": "Più da",
+      "fewerFrom": "Meno da"
+    },
+    "you": {
+      "sources": {
+        "mute": "Silenzia"
+      }
+    }
+  },
+  "ja": {
+    "publicationPage": {
+      "moreFrom": "多く表示",
+      "fewerFrom": "少なく表示"
+    },
+    "you": {
+      "sources": {
+        "mute": "ミュート"
+      }
+    }
+  },
+  "ko": {
+    "publicationPage": {
+      "moreFrom": "더 보기:",
+      "fewerFrom": "덜 보기:"
+    },
+    "you": {
+      "sources": {
+        "mute": "음소거"
+      }
+    }
+  },
+  "nl": {
+    "publicationPage": {
+      "moreFrom": "Meer van",
+      "fewerFrom": "Minder van"
+    },
+    "you": {
+      "sources": {
+        "mute": "Dempen"
+      }
+    }
+  },
+  "pl": {
+    "publicationPage": {
+      "moreFrom": "Więcej z",
+      "fewerFrom": "Mniej z"
+    },
+    "you": {
+      "sources": {
+        "mute": "Wycisz"
+      }
+    }
+  },
+  "pt-BR": {
+    "publicationPage": {
+      "moreFrom": "Mais de",
+      "fewerFrom": "Menos de"
+    },
+    "you": {
+      "sources": {
+        "mute": "Silenciar"
+      }
+    }
+  },
+  "ru": {
+    "publicationPage": {
+      "moreFrom": "Больше от",
+      "fewerFrom": "Меньше от"
+    },
+    "you": {
+      "sources": {
+        "mute": "Заглушить"
+      }
+    }
+  },
+  "th": {
+    "publicationPage": {
+      "moreFrom": "ดูมากขึ้น",
+      "fewerFrom": "ดูน้อยลง"
+    },
+    "you": {
+      "sources": {
+        "mute": "ปิดเสียง"
+      }
+    }
+  },
+  "tr": {
+    "publicationPage": {
+      "moreFrom": "Daha fazla",
+      "fewerFrom": "Daha az"
+    },
+    "you": {
+      "sources": {
+        "mute": "Sustur"
+      }
+    }
+  },
+  "uk": {
+    "publicationPage": {
+      "moreFrom": "Більше від",
+      "fewerFrom": "Менше від"
+    },
+    "you": {
+      "sources": {
+        "mute": "Заглушити"
+      }
+    }
+  },
+  "vi": {
+    "publicationPage": {
+      "moreFrom": "Nhiều hơn từ",
+      "fewerFrom": "Ít hơn từ"
+    },
+    "you": {
+      "sources": {
+        "mute": "Tắt tiếng"
+      }
+    }
+  },
+  "zh-CN": {
+    "publicationPage": {
+      "moreFrom": "更多来自",
+      "fewerFrom": "减少来自"
+    },
+    "you": {
+      "sources": {
+        "mute": "屏蔽"
+      }
+    }
+  },
+  "zh-TW": {
+    "publicationPage": {
+      "moreFrom": "增加來自",
+      "fewerFrom": "減少來自"
+    },
+    "you": {
+      "sources": {
+        "mute": "靜音"
+      }
+    }
+  }
+}

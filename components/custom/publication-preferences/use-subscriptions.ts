@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type UserPublicationSubscriptionModel from '@/lib/database/models/UserPublicationSubscription';
-import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import {
   cancelSubscription,
   declinePublisher,
@@ -66,17 +65,9 @@ export function useSubscriptions() {
   }, [isLoading, items]);
 
   /**
-   * Records a subscription and boosts the publication.
-   *
-   * The boost goes through `setSourcePrefFromUi`, the single mutation entry
-   * point, which owns the guard, the read-before, the change-log entry and the
-   * sweep. It writes the canonical boost weight (0.5). DEVIATION FROM THE PLAN,
-   * agreed: Part 3 asked for a special 1.0, but `setSourcePrefFromUi` cannot
-   * express it, `weightToPrefKind` classifies both as the same 'boost' kind,
-   * and the existing 3-way selector on this very screen can only ever write
-   * 0.5 — so a 1.0 would be silently flattened the first time anyone touched
-   * the row. Writing the row directly to get 1.0 would bypass the dance the
-   * plan explicitly says not to bypass.
+   * Records a subscription. Nothing else: Subscribed is one tag among More,
+   * Fewer and Mute and writes no preference row (owner). Its stories get their
+   * weight from the subscribed-sibling read in scoring, not from a boost.
    */
   const addSubscription = useCallback(async (chosen: ChosenPublisher) => {
     setBusyId(chosen.publisherId);
@@ -92,10 +83,6 @@ export function useSubscriptions() {
         subscriptionUri: chosen.subscriptionUri,
         sourceNames,
       });
-      await setSourcePrefFromUi(
-        { kind: 'publication', publicationName: chosen.publisherName },
-        'prioritised',
-      );
       return true;
     } catch (error) {
       logger.captureException(error, {
@@ -109,11 +96,8 @@ export function useSubscriptions() {
   }, []);
 
   /**
-   * Retires the subscription row and LEAVES THE BOOST ALONE.
-   *
-   * The user may still want the source prioritised, and there is no special
-   * weight to unwind (see `addSubscription`). Un-boosting here would silently
-   * undo a preference the user can see and set independently on this screen.
+   * Retires the subscription row and touches no preference: More, Fewer and
+   * Mute are separate tags. A More left by an older build's subscribe stays.
    */
   const removeSubscription = useCallback(
     async (row: UserPublicationSubscriptionModel) => {

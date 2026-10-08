@@ -16,6 +16,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { calendarDaysAgo, formatDayMonth } from '@/lib/stats/visited-publications';
+import { toastManager } from '@/lib/toast-manager';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -88,18 +89,18 @@ function switchRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 'button' | 
  */
 /**
  * FinalLibrary #14: how often the reader opened this outlet, why support
- * matters, then Subscribe and I already pay, or a green "You pay". Shown only
- * when the outlet has a subscription page. ponytail: Subscribe only; the
- * board's "Support" for donation-funded outlets needs a catalogue field that
- * does not exist (owner default L2).
+ * matters, then Subscribe, which opens the outlet's own subscribe page and asks
+ * on return. Shown only when the outlet has a subscription page and the reader
+ * has not tagged it Subscribed (the tag grid above marks a subscription the
+ * reader already has). ponytail: Subscribe only; the board's "Support" for
+ * donation-funded outlets needs a catalogue field that does not exist (owner
+ * default L2).
  */
 const SupportBox: React.FC<{
     readonly displayName: string;
     readonly visitCount: number;
-    readonly subscribed: boolean;
     readonly onSubscribe: () => void;
-    readonly onAlreadyPay: () => void;
-}> = ({ displayName, visitCount, subscribed, onSubscribe, onAlreadyPay }) => {
+}> = ({ displayName, visitCount, onSubscribe }) => {
     const { t } = useTranslation();
     const c = useColors();
     const line = { color: c.ink2, lineHeight: 20 } as const;
@@ -111,47 +112,18 @@ const SupportBox: React.FC<{
                     : ''}
                 {t('publicationPage.supportLine')}
             </Text>
-            {subscribed ? (
-                <HStack space="xs" className="items-center" testID="publication-subscribed">
-                    <MaterialIcons
-                        name="check-circle"
-                        size={16}
-                        color={c.positive}
-                        accessible={false}
-                        accessibilityElementsHidden
-                        importantForAccessibility="no-hide-descendants"
-                    />
-                    <Text size="sm" style={{ color: c.positive, fontWeight: '600' }}>
-                        {t('library.visited.youPay')}
-                    </Text>
-                </HStack>
-            ) : (
-                <View style={styles.supportRow}>
-                    <Pressable
-                        onPress={onSubscribe}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('subscriptions.subscribeAt', { publisher: displayName })}
-                        accessibilityHint={t('subscriptions.opensPublisherSite', { publisher: displayName })}
-                        testID="publication-subscribe"
-                        style={[styles.supportButton, { backgroundColor: c.accent }]}
-                    >
-                        <Text size="sm" style={{ color: c.onAccent, fontWeight: '600' }}>
-                            {t('library.visited.subscribe')}
-                        </Text>
-                    </Pressable>
-                    <Pressable
-                        onPress={onAlreadyPay}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('library.visited.alreadyPayA11y', { publisher: displayName })}
-                        testID="publication-already-pay"
-                        style={[styles.supportButton, { borderWidth: 1, borderColor: c.line }]}
-                    >
-                        <Text size="sm" style={{ color: c.ink, fontWeight: '600' }}>
-                            {t('library.visited.alreadyPay')}
-                        </Text>
-                    </Pressable>
-                </View>
-            )}
+            <Pressable
+                onPress={onSubscribe}
+                accessibilityRole="button"
+                accessibilityLabel={t('subscriptions.subscribeAt', { publisher: displayName })}
+                accessibilityHint={t('subscriptions.opensPublisherSite', { publisher: displayName })}
+                testID="publication-subscribe"
+                style={[styles.supportButton, { backgroundColor: c.accent }]}
+            >
+                <Text size="sm" style={{ color: c.onAccent, fontWeight: '600' }}>
+                    {t('subscriptions.subscribeAt', { publisher: displayName })}
+                </Text>
+            </Pressable>
         </View>
     );
 };
@@ -274,16 +246,37 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
         .join(' · ');
     const kind = profile?.isOfficial ? sourceKindOf(profile.publicationType) ?? 'regulator' : null;
 
-    const subscribeTarget =
-        profile?.subscriptionUri && profile.newsPublisherId
-            ? {
-                  publisherId: profile.newsPublisherId,
-                  publisherName: profile.name,
-                  countryCode: profile.countryCode,
-                  subscriptionUri: profile.subscriptionUri,
-              }
-            : null;
+    // A subscription is keyed on the publisher id; the outlet's own subscribe
+    // page is optional (only the Subscribe link below needs it).
+    const subscribeTarget = profile?.newsPublisherId
+        ? {
+              publisherId: profile.newsPublisherId,
+              publisherName: profile.name,
+              countryCode: profile.countryCode,
+              subscriptionUri: profile.subscriptionUri ?? null,
+          }
+        : null;
     const subscribed = subscribeTarget ? subscribeFlow.isSubscribed(subscribeTarget.publisherId) : false;
+    const subscriptionRow = subscribeTarget
+        ? subscribeFlow.subscriptions.items.find((r) => r.publisherId === subscribeTarget.publisherId)
+        : undefined;
+    // An add marks the publisher id busy, a remove the row id.
+    const busySubscriptionId = subscribeFlow.subscriptions.busyId;
+    const subscribeBusy =
+        !!subscribeTarget &&
+        !!busySubscriptionId &&
+        (busySubscriptionId === subscribeTarget.publisherId || busySubscriptionId === subscriptionRow?.id);
+    const toggleSubscribed = () => {
+        if (!subscribeTarget) return;
+        const row = subscriptionRow;
+        if (!row) {
+            void subscribeFlow.confirmDirectly(subscribeTarget);
+            return;
+        }
+        void subscribeFlow.subscriptions.removeSubscription(row).then((ok) => {
+            if (ok) toastManager.showInfo(t('subscriptions.removed', { publisher: row.publisherName }));
+        });
+    };
 
     const roles = switchRoles(Platform.OS);
     const pill = (value: PublicationView, label: string, testID: string) => {
@@ -331,6 +324,11 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 <PublicationFeedControl
                     testID="publication-pref-row"
                     current={pref.level}
+                    muted={pref.muted}
+                    subscribed={subscribed}
+                    canSubscribe={!!subscribeTarget}
+                    subscribeBusy={subscribeBusy}
+                    onToggleSubscribed={toggleSubscribed}
                     busy={pref.busy || pref.names.length === 0}
                     onChange={pref.change}
                 />
@@ -367,13 +365,11 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 </HStack>
             ) : null}
 
-            {subscribeTarget ? (
+            {subscribeTarget?.subscriptionUri && !subscribed ? (
                 <SupportBox
                     displayName={displayName}
                     visitCount={visitCount}
-                    subscribed={subscribed}
                     onSubscribe={() => void subscribeFlow.begin(subscribeTarget)}
-                    onAlreadyPay={() => void subscribeFlow.confirmDirectly(subscribeTarget)}
                 />
             ) : null}
 
@@ -597,8 +593,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
 
 const styles = StyleSheet.create({
     supportBox: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 14, gap: 12 },
-    supportRow: { flexDirection: 'row', gap: 8 },
-    supportButton: { flex: 1, minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+    supportButton: { minHeight: 44, paddingHorizontal: 16, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
 });
 
 export default PublicationPage;

@@ -3,8 +3,11 @@
 // sits behind it: the profile query, the paged news list, and the preference
 // rows keyed on EVERY name a publication is known by.
 
-import { observeActive as observeActivePublicationPreferences } from '@/lib/database/services/publication-preference-service';
-import { resolvePrefLevel, type PrefRowLike } from '@/lib/database/services/publication-pref-level';
+import {
+    observeActive as observeActivePublicationPreferences,
+    weightToPrefKind,
+} from '@/lib/database/services/publication-preference-service';
+import { normalizePrefName, resolvePrefLevel, type PrefRowLike } from '@/lib/database/services/publication-pref-level';
 import {
     setSourcePrefFromUi,
     type SourcePrefUiLevel,
@@ -17,6 +20,7 @@ import {
     getAllVisitedArticles,
     type VisitedArticle,
 } from '@/lib/database/services/publication-visit-service';
+import { setPublisherKind } from '@/components/custom/publication-preferences/set-publisher-kind';
 import logger from '@/lib/logger';
 import { visitsForNames } from '@/lib/stats/visited-publications';
 import { useCallback, useEffect, useState } from 'react';
@@ -37,10 +41,28 @@ export {
 export interface PublicationPrefResult {
     /** The level across every name (fewer wins over more). */
     readonly level: SourcePrefUiLevel;
+    /** A mute on any of the names. The level reads a mute as fewer; the page
+     *  shows Mute as its own choice. */
+    readonly muted: boolean;
     readonly busy: boolean;
     /** Every name the level is read and written under; empty until resolved. */
     readonly names: readonly string[];
-    readonly change: (next: SourcePrefUiLevel) => void;
+    readonly change: (next: PublicationPrefChoice) => void;
+}
+
+/** What the page's control writes: a level, or a mute. */
+export type PublicationPrefChoice = SourcePrefUiLevel | 'muted';
+
+/** True when an active named row for any of `names` is a mute. */
+export function isMutedAcross(rows: readonly PrefRowLike[], names: readonly string[]): boolean {
+    const wanted = new Set(names.map(normalizePrefName).filter(Boolean));
+    return rows.some(
+        (row) =>
+            row.scopeKind == null &&
+            (row.status === undefined || row.status === 'active') &&
+            wanted.has(normalizePrefName(row.publicationName ?? '')) &&
+            weightToPrefKind(row.weight) === 'mute',
+    );
 }
 
 /**
@@ -79,20 +101,32 @@ export function usePublicationPref(hints: PublicationNameHints): PublicationPref
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hintKey]);
 
+    const muted = isMutedAcross(rows, names);
     const change = useCallback(
-        (next: SourcePrefUiLevel) => {
+        (next: PublicationPrefChoice) => {
             if (names.length === 0) return;
             setBusy(true);
-            setSourcePrefFromUi({ kind: 'publisher', names }, next)
+            const target = { kind: 'publisher' as const, names };
+            // A mute is not a level: the same per-name executor write the
+            // Sources rows use. Clearing goes through the level writer, which
+            // re-sweeps what the mute had hidden. The level writer never
+            // softens a mute to fewer (the card menu relies on that), so an
+            // explicit Fewer over a mute clears it first.
+            const write = async (): Promise<unknown> => {
+                if (next === 'muted') return setPublisherKind(names, 'mute');
+                if (muted && next === 'deprioritised') await setSourcePrefFromUi(target, 'none');
+                return setSourcePrefFromUi(target, next);
+            };
+            write()
                 .catch((error) => {
                     logger.captureException(error, { tags: { screen: 'PublicationPage', method: 'setPref' } });
                 })
                 .finally(() => setBusy(false));
         },
-        [names],
+        [names, muted],
     );
 
-    return { level: resolvePrefLevel(rows, names), busy, names, change };
+    return { level: resolvePrefLevel(rows, names), muted, busy, names, change };
 }
 
 export type { VisitedArticle };
