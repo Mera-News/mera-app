@@ -145,6 +145,18 @@ export function attachChatSession(opts: AttachOptions): ChatEngine {
 }
 
 /**
+ * THE STOP BUTTON. Aborts whatever the live engine is doing: the stream, the
+ * agent loop's next leg, any tool not yet started, the forced pass, a queued
+ * hidden turn. A no-op when nothing is busy. The engine settles itself (busy
+ * clears through its own store, which `sync` mirrors), so the composer is ready
+ * at once and no "answer ready" ring is left behind.
+ */
+export function stopChatTurn(): void {
+    if (!live || !busyNow()) return;
+    live.engine.stop();
+}
+
+/**
  * A fresh thread: no engine and empty stores. MeraChatSession calls it when it
  * creates a conversation (launch, New chat, a context switch); clearAllStores
  * calls it on an account switch. With the stores idle the hold is released.

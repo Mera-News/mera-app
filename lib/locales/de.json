@@ -675,7 +675,9 @@
       "updatingModel": "Modell aktualisieren",
       "weighingTopics": "Themen gewichten"
     },
-    "hideKeyboard": "Tastatur ausblenden"
+    "hideKeyboard": "Tastatur ausblenden",
+    "stop": "Stoppen",
+    "stopped": "Gestoppt"
   },
   "personaChat": {
     "introMessage": "Hallo! Ich bin Mera, dein persönlicher Nachrichten-Assistent.\n\nUm Nachrichten zu finden, die wirklich zählen, brauche ich ein wenig über dich zu wissen. Wo du wohnst, was du beruflich machst, welchen Hobbys du nachgehst, welche Aktien du verfolgst, wo deine Familie lebt. Teile so viel oder so wenig mit, wie du möchtest.\n\nWenn dich das ins Grübeln bringt, gutes Gespür. Es ist nicht ratsam, persönliche Daten an eine App-Firma zu übergeben. Mera ist anders aufgebaut: Alles, was du mir erzählst, wird auf deinem Gerät gespeichert, nicht auf unseren Servern. Frag mich, wie das funktioniert, oder sag 'Hilf mir bei der Einrichtung' und wir können beginnen."

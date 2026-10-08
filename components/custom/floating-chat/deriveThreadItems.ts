@@ -1218,7 +1218,8 @@ function emitMessage(
     });
   }
 
-  const hasContent = message.content.trim().length > 0;
+  // A stopped turn with nothing said still shows its "Stopped" line.
+  const hasContent = message.content.trim().length > 0 || message.stopped === true;
   const ownedBox = boxes?.get(message.id);
   // Skip empty assistant placeholders that produced no cards AND own no steps
   // box. The `ownedBox` clause is the fix: without it a content-less message

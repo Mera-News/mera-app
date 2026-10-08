@@ -675,7 +675,9 @@
       "updatingModel": "Aggiornamento del modello",
       "weighingTopics": "Peso degli argomenti"
     },
-    "hideKeyboard": "Nascondi tastiera"
+    "hideKeyboard": "Nascondi tastiera",
+    "stop": "Interrompi",
+    "stopped": "Interrotto"
   },
   "personaChat": {
     "introMessage": "Ciao! Sono Mera, la tua assistente personale di notizie.\n\nPer trovare notizie che contano davvero per te, ho bisogno di conoscerti un po'. Dove vivi, di cosa ti occupi, hobby che segui, azioni che monitori, dove vive la tua famiglia. Condividi tutto o poco, come preferisci.\n\nSe questo ti preoccupa, è un buon istinto. Non è saggio affidare dati personali a una società che sviluppa app. Mera è costruita diversamente: tutto quello che mi dici viene salvato sul tuo dispositivo, non sui nostri server. Chiedimi come funziona, o di' semplicemente 'aiutami a configurarlo' e iniziamo."

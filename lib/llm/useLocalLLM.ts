@@ -283,6 +283,9 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
   const agentRef = { current: initialAgent };
   const isStreamingRef = { current: false };
   const initializedRef = { current: false };
+  /** THE STOP BUTTON, for the turn in flight. Read between tokens: leaving the
+   *  token loop makes the toolkit halt llama before it frees its lock. */
+  const stopRef = { requested: false };
 
   /**
    * The wait line's sink for the turn in flight.
@@ -405,6 +408,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
           maxTokens: MAX_OUTPUT_TOKENS,
           temperature: 0.4,
         })) {
+          if (stopRef.requested) break;
           // Think tags go BEFORE the tool-call parser: its `<` holdback plus the
           // end-of-stream `startsWith('<')` discard would otherwise swallow the
           // reply after a stray tag, and a <tool_call> inside a think block
@@ -449,6 +453,19 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
               );
             }
           }
+        }
+
+        if (stopRef.requested) {
+          // STOPPED: the partial reply stays; no tool call (running or merely
+          // parsed from the partial text) is kept or executed.
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? { ...m, content: accContent, toolCalls: undefined, stopped: true }
+                : m,
+            ),
+          );
+          return;
         }
 
         const thinkTail = thinkStripper.flush();
@@ -649,6 +666,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
       const newMessages = [...st().messages, userMsg];
       setMessages(newMessages);
 
+      stopRef.requested = false;
       isStreamingRef.current = true;
       setStatus('streaming');
       setTurnBusy(true);
@@ -666,6 +684,9 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
     sendHidden: (text) => startTurn(text, true),
     setAgent: (agent) => {
       agentRef.current = agent;
+    },
+    stop: () => {
+      stopRef.requested = true;
     },
     dispose: () => {
       alive = false;

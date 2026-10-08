@@ -1,0 +1,122 @@
+{
+  "en": {
+    "chat": {
+      "stop": "Stop",
+      "stopped": "Stopped"
+    }
+  },
+  "ar": {
+    "chat": {
+      "stop": "إيقاف",
+      "stopped": "تم الإيقاف"
+    }
+  },
+  "de": {
+    "chat": {
+      "stop": "Stoppen",
+      "stopped": "Gestoppt"
+    }
+  },
+  "es": {
+    "chat": {
+      "stop": "Detener",
+      "stopped": "Detenido"
+    }
+  },
+  "fr": {
+    "chat": {
+      "stop": "Arrêter",
+      "stopped": "Arrêté"
+    }
+  },
+  "hi": {
+    "chat": {
+      "stop": "रोकें",
+      "stopped": "रोका गया"
+    }
+  },
+  "id": {
+    "chat": {
+      "stop": "Berhenti",
+      "stopped": "Dihentikan"
+    }
+  },
+  "it": {
+    "chat": {
+      "stop": "Interrompi",
+      "stopped": "Interrotto"
+    }
+  },
+  "ja": {
+    "chat": {
+      "stop": "停止",
+      "stopped": "停止しました"
+    }
+  },
+  "ko": {
+    "chat": {
+      "stop": "중지",
+      "stopped": "중지됨"
+    }
+  },
+  "nl": {
+    "chat": {
+      "stop": "Stoppen",
+      "stopped": "Gestopt"
+    }
+  },
+  "pl": {
+    "chat": {
+      "stop": "Zatrzymaj",
+      "stopped": "Zatrzymano"
+    }
+  },
+  "pt-BR": {
+    "chat": {
+      "stop": "Parar",
+      "stopped": "Parado"
+    }
+  },
+  "ru": {
+    "chat": {
+      "stop": "Остановить",
+      "stopped": "Остановлено"
+    }
+  },
+  "th": {
+    "chat": {
+      "stop": "หยุด",
+      "stopped": "หยุดแล้ว"
+    }
+  },
+  "tr": {
+    "chat": {
+      "stop": "Durdur",
+      "stopped": "Durduruldu"
+    }
+  },
+  "uk": {
+    "chat": {
+      "stop": "Зупинити",
+      "stopped": "Зупинено"
+    }
+  },
+  "vi": {
+    "chat": {
+      "stop": "Dừng",
+      "stopped": "Đã dừng"
+    }
+  },
+  "zh-CN": {
+    "chat": {
+      "stop": "停止",
+      "stopped": "已停止"
+    }
+  },
+  "zh-TW": {
+    "chat": {
+      "stop": "停止",
+      "stopped": "已停止"
+    }
+  }
+}

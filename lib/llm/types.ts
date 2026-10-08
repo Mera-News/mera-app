@@ -58,6 +58,9 @@ export interface ConversationMessage {
    * no gain, since nothing is ever stored.
    */
   hidden?: boolean;
+  /** The reader pressed Stop on this turn. The thread shows a muted "Stopped"
+   *  line under whatever partial text there is. Memory only: not persisted. */
+  stopped?: boolean;
 }
 
 // ---------------------------------------------------------------------------

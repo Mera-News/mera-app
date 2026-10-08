@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/chat-ai';
 import { hapticLight } from '@/lib/haptics';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
+import { stopChatTurn } from '@/lib/chat-session/chat-session';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import {
   useFloatingChatPendingDraft,
@@ -87,6 +88,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const styles = useStyles();
   const { t } = useTranslation();
   const colors = useColors();
+  // The session's whole-turn busy mirror (not `status`): Send is Stop until it clears.
+  const turnBusy = useFloatingChatStore((st) => st.isGenerating);
 
   // Autofocus the input once the popover's open morph fully settles. Focusing
   // mid-morph fights the scale transform and janks the keyboard slide-up, so we
@@ -209,6 +212,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   reserved gutter indented every reply ~34pt from the thread's
                   left edge (the steps box, cards and input start there). The
                   bubble takes the user side's 88% max width, mirrored. */}
+              {message.content.trim().length > 0 ? (
               <MessageContent role="assistant">
                 {/* THE SLOT. While streaming the reply holds at least the
                     wait row's height, so it takes the row's place at the
@@ -220,6 +224,12 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   <MessageResponse>{message.content}</MessageResponse>
                 </View>
               </MessageContent>
+              ) : null}
+              {message.stopped ? (
+                <Text size="xs" style={styles.stoppedLine} testID="chat-stopped">
+                  {t('chat.stopped')}
+                </Text>
+              ) : null}
             </Message>
           );
         // Only animate in live-session bubbles; history pages load without replay.
@@ -485,6 +495,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             // on the banner meant a failed turn disabled the composer for good,
             // with the banner telling the user to try again.
             disabled={isInputDisabled || bannerBlocksInput}
+            // While a turn runs (the whole turn, not only text arriving) Send
+            // becomes Stop.
+            busy={turnBusy}
+            onStop={stopChatTurn}
           />
         </View>
         {composerTrailing}
@@ -504,6 +518,11 @@ const useStyles = themedStyles((c) => StyleSheet.create({
   // panel's rounded edge (audit F9).
   composerRow: { flexDirection: 'row', alignItems: 'center' },
   composerFill: { flex: 1 },
+  stoppedLine: {
+    color: c.ink3,
+    marginTop: 4,
+    marginHorizontal: 4,
+  },
   replySlotStreaming: {
     minHeight: WAIT_ROW_TEXT_HEIGHT,
   },

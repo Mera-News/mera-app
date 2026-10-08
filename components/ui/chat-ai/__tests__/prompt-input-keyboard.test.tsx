@@ -54,3 +54,37 @@ describe('PromptInput hide-keyboard button', () => {
     expect(box('chat-hide-keyboard')).toEqual(box('chat-send'));
   });
 });
+
+describe('PromptInput send / stop', () => {
+  it('idle: send, disabled while empty', () => {
+    mockKeyboard();
+    const { getByTestId, queryByTestId } = render(<PromptInput onSubmit={() => {}} onStop={() => {}} />);
+    expect(queryByTestId('chat-stop')).toBeNull();
+    expect(getByTestId('chat-send').props.accessibilityLabel).toBe('chat.send');
+    expect(getByTestId('chat-send').props.accessibilityState).toEqual({ disabled: true });
+  });
+
+  it('busy: the same button is Stop, ENABLED even though the field is locked, and stops', () => {
+    mockKeyboard();
+    const onStop = jest.fn();
+    const onSubmit = jest.fn();
+    const { getByTestId, queryByTestId } = render(
+      <PromptInput onSubmit={onSubmit} disabled busy onStop={onStop} />,
+    );
+    expect(queryByTestId('chat-send')).toBeNull();
+    const stop = getByTestId('chat-stop');
+    expect(stop.props.accessibilityLabel).toBe('chat.stop');
+    expect(stop.props.accessibilityState).toEqual({ disabled: false });
+    fireEvent.press(stop);
+    expect(onStop).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('toggles with busy and goes back to send when the turn ends', () => {
+    mockKeyboard();
+    const { getByTestId, rerender } = render(<PromptInput onSubmit={() => {}} busy onStop={() => {}} />);
+    expect(getByTestId('chat-stop')).toBeTruthy();
+    rerender(<PromptInput onSubmit={() => {}} busy={false} onStop={() => {}} />);
+    expect(getByTestId('chat-send')).toBeTruthy();
+  });
+});

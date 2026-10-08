@@ -6,7 +6,7 @@
 
 import type { ChatEngine } from '@/lib/chat-session/engine';
 import logger from '../logger';
-import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
+import { CallerAbortError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
@@ -227,6 +227,14 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   const turnBusyRef = { current: false };
   /** True while the forced pass owns the busy release. */
   const forcedPassRef = { current: false };
+  /** THE STOP BUTTON. One controller per turn; `stop()` aborts it, which cancels
+   *  the stream on both hedge legs, and every later step of the turn checks it
+   *  (no more legs, no tool calls, no forced pass). Kept after the turn ends so
+   *  the forced pass, which outlives it, is stoppable too. */
+  const stopRef: { current: AbortController } = { current: new AbortController() };
+  const throwIfStopped = (): void => {
+    if (stopRef.current.signal.aborted) throw new CallerAbortError('turn stopped');
+  };
 
   /**
    * Sets `turnBusyRef` AND mirrors it onto the store's `agentTurnState`, so the
@@ -416,10 +424,25 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
               }
             },
             (signal) => phaseSinkRef.current?.(signal),
+            stopRef.current.signal,
           )),
           onLeg,
         });
         if (queued) flush();
+        if (stopRef.current.signal.aborted) {
+          // STOPPED: the partial acknowledgement stays as the reply, and nothing
+          // else the turn produced is kept (no cards, no terminal, no state).
+          useCloudChatStore.getState().setMessages((prev) =>
+            prev.map((m) =>
+              m.id === ackId
+                ? { ...m, content: replaceClauseDashes(acc) }
+                : m.id === assistantId
+                  ? { ...m, content: '' }
+                  : m,
+            ),
+          );
+          return;
+        }
         // The loop's text is dash-cleaned and gated; the streamed accumulation
         // is not, so these final writes are the authoritative ones. An
         // acknowledgement the loop dropped (it narrated or leaked) empties its
@@ -555,6 +578,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           // the line back to "encrypting" after the answer was on screen.
           // Same reason the content render is gated on this flag.
           onPhase: suppressText ? undefined : (signal) => phaseSinkRef.current?.(signal),
+          signal: stopRef.current.signal,
         });
 
         // ONE store write per frame, not per token. Every SSE delta is a
@@ -648,6 +672,12 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           accContent = cleaned;
           if (!suppressText) renderContent();
         }
+        } catch (err) {
+          // STOP: land the tokens already received before the exception
+          // disarms the render, or the last frame's worth of the partial reply
+          // never reaches the bubble.
+          if (stopRef.current.signal.aborted) flushContentRender();
+          throw err;
         } finally {
           renderArmed = false;
           // Released in `startTurn`'s finally, the one owner. See the agent
@@ -714,6 +744,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         targetId: string,
         toolCalls: ReturnType<typeof finalizeToolCalls>,
       ) => {
+        // No tool starts after Stop. One already running finishes atomically.
+        throwIfStopped();
         const pendingRecords: ToolCallRecord[] = toolCalls.map((tc) => ({
           id: tc.id,
           name: tc.name,
@@ -895,6 +927,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       // 'auto' (explicit): a text-only reply finishes in one round trip; the
       // model still calls a tool when the turn warrants one (→ continuation).
       const first = await streamOne(assistantId, true, 'auto');
+      throwIfStopped();
       pushAssistantToWire(first.accContent, first.toolCalls);
 
       if (first.toolCalls.length > 0) {
@@ -980,6 +1013,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       // Gate (P0): only run when the agent supplies a payload of tools that are
       // safe to be FORCED. Empty => skip entirely. See forcedExtractionTools.
       const startForcedExtraction = () => {
+        if (stopRef.current.signal.aborted) return;
         const forcedTools = forcedExtractionTools();
         if (forcedTools.length > 0) {
           forcedPassRef.current = true;
@@ -1020,6 +1054,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         useCloudChatStore.getState().setMessages((prev) => [...prev, followUpPlaceholder]);
 
         const second = await streamOne(followUpId, true, 'auto');
+        throwIfStopped();
         pushAssistantToWire(second.accContent, second.toolCalls);
         if (second.toolCalls.length > 0) {
           await executeToolsAndPushResults(followUpId, second.toolCalls);
@@ -1043,6 +1078,22 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    * reads `messages`, not the wire — nothing is stored either. The model still
    * sees an ordinary trailing `user` turn with fresh <context> on it.
    */
+  /** After a stop: drop the stopped turn's tool calls (nothing is staged or
+   *  saved from a half-run turn) and mark the last bubble with text, or the
+   *  answer slot when nothing was said, as stopped. The partial text stays. */
+  const markStopped = (assistantId: string): void => {
+    const ids = new Set([`${assistantId}-ack`, assistantId]);
+    useCloudChatStore.getState().setMessages((prev) => {
+      const turn = prev.filter((m) => ids.has(m.id));
+      const target = [...turn].reverse().find((m) => m.content.trim().length > 0) ?? turn[turn.length - 1];
+      return prev.map((m) =>
+        !ids.has(m.id)
+          ? m
+          : { ...m, toolCalls: undefined, ...(m.id === target?.id ? { stopped: true } : {}) },
+      );
+    });
+  };
+
   const startTurn = (text: string, visible: boolean) => {
       const store = useCloudChatStore.getState();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
@@ -1079,6 +1130,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       setTurnBusy(true);
       isStreamingRef.current = true;
       store.setStatus('streaming');
+      stopRef.current = new AbortController();
+      const turnStop = stopRef.current;
 
       // SYNCHRONOUSLY, before the async IIFE. Everything between here and the
       // first gateway call is real work the user waits through:
@@ -1135,10 +1188,14 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             logger.debug(`${TAG} runSingleShot completed`);
           }
         } catch (err) {
-          const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
-          logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
-          useCloudChatStore.getState().setError(msg);
+          // A stop is not a failure: no banner, no report.
+          if (!turnStop.signal.aborted) {
+            const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
+            logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
+            useCloudChatStore.getState().setError(msg);
+          }
         } finally {
+          if (turnStop.signal.aborted) markStopped(assistantId);
           logger.debug(`${TAG} startTurn done, setting idle`);
           // THE ONE RELEASE, and it is in a `finally` on purpose: it has to run
           // on the throw path too, or a 429 leaves the line reassuring the user
@@ -1169,6 +1226,11 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     },
     setAgent: (agent) => {
       agentRef.current = agent;
+    },
+    stop: () => {
+      // A hidden turn queued behind the running one is part of the same stop.
+      pendingHiddenTurnRef.current = null;
+      stopRef.current.abort();
     },
     dispose: () => {
       alive = false;

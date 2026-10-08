@@ -33,7 +33,8 @@ const loadedModel = (modelId: string) => ({ modelId }) as ReturnType<typeof mode
 
 // Completion mock lives on the context object returned by _getContext.
 const mockCompletion = jest.fn();
-const mockContext = { completion: mockCompletion } as unknown as LlamaContext;
+const mockStopCompletion = jest.fn();
+const mockContext = { completion: mockCompletion, stopCompletion: mockStopCompletion } as unknown as LlamaContext;
 
 const BASE_PARAMS: InferParams = {
   prompt: 'What is the capital of France?',
@@ -300,6 +301,33 @@ describe('inferStream', () => {
       tokens.push(tok);
     }
     expect(tokens).toEqual(['Tok1', 'Tok2', 'Tok3']);
+  });
+
+  it('leaving early stops llama and waits for it before the lock is released', async () => {
+    let finish!: () => void;
+    const unwound = new Promise<void>((r) => { finish = r; });
+    mockCompletion.mockImplementation(async (_opts: any, callback: (data: { token: string }) => void) => {
+      callback({ token: 'a' });
+      callback({ token: 'b' });
+      await unwound; // generation goes on until llama is told to stop
+      return { text: 'ab', tokens_predicted: 2, tokens_evaluated: 1, truncated: false };
+    });
+    mockStopCompletion.mockImplementation(async () => { finish(); });
+
+    for await (const tok of inferStream(BASE_PARAMS)) {
+      expect(tok).toBe('a');
+      break; // Stop
+    }
+    expect(mockStopCompletion).toHaveBeenCalledTimes(1);
+
+    // The lock is free again: the next call can start.
+    mockCompletion.mockImplementation(async (_o: any, cb: (d: { token: string }) => void) => {
+      cb({ token: 'next' });
+      return { text: 'next', tokens_predicted: 1, tokens_evaluated: 1, truncated: false };
+    });
+    const out: string[] = [];
+    for await (const tok of inferStream(BASE_PARAMS)) out.push(tok);
+    expect(out).toEqual(['next']);
   });
 
   it('yields no tokens when completion callback is never called', async () => {

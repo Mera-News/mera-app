@@ -18,10 +18,10 @@ jest.mock('@/lib/database/services/conversation-service', () => ({
   appendMessage: (...a: unknown[]) => mockAppend(...a),
 }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { error: jest.fn() } }));
-const mockMade: { kind: string; agent: unknown; dispose: jest.Mock; setAgent: jest.Mock }[] = [];
+const mockMade: { kind: string; agent: unknown; dispose: jest.Mock; setAgent: jest.Mock; stop: jest.Mock }[] = [];
 function mockEngine(kind: string) {
   return (agent: unknown) => {
-    const e = { kind, agent, dispose: jest.fn(), setAgent: jest.fn(), send: jest.fn(), sendHidden: jest.fn() };
+    const e = { kind, agent, dispose: jest.fn(), setAgent: jest.fn(), send: jest.fn(), sendHidden: jest.fn(), stop: jest.fn() };
     mockMade.push(e);
     return e;
   };
@@ -32,7 +32,7 @@ jest.mock('@/lib/llm/useLocalLLM', () => ({ createLocalEngine: mockEngine('local
 import type { ConversationMessage, IAgent } from '@/lib/llm/types';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
-import { attachChatSession, resetChatSession } from '../chat-session';
+import { attachChatSession, resetChatSession, stopChatTurn } from '../chat-session';
 import { useLocalChatStore } from '../local-chat-store';
 
 const agentA = { id: 'persona-a' } as unknown as IAgent;
@@ -147,5 +147,42 @@ describe('persistence', () => {
     ]);
     const written = mockAppend.mock.calls[0][1] as { toolCalls: { result: unknown }[] };
     expect(written.toolCalls[0].result).toEqual({ tapped: true });
+  });
+});
+
+describe('stopChatTurn', () => {
+  it('does nothing when no turn is running', () => {
+    attachChatSession({ conversationId: 'c1', kind: 'cloud', agent: agentA, persistedIds: [] });
+    stopChatTurn();
+    expect(mockMade[0].stop).not.toHaveBeenCalled();
+  });
+
+  it('stops the live engine mid-turn; once the engine settles, busy clears and nothing stays held', () => {
+    attachChatSession({ conversationId: 'c1', kind: 'cloud', agent: agentA, persistedIds: [] });
+    // The fake engine behaves like the real one: stop ends the turn.
+    mockMade[0].stop.mockImplementation(() => {
+      cloud().setStatus('idle');
+      cloud().setAgentTurnState({ turnActive: false } as never);
+    });
+    // The Stop button lives in the open chat.
+    useFloatingChatStore.setState({ isExpanded: true });
+    cloud().setStatus('streaming');
+    cloud().setAgentTurnState({ turnActive: true } as never);
+    expect(useFloatingChatStore.getState().isGenerating).toBe(true);
+
+    stopChatTurn();
+
+    expect(mockMade[0].stop).toHaveBeenCalledTimes(1);
+    expect(useFloatingChatStore.getState().isGenerating).toBe(false);
+    expect(held()).toBe(0);
+    // No "answer ready" ring for a turn the reader stopped.
+    expect(useFloatingChatStore.getState().answerUnread).toBe(false);
+  });
+
+  it('stops the on-device engine too', () => {
+    attachChatSession({ conversationId: 'c2', kind: 'local', agent: agentA, persistedIds: [] });
+    useLocalChatStore.setState({ turnBusy: true });
+    stopChatTurn();
+    expect(mockMade[0].stop).toHaveBeenCalledTimes(1);
   });
 });

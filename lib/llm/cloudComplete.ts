@@ -237,6 +237,11 @@ export interface AuthFetchOptions {
  *  requests on two different models, which only the model-fallback layer above
  *  it can reason about. */
 export interface CloudCallOptions extends AuthFetchOptions {
+  /** The caller's stop. Aborts EVERY leg in flight (both hedge legs), the
+   *  limiter wait and the response body. A caller abort says nothing about the
+   *  model: it never counts against the timeout budget and never engages the
+   *  session fallback. */
+  signal?: AbortSignal;
   /** Fire the same request at the primary's fallback after this many ms and
    *  race them. Omit (the default) to disable hedging entirely. */
   hedgeAfterMs?: number;
@@ -597,13 +602,19 @@ interface Leg<C> {
   model: string;
 }
 
+/** The caller's stop rides on the request so authFetch's limiter wait, backoff
+ *  and abort bridge all see it. */
+function withCallerSignal(init: RequestInit, options: { signal?: AbortSignal }): RequestInit {
+  return options.signal ? { ...init, signal: options.signal } : init;
+}
+
 /** The original (pre-hedge) sequential behavior: one request, and on a
  *  timeout-class failure, engage + retry once on the fallback. */
 async function sendSequential<C>(
   url: string,
   primaryModel: string,
   build: Build<C>,
-  options: AuthFetchOptions,
+  options: CloudCallOptions,
 ): Promise<Leg<C>> {
   const model = resolveModel(primaryModel);
   const first = await build(model);
@@ -611,7 +622,7 @@ async function sendSequential<C>(
   let originalResponse: Response | null = null;
   let originalError: unknown = null;
   try {
-    const response = await authFetch(url, first.init, options);
+    const response = await authFetch(url, withCallerSignal(first.init, options), options);
     if (response.status !== 502) {
       if (response.ok) reportModelSuccess(primaryModel);
       return { response, ctx: first.ctx, model };
@@ -642,7 +653,7 @@ async function engageAndRetry<C>(
   url: string,
   primaryModel: string,
   build: Build<C>,
-  options: AuthFetchOptions,
+  options: CloudCallOptions,
   failed: { model: string; ctx: C; response: Response | null; error: unknown },
 ): Promise<Leg<C>> {
   reportModelFailure(primaryModel);
@@ -658,7 +669,10 @@ async function engageAndRetry<C>(
       // ONE attempt, deliberately: this retry exists so the call that
       // discovered the stall can still succeed, not to open a second budget.
       // Worst case per call stays bounded at (timeout budget + 1) attempts.
-      const response = await authFetch(url, retry.init, { ...options, maxTimeoutAttempts: 1 });
+      const response = await authFetch(url, withCallerSignal(retry.init, options), {
+        ...options,
+        maxTimeoutAttempts: 1,
+      });
       if (response.status !== 502) {
         return { response, ctx: retry.ctx, model: fallbackModel };
       }
@@ -714,6 +728,15 @@ async function sendHedged<C>(
   // grant normally; it cannot delay the primary, which was granted ~10s
   // earlier.
   const primaryController = new AbortController();
+  const hedgeController = new AbortController();
+  // A STOP ABORTS BOTH LEGS. Each leg runs on its own controller (the loser
+  // must be abortable alone), so the caller's signal is fanned out to both.
+  const stopBoth = () => {
+    primaryController.abort();
+    hedgeController.abort();
+  };
+  if (options.signal?.aborted) stopBoth();
+  else options.signal?.addEventListener('abort', stopBoth, { once: true });
   await gatewayRateLimiter.acquire(
     options.lane ?? 'background',
     primaryController.signal,
@@ -760,7 +783,6 @@ async function sendHedged<C>(
 
   // ─── Phase 2: both legs in flight ──────────────────────────────────────────
   logger.warn(`${TAG} hedge fired`, { primaryModel, hedgeModel });
-  const hedgeController = new AbortController();
   // ONE attempt: the hedge exists to answer FAST. A retrying hedge is just a
   // second storm on a second model.
   const hedgeRaw = runLeg(hedgeModel, hedgeController.signal, {
@@ -1192,6 +1214,9 @@ export interface CloudChatStreamRequest {
    * narrate a turn a person is watching.
    */
   onPhase?: (signal: PhaseSignal) => void;
+  /** The caller's stop (the Stop button). Aborts the request on both hedge
+   *  legs and cancels the body mid-stream; surfaces as a CallerAbortError. */
+  signal?: AbortSignal;
 }
 
 /** One OpenAI streaming chunk. `choices` is optional AND may be empty — the
@@ -1249,6 +1274,8 @@ export async function* cloudChatStream(
     maxOutputTokens: request.maxTokens ?? request.maxCompletionTokens,
     model,
   });
+
+  if (request.signal?.aborted) throw new CallerAbortError('cloudChatStream: stopped before send');
 
   logger.debug(`${TAG} cloudChatStream POST`, { url: CHAT_API });
 
@@ -1319,6 +1346,7 @@ export async function* cloudChatStream(
         method: 'POST',
         headers: { ...baseHeaders, ...attemptCtx.headers },
         body: JSON.stringify(body),
+        ...(request.signal ? { signal: request.signal } : {}),
       } satisfies RequestInit,
       ctx: attemptCtx,
     };
@@ -1345,6 +1373,7 @@ export async function* cloudChatStream(
       hedgeAfterMs: HEDGE_DELAY_MS,
       streamBody: true,
       lane: 'interactive',
+      signal: request.signal,
     }),
   );
   logger.debug('[chat-timing] chat POST→response', {
@@ -1416,7 +1445,7 @@ export async function* cloudChatStream(
         maxTimeoutAttempts: 1,
       });
       if (freshResponse.ok) {
-        yield* consumeChatResponse(freshResponse, fresh.ctx.privateKey, fresh.ctx.algo);
+        yield* consumeChatResponse(freshResponse, fresh.ctx.privateKey, fresh.ctx.algo, request.signal);
         return;
       }
       takeStreamHandle(freshResponse)?.release();
@@ -1466,7 +1495,7 @@ export async function* cloudChatStream(
 
   let textYielded = false;
   try {
-    for await (const event of consumeChatResponse(response, ctx.privateKey, ctx.algo)) {
+    for await (const event of consumeChatResponse(response, ctx.privateKey, ctx.algo, request.signal)) {
       if (event.type === 'text-delta') textYielded = true;
       yield event;
     }
@@ -1475,6 +1504,8 @@ export async function* cloudChatStream(
     // Text already reached the user: surface the error so the existing
     // failed-turn UX finalizes. Silently re-sending a half-answered prompt
     // would duplicate the answer.
+    // A stop is final: no retry, no model verdict.
+    if (isCallerAbort(err) || request.signal?.aborted) throw err;
     if (textYielded) throw err;
     // Already on the fallback (session-engaged, or a hedge winner) — there is
     // no healthier model left to try.
@@ -1525,7 +1556,7 @@ export async function* cloudChatStream(
       responseBody: errorText,
     });
   }
-  yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo);
+  yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo, request.signal);
 }
 
 /** Turn an OK chat response into events, streaming when the gateway relayed
@@ -1539,9 +1570,10 @@ async function* consumeChatResponse(
   response: Response,
   privateKey: Uint8Array,
   algo: SigningAlgo,
+  signal?: AbortSignal,
 ): AsyncGenerator<SseEvent> {
   const think = createThinkStripper();
-  for await (const event of consumeChatResponseRaw(response, privateKey, algo)) {
+  for await (const event of consumeChatResponseRaw(response, privateKey, algo, signal)) {
     if (event.type === 'text-delta') {
       const delta = think.push(event.delta);
       if (delta) yield { ...event, delta };
@@ -1559,6 +1591,7 @@ async function* consumeChatResponseRaw(
   response: Response,
   privateKey: Uint8Array,
   algo: SigningAlgo,
+  signal?: AbortSignal,
 ): AsyncGenerator<SseEvent> {
   const handle = takeStreamHandle(response);
   const contentType = response.headers?.get('content-type') ?? '';
@@ -1569,7 +1602,7 @@ async function* consumeChatResponseRaw(
     yield* consumeBufferedChat(response, privateKey, algo);
     return;
   }
-  yield* consumeSseChat(response, privateKey, algo, handle);
+  yield* consumeSseChat(response, privateKey, algo, handle, signal);
 }
 
 /** Streaming path: one E2EE envelope per `delta.content`, decrypted as it lands. */
@@ -1578,6 +1611,7 @@ async function* consumeSseChat(
   privateKey: Uint8Array,
   algo: SigningAlgo,
   handle: StreamHandle | undefined,
+  signal?: AbortSignal,
 ): AsyncGenerator<SseEvent> {
   const reader = (response.body as ReadableStream<Uint8Array>).getReader();
   let idleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -1592,6 +1626,14 @@ async function* consumeSseChat(
       void reader.cancel().catch(() => { /* already dead */ });
     }, ms);
   };
+
+  // A stop cancels the body at once instead of waiting for the next chunk.
+  const onStop = () => {
+    handle?.abort();
+    void reader.cancel().catch(() => { /* already dead */ });
+  };
+  if (signal?.aborted) onStop();
+  else signal?.addEventListener('abort', onStop, { once: true });
 
   let finishReason = 'stop';
   try {
@@ -1644,9 +1686,16 @@ async function* consumeSseChat(
       }
     }
     // A cancelled reader ends the loop cleanly, so the flag is the only signal.
+    if (signal?.aborted) throw new CallerAbortError('cloudChatStream: stopped');
     if (idleTimedOut) throw new Error(`${TAG} chat stream went idle`);
+  } catch (err) {
+    // The cancelled body rejects with a plain abort error: re-type it, so it is
+    // never read as evidence about the model.
+    if (signal?.aborted && !isCallerAbort(err)) throw new CallerAbortError('cloudChatStream: stopped', err);
+    throw err;
   } finally {
     clearTimeout(idleTimer);
+    signal?.removeEventListener('abort', onStop);
     handle?.release();
   }
 

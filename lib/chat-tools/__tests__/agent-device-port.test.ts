@@ -364,3 +364,74 @@ describe('ux2 batch 25 D2: an EXACT alias beats a prefix match', () => {
     expect(out.status === 'resolved' && out.places.length).toBe(2);
   });
 });
+
+// THE STOP BUTTON. Once the signal aborts, no model call or tool starts: the
+// loop sees a resolved error and ends the turn with no further legs.
+describe('makeAgentDeps honours Stop', () => {
+  const { cloudChatStream } = require('../../llm/cloudComplete');
+  const { handleSaveExtractedFacts } = require('../tool-handlers');
+  const { findSimilarFacts } = require('../../database/services/fact-similarity-service');
+  const { getFacts } = require('../../database/services/fact-service');
+  const base = { role: 'tool' as const, model: 'BIG', systemPrompt: 's', messages: [] };
+
+  beforeEach(() => {
+    (cloudChatStream as jest.Mock).mockReset();
+    (handleSaveExtractedFacts as jest.Mock).mockReset();
+    (findSimilarFacts as jest.Mock).mockResolvedValue([]);
+    (getFacts as jest.Mock).mockResolvedValue([]);
+  });
+
+  it('a model call after Stop never reaches the network', async () => {
+    const stop = new AbortController();
+    const deps = makeAgentDeps('msg', jest.fn(), undefined, stop.signal);
+    stop.abort();
+    const out = await deps.callModel(base);
+    expect(out.error).toBe('stopped');
+    expect(cloudChatStream).not.toHaveBeenCalled();
+  });
+
+  it('a stream cut by Stop resolves as stopped instead of throwing', async () => {
+    const stop = new AbortController();
+    (cloudChatStream as jest.Mock).mockImplementation(async function* () {
+      yield { type: 'text-delta', delta: 'par' };
+      stop.abort();
+      throw new Error('cloudChatStream: stopped');
+    });
+    const deps = makeAgentDeps('msg', jest.fn(), undefined, stop.signal);
+    await expect(deps.callModel({ ...base, streamToUser: true })).resolves.toMatchObject({ error: 'stopped' });
+  });
+
+  it('tools run until Stop and answer "stopped" without touching the device after', async () => {
+    const stop = new AbortController();
+    const deps = makeAgentDeps('msg', jest.fn(), undefined, stop.signal);
+    await expect(deps.tools.findSimilarFacts({})).resolves.toEqual({ candidates: [] });
+    stop.abort();
+    await expect(deps.tools.saveExtractedFacts({ extracted_user_information: [] })).resolves.toEqual({
+      error: 'stopped',
+    });
+    expect(handleSaveExtractedFacts).not.toHaveBeenCalled();
+  });
+
+  it('the real loop runs no second leg and stages nothing once Stop lands in leg one', async () => {
+    const { runAgentTurn, createAgentState } = require('@/lib/mera-harness');
+    const stop = new AbortController();
+    (cloudChatStream as jest.Mock).mockImplementation(async function* () {
+      yield { type: 'tool-call-delta', index: 0, id: 'c1', name: 'load_skill', argumentsDelta: '{"id":"facts/residence"}' };
+      yield { type: 'finish', reason: 'tool_calls' };
+      stop.abort(); // the reader pressed Stop while the first leg was ending
+    });
+    const state = createAgentState({
+      surface: 'CONFIG',
+      languageName: 'English',
+      facts: [{ id: 'f1', statement: 'Lives in Amsterdam', attribute: 'location: residence' }],
+    });
+    const out = await runAgentTurn({
+      state,
+      userMessage: 'I moved to Porto',
+      deps: makeAgentDeps('I moved to Porto', jest.fn(), undefined, stop.signal),
+    });
+    expect(cloudChatStream).toHaveBeenCalledTimes(1);
+    expect(handleSaveExtractedFacts).not.toHaveBeenCalled();
+    expect(out.proposals).toHaveLength(0);
+  });
+});

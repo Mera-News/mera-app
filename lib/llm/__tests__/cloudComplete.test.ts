@@ -2861,6 +2861,48 @@ describe('hedged requests', () => {
     expect((logger.captureMessage as jest.Mock)).not.toHaveBeenCalled();
   });
 
+  it('a caller stop aborts BOTH legs once the hedge has fired', async () => {
+    const stop = new AbortController();
+    const p = complete({ ...HEDGED, signal: stop.signal });
+    const settled = p.then(
+      () => 'resolved',
+      (e: unknown) => e,
+    );
+    await tickMicrotasks();
+    await fireHedge();
+    expect(legs).toHaveLength(2);
+    expect(legs[0].signal?.aborted).toBe(false);
+    expect(legs[1].signal?.aborted).toBe(false);
+
+    stop.abort();
+    await tickMicrotasks(20);
+
+    expect(legs[0].signal?.aborted).toBe(true);
+    expect(legs[1].signal?.aborted).toBe(true);
+    await settled;
+    // A stop says nothing about the model.
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+  });
+
+  it('a caller stop before the hedge fires aborts the primary and never starts the hedge', async () => {
+    const stop = new AbortController();
+    const p = complete({ ...HEDGED, signal: stop.signal });
+    const settled = p.then(
+      () => 'resolved',
+      (e: unknown) => e,
+    );
+    await tickMicrotasks();
+    stop.abort();
+    await tickMicrotasks(20);
+    expect(legs[0].signal?.aborted).toBe(true);
+
+    jest.advanceTimersByTime(HEDGE_DELAY_MS);
+    await tickMicrotasks(20);
+    await settled;
+    expect(legs).toHaveLength(1);
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+  });
+
   it('ctx follows the winner — primary wins', async () => {
     const p = complete();
     await tickMicrotasks();

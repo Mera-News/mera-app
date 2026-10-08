@@ -407,6 +407,7 @@ export function resolveTierToModelId(tier: string | undefined): string {
 export async function callModelViaCloud(
   req: AgentModelRequest,
   onPhase?: (signal: PhaseSignal) => void,
+  stop?: AbortSignal,
 ): Promise<AgentModelResult> {
   const started = Date.now();
   const modelId = resolveTierToModelId(req.model);
@@ -433,6 +434,7 @@ export async function callModelViaCloud(
     // and costs the whole budget on the topic path.
     enableThinking: req.enableThinking ?? false,
     onPhase,
+    signal: stop,
   });
 
   let finishReason = 'stop';
@@ -474,17 +476,64 @@ export function makeAgentDeps(
   userMessage: string,
   onDelta: (d: { content?: string; reasoning?: string }) => void,
   onPhase?: (signal: PhaseSignal) => void,
+  /** The Stop button. Once aborted, no further model call or tool runs: the
+   *  loop sees a resolved `error` and ends the turn with no new legs. */
+  stop?: AbortSignal,
 ): AgentDeps {
+  const tools = makeAgentToolPort(userMessage, onPhase);
   return {
     // Only the leg the loop marks `streamToUser` reaches the bubble. Passing
     // `onDelta` on every leg streamed each later leg's text into the
     // acknowledgement bubble, where the final write then split it off again.
-    callModel: (req) =>
-      callModelViaCloud({ ...req, onDelta: req.streamToUser ? onDelta : undefined }, onPhase),
-    tools: makeAgentToolPort(userMessage, onPhase),
+    callModel: async (req) => {
+      if (stop?.aborted) return stoppedModelResult();
+      try {
+        return await callModelViaCloud(
+          { ...req, onDelta: req.streamToUser ? onDelta : undefined },
+          onPhase,
+          stop,
+        );
+      } catch (err) {
+        if (stop?.aborted) return stoppedModelResult();
+        throw err;
+      }
+    },
+    tools: stop ? haltable(tools, stop) : tools,
     loadSkill,
     skillIds,
     now: () => Date.now(),
+  };
+}
+
+/** What a model call returns once the reader pressed Stop. A RESOLVED error is
+ *  the one thing the loop treats as terminal without running another leg. */
+function stoppedModelResult(): AgentModelResult {
+  return {
+    content: '',
+    toolCalls: [],
+    finishReason: 'stop',
+    truncated: false,
+    usage: null,
+    modelSent: null,
+    latencyMs: 0,
+    ttVisibleMs: null,
+    error: 'stopped',
+  };
+}
+
+/** After Stop, every tool answers "stopped" without touching the device. A tool
+ *  already past its guard (a write in flight) finishes on its own: each is a
+ *  single atomic call. Mid-turn tools only read or STAGE a card; nothing is
+ *  committed until the reader taps it, so a stopped turn leaves nothing behind. */
+function haltable(port: AgentToolPort, stop: AbortSignal): AgentToolPort {
+  const halted = <T,>(run: () => Promise<T>): Promise<T> =>
+    stop.aborted ? Promise.resolve({ error: 'stopped' } as unknown as T) : run();
+  return {
+    findSimilarFacts: (a) => halted(() => port.findSimilarFacts(a)),
+    lookupPlace: (a) => halted(() => port.lookupPlace(a)),
+    saveExtractedFacts: (a) => halted(() => port.saveExtractedFacts(a)),
+    deleteUserFacts: (a) => halted(() => port.deleteUserFacts(a)),
+    ...(port.webSearch ? { webSearch: (a: { queries: string[] }) => halted(() => port.webSearch!(a)) } : {}),
   };
 }
 

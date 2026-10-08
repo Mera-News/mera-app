@@ -10,6 +10,9 @@ export interface ChatEngine {
     sendHidden(text: string): void;
     /** The view re-creates its agent when the context object changes. */
     setAgent(agent: IAgent): void;
+    /** The Stop button: abort the turn in flight (and a queued hidden one).
+     *  The partial reply stays; nothing new is staged or saved. */
+    stop(): void;
     /** Stops the engine writing to its store once replaced. A turn already
      *  running finishes its own cleanup (the inference queue resumes). */
     dispose(): void;

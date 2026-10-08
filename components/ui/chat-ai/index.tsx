@@ -22,6 +22,7 @@ import React, {
   useState,
 } from 'react';
 import {
+  Animated,
   FlatList,
   Keyboard,
   type FlatListProps,
@@ -38,6 +39,7 @@ import Markdown from 'react-native-markdown-display';
 import { useTranslation } from 'react-i18next';
 import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/typography/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens';
 
 const ACCENT = 'rgb(231, 138, 83)';
@@ -329,10 +331,14 @@ export interface PromptInputProps {
   onSubmit: (text: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  /** A turn is running. With `onStop`, the send button becomes Stop: same place
+   *  and size, ENABLED even though the field itself is locked. */
+  busy?: boolean;
+  onStop?: () => void;
 }
 
 const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function PromptInput(
-  { onSubmit, placeholder, disabled = false },
+  { onSubmit, placeholder, disabled = false, busy = false, onStop },
   ref,
 ) {
   const { t } = useTranslation();
@@ -349,7 +355,22 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
     setText: (next: string) => setText(next),
   }));
 
-  const isSendDisabled = disabled || text.trim().length === 0;
+  const stopMode = busy && onStop !== undefined;
+  const isSendDisabled = !stopMode && (disabled || text.trim().length === 0);
+
+  // Send and Stop crossfade on one disc; instant in Lite / Reduce Motion. RN's
+  // own Animated, not Reanimated: this kit file imports none (see
+  // MessageContent's note), and the opacity runs on the native driver.
+  const motion = useMotionAllowed();
+  const stopMix = useRef(new Animated.Value(stopMode ? 1 : 0)).current;
+  useEffect(() => {
+    if (!motion) {
+      stopMix.setValue(stopMode ? 1 : 0);
+      return;
+    }
+    Animated.timing(stopMix, { toValue: stopMode ? 1 : 0, duration: 140, useNativeDriver: true }).start();
+  }, [stopMode, motion, stopMix]);
+  const sendOpacity = stopMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
   const [sendPressed, setSendPressed] = useState(false);
 
   // The hide-keyboard button exists only while the keyboard is up, so the field
@@ -452,17 +473,17 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
           which once erased this fill (item-13 bug), so pressed is state. */}
       <View style={styles.sendBox}>
         <Pressable
-          onPress={handleSend}
+          onPress={stopMode ? onStop : handleSend}
           onPressIn={() => setSendPressed(true)}
           onPressOut={() => setSendPressed(false)}
           disabled={isSendDisabled}
           accessibilityRole="button"
-          accessibilityLabel={t('chat.send')}
+          accessibilityLabel={stopMode ? t('chat.stop') : t('chat.send')}
           // `disabled` stops the press; the state is what VoiceOver reads, so
           // a dimmed button never announces as available.
           accessibilityState={{ disabled: isSendDisabled }}
           hitSlop={8}
-          testID="chat-send"
+          testID={stopMode ? 'chat-stop' : 'chat-send'}
           style={styles.sendFrame}
         />
         <View
@@ -479,14 +500,26 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
               isSendDisabled && styles.sendDiscDisabled,
             ]}
           >
-            <MaterialIcons
-              name="arrow-upward"
-              size={20}
-              color="#FFFFFF"
-              accessible={false}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            />
+            <Animated.View style={{ opacity: sendOpacity }}>
+              <MaterialIcons
+                name="arrow-upward"
+                size={20}
+                color="#FFFFFF"
+                accessible={false}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              />
+            </Animated.View>
+            <Animated.View style={[StyleSheet.absoluteFill, styles.stopIcon, { opacity: stopMix }]}>
+              <MaterialIcons
+                name="stop"
+                size={22}
+                color="#FFFFFF"
+                accessible={false}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              />
+            </Animated.View>
           </View>
         </View>
       </View>
@@ -608,6 +641,7 @@ const useStyles = themedStyles((c, mode) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  stopIcon: { alignItems: 'center', justifyContent: 'center' },
   sendDiscPressed: { backgroundColor: 'rgb(203, 121, 73)', transform: [{ scale: 0.9 }] }, // primary-300
   sendDiscDisabled: { opacity: 0.4 },
   textInput: {

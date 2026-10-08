@@ -195,24 +195,39 @@ async function* inferStreamExclusive(
       rejectWait = null;
     });
 
-  // Yield tokens as they arrive
-  while (true) {
-    if (tokenQueue.length > 0) {
-      yield tokenQueue.shift()!;
-    } else if (done) {
-      break;
-    } else {
-      // Wait for next token or completion
-      await new Promise<void>((resolve, reject) => {
-        resolveWait = resolve;
-        rejectWait = reject;
-      });
+  try {
+    // Yield tokens as they arrive
+    while (true) {
+      if (tokenQueue.length > 0) {
+        yield tokenQueue.shift()!;
+      } else if (done) {
+        break;
+      } else {
+        // Wait for next token or completion
+        await new Promise<void>((resolve, reject) => {
+          resolveWait = resolve;
+          rejectWait = reject;
+        });
+      }
     }
-  }
 
-  // Drain any remaining tokens
-  while (tokenQueue.length > 0) {
-    yield tokenQueue.shift()!;
+    // Drain any remaining tokens
+    while (tokenQueue.length > 0) {
+      yield tokenQueue.shift()!;
+    }
+  } finally {
+    // The consumer left early (Stop, or any throw): halt llama before the lock
+    // is released, or the next completion would interleave with this one in
+    // the shared KV cache. `done` is set by the completion's own settle.
+    if (!done) {
+      try {
+        await context.stopCompletion();
+      } catch {
+        /* already finished or never started */
+      }
+      // Never release the lock while llama is still unwinding.
+      await completionPromise;
+    }
   }
 
   // Ensure the completion promise has settled
