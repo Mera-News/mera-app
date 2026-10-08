@@ -1,4 +1,4 @@
-import { zeroHasLink, zeroState, type ZeroStateInput } from '../zero-state';
+import { zeroState, type ZeroStateInput } from '../zero-state';
 
 const base: ZeroStateInput = {
   mode: 'idle',
@@ -30,11 +30,6 @@ describe('zeroState', () => {
       expect(zeroState({ ...base, mode, articleCount: 0 })).toBeNull();
     }
     expect(zeroState({ ...base, noFacts: true, articleCount: 0 })).toBeNull();
-  });
-
-  it('links only from the relevant sentence', () => {
-    expect(zeroHasLink('relevant')).toBe(true);
-    for (const z of ['fetched', 'analysed', 'offline'] as const) expect(zeroHasLink(z)).toBe(false);
   });
 
   it('blames the connection when offline', () => {

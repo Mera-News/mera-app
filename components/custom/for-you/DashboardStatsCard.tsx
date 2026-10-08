@@ -12,9 +12,8 @@
 // problem the whole card is FeedStatusNotice instead: no chevron, no counts.
 //
 // A zero count leads with its reason instead (zero-state.ts): nothing
-// fetched, nothing analysed, nothing relevant, or offline. Only the
-// relevant one carries a link (Review your profile), so only that row is
-// live text with its own chevron button; the others are the one-press row.
+// fetched, nothing analysed, nothing relevant, or offline, as plain text in
+// the card's one-press row (no links, owner).
 //
 // No announcement here: FeedScreen announces the capped and error states.
 
@@ -26,14 +25,13 @@ import { Pressable } from '@/components/ui/pressable';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
-import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { formatCount } from '@/lib/utils/format-count';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect } from 'react';
 import { registerStatusCard, setStatusCardExpanded, useFeedStatusCard } from './feed-status-card';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { ShimmerText } from '@/components/ui/shimmer';
 import { Text } from '@/components/ui/text';
@@ -43,7 +41,7 @@ import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanim
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { zeroHasLink, zeroState, type ZeroState } from './zero-state';
+import { zeroState, type ZeroState } from './zero-state';
 
 const HIDDEN = {
     accessible: false,
@@ -75,42 +73,19 @@ function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
 
 const TABULAR = { fontVariant: ['tabular-nums' as const] };
 
-/** A zero's sentence as plain text: every kind but 'relevant'. */
+/** A zero's sentence, plain text (owner: no links; the reader finds
+ *  Settings and their profile themselves). */
 function useZeroText(kind: ZeroState | null): string | null {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
-    const { articleCount } = useFeedCounts();
-    if (kind === 'offline') return t('common.offlineBannerOffline');
-    if (kind === 'fetched') return t('feed.statsZeroFetched');
-    if (kind === 'analysed')
-        return `${t('feed.statsPublished', { count: articleCount, formatted: formatCount(articleCount, appLanguage) })} ${t('feed.statsZeroAnalysedTail')}`;
-    return null;
-}
-
-/** "n published, x analysed, but none look relevant yet. Review your
- *  profile (a link) or contact support." */
-function ZeroRelevantSentence() {
-    const { t } = useTranslation();
-    const colors = useColors();
-    const appLanguage = useAppLanguage();
     const { articleCount, analysedCount } = useFeedCounts();
     const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
-    return (
-        <Text size="sm" className="text-ink font-medium" style={TABULAR} testID="dashboard-stats-card-zero">
-            {t('feed.statsPublished', fmt(articleCount))} {t('feed.statsAnalysed', fmt(analysedCount))}{' '}
-            <Trans
-                i18nKey="feed.statsZeroRelevantTail"
-                components={[
-                    <Text
-                        key="profile"
-                        onPress={() => navigateToPage('profile')}
-                        accessibilityRole="link"
-                        style={{ color: colors.accentText }}
-                    />,
-                ]}
-            />
-        </Text>
-    );
+    if (kind === 'offline') return t('common.offlineBannerOffline');
+    if (kind === 'fetched') return t('feed.statsZeroFetched');
+    if (kind === 'analysed') return `${t('feed.statsPublished', fmt(articleCount))} ${t('feed.statsZeroAnalysedTail')}`;
+    if (kind === 'relevant')
+        return `${t('feed.statsPublished', fmt(articleCount))} ${t('feed.statsAnalysed', fmt(analysedCount))} ${t('feed.statsZeroRelevantTail')}`;
+    return null;
 }
 
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {
@@ -160,25 +135,6 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
             >
                 {notice ? (
                     <FeedStatusNotice mode={mode} />
-                ) : zero && zeroHasLink(zero) ? (
-                    <>
-                        <HStack className="items-start" space="sm">
-                            <View style={{ flex: 1, minWidth: 0 }}>
-                                <ZeroRelevantSentence />
-                            </View>
-                            <Pressable
-                                onPress={toggle}
-                                accessibilityRole="button"
-                                accessibilityState={{ expanded }}
-                                accessibilityLabel={t(expanded ? 'feedStatus.collapseA11y' : 'feedStatus.expandA11y')}
-                                hitSlop={12}
-                                testID={`${testID}-toggle`}
-                            >
-                                <MaterialIcons name={expanded ? 'expand-less' : 'expand-more'} size={20} color={colors.ink} />
-                            </Pressable>
-                        </HStack>
-                        {details}
-                    </>
                 ) : (
                     <>
                         {/* A hidden visual under a CHILDLESS labelled button: a
