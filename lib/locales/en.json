@@ -1030,7 +1030,8 @@
       "understanding": "Understanding",
       "updatingModel": "Updating model",
       "weighingTopics": "Weighing topics"
-    }
+    },
+    "hideKeyboard": "Hide keyboard"
   },
   "personaChat": {
     "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."

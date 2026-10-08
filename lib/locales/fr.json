@@ -674,7 +674,8 @@
       "understanding": "Compréhension",
       "updatingModel": "Mise à jour du modèle",
       "weighingTopics": "Pondération des sujets"
-    }
+    },
+    "hideKeyboard": "Masquer le clavier"
   },
   "personaChat": {
     "introMessage": "Bonjour ! Je suis Mera, votre assistante d'actualités personnelle.\n\nPour trouver des actualités qui vous intéressent vraiment, j'ai besoin de connaître quelques détails vous concernant. Où vous vivez, ce que vous faites, les loisirs que vous aimez, les actions que vous suivez, où vit votre famille. Partagez ce que vous voulez, un peu ou beaucoup.\n\nSi cela vous fait hésiter, c'est un bon instinct. Il n'est pas judicieux de confier des données personnelles à une société d'applications. Mera est construite différemment : tout ce que vous me dites est enregistré sur votre appareil, pas sur nos serveurs. Demandez-moi comment cela fonctionne, ou dites « Aidez-moi à configurer » et nous commencerons."

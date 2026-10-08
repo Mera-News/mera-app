@@ -669,7 +669,8 @@
       "understanding": "Anlıyor",
       "updatingModel": "Modeli güncelliyor",
       "weighingTopics": "Konuları tartıyor"
-    }
+    },
+    "hideKeyboard": "Klavyeyi gizle"
   },
   "personaChat": {
     "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nEğer bu seni biraz şüpheye düşürürse, içgüdün doğru. Kişisel verileri bir uygulama şirketi vermeye akıllıca demek değil. Mera farklı şekilde inşa edildi: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana nasıl çalıştığını sorabilirsin, ya da 'kurulumda bana yardım et' de ve başlayalım."

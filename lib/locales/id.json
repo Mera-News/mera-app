@@ -669,7 +669,8 @@
       "understanding": "Memahami",
       "updatingModel": "Memperbarui model",
       "weighingTopics": "Menimbang topik"
-    }
+    },
+    "hideKeyboard": "Sembunyikan keyboard"
   },
   "personaChat": {
     "introMessage": "Hai! Aku Mera, asisten berita pribadimu.\n\nUntuk mencari berita yang benar-benar penting bagi kamu, aku perlu tahu sedikit tentang dirimu. Di mana kamu tinggal, apa pekerjaan kamu, hobi yang kamu ikuti, saham yang kamu pantau, di mana keluargamu tinggal. Ceritakan sebanyak atau sesedikit yang kamu mau.\n\nJika ini membuatmu ragu-ragu, itu adalah naluri yang baik. Tidak bijak memberikan data pribadi kepada perusahaan pengembang aplikasi. Mera dibangun berbeda: semua yang kamu ceritakan kepada aku disimpan di perangkatmu, bukan di server kami. Tanya padaku cara kerjanya, atau bilang 'bantu aku menyiapkannya' dan kita akan mulai."

@@ -16,12 +16,14 @@ import React, {
   createContext,
   forwardRef,
   useContext,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
 } from 'react';
 import {
   FlatList,
+  Keyboard,
   type FlatListProps,
   Pressable,
   type ListRenderItem,
@@ -57,6 +59,11 @@ const SEND_FRAME = 44;
 const SEND_DISC = 31.5;
 const CHAT_FONT_SIZE = 15;
 const CHAT_LINE_HEIGHT = 21;
+/** The field's one-line height (line plus 10pt padding top and bottom). */
+const FIELD_MIN_HEIGHT = CHAT_LINE_HEIGHT + 20;
+/** Lifts a button's centre onto the field's LAST line: the same bottom inset
+ *  as the field, so it holds for one line and for a field grown upward. */
+const BUTTON_LIFT = (FIELD_MIN_HEIGHT - SEND_DISC) / 2;
 
 // ---------------------------------------------------------------------------
 // Conversation — outer container
@@ -345,6 +352,18 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
   const isSendDisabled = disabled || text.trim().length === 0;
   const [sendPressed, setSendPressed] = useState(false);
 
+  // The hide-keyboard button exists only while the keyboard is up, so the field
+  // keeps its full width when nobody is typing.
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardUp(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
   // The composer's 140pt ceiling is ~6.6 lines at the default 15/21, but under
   // 3 lines once the OS is scaling text — so at exactly the sizes where a
   // reader needs MORE room to see what they typed, they got less. Growing the
@@ -368,6 +387,38 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
 
   return (
     <View style={styles.inputRow}>
+      {keyboardUp ? (
+        // Same build as send: a childless labelled 44pt Pressable with the
+        // outline disc laid over it, so the glyph is not its own StaticText.
+        <View style={styles.sendBox}>
+          <Pressable
+            onPress={() => Keyboard.dismiss()}
+            accessibilityRole="button"
+            accessibilityLabel={t('chat.hideKeyboard')}
+            hitSlop={8}
+            testID="chat-hide-keyboard"
+            style={styles.sendFrame}
+          />
+          <View
+            pointerEvents="none"
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={styles.sendOverlay}
+          >
+            <View style={styles.hideDisc}>
+              <MaterialIcons
+                name="keyboard-hide"
+                size={20}
+                color={colors.ink}
+                accessible={false}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              />
+            </View>
+          </View>
+        </View>
+      ) : null}
       <TextInput
         ref={inputRef}
         multiline
@@ -527,6 +578,8 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     width: SEND_FRAME,
     height: SEND_FRAME,
     margin: -(SEND_FRAME - SEND_DISC) / 2,
+    // Centre on the field's last line instead of its bottom edge.
+    marginBottom: -(SEND_FRAME - SEND_DISC) / 2 + BUTTON_LIFT,
   },
   sendFrame: { width: SEND_FRAME, height: SEND_FRAME },
   sendOverlay: {
@@ -542,6 +595,15 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: ACCENT, // primary-400
   },
+  hideDisc: {
+    width: SEND_DISC,
+    height: SEND_DISC,
+    borderRadius: SEND_DISC / 2,
+    borderWidth: 1,
+    borderColor: tint(c.ink, 0.35),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sendDiscPressed: { backgroundColor: 'rgb(203, 121, 73)', transform: [{ scale: 0.9 }] }, // primary-300
   sendDiscDisabled: { opacity: 0.4 },
   textInput: {
@@ -554,6 +616,7 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom: 10,
+    minHeight: FIELD_MIN_HEIGHT,
     // maxHeight is applied at the call site, derived from the live font scale —
     // see `composerMaxHeight`. Leaving it here would pin it at 1x.
     textAlignVertical: 'top',
