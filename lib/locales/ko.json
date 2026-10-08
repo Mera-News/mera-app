@@ -87,7 +87,7 @@
       "welcome": "메라에 오신 것을 환영합니다",
       "wrongCode": "코드가 맞지 않습니다. 확인하시거나 새 코드를 다시 보내 주세요.",
       "noSheetTitle": "iPhone에서 다운로드를 열지 못했습니다",
-      "noSheetBody": "다시 시도하거나 설정 › 일반 › 언어 및 지역 › 번역 언어에서 {{language}}을(를) 다운로드하세요."
+      "noSheetBody": "다시 시도하거나 iPhone 설정을 열고 일반, 언어 및 지역, 번역 언어 순서로 이동해 {{language}}을(를) 다운로드하세요."
     }
   },
   "account": {
@@ -125,7 +125,7 @@
         "fetching": {
           "headlines": [
             "오늘의 기사를 기기로 가져오는 중…",
-            "메라는 뉴스를 기기로 직접 가져옵니다. 관심사는 기기 밖으로 나가지 않습니다."
+            "회원님을 위해 오늘의 스토리를 준비하는 중…"
           ],
           "amberSubline": "이 화면을 열어 두세요."
         },
@@ -204,15 +204,15 @@
       "freeBodyWithTime": "메라가 오늘 보낸 기사를 모두 받았습니다. 기기에 있는 기사를 살펴보세요. {{time}}에 더 도착합니다."
     },
     "statsPublishedPending_other": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
-    "statsPublished_other": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
-    "statsAnalysed_other": "{{formatted}}개의 기사가 분석되었습니다.",
-    "statsRelevant_other": "{{formatted}}개가 관련 있는 것으로 확인되었습니다.",
-    "statsRead_other": "당신은 {{formatted}}개를 읽었습니다.",
-    "statsAnalysed_one": "{{formatted}}개가 분석되었습니다,",
+    "statsPublished_other": "지난 24시간 동안 {{formatted}}개의 기사가 게재되었으며,",
+    "statsAnalysed_other": "회원님을 위해 {{formatted}}개가 분석되었고,",
+    "statsRelevant_other": "{{formatted}}개가 관련 있어 보이며,",
+    "statsRead_other": "{{formatted}}개를 읽으셨습니다.",
+    "statsAnalysed_one": "회원님을 위해 {{formatted}}개가 분석되었고,",
     "statsPublishedPending_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
-    "statsPublished_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다,",
-    "statsRead_one": "당신은 {{formatted}}개를 읽었습니다.",
-    "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,",
+    "statsPublished_one": "지난 24시간 동안 {{formatted}}개의 기사가 게재되었으며,",
+    "statsRead_one": "{{formatted}}개를 읽으셨습니다.",
+    "statsRelevant_one": "{{formatted}}개가 관련 있어 보이며,",
     "loadingA11y": "피드를 불러오는 중",
     "translatingCaption": "번역 중…",
     "reasonWritingA11y": "메모 작성 중",
@@ -238,7 +238,10 @@
       "continuous": "연속 피드",
       "sectioned": "섹션 피드",
       "title": "보기"
-    }
+    },
+    "statsZeroFetched": "메라가 아직 기사를 가져오지 못했습니다. 계속 시도할 것입니다. 이런 상황이 계속되면 고객 지원팀에 문의해 주세요.",
+    "statsZeroAnalysedTail": "메라가 아직 회원님을 위해 기사를 분석하지 못했습니다. 계속 시도할 것입니다. 이런 상황이 계속되면 고객 지원팀에 문의해 주세요.",
+    "statsZeroRelevantTail": "아직 관련 있어 보이는 기사는 없습니다. 프로필을 확인하거나 고객 지원팀에 문의해 주세요."
   },
   "relevance": {
     "emergency": "긴급",
@@ -353,7 +356,7 @@
     "retry": "재시도",
     "translationUnavailableTapToRetry": "{{language}} 언어 팩이 아직 다운로드 중일 수 있습니다. 지금은 영어로 표시하고 있습니다. 다시 시도하려면 탭하세요.",
     "translationUnavailableTitle": "번역을 사용할 수 없습니다",
-    "translationUnsupportedOnThisIos": "사용 중인 iOS 버전은 {{language}}(으)로 번역할 수 없습니다. 대신 영어를 표시하고 있습니다 — iOS를 업데이트하면 가능해집니다.",
+    "translationUnsupportedOnThisIos": "사용 중인 iOS 버전은 {{language}}(으)로 번역할 수 없어서 영어로 표시됩니다. iOS를 업데이트하면 사용할 수 있습니다.",
     "downloadHintNowPrefix": "아래 목록에서 각 언어 옆에 있는",
     "downloadHintNowSuffix": "아이콘을 눌러 다운로드를 시작하세요.",
     "switchDeviceUnsupportedBody": "이 기기는 어떤 언어로도 뉴스 기사를 번역할 수 없어서 앱이 영어를 사용하고 있어요. {{language}}(으)로 설정하면 기사가 번역되지 않은 채로 남아요.",
@@ -362,7 +365,7 @@
     "switchTimedOutBody": "{{language}} 준비가 너무 오래 걸려서 계속 {{previous}}을(를) 사용하고 있어요. 백그라운드에서 다운로드가 곧 끝날 수 있으니 잠시 후 다시 시도해 주세요.",
     "switchUnsupportedBody": "이 iOS 버전은 {{language}}(으)로 번역할 수 없어서 계속 {{previous}}을(를) 사용하고 있어요.",
     "switchingCancel": "언어 전환 중단",
-    "switchingNudge": "잠시만 기다려 주세요. 기기가 {{language}} 번역 팩을 준비하고 있어요. 완료될 때까지 이 화면을 벗어나지 마세요 — 지금 나가면 기사가 영어로만 보여요.",
+    "switchingNudge": "기기가 {{language}} 번역 팩을 준비하고 있어요. 완료될 때까지 이 화면을 열어 두세요. 지금 나가면 기사가 영어로 남아요.",
     "switchingTitle": "{{language}} 설정 중…",
     "translationUnavailableOnThisDevice": "이 기기는 뉴스 기사를 {{language}}(으)로 번역할 수 없어요. 대신 영어로 보여드려요."
   },
@@ -432,7 +435,7 @@
     "attestationCheckTcbStatus": "플랫폼 패치 수준 최신",
     "attestationCheckGpuAttestation": "GPU 증명",
     "attestationNotCheckedLabel": "미확인",
-    "attestationScopeNotice": "이것은 위에 표시된 모델을 확인합니다. 메라는 여러 클라우드 모델을 사용하므로(채팅은 다른 모델을 사용하며 각각 백업이 있음), 여기에서의 통과는 이 모델을 다루지만 모든 요청은 다루지 않습니다.",
+    "attestationScopeNotice": "이 검사는 위에 표시된 모델만 확인합니다. 메라는 여러 클라우드 모델을 사용합니다(채팅은 다른 모델을 쓰고, 각 모델에는 백업이 있습니다). 그래서 이 화면의 통과 결과는 이 모델에만 해당하며, 모든 요청에 해당하지는 않습니다.",
     "attestationModelLabel": "확인된 모델",
     "webSearchTitle": "채팅에서 웹 검색",
     "extractedMetadataPanelHeading": "추출된 메타데이터",
@@ -468,7 +471,8 @@
     "staysPrivateTitle": "데이터는 비공개로 유지됩니다",
     "webSearchShort": "검색어만 휴대폰을 떠납니다. 회원님이 누구인지 알려 주는 정보는 없습니다.",
     "whereReads": "메라가 뉴스를 읽는 곳",
-    "whileClosed": "메라가 닫혀 있는 동안"
+    "whileClosed": "메라가 닫혀 있는 동안",
+    "deleting": "삭제 중…"
   },
   "manageData": {
     "viewingHistoryModalDescription": "열어본 기사의 로컬 기록을 지웁니다. 소스 탭의 '읽은 발행사' 카드와 발행사별 기록이 초기화됩니다. 다른 항목에는 영향이 없으며, 서버 데이터는 변경되지 않습니다(이 데이터는 기기를 벗어난 적이 없습니다).",
@@ -506,7 +510,8 @@
     "intro": "메라가 이 휴대폰에 보관하는 데이터를 백업하고, 살펴보고, 가져가거나, 삭제할 수 있습니다.",
     "lookAndTake": "살펴보기 및 가져가기",
     "askBeforeTopicDelete": "토픽을 삭제하기 전에 확인",
-    "askBeforeTopicDeleteHint": "사실에서 토픽을 삭제할 때마다 메라가 확인을 요청합니다."
+    "askBeforeTopicDeleteHint": "사실에서 토픽을 삭제할 때마다 메라가 확인을 요청합니다.",
+    "exportHistoryWindowNote_other": "이 내보내기에는 최근 {{count}}일간의 읽기 기록만 포함됩니다. 그보다 오래된 항목은 이 기기에서 자동으로 삭제되었으며, 서버로 전송된 적이 없습니다."
   },
   "preferences": {
     "notifications": "알림",
@@ -517,7 +522,7 @@
     "deleteAccount": "계정 삭제",
     "logout": "로그아웃",
     "signOutModalTitle": "로그아웃",
-    "signOutConfirm": "정말로 계정에서 로그아웃하시겠습니까?",
+    "signOutConfirm": "로그아웃하면 이 기기에 저장된 모든 항목이 삭제됩니다. 저장한 기사, 읽기 기록, 팔로우한 스토리, 맞춤 설정이 모두 해당됩니다. 메라를 사용하려면 다시 로그인해야 합니다.",
     "signOut": "로그아웃",
     "continue": "계속",
     "finalConfirmation": "최종 확인",
@@ -590,7 +595,10 @@
     "modelProgress": "{{percent}}%",
     "completeBody": "이제 메라 프로토콜을 사용할 수 있습니다.",
     "completeTitle": "다운로드 완료",
-    "failedTitle": "다운로드 실패"
+    "failedTitle": "다운로드 실패",
+    "failedConnection": "연결을 확인하고 다시 시도해 주세요.",
+    "failedServer": "다운로드 서버에 문제가 있었습니다. 나중에 다시 시도해 주세요.",
+    "failedDamaged": "다운로드한 파일이 손상되었습니다. 다시 시도해 주세요."
   },
   "chat": {
     "startingChat": "채팅 시작 중...",
@@ -623,7 +631,9 @@
     },
     "hideKeyboard": "키보드 숨기기",
     "stop": "중지",
-    "stopped": "중지됨"
+    "stopped": "중지됨",
+    "replyLeakFallback": "알겠습니다. 더 추가하고 싶은 내용이 있나요?",
+    "replyProcessFallback": "죄송해요, 그 부분을 처리하지 못했어요. 다시 한번 말씀해 주시겠어요?"
   },
   "personaChat": {
     "introMessage": "안녕하세요! 저는 메라, 당신의 개인 뉴스 어시스턴트입니다.\n\n당신에게 정말 중요한 뉴스를 찾으려면 당신에 대해 조금 알아야 합니다. 어디에 사시는지, 무엇을 하시는지, 따르시는 취미, 추적하시는 주식, 가족이 어디에 사시는지. 편한 만큼 공유해 주세요.\n\n만약 이것이 조금 불안하다면, 그것은 좋은 직감입니다. 개인 데이터를 앱 개발 회사에 맡기는 것은 현명하지 않습니다. 메라는 다르게 만들어졌습니다. 당신이 제게 말씀하시는 모든 것은 당신의 기기에 저장되며, 저희 서버에는 저장되지 않습니다. 어떻게 작동하는지 물어보세요, 또는 '설정 도와줘'라고 말씀해 주시면 시작합니다."
@@ -721,10 +731,10 @@
     "chooseOneHint": "옵션 하나 선택"
   },
   "publicationVisits": {
-    "badge_one": "지난 30일 동안 {{publication}}을(를) 1회 방문하셨습니다",
+    "badge_one": "지난 30일 동안 {{publication}}을(를) {{count}}회 방문하셨습니다",
     "badge_other": "지난 30일 동안 {{publication}}을(를) {{count}}회 방문하셨습니다",
     "tooltipA11y": "열람 기록 정보",
-    "tooltipIntro": "메라가 독서 패턴을 추적합니다: 기기에만 저장됩니다.",
+    "tooltipIntro": "메라가 회원님의 읽기 패턴을 기록해 둡니다. 이 기록은 기기에만 남아 있습니다.",
     "tooltipLink": "전체 열람 기록을 여기에서 확인하세요."
   },
   "nativeUpdate": {
@@ -777,8 +787,8 @@
     "running": "{{count}}개 실행 중",
     "failed": "{{count}}개 실패",
     "pending": "{{count}}개 대기 중",
-    "noteBody": "이 화면은 메라의 기기 내 데이터베이스를 직접 읽습니다 — 피드를 구축하는 데이터가 가시성 및 디버깅 목적으로 여기 표시됩니다. 메라 서버는 사용자의 정보, 읽기 기록 또는 거기서 생성된 제안을 저장하지 않습니다.",
-    "noteExceptions": "2가지 예외가 있습니다: 계정 프로필(로그인, 알림, 언어)이 메라 계정과 동기화되며, 클라우드 AI가 켜져 있을 때는 채점을 위해 전송되기 전에 이 기기에서 정보가 암호화됩니다.",
+    "noteBody": "이 화면은 메라의 기기 내 데이터베이스를 직접 읽습니다. 피드를 만드는 데이터이며, 확인과 디버깅을 위해 여기에 표시됩니다. 메라 서버는 회원님의 사실, 읽기 기록, 그리고 여기서 만든 추천을 저장하지 않습니다.",
+    "noteExceptions": "예외는 두 가지입니다. 계정 프로필(로그인, 알림, 언어)은 메라 계정과 동기화됩니다. 클라우드 AI가 켜져 있으면 회원님의 사실은 채점을 위해 전송되기 전에 이 기기에서 암호화됩니다.",
     "noteFooter": "여기의 값은 원본이고 진단 용도입니다. 피드 행은 48시간 후 자동으로 삭제됩니다. 데이터 관리에서 정보, 피드 캐시 및 열람 기록을 삭제할 수 있습니다.",
     "noteTitle": "당신의 데이터, 당신의 기기에"
   },
@@ -790,7 +800,7 @@
     "allRowsLoaded": "전체 {{count}}행 로드됨"
   },
   "sync": {
-    "fetchingTopics": "오늘의 토픽 가져오는 중…",
+    "fetchingTopics": "회원님의 토픽에 맞는 오늘의 뉴스를 찾는 중…",
     "checkingForUpdates": "업데이트 확인 중…",
     "downloadingArticles": "기사 다운로드 중…",
     "savingArticles": "기사 저장 중…",
@@ -954,7 +964,11 @@
     "help": {
       "title": "알림 안내",
       "body": "메라가 피드에 관해 남기는 메모가 여기에 모여요. 요청하신 팩트 체크가 준비되었을 때, 매일의 피드 점검 결과가 나왔을 때, 관심사를 정리하거나 다듬는 팁이 있을 때, 메라 팀이 질문할 때 알려 드려요. 메모는 이 휴대폰에만 90일 동안 보관되며, 점이 보이면 읽지 않은 메모가 있다는 뜻이에요. 뉴스 알림은 여기에 나타나지 않아요. 알림 시간은 설정의 알림 항목에서 정할 수 있어요."
-    }
+    },
+    "ageNow": "지금",
+    "ageMinutes": "{{n}}분",
+    "ageHours": "{{n}}시간",
+    "ageDays": "{{n}}일"
   },
   "settings": {
     "groupHelp": "도움말",
@@ -1004,7 +1018,27 @@
       "addLocation": "위치 추가",
       "deleteLocation": "위치 삭제",
       "retireSuppression": "필터를 제거했습니다",
-      "setSourceScopePref": "소스 범위를 조정했습니다"
+      "setSourceScopePref": "소스 범위를 조정했습니다",
+      "migrateFact": "관심사를 옮겼습니다",
+      "setScoringOverride": "스토리 순위 매기는 방식을 조정했습니다"
+    },
+    "summary": {
+      "added": "{{name}}을(를) 추가했습니다",
+      "removed": "{{name}}을(를) 삭제했습니다",
+      "muted": "{{name}}을(를) 숨겼습니다",
+      "countsMore": "{{name}}의 비중을 높였습니다",
+      "countsLess": "{{name}}의 비중을 낮췄습니다",
+      "pinned": "{{name}}을(를) 고정했습니다",
+      "unpinned": "{{name}} 고정을 해제했습니다",
+      "notInterested": "{{name}}에 관심 없음",
+      "showingAgain": "{{name}}을(를) 다시 보여 줍니다",
+      "moreFrom": "{{name}}의 기사를 더 보여 줍니다",
+      "cleared": "{{name}} 설정을 지웠습니다",
+      "moreSourcesFrom": "{{name}}의 소스를 더 보여 줍니다",
+      "fewerSourcesFrom": "{{name}}의 소스를 덜 보여 줍니다",
+      "clearedSourcesFrom": "{{name}}의 소스 설정을 지웠습니다",
+      "carriedOver": "{{name}}을(를) 옮겼습니다",
+      "undone": "실행 취소됨: {{change}}"
     }
   },
   "calibration": {
@@ -1069,7 +1103,8 @@
     "followStory": "이 스토리 팔로우",
     "moreAboutTopic": "이 토픽 더 보기",
     "moreFromPublication": "이 소스의 기사 더 보기",
-    "moreNewsFromPlace": "이 지역 뉴스 더 보기"
+    "moreNewsFromPlace": "이 지역 뉴스 더 보기",
+    "confirmMuteBodyUnnamed": "이 매체의 기사는 다시 보이지 않습니다. 언제든지 실행 취소할 수 있습니다."
   },
   "topicPlan": {
     "title": "추적할 토픽",
@@ -1116,7 +1151,7 @@
   },
   "hygiene": {
     "notificationTitle": "관심사를 정리할까요?",
-    "notificationBody_one": "메라가 프로필을 위한 {{count}}개의 정리를 찾았습니다.",
+    "notificationBody_one": "메라가 회원님의 프로필에서 {{count}}개의 정리 항목을 찾았습니다.",
     "notificationBody_other": "메라가 회원님의 프로필에서 {{count}}개의 정리 항목을 찾았습니다.",
     "reviewChip": "검토",
     "title": "프로필 정리",
@@ -1142,7 +1177,15 @@
     "titleLocationConflict": "두 장소의 정보가 다릅니다",
     "titleStaleFact": "사실에 활성 토픽이 남아 있지 않습니다",
     "titleStaleTopic": "토픽이 조용해졌습니다",
-    "titleTooBroad": "사실 하나가 너무 많은 것을 가져옵니다"
+    "titleTooBroad": "사실 하나가 너무 많은 것을 가져옵니다",
+    "summary": {
+      "duplicate": "{{fact}}이(가) {{other}}과(와) 겹칩니다",
+      "locationConflict": "{{fact}}과(와) {{other}}이(가) 서로 다른 장소를 가리킵니다",
+      "staleFact": "{{fact}}에 남은 활성 토픽이 없습니다",
+      "tooBroad": "{{fact}}이(가) 너무 넓습니다",
+      "staleTopic": "{{topic}}이(가) 몇 주째 잠잠합니다",
+      "incoherentTopics_other": "{{fact}}에 맞지 않는 토픽이 {{count}}개 있습니다: {{topics}}"
+    }
   },
   "locations": {
     "title": "장소",
@@ -1202,12 +1245,12 @@
       "publication": "소스",
       "topic": "주제"
     },
-    "cardExemptLabel": "\"{{filter}}\"를 필터링했습니다 — 주요 뉴스이므로 표시합니다"
+    "cardExemptLabel": "\"{{filter}}\" 필터를 설정했지만, 주요 뉴스이므로 표시합니다."
   },
   "headlineDepth": {
     "title": "주요 뉴스",
-    "subtitle": "메라가 당신을 위해 읽는 수",
-    "intro": "메라는 각 섹션의 가장 큰 스토리를 읽은 다음 당신에게 중요한 것을 선택합니다. 섹션을 높여 더 보기; 낮춰서 간결하게 유지하세요.",
+    "subtitle": "메라가 회원님을 위해 읽는 수",
+    "intro": "메라는 각 섹션에서 가장 큰 스토리를 읽은 다음 회원님에게 중요한 것을 고릅니다. 섹션을 높이면 더 많이 보고, 낮추면 간결하게 유지할 수 있습니다.",
     "worldwide": "전 세계",
     "optionLabel": "상위 {{n}}",
     "usingDefault": "표준 {{n}}을 사용 중입니다.",
@@ -1278,7 +1321,9 @@
     "discardConfirmNo": "유지",
     "appliedToast": "{{count}}건의 변경 사항이 적용되었습니다",
     "appliedTitle": "피드가 조정되었습니다",
-    "empty": "지금은 조정할 사항이 없습니다."
+    "empty": "지금은 조정할 사항이 없습니다.",
+    "optionApply": "적용",
+    "optionSkip": "건너뛰기"
   },
   "pin": {
     "lockTitle": "메라가 잠겨 있습니다",
@@ -1417,11 +1462,11 @@
     "optionWholeArticle": "전체 기사",
     "quickAnswered": "웹 검색으로 찾은 결과입니다:",
     "quickArticleFailed": "메라에서 요청 전송을 확인할 수 없습니다. 잠시 후 다시 시도해주세요.",
-    "quickArticleRequested": "요청을 보냈습니다. 메라에서 전체 기사를 확인할 것입니다, 결과가 준비되면 대시보드의 팩트 체크에서 확인할 수 있습니다.",
+    "quickArticleRequested": "요청을 보냈습니다. 메라가 기사 전체를 확인하며, 결과는 준비되면 대시보드의 팩트 체크에서 볼 수 있습니다.",
     "quickArticleSending": "요청을 보내는 중…",
     "quickCouldNotSearch": "방금 웹을 검색할 수 없었습니다. 따라서 이것은 답변이 아닙니다, 잠시 후 다시 시도해주세요.",
     "quickDisclaimer": "이것은 팩트체킹 기관의 확인이 아닌 빠른 웹 검색이며, 저장되지 않습니다. 출처가 명시된 철저한 확인을 원하면 \"전체 기사\"를 선택하세요.",
-    "quickFailed": "메라에서 정보를 찾았지만 이번에는 답변을 구성할 수 없습니다. 잠시 후 다시 시도해주세요.",
+    "quickFailed": "메라가 정보를 찾았지만 이번에는 답변을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.",
     "quickNothingFound": "검색 결과 이에 대한 정보가 없습니다. 이것이 거짓이라는 의미는 아닙니다, 새로운 내용이거나 틈새 주제이거나 온라인에서 광범위하게 다루어지지 않은 내용일 수 있습니다.",
     "quickRunning": "웹을 검색 중…",
     "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다, 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
@@ -1565,7 +1610,7 @@
             "headline": "팩트는 어디에서 오는가",
             "body": "양식을 작성할 필요가 없습니다.",
             "steps": {
-              "0": "메라와 대화하면 지속적인 것을 경청합니다.",
+              "0": "메라와 대화하면 오래 남는 정보를 알아듣습니다.",
               "1": "직접 말씀하십시오: '나는 리스본으로 이사했습니다.'",
               "2": "추가와 삭제는 내 정보 탭에서 직접 합니다."
             }
@@ -1634,7 +1679,7 @@
             "steps": {
               "0": "최신: 아직 보지 못한 모든 기사",
               "1": "다음: 본 기사이지만 열지 않은 것",
-              "2": "가장 오래: 이미 읽은 것 — 구분자가 없고 같은 목록의 낮은 위치일 뿐입니다."
+              "2": "가장 아래: 이미 읽은 기사입니다. 구분선은 없고, 같은 목록의 낮은 위치에 있을 뿐입니다."
             },
             "beforeAfter": {
               "before": "읽기 전: 카드가 새로운 것처럼 맨 위에 앉아 있습니다.",
@@ -1665,12 +1710,12 @@
           },
           "why-this-one": {
             "headline": "왜 이것일까?",
-            "body": "각 카드는 왜 당신에게 도달했는지 나타내는 짧은 줄과 얼마나 중요한지를 나타내는 단어를 포함합니다. 이유가 잘못되어 보인다면, 메라에 말할 수 있는 가장 유용한 것입니다.",
+            "body": "각 카드에는 왜 회원님에게 왔는지 짧게 적힌 줄과, 얼마나 중요해 보이는지 알려 주는 단어가 있습니다. 이유가 틀려 보이면, 메라에 알려 줄 수 있는 가장 유용한 정보입니다.",
             "ask": "스토리 아래의 이유는 어디에서 오는가?"
           },
           "caught-up": {
             "headline": "다 봤어도 괜찮습니다",
-            "body": "새로운 것이 더 이상 없으면, 메라는 그렇게 말하고 멈춥니다. 당신이 계속 스크롤하도록 목록을 채우지 않을 것입니다. 이미 읽은 모든 것은 여전히 아래에 있습니다."
+            "body": "새로운 기사가 더 없으면 메라는 그렇게 알리고 멈춥니다. 계속 스크롤하도록 목록을 채우지 않습니다. 이미 읽은 기사는 원하면 아래에서 볼 수 있습니다."
           },
           "quiet-by-design": {
             "headline": "일부러 조용하게 둔 피드",
@@ -1768,12 +1813,12 @@
           },
           "on-device-option": {
             "headline": "원하는 경우 기기에서",
-            "body": "설정 → 메라 프로토콜에서 처리를 이 휴대폰으로 옮길 수 있습니다. 그러면 뉴스를 읽는 AI가 클라우드가 아닌 여기서 실행됩니다. 뉴스를 가져오기 위해 주제 문구는 계속 전송되고, 로그인에는 계속 이메일이나 이 휴대폰이 필요합니다. 먼저 모델을 내려받아야 하고, 비교적 최신 휴대폰이 필요하며, 눈에 띄게 느립니다. 그래서 기본값이 아닙니다."
+            "body": "설정에서 메라 프로토콜을 열면 처리를 이 휴대폰으로 옮길 수 있습니다. 그러면 뉴스를 읽는 AI가 클라우드 대신 여기서 실행됩니다. 뉴스를 가져오기 위해 주제 문구는 계속 전송되고, 로그인에는 계속 이메일이나 이 휴대폰이 필요합니다. 먼저 모델을 내려받아야 하고, 비교적 최신 휴대폰이 필요하며, 눈에 띄게 느립니다. 그래서 기본값이 아닙니다."
           },
           "what-we-keep": {
             "headline": "우리가 유지하는 것",
             "body": "추가했다면 로그인 이메일. 사용 중인 요금제. 하루 분석 기사 수. 이메일 없이 메라를 사용한다면 이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 주제 문구는 텍스트로만 캐시되고 누가 요청했는지는 기록되지 않으며, 14일 동안 쓰이지 않으면 삭제됩니다.",
-            "ask": "메라가 서버에 저장하는 당신에 대한 정보는 무엇입니까?"
+            "ask": "메라가 서버에 회원님에 대해 저장하는 정보는 무엇인가요?"
           }
         }
       },
@@ -1796,7 +1841,7 @@
           },
           "pick-the-scope": {
             "headline": "얼마나 넓어야 합니까?",
-            "body": "메라는 3~4개의 범위를 제공하고 하나를 탭합니다. 당신이 할 때까지 아무것도 팔로우되지 않습니다. 법정 사건에 어떤 것을 선택할까요?",
+            "body": "메라가 범위를 3~4개 제시하면 하나를 누르세요. 누르기 전까지는 아무것도 팔로우되지 않습니다. 법정 사건을 따라간다면 어떤 범위를 고르시겠어요?",
             "choose": {
               "narrow": {
                 "label": "이 재판만",
@@ -1954,7 +1999,7 @@
               },
               "from-an-article": {
                 "label": "보고 있는 스토리에 대해 말씀하세요",
-                "feedback": "예. 채팅에서 메라에 말하거나, 스토리 자체의 피드백 카드를 사용하세요. 필터는 그 스토리의 실제 장소로부터 발행되므로, 정확히 일치합니다."
+                "feedback": "예. 채팅에서 메라에 말하거나, 스토리 자체의 피드백 카드를 사용하세요. 필터는 그 스토리의 실제 장소로 만들어지므로 정확히 맞습니다."
               }
             }
           },
@@ -2026,11 +2071,11 @@
           },
           "written-down": {
             "headline": "모든 변경이 기록됩니다",
-            "body": "적용된 변경은 그것이 무엇이었는지, 무엇이 되었는지, 어디에서 온 변경인지 기록됩니다. 채팅, 피드백, 제안, 또는 당신. 메라가 프로필에 하는 아무것도 보이지 않습니다."
+            "body": "적용된 변경은 이전 값, 새 값, 변경이 시작된 곳(채팅, 피드백, 제안 또는 회원님)과 함께 기록됩니다. 메라가 프로필을 바꾸는 일은 모두 눈에 보입니다."
           },
           "take-it-back": {
             "headline": "그리고 대부분은 다시 가져올 수 있습니다",
-            "body": "기록은 설정 → 메라 프로토콜 → 페르소나 변경 로그에 있습니다.",
+            "body": "기록은 설정에서 메라 프로토콜을 열고 페르소나 변경 로그에서 볼 수 있습니다.",
             "beforeAfter": {
               "before": "무게 변화, 추가된 주제, 제거한 필터: 이것들은 정확히 원래대로 돌려놓는 되돌리기를 수행합니다.",
               "after": "일부는 실행 취소할 수 없으며 그렇게 말합니다. 정리 중 팩트를 삭제하거나 장소를 제거하면 복원하는 데 필요한 것을 버립니다. 그들은 옆에 되돌리기 없이 로그에 앉습니다."
@@ -2247,7 +2292,7 @@
     "titleReplace": "이 정보를 바꿀까요?",
     "replace": "바꾸기",
     "replacesLabel": "대체 대상",
-    "replacesTopics_one": "및 관련 주제 1개",
+    "replacesTopics_one": "및 관련 주제 {{count}}개",
     "replacesTopics_other": "및 관련 주제 {{count}}개",
     "replacesNoUndo": "이전 정보와 관련 주제가 완전히 삭제돼요. 되돌릴 수 없어요.",
     "replacesLoading": "무엇이 바뀌는지 확인하고 있어요",
@@ -2502,7 +2547,7 @@
     "fewerFrom": "덜 보기:",
     "historyEmpty": "지난 30일 동안 방문 기록이 없습니다.",
     "moreFrom": "더 보기:",
-    "openedCount_one": "지난 30일 동안 {{publisher}}을(를) 한 번 열었습니다.",
+    "openedCount_one": "지난 30일 동안 {{publisher}}을(를) {{count}}번 열었습니다.",
     "openedCount_other": "지난 30일 동안 {{publisher}}을(를) {{count}}번 열었습니다.",
     "openedOn": "{{date}}에 열람",
     "openedToday": "오늘 열람",

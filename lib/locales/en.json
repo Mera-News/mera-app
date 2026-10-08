@@ -509,7 +509,9 @@
     "stopFollowingConfirmTitle": "Stop following this story?",
     "updatedAgo": "updated {{time}}",
     "articlesCount_one": "{{count}} article",
-    "articlesCount_other": "{{count}} articles"
+    "articlesCount_other": "{{count}} articles",
+    "updatesBadge_one": "{{count}} new",
+    "updatesBadge_other": "{{count}} new"
   },
   "whatsNew": {
     "gotIt": "Got it",
@@ -1932,7 +1934,7 @@
           },
           "on-device-option": {
             "headline": "On-device, if you want it",
-            "body": "In Settings → Mera Protocol you can move the processing onto this phone. Then the AI that reads your news runs here instead of in the cloud. Your topic phrases still go out to fetch news, and signing in still needs your email or this phone. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
+            "body": "Open Settings, then Mera Protocol, to move the processing onto this phone. The AI that reads your news then runs here instead of in the cloud. Your topic phrases still go out to fetch news, and signing in still needs your email or this phone. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
           },
           "what-we-keep": {
             "headline": "What we do keep",
@@ -2194,7 +2196,7 @@
           },
           "take-it-back": {
             "headline": "And most of it can be taken back",
-            "body": "The record lives in Settings → Mera Protocol → Persona change log.",
+            "body": "To see the record, open Settings, then Mera Protocol, then Persona change log.",
             "beforeAfter": {
               "before": "A weight change, an added topic, a filter you removed: these carry a Revert that puts things back exactly as they were.",
               "after": "A few cannot be undone and say so: deleting a fact during a cleanup, or removing a place, throws away what would be needed to restore it. Those sit in the log with no Revert beside them."

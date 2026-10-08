@@ -16,7 +16,7 @@
     "home": "首頁",
     "offlineBannerOffline": "您目前離線。正在顯示已儲存的新聞，我們會繼續嘗試。",
     "offlineBannerInternetDown": "無法連接網際網路。正在顯示已儲存的新聞，我們會繼續嘗試。",
-    "offlineBannerServerDown": "與梅拉的連線速度緩慢或無連線。正在顯示已儲存的新聞，我們會繼續嘗試。",
+    "offlineBannerServerDown": "與梅拉的連線很慢或沒有連線。目前顯示已儲存的新聞，我們會持續嘗試。",
     "beta": "測試版",
     "copy": "複製",
     "today": "今天",
@@ -36,8 +36,8 @@
     "resendIn": "{{seconds}} 秒後可重新發送",
     "faq": "常見問題",
     "identitySwitchFailedTitle": "無法完成帳戶切換",
-    "identitySwitchFailedBody": "此裝置上仍有另一個帳戶的資料。梅拉必須先清除這些資料才能繼續，而這次清除失敗了。",
-    "identitySwitchFailedWhy": "不會遺失任何內容。這些資料屬於另一個帳戶，會保留在其梅拉帳戶中。此裝置清除後，你的帳戶將重新開始。",
+    "identitySwitchFailedBody": "這台裝置上仍有另一個帳號的資料。梅拉必須先清除這些資料，你才能繼續，但這次清除失敗了。",
+    "identitySwitchFailedWhy": "沒有任何內容遺失。這些資料屬於另一個帳號，仍保留在對方的梅拉帳號中。裝置清除後，你的帳號就會從頭開始。",
     "identitySwitchFailedExhausted": "仍然失敗。請登出並重新開始，以清除此裝置。",
     "identitySwitchRetry": "再試一次",
     "identitySwitchSignOut": "登出並重新開始",
@@ -58,15 +58,15 @@
       "body": "我們會清除梅拉中 {{email}} 的所有內容。你確定嗎？",
       "continue": "移除並繼續",
       "useEmail": "保留我的帳號",
-      "bodyGeneric": "我們會清除梅拉中此帳號的所有內容。你確定嗎？"
+      "bodyGeneric": "我們會清除梅拉中這個帳號的所有內容。你確定嗎？"
     },
     "deviceSignInCaption": {
-      "uninstall": "你的帳號與這支手機綁定。如果你刪除梅拉或遺失手機，就要從新帳號開始。設定中的「備份與還原」可以保留你的資料。",
+      "uninstall": "你的帳號綁定在這支手機上。如果刪除梅拉或遺失手機，你就會開始一個新帳號。在「設定」中使用「備份與還原」，可以保留你的資料。",
       "reset": "你的帳號與這支手機綁定。如果你重設或遺失手機，就要從新帳號開始。設定中的「備份與還原」可以保留你的資料。"
     },
     "track": {
       "beforeYouStart": "開始之前",
-      "beginCaption": "梅拉會用這支手機為你登入，不需要記住任何東西。",
+      "beginCaption": "梅拉會用這支手機幫你登入，不需要記住任何東西。",
       "beginMera": "開始使用梅拉",
       "beginTitle": "你想如何開始？",
       "beginWithoutEmail": "不使用電子郵件開始",
@@ -76,7 +76,7 @@
       "continueWithEmail": "使用電子郵件繼續",
       "downloadA11y": "下載{{language}}",
       "emailBody": "我們會寄出 6 位數驗證碼給你，不需要記住密碼。",
-      "gettingReadyIos": "在下方面板中點一下每種語言旁邊的 ↓，然後在此等待。請保持梅拉開啟。",
+      "gettingReadyIos": "請在下方面板中，點按每種語言旁邊的 ↓，然後在這裡等待。請保持梅拉開啟。",
       "gettingReadyTitle": "正在準備{{language}}",
       "notHereBody": "請下載語言包，或使用這裡已有的其他語言。",
       "notHereTitle": "這支手機還沒有{{language}}",
@@ -87,7 +87,7 @@
       "welcome": "歡迎使用梅拉",
       "wrongCode": "驗證碼無效。請檢查後再輸入，或重新寄送新的驗證碼。",
       "noSheetTitle": "你的 iPhone 未能開始下載",
-      "noSheetBody": "請再試一次，或到 設定 › 一般 › 語言與地區 › 翻譯語言 下載 {{language}}。"
+      "noSheetBody": "請再試一次。或在 iPhone 上打開「設定」，依序前往「一般」、「語言與地區」、「翻譯語言」，下載 {{language}}。"
     }
   },
   "account": {
@@ -96,7 +96,7 @@
   "feed": {
     "allCaughtUp": "您已瀏覽完所有與您相關的新聞。",
     "pullDownToRetry": "下拉以重試",
-    "offlineCached": "離線中 — 顯示快取內容",
+    "offlineCached": "離線中：顯示快取內容",
     "newBadge": "最新",
     "newsCluster": "新聞叢集",
     "justNow": "剛剛",
@@ -124,28 +124,28 @@
       "stages": {
         "fetching": {
           "headlines": [
-            "正在把今日的文章帶到您的手機上…",
-            "梅拉將新聞帶到您的裝置 — 您的興趣從不離開它。"
+            "正在把今天的文章帶到你的手機上…",
+            "正在為你準備今天的報導…"
           ],
           "amberSubline": "請保持此畫面開啟。"
         },
         "cloudRelevance": {
           "headlines": [
-            "AI 正在閱讀每篇文章，看看哪些對您很重要。",
-            "您的請求已加密 — 只有您的手機持有金鑰。"
+            "AI 正在閱讀每篇文章，判斷哪些對你重要。",
+            "你的請求已加密：只有你的手機持有金鑰。"
           ]
         },
         "cloudReasons": {
           "headlines": [
             "正在為每則相關報導撰寫簡短說明。",
-            "您可以離開 — 準備好時我們會立即通知您。",
-            "一切始終保持端對端加密 — 只有您的手機才能讀取。"
+            "你可以先離開。準備好時我們會通知你。",
+            "一切都維持端對端加密：只有你的手機能讀取。"
           ]
         },
         "onDevice": {
           "headlines": [
-            "您的手機正在為您對這些報導評分。",
-            "這完全在您的裝置上進行 — 沒有任何內容離開它。"
+            "你的手機正在為這些報導評分。",
+            "這一切完全在你的裝置上進行：沒有任何內容離開它。"
           ]
         },
         "downloading": {
@@ -196,23 +196,23 @@
       "completedMessage": "您的動態已準備就緒"
     },
     "dailyLimit": {
-      "body": "目前無法擷取新的文章。你可以瀏覽裝置上已有的文章——新文章將於明天解鎖。",
-      "bodyWithTime": "目前無法擷取新的文章。你可以瀏覽裝置上已有的文章——新文章將於 {{time}} 解鎖。",
+      "body": "目前無法擷取新文章。你可以瀏覽裝置上已有的文章，新文章明天會解鎖。",
+      "bodyWithTime": "目前無法擷取新文章。你可以瀏覽裝置上已有的文章，新文章將於 {{time}} 解鎖。",
       "title": "已達每日文章上限",
       "freeTitle": "今天的文章就這些",
-      "freeBodyWithTime": "梅拉今天傳送的內容你都已收到。看看裝置上已有的文章吧。{{time}} 會有更多。"
+      "freeBodyWithTime": "梅拉今天傳送給你的內容，你都已經收到了。你可以瀏覽裝置上已有的文章。更多內容將於 {{time}} 送達。"
     },
     "analysingProgress": "正在分析 {{total}} 篇文章中的第 {{done}} 篇",
     "statsPublishedPending_other": "過去 24 小時內發佈了{{formatted}}篇文章。",
-    "statsPublished_other": "過去 24 小時內發佈了{{formatted}}篇文章。",
-    "statsAnalysed_other": "{{formatted}}篇文章經過分析。",
-    "statsRelevant_other": "{{formatted}}篇與您相關。",
-    "statsRead_other": "您已閱讀{{formatted}}篇。",
-    "statsAnalysed_one": "{{formatted}}篇文章經過分析,",
+    "statsPublished_other": "過去 24 小時內發佈了{{formatted}}篇文章，",
+    "statsAnalysed_other": "{{formatted}}篇已為你分析，",
+    "statsRelevant_other": "{{formatted}}篇看起來與你相關，",
+    "statsRead_other": "且你已閱讀{{formatted}}篇。",
+    "statsAnalysed_one": "{{formatted}}篇已為你分析，",
     "statsPublishedPending_one": "過去24小時內發佈了{{formatted}}篇文章。",
-    "statsPublished_one": "過去24小時內發佈了{{formatted}}篇文章,",
-    "statsRead_one": "且您已閱讀{{formatted}}篇。",
-    "statsRelevant_one": "{{formatted}}篇與您相關,",
+    "statsPublished_one": "過去 24 小時內發佈了{{formatted}}篇文章，",
+    "statsRead_one": "且你已閱讀{{formatted}}篇。",
+    "statsRelevant_one": "{{formatted}}篇看起來與你相關，",
     "loadingA11y": "正在載入你的動態",
     "translatingCaption": "正在翻譯…",
     "reasonWritingA11y": "正在撰寫筆記",
@@ -222,7 +222,7 @@
     "processingOffline": "你目前離線。恢復連線後，你的報導就會送達。",
     "forYouTitle": "為你推薦",
     "newStoriesBelowA11y": "下方有新報導",
-    "noFactsBody": "點按梅拉按鈕告訴梅拉你關注的內容，梅拉會把它整理成你的資訊流。",
+    "noFactsBody": "點按梅拉按鈕，告訴梅拉你關注什麼。梅拉會把它整理成你的資訊流。",
     "noteSuggestedMany": "為你的事實推薦：",
     "noteSuggestedOne": "為你的事實推薦：{{fact}}。梅拉正在撰寫理由，請稍候。",
     "noteWait": "梅拉正在撰寫理由，請稍候。",
@@ -238,7 +238,10 @@
       "continuous": "連續資訊流",
       "sectioned": "分區資訊流",
       "title": "檢視"
-    }
+    },
+    "statsZeroFetched": "梅拉還無法擷取任何文章。它會持續嘗試。如果一直這樣，請聯絡客服。",
+    "statsZeroAnalysedTail": "但梅拉還無法為你分析任何文章。它會持續嘗試。如果一直這樣，請聯絡客服。",
+    "statsZeroRelevantTail": "但目前還看不出相關的內容。請檢視你的個人資料，或聯絡客服。"
   },
   "relevance": {
     "emergency": "緊急",
@@ -291,7 +294,7 @@
     "badgeRegulator": "官方機構"
   },
   "clusterDetail": {
-    "notTranslatable": "這篇文章是{{language}}內容。你的裝置無法翻譯——請使用 Google 翻譯,以你的語言閱讀。",
+    "notTranslatable": "這篇文章是 {{language}} 的內容。你的裝置無法翻譯。請使用 Google 翻譯，以你的語言閱讀。",
     "notTranslatableOsOutdated": "這篇文章是{{language}}內容。裝置端翻譯需要 iOS {{requiredVersion}},你目前是 iOS {{currentVersion}}。請更新 iOS,或使用 Google 翻譯以你的語言閱讀。",
     "unknownLanguage": "另一種語言",
     "translationGuideLink": "告訴我如何翻譯這篇文章",
@@ -306,17 +309,17 @@
     "close": "關閉",
     "logoutFailedTitle": "登出失敗",
     "logoutFailedDescription": "登出時發生問題，請再試一次。",
-    "composerPlaceholder": "告訴梅拉關於你的事",
+    "composerPlaceholder": "告訴梅拉你的事",
     "continueAnyway": "仍要繼續",
     "factsCount_one": "關於你的 {{count}} 項事實",
     "factsCount_other": "關於你的 {{count}} 項事實",
-    "noFactsBody": "梅拉根據你的事實挑選新聞。若沒有任何事實，你的資訊流只會顯示頭條新聞，而「全球」在你新增國家之前不會顯示任何國家。",
+    "noFactsBody": "梅拉會根據你的事實挑選新聞。如果沒有任何事實，你的資訊流只會顯示頭條，而「全球」在你新增國家之前不會顯示任何國家。",
     "noFactsTitle": "不設定任何事實就繼續？",
     "noNotifBody": "新聞準備好或你追蹤的報導有進展時，你不會收到通知。之後可以在設定中開啟。",
-    "noNotifTitle": "不開啟通知就使用梅拉？",
+    "noNotifTitle": "不開啟通知也要使用梅拉嗎？",
     "notNow": "暫不",
     "notificationsOn": "通知已開啟",
-    "remindBody": "梅拉的設計是不會無故打擾你。選擇你希望何時收到閱讀新聞的提醒。我們建議選擇一個你能好好看完的時間。",
+    "remindBody": "梅拉的設計是不會無故打擾你。請選擇你希望何時收到閱讀新聞的提醒。我們建議你挑一個能好好讀完新聞的時段。",
     "remindTitle": "梅拉應該何時提醒你？",
     "turnOn": "開啟通知",
     "turnThemOn": "開啟通知"
@@ -328,7 +331,7 @@
     "loadFailedTitle": "載入失敗",
     "loadFailedDescription": "無法載入通知設定。",
     "permissionRequiredTitle": "需要權限",
-    "permissionRequiredDescription": "請在裝置的設定應用程式中，於梅拉下方啟用通知。",
+    "permissionRequiredDescription": "請到裝置的「設定」App，在「梅拉」下方開啟通知。",
     "setupFailedTitle": "設定失敗",
     "setupFailedDescription": "無法註冊推播通知，請再試一次。",
     "enabledTitle": "通知已啟用",
@@ -353,7 +356,7 @@
     "retry": "重試",
     "translationUnavailableTapToRetry": "{{language}}語言包可能仍在下載。目前顯示英文。點擊重試。",
     "translationUnavailableTitle": "翻譯無法使用",
-    "translationUnsupportedOnThisIos": "您的 iOS 版本無法翻譯為{{language}}。顯示英文——更新iOS可啟用。",
+    "translationUnsupportedOnThisIos": "你的 iOS 版本無法翻譯成 {{language}}，所以改為顯示英文。更新 iOS 後即可使用。",
     "downloadHintNowPrefix": "點一下下方清單中每種語言旁的",
     "downloadHintNowSuffix": "圖示,即可開始下載。",
     "switchDeviceUnsupportedBody": "這台裝置無法將新聞文章翻譯成任何語言,因此應用程式目前以英文顯示。若切換到{{language}},文章將無法翻譯。",
@@ -362,14 +365,14 @@
     "switchTimedOutBody": "準備{{language}}花費的時間過長,你目前仍在使用{{previous}}。下載可能仍在背景進行。請稍後再試一次。",
     "switchUnsupportedBody": "這個版本的 iOS 無法翻譯成{{language}},你目前仍在使用{{previous}}。",
     "switchingCancel": "停止切換語言",
-    "switchingNudge": "你的裝置正在準備{{language}}翻譯包。請讓這個畫面保持開啟,直到準備完成——如果現在離開,新聞文章會繼續以英文顯示。",
+    "switchingNudge": "你的裝置正在準備 {{language}} 翻譯套件。請保持此畫面開啟，直到完成。如果現在離開，新聞文章會維持英文。",
     "switchingTitle": "正在設定{{language}}…",
     "translationUnavailableOnThisDevice": "這台裝置無法將新聞文章翻譯成{{language}},將改用英文顯示。"
   },
   "meraProtocol": {
     "title": "梅拉協定",
     "modelRequiredForOnDevice": "裝置端處理所必需。",
-    "aiModel": "AI Model",
+    "aiModel": "AI 模型",
     "notDownloaded": "尚未下載",
     "downloading": "下載中（{{percent}}%）",
     "starting": "開始下載...",
@@ -398,9 +401,9 @@
     "dlFailedTitle": "下載失敗",
     "dlFailedDescription": "AI Model 下載失敗，請再試一次。",
     "modeUpdatedOnDeviceTitle": "已切換至裝置端",
-    "modeUpdatedOnDeviceDescription": "梅拉協定 現在在您的手機上完全離線執行。",
+    "modeUpdatedOnDeviceDescription": "梅拉協定現在會在你的手機上完全離線執行。",
     "modeUpdatedCloudTitle": "已切換至雲端",
-    "modeUpdatedCloudDescription": "梅拉協定 現在使用端對端加密雲端推論。",
+    "modeUpdatedCloudDescription": "梅拉協定現在使用端對端加密的雲端推論。",
     "settingUpdateFailedTitle": "更新失敗",
     "settingUpdateFailedDescription": "無法更新處理模式，請再試一次。",
     "modelDeletedTitle": "模型已刪除",
@@ -432,7 +435,7 @@
     "attestationCheckTcbStatus": "平台修補程式級別為最新",
     "attestationCheckGpuAttestation": "GPU認證",
     "attestationNotCheckedLabel": "未檢查",
-    "attestationScopeNotice": "這檢查上方顯示的模型。梅拉使用多個雲端模型（聊天使用不同的，每個都有備份），所以此處的通過涵蓋此模型，而非每個請求。",
+    "attestationScopeNotice": "這項檢查的是上方顯示的模型。梅拉使用多個雲端模型（聊天使用另一個，每個都有備用），所以這裡通過的結果只涵蓋此模型，不代表每個請求。",
     "attestationModelLabel": "已檢查的模型",
     "webSearchTitle": "聊天中的網路搜尋",
     "extractedMetadataPanelHeading": "提取的元數據",
@@ -440,7 +443,7 @@
     "extractedMetadataPlacesLabel": "地點",
     "extractedMetadataEntitiesLabel": "實體",
     "extractedMetadataCaption": "AI提取，未經驗證的事實",
-    "loadFailedDescription": "無法載入梅拉協定 設定。",
+    "loadFailedDescription": "無法載入梅拉協定設定。",
     "loadFailedTitle": "載入失敗",
     "chooseModel": "選擇一個要下載的模型。之後可以切換。",
     "downloadModelNamed": "下載 {{model}}（{{size}}）",
@@ -456,19 +459,20 @@
     "speedReason": "理由：每篇文章 {{ms}} 毫秒",
     "speedResetNote": "於您上次同步時測得。應用程式重新啟動後清除。",
     "bgRefreshTitle": "背景重新整理",
-    "bgRefreshCloudIos": "當應用程式關閉時，梅拉會取得新文章並開始為您排序。您的手機決定何時執行此操作。在低耗電模式下或關閉「背景 App 重新整理」時可能無法執行。消耗少量電量和數據，以及最多您每日文章限額的一半。這不會改變備份。除了梅拉在應用程式開啟時已使用的內容外，不會分享任何內容。",
-    "bgRefreshCloudAndroid": "當應用程式關閉時，梅拉會取得新文章並開始為您排序。您的手機決定何時執行此操作。啟用省電模式時可能無法執行。消耗少量電量和數據，以及最多您每日文章限額的一半。這不會改變備份。除了梅拉在應用程式開啟時已使用的內容外，不會分享任何內容。",
-    "bgRefreshOnDevice": "當應用程式關閉時，梅拉會取得新文章。開啟應用程式時，您的手機會為您排序。消耗少量電量和數據，以及最多您每日文章限額的一半。這不會改變備份。",
+    "bgRefreshCloudIos": "梅拉會在 App 關閉時取得新文章，並開始為你排序。何時執行由你的手機決定。在低耗電模式或關閉「背景 App 重新整理」時，可能無法執行。這會耗用一些電量與流量，並使用最多你每日文章額度的一半。這不會改變備份。除了 App 開啟時梅拉已經使用的資料之外，不會分享任何其他內容。",
+    "bgRefreshCloudAndroid": "梅拉會在 App 關閉時取得新文章，並開始為你排序。何時執行由你的手機決定。省電模式開啟時，可能無法執行。這會耗用一些電量與流量，並使用最多你每日文章額度的一半。這不會改變備份。除了 App 開啟時梅拉已經使用的資料之外，不會分享任何其他內容。",
+    "bgRefreshOnDevice": "梅拉會在 App 關閉時取得新文章。你開啟 App 時，手機才會為它們排序。這會耗用一些電量與流量，並使用最多你每日文章額度的一半。這不會改變備份。",
     "cantRun": "這支手機無法執行",
     "chatGroup": "聊天",
     "encrypted": "已加密。梅拉無法讀取。",
-    "explainerCan": "在這支手機上，梅拉 AI 可以完全離線執行。私有雲以加密方式執行，因此梅拉無法讀取。",
-    "explainerCant": "在這支手機上，梅拉 AI 可以完全離線執行。要在裝置上執行梅拉 AI，你需要性能足夠的手機。這支手機做不到，因此梅拉使用私有雲。",
-    "staysPrivateBody": "梅拉協定 始終開啟。你的事實絕不會以未加密的形式離開這支手機。",
+    "explainerCan": "在這支手機上，梅拉 AI 可以完全離線執行。私有雲則以加密方式執行，因此梅拉無法讀取內容。",
+    "explainerCant": "在這支手機上，梅拉 AI 可以完全離線執行。若要在裝置上執行梅拉 AI，你需要效能足夠的手機。這支手機做不到，因此梅拉會使用私有雲。",
+    "staysPrivateBody": "梅拉協定一直都是開啟的。你的事實絕不會以未加密的形式離開這支手機。",
     "staysPrivateTitle": "你的資料保持私密",
     "webSearchShort": "只有搜尋字詞會離開你的手機。不包含任何說明你是誰的資訊。",
     "whereReads": "梅拉在哪裡讀取你的新聞",
-    "whileClosed": "梅拉關閉時"
+    "whileClosed": "梅拉關閉時",
+    "deleting": "正在刪除…"
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除您已開啟文章的本機記錄。「來源」標籤中的「您正在閱讀的媒體」卡片及各媒體的歷史記錄將重設為空。其他資料不受影響，且不涉及伺服器資料（此資料從未離開您的裝置）。",
@@ -479,12 +483,12 @@
     "factsModalDescription": "清除您新增的事實以及由此產生的主題。您的事實從不離開這台裝置。主題詞會在您取得新聞時傳送，並在我們的伺服器上快取，不附帶使用者 ID，因此那裡沒有任何紀錄顯示它們屬於您。您的文章列表也會一併清空，因為它由這些主題建立，在您新增新事實之前會保持空白。",
     "exportHistoryTitle": "匯出閱讀歷史",
     "exportHistoryDescription": "過去30天的JSON：文章、出版商和發佈後到閱讀的平均時間",
-    "exportHistorySubject": "我的梅拉閱讀歷史（JSON）",
+    "exportHistorySubject": "我的梅拉閱讀紀錄（JSON）",
     "exporting": "匯出中……",
     "exportHistoryEmptyTitle": "尚未有匯出內容",
     "exportHistoryEmptyDescription": "你過去30天內還未閱讀任何文章。",
     "keeps": {
-      "title": "梅拉保留的關於你的資料",
+      "title": "梅拉為你保留的資料",
       "emailAndPlan": "你的電子郵件和方案。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
       "plan": "你的方案。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
       "emailIfAdded": "你的電子郵件（如果有新增）和方案。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
@@ -503,10 +507,11 @@
     "deleteAccountHint": "你的帳號、你的方案，以及梅拉在這支手機上保存的所有內容。此操作無法復原。",
     "deleteGroup": "刪除",
     "exportHint": "過去 30 天，JSON 格式",
-    "intro": "備份梅拉在這支手機上保存的內容，查看、帶走或刪除。",
+    "intro": "備份梅拉在這支手機上保存的內容，你可以查看、帶走，或刪除。",
     "lookAndTake": "查看與帶走",
     "askBeforeTopicDelete": "刪除主題前詢問",
-    "askBeforeTopicDeleteHint": "每次你從某個事實中刪除主題時，梅拉都會要求你確認。"
+    "askBeforeTopicDeleteHint": "每次你從某項事實中刪除主題時，梅拉都會先請你確認。",
+    "exportHistoryWindowNote_other": "此匯出只包含最近 {{count}} 天的閱讀紀錄。較舊的紀錄會自動從這支裝置刪除，而且從來沒有傳送到伺服器。"
   },
   "preferences": {
     "notifications": "通知",
@@ -517,7 +522,7 @@
     "deleteAccount": "刪除帳號",
     "logout": "登出",
     "signOutModalTitle": "登出",
-    "signOutConfirm": "您確定要登出帳號嗎？",
+    "signOutConfirm": "登出會清除這支裝置上儲存的所有內容：你儲存的文章、閱讀紀錄、追蹤的報導和個人化設定。你需要重新登入才能使用梅拉。",
     "signOut": "登出",
     "continue": "繼續",
     "finalConfirmation": "最終確認",
@@ -545,7 +550,7 @@
     "deleteFailedDescription": "無法刪除該事實。請重試。",
     "deleteFactTitle": "刪除事實",
     "deleteFactConfirm": "您確定要刪除此事實嗎？",
-    "deleteFactWarning": "它的主題和找到的新聞也會一併刪除，梅拉將不再為此尋找新聞。",
+    "deleteFactWarning": "它的主題和找到的報導也會一併刪除，梅拉也會停止為此尋找新聞。",
     "yesDelete": "是的，刪除",
     "addTopic": "新增主題",
     "addTopicDescription": "請輸入您想追蹤此事實的主題。應用程式將根據您的主題尋找新聞，並根據事實了解其相關性。",
@@ -569,15 +574,15 @@
     "accountRestrictedDescription": "您的帳號已受到限制。請聯繫支援團隊。",
     "scoring": {
       "generic": {
-        "message": "為你挑選新聞時發生問題。我們會持續嘗試——若情況持續，請下拉重新整理。",
+        "message": "為你挑選新聞時發生問題。我們會持續嘗試。如果問題持續，請下拉重新整理。",
         "title": "無法更新你的資訊流"
       },
       "offline": {
-        "message": "我們無法連上伺服器為你挑選新聞。請檢查你的連線——恢復連線後，你的資訊流會自動補上。",
+        "message": "我們無法連上伺服器為你挑選新聞。請檢查你的網路連線。恢復連線後，你的資訊流會自動補上。",
         "title": "你目前離線"
       },
       "server": {
-        "message": "我們無法連上新聞服務。這通常只是暫時的——我們會持續嘗試，你的資訊流會自動更新。",
+        "message": "我們無法連上新聞服務。這通常只是暫時的，我們會持續嘗試，你的資訊流也會自動更新。",
         "title": "服務無法使用"
       }
     },
@@ -588,16 +593,19 @@
   "download": {
     "modelDownloading": "正在下載 AI Model...",
     "modelProgress": "{{percent}}%",
-    "completeBody": "梅拉協定 已可使用。",
+    "completeBody": "梅拉協定已可以使用。",
     "completeTitle": "下載完成",
-    "failedTitle": "下載失敗"
+    "failedTitle": "下載失敗",
+    "failedConnection": "請檢查你的網路連線，然後再試一次。",
+    "failedServer": "下載伺服器發生問題。請稍後再試。",
+    "failedDamaged": "下載的檔案已損毀。請再試一次。"
   },
   "chat": {
     "startingChat": "正在啟動聊天...",
     "loadingModel": "正在載入 AI Model...",
     "loadingModelProgress": "正在載入 AI Model... {{percent}}%",
     "reloadingModel": "正在重新載入 AI Model... {{percent}}%",
-    "inferenceError": "我們目前無法連線至梅拉推論服務。請稍後再試。",
+    "inferenceError": "我們目前無法連上梅拉的推論服務。請稍後再試。",
     "send": "傳送",
     "streamingLabels": {
       "adaptingFeed": "正在調整動態",
@@ -623,10 +631,12 @@
     },
     "hideKeyboard": "隱藏鍵盤",
     "stop": "停止",
-    "stopped": "已停止"
+    "stopped": "已停止",
+    "replyLeakFallback": "好的。還有其他想補充的嗎？",
+    "replyProcessFallback": "抱歉，我沒能處理這個。可以再說一次嗎？"
   },
   "personaChat": {
-    "introMessage": "嗨！我是梅拉，你的個人新聞助理。\n\n為了找到對你真正重要的新聞，我需要了解一些關於你的事。你住在哪裡、從事什麼工作、追蹤的興趣、持有的股票、家人住在哪裡。隨你願意分享多少。\n\n如果這讓你有些猶豫，那是很好的直覺。把個人資料交給做應用的公司並不明智。梅拉的建構方式不同：你告訴我的一切都儲存在你的裝置上，而不是在我們的伺服器上。問我它如何運作，或說「幫我設定」，我們就開始吧。"
+    "introMessage": "嗨，我是梅拉，你的個人新聞助理。\n\n為了找到真正對你重要的新聞，我需要了解你一些事情。你住在哪裡、從事什麼工作、追蹤哪些興趣、持有哪些股票、家人住在哪裡。你願意分享多少都可以。\n\n如果這讓你有些猶豫，那是很好的直覺。把個人資料交給應用程式公司並不明智。梅拉的設計不一樣：你告訴我的所有內容都儲存在你的裝置上，而不是我們的伺服器。想知道它怎麼運作，可以問我，或是說「幫我設定」，我們就開始。"
   },
   "floatingChat": {
     "close": "關閉",
@@ -662,7 +672,7 @@
     },
     "topicGenFailed": "無法為此產生主題。",
     "topicGenRetry": "重試",
-    "aiUsageNoticeGeneral": "梅拉可能會出錯，重要內容請自行查證。",
+    "aiUsageNoticeGeneral": "梅拉可能會出錯，所以重要的內容請自行查證。",
     "trackChooseHint": "選擇要追蹤的內容",
     "factDeletePendingTitle": "將從你的檔案中移除",
     "saveAsWritten": "照我寫的儲存",
@@ -671,11 +681,11 @@
     "factDeleteKept": "沒有移除任何內容。",
     "topicsSavedHint": "主題已儲存！你可以繼續新增資訊，或點按 {{close}} 開始探索。",
     "guidelinesAfter": "。如果發現濫用，它會暫停你的帳號，直到你要求審核。",
-    "guidelinesBefore": "你正在與梅拉交談，它是 AI，不是真人。梅拉遵守",
+    "guidelinesBefore": "你正在與梅拉交談，它是 AI，不是真人。梅拉遵守 ",
     "guidelinesLink": "內容指引",
     "aiSubtitle": "AI，不是真人",
     "aboutTitle": "關於梅拉",
-    "mayMistakes": "梅拉可能會出錯，因此請到原始來源查證重要新聞。"
+    "mayMistakes": "梅拉可能會出錯，因此請到原始來源查證重要的新聞。"
   },
   "articleFeedback": {
     "thumbsUpMessage": "我喜歡這篇文章:「{{title}}」。我想看到更多類似的建議。",
@@ -684,8 +694,8 @@
     "dislikeLabel": "不適合我",
     "intro": "我能為你做些什麼?我可以解釋你為什麼收到這個建議,或是幫你取得更好的建議。",
     "introArticle": "我能為你做些什麼?我可以根據這篇文章幫你調整新聞建議。",
-    "introLikeTuning": "你喜歡這則報導 — 告訴我更多，我會幫你調整你的動態。",
-    "introDislikeTuning": "你不喜歡這則報導 — 告訴我原因，我會幫你調整你的動態。",
+    "introLikeTuning": "你喜歡這則報導。告訴我更多，我會幫你調整資訊流。",
+    "introDislikeTuning": "你不喜歡這則報導。告訴我原因，我會幫你調整資訊流。",
     "chipWhy": "我為什麼會收到這個建議?",
     "chipWhyMessage": "我為什麼會收到這個建議?",
     "chipDontWant": "我不想要這個建議",
@@ -704,7 +714,7 @@
     "actionDeleteFact": "移除資訊",
     "actionAddTopics": "新增主題",
     "actionRemoveTopics": "移除主題",
-    "actionFeatureRequest": "向梅拉團隊發送功能請求",
+    "actionFeatureRequest": "向梅拉團隊傳送功能需求",
     "actionShowLessTopic": "減少顯示某個主題",
     "actionShowMoreTopic": "增加顯示某個主題",
     "actionDownRank": "降低某個主題的優先順序",
@@ -724,12 +734,12 @@
     "badge_one": "過去 30 天內您造訪了 {{publication}} 1 次",
     "badge_other": "過去 30 天內您造訪了 {{publication}} {{count}} 次",
     "tooltipA11y": "關於閱讀歷史",
-    "tooltipIntro": "梅拉為您追蹤閱讀習慣——且資料僅保存在您的裝置上。",
+    "tooltipIntro": "梅拉會替你記錄閱讀習慣。這些紀錄只保存在你的裝置上。",
     "tooltipLink": "在這裡查看您的完整閱讀歷史。"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "需要更新",
-    "updateRequiredBody": "請將梅拉更新至最新版本以繼續。",
+    "updateRequiredBody": "請將梅拉更新至最新版本，才能繼續使用。",
     "updateCta": "更新"
   },
   "feedback": {
@@ -768,7 +778,7 @@
     "noTasksYet": "尚未登錄任何任務",
     "feed": "動態",
     "feedFunnel": "動態漏斗",
-    "protocol": "協定",
+    "protocol": "裝置端 AI",
     "system": "系統",
     "settings": "設定",
     "noSettings": "無設定",
@@ -777,9 +787,9 @@
     "running": "{{count}} 個執行中",
     "failed": "{{count}} 個失敗",
     "pending": "{{count}} 個待處理",
-    "noteBody": "此螢幕直接讀取梅拉的裝置內資料庫——構建您的動態的資料,此處顯示用於可見性和偵錯。梅拉的伺服器不儲存您的事實、閱讀歷史或從它們構建的建議。",
-    "noteExceptions": "兩個例外:您的帳戶資料(登入、通知、語言)與您的梅拉帳戶同步,當雲端AI開啟時,您的事實在此裝置上加密後再傳送進行評分。",
-    "noteFooter": "此處的值是原始和診斷的。動態列在48小時後自動清除;您可以從管理資料中刪除您的事實、動態快取和瀏覽歷史。",
+    "noteBody": "這個畫面直接讀取梅拉的裝置內資料庫。這是建構你資訊流的資料，在此顯示是為了透明與除錯。梅拉的伺服器不會儲存你的事實、閱讀紀錄，或由它們建立的建議。",
+    "noteExceptions": "有兩個例外：你的帳號資料（登入、通知、語言）會同步到你的梅拉帳號；而開啟雲端 AI 時，你的事實會先在這支裝置上加密，然後才會傳送出去評分。",
+    "noteFooter": "這裡的數值是原始的診斷資料。資訊流項目會在 48 小時後自動清除。你可以在「管理資料」中刪除你的事實、資訊流快取和閱讀紀錄。",
     "noteTitle": "您的資料,在您的裝置上"
   },
   "tableDetail": {
@@ -797,8 +807,8 @@
     "analyzingRelevance": "正在分析相關性…",
     "upToDate": "您的動態已是最新",
     "waitingForConnection": "等待連線中…",
-    "serverUnavailable": "伺服器無法連線 — 即將重試",
-    "sessionExpired": "工作階段已過期 — 請重新登入",
+    "serverUnavailable": "伺服器無法連線，即將重試",
+    "sessionExpired": "工作階段已過期，請重新登入",
     "noTopics": "新增主題以查看您的新聞",
     "storageFull": "請釋放裝置儲存空間後再試",
     "syncFailed": "無法載入最新內容。下拉以重新整理。",
@@ -814,7 +824,7 @@
     "emptyTitle": "還沒有儲存任何內容"
   },
   "subscription": {
-    "activationDelayed": "正在確認你的購買項目。這可能需要一點時間——若未繼續，請點按重新整理。",
+    "activationDelayed": "正在確認你的購買。這可能需要一點時間。如果沒有繼續，請點按重新整理。",
     "customerCenter": "管理／取消訂閱",
     "expiresOn": "到期日",
     "lifetime": "終身",
@@ -832,12 +842,12 @@
     "planPending": "{{plan}} · 啟用中",
     "perMonth": "/月",
     "starterFreeTitle": "您正在使用 Starter，免費",
-    "starterFreeBody": "我們希望您看到梅拉是做什麼的，所以每個帳號都免費包含完整的 Starter 方案。也就是每天 250 篇文章、您的所有興趣、聊天、事實查核和已追蹤的報導。",
+    "starterFreeBody": "我們希望你看見梅拉的價值，所以每個帳號都免費包含完整的 Starter 方案。這包括每天 250 篇文章、你所有的興趣、聊天、事實查核，以及你追蹤的報導。",
     "analysedForYou": "為你分析",
     "articlesUsedToday": "今日已使用的文章",
     "available24h": "可用，過去 24 小時",
     "discarded": "已捨棄",
-    "localOnly": "根據梅拉已保存的內容在這支手機上計算。不會額外記錄任何資料。",
+    "localOnly": "根據梅拉已保存的資料，在這支手機上計算。不會另外記錄任何內容。",
     "ofLimit": "上限 {{limit}}",
     "promoEndsNoRenew": "促銷權限 · {{date}} 結束，不會續訂",
     "relevantSoFar": "目前相關",
@@ -855,14 +865,14 @@
   },
   "swipeFeed": {
     "askMera": "詢問梅拉",
-    "feedbackCaption": "單靠一個拇指手勢，梅拉無法理解足夠的資訊——所以我們會丟棄它，以維持您的資訊流品質。選擇一個原因，您的資訊流會立即調整。",
-    "chatHandoffLike": "我喜歡這則報導 — 想看更多類似的：{{path}}。",
-    "chatHandoffLikeNoPath": "我喜歡這則報導 — 我想看更多類似的。",
-    "chatHandoffDislike": "我不喜歡這則報導 — {{path}}。",
+    "feedbackCaption": "只憑一個拇指，梅拉無法掌握足夠的資訊，所以我們會捨棄它，以維持你的資訊流品質。選一個原因，你的資訊流會立即調整。",
+    "chatHandoffLike": "我喜歡這則報導。想看更多類似的：{{path}}。",
+    "chatHandoffLikeNoPath": "我喜歡這則報導。我想看更多類似的。",
+    "chatHandoffDislike": "我不喜歡這則報導：{{path}}。",
     "chatHandoffDislikeNoPath": "我不喜歡這則報導。請幫我減少看到這類內容。"
   },
   "explore": {
-    "serverUnavailable": "目前無法聯絡到梅拉，請稍後再試。",
+    "serverUnavailable": "目前無法連上梅拉，請稍後再試。",
     "searchNotSubscribed": "搜尋需要有效的方案",
     "window": {
       "label24": "24小時",
@@ -915,17 +925,17 @@
     "followChatIntro": "告訴我你想追蹤的內容，我會為你設定。",
     "removeMemberAction": "不屬於此報導",
     "removeMemberConfirmTitle": "移除這篇文章？",
-    "removeMemberConfirmBody": "這篇文章將從報導的時間軸中移除。梅拉會繼續追蹤報導本身。",
+    "removeMemberConfirmBody": "這篇文章會從報導的時間軸中移除。梅拉會繼續追蹤這則報導本身。",
     "timelineLoadFailed": "無法載入此報導。下拉即可重試。",
     "deleteFailed": "無法取消追蹤此報導。請再試一次。",
     "removeFailed": "無法將此文章從報導中移除。請再試一次。",
-    "emptyBodyMera": "追蹤一則正在發展的報導，梅拉會在這裡持續更新。點一下梅拉按鈕即可追蹤。",
+    "emptyBodyMera": "追蹤一則持續發展中的報導，梅拉會在這裡為你更新。點按梅拉按鈕即可追蹤。",
     "followedSince": "{{date}} 起追蹤",
     "headlinesByMera": "標題由梅拉撰寫",
     "learnAbout": "了解報導",
-    "nextNote": "報導有進展時，梅拉會在這裡加入新的報導。",
+    "nextNote": "報導有新進展時，梅拉會在這裡加入新的報導。",
     "stopFollowing": "取消追蹤",
-    "stopFollowingConfirmBody": "梅拉將停止在此新增報導，並移除為這則報導保存的內容。",
+    "stopFollowingConfirmBody": "梅拉會停止在這裡加入報導，並移除為這則報導保存的內容。",
     "stopFollowingConfirmTitle": "要取消追蹤這則報導嗎？",
     "updatedAgo": "{{time}}更新",
     "articlesCount_one": "{{count}} 篇文章",
@@ -934,27 +944,31 @@
   "whatsNew": {
     "gotIt": "知道了",
     "starterTitle": "Starter 由我們招待",
-    "starterIntro": "為了讓您看到梅拉是做什麼的，現在每個帳號都免費包含完整的 Starter 方案。",
+    "starterIntro": "為了讓你看見梅拉的價值，每個帳號現在都免費包含完整的 Starter 方案。",
     "starterArticlesTitle": "每天 250 篇文章",
-    "starterArticlesBody": "梅拉每天為您分析最多 250 篇文章。",
+    "starterArticlesBody": "梅拉每天為你分析最多 250 篇文章。",
     "starterInterestsTitle": "您的所有興趣",
-    "starterInterestsBody": "想加多少都可以。梅拉會追蹤每一個。",
+    "starterInterestsBody": "想加多少都可以，梅拉會追蹤每一項。",
     "starterChatTitle": "聊天和事實查核",
-    "starterChatBody": "就任何報導向梅拉提問，並用已發布的事實查核來驗證說法。",
+    "starterChatBody": "可以針對任何報導詢問梅拉，並用已發布的事實查核來驗證說法。",
     "starterStoriesTitle": "已追蹤的報導",
-    "starterStoriesBody": "追蹤一則報導，梅拉會替您持續留意。"
+    "starterStoriesBody": "追蹤一則報導，梅拉會替你持續留意。"
   },
   "notificationCenter": {
     "title": "通知",
     "empty": "你已經看完所有內容",
     "dailyLimitTitle": "已達每日新聞上限",
     "dailyLimitBody": "你已達到今日文章上限，即將重設。",
-    "emptyBody": "任何需要你處理的事，例如個人資料整理或梅拉的提問，都會顯示在這裡。",
+    "emptyBody": "任何需要你處理的事項，例如個人資料整理，或梅拉的提問，都會顯示在這裡。",
     "settingsLink": "通知設定",
     "help": {
       "title": "關於通知",
-      "body": "梅拉會在這裡留下和你動態有關的提醒，包括你要求的事實查核已完成、每日動態調校、整理或調整興趣的小建議，以及來自梅拉團隊的問題。這些提醒只保存在這支手機上，為期 90 天。一個小圓點代表有未讀的提醒。新聞提醒不會出現在這裡，你可以在「設定」的「通知」中調整它們的時間。"
-    }
+      "body": "梅拉會在這裡留下與你資訊流有關的提醒，包括你要求的事實查核已完成、每日資訊流調整、整理或調整興趣的小建議，以及來自梅拉團隊的問題。這些提醒只保存在這支手機上，保存 90 天。小圓點代表有未讀的提醒。新聞提醒不會出現在這裡。提醒時間請在「設定」的「通知」中調整。"
+    },
+    "ageNow": "現在",
+    "ageMinutes": "{{n}}分",
+    "ageHours": "{{n}}時",
+    "ageDays": "{{n}}天"
   },
   "settings": {
     "groupHelp": "說明",
@@ -963,7 +977,7 @@
   },
   "personaAudit": {
     "title": "個人資料的變更",
-    "empty": "尚無變更紀錄。當梅拉調整你的興趣時，每次變更都會顯示在這裡。",
+    "empty": "還沒有任何變更。梅拉調整你的興趣時，每項變更都會顯示在這裡。",
     "revertedBadge": "已復原",
     "revertConfirmTitle": "要復原這項變更嗎？",
     "revertConfirmBody": "這會將你的個人資料恢復到變更前的樣子。",
@@ -1004,20 +1018,39 @@
       "addLocation": "新增了地點",
       "deleteLocation": "移除了地點",
       "retireSuppression": "移除了一個篩選",
-      "setSourceScopePref": "調整了來源範圍"
+      "setSourceScopePref": "調整了來源範圍",
+      "migrateFact": "已帶入一項興趣",
+      "setScoringOverride": "調整了報導的排序方式"
+    },
+    "summary": {
+      "added": "已新增 {{name}}",
+      "removed": "已移除 {{name}}",
+      "muted": "已靜音 {{name}}",
+      "countsMore": "{{name}} 的權重提高了",
+      "countsLess": "{{name}} 的權重降低了",
+      "pinned": "已釘選 {{name}}",
+      "unpinned": "已取消釘選 {{name}}",
+      "notInterested": "對{{name}}不感興趣",
+      "showingAgain": "重新顯示 {{name}}",
+      "moreFrom": "更多來自 {{name}} 的內容",
+      "cleared": "已清除你對 {{name}} 的設定",
+      "moreSourcesFrom": "來自 {{name}} 的來源增加了",
+      "fewerSourcesFrom": "來自 {{name}} 的來源減少了",
+      "clearedSourcesFrom": "已清除你對來自 {{name}} 的來源的設定",
+      "carriedOver": "已帶入 {{name}}",
+      "undone": "已復原：{{change}}"
     }
   },
   "calibration": {
     "notificationTitle": "讓梅拉更懂你的口味",
-    "notificationBody": "梅拉最近在裝置端排序中與自身判斷出現了 {{count}} 次不一致。重新校準可以縮小這個差距。",
-    "notificationBody_other": "梅拉最近在裝置端排序中與自身判斷出現了 {{count}} 次不一致。重新校準可以縮小這個落差。",
+    "notificationBody": "最近，梅拉的裝置端排序與它自己的判斷有 {{count}} 次不一致。重新校準即可縮小落差。",
     "recalibrateChip": "立即重新校準",
-    "chatIntro": "最近我一直在重新檢視自己為你排序新聞的方式。要不要我重新校準一下，讓評分更符合你的口味？點擊「立即重新校準」，我會調整——你隨時都可以復原。",
+    "chatIntro": "我最近一直在重新檢視自己替你排序新聞的方式。要不要我重新校準，讓評分更符合你的口味？點按「立即重新校準」，我就會調整。你隨時都可以復原。",
     "confirmChip": "立即重新校準",
     "runningBody": "正在重新校準你的排序…",
     "successTitle": "已重新校準",
     "successBody": "我調整了排序，讓它更符合你的口味。",
-    "noChangeBody": "你的排序看起來已經很合適了——不需要變更。",
+    "noChangeBody": "你的排序看起來已經很合適了，不需要任何變更。",
     "failedBody": "我暫時無法完成重新校準，稍後會再試一次。",
     "actionRecalibrate": "重新調整相關性評分"
   },
@@ -1032,19 +1065,19 @@
     "confirm": "確認",
     "confirmMuteTitle": "不再顯示此媒體？",
     "confirmMuteBody": "你將不再看到來自 {{publication}} 的文章。你可以隨時復原此操作。",
-    "appliedTitle": "好的——已更新你的動態",
+    "appliedTitle": "好的，資訊流已更新",
     "undo": "復原",
     "undoneTitle": "變更已復原",
     "thanks": "感謝你的回饋",
-    "seenAck": "好的——我們會減少顯示你已看過的內容",
+    "seenAck": "好的，我們會減少顯示你已經看過的內容",
     "nudgeSubscribe": "訂閱 {{publication}} 即可解鎖完整文章",
     "nudgeBrowse": "查看其他來源的相關報導",
     "paywallRelatedOption": "顯示相關報導",
-    "paywallRelatedDesc": "另一家出版機構的類似報導可能不在付費牆後面 — 請查看相關文章。",
-    "paywallSubscribeDesc": "本月您造訪了{{publication}}{{visits}}次 — 請考慮訂閱以獲得完整存取權限。",
+    "paywallRelatedDesc": "另一家出版機構的類似報導可能不需付費即可閱讀。請查看相關文章。",
+    "paywallSubscribeDesc": "你本月已造訪 {{publication}} {{visits}} 次。考慮訂閱，以取得完整的存取權限。",
     "paywallBlockOption": "改為封鎖{{publication}}",
     "tooMuchOfThis": "這種內容我看到太多次了",
-    "managePublicationsDesc": "提升、降低排名或靜音任何出版物——包括此出版物。",
+    "managePublicationsDesc": "提升、降低或靜音任何出版機構，包括這一家。",
     "managePublicationsOption": "管理出版物",
     "neverShowPublication": "永遠不要顯示此出版物",
     "notAGoodSuggestion": "不是好建議",
@@ -1070,7 +1103,8 @@
     "followStory": "追蹤這則報導",
     "moreAboutTopic": "更多這個主題的內容",
     "moreFromPublication": "更多來自這個來源的內容",
-    "moreNewsFromPlace": "更多這個地方的新聞"
+    "moreNewsFromPlace": "更多這個地方的新聞",
+    "confirmMuteBodyUnnamed": "你之後不會再看到這家出版機構的文章。隨時都可以復原。"
   },
   "topicPlan": {
     "title": "我將追蹤的主題",
@@ -1117,23 +1151,23 @@
   },
   "hygiene": {
     "notificationTitle": "整理一下你的興趣？",
-    "notificationBody_one": "梅拉為您的檔案發現了 {{count}} 項整理項目。",
-    "notificationBody_other": "梅拉為你的資料發現了 {{count}} 項可整理內容。",
+    "notificationBody_one": "梅拉為你的個人資料發現了 {{count}} 項整理建議。",
+    "notificationBody_other": "梅拉為你的個人資料發現了 {{count}} 項整理建議。",
     "reviewChip": "查看",
     "title": "整理你的個人資料",
-    "intro": "梅拉發現了這個。在你選擇之前，什麼都不會改變。",
+    "intro": "梅拉注意到了這件事。在你做出選擇之前，什麼都不會改變。",
     "accept": "接受",
     "reject": "忽略",
     "effectTooBroad": "降低此興趣的權重，使其帶來的偏題內容更少。",
     "effectStaleTopic": "停用這個不活躍的主題。",
-    "effectStaleFact": "移除此事實——它的所有主題都已不再活躍。",
+    "effectStaleFact": "移除這項事實。它的所有主題都已不再活躍。",
     "appliedTitle": "整理已套用",
     "appliedBody": "你的資料已完成整理。查看變更紀錄以了解詳情。",
     "applyFailedTitle": "無法套用整理",
     "applyFailedBody": "請稍後再試。",
     "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。",
     "effectLocationConflict": "保留較新的地點，移除較舊的地點。",
-    "emptyBody": "當兩項事實有重疊，或某項事實過時，梅拉會在這裡建議整理。",
+    "emptyBody": "當兩項事實重疊，或某項事實過時，梅拉會在這裡建議整理。",
     "emptyTitle": "沒有需要整理的內容",
     "keepBoth": "兩者都保留",
     "merge": "合併",
@@ -1143,7 +1177,15 @@
     "titleLocationConflict": "兩個地點的資料互相矛盾",
     "titleStaleFact": "某項事實已沒有活躍的主題",
     "titleStaleTopic": "某個主題已沉寂",
-    "titleTooBroad": "一項事實帶入的內容太廣"
+    "titleTooBroad": "一項事實帶入的內容太廣",
+    "summary": {
+      "duplicate": "{{fact}} 與 {{other}} 重複",
+      "locationConflict": "{{fact}} 和 {{other}} 指向不同的地點",
+      "staleFact": "{{fact}} 已經沒有任何有效的主題",
+      "tooBroad": "{{fact}} 的範圍很廣",
+      "staleTopic": "{{topic}} 已經好幾週沒有動靜了",
+      "incoherentTopics_other": "{{fact}} 底下有 {{count}} 個主題不符合：{{topics}}"
+    }
   },
   "locations": {
     "title": "地點",
@@ -1155,7 +1197,7 @@
     "searchPlaceholder": "搜尋城市",
     "searchCountries": "搜尋國家",
     "noMatches": "找不到符合的地點",
-    "searchUnavailable": "搜尋目前無法使用 — 請稍後再試。",
+    "searchUnavailable": "搜尋目前無法使用，請稍後再試。",
     "addManuallyCta": "找不到？手動新增",
     "cityLabel": "城市",
     "cityPlaceholder": "輸入城市名稱",
@@ -1180,7 +1222,7 @@
       "high": "高"
     },
     "toastUpdatedTitle": "已更新現有地點",
-    "toastUpdatedBody": "該地點先前已儲存——我們已為你更新。",
+    "toastUpdatedBody": "這個地點先前已儲存，我們已為你更新。",
     "saveFailedTitle": "無法儲存地點",
     "saveFailedBody": "請再試一次。",
     "deleteConfirmTitle": "要移除這個地點嗎？",
@@ -1188,7 +1230,7 @@
     "deleteFailedTitle": "無法移除地點",
     "deleteFailedBody": "請再試一次。",
     "footnote": "每個地點帶來多少在地新聞。可從其 ••• 選單移除或重新命名。",
-    "intro": "地點來自你的事實。你可以在這裡新增，或告訴梅拉地點與你的關係。",
+    "intro": "地點來自你的事實。你可以在這裡新增，或告訴梅拉某個地點與你的關係。",
     "menuA11y": "{{place}}的選項",
     "relabel": "重新命名",
     "remove": "移除",
@@ -1203,12 +1245,12 @@
       "publication": "來源",
       "topic": "主題"
     },
-    "cardExemptLabel": "您篩選了 {{filter}} ——因為這是重大新聞所以顯示"
+    "cardExemptLabel": "你已篩選「{{filter}}」。因為這是重大新聞，所以仍會顯示。"
   },
   "headlineDepth": {
     "title": "頭條新聞",
-    "subtitle": "梅拉為您閱讀多少則新聞",
-    "intro": "梅拉閱讀每個版塊的最大故事，然後挑選與您相關的。提高一個版塊來看更多；降低它來精簡內容。",
+    "subtitle": "梅拉為你閱讀多少則新聞",
+    "intro": "梅拉會閱讀每個版塊中最大的報導，再挑出對你重要的。想看更多就調高某個版塊，想精簡一點就調低。",
     "worldwide": "全球",
     "optionLabel": "前 {{n}} 則",
     "usingDefault": "使用標準的 {{n}} 則。",
@@ -1222,13 +1264,13 @@
   },
   "facts": {
     "screenTitle": "事實",
-    "screenSubtitle": "梅拉根據這些為你挑選新聞。每項都會顯示它擁有的主題數量。點按一項即可查看主題和報導。",
+    "screenSubtitle": "梅拉根據這些事實為你挑選新聞。每項都會顯示它擁有的主題數量。點按一項，即可查看主題和相關報導。",
     "addFact": "新增事實",
     "page": {
       "edit": "編輯",
       "howMuch": "影響程度",
       "impactfulEmpty": "過去 48 小時內還沒有與這項事實相關的報導。",
-      "impactfulHint": "梅拉因這項事實為你挑選的報導。",
+      "impactfulHint": "因為這項事實，梅拉為你挑選的報導。",
       "menuA11y": "編輯或刪除此事實",
       "new": "新",
       "nextInterest": "下一個興趣",
@@ -1236,7 +1278,7 @@
       "reach_other": "過去 48 小時內 {{count}} 則報導",
       "recentTab": "最近的文章",
       "removeChipA11y": "移除{{text}}",
-      "showLessHint": "梅拉會減少顯示這些主題的報導。移除一項即可像之前一樣看到它。",
+      "showLessHint": "梅拉減少顯示與這些有關的報導。移除一項，即可恢復原本的顯示。",
       "showLessOf": "減少顯示",
       "showLessPlaceholder": "新增主題",
       "stillLooking": "梅拉正在尋找更多主題",
@@ -1255,7 +1297,7 @@
       "discardedEmpty": "這項事實目前還沒有被排除在你的資訊流之外的內容。",
       "deleteTopicA11y": "刪除{{topic}}",
       "deleteTopicTitle": "刪除主題？",
-      "deleteTopicBody": "梅拉不會再將此主題用於這則事實，也不會再推薦。你可以在「減少顯示」中將其恢復。"
+      "deleteTopicBody": "梅拉不會再將此主題用於這項事實，也不會再推薦它。你可以在「減少顯示」中將它恢復。"
     }
   },
   "publicationPrefs": {
@@ -1279,7 +1321,9 @@
     "discardConfirmNo": "保留",
     "appliedToast": "已套用 {{count}} 項變更",
     "appliedTitle": "動態已調校",
-    "empty": "目前沒有需要調校的內容。"
+    "empty": "目前沒有需要調校的內容。",
+    "optionApply": "套用",
+    "optionSkip": "略過"
   },
   "pin": {
     "lockTitle": "梅拉已鎖定",
@@ -1291,7 +1335,7 @@
     "forgotOffline": "重設 PIN 需要網際網路連線來傳送登入代碼。連線到網際網路後再試。",
     "forgotConfirm": "重新登入",
     "setupTitle": "選擇 4 位數 PIN",
-    "setupSubtitle": "你將用它在這支手機上開啟梅拉。",
+    "setupSubtitle": "你會用它在這支手機上開啟梅拉。",
     "confirmTitle": "請再輸入一次",
     "mismatch": "PIN 不符。請重新開始。",
     "startOver": "重新開始"
@@ -1299,9 +1343,9 @@
   "security": {
     "requirePinTitle": "要求 PIN 碼",
     "lockEnabledTitle": "PIN 解鎖已啟用",
-    "lockEnabledDescription": "開啟梅拉時您會輸入 PIN。",
+    "lockEnabledDescription": "開啟梅拉時，你需要輸入 PIN 碼。",
     "lockDisabledTitle": "PIN 解鎖已停用",
-    "lockDisabledDescription": "梅拉將在不需要 PIN 的情況下開啟。您的 PIN 已被移除。",
+    "lockDisabledDescription": "開啟梅拉時不需要 PIN 碼。你的 PIN 碼已移除。",
     "changePin": "變更 PIN",
     "verifyCurrentTitle": "輸入目前的 PIN",
     "verifyCurrentSubtitle": "確認您的目前 PIN 來繼續",
@@ -1336,7 +1380,7 @@
     "openOn": "開啟時顯示",
     "sectionFeed": "資訊流",
     "meraButtonTitle": "梅拉按鈕",
-    "meraButtonHint": "選擇浮動梅拉按鈕的顏色。在淺色和深色模式下，它都保持不變。"
+    "meraButtonHint": "選擇浮動梅拉按鈕的顏色。在淺色與深色模式下，它都保持不變。"
   },
   "freeTier": {
     "seePlans": "查看方案",
@@ -1351,13 +1395,13 @@
     "blocked": "無法搜尋此故事。",
     "claimsHeading": "已檢查的聲明",
     "citationsHeading": "參考來源",
-    "noCitations": "此檢查未引用任何特定頁面。這不是搜尋失敗——在沒有來源指引的情況下，請對摘要抱持更謹慎的態度。",
+    "noCitations": "這次查核沒有引用任何特定頁面。這不代表搜尋失敗，但請對摘要保持更謹慎的態度。",
     "sourceFallback": "來源{{index}}",
-    "disclaimer": "這是梅拉對網路搜尋的自我解讀，由 AI 撰寫。可能有誤或不完整，在依賴之前請先閱讀來源。",
+    "disclaimer": "這是梅拉根據網路搜尋所做的解讀，由 AI 撰寫。內容可能有誤或不完整，請先閱讀來源再做判斷。",
     "verdict": {
       "supported": {
         "label": "與來源一致",
-        "detail": "搜尋找到的來源說的基本上是同樣的事情。這不是真實性的證明——只是未發現任何與之相矛盾的內容。"
+        "detail": "搜尋找到的來源大致說法相同。這並不代表它一定是真的，只代表沒有找到與之矛盾的內容。"
       },
       "disputed": {
         "label": "來源有分歧",
@@ -1365,7 +1409,7 @@
       },
       "unsupported": {
         "label": "未找到支持",
-        "detail": "搜尋未找到任何支持此內容的內容。這可能只是因為故事是新的或是小眾故事——這不表示它是假的。"
+        "detail": "搜尋沒有找到任何能佐證的內容。這可能只是因為報導很新或很冷門，並不代表它是假的。"
       },
       "mixed": {
         "label": "部分一致",
@@ -1400,16 +1444,16 @@
       "factChecksFound_one": "找到 {{count}} 項事實查證。點按以閱讀",
       "factChecksFound_other": "找到 {{count}} 項事實查證。點按以閱讀"
     },
-    "explainer": "梅拉不會對新聞進行事實查證。它會搜尋已建立的事實查證機構已發佈的內容。",
+    "explainer": "梅拉本身不會查證新聞。它會搜尋既有的事實查核機構，已經針對這則報導發表過什麼。",
     "noCheckedBy": "我們未能找到關於此故事的已發佈事實查證。這不表示故事有誤。大多數故事都未曾被事實查證過。",
     "organisationA11y": "在應用內瀏覽器中開啟 {{organisation}} 的事實查證（評等：{{rating}}）",
-    "queued": "此檢查將在背景中繼續執行。您無需在此等待——放心地離開文章即可。",
+    "queued": "這項查核會在背景持續進行。你可以離開這篇文章。",
     "queuedHint": "結果準備好後，將出現在您儀表板上的「事實查證」下。",
     "citationA11y": "在應用內瀏覽器中開啟來源 {{source}}",
     "noLink": "無可用連結",
-    "actionA11yPending": "已要求事實查證——查看結果",
-    "actionA11yDone": "事實查證已準備好——結果如下所示",
-    "checkedByUnavailable": "我們無法檢查事實查證機構是否對此故事進行了發表——查詢未成功。這與沒有人發表不同；以下是更廣泛搜尋的結果。",
+    "actionA11yPending": "已要求事實查核，請留意結果",
+    "actionA11yDone": "事實查核已完成，結果顯示在下方",
+    "checkedByUnavailable": "我們無法確認是否有事實查核機構發表過這則報導。這和「沒有人發表」不同。以下是更廣泛搜尋的結果。",
     "claimProposalTitle": "檢查此聲明的事實？",
     "actionCheckClaim": "檢查此聲明",
     "chatSeed": "此故事中有什麼可以進行事實查證的？",
@@ -1417,36 +1461,36 @@
     "chipQuickFactCheck": "快速查證",
     "optionWholeArticle": "完整文章",
     "quickAnswered": "以下是快速網路搜尋的結果：",
-    "quickArticleFailed": "梅拉無法確認請求已送出。請稍後再試。",
-    "quickArticleRequested": "請求已送出。梅拉將詳細檢查文章——結果準備好後將顯示在您的儀表板「查證結果」下方。",
+    "quickArticleFailed": "梅拉無法確認請求是否已送出。請稍後再試。",
+    "quickArticleRequested": "已送出請求。梅拉會檢查整篇文章，結果會出現在你儀表板的「事實查核」下方。",
     "quickArticleSending": "正在發送請求…",
-    "quickCouldNotSearch": "梅拉目前無法搜尋網路，所以這不是答案——請稍後再試。",
+    "quickCouldNotSearch": "梅拉剛才無法搜尋網路，所以這不是答案。請稍後再試。",
     "quickDisclaimer": "這是快速網路搜尋，不是由查證機構進行的檢查，也不會被保存。要進行包含具體來源的詳細檢查，請選擇「完整文章」。",
-    "quickFailed": "梅拉找到了一些資訊但這次無法整合成答案。請稍後再試。",
-    "quickNothingFound": "搜尋沒有找到相關內容。這並不意味著是假的——它可能只是新近發生、專業領域話題或網路上沒有廣泛報導。",
+    "quickFailed": "梅拉找到了一些資訊，但這次無法整理成答案。請稍後再試。",
+    "quickNothingFound": "搜尋沒有找到這方面的相關內容。這並不代表它是假的，可能只是新聞、冷門，或在網路上報導不多。",
     "quickRunning": "正在搜尋網路…",
-    "stillChecking": "這花費的時間比平常久。它仍在背景檢查中——稍後再查看，或查看您儀表板上的「查證結果」。",
-    "checkedByMultipleNote": "這些是各自獨立的評等,分別採用相關機構自己的標準——彼此不一定一致。",
+    "stillChecking": "這花的時間比平常久。查核仍在背景進行，請稍後到你儀表板的「事實查核」下方再看。",
+    "checkedByMultipleNote": "這些是各自獨立的評等，各機構採用自己的標準，結果不一定一致。",
     "collapseA11y": "隱藏此項事實查核",
     "expandA11y": "顯示此項事實查核",
     "checkedByRelatedNote": "這些來自關鍵字搜尋，可能與不同的故事有關。打開其中一個進行檢查。",
     "searchFoundHeading": "搜尋發現的內容",
-    "searchFoundEmpty": "搜尋中沒有足夠的內容供梅拉在此總結。",
+    "searchFoundEmpty": "搜尋結果不足，梅拉無法在這裡為你整理摘要。",
     "headerA11y": "{{title}}。{{status}}。{{action}}",
     "notify": {
       "title": "事實查證已完成",
       "bodyFound": "事實查核機構已就「{{title}}」發布查核。",
       "bodyNone": "目前還沒有關於「{{title}}」的已發布事實查核。",
-      "bodyUnavailable": "梅拉未能完成對「{{title}}」的查證。",
+      "bodyUnavailable": "梅拉無法完成「{{title}}」的查核。",
       "open": "開啟文章",
       "bodyFoundUntitled": "事實查核機構已就你詢問的文章發布了結果。",
       "bodyNoneUntitled": "你詢問的文章尚無已發布的事實查核。",
-      "bodyUnavailableUntitled": "梅拉無法完成對你詢問的文章的查核。"
+      "bodyUnavailableUntitled": "梅拉無法完成你詢問的這篇文章的查核。"
     }
   },
   "consent": {
     "title": "在你繼續之前",
-    "body": "我們更新了《服務條款》和《隱私政策》。請審查並接受它們以繼續使用梅拉。",
+    "body": "我們更新了服務條款與隱私權政策。請審閱並接受，才能繼續使用梅拉。",
     "termsLink": "服務條款",
     "privacyLink": "隱私政策",
     "accept": "同意並繼續",
@@ -1455,13 +1499,13 @@
     "retry": "重試",
     "welcomeBody": "點按「同意並繼續」即表示您接受我們的服務條款與隱私權政策。",
     "deviceNotice": {
-      "appAttest": "不需要電子郵件。梅拉會用這支手機為你登入。為了阻擋假帳號，Apple 會確認這是真實 iPhone 上的正版梅拉 App。在你擁有帳號期間，我們會保留一筆登入紀錄。",
-      "playIntegrity": "不需要電子郵件。梅拉會用這支手機為你登入。為了阻擋假帳號，Google 會確認這是真實 Android 手機上的正版梅拉 App。我們保留的是登入紀錄，而不是你手機的 ID。",
-      "generic": "不需要電子郵件。梅拉會用這支手機為你登入。在你擁有帳號期間，我們會為這支手機保留一筆登入紀錄。"
+      "appAttest": "不需要電子郵件。梅拉會用這支手機為你登入。為了阻擋假帳號，Apple 會確認這是真正 iPhone 上的正版梅拉 App。只要你擁有帳號，我們就會保留一筆登入紀錄。",
+      "playIntegrity": "不需要電子郵件。梅拉會用這支手機為你登入。為了阻擋假帳號，Google 會確認這是真正 Android 手機上的正版梅拉 App。我們保存的是登入紀錄，而不是你手機的 ID。",
+      "generic": "不需要電子郵件。梅拉會用這支手機為你登入。只要你擁有帳號，我們就會為這支手機保留一筆登入紀錄。"
     }
   },
   "tutorials": {
-    "entryRow": "梅拉的運作方式",
+    "entryRow": "梅拉如何運作",
     "menuTitle": "了解梅拉",
     "menuSubtitle": "此應用程式如何思考的簡短指南。從任何地方開始。",
     "sectionBasic": "從這裡開始",
@@ -1482,7 +1526,7 @@
     "continueAnyway": "仍然繼續",
     "slideProgress": "卡{{current}} / {{total}}",
     "askMera": "詢問梅拉",
-    "chatIntro": "詢問我任何有關梅拉如何運作的事。我可以解釋，但無法從這裡改變任何內容。",
+    "chatIntro": "關於梅拉如何運作，什麼都可以問我。我能解釋，但無法在這裡更改任何設定。",
     "launchButton": "開始導覽",
     "hintReveal": "點擊每一個。",
     "hintRevealSome": "至少點擊{{count}}個。",
@@ -1500,7 +1544,7 @@
         "slides": {
           "what": {
             "headline": "從你開始的新聞應用程式",
-            "body": "大多數新聞 App 先給你新聞，希望其中有些符合你的需求。梅拉則先從你開始，再去找與你的生活相關的報導。"
+            "body": "大多數新聞 App 先給你新聞，希望其中有些符合你的需求。梅拉則是先從你開始，再去尋找會觸及你生活的報導。"
           },
           "not-a-timeline": {
             "headline": "不是時間軸",
@@ -1525,7 +1569,7 @@
             "body": "真的就這麼短。",
             "steps": {
               "0": "你說幾件關於你生活的真實事情。",
-              "1": "梅拉將它們轉化為要尋找的東西。",
+              "1": "梅拉會把這些內容轉化為要去尋找的目標。",
               "2": "它讀取當天的新聞並保留符合的內容。"
             }
           },
@@ -1549,24 +1593,24 @@
           },
           "begin": {
             "headline": "準備好時就開始",
-            "body": "梅拉會問你幾件事。沒有標準答案，之後可以隨時更改任何內容。"
+            "body": "梅拉會問你幾個問題。沒有標準答案，之後隨時都可以更改任何內容。"
           }
         }
       },
       "facts": {
         "title": "你的資訊形塑你的動態",
-        "subtitle": "告訴梅拉關於你的生活。它會完成其餘部分。",
+        "subtitle": "告訴梅拉你的生活狀況，其餘的交給它。",
         "slides": {
           "a-fact-is": {
             "headline": "一項資訊是一行真實陳述",
             "body": "「我是護士。」「我住在烏特勒支。」「我有一個小孩。」簡短、真實、關於你的生活。就是全部想法。",
-            "ask": "在梅拉中什麼被視為一項資訊？"
+            "ask": "在梅拉中，什麼算是一項事實？"
           },
           "where-from": {
             "headline": "資訊從哪裡來",
             "body": "你永遠不需要填表。",
             "steps": {
-              "0": "你與梅拉交談，它聽取持久部分。",
+              "0": "你和梅拉聊天，它會聽取那些長期有效的內容。",
               "1": "你直接說：「我搬到里斯本。」",
               "2": "你可以在「我的」標籤中自行新增或移除。"
             }
@@ -1593,11 +1637,11 @@
           },
           "importance": {
             "headline": "某些資訊比其他的重要",
-            "body": "在「我的」標籤中開啟你的事實，點按梅拉了解的任何關於你的內容，就可以調高或調低它的權重、修改措辭或將其移除。調低比刪除更溫和，通常是更好的第一步。",
+            "body": "在「我的」分頁中開啟你的事實，點按梅拉了解的任何關於你的內容，就能調高或調低它的重要性、改寫措辭，或將它移除。調低比刪除溫和，通常是比較好的第一步。",
             "ask": "我如何改變我某項資訊的重要性？"
           },
           "your-profile": {
-            "body": "梅拉用來挑選新聞的所有內容，都集中在這裡。點按每一項。",
+            "body": "梅拉用來挑選新聞的所有內容，都集中在同一個地方。逐一點按即可查看。",
             "headline": "你的個人資料",
             "reveal": {
               "facts": {
@@ -1610,7 +1654,7 @@
               },
               "show-less": {
                 "label": "減少顯示",
-                "text": "你在某項事實中拒絕的主題。梅拉會減少顯示與它們有關的報導。"
+                "text": "你在某項事實中減少顯示的主題。梅拉會減少顯示與它們有關的報導。"
               },
               "sources": {
                 "label": "來源",
@@ -1626,16 +1670,16 @@
         "slides": {
           "two-lists": {
             "headline": "兩種檢視，一個資訊流",
-            "body": "資訊流顯示梅拉為你挑選的報導。連續資訊流是一個長清單，最相關的在靠近頂部。分區資訊流會依事實將相同的報導分組。報導則在滑動一下即可到達的位置，保存你追蹤的、正在發展的報導。",
+            "body": "資訊流顯示梅拉為你挑選的報導。連續資訊流是一長串清單，最相關的內容在最上方。分區資訊流會依事實，把相同的報導分組。報導頁則放著你追蹤中、仍在發展的報導，只要滑動一下就能看到。",
             "ask": "連續資訊流和分區資訊流有什麼不同？"
           },
           "nothing-removed": {
             "headline": "永遠不會移除任何東西",
-            "body": "閱讀卡片後，它不會消失；它會下沉。這是一個連續的清單，而不是由分隔線分開的部分——當您繼續瀏覽時，卡片會靜靜地在新的卡片下方漂移。",
+            "body": "閱讀卡片後，它不會消失，而是會往下沉。這是一份連續的清單，不是被分隔線切開的區塊。你往下捲動時，卡片會慢慢沉到較新的卡片下方。",
             "steps": {
               "0": "最新：您還沒有看到的所有內容。",
               "1": "接下來：已看到，但未開啟。",
-              "2": "最低：已閱讀——沒有分隔線，只是在相同清單中的較低位置。"
+              "2": "最下方是已讀的內容。沒有分隔線，只是同一份清單中較低的位置。"
             },
             "beforeAfter": {
               "before": "在你讀過它之前：卡與其他所有新內容一起坐在頂部。",
@@ -1656,43 +1700,43 @@
               },
               "act": {
                 "label": "對它採取行動",
-                "text": "拇指、儲存、追蹤故事或將其傳送給梅拉都算讀取。"
+                "text": "拇指向上、儲存、追蹤報導，或將它傳送給梅拉，都算已讀。"
               }
             }
           },
           "order-holds-still": {
             "headline": "你讀取時順序保持不變",
-            "body": "梅拉計算一次順序，當你打開應用程式或向下拉以重新整理時，然後就不再管它。沒有什麼在清單中途重新排列在你的拇指下。"
+            "body": "梅拉只在你開啟 App 或下拉重新整理時，計算一次順序，之後就不會再變動。清單中間不會在你的拇指下自己重新排列。"
           },
           "why-this-one": {
             "headline": "為什麼是這個？",
-            "body": "每張卡都帶有一行簡短的說明，說明為什麼它到達你，以及一個表示它的重要程度的單詞。如果一個理由看起來有誤，這是你可以告訴梅拉最有用的單一事情。",
+            "body": "每張卡片都會附上一行簡短說明，告訴你它為什麼會出現，以及它看起來有多重要。如果某個理由看起來不對，這是你能告訴梅拉最有用的一件事。",
             "ask": "故事下方的理由來自哪裡？"
           },
           "caught-up": {
             "headline": "用完是沒關係的",
-            "body": "當沒有新的東西時，梅拉說所以並停止。它不會為了讓你一直滾動而填充清單。你已經讀過的所有東西都仍在下方，如果你想要。"
+            "body": "沒有新內容時，梅拉會直接說明，然後停止。它不會為了讓你一直滑下去而硬塞內容到清單裡。如果你想看，之前已讀的內容都還在下方。"
           },
           "quiet-by-design": {
             "headline": "刻意保持安靜的資訊流",
-            "body": "閱讀時，梅拉不會對你計數。點按兩者，看看每種檢視方式如何保持安靜。",
+            "body": "你閱讀時，梅拉不會對你進行計數。點按兩者，看看每種檢視方式如何保持安靜。",
             "ask": "資訊流為什麼不顯示進來了多少則報導？",
             "reveal": {
               "feed": {
                 "label": "資訊流",
-                "text": "梅拉按鈕只在梅拉讀取內容時移動，其餘時間保持靜止。這是唯一表示有內容正在載入的提示。"
+                "text": "梅拉讀取內容時，梅拉按鈕會移動，其餘時間都保持靜止。這是唯一顯示有內容正在擷取的跡象。"
               },
               "dashboard": {
                 "label": "興趣",
-                "text": "同一天的內容依興趣整理，你告訴梅拉的每件事各有一個分區，未讀報導排在最前。離開頁面時，或每隔 10 分鐘，分區會重新排序。"
+                "text": "同一天的內容依興趣排序，每件你告訴梅拉的事各有一個分區，未讀報導排在最前面。離開頁面時，或每隔 10 分鐘，分區就會重新排序。"
               },
               "continuous": {
                 "label": "連續資訊流",
-                "text": "頂部的梅拉圖示在梅拉閱讀時會變色，其餘時間保持不動。它是唯一顯示有內容正在擷取的跡象。"
+                "text": "梅拉讀取內容時，頂部的梅拉圖示會變色，其餘時間都保持不動。這是唯一顯示有內容正在擷取的跡象。"
               },
               "sectioned": {
                 "label": "分區資訊流",
-                "text": "相同的報導依事實分組，每個你告訴梅拉的內容各有一個區塊，未讀報導排在前面。"
+                "text": "相同的報導依事實分組，每件你告訴梅拉的事各有一個分區，未讀報導排在最前面。"
               }
             }
           }
@@ -1722,7 +1766,7 @@
             "choose": {
               "just-thumb": {
                 "label": "向下拇指，不執行其他操作",
-                "feedback": "沒有改變。梅拉無法判斷是主題、來源還是只是今天。"
+                "feedback": "什麼都不會改變。梅拉無法判斷是因為主題、來源，還是只因為今天。"
               },
               "thumb-plus-reason": {
                 "label": "向下拇指加「此足球俱樂部太多」",
@@ -1751,30 +1795,30 @@
           },
           "what-leaves": {
             "headline": "實際上出去的內容",
-            "body": "三件事，就是清單。",
+            "body": "就這三件事，沒有別的。",
             "steps": {
-              "0": "簡短的主題短語，所以有東西可以對故事進行配對。",
+              "0": "簡短的主題短語，讓系統有東西可以用來比對報導。",
               "1": "你的登入方式（電子郵件或這支手機），以及你使用的方案。",
-              "2": "今天分析的故事數量統計，以保持該計畫誠實。"
+              "2": "今天分析了多少則報導的計數，用來讓方案用量如實計算。"
             },
-            "ask": "應用程式傳送到你的伺服器什麼？"
+            "ask": "應用程式會把什麼傳送到梅拉的伺服器？"
           },
           "cloud-is-default": {
             "headline": "預設值是加密雲端",
-            "body": "讀取一天的新聞需要相當多的思考，大多數手機寧願不這樣做。所以在開箱即用時，該工作發生在雲端。",
+            "body": "讀完一天的新聞需要相當多的運算，大多數手機並不想做這件事。所以一開始，這項工作是在雲端進行。",
             "beforeAfter": {
               "before": "我們想告訴你的版本：你的手機一直做所有的工作。",
-              "after": "實際上是真實的：預設情況下，思考發生在雲端，在此手機上加密並僅在密封隔離區內打開。裝置端是一個你可以翻轉的開關。我們寧願直言不諱，也不要讓你假設。"
+              "after": "實際情況是：預設由雲端負責運算，資料在這支手機上加密，只在密封隔離區內開啟。裝置端是一個可以自己打開的開關。我們寧願直接說清楚，也不想讓你自行誤會。"
             }
           },
           "on-device-option": {
             "headline": "裝置端，如果你想要的話",
-            "body": "在設定 → 梅拉協定 中，你可以把處理移到這支手機上。這樣為你閱讀新聞的 AI 就在這裡執行，而不是在雲端。你的主題短語仍會送出以取得新聞，登入也仍需要你的電子郵件或這支手機。它會先下載一個模型，需要較新的手機，而且明顯更慢，這正是它不是預設選項的原因。"
+            "body": "你可以在「設定」中點選「梅拉協定」，把處理移到這支手機上。這樣一來，為你閱讀新聞的 AI 就會在這裡執行，而不是在雲端。你的主題片語仍會送出去取得新聞，登入也仍需要你的電子郵件或這支手機。它會先下載一個模型，需要較新的手機，而且速度明顯較慢，這正是它不是預設選項的原因。"
           },
           "what-we-keep": {
             "headline": "我們保留什麼",
-            "body": "你的登入電子郵件（如果有新增）。你使用的方案。每日已分析的報導數量。如果你不用電子郵件使用梅拉，還有這支手機的一筆登入紀錄，會隨帳號一起刪除。主題短語只依文字快取，不記錄是誰要求的，十四天未使用即刪除。",
-            "ask": "梅拉在其伺服器上關於我儲存什麼？"
+            "body": "你的登入電子郵件（如果你有新增）。你使用的方案。每天分析過的報導數量。如果你不用電子郵件就使用梅拉，則會有一筆這支手機的登入紀錄，並會隨帳號一起刪除。主題片語只依文字本身快取，不記錄是誰提出的，十四天沒有使用就會刪除。",
+            "ask": "梅拉在它的伺服器上為我保存了什麼？"
           }
         }
       },
@@ -1791,13 +1835,13 @@
             "body": "兩個都以同一個地方結束。",
             "steps": {
               "0": "在文章上打開 ••• 選單，然後點按「追蹤這則報導」。",
-              "1": "或點按梅拉按鈕，說出你想持續關注的內容。"
+              "1": "或者點按梅拉按鈕，說出你想持續關注的內容。"
             },
             "ask": "我如何追蹤一個故事？"
           },
           "pick-the-scope": {
             "headline": "它應該有多寬？",
-            "body": "梅拉提供三或四個範圍，你點擊一個。沒有任何東西被追蹤，直到你做。你會為法庭案件選擇哪一個？",
+            "body": "梅拉會提供三到四種範圍，你點選其中一種。在你選擇之前，什麼都不會被追蹤。如果是法庭案件，你會選哪一種？",
             "choose": {
               "narrow": {
                 "label": "僅這個試驗",
@@ -1815,7 +1859,7 @@
           },
           "the-timeline": {
             "headline": "它聚集，它不嘮叨",
-            "body": "新發展在故事自己的時間軸上收集，旁邊有一個小計數。如果故事安靜下來，梅拉說所以而不是虛構一個更新以填補空間。"
+            "body": "新的進展會匯集在報導自己的時間軸上，旁邊有小小的數字。如果報導沒有新動靜，梅拉會直接說明，而不會編造一則更新來填補空白。"
           },
           "stop-following": {
             "headline": "停止是一個點擊",
@@ -1830,12 +1874,12 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "故意不是關於你",
-            "body": "「全球」是梅拉唯一不做任何個人化的地方。沒有評分，沒有理由，也不會從你在這裡開啟的內容中學習。只依各國新聞編輯室自己的順序，呈現他們目前的頭條。",
+            "body": "「全球」是梅拉唯一不做任何個人化的地方。沒有評分，沒有理由，也不會從你在這裡開啟的內容中學習。只會依各國新聞編輯室自己的順序，呈現他們目前的頭條。",
             "ask": "為什麼「全球」不做個人化？"
           },
           "the-chips": {
             "headline": "每個國家一個頁面",
-            "body": "梅拉會為你建好這些頁面，你也可以自行調整。",
+            "body": "梅拉會為你建立這些頁面，你也可以自行調整。",
             "steps": {
               "0": "除非你移動它，「全球」一律排在第一位。",
               "1": "接著是你所在的國家和你的地點所屬的國家，最後是你自己新增的國家。"
@@ -1933,7 +1977,7 @@
         "slides": {
           "three-shelves": {
             "headline": "一個螢幕上的三個架子",
-            "body": "「不感興趣」螢幕保留你要求梅拉保留在後面的所有東西。",
+            "body": "「不感興趣」畫面保存了你要求梅拉先擋下來的所有內容。",
             "steps": {
               "0": "你隱藏的字詞和東西。",
               "1": "你看到較少的主題。",
@@ -1955,7 +1999,7 @@
               },
               "from-an-article": {
                 "label": "關於你正在查看的故事說出來",
-                "feedback": "是的。在聊天中告訴梅拉，或在故事本身上使用回饋卡。篩選從該故事的真實地點鑄造，所以它完全對齐。"
+                "feedback": "是的。在聊天中告訴梅拉，或使用報導本身的回饋卡。篩選條件是根據該報導的實際地點建立的，所以完全吻合。"
               }
             }
           },
@@ -1981,7 +2025,7 @@
           "where-mera-is": {
             "headline": "每個頁面都有梅拉",
             "body": "右下角的圓形梅拉按鈕會開啟聊天，並從你目前所在的頁面開始。",
-            "ask": "我在哪裡找到與梅拉的聊天？"
+            "ask": "在哪裡可以找到和梅拉的聊天？"
           },
           "ask-what-it-knows": {
             "headline": "先問它知道什麼",
@@ -1992,13 +2036,13 @@
             "body": "沒有命令，沒有語法。點擊幾個例子。",
             "steps": {
               "0": "你直言不諱地說。",
-              "1": "梅拉計算出哪個設定意味著。",
+              "1": "梅拉會判斷這代表哪些設定。",
               "2": "你確認，或者不。"
             },
             "reveal": {
               "less-of": {
                 "label": "「少一些足球，請」",
-                "text": "梅拉將其轉化為轉動的主題，並在套用任何東西之前向你顯示改變。"
+                "text": "梅拉會把它轉換成一個被調低的主題，並在套用任何變更之前先讓你看到。"
               },
               "more-of": {
                 "label": "「我開始騎自行車」",
@@ -2012,7 +2056,7 @@
           },
           "nothing-until-you-tap": {
             "headline": "什麼都不會發生，直到你點擊",
-            "body": "當梅拉決定某件事應該改變時，它將改變作為卡進行，並停止。那麼，如果你輸入「是的，去做」而不是點擊卡會發生什麼？",
+            "body": "當梅拉認為某件事應該改變時，它會把這項變更做成一張卡片，然後停下來。那如果你輸入「好，就這麼做」，而不是點按卡片，會發生什麼事？",
             "choose": {
               "applies-immediately": {
                 "label": "它立即套用改變",
@@ -2023,25 +2067,25 @@
                 "feedback": "對。卡通常提供一個範圍選擇，只有你可以做出，所以它等待點擊。"
               }
             },
-            "ask": "為什麼梅拉不套用我說是的改變？"
+            "ask": "我說好了，為什麼梅拉沒有套用這項變更？"
           },
           "written-down": {
             "headline": "每個改變都被寫下來",
-            "body": "套用的改變被記錄了它在什麼之前，它變成了什麼，和改變來自哪裡：聊天、回饋、建議或你。梅拉對你設定檔所做的任何東西都不是看不見的。"
+            "body": "已套用的變更會記錄下它之前的樣子、變成什麼樣子，以及變更來源：聊天、回饋、建議，或你自己。梅拉對你的個人資料做的任何事，都不會是看不見的。"
           },
           "take-it-back": {
             "headline": "而大多數可以被拿回",
-            "body": "記錄在設定→梅拉協定→個人資料改變日誌中。",
+            "body": "紀錄保存在「設定」中，依序點選「梅拉協定」、「個人資料變更紀錄」。",
             "beforeAfter": {
               "before": "重量改變、新增的主題、你移除的篩選：這些帶有一個復原，將事物放回完全相同的原樣。",
               "after": "幾個不能被復原並說所以：在清理期間刪除事實，或移除地點，丟棄恢復它所需的東西。那些在日誌中坐著，旁邊沒有復原。"
             },
-            "ask": "我如何復原梅拉改變的關於我設定檔的事情？"
+            "ask": "我要如何復原梅拉對我的個人資料所做的變更？"
           }
         }
       },
       "protocol": {
-        "title": "梅拉協定螢幕",
+        "title": "梅拉協定畫面",
         "subtitle": "幾個開關，以及每個實際做什麼。",
         "slides": {
           "one-screen": {
@@ -2051,7 +2095,7 @@
               "0": "「我的」標籤，然後是「設定」。",
               "1": "梅拉協定。"
             },
-            "ask": "梅拉協定螢幕在哪裡？"
+            "ask": "梅拉協定畫面在哪裡？"
           },
           "processing-mode": {
             "headline": "處理模式",
@@ -2059,25 +2103,25 @@
             "reveal": {
               "cloud": {
                 "label": "雲端（預設）",
-                "text": "你的資料在此手機上加密，僅在密封隔離區內打開，以及加密方式回來。快速，以及在任何手機上工作。應用程式尚未對照晶片製造商檢查該隔離區的憑證，隱私通知直言不諱地說。"
+                "text": "你的資料會在這支手機上加密，只在密封隔離區內開啟，回傳時再加密一次。速度快，任何手機都能用。App 尚未對照晶片製造商檢查該隔離區的憑證，隱私聲明中已直接說明。"
               },
               "on-device": {
                 "label": "裝置端",
-                "text": "所有東西在這裡執行，你的任何東西根本不離開。它首先下載一個模型，想要一個相當新的手機，以及明顯更慢。"
+                "text": "一切都在這裡執行，完全沒有關於你的內容離開。需要先下載一個模型，要求手機較新，而且明顯較慢。"
               }
             }
           },
           "inject-noise": {
             "headline": "注入雜訊，仍在開發中",
-            "body": "把捏造的主題和真實主題一起送出，會讓離開你手機的詞語更難被讀成某一個人的輪廓。這是梅拉協定 中我們仍在建置的部分：它還沒有做出來，所以沒有對應的設定，今天也沒有任何東西為你手機送出的內容做填充。與其讓你以為擁有一層並不存在的保護，我們寧願直接告訴你。"
+            "body": "把捏造的主題和真實主題一起送出，會讓從你手機送出的片語更難被讀成某個人的畫像。這是我們仍在建置的梅拉協定部分：目前還沒完成，所以沒有相應的設定，今天你手機送出的內容也沒有任何填充。與其讓你以為有一層你其實沒有的保護，我們寧願直接告訴你。"
           },
           "web-search": {
             "headline": "聊天中的網路搜尋",
-            "body": "預設為關閉。轉開，梅拉可以查詢中間談話。什麼在它做時離開你的手機？",
+            "body": "預設為關閉。開啟後，梅拉可以在對話中查詢資料。這時會有什麼內容離開你的手機？",
             "choose": {
               "whole-question": {
                 "label": "你的整個訊息",
-                "feedback": "不是。當開關關閉時，搜尋工具甚至沒有提供給模型，所以它根本無法花費。"
+                "feedback": "不是。而且開關關閉時，搜尋工具甚至不會提供給模型，所以完全不會有任何花費。"
               },
               "search-words-only": {
                 "label": "只有搜尋字詞",
@@ -2096,11 +2140,11 @@
       "library": {
         "slides": {
           "fact-checks": {
-            "body": "可以從文章的 ••• 選單開始，或請梅拉查核某個說法。需要一些時間，完成後「資料庫」上會出現一個小圓點。",
+            "body": "你可以從文章的 ••• 選單開始查核，或請梅拉查核某個說法。這需要一點時間，完成後「資料庫」上會出現小圓點通知你。",
             "headline": "事實查核需要一些時間"
           },
           "history": {
-            "body": "造訪過會列出你在出版商自己網站上開啟過的出版物，以及你回去的頻率。資料只保存在這支手機上。",
+            "body": "歷史記錄會列出你在出版商自己網站上開啟過的出版物，以及你回去的頻率。資料只保存在這支手機上。",
             "headline": "你在哪裡閱讀"
           },
           "saved": {
@@ -2108,7 +2152,7 @@
             "headline": "已儲存的內容留在這裡"
           },
           "stats": {
-            "body": "統計只計算梅拉已在這支手機上保存的內容。製作統計時不會追蹤任何資料。",
+            "body": "統計只計算梅拉已保存在這支手機上的內容。製作統計時不會追蹤任何資料。",
             "headline": "你過去 30 天"
           }
         },
@@ -2222,7 +2266,7 @@
     "restoreBody": "換了新手機？還原你之前建立的備份。你需要它的復原碼。",
     "restoreCodeHint": "你設定備份時寫下的復原碼。",
     "restoreReplaces": "這會取代這支手機上的個人資料、已儲存的文章和紀錄。",
-    "restoringHint": "請在 Wi-Fi 下保持梅拉開啟。這需要一到兩分鐘。",
+    "restoringHint": "請在 Wi-Fi 連線下保持梅拉開啟。這需要一到兩分鐘。",
     "restoringTitle": "正在還原你的資料",
     "schedule": "排程：{{cadence}}",
     "show": "顯示",
@@ -2252,7 +2296,7 @@
     "replacesTopics_other": "以及它的 {{count}} 個主題",
     "replacesNoUndo": "原有資訊及其主題將被永久刪除，無法復原。",
     "replacesLoading": "正在確認會替換什麼",
-    "replacesUnavailable": "梅拉暫時無法顯示會刪除哪些內容。請稍後再試。",
+    "replacesUnavailable": "梅拉目前無法顯示這會刪除哪些內容。請稍後再試。",
     "keepBoth": "兩個都保留",
     "titleAlsoAdd": "也加入這則嗎？",
     "pendingHint": "請選擇上方的一個選項，或直接輸入你的回答。",
@@ -2325,7 +2369,7 @@
     "asking": "正在向你提問",
     "working": "正在處理",
     "slow": "仍在處理，網路較慢",
-    "legCapSentence": "這超出了梅拉一次能完成的步驟數。再問一次即可繼續。",
+    "legCapSentence": "這需要的步驟超過梅拉一次能完成的數量。再問一次即可繼續。",
     "interrupted": "這次處理中斷了。再問一次即可繼續。",
     "summaryFailed": "有一項沒有成功",
     "statePending": "進行中",
@@ -2334,16 +2378,16 @@
     "consequence": {
       "generic": "這一步沒有完成",
       "interrupted": "這項沒有完成",
-      "lookupPlace": "無法確認該地區，梅拉使用了已知的資訊",
+      "lookupPlace": "無法確認該地區，所以梅拉使用了它已知的資訊",
       "findSimilarFacts": "無法核對你之前告訴我的內容，可能會重複",
-      "loadSkill": "無法載入相關指引，梅拉採用了通用做法",
+      "loadSkill": "無法載入相關指引，所以梅拉採用了一般做法",
       "writeUp": "無法整理這項內容，因此沒有新增任何內容",
       "removing": "無法刪除這項，它仍然在"
     },
-    "noRouteSentence": "梅拉沒能判斷這是關於什麼的。換個說法再試試。",
+    "noRouteSentence": "梅拉無法判斷這是關於什麼的。請換個方式說說看。",
     "noProposalSentence": "梅拉沒有從中找到可以新增的內容。",
     "unknownToolSentence": "梅拉這邊出了點問題。再問一次即可繼續。",
-    "malformedChoiceSentence": "梅拉沒能顯示選項。再問一次即可繼續。",
+    "malformedChoiceSentence": "梅拉無法顯示選項。再問一次即可繼續。",
     "boxTitle": "梅拉正在工作",
     "doneInSteps_one": "已完成，共 {{count}} 步",
     "doneInSteps_other": "已完成，共 {{count}} 步",
@@ -2365,7 +2409,7 @@
   },
   "chatPhases": {
     "preparing": [
-      "正在整理梅拉已經了解你的內容。",
+      "正在整理梅拉已經了解你的資訊。",
       "正在組織你的問題。"
     ],
     "queued": [
@@ -2409,7 +2453,7 @@
     "step3Heading": "選擇格式",
     "selectAll": "全選",
     "selectedCount": "已選擇 {{count}} 篇",
-    "includeReason": "包含梅拉的理由",
+    "includeReason": "加入梅拉的理由",
     "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句話。單獨儲存的文章沒有這句話。",
     "formatMarkdown": "Markdown 清單",
     "formatMarkdownHint": "易於閱讀的清單，適合筆記與文件。",
@@ -2446,7 +2490,7 @@
     "removeDislike": "取消「不適合我」",
     "aboutSource": "關於此來源",
     "liveChat": "即時聊天",
-    "liveChatSub": "梅拉團隊的真人",
+    "liveChatSub": "來自梅拉團隊的真人",
     "sourceSub": "關於此來源，減少來自{{source}}的內容",
     "support": "支援",
     "supportSub": "回報問題、即時聊天、常見問題、教學",
@@ -2459,11 +2503,11 @@
   },
   "systemCheck": {
     "title": "正在檢查你的手機",
-    "subtitle": "只需幾秒，讓梅拉在這裡順暢運作。",
+    "subtitle": "只需幾秒鐘，讓梅拉在這裡順暢運作。",
     "aiTitle": "裝置端 AI",
     "settingsTitle": "系統檢查",
-    "settingsDescription": "查看梅拉在這支手機上的運作方式，並檢查你的語言套件。",
-    "aiCloud": "這支手機尚不支援。梅拉使用私有雲。",
+    "settingsDescription": "查看梅拉在這支手機上如何運作，並檢查你的語言套件。",
+    "aiCloud": "這支手機目前還不支援。梅拉會使用私有雲。",
     "liteOff": "精簡模式已關閉",
     "liteOn": "精簡模式已開啟",
     "phoneSupportedLine": "這支手機支援",
@@ -2474,7 +2518,7 @@
     "placeholder": "輸入你的回答",
     "answerLabel": "你的回答",
     "submit": "同意並提交",
-    "disclaimer": "你的回答會連同你的使用者 ID 和訂閱資訊一起傳送給梅拉。",
+    "disclaimer": "你的回答會連同你的使用者 ID 與訂閱資訊一起傳送給梅拉。",
     "counter": "{{current}}/{{max}} 個字元",
     "thanks": "感謝你的回答",
     "alreadyAnswered": "你已經回答過這個問題了",
@@ -2537,7 +2581,7 @@
     "tabNewA11y": "{{label}}，有新更新"
   },
   "feedShortcuts": {
-    "header": "梅拉閱讀期間",
+    "header": "梅拉閱讀時",
     "world1": "看看世界此刻正在發生什麼",
     "world2": "此刻最重大的報導，每個人看到的都一樣",
     "country1": "{{country}}今日頭條",
@@ -2565,7 +2609,7 @@
     },
     "search": {
       "placeholder": "搜尋所有新聞",
-      "empty": "搜尋梅拉在最近 48 小時內找到的新聞。",
+      "empty": "搜尋梅拉在過去 48 小時內找到的新聞。",
       "count_other": "{{count}} 則報導",
       "errorRetry": "目前無法搜尋。",
       "noMatch": "過去 48 小時內沒有符合此搜尋的新聞。",
@@ -2653,10 +2697,10 @@
       "places": "地點",
       "sources": "來源",
       "viewAll": "查看全部 {{count}} 項",
-      "factsEmpty": "目前沒有。告訴梅拉你關注什麼，它就會顯示在這裡。",
+      "factsEmpty": "目前還沒有。告訴梅拉你關注什麼，它就會顯示在這裡。",
       "placesEmpty": "還沒有地點",
       "addCity": "新增城市",
-      "sourcesEmpty": "沒有調整過。梅拉對所有來源一視同仁。",
+      "sourcesEmpty": "沒有調整過任何來源。梅拉對所有來源一視同仁。",
       "adjusted_one": "已調整 {{count}} 項",
       "adjusted_other": "已調整 {{count}} 項",
       "changes": "個人資料的變更",
@@ -2683,7 +2727,7 @@
       "usageOffline": "連上網路後才會顯示用量",
       "resetsAt": "於 {{time}} 重設",
       "addEmail": "新增電子郵件",
-      "addEmailHint": "選填。只有在你想將帳號與方案轉移到其他手機，或想收到梅拉的郵件時才需要。",
+      "addEmailHint": "選填。只有在你想把帳號和方案轉移到另一支手機，或想收到梅拉的電子郵件時才需要。",
       "appLock": "App 鎖定",
       "backupOff": "備份已關閉",
       "backupOn": "備份已開啟",
@@ -2706,7 +2750,7 @@
     "notifications": {
       "push": "推播通知",
       "when": "梅拉何時可以通知你",
-      "offLine": "梅拉不會傳送任何通知給你。開啟此功能，即可選擇可以傳送的時段。",
+      "offLine": "梅拉不會傳送任何通知給你。開啟此功能，即可選擇可以通知的時段。",
       "zeroTimes": "請選擇一個時間，否則梅拉不會傳送任何通知。"
     }
   },
@@ -2733,7 +2777,7 @@
       "quote": "問問某句引述是否真實"
     },
     "library": {
-      "likeToRead": "告訴梅拉你喜歡讀什麼"
+      "likeToRead": "告訴梅拉你喜歡閱讀什麼"
     },
     "facts": {
       "change": "變更你的事實",
@@ -2778,7 +2822,7 @@
   },
   "explainer": {
     "feed": {
-      "p1": "根據梅拉對你的了解，為你挑選的新聞。每張卡片都會說明是哪個事實帶來它，以及它為何出現在這裡。",
+      "p1": "根據梅拉對你的了解，為你挑選的新聞。每張卡片都會說明是哪項事實讓它出現，以及它為什麼會在這裡。",
       "p2": "連續資訊流會把每則報導放在同一個清單中。分區資訊流會依事實將相同的報導分組。報導頁面則保存你追蹤的報導。"
     },
     "stories": {
@@ -2792,12 +2836,12 @@
     "getHelp": "取得協助",
     "noEmailBody": "請稍後再試。如果問題持續發生，請寄信給我們並附上你的支援 ID。",
     "noEmailTitle": "你的帳號出現問題",
-    "offlineBody": "梅拉需要網路連線才能在開啟前確認你的帳號。",
+    "offlineBody": "梅拉需要網路連線，才能在開啟前確認你的帳號。",
     "offlineTitle": "你目前離線",
     "opensByItself": "恢復連線後會自動開啟",
     "reauthBody": "你的登入已過期。我們會將驗證碼寄到此帳號的電子郵件。",
     "reauthTitle": "請登入以繼續",
-    "unreachableBody": "問題出在我們這邊，而不是你的手機。梅拉會持續嘗試，恢復後就會開啟。",
+    "unreachableBody": "問題出在我們這邊，不是你的手機。梅拉會持續嘗試，恢復後就會開啟。",
     "unreachableTitle": "無法連上梅拉",
     "mismatchTitle": "這個電子郵件屬於其他帳號",
     "mismatchBody": "請使用此帳號的電子郵件登入，或取得協助。",

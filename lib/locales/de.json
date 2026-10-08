@@ -87,7 +87,7 @@
       "welcome": "Willkommen bei Mera",
       "wrongCode": "Dieser Code hat nicht funktioniert. Prüfe ihn oder fordere einen neuen an.",
       "noSheetTitle": "Dein iPhone hat den Download nicht geöffnet",
-      "noSheetBody": "Versuch es noch einmal, oder lade {{language}} in Einstellungen › Allgemein › Sprache und Region › Übersetzungssprachen herunter."
+      "noSheetBody": "Versuch es noch einmal, oder öffne auf deinem iPhone die Einstellungen, dann Allgemein, dann Sprache und Region, dann Übersetzungssprachen, und lade dort {{language}} herunter."
     }
   },
   "account": {
@@ -125,7 +125,7 @@
         "fetching": {
           "headlines": [
             "Die heutigen Artikel werden auf dein Telefon geladen…",
-            "Mera bringt die Nachrichten auf dein Gerät. Deine Interessen verlassen es nie."
+            "Die heutigen Geschichten werden für dich vorbereitet…"
           ],
           "amberSubline": "Bitte lass diesen Bildschirm geöffnet."
         },
@@ -196,8 +196,8 @@
       "completedMessage": "Dein Feed ist bereit"
     },
     "dailyLimit": {
-      "body": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden morgen freigeschaltet.",
-      "bodyWithTime": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden um {{time}} freigeschaltet.",
+      "body": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind. Neue Artikel werden morgen freigeschaltet.",
+      "bodyWithTime": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind. Neue Artikel werden um {{time}} freigeschaltet.",
       "title": "Tägliches Artikellimit erreicht",
       "freeTitle": "Das sind die Artikel für heute",
       "freeBodyWithTime": "Du hast alles, was Mera heute geschickt hat. Sieh dir an, was auf deinem Gerät ist. Mehr kommt um {{time}}."
@@ -238,7 +238,10 @@
       "continuous": "Fortlaufender Feed",
       "sectioned": "Unterteilter Feed",
       "title": "Ansicht"
-    }
+    },
+    "statsZeroFetched": "Mera konnte noch keine Artikel laden. Mera versucht es weiter. Wenn das immer wieder passiert, wende dich an den Support.",
+    "statsZeroAnalysedTail": "aber Mera konnte noch nichts davon für dich auswerten. Mera versucht es weiter. Wenn das immer wieder passiert, wende dich an den Support.",
+    "statsZeroRelevantTail": "aber bisher wirkt nichts davon relevant. Prüfe dein Profil oder wende dich an den Support."
   },
   "relevance": {
     "emergency": "Notfall",
@@ -291,7 +294,7 @@
     "badgeRegulator": "Offizielle Behörde"
   },
   "clusterDetail": {
-    "notTranslatable": "Dieser Artikel ist auf {{language}} verfasst. Dein Gerät kann ihn nicht übersetzen – nutze Google Translate, um ihn in deiner Sprache zu lesen.",
+    "notTranslatable": "Dieser Artikel ist auf {{language}} verfasst. Dein Gerät kann ihn nicht übersetzen. Nutze Google Translate, um ihn in deiner Sprache zu lesen.",
     "notTranslatableOsOutdated": "Dieser Artikel ist auf {{language}} verfasst. Die Übersetzung auf dem Gerät erfordert iOS {{requiredVersion}}: Du nutzt iOS {{currentVersion}}. Aktualisiere iOS oder nutze Google Translate, um ihn in deiner Sprache zu lesen.",
     "unknownLanguage": "einer anderen Sprache",
     "translationGuideLink": "Zeig mir, wie ich den Artikel übersetze",
@@ -362,7 +365,7 @@
     "switchTimedOutBody": "Die Vorbereitung von {{language}} dauert zu lange, daher verwendest du weiterhin {{previous}}. Der Download wird möglicherweise im Hintergrund fertig. Versuche es in Kürze noch einmal.",
     "switchUnsupportedBody": "Diese iOS-Version kann nicht in {{language}} übersetzen, daher verwendest du weiterhin {{previous}}.",
     "switchingCancel": "Sprachwechsel abbrechen",
-    "switchingNudge": "Dein Gerät bereitet gerade das Übersetzungspaket für {{language}} vor. Bitte lass diesen Bildschirm geöffnet, bis der Vorgang abgeschlossen ist – verlässt du ihn jetzt, bleiben die Nachrichtenartikel auf Englisch.",
+    "switchingNudge": "Dein Gerät bereitet gerade das Übersetzungspaket für {{language}} vor. Lass diesen Bildschirm geöffnet, bis es fertig ist. Wenn du ihn jetzt verlässt, bleiben die Nachrichtenartikel auf Englisch.",
     "switchingTitle": "{{language}} wird eingerichtet …",
     "translationUnavailableOnThisDevice": "Dieses Gerät kann Nachrichtenartikel nicht in {{language}} übersetzen. Es wird stattdessen Englisch angezeigt."
   },
@@ -468,7 +471,8 @@
     "staysPrivateTitle": "Deine Daten bleiben privat",
     "webSearchShort": "Nur die Suchbegriffe verlassen dein Telefon. Nichts, was verrät, wer du bist.",
     "whereReads": "Wo Mera deine Nachrichten liest",
-    "whileClosed": "Während Mera geschlossen ist"
+    "whileClosed": "Während Mera geschlossen ist",
+    "deleting": "Wird gelöscht…"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Löscht das lokale Protokoll der von dir geöffneten Artikel. Die Karte \"Zuletzt gelesene Publikationen\" im Tab \"Quellen\" sowie der Verlauf pro Publikation werden zurückgesetzt. Nichts anderes ist betroffen, und es werden keine Serverdaten berührt (diese Daten haben dein Gerät nie verlassen).",
@@ -506,7 +510,9 @@
     "intro": "Sichere, was Mera auf diesem Telefon speichert, sieh es dir an, nimm es mit oder lösche es.",
     "lookAndTake": "Ansehen und mitnehmen",
     "askBeforeTopicDelete": "Vor dem Löschen eines Themas nachfragen",
-    "askBeforeTopicDeleteHint": "Mera bittet dich jedes Mal um Bestätigung, wenn du ein Thema aus einem deiner Fakten löschst."
+    "askBeforeTopicDeleteHint": "Mera bittet dich jedes Mal um Bestätigung, wenn du ein Thema aus einem deiner Fakten löschst.",
+    "exportHistoryWindowNote_one": "Dieser Export umfasst nur die letzten {{count}} Tag Lesezeit. Ältere Einträge werden automatisch von diesem Gerät gelöscht und nie an einen Server gesendet.",
+    "exportHistoryWindowNote_other": "Dieser Export umfasst nur die letzten {{count}} Tage Lesezeit. Ältere Einträge werden automatisch von diesem Gerät gelöscht und nie an einen Server gesendet."
   },
   "preferences": {
     "notifications": "Benachrichtigungen",
@@ -517,7 +523,7 @@
     "deleteAccount": "Konto löschen",
     "logout": "Abmelden",
     "signOutModalTitle": "Abmelden",
-    "signOutConfirm": "Möchtest du dich wirklich von deinem Konto abmelden?",
+    "signOutConfirm": "Beim Abmelden wird alles gelöscht, was auf diesem Gerät gespeichert ist: deine gespeicherten Artikel, dein Leseverlauf, verfolgte Geschichten und deine Personalisierung. Du musst dich erneut anmelden, um Mera zu nutzen.",
     "signOut": "Abmelden",
     "continue": "Weiter",
     "finalConfirmation": "Letzte Bestätigung",
@@ -569,15 +575,15 @@
     "accountRestrictedDescription": "Dein Konto wurde eingeschränkt. Bitte kontaktiere den Support.",
     "scoring": {
       "generic": {
-        "message": "Beim Auswählen der News für dich ist etwas schiefgelaufen. Wir versuchen es weiter – zieh nach unten, um zu aktualisieren, falls es weiterhin auftritt.",
+        "message": "Beim Auswählen von News für dich ist etwas schiefgelaufen. Wir versuchen es weiter. Zieh zum Aktualisieren nach unten, falls das Problem bleibt.",
         "title": "Feed konnte nicht aktualisiert werden"
       },
       "offline": {
-        "message": "Wir erreichen den Server nicht, um News für dich auszuwählen. Prüfe deine Verbindung – dein Feed holt automatisch auf, sobald du wieder online bist.",
+        "message": "Wir können den Server gerade nicht erreichen, um News für dich auszuwählen. Prüfe deine Verbindung. Dein Feed holt automatisch auf, sobald du wieder online bist.",
         "title": "Du bist offline"
       },
       "server": {
-        "message": "Wir konnten den News-Dienst nicht erreichen. Das ist meist nur kurz – wir versuchen es weiter und dein Feed aktualisiert sich von selbst.",
+        "message": "Wir konnten den News-Dienst nicht erreichen. Das ist meist nur kurz. Wir versuchen es weiter, und dein Feed aktualisiert sich von selbst.",
         "title": "Dienst nicht verfügbar"
       }
     },
@@ -590,7 +596,10 @@
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol ist jetzt einsatzbereit.",
     "completeTitle": "Download abgeschlossen",
-    "failedTitle": "Download fehlgeschlagen"
+    "failedTitle": "Download fehlgeschlagen",
+    "failedConnection": "Prüfe deine Verbindung und versuche es erneut.",
+    "failedServer": "Der Download-Server hat ein Problem. Versuch es später noch einmal.",
+    "failedDamaged": "Der Download war beschädigt. Versuch es noch einmal."
   },
   "chat": {
     "startingChat": "Chat wird gestartet...",
@@ -623,7 +632,9 @@
     },
     "hideKeyboard": "Tastatur ausblenden",
     "stop": "Stoppen",
-    "stopped": "Gestoppt"
+    "stopped": "Gestoppt",
+    "replyLeakFallback": "Alles klar. Möchtest du noch etwas hinzufügen?",
+    "replyProcessFallback": "Tut mir leid, ich bin darauf nicht eingegangen. Kannst du es noch einmal sagen?"
   },
   "personaChat": {
     "introMessage": "Hallo! Ich bin Mera, dein persönlicher Nachrichten-Assistent.\n\nUm Nachrichten zu finden, die wirklich zählen, brauche ich ein wenig über dich zu wissen. Wo du wohnst, was du beruflich machst, welchen Hobbys du nachgehst, welche Aktien du verfolgst, wo deine Familie lebt. Teile so viel oder so wenig mit, wie du möchtest.\n\nWenn dich das ins Grübeln bringt, gutes Gespür. Es ist nicht ratsam, persönliche Daten an eine App-Firma zu übergeben. Mera ist anders aufgebaut: Alles, was du mir erzählst, wird auf deinem Gerät gespeichert, nicht auf unseren Servern. Frag mich, wie das funktioniert, oder sag 'Hilf mir bei der Einrichtung' und wir können beginnen."
@@ -724,7 +735,7 @@
     "badge_one": "Du hast {{publication}} in den letzten 30 Tagen einmal besucht",
     "badge_other": "Du hast {{publication}} in den letzten 30 Tagen {{count}} Mal besucht",
     "tooltipA11y": "Über den Leseverlauf",
-    "tooltipIntro": "Mera verfolgt deine Lesemuster für dich, und das nur auf deinem Gerät.",
+    "tooltipIntro": "Mera hält deine Lesemuster für dich fest. Dieser Eintrag bleibt nur auf deinem Gerät.",
     "tooltipLink": "Sieh dir hier deinen gesamten Leseverlauf an."
   },
   "nativeUpdate": {
@@ -814,7 +825,7 @@
     "emptyTitle": "Noch nichts gespeichert"
   },
   "subscription": {
-    "activationDelayed": "Dein Kauf wird bestätigt. Das kann einen Moment dauern – tippe auf Aktualisieren, falls es nicht weitergeht.",
+    "activationDelayed": "Dein Kauf wird bestätigt. Das kann einen Moment dauern. Tippe auf Aktualisieren, falls es nicht weitergeht.",
     "customerCenter": "Abo verwalten / kündigen",
     "expiresOn": "Läuft ab am",
     "lifetime": "Lebenslang",
@@ -954,7 +965,11 @@
     "help": {
       "title": "Über Benachrichtigungen",
       "body": "Mera hinterlässt hier Hinweise zu deinem Feed. Dazu gehören ein Faktencheck, den du angefordert hast und der fertig ist, dein täglicher Feed-Check, Tipps, um deine Interessen aufzuräumen oder anzupassen, und Fragen vom Mera-Team. Die Hinweise bleiben nur auf diesem Telefon, 90 Tage lang. Ein Punkt zeigt an, dass etwas ungelesen ist. Nachrichten-Alarme erscheinen hier nicht. Die Zeiten dafür stellst du unter Einstellungen bei Benachrichtigungen ein."
-    }
+    },
+    "ageNow": "jetzt",
+    "ageMinutes": "{{n}} Min.",
+    "ageHours": "{{n}} Std.",
+    "ageDays": "{{n}} T."
   },
   "settings": {
     "groupHelp": "Hilfe",
@@ -1004,7 +1019,27 @@
       "addLocation": "Ort hinzugefügt",
       "deleteLocation": "Ort entfernt",
       "retireSuppression": "Eine Filterung entfernt",
-      "setSourceScopePref": "Ein Quellengebiet angepasst"
+      "setSourceScopePref": "Ein Quellengebiet angepasst",
+      "migrateFact": "Ein Interesse übernommen",
+      "setScoringOverride": "Angepasst, wie deine Geschichten sortiert werden"
+    },
+    "summary": {
+      "added": "{{name}} hinzugefügt",
+      "removed": "{{name}} entfernt",
+      "muted": "{{name}} stummgeschaltet",
+      "countsMore": "{{name}} zählt stärker",
+      "countsLess": "{{name}} zählt schwächer",
+      "pinned": "{{name}} angeheftet",
+      "unpinned": "{{name}} nicht mehr angeheftet",
+      "notInterested": "Kein Interesse an {{name}}",
+      "showingAgain": "{{name}} wird wieder angezeigt",
+      "moreFrom": "Mehr von {{name}}",
+      "cleared": "Deine Einstellung für {{name}} wurde zurückgesetzt",
+      "moreSourcesFrom": "Mehr Quellen von {{name}}",
+      "fewerSourcesFrom": "Weniger Quellen von {{name}}",
+      "clearedSourcesFrom": "Deine Einstellung für Quellen von {{name}} wurde zurückgesetzt",
+      "carriedOver": "{{name}} übernommen",
+      "undone": "Rückgängig gemacht: {{change}}"
     }
   },
   "calibration": {
@@ -1069,7 +1104,8 @@
     "followStory": "Dieser Story folgen",
     "moreAboutTopic": "Mehr zu diesem Thema",
     "moreFromPublication": "Mehr von dieser Publikation",
-    "moreNewsFromPlace": "Mehr Nachrichten aus diesem Ort"
+    "moreNewsFromPlace": "Mehr Nachrichten aus diesem Ort",
+    "confirmMuteBodyUnnamed": "Du siehst keine Artikel von dieser Publikation mehr. Das kannst du jederzeit rückgängig machen."
   },
   "topicPlan": {
     "title": "Themen, die ich verfolge",
@@ -1142,7 +1178,16 @@
     "titleLocationConflict": "Zwei Orte widersprechen sich",
     "titleStaleFact": "Ein Fakt hat keine aktiven Themen mehr",
     "titleStaleTopic": "Ein Thema ist ruhig geworden",
-    "titleTooBroad": "Ein Fakt bringt zu viel mit sich"
+    "titleTooBroad": "Ein Fakt bringt zu viel mit sich",
+    "summary": {
+      "duplicate": "{{fact}} wiederholt {{other}}",
+      "locationConflict": "{{fact}} und {{other}} nennen unterschiedliche Orte",
+      "staleFact": "{{fact}} hat keine aktiven Themen mehr",
+      "tooBroad": "{{fact}} ist sehr weit gefasst",
+      "staleTopic": "{{topic}} ist seit Wochen ruhig",
+      "incoherentTopics_one": "{{count}} Thema unter {{fact}} passt nicht dazu: {{topics}}",
+      "incoherentTopics_other": "{{count}} Themen unter {{fact}} passen nicht dazu: {{topics}}"
+    }
   },
   "locations": {
     "title": "Orte",
@@ -1278,7 +1323,9 @@
     "discardConfirmNo": "Behalten",
     "appliedToast": "{{count}} Änderungen übernommen",
     "appliedTitle": "Feed optimiert",
-    "empty": "Momentan nichts zu optimieren."
+    "empty": "Momentan nichts zu optimieren.",
+    "optionApply": "Anwenden",
+    "optionSkip": "Überspringen"
   },
   "pin": {
     "lockTitle": "Mera ist gesperrt",
@@ -1408,7 +1455,7 @@
     "noLink": "Kein Link verfügbar",
     "actionA11yPending": "Faktencheck angefordert, überprüfe das Ergebnis",
     "actionA11yDone": "Faktencheck abgeschlossen, das Ergebnis wird unten angezeigt",
-    "checkedByUnavailable": "Wir konnten nicht überprüfen, ob eine Faktencheck-Organisation zu diesem Artikel veröffentlicht hat, die Suche ist fehlgeschlagen. Das ist unterschiedlich von der Situation, dass niemand dazu veröffentlicht hat; unten siehst du, was die weitere Suche gefunden hat.",
+    "checkedByUnavailable": "Wir konnten nicht prüfen, ob eine Faktencheck-Organisation zu dieser Geschichte etwas veröffentlicht hat. Die Suche ist fehlgeschlagen. Das ist etwas anderes, als wenn niemand etwas veröffentlicht hat. Unten siehst du, was die weitere Suche gefunden hat.",
     "claimProposalTitle": "Diese Aussage überprüfen?",
     "actionCheckClaim": "Aussage überprüfen",
     "chatSeed": "Was in diesem Artikel überprüft werden kann?",
@@ -1630,11 +1677,11 @@
           },
           "nothing-removed": {
             "headline": "Nichts wird je entfernt",
-            "body": "Lies eine Karte und sie verschwindet nicht; sie versinkt. Es ist eine durchgehende Liste, keine Abschnitte, die durch Trennlinien unterbrochen sind – Karten driften leise nach unten, an den neueren vorbei, wenn du vorgehen.",
+            "body": "Lies eine Karte, und sie verschwindet nicht, sondern sinkt. Es ist eine durchgehende Liste, keine Abschnitte, die durch Trennlinien getrennt sind. Karten wandern beim Weiterlesen leise nach unten an den neueren vorbei.",
             "steps": {
               "0": "Leads: alles, was du noch nicht gesehen hast.",
               "1": "Weiter: gesehen, aber nicht geöffnet.",
-              "2": "Niedrig: bereits gelesen – keine Trennlinie, nur ein tieferer Platz in derselben Liste."
+              "2": "Ganz unten: schon gelesen. Keine Trennlinie, nur ein tieferer Platz in derselben Liste."
             },
             "beforeAfter": {
               "before": "Bevor du es liest: Die Karte sitzt oben mit allem anderen das neu ist.",
@@ -1768,7 +1815,7 @@
           },
           "on-device-option": {
             "headline": "Auf dem Gerät, wenn du es möchtest",
-            "body": "In Einstellungen → Mera Protocol kannst du die Verarbeitung auf dieses Telefon verlegen. Dann läuft die KI, die deine Nachrichten liest, hier statt in der Cloud. Deine Themenbegriffe gehen weiterhin raus, um Nachrichten abzurufen, und für die Anmeldung braucht es weiterhin deine E-Mail oder dieses Telefon. Zuerst wird ein Modell heruntergeladen, es braucht ein recht neues Telefon und ist spürbar langsamer, genau deshalb ist es nicht die Standardeinstellung."
+            "body": "Öffne Einstellungen, dann Mera Protocol, um die Verarbeitung auf dieses Telefon zu verlegen. Dann läuft die KI, die deine Nachrichten liest, hier statt in der Cloud. Deine Themenbegriffe gehen weiterhin raus, um Nachrichten abzurufen, und für die Anmeldung braucht es weiterhin deine E-Mail oder dieses Telefon. Zuerst wird ein Modell heruntergeladen, es braucht ein recht neues Telefon und ist spürbar langsamer, genau deshalb ist es nicht die Standardeinstellung."
           },
           "what-we-keep": {
             "headline": "Was wir behalten",
@@ -2015,7 +2062,7 @@
             "choose": {
               "applies-immediately": {
                 "label": "Es wendet die Änderung an",
-                "feedback": "Es tut nicht. Tippte Zustimmung ist nicht Zustimmung hier; das Tippen ist."
+                "feedback": "Nein, nicht sofort. Eine getippte Zustimmung zählt hier nicht. Die Zustimmung ist der Tipp."
               },
               "waits-for-your-tap": {
                 "label": "Nichts. Die Karte sitzt immer noch wartend",
@@ -2030,7 +2077,7 @@
           },
           "take-it-back": {
             "headline": "Und die meisten davon können zurückgenommen werden",
-            "body": "Der Datensatz lebt in Einstellungen → Mera Protocol → Persona-Änderungsprotokoll.",
+            "body": "Du findest den Verlauf, wenn du Einstellungen öffnest, dann Mera Protocol, dann Persona-Änderungsprotokoll.",
             "beforeAfter": {
               "before": "Ein Gewichts-Änderung, ein hinzugefügtes Thema, ein Filter du entferntest: Diese tragen ein Rückgängigmachen, das Dinge genau zurück setzt wie sie waren.",
               "after": "Ein paar können nicht rückgängig gemacht werden und sagen so: Einen Fakt während ein Aufräumen löschen oder das Entfernen eines Ortes wirft fort was zurückgestellt werden würde. Diese sitzen im Protokoll mit kein Rückgängigmachen neben ihnen."
@@ -2058,7 +2105,7 @@
             "reveal": {
               "cloud": {
                 "label": "Cloud (die Standard)",
-                "text": "Deine Daten sind auf diesem Telefon verschlüsselt, nur innen in einer versiegelten Enklave geöffnet und auf der Rückseite verschlüsselt erneut. Schnell und funktioniert auf jedem Telefon. Die App überprüft das Zertifikat dieses Enklaven-Knotens noch nicht gegen den Chiphersteller, die die Datenschutznotiz offen sagt."
+                "text": "Deine Daten werden auf diesem Telefon verschlüsselt, nur innerhalb einer versiegelten Enklave geöffnet und auf dem Rückweg erneut verschlüsselt. Schnell und funktioniert auf jedem Telefon. Die App prüft das Zertifikat dieser Enklave noch nicht gegen den Chiphersteller, was die Datenschutzerklärung offen sagt."
               },
               "on-device": {
                 "label": "Auf dem Gerät",

@@ -1,38 +1,17 @@
-// No em dashes or en dashes in user-facing copy (owner rule: they read as
-// AI-written punctuation).
-//
-// English is held to zero. Other locales are a RATCHET, not a sweep: each one's
-// count may only go down. ja, zh-CN, zh-TW, ru and uk are exempt because a dash
-// is ordinary punctuation there (owner decision, ux1 Q10).
-//
-// Lower a baseline when a locale improves; never raise one.
+// Copy rules for every value in all 20 dictionaries (owner rules):
+//   - no em dash or en dash, in ANY locale (CJK, ru and uk included);
+//   - no ';' and no '›': write two sentences, or "Open Settings, then …";
+//   - never "open source" (the app is source-available, not open source);
+//   - in the non-Latin locales the brand is written phonetically (ar ميرا,
+//     hi मेरा, ja メラ, ko 메라, ru/uk Мера, th เมร่า, zh 梅拉). Latin "Mera"
+//     survives only in the legal name "Mera Labs B.V.", a URL or an email.
+// Every rule is a zero, not a ratchet: a new value either obeys it or fails here.
 import fs from 'node:fs';
 import path from 'node:path';
 
 const LOCALES_DIR = path.resolve(__dirname, '..');
-const DASH = /[—–]/g;
-const HAS_DASH = /[—–]/;
-const EXEMPT = new Set(['ja', 'zh-CN', 'zh-TW', 'ru', 'uk']);
-
-/**
- * Dash occurrences per non-English locale, measured after the ux1 sweep and
- * again after the feedbackTree description fix. Tightened to the TRUE count
- * on that second pass: every value here had drifted 13-18 dashes above the
- * real count (e.g. `ar` read 38 when the file held 23), which is 13-18
- * dashes of silent slack a locale could have gained without this test ever
- * tripping. Lower it further whenever a locale improves; never raise it.
- */
-const BASELINE: Record<string, number> = {
-  ar: 20, de: 29, es: 19, fr: 20, hi: 20, id: 20, it: 20, ko: 12, nl: 20,
-  pl: 20, 'pt-BR': 20, th: 14, tr: 20, vi: 20,
-};
-
-/**
- * English keys still waiting for the chat scout's rewrite (it owns every
- * factCheck.* and floatingChat.* string). Delete entries as they land; the
- * list must only shrink.
- */
-const EN_PENDING = new Set<string>([]);
+const NON_LATIN = new Set(['ar', 'hi', 'ja', 'ko', 'ru', 'uk', 'th', 'zh-CN', 'zh-TW']);
+const KEEP_LATIN = /Mera Labs B\.V\.|https?:\/\/\S+|[\w.+-]*mera\.news\S*|[\w.+-]+@[\w.-]+/gi;
 
 function leaves(obj: unknown, prefix = '', out: [string, string][] = []): [string, string][] {
   if (typeof obj === 'string') {
@@ -43,65 +22,33 @@ function leaves(obj: unknown, prefix = '', out: [string, string][] = []): [strin
   return out;
 }
 
-function read(file: string): unknown {
-  return JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, file), 'utf8'));
-}
-
 const dictionaries = fs
   .readdirSync(LOCALES_DIR)
   .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
   .map((f) => f.replace(/\.json$/, ''));
 
-describe('locale dash rule', () => {
+const values = (locale: string) =>
+  leaves(JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, `${locale}.json`), 'utf8')));
+
+describe('locale copy rules', () => {
   it('finds all 20 dictionaries', () => {
     expect(dictionaries).toHaveLength(20);
   });
 
-  it('English has no em or en dash outside the pending chat keys', () => {
-    const offenders = leaves(read('en.json'))
-      .filter(([k, v]) => HAS_DASH.test(v) && !EN_PENDING.has(k))
+  it.each(dictionaries)('%s has no em dash, en dash, semicolon, › or →', (locale) => {
+    const offenders = values(locale).filter(([, v]) => /[—–;›→]/.test(v)).map(([k]) => k);
+    expect(offenders).toEqual([]);
+  });
+
+  it.each(dictionaries)('%s never says "open source"', (locale) => {
+    const offenders = values(locale).filter(([, v]) => /open[ -]source/i.test(v)).map(([k]) => k);
+    expect(offenders).toEqual([]);
+  });
+
+  it.each(dictionaries.filter((l) => NON_LATIN.has(l)))('%s writes the brand phonetically', (locale) => {
+    const offenders = values(locale)
+      .filter(([, v]) => /mera/i.test(v.replace(KEEP_LATIN, '')))
       .map(([k]) => k);
     expect(offenders).toEqual([]);
-  });
-
-  it('every pending English key still exists and still needs the rewrite', () => {
-    const en = new Map(leaves(read('en.json')));
-    const stale = [...EN_PENDING].filter((k) => !(en.get(k) ?? '').match(DASH));
-    // A key here that no longer has a dash must be removed from EN_PENDING.
-    expect(stale).toEqual([]);
-  });
-
-  it.each(Object.keys(BASELINE))('%s does not gain dashes', (locale) => {
-    const count = leaves(read(`${locale}.json`)).reduce(
-      (n, [, v]) => n + (v.match(DASH)?.length ?? 0),
-      0,
-    );
-    expect(count).toBeLessThanOrEqual(BASELINE[locale]);
-  });
-
-  // The whole-locale ratchet above is a TOTAL COUNT, not a per-key gate: a
-  // key can carry a dash forever as long as its locale's total stays under
-  // baseline. That is exactly why the three feedbackTree description keys
-  // sat with a visible dash for a long time (ux1 P2) without ever failing
-  // this suite — each locale's total was still comfortably under its
-  // (stale) baseline. This is a permanent, narrow gate for those three keys
-  // specifically, so THIS regression can't recur even if a locale's total
-  // has room again. It does not generalize to "every key, every locale":
-  // the BASELINE counts above are still non-zero, so a blanket zero-dash
-  // rule across all keys would fail today on real, pre-existing copy this
-  // fix never touched.
-  it.each(Object.keys(BASELINE))('%s: the three feedbackTree description keys stay dash-free', (locale) => {
-    const dict = new Map(leaves(read(`${locale}.json`)));
-    const offenders = [
-      'feedbackTree.paywallRelatedDesc',
-      'feedbackTree.paywallSubscribeDesc',
-      'feedbackTree.managePublicationsDesc',
-    ].filter((k) => HAS_DASH.test(dict.get(k) ?? ''));
-    expect(offenders).toEqual([]);
-  });
-
-  it('every non-exempt locale has a baseline', () => {
-    const missing = dictionaries.filter((l) => l !== 'en' && !EXEMPT.has(l) && !(l in BASELINE));
-    expect(missing).toEqual([]);
   });
 });

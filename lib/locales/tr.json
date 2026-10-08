@@ -1,6 +1,6 @@
 {
   "common": {
-    "home": "Home",
+    "home": "Ana Sayfa",
     "cancel": "İptal",
     "delete": "Sil",
     "save": "Kaydet",
@@ -66,7 +66,7 @@
     },
     "track": {
       "beforeYouStart": "Başlamadan önce",
-      "beginCaption": "Mera sizi bu telefonla giriş yaptırır. Hatırlanacak bir şey yok.",
+      "beginCaption": "Mera, bu telefonla giriş yapmanı sağlar. Hatırlanacak bir şey yok.",
       "beginMera": "Mera'yı başlat",
       "beginTitle": "Nasıl başlamak istersiniz?",
       "beginWithoutEmail": "E-posta olmadan başla",
@@ -87,7 +87,7 @@
       "welcome": "Mera'ya hoş geldiniz",
       "wrongCode": "Bu kod işe yaramadı. Kontrol edin ya da yeni bir kod isteyin.",
       "noSheetTitle": "iPhone'unuz indirmeyi açamadı",
-      "noSheetBody": "Tekrar deneyin veya Ayarlar › Genel › Dil ve Bölge › Çeviri Dilleri bölümünden {{language}} dilini indirin."
+      "noSheetBody": "Tekrar deneyin ya da iPhone'unuzda Ayarlar'ı açın, ardından Genel, Dil ve Bölge, Çeviri Dilleri bölümüne gidip {{language}} dilini indirin."
     }
   },
   "account": {
@@ -125,7 +125,7 @@
         "fetching": {
           "headlines": [
             "Bugünün makaleleri telefonuna aktarılıyor…",
-            "Mera haberleri cihazına getirir. İlgi alanların hiçbir zaman buradan çıkmaz."
+            "Bugünün haberleri senin için hazırlanıyor…"
           ],
           "amberSubline": "Lütfen bu ekranı açık tut."
         },
@@ -207,12 +207,12 @@
     "statsPublishedPending_other": "{{formatted}} makale son 24 saatte yayınlandı.",
     "statsPublished_one": "{{formatted}} makale son 24 saatte yayınlandı,",
     "statsPublished_other": "{{formatted}} makale son 24 saatte yayınlandı,",
-    "statsAnalysed_one": "{{formatted}} senin için analiz edildi,",
-    "statsAnalysed_other": "{{formatted}} senin için analiz edildi,",
-    "statsRelevant_one": "{{formatted}} uygun görünüyor,",
-    "statsRelevant_other": "{{formatted}} uygun görünüyor,",
-    "statsRead_one": "ve {{formatted}} okumuşsun.",
-    "statsRead_other": "ve {{formatted}} okumuşsun.",
+    "statsAnalysed_one": "{{formatted}} sizin için analiz edildi,",
+    "statsAnalysed_other": "{{formatted}} sizin için analiz edildi,",
+    "statsRelevant_one": "{{formatted}} alakalı görünüyor",
+    "statsRelevant_other": "{{formatted}} alakalı görünüyor",
+    "statsRead_one": "ve {{formatted}} tanesini okudun.",
+    "statsRead_other": "ve {{formatted}} tanesini okudun.",
     "loadingA11y": "Akışın yükleniyor",
     "translatingCaption": "Çevriliyor…",
     "reasonWritingA11y": "not yazılıyor",
@@ -238,7 +238,10 @@
       "continuous": "Sürekli akış",
       "sectioned": "Bölümlü akış",
       "title": "Görünüm"
-    }
+    },
+    "statsZeroFetched": "Mera henüz hiç makale getiremedi. Denemeye devam edecek. Bu durum sürerse destek ekibiyle iletişime geçin.",
+    "statsZeroAnalysedTail": "ama Mera henüz senin için hiçbirini analiz edemedi. Denemeye devam edecek. Bu durum sürerse destek ekibiyle iletişime geç.",
+    "statsZeroRelevantTail": "ama henüz hiçbiri alakalı görünmüyor. Profilini gözden geçir veya destek ekibiyle iletişime geç."
   },
   "relevance": {
     "emergency": "Acil",
@@ -291,7 +294,7 @@
     "badgeRegulator": "Resmi kurum"
   },
   "clusterDetail": {
-    "notTranslatable": "Bu makale {{language}} dilinde. Cihazın onu çeviremiyor — kendi dilinde okumak için Google Translate'i kullan.",
+    "notTranslatable": "Bu makale {{language}} dilinde. Cihazınız onu çeviremiyor. Kendi dilinizde okumak için Google Çeviri'yi kullanın.",
     "notTranslatableOsOutdated": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri için iOS {{requiredVersion}} gerekiyor: sen iOS {{currentVersion}} kullanıyorsun. iOS'u güncelle ya da kendi dilinde okumak için Google Translate'i kullan.",
     "unknownLanguage": "başka bir dil",
     "translationGuideLink": "Makaleyi nasıl çevireceğimi göster",
@@ -353,7 +356,7 @@
     "retry": "Tekrar Dene",
     "translationUnavailableTapToRetry": "{{language}} dil paketi hâlâ indiriliyor olabilir. Şimdilik İngilizce gösteriliyor. Tekrar denemek için dokunun.",
     "translationUnavailableTitle": "Çeviri kullanılamıyor",
-    "translationUnsupportedOnThisIos": "iOS sürümünüz {{language}} dilinde çeviremiyor. İngilizce gösteriliyor — iOS'u güncellemek bunu etkinleştirecektir.",
+    "translationUnsupportedOnThisIos": "iOS sürümünüz {{language}} dilinde çeviri yapamıyor, bu yüzden İngilizce gösteriliyor. iOS'u güncellemek bunu etkinleştirir.",
     "downloadHintNowPrefix": "İndirmeyi başlatmak için aşağıdaki listede her dilin yanındaki",
     "downloadHintNowSuffix": "simgesine dokun.",
     "switchDeviceUnsupportedBody": "Bu cihaz haber makalelerini hiçbir dile çeviremiyor, bu yüzden uygulama İngilizce kullanıyor. {{language}} makaleleri çevrilmeden bırakır.",
@@ -362,7 +365,7 @@
     "switchTimedOutBody": "{{language}} dilinin hazırlanması çok uzun sürüyor, bu yüzden hâlâ {{previous}} dilini kullanıyorsun. İndirme arka planda tamamlanabilir. Kısa süre sonra tekrar dene.",
     "switchUnsupportedBody": "iOS'un bu sürümü {{language}} diline çeviri yapamıyor, bu yüzden hâlâ {{previous}} dilini kullanıyorsun.",
     "switchingCancel": "Dil değiştirmeyi durdur",
-    "switchingNudge": "Cihazın {{language}} çeviri paketini hazırlıyor. Lütfen işlem bitene kadar bu ekranı açık tut — şimdi ayrılırsan haberler İngilizce kalmaya devam eder.",
+    "switchingNudge": "Cihazınız {{language}} çeviri paketini hazırlıyor. İşlem bitene kadar lütfen bu ekranı açık tutun. Şimdi ayrılırsanız haberler İngilizce kalmaya devam eder.",
     "switchingTitle": "{{language}} dili ayarlanıyor…",
     "translationUnavailableOnThisDevice": "Bu cihaz haber makalelerini {{language}} diline çeviremiyor. Bunun yerine İngilizce gösteriliyor."
   },
@@ -408,14 +411,14 @@
     "deleteFailedTitle": "Silme Başarısız",
     "deleteFailedDescription": "Model silinemedi. Lütfen tekrar dene.",
     "attestationTitle": "Tasdiki doğrula",
-    "attestationSubtitle": "Bulut yapay zekasının gerçek Intel TDX donanımında çalıştığını ve verilerinizin şifrelendiği anahtarın içinden geldiğini kontrol edin.",
+    "attestationSubtitle": "Bulut yapay zekasının gerçek Intel TDX donanımında çalıştığını ve verilerinizin şifrelendiği anahtarın bu donanımın içinden geldiğini kontrol edin.",
     "attestationVerifyButton": "Doğrulamayı çalıştır",
     "attestationVerifying": "Doğrulanıyor...",
     "attestationRerun": "Tekrar çalıştır",
     "attestationVerdictFailed": "Doğrulama başarısız oldu",
     "attestationVerdictIncomplete": "Kısmen doğrulandi",
     "attestationVerdictVerified": "Doğrulandi",
-    "attestationVerdictFailedDetail": "Bir şey kontrol edilmedi. Verileriniz hâlâ şifreli, ancak donanım doğrulanamadı.",
+    "attestationVerdictFailedDetail": "Bir kontrol başarısız oldu. Verileriniz hâlâ şifreli, ancak donanım doğrulanamadı.",
     "attestationVerdictIncompleteDetail": "Gerçekleştirdiğimiz her denetim geçti. Bazı denetimler hiç yapılmıyor ve aşağıda kontrol edilmedi olarak listeleniyor.",
     "attestationError": "Tasdikat raporu getirilemedi. Bağlantını kontrol et ve tekrar dene.",
     "attestationNotRunYet": "Henüz çalıştırılmadı.",
@@ -432,7 +435,7 @@
     "attestationCheckTcbStatus": "Platform yaması düzey güncel",
     "attestationCheckGpuAttestation": "GPU tasdiki",
     "attestationNotCheckedLabel": "kontrol edilmedi",
-    "attestationScopeNotice": "Bu yukarıda gösterilen modeli kontrol ediyor. Mera birden fazla bulut modeli kullanıyor (chat farklı bir tane kullanıyor ve her birinin bir yedeği var), bu yüzden burada bir geçiş bunu başarmaksa bunu yapar, her isteği değil.",
+    "attestationScopeNotice": "Bu, yukarıda gösterilen modeli kontrol eder. Mera birden fazla bulut modeli kullanır (sohbet farklı bir model kullanır ve her birinin bir yedeği vardır), bu yüzden buradaki başarılı sonuç yalnızca bu modeli kapsar, her isteği değil.",
     "attestationModelLabel": "Kontrol edilen model",
     "webSearchTitle": "Sohbette web araması",
     "extractedMetadataPanelHeading": "Çıkarılan Meta Veriler",
@@ -468,7 +471,8 @@
     "staysPrivateTitle": "Verileriniz gizli kalır",
     "webSearchShort": "Telefonunuzdan yalnızca arama kelimeleri çıkar. Kim olduğunuzu söyleyen hiçbir şey çıkmaz.",
     "whereReads": "Mera haberlerinizi nerede okur",
-    "whileClosed": "Mera kapalıyken"
+    "whileClosed": "Mera kapalıyken",
+    "deleting": "Siliniyor…"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanır. Başka hiçbir şey etkilenmez ve sunucu verisi değiştirilmez (bu veri hiç cihazından çıkmadı).",
@@ -476,7 +480,7 @@
     "deletedDescription": "Seçilen veriler başarıyla temizlendi.",
     "errorTitle": "Hata",
     "errorDescription": "Veriler silinemedi. Lütfen tekrar dene.",
-    "factsModalDescription": "Eklediğiniz bilgileri ve onlardan üretilen konuları siler. Bilgileriniz bu cihazdan hiç ayrılmaz. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır; dolayısıyla orada bunların size ait olduğunu gösteren hiçbir kayıt yoktur. Haber akışınız da temizlenir, çünkü bu konular üzerine kuruludur, ve yeni bilgi ekleyene kadar boş kalır.",
+    "factsModalDescription": "Eklediğiniz gerçekleri ve onlardan üretilen konuları siler. Gerçekleriniz bu cihazdan hiç ayrılmaz. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır. Bu yüzden orada bunların size ait olduğunu gösteren hiçbir kayıt yoktur. Haber akışınız da temizlenir, çünkü bu konular üzerine kuruludur. Yeni gerçek ekleyene kadar boş olarak yeniden oluşur.",
     "exportHistoryTitle": "Okuma geçmişini dışa aktar",
     "exportHistoryDescription": "Son 30 gün JSON olarak: makaleler, yayınlar ve ortalama yayından okumasına kadar süre",
     "exportHistorySubject": "Mera okuma geçmişim (JSON)",
@@ -506,7 +510,9 @@
     "intro": "Mera'nın bu telefonda tuttuğu her şeyi yedekleyin, inceleyin, yanınıza alın ya da silin.",
     "lookAndTake": "İncele ve al",
     "askBeforeTopicDelete": "Konu silmeden önce onay iste",
-    "askBeforeTopicDeleteHint": "Bilgilerinizden birinden bir konuyu her sildiğinizde Mera sizden onay ister."
+    "askBeforeTopicDeleteHint": "Bilgilerinizden birinden bir konuyu her sildiğinizde Mera sizden onay ister.",
+    "exportHistoryWindowNote_one": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve hiçbir zaman bir sunucuya gönderilmedi.",
+    "exportHistoryWindowNote_other": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve hiçbir zaman bir sunucuya gönderilmedi."
   },
   "preferences": {
     "notifications": "Bildirimler",
@@ -517,7 +523,7 @@
     "deleteAccount": "Hesabı sil",
     "logout": "Çıkış yap",
     "signOutModalTitle": "Çıkış Yap",
-    "signOutConfirm": "Hesabından çıkış yapmak istediğinden emin misin?",
+    "signOutConfirm": "Çıkış yapmak bu cihazda saklanan her şeyi siler: kaydettiğin makaleler, okuma geçmişin, takip ettiğin haberler ve kişiselleştirme. Mera'yı kullanmak için tekrar giriş yapman gerekir.",
     "signOut": "Çıkış Yap",
     "continue": "Devam Et",
     "finalConfirmation": "Son Onay",
@@ -590,7 +596,10 @@
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol artık kullanıma hazır.",
     "completeTitle": "İndirme tamamlandı",
-    "failedTitle": "İndirme başarısız"
+    "failedTitle": "İndirme başarısız",
+    "failedConnection": "Bağlantınızı kontrol edip tekrar deneyin.",
+    "failedServer": "İndirme sunucusunda bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
+    "failedDamaged": "İndirme bozuk geldi. Lütfen tekrar deneyin."
   },
   "chat": {
     "startingChat": "Sohbet başlatılıyor...",
@@ -623,10 +632,12 @@
     },
     "hideKeyboard": "Klavyeyi gizle",
     "stop": "Durdur",
-    "stopped": "Durduruldu"
+    "stopped": "Durduruldu",
+    "replyLeakFallback": "Anladım. Eklemek istediğiniz başka bir şey var mı?",
+    "replyProcessFallback": "Özür dilerim, buna yetişemedim. Bir daha söyleyebilir misiniz?"
   },
   "personaChat": {
-    "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nEğer bu seni biraz şüpheye düşürürse, içgüdün doğru. Kişisel verileri bir uygulama şirketi vermeye akıllıca demek değil. Mera farklı şekilde inşa edildi: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana nasıl çalıştığını sorabilirsin, ya da 'kurulumda bana yardım et' de ve başlayalım."
+    "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nBu seni biraz tereddüte düşürüyorsa, içgüdün doğru. Kişisel verilerini bir uygulama şirketine teslim etmek akıllıca değil. Mera farklı tasarlandı: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana bunun nasıl çalıştığını sorabilirsin ya da 'kurulumda bana yardım et' de, başlayalım."
   },
   "floatingChat": {
     "close": "Kapat",
@@ -768,7 +779,7 @@
     "noTasksYet": "Henüz kayıtlı görev yok",
     "feed": "Akış",
     "feedFunnel": "Akış hunisi",
-    "protocol": "Protokol",
+    "protocol": "Cihaz üzerinde yapay zeka",
     "system": "Sistem",
     "settings": "Ayarlar",
     "noSettings": "Ayar yok",
@@ -777,9 +788,9 @@
     "running": "{{count}} çalışıyor",
     "failed": "{{count}} başarısız",
     "pending": "{{count}} bekliyor",
-    "noteBody": "Bu ekran Mera'nın cihazında kurulu olan veritabanını doğrudan okur — haber akışını oluşturan veriler burada görünürlük ve hata ayıklama için gösterilir. Mera'nın sunucuları senin gerçeklerinizi, okuma geçmişini veya bunlardan oluşturulan önerileri saklamaz.",
+    "noteBody": "Bu ekran Mera'nın cihazındaki veritabanını doğrudan okur. Haber akışınızı oluşturan veriler burada, görünürlük ve hata ayıklama için gösterilir. Mera'nın sunucuları gerçeklerinizi, okuma geçmişinizi veya bunlardan oluşturulan önerileri saklamaz.",
     "noteExceptions": "İki istisna: hesap profilin (giriş, bildirimler, dil) Mera hesabınla senkronize edilir ve bulut AI açıkken gerçekleriniz puanlama için gönderilmeden önce bu cihazda şifrelenir.",
-    "noteFooter": "Buradaki değerler ham ve tanılayıcıdır. Akış satırları 48 saat sonra kendilerini temizler; gerçeklerinizi, akış önbelleğini ve görüntüleme geçmişini Verileri Yönet'ten silebilirsin.",
+    "noteFooter": "Buradaki değerler ham ve tanılayıcıdır. Akış satırları 48 saat sonra kendiliğinden temizlenir. Gerçeklerinizi, akış önbelleğinizi ve görüntüleme geçmişinizi Verileri Yönet'ten silebilirsiniz.",
     "noteTitle": "Verileriniz, Cihazınızda"
   },
   "tableDetail": {
@@ -855,7 +866,7 @@
   },
   "swipeFeed": {
     "askMera": "Mera'ya Sor",
-    "feedbackCaption": "Tek başına bir dokunuş Mera'ya yeterli bilgi vermez — o yüzden atıyoruz, haber akışını sağlıklı tutmak için. Bir sebep seç, haber akışın hemen değişecek.",
+    "feedbackCaption": "Tek başına bir dokunuş Mera'ya yeterince bilgi vermez, bu yüzden haber akışınızı sağlıklı tutmak için yok sayılır. Bir sebep seçin, haber akışınız hemen değişir.",
     "chatHandoffLike": "Bu haberi beğendim, bunun gibi daha fazlası: {{path}}.",
     "chatHandoffLikeNoPath": "Bu haberi beğendim, bunun gibi daha fazlasını istiyorum.",
     "chatHandoffDislike": "Bu haberi beğenmedim, {{path}}.",
@@ -956,7 +967,11 @@
     "help": {
       "title": "Bildirimler hakkında",
       "body": "Mera burada haber akışın hakkında notlar bırakır: istediğin doğruluk kontrolü hazır olduğunda, günlük haber akışı bakımın, ilgi alanlarını düzenlemek ya da toparlamak için ipuçları ve Mera ekibinden sorular. Bunlar yalnızca bu telefonda 90 gün saklanır ve okunmamış bir not varsa bir nokta görünür. Haber uyarıları burada görünmez. Zamanlarını Ayarlar'da, Bildirimler altından ayarlarsın."
-    }
+    },
+    "ageNow": "şimdi",
+    "ageMinutes": "{{n}} dk",
+    "ageHours": "{{n}} sa",
+    "ageDays": "{{n}} gün"
   },
   "settings": {
     "groupHelp": "Yardım",
@@ -1006,7 +1021,27 @@
       "addLocation": "Konum eklendi",
       "deleteLocation": "Konum kaldırıldı",
       "retireSuppression": "Filtre kaldırıldı",
-      "setSourceScopePref": "Kaynak kapsamı ayarlandı"
+      "setSourceScopePref": "Kaynak kapsamı ayarlandı",
+      "migrateFact": "Bir ilgi alanı taşındı",
+      "setScoringOverride": "Hikayelerinizin sıralanmasını ayarladı"
+    },
+    "summary": {
+      "added": "{{name}} eklendi",
+      "removed": "{{name}} kaldırıldı",
+      "muted": "{{name}} sessize alındı",
+      "countsMore": "{{name}} daha fazla sayılıyor",
+      "countsLess": "{{name}} daha az sayılıyor",
+      "pinned": "{{name}} sabitlendi",
+      "unpinned": "{{name}} sabitlemesi kaldırıldı",
+      "notInterested": "{{name}} ilgini çekmiyor",
+      "showingAgain": "{{name}} yeniden gösteriliyor",
+      "moreFrom": "{{name}} ile ilgili daha fazlası",
+      "cleared": "{{name}} için ayarınız temizlendi",
+      "moreSourcesFrom": "{{name}} kaynaklarından daha fazla",
+      "fewerSourcesFrom": "{{name}} kaynaklarından daha az",
+      "clearedSourcesFrom": "{{name}} kaynakları için ayarınız temizlendi",
+      "carriedOver": "{{name}} aktarıldı",
+      "undone": "Geri alındı: {{change}}"
     }
   },
   "calibration": {
@@ -1071,7 +1106,8 @@
     "followStory": "Bu hikayeyi takip et",
     "moreAboutTopic": "Bu konu hakkında daha fazla",
     "moreFromPublication": "Bu yayından daha fazla",
-    "moreNewsFromPlace": "Bu yerden daha fazla haber"
+    "moreNewsFromPlace": "Bu yerden daha fazla haber",
+    "confirmMuteBodyUnnamed": "Bu yayından bir daha makale görmeyeceksiniz. Bunu istediğiniz zaman geri alabilirsiniz."
   },
   "topicPlan": {
     "title": "Takip edeceğim konular",
@@ -1144,7 +1180,16 @@
     "titleLocationConflict": "İki yer birbiriyle çelişiyor",
     "titleStaleFact": "Bir bilginin artık aktif konusu kalmadı",
     "titleStaleTopic": "Bir konu sessizleşti",
-    "titleTooBroad": "Bir bilgi çok fazla şey getiriyor"
+    "titleTooBroad": "Bir bilgi çok fazla şey getiriyor",
+    "summary": {
+      "duplicate": "{{fact}}, {{other}} ile tekrar ediyor",
+      "locationConflict": "{{fact}} ve {{other}} farklı yerlerden söz ediyor",
+      "staleFact": "{{fact}} için artık aktif konu kalmadı",
+      "tooBroad": "{{fact}} çok geniş",
+      "staleTopic": "{{topic}} haftalardır sessiz",
+      "incoherentTopics_one": "{{fact}} altındaki {{count}} konu buna uymuyor: {{topics}}",
+      "incoherentTopics_other": "{{fact}} altındaki {{count}} konu buna uymuyor: {{topics}}"
+    }
   },
   "locations": {
     "title": "Yerler",
@@ -1204,12 +1249,12 @@
       "publication": "Kaynak",
       "topic": "Konu"
     },
-    "cardExemptLabel": "\"{{filter}}\" filtrelemişsin — önemli haber olduğu için gösteriyorum"
+    "cardExemptLabel": "\"{{filter}}\" filtrelediniz. Önemli bir haber olduğu için gösteriliyor"
   },
   "headlineDepth": {
     "title": "Öne çıkan başlıklar",
     "subtitle": "Mera sana kaç tane okuyor",
-    "intro": "Mera her bölümdeki en büyük hikayeleri okur, sonra sana önemli olanları seçer. Daha fazla görmek için bir bölümü yükselt; dar tutmak için düşür.",
+    "intro": "Mera her bölümdeki en büyük hikayeleri okur, ardından sizin için önemli olanları seçer. Daha fazla görmek için bir bölümü yükseltin, daha sade tutmak için düşürün.",
     "worldwide": "Dünya geneli",
     "optionLabel": "En İyi {{n}}",
     "usingDefault": "Standart {{n}} kullanıyorum.",
@@ -1280,7 +1325,9 @@
     "discardConfirmNo": "Sakla",
     "appliedToast": "{{count}} değişiklik uygulandı",
     "appliedTitle": "Akış ayarlandı",
-    "empty": "Şu anda ayarlanacak bir şey yok."
+    "empty": "Şu anda ayarlanacak bir şey yok.",
+    "optionApply": "Uygula",
+    "optionSkip": "Atla"
   },
   "pin": {
     "lockTitle": "Mera kilitli",
@@ -1410,7 +1457,7 @@
     "noLink": "Bağlantı mevcut değil",
     "actionA11yPending": "Gerçek kontrol talep edildi, sonuç için kontrol edin",
     "actionA11yDone": "Gerçek kontrol hazır, sonuç aşağıda gösterilir",
-    "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik, sorgu başarısız oldu. Bu kimsenin yayın yapmamış olmasından farklıdır; aşağıda geniş aramanın bulduğu sonuçlar yer almaktadır.",
+    "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik. Bu, kimsenin yayın yapmadığı anlamına gelmez. Aşağıda daha geniş aramanın bulduklarını görebilirsiniz.",
     "claimProposalTitle": "Bu iddiayı kontrol et?",
     "actionCheckClaim": "Iddiayı kontrol et",
     "chatSeed": "Bu hikaye hakkında ne kontrol edilebilir?",
@@ -1540,7 +1587,7 @@
             "reveal": {
               "about-you": {
                 "label": "Senin hakkında ne biliyor",
-                "text": "Gerçekleriniz, ilgileriniz ve okuduğunuz bu telefona yazılıyor ve orada kalıyor. Sunucuda onun kopyası yok."
+                "text": "Gerçekleriniz, ilgi alanlarınız ve okuduklarınız bu telefona yazılır ve orada kalır. Sunucuda bunların bir kopyası yoktur."
               },
               "what-leaves": {
                 "label": "Aslında ne ayrılıyor",
@@ -1632,11 +1679,11 @@
           },
           "nothing-removed": {
             "headline": "Hiçbir şey hiçbir zaman kaldırılmaz",
-            "body": "Bir kartı okuyun ve kaybolmaz; batır. Bu, ayırıcılarla kesilen bölümler değil, tek bir sürekli listedir — kartlar sessizce yenileri geçerken daha aşağıya kaymaktadır.",
+            "body": "Bir kartı okuduğunuzda kaybolmaz, aşağı iner. Bu, ayırıcılarla bölünmüş bölümler değil, tek ve kesintisiz bir listedir. Siz ilerledikçe kartlar yenilerinin altına sessizce kayar.",
             "steps": {
               "0": "Ön plandaki: henüz görmediğiniz her şey.",
               "1": "Sonraki: görülen, ama açılmayan.",
-              "2": "En altta: zaten okundu — ayırıcı yok, sadece aynı listedeki daha düşük bir yer."
+              "2": "En altta: zaten okunanlar. Ayırıcı yok, yalnızca aynı listede daha aşağıda bir yer."
             },
             "beforeAfter": {
               "before": "Okumadan önce: kart tepede yeni başka her şeylerle oturuyor.",
@@ -1676,7 +1723,7 @@
           },
           "quiet-by-design": {
             "headline": "Bilerek sessiz bir akış",
-            "body": "Mera okurken sizi takip etmez. İki görünümün de nasıl sakin kaldığını görmek için ikisine de dokunun.",
+            "body": "Mera, siz okurken size sayaç göstermez. Her görünümün nasıl sakin kaldığını görmek için ikisine de dokunun.",
             "ask": "Akış neden kaç haberin geldiğini göstermiyor?",
             "reveal": {
               "feed": {
@@ -1744,10 +1791,10 @@
       },
       "privacy": {
         "title": "Gizliliğiniz",
-        "subtitle": "Bu telefonu ne ayrılıyor ve ne hiç ayrılmıyor.",
+        "subtitle": "Bu telefondan ne çıkıyor, ne asla çıkmıyor.",
         "slides": {
           "stays-on-phone": {
-            "headline": "Senin hakkında olan bölüm hiçbir zaman ayrılmıyor",
+            "headline": "Senin hakkındaki kısım telefonundan asla çıkmaz",
             "body": "Gerçekleriniz, ilgileriniz, yerleriniz ve okuduğunuz bu telefonda yaşıyor. Sunucuda bir kopyası yok, bu yüzden de çıkış yapma veya telefon değiştirme profilini tekrar inşa etmek anlamına gelir."
           },
           "what-leaves": {
@@ -1756,26 +1803,26 @@
             "steps": {
               "0": "Kısa konu ifadeleri, böylece hikayelerle eşleşecek bir şey var.",
               "1": "Nasıl giriş yaptığınız, e-postayla veya bu telefonla, ve hangi planda olduğunuz.",
-              "2": "Bugün kaç hikaye analiz edildiğinin sayısı, bunu yapılan planı dürüst tutmak."
+              "2": "Planınızı dürüst tutmak için bugün kaç haberin analiz edildiğinin sayısı."
             },
             "ask": "Uygulama sunucularınıza ne gönderiyor?"
           },
           "cloud-is-default": {
             "headline": "Varsayılan şifreli buluttadır",
-            "body": "Bir gün haber okumak makine kalitesinde birçok düşünme alır ve çoğu telefon istemez. Bu yüzden kutunun dışından bu iş bulutta olur.",
+            "body": "Bir günün haberlerini okumak epey düşünmeyi gerektirir ve çoğu telefon bunu istemez. Bu yüzden varsayılan olarak bu iş bulutta yapılır.",
             "beforeAfter": {
-              "before": "Sana söylemek isteyebileceğimiz versiyon: telefonun her zaman tamamını yapıyor.",
-              "after": "Aslında doğru olan: varsayılan olarak düşünme bulutta olur, bu telefonda şifreli ve yalnızca kapalı kapsülün içinde açılır. Cihazda yer aldığınız bir switch. Kabul etmek yerine söylemekten çok isteriz."
+              "before": "Size anlatmayı çok isteyeceğimiz sürüm: telefonunuz her şeyi yapıyor, her zaman.",
+              "after": "Gerçekte olan şu: varsayılan olarak düşünme işi bulutta olur, veriler bu telefonda şifrelenir ve yalnızca kapalı bir kapsülün içinde açılır. Cihaz üzerinde işleme, açabileceğiniz bir anahtardır. Bunu varsaymanızdansa açıkça söylemeyi tercih ederiz."
             }
           },
           "on-device-option": {
             "headline": "İsterseniz cihaz üzerinde",
-            "body": "Ayarlar → Mera Protocol bölümünden işlemeyi bu telefona taşıyabilirsiniz. O zaman haberlerinizi okuyan yapay zeka bulut yerine burada çalışır. Konu ifadeleriniz haber getirmek için yine dışarı çıkar ve giriş için yine e-postanız ya da bu telefon gerekir. Önce bir model indirir, oldukça yeni bir telefon ister ve belirgin şekilde daha yavaştır, varsayılan olmamasının nedeni de tam olarak budur."
+            "body": "Ayarlar'ı, ardından Mera Protocol'ü açarak işlemeyi bu telefona taşıyabilirsiniz. O zaman haberlerinizi okuyan yapay zeka bulut yerine burada çalışır. Konu ifadeleriniz haber getirmek için yine dışarı çıkar ve giriş için yine e-postanız ya da bu telefon gerekir. Önce bir model indirir, oldukça yeni bir telefon ister ve belirgin şekilde daha yavaştır, varsayılan olmamasının nedeni de tam olarak budur."
           },
           "what-we-keep": {
             "headline": "Ne tuttuğumuz",
             "body": "Eklediyseniz giriş e-postanız. Hangi planda olduğunuz. Günlük analiz edilen haber sayısı. Mera'yı e-posta olmadan kullanıyorsanız, bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğine dair hiçbir kayıt tutulmaz ve on dört gün kullanılmazsa silinir.",
-            "ask": "Mera beni sunuculara ne saklar?"
+            "ask": "Mera sunucularında benim hakkımda ne saklıyor?"
           }
         }
       },
@@ -1944,7 +1991,7 @@
           },
           "exact-match": {
             "headline": "Bir filtre tam olarak bir şey eşleşir",
-            "body": "Filtreler aramalar değil. Bir yer filtresi o yeri eşleştirir; kaynak filtresi bu kaynağı eşleştirir. Onlar hikayenin bir alanının tam değerini karşılaştırırlar, bunu öngörülebilir yapan ve aynı zamanda sonraki kartı önemli kılanlar."
+            "body": "Filtreler arama değildir. Yer filtresi o yeri, kaynak filtresi de o kaynağı eşleştirir. Bunlar bir hikayenin tek bir alanındaki tam değeri karşılaştırır. Tahmin edilebilir olmalarını sağlayan bu özellik, sonraki kartı da önemli kılar."
           },
           "made-from-a-story": {
             "headline": "Kesin olanlar nereden gelir",
@@ -2017,7 +2064,7 @@
             "choose": {
               "applies-immediately": {
                 "label": "Değişikliği uygulanır",
-                "feedback": "Yapmaz. Yazılan anlaşma burada rıza değil; karışım."
+                "feedback": "Yapmaz. Burada yazarak verilen onay rıza sayılmaz. Rızayı dokunuş verir."
               },
               "waits-for-your-tap": {
                 "label": "Hiçbir şey. Kart hâlâ orada bekliyorum",
@@ -2032,7 +2079,7 @@
           },
           "take-it-back": {
             "headline": "Çoğu geri alınabilir",
-            "body": "Kayıt Ayarlar → Mera Protokolü → Persona değişiklik günlüğünde yaşıyor.",
+            "body": "Kaydı görmek için Ayarlar'ı, ardından Mera Protokolü'nü, ardından Persona değişiklik günlüğünü açın.",
             "beforeAfter": {
               "before": "Ağırlık değişikliği, eklenen konu, kaldırdığı filtre: bunlar tam olarak nasıl geri koydukları bir Geri Al taşıyoruz.",
               "after": "Birkaçı geri alınamaz ve söyleyin: temizleme sırasında bir gerçeği silmek veya yer kaldırma, geri koymak için gerekli olanları atar. Onlar hiçbir Geri Al yanında oturum günlüğünde oturuyoruz."
@@ -2060,7 +2107,7 @@
             "reveal": {
               "cloud": {
                 "label": "Bulut (varsayılan)",
-                "text": "Verileriniz bu telefonda şifreli, yalnızca kapalı kapsülün içinde açılıyor ve yolda tekrar şifrelenmiş. Hızlı ve herhangi bir telefonda çalışır. Uygulama henüz bu kapsülün sertifikasını çip yapan kontrol etmiyor, gizlilik bildirimi açık söylüyor."
+                "text": "Verileriniz bu telefonda şifrelenir, yalnızca kapalı bir kapsülün içinde açılır ve dönüş yolunda tekrar şifrelenir. Hızlıdır ve her telefonda çalışır. Uygulama bu kapsülün sertifikasını henüz çip üreticisine karşı doğrulamıyor ve gizlilik bildirimi bunu açıkça söylüyor."
               },
               "on-device": {
                 "label": "Cihazda",
@@ -2074,18 +2121,18 @@
           },
           "web-search": {
             "headline": "Sohbette web araması",
-            "body": "Varsayılan olarak kapalı. Çevrildi, Mera orta konuşmayı bir şey bakabilirsiniz. Ne çıkıyor telefonu yaptığında?",
+            "body": "Varsayılan olarak kapalıdır. Açıldığında Mera, sohbet sırasında bir şeyi araştırabilir. Bunu yaptığında telefonundan ne çıkar?",
             "choose": {
               "whole-question": {
                 "label": "Tüm mesajın",
-                "feedback": "Hayır. Anahtar kapalı, arama aracı bile modele sunulmuş, bu yüzden hiçbir şey maliyeti."
+                "feedback": "Hayır. Anahtar kapalıyken arama aracı modele hiç sunulmaz, bu yüzden hiçbir maliyeti olmaz."
               },
               "search-words-only": {
                 "label": "Sadece arama sözcükleri",
-                "feedback": "Doğru. Sözcükleri aramaya karar verdi ve başka hiçbir şey."
+                "feedback": "Doğru. Yalnızca aramaya karar verdiği kelimeler çıkar, başka hiçbir şey çıkmaz."
               }
             },
-            "ask": "Web araması açık olduğunda telefonu ne bırakır?"
+            "ask": "Sohbette web araması açıkken telefonumdan ne çıkıyor?"
           },
           "the-change-log": {
             "headline": "Değişim günlüğü burada da yaşıyor",
@@ -2175,7 +2222,7 @@
     "driveConnect": "Google hesabını bağlamak için dokun",
     "driveFailed": "Google girişini yapamadı. Birazdan tekrar dene.",
     "driveFailedTitle": "Google Drive bağlanamadı",
-    "driveHiddenFolder": "Drive'ın gizli uygulama depolama alanında. Dosyalarının arasında görünmez; yalnızca Drive ayarlarında, Uygulamaları yönet bölümünde görünür.",
+    "driveHiddenFolder": "Drive'ın gizli uygulama depolama alanında. Dosyalarınızın arasında görünmez, yalnızca Drive ayarlarında, Uygulamaları yönet bölümünde görünür.",
     "driveMisconfigured": "Google Sign-In bu uygulama sürümü için ayarlanmamış.",
     "drivePlayServices": "Drive'ı kullanmak için bu cihazda güncel Google Play hizmetleri gerekiyor.",
     "driveReady": "Google Drive depolama alanını kullanır",
@@ -2377,8 +2424,8 @@
       "Sözlerin telefonundan çıkmadan önce şifrelenir."
     ],
     "attesting": [
-      "Seninle model arasında güvenilir bir ortamda güvenli bağlantı kuruluyor.",
-      "Anahtar, modelin güvenilir ortamından alınıyor; böylece bunu yalnızca model okuyabilir."
+      "Güvenilir bir ortamda, sizinle model arasında güvenli bir bağlantı kuruluyor.",
+      "Anahtar, modelin güvenilir ortamından alınıyor. Bu sayede yalnızca model bunu okuyabilir."
     ],
     "thinking": [
       "Model mesajını okuyor.",
@@ -2627,7 +2674,7 @@
       "topLine": "sonra {{second}} ve {{third}}",
       "topLineOne": "sonra {{second}}",
       "emptyTitle": "Henüz sayılacak bir şey yok",
-      "emptyBody": "Haberleri kaynağında açın, kaydedin ya da hikayeleri takip edin; son 30 gününüz burada görünür.",
+      "emptyBody": "Haberleri kaynağında açın, kaydedin ya da hikayeleri takip edin. Son 30 gününüz burada görünür.",
       "learn": "İstatistikleri keşfet",
       "freshLineDays_one": "açtığınızın yarısı {{count}} günden yeniydi",
       "freshLineDays_other": "açtığınızın yarısı {{count}} günden yeniydi",

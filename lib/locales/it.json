@@ -87,7 +87,7 @@
       "welcome": "Benvenuto in Mera",
       "wrongCode": "Il codice non funziona. Controllalo, oppure richiedine uno nuovo.",
       "noSheetTitle": "Il tuo iPhone non ha aperto il download",
-      "noSheetBody": "Riprova oppure scarica {{language}} in Impostazioni › Generali › Lingua e regione › Lingue di traduzione."
+      "noSheetBody": "Riprova, oppure apri Impostazioni sul tuo iPhone, poi Generali, poi Lingua e regione, poi Lingue di traduzione, e scarica {{language}}."
     }
   },
   "account": {
@@ -125,7 +125,7 @@
         "fetching": {
           "headlines": [
             "Porto gli articoli di oggi sul tuo telefono…",
-            "Mera porta le notizie sul tuo dispositivo. I tuoi interessi non lo abbandonano mai."
+            "Stiamo preparando per te le storie di oggi…"
           ],
           "amberSubline": "Mantieni questa schermata aperta."
         },
@@ -238,7 +238,10 @@
       "continuous": "Feed continuo",
       "sectioned": "Feed per sezioni",
       "title": "Vista"
-    }
+    },
+    "statsZeroFetched": "Mera non è ancora riuscita a recuperare nessun articolo. Continuerà a provare. Se succede ancora, contatta l'assistenza.",
+    "statsZeroAnalysedTail": "ma Mera non è ancora riuscita ad analizzarne nessuno per te. Continuerà a provare. Se succede ancora, contatta l'assistenza.",
+    "statsZeroRelevantTail": "ma nessuno sembra ancora rilevante. Controlla il tuo profilo o contatta l'assistenza."
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -291,7 +294,7 @@
     "badgeRegulator": "Agenzia ufficiale"
   },
   "clusterDetail": {
-    "notTranslatable": "Questo articolo è in {{language}}. Il tuo dispositivo non può tradurlo — usa Google Translate per leggerlo nella tua lingua.",
+    "notTranslatable": "Questo articolo è in {{language}}. Il tuo dispositivo non può tradurlo. Usa Google Translate per leggerlo nella tua lingua.",
     "notTranslatableOsOutdated": "Questo articolo è in {{language}}. La traduzione sul dispositivo richiede iOS {{requiredVersion}}: tu hai iOS {{currentVersion}}. Aggiorna iOS oppure usa Google Translate per leggerlo nella tua lingua.",
     "unknownLanguage": "un'altra lingua",
     "translationGuideLink": "Mostrami come tradurre l'articolo",
@@ -353,7 +356,7 @@
     "retry": "Riprova",
     "translationUnavailableTapToRetry": "Il pacchetto linguistico {{language}} potrebbe essere ancora in download. Al momento viene mostrato l'inglese. Tocca per riprovare.",
     "translationUnavailableTitle": "Traduzione non disponibile",
-    "translationUnsupportedOnThisIos": "La Sua versione di iOS non può tradurre in {{language}}. Mostrando inglese invece — aggiornare iOS lo renderà possibile.",
+    "translationUnsupportedOnThisIos": "La tua versione di iOS non può tradurre in {{language}}, quindi viene mostrato l'inglese. Aggiornando iOS potrai attivarla.",
     "downloadHintNowPrefix": "Tocca l'icona",
     "downloadHintNowSuffix": "accanto a ogni lingua nell'elenco qui sotto per avviare il download.",
     "switchDeviceUnsupportedBody": "Questo dispositivo non può tradurre gli articoli di notizie in nessuna lingua, quindi l'app sta usando l'inglese. Con {{language}} gli articoli resterebbero non tradotti.",
@@ -362,7 +365,7 @@
     "switchTimedOutBody": "La preparazione di {{language}} sta richiedendo troppo tempo, quindi stai ancora usando {{previous}}. Il download potrebbe completarsi in background. Riprova a breve.",
     "switchUnsupportedBody": "Questa versione di iOS non può tradurre in {{language}}, quindi stai ancora usando {{previous}}.",
     "switchingCancel": "Interrompi il cambio lingua",
-    "switchingNudge": "Il tuo dispositivo sta preparando il pacchetto di traduzione per {{language}}. Tieni aperta questa schermata finché non ha finito — se esci ora, gli articoli resteranno in inglese.",
+    "switchingNudge": "Il tuo dispositivo sta preparando il pacchetto di traduzione per {{language}}. Tieni aperta questa schermata finché non ha finito. Se esci ora, gli articoli resteranno in inglese.",
     "switchingTitle": "Configurazione di {{language}} in corso…",
     "translationUnavailableOnThisDevice": "Questo dispositivo non può tradurre gli articoli di notizie in {{language}}. Al loro posto viene mostrato l'inglese."
   },
@@ -468,7 +471,8 @@
     "staysPrivateTitle": "I tuoi dati restano privati",
     "webSearchShort": "Escono dal telefono solo le parole della ricerca. Nulla che dica chi sei.",
     "whereReads": "Dove Mera legge le tue notizie",
-    "whileClosed": "Mentre Mera è chiuso"
+    "whileClosed": "Mentre Mera è chiuso",
+    "deleting": "Eliminazione in corso…"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Elimina il registro locale degli articoli che hai aperto. La scheda Fonti con la sezione \"Pubblicazioni che stai leggendo\" e la cronologia per pubblicazione verranno azzerate. Nient'altro viene modificato e nessun dato del server viene toccato (questi dati non hanno mai lasciato il dispositivo).",
@@ -476,7 +480,7 @@
     "deletedDescription": "I dati selezionati sono stati cancellati con successo.",
     "errorTitle": "Errore",
     "errorDescription": "Impossibile eliminare i dati. Per favore riprova.",
-    "factsModalDescription": "Cancella i dati che hai aggiunto e i temi generati da essi. I tuoi dati personali non lasciano mai questo dispositivo. I temi vengono inviati quando richiedi notizie e messi in cache sui nostri server senza identificativo utente, quindi lì nulla registra che fossero tuoi. Anche il tuo feed di articoli viene svuotato, dato che si basa su questi temi, e resta vuoto finché non aggiungi nuovi dati.",
+    "factsModalDescription": "Cancella i fatti che hai aggiunto e gli argomenti generati da essi. I tuoi fatti non lasciano mai questo dispositivo. Le frasi degli argomenti vengono inviate quando richiedi notizie e messe in cache sui nostri server senza identificativo utente, quindi lì nulla registra che fossero tue. Anche il tuo feed di articoli viene svuotato, dato che si basa su questi argomenti, e resta vuoto finché non aggiungi nuovi fatti.",
     "exportHistoryTitle": "Esporta cronologia di lettura",
     "exportHistoryDescription": "Ultimi 30 giorni come JSON: articoli, pubblicazioni, e tempo medio dalla pubblicazione alla lettura",
     "exportHistorySubject": "La mia cronologia di lettura Mera (JSON)",
@@ -506,7 +510,9 @@
     "intro": "Salva una copia di ciò che Mera conserva su questo telefono, guardalo, portalo con te o eliminalo.",
     "lookAndTake": "Guarda e porta via",
     "askBeforeTopicDelete": "Chiedi conferma prima di eliminare un argomento",
-    "askBeforeTopicDeleteHint": "Mera ti chiede di confermare ogni volta che elimini un argomento da uno dei tuoi fatti."
+    "askBeforeTopicDeleteHint": "Mera ti chiede di confermare ogni volta che elimini un argomento da uno dei tuoi fatti.",
+    "exportHistoryWindowNote_one": "Questa esportazione copre solo l'ultimo giorno di lettura. Le voci più vecchie vengono eliminate automaticamente da questo dispositivo e non sono mai state inviate a un server.",
+    "exportHistoryWindowNote_other": "Questa esportazione copre solo gli ultimi {{count}} giorni di lettura. Le voci più vecchie vengono eliminate automaticamente da questo dispositivo e non sono mai state inviate a un server."
   },
   "preferences": {
     "notifications": "Notifiche",
@@ -517,7 +523,7 @@
     "deleteAccount": "Elimina account",
     "logout": "Esci",
     "signOutModalTitle": "Disconnessione",
-    "signOutConfirm": "Sei sicuro di voler uscire dal tuo account?",
+    "signOutConfirm": "Uscire cancella tutto ciò che è salvato su questo dispositivo: i tuoi articoli salvati, la cronologia di lettura, le storie seguite e la personalizzazione. Dovrai accedere di nuovo per usare Mera.",
     "signOut": "Disconnetti",
     "continue": "Continua",
     "finalConfirmation": "Conferma finale",
@@ -590,7 +596,10 @@
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol è ora pronto all'uso.",
     "completeTitle": "Download completato",
-    "failedTitle": "Download non riuscito"
+    "failedTitle": "Download non riuscito",
+    "failedConnection": "Controlla la connessione e riprova.",
+    "failedServer": "Il server di download ha avuto un problema. Riprova più tardi.",
+    "failedDamaged": "Il download è danneggiato. Riprova."
   },
   "chat": {
     "startingChat": "Avvio della chat...",
@@ -623,7 +632,9 @@
     },
     "hideKeyboard": "Nascondi tastiera",
     "stop": "Interrompi",
-    "stopped": "Interrotto"
+    "stopped": "Interrotto",
+    "replyLeakFallback": "Capito. Vuoi aggiungere qualcos'altro?",
+    "replyProcessFallback": "Scusa, non sono riuscito a rispondere. Puoi ripetere?"
   },
   "personaChat": {
     "introMessage": "Ciao! Sono Mera, la tua assistente personale di notizie.\n\nPer trovare notizie che contano davvero per te, ho bisogno di conoscerti un po'. Dove vivi, di cosa ti occupi, hobby che segui, azioni che monitori, dove vive la tua famiglia. Condividi tutto o poco, come preferisci.\n\nSe questo ti preoccupa, è un buon istinto. Non è saggio affidare dati personali a una società che sviluppa app. Mera è costruita diversamente: tutto quello che mi dici viene salvato sul tuo dispositivo, non sui nostri server. Chiedimi come funziona, o di' semplicemente 'aiutami a configurarlo' e iniziamo."
@@ -757,7 +768,7 @@
     "relevant": "Rilevante",
     "unscored": "Non valutato",
     "scheduler": "Pianificatore",
-    "dbTables": "Tabelle DB",
+    "dbTables": "I tuoi dati",
     "table": "Tabella",
     "rowsStatus": "Righe / Stato",
     "schedulerTasks": "Attività pianificatore",
@@ -768,7 +779,7 @@
     "noTasksYet": "Nessuna attività registrata",
     "feed": "Feed",
     "feedFunnel": "Imbuto del feed",
-    "protocol": "Protocollo",
+    "protocol": "IA sul dispositivo",
     "system": "Sistema",
     "settings": "Impostazioni",
     "noSettings": "Nessuna impostazione",
@@ -777,9 +788,9 @@
     "running": "{{count}} in esecuzione",
     "failed": "{{count}} non riuscite",
     "pending": "{{count}} in attesa",
-    "noteBody": "Questo schermo legge direttamente il database locale di Mera — i dati che costruiscono il tuo feed, mostrati qui per la visibilità e il debug. I server di Mera non memorizzano i tuoi fatti, la tua cronologia di lettura o i suggerimenti costruiti da essi.",
+    "noteBody": "Questa schermata legge direttamente il database sul dispositivo di Mera. Sono i dati che costruiscono il tuo feed, mostrati qui per trasparenza e debug. I server di Mera non conservano i tuoi fatti, la tua cronologia di lettura o i suggerimenti che ne derivano.",
     "noteExceptions": "Due eccezioni: il tuo profilo account (accesso, notifiche, lingua) è sincronizzato con il tuo account Mera, e quando l'IA cloud è attivata, i tuoi fatti vengono crittografati su questo dispositivo prima di essere inviati per la valutazione.",
-    "noteFooter": "I valori qui sono grezzi e diagnostici. Le righe del feed si cancellano dopo 48 ore; puoi eliminare i tuoi fatti, la cache del feed e la cronologia di visualizzazione da Gestisci dati.",
+    "noteFooter": "I valori qui sono grezzi e diagnostici. Le righe del feed si cancellano da sole dopo 48 ore. Puoi eliminare i tuoi fatti, la cache del feed e la cronologia di visualizzazione da Gestisci dati.",
     "noteTitle": "I tuoi dati, sul tuo dispositivo"
   },
   "tableDetail": {
@@ -855,14 +866,14 @@
   },
   "swipeFeed": {
     "askMera": "Chiedi a Mera",
-    "feedbackCaption": "Un pollice da solo non dice a Mera abbastanza — quindi viene scartato, per mantenere sano il tuo feed. Scegli un motivo e il tuo feed cambia subito.",
+    "feedbackCaption": "Un pollice da solo non basta a Mera, quindi viene scartato per tenere sano il tuo feed. Scegli un motivo e il tuo feed cambia subito.",
     "chatHandoffLike": "Mi è piaciuta questa storia, altre come questa: {{path}}.",
     "chatHandoffLikeNoPath": "Mi è piaciuta questa storia. Vorrei vederne altre simili.",
     "chatHandoffDislike": "Non mi è piaciuta questa storia, {{path}}.",
     "chatHandoffDislikeNoPath": "Non mi è piaciuta questa storia. Aiutami a vederne di meno simili."
   },
   "explore": {
-    "serverUnavailable": "Impossibile raggiungere Mera al momento; riprova tra poco.",
+    "serverUnavailable": "Mera non è raggiungibile in questo momento. Riprova tra poco.",
     "searchNotSubscribed": "La ricerca richiede un piano attivo",
     "window": {
       "label24": "24 h",
@@ -954,7 +965,11 @@
     "help": {
       "title": "Informazioni sulle notifiche",
       "body": "Mera lascia qui delle note sul tuo feed: una verifica dei fatti che hai richiesto è pronta, la messa a punto quotidiana del tuo feed, suggerimenti per riordinare o regolare i tuoi interessi e domande dal team Mera. Restano solo su questo telefono per 90 giorni, e un puntino significa che c'è qualcosa di non letto. Gli avvisi sulle notizie non compaiono qui. Gli orari si impostano in Impostazioni, alla voce Notifiche."
-    }
+    },
+    "ageNow": "ora",
+    "ageMinutes": "{{n}} min",
+    "ageHours": "{{n}} h",
+    "ageDays": "{{n}} g"
   },
   "settings": {
     "groupHelp": "Aiuto",
@@ -1004,7 +1019,27 @@
       "addLocation": "Posizione aggiunta",
       "deleteLocation": "Posizione rimossa",
       "retireSuppression": "Rimosso un filtro",
-      "setSourceScopePref": "Regolato un ambito di fonti"
+      "setSourceScopePref": "Regolato un ambito di fonti",
+      "migrateFact": "Interesse trasferito",
+      "setScoringOverride": "Modificato il modo in cui vengono ordinate le tue storie"
+    },
+    "summary": {
+      "added": "Aggiunto {{name}}",
+      "removed": "Rimosso {{name}}",
+      "muted": "Silenziato {{name}}",
+      "countsMore": "{{name}} conta di più",
+      "countsLess": "{{name}} conta di meno",
+      "pinned": "Fissato {{name}}",
+      "unpinned": "{{name}} non è più fissato",
+      "notInterested": "Non ti interessa {{name}}",
+      "showingAgain": "Mostro di nuovo {{name}}",
+      "moreFrom": "Di più da {{name}}",
+      "cleared": "Impostazione per {{name}} rimossa",
+      "moreSourcesFrom": "Più fonti da {{name}}",
+      "fewerSourcesFrom": "Meno fonti da {{name}}",
+      "clearedSourcesFrom": "Impostazione per le fonti di {{name}} rimossa",
+      "carriedOver": "Trasferito {{name}}",
+      "undone": "Annullato: {{change}}"
     }
   },
   "calibration": {
@@ -1069,7 +1104,8 @@
     "followStory": "Segui questa storia",
     "moreAboutTopic": "Altro su questo argomento",
     "moreFromPublication": "Altro da questa testata",
-    "moreNewsFromPlace": "Altre notizie da questo luogo"
+    "moreNewsFromPlace": "Altre notizie da questo luogo",
+    "confirmMuteBodyUnnamed": "Non vedrai più articoli di questa testata. Puoi annullare in qualsiasi momento."
   },
   "topicPlan": {
     "title": "Argomenti che monitorerò",
@@ -1142,7 +1178,16 @@
     "titleLocationConflict": "Due luoghi non coincidono",
     "titleStaleFact": "Un fatto non ha più argomenti attivi",
     "titleStaleTopic": "Un argomento è diventato silenzioso",
-    "titleTooBroad": "Un fatto porta dentro troppo"
+    "titleTooBroad": "Un fatto porta dentro troppo",
+    "summary": {
+      "duplicate": "{{fact}} ripete {{other}}",
+      "locationConflict": "{{fact}} e {{other}} indicano luoghi diversi",
+      "staleFact": "{{fact}} non ha più argomenti attivi",
+      "tooBroad": "{{fact}} è molto generico",
+      "staleTopic": "{{topic}} è fermo da settimane",
+      "incoherentTopics_one": "{{count}} argomento sotto {{fact}} non c'entra: {{topics}}",
+      "incoherentTopics_other": "{{count}} argomenti sotto {{fact}} non c'entrano: {{topics}}"
+    }
   },
   "locations": {
     "title": "Luoghi",
@@ -1202,12 +1247,12 @@
       "publication": "Fonte",
       "topic": "Argomento"
     },
-    "cardExemptLabel": "Hai filtrato \"{{filter}}\" — lo mostro perché è una notizia importante"
+    "cardExemptLabel": "Hai filtrato \"{{filter}}\". Lo mostro perché è una notizia importante"
   },
   "headlineDepth": {
     "title": "Notizie principali",
     "subtitle": "Quante notizie Mera legge per te",
-    "intro": "Mera legge le storie più grandi in ogni sezione, poi sceglie quelle che contano per te. Alza una sezione per vederne più; abbassala per mantenere le cose strette.",
+    "intro": "Mera legge le storie principali di ogni sezione, poi sceglie quelle che contano per te. Alza una sezione per vederne di più, oppure abbassala per tenere tutto più essenziale.",
     "worldwide": "Mondiale",
     "optionLabel": "Top {{n}}",
     "usingDefault": "Usando lo standard {{n}}.",
@@ -1278,7 +1323,9 @@
     "discardConfirmNo": "Mantieni",
     "appliedToast": "{{count}} modifiche applicate",
     "appliedTitle": "Feed aggiornato",
-    "empty": "Al momento non c'è nulla da aggiornare."
+    "empty": "Al momento non c'è nulla da aggiornare.",
+    "optionApply": "Applica",
+    "optionSkip": "Salta"
   },
   "pin": {
     "lockTitle": "Mera è bloccato",
@@ -1408,7 +1455,7 @@
     "noLink": "Nessun link disponibile",
     "actionA11yPending": "Controllo di fatto richiesto, verifica il risultato",
     "actionA11yDone": "Controllo di fatto pronto, il risultato è mostrato sotto",
-    "checkedByUnavailable": "Non abbiamo potuto controllare se un'organizzazione di fact-checking ha pubblicato su questa storia, la ricerca non è andata a buon fine. È diverso dal fatto che nessuno abbia pubblicato; qui sotto è quello che la ricerca più ampia ha trovato.",
+    "checkedByUnavailable": "Non siamo riusciti a verificare se un'organizzazione di fact-checking ha pubblicato su questa storia. È diverso dal fatto che nessuno abbia pubblicato. Qui sotto trovi quello che ha trovato la ricerca più ampia.",
     "claimProposalTitle": "Verificare questa affermazione?",
     "actionCheckClaim": "Verifica questa affermazione",
     "chatSeed": "Cosa può essere verificato in questa storia?",
@@ -1538,7 +1585,7 @@
             "reveal": {
               "about-you": {
                 "label": "Cosa sa di te",
-                "text": "I tuoi fatti, i tuoi interessi e quello che hai letto sono scritti su questo telefono e rimangono lì. Non c'è una copia seduta su un server."
+                "text": "I tuoi fatti, i tuoi interessi e quello che hai letto sono scritti su questo telefono e rimangono lì. Non ne esiste alcuna copia su un server."
               },
               "what-leaves": {
                 "label": "Cosa effettivamente se ne va",
@@ -1592,7 +1639,7 @@
           },
           "importance": {
             "headline": "Alcuni fatti importano più di altri",
-            "body": "Nella scheda Tu, apri i tuoi dati e tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularla o rimuoverla. Abbassarla è più delicato che eliminarla, e di solito è la prima mossa migliore.",
+            "body": "Nella scheda Tu, apri i tuoi fatti e tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularla o rimuoverla. Abbassarla è più delicato che eliminarla, e di solito è la prima mossa migliore.",
             "ask": "Come cambio quanto importante è uno dei miei fatti?"
           },
           "your-profile": {
@@ -1630,11 +1677,11 @@
           },
           "nothing-removed": {
             "headline": "Niente è mai rimosso",
-            "body": "Leggi una card e non scompare; affonda. È un unico elenco continuo, non sezioni tagliate dai divisori — le card affondano tranquillamente verso il basso oltre le più nuove mentre vai avanti.",
+            "body": "Leggi una card e non scompare. Affonda. È un unico elenco continuo, senza sezioni separate da divisori. Le card scendono piano oltre quelle più recenti mentre scorri.",
             "steps": {
               "0": "Leader: tutto quello che non hai ancora visto.",
               "1": "Prossimo: visto, ma non aperto.",
-              "2": "Più basso: già letto — nessun divisore, solo un posto più basso nello stesso elenco."
+              "2": "Più in basso: già letto. Nessun divisore, solo una posizione più bassa nello stesso elenco."
             },
             "beforeAfter": {
               "before": "Prima di leggerlo: la carta siede in cima con tutto il resto che è nuovo.",
@@ -1745,14 +1792,14 @@
         "subtitle": "Cosa lascia questo telefono, e cosa non lo fa mai.",
         "slides": {
           "stays-on-phone": {
-            "headline": "La parte su di te non lascia mai",
-            "body": "I tuoi fatti, i tuoi interessi, i tuoi posti e tutto quello che hai letto vivono su questo telefono. Non c'è una copia su un server, il quale è anche il motivo per cui disconnettersi o cambiare telefoni significa ricostruire il profilo di nuovo."
+            "headline": "La parte su di te non esce mai",
+            "body": "I tuoi fatti, i tuoi interessi, i tuoi luoghi e tutto quello che hai letto vivono su questo telefono. Non c'è una copia su un server, ed è anche per questo che uscire o cambiare telefono significa ricostruire di nuovo il profilo."
           },
           "what-leaves": {
             "headline": "Cosa effettivamente va fuori",
             "body": "Tre cose, e quella è la lista.",
             "steps": {
-              "0": "Brevi frasi di argomenti, così c'è qualcosa di cui abbinare le storie.",
+              "0": "Brevi frasi di argomenti, così c'è qualcosa con cui abbinare le storie.",
               "1": "Come accedi, con l'email o con questo telefono, e quale piano hai.",
               "2": "Un conteggio di quante storie sono state analizzate oggi, per mantenere quel piano onesto."
             },
@@ -1763,12 +1810,12 @@
             "body": "Leggere un giorno di notizie richiede una discreta quantità di riflessione, e la maggior parte dei telefoni preferisce non farlo. Quindi fuori dalla scatola quel lavoro accade nel cloud.",
             "beforeAfter": {
               "before": "La versione che vorremmo dirti: il tuo telefono lo fa tutto, sempre.",
-              "after": "Quello che è effettivamente vero: per impostazione predefinita il pensiero accade nel cloud, cifrato su questo telefono e aperto solo dentro un enclave sigillato. On-device è un interruttore che puoi capovolgere. Preferiremo dirlo piuttosto che lasciarti presumere."
+              "after": "Quello che è effettivamente vero: per impostazione predefinita il pensiero accade nel cloud, cifrato su questo telefono e aperto solo dentro un enclave sigillato. On-device è un interruttore che puoi attivare. Preferiamo dirlo piuttosto che lasciarti dare per scontato il contrario."
             }
           },
           "on-device-option": {
             "headline": "On-device, se lo vuoi",
-            "body": "In Impostazioni → Mera Protocol puoi spostare l'elaborazione su questo telefono. Così l'IA che legge le tue notizie funziona qui invece che nel cloud. Le tue frasi di argomento escono comunque per cercare le notizie, e per accedere servono comunque la tua email o questo telefono. Prima scarica un modello, serve un telefono abbastanza recente ed è decisamente più lento, proprio per questo non è l'impostazione predefinita."
+            "body": "Apri Impostazioni, poi Mera Protocol, per spostare l'elaborazione su questo telefono. Così l'IA che legge le tue notizie funziona qui invece che nel cloud. Le tue frasi di argomento escono comunque per cercare le notizie, e per accedere servono comunque la tua email o questo telefono. Prima scarica un modello, serve un telefono abbastanza recente ed è decisamente più lento, proprio per questo non è l'impostazione predefinita."
           },
           "what-we-keep": {
             "headline": "Cosa conserviamo",
@@ -1942,7 +1989,7 @@
           },
           "exact-match": {
             "headline": "Un filtro corrisponde a una cosa esattamente",
-            "body": "I filtri non sono ricerche. Un filtro di luogo corrisponde a quel luogo; un filtro di fonte corrisponde a quella fonte. Confrontano un valore esatto contro un campo di una storia, il quale è quello che li rende prevedibili, e anche quello che rende la prossima carta importante."
+            "body": "I filtri non sono ricerche. Un filtro di luogo corrisponde a quel luogo, e un filtro di fonte corrisponde a quella fonte. Confrontano un valore esatto con un campo di una storia. È questo che li rende prevedibili, ed è anche per questo che la card successiva conta."
           },
           "made-from-a-story": {
             "headline": "Da dove vengono quelli precisi",
@@ -2015,7 +2062,7 @@
             "choose": {
               "applies-immediately": {
                 "label": "Applica il cambiamento",
-                "feedback": "Non lo fa. L'accordo digitato non è consenso qui; il tocco lo è."
+                "feedback": "Non lo fa. Qui l'accordo scritto non vale come consenso. Vale il tocco."
               },
               "waits-for-your-tap": {
                 "label": "Niente. La carta è ancora seduta ad aspettare",
@@ -2030,7 +2077,7 @@
           },
           "take-it-back": {
             "headline": "E la maggior parte di esso può essere ripreso",
-            "body": "Il registro vive in Impostazioni; Mera Protocol; Registro modifiche persona.",
+            "body": "Il registro si trova in Impostazioni, poi Mera Protocol, poi Registro modifiche persona.",
             "beforeAfter": {
               "before": "Un cambio di peso, un argomento aggiunto, un filtro rimosso: questi portano un Annulla che rimette le cose esattamente come erano.",
               "after": "Pochi non possono essere annullati e lo dicono: eliminare un fatto durante una pulizia, o rimuovere un luogo, butta via quello che sarebbe necessario per ripristinarlo. Quelli siedono nel registro senza Annulla accanto a loro."
@@ -2058,10 +2105,10 @@
             "reveal": {
               "cloud": {
                 "label": "Cloud (l'impostazione predefinita)",
-                "text": "I tuoi dati sono cifrati su questo telefono, aperti solo dentro un enclave sigillato, e cifrati di nuovo sulla strada indietro. Veloce, e funziona su qualsiasi telefono. L'app non verifica ancora quel certificato di enclave contro il produttore del chip, il quale il avviso sulla privacy lo dice a voce alta."
+                "text": "I tuoi dati sono cifrati su questo telefono, aperti solo dentro un enclave sigillato, e cifrati di nuovo sulla strada indietro. Veloce, e funziona su qualsiasi telefono. L'app non verifica ancora il certificato di quell'enclave rispetto al produttore del chip, come dichiara apertamente l'informativa sulla privacy."
               },
               "on-device": {
-                "label": "On-device",
+                "label": "Sul dispositivo",
                 "text": "Tutto gira qui e niente su di te se ne va affatto. Scarica prima un modello, vuole un telefono piuttosto recente, ed è notevolmente più lento."
               }
             }
@@ -2187,7 +2234,7 @@
     "restartNeeded": "I tuoi dati sono tornati. Chiudi e riapri l'app per vederli.",
     "restore": "Ripristina da un backup",
     "restoreConfirmAction": "Sostituisci",
-    "restoreConfirmDescription": "I tuoi dati, argomenti, chat, articoli salvati e cronologia di lettura su questo telefono verranno sostituiti da ciò che c'è nel backup. Non si può annullare. Il tuo account e il tuo abbonamento non vengono toccati.",
+    "restoreConfirmDescription": "I tuoi fatti, argomenti, chat, articoli salvati e cronologia di lettura su questo telefono verranno sostituiti da ciò che c'è nel backup. Non si può annullare. Il tuo account e il tuo abbonamento non vengono toccati.",
     "restoreConfirmTitle": "Sostituire i dati su questo dispositivo?",
     "restoreEmpty": "Nessun backup trovato qui. Se prima usavi un altro account Google o iCloud, accedi con quello.",
     "restoreWhereDescription": "Scegli dove l'hai salvato. Vedrai cosa contiene prima che qualcosa venga sostituito.",
