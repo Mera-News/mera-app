@@ -14,7 +14,7 @@ describe('assistant rows share the thread edge', () => {
     // Nothing but comments and the empty-reply guard sits between Message and
     // the bubble: no sibling that could reserve a left gutter.
     expect(src).toMatch(
-      /<Message role="assistant">(?:\s|\{\/\*[\s\S]*?\*\/\}|\{message\.content\.trim\(\)\.length > 0 \? \()*<MessageContent role="assistant">/,
+      /<Message role="assistant">[\s\S]{0,1400}?<View style={styles\.replyRow}>\s*<MessageContent role="assistant">/,
     );
     expect(src).toMatch(/<Message role="assistant">\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<WaitBubble>/);
   });

@@ -213,6 +213,12 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   left edge (the steps box, cards and input start there). The
                   bubble takes the user side's 88% max width, mirrored. */}
               {message.content.trim().length > 0 ? (
+              // A ROW, as the avatar gutter's row was: the bubble is a flex item
+              // of a definite-width row (flexShrink 1, so its 88% maxWidth
+              // holds) instead of a shrink-wrapped child of a column. Without
+              // it a long reply's last paragraph kept a stale text layout and
+              // was clipped at the bubble's right edge.
+              <View style={styles.replyRow}>
               <MessageContent role="assistant">
                 {/* THE SLOT. While streaming the reply holds at least the
                     wait row's height, so it takes the row's place at the
@@ -224,6 +230,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   <MessageResponse>{message.content}</MessageResponse>
                 </View>
               </MessageContent>
+              </View>
               ) : null}
               {message.stopped ? (
                 <Text size="xs" style={styles.stoppedLine} testID="chat-stopped">
@@ -518,6 +525,10 @@ const useStyles = themedStyles((c) => StyleSheet.create({
   // panel's rounded edge (audit F9).
   composerRow: { flexDirection: 'row', alignItems: 'center' },
   composerFill: { flex: 1 },
+  replyRow: {
+    flexDirection: 'row',
+    flexShrink: 1,
+  },
   stoppedLine: {
     color: c.ink3,
     marginTop: 4,
