@@ -33,10 +33,9 @@ export type { CountryPageId, PageId, StaticPageId, StaticTabId, TabId };
 
 /**
  * Space between the tab header's bottom and a tab page's first content: every
- * tab list pads `headerHeight + PAGE_CONTENT_GAP`. With the header ending at
- * safe-area +52 this puts the first content at safe-area +66, the board's
- * `.body` (padding-top 14 under a 106pt header with a 54pt status area), the
- * same baseline as the You stack's sub-pages.
+ * tab list pads `headerHeight + PAGE_CONTENT_GAP` (the board's `.body`
+ * padding-top). With the segmented header ending at safe-area +56 (its row is
+ * the 46pt track) the first content sits at safe-area +70.
  */
 export const PAGE_CONTENT_GAP = 14;
 
