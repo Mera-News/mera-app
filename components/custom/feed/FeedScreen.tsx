@@ -958,6 +958,9 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   // mirrors DashboardSectionsFeed's composition.
   const tickHandler = useAnimatedScrollHandler({
     onScroll: (e) => {
+      // Only a real offset change ticks: a programmatic setContentOffset to
+      // the same place must not feed a layout loop.
+      if (e.contentOffset.y === lastOffsetShared.value) return;
       runOnJS(notifyScrollTick)();
       // Mirror the raw offset every frame (UI thread, no bridge crossing, no
       // re-render) for the re-tap's "am I at the top" read.
@@ -1156,7 +1159,15 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
         // but with the pin, nothing is inserted above the reader any more, so it
         // can now only fire at the top, which is precisely where we want it.
         // The two changes are a pair: this is unsafe without the pin.
-        maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 100 }}
+        //
+        // NEVER while the list has no rows (a new account: title row, empty
+        // block, maybe headlines in the header only). With nothing to anchor,
+        // iOS's MVCP adjust set the offset, the scroll worklet re-laid the
+        // header, the next mount adjusted again: a main-thread loop at 100%
+        // CPU with the list never drawn (captured, navx2).
+        maintainVisibleContentPosition={
+          listData.length > 0 ? { minIndexForVisible: 0, autoscrollToTopThreshold: 100 } : undefined
+        }
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         onScroll={onScroll}

@@ -248,6 +248,8 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   // no re-render.
   const tickHandler = useAnimatedScrollHandler({
     onScroll: (e) => {
+      // Only a real offset change ticks (see FeedScreen).
+      if (e.contentOffset.y === lastOffsetShared.value) return;
       runOnJS(notifyScrollTick)();
       lastOffsetShared.value = e.contentOffset.y;
     },
@@ -343,7 +345,10 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         // sections re-sort while parked at the top — behaviour FeedScreen
         // deliberately refuses anyway, because it yanks a reader off the first
         // card. `minIndexForVisible` is kept, so position is still anchored.
-        maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+        // Not while there are no sections: with nothing to anchor, iOS's MVCP
+        // adjust and the scroll worklet loop on the main thread (see
+        // FeedScreen).
+        maintainVisibleContentPosition={sectionData.length > 0 ? { minIndexForVisible: 0 } : undefined}
       />
     </Box>
   );
