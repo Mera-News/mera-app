@@ -1,4 +1,4 @@
-import { cardState, MARK_MAX, MARK_MIN, markSizeFor, markTone, type CardStateInput } from '../card-state';
+import { cardState, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, type CardStateInput } from '../card-state';
 
 const base: CardStateInput = {
   mode: 'idle',
@@ -62,5 +62,21 @@ describe('markTone', () => {
   });
   it('keeps the ink everywhere else', () => {
     for (const s of ['relevant', 'offline', null] as const) expect(markTone(s)).toBe('normal');
+  });
+});
+
+describe('joinClauses', () => {
+  const parts = ['公開されました。', 'ただ、分析できませんでした。'];
+  it('joins Japanese and Chinese with no space after their punctuation', () => {
+    expect(joinClauses(parts, 'ja')).toBe('公開されました。ただ、分析できませんでした。');
+    expect(joinClauses(['已发布，', '但尚未分析。'], 'zh-CN')).toBe('已发布，但尚未分析。');
+    expect(joinClauses(['已發布，', '但尚未分析。'], 'zh-TW')).toBe('已發布，但尚未分析。');
+  });
+  it('joins every other language with one space', () => {
+    expect(joinClauses(['5 articles were published,', '3 were analysed.'], 'en')).toBe(
+      '5 articles were published, 3 were analysed.',
+    );
+    expect(joinClauses(['a', 'b'], 'th')).toBe('a b');
+    expect(joinClauses(['a', 'b'], undefined)).toBe('a b');
   });
 });

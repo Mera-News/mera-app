@@ -41,7 +41,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from '
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, markSizeFor, markTone, type CardState, type MarkTone } from './card-state';
+import { cardState, joinClauses, markSizeFor, markTone, type CardState, type MarkTone } from './card-state';
 import CardRow, { CARD_RADIUS, CARD_ROW_PAD } from '@/components/custom/feed/CardRow';
 import { useForYouDailyLimitResetAt, useForYouScoringError } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
@@ -75,7 +75,7 @@ const TABULAR = { fontVariant: ['tabular-nums' as const] };
  *  Settings and their profile themselves; the limit's and the error's actions
  *  are in the details). */
 function useStateText(kind: CardState | null): string | null {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const appLanguage = useAppLanguage();
     const { articleCount, analysedCount } = useFeedCounts();
     const resetAt = useForYouDailyLimitResetAt();
@@ -85,9 +85,17 @@ function useStateText(kind: CardState | null): string | null {
     if (kind === 'error') return t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].message);
     if (kind === 'offline') return t('common.offlineBannerOffline');
     if (kind === 'fetched') return t('feed.statsZeroFetched');
-    if (kind === 'analysed') return `${t('feed.statsPublished', fmt(articleCount))} ${t('feed.statsZeroAnalysedTail')}`;
+    if (kind === 'analysed')
+        return joinClauses([t('feed.statsPublished', fmt(articleCount)), t('feed.statsZeroAnalysedTail')], i18n.language);
     if (kind === 'relevant')
-        return `${t('feed.statsPublished', fmt(articleCount))} ${t('feed.statsAnalysed', fmt(analysedCount))} ${t('feed.statsZeroRelevantTail')}`;
+        return joinClauses(
+            [
+                t('feed.statsPublished', fmt(articleCount)),
+                t('feed.statsAnalysed', fmt(analysedCount)),
+                t('feed.statsZeroRelevantTail'),
+            ],
+            i18n.language,
+        );
     return null;
 }
 

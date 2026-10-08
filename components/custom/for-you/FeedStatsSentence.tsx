@@ -18,6 +18,7 @@ import { Text } from '@/components/ui/text';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { formatCount } from '@/lib/utils/format-count';
+import { joinClauses } from './card-state';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -50,7 +51,7 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   className = 'text-ink-3',
   syncing = false,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const appLanguage = useAppLanguage();
   const { articleCount, analysedCount, relevantCount, readCount } = useFeedCounts();
 
@@ -80,17 +81,23 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
     analysedCount === 0
       ? clause('feed.statsPublishedPending', articleCount)
       : syncing
-      ? [
-          clause('feed.statsSyncAnalysing', analysedCount),
-          clause('feed.statsSyncFrom', articleCount),
-          clause('feed.statsSyncRelevant', relevantCount),
-        ].join(' ')
-      : [
-          clause('feed.statsPublished', articleCount),
-          clause('feed.statsAnalysed', analysedCount),
-          clause('feed.statsRelevant', relevantCount),
-          clause('feed.statsRead', readCount),
-        ].join(' ');
+      ? joinClauses(
+          [
+            clause('feed.statsSyncAnalysing', analysedCount),
+            clause('feed.statsSyncFrom', articleCount),
+            clause('feed.statsSyncRelevant', relevantCount),
+          ],
+          i18n.language,
+        )
+      : joinClauses(
+          [
+            clause('feed.statsPublished', articleCount),
+            clause('feed.statsAnalysed', analysedCount),
+            clause('feed.statsRelevant', relevantCount),
+            clause('feed.statsRead', readCount),
+          ],
+          i18n.language,
+        );
 
   return (
     <Text size="sm" className={className} style={TABULAR}>

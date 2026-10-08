@@ -65,3 +65,12 @@ export function markSizeFor(textHeight: number): number {
   const s = Math.round((textHeight - MARK_INSET) * MARK_SCALE * 2) / 2;
   return Math.min(MARK_MAX, Math.max(MARK_MIN, s));
 }
+
+/** Joins the stats card's sentence parts (each a translated clause or
+ *  sentence). Japanese and Chinese write no space after their full stop or
+ *  comma, so "。 " would show; every other language takes one space. `lang`
+ *  is the UI language (i18next: ja, zh-CN, zh-TW; any zh-* counts). */
+export function joinClauses(parts: readonly string[], lang: string | undefined): string {
+  const tight = /^(ja|zh)(-|$)/i.test(lang ?? '');
+  return parts.join(tight ? '' : ' ');
+}
