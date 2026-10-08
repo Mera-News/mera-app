@@ -269,7 +269,8 @@
     "view": {
       "a11y": "表示：{{view}}。表示を変更",
       "continuous": "連続フィード",
-      "sectioned": "セクション別フィード"
+      "sectioned": "セクション別フィード",
+      "title": "表示"
     }
   },
   "relevance": {

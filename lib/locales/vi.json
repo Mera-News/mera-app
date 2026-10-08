@@ -269,7 +269,8 @@
     "view": {
       "a11y": "Chế độ xem: {{view}}. Đổi chế độ xem",
       "continuous": "Bảng tin liên tục",
-      "sectioned": "Bảng tin theo mục"
+      "sectioned": "Bảng tin theo mục",
+      "title": "Chế độ xem"
     }
   },
   "relevance": {

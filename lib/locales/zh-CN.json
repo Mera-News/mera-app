@@ -269,7 +269,8 @@
     "view": {
       "a11y": "视图：{{view}}。更改视图",
       "continuous": "连续信息流",
-      "sectioned": "分段信息流"
+      "sectioned": "分段信息流",
+      "title": "视图"
     }
   },
   "relevance": {

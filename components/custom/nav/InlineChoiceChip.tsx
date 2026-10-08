@@ -59,6 +59,13 @@ export interface InlineChoiceChipProps<T extends string | number> {
   readonly disabled?: boolean;
   /** Chip: `${testID}-toggle`; menu: `${testID}-options`; rows: `${testID}-${option}`. */
   readonly testID: string;
+  /** An option's glyph. Given, the chip shows ONLY the chosen option's glyph
+   *  and the ⌄ (a GitHub-style view picker: the Feed's View chip), with a
+   *  round glass fill while pressed or open, and each menu row leads with its
+   *  glyph. */
+  readonly iconOf?: (option: T) => keyof typeof MaterialIcons.glyphMap;
+  /** A small muted title over the menu's rows ("View"). */
+  readonly menuTitle?: string;
 }
 
 /** A floating menu's surface: the same material as every modal and bottom
@@ -91,6 +98,8 @@ export default function InlineChoiceChip<T extends string | number>({
   onChange,
   disabled = false,
   testID,
+  iconOf,
+  menuTitle,
 }: InlineChoiceChipProps<T>) {
   const colors = useColors();
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
@@ -140,6 +149,9 @@ export default function InlineChoiceChip<T extends string | number>({
           <View style={styles.check} {...HIDDEN}>
             {picked ? <MaterialIcons name="check" size={18} color={colors.accentMark} /> : null}
           </View>
+          {iconOf ? (
+            <MaterialIcons name={iconOf(option)} size={18} color={colors.ink2} {...HIDDEN} />
+          ) : null}
           <Text
             numberOfLines={1}
             maxFontSizeMultiplier={1}
@@ -151,6 +163,22 @@ export default function InlineChoiceChip<T extends string | number>({
         </Pressable>
       );
     });
+  const panel = (live: boolean) => (
+    <ChoiceMenuPanel>
+      {menuTitle ? (
+        <Text
+          maxFontSizeMultiplier={1}
+          style={[styles.menuTitle, { color: colors.muted }]}
+          accessibilityRole="header"
+          {...(live ? null : HIDDEN)}
+        >
+          {menuTitle}
+        </Text>
+      ) : null}
+      {rows(live)}
+    </ChoiceMenuPanel>
+  );
+  const [pressed, setPressed] = useState(false);
   // Hangs from the chip's trailing edge: the right in LTR, the left in RTL.
   const side = anchor ? (rtl ? { left: anchor.left } : { right: anchor.right }) : null;
 
@@ -158,15 +186,27 @@ export default function InlineChoiceChip<T extends string | number>({
     <View style={[styles.frame, disabled ? styles.disabled : null]} testID={`${testID}-frame`}>
       <View ref={chipRef} collapsable={false} pointerEvents="none" {...HIDDEN}>
         <View
-          style={[styles.pill, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}
+          style={
+            iconOf
+              ? [
+                  styles.iconPill,
+                  // Glass only while pressed or open (the view-picker look).
+                  pressed || anchor ? { backgroundColor: colors.glass, borderColor: colors.trackBorder } : null,
+                ]
+              : [styles.pill, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]
+          }
         >
-          <Text
-            numberOfLines={1}
-            maxFontSizeMultiplier={1}
-            style={[styles.label, { color: colors.ink, fontWeight: '600' }]}
-          >
-            {labelOf(value)}
-          </Text>
+          {iconOf ? (
+            <MaterialIcons name={iconOf(value)} size={20} color={colors.ink} />
+          ) : (
+            <Text
+              numberOfLines={1}
+              maxFontSizeMultiplier={1}
+              style={[styles.label, { color: colors.ink, fontWeight: '600' }]}
+            >
+              {labelOf(value)}
+            </Text>
+          )}
           <MaterialIcons
             name={anchor ? 'expand-less' : 'expand-more'}
             size={16}
@@ -176,6 +216,8 @@ export default function InlineChoiceChip<T extends string | number>({
       </View>
       <Pressable
         onPress={open}
+        onPressIn={() => setPressed(true)}
+        onPressOut={() => setPressed(false)}
         disabled={disabled}
         style={StyleSheet.absoluteFill}
         accessibilityRole="button"
@@ -200,7 +242,7 @@ export default function InlineChoiceChip<T extends string | number>({
             style={[styles.panel, styles.measuring, { top: 0, minWidth: anchor.width }, side]}
             onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}
           >
-            <ChoiceMenuPanel>{rows(false)}</ChoiceMenuPanel>
+            {panel(false)}
           </View>
         ) : null}
         {anchor && panelHeight !== null ? (
@@ -227,7 +269,7 @@ export default function InlineChoiceChip<T extends string | number>({
               side,
             ]}
           >
-            <ChoiceMenuPanel>{rows(true)}</ChoiceMenuPanel>
+            {panel(true)}
           </Animated.View>
         ) : null}
       </Modal>
@@ -271,5 +313,21 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   check: { width: 20, alignItems: 'center' },
+  // The icon-only chip: a round 34pt glyph + ⌄, the glass only while pressed
+  // or open; the 44pt frame around it is the target.
+  iconPill: {
+    height: PILL,
+    minWidth: PILL,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    paddingLeft: 8,
+    paddingRight: 6,
+  },
+  menuTitle: { fontSize: 12, lineHeight: 16, fontWeight: '600', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   rowLabel: { fontSize: 15, lineHeight: 20 },
 });

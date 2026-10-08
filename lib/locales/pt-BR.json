@@ -269,7 +269,8 @@
     "view": {
       "a11y": "Visualização: {{view}}. Mudar a visualização",
       "continuous": "Feed contínuo",
-      "sectioned": "Feed por seções"
+      "sectioned": "Feed por seções",
+      "title": "Visualização"
     }
   },
   "relevance": {

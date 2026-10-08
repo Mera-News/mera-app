@@ -269,7 +269,8 @@
     "view": {
       "a11y": "檢視：{{view}}。更改檢視方式",
       "continuous": "連續資訊流",
-      "sectioned": "分區資訊流"
+      "sectioned": "分區資訊流",
+      "title": "檢視"
     }
   },
   "relevance": {

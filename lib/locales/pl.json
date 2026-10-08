@@ -287,7 +287,8 @@
     "view": {
       "a11y": "Widok: {{view}}. Zmień widok",
       "continuous": "Kanał ciągły",
-      "sectioned": "Kanał z sekcjami"
+      "sectioned": "Kanał z sekcjami",
+      "title": "Widok"
     }
   },
   "relevance": {

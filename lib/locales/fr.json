@@ -274,7 +274,8 @@
     "view": {
       "a11y": "Affichage : {{view}}. Changer l'affichage",
       "continuous": "Fil continu",
-      "sectioned": "Fil par sections"
+      "sectioned": "Fil par sections",
+      "title": "Affichage"
     }
   },
   "relevance": {

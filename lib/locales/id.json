@@ -269,7 +269,8 @@
     "view": {
       "a11y": "Tampilan: {{view}}. Ubah tampilan",
       "continuous": "Feed berkelanjutan",
-      "sectioned": "Feed per bagian"
+      "sectioned": "Feed per bagian",
+      "title": "Tampilan"
     }
   },
   "relevance": {

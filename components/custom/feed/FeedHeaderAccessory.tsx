@@ -1,5 +1,6 @@
 // The Feed page's header accessory (TabPages `renderAccessory`): under the
-// Feed | Stories track, hiding with the header. The View chip, right-aligned,
+// Feed | Stories | Notifications track, hiding with the header. The View chip
+// (icon-only: the chosen style's glyph and ⌄; its menu titled "View"), right-aligned,
 // then the ONE counts card whenever it shows (feed-status-card.ts): an empty
 // Feed whose state needs it, the daily limit, or the status icon's request.
 
@@ -13,6 +14,9 @@ import { StyleSheet, View } from 'react-native';
 import { type FeedView, setFeedView, useFeedView } from './feed-view-prefs';
 
 const VIEWS: readonly FeedView[] = ['continuous', 'sectioned'];
+/** The style glyphs: rows for the stream, grouped blocks for sections. */
+const VIEW_ICON = { continuous: 'view-stream', sectioned: 'view-agenda' } as const;
+const iconOf = (v: FeedView) => VIEW_ICON[v];
 
 const FeedHeaderAccessory: React.FC = () => {
   const { t } = useTranslation();
@@ -33,6 +37,8 @@ const FeedHeaderAccessory: React.FC = () => {
           labelOf={labelOf}
           a11yLabelOf={(v) => t('feed.view.a11y', { view: labelOf(v) })}
           onChange={setFeedView}
+          iconOf={iconOf}
+          menuTitle={t('feed.view.title')}
           testID="feed-view-chip"
         />
       </View>

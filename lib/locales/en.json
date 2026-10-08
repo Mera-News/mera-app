@@ -300,7 +300,8 @@
     "view": {
       "a11y": "View: {{view}}. Change the view",
       "continuous": "Continuous feed",
-      "sectioned": "Sectioned feed"
+      "sectioned": "Sectioned feed",
+      "title": "View"
     }
   },
   "relevance": {

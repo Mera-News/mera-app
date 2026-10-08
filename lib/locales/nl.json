@@ -269,7 +269,8 @@
     "view": {
       "a11y": "Weergave: {{view}}. De weergave wijzigen",
       "continuous": "Doorlopende feed",
-      "sectioned": "Feed per sectie"
+      "sectioned": "Feed per sectie",
+      "title": "Weergave"
     }
   },
   "relevance": {

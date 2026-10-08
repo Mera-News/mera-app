@@ -269,7 +269,8 @@
     "view": {
       "a11y": "Görünüm: {{view}}. Görünümü değiştir",
       "continuous": "Sürekli akış",
-      "sectioned": "Bölümlü akış"
+      "sectioned": "Bölümlü akış",
+      "title": "Görünüm"
     }
   },
   "relevance": {

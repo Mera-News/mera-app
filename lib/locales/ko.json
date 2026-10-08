@@ -269,7 +269,8 @@
     "view": {
       "a11y": "보기: {{view}}. 보기 방식 변경",
       "continuous": "연속 피드",
-      "sectioned": "섹션 피드"
+      "sectioned": "섹션 피드",
+      "title": "보기"
     }
   },
   "relevance": {

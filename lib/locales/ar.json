@@ -305,7 +305,8 @@
     "view": {
       "a11y": "العرض: {{view}}. تغيير العرض",
       "continuous": "خلاصة متواصلة",
-      "sectioned": "خلاصة مقسّمة"
+      "sectioned": "خلاصة مقسّمة",
+      "title": "العرض"
     }
   },
   "relevance": {

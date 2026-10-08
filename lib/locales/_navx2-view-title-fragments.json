@@ -1,0 +1,143 @@
+{
+  "_comment": "navx2-fu: the Feed View chip's menu title. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "feed": {
+      "view": {
+        "title": "View"
+      }
+    }
+  },
+  "ar": {
+    "feed": {
+      "view": {
+        "title": "العرض"
+      }
+    }
+  },
+  "de": {
+    "feed": {
+      "view": {
+        "title": "Ansicht"
+      }
+    }
+  },
+  "es": {
+    "feed": {
+      "view": {
+        "title": "Vista"
+      }
+    }
+  },
+  "fr": {
+    "feed": {
+      "view": {
+        "title": "Affichage"
+      }
+    }
+  },
+  "hi": {
+    "feed": {
+      "view": {
+        "title": "दृश्य"
+      }
+    }
+  },
+  "id": {
+    "feed": {
+      "view": {
+        "title": "Tampilan"
+      }
+    }
+  },
+  "it": {
+    "feed": {
+      "view": {
+        "title": "Vista"
+      }
+    }
+  },
+  "ja": {
+    "feed": {
+      "view": {
+        "title": "表示"
+      }
+    }
+  },
+  "ko": {
+    "feed": {
+      "view": {
+        "title": "보기"
+      }
+    }
+  },
+  "nl": {
+    "feed": {
+      "view": {
+        "title": "Weergave"
+      }
+    }
+  },
+  "pl": {
+    "feed": {
+      "view": {
+        "title": "Widok"
+      }
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "view": {
+        "title": "Visualização"
+      }
+    }
+  },
+  "ru": {
+    "feed": {
+      "view": {
+        "title": "Вид"
+      }
+    }
+  },
+  "th": {
+    "feed": {
+      "view": {
+        "title": "มุมมอง"
+      }
+    }
+  },
+  "tr": {
+    "feed": {
+      "view": {
+        "title": "Görünüm"
+      }
+    }
+  },
+  "uk": {
+    "feed": {
+      "view": {
+        "title": "Вигляд"
+      }
+    }
+  },
+  "vi": {
+    "feed": {
+      "view": {
+        "title": "Chế độ xem"
+      }
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "view": {
+        "title": "视图"
+      }
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "view": {
+        "title": "檢視"
+      }
+    }
+  }
+}
