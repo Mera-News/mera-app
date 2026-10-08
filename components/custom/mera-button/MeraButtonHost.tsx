@@ -35,7 +35,7 @@ import { tabForSurface, type TabId } from '@/components/custom/nav/page-registry
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import { SPRING } from '@/lib/motion';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
-import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE, useMeraButtonBottom } from '@/lib/navigation/tab-bar';
+import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_EDGE, MERA_BUTTON_SIZE, useMeraButtonBottom } from '@/lib/navigation/tab-bar';
 import {
   useFloatingChatAnswerUnread,
   useFloatingChatIsGenerating,
@@ -71,7 +71,6 @@ import {
 import MeraButton from './MeraButton';
 import { pageKeyFor } from './mera-pages';
 
-const EDGE = 14;
 const TOP_GAP = 12;
 /** Height of a page header below the safe area, for a surface that reports
  *  no header bottom (the You-stack screens). */
@@ -240,7 +239,7 @@ const MeraButtonHost: React.FC<MeraButtonHostProps> = (props) => {
         height: size.height,
         top: headerBottom + TOP_GAP,
         bottom,
-        inset: EDGE,
+        inset: MERA_BUTTON_EDGE,
         size: MERA_BUTTON_SIZE,
       },
     [size, headerBottom, bottom],
