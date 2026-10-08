@@ -1,5 +1,9 @@
-// The Stats page's share preview: a modal over the page from just under the
-// page strip to just above the tab bar, about 3% in from each screen edge.
+// The Stats page's share preview: a card over the page whose VISIBLE edges
+// are the box (owner): from just under the page strip to just above the tab
+// bar, about 3% in from each screen edge. Its own RN Modal (not ui/modal,
+// whose content wrapper is full width and padded, so the card sat inside a
+// bigger invisible box and scrim taps only landed at the edges): a scrim
+// that closes on any tap outside the card, the modals' ModalMaterial inside.
 // Each image shows the WHOLE 9:16 frame exactly as exported (reserves
 // included), as large as the box allows, centred; dots under it when there
 // are several (tap to jump, they follow the swipe); then ONE row with
@@ -15,7 +19,7 @@ import { CARD_PALETTES, CardPaletteContext } from '@/components/custom/share-sta
 import { hostSizeForScale } from '@/components/custom/share-stats/card-shell';
 import { StatImage } from '@/components/custom/share-stats/stat-image';
 import { useMeraCorner } from '@/components/custom/mera-button/corner';
-import { Modal, ModalBackdrop, ModalContent } from '@/components/ui/modal';
+import ModalMaterial from '@/components/custom/ModalMaterial';
 import { Pressable } from '@/components/ui/pressable';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Text } from '@/components/ui/text';
@@ -26,7 +30,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, I18nManager, PixelRatio, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, I18nManager, Modal, PixelRatio, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 type Background = 'dark' | 'light';
 
@@ -95,13 +99,9 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box })
     const dotsH = groups.length > 1 ? DOTS_H : 0;
     const chromeH = 2 * PAD + HEAD_H + HEAD_GAP + dotsH + CONTROLS_GAP + CONTROLS_H;
     const image = fitPortrait(modalW - 2 * PAD, boxH - chromeH);
-    const modalH = chromeH + image.height;
-    // The modal is centred in the window; move it to the centre of its box.
-    const shiftY = box.top + boxH / 2 - screenH / 2;
-    // The Mera button may sit over the modal's bottom corner: keep the
+    // The Mera button may sit over the card's bottom corner: keep the
     // controls clear of its column when the two meet.
-    const modalBottomFromWindowBottom = screenH / 2 - shiftY - modalH / 2;
-    const controlsBottom = modalBottomFromWindowBottom + PAD;
+    const controlsBottom = box.bottom + PAD;
     const meraTop = box.meraBottom + MERA_BUTTON_SIZE;
     const meraMeets = corner.startsWith('b') && controlsBottom < meraTop && controlsBottom + CONTROLS_H > box.meraBottom;
     const meraPhysicalRight = corner.endsWith('r');
@@ -157,12 +157,23 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box })
     });
 
     return (
-        <Modal isOpen={open} onClose={onClose} size="full">
-            <ModalBackdrop />
-            <ModalContent
-                style={{ width: modalW, padding: PAD, transform: [{ translateY: shiftY }] }}
+        <Modal visible={open} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+            <Pressable
+                style={[StyleSheet.absoluteFill, { backgroundColor: c.scrim }]}
+                onPress={onClose}
+                accessible={false}
+                testID="stats-share-scrim"
+            />
+            <View
+                style={[
+                    styles.card,
+                    { top: box.top, bottom: box.bottom, left: inset, right: inset, borderColor: c.line },
+                ]}
+                accessibilityViewIsModal
                 testID="stats-share-modal"
             >
+                <ModalMaterial />
+                <View style={{ flex: 1, padding: PAD }}>
                 {/* The off-screen capture host, at the export size, positioned
                     away and laid out (unmounted or display:none captures blank). */}
                 {hostGroup ? (
@@ -193,6 +204,7 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box })
                 </View>
 
                 <CardPaletteContext.Provider value={palette}>
+                    <View style={styles.imageArea}>
                     <FlatList
                         ref={listRef}
                         horizontal
@@ -209,6 +221,7 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box })
                         )}
                         style={{ flexGrow: 0, width: image.width, alignSelf: 'center' }}
                     />
+                    </View>
                 </CardPaletteContext.Provider>
 
                 {groups.length > 1 ? (
@@ -279,12 +292,15 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box })
                         {failure === 'unavailable' ? t('shareStats.sharingUnavailable') : t('shareStats.shareFailed')}
                     </Text>
                 ) : null}
-            </ModalContent>
+                </View>
+            </View>
         </Modal>
     );
 };
 
 const styles = StyleSheet.create({
+    card: { position: 'absolute', borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
+    imageArea: { flex: 1, justifyContent: 'center' },
     head: { flexDirection: 'row', alignItems: 'center' },
     close: { width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' },
     dots: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
