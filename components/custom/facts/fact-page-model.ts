@@ -14,6 +14,7 @@ import {
     WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
 } from '@/lib/feed-grouping/story-grouping';
 import { FEED_WINDOW_MS, isWithinWindow, relevancePassesGate } from '@/lib/stores/fact-rows-selector';
+import type { FactRowGroup } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 /** A story: its newest article and the rest. */
@@ -90,4 +91,26 @@ export function storiesPerTopic(stories: readonly Story[]): (topic: { id: string
         for (const k of keys) byKey.set(k, (byKey.get(k) ?? 0) + 1);
     }
     return (topic) => byKey.get(`id:${topic.id}`) ?? byKey.get(`text:${topic.text.trim().toLowerCase()}`) ?? 0;
+}
+
+/** The Recent articles filter: everything, what the Feed shows for this fact,
+ *  or what this fact found and left out of the Feed. */
+export type StoryFilter = 'all' | 'suggested' | 'discarded';
+
+export interface FilteredStory {
+    readonly story: FactRowGroup | Story;
+    /** Left out of the Feed: the row offers "This was relevant". */
+    readonly left: boolean;
+}
+
+/** One list for the filter, newest first. `picked` is this fact's Feed section
+ *  (`buildFactRows`), `leftOut` is `leftOutStories`. */
+export function filterStories(
+    filter: StoryFilter,
+    picked: readonly FactRowGroup[],
+    leftOut: readonly Story[],
+): FilteredStory[] {
+    const a = filter === 'discarded' ? [] : picked.map((story) => ({ story, left: false, ms: story.pubDateMs }));
+    const b = filter === 'suggested' ? [] : leftOut.map((story) => ({ story, left: true, ms: pubMs(story.data) }));
+    return [...a, ...b].sort((x, y) => y.ms - x.ms).map(({ story, left }) => ({ story, left }));
 }

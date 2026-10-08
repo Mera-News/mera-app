@@ -1338,17 +1338,12 @@
     "addFact": "Ajouter un fait",
     "page": {
       "edit": "Modifier",
-      "emptyBody": "Quand Mera trouve une histoire grâce à ce fait et la laisse de côté, elle apparaît ici.",
-      "emptyTitle": "Rien de laissé de côté pour l'instant",
       "howMuch": "Son poids dans le fil",
-      "impactful": "Influent",
       "impactfulEmpty": "Aucune histoire pour ce fait dans les 48 dernières heures pour l'instant.",
       "impactfulHint": "Histoires que Mera a choisies pour vous grâce à ce fait.",
       "menuA11y": "Modifier ou supprimer ce fait",
       "new": "Nouveau",
       "nextInterest": "Centre d'intérêt suivant",
-      "notImpactful": "Peu influent",
-      "notImpactfulHint": "Trouvées grâce aux sujets de ce fait au cours des 48 dernières heures, puis laissées de côté. Conservées sur ce téléphone.",
       "reach_one": "{{count}} histoire dans les 48 dernières heures",
       "reach_other": "{{count}} histoires dans les 48 dernières heures",
       "recentTab": "Articles récents",
@@ -1364,7 +1359,14 @@
       "thisWasRelevant": "C'était pertinent",
       "title": "Fait",
       "topicMenuA11y": "Options pour {{text}}",
-      "topicsTab": "Sujets"
+      "topicsTab": "Sujets",
+      "filterAll": "Toutes",
+      "filterSuggested": "Suggérées",
+      "filterDiscarded": "Écartées",
+      "filterA11y": "Afficher les histoires : {{filter}}",
+      "allHint": "Toutes les histoires trouvées grâce à ce fait au cours des 48 dernières heures.",
+      "discardedHint": "Trouvées grâce à ce fait et écartées de votre fil : non pertinentes, masquées par vos filtres ou déjà lues.",
+      "discardedEmpty": "Rien n'a encore été écarté de votre fil pour ce fait."
     }
   },
   "publicationPrefs": {

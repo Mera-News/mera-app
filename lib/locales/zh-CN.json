@@ -1333,17 +1333,12 @@
     "addFact": "添加事实",
     "page": {
       "edit": "编辑",
-      "emptyBody": "当 Mera 通过此事实找到一条报道但未展示时，会显示在这里。",
-      "emptyTitle": "暂时没有被排除的内容",
       "howMuch": "影响程度",
-      "impactful": "有影响",
       "impactfulEmpty": "过去48小时内还没有与此事实相关的报道。",
       "impactfulHint": "Mera 因此事实为你挑选的报道。",
       "menuA11y": "编辑或删除此事实",
       "new": "新",
       "nextInterest": "下一个兴趣",
-      "notImpactful": "影响较小",
-      "notImpactfulHint": "在过去48小时内通过此事实的主题找到，随后被排除。保存在这部手机上。",
       "reach_one": "过去48小时内 {{count}} 条报道",
       "reach_other": "过去48小时内 {{count}} 条报道",
       "recentTab": "最近的文章",
@@ -1359,7 +1354,14 @@
       "thisWasRelevant": "这条相关",
       "title": "事实",
       "topicMenuA11y": "{{text}}的选项",
-      "topicsTab": "主题"
+      "topicsTab": "主题",
+      "filterAll": "全部",
+      "filterSuggested": "推荐",
+      "filterDiscarded": "已排除",
+      "filterA11y": "显示{{filter}}报道",
+      "allHint": "过去48小时内，此事实找到的全部报道。",
+      "discardedHint": "通过此事实找到，但未出现在你的信息流中：不相关、被你的筛选条件隐藏，或已阅读。",
+      "discardedEmpty": "此事实暂时还没有被排除在你的信息流之外的内容。"
     }
   },
   "publicationPrefs": {

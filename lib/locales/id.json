@@ -1332,17 +1332,12 @@
     "addFact": "Tambah fakta",
     "page": {
       "edit": "Ubah",
-      "emptyBody": "Saat Mera menemukan cerita lewat fakta ini dan menyingkirkannya, cerita itu muncul di sini.",
-      "emptyTitle": "Belum ada yang disingkirkan",
       "howMuch": "Seberapa besar pengaruhnya",
-      "impactful": "Berpengaruh",
       "impactfulEmpty": "Belum ada cerita untuk fakta ini dalam 48 jam terakhir.",
       "impactfulHint": "Cerita yang Mera pilih untuk Anda karena fakta ini.",
       "menuA11y": "Ubah atau hapus fakta ini",
       "new": "Baru",
       "nextInterest": "Minat berikutnya",
-      "notImpactful": "Tidak berpengaruh",
-      "notImpactfulHint": "Ditemukan lewat topik fakta ini dalam 48 jam terakhir, lalu disingkirkan. Disimpan di ponsel ini.",
       "reach_one": "{{count}} cerita dalam 48 jam terakhir",
       "reach_other": "{{count}} cerita dalam 48 jam terakhir",
       "recentTab": "Artikel terbaru",
@@ -1358,7 +1353,14 @@
       "thisWasRelevant": "Ini relevan",
       "title": "Fakta",
       "topicMenuA11y": "Pilihan untuk {{text}}",
-      "topicsTab": "Topik"
+      "topicsTab": "Topik",
+      "filterAll": "Semua",
+      "filterSuggested": "Disarankan",
+      "filterDiscarded": "Dibuang",
+      "filterA11y": "Tampilkan cerita: {{filter}}",
+      "allHint": "Setiap cerita yang ditemukan fakta ini dalam 48 jam terakhir.",
+      "discardedHint": "Ditemukan lewat fakta ini dan tidak ditampilkan di feed Anda: tidak relevan, disembunyikan filter Anda, atau sudah dibaca.",
+      "discardedEmpty": "Belum ada yang disingkirkan dari feed Anda untuk fakta ini."
     }
   },
   "publicationPrefs": {

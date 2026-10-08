@@ -1358,17 +1358,12 @@
     "addFact": "Dodaj fakt",
     "page": {
       "edit": "Edytuj",
-      "emptyBody": "Gdy Mera znajdzie historię przez ten fakt i ją pominie, pojawi się tutaj.",
-      "emptyTitle": "Nic jeszcze nie pominięto",
       "howMuch": "Jak bardzo się liczy",
-      "impactful": "Ważne",
       "impactfulEmpty": "Na razie brak historii dla tego faktu w ciągu ostatnich 48 godzin.",
       "impactfulHint": "Historie, które Mera wybrała dla Ciebie dzięki temu faktowi.",
       "menuA11y": "Edytuj lub usuń ten fakt",
       "new": "Nowe",
       "nextInterest": "Następne zainteresowanie",
-      "notImpactful": "Nieważne",
-      "notImpactfulHint": "Znalezione przez tematy tego faktu w ciągu ostatnich 48 godzin, a potem pominięte. Zostaje na tym telefonie.",
       "reach_one": "{{count}} historia w ciągu ostatnich 48 godzin",
       "reach_few": "{{count}} historie w ciągu ostatnich 48 godzin",
       "reach_many": "{{count}} historii w ciągu ostatnich 48 godzin",
@@ -1388,7 +1383,14 @@
       "thisWasRelevant": "To było trafne",
       "title": "Fakt",
       "topicMenuA11y": "Opcje dla: {{text}}",
-      "topicsTab": "Tematy"
+      "topicsTab": "Tematy",
+      "filterAll": "Wszystkie",
+      "filterSuggested": "Polecane",
+      "filterDiscarded": "Pominięte",
+      "filterA11y": "Pokaż historie: {{filter}}",
+      "allHint": "Każda historia, którą ten fakt znalazł w ciągu ostatnich 48 godzin.",
+      "discardedHint": "Znalezione przez ten fakt i pominięte w Twoim feedzie: nieistotne, ukryte przez Twoje filtry albo już przeczytane.",
+      "discardedEmpty": "Na razie nic z Twojego feedu nie zostało pominięte dla tego faktu."
     }
   },
   "publicationPrefs": {

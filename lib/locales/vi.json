@@ -1333,17 +1333,12 @@
     "addFact": "Thêm một dữ kiện",
     "page": {
       "edit": "Sửa",
-      "emptyBody": "Khi Mera tìm thấy một câu chuyện qua dữ kiện này và bỏ qua, câu chuyện sẽ hiện ở đây.",
-      "emptyTitle": "Chưa bỏ qua tin nào",
       "howMuch": "Mức độ ảnh hưởng",
-      "impactful": "Có ảnh hưởng",
       "impactfulEmpty": "Chưa có câu chuyện nào cho dữ kiện này trong 48 giờ qua.",
       "impactfulHint": "Các câu chuyện Mera chọn cho bạn nhờ dữ kiện này.",
       "menuA11y": "Sửa hoặc xóa dữ kiện này",
       "new": "Mới",
       "nextInterest": "Mối quan tâm tiếp theo",
-      "notImpactful": "Không có ảnh hưởng",
-      "notImpactfulHint": "Được tìm thấy qua các chủ đề của dữ kiện này trong 48 giờ qua, rồi bị bỏ qua. Được lưu trên điện thoại này.",
       "reach_one": "{{count}} câu chuyện trong 48 giờ qua",
       "reach_other": "{{count}} câu chuyện trong 48 giờ qua",
       "recentTab": "Bài viết gần đây",
@@ -1359,7 +1354,14 @@
       "thisWasRelevant": "Điều này có liên quan",
       "title": "Dữ kiện",
       "topicMenuA11y": "Tùy chọn cho {{text}}",
-      "topicsTab": "Chủ đề"
+      "topicsTab": "Chủ đề",
+      "filterAll": "Tất cả",
+      "filterSuggested": "Đề xuất",
+      "filterDiscarded": "Đã loại",
+      "filterA11y": "Hiện câu chuyện: {{filter}}",
+      "allHint": "Mọi câu chuyện mà dữ kiện này tìm được trong 48 giờ qua.",
+      "discardedHint": "Được tìm thấy qua dữ kiện này và bị loại khỏi nguồn tin của bạn: không liên quan, bị bộ lọc của bạn ẩn hoặc đã đọc.",
+      "discardedEmpty": "Chưa có câu chuyện nào bị loại khỏi nguồn tin của bạn cho dữ kiện này."
     }
   },
   "publicationPrefs": {

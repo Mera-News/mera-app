@@ -1334,17 +1334,12 @@
     "addFact": "Bilgi ekle",
     "page": {
       "edit": "Düzenle",
-      "emptyBody": "Mera bu bilgi üzerinden bir haber bulup dışarıda bıraktığında burada görünür.",
-      "emptyTitle": "Henüz dışarıda bırakılan yok",
       "howMuch": "Etki düzeyi",
-      "impactful": "Etkili",
       "impactfulEmpty": "Son 48 saatte bu bilgi için henüz haber yok.",
       "impactfulHint": "Bu bilgi yüzünden sizin için seçilen haberler.",
       "menuA11y": "Bu bilgiyi düzenle ya da sil",
       "new": "Yeni",
       "nextInterest": "Sonraki ilgi alanı",
-      "notImpactful": "Etkisiz",
-      "notImpactfulHint": "Son 48 saatte bu bilginin konularında bulundu, sonra dışarıda bırakıldı. Bu telefonda saklanır.",
       "reach_one": "Son 48 saatte {{count}} haber",
       "reach_other": "Son 48 saatte {{count}} haber",
       "recentTab": "Son makaleler",
@@ -1360,7 +1355,14 @@
       "thisWasRelevant": "Bu ilgiliydi",
       "title": "Bilgi",
       "topicMenuA11y": "{{text}} için seçenekler",
-      "topicsTab": "Konular"
+      "topicsTab": "Konular",
+      "filterAll": "Tümü",
+      "filterSuggested": "Önerilen",
+      "filterDiscarded": "Dışarıda bırakılan",
+      "filterA11y": "Haberleri göster: {{filter}}",
+      "allHint": "Bu bilginin son 48 saatte bulduğu her haber.",
+      "discardedHint": "Bu bilgi üzerinden bulundu ve akışınızın dışında bırakıldı: ilgili değil, filtreleriniz tarafından gizlendi ya da zaten okundu.",
+      "discardedEmpty": "Bu bilgi için akışınızın dışında bırakılan bir şey henüz yok."
     }
   },
   "publicationPrefs": {

@@ -1552,17 +1552,12 @@
     "addFact": "Add a fact",
     "page": {
       "edit": "Edit",
-      "emptyBody": "When Mera finds a story through this fact and leaves it out, it shows here.",
-      "emptyTitle": "Nothing left out yet",
       "howMuch": "How much it counts",
-      "impactful": "Impactful",
       "impactfulEmpty": "No stories for this fact in the last 48 hours yet.",
       "impactfulHint": "Stories Mera picked for you because of this fact.",
       "menuA11y": "Edit or delete this fact",
       "new": "New",
       "nextInterest": "Next interest",
-      "notImpactful": "Not impactful",
-      "notImpactfulHint": "Found through this fact's topics in the last 48 hours, then left out. Kept on this phone.",
       "reach_one": "{{count}} story in the last 48 hours",
       "reach_other": "{{count}} stories in the last 48 hours",
       "recentTab": "Recent articles",
@@ -1578,7 +1573,14 @@
       "thisWasRelevant": "This was relevant",
       "title": "Fact",
       "topicMenuA11y": "Options for {{text}}",
-      "topicsTab": "Topics"
+      "topicsTab": "Topics",
+      "filterAll": "All",
+      "filterSuggested": "Suggested",
+      "filterDiscarded": "Discarded",
+      "filterA11y": "Show {{filter}} stories",
+      "allHint": "Every story this fact found in the last 48 hours.",
+      "discardedHint": "Found through this fact and left out of your feed: not relevant, hidden by your filters, or already read.",
+      "discardedEmpty": "Nothing left out of your feed for this fact yet."
     }
   },
   "publicationPrefs": {

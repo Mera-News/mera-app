@@ -1332,17 +1332,12 @@
     "addFact": "Feit toevoegen",
     "page": {
       "edit": "Bewerken",
-      "emptyBody": "Wanneer Mera via dit feit een verhaal vindt en het weglaat, verschijnt het hier.",
-      "emptyTitle": "Nog niets weggelaten",
       "howMuch": "Hoeveel het telt",
-      "impactful": "Impactvol",
       "impactfulEmpty": "Nog geen verhalen voor dit feit in de laatste 48 uur.",
       "impactfulHint": "Verhalen die Mera voor je heeft gekozen vanwege dit feit.",
       "menuA11y": "Dit feit bewerken of verwijderen",
       "new": "Nieuw",
       "nextInterest": "Volgende interesse",
-      "notImpactful": "Niet impactvol",
-      "notImpactfulHint": "Gevonden via de onderwerpen van dit feit in de laatste 48 uur, en daarna weggelaten. Bewaard op deze telefoon.",
       "reach_one": "{{count}} verhaal in de laatste 48 uur",
       "reach_other": "{{count}} verhalen in de laatste 48 uur",
       "recentTab": "Recente artikelen",
@@ -1358,7 +1353,14 @@
       "thisWasRelevant": "Dit was relevant",
       "title": "Feit",
       "topicMenuA11y": "Opties voor {{text}}",
-      "topicsTab": "Onderwerpen"
+      "topicsTab": "Onderwerpen",
+      "filterAll": "Alle",
+      "filterSuggested": "Voorgesteld",
+      "filterDiscarded": "Weggelaten",
+      "filterA11y": "Verhalen tonen: {{filter}}",
+      "allHint": "Elk verhaal dat dit feit in de laatste 48 uur heeft gevonden.",
+      "discardedHint": "Gevonden via dit feit en weggelaten uit je feed: niet relevant, verborgen door je filters, of al gelezen.",
+      "discardedEmpty": "Voor dit feit is nog niets uit je feed weggelaten."
     }
   },
   "publicationPrefs": {

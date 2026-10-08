@@ -1,4 +1,4 @@
-import { isLeftOut, leftOutStories, storiesPerTopic } from '../fact-page-model';
+import { filterStories, isLeftOut, leftOutStories, storiesPerTopic } from '../fact-page-model';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 const NOW = Date.parse('2026-10-07T12:00:00Z');
@@ -55,5 +55,27 @@ describe('fact page model', () => {
         expect(count({ id: 't1', text: 'Power outages' })).toBe(2);
         expect(count({ id: 't9', text: ' housing ' })).toBe(1);
         expect(count({ id: 't8', text: 'Nothing' })).toBe(0);
+    });
+});
+
+describe('filterStories', () => {
+    const picked = (id: string, ms: number) => ({ data: { _id: id }, pubDateMs: ms }) as never;
+    const left = (id: string, iso: string) => ({ data: { _id: id, firstPubDate: iso }, members: [] }) as never;
+    const P = [picked('p-new', Date.parse('2026-10-08T10:00:00Z')), picked('p-old', Date.parse('2026-10-07T10:00:00Z'))];
+    const L = [left('l-mid', '2026-10-08T09:00:00Z')];
+    const ids = (xs: ReturnType<typeof filterStories>) =>
+        xs.map((x) => `${(x.story as unknown as { data: { _id: string } }).data._id}:${x.left}`);
+
+    it('All merges both lists newest first, marking the left-out rows', () => {
+        expect(ids(filterStories('all', P, L))).toEqual(['p-new:false', 'l-mid:true', 'p-old:false']);
+    });
+    it('Suggested is the Feed section only', () => {
+        expect(ids(filterStories('suggested', P, L))).toEqual(['p-new:false', 'p-old:false']);
+    });
+    it('Discarded is the left-out list only', () => {
+        expect(ids(filterStories('discarded', P, L))).toEqual(['l-mid:true']);
+    });
+    it('is empty when both lists are', () => {
+        expect(filterStories('all', [], [])).toEqual([]);
     });
 });

@@ -22,6 +22,7 @@ import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Pressable } from '@/components/ui/pressable';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import { Text } from '@/components/ui/text';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
 import { recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
@@ -54,7 +55,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, TextInput, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { isLeftOut, leftOutStories, storiesPerTopic, type Story } from './fact-page-model';
+import { filterStories, isLeftOut, leftOutStories, storiesPerTopic, type Story, type StoryFilter } from './fact-page-model';
 import AddTopicModal from './AddTopicModal';
 import { sentenceCase } from './sentence-case';
 
@@ -79,7 +80,7 @@ const GENERATE_MORE_TOPIC_COUNT = 10;
 const SOFT_STRENGTH = 0.5;
 
 type Tab = 'topics' | 'recent';
-type Side = 'impactful' | 'left';
+const STORY_FILTERS: readonly StoryFilter[] = ['all', 'suggested', 'discarded'];
 interface TopicRow {
     readonly id: string;
     readonly text: string;
@@ -102,7 +103,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
     const active = useIsFocusedSafe();
 
     const [tab, setTab] = useState<Tab>(from === 'feed' ? 'recent' : 'topics');
-    const [side, setSide] = useState<Side>('impactful');
+    const [filter, setFilter] = useState<StoryFilter>('all');
 
     // ── The fact and its topics ────────────────────────────────────────────
     const [fact, setFact] = useState<Fact | null>(null);
@@ -154,6 +155,9 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
     const leftOut = useMemo(() => leftOutStories(suggestions, factId, Date.now()), [suggestions, factId]);
     const topicStories = useMemo(() => storiesPerTopic([...impactful, ...leftOut]), [impactful, leftOut]);
     const total = impactful.length + leftOut.length;
+    const filterCount = (f: StoryFilter) => (f === 'all' ? total : f === 'suggested' ? impactful.length : leftOut.length);
+    const filterLabel = (f: StoryFilter) =>
+        f === 'all' ? t('facts.page.filterAll') : f === 'suggested' ? t('facts.page.filterSuggested') : t('facts.page.filterDiscarded');
 
     const nextFact = useMemo(() => {
         if (from !== 'feed') return null;
@@ -366,9 +370,8 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
     // ── List ───────────────────────────────────────────────────────────────
     const data: Item[] = useMemo(() => {
         if (tab === 'topics') return topics.map((topic) => ({ kind: 'topic' as const, topic }));
-        const stories: (FactRowGroup | Story)[] = side === 'impactful' ? impactful : leftOut;
-        return stories.map((story) => ({ kind: 'story' as const, story, left: side === 'left' }));
-    }, [tab, side, topics, impactful, leftOut]);
+        return filterStories(filter, impactful, leftOut).map(({ story, left }) => ({ kind: 'story' as const, story, left }));
+    }, [tab, filter, topics, impactful, leftOut]);
 
     const renderItem = useCallback(
         ({ item }: { item: Item }) => {
@@ -484,18 +487,23 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
             ) : null}
             {tab === 'recent' ? (
                 <>
-                    <SegmentedControl
-                        testID="fact-sides"
-                        accessibilityLabel={t('facts.page.recentTab')}
-                        value={side}
-                        onChange={setSide}
-                        options={[
-                            { value: 'impactful', label: `${t('facts.page.impactful')} ${impactful.length}` },
-                            { value: 'left', label: `${t('facts.page.notImpactful')} ${leftOut.length}` },
-                        ]}
-                        style={{ alignSelf: 'center' }}
-                    />
-                    <Help>{side === 'impactful' ? t('facts.page.impactfulHint') : t('facts.page.notImpactfulHint')}</Help>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                        <InlineChoiceChip<StoryFilter>
+                            testID="fact-filter"
+                            options={STORY_FILTERS}
+                            value={filter}
+                            labelOf={(f) => `${filterLabel(f)} ${filterCount(f)}`}
+                            a11yLabelOf={(f) => t('facts.page.filterA11y', { filter: filterLabel(f) })}
+                            onChange={setFilter}
+                        />
+                    </View>
+                    <Help>
+                        {filter === 'all'
+                            ? t('facts.page.allHint')
+                            : filter === 'suggested'
+                              ? t('facts.page.impactfulHint')
+                              : t('facts.page.discardedHint')}
+                    </Help>
                 </>
             ) : null}
         </View>
@@ -578,14 +586,11 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
     );
 
     const recentFooter =
-        tab === 'recent' && side === 'left' && leftOut.length === 0 ? (
-            <View style={{ paddingHorizontal: 18, paddingTop: 24, gap: 6 }} testID="fact-left-empty">
-                <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('facts.page.emptyTitle')}</Text>
-                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('facts.page.emptyBody')}</Text>
-            </View>
-        ) : tab === 'recent' && side === 'impactful' && impactful.length === 0 ? (
-            <View style={{ paddingHorizontal: 18, paddingTop: 24 }} testID="fact-impactful-empty">
-                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('facts.page.impactfulEmpty')}</Text>
+        tab === 'recent' && filterCount(filter) === 0 ? (
+            <View style={{ paddingHorizontal: 18, paddingTop: 24 }} testID={`fact-${filter}-empty`}>
+                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>
+                    {filter === 'discarded' ? t('facts.page.discardedEmpty') : t('facts.page.impactfulEmpty')}
+                </Text>
             </View>
         ) : null;
 

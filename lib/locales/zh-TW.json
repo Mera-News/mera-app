@@ -1333,17 +1333,12 @@
     "addFact": "新增事實",
     "page": {
       "edit": "編輯",
-      "emptyBody": "當 Mera 透過這項事實找到報導但將其排除時，會顯示在這裡。",
-      "emptyTitle": "目前沒有被排除的內容",
       "howMuch": "影響程度",
-      "impactful": "有影響",
       "impactfulEmpty": "過去 48 小時內還沒有與這項事實相關的報導。",
       "impactfulHint": "Mera 因這項事實為你挑選的報導。",
       "menuA11y": "編輯或刪除此事實",
       "new": "新",
       "nextInterest": "下一個興趣",
-      "notImpactful": "沒有影響",
-      "notImpactfulHint": "在過去 48 小時內透過此事實的主題找到，然後被排除。保存在這支手機上。",
       "reach_one": "過去 48 小時內 {{count}} 則報導",
       "reach_other": "過去 48 小時內 {{count}} 則報導",
       "recentTab": "最近的文章",
@@ -1359,7 +1354,14 @@
       "thisWasRelevant": "這則相關",
       "title": "事實",
       "topicMenuA11y": "{{text}}的選項",
-      "topicsTab": "主題"
+      "topicsTab": "主題",
+      "filterAll": "全部",
+      "filterSuggested": "推薦",
+      "filterDiscarded": "已排除",
+      "filterA11y": "顯示{{filter}}報導",
+      "allHint": "過去 48 小時內，這項事實找到的所有報導。",
+      "discardedHint": "透過這項事實找到，但未出現在你的資訊流中：不相關、被你的篩選條件隱藏，或已讀取。",
+      "discardedEmpty": "這項事實目前還沒有被排除在你的資訊流之外的內容。"
     }
   },
   "publicationPrefs": {

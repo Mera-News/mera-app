@@ -1332,17 +1332,12 @@
     "addFact": "ファクトを追加",
     "page": {
       "edit": "編集",
-      "emptyBody": "Meraがこのファクトを通じてストーリーを見つけて除外すると、ここに表示されます。",
-      "emptyTitle": "まだ除外されたものはありません",
       "howMuch": "どの程度影響するか",
-      "impactful": "影響あり",
       "impactfulEmpty": "このファクトに関するストーリーは、過去48時間ではまだありません。",
       "impactfulHint": "このファクトがあるため、Meraがあなたのために選んだストーリーです。",
       "menuA11y": "このファクトを編集または削除",
       "new": "新着",
       "nextInterest": "次の関心事",
-      "notImpactful": "影響なし",
-      "notImpactfulHint": "過去48時間にこのファクトのトピックから見つかり、除外されたものです。この電話に残ります。",
       "reach_one": "過去48時間に{{count}}件のストーリー",
       "reach_other": "過去48時間に{{count}}件のストーリー",
       "recentTab": "最近の記事",
@@ -1358,7 +1353,14 @@
       "thisWasRelevant": "これは関連していました",
       "title": "ファクト",
       "topicMenuA11y": "{{text}}のオプション",
-      "topicsTab": "トピック"
+      "topicsTab": "トピック",
+      "filterAll": "すべて",
+      "filterSuggested": "おすすめ",
+      "filterDiscarded": "除外済み",
+      "filterA11y": "ストーリーを表示: {{filter}}",
+      "allHint": "このファクトが過去48時間に見つけたストーリーすべて。",
+      "discardedHint": "このファクトから見つかりフィードから除外されたもの。関連性がない、フィルターで非表示、または既読です。",
+      "discardedEmpty": "このファクトについて、フィードから除外されたストーリーはまだありません。"
     }
   },
   "publicationPrefs": {

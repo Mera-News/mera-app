@@ -1332,17 +1332,12 @@
     "addFact": "Fakt hinzufügen",
     "page": {
       "edit": "Bearbeiten",
-      "emptyBody": "Wenn Mera über diesen Fakt eine Geschichte findet und sie weglässt, erscheint sie hier.",
-      "emptyTitle": "Noch nichts weggelassen",
       "howMuch": "Wie viel er zählt",
-      "impactful": "Wichtig",
       "impactfulEmpty": "In den letzten 48 Stunden gibt es noch keine Geschichten zu diesem Fakt.",
       "impactfulHint": "Geschichten, die Mera wegen dieses Fakts für dich ausgewählt hat.",
       "menuA11y": "Diesen Fakt bearbeiten oder löschen",
       "new": "Neu",
       "nextInterest": "Nächstes Interesse",
-      "notImpactful": "Nicht wichtig",
-      "notImpactfulHint": "In den letzten 48 Stunden über die Themen dieses Fakts gefunden und dann weggelassen. Bleibt auf diesem Telefon gespeichert.",
       "reach_one": "{{count}} Geschichte in den letzten 48 Stunden",
       "reach_other": "{{count}} Geschichten in den letzten 48 Stunden",
       "recentTab": "Neue Artikel",
@@ -1358,7 +1353,14 @@
       "thisWasRelevant": "Das war relevant",
       "title": "Fakt",
       "topicMenuA11y": "Optionen für {{text}}",
-      "topicsTab": "Themen"
+      "topicsTab": "Themen",
+      "filterAll": "Alle",
+      "filterSuggested": "Vorgeschlagen",
+      "filterDiscarded": "Aussortiert",
+      "filterA11y": "Geschichten anzeigen: {{filter}}",
+      "allHint": "Jede Geschichte, die dieser Fakt in den letzten 48 Stunden gefunden hat.",
+      "discardedHint": "Über diesen Fakt gefunden und aus deinem Feed rausgelassen: nicht relevant, von deinen Filtern ausgeblendet oder schon gelesen.",
+      "discardedEmpty": "Für diesen Fakt wurde bisher nichts aus deinem Feed rausgelassen."
     }
   },
   "publicationPrefs": {

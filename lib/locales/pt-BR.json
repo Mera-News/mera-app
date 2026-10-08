@@ -1332,17 +1332,12 @@
     "addFact": "Adicionar um fato",
     "page": {
       "edit": "Editar",
-      "emptyBody": "Quando a Mera encontrar uma história por meio deste fato e deixar de fora, ela aparece aqui.",
-      "emptyTitle": "Nada deixado de fora ainda",
       "howMuch": "Quanto isso pesa",
-      "impactful": "Relevantes",
       "impactfulEmpty": "Nenhuma história deste fato nas últimas 48 horas ainda.",
       "impactfulHint": "Histórias que a Mera escolheu para você por causa deste fato.",
       "menuA11y": "Editar ou apagar este fato",
       "new": "Novo",
       "nextInterest": "Próximo interesse",
-      "notImpactful": "Pouco relevantes",
-      "notImpactfulHint": "Encontradas pelos temas deste fato nas últimas 48 horas e deixadas de fora. Guardadas neste celular.",
       "reach_one": "{{count}} história nas últimas 48 horas",
       "reach_other": "{{count}} histórias nas últimas 48 horas",
       "recentTab": "Artigos recentes",
@@ -1358,7 +1353,14 @@
       "thisWasRelevant": "Isso era relevante",
       "title": "Fato",
       "topicMenuA11y": "Opções para {{text}}",
-      "topicsTab": "Temas"
+      "topicsTab": "Temas",
+      "filterAll": "Todas",
+      "filterSuggested": "Sugeridas",
+      "filterDiscarded": "Descartadas",
+      "filterA11y": "Mostrar histórias: {{filter}}",
+      "allHint": "Todas as histórias que este fato encontrou nas últimas 48 horas.",
+      "discardedHint": "Encontradas por meio deste fato e deixadas fora do seu feed: não são relevantes, estão ocultas pelos seus filtros ou já foram lidas.",
+      "discardedEmpty": "Nada foi deixado fora do seu feed para este fato ainda."
     }
   },
   "publicationPrefs": {
