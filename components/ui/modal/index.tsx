@@ -18,6 +18,7 @@ import { Pressable, ScrollView, View, ViewStyle } from 'react-native';
 import { GLASS_EDGE } from '@/components/custom/GlassSurface';
 import ModalMaterial from '@/components/custom/ModalMaterial';
 import { MOTION } from '@/lib/motion';
+import { useColors } from '@/lib/theme/tokens';
 
 type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
@@ -60,7 +61,7 @@ const modalStyle = tva({
 });
 
 const modalBackdropStyle = tva({
-  base: 'absolute left-0 top-0 right-0 bottom-0 bg-background-dark web:cursor-default',
+  base: 'absolute left-0 top-0 right-0 bottom-0 web:cursor-default',
 });
 
 /**
@@ -156,6 +157,9 @@ const ModalBackdrop = React.forwardRef<
   React.ComponentRef<typeof UIModal.Backdrop>,
   IModalBackdropProps
 >(function ModalBackdrop({ className, ...props }, ref) {
+  // The theme's scrim carries its own alpha (Modals board: 78% black in dark,
+  // 35% ink in light), so the fade runs to full opacity of that colour.
+  const { scrim } = useColors();
   return (
     <UIModal.Backdrop
       ref={ref}
@@ -163,8 +167,7 @@ const ModalBackdrop = React.forwardRef<
         opacity: 0,
       }}
       animate={{
-        // The Modals board's dim: 78% black, not gluestack's 0.5.
-        opacity: 0.78,
+        opacity: 1,
       }}
       exit={{
         opacity: 0,
@@ -178,6 +181,7 @@ const ModalBackdrop = React.forwardRef<
           duration: 250,
         },
       }}
+      style={{ backgroundColor: scrim }}
       {...props}
       className={modalBackdropStyle({
         class: className,
