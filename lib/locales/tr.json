@@ -1531,7 +1531,6 @@
     "slideProgress": "Kart {{current}} / {{total}}",
     "askMera": "Mera'ya sor",
     "chatIntro": "Mera'nın nasıl çalıştığı hakkında bana ne istersen sor. Açıklayabilirim ama buradan hiçbir şeyi değiştiremem.",
-    "launchButton": "Turu al",
     "hintReveal": "Her birine dokun.",
     "hintRevealSome": "En az {{count}}'a dokun.",
     "hintChoose": "Birini seç.",

@@ -1567,7 +1567,6 @@
     "slideProgress": "Karta {{current}} z {{total}}",
     "askMera": "Zapytaj Mera",
     "chatIntro": "Zapytaj mnie o cokolwiek dotyczącego działania Mera. Mogę wyjaśnić, ale nie mogę nic stąd zmienić.",
-    "launchButton": "Weź udział w wycieczce",
     "hintReveal": "Dotknij każdy.",
     "hintRevealSome": "Dotknij co najmniej {{count}}.",
     "hintChoose": "Wybierz jeden.",

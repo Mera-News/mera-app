@@ -1535,7 +1535,6 @@
     "slideProgress": "Carte {{current}} sur {{total}}",
     "askMera": "Demander à Mera",
     "chatIntro": "Posez-moi n'importe quelle question sur le fonctionnement de Mera. Je peux expliquer, mais je ne peux rien changer d'ici.",
-    "launchButton": "Faire la visite",
     "hintReveal": "Appuyez sur chacun.",
     "hintRevealSome": "Appuyez sur au moins {{count}}.",
     "hintChoose": "Choisissez-en une.",

@@ -1527,7 +1527,6 @@
     "slideProgress": "카드 {{current}}/{{total}}",
     "askMera": "메라에 물어보기",
     "chatIntro": "메라 작동 방식에 대해 무엇이든 물어봐도 됩니다. 설명할 수는 있지만 여기에서는 아무것도 변경할 수 없습니다.",
-    "launchButton": "투어 시작",
     "hintReveal": "각 항목을 탭하세요.",
     "hintRevealSome": "최소 {{count}}개를 탭하세요.",
     "hintChoose": "하나를 선택하세요.",

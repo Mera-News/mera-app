@@ -1527,7 +1527,6 @@
     "slideProgress": "卡片{{current}}（共{{total}}）",
     "askMera": "问梅拉",
     "chatIntro": "问我任何关于梅拉如何工作的问题。我可以解释，但不能从这里改变任何东西。",
-    "launchButton": "开始浏览",
     "hintReveal": "点击每个。",
     "hintRevealSome": "至少点击{{count}}个。",
     "hintChoose": "选择一个。",

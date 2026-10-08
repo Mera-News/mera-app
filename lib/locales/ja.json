@@ -1527,7 +1527,6 @@
     "slideProgress": "カード{{current}}/{{total}}",
     "askMera": "メラに聞く",
     "chatIntro": "メラのしくみについて、何でも聞いてください。説明はできますが、ここから何かを変更することはできません。",
-    "launchButton": "ツアーをする",
     "hintReveal": "それぞれをタップします。",
     "hintRevealSome": "少なくとも{{count}}をタップしてください。",
     "hintChoose": "1つを選びます。",

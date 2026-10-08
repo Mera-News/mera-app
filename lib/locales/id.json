@@ -1527,7 +1527,6 @@
     "slideProgress": "Kartu {{current}} dari {{total}}",
     "askMera": "Tanya Mera",
     "chatIntro": "Tanyakan apa pun tentang cara kerja Mera. Saya dapat menjelaskan, tetapi saya tidak dapat mengubah apa pun dari sini.",
-    "launchButton": "Ikuti tur",
     "hintReveal": "Ketuk masing-masing.",
     "hintRevealSome": "Ketuk setidaknya {{count}}.",
     "hintChoose": "Pilih satu.",

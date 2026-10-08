@@ -1529,7 +1529,6 @@
     "slideProgress": "Karte {{current}} von {{total}}",
     "askMera": "Frag Mera",
     "chatIntro": "Frag mich alles über die Funktionsweise von Mera. Ich kann erklären, kann aber von hier aus nichts ändern.",
-    "launchButton": "Tour machen",
     "hintReveal": "Tippe auf jede.",
     "hintRevealSome": "Tippe auf mindestens {{count}}.",
     "hintChoose": "Wähle eine aus.",

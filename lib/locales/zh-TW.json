@@ -1527,7 +1527,6 @@
     "slideProgress": "卡{{current}} / {{total}}",
     "askMera": "詢問梅拉",
     "chatIntro": "關於梅拉如何運作，什麼都可以問我。我能解釋，但無法在這裡更改任何設定。",
-    "launchButton": "開始導覽",
     "hintReveal": "點擊每一個。",
     "hintRevealSome": "至少點擊{{count}}個。",
     "hintChoose": "選擇一個。",

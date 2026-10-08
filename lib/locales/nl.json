@@ -1529,7 +1529,6 @@
     "slideProgress": "Kaart {{current}} van {{total}}",
     "askMera": "Vraag Mera",
     "chatIntro": "Vraag me alles over hoe Mera werkt. Ik kan het uitleggen, maar kan niets van hier uit veranderen.",
-    "launchButton": "Maak de rondleiding",
     "hintReveal": "Tik op elk.",
     "hintRevealSome": "Tik op minstens {{count}}.",
     "hintChoose": "Kies er een.",

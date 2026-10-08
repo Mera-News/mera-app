@@ -1648,7 +1648,6 @@
     "slideProgress": "Card {{current}} of {{total}}",
     "askMera": "Ask Mera",
     "chatIntro": "Ask me anything about how Mera works. I can explain, but I can't change anything from here.",
-    "launchButton": "Take the tour",
     "hintReveal": "Tap each one.",
     "hintRevealSome": "Tap at least {{count}}.",
     "hintChoose": "Pick one.",
