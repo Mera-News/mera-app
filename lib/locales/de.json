@@ -2077,7 +2077,7 @@
           },
           "exact-match": {
             "headline": "Ein Filter passt eine Sache genau",
-            "body": "Filter sind keine Suchen. Ein Orts-Filter passt diesen Ort; ein Quellen-Filter passt diese Quelle. Sie vergleichen einen genauen Wert gegen ein Feld einer Geschichte, was sie vorhersehbar macht und auch was die nächste Karte würdig macht."
+            "body": "Filter sind keine Suchen. Ein Orts-Filter passt auf diesen Ort. Ein Quellen-Filter passt auf diese Quelle. Sie vergleichen einen genauen Wert gegen ein Feld einer Geschichte, was sie vorhersehbar macht und auch was die nächste Karte würdig macht."
           },
           "made-from-a-story": {
             "headline": "Woher die genauen kommen",
