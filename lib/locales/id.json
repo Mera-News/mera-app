@@ -37,7 +37,7 @@
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Kami tidak dapat menyelesaikan pergantian akun",
     "identitySwitchFailedBody": "Data akun lain masih ada di perangkat ini. Mera harus menghapusnya sebelum Anda dapat melanjutkan, dan penghapusan kali ini tidak berhasil.",
-    "identitySwitchFailedWhy": "Tidak ada yang hilang. Data itu milik akun lain dan tetap ada di akun Mera mereka. Akun Anda mulai dari awal setelah perangkat ini bersih.",
+    "identitySwitchFailedWhy": "Belum ada yang dihapus. Data itu milik akun lain, dan membersihkannya akan menghapusnya dari ponsel ini secara permanen kecuali akun itu membuat cadangan. Akun Anda mulai dari awal setelah perangkat ini bersih.",
     "identitySwitchFailedExhausted": "Masih belum berhasil. Keluar dan mulai lagi untuk membersihkan perangkat ini.",
     "identitySwitchRetry": "Coba lagi",
     "identitySwitchSignOut": "Keluar dan mulai lagi",
@@ -55,10 +55,10 @@
     "signInWithoutEmail": "Masuk tanpa email",
     "differentAccount": {
       "title": "Masuk tanpa email?",
-      "body": "Kami akan menghapus semua data Mera untuk {{email}}. Yakin?",
+      "body": "Kami akan menghapus semua yang disimpan Mera di ponsel ini untuk {{email}}. Akunnya sendiri tidak dihapus. Yakin?",
       "continue": "Hapus dan lanjutkan",
       "useEmail": "Simpan akun saya",
-      "bodyGeneric": "Kami akan menghapus semua data Mera untuk akun ini. Yakin?"
+      "bodyGeneric": "Kami akan menghapus semua yang disimpan Mera di ponsel ini untuk akun ini. Akunnya sendiri tidak dihapus. Yakin?"
     },
     "deviceSignInCaption": {
       "uninstall": "Akun Anda terikat ke ponsel ini. Jika Anda menghapus Mera atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda.",
@@ -132,14 +132,14 @@
         "cloudRelevance": {
           "headlines": [
             "AI sedang membaca setiap artikel untuk melihat mana yang penting bagi Anda.",
-            "Permintaan Anda dienkripsi: hanya ponsel Anda yang menyimpan kuncinya."
+            "Permintaan Anda dienkripsi sehingga hanya AI di dalam enklave yang tersegel yang bisa membacanya."
           ]
         },
         "cloudReasons": {
           "headlines": [
             "Menulis catatan singkat untuk setiap cerita yang relevan.",
             "Anda bisa pergi sejenak. Kami akan memberi tahu Anda saat sudah siap.",
-            "Semua tetap terenkripsi end-to-end: hanya ponsel Anda yang bisa membacanya."
+            "Semuanya tetap terenkripsi antara ponsel Anda dan enklave AI yang tersegel."
           ]
         },
         "onDevice": {
@@ -151,7 +151,7 @@
         "downloading": {
           "headlines": [
             "Artikel hari ini sedang masuk ke ponsel Anda.",
-            "Tidak ada yang dibaca di server. Semuanya sampai ke Anda lebih dulu."
+            "Artikel datang ke ponsel Anda lebih dulu, sebelum ada yang dipilihkan untuk Anda."
           ]
         },
         "grouping": {
@@ -304,7 +304,7 @@
   "onboarding": {
     "stepOf": "Langkah {{current}} dari {{total}}",
     "connectionIssue": "Masalah Koneksi",
-    "connectionDescription": "Kami mengalami masalah koneksi ke server. Anda dapat menutup aplikasi dan mencoba lagi nanti. Jika masalah berlanjut, kami sarankan Anda keluar dan masuk kembali.",
+    "connectionDescription": "Kami kesulitan menjangkau server. Tutup aplikasi dan coba lagi beberapa saat lagi.",
     "logout": "Keluar",
     "close": "Tutup",
     "logoutFailedTitle": "Gagal Keluar",
@@ -401,7 +401,7 @@
     "dlFailedTitle": "Unduhan Gagal",
     "dlFailedDescription": "Gagal mengunduh AI Model. Silakan coba lagi.",
     "modeUpdatedOnDeviceTitle": "Beralih ke di perangkat",
-    "modeUpdatedOnDeviceDescription": "Mera Protocol kini berjalan sepenuhnya offline di ponsel Anda.",
+    "modeUpdatedOnDeviceDescription": "Mera AI kini berjalan di ponsel Anda. Berita tetap berasal dari server Mera.",
     "modeUpdatedCloudTitle": "Beralih ke cloud",
     "modeUpdatedCloudDescription": "Mera Protocol kini menggunakan inferensi cloud terenkripsi ujung ke ujung.",
     "settingUpdateFailedTitle": "Pembaruan Gagal",
@@ -465,22 +465,22 @@
     "cantRun": "Ponsel ini tidak bisa menjalankannya",
     "chatGroup": "Obrolan",
     "encrypted": "Terenkripsi. Mera tidak bisa membacanya.",
-    "explainerCan": "Di ponsel ini, Mera AI berjalan sepenuhnya offline. Cloud pribadi menjalankannya dalam keadaan terenkripsi, jadi Mera tidak bisa membacanya.",
-    "explainerCant": "Di ponsel ini, Mera AI berjalan sepenuhnya offline. Anda memerlukan ponsel yang mumpuni untuk menjalankan Mera AI di perangkat. Ponsel ini tidak mampu, jadi Mera memakai cloud pribadi.",
+    "explainerCan": "Dengan “Di ponsel ini”, Mera AI berjalan di ponsel Anda, dan berita tetap datang lewat internet. Dengan “Cloud pribadi”, AI berjalan dalam keadaan terenkripsi, jadi Mera tidak bisa membacanya.",
+    "explainerCant": "Dengan “Di ponsel ini”, Mera AI berjalan di ponsel Anda, dan berita tetap datang lewat internet. Itu memerlukan ponsel yang mumpuni. Ponsel ini tidak, jadi Mera memakai “Cloud pribadi”.",
     "staysPrivateBody": "Mera Protocol selalu aktif. Fakta Anda tidak pernah meninggalkan ponsel ini dalam keadaan tidak terenkripsi.",
     "staysPrivateTitle": "Data Anda tetap pribadi",
-    "webSearchShort": "Hanya kata pencarian yang keluar dari ponsel Anda. Tidak ada yang menunjukkan siapa Anda.",
+    "webSearchShort": "Hanya kata pencarian yang keluar dari ponsel Anda, lewat server Mera. Mesin pencari tidak pernah tahu siapa Anda.",
     "whereReads": "Di mana Mera membaca berita Anda",
     "whileClosed": "Saat Mera ditutup",
     "deleting": "Menghapus…"
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu \"Publikasi yang Anda baca\" di tab Sumber dan riwayat per-publikasi akan direset menjadi kosong. Tidak ada hal lain yang terpengaruh, dan tidak ada data server yang disentuh (data ini tidak pernah meninggalkan perangkat Anda).",
+    "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu \"Publikasi yang Anda baca\" di tab Sumber dan riwayat per-publikasi akan direset menjadi kosong. Tidak ada hal lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah memiliki data ini.",
     "deletedTitle": "Data Dihapus",
     "deletedDescription": "Data yang dipilih telah berhasil dihapus.",
     "errorTitle": "Kesalahan",
     "errorDescription": "Gagal menghapus data. Silakan coba lagi.",
-    "factsModalDescription": "Menghapus fakta yang Anda tambahkan beserta topik yang dihasilkan darinya. Fakta Anda tidak pernah meninggalkan perangkat ini. Frasa topik dikirim saat Anda mengambil berita dan disimpan di cache pada server kami tanpa ID pengguna, jadi tidak ada apa pun di sana yang mencatat bahwa itu milik Anda. Umpan artikel Anda juga dibersihkan, karena dibangun dari topik-topik ini, dan tetap kosong sampai Anda menambahkan fakta baru.",
+    "factsModalDescription": "Menghapus fakta yang Anda tambahkan beserta topik yang dihasilkan darinya. Fakta Anda disimpan di perangkat ini, bukan di server Mera. Frasa topik dikirim saat Anda mengambil berita dan disimpan di cache pada server kami tanpa ID pengguna, jadi tidak ada apa pun di sana yang mencatat bahwa itu milik Anda. Umpan artikel Anda juga dibersihkan, karena dibangun dari topik-topik ini.",
     "exportHistoryTitle": "Ekspor riwayat bacaan",
     "exportHistoryDescription": "30 hari terakhir sebagai JSON: artikel, publikasi, dan waktu rata-rata dari penerbitan hingga dibaca",
     "exportHistorySubject": "Riwayat bacaan Mera saya (JSON)",
@@ -495,7 +495,7 @@
       "signInRecordIos": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple bahwa ini aplikasi asli tidak disimpan.",
       "signInRecordAndroid": "Catatan masuk untuk ponsel ini, bukan ID ponsel Anda, dihapus bersama akun Anda. Pemeriksaan Google bahwa ini aplikasi asli tidak disimpan.",
       "signInRecordGeneric": "Tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple atau Google bahwa ini aplikasi asli tidak disimpan.",
-      "usage": "Hitungan harian artikel yang dianalisis, untuk menerapkan batas paket Anda. Proses masuk tidak menyimpan alamat IP atau detail browser.",
+      "usage": "Hitungan harian artikel yang dikirim ke ponsel ini, untuk menerapkan batas paket Anda, dan hari-hari saat Anda memakai Mera. Disimpan selama 90 hari. Proses masuk tidak menyimpan alamat IP atau detail browser.",
       "topics": "Frasa topik, disimpan hanya berdasarkan teksnya tanpa apa pun yang mengaitkannya dengan Anda, dan dihapus setelah 14 hari tidak dipakai.",
       "privacyLink": "Baca kebijakan privasi"
     },
@@ -504,14 +504,14 @@
     "clearHistoryTitle": "Hapus riwayat baca",
     "clearProfileHint": "Fakta Anda dan topiknya",
     "clearProfileTitle": "Hapus profil",
-    "deleteAccountHint": "Akun Anda, paket Anda, dan semua yang Mera simpan di ponsel ini. Tindakan ini tidak dapat dibatalkan.",
+    "deleteAccountHint": "Akun Anda dan semua yang disimpan Mera di ponsel ini. Langganan toko tetap berjalan sampai Anda membatalkannya di App Store atau Google Play. Tindakan ini tidak dapat dibatalkan.",
     "deleteGroup": "Hapus",
     "exportHint": "30 hari terakhir, dalam JSON",
     "intro": "Cadangkan apa yang Mera simpan di ponsel ini, lihat, bawa, atau hapus.",
     "lookAndTake": "Lihat dan bawa",
     "askBeforeTopicDelete": "Tanyakan sebelum menghapus topik",
     "askBeforeTopicDeleteHint": "Mera meminta Anda mengonfirmasi setiap kali Anda menghapus topik dari salah satu fakta Anda.",
-    "exportHistoryWindowNote_other": "Ekspor ini hanya mencakup {{count}} hari terakhir membaca. Entri yang lebih lama dihapus otomatis dari perangkat ini dan tidak pernah dikirim ke server."
+    "exportHistoryWindowNote_other": "Ekspor ini hanya mencakup {{count}} hari terakhir membaca. Entri yang lebih lama dihapus otomatis dari perangkat ini dan tidak pernah dikirim ke server Mera."
   },
   "preferences": {
     "notifications": "Notifikasi",
@@ -538,7 +538,7 @@
     "faq": "FAQ",
     "reportBug": "Laporkan bug",
     "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk dihapus, dengan masa tenggang 30 hari. Jika akun Anda punya email, masuklah dengan email itu dalam 30 hari tersebut untuk membatalkan. Akun tanpa email tidak bisa dimasuki lagi, jadi penghapusannya tidak bisa dibatalkan.",
-    "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, semua data Anda dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.",
+    "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, data akun Anda dihapus secara permanen. Catatan penagihan disimpan selama 7 tahun untuk pembukuan. Tindakan ini tidak dapat dibatalkan.",
     "finalConfirmationBodyGrace": "Ini menjadwalkan akun Anda untuk penghapusan permanen dalam 30 hari.",
     "accountDeletionScheduledTitle": "Penghapusan Dijadwalkan",
     "accountDeletionScheduledDescription": "Akun Anda akan dihapus permanen dalam 30 hari. Jika akun punya email, masuklah dengan email itu sebelumnya untuk membatalkan."
@@ -568,7 +568,7 @@
     "unexpectedError": "Kami mengalami kesalahan yang tidak terduga. Silakan coba lagi.",
     "failedToLoad": "Gagal memuat",
     "errorLoadingContent": "Kesalahan saat memuat konten",
-    "networkError": "Tidak dapat terhubung ke server. Periksa jaringan dan pengaturan API endpoint Anda.",
+    "networkError": "Tidak dapat terhubung ke server. Periksa koneksi Anda dan coba lagi.",
     "feedError": "Tidak dapat memuat feed berita Anda. Silakan coba lagi.",
     "accountRestricted": "Akun Dibatasi",
     "accountRestrictedDescription": "Akun Anda telah dibatasi. Silakan hubungi dukungan.",
@@ -734,7 +734,7 @@
     "badge_one": "Anda mengunjungi {{publication}} sekali dalam 30 hari terakhir",
     "badge_other": "Anda mengunjungi {{publication}} {{count}} kali dalam 30 hari terakhir",
     "tooltipA11y": "Tentang riwayat bacaan",
-    "tooltipIntro": "Mera mencatat pola bacaan Anda untuk Anda. Catatan itu hanya ada di perangkat Anda.",
+    "tooltipIntro": "Mera mencatat pola bacaan Anda untuk Anda. Catatan itu disimpan di perangkat Anda, dan server Mera tidak pernah melihatnya.",
     "tooltipLink": "Lihat semua riwayat bacaan Anda di sini."
   },
   "nativeUpdate": {
@@ -788,7 +788,7 @@
     "failed": "{{count}} gagal",
     "pending": "{{count}} tertunda",
     "noteBody": "Layar ini membaca database lokal Mera secara langsung. Ini adalah data yang membangun feed Anda, ditampilkan di sini untuk transparansi dan debugging. Server Mera tidak menyimpan fakta Anda, riwayat bacaan Anda, atau saran yang dibangun darinya.",
-    "noteExceptions": "Dua pengecualian: profil akun Anda (masuk, notifikasi, bahasa) disinkronkan dengan akun Mera Anda, dan ketika AI cloud diaktifkan, fakta Anda dienkripsi di perangkat ini sebelum dikirim untuk penilaian.",
+    "noteExceptions": "Pengecualian: profil akun Anda (masuk, paket, notifikasi, bahasa) disinkronkan dengan akun Mera Anda, jawaban yang Anda kirim ke tim Mera disimpan bersamanya, dan saat AI cloud diaktifkan, fakta Anda dienkripsi di perangkat ini sebelum dikirim untuk penilaian dan pengecekan topik.",
     "noteFooter": "Nilai di sini bersifat mentah dan diagnostik. Baris feed menghapus dirinya sendiri setelah 48 jam. Anda bisa menghapus fakta, cache feed, dan riwayat tampilan dari Kelola Data.",
     "noteTitle": "Data Anda, di perangkat Anda"
   },
@@ -1582,11 +1582,11 @@
             "reveal": {
               "about-you": {
                 "label": "Apa yang diketahuinya tentang Anda",
-                "text": "Fakta Anda, minat Anda, dan apa yang telah Anda baca ditulis ke ponsel ini dan tetap di sana. Tidak ada salinannya di server."
+                "text": "Fakta Anda, minat Anda, dan apa yang telah Anda baca ditulis ke ponsel ini dan tetap di sana. Server Mera tidak menyimpan salinannya."
               },
               "what-leaves": {
                 "label": "Apa yang benar-benar pergi",
-                "text": "Frasa topik pendek, seperti 'staf rumah sakit'. Tidak ada nama, tidak ada akun, tidak ada yang mengatakan frasa itu berasal dari Anda."
+                "text": "Frasa topik pendek, seperti \"staf rumah sakit\". Server Mera menyimpannya tanpa nama atau akun, jadi tidak ada yang mencatat bahwa suatu frasa berasal dari Anda."
               }
             }
           },
@@ -1789,16 +1789,16 @@
         "subtitle": "Apa yang meninggalkan ponsel ini, dan apa yang tidak pernah.",
         "slides": {
           "stays-on-phone": {
-            "headline": "Bagian tentang Anda tidak pernah pergi",
-            "body": "Fakta Anda, minat Anda, tempat Anda, dan semua yang telah Anda baca tinggal di ponsel ini. Tidak ada salinannya di server, itulah sebabnya keluar atau berganti ponsel berarti membangun profil lagi."
+            "headline": "Bagian tentang Anda disimpan di sini",
+            "body": "Fakta Anda, minat Anda, tempat Anda, dan semua yang telah Anda baca tinggal di ponsel ini. Server Mera tidak menyimpan salinannya, itulah sebabnya keluar akan menghapus profil Anda. Di ponsel baru, Cadangan dapat mengembalikannya."
           },
           "what-leaves": {
             "headline": "Apa yang benar-benar keluar",
-            "body": "Tiga hal, dan itulah daftarnya.",
+            "body": "Hal-hal utamanya, dan mengapa masing-masing keluar.",
             "steps": {
               "0": "Frasa topik pendek, jadi ada sesuatu untuk mencocokkan cerita.",
               "1": "Cara Anda masuk, lewat email atau ponsel ini, dan paket yang Anda pakai.",
-              "2": "Hitungan berapa banyak cerita yang dianalisis hari ini, untuk menjaga paket itu jujur."
+              "2": "Artikel yang diminta ponsel Anda, dihitung per hari agar batas paket tetap adil."
             },
             "ask": "Apa yang dikirim aplikasi ke server Anda?"
           },
@@ -1816,7 +1816,7 @@
           },
           "what-we-keep": {
             "headline": "Apa yang kami simpan",
-            "body": "Email masuk Anda, jika Anda menambahkannya. Paket yang Anda pakai. Hitungan harian cerita yang dianalisis. Jika Anda memakai Mera tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
+            "body": "Email masuk Anda, jika Anda menambahkannya. Paket yang Anda pakai. Hitungan harian artikel yang dikirim ke Anda dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Jika Anda memakai Mera tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
             "ask": "Apa yang disimpan Mera tentang saya di servernya?"
           }
         }
@@ -1951,7 +1951,7 @@
           },
           "mute-is-not-a-downrank": {
             "headline": "Bungkam adalah hal yang sama sekali berbeda",
-            "body": "Bungkam hanya tinggal di layar preferensi sumber, dan itu pengecualian keras: cerita-cerita itu dijatuhkan, bukan hanya diurutkan lebih rendah. Ketuk setiap kartu dan letakkan di mana seharusnya.",
+            "body": "Bungkam diatur di halaman sebuah publikasi, dan itu pengecualian keras: cerita-cerita itu dibuang, bukan hanya diurutkan lebih rendah. Ketuk setiap kartu dan letakkan di tempat yang seharusnya.",
             "steps": {
               "0": "Panah turun: ditampilkan lebih jarang.",
               "1": "Bungkam: tidak ditampilkan sama sekali.",
@@ -2102,11 +2102,11 @@
             "reveal": {
               "cloud": {
                 "label": "Cloud (standar)",
-                "text": "Data Anda dienkripsi di ponsel ini, dibuka hanya di dalam enklave yang tersegel, dan dienkripsi lagi dalam perjalanan kembali. Cepat, dan bekerja di ponsel apa pun. Aplikasi belum memeriksa sertifikat enklave itu terhadap pembuat chip, hal yang dinyatakan terbuka dalam pemberitahuan privasi."
+                "text": "Data Anda dienkripsi di ponsel ini, dibuka hanya di dalam enklave yang tersegel, dan dienkripsi lagi dalam perjalanan kembali. Cepat, dan bekerja di ponsel apa pun. Aplikasi tidak memeriksa enklave dengan pembuat chip sebelum setiap permintaan, hal yang dinyatakan terbuka di FAQ kami. Anda bisa menjalankan pemeriksaan itu sendiri di Pengaturan, di bawah Mera Protocol."
               },
               "on-device": {
                 "label": "Di perangkat",
-                "text": "Semuanya berjalan di sini dan tidak ada apa pun tentang Anda yang pergi. Itu mengunduh model terlebih dahulu, menginginkan ponsel yang cukup baru, dan terlihat lebih lambat secara nyata."
+                "text": "AI berjalan di sini, bukan di cloud. Frasa topik Anda tetap dikirim keluar untuk mengambil berita dan disimpan tanpa nama. AI ini mengunduh model terlebih dahulu, memerlukan ponsel yang cukup baru, dan terasa jauh lebih lambat."
               }
             }
           },
@@ -2116,7 +2116,7 @@
           },
           "web-search": {
             "headline": "Pencarian web dalam chat",
-            "body": "Nonaktif secara default. Dinyalakan, Mera dapat mencari sesuatu di tengah percakapan. Apa yang meninggalkan ponsel Anda saat itu?",
+            "body": "Aktif secara default. Saat aktif, Mera dapat mencari sesuatu di tengah percakapan. Apa yang meninggalkan ponsel Anda saat itu?",
             "choose": {
               "whole-question": {
                 "label": "Pesan keseluruhan Anda",
@@ -2231,7 +2231,7 @@
     "restartNeeded": "Data Anda sudah kembali. Tutup dan buka kembali aplikasi untuk melihatnya.",
     "restore": "Pulihkan dari cadangan",
     "restoreConfirmAction": "Ganti",
-    "restoreConfirmDescription": "Fakta, topik, chat, artikel tersimpan, dan riwayat baca Anda di ponsel ini akan diganti dengan isi cadangan. Tindakan ini tidak dapat dibatalkan. Akun dan langganan Anda tidak terpengaruh.",
+    "restoreConfirmDescription": "Fakta, topik, artikel tersimpan, dan riwayat baca Anda di ponsel ini akan diganti dengan isi cadangan. Chat Anda tetap seperti semula. Tindakan ini tidak dapat dibatalkan. Akun dan langganan Anda tidak terpengaruh.",
     "restoreConfirmTitle": "Ganti data di perangkat ini?",
     "restoreEmpty": "Tidak ada cadangan ditemukan di sini. Jika sebelumnya Anda memakai akun Google atau akun iCloud yang berbeda, masuk dengan akun itu.",
     "restoreWhereDescription": "Pilih tempat Anda menyimpannya. Anda akan melihat isinya sebelum ada yang diganti.",

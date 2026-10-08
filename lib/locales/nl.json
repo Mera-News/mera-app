@@ -37,7 +37,7 @@
     "faq": "FAQ",
     "identitySwitchFailedTitle": "We konden het wisselen van account niet afronden",
     "identitySwitchFailedBody": "Er staan nog gegevens van een ander account op dit apparaat. Mera moet die wissen voordat je verder kunt, en het wissen is deze keer niet gelukt.",
-    "identitySwitchFailedWhy": "Er gaat niets verloren. Die gegevens horen bij het andere account en blijven daar bewaard. Jouw account begint opnieuw zodra dit apparaat leeg is.",
+    "identitySwitchFailedWhy": "Er is nog niets verwijderd. Die gegevens horen bij het andere account, en als je ze wist, verdwijnen ze definitief van deze telefoon, tenzij dat account een back-up heeft gemaakt. Jouw account begint opnieuw zodra dit apparaat leeg is.",
     "identitySwitchFailedExhausted": "Het is nog steeds niet gelukt. Log uit en begin opnieuw om dit apparaat leeg te maken.",
     "identitySwitchRetry": "Opnieuw proberen",
     "identitySwitchSignOut": "Uitloggen en opnieuw beginnen",
@@ -55,10 +55,10 @@
     "signInWithoutEmail": "Inloggen zonder e-mail",
     "differentAccount": {
       "title": "Inloggen zonder e-mail?",
-      "body": "We wissen alles in Mera voor {{email}}. Weet je het zeker?",
+      "body": "We wissen alles wat Mera op deze telefoon bewaart voor {{email}}. Het account zelf wordt niet verwijderd. Weet je het zeker?",
       "continue": "Verwijderen en doorgaan",
       "useEmail": "Mijn account behouden",
-      "bodyGeneric": "We wissen alles in Mera voor dit account. Weet je het zeker?"
+      "bodyGeneric": "We wissen alles wat Mera op deze telefoon bewaart voor dit account. Het account zelf wordt niet verwijderd. Weet je het zeker?"
     },
     "deviceSignInCaption": {
       "uninstall": "Je account is gekoppeld aan deze telefoon. Als je Mera verwijdert of de telefoon kwijtraakt, begin je met een nieuw account. Back-up en herstel in Instellingen kan je gegevens bewaren.",
@@ -132,14 +132,14 @@
         "cloudRelevance": {
           "headlines": [
             "Een AI leest elk artikel om te zien welke voor jou van belang zijn.",
-            "Je verzoek is versleuteld. Alleen je telefoon heeft de sleutel."
+            "Je verzoek is versleuteld, zodat alleen de AI in zijn afgesloten enclave het kan lezen."
           ]
         },
         "cloudReasons": {
           "headlines": [
             "Een korte notitie schrijven voor elk relevant artikel.",
             "Je kunt wegstappen. We sturen je een melding wanneer het klaar is.",
-            "Alles blijft end-to-end versleuteld. Alleen jouw telefoon kan het lezen."
+            "Alles blijft versleuteld tussen je telefoon en de afgesloten enclave van de AI."
           ]
         },
         "onDevice": {
@@ -151,7 +151,7 @@
         "downloading": {
           "headlines": [
             "De artikelen van vandaag komen naar je telefoon.",
-            "Er wordt niets op een server gelezen. Ze komen eerst bij jou."
+            "De artikelen komen eerst naar je telefoon, voordat er iets voor je wordt uitgekozen."
           ]
         },
         "grouping": {
@@ -304,7 +304,7 @@
   "onboarding": {
     "stepOf": "Stap {{current}} van {{total}}",
     "connectionIssue": "Verbindingsprobleem",
-    "connectionDescription": "We hebben problemen met de verbinding naar de server. Je kunt de app sluiten en het later opnieuw proberen. Als het probleem aanhoudt, raden we aan om uit te loggen en opnieuw in te loggen.",
+    "connectionDescription": "We kunnen de server niet bereiken. Sluit de app en probeer het over een tijdje opnieuw.",
     "logout": "Uitloggen",
     "close": "Sluiten",
     "logoutFailedTitle": "Uitloggen mislukt",
@@ -401,7 +401,7 @@
     "dlFailedTitle": "Download mislukt",
     "dlFailedDescription": "Het AI-model downloaden is mislukt. Probeer het opnieuw.",
     "modeUpdatedOnDeviceTitle": "Overgeschakeld naar op apparaat",
-    "modeUpdatedOnDeviceDescription": "Mera Protocol draait nu volledig offline op je telefoon.",
+    "modeUpdatedOnDeviceDescription": "Mera AI draait nu op je telefoon. Het nieuws komt nog steeds van de servers van Mera.",
     "modeUpdatedCloudTitle": "Overgeschakeld naar cloud",
     "modeUpdatedCloudDescription": "Mera Protocol gebruikt nu end-to-end versleutelde cloudinferentie.",
     "settingUpdateFailedTitle": "Bijwerken mislukt",
@@ -465,22 +465,22 @@
     "cantRun": "Deze telefoon kan het niet draaien",
     "chatGroup": "Chat",
     "encrypted": "Versleuteld. Mera kan het niet lezen.",
-    "explainerCan": "Op deze telefoon draait Mera AI volledig offline. De privécloud draait het versleuteld, zodat Mera het niet kan lezen.",
-    "explainerCant": "Op deze telefoon draait Mera AI volledig offline. Je hebt een capabele telefoon nodig om Mera AI op het apparaat te draaien. Deze kan dat niet, dus Mera gebruikt de privécloud.",
+    "explainerCan": "Met ‘Op deze telefoon’ draait Mera AI op je telefoon, en het nieuws komt nog steeds online binnen. Met ‘Privécloud’ draait het versleuteld, zodat Mera het niet kan lezen.",
+    "explainerCant": "Met ‘Op deze telefoon’ draait Mera AI op je telefoon, en het nieuws komt nog steeds online binnen. Daarvoor is een krachtige telefoon nodig. Deze is dat niet, dus Mera gebruikt ‘Privécloud’.",
     "staysPrivateBody": "Het Mera Protocol staat altijd aan. Je feiten verlaten deze telefoon nooit onversleuteld.",
     "staysPrivateTitle": "Je gegevens blijven privé",
-    "webSearchShort": "Alleen de zoekwoorden verlaten je telefoon. Niets dat zegt wie je bent.",
+    "webSearchShort": "Alleen de zoekwoorden verlaten je telefoon, via de server van Mera. De zoekmachine komt nooit te weten wie je bent.",
     "whereReads": "Waar Mera je nieuws leest",
     "whileClosed": "Terwijl Mera gesloten is",
     "deleting": "Verwijderen…"
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart 'Publicaties die je leest' op het tabblad Bronnen en de per-publicatiegeschiedenis worden gereset naar leeg. Niets anders wordt beïnvloed en er worden geen servergegevens aangeraakt (deze gegevens hebben je apparaat nooit verlaten).",
+    "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart 'Publicaties die je leest' op het tabblad Bronnen en de per-publicatiegeschiedenis worden gereset naar leeg. Niets anders wordt beïnvloed en er worden geen servergegevens aangeraakt, want de servers van Mera hebben deze gegevens nooit gehad.",
     "deletedTitle": "Gegevens verwijderd",
     "deletedDescription": "Geselecteerde gegevens zijn succesvol gewist.",
     "errorTitle": "Fout",
     "errorDescription": "Gegevens verwijderen mislukt. Probeer het opnieuw.",
-    "factsModalDescription": "Wist de feiten die je hebt toegevoegd en de onderwerpen die daaruit zijn ontstaan. Je feiten verlaten dit apparaat nooit. Onderwerpsfrasen worden verstuurd wanneer je nieuws ophaalt en op onze servers gecachet zonder gebruikers-ID, dus daar staat nergens vastgelegd dat ze van jou kwamen. Je artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebouwd, en blijft leeg totdat je nieuwe feiten toevoegt.",
+    "factsModalDescription": "Wist de feiten die je hebt toegevoegd en de onderwerpen die daaruit zijn ontstaan. Je feiten staan op dit apparaat, niet op de servers van Mera. Onderwerpsfrasen worden verstuurd wanneer je nieuws ophaalt en op onze servers gecachet zonder gebruikers-ID, dus daar staat nergens vastgelegd dat ze van jou kwamen. Je artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebouwd.",
     "exportHistoryTitle": "Leesgeschiedenis exporteren",
     "exportHistoryDescription": "Afgelopen 30 dagen als JSON: artikelen, publicaties en gemiddelde tijd van publicatie tot lezen",
     "exportHistorySubject": "Mijn Mera-leesgeschiedenis (JSON)",
@@ -495,7 +495,7 @@
       "signInRecordIos": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple dat dit de echte app is, bewaren we niet.",
       "signInRecordAndroid": "Een inlogregistratie voor deze telefoon, niet de ID van je telefoon, die met je account wordt verwijderd. De controle van Google dat dit de echte app is, bewaren we niet.",
       "signInRecordGeneric": "Zonder e-mail een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple of Google dat dit de echte app is, bewaren we niet.",
-      "usage": "Een dagelijkse telling van geanalyseerde artikelen, om de limiet van je abonnement toe te passen. Bij inloggen bewaren we geen IP-adres of browsergegevens.",
+      "usage": "Een dagelijkse telling van de artikelen die naar deze telefoon zijn gestuurd, om de limiet van je abonnement toe te passen, en op welke dagen je Mera hebt gebruikt. Bewaard gedurende 90 dagen. Bij inloggen bewaren we geen IP-adres of browsergegevens.",
       "topics": "Onderwerpzinnen, alleen op hun tekst opgeslagen zonder iets dat ze aan jou koppelt, en verwijderd na 14 dagen zonder gebruik.",
       "privacyLink": "Lees het privacybeleid"
     },
@@ -504,15 +504,15 @@
     "clearHistoryTitle": "Leesgeschiedenis wissen",
     "clearProfileHint": "Je feiten en hun onderwerpen",
     "clearProfileTitle": "Profiel wissen",
-    "deleteAccountHint": "Je account, je abonnement en alles wat Mera op deze telefoon bewaart. Dit kan niet ongedaan worden gemaakt.",
+    "deleteAccountHint": "Je account en alles wat Mera op deze telefoon bewaart. Een abonnement via de store blijft doorlopen totdat je het opzegt in de App Store of Google Play. Dit kan niet ongedaan worden gemaakt.",
     "deleteGroup": "Verwijderen",
     "exportHint": "Afgelopen 30 dagen, als JSON",
     "intro": "Maak een back-up van wat Mera op deze telefoon bewaart, bekijk het, neem het mee of verwijder het.",
     "lookAndTake": "Bekijken en meenemen",
     "askBeforeTopicDelete": "Vragen voordat je een onderwerp verwijdert",
     "askBeforeTopicDeleteHint": "Mera vraagt je elke keer om te bevestigen als je een onderwerp uit een van je feiten verwijdert.",
-    "exportHistoryWindowNote_one": "Deze export bevat alleen de laatste {{count}} dag leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar een server gestuurd.",
-    "exportHistoryWindowNote_other": "Deze export bevat alleen de laatste {{count}} dagen leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar een server gestuurd."
+    "exportHistoryWindowNote_one": "Deze export bevat alleen de laatste {{count}} dag leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar de servers van Mera gestuurd.",
+    "exportHistoryWindowNote_other": "Deze export bevat alleen de laatste {{count}} dagen leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar de servers van Mera gestuurd."
   },
   "preferences": {
     "notifications": "Meldingen",
@@ -539,7 +539,7 @@
     "faq": "FAQ",
     "reportBug": "Een bug melden",
     "deleteAccountConfirmGrace": "Je account wordt ingepland voor verwijdering, met een bedenktijd van 30 dagen. Heeft je account een e-mailadres, log daar dan binnen deze 30 dagen mee in om te annuleren. Een account zonder e-mail kan niet meer inloggen, dus de verwijdering ervan kan niet worden geannuleerd.",
-    "deleteAccountWarningGrace": "⚠️ Na 30 dagen worden al je gegevens permanent verwijderd. Dit kan niet ongedaan worden gemaakt.",
+    "deleteAccountWarningGrace": "⚠️ Na 30 dagen worden je accountgegevens permanent verwijderd. Factuurgegevens worden 7 jaar bewaard voor de boekhouding. Dit kan niet ongedaan worden gemaakt.",
     "finalConfirmationBodyGrace": "Dit plant je account voor permanente verwijdering over 30 dagen in.",
     "accountDeletionScheduledTitle": "Verwijdering gepland",
     "accountDeletionScheduledDescription": "Je account wordt over 30 dagen definitief verwijderd. Heeft het een e-mailadres, log daar dan eerder mee in om te annuleren."
@@ -569,7 +569,7 @@
     "unexpectedError": "We zijn een onverwachte fout tegengekomen. Probeer het opnieuw.",
     "failedToLoad": "Laden mislukt",
     "errorLoadingContent": "Fout bij het laden van inhoud",
-    "networkError": "Kan geen verbinding maken met de server. Controleer je netwerk en API-eindpuntinstellingen.",
+    "networkError": "Kan geen verbinding maken met de server. Controleer je verbinding en probeer het opnieuw.",
     "feedError": "Je feed kon niet worden geladen. Probeer het opnieuw.",
     "accountRestricted": "Account beperkt",
     "accountRestrictedDescription": "Je account is beperkt. Neem contact op met de ondersteuning.",
@@ -735,7 +735,7 @@
     "badge_one": "Je hebt {{publication}} één keer bezocht in de afgelopen 30 dagen",
     "badge_other": "Je hebt {{publication}} {{count}} keer bezocht in de afgelopen 30 dagen",
     "tooltipA11y": "Over leesgeschiedenis",
-    "tooltipIntro": "Mera houdt je leesgedrag bij, en dit blijft alleen op je apparaat.",
+    "tooltipIntro": "Mera houdt je leesgedrag voor je bij. Dat overzicht wordt op je apparaat bewaard en de servers van Mera zien het nooit.",
     "tooltipLink": "Bekijk hier al je leesgeschiedenis."
   },
   "nativeUpdate": {
@@ -789,7 +789,7 @@
     "failed": "{{count}} mislukt",
     "pending": "{{count}} in wachtrij",
     "noteBody": "Dit scherm leest Mera's on-device database rechtstreeks. Het zijn de gegevens die je feed opbouwen, hier getoond voor zichtbaarheid en debugging. Mera's servers slaan je feiten, je leesgeschiedenis of de suggesties die eruit ontstaan niet op.",
-    "noteExceptions": "Twee uitzonderingen: je accountprofiel (aanmelden, meldingen, taal) wordt gesynchroniseerd met je Mera-account, en wanneer cloud-AI is ingeschakeld, worden je feiten op dit apparaat versleuteld voordat ze voor scoring worden verzonden.",
+    "noteExceptions": "Uitzonderingen: je accountprofiel (aanmelden, abonnement, meldingen, taal) wordt gesynchroniseerd met je Mera-account, antwoorden die je naar het Mera-team stuurt worden daarbij bewaard, en als cloud-AI aanstaat, worden je feiten op dit apparaat versleuteld voordat ze worden verstuurd voor scoring en onderwerpcontroles.",
     "noteFooter": "Waarden hier zijn ruw en diagnostisch. Feedrijen wissen zichzelf na 48 uur. Je kunt je feiten, feedcache en leesgeschiedenis verwijderen via Gegevens beheren.",
     "noteTitle": "Je gegevens, op je apparaat"
   },
@@ -1584,11 +1584,11 @@
             "reveal": {
               "about-you": {
                 "label": "Wat het over jou weet",
-                "text": "Je feiten, je interesses en wat je hebt gelezen worden op deze telefoon geschreven en blijven daar. Er is geen kopie ervan op een server."
+                "text": "Je feiten, je interesses en wat je hebt gelezen worden op deze telefoon opgeslagen en blijven daar. De servers van Mera bewaren er geen kopie van."
               },
               "what-leaves": {
                 "label": "Wat werkelijk weggaat",
-                "text": "Korte onderwerpsfrasen, zoals 'ziekenhuisbezetting'. Geen naam, geen account, niets dat zegt dat de zin van jou afkomstig was."
+                "text": "Korte onderwerpsfrasen, zoals 'ziekenhuisbezetting'. De servers van Mera slaan ze op zonder naam of account, dus nergens staat vastgelegd dat een frase van jou kwam."
               }
             }
           },
@@ -1791,16 +1791,16 @@
         "subtitle": "Wat dit apparaat verlaat en wat nooit doet.",
         "slides": {
           "stays-on-phone": {
-            "headline": "Het deel over jou verlaat nooit",
-            "body": "Je feiten, je interesses, je plaatsen en alles wat je hebt gelezen leven op deze telefoon. Er is geen kopie op een server, wat ook waarom afmelden of van telefoon wisselen betekent het profiel opnieuw op te bouwen."
+            "headline": "Het deel over jou blijft hier bewaard",
+            "body": "Je feiten, je interesses, je plaatsen en alles wat je hebt gelezen staan op deze telefoon. De servers van Mera bewaren geen kopie, en daarom wordt je profiel gewist als je je afmeldt. Op een nieuwe telefoon kan Back-up het terugbrengen."
           },
           "what-leaves": {
             "headline": "Wat werkelijk naar buiten gaat",
-            "body": "Drie dingen en dat is de lijst.",
+            "body": "De belangrijkste dingen, en waarom elk ervan de deur uit gaat.",
             "steps": {
               "0": "Korte onderwerpsfrasen, dus er is iets om verhalen tegenaan te passen.",
               "1": "Hoe je inlogt, met e-mail of met deze telefoon, en welk abonnement je hebt.",
-              "2": "Een telling van hoeveel verhalen vandaag zijn geanalyseerd, om dat abonnement eerlijk te houden."
+              "2": "De artikelen die je telefoon opvraagt, per dag geteld om dat abonnement eerlijk te houden."
             },
             "ask": "Wat stuurt de app naar jullie servers?"
           },
@@ -1818,7 +1818,7 @@
           },
           "what-we-keep": {
             "headline": "Wat we houden",
-            "body": "Je inlog-e-mailadres, als je er een hebt toegevoegd. Welk abonnement je hebt. Een dagelijkse telling van geanalyseerde artikelen. Als je Mera zonder e-mail gebruikt, een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
+            "body": "Je inlog-e-mailadres, als je er een hebt toegevoegd. Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Als je Mera zonder e-mail gebruikt, een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
             "ask": "Wat slaat Mera op haar servers over mij op?"
           }
         }
@@ -1953,7 +1953,7 @@
           },
           "mute-is-not-a-downrank": {
             "headline": "Mute is iets heel anders",
-            "body": "Mute leeft alleen op het scherm met bronvoorkeuzen en het is een harde uitsluiting: die verhalen worden verwijderd, niet alleen lager gesorteerd. Tik op elke kaart en zet het waar het hoort.",
+            "body": "Dempen stel je in op de pagina van een publicatie, en het is een harde uitsluiting: die verhalen worden verwijderd, niet alleen lager gesorteerd. Tik op elke kaart en zet hem waar hij hoort.",
             "steps": {
               "0": "Omlaag pijl: minder vaak weergegeven.",
               "1": "Dempen: helemaal niet weergegeven.",
@@ -2104,11 +2104,11 @@
             "reveal": {
               "cloud": {
                 "label": "Cloud (het standaard)",
-                "text": "Je gegevens worden op deze telefoon versleuteld, alleen geopend in een afgesloten enclave en opnieuw versleuteld op de terugweg. Snel, en het werkt op elke telefoon. De app controleert het certificaat van die enclave nog niet bij de chipfabrikant, en de privacyverklaring zegt dat hardop."
+                "text": "Je gegevens worden op deze telefoon versleuteld, alleen geopend in een afgesloten enclave en opnieuw versleuteld op de terugweg. Snel, en het werkt op elke telefoon. De app controleert de enclave niet voor elk verzoek bij de chipfabrikant, en dat zeggen we ook gewoon in onze veelgestelde vragen. Je kunt die controle zelf uitvoeren in Instellingen, onder Mera Protocol."
               },
               "on-device": {
                 "label": "Op apparaat",
-                "text": "Alles draait hier en er verlaat helemaal niets over jou je apparaat. Het downloadt eerst een model, wil een vrij recent apparaat en is merkbaar langzamer."
+                "text": "De AI draait hier in plaats van in de cloud. Je onderwerpsfrasen gaan nog steeds de deur uit om nieuws op te halen en worden opgeslagen zonder naam. Er wordt eerst een model gedownload, je hebt een vrij recente telefoon nodig en het is merkbaar langzamer."
               }
             }
           },
@@ -2118,7 +2118,7 @@
           },
           "web-search": {
             "headline": "Websearch in chat",
-            "body": "Standaard uit. Ingeschakeld, Mera kan midden in het gesprek iets opzoeken. Wat verlaat je telefoon als het dat doet?",
+            "body": "Standaard aan. Als het aanstaat, kan Mera midden in het gesprek iets opzoeken. Wat verlaat je telefoon als dat gebeurt?",
             "choose": {
               "whole-question": {
                 "label": "Je hele bericht",
@@ -2233,7 +2233,7 @@
     "restartNeeded": "Je gegevens zijn terug. Sluit de app en open hem opnieuw om ze te zien.",
     "restore": "Herstellen vanaf een back-up",
     "restoreConfirmAction": "Vervangen",
-    "restoreConfirmDescription": "Je feiten, onderwerpen, chats, opgeslagen artikelen en leesgeschiedenis op deze telefoon worden vervangen door wat er in de back-up staat. Dit kan niet ongedaan worden gemaakt. Je account en abonnement blijven ongewijzigd.",
+    "restoreConfirmDescription": "Je feiten, onderwerpen, opgeslagen artikelen en leesgeschiedenis op deze telefoon worden vervangen door wat er in de back-up staat. Je chats blijven zoals ze zijn. Dit kan niet ongedaan worden gemaakt. Je account en abonnement blijven ongewijzigd.",
     "restoreConfirmTitle": "Gegevens op dit apparaat vervangen?",
     "restoreEmpty": "Hier zijn geen back-ups gevonden. Gebruikte je eerder een ander Google-account of iCloud-account, log dan met dat account in.",
     "restoreWhereDescription": "Kies waar je hem hebt opgeslagen. Je ziet wat er staat voordat er iets wordt vervangen.",

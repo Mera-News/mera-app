@@ -37,7 +37,7 @@
     "faq": "SSS",
     "identitySwitchFailedTitle": "Hesap değişimi tamamlanamadı",
     "identitySwitchFailedBody": "Bu cihazda hâlâ başka bir hesabın verileri var. Devam edebilmen için Mera'nın bunları silmesi gerekiyor ve silme işlemi bu kez başarısız oldu.",
-    "identitySwitchFailedWhy": "Hiçbir şey kaybolmaz. Bu veriler diğer hesaba ait ve o hesabın Mera hesabında kalır. Bu cihaz temizlendiğinde seninki sıfırdan başlar.",
+    "identitySwitchFailedWhy": "Henüz hiçbir şey silinmedi. Bu veriler diğer hesaba ait ve o hesap yedek almadıysa, temizlemek onları bu telefondan kalıcı olarak kaldırır. Bu cihaz temizlendiğinde seninki sıfırdan başlar.",
     "identitySwitchFailedExhausted": "Yine olmadı. Bu cihazı temizlemek için çıkış yap ve baştan başla.",
     "identitySwitchRetry": "Tekrar dene",
     "identitySwitchSignOut": "Çıkış yap ve baştan başla",
@@ -55,10 +55,10 @@
     "signInWithoutEmail": "E-posta olmadan giriş yap",
     "differentAccount": {
       "title": "E-posta olmadan giriş yapılsın mı?",
-      "body": "{{email}} için Mera'daki her şey silinecek. Emin misiniz?",
+      "body": "Mera'nın bu telefonda {{email}} için tuttuğu her şeyi sileceğiz. Hesabın kendisi silinmez. Emin misin?",
       "continue": "Kaldır ve devam et",
       "useEmail": "Hesabımı koru",
-      "bodyGeneric": "Bu hesap için Mera'daki her şey silinecek. Emin misiniz?"
+      "bodyGeneric": "Mera'nın bu telefonda bu hesap için tuttuğu her şeyi sileceğiz. Hesabın kendisi silinmez. Emin misin?"
     },
     "deviceSignInCaption": {
       "uninstall": "Hesabınız bu telefona bağlıdır. Mera'yı silerseniz veya telefonu kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir.",
@@ -132,14 +132,14 @@
         "cloudRelevance": {
           "headlines": [
             "Bir AI her makaleyi okuyarak hangilerinin sana önemli olduğunu belirliyor.",
-            "İsteğin şifreli: anahtarı yalnızca telefonun tutuyor."
+            "İsteğin şifreli, bu yüzden onu yalnızca kapalı kapsülündeki AI okuyabilir."
           ]
         },
         "cloudReasons": {
           "headlines": [
             "Her uygun hikaye için kısa bir not yazılıyor.",
             "Uzaklaşabilirsin. Hazır olduğunda sana bildirim göndeririz.",
-            "Her şey uçtan uca şifreli kalır: yalnızca telefonun bunu okuyabilir."
+            "Her şey telefonun ile AI'ın kapalı kapsülü arasında şifreli kalır."
           ]
         },
         "onDevice": {
@@ -151,7 +151,7 @@
         "downloading": {
           "headlines": [
             "Bugünün makaleleri telefonunuza geliyor.",
-            "Hiçbir şey bir sunucuda okunmuyor. Önce size ulaşıyorlar."
+            "Sana bir şey seçilmeden önce makaleler ilk olarak telefonuna gelir."
           ]
         },
         "grouping": {
@@ -304,7 +304,7 @@
   "onboarding": {
     "stepOf": "Adım {{current}} / {{total}}",
     "connectionIssue": "Bağlantı Sorunu",
-    "connectionDescription": "Sunucuya bağlanırken bazı sorunlar yaşıyoruz. Uygulamayı kapatıp daha sonra tekrar deneyebilirsin. Sorun devam ederse, çıkış yapıp tekrar giriş yapmanı öneririz.",
+    "connectionDescription": "Sunucuya ulaşmakta sorun yaşıyoruz. Uygulamayı kapat ve biraz sonra tekrar dene.",
     "logout": "Çıkış Yap",
     "close": "Kapat",
     "logoutFailedTitle": "Çıkış Başarısız",
@@ -401,7 +401,7 @@
     "dlFailedTitle": "İndirme Başarısız",
     "dlFailedDescription": "AI modeli indirilemedi. Lütfen tekrar dene.",
     "modeUpdatedOnDeviceTitle": "Cihaz üzerine geçildi",
-    "modeUpdatedOnDeviceDescription": "Mera Protocol artık telefonunda tamamen çevrimdışı çalışıyor.",
+    "modeUpdatedOnDeviceDescription": "Mera AI artık telefonunda çalışıyor. Haberler yine Mera'nın sunucularından geliyor.",
     "modeUpdatedCloudTitle": "Buluta geçildi",
     "modeUpdatedCloudDescription": "Mera Protocol artık uçtan uca şifreli bulut çıkarımı kullanıyor.",
     "settingUpdateFailedTitle": "Güncelleme Başarısız",
@@ -465,22 +465,22 @@
     "cantRun": "Bu telefon çalıştıramaz",
     "chatGroup": "Sohbet",
     "encrypted": "Şifreli. Mera okuyamaz.",
-    "explainerCan": "Bu telefonda Mera AI tamamen çevrimdışı çalışır. Özel bulut şifreli çalıştırır, dolayısıyla Mera okuyamaz.",
-    "explainerCant": "Bu telefonda Mera AI tamamen çevrimdışı çalışır. Mera AI'yi cihazda çalıştırmak için yetenekli bir telefon gerekir. Bu telefon yeterli değil, bu yüzden Mera özel bulutu kullanır.",
+    "explainerCan": "“Bu telefonda” seçiliyken Mera AI telefonda çalışır, haberler ise yine çevrimiçi gelir. “Özel bulut” seçiliyken şifreli çalışır, bu yüzden Mera onu okuyamaz.",
+    "explainerCant": "“Bu telefonda” seçiliyken Mera AI telefonda çalışır, haberler ise yine çevrimiçi gelir. Bunun için güçlü bir telefon gerekir. Bu telefon yeterli değil, bu yüzden Mera “Özel bulut” kullanır.",
     "staysPrivateBody": "Mera Protokolü her zaman açıktır. Bilgileriniz bu telefondan asla şifresiz çıkmaz.",
     "staysPrivateTitle": "Verileriniz gizli kalır",
-    "webSearchShort": "Telefonunuzdan yalnızca arama kelimeleri çıkar. Kim olduğunuzu söyleyen hiçbir şey çıkmaz.",
+    "webSearchShort": "Telefonundan yalnızca arama kelimeleri, Mera'nın sunucusu üzerinden çıkar. Arama motoru senin kim olduğunu hiçbir zaman öğrenmez.",
     "whereReads": "Mera haberlerinizi nerede okur",
     "whileClosed": "Mera kapalıyken",
     "deleting": "Siliniyor…"
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanır. Başka hiçbir şey etkilenmez ve sunucu verisi değiştirilmez (bu veri hiç cihazından çıkmadı).",
+    "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanıp boşalır. Başka hiçbir şey etkilenmez ve sunucu verisine dokunulmaz, çünkü Mera'nın sunucularında bu veri hiç olmadı.",
     "deletedTitle": "Veriler Silindi",
     "deletedDescription": "Seçilen veriler başarıyla temizlendi.",
     "errorTitle": "Hata",
     "errorDescription": "Veriler silinemedi. Lütfen tekrar dene.",
-    "factsModalDescription": "Eklediğiniz gerçekleri ve onlardan üretilen konuları siler. Gerçekleriniz bu cihazdan hiç ayrılmaz. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır. Bu yüzden orada bunların size ait olduğunu gösteren hiçbir kayıt yoktur. Haber akışınız da temizlenir, çünkü bu konular üzerine kuruludur. Yeni gerçek ekleyene kadar boş olarak yeniden oluşur.",
+    "factsModalDescription": "Eklediğin gerçekleri ve onlardan üretilen konuları siler. Gerçeklerin bu cihazda saklanır, Mera'nın sunucularında değil. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır, bu yüzden orada bunların sana ait olduğunu gösteren bir kayıt yoktur. Haber akışın da temizlenir, çünkü bu konulardan oluşturulur.",
     "exportHistoryTitle": "Okuma geçmişini dışa aktar",
     "exportHistoryDescription": "Son 30 gün JSON olarak: makaleler, yayınlar ve ortalama yayından okumasına kadar süre",
     "exportHistorySubject": "Mera okuma geçmişim (JSON)",
@@ -495,7 +495,7 @@
       "signInRecordIos": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "signInRecordAndroid": "Bu telefon için telefonunuzun kimliği olmayan, hesabınızla birlikte silinen bir giriş kaydı. Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "signInRecordGeneric": "E-posta yoksa, bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
-      "usage": "Planınızın sınırını uygulamak için günlük analiz edilen makale sayısı. Girişlerde IP adresi veya tarayıcı bilgisi saklanmaz.",
+      "usage": "Planının sınırını uygulamak için bu telefona gönderilen makalelerin günlük sayısı ve Mera'yı hangi günler kullandığın. 90 gün saklanır. Girişlerde IP adresi veya tarayıcı bilgisi saklanmaz.",
       "topics": "Konu ifadeleri, yalnızca metinleriyle ve sizinle hiçbir bağlantı olmadan saklanır, 14 gün kullanılmazsa silinir.",
       "privacyLink": "Gizlilik politikasını okuyun"
     },
@@ -504,15 +504,15 @@
     "clearHistoryTitle": "Okuma geçmişini temizle",
     "clearProfileHint": "Bilgileriniz ve konuları",
     "clearProfileTitle": "Profili temizle",
-    "deleteAccountHint": "Hesabınız, planınız ve bu telefonda Mera'nın tuttuğu her şey. Bu geri alınamaz.",
+    "deleteAccountHint": "Hesabın ve Mera'nın bu telefonda tuttuğu her şey. Mağaza aboneliği, App Store'dan veya Google Play'den iptal edene kadar devam eder. Bu geri alınamaz.",
     "deleteGroup": "Sil",
     "exportHint": "Son 30 gün, JSON olarak",
     "intro": "Mera'nın bu telefonda tuttuğu her şeyi yedekleyin, inceleyin, yanınıza alın ya da silin.",
     "lookAndTake": "İncele ve al",
     "askBeforeTopicDelete": "Konu silmeden önce onay iste",
     "askBeforeTopicDeleteHint": "Bilgilerinizden birinden bir konuyu her sildiğinizde Mera sizden onay ister.",
-    "exportHistoryWindowNote_one": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve hiçbir zaman bir sunucuya gönderilmedi.",
-    "exportHistoryWindowNote_other": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve hiçbir zaman bir sunucuya gönderilmedi."
+    "exportHistoryWindowNote_one": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve Mera'nın sunucularına hiç gönderilmedi.",
+    "exportHistoryWindowNote_other": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve Mera'nın sunucularına hiç gönderilmedi."
   },
   "preferences": {
     "notifications": "Bildirimler",
@@ -539,7 +539,7 @@
     "faq": "SSS",
     "reportBug": "Hata bildir",
     "deleteAccountConfirmGrace": "Hesabınız 30 günlük bir bekleme süresiyle silinmek üzere planlanır. Hesabınızın e-postası varsa, iptal etmek için bu 30 gün içinde onunla giriş yapın. E-postası olmayan bir hesaba tekrar giriş yapılamaz, bu yüzden silinmesi iptal edilemez.",
-    "deleteAccountWarningGrace": "⚠️ 30 gün sonra tüm verilerin kalıcı olarak kaldırılır. Bu geri alınamaz.",
+    "deleteAccountWarningGrace": "⚠️ 30 gün sonra hesap verilerin kalıcı olarak kaldırılır. Faturalama kayıtları muhasebe için 7 yıl saklanır. Bu geri alınamaz.",
     "finalConfirmationBodyGrace": "Bu, hesabınızı 30 gün içinde kalıcı silme için planlar.",
     "accountDeletionScheduledTitle": "Silme Planlandı",
     "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek. E-postası varsa, iptal etmek için daha önce onunla giriş yapın."
@@ -569,7 +569,7 @@
     "unexpectedError": "Beklenmeyen bir hata oluştu. Lütfen tekrar dene.",
     "failedToLoad": "Yüklenemedi",
     "errorLoadingContent": "İçerik yüklenirken hata oluştu",
-    "networkError": "Sunucuya bağlanılamıyor. Ağını ve API uç nokta ayarlarını kontrol et.",
+    "networkError": "Sunucuya bağlanılamıyor. Bağlantını kontrol edip tekrar dene.",
     "feedError": "Haber akışın yüklenemedi. Lütfen tekrar dene.",
     "accountRestricted": "Hesap Kısıtlandı",
     "accountRestrictedDescription": "Hesabın kısıtlanmıştır. Lütfen destek ekibiyle iletişime geç.",
@@ -735,7 +735,7 @@
     "badge_one": "Son 30 günde {{publication}} yayınını bir kez ziyaret ettin",
     "badge_other": "Son 30 günde {{publication}} yayınını {{count}} kez ziyaret ettin",
     "tooltipA11y": "Okuma geçmişi hakkında",
-    "tooltipIntro": "Mera okuma alışkanlıklarını senin için takip eder ve bu bilgi yalnızca cihazında saklanır.",
+    "tooltipIntro": "Mera okuma alışkanlıklarını senin için takip eder. Bu kayıt cihazında saklanır ve Mera'nın sunucuları onu hiç görmez.",
     "tooltipLink": "Tüm okuma geçmişini buradan gör."
   },
   "nativeUpdate": {
@@ -789,7 +789,7 @@
     "failed": "{{count}} başarısız",
     "pending": "{{count}} bekliyor",
     "noteBody": "Bu ekran Mera'nın cihazındaki veritabanını doğrudan okur. Haber akışınızı oluşturan veriler burada, görünürlük ve hata ayıklama için gösterilir. Mera'nın sunucuları gerçeklerinizi, okuma geçmişinizi veya bunlardan oluşturulan önerileri saklamaz.",
-    "noteExceptions": "İki istisna: hesap profilin (giriş, bildirimler, dil) Mera hesabınla senkronize edilir ve bulut AI açıkken gerçekleriniz puanlama için gönderilmeden önce bu cihazda şifrelenir.",
+    "noteExceptions": "İstisnalar: hesap profilin (giriş, plan, bildirimler, dil) Mera hesabınla senkronize edilir, Mera ekibine gönderdiğin yanıtlar onunla birlikte saklanır ve bulut AI açıkken gerçeklerin, puanlama ve konu kontrolleri için gönderilmeden önce bu cihazda şifrelenir.",
     "noteFooter": "Buradaki değerler ham ve tanılayıcıdır. Akış satırları 48 saat sonra kendiliğinden temizlenir. Gerçeklerinizi, akış önbelleğinizi ve görüntüleme geçmişinizi Verileri Yönet'ten silebilirsiniz.",
     "noteTitle": "Verileriniz, Cihazınızda"
   },
@@ -1586,11 +1586,11 @@
             "reveal": {
               "about-you": {
                 "label": "Senin hakkında ne biliyor",
-                "text": "Gerçekleriniz, ilgi alanlarınız ve okuduklarınız bu telefona yazılır ve orada kalır. Sunucuda bunların bir kopyası yoktur."
+                "text": "Gerçeklerin, ilgi alanların ve okuduklarının hepsi bu telefona yazılır ve orada kalır. Mera'nın sunucuları bunların bir kopyasını tutmaz."
               },
               "what-leaves": {
                 "label": "Aslında ne ayrılıyor",
-                "text": "\"Hastane personeli\" gibi kısa konu ifadeleri. Ad yok, hesap yok, ifadenin senden geldiğini söyleyen hiçbir şey."
+                "text": "\"Hastane personeli\" gibi kısa konu ifadeleri. Mera'nın sunucuları bunları ad veya hesap olmadan saklar, bu yüzden bir ifadenin senden geldiğini gösteren hiçbir kayıt yoktur."
               }
             }
           },
@@ -1793,16 +1793,16 @@
         "subtitle": "Bu telefondan ne çıkıyor, ne asla çıkmıyor.",
         "slides": {
           "stays-on-phone": {
-            "headline": "Senin hakkındaki kısım telefonundan asla çıkmaz",
-            "body": "Gerçekleriniz, ilgileriniz, yerleriniz ve okuduğunuz bu telefonda yaşıyor. Sunucuda bir kopyası yok, bu yüzden de çıkış yapma veya telefon değiştirme profilini tekrar inşa etmek anlamına gelir."
+            "headline": "Senin hakkındaki kısım burada tutulur",
+            "body": "Gerçeklerin, ilgi alanların, yerlerin ve okuduğun her şey bu telefonda durur. Mera'nın sunucuları bunun bir kopyasını tutmaz, bu yüzden çıkış yapmak profilini siler. Yeni bir telefonda Yedekleme onu geri getirebilir."
           },
           "what-leaves": {
             "headline": "Aslında ne gidiyor",
-            "body": "Üç şey ve bu liste.",
+            "body": "Başlıca şeyler ve her birinin neden dışarı çıktığı.",
             "steps": {
               "0": "Kısa konu ifadeleri, böylece hikayelerle eşleşecek bir şey var.",
               "1": "Nasıl giriş yaptığınız, e-postayla veya bu telefonla, ve hangi planda olduğunuz.",
-              "2": "Planınızı dürüst tutmak için bugün kaç haberin analiz edildiğinin sayısı."
+              "2": "Telefonunun istediği makaleler, planı dürüst tutmak için günlük olarak sayılır."
             },
             "ask": "Uygulama sunucularınıza ne gönderiyor?"
           },
@@ -1820,7 +1820,7 @@
           },
           "what-we-keep": {
             "headline": "Ne tuttuğumuz",
-            "body": "Eklediyseniz giriş e-postanız. Hangi planda olduğunuz. Günlük analiz edilen haber sayısı. Mera'yı e-posta olmadan kullanıyorsanız, bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğine dair hiçbir kayıt tutulmaz ve on dört gün kullanılmazsa silinir.",
+            "body": "Eklediysen giriş e-postan. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Mera'yı e-posta olmadan kullanıyorsan, bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
             "ask": "Mera sunucularında benim hakkımda ne saklıyor?"
           }
         }
@@ -1955,7 +1955,7 @@
           },
           "mute-is-not-a-downrank": {
             "headline": "Sessize almak tamamen başka bir şey",
-            "body": "Sessize almak yalnızca kaynak tercihleri ekranında yaşıyor ve sert bir dışlama: bu hikayeler indirilir, yalnızca daha düşük sıralanmış değil. Kartı ve nereye ait olduğu yerdir.",
+            "body": "Sessize alma, bir yayının sayfasında ayarlanır ve sert bir dışlamadır: o hikayeler yalnızca aşağı sıralanmaz, tamamen çıkarılır. Her karta dokun ve ait olduğu yere koy.",
             "steps": {
               "0": "Aşağı okları: daha az sık gösterilir.",
               "1": "Sessize al: hiç gösterilmez.",
@@ -2106,11 +2106,11 @@
             "reveal": {
               "cloud": {
                 "label": "Bulut (varsayılan)",
-                "text": "Verileriniz bu telefonda şifrelenir, yalnızca kapalı bir kapsülün içinde açılır ve dönüş yolunda tekrar şifrelenir. Hızlıdır ve her telefonda çalışır. Uygulama bu kapsülün sertifikasını henüz çip üreticisine karşı doğrulamıyor ve gizlilik bildirimi bunu açıkça söylüyor."
+                "text": "Verilerin bu telefonda şifrelenir, yalnızca kapalı bir kapsülün içinde açılır ve dönüş yolunda tekrar şifrelenir. Hızlıdır ve her telefonda çalışır. Uygulama, her istekten önce kapsülü çip üreticisiyle doğrulamaz, SSS bunu açıkça söylüyor. Bu kontrolü kendin Ayarlar'da, Mera Protocol bölümünde çalıştırabilirsin."
               },
               "on-device": {
                 "label": "Cihazda",
-                "text": "Her şey burada çalışıyor ve senin hakkında hiçbir şey ayrılmaz. İlk model indirir, oldukça yeni bir telefon ister ve belirgin yavaştır."
+                "text": "Yapay zeka bulutta değil, burada çalışır. Konu ifadelerin haberleri getirmek için yine dışarı gönderilir ve adsız olarak saklanır. Önce bir model indirir, oldukça yeni bir telefon ister ve belirgin biçimde daha yavaştır."
               }
             }
           },
@@ -2120,7 +2120,7 @@
           },
           "web-search": {
             "headline": "Sohbette web araması",
-            "body": "Varsayılan olarak kapalıdır. Açıldığında Mera, sohbet sırasında bir şeyi araştırabilir. Bunu yaptığında telefonundan ne çıkar?",
+            "body": "Varsayılan olarak açıktır. Açıkken Mera, sohbetin ortasında bir şeyi araştırabilir. Bunu yaptığında telefonundan ne çıkar?",
             "choose": {
               "whole-question": {
                 "label": "Tüm mesajın",
@@ -2235,7 +2235,7 @@
     "restartNeeded": "Verilerin geri geldi. Görmek için uygulamayı kapatıp yeniden aç.",
     "restore": "Yedekten geri yükle",
     "restoreConfirmAction": "Değiştir",
-    "restoreConfirmDescription": "Bu telefondaki gerçeklerin, konuların, sohbetlerin, kaydedilen makalelerin ve okuma geçmişin yedekteki içerikle değiştirilecek. Bu geri alınamaz. Hesabın ve aboneliğin etkilenmez.",
+    "restoreConfirmDescription": "Bu telefondaki gerçeklerin, konuların, kaydedilen makalelerin ve okuma geçmişin yedekteki içerikle değiştirilecek. Sohbetlerin olduğu gibi kalır. Bu geri alınamaz. Hesabın ve aboneliğin etkilenmez.",
     "restoreConfirmTitle": "Bu cihazdaki veriler değiştirilsin mi?",
     "restoreEmpty": "Burada yedek bulunamadı. Daha önce farklı bir Google hesabı veya iCloud hesabı kullandıysan onunla giriş yap.",
     "restoreWhereDescription": "Nereye kaydettiğini seç. Bir şey değiştirilmeden önce orada ne olduğunu görürsün.",

@@ -37,7 +37,7 @@
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Impossibile completare il cambio di account",
     "identitySwitchFailedBody": "Su questo dispositivo ci sono ancora i dati di un altro account. Mera deve cancellarli prima di poter continuare, e questa volta la cancellazione non è riuscita.",
-    "identitySwitchFailedWhy": "Non si perde nulla. Quei dati appartengono all'altro account e restano nel suo account Mera. Il tuo riparte da zero quando questo dispositivo è pulito.",
+    "identitySwitchFailedWhy": "Non è stato ancora eliminato nulla. Quei dati appartengono all'altro account e cancellarli li rimuove da questo telefono per sempre, a meno che quell'account non abbia fatto un backup. Il tuo riparte da zero quando questo dispositivo è pulito.",
     "identitySwitchFailedExhausted": "Non ha ancora funzionato. Esci e ricomincia per pulire questo dispositivo.",
     "identitySwitchRetry": "Riprova",
     "identitySwitchSignOut": "Esci e ricomincia",
@@ -55,10 +55,10 @@
     "signInWithoutEmail": "Accedi senza email",
     "differentAccount": {
       "title": "Accedere senza email?",
-      "body": "Cancelleremo tutto ciò che c'è in Mera per {{email}}. Sei sicuro?",
+      "body": "Cancelleremo tutto ciò che Mera conserva su questo telefono per {{email}}. L'account in sé non viene eliminato. Sei sicuro?",
       "continue": "Rimuovi e continua",
       "useEmail": "Mantieni il mio account",
-      "bodyGeneric": "Cancelleremo tutto ciò che c'è in Mera per questo account. Sei sicuro?"
+      "bodyGeneric": "Cancelleremo tutto ciò che Mera conserva su questo telefono per questo account. L'account in sé non viene eliminato. Sei sicuro?"
     },
     "deviceSignInCaption": {
       "uninstall": "Il tuo account è legato a questo telefono. Se elimini Mera o perdi il telefono, ripartirai con un nuovo account. Backup e ripristino, in Impostazioni, può conservare i tuoi dati.",
@@ -132,14 +132,14 @@
         "cloudRelevance": {
           "headlines": [
             "Un'intelligenza artificiale sta leggendo ogni articolo per vedere quali ti riguardano.",
-            "La tua richiesta è cifrata: solo il tuo telefono ha la chiave."
+            "La tua richiesta è cifrata, così solo l'IA nel suo enclave sigillato può leggerla."
           ]
         },
         "cloudReasons": {
           "headlines": [
             "Scrittura di una breve nota per ogni storia rilevante.",
             "Puoi allontanarti. Ti avvisiamo non appena è pronto.",
-            "Tutto rimane crittografato end-to-end: solo il tuo telefono può leggerlo."
+            "Tutto resta cifrato tra il tuo telefono e l'enclave sigillato dell'IA."
           ]
         },
         "onDevice": {
@@ -151,7 +151,7 @@
         "downloading": {
           "headlines": [
             "Gli articoli di oggi stanno arrivando sul tuo telefono.",
-            "Niente viene letto su un server. Arrivano prima a te."
+            "Gli articoli arrivano prima sul tuo telefono, prima che venga scelto qualcosa per te."
           ]
         },
         "grouping": {
@@ -304,7 +304,7 @@
   "onboarding": {
     "stepOf": "Passaggio {{current}} di {{total}}",
     "connectionIssue": "Problema di connessione",
-    "connectionDescription": "Stiamo riscontrando problemi di connessione al server. Puoi chiudere l'app e riprovare più tardi. Se il problema persiste, ti consigliamo di disconnetterti e accedere di nuovo.",
+    "connectionDescription": "Stiamo avendo problemi a raggiungere il server. Chiudi l'app e riprova tra un po'.",
     "logout": "Esci",
     "close": "Chiudi",
     "logoutFailedTitle": "Disconnessione non riuscita",
@@ -401,7 +401,7 @@
     "dlFailedTitle": "Download non riuscito",
     "dlFailedDescription": "Impossibile scaricare l'AI Model. Per favore riprova.",
     "modeUpdatedOnDeviceTitle": "Passato a sul dispositivo",
-    "modeUpdatedOnDeviceDescription": "Mera Protocol ora funziona completamente offline sul tuo telefono.",
+    "modeUpdatedOnDeviceDescription": "Mera AI ora funziona sul tuo telefono. Le notizie arrivano comunque dai server di Mera.",
     "modeUpdatedCloudTitle": "Passato al cloud",
     "modeUpdatedCloudDescription": "Mera Protocol sta ora utilizzando l'inferenza cloud cifrata end-to-end.",
     "settingUpdateFailedTitle": "Aggiornamento non riuscito",
@@ -465,22 +465,22 @@
     "cantRun": "Questo telefono non può eseguirlo",
     "chatGroup": "Chat",
     "encrypted": "Cifrato. Mera non può leggerlo.",
-    "explainerCan": "Sul dispositivo, Mera AI funziona completamente offline. Il cloud privato lo esegue cifrato, quindi Mera non può leggerlo.",
-    "explainerCant": "Sul dispositivo, Mera AI funziona completamente offline. Per eseguire Mera AI sul dispositivo serve un telefono capace. Questo non lo è, quindi Mera usa il cloud privato.",
+    "explainerCan": "Con «Su questo telefono», Mera AI funziona sul tuo telefono e le notizie arrivano comunque online. Con «Cloud privato», funziona cifrata, quindi Mera non può leggerla.",
+    "explainerCant": "Con «Su questo telefono», Mera AI funziona sul tuo telefono e le notizie arrivano comunque online. Serve però un telefono capace. Questo non lo è, quindi Mera usa «Cloud privato».",
     "staysPrivateBody": "Mera Protocol è sempre attivo. I tuoi fatti non lasciano mai questo telefono senza cifratura.",
     "staysPrivateTitle": "I tuoi dati restano privati",
-    "webSearchShort": "Escono dal telefono solo le parole della ricerca. Nulla che dica chi sei.",
+    "webSearchShort": "Lasciano il telefono solo le parole della ricerca, tramite il server di Mera. Il motore di ricerca non scopre mai chi sei.",
     "whereReads": "Dove Mera legge le tue notizie",
     "whileClosed": "Mentre Mera è chiuso",
     "deleting": "Eliminazione in corso…"
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Elimina il registro locale degli articoli che hai aperto. La scheda Fonti con la sezione \"Pubblicazioni che stai leggendo\" e la cronologia per pubblicazione verranno azzerate. Nient'altro viene modificato e nessun dato del server viene toccato (questi dati non hanno mai lasciato il dispositivo).",
+    "viewingHistoryModalDescription": "Cancella il registro locale degli articoli che hai aperto. La scheda Fonti con la sezione \"Pubblicazioni che stai leggendo\" e la cronologia per pubblicazione verranno azzerate. Nient'altro viene modificato e nessun dato sui server viene toccato, perché i server di Mera non hanno mai avuto questi dati.",
     "deletedTitle": "Dati eliminati",
     "deletedDescription": "I dati selezionati sono stati cancellati con successo.",
     "errorTitle": "Errore",
     "errorDescription": "Impossibile eliminare i dati. Per favore riprova.",
-    "factsModalDescription": "Cancella i fatti che hai aggiunto e gli argomenti generati da essi. I tuoi fatti non lasciano mai questo dispositivo. Le frasi degli argomenti vengono inviate quando richiedi notizie e messe in cache sui nostri server senza identificativo utente, quindi lì nulla registra che fossero tue. Anche il tuo feed di articoli viene svuotato, dato che si basa su questi argomenti, e resta vuoto finché non aggiungi nuovi fatti.",
+    "factsModalDescription": "Cancella i fatti che hai aggiunto e gli argomenti generati da essi. I tuoi fatti sono salvati su questo dispositivo, non sui server di Mera. Le frasi degli argomenti vengono inviate quando richiedi notizie e messe in cache sui nostri server senza identificativo utente, quindi lì nulla registra che fossero tue. Anche il tuo feed di articoli viene svuotato, dato che si basa su questi argomenti.",
     "exportHistoryTitle": "Esporta cronologia di lettura",
     "exportHistoryDescription": "Ultimi 30 giorni come JSON: articoli, pubblicazioni, e tempo medio dalla pubblicazione alla lettura",
     "exportHistorySubject": "La mia cronologia di lettura Mera (JSON)",
@@ -495,7 +495,7 @@
       "signInRecordIos": "Un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple che si tratta della vera app non viene conservato.",
       "signInRecordAndroid": "Un record di accesso per questo telefono, non l'ID del tuo telefono, eliminato con il tuo account. Il controllo di Google che si tratta della vera app non viene conservato.",
       "signInRecordGeneric": "Senza email, un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple o Google che si tratta della vera app non viene conservato.",
-      "usage": "Un conteggio giornaliero di articoli analizzati, per applicare il limite del tuo piano. Gli accessi non conservano indirizzo IP né dati del browser.",
+      "usage": "Un conteggio giornaliero degli articoli inviati a questo telefono, per applicare il limite del tuo piano, e i giorni in cui hai usato Mera. Conservato per 90 giorni. Gli accessi non conservano indirizzo IP né dati del browser.",
       "topics": "Frasi di argomento, salvate solo in base al testo senza nulla che le colleghi a te, ed eliminate dopo 14 giorni di inutilizzo.",
       "privacyLink": "Leggi l'informativa sulla privacy"
     },
@@ -504,15 +504,15 @@
     "clearHistoryTitle": "Cancella cronologia di lettura",
     "clearProfileHint": "I tuoi fatti e i loro argomenti",
     "clearProfileTitle": "Cancella profilo",
-    "deleteAccountHint": "Il tuo account, il tuo piano e tutto ciò che Mera conserva su questo telefono. Non si può annullare.",
+    "deleteAccountHint": "Il tuo account e tutto ciò che Mera conserva su questo telefono. Un abbonamento acquistato tramite lo store continua finché non lo annulli nell'App Store o in Google Play. Non si può annullare.",
     "deleteGroup": "Elimina",
     "exportHint": "Ultimi 30 giorni, in JSON",
     "intro": "Salva una copia di ciò che Mera conserva su questo telefono, guardalo, portalo con te o eliminalo.",
     "lookAndTake": "Guarda e porta via",
     "askBeforeTopicDelete": "Chiedi conferma prima di eliminare un argomento",
     "askBeforeTopicDeleteHint": "Mera ti chiede di confermare ogni volta che elimini un argomento da uno dei tuoi fatti.",
-    "exportHistoryWindowNote_one": "Questa esportazione copre solo l'ultimo giorno di lettura. Le voci più vecchie vengono eliminate automaticamente da questo dispositivo e non sono mai state inviate a un server.",
-    "exportHistoryWindowNote_other": "Questa esportazione copre solo gli ultimi {{count}} giorni di lettura. Le voci più vecchie vengono eliminate automaticamente da questo dispositivo e non sono mai state inviate a un server."
+    "exportHistoryWindowNote_one": "Questa esportazione copre solo l'ultimo giorno di lettura. Le voci più vecchie vengono eliminate automaticamente da questo dispositivo e non sono mai state inviate ai server di Mera.",
+    "exportHistoryWindowNote_other": "Questa esportazione copre solo gli ultimi {{count}} giorni di lettura. Le voci più vecchie vengono eliminate automaticamente da questo dispositivo e non sono mai state inviate ai server di Mera."
   },
   "preferences": {
     "notifications": "Notifiche",
@@ -539,7 +539,7 @@
     "faq": "FAQ",
     "reportBug": "Segnala un bug",
     "deleteAccountConfirmGrace": "Il tuo account sarà programmato per l'eliminazione, con un periodo di tolleranza di 30 giorni. Se il tuo account ha un'email, accedi con quella entro questi 30 giorni per annullare. Un account senza email non può più accedere, quindi la sua eliminazione non si può annullare.",
-    "deleteAccountWarningGrace": "⚠️ Dopo 30 giorni, tutti i tuoi dati vengono rimossi in modo permanente. Non si può annullare.",
+    "deleteAccountWarningGrace": "⚠️ Dopo 30 giorni, i dati del tuo account vengono rimossi in modo permanente. I documenti di fatturazione vengono conservati per 7 anni per la contabilità. Non si può annullare.",
     "finalConfirmationBodyGrace": "Questo programma il tuo account per l'eliminazione permanente tra 30 giorni.",
     "accountDeletionScheduledTitle": "Eliminazione programmata",
     "accountDeletionScheduledDescription": "Il tuo account sarà eliminato definitivamente tra 30 giorni. Se ha un'email, accedi con quella prima di allora per annullare."
@@ -569,7 +569,7 @@
     "unexpectedError": "Si è verificato un errore imprevisto. Per favore riprova.",
     "failedToLoad": "Caricamento non riuscito",
     "errorLoadingContent": "Errore nel caricamento del contenuto",
-    "networkError": "Impossibile connettersi al server. Controlla la rete e le impostazioni dell'endpoint API.",
+    "networkError": "Impossibile connettersi al server. Controlla la connessione e riprova.",
     "feedError": "Impossibile caricare il tuo feed. Per favore riprova.",
     "accountRestricted": "Account limitato",
     "accountRestrictedDescription": "Il tuo account è stato limitato. Per favore contatta il supporto.",
@@ -735,7 +735,7 @@
     "badge_one": "Hai visitato {{publication}} una volta negli ultimi 30 giorni",
     "badge_other": "Hai visitato {{publication}} {{count}} volte negli ultimi 30 giorni",
     "tooltipA11y": "Informazioni sulla cronologia di lettura",
-    "tooltipIntro": "Mera tiene traccia dei tuoi schemi di lettura, e i dati restano solo sul tuo dispositivo.",
+    "tooltipIntro": "Mera tiene traccia dei tuoi schemi di lettura per te. Questa registrazione resta sul tuo dispositivo e i server di Mera non la vedono mai.",
     "tooltipLink": "Vedi tutta la tua cronologia di lettura qui."
   },
   "nativeUpdate": {
@@ -789,7 +789,7 @@
     "failed": "{{count}} non riuscite",
     "pending": "{{count}} in attesa",
     "noteBody": "Questa schermata legge direttamente il database sul dispositivo di Mera. Sono i dati che costruiscono il tuo feed, mostrati qui per trasparenza e debug. I server di Mera non conservano i tuoi fatti, la tua cronologia di lettura o i suggerimenti che ne derivano.",
-    "noteExceptions": "Due eccezioni: il tuo profilo account (accesso, notifiche, lingua) è sincronizzato con il tuo account Mera, e quando l'IA cloud è attivata, i tuoi fatti vengono crittografati su questo dispositivo prima di essere inviati per la valutazione.",
+    "noteExceptions": "Eccezioni: il profilo del tuo account (accesso, piano, notifiche, lingua) viene sincronizzato con il tuo account Mera, le risposte che invii al team di Mera vengono conservate insieme a esso e, quando l'IA cloud è attivata, i tuoi fatti vengono cifrati su questo dispositivo prima di essere inviati per la valutazione e il controllo degli argomenti.",
     "noteFooter": "I valori qui sono grezzi e diagnostici. Le righe del feed si cancellano da sole dopo 48 ore. Puoi eliminare i tuoi fatti, la cache del feed e la cronologia di visualizzazione da Gestisci dati.",
     "noteTitle": "I tuoi dati, sul tuo dispositivo"
   },
@@ -1584,11 +1584,11 @@
             "reveal": {
               "about-you": {
                 "label": "Cosa sa di te",
-                "text": "I tuoi fatti, i tuoi interessi e quello che hai letto sono scritti su questo telefono e rimangono lì. Non ne esiste alcuna copia su un server."
+                "text": "I tuoi fatti, i tuoi interessi e quello che hai letto sono scritti su questo telefono e rimangono lì. I server di Mera non ne conservano alcuna copia."
               },
               "what-leaves": {
                 "label": "Cosa effettivamente se ne va",
-                "text": "Brevi frasi di argomenti, come \"staffing ospedaliero\". Nessun nome, nessun account, nulla che dica che la frase è venuta da te."
+                "text": "Brevi frasi di argomenti, come \"staffing ospedaliero\". I server di Mera le salvano senza nome né account, quindi nulla registra che una frase sia venuta da te."
               }
             }
           },
@@ -1791,16 +1791,16 @@
         "subtitle": "Cosa lascia questo telefono, e cosa non lo fa mai.",
         "slides": {
           "stays-on-phone": {
-            "headline": "La parte su di te non esce mai",
-            "body": "I tuoi fatti, i tuoi interessi, i tuoi luoghi e tutto quello che hai letto vivono su questo telefono. Non c'è una copia su un server, ed è anche per questo che uscire o cambiare telefono significa ricostruire di nuovo il profilo."
+            "headline": "La parte su di te resta qui",
+            "body": "I tuoi fatti, i tuoi interessi, i tuoi luoghi e tutto quello che hai letto vivono su questo telefono. I server di Mera non ne conservano alcuna copia, ed è per questo che uscire cancella il tuo profilo. Su un nuovo telefono, il Backup può riportarlo indietro."
           },
           "what-leaves": {
             "headline": "Cosa effettivamente va fuori",
-            "body": "Tre cose, e quella è la lista.",
+            "body": "Le cose principali, e perché ognuna esce.",
             "steps": {
               "0": "Brevi frasi di argomenti, così c'è qualcosa con cui abbinare le storie.",
               "1": "Come accedi, con l'email o con questo telefono, e quale piano hai.",
-              "2": "Un conteggio di quante storie sono state analizzate oggi, per mantenere quel piano onesto."
+              "2": "Gli articoli che il tuo telefono richiede, contati ogni giorno per mantenere onesto quel piano."
             },
             "ask": "Cosa invia l'app ai tuoi server?"
           },
@@ -1818,7 +1818,7 @@
           },
           "what-we-keep": {
             "headline": "Cosa conserviamo",
-            "body": "La tua email di accesso, se ne hai aggiunta una. Quale piano hai. Un conteggio giornaliero degli articoli analizzati. Se usi Mera senza email, un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo.",
+            "body": "La tua email di accesso, se ne hai aggiunta una. Quale piano hai. Un conteggio giornaliero degli articoli inviati a te e i giorni in cui hai usato Mera, conservato per 90 giorni. Gli orari delle notifiche, la lingua e la modalità di elaborazione. Le risposte che invii alle domande del team di Mera. Se usi Mera senza email, un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo.",
             "ask": "Cosa conserva Mera su di me sui suoi server?"
           }
         }
@@ -1953,7 +1953,7 @@
           },
           "mute-is-not-a-downrank": {
             "headline": "Muta è una cosa completamente diversa",
-            "body": "Muta vive solo sulla schermata delle preferenze di origine, e è un'esclusione dura: quelle storie vengono abbandonate, non semplicemente ordinate più basse. Tocca ogni carta e mettila dove appartiene.",
+            "body": "Silenzia si imposta sulla pagina di una pubblicazione ed è un'esclusione dura: quelle storie vengono scartate, non solo ordinate più in basso. Tocca ogni carta e mettila dove appartiene.",
             "steps": {
               "0": "Freccia giù: mostrata meno spesso.",
               "1": "Muta: non mostrata affatto.",
@@ -2104,11 +2104,11 @@
             "reveal": {
               "cloud": {
                 "label": "Cloud (l'impostazione predefinita)",
-                "text": "I tuoi dati sono cifrati su questo telefono, aperti solo dentro un enclave sigillato, e cifrati di nuovo sulla strada indietro. Veloce, e funziona su qualsiasi telefono. L'app non verifica ancora il certificato di quell'enclave rispetto al produttore del chip, come dichiara apertamente l'informativa sulla privacy."
+                "text": "I tuoi dati sono cifrati su questo telefono, aperti solo dentro un enclave sigillato e cifrati di nuovo sulla via del ritorno. Veloce, e funziona su qualsiasi telefono. L'app non verifica l'enclave con il produttore del chip prima di ogni richiesta, e lo diciamo apertamente nelle nostre FAQ. Puoi fare quel controllo tu stesso in Impostazioni, sotto Mera Protocol."
               },
               "on-device": {
                 "label": "Sul dispositivo",
-                "text": "Tutto gira qui e niente su di te se ne va affatto. Scarica prima un modello, vuole un telefono piuttosto recente, ed è notevolmente più lento."
+                "text": "L'IA funziona qui invece che nel cloud. Le frasi dei tuoi argomenti vengono comunque inviate per recuperare le notizie e salvate senza alcun nome associato. Prima scarica un modello, richiede un telefono abbastanza recente ed è decisamente più lento."
               }
             }
           },
@@ -2118,7 +2118,7 @@
           },
           "web-search": {
             "headline": "Ricerca web in chat",
-            "body": "Spento per impostazione predefinita. Acceso, Mera può cercare qualcosa a metà conversazione. Cosa lascia il tuo telefono quando lo fa?",
+            "body": "Attiva per impostazione predefinita. Con la ricerca attiva, Mera può cercare qualcosa a metà conversazione. Cosa lascia il tuo telefono quando lo fa?",
             "choose": {
               "whole-question": {
                 "label": "Il tuo intero messaggio",
@@ -2233,7 +2233,7 @@
     "restartNeeded": "I tuoi dati sono tornati. Chiudi e riapri l'app per vederli.",
     "restore": "Ripristina da un backup",
     "restoreConfirmAction": "Sostituisci",
-    "restoreConfirmDescription": "I tuoi fatti, argomenti, chat, articoli salvati e cronologia di lettura su questo telefono verranno sostituiti da ciò che c'è nel backup. Non si può annullare. Il tuo account e il tuo abbonamento non vengono toccati.",
+    "restoreConfirmDescription": "I tuoi fatti, argomenti, articoli salvati e cronologia di lettura su questo telefono verranno sostituiti da ciò che c'è nel backup. Le tue chat restano come sono. Non si può annullare. Il tuo account e il tuo abbonamento non vengono toccati.",
     "restoreConfirmTitle": "Sostituire i dati su questo dispositivo?",
     "restoreEmpty": "Nessun backup trovato qui. Se prima usavi un altro account Google o iCloud, accedi con quello.",
     "restoreWhereDescription": "Scegli dove l'hai salvato. Vedrai cosa contiene prima che qualcosa venga sostituito.",

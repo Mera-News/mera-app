@@ -37,7 +37,7 @@
     "faq": "Câu hỏi thường gặp",
     "identitySwitchFailedTitle": "Không thể hoàn tất việc chuyển tài khoản",
     "identitySwitchFailedBody": "Dữ liệu của một tài khoản khác vẫn còn trên thiết bị này. Mera phải xóa dữ liệu đó trước khi bạn tiếp tục, và lần này việc xóa không thành công.",
-    "identitySwitchFailedWhy": "Không có gì bị mất. Dữ liệu đó thuộc về tài khoản kia và vẫn nằm trong tài khoản Mera của họ. Tài khoản của bạn sẽ bắt đầu mới khi thiết bị này được dọn sạch.",
+    "identitySwitchFailedWhy": "Chưa có gì bị xóa. Dữ liệu đó thuộc về tài khoản kia, và việc dọn sạch sẽ xóa nó khỏi điện thoại này vĩnh viễn, trừ khi tài khoản đó đã sao lưu. Tài khoản của bạn sẽ bắt đầu mới khi thiết bị này được dọn sạch.",
     "identitySwitchFailedExhausted": "Vẫn không thành công. Hãy đăng xuất và bắt đầu lại để dọn sạch thiết bị này.",
     "identitySwitchRetry": "Thử lại",
     "identitySwitchSignOut": "Đăng xuất và bắt đầu lại",
@@ -55,10 +55,10 @@
     "signInWithoutEmail": "Đăng nhập không cần email",
     "differentAccount": {
       "title": "Đăng nhập không cần email?",
-      "body": "Chúng tôi sẽ xóa mọi thứ của Mera cho {{email}}. Bạn có chắc không?",
+      "body": "Chúng tôi sẽ xóa mọi thứ Mera lưu trên điện thoại này cho {{email}}. Bản thân tài khoản không bị xóa. Bạn có chắc không?",
       "continue": "Xóa và tiếp tục",
       "useEmail": "Giữ tài khoản của tôi",
-      "bodyGeneric": "Chúng tôi sẽ xóa mọi thứ của Mera cho tài khoản này. Bạn có chắc không?"
+      "bodyGeneric": "Chúng tôi sẽ xóa mọi thứ Mera lưu trên điện thoại này cho tài khoản này. Bản thân tài khoản không bị xóa. Bạn có chắc không?"
     },
     "deviceSignInCaption": {
       "uninstall": "Tài khoản của bạn gắn với điện thoại này. Nếu bạn xóa Mera hoặc mất điện thoại, bạn sẽ bắt đầu một tài khoản mới. Sao lưu và khôi phục trong Cài đặt có thể giữ dữ liệu của bạn.",
@@ -132,14 +132,14 @@
         "cloudRelevance": {
           "headlines": [
             "Một AI đang đọc từng bài viết để xem bài nào quan trọng với bạn.",
-            "Yêu cầu của bạn được mã hóa: chỉ điện thoại của bạn giữ khóa."
+            "Yêu cầu của bạn được mã hóa để chỉ AI trong enclave được niêm phong mới đọc được."
           ]
         },
         "cloudReasons": {
           "headlines": [
             "Đang viết ghi chú ngắn cho từng bài viết liên quan.",
             "Bạn có thể rời đi, chúng tôi sẽ thông báo khi xong.",
-            "Mọi thứ luôn được mã hóa đầu cuối: chỉ điện thoại của bạn mới có thể đọc được."
+            "Mọi thứ luôn được mã hóa giữa điện thoại của bạn và enclave được niêm phong của AI."
           ]
         },
         "onDevice": {
@@ -151,7 +151,7 @@
         "downloading": {
           "headlines": [
             "Các bài viết hôm nay đang về máy của bạn.",
-            "Không có gì được đọc trên máy chủ. Chúng đến với bạn trước."
+            "Các bài viết đến điện thoại của bạn trước, rồi mới chọn cho bạn."
           ]
         },
         "grouping": {
@@ -304,7 +304,7 @@
   "onboarding": {
     "stepOf": "Bước {{current}} / {{total}}",
     "connectionIssue": "Sự cố kết nối",
-    "connectionDescription": "Chúng tôi gặp một số sự cố khi kết nối đến máy chủ. Bạn có thể đóng ứng dụng và thử lại sau. Nếu sự cố vẫn tiếp diễn, chúng tôi khuyên bạn nên đăng xuất và đăng nhập lại.",
+    "connectionDescription": "Chúng tôi gặp sự cố khi kết nối đến máy chủ. Hãy đóng ứng dụng và thử lại sau một lát.",
     "logout": "Đăng xuất",
     "close": "Đóng",
     "logoutFailedTitle": "Đăng xuất thất bại",
@@ -401,7 +401,7 @@
     "dlFailedTitle": "Tải xuống thất bại",
     "dlFailedDescription": "Không thể tải AI Model. Vui lòng thử lại.",
     "modeUpdatedOnDeviceTitle": "Đã chuyển sang trên thiết bị",
-    "modeUpdatedOnDeviceDescription": "Mera Protocol hiện đang chạy hoàn toàn ngoại tuyến trên điện thoại của bạn.",
+    "modeUpdatedOnDeviceDescription": "Mera AI giờ chạy ngay trên điện thoại của bạn. Tin tức vẫn đến từ máy chủ của Mera.",
     "modeUpdatedCloudTitle": "Đã chuyển sang đám mây",
     "modeUpdatedCloudDescription": "Mera Protocol hiện đang sử dụng suy luận đám mây được mã hóa đầu cuối.",
     "settingUpdateFailedTitle": "Cập nhật thất bại",
@@ -465,22 +465,22 @@
     "cantRun": "Điện thoại này không chạy được",
     "chatGroup": "Trò chuyện",
     "encrypted": "Được mã hóa. Mera không thể đọc.",
-    "explainerCan": "Trên điện thoại này, Mera AI chạy hoàn toàn ngoại tuyến. Đám mây riêng chạy ở dạng được mã hóa, nên Mera không thể đọc.",
-    "explainerCant": "Trên điện thoại này, Mera AI chạy hoàn toàn ngoại tuyến. Bạn cần một điện thoại đủ mạnh để chạy Mera AI trên thiết bị. Chiếc này không đủ mạnh, nên Mera dùng đám mây riêng.",
+    "explainerCan": "Với “Trên điện thoại này”, Mera AI chạy trên điện thoại của bạn, còn tin tức vẫn được lấy qua mạng. Với “Đám mây riêng”, AI chạy ở dạng được mã hóa, nên Mera không thể đọc.",
+    "explainerCant": "Với “Trên điện thoại này”, Mera AI chạy trên điện thoại của bạn, còn tin tức vẫn được lấy qua mạng. Việc này cần một điện thoại đủ mạnh. Chiếc này không đủ, nên Mera dùng “Đám mây riêng”.",
     "staysPrivateBody": "Mera Protocol luôn bật. Các dữ kiện của bạn không bao giờ rời khỏi điện thoại này khi chưa được mã hóa.",
     "staysPrivateTitle": "Dữ liệu của bạn vẫn riêng tư",
-    "webSearchShort": "Chỉ những từ tìm kiếm rời khỏi điện thoại. Không có gì cho biết bạn là ai.",
+    "webSearchShort": "Chỉ những từ tìm kiếm rời khỏi điện thoại của bạn, thông qua máy chủ của Mera. Công cụ tìm kiếm không bao giờ biết bạn là ai.",
     "whereReads": "Nơi Mera đọc tin của bạn",
     "whileClosed": "Khi Mera đóng",
     "deleting": "Đang xóa…"
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ \"Ấn phẩm bạn đang đọc\" trong tab Nguồn và lịch sử theo từng ấn phẩm sẽ trở về trạng thái trống. Không có dữ liệu nào khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị chạm đến (dữ liệu này chưa bao giờ rời thiết bị của bạn).",
+    "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ \"Ấn phẩm bạn đang đọc\" trong tab Nguồn và lịch sử theo từng ấn phẩm sẽ trở về trạng thái trống. Không có gì khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị chạm đến, vì máy chủ của Mera chưa bao giờ có dữ liệu này.",
     "deletedTitle": "Đã xóa dữ liệu",
     "deletedDescription": "Dữ liệu đã chọn đã được xóa thành công.",
     "errorTitle": "Lỗi",
     "errorDescription": "Không thể xóa dữ liệu. Vui lòng thử lại.",
-    "factsModalDescription": "Xóa các dữ kiện bạn đã thêm và những chủ đề sinh ra từ đó. Dữ kiện của bạn không bao giờ rời khỏi thiết bị này. Các cụm chủ đề được gửi khi bạn lấy tin và được lưu đệm trên máy chủ của chúng tôi mà không gắn ID người dùng, nên ở đó không có gì ghi lại rằng chúng là của bạn. Nguồn cấp bài viết của bạn cũng bị xóa, vì nó được dựng từ các chủ đề này, và sẽ trống cho tới khi bạn thêm dữ kiện mới.",
+    "factsModalDescription": "Xóa các dữ kiện bạn đã thêm và những chủ đề sinh ra từ đó. Dữ kiện của bạn được lưu trên thiết bị này, không phải trên máy chủ của Mera. Các cụm chủ đề được gửi khi bạn lấy tin và được lưu đệm trên máy chủ của chúng tôi mà không gắn ID người dùng, nên ở đó không có gì ghi lại rằng chúng là của bạn. Nguồn cấp bài viết của bạn cũng bị xóa, vì nó được dựng từ các chủ đề này.",
     "exportHistoryTitle": "Xuất lịch sử đọc",
     "exportHistoryDescription": "30 ngày cuối cùng dưới dạng JSON: bài viết, ấn phẩm và thời gian trung bình từ xuất bản đến đọc",
     "exportHistorySubject": "Lịch sử đọc Mera của tôi (JSON)",
@@ -495,7 +495,7 @@
       "signInRecordIos": "Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple rằng đây là ứng dụng thật không được giữ lại.",
       "signInRecordAndroid": "Một bản ghi đăng nhập cho điện thoại này, không phải ID điện thoại của bạn, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Google rằng đây là ứng dụng thật không được giữ lại.",
       "signInRecordGeneric": "Nếu không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple hoặc Google rằng đây là ứng dụng thật không được giữ lại.",
-      "usage": "Số bài viết được phân tích mỗi ngày, để áp dụng giới hạn gói của bạn. Các lần đăng nhập không lưu địa chỉ IP hay thông tin trình duyệt.",
+      "usage": "Số bài viết được gửi đến điện thoại này mỗi ngày, để áp dụng giới hạn gói của bạn, và những ngày bạn dùng Mera. Được giữ trong 90 ngày. Các lần đăng nhập không lưu địa chỉ IP hay thông tin trình duyệt.",
       "topics": "Cụm từ chủ đề, chỉ lưu theo văn bản, không có gì liên kết chúng với bạn, và bị xóa sau 14 ngày không dùng.",
       "privacyLink": "Đọc chính sách quyền riêng tư"
     },
@@ -504,14 +504,14 @@
     "clearHistoryTitle": "Xóa lịch sử đọc",
     "clearProfileHint": "Các dữ kiện của bạn và chủ đề của chúng",
     "clearProfileTitle": "Xóa hồ sơ",
-    "deleteAccountHint": "Tài khoản, gói của bạn và mọi thứ Mera lưu trên điện thoại này. Không thể hoàn tác.",
+    "deleteAccountHint": "Tài khoản của bạn và mọi thứ Mera lưu trên điện thoại này. Gói đăng ký qua cửa hàng vẫn tiếp tục cho đến khi bạn hủy trên App Store hoặc Google Play. Không thể hoàn tác.",
     "deleteGroup": "Xóa",
     "exportHint": "30 ngày gần nhất, dưới dạng JSON",
     "intro": "Sao lưu những gì Mera lưu trên điện thoại này, xem lại, mang theo hoặc xóa.",
     "lookAndTake": "Xem và mang theo",
     "askBeforeTopicDelete": "Hỏi trước khi xóa chủ đề",
     "askBeforeTopicDeleteHint": "Mera yêu cầu bạn xác nhận mỗi lần bạn xóa một chủ đề khỏi một trong các dữ kiện của mình.",
-    "exportHistoryWindowNote_other": "Bản xuất này chỉ bao gồm {{count}} ngày đọc gần nhất. Các mục cũ hơn sẽ tự động bị xóa khỏi thiết bị này và chưa bao giờ được gửi lên máy chủ."
+    "exportHistoryWindowNote_other": "Bản xuất này chỉ bao gồm {{count}} ngày đọc gần nhất. Các mục cũ hơn sẽ tự động bị xóa khỏi thiết bị này và chưa bao giờ được gửi lên máy chủ của Mera."
   },
   "preferences": {
     "notifications": "Thông báo",
@@ -538,7 +538,7 @@
     "faq": "Câu hỏi thường gặp",
     "reportBug": "Báo lỗi",
     "deleteAccountConfirmGrace": "Tài khoản của bạn sẽ được lên lịch xóa, với thời gian ân hạn 30 ngày. Nếu tài khoản có email, hãy đăng nhập bằng email đó trong 30 ngày này để hủy. Tài khoản không có email không thể đăng nhập lại, nên không thể hủy việc xóa.",
-    "deleteAccountWarningGrace": "⚠️ Sau 30 ngày, toàn bộ dữ liệu của bạn sẽ bị xóa vĩnh viễn. Không thể hoàn tác.",
+    "deleteAccountWarningGrace": "⚠️ Sau 30 ngày, dữ liệu tài khoản của bạn sẽ bị xóa vĩnh viễn. Hồ sơ thanh toán được giữ 7 năm để phục vụ sổ sách kế toán. Không thể hoàn tác.",
     "finalConfirmationBodyGrace": "Điều này lên lịch tài khoản của bạn để xóa vĩnh viễn trong 30 ngày.",
     "accountDeletionScheduledTitle": "Xóa đã được lên lịch",
     "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn sau 30 ngày. Nếu tài khoản có email, hãy đăng nhập bằng email đó trước thời điểm đó để hủy."
@@ -568,7 +568,7 @@
     "unexpectedError": "Chúng tôi gặp lỗi không mong muốn. Vui lòng thử lại.",
     "failedToLoad": "Tải thất bại",
     "errorLoadingContent": "Lỗi khi tải nội dung",
-    "networkError": "Không thể kết nối đến máy chủ. Kiểm tra mạng và cài đặt API endpoint.",
+    "networkError": "Không thể kết nối đến máy chủ. Hãy kiểm tra kết nối mạng và thử lại.",
     "feedError": "Không thể tải bản tin của bạn. Vui lòng thử lại.",
     "accountRestricted": "Tài khoản bị hạn chế",
     "accountRestrictedDescription": "Tài khoản của bạn đã bị hạn chế. Vui lòng liên hệ hỗ trợ.",
@@ -734,7 +734,7 @@
     "badge_one": "Bạn đã ghé thăm {{publication}} một lần trong 30 ngày qua",
     "badge_other": "Bạn đã ghé thăm {{publication}} {{count}} lần trong 30 ngày qua",
     "tooltipA11y": "Về lịch sử đọc",
-    "tooltipIntro": "Mera theo dõi thói quen đọc của bạn và dữ liệu này chỉ lưu trên thiết bị của bạn.",
+    "tooltipIntro": "Mera theo dõi thói quen đọc của bạn giúp bạn. Dữ liệu này được lưu trên thiết bị của bạn, và máy chủ của Mera không bao giờ thấy nó.",
     "tooltipLink": "Xem toàn bộ lịch sử đọc của bạn tại đây."
   },
   "nativeUpdate": {
@@ -788,7 +788,7 @@
     "failed": "{{count}} thất bại",
     "pending": "{{count}} đang chờ",
     "noteBody": "Màn hình này đọc trực tiếp cơ sở dữ liệu trên thiết bị của Mera. Đây là dữ liệu xây dựng bảng tin của bạn, được hiển thị ở đây để kiểm tra và gỡ lỗi. Máy chủ của Mera không lưu trữ các dữ kiện, lịch sử đọc hay các gợi ý được tạo từ chúng.",
-    "noteExceptions": "Hai ngoại lệ: hồ sơ tài khoản của bạn (đăng nhập, thông báo, ngôn ngữ) được đồng bộ với tài khoản Mera của bạn, và khi bật AI đám mây, các sự kiện của bạn được mã hóa trên thiết bị này trước khi được gửi để chấm điểm.",
+    "noteExceptions": "Ngoại lệ: hồ sơ tài khoản của bạn (đăng nhập, gói, thông báo, ngôn ngữ) được đồng bộ với tài khoản Mera của bạn, các câu trả lời bạn gửi cho đội ngũ Mera được lưu cùng với đó, và khi bật AI đám mây, các sự kiện của bạn được mã hóa trên thiết bị này trước khi được gửi đi để chấm điểm và kiểm tra chủ đề.",
     "noteFooter": "Các giá trị ở đây là dữ liệu thô, dùng để chẩn đoán. Các hàng bảng tin tự xóa sau 48 giờ. Bạn có thể xóa dữ kiện, bộ nhớ đệm bảng tin và lịch sử xem trong Quản lý dữ liệu.",
     "noteTitle": "Dữ liệu của bạn, trên thiết bị của bạn"
   },
@@ -1582,11 +1582,11 @@
             "reveal": {
               "about-you": {
                 "label": "Những gì nó biết về bạn",
-                "text": "Các thông tin của bạn, sở thích của bạn và những gì bạn đã đọc được viết vào điện thoại này và ở đó. Không có bản sao của chúng nằm trên máy chủ."
+                "text": "Các dữ kiện, sở thích và những gì bạn đã đọc được ghi vào điện thoại này và ở lại đó. Máy chủ của Mera không giữ bản sao nào của chúng."
               },
               "what-leaves": {
                 "label": "Những gì thực sự rời đi",
-                "text": "Các cụm chủ đề ngắn, như 'quản lý bệnh viện'. Không có tên, không có tài khoản, không có gì nói cụm từ đến từ bạn."
+                "text": "Các cụm chủ đề ngắn, như \"nhân sự bệnh viện\". Máy chủ của Mera lưu chúng mà không có tên hay tài khoản, nên không có gì ghi lại rằng cụm từ đó đến từ bạn."
               }
             }
           },
@@ -1789,16 +1789,16 @@
         "subtitle": "Những gì rời khỏi điện thoại này, và những gì không bao giờ làm.",
         "slides": {
           "stays-on-phone": {
-            "headline": "Phần về bạn không bao giờ rời đi",
-            "body": "Các thông tin của bạn, sở thích của bạn, nơi của bạn và tất cả những gì bạn đã đọc sống trên điện thoại này. Không có bản sao trên máy chủ, đó cũng là lý do tại sao đăng xuất hoặc chuyển điện thoại có nghĩa là xây dựng lại hồ sơ."
+            "headline": "Phần về bạn được giữ ở đây",
+            "body": "Các dữ kiện, sở thích, nơi chốn của bạn và tất cả những gì bạn đã đọc nằm trên điện thoại này. Máy chủ của Mera không giữ bản sao nào, đó là lý do đăng xuất sẽ xóa hồ sơ của bạn. Trên điện thoại mới, Sao lưu có thể khôi phục lại."
           },
           "what-leaves": {
             "headline": "Những gì thực sự đi ra",
-            "body": "Ba điều, và đó là danh sách.",
+            "body": "Những điều chính, và lý do mỗi điều được gửi đi.",
             "steps": {
               "0": "Các cụm chủ đề ngắn, vì vậy có cái gì đó để đối sánh những câu chuyện với.",
               "1": "Cách bạn đăng nhập, bằng email hoặc bằng điện thoại này, và bạn đang dùng gói nào.",
-              "2": "Số lượng câu chuyện được phân tích hôm nay, để giữ gói đó trung thực."
+              "2": "Các bài viết điện thoại của bạn yêu cầu, được đếm theo ngày để giữ giới hạn của gói công bằng."
             },
             "ask": "Ứng dụng gửi những gì cho máy chủ của bạn?"
           },
@@ -1816,7 +1816,7 @@
           },
           "what-we-keep": {
             "headline": "Những gì chúng tôi giữ lại",
-            "body": "Email đăng nhập của bạn, nếu bạn đã thêm. Bạn đang dùng gói nào. Số tin được phân tích mỗi ngày. Nếu bạn dùng Mera không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm từ chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
+            "body": "Email đăng nhập của bạn, nếu bạn đã thêm. Bạn đang dùng gói nào. Số bài viết được gửi đến bạn mỗi ngày và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Nếu bạn dùng Mera không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
             "ask": "Mera lưu trữ những gì về tôi trên máy chủ của nó?"
           }
         }
@@ -1951,7 +1951,7 @@
           },
           "mute-is-not-a-downrank": {
             "headline": "Im lặng là một điều khác hoàn toàn",
-            "body": "Mute sống chỉ trên màn hình tùy chọn nguồn, và nó là một loại trừ cứng: những câu chuyện đó được loại bỏ, không chỉ sắp xếp thấp hơn. Nhấn mỗi thẻ và đặt nó nơi nó thuộc về.",
+            "body": "Tắt tiếng được đặt trên trang của một ấn phẩm, và đó là loại trừ cứng: những câu chuyện đó bị loại bỏ, không chỉ sắp xếp thấp hơn. Nhấn mỗi thẻ và đặt nó vào đúng chỗ.",
             "steps": {
               "0": "Mũi tên xuống: được hiển thị ít thường xuyên.",
               "1": "Im lặng: không hiển thị nào cả.",
@@ -2102,11 +2102,11 @@
             "reveal": {
               "cloud": {
                 "label": "Đám mây (mặc định)",
-                "text": "Dữ liệu của bạn được mã hóa trên điện thoại này, chỉ được mở bên trong một enclave được niêm phong, và được mã hóa lại trên đường trả về. Nhanh, và chạy trên mọi điện thoại. Ứng dụng chưa đối chiếu chứng chỉ của enclave đó với nhà sản xuất chip, và thông báo quyền riêng tư nói rõ điều này."
+                "text": "Dữ liệu của bạn được mã hóa trên điện thoại này, chỉ được mở bên trong một enclave được niêm phong, và được mã hóa lại trên đường trả về. Nhanh, và chạy trên mọi điện thoại. Ứng dụng không đối chiếu enclave với nhà sản xuất chip trước mỗi yêu cầu, và phần Câu hỏi thường gặp của chúng tôi nói rõ điều này. Bạn có thể tự chạy bước kiểm tra đó trong Cài đặt, mục Mera Protocol."
               },
               "on-device": {
                 "label": "Trên thiết bị",
-                "text": "Mọi thứ chạy ngay trên máy và không có gì về bạn rời khỏi thiết bị. Trước tiên nó tải một mô hình, cần điện thoại khá mới và chậm hơn rõ rệt."
+                "text": "AI chạy ngay tại đây thay vì trên đám mây. Các cụm chủ đề của bạn vẫn được gửi đi để lấy tin và được lưu mà không gắn tên. Trước tiên nó tải một mô hình, cần điện thoại khá mới và chậm hơn rõ rệt."
               }
             }
           },
@@ -2116,7 +2116,7 @@
           },
           "web-search": {
             "headline": "Tìm kiếm web trong trò chuyện",
-            "body": "Tắt theo mặc định. Bật, Mera có thể tìm kiếm một cái gì đó trong cuộc trò chuyện. Những gì rời khỏi điện thoại của bạn khi nó làm?",
+            "body": "Bật theo mặc định. Khi bật, Mera có thể tra cứu thông tin giữa cuộc trò chuyện. Những gì rời khỏi điện thoại của bạn khi đó?",
             "choose": {
               "whole-question": {
                 "label": "Toàn bộ tin nhắn của bạn",
@@ -2231,7 +2231,7 @@
     "restartNeeded": "Dữ liệu của bạn đã trở lại. Đóng và mở lại ứng dụng để xem.",
     "restore": "Khôi phục từ bản sao lưu",
     "restoreConfirmAction": "Thay thế",
-    "restoreConfirmDescription": "Các dữ kiện, chủ đề, cuộc trò chuyện, bài viết đã lưu và lịch sử đọc trên điện thoại này sẽ được thay bằng nội dung trong bản sao lưu. Không thể hoàn tác. Tài khoản và gói đăng ký của bạn không bị ảnh hưởng.",
+    "restoreConfirmDescription": "Các dữ kiện, chủ đề, bài viết đã lưu và lịch sử đọc trên điện thoại này sẽ được thay bằng nội dung trong bản sao lưu. Các cuộc trò chuyện của bạn giữ nguyên. Không thể hoàn tác. Tài khoản và gói đăng ký của bạn không bị ảnh hưởng.",
     "restoreConfirmTitle": "Thay thế dữ liệu trên thiết bị này?",
     "restoreEmpty": "Không tìm thấy bản sao lưu nào ở đây. Nếu trước đây bạn dùng tài khoản Google hoặc tài khoản iCloud khác, hãy đăng nhập bằng tài khoản đó.",
     "restoreWhereDescription": "Chọn nơi bạn đã lưu. Bạn sẽ thấy nội dung ở đó trước khi bất cứ thứ gì bị thay thế.",
