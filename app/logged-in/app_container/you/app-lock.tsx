@@ -1,6 +1,6 @@
 // Settings > App lock, inside the You stack: the PIN switch, Change PIN and
 // the Forgot your PIN line (FinalSettings #12). The PIN flows open over it.
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import SecuritySettingsSection from '@/components/custom/config-mera/SecuritySettingsSection';
 import TabStackScreen from '@/components/custom/nav/TabStackScreen';
 import { router } from 'expo-router';
@@ -12,7 +12,7 @@ export default function AppLockRoute() {
   return (
     <TabStackScreen surface="settings:app-lock" backdrop testID="app-lock-screen">
       <DrillDownHeader title={t('you.settings.appLock')} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 48 }}>
         <SecuritySettingsSection />
       </ScrollView>
     </TabStackScreen>

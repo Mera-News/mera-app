@@ -1,4 +1,4 @@
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
@@ -64,7 +64,7 @@ const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
                     onScroll={notifyScrollTick}
                     onContentSizeChange={notifyScrollTick}
                     scrollEventThrottle={16}
-                    contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 120, gap: 14 }}
+                    contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 120, gap: 14 }}
                 >
                     <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginHorizontal: 4 }}>
                         {t('facts.screenSubtitle')}

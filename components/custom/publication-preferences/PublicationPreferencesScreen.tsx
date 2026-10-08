@@ -1,4 +1,4 @@
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { alpha3ToAlpha2 } from '@/components/custom/locations/location-display';
@@ -162,7 +162,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                     keyExtractor={(item) => item.group.key}
                     renderItem={renderItem}
                     keyboardShouldPersistTaps="handled"
-                    contentContainerStyle={{ paddingTop: 8, paddingBottom: bottom + 24 }}
+                    contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottom + 24 }}
                     showsVerticalScrollIndicator={false}
                     ListHeaderComponent={
                         <VStack>

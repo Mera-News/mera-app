@@ -969,7 +969,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
                 </Box>
 
-                <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
+                <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
                     {renderContent()}
                 </ScrollView>
 

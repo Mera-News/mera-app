@@ -8,6 +8,13 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { I18nManager, StyleSheet, View } from 'react-native';
 
+/** Where a sub-page's first content starts below the header's hairline
+ *  (FinalSettings .body padding-top). Each screen's scroll pads by it, so a
+ *  scrolled row still reaches the hairline. */
+export const SUBPAGE_TOP_GAP = 14;
+/** The header row under the status bar (FinalSettings .sh: 106 - 54). */
+const ROW_HEIGHT = 52;
+
 const BACK_GLYPH = 22;
 /** p-1 at NativeWind's 14pt rem: the old box's padding and left pull. */
 const BACK_PAD = 3.5;
@@ -58,7 +65,7 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({
     const { t } = useTranslation();
     const colors = useColors();
     return (
-        <HStack className="px-4 py-3 items-center border-b border-line">
+        <HStack className="px-4 items-center border-b border-line" style={{ minHeight: ROW_HEIGHT }}>
             {/* A numeric 44pt frame pulled back by negative margins to the old
                 29pt box (22pt glyph + 3.5pt padding, 3.5pt left of the row's
                 padding), so nothing reflows and the arrow does not move. The
@@ -104,8 +111,9 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({
                 )}
                 {titleContent ?? (
                     <Text
-                        size="lg"
-                        className="text-ink font-semibold"
+                        className="text-ink"
+                        style={{ fontSize: 17, lineHeight: 22, fontWeight: '600' }}
+                        maxFontSizeMultiplier={1.2}
                         numberOfLines={titleNumberOfLines}
                         accessibilityRole="header"
                     >

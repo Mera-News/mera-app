@@ -1,4 +1,4 @@
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Group, GroupLabel } from '@/components/custom/you/rows';
 import { Pressable } from '@/components/ui/pressable';
@@ -157,7 +157,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                     <Spinner size="large" />
                 </View>
             ) : rows.length === 0 ? (
-                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, marginHorizontal: 18, marginTop: 16 }}>
+                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, marginHorizontal: 18, marginTop: SUBPAGE_TOP_GAP }}>
                     {t('personaAudit.empty')}
                 </Text>
             ) : (

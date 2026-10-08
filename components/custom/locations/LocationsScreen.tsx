@@ -1,4 +1,4 @@
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Group, Help } from '@/components/custom/you/rows';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -197,7 +197,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
       <ScrollView
         testID="places-list"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 120, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 120, gap: 12 }}
       >
         <Help>{t('locations.intro')}</Help>
         <Group>{locations.map(renderPlace)}</Group>

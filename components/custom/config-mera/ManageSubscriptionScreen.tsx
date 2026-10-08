@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useColors } from '@/lib/theme/tokens';
 import { formatResetTime } from './SettingsUsageCard';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 
 interface ManageSubscriptionScreenProps {
     onBack?: () => void;
@@ -276,7 +276,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                     </View>
                 ) : (
                     <ScrollView
-                        contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: insets.bottom + 24, gap: 12 }}
+                        contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 24, gap: 12 }}
                         showsVerticalScrollIndicator={false}
                     >
                         {/* The purchase went through but our server has not

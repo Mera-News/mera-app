@@ -19,7 +19,7 @@ import { FlatList, Modal, Platform, ScrollView, TouchableOpacity } from 'react-n
 import { showDialog } from '@/lib/dialog';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 
 interface LanguageSettingsScreenProps {
     onBack?: () => void;
@@ -139,7 +139,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                     />
                 </Box>
 
-                <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: insets.bottom + 32, gap: 12 }}>
+                <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 32, gap: 12 }}>
                     <Group>
                         <Row
                             testID="language-current-row"

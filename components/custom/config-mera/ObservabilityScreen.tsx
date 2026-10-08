@@ -60,7 +60,7 @@ import {
     tableLabel,
     IMAGE_RESOLUTION_LABELS,
 } from './observability-labels';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -767,7 +767,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
 
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 24 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Transparency note. Deliberately narrower than "Mera cannot

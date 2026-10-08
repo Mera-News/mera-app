@@ -1,4 +1,4 @@
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { sentenceCase } from '@/components/custom/facts/sentence-case';
 import { Group, Row } from '@/components/custom/you/rows';
@@ -267,7 +267,7 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                     <Spinner size="large" />
                 </View>
             ) : items.length === 0 ? (
-                <View testID="hygiene-empty" style={{ paddingHorizontal: 18, paddingTop: 16, gap: 6 }}>
+                <View testID="hygiene-empty" style={{ paddingHorizontal: 18, paddingTop: SUBPAGE_TOP_GAP, gap: 6 }}>
                     <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('hygiene.emptyTitle')}</Text>
                     <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('hygiene.emptyBody')}</Text>
                 </View>
@@ -281,7 +281,7 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                     data={items}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingTop: 4, paddingBottom: 120 }}
+                    contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 120 }}
                     showsVerticalScrollIndicator={false}
                     ListHeaderComponent={
                         <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginHorizontal: 18, marginBottom: 12 }}>

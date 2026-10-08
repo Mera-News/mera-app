@@ -9,7 +9,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { StatusIndicator } from '@/components/custom/chat/StatusIndicator';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
@@ -663,7 +663,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 }}
                 keyboardShouldPersistTaps="handled"
                 initialNumToRender={10}
-                contentContainerStyle={{ paddingTop: 8, paddingBottom: insets.bottom + 120 }}
+                contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 120 }}
                 showsVerticalScrollIndicator={false}
             />
 

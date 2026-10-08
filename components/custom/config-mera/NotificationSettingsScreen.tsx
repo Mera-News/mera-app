@@ -18,7 +18,7 @@ import { Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import NotificationTimes from './NotificationTimes';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { useColors } from '@/lib/theme/tokens';
 
 /** Quiet period after the last change before the hours are saved. */
@@ -443,7 +443,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         <ScrollView
             testID="notifications-scroll"
             className="flex-1"
-            contentContainerStyle={{ paddingTop: 4, paddingBottom: insets.bottom + 24 }}
+            contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 24 }}
             showsVerticalScrollIndicator={false}
         >
             {/* First launch: the wizard draws the title and the why. Off is one

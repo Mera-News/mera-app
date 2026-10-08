@@ -1,6 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import WhatMeraKeepsCard from '@/components/custom/config-mera/WhatMeraKeepsCard';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
 import { Spinner } from '@/components/ui/spinner';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
@@ -214,7 +214,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             <View style={{ paddingTop: insets.top }}>
                 <DrillDownHeader title={t('you.settings.yourData')} onBack={onBack} />
             </View>
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: insets.bottom + 32 }}>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 32 }}>
                 <Help>{t('manageData.intro')}</Help>
                 <View style={{ height: 12 }} />
                 <Group>

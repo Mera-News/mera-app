@@ -1,6 +1,6 @@
 // Settings > Your data > Backup, inside the You stack (FinalBackup).
 import BackupSection from '@/components/custom/backup/BackupSection';
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import TabStackScreen from '@/components/custom/nav/TabStackScreen';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -16,7 +16,7 @@ export default function BackupRoute() {
   return (
     <TabStackScreen surface="settings:backup" backdrop testID="backup-screen">
       <DrillDownHeader title={t('backup.title')} onBack={() => router.back()} />
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 48 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 48 }}>
         <BackupSection autoOpenRecover={autoOpenRecover} />
       </ScrollView>
     </TabStackScreen>
