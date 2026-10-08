@@ -5,6 +5,7 @@ import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useReducedMotion } 
 import { useTranslation } from 'react-i18next';
 
 import { LanguageRow } from '@/components/custom/auth/LanguageRow';
+import RotatingLanguageHeading from '@/components/custom/auth/RotatingLanguageHeading';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Button, ButtonText } from '@/components/ui/button';
 import { useLanguageSwitch, type LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
@@ -144,7 +145,7 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
             <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
                 {t('auth.track.welcome')}
             </Text>
-            <Text style={[styles.label, { color: colors.ink3 }]}>{t('auth.track.chooseLanguage')}</Text>
+            <RotatingLanguageHeading phone={phone} style={[styles.label, { color: colors.ink3 }]} containerStyle={styles.labelBox} />
 
             <View
                 pointerEvents={waiting ? 'none' : 'auto'}
@@ -213,7 +214,8 @@ const styles = StyleSheet.create({
     messageTitle: { fontSize: 15, fontWeight: '700' },
     messageBody: { fontSize: 13, lineHeight: 18 },
     title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
-    label: { fontSize: 13, textAlign: 'center', marginTop: 8, marginBottom: 12 },
+    label: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
+    labelBox: { marginTop: 8, marginBottom: 12 },
     list: { flex: 1, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 4, overflow: 'hidden' },
     actions: { gap: 10, marginTop: 16 },
 });
