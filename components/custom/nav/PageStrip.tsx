@@ -1,11 +1,11 @@
 // The tab header: the page pills, in one of two shapes, then the controls
 // pinned outside the scroller.
 //
-//  - `segmented` (Feed, Library, You): one centred track, the shared
-//    `SegmentedControl` at its header size. The selected fill is drawn INSIDE
-//    the selected tab (exactly its bounds) and crossfades on a page change; it
-//    does not follow the finger. The track scrolls instead of centring when a
-//    long locale makes it wider than the screen.
+//  - `segmented` (Feed, Library, You): one track centred in the space the
+//    side controls leave, the shared `SegmentedControl` at its header size.
+//    Every option has an icon; all labels show when they all fit that MEASURED
+//    space, else only the selected one's. It never scrolls. The selected fill
+//    is drawn INSIDE the selected tab and crossfades on a page change.
 //  - `scroll` (World): TWO rows. The top row carries the tab's title, the
 //    title chip (World's time window), then search and the ? at the end; the
 //    page pills sit below it in one scrolling row of glass pills that fade
@@ -23,9 +23,9 @@
 
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { SegmentedControl } from '@/components/ui/segmented-control';
+import { HEADER_TRACK_HEIGHT, SegmentedControl } from '@/components/ui/segmented-control';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet, View, type AccessibilityActionEvent } from 'react-native';
 import Animated, {
@@ -38,8 +38,10 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
+import { headerSideSlots, SIDE_SLOT } from './header-slots';
 import HelpButton from './HelpButton';
 import { useColors } from '@/lib/theme/tokens';
+import { MAX_FONT_SCALE } from '@/lib/typography/policy';
 import type { PageId } from './page-registry';
 import type { PageDot, PagePill } from './types';
 
@@ -59,16 +61,17 @@ export const PILL_HEIGHT = 34;
 /** Frame padding around a 34pt pill: 44pt touch target. */
 export const PILL_FRAME_PAD = 5;
 const PILL_GAP = 6;
-const SIDE_SLOT = 44;
 const LONG_PRESS_MS = 400;
 /** The tab header's side padding (TabPages). World's row cancels it, so its
  *  scroller spans the screen and a pill fades out before the screen edge. */
 export const HEADER_SIDE_PAD = 6;
-/** The board's header, measured from the safe-area top: the track at +5, 42pt
- *  tall, and the header's bottom 5pt under it (+52). */
+/** The header, measured from the safe-area top: the track at +5, as tall as
+ *  the track (46pt at 1.1x), and the header's bottom 5pt under it (+56). */
 export const HEADER_TOP_PAD = 5;
-export const HEADER_ROW_HEIGHT = 42;
+export const HEADER_ROW_HEIGHT = HEADER_TRACK_HEIGHT;
 export const HEADER_BOTTOM_PAD = 5;
+/** Clear space between the track and a side control. */
+const TRACK_SIDE_GAP = 4;
 /** World's rows start 16pt in; a pill is fully faded once an edge reaches
  *  the screen edge, so it is never cut square. */
 const ROW_START = 16;
@@ -318,6 +321,8 @@ const PageStrip: React.FC<PageStripProps> = ({
   const { t } = useTranslation();
   const colors = useColors();
   const segmented = variant === 'segmented';
+  // The track's space: the row less its side controls, measured.
+  const [trackSpace, setTrackSpace] = useState<number | null>(null);
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const layouts = useRef<Partial<Record<string, { x: number; width: number }>>>({});
@@ -365,9 +370,10 @@ const PageStrip: React.FC<PageStripProps> = ({
           {title ? (
             <Text
               numberOfLines={1}
-              maxFontSizeMultiplier={1}
+              // The tracks' label style (15.5pt, chrome text-scale tier).
+              maxFontSizeMultiplier={MAX_FONT_SCALE.chrome}
               accessibilityRole="header"
-              style={[styles.label, styles.title, { color: colors.ink }]}
+              style={[styles.title, { color: colors.ink }]}
               testID="page-strip-title"
             >
               {title}
@@ -404,56 +410,62 @@ const PageStrip: React.FC<PageStripProps> = ({
     );
   }
 
+  // A lone side control is balanced by an empty slot (header-slots.ts), so
+  // the track centres on the screen on every tab.
+  const slots = headerSideSlots(Boolean(leading), help !== null);
   return (
     <View style={styles.row} pointerEvents="box-none" testID="page-strip">
-      {leading ? <View style={styles.sideSlot}>{leading}</View> : null}
-      <View style={styles.scrollerWrap} pointerEvents="box-none">
-        <Animated.ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.segContent}
-          testID="page-strip-scroll"
-        >
-          <SegmentedControl
-            size="header"
-            value={activeId}
-            onChange={onSelect}
-            accessibilityLabel={tabLabel}
-            testID="page-pill"
-            options={pages.map((p, i) => ({
-              value: p.id,
-              label: p.label,
-              icon: p.icon,
-              useDot: p.useDot ? () => (p.useDot ?? noDot)().visible : undefined,
-              accessibilityLabelFor: (dot: boolean) =>
-                t(dot ? 'nav.pillNewA11y' : 'nav.pillA11y', { label: p.label, index: i + 1, count: pages.length }),
-            }))}
-          />
-        </Animated.ScrollView>
+      {slots.left ? <View style={styles.sideSlot}>{leading}</View> : null}
+      <View
+        style={styles.trackSpace}
+        pointerEvents="box-none"
+        onLayout={(e) => {
+          const w = Math.floor(e.nativeEvent.layout.width) - 2 * TRACK_SIDE_GAP;
+          setTrackSpace((prev) => (prev === w ? prev : w));
+        }}
+        testID="page-strip-track"
+      >
+        <SegmentedControl
+          size="header"
+          availableWidth={trackSpace}
+          value={activeId}
+          onChange={onSelect}
+          accessibilityLabel={tabLabel}
+          testID="page-pill"
+          options={pages.map((p, i) => ({
+            value: p.id,
+            label: p.label,
+            icon: p.icon,
+            useDot: p.useDot ? () => (p.useDot ?? noDot)().visible : undefined,
+            accessibilityLabelFor: (dot: boolean) =>
+              t(dot ? 'nav.pillNewA11y' : 'nav.pillA11y', { label: p.label, index: i + 1, count: pages.length }),
+          }))}
+        />
       </View>
-      {/* Keeps the track centred on the screen beside a leading icon when
-          there is no ? to balance it. */}
-      {leading && !help ? <View style={styles.sideSlot} /> : null}
-      {help}
+      {slots.right ? <View style={styles.sideSlot}>{help}</View> : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  // A fixed row: the segmented track (42pt) fills it exactly.
+  // A fixed row, exactly the segmented track's height.
   row: { flexDirection: 'row', alignItems: 'center', height: HEADER_ROW_HEIGHT },
   // World's pill row under the title row: 34pt pills in 44pt frames.
   pillRow: { height: PILL_HEIGHT + 2 * PILL_FRAME_PAD },
   // The title starts on the pills' 16pt line.
-  title: { marginStart: ROW_START - HEADER_SIDE_PAD, marginEnd: 8, fontWeight: '700', flexShrink: 1 },
+  title: {
+    fontSize: 15.5,
+    lineHeight: 20,
+    marginStart: ROW_START - HEADER_SIDE_PAD,
+    marginEnd: 8,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
   spacer: { flex: 1 },
   sideSlot: { width: SIDE_SLOT, height: HEADER_ROW_HEIGHT, alignItems: 'center', justifyContent: 'center' },
-  scrollerWrap: { flex: 1, height: HEADER_ROW_HEIGHT },
   fullBleed: { marginHorizontal: -HEADER_SIDE_PAD },
   rowPad: { paddingHorizontal: ROW_START },
-  // Centred while it fits, scrolls once it does not.
-  segContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 8 },
+  trackSpace: { flex: 1, height: HEADER_ROW_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   pills: { flexDirection: 'row', alignItems: 'center', gap: PILL_GAP },
   pill: {
     height: PILL_HEIGHT,

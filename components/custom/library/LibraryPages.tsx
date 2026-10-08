@@ -17,6 +17,14 @@ import { useTranslation } from 'react-i18next';
  * Page ids `saved`, `checks`, `visited`, `stats`.
  * The ? in the tab header opens the active page's explainer.
  */
+/** Each page's icon on the track (outline MaterialIcons on both platforms). */
+const ICONS: Readonly<Record<string, NonNullable<PagePill['icon']>>> = {
+    saved: 'bookmark-border',
+    checks: 'fact-check',
+    visited: 'history',
+    stats: 'bar-chart',
+};
+
 /** The Fact checks pill's dot: a check finished since the page was seen. */
 function useChecksDot(): PageDot {
     return { visible: useChecksUnseen() };
@@ -39,6 +47,7 @@ export function LibraryPages() {
             order.map((id) => ({
                 id,
                 label: t(pageMeta(id).labelKey),
+                icon: ICONS[id],
                 useDot: id === 'checks' ? useChecksDot : undefined,
             })),
         [order, t],

@@ -28,6 +28,13 @@ const SettingsPage: React.FC<{ readonly header: PageHeaderBinding }> = ({ header
     );
 };
 
+/** Each page's icon on the track (outline MaterialIcons on both platforms). */
+const ICONS: Readonly<Record<string, NonNullable<PagePill['icon']>>> = {
+    profile: 'person-outline',
+    settings: 'settings',
+    notifications: 'notifications-none',
+};
+
 /** The Notifications pill's dot: lit while anything is unread. Seeing the
  *  page marks rows read, which clears it (and the You tab dot). */
 function useNotificationsDot(): PageDot {
@@ -55,6 +62,7 @@ export function YouPages() {
             DEFAULT_PAGE_ORDER.you.map((id) => ({
                 id,
                 label: tAny(pageMeta(id).labelKey),
+                icon: ICONS[id],
                 useDot: id === 'notifications' ? useNotificationsDot : undefined,
             })),
         [tAny],

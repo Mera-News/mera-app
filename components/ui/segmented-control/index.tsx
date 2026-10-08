@@ -1,11 +1,32 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+    type StyleProp,
+    type TextLayoutEventData,
+    type NativeSyntheticEvent,
+    type ViewStyle,
+} from 'react-native';
+import Animated, {
+    FadeIn,
+    FadeOut,
+    LinearTransition,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withTiming,
+} from 'react-native-reanimated';
 
 import { hapticSelection } from '@/lib/haptics';
 import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
+import { MAX_FONT_SCALE } from '@/lib/typography/policy';
+
+import { allHeaderLabelsFit, HEADER_METRICS, headerLabelShown } from './fit';
 
 export interface SegmentedOption<T extends string> {
     value: T;
@@ -29,13 +50,16 @@ export interface SegmentedControlProps<T extends string> {
     /** Options are `${testID}-${value}`; a header option's dot `${testID}-${value}-dot`. */
     testID?: string;
     /**
-     * `header`: the tab header's page track (34pt options, 14pt fixed-size
-     * labels, a dot). Its selected fill is drawn INSIDE the selected option,
-     * so it has exactly that option's bounds, and crossfades on a change
-     * (240 ms) instead of sliding: no measured offsets, nothing to misalign.
-     * The host gives the selection haptic.
+     * `header`: the tab header's page track (38pt options, an icon each,
+     * 15.5pt labels on the chrome text-scale tier, a dot). Every label shows
+     * when all of them fit `availableWidth`, else only the selected one's
+     * (fit.ts); it never scrolls. Its selected fill is drawn INSIDE the
+     * selected option, so it has exactly that option's bounds, and crossfades
+     * on a change (240 ms) instead of sliding. The host gives the haptic.
      */
     size?: 'default' | 'header';
+    /** Header size only: the width the host gives the track. */
+    availableWidth?: number | null;
 }
 
 /** FinalSettings #6: 36pt options inside a 3pt padded, 1pt bordered track,
@@ -137,8 +161,19 @@ function DefaultTrack<T extends string>({
     );
 }
 
-/** The tab header's page track (`size="header"`). */
-const HEADER_OPTION_HEIGHT = 34;
+/** The tab header's page track (`size="header"`): the board's 14pt track
+ *  at 1.1x (owner). */
+const HEADER_OPTION_HEIGHT = 38;
+// The fit rule's metrics (fit.ts) are the ones the track draws.
+const HEADER_PAD = HEADER_METRICS.chrome / 2 - BORDER;
+const HEADER_ICON = HEADER_METRICS.icon;
+const HEADER_OPTION_PAD = HEADER_METRICS.pad;
+const HEADER_GAP = HEADER_METRICS.gap;
+const HEADER_DOT = 8;
+const HEADER_DOT_PICKED = HEADER_METRICS.dot + 2;
+/** The whole track's height: the header row is derived from it, never set
+ *  on its own (a row shorter than the track clips it). */
+export const HEADER_TRACK_HEIGHT = HEADER_OPTION_HEIGHT + 2 * (HEADER_PAD + BORDER);
 /** iOS maps `tab` to no trait: a button in a tabbar; Android gets real tabs. */
 const HEADER_ROLES =
     Platform.OS === 'ios'
@@ -150,32 +185,74 @@ const HIDDEN = {
     importantForAccessibility: 'no-hide-descendants',
 } as const;
 const noDot = () => false;
+const LABEL_MOTION = MOTION.pill.duration;
 
-function HeaderTrack<T extends string>({ options, value, onChange, style, testID }: SegmentedControlProps<T>) {
+function HeaderTrack<T extends string>({
+    options,
+    value,
+    onChange,
+    style,
+    testID,
+    availableWidth = null,
+}: SegmentedControlProps<T>) {
     const colors = useColors();
+    const reduceMotion = useReducedMotion();
+    // Each label's width, measured at the picked weight and the current text
+    // size by a hidden copy, so the decision never depends on what is shown.
+    const [widths, setWidths] = useState<Readonly<Record<string, number>>>({});
+    const onMeasure = useCallback((key: string, e: NativeSyntheticEvent<TextLayoutEventData>) => {
+        const w = Math.ceil(e.nativeEvent.lines[0]?.width ?? 0);
+        setWidths((prev) => (prev[key] === w ? prev : { ...prev, [key]: w }));
+    }, []);
+    const allFit = useMemo(
+        () =>
+            allHeaderLabelsFit(
+                options.map((o) => widths[o.label]),
+                options.map((o) => o.useDot !== undefined),
+                availableWidth,
+                HEADER_METRICS,
+            ),
+        [options, widths, availableWidth],
+    );
     return (
-        <View
+        // The track glides to its new width with its options.
+        <Animated.View
+            layout={reduceMotion ? undefined : LinearTransition.duration(LABEL_MOTION)}
             accessibilityRole={HEADER_ROLES.group}
             testID={testID}
             style={[
                 styles.track,
                 styles.headerTrack,
                 { backgroundColor: colors.trackFill, borderColor: colors.trackBorder },
+                availableWidth ? { maxWidth: availableWidth } : null,
                 style,
             ]}
         >
+            <View pointerEvents="none" style={styles.measurer} {...HIDDEN}>
+                {options.map((o) => (
+                    <Text
+                        key={o.value}
+                        maxFontSizeMultiplier={MAX_FONT_SCALE.chrome}
+                        onTextLayout={(e) => onMeasure(o.label, e)}
+                        style={[styles.headerLabel, { fontWeight: '700' }]}
+                    >
+                        {o.label}
+                    </Text>
+                ))}
+            </View>
             {options.map((o) => (
                 <HeaderOption
                     key={o.value}
                     option={o}
                     on={o.value === value}
+                    showLabel={headerLabelShown(o.value === value, allFit)}
                     onPress={() => {
                         if (o.value !== value) onChange(o.value);
                     }}
                     testID={testID ? `${testID}-${o.value}` : undefined}
                 />
             ))}
-        </View>
+        </Animated.View>
     );
 }
 
@@ -183,15 +260,18 @@ function HeaderTrack<T extends string>({ options, value, onChange, style, testID
 function HeaderOption<T extends string>({
     option,
     on,
+    showLabel,
     onPress,
     testID,
 }: {
     option: SegmentedOption<T>;
     on: boolean;
+    showLabel: boolean;
     onPress: () => void;
     testID?: string;
 }) {
     const colors = useColors();
+    const reduceMotion = useReducedMotion();
     const useDot = option.useDot ?? noDot;
     const dot = useDot();
     const fill = useSharedValue(on ? 1 : 0);
@@ -202,21 +282,29 @@ function HeaderOption<T extends string>({
     const ink = on ? colors.onAccent : colors.muted;
     return (
         // A hidden visual under a CHILDLESS labelled button: a glyph inside a
-        // button surfaces on iOS as its own StaticText.
-        <View style={styles.headerOption}>
+        // button surfaces on iOS as its own StaticText. An icon-only option
+        // still speaks its full label ("Saved, 1 of 4").
+        <Animated.View
+            layout={reduceMotion ? undefined : LinearTransition.duration(LABEL_MOTION)}
+            style={[styles.headerOption, on ? styles.headerOptionPicked : null]}
+        >
             <Animated.View
                 pointerEvents="none"
                 style={[StyleSheet.absoluteFill, styles.headerFill, { backgroundColor: colors.accent }, fillStyle]}
             />
             <View pointerEvents="none" style={styles.headerInner} {...HIDDEN}>
-                {option.icon ? <MaterialIcons name={option.icon} size={14} color={ink} /> : null}
-                <Text
-                    numberOfLines={1}
-                    maxFontSizeMultiplier={1}
-                    style={[styles.headerLabel, { color: ink, fontWeight: on ? '700' : '500' }]}
-                >
-                    {option.label}
-                </Text>
+                {option.icon ? <MaterialIcons name={option.icon} size={HEADER_ICON} color={ink} /> : null}
+                {showLabel ? (
+                    <Animated.Text
+                        entering={reduceMotion ? undefined : FadeIn.duration(LABEL_MOTION)}
+                        exiting={reduceMotion ? undefined : FadeOut.duration(LABEL_MOTION)}
+                        numberOfLines={1}
+                        maxFontSizeMultiplier={MAX_FONT_SCALE.chrome}
+                        style={[styles.headerLabel, styles.headerLabelShrink, { color: ink, fontWeight: on ? '700' : '500' }]}
+                    >
+                        {option.label}
+                    </Animated.Text>
+                ) : null}
                 {dot ? (
                     <View
                         testID={testID ? `${testID}-dot` : undefined}
@@ -236,7 +324,7 @@ function HeaderOption<T extends string>({
                 testID={testID}
                 style={StyleSheet.absoluteFill}
             />
-        </View>
+        </Animated.View>
     );
 }
 
@@ -265,11 +353,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
     },
     label: { fontSize: 14, fontWeight: '600' },
-    headerTrack: { borderRadius: (HEADER_OPTION_HEIGHT + PAD * 2 + BORDER * 2) / 2 },
-    headerOption: { height: HEADER_OPTION_HEIGHT, justifyContent: 'center' },
+    headerTrack: { alignSelf: 'center', padding: HEADER_PAD, borderRadius: (HEADER_OPTION_HEIGHT + HEADER_PAD * 2 + BORDER * 2) / 2 },
+    headerOption: { height: HEADER_OPTION_HEIGHT, justifyContent: 'center', flexShrink: 0 },
+    // Only the picked option gives way (its label ellipsizes) when even the
+    // compact track is wider than the space, at the largest text sizes.
+    headerOptionPicked: { flexShrink: 1 },
     headerFill: { borderRadius: HEADER_OPTION_HEIGHT / 2 },
-    headerInner: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13 },
-    headerLabel: { fontSize: 14, lineHeight: 18 },
-    dot: { width: 7, height: 7, borderRadius: 4, marginLeft: -2 },
-    dotOnPicked: { borderWidth: 1.5, width: 9, height: 9, borderRadius: 5 },
+    headerInner: { flexDirection: 'row', alignItems: 'center', gap: HEADER_GAP, paddingHorizontal: HEADER_OPTION_PAD },
+    headerLabel: { fontSize: 15.5, lineHeight: 20 },
+    headerLabelShrink: { flexShrink: 1 },
+    // Off screen and unclipped: labels measure at their natural width.
+    measurer: { position: 'absolute', top: 0, left: 0, width: 4000, flexDirection: 'row', alignItems: 'flex-start', opacity: 0 },
+    dot: { width: HEADER_DOT, height: HEADER_DOT, borderRadius: HEADER_DOT / 2, marginLeft: -2 },
+    dotOnPicked: { borderWidth: 1.5, width: HEADER_DOT_PICKED, height: HEADER_DOT_PICKED, borderRadius: HEADER_DOT_PICKED / 2 },
 });
