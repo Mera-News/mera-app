@@ -2993,7 +2993,7 @@
     "settings": {
       "title": "Paramètres",
       "p1": "Choisissez le fonctionnement de Mera sur ce téléphone : langue, affichage, notifications et verrouillage de l'app.",
-      "p2": "Mera Protocol définit où tourne l'IA de Mera, sur ce téléphone ou dans le cloud privé de Mera. Vos données se trouvent là où sont enregistrées les sauvegardes et les exportations.",
+      "p2": "Mera Protocol définit où tourne l'IA de Mera, sur ce téléphone ou dans le cloud privé de Mera. Les sauvegardes et les exportations se trouvent sous Vos données.",
       "p3": "L'aide, votre connexion et les mentions légales sont en bas."
     },
     "notifications": {

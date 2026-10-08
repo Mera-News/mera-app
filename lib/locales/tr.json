@@ -2989,7 +2989,7 @@
     "settings": {
       "title": "Ayarlar",
       "p1": "Mera'nın bu telefondaki çalışma şeklini seçin: dil, görünüm, bildirimler ve uygulama kilidi.",
-      "p2": "Mera Protocol, Mera'nın yapay zekasının nerede çalışacağını belirler: bu telefonda ya da Mera'nın özel bulutunda. Verileriniz yedeklerin ve dışa aktarımların saklandığı yerdedir.",
+      "p2": "Mera Protocol, Mera'nın yapay zekasının nerede çalışacağını belirler: bu telefonda ya da Mera'nın özel bulutunda. Yedekler ve dışa aktarımlar Verileriniz bölümünde.",
       "p3": "Yardım, oturum açma ve yasal sayfalar en altta."
     },
     "notifications": {

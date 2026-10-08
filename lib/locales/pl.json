@@ -3055,7 +3055,7 @@
     "settings": {
       "title": "Ustawienia",
       "p1": "Wybierz, jak Mera działa na tym telefonie: język, wyświetlanie, powiadomienia i blokadę aplikacji.",
-      "p2": "Mera Protocol określa, gdzie działa AI Mery: na tym telefonie czy w prywatnej chmurze Mery. Twoje dane są tam, gdzie zapisywane są kopie zapasowe i eksporty.",
+      "p2": "Mera Protocol określa, gdzie działa AI Mery: na tym telefonie czy w prywatnej chmurze Mery. Kopie zapasowe i eksporty są w sekcji Twoje dane.",
       "p3": "Pomoc, logowanie i strony prawne są na dole."
     },
     "notifications": {

@@ -2987,7 +2987,7 @@
     "settings": {
       "title": "Ajustes",
       "p1": "Elige cómo funciona Mera en este teléfono: idioma, pantalla, notificaciones y bloqueo de la app.",
-      "p2": "Mera Protocol decide dónde se ejecuta la IA de Mera: en este teléfono o en la nube privada de Mera. Tus datos están donde se guardan las copias de seguridad y las exportaciones.",
+      "p2": "Mera Protocol decide dónde se ejecuta la IA de Mera: en este teléfono o en la nube privada de Mera. Las copias de seguridad y las exportaciones están en Tus datos.",
       "p3": "La ayuda, tu inicio de sesión y las páginas legales están abajo."
     },
     "notifications": {

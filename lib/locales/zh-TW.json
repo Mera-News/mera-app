@@ -2985,7 +2985,7 @@
     "settings": {
       "title": "設定",
       "p1": "選擇 Mera 在這支手機上的運作方式：語言、顯示、通知和 App 鎖定。",
-      "p2": "Mera Protocol 決定 Mera 的 AI 要在這支手機上執行，還是在 Mera 的私有雲中執行。你的資料存放在備份和匯出的位置。",
+      "p2": "Mera Protocol 決定 Mera 的 AI 要在這支手機上執行，還是在 Mera 的私有雲中執行。備份和匯出內容位於「你的資料」中。",
       "p3": "說明、登入和法律頁面都在底部。"
     },
     "notifications": {

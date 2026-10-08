@@ -2987,7 +2987,7 @@
     "settings": {
       "title": "Impostazioni",
       "p1": "Scegli come funziona Mera su questo telefono: lingua, visualizzazione, notifiche e blocco app.",
-      "p2": "Mera Protocol stabilisce dove viene eseguita l'IA di Mera, su questo telefono o nel cloud privato di Mera. I tuoi dati si trovano dove sono salvati backup ed esportazioni.",
+      "p2": "Mera Protocol stabilisce dove viene eseguita l'IA di Mera, su questo telefono o nel cloud privato di Mera. Backup ed esportazioni si trovano sotto I tuoi dati.",
       "p3": "Aiuto, accesso e pagine legali sono in fondo."
     },
     "notifications": {

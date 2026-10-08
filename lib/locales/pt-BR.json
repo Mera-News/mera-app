@@ -2987,7 +2987,7 @@
     "settings": {
       "title": "Configurações",
       "p1": "Escolha como o Mera funciona neste celular: idioma, exibição, notificações e bloqueio do app.",
-      "p2": "O Mera Protocol define onde a IA do Mera roda, neste celular ou na nuvem privada do Mera. Seus dados ficam onde estão os backups e as exportações.",
+      "p2": "O Mera Protocol define onde a IA do Mera roda, neste celular ou na nuvem privada do Mera. Backups e exportações ficam em Seus dados.",
       "p3": "Ajuda, seu login e as páginas legais estão no final."
     },
     "notifications": {

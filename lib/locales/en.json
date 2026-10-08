@@ -2987,7 +2987,7 @@
     "settings": {
       "title": "Settings",
       "p1": "Choose how Mera works on this phone: language, display, notifications and app lock.",
-      "p2": "Mera Protocol sets where Mera's AI runs, on this phone or in Mera's private cloud. Your data is where backups and exports live.",
+      "p2": "Mera Protocol sets where Mera's AI runs, on this phone or in Mera's private cloud. Backups and exports are under Your data.",
       "p3": "Help, your sign-in and the legal pages are at the bottom."
     },
     "notifications": {

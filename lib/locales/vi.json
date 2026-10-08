@@ -2985,7 +2985,7 @@
     "settings": {
       "title": "Cài đặt",
       "p1": "Chọn cách Mera hoạt động trên điện thoại này: ngôn ngữ, hiển thị, thông báo và khóa ứng dụng.",
-      "p2": "Mera Protocol quyết định nơi AI của Mera chạy: trên điện thoại này hoặc trên đám mây riêng của Mera. Dữ liệu của bạn nằm ở nơi lưu bản sao lưu và xuất dữ liệu.",
+      "p2": "Mera Protocol quyết định nơi AI của Mera chạy: trên điện thoại này hoặc trên đám mây riêng của Mera. Bản sao lưu và xuất dữ liệu nằm trong mục Dữ liệu của bạn.",
       "p3": "Trợ giúp, đăng nhập và các trang pháp lý nằm ở cuối trang."
     },
     "notifications": {

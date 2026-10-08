@@ -2987,7 +2987,7 @@
     "settings": {
       "title": "Einstellungen",
       "p1": "Lege fest, wie Mera auf diesem Handy funktioniert: Sprache, Anzeige, Benachrichtigungen und App-Sperre.",
-      "p2": "Mit Mera Protocol legst du fest, wo Meras KI läuft: auf diesem Handy oder in Meras privater Cloud. Deine Daten liegen dort, wo Backups und Exporte gespeichert werden.",
+      "p2": "Mit Mera Protocol legst du fest, wo Meras KI läuft: auf diesem Handy oder in Meras privater Cloud. Backups und Exporte findest du unter Deine Daten.",
       "p3": "Hilfe, deine Anmeldung und die rechtlichen Seiten findest du unten."
     },
     "notifications": {
