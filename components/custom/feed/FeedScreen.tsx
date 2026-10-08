@@ -1102,14 +1102,23 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   };
 
   // The title row, then (no facts yet) the empty block, both first in the list.
+  // At the daily limit the list leads with the limit card (owner), the same
+  // DashboardStatsCard the status icon slides in, in its limit layout. Only
+  // over rows: an empty Feed already shows it in the empty chain.
+  const limitCard = statusMode === 'limited' && listData.length > 0;
   const headerNode = useMemo(
     () => (
       <>
         {listHeader ? <View style={{ marginBottom: PAGE_TITLE_GAP }}>{listHeader}</View> : null}
         {noFacts ? <FeedNoFacts view="continuous" /> : null}
+        {limitCard ? (
+          <View style={{ marginBottom: PAGE_TITLE_GAP }}>
+            <DashboardStatsCard initiallyExpanded testID="feed-limit-card" />
+          </View>
+        ) : null}
       </>
     ),
-    [listHeader, noFacts],
+    [listHeader, noFacts, limitCard],
   );
 
   return (

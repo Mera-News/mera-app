@@ -42,6 +42,8 @@ import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, View } from 'react-native';
+import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
+import { PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
 interface SortSnapshot {
@@ -134,6 +136,20 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
 
   const { refreshing, onRefresh } = useFeedSyncRefresh(header.reveal);
   const isFeedProcessing = useIsFeedProcessing();
+  // At the daily limit the list leads with the limit card, as in Continuous;
+  // only over sections with stories (the empty chain shows it otherwise).
+  const limited = useFeedStatusMode() === 'limited';
+  const limitCard = limited && rows.some((r) => r.groups.length > 0);
+  const listHeaderNode = limitCard ? (
+    <>
+      {listHeader}
+      <View style={{ marginBottom: PAGE_TITLE_GAP }}>
+        <DashboardStatsCard initiallyExpanded testID="interests-limit-card" />
+      </View>
+    </>
+  ) : (
+    listHeader
+  );
 
   // ── Nothing to show yet ──
   let empty: React.ReactElement | null;
@@ -184,7 +200,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
         onPressSuggestion={handleSuggestionPress}
         scrollHandler={header.scrollHandler}
         headerHeight={header.headerHeight}
-        ListHeaderComponent={listHeader}
+        ListHeaderComponent={listHeaderNode}
         ListEmptyComponent={empty}
         refreshing={refreshing}
         onRefresh={onRefresh}
