@@ -1,5 +1,5 @@
 import AppPreferencesTab from '@/components/custom/config-mera/AppPreferencesTab';
-import { pageMeta } from '@/components/custom/nav/page-registry';
+import { PAGE_CONTENT_GAP, pageMeta } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type { PageDot, PageHeaderBinding, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import NotificationsScreen from '@/components/custom/notifications/NotificationsScreen';
@@ -21,7 +21,7 @@ const SettingsPage: React.FC<{ readonly header: PageHeaderBinding }> = ({ header
             onScroll={header.scrollHandler}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: header.headerHeight + 8, paddingBottom: bottom + 24 }}
+            contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingBottom: bottom + 24 }}
         >
             <AppPreferencesTab />
         </Animated.ScrollView>

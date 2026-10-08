@@ -28,6 +28,7 @@ import Animated, { type SharedValue, useAnimatedScrollHandler } from 'react-nati
 import SavedExportModal from './SavedExportModal';
 import SavedExportRow, { SAVED_EXPORT_ROW_HEIGHT } from './SavedExportRow';
 import { savedItemId } from './saved-item-id';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 interface SavedSuggestionsScreenProps {
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
@@ -176,7 +177,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     // 12pt below the pinned row.
-                    paddingTop: headerHeight + (showRow ? SAVED_EXPORT_ROW_HEIGHT : 0) + 12,
+                    paddingTop: headerHeight + (showRow ? SAVED_EXPORT_ROW_HEIGHT : 0) + PAGE_CONTENT_GAP,
                     paddingHorizontal: 12,
                     paddingBottom: listEndPadding ?? tabClearance + 24,
                     flexGrow: 1,

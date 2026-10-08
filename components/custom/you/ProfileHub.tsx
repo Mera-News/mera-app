@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import { Badge, Group, Help, Row, ViewAll } from './rows';
 import { useActiveTopicTexts, useHubCleanup, useHubFacts, useHubPlaces } from './use-hub-data';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 /** Screens pushed inside the You stack. */
 type YouScreen = 'facts' | 'locations' | 'sources' | 'hygiene-review' | 'activity';
@@ -87,7 +88,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
             }}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: header.headerHeight + 8, paddingHorizontal: 14, paddingBottom: endClearance, gap: 10 }}
+            contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingHorizontal: 14, paddingBottom: endClearance, gap: 10 }}
         >
             <PageTitleRow title={t('you.profile.title')} onExplain={header.openExplainer} testID="profile-title" />
             <Help>{t('you.profile.subtitle')}</Help>

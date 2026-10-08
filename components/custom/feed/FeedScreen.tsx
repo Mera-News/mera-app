@@ -164,11 +164,12 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 
 /** Gap between the collapsing header's bottom edge and the first card.
  *  Matches the Interests page's (`DashboardSectionsFeed`, +12). */
-const CONTENT_TOP_GAP = 12;
+const CONTENT_TOP_GAP = PAGE_CONTENT_GAP;
 
 // ── Arrival transition ──────────────────────────────────────────────────────
 //

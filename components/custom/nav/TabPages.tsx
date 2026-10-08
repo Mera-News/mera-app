@@ -26,7 +26,13 @@ import { useIsFocused } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ArrangeOverlay from './ArrangeOverlay';
@@ -47,7 +53,7 @@ import {
 import PageExplainerSheet from './PageExplainerSheet';
 import PagePager from './PagePager';
 import { survivingPage } from './tab-swipe';
-import PageStrip, { HEADER_SIDE_PAD } from './PageStrip';
+import PageStrip, { HEADER_BOTTOM_PAD, HEADER_SIDE_PAD, HEADER_TOP_PAD } from './PageStrip';
 import { pageMeta, TAB_LABEL_KEYS, TAB_ORDER, type PageId } from './page-registry';
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
@@ -169,6 +175,15 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
     () => ({ scrollHandler, headerHeight, hidden, reveal, openExplainer }),
     [scrollHandler, headerHeight, hidden, reveal, openExplainer],
   );
+  // Only the VISIBLE page drives the header. The warm neighbours share the
+  // pager window and would otherwise feed it their own offsets: a neighbour's
+  // event at y = 0 reads as "at the top" and reveals the header under a list
+  // scrolled hundreds of points down.
+  const idleScroll = useAnimatedScrollHandler({ onScroll: () => {} });
+  const idleHeader: PageHeaderBinding = useMemo(
+    () => ({ ...header, scrollHandler: idleScroll }),
+    [header, idleScroll],
+  );
   useEffect(() => {
     if (!focused) setExplaining(false);
   }, [focused]);
@@ -181,9 +196,9 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
       renderPage({
         pageId: ids[i],
         active: pageActive && focused && !arranging,
-        header,
+        header: pageActive ? header : idleHeader,
       }),
-    [renderPage, ids, focused, arranging, header],
+    [renderPage, ids, focused, arranging, header, idleHeader],
   );
 
   const tabLabel = t(TAB_LABEL_KEYS[tab]);
@@ -229,7 +244,14 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
         style={[styles.header, headerStyle]}
       >
         {/* Symmetric sides, so a segmented track centres on the SCREEN. */}
-        <View pointerEvents="box-none" style={{ paddingTop: insets.top + 6, paddingBottom: 6, paddingHorizontal: HEADER_SIDE_PAD }}>
+        <View
+          pointerEvents="box-none"
+          style={{
+            paddingTop: insets.top + HEADER_TOP_PAD,
+            paddingBottom: HEADER_BOTTOM_PAD,
+            paddingHorizontal: HEADER_SIDE_PAD,
+          }}
+        >
           <PageStrip
             tabLabel={tabLabel}
             pages={pages}

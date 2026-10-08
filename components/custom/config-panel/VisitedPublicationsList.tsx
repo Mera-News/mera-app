@@ -40,6 +40,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { I18nManager, type ListRenderItem, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 /** "How Stats works": the ? beside "Your last 30 days" (FinalLibrary #10). */
 export const STATS_EXPLAINER: PageExplainer = {
@@ -255,7 +256,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     )
                 }
                 contentContainerStyle={{
-                    paddingTop: headerHeight + 12,
+                    paddingTop: headerHeight + PAGE_CONTENT_GAP,
                     paddingHorizontal: 12,
                     // Clear of the Mera button, and of the floating Share above it.
                     paddingBottom: listEnd + (shareShown ? SHARE_H + 12 : 0),

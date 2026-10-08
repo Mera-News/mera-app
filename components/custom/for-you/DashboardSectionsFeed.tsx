@@ -29,6 +29,7 @@ import Animated, {
   useComposedEventHandler,
   useSharedValue,
 } from 'react-native-reanimated';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 /** Pull-to-refresh spinner tint — same value the Feed tab uses. */
 
@@ -305,7 +306,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
           ) : undefined
         }
         contentContainerStyle={{
-          paddingTop: headerHeight + 12,
+          paddingTop: headerHeight + PAGE_CONTENT_GAP,
           paddingHorizontal: 12,
           // Bottom clearance for the tab bar plus a breathing-room tail. The
           // helper, never insets.bottom + TAB_BAR_HEIGHT (see tab-bar.ts).

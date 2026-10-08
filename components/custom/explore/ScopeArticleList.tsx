@@ -27,6 +27,7 @@ import Animated, {
     useComposedEventHandler,
     useSharedValue,
 } from 'react-native-reanimated';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 const PAGE_SIZE = 10;
 
@@ -564,7 +565,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 padding: 16,
                 // Clear the pinned header overlay (measured by TabPages) —
                 // the list scrolls underneath it.
-                paddingTop: headerHeight + 8,
+                paddingTop: headerHeight + PAGE_CONTENT_GAP,
                 // The tab bar once, then a tail (see useTabBarClearance).
                 paddingBottom: bottomClearance ?? tabClearance + 24,
                 flexGrow: 1,

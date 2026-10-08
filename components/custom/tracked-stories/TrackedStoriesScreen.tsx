@@ -36,6 +36,7 @@ import { useTranslation } from 'react-i18next';
 import { type ListRenderItem, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { latestMember } from './merge-timeline';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 interface TrackedStoriesScreenProps {
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
@@ -211,7 +212,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     ) : null
                 }
                 contentContainerStyle={{
-                    paddingTop: headerHeight + 12,
+                    paddingTop: headerHeight + PAGE_CONTENT_GAP,
                     // The same inset as the Feed's list, so the title row
                     // lines up with the rows under it.
                     paddingHorizontal: 12,

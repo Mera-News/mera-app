@@ -29,6 +29,7 @@ import {
     runNotificationAction,
     type NotificationAction,
 } from './notification-actions';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 /** "now" / "5m" / "2h" / "3d", as the board draws it. */
 function relativeTime(date: Date): string {
@@ -218,7 +219,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
             onContentSizeChange={() => {
                 if (active) notifyScrollTick();
             }}
-            contentContainerStyle={{ paddingTop: header.headerHeight + 8, paddingBottom: endClearance }}
+            contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingBottom: endClearance }}
         />
     );
 };

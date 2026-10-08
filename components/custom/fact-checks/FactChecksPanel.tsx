@@ -22,6 +22,7 @@ import { ShieldCheck } from 'lucide-react-native';
 import { RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { notifyScrollTick } from '@/lib/visibility-tick';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 
 
 
@@ -197,7 +198,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     />
                 }
                 contentContainerStyle={{
-                    paddingTop: headerHeight + 12,
+                    paddingTop: headerHeight + PAGE_CONTENT_GAP,
                     paddingHorizontal: 12,
                     // Clear of the tab bar and the Mera button.
                     paddingBottom: listEndPadding ?? tabClearance + 24,

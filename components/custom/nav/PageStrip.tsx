@@ -60,6 +60,11 @@ const LONG_PRESS_MS = 400;
 /** The tab header's side padding (TabPages). World's row cancels it, so its
  *  scroller spans the screen and a pill fades out before the screen edge. */
 export const HEADER_SIDE_PAD = 6;
+/** The board's header, measured from the safe-area top: the track at +5, 42pt
+ *  tall, and the header's bottom 5pt under it (+52). */
+export const HEADER_TOP_PAD = 5;
+export const HEADER_ROW_HEIGHT = 42;
+export const HEADER_BOTTOM_PAD = 5;
 /** World's row starts 16pt in; a pill is fully faded once its start edge
  *  reaches the screen edge, so it is never cut square. */
 const ROW_START = 16;
@@ -231,7 +236,8 @@ const SearchButton: React.FC<{ readonly onPress: () => void }> = ({ onPress }) =
   const colors = useColors();
   return (
     <View style={styles.searchFab} testID="page-strip-search-frame">
-      <View pointerEvents="none" {...GLYPH_HIDDEN} style={styles.searchShadow}>
+      {/* The same flat glass as the World pills, no shadow, in both themes. */}
+      <View pointerEvents="none" {...GLYPH_HIDDEN}>
         <View style={[styles.searchCircle, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
           <MaterialIcons name="search" size={22} color={colors.ink} />
         </View>
@@ -299,7 +305,7 @@ const PageStrip: React.FC<PageStripProps> = ({
   return (
     <View style={styles.row} pointerEvents="box-none" testID="page-strip">
       {leading ? <View style={styles.sideSlot}>{leading}</View> : null}
-      <View style={[styles.scrollerWrap, segmented ? null : styles.fullBleed]} pointerEvents="box-none">
+      <View style={[styles.scrollerWrap, segmented ? null : [styles.rowBleed, styles.fullBleed]]} pointerEvents="box-none">
         <Animated.ScrollView
           ref={scrollRef}
           horizontal
@@ -346,9 +352,12 @@ const PageStrip: React.FC<PageStripProps> = ({
 };
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
-  sideSlot: { width: SIDE_SLOT, height: SIDE_SLOT, alignItems: 'center', justifyContent: 'center' },
-  scrollerWrap: { flex: 1, marginVertical: -PILL_FRAME_PAD },
+  // A fixed row: the segmented track (42pt) fills it exactly; World's 44pt
+  // pill frames reach 5pt past it through `rowBleed`.
+  row: { flexDirection: 'row', alignItems: 'center', height: HEADER_ROW_HEIGHT },
+  sideSlot: { width: SIDE_SLOT, height: HEADER_ROW_HEIGHT, alignItems: 'center', justifyContent: 'center' },
+  scrollerWrap: { flex: 1, height: HEADER_ROW_HEIGHT },
+  rowBleed: { height: HEADER_ROW_HEIGHT + 2 * PILL_FRAME_PAD, marginVertical: -PILL_FRAME_PAD },
   fullBleed: { marginHorizontal: -HEADER_SIDE_PAD },
   rowPad: { paddingLeft: ROW_START, paddingRight: ROW_END },
   // Centred while it fits, scrolls once it does not.
@@ -366,14 +375,7 @@ const styles = StyleSheet.create({
   flag: { fontSize: 13, lineHeight: 16 },
   dot: { width: 7, height: 7, borderRadius: 4, marginLeft: -2 },
   dotOnActive: { borderWidth: 1.5, width: 9, height: 9, borderRadius: 5 },
-  searchFab: { position: 'absolute', right: 4, top: 0, width: 44, height: 44 },
-  searchShadow: {
-    borderRadius: 22,
-    shadowColor: '#000000',
-    shadowOpacity: 0.5,
-    shadowRadius: 7,
-    shadowOffset: { width: 0, height: 4 },
-  },
+  searchFab: { position: 'absolute', right: 4, top: -1, width: 44, height: 44 },
   searchCircle: {
     width: 44,
     height: 44,

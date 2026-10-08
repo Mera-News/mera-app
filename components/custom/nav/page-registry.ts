@@ -31,6 +31,15 @@ import {
 export { DEFAULT_PAGE_ORDER };
 export type { CountryPageId, PageId, StaticPageId, StaticTabId, TabId };
 
+/**
+ * Space between the tab header's bottom and a tab page's first content: every
+ * tab list pads `headerHeight + PAGE_CONTENT_GAP`. With the header ending at
+ * safe-area +52 this puts the first content at safe-area +66, the board's
+ * `.body` (padding-top 14 under a 106pt header with a 54pt status area), the
+ * same baseline as the You stack's sub-pages.
+ */
+export const PAGE_CONTENT_GAP = 14;
+
 /** Bottom-tab order. Also the cross-tab swipe order. */
 export const TAB_ORDER: readonly TabId[] = ['feed', 'world', 'library', 'you'];
 
