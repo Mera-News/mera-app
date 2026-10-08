@@ -83,6 +83,8 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
     const colors = useColors();
     const liteMode = useDisplayPrefsStore((s) => s.liteMode);
     const appearance = useAppearanceSetting();
+    // The appearance row stacks once its label would wrap (long locales, Larger Text).
+    const [stacked, setStacked] = useState(false);
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
 
     const english = appLanguage === 'en';
@@ -161,21 +163,42 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
                 Settings > Display, starting at the phone's look. Hidden while
                 THEME_SWITCH_LIVE is off. */}
             {appearance.live ? (
-                <View style={[styles.themeRow, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-                    <View style={styles.rowText}>
-                        <Text style={[styles.rowTitle, { color: colors.ink }]}>{t('display.appearanceTitle')}</Text>
-                        <Text style={[styles.rowDetail, { color: colors.ink3 }]}>{t('display.appearanceHint')}</Text>
+                // One row in the checklist's language: icon column and text as
+                // a CheckRow, the control at the card's right edge. Stacked
+                // (label above, control full width) when the label would wrap.
+                <View style={[styles.card, styles.themeCard, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+                    <View style={[styles.themeRow, stacked && styles.themeStacked]}>
+                        <View style={styles.themeLabel}>
+                            <View style={styles.rowIcon}>
+                                <MaterialIcons
+                                    name={appearance.mode === 'light' ? 'light-mode' : 'dark-mode'}
+                                    size={18}
+                                    color={colors.ink3}
+                                />
+                            </View>
+                            <View style={styles.rowText}>
+                                <Text
+                                    style={[styles.rowTitle, { color: colors.ink }]}
+                                    onTextLayout={(e) => {
+                                        if (!stacked && e.nativeEvent.lines.length > 1) setStacked(true);
+                                    }}
+                                >
+                                    {t('display.appearanceTitle')}
+                                </Text>
+                            </View>
+                        </View>
+                        <SegmentedControl
+                            accessibilityLabel={t('display.appearanceTitle')}
+                            value={appearance.mode}
+                            onChange={appearance.setMode}
+                            options={[
+                                { value: 'light', label: t('display.appearanceLight'), icon: 'light-mode' },
+                                { value: 'dark', label: t('display.appearanceDark'), icon: 'dark-mode' },
+                            ]}
+                            style={stacked ? styles.themeControlStacked : undefined}
+                            testID={`${testID}-theme`}
+                        />
                     </View>
-                    <SegmentedControl
-                        accessibilityLabel={t('display.appearanceTitle')}
-                        value={appearance.mode}
-                        onChange={appearance.setMode}
-                        options={[
-                            { value: 'light', label: t('display.appearanceLight'), icon: 'light-mode' },
-                            { value: 'dark', label: t('display.appearanceDark'), icon: 'dark-mode' },
-                        ]}
-                        testID={`${testID}-theme`}
-                    />
                 </View>
             ) : null}
 
@@ -199,5 +222,10 @@ const styles = StyleSheet.create({
     rowTitle: { fontSize: 15 },
     rowDetail: { fontSize: 13, lineHeight: 18 },
     spacer: { flex: 1 },
-    themeRow: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 14, marginTop: 12, gap: 12 },
+    // The checklist card's own insets: 14pt sides, 12pt above and below a row.
+    themeCard: { marginTop: 12, paddingVertical: 12 },
+    themeRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    themeStacked: { flexDirection: 'column', alignItems: 'stretch' },
+    themeLabel: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+    themeControlStacked: { alignSelf: 'stretch' },
 });
