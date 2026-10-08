@@ -9,7 +9,7 @@ describe('publisherRouteInk', () => {
         expect(publisherRouteInk('not-translatable')).toBe('ink');
     });
 
-    it('is the neutral ink for an article in the reader’s own language', () => {
-        expect(publisherRouteInk('same-language')).toBe('ink');
+    it('is green for an article in the reader’s own language', () => {
+        expect(publisherRouteInk('same-language')).toBe('positive');
     });
 });

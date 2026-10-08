@@ -67,8 +67,9 @@ interface ReadTranslateActionsProps {
  * (`ArticleSuggestionScreen`, `ArticleDetailScreen`), the owner's preferred
  * old build over FinalRead's filled + glass row:
  *
- *   ( ↗ Read on <publication>      )     green when this phone can translate
- *                                         it on device, else the ink outline
+ *   ( ↗ Read on <publication>      )     green when the reader can read it (same
+ *                                         language, or this phone translates it),
+ *                                         else the ink outline
  *   ( G文 Read on Google Translate  )     green outline, another language only
  *          (?) About translation           muted text button, opens the sheet
  *
