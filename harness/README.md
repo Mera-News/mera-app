@@ -149,10 +149,10 @@ These don't fail loudly — they hand you a confident wrong answer. Each cost re
   for 13 steps — a perfect "the gate is broken" signature. A cold launch cleared it entirely.
 - **`agent-device scroll down` can switch tabs, and a sideways one switches PAGES.** Repeated scrolls
   once silently landed on another tab, and every later snapshot read the wrong list. Since navx a
-  horizontal drag changes the page, and past a tab's last page it opens the NEXT TAB. Verify the
+  horizontal drag changes the page; it never leaves the tab (past the last page it springs back). Verify the
   surface by dumping identifiers, and prefer vertical coordinate swipes inside the list.
-- **`agent-device pan` does not move the page pager; only `fling`/`swipe` do.** A slow over-pull
-  (the cross-tab edge label) cannot be driven by the agent; it needs a hand check.
+- **`agent-device pan` does not move the page pager; only `fling`/`swipe` do.** A slow drag past
+  the last page (its resistance and spring back) cannot be driven by the agent; it needs a hand check.
 - **Judging collapse/scroll state at a list boundary always reads as a false negative.** A fling
   that runs to the end of the list triggers the iOS rubber-band bounce, which scrolls *up* and
   trips the collapsible header's `UP_THRESHOLD` — so the header reveals and looks like the fix

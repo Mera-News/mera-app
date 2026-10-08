@@ -8,6 +8,8 @@
 export interface HeaderTrackMetrics {
   /** An option's padding on each side. */
   readonly pad: number;
+  /** An option's padding on each side in `names` mode (no icon). */
+  readonly namesPad: number;
   readonly icon: number;
   /** Between icon, label and dot. */
   readonly gap: number;
@@ -17,10 +19,11 @@ export interface HeaderTrackMetrics {
   readonly chrome: number;
 }
 
-/** The header track at 1.1x the board's 14pt (owner): 14pt option padding,
+/** The header track at 1.1x the board's 14pt (owner): 14pt option padding
+ *  (10 for a name alone, so Library's four names fit a 375pt phone),
  *  a 15pt icon, 7pt gaps, a 10pt picked dot (less its -2 margin), and the
  *  track's 3pt padding and 1pt border on each side. */
-export const HEADER_METRICS: HeaderTrackMetrics = { pad: 14, icon: 15, gap: 7, dot: 8, chrome: 8 };
+export const HEADER_METRICS: HeaderTrackMetrics = { pad: 14, namesPad: 10, icon: 15, gap: 7, dot: 8, chrome: 8 };
 
 /** One option's width: icon only (`labelWidth` null), or icon and label;
  *  `icon` false: the name alone. */
@@ -30,7 +33,7 @@ export function headerOptionWidth(
   m: HeaderTrackMetrics,
   icon: boolean = true,
 ): number {
-  let w = 2 * m.pad + (icon ? m.icon : 0);
+  let w = 2 * (icon ? m.pad : m.namesPad) + (icon ? m.icon : 0);
   if (labelWidth !== null) w += (icon ? m.gap : 0) + labelWidth;
   if (hasDot) w += m.gap + m.dot;
   return w;

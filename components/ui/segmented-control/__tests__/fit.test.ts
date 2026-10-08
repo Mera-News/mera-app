@@ -1,6 +1,6 @@
 import { allHeaderLabelsFit, HEADER_METRICS, headerOptionParts, headerOptionWidth, headerTrackMode } from '../fit';
 
-const m = { pad: 17, icon: 18, gap: 8, dot: 10, chrome: 10 };
+const m = { pad: 17, namesPad: 17, icon: 18, gap: 8, dot: 10, chrome: 10 };
 
 describe('headerOptionWidth', () => {
   it('adds the label and the dot to the icon', () => {
@@ -74,8 +74,14 @@ describe('the 1.1x header track at 375pt', () => {
     expect(headerTrackMode([54, 69, 105], [false, false, true], fullSpace, HEADER_METRICS, true)).toBe('names');
   });
 
-  it('Library in English, and both in German, fall back to icons', () => {
-    expect(headerTrackMode([50, 98, 60, 43], [false, true, false, false], fullSpace, HEADER_METRICS, true)).toBe('compact');
+  it('Library in English shows its names at 375 and 390 (Fact checks has a dot)', () => {
+    const widths = [50, 98, 60, 43];
+    const dots = [false, true, false, false];
+    expect(headerTrackMode(widths, dots, fullSpace, HEADER_METRICS, true)).toBe('names');
+    expect(headerTrackMode(widths, dots, 390 - 12 - 8, HEADER_METRICS, true)).toBe('names');
+  });
+
+  it('both tracks fall back to icons in German', () => {
     expect(headerTrackMode([100, 114, 60, 69], [false, true, false, false], fullSpace, HEADER_METRICS, true)).toBe('compact');
     expect(headerTrackMode([44, 111, 165], [false, false, true], fullSpace, HEADER_METRICS, true)).toBe('compact');
   });

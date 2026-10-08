@@ -296,7 +296,11 @@ function HeaderOption<T extends string>({
                 pointerEvents="none"
                 style={[StyleSheet.absoluteFill, styles.headerFill, { backgroundColor: colors.accent }, fillStyle]}
             />
-            <View pointerEvents="none" style={styles.headerInner} {...HIDDEN}>
+            <View
+                pointerEvents="none"
+                style={[styles.headerInner, parts.icon ? null : styles.headerInnerNames]}
+                {...HIDDEN}
+            >
                 {option.icon && parts.icon ? <MaterialIcons name={option.icon} size={HEADER_ICON} color={ink} /> : null}
                 {parts.label ? (
                     <Animated.Text
@@ -364,6 +368,7 @@ const styles = StyleSheet.create({
     headerOptionPicked: { flexShrink: 1 },
     headerFill: { borderRadius: HEADER_OPTION_HEIGHT / 2 },
     headerInner: { flexDirection: 'row', alignItems: 'center', gap: HEADER_GAP, paddingHorizontal: HEADER_OPTION_PAD },
+    headerInnerNames: { paddingHorizontal: HEADER_METRICS.namesPad },
     headerLabel: { fontSize: 15.5, lineHeight: 20 },
     headerLabelShrink: { flexShrink: 1 },
     // Off screen and unclipped: labels measure at their natural width.
