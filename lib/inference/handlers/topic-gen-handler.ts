@@ -188,6 +188,8 @@ export async function handleTopicGenJob(
     try {
       const run = await runSkillGuided(payload, fact, ownTopics, declined);
       const topics = freshTopics(run.topics, ownTopics, declined);
+      // Persona content, so DEBUG only: console under EXPO_PUBLIC_VERBOSE_LOGS, a breadcrumb in dev builds, nothing in prod.
+      logger.debug('[topic-gen] generated', { fact: fact.statement, returned: run.topics, kept: topics });
       if (topics.length === 0) {
         // "Generate more" that found nothing new leaves the fact as it was;
         // a first run with nothing usable is a failure the card can retry.
