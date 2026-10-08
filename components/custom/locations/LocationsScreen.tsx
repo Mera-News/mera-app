@@ -51,10 +51,15 @@ function formatValidUntil(ms: number): string {
   }
 }
 
+/** The weather feature is not built yet: every "Use for weather" control stays
+ *  hidden until it is (the stored weather pin is kept, untouched). */
+export const WEATHER_UI_ENABLED = false;
+
 /**
  * Profile > Places (FinalProfile #11): one line of explanation, then each
  * place with its role and how much local news it brings; Relabel, Use for
- * weather and Remove live in its ••• menu. "+" adds a place.
+ * weather (behind WEATHER_UI_ENABLED) and Remove live in its ••• menu. "+"
+ * adds a place.
  */
 const LocationsScreen: React.FC<Props> = ({ onBack }) => {
   const bottomInset = useTabContentBottomInset();
@@ -247,13 +252,15 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
         ) : menuFor ? (
           <Group>
             <MenuRow testID="place-menu-relabel" icon="label-outline" label={t('locations.relabel')} onPress={() => setRelabeling(true)} />
-            <MenuRow
-              testID="place-menu-weather"
-              icon="wb-sunny"
-              label={t('locations.useForWeather')}
-              checked={menuFor.pinnedForWeather}
-              onPress={() => pinForWeather(menuFor)}
-            />
+            {WEATHER_UI_ENABLED ? (
+              <MenuRow
+                testID="place-menu-weather"
+                icon="wb-sunny"
+                label={t('locations.useForWeather')}
+                checked={menuFor.pinnedForWeather}
+                onPress={() => pinForWeather(menuFor)}
+              />
+            ) : null}
             <MenuRow
               testID="place-menu-remove"
               icon="delete-outline"
