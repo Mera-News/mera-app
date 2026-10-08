@@ -6,6 +6,14 @@
 
 import { articleChatContext, type AskMeraSubject } from '@/components/custom/floating-chat/ask-mera';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
+import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_EDGE, MERA_BUTTON_SIZE, TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+
+import type { CornerFrame } from './corner';
+
+/** Below the header's bottom edge. */
+const TOP_GAP = 12;
+/** The tab header below the safe area (5 + 42 + 5), until a tab reports. */
+const HEADER_FALLBACK = 52;
 
 /**
  * The full-screen wrapper the button is placed in. It must stay invisible to
@@ -15,6 +23,32 @@ import type { ChatContext } from '@/lib/stores/floating-chat-store';
  * with nothing but "Ask Mera". Only the button itself is an element.
  */
 export const OVERLAY_PROPS = { pointerEvents: 'box-none' } as const;
+
+export interface ButtonGeometry {
+  /** The largest reported tab-header bottom (window points), or null. */
+  readonly tabHeaderBottom: number | null;
+  /** The folded tab-bar top, from the window bottom, or null. */
+  readonly tabBarTop: number | null;
+  readonly insetsTop: number;
+  readonly insetsBottom: number;
+}
+
+/**
+ * The ONE box the button rests and drags in, the same on every route (owner):
+ * below the tabs' header, above the tab bar, even on Search and an article,
+ * which have neither. The route is deliberately not an input, so the button
+ * never moves when a screen opens.
+ */
+export function meraButtonFrame(size: { width: number; height: number }, g: ButtonGeometry): CornerFrame {
+  return {
+    width: size.width,
+    height: size.height,
+    top: (g.tabHeaderBottom ?? g.insetsTop + HEADER_FALLBACK) + TOP_GAP,
+    bottom: (g.tabBarTop ?? g.insetsBottom + TAB_BAR_HEIGHT) + MERA_BUTTON_BAR_GAP,
+    inset: MERA_BUTTON_EDGE,
+    size: MERA_BUTTON_SIZE,
+  };
+}
 
 /** What kind of route is showing, from expo-router's segments. */
 export type MeraRouteKind = 'tab' | 'article' | 'search' | 'other';

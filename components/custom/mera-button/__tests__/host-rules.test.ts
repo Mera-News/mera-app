@@ -1,6 +1,14 @@
 jest.mock('@/lib/stores/floating-chat-store', () => ({ useFloatingChatStore: { getState: jest.fn() } }));
 
-import { buttonContextFor, lastKnown, meraButtonVisible, OVERLAY_PROPS, routeKindFor } from '../host-rules';
+import { cornerPoint, MERA_CORNERS } from '../corner';
+import {
+  buttonContextFor,
+  lastKnown,
+  meraButtonFrame,
+  meraButtonVisible,
+  OVERLAY_PROPS,
+  routeKindFor,
+} from '../host-rules';
 
 describe('routeKindFor', () => {
   it('classifies tabs, their pushed screens, Search and the article pages', () => {
@@ -88,5 +96,33 @@ describe('OVERLAY_PROPS', () => {
       expect(OVERLAY_PROPS).not.toHaveProperty(key);
     }
     expect(OVERLAY_PROPS.pointerEvents).toBe('box-none');
+  });
+});
+
+describe('meraButtonFrame', () => {
+  const size = { width: 390, height: 844 };
+  // iPhone, after the tabs reported: header bottom 99 (47 + 52), bar top 83.
+  const g = { tabHeaderBottom: 99, tabBarTop: 83, insetsTop: 47, insetsBottom: 34 };
+
+  it('rests every corner at the same point on a tab, an article and Search', () => {
+    // The route is not an input: one frame serves every route.
+    const frames = (['tab', 'article', 'search'] as const).map(() => meraButtonFrame(size, g));
+    for (const c of MERA_CORNERS) {
+      const points = frames.map((f) => cornerPoint(c, f));
+      expect(points[1]).toEqual(points[0]);
+      expect(points[2]).toEqual(points[0]);
+    }
+  });
+
+  it('sits 12pt under the tab header and 13pt above the tab bar', () => {
+    const f = meraButtonFrame(size, g);
+    expect(f.top).toBe(111);
+    expect(cornerPoint('br', f).y + f.size).toBe(844 - 83 - 13);
+  });
+
+  it('estimates the header and the bar until a tab has measured them', () => {
+    const f = meraButtonFrame(size, { ...g, tabHeaderBottom: null, tabBarTop: null });
+    expect(f.top).toBe(47 + 52 + 12);
+    expect(f.bottom).toBeGreaterThan(34 + 13);
   });
 });

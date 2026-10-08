@@ -38,6 +38,9 @@ interface CurrentSurfaceState {
   tabDots: Readonly<Record<TabId, boolean>>;
   /** The article an `article` surface is about (the Mera button opens on it). */
   article: AskMeraSubject | null;
+  /** The LARGEST expanded tab-header bottom any tab reported (World's two
+   *  rows are the tallest): the Mera button's one top bound, app-wide. */
+  tabHeaderBottom: number | null;
 }
 
 const INITIAL: CurrentSurfaceState = {
@@ -46,6 +49,7 @@ const INITIAL: CurrentSurfaceState = {
   headerBottom: null,
   tabDots: { feed: false, world: false, library: false, you: false },
   article: null,
+  tabHeaderBottom: null,
 };
 
 export const useCurrentSurfaceStore = create<CurrentSurfaceState>()(() => INITIAL);
@@ -148,8 +152,17 @@ export function useHeaderBottom(): number | null {
 export function reportHeaderBottom(owner: string, y: number): void {
   const prev = useCurrentSurfaceStore.getState().headerBottom;
   const next = Math.round(y);
+  const tabMax = useCurrentSurfaceStore.getState().tabHeaderBottom;
+  if (owner.startsWith('tab:') && (tabMax === null || next > tabMax)) {
+    useCurrentSurfaceStore.setState({ tabHeaderBottom: next });
+  }
   if (prev && prev.owner === owner && prev.y === next) return;
   useCurrentSurfaceStore.setState({ headerBottom: { owner, y: next } });
+}
+
+/** The Mera button's top bound on every route (see `tabHeaderBottom`). */
+export function useTabHeaderBottom(): number | null {
+  return useCurrentSurfaceStore((s) => s.tabHeaderBottom);
 }
 
 /** A header drawn at the top of a view whose window y is `rootY`: its

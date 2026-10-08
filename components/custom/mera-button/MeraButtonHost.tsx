@@ -34,17 +34,11 @@ import {
   useArrangeOpen,
   useArticleSubject,
   useCurrentSurface,
-  useHeaderBottom,
+  useTabHeaderBottom,
 } from '@/components/custom/nav/current-surface';
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import { SPRING } from '@/lib/motion';
-import {
-  MERA_BUTTON_BAR_GAP,
-  MERA_BUTTON_EDGE,
-  MERA_BUTTON_SIZE,
-  TAB_BAR_HEIGHT,
-  useTabBarTop,
-} from '@/lib/navigation/tab-bar';
+import { useTabBarTop } from '@/lib/navigation/tab-bar';
 import { useSegments } from 'expo-router';
 import {
   useFloatingChatAnswerUnread,
@@ -79,13 +73,9 @@ import {
   type MeraCorner,
 } from './corner';
 import MeraButton from './MeraButton';
-import { buttonContextFor, lastKnown, meraButtonVisible, OVERLAY_PROPS, routeKindFor } from './host-rules';
+import { buttonContextFor, lastKnown, meraButtonFrame, meraButtonVisible, OVERLAY_PROPS, routeKindFor } from './host-rules';
 import { pageKeyFor } from './mera-pages';
 
-const TOP_GAP = 12;
-/** Height of a page header below the safe area, for a surface that reports
- *  no header bottom (the You-stack screens). */
-const HEADER_FALLBACK = 52;
 const SNAP_SPRING = SPRING.drag;
 
 function useKeyboardUp(): boolean {
@@ -230,20 +220,11 @@ const MeraButtonHost: React.FC = () => {
   const [heldSurface, setHeldSurface] = useState(reportedSurface);
   if (reportedSurface !== null && reportedSurface !== heldSurface) setHeldSurface(reportedSurface);
   const surface = lastKnown(heldSurface, reportedSurface);
-  const reportedHeader = useHeaderBottom();
-  const [heldHeader, setHeldHeader] = useState(reportedHeader);
-  if (reportedHeader !== null && reportedHeader !== heldHeader) setHeldHeader(reportedHeader);
+  const tabHeaderBottom = useTabHeaderBottom();
 
   const article = useArticleSubject();
   const context = useMemo(() => buttonContextFor(route, article), [route, article]);
 
-  // Above the tab bar on a tab, above the home indicator elsewhere. Until a
-  // tab has measured the bar, the root inset plus the bar's estimate stands
-  // in (the root inset alone sits under a floating iOS bar).
-  const bottom = (onTab ? (tabBarTop ?? insets.bottom + TAB_BAR_HEIGHT) : insets.bottom) + MERA_BUTTON_BAR_GAP;
-  // A top corner sits under the SHOWN header (it never follows a header that
-  // collapses on scroll); off the tabs, under the plain fallback.
-  const headerBottom = (onTab ? lastKnown(heldHeader, reportedHeader) : null) ?? insets.top + HEADER_FALLBACK;
 
   // No flash on launch: nothing renders until the stored corner is known.
   // Idempotent, so hydrateAllStores reading it first only makes this instant.
@@ -253,17 +234,13 @@ const MeraButtonHost: React.FC = () => {
   }, [hydrated]);
 
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  // One box on every route (meraButtonFrame): the button never moves when a
+  // screen opens.
   const frame = useMemo<CornerFrame | null>(
     () =>
-      size && {
-        width: size.width,
-        height: size.height,
-        top: headerBottom + TOP_GAP,
-        bottom,
-        inset: MERA_BUTTON_EDGE,
-        size: MERA_BUTTON_SIZE,
-      },
-    [size, headerBottom, bottom],
+      size &&
+      meraButtonFrame(size, { tabHeaderBottom, tabBarTop, insetsTop: insets.top, insetsBottom: insets.bottom }),
+    [size, tabHeaderBottom, tabBarTop, insets.top, insets.bottom],
   );
 
   if (!meraButtonVisible({ route, hydrated, chatOpen, arrangeOpen, keyboardUp })) return null;
