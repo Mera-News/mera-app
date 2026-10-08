@@ -1,7 +1,9 @@
-// The feed's counts card (FinalFeed #1, FinalFeedStatus #1-5). Two homes: open
-// at the top of an empty Feed (`initiallyExpanded`), and slid in over the list
-// from the status icon (StatusCardSlideIn). Never a permanent card in a list.
-// The chevron opens the details INSIDE the card.
+// The feed's ONE counts card (FinalFeed #1, FinalFeedStatus #1-5): in an empty
+// Feed's empty chain, at the head of the list at the daily limit, or at the
+// head of the list when the Mera status icon asks for it (feed-status-card.ts,
+// which also holds its open/closed state, so the icon can expand it). There
+// is never an overlay and never two. The chevron opens the details INSIDE the
+// card.
 //
 // Level 1: the status line (a light sweeps across it while a sync runs) and a
 // chevron, then the count sentence ("being analysed" while syncing, with the
@@ -20,7 +22,8 @@ import { Pressable } from '@/components/ui/pressable';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
+import { registerStatusCard, setStatusCardExpanded, useFeedStatusCard } from './feed-status-card';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { ShimmerText } from '@/components/ui/shimmer';
@@ -41,12 +44,6 @@ const HIDDEN = {
 const SCENE_SIZE = 20;
 
 export interface DashboardStatsCardProps {
-    /** Details open from the first frame (the empty Feed, FinalFeed #1). */
-    readonly initiallyExpanded?: boolean;
-    /** Drawn over list content: an opaque base, or the cards read through. */
-    readonly overContent?: boolean;
-    /** Called before "Manage plan" or the upgrade link navigates. */
-    readonly onBeforeNavigate?: () => void;
     readonly testID?: string;
 }
 
@@ -66,25 +63,22 @@ function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
     );
 }
 
-export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
-    initiallyExpanded = false,
-    overContent = false,
-    onBeforeNavigate,
-    testID = 'dashboard-stats-card',
-}) => {
+export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {
     const { t } = useTranslation();
     // `a11yStateKey` is computed from the mode; see its own note on `tAny`.
     const tAny = t as unknown as (key: string) => string;
     const mode = useFeedStatusMode();
     const { articleCount } = useFeedCounts();
-    const [expanded, setExpanded] = useState(initiallyExpanded);
+    const expanded = useFeedStatusCard((s) => s.expanded);
+    // The icon reads whether a card is showing from this count.
+    useEffect(() => registerStatusCard(), []);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
 
     const reduceMotion = useReducedMotion();
     const colors = useColors();
 
-    const toggle = useCallback(() => setExpanded((v) => !v), []);
+    const toggle = useCallback(() => setStatusCardExpanded(!useFeedStatusCard.getState().expanded), []);
 
     const notice = mode === 'limited' || mode === 'error';
 
@@ -93,11 +87,10 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
             <GlassPanel
                 radius={12}
                 contentClassName="px-4 py-3"
-                style={overContent ? { backgroundColor: colors.modalBase } : undefined}
                 testID={testID}
             >
                 {notice ? (
-                    <FeedStatusNotice mode={mode} onBeforeNavigate={onBeforeNavigate} />
+                    <FeedStatusNotice mode={mode} />
                 ) : (
                     <>
                         {/* A hidden visual under a CHILDLESS labelled button: a

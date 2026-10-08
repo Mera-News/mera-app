@@ -85,6 +85,7 @@ import {
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
+import { useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
 import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
@@ -1085,7 +1086,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     if (lastProcessingRunFinishedAt !== null) {
       return (
         <Animated.View exiting={FadeOut.duration(200)}>
-          <DashboardStatsCard initiallyExpanded testID="feed-status-inline" />
+          <DashboardStatsCard testID="feed-status-inline" />
           <FeedShortcuts reading={isFeedProcessing} />
         </Animated.View>
       );
@@ -1099,10 +1100,11 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   };
 
   // The title row, then (no facts yet) the empty block, both first in the list.
-  // At the daily limit the list leads with the limit card (owner), the same
-  // DashboardStatsCard the status icon slides in, in its limit layout. Only
-  // over rows: an empty Feed already shows it in the empty chain.
-  const limitCard = statusMode === 'limited' && listData.length > 0;
+  // Over rows, the list leads with the ONE counts card at the daily limit
+  // (its limit layout) or when the Mera status icon asked for it
+  // (feed-status-card.ts). An empty Feed shows it in the empty chain instead.
+  const statusRequested = useFeedStatusCard((s) => s.requested);
+  const limitCard = listData.length > 0 && (statusMode === 'limited' || statusRequested);
   const headerNode = useMemo(
     () => (
       <>
@@ -1110,13 +1112,22 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
         {noFacts ? <FeedNoFacts view="continuous" /> : null}
         {limitCard ? (
           <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-            <DashboardStatsCard initiallyExpanded testID="feed-limit-card" />
+            <DashboardStatsCard testID="feed-limit-card" />
           </View>
         ) : null}
       </>
     ),
     [listHeader, noFacts, limitCard],
   );
+  // The status icon asks for the card: bring the list's head into view.
+  const motionAllowed = useMotionAllowed();
+  const statusScroll = useFeedStatusCard((s) => s.scrollSignal);
+  useEffect(() => {
+    if (statusScroll === 0 || !active) return;
+    listRef.current?.scrollToOffset({ offset: 0, animated: motionAllowed });
+    // Fires on the signal only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusScroll]);
 
   return (
     // No backdrop and no header: the tab (TabPages) draws both.

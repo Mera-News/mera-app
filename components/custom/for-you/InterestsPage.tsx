@@ -43,6 +43,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { AppState, View } from 'react-native';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
+import { useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
 import { PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
@@ -138,13 +139,17 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
   const isFeedProcessing = useIsFeedProcessing();
   // At the daily limit the list leads with the limit card, as in Continuous;
   // only over sections with stories (the empty chain shows it otherwise).
+  // The ONE counts card leads the list at the daily limit or when the status
+  // icon asked for it; over no sections the empty chain shows it instead.
   const limited = useFeedStatusMode() === 'limited';
-  const limitCard = limited && rows.some((r) => r.groups.length > 0);
+  const statusRequested = useFeedStatusCard((s) => s.requested);
+  const statusScroll = useFeedStatusCard((s) => s.scrollSignal);
+  const limitCard = (limited || statusRequested) && rows.some((r) => r.groups.length > 0);
   const listHeaderNode = limitCard ? (
     <>
       {listHeader}
       <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-        <DashboardStatsCard initiallyExpanded testID="interests-limit-card" />
+        <DashboardStatsCard testID="interests-limit-card" />
       </View>
     </>
   ) : (
@@ -178,7 +183,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
     // a long gap"): the counts card open, then the shortcuts.
     empty = (
       <Animated.View exiting={FadeOut.duration(200)}>
-        <DashboardStatsCard initiallyExpanded testID="feed-status-inline" />
+        <DashboardStatsCard testID="feed-status-inline" />
         <FeedShortcuts reading={isFeedProcessing} />
       </Animated.View>
     );
@@ -201,6 +206,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
         scrollHandler={header.scrollHandler}
         headerHeight={header.headerHeight}
         ListHeaderComponent={listHeaderNode}
+        scrollToTopSignal={statusScroll}
         ListEmptyComponent={empty}
         refreshing={refreshing}
         onRefresh={onRefresh}

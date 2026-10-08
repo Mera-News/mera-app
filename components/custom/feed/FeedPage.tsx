@@ -16,7 +16,9 @@ import InterestsPage from '@/components/custom/for-you/InterestsPage';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { useIsFocused } from '@react-navigation/native';
+import { resetStatusCard } from '@/components/custom/for-you/feed-status-card';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -31,6 +33,11 @@ export interface FeedPageProps {
 }
 
 const FeedPage: React.FC<FeedPageProps> = ({ active, header }) => {
+  // Leaving the Feed page drops a card the status icon asked for.
+  const focused = useIsFocused();
+  useEffect(() => {
+    if (!(active && focused)) resetStatusCard();
+  }, [active, focused]);
   const { t } = useTranslation();
   const view = useFeedView();
   const { reveal } = header;

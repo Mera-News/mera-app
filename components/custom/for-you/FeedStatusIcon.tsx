@@ -1,7 +1,8 @@
 // The Feed tab's status at a glance (FinalFeedStatus): the Mera mark in the
 // header's leading slot. Still and white at rest, moving while a sync runs,
-// orange at the daily limit, red on a problem. A tap shows the counts card
-// (StatusCardSlideIn); the label says the state and what the tap does.
+// orange at the daily limit, red on a problem. A tap opens the Feed's one
+// counts card (feed-status-card.ts); the label says the state and what the
+// tap does.
 //
 // The mark holds still by itself in Lite mode, under Reduce Motion and off
 // screen. "Moving" follows `statusMode === 'processing'`, which also goes true

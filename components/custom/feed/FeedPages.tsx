@@ -3,11 +3,13 @@
 // its reading session survives any swipe or reorder.
 //
 // The status icon sits in the header's leading slot on every page of the tab;
-// a tap slides the counts card in over the list (StatusCardSlideIn), mounted
-// here once, OUTSIDE TabPages (which all four tabs share).
+// a tap acts on the Feed's ONE counts card (feed-status-card.ts: expand it, or
+// show it at the head of the list) and brings the Feed page forward.
 
 import FeedStatusIcon from '@/components/custom/for-you/FeedStatusIcon';
-import StatusCardSlideIn from '@/components/custom/for-you/StatusCardSlideIn';
+import { tapStatusIcon } from '@/components/custom/for-you/feed-status-card';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
+import { useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
 import FeedPage from '@/components/custom/feed/FeedPage';
 import { PAGE_META } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
@@ -99,15 +101,16 @@ export function FeedPages() {
     }
   }, [t]);
 
-  const [statusShown, setStatusShown] = useState(false);
-  const toggleStatus = useCallback(() => setStatusShown((v) => !v), []);
-  const hideStatus = useCallback(() => setStatusShown(false), []);
-  const leading = useMemo(() => <FeedStatusIcon onPress={toggleStatus} />, [toggleStatus]);
+  const onStatus = useCallback(() => {
+    // From Stories, bring the Feed page forward first; the card lives there.
+    if (useCurrentSurfaceStore.getState().surface !== 'feed') navigateToPage('feed');
+    tapStatusIcon();
+  }, []);
+  const leading = useMemo(() => <FeedStatusIcon onPress={onStatus} />, [onStatus]);
 
   return (
     <View style={{ flex: 1 }}>
       <TabPages tab="feed" pages={pills} renderPage={renderPage} leading={leading} testID="feed-pages" />
-      <StatusCardSlideIn visible={statusShown} onHide={hideStatus} />
     </View>
   );
 }
