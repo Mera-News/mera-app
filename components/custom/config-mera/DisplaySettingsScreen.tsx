@@ -11,8 +11,8 @@ import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { type LaunchTab } from '@/lib/navigation/startup-tab';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import { useMeraButtonLook } from '@/components/custom/mera-button/look';
-import { useDisplayPrefsStore, type MeraButtonLook } from '@/lib/stores/display-prefs-store';
+import MeraButtonLookPicker from '@/components/custom/mera-button/MeraButtonLookPicker';
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useStartupTabStore } from '@/lib/stores/startup-tab-store';
 import { useTextScaleStore } from '@/lib/stores/text-scale-store';
 import { useAppearanceSetting } from '@/lib/theme/theme-store';
@@ -51,8 +51,6 @@ const DisplaySettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
   const setPerformanceOverride = useDisplayPrefsStore((s) => s.setPerformanceOverride);
-  const meraButtonLook = useMeraButtonLook();
-  const setMeraButtonLook = useDisplayPrefsStore((s) => s.setMeraButtonLook);
   const textScale = useTextScaleStore((s) => s.scale);
   const setTextScale = useTextScaleStore((s) => s.setScale);
   const blurImages = useBlurImagesStore((s) => s.blurImages);
@@ -154,25 +152,16 @@ const DisplaySettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                 </View>
               </View>
             ) : null}
-            {/* The floating Mera button's own look, whatever the theme. Shows
-                the theme's look until the reader picks (no Automatic). */}
-            <View style={{ padding: 16 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: colors.ink, fontSize: 16 }}>{t('display.meraButtonTitle')}</Text>
-                  <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{t('display.meraButtonHint')}</Text>
-                </View>
-                <SegmentedControl<MeraButtonLook>
-                  testID="mera-button-look-switch"
-                  accessibilityLabel={t('display.meraButtonTitle')}
-                  value={meraButtonLook}
-                  onChange={setMeraButtonLook}
-                  options={[
-                    { value: 'light', label: t('display.appearanceLight') },
-                    { value: 'dark', label: t('display.appearanceDark') },
-                  ]}
-                />
+            {/* The floating Mera button's own look, whatever the theme, picked
+                by the button itself (the theme's look until the reader picks;
+                no Automatic). The previews sit under the hint, so they never
+                fight the text for width at large sizes. */}
+            <View style={{ padding: 16, gap: 12 }}>
+              <View>
+                <Text style={{ color: colors.ink, fontSize: 16 }}>{t('display.meraButtonTitle')}</Text>
+                <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{t('display.meraButtonHint')}</Text>
               </View>
+              <MeraButtonLookPicker groupLabel={t('display.meraButtonTitle')} />
             </View>
             <Row
               title={t('security.blurImagesTitle')}
