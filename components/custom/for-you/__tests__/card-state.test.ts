@@ -1,4 +1,4 @@
-import { cardState, MARK_MAX, MARK_MIN, markSizeFor, type CardStateInput } from '../card-state';
+import { cardState, MARK_MAX, MARK_MIN, markSizeFor, markTone, type CardStateInput } from '../card-state';
 
 const base: CardStateInput = {
   mode: 'idle',
@@ -53,5 +53,14 @@ describe('markSizeFor', () => {
     expect(markSizeFor(20)).toBe(MARK_MIN);
     expect(markSizeFor(60)).toBe(MARK_MAX);
     expect(markSizeFor(200)).toBe(MARK_MAX);
+  });
+});
+
+describe('markTone', () => {
+  it('is orange only when Mera is stuck', () => {
+    for (const s of ['fetched', 'limited', 'analysed'] as const) expect(markTone(s)).toBe('alert');
+  });
+  it('keeps the ink everywhere else, the scoring error included', () => {
+    for (const s of ['relevant', 'offline', 'error', null] as const) expect(markTone(s)).toBe('normal');
   });
 });

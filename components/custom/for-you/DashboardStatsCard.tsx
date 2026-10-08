@@ -42,7 +42,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from '
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, MARK_MAX, markSizeFor, type CardState } from './card-state';
+import { cardState, MARK_MAX, markSizeFor, markTone, type CardState, type MarkTone } from './card-state';
 import { useForYouDailyLimitResetAt, useForYouScoringError } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 
@@ -142,11 +142,11 @@ function ExpandingDetails({ open, children }: { open: boolean; children: React.R
 /** The Mera mark, always at the sentence's start (owner): moving while a run
  *  is in flight, a still frame when idle. MeraLogo itself holds still in Lite,
  *  under Reduce Motion and off screen. */
-export function StatusMark({ working, size }: { working: boolean; size: number }) {
+export function StatusMark({ working, size, tone }: { working: boolean; size: number; tone: MarkTone }) {
     const colors = useColors();
     return (
         <View {...HIDDEN} style={styles.markColumn} testID="dashboard-stats-card-mark">
-            <MeraLogo size={size} color={colors.ink} animated={working} />
+            <MeraLogo size={size} color={tone === 'alert' ? colors.accentMark : colors.ink} animated={working} />
         </View>
     );
 }
@@ -218,7 +218,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                     beside the ⌄; the status line only when there
                                     is nothing to count. */}
                                 <HStack className="items-center">
-                                    <StatusMark working={processing} size={markSizeFor(textHeight)} />
+                                    <StatusMark working={processing} size={markSizeFor(textHeight)} tone={markTone(state)} />
                                     <View style={styles.sentence} onLayout={onTextLayout}>
                                         {zeroText ? (
                                             <Text

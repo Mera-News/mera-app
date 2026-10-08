@@ -45,6 +45,14 @@ export function cardState(i: CardStateInput): CardState | null {
   return zero && i.offline ? 'offline' : zero;
 }
 
+/** The mark's colour (owner): orange (`accentMark`) when Mera is stuck
+ *  (nothing fetched, the daily limit, nothing analysed); the theme's ink in
+ *  every other state, the scoring error included (as the owner listed). */
+export type MarkTone = 'alert' | 'normal';
+export function markTone(state: CardState | null): MarkTone {
+  return state === 'fetched' || state === 'limited' || state === 'analysed' ? 'alert' : 'normal';
+}
+
 /** The lead row's Mera mark, by the sentence block's height (owner: as big
  *  as the text, a few pt shy of it). MeraLogo's `size` IS the drawn glyph's
  *  height (its viewBox is cut to the hexagon and stroke), so the glyph is
