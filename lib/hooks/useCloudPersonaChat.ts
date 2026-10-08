@@ -351,6 +351,24 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       };
 
       const onLeg = (leg: AgentLeg) => {
+        // WHAT THE MODEL SAW AND SAID, per leg: the state line is the only
+        // context the loop carries between turns, and a forced leg is where a
+        // fact can appear that nobody said. Debug only (console under
+        // EXPO_PUBLIC_VERBOSE_LOGS, breadcrumb in dev builds, nothing in prod).
+        logger.debug(`${TAG} agent leg`, {
+          leg: leg.index,
+          role: leg.role,
+          forced: leg.forced === true,
+          state: (leg.messages[0]?.content ?? '').slice(0, 800),
+          tools: leg.toolCalls.map((c) => c.name),
+          proposed: leg.toolCalls
+            .filter((c) => c.name === 'saveExtractedFacts')
+            .flatMap((c) => {
+              const list = parseToolArgs(c.argumentsRaw).extracted_user_information;
+              return Array.isArray(list) ? list.map((e) => String((e as { statement?: unknown })?.statement ?? '')) : [];
+            }),
+          text: leg.rawOutput.slice(0, 200),
+        });
         // Live progress rows: the result only arrives at the end of a turn that
         // can run ~10s, so the steps box would otherwise sit empty and then
         // fill at once.
@@ -1077,37 +1095,42 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
       void (async () => {
         try {
-          const systemPrompt = await agentRef.current.buildSystemPrompt(false);
-          logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
-          logger.debug(`${TAG} system prompt content`, { content: systemPrompt });
-
-          const tools = agentRef.current.getToolDefinitions?.() ?? [];
-          logger.debug(`${TAG} tool definitions`, { count: tools.length, names: tools.map(t => t.function.name) });
-
-          let context = '';
-          if (agentRef.current.buildContext) {
-            try {
-              context = await agentRef.current.buildContext();
-              logger.debug(`${TAG} context built`, { length: context.length });
-              logger.debug(`${TAG} context content`, { content: context });
-            } catch (err) {
-              logger.warn(`${TAG} buildContext failed, proceeding without context`, { error: String(err) });
-            }
-          }
-
-          // Push only the RAW user text into wireMessages. Context is re-injected
-          // fresh onto the last user message in runSingleShot — never persisted,
-          // so multi-turn chats don't accumulate N copies of the facts/guide block.
-          useCloudChatStore.getState().pushWireMessage({ role: 'user', content: trimmed });
-          logger.debug(`${TAG} starting runSingleShot`, { wireMessages: useCloudChatStore.getState().wireMessages.length });
-
           if (isPersonaAgent(agentRef.current.id)) {
             // THE SHIPPED PATH for the persona agent. No flag: a loop behind a
             // flag is a loop nobody runs, which is exactly how the device pass
             // found the old single-shot prompt still live.
+            //
+            // The one-shot system prompt, tools and context are NOT built here.
+            // They were built and logged on every turn while the loop sent its
+            // own router prompt and state line, so the log showed a prompt the
+            // model never saw (its "Middle East politics" example and its
+            // searchNews rule were blamed for a turn they never reached).
+            useCloudChatStore.getState().pushWireMessage({ role: 'user', content: trimmed });
             await runAgentLoopTurn(assistantId, trimmed);
             logger.debug(`${TAG} agent loop completed`);
           } else {
+            const systemPrompt = await agentRef.current.buildSystemPrompt(false);
+            logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
+            logger.debug(`${TAG} system prompt content`, { content: systemPrompt });
+
+            const tools = agentRef.current.getToolDefinitions?.() ?? [];
+            logger.debug(`${TAG} tool definitions`, { count: tools.length, names: tools.map(t => t.function.name) });
+
+            let context = '';
+            if (agentRef.current.buildContext) {
+              try {
+                context = await agentRef.current.buildContext();
+                logger.debug(`${TAG} context built`, { length: context.length });
+                logger.debug(`${TAG} context content`, { content: context });
+              } catch (err) {
+                logger.warn(`${TAG} buildContext failed, proceeding without context`, { error: String(err) });
+              }
+            }
+            // Push only the RAW user text into wireMessages. Context is re-injected
+            // fresh onto the last user message in runSingleShot — never persisted,
+            // so multi-turn chats don't accumulate N copies of the facts/guide block.
+            useCloudChatStore.getState().pushWireMessage({ role: 'user', content: trimmed });
+            logger.debug(`${TAG} starting runSingleShot`, { wireMessages: useCloudChatStore.getState().wireMessages.length });
             await runSingleShot(systemPrompt, tools, assistantId, context);
             logger.debug(`${TAG} runSingleShot completed`);
           }
