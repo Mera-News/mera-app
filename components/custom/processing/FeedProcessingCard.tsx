@@ -63,10 +63,7 @@ const FeedProcessingCard: React.FC = () => {
                 // is a first launch before any run has finished.
                 //
                 // It used to be two lines of grey text on an empty card. It now
-                // carries the same idle scene the all-caught-up card draws, at
-                // PROCESSING_SCENE_SIZE and at the same offset from the card
-                // top, so moving between the three empty states never makes the
-                // artwork jump.
+                // carries the idle scene (IdleScene) at PROCESSING_SCENE_SIZE.
                 //
                 // The copy stays because it is TRUE here and the caught-up copy
                 // would not be: this branch is reached while a first feed is

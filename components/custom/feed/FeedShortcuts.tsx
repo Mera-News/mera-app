@@ -90,7 +90,9 @@ interface Shortcut {
   readonly flag?: string;
 }
 
-const FeedShortcuts: React.FC = () => {
+/** `reading`: Mera is processing, so the "While Mera reads" header is true.
+ *  Idle (caught up, the limit, a problem), the rows stand without it. */
+const FeedShortcuts: React.FC<{ readonly reading: boolean }> = ({ reading }) => {
   const { t } = useTranslation();
   const c = useColors();
   const styles = useStyles();
@@ -148,9 +150,11 @@ const FeedShortcuts: React.FC = () => {
 
   return (
     <View style={styles.wrap} testID="feed-shortcuts">
-      <Text size="sm" bold style={styles.header} accessibilityRole="header">
-        {t('feedShortcuts.header')}
-      </Text>
+      {reading ? (
+        <Text size="sm" bold style={styles.header} accessibilityRole="header">
+          {t('feedShortcuts.header')}
+        </Text>
+      ) : null}
       {rows.map((r) => (
         <View key={r.page} style={styles.row} testID={`feed-shortcut-${r.page}-frame`}>
           <View style={styles.visual} pointerEvents="none" {...GLYPH_HIDDEN}>

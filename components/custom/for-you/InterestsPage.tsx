@@ -9,7 +9,6 @@
 // not throttled: they slot into their band at once (the sort key is viewed,
 // relevance band, incoming index, and only `viewed` is frozen).
 
-import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import { useFeedSyncRefresh, useIsFeedProcessing } from '@/components/custom/FeedSyncIndicator';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
@@ -28,7 +27,6 @@ import {
   type ResortTrigger,
 } from '@/lib/feed-ordering/dashboard-resort';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
-import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
@@ -135,7 +133,6 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
   }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx, lastProcessingRunFinishedAt]);
 
   const { refreshing, onRefresh } = useFeedSyncRefresh(header.reveal);
-  const statusMode = useFeedStatusMode();
   const isFeedProcessing = useIsFeedProcessing();
 
   // ── Nothing to show yet ──
@@ -160,21 +157,22 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
   } else if (snapshots.facts.size === 0) {
     // Sectioned shows the block alone (no headline rows here, C4).
     empty = <FeedNoFacts view="sectioned" />;
-  } else if (
-    lastProcessingRunFinishedAt !== null &&
-    (isFeedProcessing || statusMode === 'limited' || statusMode === 'error')
-  ) {
-    // The empty Feed after a long gap, the same as Continuous (FinalFeed #1).
+  } else if (lastProcessingRunFinishedAt !== null) {
+    // Nothing to show, the same as Continuous (FinalFeed "Feed, empty after
+    // a long gap"): the counts card open, then the shortcuts.
     empty = (
       <Animated.View exiting={FadeOut.duration(200)}>
         <DashboardStatsCard initiallyExpanded testID="feed-status-inline" />
-        <FeedShortcuts />
+        <FeedShortcuts reading={isFeedProcessing} />
       </Animated.View>
     );
-  } else if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
-    empty = <FeedProcessingCard />;
   } else {
-    empty = <AllCaughtUpCard />;
+    empty = (
+      <>
+        <FeedProcessingCard />
+        <FeedShortcuts reading />
+      </>
+    );
   }
 
   return (

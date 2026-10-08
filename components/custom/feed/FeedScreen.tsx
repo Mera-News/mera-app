@@ -32,14 +32,14 @@
 // The user reported the in-list dividers' position wasn't reliable (a card
 // whose slot moves as new stories arrive and old ones sink reads as broken), so
 // both were removed: the list renders nothing at a tier boundary any more.
-// Exactly ONE caught-up card remains, always at the very end — see `listFooter`
-// below and `renderEmpty`. NOTHING is ever removed for being read: a read card
+// Exactly ONE caught-up card remains, always at the very end, under real
+// cards (`listFooter`); an empty Feed never shows it (`renderEmpty`). NOTHING is ever removed for being read: a read card
 // SINKS to the bottom, so it stays reachable by scrolling on. Cards leave the
 // feed by exactly one route: `hydrate` dropping a persisted id whose story aged
 // out of the publication window between sessions (FEED_WINDOW_MS).
 //
 // The end card carries no button: the tabs and the Mera button are the way
-// on. The empty states add the "While Mera reads" shortcuts (FeedShortcuts).
+// on. The empty states are the counts card plus the shortcuts (FeedShortcuts).
 //
 // The unviewed/viewed input to that sort is a SNAPSHOT, so a card never sinks
 // under the reader mid-session. Together with the pinned prefix it refreshes at
@@ -1001,14 +1001,13 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   // no in-list dividers any more, just this footer.
   //
   // Gated on a non-empty list because FlatList renders `ListFooterComponent`
-  // even when `data` is empty — without this the zero-item case would show the
-  // AllCaughtUpCard twice (the empty-state chain in `renderEmpty` already owns
-  // that case, and still does).
+  // even when `data` is empty, and an empty Feed shows the counts card and the
+  // shortcuts instead (`renderEmpty`).
   const listFooter = useMemo(
     () =>
       listData.length > 0 ? (
         <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-          <AllCaughtUpCard compact />
+          <AllCaughtUpCard />
         </Box>
       ) : null,
     [listData.length],
@@ -1077,33 +1076,23 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
     // No facts: the block sits in the list header (above any top headlines,
     // C4), so the empty list itself says nothing more.
     if (noFacts) return null;
-    // The empty Feed after a long gap (FinalFeed #1): the counts card open,
-    // then the shortcuts. It says why (syncing, the daily limit or a problem)
-    // and folds away when the first rows land. The cap and the error come
-    // BEFORE "caught up": a capped or failing reader must never read that
-    // everything is fine. The first run after setup (no run has finished)
+    // Nothing to show (FinalFeed "Feed, empty after a long gap"): the counts
+    // card open, then the shortcuts, whatever the mode (syncing, caught up,
+    // the daily limit or a problem; the card says which). It folds away when
+    // the first rows land. The first run after setup (no run has finished)
     // keeps the processing scene.
-    const stateful = isFeedProcessing || statusMode === 'limited' || statusMode === 'error';
-    if (stateful && lastProcessingRunFinishedAt !== null) {
+    if (lastProcessingRunFinishedAt !== null) {
       return (
         <Animated.View exiting={FadeOut.duration(200)}>
           <DashboardStatsCard initiallyExpanded testID="feed-status-inline" />
-          <FeedShortcuts />
+          <FeedShortcuts reading={isFeedProcessing} />
         </Animated.View>
-      );
-    }
-    if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
-      return (
-        <>
-          <FeedProcessingCard />
-          <FeedShortcuts />
-        </>
       );
     }
     return (
       <>
-        <AllCaughtUpCard />
-        <FeedShortcuts />
+        <FeedProcessingCard />
+        <FeedShortcuts reading />
       </>
     );
   };

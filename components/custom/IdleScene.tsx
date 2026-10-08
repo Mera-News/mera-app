@@ -21,13 +21,11 @@ interface IdleSceneProps {
  * The calm idle loop, drawn by every empty state that is waiting rather than
  * reporting a problem.
  *
- * ## One component, because it has two homes
+ * ## Its home
  *
- * `AllCaughtUpCard` (there is nothing more to read) and `FeedProcessingCard`'s
- * fallback branch (a first feed is still being built) both draw it. They were
- * briefly two copies of the same twelve lines, which is how the two drift: one
- * gains a gate the other does not, and the difference only shows on the devices
- * nobody tests.
+ * `FeedProcessingCard`'s fallback branch (a first feed is still being built).
+ * The empty Feed's caught-up card that also drew it is gone: an empty Feed now
+ * shows the counts card and the shortcuts.
  *
  * ## The size is not a style choice
  *

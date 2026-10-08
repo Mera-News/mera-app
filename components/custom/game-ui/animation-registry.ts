@@ -30,8 +30,8 @@
  * from its name.
  *
  * ── What is actually rendered on this branch ────────────────────────────────
- * `game-hud-idle` is drawn by `components/custom/AllCaughtUpCard.tsx` on its
- * roomy branch. `game-mark-earn` has NO renderer here: there is no reward host
+ * `game-hud-idle` is drawn by `components/custom/IdleScene.tsx` (the
+ * processing card's fallback). `game-mark-earn` has NO renderer here: there is no reward host
  * on this branch, so it is a claimed, resolvable asset and nothing more. That
  * is a supported state, not a gap to fill — the entry is what stops the orphan
  * gate reading the file as a stray, and it costs one `require()`.

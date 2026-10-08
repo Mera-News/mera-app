@@ -50,7 +50,7 @@ export const FEED_SYNC_TASK = 'feed-sync';
  * Any client-visible fetch/scoring work still in flight, derived purely from the
  * for-you store. Lifted verbatim out of ForYouScreen/FeedScreen, which had
  * identical copies — both still need it for their empty-state chain
- * (FeedProcessingCard vs AllCaughtUpCard) and header auto-reveal, so it stays a
+ * (FeedProcessingCard vs the counts card) and header auto-reveal, so it stays a
  * standalone hook rather than being buried in the component.
  *
  * Deliberately does NOT fold in the scheduler flag: the empty-state chain reads
