@@ -11,31 +11,28 @@ export interface HeaderTrackMetrics {
   /** An option's padding on each side in `names` mode (no icon). */
   readonly namesPad: number;
   readonly icon: number;
-  /** Between icon, label and dot. */
+  /** Between icon and label. */
   readonly gap: number;
-  /** A dot's room beyond its gap. */
-  readonly dot: number;
   /** The track's own padding and border, both sides. */
   readonly chrome: number;
 }
 
 /** The header track at 1.1x the board's 14pt (owner): 14pt option padding
  *  (10 for a name alone, so Library's four names fit a 375pt phone),
- *  a 16.5pt icon (15 x 1.1, owner), 7pt gaps, a 10pt picked dot (less its -2 margin), and the
- *  track's 3pt padding and 1pt border on each side. */
-export const HEADER_METRICS: HeaderTrackMetrics = { pad: 14, namesPad: 10, icon: 16.5, gap: 7, dot: 8, chrome: 8 };
+ *  a 16.5pt icon (15 x 1.1, owner), 7pt gaps, and the track's 3pt padding and
+ *  1pt border on each side. The "new" dot is a badge on the icon (or name)
+ *  and takes no room. */
+export const HEADER_METRICS: HeaderTrackMetrics = { pad: 14, namesPad: 10, icon: 16.5, gap: 7, chrome: 8 };
 
 /** One option's width: icon only (`labelWidth` null), or icon and label;
  *  `icon` false: the name alone. */
 export function headerOptionWidth(
   labelWidth: number | null,
-  hasDot: boolean,
   m: HeaderTrackMetrics,
   icon: boolean = true,
 ): number {
   let w = 2 * (icon ? m.pad : m.namesPad) + (icon ? m.icon : 0);
   if (labelWidth !== null) w += (icon ? m.gap : 0) + labelWidth;
-  if (hasDot) w += m.gap + m.dot;
   return w;
 }
 
@@ -45,7 +42,6 @@ export function headerOptionWidth(
  */
 export function allHeaderLabelsFit(
   labelWidths: readonly (number | undefined)[],
-  dots: readonly boolean[],
   available: number | null,
   m: HeaderTrackMetrics,
   icons: boolean = true,
@@ -55,7 +51,7 @@ export function allHeaderLabelsFit(
   for (let i = 0; i < labelWidths.length; i++) {
     const w = labelWidths[i];
     if (w === undefined) return null;
-    total += headerOptionWidth(w, dots[i] ?? false, m, icons);
+    total += headerOptionWidth(w, m, icons);
   }
   return total <= available;
 }
@@ -69,12 +65,11 @@ export type HeaderTrackMode = 'names' | 'full' | 'compact';
  */
 export function headerTrackMode(
   labelWidths: readonly (number | undefined)[],
-  dots: readonly boolean[],
   available: number | null,
   m: HeaderTrackMetrics,
   namesFirst: boolean,
 ): HeaderTrackMode {
-  const fits = allHeaderLabelsFit(labelWidths, dots, available, m, !namesFirst);
+  const fits = allHeaderLabelsFit(labelWidths, available, m, !namesFirst);
   if (fits !== true) return 'compact';
   return namesFirst ? 'names' : 'full';
 }

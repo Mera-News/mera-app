@@ -182,8 +182,11 @@ const HEADER_PAD = HEADER_METRICS.chrome / 2 - BORDER;
 const HEADER_ICON = HEADER_METRICS.icon;
 const HEADER_OPTION_PAD = HEADER_METRICS.pad;
 const HEADER_GAP = HEADER_METRICS.gap;
+/** The "something new" dot: a filled badge on the icon's top-right corner
+ *  (on the name's, with no icon), ringed in what is under it, so it takes no
+ *  room in the option and the fit rule never counts it. */
 const HEADER_DOT = 8;
-const HEADER_DOT_PICKED = HEADER_METRICS.dot + 2;
+const HEADER_DOT_RING = 1.5;
 /** The whole track's height: the header row is derived from it, never set
  *  on its own (a row shorter than the track clips it). */
 export const HEADER_TRACK_HEIGHT = HEADER_OPTION_HEIGHT + 2 * (HEADER_PAD + BORDER);
@@ -317,7 +320,6 @@ function HeaderTrack<T extends string>({
         () =>
             headerTrackMode(
                 options.map((o) => widths[o.label]),
-                options.map((o) => o.useDot !== undefined),
                 availableWidth,
                 HEADER_METRICS,
                 namesFirst,
@@ -397,6 +399,33 @@ function HeaderOption<T extends string>({
     const useDot = option.useDot ?? noDot;
     const dot = useDot();
     const ink = on ? colors.onAccent : colors.muted;
+    const iconShown = !!option.icon && parts.icon;
+    // Filled, and ringed in what it sits on: ink on the orange fill, the mark
+    // colour on the bare track.
+    const badge = dot ? (
+        <View
+            testID={testID ? `${testID}-dot` : undefined}
+            style={[
+                styles.dot,
+                on
+                    ? { backgroundColor: colors.onAccent, borderColor: colors.accent }
+                    : { backgroundColor: colors.accentMark, borderColor: colors.trackFill },
+            ]}
+        />
+    ) : null;
+    // Its own element: with an icon it stays a direct child, so its exiting
+    // scale-out still runs when the name leaves.
+    const label = (
+        <Animated.Text
+            entering={reduceMotion ? undefined : labelIn}
+            exiting={reduceMotion ? undefined : labelOut}
+            numberOfLines={1}
+            maxFontSizeMultiplier={MAX_FONT_SCALE.chrome}
+            style={[styles.headerLabel, styles.headerLabelShrink, styles.labelOrigin, { color: ink, fontWeight: on ? '700' : '500' }]}
+        >
+            {option.label}
+        </Animated.Text>
+    );
     return (
         // A hidden visual under a CHILDLESS labelled button: a glyph inside a
         // button surfaces on iOS as its own StaticText. An icon-only option
@@ -417,27 +446,19 @@ function HeaderOption<T extends string>({
                 style={[styles.headerInner, parts.icon ? null : styles.headerInnerNames]}
                 {...HIDDEN}
             >
-                {option.icon && parts.icon ? <MaterialIcons name={option.icon} size={HEADER_ICON} color={ink} /> : null}
-                {parts.label ? (
-                    <Animated.Text
-                        entering={reduceMotion ? undefined : labelIn}
-                        exiting={reduceMotion ? undefined : labelOut}
-                        numberOfLines={1}
-                        maxFontSizeMultiplier={MAX_FONT_SCALE.chrome}
-                        style={[styles.headerLabel, styles.headerLabelShrink, styles.labelOrigin, { color: ink, fontWeight: on ? '700' : '500' }]}
-                    >
-                        {option.label}
-                    </Animated.Text>
+                {iconShown ? (
+                    <View>
+                        <MaterialIcons name={option.icon} size={HEADER_ICON} color={ink} />
+                        {badge}
+                    </View>
                 ) : null}
-                {dot ? (
-                    <View
-                        testID={testID ? `${testID}-dot` : undefined}
-                        style={[
-                            styles.dot,
-                            { backgroundColor: colors.accent },
-                            on ? [styles.dotOnPicked, { borderColor: colors.onAccent }] : null,
-                        ]}
-                    />
+                {parts.label ? (
+                    iconShown ? label : (
+                        <View style={styles.headerLabelShrink}>
+                            {label}
+                            {badge}
+                        </View>
+                    )
                 ) : null}
             </View>
             <Pressable
@@ -502,6 +523,13 @@ const styles = StyleSheet.create({
     labelOrigin: { transformOrigin: I18nManager.isRTL ? 'right center' : 'left center' },
     // Off screen and unclipped: labels measure at their natural width.
     measurer: { position: 'absolute', top: 0, left: 0, width: 4000, flexDirection: 'row', alignItems: 'flex-start', opacity: 0 },
-    dot: { width: HEADER_DOT, height: HEADER_DOT, borderRadius: HEADER_DOT / 2, marginLeft: -2 },
-    dotOnPicked: { borderWidth: 1.5, width: HEADER_DOT_PICKED, height: HEADER_DOT_PICKED, borderRadius: HEADER_DOT_PICKED / 2 },
+    dot: {
+        position: 'absolute',
+        top: -HEADER_DOT / 2,
+        right: -HEADER_DOT / 2 - HEADER_DOT_RING,
+        width: HEADER_DOT + 2 * HEADER_DOT_RING,
+        height: HEADER_DOT + 2 * HEADER_DOT_RING,
+        borderRadius: HEADER_DOT / 2 + HEADER_DOT_RING,
+        borderWidth: HEADER_DOT_RING,
+    },
 });
