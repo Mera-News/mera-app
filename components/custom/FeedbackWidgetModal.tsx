@@ -1,5 +1,3 @@
-import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import { TranslucentPlate } from '@/components/custom/GlassSurface';
 import { FeedbackWidget } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,20 +9,21 @@ import {
     Pressable,
     ScrollView,
     StyleSheet,
+    Text,
     View,
-    useWindowDimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import MeraLogo from '@/components/custom/MeraLogo';
+import ModalMaterial from '@/components/custom/ModalMaterial';
 import { authClient } from '@/lib/auth-client';
 import { emailLooksAnonymous } from '@/lib/subscription/email-capture';
 import { readSupportIdFromUser } from '@/lib/support-id';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useFeedbackStore, useFeedbackVisible } from '@/lib/stores/feedback-store';
 import { useUserStore } from '@/lib/stores/user-store';
-import { themedStyles } from '@/lib/theme/tokens';
+import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { useMotionAllowed } from '@/lib/motion-gate';
 
 // Set the feedback identifier so a submitted report can be tied back to the
@@ -49,8 +48,6 @@ function attachFeedbackMetadata(userId: string | undefined, supportId: string | 
     }
 }
 
-const CLOSE_RED = '#ef4444'; // error-400, same close affordance as ChatPopover
-
 /**
  * The "Report a Bug" form. Renders Sentry's `FeedbackWidget` component (which
  * submits via Sentry.captureFeedback) inside a bounded, centered floating card
@@ -72,8 +69,8 @@ const FeedbackWidgetModal: React.FC = () => {
     const motion = useMotionAllowed();
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
-    const { height: screenHeight } = useWindowDimensions();
     const styles = useStyles();
+    const c = useColors();
     const visible = useFeedbackVisible();
     const hide = useFeedbackStore((s) => s.hide);
 
@@ -112,14 +109,13 @@ const FeedbackWidgetModal: React.FC = () => {
         return null;
     }
 
-    // Cap the card so it floats within the safe area with the backdrop peeking at
-    // every edge, rather than filling the screen.
-    const maxCardHeight = screenHeight - insets.top - insets.bottom - 48;
-
     return (
         <Modal visible={visible} transparent animationType={motion ? 'fade' : 'none'} onRequestClose={hide} statusBarTranslucent>
+            {/* The app's centred dialog (HelpModal / ConfirmDialog): the card is
+                capped at the room inside the safe area and above the keyboard,
+                and the form scrolls inside it. */}
             <KeyboardAvoidingView
-                style={styles.root}
+                style={[styles.root, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 {/* Backdrop — tap outside the card to close. */}
@@ -130,26 +126,30 @@ const FeedbackWidgetModal: React.FC = () => {
                     accessibilityRole="button"
                 />
 
-                <View style={[styles.card, { maxHeight: maxCardHeight }]}>
-                    {/* The modal material (components/ui/modal): opaque base, the app's gradient, the plate. */}
-                    <AbstractGradientBackdrop seed="mera-modal" frame={0} />
-                    <TranslucentPlate />
-                    {/* Mera-branded header: logo left, close X top-right (chat-bubble
-                        pattern) — replaces the Sentry logo + bottom Cancel button. */}
+                <View style={styles.card} accessibilityViewIsModal>
+                    <ModalMaterial />
+                    {/* The dialog header: the Mera mark and the form's title, and the
+                        standard close X (it replaces the widget's own title and its
+                        bottom Cancel). */}
                     <View style={styles.header}>
-                        <MeraLogo size={30} />
+                        <View style={styles.headerTitle}>
+                            <MeraLogo size={30} />
+                            <Text accessibilityRole="header" style={styles.title}>
+                                {t('feedback.formTitle')}
+                            </Text>
+                        </View>
                         <Pressable
                             onPress={hide}
                             accessibilityLabel={t('feedback.cancelButtonLabel')}
                             accessibilityRole="button"
-                            hitSlop={12}
-                            style={styles.closeButton}
+                            style={styles.close}
                         >
-                            <MaterialIcons name="close" size={22} color="#fff" />
+                            <MaterialIcons name="close" size={22} color={c.ink2} />
                         </Pressable>
                     </View>
 
                     <ScrollView
+                        style={styles.scroll}
                         keyboardShouldPersistTaps="handled"
                         showsVerticalScrollIndicator
                         contentContainerStyle={styles.scrollContent}
@@ -170,9 +170,23 @@ const FeedbackWidgetModal: React.FC = () => {
                             // zero height inside a ScrollView), make it transparent so
                             // the card supplies the background, and hide the built-in
                             // Cancel button (the header X closes instead).
+                            // The widget's theme is fixed dark (lib/sentry-init.ts), so
+                            // every part the reader sees is restyled on the app's
+                            // tokens here; the widget REPLACES a style it is given,
+                            // so each is complete.
                             styles={{
                                 container: styles.widgetContainer,
-                                cancelButton: styles.hiddenCancel,
+                                titleContainer: styles.hidden,
+                                cancelButton: styles.hidden,
+                                label: styles.label,
+                                input: styles.input,
+                                textArea: styles.textArea,
+                                screenshotButton: styles.outlineButton,
+                                takeScreenshotButton: styles.takeScreenshotButton,
+                                screenshotText: styles.outlineText,
+                                takeScreenshotText: styles.outlineText,
+                                submitButton: styles.submitButton,
+                                submitText: styles.submitText,
                             }}
                             // Localized labels.
                             formTitle={t('feedback.formTitle')}
@@ -202,6 +216,8 @@ const FeedbackWidgetModal: React.FC = () => {
     );
 };
 
+const CLOSE_FRAME = 44;
+
 const useStyles = themedStyles((c) => StyleSheet.create({
     root: {
         flex: 1,
@@ -210,49 +226,85 @@ const useStyles = themedStyles((c) => StyleSheet.create({
         paddingHorizontal: 16,
         backgroundColor: c.scrim,
     },
-    // Unpadded (the padding lives on `header` and `widgetContainer`), clipping
-    // and radius-owning, so the gradient and the plate fill it edge to edge.
+    // The dialog surface (HelpModal): 16pt corners, a 1pt edge, the material
+    // behind, at most 400 wide and never taller than the room it has.
     card: {
         width: '100%',
-        maxWidth: 480,
-        borderRadius: 24,
-        overflow: 'hidden',
+        maxWidth: 400,
+        maxHeight: '100%',
+        borderRadius: 16,
         borderWidth: 1,
         borderColor: c.line,
-        backgroundColor: c.modalBase,
+        overflow: 'hidden',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 2,
+        paddingTop: 16,
+        paddingLeft: 24,
+        paddingRight: 8,
+        gap: 8,
     },
-    closeButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: CLOSE_RED,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    scrollContent: {
-        flexGrow: 1,
-    },
-    // Override for the widget's root View: no flex (so it sizes to content inside
-    // the ScrollView) and transparent so the card's background shows through.
-    // Reduced top padding since our header sits above.
+    headerTitle: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+    title: { flex: 1, color: c.ink, fontSize: 20, lineHeight: 26, fontWeight: '700' },
+    close: { width: CLOSE_FRAME, height: CLOSE_FRAME, alignItems: 'center', justifyContent: 'center' },
+    scroll: { flexGrow: 0, flexShrink: 1 },
+    scrollContent: { flexGrow: 1 },
+    // The widget's root: no flex (it would collapse inside the ScrollView),
+    // transparent so the material shows, the dialog's 24pt padding.
     widgetContainer: {
-        paddingHorizontal: 20,
-        paddingTop: 4,
-        paddingBottom: 20,
+        paddingHorizontal: 24,
+        paddingTop: 12,
+        paddingBottom: 24,
         backgroundColor: 'transparent',
     },
-    // The built-in Cancel button is replaced by the header X.
-    hiddenCancel: {
-        display: 'none',
+    hidden: { display: 'none' },
+    label: { marginBottom: 6, fontSize: 15, color: c.ink2 },
+    input: {
+        minHeight: 48,
+        borderColor: c.trackBorder,
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        marginBottom: 16,
+        fontSize: 16,
+        color: c.ink,
+        backgroundColor: c.surface,
     },
+    textArea: { height: 110, paddingTop: 12, textAlignVertical: 'top', color: c.ink },
+    // The outlined secondary of ConfirmDialog.
+    outlineButton: {
+        flex: 1,
+        minHeight: 44,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: c.edge,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+    },
+    takeScreenshotButton: {
+        minHeight: 44,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: c.edge,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+        marginTop: -4,
+        marginBottom: 16,
+    },
+    outlineText: { color: c.ink, fontSize: 15, fontWeight: '600' },
+    // The primary of ConfirmDialog: the accent pill at 44pt.
+    submitButton: {
+        minHeight: 44,
+        borderRadius: 999,
+        backgroundColor: c.accent,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+    },
+    submitText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
 }));
 
 export default FeedbackWidgetModal;
