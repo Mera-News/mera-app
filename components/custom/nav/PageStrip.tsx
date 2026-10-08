@@ -110,6 +110,8 @@ export interface PageStripProps {
   readonly namesFirst?: boolean;
   /** `segmented`: icons only plus the selected name, at any width (Feed). */
   readonly iconsOnly?: boolean;
+  /** `segmented`: the pager's fractional page index; the selected fill rides it. */
+  readonly progress?: SharedValue<number>;
   /** A long press on a pill (World: opens Arrange with that page lifted). */
   readonly onLongPressPill?: (id: PageId) => void;
   /** World: the edit button after the last pill (opens Arrange). Absent while
@@ -301,6 +303,7 @@ const PageStrip: React.FC<PageStripProps> = ({
   onSearch,
   namesFirst = false,
   iconsOnly = false,
+  progress,
   onHelp,
   helpLabel,
   title,
@@ -430,6 +433,7 @@ const PageStrip: React.FC<PageStripProps> = ({
           availableWidth={trackSpace}
           namesFirst={namesFirst}
           iconsOnly={iconsOnly}
+          progress={progress}
           value={activeId}
           onChange={onSelect}
           accessibilityLabel={tabLabel}

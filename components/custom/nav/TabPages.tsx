@@ -242,6 +242,7 @@ const TabPages: React.FC<TabPagesProps> = ({
             leading={leading}
             namesFirst={namesFirst}
             iconsOnly={iconsOnly}
+            progress={tabSwipeProgress(tab)}
             onSearch={onSearch}
             onHelp={hasExplainer ? openExplainer : undefined}
             helpLabel={t('nav.explainerA11y', { page: activeLabel })}

@@ -88,3 +88,34 @@ export function survivingPage<T extends string>(
   if (activeId && pages.includes(activeId)) return activeId;
   return pages[Math.max(0, Math.min(lastIndex - 1, pages.length - 1))];
 }
+
+/** A tap's slide from page `from` to page `to`: the picked page is laid in
+ *  `slot`, the one next to `from`, so the row moves one width and no page in
+ *  between shows. `[from, to, slot]`; NO_TRANSIT when nothing slides. */
+export type Transit = readonly [from: number, to: number, slot: number];
+export const NO_TRANSIT: Transit = [-1, -1, -1];
+
+export function tapTransit(from: number, to: number): Transit {
+  return from === to ? NO_TRANSIT : [from, to, from + (to > from ? 1 : -1)];
+}
+
+/** The fractional page index the track's fill shows while the row sits at
+ *  `at` (in page widths). During a tap slide the row covers from -> slot (one
+ *  width) and the fill covers from -> to. */
+export function transitProgress(at: number, t: Transit): number {
+  'worklet';
+  const [from, to, slot] = t;
+  if (from < 0) return at;
+  const done = Math.min(1, Math.abs(at - from) / Math.abs(slot - from));
+  return from + (to - from) * done;
+}
+
+/** Where page `i` sits during a tap slide, and whether it hides because the
+ *  picked page borrowed its slot. */
+export function transitPanel(i: number, t: Transit): { slot: number; hidden: boolean } {
+  'worklet';
+  const [from, to, slot] = t;
+  if (from < 0) return { slot: i, hidden: false };
+  if (i === to) return { slot, hidden: false };
+  return { slot: i, hidden: i === slot };
+}

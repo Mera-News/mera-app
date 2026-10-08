@@ -1,24 +1,26 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Platform,
     Pressable,
+    I18nManager,
     StyleSheet,
     Text,
     View,
+    type LayoutChangeEvent,
     type StyleProp,
     type TextLayoutEventData,
     type NativeSyntheticEvent,
     type ViewStyle,
 } from 'react-native';
 import Animated, {
-    FadeIn,
-    FadeOut,
+    Easing,
     LinearTransition,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
     withTiming,
+    type SharedValue,
 } from 'react-native-reanimated';
 
 import { hapticSelection } from '@/lib/haptics';
@@ -27,6 +29,8 @@ import { useColors } from '@/lib/theme/tokens';
 import { MAX_FONT_SCALE } from '@/lib/typography/policy';
 
 import { HEADER_METRICS, headerOptionParts, headerTrackMode } from './fit';
+import { fillAt, settleFill, type OptionBox } from './fill';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 export interface SegmentedOption<T extends string> {
     value: T;
@@ -65,6 +69,10 @@ export interface SegmentedControlProps<T extends string> {
     /** Header size only: icons, with only the selected option's name, at any
      *  width (the fit rule is skipped). */
     iconsOnly?: boolean;
+    /** Header size only: the pager's fractional page index. The ONE selected
+     *  fill rides it (fill.ts), so a swipe drags it and a tap's slide carries
+     *  it; without it the fill slides to the picked option on its own. */
+    progress?: SharedValue<number>;
 }
 
 /** FinalSettings #6: 36pt options inside a 3pt padded, 1pt bordered track,
@@ -190,7 +198,34 @@ const HIDDEN = {
     importantForAccessibility: 'no-hide-descendants',
 } as const;
 const noDot = () => false;
-const LABEL_MOTION = MOTION.pill.duration;
+/** A page change in the header: the pager's tap slide (PagePager
+ *  TAP_SLIDE_MS) and its ease-out, so labels, reflow, fill and page land
+ *  together. */
+const PAGE_MOTION = { duration: 300, easing: Easing.out(Easing.cubic) };
+const optionReflow = LinearTransition.duration(PAGE_MOTION.duration).easing(PAGE_MOTION.easing);
+/** A label leaving scales to 0 into its own leading edge (next to its icon)
+ *  as it fades; one arriving grows from there. The default ReduceMotion
+ *  (System) lets LiteMotionConfig land both at once. */
+function labelIn() {
+    'worklet';
+    return {
+        initialValues: { opacity: 0, transform: [{ scale: 0 }] },
+        animations: {
+            opacity: withTiming(1, PAGE_MOTION),
+            transform: [{ scale: withTiming(1, PAGE_MOTION) }],
+        },
+    };
+}
+function labelOut() {
+    'worklet';
+    return {
+        initialValues: { opacity: 1, transform: [{ scale: 1 }] },
+        animations: {
+            opacity: withTiming(0, PAGE_MOTION),
+            transform: [{ scale: withTiming(0, PAGE_MOTION) }],
+        },
+    };
+}
 
 function HeaderTrack<T extends string>({
     options,
@@ -201,9 +236,76 @@ function HeaderTrack<T extends string>({
     availableWidth = null,
     namesFirst = false,
     iconsOnly = false,
+    progress,
 }: SegmentedControlProps<T>) {
     const colors = useColors();
     const reduceMotion = useReducedMotion();
+    const motionAllowed = useMotionAllowed();
+    // ONE selected fill under the options, moving between their MEASURED
+    // boxes (x and width) by the driver: the pager's progress when given,
+    // else its own slide to the picked index. All on the UI thread.
+    // The JS copy is the truth: a shared value written from JS reaches the UI
+    // thread on a later tick, so reading it back on JS returns the OLD value
+    // (several options reporting in one tick each overwrote the others).
+    const boxesRef = useRef<(OptionBox | null)[]>(options.map(() => null));
+    const boxes = useSharedValue<(OptionBox | null)[]>(boxesRef.current);
+    const fillY = useSharedValue(0);
+    // A new layout (a label in or out, a text size change) moves the boxes
+    // at once; the fill settles from the old set onto the new one.
+    const boxesFrom = useSharedValue<(OptionBox | null)[]>(boxesRef.current);
+    const settle = useSharedValue(1);
+    const appliedRef = useRef<(OptionBox | null)[] | null>(null);
+    const flushQueued = useRef(false);
+    // Until every option has reported its box, the picked option draws its
+    // own still fill, so the track never shows with no selection.
+    const [measured, setMeasured] = useState(false);
+    useEffect(() => {
+        if (boxesRef.current.length === options.length) return;
+        boxesRef.current = Array<OptionBox | null>(options.length).fill(null);
+        boxes.value = boxesRef.current;
+        appliedRef.current = null;
+        setMeasured(false);
+    }, [options.length, boxes]);
+    const onOptionLayout = useCallback(
+        (i: number, e: LayoutChangeEvent) => {
+            const { x, y, width } = e.nativeEvent.layout;
+            const prev = boxesRef.current[i];
+            if (prev && prev.x === x && prev.width === width) return;
+            const next = boxesRef.current.slice();
+            next[i] = { x, width };
+            boxesRef.current = next;
+            fillY.value = y;
+            if (!(next.length === options.length && next.every(Boolean))) return;
+            setMeasured(true);
+            // Options report one by one in the same tick: apply the set once.
+            if (flushQueued.current) return;
+            flushQueued.current = true;
+            queueMicrotask(() => {
+                flushQueued.current = false;
+                const to = boxesRef.current;
+                const from = appliedRef.current ?? to;
+                appliedRef.current = to;
+                boxesFrom.value = from;
+                boxes.value = to;
+                settle.value = 0;
+                settle.value = motionAllowed && from !== to ? withTiming(1, PAGE_MOTION) : 1;
+            });
+        },
+        [boxes, boxesFrom, settle, fillY, options.length, motionAllowed],
+    );
+    const pickedIndex = Math.max(0, options.findIndex((o) => o.value === value));
+    const own = useSharedValue(pickedIndex);
+    useEffect(() => {
+        own.value = motionAllowed
+            ? withTiming(pickedIndex, PAGE_MOTION)
+            : pickedIndex;
+    }, [pickedIndex, motionAllowed, own]);
+    const driver = progress ?? own;
+    const fillStyle = useAnimatedStyle(() => {
+        const b = settleFill(fillAt(driver.value, boxesFrom.value), fillAt(driver.value, boxes.value), settle.value);
+        if (!b) return { opacity: 0 };
+        return { opacity: 1, width: b.width, transform: [{ translateX: b.x }, { translateY: fillY.value }] };
+    });
     // Each label's width, measured at the picked weight and the current text
     // size by a hidden copy, so the decision never depends on what is shown.
     const [widths, setWidths] = useState<Readonly<Record<string, number>>>({});
@@ -226,7 +328,7 @@ function HeaderTrack<T extends string>({
     return (
         // The track glides to its new width with its options.
         <Animated.View
-            layout={reduceMotion ? undefined : LinearTransition.duration(LABEL_MOTION)}
+            layout={reduceMotion ? undefined : optionReflow}
             accessibilityRole={HEADER_ROLES.group}
             testID={testID}
             style={[
@@ -237,6 +339,11 @@ function HeaderTrack<T extends string>({
                 style,
             ]}
         >
+            {/* Over the track's border box, laid out LTR: onLayout's x is
+                physical, and a plain `left` flips to the right under RTL. */}
+            <View pointerEvents="none" style={styles.sliderFrame}>
+                <Animated.View style={[styles.headerSlider, { backgroundColor: colors.accent }, fillStyle]} />
+            </View>
             <View pointerEvents="none" style={styles.measurer} {...HIDDEN}>
                 {options.map((o) => (
                     <Text
@@ -249,11 +356,13 @@ function HeaderTrack<T extends string>({
                     </Text>
                 ))}
             </View>
-            {options.map((o) => (
+            {options.map((o, i) => (
                 <HeaderOption
                     key={o.value}
                     option={o}
+                    onLayout={(e) => onOptionLayout(i, e)}
                     on={o.value === value}
+                    stillFill={!measured && o.value === value}
                     parts={headerOptionParts(o.value === value, mode)}
                     onPress={() => {
                         if (o.value !== value) onChange(o.value);
@@ -271,9 +380,13 @@ function HeaderOption<T extends string>({
     on,
     parts,
     onPress,
+    onLayout,
+    stillFill,
     testID,
 }: {
     option: SegmentedOption<T>;
+    onLayout: (e: LayoutChangeEvent) => void;
+    stillFill: boolean;
     on: boolean;
     parts: { label: boolean; icon: boolean };
     onPress: () => void;
@@ -283,24 +396,22 @@ function HeaderOption<T extends string>({
     const reduceMotion = useReducedMotion();
     const useDot = option.useDot ?? noDot;
     const dot = useDot();
-    const fill = useSharedValue(on ? 1 : 0);
-    useEffect(() => {
-        fill.value = withTiming(on ? 1 : 0, { duration: MOTION.pill.duration, easing: EASE.across });
-    }, [on, fill]);
-    const fillStyle = useAnimatedStyle(() => ({ opacity: fill.value }));
     const ink = on ? colors.onAccent : colors.muted;
     return (
         // A hidden visual under a CHILDLESS labelled button: a glyph inside a
         // button surfaces on iOS as its own StaticText. An icon-only option
         // still speaks its full label ("Saved, 1 of 4").
         <Animated.View
-            layout={reduceMotion ? undefined : LinearTransition.duration(LABEL_MOTION)}
+            layout={reduceMotion ? undefined : optionReflow}
             style={[styles.headerOption, on ? styles.headerOptionPicked : null]}
+            onLayout={onLayout}
         >
-            <Animated.View
-                pointerEvents="none"
-                style={[StyleSheet.absoluteFill, styles.headerFill, { backgroundColor: colors.accent }, fillStyle]}
-            />
+            {stillFill ? (
+                <View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, styles.headerFill, { backgroundColor: colors.accent }]}
+                />
+            ) : null}
             <View
                 pointerEvents="none"
                 style={[styles.headerInner, parts.icon ? null : styles.headerInnerNames]}
@@ -309,11 +420,11 @@ function HeaderOption<T extends string>({
                 {option.icon && parts.icon ? <MaterialIcons name={option.icon} size={HEADER_ICON} color={ink} /> : null}
                 {parts.label ? (
                     <Animated.Text
-                        entering={reduceMotion ? undefined : FadeIn.duration(LABEL_MOTION)}
-                        exiting={reduceMotion ? undefined : FadeOut.duration(LABEL_MOTION)}
+                        entering={reduceMotion ? undefined : labelIn}
+                        exiting={reduceMotion ? undefined : labelOut}
                         numberOfLines={1}
                         maxFontSizeMultiplier={MAX_FONT_SCALE.chrome}
-                        style={[styles.headerLabel, styles.headerLabelShrink, { color: ink, fontWeight: on ? '700' : '500' }]}
+                        style={[styles.headerLabel, styles.headerLabelShrink, styles.labelOrigin, { color: ink, fontWeight: on ? '700' : '500' }]}
                     >
                         {option.label}
                     </Animated.Text>
@@ -372,10 +483,23 @@ const styles = StyleSheet.create({
     // compact track is wider than the space, at the largest text sizes.
     headerOptionPicked: { flexShrink: 1 },
     headerFill: { borderRadius: HEADER_OPTION_HEIGHT / 2 },
+    // The one sliding fill, in a frame over the track's border box (the
+    // origin of the options' measured x and y). Equal insets and LTR, so RTL
+    // neither flips the frame nor the fill's offset.
+    sliderFrame: { position: 'absolute', top: -BORDER, bottom: -BORDER, left: -BORDER, right: -BORDER, direction: 'ltr' },
+    headerSlider: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        height: HEADER_OPTION_HEIGHT,
+        borderRadius: HEADER_OPTION_HEIGHT / 2,
+    },
     headerInner: { flexDirection: 'row', alignItems: 'center', gap: HEADER_GAP, paddingHorizontal: HEADER_OPTION_PAD },
     headerInnerNames: { paddingHorizontal: HEADER_METRICS.namesPad },
     headerLabel: { fontSize: 15.5, lineHeight: 20 },
     headerLabelShrink: { flexShrink: 1 },
+    // The leading edge, where the label meets its icon.
+    labelOrigin: { transformOrigin: I18nManager.isRTL ? 'right center' : 'left center' },
     // Off screen and unclipped: labels measure at their natural width.
     measurer: { position: 'absolute', top: 0, left: 0, width: 4000, flexDirection: 'row', alignItems: 'flex-start', opacity: 0 },
     dot: { width: HEADER_DOT, height: HEADER_DOT, borderRadius: HEADER_DOT / 2, marginLeft: -2 },

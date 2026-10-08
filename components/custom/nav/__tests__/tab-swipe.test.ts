@@ -6,6 +6,10 @@ import {
   swipeOutcome,
   survivingPage,
   swipeWindow,
+  NO_TRANSIT,
+  tapTransit,
+  transitPanel,
+  transitProgress,
 } from '../tab-swipe';
 
 const W = 400;
@@ -95,5 +99,33 @@ describe('survivingPage', () => {
   it('falls back to the first page', () => {
     expect(survivingPage(pages, null, 0)).toBe('world');
     expect(survivingPage([], 'world', 0)).toBeNull();
+  });
+});
+
+describe('tap slide transit', () => {
+  it('lays the picked page next to the old one', () => {
+    expect(tapTransit(0, 2)).toEqual([0, 2, 1]);
+    expect(tapTransit(2, 0)).toEqual([2, 0, 1]);
+    expect(tapTransit(1, 2)).toEqual([1, 2, 2]);
+    expect(tapTransit(1, 1)).toBe(NO_TRANSIT);
+  });
+
+  it('maps the one-width slide onto the whole from -> to range', () => {
+    const t = tapTransit(0, 2);
+    expect(transitProgress(0, t)).toBe(0);
+    expect(transitProgress(0.5, t)).toBe(1);
+    expect(transitProgress(1, t)).toBe(2);
+    expect(transitProgress(1.2, t)).toBe(2);
+    expect(transitProgress(2, tapTransit(2, 0))).toBe(2);
+    expect(transitProgress(1.5, tapTransit(2, 0))).toBe(1);
+    expect(transitProgress(1.25, NO_TRANSIT)).toBe(1.25);
+  });
+
+  it('moves only the picked page and hides the page whose slot it borrows', () => {
+    const t = tapTransit(0, 2);
+    expect(transitPanel(2, t)).toEqual({ slot: 1, hidden: false });
+    expect(transitPanel(1, t)).toEqual({ slot: 1, hidden: true });
+    expect(transitPanel(0, t)).toEqual({ slot: 0, hidden: false });
+    expect(transitPanel(1, NO_TRANSIT)).toEqual({ slot: 1, hidden: false });
   });
 });
