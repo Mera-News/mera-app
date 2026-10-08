@@ -104,7 +104,7 @@
       "welcome": "Welcome to Mera",
       "wrongCode": "That code didn't work. Check it, or resend a new one.",
       "noSheetTitle": "Your iPhone didn't open the download",
-      "noSheetBody": "Try again, or download {{language}} in Settings › General › Language & Region › Translation Languages."
+      "noSheetBody": "Try again, or open Settings on your iPhone and go to General, then Language & Region, then Translation Languages to download {{language}}."
     }
   },
   "account": {
@@ -608,7 +608,11 @@
     "help": {
       "title": "About notifications",
       "body": "Mera leaves notes here about your feed: a fact check you asked for is ready, your daily feed tune-up, tips to tidy up or tune your interests, and questions from the Mera team. They're kept only on this phone for 90 days, and a dot means something is unread. News alerts don't appear here. You set their times in Settings, under Notifications."
-    }
+    },
+    "ageNow": "now",
+    "ageMinutes": "{{n}}m",
+    "ageHours": "{{n}}h",
+    "ageDays": "{{n}}d"
   },
   "clusterDetail": {
     "notTranslatable": "This article is in {{language}}. Your device can't translate it. Use Google Translate to read it in your language.",
@@ -793,7 +797,8 @@
     "staysPrivateTitle": "Your data stays private",
     "webSearchShort": "Only the search words leave your phone. Nothing that says who you are.",
     "whereReads": "Where Mera reads your news",
-    "whileClosed": "While Mera is closed"
+    "whileClosed": "While Mera is closed",
+    "deleting": "Deleting…"
   },
   "manageData": {
     "exportHistoryTitle": "Export reading history",
@@ -831,7 +836,9 @@
     "intro": "Back up what Mera keeps on this phone, look at it, take it with you, or delete it.",
     "lookAndTake": "Look and take",
     "askBeforeTopicDelete": "Ask before deleting a topic",
-    "askBeforeTopicDeleteHint": "Mera asks you to confirm each time you delete a topic from one of your facts."
+    "askBeforeTopicDeleteHint": "Mera asks you to confirm each time you delete a topic from one of your facts.",
+    "exportHistoryWindowNote_one": "This export only covers the last {{count}} day of reading. Older entries are deleted from this device automatically and were never sent to a server.",
+    "exportHistoryWindowNote_other": "This export only covers the last {{count}} days of reading. Older entries are deleted from this device automatically and were never sent to a server."
   },
   "backup": {
     "title": "Backup",
@@ -1006,7 +1013,10 @@
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol is now ready for use.",
     "completeTitle": "Download Complete",
-    "failedTitle": "Download Failed"
+    "failedTitle": "Download Failed",
+    "failedConnection": "Check your connection and try again.",
+    "failedServer": "The download server had a problem. Try again later.",
+    "failedDamaged": "The download was damaged. Try again."
   },
   "chat": {
     "startingChat": "Starting chat...",
@@ -1041,7 +1051,9 @@
     },
     "hideKeyboard": "Hide keyboard",
     "stop": "Stop",
-    "stopped": "Stopped"
+    "stopped": "Stopped",
+    "replyLeakFallback": "Got it. Anything else you would like to add?",
+    "replyProcessFallback": "Sorry, I didn't get to that. Could you say it again?"
   },
   "personaChat": {
     "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."
@@ -1286,7 +1298,27 @@
       "addLocation": "Added location",
       "deleteLocation": "Removed location",
       "retireSuppression": "Removed a filter",
-      "setSourceScopePref": "Adjusted a source scope"
+      "setSourceScopePref": "Adjusted a source scope",
+      "migrateFact": "Carried over an interest",
+      "setScoringOverride": "Tuned how your stories are ranked"
+    },
+    "summary": {
+      "added": "Added {{name}}",
+      "removed": "Removed {{name}}",
+      "muted": "Muted {{name}}",
+      "countsMore": "{{name}} counts more",
+      "countsLess": "{{name}} counts less",
+      "pinned": "Pinned {{name}}",
+      "unpinned": "Unpinned {{name}}",
+      "notInterested": "Not interested in {{name}}",
+      "showingAgain": "Showing {{name}} again",
+      "moreFrom": "More from {{name}}",
+      "cleared": "Cleared your setting for {{name}}",
+      "moreSourcesFrom": "More sources from {{name}}",
+      "fewerSourcesFrom": "Fewer sources from {{name}}",
+      "clearedSourcesFrom": "Cleared your setting for sources from {{name}}",
+      "carriedOver": "Carried over {{name}}",
+      "undone": "Undone: {{change}}"
     }
   },
   "calibration": {
@@ -1352,7 +1384,8 @@
     "followStory": "Follow this story",
     "moreAboutTopic": "More about this topic",
     "moreFromPublication": "More from this publication",
-    "moreNewsFromPlace": "More news from this place"
+    "moreNewsFromPlace": "More news from this place",
+    "confirmMuteBodyUnnamed": "You won't see articles from this publication again. You can undo this anytime."
   },
   "topicPlan": {
     "title": "Topics I'll track",
@@ -1456,7 +1489,16 @@
     "titleLocationConflict": "Two places disagree",
     "titleStaleFact": "A fact has no active topics left",
     "titleStaleTopic": "A topic has gone quiet",
-    "titleTooBroad": "One fact brings in too much"
+    "titleTooBroad": "One fact brings in too much",
+    "summary": {
+      "duplicate": "{{fact}} repeats {{other}}",
+      "locationConflict": "{{fact}} and {{other}} name different places",
+      "staleFact": "{{fact}} has no active topics left",
+      "tooBroad": "{{fact}} is very broad",
+      "staleTopic": "{{topic}} has been quiet for weeks",
+      "incoherentTopics_one": "{{count}} topic under {{fact}} doesn't fit it: {{topics}}",
+      "incoherentTopics_other": "{{count}} topics under {{fact}} don't fit it: {{topics}}"
+    }
   },
   "locations": {
     "title": "Places",
@@ -1614,7 +1656,9 @@
     "discardConfirmNo": "Keep",
     "appliedToast": "{{count}} changes applied",
     "appliedTitle": "Feed tuned up",
-    "empty": "Nothing to tune up right now."
+    "empty": "Nothing to tune up right now.",
+    "optionApply": "Apply",
+    "optionSkip": "Skip"
   },
   "pin": {
     "lockTitle": "Mera is locked",
