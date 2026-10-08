@@ -5,7 +5,7 @@ import React from 'react';
 
 import en from '@/lib/locales/en.json';
 
-const mockOpenInAppBrowser = jest.fn(() => Promise.resolve());
+const mockOpenInAppBrowser = jest.fn((_url: string) => Promise.resolve());
 let mockOnClosed: (() => void) | undefined;
 
 jest.mock('react-i18next', () => {
