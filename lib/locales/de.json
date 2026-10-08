@@ -2438,7 +2438,9 @@
       "heatLegendMore": "mehr",
       "rhythmWeekdays": "M,D,M,D,F,S,S",
       "privacyMine": "Auf meinem Telefon gezählt. Nichts hat es verlassen.",
-      "windowLine": "{{label}} · letzte 30 Tage"
+      "windowLine": "{{label}} · letzte 30 Tage",
+      "daysCount_one": "{{count}} Tag",
+      "daysCount_other": "{{count}} Tage"
     },
     "preview": {
       "position": "{{index}} von {{total}}",
@@ -2800,7 +2802,9 @@
       "topLineOne": "dann {{second}}",
       "emptyTitle": "Noch nichts zum Zählen",
       "emptyBody": "Öffne Artikel bei der Quelle, speichere sie oder folge Geschichten, und deine letzten 30 Tage erscheinen hier.",
-      "learn": "Statistik kennenlernen"
+      "learn": "Statistik kennenlernen",
+      "freshLineDays_one": "die Hälfte dessen, was du geöffnet hast, war jünger als {{count}} Tag",
+      "freshLineDays_other": "die Hälfte dessen, was du geöffnet hast, war jünger als {{count}} Tage"
     },
     "explainer": {
       "saved": {

@@ -2444,7 +2444,9 @@
       "heatLegendMore": "plus",
       "rhythmWeekdays": "L,M,M,J,V,S,D",
       "privacyMine": "Compté sur mon téléphone. Rien n'en est sorti.",
-      "windowLine": "{{label}} · 30 derniers jours"
+      "windowLine": "{{label}} · 30 derniers jours",
+      "daysCount_one": "{{count}} jour",
+      "daysCount_other": "{{count}} jours"
     },
     "preview": {
       "position": "{{index}} sur {{total}}",
@@ -2806,7 +2808,9 @@
       "topLineOne": "puis {{second}}",
       "emptyTitle": "Rien à compter pour l'instant",
       "emptyBody": "Ouvrez des articles à leur source, enregistrez-les ou suivez des histoires, et vos 30 derniers jours apparaîtront ici.",
-      "learn": "Découvrir les statistiques"
+      "learn": "Découvrir les statistiques",
+      "freshLineDays_one": "la moitié de ce que vous avez ouvert avait moins de {{count}} jour",
+      "freshLineDays_other": "la moitié de ce que vous avez ouvert avait moins de {{count}} jours"
     },
     "explainer": {
       "saved": {

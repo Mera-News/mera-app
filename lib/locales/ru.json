@@ -2474,7 +2474,11 @@
       "heatLegendMore": "больше",
       "rhythmWeekdays": "П,В,С,Ч,П,С,В",
       "privacyMine": "Посчитано на моём телефоне. Ничего никуда не ушло.",
-      "windowLine": "{{label}} · последние 30 дней"
+      "windowLine": "{{label}} · последние 30 дней",
+      "daysCount_one": "{{count}} дн.",
+      "daysCount_few": "{{count}} дн.",
+      "daysCount_many": "{{count}} дн.",
+      "daysCount_other": "{{count}} дн."
     },
     "preview": {
       "position": "{{index}} из {{total}}",
@@ -2856,7 +2860,11 @@
       "topLineOne": "затем {{second}}",
       "emptyTitle": "Пока нечего считать",
       "emptyBody": "Открывайте статьи у источника, сохраняйте их или следите за историями, и здесь появятся ваши последние 30 дней.",
-      "learn": "Узнать о статистике"
+      "learn": "Узнать о статистике",
+      "freshLineDays_one": "половина прочитанного была моложе {{count}} дн.",
+      "freshLineDays_few": "половина прочитанного была моложе {{count}} дн.",
+      "freshLineDays_many": "половина прочитанного была моложе {{count}} дн.",
+      "freshLineDays_other": "половина прочитанного была моложе {{count}} дн."
     },
     "explainer": {
       "saved": {

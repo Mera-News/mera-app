@@ -2439,7 +2439,9 @@
       "heatLegendMore": "多",
       "rhythmWeekdays": "一,二,三,四,五,六,日",
       "privacyMine": "在我的手機上計算。沒有任何資料離開。",
-      "windowLine": "{{label}} · 過去 30 天"
+      "windowLine": "{{label}} · 過去 30 天",
+      "daysCount_one": "{{count}} 天",
+      "daysCount_other": "{{count}} 天"
     },
     "preview": {
       "position": "第 {{index}} 項，共 {{total}} 項",
@@ -2800,7 +2802,9 @@
       "topLineOne": "接著是 {{second}}",
       "emptyTitle": "還沒有可統計的內容",
       "emptyBody": "在來源開啟文章、儲存文章或追蹤報導，你的過去 30 天就會顯示在這裡。",
-      "learn": "了解統計"
+      "learn": "了解統計",
+      "freshLineDays_one": "你打開的內容中有一半不到 {{count}} 天",
+      "freshLineDays_other": "你打開的內容中有一半不到 {{count}} 天"
     },
     "explainer": {
       "saved": {

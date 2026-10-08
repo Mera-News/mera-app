@@ -2516,7 +2516,13 @@
       "heatLegendMore": "أكثر",
       "rhythmWeekdays": "ن,ث,ر,خ,ج,س,ح",
       "privacyMine": "عُدّ على هاتفي. لم يغادره شيء.",
-      "windowLine": "{{label}} · آخر 30 يومًا"
+      "windowLine": "{{label}} · آخر 30 يومًا",
+      "daysCount_zero": "{{count}} يوم",
+      "daysCount_one": "يوم واحد",
+      "daysCount_two": "يومان",
+      "daysCount_few": "{{count}} أيام",
+      "daysCount_many": "{{count}} يومًا",
+      "daysCount_other": "{{count}} يوم"
     },
     "preview": {
       "position": "{{index}} من {{total}}",
@@ -2918,7 +2924,13 @@
       "topLineOne": "ثم {{second}}",
       "emptyTitle": "لا شيء لإحصائه بعد",
       "emptyBody": "افتح المقالات عند مصدرها، واحفظها أو تابع القصص، وستظهر آخر 30 يومًا هنا.",
-      "learn": "تعرّف على الإحصائيات"
+      "learn": "تعرّف على الإحصائيات",
+      "freshLineDays_zero": "نصف ما فتحته كان أقل من {{count}} يوم عمرًا",
+      "freshLineDays_one": "نصف ما فتحته كان أقل من يوم عمرًا",
+      "freshLineDays_two": "نصف ما فتحته كان أقل من يومين عمرًا",
+      "freshLineDays_few": "نصف ما فتحته كان أقل من {{count}} أيام عمرًا",
+      "freshLineDays_many": "نصف ما فتحته كان أقل من {{count}} يوم عمرًا",
+      "freshLineDays_other": "نصف ما فتحته كان أقل من {{count}} يوم عمرًا"
     },
     "explainer": {
       "saved": {

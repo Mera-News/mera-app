@@ -2438,7 +2438,9 @@
       "heatLegendMore": "más",
       "rhythmWeekdays": "L,M,X,J,V,S,D",
       "privacyMine": "Contado en mi teléfono. Nada salió de él.",
-      "windowLine": "{{label}} · últimos 30 días"
+      "windowLine": "{{label}} · últimos 30 días",
+      "daysCount_one": "{{count}} día",
+      "daysCount_other": "{{count}} días"
     },
     "preview": {
       "position": "{{index}} de {{total}}",
@@ -2800,7 +2802,9 @@
       "topLineOne": "luego {{second}}",
       "emptyTitle": "Nada que contar todavía",
       "emptyBody": "Abre artículos en su fuente, guárdalos o sigue historias, y tus últimos 30 días aparecerán aquí.",
-      "learn": "Conoce las estadísticas"
+      "learn": "Conoce las estadísticas",
+      "freshLineDays_one": "la mitad de lo que abriste tenía menos de {{count}} día",
+      "freshLineDays_other": "la mitad de lo que abriste tenía menos de {{count}} días"
     },
     "explainer": {
       "saved": {

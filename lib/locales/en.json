@@ -2438,7 +2438,9 @@
       "heatLegendMore": "more",
       "rhythmWeekdays": "M,T,W,T,F,S,S",
       "privacyMine": "Counted on my phone. Nothing left it.",
-      "windowLine": "{{label}} · last 30 days"
+      "windowLine": "{{label}} · last 30 days",
+      "daysCount_one": "{{count}} day",
+      "daysCount_other": "{{count}} days"
     },
     "preview": {
       "position": "{{index}} of {{total}}",
@@ -2800,7 +2802,9 @@
       "topLineOne": "then {{second}}",
       "emptyTitle": "Nothing to count yet",
       "emptyBody": "Open articles at their source, save them or follow stories, and your last 30 days show up here.",
-      "learn": "Learn about Stats"
+      "learn": "Learn about Stats",
+      "freshLineDays_one": "half of what you opened was under {{count}} day old",
+      "freshLineDays_other": "half of what you opened was under {{count}} days old"
     },
     "explainer": {
       "saved": {

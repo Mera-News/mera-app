@@ -2438,7 +2438,9 @@
       "heatLegendMore": "banyak",
       "rhythmWeekdays": "S,S,R,K,J,S,M",
       "privacyMine": "Dihitung di ponsel saya. Tidak ada yang keluar darinya.",
-      "windowLine": "{{label}} · 30 hari terakhir"
+      "windowLine": "{{label}} · 30 hari terakhir",
+      "daysCount_one": "{{count}} hari",
+      "daysCount_other": "{{count}} hari"
     },
     "preview": {
       "position": "{{index}} dari {{total}}",
@@ -2799,7 +2801,9 @@
       "topLineOne": "lalu {{second}}",
       "emptyTitle": "Belum ada yang dihitung",
       "emptyBody": "Buka artikel di sumbernya, simpan, atau ikuti cerita, dan 30 hari terakhir Anda akan muncul di sini.",
-      "learn": "Pelajari Statistik"
+      "learn": "Pelajari Statistik",
+      "freshLineDays_one": "separuh dari yang Anda buka berusia di bawah {{count}} hari",
+      "freshLineDays_other": "separuh dari yang Anda buka berusia di bawah {{count}} hari"
     },
     "explainer": {
       "saved": {

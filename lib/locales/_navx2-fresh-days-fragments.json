@@ -1,0 +1,303 @@
+{
+  "_comment": "navx2-fu: How fresh past 48 hours reads in days (figure and line). Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "ar": {
+    "shareStats": {
+      "card": {
+        "daysCount_zero": "{{count}} يوم",
+        "daysCount_one": "يوم واحد",
+        "daysCount_two": "يومان",
+        "daysCount_few": "{{count}} أيام",
+        "daysCount_many": "{{count}} يومًا",
+        "daysCount_other": "{{count}} يوم"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_zero": "نصف ما فتحته كان أقل من {{count}} يوم عمرًا",
+        "freshLineDays_one": "نصف ما فتحته كان أقل من يوم عمرًا",
+        "freshLineDays_two": "نصف ما فتحته كان أقل من يومين عمرًا",
+        "freshLineDays_few": "نصف ما فتحته كان أقل من {{count}} أيام عمرًا",
+        "freshLineDays_many": "نصف ما فتحته كان أقل من {{count}} يوم عمرًا",
+        "freshLineDays_other": "نصف ما فتحته كان أقل من {{count}} يوم عمرًا"
+      }
+    }
+  },
+  "de": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} Tag",
+        "daysCount_other": "{{count}} Tage"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "die Hälfte dessen, was du geöffnet hast, war jünger als {{count}} Tag",
+        "freshLineDays_other": "die Hälfte dessen, was du geöffnet hast, war jünger als {{count}} Tage"
+      }
+    }
+  },
+  "en": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} day",
+        "daysCount_other": "{{count}} days"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "half of what you opened was under {{count}} day old",
+        "freshLineDays_other": "half of what you opened was under {{count}} days old"
+      }
+    }
+  },
+  "es": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} día",
+        "daysCount_other": "{{count}} días"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "la mitad de lo que abriste tenía menos de {{count}} día",
+        "freshLineDays_other": "la mitad de lo que abriste tenía menos de {{count}} días"
+      }
+    }
+  },
+  "fr": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} jour",
+        "daysCount_other": "{{count}} jours"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "la moitié de ce que vous avez ouvert avait moins de {{count}} jour",
+        "freshLineDays_other": "la moitié de ce que vous avez ouvert avait moins de {{count}} jours"
+      }
+    }
+  },
+  "hi": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} दिन",
+        "daysCount_other": "{{count}} दिन"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "आपने जो खोला उसका आधा {{count}} दिन से कम पुराना था",
+        "freshLineDays_other": "आपने जो खोला उसका आधा {{count}} दिनों से कम पुराना था"
+      }
+    }
+  },
+  "id": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} hari",
+        "daysCount_other": "{{count}} hari"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "separuh dari yang Anda buka berusia di bawah {{count}} hari",
+        "freshLineDays_other": "separuh dari yang Anda buka berusia di bawah {{count}} hari"
+      }
+    }
+  },
+  "it": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} giorno",
+        "daysCount_other": "{{count}} giorni"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "metà di ciò che hai aperto aveva meno di {{count}} giorno",
+        "freshLineDays_other": "metà di ciò che hai aperto aveva meno di {{count}} giorni"
+      }
+    }
+  },
+  "ja": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} 日",
+        "daysCount_other": "{{count}} 日"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "開いた記事の半分は{{count}}日以内に公開されたものでした",
+        "freshLineDays_other": "開いた記事の半分は{{count}}日以内に公開されたものでした"
+      }
+    }
+  },
+  "ko": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}}일",
+        "daysCount_other": "{{count}}일"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "열어 본 기사의 절반은 {{count}}일 이내의 기사였습니다",
+        "freshLineDays_other": "열어 본 기사의 절반은 {{count}}일 이내의 기사였습니다"
+      }
+    }
+  },
+  "nl": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} dag",
+        "daysCount_other": "{{count}} dagen"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "de helft van wat je opende was minder dan {{count}} dag oud",
+        "freshLineDays_other": "de helft van wat je opende was minder dan {{count}} dagen oud"
+      }
+    }
+  },
+  "pl": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} dzień",
+        "daysCount_few": "{{count}} dni",
+        "daysCount_many": "{{count}} dni",
+        "daysCount_other": "{{count}} dni"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dzień",
+        "freshLineDays_few": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dni",
+        "freshLineDays_many": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dni",
+        "freshLineDays_other": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dni"
+      }
+    }
+  },
+  "pt-BR": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} dia",
+        "daysCount_other": "{{count}} dias"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "metade do que você abriu tinha menos de {{count}} dia",
+        "freshLineDays_other": "metade do que você abriu tinha menos de {{count}} dias"
+      }
+    }
+  },
+  "ru": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} дн.",
+        "daysCount_few": "{{count}} дн.",
+        "daysCount_many": "{{count}} дн.",
+        "daysCount_other": "{{count}} дн."
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "половина прочитанного была моложе {{count}} дн.",
+        "freshLineDays_few": "половина прочитанного была моложе {{count}} дн.",
+        "freshLineDays_many": "половина прочитанного была моложе {{count}} дн.",
+        "freshLineDays_other": "половина прочитанного была моложе {{count}} дн."
+      }
+    }
+  },
+  "th": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} วัน",
+        "daysCount_other": "{{count}} วัน"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "ครึ่งหนึ่งของสิ่งที่คุณเปิดมีอายุไม่ถึง {{count}} วัน",
+        "freshLineDays_other": "ครึ่งหนึ่งของสิ่งที่คุณเปิดมีอายุไม่ถึง {{count}} วัน"
+      }
+    }
+  },
+  "tr": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} gün",
+        "daysCount_other": "{{count}} gün"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "açtığınızın yarısı {{count}} günden yeniydi",
+        "freshLineDays_other": "açtığınızın yarısı {{count}} günden yeniydi"
+      }
+    }
+  },
+  "uk": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} день",
+        "daysCount_few": "{{count}} дні",
+        "daysCount_many": "{{count}} днів",
+        "daysCount_other": "{{count}} дні"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "половина того, що ви відкрили, була молодша за {{count}} день",
+        "freshLineDays_few": "половина того, що ви відкрили, була молодша за {{count}} дні",
+        "freshLineDays_many": "половина того, що ви відкрили, була молодша за {{count}} днів",
+        "freshLineDays_other": "половина того, що ви відкрили, була молодша за {{count}} дні"
+      }
+    }
+  },
+  "vi": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} ngày",
+        "daysCount_other": "{{count}} ngày"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày",
+        "freshLineDays_other": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày"
+      }
+    }
+  },
+  "zh-CN": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} 天",
+        "daysCount_other": "{{count}} 天"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "你打开的内容中，一半不到{{count}}天前发布",
+        "freshLineDays_other": "你打开的内容中，一半不到{{count}}天前发布"
+      }
+    }
+  },
+  "zh-TW": {
+    "shareStats": {
+      "card": {
+        "daysCount_one": "{{count}} 天",
+        "daysCount_other": "{{count}} 天"
+      }
+    },
+    "library": {
+      "stats": {
+        "freshLineDays_one": "你打開的內容中有一半不到 {{count}} 天",
+        "freshLineDays_other": "你打開的內容中有一半不到 {{count}} 天"
+      }
+    }
+  }
+}

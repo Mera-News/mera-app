@@ -2478,7 +2478,11 @@
       "heatLegendMore": "більше",
       "rhythmWeekdays": "П,В,С,Ч,П,С,Н",
       "privacyMine": "Підраховано на моєму телефоні. Нічого з нього не виходило.",
-      "windowLine": "{{label}} · останні 30 днів"
+      "windowLine": "{{label}} · останні 30 днів",
+      "daysCount_one": "{{count}} день",
+      "daysCount_few": "{{count}} дні",
+      "daysCount_many": "{{count}} днів",
+      "daysCount_other": "{{count}} дні"
     },
     "preview": {
       "position": "{{index}} з {{total}}",
@@ -2860,7 +2864,11 @@
       "topLineOne": "потім {{second}}",
       "emptyTitle": "Поки нічого рахувати",
       "emptyBody": "Відкривайте статті на сайті джерела, зберігайте їх або стежте за історіями, і тут з'являться ваші останні 30 днів.",
-      "learn": "Дізнатися про статистику"
+      "learn": "Дізнатися про статистику",
+      "freshLineDays_one": "половина того, що ви відкрили, була молодша за {{count}} день",
+      "freshLineDays_few": "половина того, що ви відкрили, була молодша за {{count}} дні",
+      "freshLineDays_many": "половина того, що ви відкрили, була молодша за {{count}} днів",
+      "freshLineDays_other": "половина того, що ви відкрили, була молодша за {{count}} дні"
     },
     "explainer": {
       "saved": {

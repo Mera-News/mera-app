@@ -2438,7 +2438,9 @@
       "heatLegendMore": "meer",
       "rhythmWeekdays": "M,D,W,D,V,Z,Z",
       "privacyMine": "Geteld op mijn telefoon. Niets heeft hem verlaten.",
-      "windowLine": "{{label}} · afgelopen 30 dagen"
+      "windowLine": "{{label}} · afgelopen 30 dagen",
+      "daysCount_one": "{{count}} dag",
+      "daysCount_other": "{{count}} dagen"
     },
     "preview": {
       "position": "{{index}} van {{total}}",
@@ -2800,7 +2802,9 @@
       "topLineOne": "dan {{second}}",
       "emptyTitle": "Nog niets om te tellen",
       "emptyBody": "Open artikelen bij de bron, bewaar ze of volg verhalen, en je afgelopen 30 dagen verschijnen hier.",
-      "learn": "Meer over statistieken"
+      "learn": "Meer over statistieken",
+      "freshLineDays_one": "de helft van wat je opende was minder dan {{count}} dag oud",
+      "freshLineDays_other": "de helft van wat je opende was minder dan {{count}} dagen oud"
     },
     "explainer": {
       "saved": {

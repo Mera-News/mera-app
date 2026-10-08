@@ -22,6 +22,9 @@ import type { TFunction } from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
+/** How fresh switches from hours to days past this many hours. */
+export const FRESH_DAYS_AFTER_HOURS = 48;
+
 /** Languages named on the bar; beyond this the remainder band carries them. */
 const LANGUAGES_TOP_N = 4;
 
@@ -185,10 +188,20 @@ const StatFigure: React.FC<Props> = ({ id, stats, variant, k = 1 }) => {
       break;
     case 'fresh': {
       const hours = roundedMedianHours(stats.publishToRead) ?? 0;
+      // Past two days an age reads in days ("80 days"), never "1918h".
+      const days = hours > FRESH_DAYS_AFTER_HOURS ? Math.round(hours / 24) : null;
       body = (
         <FigureLine
-          figure={t('shareStats.card.hoursShort', { n: hours })}
-          line={t('library.stats.freshLine', { count: hours })}
+          figure={
+            days !== null
+              ? t('shareStats.card.daysCount', { count: days })
+              : t('shareStats.card.hoursShort', { n: hours })
+          }
+          line={
+            days !== null
+              ? t('library.stats.freshLineDays', { count: days })
+              : t('library.stats.freshLine', { count: hours })
+          }
           variant={variant}
           k={k}
         />

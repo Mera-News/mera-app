@@ -2474,7 +2474,11 @@
       "heatLegendMore": "więcej",
       "rhythmWeekdays": "P,W,Ś,C,P,S,N",
       "privacyMine": "Policzone na moim telefonie. Nic go nie opuściło.",
-      "windowLine": "{{label}} · ostatnie 30 dni"
+      "windowLine": "{{label}} · ostatnie 30 dni",
+      "daysCount_one": "{{count}} dzień",
+      "daysCount_few": "{{count}} dni",
+      "daysCount_many": "{{count}} dni",
+      "daysCount_other": "{{count}} dni"
     },
     "preview": {
       "position": "{{index}} z {{total}}",
@@ -2856,7 +2860,11 @@
       "topLineOne": "potem {{second}}",
       "emptyTitle": "Nie ma jeszcze czego liczyć",
       "emptyBody": "Otwieraj artykuły u źródła, zapisuj je lub obserwuj historie, a Twoje ostatnie 30 dni pojawią się tutaj.",
-      "learn": "Dowiedz się o statystykach"
+      "learn": "Dowiedz się o statystykach",
+      "freshLineDays_one": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dzień",
+      "freshLineDays_few": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dni",
+      "freshLineDays_many": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dni",
+      "freshLineDays_other": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dni"
     },
     "explainer": {
       "saved": {

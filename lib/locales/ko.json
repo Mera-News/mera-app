@@ -2438,7 +2438,9 @@
       "heatLegendMore": "많음",
       "rhythmWeekdays": "월,화,수,목,금,토,일",
       "privacyMine": "내 휴대폰에서 집계되었습니다. 밖으로 나간 것은 없습니다.",
-      "windowLine": "{{label}} · 지난 30일"
+      "windowLine": "{{label}} · 지난 30일",
+      "daysCount_one": "{{count}}일",
+      "daysCount_other": "{{count}}일"
     },
     "preview": {
       "position": "{{total}}개 중 {{index}}",
@@ -2799,7 +2801,9 @@
       "topLineOne": "그다음 {{second}}",
       "emptyTitle": "아직 집계할 내용이 없습니다",
       "emptyBody": "기사를 원래 출처에서 열고, 저장하거나 스토리를 팔로우하면 지난 30일이 여기에 표시됩니다.",
-      "learn": "통계 알아보기"
+      "learn": "통계 알아보기",
+      "freshLineDays_one": "열어 본 기사의 절반은 {{count}}일 이내의 기사였습니다",
+      "freshLineDays_other": "열어 본 기사의 절반은 {{count}}일 이내의 기사였습니다"
     },
     "explainer": {
       "saved": {

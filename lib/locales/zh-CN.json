@@ -2439,7 +2439,9 @@
       "heatLegendMore": "多",
       "rhythmWeekdays": "一,二,三,四,五,六,日",
       "privacyMine": "在我的手机上统计。没有任何数据离开。",
-      "windowLine": "{{label}} · 过去30天"
+      "windowLine": "{{label}} · 过去30天",
+      "daysCount_one": "{{count}} 天",
+      "daysCount_other": "{{count}} 天"
     },
     "preview": {
       "position": "第 {{index}} 张，共 {{total}} 张",
@@ -2800,7 +2802,9 @@
       "topLineOne": "然后是{{second}}",
       "emptyTitle": "还没有可统计的内容",
       "emptyBody": "在来源处打开文章、收藏文章或关注报道，你过去30天的数据就会显示在这里。",
-      "learn": "了解统计"
+      "learn": "了解统计",
+      "freshLineDays_one": "你打开的内容中，一半不到{{count}}天前发布",
+      "freshLineDays_other": "你打开的内容中，一半不到{{count}}天前发布"
     },
     "explainer": {
       "saved": {

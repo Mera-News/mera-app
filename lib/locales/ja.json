@@ -2438,7 +2438,9 @@
       "heatLegendMore": "多い",
       "rhythmWeekdays": "月,火,水,木,金,土,日",
       "privacyMine": "私の電話で集計しています。外に出るものは何もありません。",
-      "windowLine": "{{label}} · 過去30日間"
+      "windowLine": "{{label}} · 過去30日間",
+      "daysCount_one": "{{count}} 日",
+      "daysCount_other": "{{count}} 日"
     },
     "preview": {
       "position": "{{index}} / {{total}}",
@@ -2799,7 +2801,9 @@
       "topLineOne": "次に{{second}}",
       "emptyTitle": "まだ集計するものがありません",
       "emptyBody": "記事を公開元で開いたり、保存したり、ストーリーをフォローしたりすると、過去30日間がここに表示されます。",
-      "learn": "統計について学ぶ"
+      "learn": "統計について学ぶ",
+      "freshLineDays_one": "開いた記事の半分は{{count}}日以内に公開されたものでした",
+      "freshLineDays_other": "開いた記事の半分は{{count}}日以内に公開されたものでした"
     },
     "explainer": {
       "saved": {

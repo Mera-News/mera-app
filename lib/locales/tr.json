@@ -2440,7 +2440,9 @@
       "heatLegendMore": "çok",
       "rhythmWeekdays": "P,S,Ç,P,C,C,P",
       "privacyMine": "Telefonumda sayıldı. Hiçbir şey dışarı çıkmadı.",
-      "windowLine": "{{label}} · son 30 gün"
+      "windowLine": "{{label}} · son 30 gün",
+      "daysCount_one": "{{count}} gün",
+      "daysCount_other": "{{count}} gün"
     },
     "preview": {
       "position": "{{total}} içinde {{index}}",
@@ -2802,7 +2804,9 @@
       "topLineOne": "sonra {{second}}",
       "emptyTitle": "Henüz sayılacak bir şey yok",
       "emptyBody": "Haberleri kaynağında açın, kaydedin ya da hikayeleri takip edin; son 30 gününüz burada görünür.",
-      "learn": "İstatistikleri keşfet"
+      "learn": "İstatistikleri keşfet",
+      "freshLineDays_one": "açtığınızın yarısı {{count}} günden yeniydi",
+      "freshLineDays_other": "açtığınızın yarısı {{count}} günden yeniydi"
     },
     "explainer": {
       "saved": {

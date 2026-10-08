@@ -2439,7 +2439,9 @@
       "heatLegendMore": "nhiều",
       "rhythmWeekdays": "H,B,T,N,S,B,C",
       "privacyMine": "Được đếm trên điện thoại của tôi. Không có gì rời khỏi máy.",
-      "windowLine": "{{label}} · 30 ngày gần nhất"
+      "windowLine": "{{label}} · 30 ngày gần nhất",
+      "daysCount_one": "{{count}} ngày",
+      "daysCount_other": "{{count}} ngày"
     },
     "preview": {
       "position": "{{index}} trên {{total}}",
@@ -2800,7 +2802,9 @@
       "topLineOne": "rồi {{second}}",
       "emptyTitle": "Chưa có gì để thống kê",
       "emptyBody": "Mở bài viết tại nguồn, lưu bài hoặc theo dõi câu chuyện, và 30 ngày gần nhất của bạn sẽ hiện ở đây.",
-      "learn": "Tìm hiểu về Thống kê"
+      "learn": "Tìm hiểu về Thống kê",
+      "freshLineDays_one": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày",
+      "freshLineDays_other": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày"
     },
     "explainer": {
       "saved": {
