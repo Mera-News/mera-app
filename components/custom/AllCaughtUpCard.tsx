@@ -11,9 +11,8 @@ import IdleScene from './IdleScene';
 import MeraLogo from './MeraLogo';
 
 /**
- * The end-of-list "you're all caught up" card. Used at SIX call sites: the
- * Feed's end-of-list footer, and the empty state of the Feed, FactFeedScreen,
- * and ForYouScreen.
+ * The end-of-list "you're all caught up" card: the Feed's end-of-list footer,
+ * and the empty state of both Feed views (FeedScreen and InterestsPage).
  *
  * There used to be two MORE instances of this same card, spliced in-list at
  * each Feed attention-tier boundary (`variant="seen"` / `"read"`), each with
@@ -28,9 +27,8 @@ interface AllCaughtUpCardProps {
      * rather than as a full-width panel.
      *
      * The call sites split two ways: the Feed's end-of-list footer is
-     * `compact`, and the three terminal EMPTY STATES — the Feed's own
-     * `renderEmpty`, `for-you/FactFeedScreen`, and `for-you/ForYouScreen` —
-     * are roomy, where the card is the entire screen and its presence is the
+     * `compact`, and the two terminal EMPTY STATES (FeedScreen's and
+     * `for-you/InterestsPage`'s) are roomy, where the card is the entire screen and its presence is the
      * point. Shrinking those would leave a small card marooned in a blank
      * screen.
      */

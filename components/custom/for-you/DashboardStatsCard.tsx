@@ -10,9 +10,6 @@
 // and INSIDE the same card: FeedStatusDetails. At the daily limit or on a
 // problem the whole card is FeedStatusNotice instead: no chevron, no counts.
 //
-// `mode` is injectable so the kit gallery can show the limit and problem
-// states, which no simulator reaches.
-//
 // No announcement here: FeedScreen announces the capped and error states.
 
 import { GlassPanel } from '@/components/custom/GlassSurface';
@@ -20,7 +17,6 @@ import LoopScene from '@/components/custom/for-you/LoopScene';
 import { processingAnimationFor } from '@/components/custom/processing/animation-registry';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
-import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -45,8 +41,6 @@ const HIDDEN = {
 const SCENE_SIZE = 20;
 
 export interface DashboardStatsCardProps {
-    /** Injected by the kit gallery; the live mode otherwise. */
-    readonly mode?: FeedStatusMode;
     /** Details open from the first frame (the empty Feed, FinalFeed #1). */
     readonly initiallyExpanded?: boolean;
     /** Drawn over list content: an opaque base, or the cards read through. */
@@ -73,7 +67,6 @@ function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
 }
 
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
-    mode: modeOverride,
     initiallyExpanded = false,
     overContent = false,
     onBeforeNavigate,
@@ -82,8 +75,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
     const { t } = useTranslation();
     // `a11yStateKey` is computed from the mode; see its own note on `tAny`.
     const tAny = t as unknown as (key: string) => string;
-    const liveMode = useFeedStatusMode();
-    const mode = modeOverride ?? liveMode;
+    const mode = useFeedStatusMode();
     const { articleCount } = useFeedCounts();
     const [expanded, setExpanded] = useState(initiallyExpanded);
     const stateLabel = tAny(a11yStateKey(mode));

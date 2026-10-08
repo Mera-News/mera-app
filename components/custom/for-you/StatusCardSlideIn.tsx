@@ -12,7 +12,6 @@
 // from under the header.
 
 import { useHeaderBottom } from '@/components/custom/nav/current-surface';
-import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { EASE, MOTION } from '@/lib/motion';
@@ -42,10 +41,6 @@ const TOP_GAP = 8;
 export interface StatusCardSlideInProps {
     readonly visible: boolean;
     readonly onHide: () => void;
-    /** Injected by the kit gallery; the live mode otherwise. */
-    readonly mode?: FeedStatusMode;
-    /** Top inside the layer, for the kit gallery (no tab header there). */
-    readonly topOverride?: number;
 }
 
 function useScreenReader(): boolean {
@@ -62,11 +57,10 @@ function useScreenReader(): boolean {
     return on;
 }
 
-const StatusCardSlideIn: React.FC<StatusCardSlideInProps> = ({ visible, onHide, mode: modeOverride, topOverride }) => {
+const StatusCardSlideIn: React.FC<StatusCardSlideInProps> = ({ visible, onHide }) => {
     const { t } = useTranslation();
     const tAny = t as unknown as (key: string) => string;
-    const liveMode = useFeedStatusMode();
-    const mode = modeOverride ?? liveMode;
+    const mode = useFeedStatusMode();
     const reduceMotion = useReducedMotion();
     const screenReader = useScreenReader();
     const focused = useIsFocusedSafe();
@@ -76,7 +70,7 @@ const StatusCardSlideIn: React.FC<StatusCardSlideInProps> = ({ visible, onHide, 
     // Window y of this layer, so a window-space header bottom maps into it.
     const layerRef = useRef<View>(null);
     const [layerY, setLayerY] = useState(0);
-    const top = topOverride ?? (headerBottom ?? insets.top + 56) - layerY + TOP_GAP;
+    const top = (headerBottom ?? insets.top + 56) - layerY + TOP_GAP;
 
     // Mounted from show until the exit slide ends. Parked far above until its
     // first layout says how far to slide.
@@ -184,7 +178,6 @@ const StatusCardSlideIn: React.FC<StatusCardSlideInProps> = ({ visible, onHide, 
                             testID="status-slide-in"
                         >
                             <DashboardStatsCard
-                                mode={modeOverride}
                                 overContent
                                 onBeforeNavigate={onHide}
                                 testID="status-slide-in-card"
