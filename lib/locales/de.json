@@ -1007,7 +1007,9 @@
     "stopFollowing": "Nicht mehr folgen",
     "stopFollowingConfirmBody": "Mera fügt hier keine Berichte mehr hinzu und entfernt, was es für diese Geschichte gespeichert hat.",
     "stopFollowingConfirmTitle": "Dieser Geschichte nicht mehr folgen?",
-    "updatedAgo": "aktualisiert {{time}}"
+    "updatedAgo": "aktualisiert {{time}}",
+    "articlesCount_one": "{{count}} Artikel",
+    "articlesCount_other": "{{count}} Artikel"
   },
   "whatsNew": {
     "title": "Neuigkeiten",

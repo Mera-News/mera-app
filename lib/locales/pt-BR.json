@@ -1007,7 +1007,9 @@
     "stopFollowing": "Deixar de seguir",
     "stopFollowingConfirmBody": "A Mera para de adicionar coberturas aqui e remove o que salvou para esta história.",
     "stopFollowingConfirmTitle": "Parar de seguir esta história?",
-    "updatedAgo": "atualizado {{time}}"
+    "updatedAgo": "atualizado {{time}}",
+    "articlesCount_one": "{{count}} artigo",
+    "articlesCount_other": "{{count}} artigos"
   },
   "whatsNew": {
     "title": "Novidades",

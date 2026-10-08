@@ -1,12 +1,13 @@
 // The Feed tab's Stories page (FinalFeedStatus #6-8): every followed story,
 // live via `observeActive` (unseen first, newest next).
 //
-// A row: the story's title with a tinted "N new" on the right, its latest
+// A row: the story's own title (Mera's headline, else its topic; never the
+// article it was followed from) with a tinted "N new" (members since the last
+// visit, the seen watermark) and an unfollow ⊘ on the right, its latest
 // headline (the newest CURRENT member, translated from its original), then
-// "Publisher · updated 1h ago". No follow button here (the Mera button and
-// articles follow a story) and no trash icon (owner default F1): a long press
-// opens a small sheet with Stop following, and screen readers get the same
-// as an action. One AI line under the rows says whether every title is
+// "updated 1h ago". No publication: a story is not the outlet it was
+// followed from. ⊘, a long press (a sheet with Stop following) and the
+// screen-reader action all ask on the gluestack ConfirmDialog first. One AI line under the rows says whether every title is
 // AI-written or only some (owner default F2: never claim all unless true).
 
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
@@ -33,7 +34,8 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type ListRenderItem, StyleSheet, View } from 'react-native';
+import { type ListRenderItem, Pressable, StyleSheet, View } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { latestMember } from './merge-timeline';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
@@ -88,14 +90,17 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
 
     const renderItem: ListRenderItem<TrackedStoryModel> = useCallback(
         ({ item }) => {
-            const title = item.llmHeadline ?? item.fallbackTitle;
-            const isLlmHeadline = !!item.llmHeadline;
+            // The story's own label (Mera's headline, else its topic), never
+            // the headline of the article it was followed from; only legacy
+            // (pre-topic) rows still fall back to that.
+            const title = item.llmHeadline ?? item.topicText ?? item.fallbackTitle;
+            const isLlmHeadline = !!(item.llmHeadline ?? item.topicText);
             const unseen = item.unseenCount ?? 0;
             const latest = latestMember(item.memberSnapshots, item.memberArticleIds);
             const updated = t('trackedStories.updatedAgo', {
                 time: formatTimeAgo(t, item.lastUpdateAt ?? item.createdAt),
             });
-            const meta = [latest?.publicationName, updated].filter(Boolean).join(' · ');
+            const meta = updated;
             return (
                 <PressableCard
                     onPress={() => openTimeline(item)}
@@ -140,6 +145,18 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                                         </Text>
                                     </View>
                                 ) : null}
+                                {/* Unfollow: the same confirm as Stop following. Inside
+                                    the row's one accessibility element, so screen
+                                    readers use its 'untrack' action instead. */}
+                                <Pressable
+                                    onPress={() => setConfirmTarget(item)}
+                                    accessible={false}
+                                    importantForAccessibility="no"
+                                    style={styles.unfollow}
+                                    testID={`tracked-story-unfollow-${item.id}`}
+                                >
+                                    <MaterialIcons name="remove-circle-outline" size={20} color={c.ink3} />
+                                </Pressable>
                                 {item.status === 'ended' ? (
                                     <View style={[styles.badge, { backgroundColor: c.surface }]}>
                                         <Text style={{ color: c.ink3, fontSize: 12, lineHeight: 16, fontWeight: '600' }}>
@@ -265,6 +282,8 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
 
 const styles = StyleSheet.create({
     badge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, marginTop: 2 },
+    // A 44pt frame given back by negative margins, never hitSlop.
+    unfollow: { width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' },
 });
 
 export default TrackedStoriesScreen;

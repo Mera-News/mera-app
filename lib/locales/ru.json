@@ -1029,7 +1029,11 @@
     "stopFollowing": "Перестать следить",
     "stopFollowingConfirmBody": "Mera перестанет добавлять сюда материалы и удалит всё, что сохранила для этой истории.",
     "stopFollowingConfirmTitle": "Перестать следить за этой историей?",
-    "updatedAgo": "обновлено {{time}}"
+    "updatedAgo": "обновлено {{time}}",
+    "articlesCount_one": "{{count}} статья",
+    "articlesCount_few": "{{count}} статьи",
+    "articlesCount_many": "{{count}} статей",
+    "articlesCount_other": "{{count}} статьи"
   },
   "whatsNew": {
     "title": "Что нового",

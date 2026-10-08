@@ -1007,7 +1007,9 @@
     "stopFollowing": "팔로우 취소",
     "stopFollowingConfirmBody": "Mera가 여기에 더 이상 보도를 추가하지 않고, 이 스토리를 위해 저장해 둔 내용을 지웁니다.",
     "stopFollowingConfirmTitle": "이 스토리를 팔로우 취소할까요?",
-    "updatedAgo": "{{time}}에 업데이트됨"
+    "updatedAgo": "{{time}}에 업데이트됨",
+    "articlesCount_one": "기사 {{count}}개",
+    "articlesCount_other": "기사 {{count}}개"
   },
   "whatsNew": {
     "title": "새로운 기능",

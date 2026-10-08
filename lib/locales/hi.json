@@ -1009,7 +1009,9 @@
     "stopFollowing": "फ़ॉलो करना बंद करें",
     "stopFollowingConfirmBody": "Mera यहां कवरेज जोड़ना बंद कर देगा और इस स्टोरी के लिए जो सहेजा था उसे हटा देगा।",
     "stopFollowingConfirmTitle": "इस स्टोरी को फ़ॉलो करना बंद करें?",
-    "updatedAgo": "{{time}} अपडेट किया गया"
+    "updatedAgo": "{{time}} अपडेट किया गया",
+    "articlesCount_one": "{{count}} लेख",
+    "articlesCount_other": "{{count}} लेख"
   },
   "whatsNew": {
     "title": "नया क्या है",

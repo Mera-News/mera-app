@@ -1009,7 +1009,9 @@
     "stopFollowing": "Takibi bırak",
     "stopFollowingConfirmBody": "Mera burada haber eklemeyi durdurur ve bu haber için kaydettiklerini kaldırır.",
     "stopFollowingConfirmTitle": "Bu haberin takibi bırakılsın mı?",
-    "updatedAgo": "{{time}} güncellendi"
+    "updatedAgo": "{{time}} güncellendi",
+    "articlesCount_one": "{{count}} makale",
+    "articlesCount_other": "{{count}} makale"
   },
   "whatsNew": {
     "title": "Yenilikler",

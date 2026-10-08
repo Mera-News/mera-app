@@ -1007,7 +1007,9 @@
     "stopFollowing": "Ngừng theo dõi",
     "stopFollowingConfirmBody": "Mera sẽ ngừng thêm đưa tin vào đây và xóa những gì đã lưu cho câu chuyện này.",
     "stopFollowingConfirmTitle": "Ngừng theo dõi câu chuyện này?",
-    "updatedAgo": "cập nhật {{time}}"
+    "updatedAgo": "cập nhật {{time}}",
+    "articlesCount_one": "{{count}} bài viết",
+    "articlesCount_other": "{{count}} bài viết"
   },
   "whatsNew": {
     "title": "Có gì mới",

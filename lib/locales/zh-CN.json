@@ -1007,7 +1007,9 @@
     "stopFollowing": "取消关注",
     "stopFollowingConfirmBody": "Mera 将停止在这里添加报道内容，并删除为此报道保存的内容。",
     "stopFollowingConfirmTitle": "取消关注这条报道？",
-    "updatedAgo": "{{time}}更新"
+    "updatedAgo": "{{time}}更新",
+    "articlesCount_one": "{{count}} 篇文章",
+    "articlesCount_other": "{{count}} 篇文章"
   },
   "whatsNew": {
     "title": "更新内容",

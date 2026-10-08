@@ -72,9 +72,9 @@ function snapshotFromSubject(subject: FeedbackSubject): TrackedStoryMemberSnapsh
     articleId: subject.articleId,
     title: subject.title ?? '',
     pubDateMs,
-    publicationName: subject.publicationName ?? undefined,
-    // No language on the subject — the timeline resolves it from the local
-    // suggestion row on first open (see `hydrateSource`).
+    // No publication and no language on the seed (owner: a story is not the
+    // publication it was followed from). The timeline resolves both from the
+    // local suggestion row on first open (see `hydrateSource`).
     countryCode: subject.countryCode ?? undefined,
   };
 }

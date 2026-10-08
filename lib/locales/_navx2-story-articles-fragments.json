@@ -1,0 +1,133 @@
+{
+  "_comment": "navx2-fu: the story page's article count. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} article",
+      "articlesCount_other": "{{count}} articles"
+    }
+  },
+  "ar": {
+    "trackedStories": {
+      "articlesCount_zero": "{{count}} مقالة",
+      "articlesCount_one": "{{count}} مقال",
+      "articlesCount_two": "{{count}} مقالان",
+      "articlesCount_few": "{{count}} مقالات",
+      "articlesCount_many": "{{count}} مقالًا",
+      "articlesCount_other": "{{count}} مقالة"
+    }
+  },
+  "de": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} Artikel",
+      "articlesCount_other": "{{count}} Artikel"
+    }
+  },
+  "es": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} artículo",
+      "articlesCount_other": "{{count}} artículos"
+    }
+  },
+  "fr": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} article",
+      "articlesCount_other": "{{count}} articles"
+    }
+  },
+  "hi": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} लेख",
+      "articlesCount_other": "{{count}} लेख"
+    }
+  },
+  "id": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} artikel",
+      "articlesCount_other": "{{count}} artikel"
+    }
+  },
+  "it": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} articolo",
+      "articlesCount_other": "{{count}} articoli"
+    }
+  },
+  "ja": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}}件の記事",
+      "articlesCount_other": "{{count}}件の記事"
+    }
+  },
+  "ko": {
+    "trackedStories": {
+      "articlesCount_one": "기사 {{count}}개",
+      "articlesCount_other": "기사 {{count}}개"
+    }
+  },
+  "nl": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} artikel",
+      "articlesCount_other": "{{count}} artikelen"
+    }
+  },
+  "pl": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} artykuł",
+      "articlesCount_few": "{{count}} artykuły",
+      "articlesCount_many": "{{count}} artykułów",
+      "articlesCount_other": "{{count}} artykułu"
+    }
+  },
+  "pt-BR": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} artigo",
+      "articlesCount_other": "{{count}} artigos"
+    }
+  },
+  "ru": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} статья",
+      "articlesCount_few": "{{count}} статьи",
+      "articlesCount_many": "{{count}} статей",
+      "articlesCount_other": "{{count}} статьи"
+    }
+  },
+  "th": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} บทความ",
+      "articlesCount_other": "{{count}} บทความ"
+    }
+  },
+  "tr": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} makale",
+      "articlesCount_other": "{{count}} makale"
+    }
+  },
+  "uk": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} стаття",
+      "articlesCount_few": "{{count}} статті",
+      "articlesCount_many": "{{count}} статей",
+      "articlesCount_other": "{{count}} статті"
+    }
+  },
+  "vi": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} bài viết",
+      "articlesCount_other": "{{count}} bài viết"
+    }
+  },
+  "zh-CN": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} 篇文章",
+      "articlesCount_other": "{{count}} 篇文章"
+    }
+  },
+  "zh-TW": {
+    "trackedStories": {
+      "articlesCount_one": "{{count}} 篇文章",
+      "articlesCount_other": "{{count}} 篇文章"
+    }
+  }
+}

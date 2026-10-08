@@ -1007,7 +1007,9 @@
     "stopFollowing": "เลิกติดตาม",
     "stopFollowingConfirmBody": "Mera จะหยุดเพิ่มข่าวที่นี่ และลบสิ่งที่บันทึกไว้สำหรับเรื่องนี้",
     "stopFollowingConfirmTitle": "เลิกติดตามเรื่องนี้ใช่ไหม",
-    "updatedAgo": "อัปเดต {{time}}"
+    "updatedAgo": "อัปเดต {{time}}",
+    "articlesCount_one": "{{count}} บทความ",
+    "articlesCount_other": "{{count}} บทความ"
   },
   "whatsNew": {
     "title": "มีอะไรใหม่",

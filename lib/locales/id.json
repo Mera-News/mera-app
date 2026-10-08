@@ -1007,7 +1007,9 @@
     "stopFollowing": "Berhenti mengikuti",
     "stopFollowingConfirmBody": "Mera berhenti menambahkan liputan di sini dan menghapus apa yang sudah disimpannya untuk cerita ini.",
     "stopFollowingConfirmTitle": "Berhenti mengikuti cerita ini?",
-    "updatedAgo": "diperbarui {{time}}"
+    "updatedAgo": "diperbarui {{time}}",
+    "articlesCount_one": "{{count}} artikel",
+    "articlesCount_other": "{{count}} artikel"
   },
   "whatsNew": {
     "title": "Yang baru",

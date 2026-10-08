@@ -1007,7 +1007,9 @@
     "stopFollowing": "Smetti di seguire",
     "stopFollowingConfirmBody": "Mera smette di aggiungere articoli qui e rimuove ciò che ha salvato per questa storia.",
     "stopFollowingConfirmTitle": "Smettere di seguire questa storia?",
-    "updatedAgo": "aggiornata {{time}}"
+    "updatedAgo": "aggiornata {{time}}",
+    "articlesCount_one": "{{count}} articolo",
+    "articlesCount_other": "{{count}} articoli"
   },
   "whatsNew": {
     "title": "Novità",

@@ -1007,7 +1007,9 @@
     "stopFollowing": "Stoppen met volgen",
     "stopFollowingConfirmBody": "Mera voegt hier geen berichtgeving meer toe en verwijdert wat het voor dit verhaal heeft opgeslagen.",
     "stopFollowingConfirmTitle": "Stoppen met dit verhaal te volgen?",
-    "updatedAgo": "bijgewerkt {{time}}"
+    "updatedAgo": "bijgewerkt {{time}}",
+    "articlesCount_one": "{{count}} artikel",
+    "articlesCount_other": "{{count}} artikelen"
   },
   "whatsNew": {
     "title": "Wat is er nieuw",

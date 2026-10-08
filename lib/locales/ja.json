@@ -1007,7 +1007,9 @@
     "stopFollowing": "フォローをやめる",
     "stopFollowingConfirmBody": "Meraはここへの報道の追加を止め、このストーリーのために保存したものを削除します。",
     "stopFollowingConfirmTitle": "このストーリーのフォローをやめますか？",
-    "updatedAgo": "{{time}}に更新"
+    "updatedAgo": "{{time}}に更新",
+    "articlesCount_one": "{{count}}件の記事",
+    "articlesCount_other": "{{count}}件の記事"
   },
   "whatsNew": {
     "title": "新機能",

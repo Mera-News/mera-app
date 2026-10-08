@@ -1033,7 +1033,11 @@
     "stopFollowing": "Припинити стежити",
     "stopFollowingConfirmBody": "Mera перестане додавати сюди матеріали та видалить те, що зберегла для цієї історії.",
     "stopFollowingConfirmTitle": "Припинити стежити за цією історією?",
-    "updatedAgo": "оновлено {{time}}"
+    "updatedAgo": "оновлено {{time}}",
+    "articlesCount_one": "{{count}} стаття",
+    "articlesCount_few": "{{count}} статті",
+    "articlesCount_many": "{{count}} статей",
+    "articlesCount_other": "{{count}} статті"
   },
   "whatsNew": {
     "title": "Що нового",

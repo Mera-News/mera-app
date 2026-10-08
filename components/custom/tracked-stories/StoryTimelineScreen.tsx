@@ -161,6 +161,11 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     // (not just its id) keeps the confirm addressable after the list re-renders.
     const [confirmRemove, setConfirmRemove] = useState<TimelineCard | null>(null);
     const [exportOpen, setExportOpen] = useState(false);
+    // Export was picked in the ••• sheet: it opens once the sheet has gone.
+    const exportPicked = useRef(false);
+    // New since the reader last opened this page: the story's unseen count,
+    // read BEFORE the visit stamps it (markSeen), so the header can say it.
+    const [newAtOpen, setNewAtOpen] = useState(0);
 
     // Deleting retires the linked TOPIC as well as dropping the row — without
     // that the topic keeps pulling this story's coverage every fetch cycle for a
@@ -245,8 +250,8 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                     return;
                 }
                 setEmptyReason('quiet');
-                setHeadline(story.llmHeadline ?? story.fallbackTitle ?? '');
-                setIsLlmHeadline(!!story.llmHeadline);
+                setHeadline(story.llmHeadline ?? story.topicText ?? story.fallbackTitle ?? '');
+                setIsLlmHeadline(!!(story.llmHeadline ?? story.topicText));
                 setFollowedSinceMs(story.createdAt ? story.createdAt.getTime() : null);
 
                 const localSnapshots = story.memberSnapshots ?? [];
@@ -320,7 +325,11 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     // the freshest coverage. markSeen clears the unseen badge as it opens.
     useFocusEffect(
         useCallback(() => {
-            void markSeen(trackedStoryId);
+            void (async () => {
+                const before = await getTrackedStoryById(trackedStoryId);
+                setNewAtOpen(before?.unseenCount ?? 0);
+                await markSeen(trackedStoryId);
+            })();
             void load();
             return () => {
                 // Invalidate any in-flight load so it can't write state post-blur.
@@ -527,7 +536,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                         )}
                         {/* Followed since, and the AI disclosure when the
                             headline is Mera's (EU AI Act Art. 50). Wraps, never truncates. */}
-                        {followedSinceMs || isLlmHeadline ? (
+                        {followedSinceMs || isLlmHeadline || cards.length > 0 ? (
                             <Text size="xs" style={{ color: colors.ink3, marginTop: 2 }}>
                                 {[
                                     followedSinceMs
@@ -535,6 +544,8 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                               date: formatDayMonth(followedSinceMs, appLanguage),
                                           })
                                         : null,
+                                    cards.length > 0 ? t('trackedStories.articlesCount', { count: cards.length }) : null,
+                                    newAtOpen > 0 ? t('trackedStories.updatesBadge', { count: newAtOpen }) : null,
                                     isLlmHeadline ? t('trackedStories.headlinesByMera') : null,
                                 ]
                                     .filter(Boolean)
@@ -542,19 +553,6 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                             </Text>
                         ) : null}
                     </Box>
-                    {/* Export. Hidden until there is something to export, so
-                        it never opens an empty wizard. */}
-                    {!isLoading && exportRows.length > 0 && (
-                        <Pressable
-                            testID="story-timeline-share"
-                            onPress={() => setExportOpen(true)}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('storyExport.shareA11y')}
-                            style={HEADER_BUTTON}
-                        >
-                            <MaterialIcons name="ios-share" size={24} color={colors.ink} />
-                        </Pressable>
-                    )}
                     {/* Stopping is the ONLY way to unfollow a story (Q13): it
                         destroys everything saved here, hence the confirm. */}
                     <Pressable
@@ -575,12 +573,30 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 // The confirm opens once the sheet has fully gone: iOS refuses
                 // a second modal over one still leaving.
                 onClosed={() => {
+                    if (exportPicked.current) {
+                        exportPicked.current = false;
+                        setExportOpen(true);
+                        return;
+                    }
                     if (!stopPicked.current) return;
                     stopPicked.current = false;
                     setConfirmDelete(true);
                 }}
                 testID="story-timeline-menu"
             >
+                {/* Export, moved here from the header (owner). Only when there
+                    is something to export, so it never opens an empty wizard. */}
+                {!isLoading && exportRows.length > 0 ? (
+                    <ActionSheetRow
+                        testID="story-timeline-share"
+                        label={t('storyExport.shareA11y')}
+                        icon="ios-share"
+                        onPress={() => {
+                            exportPicked.current = true;
+                            setMenuOpen(false);
+                        }}
+                    />
+                ) : null}
                 <ActionSheetRow
                     testID="story-timeline-stop"
                     label={t('trackedStories.stopFollowing')}

@@ -1012,7 +1012,9 @@
     "stopFollowing": "Arrêter de suivre",
     "stopFollowingConfirmBody": "Mera n'ajoute plus de couverture ici et supprime ce qu'elle avait enregistré pour cette histoire.",
     "stopFollowingConfirmTitle": "Arrêter de suivre cette histoire ?",
-    "updatedAgo": "mis à jour {{time}}"
+    "updatedAgo": "mis à jour {{time}}",
+    "articlesCount_one": "{{count}} article",
+    "articlesCount_other": "{{count}} articles"
   },
   "whatsNew": {
     "title": "Nouveautés",

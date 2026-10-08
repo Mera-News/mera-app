@@ -1029,7 +1029,11 @@
     "stopFollowing": "Przestań obserwować",
     "stopFollowingConfirmBody": "Mera przestanie dodawać tu doniesienia i usunie to, co zapisała dla tej historii.",
     "stopFollowingConfirmTitle": "Przestać obserwować tę historię?",
-    "updatedAgo": "zaktualizowano {{time}}"
+    "updatedAgo": "zaktualizowano {{time}}",
+    "articlesCount_one": "{{count}} artykuł",
+    "articlesCount_few": "{{count}} artykuły",
+    "articlesCount_many": "{{count}} artykułów",
+    "articlesCount_other": "{{count}} artykułu"
   },
   "whatsNew": {
     "title": "Co nowego",

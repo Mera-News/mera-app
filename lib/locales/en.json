@@ -569,7 +569,9 @@
     "stopFollowing": "Stop following",
     "stopFollowingConfirmBody": "Mera stops adding coverage here and removes what it saved for this story.",
     "stopFollowingConfirmTitle": "Stop following this story?",
-    "updatedAgo": "updated {{time}}"
+    "updatedAgo": "updated {{time}}",
+    "articlesCount_one": "{{count}} article",
+    "articlesCount_other": "{{count}} articles"
   },
   "whatsNew": {
     "title": "What's new",
