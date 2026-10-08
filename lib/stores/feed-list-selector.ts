@@ -37,6 +37,7 @@ import {
 import { type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import { makeRepCompare } from '@/lib/feed-grouping/representative-compare';
 import { isReasonPendingVisible } from '@/lib/feed-ordering/pending-visibility';
+import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { ForYouSuggestion } from './for-you-store';
 
@@ -224,8 +225,12 @@ export function buildFeedList(
   // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS). Same gate the
   //    swipe deck / fact-rows feeds use, so every surface agrees on what is
   //    showable. The Feed widens it to scored rows still awaiting their note.
+  //    A muted publication's rows never enter (Mute means skip; the scoring
+  //    screen excludes new ones, this catches rows scored before the mute).
   const visible = suggestions.filter(
-    (s) => isVisible(s, cutoffMs) || (includePending && isReasonPendingVisible(s, cutoffMs)),
+    (s) =>
+      (isVisible(s, cutoffMs) || (includePending && isReasonPendingVisible(s, cutoffMs))) &&
+      !isMutedPublication(s.publication_name, userCtx),
   );
   if (visible.length === 0) return [];
 

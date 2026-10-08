@@ -20,6 +20,10 @@ import {
     getActive as getActivePublicationPreferences,
     observeActive as observeActivePublicationPreferences,
 } from '@/lib/database/services/publication-preference-service';
+import {
+    getSubscribedSourceNameSet,
+    observeActive as observeActiveSubscriptions,
+} from '@/lib/database/services/user-publication-subscription-service';
 import { alpha2ToAlpha3 } from '@/lib/explore/scopes';
 import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import { useAppLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -27,8 +31,13 @@ import {
     baseLang,
     normAlpha3,
     normPublicationName,
-    type UserGeoLanguageContext,
 } from '@/lib/feed-grouping/geo-language-priority';
+import {
+    publicationTagMultiplier,
+    type PublicationPrefTag,
+    type RankingContext,
+} from '@/lib/feed-ordering/publication-tags';
+import { weightToPrefKind } from '@/lib/database/services/publication-preference-service';
 
 /**
  * Resolve the user's geo/language context from on-device state:
@@ -51,10 +60,11 @@ import {
  * `'en'`. That is harmless — it only softens the tier-2 "app language" match
  * for that one run; the country tiers (0/1) and everything else are unaffected.
  */
-export async function loadUserGeoLanguageContext(): Promise<UserGeoLanguageContext | null> {
+export async function loadUserGeoLanguageContext(): Promise<RankingContext | null> {
     try {
         const locations = await getAll(); // weight-desc (canonical ordering)
         const pubPrefs = await getActivePublicationPreferences();
+        const subscribedNames = await getSubscribedSourceNameSet();
 
         const homeLoc = locations.find((l) => l.role === 'home');
         let homeCountryAlpha3: string | null = homeLoc
@@ -102,6 +112,31 @@ export async function loadUserGeoLanguageContext(): Promise<UserGeoLanguageConte
             if (name !== null) preferredPublications.add(name);
         }
 
+        // The publication tags (More, Fewer, Mute, Subscribed) as ONE map of
+        // ranking multipliers, the single source the Feed's sort and its Mute
+        // skip read (lib/feed-ordering/publication-tags.ts). Subscribed names
+        // also top the related list, like More.
+        const tags = new Map<string, PublicationPrefTag>();
+        for (const p of pubPrefs) {
+            if (p.scopeKind != null) continue;
+            const name = normPublicationName(p.publicationName);
+            const kind = weightToPrefKind(p.weight);
+            if (name === null || kind === null) continue;
+            tags.set(name, kind === 'boost' ? 'more' : kind === 'deprioritize' ? 'fewer' : 'mute');
+        }
+        const subscribed = new Set<string>();
+        for (const raw of subscribedNames) {
+            const name = normPublicationName(raw);
+            if (name === null) continue;
+            subscribed.add(name);
+            preferredPublications.add(name);
+        }
+        const publicationMultipliers = new Map<string, number>();
+        for (const name of new Set([...tags.keys(), ...subscribed])) {
+            const m = publicationTagMultiplier(tags.get(name) ?? null, subscribed.has(name));
+            if (m !== 1) publicationMultipliers.set(name, m);
+        }
+
         // Spread CONDITIONALLY — same idiom as `buildPersonaContext`'s
         // filters/proposal blocks. A user who has expressed NO source preference
         // gets a context object byte-identical to the pre-source-pref one, which
@@ -114,6 +149,7 @@ export async function loadUserGeoLanguageContext(): Promise<UserGeoLanguageConte
             appLanguageBase,
             ...(preferredPublications.size > 0 ? { preferredPublications } : {}),
             ...(preferredCountriesAlpha3.size > 0 ? { preferredCountriesAlpha3 } : {}),
+            ...(publicationMultipliers.size > 0 ? { publicationMultipliers } : {}),
         };
     } catch {
         return null; // fail open — legacy geo/language-blind behavior downstream
@@ -138,9 +174,9 @@ export async function loadUserGeoLanguageContext(): Promise<UserGeoLanguageConte
  * so the single source of truth for BUILDING a context stays
  * `loadUserGeoLanguageContext` (which background tasks call directly).
  */
-export function useUserGeoLanguageContext(): UserGeoLanguageContext | null {
+export function useUserGeoLanguageContext(): RankingContext | null {
     const appLanguage = useAppLanguage();
-    const [ctx, setCtx] = useState<UserGeoLanguageContext | null>(null);
+    const [ctx, setCtx] = useState<RankingContext | null>(null);
     const [prefsRevision, setPrefsRevision] = useState(0);
 
     useEffect(() => {
@@ -148,10 +184,14 @@ export function useUserGeoLanguageContext(): UserGeoLanguageContext | null {
         // (no DB in a test/background context), the context simply stops
         // auto-refreshing — it never throws into the render tree.
         try {
-            const sub = observeActivePublicationPreferences().subscribe(() => {
-                setPrefsRevision((r) => r + 1);
-            });
-            return () => sub.unsubscribe();
+            // Subscriptions are tags too: a change re-reads the context.
+            const bump = () => setPrefsRevision((r) => r + 1);
+            const prefs = observeActivePublicationPreferences().subscribe(bump);
+            const subs = observeActiveSubscriptions().subscribe(bump);
+            return () => {
+                prefs.unsubscribe();
+                subs.unsubscribe();
+            };
         } catch {
             return undefined;
         }

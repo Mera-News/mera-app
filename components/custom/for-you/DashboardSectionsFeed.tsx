@@ -10,6 +10,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
+import { isMutedPublication, rankedRelevance, type RankingContext } from '@/lib/feed-ordering/publication-tags';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
 import {
   isSuggestionOpened,
@@ -136,6 +137,9 @@ interface DashboardSectionsFeedProps {
   refreshing?: boolean;
   /** Pull-to-refresh handler. Omit both props to render no refresh control. */
   onRefresh?: () => void;
+  /** The publication tags: they weigh a section's order, and a muted
+   *  publication's stories leave it (lib/feed-ordering/publication-tags). */
+  rankingCtx?: RankingContext | null;
   /** False while this is not the visible page of the focused Feed tab: no
    *  scroll ticks, and the tab re-tap neither scrolls nor refreshes through
    *  it. Default true. */
@@ -162,6 +166,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   ListHeaderComponent,
   refreshing,
   onRefresh,
+  rankingCtx = null,
   active = true,
 }) => {
   // Inside a tab on iOS the inset already includes the tab bar; measured on
@@ -200,13 +205,13 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
       // no header and no placeholder. The selector still builds it (a fact
       // feed opened directly shows its own empty state), nothing is persisted,
       // and it appears as soon as a refresh gives it a story.
-      if (row.groups.length === 0) continue;
-      // Every group the row carries renders. A display-only importance pill
-      // used to cut this list first, and a row whose groups it emptied was
-      // dropped; both are gone, so the preview, the total and the
-      // "+N"/denominator counts agree on `row.groups` by construction.
-      const ordered = sortByPriority(row.groups, (g) => ({
-        relevance: g.data.relevance ?? 0,
+      // Every group renders except a muted publication's (Mute means skip),
+      // so the preview, the total and the "+N"/denominator counts agree on
+      // `groups` by construction.
+      const groups = row.groups.filter((g) => !isMutedPublication(g.data.publication_name, rankingCtx));
+      if (groups.length === 0) continue;
+      const ordered = sortByPriority(groups, (g) => ({
+        relevance: rankedRelevance(g.data.relevance ?? 0, g.data.publication_name, rankingCtx),
         viewed: isViewedArticle(
           g.data.articleId,
           g.data.articleId,
@@ -222,12 +227,12 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         key: `s:${row.factId}`,
         row,
         preview: ordered.slice(0, SECTION_PREVIEW_COUNT),
-        total: row.groups.length,
+        total: groups.length,
         title: sectionTitle(t, row),
       });
     }
     return data;
-  }, [rows, sortSnapshot, t]);
+  }, [rows, sortSnapshot, t, rankingCtx]);
 
   const openFactFeed = useCallback((row: FactRow, title: string) => {
     router.push({

@@ -46,6 +46,7 @@ import {
   type SeenTier,
 } from '@/lib/feed-ordering/priority-order';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import { isMutedPublication, rankedRelevance, type RankingContext } from '@/lib/feed-ordering/publication-tags';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import { FEED_HALF_LIFE_HOURS, type FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -225,8 +226,12 @@ export function effectiveBand(
   item: FeedListItem,
   tier: SeenTier,
   nowMs: number,
+  ctx: RankingContext | null = null,
 ): number {
-  const base = relevanceBandRank(item.suggestion.relevance ?? 0);
+  // The publication tags weigh the SORT band only (publication-tags.ts).
+  const base = relevanceBandRank(
+    rankedRelevance(item.suggestion.relevance ?? 0, item.suggestion.publication_name, ctx),
+  );
   if (tier !== 0) return base;
   const penalty = stalenessBandPenalty(ageHoursOf(item, nowMs));
   if (penalty === 0) return base;
@@ -265,9 +270,10 @@ function feedPriorityFacts(
   openedArticleIds: Set<string>,
   nowMs: number,
   awaitingNote: (it: FeedListItem) => boolean,
+  ctx: RankingContext | null = null,
 ): PriorityFacts {
   const tier = seenTierOfEntry(item, cardStates, openedArticleIds);
-  const band = effectiveBand(item, tier, nowMs);
+  const band = effectiveBand(item, tier, nowMs, ctx);
   return {
     relevance: item.suggestion.relevance ?? 0,
     // Both are supplied and cannot disagree — `isViewedEntry` IS `tier > 0`.
@@ -312,10 +318,16 @@ export function sortFeedEntries(
   pinnedIds: readonly string[] = [],
   nowMs: number = Date.now(),
   awaitingNote: (it: FeedListItem) => boolean = representativeAwaitingNote,
+  /** The session's ranking context: publication tags weigh the band, and a
+   *  muted publication's rows leave the list (pinned ones included). */
+  ctx: RankingContext | null = null,
 ): SortedFeed {
+  if (ctx?.publicationMultipliers) {
+    data = data.filter((it) => !isMutedPublication(it.suggestion.publication_name, ctx));
+  }
   if (data.length === 0) return { rows: [], pinnedCount: 0 };
   const facts = (it: FeedListItem) =>
-    feedPriorityFacts(it, cardStates, openedArticleIds, nowMs, awaitingNote);
+    feedPriorityFacts(it, cardStates, openedArticleIds, nowMs, awaitingNote, ctx);
   if (pinnedIds.length === 0) {
     return { rows: sortByPriority(data, facts), pinnedCount: 0 };
   }

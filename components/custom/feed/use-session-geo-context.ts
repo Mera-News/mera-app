@@ -19,13 +19,13 @@
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import { useRef } from 'react';
 
-export function useSessionGeoLanguageContext(
-    live: UserGeoLanguageContext | null,
+export function useSessionGeoLanguageContext<T extends UserGeoLanguageContext>(
+    live: T | null,
     /** Changes at every new reading session (FeedScreen: a counter bumped by
      *  `resetSession`; FactFeedScreen: the fact id). */
     sessionEpoch: string | number,
-): UserGeoLanguageContext | null {
-    const held = useRef<{ ctx: UserGeoLanguageContext | null; epoch: string | number }>({ ctx: null, epoch: sessionEpoch });
+): T | null {
+    const held = useRef<{ ctx: T | null; epoch: string | number }>({ ctx: null, epoch: sessionEpoch });
     const h = held.current;
     if (
         live &&

@@ -188,6 +188,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header, listHeade
         ListEmptyComponent={empty}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        rankingCtx={userGeoLanguageCtx}
         active={active}
       />
     </View>

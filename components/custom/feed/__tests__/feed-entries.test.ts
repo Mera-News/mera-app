@@ -536,3 +536,36 @@ describe('pending-note sink (tier 0 only)', () => {
     expect(ids(sortFeedEntries(data, noStates, new Set()))).toEqual(['story', 'low']);
   });
 });
+
+describe('publication tags in the sort', () => {
+  const tagged = (id: string, relevance: number, publication: string): FeedListItem => {
+    const it = item(id, relevance);
+    return { ...it, suggestion: { ...it.suggestion, publication_name: publication } as ForYouSuggestion };
+  };
+  const ctx = {
+    homeCountryAlpha3: null,
+    otherCountriesAlpha3: [],
+    appLanguageBase: null,
+    publicationMultipliers: new Map([
+      ['paid', 2],
+      ['less', 0.5],
+      ['muted', 0],
+    ]),
+  };
+
+  it('Subscribed lifts, Fewer sinks, Mute removes', () => {
+    const data = [
+      tagged('plain-high', 0.85, 'Plain'),
+      tagged('paid-low', 0.45, 'Paid'),
+      tagged('less-high', 0.85, 'Less'),
+      tagged('muted-high', 0.9, 'Muted'),
+      tagged('plain-mid', 0.65, 'Plain'),
+    ];
+    const untagged = sortFeedEntries(data, noStates, new Set(), [], 0, () => false);
+    expect(ids(untagged)).toEqual(['plain-high', 'less-high', 'muted-high', 'plain-mid', 'paid-low']);
+
+    const out = sortFeedEntries(data, noStates, new Set(), [], 0, () => false, ctx);
+    // paid-low 0.45 x2 = 0.9 (HIGH), less-high 0.85 x0.5 = 0.425 (LOW), muted gone.
+    expect(ids(out)).toEqual(['plain-high', 'paid-low', 'plain-mid', 'less-high']);
+  });
+});

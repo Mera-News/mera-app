@@ -692,8 +692,9 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
         pinnedIds,
         partitionSnapshot.at,
         (it) => isAwaitingNote(displayedSuggestionOf(it, liveById, rowSessionRef.current)),
+        userGeoLanguageCtx,
       ),
-    [data, partitionSnapshot, pinnedIds, liveById],
+    [data, partitionSnapshot, pinnedIds, liveById, userGeoLanguageCtx],
   );
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
