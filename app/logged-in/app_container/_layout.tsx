@@ -66,7 +66,15 @@ export default function AppLayout() {
                     accessibility title (the string children) while suppressing the
                     visible caption. `hidden` on NativeTabsTriggerLabelProps is the
                     supported cross-platform mechanism (iOS + Android). */}
-                <NativeTabs tintColor={colors.accent} badgeBackgroundColor={colors.accent} minimizeBehavior="onScrollDown">
+                <NativeTabs
+                    // Outline glyphs in ink, the picked one in the accent's mark
+                    // tone (the boards' tab bar). The selected PILL's tint is the
+                    // system's on iOS 26 (no prop reaches it; native list).
+                    tintColor={colors.accentMark}
+                    iconColor={{ default: colors.ink, selected: colors.accentMark }}
+                    badgeBackgroundColor={colors.accent}
+                    minimizeBehavior="onScrollDown"
+                >
                     {/* navx: four tabs, Feed, World, Library, You, each a folder
                         with its own Stack. `disableScrollToTop` because each
                         page handles a re-tap in JS (use-tab-press-scroll-refresh:
@@ -81,8 +89,8 @@ export default function AppLayout() {
                         <Label hidden>{t('tabs.deck')}</Label>
                         <Badge hidden={!dot.feed} />
                         <Icon
-                            sf="list.bullet.rectangle.fill"
-                            src={<VectorIcon family={MaterialIcons} name="view-agenda" />}
+                            sf={{ default: 'doc.text', selected: 'doc.text' }}
+                            src={<VectorIcon family={MaterialIcons} name="article" />}
                         />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger
@@ -92,7 +100,7 @@ export default function AppLayout() {
                     >
                         <Label hidden>{t('tabs.world')}</Label>
                         <Badge hidden={!dot.world} />
-                        <Icon sf="globe" src={<VectorIcon family={MaterialIcons} name="public" />} />
+                        <Icon sf={{ default: 'globe', selected: 'globe' }} src={<VectorIcon family={MaterialIcons} name="public" />} />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger
                         name="library"
@@ -101,7 +109,7 @@ export default function AppLayout() {
                     >
                         <Label hidden>{t('tabs.library')}</Label>
                         <Badge hidden={!dot.library} />
-                        <Icon sf="bookmark.fill" src={<VectorIcon family={MaterialIcons} name="bookmark" />} />
+                        <Icon sf={{ default: 'bookmark', selected: 'bookmark' }} src={<VectorIcon family={MaterialIcons} name="bookmark-border" />} />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger
                         name="you"
@@ -110,7 +118,7 @@ export default function AppLayout() {
                     >
                         <Label hidden>{t('tabs.you')}</Label>
                         <Badge hidden={!dot.you} />
-                        <Icon sf="person.fill" src={<VectorIcon family={MaterialIcons} name="person" />} />
+                        <Icon sf={{ default: 'person', selected: 'person' }} src={<VectorIcon family={MaterialIcons} name="person-outline" />} />
                     </NativeTabs.Trigger>
                 </NativeTabs>
             </ErrorBoundary>
