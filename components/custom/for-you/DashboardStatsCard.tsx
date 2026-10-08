@@ -7,10 +7,14 @@
 //
 // Level 1: the status line (a light sweeps across it while a sync runs) and a
 // chevron, then the count sentence ("being analysed" while syncing, with the
-// 20pt processing scene beside it). The sentence says nothing at zero
-// articles, the normal state of a capped account. Level 2, under the chevron
+// 20pt processing scene beside it). Level 2, under the chevron
 // and INSIDE the same card: FeedStatusDetails. At the daily limit or on a
 // problem the whole card is FeedStatusNotice instead: no chevron, no counts.
+//
+// A zero count leads with its reason instead (zero-state.ts): nothing
+// fetched, nothing analysed, nothing relevant, or offline. Those sentences
+// carry links (contact support, Review your profile), so that row is real
+// text with its own chevron button, not the hidden visual under one press.
 //
 // No announcement here: FeedScreen announces the capped and error states.
 
@@ -21,10 +25,15 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
+import { useSupportAction } from '@/lib/intercom';
+import { useIsConnected } from '@/lib/stores/network-store';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
+import { formatCount } from '@/lib/utils/format-count';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect } from 'react';
 import { registerStatusCard, setStatusCardExpanded, useFeedStatusCard } from './feed-status-card';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { ShimmerText } from '@/components/ui/shimmer';
 import { Text } from '@/components/ui/text';
@@ -34,6 +43,7 @@ import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanim
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
+import { zeroState, type ZeroState } from './zero-state';
 
 const HIDDEN = {
     accessible: false,
@@ -63,13 +73,54 @@ function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
     );
 }
 
+const TABULAR = { fontVariant: ['tabular-nums' as const] };
+
+/** The sentence a zero count leads with, its links live. */
+function ZeroSentence({ kind }: { kind: ZeroState }) {
+    const { t } = useTranslation();
+    const colors = useColors();
+    const appLanguage = useAppLanguage();
+    const { articleCount, analysedCount } = useFeedCounts();
+    const { openSupport } = useSupportAction();
+    const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
+    const link = (key: string, onPress: () => void) => (
+        <Text key={key} onPress={onPress} accessibilityRole="link" style={{ color: colors.accentText }} />
+    );
+    const support = link('support', () => void openSupport());
+    const profile = link('profile', () => navigateToPage('profile'));
+    const body =
+        kind === 'offline' ? (
+            t('common.offlineBannerOffline')
+        ) : kind === 'fetched' ? (
+            <Trans i18nKey="feed.statsZeroFetched" components={[support]} />
+        ) : kind === 'analysed' ? (
+            <>
+                {t('feed.statsPublished', fmt(articleCount))}{' '}
+                <Trans i18nKey="feed.statsZeroAnalysedTail" components={[support]} />
+            </>
+        ) : (
+            <>
+                {t('feed.statsPublished', fmt(articleCount))} {t('feed.statsAnalysed', fmt(analysedCount))}{' '}
+                <Trans i18nKey="feed.statsZeroRelevantTail" components={[profile, support]} />
+            </>
+        );
+    return (
+        <Text size="sm" className="text-ink font-medium" style={TABULAR} testID="dashboard-stats-card-zero">
+            {body}
+        </Text>
+    );
+}
+
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {
     const { t } = useTranslation();
     // `a11yStateKey` is computed from the mode; see its own note on `tAny`.
     const tAny = t as unknown as (key: string) => string;
     const mode = useFeedStatusMode();
-    const { articleCount } = useFeedCounts();
+    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const expanded = useFeedStatusCard((s) => s.expanded);
+    const noFacts = useFeedStatusCard((s) => s.emptyWants);
+    const offline = useIsConnected() === false;
+    const zero = zeroState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount });
     // The icon reads whether a card is showing from this count.
     useEffect(() => registerStatusCard(), []);
     const stateLabel = tAny(a11yStateKey(mode));
@@ -85,6 +136,15 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     // expanded (the details' Stage row already says the state). At zero the
     // sentence says nothing, so then the status line leads.
     const countsTop = articleCount > 0;
+    const details = expanded ? (
+        <Animated.View
+            entering={reduceMotion ? undefined : FadeIn.duration(MOTION.status.open)}
+            exiting={reduceMotion ? undefined : FadeOut.duration(MOTION.status.close)}
+        >
+            <FeedStatusDetails mode={mode} />
+            {processing ? <AnalysingProgress /> : null}
+        </Animated.View>
+    ) : null;
 
     return (
         <View className="mb-2" testID={`${testID}-anchor`}>
@@ -95,6 +155,25 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
             >
                 {notice ? (
                     <FeedStatusNotice mode={mode} />
+                ) : zero ? (
+                    <>
+                        <HStack className="items-start" space="sm">
+                            <View style={{ flex: 1, minWidth: 0 }}>
+                                <ZeroSentence kind={zero} />
+                            </View>
+                            <Pressable
+                                onPress={toggle}
+                                accessibilityRole="button"
+                                accessibilityState={{ expanded }}
+                                accessibilityLabel={t(expanded ? 'feedStatus.collapseA11y' : 'feedStatus.expandA11y')}
+                                hitSlop={12}
+                                testID={`${testID}-toggle`}
+                            >
+                                <MaterialIcons name={expanded ? 'expand-less' : 'expand-more'} size={20} color={colors.ink} />
+                            </Pressable>
+                        </HStack>
+                        {details}
+                    </>
                 ) : (
                     <>
                         {/* A hidden visual under a CHILDLESS labelled button: a
@@ -139,15 +218,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                 style={StyleSheet.absoluteFill}
                             />
                         </View>
-                        {expanded ? (
-                            <Animated.View
-                                entering={reduceMotion ? undefined : FadeIn.duration(MOTION.status.open)}
-                                exiting={reduceMotion ? undefined : FadeOut.duration(MOTION.status.close)}
-                            >
-                                <FeedStatusDetails mode={mode} />
-                                {processing ? <AnalysingProgress /> : null}
-                            </Animated.View>
-                        ) : null}
+                        {details}
                     </>
                 )}
             </GlassPanel>
