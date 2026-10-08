@@ -21,7 +21,8 @@ import {
 } from '@/lib/stores/floating-chat-store';
 import { useIsOnDeviceProcessing, useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
 import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-pages';
-import { usesProfileWelcome } from './profile-welcome';
+import { awaitsFactsRead, usesOriginalWelcome } from './original-welcome';
+import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useUserStore } from '@/lib/stores/user-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -119,36 +120,51 @@ export default function ChatSessionView({
   // Computed keys from the page table, so `t` takes them untyped (the
   // en.json presence test in mera-button covers every one).
   const tKey = t as unknown as (key: string, opts?: Record<string, string>) => string;
-  const introText =
-    context.kind === 'optimisation-plan'
+  // Whether the reader had facts when the chat opened, frozen at the first
+  // answer: a fact saved during the chat must not swap the welcome under them.
+  const hasFacts = useHasFacts();
+  const [factsAtOpen, setFactsAtOpen] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (factsAtOpen === null && hasFacts !== null) setFactsAtOpen(hasFacts);
+  }, [factsAtOpen, hasFacts]);
+  const originalWelcome = usesOriginalWelcome(context, factsAtOpen);
+  const awaitingFacts = awaitsFactsRead(context, factsAtOpen);
+  const introText = awaitingFacts
+    ? null
+    : context.kind === 'optimisation-plan'
       ? // The pinned plan card IS the content — no persona intro line beneath it.
         null
       : (context.kind === 'persona' || context.kind === 'follow-story') &&
           context.page &&
-          !usesProfileWelcome(context)
+          !originalWelcome
         ? // Opened from the Mera button: the page's own first line.
           tKey(introKeyFor(context.page, webSearch))
-      : context.kind === 'follow-story'
-        ? // The FAB seeds "I want to follow a story", so the persona intro
-          // ("tell me about yourself…") would answer a question nobody asked.
-          t('trackedStories.followChatIntro')
-      : context.kind === 'generic'
-        ? // Route-aware product help (today: "Ask Mera" on a tutorial slide).
-          // The persona intro ("tell me about yourself so I can tune your feed")
-          // would be an outright lie here — TutorialHelpAgent has no tools and
-          // cannot tune anything. The button also always seeds a question, so
-          // this line is only ever briefly visible.
-          t('tutorials.chatIntro')
-      : context.kind === 'article-suggestion'
-        ? context.verdict === 'like'
-          ? t('articleFeedback.introLikeTuning')
-          : context.verdict === 'dislike'
-            ? t('articleFeedback.introDislikeTuning')
-            : t(context.suggestionId ? 'articleFeedback.intro' : 'articleFeedback.introArticle')
-        : t('personaChat.introMessage');
+        : context.kind === 'follow-story'
+          ? // The FAB seeds "I want to follow a story", so the persona intro
+            // ("tell me about yourself…") would answer a question nobody asked.
+            t('trackedStories.followChatIntro')
+          : context.kind === 'generic'
+            ? // Route-aware product help (today: "Ask Mera" on a tutorial slide).
+              // The persona intro ("tell me about yourself so I can tune your feed")
+              // would be an outright lie here — TutorialHelpAgent has no tools and
+              // cannot tune anything. The button also always seeds a question, so
+              // this line is only ever briefly visible.
+              t('tutorials.chatIntro')
+            : context.kind === 'article-suggestion'
+              ? context.verdict === 'like'
+                ? t('articleFeedback.introLikeTuning')
+                : context.verdict === 'dislike'
+                  ? t('articleFeedback.introDislikeTuning')
+                  : t(
+                      context.suggestionId
+                        ? 'articleFeedback.intro'
+                        : 'articleFeedback.introArticle',
+                    )
+              : t('personaChat.introMessage');
 
   // Intro pseudo-message until the first send of this session.
-  const [introMessage, setIntroMessage] = useState<string | null>(introText);
+  const [introCleared, setIntroCleared] = useState(false);
+  const introMessage = introCleared ? null : introText;
 
   // Lazily page in older history on scroll-up.
   const { history, loadOlder, hasOlder, isLoadingOlder } = useChatHistory(
@@ -226,7 +242,6 @@ export default function ChatSessionView({
     ],
   );
 
-
   // r14 — topic-plan gate. Every unresolved "Topics I'll track" card in the
   // thread blocks the chat input, so the user can't walk away from a plan they
   // never chose to keep or discard.
@@ -260,6 +275,7 @@ export default function ChatSessionView({
   // which is correct because an unanswered question is unanswered again.
   const unresolvedFactChoices = useMemo(
     () =>
+
       items.filter(
         (item) => item.kind === 'fact-choice-card' && !item.stale && !item.dismissed,
       ).length,
@@ -290,10 +306,10 @@ export default function ChatSessionView({
     [],
   );
 
-
   // Success haptic when a new fact card lands in the LIVE session. History
   // cards are excluded so paging in old conversations doesn't buzz.
   const liveFactCardCount = useMemo(
+
     () =>
       items.filter((item) => item.kind === 'fact-card' && item.key.startsWith('card-')).length,
     [items],
@@ -308,13 +324,13 @@ export default function ChatSessionView({
 
   const starterChips: StarterChip[] = useMemo(() => {
     // The optimisation-plan thread is card-only — no persona/article chips.
-    if (context.kind === 'optimisation-plan') return [];
+    if (context.kind === 'optimisation-plan' || awaitingFacts) return [];
     // Opened from the Mera button: the page's hints as starters that fill the
     // composer and never send (owner ruling, navx).
     if (
       (context.kind === 'persona' || context.kind === 'follow-story') &&
       context.page &&
-      !usesProfileWelcome(context)
+      !originalWelcome
     ) {
       const subject = context.kind === 'persona' ? context.subject : undefined;
       return pageStarters(context.page, webSearch, subject).map((s) => ({
@@ -394,7 +410,7 @@ export default function ChatSessionView({
         message: t('floatingChat.chipDataHandlingMessage'),
       },
     ];
-  }, [t, tKey, context, isOnDevice, webSearch]);
+  }, [t, tKey, context, isOnDevice, webSearch, originalWelcome, awaitingFacts]);
 
   // --- Server-authoritative block state ---------------------------------
   // The hook's `isBlocked` only flips mid-session (via an issueWarning side
@@ -475,7 +491,7 @@ export default function ChatSessionView({
     lastFiredTurnRef.current = topicPlanTurnRequest;
     store.clearTopicPlanTurnRequest();
     store.setTopicPlanTurnInFlight(true);
-    setIntroMessage(null);
+    setIntroCleared(true);
     sendHiddenTurn(body);
   }, [
     topicPlanTurnRequest,
@@ -496,7 +512,9 @@ export default function ChatSessionView({
       .then((req) => {
         if (req && req.status === 'PENDING') setUnblockPending(true);
       })
-      .catch((err) => logger.warn('[ChatSessionView] pending unblock check failed', { error: String(err) }));
+      .catch((err) =>
+        logger.warn('[ChatSessionView] pending unblock check failed', { error: String(err) }),
+      );
   }, [effectiveBlocked, userId, unblockChecked]);
 
   // The only way a user learns staff lifted the block in v1 (no push-back):
@@ -534,7 +552,7 @@ export default function ChatSessionView({
       // typed answer, and the card stays pending beside it (audit F7).
       if (unresolvedTopicPlans.length > 0) return;
       void hapticMedium();
-      setIntroMessage(null);
+      setIntroCleared(true);
       sendMessage(trimmed);
     },
     [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage],
@@ -592,16 +610,16 @@ export default function ChatSessionView({
   const composerHint = unresolvedFactChoices > 0 ? t('factChoice.pendingHint') : null;
 
   const blockedMessage = effectiveBlocked
-    ? effectiveBlockedReason ?? t('errors.accountRestricted')
+    ? (effectiveBlockedReason ?? t('errors.accountRestricted'))
     : error
-      // The raw error string is NOT appended. It is a bare string with no class
-      // to branch on, and what it carried was the provider's own English JSON
-      // (`{"error":{"message":"Provider failed for model ...: Decryption
-      // failed"}}`), rendered verbatim to users in every locale — MERA-APP-72
-      // caught it on a Portuguese device. `chat.inferenceError` already tells
-      // the user to try again in a moment, which is the only action available.
-      // Status and body stay on the cloudComplete breadcrumb for triage.
-      ? t('chat.inferenceError')
+      ? // The raw error string is NOT appended. It is a bare string with no class
+        // to branch on, and what it carried was the provider's own English JSON
+        // (`{"error":{"message":"Provider failed for model ...: Decryption
+        // failed"}}`), rendered verbatim to users in every locale — MERA-APP-72
+        // caught it on a Portuguese device. `chat.inferenceError` already tells
+        // the user to try again in a moment, which is the only action available.
+        // Status and body stay on the cloudComplete breadcrumb for triage.
+        t('chat.inferenceError')
       : unresolvedTopicPlans.length > 0
         ? t('topicPlan.resolveBeforeContinuing')
         : null;
@@ -644,7 +662,9 @@ export default function ChatSessionView({
         composerHint={composerHint}
         composerTrailing={composerTrailing}
         composerPlaceholder={composerPlaceholder}
-        usageNotice={context.kind === 'persona' ? undefined : t('floatingChat.aiUsageNoticeGeneral')}
+        usageNotice={
+          context.kind === 'persona' ? undefined : t('floatingChat.aiUsageNoticeGeneral')
+        }
       />
       {!!userId && conversationId && (
         <RequestUnblockModal
@@ -659,16 +679,18 @@ export default function ChatSessionView({
   );
 }
 
-const useStyles = themedStyles((c) => StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    padding: 24,
-  },
-  loadingText: {
-    color: c.ink2,
-    textAlign: 'center',
-  },
-}));
+const useStyles = themedStyles((c) =>
+  StyleSheet.create({
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 12,
+      padding: 24,
+    },
+    loadingText: {
+      color: c.ink2,
+      textAlign: 'center',
+    },
+  }),
+);
