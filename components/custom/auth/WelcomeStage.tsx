@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { LanguageRow } from '@/components/custom/auth/LanguageRow';
 import RotatingLanguageHeading from '@/components/custom/auth/RotatingLanguageHeading';
 import DownloadPressIllustration from '@/components/custom/auth/DownloadPressIllustration';
+import ModalMaterial from '@/components/custom/ModalMaterial';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { useCurrentProbe, useLanguageSwitch, type LanguageSwitchResult, type Probe } from '@/lib/hooks/use-language-switch';
@@ -24,9 +25,8 @@ import {
 } from '@/lib/translation-service';
 
 const RTL_CODES = new Set(['ar', 'he']);
-/** The notice is the light theme's card in both themes. */
+/** The notice wears the light theme's modal material and ink in both themes. */
 const NOTICE_INK = COLORS.light.ink;
-const NOTICE_BASE = COLORS.light.base;
 
 /**
  * A probe for a pack that is already there settles in well under this, with
@@ -197,12 +197,14 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
                     entering={reduceMotion ? FadeIn.duration(150) : FadeInDown.duration(220)}
                     exiting={FadeOut.duration(220)}
                     accessibilityLiveRegion="polite"
-                    // A white card with dark ink in BOTH themes: iOS's download
-                    // sheet dims everything behind it, and this card has to read
-                    // through that. A hairline edge keeps it apart from a light page.
+                    // The LIGHT modal material with dark ink in BOTH themes: iOS's
+                    // download sheet dims everything behind it, and this card has
+                    // to read through that. A hairline edge keeps it apart from a
+                    // light page.
                     style={[styles.message, { top: messageTop }]}
                     testID="auth-language-message-getting"
                 >
+                    <ModalMaterial scheme="light" />
                     <DownloadPressIllustration />
                     <View style={styles.messageText}>
                         <Text style={[styles.messageTitle, { color: NOTICE_INK, writingDirection: messageDir }]}>{messageTitle}</Text>
@@ -292,7 +294,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: COLORS.light.line,
-        backgroundColor: NOTICE_BASE,
+        overflow: 'hidden',
     },
     messageText: { flex: 1, gap: 6 },
     messageTitle: { fontSize: 22, lineHeight: 28, fontWeight: '700' },

@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { useColors, useThemeMode, type ThemeMode } from '@/lib/theme/tokens';
+import { COLORS, useThemeMode, type ThemeMode } from '@/lib/theme/tokens';
 
 /**
  * The ONE material for every bottom sheet and centred dialog (Modals board):
@@ -53,13 +53,22 @@ const GLOWS: Record<ThemeMode, { wash: string; washOpacity: number; glows: Glow[
     },
 };
 
-export default function ModalMaterial({ style }: { style?: StyleProp<ViewStyle> }) {
-    const colors = useColors();
-    const { wash, washOpacity, glows } = GLOWS[useThemeMode()];
+interface ModalMaterialProps {
+    style?: StyleProp<ViewStyle>;
+    /** Paint one theme's material whatever the app theme is. Only the
+     *  first-launch download notice passes it ('light'): it has to read through
+     *  iOS's dim behind the download sheet in both themes. */
+    scheme?: ThemeMode;
+}
+
+export default function ModalMaterial({ style, scheme }: ModalMaterialProps) {
+    const appMode = useThemeMode();
+    const mode = scheme ?? appMode;
+    const { wash, washOpacity, glows } = GLOWS[mode];
     return (
         <View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: colors.modalBase }, style]}
+            style={[StyleSheet.absoluteFill, { backgroundColor: COLORS[mode].modalBase }, style]}
         >
             <Svg width="100%" height="100%">
                 <Defs>
