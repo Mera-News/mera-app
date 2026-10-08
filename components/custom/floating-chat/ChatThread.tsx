@@ -17,10 +17,8 @@ import {
   PromptInput,
   type PromptInputHandle,
 } from '@/components/ui/chat-ai';
-import { CONTENT_POLICY_URL } from '@/lib/config/branding';
 import { hapticLight } from '@/lib/haptics';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
-import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import {
   useFloatingChatPendingDraft,
@@ -398,35 +396,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
   return (
     <Conversation>
-      {/* EU AI Act Art. 50(1) interaction notice (Group C1) — fixed chrome,
-          NOT list content. `ConversationContent`'s `header` prop is an
-          inverted FlatList's `ListHeaderComponent`, which is list content: it
-          scrolls away once the user scrolls up, and once real messages exist
-          it renders between the newest bubble and the prompt input rather
-          than at the top of the surface. A "persistent" disclosure has to
-          survive scrolling and sit at a fixed spot, so it lives here instead
-          — a sibling rendered once above the list for every chat entry point
-          (floating bubble → ChatSessionView, persona chat → CloudPersonaChat
-          / LocalPersonaChat, onboarding step 1 → PersonaUpdateChatStep →
-          CloudPersonaChat — all of which mount this ChatThread). */}
-      <View style={styles.aiInteractionRow}>
-        {/* One sentence in three keys, joined as they are: each locale
-            carries its own spacing (ja/zh/th join with none). The middle
-            part is the link. Nested Text keeps it one sentence that wraps
-            as one; the app has no <Trans>. */}
-        <Text size="xs" style={[styles.guidelines, { color: colors.ink2 }]} testID="chat-guidelines">
-          {t('floatingChat.guidelinesBefore')}
-          <Text
-            size="xs"
-            accessibilityRole="link"
-            onPress={() => void openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL))}
-            style={[styles.guidelinesLink, { color: colors.accentText }]}
-          >
-            {t('floatingChat.guidelinesLink')}
-          </Text>
-          {t('floatingChat.guidelinesAfter')}
-        </Text>
-      </View>
       <View style={styles.listWrap}>
         <ConversationContent
           items={displayItems}
@@ -565,16 +534,6 @@ const useStyles = themedStyles((c) => StyleSheet.create({
   // panel's rounded edge (audit F9).
   composerRow: { flexDirection: 'row', alignItems: 'center' },
   composerFill: { flex: 1 },
-  aiInteractionRow: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  guidelines: {
-    lineHeight: 17,
-  },
-  guidelinesLink: {
-    textDecorationLine: 'underline',
-  },
   replySlotStreaming: {
     minHeight: WAIT_ROW_TEXT_HEIGHT,
   },

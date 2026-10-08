@@ -722,7 +722,10 @@
     "topicsSavedHint": "Konular kaydedildi! Bilgi eklemeye devam edebilir ya da keşfetmeye başlamak için {{close}} simgesine dokunabilirsin.",
     "guidelinesAfter": ". Kötüye kullanım fark ederse, bir inceleme isteyene kadar hesabınızı duraklatır.",
     "guidelinesBefore": "Bir kişiyle değil, yapay zeka olan Mera ile konuşuyorsunuz. Mera ",
-    "guidelinesLink": "içerik yönergelerine uyar"
+    "guidelinesLink": "içerik yönergelerine uyar",
+    "aiSubtitle": "Bir yapay zeka, bir insan değil",
+    "aboutTitle": "Mera hakkında",
+    "mayMistakes": "Mera hata yapabilir, bu yüzden önemli haberleri kaynağından kontrol edin."
   },
   "articleFeedback": {
     "thumbsUp": "Beğendim",

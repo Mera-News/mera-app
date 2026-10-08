@@ -722,7 +722,10 @@
     "topicsSavedHint": "Đã lưu chủ đề! Bạn cứ tiếp tục thêm thông tin, hoặc nhấn {{close}} để bắt đầu khám phá.",
     "guidelinesAfter": ". Nếu phát hiện hành vi lạm dụng, Mera sẽ tạm khóa tài khoản của bạn cho đến khi bạn yêu cầu xem xét lại.",
     "guidelinesBefore": "Bạn đang trò chuyện với Mera, một AI chứ không phải người. Mera tuân theo ",
-    "guidelinesLink": "hướng dẫn nội dung"
+    "guidelinesLink": "hướng dẫn nội dung",
+    "aiSubtitle": "Một AI, không phải người",
+    "aboutTitle": "Giới thiệu về Mera",
+    "mayMistakes": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra các tin quan trọng tại nguồn gốc."
   },
   "articleFeedback": {
     "thumbsUp": "Tôi thích",

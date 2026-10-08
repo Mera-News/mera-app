@@ -722,7 +722,10 @@
     "topicsSavedHint": "บันทึกหัวข้อแล้ว! คุณเพิ่มข้อมูลต่อได้เลย หรือแตะ {{close}} เพื่อเริ่มสำรวจ",
     "guidelinesAfter": ". หาก Mera พบการใช้งานในทางที่ผิด ระบบจะระงับบัญชีของคุณจนกว่าคุณจะขอให้ตรวจสอบ",
     "guidelinesBefore": "คุณกำลังคุยกับ Mera ซึ่งเป็น AI ไม่ใช่คน Mera ปฏิบัติตาม",
-    "guidelinesLink": "แนวทางเนื้อหา"
+    "guidelinesLink": "แนวทางเนื้อหา",
+    "aiSubtitle": "AI ไม่ใช่คน",
+    "aboutTitle": "เกี่ยวกับ Mera",
+    "mayMistakes": "Mera อาจผิดพลาดได้ ดังนั้นโปรดตรวจสอบข่าวสำคัญจากแหล่งที่มาโดยตรง"
   },
   "articleFeedback": {
     "thumbsUp": "ถูกใจ",

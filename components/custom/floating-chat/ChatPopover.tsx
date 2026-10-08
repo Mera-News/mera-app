@@ -12,6 +12,8 @@
 import MeraLogo from '@/components/custom/MeraLogo';
 import ModalMaterial from '@/components/custom/ModalMaterial';
 import { GlyphSafeIconButton } from './glyph-safe';
+import AboutMeraModal from './AboutMeraModal';
+import { markHelpOrigin } from '@/components/ui/help-modal';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { hapticLight } from '@/lib/haptics';
 import { EASE, MOTION } from '@/lib/motion';
@@ -20,7 +22,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -183,6 +185,28 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         [dragTranslateY, requestClose],
     );
 
+    // About Mera: the header's AI disclosure opens a HelpModal that grows out
+    // of the title block.
+    const [aboutOpen, setAboutOpen] = useState(false);
+    const titleRef = useRef<View>(null);
+    const openAbout = useCallback(() => {
+        markHelpOrigin(titleRef.current);
+        setAboutOpen(true);
+    }, []);
+    const headerGesture = useMemo(
+        () =>
+            Gesture.Race(
+                swipeDownGesture,
+                Gesture.Tap()
+                    .maxDistance(10)
+                    .onEnd((_e, success) => {
+                        'worklet';
+                        if (success) runOnJS(openAbout)();
+                    }),
+            ),
+        [swipeDownGesture, openAbout],
+    );
+
     // Drive the phase machine from the store's isExpanded flag.
     useEffect(() => {
         if (isExpanded && (phase === 'closed' || phase === 'closing')) {
@@ -306,10 +330,40 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                     {/* Grab zone (avatar slot + title): pans down to close.
                         Kept off the buttons so a swipe never eats a tap. The
                         slot is empty: the riding mark sits over it. */}
-                    <GestureDetector gesture={swipeDownGesture}>
+                    <GestureDetector gesture={headerGesture}>
                         <View style={styles.headerGrab}>
                             <View style={styles.avatarSlot} />
-                            <Text style={[styles.title, { color: colors.ink }]}>{t('floatingChat.title')}</Text>
+                            {/* EU AI Act Art. 50(1) interaction notice, fixed
+                                chrome: this block is always on screen while the
+                                chat is, so the disclosure never scrolls away or
+                                hides. The panel is ChatSessionView's only shell
+                                (floating bubble, every Ask Mera entry), so this
+                                is the notice for every chat entry point. The
+                                subtitle WRAPS at large text sizes, never
+                                truncates. Tapping the block opens About Mera.
+                                A Tap gesture, not a Pressable, so it shares one
+                                detector with the swipe-down pan (the Mera
+                                button's rule); the pan needs 14pt of travel and
+                                the tap fails past 10pt, so they never contest. */}
+                            <View
+                                ref={titleRef}
+                                style={styles.titleBlock}
+                                accessible
+                                accessibilityRole="button"
+                                accessibilityLabel={`${t('floatingChat.title')}. ${t('floatingChat.aiSubtitle')}`}
+                                accessibilityHint={t('floatingChat.aboutTitle')}
+                                accessibilityActions={[{ name: 'activate' }]}
+                                onAccessibilityAction={openAbout}
+                                onAccessibilityTap={openAbout}
+                                testID="chat-header-about"
+                            >
+                                <Text style={[styles.title, { color: colors.ink }]}>{t('floatingChat.title')}</Text>
+                                <Text style={[styles.subtitle, { color: colors.ink2 }]} testID="chat-header-ai-subtitle">
+                                    {t('floatingChat.aiSubtitle')}
+                                    {' '}
+                                    <Text style={{ color: colors.accentText }}>?</Text>
+                                </Text>
+                            </View>
                         </View>
                     </GestureDetector>
                     {/* Real 44pt frames (ux2 batch 26): a childless labelled
@@ -353,6 +407,7 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                     <MeraLogo size={BUTTON_LOGO} color={colors.ink} animated />
                 </Animated.View>
             </Animated.View>
+            <AboutMeraModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
         </View>
     );
 };
@@ -377,16 +432,24 @@ const styles = StyleSheet.create({
     },
     headerGrab: {
         flex: 1,
-        height: HEADER_ROW,
+        minHeight: HEADER_ROW,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
     },
     avatarSlot: { width: AVATAR, height: AVATAR },
-    title: {
+    titleBlock: {
         flex: 1,
+        justifyContent: 'center',
+        minHeight: HEADER_ROW,
+    },
+    title: {
         fontSize: 17,
         fontWeight: '600',
+    },
+    subtitle: {
+        fontSize: 13,
+        lineHeight: 17,
     },
     body: {
         flex: 1,

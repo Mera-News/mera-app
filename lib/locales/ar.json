@@ -762,7 +762,10 @@
     "topicsSavedHint": "تم حفظ المواضيع! يمكنك مواصلة إضافة المعلومات، أو اضغط على {{close}} لبدء الاستكشاف.",
     "guidelinesAfter": ". إذا رصد إساءة استخدام، يوقف حسابك حتى تطلب مراجعة.",
     "guidelinesBefore": "أنت تتحدث مع Mera، وهو ذكاء اصطناعي وليس شخصًا. يتبع Mera ",
-    "guidelinesLink": "إرشادات المحتوى"
+    "guidelinesLink": "إرشادات المحتوى",
+    "aiSubtitle": "ذكاء اصطناعي، وليس شخصًا",
+    "aboutTitle": "حول Mera",
+    "mayMistakes": "قد يرتكب Mera أخطاء، لذا تحقق من الأخبار المهمة من مصدرها."
   },
   "articleFeedback": {
     "thumbsUp": "أعجبني",

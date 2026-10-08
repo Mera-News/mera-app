@@ -722,7 +722,10 @@
     "topicsSavedHint": "主題已儲存！你可以繼續新增資訊，或點按 {{close}} 開始探索。",
     "guidelinesAfter": "。如果發現濫用，它會暫停你的帳號，直到你要求審核。",
     "guidelinesBefore": "你正在與 Mera 交談，它是 AI，不是真人。Mera 遵守",
-    "guidelinesLink": "內容指引"
+    "guidelinesLink": "內容指引",
+    "aiSubtitle": "AI，不是真人",
+    "aboutTitle": "關於 Mera",
+    "mayMistakes": "Mera 可能會出錯，因此請到原始來源查證重要新聞。"
   },
   "articleFeedback": {
     "thumbsUp": "喜歡",

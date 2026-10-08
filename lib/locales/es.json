@@ -722,7 +722,10 @@
     "topicsSavedHint": "¡Temas guardados! Puedes seguir añadiendo datos o tocar {{close}} para empezar a explorar.",
     "guidelinesAfter": ". Si detecta un uso indebido, pausa tu cuenta hasta que pidas una revisión.",
     "guidelinesBefore": "Estás hablando con Mera, una IA, no con una persona. Mera sigue las ",
-    "guidelinesLink": "normas de contenido"
+    "guidelinesLink": "normas de contenido",
+    "aiSubtitle": "Una IA, no una persona",
+    "aboutTitle": "Acerca de Mera",
+    "mayMistakes": "Mera puede cometer errores, así que comprueba las noticias importantes en su fuente."
   },
   "articleFeedback": {
     "thumbsUp": "Me gusta",

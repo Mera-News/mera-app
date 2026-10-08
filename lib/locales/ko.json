@@ -722,7 +722,10 @@
     "topicsSavedHint": "주제가 저장되었습니다! 계속 정보를 추가하거나 {{close}}을(를) 탭해 둘러보기를 시작하세요.",
     "guidelinesAfter": " 따릅니다. 악용이 확인되면 검토를 요청하기 전까지 계정을 일시 정지합니다.",
     "guidelinesBefore": "회원님은 사람이 아니라 AI인 Mera와 대화하고 있습니다. Mera는 ",
-    "guidelinesLink": "콘텐츠 가이드라인을"
+    "guidelinesLink": "콘텐츠 가이드라인을",
+    "aiSubtitle": "사람이 아닌 AI",
+    "aboutTitle": "Mera 정보",
+    "mayMistakes": "Mera는 실수할 수 있으니 중요한 뉴스는 원문에서 확인하세요."
   },
   "articleFeedback": {
     "thumbsUp": "좋아요",

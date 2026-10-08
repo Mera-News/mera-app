@@ -722,7 +722,10 @@
     "topicsSavedHint": "Argomenti salvati! Puoi continuare ad aggiungere informazioni, oppure tocca {{close}} per iniziare a esplorare.",
     "guidelinesAfter": ". Se nota un uso scorretto, mette in pausa il tuo account finché non chiedi una revisione.",
     "guidelinesBefore": "Stai parlando con Mera, un'IA, non con una persona. Mera segue le ",
-    "guidelinesLink": "linee guida sui contenuti"
+    "guidelinesLink": "linee guida sui contenuti",
+    "aiSubtitle": "Un'IA, non una persona",
+    "aboutTitle": "Info su Mera",
+    "mayMistakes": "Mera può commettere errori, quindi controlla le notizie importanti alla fonte."
   },
   "articleFeedback": {
     "thumbsUp": "Mi piace",

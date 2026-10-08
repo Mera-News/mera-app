@@ -1082,7 +1082,10 @@
     "topicsSavedHint": "Topics saved! Feel free to keep adding facts, or tap {{close}} to start exploring.",
     "guidelinesAfter": ". If it spots misuse, it pauses your account until you ask for a review.",
     "guidelinesBefore": "You're talking with Mera, an AI, not a person. Mera follows ",
-    "guidelinesLink": "content guidelines"
+    "guidelinesLink": "content guidelines",
+    "aiSubtitle": "An AI, not a person",
+    "aboutTitle": "About Mera",
+    "mayMistakes": "Mera may make mistakes, so check important news at the source."
   },
   "articleFeedback": {
     "thumbsUp": "I like it",

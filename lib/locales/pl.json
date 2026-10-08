@@ -742,7 +742,10 @@
     "topicsSavedHint": "Tematy zapisane! Możesz dalej dodawać informacje albo dotknąć {{close}}, aby zacząć odkrywać.",
     "guidelinesAfter": ". Jeśli wykryje nadużycie, wstrzyma Twoje konto, dopóki nie poprosisz o przegląd.",
     "guidelinesBefore": "Rozmawiasz z Mera, AI, a nie z człowiekiem. Mera stosuje się do ",
-    "guidelinesLink": "zasad dotyczących treści"
+    "guidelinesLink": "zasad dotyczących treści",
+    "aiSubtitle": "AI, a nie człowiek",
+    "aboutTitle": "O Mera",
+    "mayMistakes": "Mera może popełniać błędy, dlatego sprawdzaj ważne wiadomości u źródła."
   },
   "articleFeedback": {
     "thumbsUp": "Podoba mi się",

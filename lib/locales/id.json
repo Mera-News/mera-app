@@ -722,7 +722,10 @@
     "topicsSavedHint": "Topik tersimpan! Silakan terus tambahkan fakta, atau ketuk {{close}} untuk mulai menjelajah.",
     "guidelinesAfter": ". Jika Mera menemukan penyalahgunaan, akun Anda dijeda sampai Anda meminta peninjauan.",
     "guidelinesBefore": "Anda sedang berbicara dengan Mera, AI, bukan orang. Mera mengikuti ",
-    "guidelinesLink": "pedoman konten"
+    "guidelinesLink": "pedoman konten",
+    "aiSubtitle": "AI, bukan orang",
+    "aboutTitle": "Tentang Mera",
+    "mayMistakes": "Mera bisa membuat kesalahan, jadi periksa berita penting di sumbernya."
   },
   "articleFeedback": {
     "thumbsUp": "Saya suka",

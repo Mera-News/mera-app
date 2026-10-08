@@ -722,7 +722,10 @@
     "topicsSavedHint": "Onderwerpen opgeslagen! Voeg gerust meer feiten toe, of tik op {{close}} om te beginnen met ontdekken.",
     "guidelinesAfter": ". Als het misbruik ziet, pauzeert het je account totdat je om een beoordeling vraagt.",
     "guidelinesBefore": "Je praat met Mera, een AI en geen mens. Mera volgt de ",
-    "guidelinesLink": "contentrichtlijnen"
+    "guidelinesLink": "contentrichtlijnen",
+    "aiSubtitle": "Een AI, geen mens",
+    "aboutTitle": "Over Mera",
+    "mayMistakes": "Mera kan fouten maken, dus controleer belangrijk nieuws bij de bron."
   },
   "articleFeedback": {
     "thumbsUp": "Ik vind het leuk",

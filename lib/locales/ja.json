@@ -722,7 +722,10 @@
     "topicsSavedHint": "トピックを保存しました。引き続き情報を追加するか、{{close}} をタップして探索を始めましょう。",
     "guidelinesAfter": "に従っています。不正利用が見つかった場合、あなたが審査をリクエストするまでアカウントを一時停止します。",
     "guidelinesBefore": "あなたが話している相手は人間ではなく、AIのMeraです。Meraは",
-    "guidelinesLink": "コンテンツガイドライン"
+    "guidelinesLink": "コンテンツガイドライン",
+    "aiSubtitle": "人ではなくAI",
+    "aboutTitle": "Meraについて",
+    "mayMistakes": "Meraは間違えることがあるので、重要なニュースは情報源で確認してください。"
   },
   "articleFeedback": {
     "thumbsUp": "いいね",

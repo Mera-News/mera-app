@@ -727,7 +727,10 @@
     "topicsSavedHint": "Sujets enregistrés ! Vous pouvez continuer à ajouter des informations, ou appuyer sur {{close}} pour commencer à explorer.",
     "guidelinesAfter": ". Si Mera repère un usage abusif, votre compte est suspendu jusqu'à ce que vous demandiez un examen.",
     "guidelinesBefore": "Vous parlez avec Mera, un assistant IA, pas avec une personne. Mera respecte les ",
-    "guidelinesLink": "règles de contenu"
+    "guidelinesLink": "règles de contenu",
+    "aiSubtitle": "Un assistant IA, pas une personne",
+    "aboutTitle": "À propos de Mera",
+    "mayMistakes": "Mera peut faire des erreurs, alors vérifiez les informations importantes auprès de la source."
   },
   "articleFeedback": {
     "thumbsUp": "J'aime",

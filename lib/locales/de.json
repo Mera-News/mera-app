@@ -722,7 +722,10 @@
     "topicsSavedHint": "Themen gespeichert! Du kannst gern weitere Fakten hinzufügen oder auf {{close}} tippen, um mit dem Entdecken zu beginnen.",
     "guidelinesAfter": ". Erkennt Mera Missbrauch, wird dein Konto pausiert, bis du eine Prüfung beantragst.",
     "guidelinesBefore": "Du sprichst mit Mera, einer KI und keiner Person. Mera hält sich an die ",
-    "guidelinesLink": "Inhaltsrichtlinien"
+    "guidelinesLink": "Inhaltsrichtlinien",
+    "aiSubtitle": "Eine KI, keine Person",
+    "aboutTitle": "Über Mera",
+    "mayMistakes": "Mera kann Fehler machen, prüfe wichtige Nachrichten daher an der Quelle."
   },
   "articleFeedback": {
     "thumbsUp": "Gefällt mir",
