@@ -255,7 +255,7 @@
     "processingOffline": "오프라인 상태예요. 다시 온라인이 되면 스토리가 도착해요.",
     "forYouTitle": "회원님을 위해",
     "newStoriesBelowA11y": "아래에 새 스토리",
-    "noFactsBody": "팔로우하는 것 하나를 Mera에 알려 주면 관련 뉴스가 여기에 도착하기 시작합니다. Mera 버튼을 눌러 시작하세요.",
+    "noFactsBody": "Mera 버튼을 눌러 팔로우하는 것을 알려 주세요. 그러면 피드가 만들어집니다.",
     "noteSuggestedMany": "회원님의 사실에 맞춘 추천:",
     "noteSuggestedOne": "회원님의 사실 {{fact}}에 맞춘 추천입니다. Mera가 이유를 작성하는 동안 잠시 기다려 주세요.",
     "noteWait": "Mera가 이유를 작성하는 동안 잠시 기다려 주세요.",
@@ -2719,8 +2719,7 @@
   },
   "interests": {
     "emptyTitle": "Mera가 아직 내 관심사를 몰라요",
-    "emptyBody": "팔로우하는 것 하나를 Mera에 알려 주면 여기에 별도 섹션이 생깁니다. Mera 버튼을 눌러 시작하세요.",
-    "learnAbout": "관심사 알아보기"
+    "learnAbout": "사실 추가하는 방법 알아보기"
   },
   "world": {
     "gathering": "{{country}}의 오늘 뉴스를 모으는 중이에요. 첫 스토리가 몇 초 안에 나타나요.",

@@ -255,7 +255,7 @@
     "processingOffline": "Je bent offline. Je verhalen komen zodra je weer online bent.",
     "forYouTitle": "Voor jou",
     "newStoriesBelowA11y": "Nieuwe verhalen hieronder",
-    "noFactsBody": "Vertel Mera één ding dat je volgt, dan komt het nieuws daarover hier binnen. Tik op de Mera-knop om te beginnen.",
+    "noFactsBody": "Tik op de Mera-knop om te vertellen wat je volgt. Daaruit maakt Mera je feed.",
     "noteSuggestedMany": "Voorgesteld voor je feiten:",
     "noteSuggestedOne": "Voorgesteld voor je feit: {{fact}}. Even wachten terwijl Mera de reden schrijft.",
     "noteWait": "Even wachten terwijl Mera de reden schrijft.",
@@ -2719,8 +2719,7 @@
   },
   "interests": {
     "emptyTitle": "Mera kent je interesses nog niet",
-    "emptyBody": "Vertel Mera één ding dat je volgt, dan krijgt het hier zijn eigen sectie. Tik op de Mera-knop om te beginnen.",
-    "learnAbout": "Meer over interesses"
+    "learnAbout": "Leer hoe je feiten toevoegt"
   },
   "world": {
     "gathering": "Het nieuws van vandaag uit {{country}} wordt verzameld. De eerste verhalen verschijnen over een paar seconden.",

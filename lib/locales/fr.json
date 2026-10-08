@@ -260,7 +260,7 @@
     "processingOffline": "Vous êtes hors connexion. Vos actualités arriveront une fois la connexion rétablie.",
     "forYouTitle": "Pour vous",
     "newStoriesBelowA11y": "Nouvelles histoires ci-dessous",
-    "noFactsBody": "Dites à Mera une chose que vous suivez et ses actualités commenceront à arriver ici. Touchez le bouton Mera pour commencer.",
+    "noFactsBody": "Touchez le bouton Mera pour lui dire ce que vous suivez. Mera en fait votre fil d'actualité.",
     "noteSuggestedMany": "Suggéré pour vos faits :",
     "noteSuggestedOne": "Suggéré pour votre fait : {{fact}}. Veuillez patienter pendant que Mera rédige la raison.",
     "noteWait": "Veuillez patienter pendant que Mera rédige la raison.",
@@ -2725,8 +2725,7 @@
   },
   "interests": {
     "emptyTitle": "Mera ne connaît pas encore vos centres d'intérêt",
-    "emptyBody": "Dites à Mera une chose que vous suivez et elle aura sa propre section ici. Touchez le bouton Mera pour commencer.",
-    "learnAbout": "En savoir plus sur les centres d'intérêt"
+    "learnAbout": "Découvrir comment ajouter des faits"
   },
   "world": {
     "gathering": "Collecte des actualités du jour pour {{country}}. Les premières s'afficheront dans quelques secondes.",

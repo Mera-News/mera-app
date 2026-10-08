@@ -255,7 +255,7 @@
     "processingOffline": "Sin conexión. Tus historias llegarán cuando vuelvas a conectarte.",
     "forYouTitle": "Para ti",
     "newStoriesBelowA11y": "Nuevas historias abajo",
-    "noFactsBody": "Cuéntale a Mera algo que sigues y sus noticias empezarán a llegar aquí. Toca el botón de Mera para empezar.",
+    "noFactsBody": "Toca el botón de Mera para contarle lo que sigues. Con eso crea tu Feed.",
     "noteSuggestedMany": "Sugerido para tus hechos:",
     "noteSuggestedOne": "Sugerido para tu hecho: {{fact}}. Espera mientras Mera escribe el motivo.",
     "noteWait": "Espera mientras Mera escribe el motivo.",
@@ -2719,8 +2719,7 @@
   },
   "interests": {
     "emptyTitle": "Mera aún no conoce tus intereses",
-    "emptyBody": "Cuéntale a Mera algo que sigues y tendrá su propia sección aquí. Toca el botón de Mera para empezar.",
-    "learnAbout": "Más sobre los intereses"
+    "learnAbout": "Aprende a añadir hechos"
   },
   "world": {
     "gathering": "Reuniendo las noticias de hoy de {{country}}. Las primeras historias aparecerán en unos segundos.",

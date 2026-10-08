@@ -255,7 +255,7 @@
     "processingOffline": "Çevrimdışısınız. Hikayeleriniz tekrar çevrimiçi olduğunuzda gelir.",
     "forYouTitle": "Sizin için",
     "newStoriesBelowA11y": "Aşağıda yeni haberler",
-    "noFactsBody": "Mera'ya takip ettiğiniz bir şeyi söyleyin, haberleri burada görmeye başlasın. Başlamak için Mera düğmesine dokunun.",
+    "noFactsBody": "Takip ettiklerinizi Mera'ya anlatmak için Mera düğmesine dokunun. Mera bunu akışınıza dönüştürür.",
     "noteSuggestedMany": "Bilgileriniz için önerilenler:",
     "noteSuggestedOne": "Bilginiz için önerilen: {{fact}}. Mera nedenini yazarken lütfen bekleyin.",
     "noteWait": "Mera nedenini yazarken lütfen bekleyin.",
@@ -2721,8 +2721,7 @@
   },
   "interests": {
     "emptyTitle": "Mera ilgi alanlarınızı henüz bilmiyor",
-    "emptyBody": "Mera'ya takip ettiğiniz bir şeyi söyleyin, burada kendi bölümünü alsın. Başlamak için Mera düğmesine dokunun.",
-    "learnAbout": "İlgi alanları hakkında bilgi edinin"
+    "learnAbout": "Bilgi eklemeyi öğrenin"
   },
   "world": {
     "gathering": "{{country}} ülkesinin bugünkü haberleri toplanıyor. İlk hikayeler birkaç saniye içinde görünür.",

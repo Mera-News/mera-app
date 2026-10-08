@@ -286,7 +286,7 @@
     "processingOffline": "You're offline. Your stories arrive once you're back online.",
     "forYouTitle": "For you",
     "newStoriesBelowA11y": "New stories below",
-    "noFactsBody": "Tell Mera one thing you follow and its news starts arriving here. Tap the Mera button to start.",
+    "noFactsBody": "Tap the Mera button to tell it what you follow. It turns that into your feed.",
     "noteSuggestedMany": "Suggested for your facts:",
     "noteSuggestedOne": "Suggested for your fact: {{fact}}. Please wait while Mera writes the reason.",
     "noteWait": "Please wait while Mera writes the reason.",
@@ -2719,8 +2719,7 @@
   },
   "interests": {
     "emptyTitle": "Mera doesn't know your interests yet",
-    "emptyBody": "Tell Mera one thing you follow and it gets its own section here. Tap the Mera button to start.",
-    "learnAbout": "Learn about interests"
+    "learnAbout": "Learn how to add facts"
   },
   "world": {
     "gathering": "Gathering today's news from {{country}}. The first stories appear in a few seconds.",

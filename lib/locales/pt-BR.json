@@ -255,7 +255,7 @@
     "processingOffline": "Você está off-line. Suas histórias chegam quando você voltar a ficar on-line.",
     "forYouTitle": "Para você",
     "newStoriesBelowA11y": "Novas histórias abaixo",
-    "noFactsBody": "Conte à Mera uma coisa que você acompanha e as notícias começam a chegar aqui. Toque no botão da Mera para começar.",
+    "noFactsBody": "Toque no botão da Mera para contar o que você acompanha. A Mera transforma isso no seu feed.",
     "noteSuggestedMany": "Sugeridas para os seus fatos:",
     "noteSuggestedOne": "Sugerida para o seu fato: {{fact}}. Aguarde enquanto a Mera escreve o motivo.",
     "noteWait": "Aguarde enquanto a Mera escreve o motivo.",
@@ -2719,8 +2719,7 @@
   },
   "interests": {
     "emptyTitle": "A Mera ainda não conhece seus interesses",
-    "emptyBody": "Conte à Mera uma coisa que você acompanha e ela ganha uma seção própria aqui. Toque no botão da Mera para começar.",
-    "learnAbout": "Saiba mais sobre interesses"
+    "learnAbout": "Saiba como adicionar fatos"
   },
   "world": {
     "gathering": "Reunindo as notícias de hoje de {{country}}. As primeiras histórias aparecem em alguns segundos.",

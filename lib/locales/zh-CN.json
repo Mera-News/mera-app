@@ -255,7 +255,7 @@
     "processingOffline": "你已离线。恢复联网后，你的报道就会送达。",
     "forYouTitle": "为你推荐",
     "newStoriesBelowA11y": "下方有新报道",
-    "noFactsBody": "告诉 Mera 一件你关注的事，它的新闻就会开始出现在这里。点按 Mera 按钮开始。",
+    "noFactsBody": "点按 Mera 按钮告诉 Mera 你关注的内容，Mera 会把它整理成你的信息流。",
     "noteSuggestedMany": "为你的事实推荐：",
     "noteSuggestedOne": "为你的事实推荐：{{fact}}。请稍候，Mera 正在撰写推荐理由。",
     "noteWait": "请稍候，Mera 正在撰写推荐理由。",
@@ -2720,8 +2720,7 @@
   },
   "interests": {
     "emptyTitle": "Mera 还不了解你的兴趣",
-    "emptyBody": "告诉 Mera 一件你关注的事，它会在这里获得自己的版块。点按 Mera 按钮开始。",
-    "learnAbout": "了解兴趣"
+    "learnAbout": "了解如何添加事实"
   },
   "world": {
     "gathering": "正在汇集{{country}}今天的新闻。几秒钟后，第一批报道就会出现。",

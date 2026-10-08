@@ -255,7 +255,7 @@
     "processingOffline": "你目前離線。恢復連線後，你的報導就會送達。",
     "forYouTitle": "為你推薦",
     "newStoriesBelowA11y": "下方有新報導",
-    "noFactsBody": "告訴 Mera 一件你關注的事，它的新聞就會開始出現在這裡。點按 Mera 按鈕即可開始。",
+    "noFactsBody": "點按 Mera 按鈕告訴 Mera 你關注的內容，Mera 會把它整理成你的資訊流。",
     "noteSuggestedMany": "為你的事實推薦：",
     "noteSuggestedOne": "為你的事實推薦：{{fact}}。Mera 正在撰寫理由，請稍候。",
     "noteWait": "Mera 正在撰寫理由，請稍候。",
@@ -2720,8 +2720,7 @@
   },
   "interests": {
     "emptyTitle": "Mera 還不了解你的興趣",
-    "emptyBody": "告訴 Mera 一件你關注的事，它就會在這裡有自己的分區。點按 Mera 按鈕即可開始。",
-    "learnAbout": "了解興趣"
+    "learnAbout": "了解如何新增事實"
   },
   "world": {
     "gathering": "正在彙整{{country}}今天的新聞。幾秒鐘後，第一批報導就會出現。",

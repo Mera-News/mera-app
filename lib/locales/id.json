@@ -255,7 +255,7 @@
     "processingOffline": "Anda sedang offline. Cerita Anda akan datang setelah Anda online lagi.",
     "forYouTitle": "Untuk Anda",
     "newStoriesBelowA11y": "Cerita baru di bawah",
-    "noFactsBody": "Beri tahu Mera satu hal yang Anda ikuti dan beritanya mulai datang di sini. Ketuk tombol Mera untuk memulai.",
+    "noFactsBody": "Ketuk tombol Mera untuk memberi tahu Mera apa yang Anda ikuti. Hasilnya jadi feed Anda.",
     "noteSuggestedMany": "Disarankan untuk fakta Anda:",
     "noteSuggestedOne": "Disarankan untuk fakta Anda: {{fact}}. Mohon tunggu sementara Mera menulis alasannya.",
     "noteWait": "Mohon tunggu sementara Mera menulis alasannya.",
@@ -2719,8 +2719,7 @@
   },
   "interests": {
     "emptyTitle": "Mera belum tahu minat Anda",
-    "emptyBody": "Beri tahu Mera satu hal yang Anda ikuti dan hal itu mendapat bagiannya sendiri di sini. Ketuk tombol Mera untuk memulai.",
-    "learnAbout": "Pelajari tentang minat"
+    "learnAbout": "Pelajari cara menambahkan fakta"
   },
   "world": {
     "gathering": "Mengumpulkan berita hari ini dari {{country}}. Cerita pertama akan muncul dalam beberapa detik.",

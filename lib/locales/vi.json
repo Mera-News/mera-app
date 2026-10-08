@@ -255,7 +255,7 @@
     "processingOffline": "Bạn đang ngoại tuyến. Các câu chuyện của bạn sẽ đến khi bạn có mạng trở lại.",
     "forYouTitle": "Dành cho bạn",
     "newStoriesBelowA11y": "Có câu chuyện mới bên dưới",
-    "noFactsBody": "Hãy cho Mera biết một điều bạn theo dõi, và tin tức về nó sẽ bắt đầu xuất hiện ở đây. Chạm vào nút Mera để bắt đầu.",
+    "noFactsBody": "Chạm vào nút Mera để kể cho Mera biết bạn theo dõi điều gì. Mera sẽ biến điều đó thành nguồn tin của bạn.",
     "noteSuggestedMany": "Gợi ý cho các dữ kiện của bạn:",
     "noteSuggestedOne": "Gợi ý cho dữ kiện của bạn: {{fact}}. Vui lòng đợi trong khi Mera viết lý do.",
     "noteWait": "Vui lòng đợi trong khi Mera viết lý do.",
@@ -2720,8 +2720,7 @@
   },
   "interests": {
     "emptyTitle": "Mera chưa biết bạn quan tâm đến điều gì",
-    "emptyBody": "Hãy cho Mera biết một điều bạn theo dõi, và nó sẽ có một mục riêng ở đây. Chạm vào nút Mera để bắt đầu.",
-    "learnAbout": "Tìm hiểu về mối quan tâm"
+    "learnAbout": "Tìm hiểu cách thêm dữ kiện"
   },
   "world": {
     "gathering": "Đang thu thập tin hôm nay từ {{country}}. Những câu chuyện đầu tiên sẽ hiện sau vài giây.",

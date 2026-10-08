@@ -255,7 +255,7 @@
     "processingOffline": "オフラインです。オンラインに戻るとストーリーが届きます。",
     "forYouTitle": "あなたへ",
     "newStoriesBelowA11y": "下に新しいストーリーがあります",
-    "noFactsBody": "フォローしているものを1つMeraに伝えると、そのニュースがここに届き始めます。Meraボタンをタップして始めてください。",
+    "noFactsBody": "Meraボタンをタップして、フォローしているものを伝えましょう。それをもとにフィードが作られます。",
     "noteSuggestedMany": "あなたのファクトに基づく提案：",
     "noteSuggestedOne": "あなたのファクトに基づく提案：{{fact}}。Meraが理由を書いている間、お待ちください。",
     "noteWait": "Meraが理由を書いている間、お待ちください。",
@@ -2719,8 +2719,7 @@
   },
   "interests": {
     "emptyTitle": "Meraはまだあなたの関心を知りません",
-    "emptyBody": "フォローしているものを1つMeraに伝えると、ここに専用のセクションができます。Meraボタンをタップして始めてください。",
-    "learnAbout": "関心事について"
+    "learnAbout": "ファクトの追加方法を見る"
   },
   "world": {
     "gathering": "{{country}}の今日のニュースを集めています。最初のストーリーは数秒で表示されます。",

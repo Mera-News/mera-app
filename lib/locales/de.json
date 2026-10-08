@@ -255,7 +255,7 @@
     "processingOffline": "Du bist offline. Deine Geschichten kommen, sobald du wieder online bist.",
     "forYouTitle": "Für dich",
     "newStoriesBelowA11y": "Neue Geschichten weiter unten",
-    "noFactsBody": "Nenne Mera ein Thema, dem du folgst, dann kommen die passenden Nachrichten hier an. Tippe auf die Mera-Taste, um zu beginnen.",
+    "noFactsBody": "Tippe auf die Mera-Taste und erzähl Mera, was du verfolgst. Daraus entsteht dein Feed.",
     "noteSuggestedMany": "Für deine Fakten vorgeschlagen:",
     "noteSuggestedOne": "Für deinen Fakt vorgeschlagen: {{fact}}. Warte, während Mera den Grund formuliert.",
     "noteWait": "Bitte warte, während Mera den Grund formuliert.",
@@ -2719,8 +2719,7 @@
   },
   "interests": {
     "emptyTitle": "Mera kennt deine Interessen noch nicht",
-    "emptyBody": "Nenne Mera ein Thema, dem du folgst, dann bekommt es hier einen eigenen Abschnitt. Tippe auf die Mera-Taste, um zu beginnen.",
-    "learnAbout": "Mehr über Interessen erfahren"
+    "learnAbout": "Erfahre, wie du Fakten hinzufügst"
   },
   "world": {
     "gathering": "Die Nachrichten von heute aus {{country}} werden gesammelt. Die ersten Meldungen erscheinen in ein paar Sekunden.",

@@ -95,7 +95,8 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
  * The Feed's "No facts yet" block (FinalFeed #8, #9): the same block in both
  * views, below the title row. Continuous keeps the top headlines under it
  * (OWNER_QUESTIONS C4: a phone with no facts still gets headlines); Sectioned
- * shows it alone. The Mera button starts the interview.
+ * shows it alone. The Mera button starts the interview; the action opens the
+ * tutorial on adding facts ("Your facts shape your feed").
  */
 export const FeedNoFacts: React.FC<{ readonly view: 'continuous' | 'sectioned' }> = ({ view }) => {
   const { t } = useTranslation();
@@ -103,10 +104,10 @@ export const FeedNoFacts: React.FC<{ readonly view: 'continuous' | 'sectioned' }
     <ForYouEmptyState
       animationId="feed-two-lists"
       title={t('interests.emptyTitle')}
-      body={view === 'sectioned' ? t('interests.emptyBody') : t('feed.noFactsBody')}
+      body={t('feed.noFactsBody')}
       action={{
         label: t('interests.learnAbout'),
-        onPress: () => openTutorial('feed', 'two-lists'),
+        onPress: () => openTutorial('facts', 'a-fact-is'),
         testID: 'feed-no-facts-learn',
       }}
       testID={`feed-no-facts-${view}`}
