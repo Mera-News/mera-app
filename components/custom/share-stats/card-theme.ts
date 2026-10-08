@@ -16,7 +16,7 @@
 
 import React from 'react';
 import type { TextStyle } from 'react-native';
-import { COLORS } from '@/lib/theme/tokens';
+import { COLORS, type ThemeMode } from '@/lib/theme/tokens';
 
 /** The single accent. Same value as the dark palette's `primary-400` and the
  *  `tintColor` on the app's tab bar. */
@@ -77,7 +77,15 @@ export const CARD_PALETTES: Readonly<Record<'dark' | 'light', CardPalette>> = {
 
 export type InkLevel = 'primary' | 'secondary' | 'muted' | 'accent';
 
-/** The palette every card piece below the provider draws with. Dark by default. */
+/** The palette for cards drawn IN the app (Library › Stats): the app's own
+ *  theme. A share image picks its Light | Dark explicitly instead. */
+export function inAppCardPalette(mode: ThemeMode): CardPalette {
+  return CARD_PALETTES[mode];
+}
+
+/** The palette every card piece below the provider draws with. Dark by
+ *  default, so an in-app surface MUST provide `inAppCardPalette` (Stats once
+ *  drew white ink on its light cards). */
 export const CardPaletteContext = React.createContext<CardPalette>(CARD_PALETTES.dark);
 
 /** The palette in force, with `ink` (a text style, composes with `type()`)

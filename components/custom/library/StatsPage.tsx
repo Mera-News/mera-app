@@ -34,7 +34,8 @@ import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import logger from '@/lib/logger';
 import { availableCards, emptyReadingStats, type ReadingStats, type StatsCardId } from '@/lib/stats/reading-stats';
 import { loadReadingStats } from '@/lib/stats/reading-stats-source';
-import { useColors } from '@/lib/theme/tokens';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
+import { CardPaletteContext, inAppCardPalette } from '@/components/custom/share-stats/card-theme';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -121,6 +122,7 @@ const StatTile: React.FC<{
 
 const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listEndPadding }) => {
     const { t } = useTranslation();
+    const themeMode = useThemeMode();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<StatsCardId>>(null);
     usePageScrollTarget(listRef);
@@ -219,6 +221,8 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
     }, [selecting, visible, stopSelecting]);
 
     return (
+        // The cards follow the app's theme (the share images choose their own).
+        <CardPaletteContext.Provider value={inAppCardPalette(themeMode)}>
         <View ref={rootRef} style={{ flex: 1 }} onLayout={measureRoot} collapsable={false}>
             <Animated.FlatList
                 ref={listRef}
@@ -360,6 +364,7 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
             {selecting ? <PackMeasure cards={cards} stats={stats} onMeasured={setMeasure} /> : null}
             <StatsShareModal open={previewOpen} onClose={closePreview} groups={groups} stats={stats} box={previewBox} />
         </View>
+        </CardPaletteContext.Provider>
     );
 };
 
