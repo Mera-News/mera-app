@@ -61,6 +61,10 @@ export const PILL_HEIGHT = 34;
 /** Frame padding around a 34pt pill: 44pt touch target. */
 export const PILL_FRAME_PAD = 5;
 const PILL_GAP = 6;
+/** GlassPanel's hairline edge, drawn outside a chip's own box. */
+const GLASS_EDGE_PX = 1;
+/** The edit circle's touch grows to 44pt across (it is 34pt). */
+const EDIT_HIT_SLOP = { left: 5, right: 5 };
 const LONG_PRESS_MS = 400;
 /** The tab header's side padding (TabPages). World's row cancels it, so its
  *  scroller spans the screen and a pill fades out before the screen edge. */
@@ -141,7 +145,8 @@ function useEdgeFade(fade: RowFade | undefined) {
 }
 
 /** World's edit button: the last item of the row, opening Arrange, in the
- *  country chips' glass. */
+ *  country chips' glass and EXACTLY their size and frame (so it centres with
+ *  them); hitSlop makes its touch 44pt wide. */
 const EditButton: React.FC<{ readonly onPress: () => void; readonly label: string; readonly fade?: RowFade }> = ({
   onPress,
   label,
@@ -158,14 +163,15 @@ const EditButton: React.FC<{ readonly onPress: () => void; readonly label: strin
       }}
     >
       <View pointerEvents="none" {...GLYPH_HIDDEN}>
-        <GlassPanel radius={22}>
-          <View style={[styles.searchCircle, { borderColor: colors.trackBorder }]}>
-            <MaterialIcons name="edit" size={22} color={colors.ink} />
+        <GlassPanel radius={999}>
+          <View style={[styles.editCircle, { borderColor: colors.trackBorder }]}>
+            <MaterialIcons name="edit" size={17} color={colors.ink} />
           </View>
         </GlassPanel>
       </View>
       <Pressable
         onPress={onPress}
+        hitSlop={EDIT_HIT_SLOP}
         style={StyleSheet.absoluteFill}
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -437,8 +443,10 @@ const PageStrip: React.FC<PageStripProps> = ({
 const styles = StyleSheet.create({
   // A fixed row, exactly the segmented track's height.
   row: { flexDirection: 'row', alignItems: 'center', height: HEADER_ROW_HEIGHT },
-  // World's pill row under the title row: 34pt pills in 44pt frames.
-  pillRow: { height: PILL_HEIGHT + 2 * PILL_FRAME_PAD },
+  // World's chip row under the title row: a chip is 34pt plus GlassPanel's
+  // 1pt edge each side, in a frame 5pt taller each side. The row is that
+  // whole frame: a horizontal scroller clips anything taller (it cut the ✎).
+  pillRow: { height: PILL_HEIGHT + 2 * GLASS_EDGE_PX + 2 * PILL_FRAME_PAD },
   // The title starts on the pills' 16pt line.
   title: {
     fontSize: 15.5,
@@ -466,11 +474,13 @@ const styles = StyleSheet.create({
   flag: { fontSize: 13, lineHeight: 16 },
   dot: { width: 7, height: 7, borderRadius: 4, marginLeft: -2 },
   dotOnActive: { borderWidth: 1.5, width: 9, height: 9, borderRadius: 5 },
-  editFrame: { width: 44, height: 44 },
-  searchCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  // The pills' frame: 34 visible plus 5 above and below.
+  editFrame: { paddingVertical: PILL_FRAME_PAD },
+  // The chip's own box, so with GlassPanel's edge it is the chip's size.
+  editCircle: {
+    width: PILL_HEIGHT,
+    height: PILL_HEIGHT,
+    borderRadius: PILL_HEIGHT / 2,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
