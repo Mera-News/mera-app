@@ -2786,10 +2786,8 @@
       "freshLine_one": "metade do que você abriu tinha menos de {{count}} hora",
       "freshLine_other": "metade do que você abriu tinha menos de {{count}} horas",
       "languages": "Idiomas",
-      "languagesLine": "idiomas em que você lê",
       "now": "Agora mesmo",
       "opened": "Abertos na fonte",
-      "openedLine": "artigos abertos no próprio site",
       "publications": "Veículos",
       "pubsInCountries_one": "veículos em {{count}} país",
       "pubsInCountries_other": "veículos em {{count}} países",
@@ -2803,7 +2801,13 @@
       "emptyBody": "Abra os artigos na fonte, salve-os ou siga histórias, e seus últimos 30 dias aparecem aqui.",
       "learn": "Conheça as estatísticas",
       "freshLineDays_one": "metade do que você abriu tinha menos de {{count}} dia",
-      "freshLineDays_other": "metade do que você abriu tinha menos de {{count}} dias"
+      "freshLineDays_other": "metade do que você abriu tinha menos de {{count}} dias",
+      "languagesLine_one": "idioma em que você lê",
+      "languagesLine_other": "idiomas em que você lê",
+      "openedLine_one": "artigo aberto no próprio site",
+      "openedLine_other": "artigos abertos no próprio site",
+      "pubInCountries_one": "veículo em {{count}} país",
+      "pubInCountries_other": "veículo em {{count}} países"
     },
     "history": {
       "colLastRead": "Última leitura",

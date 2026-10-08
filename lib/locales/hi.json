@@ -2788,10 +2788,8 @@
       "freshLine_one": "आपने जो खोला उसका आधा {{count}} घंटे से कम पुराना था",
       "freshLine_other": "आपने जो खोला उसका आधा {{count}} घंटों से कम पुराना था",
       "languages": "भाषाएं",
-      "languagesLine": "वे भाषाएं जिनमें आपने पढ़ा",
       "now": "अभी",
       "opened": "स्रोत पर खोला गया",
-      "openedLine": "लेख उनकी अपनी साइट पर खोले गए",
       "publications": "प्रकाशन",
       "pubsInCountries_one": "{{count}} देश में प्रकाशन",
       "pubsInCountries_other": "{{count}} देशों में प्रकाशन",
@@ -2805,7 +2803,13 @@
       "emptyBody": "लेख उनके स्रोत पर खोलें, उन्हें सहेजें या स्टोरी फ़ॉलो करें, और आपके पिछले 30 दिन यहां दिखेंगे।",
       "learn": "आँकड़ों के बारे में जानें",
       "freshLineDays_one": "आपने जो खोला उसका आधा {{count}} दिन से कम पुराना था",
-      "freshLineDays_other": "आपने जो खोला उसका आधा {{count}} दिनों से कम पुराना था"
+      "freshLineDays_other": "आपने जो खोला उसका आधा {{count}} दिनों से कम पुराना था",
+      "languagesLine_one": "वह भाषा जिसमें आपने पढ़ा",
+      "languagesLine_other": "वे भाषाएं जिनमें आपने पढ़ा",
+      "openedLine_one": "लेख उनकी अपनी साइट पर खोला गया",
+      "openedLine_other": "लेख उनकी अपनी साइट पर खोले गए",
+      "pubInCountries_one": "{{count}} देश में प्रकाशन",
+      "pubInCountries_other": "{{count}} देशों में प्रकाशन"
     },
     "history": {
       "colLastRead": "आखिरी बार पढ़ा",

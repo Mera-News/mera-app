@@ -2785,10 +2785,8 @@
       "freshLine_one": "separuh dari yang Anda buka berusia di bawah {{count}} jam",
       "freshLine_other": "separuh dari yang Anda buka berusia di bawah {{count}} jam",
       "languages": "Bahasa",
-      "languagesLine": "bahasa yang Anda baca",
       "now": "Saat ini",
       "opened": "Dibuka di sumbernya",
-      "openedLine": "artikel dibuka di situsnya sendiri",
       "publications": "Publikasi",
       "pubsInCountries_one": "publikasi di {{count}} negara",
       "pubsInCountries_other": "publikasi di {{count}} negara",
@@ -2802,7 +2800,13 @@
       "emptyBody": "Buka artikel di sumbernya, simpan, atau ikuti cerita, dan 30 hari terakhir Anda akan muncul di sini.",
       "learn": "Pelajari Statistik",
       "freshLineDays_one": "separuh dari yang Anda buka berusia di bawah {{count}} hari",
-      "freshLineDays_other": "separuh dari yang Anda buka berusia di bawah {{count}} hari"
+      "freshLineDays_other": "separuh dari yang Anda buka berusia di bawah {{count}} hari",
+      "languagesLine_one": "bahasa yang Anda baca",
+      "languagesLine_other": "bahasa yang Anda baca",
+      "openedLine_one": "artikel dibuka di situsnya sendiri",
+      "openedLine_other": "artikel dibuka di situsnya sendiri",
+      "pubInCountries_one": "publikasi di {{count}} negara",
+      "pubInCountries_other": "publikasi di {{count}} negara"
     },
     "history": {
       "colLastRead": "Terakhir dibaca",

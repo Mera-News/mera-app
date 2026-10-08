@@ -121,7 +121,13 @@ const StatFigure: React.FC<Props> = ({ id, stats, variant, k = 1 }) => {
         <>
           <FigureLine
             figure={String(stats.publicationCount)}
-            line={t('library.stats.pubsInCountries', { count: stats.countryCount })}
+            // Two counts, one plural each: "publication(s)" agrees with the
+            // publication count (one key per side), "country" with `count`.
+            line={
+              stats.publicationCount === 1
+                ? t('library.stats.pubInCountries', { count: stats.countryCount })
+                : t('library.stats.pubsInCountries', { count: stats.countryCount })
+            }
             variant={variant}
             k={k}
           />
@@ -155,7 +161,7 @@ const StatFigure: React.FC<Props> = ({ id, stats, variant, k = 1 }) => {
           : [];
       body = (
         <>
-          <FigureLine figure={String(stats.languageCount)} line={t('library.stats.languagesLine')} variant={variant} k={k} />
+          <FigureLine figure={String(stats.languageCount)} line={t('library.stats.languagesLine', { count: stats.languageCount })} variant={variant} k={k} />
           {segments.length > 0 ? <ProportionBar segments={segments} k={ck} textK={k} testID={`stat-${id}-bar`} /> : null}
         </>
       );
@@ -184,7 +190,7 @@ const StatFigure: React.FC<Props> = ({ id, stats, variant, k = 1 }) => {
       );
       break;
     case 'opened':
-      body = <FigureLine figure={String(stats.openedAtSourceCount)} line={t('library.stats.openedLine')} variant={variant} k={k} />;
+      body = <FigureLine figure={String(stats.openedAtSourceCount)} line={t('library.stats.openedLine', { count: stats.openedAtSourceCount })} variant={variant} k={k} />;
       break;
     case 'fresh': {
       const hours = roundedMedianHours(stats.publishToRead) ?? 0;

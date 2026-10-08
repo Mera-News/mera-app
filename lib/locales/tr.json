@@ -2788,10 +2788,8 @@
       "freshLine_one": "açtığınızın yarısı {{count}} saatten yeniydi",
       "freshLine_other": "açtığınızın yarısı {{count}} saatten yeniydi",
       "languages": "Diller",
-      "languagesLine": "okuduğunuz diller",
       "now": "Şu an",
       "opened": "Kaynağında açıldı",
-      "openedLine": "kendi sitelerinde açılan makaleler",
       "publications": "Yayınlar",
       "pubsInCountries_one": "{{count}} ülkede yayın",
       "pubsInCountries_other": "{{count}} ülkede yayın",
@@ -2805,7 +2803,13 @@
       "emptyBody": "Haberleri kaynağında açın, kaydedin ya da hikayeleri takip edin; son 30 gününüz burada görünür.",
       "learn": "İstatistikleri keşfet",
       "freshLineDays_one": "açtığınızın yarısı {{count}} günden yeniydi",
-      "freshLineDays_other": "açtığınızın yarısı {{count}} günden yeniydi"
+      "freshLineDays_other": "açtığınızın yarısı {{count}} günden yeniydi",
+      "languagesLine_one": "okuduğunuz dil",
+      "languagesLine_other": "okuduğunuz diller",
+      "openedLine_one": "kendi sitelerinde açılan makale",
+      "openedLine_other": "kendi sitelerinde açılan makaleler",
+      "pubInCountries_one": "{{count}} ülkede yayın",
+      "pubInCountries_other": "{{count}} ülkede yayın"
     },
     "history": {
       "colLastRead": "Son okuma",

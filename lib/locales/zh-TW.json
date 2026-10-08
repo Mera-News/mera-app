@@ -2786,10 +2786,8 @@
       "freshLine_one": "你打開的內容中有一半不到 {{count}} 小時",
       "freshLine_other": "你打開的內容中有一半不到 {{count}} 小時",
       "languages": "語言",
-      "languagesLine": "你閱讀的語言",
       "now": "目前",
       "opened": "在來源開啟",
-      "openedLine": "在出版商自己的網站上開啟的文章",
       "publications": "出版物",
       "pubsInCountries_one": "{{count}} 個國家的出版物",
       "pubsInCountries_other": "{{count}} 個國家的出版物",
@@ -2803,7 +2801,13 @@
       "emptyBody": "在來源開啟文章、儲存文章或追蹤報導，你的過去 30 天就會顯示在這裡。",
       "learn": "了解統計",
       "freshLineDays_one": "你打開的內容中有一半不到 {{count}} 天",
-      "freshLineDays_other": "你打開的內容中有一半不到 {{count}} 天"
+      "freshLineDays_other": "你打開的內容中有一半不到 {{count}} 天",
+      "languagesLine_one": "你閱讀的語言",
+      "languagesLine_other": "你閱讀的語言",
+      "openedLine_one": "在出版商自己的網站上開啟的文章",
+      "openedLine_other": "在出版商自己的網站上開啟的文章",
+      "pubInCountries_one": "{{count}} 個國家的出版物",
+      "pubInCountries_other": "{{count}} 個國家的出版物"
     },
     "history": {
       "colLastRead": "最後閱讀",

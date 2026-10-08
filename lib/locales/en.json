@@ -2786,10 +2786,8 @@
       "freshLine_one": "half of what you opened was under {{count}} hour old",
       "freshLine_other": "half of what you opened was under {{count}} hours old",
       "languages": "Languages",
-      "languagesLine": "languages you read in",
       "now": "Right now",
       "opened": "Opened at the source",
-      "openedLine": "articles opened on their own site",
       "publications": "Publications",
       "pubsInCountries_one": "publications in {{count}} country",
       "pubsInCountries_other": "publications in {{count}} countries",
@@ -2803,7 +2801,13 @@
       "emptyBody": "Open articles at their source, save them or follow stories, and your last 30 days show up here.",
       "learn": "Learn about Stats",
       "freshLineDays_one": "half of what you opened was under {{count}} day old",
-      "freshLineDays_other": "half of what you opened was under {{count}} days old"
+      "freshLineDays_other": "half of what you opened was under {{count}} days old",
+      "languagesLine_one": "language you read in",
+      "languagesLine_other": "languages you read in",
+      "openedLine_one": "article opened on its own site",
+      "openedLine_other": "articles opened on their own site",
+      "pubInCountries_one": "publication in {{count}} country",
+      "pubInCountries_other": "publication in {{count}} countries"
     },
     "history": {
       "colLastRead": "Last read",

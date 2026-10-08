@@ -2786,10 +2786,8 @@
       "freshLine_one": "你打开的内容中，一半不到{{count}}小时前发布",
       "freshLine_other": "你打开的内容中，一半不到{{count}}小时前发布",
       "languages": "语言",
-      "languagesLine": "你阅读过的语言",
       "now": "当前",
       "opened": "在来源处打开",
-      "openedLine": "在其自己网站上打开的文章",
       "publications": "媒体",
       "pubsInCountries_one": "{{count}} 个国家的媒体",
       "pubsInCountries_other": "{{count}} 个国家的媒体",
@@ -2803,7 +2801,13 @@
       "emptyBody": "在来源处打开文章、收藏文章或关注报道，你过去30天的数据就会显示在这里。",
       "learn": "了解统计",
       "freshLineDays_one": "你打开的内容中，一半不到{{count}}天前发布",
-      "freshLineDays_other": "你打开的内容中，一半不到{{count}}天前发布"
+      "freshLineDays_other": "你打开的内容中，一半不到{{count}}天前发布",
+      "languagesLine_one": "你阅读过的语言",
+      "languagesLine_other": "你阅读过的语言",
+      "openedLine_one": "在其自己网站上打开的文章",
+      "openedLine_other": "在其自己网站上打开的文章",
+      "pubInCountries_one": "{{count}} 个国家的媒体",
+      "pubInCountries_other": "{{count}} 个国家的媒体"
     },
     "history": {
       "colLastRead": "最近阅读",

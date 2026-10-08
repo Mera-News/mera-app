@@ -2786,10 +2786,8 @@
       "freshLine_one": "metà di ciò che hai aperto aveva meno di {{count}} ora",
       "freshLine_other": "metà di ciò che hai aperto aveva meno di {{count}} ore",
       "languages": "Lingue",
-      "languagesLine": "lingue in cui leggi",
       "now": "In questo momento",
       "opened": "Aperti alla fonte",
-      "openedLine": "articoli aperti sul loro sito",
       "publications": "Pubblicazioni",
       "pubsInCountries_one": "pubblicazione in {{count}} paese",
       "pubsInCountries_other": "pubblicazioni in {{count}} paesi",
@@ -2803,7 +2801,13 @@
       "emptyBody": "Apri gli articoli alla fonte, salvali o segui le storie, e i tuoi ultimi 30 giorni appariranno qui.",
       "learn": "Scopri le statistiche",
       "freshLineDays_one": "metà di ciò che hai aperto aveva meno di {{count}} giorno",
-      "freshLineDays_other": "metà di ciò che hai aperto aveva meno di {{count}} giorni"
+      "freshLineDays_other": "metà di ciò che hai aperto aveva meno di {{count}} giorni",
+      "languagesLine_one": "lingua in cui leggi",
+      "languagesLine_other": "lingue in cui leggi",
+      "openedLine_one": "articolo aperto sul loro sito",
+      "openedLine_other": "articoli aperti sul loro sito",
+      "pubInCountries_one": "pubblicazione in {{count}} paese",
+      "pubInCountries_other": "pubblicazione in {{count}} paesi"
     },
     "history": {
       "colLastRead": "Ultima lettura",

@@ -2786,10 +2786,8 @@
       "freshLine_one": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} giờ",
       "freshLine_other": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} giờ",
       "languages": "Ngôn ngữ",
-      "languagesLine": "ngôn ngữ bạn đã đọc",
       "now": "Ngay lúc này",
       "opened": "Đã mở tại nguồn",
-      "openedLine": "bài viết đã mở trên trang của chính nguồn",
       "publications": "Nguồn",
       "pubsInCountries_one": "nguồn ở {{count}} quốc gia",
       "pubsInCountries_other": "nguồn ở {{count}} quốc gia",
@@ -2803,7 +2801,13 @@
       "emptyBody": "Mở bài viết tại nguồn, lưu bài hoặc theo dõi câu chuyện, và 30 ngày gần nhất của bạn sẽ hiện ở đây.",
       "learn": "Tìm hiểu về Thống kê",
       "freshLineDays_one": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày",
-      "freshLineDays_other": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày"
+      "freshLineDays_other": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày",
+      "languagesLine_one": "ngôn ngữ bạn đã đọc",
+      "languagesLine_other": "ngôn ngữ bạn đã đọc",
+      "openedLine_one": "bài viết đã mở trên trang của chính nguồn",
+      "openedLine_other": "bài viết đã mở trên trang của chính nguồn",
+      "pubInCountries_one": "nguồn ở {{count}} quốc gia",
+      "pubInCountries_other": "nguồn ở {{count}} quốc gia"
     },
     "history": {
       "colLastRead": "Lần đọc gần nhất",

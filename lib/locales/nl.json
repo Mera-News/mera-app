@@ -2786,10 +2786,8 @@
       "freshLine_one": "de helft van wat je opende was minder dan {{count}} uur oud",
       "freshLine_other": "de helft van wat je opende was minder dan {{count}} uur oud",
       "languages": "Talen",
-      "languagesLine": "talen waarin je las",
       "now": "Nu",
       "opened": "Geopend bij de bron",
-      "openedLine": "artikelen geopend op hun eigen site",
       "publications": "Publicaties",
       "pubsInCountries_one": "publicatie in {{count}} land",
       "pubsInCountries_other": "publicaties in {{count}} landen",
@@ -2803,7 +2801,13 @@
       "emptyBody": "Open artikelen bij de bron, bewaar ze of volg verhalen, en je afgelopen 30 dagen verschijnen hier.",
       "learn": "Meer over statistieken",
       "freshLineDays_one": "de helft van wat je opende was minder dan {{count}} dag oud",
-      "freshLineDays_other": "de helft van wat je opende was minder dan {{count}} dagen oud"
+      "freshLineDays_other": "de helft van wat je opende was minder dan {{count}} dagen oud",
+      "languagesLine_one": "taal waarin je las",
+      "languagesLine_other": "talen waarin je las",
+      "openedLine_one": "artikel geopend op hun eigen site",
+      "openedLine_other": "artikelen geopend op hun eigen site",
+      "pubInCountries_one": "publicatie in {{count}} land",
+      "pubInCountries_other": "publicatie in {{count}} landen"
     },
     "history": {
       "colLastRead": "Laatst gelezen",

@@ -2785,10 +2785,8 @@
       "freshLine_one": "開いた記事の半分は{{count}}時間以内に公開されたものでした",
       "freshLine_other": "開いた記事の半分は{{count}}時間以内に公開されたものでした",
       "languages": "言語",
-      "languagesLine": "読んでいる言語",
       "now": "現在",
       "opened": "公開元で開いた",
-      "openedLine": "公開元のサイトで開いた記事",
       "publications": "公開元",
       "pubsInCountries_one": "{{count}}か国の公開元",
       "pubsInCountries_other": "{{count}}か国の公開元",
@@ -2802,7 +2800,13 @@
       "emptyBody": "記事を公開元で開いたり、保存したり、ストーリーをフォローしたりすると、過去30日間がここに表示されます。",
       "learn": "統計について学ぶ",
       "freshLineDays_one": "開いた記事の半分は{{count}}日以内に公開されたものでした",
-      "freshLineDays_other": "開いた記事の半分は{{count}}日以内に公開されたものでした"
+      "freshLineDays_other": "開いた記事の半分は{{count}}日以内に公開されたものでした",
+      "languagesLine_one": "読んでいる言語",
+      "languagesLine_other": "読んでいる言語",
+      "openedLine_one": "公開元のサイトで開いた記事",
+      "openedLine_other": "公開元のサイトで開いた記事",
+      "pubInCountries_one": "{{count}}か国の公開元",
+      "pubInCountries_other": "{{count}}か国の公開元"
     },
     "history": {
       "colLastRead": "最後に読んだ日",

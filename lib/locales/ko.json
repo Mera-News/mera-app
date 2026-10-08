@@ -2785,10 +2785,8 @@
       "freshLine_one": "열어 본 기사의 절반은 {{count}}시간 이내의 기사였습니다",
       "freshLine_other": "열어 본 기사의 절반은 {{count}}시간 이내의 기사였습니다",
       "languages": "언어",
-      "languagesLine": "읽은 언어",
       "now": "지금",
       "opened": "출처에서 열람",
-      "openedLine": "기사를 원래 사이트에서 연 횟수",
       "publications": "매체",
       "pubsInCountries_one": "{{count}}개국의 매체",
       "pubsInCountries_other": "{{count}}개국의 매체",
@@ -2802,7 +2800,13 @@
       "emptyBody": "기사를 원래 출처에서 열고, 저장하거나 스토리를 팔로우하면 지난 30일이 여기에 표시됩니다.",
       "learn": "통계 알아보기",
       "freshLineDays_one": "열어 본 기사의 절반은 {{count}}일 이내의 기사였습니다",
-      "freshLineDays_other": "열어 본 기사의 절반은 {{count}}일 이내의 기사였습니다"
+      "freshLineDays_other": "열어 본 기사의 절반은 {{count}}일 이내의 기사였습니다",
+      "languagesLine_one": "읽은 언어",
+      "languagesLine_other": "읽은 언어",
+      "openedLine_one": "기사를 원래 사이트에서 연 횟수",
+      "openedLine_other": "기사를 원래 사이트에서 연 횟수",
+      "pubInCountries_one": "{{count}}개국의 매체",
+      "pubInCountries_other": "{{count}}개국의 매체"
     },
     "history": {
       "colLastRead": "마지막 열람",
