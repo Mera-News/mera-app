@@ -28,7 +28,8 @@
     "confirm": "Onayla",
     "copy": "Kopyala",
     "today": "Bugün",
-    "yesterday": "Dün"
+    "yesterday": "Dün",
+    "dontAskAgain": "Bir daha sorma"
   },
   "auth": {
     "emailPlaceholder": "E-posta adresinizi girin",
@@ -1348,14 +1349,12 @@
       "showLessHint": "Mera bunlarla ilgili daha az haber gösterir. Birini kaldırırsanız eskisi gibi görünür.",
       "showLessOf": "Daha az göster",
       "showLessPlaceholder": "Bir konu ekleyin",
-      "showLessThis": "Bunu daha az göster",
       "stillLooking": "Mera daha fazla konu arıyor",
       "storyCount_one": "{{count}} haber",
       "storyCount_other": "{{count}} haber",
       "suggestMore": "Daha fazlasını öner",
       "thisWasRelevant": "Bu ilgiliydi",
       "title": "Bilgi",
-      "topicMenuA11y": "{{text}} için seçenekler",
       "topicsTab": "Konular",
       "filterAll": "Tümü",
       "filterSuggested": "Önerilen",
@@ -1363,7 +1362,10 @@
       "filterA11y": "Haberleri göster: {{filter}}",
       "allHint": "Bu bilginin son 48 saatte bulduğu her haber.",
       "discardedHint": "Bu bilgi üzerinden bulundu ve akışınızın dışında bırakıldı: ilgili değil, filtreleriniz tarafından gizlendi ya da zaten okundu.",
-      "discardedEmpty": "Bu bilgi için akışınızın dışında bırakılan bir şey henüz yok."
+      "discardedEmpty": "Bu bilgi için akışınızın dışında bırakılan bir şey henüz yok.",
+      "deleteTopicA11y": "{{topic}} sil",
+      "deleteTopicTitle": "Konu silinsin mi?",
+      "deleteTopicBody": "Mera bu bilgi için konuyu kullanmayı bırakır ve bir daha önermez. Konuyu Daha az göster bölümünden geri getirebilirsiniz."
     }
   },
   "publicationPrefs": {

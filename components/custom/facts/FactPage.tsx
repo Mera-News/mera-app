@@ -34,6 +34,8 @@ import { deleteTopicWithDecline, listDeclinedTopics, recordDecline, removeDeclin
 import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
 import { createTopics, normalizeTopicText, observeByFact, reactivate, retire } from '@/lib/database/services/topic-service';
 import { showDialog } from '@/lib/dialog';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { hapticSuccess } from '@/lib/haptics';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
@@ -80,6 +82,8 @@ const GENERATE_MORE_TOPIC_COUNT = 10;
 const SOFT_STRENGTH = 0.5;
 
 type Tab = 'topics' | 'recent';
+/** Per device: the reader ticked "Don't ask again" on a topic delete. */
+const SKIP_TOPIC_DELETE_CONFIRM_KEY = 'fact_topic_delete_skip_confirm';
 const STORY_FILTERS: readonly StoryFilter[] = ['all', 'suggested', 'discarded'];
 interface TopicRow {
     readonly id: string;
@@ -226,18 +230,49 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
     );
 
     // ── Topics: turn down, add, suggest more, retry ────────────────────────
-    const [topicMenu, setTopicMenu] = useState<TopicRow | null>(null);
-    const pendingTurnDown = useRef<TopicRow | null>(null);
-    const onTopicMenuClosed = useCallback(() => {
-        const topic = pendingTurnDown.current;
-        pendingTurnDown.current = null;
+    // A topic's delete is one tap; the first one asks, with "Don't ask again"
+    // kept per device (AsyncStorage, so an account switch keeps it).
+    const [confirmTopic, setConfirmTopic] = useState<TopicRow | null>(null);
+    const [dontAsk, setDontAsk] = useState(false);
+    const skipConfirm = useRef(false);
+    useEffect(() => {
+        AsyncStorage.getItem(SKIP_TOPIC_DELETE_CONFIRM_KEY)
+            .then((v) => {
+                skipConfirm.current = v === '1';
+            })
+            .catch(() => undefined);
+    }, []);
+    const deleteTopic = useCallback(
+        (topic: TopicRow) => {
+            // A permanent decline: the persona agent never proposes it again
+            // until it is lifted from the Show less of field below.
+            deleteTopicWithDecline(topic.id).catch((error) =>
+                logger.error('[FactPage] topic delete failed', error, { factId, topicId: topic.id }),
+            );
+        },
+        [factId],
+    );
+    const askDeleteTopic = useCallback(
+        (topic: TopicRow) => {
+            if (skipConfirm.current) {
+                deleteTopic(topic);
+                return;
+            }
+            setDontAsk(false);
+            setConfirmTopic(topic);
+        },
+        [deleteTopic],
+    );
+    const confirmDeleteTopic = useCallback(() => {
+        const topic = confirmTopic;
+        setConfirmTopic(null);
         if (!topic) return;
-        // A permanent decline (with the 5 s undo): the persona agent never
-        // proposes it again until it is lifted from the chip field below.
-        deleteTopicWithDecline(topic.id).catch((error) =>
-            logger.error('[FactPage] turn down failed', error, { factId, topicId: topic.id }),
-        );
-    }, [factId]);
+        if (dontAsk) {
+            skipConfirm.current = true;
+            AsyncStorage.setItem(SKIP_TOPIC_DELETE_CONFIRM_KEY, '1').catch(() => undefined);
+        }
+        deleteTopic(topic);
+    }, [confirmTopic, dontAsk, deleteTopic]);
 
     const [addOpen, setAddOpen] = useState(false);
     const [addText, setAddText] = useState('');
@@ -395,13 +430,13 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                             />
                         </View>
                         <Pressable
-                            testID={`fact-topic-menu-${item.topic.id}`}
-                            onPress={() => setTopicMenu(item.topic)}
+                            testID={`topic-delete-${item.topic.id}`}
+                            onPress={() => askDeleteTopic(item.topic)}
                             accessibilityRole="button"
-                            accessibilityLabel={t('facts.page.topicMenuA11y', { text: item.topic.text })}
+                            accessibilityLabel={t('facts.page.deleteTopicA11y', { topic: item.topic.text })}
                             style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
                         >
-                            <MaterialIcons name="more-horiz" size={22} color={colors.ink2} />
+                            <MaterialIcons name="delete-outline" size={18} color={colors.ink3} />
                         </Pressable>
                     </View>
                 );
@@ -440,7 +475,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 </View>
             );
         },
-        [knownIds, reduceMotion, topicStories, colors, t, openSuggestion, openedIds, taught, markRelevant],
+        [knownIds, reduceMotion, topicStories, colors, t, openSuggestion, openedIds, taught, markRelevant, askDeleteTopic],
     );
 
     const header = (
@@ -713,25 +748,17 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 </Group>
             </BottomSheet>
 
-            <BottomSheet
-                testID="fact-topic-sheet"
-                open={topicMenu !== null}
-                onClose={() => setTopicMenu(null)}
-                onClosed={onTopicMenuClosed}
-            >
-                <Group>
-                    <Row
-                        testID="fact-topic-show-less"
-                        title={t('facts.page.showLessThis')}
-                        leadingIcon="visibility-off"
-                        onPress={() => {
-                            pendingTurnDown.current = topicMenu;
-                            setTopicMenu(null);
-                        }}
-                        hideChevron
-                    />
-                </Group>
-            </BottomSheet>
+            <ConfirmDialog
+                testID="fact-topic-delete"
+                open={confirmTopic !== null}
+                title={t('facts.page.deleteTopicTitle')}
+                body={t('facts.page.deleteTopicBody')}
+                confirmLabel={t('common.delete')}
+                destructive
+                onConfirm={confirmDeleteTopic}
+                onCancel={() => setConfirmTopic(null)}
+                checkbox={{ label: t('common.dontAskAgain'), value: dontAsk, onChange: setDontAsk }}
+            />
 
             <AddTopicModal
                 isOpen={addOpen}

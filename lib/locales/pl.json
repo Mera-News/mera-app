@@ -28,7 +28,8 @@
     "confirm": "Potwierdź",
     "copy": "Kopiuj",
     "today": "Dzisiaj",
-    "yesterday": "Wczoraj"
+    "yesterday": "Wczoraj",
+    "dontAskAgain": "Nie pytaj ponownie"
   },
   "auth": {
     "emailPlaceholder": "Wpisz swój adres e-mail",
@@ -1376,7 +1377,6 @@
       "showLessHint": "Mera pokazuje mniej historii o tym. Usuń jedną, aby zobaczyć ją jak wcześniej.",
       "showLessOf": "Pokazuj mniej",
       "showLessPlaceholder": "Dodaj temat",
-      "showLessThis": "Pokazuj mniej tego",
       "stillLooking": "Mera szuka kolejnych tematów",
       "storyCount_one": "{{count}} historia",
       "storyCount_few": "{{count}} historie",
@@ -1385,7 +1385,6 @@
       "suggestMore": "Zaproponuj więcej",
       "thisWasRelevant": "To było trafne",
       "title": "Fakt",
-      "topicMenuA11y": "Opcje dla: {{text}}",
       "topicsTab": "Tematy",
       "filterAll": "Wszystkie",
       "filterSuggested": "Polecane",
@@ -1393,7 +1392,10 @@
       "filterA11y": "Pokaż historie: {{filter}}",
       "allHint": "Każda historia, którą ten fakt znalazł w ciągu ostatnich 48 godzin.",
       "discardedHint": "Znalezione przez ten fakt i pominięte w Twoim feedzie: nieistotne, ukryte przez Twoje filtry albo już przeczytane.",
-      "discardedEmpty": "Na razie nic z Twojego feedu nie zostało pominięte dla tego faktu."
+      "discardedEmpty": "Na razie nic z Twojego feedu nie zostało pominięte dla tego faktu.",
+      "deleteTopicA11y": "Usuń {{topic}}",
+      "deleteTopicTitle": "Usunąć temat?",
+      "deleteTopicBody": "Mera przestaje go używać przy tym fakcie i nie będzie go więcej podpowiadać. Można go przywrócić z Pokazuj mniej."
     }
   },
   "publicationPrefs": {

@@ -28,7 +28,8 @@
     "confirm": "Confirmar",
     "copy": "Copiar",
     "today": "Hoje",
-    "yesterday": "Ontem"
+    "yesterday": "Ontem",
+    "dontAskAgain": "Não perguntar novamente"
   },
   "auth": {
     "emailPlaceholder": "Digite seu endereço de e-mail",
@@ -1346,14 +1347,12 @@
       "showLessHint": "A Mera mostra menos histórias sobre estes temas. Remova um para voltar ao normal.",
       "showLessOf": "Mostrar menos de",
       "showLessPlaceholder": "Adicione um tema",
-      "showLessThis": "Mostrar menos disto",
       "stillLooking": "A Mera ainda está procurando mais temas",
       "storyCount_one": "{{count}} história",
       "storyCount_other": "{{count}} histórias",
       "suggestMore": "Sugerir mais",
       "thisWasRelevant": "Isso era relevante",
       "title": "Fato",
-      "topicMenuA11y": "Opções para {{text}}",
       "topicsTab": "Temas",
       "filterAll": "Todas",
       "filterSuggested": "Sugeridas",
@@ -1361,7 +1360,10 @@
       "filterA11y": "Mostrar histórias: {{filter}}",
       "allHint": "Todas as histórias que este fato encontrou nas últimas 48 horas.",
       "discardedHint": "Encontradas por meio deste fato e deixadas fora do seu feed: não são relevantes, estão ocultas pelos seus filtros ou já foram lidas.",
-      "discardedEmpty": "Nada foi deixado fora do seu feed para este fato ainda."
+      "discardedEmpty": "Nada foi deixado fora do seu feed para este fato ainda.",
+      "deleteTopicA11y": "Excluir {{topic}}",
+      "deleteTopicTitle": "Excluir tema?",
+      "deleteTopicBody": "A Mera deixa de usá-lo para este fato e não vai sugeri-lo de novo. Pode trazê-lo de volta em Mostrar menos de."
     }
   },
   "publicationPrefs": {

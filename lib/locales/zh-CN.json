@@ -28,7 +28,8 @@
     "confirm": "确认",
     "copy": "复制",
     "today": "今天",
-    "yesterday": "昨天"
+    "yesterday": "昨天",
+    "dontAskAgain": "不再询问"
   },
   "auth": {
     "emailPlaceholder": "请输入您的电子邮箱地址",
@@ -1347,14 +1348,12 @@
       "showLessHint": "Mera 会减少显示与这些相关的报道。移除一个即可恢复之前的显示。",
       "showLessOf": "减少显示",
       "showLessPlaceholder": "添加主题",
-      "showLessThis": "减少显示此内容",
       "stillLooking": "Mera 正在寻找更多主题",
       "storyCount_one": "{{count}} 条报道",
       "storyCount_other": "{{count}} 条报道",
       "suggestMore": "推荐更多",
       "thisWasRelevant": "这条相关",
       "title": "事实",
-      "topicMenuA11y": "{{text}}的选项",
       "topicsTab": "主题",
       "filterAll": "全部",
       "filterSuggested": "推荐",
@@ -1362,7 +1361,10 @@
       "filterA11y": "显示{{filter}}报道",
       "allHint": "过去48小时内，此事实找到的全部报道。",
       "discardedHint": "通过此事实找到，但未出现在你的信息流中：不相关、被你的筛选条件隐藏，或已阅读。",
-      "discardedEmpty": "此事实暂时还没有被排除在你的信息流之外的内容。"
+      "discardedEmpty": "此事实暂时还没有被排除在你的信息流之外的内容。",
+      "deleteTopicA11y": "删除{{topic}}",
+      "deleteTopicTitle": "删除主题？",
+      "deleteTopicBody": "Mera 不会再将此主题用于这条事实，也不会再推荐。你可以在“减少显示”中将其恢复。"
     }
   },
   "publicationPrefs": {

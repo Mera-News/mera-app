@@ -28,7 +28,8 @@
     "confirm": "確認",
     "copy": "複製",
     "today": "今天",
-    "yesterday": "昨天"
+    "yesterday": "昨天",
+    "dontAskAgain": "不再詢問"
   },
   "auth": {
     "emailPlaceholder": "輸入您的電子郵件地址",
@@ -1347,14 +1348,12 @@
       "showLessHint": "Mera 會減少顯示這些主題的報導。移除一項即可像之前一樣看到它。",
       "showLessOf": "減少顯示",
       "showLessPlaceholder": "新增主題",
-      "showLessThis": "減少顯示這個",
       "stillLooking": "Mera 正在尋找更多主題",
       "storyCount_one": "{{count}} 則報導",
       "storyCount_other": "{{count}} 則報導",
       "suggestMore": "推薦更多",
       "thisWasRelevant": "這則相關",
       "title": "事實",
-      "topicMenuA11y": "{{text}}的選項",
       "topicsTab": "主題",
       "filterAll": "全部",
       "filterSuggested": "推薦",
@@ -1362,7 +1361,10 @@
       "filterA11y": "顯示{{filter}}報導",
       "allHint": "過去 48 小時內，這項事實找到的所有報導。",
       "discardedHint": "透過這項事實找到，但未出現在你的資訊流中：不相關、被你的篩選條件隱藏，或已讀取。",
-      "discardedEmpty": "這項事實目前還沒有被排除在你的資訊流之外的內容。"
+      "discardedEmpty": "這項事實目前還沒有被排除在你的資訊流之外的內容。",
+      "deleteTopicA11y": "刪除{{topic}}",
+      "deleteTopicTitle": "刪除主題？",
+      "deleteTopicBody": "Mera 不會再將此主題用於這則事實，也不會再推薦。你可以在「減少顯示」中將其恢復。"
     }
   },
   "publicationPrefs": {

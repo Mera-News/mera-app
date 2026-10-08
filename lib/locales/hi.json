@@ -28,7 +28,8 @@
     "confirm": "पुष्टि करें",
     "copy": "कॉपी करें",
     "today": "आज",
-    "yesterday": "कल"
+    "yesterday": "कल",
+    "dontAskAgain": "दोबारा न पूछें"
   },
   "auth": {
     "emailPlaceholder": "अपना ईमेल पता दर्ज करें",
@@ -1348,14 +1349,12 @@
       "showLessHint": "Mera इनके बारे में कम स्टोरीज़ दिखाता है। किसी एक को हटाएं, तो वह पहले की तरह दिखेगी।",
       "showLessOf": "इनमें से कम दिखाएं",
       "showLessPlaceholder": "एक विषय जोड़ें",
-      "showLessThis": "यह कम दिखाएं",
       "stillLooking": "Mera और विषय ढूंढ रहा है",
       "storyCount_one": "{{count}} स्टोरी",
       "storyCount_other": "{{count}} स्टोरीज़",
       "suggestMore": "और सुझाएं",
       "thisWasRelevant": "यह काम का था",
       "title": "तथ्य",
-      "topicMenuA11y": "{{text}} के विकल्प",
       "topicsTab": "विषय",
       "filterAll": "सभी",
       "filterSuggested": "सुझाई गई",
@@ -1363,7 +1362,10 @@
       "filterA11y": "स्टोरीज़ दिखाएं: {{filter}}",
       "allHint": "पिछले 48 घंटों में इस तथ्य से मिली हर स्टोरी।",
       "discardedHint": "इस तथ्य से मिली और आपके फ़ीड से हटाई गई स्टोरीज़: प्रासंगिक नहीं, आपके फ़िल्टर से छिपी हुई, या पहले से पढ़ी हुई।",
-      "discardedEmpty": "इस तथ्य के लिए अभी तक आपके फ़ीड से कुछ नहीं हटाया गया है।"
+      "discardedEmpty": "इस तथ्य के लिए अभी तक आपके फ़ीड से कुछ नहीं हटाया गया है।",
+      "deleteTopicA11y": "{{topic}} हटाएं",
+      "deleteTopicTitle": "विषय हटाएं?",
+      "deleteTopicBody": "Mera इस तथ्य के लिए इसका उपयोग बंद कर देता है और इसे दोबारा नहीं सुझाएगा। इसे इनमें से कम दिखाएं से वापस लाया जा सकता है।"
     }
   },
   "publicationPrefs": {

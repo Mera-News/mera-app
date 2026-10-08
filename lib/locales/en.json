@@ -28,7 +28,8 @@
     "confirm": "Confirm",
     "copy": "Copy",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "dontAskAgain": "Don't ask again"
   },
   "auth": {
     "emailPlaceholder": "Enter your email address",
@@ -1566,14 +1567,12 @@
       "showLessHint": "Mera shows fewer stories about these. Remove one to see it as before.",
       "showLessOf": "Show less of",
       "showLessPlaceholder": "Add a topic",
-      "showLessThis": "Show less of this",
       "stillLooking": "Mera is looking for more topics",
       "storyCount_one": "{{count}} story",
       "storyCount_other": "{{count}} stories",
       "suggestMore": "Suggest more",
       "thisWasRelevant": "This was relevant",
       "title": "Fact",
-      "topicMenuA11y": "Options for {{text}}",
       "topicsTab": "Topics",
       "filterAll": "All",
       "filterSuggested": "Suggested",
@@ -1581,7 +1580,10 @@
       "filterA11y": "Show {{filter}} stories",
       "allHint": "Every story this fact found in the last 48 hours.",
       "discardedHint": "Found through this fact and left out of your feed: not relevant, hidden by your filters, or already read.",
-      "discardedEmpty": "Nothing left out of your feed for this fact yet."
+      "discardedEmpty": "Nothing left out of your feed for this fact yet.",
+      "deleteTopicA11y": "Delete {{topic}}",
+      "deleteTopicTitle": "Delete topic?",
+      "deleteTopicBody": "Mera stops using it for this fact and won't suggest it again. You can bring it back from Show less of."
     }
   },
   "publicationPrefs": {

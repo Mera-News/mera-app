@@ -28,7 +28,8 @@
     "confirm": "Bestätigen",
     "copy": "Kopieren",
     "today": "Heute",
-    "yesterday": "Gestern"
+    "yesterday": "Gestern",
+    "dontAskAgain": "Nicht noch einmal fragen"
   },
   "auth": {
     "emailPlaceholder": "E-Mail-Adresse eingeben",
@@ -1346,14 +1347,12 @@
       "showLessHint": "Mera zeigt weniger Geschichten dazu. Entferne eines, um es wie vorher zu sehen.",
       "showLessOf": "Weniger anzeigen von",
       "showLessPlaceholder": "Thema hinzufügen",
-      "showLessThis": "Davon weniger anzeigen",
       "stillLooking": "Mera sucht nach weiteren Themen",
       "storyCount_one": "{{count}} Geschichte",
       "storyCount_other": "{{count}} Geschichten",
       "suggestMore": "Mehr vorschlagen",
       "thisWasRelevant": "Das war relevant",
       "title": "Fakt",
-      "topicMenuA11y": "Optionen für {{text}}",
       "topicsTab": "Themen",
       "filterAll": "Alle",
       "filterSuggested": "Vorgeschlagen",
@@ -1361,7 +1360,10 @@
       "filterA11y": "Geschichten anzeigen: {{filter}}",
       "allHint": "Jede Geschichte, die dieser Fakt in den letzten 48 Stunden gefunden hat.",
       "discardedHint": "Über diesen Fakt gefunden und aus deinem Feed rausgelassen: nicht relevant, von deinen Filtern ausgeblendet oder schon gelesen.",
-      "discardedEmpty": "Für diesen Fakt wurde bisher nichts aus deinem Feed rausgelassen."
+      "discardedEmpty": "Für diesen Fakt wurde bisher nichts aus deinem Feed rausgelassen.",
+      "deleteTopicA11y": "{{topic}} löschen",
+      "deleteTopicTitle": "Thema löschen?",
+      "deleteTopicBody": "Mera verwendet es für diesen Fakt nicht mehr und schlägt es dir nicht erneut vor. Du kannst es über „Weniger anzeigen von“ wieder hinzufügen."
     }
   },
   "publicationPrefs": {

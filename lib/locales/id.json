@@ -28,7 +28,8 @@
     "confirm": "Konfirmasi",
     "copy": "Salin",
     "today": "Hari ini",
-    "yesterday": "Kemarin"
+    "yesterday": "Kemarin",
+    "dontAskAgain": "Jangan tanya lagi"
   },
   "auth": {
     "emailPlaceholder": "Masukkan alamat email Anda",
@@ -1346,14 +1347,12 @@
       "showLessHint": "Mera menampilkan lebih sedikit cerita tentang ini. Hapus satu untuk melihatnya seperti sebelumnya.",
       "showLessOf": "Tampilkan lebih sedikit",
       "showLessPlaceholder": "Tambah topik",
-      "showLessThis": "Tampilkan lebih sedikit tentang ini",
       "stillLooking": "Mera sedang mencari topik lainnya",
       "storyCount_one": "{{count}} cerita",
       "storyCount_other": "{{count}} cerita",
       "suggestMore": "Sarankan lebih banyak",
       "thisWasRelevant": "Ini relevan",
       "title": "Fakta",
-      "topicMenuA11y": "Pilihan untuk {{text}}",
       "topicsTab": "Topik",
       "filterAll": "Semua",
       "filterSuggested": "Disarankan",
@@ -1361,7 +1360,10 @@
       "filterA11y": "Tampilkan cerita: {{filter}}",
       "allHint": "Setiap cerita yang ditemukan fakta ini dalam 48 jam terakhir.",
       "discardedHint": "Ditemukan lewat fakta ini dan tidak ditampilkan di feed Anda: tidak relevan, disembunyikan filter Anda, atau sudah dibaca.",
-      "discardedEmpty": "Belum ada yang disingkirkan dari feed Anda untuk fakta ini."
+      "discardedEmpty": "Belum ada yang disingkirkan dari feed Anda untuk fakta ini.",
+      "deleteTopicA11y": "Hapus {{topic}}",
+      "deleteTopicTitle": "Hapus topik?",
+      "deleteTopicBody": "Mera berhenti menggunakannya untuk fakta ini dan tidak akan menyarankannya lagi. Anda bisa mengembalikannya dari Tampilkan lebih sedikit."
     }
   },
   "publicationPrefs": {

@@ -28,7 +28,8 @@
     "confirm": "Conferma",
     "copy": "Copia",
     "today": "Oggi",
-    "yesterday": "Ieri"
+    "yesterday": "Ieri",
+    "dontAskAgain": "Non chiedere più"
   },
   "auth": {
     "emailPlaceholder": "Inserisci il tuo indirizzo email",
@@ -1346,14 +1347,12 @@
       "showLessHint": "Mera mostra meno storie su questi temi. Rimuovine uno per vederlo come prima.",
       "showLessOf": "Mostra meno di",
       "showLessPlaceholder": "Aggiungi un argomento",
-      "showLessThis": "Mostra meno di questo",
       "stillLooking": "Mera sta cercando altri argomenti",
       "storyCount_one": "{{count}} storia",
       "storyCount_other": "{{count}} storie",
       "suggestMore": "Suggerisci altri",
       "thisWasRelevant": "Questo era pertinente",
       "title": "Fatto",
-      "topicMenuA11y": "Opzioni per {{text}}",
       "topicsTab": "Argomenti",
       "filterAll": "Tutte",
       "filterSuggested": "Suggerite",
@@ -1361,7 +1360,10 @@
       "filterA11y": "Mostra storie: {{filter}}",
       "allHint": "Tutte le storie trovate da questo fatto nelle ultime 48 ore.",
       "discardedHint": "Trovate tramite questo fatto e lasciate fuori dal tuo feed: non pertinenti, nascoste dai tuoi filtri o già lette.",
-      "discardedEmpty": "Per ora nulla è stato lasciato fuori dal tuo feed per questo fatto."
+      "discardedEmpty": "Per ora nulla è stato lasciato fuori dal tuo feed per questo fatto.",
+      "deleteTopicA11y": "Elimina {{topic}}",
+      "deleteTopicTitle": "Eliminare l'argomento?",
+      "deleteTopicBody": "Mera smette di usarlo per questo fatto e non lo suggerirà più. Si può ripristinare da Mostra meno di."
     }
   },
   "publicationPrefs": {

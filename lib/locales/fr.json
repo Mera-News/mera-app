@@ -28,7 +28,8 @@
     "confirm": "Confirmer",
     "copy": "Copier",
     "today": "Aujourd'hui",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "dontAskAgain": "Ne plus demander"
   },
   "auth": {
     "emailPlaceholder": "Entrez votre adresse e-mail",
@@ -1352,14 +1353,12 @@
       "showLessHint": "Mera affiche moins d'histoires à ce sujet. Supprimez-en un pour le revoir comme avant.",
       "showLessOf": "Afficher moins de",
       "showLessPlaceholder": "Ajouter un sujet",
-      "showLessThis": "Afficher moins de ceci",
       "stillLooking": "Mera cherche d'autres sujets",
       "storyCount_one": "{{count}} histoire",
       "storyCount_other": "{{count}} histoires",
       "suggestMore": "Suggérer davantage",
       "thisWasRelevant": "C'était pertinent",
       "title": "Fait",
-      "topicMenuA11y": "Options pour {{text}}",
       "topicsTab": "Sujets",
       "filterAll": "Toutes",
       "filterSuggested": "Suggérées",
@@ -1367,7 +1366,10 @@
       "filterA11y": "Afficher les histoires : {{filter}}",
       "allHint": "Toutes les histoires trouvées grâce à ce fait au cours des 48 dernières heures.",
       "discardedHint": "Trouvées grâce à ce fait et écartées de votre fil : non pertinentes, masquées par vos filtres ou déjà lues.",
-      "discardedEmpty": "Rien n'a encore été écarté de votre fil pour ce fait."
+      "discardedEmpty": "Rien n'a encore été écarté de votre fil pour ce fait.",
+      "deleteTopicA11y": "Supprimer {{topic}}",
+      "deleteTopicTitle": "Supprimer le sujet ?",
+      "deleteTopicBody": "Mera arrête de l'utiliser pour ce fait et ne le suggérera plus. Vous pouvez le rétablir depuis « Afficher moins de »."
     }
   },
   "publicationPrefs": {

@@ -1,5 +1,6 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
@@ -28,6 +29,8 @@ export interface ConfirmDialogProps {
     destructive?: boolean;
     /** The action is running: a spinner on the confirm, both buttons off. */
     busy?: boolean;
+    /** An optional checkbox under the body ("Don't ask again"). */
+    checkbox?: { label: string; value: boolean; onChange: (value: boolean) => void };
     testID?: string;
 }
 
@@ -49,6 +52,7 @@ export function ConfirmDialog({
     cancelLabel,
     destructive,
     busy,
+    checkbox,
     testID,
 }: ConfirmDialogProps) {
     const { t } = useTranslation();
@@ -66,6 +70,23 @@ export function ConfirmDialog({
                         <Text style={{ color: colors.negative, fontSize: 14, lineHeight: 20, marginTop: 8 }}>
                             {warning}
                         </Text>
+                    ) : null}
+                    {checkbox ? (
+                        <Pressable
+                            onPress={() => checkbox.onChange(!checkbox.value)}
+                            accessibilityRole="checkbox"
+                            accessibilityState={{ checked: checkbox.value }}
+                            accessibilityLabel={checkbox.label}
+                            testID={testID ? `${testID}-checkbox` : undefined}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, marginTop: 8 }}
+                        >
+                            <MaterialIcons
+                                name={checkbox.value ? 'check-box' : 'check-box-outline-blank'}
+                                size={22}
+                                color={checkbox.value ? colors.accentMark : colors.ink2}
+                            />
+                            <Text style={{ color: colors.ink, fontSize: 15 }}>{checkbox.label}</Text>
+                        </Pressable>
                     ) : null}
                 </ModalBody>
                 <View style={{ gap: 10, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 16 }}>

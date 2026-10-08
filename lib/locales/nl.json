@@ -28,7 +28,8 @@
     "confirm": "Bevestigen",
     "copy": "Kopiëren",
     "today": "Vandaag",
-    "yesterday": "Gisteren"
+    "yesterday": "Gisteren",
+    "dontAskAgain": "Niet meer vragen"
   },
   "auth": {
     "emailPlaceholder": "Voer je e-mailadres in",
@@ -1346,14 +1347,12 @@
       "showLessHint": "Mera toont minder verhalen hierover. Verwijder er een om hem weer zoals voorheen te zien.",
       "showLessOf": "Minder van",
       "showLessPlaceholder": "Voeg een onderwerp toe",
-      "showLessThis": "Minder hiervan tonen",
       "stillLooking": "Mera zoekt naar meer onderwerpen",
       "storyCount_one": "{{count}} verhaal",
       "storyCount_other": "{{count}} verhalen",
       "suggestMore": "Meer voorstellen",
       "thisWasRelevant": "Dit was relevant",
       "title": "Feit",
-      "topicMenuA11y": "Opties voor {{text}}",
       "topicsTab": "Onderwerpen",
       "filterAll": "Alle",
       "filterSuggested": "Voorgesteld",
@@ -1361,7 +1360,10 @@
       "filterA11y": "Verhalen tonen: {{filter}}",
       "allHint": "Elk verhaal dat dit feit in de laatste 48 uur heeft gevonden.",
       "discardedHint": "Gevonden via dit feit en weggelaten uit je feed: niet relevant, verborgen door je filters, of al gelezen.",
-      "discardedEmpty": "Voor dit feit is nog niets uit je feed weggelaten."
+      "discardedEmpty": "Voor dit feit is nog niets uit je feed weggelaten.",
+      "deleteTopicA11y": "{{topic}} verwijderen",
+      "deleteTopicTitle": "Onderwerp verwijderen?",
+      "deleteTopicBody": "Mera gebruikt het niet meer voor dit feit en stelt het niet opnieuw voor. Het is terug te zetten via Minder van."
     }
   },
   "publicationPrefs": {

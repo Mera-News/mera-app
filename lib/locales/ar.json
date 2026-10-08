@@ -28,7 +28,8 @@
     "confirm": "تأكيد",
     "copy": "نسخ",
     "today": "اليوم",
-    "yesterday": "أمس"
+    "yesterday": "أمس",
+    "dontAskAgain": "عدم السؤال مرة أخرى"
   },
   "auth": {
     "emailPlaceholder": "أدخل عنوان بريدك الإلكتروني",
@@ -1412,7 +1413,6 @@
       "showLessHint": "يعرض Mera قصصًا أقل عن هذه. أزل واحدًا منها لتعود القصص كما كانت.",
       "showLessOf": "أظهر أقل من",
       "showLessPlaceholder": "أضف موضوعًا",
-      "showLessThis": "أظهر أقل من هذا",
       "stillLooking": "يبحث Mera عن مواضيع إضافية",
       "storyCount_zero": "لا توجد قصص",
       "storyCount_one": "قصة واحدة",
@@ -1423,7 +1423,6 @@
       "suggestMore": "اقترح المزيد",
       "thisWasRelevant": "كان هذا ذا صلة",
       "title": "الحقيقة",
-      "topicMenuA11y": "خيارات {{text}}",
       "topicsTab": "المواضيع",
       "filterAll": "الكل",
       "filterSuggested": "مقترحة",
@@ -1431,7 +1430,10 @@
       "filterA11y": "عرض القصص: {{filter}}",
       "allHint": "كل قصة وجدتها هذه الحقيقة خلال الساعات الـ48 الماضية.",
       "discardedHint": "وُجدت عبر هذه الحقيقة وتُركت خارج خلاصتك: ليست ذات صلة، أو مخفية بفلاترك، أو سبق قراءتها.",
-      "discardedEmpty": "لم يُستبعد من خلاصتك شيء لهذه الحقيقة حتى الآن."
+      "discardedEmpty": "لم يُستبعد من خلاصتك شيء لهذه الحقيقة حتى الآن.",
+      "deleteTopicA11y": "حذف {{topic}}",
+      "deleteTopicTitle": "أتريد حذف الموضوع؟",
+      "deleteTopicBody": "يتوقف Mera عن استخدامه لهذه الحقيقة ولن يقترحه مرة أخرى. يمكنك استعادته من أظهر أقل من."
     }
   },
   "publicationPrefs": {

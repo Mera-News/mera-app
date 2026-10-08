@@ -28,7 +28,8 @@
     "confirm": "Xác nhận",
     "copy": "Sao chép",
     "today": "Hôm nay",
-    "yesterday": "Hôm qua"
+    "yesterday": "Hôm qua",
+    "dontAskAgain": "Không hỏi lại"
   },
   "auth": {
     "emailPlaceholder": "Nhập địa chỉ email của bạn",
@@ -1347,14 +1348,12 @@
       "showLessHint": "Mera sẽ hiện ít câu chuyện về những chủ đề này hơn. Xóa một chủ đề để thấy lại như trước.",
       "showLessOf": "Hiện ít hơn về",
       "showLessPlaceholder": "Thêm một chủ đề",
-      "showLessThis": "Hiện ít hơn về điều này",
       "stillLooking": "Mera đang tìm thêm chủ đề",
       "storyCount_one": "{{count}} câu chuyện",
       "storyCount_other": "{{count}} câu chuyện",
       "suggestMore": "Gợi ý thêm",
       "thisWasRelevant": "Điều này có liên quan",
       "title": "Dữ kiện",
-      "topicMenuA11y": "Tùy chọn cho {{text}}",
       "topicsTab": "Chủ đề",
       "filterAll": "Tất cả",
       "filterSuggested": "Đề xuất",
@@ -1362,7 +1361,10 @@
       "filterA11y": "Hiện câu chuyện: {{filter}}",
       "allHint": "Mọi câu chuyện mà dữ kiện này tìm được trong 48 giờ qua.",
       "discardedHint": "Được tìm thấy qua dữ kiện này và bị loại khỏi nguồn tin của bạn: không liên quan, bị bộ lọc của bạn ẩn hoặc đã đọc.",
-      "discardedEmpty": "Chưa có câu chuyện nào bị loại khỏi nguồn tin của bạn cho dữ kiện này."
+      "discardedEmpty": "Chưa có câu chuyện nào bị loại khỏi nguồn tin của bạn cho dữ kiện này.",
+      "deleteTopicA11y": "Xóa {{topic}}",
+      "deleteTopicTitle": "Xóa chủ đề?",
+      "deleteTopicBody": "Mera ngừng dùng chủ đề này cho dữ kiện này và sẽ không gợi ý lại. Bạn có thể đưa lại từ Hiện ít hơn về."
     }
   },
   "publicationPrefs": {

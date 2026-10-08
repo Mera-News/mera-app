@@ -28,7 +28,8 @@
     "confirm": "確認",
     "copy": "コピー",
     "today": "今日",
-    "yesterday": "昨日"
+    "yesterday": "昨日",
+    "dontAskAgain": "今後確認しない"
   },
   "auth": {
     "emailPlaceholder": "メールアドレスを入力してください",
@@ -1346,14 +1347,12 @@
       "showLessHint": "Meraはこれらに関するストーリーを減らします。1つ削除すると、以前のように表示されます。",
       "showLessOf": "次を減らす",
       "showLessPlaceholder": "トピックを追加",
-      "showLessThis": "これを減らす",
       "stillLooking": "Meraはさらにトピックを探しています",
       "storyCount_one": "{{count}}件のストーリー",
       "storyCount_other": "{{count}}件のストーリー",
       "suggestMore": "もっと提案",
       "thisWasRelevant": "これは関連していました",
       "title": "ファクト",
-      "topicMenuA11y": "{{text}}のオプション",
       "topicsTab": "トピック",
       "filterAll": "すべて",
       "filterSuggested": "おすすめ",
@@ -1361,7 +1360,10 @@
       "filterA11y": "ストーリーを表示: {{filter}}",
       "allHint": "このファクトが過去48時間に見つけたストーリーすべて。",
       "discardedHint": "このファクトから見つかりフィードから除外されたもの。関連性がない、フィルターで非表示、または既読です。",
-      "discardedEmpty": "このファクトについて、フィードから除外されたストーリーはまだありません。"
+      "discardedEmpty": "このファクトについて、フィードから除外されたストーリーはまだありません。",
+      "deleteTopicA11y": "{{topic}}を削除",
+      "deleteTopicTitle": "トピックを削除しますか？",
+      "deleteTopicBody": "Mera はこのファクトではこのトピックを使わなくなり、再び提案することもありません。「次を減らす」から元に戻せます。"
     }
   },
   "publicationPrefs": {
