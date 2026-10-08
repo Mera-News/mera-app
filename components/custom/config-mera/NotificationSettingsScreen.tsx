@@ -14,7 +14,7 @@ import { hasUserDeniedPermissions, setVisibleNotificationsEnabled } from '@/lib/
 import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/notificationSlotUtils';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView } from '@/components/ui/scroll-view';
-import { Linking } from 'react-native';
+import { Linking, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import NotificationTimes from './NotificationTimes';
@@ -44,8 +44,8 @@ interface NotificationSettingsScreenProps {
 /**
  * Settings > Notifications, and the first onboarding step (same component,
  * `isOnboarding`). Two controls: the push switch, and when Mera may notify
- * (any number of hours, `NotificationTimes`: the strip, the pills, and a wheel
- * that moves the outlined hour for Add to pick).
+ * (any number of hours, `NotificationTimes`: the multi-select wheel with the
+ * Selected count and the 24h | AM/PM toggle beside it).
  */
 const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     onBack,
@@ -333,6 +333,20 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     };
 
     const saveStatusLine = () => {
+        // Nothing picked: the server takes no empty list, so say what to do.
+        if (selectedHours.length === 0) {
+            return (
+                <Text
+                    testID="notifications-zero-times"
+                    size="sm"
+                    className="text-center"
+                    style={{ color: colors.warning }}
+                    accessibilityLiveRegion="polite"
+                >
+                    {t('you.notifications.zeroTimes')}
+                </Text>
+            );
+        }
         if (saveState !== 'saving' && saveState !== 'saved') return null;
         return (
             <Text
@@ -430,17 +444,28 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         </VStack>
     );
 
-    const hoursSection = () => (
-        <VStack>
-            <Text className="mx-4 mb-1 font-semibold" size="md" style={{ color: colors.ink }} accessibilityRole="header">
+    // On: the wheel is a vertical list, so the page does not scroll around it.
+    // It takes the height left between the heading and the save line and
+    // shrinks first, so the wizard's Next and the tab bar stay clear.
+    const enabledBody = () => (
+        <View
+            style={{
+                flex: 1,
+                minHeight: 0,
+                paddingTop: SUBPAGE_TOP_GAP,
+                paddingBottom: isOnboarding ? 8 : bottomInset,
+            }}
+        >
+            {isOnboarding ? null : pushRow()}
+            <Text className="mx-4 mb-2 font-semibold" size="md" style={{ color: colors.ink }} accessibilityRole="header">
                 {isOnboarding ? t('onboarding.notificationsOn') : t('you.notifications.when')}
             </Text>
             <NotificationTimes hours={selectedHours} onChange={handleHoursChange} />
-            <Box className="mx-4" style={{ minHeight: 24 }}>{saveStatusLine()}</Box>
-        </VStack>
+            <Box className="mx-4 mt-2" style={{ minHeight: 24 }}>{saveStatusLine()}</Box>
+        </View>
     );
 
-    const body = () => (
+    const body = () => notificationsEnabled ? enabledBody() : (
         <ScrollView
             testID="notifications-scroll"
             className="flex-1"
@@ -448,9 +473,8 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             showsVerticalScrollIndicator={false}
         >
             {/* First launch: the wizard draws the title and the why. Off is one
-                primary button; on drops straight into the times. */}
-            {isOnboarding ? (notificationsEnabled ? null : turnOnButton()) : pushRow()}
-            {notificationsEnabled ? hoursSection() : null}
+                primary button. */}
+            {isOnboarding ? turnOnButton() : pushRow()}
         </ScrollView>
     );
 

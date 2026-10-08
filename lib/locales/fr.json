@@ -390,7 +390,10 @@
     "updateFailedDescription": "Impossible de désactiver les notifications. Veuillez réessayer.",
     "saveFailedTitle": "Échec de l'enregistrement",
     "saveFailedDescription": "Impossible d'enregistrer vos préférences. Veuillez réessayer.",
-    "savedInline": "Enregistré"
+    "savedInline": "Enregistré",
+    "selectedLabel": "Sélectionnées",
+    "format24h": "24h",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "Langue",
@@ -2877,15 +2880,7 @@
     "notifications": {
       "push": "Notifications push",
       "when": "Quand Mera peut vous notifier",
-      "yourTimes": "Vos horaires",
-      "noneYet": "Aucun choisi pour l'instant",
-      "add": "Ajouter un horaire",
-      "remove": "Supprimer {{time}}",
-      "wheel": "Horaire à ajouter",
-      "footnote": "Faites tourner pour déplacer l'horaire entouré. Mera n'envoie une notification qu'à ces horaires, dans votre fuseau horaire.",
       "offLine": "Mera ne vous enverra rien. Activez cette option pour choisir quand cela peut arriver.",
-      "addHour": "Ajouter {{time}}",
-      "alreadyPicked": "{{time}} est déjà choisi",
       "zeroTimes": "Choisissez un horaire, sinon Mera n'enverra aucune notification."
     }
   },

@@ -385,7 +385,10 @@
     "updateFailedDescription": "無法停用通知，請再試一次。",
     "saveFailedTitle": "儲存失敗",
     "saveFailedDescription": "無法儲存您的偏好設定，請再試一次。",
-    "savedInline": "已儲存"
+    "savedInline": "已儲存",
+    "selectedLabel": "已選",
+    "format24h": "24 小時制",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "語言",
@@ -2869,15 +2872,7 @@
     "notifications": {
       "push": "推播通知",
       "when": "Mera 何時可以通知你",
-      "yourTimes": "你的時間",
-      "noneYet": "還沒有選擇",
-      "add": "新增時間",
-      "remove": "移除 {{time}}",
-      "wheel": "要新增的時間",
-      "footnote": "滾動即可移動有框線的時間。Mera 只會在這些時間傳送通知，並依你所在的時區計算。",
       "offLine": "Mera 不會傳送任何通知給你。開啟此功能，即可選擇可以傳送的時段。",
-      "addHour": "新增 {{time}}",
-      "alreadyPicked": "已選擇 {{time}}",
       "zeroTimes": "請選擇一個時間，否則 Mera 不會傳送任何通知。"
     }
   },

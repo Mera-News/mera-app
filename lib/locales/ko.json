@@ -385,7 +385,10 @@
     "updateFailedDescription": "알림 비활성화에 실패했습니다. 다시 시도해 주세요.",
     "saveFailedTitle": "저장 실패",
     "saveFailedDescription": "환경설정을 저장하지 못했습니다. 다시 시도해 주세요.",
-    "savedInline": "저장됨"
+    "savedInline": "저장됨",
+    "selectedLabel": "선택됨",
+    "format24h": "24시간",
+    "formatAmPm": "오전/오후"
   },
   "language": {
     "title": "언어",
@@ -2868,15 +2871,7 @@
     "notifications": {
       "push": "푸시 알림",
       "when": "Mera가 알림을 보낼 수 있는 때",
-      "yourTimes": "내 시간",
-      "noneYet": "아직 고른 시간이 없어요",
-      "add": "시간 추가",
-      "remove": "{{time}} 제거",
-      "wheel": "추가할 시간",
-      "footnote": "돌려서 윤곽선이 있는 시간을 옮겨요. Mera는 내 시간대 기준으로 이 시간에만 알림을 보내요.",
       "offLine": "Mera는 아무것도 보내지 않습니다. 켜면 가능한 시간을 고를 수 있습니다.",
-      "addHour": "{{time}} 추가",
-      "alreadyPicked": "{{time}}은 이미 골랐어요",
       "zeroTimes": "시간을 고르세요. 고르지 않으면 Mera가 알림을 보내지 않아요."
     }
   },

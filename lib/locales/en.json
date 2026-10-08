@@ -657,7 +657,10 @@
     "updateFailedDescription": "Failed to disable notifications. Please try again.",
     "saveFailedTitle": "Save Failed",
     "saveFailedDescription": "Failed to save your preferences. Please try again.",
-    "savedInline": "Saved"
+    "savedInline": "Saved",
+    "selectedLabel": "Selected",
+    "format24h": "24h",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "Language",
@@ -2871,15 +2874,7 @@
     "notifications": {
       "push": "Push notifications",
       "when": "When Mera can notify you",
-      "yourTimes": "Your times",
-      "noneYet": "None picked yet",
-      "add": "Add a time",
-      "remove": "Remove {{time}}",
-      "wheel": "Time to add",
-      "footnote": "Spin to move the outlined time. Mera only sends a notice at these times, in your time zone.",
       "offLine": "Mera won't send you anything. Turn this on to pick when it can.",
-      "addHour": "Add {{time}}",
-      "alreadyPicked": "{{time}} is already picked",
       "zeroTimes": "Pick a time, or Mera won't send any notices."
     }
   },

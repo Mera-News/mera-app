@@ -385,7 +385,10 @@
     "updateFailedDescription": "Falha ao desativar notificações. Por favor, tente novamente.",
     "saveFailedTitle": "Falha ao Salvar",
     "saveFailedDescription": "Falha ao salvar suas preferências. Por favor, tente novamente.",
-    "savedInline": "Salvo"
+    "savedInline": "Salvo",
+    "selectedLabel": "Selecionados",
+    "format24h": "24h",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "Idioma",
@@ -2871,15 +2874,7 @@
     "notifications": {
       "push": "Notificações push",
       "when": "Quando a Mera pode avisar você",
-      "yourTimes": "Seus horários",
-      "noneYet": "Nenhum escolhido ainda",
-      "add": "Adicionar um horário",
-      "remove": "Remover {{time}}",
-      "wheel": "Horário para adicionar",
-      "footnote": "Gire para mover o horário destacado. A Mera só envia um aviso nesses horários, no seu fuso horário.",
       "offLine": "A Mera não vai enviar nada. Ative para escolher quando isso pode acontecer.",
-      "addHour": "Adicionar {{time}}",
-      "alreadyPicked": "{{time}} já foi escolhido",
       "zeroTimes": "Escolha um horário, ou a Mera não envia nenhum aviso."
     }
   },

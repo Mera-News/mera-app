@@ -385,7 +385,10 @@
     "updateFailedDescription": "Gagal menonaktifkan notifikasi. Silakan coba lagi.",
     "saveFailedTitle": "Gagal Menyimpan",
     "saveFailedDescription": "Gagal menyimpan preferensi Anda. Silakan coba lagi.",
-    "savedInline": "Tersimpan"
+    "savedInline": "Tersimpan",
+    "selectedLabel": "Dipilih",
+    "format24h": "24 jam",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "Bahasa",
@@ -2868,15 +2871,7 @@
     "notifications": {
       "push": "Notifikasi push",
       "when": "Kapan Mera boleh memberi notifikasi",
-      "yourTimes": "Waktu Anda",
-      "noneYet": "Belum ada yang dipilih",
-      "add": "Tambah waktu",
-      "remove": "Hapus {{time}}",
-      "wheel": "Waktu yang ditambahkan",
-      "footnote": "Putar untuk memindahkan waktu yang diberi garis tepi. Mera hanya mengirim pemberitahuan pada waktu ini, sesuai zona waktu Anda.",
       "offLine": "Mera tidak akan mengirim apa pun kepada Anda. Aktifkan ini untuk memilih kapan Mera bisa mengirim.",
-      "addHour": "Tambah {{time}}",
-      "alreadyPicked": "{{time}} sudah dipilih",
       "zeroTimes": "Pilih satu waktu, atau Mera tidak akan mengirim pemberitahuan apa pun."
     }
   },

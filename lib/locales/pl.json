@@ -405,7 +405,10 @@
     "updateFailedDescription": "Nie udało się wyłączyć powiadomień. Spróbuj ponownie.",
     "saveFailedTitle": "Zapis nieudany",
     "saveFailedDescription": "Nie udało się zapisać preferencji. Spróbuj ponownie.",
-    "savedInline": "Zapisano"
+    "savedInline": "Zapisano",
+    "selectedLabel": "Wybrane",
+    "format24h": "24h",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "Język",
@@ -2941,15 +2944,7 @@
     "notifications": {
       "push": "Powiadomienia push",
       "when": "Kiedy Mera może Ci powiadamiać",
-      "yourTimes": "Twoje godziny",
-      "noneYet": "Nic jeszcze nie wybrano",
-      "add": "Dodaj godzinę",
-      "remove": "Usuń {{time}}",
-      "wheel": "Godzina do dodania",
-      "footnote": "Obracaj, aby przesunąć zaznaczoną godzinę. Mera wysyła powiadomienie tylko o tych godzinach, w Twojej strefie czasowej.",
       "offLine": "Mera nic Ci nie wyśle. Włącz to, aby wybrać porę, w której może.",
-      "addHour": "Dodaj {{time}}",
-      "alreadyPicked": "{{time}} jest już wybrana",
       "zeroTimes": "Wybierz godzinę, inaczej Mera nie wyśle żadnych powiadomień."
     }
   },

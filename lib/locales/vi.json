@@ -385,7 +385,10 @@
     "updateFailedDescription": "Không thể tắt thông báo. Vui lòng thử lại.",
     "saveFailedTitle": "Lưu thất bại",
     "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại.",
-    "savedInline": "Đã lưu"
+    "savedInline": "Đã lưu",
+    "selectedLabel": "Đã chọn",
+    "format24h": "24h",
+    "formatAmPm": "SA/CH"
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -2869,15 +2872,7 @@
     "notifications": {
       "push": "Thông báo đẩy",
       "when": "Khi nào Mera có thể thông báo cho bạn",
-      "yourTimes": "Giờ của bạn",
-      "noneYet": "Chưa chọn giờ nào",
-      "add": "Thêm một giờ",
-      "remove": "Xóa {{time}}",
-      "wheel": "Giờ cần thêm",
-      "footnote": "Cuộn để di chuyển giờ được viền. Mera chỉ gửi thông báo vào những giờ này, theo múi giờ của bạn.",
       "offLine": "Mera sẽ không gửi bất cứ điều gì cho bạn. Bật lên để chọn thời điểm có thể gửi.",
-      "addHour": "Thêm {{time}}",
-      "alreadyPicked": "Đã chọn {{time}}",
       "zeroTimes": "Hãy chọn một giờ, nếu không Mera sẽ không gửi thông báo nào."
     }
   },

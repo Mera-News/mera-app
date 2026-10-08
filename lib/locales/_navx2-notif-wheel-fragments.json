@@ -1,0 +1,142 @@
+{
+  "ar": {
+    "notifications": {
+      "selectedLabel": "المحدد",
+      "format24h": "24 ساعة",
+      "formatAmPm": "ص/م"
+    }
+  },
+  "de": {
+    "notifications": {
+      "selectedLabel": "Ausgewählt",
+      "format24h": "24h",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "en": {
+    "notifications": {
+      "selectedLabel": "Selected",
+      "format24h": "24h",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "es": {
+    "notifications": {
+      "selectedLabel": "Seleccionadas",
+      "format24h": "24h",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "fr": {
+    "notifications": {
+      "selectedLabel": "Sélectionnées",
+      "format24h": "24h",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "hi": {
+    "notifications": {
+      "selectedLabel": "चयनित",
+      "format24h": "24 घंटे",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "id": {
+    "notifications": {
+      "selectedLabel": "Dipilih",
+      "format24h": "24 jam",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "it": {
+    "notifications": {
+      "selectedLabel": "Selezionati",
+      "format24h": "24h",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "ja": {
+    "notifications": {
+      "selectedLabel": "選択中",
+      "format24h": "24時間制",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "ko": {
+    "notifications": {
+      "selectedLabel": "선택됨",
+      "format24h": "24시간",
+      "formatAmPm": "오전/오후"
+    }
+  },
+  "nl": {
+    "notifications": {
+      "selectedLabel": "Gekozen",
+      "format24h": "24u",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "pl": {
+    "notifications": {
+      "selectedLabel": "Wybrane",
+      "format24h": "24h",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "pt-BR": {
+    "notifications": {
+      "selectedLabel": "Selecionados",
+      "format24h": "24h",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "ru": {
+    "notifications": {
+      "selectedLabel": "Выбрано",
+      "format24h": "24 ч",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "th": {
+    "notifications": {
+      "selectedLabel": "ที่เลือก",
+      "format24h": "24 ชั่วโมง",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "tr": {
+    "notifications": {
+      "selectedLabel": "Seçili",
+      "format24h": "24 saat",
+      "formatAmPm": "ÖÖ/ÖS"
+    }
+  },
+  "uk": {
+    "notifications": {
+      "selectedLabel": "Вибрано",
+      "format24h": "24 год",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "vi": {
+    "notifications": {
+      "selectedLabel": "Đã chọn",
+      "format24h": "24h",
+      "formatAmPm": "SA/CH"
+    }
+  },
+  "zh-CN": {
+    "notifications": {
+      "selectedLabel": "已选",
+      "format24h": "24小时制",
+      "formatAmPm": "AM/PM"
+    }
+  },
+  "zh-TW": {
+    "notifications": {
+      "selectedLabel": "已選",
+      "format24h": "24 小時制",
+      "formatAmPm": "AM/PM"
+    }
+  }
+}

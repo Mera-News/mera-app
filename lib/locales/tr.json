@@ -385,7 +385,10 @@
     "updateFailedDescription": "Bildirimler devre dışı bırakılamadı. Lütfen tekrar dene.",
     "saveFailedTitle": "Kaydetme Başarısız",
     "saveFailedDescription": "Tercihler kaydedilemedi. Lütfen tekrar dene.",
-    "savedInline": "Kaydedildi"
+    "savedInline": "Kaydedildi",
+    "selectedLabel": "Seçili",
+    "format24h": "24 saat",
+    "formatAmPm": "ÖÖ/ÖS"
   },
   "language": {
     "title": "Dil",
@@ -2873,15 +2876,7 @@
     "notifications": {
       "push": "Anlık bildirimler",
       "when": "Mera size ne zaman bildirim gönderebilir",
-      "yourTimes": "Saatleriniz",
-      "noneYet": "Henüz seçilmedi",
-      "add": "Saat ekle",
-      "remove": "{{time}} kaldır",
-      "wheel": "Eklenecek saat",
-      "footnote": "Çerçeveli saati kaydırmak için çevirin. Mera yalnızca bu saatlerde, saat diliminize göre bildirim gönderir.",
       "offLine": "Mera size hiçbir şey göndermez. Mümkün olduğunda ne zaman gönderebileceğini seçmek için bunu açın.",
-      "addHour": "{{time}} ekle",
-      "alreadyPicked": "{{time}} zaten seçili",
       "zeroTimes": "Bir saat seçin, yoksa Mera hiç bildirim göndermez."
     }
   },

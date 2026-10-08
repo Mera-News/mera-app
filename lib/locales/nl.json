@@ -385,7 +385,10 @@
     "updateFailedDescription": "Meldingen uitschakelen mislukt. Probeer het opnieuw.",
     "saveFailedTitle": "Opslaan mislukt",
     "saveFailedDescription": "Voorkeuren opslaan mislukt. Probeer het opnieuw.",
-    "savedInline": "Opgeslagen"
+    "savedInline": "Opgeslagen",
+    "selectedLabel": "Gekozen",
+    "format24h": "24u",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "Taal",
@@ -2871,15 +2874,7 @@
     "notifications": {
       "push": "Pushmeldingen",
       "when": "Wanneer Mera je mag melden",
-      "yourTimes": "Jouw tijden",
-      "noneYet": "Nog niets gekozen",
-      "add": "Voeg een tijd toe",
-      "remove": "{{time}} verwijderen",
-      "wheel": "Tijd om toe te voegen",
-      "footnote": "Draai om de omlijnde tijd te verplaatsen. Mera stuurt alleen op deze tijden een melding, in jouw tijdzone.",
       "offLine": "Mera stuurt je niets. Zet dit aan om te kiezen wanneer het dat kan.",
-      "addHour": "{{time}} toevoegen",
-      "alreadyPicked": "{{time}} is al gekozen",
       "zeroTimes": "Kies een tijd, anders stuurt Mera geen meldingen."
     }
   },

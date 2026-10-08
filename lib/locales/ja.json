@@ -385,7 +385,10 @@
     "updateFailedDescription": "通知の無効化に失敗しました。もう一度お試しください。",
     "saveFailedTitle": "保存に失敗しました",
     "saveFailedDescription": "設定の保存に失敗しました。もう一度お試しください。",
-    "savedInline": "保存しました"
+    "savedInline": "保存しました",
+    "selectedLabel": "選択中",
+    "format24h": "24時間制",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "言語",
@@ -2868,15 +2871,7 @@
     "notifications": {
       "push": "プッシュ通知",
       "when": "Meraが通知できる時間",
-      "yourTimes": "通知する時間",
-      "noneYet": "まだ選ばれていません",
-      "add": "時間を追加",
-      "remove": "{{time}}を削除",
-      "wheel": "追加する時間",
-      "footnote": "回して、枠で囲まれた時間を動かします。Meraはここで選んだ時間にだけ、お使いのタイムゾーンで通知を送ります。",
       "offLine": "Meraは何も送りません。オンにすると、送信してよい時間帯を選べます。",
-      "addHour": "{{time}}を追加",
-      "alreadyPicked": "{{time}}はすでに選ばれています",
       "zeroTimes": "時間を選んでください。選ばないと、Meraは通知を送りません。"
     }
   },

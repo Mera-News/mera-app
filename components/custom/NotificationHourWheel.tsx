@@ -1,244 +1,155 @@
+// The multi-select hour wheel (owner: the ux1 picker, restored from 746dd4a0):
+// a tall, endless column of hours; a tap toggles an hour, scrolling only
+// moves the column. A picked hour is an accent-outlined box with an accent
+// bold label. Any number of hours (unique 0-23, the server's only limit).
 import { Text } from '@/components/ui/text';
 import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef } from 'react';
-import {
-    AccessibilityActionEvent,
-    FlatList,
-    NativeScrollEvent,
-    NativeSyntheticEvent,
-    Pressable,
-    View,
-} from 'react-native';
+import { FlatList, NativeScrollEvent, NativeSyntheticEvent, Pressable, View } from 'react-native';
+
+interface NotificationHourWheelProps {
+    readonly selectedHours: readonly number[];
+    readonly onHoursChange: (hours: number[]) => void;
+    readonly use24h: boolean;
+}
 
 const HOURS = 24;
-/** One row. 44pt so a tapped row is a full touch target. Every bit of scroll
- *  maths divides by it (snap, index from offset, recentre), so it is a unit,
- *  not decoration: change it only together with all of that. */
-export const WHEEL_ROW_HEIGHT = 44;
-const VISIBLE_ROWS = 5;
-const CENTER_OFFSET = (VISIBLE_ROWS - 1) / 2; // 2: the outlined row
+const ROW_HEIGHT = 50;
+const CELL_SIZE = 44;
+const VISIBLE_ROWS = 13;
+const HALF_VISIBLE = (VISIBLE_ROWS - 1) / 2;
+const INITIAL_CENTER_HOUR = 15; // 3 PM
 const REPEATS = 401;
 const CENTER_REPEAT = (REPEATS - 1) / 2;
 const TOTAL_ROWS = HOURS * REPEATS;
 const RECENTER_GUARD = HOURS * 20;
+const INITIAL_TOP_INDEX = CENTER_REPEAT * HOURS + INITIAL_CENTER_HOUR - HALF_VISIBLE;
 const ROWS = Array.from({ length: TOTAL_ROWS }, (_, i) => i);
 
-const hourOf = (rowIndex: number) => ((rowIndex % HOURS) + HOURS) % HOURS;
-/** The top row index that puts `hour` in the outlined centre, in the middle repeat. */
-const topIndexFor = (hour: number) => CENTER_REPEAT * HOURS + hour - CENTER_OFFSET;
+export const formatHour = (h: number, use24h: boolean): string => {
+    if (use24h) return h.toString().padStart(2, '0');
+    if (h === 0) return '12 AM';
+    if (h === 12) return '12 PM';
+    return h < 12 ? `${h} AM` : `${h - 12} PM`;
+};
 
-/**
- * "08:00" in 24-hour mode, the locale's own short hour ("8 AM", "오전 8시") in
- * 12-hour mode. A malformed language tag throws in some Hermes builds, so the
- * English form is the fallback rather than a crash.
- */
-export function formatHourLabel(hour: number, use24h: boolean, language?: string): string {
-    if (use24h) return `${hour.toString().padStart(2, '0')}:00`;
-    try {
-        return new Intl.DateTimeFormat(language, { hour: 'numeric', hour12: true }).format(
-            new Date(2000, 0, 1, hour),
-        );
-    } catch {
-        const h = hour % 12 === 0 ? 12 : hour % 12;
-        return `${h} ${hour < 12 ? 'AM' : 'PM'}`;
-    }
+interface RowProps {
+    readonly label: string;
+    readonly isSelected: boolean;
+    readonly onPress: () => void;
+    readonly accent: string;
+    readonly accentText: string;
+    readonly ink: string;
 }
 
-interface NotificationHourWheelProps {
-    /** The hour in the outlined centre row (0-23). */
-    readonly cursorHour: number;
-    readonly onCursorChange: (hour: number) => void;
-    /** Picked hours render in the accent colour; the wheel never edits them. */
-    readonly pickedHours: readonly number[];
-    readonly format: (hour: number) => string;
-    /** Spoken name of the control, e.g. "Time to add". */
-    readonly accessibilityLabel: string;
-}
+const Row: React.FC<RowProps> = React.memo(({ label, isSelected, onPress, accent, accentText, ink }) => (
+    <View style={{ height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center' }}>
+        <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{ selected: isSelected }}
+            style={{
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+                borderRadius: 10,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: isSelected ? 1.5 : 0,
+                borderColor: accent,
+            }}
+        >
+            {/* ROW_HEIGHT is the wheel's scroll unit (snap, index, recentre), so
+                the label is capped (`locked`) rather than the row grown. */}
+            <Text
+                size="2xs"
+                scaleTier="locked"
+                style={{ fontWeight: isSelected ? '700' : '500', color: isSelected ? accentText : ink }}
+            >
+                {label}
+            </Text>
+        </Pressable>
+    </View>
+));
+Row.displayName = 'Row';
 
-/**
- * A spinning hour picker: five rows, the centre one outlined. Spinning or
- * tapping a row moves the outlined hour; the screen's Add button picks it.
- *
- * To VoiceOver and TalkBack it is ONE adjustable control (swipe up or down to
- * move an hour); the rows are not separate stops, since a screen reader
- * cannot spin 9,624 rows.
- */
-const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
-    cursorHour,
-    onCursorChange,
-    pickedHours,
-    format,
-    accessibilityLabel,
-}) => {
+const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({ selectedHours, onHoursChange, use24h }) => {
     const colors = useColors();
     const listRef = useRef<FlatList<number>>(null);
-    // The top row index the list rests on. A ref, not state: it feeds scroll
-    // commands, never rendering.
-    const topIndexRef = useRef(topIndexFor(cursorHour));
 
-    const scrollToTop = useCallback((topIndex: number, animated: boolean) => {
-        topIndexRef.current = topIndex;
-        listRef.current?.scrollToOffset({ offset: topIndex * WHEEL_ROW_HEIGHT, animated });
+    // Endless column: far from the middle repeat, jump back by whole days.
+    const handleMomentumEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const topIndex = Math.round(e.nativeEvent.contentOffset.y / ROW_HEIGHT);
+        const middle = CENTER_REPEAT * HOURS;
+        if (Math.abs(topIndex - middle) > RECENTER_GUARD) {
+            const hourOffset = ((topIndex % HOURS) + HOURS) % HOURS;
+            listRef.current?.scrollToOffset({ offset: (middle + hourOffset) * ROW_HEIGHT, animated: false });
+        }
     }, []);
 
-    // initialScrollIndex alone has landed a row off on first layout (seen on
-    // the simulator: 07 outlined where 08 was asked for), and a frame-later
-    // fix raced it. Set the offset once the list has its size instead.
-    const onListLayout = useCallback(() => scrollToTop(topIndexRef.current, false), [scrollToTop]);
+    const toggleHour = useCallback(
+        (hour: number) => {
+            onHoursChange(
+                selectedHours.includes(hour)
+                    ? selectedHours.filter((h) => h !== hour)
+                    : [...selectedHours, hour].sort((a, b) => a - b),
+            );
+        },
+        [selectedHours, onHoursChange],
+    );
 
-    // Only a finger moves the cursor. A scroll end that follows a programmatic
-    // scroll (the layout fix above, a tap, a reset) is ignored, or a list that
-    // landed a row off would report that row as the reader's choice.
-    const draggingRef = useRef(false);
-    const onDragBegin = useCallback(() => {
-        draggingRef.current = true;
-    }, []);
-
-    // A cursor moved from outside (accessibility action, a reset) scrolls the
-    // wheel there, by the shortest way round from where it rests.
     useEffect(() => {
-        const current = topIndexRef.current;
-        if (hourOf(current + CENTER_OFFSET) === cursorHour) return;
-        let delta = cursorHour - hourOf(current + CENTER_OFFSET);
-        if (delta > HOURS / 2) delta -= HOURS;
-        if (delta < -HOURS / 2) delta += HOURS;
-        scrollToTop(current + delta, true);
-    }, [cursorHour, scrollToTop]);
-
-    const settle = useCallback(
-        (y: number) => {
-            if (!draggingRef.current) return;
-            draggingRef.current = false;
-            let topIndex = Math.round(y / WHEEL_ROW_HEIGHT);
-            const middle = CENTER_REPEAT * HOURS;
-            if (Math.abs(topIndex - middle) > RECENTER_GUARD) {
-                topIndex = middle + hourOf(topIndex);
-                scrollToTop(topIndex, false);
-            }
-            topIndexRef.current = topIndex;
-            const hour = hourOf(topIndex + CENTER_OFFSET);
-            if (hour !== cursorHour) onCursorChange(hour);
-        },
-        [cursorHour, onCursorChange, scrollToTop],
-    );
-
-    const onMomentumEnd = useCallback(
-        (e: NativeSyntheticEvent<NativeScrollEvent>) => settle(e.nativeEvent.contentOffset.y),
-        [settle],
-    );
-    // A slow drag can end with no momentum phase at all, so a drag end with
-    // no velocity settles too.
-    const onDragEnd = useCallback(
-        (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-            if (Math.abs(e.nativeEvent.velocity?.y ?? 0) < 0.05) settle(e.nativeEvent.contentOffset.y);
-        },
-        [settle],
-    );
-
-    const onAccessibilityAction = useCallback(
-        (e: AccessibilityActionEvent) => {
-            if (e.nativeEvent.actionName === 'increment') onCursorChange((cursorHour + 1) % HOURS);
-            if (e.nativeEvent.actionName === 'decrement') onCursorChange((cursorHour + HOURS - 1) % HOURS);
-        },
-        [cursorHour, onCursorChange],
-    );
+        const id = requestAnimationFrame(() => {
+            listRef.current?.scrollToOffset({ offset: INITIAL_TOP_INDEX * ROW_HEIGHT, animated: false });
+        });
+        return () => cancelAnimationFrame(id);
+    }, []);
 
     const renderItem = useCallback(
         ({ item: rowIndex }: { item: number }) => {
-            const hour = hourOf(rowIndex);
-            const distance = Math.min(Math.abs(hour - cursorHour), HOURS - Math.abs(hour - cursorHour));
-            const picked = pickedHours.includes(hour);
-            const fontSize = distance === 0 ? 30 : distance === 1 ? 22 : 18;
-            const opacity = distance === 0 ? 1 : distance === 1 ? 0.75 : 0.4;
-            // "08:00" draws its minutes dimmer; a 12-hour label has no colon.
-            const label = format(hour);
-            const colon = label.indexOf(':');
+            const hour = ((rowIndex % HOURS) + HOURS) % HOURS;
             return (
-                <Pressable
-                    testID={`hour-wheel-row-${hour}`}
-                    onPress={() => {
-                        scrollToTop(rowIndex - CENTER_OFFSET, true);
-                        if (hour !== cursorHour) onCursorChange(hour);
-                    }}
-                    style={{ height: WHEEL_ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', opacity }}
-                >
-                    {/* `locked`: the row height is the wheel's scroll unit. */}
-                    <Text
-                        scaleTier="locked"
-                        style={{
-                            fontSize,
-                            lineHeight: fontSize + 6,
-                            fontWeight: distance === 0 ? '700' : '500',
-                            color: picked ? colors.accentText : colors.ink,
-                        }}
-                    >
-                        {colon < 0 ? label : label.slice(0, colon)}
-                        {colon < 0 ? null : <Text scaleTier="locked" style={{ opacity: 0.6 }}>{label.slice(colon)}</Text>}
-                    </Text>
-                </Pressable>
+                <Row
+                    label={formatHour(hour, use24h)}
+                    isSelected={selectedHours.includes(hour)}
+                    onPress={() => toggleHour(hour)}
+                    accent={colors.accent}
+                    accentText={colors.accentText}
+                    ink={colors.ink}
+                />
             );
         },
-        [cursorHour, pickedHours, format, onCursorChange, scrollToTop, colors],
+        [selectedHours, use24h, toggleHour, colors],
     );
 
     const getItemLayout = useCallback(
         (_: ArrayLike<number> | null | undefined, index: number) => ({
-            length: WHEEL_ROW_HEIGHT,
-            offset: WHEEL_ROW_HEIGHT * index,
+            length: ROW_HEIGHT,
+            offset: ROW_HEIGHT * index,
             index,
         }),
         [],
     );
 
     return (
-        <View
+        <FlatList
             testID="hour-wheel"
-            accessible
-            accessibilityRole="adjustable"
-            accessibilityLabel={accessibilityLabel}
-            accessibilityValue={{ text: format(cursorHour) }}
-            accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-            onAccessibilityAction={onAccessibilityAction}
-            style={{ height: WHEEL_ROW_HEIGHT * VISIBLE_ROWS }}
-        >
-            {/* The outlined centre row, drawn behind the list. */}
-            <View
-                pointerEvents="none"
-                style={{
-                    position: 'absolute',
-                    left: 12,
-                    right: 12,
-                    top: WHEEL_ROW_HEIGHT * CENTER_OFFSET,
-                    height: WHEEL_ROW_HEIGHT,
-                    borderRadius: 12,
-                    backgroundColor: colors.line,
-                    borderWidth: 1,
-                    borderColor: colors.accent,
-                }}
-            />
-            <FlatList
-                ref={listRef}
-                data={ROWS}
-                keyExtractor={(item: number) => String(item)}
-                renderItem={renderItem}
-                extraData={cursorHour}
-                getItemLayout={getItemLayout}
-                initialScrollIndex={topIndexRef.current}
-                showsVerticalScrollIndicator={false}
-                onLayout={onListLayout}
-                onScrollBeginDrag={onDragBegin}
-                onMomentumScrollEnd={onMomentumEnd}
-                onScrollEndDrag={onDragEnd}
-                snapToInterval={WHEEL_ROW_HEIGHT}
-                decelerationRate="fast"
-                // The screen scrolls too (onboarding and small phones).
-                nestedScrollEnabled
-                windowSize={5}
-                initialNumToRender={VISIBLE_ROWS + 4}
-                maxToRenderPerBatch={VISIBLE_ROWS + 4}
-                removeClippedSubviews
-            />
-        </View>
+            ref={listRef}
+            data={ROWS}
+            keyExtractor={(item: number) => String(item)}
+            renderItem={renderItem}
+            getItemLayout={getItemLayout}
+            initialScrollIndex={INITIAL_TOP_INDEX}
+            showsVerticalScrollIndicator={false}
+            onMomentumScrollEnd={handleMomentumEnd}
+            snapToInterval={ROW_HEIGHT}
+            decelerationRate="normal"
+            windowSize={5}
+            initialNumToRender={VISIBLE_ROWS + 4}
+            maxToRenderPerBatch={VISIBLE_ROWS + 4}
+            removeClippedSubviews
+            style={{ flex: 1 }}
+        />
     );
 };
 

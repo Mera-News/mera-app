@@ -385,7 +385,10 @@
     "updateFailedDescription": "Benachrichtigungen konnten nicht deaktiviert werden. Bitte versuche es erneut.",
     "saveFailedTitle": "Speichern fehlgeschlagen",
     "saveFailedDescription": "Deine Einstellungen konnten nicht gespeichert werden. Bitte versuche es erneut.",
-    "savedInline": "Gespeichert"
+    "savedInline": "Gespeichert",
+    "selectedLabel": "Ausgewählt",
+    "format24h": "24h",
+    "formatAmPm": "AM/PM"
   },
   "language": {
     "title": "Sprache",
@@ -2871,15 +2874,7 @@
     "notifications": {
       "push": "Push-Benachrichtigungen",
       "when": "Wann Mera dich benachrichtigen darf",
-      "yourTimes": "Deine Zeiten",
-      "noneYet": "Noch keine gewählt",
-      "add": "Zeit hinzufügen",
-      "remove": "{{time}} entfernen",
-      "wheel": "Zeit zum Hinzufügen",
-      "footnote": "Drehe, um die umrandete Zeit zu verschieben. Mera sendet nur zu diesen Zeiten eine Mitteilung, in deiner Zeitzone.",
       "offLine": "Mera schickt dir nichts. Schalte dies ein, um auszuwählen, wann es das tun darf.",
-      "addHour": "{{time}} hinzufügen",
-      "alreadyPicked": "{{time}} ist bereits gewählt",
       "zeroTimes": "Wähle eine Zeit, sonst sendet Mera keine Mitteilungen."
     }
   },

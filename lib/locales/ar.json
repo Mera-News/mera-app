@@ -425,7 +425,10 @@
     "updateFailedDescription": "فشل تعطيل الإشعارات. يرجى المحاولة مرة أخرى.",
     "saveFailedTitle": "فشل الحفظ",
     "saveFailedDescription": "فشل حفظ تفضيلاتك. يرجى المحاولة مرة أخرى.",
-    "savedInline": "تم الحفظ"
+    "savedInline": "تم الحفظ",
+    "selectedLabel": "المحدد",
+    "format24h": "24 ساعة",
+    "formatAmPm": "ص/م"
   },
   "language": {
     "title": "اللغة",
@@ -3017,15 +3020,7 @@
     "notifications": {
       "push": "الإشعارات الفورية",
       "when": "متى يمكن لـ Mera إشعارك",
-      "yourTimes": "أوقاتك",
-      "noneYet": "لم يُختر أي وقت بعد",
-      "add": "أضف وقتًا",
-      "remove": "إزالة {{time}}",
-      "wheel": "الوقت المراد إضافته",
-      "footnote": "أدر العجلة لتحريك الوقت المحدد. لا يرسل Mera إشعارًا إلا في هذه الأوقات، حسب منطقتك الزمنية.",
       "offLine": "لن يرسل Mera إليك أي شيء. فعّل هذا لاختيار متى يمكنه ذلك.",
-      "addHour": "إضافة {{time}}",
-      "alreadyPicked": "{{time}} مختار بالفعل",
       "zeroTimes": "اختر وقتًا، وإلا فلن يرسل Mera أي إشعارات."
     }
   },
