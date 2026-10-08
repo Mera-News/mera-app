@@ -1,12 +1,11 @@
 import LottieView from 'lottie-react-native';
 import React from 'react';
-import { useReducedMotion } from 'react-native-reanimated';
 
 import { gameAnimationFor } from '@/components/custom/game-ui/animation-registry';
 import { PROCESSING_SCENE_SIZE } from '@/components/custom/processing/types';
 import { Box } from '@/components/ui/box';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 interface IdleSceneProps {
     /** Required, and deliberately not defaulted: two surfaces draw this and a
@@ -52,10 +51,9 @@ interface IdleSceneProps {
  * broke `status-cards.test.tsx`.
  */
 const IdleScene: React.FC<IdleSceneProps> = ({ testID, size = PROCESSING_SCENE_SIZE }) => {
-    const reduceMotion = useReducedMotion();
-    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const motion = useMotionAllowed();
     const animationsActive = useAnimationsActive();
-    const playing = animationsActive && !(reduceMotion || liteMode);
+    const playing = animationsActive && motion;
 
     return (
         <Box testID={testID} style={{ width: size, height: size }}>

@@ -54,6 +54,7 @@ import {
     type EmailCaptureSource,
 } from '@/lib/subscription/email-capture';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 type Step = 'email' | 'otp' | 'done' | 'skip-confirm';
 
@@ -72,6 +73,8 @@ interface EmailCaptureSheetProps {
 }
 
 export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailCaptureSheetProps) {
+    // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
+    const motion = useMotionAllowed();
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const c = useColors();
@@ -250,7 +253,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
     return (
         <Modal
             visible={isOpen}
-            animationType="slide"
+            animationType={motion ? 'slide' : 'none'}
             presentationStyle="overFullScreen"
             transparent
             statusBarTranslucent

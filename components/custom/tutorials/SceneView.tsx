@@ -1,14 +1,13 @@
 import React from 'react';
 import { View } from 'react-native';
 import LottieView from 'lottie-react-native';
-import { useReducedMotion } from 'react-native-reanimated';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import type { SceneVisual } from '@/lib/tutorials/types';
 import ScenePlaceholder from './ScenePlaceholder';
 import { SCENE_HEIGHT } from './theme';
 import { animationSourceFor } from './animation-registry';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 interface SceneViewProps {
     readonly visual: SceneVisual;
@@ -62,10 +61,9 @@ interface SceneViewProps {
  */
 const SceneView: React.FC<SceneViewProps> = ({ visual, animationId, stepLabels }) => {
     const source = animationSourceFor(visual.animation ?? animationId);
-    const reduceMotion = useReducedMotion();
-    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const motion = useMotionAllowed();
     const active = useAnimationsActive();
-    const isStatic = reduceMotion || liteMode;
+    const isStatic = !motion;
 
     if (source) {
         return (

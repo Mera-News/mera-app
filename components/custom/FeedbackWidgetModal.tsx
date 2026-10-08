@@ -25,6 +25,7 @@ import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useFeedbackStore, useFeedbackVisible } from '@/lib/stores/feedback-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { themedStyles } from '@/lib/theme/tokens';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 // Set the feedback identifier so a submitted report can be tied back to the
 // account that filed it. captureFeedback applies the current scope's user.
@@ -67,6 +68,8 @@ const CLOSE_RED = '#ef4444'; // error-400, same close affordance as ChatPopover
  * feedbackIntegration config in lib/sentry-init.ts.
  */
 const FeedbackWidgetModal: React.FC = () => {
+    // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
+    const motion = useMotionAllowed();
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const { height: screenHeight } = useWindowDimensions();
@@ -114,7 +117,7 @@ const FeedbackWidgetModal: React.FC = () => {
     const maxCardHeight = screenHeight - insets.top - insets.bottom - 48;
 
     return (
-        <Modal visible={visible} transparent animationType="fade" onRequestClose={hide} statusBarTranslucent>
+        <Modal visible={visible} transparent animationType={motion ? 'fade' : 'none'} onRequestClose={hide} statusBarTranslucent>
             <KeyboardAvoidingView
                 style={styles.root}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}

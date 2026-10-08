@@ -14,6 +14,7 @@ import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 /**
  * Settings > Security: the PIN lock, directly in the Settings list.
@@ -32,6 +33,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type Flow = 'none' | 'enable' | 'verify' | 'set';
 
 const SecuritySettingsSection: React.FC = () => {
+    // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
+    const motion = useMotionAllowed();
     const { t } = useTranslation();
     const colors = useColors();
     const toast = useToast();
@@ -179,7 +182,7 @@ const SecuritySettingsSection: React.FC = () => {
                 provider and an opaque page, the TutorialModalHost recipe. */}
             <Modal
                 visible={flow !== 'none'}
-                animationType="slide"
+                animationType={motion ? 'slide' : 'none'}
                 presentationStyle="overFullScreen"
                 transparent
                 statusBarTranslucent

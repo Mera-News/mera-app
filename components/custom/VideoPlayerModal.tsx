@@ -11,6 +11,7 @@ import React from 'react';
 import { Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 interface VideoPlayerModalProps {
     /** Whether the modal is shown. The player is mounted only while visible. */
@@ -31,10 +32,12 @@ interface VideoPlayerModalProps {
  * don't hold a decoder while the modal is hidden).
  */
 const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ visible, uri, onClose }) => {
+    // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
+    const motion = useMotionAllowed();
     return (
         <Modal
             visible={visible}
-            animationType="fade"
+            animationType={motion ? 'fade' : 'none'}
             presentationStyle="overFullScreen"
             transparent
             statusBarTranslucent

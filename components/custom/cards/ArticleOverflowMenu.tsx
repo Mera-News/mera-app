@@ -9,7 +9,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, Easing, LayoutAnimation, Platform, Pressable, View, useWindowDimensions } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 /** One slide between levels, both ways (FinalRead #15). */
 export const SHEET_SLIDE_MS = MOTION.supportSubList.duration;
@@ -182,7 +182,8 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     const { t } = useTranslation();
     const colors = useColors();
     const { width } = useWindowDimensions();
-    const reduceMotion = useReducedMotion();
+    // Lite or Reduce Motion: levels swap in place, no slide, no height ease.
+    const motion = useMotionAllowed();
 
     // 0 → 1 over one transition. Incoming: from the side it came from to 0.
     // Outgoing: from 0 to the opposite side.
@@ -207,7 +208,7 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     // frame of the new level is already offset (no flash at rest).
     if (lastKey.current !== levelKey) {
         lastKey.current = levelKey;
-        const animate = !reduceMotion && direction !== 'none';
+        const animate = motion && direction !== 'none';
         if (animate) {
             if (Platform.OS === 'ios') {
                 // Height only (`update`), same duration, so it moves IN STEP with

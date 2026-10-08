@@ -1,4 +1,3 @@
-import { useReducedMotion } from 'react-native-reanimated';
 
 import { useFeedSyncRunning, useIsFeedProcessing } from '@/components/custom/FeedSyncIndicator';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
@@ -7,7 +6,6 @@ import {
   resolveProcessingStage,
   type ProcessingStageId,
 } from '@/lib/services/processing-stage';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import {
   useForYouAsyncJobPhase,
   useForYouBatchProgress,
@@ -18,6 +16,7 @@ import {
   useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import type { ProcessingSnapshot } from './types';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 const EMPTY_CHUNKS: readonly [] = [];
 
@@ -91,8 +90,7 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
   const { hydrationCompleted, hydrationTotal } = useForYouHydrationProgress();
   const lastRunFinishedAt = useForYouLastProcessingRunFinishedAt();
 
-  const reduceMotion = useReducedMotion();
-  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+  const motion = useMotionAllowed();
   const animationsActive = useAnimationsActive();
 
   if (mark.runToken !== lastRunFinishedAt) {
@@ -136,7 +134,7 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
     hydrationTotal,
     analysedDone: batchProgress?.done ?? 0,
     analysedTotal: batchProgress?.total ?? 0,
-    isStatic: reduceMotion || liteMode,
+    isStatic: !motion,
     animationsActive,
   };
 }

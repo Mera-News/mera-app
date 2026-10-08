@@ -4,11 +4,10 @@
 // frame, never an empty box (the asset gate keeps frame 0 meaningful).
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import LottieView from 'lottie-react-native';
 import React from 'react';
 import { View } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 export interface LoopSceneProps {
   /** A `require()`d bodymovin file from one of the animation registries. */
@@ -18,9 +17,9 @@ export interface LoopSceneProps {
 }
 
 const LoopScene: React.FC<LoopSceneProps> = ({ source, size, testID }) => {
-  const reduceMotion = useReducedMotion();
-  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
-  const playing = useAnimationsActive() && !(reduceMotion || liteMode);
+  const motion = useMotionAllowed();
+  const active = useAnimationsActive();
+  const playing = active && motion;
   return (
     <View
       testID={testID}

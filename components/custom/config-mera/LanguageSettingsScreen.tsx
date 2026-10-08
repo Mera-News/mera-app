@@ -20,6 +20,7 @@ import { showDialog } from '@/lib/dialog';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 interface LanguageSettingsScreenProps {
     onBack?: () => void;
@@ -30,6 +31,8 @@ interface LanguageSettingsScreenProps {
 const RTL_CODES = new Set(['ar', 'he']);
 
 const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack, onBusyChange }) => {
+    // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
+    const motion = useMotionAllowed();
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const colors = useColors();
@@ -162,7 +165,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
             {/* Language Picker Modal */}
             <Modal
                 visible={showLangPicker}
-                animationType="slide"
+                animationType={motion ? 'slide' : 'none'}
                 presentationStyle="pageSheet"
                 onRequestClose={() => setShowLangPicker(false)}
                 // THE HANDSHAKE. iOS fires this once the dismissal transition

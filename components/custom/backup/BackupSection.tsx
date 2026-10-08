@@ -35,7 +35,6 @@
 import LottieView from 'lottie-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Share, StyleSheet, TextInput, View } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -86,6 +85,7 @@ import { hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { toastManager } from '@/lib/toast-manager';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 /** Past this, the status card says the copy is old (FinalBackup #8: a week). */
 export const STALE_BACKUP_MS = 7 * 24 * 60 * 60 * 1000;
@@ -129,7 +129,8 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
   const language = i18n?.language;
   const colors = useColors();
   const themeMode = useThemeMode();
-  const reduceMotion = useReducedMotion();
+  // Lite / Reduce Motion: no earned-moment animation at all.
+  const motion = useMotionAllowed();
   const tRef = useRef(t);
   tRef.current = t;
 
@@ -781,7 +782,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
       </Group>
       <Help>{t('backup.offDescription')}</Help>
 
-      {earned && !reduceMotion && earnSource ? (
+      {earned && motion && earnSource ? (
         // The one earned moment: backup turned on for the first time.
         <View pointerEvents="none" accessible={false} style={{ alignItems: 'center' }}>
           <LottieView
