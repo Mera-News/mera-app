@@ -3,7 +3,6 @@ import { StyleSheet, Text, View, type DimensionValue, type StyleProp, type TextS
 import Animated, {
     cancelAnimation,
     useAnimatedStyle,
-    useReducedMotion,
     useSharedValue,
     withRepeat,
     withTiming,
@@ -12,7 +11,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { EASE, MOTION } from '@/lib/motion';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { useColors } from '@/lib/theme/tokens';
 
 /**
@@ -51,10 +50,9 @@ function useSweep(on: boolean) {
 }
 
 function useSweepAllowed(): boolean {
-    const reduceMotion = useReducedMotion();
-    const lite = useDisplayPrefsStore((s) => s.liteMode);
+    const motion = useMotionAllowed();
     const active = useAnimationsActive();
-    return !reduceMotion && !lite && active;
+    return motion && active;
 }
 
 export interface ShimmerProps {

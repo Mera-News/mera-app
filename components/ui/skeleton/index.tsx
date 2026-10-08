@@ -2,6 +2,7 @@ import React, { forwardRef, useEffect, useRef } from 'react';
 import type { VariantProps } from '@gluestack-ui/utils/nativewind-utils';
 import { Animated, Easing, Platform, View } from 'react-native';
 import { skeletonStyle, skeletonTextStyle } from './styles';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 type ISkeletonProps = React.ComponentProps<typeof View> &
   VariantProps<typeof skeletonStyle> & {
@@ -34,8 +35,14 @@ const Skeleton = forwardRef<
 ) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+  // Lite / Reduce Motion: a still placeholder, no pulse.
+  const motion = useMotionAllowed();
 
   useEffect(() => {
+    if (!motion) {
+      pulseAnim.setValue(1);
+      return undefined;
+    }
     if (!isLoaded) {
       const customTimingFunction = Easing.bezier(0.4, 0, 0.6, 1);
       const fadeDuration = 0.6;
@@ -69,7 +76,7 @@ const Skeleton = forwardRef<
     return () => {
       animationRef.current?.stop();
     };
-  }, [isLoaded, speed, pulseAnim]);
+  }, [isLoaded, speed, pulseAnim, motion]);
 
   if (isLoaded) {
     return children;

@@ -10,6 +10,7 @@ import {
   MotionComponentProps,
 } from '@legendapp/motion';
 import { cssInterop } from 'nativewind';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 type IMotionViewProps = React.ComponentProps<typeof View> &
   MotionComponentProps<typeof View, ViewStyle, unknown, unknown, unknown>;
@@ -24,6 +25,9 @@ export const UITooltip = createTooltip({
 });
 
 cssInterop(MotionView, { className: 'style' });
+
+/** Lite / Reduce Motion: Legend Motion lands at once (lib/motion-gate.ts). */
+const INSTANT = { type: 'timing', duration: 0 } as const;
 
 const tooltipStyle = tva({
   base: 'w-full h-full web:pointer-events-none',
@@ -98,9 +102,11 @@ const TooltipContent = React.forwardRef<
   React.ComponentRef<typeof UITooltip.Content>,
   ITooltipContentProps & { className?: string }
 >(function TooltipContent({ className, ...props }, ref) {
+  const motion = useMotionAllowed();
   return (
     <UITooltip.Content
       ref={ref}
+      {...(motion ? null : { transition: INSTANT })}
       {...props}
       className={tooltipContentStyle({
         class: className,

@@ -14,6 +14,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
 import { useAnimationsActive } from './use-is-focused-safe';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 export interface UsePulseOptions {
   /**
@@ -41,7 +42,10 @@ export interface UsePulseOptions {
 export function usePulse(active: boolean, options: UsePulseOptions = {}): Animated.Value {
   const { restWhenActive = 0.3, durationMs = 800 } = options;
   const anim = useRef(new Animated.Value(restWhenActive)).current;
-  const animationsActive = useAnimationsActive();
+  // Lite / Reduce Motion count as "gated off": the ring holds still at rest.
+  const focusedAndFront = useAnimationsActive();
+  const motion = useMotionAllowed();
+  const animationsActive = focusedAndFront && motion;
 
   useEffect(() => {
     if (active && animationsActive) {

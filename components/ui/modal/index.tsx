@@ -19,6 +19,7 @@ import { GLASS_EDGE } from '@/components/custom/GlassSurface';
 import ModalMaterial from '@/components/custom/ModalMaterial';
 import { MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
@@ -46,6 +47,9 @@ const UIModal = createModal({
 
 cssInterop(AnimatedPressable, { className: 'style' });
 cssInterop(MotionView, { className: 'style' });
+
+/** Lite / Reduce Motion: Legend Motion lands at once (lib/motion-gate.ts). */
+const INSTANT = { type: 'timing', duration: 0 } as const;
 
 const modalStyle = tva({
   base: 'group/modal w-full h-full justify-center items-center web:pointer-events-none',
@@ -160,6 +164,7 @@ const ModalBackdrop = React.forwardRef<
   // The theme's scrim carries its own alpha (Modals board: 78% black in dark,
   // 35% ink in light), so the fade runs to full opacity of that colour.
   const { scrim } = useColors();
+  const motion = useMotionAllowed();
   return (
     <UIModal.Backdrop
       ref={ref}
@@ -172,15 +177,19 @@ const ModalBackdrop = React.forwardRef<
       exit={{
         opacity: 0,
       }}
-      transition={{
-        type: 'spring',
-        damping: 18,
-        stiffness: 250,
-        opacity: {
-          type: 'timing',
-          duration: 250,
-        },
-      }}
+      transition={
+        motion
+          ? {
+              type: 'spring',
+              damping: 18,
+              stiffness: 250,
+              opacity: {
+                type: 'timing',
+                duration: 250,
+              },
+            }
+          : INSTANT
+      }
       style={{ backgroundColor: scrim }}
       {...props}
       className={modalBackdropStyle({
@@ -195,6 +204,7 @@ const ModalContent = React.forwardRef<
   IModalContentProps
 >(function ModalContent({ className, size, children, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
+  const motion = useMotionAllowed();
 
   return (
     <UIModal.Content
@@ -214,10 +224,7 @@ const ModalContent = React.forwardRef<
         opacity: 0,
         scale: MOTION.smallModal.toScale,
       }}
-      transition={{
-        type: 'timing',
-        duration: MOTION.smallModal.in,
-      }}
+      transition={motion ? { type: 'timing', duration: MOTION.smallModal.in } : INSTANT}
       {...props}
       className={modalContentStyle({
         parentVariants: {

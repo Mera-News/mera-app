@@ -19,6 +19,7 @@ import {
 } from '@gluestack-ui/utils/nativewind-utils';
 import { cssInterop } from 'nativewind';
 import type { VariantProps } from '@gluestack-ui/utils/nativewind-utils';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
@@ -47,6 +48,9 @@ const UIPopover = createPopover({
 });
 
 cssInterop(MotionView, { className: 'style' });
+
+/** Lite / Reduce Motion: Legend Motion lands at once (lib/motion-gate.ts). */
+const INSTANT = { type: 'timing', duration: 0 } as const;
 cssInterop(AnimatedPressable, { className: 'style' });
 
 const popoverStyle = tva({
@@ -203,21 +207,26 @@ const PopoverContent = React.forwardRef<
 >(function PopoverContent({ className, size, children, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
   const c = useColors();
+  const motion = useMotionAllowed();
 
   return (
     <UIPopover.Content
       ref={ref}
-      transition={{
-        type: 'spring',
-        damping: 18,
-        stiffness: 250,
-        mass: 0.9,
-        opacity: {
-          type: 'timing',
-          duration: 50,
-          delay: 50,
-        },
-      }}
+      transition={
+        motion
+          ? {
+              type: 'spring',
+              damping: 18,
+              stiffness: 250,
+              mass: 0.9,
+              opacity: {
+                type: 'timing',
+                duration: 50,
+                delay: 50,
+              },
+            }
+          : INSTANT
+      }
       {...props}
       className={popoverContentStyle({
         parentVariants: {
@@ -248,20 +257,25 @@ const PopoverArrow = React.forwardRef<
   IPopoverArrowProps
 >(function PopoverArrow({ className, ...props }, ref) {
   const { placement } = useStyleContext(SCOPE);
+  const motion = useMotionAllowed();
   return (
     <UIPopover.Arrow
       ref={ref}
-      transition={{
-        type: 'spring',
-        damping: 18,
-        stiffness: 250,
-        mass: 0.9,
-        opacity: {
-          type: 'timing',
-          duration: 50,
-          delay: 50,
-        },
-      }}
+      transition={
+        motion
+          ? {
+              type: 'spring',
+              damping: 18,
+              stiffness: 250,
+              mass: 0.9,
+              opacity: {
+                type: 'timing',
+                duration: 50,
+                delay: 50,
+              },
+            }
+          : INSTANT
+      }
       {...props}
       className={popoverArrowStyle({
         class: className,
@@ -275,6 +289,7 @@ const PopoverBackdrop = React.forwardRef<
   React.ComponentRef<typeof UIPopover.Backdrop>,
   IPopoverBackdropProps
 >(function PopoverBackdrop({ className, ...props }, ref) {
+  const motion = useMotionAllowed();
   return (
     <UIPopover.Backdrop
       ref={ref}
@@ -288,17 +303,21 @@ const PopoverBackdrop = React.forwardRef<
       exit={{
         opacity: 0,
       }}
-      transition={{
-        type: 'spring',
-        damping: 18,
-        stiffness: 450,
-        mass: 0.9,
-        opacity: {
-          type: 'timing',
-          duration: 50,
-          delay: 50,
-        },
-      }}
+      transition={
+        motion
+          ? {
+              type: 'spring',
+              damping: 18,
+              stiffness: 450,
+              mass: 0.9,
+              opacity: {
+                type: 'timing',
+                duration: 50,
+                delay: 50,
+              },
+            }
+          : INSTANT
+      }
       className={popoverBackdropStyle({
         class: className,
       })}
