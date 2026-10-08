@@ -60,9 +60,8 @@ export const useIsToastFront = () => React.useContext(ToastFrontContext);
  * That neutral surface was briefly LIQUID GLASS. It is not any more — the owner
  * called it ugly, and it now uses the same flat panel as the menus (the
  * `panel` token). Do not reintroduce
- * `GlassPlate` here; `components/ui/menu/index.tsx` records that a glass menu
- * was tried and rejected for the same surface, because page text read through
- * the labels even at a denser scrim.
+ * `GlassPlate` here: a glass menu was tried and rejected for the same surface,
+ * because page text read through the labels even at a denser scrim.
  *
  * The `action` / `variant` variants are kept with EMPTY classes on purpose:
  * they still type `VariantProps` and still feed the style context that

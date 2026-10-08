@@ -156,7 +156,7 @@ export const GLASS_EDGE = 'border border-line';
  *
  * This is the distinction the whole "is glass readable?" question turns on, and
  * it is why a glass MENU and a glass TOAST were both tried and rejected
- * (`components/ui/menu/index.tsx`, `components/ui/toast/index.tsx`): page text
+ * (the menus, and `components/ui/toast/index.tsx`): page text
  * read straight through them. Cards and `GlassPanel` do not have that problem
  * because what is behind them is the backdrop — dark, soft, low-detail. A modal
  * or a bottom sheet is over headlines, photographs and chips.
