@@ -60,9 +60,8 @@ export type FixedPageId = StaticPageId | 'world';
 export interface PageExplainer {
   readonly titleKey: I18nKey;
   readonly paragraphKeys: readonly I18nKey[];
-  /** The tutorial chapter Learn more opens (`openTutorial`). Absent: no
-   *  Learn more. */
-  readonly chapter?: ChapterId;
+  /** The tutorial chapter Learn more opens (`openTutorial`). */
+  readonly chapter: ChapterId;
   /** The card in that chapter; absent: its first. */
   readonly slide?: string;
 }
@@ -75,7 +74,8 @@ export interface PageMeta {
    *  (pinned prefix, partition snapshot, row session) lives in the screen. */
   readonly keepMounted: boolean;
   /** What the ? at the end of the tab header opens while this page is
-   *  active. Null: no ?. */
+   *  active. Null: no ? (Library and You, owner: their pages name
+   *  themselves on the track). */
   readonly explainer: PageExplainer | null;
 }
 
@@ -110,87 +110,15 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       chapter: 'explore',
     },
   },
-  saved: {
-    tab: 'library',
-    labelKey: 'nav.page.saved',
-    keepMounted: false,
-    explainer: {
-      titleKey: 'library.explainer.saved.title',
-      paragraphKeys: ['library.explainer.saved.what', 'library.explainer.saved.how1', 'library.explainer.saved.how2'],
-      chapter: 'library',
-      slide: 'saved',
-    },
-  },
-  checks: {
-    tab: 'library',
-    labelKey: 'factCheck.dashboard.listTitle',
-    keepMounted: false,
-    explainer: {
-      titleKey: 'library.explainer.checks.title',
-      paragraphKeys: ['library.explainer.checks.what', 'library.explainer.checks.how1', 'library.explainer.checks.how2'],
-      chapter: 'library',
-      slide: 'fact-checks',
-    },
-  },
-  visited: {
-    tab: 'library',
-    labelKey: 'publicationPage.history',
-    keepMounted: false,
-    explainer: {
-      titleKey: 'library.explainer.visited.title',
-      paragraphKeys: [
-        'library.explainer.visited.what',
-        'library.explainer.visited.how1',
-        'library.explainer.visited.how2',
-        'library.explainer.visited.privacy',
-      ],
-      chapter: 'library',
-      slide: 'history',
-    },
-  },
-  stats: {
-    tab: 'library',
-    labelKey: 'nav.page.stats',
-    keepMounted: false,
-    explainer: {
-      titleKey: 'library.explainer.stats.title',
-      paragraphKeys: ['library.explainer.stats.what', 'library.explainer.stats.how1', 'library.explainer.stats.how2'],
-      chapter: 'library',
-      slide: 'stats',
-    },
-  },
-  profile: {
-    tab: 'you',
-    labelKey: 'tabs.profile',
-    keepMounted: false,
-    explainer: {
-      titleKey: 'you.explainer.title',
-      paragraphKeys: ['you.explainer.what', 'you.explainer.how1', 'you.explainer.privacy'],
-      chapter: 'facts',
-      slide: 'your-profile',
-    },
-  },
-  settings: {
-    tab: 'you',
-    labelKey: 'tabs.settings',
-    keepMounted: false,
-    explainer: {
-      titleKey: 'explainer.settings.title',
-      paragraphKeys: ['explainer.settings.p1', 'explainer.settings.p2', 'explainer.settings.p3'],
-      chapter: 'privacy',
-    },
-  },
+  saved: { tab: 'library', labelKey: 'nav.page.saved', keepMounted: false, explainer: null },
+  checks: { tab: 'library', labelKey: 'factCheck.dashboard.listTitle', keepMounted: false, explainer: null },
+  visited: { tab: 'library', labelKey: 'publicationPage.history', keepMounted: false, explainer: null },
+  stats: { tab: 'library', labelKey: 'nav.page.stats', keepMounted: false, explainer: null },
+  profile: { tab: 'you', labelKey: 'tabs.profile', keepMounted: false, explainer: null },
+  settings: { tab: 'you', labelKey: 'tabs.settings', keepMounted: false, explainer: null },
   // The inbox (NotificationsScreen embedded). Not `settings:notifications`,
   // which is the notification SETTINGS screen pushed in the You stack.
-  notifications: {
-    tab: 'you',
-    labelKey: 'notificationCenter.title',
-    keepMounted: false,
-    explainer: {
-      titleKey: 'explainer.notifications.title',
-      paragraphKeys: ['explainer.notifications.p1', 'explainer.notifications.p2', 'explainer.notifications.p3'],
-    },
-  },
+  notifications: { tab: 'you', labelKey: 'notificationCenter.title', keepMounted: false, explainer: null },
 };
 
 /** A country page: World's shape, its own explainer. */

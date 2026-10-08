@@ -2795,33 +2795,6 @@
       "freshLineDays_one": "açtığınızın yarısı {{count}} günden yeniydi",
       "freshLineDays_other": "açtığınızın yarısı {{count}} günden yeniydi"
     },
-    "explainer": {
-      "saved": {
-        "title": "Kaydedilenler",
-        "what": "Herhangi bir makalede yer imine dokunun, burada tutulsun.",
-        "how1": "Kaydedilen makaleler, Akışınızdan çıksalar bile siz kaldırana kadar bu telefonda kalır.",
-        "how2": "Dışa aktar, onları okunabilir bir liste veya veri olarak seçtiğiniz herhangi bir uygulamaya gönderir."
-      },
-      "checks": {
-        "title": "Doğruluk kontrolleri",
-        "what": "Doğruluk kontrolleri, Mera'dan kontrol etmesini istediğiniz makaleleri listeler.",
-        "how1": "Her derecelendirme, doğruluk kontrolü yapan kuruluşun kendisine aittir ve yayımladıkları şekilde gösterilir.",
-        "how2": "Kontroller bu telefonda kalır. Birini silmek onu yalnızca buradan kaldırır."
-      },
-      "visited": {
-        "title": "Geçmiş",
-        "what": "Geçmiş, son 30 günde Mera'dan sitelerini açtığınız yayınları listeler. En çok açtığınız üstte çıkar.",
-        "how1": "Yalnızca yayıncının sitesinde açtığınız makaleler sayılır. Mera içinde okumak listelenmez.",
-        "how2": "Abone olmak ya da desteklemek veya orada ne okuduğunuzu görmek için birine dokunun.",
-        "privacy": "Bu liste bu telefonda kalır. Her ziyaret 30 gün sonra silinir."
-      },
-      "stats": {
-        "title": "İstatistikler nasıl çalışır",
-        "what": "İstatistikleriniz son 30 günlük okumalarınızı paylaşabileceğiniz görsellere dönüştürür.",
-        "how1": "Kartlar, bu telefonun Mera'yı çalıştırmak için zaten tuttuklarını kullanır: açtığınız siteler ile kaydettikleriniz ve takip ettikleriniz. Fazladan hiçbir şey kaydedilmez.",
-        "how2": "Yayın adları yalnızca En çok açılan seçilirse görünür. Makale başlıkları hiçbir zaman görünmez."
-      }
-    },
     "history": {
       "colLastRead": "Son okuma",
       "colPublication": "Yayın",
@@ -2851,12 +2824,6 @@
       "title": "Profiliniz",
       "topicCount_one": "{{count}} konu",
       "topicCount_other": "{{count}} konu"
-    },
-    "explainer": {
-      "title": "Profiliniz",
-      "what": "Mera'nın haberlerinizi seçmek için kullandığı her şey: bilgileriniz, yerleriniz ve kaynaklarınızı nasıl ayarladığınız.",
-      "how1": "Burada istediğinizi değiştirin ya da Mera düğmesiyle Mera'ya söyleyin. Her değişiklik listelenir ve geri alınabilir.",
-      "privacy": "Gerçeklerinizden yapılan aramalar hiçbir zaman hesabınıza bağlanmaz. Sunucu yalnızca arama metnini tutar, bunu tüm kullanıcılar arasında anonim olarak paylaşır ve 14 gün kullanılmazsa siler."
     },
     "sources": {
       "title": "Kaynaklar",
@@ -2986,18 +2953,6 @@
     "stories": {
       "p1": "Takip etmeyi seçtiğiniz haberler. Her biri geliştikçe yeni makaleler toplamaya devam eder ve son bakışınızdan beri neyin yeni olduğunu gösterir.",
       "p2": "Mera düğmesinden ya da bir makaleden bir haberi takip edin. Buradan istediğiniz zaman takibi bırakabilirsiniz."
-    },
-    "settings": {
-      "title": "Ayarlar",
-      "p1": "Mera'nın bu telefondaki çalışma şeklini seçin: dil, görünüm, bildirimler ve uygulama kilidi.",
-      "p2": "Mera Protocol, Mera'nın yapay zekasının nerede çalışacağını belirler: bu telefonda ya da Mera'nın özel bulutunda. Yedekler ve dışa aktarımlar Verileriniz bölümünde.",
-      "p3": "Yardım, oturum açma ve yasal sayfalar en altta."
-    },
-    "notifications": {
-      "title": "Bildirimler",
-      "p1": "Dikkatinizi gerektiren her şey burada görünür, örneğin profil temizliği ya da Mera'dan bir soru.",
-      "p2": "Açmak için birine dokunun. Bu sayfayı açmak her şeyi okundu olarak işaretler.",
-      "p3": "Bunlar bu telefonda kalır ve 90 gün sonra silinir. Kilit ekranında neyin görüneceğini Bildirim ayarları'ndan seçin."
     }
   },
   "gate": {

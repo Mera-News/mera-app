@@ -2793,33 +2793,6 @@
       "freshLineDays_one": "half of what you opened was under {{count}} day old",
       "freshLineDays_other": "half of what you opened was under {{count}} days old"
     },
-    "explainer": {
-      "saved": {
-        "title": "Saved",
-        "what": "Tap the bookmark on any article to keep it here.",
-        "how1": "Saved articles stay on this phone until you remove them, even after they leave your Feed.",
-        "how2": "Export sends them as a readable list or as data to any app you choose."
-      },
-      "checks": {
-        "title": "Fact checks",
-        "what": "Fact checks lists the articles you asked Mera to look up fact checks for.",
-        "how1": "Each rating is the fact-checking organisation's own, shown the way they published it.",
-        "how2": "Checks stay on this phone. Deleting one only removes it here."
-      },
-      "visited": {
-        "title": "History",
-        "what": "History lists the publications whose sites you opened from Mera in the last 30 days, the one you open most first.",
-        "how1": "Only articles you open at the publisher's site count. Reading inside Mera is not listed.",
-        "how2": "Tap one to subscribe or support it, or to see what you read there.",
-        "privacy": "This list stays on this phone. Each visit is deleted after 30 days."
-      },
-      "stats": {
-        "title": "How Stats works",
-        "what": "Your stats turn the last 30 days of reading into images you can share.",
-        "how1": "The cards use what this phone already keeps to run Mera: the sites you opened and what you saved or follow. Nothing extra is recorded.",
-        "how2": "Publication names only appear if you pick Most opened. Article titles never do."
-      }
-    },
     "history": {
       "colLastRead": "Last read",
       "colPublication": "Publication",
@@ -2849,12 +2822,6 @@
       "title": "Your profile",
       "topicCount_one": "{{count}} topic",
       "topicCount_other": "{{count}} topics"
-    },
-    "explainer": {
-      "title": "Your profile",
-      "what": "Everything Mera uses to pick your news: your facts, your places and how you set your sources.",
-      "how1": "Change anything here, or tell Mera with the Mera button. Every change is listed and can be undone.",
-      "privacy": "The searches made from your facts are never linked to your account. The server keeps only the search text, shared anonymously across all users, and deletes it after 14 days without use."
     },
     "sources": {
       "title": "Sources",
@@ -2984,18 +2951,6 @@
     "stories": {
       "p1": "Stories you chose to follow. Each one keeps collecting new articles as it develops, and shows what is new since you last looked.",
       "p2": "Follow a story from the Mera button or from an article. Stop following it here at any time."
-    },
-    "settings": {
-      "title": "Settings",
-      "p1": "Choose how Mera works on this phone: language, display, notifications and app lock.",
-      "p2": "Mera Protocol sets where Mera's AI runs, on this phone or in Mera's private cloud. Backups and exports are under Your data.",
-      "p3": "Help, your sign-in and the legal pages are at the bottom."
-    },
-    "notifications": {
-      "title": "Notifications",
-      "p1": "Anything that needs you shows up here, like a profile cleanup or a question from Mera.",
-      "p2": "Tap one to open it. Opening this page marks everything as read.",
-      "p3": "They stay on this phone and are removed after 90 days. Choose what reaches your lock screen in Notification settings."
     }
   },
   "gate": {

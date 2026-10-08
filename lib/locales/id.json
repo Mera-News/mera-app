@@ -2792,33 +2792,6 @@
       "freshLineDays_one": "separuh dari yang Anda buka berusia di bawah {{count}} hari",
       "freshLineDays_other": "separuh dari yang Anda buka berusia di bawah {{count}} hari"
     },
-    "explainer": {
-      "saved": {
-        "title": "Tersimpan",
-        "what": "Ketuk penanda di artikel mana pun untuk menyimpannya di sini.",
-        "how1": "Artikel tersimpan tetap ada di ponsel ini sampai Anda menghapusnya, bahkan setelah hilang dari Feed Anda.",
-        "how2": "Ekspor mengirimnya sebagai daftar yang bisa dibaca atau sebagai data ke aplikasi apa pun yang Anda pilih."
-      },
-      "checks": {
-        "title": "Pemeriksaan fakta",
-        "what": "Pemeriksaan fakta mencantumkan artikel yang Anda minta agar Mera mencari pemeriksaan faktanya.",
-        "how1": "Setiap penilaian berasal dari organisasi pemeriksa fakta itu sendiri, ditampilkan seperti yang mereka terbitkan.",
-        "how2": "Pengecekan tetap ada di ponsel ini. Menghapus satu hanya menghapusnya di sini."
-      },
-      "visited": {
-        "title": "Riwayat",
-        "what": "Riwayat mencantumkan publikasi yang situsnya Anda buka dari Mera dalam 30 hari terakhir, yang paling sering dibuka di urutan pertama.",
-        "how1": "Hanya artikel yang Anda buka di situs penerbit yang dihitung. Membaca di dalam Mera tidak dicantumkan.",
-        "how2": "Ketuk satu untuk berlangganan atau mendukungnya, atau untuk melihat apa yang Anda baca di sana.",
-        "privacy": "Daftar ini tetap ada di ponsel ini. Setiap kunjungan dihapus setelah 30 hari."
-      },
-      "stats": {
-        "title": "Cara kerja Statistik",
-        "what": "Statistik Anda mengubah 30 hari terakhir membaca menjadi gambar yang bisa Anda bagikan.",
-        "how1": "Kartu memakai yang sudah disimpan ponsel ini untuk menjalankan Mera: situs yang Anda buka serta yang Anda simpan atau ikuti. Tidak ada yang dicatat tambahan.",
-        "how2": "Nama publikasi hanya muncul jika Anda memilih Paling sering dibuka. Judul artikel tidak pernah muncul."
-      }
-    },
     "history": {
       "colLastRead": "Terakhir dibaca",
       "colPublication": "Publikasi",
@@ -2848,12 +2821,6 @@
       "title": "Profil Anda",
       "topicCount_one": "{{count}} topik",
       "topicCount_other": "{{count}} topik"
-    },
-    "explainer": {
-      "title": "Profil Anda",
-      "what": "Semua yang Mera gunakan untuk memilih berita Anda: fakta, tempat, dan cara Anda mengatur sumber.",
-      "how1": "Ubah apa saja di sini, atau beri tahu Mera lewat tombol Mera. Setiap perubahan tercatat dan bisa dibatalkan.",
-      "privacy": "Pencarian yang dibuat dari fakta Anda tidak pernah dikaitkan dengan akun Anda. Server hanya menyimpan teks pencariannya, dibagikan secara anonim ke semua pengguna, dan menghapusnya setelah 14 hari tanpa dipakai."
     },
     "sources": {
       "title": "Sumber",
@@ -2981,18 +2948,6 @@
     "stories": {
       "p1": "Cerita yang Anda pilih untuk diikuti. Setiap cerita terus mengumpulkan artikel baru saat berkembang, dan menampilkan apa yang baru sejak terakhir Anda melihatnya.",
       "p2": "Ikuti cerita dari tombol Mera atau dari artikel. Berhenti mengikutinya di sini kapan saja."
-    },
-    "settings": {
-      "title": "Pengaturan",
-      "p1": "Atur cara Mera bekerja di ponsel ini: bahasa, tampilan, notifikasi, dan kunci aplikasi.",
-      "p2": "Mera Protocol menentukan tempat AI Mera berjalan, di ponsel ini atau di cloud pribadi Mera. Cadangan dan ekspor ada di Data Anda.",
-      "p3": "Bantuan, cara masuk, dan halaman hukum ada di bagian bawah."
-    },
-    "notifications": {
-      "title": "Notifikasi",
-      "p1": "Apa pun yang membutuhkan perhatian Anda muncul di sini, misalnya pembersihan profil atau pertanyaan dari Mera.",
-      "p2": "Ketuk salah satu untuk membukanya. Membuka halaman ini menandai semuanya sudah dibaca.",
-      "p3": "Notifikasi disimpan di ponsel ini dan dihapus setelah 90 hari. Pilih notifikasi yang muncul di layar kunci di Pengaturan notifikasi."
     }
   },
   "gate": {

@@ -105,6 +105,8 @@ export interface PageStripProps {
   readonly variant?: 'segmented' | 'scroll';
   /** Drawn in a 44pt frame at the row's start (the Feed's status icon). */
   readonly leading?: React.ReactNode;
+  /** `segmented`: names alone when they all fit (Library, You). */
+  readonly namesFirst?: boolean;
   /** A long press on a pill (World: opens Arrange with that page lifted). */
   readonly onLongPressPill?: (id: PageId) => void;
   /** World: the edit button after the last pill (opens Arrange). Absent while
@@ -294,6 +296,7 @@ const PageStrip: React.FC<PageStripProps> = ({
   activeId,
   onSelect,
   onSearch,
+  namesFirst = false,
   onHelp,
   helpLabel,
   title,
@@ -421,6 +424,7 @@ const PageStrip: React.FC<PageStripProps> = ({
         <SegmentedControl
           size="header"
           availableWidth={trackSpace}
+          namesFirst={namesFirst}
           value={activeId}
           onChange={onSelect}
           accessibilityLabel={tabLabel}

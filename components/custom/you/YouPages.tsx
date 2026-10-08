@@ -81,7 +81,7 @@ export function YouPages() {
         }
     }, []);
 
-    return <TabPages tab="you" pages={pills} renderPage={renderPage} testID="you-pages" />;
+    return <TabPages tab="you" namesFirst pages={pills} renderPage={renderPage} testID="you-pages" />;
 }
 
 export default YouPages;

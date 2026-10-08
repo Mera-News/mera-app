@@ -103,6 +103,7 @@ export function LibraryPages() {
     return (
         <TabPages
             tab="library"
+            namesFirst
             pages={pills}
             renderPage={renderPage}
             testID="library-pages"

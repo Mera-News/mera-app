@@ -2793,33 +2793,6 @@
       "freshLineDays_one": "die Hälfte dessen, was du geöffnet hast, war jünger als {{count}} Tag",
       "freshLineDays_other": "die Hälfte dessen, was du geöffnet hast, war jünger als {{count}} Tage"
     },
-    "explainer": {
-      "saved": {
-        "title": "Gespeichert",
-        "what": "Tippe bei einem Artikel auf das Lesezeichen, um ihn hier aufzubewahren.",
-        "how1": "Gespeicherte Artikel bleiben auf diesem Telefon, bis du sie entfernst, auch wenn sie aus deinem Feed verschwinden.",
-        "how2": "Beim Exportieren gehen sie als lesbare Liste oder als Daten an eine App deiner Wahl."
-      },
-      "checks": {
-        "title": "Faktenchecks",
-        "what": "Faktenchecks listet die Artikel auf, zu denen du Mera einen Faktencheck angefordert hast.",
-        "how1": "Jede Bewertung stammt von der Faktencheck-Organisation selbst und wird so gezeigt, wie sie sie veröffentlicht hat.",
-        "how2": "Prüfungen bleiben auf diesem Telefon. Eine zu löschen entfernt sie nur hier."
-      },
-      "visited": {
-        "title": "Verlauf",
-        "what": "Der Verlauf listet die Veröffentlichungen auf, deren Websites du in den letzten 30 Tagen über Mera geöffnet hast, die am meisten geöffnete zuerst.",
-        "how1": "Nur Artikel, die du auf der Seite des Verlags öffnest, zählen. Lesen in Mera wird nicht aufgeführt.",
-        "how2": "Tippe auf eine, um sie zu abonnieren oder zu unterstützen oder um zu sehen, was du dort gelesen hast.",
-        "privacy": "Diese Liste bleibt auf diesem Telefon. Jeder Besuch wird nach 30 Tagen gelöscht."
-      },
-      "stats": {
-        "title": "So funktioniert Statistik",
-        "what": "Deine Statistik macht das Lesen der letzten 30 Tage zu Bildern, die du teilen kannst.",
-        "how1": "Die Karten nutzen, was dieses Telefon ohnehin für den Betrieb von Mera speichert: die Seiten, die du geöffnet hast, und was du gespeichert hast oder verfolgst. Es wird nichts zusätzlich aufgezeichnet.",
-        "how2": "Namen von Veröffentlichungen erscheinen nur, wenn du „Am meisten geöffnet“ wählst. Artikeltitel erscheinen nie."
-      }
-    },
     "history": {
       "colLastRead": "Zuletzt gelesen",
       "colPublication": "Veröffentlichung",
@@ -2849,12 +2822,6 @@
       "title": "Dein Profil",
       "topicCount_one": "{{count}} Thema",
       "topicCount_other": "{{count}} Themen"
-    },
-    "explainer": {
-      "title": "Dein Profil",
-      "what": "Alles, was Mera für die Auswahl deiner Nachrichten nutzt: deine Fakten, deine Orte und wie du deine Quellen eingestellt hast.",
-      "how1": "Ändere hier alles oder sag es Mera über die Mera-Taste. Jede Änderung wird aufgelistet und kann rückgängig gemacht werden.",
-      "privacy": "Die aus deinen Fakten erstellten Suchen werden nie mit deinem Konto verknüpft. Der Server speichert nur den Suchtext, anonym für alle Nutzer geteilt, und löscht ihn nach 14 Tagen ohne Nutzung."
     },
     "sources": {
       "title": "Quellen",
@@ -2984,18 +2951,6 @@
     "stories": {
       "p1": "Geschichten, denen du folgst. Jede sammelt weiter neue Artikel, während sie sich entwickelt, und zeigt, was seit deinem letzten Blick neu ist.",
       "p2": "Folge einer Geschichte über die Mera-Taste oder aus einem Artikel heraus. Hier kannst du jederzeit aufhören, ihr zu folgen."
-    },
-    "settings": {
-      "title": "Einstellungen",
-      "p1": "Lege fest, wie Mera auf diesem Handy funktioniert: Sprache, Anzeige, Benachrichtigungen und App-Sperre.",
-      "p2": "Mit Mera Protocol legst du fest, wo Meras KI läuft: auf diesem Handy oder in Meras privater Cloud. Backups und Exporte findest du unter Deine Daten.",
-      "p3": "Hilfe, deine Anmeldung und die rechtlichen Seiten findest du unten."
-    },
-    "notifications": {
-      "title": "Benachrichtigungen",
-      "p1": "Alles, was deine Aufmerksamkeit braucht, erscheint hier, zum Beispiel eine Bereinigung deines Profils oder eine Frage von Mera.",
-      "p2": "Tippe auf eine Benachrichtigung, um sie zu öffnen. Wenn du diese Seite öffnest, werden alle als gelesen markiert.",
-      "p3": "Sie bleiben auf diesem Handy und werden nach 90 Tagen entfernt. Welche auf dem Sperrbildschirm erscheinen, legst du in den Benachrichtigungseinstellungen fest."
     }
   },
   "gate": {

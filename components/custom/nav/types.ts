@@ -81,6 +81,8 @@ export interface TabPagesProps {
   readonly arrange?: ArrangeConfig;
   /** Drawn at the header row's start (the Feed's status icon). */
   readonly leading?: React.ReactNode;
+  /** The track shows its page NAMES alone when they all fit (Library, You). */
+  readonly namesFirst?: boolean;
   /** World: the header's top row title ("Explore") and the control right
    *  after it (the active page's time window). */
   readonly title?: string;

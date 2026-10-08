@@ -2799,33 +2799,6 @@
       "freshLineDays_one": "la moitié de ce que vous avez ouvert avait moins de {{count}} jour",
       "freshLineDays_other": "la moitié de ce que vous avez ouvert avait moins de {{count}} jours"
     },
-    "explainer": {
-      "saved": {
-        "title": "Enregistrés",
-        "what": "Touchez le marque-page sur n'importe quel article pour le garder ici.",
-        "how1": "Les articles enregistrés restent sur ce téléphone jusqu'à leur suppression, même après avoir quitté votre Feed.",
-        "how2": "Exporter les envoie sous forme de liste lisible ou de données vers l'appli de votre choix."
-      },
-      "checks": {
-        "title": "Vérifications des faits",
-        "what": "Vérifications des faits liste les articles pour lesquels vous avez demandé à Mera de chercher des vérifications.",
-        "how1": "Chaque évaluation est celle de l'organisme de vérification des faits, présentée comme il l'a publiée.",
-        "how2": "Les vérifications restent sur ce téléphone. En supprimer une ne la retire qu'ici."
-      },
-      "visited": {
-        "title": "Historique",
-        "what": "L'historique liste les publications dont vous avez ouvert le site depuis Mera au cours des 30 derniers jours, celle que vous ouvrez le plus en premier.",
-        "how1": "Seuls les articles ouverts sur le site de l'éditeur comptent. La lecture dans Mera n'est pas listée.",
-        "how2": "Touchez-en une pour vous abonner ou la soutenir, ou pour voir ce que vous y avez lu.",
-        "privacy": "Cette liste reste sur ce téléphone. Chaque visite est supprimée après 30 jours."
-      },
-      "stats": {
-        "title": "Comment fonctionnent les Statistiques",
-        "what": "Vos statistiques transforment les 30 derniers jours de lecture en images que vous pouvez partager.",
-        "how1": "Les cartes utilisent ce que ce téléphone conserve déjà pour faire fonctionner Mera : les sites que vous avez ouverts et ce que vous avez enregistré ou suivez. Rien de plus n'est enregistré.",
-        "how2": "Les noms de publications n'apparaissent que si vous choisissez Les plus ouverts. Les titres d'articles n'apparaissent jamais."
-      }
-    },
     "history": {
       "colLastRead": "Dernière lecture",
       "colPublication": "Publication",
@@ -2855,12 +2828,6 @@
       "title": "Votre profil",
       "topicCount_one": "{{count}} sujet",
       "topicCount_other": "{{count}} sujets"
-    },
-    "explainer": {
-      "title": "Votre profil",
-      "what": "Tout ce que Mera utilise pour choisir vos actualités : vos faits, vos lieux et la façon dont vous réglez vos sources.",
-      "how1": "Modifiez ce que vous voulez ici, ou dites-le à Mera avec le bouton Mera. Chaque changement est listé et peut être annulé.",
-      "privacy": "Les recherches faites à partir de vos faits ne sont jamais liées à votre compte. Le serveur ne garde que le texte de la recherche, partagé anonymement entre tous les utilisateurs, et le supprime après 14 jours sans utilisation."
     },
     "sources": {
       "title": "Sources",
@@ -2990,18 +2957,6 @@
     "stories": {
       "p1": "Les histoires que vous avez choisi de suivre. Chacune continue de réunir de nouveaux articles à mesure qu'elle évolue, et montre ce qui est nouveau depuis votre dernière visite.",
       "p2": "Suivez une histoire depuis le bouton Mera ou depuis un article. Vous pouvez arrêter de la suivre ici à tout moment."
-    },
-    "settings": {
-      "title": "Paramètres",
-      "p1": "Choisissez le fonctionnement de Mera sur ce téléphone : langue, affichage, notifications et verrouillage de l'app.",
-      "p2": "Mera Protocol définit où tourne l'IA de Mera, sur ce téléphone ou dans le cloud privé de Mera. Les sauvegardes et les exportations se trouvent sous Vos données.",
-      "p3": "L'aide, votre connexion et les mentions légales sont en bas."
-    },
-    "notifications": {
-      "title": "Notifications",
-      "p1": "Tout ce qui demande votre attention apparaît ici, comme un nettoyage de votre profil ou une question de Mera.",
-      "p2": "Touchez-en une pour l'ouvrir. Ouvrir cette page marque tout comme lu.",
-      "p3": "Elles restent sur ce téléphone et sont supprimées après 90 jours. Choisissez ce qui s'affiche sur l'écran verrouillé dans les Paramètres des notifications."
     }
   },
   "gate": {

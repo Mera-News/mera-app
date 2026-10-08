@@ -26,7 +26,7 @@ import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
 import { MAX_FONT_SCALE } from '@/lib/typography/policy';
 
-import { allHeaderLabelsFit, HEADER_METRICS, headerLabelShown } from './fit';
+import { HEADER_METRICS, headerOptionParts, headerTrackMode } from './fit';
 
 export interface SegmentedOption<T extends string> {
     value: T;
@@ -51,15 +51,17 @@ export interface SegmentedControlProps<T extends string> {
     testID?: string;
     /**
      * `header`: the tab header's page track (38pt options, an icon each,
-     * 15.5pt labels on the chrome text-scale tier, a dot). Every label shows
-     * when all of them fit `availableWidth`, else only the selected one's
-     * (fit.ts); it never scrolls. Its selected fill is drawn INSIDE the
+     * 15.5pt labels on the chrome text-scale tier, a dot). Names alone
+     * (`namesFirst`) or icons and names when they all fit `availableWidth`,
+     * else icons with only the selected name (fit.ts); it never scrolls. Its selected fill is drawn INSIDE the
      * selected option, so it has exactly that option's bounds, and crossfades
      * on a change (240 ms) instead of sliding. The host gives the haptic.
      */
     size?: 'default' | 'header';
     /** Header size only: the width the host gives the track. */
     availableWidth?: number | null;
+    /** Header size only: names alone when they all fit, no icons (fit.ts). */
+    namesFirst?: boolean;
 }
 
 /** FinalSettings #6: 36pt options inside a 3pt padded, 1pt bordered track,
@@ -194,6 +196,7 @@ function HeaderTrack<T extends string>({
     style,
     testID,
     availableWidth = null,
+    namesFirst = false,
 }: SegmentedControlProps<T>) {
     const colors = useColors();
     const reduceMotion = useReducedMotion();
@@ -204,15 +207,16 @@ function HeaderTrack<T extends string>({
         const w = Math.ceil(e.nativeEvent.lines[0]?.width ?? 0);
         setWidths((prev) => (prev[key] === w ? prev : { ...prev, [key]: w }));
     }, []);
-    const allFit = useMemo(
+    const mode = useMemo(
         () =>
-            allHeaderLabelsFit(
+            headerTrackMode(
                 options.map((o) => widths[o.label]),
                 options.map((o) => o.useDot !== undefined),
                 availableWidth,
                 HEADER_METRICS,
+                namesFirst,
             ),
-        [options, widths, availableWidth],
+        [options, widths, availableWidth, namesFirst],
     );
     return (
         // The track glides to its new width with its options.
@@ -245,7 +249,7 @@ function HeaderTrack<T extends string>({
                     key={o.value}
                     option={o}
                     on={o.value === value}
-                    showLabel={headerLabelShown(o.value === value, allFit)}
+                    parts={headerOptionParts(o.value === value, mode)}
                     onPress={() => {
                         if (o.value !== value) onChange(o.value);
                     }}
@@ -260,13 +264,13 @@ function HeaderTrack<T extends string>({
 function HeaderOption<T extends string>({
     option,
     on,
-    showLabel,
+    parts,
     onPress,
     testID,
 }: {
     option: SegmentedOption<T>;
     on: boolean;
-    showLabel: boolean;
+    parts: { label: boolean; icon: boolean };
     onPress: () => void;
     testID?: string;
 }) {
@@ -293,8 +297,8 @@ function HeaderOption<T extends string>({
                 style={[StyleSheet.absoluteFill, styles.headerFill, { backgroundColor: colors.accent }, fillStyle]}
             />
             <View pointerEvents="none" style={styles.headerInner} {...HIDDEN}>
-                {option.icon ? <MaterialIcons name={option.icon} size={HEADER_ICON} color={ink} /> : null}
-                {showLabel ? (
+                {option.icon && parts.icon ? <MaterialIcons name={option.icon} size={HEADER_ICON} color={ink} /> : null}
+                {parts.label ? (
                     <Animated.Text
                         entering={reduceMotion ? undefined : FadeIn.duration(LABEL_MOTION)}
                         exiting={reduceMotion ? undefined : FadeOut.duration(LABEL_MOTION)}

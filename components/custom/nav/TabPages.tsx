@@ -54,6 +54,7 @@ const TabPages: React.FC<TabPagesProps> = ({
   onSearch,
   arrange,
   leading,
+  namesFirst,
   title,
   renderTitleChip,
   testID,
@@ -228,6 +229,7 @@ const TabPages: React.FC<TabPagesProps> = ({
             // other tab is one centred track.
             variant={tab === 'world' ? 'scroll' : 'segmented'}
             leading={leading}
+            namesFirst={namesFirst}
             onSearch={onSearch}
             onHelp={hasExplainer ? openExplainer : undefined}
             helpLabel={t('nav.explainerA11y', { page: activeLabel })}

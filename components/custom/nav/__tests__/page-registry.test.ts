@@ -24,18 +24,12 @@ describe('page-registry', () => {
     expect(kept).toEqual(['feed']);
   });
 
-  it("gives every page an explainer for the header's ?", () => {
+  it("gives the ? only to Feed and World pages; Library and You have none", () => {
     for (const id of Object.keys(PAGE_META) as FixedPageId[]) {
-      expect(PAGE_META[id].explainer?.paragraphKeys.length).toBeGreaterThan(0);
+      const tab = PAGE_META[id].tab;
+      const hasHelp = PAGE_META[id].explainer !== null;
+      expect(hasHelp).toBe(tab === 'feed' || tab === 'world');
     }
-    expect(PAGE_META.settings.explainer?.titleKey).toBe('explainer.settings.title');
-    expect(PAGE_META.notifications.explainer?.titleKey).toBe('explainer.notifications.title');
-  });
-
-  it('offers Learn more only where a chapter is named', () => {
-    expect(PAGE_META.settings.explainer?.chapter).toBe('privacy');
-    expect(PAGE_META.notifications.explainer?.chapter).toBeUndefined();
-    expect(PAGE_META.saved.explainer?.chapter).toBe('library');
   });
 
   it('round-trips country page ids as uppercase alpha-2', () => {

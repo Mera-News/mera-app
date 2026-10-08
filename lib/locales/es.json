@@ -2793,33 +2793,6 @@
       "freshLineDays_one": "la mitad de lo que abriste tenía menos de {{count}} día",
       "freshLineDays_other": "la mitad de lo que abriste tenía menos de {{count}} días"
     },
-    "explainer": {
-      "saved": {
-        "title": "Guardados",
-        "what": "Toca el marcador de cualquier artículo para guardarlo aquí.",
-        "how1": "Los artículos guardados se quedan en este teléfono hasta que los quites, incluso después de salir de tu Feed.",
-        "how2": "Exportar los envía como una lista legible o como datos a la app que elijas."
-      },
-      "checks": {
-        "title": "Verificaciones de hechos",
-        "what": "Verificaciones de hechos enumera los artículos para los que pediste a Mera buscar verificaciones.",
-        "how1": "Cada valoración es de la propia organización de verificación, tal como la publicó.",
-        "how2": "Las verificaciones se quedan en este teléfono. Borrar una solo la quita de aquí."
-      },
-      "visited": {
-        "title": "Historial",
-        "what": "Historial enumera las publicaciones cuyos sitios abriste desde Mera en los últimos 30 días, la que más abres primero.",
-        "how1": "Solo cuentan los artículos que abres en el sitio del medio. Leer dentro de Mera no aparece.",
-        "how2": "Toca una para suscribirte o apoyarla, o para ver lo que leíste allí.",
-        "privacy": "Esta lista se queda en este teléfono. Cada visita se borra a los 30 días."
-      },
-      "stats": {
-        "title": "Cómo funcionan las Estadísticas",
-        "what": "Tus estadísticas convierten los últimos 30 días de lectura en imágenes que puedes compartir.",
-        "how1": "Las tarjetas usan lo que este teléfono ya guarda para que Mera funcione: los sitios que abriste y lo que guardaste o sigues. No se registra nada extra.",
-        "how2": "Los nombres de las publicaciones solo aparecen si eliges Más abiertos. Los títulos de los artículos nunca aparecen."
-      }
-    },
     "history": {
       "colLastRead": "Última lectura",
       "colPublication": "Publicación",
@@ -2849,12 +2822,6 @@
       "title": "Tu perfil",
       "topicCount_one": "{{count}} tema",
       "topicCount_other": "{{count}} temas"
-    },
-    "explainer": {
-      "title": "Tu perfil",
-      "what": "Todo lo que Mera usa para elegir tus noticias: tus hechos, tus lugares y cómo configuras tus fuentes.",
-      "how1": "Cambia lo que quieras aquí, o díselo a Mera con el botón de Mera. Cada cambio aparece en una lista y se puede deshacer.",
-      "privacy": "Las búsquedas hechas a partir de tus hechos nunca se vinculan a tu cuenta. El servidor solo guarda el texto de la búsqueda, compartido de forma anónima entre todos los usuarios, y lo borra tras 14 días sin uso."
     },
     "sources": {
       "title": "Fuentes",
@@ -2984,18 +2951,6 @@
     "stories": {
       "p1": "Historias que elegiste seguir. Cada una sigue recopilando artículos nuevos a medida que avanza, y muestra lo nuevo desde la última vez que la miraste.",
       "p2": "Sigue una historia desde el botón de Mera o desde un artículo. Puedes dejar de seguirla aquí en cualquier momento."
-    },
-    "settings": {
-      "title": "Ajustes",
-      "p1": "Elige cómo funciona Mera en este teléfono: idioma, pantalla, notificaciones y bloqueo de la app.",
-      "p2": "Mera Protocol decide dónde se ejecuta la IA de Mera: en este teléfono o en la nube privada de Mera. Las copias de seguridad y las exportaciones están en Tus datos.",
-      "p3": "La ayuda, tu inicio de sesión y las páginas legales están abajo."
-    },
-    "notifications": {
-      "title": "Notificaciones",
-      "p1": "Aquí aparece todo lo que necesita tu atención, como una limpieza de tu perfil o una pregunta de Mera.",
-      "p2": "Toca una para abrirla. Al abrir esta página, todo se marca como leído.",
-      "p3": "Se quedan en este teléfono y se borran después de 90 días. Elige qué llega a tu pantalla de bloqueo en Ajustes de notificaciones."
     }
   },
   "gate": {

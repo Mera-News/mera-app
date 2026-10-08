@@ -2793,33 +2793,6 @@
       "freshLineDays_one": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày",
       "freshLineDays_other": "một nửa số bài bạn đã mở được đăng trong vòng chưa đầy {{count}} ngày"
     },
-    "explainer": {
-      "saved": {
-        "title": "Đã lưu",
-        "what": "Chạm vào biểu tượng đánh dấu trên bất kỳ bài viết nào để giữ nó ở đây.",
-        "how1": "Bài đã lưu ở lại trên điện thoại này cho đến khi bạn xóa, kể cả khi chúng không còn trong Bảng tin của bạn.",
-        "how2": "Xuất sẽ gửi chúng dưới dạng danh sách dễ đọc hoặc dữ liệu đến bất kỳ ứng dụng nào bạn chọn."
-      },
-      "checks": {
-        "title": "Kiểm chứng sự kiện",
-        "what": "Kiểm chứng sự kiện liệt kê các bài viết mà bạn đã nhờ Mera tra cứu kết quả kiểm chứng.",
-        "how1": "Mỗi đánh giá là của chính tổ chức kiểm chứng thông tin, hiển thị đúng như họ đã công bố.",
-        "how2": "Kiểm chứng được lưu trên điện thoại này. Xóa một mục chỉ xóa nó ở đây."
-      },
-      "visited": {
-        "title": "Lịch sử",
-        "what": "Lịch sử liệt kê các nguồn mà bạn đã mở từ Mera trong 30 ngày qua, nguồn bạn mở nhiều nhất được xếp lên đầu.",
-        "how1": "Chỉ những bài bạn mở trên trang của nhà xuất bản mới được tính. Đọc trong Mera thì không được liệt kê.",
-        "how2": "Chạm vào một nguồn để đăng ký hoặc ủng hộ, hoặc để xem bạn đã đọc gì ở đó.",
-        "privacy": "Danh sách này ở lại trên điện thoại này. Mỗi lượt ghé bị xóa sau 30 ngày."
-      },
-      "stats": {
-        "title": "Thống kê hoạt động thế nào",
-        "what": "Số liệu của bạn biến 30 ngày đọc gần nhất thành hình ảnh mà bạn có thể chia sẻ.",
-        "how1": "Các thẻ chỉ dùng những gì điện thoại này vốn đã lưu để chạy Mera: các trang bạn đã mở, và những gì bạn đã lưu hoặc theo dõi. Không ghi lại thêm gì cả.",
-        "how2": "Tên nguồn chỉ hiện nếu bạn chọn Mở nhiều nhất. Tiêu đề bài viết thì không bao giờ hiện."
-      }
-    },
     "history": {
       "colLastRead": "Lần đọc gần nhất",
       "colPublication": "Nguồn",
@@ -2849,12 +2822,6 @@
       "title": "Hồ sơ của bạn",
       "topicCount_one": "{{count}} chủ đề",
       "topicCount_other": "{{count}} chủ đề"
-    },
-    "explainer": {
-      "title": "Hồ sơ của bạn",
-      "what": "Mọi thứ Mera dùng để chọn tin cho bạn: dữ kiện, địa điểm và cách bạn thiết lập nguồn tin.",
-      "how1": "Thay đổi bất cứ điều gì ở đây, hoặc nói với Mera bằng nút Mera. Mọi thay đổi đều được liệt kê và có thể hoàn tác.",
-      "privacy": "Các lượt tìm kiếm tạo từ thông tin của bạn không bao giờ gắn với tài khoản của bạn. Máy chủ chỉ giữ nội dung tìm kiếm, chia sẻ ẩn danh giữa mọi người dùng, và xóa nó sau 14 ngày không dùng."
     },
     "sources": {
       "title": "Nguồn",
@@ -2982,18 +2949,6 @@
     "stories": {
       "p1": "Các câu chuyện bạn chọn theo dõi. Mỗi câu chuyện tiếp tục nhận bài viết mới khi nó phát triển, và cho thấy những gì mới kể từ lần cuối bạn xem.",
       "p2": "Theo dõi một câu chuyện từ nút Mera hoặc từ một bài viết. Bạn có thể ngừng theo dõi ở đây bất cứ lúc nào."
-    },
-    "settings": {
-      "title": "Cài đặt",
-      "p1": "Chọn cách Mera hoạt động trên điện thoại này: ngôn ngữ, hiển thị, thông báo và khóa ứng dụng.",
-      "p2": "Mera Protocol quyết định nơi AI của Mera chạy: trên điện thoại này hoặc trên đám mây riêng của Mera. Bản sao lưu và xuất dữ liệu nằm trong mục Dữ liệu của bạn.",
-      "p3": "Trợ giúp, đăng nhập và các trang pháp lý nằm ở cuối trang."
-    },
-    "notifications": {
-      "title": "Thông báo",
-      "p1": "Mọi việc cần bạn chú ý sẽ hiện ở đây, chẳng hạn như dọn dẹp hồ sơ hoặc câu hỏi từ Mera.",
-      "p2": "Chạm vào một thông báo để mở. Mở trang này sẽ đánh dấu tất cả là đã đọc.",
-      "p3": "Thông báo được lưu trên điện thoại này và bị xóa sau 90 ngày. Chọn thông báo nào hiện trên màn hình khóa trong Cài đặt thông báo."
     }
   },
   "gate": {

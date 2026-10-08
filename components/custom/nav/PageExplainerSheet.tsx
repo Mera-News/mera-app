@@ -1,6 +1,6 @@
 // A page's explainer: the help card (HelpModal) the ? in the tab header
-// opens. The page's paragraphs, then Learn more (outlined, opens the tutorial chapter;
-// absent when the page names none) and Got it (filled orange). Got it, the X, a scrim tap or Back closes it.
+// opens. The page's paragraphs, then Learn more (outlined, opens the tutorial chapter)
+// and Got it (filled orange). Got it, the X, a scrim tap or Back closes it.
 //
 // The surface, title, X, scrim and fade are HelpModal's; this file is only
 // the content. A card opened from inside a tab survives a tab switch, so its
@@ -41,7 +41,7 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
   const onClosed = () => {
     if (!wantsTutorial.current) return;
     wantsTutorial.current = false;
-    if (shown.chapter) openTutorial(shown.chapter, shown.slide);
+    openTutorial(shown.chapter, shown.slide);
   };
 
   return (
@@ -61,18 +61,16 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
           ))}
         </View>
         <View style={styles.actions}>
-          {shown.chapter ? (
-            <Pressable
-              onPress={learnMore}
-              accessibilityRole="button"
-              style={[styles.button, styles.outlined, { borderColor: colors.helpRing }]}
-              testID="page-explainer-learn-more"
-            >
-              <Text size="md" bold style={{ color: colors.ink }}>
-                {t('nav.learnMore')}
-              </Text>
-            </Pressable>
-          ) : null}
+          <Pressable
+            onPress={learnMore}
+            accessibilityRole="button"
+            style={[styles.button, styles.outlined, { borderColor: colors.helpRing }]}
+            testID="page-explainer-learn-more"
+          >
+            <Text size="md" bold style={{ color: colors.ink }}>
+              {t('nav.learnMore')}
+            </Text>
+          </Pressable>
           <Pressable
             onPress={onClose}
             accessibilityRole="button"

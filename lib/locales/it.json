@@ -2793,33 +2793,6 @@
       "freshLineDays_one": "metà di ciò che hai aperto aveva meno di {{count}} giorno",
       "freshLineDays_other": "metà di ciò che hai aperto aveva meno di {{count}} giorni"
     },
-    "explainer": {
-      "saved": {
-        "title": "Salvati",
-        "what": "Tocca il segnalibro su un articolo per tenerlo qui.",
-        "how1": "Gli articoli salvati restano su questo telefono finché non li rimuovi, anche dopo che hanno lasciato il tuo Feed.",
-        "how2": "Esporta li invia come elenco leggibile o come dati a qualsiasi app tu scelga."
-      },
-      "checks": {
-        "title": "Verifiche dei fatti",
-        "what": "Verifiche dei fatti elenca gli articoli per cui hai chiesto a Mera di cercare verifiche.",
-        "how1": "Ogni valutazione è quella dell'organizzazione di fact-checking, mostrata come l'ha pubblicata.",
-        "how2": "Le verifiche restano su questo telefono. Eliminarne una la rimuove solo da qui."
-      },
-      "visited": {
-        "title": "Cronologia",
-        "what": "Cronologia elenca le pubblicazioni i cui siti hai aperto da Mera negli ultimi 30 giorni, quella che apri di più in cima.",
-        "how1": "Contano solo gli articoli che apri sul sito della testata. Leggere dentro Mera non viene elencato.",
-        "how2": "Tocca una pubblicazione per abbonarti o sostenerla, o per vedere cosa hai letto lì.",
-        "privacy": "Questo elenco resta su questo telefono. Ogni visita viene eliminata dopo 30 giorni."
-      },
-      "stats": {
-        "title": "Come funzionano le Statistiche",
-        "what": "Le tue statistiche trasformano gli ultimi 30 giorni di lettura in immagini da condividere.",
-        "how1": "Le schede usano ciò che questo telefono già conserva per far funzionare Mera: i siti che hai aperto e quello che hai salvato o segui. Non viene registrato nulla in più.",
-        "how2": "I nomi delle pubblicazioni compaiono solo se scegli Più aperti. I titoli degli articoli non compaiono mai."
-      }
-    },
     "history": {
       "colLastRead": "Ultima lettura",
       "colPublication": "Pubblicazione",
@@ -2849,12 +2822,6 @@
       "title": "Il tuo profilo",
       "topicCount_one": "{{count}} argomento",
       "topicCount_other": "{{count}} argomenti"
-    },
-    "explainer": {
-      "title": "Il tuo profilo",
-      "what": "Tutto ciò che Mera usa per scegliere le tue notizie: i tuoi fatti, i tuoi luoghi e come imposti le tue fonti.",
-      "how1": "Cambia qualsiasi cosa qui, oppure dillo a Mera con il pulsante Mera. Ogni modifica è elencata e può essere annullata.",
-      "privacy": "Le ricerche create dai tuoi fatti non sono mai collegate al tuo account. Il server conserva solo il testo della ricerca, condiviso in modo anonimo tra tutti gli utenti, e lo elimina dopo 14 giorni senza utilizzo."
     },
     "sources": {
       "title": "Fonti",
@@ -2984,18 +2951,6 @@
     "stories": {
       "p1": "Storie che hai scelto di seguire. Ognuna continua a raccogliere nuovi articoli man mano che si sviluppa e mostra cosa c'è di nuovo dall'ultima volta che l'hai guardata.",
       "p2": "Segui una storia dal pulsante Mera o da un articolo. Puoi smettere di seguirla qui in qualsiasi momento."
-    },
-    "settings": {
-      "title": "Impostazioni",
-      "p1": "Scegli come funziona Mera su questo telefono: lingua, visualizzazione, notifiche e blocco app.",
-      "p2": "Mera Protocol stabilisce dove viene eseguita l'IA di Mera, su questo telefono o nel cloud privato di Mera. Backup ed esportazioni si trovano sotto I tuoi dati.",
-      "p3": "Aiuto, accesso e pagine legali sono in fondo."
-    },
-    "notifications": {
-      "title": "Notifiche",
-      "p1": "Qui compare tutto ciò che richiede la tua attenzione, come la pulizia del profilo o una domanda di Mera.",
-      "p2": "Tocca una notifica per aprirla. Aprire questa pagina segna tutto come letto.",
-      "p3": "Restano su questo telefono e vengono eliminate dopo 90 giorni. Scegli cosa arriva sulla schermata di blocco in Impostazioni delle notifiche."
     }
   },
   "gate": {

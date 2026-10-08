@@ -2793,33 +2793,6 @@
       "freshLineDays_one": "de helft van wat je opende was minder dan {{count}} dag oud",
       "freshLineDays_other": "de helft van wat je opende was minder dan {{count}} dagen oud"
     },
-    "explainer": {
-      "saved": {
-        "title": "Opgeslagen",
-        "what": "Tik op het bladwijzertje bij een artikel om het hier te bewaren.",
-        "how1": "Opgeslagen artikelen blijven op deze telefoon tot je ze verwijdert, ook als ze uit je Feed verdwijnen.",
-        "how2": "Exporteren stuurt ze als leesbare lijst of als gegevens naar een app naar keuze."
-      },
-      "checks": {
-        "title": "Feitencontroles",
-        "what": "Feitencontroles toont de artikelen waarvoor je Mera feitencontroles hebt laten zoeken.",
-        "how1": "Elke beoordeling is van de factcheckorganisatie zelf, getoond zoals zij die publiceerde.",
-        "how2": "Controles blijven op deze telefoon. Een controle verwijderen haalt hem alleen hier weg."
-      },
-      "visited": {
-        "title": "Geschiedenis",
-        "what": "Geschiedenis toont de publicaties waarvan je de sites in de afgelopen 30 dagen vanuit Mera hebt geopend, met de publicatie die je het vaakst opent bovenaan.",
-        "how1": "Alleen artikelen die je op de site van de uitgever opent tellen mee. Lezen in Mera staat er niet bij.",
-        "how2": "Tik erop om het te steunen of je erop te abonneren, of om te zien wat je daar hebt gelezen.",
-        "privacy": "Deze lijst blijft op deze telefoon. Elk bezoek wordt na 30 dagen verwijderd."
-      },
-      "stats": {
-        "title": "Hoe Statistieken werkt",
-        "what": "Je statistieken zetten het lezen van de afgelopen 30 dagen om in afbeeldingen die je kunt delen.",
-        "how1": "De kaarten gebruiken wat deze telefoon al bewaart om Mera te laten werken: de sites die je opende en wat je opsloeg of volgt. Er wordt niets extra vastgelegd.",
-        "how2": "Namen van publicaties verschijnen alleen als je Meest geopend kiest. Artikeltitels nooit."
-      }
-    },
     "history": {
       "colLastRead": "Laatst gelezen",
       "colPublication": "Publicatie",
@@ -2849,12 +2822,6 @@
       "title": "Je profiel",
       "topicCount_one": "{{count}} onderwerp",
       "topicCount_other": "{{count}} onderwerpen"
-    },
-    "explainer": {
-      "title": "Je profiel",
-      "what": "Alles wat Mera gebruikt om je nieuws te kiezen: je feiten, je plaatsen en hoe je je bronnen instelt.",
-      "how1": "Wijzig hier alles, of vertel het Mera met de Mera-knop. Elke wijziging staat in de lijst en kan ongedaan worden gemaakt.",
-      "privacy": "De zoekopdrachten die uit je feiten voortkomen worden nooit aan je account gekoppeld. De server bewaart alleen de zoektekst, anoniem gedeeld door alle gebruikers, en verwijdert die na 14 dagen zonder gebruik."
     },
     "sources": {
       "title": "Bronnen",
@@ -2984,18 +2951,6 @@
     "stories": {
       "p1": "Verhalen die je hebt gekozen om te volgen. Elk verzamelt nieuwe artikelen naarmate het zich ontwikkelt, en laat zien wat er nieuw is sinds je het voor het laatst bekeek.",
       "p2": "Volg een verhaal via de Mera-knop of vanuit een artikel. Je kunt hier op elk moment stoppen met volgen."
-    },
-    "settings": {
-      "title": "Instellingen",
-      "p1": "Bepaal hoe Mera op deze telefoon werkt: taal, weergave, meldingen en app-vergrendeling.",
-      "p2": "Met Mera Protocol bepaal je waar de AI van Mera draait: op deze telefoon of in de privécloud van Mera. Back-ups en exports vind je onder Je gegevens.",
-      "p3": "Hulp, inloggen en de juridische pagina's staan onderaan."
-    },
-    "notifications": {
-      "title": "Meldingen",
-      "p1": "Alles wat jouw aandacht nodig heeft, verschijnt hier, zoals een opschoning van je profiel of een vraag van Mera.",
-      "p2": "Tik op een melding om die te openen. Als je deze pagina opent, worden alle meldingen als gelezen gemarkeerd.",
-      "p3": "Ze blijven op deze telefoon en worden na 90 dagen verwijderd. Kies wat op je vergrendelscherm komt via Meldingsinstellingen."
     }
   },
   "gate": {

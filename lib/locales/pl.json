@@ -2853,33 +2853,6 @@
       "freshLineDays_many": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dni",
       "freshLineDays_other": "połowa tego, co otworzyłeś, miała mniej niż {{count}} dni"
     },
-    "explainer": {
-      "saved": {
-        "title": "Zapisane",
-        "what": "Stuknij zakładkę przy dowolnym artykule, aby zostawił go tutaj.",
-        "how1": "Zapisane artykuły zostają na tym telefonie, dopóki ich nie usuniesz, nawet gdy znikną z Twojego Feedu.",
-        "how2": "Eksport wysyła je jako czytelną listę lub jako dane do wybranej aplikacji."
-      },
-      "checks": {
-        "title": "Weryfikacje faktów",
-        "what": "Weryfikacje faktów zawiera artykuły, dla których poprosiłeś Mera o sprawdzenie faktów u weryfikatorów.",
-        "how1": "Każda ocena pochodzi od samej organizacji weryfikującej fakty i jest pokazana tak, jak ją opublikowała.",
-        "how2": "Sprawdzenia zostają na tym telefonie. Usunięcie jednego usuwa je tylko tutaj."
-      },
-      "visited": {
-        "title": "Historia",
-        "what": "Historia zawiera wydawców, których strony otworzyłeś z Mera w ciągu ostatnich 30 dni. Najczęściej otwierany jest pierwszy.",
-        "how1": "Liczą się tylko artykuły otwarte na stronie wydawcy. Czytanie w Merze nie jest wliczane.",
-        "how2": "Stuknij jedno, aby je wspierać lub subskrybować, albo zobaczyć, co tam czytałeś.",
-        "privacy": "Ta lista zostaje na tym telefonie. Każda wizyta jest usuwana po 30 dniach."
-      },
-      "stats": {
-        "title": "Jak działają Statystyki",
-        "what": "Twoje statystyki zamieniają czytanie z ostatnich 30 dni w obrazy, które możesz udostępnić.",
-        "how1": "Karty korzystają z tego, co ten telefon już przechowuje, aby Mera działała: otwartych stron oraz tego, co zapisałeś lub śledzisz. Nic dodatkowego nie jest zapisywane.",
-        "how2": "Nazwy wydawców pojawiają się tylko wtedy, gdy wybierzesz Najczęściej otwierane. Tytuły artykułów nigdy."
-      }
-    },
     "history": {
       "colLastRead": "Ostatnio czytane",
       "colPublication": "Wydawca",
@@ -2913,12 +2886,6 @@
       "topicCount_few": "{{count}} tematy",
       "topicCount_many": "{{count}} tematów",
       "topicCount_other": "{{count}} tematów"
-    },
-    "explainer": {
-      "title": "Twój profil",
-      "what": "Wszystko, czego Mera używa do wyboru wiadomości: Twoje fakty, miejsca i sposób ustawienia źródeł.",
-      "how1": "Zmień cokolwiek tutaj albo powiedz Mera przyciskiem Mera. Każda zmiana jest zapisana na liście i można ją cofnąć.",
-      "privacy": "Wyszukiwania tworzone z Twoich faktów nigdy nie są powiązane z Twoim kontem. Serwer przechowuje tylko tekst wyszukiwania, anonimowo współdzielony przez wszystkich użytkowników, i usuwa go po 14 dniach bez użycia."
     },
     "sources": {
       "title": "Źródła",
@@ -3052,18 +3019,6 @@
     "stories": {
       "p1": "Historie, które wybrałeś do obserwowania. Każda dalej zbiera nowe artykuły w miarę rozwoju i pokazuje, co nowego pojawiło się od Twojej ostatniej wizyty.",
       "p2": "Obserwuj historię z przycisku Mera albo z artykułu. Przestań ją obserwować tutaj w dowolnym momencie."
-    },
-    "settings": {
-      "title": "Ustawienia",
-      "p1": "Wybierz, jak Mera działa na tym telefonie: język, wyświetlanie, powiadomienia i blokadę aplikacji.",
-      "p2": "Mera Protocol określa, gdzie działa AI Mery: na tym telefonie czy w prywatnej chmurze Mery. Kopie zapasowe i eksporty są w sekcji Twoje dane.",
-      "p3": "Pomoc, logowanie i strony prawne są na dole."
-    },
-    "notifications": {
-      "title": "Powiadomienia",
-      "p1": "Wszystko, co wymaga twojej uwagi, pojawia się tutaj, na przykład porządki w profilu czy pytanie od Mery.",
-      "p2": "Stuknij powiadomienie, by je otworzyć. Otwarcie tej strony oznacza wszystko jako przeczytane.",
-      "p3": "Zostają na tym telefonie i są usuwane po 90 dniach. Co pojawia się na ekranie blokady, wybierzesz w Ustawieniach powiadomień."
     }
   },
   "gate": {

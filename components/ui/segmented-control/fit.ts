@@ -1,7 +1,9 @@
-// The header track's label rule (owner): every option shows its icon; every
-// label shows when they ALL fit the space the header gives the track, else
-// only the selected option's. The track never scrolls. Measured widths in,
-// a decision out, so the rule is tested without a renderer.
+// The header track's label rule (owner), measured widths in, a mode out, so
+// it is tested without a renderer. The track never scrolls.
+//  - `names`: names only, no icons (Library, You: when every NAME fits).
+//  - `full`: icon and name on every option (Feed: when they all fit).
+//  - `compact`: icons, and only the selected option's name. What any track
+//    falls back to: long locales, large text sizes.
 
 export interface HeaderTrackMetrics {
   /** An option's padding on each side. */
@@ -20,10 +22,16 @@ export interface HeaderTrackMetrics {
  *  track's 3pt padding and 1pt border on each side. */
 export const HEADER_METRICS: HeaderTrackMetrics = { pad: 14, icon: 15, gap: 7, dot: 8, chrome: 8 };
 
-/** One option's width: icon only (`labelWidth` null), or icon and label. */
-export function headerOptionWidth(labelWidth: number | null, hasDot: boolean, m: HeaderTrackMetrics): number {
-  let w = 2 * m.pad + m.icon;
-  if (labelWidth !== null) w += m.gap + labelWidth;
+/** One option's width: icon only (`labelWidth` null), or icon and label;
+ *  `icon` false: the name alone. */
+export function headerOptionWidth(
+  labelWidth: number | null,
+  hasDot: boolean,
+  m: HeaderTrackMetrics,
+  icon: boolean = true,
+): number {
+  let w = 2 * m.pad + (icon ? m.icon : 0);
+  if (labelWidth !== null) w += (icon ? m.gap : 0) + labelWidth;
   if (hasDot) w += m.gap + m.dot;
   return w;
 }
@@ -37,18 +45,38 @@ export function allHeaderLabelsFit(
   dots: readonly boolean[],
   available: number | null,
   m: HeaderTrackMetrics,
+  icons: boolean = true,
 ): boolean | null {
   if (available === null || available <= 0) return null;
   let total = m.chrome;
   for (let i = 0; i < labelWidths.length; i++) {
     const w = labelWidths[i];
     if (w === undefined) return null;
-    total += headerOptionWidth(w, dots[i] ?? false, m);
+    total += headerOptionWidth(w, dots[i] ?? false, m, icons);
   }
   return total <= available;
 }
 
-/** All labels when they all fit; otherwise only the selected option's. */
-export function headerLabelShown(selected: boolean, allFit: boolean | null): boolean {
-  return selected || allFit === true;
+export type HeaderTrackMode = 'names' | 'full' | 'compact';
+
+/**
+ * The track's mode. `namesFirst` (Library, You): names alone when they all
+ * fit, else compact. Otherwise (Feed): icons and names when they all fit,
+ * else compact. Compact until everything is measured.
+ */
+export function headerTrackMode(
+  labelWidths: readonly (number | undefined)[],
+  dots: readonly boolean[],
+  available: number | null,
+  m: HeaderTrackMetrics,
+  namesFirst: boolean,
+): HeaderTrackMode {
+  const fits = allHeaderLabelsFit(labelWidths, dots, available, m, !namesFirst);
+  if (fits !== true) return 'compact';
+  return namesFirst ? 'names' : 'full';
+}
+
+/** Whether an option shows its name, and its icon, in `mode`. */
+export function headerOptionParts(selected: boolean, mode: HeaderTrackMode): { label: boolean; icon: boolean } {
+  return { label: selected || mode !== 'compact', icon: mode !== 'names' };
 }
