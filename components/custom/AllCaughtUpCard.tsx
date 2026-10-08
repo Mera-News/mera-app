@@ -1,3 +1,4 @@
+import { useMotionAllowed } from '@/lib/motion-gate';
 import {
     CARDS_USE_GLASS,
     CardGlassPlate,
@@ -25,14 +26,16 @@ const AllCaughtUpCard: React.FC = () => {
     // stay mounted, and a hidden Feed footer re-rendering forever costs a
     // render and a native mount every tick on every other tab.
     const animationsActive = useAnimationsActive();
+    // Lite / Reduce Motion: the first message stays; nothing cycles.
+    const motion = useMotionAllowed();
     useEffect(() => {
-        if (!animationsActive) return;
+        if (!animationsActive || !motion) return;
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) => (prevIndex + 1) % messages.length);
         }, 3000);
 
         return () => clearInterval(interval);
-    }, [messages.length, animationsActive]);
+    }, [messages.length, animationsActive, motion]);
 
     // `px-4` mirrors ArticleCardBase's own content padding, so the
     // text column starts on the same vertical line as every neighbouring card's.

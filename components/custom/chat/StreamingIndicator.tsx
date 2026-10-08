@@ -1,7 +1,6 @@
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -10,12 +9,12 @@ import Animated, {
     Easing,
     makeMutable,
     useAnimatedStyle,
-    useReducedMotion,
     useSharedValue,
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
 import { useColors } from '@/lib/theme/tokens';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 const STREAMING_LABEL_KEYS = [
     'chat.streamingLabels.understanding',
@@ -151,9 +150,8 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     // against gating an in-flight liveness signal on something NARROWER than
     // that; pausing while nobody can see it creates no "hung" impression.
     const animationsActive = useAnimationsActive();
-    const reduceMotion = useReducedMotion();
-    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
-    const moving = animationsActive && !reduceMotion && !liteMode;
+    const motion = useMotionAllowed();
+    const moving = animationsActive && motion;
 
     useEffect(() => {
         if (!moving) return;
@@ -223,7 +221,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
 
     return (
         <View style={streamingIndicatorStyles.container}>
-            <MeraLogo size={48} animated showsProgress />
+            <MeraLogo size={48} animated />
             {labelRow}
         </View>
     );

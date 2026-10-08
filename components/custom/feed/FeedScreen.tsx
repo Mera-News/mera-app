@@ -145,6 +145,7 @@ import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import {
   useForYouLastProcessingRunFinishedAt,
   useForYouSuggestions,
@@ -160,10 +161,8 @@ import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
   useComposedEventHandler,
-  useReducedMotion,
   useSharedValue,
 } from 'react-native-reanimated';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 
 
@@ -336,9 +335,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header, listHeader }) =
   // instant, no stagger, nothing to wait through. Same pair the processing
   // area and the tutorial heroes read, and the same one-liner
   // `AbstractGradientBackdrop` established.
-  const reduceMotion = useReducedMotion();
-  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
-  const arrivalMotion = !reduceMotion && !liteMode;
+  const arrivalMotion = useMotionAllowed();
 
   // The tab's collapsing header (TabPages): this list drives it while active.
   const { scrollHandler, headerHeight, reveal, hidden: headerHidden } = header;

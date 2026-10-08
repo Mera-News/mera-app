@@ -1,6 +1,7 @@
+import { useMotionAllowed } from '@/lib/motion-gate';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
-import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import i18n from '@/lib/i18n';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
@@ -34,7 +35,8 @@ export default function RotatingLanguageHeading({
     style: StyleProp<TextStyle>;
     containerStyle?: StyleProp<ViewStyle>;
 }) {
-    const reduceMotion = useReducedMotion();
+    // Lite or Reduce Motion: the phone's language, still.
+    const motion = useMotionAllowed();
     const active = useAnimationsActive();
     const lines = useMemo(() => {
         const codes = Object.keys(i18n.options.resources ?? {});
@@ -42,7 +44,7 @@ export default function RotatingLanguageHeading({
     }, [phone]);
     const [index, setIndex] = useState(0);
     const [heights, setHeights] = useState<Record<string, number>>({});
-    const rotating = active && !reduceMotion && lines.length > 1;
+    const rotating = active && motion && lines.length > 1;
 
     useEffect(() => {
         if (!rotating) {

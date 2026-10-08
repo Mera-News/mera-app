@@ -4,13 +4,12 @@ import Animated, {
     Easing,
     cancelAnimation,
     useAnimatedStyle,
-    useReducedMotion,
     useSharedValue,
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useColors } from '@/lib/theme/tokens';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 /** One full sweep, left edge to past the right edge. */
 const SWEEP_MS = 1400;
@@ -42,8 +41,7 @@ export interface IndeterminateBarProps {
  */
 export default function IndeterminateBar({ width, height = 3, color, testID }: IndeterminateBarProps) {
     const c = useColors();
-    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
-    const reduceMotion = useReducedMotion() || liteMode;
+    const reduceMotion = !useMotionAllowed();
     const segment = Math.round(width * SEGMENT_SHARE);
     const restX = Math.round((width - segment) / 2);
     const x = useSharedValue(reduceMotion ? restX : -segment);

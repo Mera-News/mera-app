@@ -39,6 +39,16 @@ function systemReduceMotion(): boolean {
     return (globalThis as { _REANIMATED_IS_REDUCED_MOTION?: boolean })._REANIMATED_IS_REDUCED_MOTION === true;
 }
 
+/**
+ * Whether a loop runs: someone is looking (`useAnimationsActive`), motion is
+ * allowed, and the caller has not asked for a still frame. A loop that shows
+ * work in progress is no exception: Lite = no motion, and a text line beside
+ * it carries the state.
+ */
+export function loopRuns(onScreen: boolean, motionAllowed: boolean, still = false): boolean {
+    return onScreen && motionAllowed && !still;
+}
+
 /** The gate outside React (an imperative call, a module-level helper). */
 export function motionAllowed(): boolean {
     return isMotionAllowed(useDisplayPrefsStore.getState().liteMode, systemReduceMotion());

@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import type { MaterialIconName } from '@/lib/tutorials/types';
 import {
     SCENE_HEIGHT,
@@ -38,7 +39,10 @@ const DOTS = 5;
 const OrbitPlaceholder: React.FC<{ readonly name: MaterialIconName }> = ({ name }) => {
     const styles = useStyles();
     const spin = useSharedValue(0);
-    const active = useAnimationsActive();
+    // Off screen, Lite or Reduce Motion: the placeholder holds a still frame.
+    const focusedAndFront = useAnimationsActive();
+    const motion = useMotionAllowed();
+    const active = focusedAndFront && motion;
 
     useEffect(() => {
         if (!active) {

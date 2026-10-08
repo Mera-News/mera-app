@@ -23,8 +23,8 @@
 //
 // ## Two gates, and they are different questions
 //
-// `useReducedMotion()` is the accessibility setting: someone who asked for
-// less motion did not mean "except in text", so the pool stops rotating. The
+// `useMotionAllowed()` is Reduce Motion or Lite: someone who asked for less
+// motion did not mean "except in text", so the pool stops rotating. The
 // phase itself still changes, because that is state, not decoration, and it is
 // the same thing the steps box does when it adds a row.
 //
@@ -33,13 +33,13 @@
 // docstring forbids using it to gate a liveness indicator, so it is not used
 // here at all: a paused line on a backgrounded chat reads as a hung request.
 
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { Text } from '@/components/ui/text';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -64,7 +64,8 @@ export const ChatPhaseLine: React.FC<ChatPhaseLineProps> = ({ testID = 'chat-pha
   const { t } = useTranslation();
   const tAny = t as unknown as (key: string, opts?: object) => string | string[];
   const view = useChatPhaseStore((s) => s.view);
-  const reduceMotion = useReducedMotion();
+  // Lite or Reduce Motion: the first phrase holds; nothing rotates.
+  const reduceMotion = !useMotionAllowed();
 
   // THE THREE-STATE READ, and the two "no phase" cases are opposites.
   //

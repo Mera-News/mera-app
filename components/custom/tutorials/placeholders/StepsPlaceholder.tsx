@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import {
     SCENE_HEIGHT,
     TUTORIAL_ACCENT,
@@ -92,7 +93,10 @@ const StepRow: React.FC<{
  */
 const StepsPlaceholder: React.FC<{ readonly labels: readonly string[] }> = ({ labels }) => {
     const styles = useStyles();
-    const active = useAnimationsActive();
+    // Off screen, Lite or Reduce Motion: the placeholder holds a still frame.
+    const focusedAndFront = useAnimationsActive();
+    const motion = useMotionAllowed();
+    const active = focusedAndFront && motion;
     const rows = labels.slice(0, 4);
 
     return (

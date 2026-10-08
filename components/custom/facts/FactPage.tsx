@@ -555,7 +555,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                         accessibilityLabel={t('chatTopics.finding')}
                         style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 8 }}
                     >
-                        <MeraLogo size={26} animated showsProgress />
+                        <MeraLogo size={26} animated />
                         <Text style={{ color: colors.ink2, fontSize: 14 }}>{t('chatTopics.finding')}</Text>
                     </View>
                 ) : (

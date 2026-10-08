@@ -8,7 +8,6 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { MOTION, SPRING } from '@/lib/motion';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { TYPE_SCALE } from '@/lib/typography/scale';
@@ -16,7 +15,8 @@ import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, FadeInUp, FadeOutUp, useReducedMotion, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, FadeOutUp, ZoomIn } from 'react-native-reanimated';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 /**
  * The state of a note that is not there yet, shared by the Feed card and the
@@ -199,8 +199,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
 }) => {
     const { t, i18n } = useTranslation();
     const lineHeight = useNoteLineHeight();
-    const reduceMotion = useReducedMotion();
-    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const motion = useMotionAllowed();
     const note = useNoteInk();
     const pending = !reason ? pendingMode : undefined;
 
@@ -213,8 +212,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     const wordByWord =
         revealing &&
         !revealDone &&
-        !reduceMotion &&
-        !liteMode &&
+        motion &&
         // The note is written in English; a translated app fades it whole.
         (i18n.language ?? 'en').startsWith('en') &&
         !NO_SPACE_SCRIPT.test(reason);

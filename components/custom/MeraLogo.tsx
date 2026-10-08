@@ -6,7 +6,6 @@ import Animated, {
     Easing,
     makeMutable,
     useAnimatedStyle,
-    useReducedMotion,
     withRepeat,
     withSequence,
     withTiming,
@@ -14,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
+import { loopRuns, useMotionAllowed } from '@/lib/motion-gate';
 import { useColors } from '@/lib/theme/tokens';
 
 // The Mera mark. Static callers get ONE Svg, exactly as before. A mark that
@@ -169,7 +168,7 @@ interface LayeredProps {
     color: string;
     cone: boolean;
     cards: boolean;
-    /** Lite mode (and not `showsProgress`): the loops hold still. */
+    /** The caller wants it still (the kit gallery's frozen tile). */
     still: boolean;
 }
 
@@ -177,8 +176,10 @@ interface LayeredProps {
  *  passes `still`); everything else goes through `MeraLogo`. */
 export const LayeredMark: React.FC<LayeredProps> = ({ size, color, cone, cards, still }) => {
     const active = useAnimationsActive();
-    const reduceMotion = useReducedMotion();
-    const moving = active && !still && !reduceMotion;
+    const motion = useMotionAllowed();
+    // Lite = no motion, even while it shows work in progress: a text line
+    // beside it says so.
+    const moving = loopRuns(active, motion, still);
     const angle = useClock(coneClock, -SWEEP_DEG, cone && moving);
     const offset = useClock(cardClock, 0, cards && moving);
 
@@ -246,8 +247,8 @@ interface MeraLogoProps {
     /**
      * The cone sweeps left and right on the shared clock. Default false: one
      * still Svg with no reanimated involvement (every icon, sheet and brand
-     * call site). Holds still while off screen, in Lite mode (unless
-     * `showsProgress`) and under Reduce Motion.
+     * call site). Holds still while off screen, in Lite mode and under
+     * Reduce Motion (useMotionAllowed).
      */
     animated?: boolean;
     /** Ink for every stroke and fill. Default: the theme's ink (white in dark,
@@ -257,12 +258,6 @@ interface MeraLogoProps {
     /** Scroll the background cards right to left on the shared clock (news
      *  passing under the torch). Same gates as `animated`. */
     scrollCards?: boolean;
-    /**
-     * The loop tells the reader work is in progress (a launch gate, a chat
-     * reply streaming), so it keeps moving in Lite mode. Reduce Motion still
-     * stills it: the motion is decoration, the state is told elsewhere.
-     */
-    showsProgress?: boolean;
 }
 
 // The viewBox is tightened to the glyph bounds (hexagon x 279-745 / y 170-854
@@ -273,11 +268,9 @@ const MeraLogo: React.FC<MeraLogoProps> = ({
     animated = false,
     color,
     scrollCards = false,
-    showsProgress = false,
 }) => {
     const colors = useColors();
     const mark = color ?? colors.ink;
-    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
     if (animated || scrollCards) {
         return (
             <LayeredMark
@@ -285,7 +278,7 @@ const MeraLogo: React.FC<MeraLogoProps> = ({
                 color={mark}
                 cone={animated}
                 cards={scrollCards}
-                still={liteMode && !showsProgress}
+                still={false}
             />
         );
     }

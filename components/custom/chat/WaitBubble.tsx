@@ -16,6 +16,7 @@
 // waiting. A hook at the thread's top level would breathe forever behind a
 // settled conversation.
 
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { GLOW_BRIGHT, GLOW_DIM, MessageContent } from '@/components/ui/chat-ai';
 import React, { useEffect } from 'react';
 import Animated, {
@@ -23,7 +24,6 @@ import Animated, {
   Easing,
   interpolateColor,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -41,7 +41,8 @@ export const WaitBubble: React.FC<WaitBubbleProps> = ({
   testID = 'chat-wait-bubble',
   children,
 }) => {
-  const reduceMotion = useReducedMotion();
+  // Lite or Reduce Motion: the outline holds still, at the bright end.
+  const reduceMotion = !useMotionAllowed();
   const glow = useSharedValue(0);
 
   useEffect(() => {

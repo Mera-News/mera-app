@@ -4,7 +4,6 @@ import Animated, {
   Easing,
   makeMutable,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withTiming,
   type SharedValue,
@@ -12,8 +11,8 @@ import Animated, {
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useThemeMode } from '@/lib/theme/tokens';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 /**
  * The app-wide background for the five tab pages: a slowly drifting,
@@ -704,8 +703,7 @@ const LIGHT_FIELD = { opacity: 0.5 } as const;
 
 const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed, frame }) => {
   const light = useThemeMode() === 'light';
-  const reduceMotion = useReducedMotion();
-  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+  const motion = useMotionAllowed();
 
   // OS Reduce Motion, the app's own "Static background" setting
   // (Settings → Display) and Android are the SAME mode: a single static frame,
@@ -721,7 +719,7 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   // consequence is that Settings → Display's "Static background" switch is a
   // no-op on Android, which is why `DisplaySettingsScreen` hides that row
   // there.
-  const isStatic = reduceMotion || liteMode || ANDROID_STATIC_CSS;
+  const isStatic = !motion || ANDROID_STATIC_CSS;
 
   /* ──────────────────────────────────────────────────────────────────────────
    * ONLY THE FOCUSED INSTANCE CROSS-FADES

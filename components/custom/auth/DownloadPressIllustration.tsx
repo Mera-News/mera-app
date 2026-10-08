@@ -4,7 +4,6 @@ import { StyleSheet, View } from 'react-native';
 import Animated, {
     cancelAnimation,
     useAnimatedStyle,
-    useReducedMotion,
     useSharedValue,
     withDelay,
     withRepeat,
@@ -13,8 +12,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { COLORS } from '@/lib/theme/tokens';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 const SIZE = 52;
 /** iOS's download control is a filled blue circle; the light theme's `info`
@@ -32,10 +31,9 @@ const RIPPLE_MS = 700;
  * nobody is looking (backgrounded or off screen).
  */
 export default function DownloadPressIllustration() {
-    const reduceMotion = useReducedMotion();
-    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const motion = useMotionAllowed();
     const active = useAnimationsActive();
-    const moving = active && !reduceMotion && !liteMode;
+    const moving = active && motion;
     const press = useSharedValue(0);
     const ripple = useSharedValue(0);
 

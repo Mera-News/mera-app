@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import {
     BREATH_MS,
     SCENE_HEIGHT,
@@ -76,7 +77,10 @@ const DriftingCard: React.FC<{
  */
 const CardsPlaceholder: React.FC<{ readonly count?: number }> = ({ count = 3 }) => {
     const styles = useStyles();
-    const active = useAnimationsActive();
+    // Off screen, Lite or Reduce Motion: the placeholder holds a still frame.
+    const focusedAndFront = useAnimationsActive();
+    const motion = useMotionAllowed();
+    const active = focusedAndFront && motion;
     // Clamp: the scene block is a fixed height and four cards is already tight.
     const total = Math.max(1, Math.min(4, count));
 

@@ -21,7 +21,6 @@ import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticLight } from '@/lib/haptics';
-import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { tint } from '@/lib/theme/tint';
 import { useColors, useThemeMode, type ThemeColors, type ThemeMode } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -41,7 +40,6 @@ import Animated, {
   interpolateColor,
   runOnJS,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -65,6 +63,7 @@ import { setArrangeOpen } from './current-surface';
 import { alpha2OfPage, type PageId } from './page-registry';
 import { flagEmoji } from './PageStrip';
 import type { ArrangeConfig, PagePill } from './types';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 const GLOW_PERIOD_MS = 1600;
 /** Constant: the glow animates colour only, never width. */
@@ -257,9 +256,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
   const ink = useMemo(() => inks(colors, mode), [colors, mode]);
   const insets = useSafeAreaInsets();
   const rtl = I18nManager.isRTL;
-  const reduceMotion = useReducedMotion();
-  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
-  const still = reduceMotion || liteMode;
+  const still = !useMotionAllowed();
 
   const [state, setState] = useState<ArrangeState>(() => initialArrange(pages.map((p) => p.id)));
   const [query, setQuery] = useState('');

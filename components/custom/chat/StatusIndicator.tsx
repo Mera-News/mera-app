@@ -76,7 +76,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
     <View style={styles.row}>
       <View style={[styles.glyph, { width: glyph, height: glyph }]}>
         {status === 'pending' && live ? (
-          <MeraLogo size={glyph} color={colors.ink} animated showsProgress />
+          <MeraLogo size={glyph} color={colors.ink} animated />
         ) : status === 'pending' ? (
           // Not an element of its own: the state word is in the label beside it.
           <ActivityIndicator
