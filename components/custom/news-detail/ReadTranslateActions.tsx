@@ -1,4 +1,5 @@
 import AboutTranslationModal from '@/components/custom/news-detail/AboutTranslationModal';
+import { markHelpOrigin } from '@/components/ui/help-modal';
 import { Text } from '@/components/ui/text';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useColors } from '@/lib/theme/tokens';
@@ -185,7 +186,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                             testID="detail-about-translation"
                             accessibilityRole="button"
                             accessibilityLabel={t('articleDetail.aboutTranslation')}
-                            onPress={() => setAboutOpen(true)}
+                            onPress={(e) => { markHelpOrigin(e.currentTarget); setAboutOpen(true); }}
                             style={StyleSheet.absoluteFill}
                         />
                     </View>
