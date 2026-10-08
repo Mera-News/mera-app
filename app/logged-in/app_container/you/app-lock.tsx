@@ -6,13 +6,15 @@ import TabStackScreen from '@/components/custom/nav/TabStackScreen';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
+import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
 
 export default function AppLockRoute() {
+  const bottomInset = useTabContentBottomInset();
   const { t } = useTranslation();
   return (
     <TabStackScreen surface="settings:app-lock" backdrop testID="app-lock-screen">
       <DrillDownHeader title={t('you.settings.appLock')} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottomInset }}>
         <SecuritySettingsSection />
       </ScrollView>
     </TabStackScreen>

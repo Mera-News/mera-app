@@ -7,6 +7,9 @@ import {
   meraButtonBottom,
   tabBarClearance,
   foldTabBarTop,
+  TAB_CONTENT_END_GAP,
+  tabBarOverlap,
+  tabContentBottomInset,
   tabBarTopFromBottom,
 } from '../tab-bar';
 
@@ -93,5 +96,20 @@ describe('foldTabBarTop', () => {
   it('starts over when the window changes size', () => {
     const s = foldTabBarTop(foldTabBarTop(empty, 83, 844), 40, 390);
     expect(s).toEqual({ top: 40, windowHeight: 390 });
+  });
+});
+
+describe('tabBarOverlap and tabContentBottomInset', () => {
+  it('never lets an iOS page end under the measured bar, even on the early inset', () => {
+    // The tab's safe area has not landed yet (34), the tabs measured the bar (83).
+    expect(tabBarOverlap('ios', 34, 83)).toBe(83);
+    expect(tabBarOverlap('ios', 83, 83)).toBe(83);
+    expect(tabBarOverlap('ios', 34, null)).toBe(34);
+    expect(tabContentBottomInset('ios', 34, 83)).toBe(83 + TAB_CONTENT_END_GAP);
+  });
+
+  it('adds only the gap on Android, where the content already ends at the bar', () => {
+    expect(tabBarOverlap('android', 24, 104)).toBe(0);
+    expect(tabContentBottomInset('android', 24, 104)).toBe(TAB_CONTENT_END_GAP);
   });
 });

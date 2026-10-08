@@ -48,10 +48,35 @@ export function tabBarClearance(os: string, insetsBottom: number): number {
   return insetsBottom;
 }
 
-/** `tabBarClearance` for the current platform and the current tab's insets. */
+/**
+ * How much of a tab screen the bar covers at its bottom, the root of every
+ * page's bottom space: `tabBarClearance`, but on iOS never less than the bar
+ * the tabs MEASURED (the folded store). A tab's own safe area, which holds
+ * the bar, lands after its first layout; a screen that read only the early
+ * inset (or hard-coded a number) put its last row behind the floating bar.
+ */
+export function tabBarOverlap(os: string, insetsBottom: number, measuredBarTop: number | null): number {
+  if (os === 'android') return 0;
+  return Math.max(insetsBottom, measuredBarTop ?? 0);
+}
+
+/** `tabBarOverlap` for the current platform and tab. */
 export function useTabBarClearance(): number {
   const insets = useSafeAreaInsets();
-  return tabBarClearance(Platform.OS, insets.bottom);
+  return tabBarOverlap(Platform.OS, insets.bottom, useTabBarTop());
+}
+
+/** Clear space between a page's last element and the tab bar. */
+export const TAB_CONTENT_END_GAP = 16;
+
+/** A scrolling page's bottom padding inside a tab (tab pages that keep the
+ *  Mera button clear use `useListEndClearance` instead). */
+export function tabContentBottomInset(os: string, insetsBottom: number, measuredBarTop: number | null): number {
+  return tabBarOverlap(os, insetsBottom, measuredBarTop) + TAB_CONTENT_END_GAP;
+}
+
+export function useTabContentBottomInset(): number {
+  return useTabBarClearance() + TAB_CONTENT_END_GAP;
 }
 
 /** The Mera button's diameter (one app-wide button, mounted in app/logged-in/_layout). */
@@ -74,10 +99,9 @@ export function listEndClearance(os: string, insetsBottom: number): number {
   return tabBarClearance(os, insetsBottom) + LIST_END_RESERVE;
 }
 
-/** `listEndClearance` for the current platform and tab insets. */
+/** `listEndClearance`, on the measured overlap (`useTabBarClearance`). */
 export function useListEndClearance(): number {
-  const insets = useSafeAreaInsets();
-  return listEndClearance(Platform.OS, insets.bottom);
+  return useTabBarClearance() + LIST_END_RESERVE;
 }
 
 /** The Mera button's bottom offset inside a tab (its parent ends where the
@@ -87,8 +111,7 @@ export function meraButtonBottom(os: string, insetsBottom: number): number {
 }
 
 export function useMeraButtonBottom(): number {
-  const insets = useSafeAreaInsets();
-  return meraButtonBottom(Platform.OS, insets.bottom);
+  return useTabBarClearance() + MERA_BUTTON_BAR_GAP;
 }
 
 /**

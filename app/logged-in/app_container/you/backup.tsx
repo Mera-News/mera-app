@@ -6,8 +6,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
+import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
 
 export default function BackupRoute() {
+  const bottomInset = useTabContentBottomInset();
   const { t } = useTranslation();
   const { restore } = useLocalSearchParams<{ restore?: string }>();
   // Latched on FIRST read: the param stays on the route, and cancelling out
@@ -16,7 +18,7 @@ export default function BackupRoute() {
   return (
     <TabStackScreen surface="settings:backup" backdrop testID="backup-screen">
       <DrillDownHeader title={t('backup.title')} onBack={() => router.back()} />
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 48 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottomInset }}>
         <BackupSection autoOpenRecover={autoOpenRecover} />
       </ScrollView>
     </TabStackScreen>

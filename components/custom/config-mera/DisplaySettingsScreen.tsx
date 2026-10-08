@@ -23,6 +23,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
 
 /** Index-aligned with `TEXT_SCALE_STEPS` / `TEXT_SCALE_LABEL_KEYS`, written out
  *  so the keys stay greppable. Settings shows the active one as Display's value. */
@@ -45,6 +46,7 @@ const DisplaySettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   const { t } = useTranslation();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const bottomInset = useTabContentBottomInset();
 
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
   const setPerformanceOverride = useDisplayPrefsStore((s) => s.setPerformanceOverride);
@@ -73,7 +75,7 @@ const DisplaySettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: insets.bottom + 32 }}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: bottomInset }}
         >
           <GroupLabel>{t('display.sectionText')}</GroupLabel>
           <Group>

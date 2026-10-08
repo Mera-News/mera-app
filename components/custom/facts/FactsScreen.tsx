@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 import { openFactPage } from './open-fact-page';
 import { sentenceCase } from './sentence-case';
+import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
 
 const FactRow: React.FC<{ readonly fact: Fact }> = ({ fact }) => {
     const { t } = useTranslation();
@@ -38,6 +39,7 @@ const FactRow: React.FC<{ readonly fact: Fact }> = ({ fact }) => {
  * things down live). Add a fact opens the Mera chat.
  */
 const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
+    const bottomInset = useTabContentBottomInset();
     const { t } = useTranslation();
     const colors = useColors();
     const facts = useHubFacts();
@@ -64,7 +66,7 @@ const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
                     onScroll={notifyScrollTick}
                     onContentSizeChange={notifyScrollTick}
                     scrollEventThrottle={16}
-                    contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 120, gap: 14 }}
+                    contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottomInset, gap: 14 }}
                 >
                     <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginHorizontal: 4 }}>
                         {t('facts.screenSubtitle')}

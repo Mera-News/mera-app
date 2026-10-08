@@ -60,6 +60,7 @@ import {
     loadBgRefreshToggle,
     saveBgRefreshToggle,
 } from '@/lib/background/bg-refresh-ui';
+import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
 
 interface MeraProtocolSettingsScreenProps {
     onBack?: () => void;
@@ -68,6 +69,7 @@ interface MeraProtocolSettingsScreenProps {
 const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     onBack,
 }) => {
+    const bottomInset = useTabContentBottomInset();
     const { t } = useTranslation();
     const colors = useColors();
     const [isLoading, setIsLoading] = useState(true);
@@ -969,7 +971,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
                 </Box>
 
-                <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+                <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: bottomInset }}>
                     {renderContent()}
                 </ScrollView>
 
