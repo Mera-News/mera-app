@@ -3,22 +3,16 @@ import WhatMeraKeepsCard from '@/components/custom/config-mera/WhatMeraKeepsCard
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
 import { Spinner } from '@/components/ui/spinner';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import { backupCadence, backupProviderId } from '@/lib/backup/backup-settings';
 import database from '@/lib/database';
 import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
-import { clearDeviceAuthCredentials } from '@/lib/device-auth';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { showDialog } from '@/lib/dialog';
-import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import * as scoringPipeline from '@/lib/services/scoring-pipeline';
-import { clearAllStores, useForYouStore } from '@/lib/stores';
+import { useForYouStore } from '@/lib/stores';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
-import { useUIStore } from '@/lib/stores/ui-store';
-import { useColors } from '@/lib/theme/tokens';
 import { toastManager } from '@/lib/toast-manager';
 import { Q } from '@nozbe/watermelondb';
 import { router, useFocusEffect, type Href } from 'expo-router';
@@ -40,17 +34,14 @@ interface ManageDataScreenProps {
 /**
  * Settings > Your data (FinalSettings #15): Backup as one row to its own
  * screen, then look at it and take it (What Mera keeps, Export reading
- * history), then Delete (Clear profile, Clear reading history, and Delete
- * account last, in red, asking twice). No "Clear article cache" (it clears
- * itself) and no "Wipe all" (owner Y10).
+ * history), then Delete (Clear profile, Clear reading history). Delete account
+ * sits above Log out in Settings (`use-delete-account.tsx`). No "Clear article
+ * cache" (it clears itself) and no "Wipe all" (owner Y10).
  */
 const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
-    const toast = useToast();
     const { t } = useTranslation();
-    const colors = useColors();
     const [isProcessing, setIsProcessing] = useState(false);
-    const { closeModal, setModalProcessing } = useUIStore();
     const { exporting, exportHistory } = useExportHistory('ManageDataScreen');
 
     // The backup value reads the synchronous mirror; re-read on focus so a
@@ -110,104 +101,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         [deleteTables, t],
     );
 
-    const handleDeleteAccount = useCallback(async () => {
-        let serverDeleteSucceeded = false;
-        try {
-            setModalProcessing('deleteAccount', true);
-            closeModal('deleteAccount');
-
-            // authClient.deleteUser() now 404s unconditionally — the server has
-            // replaced immediate deletion with a 30-day grace period. `$fetch`
-            // resolves `{ data, error }` rather than throwing on a non-2xx
-            // response, so success must be read from `error` being absent, not
-            // from the call merely completing.
-            const { error } = await authClient.$fetch('/request-account-deletion', {
-                method: 'POST',
-            });
-            if (error) throw error;
-            serverDeleteSucceeded = true;
-
-            // Local cleanup after the server accepted the deletion. Each step
-            // runs on its own, so one failing (a keychain hiccup, a sign-out
-            // that throws) cannot skip the steps after it, and each failure is
-            // reported by name rather than swallowed.
-            const cleanupStep = async (step: string, run: () => Promise<void> | void) => {
-                try {
-                    await run();
-                } catch (error) {
-                    logger.captureException(error, {
-                        tags: { component: 'ManageDataScreen', method: 'deleteAccount', step },
-                    });
-                }
-            };
-            // clearAuthStorage() owns the (guarded, bounded) server sign-out,
-            // see its header. A direct signOut here once let a network failure
-            // skip the whole local cleanup silently.
-            await cleanupStep('sign-out', () => clearAuthStorage());
-            // DELETION SEVERS the device binding (S10). Logout preserves it so
-            // login resumes the account; deletion must not. The server deletes
-            // the device record too, so this is the client half.
-            await cleanupStep('device-credentials', () => clearDeviceAuthCredentials());
-            await cleanupStep('route', () => {
-                router.dismissAll();
-                // The LOGOUT route, not '/': the launch gate counts the
-                // still-stale better-auth session atom as identity and
-                // re-entered the app with a dead session (BUG 4). signedOut
-                // suppresses login.tsx's mirror-image shortcut until the atom
-                // actually clears.
-                router.replace({ pathname: '/login', params: { signedOut: '1' } });
-            });
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            await cleanupStep('stores', () => clearAllStores());
-
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('preferences.accountDeletionScheduledTitle')}</ToastTitle>
-                        <ToastDescription>{t('preferences.accountDeletionScheduledDescription')}</ToastDescription>
-                    </Toast>
-                ),
-            });
-        } catch {
-            if (!serverDeleteSucceeded) {
-                toast.show({
-                    placement: 'top',
-                    render: () => (
-                        <Toast action="error" variant="solid">
-                            <ToastTitle>{t('preferences.deletionFailedTitle')}</ToastTitle>
-                            <ToastDescription>{t('preferences.deletionFailedDescription')}</ToastDescription>
-                        </Toast>
-                    ),
-                });
-            }
-        } finally {
-            setModalProcessing('deleteAccount', false);
-        }
-    }, [closeModal, setModalProcessing, toast, t]);
-
-    // Delete account asks twice before it does anything (App Store 5.1.1(v)).
-    const confirmDeleteAccount = useCallback(async () => {
-        const first = await showDialog({
-            title: t('preferences.deleteAccount'),
-            body: t('preferences.deleteAccountConfirmGrace'),
-            warning: t('preferences.deleteAccountWarningGrace'),
-            confirmLabel: t('preferences.continue'),
-            cancelLabel: t('common.cancel'),
-            destructive: true,
-        });
-        if (!first) return;
-        const second = await showDialog({
-            title: t('preferences.finalConfirmation'),
-            body: t('preferences.finalConfirmationBodyGrace'),
-            warning: t('preferences.absolutelySure'),
-            confirmLabel: t('preferences.yesDeleteAccount'),
-            cancelLabel: t('common.cancel'),
-            destructive: true,
-        });
-        if (second) await handleDeleteAccount();
-    }, [handleDeleteAccount, t]);
-
     return (
         <View style={{ flex: 1 }}>
             <AbstractGradientBackdrop />
@@ -257,14 +150,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                         title={t('manageData.clearHistoryTitle')}
                         subtitle={t('manageData.clearHistoryHint')}
                         onPress={() => void clear('viewingHistory')}
-                    />
-                    <Row
-                        testID="manage-data-delete-account"
-                        leadingIcon="delete-forever"
-                        title={t('preferences.deleteAccount')}
-                        titleColor={colors.negative}
-                        subtitle={t('manageData.deleteAccountHint')}
-                        onPress={() => void confirmDeleteAccount()}
                     />
                 </Group>
             </ScrollView>

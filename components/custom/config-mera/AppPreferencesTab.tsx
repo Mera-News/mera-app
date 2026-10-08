@@ -37,6 +37,7 @@ import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import { deviceUses24h } from './NotificationTimes';
 import SettingsUsageCard from './SettingsUsageCard';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
+import { useDeleteAccount } from './use-delete-account';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
 type YouSettingsScreen = 'display' | 'notifications' | 'mera-protocol' | 'app-lock' | 'data';
@@ -82,6 +83,7 @@ const AppPreferencesTab: React.FC = () => {
     });
 
     const { closeModal, setModalProcessing } = useUIStore();
+    const confirmDeleteAccount = useDeleteAccount();
 
     // Function that performs the actual logout
     const handleActualLogout = async () => {
@@ -403,6 +405,14 @@ const AppPreferencesTab: React.FC = () => {
                         onPress={() => requestEmailCapture('settings')}
                     />
                 )}
+                <Row
+                    testID="settings-row-delete-account"
+                    leadingIcon="delete-forever"
+                    title={t('preferences.deleteAccount')}
+                    titleColor={colors.negative}
+                    subtitle={t('manageData.deleteAccountHint')}
+                    onPress={() => void confirmDeleteAccount()}
+                />
                 <Row
                     testID="settings-row-logout"
                     leadingIcon="logout"
