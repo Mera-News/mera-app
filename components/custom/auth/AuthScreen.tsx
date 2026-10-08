@@ -13,6 +13,8 @@ import Animated, {
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
+    withDelay,
+    withSequence,
     withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -279,18 +281,30 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         if (logoAt !== 'slot') setSlot(null);
     }, [logoAt]);
     useEffect(() => {
-        const timing = { duration: reduceMotion ? 0 : 500, easing: EASE.arrive };
         const hidden = !logoAt || (logoAt === 'slot' && slot?.inline === true);
-        logoOpacity.value = withTiming(hidden ? 0 : 1, { duration: reduceMotion ? 0 : 250 });
-        if (!logoAt) return;
-        // A slot not measured yet: hold where the logo is until it reports.
-        if (logoAt === 'slot' && !slot) return;
-        logoScale.value = withTiming(logoAt === 'center' ? 1 : LOGO_TOP / LOGO_FULL, timing);
+        if (!logoAt || (logoAt === 'slot' && !slot)) {
+            // Gone, or a slot not measured yet (hold where it is until it reports).
+            logoOpacity.value = withTiming(hidden ? 0 : 1, { duration: reduceMotion ? 0 : 250 });
+            return;
+        }
         const topY = (y: number) => y - (LOGO_FULL - LOGO_TOP) / 2;
-        logoY.value = withTiming(
-            logoAt === 'center' ? height * 0.3 : logoAt === 'slot' && slot ? topY(slot.y) : topY(insets.top + 16),
-            timing,
-        );
+        const y = logoAt === 'center' ? height * 0.3 : logoAt === 'slot' && slot ? topY(slot.y) : topY(insets.top + 16);
+        const scale = logoAt === 'center' ? 1 : LOGO_TOP / LOGO_FULL;
+        if (reduceMotion) {
+            // A plain crossfade: out where it is, in where it goes.
+            const half = MOTION.launchLogo.duration / 2;
+            logoOpacity.value = withSequence(withTiming(0, { duration: half }), withTiming(hidden ? 0 : 1, { duration: half }));
+            logoY.value = withDelay(half, withTiming(y, { duration: 0 }));
+            logoScale.value = withDelay(half, withTiming(scale, { duration: 0 }));
+            return;
+        }
+        // ONE glide, position and scale together, at the track's own pace and
+        // in-out curve so the whole move reads (the boxes-to-cone crossfade
+        // in LaunchLogo runs inside it). A front-loaded curve looked like a jump.
+        const glide = { duration: MOTION.stage.duration, easing: EASE.across };
+        logoOpacity.value = withTiming(hidden ? 0 : 1, { duration: 250 });
+        logoScale.value = withTiming(scale, glide);
+        logoY.value = withTiming(y, glide);
     }, [logoAt, slot, height, insets.top, reduceMotion, logoScale, logoY, logoOpacity]);
     const logoStyle = useAnimatedStyle(() => ({
         opacity: logoOpacity.value,
