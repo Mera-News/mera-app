@@ -29,8 +29,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet, View, type AccessibilityActionEvent } from 'react-native';
 import Animated, {
-  Extrapolation,
-  interpolate,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -38,8 +36,9 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
+import { CHIP_ROW_INSET, chipOpacity, revealOffset } from './chip-row';
 import { headerSideSlots, SIDE_SLOT } from './header-slots';
-import HelpButton from './HelpButton';
+import HelpButton, { RingButton } from './HelpButton';
 import { useColors } from '@/lib/theme/tokens';
 import { MAX_FONT_SCALE } from '@/lib/typography/policy';
 import type { PageId } from './page-registry';
@@ -72,9 +71,8 @@ export const HEADER_ROW_HEIGHT = HEADER_TRACK_HEIGHT;
 export const HEADER_BOTTOM_PAD = 5;
 /** Clear space between the track and a side control. */
 const TRACK_SIDE_GAP = 4;
-/** World's rows start 16pt in; a pill is fully faded once an edge reaches
- *  the screen edge, so it is never cut square. */
-const ROW_START = 16;
+/** World's rows start at the page side inset. */
+const ROW_START = CHIP_ROW_INSET;
 
 /** Regional-indicator flag from ISO alpha-2 (XK included); '' when invalid. */
 export function flagEmoji(alpha2: string): string {
@@ -126,9 +124,9 @@ interface PillProps {
 
 type RowFade = { scrollX: SharedValue<number>; viewport: SharedValue<number> };
 
-/** World's per-item edge fade, on the UI thread: an item fades to clear as
- *  either edge reaches the screen edge. Write the item's layout x and width
- *  into `x` and `w`. */
+/** World's per-item edge fade, on the UI thread: only an item the screen
+ *  edge cuts fades, by its visible share, never to nothing (chip-row.ts).
+ *  Write the item's layout x and width into `x` and `w`. */
 function useEdgeFade(fade: RowFade | undefined) {
   const x = useSharedValue(0);
   const w = useSharedValue(0);
@@ -136,11 +134,7 @@ function useEdgeFade(fade: RowFade | undefined) {
     if (!fade || w.value === 0) return { opacity: 1 };
     // Physical on-screen edges (layout x and the scroll offset are both
     // physical), so the fade needs no RTL case.
-    const left = x.value - fade.scrollX.value;
-    const right = left + w.value;
-    const toLeft = interpolate(left, [0, ROW_START], [0, 1], Extrapolation.CLAMP);
-    const toRight = interpolate(fade.viewport.value - right, [0, ROW_START], [0, 1], Extrapolation.CLAMP);
-    return { opacity: Math.min(toLeft, toRight) };
+    return { opacity: chipOpacity(x.value - fade.scrollX.value, w.value, fade.viewport.value) };
   });
   return { x, w, fadeStyle };
 }
@@ -280,27 +274,10 @@ const Pill: React.FC<PillProps> = ({
   );
 };
 
-/** World's round search button, before the ? at the top row's end. */
+/** World's search: the same ring as the ? beside it. */
 const SearchButton: React.FC<{ readonly onPress: () => void }> = ({ onPress }) => {
   const { t } = useTranslation();
-  const colors = useColors();
-  return (
-    <View style={styles.sideSlot} testID="page-strip-search-frame">
-      {/* The same flat glass as the World pills, no shadow, in both themes. */}
-      <View pointerEvents="none" {...GLYPH_HIDDEN}>
-        <View style={[styles.searchCircle, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]}>
-          <MaterialIcons name="search" size={22} color={colors.ink} />
-        </View>
-      </View>
-      <Pressable
-        onPress={onPress}
-        style={StyleSheet.absoluteFill}
-        accessibilityRole="button"
-        accessibilityLabel={t('world.search.placeholder')}
-        testID="page-strip-search"
-      />
-    </View>
-  );
+  return <RingButton icon="search" onPress={onPress} label={t('world.search.placeholder')} testID="page-strip-search" />;
 };
 
 const PageStrip: React.FC<PageStripProps> = ({
@@ -340,10 +317,15 @@ const PageStrip: React.FC<PageStripProps> = ({
   });
   const fade = segmented ? undefined : { scrollX, viewport };
 
+  // A selection scrolls just enough to show its chip, and never past the
+  // content (revealOffset): no chip is stranded behind a blank band.
+  const contentWidth = useRef(0);
   useEffect(() => {
     const l = layouts.current[activeId];
-    if (l) scrollRef.current?.scrollTo({ x: Math.max(0, l.x - ROW_START), animated: true });
-  }, [activeId, scrollRef]);
+    if (!l) return;
+    const to = revealOffset(l.x, l.width, scrollX.value, viewport.value, contentWidth.current);
+    if (to !== null) scrollRef.current?.scrollTo({ x: to, animated: true });
+  }, [activeId, scrollRef, scrollX, viewport]);
 
   const pills = pages.map((p, i) => (
     <Pill
@@ -393,6 +375,9 @@ const PageStrip: React.FC<PageStripProps> = ({
             scrollEventThrottle={16}
             onLayout={(e) => {
               viewport.value = e.nativeEvent.layout.width;
+            }}
+            onContentSizeChange={(w) => {
+              contentWidth.current = w;
             }}
             testID="page-strip-scroll"
           >
