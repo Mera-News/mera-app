@@ -1,8 +1,10 @@
-// The Stats page's share preview: a centred modal over the page with the
-// packed image(s), swiped through ("1 of 2"), then ONE row with Light | Dark
-// and Share. Share sends the images one after another (several files in one
-// share sheet is native work, N5). The background is the image's, whatever
-// the app theme, and is not stored.
+// The Stats page's share preview: a modal over the page from just under the
+// page strip to just above the tab bar, about 3% in from each screen edge.
+// Each image shows the WHOLE 9:16 frame exactly as exported (reserves
+// included), as large as the box allows, centred; dots under it when there
+// are several (tap to jump, they follow the swipe); then ONE row with
+// Light | Dark and Share, which sends the images one after another (several
+// files in one share sheet is native work, N5) and closes the preview.
 //
 // Each image is captured from ONE off-screen host at the export size, drawn
 // with the picked palette (capture-and-share keeps its native imports
@@ -10,41 +12,74 @@
 
 import { captureAndShare } from '@/components/custom/share-stats/capture-and-share';
 import { CARD_PALETTES, CardPaletteContext } from '@/components/custom/share-stats/card-theme';
-import { fitCardToPage, hostSizeForScale } from '@/components/custom/share-stats/card-shell';
+import { hostSizeForScale } from '@/components/custom/share-stats/card-shell';
 import { StatImage } from '@/components/custom/share-stats/stat-image';
+import { useMeraCorner } from '@/components/custom/mera-button/corner';
 import { Modal, ModalBackdrop, ModalContent } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Text } from '@/components/ui/text';
 import logger from '@/lib/logger';
+import { MERA_BUTTON_EDGE, MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import type { ReadingStats, StatsCardId } from '@/lib/stats/reading-stats';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, PixelRatio, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, I18nManager, PixelRatio, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 type Background = 'dark' | 'light';
 
-/** The modal card's own padding; its width is the `lg` size (90%, ≤ 640). */
-const MODAL_PAD = 16;
+const PAD = 16;
+const HEAD_H = 32;
+const HEAD_GAP = 12;
+const DOTS_H = 28;
+const CONTROLS_H = 44;
+const CONTROLS_GAP = 14;
+const DOT = 8;
+/** Kept between the Share row and the Mera button's column when they meet. */
+const MERA_SIDE_GAP = 8;
+
+/** Where the modal may sit, in window points. */
+export interface PreviewBox {
+    /** From the window's top: just under the page strip. */
+    readonly top: number;
+    /** From the window's bottom: the tab bar's top. */
+    readonly bottom: number;
+    /** From the window's bottom: the Mera button's bottom edge. */
+    readonly meraBottom: number;
+}
 
 interface Props {
     readonly open: boolean;
     readonly onClose: () => void;
     readonly groups: readonly (readonly StatsCardId[])[];
     readonly stats: ReadingStats;
+    readonly box: PreviewBox;
 }
 
-const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats }) => {
+/** The modal's side inset: about 3% of the screen, on the 4pt grid. */
+export function sideInset(screenW: number): number {
+    return Math.max(4, Math.round((screenW * 0.03) / 4) * 4);
+}
+
+/** The largest 9:16 image that fits both limits. */
+export function fitPortrait(maxW: number, maxH: number): { width: number; height: number } {
+    const w = Math.max(0, Math.min(maxW, (maxH * 9) / 16));
+    return { width: Math.floor(w), height: Math.floor((w * 16) / 9) };
+}
+
+const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box }) => {
     const { t } = useTranslation();
     const c = useColors();
+    const corner = useMeraCorner();
     const { width: screenW, height: screenH } = useWindowDimensions();
     const [background, setBackground] = useState<Background>('dark');
     const [index, setIndex] = useState(0);
     const [capturing, setCapturing] = useState<number | null>(null);
     const [failure, setFailure] = useState<'unavailable' | 'failed' | null>(null);
     const hostRef = useRef<View>(null);
+    const listRef = useRef<FlatList<StatsCardId[]>>(null);
 
     useEffect(() => {
         if (open) {
@@ -53,16 +88,46 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats }) => {
         }
     }, [open]);
 
-    const itemW = Math.min(screenW * 0.9, 640) - 2 * MODAL_PAD;
-    const imageSize = fitCardToPage({ width: itemW, height: screenH * 0.5 });
+    // ── Geometry ──
+    const inset = sideInset(screenW);
+    const modalW = screenW - 2 * inset;
+    const boxH = screenH - box.top - box.bottom;
+    const dotsH = groups.length > 1 ? DOTS_H : 0;
+    const chromeH = 2 * PAD + HEAD_H + HEAD_GAP + dotsH + CONTROLS_GAP + CONTROLS_H;
+    const image = fitPortrait(modalW - 2 * PAD, boxH - chromeH);
+    const modalH = chromeH + image.height;
+    // The modal is centred in the window; move it to the centre of its box.
+    const shiftY = box.top + boxH / 2 - screenH / 2;
+    // The Mera button may sit over the modal's bottom corner: keep the
+    // controls clear of its column when the two meet.
+    const modalBottomFromWindowBottom = screenH / 2 - shiftY - modalH / 2;
+    const controlsBottom = modalBottomFromWindowBottom + PAD;
+    const meraTop = box.meraBottom + MERA_BUTTON_SIZE;
+    const meraMeets = corner.startsWith('b') && controlsBottom < meraTop && controlsBottom + CONTROLS_H > box.meraBottom;
+    const meraPhysicalRight = corner.endsWith('r');
+    const meraReach = MERA_BUTTON_EDGE + MERA_BUTTON_SIZE + MERA_SIDE_GAP - inset - PAD;
+    const guard = meraMeets ? Math.max(0, meraReach) : 0;
+    // Corners are PHYSICAL; RN swaps start/end padding in RTL.
+    const guardSide = meraPhysicalRight !== I18nManager.isRTL ? 'paddingEnd' : 'paddingStart';
+
     const host = hostSizeForScale(PixelRatio.get());
     const palette = CARD_PALETTES[background];
 
+    const jumpTo = useCallback(
+        (i: number) => {
+            const next = Math.max(0, Math.min(groups.length - 1, i));
+            setIndex(next);
+            listRef.current?.scrollToOffset({ offset: next * image.width, animated: true });
+        },
+        [groups.length, image.width],
+    );
+
     // One after another: point the host at each image, let it draw (two
-    // frames), capture and share, then the next.
+    // frames), capture and share, then the next. Done closes the preview.
     const share = useCallback(async () => {
         if (capturing !== null || groups.length === 0) return;
         setFailure(null);
+        let done = true;
         for (let i = 0; i < groups.length; i++) {
             setCapturing(i);
             await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
@@ -77,18 +142,27 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats }) => {
             }
             if (result.status !== 'shared') {
                 setFailure(result.status);
+                done = false;
                 break;
             }
         }
         setCapturing(null);
-    }, [capturing, groups.length, host.width, host.height, t]);
+        if (done) onClose();
+    }, [capturing, groups.length, host.width, host.height, t, onClose]);
 
     const hostGroup = groups[capturing ?? Math.min(index, groups.length - 1)];
+    const position = t('shareStats.preview.position', {
+        index: Math.min(index, groups.length - 1) + 1,
+        total: groups.length,
+    });
 
     return (
-        <Modal isOpen={open} onClose={onClose} size="lg">
+        <Modal isOpen={open} onClose={onClose} size="full">
             <ModalBackdrop />
-            <ModalContent style={{ padding: MODAL_PAD }} testID="stats-share-modal">
+            <ModalContent
+                style={{ width: modalW, padding: PAD, transform: [{ translateY: shiftY }] }}
+                testID="stats-share-modal"
+            >
                 {/* The off-screen capture host, at the export size, positioned
                     away and laid out (unmounted or display:none captures blank). */}
                 {hostGroup ? (
@@ -103,7 +177,7 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats }) => {
                     </View>
                 ) : null}
 
-                <View style={styles.head}>
+                <View style={[styles.head, { height: HEAD_H, marginBottom: HEAD_GAP }]}>
                     <Text style={{ color: c.ink, fontSize: 17, lineHeight: 22, fontWeight: '700', flex: 1 }} accessibilityRole="header">
                         {t('shareStats.preview.title')}
                     </Text>
@@ -120,34 +194,57 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats }) => {
 
                 <CardPaletteContext.Provider value={palette}>
                     <FlatList
+                        ref={listRef}
                         horizontal
+                        pagingEnabled
                         data={groups as StatsCardId[][]}
                         keyExtractor={(g) => g.join('-')}
                         showsHorizontalScrollIndicator={false}
-                        snapToInterval={itemW}
-                        decelerationRate="fast"
-                        onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / itemW))}
+                        getItemLayout={(_, i) => ({ length: image.width, offset: image.width * i, index: i })}
+                        onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / image.width))}
                         renderItem={({ item }) => (
-                            <View style={{ width: itemW, alignItems: 'center' }}>
-                                <View style={{ borderRadius: 18, overflow: 'hidden' }}>
-                                    <StatImage ids={item} stats={stats} hostSize={imageSize} />
-                                </View>
+                            <View style={{ width: image.width, height: image.height, borderRadius: 14, overflow: 'hidden' }}>
+                                <StatImage ids={item} stats={stats} hostSize={image} fullFrame />
                             </View>
                         )}
-                        style={{ flexGrow: 0, width: itemW }}
+                        style={{ flexGrow: 0, width: image.width, alignSelf: 'center' }}
                     />
                 </CardPaletteContext.Provider>
 
                 {groups.length > 1 ? (
-                    <Text
-                        style={{ color: c.ink2, fontSize: 13, lineHeight: 18, textAlign: 'center', marginTop: 10 }}
-                        accessibilityLiveRegion="polite"
+                    <View
+                        style={[styles.dots, { height: DOTS_H }]}
+                        accessible
+                        accessibilityRole="adjustable"
+                        accessibilityLabel={t('shareStats.preview.title')}
+                        accessibilityValue={{ text: position }}
+                        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+                        onAccessibilityAction={(e) => jumpTo(index + (e.nativeEvent.actionName === 'increment' ? 1 : -1))}
+                        testID="stats-share-dots"
                     >
-                        {t('shareStats.preview.position', { index: Math.min(index, groups.length - 1) + 1, total: groups.length })}
-                    </Text>
+                        {groups.map((g, i) => (
+                            <Pressable
+                                key={g.join('-')}
+                                onPress={() => jumpTo(i)}
+                                accessible={false}
+                                importantForAccessibility="no"
+                                style={styles.dotFrame}
+                                testID={`stats-share-dot-${i}`}
+                            >
+                                <View
+                                    style={{
+                                        width: DOT,
+                                        height: DOT,
+                                        borderRadius: DOT / 2,
+                                        backgroundColor: i === index ? c.accent : c.helpRing,
+                                    }}
+                                />
+                            </Pressable>
+                        ))}
+                    </View>
                 ) : null}
 
-                <View style={styles.controls}>
+                <View style={[styles.controls, { height: CONTROLS_H, marginTop: CONTROLS_GAP, [guardSide]: guard }]}>
                     <SegmentedControl<Background>
                         options={[
                             { value: 'light', label: t('display.appearanceLight') },
@@ -168,7 +265,7 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats }) => {
                         style={[styles.share, { backgroundColor: c.accent, opacity: capturing !== null ? 0.45 : 1 }]}
                     >
                         <MaterialIcons name="ios-share" size={17} color={c.onAccent} />
-                        <Text style={{ color: c.onAccent, fontSize: 15, lineHeight: 20, fontWeight: '700' }}>
+                        <Text numberOfLines={1} style={{ color: c.onAccent, fontSize: 15, lineHeight: 20, fontWeight: '700' }}>
                             {t('library.stats.share')}
                         </Text>
                     </Pressable>
@@ -188,9 +285,11 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats }) => {
 };
 
 const styles = StyleSheet.create({
-    head: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+    head: { flexDirection: 'row', alignItems: 'center' },
     close: { width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' },
-    controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 14 },
+    dots: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+    dotFrame: { width: 22, height: DOTS_H, alignItems: 'center', justifyContent: 'center' },
+    controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     share: {
         minHeight: 44,
         paddingHorizontal: 18,
@@ -198,6 +297,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
+        flexShrink: 1,
     },
 });
 

@@ -29,7 +29,13 @@ const LANGUAGES_TOP_N = 4;
 const SIZES = {
   tile: { figure: 30, line: 13, gap: 8 },
   image: { figure: 56, line: 15, gap: 14 },
+  /** Several figures sharing one image (owner: as many per image as fit). */
+  packed: { figure: 32, line: 12, gap: 8 },
 } as const;
+
+/** Charts on a packed image draw at this share of their image size; their
+ *  text keeps its size (the 9.5pt floor). */
+const PACKED_CHART_SCALE = 0.6;
 
 export type StatVariant = keyof typeof SIZES;
 
@@ -71,7 +77,7 @@ interface Props {
 function FigureLine({ figure, line, variant, k }: { figure: string; line?: string | null; variant: StatVariant; k: number }) {
   const { ink } = useCardInk();
   const s = SIZES[variant];
-  const block = variant === 'image';
+  const block = variant !== 'tile';
   const figureNode = (
     <Text
       allowFontScaling={false}
@@ -103,6 +109,7 @@ function FigureLine({ figure, line, variant, k }: { figure: string; line?: strin
 const StatFigure: React.FC<Props> = ({ id, stats, variant, k = 1 }) => {
   const { t, i18n } = useTranslation();
   const s = SIZES[variant];
+  const ck = variant === 'packed' ? k * PACKED_CHART_SCALE : k;
 
   let body: React.ReactNode = null;
   switch (id) {
@@ -118,7 +125,8 @@ const StatFigure: React.FC<Props> = ({ id, stats, variant, k = 1 }) => {
           {stats.countries.length > 0 ? (
             <FlagGrid
               countryCodes={stats.countries.map((c) => c.countryCode)}
-              k={k}
+              k={ck}
+              textK={k}
               overflowLabel={(n) => t('shareStats.card.flagsMore', { n })}
               testID={`stat-${id}-flags`}
             />
@@ -145,7 +153,7 @@ const StatFigure: React.FC<Props> = ({ id, stats, variant, k = 1 }) => {
       body = (
         <>
           <FigureLine figure={String(stats.languageCount)} line={t('library.stats.languagesLine')} variant={variant} k={k} />
-          {segments.length > 0 ? <ProportionBar segments={segments} k={k} testID={`stat-${id}-bar`} /> : null}
+          {segments.length > 0 ? <ProportionBar segments={segments} k={ck} textK={k} testID={`stat-${id}-bar`} /> : null}
         </>
       );
       break;
@@ -162,7 +170,8 @@ const StatFigure: React.FC<Props> = ({ id, stats, variant, k = 1 }) => {
           <HeatGrid
             days={stats.days}
             peak={peakDayCount(stats.days)}
-            k={k}
+            k={ck}
+            textK={k}
             weekdayInitials={t('shareStats.card.rhythmWeekdays').split(',').map((d) => d.trim())}
             legendLess={t('shareStats.card.heatLegendLess')}
             legendMore={t('shareStats.card.heatLegendMore')}

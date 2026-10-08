@@ -109,6 +109,9 @@ export interface FlagGridProps {
   /** Country codes, already ordered by the caller. */
   countryCodes: string[];
   k: number;
+  /** Text scale; defaults to `k`. A packed image shrinks the chart, never its
+   *  text below the 9.5pt floor. */
+  textK?: number;
   /** Rendered in the overflow chip, already interpolated by the caller. Passing
    *  the finished string keeps i18n out of this file. */
   overflowLabel: (remaining: number) => string;
@@ -139,6 +142,7 @@ export function splitFlagGrid(
 export const FlagGrid: React.FC<FlagGridProps> = ({
   countryCodes,
   k,
+  textK,
   overflowLabel,
   maxCells,
   testID,
@@ -184,7 +188,7 @@ export const FlagGrid: React.FC<FlagGridProps> = ({
           <Text
             allowFontScaling={false}
             style={[
-              chartType(CHART_METRICS.barLegendSize, k),
+              chartType(CHART_METRICS.barLegendSize, textK ?? k),
               { color: inkColor('muted') },
             ]}
           >
@@ -210,6 +214,9 @@ export interface ProportionSegment {
 export interface ProportionBarProps {
   segments: ProportionSegment[];
   k: number;
+  /** Text scale; defaults to `k`. A packed image shrinks the chart, never its
+   *  text below the 9.5pt floor. */
+  textK?: number;
   testID?: string;
 }
 
@@ -221,7 +228,7 @@ export interface ProportionBarProps {
  * the row means no rounding residue can open a gap at the right edge that the
  * legend does not explain.
  */
-export const ProportionBar: React.FC<ProportionBarProps> = ({ segments, k, testID }) => {
+export const ProportionBar: React.FC<ProportionBarProps> = ({ segments, k, textK, testID }) => {
   const { inkColor, palette } = useCardInk();
   if (segments.length === 0) return null;
 
@@ -270,7 +277,7 @@ export const ProportionBar: React.FC<ProportionBarProps> = ({ segments, k, testI
             />
             <Text
               allowFontScaling={false}
-              style={[chartType(CHART_METRICS.barLegendSize, k), { color: inkColor('secondary') }]}
+              style={[chartType(CHART_METRICS.barLegendSize, textK ?? k), { color: inkColor('secondary') }]}
             >
               {segment.label}
             </Text>
@@ -296,6 +303,9 @@ export interface HeatGridProps {
    *  Zero means every cell draws at the empty tone. */
   peak: number;
   k: number;
+  /** Text scale; defaults to `k`. A packed image shrinks the chart, never its
+   *  text below the 9.5pt floor. */
+  textK?: number;
   /** Seven single-character weekday initials, Monday first, already localised
    *  by the caller. Passing finished strings keeps i18n out of this file. */
   weekdayInitials: string[];
@@ -351,6 +361,7 @@ export const HeatGrid: React.FC<HeatGridProps> = ({
   days,
   peak,
   k,
+  textK,
   weekdayInitials,
   legendLess,
   legendMore,
@@ -371,7 +382,7 @@ export const HeatGrid: React.FC<HeatGridProps> = ({
             <Text
               allowFontScaling={false}
               style={[
-                chartType(CHART_METRICS.heatLabelSize, k),
+                chartType(CHART_METRICS.heatLabelSize, textK ?? k),
                 { color: inkColor('muted') },
               ]}
             >
@@ -410,7 +421,7 @@ export const HeatGrid: React.FC<HeatGridProps> = ({
       >
         <Text
           allowFontScaling={false}
-          style={[chartType(CHART_METRICS.heatLegendSize, k), { color: inkColor('muted') }]}
+          style={[chartType(CHART_METRICS.heatLegendSize, textK ?? k), { color: inkColor('muted') }]}
         >
           {legendLess}
         </Text>
@@ -427,7 +438,7 @@ export const HeatGrid: React.FC<HeatGridProps> = ({
         ))}
         <Text
           allowFontScaling={false}
-          style={[chartType(CHART_METRICS.heatLegendSize, k), { color: inkColor('muted') }]}
+          style={[chartType(CHART_METRICS.heatLegendSize, textK ?? k), { color: inkColor('muted') }]}
         >
           {legendMore}
         </Text>

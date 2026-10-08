@@ -184,6 +184,10 @@ export interface CardShellProps {
    * phone screen to keep clear of). The CONTENT is identical either way.
    */
   hostSize?: { width: number; height: number };
+  /** With `hostSize`: draw the WHOLE 9:16 export frame at that size, reserves
+   *  included, so a preview shows exactly what is shared. `hostSize` must then
+   *  be 9:16. */
+  fullFrame?: boolean;
   testID: string;
   children: React.ReactNode;
   /** Reports the height the figures may fill (between the title and the
@@ -192,11 +196,13 @@ export interface CardShellProps {
 }
 
 const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
-  { title, privacyLine, pixelRatio, hostSize, testID, children, onBodyLayout },
+  { title, privacyLine, pixelRatio, hostSize, fullFrame, testID, children, onBodyLayout },
   ref,
 ) {
   const { palette, ink } = useCardInk();
-  const onScreen = hostSize !== undefined;
+  // Only a content-box preview drops the reserves; the export and a full-frame
+  // preview draw them.
+  const onScreen = hostSize !== undefined && !fullFrame;
   const host = hostSize ?? hostSizeForScale(pixelRatio);
   const k = host.width / DESIGN_WIDTH;
   // On screen the host IS the content box, so there is no reserve to subtract.

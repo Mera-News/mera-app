@@ -1,12 +1,13 @@
 // The Library's Stats page: the reader's last 30 days as plain cards (one per
 // figure with data, `availableCards`, never a screen-level "has any data"
 // gate), the "counted on this phone" line, and one floating Share above the
-// Mera button. Share works IN PLACE (owner): Share puts the page in select
-// mode (a checkbox on every card, all picked, Cancel in the title row or
-// back to leave), the button becomes Preview, and Preview opens
-// StatsShareModal with the picks packed onto as few images as fit (measured).
-// The floating button sits centred in the Mera button's row (its bottom and
-// size from tab-bar), capped clear of either corner's column.
+// Mera button. Share works IN PLACE (owner, `share-flow.ts`): Share puts the
+// page in select mode (a checkbox on every card, all picked), the floating
+// Share becomes [Cancel] [Preview], and Preview opens StatsShareModal with the
+// picks packed onto as few images as fit (measured). Closing the preview by
+// any route, Cancel, back or leaving the page all end select mode. The
+// floating controls sit centred in the Mera button's row (its bottom and size
+// from tab-bar), capped clear of either corner's column.
 //
 // "Clear viewing history" empties the visit figures but not Right now, which
 // stays while there are saves or followed stories.
@@ -15,10 +16,17 @@ import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 import StatFigure, { statLabel } from '@/components/custom/share-stats/stat-figures';
-import StatsShareModal from '@/components/custom/share-stats/StatsShareModal';
+import StatsShareModal, { type PreviewBox } from '@/components/custom/share-stats/StatsShareModal';
+import { IDLE, shareFlow } from '@/components/custom/library/share-flow';
 import { PackMeasure, packGroups, type PackMeasurement } from '@/components/custom/share-stats/stat-image';
 import { hapticSelection } from '@/lib/haptics';
-import { MERA_BUTTON_EDGE, MERA_BUTTON_SIZE, useMeraButtonBottom } from '@/lib/navigation/tab-bar';
+import {
+    MERA_BUTTON_EDGE,
+    MERA_BUTTON_SIZE,
+    useMeraButtonBottom,
+    useTabBarClearance,
+} from '@/lib/navigation/tab-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
@@ -31,12 +39,16 @@ import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BackHandler, Pressable, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 
 const SHARE_H = 44;
+/** Under the page strip's pill track (safe area + 47): the preview's top. */
+const PREVIEW_TOP = 52;
+/** Between Cancel and Preview. */
+const FLOAT_GAP = 8;
 /** Clear space between the floating button and the Mera button's column. */
 const MERA_SIDE_GAP = 8;
 
@@ -150,23 +162,35 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
     const meraBottom = useMeraButtonBottom();
     const { width: screenW } = useWindowDimensions();
     const floatMaxW = screenW - 2 * (MERA_BUTTON_EDGE + MERA_BUTTON_SIZE + MERA_SIDE_GAP);
+    // The preview's box in window points: under the strip, above the tab bar.
+    // The page's own bottom in the window anchors both bottoms (on iOS the tab
+    // content runs under the bar; on Android it ends at it).
+    const insets = useSafeAreaInsets();
+    const tabClearance = useTabBarClearance();
+    const { height: screenH } = useWindowDimensions();
+    const rootRef = useRef<View>(null);
+    const [pageBottomGap, setPageBottomGap] = useState(0);
+    const measureRoot = useCallback(() => {
+        rootRef.current?.measureInWindow((_x, y, _w, h) => {
+            if (Number.isFinite(y) && h > 0) setPageBottomGap(Math.max(0, screenH - (y + h)));
+        });
+    }, [screenH]);
+    const previewBox: PreviewBox = {
+        top: insets.top + PREVIEW_TOP,
+        bottom: pageBottomGap + tabClearance,
+        meraBottom: pageBottomGap + meraBottom,
+    };
 
     // ── Share in place ──
-    const [selecting, setSelecting] = useState(false);
-    const [picked, setPicked] = useState<readonly StatsCardId[]>([]);
-    const [previewOpen, setPreviewOpen] = useState(false);
+    const [flow, dispatch] = useReducer(shareFlow, IDLE);
+    const { selecting, picked, previewOpen } = flow;
     const [measure, setMeasure] = useState<PackMeasurement | null>(null);
-    const startSelecting = useCallback(() => {
-        setPicked(availableCards(stats));
-        setSelecting(true);
-    }, [stats]);
-    const stopSelecting = useCallback(() => {
-        setSelecting(false);
-        setPreviewOpen(false);
-    }, []);
+    const startSelecting = useCallback(() => dispatch({ type: 'start', cards: availableCards(stats) }), [stats]);
+    const stopSelecting = useCallback(() => dispatch({ type: 'cancel' }), []);
+    const closePreview = useCallback(() => dispatch({ type: 'closePreview' }), []);
     const toggle = useCallback((id: StatsCardId) => {
         void hapticSelection();
-        setPicked((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
+        dispatch({ type: 'toggle', id });
     }, []);
     // Picks in page order, whatever order they were ticked in.
     const groups = useMemo(
@@ -188,7 +212,7 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
     }, [selecting, visible, stopSelecting]);
 
     return (
-        <Box className="flex-1">
+        <View ref={rootRef} style={{ flex: 1 }} onLayout={measureRoot} collapsable={false}>
             <Animated.FlatList
                 testID="stats-page"
                 data={cards}
@@ -209,20 +233,6 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                             title={t('library.stats.title')}
                             onExplain={onExplain}
                             testID="stats-title-row"
-                            trailing={
-                                selecting ? (
-                                    <Pressable
-                                        onPress={stopSelecting}
-                                        accessibilityRole="button"
-                                        testID="stats-select-cancel"
-                                        style={styles.cancel}
-                                    >
-                                        <Text style={{ color: c.accentText, fontSize: 16, lineHeight: 21, fontWeight: '600' }}>
-                                            {t('common.cancel')}
-                                        </Text>
-                                    </Pressable>
-                                ) : null
-                            }
                         />
                     </View>
                 }
@@ -280,56 +290,77 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                     pointerEvents="box-none"
                     style={[styles.floatRow, { bottom: meraBottom + (MERA_BUTTON_SIZE - SHARE_H) / 2 }]}
                 >
-                    <Pressable
-                        onPress={selecting ? () => setPreviewOpen(true) : startSelecting}
-                        disabled={selecting && picked.length === 0}
-                        accessibilityRole="button"
-                        accessibilityState={{ disabled: selecting && picked.length === 0 }}
-                        accessibilityLabel={
-                            selecting ? t('shareStats.preview.title') : t('library.stats.share')
-                        }
-                        testID={selecting ? 'stats-preview' : 'stats-share'}
-                        style={[
-                            styles.share,
-                            {
-                                maxWidth: floatMaxW,
-                                backgroundColor: c.accent,
-                                opacity: selecting && picked.length === 0 ? 0.45 : 1,
-                            },
-                        ]}
-                    >
-                        <MaterialIcons name={selecting ? 'visibility' : 'ios-share'} size={17} color={c.onAccent} />
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            scaleTier="chrome"
-                            style={{ flexShrink: 1, color: c.onAccent, fontSize: 14, lineHeight: 18, fontWeight: '700' }}
+                    <View style={[styles.floatGroup, { maxWidth: floatMaxW }]}>
+                        {selecting ? (
+                            <Pressable
+                                onPress={stopSelecting}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('common.cancel')}
+                                testID="stats-select-cancel"
+                                style={[styles.pill, styles.pillOutline, { borderColor: c.line, backgroundColor: c.base }]}
+                            >
+                                <Text
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                    scaleTier="chrome"
+                                    style={{ flexShrink: 1, color: c.ink, fontSize: 14, lineHeight: 18, fontWeight: '600' }}
+                                >
+                                    {t('common.cancel')}
+                                </Text>
+                            </Pressable>
+                        ) : null}
+                        <Pressable
+                            onPress={selecting ? () => dispatch({ type: 'preview' }) : startSelecting}
+                            disabled={selecting && picked.length === 0}
+                            accessibilityRole="button"
+                            accessibilityState={{ disabled: selecting && picked.length === 0 }}
+                            accessibilityLabel={selecting ? t('shareStats.preview.title') : t('library.stats.share')}
+                            testID={selecting ? 'stats-preview' : 'stats-share'}
+                            style={[
+                                styles.pill,
+                                {
+                                    backgroundColor: c.accent,
+                                    opacity: selecting && picked.length === 0 ? 0.45 : 1,
+                                },
+                            ]}
                         >
-                            {selecting ? t('shareStats.preview.title') : t('library.stats.share')}
-                        </Text>
-                    </Pressable>
+                            {/* The group needs the room in select mode, so only
+                                Share carries its glyph. */}
+                            {selecting ? null : <MaterialIcons name="ios-share" size={17} color={c.onAccent} />}
+                            <Text
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                                scaleTier="chrome"
+                                style={{ flexShrink: 1, color: c.onAccent, fontSize: 14, lineHeight: 18, fontWeight: '700' }}
+                            >
+                                {selecting ? t('shareStats.preview.title') : t('library.stats.share')}
+                            </Text>
+                        </Pressable>
+                    </View>
                 </View>
             ) : null}
 
             {selecting ? <PackMeasure cards={cards} stats={stats} onMeasured={setMeasure} /> : null}
-            <StatsShareModal open={previewOpen} onClose={() => setPreviewOpen(false)} groups={groups} stats={stats} />
-        </Box>
+            <StatsShareModal open={previewOpen} onClose={closePreview} groups={groups} stats={stats} box={previewBox} />
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     tile: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 14 },
     tileHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-    cancel: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
     floatRow: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-    share: {
+    floatGroup: { flexDirection: 'row', alignItems: 'center', gap: FLOAT_GAP },
+    pill: {
         height: SHARE_H,
-        paddingHorizontal: 16,
+        paddingHorizontal: 14,
         borderRadius: 999,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
+        flexShrink: 1,
     },
+    pillOutline: { borderWidth: 1.5 },
 });
 
 export default StatsPage;
