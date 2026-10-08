@@ -8,7 +8,8 @@ import { LanguageRow } from '@/components/custom/auth/LanguageRow';
 import RotatingLanguageHeading from '@/components/custom/auth/RotatingLanguageHeading';
 import DownloadPressIllustration from '@/components/custom/auth/DownloadPressIllustration';
 import { Button, ButtonText } from '@/components/ui/button';
-import { useLanguageSwitch, type LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { useLanguageSwitch, useProbingLanguage, type LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { languageCheckStatus } from '@/lib/system-check/system-check';
 import i18n from '@/lib/i18n';
@@ -22,16 +23,16 @@ import {
     useTranslationBlocked,
 } from '@/lib/translation-service';
 
-type Message = { kind: 'getting' | 'missing' | 'ready'; code: string } | null;
-
 const RTL_CODES = new Set(['ar', 'he']);
 /** The notice is the light theme's card in both themes. */
 const NOTICE_INK = COLORS.light.ink;
 const NOTICE_BASE = COLORS.light.base;
 
-
-/** "X is ready" stays this long, then fades (Journey #13). */
-const READY_MESSAGE_MS = 1500;
+/**
+ * A probe for a pack that is already there settles in well under this, with
+ * no sheet. Waiting it out keeps the notice from flashing in that case.
+ */
+const NOTICE_DELAY_MS = 300;
 
 interface WelcomeStageProps {
     /** The message card's top in this view's coordinates: the screen top plus
@@ -48,14 +49,17 @@ interface WelcomeStageProps {
  * line, the language list with the phone's language first and already picked,
  * and the two ways in. A language this phone still needs shows a download
  * button; picking it (or tapping the button) runs the ONE probe that may show
- * Apple's download sheet, while a message card says what is happening and the
- * ways in step away. The page turns to the new language only once it is ready.
+ * Apple's download sheet, and the ways in step away. The page turns to the new
+ * language only once it is ready; the list's tick says so, with no message.
+ *
+ * Owner rule: the download notice shows ONLY while Apple's sheet is up. JS gets
+ * no sheet event, so it rides the probe call (`useProbingLanguage`): iOS only,
+ * after NOTICE_DELAY_MS, gone the moment the call settles.
  *
  * Owner rule: a language the phone cannot translate into is never offered, and
- * one that turns out missing falls back to English, with no continue-anyway.
- * The list never fires a second probe beside the startup one
- * (TranslationUnavailablePrompt): while that one runs, this page shows the same
- * "Getting X ready" message for the preselected language.
+ * one that turns out missing falls back to English, with no continue-anyway;
+ * a toast says so. The list never fires a second probe beside the startup one
+ * (TranslationUnavailablePrompt), which drives the same notice.
  */
 export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeStageProps) {
     const { t } = useTranslation();
@@ -63,16 +67,28 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
     const reduceMotion = useReducedMotion();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const phone = useMemo(() => phoneLanguage(), []);
-    const [message, setMessage] = useState<Message>(null);
+    const toast = useToast();
 
-    const onResult = useCallback((r: LanguageSwitchResult) => setMessage({ kind: 'missing', code: r.code }), []);
-    const onCommitted = useCallback((code: string) => setMessage({ kind: 'ready', code }), []);
-    const { requestSwitch, busy, pendingCode } = useLanguageSwitch({
-        preview: false,
-        immediate: true,
-        onResult,
-        onCommitted,
-    });
+    const showMissing = useCallback(
+        (code: string) => {
+            const id = `auth-language-missing-${code}`;
+            if (toast.isActive(id)) return;
+            const language = getNativeLanguageName(code) ?? code;
+            toast.show({
+                id,
+                placement: 'top',
+                render: () => (
+                    <Toast action="info" variant="solid">
+                        <ToastTitle>{t('auth.track.notHereTitle', { language })}</ToastTitle>
+                        <ToastDescription>{t('auth.track.notHereBody')}</ToastDescription>
+                    </Toast>
+                ),
+            });
+        },
+        [toast, t],
+    );
+    const onResult = useCallback((r: LanguageSwitchResult) => showMissing(r.code), [showMissing]);
+    const { requestSwitch, busy, pendingCode } = useLanguageSwitch({ preview: false, immediate: true, onResult });
 
     // The startup probe for the preselected language (never a second probe).
     const blocked = useTranslationBlocked(appLanguage) != null;
@@ -80,22 +96,26 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
     const startup = languageCheckStatus({ appLanguage, verified, blocked, isPhysicalDevice: Device.isDevice !== false });
 
     // A preselected language this phone turns out not to have: English, with
-    // the message saying so (owner rule: no continue-anyway).
+    // a toast saying so (owner rule: no continue-anyway).
     useEffect(() => {
         if (startup !== 'needs-english' || appLanguage === 'en' || busy) return;
-        setMessage({ kind: 'missing', code: appLanguage });
+        showMissing(appLanguage);
         void useAppLanguageStore.getState().setAppLanguage('en');
-    }, [startup, appLanguage, busy]);
+    }, [startup, appLanguage, busy, showMissing]);
 
+    // The list locks at once, with no delay: a second tap inside the notice
+    // delay would start a second probe, i.e. a second sheet.
+    const waiting = busy || startup === 'checking';
+    const probing = useProbingLanguage();
+    const [noticeCode, setNoticeCode] = useState<string | null>(null);
     useEffect(() => {
-        if (message?.kind !== 'ready') return;
-        const id = setTimeout(() => setMessage(null), READY_MESSAGE_MS);
+        if (Platform.OS !== 'ios' || !probing) {
+            setNoticeCode(null);
+            return;
+        }
+        const id = setTimeout(() => setNoticeCode(probing), NOTICE_DELAY_MS);
         return () => clearTimeout(id);
-    }, [message]);
-
-    const gettingCode = busy && pendingCode ? pendingCode : startup === 'checking' ? appLanguage : null;
-    const shown: Message = gettingCode ? { kind: 'getting', code: gettingCode } : message;
-    const waiting = gettingCode !== null;
+    }, [probing]);
 
     const languages = useMemo(() => {
         const offered = SUPPORTED_LANGUAGES.filter((l) => l.code === 'en' || canTranslateIntoLanguage(l.code));
@@ -106,40 +126,26 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
     const pick = useCallback(
         (code: string) => {
             if (waiting || code === appLanguage) return;
-            setMessage(null);
             requestSwitch(code);
         },
         [waiting, appLanguage, requestSwitch],
     );
 
-    const name = (code: string) => getNativeLanguageName(code) ?? code;
-    // Getting X ready / X is ready speak X itself: the reader picked it, and
+    // The notice speaks the language being fetched: the reader picked it, and
     // iOS dims the rest of the screen while it asks. "Not on this phone" stays
     // in the language the app is in, the one the reader has now.
-    const lt = shown && shown.kind !== 'missing' ? i18n.getFixedT(shown.code) : t;
-    const messageDir = shown && shown.kind !== 'missing' && RTL_CODES.has(shown.code) ? 'rtl' : 'ltr';
-    const messageTitle =
-        shown?.kind === 'getting'
-            ? lt('auth.track.gettingReadyTitle', { language: name(shown.code) })
-            : shown?.kind === 'missing'
-              ? t('auth.track.notHereTitle', { language: name(shown.code) })
-              : shown?.kind === 'ready'
-                ? lt('auth.track.readyTitle', { language: name(shown.code) })
-                : '';
-    const messageBody =
-        shown?.kind === 'getting'
-            ? lt(Platform.OS === 'ios' ? 'auth.track.gettingReadyIos' : 'auth.track.gettingReadyOther')
-            : shown?.kind === 'missing'
-              ? t('auth.track.notHereBody')
-              : shown?.kind === 'ready'
-                ? lt('auth.track.readyBody', { language: name(shown.code) })
-                : '';
+    const lt = noticeCode ? i18n.getFixedT(noticeCode) : t;
+    const messageDir = noticeCode && RTL_CODES.has(noticeCode) ? 'rtl' : 'ltr';
+    const messageTitle = noticeCode
+        ? lt('auth.track.gettingReadyTitle', { language: getNativeLanguageName(noticeCode) ?? noticeCode })
+        : '';
+    const messageBody = noticeCode ? lt('auth.track.gettingReadyIos') : '';
 
     return (
         <View style={styles.root} testID="auth-welcome-stage">
-            {shown ? (
+            {noticeCode ? (
                 <Animated.View
-                    key={`${shown.kind}-${shown.code}`}
+                    key={noticeCode}
                     entering={reduceMotion ? FadeIn.duration(150) : FadeInDown.duration(220)}
                     exiting={FadeOut.duration(220)}
                     accessibilityLiveRegion="polite"
@@ -147,9 +153,9 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
                     // sheet dims everything behind it, and this card has to read
                     // through that. A hairline edge keeps it apart from a light page.
                     style={[styles.message, { top: messageTop }]}
-                    testID={`auth-language-message-${shown.kind}`}
+                    testID="auth-language-message-getting"
                 >
-                    {shown.kind === 'getting' ? <DownloadPressIllustration /> : null}
+                    <DownloadPressIllustration />
                     <View style={styles.messageText}>
                         <Text style={[styles.messageTitle, { color: NOTICE_INK, writingDirection: messageDir }]}>{messageTitle}</Text>
                         <Text style={[styles.messageBody, { color: NOTICE_INK, writingDirection: messageDir }]}>

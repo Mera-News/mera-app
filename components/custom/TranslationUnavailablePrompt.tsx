@@ -4,11 +4,11 @@ import { InteractionManager, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { probeLanguage } from '@/lib/hooks/use-language-switch';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
     getNativeLanguageName,
     isTranslationVerified,
-    probeTranslationLanguage,
     TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS,
     useTranslationBlocked,
 } from '@/lib/translation-service';
@@ -47,8 +47,8 @@ const TranslationUnavailablePrompt: React.FC = () => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
     const blocked = useTranslationBlocked(appLanguage);
-    // The first-launch language list (AuthScreen, /login) says the same thing
-    // in place and falls back to English, so the card stays off that screen.
+    // The first-launch language list (AuthScreen, /login) shows its own
+    // toast and falls back to English, so this card stays off that screen.
     const onLanguageList = usePathname() === '/login';
     const toast = useToast();
     const shownToastIdRef = useRef<string | null>(null);
@@ -82,7 +82,7 @@ const TranslationUnavailablePrompt: React.FC = () => {
         if (blocked) return;
         startupProbedRef.current = appLanguage;
         const handle = InteractionManager.runAfterInteractions(() => {
-            void probeTranslationLanguage(appLanguage, TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS)
+            void probeLanguage(appLanguage, TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS)
                 .catch(() => {});
         });
         return () => handle.cancel();
@@ -150,7 +150,7 @@ const TranslationUnavailablePrompt: React.FC = () => {
                             // itself, so it is still exactly one deliberate
                             // attempt: one tap, one call, one sheet at most,
                             // and a failure re-blocks immediately.
-                            void probeTranslationLanguage(appLanguage);
+                            void probeLanguage(appLanguage);
                         }}
                     >
                         {body}

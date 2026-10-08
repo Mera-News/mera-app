@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { BackHandler, Platform } from 'react-native';
 
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -69,6 +69,40 @@ import logger from '@/lib/logger';
  * moment the spinner renders and does not wait on the native promise, because
  * that promise is exactly the thing that may hang.
  */
+
+/**
+ * The languages whose probe call is in flight right now, oldest first. This is
+ * the ONLY signal JS has for Apple's download sheet: expo-translate-text sends
+ * no presented or dismissed event, it just holds the promise open while the
+ * sheet is up. The first-launch download notice reads it, so every probe the
+ * app fires goes through `probeLanguage`, never `probeTranslationLanguage`.
+ */
+const probesInFlight: string[] = [];
+const probeListeners = new Set<() => void>();
+const emitProbes = () => probeListeners.forEach((l) => l());
+
+export async function probeLanguage(code: string, timeoutMs?: number): Promise<TranslationProbeOutcome> {
+    probesInFlight.push(code);
+    emitProbes();
+    try {
+        return await probeTranslationLanguage(code, timeoutMs);
+    } finally {
+        probesInFlight.splice(probesInFlight.indexOf(code), 1);
+        emitProbes();
+    }
+}
+
+const subscribeProbes = (l: () => void) => {
+    probeListeners.add(l);
+    return () => probeListeners.delete(l);
+};
+
+/** The language whose probe has been running longest, or null. */
+export const probingLanguage = (): string | null => probesInFlight[0] ?? null;
+
+export function useProbingLanguage(): string | null {
+    return useSyncExternalStore(subscribeProbes, probingLanguage);
+}
 
 export type LanguageSwitchPhase =
     | 'idle'
@@ -191,7 +225,7 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
             const previous = useAppLanguageStore.getState().appLanguage;
             let outcome: TranslationProbeOutcome = 'failed';
             try {
-                outcome = await probeTranslationLanguage(code);
+                outcome = await probeLanguage(code);
             } catch (err) {
                 logger.warn('[useLanguageSwitch] Probe threw', {
                     code,
