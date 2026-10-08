@@ -11,7 +11,8 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { useLanguageSwitch, type LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { languageCheckStatus } from '@/lib/system-check/system-check';
-import { useColors } from '@/lib/theme/tokens';
+import i18n from '@/lib/i18n';
+import { tint, useColors } from '@/lib/theme/tokens';
 import {
     canTranslateIntoLanguage,
     getNativeLanguageName,
@@ -22,6 +23,8 @@ import {
 } from '@/lib/translation-service';
 
 type Message = { kind: 'getting' | 'missing' | 'ready'; code: string } | null;
+
+const RTL_CODES = new Set(['ar', 'he']);
 
 /** "X is ready" stays this long, then fades (Journey #13). */
 const READY_MESSAGE_MS = 1500;
@@ -106,21 +109,26 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
     );
 
     const name = (code: string) => getNativeLanguageName(code) ?? code;
+    // Getting X ready / X is ready speak X itself: the reader picked it, and
+    // iOS dims the rest of the screen while it asks. "Not on this phone" stays
+    // in the language the app is in, the one the reader has now.
+    const lt = shown && shown.kind !== 'missing' ? i18n.getFixedT(shown.code) : t;
+    const messageDir = shown && shown.kind !== 'missing' && RTL_CODES.has(shown.code) ? 'rtl' : 'ltr';
     const messageTitle =
         shown?.kind === 'getting'
-            ? t('auth.track.gettingReadyTitle', { language: name(shown.code) })
+            ? lt('auth.track.gettingReadyTitle', { language: name(shown.code) })
             : shown?.kind === 'missing'
               ? t('auth.track.notHereTitle', { language: name(shown.code) })
               : shown?.kind === 'ready'
-                ? t('auth.track.readyTitle', { language: name(shown.code) })
+                ? lt('auth.track.readyTitle', { language: name(shown.code) })
                 : '';
     const messageBody =
         shown?.kind === 'getting'
-            ? t(Platform.OS === 'ios' ? 'auth.track.gettingReadyIos' : 'auth.track.gettingReadyOther')
+            ? lt(Platform.OS === 'ios' ? 'auth.track.gettingReadyIos' : 'auth.track.gettingReadyOther')
             : shown?.kind === 'missing'
               ? t('auth.track.notHereBody')
               : shown?.kind === 'ready'
-                ? t('auth.track.readyBody', { language: name(shown.code) })
+                ? lt('auth.track.readyBody', { language: name(shown.code) })
                 : '';
 
     return (
@@ -131,13 +139,15 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
                     entering={reduceMotion ? FadeIn.duration(150) : FadeInDown.duration(220)}
                     exiting={FadeOut.duration(220)}
                     accessibilityLiveRegion="polite"
-                    style={[styles.message, { top: messageTop, backgroundColor: colors.panel, borderColor: colors.panelBorder }]}
+                    // Opaque and edged, at full ink: iOS's download sheet dims
+                    // everything behind it, and this card has to read through that.
+                    style={[styles.message, { top: messageTop, backgroundColor: colors.modalBase, borderColor: tint(colors.ink, 0.7) }]}
                     testID={`auth-language-message-${shown.kind}`}
                 >
-                    {shown.kind === 'getting' ? <MeraLogo size={20} animated /> : null}
+                    {shown.kind === 'getting' ? <MeraLogo size={32} animated /> : null}
                     <View style={styles.messageText}>
-                        <Text style={[styles.messageTitle, { color: colors.ink }]}>{messageTitle}</Text>
-                        <Text style={[styles.messageBody, { color: colors.ink2 }]}>{messageBody}</Text>
+                        <Text style={[styles.messageTitle, { color: colors.ink, writingDirection: messageDir }]}>{messageTitle}</Text>
+                        <Text style={[styles.messageBody, { color: colors.ink, writingDirection: messageDir }]}>{messageBody}</Text>
                     </View>
                 </Animated.View>
             ) : null}
@@ -205,14 +215,14 @@ const styles = StyleSheet.create({
         zIndex: 2,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        padding: 14,
-        borderRadius: 16,
-        borderWidth: 1,
+        gap: 14,
+        padding: 20,
+        borderRadius: 20,
+        borderWidth: 1.5,
     },
-    messageText: { flex: 1, gap: 2 },
-    messageTitle: { fontSize: 15, fontWeight: '700' },
-    messageBody: { fontSize: 13, lineHeight: 18 },
+    messageText: { flex: 1, gap: 6 },
+    messageTitle: { fontSize: 22, lineHeight: 28, fontWeight: '700' },
+    messageBody: { fontSize: 17, lineHeight: 24, fontWeight: '600' },
     title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
     label: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
     labelBox: { marginTop: 8, marginBottom: 12 },
