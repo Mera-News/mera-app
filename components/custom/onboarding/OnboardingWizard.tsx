@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text as RNText, View } from 'react-native';
+import { Keyboard, StyleSheet, Text as RNText, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -229,10 +229,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 return;
             }
             if (factCount === 0) {
+                // Next sits beside the input, so the keyboard can be up: the guard
+                // sits near the bottom and would land behind it.
+                Keyboard.dismiss();
                 setGuard('no-facts');
                 return;
             }
         } else if (!notificationsOn) {
+            Keyboard.dismiss();
             setGuard('no-notifications');
             return;
         }
