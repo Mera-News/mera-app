@@ -22,9 +22,12 @@ import { Text } from '@/components/ui/text';
 import { hapticSelection } from '@/lib/haptics';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useColors } from '@/lib/theme/tokens';
+
+import { menuTop } from './menu-placement';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
 import { I18nManager, Modal, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, Keyframe, useReducedMotion } from 'react-native-reanimated';
 
 const PILL = 34;
@@ -72,7 +75,9 @@ export function ChoiceMenuPanel({ children }: { readonly children: React.ReactNo
 }
 
 interface Anchor {
-  readonly top: number;
+  /** The chip's own top and height in the window. */
+  readonly chipTop: number;
+  readonly chipHeight: number;
   readonly left: number;
   readonly right: number;
   readonly width: number;
@@ -92,15 +97,62 @@ export default function InlineChoiceChip<T extends string | number>({
   const still = useReducedMotion() || liteMode;
   const window = useWindowDimensions();
   const chipRef = useRef<View>(null);
+  const insets = useSafeAreaInsets();
   const [anchor, setAnchor] = useState<Anchor | null>(null);
+  // Measured once per open by a hidden first pass, then placed: under the
+  // chip, or above it when it does not fit (menu-placement.ts).
+  const [panelHeight, setPanelHeight] = useState<number | null>(null);
   const rtl = I18nManager.isRTL;
 
   const open = useCallback(() => {
     chipRef.current?.measureInWindow((x, y, width, height) => {
-      setAnchor({ top: y + height + MENU_GAP, left: x, right: window.width - (x + width), width });
+      setPanelHeight(null);
+      setAnchor({
+        chipTop: y,
+        chipHeight: height,
+        left: x,
+        right: window.width - (x + width),
+        width,
+      });
     });
   }, [window.width]);
   const close = useCallback(() => setAnchor(null), []);
+
+  const rows = (live: boolean) =>
+    options.map((option) => {
+      const picked = option === value;
+      return (
+        <Pressable
+          key={String(option)}
+          onPress={() => {
+            close();
+            if (!picked) {
+              void hapticSelection();
+              onChange(option);
+            }
+          }}
+          accessibilityRole="menuitem"
+          accessibilityLabel={a11yLabelOf(option)}
+          accessibilityState={{ checked: picked }}
+          testID={live ? `${testID}-${option}` : undefined}
+          style={styles.row}
+        >
+          <View style={styles.check} {...HIDDEN}>
+            {picked ? <MaterialIcons name="check" size={18} color={colors.accentMark} /> : null}
+          </View>
+          <Text
+            numberOfLines={1}
+            maxFontSizeMultiplier={1}
+            style={[styles.rowLabel, { color: colors.ink, fontWeight: picked ? '600' : '400' }]}
+            {...HIDDEN}
+          >
+            {labelOf(option)}
+          </Text>
+        </Pressable>
+      );
+    });
+  // Hangs from the chip's trailing edge: the right in LTR, the left in RTL.
+  const side = anchor ? (rtl ? { left: anchor.left } : { right: anchor.right }) : null;
 
   return (
     <View style={[styles.frame, disabled ? styles.disabled : null]} testID={`${testID}-frame`}>
@@ -140,7 +192,18 @@ export default function InlineChoiceChip<T extends string | number>({
           accessible={false}
           testID={`${testID}-outside`}
         />
-        {anchor ? (
+        {anchor && panelHeight === null ? (
+          // The measuring pass: same panel, invisible and inert.
+          <View
+            pointerEvents="none"
+            {...HIDDEN}
+            style={[styles.panel, styles.measuring, { top: 0, minWidth: anchor.width }, side]}
+            onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}
+          >
+            <ChoiceMenuPanel>{rows(false)}</ChoiceMenuPanel>
+          </View>
+        ) : null}
+        {anchor && panelHeight !== null ? (
           <Animated.View
             entering={still ? FadeIn.duration(OPEN_MS) : OPEN}
             accessibilityRole="menu"
@@ -149,50 +212,22 @@ export default function InlineChoiceChip<T extends string | number>({
             testID={`${testID}-options`}
             style={[
               styles.panel,
-              { top: anchor.top, minWidth: anchor.width },
-              // Hangs from the chip's trailing edge: the right in LTR, the left in RTL.
-              rtl ? { left: anchor.left } : { right: anchor.right },
+              {
+                top: menuTop({
+                  chipTop: anchor.chipTop,
+                  chipHeight: anchor.chipHeight,
+                  panelHeight,
+                  windowHeight: window.height,
+                  safeTop: insets.top,
+                  safeBottom: insets.bottom,
+                  gap: MENU_GAP,
+                }),
+                minWidth: anchor.width,
+              },
+              side,
             ]}
           >
-            <ChoiceMenuPanel>
-              {options.map((option) => {
-                const picked = option === value;
-                return (
-                  <Pressable
-                    key={String(option)}
-                    onPress={() => {
-                      close();
-                      if (!picked) {
-                        void hapticSelection();
-                        onChange(option);
-                      }
-                    }}
-                    accessibilityRole="menuitem"
-                    accessibilityLabel={a11yLabelOf(option)}
-                    accessibilityState={{ checked: picked }}
-                    testID={`${testID}-${option}`}
-                    style={styles.row}
-                  >
-                    <View style={styles.check} {...HIDDEN}>
-                      {picked ? (
-                        <MaterialIcons name="check" size={18} color={colors.accentMark} />
-                      ) : null}
-                    </View>
-                    <Text
-                      numberOfLines={1}
-                      maxFontSizeMultiplier={1}
-                      style={[
-                        styles.rowLabel,
-                        { color: colors.ink, fontWeight: picked ? '600' : '400' },
-                      ]}
-                      {...HIDDEN}
-                    >
-                      {labelOf(option)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ChoiceMenuPanel>
+            <ChoiceMenuPanel>{rows(true)}</ChoiceMenuPanel>
           </Animated.View>
         ) : null}
       </Modal>
@@ -225,6 +260,7 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
   },
+  measuring: { opacity: 0 },
   clip: { borderRadius: 14, borderWidth: 1, overflow: 'hidden', paddingVertical: 4 },
   row: {
     minHeight: ROW,
