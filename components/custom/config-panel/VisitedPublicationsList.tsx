@@ -10,7 +10,6 @@
 
 import TapPressable from '@/components/custom/cards/TapPressable';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
-import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
@@ -141,33 +140,35 @@ const VisitedPublicationsList: React.FC<Props> = ({
 
     const listEnd = listEndPadding ?? tabClearance + 24;
 
-    const listHeader = (
-        <View>
-            <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-                <PageTitleRow title={t('library.history.title')} testID="history-title-row" />
-            </View>
-            {items.length > 0 ? (
-                <>
-                    <Text
-                        style={{ fontSize: 13, lineHeight: 18, color: c.ink2, marginHorizontal: 4, marginBottom: PAGE_TITLE_GAP }}
-                        testID="history-intro"
-                    >
-                        {t('library.history.intro')}
+    // No title line on screen (owner): the intro, then the table. The title's
+    // wording stays for screen readers on the column headings.
+    const listHeader =
+        items.length > 0 ? (
+            <View>
+                <Text
+                    style={{ fontSize: 13, lineHeight: 18, color: c.ink2, marginHorizontal: 4, marginBottom: PAGE_TITLE_GAP }}
+                    testID="history-intro"
+                >
+                    {t('library.history.intro')}
+                </Text>
+                {/* Column headings above the card (FinalLibrary: padding 0 14 6). */}
+                <View
+                    style={styles.headRow}
+                    accessible
+                    accessibilityRole="header"
+                    accessibilityLabel={t('library.history.title')}
+                    testID="history-head"
+                >
+                    <Text style={[styles.headCell, { color: c.ink3, flex: 1 }]}>{t('library.history.colPublication')}</Text>
+                    <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_VISITS }]}>
+                        {t('library.history.colVisits')}
                     </Text>
-                    {/* Column headings above the card (FinalLibrary: padding 0 14 6). */}
-                    <View style={styles.headRow}>
-                        <Text style={[styles.headCell, { color: c.ink3, flex: 1 }]}>{t('library.history.colPublication')}</Text>
-                        <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_VISITS }]}>
-                            {t('library.history.colVisits')}
-                        </Text>
-                        <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_LAST + 18 }]}>
-                            {t('library.history.colLastRead')}
-                        </Text>
-                    </View>
-                </>
-            ) : null}
-        </View>
-    );
+                    <Text style={[styles.headCell, styles.cellNum, { color: c.ink3, width: COL_LAST + 18 }]}>
+                        {t('library.history.colLastRead')}
+                    </Text>
+                </View>
+            </View>
+        ) : null;
 
     const listFooter =
         items.length > 0 ? (

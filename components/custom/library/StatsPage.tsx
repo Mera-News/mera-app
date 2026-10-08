@@ -13,7 +13,6 @@
 // stays while there are saves or followed stories.
 
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
-import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 import StatFigure, { statLabel } from '@/components/custom/share-stats/stat-figures';
 import StatsShareModal, { type PreviewBox } from '@/components/custom/share-stats/StatsShareModal';
@@ -231,13 +230,16 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                 )}
                 extraData={selecting ? picked : null}
                 ItemSeparatorComponent={() => <View style={{ height: PAGE_TITLE_GAP }} />}
+                // No title line on screen (owner); the window ("Your last 30
+                // days") stays for screen readers, and on the share images.
                 ListHeaderComponent={
-                    <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-                        <PageTitleRow
-                            title={t('library.stats.title')}
-                            testID="stats-title-row"
-                        />
-                    </View>
+                    <View
+                        accessible
+                        accessibilityRole="header"
+                        accessibilityLabel={t('library.stats.title')}
+                        style={styles.srOnly}
+                        testID="stats-title-sr"
+                    />
                 }
                 ListFooterComponent={
                     cards.length > 0 ? (
@@ -357,6 +359,9 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
 };
 
 const styles = StyleSheet.create({
+    // A screen-reader heading with no visual (an empty 1pt view; alpha 0
+    // would hide it from VoiceOver too).
+    srOnly: { height: 1 },
     tile: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 14 },
     tileHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
     floatRow: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
