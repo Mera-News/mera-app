@@ -1,6 +1,5 @@
-import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 // FeedbackRequestModal: one question from the Mera team, a text area and a
-// submit button, on a centred glass card (the FeedbackWidgetModal look).
+// submit button, on the app's centred dialog (HelpModal / ConfirmDialog).
 //
 // WHY A ROUTE (app/logged-in/feedback-request.tsx, `transparentModal`) and not
 // an in-tree RN Modal like every other sheet in the app: a push tap can only
@@ -38,12 +37,12 @@ import {
     ScrollView,
     StyleSheet,
     View,
-    useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TranslucentPlate } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
+import ModalMaterial from '@/components/custom/ModalMaterial';
+import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { markActionedBySource } from '@/lib/database/services/notification-service';
@@ -73,7 +72,6 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { consentBlocksFeedbackRequest } from './feedback-request-consent';
 
-const CLOSE_RED = '#ef4444'; // same close affordance as FeedbackWidgetModal
 /** The counter appears once the answer is this close to the limit. */
 const COUNTER_FROM = FEEDBACK_RESPONSE_MAX_CHARS - 200;
 
@@ -144,7 +142,6 @@ const FeedbackRequestModal: React.FC<FeedbackRequestModalProps> = ({ id, onClose
 const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
-    const { height: screenHeight } = useWindowDimensions();
     const styles = useStyles();
     const c = useColors();
     const [phase, setPhase] = useState<Phase>({ kind: 'loading' });
@@ -252,7 +249,6 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
     const canSubmit = showsTextArea && !submitting && answer.trim().length > 0;
     // A backdrop tap with text typed would throw the answer away.
     const backdropCloses = !showsTextArea || answer.trim().length === 0;
-    const maxCardHeight = screenHeight - insets.top - insets.bottom - 48;
 
     let message: string | null = null;
     if (phase.kind === 'thanks') message = t('feedbackRequest.thanks');
@@ -260,9 +256,19 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
     else if (phase.kind === 'closed') message = t('feedbackRequest.closed');
     else if (phase.kind === 'load-error') message = phase.offline ? t('feedbackRequest.offline') : t('feedbackRequest.loadError');
 
+    const actionButton = (testID: string, label: string, onPress: () => void) => (
+        <Button action="primary" onPress={onPress} style={styles.button} testID={testID}>
+            <ButtonText>{label}</ButtonText>
+        </Button>
+    );
+
+    // The app's centred dialog (HelpModal / ConfirmDialog): the modal material
+    // filling the whole card, 16pt corners, a 1pt edge, the title row, a close
+    // X in ink. The submit button sits in a footer OUTSIDE the scroll, so with
+    // the keyboard up the body scrolls and the button stays on screen.
     return (
         <KeyboardAvoidingView
-            style={styles.root}
+            style={[styles.root, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             <Pressable
@@ -271,14 +277,12 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                 accessible={false}
                 importantForAccessibility="no"
             />
-            <View testID="feedback-request-card" style={[styles.card, { maxHeight: maxCardHeight }]}>
-                {/* The modal material (components/ui/modal). */}
-                <AbstractGradientBackdrop seed="mera-modal" frame={0} />
-                <TranslucentPlate />
+            <View testID="feedback-request-card" accessibilityViewIsModal style={styles.card}>
+                <ModalMaterial />
                 <View style={styles.header}>
                     <View style={styles.headerTitle}>
                         <MeraLogo size={30} />
-                        <Text size="md" bold className="text-ink flex-1" accessibilityRole="header">
+                        <Text accessibilityRole="header" style={styles.title}>
                             {t('feedbackRequest.title')}
                         </Text>
                     </View>
@@ -287,14 +291,14 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                         onPress={onClose}
                         accessibilityLabel={t('feedbackRequest.close')}
                         accessibilityRole="button"
-                        hitSlop={12}
-                        style={styles.closeButton}
+                        style={styles.close}
                     >
-                        <MaterialIcons name="close" size={22} color="#fff" />
+                        <MaterialIcons name="close" size={22} color={c.ink2} />
                     </Pressable>
                 </View>
 
                 <ScrollView
+                    style={styles.scroll}
                     keyboardShouldPersistTaps="handled"
                     bounces={false}
                     contentContainerStyle={styles.body}
@@ -309,7 +313,7 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                     ) : null}
 
                     {question && phase.kind !== 'loading' && phase.kind !== 'load-error' ? (
-                        <Text testID="feedback-request-question" size="lg" className="text-ink">
+                        <Text testID="feedback-request-question" style={styles.question}>
                             {question}
                         </Text>
                     ) : null}
@@ -332,11 +336,7 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                                 />
                             </Input>
                             {answer.length >= COUNTER_FROM ? (
-                                <Text
-                                    testID="feedback-request-counter"
-                                    size="xs"
-                                    style={styles.counter}
-                                >
+                                <Text testID="feedback-request-counter" size="xs" style={styles.counter}>
                                     {t('feedbackRequest.counter', {
                                         current: answer.length,
                                         max: FEEDBACK_RESPONSE_MAX_CHARS,
@@ -344,7 +344,7 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                                 </Text>
                             ) : null}
                             {phase.kind === 'error' ? (
-                                <Text testID="feedback-request-error" size="sm" className="text-red-400 mt-3">
+                                <Text testID="feedback-request-error" size="sm" style={styles.error}>
                                     {phase.offline ? t('feedbackRequest.offline') : t('feedbackRequest.error')}
                                 </Text>
                             ) : null}
@@ -353,69 +353,54 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                             <Text testID="feedback-request-disclaimer" size="xs" style={styles.disclaimer}>
                                 {t('feedbackRequest.disclaimer')}
                             </Text>
-                            <Pressable
-                                testID="feedback-request-submit"
-                                onPress={() => void handleSubmit()}
-                                disabled={!canSubmit}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('feedbackRequest.submit')}
-                                accessibilityState={{ disabled: !canSubmit, busy: submitting }}
-                                style={[styles.primaryButton, !canSubmit && styles.buttonDisabled]}
-                            >
-                                {submitting ? (
-                                    <ActivityIndicator color={c.onAccent} />
-                                ) : (
-                                    <Text size="md" bold style={styles.primaryButtonText}>
-                                        {t('feedbackRequest.submit')}
-                                    </Text>
-                                )}
-                            </Pressable>
                         </>
                     ) : null}
 
                     {message ? (
                         <Text
                             testID={`feedback-request-${phase.kind}`}
-                            size="md"
                             style={styles.message}
                             accessibilityLiveRegion="polite"
                         >
                             {message}
                         </Text>
                     ) : null}
-
-                    {phase.kind === 'load-error' ? (
-                        <Pressable
-                            testID="feedback-request-retry"
-                            onPress={() => void load()}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('feedbackRequest.retry')}
-                            style={styles.primaryButton}
-                        >
-                            <Text size="md" bold style={styles.primaryButtonText}>
-                                {t('feedbackRequest.retry')}
-                            </Text>
-                        </Pressable>
-                    ) : null}
-
-                    {phase.kind === 'thanks' || phase.kind === 'already' || phase.kind === 'closed' ? (
-                        <Pressable
-                            testID="feedback-request-done"
-                            onPress={onClose}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('feedbackRequest.close')}
-                            style={styles.primaryButton}
-                        >
-                            <Text size="md" bold style={styles.primaryButtonText}>
-                                {t('feedbackRequest.close')}
-                            </Text>
-                        </Pressable>
-                    ) : null}
                 </ScrollView>
+
+                {showsTextArea ? (
+                    <View style={styles.footer}>
+                        {/* The app's primary: the accent, and the standard
+                            disabled look while the answer is empty. */}
+                        <Button
+                            action="primary"
+                            onPress={() => void handleSubmit()}
+                            isDisabled={!canSubmit}
+                            accessibilityLabel={t('feedbackRequest.submit')}
+                            accessibilityState={{ disabled: !canSubmit, busy: submitting }}
+                            style={styles.button}
+                            testID="feedback-request-submit"
+                        >
+                            {submitting ? <ButtonSpinner /> : null}
+                            <ButtonText>{t('feedbackRequest.submit')}</ButtonText>
+                        </Button>
+                    </View>
+                ) : null}
+                {phase.kind === 'load-error' ? (
+                    <View style={styles.footer}>
+                        {actionButton('feedback-request-retry', t('feedbackRequest.retry'), () => void load())}
+                    </View>
+                ) : null}
+                {phase.kind === 'thanks' || phase.kind === 'already' || phase.kind === 'closed' ? (
+                    <View style={styles.footer}>
+                        {actionButton('feedback-request-done', t('feedbackRequest.close'), onClose)}
+                    </View>
+                ) : null}
             </View>
         </KeyboardAvoidingView>
     );
 };
+
+const CLOSE_FRAME = 44;
 
 const useStyles = themedStyles((c) => StyleSheet.create({
     root: {
@@ -425,23 +410,24 @@ const useStyles = themedStyles((c) => StyleSheet.create({
         paddingHorizontal: 16,
         backgroundColor: c.scrim,
     },
+    // The dialog surface (HelpModal): 16pt corners, a 1pt edge, the material
+    // behind; it never grows past the room left above the keyboard.
     card: {
         width: '100%',
-        maxWidth: 480,
-        borderRadius: 24,
-        overflow: 'hidden',
+        maxWidth: 400,
+        maxHeight: '100%',
+        borderRadius: 16,
         borderWidth: 1,
         borderColor: c.line,
-        backgroundColor: c.modalBase,
+        overflow: 'hidden',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 2,
-        gap: 12,
+        paddingTop: 16,
+        paddingLeft: 24,
+        paddingRight: 8,
+        gap: 8,
     },
     headerTitle: {
         flex: 1,
@@ -449,56 +435,38 @@ const useStyles = themedStyles((c) => StyleSheet.create({
         alignItems: 'center',
         gap: 10,
     },
-    closeButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: CLOSE_RED,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+    title: { flex: 1, color: c.ink, fontSize: 20, lineHeight: 26, fontWeight: '700' },
+    close: { width: CLOSE_FRAME, height: CLOSE_FRAME, alignItems: 'center', justifyContent: 'center' },
+    scroll: { flexGrow: 0, flexShrink: 1 },
     body: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 24,
         paddingTop: 12,
-        paddingBottom: 20,
+        paddingBottom: 8,
     },
     spinner: {
         marginVertical: 24,
     },
+    question: { color: c.ink, fontSize: 17, lineHeight: 24 },
     counter: {
         color: c.ink2,
         textAlign: 'right',
         marginTop: 6,
     },
+    error: { color: c.negative, marginTop: 12 },
     disclaimer: {
         color: c.ink2,
         marginTop: 12,
         lineHeight: 18,
     },
     message: {
-        color: c.ink,
-        marginTop: 12,
+        color: c.ink2,
+        fontSize: 16,
         lineHeight: 22,
+        marginTop: 4,
     },
-    // Grows with its label: a long translation wraps inside a taller button
-    // rather than being clipped by a fixed height.
-    primaryButton: {
-        marginTop: 16,
-        minHeight: 48,
-        borderRadius: 24,
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        backgroundColor: c.accent,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    buttonDisabled: {
-        opacity: 0.4,
-    },
-    primaryButtonText: {
-        color: c.onAccent,
-        textAlign: 'center',
-    },
+    footer: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 },
+    // 44pt, as ConfirmDialog (the Modals board).
+    button: { minHeight: 44 },
 }));
 
 export default FeedbackRequestModal;
