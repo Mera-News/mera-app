@@ -8,7 +8,7 @@
 //
 // Redirect stubs (share-stats, saved-suggestions, ...) and the shortcuts on
 // the Feed's empty state go through here too; `params` carries what a page
-// needs on arrival (Stats' `card`).
+// needs on arrival (no page reads any today).
 //
 // Navigation order: a root push above app_container (article detail, Search,
 // a stub) is dismissed first, and only then, so the origin tab's own stack is
@@ -30,7 +30,7 @@ import { tabForSurface, tabOfPage, tabRoute, type PageId, type SurfaceId, type T
 
 export interface PageRequest {
   readonly page: PageId;
-  /** One-shot arrival params for the page (Stats: `card`). */
+  /** One-shot arrival params for the page. */
   readonly params: Readonly<Record<string, string>> | null;
   /** Where the jump started, for the jump-origin Back. Null: unknown. */
   readonly origin: SurfaceId | null;

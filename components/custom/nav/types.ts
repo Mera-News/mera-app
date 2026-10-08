@@ -27,7 +27,7 @@ export interface PageRenderProps {
    *  or tab-press handling. */
   readonly active: boolean;
   readonly header: PageHeaderBinding;
-  /** One-shot arrival params from `navigateToPage` (Stats: `card`). Non-null
+  /** One-shot arrival params from `navigateToPage`. Non-null
    *  only on the render that lands the request; copy what you need. */
   readonly params: Readonly<Record<string, string>> | null;
 }
