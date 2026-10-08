@@ -2,7 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler, Keyboard, Linking, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { BackHandler, Keyboard, Linking, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
     FadeIn,
     FadeOut,
@@ -23,7 +23,7 @@ import validator from 'validator';
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import ConsentContent from '@/components/custom/auth/ConsentContent';
-import { consentNoticeKey, noEmailFaqUrl } from '@/components/custom/auth/device-sign-in-copy';
+import { consentNoticeKey } from '@/components/custom/auth/device-sign-in-copy';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
 import LaunchLogo from '@/components/custom/auth/LaunchLogo';
@@ -60,7 +60,6 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { buildSupportMailtoUrl } from '@/lib/support-id';
 import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { maskEmail } from '@/lib/utils/mask-email';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
 
 import { acceptLegal, fetchLegalVersions, markLegalAcceptedThisProcess, silentlyAcceptLegal } from './legal-consent';
 
@@ -310,7 +309,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         opacity: logoOpacity.value,
         transform: [{ translateY: logoY.value }, { scale: logoScale.value }],
     }));
-    const bodyTop = insets.top + (logoAt === 'top' ? 16 + LOGO_TOP + 16 : 16);
+    // Consent draws its own top bar: the back button on the logo's row.
+    const bodyTop = insets.top + (logoAt === 'top' && stage !== 'consent' ? 16 + LOGO_TOP + 16 : 16);
 
     // ── Handlers ──────────────────────────────────────────────────────────
     const canSignInWithoutEmail = allowDeviceSignIn && availability !== 'unavailable';
@@ -698,42 +698,47 @@ function ConsentStage({
 
     return (
         <View style={styles.pad} testID="auth-consent">
-            <BackArrow onPress={onBack} />
-            <View style={styles.flex} />
-            <ConsentContent
-                testIDPrefix="auth-consent"
-                title={t('auth.track.beforeYouStart')}
-                body={t('consent.welcomeBody')}
-                notice={
-                    noticeKey ? (
-                        <Text testID="auth-consent-device-notice" style={[styles.text, { color: colors.ink2 }]}>
-                            {t(noticeKey)}
-                        </Text>
-                    ) : undefined
-                }
-                onWhatMeraKeeps={mode === 'device' ? () => openInAppBrowser(noEmailFaqUrl()) : undefined}
-                ctaLabel={t('consent.accept')}
-                busyLabel={t('auth.deviceSignInWorking')}
-                busy={working}
-                onAccept={() => void agree()}
-            >
-                {failure !== null ? (
-                    <View style={styles.gap8}>
-                        <Text testID="auth-device-failure" style={[styles.text, { color: colors.negative, textAlign: 'center' }]}>
-                            {failureText}
-                        </Text>
-                        <Button variant="outline" action="secondary" onPress={() => void agree()} testID="auth-device-retry">
-                            <ButtonText>{t('auth.tryAgain')}</ButtonText>
-                        </Button>
-                        {/* A new user whose device cannot attest gets an account
-                            minted through email here: never account-ownership
-                            framing (the key name is historical). */}
-                        <Button variant="outline" action="secondary" onPress={onUseEmail} testID="auth-use-email-failure">
-                            <ButtonText>{t('auth.alreadyHaveAccount')}</ButtonText>
-                        </Button>
-                    </View>
-                ) : null}
-            </ConsentContent>
+            {/* The top bar: back on the left of the logo's row (the hoisted
+                logo is centred over it). Then ONE centred stack, like the
+                begin step; taller than the screen, it scrolls from the top. */}
+            <View style={styles.topBar}>
+                <BackArrow onPress={onBack} style={styles.backInBar} />
+            </View>
+            <ScrollView contentContainerStyle={styles.consentStack}>
+                <ConsentContent
+                    testIDPrefix="auth-consent"
+                    title={t('auth.track.beforeYouStart')}
+                    body={t('consent.welcomeBody')}
+                    notice={
+                        noticeKey ? (
+                            <Text testID="auth-consent-device-notice" style={[styles.text, styles.centerText, { color: colors.ink2 }]}>
+                                {t(noticeKey)}
+                            </Text>
+                        ) : undefined
+                    }
+                    ctaLabel={t('consent.accept')}
+                    busyLabel={t('auth.deviceSignInWorking')}
+                    busy={working}
+                    onAccept={() => void agree()}
+                >
+                    {failure !== null ? (
+                        <View style={styles.gap8}>
+                            <Text testID="auth-device-failure" style={[styles.text, { color: colors.negative, textAlign: 'center' }]}>
+                                {failureText}
+                            </Text>
+                            <Button variant="outline" action="secondary" onPress={() => void agree()} testID="auth-device-retry">
+                                <ButtonText>{t('auth.tryAgain')}</ButtonText>
+                            </Button>
+                            {/* A new user whose device cannot attest gets an account
+                                minted through email here: never account-ownership
+                                framing (the key name is historical). */}
+                            <Button variant="outline" action="secondary" onPress={onUseEmail} testID="auth-use-email-failure">
+                                <ButtonText>{t('auth.alreadyHaveAccount')}</ButtonText>
+                            </Button>
+                        </View>
+                    ) : null}
+                </ConsentContent>
+            </ScrollView>
         </View>
     );
 }
@@ -1036,7 +1041,7 @@ function DifferentAccountSheet({
 
 // ── Small pieces ─────────────────────────────────────────────────────────────
 
-function BackArrow({ onPress }: { onPress: () => void }) {
+function BackArrow({ onPress, style }: { onPress: () => void; style?: StyleProp<ViewStyle> }) {
     const { t } = useTranslation();
     const colors = useColors();
     return (
@@ -1047,7 +1052,7 @@ function BackArrow({ onPress }: { onPress: () => void }) {
             }}
             accessibilityRole="button"
             accessibilityLabel={t('common.back')}
-            style={styles.back}
+            style={[styles.back, style]}
             testID="auth-back"
         >
             <MaterialIcons name="arrow-back" size={24} color={colors.ink} />
@@ -1112,6 +1117,9 @@ const styles = StyleSheet.create({
     caption: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
     field: { height: 52, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, fontSize: 16, marginTop: 20 },
     back: { width: 44, height: 44, justifyContent: 'center', marginBottom: 8 },
+    topBar: { height: LOGO_TOP, justifyContent: 'center' },
+    backInBar: { marginBottom: 0 },
+    consentStack: { flexGrow: 1, justifyContent: 'center', paddingVertical: 16 },
     pill: {
         flexDirection: 'row',
         alignItems: 'center',
