@@ -48,9 +48,6 @@ interface NotificationHourWheelProps {
     /** The hour in the outlined centre row (0-23). */
     readonly cursorHour: number;
     readonly onCursorChange: (hour: number) => void;
-    /** A tapped row (or a screen reader's activate on the outlined hour) is a
-     *  pick: the screen saves it. Spinning only moves the cursor. */
-    readonly onPickHour: (hour: number) => void;
     /** Picked hours render in the accent colour; the wheel never edits them. */
     readonly pickedHours: readonly number[];
     readonly format: (hour: number) => string;
@@ -59,17 +56,16 @@ interface NotificationHourWheelProps {
 }
 
 /**
- * A spinning hour picker: five rows, the centre one outlined. Spinning moves
- * the outlined hour; tapping a row brings it to the centre AND picks it.
+ * A spinning hour picker: five rows, the centre one outlined. Spinning or
+ * tapping a row moves the outlined hour; the screen's Add button picks it.
  *
  * To VoiceOver and TalkBack it is ONE adjustable control (swipe up or down to
- * move an hour, double tap to pick the outlined one); the rows are not
- * separate stops, since a screen reader cannot spin 9,624 rows.
+ * move an hour); the rows are not separate stops, since a screen reader
+ * cannot spin 9,624 rows.
  */
 const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
     cursorHour,
     onCursorChange,
-    onPickHour,
     pickedHours,
     format,
     accessibilityLabel,
@@ -143,9 +139,8 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
         (e: AccessibilityActionEvent) => {
             if (e.nativeEvent.actionName === 'increment') onCursorChange((cursorHour + 1) % HOURS);
             if (e.nativeEvent.actionName === 'decrement') onCursorChange((cursorHour + HOURS - 1) % HOURS);
-            if (e.nativeEvent.actionName === 'activate') onPickHour(cursorHour);
         },
-        [cursorHour, onCursorChange, onPickHour],
+        [cursorHour, onCursorChange],
     );
 
     const renderItem = useCallback(
@@ -164,7 +159,6 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
                     onPress={() => {
                         scrollToTop(rowIndex - CENTER_OFFSET, true);
                         if (hour !== cursorHour) onCursorChange(hour);
-                        onPickHour(hour);
                     }}
                     style={{ height: WHEEL_ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', opacity }}
                 >
@@ -184,7 +178,7 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
                 </Pressable>
             );
         },
-        [cursorHour, pickedHours, format, onCursorChange, onPickHour, scrollToTop, colors],
+        [cursorHour, pickedHours, format, onCursorChange, scrollToTop, colors],
     );
 
     const getItemLayout = useCallback(
@@ -203,7 +197,7 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
             accessibilityRole="adjustable"
             accessibilityLabel={accessibilityLabel}
             accessibilityValue={{ text: format(cursorHour) }}
-            accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }, { name: 'activate' }]}
+            accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
             onAccessibilityAction={onAccessibilityAction}
             style={{ height: WHEEL_ROW_HEIGHT * VISIBLE_ROWS }}
         >

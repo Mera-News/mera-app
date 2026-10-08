@@ -2877,10 +2877,11 @@
       "add": "Zeit hinzufügen",
       "remove": "{{time}} entfernen",
       "wheel": "Zeit zum Hinzufügen",
-      "footnote": "Mera sendet nur zu diesen Zeiten eine Mitteilung, in deiner Zeitzone. Bis zu drei.",
-      "offLine": "Mera schickt dir nichts. Schalte dies ein, um bis zu drei Zeiten auszuwählen, zu denen es das tun darf.",
-      "tapToSave": "Tippe auf eine Zeit, um sie zu speichern.",
-      "footnoteNoCap": "Mera sendet nur zu diesen Zeiten eine Mitteilung, in deiner Zeitzone."
+      "footnote": "Drehe, um die umrandete Zeit zu verschieben. Mera sendet nur zu diesen Zeiten eine Mitteilung, in deiner Zeitzone.",
+      "offLine": "Mera schickt dir nichts. Schalte dies ein, um auszuwählen, wann es das tun darf.",
+      "addHour": "{{time}} hinzufügen",
+      "alreadyPicked": "{{time}} ist bereits gewählt",
+      "zeroTimes": "Wähle eine Zeit, sonst sendet Mera keine Mitteilungen."
     }
   },
   "meraHints": {

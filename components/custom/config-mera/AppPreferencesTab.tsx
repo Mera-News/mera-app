@@ -12,7 +12,6 @@ import { showDialog } from '@/lib/dialog';
 import { showFeedback } from '@/lib/feedback';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useSupportAction } from '@/lib/intercom';
-import { convertUTCHoursToLocal } from '@/lib/notificationSlotUtils';
 import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -28,13 +27,11 @@ import { TEXT_SCALE_STEPS } from '@/lib/typography/scale';
 import { maskEmail } from '@/lib/utils/mask-email';
 import { getAppVersion, getGitCommit } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
-import { formatHourLabel } from '@/components/custom/NotificationHourWheel';
 import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
-import { deviceUses24h } from './NotificationTimes';
 import SettingsUsageCard from './SettingsUsageCard';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { useDeleteAccount } from './use-delete-account';
@@ -63,7 +60,7 @@ const FAQ_OPENING_MS = 1000;
 const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
     const toast = useToast();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const colors = useColors();
     // Shared with the paywall footer and BlockedBanner. `busy` drives the
     // spinner in the chevron slot; every fallback decision lives in the hook.
@@ -72,7 +69,6 @@ const AppPreferencesTab: React.FC = () => {
     const processingMode = useMeraProtocolStore((s) => s.processingMode);
     const textScale = useTextScaleStore((s) => s.scale);
     const lockEnabled = usePinStore((s) => s.lockEnabled);
-    const userPersona = useUserStore((s) => s.userPersona);
     const { data: session } = authClient.useSession();
     // LOCAL first: the stored email survives offline and auth blips; the
     // session is the fallback. One derivation, shared with email-capture.
@@ -244,17 +240,6 @@ const AppPreferencesTab: React.FC = () => {
 
     const backupOn = backupCadence() !== 'off' && backupProviderId() !== null;
 
-    // Notifications: the picked times in the phone's clock, or Off.
-    const notificationsValue = (() => {
-        const hours = userPersona?.preferredNotificationWindow ?? [];
-        if (!userPersona?.notificationsEnabled || hours.length === 0) return t('you.settings.off');
-        const use24h = deviceUses24h();
-        return convertUTCHoursToLocal(hours)
-            .sort((a, b) => a - b)
-            .map((h) => formatHourLabel(h, use24h, i18n?.language))
-            .join(', ');
-    })();
-
     const textStep = Math.max(0, TEXT_SCALE_STEPS.indexOf(textScale as never));
 
     const [faqOpening, setFaqOpening] = React.useState(false);
@@ -316,7 +301,6 @@ const AppPreferencesTab: React.FC = () => {
                     testID="settings-row-notifications"
                     leadingIcon="notifications-none"
                     title={t('preferences.notifications')}
-                    value={notificationsValue}
                     onPress={() => routerHook.push(youScreen('notifications'))}
                 />
             </Group>

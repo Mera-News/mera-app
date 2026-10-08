@@ -2947,10 +2947,11 @@
       "add": "Dodaj godzinę",
       "remove": "Usuń {{time}}",
       "wheel": "Godzina do dodania",
-      "footnote": "Mera wysyła powiadomienia tylko o tych porach, w Twojej strefie czasowej. Do trzech.",
-      "offLine": "Mera nic Ci nie wyśle. Włącz to, aby wybrać do trzech pór, w których może.",
-      "tapToSave": "Stuknij porę, aby ją zapisać.",
-      "footnoteNoCap": "Mera wysyła powiadomienia tylko o tych porach, w Twojej strefie czasowej."
+      "footnote": "Obracaj, aby przesunąć zaznaczoną godzinę. Mera wysyła powiadomienie tylko o tych godzinach, w Twojej strefie czasowej.",
+      "offLine": "Mera nic Ci nie wyśle. Włącz to, aby wybrać porę, w której może.",
+      "addHour": "Dodaj {{time}}",
+      "alreadyPicked": "{{time}} jest już wybrana",
+      "zeroTimes": "Wybierz godzinę, inaczej Mera nie wyśle żadnych powiadomień."
     }
   },
   "meraHints": {

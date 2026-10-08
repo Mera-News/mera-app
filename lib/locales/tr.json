@@ -2879,10 +2879,11 @@
       "add": "Saat ekle",
       "remove": "{{time}} kaldır",
       "wheel": "Eklenecek saat",
-      "footnote": "Mera bildirimi yalnızca bu saatlerde, saat diliminizde gönderir. En fazla üç tane.",
-      "offLine": "Mera size hiçbir şey göndermez. Mümkün olduğunda en fazla üç saat seçmek için bunu açın.",
-      "tapToSave": "Kaydetmek için bir saate dokunun.",
-      "footnoteNoCap": "Mera bildirimi yalnızca bu saatlerde, saat diliminizde gönderir."
+      "footnote": "Çerçeveli saati kaydırmak için çevirin. Mera yalnızca bu saatlerde, saat diliminize göre bildirim gönderir.",
+      "offLine": "Mera size hiçbir şey göndermez. Mümkün olduğunda ne zaman gönderebileceğini seçmek için bunu açın.",
+      "addHour": "{{time}} ekle",
+      "alreadyPicked": "{{time}} zaten seçili",
+      "zeroTimes": "Bir saat seçin, yoksa Mera hiç bildirim göndermez."
     }
   },
   "meraHints": {

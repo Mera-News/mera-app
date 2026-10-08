@@ -2875,10 +2875,11 @@
       "add": "Thêm một giờ",
       "remove": "Xóa {{time}}",
       "wheel": "Giờ cần thêm",
-      "footnote": "Mera chỉ gửi thông báo vào các thời điểm này, theo múi giờ của bạn. Tối đa ba thời điểm.",
-      "offLine": "Mera sẽ không gửi bất cứ điều gì cho bạn. Bật lên để chọn tối đa ba thời điểm có thể gửi.",
-      "tapToSave": "Chạm vào một thời điểm để lưu.",
-      "footnoteNoCap": "Mera chỉ gửi thông báo vào các thời điểm này, theo múi giờ của bạn."
+      "footnote": "Cuộn để di chuyển giờ được viền. Mera chỉ gửi thông báo vào những giờ này, theo múi giờ của bạn.",
+      "offLine": "Mera sẽ không gửi bất cứ điều gì cho bạn. Bật lên để chọn thời điểm có thể gửi.",
+      "addHour": "Thêm {{time}}",
+      "alreadyPicked": "Đã chọn {{time}}",
+      "zeroTimes": "Hãy chọn một giờ, nếu không Mera sẽ không gửi thông báo nào."
     }
   },
   "meraHints": {

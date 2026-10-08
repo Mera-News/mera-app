@@ -2875,10 +2875,11 @@
       "add": "新增時間",
       "remove": "移除 {{time}}",
       "wheel": "要新增的時間",
-      "footnote": "Mera 只會在這些時間發送通知，並以你的時區為準。最多三個。",
-      "offLine": "Mera 不會傳送任何通知給你。開啟此功能，即可選擇最多三個時段。",
-      "tapToSave": "點按一個時間即可儲存。",
-      "footnoteNoCap": "Mera 只會在這些時間發送通知，並以你的時區為準。"
+      "footnote": "滾動即可移動有框線的時間。Mera 只會在這些時間傳送通知，並依你所在的時區計算。",
+      "offLine": "Mera 不會傳送任何通知給你。開啟此功能，即可選擇可以傳送的時段。",
+      "addHour": "新增 {{time}}",
+      "alreadyPicked": "已選擇 {{time}}",
+      "zeroTimes": "請選擇一個時間，否則 Mera 不會傳送任何通知。"
     }
   },
   "meraHints": {

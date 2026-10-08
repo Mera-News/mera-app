@@ -2877,10 +2877,11 @@
       "add": "Añadir una hora",
       "remove": "Quitar {{time}}",
       "wheel": "Hora para añadir",
-      "footnote": "Mera solo envía un aviso a estas horas, en tu zona horaria. Hasta tres.",
-      "offLine": "Mera no te enviará nada. Actívalo para elegir hasta tres horas en las que puede hacerlo.",
-      "tapToSave": "Toca una hora para guardarla.",
-      "footnoteNoCap": "Mera solo envía un aviso a estas horas, en tu zona horaria."
+      "footnote": "Gira para mover la hora marcada. Mera solo envía un aviso a estas horas, en tu zona horaria.",
+      "offLine": "Mera no te enviará nada. Actívalo para elegir cuándo puede hacerlo.",
+      "addHour": "Añadir {{time}}",
+      "alreadyPicked": "{{time}} ya está elegida",
+      "zeroTimes": "Elige una hora, o Mera no enviará ningún aviso."
     }
   },
   "meraHints": {

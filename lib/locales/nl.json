@@ -2877,10 +2877,11 @@
       "add": "Voeg een tijd toe",
       "remove": "{{time}} verwijderen",
       "wheel": "Tijd om toe te voegen",
-      "footnote": "Mera stuurt alleen een melding op deze tijden, in jouw tijdzone. Maximaal drie.",
-      "offLine": "Mera stuurt je niets. Zet dit aan om maximaal drie tijden te kiezen waarop het dat kan.",
-      "tapToSave": "Tik op een tijd om hem op te slaan.",
-      "footnoteNoCap": "Mera stuurt alleen een melding op deze tijden, in jouw tijdzone."
+      "footnote": "Draai om de omlijnde tijd te verplaatsen. Mera stuurt alleen op deze tijden een melding, in jouw tijdzone.",
+      "offLine": "Mera stuurt je niets. Zet dit aan om te kiezen wanneer het dat kan.",
+      "addHour": "{{time}} toevoegen",
+      "alreadyPicked": "{{time}} is al gekozen",
+      "zeroTimes": "Kies een tijd, anders stuurt Mera geen meldingen."
     }
   },
   "meraHints": {

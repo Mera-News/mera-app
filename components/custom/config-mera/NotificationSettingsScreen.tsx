@@ -44,9 +44,8 @@ interface NotificationSettingsScreenProps {
 /**
  * Settings > Notifications, and the first onboarding step (same component,
  * `isOnboarding`). Two controls: the push switch, and when Mera may notify
- * (up to three times). Picked hours show three ways: dots on a decorative
- * 24-hour strip, removable pills, and the accent colour on the wheel. Tapping
- * a wheel row saves it; "Add a time" reopens the wheel.
+ * (any number of hours, `NotificationTimes`: the strip, the pills, and a wheel
+ * that moves the outlined hour for Add to pick).
  */
 const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     onBack,

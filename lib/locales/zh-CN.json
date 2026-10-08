@@ -2875,10 +2875,11 @@
       "add": "添加时间",
       "remove": "移除 {{time}}",
       "wheel": "要添加的时间",
-      "footnote": "Mera 只会在这些时间发送通知，按你所在时区计算。最多三个。",
-      "offLine": "Mera 不会向你发送任何内容。开启此功能，即可选择最多三个接收通知的时间。",
-      "tapToSave": "点按一个时间即可保存。",
-      "footnoteNoCap": "Mera 只会在这些时间发送通知，按你所在时区计算。"
+      "footnote": "滚动即可移动带框的时间。Mera 只会在这些时间发送通知，并按你所在的时区计算。",
+      "offLine": "Mera 不会向你发送任何内容。开启此功能，即可选择它可以发送通知的时间。",
+      "addHour": "添加 {{time}}",
+      "alreadyPicked": "已选择 {{time}}",
+      "zeroTimes": "请选择一个时间，否则 Mera 不会发送任何通知。"
     }
   },
   "meraHints": {
