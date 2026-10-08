@@ -142,8 +142,14 @@ export function StepSlider({
 }
 
 const BUBBLE_W = 52;
+const BUBBLE_H = 26;
+/** The bubble sits this far above the thumb's top edge. */
+const BUBBLE_GAP = 4;
+/** How far the bubble reaches above the 44pt touch row, so the slider can keep
+ *  that room (plus 4pt) free and the bubble never covers what is above it. */
+const BUBBLE_OVERHANG = BUBBLE_H + BUBBLE_GAP + THUMB / 2 - HIT / 2;
 const styles = StyleSheet.create({
-    root: { paddingHorizontal: THUMB / 2 },
+    root: { paddingHorizontal: THUMB / 2, paddingTop: BUBBLE_OVERHANG + 4 },
     hit: { height: HIT, justifyContent: 'center' },
     track: { height: TRACK, borderRadius: TRACK / 2 },
     fill: { position: 'absolute', start: 0 },
@@ -158,9 +164,10 @@ const styles = StyleSheet.create({
     bubble: {
         position: 'absolute',
         start: -BUBBLE_W / 2,
-        bottom: HIT / 2 + THUMB / 2 + 4,
+        bottom: HIT / 2 + THUMB / 2 + BUBBLE_GAP,
         width: BUBBLE_W,
-        paddingVertical: 4,
+        height: BUBBLE_H,
+        justifyContent: 'center',
         borderRadius: 10,
         borderWidth: 1,
         alignItems: 'center',
