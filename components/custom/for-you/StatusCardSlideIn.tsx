@@ -75,6 +75,9 @@ const StatusCardSlideIn: React.FC<StatusCardSlideInProps> = ({ visible, onHide }
     // Mounted from show until the exit slide ends. Parked far above until its
     // first layout says how far to slide.
     const [mounted, setMounted] = useState(visible);
+    // Bumped on every show: the card remounts EXPANDED each time the icon
+    // opens it (owner), even when re-shown mid-exit after the reader collapsed it.
+    const [openEpoch, setOpenEpoch] = useState(0);
     const offset = useSharedValue(-2000);
     const height = useRef(0);
     const entered = useRef(false);
@@ -87,6 +90,7 @@ const StatusCardSlideIn: React.FC<StatusCardSlideInProps> = ({ visible, onHide }
 
     useEffect(() => {
         if (visible) {
+            setOpenEpoch((n) => n + 1);
             if (mounted && height.current > 0) {
                 // Re-shown mid-exit: the exit's completion is cancelled.
                 entered.current = true;
@@ -178,6 +182,8 @@ const StatusCardSlideIn: React.FC<StatusCardSlideInProps> = ({ visible, onHide }
                             testID="status-slide-in"
                         >
                             <DashboardStatsCard
+                                key={openEpoch}
+                                initiallyExpanded
                                 overContent
                                 onBeforeNavigate={onHide}
                                 testID="status-slide-in-card"
