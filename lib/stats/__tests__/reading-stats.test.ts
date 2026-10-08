@@ -7,9 +7,7 @@ import {
   roundedMedianHours,
   availableCards,
   cardHasData,
-  countryBands,
   dailyReads,
-  heatGridRows,
   mondayIndex,
   peakDayCount,
   STATS_CARD_IDS,
@@ -481,42 +479,6 @@ describe('openedAtSourceCount', () => {
   });
 });
 
-describe('countryBands', () => {
-  function reach(counts: [string, number][]): ReadingStats {
-    return {
-      ...emptyReadingStats(),
-      countries: counts.map(([countryCode, visitCount]) => ({ countryCode, visitCount })),
-      countryCount: counts.length,
-    };
-  }
-
-  it('returns fractions that sum to exactly one', () => {
-    const bands = countryBands(reach([['IN', 38], ['US', 22], ['GB', 14], ['DE', 16], ['FR', 10]]));
-
-    expect(bands.map((b) => b.countryCode)).toEqual(['IN', 'US', 'GB', null]);
-    const total = bands.reduce((sum, b) => sum + b.share, 0);
-    expect(total).toBeCloseTo(1, 10);
-  });
-
-  it('omits the remainder band when the top N is everything', () => {
-    // Strictly greater than zero, so the bar never draws a band the reader
-    // cannot see and the legend never names an empty "rest".
-    const bands = countryBands(reach([['IN', 5], ['US', 3]]));
-    expect(bands.map((b) => b.countryCode)).toEqual(['IN', 'US']);
-  });
-
-  it('returns nothing rather than dividing by zero', () => {
-    expect(countryBands(emptyReadingStats())).toEqual([]);
-    expect(countryBands(reach([['IN', 0]]))).toEqual([]);
-  });
-
-  it('is a fraction of TAPS, not of countries', () => {
-    const bands = countryBands(reach([['IN', 9], ['FR', 1]]));
-    expect(bands[0].share).toBeCloseTo(0.9, 10);
-    expect(bands[1].share).toBeCloseTo(0.1, 10);
-  });
-});
-
 describe('languages', () => {
   it('is a DIFFERENT fact from country, not a proxy for it', () => {
     // One publisher in Switzerland produces German, French and Italian rows.
@@ -615,33 +577,6 @@ describe('dailyReads', () => {
     expect(mondayIndex(monday)).toBe(0);
     expect(mondayIndex(monday + 5 * DAY)).toBe(5);
     expect(mondayIndex(monday + 6 * DAY)).toBe(6);
-  });
-});
-
-describe('heatGridRows', () => {
-  it('needs SIX rows when the window starts late in the week', () => {
-    // The row count is NOT days / 7: the first row is padded so day one lands
-    // in its own weekday column. Five rows is the lucky case, and a budget
-    // sized against it overflows.
-    const startingSaturday = dailyReads([], Date.UTC(2026, 9, 17, 12, 0, 0), 30);
-    const rows = heatGridRows(startingSaturday);
-    expect(rows).toBeGreaterThanOrEqual(5);
-    expect(rows).toBeLessThanOrEqual(6);
-  });
-
-  it('reaches six for at least one start weekday, and five for at least one', () => {
-    // Non-vacuity for the budget: if every start gave the same row count, the
-    // worst-case modelling above would be pointless.
-    const counts = new Set<number>();
-    for (let i = 0; i < 7; i += 1) {
-      counts.add(heatGridRows(dailyReads([], Date.UTC(2026, 8, 14 + i, 12, 0, 0), 30)));
-    }
-    expect(counts.has(5)).toBe(true);
-    expect(counts.has(6)).toBe(true);
-  });
-
-  it('is zero for an empty window rather than one empty row', () => {
-    expect(heatGridRows([])).toBe(0);
   });
 });
 

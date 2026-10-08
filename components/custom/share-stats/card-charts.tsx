@@ -11,14 +11,10 @@
 // Each has to be parsed in about a second, from a screenshot, with no legend.
 //
 //   FlagGrid       a set. The flags ARE the chart.
-//   ProportionBar  a part-to-whole. The ONLY one here, and it is used once, on
-//                  the reach card, where shares of total taps genuinely sum to
-//                  one. Nothing else on any card is a part of a whole, which is
-//                  why there is no donut anywhere in this file.
-//   DotArray       a count you can verify by eye at small N and read as mass at
-//                  large N.
-//   RuledScale     a single value's position on a range, which is what a
-//                  latency average is.
+//   ProportionBar  a part-to-whole: the Languages card, where shares of total
+//                  taps genuinely sum to one. Nothing else is a part of a
+//                  whole, which is why there is no donut anywhere in this file.
+//   HeatGrid       the Days you read card's 30-day calendar.
 //
 // ## Why Views and not SVG
 //
@@ -75,12 +71,6 @@ export const CHART_METRICS = {
   barLegendGap: 6,
   barLegendTop: 7,
 
-  dotSize: 9,
-  dotGap: 5,
-  dotRowGap: 5,
-  dotsPerRow: 20,
-  dotMax: 60,
-
   /** HeatGrid. 16pt cells since the habits card merged days, opened and pace
    *  onto one card; the history below explains the six-row worst case, which
    *  still holds. Every TEXT size here is at least 9.5pt, which is 28.5px at
@@ -102,12 +92,6 @@ export const CHART_METRICS = {
   heatLegendSize: 9.5,
   heatLegendTop: 8,
   heatLegendSwatch: 9,
-
-  scaleRule: 2,
-  scaleTickHeight: 8,
-  scaleMarker: 11,
-  scaleLabelSize: 9.5,
-  scaleLabelTop: 6,
 } as const;
 
 /** Always emits lineHeight beside fontSize. Same rule as the card's `type()`:
@@ -233,7 +217,7 @@ export interface ProportionBarProps {
  * A single stacked bar plus its inline legend.
  *
  * Widths are `flex: share` rather than a percentage string: the shares come
- * from `countryBands` as exact fractions summing to 1, and letting flex divide
+ * from the caller as exact fractions summing to 1, and letting flex divide
  * the row means no rounding residue can open a gap at the right edge that the
  * legend does not explain.
  */
@@ -296,155 +280,6 @@ export const ProportionBar: React.FC<ProportionBarProps> = ({ segments, k, testI
     </View>
   );
 };
-
-// --- DotArray --------------------------------------------------------------
-
-export interface DotArrayProps {
-  count: number;
-  k: number;
-  /** Filled for a solid dot, ring for an outline. Two shapes rather than two
-   *  colours, so the distinction survives a greyscale screenshot. */
-  shape?: 'filled' | 'ring';
-  accent?: boolean;
-  maxDots?: number;
-  testID?: string;
-}
-
-/** How many dots actually get drawn, and whether the array is truncated. */
-export function dotsFor(
-  count: number,
-  maxDots: number = CHART_METRICS.dotMax,
-): { drawn: number; truncated: boolean } {
-  const n = Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
-  return { drawn: Math.min(n, maxDots), truncated: n > maxDots };
-}
-
-export const DotArray: React.FC<DotArrayProps> = ({
-  count,
-  k,
-  shape = 'filled',
-  accent = false,
-  maxDots,
-  testID,
-}) => {
-  const { inkColor } = useCardInk();
-  const { drawn } = dotsFor(count, maxDots ?? CHART_METRICS.dotMax);
-  const size = CHART_METRICS.dotSize * k;
-  const colour = accent ? inkColor('accent') : inkColor('primary');
-
-  return (
-    <View
-      testID={testID}
-      style={{
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        columnGap: CHART_METRICS.dotGap * k,
-        rowGap: CHART_METRICS.dotRowGap * k,
-        // A wrapped row with no main-axis floor and centred content clips its
-        // ENDS symmetrically and looks correct. Left-aligned, so an overflow is
-        // visible rather than silently eating dots off both sides.
-        justifyContent: 'flex-start',
-      }}
-    >
-      {Array.from({ length: drawn }, (_, i) => (
-        <View
-          key={i}
-          style={{
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            ...(shape === 'filled'
-              ? { backgroundColor: colour }
-              : { borderWidth: Math.max(1, 1.4 * k), borderColor: colour }),
-          }}
-        />
-      ))}
-    </View>
-  );
-};
-
-// --- RuledScale ------------------------------------------------------------
-
-export interface RuledScaleProps {
-  /** Where the marker sits, in the same unit as min and max. */
-  value: number;
-  min: number;
-  max: number;
-  k: number;
-  startLabel: string;
-  endLabel: string;
-  testID?: string;
-}
-
-/** The marker's position as a fraction of the rule, clamped into it. A value
- *  past `max` pins to the end rather than running off the card. */
-export function scalePosition(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value) || !Number.isFinite(min) || !Number.isFinite(max)) return 0;
-  if (max <= min) return 0;
-  return Math.min(1, Math.max(0, (value - min) / (max - min)));
-}
-
-export const RuledScale: React.FC<RuledScaleProps> = ({
-  value,
-  min,
-  max,
-  k,
-  startLabel,
-  endLabel,
-  testID,
-}) => {
-  const { inkColor, palette } = useCardInk();
-  const fraction = scalePosition(value, min, max);
-  const marker = CHART_METRICS.scaleMarker * k;
-
-  return (
-    <View testID={testID}>
-      <View style={{ height: marker, justifyContent: 'center' }}>
-        <View
-          style={{
-            height: CHART_METRICS.scaleRule * k,
-            borderRadius: CHART_METRICS.scaleRule * k,
-            backgroundColor: palette.rule,
-          }}
-        />
-        {/* Positioned as a percentage of the row and pulled back by half its
-            own width, so the marker's CENTRE lands on the value at any width
-            and both ends stay inside the rule. */}
-        <View
-          testID={testID ? `${testID}-marker` : undefined}
-          style={{
-            position: 'absolute',
-            left: `${fraction * 100}%`,
-            marginLeft: -marker / 2,
-            width: marker,
-            height: marker,
-            borderRadius: marker / 2,
-            backgroundColor: inkColor('accent'),
-          }}
-        />
-      </View>
-      <HStack
-        className="justify-between"
-        style={{ marginTop: CHART_METRICS.scaleLabelTop * k }}
-      >
-        <Text
-          allowFontScaling={false}
-          style={[chartType(CHART_METRICS.scaleLabelSize, k), { color: inkColor('muted') }]}
-        >
-          {startLabel}
-        </Text>
-        <Text
-          allowFontScaling={false}
-          style={[chartType(CHART_METRICS.scaleLabelSize, k), { color: inkColor('muted') }]}
-        >
-          {endLabel}
-        </Text>
-      </HStack>
-    </View>
-  );
-};
-
-
 
 // --- HeatGrid --------------------------------------------------------------
 
@@ -601,4 +436,4 @@ export const HeatGrid: React.FC<HeatGridProps> = ({
   );
 };
 
-export default { FlagGrid, ProportionBar, DotArray, RuledScale, HeatGrid };
+export default { FlagGrid, ProportionBar, HeatGrid };

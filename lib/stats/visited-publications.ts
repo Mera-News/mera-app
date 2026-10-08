@@ -61,16 +61,6 @@ export function mergeVisitedByName(rows: readonly VisitedPublication[]): Visited
 }
 
 /**
- * Whether the first row may be called "more than any other": strictly more
- * visits than the second. A tie would make the line false, so a tie gets no
- * top card. One publication alone qualifies.
- */
-export function hasClearLeader(rows: readonly VisitedPublication[]): boolean {
-  if (rows.length === 0) return false;
-  return rows.length === 1 || rows[0].visitCount > rows[1].visitCount;
-}
-
-/**
  * The visits that belong to one publication page, matched on every name the
  * page knows it by (its raw name, the profile's name and source names),
  * normalised and in any country, the same rule the Visited merge uses. So a
@@ -89,41 +79,6 @@ export function visitsForNames(
     const key = normPublicationName(v.publicationName);
     return key !== null && wanted.has(key);
   });
-}
-
-/** The two columns of a subscription row this needs; satisfied structurally
- *  by the WatermelonDB model, so no DB import reaches this file. */
-export interface SubscriptionNames {
-  readonly publisherName: string;
-  readonly sourceNamesJson: string | null;
-}
-
-/**
- * Every name the reader's active subscriptions cover, normalised: each
- * publisher's own name plus the source names stored with it. Visited marks a
- * row "You pay" from this set alone, so it works offline and before the
- * publisher lookup answers, and flips the moment "I already pay" writes a row.
- *
- * The normalisation is `normPublicationName`, character for character the
- * same rule as `normalizeSubscriptionName`, which wrote `sourceNamesJson`.
- * A malformed blob covers nothing rather than throwing on the render path.
- */
-export function subscribedNameSet(items: readonly SubscriptionNames[]): Set<string> {
-  const set = new Set<string>();
-  const add = (name: unknown) => {
-    const key = typeof name === 'string' ? normPublicationName(name) : null;
-    if (key) set.add(key);
-  };
-  for (const item of items) {
-    add(item.publisherName);
-    try {
-      const parsed: unknown = item.sourceNamesJson ? JSON.parse(item.sourceNamesJson) : [];
-      if (Array.isArray(parsed)) parsed.forEach(add);
-    } catch {
-      // A truncated blob matches nothing; the publisher name above still does.
-    }
-  }
-  return set;
 }
 
 /**

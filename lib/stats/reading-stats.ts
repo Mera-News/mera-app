@@ -405,40 +405,6 @@ export function availableCards(stats: ReadingStats): StatsCardId[] {
   return STATS_CARD_IDS.filter((card) => cardHasData(stats, card));
 }
 
-/**
- * The reach card's proportion bar: the largest `topN` countries by taps, plus
- * one remainder segment when anything is left over.
- *
- * Shares are fractions of the WINDOWED TOTAL, so they always sum to 1 and the
- * bar can never leave a gap it does not explain. Returned as fractions rather
- * than percentages because rounding for display is the render site's business,
- * and rounding here would let three rounded values sum to 99.
- */
-export interface CountryBand {
-  /** Null on the remainder band, which has no single country. */
-  countryCode: string | null;
-  share: number;
-}
-
-export function countryBands(stats: ReadingStats, topN = 3): CountryBand[] {
-  const total = stats.countries.reduce((sum, c) => sum + c.visitCount, 0);
-  if (total <= 0) return [];
-
-  const lead = stats.countries.slice(0, Math.max(0, topN));
-  const bands: CountryBand[] = lead.map((c) => ({
-    countryCode: c.countryCode,
-    share: c.visitCount / total,
-  }));
-
-  const leadTotal = lead.reduce((sum, c) => sum + c.visitCount, 0);
-  // Strictly greater, so a rounding residue of zero never draws a band the
-  // reader cannot see and the legend never names an empty "rest".
-  if (total - leadTotal > 0) {
-    bands.push({ countryCode: null, share: (total - leadTotal) / total });
-  }
-  return bands;
-}
-
 // --- daily reading, for the rhythm grid ------------------------------------
 
 /**
@@ -499,19 +465,6 @@ export function dailyReads(
     cursor.setDate(cursor.getDate() - 1);
   }
   return out.reverse();
-}
-
-/**
- * How many rows a 7-column grid needs for these days.
- *
- * The first row is PADDED so day one lands in its own weekday column, so the
- * row count is not `days / 7`: a 30-day window starting on a Saturday needs SIX
- * rows, not five. Exported because the height budget has to model the worst
- * case the UI can be asked to draw, and five rows is the lucky case.
- */
-export function heatGridRows(days: DayRead[]): number {
-  if (days.length === 0) return 0;
-  return Math.ceil((days[0].weekday + days.length) / 7);
 }
 
 /** The most articles read on any one day, which is what the shading scale is

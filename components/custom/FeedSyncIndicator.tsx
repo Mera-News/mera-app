@@ -210,8 +210,8 @@ export function useFeedSyncRefresh(
         }
 
         // Paused means the auth-failure breaker took feed-sync offline. Spinning
-        // silently would be a lie; the ReauthBanner mounted at the logged-in
-        // layout root is the recovery path.
+        // silently would be a lie; the account gate (shown on the next
+        // foreground or launch, never mid-read) is the recovery path.
         if (AppScheduler.isPaused(FEED_SYNC_TASK)) {
             logger.info('[FeedSyncIndicator] pull-to-refresh skipped — feed-sync paused (auth breaker)');
             return;

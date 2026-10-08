@@ -67,9 +67,6 @@ async function readSeenAt(): Promise<number> {
     return now;
 }
 
-/** How many the Dashboard block shows before "View all". */
-export const DASHBOARD_FACT_CHECK_PREVIEW = 3;
-
 interface FactChecksState {
     /** Newest request first. Empty until the first `load()`. */
     items: StoredFactCheck[];

@@ -3,9 +3,7 @@ import type {
   VisitedPublication,
 } from '@/lib/database/services/publication-visit-service';
 import {
-  hasClearLeader,
   mergeVisitedByName,
-  subscribedNameSet,
   visitsForNames,
 } from '../visited-publications';
 
@@ -66,18 +64,6 @@ describe('mergeVisitedByName', () => {
   });
 });
 
-describe('hasClearLeader', () => {
-  it('needs strictly more visits than the second', () => {
-    expect(hasClearLeader([pub('A', null, 3, 1), pub('B', null, 2, 1)])).toBe(true);
-    expect(hasClearLeader([pub('A', null, 3, 1), pub('B', null, 3, 1)])).toBe(false);
-  });
-
-  it('is true for one publication and false for none', () => {
-    expect(hasClearLeader([pub('A', null, 1, 1)])).toBe(true);
-    expect(hasClearLeader([])).toBe(false);
-  });
-});
-
 describe('visitsForNames', () => {
   const visits = [
     visit('The Guardian', 'g1', 300),
@@ -92,20 +78,6 @@ describe('visitsForNames', () => {
 
   it('returns nothing when no name is known', () => {
     expect(visitsForNames(visits, [undefined, ' '])).toEqual([]);
-  });
-});
-
-describe('subscribedNameSet', () => {
-  it('covers publisher names and stored source names, normalised', () => {
-    const set = subscribedNameSet([
-      { publisherName: 'Handelsblatt Media', sourceNamesJson: '["handelsblatt","hb  live"]' },
-      { publisherName: ' NRC ', sourceNamesJson: null },
-    ]);
-    expect([...set].sort()).toEqual(['handelsblatt', 'handelsblatt media', 'hb live', 'nrc']);
-  });
-
-  it('survives a malformed blob', () => {
-    expect([...subscribedNameSet([{ publisherName: 'NOS', sourceNamesJson: '["no' }])]).toEqual(['nos']);
   });
 });
 
