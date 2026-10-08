@@ -10,19 +10,10 @@
 //    and dies with an uninstall, exactly like the iPhone key, while ANDROID_ID
 //    survives a reinstall and is lost only to a reset.
 //
-// Import-light on purpose (a type import, one URL constant and the locale
-// helper), so each branch is testable without mocking Platform.
+// Import-light on purpose (one type import), so each branch is testable
+// without mocking Platform.
 
-import { FAQ_URL } from '@/lib/config/branding';
 import type { DeviceSignInPath } from '@/lib/device-auth';
-import { withAppLanguage } from '@/lib/web-browser-utils';
-
-/** The website's FAQ answer on signing in without email, in the app's
- *  language. A function, not a constant: the language can change at runtime,
- *  and `withAppLanguage` reads it at call time. */
-export function noEmailFaqUrl(): string {
-    return `${withAppLanguage(FAQ_URL)}#no-email`;
-}
 
 export type ConsentNoticeKey =
     | 'consent.deviceNotice.appAttest'

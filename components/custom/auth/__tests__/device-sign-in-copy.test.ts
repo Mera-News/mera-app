@@ -3,18 +3,7 @@
 // only for App Attest, Google only for Play Integrity, the dev bypass claims
 // no platform check, and only ANDROID_ID survives an uninstall.
 
-jest.mock('@/lib/config/branding', () => ({ FAQ_URL: 'https://mera.news/faq' }));
-// Stands in for the real locale insertion; its mapping is covered in
-// lib/__tests__/web-browser-utils.test.ts.
-jest.mock('@/lib/web-browser-utils', () => ({
-    withAppLanguage: (u: string) => u.replace('mera.news/', 'mera.news/zh-Hant/'),
-}));
-
-import {
-    consentNoticeKey,
-    deviceSignInCaptionKey,
-    noEmailFaqUrl,
-} from '../device-sign-in-copy';
+import { consentNoticeKey, deviceSignInCaptionKey } from '../device-sign-in-copy';
 
 describe('consentNoticeKey', () => {
     it.each([
@@ -38,10 +27,6 @@ describe('deviceSignInCaptionKey', () => {
     ] as const)('%s -> %s', (path, key) => {
         expect(deviceSignInCaptionKey(path)).toBe(key);
     });
-});
-
-it('the FAQ link is localized and keeps the no-email anchor after the path', () => {
-    expect(noEmailFaqUrl()).toBe('https://mera.news/zh-Hant/faq#no-email');
 });
 
 it('every key it can return exists in en.json', () => {
