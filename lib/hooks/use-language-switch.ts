@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { BackHandler } from 'react-native';
+import { AppState, BackHandler } from 'react-native';
 
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import {
@@ -74,17 +74,27 @@ import logger from '@/lib/logger';
 export interface Probe {
     readonly code: string;
 }
+/** Probes during which iOS reported the app not active: the one outside sign
+ *  of Apple's download sheet. Watched from the moment the call starts, so a
+ *  brief inactive blip while the page is still rendering is never missed. */
+const sheetSeenProbes = new WeakSet<Probe>();
+export const probeSawSheet = (probe: Probe): boolean => sheetSeenProbes.has(probe);
 const probesInFlight: Probe[] = [];
 const probeListeners = new Set<() => void>();
 const emitProbes = () => probeListeners.forEach((l) => l());
 
 export async function probeLanguage(code: string, timeoutMs?: number): Promise<TranslationProbeOutcome> {
     const probe: Probe = { code };
+    if (AppState.currentState !== 'active') sheetSeenProbes.add(probe);
+    const sub = AppState.addEventListener('change', (state) => {
+        if (state !== 'active') sheetSeenProbes.add(probe);
+    });
     probesInFlight.push(probe);
     emitProbes();
     try {
         return await probeTranslationLanguage(code, timeoutMs);
     } finally {
+        sub.remove();
         probesInFlight.splice(probesInFlight.indexOf(probe), 1);
         emitProbes();
     }

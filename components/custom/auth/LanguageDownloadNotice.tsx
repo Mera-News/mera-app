@@ -2,87 +2,23 @@
 // and by Settings > Language: "Getting <language> ready" on the LIGHT modal
 // material with the pressing-↓ illustration, in the language being fetched.
 //
-// Owner rule: it shows ONLY while Apple's download sheet is up. JS gets no
-// sheet event, so it rides the probe call (`useCurrentProbe`): iOS only, after
-// NOTICE_DELAY_MS, gone the moment the call settles. If no sheet shows by
-// NO_SHEET_MS the host is let go (`onNoSheet`): notice off, list unlocked, the
-// switch cancelled; the call itself keeps its real timeout.
+// When it shows is `useLanguageDownloadNotice` (use-language-download-notice.ts).
 
-import React, { useEffect, useRef, useState } from 'react';
-import { AppState, Platform, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, useReducedMotion } from 'react-native-reanimated';
 
 import DownloadPressIllustration from '@/components/custom/auth/DownloadPressIllustration';
 import ModalMaterial from '@/components/custom/ModalMaterial';
-import { useCurrentProbe, type Probe } from '@/lib/hooks/use-language-switch';
 import i18n from '@/lib/i18n';
 import { COLORS } from '@/lib/theme/tokens';
 import { getNativeLanguageName } from '@/lib/translation-service';
 
+export { useLanguageDownloadNotice } from './use-language-download-notice';
+
 const RTL_CODES = new Set(['ar', 'he']);
 /** The notice wears the light theme's modal material and ink in both themes. */
 const NOTICE_INK = COLORS.light.ink;
-
-/**
- * A probe for a pack that is already there settles in well under this, with
- * no sheet. Waiting it out keeps the notice from flashing in that case.
- */
-const NOTICE_DELAY_MS = 300;
-
-/**
- * A probe this far in with no sign of Apple's sheet is not going to show one
- * (a call left over from an earlier attempt can hold the native host). The
- * reader is let go; the call itself keeps its real 90s / 20s timeout.
- */
-const NO_SHEET_MS = 8000;
-
-/**
- * The notice's guards. `noticeCode` is the language to show the notice for
- * (null: no notice); `gaveUp` is the probe the host stopped waiting on.
- * `cancel` is the host's switch cancel; `onNoSheet` says why it was let go.
- */
-export function useLanguageDownloadNotice(cancel: () => void, onNoSheet: (code: string) => void) {
-    const probe = useCurrentProbe();
-    const [gaveUp, setGaveUp] = useState<Probe | null>(null);
-    const live = Platform.OS === 'ios' && probe && probe !== gaveUp ? probe.code : null;
-    const cancelRef = useRef(cancel);
-    cancelRef.current = cancel;
-    const onNoSheetRef = useRef(onNoSheet);
-    onNoSheetRef.current = onNoSheet;
-
-    const [noticeCode, setNoticeCode] = useState<string | null>(null);
-    useEffect(() => {
-        if (!live) {
-            setNoticeCode(null);
-            return;
-        }
-        const id = setTimeout(() => setNoticeCode(live), NOTICE_DELAY_MS);
-        return () => clearTimeout(id);
-    }, [live, probe]);
-
-    // No-sheet fallback. Apple's sheet sends JS no event; iOS reporting the app
-    // inactive is the one outside sign of a system sheet, and a probe that has
-    // seen it is waiting on the reader, so it is never cut short.
-    useEffect(() => {
-        if (!live || !probe) return;
-        let sheetSeen = AppState.currentState !== 'active';
-        const sub = AppState.addEventListener('change', (state) => {
-            if (state !== 'active') sheetSeen = true;
-        });
-        const id = setTimeout(() => {
-            if (sheetSeen) return;
-            setGaveUp(probe);
-            cancelRef.current();
-            onNoSheetRef.current(live);
-        }, NO_SHEET_MS);
-        return () => {
-            clearTimeout(id);
-            sub.remove();
-        };
-    }, [live, probe]);
-
-    return { noticeCode, gaveUp };
-}
 
 /** The card itself, absolutely placed at `top` in its host. */
 export default function LanguageDownloadNotice({ code, top }: { readonly code: string | null; readonly top: number }) {

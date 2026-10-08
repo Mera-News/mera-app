@@ -87,9 +87,11 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
         [t],
     );
 
-    // The selector is inline, so the probe runs at once. The UI previews the
-    // new language while it is checked.
+    // EXACTLY first launch's switch (WelcomeStage): no preview, so the page
+    // turns only once the language is ready. A preview re-rendered the whole
+    // app in the new language at the moment Apple's sheet came up.
     const { pendingCode, busy, requestSwitch, cancel } = useLanguageSwitch({
+        preview: false,
         onCommitted: handleCommitted,
         onResult: handleResult,
     });
@@ -137,7 +139,9 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                     on pick, under the switch's progress. The list scrolls in
                     its box. */}
                 <View style={{ flex: 1, minHeight: 0, paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 16, gap: 12 }}>
-                    {busy && pendingCode ? <LanguageSwitchProgress code={pendingCode} onCancel={cancel} /> : null}
+                    {/* One piece of feedback at a time: while the download
+                        notice is up, the progress card stays away. */}
+                    {busy && pendingCode && !noticeCode ? <LanguageSwitchProgress code={pendingCode} onCancel={cancel} /> : null}
                     <LanguageSelector
                         appLanguage={appLanguage}
                         phone={phone}
