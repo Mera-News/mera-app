@@ -25,6 +25,8 @@ import { consentNoticeKey, noEmailFaqUrl } from '@/components/custom/auth/device
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
 import LaunchLogo from '@/components/custom/auth/LaunchLogo';
+import MeraLogo from '@/components/custom/MeraLogo';
+import { ScrollView } from '@/components/ui/scroll-view';
 import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
 import TutorialModalHost from '@/components/custom/tutorials/TutorialModalHost';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
@@ -143,11 +145,13 @@ const TRACK: Partial<Record<Stage, number>> = {
 /** The one logo: where and how big it sits on each stage (FinalJourney "One logo"). */
 const LOGO_FULL = 150;
 const LOGO_TOP = 56;
-const LOGO: Partial<Record<Stage, 'center' | 'top'>> = {
+/** `slot`: the stage measures where the logo belongs in its own centred stack
+ *  (the begin step) and reports it; the logo travels there. */
+const LOGO: Partial<Record<Stage, 'center' | 'top' | 'slot'>> = {
     intro: 'center',
     welcome: 'top',
     checks: 'top',
-    begin: 'top',
+    begin: 'slot',
     consent: 'top',
 };
 
@@ -268,13 +272,26 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
     const logoScale = useSharedValue(1);
     const logoY = useSharedValue(height * 0.3);
     const logoOpacity = useSharedValue(0);
+    // The begin step's logo slot, in window coordinates; `inline` when its
+    // stack scrolls (Larger Text) and draws the logo itself instead.
+    const [slot, setSlot] = useState<{ y: number; inline: boolean } | null>(null);
+    useEffect(() => {
+        if (logoAt !== 'slot') setSlot(null);
+    }, [logoAt]);
     useEffect(() => {
         const timing = { duration: reduceMotion ? 0 : 500, easing: EASE.arrive };
-        logoOpacity.value = withTiming(logoAt ? 1 : 0, { duration: reduceMotion ? 0 : 250 });
+        const hidden = !logoAt || (logoAt === 'slot' && slot?.inline === true);
+        logoOpacity.value = withTiming(hidden ? 0 : 1, { duration: reduceMotion ? 0 : 250 });
         if (!logoAt) return;
+        // A slot not measured yet: hold where the logo is until it reports.
+        if (logoAt === 'slot' && !slot) return;
         logoScale.value = withTiming(logoAt === 'center' ? 1 : LOGO_TOP / LOGO_FULL, timing);
-        logoY.value = withTiming(logoAt === 'center' ? height * 0.3 : insets.top + 16 - (LOGO_FULL - LOGO_TOP) / 2, timing);
-    }, [logoAt, height, insets.top, reduceMotion, logoScale, logoY, logoOpacity]);
+        const topY = (y: number) => y - (LOGO_FULL - LOGO_TOP) / 2;
+        logoY.value = withTiming(
+            logoAt === 'center' ? height * 0.3 : logoAt === 'slot' && slot ? topY(slot.y) : topY(insets.top + 16),
+            timing,
+        );
+    }, [logoAt, slot, height, insets.top, reduceMotion, logoScale, logoY, logoOpacity]);
     const logoStyle = useAnimatedStyle(() => ({
         opacity: logoOpacity.value,
         transform: [{ translateY: logoY.value }, { scale: logoScale.value }],
@@ -344,6 +361,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         case 'begin':
             body = (
                 <BeginStage
+                    onLogoSlot={setSlot}
                     canUsePhone={availability !== 'unavailable'}
                     onWithoutEmail={() => {
                         setConsentFor('device');
@@ -554,37 +572,60 @@ function BeginStage({
     canUsePhone,
     onWithoutEmail,
     onWithEmail,
+    onLogoSlot,
 }: {
     canUsePhone: boolean;
     onWithoutEmail: () => void;
     onWithEmail: () => void;
+    /** Where the logo belongs in this stack (window y), for the hoisted logo. */
+    onLogoSlot: (slot: { y: number; inline: boolean }) => void;
 }) {
     const { t } = useTranslation();
     const colors = useColors();
+    // One centred stack (owner): logo, title, the primary with its helper, the
+    // secondary. Taller than the screen (Larger Text): it scrolls, top-aligned,
+    // and draws the logo inline, since the hoisted one cannot scroll with it.
+    const [viewport, setViewport] = useState(0);
+    const [content, setContent] = useState(0);
+    const inline = viewport > 0 && content > viewport;
+    const slotRef = useRef<View>(null);
+    const report = useCallback(() => {
+        slotRef.current?.measureInWindow((_x, y) => onLogoSlot({ y, inline }));
+    }, [inline, onLogoSlot]);
+    useEffect(report, [report]);
     return (
-        <View style={styles.pad} testID="auth-begin">
-            <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
+        <ScrollView
+            testID="auth-begin"
+            onLayout={(e) => setViewport(e.nativeEvent.layout.height)}
+            onContentSizeChange={(_w, h) => setContent(h)}
+            contentContainerStyle={[styles.beginStack, inline ? null : styles.beginCentered]}
+        >
+            <View ref={slotRef} onLayout={report} style={styles.beginLogo}>
+                {inline ? <MeraLogo size={LOGO_TOP} animated /> : null}
+            </View>
+            <Text accessibilityRole="header" style={[styles.title, styles.centerText, styles.beginTitle, { color: colors.ink }]}>
                 {t('auth.track.beginTitle')}
             </Text>
-            <View style={styles.flex} />
             {canUsePhone ? (
-                <View style={styles.gap8}>
-                    <Button action="primary" onPress={onWithoutEmail} testID="auth-begin-without-email">
+                <>
+                    <Button action="primary" onPress={onWithoutEmail} style={styles.beginPrimary} testID="auth-begin-without-email">
                         <ButtonText>{t('auth.track.beginWithoutEmail')}</ButtonText>
                     </Button>
-                    <Text style={[styles.caption, { color: colors.ink3 }]}>{t('auth.track.beginCaption')}</Text>
-                </View>
+                    <Text style={[styles.caption, styles.centerText, styles.beginHelper, { color: colors.ink3 }]}>
+                        {t('auth.track.beginCaption')}
+                    </Text>
+                </>
             ) : null}
             <Button
                 variant={canUsePhone ? 'outline' : 'solid'}
                 action={canUsePhone ? 'secondary' : 'primary'}
                 onPress={onWithEmail}
-                className="mt-4"
+                style={canUsePhone ? styles.beginSecondary : styles.beginPrimary}
                 testID="auth-begin-with-email"
             >
                 <ButtonText>{t('auth.track.continueWithEmail')}</ButtonText>
             </Button>
-        </View>
+        </ScrollView>
     );
 }
 
@@ -1045,6 +1086,13 @@ const styles = StyleSheet.create({
     centerText: { textAlign: 'center' },
     flex: { flex: 1 },
     gap8: { gap: 8 },
+    beginStack: { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 16 },
+    beginCentered: { justifyContent: 'center' },
+    beginLogo: { width: LOGO_TOP, height: LOGO_TOP, alignSelf: 'center' },
+    beginTitle: { marginTop: 24 },
+    beginHelper: { marginTop: 8 },
+    beginPrimary: { marginTop: 24 },
+    beginSecondary: { marginTop: 16 },
     title: { fontSize: 26, fontWeight: '700' },
     text: { fontSize: 15, lineHeight: 21 },
     caption: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
