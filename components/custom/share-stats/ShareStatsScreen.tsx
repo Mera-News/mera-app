@@ -150,7 +150,8 @@ const ShareStatsScreen: React.FC = () => {
 
     if (step === 'choose') {
         return (
-            <View style={[styles.screen, { backgroundColor: c.base }]} testID="share-stats-choose">
+            // DrillDownHeader draws no status-bar inset of its own: the screen pads it.
+            <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: c.base }]} testID="share-stats-choose">
                 <DrillDownHeader
                     title={t('shareStats.choose.title')}
                     rightAction={
@@ -202,7 +203,7 @@ const ShareStatsScreen: React.FC = () => {
 
     const palette = CARD_PALETTES[background];
     return (
-        <View style={[styles.screen, { backgroundColor: c.base }]} testID="share-stats-preview-step">
+        <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: c.base }]} testID="share-stats-preview-step">
             {/* The off-screen capture host, at the export size, positioned away
                 and laid out (an unmounted or display:none host captures blank). */}
             {current ? (
