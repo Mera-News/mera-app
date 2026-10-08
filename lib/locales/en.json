@@ -176,7 +176,7 @@
         "cloudReasons": {
           "headlines": [
             "Writing a short note for each relevant story.",
-            "You can step away; we’ll notify you when it’s ready.",
+            "You can step away. We’ll notify you when it’s ready.",
             "Everything stays end-to-end encrypted: only your phone can read it."
           ]
         },
@@ -1073,7 +1073,7 @@
     "badge_one": "You've visited {{publication}} once in the last 30 days",
     "badge_other": "You've visited {{publication}} {{count}} times in the last 30 days",
     "tooltipA11y": "About reading history",
-    "tooltipIntro": "Mera keeps track of your reading patterns for you; it lives only on your device.",
+    "tooltipIntro": "Mera keeps track of your reading patterns for you. That record stays only on your device.",
     "tooltipLink": "See all your reading history here."
   },
   "savedSuggestions": {
@@ -1114,7 +1114,7 @@
     "noteTitle": "Your data, on your device",
     "noteBody": "This screen reads Mera's on-device database directly. It is the data that builds your feed, shown here for visibility and for debugging. Mera's servers don't store your facts, your reading history, or the suggestions built from them.",
     "noteExceptions": "Two exceptions: your account profile (sign-in, notifications, language) is synced to your Mera account, and when cloud AI is switched on, your facts are encrypted on this device before being sent for scoring.",
-    "noteFooter": "Values here are raw and diagnostic. Feed rows clear themselves after 48 hours; you can delete your facts, feed cache and viewing history from Manage Data.",
+    "noteFooter": "Values here are raw and diagnostic. Feed rows clear themselves after 48 hours. You can delete your facts, feed cache and viewing history from Manage Data.",
     "articles": "Articles",
     "relevant": "Relevant",
     "unscored": "Unscored",
@@ -1232,7 +1232,7 @@
     "notificationTitle": "Tune Mera to your taste",
     "notificationBody": "Mera's on-device ranking disagreed with its own judgement {{count}} times lately. Recalibrate to close the gap.",
     "recalibrateChip": "Recalibrate now",
-    "chatIntro": "I've been second-guessing how I rank your news lately. Want me to recalibrate so my scoring better matches your taste? Tap \"Recalibrate now\" and I'll tune it; you can always undo it.",
+    "chatIntro": "I've been second-guessing how I rank your news lately. Want me to recalibrate so my scoring better matches your taste? Tap \"Recalibrate now\" and I'll tune it. You can always undo it.",
     "confirmChip": "Recalibrate now",
     "runningBody": "Recalibrating your ranking…",
     "successTitle": "Recalibrated",
@@ -1378,7 +1378,7 @@
     "reject": "Dismiss",
     "effectTooBroad": "Lowers this interest's weight so it pulls in fewer off-topic stories.",
     "effectStaleTopic": "Retires this quiet topic.",
-    "effectStaleFact": "Removes this fact; none of its topics are active anymore.",
+    "effectStaleFact": "Removes this fact. None of its topics are active anymore.",
     "effectIncoherentTopics": "Replaces these topics with better ones for this interest.",
     "appliedTitle": "Cleanup applied",
     "appliedBody": "Your profile was tidied up. See the change log to review.",
@@ -1469,7 +1469,7 @@
   "headlineDepth": {
     "title": "Top headlines",
     "subtitle": "How many Mera reads for you",
-    "intro": "Mera reads the biggest stories in each section, then picks the ones that matter to you. Raise a section to see more; lower it to keep things tight.",
+    "intro": "Mera reads the biggest stories in each section, then picks the ones that matter to you. Raise a section to see more, or lower it to keep things tight.",
     "worldwide": "Worldwide",
     "optionLabel": "Top {{n}}",
     "usingDefault": "Using the standard {{n}}.",
@@ -1794,7 +1794,7 @@
           },
           "nothing-removed": {
             "headline": "Nothing is ever removed",
-            "body": "Read a card and it does not vanish; it sinks. It is one continuous list, not sections cut off by dividers. Cards quietly drift down past the newer ones as you go.",
+            "body": "Read a card and it does not vanish. It sinks. It is one continuous list, not sections cut off by dividers. Cards quietly drift down past the newer ones as you go.",
             "steps": {
               "0": "Leads: everything you have not seen yet.",
               "1": "Next: seen, but not opened.",
@@ -2106,7 +2106,7 @@
           },
           "exact-match": {
             "headline": "A filter matches one thing exactly",
-            "body": "Filters are not searches. A place filter matches that place; a source filter matches that source. They compare an exact value against one field of a story, which is what makes them predictable, and also what makes the next card matter."
+            "body": "Filters are not searches. A place filter matches that place, and a source filter matches that source. They compare an exact value against one field of a story, which is what makes them predictable, and also what makes the next card matter."
           },
           "made-from-a-story": {
             "headline": "Where the precise ones come from",
@@ -2179,7 +2179,7 @@
             "choose": {
               "applies-immediately": {
                 "label": "It applies the change",
-                "feedback": "It does not. Typed agreement is not consent here; the tap is."
+                "feedback": "It does not. Typed agreement is not consent here. The tap is."
               },
               "waits-for-your-tap": {
                 "label": "Nothing. The card is still sitting there waiting",
