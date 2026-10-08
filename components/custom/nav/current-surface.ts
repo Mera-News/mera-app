@@ -118,8 +118,11 @@ export function useReportArticleSurface(subject: AskMeraSubject | undefined): vo
     useCallback(() => {
       const article = subject ?? null;
       useCurrentSurfaceStore.setState({ surface: 'article', article });
+      // Owner-only clear, like clearSurface: on Back the tab may report its
+      // own surface before this blur runs, and that report must survive.
       return () => {
-        if (useCurrentSurfaceStore.getState().article === article) {
+        const now = useCurrentSurfaceStore.getState();
+        if (now.surface === 'article' && now.article === article) {
           useCurrentSurfaceStore.setState({ surface: null, article: null });
         }
       };
