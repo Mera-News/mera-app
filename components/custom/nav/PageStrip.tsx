@@ -1,11 +1,11 @@
 // The tab header: the page pills, in one of two shapes, then the controls
 // pinned outside the scroller.
 //
-//  - `segmented` (Feed, Library, You): one centred track. A single orange pill
-//    sits behind the active page and travels with the pager's fractional
-//    `progress`, so it follows the finger and the slide after it. The track
-//    scrolls instead of centring when a long locale makes it wider than the
-//    screen. Reduce Motion: the active pill fills itself, no travel.
+//  - `segmented` (Feed, Library, You): one centred track, the shared
+//    `SegmentedControl` at its header size. The selected fill is drawn INSIDE
+//    the selected tab (exactly its bounds) and crossfades on a page change; it
+//    does not follow the finger. The track scrolls instead of centring when a
+//    long locale makes it wider than the screen.
 //  - `scroll` (World): a scrolling row of glass pills. Pills fade by distance
 //    from the leading edge and from the floating search button, per pill on
 //    the UI thread (no JS per scroll frame).
@@ -19,6 +19,7 @@
 
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -29,14 +30,12 @@ import Animated, {
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   type SharedValue,
 } from 'react-native-reanimated';
 
 import { inlineSign } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
-import { indicatorAt } from './tab-swipe';
 import type { PageId } from './page-registry';
 import type { PageDot, PagePill } from './types';
 
@@ -56,8 +55,6 @@ export const PILL_HEIGHT = 34;
 /** Frame padding around a 34pt pill: 44pt touch target. */
 export const PILL_FRAME_PAD = 5;
 const PILL_GAP = 6;
-/** The segmented track's inset around its pills (3pt) plus its 1pt border. */
-const TRACK_PAD = 4;
 const SIDE_SLOT = 44;
 const LONG_PRESS_MS = 400;
 /** The tab header's side padding (TabPages). World's row cancels it, so its
@@ -89,8 +86,6 @@ export interface PageStripProps {
   readonly onSearch?: () => void;
   /** Default `scroll`. */
   readonly variant?: 'segmented' | 'scroll';
-  /** The pager's fractional page index; the segmented pill travels with it. */
-  readonly progress?: SharedValue<number>;
   /** Drawn in a 44pt frame at the row's start (the Feed's status icon). */
   readonly leading?: React.ReactNode;
   /** A long press on a pill (World: opens Arrange with that page lifted). */
@@ -105,9 +100,6 @@ interface PillProps {
   readonly active: boolean;
   readonly position: number;
   readonly count: number;
-  readonly segmented: boolean;
-  /** The travelling pill draws the fill; this one draws only its label. */
-  readonly fillDrawnBehind: boolean;
   readonly tabLabel: string;
   readonly onSelect: (id: PageId) => void;
   readonly onLongPress?: (id: PageId) => void;
@@ -122,8 +114,6 @@ const Pill: React.FC<PillProps> = ({
   active,
   position,
   count,
-  segmented,
-  fillDrawnBehind,
   tabLabel,
   onSelect,
   onLongPress,
@@ -138,7 +128,7 @@ const Pill: React.FC<PillProps> = ({
     : t('nav.pillA11y', { label: pill.label, index: position, count });
   const flag = pill.flagAlpha2 ? flagEmoji(pill.flagAlpha2) : '';
   const colors = useColors();
-  const ink = active ? colors.onAccent : segmented ? colors.muted : colors.ink;
+  const ink = active ? colors.onAccent : colors.ink;
   const accentFill = { backgroundColor: colors.accent, borderColor: colors.accent };
 
   // World only: this pill's own place in the row, for its edge fade.
@@ -182,16 +172,7 @@ const Pill: React.FC<PillProps> = ({
   );
 
   let visual: React.ReactNode;
-  if (segmented) {
-    visual = (
-      <View
-        style={[styles.pill, styles.segPill, active && !fillDrawnBehind ? accentFill : null]}
-        testID={`page-pill-${pill.id}-chip`}
-      >
-        {inner}
-      </View>
-    );
-  } else if (active) {
+  if (active) {
     visual = (
       <View style={[styles.pill, accentFill]} testID={`page-pill-${pill.id}-chip`}>
         {inner}
@@ -273,37 +254,17 @@ const PageStrip: React.FC<PageStripProps> = ({
   onSelect,
   onSearch,
   variant = 'scroll',
-  progress,
   leading,
   onLongPressPill,
 }) => {
-  const colors = useColors();
+  const { t } = useTranslation();
   const segmented = variant === 'segmented';
-  const reduceMotion = useReducedMotion();
-  const travelling = segmented && !!progress && !reduceMotion;
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const layouts = useRef<Partial<Record<string, { x: number; width: number }>>>({});
-
-  // The segmented pill's stops, in page order, once every pill is measured.
-  const xs = useSharedValue<number[]>([]);
-  const widths = useSharedValue<number[]>([]);
-  const onPillLayout = useCallback(
-    (id: PageId, x: number, width: number) => {
-      layouts.current[id] = { x, width };
-      const all = pages.map((p) => layouts.current[p.id]);
-      if (all.every(Boolean)) {
-        xs.value = all.map((l) => l!.x);
-        widths.value = all.map((l) => l!.width);
-      }
-    },
-    [pages, xs, widths],
-  );
-
-  const indicatorStyle = useAnimatedStyle(() => {
-    const at = indicatorAt(progress ? progress.value : 0, xs.value, widths.value);
-    return { transform: [{ translateX: at.x }], width: at.width, opacity: at.width > 0 ? 1 : 0 };
-  });
+  const onPillLayout = useCallback((id: PageId, x: number, width: number) => {
+    layouts.current[id] = { x, width };
+  }, []);
 
   // World's edge fade reads these on the UI thread.
   const scrollX = useSharedValue(0);
@@ -327,8 +288,6 @@ const PageStrip: React.FC<PageStripProps> = ({
       active={p.id === activeId}
       position={i + 1}
       count={pages.length}
-      segmented={segmented}
-      fillDrawnBehind={travelling}
       tabLabel={tabLabel}
       onSelect={onSelect}
       onLongPress={onLongPressPill}
@@ -354,22 +313,21 @@ const PageStrip: React.FC<PageStripProps> = ({
           testID="page-strip-scroll"
         >
           {segmented ? (
-            <View style={styles.track} accessibilityRole={ROLES.row} testID="page-strip-pills">
-              <View
-                style={[styles.trackPlate, { borderColor: colors.trackBorder, backgroundColor: colors.trackFill }]}
-                pointerEvents="none"
-                {...GLYPH_HIDDEN}
-              />
-              {travelling ? (
-                <Animated.View
-                  style={[styles.indicator, { backgroundColor: colors.accent }, indicatorStyle]}
-                  pointerEvents="none"
-                  {...GLYPH_HIDDEN}
-                  testID="page-strip-indicator"
-                />
-              ) : null}
-              {pills}
-            </View>
+            <SegmentedControl
+              size="header"
+              value={activeId}
+              onChange={onSelect}
+              accessibilityLabel={tabLabel}
+              testID="page-pill"
+              options={pages.map((p, i) => ({
+                value: p.id,
+                label: p.label,
+                icon: p.icon,
+                useDot: p.useDot ? () => (p.useDot ?? noDot)().visible : undefined,
+                accessibilityLabelFor: (dot: boolean) =>
+                  t(dot ? 'nav.pillNewA11y' : 'nav.pillA11y', { label: p.label, index: i + 1, count: pages.length }),
+              }))}
+            />
           ) : (
             // The row's own padding (not the scroller's), so each pill's
             // layout x is its place in the scrolled content.
@@ -396,24 +354,6 @@ const styles = StyleSheet.create({
   // Centred while it fits, scrolls once it does not.
   segContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 8 },
   pills: { flexDirection: 'row', alignItems: 'center', gap: PILL_GAP },
-  track: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: TRACK_PAD },
-  // The plate is 1pt inside the 44pt frames: 34 + 2 * 3 inset + 2 * 1 border.
-  trackPlate: {
-    position: 'absolute',
-    top: PILL_FRAME_PAD - TRACK_PAD,
-    bottom: PILL_FRAME_PAD - TRACK_PAD,
-    left: 0,
-    right: 0,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  indicator: {
-    position: 'absolute',
-    left: 0,
-    top: PILL_FRAME_PAD,
-    height: PILL_HEIGHT,
-    borderRadius: 999,
-  },
   pill: {
     height: PILL_HEIGHT,
     paddingHorizontal: 13,
@@ -421,7 +361,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
   },
-  segPill: { borderColor: 'transparent' },
   pillInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   label: { fontSize: 14, lineHeight: 18 },
   flag: { fontSize: 13, lineHeight: 16 },

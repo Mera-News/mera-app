@@ -85,20 +85,3 @@ export function survivingPage<T extends string>(
   if (activeId && pages.includes(activeId)) return activeId;
   return pages[Math.max(0, Math.min(lastIndex - 1, pages.length - 1))];
 }
-
-/** Where the travelling pill sits for a fractional page index, over the
- *  measured pills. Clamped to the ends (a pull into the next tab). */
-export function indicatorAt(
-  progress: number,
-  xs: readonly number[],
-  widths: readonly number[],
-): { x: number; width: number } {
-  'worklet';
-  const n = xs.length;
-  if (n === 0) return { x: 0, width: 0 };
-  const p = Math.min(Math.max(progress, 0), n - 1);
-  const i = Math.floor(p);
-  const j = Math.min(i + 1, n - 1);
-  const f = p - i;
-  return { x: xs[i] + (xs[j] - xs[i]) * f, width: widths[i] + (widths[j] - widths[i]) * f };
-}

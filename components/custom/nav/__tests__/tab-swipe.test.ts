@@ -3,7 +3,6 @@ import {
   SWIPE_DAMPING,
   TAB_HANDOFF_FRACTION,
   swipeOutcome,
-  indicatorAt,
   survivingPage,
   swipeWindow,
 } from '../tab-swipe';
@@ -94,24 +93,5 @@ describe('survivingPage', () => {
   it('falls back to the first page', () => {
     expect(survivingPage(pages, null, 0)).toBe('world');
     expect(survivingPage([], 'world', 0)).toBeNull();
-  });
-});
-
-describe('indicatorAt', () => {
-  const xs = [4, 90, 200];
-  const widths = [80, 100, 60];
-  it('sits on a page at a whole index', () => {
-    expect(indicatorAt(1, xs, widths)).toEqual({ x: 90, width: 100 });
-    expect(indicatorAt(2, xs, widths)).toEqual({ x: 200, width: 60 });
-  });
-  it('travels between two pages mid-swipe', () => {
-    expect(indicatorAt(0.5, xs, widths)).toEqual({ x: 47, width: 90 });
-  });
-  it('clamps a pull past either end', () => {
-    expect(indicatorAt(-0.3, xs, widths)).toEqual({ x: 4, width: 80 });
-    expect(indicatorAt(2.4, xs, widths)).toEqual({ x: 200, width: 60 });
-  });
-  it('draws nothing before the pills are measured', () => {
-    expect(indicatorAt(0, [], [])).toEqual({ x: 0, width: 0 });
   });
 });

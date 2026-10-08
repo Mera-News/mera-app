@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { hapticSelection } from '@/lib/haptics';
@@ -12,6 +12,11 @@ export interface SegmentedOption<T extends string> {
     label: string;
     /** A MaterialIcons name, shown before the label (Appearance: light-mode, dark-mode). */
     icon?: React.ComponentProps<typeof MaterialIcons>['name'];
+    /** Header size only: a hook (called in the option's own component, keyed by
+     *  value) that says whether the option shows its 7pt "something new" dot. */
+    useDot?: () => boolean;
+    /** Header size only: the spoken name, given the dot ("Feed, 1 of 2"). */
+    accessibilityLabelFor?: (dot: boolean) => string;
 }
 
 export interface SegmentedControlProps<T extends string> {
@@ -21,7 +26,16 @@ export interface SegmentedControlProps<T extends string> {
     /** Names the group for screen readers ("Appearance"). */
     accessibilityLabel: string;
     style?: StyleProp<ViewStyle>;
+    /** Options are `${testID}-${value}`; a header option's dot `${testID}-${value}-dot`. */
     testID?: string;
+    /**
+     * `header`: the tab header's page track (34pt options, 14pt fixed-size
+     * labels, a dot). Its selected fill is drawn INSIDE the selected option,
+     * so it has exactly that option's bounds, and crossfades on a change
+     * (240 ms) instead of sliding: no measured offsets, nothing to misalign.
+     * The host gives the selection haptic.
+     */
+    size?: 'default' | 'header';
 }
 
 /** FinalSettings #6: 36pt options inside a 3pt padded, 1pt bordered track,
@@ -38,7 +52,11 @@ const BORDER = 1;
  * The fill follows each option's MEASURED x, so it lands right in RTL too
  * (a row lays out mirrored and onLayout reports physical positions).
  */
-export function SegmentedControl<T extends string>({
+export function SegmentedControl<T extends string>(props: SegmentedControlProps<T>) {
+    return props.size === 'header' ? <HeaderTrack {...props} /> : <DefaultTrack {...props} />;
+}
+
+function DefaultTrack<T extends string>({
     options,
     value,
     onChange,
@@ -119,6 +137,109 @@ export function SegmentedControl<T extends string>({
     );
 }
 
+/** The tab header's page track (`size="header"`). */
+const HEADER_OPTION_HEIGHT = 34;
+/** iOS maps `tab` to no trait: a button in a tabbar; Android gets real tabs. */
+const HEADER_ROLES =
+    Platform.OS === 'ios'
+        ? ({ group: 'tabbar', option: 'button' } as const)
+        : ({ group: 'tablist', option: 'tab' } as const);
+const HIDDEN = {
+    accessible: false,
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants',
+} as const;
+const noDot = () => false;
+
+function HeaderTrack<T extends string>({ options, value, onChange, style, testID }: SegmentedControlProps<T>) {
+    const colors = useColors();
+    return (
+        <View
+            accessibilityRole={HEADER_ROLES.group}
+            testID={testID}
+            style={[
+                styles.track,
+                styles.headerTrack,
+                { backgroundColor: colors.trackFill, borderColor: colors.trackBorder },
+                style,
+            ]}
+        >
+            {options.map((o) => (
+                <HeaderOption
+                    key={o.value}
+                    option={o}
+                    on={o.value === value}
+                    onPress={() => {
+                        if (o.value !== value) onChange(o.value);
+                    }}
+                    testID={testID ? `${testID}-${o.value}` : undefined}
+                />
+            ))}
+        </View>
+    );
+}
+
+/** One header option: its own component so its dot hook has a stable place. */
+function HeaderOption<T extends string>({
+    option,
+    on,
+    onPress,
+    testID,
+}: {
+    option: SegmentedOption<T>;
+    on: boolean;
+    onPress: () => void;
+    testID?: string;
+}) {
+    const colors = useColors();
+    const useDot = option.useDot ?? noDot;
+    const dot = useDot();
+    const fill = useSharedValue(on ? 1 : 0);
+    useEffect(() => {
+        fill.value = withTiming(on ? 1 : 0, { duration: MOTION.pill.duration, easing: EASE.across });
+    }, [on, fill]);
+    const fillStyle = useAnimatedStyle(() => ({ opacity: fill.value }));
+    const ink = on ? colors.onAccent : colors.muted;
+    return (
+        // A hidden visual under a CHILDLESS labelled button: a glyph inside a
+        // button surfaces on iOS as its own StaticText.
+        <View style={styles.headerOption}>
+            <Animated.View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, styles.headerFill, { backgroundColor: colors.accent }, fillStyle]}
+            />
+            <View pointerEvents="none" style={styles.headerInner} {...HIDDEN}>
+                {option.icon ? <MaterialIcons name={option.icon} size={14} color={ink} /> : null}
+                <Text
+                    numberOfLines={1}
+                    maxFontSizeMultiplier={1}
+                    style={[styles.headerLabel, { color: ink, fontWeight: on ? '700' : '500' }]}
+                >
+                    {option.label}
+                </Text>
+                {dot ? (
+                    <View
+                        testID={testID ? `${testID}-dot` : undefined}
+                        style={[
+                            styles.dot,
+                            { backgroundColor: colors.accent },
+                            on ? [styles.dotOnPicked, { borderColor: colors.onAccent }] : null,
+                        ]}
+                    />
+                ) : null}
+            </View>
+            <Pressable
+                onPress={onPress}
+                accessibilityRole={HEADER_ROLES.option}
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={option.accessibilityLabelFor?.(dot) ?? option.label}
+                testID={testID}
+                style={StyleSheet.absoluteFill}
+            />
+        </View>
+    );
+}
+
 const styles = StyleSheet.create({
     track: {
         flexDirection: 'row',
@@ -144,4 +265,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
     },
     label: { fontSize: 14, fontWeight: '600' },
+    headerTrack: { borderRadius: (HEADER_OPTION_HEIGHT + PAD * 2 + BORDER * 2) / 2 },
+    headerOption: { height: HEADER_OPTION_HEIGHT, justifyContent: 'center' },
+    headerFill: { borderRadius: HEADER_OPTION_HEIGHT / 2 },
+    headerInner: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13 },
+    headerLabel: { fontSize: 14, lineHeight: 18 },
+    dot: { width: 7, height: 7, borderRadius: 4, marginLeft: -2 },
+    dotOnPicked: { borderWidth: 1.5, width: 9, height: 9, borderRadius: 5 },
 });

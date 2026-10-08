@@ -238,7 +238,6 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
             // World keeps a scrolling row (its countries can grow); every
             // other tab is one centred track.
             variant={tab === 'world' ? 'scroll' : 'segmented'}
-            progress={tabSwipeProgress(tab)}
             leading={leading}
             onSearch={onSearch}
             // Only World arranges, by a long press on a page name.
