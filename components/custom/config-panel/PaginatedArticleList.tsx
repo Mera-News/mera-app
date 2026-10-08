@@ -12,7 +12,7 @@ import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
-import DrillDownHeader from './DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from './DrillDownHeader';
 
 type ArticlePage = Pick<ArticlesForPublicationSourceResponse, 'articles' | 'pageInfo'>;
 
@@ -146,7 +146,7 @@ const PaginatedArticleList: React.FC<PaginatedArticleListProps> = ({
                     data={articles}
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
-                    contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
+                    contentContainerStyle={{ padding: 16, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 20 }}
                     showsVerticalScrollIndicator={false}
                     onScroll={notifyScrollTick}
                     scrollEventThrottle={16}

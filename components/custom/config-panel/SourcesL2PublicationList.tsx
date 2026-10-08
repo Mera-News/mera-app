@@ -15,7 +15,7 @@ import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
-import DrillDownHeader from './DrillDownHeader';
+import DrillDownHeader, { SUBPAGE_TOP_GAP } from './DrillDownHeader';
 
 /**
  * Sources > one country: its publications, one plain row each (name, website
@@ -151,7 +151,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                     data={publishers}
                     renderItem={renderPublisher}
                     keyExtractor={keyExtractor}
-                    contentContainerStyle={{ paddingTop: 12, paddingBottom: 20 }}
+                    contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: 20 }}
                     showsVerticalScrollIndicator={false}
                     onEndReached={loadMore}
                     onEndReachedThreshold={0.5}
