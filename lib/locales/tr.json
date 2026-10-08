@@ -1448,7 +1448,9 @@
     "minimapHint": "Akışın solunda kısa çizgilerden oluşan bir şerit: görülen kartlar beyaz, yeniler turuncu. Atlamak için sürükleyin.",
     "minimapTitle": "Akış mini haritası",
     "openOn": "Açılış sayfası",
-    "sectionFeed": "Akış"
+    "sectionFeed": "Akış",
+    "meraButtonTitle": "Mera düğmesi",
+    "meraButtonHint": "Yüzen Mera düğmesinin rengini seçin. Açık ve koyu modda aynı kalır."
   },
   "freeTier": {
     "cardBody": "Mera'nın yapay zeka kısmı şu an kapalı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey bu cihazda kalıyor ve Keşfet sekmesinde hâlâ bugünün haberlerine erişebilirsiniz. Bir plan olmadan Mera sizin akışınızı oluşturamaz, sorularınızı cevaplayamaz ya da yeni haberleri takip edemez. Bir plan başlatın ve her şey geri gelir.",

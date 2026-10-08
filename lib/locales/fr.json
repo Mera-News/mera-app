@@ -1452,7 +1452,9 @@
     "minimapHint": "Une bande de petites lignes à gauche du fil : blanches pour les cartes vues, orange pour les nouvelles. Faites-la glisser pour sauter.",
     "minimapTitle": "Mini-carte du fil",
     "openOn": "Ouvrir sur",
-    "sectionFeed": "Fil d'actu"
+    "sectionFeed": "Fil d'actu",
+    "meraButtonTitle": "Bouton Mera",
+    "meraButtonHint": "Choisissez la couleur du bouton Mera flottant. Elle reste la même en mode clair et en mode sombre."
   },
   "freeTier": {
     "cardBody": "La partie IA de Mera est désactivée pour l'instant. Tout ce que vous avez enregistré, suivi ou lu reste sur cet appareil, et l'onglet Explorez affiche toujours les principales actualités du jour. Sans plan, Mera ne peut pas construire votre fil, répondre à vos questions ou suivre de nouvelles histoires. Commencez un plan et tout revient.",

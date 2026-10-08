@@ -1446,7 +1446,9 @@
     "minimapHint": "Uma faixa de linhas curtas à esquerda do Feed: brancas para os cards que você já viu, laranjas para os novos. Arraste para pular.",
     "minimapTitle": "Minimapa do Feed",
     "openOn": "Abrir em",
-    "sectionFeed": "Feed"
+    "sectionFeed": "Feed",
+    "meraButtonTitle": "Botão da Mera",
+    "meraButtonHint": "Escolha a cor do botão flutuante da Mera. Ela fica a mesma no modo claro e no modo escuro."
   },
   "freeTier": {
     "cardBody": "A parte de IA do Mera está desativada por enquanto. Tudo que você salvou, seguiu ou leu fica neste dispositivo, e Explorar ainda mostra as manchetes de hoje. Sem um plano, Mera não monta seu feed, não responde suas perguntas e não acompanha novas histórias. Comece um plano e tudo volta.",

@@ -1446,7 +1446,9 @@
     "minimapHint": "Una striscia di linee corte sul lato sinistro del Feed: bianche per le schede già viste, arancioni per quelle nuove. Trascinala per saltare.",
     "minimapTitle": "Minimappa del Feed",
     "openOn": "Apri su",
-    "sectionFeed": "Feed"
+    "sectionFeed": "Feed",
+    "meraButtonTitle": "Pulsante Mera",
+    "meraButtonHint": "Scegli il colore del pulsante Mera mobile. Resta lo stesso in modalità chiara e in modalità scura."
   },
   "freeTier": {
     "cardBody": "La parte AI di Mera è disattivata per ora. Tutto ciò che hai salvato, seguito o letto rimane su questo dispositivo, e Esplora ha ancora le notizie di oggi. Senza un piano, Mera non costruirà il tuo feed, non risponderà alle tue domande né seguirà le nuove storie. Avvia un piano e tutto torna.",

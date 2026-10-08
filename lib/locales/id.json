@@ -1446,7 +1446,9 @@
     "minimapHint": "Deretan garis pendek di sisi kiri Feed: putih untuk kartu yang sudah Anda lihat, oranye untuk yang baru. Seret untuk melompat.",
     "minimapTitle": "Peta Feed",
     "openOn": "Buka di",
-    "sectionFeed": "Feed"
+    "sectionFeed": "Feed",
+    "meraButtonTitle": "Tombol Mera",
+    "meraButtonHint": "Pilih warna tombol Mera yang mengambang. Warnanya tetap sama di mode terang dan mode gelap."
   },
   "freeTier": {
     "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",

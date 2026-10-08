@@ -1446,7 +1446,9 @@
     "minimapHint": "Eine Leiste mit kurzen Strichen links im Feed: weiß für Karten, die du gesehen hast, orange für neue. Zieh daran, um zu springen.",
     "minimapTitle": "Feed-Minikarte",
     "openOn": "Öffnen mit",
-    "sectionFeed": "Feed"
+    "sectionFeed": "Feed",
+    "meraButtonTitle": "Mera-Button",
+    "meraButtonHint": "Wähle die Farbe des schwebenden Mera-Buttons. Sie bleibt im hellen und im dunklen Modus gleich."
   },
   "freeTier": {
     "cardBody": "Der KI-Teil von Mera ist momentan ausgeschaltet. Alles, das du gespeichert, verfolgt oder gelesen hast, bleibt auf diesem Gerät, und der Tab \"Entdecken\" zeigt weiterhin die heutigen Schlagzeilen. Ohne einen Plan wird Mera deinen Feed nicht zusammenstellen, deine Fragen nicht beantworten oder neue Geschichten nicht verfolgen. Starte einen Plan und alles kommt zurück.",

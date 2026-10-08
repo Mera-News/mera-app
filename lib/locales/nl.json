@@ -1446,7 +1446,9 @@
     "minimapHint": "Een strook korte lijntjes links in de Feed: wit voor kaarten die je hebt gezien, oranje voor nieuwe. Sleep om te springen.",
     "minimapTitle": "Feed-minimap",
     "openOn": "Openen op",
-    "sectionFeed": "Feed"
+    "sectionFeed": "Feed",
+    "meraButtonTitle": "Mera-knop",
+    "meraButtonHint": "Kies de kleur van de zwevende Mera-knop. Die blijft hetzelfde in de lichte en donkere modus."
   },
   "freeTier": {
     "cardBody": "Het AI-deel van Mera is voor nu uitgeschakeld. Alles wat je hebt opgeslagen, gevolgd of gelezen blijft op dit apparaat, en Verkennen toont nog steeds vandaags nieuws. Zonder een plan zal Mera je feed niet opbouwen, je vragen niet beantwoorden en geen nieuwe verhalen niet volgen. Start een plan en alles komt terug.",

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import * as Device from 'expo-device';
 import logger from '@/lib/logger';
@@ -15,6 +16,12 @@ import {
  *  into Lite mode, then deleted. */
 const LEGACY_STATIC_GRADIENT_KEY = 'static_gradient';
 
+/** The Mera button's look ('light' | 'dark'). DEVICE-level AsyncStorage like
+ *  Lite mode and the theme, so an account switch keeps it. Absent: the button
+ *  follows the theme as it always did. */
+export const MERA_BUTTON_LOOK_KEY = 'mera_button_look';
+export type MeraButtonLook = 'light' | 'dark';
+
 interface DisplayPrefsState {
     /**
      * Lite mode (lib/performance/performance-mode.ts): the animated backdrop,
@@ -27,9 +34,12 @@ interface DisplayPrefsState {
     deviceMode: PerformanceMode;
     /** The reader's choice; `auto` follows `deviceMode`. */
     performanceOverride: PerformanceOverride;
+    /** The reader's Mera button look; null follows the theme. */
+    meraButtonLook: MeraButtonLook | null;
     hydrated: boolean;
     hydrate: () => Promise<void>;
     setPerformanceOverride: (value: PerformanceOverride) => void;
+    setMeraButtonLook: (value: MeraButtonLook) => void;
 }
 
 // Derived synchronously at module load: `Device.totalMemory` is a constant, so
@@ -40,6 +50,7 @@ export const useDisplayPrefsStore = create<DisplayPrefsState>()((set, get) => ({
     liteMode: initialDeviceMode === 'lite',
     deviceMode: initialDeviceMode,
     performanceOverride: 'auto',
+    meraButtonLook: null,
     hydrated: false,
 
     hydrate: async () => {
@@ -70,6 +81,16 @@ export const useDisplayPrefsStore = create<DisplayPrefsState>()((set, get) => ({
             logger.captureException(err, { tags: { store: 'display-prefs-store' } });
             set({ deviceMode, liteMode: resolvePerformanceMode(get().performanceOverride, deviceMode) === 'lite', hydrated: true });
         }
+        // The Mera button's look. A missing or unreadable one keeps the theme's.
+        const look = await AsyncStorage.getItem(MERA_BUTTON_LOOK_KEY).catch(() => null);
+        if (look === 'light' || look === 'dark') set({ meraButtonLook: look });
+    },
+
+    setMeraButtonLook: (value) => {
+        set({ meraButtonLook: value });
+        AsyncStorage.setItem(MERA_BUTTON_LOOK_KEY, value).catch((err) =>
+            logger.captureException(err, { tags: { store: 'display-prefs-store' } }),
+        );
     },
 
     setPerformanceOverride: (value) => {

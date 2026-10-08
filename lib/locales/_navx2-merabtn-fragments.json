@@ -1,0 +1,122 @@
+{
+  "en": {
+    "display": {
+      "meraButtonTitle": "Mera button",
+      "meraButtonHint": "Pick the colour of the floating Mera button. It stays the same in light and dark mode."
+    }
+  },
+  "ar": {
+    "display": {
+      "meraButtonTitle": "زر Mera",
+      "meraButtonHint": "اختر لون زر Mera العائم. يبقى باللون نفسه في الوضع الفاتح والوضع الداكن."
+    }
+  },
+  "de": {
+    "display": {
+      "meraButtonTitle": "Mera-Button",
+      "meraButtonHint": "Wähle die Farbe des schwebenden Mera-Buttons. Sie bleibt im hellen und im dunklen Modus gleich."
+    }
+  },
+  "es": {
+    "display": {
+      "meraButtonTitle": "Botón de Mera",
+      "meraButtonHint": "Elige el color del botón flotante de Mera. Se mantiene igual en el modo claro y en el oscuro."
+    }
+  },
+  "fr": {
+    "display": {
+      "meraButtonTitle": "Bouton Mera",
+      "meraButtonHint": "Choisissez la couleur du bouton Mera flottant. Elle reste la même en mode clair et en mode sombre."
+    }
+  },
+  "hi": {
+    "display": {
+      "meraButtonTitle": "Mera बटन",
+      "meraButtonHint": "तैरते हुए Mera बटन का रंग चुनें। यह लाइट और डार्क मोड में एक जैसा रहता है।"
+    }
+  },
+  "id": {
+    "display": {
+      "meraButtonTitle": "Tombol Mera",
+      "meraButtonHint": "Pilih warna tombol Mera yang mengambang. Warnanya tetap sama di mode terang dan mode gelap."
+    }
+  },
+  "it": {
+    "display": {
+      "meraButtonTitle": "Pulsante Mera",
+      "meraButtonHint": "Scegli il colore del pulsante Mera mobile. Resta lo stesso in modalità chiara e in modalità scura."
+    }
+  },
+  "ja": {
+    "display": {
+      "meraButtonTitle": "Meraボタン",
+      "meraButtonHint": "フローティングのMeraボタンの色を選びます。ライトモードとダークモードでも同じ色のままです。"
+    }
+  },
+  "ko": {
+    "display": {
+      "meraButtonTitle": "Mera 버튼",
+      "meraButtonHint": "떠 있는 Mera 버튼의 색을 고르세요. 라이트 모드와 다크 모드에서도 같은 색을 유지합니다."
+    }
+  },
+  "nl": {
+    "display": {
+      "meraButtonTitle": "Mera-knop",
+      "meraButtonHint": "Kies de kleur van de zwevende Mera-knop. Die blijft hetzelfde in de lichte en donkere modus."
+    }
+  },
+  "pl": {
+    "display": {
+      "meraButtonTitle": "Przycisk Mera",
+      "meraButtonHint": "Wybierz kolor pływającego przycisku Mera. Pozostaje taki sam w jasnym i ciemnym trybie."
+    }
+  },
+  "pt-BR": {
+    "display": {
+      "meraButtonTitle": "Botão da Mera",
+      "meraButtonHint": "Escolha a cor do botão flutuante da Mera. Ela fica a mesma no modo claro e no modo escuro."
+    }
+  },
+  "ru": {
+    "display": {
+      "meraButtonTitle": "Кнопка Mera",
+      "meraButtonHint": "Выберите цвет плавающей кнопки Mera. В светлой и тёмной теме она остаётся одинаковой."
+    }
+  },
+  "th": {
+    "display": {
+      "meraButtonTitle": "ปุ่ม Mera",
+      "meraButtonHint": "เลือกสีของปุ่ม Mera ที่ลอยอยู่ ปุ่มจะมีสีเดียวกันในโหมดสว่างและโหมดมืด"
+    }
+  },
+  "tr": {
+    "display": {
+      "meraButtonTitle": "Mera düğmesi",
+      "meraButtonHint": "Yüzen Mera düğmesinin rengini seçin. Açık ve koyu modda aynı kalır."
+    }
+  },
+  "uk": {
+    "display": {
+      "meraButtonTitle": "Кнопка Mera",
+      "meraButtonHint": "Виберіть колір плаваючої кнопки Mera. У світлій і темній темі вона залишається однаковою."
+    }
+  },
+  "vi": {
+    "display": {
+      "meraButtonTitle": "Nút Mera",
+      "meraButtonHint": "Chọn màu cho nút Mera nổi. Nút giữ nguyên màu ở chế độ sáng và chế độ tối."
+    }
+  },
+  "zh-CN": {
+    "display": {
+      "meraButtonTitle": "Mera 按钮",
+      "meraButtonHint": "选择悬浮 Mera 按钮的颜色。在浅色和深色模式下，它都保持不变。"
+    }
+  },
+  "zh-TW": {
+    "display": {
+      "meraButtonTitle": "Mera 按鈕",
+      "meraButtonHint": "選擇浮動 Mera 按鈕的顏色。在淺色和深色模式下，它都保持不變。"
+    }
+  }
+}

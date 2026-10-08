@@ -1447,7 +1447,9 @@
     "minimapHint": "資訊流左側的一排短線：白色代表你看過的卡片，橘色代表新卡片。拖曳即可跳轉。",
     "minimapTitle": "資訊流縮圖",
     "openOn": "開啟時顯示",
-    "sectionFeed": "資訊流"
+    "sectionFeed": "資訊流",
+    "meraButtonTitle": "Mera 按鈕",
+    "meraButtonHint": "選擇浮動 Mera 按鈕的顏色。在淺色和深色模式下，它都保持不變。"
   },
   "freeTier": {
     "cardBody": "Mera 的 AI 部分現已關閉。您已儲存、追蹤或閱讀的任何內容都保留在此裝置上，「探索」仍有今日頭條。沒有訂閱方案時，Mera 無法為您建立動態、回答問題或追蹤新報導。訂閱方案後，一切都會恢復。",

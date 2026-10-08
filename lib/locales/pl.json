@@ -1478,7 +1478,9 @@
     "minimapHint": "Pasek krótkich kresek po lewej stronie Kanału: białe dla kart, które widziałeś, pomarańczowe dla nowych. Przeciągnij, aby przeskoczyć.",
     "minimapTitle": "Mapa Kanału",
     "openOn": "Otwieraj na",
-    "sectionFeed": "Kanał"
+    "sectionFeed": "Kanał",
+    "meraButtonTitle": "Przycisk Mera",
+    "meraButtonHint": "Wybierz kolor pływającego przycisku Mera. Pozostaje taki sam w jasnym i ciemnym trybie."
   },
   "freeTier": {
     "cardBody": "Część AI w Mera jest teraz wyłączona. Wszystko, co zapisałeś, śledziłeś lub czytałeś, zostaje na tym urządzeniu, a zakładka Odkrywaj wciąż zawiera dzisiejsze nagłówki. Bez planu Mera nie będzie budować Twojego kanału, odpowiadać na Twoje pytania ani śledzić nowych historii. Zacznij plan, a wszystko wróci do normy.",

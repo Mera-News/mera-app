@@ -33,10 +33,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { DRAG_ACTIVATION, MERA_CORNERS, setMeraCorner, useMeraCorner, type MeraCorner } from './corner';
 import { chatContextFor, interestFactId } from './mera-pages';
+import { meraButtonColors, useMeraButtonLook } from './look';
 import { openMeraChat } from './open-mera-chat';
 
-// The disc is the theme's ink and the mark is the page colour, so the mark
-// reads as a cut-out: white disc and dark mark in dark, the reverse in light.
+// The disc and the mark come from the reader's look (look.ts): white disc and
+// dark mark (Light) or the reverse (Dark), so the mark reads as a cut-out. With
+// no choice the look follows the theme, as it always did.
 // The logo is DRAWN at the working size and scaled down at rest, so it stays
 // sharp while it grows (FinalMeraChat #10: 38 to 52 pt).
 const LOGO_REST = 38;
@@ -116,6 +118,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   context,
 }) => {
   const colors = useColors();
+  const look = meraButtonColors(useMeraButtonLook());
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   const tooltipOn = useHasNoFacts() && !working && !unread;
@@ -222,7 +225,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
             else if (name.startsWith('move-')) setMeraCorner(name.slice(5) as MeraCorner);
           }}
           hitSlop={4}
-          style={[styles.circle, { backgroundColor: colors.ink }]}
+          style={[styles.circle, { backgroundColor: look.disc }]}
           testID="mera-button"
         >
           {unread && (
@@ -235,7 +238,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
           {/* The cone sweeps at rest; the mark itself holds it still off
               screen, in Lite mode and under Reduce Motion. */}
           <Animated.View style={growStyle}>
-            <MeraLogo size={LOGO_WORKING} color={colors.base} animated scrollCards={working} />
+            <MeraLogo size={LOGO_WORKING} color={look.mark} animated scrollCards={working} />
           </Animated.View>
         </View>
       </GestureDetector>

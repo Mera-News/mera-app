@@ -1666,7 +1666,9 @@
     "minimapHint": "A strip of short lines down the left of the Feed: white for cards you've seen, orange for new ones. Drag it to jump.",
     "minimapTitle": "Feed minimap",
     "openOn": "Open on",
-    "sectionFeed": "Feed"
+    "sectionFeed": "Feed",
+    "meraButtonTitle": "Mera button",
+    "meraButtonHint": "Pick the colour of the floating Mera button. It stays the same in light and dark mode."
   },
   "freeTier": {
     "cardTitle": "You're on Mera News Free",
