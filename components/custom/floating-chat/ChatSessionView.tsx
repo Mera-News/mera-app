@@ -21,6 +21,7 @@ import {
 } from '@/lib/stores/floating-chat-store';
 import { useIsOnDeviceProcessing, useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
 import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-pages';
+import { usesProfileWelcome } from './profile-welcome';
 import { useUserStore } from '@/lib/stores/user-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -122,7 +123,9 @@ export default function ChatSessionView({
     context.kind === 'optimisation-plan'
       ? // The pinned plan card IS the content — no persona intro line beneath it.
         null
-      : (context.kind === 'persona' || context.kind === 'follow-story') && context.page
+      : (context.kind === 'persona' || context.kind === 'follow-story') &&
+          context.page &&
+          !usesProfileWelcome(context)
         ? // Opened from the Mera button: the page's own first line.
           tKey(introKeyFor(context.page, webSearch))
       : context.kind === 'follow-story'
@@ -308,7 +311,11 @@ export default function ChatSessionView({
     if (context.kind === 'optimisation-plan') return [];
     // Opened from the Mera button: the page's hints as starters that fill the
     // composer and never send (owner ruling, navx).
-    if ((context.kind === 'persona' || context.kind === 'follow-story') && context.page) {
+    if (
+      (context.kind === 'persona' || context.kind === 'follow-story') &&
+      context.page &&
+      !usesProfileWelcome(context)
+    ) {
       const subject = context.kind === 'persona' ? context.subject : undefined;
       return pageStarters(context.page, webSearch, subject).map((s) => ({
         key: s.labelKey,
