@@ -3,7 +3,6 @@
 // prompt input. Everything comes in via props (ChatThreadProps) — no data
 // fetching, no stores.
 
-import MeraStreamAvatar, { AVATAR_GUTTER_WIDTH } from '@/components/custom/chat/MeraStreamAvatar';
 import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
 import { WAIT_ROW_TEXT_HEIGHT } from '@/components/custom/chat/chat-phases';
 import WaitBubble from '@/components/custom/chat/WaitBubble';
@@ -206,33 +205,21 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             </Message>
           ) : (
             <Message role="assistant">
-              {/* BESIDE the bubble, not above it. `Message` is a plain column,
-                  so an avatar dropped in as a sibling stacks on top; the row
-                  is what makes the gutter `AVATAR_SIZE` was always documented
-                  to be. Bottom-aligned, Messenger style. It stays for the LIVE
-                  message while it streams, so the mark does not blink out the
-                  instant the first token lands and back in on the next turn. */}
-              <View style={styles.gutterRow}>
-                {/* A SPACER when the mark is not showing, so the bubble keeps
-                    one left edge from the first token to the settled reply.
-                    It used to shift left the moment streaming ended. */}
-                {item.streaming === true ? (
-                  <MeraStreamAvatar />
-                ) : (
-                  <View style={styles.avatarSpacer} testID="mera-avatar-spacer" />
-                )}
-                <MessageContent role="assistant">
-                  {/* THE SLOT. While streaming the reply holds at least the
-                      wait row's height, so it takes the row's place at the
-                      first token without moving the thread (ux1 C2). */}
-                  <View
-                    testID="mera-reply-slot"
-                    style={item.streaming === true ? styles.replySlotStreaming : undefined}
-                  >
-                    <MessageResponse>{message.content}</MessageResponse>
-                  </View>
-                </MessageContent>
-              </View>
+              {/* No avatar gutter: the header carries the one Mera mark, and a
+                  reserved gutter indented every reply ~34pt from the thread's
+                  left edge (the steps box, cards and input start there). The
+                  bubble takes the user side's 88% max width, mirrored. */}
+              <MessageContent role="assistant">
+                {/* THE SLOT. While streaming the reply holds at least the
+                    wait row's height, so it takes the row's place at the
+                    first token without moving the thread (ux1 C2). */}
+                <View
+                  testID="mera-reply-slot"
+                  style={item.streaming === true ? styles.replySlotStreaming : undefined}
+                >
+                  <MessageResponse>{message.content}</MessageResponse>
+                </View>
+              </MessageContent>
             </Message>
           );
         // Only animate in live-session bubbles; history pages load without replay.
@@ -368,24 +355,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       case 'typing':
         return (
           <Message role="assistant">
-            {/* Messenger-style gutter. The mark is present for the whole wait
-                and for the streaming bubble that follows, then goes when the
-                turn settles. */}
-            <View style={styles.gutterRow}>
-              <MeraStreamAvatar />
-              {/* Outlined, unfilled and breathing, so a provisional bubble
-                  never reads as something that was said. */}
-              <WaitBubble>
-                {/* A sentence that tracks the real phase, not a rotating word.
-                    The word was decorative and said the same thing whether the
-                    device was queued behind prewarm, fetching an attestation
-                    key or waiting out the model's 3-8s time to first token, so
-                    a long wait read as a frozen screen. The line subscribes to
-                    the phase store itself, so a phase tick re-renders one
-                    Text rather than this whole thread. */}
-                <ChatPhaseLine />
-              </WaitBubble>
-            </View>
+            {/* Outlined, unfilled and breathing, so a provisional bubble
+                never reads as something that was said. */}
+            <WaitBubble>
+              {/* A sentence that tracks the real phase, not a rotating word.
+                  The word was decorative and said the same thing whether the
+                  device was queued behind prewarm, fetching an attestation
+                  key or waiting out the model's 3-8s time to first token, so
+                  a long wait read as a frozen screen. The line subscribes to
+                  the phase store itself, so a phase tick re-renders one
+                  Text rather than this whole thread. */}
+              <ChatPhaseLine />
+            </WaitBubble>
           </Message>
         );
 
@@ -513,17 +494,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 };
 
 const useStyles = themedStyles((c) => StyleSheet.create({
-  // Avatar gutter. `Message` aligns its children but does not lay them out in
-  // a row, so without this the mark sits ABOVE the bubble rather than beside
-  // it — which is what shipped, despite both call sites saying "beside".
-  // `flex-end` puts the mark at the bubble's bottom edge; `flexShrink` lets
-  // the bubble keep its own maxWidth instead of overflowing the row.
-  gutterRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 6,
-    flexShrink: 1,
-  },
   listWrap: {
     flex: 1,
   },
@@ -536,9 +506,6 @@ const useStyles = themedStyles((c) => StyleSheet.create({
   composerFill: { flex: 1 },
   replySlotStreaming: {
     minHeight: WAIT_ROW_TEXT_HEIGHT,
-  },
-  avatarSpacer: {
-    width: AVATAR_GUTTER_WIDTH,
   },
   historyButtonRow: {
     alignItems: 'center',
