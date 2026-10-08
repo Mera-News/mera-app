@@ -51,6 +51,9 @@ export interface AgentArm {
    *  in one batch, with a location line and the other facts. The topic corpus
    *  runner reads this; the app does not. */
   topicFlow?: 'current' | 'isolated+combo';
+  /** Absent means ON: a forced-offer entry sharing no subject word with what
+   *  the user or Mera said this exchange is dropped. 'off' is the control. */
+  forcedOfferGrounding?: 'off' | 'on';
 }
 
 const BASELINE: AgentArm = {
@@ -168,8 +171,25 @@ const TOPICS_CURRENT: AgentArm = {
   topicFlow: 'current',
 };
 
+/**
+ * The forced offer as it was before navx2-fu: whatever the required leg
+ * returns is offered, grounded or not. Pass rule, fixed before the run: on
+ * facts/* turns, baseline's proposal hit rate is no more than 5 points below
+ * this arm's, residence turns are no worse, and `error` is checked on every row.
+ */
+export const FORCED_OFFER_UNGROUNDED_ARM_ID = 'forced-offer-ungrounded';
+const FORCED_OFFER_UNGROUNDED: AgentArm = {
+  id: FORCED_OFFER_UNGROUNDED_ARM_ID,
+  description:
+    'Control: the forced-offer leg keeps entries that name nothing the user or Mera said. '
+    + 'Compare against baseline.',
+  forcedOfferGrounding: 'off',
+};
+
 /** Arms that ship. A runner may add more for a throwaway probe. */
-const SHIPPED_ARMS: AgentArm[] = [ROUTER_V1, ONESHOT_PROD, PRE_ENFORCEMENT, MULTI_SUBJECT, TOPICS_CURRENT];
+const SHIPPED_ARMS: AgentArm[] = [
+  ROUTER_V1, ONESHOT_PROD, PRE_ENFORCEMENT, MULTI_SUBJECT, TOPICS_CURRENT, FORCED_OFFER_UNGROUNDED,
+];
 
 const REGISTRY = new Map<string, AgentArm>([
   [BASELINE_ARM, BASELINE],
@@ -241,6 +261,11 @@ export function multiSubjectFor(arm: AgentArm): 'off' | 'on' {
 }
 
 /** The topic flow an arm measures. Absent is what ships. */
+/** Absent means ON (navx2-fu). */
+export function forcedOfferGroundingFor(arm: AgentArm): 'off' | 'on' {
+  return arm.forcedOfferGrounding ?? 'on';
+}
+
 export function topicFlowFor(arm: AgentArm): 'current' | 'isolated+combo' {
   return arm.topicFlow ?? 'isolated+combo';
 }

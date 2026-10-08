@@ -4,7 +4,7 @@
 // the eval runner wires fakes. A harness green is therefore evidence about the
 // app rather than about a parallel implementation.
 
-import { multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
+import { forcedOfferGroundingFor, multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
 import {
   claimsSaveHappened,
@@ -36,7 +36,15 @@ import {
 } from './combined-fact';
 import { factPickStatement, isFactPickChoice, joinFactPick } from './fact-pick';
 import { correctedDistrict, guardPlaceRungs, hyphenatedSpelling, userSaidPlace } from './fuzzy-place';
-import { contentJaccard, isSubsetTopic } from './topic-similarity';
+import { contentJaccard, isSubsetTopic, namesFact } from './topic-similarity';
+
+/** A forced offer's grounding: a shared subject word, or a number the text
+ *  carries. `namesFact` ignores numbers, and "Age: 34" from "I'm 34" is the
+ *  number or nothing (measured on the navx2-fu staging corpus). */
+function namesSomethingSaid(statement: string, text: string): boolean {
+  return namesFact(statement, text)
+    || (statement.match(/\d+/g) ?? []).some((n) => new RegExp(`(^|\\D)${n}(\\D|$)`).test(text));
+}
 
 /** Content-word overlap at which a new fact is taken for a rewording of one on
  *  file ("Now building an AI news app" / "Building an AI news app" is 0.8;
@@ -623,6 +631,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    *  route leg carries all four discovery tools. */
   const enforceRoute = routeEnforcementFor(resolveAgentArm(params.promptVariant)) === 'on';
   const multiSubject = multiSubjectFor(resolveAgentArm(params.promptVariant)) === 'on';
+  const groundForcedOffer = forcedOfferGroundingFor(resolveAgentArm(params.promptVariant)) === 'on';
 
   // ---- resolve a pending choice BEFORE anything else -----------------------
   // The tap arrives as an ordinary message. Matching it here is what lets the
@@ -691,7 +700,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let systemPrompt = buildRouterPrompt({
     surface: state.persona.surface,
     languageName: state.persona.languageName,
-    answerPending,
+    // Only when the question's TEXT is unknown, the same rule as the state
+    // line: "They did NOT answer" is false for a typed answer, and the state
+    // line already states the question that answer follows.
+    answerPending: answerPending && lastQuestion === null,
     // THE ARM, APPLIED. Omitting this made every agent arm send a byte-identical
     // leg-0 prompt, so g2b, G2c and G2d each compared the shipped configuration
     // against itself across four "arms". `promptVariant` was declared on the
@@ -894,6 +906,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
   /** True for the ONE forced leg. */
   let forcingProposalNow = false;
+  /** Everything a forced offer may draw its subject from: this message, the
+   *  question it answers and the message that question followed, a tapped
+   *  chip, the places looked up this turn, and the facts on file (the loop's
+   *  own expat status names the home's country, which nobody typed). */
+  const groundingText = (): string =>
+    [
+      userMessage,
+      ...state.persona.facts.map((f) => f.statement),
+      lastQuestion,
+      resumedSkill || lastQuestion !== null ? turn.lastUserMessage : null,
+      turn.resolvedChoice?.text,
+      ...[...placeCandidates, ...resolvedPlacesThisTurn].flatMap((p) => [
+        p.neighbourhood, p.userTerm, p.locality, p.admin1, p.countryName, p.bloc,
+      ]),
+    ]
+      .filter(Boolean)
+      .join(' ');
 
   /** Route legs re-asked after producing no route. Raises this turn's leg
    *  ceiling so a re-ask does not cost the turn a leg of real work. */
@@ -991,6 +1020,21 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             },
           ]
         : []),
+      // THE ANTECEDENT, on any turn that answers a question. The loop sends no
+      // history, and the trailing question alone is often a pronoun: "Would
+      // you like to keep an eye on any particular thread of this?" reached the
+      // model with no subject, "Yes follow it" was read as consent, and the
+      // forced offer guessed Israel for a Ukraine answer (navx2-fu).
+      ...(!resumedSkill && lastQuestion !== null && turn.lastUserMessage
+        ? [
+            {
+              role: 'user' as const,
+              content:
+                'Their previous message, which your question followed. Use it to read this one; '
+                + `never offer a fact from it that this message does not ask for: ${escapeUntrusted(turn.lastUserMessage, 500)}`,
+            },
+          ]
+        : []),
       { role: 'user', content: escapeUntrusted(userMessage, 2000) },
     ];
     // LAST, so it is the final thing read before the model answers. Not
@@ -1059,6 +1103,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       rawOutput: result.content,
       result,
       inputTokens,
+      ...(forcingProposalNow ? { forced: true } : {}),
     };
     legs.push(leg);
     modelTexts.push(result.content, ...result.toolCalls.map((c) => c.argumentsRaw));
@@ -1455,6 +1500,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
                 `${lead}${hyphenatedSpelling(rung.trim(), modelTexts)}`)
             : guarded;
           if (!statement) continue;
+          // A FORCED OFFER NAMES SOMETHING THAT WAS SAID. `tool_choice:
+          // 'required'` makes the model produce a fact even when it has none,
+          // and with no subject in view it invents one: after "Which one are
+          // you following?" the forced leg offered "Follows the current
+          // geopolitical conflict in the region of Israel" for a Ukraine
+          // answer (navx2-fu). Precision first: ONE shared subject word with
+          // anything the user or Mera said this exchange keeps the entry.
+          if (groundForcedOffer && forcingProposalNow && !namesSomethingSaid(statement, groundingText())) continue;
           // A RE-PROPOSAL. find_similar_facts showed the model this exact
           // statement as something already on file; offering it back is a
           // duplicate card, and on device it read as a "confirmation" of a

@@ -327,7 +327,8 @@ export interface AgentLeg {
   inputTokens: number;
   /** A leg the LOOP wrote without a model call (the one-time split offer for
    *  a combined fact). Metrics that count model legs skip it. */
-  synthetic?: boolean;
+  synthetic?: boolean;  /** The forced-offer leg (`tool_choice: 'required'`). Absent on every other leg. */
+  forced?: boolean;
 }
 
 export interface AgentProposal {
