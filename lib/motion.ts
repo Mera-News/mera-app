@@ -3,8 +3,9 @@
 //
 // Rules from the board: arrive ease-out, leave ease-in and about 30% faster,
 // move across ease-in-out, springs only where a finger lets go. Reduce Motion
-// turns movement into fades; Lite stops decorative loops. Animate transform
-// and opacity on the UI thread, never layout.
+// turns movement into fades. Lite = no motion at all: gate through
+// useMotionAllowed (lib/motion-gate.ts). Animate transform and opacity on the
+// UI thread, never layout.
 
 import { I18nManager } from 'react-native';
 import { Easing, withSequence, withTiming } from 'react-native-reanimated';
