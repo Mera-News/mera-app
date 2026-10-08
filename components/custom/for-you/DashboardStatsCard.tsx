@@ -52,7 +52,8 @@ const HIDDEN = {
     importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-const MARK_SIZE = 20;
+/** The Mera mark at the lead row's start: 1.3x the old 20pt (owner). */
+const MARK_SIZE = 26;
 
 export interface DashboardStatsCardProps {
     readonly testID?: string;
@@ -206,7 +207,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                 {/* The day's counts sentence leads (owner), wrapping
                                     beside the ⌄; the status line only when there
                                     is nothing to count. */}
-                                <HStack className={countsTop || zeroText ? 'items-start' : 'items-center'} space="sm">
+                                <HStack className="items-center" space="sm">
                                     <StatusMark working={processing} />
                                     <View style={{ flex: 1, minWidth: 0 }}>
                                         {zeroText ? (
@@ -240,7 +241,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                     expanded ? 'feedStatus.collapseA11y' : 'feedStatus.expandA11y',
                                 )}`}
                                 testID={`${testID}-toggle`}
-                                style={StyleSheet.absoluteFill}
+                                style={styles.leadPress}
                             />
                         </View>
                         {details}
@@ -254,7 +255,12 @@ const styles = StyleSheet.create({
     // fontSize with its own lineHeight (the ui Text clipping trap).
     line: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
     detailsClip: { overflow: 'hidden' },
-    mark: { width: MARK_SIZE, height: 20, alignItems: 'center', justifyContent: 'center' },
+    // The lead row centres mark, sentence and ⌄ on ONE line: the sentence
+    // block's centre (level with the 2nd of 3 lines, owner).
+    // The lead row's press, 9pt into the card's 12pt padding above and below:
+    // a one-line row (26pt) is still a 44pt target.
+    leadPress: { ...StyleSheet.absoluteFillObject, top: -9, bottom: -9 },
+    mark: { width: MARK_SIZE, height: MARK_SIZE, alignItems: 'center', justifyContent: 'center' },
     detailsBody: { position: 'absolute', top: 0, left: 0, right: 0 },
 });
 
