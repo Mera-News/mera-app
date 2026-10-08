@@ -1,7 +1,9 @@
-// Saved's pinned row (FinalLibrary #1, #3): "3 saved" with its ?, then the
-// glass Export button. It sits under the page header and rides with it, so it
-// never scrolls away and never hangs alone under the status bar; the list
-// scrolls beneath it. With nothing saved there is no Export (#3).
+// Saved's pinned row (FinalLibrary #1): "3 saved" with its ?, then the glass
+// Export button, on the header's own material (the `chrome` token and a
+// hairline). It sits under the page header and rides with it, so it never
+// scrolls away and never hangs alone under the status bar; the list scrolls
+// beneath it. Only while something is saved (#3: the empty page has no pinned
+// row; its "Saved ?" title scrolls with the list).
 //
 // The title and ? are the shell's PageTitleRow, so Saved's ? is the same
 // control as every other page's.
@@ -45,8 +47,7 @@ const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExplai
         [hidden, headerHeight],
     );
 
-    const exportButton =
-        count > 0 ? (
+    const exportButton = (
             // A childless labelled button over a hidden visual: a glyph inside a
             // button surfaces on iOS as its own StaticText.
             <View testID="saved-export-open-frame" style={styles.frame}>
@@ -68,13 +69,12 @@ const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExplai
                     style={StyleSheet.absoluteFill}
                 />
             </View>
-        ) : null;
+    );
 
     return (
         <Animated.View testID="saved-export-row" style={[styles.row, { top: headerHeight }, ride]}>
-            <GlassPlate />
             <PageTitleRow
-                title={count > 0 ? t('library.saved.count', { count }) : t('nav.page.saved')}
+                title={t('library.saved.count', { count })}
                 onExplain={onExplain}
                 trailing={exportButton}
                 testID="saved-title-row"
@@ -93,6 +93,7 @@ const useStyles = themedStyles((c) => StyleSheet.create({
         justifyContent: 'center',
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: c.line,
+        backgroundColor: c.chrome,
         overflow: 'hidden',
         zIndex: 5,
     },

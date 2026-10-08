@@ -18,6 +18,7 @@ import { reconcileAskedFactChecks } from '@/lib/fact-check/fact-check-graphql-cl
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
+import { ShieldCheck } from 'lucide-react-native';
 import { RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -214,7 +215,8 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     // Names the two ways a reader asks for a check.
                     hydrated ? (
                         <ForYouEmptyState
-                            icon="fact-check"
+                            // FinalLibrary #4: an outlined shield with a check.
+                            glyph={<ShieldCheck size={48} color={colors.ink2} strokeWidth={1.75} />}
                             title={t('library.checks.emptyTitle')}
                             body={t('library.checks.emptyBodyMenu')}
                             action={{

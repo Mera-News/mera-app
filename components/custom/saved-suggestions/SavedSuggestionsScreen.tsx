@@ -10,6 +10,7 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
+import PageTitleRow from '@/components/custom/nav/PageTitleRow';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
@@ -136,6 +137,10 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         [active],
     );
 
+    // The pinned row only while something is saved; the empty page carries a
+    // plain "Saved ?" title row in the list instead (FinalLibrary #3).
+    const showRow = !isLoading && savedCount > 0;
+
     // Everything removed this visit: the empty state, without a reload.
     const ListEmpty = isLoading ? (
         <Box className="items-center justify-center py-20">
@@ -163,10 +168,15 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 onContentSizeChange={settleIfShort}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
+                ListHeaderComponent={
+                    showRow || isLoading ? null : (
+                        <PageTitleRow title={t('nav.page.saved')} onExplain={onExplain} testID="saved-title-row" />
+                    )
+                }
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     // 12pt below the pinned row.
-                    paddingTop: headerHeight + SAVED_EXPORT_ROW_HEIGHT + 12,
+                    paddingTop: headerHeight + (showRow ? SAVED_EXPORT_ROW_HEIGHT : 0) + 12,
                     paddingHorizontal: 12,
                     paddingBottom: listEndPadding ?? tabClearance + 24,
                     flexGrow: 1,
@@ -177,7 +187,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
             />
 
             {/* Pinned under the page header; the list scrolls beneath it. */}
-            {!isLoading ? (
+            {showRow ? (
                 <SavedExportRow
                     count={savedCount}
                     headerHeight={headerHeight}

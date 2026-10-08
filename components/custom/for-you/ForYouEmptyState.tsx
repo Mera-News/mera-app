@@ -18,6 +18,7 @@ import { animationSourceFor } from '@/components/custom/tutorials/animation-regi
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
 
@@ -26,6 +27,9 @@ const HERO_SIZE = 64;
 export interface ForYouEmptyStateProps {
   /** Drawn when there is no `animationId`. */
   readonly icon?: keyof typeof MaterialIcons.glyphMap;
+  /** An outline glyph the icon font lacks (Fact checks' shield-check), drawn
+   *  instead of `icon`. Its size and colour are the caller's. */
+  readonly glyph?: React.ReactElement;
   /** A tutorial animation id (`tutorials/animation-registry`), looped above
    *  the message in place of the icon. */
   readonly animationId?: string;
@@ -39,6 +43,7 @@ export interface ForYouEmptyStateProps {
 
 const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
   icon,
+  glyph,
   animationId,
   title,
   body,
@@ -56,6 +61,10 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
     {/* Decoration: hidden, or it surfaces as its own icon-font StaticText. */}
     {animationId ? (
       <LoopScene source={animationSourceFor(animationId)} size={HERO_SIZE} testID={`${testID}-hero`} />
+    ) : glyph ? (
+      <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {glyph}
+      </View>
     ) : icon ? (
       <MaterialIcons name={icon} size={compact ? 28 : 48} color={c.ink2} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
     ) : null}
