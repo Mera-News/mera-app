@@ -31,11 +31,8 @@
     "yesterday": "昨日"
   },
   "auth": {
-    "reauthBanner": "再度サインインして同期してください",
     "emailPlaceholder": "メールアドレスを入力してください",
     "otpPlaceholder": "6桁のコードを入力してください",
-    "codeSentTitle": "コードを送信しました！",
-    "codeSentDescription": "メールにサインインコードが届いていることをご確認ください",
     "invalidEmailTitle": "無効なメールアドレス",
     "invalidEmailDescription": "有効なメールアドレスを入力してください",
     "failedToSendTitle": "コードの送信に失敗しました",
@@ -49,17 +46,6 @@
     "resendCode": "コードを再送信",
     "resendIn": "{{seconds}}秒後に再送信",
     "resendSuccess": "新しいコードを送信しました。",
-    "previousUser": {
-      "title": "おかえりなさい",
-      "subtitle": "現在アカウントを読み込めませんでした。再試行するか、別のユーザーとしてサインインしてください。",
-      "retryLogin": "メールでログインを再試行する",
-      "useDifferentUser": "別のユーザーでログインする",
-      "retryFailed": "サーバーに接続できませんでした。接続を確認してもう一度お試しください。",
-      "switchBody": "ユーザーを切り替えると、このデバイス上のユーザーデータがすべて完全に削除されます。この操作は元に戻せません。",
-      "switchConfirm": "はい、データを消去してユーザーを切り替えます",
-      "switchCancel": "キャンセル",
-      "subtitleWithDevice": "現在アカウントを読み込めませんでした。メールで再試行するか、メールなしでログインするか、別のユーザーとしてサインインしてください。"
-    },
     "contentPolicy": "コンテンツポリシー",
     "faq": "よくある質問",
     "identitySwitchFailedTitle": "アカウントの切り替えを完了できませんでした",
@@ -77,11 +63,6 @@
     "startReading": "読み始める",
     "alreadyHaveAccount": "メールでログイン",
     "continue": "続行",
-    "firstTimeHint": "Meraは初めてですか？まずはクイックツアーをどうぞ。",
-    "readyHint": "Meraを自分のものにする準備はできましたか？",
-    "getStarted": "はじめる",
-    "paidUserHint": "すでに有料ユーザーですか？",
-    "signIn": "サインイン",
     "aboutLegal": "Meraについて・法的情報",
     "sourceCode": "ソースコード",
     "website": "ウェブサイト",
@@ -139,8 +120,6 @@
     "updatedAt": "{{time}}に更新",
     "allCaughtUp": "あなたに影響するすべてのニュースを確認しました。",
     "preparingFeed": "Meraがあなたのフィードを準備しています。",
-    "noInterests": "Meraはあなたのためにニュースを分析できません",
-    "noInterestsDescription": "Meraがニュースの生成を開始するには、ユーザーペルソナを作成してください。",
     "pullDownToRetry": "引き下げて再試行",
     "readArticleToast": "この記事を読みました",
     "stuckTitle": "フィードを読み込めませんでした",
@@ -270,7 +249,6 @@
     "loadingA11y": "フィードを読み込んでいます",
     "translatingCaption": "翻訳中…",
     "updatedJustNow": "たった今更新",
-    "reasonWriting": "メモを作成中",
     "reasonWritingA11y": "メモ作成中",
     "reasonNotYet": "この記事にはまだメモがありません。",
     "findingStories": "あなたのストーリーを探しています",
@@ -356,7 +334,6 @@
     "badgeRegulator": "公式機関"
   },
   "clusterDetail": {
-    "translatable": "この記事は{{language}}で書かれています。読んでいる間、端末が翻訳できます。翻訳がうまくいかない場合は、Google 翻訳でサイトを開くこともできますが、その場合はGoogle経由での閲覧になる点にご注意ください。",
     "notTranslatable": "この記事は{{language}}で書かれています。端末では翻訳できません。ご自身の言語で読むにはGoogle 翻訳をご利用ください。",
     "notTranslatableOsOutdated": "この記事は{{language}}で書かれています。端末上での翻訳にはiOS {{requiredVersion}}が必要ですが、現在のバージョンはiOS {{currentVersion}}です。iOSをアップデートするか、ご自身の言語で読むにはGoogle 翻訳をご利用ください。",
     "unknownLanguage": "別の言語",
@@ -366,17 +343,13 @@
   },
   "onboarding": {
     "stepOf": "ステップ {{current}} / {{total}}",
-    "allSet": "準備完了です！",
     "connectionIssue": "接続の問題",
     "connectionDescription": "サーバーへの接続に問題が発生しています。アプリを閉じて後でもう一度お試しください。問題が解決しない場合は、ログアウトして再度ログインすることをお勧めします。",
     "logout": "ログアウト",
     "close": "閉じる",
-    "nextStep": "次のステップ",
     "notificationLow": "低",
     "notificationMedium": "中",
     "notificationHigh": "高",
-    "signedOutTitle": "サインアウトしました",
-    "signedOutDescription": "正常にサインアウトしました。",
     "logoutFailedTitle": "ログアウトに失敗しました",
     "logoutFailedDescription": "サインアウト中に問題が発生しました。もう一度お試しください。",
     "loggingOut": "ログアウトしています…",
@@ -401,8 +374,6 @@
     "enableDescription": "通知を有効にして、パーソナライズされたニュースで最新情報を受け取りましょう",
     "permissionDenied": "以前に通知の許可を拒否した場合は、デバイスの設定で有効にする必要があります。",
     "openDeviceSettings": "デバイスの設定を開く",
-    "format24h": "24時間制",
-    "formatAmPm": "AM/PM",
     "timeDescriptionOnboarding": "ニュースをまとめて確認したい時間を選択してください",
     "savePreferences": "設定を保存",
     "loadFailedTitle": "読み込みに失敗しました",
@@ -430,9 +401,6 @@
     "title": "言語",
     "appLanguage": "アプリの言語",
     "appLanguageDescription": "アプリと、ニュースの翻訳に使われます。",
-    "languagePacksIos": "翻訳モデルはデバイスが管理しています。選択した言語のモデルをダウンロードするだけで、iOS が残りを処理します。",
-    "languagePacksIosPath": "設定 → 一般 → 言語と地域 → 翻訳言語",
-    "languagePacksAndroid": "翻訳モデル（各約30MB）は、新しい言語に初めて翻訳するときに自動的にダウンロードされます。",
     "openDeviceSettings": "デバイスの設定を開く",
     "openLanguageSettings": "言語設定を開く",
     "restartRequired": "アプリの再起動が必要です",
@@ -442,18 +410,14 @@
     "packMissingBanner": "この言語にはデバイス上の翻訳パックが必要です — 翻訳自体はお使いの端末上でローカルに実行されます。端末の設定から言語を管理できます。",
     "packMissingIosPath": "設定 → 一般 → 言語と地域",
     "retry": "再試行",
-    "watchGuide": "デバイスに言語を追加する方法を見る",
     "managePacksPrefix": "ダウンロード済みの言語を管理するには、",
     "translationUnavailableTapToRetry": "{{language}}言語パックはまだダウンロード中の可能性があります。現在は英語を表示しています。もう一度試すにはタップしてください。",
     "translationUnavailableTitle": "翻訳は利用できません",
     "translationUnsupportedOnThisIos": "お使いのiOSバージョンは{{language}}に翻訳できません。代わりに英語を表示しています — iOSを更新するとこれが有効になります。",
-    "advanced": "詳細設定",
-    "advancedDescription": "端末上での翻訳です。任意設定なので、上記の機能はこれがなくても使えます。",
     "downloadHintBeforePrefix": "言語を選択すると、iOSがダウンロードを求めることがあります。そのシートで各言語の横にある",
     "downloadHintBeforeSuffix": "をタップしてください。タップするまでは何もダウンロードされません。",
     "downloadHintNowPrefix": "下のシートで各言語の横にある",
     "downloadHintNowSuffix": "をタップすると、ダウンロードが始まります。",
-    "googleTranslateAlways": "記事ページの「Google 翻訳で読む」を使えば、どの記事もどの言語でも読めます。これは常に使え、ダウンロードは一切必要ありません。",
     "onDeviceTranslationHint": "デバイス側で翻訳させたい場合は、iOSの設定でご自身の言語が利用できるか確認してください。有効にする方法は下の動画で紹介しています。",
     "switchDeviceUnsupportedBody": "この端末はニュース記事をどの言語にも翻訳できないため、アプリは英語を使用しています。{{language}}にすると、記事は翻訳されないままになります。",
     "switchFailedBody": "{{language}}の翻訳パックを準備できなかったため、引き続き{{previous}}を使用しています。まだダウンロード中の可能性があります。少し時間をおいてもう一度お試しください。",
@@ -471,7 +435,6 @@
   "meraProtocol": {
     "title": "Mera Protocol",
     "sectionTitle": "Mera Protocol",
-    "processingModeTitle": "処理モード",
     "onDeviceMode": "デバイス上",
     "onDeviceModeSubtitle": "完全オフライン",
     "cloudMode": "クラウド (E2EE)",
@@ -600,18 +563,10 @@
   },
   "manageData": {
     "deleting": "削除中...",
-    "title": "データ管理",
-    "description": "特定のデータを削除します。各操作は確認前に何を消去するかを正確に表示します。",
-    "feedCacheTitle": "記事フィードキャッシュを消去",
-    "feedCacheDescription": "キャッシュされた候補、リンク、推論ジョブ",
-    "feedCacheModalDescription": "記事フィードキャッシュを消去します：候補、リンク、推論ジョブ。フィードは次の更新時に再構築されます。他のデータには影響しません。",
     "factsTitle": "ファクトとトピックを消去",
     "viewingHistoryTitle": "閲覧履歴を消去",
     "viewingHistoryDescription": "Meraから開いたすべての記事",
     "viewingHistoryModalDescription": "開いた記事のローカルログを消去します。「ソース」タブの「読んでいた出版社」カードと各出版社の履歴が空にリセットされます。他のものには影響せず、サーバーデータも変更されません（このデータはデバイスの外に出たことはありません）。",
-    "wipeAllTitle": "すべてのデータを消去",
-    "wipeAllDescription": "アカウント以外すべてをリセット",
-    "wipeAllModalDescription": "この端末に保存されたすべてのデータを消去します：フィードキャッシュ、ファクト、トピック、アプリ設定、閲覧履歴。サインイン状態とアカウントはそのままです。この電話では引き続きメールなしでログインできます。サーバーからは何も削除されません。",
     "deletedTitle": "データを削除しました",
     "deletedDescription": "選択されたデータが正常に消去されました。",
     "errorTitle": "エラー",
@@ -694,10 +649,7 @@
     "tabPersona": "ペルソナ",
     "tabSources": "ソース",
     "tabPreferences": "設定",
-    "privacyOnDevice": "あなたのトピックと事実はこのデバイスに保存されます。デバイス上での処理がオンになっているため、記事を読んで並べ替えるAIは当社のサーバーではなく、ここで動作します。記事は誰かが求める前に当社のサーバーで翻訳され、要約されます。ニュースを取得するとき、デバイスから出るのはあなたのトピックの語句だけです。そこにユーザーIDは含まれません。当社はそれをテキストのみをキーとしてキャッシュに保持し、14日間使われなければ削除します。あなたについて当社が保持するのは、追加した場合はログイン用メールアドレス、サブスクリプションの状態、そしてプランを適用するために使う1日あたりの分析済み記事数です。メールなしで Mera を使う場合は、アカウントを削除するまでこの電話のログイン記録も保持します。チャットは保存されません。唯一の例外は、ブロック解除の申請に添付する記録です。バックアップをオンにしていない場合、ログアウトやデバイスの変更によって、あなたのペルソナは最初からやり直しになります。",
-    "privacyCloud": "あなたのトピックと事実はこのデバイスに保存されます。クラウドでの処理が既定でオンになっています。ここでデバイス上での処理に切り替えられます。あなたのデータは、それを処理するエンクレーブ宛てに暗号化され、復号されるのはここだけです。そのアテステーションはここで確認できますが、それによって処理が止まることはまだありません。ニュースを取得するとき、デバイスから出るのはあなたのトピックの語句だけです。そこにユーザーIDは含まれません。当社はそれをテキストのみをキーとしてキャッシュに保持し、14日間使われなければ削除します。あなたについて当社が保持するのは、追加した場合はログイン用メールアドレス、サブスクリプションの状態、そしてプランを適用するために使う1日あたりの分析済み記事数です。メールなしで Mera を使う場合は、アカウントを削除するまでこの電話のログイン記録も保持します。チャットは保存されません。唯一の例外は、ブロック解除の申請に添付する記録です。バックアップをオンにしていない場合、あなたのペルソナは最初からやり直しになります。",
     "privacyPolicy": "プライバシーポリシー",
-    "privacyNoticeTitle": "プライバシー",
     "updatingTopics": "トピックを更新中... {{completed}}/{{total}}",
     "emptyStateMessage": "いくつかの質問に答えてプロフィールを作成してください",
     "factsHeading": "ファクト",
@@ -721,11 +673,7 @@
     "addTopicDescription": "このファクトに対してトラッキングしたいトピックを入力してください。アプリはトピックに基づいてニュースを見つけ、ファクトに基づいてその関連性を判断します。",
     "addTopicPlaceholder": "例：ヨーロッパにおけるAI規制",
     "adding": "追加中...",
-    "generateMoreTopics": "トピックをさらに生成",
     "generatingMoreTopics": "トピックを生成中...",
-    "generateMoreTopicsTitle": "トピックをさらに生成しますか？",
-    "generateMoreTopicsWarning": "この興味に対してさらに10件のトピックを生成します。トピックを増やすとAIの使用量が増える可能性があります。Meraでは、最大限に活用するために、本当に興味のあるトピックだけを残し、重要でないトピックは削除することをおすすめします。",
-    "generateMoreTopicsConfirm": "生成",
     "generateMoreTopicsFailedTitle": "トピックの生成に失敗しました",
     "generateMoreTopicsFailedDescription": "新しいトピックを生成できませんでした。もう一度お試しください。",
     "gotIt": "わかりました",
@@ -836,8 +784,6 @@
     "newChat": "新しいチャット",
     "inputPlaceholder": "メッセージを入力...",
     "viewPreviousMessages": "以前のメッセージを表示",
-    "aiInteractionNotice": "話している相手はAIアシスタントのMeraです。人間ではありません。",
-    "aiUsageNotice": "このアシスタントはニュース設定のセットアップをサポートします。悪用や不正操作を試みると、審査のためアカウントがブロックされる場合があります。",
     "requestUnblock": {
       "button": "ブロック解除をリクエスト",
       "pendingButton": "審査待ち",
@@ -945,8 +891,7 @@
     "formError": "必須項目をすべて入力してください。",
     "emailError": "有効なメールアドレスを入力してください。",
     "captureScreenshotError": "スクリーンショットの撮影に失敗しました。",
-    "genericError": "予期しないエラーによりフィードバックを送信できませんでした。",
-    "chatAttachmentNote": "Mera とのチャットがこのレポートに添付されます。"
+    "genericError": "予期しないエラーによりフィードバックを送信できませんでした。"
   },
   "observability": {
     "title": "オブザーバビリティ",
@@ -1043,7 +988,6 @@
     "subscribe": "登録する",
     "title": "Mera をオンにする",
     "usageSection": "利用状況",
-    "usedToday": "本日の分析数",
     "viewPlans": "プランを見る",
     "freePlan": "無料プラン",
     "active": "有効",
@@ -1105,7 +1049,6 @@
     "serverUnavailable": "Meraに現在到達できません。しばらく後にもう一度お試しください。",
     "clearSearch": "検索をクリア",
     "searchNotSubscribed": "検索には有効なプランが必要です",
-    "searchEmpty": "過去48時間に一致するものはありません。検索は最近のヘッドラインをカバーし、完全なアーカイブではありません。",
     "window": {
       "label24": "24時間",
       "label48": "48時間",
@@ -1114,26 +1057,14 @@
       "label6": "6時間",
       "label12": "12時間",
       "a11y6": "過去6時間のニュース",
-      "a11y12": "過去12時間のニュース",
-      "menuLabel": "期間",
-      "option6": "過去6時間",
-      "option12": "過去12時間",
-      "option24": "過去24時間",
-      "option48": "過去48時間"
+      "a11y12": "過去12時間のニュース"
     }
   },
   "forYou": {
-    "sectionPrefix": "関連ニュース：",
     "breaking": "速報",
     "showMore": "あと{{count}}件表示",
-    "viewAllArticles_one": "全{{count}}件の記事を表示",
-    "viewAllArticles_other": "全{{count}}件の記事を表示",
     "headlineSectionGlobal": "世界のニュース",
     "headlineSectionCountry": "{{country}}のニュース",
-    "headlineDenominator_one": "Meraが{{count}}件のニュースを読みました。{{shown}}件があなたの時間を価値があるもの。",
-    "headlineDenominator_other": "Meraが{{count}}件のニュースを読みました。{{shown}}件があなたの時間を価値があるもの。",
-    "headlineDenominatorNone_one": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
-    "headlineDenominatorNone_other": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
     "nextFactPrefix": "次へ",
     "subTabAnalytics": "分析",
     "emptySection": {
@@ -1163,7 +1094,6 @@
     "analysed": "分析済み",
     "relevant": "今のところ関連あり",
     "lastProcessed": "最終処理",
-    "errorTitle": "スコアリングの問題",
     "limitUpgrade": "または、<0>プランをアップグレード</0>してください。",
     "tryNow": "今すぐ試す"
   },
@@ -1175,7 +1105,6 @@
     "trackedToast": "このストーリーをフォローしました",
     "updatesBadge": "新着{{count}}件",
     "endedLabel": "終了",
-    "timelineQuietNote": "まだ新しい報道は集まっていません。このストーリーが進展するたびに、ここに追加していきます。",
     "untrackConfirmTitle": "フォローを解除しますか？",
     "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。",
     "untrackConfirmCta": "フォローを停止",
@@ -1188,9 +1117,6 @@
     "alreadyTrackingTitle": "このストーリーをすでにフォロー中です",
     "alreadyTrackingBody": "同じストーリーを2回フォローすることはできません。フォローを解除すると、このストーリーのすべての保存内容が削除されます。",
     "goToStoryAction": "ストーリーに移動",
-    "deleteStoryAction": "ストーリーを削除",
-    "deleteStoryConfirmTitle": "このストーリーを削除しますか？",
-    "deleteStoryConfirmBody": "削除すると、このストーリーのすべての保存内容が削除されます。",
     "followChatIntro": "フォローしたいことを教えてくださいセットアップします。",
     "removeMemberAction": "このストーリーの一部ではない",
     "removeMemberConfirmTitle": "この記事を削除しますか？",
@@ -1232,11 +1158,8 @@
   },
   "notificationCenter": {
     "title": "通知",
-    "bellA11y": "通知",
     "empty": "すべて確認済みです",
     "close": "閉じる",
-    "markAllRead": "すべて既読にする",
-    "clearAll": "すべての通知を削除",
     "migrationDoneTitle": "興味の設定が完了しました",
     "migrationDoneBody": "Meraがあなたのプロフィールをトピックと場所に整理しました。",
     "syncFailedTitle": "フィードを更新できませんでした",
@@ -1247,18 +1170,14 @@
     "settingsLink": "通知の設定"
   },
   "settings": {
-    "groupPrivacy": "プライバシーとデータ",
     "groupHelp": "ヘルプ",
     "groupAccount": "アカウント",
-    "languageRow": "言語",
-    "backupRowNever": "まだバックアップなし"
+    "languageRow": "言語"
   },
   "personaAudit": {
     "entryRow": "プロフィール変更ログ",
     "title": "プロフィールの変更",
-    "subtitle": "あなたの興味へのすべての変更",
     "empty": "まだ変更はありません。Meraがあなたの興味を調整するたびに、変更がここに表示されます。",
-    "revert": "元に戻す",
     "revertedBadge": "元に戻しました",
     "revertConfirmTitle": "この変更を元に戻しますか？",
     "revertConfirmBody": "プロフィールを、この変更を加える前の状態に戻します。",
@@ -1416,12 +1335,9 @@
     "notificationBody_other": "Meraはあなたのプロフィールで{{count}}件の整理項目を見つけました。",
     "reviewChip": "確認",
     "title": "プロフィールを整理",
-    "subtitle": "整理の提案",
     "intro": "Meraがこれに気づきました。選ぶまで何も変わりません。",
-    "empty": "あなたのプロフィールは健全です",
     "accept": "承認",
     "reject": "却下",
-    "reversibleNote": "変更ログから元に戻せます",
     "effectDuplicate": "重複を削除し、より強い方を残します。",
     "effectTooBroad": "この興味の重みを下げ、関係の薄いストーリーを減らします。",
     "effectStaleTopic": "この動きのないトピックを停止します。",
@@ -1430,8 +1346,6 @@
     "appliedBody": "プロフィールが整理されました。詳細は変更ログをご確認ください。",
     "applyFailedTitle": "整理を適用できませんでした",
     "applyFailedBody": "後でもう一度お試しください。",
-    "profileRow_one": "プロフィールの整理 · {{count}}件の提案",
-    "profileRow_other": "プロフィールの整理 · {{count}}件の提案",
     "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。",
     "effectLocationConflict": "新しい場所を残し、古い場所を削除します。",
     "emptyBody": "2つのファクトが重なったり、ファクトが古くなったりすると、Meraがここで整理を提案します。",
@@ -1500,10 +1414,6 @@
     "useForWeather": "天気に使う"
   },
   "notInterested": {
-    "title": "興味なし",
-    "subtitle": "Meraがあなたのフィードから除外するよう要求した内容",
-    "sectionFilters": "あなたが非表示にした言葉と内容",
-    "sectionTopics": "あなたが少なく見たいトピック",
     "chatHint": "ここに来る必要はありません。Meraに見たくないものを言うだけです。「セレブゴシップをもっと少なく」など、あとは任せてください。",
     "kinds": {
       "keyword": "言葉",
@@ -1541,18 +1451,12 @@
     "addPhraseTitle": "フィードから何かを非表示にする",
     "addPhraseBody": "単語または短いフレーズを入力してください。Meraが見出しとストーリーで検索し、それらをあなたの邪魔にならないようにします。より具体的な場合（カテゴリ全体、ソース、人物など）はチャットで言うか、ストーリーで親指を使ってください。Meraはストーリー自体から取得するため、常に一致します。",
     "addPhrasePlaceholder": "例：セレブゴシップ",
-    "addPhraseHardLabel": "フィードから除外する",
-    "addPhraseHardHint": "Meraがこれらを除外します。大きなニュースになった場合でも表示され、その理由がわかるようにマークされます。オフの場合、Meraは単にそれらをもっと少なく表示し、1ヶ月で忘れます。",
     "addPhraseSubmit": "非表示にする",
     "addPhraseSuccessTitle": "完了",
     "addPhraseSuccessBodyBlocked": "「{{phrase}}」はあなたのフィードから除外されました。大きなニュースのみが表示され、Meraがそう言います。",
     "addPhraseSuccessBodySoft": "「{{phrase}}」についてはずっと少なく見るようになります。",
     "addPhraseFailedTitle": "保存できませんでした",
-    "addPhraseFailedBody": "もう一度お試しください。",
-    "emptyTitle": "まだ何も非表示にしていません",
-    "emptyBody": "Meraに何かに興味がないと言うと、ここに表示されるので元に戻すことができます。",
-    "emptyFilters": "まだ言葉を非表示にしていません。",
-    "emptyTopics": "まだトピックを優先度を下げていません。"
+    "addPhraseFailedBody": "もう一度お試しください。"
   },
   "headlineDepth": {
     "title": "トップニュース",
@@ -1598,9 +1502,6 @@
     "influence": "影響",
     "moreInfluence": "より大きな影響",
     "lessInfluence": "より小さな影響",
-    "declinedTopicsTitle": "削除したトピック",
-    "allowAgain": "もう一度許可する",
-    "topicRemovalConsequence": "削除したトピックは、「削除したトピック」からもう一度許可しない限り、二度と提案されません。",
     "deleteFactA11y": "{{fact}} を削除",
     "addFact": "ファクトを追加",
     "page": {
@@ -1662,7 +1563,6 @@
   },
   "pin": {
     "lockTitle": "Meraはロックされています",
-    "lockSubtitle": "Meraのロックを解除するために4桁のPINを入力してください",
     "incorrect": "PINが正しくありません。もう一度お試しください。",
     "lockedTryAgain": "試行回数が多すぎます。{{time}}後にもう一度試してください",
     "forgot": "PINを忘れましたか？",
@@ -1673,7 +1573,6 @@
     "setupTitle": "4桁のPINを選んでください",
     "setupSubtitle": "この電話でMeraを開くときに使います。",
     "confirmTitle": "もう一度入力してください",
-    "confirmSubtitle": "4桁のPINをもう一度入力してください",
     "mismatch": "PINが一致しません。やり直してください。",
     "startOver": "やり直す"
   },
@@ -1681,8 +1580,6 @@
     "title": "セキュリティ",
     "requirePinTitle": "PINを必須にする",
     "requirePinDescription": "Meraを開くときに4桁のPINを求めます",
-    "setPinTitle": "PINを設定",
-    "setPinSubtitle": "このデバイスでMeraのロックを解除するために4桁のPINを選択してください",
     "lockEnabledTitle": "PINロック有効",
     "lockEnabledDescription": "Meraを開くときにPINを入力します。",
     "lockDisabledTitle": "PINロック無効",
@@ -1690,8 +1587,6 @@
     "changePin": "PINを変更",
     "verifyCurrentTitle": "現在のPINを入力",
     "verifyCurrentSubtitle": "続行するために現在のPINを確認してください",
-    "newPinTitle": "新しいPINを設定",
-    "newPinSubtitle": "新しい4桁のPINを選択してください",
     "pinChangedTitle": "PINが更新されました",
     "pinChangedDescription": "あなたのPINが変更されました。",
     "blurImagesTitle": "画像をぼかす",
@@ -1743,7 +1638,6 @@
     "trackBody": "既にフォロー中のストーリーは、収集したすべての情報を保持します。新しいストーリーをフォローするには、有効なプランが必要です。",
     "trackDismiss": "後で",
     "trackTitle": "ストーリー追跡はプランに含まれています",
-    "factsInFeedHeader": "フィードに表示中",
     "factsPausedHeader": "一時停止中",
     "factsPausedSubtitle": "これらは保存されたままです。プランを開始するとすべて有効になります。",
     "pausedBadge": "一時停止中",
@@ -1761,12 +1655,6 @@
       "factCheck": "ファクトチェックはプランが必要です。Meraが調べて、ほかにどこが報じているかをお見せします。",
       "default": "チャットはプランが必要です。フィードはそのまま使えます。"
     }
-  },
-  "relatedSort": {
-    "a11yLabel": "関連記事を並べ替える",
-    "relevance": "最も一致したもの",
-    "oldest": "古い順",
-    "newest": "新しい順"
   },
   "factCheck": {
     "actionA11y": "このストーリーの公開されているファクトチェックを探す",
@@ -2583,10 +2471,8 @@
     "playbackError": "動画を再生できませんでした。"
   },
   "backup": {
-    "adoptDescription": "別のデバイスでバックアップを設定したときに書き留めたコードです。大文字・小文字、スペース、ハイフンは区別されません。",
     "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
     "adoptTitle": "リカバリーコードを入力",
-    "alreadyHave": "すでにバックアップがあります",
     "backgroundRestricted": "「Appのバックグラウンド更新」がオフのため、バックアップを自動で実行できません。「今すぐバックアップ」を使うか、デバイスの設定でオンにしてください。",
     "cadence": {
       "daily": "毎日",
@@ -2624,9 +2510,6 @@
     "icloudReady": "iCloud ストレージを使用します",
     "icloudUnavailable": "利用するには、このデバイスで iCloud にサインインしてください",
     "offDescription": "プロフィール、保存した記事、履歴の暗号化されたコピーです。新しい電話でゼロから始めずに済みます。開けるのはリカバリーコードだけです。",
-    "offPrivacy": "コピーはどこかへ送られる前に、このデバイス上で暗号化されます。保管する側も、私たちも中身を読むことはできません。だからこそ、次に表示されるリカバリーコードだけが元に戻る唯一の手段です。",
-    "onboardingIntro": "以前に Mera を使っていた場合は、リカバリーコードを入力してください。ファクト、トピック、設定を復元します。スキップして新しく始めることもできます。",
-    "onboardingSkip": "スキップして新しく始める",
     "restartNeeded": "データが戻りました。アプリを閉じて開き直すと表示されます。",
     "restore": "バックアップから復元",
     "restoreConfirmAction": "置き換える",
@@ -2634,7 +2517,6 @@
     "restoreConfirmTitle": "このデバイスのデータを置き換えますか？",
     "restoreEmpty": "ここにはバックアップが見つかりませんでした。以前に別の Google アカウントや iCloud アカウントを使っていた場合は、そちらでサインインしてください。",
     "restoreHint": "このデバイスのデータを置き換えます",
-    "restoreLookHere": "ここでバックアップを探す",
     "restoreWhereDescription": "保存した場所を選んでください。置き換える前に、そこにある内容を確認できます。",
     "restoreWhereTitle": "バックアップはどこにありますか",
     "restoredDescription_one": "{{count}}件の項目をこのデバイスに復元しました。",
@@ -2644,7 +2526,6 @@
     "runNow": "今すぐバックアップ",
     "runNowHint": "自動バックアップが実行されていない場合に使用します",
     "runsInBackground": "バックグラウンドで自動的に実行されます。通常は夜間です。",
-    "setUp": "データをバックアップ",
     "shareCode": "コードを共有または保存",
     "showCode": "リカバリーコードを表示",
     "showCodeHint": "設定時に書き留めたコードです",
@@ -2735,7 +2616,6 @@
     "confirmBody": "{{publisher}}のフィードでの重みを高くし、そのメディアが報じたニュースでは記事を表示します。",
     "confirmYes": "はい、購読しています",
     "confirmNo": "まだです",
-    "iSubscribe": "これを購読しています",
     "added": "{{publisher}}を購読中のメディアに追加しました",
     "removed": "{{publisher}}を購読中のメディアから削除しました",
     "coversThisStory": "このニュースは購読でお読みいただけます。",
@@ -2743,41 +2623,16 @@
     "opensPublisherSite": "{{publisher}}の公式サイトを開きます"
   },
   "shareStats": {
-    "screenSubtitle": "過去30日間",
-    "preparing": "カードを準備しています",
-    "nameToggleLabel": "よく読む媒体を表示",
-    "nameTogglePrivacy": "既定で含まれます。発行元の名前はあなたのことを多く物語るので、共有する前にオフにできます。記事の見出しは含まれません。",
     "shareDialogTitle": "Mera の読書記録",
     "sharingUnavailable": "この端末では共有を利用できません。",
     "shareFailed": "うまくいきませんでした。もう一度お試しください。",
     "card": {
-      "title": "私の読書、過去30日間",
-      "publicationsLabel": "訪れた媒体",
-      "countriesLabel": "読んだ国",
-      "latencyLabel": "公開から読むまでの平均時間",
-      "latencyCoverage": "公開時刻がわかっている {{total}} 件中 {{sampled}} 件に基づく",
-      "openedLabel": "開いた記事",
-      "openedPartial": "部分的な数です。Mera はおすすめカードのタップだけを数えます。",
-      "topPublicationsTitle": "よく読む媒体",
-      "privacyLine": "私の端末だけで数えました。外には何も出ていません。",
-      "latencyValue_other": "{{count}} 時間",
-      "reachTitle": "どこからニュースが届いたか",
-      "keepTitle": "とっておいたもの",
-      "windowNow": "現在",
-      "savedLabel": "保存した記事",
-      "followedLabel": "フォロー中のストーリー",
-      "keepNote": "この端末に残っています。保存した記事とフォロー中のストーリーは、削除するまで残ります。",
-      "topCountriesTitle": "その多くはここから",
       "countriesRest": "その他",
       "flagsMore": "他 {{n}} 件",
-      "paceScaleTitle": "公開から読むまで",
       "hoursShort": "{{n}} 時間",
-      "languagesLabel": "読んだ言語",
-      "daysReadLabel": "何かを読んだ日数",
       "heatLegendLess": "少ない",
       "heatLegendMore": "多い",
       "rhythmWeekdays": "月,火,水,木,金,土,日",
-      "habitsTitle": "わたしの読み方",
       "privacyMine": "私の電話で集計しています。外に出るものは何もありません。",
       "windowLine": "{{label}} · 過去30日間"
     },
@@ -2793,16 +2648,6 @@
       "position": "{{index}} / {{total}}",
       "title": "プレビュー"
     }
-  },
-  "analytics": {
-    "title": "あなたの読書",
-    "subtitle": "この端末で数えています。外には出ません。",
-    "emptyBody": "記事をいくつか読むと、このページが埋まります。Mera はこの端末に 30 日分の閲覧履歴を保持します。",
-    "sectionReach": "どこからニュースが届いたか",
-    "sectionKeep": "とっておいたもの",
-    "sectionPace": "ニュースが届くまで",
-    "shareCard": "このカードを共有",
-    "loading": "数字を計算しています"
   },
   "chatTopics": {
     "none": "保存しました。今のところ追加できるトピックはありません。",
@@ -2832,7 +2677,6 @@
     "slow": "処理中です。接続が遅くなっています",
     "legCapSentence": "一度に実行できる手順の上限に達しました。続けるにはもう一度お尋ねください。",
     "interrupted": "処理が中断されました。続けるにはもう一度お尋ねください。",
-    "summaryDone": "完了しました",
     "summaryFailed": "うまくいかない処理がありました",
     "statePending": "処理中",
     "stateDone": "完了",
@@ -2950,37 +2794,16 @@
   "tabExplainer": {
     "close": "OK",
     "feed": {
-      "title": "フィードのしくみ",
-      "what": "フィードには、Meraが過去2日間にあなたのために見つけたすべての記事が表示されます。多くの媒体が報じた記事でも、カードは1枚です。",
-      "how1": "Meraはあなたが教えてくれた内容を検索に変え、合う記事を集めます。AIが1本ずつ読み、あなたにとってどれだけ重要かを判断します。",
-      "how2": "まだ見ていない記事が先に、重要なものから並びます。見ていない記事は12時間後に1段階、1日後にもう1段階下がります。",
-      "how3": "次に並べ直すとき、すでに見た記事は下へ、開いた記事は最後に移ります。読んでいる位置より上のカードは動きません。下に引くと並べ直します。",
       "privacy": "並び順はこのスマートフォンで決まります。どの記事を開いたかの記録は、このスマートフォンにだけ残ります。"
     },
-    "forYou": {
-      "how1": "各記事は最も合う関心1つに入るので、表示は1回だけです。同じくらい合う関心が2つあれば、先に追加した方に入ります。"
-    },
-    "interests": {
-      "title": "関心のしくみ",
-      "what": "関心では、Meraに伝えたことごとにニュースをまとめます。伝えたことそれぞれに専用のセクションができます。",
-      "how2": "重みを大きくした関心が先に表示されます。Meraがその関心のストーリーを見つけると、ここに表示されます。",
-      "how3": "セクション内では、未読のストーリーが先で、重要なものから順に並びます。セクションの順序は、このページを離れたとき、または10分ごとに入れ替わります。"
-    },
     "stories": {
-      "title": "ストーリーのしくみ",
-      "what": "ストーリーには、フォロー中の進行中のストーリーが並びます。新しい記事が出るたびに、Meraがそれぞれに追加します。",
-      "how1": "各ストーリーには、前回開いてから新しくなった記事の数が表示されます。",
       "privacy": "フォローしているストーリーは、この端末に保存されます。"
     }
   },
   "articleMenu": {
     "openA11y": "その他の操作",
-    "title": "記事の操作",
-    "askMera": "Mera に聞く",
     "following": "このストーリーをフォロー中",
     "checkFacts": "ファクトチェック",
-    "openOn": "{{source}} で開く",
-    "openInTranslate": "Google 翻訳で開く",
     "fewerFrom": "{{source}} を減らす",
     "fewerFromDone": "{{source}} の表示が減ります。",
     "undo": "元に戻す",
@@ -3009,23 +2832,7 @@
   "systemCheck": {
     "title": "電話を確認しています",
     "subtitle": "数秒で済みます。Meraがここでうまく動くように確認します。",
-    "phoneTitle": "お使いの端末",
-    "phoneSupported": "対応: {{details}}",
-    "memory": "メモリ{{gb}}GB",
-    "modeTitle": "Meraの動作モード",
-    "modeFull": "フルモード",
-    "modeFullDetail": "すべてのアニメーションとエフェクトがオンになっています。",
-    "modeLite": "Liteモード",
-    "modeLiteDetail": "動く背景と装飾アニメーションがオフになり、Meraが滑らかに動きます。設定でいつでも変更できます。",
     "aiTitle": "デバイス上のAI",
-    "aiNotYet": "まだ利用できません。デバイス上のAIはベータ版です。",
-    "languageTitle": "言語: {{language}}",
-    "languageEnglish": "準備完了です。",
-    "languageReady": "準備完了です。この端末で記事を翻訳できます。",
-    "languageChecking": "言語パックを確認しています。端末から確認画面が出たら、ダウンロードをタップしてください。",
-    "languageMissing": "この端末は今のところ{{language}}に翻訳できません。もう一度お試しいただくか、英語のまま続けてください。",
-    "retry": "再試行",
-    "useEnglish": "英語を使う",
     "settingsTitle": "システムチェック",
     "settingsDescription": "この端末でのMeraの動作と、言語パックの状態を確認できます。",
     "aiCloud": "まだこの電話にはありません。Meraはプライベートクラウドを使います。",
@@ -3062,12 +2869,9 @@
     "newsLoadError": "記事を読み込めませんでした",
     "websiteA11y": "{{host}}を開く",
     "aboutSourceA11y": "{{source}}について",
-    "subscribed": "{{publisher}}をフォローしています",
     "prefMoreA11y": "この媒体からもっと表示",
     "prefFewerA11y": "この媒体から少なく表示",
     "history": "履歴",
-    "historyEmptyTitle": "まだ何もありません",
-    "historyEmptyBody": "このメディアの記事を発行元のサイトで開くと、30日間ここに表示されます。",
     "fewerFrom": "少なく表示",
     "historyEmpty": "過去30日間にここへの訪問はありません。",
     "moreFrom": "多く表示",
@@ -3081,15 +2885,10 @@
   },
   "nav": {
     "page": {
-      "interests": "関心",
       "stories": "ストーリー",
-      "saved": "保存済み",
-      "checks": "ファクトチェック",
-      "visited": "訪問済み",
-      "stats": "統計"
+      "saved": "保存済み"
     },
     "rearrangeA11y": "{{tab}}のページを並べ替える",
-    "quickSettingsA11y": "{{page}}のクイック設定",
     "pillA11y": "{{label}}、{{count}}件中{{index}}件目",
     "pillNewA11y": "{{label}}、新着あり、{{count}}件中{{index}}件目",
     "howThisPageWorks": "このページのしくみ",
@@ -3123,19 +2922,9 @@
   "interests": {
     "emptyTitle": "Meraはまだあなたの関心を知りません",
     "emptyBody": "フォローしているものを1つMeraに伝えると、ここに専用のセクションができます。Meraボタンをタップして始めてください。",
-    "chipHome": "住んでいる場所",
-    "chipWork": "仕事",
-    "chipTeam": "応援しているチーム",
-    "draftHome": "住んでいる場所:",
-    "draftWork": "仕事:",
-    "draftTeam": "応援しているチーム:",
-    "findingStories": "Meraがこの関心に合うストーリーを探しています。最初の記事は数秒でここに表示されます。",
-    "backToInterests": "関心に戻る",
     "learnAbout": "関心事について"
   },
   "world": {
-    "windowRowLabel": "過去のトップストーリー",
-    "newStateLine": "トップストーリーは誰にとっても同じです。ペンのアイコンから気になる国を追加すると、国ごとに専用のページができます。",
     "gathering": "{{country}}の今日のニュースを集めています。最初のストーリーは数秒で表示されます。",
     "emptyWindow": "過去{{hours}}時間に{{country}}のトップストーリーはありません。",
     "emptyWindowWorld": "過去{{hours}}時間にトップストーリーはありません。",
@@ -3154,10 +2943,6 @@
       "privacy": "Meraは、あなたの検索をあなたのアカウントに紐付けることはありません。"
     },
     "explainer": {
-      "title": "世界のしくみ",
-      "what": "世界には、過去24時間に最も多く報じられたストーリーが、世界全体と追加した国ごとに表示されます。ページ上部で6時間、12時間、48時間に切り替えることもできます。内容は誰にとっても同じで、あなたに合わせて選んだものではありません。",
-      "how1": "世界の見出しは、各国でどれだけ広く報じられているかでストーリーを順位付けします。",
-      "how2": "国ごとの見出しは、その国に拠点を置くニュースソースから届きます。",
       "country1": "その国自身の公開元がそのストーリーについて多く書いているほど、ストーリーの順位は上がります。",
       "countrySame": "このページは全員にとって同じです。ここではあなたに関する情報は使われません。",
       "same": "ワールドは全員にとって同じです。ここではあなたに関する情報は使われません。",
@@ -3167,7 +2952,6 @@
   },
   "library": {
     "saved": {
-      "exportRow_other": "{{count}}件保存済み · 削除するまでこの端末に保存されます",
       "export": "書き出す",
       "emptyBody": "記事のブックマークをタップすると、ここに保存されます。保存した記事は、削除するまでこの端末に残ります。",
       "count_one": "{{count}}件保存済み",
@@ -3176,7 +2960,6 @@
     },
     "checks": {
       "emptyTitle": "まだファクトチェックはありません",
-      "emptyBodyAsk": "記事のチェックマークをタップするか、Meraに主張のチェックを頼んでみましょう。頼んだチェックはここに表示されます。",
       "checkedAgo": "{{age}}に確認",
       "checking": "ファクトチェック機関で確認中です",
       "claim": "主張",
@@ -3187,23 +2970,13 @@
       "new": "新着"
     },
     "visited": {
-      "intro": "過去30日間に、元のサイトで最も多く開いたメディアです。良い報道は、読者が支えることで続きます。",
-      "topLine": "ほかのどこよりもよく開いています",
       "subscribe": "登録する",
       "alreadyPay": "すでに支払っています",
       "alreadyPayA11y": "{{publisher}}にはすでに支払っています",
-      "support": "支援する",
-      "supportA11y": "{{publisher}}を支援する",
       "youPay": "支払い中",
-      "subscribed": "登録済み",
-      "lastOpened": "最後に開いた日: {{date}}",
-      "footnote": "「登録する」と「支援する」は、そのメディア自身のページを開きます。この端末に30日間保存されます。",
-      "emptyTitle": "メディアはまだありません",
-      "emptyBody": "元のサイトで記事を開くと、そのメディアがここに表示されます。よく読むメディアを支援する方法も確認できます。"
+      "emptyTitle": "メディアはまだありません"
     },
     "stats": {
-      "emptyTitle": "カードはまだありません",
-      "emptyBody": "記事を発行元のサイトで開くと、Meraが最初のカードを作ります。",
       "share": "共有",
       "counted": "この電話で集計しています。外に出るものは何もありません。",
       "days": "読んだ日",
@@ -3271,22 +3044,12 @@
       "facts": "ファクト",
       "places": "場所",
       "sources": "ソース",
-      "cleanup": "プロフィールの整理",
-      "topicsDeclined": "断ったトピック",
-      "payFor": "支払っているメディア",
-      "activity": "アクティビティ",
       "viewAll": "{{count}}件をすべて表示",
       "viewAllNoCount": "すべて表示",
-      "review": "確認",
-      "subscribed": "登録済み",
-      "hidden": "非表示",
-      "less": "減らす",
-      "aboutA11y": "{{card}}について",
       "factsEmpty": "まだありません。フォローしていることをMeraに伝えると、ここに表示されます。",
       "placesEmpty": "場所はまだありません",
       "addCity": "都市を追加",
       "sourcesEmpty": "調整したものはありません。Meraはすべてのソースを同じように扱います。",
-      "topicsDeclinedEmpty": "断ったものはまだありません。",
       "adjusted_one": "{{count}}件を調整済み",
       "adjusted_other": "{{count}}件を調整済み",
       "changes": "プロフィールの変更",
@@ -3295,37 +3058,6 @@
       "title": "あなたのプロフィール",
       "topicCount_one": "トピック{{count}}件",
       "topicCount_other": "トピック{{count}}件"
-    },
-    "hints": {
-      "facts": {
-        "title": "ファクトのしくみ",
-        "body": "ファクトはそれぞれ、Meraがあなたのために行う検索になります。ファクトを変更または削除すると、そこから生まれたストーリーも変わります。"
-      },
-      "places": {
-        "title": "場所のしくみ",
-        "body": "Meraは場所に合ったローカルニュースを探し、フィードと関心に表示します。それぞれの場所の国は、世界にもページができます。",
-        "body2": "自宅が最も重視されます。場所をタップすると、ラベルの変更や削除ができます。"
-      },
-      "sources": {
-        "title": "ソースのしくみ",
-        "body": "「増やす」と「減らす」で、メディアの表示頻度が変わります。ミュートにすると、大きなニュースを除いて表示されなくなります。"
-      },
-      "cleanup": {
-        "title": "プロフィールの整理のしくみ",
-        "body": "Meraは、重複しているファクトや、もう合わなくなったファクトを見つけます。確認するまでは何も変わりません。"
-      },
-      "topicsDeclined": {
-        "title": "断ったトピックのしくみ",
-        "body": "表示を減らす、または非表示にするとMeraに伝えたトピックです。もう一度許可すると、また表示されることがあります。"
-      },
-      "payFor": {
-        "title": "購読のしくみ",
-        "body": "支払っているメディアは、フィードで優先されます。"
-      },
-      "activity": {
-        "title": "アクティビティのしくみ",
-        "body": "プロフィールへのすべての変更が新しい順に並びます。ほとんどは元に戻せます。"
-      }
     },
     "explainer": {
       "title": "あなたのプロフィール",
@@ -3346,14 +3078,11 @@
       "empty": "まだ調整したメディアはありません。メディアを検索して、表示を増やす、減らす、または表示しないように設定できます。記事の•••メニューの「〜を減らす」もここに表示されます。"
     },
     "settings": {
-      "groupApp": "アプリ",
       "yourPlan": "ご利用中のプラン",
       "usage_other": "今日は{{limit}}件中{{count}}件の記事",
       "usageNoLimit_other": "今日は{{count}}件の記事",
       "usageOffline": "利用状況はオンラインのときに表示されます",
       "resetsAt": "{{time}}にリセット",
-      "displayValue": "文字、ライトモード",
-      "backupAndData": "バックアップとデータ",
       "addEmail": "メールアドレスを追加",
       "addEmailHint": "任意です。アカウントとプランを別の電話に移す場合や、Meraからのメールを受け取る場合にだけ必要です。",
       "appLock": "アプリロック",
@@ -3380,10 +3109,8 @@
       "when": "Meraが通知できる時間",
       "yourTimes": "通知する時間",
       "noneYet": "まだ選ばれていません",
-      "zeroTimes": "時間を選んでください。選ばないと、Meraは通知を送りません。",
       "add": "時間を追加",
       "addHour": "{{time}}を追加",
-      "alreadyPicked": "{{time}}はすでに選ばれています",
       "remove": "{{time}}を削除",
       "wheel": "追加する時間",
       "footnote": "Meraは、あなたのタイムゾーンでこれらの時間にだけ通知を送ります。最大3つまで選べます。",
@@ -3398,11 +3125,6 @@
       "addHome": "住んでいる場所を追加する"
     },
     "askNews": "ニュースについて何でも聞く",
-    "interests": {
-      "add": "関心を追加する",
-      "change": "関心を変更する",
-      "remove": "関心を削除する"
-    },
     "interest": {
       "change": "この関心を変更する",
       "remove": "この関心を削除する"
@@ -3412,7 +3134,6 @@
       "name": "追いかけたいストーリーを伝える"
     },
     "world": {
-      "countryFeed": "ある国のニュースをフィードに表示する",
       "family": "家族が住んでいる場所をMeraに伝える",
       "behind": "見出しの背景を聞く"
     },
@@ -3440,7 +3161,6 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera。{{hint}}",
     "moveTopLeft": "左上に移動",
     "moveTopRight": "右上に移動",
     "moveBottomLeft": "左下に移動",

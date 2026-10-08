@@ -31,11 +31,8 @@
     "yesterday": "Ontem"
   },
   "auth": {
-    "reauthBanner": "Faça login novamente para sincronizar",
     "emailPlaceholder": "Digite seu endereço de e-mail",
     "otpPlaceholder": "Digite o código de 6 dígitos",
-    "codeSentTitle": "Código Enviado!",
-    "codeSentDescription": "Verifique seu e-mail para o código de acesso",
     "invalidEmailTitle": "E-mail Inválido",
     "invalidEmailDescription": "Por favor, insira um endereço de e-mail válido",
     "failedToSendTitle": "Falha ao Enviar Código",
@@ -49,17 +46,6 @@
     "resendCode": "Reenviar código",
     "resendIn": "Reenviar em {{seconds}}s",
     "resendSuccess": "Um novo código foi enviado.",
-    "previousUser": {
-      "title": "Bem-vindo de volta",
-      "subtitle": "Não conseguimos carregar sua conta agora. Tente novamente ou entre com outro usuário.",
-      "retryLogin": "Tentar novamente por e-mail",
-      "useDifferentUser": "Entrar com outro usuário",
-      "retryFailed": "Não foi possível alcançar o servidor. Verifique sua conexão e tente novamente.",
-      "switchBody": "Trocar de usuário irá excluir permanentemente todos os dados deste usuário neste dispositivo. Isso não pode ser desfeito.",
-      "switchConfirm": "Sim, limpar dados e trocar de usuário",
-      "switchCancel": "Cancelar",
-      "subtitleWithDevice": "Não conseguimos carregar sua conta agora. Tente novamente com e-mail, entre sem e-mail ou entre com outro usuário."
-    },
     "contentPolicy": "Política de conteúdo",
     "faq": "Perguntas frequentes",
     "identitySwitchFailedTitle": "Não foi possível concluir a troca de conta",
@@ -77,11 +63,6 @@
     "startReading": "Começar a ler",
     "alreadyHaveAccount": "Entrar com e-mail",
     "continue": "Continuar",
-    "firstTimeHint": "Novo no Mera? Comece com um tour rápido.",
-    "readyHint": "Pronto para fazer o Mera ser seu?",
-    "getStarted": "Começar",
-    "paidUserHint": "Já é um usuário pago?",
-    "signIn": "Entrar",
     "aboutLegal": "Sobre o Mera e informações legais",
     "sourceCode": "Código-fonte",
     "website": "Site",
@@ -139,8 +120,6 @@
     "updatedAt": "Atualizado {{time}}",
     "allCaughtUp": "Você está por dentro de tudo que te impacta.",
     "preparingFeed": "Mera está preparando seu feed.",
-    "noInterests": "Mera não consegue analisar notícias para você",
-    "noInterestsDescription": "Por favor, crie seu perfil de usuário para que Mera comece a gerar notícias para você.",
     "pullDownToRetry": "Puxe para baixo para tentar novamente",
     "readArticleToast": "Você já leu este artigo",
     "stuckTitle": "Não foi possível carregar seu feed",
@@ -270,7 +249,6 @@
     "loadingA11y": "Carregando seu feed",
     "translatingCaption": "Traduzindo…",
     "updatedJustNow": "Atualizado agora mesmo",
-    "reasonWriting": "Escrevendo uma nota",
     "reasonWritingA11y": "nota sendo escrita",
     "reasonNotYet": "Ainda não há nota para este artigo.",
     "findingStories": "Buscando suas histórias",
@@ -356,7 +334,6 @@
     "badgeRegulator": "Agência oficial"
   },
   "clusterDetail": {
-    "translatable": "Este artigo está em {{language}}: seu dispositivo pode traduzi-lo enquanto você lê. Se a tradução não funcionar, você pode abrir o site no Google Translate; só lembre que você estará navegando por meio do Google.",
     "notTranslatable": "Este artigo está em {{language}}. Seu dispositivo não consegue traduzi-lo — use o Google Translate para lê-lo no seu idioma.",
     "notTranslatableOsOutdated": "Este artigo está em {{language}}. A tradução no dispositivo exige iOS {{requiredVersion}}: você está na versão iOS {{currentVersion}}. Atualize o iOS ou use o Google Translate para lê-lo no seu idioma.",
     "unknownLanguage": "outro idioma",
@@ -366,17 +343,13 @@
   },
   "onboarding": {
     "stepOf": "Etapa {{current}} de {{total}}",
-    "allSet": "Tudo pronto!",
     "connectionIssue": "Problema de Conexão",
     "connectionDescription": "Estamos tendo alguns problemas ao conectar com o servidor. Você pode fechar o app e tentar novamente mais tarde. Se o problema persistir, recomendamos que faça logout e login novamente.",
     "logout": "Sair",
     "close": "Fechar",
-    "nextStep": "Próxima Etapa",
     "notificationLow": "Baixa",
     "notificationMedium": "Média",
     "notificationHigh": "Alta",
-    "signedOutTitle": "Sessão Encerrada",
-    "signedOutDescription": "Você foi desconectado com sucesso.",
     "logoutFailedTitle": "Falha ao Sair",
     "logoutFailedDescription": "Houve um problema ao encerrar a sessão. Por favor, tente novamente.",
     "loggingOut": "Saindo...",
@@ -401,8 +374,6 @@
     "enableDescription": "Ative as notificações para ficar atualizado com notícias personalizadas",
     "permissionDenied": "Se você negou anteriormente as permissões de notificação, será necessário ativá-las nas configurações do dispositivo.",
     "openDeviceSettings": "Abrir Configurações do Dispositivo",
-    "format24h": "24h",
-    "formatAmPm": "AM/PM",
     "savePreferences": "Salvar Preferências",
     "loadFailedTitle": "Falha ao Carregar",
     "loadFailedDescription": "Falha ao carregar as configurações de notificação.",
@@ -430,9 +401,6 @@
     "title": "Idioma",
     "appLanguage": "Idioma do app",
     "appLanguageDescription": "Para o app e para traduzir notícias.",
-    "languagePacksIos": "Os modelos de tradução são gerenciados pelo seu dispositivo. Você só precisa baixar o modelo para o idioma selecionado. O iOS cuida do resto.",
-    "languagePacksIosPath": "Ajustes → Geral → Idioma e Região → Idiomas de Tradução",
-    "languagePacksAndroid": "Os modelos de tradução (~30MB cada) são baixados automaticamente quando você traduz para um novo idioma pela primeira vez.",
     "openDeviceSettings": "Abrir Configurações do Dispositivo",
     "openLanguageSettings": "Abrir configurações de idioma",
     "restartRequired": "Reinício do App Necessário",
@@ -442,18 +410,14 @@
     "packMissingBanner": "Este idioma precisa de um pacote de tradução local: a tradução em si acontece localmente no seu celular. Você pode gerenciar os idiomas nas configurações do seu celular.",
     "packMissingIosPath": "Ajustes → Geral → Idioma e Região",
     "retry": "Tentar novamente",
-    "watchGuide": "Veja como adicionar um idioma ao seu dispositivo",
     "managePacksPrefix": "Para gerenciar idiomas baixados, vá para",
     "translationUnavailableTapToRetry": "O pacote de idioma {{language}} ainda pode estar sendo baixado. Mostrando inglês por enquanto. Toque para tentar novamente.",
     "translationUnavailableTitle": "Tradução indisponível",
     "translationUnsupportedOnThisIos": "Sua versão do iOS não consegue traduzir para {{language}}. Mostrando inglês — atualizar iOS habilitará isso.",
-    "advanced": "Avançado",
-    "advancedDescription": "Tradução no dispositivo. Opcional — tudo acima funciona sem isso.",
     "downloadHintBeforePrefix": "Depois de escolher um idioma, o iOS pode pedir para baixá-lo. Toque no",
     "downloadHintBeforeSuffix": "ícone ao lado de cada idioma nessa lista — nada é baixado até você fazer isso.",
     "downloadHintNowPrefix": "Toque no",
     "downloadHintNowSuffix": "ícone ao lado de cada idioma na lista abaixo para iniciar o download.",
-    "googleTranslateAlways": "Você pode ler qualquer artigo em qualquer idioma com \"Ler no Google Translate\" na página do artigo — isso sempre funciona, sem precisar baixar nada.",
     "onDeviceTranslationHint": "Se preferir que o seu dispositivo faça a tradução, verifique se o seu idioma está disponível nas configurações do iOS; o vídeo abaixo mostra como ativar isso.",
     "switchDeviceUnsupportedBody": "Este dispositivo não consegue traduzir artigos de notícias para nenhum idioma, então o app está usando inglês. Com {{language}}, os artigos ficariam sem tradução.",
     "switchFailedBody": "Não foi possível preparar o pacote de tradução de {{language}}, então você ainda está usando {{previous}}. Ele pode ainda estar sendo baixado. Tente novamente em instantes.",
@@ -471,7 +435,6 @@
   "meraProtocol": {
     "title": "Mera Protocol",
     "sectionTitle": "Mera Protocol",
-    "processingModeTitle": "Modo de processamento",
     "onDeviceMode": "No dispositivo",
     "onDeviceModeSubtitle": "Totalmente offline",
     "cloudMode": "Nuvem (E2EE)",
@@ -600,18 +563,10 @@
   },
   "manageData": {
     "deleting": "Excluindo...",
-    "title": "Gerenciar dados",
-    "description": "Exclua partes específicas dos seus dados. Cada ação mostra exatamente o que será limpo antes de você confirmar.",
-    "feedCacheTitle": "Limpar cache do feed de artigos",
-    "feedCacheDescription": "Sugestões em cache, links e tarefas de inferência",
-    "feedCacheModalDescription": "Limpa o cache do feed de artigos: sugestões, links e tarefas de inferência. O feed será reconstruído na próxima atualização. Nenhum outro dado é afetado.",
     "factsTitle": "Limpar fatos e tópicos",
     "viewingHistoryTitle": "Limpar histórico de visualização",
     "viewingHistoryDescription": "Todos os artigos que você abriu pelo Mera",
     "viewingHistoryModalDescription": "Limpa o registro local dos artigos que você abriu. O card \"Publicações que você tem lido\" na aba Fontes e o histórico por publicação serão redefinidos para vazio. Nada mais é afetado, e nenhum dado do servidor é tocado (esses dados nunca saíram do seu dispositivo).",
-    "wipeAllTitle": "Apagar todos os dados",
-    "wipeAllDescription": "Redefinir tudo, exceto sua conta",
-    "wipeAllModalDescription": "Apaga todos os dados guardados neste aparelho: cache do feed, fatos, tópicos, configurações do app e histórico de leitura. Você continua conectado e sua conta é mantida. Este celular ainda pode fazer seu login sem e-mail. Nada é apagado dos nossos servidores.",
     "deletedTitle": "Dados Excluídos",
     "deletedDescription": "Os dados selecionados foram limpos com sucesso.",
     "errorTitle": "Erro",
@@ -694,10 +649,7 @@
     "tabPersona": "Perfil",
     "tabSources": "Fontes",
     "tabPreferences": "Preferências",
-    "privacyOnDevice": "Seus tópicos e fatos ficam armazenados neste dispositivo. O processamento no dispositivo está ativado, então a IA que lê e classifica seus artigos roda aqui, não em nossos servidores. Os artigos são traduzidos e resumidos em nossos servidores antes de alguém pedir. Quando você busca notícias, apenas suas frases de tópico saem do dispositivo. Elas não levam nenhum ID de usuário. Nós as guardamos em cache, indexadas apenas pelo texto, e as apagamos após 14 dias sem uso. Sobre você, guardamos seu e-mail de acesso, se você adicionou um, seu status de assinatura e uma contagem diária de artigos analisados, usada para aplicar seu plano. Se você usa o Mera sem e-mail, também guardamos um registro de acesso deste celular até você excluir sua conta. Os chats não são salvos. A única exceção é uma transcrição que você anexa a um pedido de desbloqueio. Se você não ativar o backup, sair da conta ou trocar de dispositivo recomeça sua persona do zero.",
-    "privacyCloud": "Seus tópicos e fatos ficam armazenados neste dispositivo. O processamento na nuvem está ativado por padrão. Você pode mudar aqui para o processamento no dispositivo. Seus dados são criptografados para o enclave que os processa e descriptografados apenas aqui. Você pode verificar a atestação dele aqui, embora isso ainda não bloqueie o processamento. Quando você busca notícias, apenas suas frases de tópico saem do dispositivo. Elas não levam nenhum ID de usuário. Nós as guardamos em cache, indexadas apenas pelo texto, e as apagamos após 14 dias sem uso. Sobre você, guardamos seu e-mail de acesso, se você adicionou um, seu status de assinatura e uma contagem diária de artigos analisados, usada para aplicar seu plano. Se você usa o Mera sem e-mail, também guardamos um registro de acesso deste celular até você excluir sua conta. Os chats não são salvos. A única exceção é uma transcrição que você anexa a um pedido de desbloqueio. Se você não ativar o backup, sua persona recomeça do zero.",
     "privacyPolicy": "Política de Privacidade",
-    "privacyNoticeTitle": "Sua privacidade",
     "updatingTopics": "Atualizando tópicos... {{completed}}/{{total}}",
     "emptyStateMessage": "Responda algumas perguntas para criar seu perfil",
     "factsHeading": "Fatos",
@@ -721,11 +673,7 @@
     "addTopicDescription": "Por favor, insira o tópico que você gostaria de acompanhar para este fato. O app busca notícias com base no seu tópico e entende sua relevância com base no fato.",
     "addTopicPlaceholder": "ex.: regulação de IA na Europa",
     "adding": "Adicionando...",
-    "generateMoreTopics": "Gerar mais tópicos",
     "generatingMoreTopics": "Gerando mais tópicos...",
-    "generateMoreTopicsTitle": "Gerar mais tópicos?",
-    "generateMoreTopicsWarning": "Isso vai gerar mais 10 tópicos para este interesse. Adicionar mais tópicos pode aumentar seu uso de IA. A Mera recomenda manter apenas os tópicos que realmente interessam a você e remover os tópicos pouco relevantes para obter o melhor valor.",
-    "generateMoreTopicsConfirm": "Gerar",
     "generateMoreTopicsFailedTitle": "Falha ao gerar tópicos",
     "generateMoreTopicsFailedDescription": "Não foi possível gerar novos tópicos. Tente novamente.",
     "gotIt": "Entendi",
@@ -836,8 +784,6 @@
     "newChat": "Nova conversa",
     "inputPlaceholder": "Digite uma mensagem...",
     "viewPreviousMessages": "Ver mensagens anteriores",
-    "aiInteractionNotice": "Você está falando com Mera, um assistente de IA, não com uma pessoa.",
-    "aiUsageNotice": "Este assistente ajuda a configurar suas preferências de notícias. Tentar manipulá-lo ou usá-lo indevidamente pode bloquear sua conta até revisão.",
     "requestUnblock": {
       "button": "Solicitar desbloqueio",
       "pendingButton": "Aguardando revisão",
@@ -945,8 +891,7 @@
     "formError": "Preencha todos os campos obrigatórios.",
     "emailError": "Digite um endereço de e-mail válido.",
     "captureScreenshotError": "Falha ao capturar a tela.",
-    "genericError": "Não foi possível enviar o feedback devido a um erro inesperado.",
-    "chatAttachmentNote": "Sua conversa com a Mera será anexada a este relatório."
+    "genericError": "Não foi possível enviar o feedback devido a um erro inesperado."
   },
   "observability": {
     "title": "Observabilidade",
@@ -1043,7 +988,6 @@
     "subscribe": "Assinar",
     "title": "Ative o Mera News",
     "usageSection": "Uso",
-    "usedToday": "Analisados hoje",
     "viewPlans": "Ver planos",
     "active": "Ativo",
     "freePlan": "Plano gratuito",
@@ -1105,7 +1049,6 @@
     "serverUnavailable": "Mera não pode ser alcançado agora; tente novamente em um momento.",
     "clearSearch": "Limpar pesquisa",
     "searchNotSubscribed": "Pesquisa requer um plano ativo",
-    "searchEmpty": "Nenhuma correspondência nas últimas 48 horas. A pesquisa cobre manchetes recentes, não o arquivo completo.",
     "window": {
       "label24": "24 h",
       "label48": "48 h",
@@ -1114,26 +1057,14 @@
       "label6": "6 h",
       "label12": "12 h",
       "a11y6": "Notícias das últimas 6 horas",
-      "a11y12": "Notícias das últimas 12 horas",
-      "menuLabel": "Período",
-      "option6": "Últimas 6 horas",
-      "option12": "Últimas 12 horas",
-      "option24": "Últimas 24 horas",
-      "option48": "Últimas 48 horas"
+      "a11y12": "Notícias das últimas 12 horas"
     }
   },
   "forYou": {
-    "sectionPrefix": "Notícias sobre:",
     "breaking": "Urgente",
     "showMore": "Mostrar mais {{count}}",
-    "viewAllArticles_one": "Ver todos os {{count}} artigo",
-    "viewAllArticles_other": "Ver todos os {{count}} artigos",
     "headlineSectionGlobal": "Notícias do mundo",
     "headlineSectionCountry": "Notícias de {{country}}",
-    "headlineDenominator_one": "O Mera leu {{count}} manchete · {{shown}} vale seu tempo.",
-    "headlineDenominator_other": "O Mera leu {{count}} manchetes · {{shown}} valem seu tempo.",
-    "headlineDenominatorNone_one": "O Mera leu {{count}} manchete · nenhuma pareceu relevante hoje.",
-    "headlineDenominatorNone_other": "O Mera leu {{count}} manchetes · nenhuma pareceu relevante hoje.",
     "nextFactPrefix": "Próximo",
     "subTabAnalytics": "Análises",
     "emptySection": {
@@ -1163,7 +1094,6 @@
     "analysed": "Analisados",
     "relevant": "Relevantes até agora",
     "lastProcessed": "Última atualização",
-    "errorTitle": "Problema de pontuação",
     "limitUpgrade": "Ou <0>faça upgrade do seu plano</0>.",
     "tryNow": "Testar agora"
   },
@@ -1175,7 +1105,6 @@
     "trackedToast": "Agora você está seguindo esta história",
     "updatesBadge": "{{count}} novos",
     "endedLabel": "Encerrada",
-    "timelineQuietNote": "Ainda não há nova cobertura reunida. Adicionaremos os desenvolvimentos aqui conforme esta história avança.",
     "untrackConfirmTitle": "Deixar de seguir?",
     "untrackConfirmBody": "Você não verá mais novos desenvolvimentos desta história.",
     "untrackConfirmCta": "Parar de seguir",
@@ -1188,9 +1117,6 @@
     "alreadyTrackingTitle": "Você já está seguindo isto",
     "alreadyTrackingBody": "Você não pode seguir esta história duas vezes. Deixar de acompanhá-la excluiria tudo que foi salvo para ela.",
     "goToStoryAction": "Ir para a história",
-    "deleteStoryAction": "Deletar história",
-    "deleteStoryConfirmTitle": "Deletar esta história?",
-    "deleteStoryConfirmBody": "Deletar remove tudo que foi salvo para esta história.",
     "followChatIntro": "Diga-me o que você gostaria de acompanhar e vou configurar.",
     "removeMemberAction": "Não faz parte desta história",
     "removeMemberConfirmTitle": "Remover este artigo?",
@@ -1232,11 +1158,8 @@
   },
   "notificationCenter": {
     "title": "Notificações",
-    "bellA11y": "Notificações",
     "empty": "Você está em dia",
     "close": "Fechar",
-    "markAllRead": "Marcar tudo como lido",
-    "clearAll": "Limpar todas as notificações",
     "migrationDoneTitle": "Seus interesses estão prontos",
     "migrationDoneBody": "A Mera organizou seu perfil em tópicos e localizações.",
     "syncFailedTitle": "Não foi possível atualizar seu feed",
@@ -1247,18 +1170,14 @@
     "settingsLink": "Configurações de notificação"
   },
   "settings": {
-    "groupPrivacy": "Privacidade e dados",
     "groupHelp": "Ajuda",
     "groupAccount": "Conta",
-    "languageRow": "Idioma",
-    "backupRowNever": "Ainda sem backup"
+    "languageRow": "Idioma"
   },
   "personaAudit": {
     "entryRow": "Histórico de alterações do perfil",
     "title": "Mudanças no seu perfil",
-    "subtitle": "Todas as alterações nos seus interesses",
     "empty": "Ainda não há alterações. Conforme a Mera ajusta seus interesses, cada alteração aparece aqui.",
-    "revert": "Reverter",
     "revertedBadge": "Revertido",
     "revertConfirmTitle": "Desfazer esta alteração?",
     "revertConfirmBody": "Isso restaura seu perfil ao estado anterior à alteração.",
@@ -1416,12 +1335,9 @@
     "notificationBody_other": "A Mera encontrou {{count}} limpezas para o seu perfil.",
     "reviewChip": "Revisar",
     "title": "Organize seu perfil",
-    "subtitle": "Limpezas sugeridas",
     "intro": "A Mera notou isto. Nada muda até você escolher.",
-    "empty": "Seu perfil está saudável",
     "accept": "Aceitar",
     "reject": "Dispensar",
-    "reversibleNote": "Reversível pelo histórico de alterações",
     "effectDuplicate": "Remove a duplicata e mantém a mais forte.",
     "effectTooBroad": "Reduz o peso deste interesse para que traga menos notícias fora do tema.",
     "effectStaleTopic": "Desativa este tópico pouco usado.",
@@ -1430,8 +1346,6 @@
     "appliedBody": "Seu perfil foi organizado. Veja o histórico de alterações para revisar.",
     "applyFailedTitle": "Não foi possível aplicar a limpeza",
     "applyFailedBody": "Tente novamente mais tarde.",
-    "profileRow_one": "Limpeza do perfil · {{count}} sugestão",
-    "profileRow_other": "Limpeza do perfil · {{count}} sugestões",
     "effectIncoherentTopics": "Substitui estes tópicos por melhores para este interesse.",
     "effectLocationConflict": "Mantém o lugar mais recente e remove o anterior.",
     "emptyBody": "A Mera sugere arrumações aqui quando dois fatos se sobrepõem ou um fica desatualizado.",
@@ -1500,10 +1414,6 @@
     "useForWeather": "Usar para o clima"
   },
   "notInterested": {
-    "title": "Não interessado",
-    "subtitle": "O que você pediu ao Mera para manter fora do seu feed",
-    "sectionFilters": "Palavras e coisas que você ocultou",
-    "sectionTopics": "Tópicos que você vê menos",
     "chatHint": "Você não precisa vir aqui. Apenas diga ao Mera o que você prefere não ver — \"menos sobre fofocas de celebridades\" — e ele cuidará do resto.",
     "kinds": {
       "keyword": "Palavras",
@@ -1541,18 +1451,12 @@
     "addPhraseTitle": "Ocultar algo do seu feed",
     "addPhraseBody": "Digite uma palavra ou uma frase curta. O Mera procurará por ela na manchete e na história, e as manterá fora do seu caminho. Para algo mais específico — uma categoria inteira, uma fonte, uma pessoa — apenas diga na conversa, ou use os polegares em uma história: o Mera pega pela história em si, então sempre coincide.",
     "addPhrasePlaceholder": "ex.: fofocas de celebridades",
-    "addPhraseHardLabel": "Manter fora do meu feed",
-    "addPhraseHardHint": "O Mera mantém estes fora. Se um se tornar notícia importante ainda aparece, marcado para você saber por quê. Se deixado desligado, o Mera simplesmente mostra menos, e esquece em um mês.",
     "addPhraseSubmit": "Ocultar",
     "addPhraseSuccessTitle": "Pronto",
     "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" está fora do seu feed agora. Apenas notícias importantes passam, e o Mera vai dizer.",
     "addPhraseSuccessBodySoft": "Você verá muito menos sobre \"{{phrase}}\".",
     "addPhraseFailedTitle": "Não consegui salvar",
-    "addPhraseFailedBody": "Por favor, tente novamente.",
-    "emptyTitle": "Nada oculto ainda",
-    "emptyBody": "Quando você diz ao Mera que não está interessado em algo, aparece aqui para você poder desfazer.",
-    "emptyFilters": "Você não ocultou nenhuma palavra ainda.",
-    "emptyTopics": "Nenhum tópico rebaixado ainda."
+    "addPhraseFailedBody": "Por favor, tente novamente."
   },
   "headlineDepth": {
     "title": "Principais manchetes",
@@ -1598,9 +1502,6 @@
     "influence": "Influência",
     "moreInfluence": "Mais influência",
     "lessInfluence": "Menos influência",
-    "declinedTopicsTitle": "Tópicos que você removeu",
-    "allowAgain": "Permitir novamente",
-    "topicRemovalConsequence": "Tópicos removidos não serão mais sugeridos, a menos que você os permita novamente em Tópicos que você removeu.",
     "deleteFactA11y": "Excluir {{fact}}",
     "addFact": "Adicionar um fato",
     "page": {
@@ -1662,7 +1563,6 @@
   },
   "pin": {
     "lockTitle": "A Mera está bloqueada",
-    "lockSubtitle": "Digite seu PIN de 4 dígitos para desbloquear o Mera",
     "incorrect": "PIN incorreto. Tente novamente.",
     "lockedTryAgain": "Muitas tentativas. Tente novamente em {{time}}",
     "forgot": "Esqueceu o PIN?",
@@ -1673,7 +1573,6 @@
     "setupTitle": "Escolha um PIN de 4 dígitos",
     "setupSubtitle": "Você vai usá-lo para abrir a Mera neste celular.",
     "confirmTitle": "Digite novamente",
-    "confirmSubtitle": "Re-digite seu PIN de 4 dígitos",
     "mismatch": "Os PINs não corresponderam. Comece novamente.",
     "startOver": "Comece novamente"
   },
@@ -1681,8 +1580,6 @@
     "title": "Segurança",
     "requirePinTitle": "Exigir PIN",
     "requirePinDescription": "Pedir um PIN de 4 dígitos quando você abre o Mera",
-    "setPinTitle": "Definir um PIN",
-    "setPinSubtitle": "Escolha um PIN de 4 dígitos para desbloquear o Mera neste dispositivo",
     "lockEnabledTitle": "Desbloqueio por PIN ativado",
     "lockEnabledDescription": "Você digitará seu PIN quando abrir o Mera.",
     "lockDisabledTitle": "Desbloqueio por PIN desativado",
@@ -1690,8 +1587,6 @@
     "changePin": "Alterar PIN",
     "verifyCurrentTitle": "Digite PIN atual",
     "verifyCurrentSubtitle": "Confirme seu PIN atual para continuar",
-    "newPinTitle": "Definir um novo PIN",
-    "newPinSubtitle": "Escolha um novo PIN de 4 dígitos",
     "pinChangedTitle": "PIN atualizado",
     "pinChangedDescription": "Seu PIN foi alterado.",
     "blurImagesTitle": "Desfocar imagens",
@@ -1743,7 +1638,6 @@
     "trackBody": "As histórias que você já segue mantêm tudo que coletaram. Começar uma nova requer um plano ativo.",
     "trackDismiss": "Depois",
     "trackTitle": "Acompanhamento de histórias vem com um plano",
-    "factsInFeedHeader": "No seu feed",
     "factsPausedHeader": "Pausados",
     "factsPausedSubtitle": "Eles continuam salvos. Um plano ativa todos.",
     "pausedBadge": "Pausado",
@@ -1761,12 +1655,6 @@
       "factCheck": "As checagens de fatos precisam de um plano. A Mera pesquisaria isso e mostraria quem mais noticiou.",
       "default": "O chat precisa de um plano. Seu feed continua funcionando."
     }
-  },
-  "relatedSort": {
-    "a11yLabel": "Ordenar artigos relacionados",
-    "relevance": "Melhor correspondência",
-    "oldest": "Mais antigos primeiro",
-    "newest": "Mais recentes primeiro"
   },
   "factCheck": {
     "actionA11y": "Pesquisar verificações de fatos publicadas nesta história",
@@ -2583,10 +2471,8 @@
     "playbackError": "Não foi possível reproduzir o vídeo."
   },
   "backup": {
-    "adoptDescription": "É o código que você anotou quando configurou o backup no seu outro aparelho. Maiúsculas, espaços e hífens não importam.",
     "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
     "adoptTitle": "Digite seu código de recuperação",
-    "alreadyHave": "Já tenho um backup",
     "backgroundRestricted": "A atualização em segundo plano está desativada, então os backups não acontecem sozinhos. Use Fazer backup agora ou ative nas configurações do aparelho.",
     "cadence": {
       "daily": "Todos os dias",
@@ -2624,9 +2510,6 @@
     "icloudReady": "Usa seu armazenamento do iCloud",
     "icloudUnavailable": "Faça login no iCloud neste aparelho para usar esta opção",
     "offDescription": "Uma cópia criptografada do seu perfil, dos artigos salvos e do histórico, para que um celular novo não comece do zero. Só o seu código de recuperação abre essa cópia.",
-    "offPrivacy": "A cópia é criptografada neste aparelho antes de ir para qualquer lugar. Quem a armazena não consegue lê-la, e nós também não. Por isso o código de recuperação que você vai receber é o único jeito de entrar de novo.",
-    "onboardingIntro": "Se você já usou o Mera antes, digite seu código de recuperação e traremos de volta seus fatos, tópicos e configurações. Você pode pular e começar do zero.",
-    "onboardingSkip": "Pular, sou novo aqui",
     "restartNeeded": "Seus dados voltaram. Feche e abra o app de novo para vê-los.",
     "restore": "Restaurar de um backup",
     "restoreConfirmAction": "Substituir",
@@ -2634,7 +2517,6 @@
     "restoreConfirmTitle": "Substituir os dados deste aparelho?",
     "restoreEmpty": "Nenhum backup encontrado aqui. Se você usava outra conta do Google ou do iCloud, faça login com ela.",
     "restoreHint": "Substitui os dados deste aparelho",
-    "restoreLookHere": "Procurar meu backup aqui",
     "restoreWhereDescription": "Escolha onde você salvou. Você vai ver o que tem lá antes de qualquer coisa ser substituída.",
     "restoreWhereTitle": "Onde está seu backup",
     "restoredDescription_one": "{{count}} item restaurado neste aparelho.",
@@ -2644,7 +2526,6 @@
     "runNow": "Fazer backup agora",
     "runNowHint": "Use se o backup automático não tiver acontecido",
     "runsInBackground": "Acontece sozinho em segundo plano, geralmente durante a noite",
-    "setUp": "Fazer backup dos seus dados",
     "shareCode": "Compartilhar ou salvar o código",
     "showCode": "Mostrar código de recuperação",
     "showCodeHint": "O código que você anotou quando configurou",
@@ -2735,7 +2616,6 @@
     "confirmBody": "Vamos dar mais peso a {{publisher}} no seu feed e mostrar a cobertura nas notícias que publica.",
     "confirmYes": "Sim, eu assino",
     "confirmNo": "Ainda não",
-    "iSubscribe": "Eu assino esta",
     "added": "{{publisher}} adicionada às suas assinaturas",
     "removed": "{{publisher}} removida das suas assinaturas",
     "coversThisStory": "Sua assinatura cobre esta notícia.",
@@ -2743,42 +2623,16 @@
     "opensPublisherSite": "Abre o site do próprio {{publisher}}"
   },
   "shareStats": {
-    "screenSubtitle": "Últimos 30 dias",
-    "preparing": "Preparando seu card",
-    "nameToggleLabel": "Mostrar minhas publicações principais",
-    "nameTogglePrivacy": "Incluídos por padrão. Nomes de publicações dizem muito sobre você, então você pode desativá-los antes de compartilhar. Títulos de artigos nunca são incluídos.",
     "shareDialogTitle": "Minhas estatísticas de leitura no Mera",
     "sharingUnavailable": "Compartilhar não está disponível neste dispositivo.",
     "shareFailed": "Não deu certo. Tente de novo.",
     "card": {
-      "title": "Minha leitura, últimos 30 dias",
-      "publicationsLabel": "Publicações que você visitou",
-      "countriesLabel": "Países de onde você leu",
-      "latencyLabel": "Tempo médio entre a publicação e a leitura",
-      "latencyCoverage": "Com base em {{sampled}} de {{total}} artigos com horário de publicação conhecido",
-      "openedLabel": "Artigos abertos",
-      "openedPartial": "Contagem parcial. O Mera conta apenas os toques nos seus cards de sugestão.",
-      "topPublicationsTitle": "Publicações principais",
-      "privacyLine": "Calculado só no meu aparelho. Nada saiu dele.",
-      "latencyValue_one": "{{count}} hora",
-      "latencyValue_other": "{{count}} horas",
-      "reachTitle": "De onde vieram minhas notícias",
-      "keepTitle": "O que eu guardei",
-      "windowNow": "Agora",
-      "savedLabel": "Artigos que você salvou",
-      "followedLabel": "Histórias que você segue",
-      "keepNote": "Continua neste aparelho. Artigos salvos e histórias seguidas ficam até você tirar.",
-      "topCountriesTitle": "A maior parte de",
       "countriesRest": "resto",
       "flagsMore": "+{{n}} mais",
-      "paceScaleTitle": "Da publicação à leitura",
       "hoursShort": "{{n}} h",
-      "languagesLabel": "Idiomas em que você leu",
-      "daysReadLabel": "Dias em que você leu algo",
       "heatLegendLess": "menos",
       "heatLegendMore": "mais",
       "rhythmWeekdays": "S,T,Q,Q,S,S,D",
-      "habitsTitle": "Como eu leio",
       "privacyMine": "Contado no meu celular. Nada saiu daqui.",
       "windowLine": "{{label}} · últimos 30 dias"
     },
@@ -2794,16 +2648,6 @@
       "position": "{{index}} de {{total}}",
       "title": "Pré-visualização"
     }
-  },
-  "analytics": {
-    "title": "Sua leitura",
-    "subtitle": "Calculado neste aparelho. Nada sai dele.",
-    "emptyBody": "Leia alguns artigos e esta página vai encher. O Mera guarda 30 dias de histórico de leitura neste aparelho.",
-    "sectionReach": "De onde vieram suas notícias",
-    "sectionKeep": "O que você guardou",
-    "sectionPace": "Como as notícias chegaram até você",
-    "shareCard": "Compartilhar este cartão",
-    "loading": "Calculando seus números"
   },
   "chatTopics": {
     "none": "Salvo. No momento não há temas para adicionar.",
@@ -2833,7 +2677,6 @@
     "slow": "Ainda em andamento, conexão lenta",
     "legCapSentence": "Isso exigiu mais etapas do que a Mera faz de uma vez. Pergunte de novo para continuar.",
     "interrupted": "Isso foi interrompido. Pergunte de novo para continuar.",
-    "summaryDone": "Pronto",
     "summaryFailed": "Algo não funcionou",
     "statePending": "em andamento",
     "stateDone": "pronto",
@@ -2951,37 +2794,16 @@
   "tabExplainer": {
     "close": "Entendi",
     "feed": {
-      "title": "Como o Feed funciona",
-      "what": "O Feed mostra cada notícia que o Mera encontrou para você nos últimos dois dias. Cada notícia tem um único cartão, mesmo quando vários veículos a cobriram.",
-      "how1": "O Mera transforma o que você contou sobre si em buscas, traz os artigos que combinam e uma IA lê cada um para avaliar o quanto ele importa para você.",
-      "how2": "As notícias que você não viu vêm primeiro, as mais importantes na frente. Uma notícia não vista desce um nível depois de 12 horas e outro depois de um dia.",
-      "how3": "Na próxima reorganização, as notícias que você já viu descem e as que você abriu vão para o fim. Os cartões acima de onde você está lendo não se mexem. Puxe para baixo para reordenar.",
       "privacy": "A ordem é calculada neste celular. O registro das notícias que você abre fica neste celular."
     },
-    "forYou": {
-      "how1": "Cada notícia vai para o interesse com que mais combina, então aparece só uma vez. Se dois combinam igual, fica com o que você adicionou primeiro."
-    },
-    "interests": {
-      "title": "Como os Interesses funcionam",
-      "what": "Interesses agrupa suas notícias pelo que você contou à Mera. Cada coisa que você contou ganha uma seção própria.",
-      "how2": "Os interesses que você marcou com mais peso vêm primeiro. Um interesse aparece aqui quando a Mera encontra uma história para ele.",
-      "how3": "Dentro de uma seção, as histórias não lidas vêm primeiro, das mais importantes para as menos. As seções se reordenam quando você sai desta página ou a cada 10 minutos."
-    },
     "stories": {
-      "title": "Como as Histórias funcionam",
-      "what": "Histórias guarda as histórias em andamento que você acompanha. A Mera adiciona a cada uma os novos artigos conforme eles aparecem.",
-      "how1": "Cada história mostra quantos artigos são novos desde a última vez que você a abriu.",
       "privacy": "As histórias que você acompanha ficam guardadas neste celular."
     }
   },
   "articleMenu": {
     "openA11y": "Mais ações",
-    "title": "Ações do artigo",
-    "askMera": "Perguntar à Mera sobre isto",
     "following": "Seguindo esta história",
     "checkFacts": "Procurar checagens",
-    "openOn": "Abrir em {{source}}",
-    "openInTranslate": "Abrir no Google Tradutor",
     "fewerFrom": "Menos de {{source}}",
     "fewerFromDone": "Você verá menos de {{source}}.",
     "undo": "Desfazer",
@@ -3010,23 +2832,7 @@
   "systemCheck": {
     "title": "Verificando seu celular",
     "subtitle": "Alguns segundos, para a Mera rodar bem aqui.",
-    "phoneTitle": "Seu celular",
-    "phoneSupported": "Compatível: {{details}}",
-    "memory": "{{gb}} GB de memória",
-    "modeTitle": "Como o Mera vai funcionar",
-    "modeFull": "Modo completo",
-    "modeFullDetail": "Todas as animações e efeitos estão ativados.",
-    "modeLite": "Modo Lite",
-    "modeLiteDetail": "Fundos em movimento e animações decorativas estão desativados para o Mera continuar fluido. Você pode mudar isso em Configurações.",
     "aiTitle": "IA local",
-    "aiNotYet": "Ainda não disponível. A IA local ainda está em beta.",
-    "languageTitle": "Idioma: {{language}}",
-    "languageEnglish": "Pronto.",
-    "languageReady": "Pronto. Os artigos podem ser traduzidos neste celular.",
-    "languageChecking": "Verificando o pacote de idioma. Se o celular pedir, toque em Baixar.",
-    "languageMissing": "Este celular não consegue traduzir para {{language}} agora. Tente novamente ou continue em inglês.",
-    "retry": "Tentar novamente",
-    "useEnglish": "Usar inglês",
     "settingsTitle": "Verificação do sistema",
     "settingsDescription": "Veja como o Mera funciona neste celular e confira seu pacote de idioma.",
     "aiCloud": "Ainda não está neste celular. A Mera usa a nuvem privada.",
@@ -3063,12 +2869,9 @@
     "newsLoadError": "Não foi possível carregar artigos",
     "websiteA11y": "Abrir {{host}}",
     "aboutSourceA11y": "Sobre {{source}}",
-    "subscribed": "Você se inscreve em {{publisher}}",
     "prefMoreA11y": "Mais desta fonte",
     "prefFewerA11y": "Menos desta fonte",
     "history": "Histórico",
-    "historyEmptyTitle": "Nada aqui ainda",
-    "historyEmptyBody": "Quando você abrir um dos artigos dela no site da publicação, ele aparece aqui por 30 dias.",
     "fewerFrom": "Menos de",
     "historyEmpty": "Nenhuma visita aqui nos últimos 30 dias.",
     "moreFrom": "Mais de",
@@ -3082,15 +2885,10 @@
   },
   "nav": {
     "page": {
-      "interests": "Interesses",
       "stories": "Histórias",
-      "saved": "Salvos",
-      "checks": "Verificações",
-      "visited": "Visitados",
-      "stats": "Estatísticas"
+      "saved": "Salvos"
     },
     "rearrangeA11y": "Reorganizar as páginas de {{tab}}",
-    "quickSettingsA11y": "Ajustes rápidos de {{page}}",
     "pillA11y": "{{label}}, {{index}} de {{count}}",
     "pillNewA11y": "{{label}}, novidades, {{index}} de {{count}}",
     "howThisPageWorks": "Como esta página funciona",
@@ -3124,19 +2922,9 @@
   "interests": {
     "emptyTitle": "A Mera ainda não conhece seus interesses",
     "emptyBody": "Conte à Mera uma coisa que você acompanha e ela ganha uma seção própria aqui. Toque no botão da Mera para começar.",
-    "chipHome": "Onde você mora",
-    "chipWork": "Seu trabalho",
-    "chipTeam": "Um time que você apoia",
-    "draftHome": "Onde eu moro:",
-    "draftWork": "Meu trabalho:",
-    "draftTeam": "Um time que eu apoio:",
-    "findingStories": "A Mera está buscando histórias para este interesse. As primeiras aparecem aqui em alguns segundos.",
-    "backToInterests": "Voltar para Interesses",
     "learnAbout": "Saiba mais sobre interesses"
   },
   "world": {
-    "windowRowLabel": "Principais notícias das últimas",
-    "newStateLine": "As mesmas principais notícias para todos. Adicione os países que importam para você com o lápis. Cada um ganha uma página própria.",
     "gathering": "Reunindo as notícias de hoje de {{country}}. As primeiras histórias aparecem em alguns segundos.",
     "emptyWindow": "Nenhuma notícia principal de {{country}} nas últimas {{hours}} horas.",
     "emptyWindowWorld": "Nenhuma notícia principal nas últimas {{hours}} horas.",
@@ -3156,10 +2944,6 @@
       "privacy": "A Mera não liga suas buscas à sua conta."
     },
     "explainer": {
-      "title": "Como Mundo funciona",
-      "what": "Mundo mostra as histórias mais cobertas nas últimas 24 horas, para o mundo e para cada país que você adicionar. No topo de cada página, você pode escolher 6, 12 ou 48 horas. São as mesmas para todos, não escolhidas para você.",
-      "how1": "As manchetes de Mundo ordenam as histórias pela amplitude da cobertura em vários países.",
-      "how2": "As manchetes de um país vêm de fontes de notícias sediadas nesse país.",
       "country1": "As histórias sobem mais quanto mais os veículos deste país estão escrevendo sobre elas.",
       "countrySame": "Esta página é igual para todos. Nada sobre você é usado aqui.",
       "same": "O Mundo é igual para todos. Nada sobre você é usado aqui.",
@@ -3169,8 +2953,6 @@
   },
   "library": {
     "saved": {
-      "exportRow_one": "{{count}} salvo · fica neste celular até você remover",
-      "exportRow_other": "{{count}} salvos · ficam neste celular até você remover",
       "export": "Exportar",
       "emptyBody": "Toque no marcador de qualquer artigo para guardá-lo aqui. Os artigos salvos ficam neste celular até você remover.",
       "count_one": "{{count}} salvo",
@@ -3179,7 +2961,6 @@
     },
     "checks": {
       "emptyTitle": "Nenhuma checagem ainda",
-      "emptyBodyAsk": "Toque na marca de verificação em um artigo ou peça à Mera para verificar uma afirmação. As verificações que você pedir aparecem aqui.",
       "checkedAgo": "verificado {{age}}",
       "checking": "Verificando isto com agências de checagem",
       "claim": "A afirmação",
@@ -3190,23 +2971,13 @@
       "new": "Novo"
     },
     "visited": {
-      "intro": "As publicações que você mais abriu na fonte nos últimos 30 dias. O bom jornalismo dura quando os leitores o apoiam.",
-      "topLine": "Você abre mais do que qualquer outra",
       "subscribe": "Assinar",
       "alreadyPay": "Eu já pago",
       "alreadyPayA11y": "Eu já pago por {{publisher}}",
-      "support": "Apoiar",
-      "supportA11y": "Apoiar {{publisher}}",
       "youPay": "Você paga",
-      "subscribed": "Assinado",
-      "lastOpened": "Aberto pela última vez em {{date}}",
-      "footnote": "Assinar e Apoiar abrem a página da própria publicação. Fica neste celular por 30 dias.",
-      "emptyTitle": "Nenhuma publicação ainda",
-      "emptyBody": "Quando você abrir um artigo na fonte, a publicação aparece aqui, com um jeito de apoiar as que você mais lê."
+      "emptyTitle": "Nenhuma publicação ainda"
     },
     "stats": {
-      "emptyTitle": "Nenhum cartão ainda",
-      "emptyBody": "Abra um artigo no site da publicação e a Mera cria seu primeiro cartão.",
       "share": "Compartilhar",
       "counted": "Contado neste celular. Nada saiu daqui.",
       "days": "Dias que você leu",
@@ -3274,22 +3045,12 @@
       "facts": "Fatos",
       "places": "Lugares",
       "sources": "Fontes",
-      "cleanup": "Limpeza do perfil",
-      "topicsDeclined": "Tópicos que você recusou",
-      "payFor": "Publicações que você paga",
-      "activity": "Atividade",
       "viewAll": "Ver todos os {{count}}",
       "viewAllNoCount": "Ver tudo",
-      "review": "Revisar",
-      "subscribed": "Assinado",
-      "hidden": "Oculto",
-      "less": "Menos",
-      "aboutA11y": "Sobre {{card}}",
       "factsEmpty": "Nada ainda. Conte à Mera o que você acompanha e aparece aqui.",
       "placesEmpty": "Nenhum lugar ainda",
       "addCity": "Adicionar uma cidade",
       "sourcesEmpty": "Nenhuma ajustada. A Mera trata todas as fontes do mesmo jeito.",
-      "topicsDeclinedEmpty": "Nada recusado ainda.",
       "adjusted_one": "{{count}} ajustado",
       "adjusted_other": "{{count}} ajustados",
       "changes": "Mudanças no seu perfil",
@@ -3298,37 +3059,6 @@
       "title": "Seu perfil",
       "topicCount_one": "{{count}} tema",
       "topicCount_other": "{{count}} temas"
-    },
-    "hints": {
-      "facts": {
-        "title": "Como os Fatos funcionam",
-        "body": "Cada fato vira buscas que a Mera faz para você. Se você mudar ou excluir um, as histórias que vieram dele também mudam."
-      },
-      "places": {
-        "title": "Como os Lugares funcionam",
-        "body": "A Mera procura notícias locais dos seus lugares e as coloca no seu Feed e em Interesses. O país de cada lugar também ganha uma página em Mundo.",
-        "body2": "Casa conta mais. Toque em um lugar para mudar o rótulo ou removê-lo."
-      },
-      "sources": {
-        "title": "Como as Fontes funcionam",
-        "body": "Mais e Menos mudam a frequência com que uma publicação aparece. Silenciada deixa a publicação de fora, exceto em notícias importantes."
-      },
-      "cleanup": {
-        "title": "Como a Limpeza do perfil funciona",
-        "body": "A Mera identifica fatos que se repetem ou que não servem mais. Nada muda até você revisar."
-      },
-      "topicsDeclined": {
-        "title": "Como os tópicos recusados funcionam",
-        "body": "Tópicos que você pediu à Mera para mostrar menos ou ocultar. Se você permitir um de novo, ele pode voltar."
-      },
-      "payFor": {
-        "title": "Como as assinaturas funcionam",
-        "body": "As publicações que você paga ganham mais peso no seu feed."
-      },
-      "activity": {
-        "title": "Como Atividade funciona",
-        "body": "Cada mudança no seu perfil, das mais recentes para as mais antigas. A maioria pode ser desfeita."
-      }
     },
     "explainer": {
       "title": "Seu perfil",
@@ -3349,7 +3079,6 @@
       "empty": "Você não ajustou nenhuma fonte. Pesquise uma publicação para ver mais, menos ou nenhuma dela. “Menos de” no menu ••• de um artigo também vem parar aqui."
     },
     "settings": {
-      "groupApp": "App",
       "yourPlan": "Seu plano",
       "usage_one": "{{count}} de {{limit}} artigos hoje",
       "usage_other": "{{count}} de {{limit}} artigos hoje",
@@ -3357,8 +3086,6 @@
       "usageNoLimit_other": "{{count}} artigos hoje",
       "usageOffline": "O uso aparece quando você está on-line",
       "resetsAt": "Renova às {{time}}",
-      "displayValue": "Texto, modo Lite",
-      "backupAndData": "Backup e dados",
       "addEmail": "Adicionar um e-mail",
       "addEmailHint": "Opcional. Só se você quiser levar sua conta e seu plano para outro celular, ou receber e-mails da Mera.",
       "appLock": "Bloqueio do app",
@@ -3385,10 +3112,8 @@
       "when": "Quando a Mera pode avisar você",
       "yourTimes": "Seus horários",
       "noneYet": "Nenhum escolhido ainda",
-      "zeroTimes": "Escolha um horário, ou a Mera não envia nenhum aviso.",
       "add": "Adicionar um horário",
       "addHour": "Adicionar {{time}}",
-      "alreadyPicked": "{{time}} já foi escolhido",
       "remove": "Remover {{time}}",
       "wheel": "Horário para adicionar",
       "footnote": "A Mera só envia um aviso nestes horários, no seu fuso. Até três.",
@@ -3403,11 +3128,6 @@
       "addHome": "Adicione onde você mora"
     },
     "askNews": "Pergunte sobre qualquer coisa nas notícias",
-    "interests": {
-      "add": "Adicionar um interesse",
-      "change": "Mudar um interesse",
-      "remove": "Remover um interesse"
-    },
     "interest": {
       "change": "Mudar este interesse",
       "remove": "Remover este interesse"
@@ -3417,7 +3137,6 @@
       "name": "Diga uma história para acompanhar"
     },
     "world": {
-      "countryFeed": "Receba no feed notícias de um país",
       "family": "Diga à Mera onde sua família mora",
       "behind": "Pergunte o que está por trás de uma manchete"
     },
@@ -3445,7 +3164,6 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}",
     "moveTopLeft": "Mover para o canto superior esquerdo",
     "moveTopRight": "Mover para o canto superior direito",
     "moveBottomLeft": "Mover para o canto inferior esquerdo",

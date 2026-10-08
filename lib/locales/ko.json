@@ -31,11 +31,8 @@
     "yesterday": "어제"
   },
   "auth": {
-    "reauthBanner": "동기화하려면 다시 로그인해 주세요",
     "emailPlaceholder": "이메일 주소를 입력하세요",
     "otpPlaceholder": "6자리 코드를 입력하세요",
-    "codeSentTitle": "코드가 발송되었습니다!",
-    "codeSentDescription": "이메일에서 로그인 코드를 확인해 주세요",
     "invalidEmailTitle": "유효하지 않은 이메일",
     "invalidEmailDescription": "올바른 이메일 주소를 입력해 주세요",
     "failedToSendTitle": "코드 발송 실패",
@@ -49,17 +46,6 @@
     "resendCode": "코드 재발송",
     "resendIn": "{{seconds}}초 후 재발송",
     "resendSuccess": "새 코드가 발송되었습니다.",
-    "previousUser": {
-      "title": "다시 오셨군요",
-      "subtitle": "지금은 계정을 불러올 수 없습니다. 다시 시도하거나, 다른 사용자로 로그인해 주세요.",
-      "retryLogin": "이메일로 로그인 재시도",
-      "useDifferentUser": "다른 사용자로 로그인",
-      "retryFailed": "서버에 연결할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.",
-      "switchBody": "사용자를 전환하면 이 기기에서 현재 사용자의 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
-      "switchConfirm": "예, 데이터를 삭제하고 사용자를 전환합니다",
-      "switchCancel": "취소",
-      "subtitleWithDevice": "지금은 계정을 불러올 수 없습니다. 이메일로 다시 시도하거나, 이메일 없이 로그인하거나, 다른 사용자로 로그인해 주세요."
-    },
     "contentPolicy": "콘텐츠 정책",
     "faq": "자주 묻는 질문",
     "identitySwitchFailedTitle": "계정 전환을 완료할 수 없습니다",
@@ -77,11 +63,6 @@
     "startReading": "읽기 시작",
     "alreadyHaveAccount": "이메일로 로그인",
     "continue": "계속",
-    "firstTimeHint": "Mera가 처음이신가요? 빠른 둘러보기로 시작하세요.",
-    "readyHint": "Mera를 시작할 준비가 되셨나요?",
-    "getStarted": "시작하기",
-    "paidUserHint": "이미 유료 사용자이신가요?",
-    "signIn": "로그인",
     "aboutLegal": "Mera 정보 및 법적 고지",
     "sourceCode": "소스 코드",
     "website": "웹사이트",
@@ -139,8 +120,6 @@
     "updatedAt": "{{time}} 업데이트됨",
     "allCaughtUp": "나와 관련된 모든 소식을 다 확인하셨습니다.",
     "preparingFeed": "Mera가 피드를 준비하고 있습니다.",
-    "noInterests": "Mera가 뉴스를 분석할 수 없습니다",
-    "noInterestsDescription": "Mera가 뉴스를 생성하려면 사용자 페르소나를 설정해 주세요.",
     "pullDownToRetry": "아래로 당겨서 재시도",
     "readArticleToast": "이 기사를 읽었습니다",
     "stuckTitle": "피드를 불러올 수 없습니다",
@@ -270,7 +249,6 @@
     "loadingA11y": "피드를 불러오는 중",
     "translatingCaption": "번역 중…",
     "updatedJustNow": "방금 업데이트됨",
-    "reasonWriting": "메모 작성 중",
     "reasonWritingA11y": "메모 작성 중",
     "reasonNotYet": "이 기사에 대한 메모가 아직 없습니다.",
     "findingStories": "내 스토리를 찾는 중",
@@ -356,7 +334,6 @@
     "badgeRegulator": "공식 기관"
   },
   "clusterDetail": {
-    "translatable": "이 기사는 {{language}}(으)로 작성되었어요. 읽는 동안 기기가 번역해 줄 수 있어요. 번역이 안 되면 구글 번역으로 사이트를 열 수 있어요. 이 경우 구글을 통해 열람하게 된다는 점만 참고하세요.",
     "notTranslatable": "이 기사는 {{language}}(으)로 작성되었어요. 이 기기는 번역할 수 없으니 구글 번역을 이용해 내 언어로 읽어 보세요.",
     "notTranslatableOsOutdated": "이 기사는 {{language}}(으)로 작성되었어요. 기기 내 번역에는 iOS {{requiredVersion}}이(가) 필요한데, 현재 iOS {{currentVersion}}을(를) 사용 중이에요. iOS를 업데이트하거나 구글 번역을 이용해 내 언어로 읽어 보세요.",
     "unknownLanguage": "다른 언어",
@@ -366,17 +343,13 @@
   },
   "onboarding": {
     "stepOf": "{{total}}단계 중 {{current}}단계",
-    "allSet": "모두 준비되었습니다!",
     "connectionIssue": "연결 문제",
     "connectionDescription": "서버 연결에 문제가 발생했습니다. 앱을 닫고 나중에 다시 시도해 주세요. 문제가 지속되면 로그아웃 후 다시 로그인하시기를 권장합니다.",
     "logout": "로그아웃",
     "close": "닫기",
-    "nextStep": "다음 단계",
     "notificationLow": "낮음",
     "notificationMedium": "보통",
     "notificationHigh": "높음",
-    "signedOutTitle": "로그아웃 완료",
-    "signedOutDescription": "성공적으로 로그아웃되었습니다.",
     "logoutFailedTitle": "로그아웃 실패",
     "logoutFailedDescription": "로그아웃 중 문제가 발생했습니다. 다시 시도해 주세요.",
     "loggingOut": "로그아웃 중...",
@@ -401,8 +374,6 @@
     "enableDescription": "알림을 활성화하여 맞춤 뉴스를 최신 상태로 받아 보세요",
     "permissionDenied": "이전에 알림 권한을 거부한 경우, 기기 설정에서 권한을 활성화해야 합니다.",
     "openDeviceSettings": "기기 설정 열기",
-    "format24h": "24시간",
-    "formatAmPm": "오전/오후",
     "savePreferences": "환경설정 저장",
     "loadFailedTitle": "불러오기 실패",
     "loadFailedDescription": "알림 설정을 불러오지 못했습니다.",
@@ -430,9 +401,6 @@
     "title": "언어",
     "appLanguage": "앱 언어",
     "appLanguageDescription": "앱과 뉴스 번역에 사용됩니다.",
-    "languagePacksIos": "번역 모델은 기기에서 관리됩니다. 선택한 언어의 모델만 다운로드하면 되며, 나머지는 iOS가 처리합니다.",
-    "languagePacksIosPath": "설정 → 일반 → 언어 및 지역 → 번역 언어",
-    "languagePacksAndroid": "번역 모델(각 약 30MB)은 새 언어로 처음 번역할 때 자동으로 다운로드됩니다.",
     "openDeviceSettings": "기기 설정 열기",
     "openLanguageSettings": "언어 설정 열기",
     "restartRequired": "앱 재시작 필요",
@@ -442,18 +410,14 @@
     "packMissingBanner": "이 언어를 사용하려면 기기 내 번역 팩이 필요합니다: 번역 자체는 휴대폰에서 로컬로 실행됩니다. 언어는 휴대폰 설정에서 관리할 수 있습니다.",
     "packMissingIosPath": "설정 → 일반 → 언어 및 지역",
     "retry": "재시도",
-    "watchGuide": "기기에 언어를 추가하는 방법 보기",
     "managePacksPrefix": "다운로드한 언어를 관리하려면 다음으로 이동하세요",
     "translationUnavailableTapToRetry": "{{language}} 언어 팩이 아직 다운로드 중일 수 있습니다. 지금은 영어로 표시하고 있습니다. 다시 시도하려면 탭하세요.",
     "translationUnavailableTitle": "번역을 사용할 수 없습니다",
     "translationUnsupportedOnThisIos": "사용 중인 iOS 버전은 {{language}}(으)로 번역할 수 없습니다. 대신 영어를 표시하고 있습니다 — iOS를 업데이트하면 가능해집니다.",
-    "advanced": "고급",
-    "advancedDescription": "기기 내 번역 기능이에요. 선택 사항이라 위 기능은 모두 이것 없이도 작동해요.",
     "downloadHintBeforePrefix": "언어를 선택하면 iOS가 다운로드할지 물어볼 수 있어요. 그 목록에서 각 언어 옆에 있는",
     "downloadHintBeforeSuffix": "아이콘을 누르세요 — 누르기 전까지는 아무것도 다운로드되지 않아요.",
     "downloadHintNowPrefix": "아래 목록에서 각 언어 옆에 있는",
     "downloadHintNowSuffix": "아이콘을 눌러 다운로드를 시작하세요.",
-    "googleTranslateAlways": "기사 페이지의 \"구글 번역으로 읽기\"를 이용하면 어떤 언어의 기사든 읽을 수 있어요 — 다운로드할 필요 없이 언제나 작동해요.",
     "onDeviceTranslationHint": "기기가 직접 번역하길 원한다면 iOS 설정에서 해당 언어를 사용할 수 있는지 확인하세요. 아래 영상에서 활성화하는 방법을 보여드려요.",
     "switchDeviceUnsupportedBody": "이 기기는 어떤 언어로도 뉴스 기사를 번역할 수 없어서 앱이 영어를 사용하고 있어요. {{language}}(으)로 설정하면 기사가 번역되지 않은 채로 남아요.",
     "switchFailedBody": "{{language}} 번역 팩을 준비하지 못해서 계속 {{previous}}을(를) 사용하고 있어요. 아직 다운로드 중일 수 있으니 잠시 후 다시 시도해 주세요.",
@@ -471,7 +435,6 @@
   "meraProtocol": {
     "title": "Mera Protocol",
     "sectionTitle": "Mera Protocol",
-    "processingModeTitle": "처리 모드",
     "onDeviceMode": "기기 내",
     "onDeviceModeSubtitle": "완전 오프라인",
     "cloudMode": "클라우드 (E2EE)",
@@ -600,18 +563,10 @@
   },
   "manageData": {
     "deleting": "삭제 중...",
-    "title": "데이터 관리",
-    "description": "특정 데이터를 삭제합니다. 각 작업은 확인 전에 삭제될 항목을 정확히 표시합니다.",
-    "feedCacheTitle": "기사 피드 캐시 지우기",
-    "feedCacheDescription": "캐시된 추천, 링크 및 추론 작업",
-    "feedCacheModalDescription": "기사 피드 캐시(추천, 링크, 추론 작업)를 지웁니다. 다음 새로고침 시 피드가 다시 빌드됩니다. 다른 데이터에는 영향이 없습니다.",
     "factsTitle": "사실 및 토픽 지우기",
     "viewingHistoryTitle": "열람 기록 지우기",
     "viewingHistoryDescription": "Mera에서 열어본 모든 기사",
     "viewingHistoryModalDescription": "열어본 기사의 로컬 기록을 지웁니다. 소스 탭의 '읽은 발행사' 카드와 발행사별 기록이 초기화됩니다. 다른 항목에는 영향이 없으며, 서버 데이터는 변경되지 않습니다(이 데이터는 기기를 벗어난 적이 없습니다).",
-    "wipeAllTitle": "모든 데이터 초기화",
-    "wipeAllDescription": "계정을 제외한 모든 항목 초기화",
-    "wipeAllModalDescription": "이 기기에 저장된 모든 데이터를 지웁니다. 피드 캐시, 사실, 주제, 앱 설정, 열람 기록이 포함됩니다. 로그인 상태와 계정은 유지됩니다. 이 휴대폰으로 계속 이메일 없이 로그인할 수 있습니다. 서버에서는 아무것도 삭제되지 않습니다.",
     "deletedTitle": "데이터 삭제됨",
     "deletedDescription": "선택한 데이터가 성공적으로 삭제되었습니다.",
     "errorTitle": "오류",
@@ -694,10 +649,7 @@
     "tabPersona": "페르소나",
     "tabSources": "소스",
     "tabPreferences": "환경설정",
-    "privacyOnDevice": "회원님의 주제와 사실은 이 기기에 저장됩니다. 기기 내 처리가 켜져 있으므로 기사를 읽고 순위를 매기는 AI는 저희 서버가 아니라 여기에서 실행됩니다. 기사는 누군가 요청하기 전에 저희 서버에서 번역되고 요약됩니다. 뉴스를 가져올 때 기기를 벗어나는 것은 회원님의 주제 문구뿐입니다. 여기에는 사용자 ID가 포함되지 않습니다. 저희는 텍스트만을 키로 삼아 캐시에 보관하고, 14일 동안 사용되지 않으면 삭제합니다. 회원님에 대해 저희가 보관하는 것은 추가했다면 로그인 이메일, 구독 상태, 그리고 요금제를 적용하는 데 쓰이는 하루 분석 기사 수입니다. 이메일 없이 Mera를 사용한다면, 계정을 삭제할 때까지 이 휴대폰의 로그인 기록도 보관합니다. 채팅은 저장되지 않습니다. 유일한 예외는 차단 해제 요청에 첨부하는 기록입니다. 백업을 켜지 않으면 로그아웃하거나 기기를 바꿀 때 회원님의 페르소나는 처음부터 다시 시작됩니다.",
-    "privacyCloud": "회원님의 주제와 사실은 이 기기에 저장됩니다. 클라우드 처리가 기본으로 켜져 있습니다. 여기에서 기기 내 처리로 전환할 수 있습니다. 회원님의 데이터는 이를 처리하는 엔클레이브를 대상으로 암호화되며 이곳에서만 복호화됩니다. 그 증명은 여기에서 확인할 수 있지만, 아직 처리를 차단하지는 않습니다. 뉴스를 가져올 때 기기를 벗어나는 것은 회원님의 주제 문구뿐입니다. 여기에는 사용자 ID가 포함되지 않습니다. 저희는 텍스트만을 키로 삼아 캐시에 보관하고, 14일 동안 사용되지 않으면 삭제합니다. 회원님에 대해 저희가 보관하는 것은 추가했다면 로그인 이메일, 구독 상태, 그리고 요금제를 적용하는 데 쓰이는 하루 분석 기사 수입니다. 이메일 없이 Mera를 사용한다면, 계정을 삭제할 때까지 이 휴대폰의 로그인 기록도 보관합니다. 채팅은 저장되지 않습니다. 유일한 예외는 차단 해제 요청에 첨부하는 기록입니다. 백업을 켜지 않으면 회원님의 페르소나는 처음부터 다시 시작됩니다.",
     "privacyPolicy": "개인정보 처리방침",
-    "privacyNoticeTitle": "개인정보 보호",
     "updatingTopics": "토픽 업데이트 중... {{completed}}/{{total}}",
     "emptyStateMessage": "몇 가지 질문에 답하여 프로필을 만들어 주세요",
     "factsHeading": "사실",
@@ -721,11 +673,7 @@
     "addTopicDescription": "이 사실에 대해 추적하고 싶은 토픽을 입력해 주세요. 앱은 토픽을 기반으로 뉴스를 찾고 사실에 기반한 관련성을 판단합니다.",
     "addTopicPlaceholder": "예: 유럽의 AI 규제",
     "adding": "추가 중...",
-    "generateMoreTopics": "토픽 더 생성하기",
     "generatingMoreTopics": "토픽 생성 중...",
-    "generateMoreTopicsTitle": "토픽을 더 생성할까요?",
-    "generateMoreTopicsWarning": "이 관심사에 대해 토픽 10개를 더 생성합니다. 토픽을 추가하면 AI 사용량이 늘어날 수 있습니다. Mera는 최고의 가치를 위해 정말 관심 있는 토픽만 남기고 중요하지 않은 토픽은 삭제할 것을 권장합니다.",
-    "generateMoreTopicsConfirm": "생성",
     "generateMoreTopicsFailedTitle": "토픽 생성 실패",
     "generateMoreTopicsFailedDescription": "새 토픽을 생성하지 못했습니다. 다시 시도해 주세요.",
     "gotIt": "알겠습니다",
@@ -836,8 +784,6 @@
     "newChat": "새 채팅",
     "inputPlaceholder": "메시지를 입력하세요...",
     "viewPreviousMessages": "이전 메시지 보기",
-    "aiInteractionNotice": "대화 상대는 사람이 아니라 AI 어시스턴트인 Mera입니다.",
-    "aiUsageNotice": "이 어시스턴트는 뉴스 환경설정을 설정하는 데 도움을 줍니다. 이를 조작하거나 악용하려고 하면 검토가 완료될 때까지 계정이 차단될 수 있습니다.",
     "requestUnblock": {
       "button": "차단 해제 요청",
       "pendingButton": "검토 대기 중",
@@ -945,8 +891,7 @@
     "formError": "필수 항목을 모두 입력해 주세요.",
     "emailError": "올바른 이메일 주소를 입력해 주세요.",
     "captureScreenshotError": "스크린샷 촬영에 실패했습니다.",
-    "genericError": "예기치 않은 오류로 인해 피드백을 보낼 수 없습니다.",
-    "chatAttachmentNote": "Mera와의 채팅이 이 신고에 첨부됩니다."
+    "genericError": "예기치 않은 오류로 인해 피드백을 보낼 수 없습니다."
   },
   "observability": {
     "title": "관찰성",
@@ -1043,7 +988,6 @@
     "subscribe": "구독하기",
     "title": "Mera 켜기",
     "usageSection": "사용량",
-    "usedToday": "오늘 분석함",
     "viewPlans": "요금제 보기",
     "active": "활성",
     "freePlan": "무료 플랜",
@@ -1105,7 +1049,6 @@
     "serverUnavailable": "지금은 Mera에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "clearSearch": "검색 지우기",
     "searchNotSubscribed": "검색하려면 활성 요금제가 필요합니다",
-    "searchEmpty": "지난 48시간 내 일치하는 것이 없습니다. 검색은 최근 헤드라인을 다루며 전체 아카이브는 제공하지 않습니다.",
     "window": {
       "label24": "24시간",
       "label48": "48시간",
@@ -1114,26 +1057,14 @@
       "label6": "6시간",
       "label12": "12시간",
       "a11y6": "지난 6시간의 뉴스",
-      "a11y12": "지난 12시간의 뉴스",
-      "menuLabel": "기간",
-      "option6": "지난 6시간",
-      "option12": "지난 12시간",
-      "option24": "지난 24시간",
-      "option48": "지난 48시간"
+      "a11y12": "지난 12시간의 뉴스"
     }
   },
   "forYou": {
-    "sectionPrefix": "관련 뉴스:",
     "breaking": "속보",
     "showMore": "{{count}}개 더 보기",
-    "viewAllArticles_one": "{{count}}개 기사 모두 보기",
-    "viewAllArticles_other": "{{count}}개 기사 모두 보기",
     "headlineSectionGlobal": "전 세계 뉴스",
     "headlineSectionCountry": "{{country}} 뉴스",
-    "headlineDenominator_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · {{shown}}개가 당신의 시간을 가치 있게 합니다.",
-    "headlineDenominator_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · {{shown}}개가 당신의 시간을 가치 있게 합니다.",
-    "headlineDenominatorNone_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
-    "headlineDenominatorNone_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
     "nextFactPrefix": "다음",
     "subTabAnalytics": "분석",
     "emptySection": {
@@ -1163,7 +1094,6 @@
     "analysed": "분석됨",
     "relevant": "지금까지 관련 있음",
     "lastProcessed": "마지막 처리",
-    "errorTitle": "점수 계산 문제",
     "limitUpgrade": "또는 <0>요금제를 업그레이드</0>하세요.",
     "tryNow": "지금 시도"
   },
@@ -1175,7 +1105,6 @@
     "trackedToast": "이 스토리를 팔로우했습니다",
     "updatesBadge": "새 소식 {{count}}개",
     "endedLabel": "종료됨",
-    "timelineQuietNote": "아직 새로운 보도가 없습니다. 이 스토리가 진행되는 대로 이곳에 소식을 추가해 드리겠습니다.",
     "untrackConfirmTitle": "팔로우를 취소할까요?",
     "untrackConfirmBody": "이 스토리의 새로운 진행 상황을 더 이상 확인할 수 없습니다.",
     "untrackConfirmCta": "팔로우 중지",
@@ -1188,9 +1117,6 @@
     "alreadyTrackingTitle": "이미 팔로우 중입니다",
     "alreadyTrackingBody": "같은 스토리를 두 번 팔로우할 수 없습니다. 팔로우를 취소하면 이 스토리에 저장된 모든 내용이 삭제됩니다.",
     "goToStoryAction": "스토리로 이동",
-    "deleteStoryAction": "스토리 삭제",
-    "deleteStoryConfirmTitle": "이 스토리를 삭제할까요?",
-    "deleteStoryConfirmBody": "삭제하면 이 스토리에 저장된 모든 내용이 삭제됩니다.",
     "followChatIntro": "팔로우하고 싶은 것을 알려주면 설정하겠습니다.",
     "removeMemberAction": "이 스토리에 속하지 않음",
     "removeMemberConfirmTitle": "이 기사를 삭제할까요?",
@@ -1232,11 +1158,8 @@
   },
   "notificationCenter": {
     "title": "알림",
-    "bellA11y": "알림",
     "empty": "모두 확인하셨습니다",
     "close": "닫기",
-    "markAllRead": "모두 읽음으로 표시",
-    "clearAll": "모든 알림 지우기",
     "migrationDoneTitle": "관심사가 준비되었습니다",
     "migrationDoneBody": "Mera가 회원님의 프로필을 토픽과 위치로 정리했습니다.",
     "syncFailedTitle": "피드를 새로고침하지 못했습니다",
@@ -1247,18 +1170,14 @@
     "settingsLink": "알림 설정"
   },
   "settings": {
-    "groupPrivacy": "개인정보 및 데이터",
     "groupHelp": "도움말",
     "groupAccount": "계정",
-    "languageRow": "언어",
-    "backupRowNever": "아직 백업 안 됨"
+    "languageRow": "언어"
   },
   "personaAudit": {
     "entryRow": "페르소나 변경 기록",
     "title": "프로필 변경 사항",
-    "subtitle": "관심사에 대한 모든 변경 사항",
     "empty": "아직 변경 사항이 없습니다. Mera가 관심사를 조정할 때마다 여기에 표시됩니다.",
-    "revert": "되돌리기",
     "revertedBadge": "되돌림",
     "revertConfirmTitle": "이 변경 사항을 실행 취소할까요?",
     "revertConfirmBody": "이 작업으로 프로필이 변경 전 상태로 돌아갑니다.",
@@ -1416,12 +1335,9 @@
     "notificationBody_other": "Mera가 회원님의 프로필에서 {{count}}개의 정리 항목을 찾았습니다.",
     "reviewChip": "검토",
     "title": "프로필 정리",
-    "subtitle": "정리 제안",
     "intro": "Mera가 이것을 발견했습니다. 회원님이 선택하기 전에는 아무것도 바뀌지 않습니다.",
-    "empty": "회원님의 페르소나는 양호한 상태입니다",
     "accept": "수락",
     "reject": "닫기",
-    "reversibleNote": "변경 기록에서 되돌릴 수 있습니다",
     "effectDuplicate": "중복 항목을 제거하고 더 강력한 항목을 유지합니다.",
     "effectTooBroad": "이 관심사의 가중치를 낮춰 관련 없는 기사가 덜 유입되도록 합니다.",
     "effectStaleTopic": "활동이 뜸한 이 토픽을 제거합니다.",
@@ -1430,8 +1346,6 @@
     "appliedBody": "프로필이 정리되었습니다. 변경 기록에서 확인해 보세요.",
     "applyFailedTitle": "정리를 적용하지 못했습니다",
     "applyFailedBody": "나중에 다시 시도해 주세요.",
-    "profileRow_one": "프로필 정리 · 제안 {{count}}개",
-    "profileRow_other": "프로필 정리 · 제안 {{count}}개",
     "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다.",
     "effectLocationConflict": "최신 장소를 유지하고 이전 장소를 삭제해요.",
     "emptyBody": "두 사실이 겹치거나 하나가 오래되면 Mera가 여기에 정리를 제안합니다.",
@@ -1500,10 +1414,6 @@
     "useForWeather": "날씨에 사용"
   },
   "notInterested": {
-    "title": "관심 없음",
-    "subtitle": "Mera에서 피드를 벗어나도록 요청한 내용",
-    "sectionFilters": "숨긴 단어와 사항",
-    "sectionTopics": "덜 보고 싶은 주제",
     "chatHint": "여기 올 필요가 없습니다. Mera에 보고 싶지 않은 것을 말하기만 하면 됩니다 — \"연예인 가십은 덜\"이라고 하면 나머지는 알아서 처리합니다.",
     "kinds": {
       "keyword": "단어",
@@ -1541,18 +1451,12 @@
     "addPhraseTitle": "피드에서 무언가 숨기기",
     "addPhraseBody": "단어나 짧은 문구를 입력하세요. Mera가 제목과 스토리에서 검색하여 피드에서 제외합니다. 더 구체적인 경우 — 전체 카테고리, 소스, 사람 등 — 채팅에서 말하거나 스토리에서 엄지손가락을 사용하세요. Mera가 스토리 자체에서 선택하므로 항상 일치합니다.",
     "addPhrasePlaceholder": "예: 연예인 가십",
-    "addPhraseHardLabel": "피드에서 제외",
-    "addPhraseHardHint": "Mera가 이를 제외합니다. 주요 뉴스가 되면 여전히 표시되며, 이유를 알 수 있도록 표시됩니다. 비활성화하면 Mera는 덜 보여주고 한 달 후 잊습니다.",
     "addPhraseSubmit": "숨기기",
     "addPhraseSuccessTitle": "완료",
     "addPhraseSuccessBodyBlocked": "\"{{phrase}}\"가 피드에서 제외되었습니다. 주요 뉴스만 통과하며 Mera가 알려줍니다.",
     "addPhraseSuccessBodySoft": "\"{{phrase}}\"에 대해 훨씬 덜 보게 됩니다.",
     "addPhraseFailedTitle": "저장할 수 없습니다",
-    "addPhraseFailedBody": "다시 시도해 주세요.",
-    "emptyTitle": "아직 숨긴 것이 없습니다",
-    "emptyBody": "Mera에 관심 없는 것을 알려주면 여기 표시되어 실행 취소할 수 있습니다.",
-    "emptyFilters": "아직 단어를 숨기지 않았습니다.",
-    "emptyTopics": "아직 순위를 낮춘 주제가 없습니다."
+    "addPhraseFailedBody": "다시 시도해 주세요."
   },
   "headlineDepth": {
     "title": "주요 뉴스",
@@ -1598,9 +1502,6 @@
     "influence": "영향도",
     "moreInfluence": "더 큰 영향도",
     "lessInfluence": "더 작은 영향도",
-    "declinedTopicsTitle": "제거한 주제",
-    "allowAgain": "다시 허용",
-    "topicRemovalConsequence": "제거한 주제는 '제거한 주제'에서 다시 허용하지 않는 한 다시 추천되지 않습니다.",
     "deleteFactA11y": "{{fact}} 삭제",
     "addFact": "사실 추가",
     "page": {
@@ -1662,7 +1563,6 @@
   },
   "pin": {
     "lockTitle": "Mera가 잠겨 있습니다",
-    "lockSubtitle": "Mera의 잠금을 해제하려면 4자리 PIN을 입력하세요",
     "incorrect": "PIN이 올바르지 않습니다. 다시 시도해 주세요.",
     "lockedTryAgain": "시도 횟수가 많습니다. {{time}} 후에 다시 시도해 주세요",
     "forgot": "PIN을 잊으셨나요?",
@@ -1673,7 +1573,6 @@
     "setupTitle": "4자리 PIN을 선택하세요",
     "setupSubtitle": "이 휴대폰에서 Mera를 열 때 사용합니다.",
     "confirmTitle": "PIN을 다시 입력하세요",
-    "confirmSubtitle": "4자리 PIN을 다시 입력하세요",
     "mismatch": "PIN이 일치하지 않습니다. 다시 시작하세요.",
     "startOver": "다시 시작"
   },
@@ -1681,8 +1580,6 @@
     "title": "보안",
     "requirePinTitle": "PIN 요구",
     "requirePinDescription": "Mera를 열 때 4자리 PIN을 요청합니다",
-    "setPinTitle": "PIN 설정",
-    "setPinSubtitle": "이 기기에서 Mera의 잠금을 해제할 4자리 PIN을 선택하세요",
     "lockEnabledTitle": "PIN 잠금 활성화",
     "lockEnabledDescription": "Mera를 열 때 PIN을 입력합니다.",
     "lockDisabledTitle": "PIN 잠금 비활성화",
@@ -1690,8 +1587,6 @@
     "changePin": "PIN 변경",
     "verifyCurrentTitle": "현재 PIN 입력",
     "verifyCurrentSubtitle": "계속하려면 현재 PIN을 확인하세요",
-    "newPinTitle": "새 PIN 설정",
-    "newPinSubtitle": "새 4자리 PIN을 선택하세요",
     "pinChangedTitle": "PIN 업데이트됨",
     "pinChangedDescription": "PIN이 변경되었습니다.",
     "blurImagesTitle": "이미지 흐리기",
@@ -1743,7 +1638,6 @@
     "trackBody": "이미 팔로우하고 있는 스토리는 수집한 모든 정보를 유지합니다. 새로운 스토리를 시작하려면 활성 플랜이 필요합니다.",
     "trackDismiss": "나중에",
     "trackTitle": "스토리 추적은 플랜에 포함됩니다",
-    "factsInFeedHeader": "내 피드에 표시 중",
     "factsPausedHeader": "일시 중지됨",
     "factsPausedSubtitle": "저장된 상태로 유지됩니다. 플랜을 시작하면 모두 켜집니다.",
     "pausedBadge": "일시 중지됨",
@@ -1761,12 +1655,6 @@
       "factCheck": "팩트 체크에는 플랜이 필요합니다. Mera가 찾아보고 어디에서 또 보도했는지 보여드립니다.",
       "default": "채팅에는 플랜이 필요합니다. 피드는 그대로 작동합니다."
     }
-  },
-  "relatedSort": {
-    "a11yLabel": "관련 기사 정렬",
-    "relevance": "최고 일치도",
-    "oldest": "가장 오래된 순",
-    "newest": "최신순"
   },
   "factCheck": {
     "actionA11y": "이 기사에 대해 발표된 팩트 체크 찾기",
@@ -2583,10 +2471,8 @@
     "playbackError": "동영상을 재생할 수 없습니다."
   },
   "backup": {
-    "adoptDescription": "다른 기기에서 백업을 설정할 때 적어 둔 코드입니다. 대소문자, 공백, 하이픈은 구분하지 않습니다.",
     "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
     "adoptTitle": "복구 코드를 입력하세요",
-    "alreadyHave": "이미 백업이 있습니다",
     "backgroundRestricted": "백그라운드 앱 새로 고침이 꺼져 있어 백업이 자동으로 실행될 수 없습니다. '지금 백업'을 사용하거나 기기 설정에서 켜 주세요.",
     "cadence": {
       "daily": "매일",
@@ -2624,9 +2510,6 @@
     "icloudReady": "iCloud 저장 공간을 사용합니다",
     "icloudUnavailable": "사용하려면 이 기기에서 iCloud에 로그인하세요",
     "offDescription": "프로필, 저장한 기사, 기록의 암호화된 사본입니다. 새 휴대폰에서도 처음부터 시작하지 않아도 됩니다. 복구 코드만 이 사본을 열 수 있습니다.",
-    "offPrivacy": "사본은 어디로든 전송되기 전에 이 기기에서 암호화됩니다. 보관하는 쪽도, 저희도 내용을 읽을 수 없습니다. 그래서 다음 단계에서 받는 복구 코드가 다시 접근할 수 있는 유일한 방법입니다.",
-    "onboardingIntro": "이전에 Mera를 사용했다면 복구 코드를 입력하세요. 사실, 토픽, 설정을 다시 가져옵니다. 건너뛰고 새로 시작할 수도 있습니다.",
-    "onboardingSkip": "건너뛰기, 처음 사용합니다",
     "restartNeeded": "데이터가 돌아왔습니다. 앱을 닫았다가 다시 열면 표시됩니다.",
     "restore": "백업에서 복원",
     "restoreConfirmAction": "대체",
@@ -2634,7 +2517,6 @@
     "restoreConfirmTitle": "이 기기의 데이터를 대체할까요?",
     "restoreEmpty": "여기에서 백업을 찾지 못했습니다. 이전에 다른 Google 계정이나 iCloud 계정을 사용했다면 그 계정으로 로그인해 보세요.",
     "restoreHint": "이 기기의 데이터를 대체합니다",
-    "restoreLookHere": "여기에서 백업 찾기",
     "restoreWhereDescription": "저장한 위치를 선택하세요. 무엇이든 대체되기 전에 그곳에 있는 내용을 먼저 확인할 수 있습니다.",
     "restoreWhereTitle": "백업은 어디에 있나요",
     "restoredDescription_one": "항목 {{count}}개를 이 기기로 복원했습니다.",
@@ -2644,7 +2526,6 @@
     "runNow": "지금 백업",
     "runNowHint": "자동 백업이 실행되지 않았을 때 사용하세요",
     "runsInBackground": "백그라운드에서 자동으로 실행되며 주로 야간에 진행됩니다",
-    "setUp": "데이터 백업하기",
     "shareCode": "코드 공유 또는 저장",
     "showCode": "복구 코드 보기",
     "showCodeHint": "설정할 때 적어 둔 코드입니다",
@@ -2735,7 +2616,6 @@
     "confirmBody": "{{publisher}}에 피드에서 더 큰 비중을 두고, 해당 매체가 다룬 뉴스에서는 그 기사를 보여 드립니다.",
     "confirmYes": "네, 구독 중입니다",
     "confirmNo": "아직요",
-    "iSubscribe": "이 매체를 구독 중입니다",
     "added": "{{publisher}}을(를) 구독 목록에 추가했습니다",
     "removed": "{{publisher}}을(를) 구독 목록에서 삭제했습니다",
     "coversThisStory": "구독 중인 매체가 이 뉴스를 다룹니다.",
@@ -2743,41 +2623,16 @@
     "opensPublisherSite": "{{publisher}}의 공식 사이트를 엽니다"
   },
   "shareStats": {
-    "screenSubtitle": "지난 30일",
-    "preparing": "카드를 준비하는 중",
-    "nameToggleLabel": "자주 읽는 매체 표시",
-    "nameTogglePrivacy": "기본으로 포함됩니다. 매체 이름은 당신에 대해 많은 것을 말해 주니, 공유하기 전에 끌 수 있어요. 기사 제목은 절대 포함되지 않습니다.",
     "shareDialogTitle": "내 Mera 읽기 통계",
     "sharingUnavailable": "이 기기에서는 공유를 사용할 수 없습니다.",
     "shareFailed": "실패했어요. 다시 시도해 주세요.",
     "card": {
-      "title": "내 읽기, 지난 30일",
-      "publicationsLabel": "방문한 매체",
-      "countriesLabel": "읽은 나라",
-      "latencyLabel": "게시부터 읽기까지 걸린 평균 시간",
-      "latencyCoverage": "게시 시각을 아는 {{total}}건 중 {{sampled}}건 기준",
-      "openedLabel": "열어 본 기사",
-      "openedPartial": "일부만 센 값입니다. Mera는 추천 카드를 누른 횟수만 셉니다.",
-      "topPublicationsTitle": "자주 읽는 매체",
-      "privacyLine": "내 기기에서만 계산했어요. 기기 밖으로 나간 것은 없습니다.",
-      "latencyValue_other": "{{count}}시간",
-      "reachTitle": "내 뉴스가 온 곳",
-      "keepTitle": "내가 간직한 것",
-      "windowNow": "지금",
-      "savedLabel": "저장한 기사",
-      "followedLabel": "팔로우 중인 스토리",
-      "keepNote": "이 기기에 그대로 있어요. 저장한 기사와 팔로우 중인 스토리는 지울 때까지 남습니다.",
-      "topCountriesTitle": "대부분 여기에서",
       "countriesRest": "나머지",
       "flagsMore": "+{{n}}개 더",
-      "paceScaleTitle": "발행부터 읽기까지",
       "hoursShort": "{{n}}시간",
-      "languagesLabel": "읽은 언어",
-      "daysReadLabel": "무언가를 읽은 날",
       "heatLegendLess": "적음",
       "heatLegendMore": "많음",
       "rhythmWeekdays": "월,화,수,목,금,토,일",
-      "habitsTitle": "나의 읽는 방식",
       "privacyMine": "내 휴대폰에서 집계되었습니다. 밖으로 나간 것은 없습니다.",
       "windowLine": "{{label}} · 지난 30일"
     },
@@ -2793,16 +2648,6 @@
       "position": "{{total}}개 중 {{index}}",
       "title": "미리 보기"
     }
-  },
-  "analytics": {
-    "title": "당신의 읽기",
-    "subtitle": "이 기기에서만 계산했어요. 밖으로 나가지 않습니다.",
-    "emptyBody": "기사를 몇 개 읽으면 이 페이지가 채워져요. Mera는 이 기기에 30일치 읽기 기록을 보관합니다.",
-    "sectionReach": "뉴스가 온 곳",
-    "sectionKeep": "간직한 것",
-    "sectionPace": "뉴스가 닿기까지",
-    "shareCard": "이 카드 공유",
-    "loading": "숫자를 계산하는 중"
   },
   "chatTopics": {
     "none": "저장했습니다. 지금은 추가할 주제가 없습니다.",
@@ -2832,7 +2677,6 @@
     "slow": "아직 진행 중이에요. 연결이 느립니다",
     "legCapSentence": "한 번에 처리할 수 있는 단계를 넘었어요. 계속하려면 다시 물어봐 주세요.",
     "interrupted": "중간에 중단됐어요. 계속하려면 다시 물어봐 주세요.",
-    "summaryDone": "완료했어요",
     "summaryFailed": "일부가 처리되지 않았어요",
     "statePending": "진행 중",
     "stateDone": "완료",
@@ -2950,37 +2794,16 @@
   "tabExplainer": {
     "close": "확인",
     "feed": {
-      "title": "피드의 작동 방식",
-      "what": "피드에는 Mera가 지난 이틀 동안 찾은 모든 기사가 표시됩니다. 여러 매체가 다룬 기사라도 카드는 하나입니다.",
-      "how1": "Mera는 당신이 알려준 내용을 검색어로 바꾸고, 맞는 기사를 가져온 뒤, AI가 기사마다 읽고 당신에게 얼마나 중요한지 판단합니다.",
-      "how2": "아직 보지 않은 기사가 먼저, 중요한 순서로 나옵니다. 보지 않은 기사는 12시간 뒤 한 단계, 하루 뒤 한 단계 더 내려갑니다.",
-      "how3": "다음에 다시 정렬할 때 이미 본 기사는 아래로, 연 기사는 맨 뒤로 갑니다. 읽고 있는 위치 위의 카드는 움직이지 않습니다. 아래로 당기면 다시 정렬됩니다.",
       "privacy": "순서는 이 휴대폰에서 정해집니다. 어떤 기사를 열었는지에 대한 기록은 이 휴대폰에만 남습니다."
     },
-    "forYou": {
-      "how1": "각 기사는 가장 잘 맞는 관심사 하나에만 들어가므로 한 번만 나타납니다. 두 관심사가 똑같이 맞으면 먼저 추가한 쪽이 가져갑니다."
-    },
-    "interests": {
-      "title": "관심사의 작동 방식",
-      "what": "관심사는 Mera에게 알려 준 내용별로 뉴스를 묶어요. 알려 준 것마다 전용 섹션이 생겨요.",
-      "how2": "비중을 높게 준 관심사가 먼저 나와요. Mera가 스토리를 찾으면 그 관심사가 여기에 나타나요.",
-      "how3": "섹션 안에서는 읽지 않은 스토리가 먼저, 중요한 순서대로 나와요. 섹션 순서는 이 페이지를 나갈 때나 10분마다 바뀌어요."
-    },
     "stories": {
-      "title": "스토리의 작동 방식",
-      "what": "스토리에는 팔로우하는 진행 중인 스토리가 모여요. 새 기사가 나오면 Mera가 각 스토리에 추가해요.",
-      "how1": "각 스토리에는 마지막으로 연 뒤 새로 올라온 기사 수가 표시돼요.",
       "privacy": "팔로우하는 스토리는 이 휴대전화에 저장돼요."
     }
   },
   "articleMenu": {
     "openA11y": "작업 더보기",
-    "title": "기사 작업",
-    "askMera": "Mera에게 물어보기",
     "following": "이 스토리를 팔로우 중",
     "checkFacts": "팩트체크",
-    "openOn": "{{source}}에서 열기",
-    "openInTranslate": "Google 번역에서 열기",
     "fewerFrom": "{{source}} 줄이기",
     "fewerFromDone": "{{source}}의 기사가 줄어들어요.",
     "undo": "실행 취소",
@@ -3009,23 +2832,7 @@
   "systemCheck": {
     "title": "휴대폰 확인 중",
     "subtitle": "몇 초면 됩니다. Mera가 여기서 잘 실행되도록 확인합니다.",
-    "phoneTitle": "내 휴대폰",
-    "phoneSupported": "지원됨: {{details}}",
-    "memory": "메모리 {{gb}}GB",
-    "modeTitle": "Mera 작동 방식",
-    "modeFull": "풀 모드",
-    "modeFullDetail": "모든 애니메이션과 효과가 켜져 있습니다.",
-    "modeLite": "라이트 모드",
-    "modeLiteDetail": "움직이는 배경과 장식 애니메이션이 꺼져서 Mera가 부드럽게 작동합니다. 설정에서 언제든지 바꿀 수 있습니다.",
     "aiTitle": "기기 내 AI",
-    "aiNotYet": "아직 사용할 수 없습니다. 기기 내 AI는 아직 베타 버전입니다.",
-    "languageTitle": "언어: {{language}}",
-    "languageEnglish": "준비 완료.",
-    "languageReady": "준비 완료. 이 휴대폰에서 기사를 번역할 수 있습니다.",
-    "languageChecking": "언어 팩을 확인하고 있습니다. 휴대폰에서 물어보면 다운로드를 탭하세요.",
-    "languageMissing": "이 휴대폰은 지금 {{language}}로 번역할 수 없습니다. 다시 시도하거나 영어로 계속하세요.",
-    "retry": "재시도",
-    "useEnglish": "영어 사용",
     "settingsTitle": "시스템 확인",
     "settingsDescription": "이 휴대폰에서 Mera가 어떻게 작동하는지 보고 언어 팩을 확인하세요.",
     "aiCloud": "아직 이 휴대폰에서 실행되지 않습니다. Mera가 프라이빗 클라우드를 사용합니다.",
@@ -3062,12 +2869,9 @@
     "newsLoadError": "기사를 불러올 수 없습니다",
     "websiteA11y": "{{host}} 열기",
     "aboutSourceA11y": "{{source}} 정보",
-    "subscribed": "{{publisher}}를 구독하고 있습니다",
     "prefMoreA11y": "이 매체에서 더 보기",
     "prefFewerA11y": "이 매체에서 덜 보기",
     "history": "기록",
-    "historyEmptyTitle": "아직 아무것도 없어요",
-    "historyEmptyBody": "이 매체의 기사를 발행처 사이트에서 열면 30일 동안 여기에 나타나요.",
     "fewerFrom": "덜 보기:",
     "historyEmpty": "지난 30일 동안 방문 기록이 없습니다.",
     "moreFrom": "더 보기:",
@@ -3081,15 +2885,10 @@
   },
   "nav": {
     "page": {
-      "interests": "관심사",
       "stories": "스토리",
-      "saved": "저장됨",
-      "checks": "팩트체크",
-      "visited": "방문함",
-      "stats": "통계"
+      "saved": "저장됨"
     },
     "rearrangeA11y": "{{tab}} 페이지 순서 바꾸기",
-    "quickSettingsA11y": "{{page}} 빠른 설정",
     "pillA11y": "{{label}}, {{count}}개 중 {{index}}번째",
     "pillNewA11y": "{{label}}, 새 소식 있음, {{count}}개 중 {{index}}번째",
     "howThisPageWorks": "이 페이지의 작동 방식",
@@ -3123,19 +2922,9 @@
   "interests": {
     "emptyTitle": "Mera가 아직 내 관심사를 몰라요",
     "emptyBody": "팔로우하는 것 하나를 Mera에 알려 주면 여기에 별도 섹션이 생깁니다. Mera 버튼을 눌러 시작하세요.",
-    "chipHome": "사는 곳",
-    "chipWork": "내 일",
-    "chipTeam": "응원하는 팀",
-    "draftHome": "내가 사는 곳:",
-    "draftWork": "내 일:",
-    "draftTeam": "내가 응원하는 팀:",
-    "findingStories": "Mera가 이 관심사의 스토리를 찾고 있어요. 첫 스토리가 몇 초 안에 여기에 나타나요.",
-    "backToInterests": "관심사로 돌아가기",
     "learnAbout": "관심사 알아보기"
   },
   "world": {
-    "windowRowLabel": "최근 주요 스토리",
-    "newStateLine": "주요 스토리는 모두에게 같아요. 연필 버튼으로 관심 있는 나라를 추가해 보세요. 나라마다 전용 페이지가 생겨요.",
     "gathering": "{{country}}의 오늘 뉴스를 모으는 중이에요. 첫 스토리가 몇 초 안에 나타나요.",
     "emptyWindow": "최근 {{hours}}시간 동안 {{country}}의 주요 스토리가 없어요.",
     "emptyWindowWorld": "최근 {{hours}}시간 동안 주요 스토리가 없어요.",
@@ -3154,10 +2943,6 @@
       "privacy": "Mera는 검색 내용을 회원님의 계정과 연결하지 않습니다."
     },
     "explainer": {
-      "title": "전 세계의 작동 방식",
-      "what": "전 세계에는 최근 24시간 동안 가장 많이 다뤄진 스토리가 세계 전체와 추가한 나라별로 나와요. 페이지 위쪽에서 6시간, 12시간, 48시간으로 바꿀 수도 있어요. 모두에게 같은 내용이고, 나에게 맞춰 고른 것은 아니에요.",
-      "how1": "전 세계 헤드라인은 여러 나라에서 얼마나 널리 다뤄졌는지에 따라 스토리 순위를 매겨요.",
-      "how2": "나라별 헤드라인은 그 나라에 기반을 둔 뉴스 출처에서 옵니다.",
       "country1": "그 나라의 자국 매체가 많이 다룰수록 스토리의 순위가 올라갑니다.",
       "countrySame": "이 페이지는 모두에게 같습니다. 여기에는 회원님에 대한 정보가 쓰이지 않습니다.",
       "same": "월드는 모두에게 같습니다. 여기에는 회원님에 대한 정보가 쓰이지 않습니다.",
@@ -3167,7 +2952,6 @@
   },
   "library": {
     "saved": {
-      "exportRow_other": "{{count}}개 저장됨 · 제거하기 전까지 이 휴대전화에 보관돼요",
       "export": "내보내기",
       "emptyBody": "기사의 북마크를 누르면 여기에 보관돼요. 저장한 기사는 제거하기 전까지 이 휴대전화에 남아요.",
       "count_one": "{{count}}개 저장됨",
@@ -3176,7 +2960,6 @@
     },
     "checks": {
       "emptyTitle": "아직 팩트체크가 없습니다",
-      "emptyBodyAsk": "기사의 체크 표시를 누르거나, Mera에게 주장을 확인해 달라고 해 보세요. 요청한 팩트체크가 여기에 나타나요.",
       "checkedAgo": "{{age}} 확인됨",
       "checking": "팩트체크 기관에서 확인하는 중입니다",
       "claim": "주장",
@@ -3187,23 +2970,13 @@
       "new": "새로"
     },
     "visited": {
-      "intro": "최근 30일 동안 원문 사이트에서 가장 많이 연 매체예요. 좋은 보도는 독자가 지원할 때 이어져요.",
-      "topLine": "다른 어떤 곳보다 자주 열어요",
       "subscribe": "구독하기",
       "alreadyPay": "이미 구독 중이에요",
       "alreadyPayA11y": "{{publisher}}을(를) 이미 구독 중이에요",
-      "support": "후원",
-      "supportA11y": "{{publisher}} 후원",
       "youPay": "구독 중",
-      "subscribed": "구독함",
-      "lastOpened": "마지막으로 연 날: {{date}}",
-      "footnote": "구독하기와 후원은 해당 매체의 페이지를 열어요. 이 휴대전화에 30일 동안 보관돼요.",
-      "emptyTitle": "아직 매체가 없어요",
-      "emptyBody": "원문 사이트에서 기사를 열면 그 매체가 여기에 나타나요. 자주 읽는 매체를 후원할 방법도 함께 보여 드려요."
+      "emptyTitle": "아직 매체가 없어요"
     },
     "stats": {
-      "emptyTitle": "아직 카드가 없어요",
-      "emptyBody": "발행처 사이트에서 기사를 열면 Mera가 첫 카드를 만들어요.",
       "share": "공유",
       "counted": "이 휴대폰에서 집계되었습니다. 밖으로 나간 것은 없습니다.",
       "days": "읽은 날",
@@ -3271,22 +3044,12 @@
       "facts": "사실",
       "places": "장소",
       "sources": "소스",
-      "cleanup": "프로필 정리",
-      "topicsDeclined": "거절한 주제",
-      "payFor": "구독 중인 매체",
-      "activity": "활동",
       "viewAll": "{{count}}개 모두 보기",
       "viewAllNoCount": "모두 보기",
-      "review": "검토",
-      "subscribed": "구독함",
-      "hidden": "숨김",
-      "less": "줄이기",
-      "aboutA11y": "{{card}}에 대해",
       "factsEmpty": "아직 없어요. 팔로우하는 것을 Mera에게 알려 주면 여기에 나타나요.",
       "placesEmpty": "아직 장소가 없어요",
       "addCity": "도시 추가",
       "sourcesEmpty": "조정한 것이 없어요. Mera는 모든 소스를 똑같이 다뤄요.",
-      "topicsDeclinedEmpty": "아직 거절한 것이 없어요.",
       "adjusted_one": "{{count}}개 조정됨",
       "adjusted_other": "{{count}}개 조정됨",
       "changes": "프로필 변경 사항",
@@ -3295,37 +3058,6 @@
       "title": "회원님의 프로필",
       "topicCount_one": "토픽 {{count}}개",
       "topicCount_other": "토픽 {{count}}개"
-    },
-    "hints": {
-      "facts": {
-        "title": "사실의 작동 방식",
-        "body": "사실은 하나하나가 Mera가 대신 실행하는 검색이 돼요. 사실을 바꾸거나 삭제하면 그 사실에서 나온 스토리도 바뀌어요."
-      },
-      "places": {
-        "title": "장소의 작동 방식",
-        "body": "Mera는 내 장소의 지역 뉴스를 찾아 피드와 관심사에 넣어요. 각 장소의 나라는 전 세계에도 페이지가 생겨요.",
-        "body2": "집이 가장 중요하게 반영돼요. 장소를 누르면 이름표를 바꾸거나 제거할 수 있어요."
-      },
-      "sources": {
-        "title": "소스의 작동 방식",
-        "body": "늘리기와 줄이기는 매체가 나오는 빈도를 바꿔요. 음소거하면 큰 뉴스를 빼고는 나오지 않아요."
-      },
-      "cleanup": {
-        "title": "프로필 정리의 작동 방식",
-        "body": "Mera가 겹치거나 더는 맞지 않는 사실을 찾아내요. 직접 검토하기 전에는 아무것도 바뀌지 않아요."
-      },
-      "topicsDeclined": {
-        "title": "거절한 주제의 작동 방식",
-        "body": "더 적게 보거나 숨기라고 Mera에게 알려 준 주제예요. 다시 허용하면 돌아올 수 있어요."
-      },
-      "payFor": {
-        "title": "구독의 작동 방식",
-        "body": "구독 중인 매체는 피드에서 더 비중 있게 다뤄요."
-      },
-      "activity": {
-        "title": "활동의 작동 방식",
-        "body": "프로필의 모든 변경 사항이 최신순으로 나와요. 대부분 되돌릴 수 있어요."
-      }
     },
     "explainer": {
       "title": "회원님의 프로필",
@@ -3346,14 +3078,11 @@
       "empty": "아직 조정한 소스가 없어요. 매체를 검색해서 더 보거나, 덜 보거나, 아예 안 볼 수 있어요. 기사 ••• 메뉴의 \"줄이기\"도 여기에 들어와요."
     },
     "settings": {
-      "groupApp": "앱",
       "yourPlan": "내 요금제",
       "usage_other": "오늘 기사 {{limit}}개 중 {{count}}개",
       "usageNoLimit_other": "오늘 기사 {{count}}개",
       "usageOffline": "사용량은 온라인일 때 표시돼요",
       "resetsAt": "{{time}}에 초기화",
-      "displayValue": "텍스트, 라이트 모드",
-      "backupAndData": "백업 및 데이터",
       "addEmail": "이메일 추가",
       "addEmailHint": "선택 사항입니다. 계정과 요금제를 다른 휴대폰으로 옮기거나 Mera 이메일을 받고 싶을 때만 추가하세요.",
       "appLock": "앱 잠금",
@@ -3380,10 +3109,8 @@
       "when": "Mera가 알림을 보낼 수 있는 때",
       "yourTimes": "내 시간",
       "noneYet": "아직 고른 시간이 없어요",
-      "zeroTimes": "시간을 고르세요. 고르지 않으면 Mera가 알림을 보내지 않아요.",
       "add": "시간 추가",
       "addHour": "{{time}} 추가",
-      "alreadyPicked": "{{time}}은 이미 골랐어요",
       "remove": "{{time}} 제거",
       "wheel": "추가할 시간",
       "footnote": "Mera는 회원님의 시간대 기준으로 이 시간에만 알림을 보냅니다. 최대 세 개까지 설정할 수 있습니다.",
@@ -3398,11 +3125,6 @@
       "addHome": "사는 곳 추가하기"
     },
     "askNews": "뉴스에 대해 무엇이든 물어보기",
-    "interests": {
-      "add": "관심사 추가하기",
-      "change": "관심사 바꾸기",
-      "remove": "관심사 제거하기"
-    },
     "interest": {
       "change": "이 관심사 바꾸기",
       "remove": "이 관심사 제거하기"
@@ -3412,7 +3134,6 @@
       "name": "계속 따라갈 스토리 알려 주기"
     },
     "world": {
-      "countryFeed": "한 나라의 뉴스를 피드에서 받기",
       "family": "가족이 사는 곳을 Mera에게 알려 주기",
       "behind": "헤드라인의 배경 물어보기"
     },
@@ -3440,7 +3161,6 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}",
     "moveTopLeft": "왼쪽 위로 이동",
     "moveTopRight": "오른쪽 위로 이동",
     "moveBottomLeft": "왼쪽 아래로 이동",
