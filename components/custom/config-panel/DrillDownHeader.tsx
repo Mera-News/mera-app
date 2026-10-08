@@ -6,7 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { I18nManager, StyleSheet, View } from 'react-native';
 
 const BACK_GLYPH = 22;
 /** p-1 at NativeWind's 14pt rem: the old box's padding and left pull. */
@@ -71,11 +71,16 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({
                     testID={backTestID ? `${backTestID}-frame` : undefined}
                     style={BACK_FRAME}
                 >
+                    {/* The boards' back chevron (FinalLightSettings #4-#6), pointing
+                        the reading direction. */}
                     <MaterialIcons
-                        name="arrow-back"
-                        size={BACK_GLYPH}
+                        name="chevron-left"
+                        size={BACK_GLYPH + 4}
                         color={colors.ink}
-                        style={backDisabled ? { opacity: 0.4 } : undefined}
+                        style={[
+                            I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : null,
+                            backDisabled ? { opacity: 0.4 } : null,
+                        ]}
                         accessible={false}
                         accessibilityElementsHidden
                         importantForAccessibility="no-hide-descendants"
