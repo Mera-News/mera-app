@@ -19,7 +19,6 @@
 //    reveals it and resets its scroll origin (pages keep their own offsets).
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import { useColors } from '@/lib/theme/tokens';
 import { hapticSelection } from '@/lib/haptics';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useIsFocused } from '@react-navigation/native';
@@ -28,7 +27,6 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
-  useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
@@ -64,7 +62,6 @@ const ARRIVAL_FADE_MS = 150;
 
 const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, arrange, leading, testID }) => {
   const { t } = useTranslation();
-  const colors = useColors();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
   const reduceMotion = useReducedMotion();
@@ -175,7 +172,6 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
     [nextTab, prevTab],
   );
 
-  const coverStyle = useAnimatedStyle(() => ({ opacity: hidden.value }));
 
   const header: PageHeaderBinding = useMemo(
     () => ({ scrollHandler, headerHeight, hidden, reveal, openExplainer }),
@@ -232,14 +228,8 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, onSearch, a
           testID={testID ? `${testID}-pager` : undefined}
         />
 
-      {/* The header is TRANSPARENT (owner): the page's own gradient shows
-          through it, with no status-bar band at rest. Only once it slides
-          away does a chrome band cover the status bar, so the list never
-          scrolls behind the clock. */}
-      <Animated.View
-        pointerEvents="none"
-        style={[styles.statusCover, { height: insets.top, backgroundColor: colors.chrome }, coverStyle]}
-      />
+      {/* The header is TRANSPARENT (owner), and nothing covers the status
+          bar: content runs up under the clock and the Dynamic Island. */}
 
       <Animated.View
         testID={testID ? `${testID}-header` : undefined}
@@ -306,7 +296,6 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  statusCover: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5 },
 });
 
 export default TabPages;
