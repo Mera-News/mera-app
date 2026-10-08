@@ -3017,5 +3017,11 @@
     "mismatchTitle": "Email này thuộc về một tài khoản khác",
     "mismatchBody": "Đăng nhập bằng email của tài khoản này, hoặc nhận trợ giúp.",
     "mismatchOtherEmail": "Dùng email khác"
+  },
+  "relatedSort": {
+    "a11yLabel": "Sắp xếp bài viết liên quan",
+    "relevance": "Khớp tốt nhất",
+    "oldest": "Cũ nhất trước",
+    "newest": "Mới nhất trước"
   }
 }

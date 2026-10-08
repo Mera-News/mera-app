@@ -3019,5 +3019,11 @@
     "mismatchTitle": "This email belongs to a different account",
     "mismatchBody": "Sign in with the email on this account, or get help.",
     "mismatchOtherEmail": "Use another email"
+  },
+  "relatedSort": {
+    "a11yLabel": "Sort related articles",
+    "relevance": "Best match",
+    "oldest": "Oldest first",
+    "newest": "Newest first"
   }
 }

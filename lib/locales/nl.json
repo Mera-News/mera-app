@@ -3019,5 +3019,11 @@
     "mismatchTitle": "Dit e-mailadres hoort bij een ander account",
     "mismatchBody": "Log in met het e-mailadres van dit account, of krijg hulp.",
     "mismatchOtherEmail": "Gebruik een ander e-mailadres"
+  },
+  "relatedSort": {
+    "a11yLabel": "Gerelateerde artikelen sorteren",
+    "relevance": "Best match",
+    "oldest": "Oudste eerst",
+    "newest": "Nieuwste eerst"
   }
 }

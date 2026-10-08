@@ -3016,5 +3016,11 @@
     "mismatchTitle": "このメールは別のアカウントのものです",
     "mismatchBody": "このアカウントのメールでサインインするか、ヘルプをご利用ください。",
     "mismatchOtherEmail": "別のメールアドレスを使う"
+  },
+  "relatedSort": {
+    "a11yLabel": "関連記事を並べ替える",
+    "relevance": "最も一致したもの",
+    "oldest": "古い順",
+    "newest": "新しい順"
   }
 }

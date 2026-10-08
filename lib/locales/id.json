@@ -3016,5 +3016,11 @@
     "mismatchTitle": "Email ini milik akun lain",
     "mismatchBody": "Masuk dengan email di akun ini, atau minta bantuan.",
     "mismatchOtherEmail": "Gunakan email lain"
+  },
+  "relatedSort": {
+    "a11yLabel": "Urutkan artikel terkait",
+    "relevance": "Kecocokan terbaik",
+    "oldest": "Paling lama pertama",
+    "newest": "Terbaru pertama"
   }
 }

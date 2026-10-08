@@ -65,6 +65,8 @@ interface RelatedCoverageProps {
     loadingMore: boolean;
     error: boolean;
     onRetry: () => void;
+    /** Drawn at the end of the heading row: the sort menu. */
+    headerAccessory?: React.ReactNode;
 }
 
 /**
@@ -82,6 +84,7 @@ const RelatedCoverage: React.FC<RelatedCoverageProps> = ({
     loadingMore,
     error,
     onRetry,
+    headerAccessory,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
@@ -111,12 +114,23 @@ const RelatedCoverage: React.FC<RelatedCoverageProps> = ({
     const { duration, stagger, rise } = MOTION.relatedStagger;
     return (
         <View testID="related-coverage">
-            <Text
-                accessibilityRole="header"
-                style={{ color: colors.ink3, fontSize: 13, fontWeight: '600', marginBottom: 10 }}
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                    marginBottom: 10,
+                }}
             >
-                {t('articleDetail.relatedArticles')}
-            </Text>
+                <Text
+                    accessibilityRole="header"
+                    style={{ flexShrink: 1, color: colors.ink3, fontSize: 13, fontWeight: '600' }}
+                >
+                    {t('articleDetail.relatedArticles')}
+                </Text>
+                {headerAccessory}
+            </View>
             {loading && rows.length === 0
                 ? Array.from({ length: SKELETON_CARDS }, (_, i) => <SkeletonCard key={i} />)
                 : null}

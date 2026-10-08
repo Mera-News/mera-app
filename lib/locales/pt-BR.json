@@ -3019,5 +3019,11 @@
     "mismatchTitle": "Este e-mail pertence a outra conta",
     "mismatchBody": "Entre com o e-mail desta conta ou peça ajuda.",
     "mismatchOtherEmail": "Usar outro e-mail"
+  },
+  "relatedSort": {
+    "a11yLabel": "Ordenar artigos relacionados",
+    "relevance": "Melhor correspondência",
+    "oldest": "Mais antigos primeiro",
+    "newest": "Mais recentes primeiro"
   }
 }

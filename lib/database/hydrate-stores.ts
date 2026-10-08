@@ -23,6 +23,7 @@ export function hydrateAllStores(): Promise<void> {
   const { useForYouPrefsStore } = require('../stores/for-you-prefs-store');
   const { useBlurImagesStore } = require('../stores/blur-images-store');
   const { useDisplayPrefsStore } = require('../stores/display-prefs-store');
+  const { useRelatedSortStore } = require('../stores/related-sort-store');
   const { useTextScaleStore } = require('../stores/text-scale-store');
   const { useTutorialsStore } = require('../stores/tutorials-store');
   const { useStartupTabStore } = require('../stores/startup-tab-store');
@@ -64,6 +65,7 @@ export function hydrateAllStores(): Promise<void> {
     useForYouPrefsStore.getState().hydrate(),
     useBlurImagesStore.getState().hydrate(),
     useDisplayPrefsStore.getState().hydrate(),
+    useRelatedSortStore.getState().hydrate(),
     useTextScaleStore.getState().hydrate(),
     useTutorialsStore.getState().hydrate(),
     useStartupTabStore.getState().hydrate(),

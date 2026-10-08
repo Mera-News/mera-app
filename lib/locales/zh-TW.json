@@ -3017,5 +3017,11 @@
     "mismatchTitle": "這個電子郵件屬於其他帳號",
     "mismatchBody": "請使用此帳號的電子郵件登入，或取得協助。",
     "mismatchOtherEmail": "使用其他電子郵件"
+  },
+  "relatedSort": {
+    "a11yLabel": "排序相關文章",
+    "relevance": "最符合",
+    "oldest": "最舊的優先",
+    "newest": "最新的優先"
   }
 }

@@ -3021,5 +3021,11 @@
     "mismatchTitle": "Bu e-posta farklı bir hesaba ait",
     "mismatchBody": "Bu hesapla ilişkili e-postayla giriş yapın veya yardım alın.",
     "mismatchOtherEmail": "Başka bir e-posta kullan"
+  },
+  "relatedSort": {
+    "a11yLabel": "İlgili makaleleri sırala",
+    "relevance": "En iyi eşleşme",
+    "oldest": "Eski olanlar ilk",
+    "newest": "Yeni olanlar ilk"
   }
 }

@@ -3017,5 +3017,11 @@
     "mismatchTitle": "这个电子邮箱属于另一个账户",
     "mismatchBody": "请使用此账户绑定的电子邮箱登录，或获取帮助。",
     "mismatchOtherEmail": "使用其他电子邮件"
+  },
+  "relatedSort": {
+    "a11yLabel": "对相关文章排序",
+    "relevance": "最佳匹配",
+    "oldest": "最早优先",
+    "newest": "最新优先"
   }
 }

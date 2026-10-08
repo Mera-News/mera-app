@@ -5,6 +5,7 @@ import {
     type ArticleSummary,
     type RelatedArticlesContextInput,
 } from '@/lib/generated/graphql-types';
+import type { RelatedSortMode } from '@/lib/feed-grouping/related-articles-sort';
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import logger from '@/lib/logger';
 
@@ -15,9 +16,16 @@ import logger from '@/lib/logger';
  */
 export const RELATED_PAGE_SIZE = 10;
 
-/** Related coverage has one order, the server's best match (the sort menu
- *  is gone, owner M3); the server still takes oldest/newest for other callers. */
-const SORT = GqlRelatedSortMode.Relevance;
+/**
+ * The app's sort mode -> the GraphQL enum. An explicit map, not a
+ * `toUpperCase()`, so adding a mode on one side without the other is a compile
+ * error rather than a silent fall back to relevance.
+ */
+const TO_GQL_SORT: Record<RelatedSortMode, GqlRelatedSortMode> = {
+    relevance: GqlRelatedSortMode.Relevance,
+    oldest: GqlRelatedSortMode.Oldest,
+    newest: GqlRelatedSortMode.Newest,
+};
 
 /**
  * Device context -> the anonymous wire input. `Set`s become arrays; a null
@@ -42,6 +50,7 @@ interface UseRelatedPaginationInput {
      *  the hook stays idle rather than firing a query for an unknown id. */
     articleId: string | null;
     stableClusterId?: string | null;
+    sortMode: RelatedSortMode;
     ctx: UserGeoLanguageContext | null;
     /** Rows the caller renders itself and must not receive again. The suggestion
      *  route passes its local siblings. Excluded SERVER-side, before ordering,
@@ -82,14 +91,15 @@ interface UseRelatedPagination {
  *    the top. Appending it would stack a second copy of page 1 under the pages
  *    already on screen, and nothing in the rows themselves reveals that. So a
  *    restarted page REPLACES.
- *  - The generation guard. A new article (or the exclusion set settling)
- *    resets the list and the cursor, so a page still in flight belongs to the
- *    old list. Dropping it wholesale is the only correct answer; appending it
- *    would interleave two lists. Copied from `ScopeArticleList.loadMore`.
+ *  - The generation guard. A sort change, a new article or the exclusion set
+ *    settling resets the list and the cursor, so a page still in flight belongs
+ *    to the old list. Dropping it wholesale is the only correct answer;
+ *    appending it would interleave two lists. Copied from `ScopeArticleList.loadMore`.
  */
 export function useRelatedPagination({
     articleId,
     stableClusterId,
+    sortMode,
     ctx,
     excludeIds,
     isConnected,
@@ -119,7 +129,7 @@ export function useRelatedPagination({
                 const page = await ArticleService.getRelatedArticlesPage({
                     articleId,
                     stableClusterId,
-                    sortMode: SORT,
+                    sortMode: TO_GQL_SORT[sortMode],
                     context: toContextInput(ctxRef.current),
                     excludeIds: excludeRef.current,
                     first: RELATED_PAGE_SIZE,
@@ -154,7 +164,7 @@ export function useRelatedPagination({
                 setError(true);
             }
         },
-        [articleId, stableClusterId],
+        [articleId, stableClusterId, sortMode],
     );
 
     /** Drop everything and fetch page 1 again under a new generation. */
@@ -177,7 +187,10 @@ export function useRelatedPagination({
         });
     }, [articleId, isConnected, fetchPage]);
 
-    // First page, and the reset. Keyed on the article.
+    // First page, and the reset. Keyed on the article and the sort mode: a sort
+    // change means the reader asked for a DIFFERENT set of rows at the top, so
+    // carrying the accumulated pages over would show them the old ordering with
+    // a new label.
     useEffect(() => {
         startFromTop();
     }, [startFromTop]);

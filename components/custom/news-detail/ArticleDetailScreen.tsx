@@ -45,6 +45,8 @@ import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useRelatedPagination } from './use-related-pagination';
+import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
+import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -231,6 +233,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     );
     const insets = useSafeAreaInsets();
     const userCtx = useUserGeoLanguageContext();
+    // One sort for both detail routes (related-sort-store), applied to the
+    // server request.
+    const relatedSortMode = useRelatedSortStore((s) => s.mode);
+    const setRelatedSortMode = useRelatedSortStore((s) => s.setMode);
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
     const openedIds = useOpenedStoriesStore((s) => s.ids);
     const isConnected = useIsConnected();
@@ -254,6 +260,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     } = useRelatedPagination({
         articleId: article?._id ?? null,
         stableClusterId,
+        sortMode: relatedSortMode,
         ctx: userCtx,
         isConnected,
     });
@@ -821,6 +828,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             loadingMore={isLoadingMoreRelated}
                             error={!!relatedError}
                             onRetry={retryRelated}
+                            headerAccessory={
+                                <RelatedSortDropdown
+                                    value={relatedSortMode}
+                                    onChange={setRelatedSortMode}
+                                    testIDPrefix="related-sort"
+                                />
+                            }
                         />
                     </>
                 }

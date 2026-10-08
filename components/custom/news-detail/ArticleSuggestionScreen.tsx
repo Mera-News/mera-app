@@ -52,6 +52,8 @@ import {
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
 import { useRelatedPagination } from './use-related-pagination';
+import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
+import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { mergeRelatedEntries } from './merge-related-entries';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
@@ -270,6 +272,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // See ArticleDetailScreen — the Mera Protocol switch (`mera_fact_check`,
     // default on) now actually gates the tick and the panel.
     const userCtx = useUserGeoLanguageContext();
+    // One sort for both detail routes (related-sort-store), applied to the
+    // server request.
+    const relatedSortMode = useRelatedSortStore((s) => s.mode);
+    const setRelatedSortMode = useRelatedSortStore((s) => s.setMode);
     const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
 
@@ -302,9 +308,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             entries,
             suggestion.country_code ?? null,
             userCtx,
-            'relevance',
+            relatedSortMode,
         );
-    }, [localSiblings, suggestion, userCtx]);
+    }, [localSiblings, suggestion, userCtx, relatedSortMode]);
 
     // Excluded SERVER-side, before ordering. Filtering the dedupe client-side
     // after the server counted these toward `first: 10` would short-change every
@@ -324,6 +330,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         retry: retryRelated,
     } = useRelatedPagination({
         articleId: suggestion?.articleId ?? null,
+        sortMode: relatedSortMode,
         ctx: userCtx,
         excludeIds,
         isConnected,
@@ -745,6 +752,13 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             loadingMore={isLoadingMoreRelated}
                             error={!!relatedError}
                             onRetry={retryRelated}
+                            headerAccessory={
+                                <RelatedSortDropdown
+                                    value={relatedSortMode}
+                                    onChange={setRelatedSortMode}
+                                    testIDPrefix="related-sort"
+                                />
+                            }
                         />
                     </>
                 }
