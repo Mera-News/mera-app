@@ -7,30 +7,21 @@ import {
     getArticleTranslationSupport,
 } from '@/lib/translation-service';
 import { appendReferrer, openInAppBrowser } from '@/lib/web-browser-utils';
-import { useMeraCorner } from '@/components/custom/mera-button/corner';
-import { MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { I18nManager, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 
-/** Both read routes: equal OUTLINE pills, 48pt (owner, over FinalRead #7). */
-const BUTTON_HEIGHT = 48;
+/** Both read routes span the text column, stacked (the owner's preferred
+ *  old build): a 40pt outline pill inside a 44pt touch frame pulled back by
+ *  negative margins, so the layout sees 40 (never hitSlop). */
+const PILL_HEIGHT = 40;
+const TOUCH_TARGET = 44;
+const FRAME_BLEED = (TOUCH_TARGET - PILL_HEIGHT) / 2;
 const ICON_SIZE = 18;
-const PAD_X = 14;
-const ICON_GAP = 8;
-/** A button's width beyond its label: padding both sides, the icon, its gap. */
-const BUTTON_CHROME = 2 * PAD_X + ICON_SIZE + ICON_GAP;
-const HELP_TARGET = 44;
-const HELP_RING = 26;
-/** Gap before the ? column when stacked; between all three when on one row. */
-const STACK_GAP = 6;
-const ROW_GAP = 8;
-/** Both rows keep clear of the Mera button's column on the side its corner is
- *  on: the button sits 14pt from the screen edge and the page is padded
- *  17.5pt, so its far edge plus an 8pt gap is this far in. */
-const MERA_COLUMN_CLEARANCE = 14 + MERA_BUTTON_SIZE + 8 - 17.5;
+/** The About translation line: 20pt of layout inside a 44pt touch frame. */
+const ABOUT_LINE = 20;
 const HIDDEN = {
     accessible: false,
     accessibilityElementsHidden: true,
@@ -71,19 +62,16 @@ interface ReadTranslateActionsProps {
 
 /**
  * Shared read/translate block for the article detail screens
- * (`ArticleSuggestionScreen`, `ArticleDetailScreen`). Two equal OUTLINE
- * choices (owner): the original in the accent, Google Translate in green.
+ * (`ArticleSuggestionScreen`, `ArticleDetailScreen`), the owner's preferred
+ * old build over FinalRead's filled + glass row:
  *
- *   ( ↗ <publication>        )               same width, ? column kept empty
- *   ( G文 Google Translate   ) (?)           only for another language
+ *   ( ↗ Read on <publication>      )     neutral outline, full text column
+ *   ( G文 Read on Google Translate  )     green outline, another language only
+ *          (?) About translation           muted text button, opens the sheet
  *
- * When both labels fit at the current text scale they share ONE row:
- * [original] [translate] [?]. The fit is measured (`onTextLayout` on hidden
- * copies), never a per-locale table; until it is known the rows stack.
- * The ? opens About translation. Render order is VoiceOver order; the spoken
- * labels keep the full strings ("Read on <publication>", "Read on Google
- * Translate"). Each visual is hidden under a childless labelled button (an
- * icon glyph inside a button surfaces on iOS as its own StaticText).
+ * Render order is VoiceOver order. Each visual is hidden under a childless
+ * labelled button (an icon glyph inside a button surfaces on iOS as its own
+ * StaticText).
  */
 const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     articleUrl,
@@ -95,12 +83,6 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     const colors = useColors();
     const appLanguage = useAppLanguage();
     const [aboutOpen, setAboutOpen] = useState(false);
-    const [width, setWidth] = useState(0);
-    const [labelW, setLabelW] = useState<{ pub?: number; gt?: number }>({});
-    // Corners are PHYSICAL; RN swaps left/right padding in RTL, so a physical
-    // right edge is paddingLeft there.
-    const meraOnRight = useMeraCorner().endsWith('r');
-    const meraSide = meraOnRight !== I18nManager.isRTL ? 'paddingRight' : 'paddingLeft';
 
     const support = getArticleTranslationSupport(sourceLanguage, appLanguage);
     // Wrap the article URL with Mera's UTM referrer params BEFORE handing it to
@@ -114,49 +96,28 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     const publication = publicationShown ? titleCasePublication(publicationShown) : null;
     const sameLanguage = support.status === 'same-language';
 
-    const pubLabel = publication ?? t('articleDetail.readArticle');
-    const pubA11y = publication ? t('articleDetail.readOn', { publication }) : t('articleDetail.readArticle');
-    const gtLabel = t('articleDetail.googleTranslate');
-
-    // One row only when BOTH labels fit their half of it.
-    const half = (width - MERA_COLUMN_CLEARANCE - HELP_TARGET - 2 * ROW_GAP) / 2;
-    const oneRow =
-        !sameLanguage &&
-        width > 0 &&
-        labelW.pub !== undefined &&
-        labelW.gt !== undefined &&
-        Math.max(labelW.pub, labelW.gt) + BUTTON_CHROME <= half;
-
-    const labelStyle = { fontSize: 16, lineHeight: 22, fontWeight: '600' } as const;
-    const measure = (key: 'pub' | 'gt') => (e: { nativeEvent: { lines: { width: number }[] } }) => {
-        const w = Math.max(0, ...e.nativeEvent.lines.map((l) => l.width));
-        setLabelW((prev) => (prev[key] === w ? prev : { ...prev, [key]: w }));
-    };
-
     const route = (
         testID: string,
         icon: keyof typeof MaterialIcons.glyphMap,
         label: string,
-        a11yLabel: string,
         onPress: () => void,
-        outline: string,
         ink: string,
     ) => (
-        <View testID={`${testID}-frame`} style={{ flex: 1, height: BUTTON_HEIGHT }}>
+        <View testID={`${testID}-frame`} style={{ height: TOUCH_TARGET, marginVertical: -FRAME_BLEED, justifyContent: 'center' }}>
             <View
                 testID={`${testID}-pill`}
                 pointerEvents="none"
                 {...HIDDEN}
                 style={{
-                    flex: 1,
-                    borderRadius: BUTTON_HEIGHT / 2,
-                    paddingHorizontal: PAD_X,
+                    height: PILL_HEIGHT,
+                    borderRadius: PILL_HEIGHT / 2,
+                    borderWidth: 1,
+                    borderColor: ink,
+                    paddingHorizontal: 14,
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: ICON_GAP,
-                    borderWidth: 1.5,
-                    borderColor: outline,
+                    gap: 7,
                 }}
             >
                 <MaterialIcons name={icon} size={ICON_SIZE} color={ink} {...HIDDEN} />
@@ -164,7 +125,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                     numberOfLines={1}
                     ellipsizeMode="tail"
                     scaleTier="chrome"
-                    style={[labelStyle, { flexShrink: 1, color: ink }]}
+                    style={{ flexShrink: 1, color: ink, fontSize: 15, lineHeight: 20, fontWeight: '600' }}
                 >
                     {label}
                 </Text>
@@ -172,97 +133,63 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
             <Pressable
                 testID={testID}
                 accessibilityRole="button"
-                accessibilityLabel={a11yLabel}
+                accessibilityLabel={label}
                 onPress={onPress}
                 style={StyleSheet.absoluteFill}
             />
         </View>
     );
 
-    const original = route(
-        'detail-read-publisher',
-        'open-in-new',
-        pubLabel,
-        pubA11y,
-        () => onOpenUrl(articleUrl),
-        colors.accentMark,
-        colors.accentText,
-    );
-    const translate = route(
-        'detail-read-google-translate',
-        'g-translate',
-        gtLabel,
-        t('articleDetail.readOnGoogleTranslate'),
-        () => openInAppBrowser(googleTranslateUrl),
-        colors.positive,
-        colors.positive,
-    );
-    const help = (
-        <View style={{ width: HELP_TARGET, height: HELP_TARGET }}>
-            <View
-                pointerEvents="none"
-                {...HIDDEN}
-                style={{
-                    margin: (HELP_TARGET - HELP_RING) / 2,
-                    width: HELP_RING,
-                    height: HELP_RING,
-                    borderRadius: HELP_RING / 2,
-                    borderWidth: 1.5,
-                    borderColor: colors.helpRing,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-            >
-                <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '700' }}>?</Text>
-            </View>
-            <Pressable
-                testID="detail-about-translation"
-                accessibilityRole="button"
-                accessibilityLabel={t('articleDetail.aboutTranslation')}
-                onPress={() => setAboutOpen(true)}
-                style={StyleSheet.absoluteFill}
-            />
-        </View>
-    );
-    const row = { flexDirection: 'row', alignItems: 'center', [meraSide]: MERA_COLUMN_CLEARANCE } as const;
-
     return (
-        <View
-            style={{ gap: 10 }}
-            testID="detail-read-routes"
-            onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-        >
-            {sameLanguage ? (
-                <View style={row}>{original}</View>
-            ) : oneRow ? (
-                <View style={[row, { gap: ROW_GAP }]}>
-                    {original}
-                    {translate}
-                    {help}
-                </View>
-            ) : (
+        // 13pt here + the screen VStack's ~11pt gap: about 24pt under the
+        // action row, as in the old build.
+        <View style={{ gap: 10, marginTop: 13 }} testID="detail-read-routes">
+            {route(
+                'detail-read-publisher',
+                'open-in-new',
+                publication ? t('articleDetail.readOn', { publication }) : t('articleDetail.readArticle'),
+                () => onOpenUrl(articleUrl),
+                colors.ink,
+            )}
+            {sameLanguage ? null : (
                 <>
-                    <View style={[row, { gap: STACK_GAP }]}>
-                        {original}
-                        <View style={{ width: HELP_TARGET }} />
-                    </View>
-                    <View style={[row, { gap: STACK_GAP }]}>
-                        {translate}
-                        {help}
+                    {route(
+                        'detail-read-google-translate',
+                        'g-translate',
+                        t('articleDetail.readOnGoogleTranslate'),
+                        () => openInAppBrowser(googleTranslateUrl),
+                        colors.positive,
+                    )}
+                    <View
+                        style={{
+                            height: TOUCH_TARGET,
+                            // The text sits 12pt under the last pill (the
+                            // block's 10pt gap, then this frame's own bleed).
+                            marginTop: 12 - 10 - (TOUCH_TARGET - ABOUT_LINE) / 2,
+                            marginBottom: -(TOUCH_TARGET - ABOUT_LINE) / 2,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <View
+                            pointerEvents="none"
+                            {...HIDDEN}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                        >
+                            <MaterialIcons name="help-outline" size={16} color={colors.muted} {...HIDDEN} />
+                            <Text scaleTier="chrome" style={{ color: colors.muted, fontSize: 14, lineHeight: ABOUT_LINE }}>
+                                {t('articleDetail.aboutTranslation')}
+                            </Text>
+                        </View>
+                        <Pressable
+                            testID="detail-about-translation"
+                            accessibilityRole="button"
+                            accessibilityLabel={t('articleDetail.aboutTranslation')}
+                            onPress={() => setAboutOpen(true)}
+                            style={StyleSheet.absoluteFill}
+                        />
                     </View>
                 </>
-            )}
-            {/* The fit check: both labels at the current text scale, unclamped,
-                off screen and invisible to assistive tech. */}
-            {sameLanguage ? null : (
-                <View pointerEvents="none" {...HIDDEN} style={styles.measure}>
-                    <Text scaleTier="chrome" style={labelStyle} onTextLayout={measure('pub')}>
-                        {pubLabel}
-                    </Text>
-                    <Text scaleTier="chrome" style={labelStyle} onTextLayout={measure('gt')}>
-                        {gtLabel}
-                    </Text>
-                </View>
             )}
             <AboutTranslationModal
                 open={aboutOpen}
@@ -275,9 +202,5 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    measure: { position: 'absolute', top: 0, left: 0, width: 4000, opacity: 0, alignItems: 'flex-start' },
-});
 
 export default ReadTranslateActions;

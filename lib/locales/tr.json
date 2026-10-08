@@ -312,8 +312,7 @@
     "aboutTranslationBody": "Bu makale {{language}} dilinde. Telefonunuz okurken çevirebilir.",
     "aboutTranslationFallback": "Bu işe yaramazsa, makaleyi Google Çeviri'de açın. Bu, makaleyi Google üzerinden okumak anlamına gelir.",
     "translateBlockedOn": "Bazı siteler Google Çeviri'yi engeller. Yüklenmezse, {{publication}} üzerinden açın.",
-    "youCameFromHere": "Buradan geldiniz",
-    "googleTranslate": "Google Çeviri"
+    "youCameFromHere": "Buradan geldiniz"
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",

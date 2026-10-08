@@ -312,8 +312,7 @@
     "aboutTranslationBody": "Dit artikel is in {{language}}. Je telefoon kan het vertalen terwijl je leest.",
     "aboutTranslationFallback": "Werkt dat niet? Open het dan in Google Translate. Zo lees je het via Google.",
     "translateBlockedOn": "Sommige sites blokkeren Google Translate. Laadt het niet? Open het dan op {{publication}}.",
-    "youCameFromHere": "Je kwam hiervandaan",
-    "googleTranslate": "Google Translate"
+    "youCameFromHere": "Je kwam hiervandaan"
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",

@@ -317,8 +317,7 @@
     "aboutTranslationBody": "Cet article est en {{language}}. Votre téléphone peut le traduire pendant que vous lisez.",
     "aboutTranslationFallback": "Si cela ne fonctionne pas, ouvrez-le dans Google Traduction, ce qui revient à le parcourir via Google.",
     "translateBlockedOn": "Certains sites bloquent Google Traduction. Si la page ne se charge pas, ouvrez-la sur {{publication}}.",
-    "youCameFromHere": "Vous venez d'ici",
-    "googleTranslate": "Google Traduction"
+    "youCameFromHere": "Vous venez d'ici"
   },
   "newsCluster": {
     "failedToLoad": "Impossible de charger les détails du groupe",

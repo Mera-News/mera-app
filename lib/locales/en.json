@@ -343,8 +343,7 @@
     "aboutTranslationBody": "This article is in {{language}}. Your phone can translate it while you read.",
     "aboutTranslationFallback": "If that doesn't work, open it in Google Translate, which means browsing it through Google.",
     "translateBlockedOn": "Some sites block Google Translate. If it doesn't load, open it on {{publication}}.",
-    "youCameFromHere": "You came from here",
-    "googleTranslate": "Google Translate"
+    "youCameFromHere": "You came from here"
   },
   "factCheck": {
     "actionA11y": "Look for published fact checks on this story",

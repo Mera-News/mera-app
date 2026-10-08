@@ -312,8 +312,7 @@
     "aboutTranslationBody": "यह लेख {{language}} में है। आपका फ़ोन पढ़ते समय इसका अनुवाद कर सकता है।",
     "aboutTranslationFallback": "अगर यह काम न करे, तो इसे Google Translate में खोलें। इसका मतलब है Google के ज़रिए ब्राउज़ करना।",
     "translateBlockedOn": "कुछ साइटें Google Translate को रोकती हैं। अगर यह लोड न हो, तो इसे {{publication}} पर खोलें।",
-    "youCameFromHere": "आप यहीं से आए थे",
-    "googleTranslate": "Google अनुवाद"
+    "youCameFromHere": "आप यहीं से आए थे"
   },
   "newsCluster": {
     "failedToLoad": "क्लस्टर विवरण लोड करने में विफल",

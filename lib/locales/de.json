@@ -312,8 +312,7 @@
     "aboutTranslationBody": "Dieser Artikel ist auf {{language}} verfasst. Dein Telefon kann ihn beim Lesen übersetzen.",
     "aboutTranslationFallback": "Falls das nicht funktioniert, öffne ihn in Google Übersetzer. Dabei surfst du über Google.",
     "translateBlockedOn": "Manche Websites blockieren Google Übersetzer. Wenn die Seite nicht lädt, öffne sie bei {{publication}}.",
-    "youCameFromHere": "Von hier kamst du",
-    "googleTranslate": "Google Übersetzer"
+    "youCameFromHere": "Von hier kamst du"
   },
   "newsCluster": {
     "failedToLoad": "Cluster-Details konnten nicht geladen werden",

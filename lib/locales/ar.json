@@ -348,8 +348,7 @@
     "aboutTranslationBody": "هذا المقال بلغة {{language}}. يستطيع هاتفك ترجمته أثناء القراءة.",
     "aboutTranslationFallback": "إذا لم ينجح ذلك، افتحه في ترجمة Google، أي تصفحه عبر Google.",
     "translateBlockedOn": "بعض المواقع تمنع ترجمة Google. إذا لم يُحمَّل الموقع، افتحه على {{publication}}.",
-    "youCameFromHere": "أتيت من هنا",
-    "googleTranslate": "ترجمة Google"
+    "youCameFromHere": "أتيت من هنا"
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
