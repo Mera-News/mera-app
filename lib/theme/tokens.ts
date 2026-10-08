@@ -64,6 +64,9 @@ export interface ThemeColors {
     warning: string;
     /** Blue for information. */
     info: string;
+    /** `info` deepened for a small glyph that must read through a dim (the
+     *  download notice's inline ↓ under iOS's sheet: >= 3:1 after a 40% dim). */
+    infoStrong: string;
     /** A translucent header over scrolling content (board header). */
     chrome: string;
 }
@@ -96,6 +99,8 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         edge: 'rgba(255,255,255,0.3)',
         warning: 'rgb(233,179,83)',
         info: 'rgb(150,190,235)',
+        // Already the light end on a dark base; nothing dims it here yet.
+        infoStrong: 'rgb(150,190,235)',
         chrome: 'rgba(18,17,19,0.90)',
     },
     // From the FinalLight* boards. Contrast gates: 4.5:1 text, 3:1 marks.
@@ -132,6 +137,9 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         // boards' own dark amber; #2563A8 is a derived blue at 4.5:1 on white.
         warning: '#9A6200',
         info: '#2563A8',
+        // #2563A8 at HSL lightness 0.32 (was 0.40): 3.2:1 after a 40% dim on
+        // the light modal material's darkest point.
+        infoStrong: '#1E4F87',
         chrome: 'rgba(255,255,255,0.62)',
     },
 };

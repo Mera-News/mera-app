@@ -209,8 +209,9 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
                     <View style={styles.messageText}>
                         <Text style={[styles.messageTitle, { color: NOTICE_INK, writingDirection: messageDir }]}>{messageTitle}</Text>
                         <Text style={[styles.messageBody, { color: NOTICE_INK, writingDirection: messageDir }]}>
-                            {/* The ↓ stands for iOS's download button: drawn in the
-                                same blue as the illustration and the iOS icon. */}
+                            {/* The ↓ stands for iOS's download button: the
+                                illustration's blue, one shade deeper so it reads
+                                through the sheet's dim. */}
                             {messageBody.split('↓').map((part, i) =>
                                 i === 0 ? (
                                     part
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
     messageText: { flex: 1, gap: 6 },
     messageTitle: { fontSize: 22, lineHeight: 28, fontWeight: '700' },
     messageBody: { fontSize: 17, lineHeight: 24, fontWeight: '600' },
-    downArrow: { color: COLORS.light.info, fontWeight: '800' },
+    downArrow: { color: COLORS.light.infoStrong, fontWeight: '800' },
     title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
     label: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
     labelBox: { marginTop: 8, marginBottom: 12 },
