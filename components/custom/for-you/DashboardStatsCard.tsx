@@ -42,7 +42,16 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from '
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, MARK_MAX, markSizeFor, markTone, type CardState, type MarkTone } from './card-state';
+import {
+    cardState,
+    MARK_GLYPH_RATIO,
+    MARK_MAX,
+    markLeft,
+    markSizeFor,
+    markTone,
+    type CardState,
+    type MarkTone,
+} from './card-state';
 import { useForYouDailyLimitResetAt, useForYouScoringError } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 
@@ -55,9 +64,12 @@ const HIDDEN = {
 /** The mark's column: as wide as the largest mark (MeraLogo draws 514 wide
  *  per 732 tall), FIXED, so the mark's size never changes the sentence's
  *  width or wrap: the text's height sizes the mark and nothing loops back. */
-const MARK_COLUMN = Math.ceil((MARK_MAX * 514) / 732);
-/** The glyph almost touches the text (owner). */
+const MARK_COLUMN = Math.ceil(MARK_MAX * MARK_GLYPH_RATIO);
+/** Between the column and the text: the text's left edge is CARD_PAD_X +
+ *  MARK_COLUMN + MARK_GAP, whatever the mark's size. */
 const MARK_GAP = 4;
+/** The card's side padding (`px-[14px]` on the panel's content). */
+const CARD_PAD_X = 14;
 
 export interface DashboardStatsCardProps {
     readonly testID?: string;
@@ -145,8 +157,13 @@ function ExpandingDetails({ open, children }: { open: boolean; children: React.R
 export function StatusMark({ working, size, tone }: { working: boolean; size: number; tone: MarkTone }) {
     const colors = useColors();
     return (
-        <View {...HIDDEN} style={styles.markColumn} testID="dashboard-stats-card-mark">
-            <MeraLogo size={size} color={tone === 'alert' ? colors.accentMark : colors.ink} animated={working} />
+        <View {...HIDDEN} style={[styles.markColumn, { height: size }]} testID="dashboard-stats-card-mark">
+            {/* MeraLogo is a square box with the glyph centred in it, ~0.3 x
+                size wider than what it draws: placed so the GLYPH, not the
+                box, sits centred between the card edge and the text. */}
+            <View style={[styles.markBox, { left: markLeft(size, CARD_PAD_X, MARK_COLUMN, MARK_GAP) }]}>
+                <MeraLogo size={size} color={tone === 'alert' ? colors.accentMark : colors.ink} animated={working} />
+            </View>
         </View>
     );
 }
@@ -205,7 +222,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
         <View className="mb-2" testID={`${testID}-anchor`}>
             <GlassPanel
                 radius={12}
-                contentClassName="px-4 py-3"
+                contentClassName="px-[14px] py-3"
                 testID={testID}
             >
                     <>
@@ -270,10 +287,10 @@ const styles = StyleSheet.create({
     // a one-line row (26pt) is still a 44pt target.
     leadPress: { ...StyleSheet.absoluteFillObject, top: -9, bottom: -9 },
     // The lead row centres mark, sentence and ⌄ on ONE line: the sentence
-    // block's centre (level with the 2nd of 3 lines, owner). The mark sits
-    // at its column's END, so its glyph is MARK_GAP from the text whatever
-    // its size.
-    markColumn: { width: MARK_COLUMN, marginEnd: MARK_GAP, alignItems: 'flex-end', justifyContent: 'center' },
+    // block's centre (level with the 2nd of 3 lines, owner). The column is
+    // fixed; the glyph is centred between the card edge and the text.
+    markColumn: { width: MARK_COLUMN, marginEnd: MARK_GAP },
+    markBox: { position: 'absolute', top: 0 },
     sentence: { flex: 1, minWidth: 0 },
     chevron: { marginStart: 8 },
     detailsBody: { position: 'absolute', top: 0, left: 0, right: 0 },

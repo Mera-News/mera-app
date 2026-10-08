@@ -65,3 +65,14 @@ export function markSizeFor(textHeight: number): number {
   const s = Math.round((textHeight - MARK_INSET) * 2) / 2;
   return Math.min(MARK_MAX, Math.max(MARK_MIN, s));
 }
+
+/** MeraLogo draws its glyph 514 wide per 732 tall, CENTRED in a square
+ *  `size` box: the box is wider than the glyph by ~0.3 x size. */
+export const MARK_GLYPH_RATIO = 514 / 732;
+
+/** Where the mark's square box starts, in its column's coordinates, so the
+ *  GLYPH is centred between the card's edge (`pad` before the column) and the
+ *  text (`gap` after it): equal visible gaps at every size. */
+export function markLeft(size: number, pad: number, column: number, gap: number): number {
+  return (column + gap - pad) / 2 - size / 2;
+}
