@@ -1615,11 +1615,6 @@ export interface FeedMetadata {
   /** Epoch ms of the last sync that delivered new articles (the "Updated"
    *  label). Absent/null on blobs written before it existed. */
   lastNewArticlesAt?: number | null;
-  /** UTC date string (`YYYY-MM-DD`) of the last daily-limit notice shown to
-   *  the user. Persisted (not just in-memory) so the notice re-arms only once
-   *  per UTC day and survives app restarts — see FeedSyncMachine's
-   *  `daily-limit` branch. Absent/null = never shown. */
-  dailyLimitNoticeDay?: string | null;
 }
 
 export async function persistFeedMetadata(meta: FeedMetadata): Promise<void> {

@@ -51,9 +51,8 @@ AppScheduler.register({
     // still gets a real attempt and can see the cap lift the moment it does.
     //
     // `dailyLimitResetAt` is in-memory only, so after a cold start one sync
-    // runs before the cap is re-learned. That is intentional: the persisted
-    // `dailyLimitNoticeDay` keeps that run from re-notifying, and re-learning
-    // beats persisting a reset time that may have been superseded server-side.
+    // runs before the cap is re-learned. That is intentional: re-learning beats
+    // persisting a reset time that may have been superseded server-side.
     {
       type: 'custom',
       check: () => {
