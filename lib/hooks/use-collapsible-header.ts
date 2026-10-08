@@ -82,10 +82,16 @@ export function useCollapsibleHeader(): CollapsibleHeader {
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (e) => {
+      const y = e.contentOffset.y;
+      // An event that moved nothing (a programmatic setContentOffset to the
+      // same place, e.g. maintainVisibleContentPosition on an empty list)
+      // must feed nothing back: re-laying the header from it looped the main
+      // thread at 100% CPU on a new account. A pending origin reset still
+      // takes the event.
+      if (!originStale.value && y === lastY.value) return;
       // Every list this drives scrolls translatable rows, and a row asks for
       // its translation only once a tick finds it on screen (visibility-tick).
       runOnJS(notifyScrollTick)();
-      const y = e.contentOffset.y;
       // Ignore iOS rubber-band overscroll above the top.
       if (y < 0) return;
 
@@ -103,10 +109,11 @@ export function useCollapsibleHeader(): CollapsibleHeader {
       lastY.value = y;
 
       if (y <= 0) {
-        // At the very top: always reveal, reset accumulators.
+        // At the very top: always reveal, reset accumulators. No new animation
+        // when the header is already out.
         downAccum.value = 0;
         upAccum.value = 0;
-        hidden.value = withTiming(0, { duration: DURATION });
+        if (hidden.value !== 0) hidden.value = withTiming(0, { duration: DURATION });
         return;
       }
 
