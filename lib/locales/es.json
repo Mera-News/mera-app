@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "Idioma",
-    "appLanguage": "Idioma de la app",
-    "appLanguageDescription": "Para la app y para traducir las noticias.",
     "restartRequired": "Se requiere reiniciar la aplicación",
     "restartDescription": "La aplicación necesita reiniciarse para aplicar el cambio de idioma.",
     "restart": "Reiniciar ahora",

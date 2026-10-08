@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "Taal",
-    "appLanguage": "Taal van de app",
-    "appLanguageDescription": "Voor de app en voor het vertalen van nieuws.",
     "restartRequired": "App opnieuw starten vereist",
     "restartDescription": "De app moet opnieuw worden gestart om de taalwijziging toe te passen.",
     "restart": "Nu herstarten",

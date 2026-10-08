@@ -1,26 +1,20 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
-import { Group, Help, Row } from '@/components/custom/you/rows';
-import { getLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import LanguageSelector from '@/components/custom/auth/LanguageSelector';
+import { Help } from '@/components/custom/you/rows';
+import { getLanguageName } from '@/lib/translation-service';
 import { requestRestart } from '@/lib/app-restart';
-import { useAppLanguageStore } from '@/lib/stores/app-language-store';
+import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
 import LanguageDownloadHint from '@/components/custom/config-mera/LanguageDownloadHint';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useColors } from '@/lib/theme/tokens';
-import React, { useCallback, useState } from 'react';
-import { FlatList, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { Platform, View } from 'react-native';
 import { showDialog } from '@/lib/dialog';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
-import { useMotionAllowed } from '@/lib/motion-gate';
 
 interface LanguageSettingsScreenProps {
     onBack?: () => void;
@@ -31,16 +25,10 @@ interface LanguageSettingsScreenProps {
 const RTL_CODES = new Set(['ar', 'he']);
 
 const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack, onBusyChange }) => {
-    // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
-    const motion = useMotionAllowed();
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
-    const colors = useColors();
-
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
-
-    const [showLangPicker, setShowLangPicker] = useState(false);
-    const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage);
+    const phone = useMemo(() => phoneLanguage(), []);
 
     // Only fires on a language that was actually applied, so a failed attempt
     // can never prompt for a restart the user did not ask for.
@@ -99,24 +87,21 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
         [t],
     );
 
-    const {
-        pendingCode,
-        busy,
-        requestSwitch,
-        notifyPickerDismissed,
-        cancel,
-    } = useLanguageSwitch({ onCommitted: handleCommitted, onResult: handleResult });
+    // The selector is inline (no picker modal to wait for), so the probe runs
+    // at once. The UI previews the new language while it is checked.
+    const { pendingCode, busy, requestSwitch, cancel } = useLanguageSwitch({
+        onCommitted: handleCommitted,
+        onResult: handleResult,
+        immediate: true,
+    });
 
     React.useEffect(() => {
         onBusyChange?.(busy);
     }, [busy, onBusyChange]);
 
-    // Closing the picker is all that happens here. The probe waits for the
-    // modal's `onDismiss` — presenting Apple's sheet on top of a dismissing
-    // pageSheet is a native crash. See lib/hooks/use-language-switch.ts.
-    const handleSelectLanguage = (code: string) => {
+    const pick = (code: string) => {
+        if (busy || code === appLanguage) return;
         requestSwitch(code);
-        setShowLangPicker(false);
     };
 
     const handleBack = () => {
@@ -142,90 +127,26 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                     />
                 </Box>
 
-                <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 32, gap: 12 }}>
-                    <Group>
-                        <Row
-                            testID="language-current-row"
-                            title={t('language.appLanguage')}
-                            subtitle={t('language.appLanguageDescription')}
-                            value={selectedLanguage?.native ?? 'English'}
-                            onPress={busy ? undefined : () => setShowLangPicker(true)}
-                        />
-                    </Group>
-                    {busy && pendingCode ? <LanguageSwitchProgress code={pendingCode} onCancel={cancel} /> : null}
-                    {/* One line, written for the phone it is on (FinalSettings #5). */}
+                {/* The first-launch selector itself (auth/LanguageSelector), applied
+                    on pick. Above it: one line for the phone it is on, the
+                    iOS download hint (read before Apple's sheet covers the lower
+                    half), and the switch's progress. The list scrolls in its box. */}
+                <View style={{ flex: 1, minHeight: 0, paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 16, gap: 12 }}>
                     <Help>{Platform.OS === 'ios' ? t('language.oneParaIos') : t('language.oneParaAndroid')}</Help>
-                    {/* Read BEFORE the picker opens: once Apple's Required
-                        Downloads sheet is up it covers the lower half of the
-                        screen. iOS-only, from inside the component. */}
                     <LanguageDownloadHint />
-                </ScrollView>
+                    {busy && pendingCode ? <LanguageSwitchProgress code={pendingCode} onCancel={cancel} /> : null}
+                    <LanguageSelector
+                        appLanguage={appLanguage}
+                        phone={phone}
+                        busy={busy}
+                        pendingCode={pendingCode}
+                        locked={busy}
+                        onPick={pick}
+                        testIDPrefix="language-option"
+                        keepCurrent
+                    />
+                </View>
             </Box>
-
-            {/* Language Picker Modal */}
-            <Modal
-                visible={showLangPicker}
-                animationType={motion ? 'slide' : 'none'}
-                presentationStyle="pageSheet"
-                onRequestClose={() => setShowLangPicker(false)}
-                // THE HANDSHAKE. iOS fires this once the dismissal transition
-                // has actually finished; only then may the probe present
-                // Apple's system sheet. Presenting it during the dismissal is
-                // a hard native crash — see lib/hooks/use-language-switch.ts.
-                onDismiss={notifyPickerDismissed}
-            >
-                <GluestackUIProvider>
-                    <Box className="flex-1 bg-page" style={{ paddingTop: insets.top + 16 }}>
-                        {/* The modal material (components/ui/modal). */}
-                        <AbstractGradientBackdrop seed="mera-modal" frame={0} />
-                        <HStack className="items-center justify-between px-5 pb-4">
-                            <Text className="text-ink text-xl font-semibold">
-                                {t('language.appLanguage')}
-                            </Text>
-                            <Pressable onPress={() => setShowLangPicker(false)}>
-                                <MaterialIcons name="close" size={24} color={colors.ink} />
-                            </Pressable>
-                        </HStack>
-                        <FlatList
-                            data={SUPPORTED_LANGUAGES}
-                            keyExtractor={(item) => item.code}
-                            renderItem={({ item }) => {
-                                const isSelected = item.code === appLanguage;
-                                return (
-                                    <TouchableOpacity
-                                        onPress={() => handleSelectLanguage(item.code)}
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            paddingVertical: 14,
-                                            paddingHorizontal: 20,
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: colors.line,
-                                        }}
-                                    >
-                                        <VStack>
-                                            <Text
-                                                className={isSelected ? 'text-accent font-semibold' : 'text-ink'}
-                                            >
-                                                {item.name}
-                                            </Text>
-                                            <Text className="text-ink-2 text-sm">
-                                                {item.native}
-                                            </Text>
-                                        </VStack>
-                                        {isSelected && (
-                                            <MaterialIcons name="check" size={20} color={colors.accent} />
-                                        )}
-                                    </TouchableOpacity>
-                                );
-                            }}
-                            contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
-                        />
-                    </Box>
-                </GluestackUIProvider>
-            </Modal>
-
         </GluestackUIProvider>
     );
 };

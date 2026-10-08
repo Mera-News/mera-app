@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "Sprache",
-    "appLanguage": "App-Sprache",
-    "appLanguageDescription": "Für die App und für die Übersetzung von Nachrichten.",
     "restartRequired": "App-Neustart erforderlich",
     "restartDescription": "Die App muss neu gestartet werden, um die Sprachänderung anzuwenden.",
     "restart": "Jetzt neu starten",

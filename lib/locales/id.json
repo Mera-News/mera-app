@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "Bahasa",
-    "appLanguage": "Bahasa aplikasi",
-    "appLanguageDescription": "Untuk aplikasi dan untuk menerjemahkan berita.",
     "restartRequired": "Perlu Memulai Ulang Aplikasi",
     "restartDescription": "Aplikasi perlu dimulai ulang untuk menerapkan perubahan bahasa.",
     "restart": "Mulai Ulang Sekarang",

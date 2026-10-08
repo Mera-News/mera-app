@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "語言",
-    "appLanguage": "應用程式語言",
-    "appLanguageDescription": "用於應用程式，以及翻譯新聞。",
     "restartRequired": "需要重新啟動應用程式",
     "restartDescription": "應用程式需要重新啟動以套用語言變更。",
     "restart": "立即重新啟動",

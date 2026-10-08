@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "भाषा",
-    "appLanguage": "ऐप की भाषा",
-    "appLanguageDescription": "ऐप और समाचार अनुवाद के लिए।",
     "restartRequired": "ऐप पुनः आरंभ आवश्यक",
     "restartDescription": "भाषा परिवर्तन लागू करने के लिए ऐप को पुनः आरंभ करना होगा।",
     "restart": "अभी पुनः आरंभ करें",

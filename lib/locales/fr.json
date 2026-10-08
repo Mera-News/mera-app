@@ -398,8 +398,6 @@
   },
   "language": {
     "title": "Langue",
-    "appLanguage": "Langue de l'application",
-    "appLanguageDescription": "Pour l'application et la traduction des actualités.",
     "restartRequired": "Redémarrage de l'application requis",
     "restartDescription": "L'application doit redémarrer pour appliquer le changement de langue.",
     "restart": "Redémarrer maintenant",

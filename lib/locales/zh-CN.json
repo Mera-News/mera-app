@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "语言",
-    "appLanguage": "应用语言",
-    "appLanguageDescription": "用于应用界面，以及翻译新闻。",
     "restartRequired": "需要重启应用",
     "restartDescription": "应用需要重启以应用语言更改。",
     "restart": "立即重启",

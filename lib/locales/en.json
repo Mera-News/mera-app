@@ -665,8 +665,6 @@
   },
   "language": {
     "title": "Language",
-    "appLanguage": "App language",
-    "appLanguageDescription": "For the app and for translating news.",
     "restartRequired": "App Restart Required",
     "restartDescription": "The app needs to restart to apply the language change.",
     "restart": "Restart Now",

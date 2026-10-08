@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "言語",
-    "appLanguage": "アプリの言語",
-    "appLanguageDescription": "アプリと、ニュースの翻訳に使われます。",
     "restartRequired": "アプリの再起動が必要です",
     "restartDescription": "言語の変更を適用するにはアプリを再起動する必要があります。",
     "restart": "今すぐ再起動",

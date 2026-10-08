@@ -413,8 +413,6 @@
   },
   "language": {
     "title": "Język",
-    "appLanguage": "Język aplikacji",
-    "appLanguageDescription": "Dla aplikacji i tłumaczenia wiadomości.",
     "restartRequired": "Wymagane ponowne uruchomienie aplikacji",
     "restartDescription": "Aplikacja musi zostać uruchomiona ponownie, aby zastosować zmianę języka.",
     "restart": "Uruchom ponownie",

@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "Ngôn ngữ",
-    "appLanguage": "Ngôn ngữ ứng dụng",
-    "appLanguageDescription": "Dùng cho ứng dụng và để dịch tin tức.",
     "restartRequired": "Cần khởi động lại ứng dụng",
     "restartDescription": "Ứng dụng cần khởi động lại để áp dụng thay đổi ngôn ngữ.",
     "restart": "Khởi động lại ngay",

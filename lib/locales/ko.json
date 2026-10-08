@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "언어",
-    "appLanguage": "앱 언어",
-    "appLanguageDescription": "앱과 뉴스 번역에 사용됩니다.",
     "restartRequired": "앱 재시작 필요",
     "restartDescription": "언어 변경을 적용하려면 앱을 재시작해야 합니다.",
     "restart": "지금 재시작",

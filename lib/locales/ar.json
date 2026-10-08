@@ -433,8 +433,6 @@
   },
   "language": {
     "title": "اللغة",
-    "appLanguage": "لغة التطبيق",
-    "appLanguageDescription": "للتطبيق ولترجمة الأخبار.",
     "restartRequired": "يلزم إعادة تشغيل التطبيق",
     "restartDescription": "يحتاج التطبيق إلى إعادة التشغيل لتطبيق تغيير اللغة.",
     "restart": "إعادة التشغيل الآن",

@@ -1,10 +1,10 @@
 import * as Device from 'expo-device';
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { AppState, FlatList, Platform, StyleSheet, Text, View } from 'react-native';
+import { AppState, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useReducedMotion } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-import { LanguageRow } from '@/components/custom/auth/LanguageRow';
+import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import RotatingLanguageHeading from '@/components/custom/auth/RotatingLanguageHeading';
 import DownloadPressIllustration from '@/components/custom/auth/DownloadPressIllustration';
 import ModalMaterial from '@/components/custom/ModalMaterial';
@@ -16,11 +16,9 @@ import { languageCheckStatus } from '@/lib/system-check/system-check';
 import i18n from '@/lib/i18n';
 import { COLORS, useColors } from '@/lib/theme/tokens';
 import {
-    canTranslateIntoLanguage,
     getNativeLanguageName,
     isTranslationVerified,
     subscribeTranslationAvailability,
-    SUPPORTED_LANGUAGES,
     useTranslationBlocked,
 } from '@/lib/translation-service';
 
@@ -165,12 +163,6 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
         };
     }, [live, probe, notify, t]);
 
-    const languages = useMemo(() => {
-        const offered = SUPPORTED_LANGUAGES.filter((l) => l.code === 'en' || canTranslateIntoLanguage(l.code));
-        const rank = (code: string) => (code === phone ? 0 : code === 'en' ? 1 : 2);
-        return [...offered].sort((a, b) => rank(a.code) - rank(b.code));
-    }, [phone]);
-
     const pick = useCallback(
         (code: string) => {
             if (waiting || code === appLanguage) return;
@@ -232,36 +224,15 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
             </Text>
             <RotatingLanguageHeading phone={phone} style={[styles.label, { color: colors.ink3 }]} containerStyle={styles.labelBox} />
 
-            <View
-                pointerEvents={waiting ? 'none' : 'auto'}
-                accessibilityRole="radiogroup"
-                style={[styles.list, { backgroundColor: colors.surface, borderColor: colors.line }]}
-            >
-                <FlatList
-                    data={languages}
-                    keyExtractor={(l) => l.code}
-                    renderItem={({ item }) => (
-                        <LanguageRow
-                            endonym={item.native}
-                            english={item.name}
-                            isPhoneLanguage={item.code === phone}
-                            picked={item.code === (busy && pendingCode ? pendingCode : appLanguage)}
-                            accessory={
-                                busy && pendingCode === item.code
-                                    ? 'busy'
-                                    : item.code !== 'en' && !isTranslationVerified(item.code)
-                                      ? 'download'
-                                      : 'none'
-                            }
-                            onPress={() => pick(item.code)}
-                            onDownload={() => pick(item.code)}
-                            downloadA11yLabel={t('auth.track.downloadA11y', { language: item.native })}
-                            phoneLanguageLabel={t('auth.track.phoneLanguage')}
-                            testID={`auth-language-${item.code}`}
-                        />
-                    )}
-                />
-            </View>
+            <LanguageSelector
+                appLanguage={appLanguage}
+                phone={phone}
+                busy={busy}
+                pendingCode={pendingCode}
+                locked={waiting}
+                onPick={pick}
+                testIDPrefix="auth-language"
+            />
 
             {!waiting ? (
                 <Animated.View
@@ -304,6 +275,5 @@ const styles = StyleSheet.create({
     title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
     label: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
     labelBox: { marginTop: 8, marginBottom: 12 },
-    list: { flex: 1, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 4, overflow: 'hidden' },
     actions: { gap: 10, marginTop: 16 },
 });

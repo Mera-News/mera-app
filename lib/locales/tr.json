@@ -393,8 +393,6 @@
   },
   "language": {
     "title": "Dil",
-    "appLanguage": "Uygulama dili",
-    "appLanguageDescription": "Uygulama ve haberlerin çevirisi için.",
     "restartRequired": "Uygulama Yeniden Başlatma Gerekli",
     "restartDescription": "Dil değişikliğini uygulamak için uygulamanın yeniden başlatılması gerekiyor.",
     "restart": "Şimdi Yeniden Başlat",
