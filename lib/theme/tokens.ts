@@ -69,6 +69,10 @@ export interface ThemeColors {
     infoStrong: string;
     /** A translucent header over scrolling content (board header). */
     chrome: string;
+    /** The Feed and Explore tab headers' fill where there is no glass blur
+     *  (Lite, Android, older iOS; owner): mostly solid, so content under it
+     *  is only a faint shape, never readable. */
+    headerFill: string;
 }
 
 export const COLORS: Record<ThemeMode, ThemeColors> = {
@@ -102,6 +106,7 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         // Already the light end on a dark base; nothing dims it here yet.
         infoStrong: 'rgb(150,190,235)',
         chrome: 'rgba(18,17,19,0.90)',
+        headerFill: 'rgba(18,17,19,0.85)',
     },
     // From the FinalLight* boards. Contrast gates: 4.5:1 text, 3:1 marks.
     light: {
@@ -141,6 +146,7 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         // the light modal material's darkest point.
         infoStrong: '#1E4F87',
         chrome: 'rgba(255,255,255,0.62)',
+        headerFill: 'rgba(255,255,255,0.85)',
     },
 };
 
