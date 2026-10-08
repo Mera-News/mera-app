@@ -13,6 +13,7 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
+import { publisherRouteInk } from '@/components/custom/news-detail/read-route-ink';
 
 /** Both read routes span the text column, stacked (the owner's preferred
  *  old build): a 40pt outline pill inside a 44pt touch frame pulled back by
@@ -66,7 +67,8 @@ interface ReadTranslateActionsProps {
  * (`ArticleSuggestionScreen`, `ArticleDetailScreen`), the owner's preferred
  * old build over FinalRead's filled + glass row:
  *
- *   ( ↗ Read on <publication>      )     neutral outline, full text column
+ *   ( ↗ Read on <publication>      )     green when this phone can translate
+ *                                         it on device, else the ink outline
  *   ( G文 Read on Google Translate  )     green outline, another language only
  *          (?) About translation           muted text button, opens the sheet
  *
@@ -150,7 +152,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                 'open-in-new',
                 publication ? t('articleDetail.readOn', { publication }) : t('articleDetail.readArticle'),
                 () => onOpenUrl(articleUrl),
-                colors.ink,
+                publisherRouteInk(support.status) === 'positive' ? colors.positive : colors.ink,
             )}
             {sameLanguage ? null : (
                 <>
