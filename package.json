@@ -85,7 +85,7 @@
     "llama.rn": "0.12.9",
     "lottie-react-native": "~7.3.4",
     "lucide-react-native": "^0.563.0",
-    "nativewind": "^4.2.1",
+    "nativewind": "4.2.7",
     "pako": "^2.1.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
