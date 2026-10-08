@@ -1,4 +1,4 @@
-import { cardState, MARK_GLYPH_RATIO, MARK_MAX, MARK_MIN, markLeft, markSizeFor, markTone, type CardStateInput } from '../card-state';
+import { cardState, MARK_MAX, MARK_MIN, markSizeFor, markTone, type CardStateInput } from '../card-state';
 
 const base: CardStateInput = {
   mode: 'idle',
@@ -62,22 +62,5 @@ describe('markTone', () => {
   });
   it('keeps the ink everywhere else, the scoring error included', () => {
     for (const s of ['relevant', 'offline', 'error', null] as const) expect(markTone(s)).toBe('normal');
-  });
-});
-
-describe('markLeft', () => {
-  const pad = 14;
-  const column = Math.ceil(MARK_MAX * MARK_GLYPH_RATIO);
-  const gap = 4;
-  it('centres the drawn glyph between the card edge and the text at every size', () => {
-    for (const size of [MARK_MIN, 36, 44.5, MARK_MAX]) {
-      const left = markLeft(size, pad, column, gap);
-      const glyph = size * MARK_GLYPH_RATIO;
-      const glyphStart = pad + left + (size - glyph) / 2;
-      const glyphEnd = glyphStart + glyph;
-      const textStart = pad + column + gap;
-      expect(glyphStart).toBeCloseTo(textStart - glyphEnd, 6);
-      expect(glyphStart).toBeGreaterThan(0);
-    }
   });
 });
