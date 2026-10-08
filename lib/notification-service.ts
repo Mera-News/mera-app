@@ -372,9 +372,8 @@ async function handleNotificationTap(
         // tap's own foreground reload usually wipes a moment later.
         const route = await takePendingNotificationRouteForNavigation(userId);
         if (!route) return;
-        // The Feed tab can open on Interests (a reordered tab), which renders
-        // from the in-memory For You cache; refresh it from the DB first so it
-        // never paints against a half-cleared cache.
+        // The Feed renders from the in-memory For You cache; refresh it from
+        // the DB first so it never paints against a half-cleared cache.
         if (route === FEED_ROUTE) await refreshForYouCacheFromDb();
         router.push(route);
     } catch (error) {

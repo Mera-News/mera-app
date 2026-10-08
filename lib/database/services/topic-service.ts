@@ -166,9 +166,9 @@ export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicMod
   });
 
   if (toCreate.length > 0) {
-    // METADATA PAIRING (v55). `fact.metadata.topics` is a SECOND topic list
-    // with its own reader — the facts screen renders it while the chat card
-    // renders this table, and `fetchTopicIdsLegacy` still retrieves from it.
+    // METADATA PAIRING (v55). `fact.metadata.topics` is a SECOND topic list:
+    // the fact page and the chat card render this table, but
+    // `fetchTopicIdsLegacy` still retrieves from the metadata copy.
     // Keeping the two in step HERE, rather than asking each caller to
     // remember, is what makes every minting path consistent: "Add topic", the
     // re-mint after a decline is lifted, and generate-more all land in this

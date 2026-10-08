@@ -66,7 +66,7 @@ export const STALE_MACHINE_AGE_MS = 2 * 60 * 60 * 1000;
  * does differently, injected by `lib/background/background-feed-sync.ts`.
  *
  * Passing this puts the machine in background mode: no keep-awake, no toasts,
- * no status publishes, no daily-limit notice stamp, no offline pause (a lost
+ * no status publishes, no offline pause (a lost
  * link fails the run instead of parking it), no foreground drain, and the
  * scoring step is the bounded background submit instead of `stepScore`.
  */
