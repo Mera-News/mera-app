@@ -73,7 +73,8 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
 
     const facts = useHubFacts();
     const places = useHubPlaces();
-    const { rows: sources } = useAdjustedSources();
+    const { publications, scopes } = useAdjustedSources();
+    const sourceCount = publications.length + scopes.length;
     const cleanup = useHubCleanup();
 
     return (
@@ -157,8 +158,8 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
                 <Row
                     testID="profile-row-sources"
                     title={t('you.profile.sources')}
-                    value={sources.length > 0 ? t('you.profile.adjusted', { count: sources.length }) : undefined}
-                    subtitle={sources.length > 0 ? undefined : t('you.profile.sourcesEmpty')}
+                    value={sourceCount > 0 ? t('you.profile.adjusted', { count: sourceCount }) : undefined}
+                    subtitle={sourceCount > 0 ? undefined : t('you.profile.sourcesEmpty')}
                     onPress={() => openYou('sources')}
                 />
                 <Row testID="profile-row-changes" title={t('you.profile.changes')} onPress={() => openYou('activity')} />

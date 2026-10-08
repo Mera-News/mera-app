@@ -8,12 +8,8 @@ import { useSubscriptions, type ChosenPublisher } from './use-subscriptions';
 
 /**
  * The whole "send them to the publisher, ask when they come back" machine,
- * extracted so the three surfaces that offer it share ONE copy.
- *
- * It was private to `SubscriptionsSection` while the settings screen was the
- * only place a subscribe link existed. It is now offered from the publication
- * history card and from both Sources publisher lists as well, and three
- * hand-rolled copies of open-page / detect-return / confirm / record is the
+ * plus the direct Subscribed tag, in ONE copy: the publication page uses it.
+ * Hand-rolled copies of open-page / detect-return / confirm / record are the
  * single biggest way this feature rots: the `background` versus `inactive`
  * distinction, the already-answered re-check, and the bad-URI fallback are
  * each one line and each silently wrong if a copy forgets them.

@@ -1,10 +1,12 @@
-// The "Adjusted" publications, one row per publication: the Sources screen's
-// list and the Profile hub's Sources card read the same rows, so the two can
-// never disagree about what is adjusted or how it is labelled.
+// Every publication the reader has tagged (More, Fewer, Muted, Subscribed),
+// one entry per publication, plus the country scopes: the Sources screen's
+// list and the Profile hub's Sources row read the same entries, so the two
+// can never disagree about what is tagged.
 
 import { useEffect, useMemo, useState } from 'react';
 
 import type PublicationPreferenceModel from '@/lib/database/models/PublicationPreference';
+import type UserPublicationSubscriptionModel from '@/lib/database/models/UserPublicationSubscription';
 import { resolvePrefLevel } from '@/lib/database/services/publication-pref-level';
 import {
     observeActive,
@@ -18,6 +20,8 @@ import {
     parseSourceNames,
 } from '@/lib/database/services/user-publication-subscription-service';
 
+/** A country scope ("More from Germany"): no publication page, so it keeps
+ *  its in-place row. */
 export interface AdjustedSource {
     readonly group: PrefRowGroup<PublicationPreferenceModel>;
     /** The row that stands for the group: its strongest setting. */
@@ -25,10 +29,24 @@ export interface AdjustedSource {
     readonly kind: PublicationPrefKind | null;
 }
 
+/** One tagged publication. Opens its publication page. */
+export interface TaggedPublication {
+    readonly key: string;
+    readonly displayName: string;
+    readonly publisherId: string | null;
+    /** Alpha-3, from a subscription; preference rows carry no country. */
+    readonly countryCode: string | null;
+    /** More, Fewer or Mute; null when only Subscribed. */
+    readonly kind: PublicationPrefKind | null;
+    readonly subscribed: boolean;
+}
+
+type SubscriptionLike = Pick<UserPublicationSubscriptionModel, 'publisherId' | 'publisherName' | 'countryCode' | 'sourceNamesJson'>;
+
 /**
- * The row that stands for a group: its strongest setting, so the row's chip
- * shows what the publication's preference IS. Mute and "fewer" win over
- * "more", the same rule the Sources glyph and the publication page read by.
+ * The row that stands for a group: its strongest setting, so the tag shows
+ * what the publication's preference IS. Mute and "fewer" win over "more",
+ * the same rule the publication page reads by.
  */
 export function representativeOf(group: PrefRowGroup<PublicationPreferenceModel>): PublicationPreferenceModel {
     const rows = group.rows;
@@ -39,23 +57,70 @@ export function representativeOf(group: PrefRowGroup<PublicationPreferenceModel>
         : rows.reduce((a, b) => (b.weight > a.weight ? b : a));
 }
 
-export function useAdjustedSources(): { readonly rows: readonly AdjustedSource[]; readonly isLoading: boolean } {
-    const [items, setItems] = useState<PublicationPreferenceModel[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    // Every SOURCE name covered by an active subscription, normalised.
-    const [subscribedSourceNames, setSubscribedSourceNames] = useState<Set<string>>(new Set());
-
-    // OBSERVED, not fetched once per `items` change: removing a subscription
-    // touches only `user_publication_subscriptions`, so a refetch keyed on the
-    // preference list left the publication hidden until a remount.
-    useEffect(() => {
-        const sub = observeActiveSubscriptions().subscribe((rows) => {
-            const names = new Set<string>();
-            for (const row of rows) {
-                for (const name of parseSourceNames(row.sourceNamesJson)) names.add(name);
-            }
-            setSubscribedSourceNames(names);
+/**
+ * Merge preference rows and subscriptions into one entry per publication.
+ * A subscription joins a preference group by publisher id, or by any of its
+ * SOURCE names (a source is often named unlike its publisher); otherwise it
+ * is its own entry. Publications sort by name; scopes keep their order.
+ */
+export function buildTaggedSources(
+    prefs: readonly PublicationPreferenceModel[],
+    subscriptions: readonly SubscriptionLike[],
+): { publications: TaggedPublication[]; scopes: AdjustedSource[] } {
+    const scopes: AdjustedSource[] = [];
+    const publications: TaggedPublication[] = [];
+    const unmatched = new Set(subscriptions);
+    for (const group of groupPrefRowsByPublication(prefs)) {
+        const pref = representativeOf(group);
+        const kind = weightToPrefKind(pref.weight);
+        if (pref.scopeKind != null) {
+            scopes.push({ group, pref, kind });
+            continue;
+        }
+        const names = new Set(group.names.map(normalizeSubscriptionName));
+        const sub = subscriptions.find(
+            (s) =>
+                (group.publisherId != null && s.publisherId === group.publisherId) ||
+                parseSourceNames(s.sourceNamesJson).some((n) => names.has(normalizeSubscriptionName(n))),
+        );
+        if (sub) unmatched.delete(sub);
+        publications.push({
+            key: group.key,
+            displayName: sub?.publisherName ?? pref.publicationName,
+            publisherId: sub?.publisherId ?? group.publisherId,
+            countryCode: sub?.countryCode ?? null,
+            kind,
+            subscribed: !!sub,
         });
+    }
+    for (const sub of unmatched) {
+        publications.push({
+            key: `subscription:${sub.publisherId}`,
+            displayName: sub.publisherName,
+            publisherId: sub.publisherId,
+            countryCode: sub.countryCode,
+            kind: null,
+            subscribed: true,
+        });
+    }
+    publications.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    return { publications, scopes };
+}
+
+export function useAdjustedSources(): {
+    readonly publications: readonly TaggedPublication[];
+    readonly scopes: readonly AdjustedSource[];
+    readonly isLoading: boolean;
+} {
+    const [items, setItems] = useState<PublicationPreferenceModel[]>([]);
+    const [subscriptions, setSubscriptions] = useState<UserPublicationSubscriptionModel[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // OBSERVED, both tables: removing a subscription touches only
+    // `user_publication_subscriptions`, so a refetch keyed on the preference
+    // list would leave the tag showing until a remount.
+    useEffect(() => {
+        const sub = observeActiveSubscriptions().subscribe(setSubscriptions);
         return () => sub.unsubscribe();
     }, []);
 
@@ -67,20 +132,6 @@ export function useAdjustedSources(): { readonly rows: readonly AdjustedSource[]
         return () => sub.unsubscribe();
     }, []);
 
-    const rows = useMemo(() => {
-        // Subscriptions have their own section. Matched against the
-        // subscription's SOURCE-name set, never its publisher name (a source is
-        // often named differently). Country scope rows are never a subscription.
-        const adjusted = items.filter(
-            (p) => p.scopeKind != null || !subscribedSourceNames.has(normalizeSubscriptionName(p.publicationName)),
-        );
-        // ONE row per publication: more/fewer is written under every source
-        // name of a publication, so raw rows would list it several times.
-        return groupPrefRowsByPublication(adjusted).map((group) => {
-            const pref = representativeOf(group);
-            return { group, pref, kind: weightToPrefKind(pref.weight) };
-        });
-    }, [items, subscribedSourceNames]);
-
-    return { rows, isLoading };
+    const { publications, scopes } = useMemo(() => buildTaggedSources(items, subscriptions), [items, subscriptions]);
+    return { publications, scopes, isLoading };
 }
