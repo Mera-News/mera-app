@@ -1327,8 +1327,6 @@
   "facts": {
     "screenTitle": "Hechos",
     "screenSubtitle": "Mera elige tus noticias a partir de estos. Cada uno muestra cuántos temas tiene. Toca uno para ver sus temas y sus historias.",
-    "moreInfluence": "Más influencia",
-    "lessInfluence": "Menos influencia",
     "addFact": "Añadir un hecho",
     "page": {
       "edit": "Editar",

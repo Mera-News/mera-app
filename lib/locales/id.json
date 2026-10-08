@@ -1327,8 +1327,6 @@
   "facts": {
     "screenTitle": "Fakta",
     "screenSubtitle": "Mera memilih berita Anda dari ini. Setiap item menunjukkan jumlah topiknya. Ketuk satu untuk melihat topik dan ceritanya.",
-    "moreInfluence": "Pengaruh lebih besar",
-    "lessInfluence": "Pengaruh lebih kecil",
     "addFact": "Tambah fakta",
     "page": {
       "edit": "Ubah",

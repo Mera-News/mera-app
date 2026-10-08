@@ -22,6 +22,7 @@ import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Pressable } from '@/components/ui/pressable';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { StepSlider } from '@/components/ui/step-slider';
 import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import { Text } from '@/components/ui/text';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
@@ -33,7 +34,7 @@ import { deleteTopicWithDecline, listDeclinedTopics, recordDecline, removeDeclin
 import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
 import { createTopics, normalizeTopicText, observeByFact, reactivate, retire } from '@/lib/database/services/topic-service';
 import { showDialog } from '@/lib/dialog';
-import { hapticLight, hapticSuccess } from '@/lib/haptics';
+import { hapticSuccess } from '@/lib/haptics';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
@@ -74,7 +75,6 @@ export interface FactPageProps {
 const INFLUENCE_STEP = 0.1;
 const INFLUENCE_MIN = 0.1;
 const INFLUENCE_MAX = 1.0;
-const round1 = (n: number) => Math.round(n * 10) / 10;
 const GENERATE_MORE_TOPIC_COUNT = 10;
 /** A typed Show less of phrase: a soft filter that never expires (owner Y4). */
 const SOFT_STRENGTH = 0.5;
@@ -206,18 +206,17 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
     // Optimistic mirror of the stored weight (null reads as 100%).
     const [influence, setInfluence] = useState(1);
     useEffect(() => {
-        setInfluence(round1(fact?.weight ?? 1));
+        // As stored: Mera may set any value, and the slider shows it where it is.
+        setInfluence(fact?.weight ?? 1);
     }, [fact?.id, fact?.weight]);
-    const nudge = useCallback(
-        async (direction: 1 | -1) => {
-            if (!fact) return;
-            const next = round1(Math.max(INFLUENCE_MIN, Math.min(INFLUENCE_MAX, influence + INFLUENCE_STEP * direction)));
-            if (next === influence) return;
+    const setWeight = useCallback(
+        async (next: number) => {
+            if (!fact || next === influence) return;
             const prev = influence;
             setInfluence(next);
-            void hapticLight();
             try {
-                await nudgeFactWeight(fact.id, INFLUENCE_STEP * direction, 'user');
+                // The same write as before (one change-log row), as a delta from the stored value.
+                await nudgeFactWeight(fact.id, next - (fact.weight ?? 1), 'user');
             } catch (err) {
                 setInfluence(prev);
                 logger.warn('[FactPage] influence nudge failed', { factId: fact.id, error: String(err) });
@@ -453,10 +452,21 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('facts.page.reach', { count: total })}</Text>
             </View>
             <Group>
-                <Row
-                    title={t('facts.page.howMuch')}
-                    trailing={<Stepper value={influence} onStep={nudge} />}
-                />
+                <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
+                    <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('facts.page.howMuch')}</Text>
+                    <StepSlider
+                        testID="fact-influence"
+                        value={influence}
+                        min={INFLUENCE_MIN}
+                        max={INFLUENCE_MAX}
+                        step={INFLUENCE_STEP}
+                        onChange={(v) => void setWeight(v)}
+                        formatValue={(v) => `${Math.round(v * 100)}%`}
+                        lowLabel={t('locations.weight.low')}
+                        highLabel={t('locations.weight.high')}
+                        accessibilityLabel={t('facts.page.howMuch')}
+                    />
+                </View>
             </Group>
             <SegmentedControl
                 testID="fact-tabs"
@@ -734,34 +744,6 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                     setAddText('');
                 }}
             />
-        </View>
-    );
-};
-
-/** − 100% + */
-const Stepper: React.FC<{ readonly value: number; readonly onStep: (direction: 1 | -1) => void }> = ({ value, onStep }) => {
-    const { t } = useTranslation();
-    const colors = useColors();
-    const button = (direction: 1 | -1, disabled: boolean) => (
-        <Pressable
-            testID={direction > 0 ? 'fact-influence-more' : 'fact-influence-less'}
-            onPress={() => onStep(direction)}
-            disabled={disabled}
-            accessibilityRole="button"
-            accessibilityLabel={direction > 0 ? t('facts.moreInfluence') : t('facts.lessInfluence')}
-            accessibilityState={{ disabled }}
-            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: disabled ? 0.35 : 1 }}
-        >
-            <MaterialIcons name={direction > 0 ? 'add' : 'remove'} size={20} color={colors.ink} />
-        </Pressable>
-    );
-    return (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: -8 }}>
-            {button(-1, value <= INFLUENCE_MIN + 1e-6)}
-            <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600', minWidth: 44, textAlign: 'center' }}>
-                {Math.round(value * 100)}%
-            </Text>
-            {button(1, value >= INFLUENCE_MAX - 1e-6)}
         </View>
     );
 };

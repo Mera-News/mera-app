@@ -1547,8 +1547,6 @@
   "facts": {
     "screenTitle": "Facts",
     "screenSubtitle": "Mera picks your news from these. Each shows how many topics it has. Tap one to see them and their stories.",
-    "moreInfluence": "More influence",
-    "lessInfluence": "Less influence",
     "addFact": "Add a fact",
     "page": {
       "edit": "Edit",

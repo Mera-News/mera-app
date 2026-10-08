@@ -1327,8 +1327,6 @@
   "facts": {
     "screenTitle": "ファクト",
     "screenSubtitle": "Meraはこれらからあなたのニュースを選びます。それぞれ、持っているトピックの数を示します。タップすると、トピックとそのストーリーが表示されます。",
-    "moreInfluence": "より大きな影響",
-    "lessInfluence": "より小さな影響",
     "addFact": "ファクトを追加",
     "page": {
       "edit": "編集",

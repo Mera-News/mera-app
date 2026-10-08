@@ -1327,8 +1327,6 @@
   "facts": {
     "screenTitle": "Fakten",
     "screenSubtitle": "Mera wählt deine Nachrichten anhand dieser Fakten aus. Jeder zeigt, wie viele Themen er hat. Tippe auf einen, um die Themen und ihre Geschichten zu sehen.",
-    "moreInfluence": "Mehr Einfluss",
-    "lessInfluence": "Weniger Einfluss",
     "addFact": "Fakt hinzufügen",
     "page": {
       "edit": "Bearbeiten",

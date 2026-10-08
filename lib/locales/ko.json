@@ -1327,8 +1327,6 @@
   "facts": {
     "screenTitle": "사실",
     "screenSubtitle": "Mera는 이것들을 바탕으로 뉴스를 고릅니다. 각 항목에 토픽 개수가 표시됩니다. 누르면 토픽과 스토리를 볼 수 있습니다.",
-    "moreInfluence": "더 큰 영향도",
-    "lessInfluence": "더 작은 영향도",
     "addFact": "사실 추가",
     "page": {
       "edit": "편집",

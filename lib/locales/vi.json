@@ -1328,8 +1328,6 @@
   "facts": {
     "screenTitle": "Dữ kiện",
     "screenSubtitle": "Mera chọn tin của bạn từ những dữ kiện này. Mỗi dữ kiện cho biết có bao nhiêu chủ đề. Chạm vào một dữ kiện để xem các chủ đề và câu chuyện của nó.",
-    "moreInfluence": "Ảnh hưởng nhiều hơn",
-    "lessInfluence": "Ảnh hưởng ít hơn",
     "addFact": "Thêm một dữ kiện",
     "page": {
       "edit": "Sửa",

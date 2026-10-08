@@ -1353,8 +1353,6 @@
   "facts": {
     "screenTitle": "Fakty",
     "screenSubtitle": "Mera wybiera Twoje wiadomości na podstawie tych. Każdy pokazuje, ile ma tematów. Stuknij, aby zobaczyć je i ich historie.",
-    "moreInfluence": "Większy wpływ",
-    "lessInfluence": "Mniejszy wpływ",
     "addFact": "Dodaj fakt",
     "page": {
       "edit": "Edytuj",

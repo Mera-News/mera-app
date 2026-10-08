@@ -1328,8 +1328,6 @@
   "facts": {
     "screenTitle": "事实",
     "screenSubtitle": "Mera 根据这些内容为你挑选新闻。每项都显示其包含的主题数量。点按一项即可查看其中的主题和报道。",
-    "moreInfluence": "更多影响",
-    "lessInfluence": "减少影响",
     "addFact": "添加事实",
     "page": {
       "edit": "编辑",

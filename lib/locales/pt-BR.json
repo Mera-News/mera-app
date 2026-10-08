@@ -1327,8 +1327,6 @@
   "facts": {
     "screenTitle": "Fatos",
     "screenSubtitle": "A Mera escolhe suas notícias a partir destes. Cada um mostra quantos temas tem. Toque em um para ver os temas e as histórias.",
-    "moreInfluence": "Mais influência",
-    "lessInfluence": "Menos influência",
     "addFact": "Adicionar um fato",
     "page": {
       "edit": "Editar",

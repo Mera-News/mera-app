@@ -1329,8 +1329,6 @@
   "facts": {
     "screenTitle": "Bilgilerin",
     "screenSubtitle": "Mera haberlerinizi bunlardan seçer. Her biri kaç konusu olduğunu gösterir. Konularını ve haberlerini görmek için birine dokunun.",
-    "moreInfluence": "Daha fazla etki",
-    "lessInfluence": "Daha az etki",
     "addFact": "Bilgi ekle",
     "page": {
       "edit": "Düzenle",

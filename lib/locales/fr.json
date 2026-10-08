@@ -1333,8 +1333,6 @@
   "facts": {
     "screenTitle": "Faits",
     "screenSubtitle": "Mera choisit vos actualités à partir de ceux-ci. Chacun indique son nombre de sujets. Touchez-en un pour voir ses sujets et leurs histoires.",
-    "moreInfluence": "Plus d'influence",
-    "lessInfluence": "Moins d'influence",
     "addFact": "Ajouter un fait",
     "page": {
       "edit": "Modifier",
