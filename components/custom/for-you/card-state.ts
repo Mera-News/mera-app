@@ -44,3 +44,16 @@ export function cardState(i: CardStateInput): CardState | null {
           : null;
   return zero && i.offline ? 'offline' : zero;
 }
+
+/** The lead row's Mera mark, by the sentence block's height (owner: as big
+ *  as the text, a few pt shy of it). MeraLogo's `size` IS the drawn glyph's
+ *  height (its viewBox is cut to the hexagon and stroke), so the glyph is
+ *  the block less MARK_INSET, clamped so a one-line row never grows for the
+ *  mark, rounded to 0.5pt. */
+export const MARK_MIN = 26;
+export const MARK_MAX = 56;
+const MARK_INSET = 4;
+export function markSizeFor(textHeight: number): number {
+  const s = Math.round((textHeight - MARK_INSET) * 2) / 2;
+  return Math.min(MARK_MAX, Math.max(MARK_MIN, s));
+}

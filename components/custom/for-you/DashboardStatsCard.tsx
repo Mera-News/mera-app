@@ -29,12 +29,12 @@ import { useIsConnected } from '@/lib/stores/network-store';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { formatCount } from '@/lib/utils/format-count';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { setStatusCardExpanded, statsCardShown, useFeedStatusCard } from './feed-status-card';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { ShimmerText } from '@/components/ui/shimmer';
 import { Text } from '@/components/ui/text';
 import { useColors } from '@/lib/theme/tokens';
@@ -42,7 +42,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from '
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, type CardState } from './card-state';
+import { cardState, MARK_MAX, markSizeFor, type CardState } from './card-state';
 import { useForYouDailyLimitResetAt, useForYouScoringError } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 
@@ -52,8 +52,12 @@ const HIDDEN = {
     importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-/** The Mera mark at the lead row's start: 1.3x the old 20pt (owner). */
-const MARK_SIZE = 26;
+/** The mark's column: as wide as the largest mark (MeraLogo draws 514 wide
+ *  per 732 tall), FIXED, so the mark's size never changes the sentence's
+ *  width or wrap: the text's height sizes the mark and nothing loops back. */
+const MARK_COLUMN = Math.ceil((MARK_MAX * 514) / 732);
+/** The glyph almost touches the text (owner). */
+const MARK_GAP = 4;
 
 export interface DashboardStatsCardProps {
     readonly testID?: string;
@@ -138,11 +142,11 @@ function ExpandingDetails({ open, children }: { open: boolean; children: React.R
 /** The Mera mark, always at the sentence's start (owner): moving while a run
  *  is in flight, a still frame when idle. MeraLogo itself holds still in Lite,
  *  under Reduce Motion and off screen. */
-export function StatusMark({ working }: { working: boolean }) {
+export function StatusMark({ working, size }: { working: boolean; size: number }) {
     const colors = useColors();
     return (
-        <View {...HIDDEN} style={styles.mark} testID="dashboard-stats-card-mark">
-            <MeraLogo size={MARK_SIZE} color={colors.ink} animated={working} />
+        <View {...HIDDEN} style={styles.markColumn} testID="dashboard-stats-card-mark">
+            <MeraLogo size={size} color={colors.ink} animated={working} />
         </View>
     );
 }
@@ -176,6 +180,12 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     const processing = mode === 'processing';
 
     const colors = useColors();
+    // The sentence block's height sizes the mark (markSizeFor).
+    const [textHeight, setTextHeight] = useState(0);
+    const onTextLayout = useCallback((e: LayoutChangeEvent) => {
+        const h = Math.round(e.nativeEvent.layout.height);
+        setTextHeight((prev) => (prev === h ? prev : h));
+    }, []);
 
     const toggle = useCallback(() => setStatusCardExpanded(!useFeedStatusCard.getState().expanded), []);
 
@@ -207,9 +217,9 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                 {/* The day's counts sentence leads (owner), wrapping
                                     beside the ⌄; the status line only when there
                                     is nothing to count. */}
-                                <HStack className="items-center" space="sm">
-                                    <StatusMark working={processing} />
-                                    <View style={{ flex: 1, minWidth: 0 }}>
+                                <HStack className="items-center">
+                                    <StatusMark working={processing} size={markSizeFor(textHeight)} />
+                                    <View style={styles.sentence} onLayout={onTextLayout}>
                                         {zeroText ? (
                                             <Text
                                                 size="sm"
@@ -229,6 +239,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                         name={expanded ? 'expand-less' : 'expand-more'}
                                         size={20}
                                         color={colors.ink}
+                                        style={styles.chevron}
                                         {...HIDDEN}
                                     />
                                 </HStack>
@@ -255,12 +266,16 @@ const styles = StyleSheet.create({
     // fontSize with its own lineHeight (the ui Text clipping trap).
     line: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
     detailsClip: { overflow: 'hidden' },
-    // The lead row centres mark, sentence and ⌄ on ONE line: the sentence
-    // block's centre (level with the 2nd of 3 lines, owner).
     // The lead row's press, 9pt into the card's 12pt padding above and below:
     // a one-line row (26pt) is still a 44pt target.
     leadPress: { ...StyleSheet.absoluteFillObject, top: -9, bottom: -9 },
-    mark: { width: MARK_SIZE, height: MARK_SIZE, alignItems: 'center', justifyContent: 'center' },
+    // The lead row centres mark, sentence and ⌄ on ONE line: the sentence
+    // block's centre (level with the 2nd of 3 lines, owner). The mark sits
+    // at its column's END, so its glyph is MARK_GAP from the text whatever
+    // its size.
+    markColumn: { width: MARK_COLUMN, marginEnd: MARK_GAP, alignItems: 'flex-end', justifyContent: 'center' },
+    sentence: { flex: 1, minWidth: 0 },
+    chevron: { marginStart: 8 },
     detailsBody: { position: 'absolute', top: 0, left: 0, right: 0 },
 });
 

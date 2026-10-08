@@ -1,4 +1,4 @@
-import { cardState, type CardStateInput } from '../card-state';
+import { cardState, MARK_MAX, MARK_MIN, markSizeFor, type CardStateInput } from '../card-state';
 
 const base: CardStateInput = {
   mode: 'idle',
@@ -40,5 +40,18 @@ describe('cardState', () => {
   it('blames the connection when offline', () => {
     expect(cardState({ ...base, offline: true, articleCount: 0 })).toBe('offline');
     expect(cardState({ ...base, offline: true })).toBeNull();
+  });
+});
+
+describe('markSizeFor', () => {
+  it('fills the sentence block, a few pt shy, in 0.5pt steps', () => {
+    expect(markSizeFor(40)).toBe(36);
+    expect(markSizeFor(40.3)).toBe(36.5);
+  });
+  it('never shrinks below the one-line size nor grows past the column', () => {
+    expect(markSizeFor(0)).toBe(MARK_MIN);
+    expect(markSizeFor(20)).toBe(MARK_MIN);
+    expect(markSizeFor(60)).toBe(MARK_MAX);
+    expect(markSizeFor(200)).toBe(MARK_MAX);
   });
 });
