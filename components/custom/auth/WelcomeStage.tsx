@@ -79,7 +79,7 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
         [notify, t],
     );
     const onResult = useCallback((r: LanguageSwitchResult) => showMissing(r.code), [showMissing]);
-    const { requestSwitch, busy, pendingCode, cancel } = useLanguageSwitch({ preview: false, immediate: true, onResult });
+    const { requestSwitch, busy, pendingCode, cancel } = useLanguageSwitch({ preview: false, onResult });
 
     // The startup probe for the preselected language (never a second probe).
     const blocked = useTranslationBlocked(appLanguage) != null;

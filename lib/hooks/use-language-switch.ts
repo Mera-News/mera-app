@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { BackHandler, Platform } from 'react-native';
+import { BackHandler } from 'react-native';
 
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import {
@@ -14,42 +14,33 @@ import logger from '@/lib/logger';
  * The language-switch state machine, shared by Settings > Language and the
  * first-launch list (`components/custom/auth/WelcomeStage.tsx`).
  *
- * WHY A SHARED HOOK AND NOT TWO COPIES. This is a five-state machine with a
- * cancellation token, a modal-dismissal handshake, a navigation lock and a
- * revert path, and an earlier pre-auth picker had a copy of the *previous*
- * version of this logic that was one line different from the Settings one.
- * That line was the whole bug: both fired a native translation call while an
- * RN `<Modal presentationStyle="pageSheet">` was still animating away. Two
- * copies of this cannot be allowed to drift again.
+ * WHY A SHARED HOOK AND NOT TWO COPIES. This is a state machine with a
+ * cancellation token, a navigation lock and a revert path, and an earlier
+ * pre-auth picker had a copy of an older version that was one line different;
+ * that line was a native crash. Two copies of this cannot be allowed to drift.
  *
- * THE SEQUENCE, AND WHY IT IS THIS SEQUENCE:
+ * NO PICKER MODAL, ON PURPOSE. Both callers pick from an INLINE list
+ * (auth/LanguageSelector), so the probe runs at once. The probe presents
+ * Apple's system download sheet from inside the native call, and presenting it
+ * while a view controller is mid-dismissal crashed the app on every language
+ * switch. A caller that puts the list in a modal again must wait for the
+ * modal's `onDismiss` before calling `requestSwitch`, never a timer guess.
  *
- *  1. `requestSwitch(code)` — remembers the code. The screen closes its picker
- *     modal. NOTHING native happens yet.
- *  2. `notifyPickerDismissed()` — the screen calls this from the modal's
- *     `onDismiss`, i.e. once UIKit says the dismissal transition has actually
- *     finished. Only now do we probe.
+ * THE SEQUENCE:
  *
- *     This handshake is the fix for a hard native crash: the probe presents
- *     Apple's system download sheet from inside the native call, and presenting
- *     it while a view controller is mid-dismissal crashed the app on every
- *     language switch (reported on device, no JS logs — it is a native fault).
- *     Never collapse steps 1 and 2 into one, and never replace `onDismiss`
- *     with a `setTimeout` guess.
- *
- *  3. The probe runs. The screen shows a spinner, copy asking the user to
- *     stay put while the pack downloads, and a cancel button.
- *  4. Success → commit. Anything else → the user goes back to the language
+ *  1. `requestSwitch(code)`: previews the language (unless `preview: false`)
+ *     and starts the probe. The screen shows its progress and a cancel.
+ *  2. Success → commit. Anything else → the user goes back to the language
  *     they were already using.
  *
- * THE UI LANGUAGE MOVES AT STEP 1, NOT STEP 4. The app's own strings are
+ * THE UI LANGUAGE MOVES AT STEP 1, NOT STEP 2. The app's own strings are
  * bundled and need no download, so making them wait on a translation pack got
  * it exactly backwards: the instruction that unblocks the wait ("tap the
  * download icon") was rendered in a language the person waiting may not read.
  * So `requestSwitch` previews the target language immediately and the progress
  * card comes up in it.
  *
- * That makes step 4 a REAL revert rather than a no-op, on all three losing
+ * That makes step 2 a REAL revert rather than a no-op, on all three losing
  * endings — failure, timeout, and the user backing out. `finish()` owns it,
  * being the one teardown every exit already goes through.
  *
@@ -117,8 +108,6 @@ export function useCurrentProbe(): Probe | null {
 
 export type LanguageSwitchPhase =
     | 'idle'
-    /** Code chosen; waiting for the picker modal to finish dismissing. */
-    | 'awaiting-dismiss'
     /** Native probe in flight. */
     | 'probing';
 
@@ -134,14 +123,6 @@ export interface LanguageSwitchResult {
     readonly fellBackToEnglish: boolean;
 }
 
-/**
- * Safety net for step 2. RN's `Modal.onDismiss` is iOS-only and, in practice,
- * reliable — but a phase that only a callback can leave is a trap if that
- * callback ever fails to fire, and `busy` disables the back button. So the
- * handshake self-heals.
- */
-const DISMISS_HANDSHAKE_FALLBACK_MS = 1200;
-
 interface UseLanguageSwitchOptions {
     /** Fired after the new language has been applied. */
     readonly onCommitted?: (code: string, previousCode: string) => void;
@@ -153,12 +134,6 @@ interface UseLanguageSwitchOptions {
      * language is ready (FinalJourney "In your language").
      */
     readonly preview?: boolean;
-    /**
-     * Probe at once, never waiting for a picker modal to dismiss. For a caller
-     * with no modal (the first-launch inline list), which would otherwise sit
-     * on the 1.2 s fallback timer on iOS.
-     */
-    readonly immediate?: boolean;
 }
 
 export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
@@ -174,12 +149,6 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
     // must not commit a language the user has already backed out of, nor
     // re-disable navigation on a screen they have left.
     const generationRef = useRef(0);
-    const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // Mirrors `phase` for synchronous reads. The transitions below fire a
-    // native call, which must never live inside a `setState` updater — React
-    // may invoke an updater more than once, and this one must run exactly
-    // once (twice would be two concurrent sheets, the original bug).
-    const phaseRef = useRef<LanguageSwitchPhase>('idle');
     // True between previewing a target language and undoing (or committing)
     // that preview. Guards the revert so it only ever fires against a preview
     // this hook actually made.
@@ -191,13 +160,6 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
     optionsRef.current = options;
 
     const busy = phase !== 'idle';
-
-    const clearFallbackTimer = useCallback(() => {
-        if (fallbackTimerRef.current) {
-            clearTimeout(fallbackTimerRef.current);
-            fallbackTimerRef.current = null;
-        }
-    }, []);
 
     /**
      * Undo the preview by re-applying whatever the store says. Correct on every
@@ -224,12 +186,10 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
      *  on each individual ending. */
     const finish = useCallback(() => {
         generationRef.current += 1;
-        clearFallbackTimer();
         revertPreview();
-        phaseRef.current = 'idle';
         setPhase('idle');
         setPendingCode(null);
-    }, [clearFallbackTimer, revertPreview]);
+    }, [revertPreview]);
 
     const runProbe = useCallback(
         async (code: string, generation: number) => {
@@ -285,7 +245,9 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
         [finish, setAppLanguage],
     );
 
-    /** Step 1. Remember the choice; the screen now closes its picker. */
+    /** Step 1. Preview the language and probe it. The native call starts
+     *  here, outside any `setState` updater: React may run an updater twice,
+     *  and two calls would be two concurrent sheets. */
     const requestSwitch = useCallback(
         (code: string) => {
             if (busy) return;
@@ -309,42 +271,11 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
                 previewLanguage(uiLocale);
             }
 
-            // English needs no probe (it is the source language) and Android's
-            // ML Kit presents no system UI at all, so neither has a dismissal
-            // race to wait out. Commit straight away.
-            if (code === 'en' || Platform.OS !== 'ios' || optionsRef.current.immediate) {
-                phaseRef.current = 'probing';
-                setPhase('probing');
-                void runProbe(code, generation);
-                return;
-            }
-
-            phaseRef.current = 'awaiting-dismiss';
-            setPhase('awaiting-dismiss');
-            clearFallbackTimer();
-            fallbackTimerRef.current = setTimeout(() => {
-                fallbackTimerRef.current = null;
-                if (phaseRef.current !== 'awaiting-dismiss') return;
-                if (generationRef.current !== generation) return;
-                phaseRef.current = 'probing';
-                setPhase('probing');
-                void runProbe(code, generation);
-            }, DISMISS_HANDSHAKE_FALLBACK_MS);
+            setPhase('probing');
+            void runProbe(code, generation);
         },
-        [appLanguage, busy, clearFallbackTimer, runProbe],
+        [appLanguage, busy, runProbe],
     );
-
-    /** Step 2. Call from the picker modal's `onDismiss`, never from a timer. */
-    const notifyPickerDismissed = useCallback(() => {
-        clearFallbackTimer();
-        const code = pendingCode;
-        if (!code) return;
-        if (phaseRef.current !== 'awaiting-dismiss') return;
-        const generation = generationRef.current;
-        phaseRef.current = 'probing';
-        setPhase('probing');
-        void runProbe(code, generation);
-    }, [clearFallbackTimer, pendingCode, runProbe]);
 
     /**
      * The escape hatch, and the only one while a probe runs. Deliberately
@@ -381,7 +312,6 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
     useEffect(
         () => () => {
             generationRef.current += 1;
-            if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
             revertPreview();
         },
         [revertPreview],
@@ -394,7 +324,6 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
         /** True while the switch is in progress: lock navigation on this. */
         busy,
         requestSwitch,
-        notifyPickerDismissed,
         cancel,
     };
 }

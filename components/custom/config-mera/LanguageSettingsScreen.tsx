@@ -87,12 +87,11 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
         [t],
     );
 
-    // The selector is inline (no picker modal to wait for), so the probe runs
-    // at once. The UI previews the new language while it is checked.
+    // The selector is inline, so the probe runs at once. The UI previews the
+    // new language while it is checked.
     const { pendingCode, busy, requestSwitch, cancel } = useLanguageSwitch({
         onCommitted: handleCommitted,
         onResult: handleResult,
-        immediate: true,
     });
 
     // The first-launch download notice and its sheet guards: shown only while
