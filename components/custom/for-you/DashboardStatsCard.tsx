@@ -146,12 +146,12 @@ export function StatusMark({ working, size, tone }: { working: boolean; size: nu
 
 /**
  * The Feed list's first item: the card when it shows (`statsCardShown`), else
- * null. `emptyWants` and `hasRows` are the list's own state, so the card is
+ * null. `empty` and `hasRows` are the list's own state, so the card is
  * there the moment the page slides in, not after it lands.
  */
-export function useStatsCardItem(emptyWants: boolean, hasRows: boolean): React.ReactElement | null {
+export function useStatsCardItem(empty: boolean, hasRows: boolean): React.ReactElement | null {
     const limited = useFeedStatusMode() === 'limited';
-    const shown = statsCardShown({ limited, emptyWants, hasRows });
+    const shown = statsCardShown({ limited, empty, hasRows });
     // One element per state, so the list header is not re-rendered per render.
     return useMemo(() => (shown ? <DashboardStatsCard testID="feed-status-card" /> : null), [shown]);
 }
@@ -163,7 +163,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     const mode = useFeedStatusMode();
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const expanded = useFeedStatusCard((s) => s.expanded);
-    // Not `emptyWants` (an empty Feed past a run, exactly where a zero needs
+    // Not the list's emptiness (an empty Feed past a run, exactly where a zero needs
     // explaining): with no facts at all the no-facts card owns the Feed.
     const noFacts = useHasFacts() === false;
     const offline = useIsConnected() === false;

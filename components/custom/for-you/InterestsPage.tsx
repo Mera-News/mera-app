@@ -41,7 +41,6 @@ import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, View } from 'react-native';
-import { setEmptyWantsCard } from '@/components/custom/for-you/feed-status-card';
 import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
@@ -133,9 +132,9 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
 
   const { refreshing, onRefresh } = useFeedSyncRefresh(header.reveal);
   const isFeedProcessing = useIsFeedProcessing();
-  // An empty Sectioned view past its first run opens the counts card, the
-  // same branch that shows the shortcuts. Without `active`, so the card is
-  // already there as the page slides in.
+  // An empty Sectioned view past its first run still leads with the counts
+  // card (collapsed), the same branch that shows the shortcuts. Without
+  // `active`, so the card is already there as the page slides in.
   const hasStories = rows.some((r) => r.groups.length > 0);
   const emptyHere =
     !hasStories &&
@@ -144,12 +143,8 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
     !errorMessage &&
     snapshots.facts.size > 0 &&
     lastProcessingRunFinishedAt !== null;
-  const emptyWantsCard = active && emptyHere;
   // The list's first item.
   const cardItem = useStatsCardItem(emptyHere, hasStories);
-  useEffect(() => {
-    if (active) setEmptyWantsCard(emptyWantsCard);
-  }, [active, emptyWantsCard]);
 
   // ── Nothing to show yet ──
   let empty: React.ReactElement | null;
