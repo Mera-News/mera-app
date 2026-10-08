@@ -44,9 +44,9 @@ describe('cardState', () => {
 });
 
 describe('markSizeFor', () => {
-  it('fills the sentence block, a few pt shy, in 0.5pt steps', () => {
-    expect(markSizeFor(40)).toBe(36);
-    expect(markSizeFor(40.3)).toBe(36.5);
+  it('is the sentence block less 4pt, at 90%, in 0.5pt steps', () => {
+    expect(markSizeFor(40)).toBe(32.5);
+    expect(markSizeFor(44)).toBe(36);
   });
   it('never shrinks below the one-line size nor grows past the column', () => {
     expect(markSizeFor(0)).toBe(MARK_MIN);

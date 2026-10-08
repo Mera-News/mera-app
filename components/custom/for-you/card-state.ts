@@ -53,15 +53,15 @@ export function markTone(state: CardState | null): MarkTone {
   return state === 'fetched' || state === 'limited' || state === 'analysed' ? 'alert' : 'normal';
 }
 
-/** The lead row's Mera mark, by the sentence block's height (owner: as big
- *  as the text, a few pt shy of it). MeraLogo's `size` IS the drawn glyph's
- *  height (its viewBox is cut to the hexagon and stroke), so the glyph is
- *  the block less MARK_INSET, clamped so a one-line row never grows for the
- *  mark, rounded to 0.5pt. */
-export const MARK_MIN = 26;
-export const MARK_MAX = 56;
+/** The lead row's Mera mark, by the sentence block's height (owner: about
+ *  as big as the text). MeraLogo's `size` IS the drawn glyph's height (its
+ *  viewBox is cut to the hexagon and stroke), so the glyph is the block less
+ *  MARK_INSET, at MARK_SCALE (owner: 10% smaller), clamped, rounded to 0.5pt. */
 const MARK_INSET = 4;
+const MARK_SCALE = 0.9;
+export const MARK_MIN = 23.5;
+export const MARK_MAX = 50.5;
 export function markSizeFor(textHeight: number): number {
-  const s = Math.round((textHeight - MARK_INSET) * 2) / 2;
+  const s = Math.round((textHeight - MARK_INSET) * MARK_SCALE * 2) / 2;
   return Math.min(MARK_MAX, Math.max(MARK_MIN, s));
 }

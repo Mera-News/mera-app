@@ -25,12 +25,7 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { I18nManager, StyleSheet, View } from 'react-native';
-
-const GLYPH_HIDDEN = {
-  accessible: false,
-  accessibilityElementsHidden: true,
-  importantForAccessibility: 'no-hide-descendants',
-} as const;
+import CardRow, { CARD_RADIUS } from './CardRow';
 
 /** Per-process caption choice: one random index per pool, never stored. */
 const picks = new Map<string, number>();
@@ -167,28 +162,27 @@ const FeedShortcuts: React.FC<{ readonly reading: boolean }> = ({ reading }) => 
       ) : null}
       {rows.map((r) => (
         <View key={r.page} style={styles.row} testID={`feed-shortcut-${r.page}-frame`}>
-          <View style={styles.visual} pointerEvents="none" {...GLYPH_HIDDEN}>
-            <View style={styles.tile}>
-              {r.flag ? (
-                <Text style={styles.flag}>{r.flag}</Text>
-              ) : (
-                <MaterialIcons name={r.icon ?? 'public'} size={22} color={c.accent} />
-              )}
-            </View>
-            <View style={styles.texts}>
-              <Text size="xs" bold style={{ color: c.accentText }} numberOfLines={1}>
-                {r.title}
-              </Text>
-              <Text size="md" className="text-ink" numberOfLines={2}>
-                {r.caption}
-              </Text>
-            </View>
-            <MaterialIcons
-              name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'}
-              size={22}
-              color={c.ink2}
-            />
-          </View>
+          <CardRow
+            icon={
+              <View style={styles.tile}>
+                {r.flag ? (
+                  <Text style={styles.flag}>{r.flag}</Text>
+                ) : (
+                  <MaterialIcons name={r.icon ?? 'public'} size={22} color={c.accent} />
+                )}
+              </View>
+            }
+            chevron={
+              <MaterialIcons name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} size={22} color={c.ink2} />
+            }
+          >
+            <Text size="xs" bold style={{ color: c.accentText }} numberOfLines={1}>
+              {r.title}
+            </Text>
+            <Text size="md" className="text-ink" numberOfLines={2}>
+              {r.caption}
+            </Text>
+          </CardRow>
           <Pressable
             onPress={() => (r.page === 'tutorials' ? router.push('/tutorials') : navigateToPage(r.page))}
             style={StyleSheet.absoluteFill}
@@ -208,13 +202,12 @@ const useStyles = themedStyles((c) => StyleSheet.create({
   header: { color: c.ink2 },
   row: {
     minHeight: 64,
-    borderRadius: 16,
+    borderRadius: CARD_RADIUS,
     borderWidth: 1,
     borderColor: c.line,
     backgroundColor: c.surface,
     justifyContent: 'center',
   },
-  visual: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
   tile: {
     width: 40,
     height: 40,
@@ -224,7 +217,6 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     justifyContent: 'center',
   },
   flag: { fontSize: 20, lineHeight: 24 },
-  texts: { flex: 1, gap: 2 },
 }));
 
 export default FeedShortcuts;

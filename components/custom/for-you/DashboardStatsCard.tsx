@@ -20,7 +20,6 @@
 // No announcement here: FeedScreen announces the capped and error states.
 
 import { GlassPanel } from '@/components/custom/GlassSurface';
-import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
@@ -42,22 +41,13 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from '
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, MARK_MAX, markSizeFor, markTone, type CardState, type MarkTone } from './card-state';
+import { cardState, markSizeFor, markTone, type CardState, type MarkTone } from './card-state';
+import CardRow, { CARD_RADIUS, CARD_ROW_PAD } from '@/components/custom/feed/CardRow';
 import { useForYouDailyLimitResetAt, useForYouScoringError } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 
-const HIDDEN = {
-    accessible: false,
-    accessibilityElementsHidden: true,
-    importantForAccessibility: 'no-hide-descendants',
-} as const;
 
-/** The mark's column: as wide as the largest mark (MeraLogo draws 514 wide
- *  per 732 tall), FIXED, so the mark's size never changes the sentence's
- *  width or wrap: the text's height sizes the mark and nothing loops back. */
-const MARK_COLUMN = Math.ceil((MARK_MAX * 514) / 732);
-/** The glyph almost touches the text (owner). */
-const MARK_GAP = 4;
+
 
 export interface DashboardStatsCardProps {
     readonly testID?: string;
@@ -144,8 +134,11 @@ function ExpandingDetails({ open, children }: { open: boolean; children: React.R
  *  under Reduce Motion and off screen. */
 export function StatusMark({ working, size, tone }: { working: boolean; size: number; tone: MarkTone }) {
     const colors = useColors();
+    // MeraLogo centres its glyph in a square box, so centring the box in the
+    // row's icon slot centres the hexagon on the slot (the shortcut tile's
+    // centre); a mark taller than the 40pt slot overflows it, unclipped.
     return (
-        <View {...HIDDEN} style={styles.markColumn} testID="dashboard-stats-card-mark">
+        <View testID="dashboard-stats-card-mark">
             <MeraLogo size={size} color={tone === 'alert' ? colors.accentMark : colors.ink} animated={working} />
         </View>
     );
@@ -203,23 +196,26 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
 
     return (
         <View className="mb-2" testID={`${testID}-anchor`}>
-            <GlassPanel
-                radius={12}
-                contentClassName="px-4 py-3"
-                testID={testID}
-            >
+            {/* The shortcut cards' geometry (CardRow; owner: the cards look
+                identical): their radius, their 1pt edge and the same row, so
+                text, icon centre and chevron line up with the shortcuts. */}
+            <GlassPanel radius={CARD_RADIUS} testID={testID}>
                     <>
-                        {/* A hidden visual under a CHILDLESS labelled button: a
-                            glyph inside a button surfaces on iOS as its own
-                            StaticText (captured class, ux2). */}
+                        {/* A hidden visual (CardRow) under a CHILDLESS labelled
+                            button: a glyph inside a button surfaces on iOS as
+                            its own StaticText (captured class, ux2). */}
                         <View>
-                            <View pointerEvents="none" {...HIDDEN}>
-                                {/* The day's counts sentence leads (owner), wrapping
-                                    beside the ⌄; the status line only when there
-                                    is nothing to count. */}
-                                <HStack className="items-center">
-                                    <StatusMark working={processing} size={markSizeFor(textHeight)} tone={markTone(state)} />
-                                    <View style={styles.sentence} onLayout={onTextLayout}>
+                                <CardRow
+                                    icon={<StatusMark working={processing} size={markSizeFor(textHeight)} tone={markTone(state)} />}
+                                    chevron={
+                                        <MaterialIcons
+                                            name={expanded ? 'expand-less' : 'expand-more'}
+                                            size={22}
+                                            color={colors.ink}
+                                        />
+                                    }
+                                    onTextLayout={onTextLayout}
+                                >
                                         {zeroText ? (
                                             <Text
                                                 size="sm"
@@ -234,16 +230,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                         ) : (
                                             <StatusLine label={stateLabel} syncing={processing} />
                                         )}
-                                    </View>
-                                    <MaterialIcons
-                                        name={expanded ? 'expand-less' : 'expand-more'}
-                                        size={20}
-                                        color={colors.ink}
-                                        style={styles.chevron}
-                                        {...HIDDEN}
-                                    />
-                                </HStack>
-                            </View>
+                                </CardRow>
                             <Pressable
                                 onPress={toggle}
                                 accessibilityRole="button"
@@ -252,7 +239,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                     expanded ? 'feedStatus.collapseA11y' : 'feedStatus.expandA11y',
                                 )}`}
                                 testID={`${testID}-toggle`}
-                                style={styles.leadPress}
+                                style={StyleSheet.absoluteFill}
                             />
                         </View>
                         {details}
@@ -266,17 +253,16 @@ const styles = StyleSheet.create({
     // fontSize with its own lineHeight (the ui Text clipping trap).
     line: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
     detailsClip: { overflow: 'hidden' },
-    // The lead row's press, 9pt into the card's 12pt padding above and below:
-    // a one-line row (26pt) is still a 44pt target.
-    leadPress: { ...StyleSheet.absoluteFillObject, top: -9, bottom: -9 },
-    // The lead row centres mark, sentence and ⌄ on ONE line: the sentence
-    // block's centre (level with the 2nd of 3 lines, owner). The mark sits
-    // at its column's END, so its glyph is MARK_GAP from the text whatever
-    // its size.
-    markColumn: { width: MARK_COLUMN, marginEnd: MARK_GAP, alignItems: 'flex-end', justifyContent: 'center' },
-    sentence: { flex: 1, minWidth: 0 },
-    chevron: { marginStart: 8 },
-    detailsBody: { position: 'absolute', top: 0, left: 0, right: 0 },
+    // The details keep the card's padding: the row's 12pt at the sides and
+    // below (the row above brings its own).
+    detailsBody: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        paddingHorizontal: CARD_ROW_PAD,
+        paddingBottom: CARD_ROW_PAD,
+    },
 });
 
 export default DashboardStatsCard;
