@@ -634,7 +634,8 @@
     "stop": "Parar",
     "stopped": "Parado",
     "replyLeakFallback": "Entendi. Quer acrescentar mais alguma coisa?",
-    "replyProcessFallback": "Desculpe, não consegui responder a isso. Pode dizer de novo?"
+    "replyProcessFallback": "Desculpe, não consegui responder a isso. Pode dizer de novo?",
+    "cloudOnlyNotice": "Isso precisa da “Nuvem privada” da Mera. Você pode trocar em Configurações, em Mera Protocol."
   },
   "personaChat": {
     "introMessage": "Oi! Sou a Mera, sua assistente pessoal de notícias.\n\nPara encontrar notícias que realmente importam para você, preciso saber um pouco sobre você. Onde você mora, o que faz, hobbies que segue, ações que acompanha, onde sua família mora. Compartilhe o quanto quiser ou tão pouco quanto se sinta confortável.\n\nSe isso desperta sua desconfiança, seu instinto é bom. Não é sábio confiar dados pessoais a uma empresa de aplicativos. Mera foi construída diferente: tudo que você me diz é armazenado no seu dispositivo, e não nos nossos servidores. Pergunte-me como funciona, ou diga 'ajude-me a configurar' e começamos."

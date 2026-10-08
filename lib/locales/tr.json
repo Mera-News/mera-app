@@ -634,7 +634,8 @@
     "stop": "Durdur",
     "stopped": "Durduruldu",
     "replyLeakFallback": "Anladım. Eklemek istediğiniz başka bir şey var mı?",
-    "replyProcessFallback": "Özür dilerim, buna yetişemedim. Bir daha söyleyebilir misiniz?"
+    "replyProcessFallback": "Özür dilerim, buna yetişemedim. Bir daha söyleyebilir misiniz?",
+    "cloudOnlyNotice": "Bunun için Mera'nın “Özel bulut” modu gerekir. Ayarlar'da, Mera Protocol bölümünden geçiş yapılabilir."
   },
   "personaChat": {
     "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nBu seni biraz tereddüte düşürüyorsa, içgüdün doğru. Kişisel verilerini bir uygulama şirketine teslim etmek akıllıca değil. Mera farklı tasarlandı: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana bunun nasıl çalıştığını sorabilirsin ya da 'kurulumda bana yardım et' de, başlayalım."
