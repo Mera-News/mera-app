@@ -123,9 +123,10 @@ export const COLORS: Record<ThemeMode, ThemeColors> = {
         modalBase: '#FFFFFF',
         panel: '#FFFFFF',
         panelBorder: 'rgba(18,17,19,0.14)',
-        // FinalLightSettings carries the dark values for these two; P12 tunes.
+        // FinalLightSettings carries the dark value for night; P12 tunes.
         night: 'rgba(120,140,200,0.35)',
-        glass: 'rgba(40,39,42,0.82)',
+        // The light boards' pills and chips: white at 82%, edged by trackBorder.
+        glass: 'rgba(255,255,255,0.82)',
         edge: 'rgba(18,17,19,0.3)',
         // The light boards draw no warning or info colour: #9A6200 is the
         // boards' own dark amber; #2563A8 is a derived blue at 4.5:1 on white.
