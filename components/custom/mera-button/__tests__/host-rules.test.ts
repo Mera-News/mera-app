@@ -1,6 +1,6 @@
 jest.mock('@/lib/stores/floating-chat-store', () => ({ useFloatingChatStore: { getState: jest.fn() } }));
 
-import { buttonContextFor, lastKnown, meraButtonVisible, routeKindFor } from '../host-rules';
+import { buttonContextFor, lastKnown, meraButtonVisible, OVERLAY_PROPS, routeKindFor } from '../host-rules';
 
 describe('routeKindFor', () => {
   it('classifies tabs, their pushed screens, Search and the article pages', () => {
@@ -71,5 +71,22 @@ describe('buttonContextFor', () => {
   it('falls back to the page context when the article has no id', () => {
     expect(buttonContextFor('article', { title: 'x' })).toBeUndefined();
     expect(buttonContextFor('article', null)).toBeUndefined();
+  });
+});
+
+describe('OVERLAY_PROPS', () => {
+  it('keeps the full-screen wrapper out of the accessibility tree and flattenable', () => {
+    for (const key of [
+      'accessible',
+      'accessibilityViewIsModal',
+      'accessibilityElementsHidden',
+      'importantForAccessibility',
+      'testID',
+      'nativeID',
+      'collapsable',
+    ]) {
+      expect(OVERLAY_PROPS).not.toHaveProperty(key);
+    }
+    expect(OVERLAY_PROPS.pointerEvents).toBe('box-none');
   });
 });

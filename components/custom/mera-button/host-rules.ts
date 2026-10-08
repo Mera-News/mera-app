@@ -7,6 +7,15 @@
 import { articleChatContext, type AskMeraSubject } from '@/components/custom/floating-chat/ask-mera';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 
+/**
+ * The full-screen wrapper the button is placed in. It must stay invisible to
+ * accessibility: no testID, no accessible, modal or hiding flags, so Fabric
+ * flattens it and no native full-screen view sits over the app. A
+ * materialized one (it carried a testID) left the accessibility snapshot
+ * with nothing but "Ask Mera". Only the button itself is an element.
+ */
+export const OVERLAY_PROPS = { pointerEvents: 'box-none' } as const;
+
 /** What kind of route is showing, from expo-router's segments. */
 export type MeraRouteKind = 'tab' | 'article' | 'search' | 'other';
 

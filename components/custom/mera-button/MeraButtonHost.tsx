@@ -79,7 +79,7 @@ import {
   type MeraCorner,
 } from './corner';
 import MeraButton from './MeraButton';
-import { buttonContextFor, lastKnown, meraButtonVisible, routeKindFor } from './host-rules';
+import { buttonContextFor, lastKnown, meraButtonVisible, OVERLAY_PROPS, routeKindFor } from './host-rules';
 import { pageKeyFor } from './mera-pages';
 
 const TOP_GAP = 12;
@@ -272,13 +272,12 @@ const MeraButtonHost: React.FC = () => {
 
   return (
     <View
-      pointerEvents="box-none"
+      {...OVERLAY_PROPS}
       style={[StyleSheet.absoluteFill, styles.physical]}
       onLayout={(e) => {
         const { width, height } = e.nativeEvent.layout;
         setSize((prev) => (prev?.width === width && prev?.height === height ? prev : { width, height }));
       }}
-      testID="mera-button-overlay"
     >
       {frame && (
         <Placed
