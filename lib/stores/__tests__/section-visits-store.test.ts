@@ -86,11 +86,18 @@ describe('useSectionVisitsStore', () => {
     });
 
     it('hydrate keeps an entry exactly at the retention boundary', async () => {
-        const now = Date.now();
-        const boundary = now - SECTION_VISIT_RETENTION_MS;
-        mockGetSetting.mockResolvedValueOnce(JSON.stringify({ 'fact-boundary': boundary }));
-        await useSectionVisitsStore.getState().hydrate();
-        expect(useSectionVisitsStore.getState().visits).toEqual({ 'fact-boundary': boundary });
+        // The clock is pinned: with a live clock, a millisecond passing between
+        // this line and hydrate's own Date.now() put the entry just past the edge.
+        const now = 1_760_000_000_000;
+        const clock = jest.spyOn(Date, 'now').mockReturnValue(now);
+        try {
+            const boundary = now - SECTION_VISIT_RETENTION_MS;
+            mockGetSetting.mockResolvedValueOnce(JSON.stringify({ 'fact-boundary': boundary }));
+            await useSectionVisitsStore.getState().hydrate();
+            expect(useSectionVisitsStore.getState().visits).toEqual({ 'fact-boundary': boundary });
+        } finally {
+            clock.mockRestore();
+        }
     });
 
     // ── hydrate — error path ──────────────────────────────────────────────
