@@ -49,6 +49,8 @@ const SHARE_H = 44;
 const PREVIEW_TOP = 52;
 /** Between Cancel and Preview. */
 const FLOAT_GAP = 8;
+/** The round Cancel (✕). */
+const CANCEL_D = 44;
 /** Clear space between the floating button and the Mera button's column. */
 const MERA_SIDE_GAP = 8;
 
@@ -185,6 +187,10 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
     const [flow, dispatch] = useReducer(shareFlow, IDLE);
     const { selecting, picked, previewOpen } = flow;
     const [measure, setMeasure] = useState<PackMeasurement | null>(null);
+    // [✕] [Preview]: Preview's glyph only when its label leaves room for it.
+    const [previewLabelW, setPreviewLabelW] = useState<number | null>(null);
+    const previewGlyphFits =
+        previewLabelW !== null && CANCEL_D + FLOAT_GAP + 2 * 14 + 17 + 6 + previewLabelW <= floatMaxW;
     const startSelecting = useCallback(() => dispatch({ type: 'start', cards: availableCards(stats) }), [stats]);
     const stopSelecting = useCallback(() => dispatch({ type: 'cancel' }), []);
     const closePreview = useCallback(() => dispatch({ type: 'closePreview' }), []);
@@ -297,16 +303,9 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                                 accessibilityRole="button"
                                 accessibilityLabel={t('common.cancel')}
                                 testID="stats-select-cancel"
-                                style={[styles.pill, styles.pillOutline, { borderColor: c.line, backgroundColor: c.base }]}
+                                style={[styles.cancelRound, { borderColor: c.line, backgroundColor: c.base }]}
                             >
-                                <Text
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                    scaleTier="chrome"
-                                    style={{ flexShrink: 1, color: c.ink, fontSize: 14, lineHeight: 18, fontWeight: '600' }}
-                                >
-                                    {t('common.cancel')}
-                                </Text>
+                                <MaterialIcons name="close" size={20} color={c.ink} />
                             </Pressable>
                         ) : null}
                         <Pressable
@@ -324,9 +323,11 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                                 },
                             ]}
                         >
-                            {/* The group needs the room in select mode, so only
-                                Share carries its glyph. */}
-                            {selecting ? null : <MaterialIcons name="ios-share" size={17} color={c.onAccent} />}
+                            {/* Preview keeps its glyph only where its label leaves room
+                                beside the round Cancel (measured, below). */}
+                            {selecting && !previewGlyphFits ? null : (
+                                <MaterialIcons name={selecting ? 'visibility' : 'ios-share'} size={17} color={c.onAccent} />
+                            )}
                             <Text
                                 numberOfLines={1}
                                 ellipsizeMode="tail"
@@ -340,6 +341,18 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                 </View>
             ) : null}
 
+            {/* Preview's label at its natural width, to decide on its glyph. */}
+            {selecting ? (
+                <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.measure}>
+                    <Text
+                        scaleTier="chrome"
+                        style={{ fontSize: 14, lineHeight: 18, fontWeight: '700' }}
+                        onTextLayout={(e) => setPreviewLabelW(Math.max(0, ...e.nativeEvent.lines.map((l) => l.width)))}
+                    >
+                        {t('shareStats.preview.title')}
+                    </Text>
+                </View>
+            ) : null}
             {selecting ? <PackMeasure cards={cards} stats={stats} onMeasured={setMeasure} /> : null}
             <StatsShareModal open={previewOpen} onClose={closePreview} groups={groups} stats={stats} box={previewBox} />
         </View>
@@ -360,7 +373,15 @@ const styles = StyleSheet.create({
         gap: 6,
         flexShrink: 1,
     },
-    pillOutline: { borderWidth: 1.5 },
+    cancelRound: {
+        width: CANCEL_D,
+        height: CANCEL_D,
+        borderRadius: CANCEL_D / 2,
+        borderWidth: 1.5,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    measure: { position: 'absolute', left: -8000, top: 0, width: 4000, opacity: 0, alignItems: 'flex-start' },
 });
 
 export default StatsPage;
