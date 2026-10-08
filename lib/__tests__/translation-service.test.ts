@@ -45,6 +45,7 @@ import {
     isTranslationBlocked,
     isTranslationVerified,
     probeTranslationLanguage,
+    PROBE_FAST_FAIL_MS,
     translateTextDetailed,
     TRANSLATION_FAILURE_THRESHOLD,
     TRANSLATION_PROBE_TIMEOUT_MS,
@@ -548,16 +549,61 @@ describe('translateText', () => {
         expect(isTranslationBlocked('de')).toBe(false);
     });
 
-    it('does NOT retry in-call when the PROBE fails on iOS', async () => {
-        // The probe is allowed through the gate, but still gets exactly one
-        // shot: each retry would be another sheet.
-        mockOnTranslateTask.mockRejectedValue(new Error('assets missing'));
+    it('does NOT retry a SLOW probe failure on iOS', async () => {
+        // A failure that took this long can be the reader declining Apple's
+        // sheet; a retry would put the sheet straight back up.
+        mockOnTranslateTask.mockImplementation(
+            () => new Promise((_r, reject) => setTimeout(() => reject(new Error('Unable to Translate')), PROBE_FAST_FAIL_MS)),
+        );
 
         const promise = probeTranslationLanguage('de');
         await jest.runAllTimersAsync();
 
         expect(await promise).toBe('failed');
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries a FAST probe failure exactly once', async () => {
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+
+        const promise = probeTranslationLanguage('de');
+        await jest.runAllTimersAsync();
+
+        expect(await promise).toBe('failed');
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(2);
+    });
+
+    it('an installed language whose first call after a start fails at once ends verified and unblocked', async () => {
+        // Owner's iPhone: the startup probe's first native call failed with
+        // "Unable to Translate", the next one succeeded, and the block from the
+        // first put the "may still be downloading" card up on every start.
+        mockOnTranslateTask
+            .mockRejectedValueOnce(new Error('Unable to Translate'))
+            .mockResolvedValueOnce({ translatedTexts: 'Привіт' });
+
+        const promise = probeTranslationLanguage('uk', TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS);
+        await jest.runAllTimersAsync();
+
+        expect(await promise).toBe('success');
+        expect(isTranslationBlocked('uk')).toBe(false);
+        expect(isTranslationVerified('uk')).toBe(true);
+    });
+
+    it('a successful probe clears a stale block for that language', async () => {
+        mockOnTranslateTask.mockRejectedValue(new Error('assets missing'));
+        const failed = probeTranslationLanguage('hi');
+        await jest.runAllTimersAsync();
+        await failed;
+        expect(isTranslationBlocked('hi')).toBe(true);
+
+        mockOnTranslateTask.mockReset();
+        mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'नमस्ते' });
+        const ok = probeTranslationLanguage('hi');
+        await jest.runAllTimersAsync();
+
+        expect(await ok).toBe('success');
+        expect(isTranslationBlocked('hi')).toBe(false);
+        expect(getTranslationFailure('hi')).toBeNull();
     });
 
     it('a successful probe opens the gate for ordinary callers', async () => {
@@ -767,7 +813,8 @@ describe('translation availability breaker', () => {
         await jest.runAllTimersAsync();
 
         expect(await p).toBe('failed');
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        // Two calls: a fast failure gets one quiet retry before the verdict.
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(2);
         expect(isTranslationBlocked('de')).toBe(true);
         expect(getTranslationFailure('de')?.permanent).toBe(false);
     });

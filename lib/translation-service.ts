@@ -655,6 +655,11 @@ const TRANSLATE_CALL_TIMEOUT_MS = 20_000;
  */
 export const TRANSLATION_PROBE_TIMEOUT_MS = 90_000;
 
+/** A probe failure faster than this is the OS, not a reader dismissing a sheet. */
+export const PROBE_FAST_FAIL_MS = 1500;
+/** Pause before the one retry of a fast probe failure. */
+const PROBE_FAST_FAIL_RETRY_MS = 1000;
+
 /**
  * Ceiling for the ONE non-gesture probe: the once-per-launch re-verify in
  * `TranslationUnavailablePrompt`, which asks the OS to confirm a language
@@ -809,10 +814,24 @@ export async function probeTranslationLanguage(
         return 'device-unsupported';
     }
 
-    const translated = await translateText('Hello', targetLangCode, {
+    const started = Date.now();
+    let translated = await translateText('Hello', targetLangCode, {
         isProbe: true,
         timeoutMs,
     });
+    // After a (re)start the first native call can fail at once with "Unable to
+    // Translate" for a pack that IS installed, and the next call succeeds
+    // (owner's iPhone, navx2). Blocking on that put the "may still be
+    // downloading" card up on every start. A failure this fast cannot be the
+    // reader declining Apple's sheet, so it earns one quiet retry first.
+    if (
+        translated == null
+        && !probeTimedOut.get(targetLangCode)
+        && Date.now() - started < PROBE_FAST_FAIL_MS
+    ) {
+        await new Promise<void>((resolve) => setTimeout(resolve, PROBE_FAST_FAIL_RETRY_MS));
+        translated = await translateText('Hello', targetLangCode, { isProbe: true, timeoutMs });
+    }
     if (translated != null) return 'success';
 
     // ONE failed probe blocks the language, rather than counting toward the
