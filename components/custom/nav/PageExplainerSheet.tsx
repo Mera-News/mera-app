@@ -1,9 +1,8 @@
-// A page's explainer: the help card the ? in the tab header opens, growing
-// out of that ? (HelpModal; the ? marks itself with `markHelpOrigin`). The
-// page's paragraphs, then Learn more (outlined, opens the tutorial chapter;
+// A page's explainer: the help card (HelpModal) the ? in the tab header
+// opens. The page's paragraphs, then Learn more (outlined, opens the tutorial chapter;
 // absent when the page names none) and Got it (filled orange). Got it, the X, a scrim tap or Back closes it.
 //
-// The surface, title, X, scrim and motion are HelpModal's; this file is only
+// The surface, title, X, scrim and fade are HelpModal's; this file is only
 // the content. A card opened from inside a tab survives a tab switch, so its
 // host (TabPages) closes it on blur. Learn more closes the card and pushes the
 // tutorial only once it is fully gone (`onClosed`): an RN Modal paints above a

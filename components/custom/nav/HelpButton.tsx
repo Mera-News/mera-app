@@ -1,10 +1,8 @@
 // The header's small ring buttons: a 24pt ring in a 44pt frame, a hidden
 // visual under a childless labelled button. `HelpButton` is the ? that opens
-// a page's explainer (it marks itself as the help card's origin, so the card
-// grows out of it); `RingButton` with a glyph is the same control for others
+// a page's explainer; `RingButton` with a glyph is the same control for others
 // (World's search), so the two read as one set.
 
-import { markHelpOrigin } from '@/components/ui/help-modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -27,14 +25,11 @@ export interface HelpButtonProps {
 export interface RingButtonProps extends HelpButtonProps {
   /** A glyph in the ring; absent: the ?. */
   readonly icon?: React.ComponentProps<typeof MaterialIcons>['name'];
-  readonly beforePress?: (target: Parameters<typeof markHelpOrigin>[0]) => void;
 }
 
-const HelpButton: React.FC<HelpButtonProps> = (props) => (
-  <RingButton {...props} beforePress={(target) => markHelpOrigin(target)} />
-);
+const HelpButton: React.FC<HelpButtonProps> = (props) => <RingButton {...props} />;
 
-export const RingButton: React.FC<RingButtonProps> = ({ onPress, beforePress, label, icon, style, testID }) => {
+export const RingButton: React.FC<RingButtonProps> = ({ onPress, label, icon, style, testID }) => {
   const colors = useColors();
   return (
     <View style={[styles.frame, style]} testID={testID ? `${testID}-frame` : undefined}>
@@ -52,10 +47,7 @@ export const RingButton: React.FC<RingButtonProps> = ({ onPress, beforePress, la
         )}
       </View>
       <Pressable
-        onPress={(e) => {
-          beforePress?.(e.currentTarget);
-          onPress();
-        }}
+        onPress={onPress}
         style={StyleSheet.absoluteFill}
         accessibilityRole="button"
         accessibilityLabel={label}

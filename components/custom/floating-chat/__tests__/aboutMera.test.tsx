@@ -68,7 +68,6 @@ describe('the disclosure lives in the header, not the thread', () => {
     const src = read('ChatPopover.tsx');
     expect(src).toContain('floatingChat.aiSubtitle');
     expect(src).toContain('AboutMeraModal');
-    expect(src).toContain('markHelpOrigin');
     // tap and swipe-down share one detector
     expect(src).toMatch(/Gesture\.Race\(\s*swipeDownGesture/);
   });

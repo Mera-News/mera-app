@@ -25,56 +25,6 @@ import { Text } from '@/components/ui/text';
 import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
 
-import { originTransform, type Rect } from './origin';
-
-/** What `markHelpOrigin` gets: a pressed view (a Pressable's `currentTarget`). */
-type Measurable = { measureInWindow?: (cb: (x: number, y: number, w: number, h: number) => void) => void } | null;
-
-// ponytail: ONE origin for the whole app, the last "?" pressed. It holds
-// because only one help card is ever open at a time; a second concurrent help
-// card would need its origin passed in instead.
-let originNode: Measurable = null;
-let originRect: Rect | null = null;
-
-/** A measure that never hangs: under Fabric a callback can simply never come. */
-function measure(node: Measurable): Promise<Rect | null> {
-    return new Promise((resolve) => {
-        if (!node || typeof node.measureInWindow !== 'function') {
-            resolve(null);
-            return;
-        }
-        const timer = setTimeout(() => resolve(null), 120);
-        try {
-            node.measureInWindow((x, y, width, height) => {
-                clearTimeout(timer);
-                resolve(width > 0 && height > 0 ? { x, y, width, height } : null);
-            });
-        } catch {
-            clearTimeout(timer);
-            resolve(null);
-        }
-    });
-}
-
-/**
- * Call in the "?"'s onPress, before opening its HelpModal:
- * `onPress={(e) => { markHelpOrigin(e.currentTarget); open(); }}`.
- */
-export function markHelpOrigin(node: unknown): void {
-    originNode = node as Measurable;
-    originRect = null;
-    void measure(originNode).then((rect) => {
-        if (rect && originNode === node) originRect = rect;
-    });
-}
-
-/** Where the card grows from or shrinks into: the "?" now, else where it was. */
-async function currentOrigin(): Promise<Rect | null> {
-    const rect = await measure(originNode);
-    if (rect) originRect = rect;
-    return originRect;
-}
-
 export interface HelpModalProps {
     open: boolean;
     /** The X, a scrim tap or Android back. The parent sets `open` to false. */
@@ -92,12 +42,12 @@ const MAX_HEIGHT_FRACTION = 0.7;
 const CLOSE_FRAME = 44;
 
 /**
- * Help for a "?": a centred card on the modal material that grows out of the
- * "?" that opened it and shrinks back into it (the Mera button → chat morph,
- * `MOTION.chat`). The scrim fades with it; Reduce Motion crossfades. Width
- * min(W − 32, 400), at most 70% of the screen tall with the body scrolling.
- * The X, a scrim tap and Android back close it; focus moves into the card on
- * open and back to the "?" on close.
+ * Help for a "?": a centred card on the modal material. It opens and closes
+ * with the small-modal motion (FinalMotion, `MOTION.smallModal`): a fade from
+ * 96% scale in, a fade to 98% out, the scrim fading with it; Reduce Motion
+ * fades only. Width min(W − 32, 400), at most 70% of the screen tall with the
+ * body scrolling. The X, a scrim tap and Android back close it; focus moves
+ * into the card on open.
  */
 export function HelpModal({ open, onClose, onClosed, title, children, testID }: HelpModalProps) {
     const { t } = useTranslation();
@@ -109,7 +59,8 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
     const [shown, setShown] = useState(open);
     const [cardHeight, setCardHeight] = useState(0);
     const progress = useSharedValue(0);
-    const origin = useSharedValue<Rect | null>(null);
+    // Closing settles to 98%, opening starts from 96% (the board's two scales).
+    const closing = useSharedValue(0);
     const rose = useRef(false);
     const titleRef = useRef<React.ElementRef<typeof Text>>(null);
     const onClosedRef = useRef(onClosed);
@@ -123,37 +74,22 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
     const finish = useCallback(() => {
         setShown(false);
         setCardHeight(0);
-        const tag = findNodeHandle(originNode as never);
-        if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
         onClosedRef.current?.();
     }, []);
 
-    // Grow: once shown and the card has its height, from the "?" as it is now.
+    // In: once shown and the card has its height.
     useLayoutEffect(() => {
         if (!open) return;
         setShown(true);
         if (cardHeight === 0 || rose.current) return;
         rose.current = true;
-        let cancelled = false;
-        void currentOrigin().then((rect) => {
-            if (cancelled) return;
-            origin.value = rect;
-            progress.value = withTiming(
-                1,
-                reduceMotion
-                    ? { duration: MOTION.chat.reduce }
-                    : { duration: MOTION.chat.open, easing: EASE.arrive },
-                (done) => {
-                    if (done) runOnJS(focusTitle)();
-                },
-            );
+        closing.value = 0;
+        progress.value = withTiming(1, { duration: MOTION.smallModal.in, easing: EASE.arrive }, (done) => {
+            if (done) runOnJS(focusTitle)();
         });
-        return () => {
-            cancelled = true;
-        };
-    }, [open, cardHeight, reduceMotion, origin, progress, focusTitle]);
+    }, [open, cardHeight, closing, progress, focusTitle]);
 
-    // Shrink: only when `open` turns false, into the "?" where it is now.
+    // Out: only when `open` turns false.
     useEffect(() => {
         if (open) return;
         if (!rose.current) {
@@ -161,17 +97,9 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
             return;
         }
         rose.current = false;
-        void currentOrigin().then((rect) => {
-            origin.value = rect;
-            progress.value = withTiming(
-                0,
-                reduceMotion
-                    ? { duration: MOTION.chat.reduce }
-                    : { duration: MOTION.chat.close, easing: EASE.leave },
-                (done) => {
-                    if (done) runOnJS(finish)();
-                },
-            );
+        closing.value = 1;
+        progress.value = withTiming(0, { duration: MOTION.smallModal.out, easing: EASE.leave }, (done) => {
+            if (done) runOnJS(finish)();
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
@@ -179,11 +107,8 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
     const scrimStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
     const cardStyle = useAnimatedStyle(() => {
         if (reduceMotion) return { opacity: progress.value };
-        const f = originTransform(origin.value, { cx: W / 2, cy: H / 2, width: cardWidth, height: cardHeight }, progress.value);
-        return {
-            opacity: f.opacity,
-            transform: [{ translateX: f.translateX }, { translateY: f.translateY }, { scale: f.scale }],
-        };
+        const from = closing.value ? MOTION.smallModal.toScale : MOTION.smallModal.fromScale;
+        return { opacity: progress.value, transform: [{ scale: from + (1 - from) * progress.value }] };
     });
 
     const onCardLayout = (e: LayoutChangeEvent) => {

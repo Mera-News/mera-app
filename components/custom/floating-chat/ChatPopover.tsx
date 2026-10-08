@@ -13,7 +13,6 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import ModalMaterial from '@/components/custom/ModalMaterial';
 import { GlyphSafeIconButton } from './glyph-safe';
 import AboutMeraModal from './AboutMeraModal';
-import { markHelpOrigin } from '@/components/ui/help-modal';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { hapticLight } from '@/lib/haptics';
 import { EASE, MOTION } from '@/lib/motion';
@@ -22,7 +21,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -185,14 +184,9 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         [dragTranslateY, requestClose],
     );
 
-    // About Mera: the header's AI disclosure opens a HelpModal that grows out
-    // of the title block.
+    // About Mera: the header's AI disclosure opens a HelpModal.
     const [aboutOpen, setAboutOpen] = useState(false);
-    const titleRef = useRef<View>(null);
-    const openAbout = useCallback(() => {
-        markHelpOrigin(titleRef.current);
-        setAboutOpen(true);
-    }, []);
+    const openAbout = useCallback(() => setAboutOpen(true), []);
     const headerGesture = useMemo(
         () =>
             Gesture.Race(
@@ -346,7 +340,6 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                                 button's rule); the pan needs 14pt of travel and
                                 the tap fails past 10pt, so they never contest. */}
                             <View
-                                ref={titleRef}
                                 style={styles.titleBlock}
                                 accessible
                                 accessibilityRole="button"
