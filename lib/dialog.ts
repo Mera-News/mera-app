@@ -1,5 +1,5 @@
 // The imperative way to show the app's dialog from plain code (no component in
-// reach), replacing `Alert.alert`: owner rule, the app draws no native alerts.
+// reach): owner rule, the app draws no native alerts.
 // `DialogHost` (components/ui/confirm-dialog, mounted once in app/_layout.tsx)
 // renders the front request with ConfirmDialog.
 //

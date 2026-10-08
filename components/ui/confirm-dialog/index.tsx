@@ -34,8 +34,8 @@ export interface ConfirmDialogProps {
 /**
  * The ONE dialog (Modals board "A choice"): a centred dialog on the modal
  * material, title, body, an optional red consequence line, then the confirm
- * over an outlined Cancel, or one button for a notice. Replaces every
- * `Alert.alert` (owner rule: no native alerts); from plain code use
+ * over an outlined Cancel, or one button for a notice. The app draws no
+ * native alerts (owner rule); from plain code use
  * `showDialog` (lib/dialog.ts), which `DialogHost` below renders.
  */
 export function ConfirmDialog({

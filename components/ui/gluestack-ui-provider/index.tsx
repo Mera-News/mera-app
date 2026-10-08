@@ -7,23 +7,16 @@ import { useColorScheme } from 'nativewind';
 
 import { useThemeMode } from '@/lib/theme/tokens';
 
-export type ModeType = 'light' | 'dark' | 'system';
-
 /**
  * The theme for everything inside it comes from the app's theme store
  * (lib/theme/theme-store.ts, via useThemeMode), NEVER from the OS scheme:
  * indexing `config[colorScheme]` from NativeWind let `Appearance.setColorScheme`
  * and the phone's own setting repaint text the app had not themed (spike 5).
- *
- * `mode` is LEGACY and ignored: ~30 screens still pass mode="dark" (modal hosts
- * are separate native windows and each needs a provider). The P12 sweep drops
- * it per folder.
+ * Modal hosts are separate native windows, so each mounts its own provider.
  */
 export function GluestackUIProvider({
-  mode: _legacyMode,
   ...props
 }: {
-  mode?: ModeType;
   children?: React.ReactNode;
   style?: ViewProps['style'];
 }) {
