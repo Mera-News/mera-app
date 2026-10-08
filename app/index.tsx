@@ -1,6 +1,6 @@
 import { Box } from "@/components/ui/box";
 import AbstractGradientBackdrop from "@/components/custom/AbstractGradientBackdrop";
-import MeraLogo from "@/components/custom/MeraLogo";
+import LaunchLogo from "@/components/custom/auth/LaunchLogo";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { StyleSheet } from "react-native";
 import { authClient } from "@/lib/auth-client";
@@ -93,7 +93,8 @@ export default function Index() {
       <Animated.View entering={FadeIn.duration(300)} style={StyleSheet.absoluteFill}>
           <AbstractGradientBackdrop />
       </Animated.View>
-      <MeraLogo size={96} animated />
+      {/* Working (cone and scrolling cards) while the app starts. */}
+      <LaunchLogo size={96} working />
     </Box>
   );
 }

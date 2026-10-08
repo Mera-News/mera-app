@@ -2,7 +2,7 @@ import { Box } from "@/components/ui/box";
 import AbstractGradientBackdrop from "@/components/custom/AbstractGradientBackdrop";
 import ErrorBoundary from "@/components/custom/ErrorBoundary";
 import { FullScreenErrorFallback } from "@/components/custom/ErrorFallback";
-import MeraLogo from "@/components/custom/MeraLogo";
+import LaunchLogo from "@/components/custom/auth/LaunchLogo";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { StyleSheet } from "react-native";
 import IdentitySwitchFailedScreen from "@/components/custom/auth/IdentitySwitchFailedScreen";
@@ -487,7 +487,8 @@ function LoggedInGate() {
             <Animated.View entering={FadeIn.duration(300)} style={StyleSheet.absoluteFill}>
                 <AbstractGradientBackdrop />
             </Animated.View>
-            <MeraLogo size={96} animated />
+            {/* The same working logo as the launch gate before it. */}
+            <LaunchLogo size={96} working />
         </Box>
     );
 }

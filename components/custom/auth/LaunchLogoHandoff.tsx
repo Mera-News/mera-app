@@ -83,7 +83,8 @@ export default function LaunchLogoHandoff() {
     if (!flying) return null;
     return (
         <Animated.View pointerEvents="none" style={[styles.logo, style]}>
-            <MeraLogo size={GATE_LOGO} animated />
+            {/* The gates' working look, carried into the button. */}
+            <MeraLogo size={GATE_LOGO} animated scrollCards />
         </Animated.View>
     );
 }

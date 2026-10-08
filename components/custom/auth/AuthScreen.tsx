@@ -24,7 +24,7 @@ import ConsentContent from '@/components/custom/auth/ConsentContent';
 import { consentNoticeKey, noEmailFaqUrl } from '@/components/custom/auth/device-sign-in-copy';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
-import MeraLogo from '@/components/custom/MeraLogo';
+import LaunchLogo from '@/components/custom/auth/LaunchLogo';
 import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
 import TutorialModalHost from '@/components/custom/tutorials/TutorialModalHost';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
@@ -496,7 +496,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         <View style={[styles.root, { backgroundColor: colors.base }]} testID="auth-screen">
             <AbstractGradientBackdrop />
             <Animated.View pointerEvents="none" style={[styles.logo, logoStyle]}>
-                <MeraLogo size={LOGO_FULL} animated />
+                {/* Working while Mera starts, settling to the plain moving logo
+                    when the language is asked (and every step after). */}
+                <LaunchLogo size={LOGO_FULL} working={stage === 'loading' || stage === 'intro'} />
             </Animated.View>
 
             {/* The welcome line under the held logo (Journey #3). In the root,
