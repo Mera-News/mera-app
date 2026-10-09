@@ -1,0 +1,4 @@
+# tsc -p <config> <error count at baseline>. R4: a deletion batch may not add errors here.
+# eval/ has no tsconfig (its scripts run through tsx), so it has no line.
+harness-local/tsconfig.lib.json 0
+harness-local/tsconfig.json 1777
