@@ -88,7 +88,8 @@ const fs = require('fs');
 const [a, b, root] = process.argv.slice(2);
 if (!fs.existsSync(a) || !fs.existsSync(b)) { console.error('FAIL: a coverage summary is missing'); process.exit(1); }
 const A = JSON.parse(fs.readFileSync(a, 'utf8')), B = JSON.parse(fs.readFileSync(b, 'utf8'));
-const rel = (f) => f.startsWith(root + '/') ? f.slice(root.length + 1) : f;
+const roots = [root, fs.realpathSync(root)].map((r) => r + '/');
+const rel = (f) => { for (const r of roots) if (f.startsWith(r)) return f.slice(r.length); return f; };
 const files = (S) => new Set(Object.keys(S).filter((k) => k !== 'total'));
 const fa = files(A), fb = files(B);
 const pct = (m) => (m.total === 0 ? 100 : (100 * m.covered) / m.total).toFixed(2);
