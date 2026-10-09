@@ -23,6 +23,7 @@ import {
   isBackfillDone,
   runSanityBackfillChunk,
 } from '@/lib/database/services/sanity-backfill-service';
+import * as settingService from '@/lib/database/services/setting-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { SANITY_BATCH_SIZE } from '@/lib/news-harness/persona-management/topic-sanity';
 import {
@@ -156,22 +157,30 @@ describe('starting the pass and walking the corpus', () => {
     expect(await getSetting(DONE)).toBe(String(nowOf(4)));
   });
 
+  // The pass has judged 540 topics (nine chunks) when the chunk under test starts: the counter is the
+  // service's own persisted state, so seeding it reaches the ceiling without minting 600 topics.
   it('stops at the hard ceiling rather than running unbounded, leaving the rest to the weekly rhythm', async () => {
-    const total = SANITY_BACKFILL_MAX_TOPICS + 100;
-    await seedCorpus(total);
+    await seedCorpus(70);
+    await setSetting(AUDITED, String(SANITY_BACKFILL_MAX_TOPICS - BACKFILL_CHUNK_TOPICS));
 
-    const chunks = SANITY_BACKFILL_MAX_TOPICS / BACKFILL_CHUNK_TOPICS;
-    for (let i = 0; i < chunks - 1; i++) await chunk();
-    expect(await isBackfillDone()).toBe(false);
     const last = await chunk();
 
     expect(last).toMatchObject({ ran: true, audited: BACKFILL_CHUNK_TOPICS, done: true });
     expect(await isBackfillDone()).toBe(true);
     expect(await getSetting(AUDITED)).toBe(String(SANITY_BACKFILL_MAX_TOPICS));
-    const audited = new Set(sanityTexts(gatewayCalls('batch')).map(topicNumber));
-    expect(audited.size).toBe(SANITY_BACKFILL_MAX_TOPICS);
-    expect(Math.max(...audited)).toBe(SANITY_BACKFILL_MAX_TOPICS - 1); // the newest 100 were never judged
+    // Topics beyond the chunk were left alone: the pass ends with them unjudged.
+    expect(new Set(sanityTexts(gatewayCalls('batch')).map(topicNumber)).size).toBe(BACKFILL_CHUNK_TOPICS);
     expect((await chunk()).reason).toBe('already_done');
+  });
+
+  it('one topic short of the ceiling the pass is still open', async () => {
+    await seedCorpus(70);
+    await setSetting(AUDITED, String(SANITY_BACKFILL_MAX_TOPICS - BACKFILL_CHUNK_TOPICS - 1));
+
+    const res = await chunk();
+
+    expect(res).toMatchObject({ audited: BACKFILL_CHUNK_TOPICS, done: false });
+    expect(await isBackfillDone()).toBe(false);
   });
 
   it('with no facts it neither audits nor finishes, and a later fact starts the pass normally', async () => {
@@ -419,5 +428,56 @@ describe('the audit cursor never skips a topic it did not judge', () => {
     expect(first.audited).toBe(60);
     expect(second).toMatchObject({ audited: 0, done: true });
     expect(new Set(sanityTexts(gatewayCalls('batch'))).size).toBe(60);
+  });
+});
+
+describe('a chunk that dies between the audit and the queue', () => {
+  // DATA-U11b-7: the audit advances the cursor as soon as verdicts decode (topic-sanity-service.ts:~172),
+  // then the backfill stores the proposals. A write that fails (or a process killed) in between leaves the
+  // cursor past topics whose verdicts were never kept. The file header promises "a chunk killed
+  // mid-flight is retried, not skipped".
+  const failQueueWriteOnce = () => {
+    const real = settingService.setSetting;
+    let armed = true;
+    return jest.spyOn(settingService, 'setSetting').mockImplementation(async (key, value) => {
+      if (armed && key === 'hygiene_pending_proposals') {
+        armed = false;
+        throw new Error('disk full');
+      }
+      return real(key, value);
+    });
+  };
+  const contaminatedCorpus = () =>
+    seedCorpus(60, { text: (i) => (i === 7 ? BAD : `cricket topic ${i}`) });
+
+  test.failing('DATA-U11b-7: the verdicts of a chunk whose queue write failed are found on the retry', async () => {
+    const { fact } = await contaminatedCorpus();
+    const spy = failQueueWriteOnce();
+
+    const failed = await chunk();
+    expect(failed).toEqual({ ran: false, audited: 0, proposalsAdded: 0, done: false });
+    const retry = await chunk();
+    spy.mockRestore();
+
+    expect(retry.proposalsAdded).toBe(1);
+    expect((await getPendingProposals()).map((p) => p.id)).toEqual([`incoherent_topics:${fact.id}`]);
+  });
+
+  it('today: a failed queue write is captured and the pass stays open, but the contaminated topic is never offered', async () => {
+    await contaminatedCorpus();
+    const spy = failQueueWriteOnce();
+
+    const failed = await chunk();
+    const retry = await chunk();
+    spy.mockRestore();
+
+    expect(failed).toEqual({ ran: false, audited: 0, proposalsAdded: 0, done: false });
+    expect(logs.captureException).toHaveBeenCalledTimes(1);
+    expect(logs.captureException.mock.calls[0][1]).toMatchObject({
+      tags: { service: 'sanity-backfill-service', method: 'runSanityBackfillChunk' },
+    });
+    expect(await getSetting(CURSOR)).toBe(String(T0 + 59 * 10)); // already past the contaminated topic
+    expect(retry).toMatchObject({ ran: true, audited: 0, proposalsAdded: 0, done: true });
+    expect(await getPendingCount()).toBe(0);
   });
 });

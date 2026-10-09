@@ -18,10 +18,12 @@ import {
   SWEEP_COOLDOWN_MS,
   getPendingCount,
   getPendingProposals,
+  rejectProposal,
   runHygieneSweep,
   subscribeHygieneChange,
 } from '@/lib/database/services/hygiene-service';
 import { getAll as getNotifications } from '@/lib/database/services/notification-service';
+import * as sanityService from '@/lib/database/services/topic-sanity-service';
 import * as settingService from '@/lib/database/services/setting-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { addFact } from '@/lib/database/services/fact-service';
@@ -281,6 +283,19 @@ describe('the audit runs before the size and age gates', () => {
     expect((await getPendingProposals()).map((p) => p.kind)).toEqual(['incoherent_topics']); // "News" is withheld
   });
 
+  it('still reports zero, and stamps, when every verdict is for a proposal the reader already rejected', async () => {
+    jest.setSystemTime(T0 - 100 * DAY);
+    const { fact } = await seedFact(CRICKET, [BAD]);
+    jest.setSystemTime(T0);
+    await rejectProposal(`incoherent_topics:${fact.id}`);
+
+    const res = await sweep();
+
+    expect(res).toEqual({ ran: false, reason: 'too_few_facts', proposalCount: 0, sanitySkipped: false });
+    expect(notified.calls()).toHaveLength(0);
+    expect(await getSetting(STAMP)).toBe(String(T0));
+  });
+
   it('still reports zero when the audit found nothing and the gate bails', async () => {
     await seedFact(CRICKET, ['India cricket news']);
 
@@ -382,6 +397,17 @@ describe('an attempted audit that gave no verdicts is NOT a skip', () => {
     expect(Date.now() - started).toBeLessThan(SANITY_RACE_MS + 10_000);
     expect(await getSetting(STAMP)).toBe(String(T0));
     expect((await getPendingProposals()).map((p) => p.kind)).toEqual(['too_broad_fact']);
+  });
+
+  it('an audit that rejects outright is treated as "attempted, found nothing": the sweep completes and stamps', async () => {
+    await cricketPersona(MIN_FACTS_FOR_SWEEP);
+    const spy = jest.spyOn(sanityService, 'runSanityAudit').mockRejectedValueOnce(new Error('audit blew up'));
+
+    const res = await sweep();
+    spy.mockRestore();
+
+    expect(res).toEqual({ ran: true, proposalCount: 1, sanitySkipped: false });
+    expect(await getSetting(STAMP)).toBe(String(T0));
   });
 
   it('does NOT stamp the cooldown when publishing throws, so the retry is not read as "cooldown"', async () => {

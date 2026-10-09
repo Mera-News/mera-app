@@ -29,7 +29,9 @@ import {
   getPendingPlan,
   runOptimisationCycle,
 } from '@/lib/database/services/optimisation-plan-service';
+import * as executor from '@/lib/database/services/persona-action-executor';
 import { getRecent } from '@/lib/database/services/persona-change-log-service';
+import { getPreferenceKind } from '@/lib/database/services/publication-preference-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { getAll as getSuppressions } from '@/lib/database/services/suppression-service';
 import { getByFact } from '@/lib/database/services/topic-service';
@@ -645,6 +647,132 @@ describe('acceptPlan', () => {
     expect(await weightOf(weaker.fact.id, 'Birdwatching')).toBeCloseTo(0.4);
     expect(await weightOf(gone.fact.id, 'Birdwatching')).toBeCloseTo(1);
     expect(await countUnprocessedFeedback()).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------
+// The other candidate kinds, end to end
+// ---------------------------------------------------------------------------------------------------
+describe('what the model is told about a candidate', () => {
+  it('names the entities of the stories behind it, liked and disliked apart, and the liked stories a removal would hit', async () => {
+    const { climate } = await actionableDay();
+    await verdict(
+      'e1',
+      'like',
+      { matchedTopics: [{ topicId: climate.id, text: 'Climate' }], entities: [' IPCC ', '', 'Greta Thunberg'], treePath: TREE.aLotMore },
+      T0 - DAY + 5000,
+    );
+    await verdict('e2', 'like', { eventType: 'obituary', treePath: TREE.seenOnly }, T0 - DAY + 6000);
+    await verdict('e3', 'dislike', { eventType: 'obituary', entities: ['Local mayor'], treePath: TREE.kindOfEvent }, T0 - DAY + 7000);
+
+    await cycle();
+
+    const lines = promptLines(gatewayCalls()[0]);
+    expect(lines).toContain(`[topic_up:${climate.id}] topic_up | Show more about "Climate" | about — liked: Greta Thunberg, IPCC`);
+    const suppress = lines.find((l) => l.startsWith('[suppress:evt:obituary]'))!;
+    expect(suppress).toContain('| conflicts: Story e2');
+    expect(suppress).toContain('| about — disliked: Local mayor');
+    // A removal that would hit a liked story is always a review item, and carries the conflict.
+    expect((await getPendingPlan())!.reviewItems[0].conflictsWith).toEqual([{ title: 'Story e2', reason: 'You liked this story' }]);
+  });
+});
+
+describe('retire, publication and failure paths on accept', () => {
+  /** Three low-relevance dislikes on one topic: the digest proposes to retire it. */
+  async function retireDay() {
+    const { topics } = await seedFact('Follows cricket', [{ text: 'Cricket', weight: 0.5 }]);
+    for (let i = 0; i < 3; i++) {
+      await verdict(
+        `r${i}`,
+        'dislike',
+        { matchedTopics: [{ topicId: topics[0].id, text: 'Cricket' }], relevance: 0.1, treePath: TREE.seenOnly },
+        T0 - DAY + i * 1000,
+      );
+    }
+    return topics[0];
+  }
+
+  it('retires the topic on the default option, through the executor', async () => {
+    const cricket = await retireDay();
+    await cycle();
+    const plan = (await getPendingPlan())!;
+    expect(plan.reviewItems.map((r) => r.fingerprint)).toContain(`retire_topic:${cricket.id}`);
+
+    const res = await acceptPlan({ uncheckedAuto: plan.autoChanges.map((a) => a.fingerprint) });
+
+    expect(res.errors).toEqual([]);
+    expect((await getByFact(cricket.factId!)).find((t) => t.id === cricket.id)!.status).toBe('retired');
+  });
+
+  it('turns a gentler alternative to a retire into a down-weight of at most 0.5 (it must name retire_topic itself; a set_topic_weight one is dropped)', async () => {
+    const cricket = await retireDay();
+    reply((call) =>
+      JSON.stringify({
+        autoChanges: [],
+        reviewItems: [
+          {
+            fingerprint: `retire_topic:${cricket.id}`,
+            question: 'Drop cricket?',
+            options: [
+              { label: 'Drop it', action: 'apply' },
+              { label: 'Lower it (dropped)', action: 'alternative', altOps: [{ action_type: 'set_topic_weight', delta: -0.2 }] },
+              { label: 'Just lower it', action: 'alternative', altOps: [{ action_type: 'retire_topic', delta: -0.9 }] },
+              { label: 'Raise it (dropped)', action: 'alternative', altOps: [{ action_type: 'retire_topic', delta: 0.2 }] },
+              { label: 'No', action: 'skip' },
+            ],
+            defaultIndex: 0,
+            rationale: '',
+            seen: fingerprintsOf(call).length,
+          },
+        ],
+      }),
+    );
+    await cycle();
+    const item = (await getPendingPlan())!.reviewItems.find((r) => r.fingerprint === `retire_topic:${cricket.id}`)!;
+    expect(item.options.map((o) => o.label)).toEqual(['Drop it', 'Just lower it', 'No']);
+    expect(item.options[1].altOps).toEqual([{ action_type: 'set_topic_weight', topicId: cricket.id, topicText: 'Cricket', delta: -0.5 }]);
+
+    await acceptPlan({ reviewChoices: { [item.fingerprint]: 1 }, uncheckedAuto: [] });
+
+    const row = (await getByFact(cricket.factId!)).find((t) => t.id === cricket.id)!;
+    expect(row.status).toBe('active');
+    expect(row.weight).toBeLessThan(0.5);
+  });
+
+  it('turns "more from this publication" into a stored publication preference', async () => {
+    for (let i = 0; i < 3; i++) {
+      await verdict(`p${i}`, 'like', { publication: 'pub-42', treePath: ['publication', 'more_from_publication'] }, T0 - DAY + i * 1000);
+    }
+    await cycle();
+    expect(Object.keys((await getPendingPlan())!.candidates)).toEqual(['publication_up:pub-42']);
+
+    const res = await acceptPlan();
+
+    expect(res).toEqual({ applied: true, appliedOps: 1, errors: [] });
+    expect(await getPreferenceKind('pub-42')).toBe('boost');
+  });
+
+  it('reports an op the executor throws on, and still applies the rest and settles the plan', async () => {
+    await actionableDay();
+    await cycle();
+    const spy = jest.spyOn(executor, 'applyPersonaAction').mockRejectedValueOnce(new Error('db locked'));
+
+    const res = await acceptPlan();
+    spy.mockRestore();
+
+    expect(res.applied).toBe(true);
+    expect(res.appliedOps).toBe(2);
+    expect(res.errors).toHaveLength(1);
+    expect(res.errors[0]).toMatch(/: apply failed$/);
+    expect(logs.captureException).toHaveBeenCalledTimes(1);
+    expect(await countUnprocessedFeedback()).toBe(0);
+  });
+
+  it('a corrupt rejected-fingerprint row is read as empty', async () => {
+    await actionableDay();
+    await setSetting('optimisation_rejected_fingerprints', '{not json');
+
+    expect(await cycle()).toEqual({ ran: true, autoCount: 2, reviewCount: 1 });
   });
 });
 

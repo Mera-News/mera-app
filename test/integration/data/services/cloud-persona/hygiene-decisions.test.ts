@@ -253,6 +253,17 @@ describe('presentation cap and the backlog', () => {
     expect(await getPendingCount()).toBe(TOTAL - 1);
   });
 
+  it('deciding something that is not in the window leaves the full window alone', async () => {
+    await seedContaminated(TOTAL);
+    await sweep();
+    const before = (await getPendingProposals()).map((p) => p.id);
+
+    await rejectProposal('not-a-pending-proposal');
+
+    expect((await getPendingProposals()).map((p) => p.id)).toEqual(before);
+    expect(await getPendingCount()).toBe(TOTAL);
+  });
+
   it('drains to empty without stranding backlog entries', async () => {
     await seedContaminated(13);
     await sweep();

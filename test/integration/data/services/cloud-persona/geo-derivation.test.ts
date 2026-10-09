@@ -182,6 +182,15 @@ describe('tier 2: one batched model call for what the first pass could not place
     expect(await places()).toEqual([{ countryCode: 'IN', city: 'Bangalore', role: 'home', weight: 1, provenance: 'llm' }]);
   });
 
+  it('also falls back to the full ISO set when the server lists no country at all', async () => {
+    await facts(BANGALORE);
+    server.use(mockGql('AllCountries', { allCountries: [] }));
+    server.use(...mockGateway(geoModel({ Bangalore: { country: 'IN', city: 'Bangalore', role: 'home' } })));
+
+    expect(await sweep()).toMatchObject({ ran: true, added: 1 });
+    expect(logs.warn).toHaveBeenCalledWith(expect.stringContaining('resolved empty'));
+  });
+
   it('degrades to tier 1 only when the gateway refuses, reporting it once', async () => {
     await facts(AMSTERDAM, BANGALORE);
     server.use(...mockGateway(() => ({ status: 400, body: { error: 'refused' } })));
