@@ -104,7 +104,30 @@ EOF
   git add -A && git commit -qm deletion
   run_case "d deletion" 1 "const aboveCount"
 
-  echo "self-test ok (4 cases)"
+  # (e) members dropped from a multi-line import whose opening line stays as context.
+  git checkout -q -b arm-e "$base"
+  {
+    echo "import {"
+    echo "  useCallback,"
+    echo "  useMemo,"
+    echo "  useState,"
+    echo "} from 'react';"
+    git show "$base:Screen.tsx"
+  } > Screen.tsx
+  git add -A && git commit -qm imports
+  local base_e; base_e="$(git rev-parse HEAD)"
+  move_fn '{print}'
+  {
+    echo "import {"
+    echo "  useState,"
+    echo "} from 'react';"
+    cat Screen.tsx
+  } > Screen.tmp && mv Screen.tmp Screen.tsx
+  git add -A && git commit -qm move-with-imports
+  set +e; out="$(bash "$self" "$base_e" HEAD 2>&1)"; rc=$?; set -e
+  if [ "$rc" -ne 0 ]; then echo "self-test FAILED: case e import members exited $rc, expected 0"; echo "$out"; exit 1; fi
+
+  echo "self-test ok (5 cases)"
 }
 
 if [ "${1:-}" = "--self-test" ]; then
@@ -126,6 +149,17 @@ git -c color.diff.old=red -c color.diff.oldMoved=blue -c color.diff.oldMovedAlte
 # hunk header = ESC[36m@@ ..., file headers = ESC[1m--- a/... ; context lines are uncoloured.
 awk -v esc="$(printf '\033')" '
 function plain(s) { gsub(esc "\\[[0-9;]*m", "", s); return s }
+# Import-block tracking, fed by context AND removed lines: a member removed from an import whose
+# opening line is unchanged context (`import Animated, {` kept, `useSharedValue,` dropped) is an
+# import line too. Returns 1 when the line belongs to an import.
+function track(content) {
+  if (inblock) { if (content ~ /^[[:space:]]*}[[:space:]]*from[[:space:]]+[\047"]/) inblock = 0; return 1 }
+  if (content ~ /^[[:space:]]*import[[:space:]]/ || content ~ /^[[:space:]]*import[\047"]/) {
+    if (content !~ /from[[:space:]]+[\047"]/ && content !~ /^[[:space:]]*import[[:space:]]*[\047"]/ && content !~ /;[[:space:]]*$/) inblock = 1
+    return 1
+  }
+  return (content ~ /^[[:space:]]*}[[:space:]]*from[[:space:]]+[\047"]/)
+}
 /^/ {
   raw = $0; p = plain(raw)
   if (p ~ /^diff --git /) { inhunk = 0; inblock = 0; next }
@@ -139,17 +173,11 @@ function plain(s) { gsub(esc "\\[[0-9;]*m", "", s); return s }
   }
   if (p ~ /^@@ -[0-9]+/) { match(p, /-[0-9]+/); old = substr(p, RSTART + 1, RLENGTH - 1) + 0; inblock = 0; next }
   c = substr(p, 1, 1)
-  if (c == "" || c == " ") { old++; inblock = 0; next }
+  if (c == "" || c == " ") { old++; track(substr(p, 2)); next }
   if (c != "-") next            # added lines and "\ No newline" are not checked
   content = substr(p, 2); n = old++
   # Import tracking (also advances on moved lines so a block stays consistent).
-  imp = 0
-  if (inblock) { imp = 1; if (content ~ /^[[:space:]]*}[[:space:]]*from[[:space:]]+[\047"]/) inblock = 0 }
-  else if (content ~ /^[[:space:]]*import[[:space:]]/ || content ~ /^[[:space:]]*import[\047"]/) {
-    imp = 1
-    if (content !~ /from[[:space:]]+[\047"]/ && content !~ /^[[:space:]]*import[[:space:]]*[\047"]/ && content !~ /;[[:space:]]*$/) inblock = 1
-  }
-  else if (content ~ /^[[:space:]]*}[[:space:]]*from[[:space:]]+[\047"]/) imp = 1
+  imp = track(content)
   if (index(raw, esc "[34m-") == 1) { moved++; next }
   if (imp || content ~ /^[][{}();,[:space:]]*$/) { allowed++; next }
   printf "%s:%d: %s\n", file, n, content; bad++
