@@ -29,6 +29,12 @@ describe('buildOverlayContext tags', () => {
         expect(ctx).toMatchObject({ entity: 'Rutte', placeValue: 'NL', geoText: 'NL', clusterSize: 4, category: 'Politics' });
     });
 
+    it('keeps the display text and the filter value distinct for a supranational place', async () => {
+        await seedSuggestion({ _id: 'a1', geo_tags: [{ countryCode: 'MIDDLE_EAST' }] } as never);
+        const ctx = await buildOverlayContext(subject);
+        expect(ctx).toMatchObject({ geoText: 'Middle East', placeValue: 'MIDDLE_EAST' });
+    });
+
     it('falls back to the subject entity, then the host fallback', async () => {
         // No suggestion row for this subject.
         const ctx = await buildOverlayContext(subject, { placeValue: 'EU', geoText: 'Europe', category: 'World' });

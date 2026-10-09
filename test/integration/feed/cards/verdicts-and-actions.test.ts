@@ -1,7 +1,7 @@
 // The card action hooks: the shared verdict plumbing (useFeedbackSheet), the origin-aware inline
 // actions (useArticleActions) and the ••• menu's "Fewer from" / follow state (useArticleMenu).
 // Real stores, in-memory DB, real services; the only fakes are native edges and the toast
-// instance the undo toast is shown on.
+// queue the undo toast is shown on (the real show/close ToastInitializer installs).
 // A native module (the sheet's gesture layer); the hook never renders the sheet here.
 jest.mock('react-native-gesture-handler', () => ({
     Gesture: {},
@@ -26,6 +26,8 @@ import { __resetSavedStateForTests } from '@/lib/saved-state';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { toastManager } from '@/lib/toast-manager';
+import { closeAll, useToastQueue } from '@/lib/toast/toast-queue';
+import { useToast } from '@/components/ui/toast';
 import { initI18nEn, signInFixtureAccount } from '@/test/helpers';
 import { seedSuggestion } from '../detail/seed';
 
@@ -234,12 +236,16 @@ describe('useArticleActions: the inline actions of a standalone card', () => {
 const levelKey = (element: React.ReactNode) => (element as React.ReactElement<{ levelKey: string }>).props.levelKey;
 
 describe('useArticleMenu', () => {
-    const show = jest.fn();
+    const toastCount = () => useToastQueue.getState().entries.length;
     beforeEach(() => {
         __clearPublisherSourceNames();
-        show.mockReset();
-        toastManager.setToastInstance({ show, close: jest.fn() } as never);
+        closeAll();
+        // What ToastInitializer installs.
+        const { result } = renderHook(() => useToast());
+        toastManager.setToastInstance(result.current);
     });
+    // The queue arms a real 6s timer for the front card; drop it so none outlives the test.
+    afterEach(closeAll);
 
     const mount = async (id: string, publicationName = 'The Hindu') => {
         const suggestion = await seedSuggestion({ _id: id, publication_name: publicationName });
@@ -253,9 +259,9 @@ describe('useArticleMenu', () => {
     };
     /** The Undo button's handler on the toast "Fewer from" showed. */
     const pressUndo = async () => {
-        const toast = show.mock.calls[0][0];
+        const toast = useToastQueue.getState().entries[0];
         await act(async () => {
-            toast.render({ id: 'toast-1' }).props.onUndo();
+            (toast.render({ id: toast.id }) as React.ReactElement<{ onUndo: () => void }>).props.onUndo();
         });
     };
 
@@ -264,7 +270,7 @@ describe('useArticleMenu', () => {
         const { run } = await mount('menu-fewer');
         await run('fewer-from');
         // The toast is shown after the last name is written.
-        await waitFor(() => expect(show).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(toastCount()).toBe(1));
         expect(await getPreferenceKind('The Hindu')).toBe('deprioritize');
         expect(await getPreferenceKind('Hindu Business Line')).toBe('deprioritize');
     });
@@ -272,7 +278,7 @@ describe('useArticleMenu', () => {
     it('Fewer from for a publication with one known name writes that one row', async () => {
         const { run } = await mount('menu-fewer-one', 'De Volkskrant');
         await run('fewer-from');
-        await waitFor(() => expect(show).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(toastCount()).toBe(1));
         expect(await getPreferenceKind('De Volkskrant')).toBe('deprioritize');
     });
 
@@ -280,7 +286,7 @@ describe('useArticleMenu', () => {
         rememberPublisherSourceNames('pub-hindu', ['The Hindu', 'Hindu Business Line']);
         const { run } = await mount('menu-undo');
         await run('fewer-from');
-        await waitFor(() => expect(show).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(toastCount()).toBe(1));
         expect(await getPreferenceKind('The Hindu')).toBe('deprioritize');
         expect(await getPreferenceKind('Hindu Business Line')).toBe('deprioritize');
 
@@ -293,7 +299,7 @@ describe('useArticleMenu', () => {
         rememberPublisherSourceNames('pub-hindu', ['The Hindu', 'Hindu Business Line']);
         const { run } = await mount('menu-cas');
         await run('fewer-from');
-        await waitFor(() => expect(show).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(toastCount()).toBe(1));
         expect(await getPreferenceKind('The Hindu')).toBe('deprioritize');
         // A later "More from" on one of the two names.
         await setSourcePrefFromUi({ kind: 'publisher', names: ['Hindu Business Line'] }, 'prioritised');
