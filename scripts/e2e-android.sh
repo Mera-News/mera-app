@@ -30,17 +30,18 @@ APK_OUT=android/app/build/outputs/apk/release/app-release.apk
 LAST=e2e-output/last-app-e2e.apk
 
 ORIG_ARGS=("$@")
-DRY=0 FLOWS=.maestro/ SKIP_BUILD=0 CLEAN=0
+DRY=0 SKIP_BUILD=0 CLEAN=0
+FLOWS=()
 HANDLERS="${E2E_HANDLERS:-./handlers}"
 
 usage() {
-  echo "usage: $0 [--dry-run] [--flows <path>] [--skip-build] [--clean] [--handlers <module>]" >&2
+  echo "usage: $0 [--dry-run] [--flows <path>]... [--skip-build] [--clean] [--handlers <module>]" >&2
   exit 2
 }
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;
-    --flows) FLOWS="${2:?}"; shift ;;
+    --flows) FLOWS+=("${2:?}"); shift ;;  # repeatable: several flows or dirs, one boot
     --skip-build) SKIP_BUILD=1 ;;
     --clean) CLEAN=1 ;;
     --handlers) HANDLERS="${2:?}"; shift ;;
@@ -48,6 +49,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+[ "${#FLOWS[@]}" -gt 0 ] || FLOWS=(.maestro/)
 
 # Remote endpoints of the app-uid sockets sampled from /proc/net/tcp{,6}. Allowed: the mock
 # (10.0.2.2:PORT), loopback and unconnected sockets. Requires at least one socket to the mock,
@@ -84,14 +86,14 @@ console.log("app sockets ok (" + mock + " samples to the mock, none elsewhere)")
 if [ "$DRY" = 1 ]; then
   cat <<PLAN
 e2e-android --dry-run (nothing is run, no heavy slot is taken)
-ROOT=$ROOT  RUN=$RUN  flows=$FLOWS  handlers=$HANDLERS
+ROOT=$ROOT  RUN=$RUN  flows=${FLOWS[*]}  handlers=$HANDLERS
 step 0 preflight: re-exec as E2E_HEAVY_HELD=1 $ROOT/../bin/heavy --all bash $SELF; abort if adb lists an emulator-*; require maestro, $EMU, $ADB; mkdir -p $RUN; trap cleanup EXIT INT TERM
 step 1 prebuild$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build)" ): (set -a; . ./.env.e2e; CI=1 EXPO_NO_DOTENV=1 TMPDIR=$ROOT/e2e-output/.metro-tmp npx expo prebuild --platform android --no-install$( [ "$CLEAN" = 1 ] && echo " --clean" ))
 step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process); cp $APK_OUT $LAST; grep the raw bundle: require 10.0.2.2:$PORT, forbid prod/staging endpoint hosts and every .env secret value (DSN, KEY, TOKEN, APP_ID, CLIENT_ID)
 step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --deny-delay 3000 --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
 step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 -http-proxy http://127.0.0.1:$PORT > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s); screenshot $RUN/launcher.png
 step 5 install: adb -s $SERIAL install -r $LAST; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
-step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test $FLOWS --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler; logcat -d > $RUN/logcat.txt; report WMDatabaseJSIBridge install line and FATAL lines
+step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler; logcat -d > $RUN/logcat.txt; report WMDatabaseJSIBridge install line and FATAL lines
 step 7 app sockets: every sampled app-uid remote must be 10.0.2.2:$PORT (or loopback/unconnected), and at least one must be the mock
 step 8 cleanup (always, idempotent): stop sampler; adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f "@$AVD" to clear; kill mock server
 exit code: maestro's if non-zero, else step 7's
@@ -215,9 +217,9 @@ APP_UID="$("$ADB" -s "$SERIAL" shell pm list packages -U "$APP_ID" | tr -d '\r' 
 SAMPLER_PID=$!
 
 # ---- step 6: Maestro ---------------------------------------------------------------------
-echo "== step 6: maestro $FLOWS"
+echo "== step 6: maestro ${FLOWS[*]}"
 MAESTRO_RC=0
-MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test "$FLOWS" \
+MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test "${FLOWS[@]}" \
   --test-output-dir "$RUN/maestro" --format junit --output "$RUN/junit.xml" \
   -e MOCK="http://localhost:$PORT" -e EMAIL="$EMAIL" -e OTP="$OTP" -e APP_ID="$APP_ID" -e SCHEME="$SCHEME" \
   -e IMAGE_ORIGIN="${IMAGE_ORIGIN:-}" || MAESTRO_RC=$?
