@@ -1,4 +1,4 @@
-import { cardState, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, type CardStateInput } from '../card-state';
+import { cardState, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, type CardStateInput } from '@/components/custom/for-you/card-state';
 
 const base: CardStateInput = {
   mode: 'idle',

@@ -1,4 +1,4 @@
-import { sectionTitle, sectionTitleIsContent, type Translate } from '../section-title';
+import { sectionTitle, sectionTitleIsContent, type Translate } from '@/components/custom/for-you/section-title';
 import type { FactRow } from '@/lib/stores/fact-rows-selector';
 
 // Stub `t`: echoes the key plus any interpolation, so the assertions pin BOTH

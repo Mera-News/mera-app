@@ -10,7 +10,7 @@ import {
   tapTransit,
   transitPanel,
   transitProgress,
-} from '../tab-swipe';
+} from '@/components/custom/nav/tab-swipe';
 
 const W = 400;
 const base = { width: W, index: 1, count: 3, rtl: false, vx: 0 };

@@ -1,5 +1,5 @@
 // The "new card" rule behind the halo, the bottom glow and the minimap.
-import { arrivedAtOf, deriveLastLeftAt, isNewCard } from '../feed-entries';
+import { arrivedAtOf, deriveLastLeftAt, isNewCard } from '@/components/custom/feed/feed-entries';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 
 const seen = (at: number): CardStateRecord => ({ state: 'viewed', at } as CardStateRecord);

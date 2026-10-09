@@ -1,4 +1,4 @@
-import { CHIP_MIN_OPACITY, CHIP_ROW_INSET, chipOpacity, revealOffset } from '../chip-row';
+import { CHIP_MIN_OPACITY, CHIP_ROW_INSET, chipOpacity, revealOffset } from '@/components/custom/nav/chip-row';
 
 describe('chipOpacity', () => {
   it('leaves every chip the viewport fully shows at full strength, edges included', () => {

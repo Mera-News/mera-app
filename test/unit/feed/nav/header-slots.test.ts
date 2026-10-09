@@ -1,4 +1,4 @@
-import { headerSideSlots, SIDE_SLOT, trackCentreX } from '../header-slots';
+import { headerSideSlots, SIDE_SLOT, trackCentreX } from '@/components/custom/nav/header-slots';
 
 describe('headerSideSlots', () => {
   it('centres the track on the screen on Feed, Library and You', () => {

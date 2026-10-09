@@ -8,7 +8,7 @@ import {
   reorder,
   slotToIndex,
   toDraft,
-} from '../arrange-model';
+} from '@/components/custom/nav/arrange-model';
 
 const FR = { alpha2: 'fr', name: 'France' };
 

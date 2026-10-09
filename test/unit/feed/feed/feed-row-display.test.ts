@@ -5,7 +5,7 @@ import {
   displayedSuggestionOf,
   newFeedRowSession,
   resolveFeedRowDisplay,
-} from '../feed-row-display';
+} from '@/components/custom/feed/feed-row-display';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';

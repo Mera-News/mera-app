@@ -19,7 +19,7 @@ import {
   STALE_TWO_BAND_HOURS,
   isAwaitingNote,
   type SortedFeed,
-} from '../feed-entries';
+} from '@/components/custom/feed/feed-entries';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { FEED_HALF_LIFE_HOURS } from '@/lib/stores/feed-list-selector';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';

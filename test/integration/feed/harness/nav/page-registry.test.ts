@@ -9,7 +9,7 @@ import {
   tabForSurface,
   tabOfPage,
   type FixedPageId,
-} from '../page-registry';
+} from '@/components/custom/nav/page-registry';
 
 describe('page-registry', () => {
   it('places every default page in the tab whose order lists it', () => {

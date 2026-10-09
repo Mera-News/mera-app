@@ -1,4 +1,4 @@
-import { menuTop } from '../menu-placement';
+import { menuTop } from '@/components/custom/nav/menu-placement';
 
 const base = {
   chipHeight: 34,

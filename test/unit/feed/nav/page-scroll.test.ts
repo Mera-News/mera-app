@@ -1,6 +1,6 @@
-import type { PageId } from '../page-registry';
-import { retapTarget, scrollListToTop } from '../page-scroll';
-import { decideTabPressAction, tabRouteKeyContaining, tabRouteKeyFor, TAB_PRESS_TOP_EPSILON } from '../tab-press';
+import type { PageId } from '@/components/custom/nav/page-registry';
+import { retapTarget, scrollListToTop } from '@/components/custom/nav/page-scroll';
+import { decideTabPressAction, tabRouteKeyContaining, tabRouteKeyFor, TAB_PRESS_TOP_EPSILON } from '@/components/custom/nav/tab-press';
 
 describe('retapTarget', () => {
   const targets = new Map<PageId, string>([
