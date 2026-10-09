@@ -162,7 +162,7 @@ describe('buffered replies with nothing to say', () => {
 });
 
 describe('a provider tool call in CLEAR (never expected, never silently dropped)', () => {
-  it('streamed: forwarded on the offset slot, reported once, no content in the report', async () => {
+  it('CH14 today: streamed: forwarded on the offset slot, reported once, no content in the report', async () => {
     const { handler } = rawChat(() => [
       delta({ tool_calls: [{ index: 0, id: 'tc-1', function: { name: 'proposeTrack', arguments: '' } }] }),
       delta({ tool_calls: [{ index: 0, function: { arguments: '{"a":' } }] }),
@@ -185,7 +185,7 @@ describe('a provider tool call in CLEAR (never expected, never silently dropped)
     expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
   });
 
-  it('buffered: each call on its own offset slot', async () => {
+  it('CH14 today: buffered: each call on its own offset slot', async () => {
     const call = (id: string, name: string, args: string) => ({ id, type: 'function', function: { name, arguments: args } });
     server.use(
       rawJson(() => ({
@@ -205,7 +205,7 @@ describe('a provider tool call in CLEAR (never expected, never silently dropped)
     expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
   });
 
-  it('buffered text and a provider call together yield both', async () => {
+  it('CH14 today: buffered text and a provider call together yield both', async () => {
     server.use(
       rawJson((seal) => ({
         choices: [
@@ -222,6 +222,52 @@ describe('a provider tool call in CLEAR (never expected, never silently dropped)
     const events = await run();
     expect(events.map((e) => e.type)).toEqual(['text-delta', 'tool-call-delta', 'finish']);
     expect(textOf(events)).toBe('Doing it.');
+  });
+
+  // CH14: a cleartext call never passed the envelope, so nothing proves the model wrote it. Fail closed.
+  test.failing("CH14: a provider's cleartext tool call fails the stream closed, streamed and buffered", async () => {
+    const drain = async () => {
+      const yielded: SseEvent[] = [];
+      let error: unknown = null;
+      try {
+        for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })) yielded.push(e);
+      } catch (e) {
+        error = e;
+      }
+      return { yielded, error };
+    };
+    const secretName = 'proposeTrack';
+    const secretArgs = '{"secret":"SENTINEL-ARGS"}';
+    const streamed = rawChat(() => [
+      delta({ tool_calls: [{ index: 0, id: 'tc-1', function: { name: secretName, arguments: '' } }] }),
+      delta({ tool_calls: [{ index: 0, function: { arguments: secretArgs } }] }),
+      delta({}, 'tool_calls'),
+      DONE,
+    ]).handler;
+    const buffered = rawJson(() => ({
+      choices: [
+        {
+          message: {
+            content: '',
+            tool_calls: [{ id: 'tc-1', type: 'function', function: { name: secretName, arguments: secretArgs } }],
+          },
+          finish_reason: 'tool_calls',
+        },
+      ],
+    })).handler;
+    const { captureMessage } = loggerSpies();
+    for (const handler of [streamed, buffered]) {
+      captureMessage.mockClear();
+      server.use(handler);
+      const { yielded, error } = await drain();
+      expect(error).toBeInstanceOf(Error);
+      expect(yielded.filter((e) => e.type === 'tool-call-delta')).toEqual([]);
+      expect(captureMessage).toHaveBeenCalledTimes(1);
+      expect(captureMessage.mock.calls[0][1]).toMatchObject({ fingerprint: ['e2ee-cleartext-tool-call'] });
+      const reported = JSON.stringify(captureMessage.mock.calls);
+      expect(reported).not.toContain(secretName);
+      expect(reported).not.toContain('SENTINEL-ARGS');
+    }
   });
 });
 
