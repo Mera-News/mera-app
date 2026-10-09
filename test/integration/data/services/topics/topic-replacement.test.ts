@@ -15,11 +15,12 @@
 //     withheld; counts only ACTIVE rows toward the floor; ignores ids that are not active; ignores
 //     ids of another fact
 //
-// Not carried over: "still mints even while the retire is withheld" is vacuous (the floor is only
-// held when nothing was planned, so there is nothing to mint); here the held floor asserts an empty
-// mint. "The batch call returned an item with an error" is not expressible through the gateway mock
-// (a refused batch fails the whole request) so it is covered by the whole-request refusal. "One
-// database.write" / "one database.batch" are asserted by the batch fault.
+// Not carried over: "an empty batch changes nothing" (the `!result` half of topic-replacement-service.ts:111,
+// and the `'no result'` fallback at :114) cannot be reached through the gateway mock, which answers one
+// result row per call, success or failure (R30 candidate). "Still mints even while the retire is
+// withheld" is vacuous (the floor is only held when nothing was planned, so there is nothing to mint);
+// here the held floor asserts an empty mint. "One database.write" / "one database.batch" are asserted
+// by the batch fault. A result carrying an error uses the mock's per-item failure.
 //
 // B3 (DATA-U8-1): see the end of the file.
 import { Q } from '@nozbe/watermelondb';
@@ -83,6 +84,18 @@ describe('generateAndReplace: a failed generation changes NOTHING', () => {
     const out = await replace(fact.id, 3, [bad.id]);
 
     expect(out).toEqual({ ok: false, minted: 0, retired: 0, floorHeld: false });
+    expect(await activeTexts(fact.id)).toEqual([OK, BAD].sort());
+    expect(await metadataTopics(fact.id)).toEqual([BAD, OK]);
+  });
+
+  it('a result carrying an error (one item of the batch failed upstream) changes nothing', async () => {
+    const { fact, bad } = await cricketWorld();
+    server.use(...mockGateway(() => ({ status: 502, body: { error: 'reasoning-overran-budget' }, perItem: true })));
+
+    const out = await replace(fact.id, 3, [bad.id]);
+
+    expect(out).toEqual({ ok: false, minted: 0, retired: 0, floorHeld: false });
+    expect(gatewayCalls('batch')).toHaveLength(1);
     expect(await activeTexts(fact.id)).toEqual([OK, BAD].sort());
     expect(await metadataTopics(fact.id)).toEqual([BAD, OK]);
   });

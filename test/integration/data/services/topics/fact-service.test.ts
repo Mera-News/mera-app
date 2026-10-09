@@ -467,6 +467,15 @@ describe('replaceFact: accept a proposal that replaces a fact', () => {
     expect(await suggestionIds()).toEqual(['s-other']);
   });
 
+  it('replacing a fact whose topics retrieved nothing purges nothing and still replaces', async () => {
+    const old = await seedFact('I live in Berlin', ['Berlin news']);
+
+    await replaceFact(old.fact.id, { statement: 'I live in Rotterdam' });
+
+    expect((await getFacts()).map((f) => f.statement)).toEqual(['I live in Rotterdam']);
+    expect(await countRows('topics')).toBe(0);
+  });
+
   it('honours an explicit topicsStatus and carries the questionnaire fields', async () => {
     const old = await addFact('old');
 
