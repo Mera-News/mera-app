@@ -1,4 +1,4 @@
-import { inboxTabTarget } from '../inbox-tab-target';
+import { inboxTabTarget } from '@/components/custom/notifications/inbox-tab-target';
 
 describe('inboxTabTarget', () => {
     it('is the centre of the first tab (the Feed), above the inset', () => {

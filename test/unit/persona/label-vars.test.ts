@@ -1,7 +1,7 @@
 // label-vars.test.ts: {{publication}} in a tree label SAYS the display name
 // (ux2 A7), while the context's `publicationName` stays the raw key.
 
-import { feedbackLabelVars } from '../label-vars';
+import { feedbackLabelVars } from '@/components/custom/feedback-tree/label-vars';
 
 describe('feedbackLabelVars', () => {
   it('fills {{publication}} with the display name when there is one', () => {

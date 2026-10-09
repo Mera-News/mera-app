@@ -3,7 +3,7 @@
 // pure evaluateCondition / resolveLeafActions run for real.
 
 import type { FeedbackTree, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
-import { resolveTreeLevel } from '../useFeedbackTreeEngine';
+import { resolveTreeLevel } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 
 const TREE: FeedbackTree = {
   version: 2,

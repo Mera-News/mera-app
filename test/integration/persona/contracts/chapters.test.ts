@@ -29,10 +29,10 @@ import fs from 'fs';
 import path from 'path';
 
 import en from '@/lib/locales/en.json';
-import { TUTORIAL_CHAPTERS, chaptersAtLevel, getChapter } from '../chapters';
-import { animationIdFor, keysForChapter, lookupKey } from '../keys';
+import { TUTORIAL_CHAPTERS, chaptersAtLevel, getChapter } from '@/lib/tutorials/chapters';
+import { animationIdFor, keysForChapter, lookupKey } from '@/lib/tutorials/keys';
 
-const REPO_ROOT = path.resolve(__dirname, '../../..');
+const REPO_ROOT = path.resolve(__dirname, '../../../..');
 
 describe('TUTORIAL_CHAPTERS', () => {
   it('has twelve chapters split across the two levels', () => {

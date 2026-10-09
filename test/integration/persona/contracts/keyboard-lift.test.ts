@@ -1,4 +1,4 @@
-import { keyboardLift } from '../keyboard-lift';
+import { keyboardLift } from '@/components/custom/onboarding/keyboard-lift';
 
 describe('keyboardLift', () => {
   it('is zero with the keyboard down', () => {
@@ -18,7 +18,7 @@ describe('onboarding chat step', () => {
   it('lifts by the shared rule, not a KeyboardAvoidingView measured from a nested frame', () => {
     const fs = require('fs');
     const path = require('path');
-    const src = fs.readFileSync(path.join(__dirname, '..', 'PersonaUpdateChatStep.tsx'), 'utf8');
+    const src = fs.readFileSync(path.resolve(__dirname, '../../../..', 'components/custom/onboarding/PersonaUpdateChatStep.tsx'), 'utf8');
     expect(src).toContain('keyboardLift(');
     expect(src).not.toMatch(/<KeyboardAvoidingView/);
   });
@@ -28,7 +28,7 @@ describe('onboarding guards', () => {
   it('the keyboard is dismissed right before each guard opens', () => {
     const fs = require('fs');
     const path = require('path');
-    const src: string = fs.readFileSync(path.join(__dirname, '..', 'OnboardingWizard.tsx'), 'utf8');
+    const src: string = fs.readFileSync(path.resolve(__dirname, '../../../..', 'components/custom/onboarding/OnboardingWizard.tsx'), 'utf8');
     for (const guard of ['no-facts', 'no-notifications']) {
       expect(src).toMatch(new RegExp(`Keyboard\\.dismiss\\(\\);\\s*setGuard\\('${guard}'\\)`));
     }

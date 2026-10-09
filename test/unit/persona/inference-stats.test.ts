@@ -4,7 +4,7 @@ import {
   recordCompletion,
   recordModelLoad,
   resetInferenceStats,
-} from '../inference-stats';
+} from '@/lib/mera-protocol-toolkit/core/inference-stats';
 
 beforeEach(() => resetInferenceStats());
 

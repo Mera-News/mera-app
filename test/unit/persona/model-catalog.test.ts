@@ -5,7 +5,7 @@ import {
   catalogEntry,
   isRetiredModelId,
   supportsJsonGrammar,
-} from '../model-catalog';
+} from '@/lib/mera-protocol-toolkit/core/model-catalog';
 
 describe('model catalogue', () => {
   it('offers exactly the two small models', () => {

@@ -3,7 +3,8 @@
 // only for App Attest, Google only for Play Integrity, the dev bypass claims
 // no platform check, and only ANDROID_ID survives an uninstall.
 
-import { consentNoticeKey, deviceSignInCaptionKey } from '../device-sign-in-copy';
+import path from 'path';
+import { consentNoticeKey, deviceSignInCaptionKey } from '@/components/custom/auth/device-sign-in-copy';
 
 describe('consentNoticeKey', () => {
     it.each([
@@ -30,7 +31,7 @@ describe('deviceSignInCaptionKey', () => {
 });
 
 it('every key it can return exists in en.json', () => {
-    const en = require('../../../../lib/locales/en.json');
+    const en = require(path.resolve(__dirname, '../../../..', 'lib/locales/en.json'));
     const get = (k: string) => k.split('.').reduce((o: any, p) => o?.[p], en);
     const paths = ['app-attest', 'play-integrity', 'play-integrity-uuid', 'dev-bypass'] as const;
     for (const p of paths) {
