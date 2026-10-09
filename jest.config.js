@@ -120,6 +120,9 @@ module.exports = {
     {
       ...base,
       displayName: 'integration',
+      // Call history resets before every test; implementations (jest.fn(impl), the setup's
+      // doMock factories) stay. resetMocks would wipe those, so it stays off.
+      clearMocks: true,
       setupFilesAfterEnv: ['<rootDir>/jest.setup.integration.js'],
       testMatch: ['<rootDir>/test/integration/**/*.test.ts?(x)'],
       testPathIgnorePatterns: ['/node_modules/', ...IGNORED_DIRS],
