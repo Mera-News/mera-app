@@ -1,39 +1,23 @@
-// withRetry uses setTimeout for exponential backoff.
-// We mock setTimeout directly to make it resolve instantly.
+// withRetry backs off with setTimeout (100ms, doubling). A strict fake clock (time moves only when
+// the test drives it) makes the delays observable without a spy on setTimeout.
+import { advanceUntilDone, useStrictClock } from '@/test/helpers';
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: { warn: jest.fn() },
 }));
 
-// Replace setTimeout with an instant version BEFORE importing withRetry
-const originalSetTimeout = global.setTimeout;
-const capturedSetTimeoutDelays: number[] = [];
-
-// Make all timeouts resolve immediately so we don't need fake timers
-jest.spyOn(global, 'setTimeout').mockImplementation((fn: any, delay?: number) => {
-  if (typeof delay === 'number') capturedSetTimeoutDelays.push(delay);
-  return originalSetTimeout(fn, 0) as any;
-});
-
 import logger from '@/lib/logger';
-import { isNonRetryableError, NonRetryableError, withRetry } from '../retry';
+import { isNonRetryableError, NonRetryableError, withRetry } from '@/lib/utils/retry';
 
 const mockLoggerWarn = logger.warn as jest.Mock;
 
 describe('withRetry', () => {
-  beforeEach(() => {
-    mockLoggerWarn.mockClear();
-    capturedSetTimeoutDelays.length = 0;
-  });
-
-  afterAll(() => {
-    jest.spyOn(global, 'setTimeout').mockRestore();
-  });
+  beforeEach(() => useStrictClock('2026-01-01T00:00:00Z'));
 
   it('returns immediately on first-try success', async () => {
     const op = jest.fn().mockResolvedValue('ok');
-    const result = await withRetry(op);
+    const result = await advanceUntilDone(withRetry(op));
     expect(result).toBe('ok');
     expect(op).toHaveBeenCalledTimes(1);
   });
@@ -44,7 +28,7 @@ describe('withRetry', () => {
       .mockRejectedValueOnce(new Error('fail2'))
       .mockResolvedValueOnce('success');
 
-    const result = await withRetry(op, undefined, 3, '[test]');
+    const result = await advanceUntilDone(withRetry(op, undefined, 3, '[test]'));
     expect(result).toBe('success');
     expect(op).toHaveBeenCalledTimes(3);
     expect(mockLoggerWarn).toHaveBeenCalledTimes(2);
@@ -56,7 +40,7 @@ describe('withRetry', () => {
     const err = new Error('persistent failure');
     const op = jest.fn().mockRejectedValue(err);
 
-    await expect(withRetry(op, undefined, 2, '[tag]')).rejects.toBe(err);
+    await expect(advanceUntilDone(withRetry(op, undefined, 2, '[tag]'))).rejects.toBe(err);
     expect(op).toHaveBeenCalledTimes(3); // 1 initial + 2 retries
   });
 
@@ -65,37 +49,31 @@ describe('withRetry', () => {
     controller.abort();
     const op = jest.fn().mockResolvedValue('never');
 
-    await expect(withRetry(op, controller.signal)).rejects.toThrow('aborted');
+    await expect(advanceUntilDone(withRetry(op, controller.signal))).rejects.toThrow('aborted');
     expect(op).not.toHaveBeenCalled();
   });
 
   it('throws "aborted" when signal is aborted between retries', async () => {
     const controller = new AbortController();
-    // Fail once, then abort, then succeed (should not reach the success)
+    // Fail once, abort during the backoff wait, and the second attempt never runs.
     const op = jest.fn()
       .mockRejectedValueOnce(new Error('fail'))
       .mockResolvedValueOnce('ok');
 
-    // Override setTimeout to abort AFTER the delay callback would be queued
-    const origSpy = jest.spyOn(global, 'setTimeout').mockImplementation((fn: any, delay?: number) => {
-      // Abort before the retry fn can run
-      controller.abort();
-      return originalSetTimeout(fn, 0) as any;
-    });
+    const result = withRetry(op, controller.signal, 3);
+    await jest.advanceTimersByTimeAsync(50);
+    expect(op).toHaveBeenCalledTimes(1);
+    controller.abort();
 
-    await expect(withRetry(op, controller.signal, 3)).rejects.toThrow('aborted');
-    origSpy.mockRestore();
-    // Re-apply the normal instant mock for subsequent tests
-    jest.spyOn(global, 'setTimeout').mockImplementation((fn: any, delay?: number) => {
-      if (typeof delay === 'number') capturedSetTimeoutDelays.push(delay);
-      return originalSetTimeout(fn, 0) as any;
-    });
+    const error = await advanceUntilDone(result).catch((e) => e);
+    expect(error).toMatchObject({ name: 'AbortError', message: 'aborted' });
+    expect(op).toHaveBeenCalledTimes(1);
   });
 
   it('uses default maxRetries=3 — calls op up to 4 times total', async () => {
     const err = new Error('err');
     const op = jest.fn().mockRejectedValue(err);
-    await expect(withRetry(op)).rejects.toBe(err);
+    await expect(advanceUntilDone(withRetry(op))).rejects.toBe(err);
     expect(op).toHaveBeenCalledTimes(4); // 1 + 3 retries
   });
 
@@ -104,7 +82,7 @@ describe('withRetry', () => {
       .mockRejectedValueOnce(new Error('err'))
       .mockResolvedValueOnce('ok');
 
-    await withRetry(op);
+    await advanceUntilDone(withRetry(op));
     expect(mockLoggerWarn).toHaveBeenCalledWith('[retry] retry 1/3');
   });
 
@@ -112,21 +90,27 @@ describe('withRetry', () => {
     const err = new Error('immediate fail');
     const op = jest.fn().mockRejectedValue(err);
 
-    await expect(withRetry(op, undefined, 0)).rejects.toBe(err);
+    await expect(advanceUntilDone(withRetry(op, undefined, 0))).rejects.toBe(err);
     expect(op).toHaveBeenCalledTimes(1);
     expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
 
   it('exponential backoff: delays double per retry (100, 200, 400ms)', async () => {
-    capturedSetTimeoutDelays.length = 0;
     const op = jest.fn()
       .mockRejectedValueOnce(new Error('1'))
       .mockRejectedValueOnce(new Error('2'))
       .mockRejectedValueOnce(new Error('3'))
       .mockResolvedValueOnce('ok');
 
-    await withRetry(op, undefined, 3);
-    expect(capturedSetTimeoutDelays).toEqual([100, 200, 400]);
+    const result = withRetry(op, undefined, 3);
+    // Each retry runs exactly when its delay ends: one ms short, still waiting; then it fires.
+    for (const [delay, callsBefore] of [[100, 1], [200, 2], [400, 3]] as const) {
+      await jest.advanceTimersByTimeAsync(delay - 1);
+      expect(op).toHaveBeenCalledTimes(callsBefore);
+      await jest.advanceTimersByTimeAsync(1);
+      expect(op).toHaveBeenCalledTimes(callsBefore + 1);
+    }
+    await expect(result).resolves.toBe('ok');
   });
 
   // ── Non-retryable errors must fail fast — no backoff loop, no wasted attempts.
@@ -134,7 +118,7 @@ describe('withRetry', () => {
     const err = { errors: [{ extensions: { code: 'BAD_USER_INPUT' } }] };
     const op = jest.fn().mockRejectedValue(err);
 
-    await expect(withRetry(op, undefined, 3)).rejects.toBe(err);
+    await expect(advanceUntilDone(withRetry(op, undefined, 3))).rejects.toBe(err);
     expect(op).toHaveBeenCalledTimes(1);
     expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
@@ -143,7 +127,7 @@ describe('withRetry', () => {
     const err = { statusCode: 400, message: 'Bad Request' };
     const op = jest.fn().mockRejectedValue(err);
 
-    await expect(withRetry(op, undefined, 3)).rejects.toBe(err);
+    await expect(advanceUntilDone(withRetry(op, undefined, 3))).rejects.toBe(err);
     expect(op).toHaveBeenCalledTimes(1);
   });
 
@@ -151,7 +135,7 @@ describe('withRetry', () => {
     const err = { statusCode: 503, message: 'Service Unavailable' };
     const op = jest.fn().mockRejectedValue(err);
 
-    await expect(withRetry(op, undefined, 2)).rejects.toBe(err);
+    await expect(advanceUntilDone(withRetry(op, undefined, 2))).rejects.toBe(err);
     expect(op).toHaveBeenCalledTimes(3); // 1 + 2 retries — treated as transient
   });
 });

@@ -1,12 +1,6 @@
 import { I18nManager } from 'react-native';
 
-import { inlineSign, inlineX } from '../motion';
-
-// Reanimated's native side does not load in jest; motion.ts only builds easings from it.
-jest.mock('react-native-reanimated', () => {
-    const f = () => () => 0;
-    return { Easing: { bezier: f, in: f, cubic: () => 0, linear: () => 0 } };
-});
+import { inlineSign, inlineX } from '@/lib/motion';
 
 describe('inline direction', () => {
     const original = I18nManager.isRTL;

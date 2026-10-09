@@ -1,9 +1,14 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import {
     LITE_BELOW_BYTES,
+    PERFORMANCE_OVERRIDE_KEY,
     classifyDevice,
+    readPerformanceOverride,
+    writePerformanceOverride,
     overrideFromLegacyStaticGradient,
     resolvePerformanceMode,
-} from '../performance-mode';
+} from '@/lib/performance/performance-mode';
 
 const GB = 1024 * 1024 * 1024;
 
@@ -43,5 +48,24 @@ describe('overrideFromLegacyStaticGradient', () => {
         expect(overrideFromLegacyStaticGradient('1')).toBe('lite');
         expect(overrideFromLegacyStaticGradient('0')).toBe('full');
         expect(overrideFromLegacyStaticGradient(null)).toBe('auto');
+    });
+});
+
+describe('the stored override (device-level AsyncStorage)', () => {
+    it('reads null when the reader never chose', async () => {
+        expect(await readPerformanceOverride()).toBeNull();
+    });
+
+    it('round-trips an explicit choice under its own key', async () => {
+        await writePerformanceOverride('lite');
+        expect(await AsyncStorage.getItem(PERFORMANCE_OVERRIDE_KEY)).toBe('lite');
+        expect(await readPerformanceOverride()).toBe('lite');
+        await writePerformanceOverride('auto');
+        expect(await readPerformanceOverride()).toBe('auto');
+    });
+
+    it('treats an unrecognised stored value as no choice', async () => {
+        await AsyncStorage.setItem(PERFORMANCE_OVERRIDE_KEY, 'turbo');
+        expect(await readPerformanceOverride()).toBeNull();
     });
 });

@@ -1,4 +1,4 @@
-import { settleDialog, showDialog, useDialogQueue } from '../dialog';
+import { settleDialog, showDialog, useDialogQueue } from '@/lib/dialog';
 
 describe('dialog queue', () => {
     beforeEach(() => useDialogQueue.setState({ queue: [] }));

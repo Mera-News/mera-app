@@ -9,7 +9,6 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import {
-    TOAST_MIN_DURATION_MS,
     TOAST_QUEUE_CAP,
     close,
     closeAll,
@@ -17,7 +16,7 @@ import {
     resetToastQueue,
     show,
     useToastQueue,
-} from '../toast-queue';
+} from '@/lib/toast/toast-queue';
 
 const render = () => null;
 const ids = () => useToastQueue.getState().entries.map((entry) => entry.id);
