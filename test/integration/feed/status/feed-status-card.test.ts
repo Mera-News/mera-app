@@ -1,4 +1,4 @@
-import { resetStatusCard, setStatusCardExpanded, statsCardShown, useFeedStatusCard } from '../feed-status-card';
+import { resetStatusCard, setStatusCardExpanded, statsCardShown, useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
 
 describe('the counts card state', () => {
     it('starts collapsed; only a tap opens it, and leaving folds it', () => {

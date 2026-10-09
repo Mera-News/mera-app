@@ -37,12 +37,12 @@ describe('the export feature cannot break JS boot on a client missing a native m
   it('loads export-and-share without resolving any native module', () => {
     // The module that OWNS the native calls. If its imports are at module
     // scope this throws, which is precisely the crash being guarded.
-    expect(() => require('../export-and-share')).not.toThrow();
+    expect(() => require('@/components/custom/saved-suggestions/export-and-share')).not.toThrow();
   });
 
   it('still exports its helpers, so deferring the imports did not hollow it out', () => {
     // Without this, the test above would pass on an empty module.
-    const { toFileUri, exportAndShare } = require('../export-and-share');
+    const { toFileUri, exportAndShare } = require('@/components/custom/saved-suggestions/export-and-share');
 
     expect(typeof exportAndShare).toBe('function');
     expect(toFileUri('/var/tmp/x.md')).toBe('file:///var/tmp/x.md');
@@ -53,7 +53,7 @@ describe('the export feature cannot break JS boot on a client missing a native m
     const { Share } = require('react-native');
     const spy = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
 
-    const { exportAndShare } = require('../export-and-share');
+    const { exportAndShare } = require('@/components/custom/saved-suggestions/export-and-share');
     const result = await exportAndShare({
       content: '# Saved articles\n',
       format: 'markdown',
@@ -75,7 +75,7 @@ describe('the export feature cannot break JS boot on a client missing a native m
     const { Share } = require('react-native');
     const spy = jest.spyOn(Share, 'share').mockRejectedValue(new Error('no sheet'));
 
-    const { exportAndShare } = require('../export-and-share');
+    const { exportAndShare } = require('@/components/custom/saved-suggestions/export-and-share');
     const result = await exportAndShare({
       content: 'x',
       format: 'json',
@@ -98,8 +98,8 @@ describe('no native import sits at module scope anywhere in the export path', ()
 
   const NATIVE = ['expo-sharing', 'expo-file-system', 'expo-haptics', 'react-native-view-shot'];
 
-  const DIR = path.join(__dirname, '..');
   const ROOT = path.join(__dirname, '..', '..', '..', '..');
+  const DIR = path.join(ROOT, 'components/custom/saved-suggestions');
 
   // DERIVED from disk, not a hand-kept list. The sibling guard in share-stats
   // keeps its list by hand and needs a second test asserting the list still

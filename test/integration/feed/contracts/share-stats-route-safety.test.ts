@@ -35,19 +35,19 @@ describe('the share feature cannot break JS boot on a client missing a native mo
   it('loads capture-and-share without resolving any native module', () => {
     // The module that OWNS the native calls. If its imports are at module
     // scope this throws, which is precisely the crash being guarded.
-    expect(() => require('../capture-and-share')).not.toThrow();
+    expect(() => require('@/components/custom/share-stats/capture-and-share')).not.toThrow();
   });
 
   it('still exports its pure helper, so deferring the imports did not hollow it out', () => {
     // Without this, the test above would pass on an empty module.
-    const { toFileUri, captureAndShare } = require('../capture-and-share');
+    const { toFileUri, captureAndShare } = require('@/components/custom/share-stats/capture-and-share');
 
     expect(typeof captureAndShare).toBe('function');
     expect(toFileUri('/var/tmp/x.png')).toBe('file:///var/tmp/x.png');
   });
 
   it('reports unavailable rather than throwing when the modules cannot resolve', async () => {
-    const { captureAndShare } = require('../capture-and-share');
+    const { captureAndShare } = require('@/components/custom/share-stats/capture-and-share');
 
     const result = await captureAndShare({
       ref: { current: null },

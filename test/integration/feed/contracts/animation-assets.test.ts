@@ -13,7 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { PROCESSING_ANIMATIONS } from '../animation-registry';
+import { PROCESSING_ANIMATIONS } from '@/components/custom/processing/animation-registry';
 import {
   GAME_ANIMATIONS,
   GAME_LOOP_IDS,
@@ -23,8 +23,8 @@ import {
   EXPLICIT_ANIMATION_IDS,
   TUTORIAL_ANIMATIONS,
 } from '@/components/custom/tutorials/animation-registry';
-import { PROCESSING_STAGES } from '../processing-stages';
-import { PROCESSING_STAGE_IDS } from '../types';
+import { PROCESSING_STAGES } from '@/components/custom/processing/processing-stages';
+import { PROCESSING_STAGE_IDS } from '@/components/custom/processing/types';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../..');
 const ASSET_DIR = path.join(REPO_ROOT, 'assets/animations');
