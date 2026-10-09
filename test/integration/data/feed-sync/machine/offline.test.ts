@@ -127,7 +127,7 @@ describe('FeedSyncMachine offline pause and the wake lock', () => {
         return { running, t, sent };
       }
 
-      test.failing('resumes and finishes once the link is back', async () => {
+      test.failing('DA15: resumes and finishes once the link is back', async () => {
         const { running, t, sent } = await dropDuringFetchThenFetchLands();
         try {
           online();
@@ -138,7 +138,7 @@ describe('FeedSyncMachine offline pause and the wake lock', () => {
         }
       });
 
-      it('today: stays parked after the link is back, hydrates nothing, and only a takeover after the stale window frees it', async () => {
+      it('DA15: today: stays parked after the link is back, hydrates nothing, and only a takeover after the stale window frees it', async () => {
         const { running, t, sent } = await dropDuringFetchThenFetchLands();
 
         online();
