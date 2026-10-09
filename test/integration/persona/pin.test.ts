@@ -478,6 +478,10 @@ describe('pin-store init()', () => {
 
             await usePinStore.getState().init();
 
+            // The restart path ran: the marker was read, with the departure stamp it carried.
+            const context = await restartContext();
+            expect(context.wasJsRestart).toBe(true);
+            expect(context.backgroundedAt).not.toBeNull();
             expect(usePinStore.getState().locked).toBe(true);
         });
 
@@ -487,6 +491,7 @@ describe('pin-store init()', () => {
 
             await usePinStore.getState().init();
 
+            expect((await restartContext()).wasJsRestart).toBe(true);
             expect(usePinStore.getState()).toMatchObject({ pinSet: true, lockEnabled: true, locked: false });
         });
 
@@ -496,6 +501,7 @@ describe('pin-store init()', () => {
 
             await usePinStore.getState().init();
 
+            expect(await restartContext()).toMatchObject({ wasJsRestart: true, backgroundedAt: null });
             expect(usePinStore.getState().locked).toBe(false);
         });
 

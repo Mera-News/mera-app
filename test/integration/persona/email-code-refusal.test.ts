@@ -3,12 +3,14 @@
 // and MSW; the server's answers are the only thing overridden.
 import Constants from 'expo-constants';
 import { signInWithEmailCode, type EmailCodeSignIn } from '@/components/custom/auth/email-code-sign-in';
+import { __resetLegalConsentLatchForTests } from '@/components/custom/auth/legal-consent';
 import {
     __resetIdentityStateForTests,
     isAccountSwitchHeld,
     holdAccountSwitch,
     readPendingAuthUserId,
 } from '@/lib/security/identity-gate';
+import { __resetInstallBoundaryForTests } from '@/lib/security/install-boundary';
 import {
     __resetAuthReadQuarantineForTests,
     releaseAuthReadQuarantine,
@@ -63,7 +65,9 @@ const sessionKeys = () => Object.keys(secureStoreDump()).filter((k) => k === COO
 beforeEach(() => {
     jest.clearAllMocks();
     __resetIdentityStateForTests();
+    __resetLegalConsentLatchForTests();
     __resetAuthReadQuarantineForTests();
+    __resetInstallBoundaryForTests();
     // The boundary has decided in a normal launch; until then every sync cookie read is null.
     releaseAuthReadQuarantine();
 });

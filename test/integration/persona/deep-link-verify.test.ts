@@ -12,6 +12,7 @@ import {
     hasIdentityFault,
     readPendingAuthUserId,
 } from '@/lib/security/identity-gate';
+import { __resetInstallBoundaryForTests } from '@/lib/security/install-boundary';
 import { __resetAuthReadQuarantineForTests, releaseAuthReadQuarantine } from '@/lib/security/install-boundary-latch';
 import { useUserStore } from '@/lib/stores/user-store';
 import { FIXTURE_ACCOUNT, HttpResponse, http, secureStoreDump, server } from '@/test/helpers';
@@ -45,6 +46,7 @@ beforeEach(() => {
     __resetIdentityStateForTests();
     __resetLegalConsentLatchForTests();
     __resetAuthReadQuarantineForTests();
+    __resetInstallBoundaryForTests();
     releaseAuthReadQuarantine();
     useUserStore.setState({ needsReauth: false });
 });

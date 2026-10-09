@@ -154,7 +154,7 @@ describe('the stage the gate opens on', () => {
 
     it('a failing settings read falls back to the intro', async () => {
         await seedAccount(ME, EMAIL);
-        const read = jest.spyOn(settingService, 'getSetting').mockRejectedValue(new Error('db unavailable'));
+        const read = jest.spyOn(settingService, 'getSetting').mockRejectedValueOnce(new Error('db unavailable'));
 
         const hook = open();
 

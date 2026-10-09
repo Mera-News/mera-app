@@ -15,6 +15,7 @@ import {
     signInWithDevice,
 } from '@/lib/device-auth';
 import logger from '@/lib/logger';
+import { __resetLegalConsentLatchForTests } from '@/components/custom/auth/legal-consent';
 import { __resetIdentityStateForTests } from '@/lib/security/identity-gate';
 import { __resetAuthReadQuarantineForTests, releaseAuthReadQuarantine } from '@/lib/security/install-boundary-latch';
 import { __resetInstallBoundaryForTests } from '@/lib/security/install-boundary';
@@ -93,6 +94,7 @@ function answerInOrder(url: string, ...answers: (() => Response | undefined)[]) 
 beforeEach(() => {
     jest.clearAllMocks();
     __resetIdentityStateForTests();
+    __resetLegalConsentLatchForTests();
     __resetAuthReadQuarantineForTests();
     __resetInstallBoundaryForTests();
     __resetDeviceAttestForTests();
@@ -537,8 +539,8 @@ describe('virgin-key assert rejection (rejected-enrollment recovery)', () => {
         mockAttest.generateKey.mockResolvedValue('key-2');
     });
 
-    it('a 400 on a VIRGIN stored key severs it and re-enrolls once, then succeeds and marks proven', async () => {
-        await seed({ [KEY_SLOT]: 'virgin-key' });
+    it('a 400 on a VIRGIN stored key severs the KEY only and re-enrolls once, then succeeds and marks proven', async () => {
+        await seed({ [KEY_SLOT]: 'virgin-key', [DEVICE_ID_STORE_KEY]: 'old-device' });
         answerInOrder(SIGN_IN('ios'), rejectAssert, () => HttpResponse.json({ user: { id: OTHER } }));
 
         const result = await signInWithDevice();
@@ -548,6 +550,8 @@ describe('virgin-key assert rejection (rejected-enrollment recovery)', () => {
         expect(countTo('/device/sign-in/ios')).toBe(2);
         expect(dump()[KEY_SLOT]).toBe('key-2');
         expect(dump()[PROVEN_SLOT]).toBe('key-2');
+        // The account binding itself is untouched: only the key was severed.
+        expect(dump()[DEVICE_ID_STORE_KEY]).toBe('old-device');
     });
 
     it('recovers once and ONLY once: a persistent 400 surfaces as attestation-denied', async () => {

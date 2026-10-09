@@ -10,6 +10,8 @@ import {
     wasLegalAcceptedThisProcess,
 } from '@/components/custom/auth/legal-consent';
 import logger from '@/lib/logger';
+import { __resetIdentityStateForTests } from '@/lib/security/identity-gate';
+import { __resetInstallBoundaryForTests } from '@/lib/security/install-boundary';
 import { __resetAuthReadQuarantineForTests, releaseAuthReadQuarantine } from '@/lib/security/install-boundary-latch';
 import { appConfig as published } from '@/test/mock-backend/fixtures/graphql/appConfig';
 import { HttpResponse, graphql, http, mockGql, mockGqlError, server, signInFixtureAccount } from '@/test/helpers';
@@ -34,8 +36,10 @@ let captured: jest.SpyInstance;
 
 beforeEach(() => {
     jest.clearAllMocks();
+    __resetIdentityStateForTests();
     __resetLegalConsentLatchForTests();
     __resetAuthReadQuarantineForTests();
+    __resetInstallBoundaryForTests();
     releaseAuthReadQuarantine();
     captured = jest.spyOn(logger, 'captureException').mockImplementation(() => '');
 });
