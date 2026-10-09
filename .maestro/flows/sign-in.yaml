@@ -1,0 +1,40 @@
+# Subflow: first launch to the Feed with the mock backend's fixture account and fixed OTP.
+# Provisional: the screen order is fixed from the discovery run.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "auth-screen"
+    timeout: 60000
+- tapOn:
+    id: "auth-begin-with-email"
+- tapOn:
+    id: "auth-email-input"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "auth-send-otp"
+- extendedWaitUntil:
+    visible:
+      id: "auth-otp-boxes"
+    timeout: 30000
+- tapOn:
+    id: "auth-otp-boxes"
+- inputText: ${OTP}
+- extendedWaitUntil:
+    visible:
+      id: "consent-accept"
+    timeout: 30000
+- tapOn:
+    id: "consent-accept"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-next"
+    timeout: 30000
+- tapOn:
+    id: "onboarding-next"
+- extendedWaitUntil:
+    visible:
+      id: "feed-screen"
+    timeout: 60000

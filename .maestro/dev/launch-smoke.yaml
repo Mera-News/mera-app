@@ -1,0 +1,11 @@
+# Dev flow: the e2e APK cold-launches to the auth screen.
+# Prerequisites: scripts/e2e-android.sh has the mock backend and emulator up.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "auth-screen"
+    timeout: 60000
+- takeScreenshot: launch

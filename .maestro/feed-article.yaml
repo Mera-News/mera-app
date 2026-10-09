@@ -1,0 +1,23 @@
+# Open an article from the Feed and see its detail header.
+# Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
+appId: ${APP_ID}
+---
+- runFlow: flows/sign-in.yaml
+- extendedWaitUntil:
+    visible:
+      id: "card-.*"
+    timeout: 90000
+- scrollUntilVisible:
+    element:
+      id: "card-.*"
+      index: 1
+    timeout: 30000
+- takeScreenshot: feed-second-card
+- tapOn:
+    id: "card-.*"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      id: "detail-meta"
+    timeout: 30000
+- takeScreenshot: article-detail

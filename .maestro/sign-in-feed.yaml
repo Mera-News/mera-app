@@ -1,0 +1,10 @@
+# Sign in with the fixture account and reach a Feed that shows article cards.
+# Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
+appId: ${APP_ID}
+---
+- runFlow: flows/sign-in.yaml
+- extendedWaitUntil:
+    visible:
+      id: "card-.*"
+    timeout: 90000
+- takeScreenshot: feed-with-cards

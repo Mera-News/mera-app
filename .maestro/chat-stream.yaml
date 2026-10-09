@@ -1,0 +1,17 @@
+# Ask Mera a question and see the streamed fixture answer.
+# Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
+appId: ${APP_ID}
+---
+- runFlow: flows/sign-in.yaml
+- tapOn:
+    id: "mera-button"
+- tapOn:
+    id: "chat-input"
+- inputText: "What is new today?"
+- tapOn:
+    id: "chat-send"
+- extendedWaitUntil:
+    visible:
+      text: "E2E fixture answer."
+    timeout: 60000
+- takeScreenshot: chat-answer

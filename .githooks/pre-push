@@ -1,0 +1,6 @@
+#!/bin/sh
+# Enabled per worktree via core.hooksPath at the end of P1.
+while read -r l lsha r rsha; do
+  [ "$r" = refs/heads/main ] && exec npm run test:full
+done
+exit 0

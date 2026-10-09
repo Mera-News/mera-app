@@ -1,0 +1,4 @@
+#!/bin/sh
+# Enabled per worktree via core.hooksPath at the end of P1.
+[ "$(git symbolic-ref --short HEAD 2>/dev/null)" = main ] || exit 0
+npm run test:full

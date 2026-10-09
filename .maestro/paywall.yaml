@@ -1,0 +1,17 @@
+# A user with no plan sees the plan card and the manage-plan row in Settings.
+# Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
+appId: ${APP_ID}
+---
+- runScript:
+    file: scripts/set-scenario.js
+    env:
+      SCENARIO: '{"tier":"none"}'
+- runFlow: flows/sign-in.yaml
+- openLink: ${SCHEME}:///logged-in/app_container/settings
+- extendedWaitUntil:
+    visible:
+      id: "settings-plan-card"
+    timeout: 30000
+- assertVisible:
+    id: "settings-manage-plan"
+- takeScreenshot: settings-no-plan

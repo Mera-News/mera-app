@@ -1,0 +1,21 @@
+# Flip Lite mode in Display settings and see it persist across an app restart.
+# The expected polarity of lite-mode-switch is fixed later on device.
+# Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
+appId: ${APP_ID}
+---
+- runFlow: flows/sign-in.yaml
+- openLink: ${SCHEME}:///logged-in/app_container/settings
+- tapOn:
+    id: "settings-row-display"
+- tapOn:
+    id: "lite-mode-switch"
+- takeScreenshot: lite-after-tap
+- stopApp
+- launchApp
+- openLink: ${SCHEME}:///logged-in/app_container/settings
+- tapOn:
+    id: "settings-row-display"
+- takeScreenshot: lite-after-restart
+- assertVisible:
+    id: "lite-mode-switch"
+    checked: true

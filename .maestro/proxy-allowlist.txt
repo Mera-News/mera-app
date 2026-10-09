@@ -1,0 +1,6 @@
+# One host or host:port per line. Every host the emulator reaches through the proxy must be listed.
+10.0.2.2:8790
+127.0.0.1:8790
+localhost:8790
+
+# OS hosts (filled from the --baseline run)
