@@ -4,9 +4,9 @@ import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { useTranslation } from 'react-i18next';
-import { useDeepLinkVerify, type DeepLinkVerifyProps } from './useDeepLinkVerify';
+import { useDeepLinkVerify, type DeepLinkVerifyProps as Props } from './useDeepLinkVerify';
 
-export default function DeepLinkVerifyScreen({ otp, email, type }: DeepLinkVerifyProps) {
+export default function DeepLinkVerifyScreen({ otp, email, type }: Props) {
     const { t } = useTranslation();
     useDeepLinkVerify({ otp, email, type });
 
