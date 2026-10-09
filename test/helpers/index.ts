@@ -10,3 +10,5 @@ export async function resetDatabase(): Promise<void> {
   const database = require('@/lib/database').default;
   await database.write(() => database.unsafeResetDatabase());
 }
+export { FIXTURE_ACCOUNT, signInFixtureAccount } from './auth';
+export { resetAuthState } from '../mock-backend/auth';
