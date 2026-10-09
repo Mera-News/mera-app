@@ -107,6 +107,18 @@ jest.mock('react-native/Libraries/Components/Switch/SwitchNativeComponent', () =
   Commands: { setValue: jest.fn() },
 }));
 
+// 2g. expo-haptics: a native edge with no JS fallback; the share flows import it dynamically.
+jest.mock('expo-haptics', () => ({
+  __esModule: true,
+  notificationAsync: jest.fn(() => Promise.resolve()),
+  impactAsync: jest.fn(() => Promise.resolve()),
+  selectionAsync: jest.fn(() => Promise.resolve()),
+  performAndroidHapticsAsync: jest.fn(() => Promise.resolve()),
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy', Soft: 'soft', Rigid: 'rigid' },
+  AndroidHaptics: { Confirm: 'confirm', Reject: 'reject', Long_Press: 'long-press', Virtual_Key: 'virtual-key' },
+}));
+
 // 3. expo-translate-text: identity translation, same export names as the package.
 jest.mock('expo-translate-text', () => {
   class TranslationError extends Error {}
