@@ -6,7 +6,7 @@
 // may attribute a rating to an organisation) and nothing here persists any more.
 // The "we could not look" contract did not go with it — it moved DOWN a layer,
 // to the quick path, and is tested at the seam that now produces user-visible
-// text: see `lib/chat-tools/__tests__/quick-fact-check-handler.test.ts`, whose
+// text: see `test/integration/chat/fact-check/quick-check.test.ts`, whose
 // must-fail test drives an unavailable search and asserts it can never render as
 // "found nothing".
 //
@@ -17,26 +17,6 @@
 //   • `coerceVerdict` — a negated verdict degrades rather than inverting;
 //   • `buildSearchQueries` — the claim is never pasted verbatim.
 
-jest.mock('@/lib/logger', () => ({
-  __esModule: true,
-  default: {
-    captureException: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-  },
-}));
-
-// The module imports the transport for its query cap — stubbed so no suite ever
-// opens a socket.
-jest.mock('@/lib/web-search/web-search-client', () => ({
-  __esModule: true,
-  searchWeb: jest.fn(),
-  MIN_QUERY_CHARS: 2,
-  MAX_QUERY_CHARS: 200,
-}));
-
 import {
   buildSearchQueries,
   buildSynthesisMessages,
@@ -45,7 +25,7 @@ import {
   parseSynthesis,
   resolveCitations,
   type SanitisedEvidence,
-} from '../fact-check-runner';
+} from '@/lib/fact-check/fact-check-runner';
 import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
 
 const CLAIM = 'The vaccine schedule requires children to receive 80 different vaccines.';
