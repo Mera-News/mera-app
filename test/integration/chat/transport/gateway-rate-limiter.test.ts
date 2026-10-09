@@ -8,6 +8,8 @@ import {
   MIN_GATEWAY_INTERVAL_MS,
   MIN_INTERACTIVE_INTERVAL_MS,
   INTERACTIVE_MAX_PAUSE_MS,
+  interactiveWaitMs,
+  msUntilNextGrant,
 } from '@/lib/llm/gateway-rate-limiter';
 
 const NOW = 1_700_000_000_000;
@@ -349,5 +351,60 @@ describe('acquire abort', () => {
     controller.abort();
     await jest.advanceTimersByTimeAsync(MIN_GATEWAY_INTERVAL_MS);
     expect(bg).toHaveBeenCalled();
+  });
+});
+
+// Paths the rest of the suite reached only by timing (G8: two lines and a branch flickered between
+// gate runs). Each is pinned here on a clock that moves only when the test moves it.
+describe('deterministic edges', () => {
+  it('a timer that fires before the lane is eligible re-checks and re-arms instead of granting early', async () => {
+    // Real timers can fire a millisecond before Date.now() says the interval is up; that is the
+    // path other suites hit only by timing. Here the first clock read in the timer is 1ms short.
+    await acquireGranted();
+    const granted = jest.fn();
+    acquire('interactive').then(() => granted(Date.now() - NOW));
+
+    const realNow = Date.now.bind(Date);
+    const early = jest.spyOn(Date, 'now').mockImplementationOnce(() => realNow() - 1);
+    try {
+      await jest.advanceTimersByTimeAsync(MIN_INTERACTIVE_INTERVAL_MS);
+      expect(granted).not.toHaveBeenCalled();
+      await jest.advanceTimersByTimeAsync(1);
+      expect(granted).toHaveBeenCalledWith(MIN_INTERACTIVE_INTERVAL_MS + 1);
+    } finally {
+      early.mockRestore();
+    }
+  });
+
+  it('msUntilNextGrant reads the background lane: one interval after a grant, the full pause after pauseFor', async () => {
+    expect(msUntilNextGrant()).toBe(0);
+    await acquireGranted();
+    expect(msUntilNextGrant()).toBe(MIN_GATEWAY_INTERVAL_MS);
+    pauseFor(5_000);
+    expect(msUntilNextGrant()).toBe(5_000);
+    jest.setSystemTime(NOW + 6_000);
+    expect(msUntilNextGrant()).toBe(0);
+  });
+
+  it('interactiveWaitMs counts the interactive callers already queued and caps a pause', async () => {
+    expect(interactiveWaitMs()).toBe(0);
+    await acquireGranted();
+    expect(interactiveWaitMs()).toBe(MIN_INTERACTIVE_INTERVAL_MS);
+    acquire('interactive').catch(() => undefined);
+    acquire('interactive').catch(() => undefined);
+    acquire('background').catch(() => undefined);
+    // Two interactive callers ahead, the background one does not count.
+    expect(interactiveWaitMs()).toBe(3 * MIN_INTERACTIVE_INTERVAL_MS);
+    _resetForTests();
+    pauseFor(60_000);
+    expect(interactiveWaitMs()).toBe(INTERACTIVE_MAX_PAUSE_MS);
+  });
+
+  it('_resetForTests clears an armed dispatch timer', async () => {
+    await acquireGranted();
+    acquire('background').catch(() => undefined);
+    expect(jest.getTimerCount()).toBe(1);
+    _resetForTests();
+    expect(jest.getTimerCount()).toBe(0);
   });
 });
