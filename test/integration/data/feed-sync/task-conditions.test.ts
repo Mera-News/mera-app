@@ -7,8 +7,6 @@ jest.mock('expo-keep-awake', () => ({
   deactivateKeepAwake: jest.fn(),
 }));
 
-import '@/test/helpers';
-
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import type { TaskDefinition } from '@/lib/scheduler/scheduler-types';
 import { useFakeClock } from '@/test/helpers';
