@@ -80,6 +80,17 @@ jest.doMock('expo-web-browser', () => ({
   },
 }));
 
+// 2e. llama.rn as the shared native mock, except toggleNativeLog resolves: the real
+// modelManager.initBaseModel chains .catch on it. Scripted behaviour per test comes from
+// installLlama (test/helpers/llama.ts). Integration only (doMock); legacy keeps its mock.
+jest.doMock('llama.rn', () => ({
+  initLlama: jest.fn(),
+  releaseAllLlama: jest.fn(),
+  loadLlamaModelInfo: jest.fn(() => Promise.resolve({})),
+  toggleNativeLog: jest.fn(() => Promise.resolve()),
+  addNativeLogListener: jest.fn(() => ({ remove: jest.fn() })),
+}));
+
 // 3. expo-translate-text: identity translation, same export names as the package.
 jest.mock('expo-translate-text', () => {
   class TranslationError extends Error {}
