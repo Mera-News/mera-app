@@ -87,16 +87,20 @@ export async function startMockServer(opts: {
                 duplex: 'half',
             } as RequestInit);
             const clone = request.clone();
+            // The operation name goes on every /graphql log line: the device lane's discovery
+            // run reads the app's real call sequence from it.
+            let op: string | undefined;
+            if (pathname.endsWith('/graphql') && hasBody) {
+                try {
+                    op = (await clone.json()).operationName ?? '';
+                } catch {
+                    op = '';
+                }
+            }
             const response = await getResponse(opts.handlers, request);
 
             if (!response) {
-                if (pathname.endsWith('/graphql')) {
-                    let op = '';
-                    try {
-                        op = (await clone.json()).operationName ?? '';
-                    } catch {
-                        /* not JSON: log an empty op */
-                    }
+                if (op !== undefined) {
                     log('unhandled-gql', { host, method, path, status: 200, via, op });
                     return send(200, {
                         errors: [
@@ -117,7 +121,7 @@ export async function startMockServer(opts: {
             });
             const cookies = response.headers.getSetCookie();
             if (cookies.length) headers['set-cookie'] = cookies;
-            log('http', { host, method, path, status: response.status, via });
+            log('http', { host, method, path, status: response.status, via, ...(op !== undefined ? { op } : {}) });
             res.writeHead(response.status, headers);
             res.flushHeaders();
             if (response.body) {

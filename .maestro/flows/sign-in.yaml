@@ -49,18 +49,25 @@ appId: ${APP_ID}
 - tapOn:
     id: "auth-otp-boxes"
 - inputText: ${OTP}
-- extendedWaitUntil:
-    visible:
-      id: "consent-accept"
-    timeout: 30000
-- tapOn:
-    id: "consent-accept"
+# Consent was accepted on the auth screen (auth-consent-agree), so no gate here.
+# Onboarding step 1 (chat) with zero facts, then step 2 (notifications) left off.
 - extendedWaitUntil:
     visible:
       id: "onboarding-next"
     timeout: 30000
 - tapOn:
     id: "onboarding-next"
+- tapOn:
+    id: "onboarding-guard-facts-secondary"
+# Step 2 is the one without the facts counter; Next stays on screen across the switch.
+- extendedWaitUntil:
+    notVisible:
+      id: "onboarding-facts-count"
+    timeout: 30000
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-guard-notifications-secondary"
 - extendedWaitUntil:
     visible:
       id: "feed-screen"
