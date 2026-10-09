@@ -256,10 +256,15 @@ describe('SuggestionSyncService', () => {
 
     it('scores every unscored row in batches of the given size and returns the count', async () => {
       await seedScorableStories();
+      const processed = new Set<number>();
+      const stop = useForYouStore.subscribe((s) => processed.add(s.deviceProcessedCount));
 
       const scored = await advanceUntilDone(runScoringPass(2));
+      stop();
 
       expect(scored).toBe(6);
+      // Batches of 2: progress passes through 2 and 4 (the default batch of 20 would jump 0 -> 6).
+      expect([...processed]).toEqual(expect.arrayContaining([0, 2, 4, 6]));
       const rows = Object.values(await suggestionRows());
       expect(rows).toHaveLength(6);
       expect(rows.map((r) => r.status)).not.toContain('unscored');

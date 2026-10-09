@@ -52,6 +52,9 @@ describe('score propagation x hard filters (P9)', () => {
       { id: 'blocked', title: 'Nvidia ships a GPU' },
       { id: 'ok', title: 'AMD ships a GPU' },
     ]);
+    // Outside the story, matches the filter, and is not one of the propagated ids: the SCOPED screen
+    // must leave it alone (a full-table screen would exclude it).
+    await seedArticles([{ id: 'elsewhere', title: 'Nvidia something unrelated' }]);
     await addHardFilter({ keyword: 'nvidia' });
 
     const propagated = await propagateToUnscoredSiblings(new Set(), purgeHardFilteredByIds);
@@ -65,6 +68,7 @@ describe('score propagation x hard filters (P9)', () => {
     expect(rows.ok).toMatchObject({ relevance: 0.9 });
     expect(rows.ok.status).not.toBe('excluded');
     expect(rows.donor).toMatchObject({ status: 'complete', relevance: 0.9 });
+    expect(rows.elsewhere.status).toBe('unscored');
   });
 
   it('evicts the blocked id from the persisted Feed order it had already been laid out in', async () => {
