@@ -1833,14 +1833,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           break;
         }
         silentLegAfterProposal = true;
-        // THE FORCED OFFER ON THE BUDGET'S LAST LEG: the sentence leg above is
-        // swallowed by the cap (forced-offer-closing arm). Only that case: a
-        // mid-budget forced offer keeps its ordinary next leg.
-        if (closeForcedOffer && forcingProposalNow && nextLegIndex >= maxLegsThisTurn + formatRetries) {
+        // A SILENT FORCED OFFER NEVER GETS ITS SENTENCE LEG (forced-offer-closing
+        // arm fixes it): `forcingProposalNow` is never reset, so that leg is
+        // forced AGAIN (screen: 5 of 5 came back `accepted: []`), and on the
+        // budget's last leg the cap swallows it outright. Under the arm it is a
+        // tool-free sentence leg, with one more leg only when the budget is spent.
+        if (closeForcedOffer && forcingProposalNow) {
           forcingProposalNow = false;
           closingLegNow = true;
           closingNote = CLOSING_LINE_NOTE;
-          maxLegsThisTurn++;
+          if (nextLegIndex >= maxLegsThisTurn + formatRetries) maxLegsThisTurn++;
         }
       }
       continue;
