@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
 import logger from './logger';
+import { E2E_MODE } from './e2e-mode';
 import { AccountService } from './account-service';
 import { useUserStore } from './stores/user-store';
 import { useNetworkStore } from './stores/network-store';
@@ -82,6 +83,8 @@ let responseListener: Notifications.Subscription | null = null;
 export async function registerForPushNotificationsAsync(
     allowProvisional: boolean = true,
 ): Promise<string | null> {
+    // E2E mode makes no push-service call and raises no permission dialog.
+    if (E2E_MODE) return null;
     let token: string | null = null;
 
     // Check if running on physical device (push notifications don't work on emulators)
@@ -465,6 +468,8 @@ let pushTokenListener: Notifications.Subscription | null = null;
  * token has changed vs the cached persona.
  */
 export async function ensurePushTokenRegistered(userId: string): Promise<void> {
+    // E2E mode makes no push-service call and raises no permission dialog.
+    if (E2E_MODE) return;
     if (!userId) return;
 
     // Don't spend a boot-time round trip on a device with no link.

@@ -10,6 +10,7 @@
 // SHA256(clientData). This module never hashes.
 
 import { requireNativeModule } from 'expo-modules-core';
+import { E2E_MODE } from '@/lib/e2e-mode';
 
 export type DeviceAttestErrorCode =
   | 'ERR_ATTEST_UNSUPPORTED'
@@ -114,6 +115,8 @@ function integrityErrorCodeIn(error: unknown, codes: Set<number>): boolean {
 /** False on simulators/emulators, in jest, in Expo Go, and on unsupported
  *  hardware. Never rejects. */
 export async function isSupported(): Promise<boolean> {
+  // The e2e lane signs in with the mock's email OTP; every attestation caller routes through here.
+  if (E2E_MODE) return false;
   const native = resolveNative();
   if (!native) return false;
   try {
