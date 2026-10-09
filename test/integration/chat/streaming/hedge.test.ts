@@ -13,7 +13,8 @@ import {
   HEDGE_DELAY_MS,
 } from '@/lib/llm/cloudComplete';
 import { isFallbackEngaged } from '@/lib/llm/model-fallback';
-import { attestationRequests, gatewayCalls, mockGateway, server, useFakeClock } from '@/test/helpers';
+import { attestationRequests, gatewayCalls, mockGateway, server } from '@/test/helpers';
+import { useStrictClock } from '@/test/integration/chat/_helpers';
 import { advanceUntil, captureChatBodies, collect, drive, installChatHooks, loggerSpies, MESSAGES, textOf } from './support';
 
 installChatHooks();
@@ -28,7 +29,7 @@ const lateText = (text: string, ms: number) => ({ chunks: [text], headerDelayMs:
 const complete = () =>
   cloudComplete({ systemPrompt: 'sys', prompt: 'p' }, { hedgeAfterMs: HEDGE_DELAY_MS, maxTimeoutAttempts: 1 });
 
-beforeEach(() => useFakeClock('2026-10-09T00:00:00Z'));
+beforeEach(() => useStrictClock('2026-10-09T00:00:00Z'));
 
 describe('when the hedge fires', () => {
   it('a primary that answers before the delay wins, and the fallback is never even attested', async () => {

@@ -17,8 +17,8 @@ import {
   mockGateway,
   resetAuthState,
   server,
-  useFakeClock,
 } from '@/test/helpers';
+import { useStrictClock } from '@/test/integration/chat/_helpers';
 import { TEST_MODEL_KEYS } from '@/test/mock-backend/gateway/keys';
 import {
   abortError,
@@ -134,7 +134,7 @@ describe('a signed-out device', () => {
 
 describe('a 502 from the gateway', () => {
   it('spends the primary budget (2), then ONE attempt on the session fallback, and surfaces the original 502', async () => {
-    useFakeClock('2026-10-09T00:00:00Z');
+    useStrictClock('2026-10-09T00:00:00Z');
     server.use(...mockGateway(respond({ status: 502, body: { error: 'upstream gone' } })));
     const outcome = fail(run());
     await drive(outcome);
@@ -236,7 +236,7 @@ describe('the two retries share one latch', () => {
 
 describe('the first chunk gets the full upstream budget', () => {
   it('a silent open stream is waited out for UPSTREAM_ALIGNED_TIMEOUT_MS, not the 30s idle window, then retried once', async () => {
-    useFakeClock('2026-10-09T00:00:00Z');
+    useStrictClock('2026-10-09T00:00:00Z');
     server.use(...mockGateway((c) => (c.index === 0 ? { chunks: ['never'], stallAfter: 0 } : 'recovered')));
     const outcome = run();
     const settled = outcome.then(
@@ -262,7 +262,7 @@ describe('the first chunk gets the full upstream budget', () => {
 });
 
 describe('the idle window after the first chunk', () => {
-  beforeEach(() => useFakeClock('2026-10-09T00:00:00Z'));
+  beforeEach(() => useStrictClock('2026-10-09T00:00:00Z'));
 
   it('a first chunk with no text, then 30s of silence, ends the stream and retries once', async () => {
     // reasoning:true puts one chunk on the wire (no visible text), stallAfter:0 then goes silent.
@@ -292,7 +292,7 @@ describe('the idle window after the first chunk', () => {
 // is retried on the same dead primary every turn. Whether Hermes' fetch ends the body cleanly or
 // rejects with AbortError on cancel is unverified; the wire here ends it cleanly.
 describe('IDLE1: a stall before the first chunk', () => {
-  beforeEach(() => useFakeClock('2026-10-09T00:00:00Z'));
+  beforeEach(() => useStrictClock('2026-10-09T00:00:00Z'));
 
   async function stallThenRecover() {
     server.use(...mockGateway((c) => (c.index === 0 ? { chunks: ['never'], stallAfter: 0 } : 'recovered')));

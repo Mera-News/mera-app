@@ -16,8 +16,8 @@ import {
   resetAuthState,
   server,
   signInFixtureAccount,
-  useFakeClock,
 } from '@/test/helpers';
+import { useStrictClock } from '@/test/integration/chat/_helpers';
 import { advanceUntil, captureChatBodies, drive, installChatHooks, loggerSpies, respond } from './support';
 
 installChatHooks();
@@ -25,7 +25,7 @@ installChatHooks();
 let clock = Date.UTC(2026, 9, 9);
 beforeEach(() => {
   clock += 3 * 3600_000;
-  useFakeClock(clock);
+  useStrictClock(clock);
 });
 afterEach(() => {
   useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });

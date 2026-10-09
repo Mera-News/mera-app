@@ -5,7 +5,8 @@
 import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
 import { CallerAbortError, cloudChatStream } from '@/lib/llm/cloudComplete';
 import { isFallbackEngaged } from '@/lib/llm/model-fallback';
-import { attestationRequests, gatewayCalls, mockGateway, server, useFakeClock } from '@/test/helpers';
+import { attestationRequests, gatewayCalls, mockGateway, server } from '@/test/helpers';
+import { useStrictClock } from '@/test/integration/chat/_helpers';
 import { advanceUntil, captureChatBodies, collect, installChatHooks, loggerSpies, MESSAGES, respond, until } from './support';
 
 installChatHooks();
@@ -31,7 +32,7 @@ describe('stop before anything is sent', () => {
 });
 
 describe('stop while the hedge race is pending', () => {
-  beforeEach(() => useFakeClock('2026-10-09T00:00:00Z'));
+  beforeEach(() => useStrictClock('2026-10-09T00:00:00Z'));
 
   it('before the hedge fires: the primary is aborted and the hedge is never started', async () => {
     server.use(...mockGateway(respond({ chunks: ['slow'], headerDelayMs: SLOW })));

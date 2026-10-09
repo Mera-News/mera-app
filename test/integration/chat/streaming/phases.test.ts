@@ -7,7 +7,8 @@ import { SMALL_MODEL } from '@/lib/llm/constants';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { cloudChatStream } from '@/lib/llm/cloudComplete';
 import { _resetForTests as resetLimiter, interactiveWaitMs } from '@/lib/llm/gateway-rate-limiter';
-import { gatewayCalls, mockGateway, server, useFakeClock } from '@/test/helpers';
+import { gatewayCalls, mockGateway, server } from '@/test/helpers';
+import { useStrictClock } from '@/test/integration/chat/_helpers';
 import {
   captureChatBodies,
   collect,
@@ -80,7 +81,7 @@ describe('the opening phases', () => {
 
 describe('queued', () => {
   it('is reported, ahead of securing, only when the interactive lane really has to wait', async () => {
-    useFakeClock('2026-10-09T00:00:00Z');
+    useStrictClock('2026-10-09T00:00:00Z');
     server.use(...mockGateway(respond('ok')));
     await drive(fetchModelPublicKey(SMALL_MODEL, 'interactive'));
     resetLimiter();
@@ -94,7 +95,7 @@ describe('queued', () => {
   });
 
   it('is not reported for a wait too short to read', async () => {
-    useFakeClock('2026-10-09T00:00:00Z');
+    useStrictClock('2026-10-09T00:00:00Z');
     server.use(...mockGateway(respond('ok')));
     await drive(fetchModelPublicKey(SMALL_MODEL, 'interactive'));
     resetLimiter();
@@ -122,7 +123,7 @@ describe('retrying: any re-entry into the request builder', () => {
   });
 
   it('the hedge leg says retrying, and the ordinary thinking line is not walked back to afterwards', async () => {
-    useFakeClock('2026-10-09T00:00:00Z');
+    useStrictClock('2026-10-09T00:00:00Z');
     server.use(...mockGateway((c) => (c.index === 0 ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')));
     await drive(fetchModelPublicKey(SMALL_MODEL, 'interactive'));
     resetLimiter();
