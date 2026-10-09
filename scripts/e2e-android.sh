@@ -23,6 +23,7 @@ APK_OUT=android/app/build/outputs/apk/release/app-release.apk
 LAST=e2e-output/last-app-e2e.apk
 ALLOWLIST=.maestro/proxy-allowlist.txt
 
+ORIG_ARGS=("$@")
 DRY=0 FLOWS=.maestro/ SKIP_BUILD=0 CLEAN=0 BASELINE="" PROXY_MODE=emulator
 HANDLERS="${E2E_HANDLERS:-./stub-handlers}"
 
@@ -98,7 +99,7 @@ fi
 HEAVY="$ROOT/../bin/heavy"
 if [ -z "${E2E_HEAVY_HELD:-}" ]; then
   if [ -x "$HEAVY" ]; then
-    E2E_HEAVY_HELD=1 exec "$HEAVY" --all bash "$SELF" "$@"
+    E2E_HEAVY_HELD=1 exec "$HEAVY" --all bash "$SELF" ${ORIG_ARGS[@]+"${ORIG_ARGS[@]}"}
   fi
   echo "warn: $HEAVY missing; running without holding the heavy slots" >&2
 fi
@@ -139,7 +140,7 @@ e2e_env() {
 if [ -z "$BASELINE" ]; then
   if [ "$SKIP_BUILD" = 0 ]; then
     echo "== step 1: prebuild"
-    ( e2e_env; npx expo prebuild --platform android --no-install $( [ "$CLEAN" = 1 ] && echo --clean ) )
+    ( e2e_env; CI=1 npx expo prebuild --platform android --no-install $( [ "$CLEAN" = 1 ] && echo --clean ) )
     echo "== step 2: gradle"
     ( e2e_env; export SENTRY_DISABLE_AUTO_UPLOAD=true; cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon )
     cp "$APK_OUT" "$LAST"
