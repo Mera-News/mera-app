@@ -5,7 +5,7 @@
 import {
   DEFAULT_HARNESS_CONFIG,
   type HarnessConfig,
-} from '../core/config';
+} from '@/lib/news-harness/core/config';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
@@ -14,7 +14,7 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-} from '../prompts/prompts';
+} from '@/lib/news-harness/prompts/prompts';
 
 describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
   const a = DEFAULT_HARNESS_CONFIG.articlePipeline;

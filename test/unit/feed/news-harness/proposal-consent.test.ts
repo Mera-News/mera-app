@@ -8,8 +8,8 @@ import {
   chooseOneRefusal,
   proposalRequiresUserChoice,
   userTapOnlyRefusal,
-} from '../core/proposals';
-import type { ProposalAction, StagedProposal } from '../core/types';
+} from '@/lib/news-harness/core/proposals';
+import type { ProposalAction, StagedProposal } from '@/lib/news-harness/core/types';
 
 const action = (statement: string): ProposalAction => ({ type: 'add_fact', statement });
 

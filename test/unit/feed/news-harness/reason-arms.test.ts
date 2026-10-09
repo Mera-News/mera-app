@@ -16,9 +16,9 @@ import {
   promptVariantIds,
   REASON_V1_ID,
   REASON_V3_ID,
-} from '../index';
-import { relevanceSystemPromptFor, reasonSystemPromptFor } from '../article-pipeline/scoring';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
+} from '@/lib/news-harness/index';
+import { relevanceSystemPromptFor, reasonSystemPromptFor } from '@/lib/news-harness/article-pipeline/scoring';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { estimateTokens } from '@/lib/llm/tokens';
 import { undoUx1ReasonLabelRule } from './ux1-reason-label';
 

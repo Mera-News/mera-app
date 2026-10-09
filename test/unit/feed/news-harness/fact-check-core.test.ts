@@ -14,11 +14,11 @@ import {
   decideProposeFactCheck,
   makeFactCheckSubject,
   parseFactCheckClaimOptions,
-} from '../fact-check';
+} from '@/lib/news-harness/fact-check';
 import {
   buildArticleFeedbackSystemPrompt,
   getArticleFeedbackToolDefinitions,
-} from '../article-feedback/agent-core';
+} from '@/lib/news-harness/article-feedback/agent-core';
 
 const ARTICLE = {
   articleId: 'a-1',

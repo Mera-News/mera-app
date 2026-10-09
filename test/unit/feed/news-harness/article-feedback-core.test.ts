@@ -9,17 +9,17 @@ import {
   decideProposeTrack,
   getArticleFeedbackToolDefinitions,
   selectActiveFiltersForContext,
-} from '../article-feedback/agent-core';
+} from '@/lib/news-harness/article-feedback/agent-core';
 import { estimateTokens } from '@/lib/llm/tokens';
-import { asUntrusted } from '../prompts/untrusted-text';
-import { SUPPRESSION_KINDS } from '../core/types';
+import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
+import { SUPPRESSION_KINDS } from '@/lib/news-harness/core/types';
 import type {
   ActiveSuppressionView,
   Fact,
   SuggestionFeedbackContext,
   StagedProposal,
   TrackFeedbackSubject,
-} from '../core/types';
+} from '@/lib/news-harness/core/types';
 
 /** not-interested P4a: named ceiling for the XML-path system prompt, so the
  *  budget assertion states a number instead of "fits". Measured 2080, ceiling

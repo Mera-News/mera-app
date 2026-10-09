@@ -6,7 +6,7 @@
 import {
   groundingTokens,
   isReasonGrounded,
-} from '../article-pipeline/reason-grounding';
+} from '@/lib/news-harness/article-pipeline/reason-grounding';
 
 // The article that motivated this whole change, verbatim.
 const MP_WEATHER = {

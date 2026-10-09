@@ -7,8 +7,8 @@ import {
   buildFollowStorySystemPrompt,
   getFollowStoryToolDefinitions,
   makeFollowStorySubject,
-} from '../follow-story';
-import type { StagedProposal } from '../core/types';
+} from '@/lib/news-harness/follow-story';
+import type { StagedProposal } from '@/lib/news-harness/core/types';
 
 const NOW = Date.parse('2026-08-07T11:00:00.000Z');
 

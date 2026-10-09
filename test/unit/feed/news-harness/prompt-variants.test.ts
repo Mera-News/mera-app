@@ -15,7 +15,7 @@ import {
   buildFeedVerifierUserMessage,
   buildReasonUserMessage,
   buildLocalReasonUserMessage,
-} from '../prompts/prompts';
+} from '@/lib/news-harness/prompts/prompts';
 import {
   BASELINE_VARIANT_ID,
   promptHash,
@@ -26,14 +26,14 @@ import {
   resolvePromptVariant,
   systemPromptForSlot,
   type PromptVariantSpec,
-} from '../prompts/prompt-variants';
+} from '@/lib/news-harness/prompts/prompt-variants';
 import {
   relevanceSystemPromptFor,
   reasonSystemPromptFor,
   buildScoreCallForChunk,
-} from '../article-pipeline/scoring';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
-import type { ScoringCandidate } from '../core/types';
+} from '@/lib/news-harness/article-pipeline/scoring';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import type { ScoringCandidate } from '@/lib/news-harness/core/types';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 const NONCE = 'abcdef012345';

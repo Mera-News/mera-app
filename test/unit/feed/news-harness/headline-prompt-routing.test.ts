@@ -16,15 +16,15 @@ import {
   relevanceSystemPromptFor,
   reasonSystemPromptFor,
   CLOUD_SCORE_CHUNK_SIZE,
-} from '../article-pipeline/scoring';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
+} from '@/lib/news-harness/article-pipeline/scoring';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
-} from '../prompts/prompts';
-import type { ScoringCandidate, StageCandidateRow } from '../core/types';
+} from '@/lib/news-harness/prompts/prompts';
+import type { ScoringCandidate, StageCandidateRow } from '@/lib/news-harness/core/types';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 const FACTS = ['Lives in Amsterdam, Netherlands', 'No investments'];

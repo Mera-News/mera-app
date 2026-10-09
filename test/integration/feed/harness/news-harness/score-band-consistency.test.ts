@@ -19,9 +19,9 @@ import {
   parseBatchRelevanceResponse,
   newRelevanceDecodeStats,
   type RelevanceDecodeStats,
-} from '../article-pipeline/scoring';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
-import type { HarnessLogger } from '../core/ports';
+} from '@/lib/news-harness/article-pipeline/scoring';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import type { HarnessLogger } from '@/lib/news-harness/core/ports';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 

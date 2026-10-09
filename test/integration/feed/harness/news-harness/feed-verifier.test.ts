@@ -6,18 +6,18 @@ import {
   buildFeedVerifierCalls,
   parseFeedVerifierResponse,
   applyFeedVerifierDecisions,
-} from '../article-pipeline/scoring';
-import { runArticlePipeline, type PipelinePorts } from '../article-pipeline/pipeline';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
-import { CLOUD_FEED_VERIFIER_SYSTEM_PROMPT } from '../prompts/prompts';
+} from '@/lib/news-harness/article-pipeline/scoring';
+import { runArticlePipeline, type PipelinePorts } from '@/lib/news-harness/article-pipeline/pipeline';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import { CLOUD_FEED_VERIFIER_SYSTEM_PROMPT } from '@/lib/news-harness/prompts/prompts';
 import type {
   BatchCall,
   BatchCompletionResult,
   Fact,
   HarnessArticle,
   ScoringCandidate,
-} from '../core/types';
-import type { LlmPort, NewsApiPort, PersonaStorePort } from '../core/ports';
+} from '@/lib/news-harness/core/types';
+import type { LlmPort, NewsApiPort, PersonaStorePort } from '@/lib/news-harness/core/ports';
 
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 const FACTS = ['Lives in Amsterdam, Netherlands', 'Works in AI'];

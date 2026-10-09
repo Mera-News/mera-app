@@ -7,7 +7,7 @@
 // takes both back out; applied to the shipped prompt it must yield the text the
 // archived arms were built from.
 
-import { RULE_NAME_BAN } from '../prompts/prompts';
+import { RULE_NAME_BAN } from '@/lib/news-harness/prompts/prompts';
 
 export const UX1_NEW_EXAMPLE =
     "\"Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.\"";

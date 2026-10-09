@@ -5,8 +5,8 @@ import {
   deriveTopicTexts,
   buildArticleToTopicTexts,
   buildCandidatesFromArticles,
-} from '../article-pipeline/candidates';
-import type { Fact, HarnessArticle } from '../core/types';
+} from '@/lib/news-harness/article-pipeline/candidates';
+import type { Fact, HarnessArticle } from '@/lib/news-harness/core/types';
 
 function fact(
   partial: Partial<Fact> & { id: string; statement: string },

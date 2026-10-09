@@ -19,19 +19,19 @@ import {
   REASON_RESCORE_ID,
   REASON_RESCORE_PRIOR_ID,
   RESCORE_DEMOTE_ONLY_ID,
-} from '../prompts/reason-arms';
+} from '@/lib/news-harness/prompts/reason-arms';
 import {
   resolvePromptVariant,
   systemPromptForSlot,
   type PromptSlot,
-} from '../prompts/prompt-variants';
+} from '@/lib/news-harness/prompts/prompt-variants';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   buildReasonUserMessage,
-} from '../prompts/prompts';
+} from '@/lib/news-harness/prompts/prompts';
 import { undoUx1HeadlineRuleBan, undoUx1ReasonLabelRule } from './ux1-reason-label';
 
 const SHIPPED: Record<string, string> = {

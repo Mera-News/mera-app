@@ -19,14 +19,14 @@ import {
   buildPublicationLabel,
   resolveLanguageName,
   buildScoreCallForChunk,
-} from '../article-pipeline/scoring';
+} from '@/lib/news-harness/article-pipeline/scoring';
 import {
   buildReasonUserMessage,
   buildLocalReasonUserMessage,
   buildFeedVerifierUserMessage,
-} from '../prompts/prompts';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
-import type { ScoringCandidate } from '../core/types';
+} from '@/lib/news-harness/prompts/prompts';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import type { ScoringCandidate } from '@/lib/news-harness/core/types';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 const NONCE = 'abcdef012345';

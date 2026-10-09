@@ -6,15 +6,15 @@ import {
   bucketNameForRaw,
   type PipelinePorts,
   type PipelineStage,
-} from '../article-pipeline/pipeline';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
+} from '@/lib/news-harness/article-pipeline/pipeline';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import type {
   BatchCall,
   BatchCompletionResult,
   Fact,
   HarnessArticle,
-} from '../core/types';
-import type { LlmPort, NewsApiPort, PersonaStorePort } from '../core/ports';
+} from '@/lib/news-harness/core/types';
+import type { LlmPort, NewsApiPort, PersonaStorePort } from '@/lib/news-harness/core/ports';
 
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
