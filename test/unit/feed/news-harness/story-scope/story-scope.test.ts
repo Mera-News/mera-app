@@ -7,7 +7,7 @@ import {
   parseStoryScopeOutput,
   MAX_SCOPE_TITLES,
   STORY_SCOPE_SYSTEM_PROMPT,
-} from '../index';
+} from '@/lib/news-harness/story-scope/index';
 
 /** Fixed injected clock — 2026-03-04. The builder never reads Date.now(), so
  *  every prompt assertion below is deterministic. */

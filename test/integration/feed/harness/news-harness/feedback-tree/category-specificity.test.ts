@@ -5,7 +5,7 @@
 // invented examples, so this test fails if the stemmer stops folding the family
 // it was built for.
 
-import { categoryStem, isDiscriminatingCategory } from '../category-specificity';
+import { categoryStem, isDiscriminatingCategory } from '@/lib/news-harness/feedback-tree/category-specificity';
 
 describe('categoryStem', () => {
   it('folds the whole observed generic family onto two stems', () => {

@@ -6,7 +6,7 @@ import {
   type FactStatTopicInfo,
   type FactStatImpression,
   type FactStatTopic,
-} from '../fact-stats';
+} from '@/lib/news-harness/feed-select/fact-stats';
 
 // --- Shared fixtures -------------------------------------------------------
 

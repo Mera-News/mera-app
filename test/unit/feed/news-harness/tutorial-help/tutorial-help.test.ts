@@ -2,7 +2,7 @@ import {
     buildTutorialHelpContext,
     buildTutorialHelpPrompt,
     parseTutorialRoute,
-} from '../index';
+} from '@/lib/news-harness/tutorial-help/index';
 
 describe('parseTutorialRoute', () => {
     it('splits a tutorial route into chapter and slide', () => {

@@ -1,10 +1,10 @@
-import { resolveLeafActions } from '../resolve-leaf-actions';
-import { ACTION_NAMES } from '../../persona-management/action-names';
+import { resolveLeafActions } from '@/lib/news-harness/feedback-tree/resolve-leaf-actions';
+import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import type {
   FeedbackTreeAbstractAction,
   FeedbackTreeLeaf,
   LocalFeedbackContext,
-} from '../types';
+} from '@/lib/news-harness/feedback-tree/types';
 
 const ctx = (over: Partial<LocalFeedbackContext> = {}): LocalFeedbackContext => ({ ...over });
 

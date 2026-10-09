@@ -1,5 +1,5 @@
-import { evaluateCondition } from '../evaluate-condition';
-import type { LocalFeedbackContext } from '../types';
+import { evaluateCondition } from '@/lib/news-harness/feedback-tree/evaluate-condition';
+import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
 
 const ctx = (over: Partial<LocalFeedbackContext> = {}): LocalFeedbackContext => ({ ...over });
 

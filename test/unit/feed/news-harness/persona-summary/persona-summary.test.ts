@@ -10,7 +10,7 @@ import {
   MAX_STATEMENT_CHARS,
   MAX_SUMMARY_STRINGS,
   type PersonaSummaryFactInput,
-} from '../index';
+} from '@/lib/news-harness/persona-summary/index';
 
 function fact(overrides: Partial<PersonaSummaryFactInput>): PersonaSummaryFactInput {
   return {

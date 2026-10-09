@@ -7,7 +7,7 @@ import {
   parseStoryHeadlineOutput,
   MAX_TITLES,
   MAX_TITLE_CHARS,
-} from '../index';
+} from '@/lib/news-harness/story-headline/index';
 
 describe('buildStoryHeadlinePrompt', () => {
   it('numbers titles 1..N and caps to MAX_TITLES', () => {

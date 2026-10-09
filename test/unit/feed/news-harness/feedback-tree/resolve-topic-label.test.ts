@@ -1,5 +1,5 @@
-import { resolveTopicLabel } from '../resolve-topic-label';
-import type { LocalFeedbackContext } from '../types';
+import { resolveTopicLabel } from '@/lib/news-harness/feedback-tree/resolve-topic-label';
+import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
 
 const ctx = (over: Partial<LocalFeedbackContext> = {}): LocalFeedbackContext => ({ ...over });
 

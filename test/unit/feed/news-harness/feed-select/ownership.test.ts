@@ -14,9 +14,9 @@ import {
   type TopicSnapshot,
   type FactSnapshot,
   bandOf,
-} from '../ownership';
-import { bucketScores } from '../../article-pipeline/scoring';
-import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
+} from '@/lib/news-harness/feed-select/ownership';
+import { bucketScores } from '@/lib/news-harness/article-pipeline/scoring';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 
 // --- factories ------------------------------------------------------------
 
