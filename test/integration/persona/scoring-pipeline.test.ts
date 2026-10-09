@@ -12,6 +12,8 @@ import { invalidateJwtCache } from '@/lib/auth-client';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { addSuppression } from '@/lib/database/services/suppression-service';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
+import * as limiter from '@/lib/llm/gateway-rate-limiter';
+import * as articleStore from '@/lib/database/services/scoring-pipeline-store';
 import * as scoringService from '@/lib/mera-protocol/scoring-service';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import {
@@ -1446,5 +1448,72 @@ describe('foreground poller', () => {
 
     expect((await phases())[0]).toBe('done');
     expect(polls).toEqual([b0.requestId, b1.requestId]);
+  });
+});
+
+// PE13: a drain that yields to a due poll kicks a poll tick at ZERO delay (kickPollTick). When the
+// limiter slot is still busy, that tick cannot poll, its own drain yields again and kicks again, and
+// the JS thread spins on getPipeline until the slot frees (~1s). The right behaviour waits for the
+// slot, as the poller's first tick does (msUntilNextGrant() + 1). The test cannot just pass time: a
+// zero-delay timer that re-arms itself never lets a fake clock move far, so advancing it would hang.
+// It runs a FIXED number of timer generations instead (each runOnlyPendingTimersAsync runs only the
+// timers already pending, moving the clock to the latest of them) and counts the pipeline reads
+// made while the slot is busy, after the push that started it has settled.
+describe('PE13 a drain that yields while the limiter slot is busy', () => {
+  const GENERATIONS = 40;
+
+  /** Batch 0 collected by push, batch 1 due for its poll, the slot just taken: the drain yields. */
+  async function readsWhileSlotBusy(): Promise<number> {
+    const script: Script = { defaultScore: 0.1 };
+    gateway(script, { pendingPolls: 999 });
+    await warmAttestation();
+    await seedAndEnqueue(ids(5 + 10));
+    await tickUntil(async () => (await waitingCount()) === 2);
+    const [b0] = await batches();
+    gateway(script);
+    holdJobs((id) => id !== b0.requestId);
+    // Foreground without the change event, so no interval timer exists: only the drain's kick ticks.
+    appStateModule.currentState = 'active';
+    // Batch 1 is due for its poll, and a gateway action has just taken the slot (busy ~1s).
+    later(3_000);
+    expect(limiter.tryTakeImmediate()).toBe(true);
+
+    let busyReads = 0;
+    const realGet = articleStore.getPipeline;
+    jest.spyOn(articleStore, 'getPipeline').mockImplementation(async () => {
+      if (limiter.msUntilNextGrant() > 0) busyReads += 1;
+      return realGet();
+    });
+
+    // From here the clock moves only when the test runs pending timers.
+    jest.useFakeTimers({ advanceTimers: false, doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'], now: Date.now() });
+    let settled = false;
+    const push = pipeline.handlePush(b0.requestId, 'foreground').finally(() => {
+      settled = true;
+    }); // → done → afterTerminal → drain → yields to batch 1's poll
+    for (let i = 0; i < 200 && !settled; i++) await new Promise((r) => setImmediate(r));
+    await push;
+    expect((await phases())[0]).toBe('done');
+
+    busyReads = 0;
+    for (let i = 0; i < GENERATIONS; i++) {
+      await new Promise((r) => setImmediate(r));
+      await jest.runOnlyPendingTimersAsync();
+    }
+    return busyReads;
+  }
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test.failing('PE13 the yielded poll tick waits for the slot instead of re-reading the pipeline while it is busy', async () => {
+    // Waiting for the slot, the kicked tick reads the pipeline once the slot is free: at most one
+    // generation's worth of reads can land while it is still busy.
+    expect(await readsWhileSlotBusy()).toBeLessThanOrEqual(6);
+  });
+
+  test('PE13 today: the yielded poll tick re-kicks at zero delay and re-reads the pipeline on every turn while the slot is busy', async () => {
+    expect(await readsWhileSlotBusy()).toBeGreaterThan(6 * 10);
   });
 });
