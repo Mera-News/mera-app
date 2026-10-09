@@ -5,7 +5,7 @@
 // re-bills the corpus), and marking itself done having processed half of it (leaves the contamination
 // behind a flag that says it is finished).
 //
-// Replaces sanity-backfill-service.test.ts (17 `it`). Carried: resets the cursor on the first run; does
+// Replaces sanity-backfill-service.test.ts (15 `it`). Carried: resets the cursor on the first run; does
 // not reset it again; audits in bounded chunks; no facts neither starts nor finishes the pass; not done
 // while chunks return work; done only when a chunk finds nothing left; a chunk that fails is not done
 // (as DATA-U11b-1 and -2: runSanityAudit never rejects, so the legacy "audit throws" case cannot occur,
@@ -326,7 +326,7 @@ describe('a chunk that could not run must not finish the pass', () => {
   // (runSanityAudit answers `skipped: true`, which the backfill never reads).
   test.failing('DATA-U11b-2: a credential lost mid-run leaves the pass open', async () => {
     await seedCorpus(150);
-    loseCredential();
+    await loseCredential();
 
     const res = await chunk();
 
@@ -336,7 +336,7 @@ describe('a chunk that could not run must not finish the pass', () => {
 
   it('today: a credential lost mid-run marks the whole pass done, with no request made', async () => {
     await seedCorpus(150);
-    loseCredential();
+    await loseCredential();
 
     const res = await chunk();
 

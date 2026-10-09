@@ -4,6 +4,8 @@
 // Everything runs on the in-memory DB with the real services, real stores and the gateway mock (real
 // E2EE both ways). A model call is answered by a responder keyed on the decrypted prompt, so a test
 // asserts what the service SENT (`gatewayCalls()`) as well as what it did with the answer.
+import * as SecureStore from 'expo-secure-store';
+
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { addFact } from '@/lib/database/services/fact-service';
 import { setSetting } from '@/lib/database/services/setting-service';
@@ -16,7 +18,7 @@ import { __resetOnDeviceGateForTests } from '@/lib/llm/on-device-gate';
 import logger from '@/lib/logger';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { toastManager } from '@/lib/toast-manager';
-import { failSecureStore, secureStoreDump, type GatewayCall, type GatewayReply } from '@/test/helpers';
+import { secureStoreDump, type GatewayCall, type GatewayReply } from '@/test/helpers';
 
 export const MIN = 60_000;
 export const HOUR = 3_600_000;
@@ -68,12 +70,14 @@ export function spyOnNotifications() {
 
 /** Silence the real logger and expose its capture channels (spies on the real object, R23). */
 export function quietLogger() {
-  const spies = (['info', 'warn', 'error', 'debug'] as const).map((m) =>
+  const [info, warn, error, debug] = (['info', 'warn', 'error', 'debug'] as const).map((m) =>
     jest.spyOn(logger, m).mockImplementation(() => {}),
   );
+  const spies = [info, warn, error, debug];
   const captureException = jest.spyOn(logger, 'captureException').mockImplementation(() => '');
   const addBreadcrumb = jest.spyOn(logger, 'addBreadcrumb').mockImplementation(() => {});
   return {
+    warn,
     captureException,
     addBreadcrumb,
     restore: () => [...spies, captureException, addBreadcrumb].forEach((s) => s.mockRestore()),
@@ -165,12 +169,73 @@ export async function seedTopicsOverTime(
 // ---------------------------------------------------------------------------
 
 /**
- * The device loses its E2EE credential: the session cookie cannot be read and the cached gateway JWT is
- * gone, so the next gateway call has no token and fails with NoCredentialError before any request.
+ * The device loses its E2EE credential: the session cookie is gone from the keychain and the cached gateway
+ * JWT with it, so the next gateway call has no token and fails with NoCredentialError before any request.
+ * `signInFixtureAccount()` brings it back.
  */
-export function loseCredential(): void {
-  const cookieKey = Object.keys(secureStoreDump()).find((k) => k.endsWith('_cookie'));
-  if (!cookieKey) throw new Error('loseCredential: no session cookie in the secure store (sign in first)');
-  failSecureStore(cookieKey, 'get');
+export async function loseCredential(): Promise<void> {
+  const keys = Object.keys(secureStoreDump()).filter((k) => k.endsWith('_cookie') || k.endsWith('_session_data'));
+  if (keys.length === 0) throw new Error('loseCredential: no session in the secure store (sign in first)');
+  for (const key of keys) await SecureStore.deleteItemAsync(key);
   invalidateJwtCache();
+}
+
+// ---------------------------------------------------------------------------
+// A persona for the hygiene tests
+// ---------------------------------------------------------------------------
+
+/** Statements that are clearly different from each other (near-identical wording trips the duplicate detector). */
+export const SUBJECTS = [
+  'Follows Indian cricket', 'Lives in Amsterdam', 'Works in machine learning',
+  'Parents reside near Bhopal', 'Attends jazz festivals', 'Cycles competitively',
+  'Reads Nordic crime fiction', 'Invests in renewable energy', 'Cooks Sichuan food',
+  'Volunteers at an animal shelter', 'Studies Japanese', 'Collects vinyl records',
+  'Runs marathons', 'Plays chess online', 'Restores vintage cameras',
+  'Brews espresso at home', 'Sails dinghies', 'Writes science fiction',
+  'Teaches mathematics', 'Practises pottery', 'Watches Formula One',
+  'Grows bonsai trees', 'Climbs indoor routes', 'Tracks migratory birds',
+  'Repairs mechanical watches',
+];
+
+/**
+ * `count` facts created `ageDays` before `T0`. Fact 0 is the single word "News" (the analyzer calls it too
+ * broad); the rest read differently from one another, so a persona of them proposes exactly one cleanup.
+ */
+export async function seedPersona(count: number, ageDays = 100) {
+  jest.setSystemTime(T0 - ageDays * DAY);
+  const facts = [];
+  for (let i = 0; i < count; i++) facts.push(await addFact(i === 0 ? 'News' : `distinct interest number ${i}`));
+  jest.setSystemTime(T0);
+  return facts;
+}
+
+/** `count` facts that each own one contaminated topic (`bad topic i`), old enough for the full sweep. */
+export async function seedContaminated(count: number, ageDays = 100) {
+  jest.setSystemTime(T0 - ageDays * DAY);
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const { fact, topics } = await seedFact(SUBJECTS[i % SUBJECTS.length], [`bad topic ${i}`]);
+    out.push({ fact, bad: topics[0] });
+  }
+  jest.setSystemTime(T0);
+  return out;
+}
+
+/** Judges `bad topic N` and `festival music tech` topics incoherent, everything else fine. */
+export const isContaminated = (text: string) => /^bad topic|festival music tech/.test(text);
+
+/**
+ * A fact whose topics are written one at a time, 10 ms apart in the order given, so the audit (oldest
+ * first, ties broken by random id) sees them in that order. Topics from ONE `createTopics` call share a
+ * millisecond, and their order in a prompt is then arbitrary.
+ */
+export async function seedFactOrdered(statement: string, topics: (string | TopicSeed)[], startMs = T0 - 50 * DAY) {
+  const fact = await addFact(statement);
+  const rows = [];
+  for (let i = 0; i < topics.length; i++) {
+    jest.setSystemTime(startMs + i * 10);
+    rows.push(...(await seedTopics(fact.id, [topics[i]])));
+  }
+  jest.setSystemTime(T0);
+  return { fact, topics: rows };
 }
