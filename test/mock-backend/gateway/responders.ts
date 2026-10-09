@@ -8,6 +8,11 @@ const FENCE = /<<ARTICLE [a-f0-9]{12}>>/g;
 const content = (call: GatewayCall, role: string) =>
   call.messages.find((m) => m.role === role)?.content ?? '';
 
+const HARNESS_LINES = /^(<state>|<known_facts>|<tool_response>|They were answering|Their previous message|Earlier in this chat)/;
+/** The person's own message in a persona-loop leg: the first user turn the harness did not write. */
+const personMessage = (call: GatewayCall) =>
+  call.messages.find((m) => m.role === 'user' && !HARNESS_LINES.test(m.content))?.content ?? '';
+
 const loadSkillCall = (id: string) =>
   `One moment.\n<tool_call>\n<function=load_skill>\n<parameter=id>\n${id}\n</parameter>\n</function>\n</tool_call>`;
 
@@ -65,14 +70,16 @@ export const defaultResponder: GatewayResponder = (call) => {
   }
 
   if (call.route === 'chat') {
-    const all = call.messages.map((m) => m.content).join('\n');
-    const toolResults = all.split('<tool_response>').length - 1;
-    // Only the person's own first message counts: skill bodies and the system prompt quote examples.
-    const factTurn = FACT_TURN.exec(content(call, 'user'));
-    if (toolResults === 0 && system.includes('## Skill index')) {
+    // The persona loop (lib/mera-harness/core/core.ts) sends no history: each leg is the system
+    // prompt, then <state>, <known_facts>, optional context lines, THE PERSON'S MESSAGE, then this
+    // leg's tool results as `<tool_response>name: {...}`. The route leg's system prompt carries
+    // the skill index; a skill leg's carries the skill body.
+    const factTurn = FACT_TURN.exec(personMessage(call));
+    if (system.includes('## Skill index')) {
       return loadSkillCall(factTurn ? 'facts/interest' : 'conversation/question');
     }
-    if (factTurn && toolResults === 1) return saveFactCall(factTurn[1].trim());
+    const offered = call.messages.some((m) => m.role !== 'system' && m.content.includes('saveExtractedFacts:'));
+    if (factTurn && !offered) return saveFactCall(factTurn[1].trim());
     return 'E2E fixture answer.';
   }
   // Topic generation, combo pass, headline, summary: not scripted yet.

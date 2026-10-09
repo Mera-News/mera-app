@@ -16,19 +16,24 @@ describe('defaultResponder scripted paths', () => {
     const leg0 = calls(defaultResponder(call([SYSTEM, user])) as string);
     expect(leg0.map((c) => [c.name, JSON.parse(c.argumentsRaw)])).toEqual([['load_skill', { id: 'facts/interest' }]]);
 
-    const leg1 = calls(
-      defaultResponder(call([{ role: 'system', content: 'facts skill' }, user, { role: 'user', content: '<tool_response>\nskill body\n</tool_response>' }])) as string,
-    );
+    // A skill leg, shaped as the persona loop sends it: state, known facts, the message, no history.
+    const state = { role: 'user', content: '<state>route: interest</state>' };
+    const known = { role: 'user', content: '<known_facts>\n(none)\n</known_facts>' };
+    const leg1 = calls(defaultResponder(call([{ role: 'system', content: 'facts skill' }, state, known, user])) as string);
     expect(leg1).toHaveLength(1);
     expect(leg1[0].name).toBe('saveExtractedFacts');
     expect(JSON.parse(leg1[0].argumentsRaw).extracted_user_information).toEqual([{ statement: 'Follows Formula 1 racing' }]);
+
+    // Once the offer's result is back, the leg closes in prose instead of offering again.
+    const offered = { role: 'user', content: '<tool_response>\nsaveExtractedFacts: {"pendingFacts":[]}\n</tool_response>' };
+    expect(defaultResponder(call([{ role: 'system', content: 'facts skill' }, state, known, user, offered]))).toBe('E2E fixture answer.');
   });
 
   it('any other chat routes to conversation/question and answers in prose', () => {
     const user = { role: 'user', content: 'What is new today?' };
     expect(calls(defaultResponder(call([SYSTEM, user])) as string)[0]).toMatchObject({ name: 'load_skill' });
     expect(JSON.parse(calls(defaultResponder(call([SYSTEM, user])) as string)[0].argumentsRaw)).toEqual({ id: 'conversation/question' });
-    expect(defaultResponder(call([{ role: 'system', content: 'q' }, user, { role: 'user', content: '<tool_response>x</tool_response>' }]))).toBe('E2E fixture answer.');
+    expect(defaultResponder(call([{ role: 'system', content: 'question skill' }, { role: 'user', content: '<state>x</state>' }, user]))).toBe('E2E fixture answer.');
   });
 
   it('topic generation returns topics the app parser accepts', () => {
