@@ -559,45 +559,93 @@ describe('purchase', () => {
     });
 
     // ---------------------------------------------------------------------------------------------
-    // PE6 is an OWNER question (persona skill): a confirmed purchase replaces whatever screen the user is on.
-    // These pin what happens today; nothing here says it is right.
-    describe('after a confirmed purchase: where the app goes', () => {
-        const purchase = async () => {
-            scriptBilling(['starter', 'individual']);
+    // PE6 (owner ruling): after a purchase the app stays on Manage subscription. The purchase starts a billing
+    // poll and the hook reports it, `purchaseStatus`: 'confirming' (an indeterminate loader) until billing
+    // confirms the entitlement ('confirmed'), or 'timed-out' when the poll budget runs out (the page then asks
+    // the user to contact support if they paid). Nothing navigates: not the purchase, not a late poll.
+    // Each test.failing below pins one part of that; its "today" sibling pins what happens now. P3 flips them.
+    describe('PE6 after a purchase', () => {
+        type Status = 'idle' | 'confirming' | 'confirmed' | 'timed-out' | undefined;
+        const statusOf = (hook: Awaited<ReturnType<typeof mountSettled>>): Status =>
+            (hook.result.current as { purchaseStatus?: Status }).purchaseStatus;
+
+        /** Mounts, buys, and runs the purchase to the end of its first poll. `steps` scripts GetUserBilling. */
+        const purchase = async (steps: string[]) => {
+            scriptBilling(steps);
             presentPaywall.mockResolvedValueOnce('PURCHASED');
             const hook = await mountSettled();
             await viewPlans(hook);
-            await until(() => router.replace.mock.calls.length > 0);
+            return hook;
         };
+        /** Gives any navigation the purchase would trigger time to land (it is fired, not awaited). */
+        const settle = () =>
+            act(async () => {
+                await jest.advanceTimersByTimeAsync(1000);
+            });
 
-        test('PE6 (owner question) today: a confirmed purchase replaces the route with the Feed when the account has facts', async () => {
+        test.failing('PE6 a confirmed purchase stays on Manage subscription (account with facts)', async () => {
             await seedFacts(['Follows Formula 1']);
-            await purchase();
+            await purchase(['starter', 'individual']);
+            await settle();
+            expect(router.replace).not.toHaveBeenCalled();
+        });
+
+        test('PE6 today: a confirmed purchase replaces the route with the Feed when the account has facts', async () => {
+            await seedFacts(['Follows Formula 1']);
+            await purchase(['starter', 'individual']);
+            await until(() => router.replace.mock.calls.length > 0);
             expect(router.replace).toHaveBeenCalledTimes(1);
             expect(router.replace).toHaveBeenCalledWith(FEED);
         });
 
-        test('PE6 (owner question) today: with no facts the purchase replaces the route with /logged-in (the gate sends it to onboarding)', async () => {
-            await purchase();
+        test.failing('PE6 a confirmed purchase stays on Manage subscription (account without facts)', async () => {
+            await purchase(['starter', 'individual']);
+            await settle();
+            expect(router.replace).not.toHaveBeenCalled();
+        });
+
+        test('PE6 today: with no facts the purchase replaces the route with /logged-in (the gate sends it to onboarding)', async () => {
+            await purchase(['starter', 'individual']);
+            await until(() => router.replace.mock.calls.length > 0);
             expect(router.replace).toHaveBeenCalledTimes(1);
             expect(router.replace).toHaveBeenCalledWith('/logged-in');
         });
 
-        test('PE6 (owner question) today: a purchase confirmed only by the late poll navigates too', async () => {
-            await seedFacts(['Follows Formula 1']);
-            // mount + 8 first-poll reads + the late poll's first read on "starter"; the webhook lands on its second.
-            scriptBilling(Array<string>(10).fill('starter').concat('individual'));
-            presentPaywall.mockResolvedValueOnce('PURCHASED');
-            const hook = await mountSettled();
+        // mount + 8 first-poll reads + the late poll's first read on "starter"; the webhook lands on its second.
+        const lateConfirmation = () => Array<string>(10).fill('starter').concat('individual');
 
-            await viewPlans(hook);
+        test.failing('PE6 a purchase confirmed only by the late poll stays on Manage subscription', async () => {
+            await seedFacts(['Follows Formula 1']);
+            const hook = await purchase(lateConfirmation());
+            await advanceWhile(() => hook.result.current.billing?.subscriptionTier !== 'individual');
+            await settle();
+            expect(hook.result.current.billing?.subscriptionTier).toBe('individual');
+            expect(router.replace).not.toHaveBeenCalled();
+        });
+
+        test('PE6 today: a purchase confirmed only by the late poll navigates too', async () => {
+            await seedFacts(['Follows Formula 1']);
+            const hook = await purchase(lateConfirmation());
             expect(router.replace).not.toHaveBeenCalled();
             await advanceWhile(() => hook.result.current.activationPending);
-
             expect(router.replace).toHaveBeenCalledWith(FEED);
         });
 
-        test('PE6 (owner question) today: presentFreeTierPaywall navigates on a confirmed purchase as well', async () => {
+        test.failing('PE6 presentFreeTierPaywall leaves the user where they are after a confirmed purchase', async () => {
+            fakeClock(NOW);
+            await seedFacts(['Follows Formula 1']);
+            useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
+            scriptBilling(['individual']);
+            presentPaywall.mockResolvedValueOnce('PURCHASED');
+
+            await advanceUntilDone(presentFreeTierPaywall('test'));
+            await settle();
+
+            expect(useSubscriptionStore.getState().serverTier).toBe('individual');
+            expect(router.replace).not.toHaveBeenCalled();
+        });
+
+        test('PE6 today: presentFreeTierPaywall navigates on a confirmed purchase as well', async () => {
             fakeClock(NOW);
             await seedFacts(['Follows Formula 1']);
             useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
@@ -608,6 +656,66 @@ describe('purchase', () => {
             await until(() => router.replace.mock.calls.length > 0);
 
             expect(router.replace).toHaveBeenCalledWith(FEED);
+        });
+
+        /** Starts a purchase WITHOUT waiting for its poll, so the state during the poll can be read. */
+        const startPurchase = async (steps: string[]) => {
+            scriptBilling(steps);
+            presentPaywall.mockResolvedValueOnce('PURCHASED');
+            const hook = await mountSettled();
+            let done: Promise<void> = Promise.resolve();
+            act(() => {
+                done = hook.result.current.handleViewPlans();
+            });
+            return { hook, done };
+        };
+        // mount, then three "starter" poll reads before the webhook lands: the poll runs for a few seconds.
+        const confirmsOnFourthRead = ['starter', 'starter', 'starter', 'individual'];
+
+        test.failing('PE6 the hook reports confirming while billing is polled, then confirmed', async () => {
+            const { hook, done } = await startPurchase(confirmsOnFourthRead);
+            // Half a second in, the first poll is still waiting on the webhook: the loader is up.
+            await act(async () => {
+                await jest.advanceTimersByTimeAsync(500);
+            });
+            expect(statusOf(hook)).toBe('confirming');
+            await act(async () => {
+                await advanceUntilDone(done);
+            });
+            await advanceWhile(() => statusOf(hook) !== 'confirmed', 10_000);
+            expect(statusOf(hook)).toBe('confirmed');
+            expect(hook.result.current.billing?.subscriptionTier).toBe('individual');
+        });
+
+        test('PE6 today: the hook exposes no purchase status; activationPending stays false through the first poll', async () => {
+            const { hook, done } = await startPurchase(confirmsOnFourthRead);
+            await act(async () => {
+                await jest.advanceTimersByTimeAsync(500);
+            });
+            expect(statusOf(hook)).toBeUndefined();
+            expect(hook.result.current.activationPending).toBe(false);
+            await act(async () => {
+                await advanceUntilDone(done);
+            });
+            expect(statusOf(hook)).toBeUndefined();
+            expect(hook.result.current.billing?.subscriptionTier).toBe('individual');
+        });
+
+        test.failing('PE6 when billing never confirms, the hook ends in timed-out (the page asks the user to contact support)', async () => {
+            const hook = await purchase(['starter']);
+            // Past the whole poll budget: the first poll and the late poll.
+            await advanceWhile(() => statusOf(hook) !== 'timed-out');
+            expect(statusOf(hook)).toBe('timed-out');
+            expect(router.replace).not.toHaveBeenCalled();
+        });
+
+        test('PE6 today: when billing never confirms, the late poll just clears activationPending; nothing reports a timeout', async () => {
+            const hook = await purchase(['starter']);
+            expect(hook.result.current.activationPending).toBe(true);
+            await advanceWhile(() => hook.result.current.activationPending);
+            expect(hook.result.current.activationPending).toBe(false);
+            expect(statusOf(hook)).toBeUndefined();
+            expect(hook.result.current.billing?.subscriptionTier).toBe('starter');
         });
     });
 });
