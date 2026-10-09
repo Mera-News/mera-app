@@ -8,8 +8,16 @@ const FENCE = /<<ARTICLE [a-f0-9]{12}>>/g;
 const content = (call: GatewayCall, role: string) =>
   call.messages.find((m) => m.role === role)?.content ?? '';
 
-const LOAD_SKILL_CALL =
-  'One moment.\n<tool_call>\n<function=load_skill>\n<parameter=id>\nconversation/question\n</parameter>\n</function>\n</tool_call>';
+const loadSkillCall = (id: string) =>
+  `One moment.\n<tool_call>\n<function=load_skill>\n<parameter=id>\n${id}\n</parameter>\n</function>\n</tool_call>`;
+
+// A fact turn is any chat whose user text says "I follow <x>": the e2e sign-in adds one such fact
+// in onboarding so the Feed has topics to fetch (a zero-fact Feed requests no articles at all).
+const FACT_TURN = /\bI follow ([^.\n"]+)/i;
+const saveFactCall = (subject: string) =>
+  '<tool_call>\n<function=saveExtractedFacts>\n<parameter=extracted_user_information>\n' +
+  JSON.stringify([{ statement: `Follows ${subject}` }]) +
+  '\n</parameter>\n</function>\n</tool_call>';
 
 export const defaultResponder: GatewayResponder = (call) => {
   if (call.route === 'web-search') {
@@ -49,9 +57,22 @@ export const defaultResponder: GatewayResponder = (call) => {
   }
   if (call.callId?.startsWith('reason:')) return 'E2E fixture reason about this story.';
 
+  // Topic generation (lib/mera-harness/core/topic-call.ts): the user message opens with `Fact: "..."`.
+  const fact = /^Fact: "([^"]+)"/.exec(user);
+  if (fact) {
+    const subject = fact[1].replace(/^(follows|interested in|likes)\s+/i, '');
+    return JSON.stringify([`${subject} news`, `${subject} results`]);
+  }
+
   if (call.route === 'chat') {
-    const seenToolResult = call.messages.some((m) => m.content.includes('<tool_response>'));
-    if (!seenToolResult && system.includes('## Skill index')) return LOAD_SKILL_CALL;
+    const all = call.messages.map((m) => m.content).join('\n');
+    const toolResults = all.split('<tool_response>').length - 1;
+    // Only the person's own first message counts: skill bodies and the system prompt quote examples.
+    const factTurn = FACT_TURN.exec(content(call, 'user'));
+    if (toolResults === 0 && system.includes('## Skill index')) {
+      return loadSkillCall(factTurn ? 'facts/interest' : 'conversation/question');
+    }
+    if (factTurn && toolResults === 1) return saveFactCall(factTurn[1].trim());
     return 'E2E fixture answer.';
   }
   // Topic generation, combo pass, headline, summary: not scripted yet.
