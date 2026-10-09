@@ -7,11 +7,15 @@ import { graphql, HttpResponse, type RequestHandler } from 'msw';
 
 export function mockGql<TData>(
     operationName: string,
-    data: TData | ((variables: Record<string, unknown>) => TData),
+    data: TData | ((variables: Record<string, unknown>) => TData | Promise<TData>),
 ): RequestHandler {
-    return graphql.operation(({ operationName: name, variables }) => {
+    return graphql.operation(async ({ operationName: name, variables }) => {
         if (name !== operationName) return undefined;
-        const body = typeof data === 'function' ? (data as (v: Record<string, unknown>) => TData)(variables) : data;
+        // An async responder is awaited, so a test can hold a response open or compute it lazily.
+        const body =
+            typeof data === 'function'
+                ? await (data as (v: Record<string, unknown>) => TData | Promise<TData>)(variables)
+                : data;
         return HttpResponse.json({ data: body as Record<string, unknown> });
     });
 }
