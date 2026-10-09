@@ -128,6 +128,9 @@ afterEach(() => {
   server.resetHandlers();
   jest.useRealTimers();
   const u = unhandled.splice(0);
+  // E2EE contract breaks (cleartext tool keys, wrong headers, undecryptable envelopes) fail the
+  // test; tests that plant one on purpose drain it with takeGatewayViolations().
+  require('./test/helpers/gateway').assertNoGatewayViolations();
   if (u.length) {
     throw new Error('Unhandled requests (add a handler or a server.use override):\n' + u.join('\n'));
   }
