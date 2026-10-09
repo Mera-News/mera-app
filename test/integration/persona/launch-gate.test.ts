@@ -455,6 +455,47 @@ describe('useLoggedInGate: account switch', () => {
             expect(replaced()).toEqual([[APP_ROUTE]]);
         });
     });
+
+    // PE9b, the same dead wipe with NO stamp: resolveIdentity answers wipeAndProceed outright (no
+    // cached_user_id), so the persona second opinion is never asked, and clearPreviousUserData does
+    // nothing without a stamp to compare. A persona row owned by another account is the positive
+    // evidence the gate exists to act on; without it (facts alone) not wiping is intended.
+    describe('persona row owned by another account, no stamp at all', () => {
+        async function seed() {
+            await signIn();
+            await addFact('I follow cricket');
+            await persistUserPersona(FOREIGN, personaFor(Date.now(), { userId: FOREIGN }));
+            expect(await getSetting('cached_user_id')).toBeNull();
+            jest.mocked(Sentry.captureMessage).mockClear();
+        }
+
+        test.failing('PE9b the previous owner facts are wiped before the incoming account is routed in', async () => {
+            await seed();
+
+            mountGate();
+            await waitForRoute();
+            await drain();
+
+            expect(await hasAnyFacts()).toBe(false);
+            expect(replaced()).toEqual([['/logged-in/onboarding']]);
+        });
+
+        test('PE9b today: the second opinion is never asked, the facts survive and the incoming account skips onboarding', async () => {
+            await seed();
+
+            mountGate();
+            await waitForRoute();
+            await drain();
+
+            expect(Sentry.captureMessage).not.toHaveBeenCalledWith(
+                'Persona rows on this device belong to a different user',
+                expect.anything(),
+            );
+            expect(await hasAnyFacts()).toBe(true);
+            expect(await getSetting('cached_user_id')).toBe(ME);
+            expect(replaced()).toEqual([[APP_ROUTE]]);
+        });
+    });
 });
 
 describe('useLoggedInGate: ownership fault and the account check', () => {
