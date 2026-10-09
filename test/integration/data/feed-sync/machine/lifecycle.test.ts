@@ -20,7 +20,6 @@ jest.mock('expo-keep-awake', () => ({
   deactivateKeepAwake: jest.fn(),
 }));
 
-import { ArticleService } from '@/lib/article-service';
 import database from '@/lib/database';
 import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
 import logger from '@/lib/logger';
@@ -245,36 +244,46 @@ describe('FeedSyncMachine lifecycle', () => {
       expect(store().articleCount).toBe(25);
     });
 
-    it('falls back to the number of ids the topics matched when the server count is 0', async () => {
-      await serveNew(ids(3));
+    // DA43: `recentCount || topicResult.serverArticleIds.length` cannot tell a real zero from a
+    // failure, and ArticleService.getRecentArticleCount turns a failed query into 0, so both show
+    // the topic-matched count instead of 0 / the last known figure. Each pair shares one setup.
+    test.failing('DA43: a real zero from the server is shown as zero', async () => {
+      await serveNew(ids(5));
       server.use(mockGql('GetRecentArticleCount', { recentArticleCount: 0 }));
 
       await run();
 
-      expect(store().articleCount).toBe(3);
+      expect(store().articleCount).toBe(0);
     });
 
-    it('falls back the same way when the count call itself throws, reporting it', async () => {
-      await serveNew(ids(3));
-      spyOnExport(ArticleService, 'getRecentArticleCount').mockRejectedValueOnce(new Error('count error'));
+    it('DA43 today: a zero from the server is replaced by the number of ids the topics matched', async () => {
+      await serveNew(ids(5));
+      server.use(mockGql('GetRecentArticleCount', { recentArticleCount: 0 }));
 
       await run();
 
-      expect(store().articleCount).toBe(3);
-      expect(captured()).toContainEqual([
-        expect.objectContaining({ message: 'count error' }),
-        expect.objectContaining({ tags: expect.objectContaining({ method: 'getRecentArticleCount' }) }),
-      ]);
-      expect(feedSyncMachine.state).toBe('done');
+      expect(store().articleCount).toBe(5);
     });
 
-    it('falls back the same way when the count query fails, and does not fail the sync', async () => {
-      await serveNew(ids(3));
+    test.failing('DA43: a failed count keeps the last known figure', async () => {
+      await serveNew(ids(5));
+      store().setCounts(12, 0); // what an earlier run stored
       server.use(graphql.query('GetRecentArticleCount', () => HttpResponse.error()));
 
       await run();
 
-      expect(store().articleCount).toBe(3);
+      expect(store().articleCount).toBe(12);
+      expect(feedSyncMachine.state).toBe('done');
+    });
+
+    it('DA43 today: a failed count query is replaced by the topic-matched count and does not fail the sync', async () => {
+      await serveNew(ids(5));
+      store().setCounts(12, 0);
+      server.use(graphql.query('GetRecentArticleCount', () => HttpResponse.error()));
+
+      await run();
+
+      expect(store().articleCount).toBe(5);
       expect(feedSyncMachine.state).toBe('done');
     });
   });

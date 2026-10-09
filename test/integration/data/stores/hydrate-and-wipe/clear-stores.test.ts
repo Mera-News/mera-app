@@ -261,7 +261,7 @@ describe('clearPreviousUserData', () => {
     await secureStore.setItemAsync(PIPELINE_KEY, 'e2ee-key-of-the-old-account');
   }
 
-  it('is a no-op with no cached user', async () => {
+  it("PE9b today: is a no-op with no cached user (the old owner's facts and PIN survive)", async () => {
     await seedUserData();
     await database.write(async () => {
       const row = (await database.get('settings').query().fetch()).find(

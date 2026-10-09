@@ -325,20 +325,39 @@ describe('the ObjectId insert-time filter', () => {
     expect(asked(served)).toEqual([...fresh, headlines[0]]);
   });
 
-  it('window-filters and caps the free followed-story ids too, without charging them', async () => {
-    await setSetting(BG_ARTICLES_CHARGED_PREFIX + TODAY, '120'); // budget 5
+  // DA44: the free followed-story ids are window-filtered and then clipped by the METERED remainder.
+  // They are not charged, so the bound that should apply is the per-run cap (50), not what is left
+  // of the day's metered allowance.
+  async function storiesRun() {
+    await setSetting(BG_ARTICLES_CHARGED_PREFIX + TODAY, '122'); // metered budget 3
     await seedTracked('local election');
-    const fresh = [0, 1, 2, 3, 4, 5, 6].map((n) => oid(3000 + n, NOW - 60_000));
+    const fresh = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => oid(3000 + n, NOW - 60_000));
     const old = oid(3100, NOW - 8 * HOUR);
     const served = serveHydrate();
     server.use(servePersona({ topics: { 'local election': [old, ...fresh] } }), ...served.handlers);
 
-    await advanceUntilDone(runFetch());
+    const out = await advanceUntilDone(runFetch());
 
     const stories = served.stats.requests.filter((r) => r.op === 'GetArticlesForStories').flatMap((r) => r.ids);
-    expect(stories).toEqual(fresh.slice(0, 5));
+    return { out, fresh, old, stories };
+  }
+
+  test.failing('DA44: free followed-story ids are bound by the per-run cap, not the metered remainder', async () => {
+    const { fresh, old, stories } = await storiesRun();
+
+    expect(stories).toEqual(fresh);
+    expect(stories.length).toBeLessThanOrEqual(BG_RUN_METERED_CAP);
     expect(stories).not.toContain(old);
-    expect(await ledger()).toBe('120'); // free ids are not reserved
+    expect(await ledger()).toBe('122'); // free ids are not reserved
+  });
+
+  it('DA44 today: window-filters the free followed-story ids and clips them to the metered remainder, without charging them', async () => {
+    const { out, fresh, old, stories } = await storiesRun();
+
+    expect(out.meteredBudget).toBe(3);
+    expect(stories).toEqual(fresh.slice(0, 3));
+    expect(stories).not.toContain(old);
+    expect(await ledger()).toBe('122'); // free ids are not reserved
   });
 });
 
