@@ -4,7 +4,7 @@ jest.mock('expo-localization', () => ({
     getLocales: () => mockGetLocales(),
 }));
 
-import { getDeviceCountryAlpha2 } from '../device-country';
+import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 
 describe('getDeviceCountryAlpha2', () => {
     afterEach(() => mockGetLocales.mockReset());
