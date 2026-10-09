@@ -193,6 +193,21 @@ describe('when it goes wrong', () => {
   });
 });
 
+describe('a provider id this build does not know', () => {
+  it('a restored settings row naming one is read as no destination: nothing runs, nothing is stamped', async () => {
+    await setUpBackup();
+    await setSetting(BACKUP_PROVIDER_KEY, 'onedrive');
+    onWifi();
+
+    await run();
+
+    expect(remoteNames()).toEqual([]);
+    expect(await getSetting(BACKUP_LAST_RUN_KEY)).toBeNull();
+    expect(await getSetting(BACKUP_LAST_FAILED_KEY)).toBeNull();
+    expect(captured()).toEqual([]);
+  });
+});
+
 describe('the Drive destination', () => {
   it('is resolved from the setting, not the iCloud provider: nothing reaches iCloud, and the run never throws', async () => {
     await setUpBackup();

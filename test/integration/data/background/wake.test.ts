@@ -47,6 +47,7 @@ import {
   sentryEvents,
   server,
   serveFresh,
+  spyOnExport,
   tap,
   tapCookieRead,
   toastsShown,
@@ -217,16 +218,16 @@ describe('every normal state of a device exits quietly', () => {
     expectQuiet(paths, { sessionKept: false });
   });
 
-  // DATA-U15-1. The brief and the skill say a keychain that throws (locked since reboot) exits
+  // DA35 (DATA-U15-1). The brief and the skill say a keychain that throws (locked since reboot) exits
   // `locked`. The SecureStore adapter's sync read swallows the throw and answers null, which
   // better-auth turns into an empty cookie, so the probe sees `signed-out`. Both are quiet exits.
-  test.failing('a keychain that throws on read (locked since reboot) exits locked', async () => {
+  test.failing('DA35: a keychain that throws on read (locked since reboot) exits locked', async () => {
     failSecureStore(COOKIE_KEY, 'get', new Error('errSecInteractionNotAllowed'));
 
     expect(await advanceUntilDone(runBackgroundRefresh(NOW))).toEqual({ stoppedBy: 'locked' });
   });
 
-  it('today: a keychain that throws on read exits signed-out, quietly, with the session still stored', async () => {
+  it('DA35: today: a keychain that throws on read exits signed-out, quietly, with the session still stored', async () => {
     failSecureStore(COOKIE_KEY, 'get', new Error('errSecInteractionNotAllowed'));
     const paths = recordPaths();
 
@@ -323,5 +324,18 @@ describe('an unexpected throw', () => {
     expect((Sentry.captureException as jest.Mock).mock.calls[0][1].tags).toEqual({ service: 'background-task', step: 'refresh' });
     expect(firstReached(order)).toContain('backup');
     expect(toastsShown()).toEqual([]);
+  });
+
+  it('a backup step that throws is reported once, with its step, and the wake still reports success', async () => {
+    // runScheduledBackup never throws on its own; a one-call fault stands in for the lazy require
+    // handing back a step that does (R23: the require returns the same module object).
+    spyOnExport(backupTask, 'runScheduledBackup').mockRejectedValueOnce(new Error('backup step died'));
+
+    const result = await advanceUntilDone(runBackgroundWake());
+
+    expect(result).toBe(BackgroundTaskResult.Success);
+    const captured = (Sentry.captureException as jest.Mock).mock.calls;
+    expect(captured).toHaveLength(1);
+    expect(captured[0][1].tags).toEqual({ service: 'background-task', step: 'backup' });
   });
 });

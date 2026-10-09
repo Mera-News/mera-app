@@ -12,7 +12,7 @@ jest.mock('expo-keep-awake', () => ({
   deactivateKeepAwake: jest.fn(),
 }));
 
-import { BG_MAX_BATCHES, isRefreshOwed } from '@/lib/background/background-feed-sync';
+import { BG_MAX_BATCHES, isRefreshOwed, shapeBackgroundDiff } from '@/lib/background/background-feed-sync';
 import database from '@/lib/database';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import * as pipeline from '@/lib/services/scoring-pipeline';
@@ -26,10 +26,12 @@ import { useNetworkStore } from '@/lib/stores/network-store';
 import { feedSyncMachine, fetchStep, loadMachineSnapshot, watchNetworkSubscriptions } from '../feed-sync/machine/support';
 import { scoredIds } from '../feed-sync/steps/support';
 import {
+  HOUR,
   NOW,
   breadcrumbs,
   hold,
   keepAwake,
+  oid,
   recordMachine,
   rowsById,
   runFetch,
@@ -133,11 +135,11 @@ describe('a run that fails', () => {
     expect(await loadMachineSnapshot()).not.toEqual(expect.objectContaining({ state: 'failed' }));
   });
 
-  // DATA-U15-3. The brief and the skill say a background run publishes no status. The machine keeps
+  // DA37 (DATA-U15-3). The brief and the skill say a background run publishes no status. The machine keeps
   // that, but the Apollo error link paints the feed-wide 'sync failed' banner for any GraphQL error
   // that is not an expected code, and it cannot tell a background run from a foreground one. The
   // reader opens the app to a failure banner for a fetch they never started.
-  test.failing('a GraphQL error during a background fetch leaves no status for the reader to find', async () => {
+  test.failing('DA37: a GraphQL error during a background fetch leaves no status for the reader to find', async () => {
     await serveFresh(3);
     server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
 
@@ -146,7 +148,7 @@ describe('a run that fails', () => {
     expect(store().syncStatusMessage).toBeNull();
   });
 
-  it("today: a GraphQL error during a background fetch paints the 'sync failed' banner from the error link", async () => {
+  it("DA37: today: a GraphQL error during a background fetch paints the 'sync failed' banner from the error link", async () => {
     await serveFresh(3);
     server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
 
@@ -189,6 +191,23 @@ describe('a run that fails', () => {
     expect(outcome).toEqual({ stoppedBy: 'deadline', meteredBudget: 50 });
     wire.release();
     await advanceUntilSettled();
+  });
+
+  it('a request that fails after the deadline is not reported as a failure: the deadline already owns the run', async () => {
+    await serveFresh(3);
+    const held = hold();
+    const fetch = fetchStep().hold(held.held, { fail: true });
+    let outcome: unknown;
+    void runFetch({ deadlineAt: NOW + 5_000 }).then((o) => (outcome = o));
+    await fetch.reached(1);
+
+    await jest.advanceTimersByTimeAsync(NOW + 5_000 - Date.now());
+    await advanceUntilDone(Promise.resolve());
+    expect(outcome).toMatchObject({ stoppedBy: 'deadline' });
+    held.release(); // the step now fails, into a signal that has already aborted
+    await advanceUntilSettled();
+
+    expect(breadcrumbs()).not.toContain('bg-feed-sync: run failed');
   });
 });
 
@@ -238,5 +257,20 @@ describe('the store refresh is owed to whoever is looking', () => {
     await advanceUntilDone(running);
     await advanceUntil(() => store().suggestions.length === fresh.length);
     expect(isRefreshOwed()).toBe(false);
+  });
+});
+
+describe('shapeBackgroundDiff on a diff without the persona shape', () => {
+  const diffOf = (missingIds: string[]) => ({ serverArticleIds: missingIds, articleToTopicTexts: new Map(), missingIds });
+
+  it('falls back to the missing ids for the persona ids, and to no story ids', () => {
+    const fresh = oid(1, NOW - HOUR);
+    const old = oid(2, NOW - 7 * HOUR);
+
+    const shaped = shapeBackgroundDiff(diffOf([old, fresh]), NOW, 50);
+
+    expect(shaped.personaIds).toEqual([fresh]);
+    expect(shaped.storyIds).toEqual([]);
+    expect(shaped.missingIds).toEqual([fresh]);
   });
 });
