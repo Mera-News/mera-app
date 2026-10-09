@@ -381,3 +381,6 @@ export async function purgeOrphanedLocalData(): Promise<boolean> {
   }
   return true;
 }
+
+/** Test-only: re-arms the once-per-process orphan purge between cases (T-reset). */
+export function __resetLocalWipeForTests(): void { purgeAttempted = false; }

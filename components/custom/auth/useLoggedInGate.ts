@@ -442,3 +442,6 @@ export function useLoggedInGate() {
     }, [session?.user?.id, retryNonce]);
     return { gate, wipeFailed, handleRetry };
 }
+
+/** Test-only: drops the in-flight account-switch wipe between cases (T-reset). */
+export function __resetLoggedInGateForTests(): void { wipeInFlight = null; }
