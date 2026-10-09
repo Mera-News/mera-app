@@ -53,8 +53,8 @@ const FACT_CHECK = { type: 'fact_check_done', articleId: 'a1' };
 const logger = edge.logger;
 
 const spies: jest.SpyInstance[] = [];
-const spy = <T extends object>(target: T, method: keyof T & string) => {
-  const s = jest.spyOn(target, method as never);
+const spy = (target: object, method: string): jest.SpyInstance<any, any[]> => {
+  const s = jest.spyOn(target as any, method as any) as jest.SpyInstance<any, any[]>;
   spies.push(s);
   return s;
 };
