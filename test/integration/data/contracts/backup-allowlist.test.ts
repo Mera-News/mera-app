@@ -22,9 +22,10 @@ import {
   TABLE_CAP_ORDER_COLUMN,
   TABLE_ROW_CAPS,
   isBackedUpSettingKey,
-} from '../allowlist';
+} from '@/lib/backup/allowlist';
 
-const SCHEMA_PATH = path.resolve(__dirname, '../../database/schema.ts');
+const SCHEMA_PATH = path.resolve(__dirname, '../../../../lib/database/schema.ts');
+if (!fs.existsSync(SCHEMA_PATH)) throw new Error(`schema.ts not found at ${SCHEMA_PATH}`);
 
 function liveSchema(): { version: number; tables: string[]; columns: Record<string, string[]> } {
   const src = fs.readFileSync(SCHEMA_PATH, 'utf8');

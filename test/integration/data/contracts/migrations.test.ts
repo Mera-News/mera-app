@@ -2,8 +2,8 @@
 // Pure data — no WatermelonDB native runtime needed.
 // schemaMigrations() returns { sortedMigrations, minVersion, maxVersion, validated }
 
-import schema from '../schema';
-import migrations from '../migrations';
+import schema from '@/lib/database/schema';
+import migrations from '@/lib/database/migrations';
 
 // The schemaMigrations object uses `sortedMigrations` (sorted ascending by toVersion)
 const migList: Array<{ toVersion: number; steps: any[] }> = (migrations as any).sortedMigrations;

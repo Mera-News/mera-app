@@ -18,6 +18,7 @@ import path from 'path';
 
 const ROOT = path.resolve(__dirname, '../../../..');
 const LIB = path.join(ROOT, 'lib');
+if (!fs.existsSync(LIB)) throw new Error(`lib/ not found at ${LIB}`);
 
 /** file (relative to the repo root) → number of createTopics( CALLS. */
 const CALL_SITES: Record<string, number> = {

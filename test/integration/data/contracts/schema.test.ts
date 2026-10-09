@@ -1,7 +1,7 @@
 // §8 structural assertions for lib/database/schema.ts
 // No WatermelonDB native runtime needed — appSchema/tableSchema are pure data builders.
 
-import schema from '../schema';
+import schema from '@/lib/database/schema';
 
 // WatermelonDB appSchema stores tables as a Record<tableName, TableSchema>
 // (not an array). Use Object.values() to iterate.
