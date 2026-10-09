@@ -1,4 +1,4 @@
-import { publisherRouteInk } from '../read-route-ink';
+import { publisherRouteInk } from '@/components/custom/news-detail/read-route-ink';
 
 describe('publisherRouteInk', () => {
     it('is green when this phone can translate the article', () => {

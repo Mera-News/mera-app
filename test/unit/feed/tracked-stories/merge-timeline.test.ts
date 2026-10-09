@@ -3,7 +3,7 @@
 // LOCAL member snapshots (a followed story is a topic; there is no server
 // archive anymore).
 
-import { buildTimeline, type TimelineCard } from '../merge-timeline';
+import { buildTimeline, type TimelineCard } from '@/components/custom/tracked-stories/merge-timeline';
 import type { TrackedStoryMemberSnapshot } from '@/lib/database/models/TrackedStory';
 
 function local(
@@ -106,7 +106,7 @@ describe('buildTimeline', () => {
 // English as the "original" of a Japanese article told TranslatableDynamic the
 // original was already in the reader's language, so it never translated.
 describe('timelineCardToArticle', () => {
-  const { timelineCardToArticle, localToCard } = require('../merge-timeline');
+  const { timelineCardToArticle, localToCard } = require('@/components/custom/tracked-stories/merge-timeline');
 
   it('keeps the real original title as `title` and English as the internal title', () => {
     const card = localToCard({
@@ -128,7 +128,7 @@ describe('timelineCardToArticle', () => {
 });
 
 describe('latestMember', () => {
-  const { latestMember } = require('../merge-timeline') as typeof import('../merge-timeline');
+  const { latestMember } = require('@/components/custom/tracked-stories/merge-timeline') as typeof import('@/components/custom/tracked-stories/merge-timeline');
   const snap = (articleId: string, pubDateMs: number) => ({ articleId, title: articleId, pubDateMs });
   it('picks the newest CURRENT member, skipping a newer disowned one', () => {
     const snaps = [snap('a', 1), snap('b', 3), snap('gone', 9), snap('c', 2)];

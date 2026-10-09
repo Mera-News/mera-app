@@ -1,6 +1,6 @@
 import { addCountry, filterAddable, initialArrange, removePage, toDraft } from '@/components/custom/nav/arrange-model';
 
-import { allCountryOptions, commitWorldDraft, searchCountryOptions, toCountryOptions } from '../world-arrange';
+import { allCountryOptions, commitWorldDraft, searchCountryOptions, toCountryOptions } from '@/components/custom/world/world-arrange';
 
 describe('toCountryOptions', () => {
     it('maps the server alpha-3 list to alpha-2 options with English names, dropping GLOBAL and unmappable codes', () => {

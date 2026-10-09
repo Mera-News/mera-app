@@ -1,4 +1,4 @@
-import { IDLE, shareFlow } from '../share-flow';
+import { IDLE, shareFlow } from '@/components/custom/library/share-flow';
 
 const cards = ['publications', 'languages', 'now'] as const;
 

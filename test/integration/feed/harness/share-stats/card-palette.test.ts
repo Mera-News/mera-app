@@ -1,6 +1,6 @@
 import { COLORS } from '@/lib/theme/tokens';
 
-import { CARD_PALETTES, inAppCardPalette } from '../card-theme';
+import { CARD_PALETTES, inAppCardPalette } from '@/components/custom/share-stats/card-theme';
 
 describe('inAppCardPalette', () => {
   it("follows the app's theme, so light Stats cards get dark ink", () => {

@@ -1,4 +1,4 @@
-import { formatCategories, homepageUrlOf, hostOf, monogramHueOf, monogramOf, sourceKindOf } from '../publication-format';
+import { formatCategories, homepageUrlOf, hostOf, monogramHueOf, monogramOf, sourceKindOf } from '@/components/custom/publication-page/publication-format';
 
 describe('hostOf', () => {
     it.each([

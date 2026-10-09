@@ -1,4 +1,4 @@
-import { packStatCards } from '../pack-cards';
+import { packStatCards } from '@/components/custom/share-stats/pack-cards';
 
 describe('packStatCards', () => {
     it('puts everything on one image when it fits', () => {

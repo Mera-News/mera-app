@@ -1,4 +1,4 @@
-import { leadWithOrigin, mergeRelatedEntries } from '../merge-related-entries';
+import { leadWithOrigin, mergeRelatedEntries } from '@/components/custom/news-detail/merge-related-entries';
 
 type E = { id: string; from: 'local' | 'server' };
 const l = (id: string): E => ({ id, from: 'local' });
