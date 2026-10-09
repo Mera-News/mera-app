@@ -1,0 +1,386 @@
+import {
+  analyzeFeedback,
+  DIGEST_CONSTANTS,
+  type DigestAnalyzeInput,
+  type DigestSignal,
+} from '@/lib/news-harness/persona-management/feedback-digest';
+import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
+
+const NOW = 1_700_000_000_000;
+const DAY = 24 * 60 * 60 * 1000;
+
+function signal(
+  id: string,
+  sentiment: 'like' | 'dislike',
+  opts: {
+    title?: string;
+    topics?: { topicId?: string; text: string }[];
+    relevance?: number;
+    eventType?: string;
+    category?: string;
+    publication?: string;
+    treePath?: string[];
+  } = {},
+): DigestSignal {
+  return {
+    id,
+    sentiment,
+    title: opts.title ?? `story ${id}`,
+    createdAtMs: NOW - DAY,
+    context: {
+      ...(opts.topics ? { matchedTopics: opts.topics } : {}),
+      ...(typeof opts.relevance === 'number' ? { relevance: opts.relevance } : {}),
+      ...(opts.eventType ? { eventType: opts.eventType } : {}),
+      ...(opts.category ? { category: opts.category } : {}),
+      ...(opts.publication ? { publication: opts.publication } : {}),
+    },
+    ...(opts.treePath ? { treePath: opts.treePath } : {}),
+  };
+}
+
+function run(partial: Partial<DigestAnalyzeInput> & Pick<DigestAnalyzeInput, 'signals'>) {
+  return analyzeFeedback({ topics: [], now: NOW, ...partial });
+}
+
+describe('path-mapped candidates', () => {
+  it('like + a_lot_more → strong topic boost (auto)', () => {
+    const c = run({
+      signals: [signal('r1', 'like', { topics: [{ topicId: 't1', text: 'Climate' }], treePath: ['more_about_topic', 'a_lot_more'] })],
+    });
+    expect(c).toHaveLength(1);
+    expect(c[0].kind).toBe('topic_up');
+    expect(c[0].confidence).toBe('auto');
+    expect(c[0].ops[0]).toMatchObject({
+      action_type: ACTION_NAMES.SET_TOPIC_WEIGHT,
+      topicId: 't1',
+      delta: DIGEST_CONSTANTS.pathBoostStrong,
+    });
+    expect(c[0].fingerprint).toBe('topic_up:t1');
+  });
+
+  it('like + a_bit_more → mild boost', () => {
+    const c = run({
+      signals: [signal('r1', 'like', { topics: [{ topicId: 't1', text: 'Climate' }], treePath: ['more_about_topic', 'a_bit_more'] })],
+    });
+    expect(c[0].ops[0].delta).toBe(DIGEST_CONSTANTS.pathBoostMild);
+  });
+
+  it('dislike + wrong_topic → topic down (auto)', () => {
+    const c = run({
+      signals: [signal('r1', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }], treePath: ['suggestion', 'not_related', 'wrong_topic'] })],
+    });
+    expect(c[0].kind).toBe('topic_down');
+    expect(c[0].ops[0].delta).toBe(DIGEST_CONSTANTS.pathLowerTopic);
+    expect(c[0].confidence).toBe('auto');
+  });
+
+  it('dislike + not_important → mild down', () => {
+    const c = run({
+      signals: [signal('r1', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }], treePath: ['suggestion', 'not_important'] })],
+    });
+    expect(c[0].ops[0].delta).toBe(DIGEST_CONSTANTS.pathLowerMild);
+  });
+
+  it('dislike + this_kind_of_event → suppression (review)', () => {
+    const c = run({
+      signals: [signal('r1', 'dislike', { eventType: 'earnings-call', treePath: ['not_important_to_me', 'this_kind_of_event'] })],
+    });
+    expect(c[0].kind).toBe('suppress');
+    expect(c[0].confidence).toBe('review');
+    expect(c[0].ops[0]).toMatchObject({ action_type: ACTION_NAMES.ADD_SUPPRESSION, suppressionPattern: 'earnings-call' });
+    expect(c[0].fingerprint).toBe('suppress:evt:earnings-call');
+  });
+
+  // "I'm seeing too much of this" is a FREQUENCY complaint — the user still
+  // wants the subject, just less of it — so it lowers the topic weight rather
+  // than minting a filter that would remove the subject entirely. This path
+  // runs exactly when the tree's own downweight did NOT land (an unstamped row),
+  // so a suppression here was elimination arriving by the back door.
+  it('dislike + too_many → STRONG topic downweight (auto), never a suppression', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', {
+          title: 'Celebrity gossip roundup weekly',
+          topics: [{ topicId: 't1', text: 'Celebrity news' }],
+          treePath: ['suggestion', 'too_many'],
+        }),
+      ],
+    });
+    expect(c).toHaveLength(1);
+    expect(c[0].kind).toBe('topic_down');
+    // A downweight is a reversible nudge, not a removal, so it does not need the
+    // review bucket that REMOVAL_KINDS routes suppressions into.
+    expect(c[0].confidence).toBe('auto');
+    expect(c[0].ops[0]).toMatchObject({
+      action_type: ACTION_NAMES.SET_TOPIC_WEIGHT,
+      topicId: 't1',
+      delta: DIGEST_CONSTANTS.pathLowerStrong,
+    });
+    expect(c[0].ops[0].action_type).not.toBe(ACTION_NAMES.ADD_SUPPRESSION);
+  });
+
+  it('too_many is a STRONGER nudge than not_important — volume beats a one-story judgement', () => {
+    expect(DIGEST_CONSTANTS.pathLowerStrong).toBe(-0.3);
+    expect(DIGEST_CONSTANTS.pathLowerStrong).toBeLessThan(DIGEST_CONSTANTS.pathLowerMild);
+  });
+
+  // The digest mirrors the tree leaf-for-leaf (every pathLower*/pathBoost*
+  // constant names its leaf), so the two must agree on what a tap MEANS.
+  it('mirrors the shipped tree leaf: same action, same scope, same delta', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', {
+          topics: [{ topicId: 't1', text: 'Celebrity news' }],
+          treePath: ['suggestion', 'too_many'],
+        }),
+      ],
+    });
+    // Mirrors BUNDLED_FEEDBACK_TREE's too_many leaf:
+    // { type: 'set_topic_weight', topics: 'matched', delta: -0.3 }
+    expect(c[0].ops[0].delta).toBe(-0.3);
+  });
+
+  it('too_many with no matched topic mints nothing — it never falls back to a filter', () => {
+    const c = run({
+      signals: [signal('r1', 'dislike', { title: 'Celebrity gossip roundup weekly', treePath: ['too_many'] })],
+    });
+    expect(c.every((x) => x.kind !== 'suppress')).toBe(true);
+  });
+
+  it('like + more_from_publication with a publication id → publication boost (auto)', () => {
+    const c = run({
+      signals: [signal('r1', 'like', { publication: 'pub-123', treePath: ['more_from_publication'] })],
+    });
+    expect(c[0].kind).toBe('publication_up');
+    expect(c[0].confidence).toBe('auto');
+  });
+
+  it('unmappable leaf (openChat/geo without geo text) → no candidate', () => {
+    const c = run({
+      signals: [signal('r1', 'dislike', { treePath: ['suggestion', 'not_related', 'something_else'] })],
+    });
+    expect(c).toHaveLength(0);
+  });
+});
+
+describe('verdict-only aggregation', () => {
+  it('≥2 dislikes on a matched topic → down-weight', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }], relevance: 0.7 }),
+        signal('r2', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }], relevance: 0.8 }),
+      ],
+    });
+    const down = c.find((x) => x.kind === 'topic_down');
+    expect(down).toBeDefined();
+    expect(down!.ops[0].delta).toBe(DIGEST_CONSTANTS.aggregateDislikeDelta);
+    expect(down!.sourceRowIds).toEqual(['r1', 'r2']);
+  });
+
+  it('≥3 dislikes, all low relevance → retire candidate (review) not down-weight', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }], relevance: 0.2 }),
+        signal('r2', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }], relevance: 0.3 }),
+        signal('r3', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }], relevance: 0.1 }),
+      ],
+    });
+    const retire = c.find((x) => x.kind === 'retire_topic');
+    expect(retire).toBeDefined();
+    expect(retire!.confidence).toBe('review');
+    expect(c.find((x) => x.kind === 'topic_down')).toBeUndefined();
+  });
+
+  it('≥2 likes on a matched topic → up-weight', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'like', { topics: [{ topicId: 't1', text: 'Space' }] }),
+        signal('r2', 'like', { topics: [{ topicId: 't1', text: 'Space' }] }),
+      ],
+    });
+    expect(c.find((x) => x.kind === 'topic_up')?.ops[0].delta).toBe(DIGEST_CONSTANTS.aggregateLikeDelta);
+  });
+
+  it('≥2 dislikes sharing an event-type → suppression', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { eventType: 'obituary' }),
+        signal('r2', 'dislike', { eventType: 'obituary' }),
+      ],
+    });
+    expect(c.find((x) => x.kind === 'suppress' && x.fingerprint === 'suppress:evt:obituary')).toBeDefined();
+  });
+
+  it('skips aggregation on already-retired topics', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }] }),
+        signal('r2', 'dislike', { topics: [{ topicId: 't1', text: 'Cricket' }] }),
+      ],
+      topics: [{ id: 't1', text: 'Cricket', normalizedText: 'cricket', weight: 0.2, status: 'retired', highPriority: false }],
+    });
+    expect(c).toHaveLength(0);
+  });
+});
+
+describe('conflict detection', () => {
+  it('a retire candidate lists liked stories sharing the topic → review', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.2 }),
+        signal('r2', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.1 }),
+        signal('r3', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.3 }),
+        signal('r4', 'like', { title: 'A breakthrough in AI research', topics: [{ topicId: 't1', text: 'AI' }] }),
+      ],
+    });
+    const retire = c.find((x) => x.kind === 'retire_topic');
+    expect(retire).toBeDefined();
+    expect(retire!.conflictsWith.length).toBe(1);
+    expect(retire!.conflictsWith[0].title).toContain('AI research');
+    expect(retire!.confidence).toBe('review');
+  });
+});
+
+describe('fingerprint stability + rejected filtering', () => {
+  const base: DigestSignal[] = [
+    signal('r1', 'dislike', { eventType: 'obituary' }),
+    signal('r2', 'dislike', { eventType: 'obituary' }),
+  ];
+
+  it('produces the same fingerprint across runs', () => {
+    const a = run({ signals: base });
+    const b = run({ signals: base });
+    expect(a[0].fingerprint).toBe(b[0].fingerprint);
+  });
+
+  it('rejected fingerprints are filtered out', () => {
+    const a = run({ signals: base });
+    const fp = a[0].fingerprint;
+    const b = run({ signals: base, rejectedFingerprints: [fp] });
+    expect(b.find((x) => x.fingerprint === fp)).toBeUndefined();
+  });
+});
+
+describe('caps', () => {
+  it('caps auto ≤ 8 and review ≤ 5', () => {
+    const signals: DigestSignal[] = [];
+    // 12 distinct topics, each with 2 likes → 12 auto topic_up candidates.
+    for (let i = 0; i < 12; i++) {
+      signals.push(signal(`up-a-${i}`, 'like', { topics: [{ topicId: `t${i}`, text: `Topic${i}` }] }));
+      signals.push(signal(`up-b-${i}`, 'like', { topics: [{ topicId: `t${i}`, text: `Topic${i}` }] }));
+    }
+    // 7 distinct event-types, each disliked twice → 7 review suppressions.
+    for (let i = 0; i < 7; i++) {
+      signals.push(signal(`ev-a-${i}`, 'dislike', { eventType: `evt${i}` }));
+      signals.push(signal(`ev-b-${i}`, 'dislike', { eventType: `evt${i}` }));
+    }
+    const c = run({ signals });
+    expect(c.filter((x) => x.confidence === 'auto').length).toBe(DIGEST_CONSTANTS.maxAutoCandidates);
+    expect(c.filter((x) => x.confidence === 'review').length).toBe(DIGEST_CONSTANTS.maxReviewCandidates);
+  });
+});
+
+// D10 — the category / event-type suppressions the digest mints are STRUCTURED
+// (exact match on the article's own field), because the value is copied verbatim
+// off `signal.context`. Since `too_many` stopped minting a title-keyword filter,
+// those are the ONLY suppressions this digest mints — every one is structured.
+describe('structured suppression kinds (D9/D10)', () => {
+  it('this_category → an exact category filter', () => {
+    const c = run({
+      signals: [signal('r1', 'dislike', { category: 'Entertainment', treePath: ['not_important_to_me', 'this_category'] })],
+    });
+    expect(c[0].ops[0]).toMatchObject({
+      action_type: ACTION_NAMES.ADD_SUPPRESSION,
+      suppressionKind: 'category',
+      suppressionValue: 'Entertainment',
+    });
+  });
+
+  it('this_kind_of_event → an exact event-type filter', () => {
+    const c = run({
+      signals: [signal('r1', 'dislike', { eventType: 'earnings-call', treePath: ['not_important_to_me', 'this_kind_of_event'] })],
+    });
+    expect(c[0].ops[0]).toMatchObject({
+      action_type: ACTION_NAMES.ADD_SUPPRESSION,
+      suppressionKind: 'event_type',
+      suppressionValue: 'earnings-call',
+    });
+  });
+
+  it('every suppression the digest mints is structured — no keyword filters left', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { category: 'Entertainment', treePath: ['not_important_to_me', 'this_category'] }),
+        signal('r2', 'dislike', { eventType: 'earnings-call', treePath: ['not_important_to_me', 'this_kind_of_event'] }),
+        // The former keyword-filter caller. A headline is not a matchable
+        // article field, so no structured filter can be built from one — which
+        // is why this leaf downweights instead of filtering at all.
+        signal('r3', 'dislike', {
+          title: 'Crypto crashes again today',
+          topics: [{ topicId: 't1', text: 'Crypto' }],
+          treePath: ['too_many'],
+        }),
+      ],
+    });
+    const suppressions = c.filter((x) => x.kind === 'suppress');
+    expect(suppressions).toHaveLength(2);
+    for (const s of suppressions) {
+      const op = s.ops[0] as { suppressionKind?: string; suppressionValue?: string };
+      expect(op.suppressionKind).toBeDefined();
+      expect(op.suppressionValue).toBeDefined();
+    }
+  });
+
+  it('the cross-article cat:/evt: aggregates are structured too', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { category: 'Sports' }),
+        signal('r2', 'dislike', { category: 'Sports' }),
+        signal('r3', 'dislike', { eventType: 'obituary' }),
+        signal('r4', 'dislike', { eventType: 'obituary' }),
+      ],
+    });
+    expect(c.find((x) => x.fingerprint === 'suppress:cat:sports')!.ops[0]).toMatchObject({
+      suppressionKind: 'category',
+      suppressionValue: 'Sports',
+    });
+    expect(c.find((x) => x.fingerprint === 'suppress:evt:obituary')!.ops[0]).toMatchObject({
+      suppressionKind: 'event_type',
+      suppressionValue: 'obituary',
+    });
+  });
+});
+
+// 74% of the prod source catalogue (80% of served articles) sits on the generic
+// "news" family. Both category producers mint NOTHING there — not a keyword
+// fallback, which would attach a substring filter to arbitrary stories that
+// merely mention the word.
+describe('generic categories mint nothing (D9 blast-radius gate)', () => {
+  it.each(['News', 'general_news', 'News (French)'])(
+    'this_category on the generic category %p produces no candidate at all',
+    (category) => {
+      const c = run({
+        signals: [signal('r1', 'dislike', { category, treePath: ['not_important_to_me', 'this_category'] })],
+      });
+      expect(c.filter((x) => x.kind === 'suppress')).toEqual([]);
+    },
+  );
+
+  it('the cat: aggregate skips a generic category but keeps a specific one', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { category: 'News' }),
+        signal('r2', 'dislike', { category: 'News' }),
+        signal('r3', 'dislike', { category: 'Sports' }),
+        signal('r4', 'dislike', { category: 'Sports' }),
+      ],
+    });
+    expect(c.find((x) => x.fingerprint === 'suppress:cat:news')).toBeUndefined();
+    expect(c.find((x) => x.fingerprint === 'suppress:cat:sports')!.ops[0]).toMatchObject({
+      suppressionKind: 'category',
+      suppressionValue: 'Sports',
+    });
+  });
+});
+
+export {};
