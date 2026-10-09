@@ -3,7 +3,7 @@
 // are the only fakes. The queue runs one native call at a time, so a probe behind another waits for
 // the first to settle: ordering below follows that, not the order the calls were started.
 // Loaded here, not lazily by the setup's beforeEach: test/helpers/screen.ts registers RNTL hooks on first import.
-import { setAppState, useFakeClock } from '@/test/helpers';
+import { setAppState } from '@/test/helpers';
 import { currentProbe, probeLanguage, probeSawSheet } from '@/lib/hooks/use-language-switch';
 import * as translationService from '@/lib/translation-service';
 import { __resetTranslationStateForTests, PROBE_FAST_FAIL_MS } from '@/lib/translation-service';
@@ -28,8 +28,20 @@ async function answerNext(translatedTexts = 'ok') {
     await flushQueue();
 }
 
+// A clock that moves only when a test advances it. The harness's useFakeClock lets wall time leak
+// into fake time (`advanceTimers: true`); under a loaded full run that leak fired the 20s probe
+// timeout before the test's 19,999 ms step, and the probe left open then failed every later test
+// (the probe list is module state). setImmediate stays real, so flushQueue still turns the queue.
+function useStrictClock(now: string): void {
+    jest.useFakeTimers({
+        advanceTimers: false,
+        doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'],
+        now: new Date(now),
+    });
+}
+
 beforeEach(() => {
-    useFakeClock('2026-10-09T10:00:00Z');
+    useStrictClock('2026-10-09T10:00:00Z');
     __resetTranslationStateForTests();
     nativeAnswers.length = 0;
     answered = 0;
