@@ -80,6 +80,9 @@ interface Args {
   scriptsDir: string;
   models: string[];
   repeat: number;
+  /** Re-runs repeats under their ORIGINAL index, so an errored repeat can be
+   *  replaced beside the others and the arms stay interleaved. */
+  repeatStart: number;
   variants: string[];
   dryRun: boolean;
   oneShotVariant: string | null;
@@ -97,6 +100,7 @@ function parseArgs(argv: string[]): Args {
     scriptsDir: 'lib/mera-harness/eval/fixtures/scripts',
     models: [BIG_MODEL],
     repeat: 3,
+    repeatStart: 0,
     variants: ['baseline'],
     dryRun: false,
     oneShotVariant: null,
@@ -109,6 +113,7 @@ function parseArgs(argv: string[]): Args {
     else if (f === '--scripts') a.scriptsDir = argv[++i] ?? a.scriptsDir;
     else if (f === '--model' || f === '--arms') a.models = (argv[++i] ?? '').split(',').filter(Boolean);
     else if (f === '--repeat') a.repeat = Number(argv[++i]);
+    else if (f === '--repeat-start') a.repeatStart = Number(argv[++i]);
     else if (f === '--variant') a.variants = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
     else if (f === '--one-shot-variant') a.oneShotVariant = argv[++i] ?? null;
     else if (f === '--dry-run') a.dryRun = true;
@@ -339,7 +344,7 @@ async function main(): Promise<number> {
   };
 
   try {
-  for (let rep = 0; rep < args.repeat; rep++) {
+  for (let rep = args.repeatStart; rep < args.repeatStart + args.repeat; rep++) {
     // Variants interleave with models so both arms sit in one run and one time
     // window: NEAR drifts enough between runs that a control arm which could
     // not affect anything still moved a kept count by 7.
