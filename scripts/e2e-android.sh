@@ -69,10 +69,12 @@ const decode = (hex) => {
 let mock = 0;
 const foreign = new Set();
 for (const r of rows) {
-  const { ip, port: p } = decode(r.trim().split(/\s+/)[0]);
+  const [addr, st] = r.trim().split(/\s+/);
+  const { ip, port: p } = decode(addr);
   if (ip === "10.0.2.2" && p === Number(port)) { mock++; continue; }
   if (ip === "0.0.0.0" || ip === "127.0.0.1" || /^\[0000(:0000){6}:000[01]\]$/.test(ip)) continue;
-  foreign.add(ip + ":" + p);
+  // st: /proc/net tcp state, 01 ESTABLISHED, 02 SYN_SENT, 06 TIME_WAIT (uid 0, never seen here).
+  foreign.add(ip + ":" + p + (st ? " (state " + st + ")" : ""));
 }
 if (mock === 0) { console.error("FAIL: no app socket to the mock was sampled (sampler blind or app never reached the mock)"); process.exit(1); }
 if (foreign.size) { console.error("FAIL: app sockets to non-mock hosts:\n" + [...foreign].sort().join("\n")); process.exit(1); }
@@ -208,7 +210,7 @@ APP_UID="$("$ADB" -s "$SERIAL" shell pm list packages -U "$APP_ID" | tr -d '\r' 
 # every refused foreign connection 3 s, and D3's negative control measures the direct path.
 (
   "$ADB" -s "$SERIAL" shell "while :; do cat /proc/net/tcp /proc/net/tcp6; sleep 0.2; done" 2> /dev/null \
-    | tr -d '\r' | awk -v u="$APP_UID" '$8 == u { print $3; fflush() }' >> "$RUN/app-sockets.txt"
+    | tr -d '\r' | awk -v u="$APP_UID" '$8 == u { print $3, $4; fflush() }' >> "$RUN/app-sockets.txt"
 ) &
 SAMPLER_PID=$!
 
