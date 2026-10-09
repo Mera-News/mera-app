@@ -16,19 +16,19 @@
 //      filter's clothes. This is the subtle one. The measured worst case is
 //      below; the floor is what makes it safe.
 
-import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import {
   applyEntityPenalty,
   computeRelevance,
   splitSuppressionPenalty,
   type ScoredCandidateInput,
-} from '../relevance';
+} from '@/lib/news-harness/scoring-engine/relevance';
 import {
   canHardExclude,
   screenHardSuppressions,
   screenHardSuppressionsDetailed,
-} from '../suppression';
-import type { PersonaScoringContext, SoftSuppression } from '../persona-context';
+} from '@/lib/news-harness/scoring-engine/suppression';
+import type { PersonaScoringContext, SoftSuppression } from '@/lib/news-harness/scoring-engine/persona-context';
 
 const ENG = DEFAULT_HARNESS_CONFIG.scoringEngine;
 const GATE = ENG.ENTITY_PENALTY_FLOOR;

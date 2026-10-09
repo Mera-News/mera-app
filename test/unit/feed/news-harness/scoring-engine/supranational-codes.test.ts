@@ -14,7 +14,7 @@ import {
   isSupranationalCode,
   supranationalName,
   type SupranationalCode,
-} from '../supranational-codes';
+} from '@/lib/news-harness/scoring-engine/supranational-codes';
 
 describe('SUPRANATIONAL_CODES', () => {
   it('is the exact closed set from the server canonical list', () => {

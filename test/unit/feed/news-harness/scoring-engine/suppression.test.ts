@@ -11,9 +11,9 @@ import {
   suppressionMatchesCandidate,
   screenHardSuppressions,
   suppressionDisplayValue,
-} from '../suppression';
-import type { SoftSuppression } from '../persona-context';
-import type { ScoredCandidateInput } from '../relevance';
+} from '@/lib/news-harness/scoring-engine/suppression';
+import type { SoftSuppression } from '@/lib/news-harness/scoring-engine/persona-context';
+import type { ScoredCandidateInput } from '@/lib/news-harness/scoring-engine/relevance';
 
 const candidate = (over: Partial<ScoredCandidateInput> = {}): ScoredCandidateInput => ({
   id: 'a1',

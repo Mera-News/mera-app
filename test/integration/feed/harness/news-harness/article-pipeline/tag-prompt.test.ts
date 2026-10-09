@@ -6,15 +6,15 @@ import {
   isTagReasonGated,
   readCandidateTags,
   selectTagGatedDemoteIds,
-} from '../tag-prompt';
+} from '@/lib/news-harness/article-pipeline/tag-prompt';
 import {
   buildScoreCallForChunk,
   buildRelevanceCalls,
   buildReasonCallsForSubset,
-} from '../scoring';
-import { DEFAULT_HARNESS_CONFIG, type ArticlePipelineConfig } from '../../core/config';
-import { computeRelevance, type ScoredCandidateInput } from '../../scoring-engine/relevance';
-import type { ScoringCandidate, StageCandidateRow } from '../../core/types';
+} from '@/lib/news-harness/article-pipeline/scoring';
+import { DEFAULT_HARNESS_CONFIG, type ArticlePipelineConfig } from '@/lib/news-harness/core/config';
+import { computeRelevance, type ScoredCandidateInput } from '@/lib/news-harness/scoring-engine/relevance';
+import type { ScoringCandidate, StageCandidateRow } from '@/lib/news-harness/core/types';
 
 const BASE = DEFAULT_HARNESS_CONFIG.articlePipeline;
 

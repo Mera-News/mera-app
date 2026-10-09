@@ -1,5 +1,5 @@
-import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
-import type { RelevanceComponents } from '../relevance';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import type { RelevanceComponents } from '@/lib/news-harness/scoring-engine/relevance';
 import {
   CALIBRATION_OVERRIDE_THRESHOLD,
   CALIBRATION_WINDOW_MS,
@@ -21,7 +21,7 @@ import {
   applyScoringOverrides,
   type CalibrationCase,
   type ScoringConstantDeltas,
-} from '../calibration';
+} from '@/lib/news-harness/scoring-engine/calibration';
 
 const eng = DEFAULT_HARNESS_CONFIG.scoringEngine;
 

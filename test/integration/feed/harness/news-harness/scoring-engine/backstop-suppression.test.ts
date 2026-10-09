@@ -10,12 +10,12 @@
 // The regression contract is the last case: a candidate matching NOTHING must
 // be byte-identical to the raw LLM score.
 
-import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
-import type { LlmPort } from '../../core/ports';
-import type { ScoringCandidate } from '../../core/types';
-import { computeAndScore, type StageCandidate } from '../run-stage';
-import type { PersonaScoringContext, SoftSuppression } from '../persona-context';
-import type { ScoredCandidateInput } from '../relevance';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import type { LlmPort } from '@/lib/news-harness/core/ports';
+import type { ScoringCandidate } from '@/lib/news-harness/core/types';
+import { computeAndScore, type StageCandidate } from '@/lib/news-harness/scoring-engine/run-stage';
+import type { PersonaScoringContext, SoftSuppression } from '@/lib/news-harness/scoring-engine/persona-context';
+import type { ScoredCandidateInput } from '@/lib/news-harness/scoring-engine/relevance';
 
 const NOW_MS = 1_752_700_000_000;
 const LLM_SCORE = 0.9;

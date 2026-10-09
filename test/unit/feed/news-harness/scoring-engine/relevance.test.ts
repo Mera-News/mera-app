@@ -1,9 +1,9 @@
-import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import {
   computeRelevance,
   type ScoredCandidateInput,
-} from '../relevance';
-import type { PersonaScoringContext, PersonaLocationSnapshot } from '../persona-context';
+} from '@/lib/news-harness/scoring-engine/relevance';
+import type { PersonaScoringContext, PersonaLocationSnapshot } from '@/lib/news-harness/scoring-engine/persona-context';
 
 const cfg = DEFAULT_HARNESS_CONFIG.scoringEngine;
 const NOW = 1_700_000_000_000;

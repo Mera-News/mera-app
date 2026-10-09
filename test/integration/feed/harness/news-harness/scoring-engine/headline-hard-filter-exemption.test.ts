@@ -16,17 +16,17 @@
 // only: a headline matching a SOFT filter must still die by the existing
 // floor-is-before-penalties rule.
 
-import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
-import type { LlmPort } from '../../core/ports';
-import type { ScoringCandidate } from '../../core/types';
-import { computeAndScore, type StageCandidate } from '../run-stage';
-import type { PersonaScoringContext, SoftSuppression } from '../persona-context';
-import { computeRelevance, type ScoredCandidateInput } from '../relevance';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import type { LlmPort } from '@/lib/news-harness/core/ports';
+import type { ScoringCandidate } from '@/lib/news-harness/core/types';
+import { computeAndScore, type StageCandidate } from '@/lib/news-harness/scoring-engine/run-stage';
+import type { PersonaScoringContext, SoftSuppression } from '@/lib/news-harness/scoring-engine/persona-context';
+import { computeRelevance, type ScoredCandidateInput } from '@/lib/news-harness/scoring-engine/relevance';
 import {
   isHardFilterExempt,
   screenHardSuppressions,
   screenHardSuppressionsDetailed,
-} from '../suppression';
+} from '@/lib/news-harness/scoring-engine/suppression';
 
 const NOW_MS = 1_752_700_000_000;
 const ENG = DEFAULT_HARNESS_CONFIG.scoringEngine;

@@ -1,6 +1,6 @@
-import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
-import { resolveGeoMatch, type ArticleGeoTag } from '../geo';
-import type { PersonaLocationSnapshot } from '../persona-context';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import { resolveGeoMatch, type ArticleGeoTag } from '@/lib/news-harness/scoring-engine/geo';
+import type { PersonaLocationSnapshot } from '@/lib/news-harness/scoring-engine/persona-context';
 
 const cfg = DEFAULT_HARNESS_CONFIG.scoringEngine;
 

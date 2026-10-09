@@ -6,7 +6,7 @@ import {
   TOPIC_LIMIT_SPAN,
   type RetrievalLocationInput,
   type RetrievalTopicInput,
-} from '../retrieval-profile';
+} from '@/lib/news-harness/scoring-engine/retrieval-profile';
 
 const topic = (t: Partial<RetrievalTopicInput> & { topicId: string; text: string }): RetrievalTopicInput => ({
   weight: 0,
