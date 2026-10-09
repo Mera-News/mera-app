@@ -357,9 +357,7 @@ describe('source-name matching', () => {
     expect(await isSubscribedPublicationName('Het Parool')).toBe(false);
   });
 
-  // "First writer wins" follows the row order of getActive, which the query does not fix (Loki returns
-  // a filtered query newest-inserted first), so only the set of owners of a shared name is asserted.
-  it('[dead-candidate] getSubscriptionBySourceName maps each source name to an active subscription that lists it', async () => {
+  it('[dead-candidate] getSubscriptionBySourceName maps every source name of an active subscription, and no cancelled one', async () => {
     await upsertSubscription(sub({ publisherId: 'p1', sourceNames: ['shared', 'only-p1'] }));
     await upsertSubscription(sub({ publisherId: 'p2', sourceNames: ['shared', 'only-p2'] }));
     const gone = await upsertSubscription(sub({ publisherId: 'p3', sourceNames: ['only-p3'] }));
@@ -368,8 +366,25 @@ describe('source-name matching', () => {
     const map = await getSubscriptionBySourceName();
 
     expect([...map.keys()].sort()).toEqual(['only-p1', 'only-p2', 'shared']);
-    expect(['p1', 'p2']).toContain(map.get('shared')?.publisherId);
     expect(map.get('only-p1')?.publisherId).toBe('p1');
     expect(map.get('only-p2')?.publisherId).toBe('p2');
+  });
+
+  // The doc comment says the FIRST writer of a shared source name wins. "First" is the position in
+  // getActive(), which has no sort. Loki returns a filtered query newest-inserted first, so the
+  // LAST-created subscription wins here. ESCALATED: whether "first" means creation order (then
+  // getActive needs a sort) is an owner call, and SQLite's row order for this query is unverified.
+  test.failing('[dead-candidate] a source name shared by two subscriptions maps to the first-created one', async () => {
+    await upsertSubscription(sub({ publisherId: 'p1', sourceNames: ['shared'] }));
+    await upsertSubscription(sub({ publisherId: 'p2', sourceNames: ['shared'] }));
+
+    expect((await getSubscriptionBySourceName()).get('shared')?.publisherId).toBe('p1');
+  });
+
+  it('[dead-candidate] today, on Loki: a source name shared by two subscriptions maps to the last-created one', async () => {
+    await upsertSubscription(sub({ publisherId: 'p1', sourceNames: ['shared'] }));
+    await upsertSubscription(sub({ publisherId: 'p2', sourceNames: ['shared'] }));
+
+    expect((await getSubscriptionBySourceName()).get('shared')?.publisherId).toBe('p2');
   });
 });

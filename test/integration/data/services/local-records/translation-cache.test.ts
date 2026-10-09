@@ -10,6 +10,7 @@
 import database from '@/lib/database';
 import type TranslationCache from '@/lib/database/models/TranslationCache';
 import {
+  __resetTranslationCacheBufferForTests,
   __translationCacheBufferSizeForTests,
   flushTranslationCacheWrites,
   hashSourceText,
@@ -192,6 +193,28 @@ describe('rememberTranslation: what is kept', () => {
     rememberTranslation('x', 'de', '');
     expect(__translationCacheBufferSizeForTests()).toBe(0);
     await flushTranslationCacheWrites();
+    expect(await countRows(TABLE)).toBe(0);
+  });
+
+  it('stores a whitespace-only text or translation as an empty string (the column trims), and loading skips such a row', async () => {
+    await store('de', [
+      [' ', 'x'],
+      ['Breaking news', ' '],
+      ['kept', 'behalten'],
+    ]);
+
+    expect(await countRows(TABLE)).toBe(3);
+    expect(await loadTranslationCache('de')).toEqual(new Map([['kept', 'behalten']]));
+  });
+
+  it('the test reset drops what is buffered and cancels the pending flush', async () => {
+    rememberTranslation('a', 'de', 'b');
+    expect(__translationCacheBufferSizeForTests()).toBe(1);
+
+    __resetTranslationCacheBufferForTests();
+    expect(__translationCacheBufferSizeForTests()).toBe(0);
+    await jest.advanceTimersByTimeAsync(TRANSLATION_CACHE_FLUSH_DEBOUNCE_MS);
+
     expect(await countRows(TABLE)).toBe(0);
   });
 

@@ -26,7 +26,7 @@ import {
 import * as settingService from '@/lib/database/services/setting-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { cancelSubscription, upsertSubscription } from '@/lib/database/services/user-publication-subscription-service';
-import { usePublicationProfile } from '@/lib/publication-profile-service';
+import { __resetPublicationProfileSession, usePublicationProfile } from '@/lib/publication-profile-service';
 import SourceService from '@/lib/source-service';
 import { articleFixtures } from '@/test/mock-backend/fixtures/articles';
 import { publicationProfile } from '@/test/mock-backend/fixtures/graphql/publications';
@@ -35,6 +35,7 @@ import { failNextQuery, quietLogger, resetLocalRecordsMemory, restoreFaults, T0,
 
 beforeEach(() => {
   resetLocalRecordsMemory();
+  __resetPublicationProfileSession();
   quietLogger();
 });
 afterEach(() => {
