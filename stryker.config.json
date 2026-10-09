@@ -4,6 +4,7 @@
   "jest": { "projectType": "custom", "configFile": "test/helpers/jest.stryker.config.js", "enableFindRelatedTests": false },
   "coverageAnalysis": "perTest",
   "concurrency": 2,
+  "timeoutMS": 30000,
   "inPlace": false,
   "disableTypeChecks": false,
   "incremental": true,
