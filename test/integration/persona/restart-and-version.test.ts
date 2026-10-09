@@ -168,7 +168,7 @@ describe('restarts and the version floor', () => {
     describe('requestRestart', () => {
         it('reloads: flushes the feed order first and has the marker on disk BEFORE the reload runs', async () => {
             asProductionBuild();
-            useFakeClock(NOW);
+            useFakeClock(NOW, { advanceTimers: true });
             const order: string[] = [];
             const realGetState = feedOrderStore.useFeedOrderStore.getState;
             jest.spyOn(feedOrderStore.useFeedOrderStore, 'getState').mockImplementationOnce(() => ({
@@ -189,7 +189,7 @@ describe('restarts and the version floor', () => {
 
         it('carries the background stamp recorded by the departure listener', async () => {
             asProductionBuild();
-            useFakeClock(NOW);
+            useFakeClock(NOW, { advanceTimers: true });
             await initRestartContext();
 
             setAppState('background');
@@ -251,7 +251,7 @@ describe('restarts and the version floor', () => {
         it('latches after a successful reload, whatever the clock says', async () => {
             // reloadAsync() can resolve before the JS context is torn down, so nothing in this process may start a second.
             asProductionBuild();
-            useFakeClock(NOW);
+            useFakeClock(NOW, { advanceTimers: true });
             await requestRestart('ota');
             expect(mockReloadAsync).toHaveBeenCalledTimes(1);
 
@@ -262,7 +262,7 @@ describe('restarts and the version floor', () => {
 
         it('enforces the interval ACROSS a reload, seeded from the marker', async () => {
             asProductionBuild();
-            useFakeClock(NOW);
+            useFakeClock(NOW, { advanceTimers: true });
             await setSetting(RESTART_MARKER_KEY, JSON.stringify({ reason: 'ota', at: NOW - 2_000, backgroundedAt: null, lastForegroundAt: null }));
             await initRestartContext();
 
@@ -277,7 +277,7 @@ describe('restarts and the version floor', () => {
 
         it('clears the marker when the reload throws, and a later attempt is possible', async () => {
             asProductionBuild();
-            useFakeClock(NOW);
+            useFakeClock(NOW, { advanceTimers: true });
             mockReloadAsync.mockRejectedValueOnce(new Error('reload failed'));
 
             await requestRestart('restore');
@@ -453,7 +453,7 @@ describe('restarts and the version floor', () => {
 
         it('is false inside the cooldown', async () => {
             asProductionBuild();
-            useFakeClock(NOW);
+            useFakeClock(NOW, { advanceTimers: true });
             await requestRestart('ota');
             jest.setSystemTime(NOW + MIN_RESTART_INTERVAL_MS - 1);
             expect(restartWouldReload()).toBe(false);
@@ -572,7 +572,7 @@ describe('restarts and the version floor', () => {
         });
 
         it('at most one restart per update id: a second return for the same bundle does not reload', async () => {
-            useFakeClock(NOW);
+            useFakeClock(NOW, { advanceTimers: true });
             pendingUpdate('update-1');
             mount();
             await jest.advanceTimersByTimeAsync(100);

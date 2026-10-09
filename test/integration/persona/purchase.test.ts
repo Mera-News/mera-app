@@ -120,7 +120,7 @@ const toastTitles = () => useToastQueue.getState().entries.map((e) => textOf(e.r
 
 /** Mounts the hook and waits for its first load. The clock is faked first: holds arm timers. */
 async function mountSettled() {
-    fakeClock(NOW);
+    fakeClock(NOW, { advanceTimers: true });
     const hook = renderHook(() => useManageSubscription());
     await waitFor(() => expect(hook.result.current.loading).toBe(false));
     return hook;
@@ -279,7 +279,7 @@ describe('purchase', () => {
         });
 
         it('presentFreeTierPaywall takes it ahead of the gate too, and keeps it on a dismissed gate and a throwing sheet', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             anonymousAccount();
             const raised = mountEmailHost();
 
@@ -360,7 +360,7 @@ describe('purchase', () => {
         });
 
         it('presentFreeTierPaywall honours the same gate: dismissed means no paywall and no sync', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             anonymousAccount();
             const raised = mountEmailHost();
             const reads = countBillingReads();
@@ -496,13 +496,13 @@ describe('purchase', () => {
     // ---------------------------------------------------------------------------------------------
     describe('presentFreeTierPaywall', () => {
         it('presents the paywall with a close button when the gate passes', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             await advanceUntilDone(presentFreeTierPaywall('test'));
             expect(presentPaywall).toHaveBeenCalledWith({ displayCloseButton: true });
         });
 
         it('cancelled: a FORCED entitlement sync goes out, the store takes the answer, and nothing is navigated', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             setScenario({ tier: 'individual' });
             const reads = countBillingReads();
 
@@ -517,7 +517,7 @@ describe('purchase', () => {
         });
 
         it('a confirmed purchase commits the tier, remembers it on the device and announces it', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
             scriptBilling(['individual']);
             presentPaywall.mockResolvedValueOnce('PURCHASED');
@@ -530,7 +530,7 @@ describe('purchase', () => {
         });
 
         it('an unconfirmed purchase commits nothing and announces nothing, then a forced sync follows', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
             setScenario({ tier: 'none' });
             const reads = countBillingReads();
@@ -547,7 +547,7 @@ describe('purchase', () => {
         });
 
         it('a throwing paywall is swallowed and refreshes nothing', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             const reads = countBillingReads();
             presentPaywall.mockRejectedValueOnce(new Error('sheet failed'));
 
@@ -632,7 +632,7 @@ describe('purchase', () => {
         });
 
         test.failing('PE6 presentFreeTierPaywall leaves the user where they are after a confirmed purchase', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             await seedFacts(['Follows Formula 1']);
             useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
             scriptBilling(['individual']);
@@ -646,7 +646,7 @@ describe('purchase', () => {
         });
 
         test('PE6 today: presentFreeTierPaywall navigates on a confirmed purchase as well', async () => {
-            fakeClock(NOW);
+            fakeClock(NOW, { advanceTimers: true });
             await seedFacts(['Follows Formula 1']);
             useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
             scriptBilling(['individual']);

@@ -1,29 +1,20 @@
-// Fake clock. nextTick, setImmediate and queueMicrotask stay real so promise
-// chains and MSW's stream plumbing keep flowing. The integration setup calls
-// jest.useRealTimers() after each test.
-export function useFakeClock(now: string | number | Date): void {
+// Fake clock. Time moves only when the test drives it (advanceTimers false): with wall time
+// leaking in, an upper bound on fake time flaked under a loaded full run. Drive it with
+// advanceUntil / advanceUntilDone, which yield a real event-loop turn per step. Pass
+// { advanceTimers: true } only for a test that needs wall time to move fake time (a real wait on
+// a fake timer). nextTick, setImmediate and queueMicrotask stay real so promise chains and MSW's
+// stream plumbing keep flowing. The integration setup calls jest.useRealTimers() after each test.
+export function useFakeClock(now: string | number | Date, opts: { advanceTimers?: boolean } = {}): void {
   jest.useFakeTimers({
-    advanceTimers: true,
+    advanceTimers: opts.advanceTimers ?? false,
     doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'],
     now: new Date(now),
   });
 }
 
-/**
- * Opt-in strict fake clock: time moves ONLY when the test drives it (`advanceTimers: false`).
- * useFakeClock follows wall time too, so under a loaded full run real time leaks into fake-time
- * windows and an upper-bound assertion on fake time ("fired within 30s + 3s") flakes. Use this for
- * any test that asserts a fake-time bound, and drive it with advanceUntil / advanceUntilDone, which
- * yield one real event-loop turn per step so MSW's streams keep moving.
- * ponytail: opt-in; making it the default for every test is a P4/P5 candidate (it would change
- * every existing test's timing mid-wave).
- */
+/** The strict clock under its earlier name; useFakeClock is now strict by default. */
 export function useStrictClock(now: string | number | Date): void {
-  jest.useFakeTimers({
-    advanceTimers: false,
-    doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'],
-    now: new Date(now),
-  });
+  useFakeClock(now);
 }
 
 /** Advances fake time in small steps until no timer is pending or maxMs has elapsed. */

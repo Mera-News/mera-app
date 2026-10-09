@@ -438,7 +438,7 @@ describe('fact-checks-store', () => {
   });
 
   it('markSeen stamps now in the store and in the settings row', async () => {
-    useFakeClock(NOW);
+    useFakeClock(NOW, { advanceTimers: true });
     store().markSeen();
     expect(store().seenAt).toBeGreaterThanOrEqual(NOW);
     const seenAt = store().seenAt!;

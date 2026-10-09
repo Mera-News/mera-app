@@ -176,6 +176,45 @@ jest.mock(
   () => require('./test/helpers/memory-sqlite-adapter'),
 );
 
+// 7b. WatermelonDB's WorkQueue starts each queued DB operation with setTimeout(0)
+// (Database/WorkQueue.js:116, `_executeNext` after `this._queue.shift()`). On the strict fake clock
+// alone, concurrent writes stall until a test moves time, and a write still queued at test end
+// wedges every later resetDatabase. On real timers alone, a test that drives with bare
+// jest.advanceTimersByTimeAsync no longer runs DB work in step. So that one call is set on both
+// clocks and runs once, on whichever fires first. Every other timer is untouched. If an upgrade
+// changes that line, setup throws instead of silently falling back to the wedge.
+jest.doMock('@nozbe/watermelondb/Database/WorkQueue', () => {
+  const path = require('path');
+  const file = require.resolve('@nozbe/watermelondb/Database/WorkQueue');
+  const source = require('fs').readFileSync(file, 'utf8');
+  const call = /setTimeout\((function \(\) \{\s*return _this2\._executeNext\(\);\s*\}), 0\)/g;
+  const found = source.match(call)?.length ?? 0;
+  if (found !== 1) {
+    const { version } = require('@nozbe/watermelondb/package.json');
+    throw new Error(
+      `jest.setup.integration.js 7b: expected one setTimeout(_executeNext, 0) in ${file} ` +
+        `(@nozbe/watermelondb ${version}), found ${found}. Re-check the WorkQueue patch.`,
+    );
+  }
+  const { setTimeout: realSetTimeout } = jest.requireActual('timers');
+  const bothClocks = (fn) => {
+    let ran = false;
+    const once = () => {
+      if (!ran) {
+        ran = true;
+        fn();
+      }
+    };
+    realSetTimeout(once, 0);
+    return setTimeout(once, 0);
+  };
+  const mod = { exports: {} };
+  const load = (p) => jest.requireActual(p.startsWith('.') ? path.join(path.dirname(file), p) : p);
+  const patched = source.replace(call, '__bothClocks($1)');
+  new Function('exports', 'require', 'module', '__bothClocks', patched)(mod.exports, load, mod, bothClocks);
+  return mod.exports;
+});
+
 // 8. Drivable AppState (replaces RN's own jest mock for this path).
 jest.mock('react-native/Libraries/AppState/AppState', () => ({
   __esModule: true,
