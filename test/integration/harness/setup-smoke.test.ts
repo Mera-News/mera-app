@@ -5,6 +5,7 @@ import { AppState } from 'react-native';
 import {
   advanceUntilSettled,
   failSecureStore,
+  healSecureStore,
   http,
   HttpResponse,
   secureStoreDump,
@@ -25,6 +26,23 @@ describe('integration setup', () => {
       failSecureStore('k', 'get');
       await expect(SecureStore.getItemAsync('k')).rejects.toThrow('keychain failure (injected)');
       expect(await SecureStore.getItemAsync('other')).toBe('o');
+    });
+
+    it('healSecureStore lifts one key, or all, and keeps the stored values', async () => {
+      await SecureStore.setItemAsync('k', 'v');
+      await SecureStore.setItemAsync('pin:hash', 'h');
+      failSecureStore('k', 'get');
+      failSecureStore('k', 'set');
+      failSecureStore('pin:hash', 'get');
+
+      healSecureStore('k');
+      expect(await SecureStore.getItemAsync('k')).toBe('v');
+      await SecureStore.setItemAsync('k', 'v2');
+      await expect(SecureStore.getItemAsync('pin:hash')).rejects.toThrow('keychain failure (injected)');
+
+      healSecureStore();
+      expect(await SecureStore.getItemAsync('pin:hash')).toBe('h');
+      expect(secureStoreDump()).toEqual({ k: 'v2', 'pin:hash': 'h' });
     });
 
     it('starts each test with empty storage', async () => {

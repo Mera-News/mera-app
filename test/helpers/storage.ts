@@ -7,9 +7,15 @@ const failures = new Map<string, Error>();
 type Op = 'get' | 'set' | 'delete';
 const failKey = (key: string, op: Op) => `${op}:${key}`;
 
-/** Makes `op` reject for `key` until resetStorage(). */
+/** Makes `op` reject for `key` until healSecureStore() or resetStorage(). */
 export function failSecureStore(key: string, op: Op, error = new Error('keychain failure (injected)')): void {
   failures.set(failKey(key, op), error);
+}
+
+/** Lifts injected failures, for one key (every op) or for all keys, and keeps the stored values. */
+export function healSecureStore(key?: string): void {
+  if (key === undefined) return failures.clear();
+  for (const k of failures.keys()) if (k.slice(k.indexOf(':') + 1) === key) failures.delete(k);
 }
 
 export function secureStoreDump(): Record<string, string> {
