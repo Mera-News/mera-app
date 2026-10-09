@@ -3,7 +3,7 @@
 // dot-path to a reader.
 
 import en from '@/lib/locales/en.json';
-import { allKeys } from '../mera-pages';
+import { allKeys } from '@/components/custom/mera-button/mera-pages';
 
 function has(key: string): boolean {
   let node: unknown = en;

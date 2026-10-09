@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const src = fs.readFileSync(path.join(__dirname, '..', 'ChatThread.tsx'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '../../../../components/custom/floating-chat/ChatThread.tsx'), 'utf8');
 
 // Mera's replies start on the thread's left edge, like the steps box, cards
 // and input. A reserved avatar gutter indented them ~34pt (28 + 6 gap).

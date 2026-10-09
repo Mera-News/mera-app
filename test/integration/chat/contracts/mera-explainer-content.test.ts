@@ -14,10 +14,10 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { MERA_EXPLAINER_SECTIONS } from '../mera-explainer-content';
+import { MERA_EXPLAINER_SECTIONS } from '@/lib/chat-tools/mera-explainer-content';
 import { MERA_EXPLAINER_TOPIC_IDS } from '@/lib/news-harness/persona-management/persona-agent-core';
 
-const SOURCE_PATH = join(__dirname, '..', 'mera-explainer-content.ts');
+const SOURCE_PATH = join(__dirname, '../../../../lib/chat-tools/mera-explainer-content.ts');
 const source = readFileSync(SOURCE_PATH, 'utf8');
 
 describe('mera-explainer-content — banned claims', () => {

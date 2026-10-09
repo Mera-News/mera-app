@@ -22,9 +22,9 @@ import {
   decryptContent,
   encryptContent,
   ModelKeyAlgoMismatchError,
-} from '../e2ee-crypto';
+} from '@/lib/e2ee/e2ee-crypto';
 
-const E2EE_DIR = resolve(__dirname, '..');
+const E2EE_DIR = resolve(__dirname, '../../../../lib/e2ee');
 
 /** Specifiers that cannot survive outside React Native. */
 const FORBIDDEN = [/^react-native/, /^expo(-|\/|$)/, /^@sentry\//, /^@better-auth\//];

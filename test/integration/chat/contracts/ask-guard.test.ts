@@ -10,7 +10,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const ROOT = path.resolve(__dirname, '../../..');
+const ROOT = path.resolve(__dirname, '../../../..');
 const DIRS = ['app', 'components', 'lib'];
 const SKIP = /(__tests__|__mocks__|node_modules|\/generated\/|\/locales\/)/;
 
