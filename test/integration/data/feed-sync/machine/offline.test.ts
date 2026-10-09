@@ -230,7 +230,7 @@ describe('FeedSyncMachine offline pause and the wake lock', () => {
       hold.release();
       await advanceUntilDone(running);
 
-      expect(scoreEntries).toEqual([{ keepAwakeHeld: false }]); // down when scoring began
+      expect(scoreEntries.map((e) => e.keepAwakeHeld)).toEqual([false]); // down when scoring began
       expect(keepAwake.tags()).toEqual({ taken: ['mera-feed-sync'], released: ['mera-feed-sync'] }); // once each
     });
 
@@ -243,7 +243,7 @@ describe('FeedSyncMachine offline pause and the wake lock', () => {
 
       await advanceUntilDone(startMachine());
 
-      expect(scoreEntries).toEqual([{ keepAwakeHeld: false }]);
+      expect(scoreEntries.map((e) => e.keepAwakeHeld)).toEqual([false]);
       expect(keepAwake.tags()).toEqual({ taken: ['mera-feed-sync'], released: ['mera-feed-sync'] });
     });
 

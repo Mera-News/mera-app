@@ -149,17 +149,22 @@ export function recordMachine(): Recorder {
 }
 
 /** Each call the machine made into the scoring step: whether the wake lock was held at that moment. */
-export const scoreEntries: { keepAwakeHeld: boolean }[] = [];
+export const scoreEntries: { keepAwakeHeld: boolean; storeRows: number; pipelineRun: boolean }[] = [];
 
 /**
  * Watches the machine's calls into the scoring step and calls the real step through (observation,
- * not a replacement): whether the wake lock was held at that moment. Call from `beforeEach`.
+ * not a replacement): whether the wake lock was held, and how many rows the feed store showed, and
+ * whether a scoring-pipeline run already existed, at that moment. Call from `beforeEach`.
  */
 export function watchScoring(): void {
   scoreEntries.length = 0;
   const original = steps.stepScore;
   spyOnExport(steps, 'stepScore').mockImplementation(async (ctx) => {
-    scoreEntries.push({ keepAwakeHeld: keepAwake.taken() > keepAwake.released() });
+    scoreEntries.push({
+      keepAwakeHeld: keepAwake.taken() > keepAwake.released(),
+      storeRows: useForYouStore.getState().suggestions.length,
+      pipelineRun: (await getPipeline()) !== null,
+    });
     return original(ctx);
   });
 }

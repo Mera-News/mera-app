@@ -25,6 +25,7 @@ jest.mock('expo-keep-awake', () => ({
 import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
 import logger from '@/lib/logger';
 import { INFLIGHT_STALE_MS } from '@/lib/scheduler/feed-sync/FeedSyncMachine';
+import * as persistence from '@/lib/scheduler/feed-sync/feed-sync-persistence';
 import * as steps from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
@@ -267,6 +268,32 @@ describe('FeedSyncMachine re-entrancy and abandonment', () => {
       await advanceUntilDone(runB);
       heldA.release(); // the zombie wakes, drops its transitions and unwinds
       await advanceUntilDone(runA.catch(() => undefined));
+      expect(feedSyncMachine.state).toBe('done');
+      rec.stop();
+    });
+
+    it("keeps the abandoned run's network listener inert in the window before the replacement subscribes", async () => {
+      const { runA, heldA } = await abandonedRun(ids(4));
+      const heldStart = gate();
+      const original = persistence.loadValidSnapshot;
+      const starting = spyOnExport(persistence, 'loadValidSnapshot').mockImplementation(async () => {
+        await heldStart.held;
+        return original();
+      });
+      const runB = startMachine(); // B owns the machine now, but has not yet released A's listener
+      await waitFor(() => starting.mock.calls.length > 0, 'run B to be starting');
+      const rec = recordMachine();
+      const stateBefore = feedSyncMachine.state;
+
+      useNetworkStore.getState().setIsConnected(false);
+
+      expect(rec.published).toEqual([]); // A's listener fired and did nothing
+      expect(feedSyncMachine.state).toBe(stateBefore);
+      useNetworkStore.getState().setIsConnected(true);
+      heldStart.release();
+      await advanceUntilDone(runB);
+      heldA.release();
+      await advanceUntilDone(runA);
       expect(feedSyncMachine.state).toBe('done');
       rec.stop();
     });

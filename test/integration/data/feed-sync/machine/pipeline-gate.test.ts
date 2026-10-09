@@ -23,7 +23,7 @@ jest.mock('expo-keep-awake', () => ({
 }));
 
 import logger from '@/lib/logger';
-import { COLLECT_WINDOW_MS, STALE_RUN_GUARD_MS, staleRunVerdict } from '@/lib/services/scoring-pipeline';
+import { COLLECT_WINDOW_MS, getPipelineStatus, STALE_RUN_GUARD_MS, staleRunVerdict } from '@/lib/services/scoring-pipeline';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import {
   advanceUntilDone,
@@ -48,12 +48,14 @@ import {
 import {
   buildRunningPipeline,
   currentRunId,
+  gate,
   feedSyncMachine,
   watchScoring,
   scoreEntries,
   serveNew,
   settleMachine,
   startMachine,
+  waitFor,
 } from './support';
 
 jest.setTimeout(60_000);
@@ -106,6 +108,28 @@ describe('FeedSyncMachine beside a scoring run in flight', () => {
 
       const rows = await rowsById();
       expect(newIds.map((id) => rows.get(id)?.status)).toEqual(newIds.map(() => 'unscored'));
+    });
+
+    // The live run owned the backlog when this sync started, so the hydrate suppressed its enqueue.
+    // If that run finishes while the sync is still hydrating, the pipeline's own post-finalize kick
+    // has already come and gone, and the tail flush of the hydrate is the only thing left to hand
+    // the new rows over. Without it they wait out the 30 minute staleness escape.
+    it('takes the handoff itself when the live run finishes while the sync is still hydrating', async () => {
+      await buildRunningPipeline();
+      const hold = gate();
+      const served = await serveNew([...ids(6, 'p'), ...newIds], { gate: () => hold.held });
+      const running = startMachine();
+      await waitFor(() => served.stats.requests.length > 0, 'the hydrate to be in flight');
+      server.use(...mockGateway(defaultResponder, { pendingPolls: 0 })); // the live run's jobs can now finish
+      for (let i = 0; i < 20 && (await getPipelineStatus()) === 'running'; i++) await tick();
+      expect(await getPipelineStatus()).toBe('idle');
+
+      hold.release();
+      await advanceUntilDone(running);
+      for (let i = 0; i < 20 && !newIds.every((id) => scoredIds().includes(id)); i++) await tick();
+
+      expect(scoreEntries).toEqual([]); // this sync never called the scoring step
+      expect(newIds.every((id) => scoredIds().includes(id))).toBe(true);
     });
 
     it('on a quiet poll does not claim a processing run finished while one is still in flight', async () => {

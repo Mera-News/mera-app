@@ -123,6 +123,30 @@ describe('FeedSyncMachine lifecycle', () => {
       expect(store().suggestions.length).toBeGreaterThan(0); // the final store refresh landed
     });
 
+    // Chunk refreshes are throttled to one per 1.5s, so a second chunk's rows reach the store only
+    // through the flush that follows the hydrate. Scoring must start from a store that shows them all.
+    it('lands every hydrated chunk in the store before scoring starts', async () => {
+      const all = ids(HYDRATE_CHUNK_SIZE * 2);
+      await serveNew(all);
+
+      await run();
+
+      const rows = (await rowsById()).size;
+      expect(rows).toBe(all.length);
+      expect(scoreEntries).toHaveLength(1);
+      expect(scoreEntries[0].storeRows).toBeGreaterThan(HYDRATE_CHUNK_SIZE);
+      expect(scoreEntries[0].storeRows).toBe(store().suggestions.length);
+    });
+
+    it('has already handed the rows to the scoring pipeline while hydrating, before the scoring step is called', async () => {
+      await serveNew(ids(6));
+
+      await run();
+
+      expect(scoreEntries).toHaveLength(1);
+      expect(scoreEntries[0].pipelineRun).toBe(true); // the foreground enqueue ran inside the hydrate
+    });
+
     it('lets go of the network subscription it took', async () => {
       await serveNew(ids(3));
       const subscriptions = watchNetworkSubscriptions();
