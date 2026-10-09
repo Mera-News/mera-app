@@ -91,6 +91,22 @@ jest.doMock('llama.rn', () => ({
   addNativeLogListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
 
+// 2f. react-native-gesture-handler's own Jest mocks: its button components pull a native-component
+// spec Jest cannot parse ("Unexpected token 'export'"), reached through components/ui/bottom-sheet.
+require('react-native-gesture-handler/jestSetup');
+// Its mocks touch RN's Switch, whose native-component specs hit the same codegen "export" parse
+// error as the scroll-content spec above; host-component strings stand in.
+jest.mock('react-native/Libraries/Components/Switch/AndroidSwitchNativeComponent', () => ({
+  __esModule: true,
+  default: 'AndroidSwitch',
+  Commands: { setNativeValue: jest.fn() },
+}));
+jest.mock('react-native/Libraries/Components/Switch/SwitchNativeComponent', () => ({
+  __esModule: true,
+  default: 'Switch',
+  Commands: { setValue: jest.fn() },
+}));
+
 // 3. expo-translate-text: identity translation, same export names as the package.
 jest.mock('expo-translate-text', () => {
   class TranslationError extends Error {}
