@@ -10,6 +10,16 @@ jest.mock('@sentry/react-native', () => ({
   setTag: jest.fn(),
 }));
 
+// The integration setup points the three endpoints at loopback. These tests rewrite
+// process.env, so put it back after each one.
+const ENV_AT_LOAD = { ...process.env };
+afterEach(() => {
+  for (const key of Object.keys(process.env)) {
+    if (!(key in ENV_AT_LOAD)) delete process.env[key];
+  }
+  Object.assign(process.env, ENV_AT_LOAD);
+});
+
 describe('config/endpoints', () => {
   const REQUIRED_VARS = {
     EXPO_PUBLIC_INFERENCE_ENDPOINT: 'https://inference.test',
@@ -38,26 +48,26 @@ describe('config/endpoints', () => {
 
   it('exports INFERENCE_ENDPOINT when env var is set', () => {
     setEnv();
-    const { INFERENCE_ENDPOINT } = require('../endpoints');
+    const { INFERENCE_ENDPOINT } = require('@/lib/config/endpoints');
     expect(INFERENCE_ENDPOINT).toBe('https://inference.test');
   });
 
   it('exports AUTH_ENDPOINT when env var is set', () => {
     setEnv();
-    const { AUTH_ENDPOINT } = require('../endpoints');
+    const { AUTH_ENDPOINT } = require('@/lib/config/endpoints');
     expect(AUTH_ENDPOINT).toBe('https://auth.test');
   });
 
   it('exports GRAPHQL_SERVER_ENDPOINT when env var is set', () => {
     setEnv();
-    const { GRAPHQL_SERVER_ENDPOINT } = require('../endpoints');
+    const { GRAPHQL_SERVER_ENDPOINT } = require('@/lib/config/endpoints');
     expect(GRAPHQL_SERVER_ENDPOINT).toBe('https://api.test');
   });
 
   it('throws when INFERENCE_ENDPOINT is missing', () => {
     setEnv({ EXPO_PUBLIC_INFERENCE_ENDPOINT: undefined } as any);
     delete process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT;
-    expect(() => require('../endpoints')).toThrow(
+    expect(() => require('@/lib/config/endpoints')).toThrow(
       /Missing required env var EXPO_PUBLIC_INFERENCE_ENDPOINT/,
     );
   });
@@ -65,7 +75,7 @@ describe('config/endpoints', () => {
   it('throws when AUTH_ENDPOINT is missing', () => {
     setEnv();
     delete process.env.EXPO_PUBLIC_AUTH_ENDPOINT;
-    expect(() => require('../endpoints')).toThrow(
+    expect(() => require('@/lib/config/endpoints')).toThrow(
       /Missing required env var EXPO_PUBLIC_AUTH_ENDPOINT/,
     );
   });
@@ -73,7 +83,7 @@ describe('config/endpoints', () => {
   it('throws when GRAPHQL_SERVER_ENDPOINT is missing', () => {
     setEnv();
     delete process.env.EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT;
-    expect(() => require('../endpoints')).toThrow(
+    expect(() => require('@/lib/config/endpoints')).toThrow(
       /Missing required env var EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT/,
     );
   });
@@ -83,7 +93,7 @@ describe('config/endpoints', () => {
     delete process.env.EXPO_PUBLIC_AUTH_ENDPOINT;
     delete process.env.EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT;
     try {
-      require('../endpoints');
+      require('@/lib/config/endpoints');
     } catch {
       // expected
     }
@@ -96,7 +106,7 @@ describe('config/endpoints', () => {
   it('exports DUMP_QUERIES_ENABLED as false when env var is not set', () => {
     setEnv();
     delete process.env.EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING;
-    const { DUMP_QUERIES_ENABLED } = require('../endpoints');
+    const { DUMP_QUERIES_ENABLED } = require('@/lib/config/endpoints');
     // __DEV__ is true in tests, but value is 'true' check: undefined !== 'true' → false
     expect(DUMP_QUERIES_ENABLED).toBe(false);
   });
@@ -105,7 +115,7 @@ describe('config/endpoints', () => {
     setEnv();
     process.env.EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING = 'true';
     // __DEV__ is true in jest globals
-    const { DUMP_QUERIES_ENABLED } = require('../endpoints');
+    const { DUMP_QUERIES_ENABLED } = require('@/lib/config/endpoints');
     expect(DUMP_QUERIES_ENABLED).toBe(true);
     delete process.env.EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING;
   });
@@ -122,7 +132,7 @@ describe('config/endpoints', () => {
     ]) {
       delete process.env[key];
     }
-    const mod = require('../endpoints');
+    const mod = require('@/lib/config/endpoints');
     expect(mod.INTERCOM_APP_ID).toBe('');
     expect(mod.INTERCOM_IOS_KEY).toBe('');
     expect(mod.INTERCOM_ANDROID_KEY).toBe('');
@@ -134,7 +144,7 @@ describe('config/endpoints', () => {
     process.env.EXPO_PUBLIC_INTERCOM_APP_ID = 'abc12345';
     process.env.EXPO_PUBLIC_INTERCOM_IOS_KEY = 'ios_sdk-test';
     process.env.EXPO_PUBLIC_INTERCOM_ANDROID_KEY = 'android_sdk-test';
-    const mod = require('../endpoints');
+    const mod = require('@/lib/config/endpoints');
     expect(mod.INTERCOM_APP_ID).toBe('abc12345');
     expect(mod.INTERCOM_IOS_KEY).toBe('ios_sdk-test');
     expect(mod.INTERCOM_ANDROID_KEY).toBe('android_sdk-test');
@@ -152,7 +162,7 @@ describe('config/endpoints', () => {
     try {
       setEnv({ EXPO_PUBLIC_AUTH_ENDPOINT: undefined } as any);
       delete process.env.EXPO_PUBLIC_AUTH_ENDPOINT;
-      require('../endpoints');
+      require('@/lib/config/endpoints');
       fail('should have thrown');
     } catch (err: any) {
       expect(err.message).toMatch(/\.env\.example/);

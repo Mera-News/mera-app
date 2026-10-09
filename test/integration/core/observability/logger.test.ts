@@ -20,7 +20,17 @@ const mockSetTag = jest.spyOn(Sentry, 'setTag' as any).mockImplementation(jest.f
 const mockSetExtra = jest.spyOn(Sentry, 'setExtra' as any).mockImplementation(jest.fn());
 const mockStartInactiveSpan = jest.spyOn(Sentry, 'startInactiveSpan' as any).mockReturnValue({ spanId: 'span-1' } as any);
 
-import logger from '../logger';
+import logger from '@/lib/logger';
+
+// The integration setup points the three endpoints at loopback. These tests rewrite
+// process.env, so put it back after each one.
+const ENV_AT_LOAD = { ...process.env };
+afterEach(() => {
+  for (const key of Object.keys(process.env)) {
+    if (!(key in ENV_AT_LOAD)) delete process.env[key];
+  }
+  Object.assign(process.env, ENV_AT_LOAD);
+});
 
 describe('logger.captureException', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -311,13 +321,13 @@ describe('logger.captureException suppression rules', () => {
 
   function authFailureCount(): number {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const breaker = require('../auth-failure-breaker') as typeof import('../auth-failure-breaker');
+    const breaker = require('@/lib/auth-failure-breaker') as typeof import('@/lib/auth-failure-breaker');
     return breaker._getBreakerState().consecutiveFailures;
   }
 
   function resetBreaker(): void {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const breaker = require('../auth-failure-breaker') as typeof import('../auth-failure-breaker');
+    const breaker = require('@/lib/auth-failure-breaker') as typeof import('@/lib/auth-failure-breaker');
     breaker._resetForTests();
   }
 

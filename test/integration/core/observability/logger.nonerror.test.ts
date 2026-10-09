@@ -9,7 +9,7 @@ jest.mock('@sentry/react-native', () => ({
   startInactiveSpan: jest.fn(),
 }));
 
-import logger from '../logger';
+import logger from '@/lib/logger';
 
 function sent() {
   const [err, opts] = mockCaptureException.mock.calls[0];

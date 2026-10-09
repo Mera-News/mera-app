@@ -40,6 +40,16 @@ jest.mock('expo-updates', () => ({
   isEmbeddedLaunch: false,
 }));
 
+// The integration setup points the three endpoints at loopback. These tests rewrite
+// process.env, so put it back after each one.
+const ENV_AT_LOAD = { ...process.env };
+afterEach(() => {
+  for (const key of Object.keys(process.env)) {
+    if (!(key in ENV_AT_LOAD)) delete process.env[key];
+  }
+  Object.assign(process.env, ENV_AT_LOAD);
+});
+
 describe('sentry-init supplemental — scrubEventValues edge cases', () => {
   let capturedBeforeSend: ((event: any) => any) | null = null;
 
@@ -55,7 +65,7 @@ describe('sentry-init supplemental — scrubEventValues edge cases', () => {
     mockSentryInit.mockImplementation((config: any) => {
       capturedBeforeSend = config.beforeSend;
     });
-    require('../sentry-init');
+    require('@/lib/sentry-init');
   });
 
   afterEach(() => {
@@ -131,7 +141,7 @@ describe('sentry-init supplemental — null endpoint values in setContext', () =
   });
 
   it('sets auth to null in runtime_endpoints when EXPO_PUBLIC_AUTH_ENDPOINT is unset', () => {
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     expect(mockSetContext).toHaveBeenCalledWith(
       'runtime_endpoints',
       expect.objectContaining({ auth: null }),
@@ -139,7 +149,7 @@ describe('sentry-init supplemental — null endpoint values in setContext', () =
   });
 
   it('sets graphql to null in runtime_endpoints when EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT is unset', () => {
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     expect(mockSetContext).toHaveBeenCalledWith(
       'runtime_endpoints',
       expect.objectContaining({ graphql: null }),
@@ -163,7 +173,7 @@ describe('sentry-init supplemental — static build tags degrade safely', () => 
   });
 
   it('still initialises Sentry when a native build-fact read throws', () => {
-    expect(() => require('../sentry-init')).not.toThrow();
+    expect(() => require('@/lib/sentry-init')).not.toThrow();
     expect(mockSentryInit).toHaveBeenCalled();
     // The endpoint tag is set before the build facts, so it survives.
     expect(mockSetTag).toHaveBeenCalledWith(

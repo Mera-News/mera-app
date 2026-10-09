@@ -30,6 +30,16 @@ jest.mock('expo-updates', () => ({
   isEmbeddedLaunch: false,
 }));
 
+// The integration setup points the three endpoints at loopback. These tests rewrite
+// process.env, so put it back after each one.
+const ENV_AT_LOAD = { ...process.env };
+afterEach(() => {
+  for (const key of Object.keys(process.env)) {
+    if (!(key in ENV_AT_LOAD)) delete process.env[key];
+  }
+  Object.assign(process.env, ENV_AT_LOAD);
+});
+
 describe('sentry-init (prod path: __DEV__ = false)', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -48,7 +58,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
     process.env.EXPO_PUBLIC_AUTH_ENDPOINT = 'https://auth.test';
     process.env.EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT = 'https://api.test';
     process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT = 'https://infer.test';
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     expect(mockSentryInit).toHaveBeenCalledWith(
       expect.objectContaining({ sendDefaultPii: false }),
     );
@@ -56,14 +66,14 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
 
   it('calls Sentry.init with the DSN from env', () => {
     process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://key@sentry.io/456';
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     expect(mockSentryInit).toHaveBeenCalledWith(
       expect.objectContaining({ dsn: 'https://key@sentry.io/456' }),
     );
   });
 
   it('includes the feedback integration in the integrations array', () => {
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     const [config] = mockSentryInit.mock.calls[0];
     expect(Array.isArray(config.integrations)).toBe(true);
     expect(config.integrations.length).toBeGreaterThan(0);
@@ -73,7 +83,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
     process.env.EXPO_PUBLIC_AUTH_ENDPOINT = 'https://auth.example';
     process.env.EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT = 'https://gql.example';
     process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT = 'https://infer.example';
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     expect(mockSetContext).toHaveBeenCalledWith(
       'runtime_endpoints',
       expect.objectContaining({
@@ -87,7 +97,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
   // Hard invariant 9: no behavioural instrumentation. Any number in a sample
   // rate key turns the feature on, so the keys must be ABSENT, not 0.
   it('tracks no sessions and turns on no tracing, profiling or replay', () => {
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     const [config] = mockSentryInit.mock.calls[0];
     expect(config).toEqual(
       expect.objectContaining({
@@ -107,7 +117,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
   });
 
   it('drops crumbs that record what the reader did, keeps the app logger crumbs', () => {
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     const [config] = mockSentryInit.mock.calls[0];
     for (const category of ['touch', 'navigation', 'ui.click', 'http', 'xhr', 'fetch', 'app.lifecycle', 'device.event']) {
       expect(config.beforeBreadcrumb({ category, message: 'x' })).toBeNull();
@@ -120,7 +130,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
 
   it('sets inference_endpoint tag', () => {
     process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT = 'https://infer.example';
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     expect(mockSetTag).toHaveBeenCalledWith(
       'inference_endpoint',
       'https://infer.example',
@@ -129,7 +139,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
 
   it('sets inference_endpoint tag to "unset" when env var is missing', () => {
     delete process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT;
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     expect(mockSetTag).toHaveBeenCalledWith('inference_endpoint', 'unset');
   });
 
@@ -138,7 +148,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
     // JS bundle a crash came from, since Sentry's `release` tracks the native
     // build only. Losing it silently is the failure this asserts against.
     it('sets one tag per static app-context field, stringified', () => {
-      require('../sentry-init');
+      require('@/lib/sentry-init');
       expect(mockSetTag).toHaveBeenCalledWith('app_version', '1.2.3');
       expect(mockSetTag).toHaveBeenCalledWith('app_build', '456');
       expect(mockSetTag).toHaveBeenCalledWith('ota_update_id', 'update-abc');
@@ -149,7 +159,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
     });
 
     it('mirrors the static context into a mera_app_build context block', () => {
-      require('../sentry-init');
+      require('@/lib/sentry-init');
       expect(mockSetContext).toHaveBeenCalledWith(
         'mera_app_build',
         expect.objectContaining({ ota_update_id: 'update-abc' }),
@@ -172,7 +182,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
       mockSentryInit.mockImplementation((config: any) => {
         capturedBeforeSend = config.beforeSend;
       });
-      require('../sentry-init');
+      require('@/lib/sentry-init');
     });
 
     // The user object is ALLOWLISTED, not denylisted: `id` is the join key to
@@ -355,13 +365,13 @@ describe('sentry-init (dev path: __DEV__ = true)', () => {
   });
 
   it('does NOT call Sentry.init in dev mode', () => {
-    require('../sentry-init');
+    require('@/lib/sentry-init');
     expect(mockSentryInit).not.toHaveBeenCalled();
   });
 });
 
 describe('environmentForChannel', () => {
-  const { environmentForChannel } = require('../sentry-init');
+  const { environmentForChannel } = require('@/lib/sentry-init');
   it.each([
     [true, 'production', 'development'],
     [false, 'production', 'production'],

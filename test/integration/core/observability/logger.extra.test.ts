@@ -25,7 +25,7 @@ jest.mock('@sentry/react-native', () => ({
 }));
 
 describe('logger — __DEV__ = false (non-dev paths)', () => {
-  let logger: typeof import('../logger').default;
+  let logger: typeof import('@/lib/logger').default;
   const mockConsoleError = jest.fn();
   const mockConsoleInfo = jest.fn();
   const mockConsoleWarn = jest.fn();
@@ -42,7 +42,7 @@ describe('logger — __DEV__ = false (non-dev paths)', () => {
     (global.console as any).warn = mockConsoleWarn;
     (global.console as any).debug = mockConsoleDebug;
 
-    logger = require('../logger').default;
+    logger = require('@/lib/logger').default;
   });
 
   afterEach(() => {

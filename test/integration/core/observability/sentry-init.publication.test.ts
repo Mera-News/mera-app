@@ -27,7 +27,7 @@ let scrub: (c: Crumb) => Crumb;
 beforeAll(() => {
   (global as { __DEV__?: boolean }).__DEV__ = false;
   jest.isolateModules(() => {
-    const mod = require('../sentry-init') as typeof import('../sentry-init');
+    const mod = require('@/lib/sentry-init') as typeof import('@/lib/sentry-init');
     scrub = mod.scrubPublicationPageCrumb;
   });
   config = mockSentryInit.mock.calls[0][0] as Config;
