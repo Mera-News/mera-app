@@ -12,3 +12,5 @@ export async function resetDatabase(): Promise<void> {
 }
 export { FIXTURE_ACCOUNT, signInFixtureAccount } from './auth';
 export { resetAuthState } from '../mock-backend/auth';
+export { mockGql, mockGqlError } from './gql';
+export { fixture } from './fixture';
