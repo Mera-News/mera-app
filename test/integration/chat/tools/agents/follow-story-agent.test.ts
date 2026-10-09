@@ -6,6 +6,7 @@ import { FollowStoryAgent } from '@/lib/llm/agents/FollowStoryAgent';
 import { FOLLOW_STORY_SURFACE } from '@/lib/news-harness/follow-story';
 import type { ProposalAction, StagedProposal } from '@/lib/news-harness/core/types';
 import { gatewayCalls, mockGql, server } from '@/test/helpers';
+import * as followStory from '@/lib/news-harness/follow-story';
 import { setProcessingMode, setWebSearchInChat } from '@/test/integration/chat/_helpers';
 import { activeTopicTexts, resetAgentWorld, setLanguage, setProposal, toolNames, trackedStoryCount } from './agents-kit';
 
@@ -42,12 +43,19 @@ describe('FollowStoryAgent: identity and prompt', () => {
     expect(await makeAgent().buildSystemPrompt(false)).not.toContain('<tool_call>');
   });
 
-  // The prompt is static per (toolFormat, language, gates): a second identical call returns the
-  // identical text, and rebuilding it for any key change is covered below.
-  it('returns the identical prompt for an identical second call', async () => {
+  // The cache is observed by counting calls into the REAL builder (a spy, no replacement).
+  it('caches the prompt: an identical second call does not rebuild it', async () => {
     const agent = makeAgent();
-    const first = await agent.buildSystemPrompt(false);
-    expect(await agent.buildSystemPrompt(false)).toBe(first);
+    const build = jest.spyOn(followStory, 'buildFollowStorySystemPrompt');
+    try {
+      const first = await agent.buildSystemPrompt(false);
+      expect(await agent.buildSystemPrompt(false)).toBe(first);
+      expect(build).toHaveBeenCalledTimes(1);
+      await agent.buildSystemPrompt(true);
+      expect(build).toHaveBeenCalledTimes(2);
+    } finally {
+      build.mockRestore();
+    }
   });
 
   it('rebuilds when the app language changes mid-session', async () => {

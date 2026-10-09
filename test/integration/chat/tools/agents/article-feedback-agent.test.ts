@@ -11,6 +11,7 @@ import { getActive as getActiveTopics } from '@/lib/database/services/topic-serv
 import { ArticleFeedbackAgent } from '@/lib/llm/agents/ArticleFeedbackAgent';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { gatewayCalls, server } from '@/test/helpers';
+import * as feedbackCore from '@/lib/news-harness/article-feedback/agent-core';
 import { setProcessingMode, setWebSearchInChat } from '@/test/integration/chat/_helpers';
 import {
   activeTopicTexts,
@@ -70,11 +71,19 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toContain('French');
   });
 
-  // The cache is not observable at the seam: an identical rebuild is byte-identical, so this pins
-  // only that two identical calls agree (the original counted calls into a mocked builder).
-  it('returns the identical prompt for identical calls', async () => {
+  // The cache is observed by counting calls into the REAL builder (a spy, no replacement).
+  it('caches the prompt: identical calls build it once', async () => {
     const agent = makeAgent();
-    expect(await agent.buildSystemPrompt(false)).toBe(await agent.buildSystemPrompt(false));
+    const build = jest.spyOn(feedbackCore, 'buildArticleFeedbackSystemPrompt');
+    try {
+      const first = await agent.buildSystemPrompt(false);
+      expect(await agent.buildSystemPrompt(false)).toBe(first);
+      expect(build).toHaveBeenCalledTimes(1);
+      await agent.buildSystemPrompt(true);
+      expect(build).toHaveBeenCalledTimes(2);
+    } finally {
+      build.mockRestore();
+    }
   });
 
   // pivot P6 (F4): the cache key used to omit the web-search toggle, so a prompt built while it was

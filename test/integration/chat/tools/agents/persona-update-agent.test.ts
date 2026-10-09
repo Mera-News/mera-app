@@ -10,6 +10,7 @@ import { PersonaUpdateAgent } from '@/lib/llm/agents/PersonaUpdateAgent';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import type { StagedProposal } from '@/lib/llm/types';
 import { FIXTURE_ACCOUNT, fixture, gatewayCalls, mockGql, server } from '@/test/helpers';
+import * as personaPrompts from '@/lib/news-harness/prompts/persona-prompts';
 import { setProcessingMode, setWebSearchInChat, until } from '@/test/integration/chat/_helpers';
 import { addFactsInOrder, factStatements, resetAgentWorld, seedFactWithTopics, setLanguage, setProposal, toolNames } from './agents-kit';
 
@@ -114,11 +115,19 @@ describe('buildSystemPrompt', () => {
     expect(await make().buildSystemPrompt(false)).toContain('**English**');
   });
 
-  // The cache is not observable at the seam: an identical rebuild is byte-identical. This pins only
-  // that two identical calls agree (the original counted calls into a mocked builder).
-  it('returns the identical prompt on a second call with the same params', async () => {
+  // The cache is observed by counting calls into the REAL builder (a spy, no replacement).
+  it('caches the prompt: a second call with the same params does not rebuild it', async () => {
     const agent = make();
-    expect(await agent.buildSystemPrompt(false)).toBe(await agent.buildSystemPrompt(false));
+    const build = jest.spyOn(personaPrompts, 'buildPersonaUpdateStaticPrompt');
+    try {
+      const first = await agent.buildSystemPrompt(false);
+      expect(await agent.buildSystemPrompt(false)).toBe(first);
+      expect(build).toHaveBeenCalledTimes(1);
+      await agent.buildSystemPrompt(true);
+      expect(build).toHaveBeenCalledTimes(2);
+    } finally {
+      build.mockRestore();
+    }
   });
 
   it('rebuilds when needsToolFormat changes', async () => {
