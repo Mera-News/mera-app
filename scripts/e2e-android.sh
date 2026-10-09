@@ -217,7 +217,8 @@ echo "== step 6: maestro $FLOWS"
 MAESTRO_RC=0
 MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test "$FLOWS" \
   --test-output-dir "$RUN/maestro" --format junit --output "$RUN/junit.xml" \
-  -e MOCK="http://localhost:$PORT" -e EMAIL="$EMAIL" -e OTP="$OTP" -e APP_ID="$APP_ID" -e SCHEME="$SCHEME" || MAESTRO_RC=$?
+  -e MOCK="http://localhost:$PORT" -e EMAIL="$EMAIL" -e OTP="$OTP" -e APP_ID="$APP_ID" -e SCHEME="$SCHEME" \
+  -e IMAGE_ORIGIN="${IMAGE_ORIGIN:-}" || MAESTRO_RC=$?
 pkill -P "$SAMPLER_PID" 2> /dev/null || true; kill "$SAMPLER_PID" 2> /dev/null || true
 SAMPLER_PID=""
 "$ADB" -s "$SERIAL" logcat -d > "$RUN/logcat.txt" || true

@@ -1,0 +1,16 @@
+# Dev flow: negative control for e2e step 7 (DECISIONS R17). Points fixture image URLs at a
+# non-mock origin (IMAGE_ORIGIN, e.g. a fast closing server on 10.0.2.2:8791, or an internet host
+# the proxy refuses), signs in and waits for cards. The run MUST end red at step 7 listing that host.
+# Run: scripts/e2e-android.sh --skip-build --handlers ./handlers --flows .maestro/dev/netguard-negative.yaml
+appId: ${APP_ID}
+---
+- runScript:
+    file: ../scripts/set-scenario.js
+    env:
+      SCENARIO: '{"imageOrigin":"${IMAGE_ORIGIN}"}'
+- runFlow: ../flows/sign-in.yaml
+- extendedWaitUntil:
+    visible:
+      id: "card-.*"
+    timeout: 90000
+- takeScreenshot: netguard-negative
