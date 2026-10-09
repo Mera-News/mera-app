@@ -7,7 +7,9 @@ import { createTopics, getByFact } from '@/lib/database/services/topic-service';
 import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
 import { skillIds } from '@/lib/mera-harness';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import logger from '@/lib/logger';
 import { gatewayCalls, signInFixtureAccount } from '@/test/helpers';
+import { resetDatabase } from '@/test/helpers/db';
 import { resetChatModules, seedFacts, setProcessingMode } from '@/test/integration/chat/_helpers';
 import { pollUntil, queuedJobs, settle } from './kit';
 
@@ -95,6 +97,21 @@ describe('commitFactChoices', () => {
 
     // The sweep is fire-and-forget and stamps its cooldown key when it ran.
     expect(await pollUntil(() => getSetting(GEO_RAN_KEY), (v) => v !== null)).not.toBeNull();
+  });
+
+  it('a geo sweep that dies is a warning, never an error at the tap', async () => {
+    const warn = jest.spyOn(logger, 'warn');
+
+    const result = await commitFactChoices([{ statement: 'Lives in Amsterdam, Netherlands', questionnaire: { attribute: LOCATION } }]);
+    // The tables go out from under the in-flight sweep.
+    await resetDatabase();
+
+    const warnings = await pollUntil(
+      async () => warn.mock.calls.filter(([m]) => m === '[fact-commit] Geo derivation failed'),
+      (calls) => calls.length > 0,
+    );
+    expect(warnings).toHaveLength(1);
+    expect(result.savedFacts).toHaveLength(1);
   });
 
   it('an empty commit does nothing at all', async () => {

@@ -63,6 +63,13 @@ describe('staging', () => {
     expect(bulkOf(items)!.groups.map((g) => g.topicSkillId)).toEqual(['topics/residence', 'topics/interest']);
   });
 
+  it('carries the questionnaire attribute onto the staged spine, and null when the offer has none', async () => {
+    const attribute = 'profession: job role and industry';
+    const { staged } = await stageTurn([{ statement: FARMER, questionnaire_attribute: attribute }, PARENTS]);
+
+    expect(readPendingGroups(staged).map((g) => g.questionnaireAttribute)).toEqual([attribute, null]);
+  });
+
   it('degrades to a null guideline when the turn routed nowhere, keeping the shipped prompt', async () => {
     const { staged } = await stageTurn([FARMER]);
     expect(cardsOf(threadFor(staged))[0].topicSkillId).toBeNull();

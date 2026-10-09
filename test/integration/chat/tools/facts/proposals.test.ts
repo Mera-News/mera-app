@@ -11,6 +11,7 @@ import { findActiveTrackedId } from '@/lib/database/services/tracked-story-servi
 import * as trackActions from '@/lib/tracking/track-actions';
 import { executeProposalActions } from '@/lib/chat-tools/proposal-handlers';
 import { useDialogQueue } from '@/lib/dialog';
+import { stopAskedFactCheckPollerForTest } from '@/lib/fact-check/fact-check-graphql-client';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import * as Sentry from '@sentry/react-native';
 import { gatewayCalls, initI18nEn, mockGateway, server, signInFixtureAccount } from '@/test/helpers';
@@ -42,6 +43,8 @@ beforeEach(async () => {
 
 afterEach(() => {
   jest.restoreAllMocks();
+  // fact_check_claim starts the asked-check poller; the last test would leave it running past teardown.
+  stopAskedFactCheckPollerForTest();
   useDialogQueue.setState({ queue: [] });
 });
 
@@ -287,6 +290,15 @@ describe('rails-backed actions (real executor, source "user")', () => {
 
     expect((await getAllByNormalizedText('cricket')).find((r) => r.id === topic.id)!.highPriority).toBe(true);
     expect(result.summaries).toEqual(['Pinned topic as high priority']);
+  });
+
+  it('set_high_priority on a topic already in that state applies with no change-log row (today: counted as applied)', async () => {
+    const [topic] = await createTopics([{ text: 'cricket', weight: 0.6, status: 'active' }]);
+
+    const result = await executeProposalActions([{ type: 'set_high_priority', topicText: 'cricket', highPriority: false }]);
+
+    expect((await getAllByNormalizedText('cricket')).find((r) => r.id === topic.id)!.highPriority).toBe(false);
+    expect(result).toEqual({ ...NOTHING, applied: 1, summaries: ['Unpinned topic'] });
   });
 
   it.each([
