@@ -60,7 +60,7 @@ module.exports = ({ config }) => {
     return plugin;
   });
 
-  return {
+  const result = {
     ...config,
     name,
     slug,
@@ -88,5 +88,47 @@ module.exports = ({ config }) => {
         projectId,
       },
     },
+  };
+
+  if (process.env.EXPO_PUBLIC_E2E !== '1') return result;
+
+  const loopback = ['localhost', '127.0.0.1', '10.0.2.2'];
+  const isLoopback = (value) => {
+    try {
+      return loopback.includes(new URL(value).hostname);
+    } catch {
+      return false;
+    }
+  };
+  if (
+    ![
+      process.env.EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT,
+      process.env.EXPO_PUBLIC_AUTH_ENDPOINT,
+      process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT,
+    ].every(isLoopback)
+  ) {
+    throw new Error('[app.config] EXPO_PUBLIC_E2E=1 needs loopback endpoints');
+  }
+
+  // A release APK blocks cleartext traffic, and expo-updates checks natively
+  // before JS runs, so both are switched off in config rather than in code.
+  const e2eAndroid = { ...result.android, package: 'com.mera.news.e2e' };
+  delete e2eAndroid.googleServicesFile;
+  return {
+    ...result,
+    scheme: 'meraapp-e2e',
+    android: e2eAndroid,
+    updates: { ...result.updates, enabled: false, checkAutomatically: 'NEVER' },
+    plugins: result.plugins.map((plugin) =>
+      Array.isArray(plugin) && plugin[0] === 'expo-build-properties'
+        ? [
+            plugin[0],
+            {
+              ...plugin[1],
+              android: { ...plugin[1]?.android, usesCleartextTraffic: true },
+            },
+          ]
+        : plugin,
+    ),
   };
 };

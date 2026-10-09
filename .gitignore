@@ -111,3 +111,8 @@ qa/**/*.txt
 harness/out/
 # Python bytecode from scripts/animations
 __pycache__/
+
+# e2e lane (scripts/e2e-android.sh)
+!.env.e2e
+e2e-output/
+.stryker-tmp/
