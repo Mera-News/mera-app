@@ -30,7 +30,7 @@ APK_OUT=android/app/build/outputs/apk/release/app-release.apk
 LAST=e2e-output/last-app-e2e.apk
 
 ORIG_ARGS=("$@")
-DRY=0 SKIP_BUILD=0 CLEAN=0
+DRY=0 SKIP_BUILD=0 CLEAN=0 ALLOW_DIRTY=0
 FLOWS=()
 HANDLERS="${E2E_HANDLERS:-./handlers}"
 
@@ -44,6 +44,7 @@ while [ $# -gt 0 ]; do
     --flows) FLOWS+=("${2:?}"); shift ;;  # repeatable: several flows or dirs, one boot
     --skip-build) SKIP_BUILD=1 ;;
     --clean) CLEAN=1 ;;
+    --allow-dirty) ALLOW_DIRTY=1 ;;  # build with uncommitted app source (the APK then matches no commit)
     --handlers) HANDLERS="${2:?}"; shift ;;
     *) usage ;;
   esac
@@ -136,6 +137,21 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
+# The APK must match a commit: refuse to build over uncommitted app source (R29). Checked right
+# before prebuild and again right before Gradle.
+require_clean() {
+  [ "$ALLOW_DIRTY" = 1 ] && return 0
+  local dirty
+  # Test files never reach the bundle, so their churn (a gate runner's deletions) does not count.
+  dirty="$(git status --porcelain -- app components lib modules plugins app.json app.config.js package.json \
+    | grep -vE '(__tests__/|\.(test|spec)\.[jt]sx?$)' || true)"
+  if [ -n "$dirty" ]; then
+    echo "FAIL: uncommitted app source; the APK would match no commit (--allow-dirty to override):" >&2
+    echo "$dirty" >&2
+    exit 1
+  fi
+}
+
 e2e_env() {
   set -a; . ./.env.e2e; set +a
   export EXPO_NO_DOTENV=1 TMPDIR="$ROOT/e2e-output/.metro-tmp"
@@ -144,11 +160,16 @@ e2e_env() {
 
 # ---- steps 1-2: build --------------------------------------------------------------------
 if [ "$SKIP_BUILD" = 0 ]; then
-  echo "== step 1: prebuild"
+  require_clean
+  BUILT_SHA="$(git rev-parse --short HEAD)"
+  echo "== step 1: prebuild (HEAD $BUILT_SHA)"
   ( e2e_env; CI=1 npx expo prebuild --platform android --no-install $( [ "$CLEAN" = 1 ] && echo --clean ) )
+  require_clean
+  [ "$(git rev-parse --short HEAD)" = "$BUILT_SHA" ] || { echo "FAIL: HEAD moved during prebuild" >&2; exit 1; }
   echo "== step 2: gradle"
   ( e2e_env; export SENTRY_DISABLE_AUTO_UPLOAD=true; cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process )
   cp "$APK_OUT" "$LAST"
+  echo "$BUILT_SHA" > "$LAST.sha"
 fi
 [ -f "$LAST" ] || { echo "error: $LAST missing; run without --skip-build" >&2; exit 1; }
 echo "== step 2: bundle grep"
@@ -241,6 +262,7 @@ BLOCKED="$(grep -l -E '^[[:space:]]*-[[:space:]]*blocked[[:space:]]*$' .maestro/
 [ -n "$BLOCKED" ] && echo "EXCLUDED (tag blocked, see each flow's header): $BLOCKED"
 
 # step 8 runs in the EXIT trap
+echo "apk built from $(cat "$LAST.sha" 2> /dev/null || echo unknown)"
 echo "maestro exit $MAESTRO_RC, app-socket exit $SOCK_RC, output in $RUN"
 [ "$MAESTRO_RC" -ne 0 ] && exit "$MAESTRO_RC"
 exit "$SOCK_RC"
