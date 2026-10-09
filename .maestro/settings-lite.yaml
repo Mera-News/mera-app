@@ -5,7 +5,13 @@ appId: ${APP_ID}
 ---
 - runScript: scripts/reset-scenario.js
 - runFlow: flows/sign-in.yaml
-- openLink: ${SCHEME}:///logged-in/app_container/settings
+# The fourth native tab (You), tapped the way a person does: NativeTabs triggers carry no label
+# on Android. A deep link into this tab left its pages out of the accessibility tree (D4).
+- tapOn:
+    id: ".*navigation_bar_item_icon_view"
+    index: 3
+- tapOn:
+    id: "page-pill-settings"
 - tapOn:
     id: "settings-row-display"
 - tapOn:
@@ -13,7 +19,13 @@ appId: ${APP_ID}
 - takeScreenshot: lite-after-tap
 - stopApp
 - launchApp
-- openLink: ${SCHEME}:///logged-in/app_container/settings
+# The fourth native tab (You), tapped the way a person does: NativeTabs triggers carry no label
+# on Android. A deep link into this tab left its pages out of the accessibility tree (D4).
+- tapOn:
+    id: ".*navigation_bar_item_icon_view"
+    index: 3
+- tapOn:
+    id: "page-pill-settings"
 - tapOn:
     id: "settings-row-display"
 - takeScreenshot: lite-after-restart

@@ -19,6 +19,6 @@ appId: ${APP_ID}
     index: 1
 - extendedWaitUntil:
     visible:
-      id: "detail-meta"
+      id: "detail-read-routes"
     timeout: 30000
 - takeScreenshot: article-detail
