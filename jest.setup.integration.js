@@ -31,6 +31,34 @@ jest.doMock('expo-constants', () => {
   return { __esModule: true, default: Constants, ExecutionEnvironment, AppOwnership };
 });
 
+// 2c. expo-router with the navigation calls services make (logout calls canDismiss/dismissAll
+// inside a try, so a missing one silently skips the wipe that follows). Integration only, by
+// doMock for the same hoisting reason as expo-constants; the legacy mock stays as it was.
+jest.doMock('expo-router', () => {
+  const nav = () => ({
+    replace: jest.fn(),
+    push: jest.fn(),
+    back: jest.fn(),
+    navigate: jest.fn(),
+    dismiss: jest.fn(),
+    dismissAll: jest.fn(),
+    dismissTo: jest.fn(),
+    canDismiss: jest.fn(() => false),
+    canGoBack: jest.fn(() => false),
+    setParams: jest.fn(),
+  });
+  return {
+    __esModule: true,
+    router: nav(),
+    useRouter: jest.fn(() => nav()),
+    usePathname: jest.fn(() => '/'),
+    useLocalSearchParams: jest.fn(() => ({})),
+    useGlobalSearchParams: jest.fn(() => ({})),
+    useSegments: jest.fn(() => []),
+    useFocusEffect: jest.fn(),
+  };
+});
+
 // 3. expo-translate-text: identity translation, same export names as the package.
 jest.mock('expo-translate-text', () => {
   class TranslationError extends Error {}

@@ -12,14 +12,6 @@ import {
 import { appConfig } from '@/test/mock-backend/fixtures/graphql/appConfig';
 import { getLastOtpEmail } from '@/test/mock-backend/auth';
 
-// The setup's expo-constants mock has no ExecutionEnvironment, so the real expo-linking
-// throws inside the expo client's getOrigin(). A native edge, so a mock is allowed.
-// ponytail: belongs in jest.setup.native.js (harness-owned); every test that touches
-// the auth client needs it until then.
-jest.mock('expo-linking', () => ({
-  createURL: (path: string, opts?: { scheme?: string }) => `${opts?.scheme ?? 'app'}://${path}`,
-}));
-
 const COOKIE_KEY = `${Constants.expoConfig?.slug || 'app'}_cookie`;
 
 const jwtPayload = (jwt: string) => JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
