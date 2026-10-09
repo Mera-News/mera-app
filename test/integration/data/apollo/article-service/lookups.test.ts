@@ -130,6 +130,11 @@ describe('getArticleById', () => {
         expect(await ArticleService.getArticleById('art-1')).toBeNull();
     });
 
+    it('returns null when the whole response is { data: null }', async () => {
+        server.use(mockGql('GetArticleById', null));
+        expect(await ArticleService.getArticleById('art-1')).toBeNull();
+    });
+
     // A check is shown only to the device that asked for it (navx): the article query must never
     // carry one another reader asked for.
     it('never selects a fact check on the article', async () => {
@@ -294,6 +299,11 @@ describe('getNewsClusterForArticle', () => {
         expect(await ArticleService.getNewsClusterForArticle('not-a-fixture-id')).toBeNull();
         server.use(mockGql('GetNewsClusterForArticle', { newsClusterForArticle: null }));
         expect(await ArticleService.getNewsClusterForArticle(ARTICLE_IDS[0])).toBeNull();
+    });
+
+    it('returns null when the whole response is { data: null }', async () => {
+        server.use(mockGql('GetNewsClusterForArticle', null));
+        expect(await ArticleService.getNewsClusterForArticle('art-1')).toBeNull();
     });
 
     it('rethrows with a breadcrumb and no capture of its own', async () => {

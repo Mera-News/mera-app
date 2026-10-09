@@ -1,6 +1,5 @@
 // The keychain keys better-auth's expo client writes are named from the app config, so a renamed
-// fork never silently writes `meraapp_cookie`. The neutral `app` fallback for a config with no slug
-// is not testable here: expo-linking, which the expo client reaches, throws without a scheme.
+// fork never silently writes `meraapp_cookie`.
 // Each case loads a fresh copy of the auth client under its own expo-constants (an edge), so the
 // secure-store Map it writes to is that copy's own.
 import { FIXTURE_ACCOUNT } from '@/test/helpers';
@@ -49,4 +48,10 @@ it('takes the first scheme when the config lists several', async () => {
     const loaded = loadWithConfig({ scheme: ['first', 'second'], slug: 'multi' });
     await signIn(loaded);
     expect(Object.keys(loaded.secureStoreDump())).toEqual(['multi_cookie']);
+});
+
+it('falls back to a neutral `app` prefix when the config has a scheme but no slug', async () => {
+    const loaded = loadWithConfig({ scheme: 'forkapp' });
+    await signIn(loaded);
+    expect(Object.keys(loaded.secureStoreDump())).toEqual(['app_cookie']);
 });

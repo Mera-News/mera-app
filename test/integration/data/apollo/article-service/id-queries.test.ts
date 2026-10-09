@@ -37,6 +37,14 @@ describe('getRecentArticleCount', () => {
         expect(await ArticleService.getRecentArticleCount()).toBe(ARTICLE_IDS.length);
     });
 
+    it('returns 0 when the whole response is { data: null }', async () => {
+        const logs = spyLogger();
+        server.use(mockGql('GetRecentArticleCount', null));
+        expect(await ArticleService.getRecentArticleCount()).toBe(0);
+        // The 0 comes from the `?? 0`, not from the catch: Apollo resolved, nothing was thrown.
+        expect(logs.crumb).not.toHaveBeenCalledWith(expect.stringContaining('failed'), 'article-service', expect.anything(), expect.anything());
+    });
+
     it('returns 0 when the field is null', async () => {
         server.use(mockGql('GetRecentArticleCount', { recentArticleCount: null }));
         expect(await ArticleService.getRecentArticleCount()).toBe(0);
@@ -89,6 +97,11 @@ describe('getArticleIdsForTopics', () => {
         const sent = recordOps();
         await ArticleService.getArticleIdsForTopics([topic('Tech')], { limitPerTopic: 5 });
         expect((await sentOf(sent, 'GetArticleIdsForTopics'))[0].variables.limitPerTopic).toBe(5);
+    });
+
+    it('returns an empty result when the whole response is { data: null }', async () => {
+        server.use(mockGql('GetArticleIdsForTopics', null));
+        expect(await ArticleService.getArticleIdsForTopics([])).toEqual({ results: [] });
     });
 
     it('returns an empty result when the server sends none or a null field', async () => {
@@ -209,6 +222,14 @@ describe('getArticleIdsForPersona', () => {
         expect(result.headlineResults[0].articleIds).toEqual([...GLOBAL_HEADLINE_IDS]);
         expect(result.headlineResults[1].articleIds).toEqual([...COUNTRY_HEADLINE_IDS]);
         expect(result.headlineResults[1].countryCode).toBe('NLD');
+    });
+
+    it('returns the empty shape when the whole response is { data: null }', async () => {
+        server.use(mockGql('GetArticleIdsForPersona', null));
+        expect(await ArticleService.getArticleIdsForPersona(personaQuery({ topics: [] }))).toEqual({
+            topicResults: [],
+            headlineResults: [],
+        });
     });
 
     it('returns the empty shape when the server sends a null field', async () => {
