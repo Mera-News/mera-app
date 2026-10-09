@@ -13,7 +13,7 @@ import {
   type StoryExportLabels,
   type StoryExportMember,
   type StoryRetainedRow,
-} from '../story-export';
+} from '@/lib/story-export';
 
 const MEMBERS: StoryExportMember[] = [
   {

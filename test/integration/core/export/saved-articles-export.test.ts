@@ -7,14 +7,14 @@
 // A fixture where every field is populated and every row is the same shape
 // would pass against several wrong implementations.
 
-import type { SavedItem } from '../database/services/saved-article-suggestion-service';
+import type { SavedItem } from '@/lib/database/services/saved-article-suggestion-service';
 import {
   buildSavedJson,
   buildSavedMarkdown,
   exportDay,
   toExportRows,
   type SavedExportLabels,
-} from '../saved-articles-export';
+} from '@/lib/saved-articles-export';
 
 const LABELS: SavedExportLabels = {
   docTitle: 'Saved articles',
