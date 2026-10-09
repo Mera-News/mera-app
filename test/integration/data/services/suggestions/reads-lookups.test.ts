@@ -90,9 +90,15 @@ describe('getReasonedSuggestionIdForArticle', () => {
       await expect(getReasonedSuggestionIdForArticle('art-1')).resolves.toBeNull();
     });
 
-    it('is null for an excluded row even if it carries note text', async () => {
-      // batchMarkExcluded clears the note, so a note on an excluded row is a bare row.
-      await bareRow('art-1', { status: 'excluded', reason: 'stale reason' });
+    // batchMarkExcluded clears the note, so a row cannot be excluded AND carry one: a row that had a
+    // note when the filter hit it is the nearest real state.
+    it('is null for a row that had a note when it was excluded', async () => {
+      await seed([article('art-1')]);
+      await toComplete('art-1');
+      await expect(getReasonedSuggestionIdForArticle('art-1')).resolves.toBe('art-1');
+
+      await toExcluded('art-1');
+
       await expect(getReasonedSuggestionIdForArticle('art-1')).resolves.toBeNull();
     });
 
@@ -387,6 +393,7 @@ describe('geoTextFromTags / placeValueFromTags', () => {
     expect(geoTextFromTags([{ city: null, region: null, countryCode: null }, { countryCode: 'GULF' }])).toBe('Gulf');
     expect(placeValueFromTags([{ city: null, region: null, countryCode: null }, { countryCode: 'GULF' }])).toBe('GULF');
     expect(geoTextFromTags([null as never, { city: 'Oslo' }])).toBe('Oslo');
+    expect(placeValueFromTags([null as never, { city: 'Oslo' }])).toBe('Oslo');
   });
 });
 

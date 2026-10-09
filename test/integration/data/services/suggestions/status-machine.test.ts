@@ -4,6 +4,9 @@
 // pinned single transitions against a mock); it is the seam that makes the machine one thing.
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import {
+  batchMarkAsScoredByIds,
+  batchMarkGateSkipped,
+  batchMarkReasonSkipped,
   batchPropagateScores,
   batchResetToUnscored,
   loadSuggestions,
@@ -139,10 +142,8 @@ describe('terminal rows stay out of every sweep and queue read', () => {
 // guards it. Reachable: a hard filter (retroactive exclude) or the already-read backfill marks a row
 // while its scoring batch is in flight, then the decode calls these. The row comes back with a score
 // above the gate and renders. Whether the guard belongs in the writer or in its callers is a lead
-// decision; the other writers that share the shape (saveReason, which leaves relevance 0 and so only
-// shifts the status, batchMarkAsScoredByIds, batchMarkReasonSkipped, batchMarkGateSkipped) are listed in
-// the report, not pinned here.
-describe('a terminal row is not moved back by a late score or propagated verdict', () => {
+// decision. The writers that only shift the status (relevance stays 0) are the DA12 block below.
+describe('DA12: a terminal row is not moved back by a late score or propagated verdict', () => {
   const late: Record<string, (id: string) => Promise<void>> = {
     saveScoringResult: (id) => saveScoringResult(id, { relevance: 0.9, reason: GROUNDED, reasonSkipped: false }),
     batchPropagateScores: (id) => batchPropagateScores([{ id, relevance: 0.9, reason: GROUNDED }]),
@@ -154,7 +155,7 @@ describe('a terminal row is not moved back by a late score or propagated verdict
 
   for (const [writer, write] of Object.entries(late)) {
     for (const [status, makeTerminal] of Object.entries(terminal)) {
-      test.failing(`${writer} leaves an ${status} row ${status}`, async () => {
+      test.failing(`DA12: ${writer} leaves an ${status} row ${status}`, async () => {
         await seed([article('a1')]);
         await makeTerminal('a1');
 
@@ -164,7 +165,7 @@ describe('a terminal row is not moved back by a late score or propagated verdict
       });
 
       // R14 sibling: today's outcome, deleted by the fix that flips the test above.
-      test(`today: ${writer} turns an ${status} row complete with a score of 0.9`, async () => {
+      test(`DA12 today: ${writer} turns an ${status} row complete with a score of 0.9`, async () => {
         await seed([article('a1')]);
         await makeTerminal('a1');
 
@@ -175,4 +176,98 @@ describe('a terminal row is not moved back by a late score or propagated verdict
       });
     }
   }
+});
+
+// The writers that do not bring a score with them still flip the status of a terminal row (excluded
+// and already_read are never to render, and the funnel counts them apart). Same race as above.
+describe('DA12: the other writers keep a terminal row terminal', () => {
+  const writers: Record<string, { run: (id: string) => Promise<void>; today: string }> = {
+    saveReason: { run: (id) => saveReason(id, GROUNDED), today: 'complete' },
+    batchMarkAsScoredByIds: { run: (id) => batchMarkAsScoredByIds([id]), today: 'complete' },
+    batchMarkReasonSkipped: { run: (id) => batchMarkReasonSkipped([id]), today: 'complete' },
+    batchMarkGateSkipped: { run: (id) => batchMarkGateSkipped([id]), today: 'reason_skipped' },
+  };
+  const terminal: Record<string, (id: string) => Promise<void>> = {
+    excluded: toExcluded,
+    already_read: toAlreadyRead,
+  };
+
+  for (const [writer, { run, today }] of Object.entries(writers)) {
+    for (const [status, makeTerminal] of Object.entries(terminal)) {
+      test.failing(`DA12: ${writer} leaves an ${status} row ${status}`, async () => {
+        await seed([article('a1')]);
+        await makeTerminal('a1');
+
+        await run('a1');
+
+        expect(await statusOf('a1')).toBe(status);
+      });
+
+      // R14 sibling: today's outcome, deleted by the fix that flips the test above.
+      test(`DA12 today: ${writer} turns an ${status} row ${today}`, async () => {
+        await seed([article('a1')]);
+        await makeTerminal('a1');
+
+        await run('a1');
+
+        expect(await statusOf('a1')).toBe(today);
+      });
+    }
+  }
+
+  // `excluded` has one designed exit (the un-exclude sweep, above); `already_read` has none.
+  test.failing('DA12: batchResetToUnscored leaves an already_read row already_read', async () => {
+    await seed([article('a1')]);
+    await toAlreadyRead('a1');
+
+    await batchResetToUnscored(['a1']);
+
+    expect(await statusOf('a1')).toBe('already_read');
+  });
+
+  test('DA12 today: batchResetToUnscored turns an already_read row unscored', async () => {
+    await seed([article('a1')]);
+    await toAlreadyRead('a1');
+
+    await batchResetToUnscored(['a1']);
+
+    expect(await statusOf('a1')).toBe('unscored');
+  });
+});
+
+// The grounding check lets a note with no content tokens through ("contentless, not wrong"), and a
+// whitespace-only note from the gateway is exactly that. The row lands complete with nothing to read,
+// out of reach of the sweep that only selects reason_pending, so it never gets its note.
+describe('DA14: a whitespace-only note is not a note', () => {
+  test.failing('DA14: saveReason keeps the row reason-owed', async () => {
+    await seed([article('a1')]);
+    await toReasonPending('a1');
+
+    await saveReason('a1', '   ');
+
+    expect(await statusOf('a1')).toBe('reason_pending');
+  });
+
+  test.failing('DA14: saveScoringResult keeps the row reason-owed', async () => {
+    await seed([article('a1')]);
+
+    await saveScoringResult('a1', { relevance: 0.8, reason: '   ', reasonSkipped: false });
+
+    expect(await statusOf('a1')).toBe('reason_pending');
+  });
+
+  test('DA14 today: saveReason and saveScoringResult mark the row complete with a blank note', async () => {
+    await seed([article('a1'), article('a2')]);
+    await toReasonPending('a1');
+
+    await saveReason('a1', '   ');
+    await saveScoringResult('a2', { relevance: 0.8, reason: '   ', reasonSkipped: false });
+
+    for (const id of ['a1', 'a2']) {
+      expect(await loadSuggestions().then((rows) => rows.find((s) => s._id === id))).toMatchObject({
+        status: 'complete',
+        reason: '   ',
+      });
+    }
+  });
 });

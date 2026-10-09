@@ -179,7 +179,9 @@ describe('clearSuggestions', () => {
   });
 
   it('clears join rows even when no suggestion is left for them', async () => {
-    // Every service deletes a suggestion's links with it, so a link with no suggestion is a bare row.
+    // Every service that deletes a suggestion (delete by id, the 48h sweep, clear, prune, the dead-topic
+    // purge) destroys its joins in the same batch; deleteFact removes the fact, not the join. So a join with
+    // no suggestion is a bare row.
     await bareLink('ghost', 'fact-1');
 
     await clearSuggestions();

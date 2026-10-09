@@ -197,6 +197,18 @@ describe('loadSuggestions', () => {
     });
   });
 
+  it('maps the matched-topic refs, skipping a null entry and blanking a bad topic id or text', async () => {
+    // persist always writes well-formed entries, so a null element or a bad field is a bare row.
+    await bareRow('s1', {
+      matchedTopicsJson: JSON.stringify([null, { topicId: 't1', text: 'x' }, { topicId: '', text: 7 }]),
+    });
+
+    expect((await loadSuggestions())[0].matchedTopics).toEqual([
+      { topicId: 't1', text: 'x' },
+      { topicId: null, text: '' },
+    ]);
+  });
+
   describe('parseClusterMemberships, through the stored column', () => {
     // No service writes a corrupt blob (persist always stringifies a list), so these use bare rows.
     it.each([
@@ -436,6 +448,19 @@ describe('getScoredSuggestionsWithoutReasons (the orphaned-reason sweep)', () =>
       relatedFacts: [{ id: fact.id, statement: 'I follow racing' }],
     });
     expect(c.meta?.id).toBe('a1');
+  });
+
+  it('skips a link whose fact is gone', async () => {
+    // Legacy path: the row carries no topic ids, so deleting the fact leaves the row and its join behind.
+    const { fact } = await interest('I follow racing', ['formula 1']);
+    await seedLegacy([article('a1')], { a1: ['formula 1'] });
+    await toReasonPending('a1');
+    await deleteFact(fact.id);
+
+    const out = await getScoredSuggestionsWithoutReasons();
+
+    expect(out.map((c) => c.id)).toEqual(['a1']);
+    expect(out[0].relatedFacts).toEqual([]);
   });
 
   it('honours the limit', async () => {

@@ -158,6 +158,35 @@ describe('getPipeline self-heal', () => {
     expect(await settingService.getSetting(PIPELINE_KEY)).toBeNull();
   });
 
+  it('reports a failed row delete and still clears the secret', async () => {
+    await settingService.setSetting(PIPELINE_KEY, 'not valid json {{{');
+    await secureStore.setItemAsync(PRIVKEY_KEY, 'orphan-key');
+    const realDelete = settingService.deleteSetting;
+    jest.spyOn(settingService, 'deleteSetting').mockImplementation(async (key: string) => {
+      if (key === PIPELINE_KEY) throw new Error('row delete failed (injected)');
+      return realDelete(key);
+    });
+
+    expect(await getPipeline()).toBeNull();
+
+    expect(secureStoreDump()[PRIVKEY_KEY]).toBeUndefined();
+    expect(logger.captureException).toHaveBeenCalledWith(expect.any(Error), {
+      tags: { service: 'scoring-pipeline-store', step: 'clear-row' },
+    });
+  });
+
+  it('reports a failed secret delete and still clears the row', async () => {
+    await settingService.setSetting(PIPELINE_KEY, 'not valid json {{{');
+    failSecureStore(PRIVKEY_KEY, 'delete', new Error('keychain error'));
+
+    expect(await getPipeline()).toBeNull();
+
+    expect(await settingService.getSetting(PIPELINE_KEY)).toBeNull();
+    expect(logger.captureException).toHaveBeenCalledWith(expect.any(Error), {
+      tags: { service: 'scoring-pipeline-store', step: 'clear-privkey' },
+    });
+  });
+
   // A locked keychain after a reboot is not "missing": clearing here would cost the run for nothing.
   it('does NOT clear the row on a transient keychain read error', async () => {
     await settingService.setSetting(PIPELINE_KEY, rowWithoutKey);

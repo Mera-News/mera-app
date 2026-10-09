@@ -12,6 +12,7 @@ import {
   batchResetToUnscored,
   batchSaveComputedScores,
   batchSaveMathScores,
+  deleteSuggestionsByServerIds,
   saveReason,
   saveScoringResult,
 } from '@/lib/database/services/article-suggestion-service';
@@ -261,6 +262,21 @@ describe('batchMarkExcluded', () => {
   });
 });
 
+// MERA-APP-53/55: every row of a batch can be hard-deleted (48h sweep, clear, prune) while it is in flight.
+describe('a batch whose rows were all deleted underneath it', () => {
+  it('is a no-op for every marker', async () => {
+    await seed([article('a1'), article('a2')]);
+    await deleteSuggestionsByServerIds(['a1', 'a2']);
+
+    await expect(batchResetToUnscored(['a1', 'a2'])).resolves.toBeUndefined();
+    await expect(batchMarkReasonSkipped(['a1', 'a2'])).resolves.toBeUndefined();
+    await expect(batchMarkGateSkipped(['a1', 'a2'])).resolves.toBeUndefined();
+    await expect(batchMarkExcluded(['a1', 'a2'])).resolves.toBeUndefined();
+    await expect(batchMarkAsScoredByIds(['a1', 'a2'])).resolves.toBeUndefined();
+    await expect(batchPropagateScores([{ id: 'a1', relevance: 0.5, reason: GROUNDED }])).resolves.toBeUndefined();
+  });
+});
+
 describe('batchResetToUnscored (the un-exclude direction)', () => {
   it('sends an excluded row back to unscored with every score cleared', async () => {
     await seed([article('a1')]);
@@ -446,6 +462,15 @@ describe('[dead-candidate] batchSaveMathScores', () => {
     expect(await snapshot('a2')).toMatchObject({ status: 'complete', relevance: 0.1 });
     await expect(batchSaveMathScores([])).resolves.toBeUndefined();
   });
+
+  it('is a no-op when every row was deleted since', async () => {
+    await seed([article('a1')]);
+    await deleteSuggestionsByServerIds(['a1']);
+
+    await expect(
+      batchSaveMathScores([{ id: 'a1', relevance: 0.5, reasonSkipped: false, computedScore: 0.5, rawScore: 0.5, scoreComponentsJson: '{}' }]),
+    ).resolves.toBeUndefined();
+  });
 });
 
 describe('[dead-candidate] batchSaveComputedScores', () => {
@@ -460,5 +485,14 @@ describe('[dead-candidate] batchSaveComputedScores', () => {
 
     expect(await snapshot('a1')).toMatchObject({ status: 'reason_pending', relevance: 0.7, computedScore: 0.5, rawScore: 0.6, scoreComponentsJson: '{"mode":"math"}' });
     await expect(batchSaveComputedScores([])).resolves.toBeUndefined();
+  });
+
+  it('is a no-op when every row was deleted since', async () => {
+    await seed([article('a1')]);
+    await deleteSuggestionsByServerIds(['a1']);
+
+    await expect(
+      batchSaveComputedScores([{ id: 'a1', computedScore: 0.5, rawScore: 0.5, scoreComponentsJson: '{}' }]),
+    ).resolves.toBeUndefined();
   });
 });

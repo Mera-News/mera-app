@@ -70,6 +70,13 @@ describe('a new row', () => {
     });
   });
 
+  it('stores no memberships when the server sent none at all (null)', async () => {
+    await seed([article('a1', { clusters: null as never })]);
+
+    expect((await row('a1')).clusterMembershipsJson).toBe('[]');
+    expect((await row('a1')).stableClusterId).toBeNull();
+  });
+
   it('stores the first copy when an article id arrives twice', async () => {
     const res = await seed([article('a1', { title_en: 'First copy' }), article('a1', { title_en: 'Second copy' })]);
 
