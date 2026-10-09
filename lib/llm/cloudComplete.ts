@@ -99,6 +99,12 @@ const QUEUE_PHASE_FLOOR_MS = 400;
 
 export const HEDGE_DELAY_MS = 10_000;
 
+/** The hedge for a BUFFERED call (`stream: false`). Its headers arrive only
+ *  when the whole answer is done, so 10s of "silence" is an ordinary tool leg
+ *  (corpus p95 ~2.3s, max ~35s), not a stall: hedging there would bill twice
+ *  and could engage the session fallback on a healthy primary. */
+export const BUFFERED_HEDGE_DELAY_MS = 30_000;
+
 /** Max gap BETWEEN CHUNKS of an in-flight SSE body — deliberately not the time
  *  to the FIRST chunk, which stays on {@link UPSTREAM_ALIGNED_TIMEOUT_MS}.
  *
@@ -1173,6 +1179,11 @@ export interface CloudChatStreamRequest {
    *  loop passes false: measured, the trace buys nothing on a tool-routing leg
    *  and costs the whole budget on the topic path. */
   enableThinking?: boolean;
+  /** Defaults to TRUE. FALSE for a step nobody watches arrive: the answer is
+   *  then ONE envelope, one decrypt, instead of one ECDH per token. Tool calls
+   *  travel inside the content now, so a streamed tool step decrypts every
+   *  token of its arguments, which native tool calls never cost. */
+  stream?: boolean;
   tools?: ToolDefinition[];
   system?: string;
   model?: string;
@@ -1304,8 +1315,9 @@ export async function* cloudChatStream(
     const body: Record<string, unknown> = {
       messages,
       // Each streamed delta is its own E2EE envelope, so streaming and E2EE
-      // coexist — see cloudChatStream's doc comment.
-      stream: true,
+      // coexist — see cloudChatStream's doc comment. A step nobody watches is
+      // buffered: one envelope (see `stream` on the request).
+      stream: request.stream ?? true,
       model: sendModel,
       chat_template_kwargs: { enable_thinking: request.enableThinking ?? true },
     };
@@ -1353,7 +1365,7 @@ export async function* cloudChatStream(
     // `lane: 'interactive'` is hardcoded, not a caller option: cloudChatStream
     // is the only user-facing streaming path in the app.
     withUpstreamAlignedDefaults({
-      hedgeAfterMs: HEDGE_DELAY_MS,
+      hedgeAfterMs: request.stream === false ? BUFFERED_HEDGE_DELAY_MS : HEDGE_DELAY_MS,
       streamBody: true,
       lane: 'interactive',
     }),

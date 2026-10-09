@@ -561,6 +561,8 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           messages: [{ role: 'system', content: systemPrompt }, ...windowed],
           tools: toolsOverride ?? tools,
           toolChoice,
+          // The forced pass's text is never shown: one envelope, one decrypt.
+          stream: !suppressText,
           model: BIG_MODEL,
           maxTokens: CHAT_MAX_OUTPUT_TOKENS,
           // `suppressText` IS THE GATE, not a null sink ref. The forced

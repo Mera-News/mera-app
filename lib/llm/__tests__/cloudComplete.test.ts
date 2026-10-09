@@ -2187,6 +2187,30 @@ describe('cloudChatStream', () => {
     expect(body.messages[3].content).toContain(SECRET);
   });
 
+  it('a step nobody watches is buffered: stream false, and a call in the one envelope still parses', async () => {
+    mockFetch.mockResolvedValueOnce(
+      makeResponse(200, {
+        choices: [
+          {
+            message: { content: 'Ok.<tool_call>\n<function=f>\n<parameter=x>\n1\n</parameter>\n</function>\n</tool_call>' },
+            finish_reason: 'stop',
+          },
+        ],
+      }),
+    );
+    const events = await collectStream(
+      cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], stream: false }),
+    );
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).stream).toBe(false);
+    expect(mockDecryptContent).toHaveBeenCalledTimes(1);
+    expect(events).toEqual([
+      { type: 'text-delta', delta: 'Ok.' },
+      expect.objectContaining({ type: 'tool-call-delta', index: 0, name: 'f', argumentsDelta: '{"x":1}' }),
+      { type: 'finish', reason: 'tool_calls' },
+    ]);
+  });
+
   it('does not include tools in body when tools array is empty', async () => {
     mockFetch.mockResolvedValueOnce(
       makeResponse(200, {

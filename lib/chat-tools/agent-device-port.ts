@@ -439,6 +439,10 @@ async function callModelOnce(
 
   const stream = cloudChatStream({
     messages,
+    // Only a leg the user watches streams. Every other leg is ONE envelope:
+    // its tool calls now ride inside the encrypted content, and streamed they
+    // would cost one ECDH per token on the JS thread.
+    stream: req.onDelta !== undefined,
     tools: req.tools as never,
     toolChoice: req.toolChoice ?? 'auto',
     model: modelId,
