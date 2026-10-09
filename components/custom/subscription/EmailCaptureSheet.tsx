@@ -24,7 +24,7 @@
  * The OTP step mirrors OTPVerificationView's resend idiom (30s cooldown)
  * rather than inventing a second pattern.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
