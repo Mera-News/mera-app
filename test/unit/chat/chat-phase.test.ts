@@ -6,7 +6,7 @@ import {
   makePhaseSink,
   resolveChatPhase,
   type ChatPhaseId,
-} from '../chat-phase';
+} from '@/lib/services/chat-phase';
 
 describe('chat-phase orders', () => {
   it('the two engine orders are disjoint and together are the whole id set', () => {
