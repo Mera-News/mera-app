@@ -1,5 +1,7 @@
 // systemRequirements.ts checks Device capabilities and storage.
 
+import { Platform } from 'react-native';
+import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 // jest.mock() is hoisted before variable declarations, so the factory must NOT
 // directly reference variables defined below (they would be in the TDZ).
 // We use a lazy wrapper so getFSInfo is looked up at call time, not factory time.
@@ -23,19 +25,18 @@ jest.mock('expo-device', () => ({
   get platformApiLevel() { return mockDevice.platformApiLevel; },
 }));
 
-// systemRequirements.ts imports Platform from 'react-native', not the deep path.
-// We must mock 'react-native' (or its actual resolution) so the source gets the mock.
-// The factory is self-contained: uses a module-scope var so Jest hoisting works.
+// systemRequirements.ts reads Platform.OS from react-native. The real Platform stays (the integration setup's
+// database needs the rest of react-native); only its OS is driven per test.
 const mockPlatformOS = { OS: 'ios' as string };
+const realOS = Object.getOwnPropertyDescriptor(Platform, 'OS')!;
 
-jest.mock('react-native', () => ({
-  Platform: {
-    get OS() { return mockPlatformOS.OS; },
-    select: (obj: any) => obj[mockPlatformOS.OS],
-  },
-}));
+beforeAll(() => {
+  Object.defineProperty(Platform, 'OS', { configurable: true, get: () => mockPlatformOS.OS });
+});
 
-import { checkRequirements } from '../systemRequirements';
+afterAll(() => {
+  Object.defineProperty(Platform, 'OS', realOS);
+});
 
 const GB = 1024 * 1024 * 1024;
 const ENOUGH_STORAGE = 4 * GB; // > 2.5 GB threshold

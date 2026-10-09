@@ -2,7 +2,7 @@
 // jest.mock() is hoisted above variable declarations, so the factory must be
 // self-contained. We grab the mock fn refs from the module after import.
 
-jest.mock('../modelManager', () => ({
+jest.mock('@/lib/mera-protocol-toolkit/core/modelManager', () => ({
   __esModule: true,
   _getContext: jest.fn(),
   _updateInferenceSpeed: jest.fn(),
@@ -20,10 +20,10 @@ jest.mock('../modelManager', () => ({
   _setActiveAdapterId: jest.fn(),
 }));
 
-import { infer, inferStream } from '../inference';
-import type { InferParams } from '../../types';
+import { infer, inferStream } from '@/lib/mera-protocol-toolkit/core/inference';
+import type { InferParams } from '@/lib/mera-protocol-toolkit/types';
 import type { LlamaContext } from 'llama.rn';
-import * as modelManager from '../modelManager';
+import * as modelManager from '@/lib/mera-protocol-toolkit/core/modelManager';
 
 // Grab typed mock refs from the hoisted mock — safe to do after imports.
 const mockGetContext = modelManager._getContext as jest.MockedFunction<typeof modelManager._getContext>;
