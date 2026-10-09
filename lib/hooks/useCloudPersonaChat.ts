@@ -8,6 +8,7 @@ import { useShallow } from 'zustand/react/shallow';
 import logger from '../logger';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
+import { REQUIRED_TOOL_REASK } from '../llm/text-tool-protocol';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import {
@@ -195,7 +196,9 @@ function finalizeToolCalls(
       // no-op in the logs.
       logger.warn(`${TAG} Failed to parse tool call arguments`, {
         name: acc.name,
-        args: acc.arguments,
+        // Lengths only: the arguments are the user's facts, and a warning is a
+        // Sentry breadcrumb in production.
+        argsLength: acc.arguments.length,
       });
       logger.captureMessage(`${TAG} malformed tool arguments`, {
         level: 'warning',
@@ -519,6 +522,8 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         // this flag its own prose would overwrite — mid-turn — the reply the
         // user is already reading (accContent restarts at '' on every call).
         suppressText = false,
+        // Appended AFTER the context injection: the forced pass's one re-ask.
+        reask?: string,
       ): Promise<{ accContent: string; toolCalls: ReturnType<typeof finalizeToolCalls> }> => {
         let accContent = '';
         const toolCallAccumulators = new Map<number, ToolCallAccumulator>();
@@ -549,6 +554,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
             ];
           }
         }
+        if (reask) windowed = [...windowed, { role: 'user', content: reask }];
         logger.debug(`${TAG} wire window`, { total: allWire.length, sent: windowed.length });
 
         const stream = cloudChatStream({
@@ -888,7 +894,12 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
             wireMessages: useCloudChatStore.getState().wireMessages.length,
             tools: tools.map((t) => t.function.name),
           });
-          const forced = await streamOne(visibleId, true, 'required', tools, true);
+          let forced = await streamOne(visibleId, true, 'required', tools, true);
+          // `required` has no text equivalent (tools travel inside the
+          // envelope): no call back means ONE re-ask, never more.
+          if (forced.toolCalls.length === 0) {
+            forced = await streamOne(visibleId, true, 'required', tools, true, REQUIRED_TOOL_REASK);
+          }
           if (forced.toolCalls.length > 0) {
             await executeToolsAndPushResults(visibleId, forced.toolCalls);
           }

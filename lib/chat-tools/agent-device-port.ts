@@ -21,6 +21,7 @@ import { isCombinedOriginFact, isLocationKey, isRelationalStatement, loadSkill, 
 import { findSimilarFacts } from '../database/services/fact-similarity-service';
 import { PLACE_CANDIDATE_LIMIT, lookupPlace, searchPlaces } from '../place-service';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
+import { REQUIRED_TOOL_REASK } from '../llm/text-tool-protocol';
 import type { PhaseSignal } from '@/lib/services/chat-phase';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
 import { handleDeleteUserFacts, handleSaveExtractedFacts } from './tool-handlers';
@@ -408,12 +409,6 @@ export async function callModelViaCloud(
   req: AgentModelRequest,
   onPhase?: (signal: PhaseSignal) => void,
 ): Promise<AgentModelResult> {
-  const started = Date.now();
-  const modelId = resolveTierToModelId(req.model);
-  let ttVisibleMs: number | null = null;
-  let content = '';
-  const byIndex = new Map<number, { name: string; args: string }>();
-
   const messages: WireMessage[] = [
     { role: 'system', content: req.systemPrompt },
     ...req.messages.map((m) =>
@@ -422,6 +417,25 @@ export async function callModelViaCloud(
         : ({ role: m.role, content: m.content } as WireMessage),
     ),
   ];
+  const first = await callModelOnce(req, messages, onPhase);
+  // `required` has no text equivalent (tools travel inside the envelope): a
+  // forced leg that came back with no call is re-asked ONCE, here, by the
+  // caller, never inside the stream.
+  if (req.toolChoice !== 'required' || first.toolCalls.length > 0) return first;
+  const second = await callModelOnce(req, [...messages, { role: 'user', content: REQUIRED_TOOL_REASK }], onPhase);
+  return { ...second, latencyMs: first.latencyMs + second.latencyMs };
+}
+
+async function callModelOnce(
+  req: AgentModelRequest,
+  messages: WireMessage[],
+  onPhase?: (signal: PhaseSignal) => void,
+): Promise<AgentModelResult> {
+  const started = Date.now();
+  const modelId = resolveTierToModelId(req.model);
+  let ttVisibleMs: number | null = null;
+  let content = '';
+  const byIndex = new Map<number, { name: string; args: string }>();
 
   const stream = cloudChatStream({
     messages,

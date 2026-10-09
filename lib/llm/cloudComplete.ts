@@ -19,6 +19,13 @@ import { CHAT_REASONING_HEADROOM_TOKENS, SMALL_MODEL } from './constants';
 import { stripLeakedReasoning } from './reasoning-leak';
 import { createThinkStripper } from './think-strip';
 import {
+  APP_TOOL_FORMAT,
+  assertNoCleartextToolFields,
+  createToolCallStreamParser,
+  toTextToolMessages,
+  type TextToolDefinition,
+} from './text-tool-protocol';
+import {
   fallbackFor,
   reportModelFailure,
   reportModelSlow,
@@ -1260,6 +1267,7 @@ export async function* cloudChatStream(
   // `securing` again and walk the reader back to "encrypting" at the moment
   // they have been waiting longest.
   let buildAttempts = 0;
+  const textTools = (request.tools ?? []) as TextToolDefinition[];
 
   const buildChatRequest = async (sendModel: string) => {
     buildAttempts += 1;
@@ -1273,14 +1281,19 @@ export async function* cloudChatStream(
       // message of a session feels different from the tenth.
       phase(getCachedAttestation(sendModel) ? 'securing' : 'attesting');
     }
-    const messages = request.messages.map((m) => ({ ...m }));
+    // NO TOOL FIELD LEAVES THE DEVICE. The schema joins the system prompt,
+    // replayed calls and results become text, and all of it is encrypted with
+    // the rest of the content (text-tool-protocol). Rebuilt per attempt, so a
+    // fallback retry never re-encrypts already-encrypted content.
+    const messages = toTextToolMessages(
+      request.messages,
+      request.tools as TextToolDefinition[] | undefined,
+      request.toolChoice,
+      APP_TOOL_FORMAT,
+    );
     // INTERACTIVE all the way down: a cold attestation cache makes this a real
     // gateway request on the critical path of a user's turn.
-    const attemptCtx = await encryptMessages(
-      messages as { role: string; content: string;[k: string]: unknown }[],
-      sendModel,
-      'interactive',
-    );
+    const attemptCtx = await encryptMessages(messages, sendModel, 'interactive');
 
     // Dev-only timing: JWT fetch on the first-chat path (cache hit ≈ 0ms, miss
     // = real auth round-trip). getAuthHeaders' only awaited work is getJwtToken.
@@ -1296,10 +1309,6 @@ export async function* cloudChatStream(
       model: sendModel,
       chat_template_kwargs: { enable_thinking: request.enableThinking ?? true },
     };
-    if (request.tools && request.tools.length > 0) {
-      body.tools = request.tools;
-      body.tool_choice = request.toolChoice ?? 'auto';
-    }
     if (request.temperature !== undefined) body.temperature = request.temperature;
     // Thinking is ON above, and on a reasoning model the trace is billed and
     // capped inside the same max_tokens as the visible answer. The caller's
@@ -1313,6 +1322,8 @@ export async function* cloudChatStream(
     if (request.n !== undefined) body.n = request.n;
     if (request.presencePenalty !== undefined) body.presence_penalty = request.presencePenalty;
     if (request.frequencyPenalty !== undefined) body.frequency_penalty = request.frequencyPenalty;
+    // FAIL CLOSED: a tool field in clear is a privacy breach, never a request.
+    assertNoCleartextToolFields(body);
 
     return {
       init: {
@@ -1416,7 +1427,7 @@ export async function* cloudChatStream(
         maxTimeoutAttempts: 1,
       });
       if (freshResponse.ok) {
-        yield* consumeChatResponse(freshResponse, fresh.ctx.privateKey, fresh.ctx.algo);
+        yield* consumeChatResponse(freshResponse, fresh.ctx.privateKey, fresh.ctx.algo, textTools);
         return;
       }
       takeStreamHandle(freshResponse)?.release();
@@ -1466,7 +1477,7 @@ export async function* cloudChatStream(
 
   let textYielded = false;
   try {
-    for await (const event of consumeChatResponse(response, ctx.privateKey, ctx.algo)) {
+    for await (const event of consumeChatResponse(response, ctx.privateKey, ctx.algo, textTools)) {
       if (event.type === 'text-delta') textYielded = true;
       yield event;
     }
@@ -1525,7 +1536,7 @@ export async function* cloudChatStream(
       responseBody: errorText,
     });
   }
-  yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo);
+  yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo, textTools);
 }
 
 /** Turn an OK chat response into events, streaming when the gateway relayed
@@ -1534,22 +1545,64 @@ export async function* cloudChatStream(
  *  Think tags are stripped HERE, once, for every cloud chat consumer (the
  *  persona loop, single-shot and article chat): a reply rendered
  *  "... Bhopal. </think>". A tag split across deltas is held until it resolves,
- *  and an all-reasoning delta yields nothing rather than an empty delta. */
+ *  and an all-reasoning delta yields nothing rather than an empty delta.
+ *
+ *  Tool calls are parsed HERE too, after the think stripper (a call inside a
+ *  think block must never run): they arrive as text inside the encrypted
+ *  content (text-tool-protocol) and leave as the same `tool-call-delta` events
+ *  a native call used to produce, one whole call per event. */
+const NATIVE_CALL_INDEX_OFFSET = 1000;
+
 async function* consumeChatResponse(
   response: Response,
   privateKey: Uint8Array,
   algo: SigningAlgo,
+  tools: TextToolDefinition[],
 ): AsyncGenerator<SseEvent> {
   const think = createThinkStripper();
+  const calls = createToolCallStreamParser(tools, APP_TOOL_FORMAT);
+  let callIndex = 0;
+  let cleartextReported = false;
+  const stamp = Date.now().toString(36);
+  function* emit(r: { text: string; calls: { name: string; argumentsRaw: string }[] }): Generator<SseEvent> {
+    if (r.text) yield { type: 'text-delta', delta: r.text };
+    for (const c of r.calls) {
+      const index = callIndex++;
+      yield { type: 'tool-call-delta', index, id: `call_${stamp}_${index}`, name: c.name, argumentsDelta: c.argumentsRaw };
+    }
+  }
   for await (const event of consumeChatResponseRaw(response, privateKey, algo)) {
     if (event.type === 'text-delta') {
       const delta = think.push(event.delta);
-      if (delta) yield { ...event, delta };
+      if (delta) yield* emit(calls.push(delta));
+      continue;
+    }
+    if (event.type === 'tool-call-delta') {
+      // A provider that lifted a call out of the content sent it in CLEAR. It
+      // is already exposed, so it is reported (never its content) and still
+      // used: dropping it would lose the user's turn and protect nothing.
+      if (!cleartextReported) {
+        cleartextReported = true;
+        logger.captureMessage(`${TAG} provider returned a cleartext tool call`, {
+          level: 'error',
+          fingerprint: ['e2ee-cleartext-tool-call'],
+          tags: { component: 'cloudComplete' },
+        });
+      }
+      // Fragments share their provider index; offset so they cannot merge
+      // into a parsed call's slot.
+      yield { ...event, index: NATIVE_CALL_INDEX_OFFSET + event.index };
       continue;
     }
     if (event.type === 'finish') {
       const tail = think.flush();
-      if (tail) yield { type: 'text-delta', delta: tail };
+      if (tail) yield* emit(calls.push(tail));
+      const last = calls.flush();
+      yield* emit(last);
+      if (callIndex > 0 && event.reason === 'stop') {
+        yield { type: 'finish', reason: 'tool_calls' };
+        continue;
+      }
     }
     yield event;
   }
@@ -1631,8 +1684,9 @@ async function* consumeSseChat(
         yield { type: 'text-delta', delta: decryptContent(delta.content, privateKey, algo) };
       }
 
-      // Tool-call arguments arrive as CLEARTEXT fragments (see the E2EE gap
-      // note below). Forwarded as they land; the consumer accumulates them.
+      // The app never sends a tools field, so a native `delta.tool_calls` here
+      // means the provider lifted a call out of the content, in CLEAR.
+      // consumeChatResponse reports it; forwarded so the turn still works.
       for (const tc of delta.tool_calls ?? []) {
         yield {
           type: 'tool-call-delta',
@@ -1683,23 +1737,12 @@ async function* consumeBufferedChat(
     yield { type: 'text-delta', delta: decrypted };
   }
 
-  // Tool calls are NOT encrypted — emit them as-is.
-  //
-  // E2EE GAP (documented, intentional): the NEAR-v2 envelope only covers
-  // `message.content` / `delta.content`, which is decrypted above. Tool-call
-  // function arguments are emitted by the gateway in cleartext because the
-  // gateway must read/route them. For the persona-update agent these arguments
-  // are model-generated structured data derived from the user's conversation
-  // (e.g. persona-fact updates), so any user-derived content placed in a
-  // tool-call argument is visible to the inference gateway operator and is NOT
-  // protected by E2EE. Encrypting tool-call args would require a matching
-  // gateway-side change and is only worth it if the gateway is treated as
-  // untrusted.
+  // Never expected: the app sends no tools field (see consumeSseChat).
   if (choice.message?.tool_calls) {
-    for (const tc of choice.message.tool_calls) {
+    for (const [index, tc] of choice.message.tool_calls.entries()) {
       yield {
         type: 'tool-call-delta',
-        index: 0,
+        index,
         id: tc.id,
         name: tc.function.name,
         argumentsDelta: tc.function.arguments,

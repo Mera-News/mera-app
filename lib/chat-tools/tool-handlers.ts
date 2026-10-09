@@ -149,7 +149,6 @@ export async function handleSaveExtractedFacts(
     if (r.reason === 'too-long') {
       logger.warn('Rejected fact exceeding max length', {
         length: r.statement.length,
-        preview: r.statement.substring(0, 80),
       });
     } else if (r.reason === 'meta') {
       logger.debug('Rejected meta-conversational fact', { statement: r.statement });
@@ -382,7 +381,8 @@ export async function handleDeleteUserFacts(
       : byAttr.get(trimmed.toLowerCase()) ?? byText.get(trimmed.toLowerCase()) ?? [];
 
     if (matches.length === 0) {
-      logger.warn('[deleteUserFacts] Fact not found', { input: trimmed });
+      // Lengths only: a warning is a Sentry breadcrumb in production.
+      logger.warn('[deleteUserFacts] Fact not found', { inputLength: trimmed.length });
       continue;
     }
     if (matches.length > 1) {
@@ -394,7 +394,7 @@ export async function handleDeleteUserFacts(
         candidates: matches.map((f) => ({ id: f.id, statement: f.statement })),
       });
       logger.warn('[deleteUserFacts] ambiguous handle, refusing', {
-        input: trimmed,
+        inputLength: trimmed.length,
         count: matches.length,
       });
       continue;

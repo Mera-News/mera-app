@@ -1638,7 +1638,7 @@ describe('cloudChatStream', () => {
     expect(events).toEqual([{ type: 'finish', reason: 'stop' }]);
   });
 
-  it('yields tool-call-delta events for tool_calls', async () => {
+  it('forwards a buffered CLEARTEXT provider tool call (never expected) on its own offset slot', async () => {
     mockFetch.mockResolvedValueOnce(
       makeResponse(200, {
         choices: [
@@ -1664,14 +1664,14 @@ describe('cloudChatStream', () => {
     expect(tcEvents).toHaveLength(2);
     expect(tcEvents[0]).toEqual({
       type: 'tool-call-delta',
-      index: 0,
+      index: 1000,
       id: 'tc-1',
       name: 'update_persona',
       argumentsDelta: '{"key":"val"}',
     });
     expect(tcEvents[1]).toEqual({
       type: 'tool-call-delta',
-      index: 0,
+      index: 1001,
       id: 'tc-2',
       name: 'another_tool',
       argumentsDelta: '{"x":1}',
@@ -2135,55 +2135,56 @@ describe('cloudChatStream', () => {
     });
   });
 
-  it('sends tools and tool_choice when tools are provided', async () => {
+  it('NEVER sends a tool field: schema, choice and replayed calls ride inside the encrypted content', async () => {
     mockFetch.mockResolvedValueOnce(
       makeResponse(200, {
         choices: [{ message: { content: 'blob', tool_calls: null }, finish_reason: 'stop' }],
       }),
     );
-
+    const SECRET = 'SENTINEL_FACT_7f3a';
     const tools = [
       {
         type: 'function' as const,
         function: {
-          name: 'my_tool',
+          name: 'my_tool_zq',
           description: 'does something',
-          parameters: { type: 'object' as const, properties: {} },
+          parameters: { type: 'object' as const, properties: { statement: { type: 'string' } } },
         },
       },
     ];
 
     await collectStream(
-      cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], tools, toolChoice: 'required' }),
+      cloudChatStream({
+        messages: [
+          { role: 'system', content: 'S' },
+          { role: 'user', content: 'Q' },
+          {
+            role: 'assistant',
+            content: '',
+            tool_calls: [{ id: 'call_x', type: 'function', function: { name: 'my_tool_zq', arguments: JSON.stringify({ statement: SECRET }) } }],
+          },
+          { role: 'tool', tool_call_id: 'call_x', content: `{"saved":"${SECRET}"}` },
+        ],
+        tools,
+        toolChoice: 'required',
+      }),
     );
 
     const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     const body = JSON.parse(init.body as string);
-    expect(body.tools).toHaveLength(1);
-    expect(body.tool_choice).toBe('required');
-  });
-
-  it('uses auto tool_choice when toolChoice not specified but tools provided', async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeResponse(200, {
-        choices: [{ message: { content: 'blob', tool_calls: null }, finish_reason: 'stop' }],
-      }),
-    );
-
-    const tools = [
-      {
-        type: 'function' as const,
-        function: {
-          name: 'my_tool',
-          description: 'd',
-          parameters: { type: 'object' as const, properties: {} },
-        },
-      },
-    ];
-
-    await collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], tools }));
-    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(init.body as string).tool_choice).toBe('auto');
+    for (const key of ['tools', 'tool_choice', 'tool_calls', 'tool_call_id', 'functions', 'function_call']) {
+      expect(JSON.stringify(body)).not.toContain(`"${key}"`);
+    }
+    for (const m of body.messages as { role: string; content: string }[]) {
+      expect(Object.keys(m).sort()).toEqual(['content', 'role']);
+      // The mock envelope is `enc(...)`: everything the model needs is INSIDE it.
+      expect(m.content.startsWith('enc(')).toBe(true);
+    }
+    expect(body.messages.map((m: { role: string }) => m.role)).toEqual(['system', 'user', 'assistant', 'user']);
+    expect(body.messages[0].content).toContain('<name>my_tool_zq</name>');
+    expect(body.messages[0].content).toContain('must contain at least one <tool_call>');
+    expect(body.messages[2].content).toContain(SECRET);
+    expect(body.messages[3].content).toContain(SECRET);
   });
 
   it('does not include tools in body when tools array is empty', async () => {
@@ -2495,7 +2496,7 @@ describe('cloudChatStream', () => {
       expect(mockDecryptContent).toHaveBeenCalledTimes(2);
     });
 
-    it('forwards fragmented tool-call deltas in the shapes the consumer already accumulates', async () => {
+    it('a CLEARTEXT provider tool call (never expected) is reported once and still forwarded', async () => {
       mockFetch.mockResolvedValueOnce(
         makeSseResponse([
           sseChunk({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'tc-1', function: { name: 'proposeTrack', arguments: '' } }] }, finish_reason: null }] }),
@@ -2512,14 +2513,47 @@ describe('cloudChatStream', () => {
       const toolEvents = events.filter((e) => e.type === 'tool-call-delta');
 
       expect(toolEvents).toHaveLength(3);
+      // Offset slot, so fragments still accumulate together and can never
+      // merge into a call parsed out of the encrypted text.
       expect(toolEvents[0]).toMatchObject({
-        type: 'tool-call-delta', index: 0, id: 'tc-1', name: 'proposeTrack', argumentsDelta: '',
+        type: 'tool-call-delta', index: 1000, id: 'tc-1', name: 'proposeTrack', argumentsDelta: '',
       });
-      expect(toolEvents[1]).toMatchObject({ index: 0, argumentsDelta: '{"a":' });
-      expect(toolEvents[2]).toMatchObject({ index: 0, argumentsDelta: '1}' });
-      // Arguments are CLEARTEXT on the wire — never routed through decrypt.
-      expect(mockDecryptContent).not.toHaveBeenCalled();
+      expect(toolEvents[1]).toMatchObject({ index: 1000, argumentsDelta: '{"a":' });
+      expect(toolEvents[2]).toMatchObject({ index: 1000, argumentsDelta: '1}' });
+      const logger = jest.requireMock('@/lib/logger').default;
+      expect(logger.captureMessage).toHaveBeenCalledTimes(1);
+      expect(logger.captureMessage.mock.calls[0][1]).toMatchObject({ fingerprint: ['e2ee-cleartext-tool-call'] });
+      expect(JSON.stringify(logger.captureMessage.mock.calls)).not.toContain('{"a":');
       expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
+    });
+
+    it('parses a call out of the ENCRYPTED text, split across deltas, and keeps it out of the visible text', async () => {
+      const reply =
+        'Noted.\n<tool_call>\n<function=saveExtractedFacts>\n<parameter=statement>\nLives in Porto\n</parameter>\n</function>\n</tool_call>';
+      const pieces = reply.match(/.{1,5}/gs) as string[];
+      mockDecryptContent.mockImplementation((s: string) => s);
+      mockFetch.mockResolvedValueOnce(
+        makeSseResponse([
+          ...pieces.map((p) => sseChunk({ choices: [{ delta: { content: p }, finish_reason: null }] })),
+          sseChunk({ choices: [{ delta: {}, finish_reason: 'stop' }] }),
+          SSE_DONE,
+        ]),
+      );
+      const events = await collectStream(
+        cloudChatStream({
+          messages: [{ role: 'user', content: 'Q' }],
+          tools: [{ type: 'function', function: { name: 'saveExtractedFacts', description: 'd', parameters: { type: 'object', properties: { statement: { type: 'string' } } } } }],
+        }),
+      );
+      const text = events.filter((e) => e.type === 'text-delta').map((e) => (e as { delta: string }).delta).join('');
+      expect(text).toBe('Noted.\n');
+      const calls = events.filter((e) => e.type === 'tool-call-delta');
+      expect(calls).toEqual([
+        expect.objectContaining({ index: 0, name: 'saveExtractedFacts', argumentsDelta: '{"statement":"Lives in Porto"}' }),
+      ]);
+      // The provider said `stop`: it never saw a call. The app reports tool_calls.
+      expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
+      expect(jest.requireMock('@/lib/logger').default.captureMessage).not.toHaveBeenCalled();
     });
 
     it('skips an unparseable SSE payload instead of failing the turn', async () => {

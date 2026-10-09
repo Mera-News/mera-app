@@ -31,6 +31,7 @@ jest.mock('../../logger', () => ({
   },
 }));
 
+import { REQUIRED_TOOL_REASK } from '../../llm/text-tool-protocol';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useCloudPersonaChat } from '../../hooks/useCloudPersonaChat';
 import { useCloudChatStore } from '../../stores/cloud-chat-store';
@@ -392,7 +393,7 @@ describe('useCloudPersonaChat', () => {
       });
 
       await waitFor(
-        () => expect(mockCloudChatStream).toHaveBeenCalledTimes(2),
+        () => expect(mockCloudChatStream).toHaveBeenCalledTimes(3),
         { timeout: 3000 },
       );
 
@@ -400,6 +401,14 @@ describe('useCloudPersonaChat', () => {
       const [secondArg] = mockCloudChatStream.mock.calls[1] as [{ toolChoice?: string }];
       expect(firstArg.toolChoice).toBe('auto');
       expect(secondArg.toolChoice).toBe('required');
+      // The forced pass got no call back, so it is re-asked ONCE, with the
+      // re-ask as the last user turn (tools travel inside the envelope now,
+      // so 'required' has no native enforcement).
+      const [thirdArg] = mockCloudChatStream.mock.calls[2] as [
+        { toolChoice?: string; messages: { role: string; content: string }[] },
+      ];
+      expect(thirdArg.toolChoice).toBe('required');
+      expect(thirdArg.messages[thirdArg.messages.length - 1]).toEqual({ role: 'user', content: REQUIRED_TOOL_REASK });
     });
   });
 
@@ -663,7 +672,7 @@ describe('useCloudPersonaChat', () => {
       });
 
       await waitFor(
-        () => expect(mockCloudChatStream).toHaveBeenCalledTimes(2),
+        () => expect(mockCloudChatStream).toHaveBeenCalledTimes(3),
         { timeout: 3000 },
       );
 
@@ -749,7 +758,7 @@ describe('useCloudPersonaChat', () => {
       });
 
       await waitFor(
-        () => expect(mockCloudChatStream).toHaveBeenCalledTimes(2),
+        () => expect(mockCloudChatStream).toHaveBeenCalledTimes(3),
         { timeout: 3000 },
       );
 
@@ -1532,14 +1541,15 @@ describe('useCloudPersonaChat — knowledge tools, hard cases', () => {
       result.current.sendMessage('I live in Porto — how do you handle my data?');
     });
 
-    await waitFor(() => expect(mockCloudChatStream).toHaveBeenCalledTimes(2), { timeout: 3000 });
+    await waitFor(() => expect(mockCloudChatStream).toHaveBeenCalledTimes(3), { timeout: 3000 });
     await new Promise((r) => setTimeout(r, 80));
 
     const choices = mockCloudChatStream.mock.calls.map(
       (c) => (c[0] as { toolChoice?: string }).toolChoice,
     );
-    // Exactly two passes: the first, then the FORCED one. No continuation.
-    expect(choices).toEqual(['auto', 'required']);
+    // The first, then the FORCED one and its single re-ask (the mock returns
+    // no call). No continuation.
+    expect(choices).toEqual(['auto', 'required', 'required']);
   });
 
   it('keeps the assistant(tool_calls)/tool pair adjacent at REALISTIC result size', async () => {
