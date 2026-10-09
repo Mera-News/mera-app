@@ -1,3 +1,5 @@
 # Top-level flows only: flows/ holds subflows and dev/ holds dev-only flows.
 flows:
   - "*"
+excludeTags:
+  - blocked

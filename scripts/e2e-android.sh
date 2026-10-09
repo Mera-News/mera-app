@@ -233,6 +233,11 @@ SOCK_RC=0
 node -e "$SOCK_JS" "$RUN/app-sockets.txt" "$PORT" || SOCK_RC=$?
 echo "proxy (diagnostic): $(grep -c '"status":403' "$RUN/proxy.jsonl" || true) foreign connections refused"
 
+# Flows tagged `blocked` are skipped by .maestro/config.yaml; name them on every run so the
+# exclusion can never go silent.
+BLOCKED="$(grep -l -E '^[[:space:]]*-[[:space:]]*blocked[[:space:]]*$' .maestro/*.yaml 2> /dev/null | grep -v config.yaml | xargs -n1 basename 2> /dev/null | tr '\n' ' ' || true)"
+[ -n "$BLOCKED" ] && echo "EXCLUDED (tag blocked, see each flow's header): $BLOCKED"
+
 # step 8 runs in the EXIT trap
 echo "maestro exit $MAESTRO_RC, app-socket exit $SOCK_RC, output in $RUN"
 [ "$MAESTRO_RC" -ne 0 ] && exit "$MAESTRO_RC"

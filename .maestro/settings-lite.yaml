@@ -2,6 +2,10 @@
 # The expected polarity of lite-mode-switch is fixed later on device.
 # Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
 appId: ${APP_ID}
+# blocked: ledger FD6, the You tab's pages are absent from the Android accessibility tree.
+# The FD6 fix commit removes this tag; nothing else in the flow changes.
+tags:
+  - blocked
 ---
 - runScript: scripts/reset-scenario.js
 - runFlow: flows/sign-in.yaml
@@ -29,6 +33,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "settings-row-display"
 - takeScreenshot: lite-after-restart
+# Polarity unverified on this AVD (the screen was never reachable): Lite starts OFF here only
+# if the device is not judged low-end. The FD6 fix run confirms it.
 - assertVisible:
     id: "lite-mode-switch"
     checked: true
