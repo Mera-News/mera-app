@@ -3,6 +3,7 @@
 # Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
 appId: ${APP_ID}
 ---
+- runScript: scripts/reset-scenario.js
 - runFlow: flows/sign-in.yaml
 - openLink: ${SCHEME}:///logged-in/app_container/settings
 - tapOn:

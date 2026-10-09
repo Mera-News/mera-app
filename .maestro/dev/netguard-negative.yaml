@@ -4,6 +4,7 @@
 # Run: scripts/e2e-android.sh --skip-build --handlers ./handlers --flows .maestro/dev/netguard-negative.yaml
 appId: ${APP_ID}
 ---
+- runScript: ../scripts/reset-scenario.js
 - runScript:
     file: ../scripts/set-scenario.js
     env:

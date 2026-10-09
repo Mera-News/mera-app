@@ -2,6 +2,7 @@
 # Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
 appId: ${APP_ID}
 ---
+- runScript: scripts/reset-scenario.js
 - runFlow: flows/sign-in.yaml
 - tapOn:
     id: "mera-button"
