@@ -68,7 +68,8 @@ appId: ${APP_ID}
     timeout: 60000
 - tapOn:
     id: "fact-choice-add-.*"
-- hideKeyboard
+# No hideKeyboard: on Android it presses BACK, which closed the app when no keyboard was up.
+# Next rides beside the composer, so it stays reachable with the keyboard open.
 - tapOn:
     id: "onboarding-next"
 # Step 2 is the one without the facts counter; Next stays on screen across the switch.
