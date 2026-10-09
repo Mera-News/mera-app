@@ -16,6 +16,7 @@ SCHEME=meraapp-e2e
 EMAIL=e2e-fixture@example.com
 OTP=424242
 SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+export ANDROID_HOME="$SDK"  # Gradle needs it; not in the user profile
 EMU="$SDK/emulator/emulator"
 ADB="$SDK/platform-tools/adb"
 RUN="e2e-output/$(date +%Y%m%d-%H%M%S)"
