@@ -161,6 +161,18 @@ describe('the place named exactly survives the candidate cap', () => {
     expect(sent).toEqual(['Amsterdam']);
   });
 
+  it('tolerates a row that comes back with no search keys: it simply is not an exact match', async () => {
+    // The schema makes `search_keys` non-null, so this is a response the contract forbids; the port must not throw on it.
+    const noKeys = (r: Row) => ({ ...r, search_keys: null }) as unknown as Row;
+    const sent = servePlaces({ porto: [noKeys(row('Porto Alegre', 'BR', [], 'RS')), noKeys(row('Porto Velho', 'BR', [], 'RO'))] });
+
+    const out = await lookupPlaceWithFallback({ query: 'Porto' });
+
+    expect(localities(out)).toEqual(['Porto Alegre', 'Porto Velho']);
+    // The lookup, then the search for exact names; no row qualified, so no country-restricted lookup follows.
+    expect(sent).toEqual(['Porto', 'Porto']);
+  });
+
   it('asks nothing extra when the caller already gave a country', async () => {
     const sent = servePlaces(portoRows());
 

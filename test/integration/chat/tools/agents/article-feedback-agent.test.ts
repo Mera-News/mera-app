@@ -24,6 +24,7 @@ import {
   toolNames,
   trackedStoryCount,
 } from './agents-kit';
+import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
 import type { StagedProposal } from '@/lib/llm/types';
 
 jest.setTimeout(30_000);
@@ -155,6 +156,23 @@ describe('buildContext', () => {
     const ctx = await makeAgent({ suggestionId }).buildContext();
 
     expect(ctx).toContain('scoring has not finished');
+  });
+
+  it('renders the scorer note, the category and the entities the sync stored', async () => {
+    const { suggestionId } = await seedSuggestion({
+      articleId: 'art-1',
+      title_en: 'EU passes AI Act',
+      relevance: 0.62,
+      reason: 'Covers the EU AI Act you follow.',
+      category: 'Politics',
+      entities: ['European Union', 'AI Act'],
+    });
+
+    const ctx = await makeAgent({ suggestionId }).buildContext();
+
+    expect(ctx).toContain('Relevance score: 6.2/10. Reason given: "Covers the EU AI Act you follow."');
+    expect(ctx).toContain('Category: Politics');
+    expect(ctx).toContain('Entities: European Union, AI Act');
   });
 
   it('injects the PENDING PROPOSAL block when a proposal is staged', async () => {
@@ -349,6 +367,60 @@ describe('executeTool: proposeChanges', () => {
       actions: [{ type: 'add_fact', statement: 'Likes AI' }],
     });
     expect(result.result.error).toContain('explanation');
+  });
+
+  // D9: a structured filter matches by exact equality against one article field, so only a value
+  // the article actually carries may stay structured; anything else falls back to a keyword filter.
+  describe('add_suppression against the article the chat is about', () => {
+    const suppress = (agent: ArticleFeedbackAgent, suppressionKind: string, suppressionValue: string) =>
+      agent.executeTool('proposeChanges', {
+        explanation: 'You wanted less of this.',
+        expected_effects: 'Fewer like it.',
+        actions: [{ type: 'add_suppression', suppressionPattern: suppressionValue, suppressionKind, suppressionValue }],
+      });
+
+    it('keeps a structured filter for a value the article carries, matched without case or padding', async () => {
+      const { suggestionId } = await seedSuggestion({
+        articleId: 'art-1',
+        publication_name: 'Euronews',
+        category: 'Celebrity',
+        entities: ['Taylor Swift'],
+      });
+      const agent = makeAgent({ suggestionId });
+
+      const byCategory = await suppress(agent, 'category', ' celebrity ');
+      const byEntity = await suppress(agent, 'entity', 'TAYLOR SWIFT');
+      const byPublication = await suppress(agent, 'publication', 'euronews');
+
+      expect(byCategory.sideEffects?.proposal?.actions[0]).toMatchObject({ suppressionKind: 'category', suppressionValue: 'celebrity' });
+      expect(byEntity.sideEffects?.proposal?.actions[0]).toMatchObject({ suppressionKind: 'entity', suppressionValue: 'TAYLOR SWIFT' });
+      expect(byPublication.sideEffects?.proposal?.actions[0]).toMatchObject({ suppressionKind: 'publication', suppressionValue: 'euronews' });
+    });
+
+    it('downgrades an invented value to a keyword filter, and so does a kind the article has nothing for', async () => {
+      // No category stored on this article, so there is nothing a category filter could match.
+      const { suggestionId } = await seedSuggestion({ articleId: 'art-1', entities: ['Taylor Swift'] });
+      const agent = makeAgent({ suggestionId });
+
+      const invented = await suppress(agent, 'entity', 'celebrity stuff');
+      const noCategory = await suppress(agent, 'category', 'Celebrity');
+
+      for (const out of [invented, noCategory]) {
+        const action = out.sideEffects?.proposal?.actions[0];
+        expect(action).toMatchObject({ type: 'add_suppression' });
+        expect(action).not.toHaveProperty('suppressionKind');
+        expect(action).not.toHaveProperty('suppressionValue');
+      }
+    });
+
+    it('matches a topic filter against the topics the article matched', async () => {
+      const { topics } = await seedFactWithTopics('Follows AI policy', ['EU AI regulation']);
+      const { suggestionId } = await seedSuggestion({ articleId: 'art-1', matchedTopics: topics });
+
+      const out = await suppress(makeAgent({ suggestionId }), 'topic', 'eu ai regulation');
+
+      expect(out.sideEffects?.proposal?.actions[0]).toMatchObject({ suppressionKind: 'topic', suppressionValue: 'eu ai regulation' });
+    });
   });
 
   it('validates and stages a submit_feature_request action (no fact_id needed)', async () => {
@@ -565,5 +637,36 @@ describe('executeTool: webSearch', () => {
     expect(result.result).toMatchObject({ searched: false });
     expect(result.result.error as string).toContain('switched off');
     expect(gatewayCalls('web-search')).toEqual([]);
+  });
+});
+
+// The agent always hands the core an entities array, but the core's own contract makes it optional
+// (the eval harness builds thin contexts). These call the core's exports directly, nothing mocked.
+describe('the feedback core given a context with no entities', () => {
+  const thin = {
+    suggestion: { title_en: asUntrusted('EU passes AI Act'), isScored: false, relevance: 0 },
+    matchedTopicTexts: [],
+    linkedFacts: [],
+  };
+
+  it('renders the article without an Entities line', () => {
+    const out = feedbackCore.buildFeedbackContext({ nowMs: Date.UTC(2026, 0, 1), facts: [], context: thin, proposal: null });
+
+    expect(out).toContain('Title: EU passes AI Act');
+    expect(out).not.toContain('Entities:');
+  });
+
+  it('downgrades an entity filter to a keyword filter: the article exposes no entity to match', () => {
+    const out = feedbackCore.decideProposeChanges(
+      {
+        explanation: 'x',
+        expected_effects: 'y',
+        actions: [{ type: 'add_suppression', suppressionPattern: 'Taylor Swift', suppressionKind: 'entity', suppressionValue: 'Taylor Swift' }],
+      },
+      new Set(),
+      { article: thin },
+    );
+
+    expect(out.sideEffects?.proposal?.actions[0]).toEqual({ type: 'add_suppression', suppressionPattern: 'Taylor Swift' });
   });
 });

@@ -84,9 +84,14 @@ export async function seedSuggestion(opts: {
   title_en?: string;
   description_en?: string;
   publication_name?: string;
+  /** The article's category and named entities, as the sync stores them (the feedback context reads both). */
+  category?: string;
+  entities?: string[];
   matchedTopics?: { topicId: string; text: string }[];
   /** Give the row a final score the way the scorer does (terminal `complete`, no note owed). Omit it for an unscored row. */
   relevance?: number;
+  /** With `relevance`: the note the scorer wrote. Omitted, the row is scored with no note owed. */
+  reason?: string;
 }): Promise<SeededSuggestion> {
   const row = {
     _id: opts.articleId,
@@ -98,6 +103,8 @@ export async function seedSuggestion(opts: {
     language_code: 'en',
     article_url: 'https://example.com/story',
     pubDate: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    category: opts.category,
+    entities: opts.entities,
     clusters: [],
   } as unknown as ArticleWithClusters;
   await persistAndLinkV2Suggestions([row], new Map(), {
@@ -106,7 +113,11 @@ export async function seedSuggestion(opts: {
   const stored = (await loadSuggestions()).find((s) => s.articleId === opts.articleId);
   if (!stored) throw new Error(`seedSuggestion: ${opts.articleId} not stored`);
   if (opts.relevance !== undefined) {
-    await saveScoringResult(stored._id, { relevance: opts.relevance, reason: '', reasonSkipped: true });
+    await saveScoringResult(stored._id, {
+      relevance: opts.relevance,
+      reason: opts.reason ?? '',
+      reasonSkipped: opts.reason === undefined,
+    });
   }
   return { suggestionId: stored._id, articleId: opts.articleId };
 }
