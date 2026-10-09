@@ -1,8 +1,6 @@
-// expo-translate-text is a native module — mock it before imports.
-const mockOnTranslateTask = jest.fn();
-jest.mock('expo-translate-text', () => ({
-    onTranslateTask: (...a: any[]) => mockOnTranslateTask(...a),
-}));
+// expo-translate-text is mocked by the integration setup (identity translator). The jest.fn is
+// reset before every test, so each test scripts its own native behaviour as the old file did.
+const mockOnTranslateTask: jest.Mock = jest.requireMock('expo-translate-text').onTranslateTask;
 
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
@@ -16,16 +14,9 @@ jest.mock('@/lib/logger', () => ({
     },
 }));
 
-// Platform must be mocked before translation-service.ts loads because the module
-// evaluates ACTIVE_TRANSLATION_SOURCE_CODES at import time using Platform.OS.
-// The global jest.setup.js mock uses 'react-native/Libraries/Utilities/Platform'
-// but expo/RN may resolve this differently — override here with full __mocks__ key.
-jest.mock('react-native', () => ({
-    Platform: {
-        OS: 'ios',
-        select: jest.fn((obj: Record<string, unknown>) => obj.ios),
-    },
-}));
+beforeEach(() => {
+    mockOnTranslateTask.mockReset();
+});
 
 import {
     buildGoogleTranslateUrl,
@@ -52,12 +43,12 @@ import {
     TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS,
     VERIFIED_TRANSLATION_FAILURE_THRESHOLD,
     __resetTranslationStateForTests,
-} from '../translation-service';
+} from '@/lib/translation-service';
 import logger from '@/lib/logger';
 import {
     bumpTranslationEpoch,
     getTranslationQueueStats,
-} from '../translation-queue';
+} from '@/lib/translation-queue';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // getLanguageName
@@ -254,7 +245,7 @@ describe('resolveUiLocale', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('getArticleTranslatableStatus (iOS)', () => {
-    // Platform.OS = 'ios' from jest.setup.js → IOS_TRANSLATION_SOURCE_CODES is active
+    // Platform.OS = 'ios' from the native setup → IOS_TRANSLATION_SOURCE_CODES is active
 
     it('returns "same-language" when originalLang is null', () => {
         expect(getArticleTranslatableStatus(null, 'en')).toBe('same-language');
@@ -379,7 +370,7 @@ describe('getArticleTranslationSupport (iOS)', () => {
     });
 
     it('reads the device version from expo-device when no override is given', () => {
-        // jest.setup.js pins Device.osVersion to '18.0'.
+        // the native setup pins Device.osVersion to '18.0'.
         expect(getArticleTranslationSupport('hi', 'en').status).toBe('translatable');
         expect(getArticleTranslationSupport('sv', 'en')).toMatchObject({
             reason: 'os-outdated',
@@ -394,7 +385,7 @@ describe('getArticleTranslationSupport (iOS)', () => {
         jest.resetModules();
         jest.doMock('expo-device', () => ({ isDevice: true, osVersion: undefined }));
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const reloaded = require('../translation-service');
+        const reloaded = require('@/lib/translation-service');
         expect(reloaded.getArticleTranslationSupport('sv', 'en').status).toBe('translatable');
         jest.dontMock('expo-device');
         jest.resetModules();
@@ -464,7 +455,6 @@ async function openGate(code: string): Promise<void> {
 
 describe('translateText', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
         jest.useFakeTimers();
         __resetTranslationStateForTests();
     });
@@ -712,7 +702,6 @@ describe('translateText', () => {
 
 describe('translation availability breaker', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
         jest.useFakeTimers();
         __resetTranslationStateForTests();
     });
@@ -943,7 +932,6 @@ describe('canTranslateIntoLanguage', () => {
 
 describe('translateTexts', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
         jest.useFakeTimers();
         __resetTranslationStateForTests();
     });
@@ -1010,7 +998,6 @@ describe('translateTexts', () => {
 
 describe('translateTextDetailed + the route epoch', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
         jest.useFakeTimers();
         __resetTranslationStateForTests();
     });

@@ -18,7 +18,7 @@ import {
     subscribeTranslationEpoch,
     TRANSLATION_CONCURRENCY,
     visibilityPriority,
-} from '../translation-queue';
+} from '@/lib/translation-queue';
 
 /** A task that resolves only when its returned `release` is called. */
 function deferredTask<T>(value: T) {

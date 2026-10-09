@@ -1,10 +1,11 @@
-// The main translation-service suite pins Platform.OS to 'ios' at import time
-// (the module evaluates its source-code set on load), so the Android call
-// boundary needs its own file.
-const mockOnTranslateTask = jest.fn();
-jest.mock('expo-translate-text', () => ({
-    onTranslateTask: (...a: any[]) => mockOnTranslateTask(...a),
-}));
+// The native setup pins Platform.OS to 'ios'; the Android call boundary needs its own file so the
+// OS flip cannot leak into the iOS suite.
+import { Platform } from 'react-native';
+
+// Platform.OS is typed readonly; the native setup's mock is a plain object.
+const platform = Platform as { OS: string };
+
+const mockOnTranslateTask: jest.Mock = jest.requireMock('expo-translate-text').onTranslateTask;
 
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
@@ -18,14 +19,7 @@ jest.mock('@/lib/logger', () => ({
     },
 }));
 
-jest.mock('react-native', () => ({
-    Platform: {
-        OS: 'android',
-        select: jest.fn((obj: Record<string, unknown>) => obj.android),
-    },
-}));
-
-import { clearTranslationFailures, translateText } from '../translation-service';
+import { clearTranslationFailures, translateText } from '@/lib/translation-service';
 
 // MERA-APP-6H: `TranslationError: Invalid target language: zh-Hans`.
 //
@@ -36,9 +30,14 @@ import { clearTranslationFailures, translateText } from '../translation-service'
 // answered "yes, I can translate into zh-Hans" and then rejected it.
 describe('Android native target language code', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        platform.OS = 'android';
         clearTranslationFailures();
+        mockOnTranslateTask.mockReset();
         mockOnTranslateTask.mockResolvedValue({ results: ['translated'] });
+    });
+
+    afterEach(() => {
+        platform.OS = 'ios';
     });
 
     it('sends bare zh to the native module for zh-Hans', async () => {
