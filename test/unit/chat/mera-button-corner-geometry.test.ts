@@ -1,0 +1,86 @@
+// The Mera button's corner geometry: pure functions, no store, no I/O. host-rules.ts is not here
+// because it reaches the logger through lib/navigation/tab-bar, which the unit project cannot load;
+// its cases live in test/integration/chat/state/.
+import {
+  clampToFrame,
+  cornerPoint,
+  nearestCorner,
+  tooltipSide,
+} from '@/components/custom/mera-button/corner';
+
+describe('nearestCorner', () => {
+  it.each([
+    [10, 10, 'tl'],
+    [380, 10, 'tr'],
+    [10, 790, 'bl'],
+    [380, 790, 'br'],
+    [194, 399, 'tl'],
+    // Exactly on a midline: right and bottom, today's spot.
+    [195, 400, 'br'],
+    [195, 10, 'tr'],
+    [10, 400, 'bl'],
+    // Thrown past an edge: clamps by quadrant.
+    [-500, -500, 'tl'],
+    [5000, -20, 'tr'],
+    [-3, 5000, 'bl'],
+    [9999, 9999, 'br'],
+  ] as const)('(%s, %s) -> %s on a 390 x 800 area', (x, y, corner) => {
+    expect(nearestCorner(x, y, 390, 800)).toBe(corner);
+  });
+});
+
+describe('cornerPoint', () => {
+  const frame = { width: 390, height: 800, top: 118, bottom: 98, inset: 14, size: 62 };
+  it.each([
+    ['tl', 14, 118],
+    ['tr', 314, 118],
+    ['bl', 14, 640],
+    ['br', 314, 640],
+  ] as const)('%s sits at (%s, %s)', (corner, x, y) => {
+    expect(cornerPoint(corner, frame)).toEqual({ x, y });
+  });
+});
+
+it('the tooltip faces the middle', () => {
+  expect(tooltipSide('tl')).toBe('right');
+  expect(tooltipSide('bl')).toBe('right');
+  expect(tooltipSide('tr')).toBe('left');
+  expect(tooltipSide('br')).toBe('left');
+});
+
+describe('clampToFrame', () => {
+  // 402 x 800 overlay; header ends at 118 (+12 gap), tab bar top + 13 = 96 from the bottom.
+  const f = { width: 402, height: 800, top: 130, bottom: 96, inset: 16, size: 62 };
+
+  it('leaves a point inside the box alone', () => {
+    expect(clampToFrame(100, 300, f)).toEqual({ x: 100, y: 300 });
+  });
+
+  it('never goes over the header or the tab bar', () => {
+    expect(clampToFrame(100, 20, f).y).toBe(130);
+    expect(clampToFrame(100, 790, f).y).toBe(800 - 96 - 62);
+  });
+
+  it('keeps the side insets', () => {
+    expect(clampToFrame(-50, 300, f).x).toBe(16);
+    expect(clampToFrame(999, 300, f).x).toBe(402 - 16 - 62);
+  });
+
+  it('keeps the bottom edge 13pt above an iOS tab bar, dragging or snapped', () => {
+    // iPhone 17 Pro: window 874, the tab's inset (bar + home indicator) 83.
+    const windowH = 874;
+    const barTop = windowH - 83;
+    const ios = { width: 402, height: windowH, top: 130, bottom: 83 + 13, inset: 16, size: 62 };
+    for (const dragY of [700, 760, 800, 874, 2000]) {
+      expect(clampToFrame(300, dragY, ios).y + ios.size).toBeLessThanOrEqual(barTop - 13);
+    }
+    expect(cornerPoint('br', ios).y + ios.size).toBe(barTop - 13);
+  });
+
+  it('spans exactly the four corner points', () => {
+    for (const c of ['tl', 'tr', 'bl', 'br'] as const) {
+      const p = cornerPoint(c, f);
+      expect(clampToFrame(p.x, p.y, f)).toEqual(p);
+    }
+  });
+});
