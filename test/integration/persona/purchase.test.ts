@@ -2,6 +2,7 @@
 // and the shared free-tier paywall chokepoint (`presentFreeTierPaywall`). Real stores, Apollo over MSW,
 // in-memory DB, real app-restart holds, real email-before-checkout gate, real toast queue. Mocked: the
 // RevenueCat paywall SDK (an edge), driven per test.
+import Purchases from 'react-native-purchases';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { act, configure, renderHook, waitFor } from '@testing-library/react-native';
 import { useManageSubscription } from '@/components/custom/config-mera/useManageSubscription';
@@ -17,6 +18,7 @@ import {
 } from '@/lib/subscription/email-capture';
 import { resetEntitlementSyncState } from '@/lib/subscription/entitlement-sync';
 import { readLastKnownTier } from '@/lib/subscription/last-known-tier';
+import { configureRevenueCat } from '@/lib/revenuecat';
 import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { PURCHASE_HOLD_AFTER_RETURN_MS, PURCHASE_HOLD_CEILING_MS } from '@/lib/subscriptions/subscribe-flow';
 import { toastManager } from '@/lib/toast-manager';
@@ -44,18 +46,32 @@ const presentPaywall = RevenueCatUI.presentPaywall as unknown as jest.Mock;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const router = require('expo-router').router as { replace: jest.Mock };
 
-const billing = (subscriptionTier: string) => ({
-    __typename: 'UserBillingInfo',
-    subscriptionTier,
-    dailyArticleLimit: 250,
-    articlesUsedToday: 0,
-    entitlementExpiresAt: null,
-    resetAt: null,
-    grantExpiresAt: null,
-});
+// A paid tier carries the store entitlement's expiry; the free Starter grant has none, only a grant window.
+const PAID_END = '2026-11-09T12:00:00.000Z';
+const GRANT_END = '2026-10-23T12:00:00.000Z';
+type BillingStep = string | { tier: string; over: Record<string, unknown> };
+/** The free Starter every account holds: a grant window, no store entitlement. */
+const freeStarter: BillingStep = { tier: 'starter', over: { entitlementExpiresAt: null, grantExpiresAt: GRANT_END } };
+/** Starter bought from the store: an entitlement expiry, no grant. */
+const boughtStarter: BillingStep = { tier: 'starter', over: { entitlementExpiresAt: PAID_END, grantExpiresAt: null } };
+
+const billing = (step: BillingStep) => {
+    const { tier, over } = typeof step === 'string' ? { tier: step, over: {} } : step;
+    const paid = tier === 'individual' || tier === 'professional';
+    return {
+        __typename: 'UserBillingInfo',
+        subscriptionTier: tier,
+        dailyArticleLimit: 250,
+        articlesUsedToday: 0,
+        entitlementExpiresAt: paid ? PAID_END : null,
+        resetAt: null,
+        grantExpiresAt: null,
+        ...over,
+    };
+};
 
 /** GetUserBilling answers one entry per call (the last repeats). The mount load is call 1. */
-function scriptBilling(steps: string[]): () => number {
+function scriptBilling(steps: BillingStep[]): () => number {
     let calls = 0;
     server.use(
         graphql.query('GetUserBilling', () =>
@@ -63,6 +79,25 @@ function scriptBilling(steps: string[]): () => number {
         ),
     );
     return () => calls;
+}
+
+const purchases = Purchases as unknown as { getCustomerInfo: jest.Mock };
+const ENTITLEMENT_ID: Record<string, string> = {
+    starter: 'mera-news-starter-plan',
+    individual: 'mera-news-individual-plan',
+    professional: 'mera-news-professional-plan',
+};
+/** What the RevenueCat SDK reports as active: the tier it names, or nothing. */
+function rcReports(tier: string | null) {
+    const active = tier ? { [ENTITLEMENT_ID[tier]]: { identifier: ENTITLEMENT_ID[tier], isActive: true, productIdentifier: `${tier}_monthly` } } : {};
+    purchases.getCustomerInfo.mockResolvedValue({ entitlements: { active } });
+}
+/** The next paywall buys `tier`: the store took the money, so the SDK now reports that entitlement. */
+function paywallBuys(tier: string) {
+    presentPaywall.mockImplementationOnce(async () => {
+        rcReports(tier);
+        return 'PURCHASED';
+    });
 }
 
 /** The account's session as the auth client reads it: this is what decides whether the email gate raises. */
@@ -126,6 +161,11 @@ async function mountSettled() {
     return hook;
 }
 
+type Status = 'idle' | 'confirming' | 'confirmed' | 'timed-out' | undefined;
+/** The PE6 purchase status, absent from the hook today. */
+const statusOf = (hook: Awaited<ReturnType<typeof mountSettled>>): Status =>
+    (hook.result.current as { purchaseStatus?: Status }).purchaseStatus;
+
 /** Runs `handleViewPlans` to completion on the fake clock. */
 async function viewPlans(hook: Awaited<ReturnType<typeof mountSettled>>) {
     await act(async () => {
@@ -169,6 +209,7 @@ describe('purchase', () => {
         resetToastQueue();
         setAppState('active');
         presentPaywall.mockResolvedValue('CANCELLED');
+        rcReports(null);
     });
 
     afterEach(async () => {
@@ -435,6 +476,46 @@ describe('purchase', () => {
             expect(hook.result.current.billing?.subscriptionTier).toBe('professional');
         });
 
+        // PE15 / PE17: the account holds the free Starter grant (a grant window, no store entitlement).
+        describe('from the free Starter grant', () => {
+            const startFree = async (steps: BillingStep[], buys: string) => {
+                scriptBilling(steps);
+                paywallBuys(buys);
+                return mountSettled();
+            };
+
+            test.failing('PE15: buying Starter from the free grant confirms', async () => {
+                const hook = await startFree([freeStarter, freeStarter, boughtStarter], 'starter');
+                await viewPlans(hook);
+                expect(hook.result.current.activationPending).toBe(false);
+                expect(hook.result.current.billing?.entitlementExpiresAt).toBe(PAID_END);
+                expect(statusOf(hook)).toBe('confirmed');
+            });
+
+            it('PE15 today: buying Starter from the free grant is never confirmed, so activationPending is set and no status is reported', async () => {
+                const hook = await startFree([freeStarter, freeStarter, boughtStarter], 'starter');
+                await viewPlans(hook);
+                expect(hook.result.current.activationPending).toBe(true);
+                expect(hook.result.current.billing?.entitlementExpiresAt).toBeNull();
+                expect(statusOf(hook)).toBeUndefined();
+            });
+
+            test.failing('PE17: the plan-active toast shows after an upgrade from free Starter', async () => {
+                const hook = await startFree([freeStarter, 'individual'], 'individual');
+                await viewPlans(hook);
+                expect(hook.result.current.billing?.subscriptionTier).toBe('individual');
+                expect(toastTitles()).toEqual(['Individual is active']);
+            });
+
+            it('PE17 today: an upgrade from free Starter is confirmed and commits, but shows no toast', async () => {
+                const hook = await startFree([freeStarter, 'individual'], 'individual');
+                await viewPlans(hook);
+                expect(hook.result.current.billing?.subscriptionTier).toBe('individual');
+                expect(useSubscriptionStore.getState().serverTier).toBe('individual');
+                expect(toastTitles()).toEqual([]);
+            });
+        });
+
         it('unconfirmed: "activating" shows, the old tier stays committed, and the late poll (20 x 5s) clears the notice', async () => {
             const reads = scriptBilling(['starter']);
             presentPaywall.mockResolvedValueOnce('PURCHASED');
@@ -565,14 +646,15 @@ describe('purchase', () => {
     // the user to contact support if they paid). Nothing navigates: not the purchase, not a late poll.
     // Each test.failing below pins one part of that; its "today" sibling pins what happens now. P3 flips them.
     describe('PE6 after a purchase', () => {
-        type Status = 'idle' | 'confirming' | 'confirmed' | 'timed-out' | undefined;
-        const statusOf = (hook: Awaited<ReturnType<typeof mountSettled>>): Status =>
-            (hook.result.current as { purchaseStatus?: Status }).purchaseStatus;
+        // The SDK reports entitlements only once configured; the planned confirm rule reads them.
+        beforeAll(() => configureRevenueCat());
+
+
 
         /** Mounts, buys, and runs the purchase to the end of its first poll. `steps` scripts GetUserBilling. */
         const purchase = async (steps: string[]) => {
             scriptBilling(steps);
-            presentPaywall.mockResolvedValueOnce('PURCHASED');
+            paywallBuys('individual');
             const hook = await mountSettled();
             await viewPlans(hook);
             return hook;
@@ -636,7 +718,7 @@ describe('purchase', () => {
             await seedFacts(['Follows Formula 1']);
             useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
             scriptBilling(['individual']);
-            presentPaywall.mockResolvedValueOnce('PURCHASED');
+            paywallBuys('individual');
 
             await advanceUntilDone(presentFreeTierPaywall('test'));
             await settle();
@@ -650,7 +732,7 @@ describe('purchase', () => {
             await seedFacts(['Follows Formula 1']);
             useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
             scriptBilling(['individual']);
-            presentPaywall.mockResolvedValueOnce('PURCHASED');
+            paywallBuys('individual');
 
             await advanceUntilDone(presentFreeTierPaywall('test'));
             await until(() => router.replace.mock.calls.length > 0);
@@ -661,7 +743,7 @@ describe('purchase', () => {
         /** Starts a purchase WITHOUT waiting for its poll, so the state during the poll can be read. */
         const startPurchase = async (steps: string[]) => {
             scriptBilling(steps);
-            presentPaywall.mockResolvedValueOnce('PURCHASED');
+            paywallBuys('individual');
             const hook = await mountSettled();
             let done: Promise<void> = Promise.resolve();
             act(() => {

@@ -95,14 +95,24 @@ function recordOps(): Sent[] {
 }
 const opsNamed = (sent: Sent[], op: string) => sent.filter((s) => s.op === op);
 
+/** A scripted billing row: a tier plus overrides (the free Starter grant and a bought one differ only in these). */
+type BillingStep = { tier: string | null; over: Record<string, unknown> };
+const GRANT_END = '2026-10-23T12:00:00.000Z';
+const BOUGHT_END = '2026-11-09T12:00:00.000Z';
+/** The free Starter every account holds: a grant window, no store entitlement. */
+const freeStarter: BillingStep = { tier: 'starter', over: { entitlementExpiresAt: null, grantExpiresAt: GRANT_END } };
+/** Starter bought from the store: an entitlement expiry, no grant. */
+const boughtStarter: BillingStep = { tier: 'starter', over: { entitlementExpiresAt: BOUGHT_END, grantExpiresAt: null } };
+
 /** GetUserBilling answers one entry per call; the last entry repeats. A string is a tier, 'error' a GraphQL error. */
-function scriptBilling(steps: (string | null | 'error')[]): () => number {
+function scriptBilling(steps: (string | null | 'error' | BillingStep)[]): () => number {
     let calls = 0;
     server.use(
         graphql.query('GetUserBilling', () => {
             const step = steps[Math.min(calls++, steps.length - 1)];
             if (step === 'error') return gqlErrorBody();
-            return gqlBody({ data: { userBilling: billing(step) } });
+            const row = step !== null && typeof step === 'object' ? billing(step.tier, step.over) : billing(step);
+            return gqlBody({ data: { userBilling: row } });
         }),
     );
     return () => calls;
@@ -204,11 +214,35 @@ describe('billing and entitlement', () => {
             expect(calls()).toBe(3);
         });
 
-        it('treats a missing tier and "none" as the same starting point', async () => {
-            const calls = scriptBilling(['none', 'starter']);
+        // PE14: the tier string is the only thing compared, so the free Starter grant every account holds reads as a
+        // purchase to anyone whose starting tier was missing or 'none'. Confirming needs a store entitlement.
+        test.failing('PE14: a missing starting tier does not confirm on the free Starter grant', async () => {
+            const calls = scriptBilling(['none', freeStarter]);
+            const result = await refreshUserBillingAfterPurchase(null, { attempts: 3, intervalMs: 10 });
+            expect(result).toMatchObject({ confirmed: false, billing: { subscriptionTier: 'starter' } });
+            expect(calls()).toBe(3);
+        });
+
+        it('PE14 today: a missing tier and "none" are the same starting point, and the free Starter grant confirms', async () => {
+            const calls = scriptBilling(['none', freeStarter]);
             const result = await refreshUserBillingAfterPurchase(null, { attempts: 3, intervalMs: 10 });
             expect(result).toMatchObject({ confirmed: true, billing: { subscriptionTier: 'starter' } });
             expect(calls()).toBe(2);
+        });
+
+        // PE15: the opposite miss. Starter bought on top of the free grant keeps the tier string, so nothing confirms.
+        test.failing('PE15: buying Starter from the free grant confirms', async () => {
+            const calls = scriptBilling([freeStarter, boughtStarter]);
+            const result = await refreshUserBillingAfterPurchase('starter', { attempts: 3, intervalMs: 10 });
+            expect(result).toMatchObject({ confirmed: true, billing: { subscriptionTier: 'starter', entitlementExpiresAt: BOUGHT_END } });
+            expect(calls()).toBe(2);
+        });
+
+        it('PE15 today: buying Starter from the free grant never confirms, the tier string is unchanged', async () => {
+            const calls = scriptBilling([freeStarter, boughtStarter]);
+            const result = await refreshUserBillingAfterPurchase('starter', { attempts: 3, intervalMs: 10 });
+            expect(result).toMatchObject({ confirmed: false, billing: { subscriptionTier: 'starter', entitlementExpiresAt: BOUGHT_END } });
+            expect(calls()).toBe(3);
         });
 
         it('a null server tier reads as "none" too: no change from "none", so unconfirmed', async () => {
