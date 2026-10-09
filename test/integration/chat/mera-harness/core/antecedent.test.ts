@@ -4,9 +4,9 @@
 // forced offer then made the model save one anyway, and it guessed Israel.
 // Driven through the real loop, two turns on ONE state, with a scripted model.
 
-import { createAgentState, runAgentTurn, type AgentPersona } from '../core';
-import { CANONICAL_LOCATION_KEY, ORIGIN_KEY } from '../combined-fact';
-import type { AgentDeps, AgentModelRequest, AgentModelResult } from '../types';
+import { createAgentState, runAgentTurn, type AgentPersona } from '@/lib/mera-harness/core/core';
+import { CANONICAL_LOCATION_KEY, ORIGIN_KEY } from '@/lib/mera-harness/core/combined-fact';
+import type { AgentDeps, AgentModelRequest, AgentModelResult } from '@/lib/mera-harness/core/types';
 
 function res(over: Partial<AgentModelResult> = {}): AgentModelResult {
   return {

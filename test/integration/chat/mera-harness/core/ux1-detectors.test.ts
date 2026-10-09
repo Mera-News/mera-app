@@ -1,6 +1,6 @@
-import { isPlainYes, narratesProcess } from '../prose';
-import { attributeKey, isLocationKey, mayReplaceKey, sameAttributeKey } from '../fact-subject';
-import { COMBINED_ORIGIN_KEY, isCombinedOriginFact, splitCombinedFact } from '../combined-fact';
+import { isPlainYes, narratesProcess } from '@/lib/mera-harness/core/prose';
+import { attributeKey, isLocationKey, mayReplaceKey, sameAttributeKey } from '@/lib/mera-harness/core/fact-subject';
+import { COMBINED_ORIGIN_KEY, isCombinedOriginFact, splitCombinedFact } from '@/lib/mera-harness/core/combined-fact';
 
 describe('narratesProcess (precision first)', () => {
   // Every positive is a reply that reached a user on device or on the corpus.
@@ -84,8 +84,8 @@ describe('declaresNothingToAdd', () => {
     "That’s already on file, and no new specifics were added. I’ll leave your profile as it is.",
     "That's already in your profile.",
     'Nothing new to add there.',
-  ])('fires on %p', (t) => expect(require('../prose').declaresNothingToAdd(t)).toBe(true));
+  ])('fires on %p', (t) => expect(require('@/lib/mera-harness/core/prose').declaresNothingToAdd(t)).toBe(true));
   it('stays quiet on an offer', () => {
-    expect(require('../prose').declaresNothingToAdd('Here it is to confirm.')).toBe(false);
+    expect(require('@/lib/mera-harness/core/prose').declaresNothingToAdd('Here it is to confirm.')).toBe(false);
   });
 });

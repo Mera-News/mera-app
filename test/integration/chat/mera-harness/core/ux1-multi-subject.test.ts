@@ -1,10 +1,10 @@
 // B1 (release group G3): several subjects in one turn, behind the
 // `multi-subject` arm. OFF by default; these pin both the arm and the control.
 
-import { createAgentState, runAgentTurn, type AgentPersona } from '../core';
-import { MULTI_SUBJECT_ARM_ID } from '../arms';
-import { buildRouterPrompt } from '../router-prompt';
-import type { AgentDeps, AgentModelResult, Place } from '../types';
+import { createAgentState, runAgentTurn, type AgentPersona } from '@/lib/mera-harness/core/core';
+import { MULTI_SUBJECT_ARM_ID } from '@/lib/mera-harness/core/arms';
+import { buildRouterPrompt } from '@/lib/mera-harness/core/router-prompt';
+import type { AgentDeps, AgentModelResult, Place } from '@/lib/mera-harness/core/types';
 
 const BERLIN: Place = { locality: 'Berlin', admin1: 'Berlin', countryCode: 'DE', countryName: 'Germany', bloc: 'EU' };
 const BERLIN_NH: Place = { ...BERLIN, admin1: 'New Hampshire', countryCode: 'US', countryName: 'United States', bloc: 'North America' };

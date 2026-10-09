@@ -1,4 +1,4 @@
-import { buildRouterPrompt } from '../router-prompt';
+import { buildRouterPrompt } from '@/lib/mera-harness/core/router-prompt';
 
 /**
  * THE DEFECT THIS FILE EXISTS FOR.

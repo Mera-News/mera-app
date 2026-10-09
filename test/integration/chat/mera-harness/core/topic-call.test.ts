@@ -5,8 +5,8 @@ import {
   parseTopics,
   parseTopicsDetailed,
   topicSkillForAttribute,
-} from '../topic-call';
-import type { AgentModelResult } from '../types';
+} from '@/lib/mera-harness/core/topic-call';
+import type { AgentModelResult } from '@/lib/mera-harness/core/types';
 
 function res(content: string): AgentModelResult {
   return {

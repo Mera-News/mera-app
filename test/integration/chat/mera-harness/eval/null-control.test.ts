@@ -3,8 +3,8 @@ import {
   agentArmIds,
   resetAgentArmsForTest,
   resolveAgentArm,
-} from '../../core/arms';
-import { NULL_CONTROL_ARM, ensureNullControlArm } from '../null-control';
+} from '@/lib/mera-harness/core/arms';
+import { NULL_CONTROL_ARM, ensureNullControlArm } from '@/lib/mera-harness/eval/null-control';
 
 describe('the noise-floor arm', () => {
   afterEach(() => resetAgentArmsForTest());

@@ -1,4 +1,4 @@
-import { isRelationalStatement, mayReplace } from '../fact-subject';
+import { isRelationalStatement, mayReplace } from '@/lib/mera-harness/core/fact-subject';
 
 describe('isRelationalStatement', () => {
   it('sees the people a persona talks about', () => {

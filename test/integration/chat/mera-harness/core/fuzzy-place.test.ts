@@ -1,4 +1,4 @@
-import { foldPlace, userSaidPlace } from '../fuzzy-place';
+import { foldPlace, userSaidPlace } from '@/lib/mera-harness/core/fuzzy-place';
 
 describe('foldPlace', () => {
   it('folds case, accents, hyphens and a leading article', () => {
@@ -39,7 +39,7 @@ describe('userSaidPlace (ux2 D2 fuzzy district guard)', () => {
 });
 
 describe('guardPlaceRungs (ux2 D13)', () => {
-  const { guardPlaceRungs } = require('../fuzzy-place') as typeof import('../fuzzy-place');
+  const { guardPlaceRungs } = require('@/lib/mera-harness/core/fuzzy-place') as typeof import('@/lib/mera-harness/core/fuzzy-place');
   const VILA = {
     locality: 'Vila Baleira', admin1: 'Madeira', countryCode: 'PT', countryName: 'Portugal', bloc: 'EU' as const,
     userTerm: 'Porto Santo',

@@ -7,8 +7,8 @@ import {
   resetAgentArmsForTest,
   resolveAgentArm,
   topicPromptFor,
-} from '../arms';
-import { buildRouterPrompt } from '../router-prompt';
+} from '@/lib/mera-harness/core/arms';
+import { buildRouterPrompt } from '@/lib/mera-harness/core/router-prompt';
 
 afterEach(() => resetAgentArmsForTest());
 
@@ -92,7 +92,7 @@ describe('baseline is a byte-exact no-op', () => {
 });
 
 describe('ux2 F6: the topic flow arm', () => {
-  const { topicFlowFor, TOPICS_CURRENT_ARM_ID } = require('../arms') as typeof import('../arms');
+  const { topicFlowFor, TOPICS_CURRENT_ARM_ID } = require('@/lib/mera-harness/core/arms') as typeof import('@/lib/mera-harness/core/arms');
   it('ships isolated topics plus the deferred combination pass', () => {
     expect(topicFlowFor(resolveAgentArm())).toBe('isolated+combo');
   });

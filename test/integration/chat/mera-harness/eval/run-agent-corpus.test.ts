@@ -2,10 +2,10 @@
 // `now` is injected as a counter, so every timing below is exact rather than
 // flaky.
 
-import { parseScript } from '../script';
-import { runAgentScript } from '../run-agent-corpus';
-import { groupTurns, firstProseReport } from '../agent-metrics';
-import type { EvalModelRequest, EvalModelResult, EvalRow } from '../types';
+import { parseScript } from '@/lib/mera-harness/eval/script';
+import { runAgentScript } from '@/lib/mera-harness/eval/run-agent-corpus';
+import { groupTurns, firstProseReport } from '@/lib/mera-harness/eval/agent-metrics';
+import type { EvalModelRequest, EvalModelResult, EvalRow } from '@/lib/mera-harness/eval/types';
 
 const SKILL_IDS = ['topics/residence', 'topics/generic'] as const;
 const ROUTE_KINDS = ['fact_capture', 'question', 'chat', 'refuse'] as const;

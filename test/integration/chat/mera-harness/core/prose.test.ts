@@ -6,7 +6,7 @@ import {
   looksLikeSerialisedPayload,
   replaceClauseDashes,
   trailingQuestion,
-} from '../prose';
+} from '@/lib/mera-harness/core/prose';
 
 describe('clause dashes', () => {
   it('replaces the measured failure shape with a comma', () => {
@@ -57,7 +57,7 @@ describe('clause dashes', () => {
 // ---------------------------------------------------------------------------
 describe('the router prompt practises what it preaches', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { buildRouterPrompt } = require('../router-prompt');
+  const { buildRouterPrompt } = require('@/lib/mera-harness/core/router-prompt');
 
   const surfaces = ['ONBOARDING', 'CONFIG'] as const;
 

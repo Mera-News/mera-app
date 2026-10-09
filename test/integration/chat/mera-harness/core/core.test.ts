@@ -8,9 +8,9 @@ import {
   reconcilePlaceChain,
   runAgentTurn,
   type AgentPersona,
-} from '../core';
-import { toolsForLeg } from '../tool-contracts';
-import type { AgentDeps, AgentModelResult, Place } from '../types';
+} from '@/lib/mera-harness/core/core';
+import { toolsForLeg } from '@/lib/mera-harness/core/tool-contracts';
+import type { AgentDeps, AgentModelResult, Place } from '@/lib/mera-harness/core/types';
 
 const AMS: Place = {
   neighbourhood: undefined,

@@ -1,9 +1,9 @@
 // ux1 audit regressions, each driven through the real loop with a scripted
 // model. Every case here failed on the loop as it was before ux1.
 
-import { REPLY_PROCESS_FALLBACK, createAgentState, reconcilePlaceChain, runAgentTurn, type AgentPersona } from '../core';
-import { CANONICAL_LOCATION_KEY, COMBINED_ORIGIN_KEY, EXPAT_KEY, ORIGIN_KEY } from '../combined-fact';
-import type { AgentDeps, AgentModelResult, Place } from '../types';
+import { REPLY_PROCESS_FALLBACK, createAgentState, reconcilePlaceChain, runAgentTurn, type AgentPersona } from '@/lib/mera-harness/core/core';
+import { CANONICAL_LOCATION_KEY, COMBINED_ORIGIN_KEY, EXPAT_KEY, ORIGIN_KEY } from '@/lib/mera-harness/core/combined-fact';
+import type { AgentDeps, AgentModelResult, Place } from '@/lib/mera-harness/core/types';
 
 const AMS: Place = {
   locality: 'Amsterdam', admin1: 'North Holland', countryCode: 'NL', countryName: 'Netherlands', bloc: 'EU',
@@ -1096,7 +1096,7 @@ describe('ux2 batch 25 D1: the hyphenated spelling the turn used wins', () => {
   });
 
   it('a loop-written home prefers the hyphenated spelling among the turn\'s', () => {
-    const { correctedDistrict } = require('../fuzzy-place') as typeof import('../fuzzy-place');
+    const { correctedDistrict } = require('@/lib/mera-harness/core/fuzzy-place') as typeof import('@/lib/mera-harness/core/fuzzy-place');
     expect(correctedDistrict('niew west', ['You live in Nieuw West.', '{"query":"Nieuw-West Amsterdam"}'])).toBe('Nieuw-West');
   });
 });

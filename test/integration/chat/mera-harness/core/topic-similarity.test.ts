@@ -3,8 +3,8 @@ import {
   FILTER_DROP_JACCARD,
   contentJaccard,
   isSubsetTopic,
-} from '../topic-similarity';
-import { filterNearDuplicates } from '../topic-dedupe';
+} from '@/lib/mera-harness/core/topic-similarity';
+import { filterNearDuplicates } from '@/lib/mera-harness/core/topic-dedupe';
 
 describe('thresholds', () => {
   it('the filter threshold is STRICTLY above the detector threshold', () => {
@@ -96,7 +96,7 @@ describe('filterNearDuplicates', () => {
 });
 
 describe('namesFact (ux2 F6 fix 4)', () => {
-  const { namesFact } = require('../topic-similarity') as typeof import('../topic-similarity');
+  const { namesFact } = require('@/lib/mera-harness/core/topic-similarity') as typeof import('@/lib/mera-harness/core/topic-similarity');
   it('a shared content word names the fact', () => {
     expect(namesFact('Feyenoord stadium plans', 'Follows Dutch football, especially Feyenoord')).toBe(true);
   });

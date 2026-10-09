@@ -20,7 +20,7 @@ import {
   outFileFor,
   personaDirFor,
   firstDifference,
-} from '../generate';
+} from '@/lib/mera-harness/skills/generate';
 
 function copyTree(from: string, to: string): void {
   fs.mkdirSync(to, { recursive: true });

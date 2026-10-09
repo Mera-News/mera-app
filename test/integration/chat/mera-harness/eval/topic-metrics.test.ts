@@ -13,8 +13,8 @@ import {
   s7Report,
   sharedRules,
   type TopicSetInput,
-} from '../topic-metrics';
-import { contentJaccard, isSubsetTopic } from '../../core/topic-similarity';
+} from '@/lib/mera-harness/eval/topic-metrics';
+import { contentJaccard, isSubsetTopic } from '@/lib/mera-harness/core/topic-similarity';
 
 const BASE: Omit<TopicSetInput, 'topics'> = {
   factId: 'f1',

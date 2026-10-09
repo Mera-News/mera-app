@@ -8,7 +8,7 @@
 import { readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 
-const HARNESS_DIR = join(__dirname, '..');
+const HARNESS_DIR = join(__dirname, '../../../../lib/mera-harness');
 
 /** Import specifiers that must never appear anywhere under lib/mera-harness. */
 const FORBIDDEN: { pattern: RegExp; why: string }[] = [

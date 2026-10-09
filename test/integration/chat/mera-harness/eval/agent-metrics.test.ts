@@ -12,8 +12,8 @@ import {
   skillReport,
   thinkingGearReport,
   toolValidityReport,
-} from '../agent-metrics';
-import type { EvalRow } from '../types';
+} from '@/lib/mera-harness/eval/agent-metrics';
+import type { EvalRow } from '@/lib/mera-harness/eval/types';
 
 function row(over: Partial<EvalRow>): EvalRow {
   return {

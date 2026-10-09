@@ -2,10 +2,10 @@
 // core, not by reading it. A mirror checked against a copy of the thing it
 // mirrors proves nothing.
 
-import { createAgentState, runAgentTurn } from '../../core/core';
-import { PERSONA_SKILL_IDS } from '../../skills/index.generated';
-import { NO_ROUTE_KIND, routeKindForSkill, routeKindsFor } from '../contract';
-import type { AgentDeps, AgentModelResult } from '../contract';
+import { createAgentState, runAgentTurn } from '@/lib/mera-harness/core/core';
+import { PERSONA_SKILL_IDS } from '@/lib/mera-harness/skills/index.generated';
+import { NO_ROUTE_KIND, routeKindForSkill, routeKindsFor } from '@/lib/mera-harness/eval/contract';
+import type { AgentDeps, AgentModelResult } from '@/lib/mera-harness/eval/contract';
 
 function modelThatLoads(skillId: string) {
   let call = 0;

@@ -1,7 +1,7 @@
 // Owner decision (ux1, 2026-09-24): an expat is THREE separate facts, never
 // one combined fact. Origin, expat status, and residence, each manageable.
 
-import { createAgentState, runAgentTurn, type AgentPersona } from '../core';
+import { createAgentState, runAgentTurn, type AgentPersona } from '@/lib/mera-harness/core/core';
 import {
   CANONICAL_LOCATION_KEY,
   COMBINED_ORIGIN_KEY,
@@ -9,8 +9,8 @@ import {
   ORIGIN_KEY,
   countryOf,
   toOriginStatement,
-} from '../combined-fact';
-import type { AgentDeps, AgentModelResult } from '../types';
+} from '@/lib/mera-harness/core/combined-fact';
+import type { AgentDeps, AgentModelResult } from '@/lib/mera-harness/core/types';
 
 function res(over: Partial<AgentModelResult> = {}): AgentModelResult {
   return {

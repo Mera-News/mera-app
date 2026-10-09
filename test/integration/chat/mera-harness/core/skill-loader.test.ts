@@ -5,8 +5,8 @@ import {
   renderSkillIndex,
   skillIds,
   skillIndexRows,
-} from '../skill-loader';
-import { PERSONA_SKILLS, PERSONA_SKILL_INDEX } from '../../skills/index.generated';
+} from '@/lib/mera-harness/core/skill-loader';
+import { PERSONA_SKILLS, PERSONA_SKILL_INDEX } from '@/lib/mera-harness/skills/index.generated';
 
 describe('skillIds', () => {
   it('lists every id in the generated index', () => {

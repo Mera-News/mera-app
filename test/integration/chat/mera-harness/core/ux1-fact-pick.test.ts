@@ -4,10 +4,10 @@
 // question. The device case: "I live in niew West Amsterdam and I'm an expat
 // from india" came back as "Which fact should I offer to save?".
 
-import { createAgentState, runAgentTurn } from '../core';
-import { CANONICAL_LOCATION_KEY, EXPAT_KEY, ORIGIN_KEY } from '../combined-fact';
-import { factPickStatement, isFactPickChoice, joinFactPick } from '../fact-pick';
-import type { AgentDeps, AgentModelResult } from '../types';
+import { createAgentState, runAgentTurn } from '@/lib/mera-harness/core/core';
+import { CANONICAL_LOCATION_KEY, EXPAT_KEY, ORIGIN_KEY } from '@/lib/mera-harness/core/combined-fact';
+import { factPickStatement, isFactPickChoice, joinFactPick } from '@/lib/mera-harness/core/fact-pick';
+import type { AgentDeps, AgentModelResult } from '@/lib/mera-harness/core/types';
 
 function res(over: Partial<AgentModelResult> = {}): AgentModelResult {
   return {
