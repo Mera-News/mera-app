@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # Android e2e lane: build the e2e APK, start the mock backend, boot the AVD, run Maestro,
-# enforce the network allowlist, clean up. One run at a time; never wrap this in bin/heavy
+# check the app's own sockets, clean up. One run at a time; never wrap this in bin/heavy
 # (it takes all heavy slots itself). Flags: see usage below.
+#
+# Network rule (no test talks to a server): the mock doubles as the emulator's HTTP proxy and
+# refuses every foreign host, so nothing outside reaches a server. That log cannot say WHO asked
+# (the playstore image's OS traffic arrives as raw IPs), so step 7 samples the sockets owned by the
+# app's uid from /proc/net and fails on any remote other than the mock. Denied proxy connections are
+# held open for 3 s so a 1 s sampler sees them.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,15 +28,13 @@ ADB="$SDK/platform-tools/adb"
 RUN="e2e-output/$(date +%Y%m%d-%H%M%S)"
 APK_OUT=android/app/build/outputs/apk/release/app-release.apk
 LAST=e2e-output/last-app-e2e.apk
-ALLOWLIST=.maestro/proxy-allowlist.txt
 
 ORIG_ARGS=("$@")
-DRY=0 FLOWS=.maestro/ SKIP_BUILD=0 CLEAN=0 BASELINE="" PROXY_MODE=emulator
+DRY=0 FLOWS=.maestro/ SKIP_BUILD=0 CLEAN=0
 HANDLERS="${E2E_HANDLERS:-./stub-handlers}"
 
 usage() {
-  echo "usage: $0 [--dry-run] [--flows <path>] [--skip-build] [--clean] [--baseline <seconds>]" >&2
-  echo "          [--handlers <module>] [--proxy-mode emulator|adb]" >&2
+  echo "usage: $0 [--dry-run] [--flows <path>] [--skip-build] [--clean] [--handlers <module>]" >&2
   exit 2
 }
 while [ $# -gt 0 ]; do
@@ -39,59 +43,56 @@ while [ $# -gt 0 ]; do
     --flows) FLOWS="${2:?}"; shift ;;
     --skip-build) SKIP_BUILD=1 ;;
     --clean) CLEAN=1 ;;
-    --baseline) BASELINE="${2:?}"; shift ;;
     --handlers) HANDLERS="${2:?}"; shift ;;
-    --proxy-mode) PROXY_MODE="${2:?}"; shift ;;
     *) usage ;;
   esac
   shift
 done
-case "$PROXY_MODE" in emulator | adb) ;; *) usage ;; esac
 
-# Hosts of `connect` lines and `via:"proxy"` lines in the proxy log, minus the allowlist.
-# With no allowlist argument it only prints the host set (used by --baseline).
-HOSTS_JS='
+# Remote endpoints of the app-uid sockets sampled from /proc/net/tcp{,6}. Allowed: the mock
+# (10.0.2.2:PORT), loopback and unconnected sockets. Requires at least one socket to the mock,
+# so a sampler that reads nothing cannot pass.
+SOCK_JS='
 const fs = require("fs");
-const [log, allow] = process.argv.slice(1);
-const hosts = new Set();
-for (const line of fs.readFileSync(log, "utf8").split("\n")) {
-  if (!line.trim()) continue;
-  let l; try { l = JSON.parse(line); } catch { continue; }
-  if (!(l.type === "connect" || l.kind === "connect" || l.event === "connect" || l.via === "proxy")) continue;
-  let h = l.host || l.authority;
-  if (!h && l.url) { try { h = new URL(l.url).host; } catch {} }
-  if (h && l.port && !String(h).includes(":")) h = h + ":" + l.port;
-  if (h) hosts.add(String(h));
+const [file, port] = process.argv.slice(1);
+const rows = fs.existsSync(file) ? fs.readFileSync(file, "utf8").split("\n").filter(Boolean) : [];
+const v4 = (h) => [0, 1, 2, 3].map((i) => parseInt(h.substr(6 - 2 * i, 2), 16)).join(".");
+const decode = (hex) => {
+  const [a, p] = hex.split(":");
+  const prt = parseInt(p, 16);
+  if (a.length === 8) return { ip: v4(a), port: prt };
+  const w = [0, 1, 2, 3].map((i) => a.substr(8 * i, 8));
+  if (w[0] === "00000000" && w[1] === "00000000" && w[2] === "FFFF0000") return { ip: v4(w[3]), port: prt };
+  const ip6 = w.map((x) => x.match(/../g).reverse().join("")).join("").toLowerCase();
+  return { ip: "[" + ip6.match(/.{4}/g).join(":") + "]", port: prt };
+};
+let mock = 0;
+const foreign = new Set();
+for (const r of rows) {
+  const { ip, port: p } = decode(r.trim().split(/\s+/)[0]);
+  if (ip === "10.0.2.2" && p === Number(port)) { mock++; continue; }
+  if (ip === "0.0.0.0" || ip === "127.0.0.1" || /^\[0000(:0000){6}:000[01]\]$/.test(ip)) continue;
+  foreign.add(ip + ":" + p);
 }
-if (!allow) { console.log([...hosts].sort().join("\n")); process.exit(0); }
-const ok = new Set(fs.readFileSync(allow, "utf8").split("\n").map(s => s.replace(/#.*/, "").trim()).filter(Boolean));
-const extra = [...hosts].filter(h => !ok.has(h) && !ok.has(h.replace(/:\d+$/, ""))).sort();
-if (extra.length) { console.error("hosts outside the allowlist:\n" + extra.join("\n")); process.exit(1); }
-console.log("allowlist ok (" + hosts.size + " hosts seen)");
+if (mock === 0) { console.error("FAIL: no app socket to the mock was sampled (sampler blind or app never reached the mock)"); process.exit(1); }
+if (foreign.size) { console.error("FAIL: app sockets to non-mock hosts:\n" + [...foreign].sort().join("\n")); process.exit(1); }
+console.log("app sockets ok (" + mock + " samples to the mock, none elsewhere)");
 '
 
 if [ "$DRY" = 1 ]; then
   cat <<PLAN
 e2e-android --dry-run (nothing is run, no heavy slot is taken)
-ROOT=$ROOT  RUN=$RUN  mode=$( [ -n "$BASELINE" ] && echo "baseline ${BASELINE}s" || echo lane )  proxy=$PROXY_MODE  flows=$FLOWS  handlers=$HANDLERS
+ROOT=$ROOT  RUN=$RUN  flows=$FLOWS  handlers=$HANDLERS
 step 0 preflight: re-exec as E2E_HEAVY_HELD=1 $ROOT/../bin/heavy --all bash $SELF; abort if adb lists an emulator-*; require maestro, $EMU, $ADB; mkdir -p $RUN; trap cleanup EXIT INT TERM
-step 1 prebuild$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build)" )$( [ -n "$BASELINE" ] && echo " (skipped: --baseline)" ): (set -a; . ./.env.e2e; EXPO_NO_DOTENV=1 TMPDIR=$ROOT/e2e-output/.metro-tmp npx expo prebuild --platform android --no-install$( [ "$CLEAN" = 1 ] && echo " --clean" ))
-step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" )$( [ -n "$BASELINE" ] && echo " (skipped: --baseline)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon); cp $APK_OUT $LAST; grep the raw bundle: require 10.0.2.2:$PORT, forbid prod/staging endpoint hosts and every .env secret value (DSN, KEY, TOKEN, APP_ID, CLIENT_ID)
-step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
-step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect$( [ "$PROXY_MODE" = emulator ] && echo " -http-proxy http://127.0.0.1:$PORT" ) > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s)$( [ "$PROXY_MODE" = adb ] && echo "; adb shell settings put global http_proxy 10.0.2.2:$PORT" ); screenshot $RUN/launcher.png
-PLAN
-  if [ -n "$BASELINE" ]; then
-    echo "baseline: no install; record proxy hosts for ${BASELINE}s -> $RUN/baseline-hosts.txt; positive control: adb shell am start -a android.intent.action.VIEW -d https://example.com, wait 15 s, require example.com in $RUN/proxy.jsonl; print the host set; steps 5-7 skipped"
-  else
-    cat <<PLAN
-step 5 install: adb -s $SERIAL install -r $LAST
-step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test $FLOWS --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; logcat -d > $RUN/logcat.txt; report WMDatabaseJSIBridge install line and FATAL lines
-step 7 allowlist: hosts of connect / via:proxy lines in $RUN/proxy.jsonl minus $ALLOWLIST; extras fail the run
-PLAN
-  fi
-  cat <<PLAN
-step 8 cleanup (always, idempotent): $( [ "$PROXY_MODE" = adb ] && echo "adb shell settings put global http_proxy :0; " )adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f "@$AVD" to clear; kill mock server
-exit code: maestro's if non-zero, else the allowlist's
+step 1 prebuild$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build)" ): (set -a; . ./.env.e2e; CI=1 EXPO_NO_DOTENV=1 TMPDIR=$ROOT/e2e-output/.metro-tmp npx expo prebuild --platform android --no-install$( [ "$CLEAN" = 1 ] && echo " --clean" ))
+step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process); cp $APK_OUT $LAST; grep the raw bundle: require 10.0.2.2:$PORT, forbid prod/staging endpoint hosts and every .env secret value (DSN, KEY, TOKEN, APP_ID, CLIENT_ID)
+step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --deny-delay 3000 --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
+step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 -http-proxy http://127.0.0.1:$PORT > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s); screenshot $RUN/launcher.png
+step 5 install: adb -s $SERIAL install -r $LAST; resolve the app uid; require /proc/net/tcp6 readable; start the 1 s app-socket sampler -> $RUN/app-sockets.txt
+step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test $FLOWS --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler; logcat -d > $RUN/logcat.txt; report WMDatabaseJSIBridge install line and FATAL lines
+step 7 app sockets: every sampled app-uid remote must be 10.0.2.2:$PORT (or loopback/unconnected), and at least one must be the mock
+step 8 cleanup (always, idempotent): stop sampler; adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f "@$AVD" to clear; kill mock server
+exit code: maestro's if non-zero, else step 7's
 PLAN
   exit 0
 fi
@@ -113,12 +114,12 @@ if "$ADB" devices | grep -q '^emulator-'; then
 fi
 mkdir -p "$RUN"
 
-MOCK_PID="" EMU_STARTED=0 PROXY_SET=0 CLEANED=0
+MOCK_PID="" EMU_STARTED=0 SAMPLER_PID="" CLEANED=0
 cleanup() {
   [ "$CLEANED" = 1 ] && return 0
   CLEANED=1
   set +e
-  [ "$PROXY_SET" = 1 ] && "$ADB" -s "$SERIAL" shell settings put global http_proxy :0
+  [ -n "$SAMPLER_PID" ] && kill "$SAMPLER_PID" 2> /dev/null
   if [ "$EMU_STARTED" = 1 ]; then
     "$ADB" -s "$SERIAL" emu kill > /dev/null 2>&1
     for _ in $(seq 1 60); do pgrep -f "@$AVD" > /dev/null || break; sleep 1; done
@@ -138,44 +139,42 @@ e2e_env() {
 }
 
 # ---- steps 1-2: build --------------------------------------------------------------------
-if [ -z "$BASELINE" ]; then
-  if [ "$SKIP_BUILD" = 0 ]; then
-    echo "== step 1: prebuild"
-    ( e2e_env; CI=1 npx expo prebuild --platform android --no-install $( [ "$CLEAN" = 1 ] && echo --clean ) )
-    echo "== step 2: gradle"
-    ( e2e_env; export SENTRY_DISABLE_AUTO_UPLOAD=true; cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process )
-    cp "$APK_OUT" "$LAST"
-  fi
-  [ -f "$LAST" ] || { echo "error: $LAST missing; run without --skip-build" >&2; exit 1; }
-  echo "== step 2: bundle grep"
-  # Grep the raw Hermes bytecode: macOS `strings` skips non-Mach-O content, and
-  # Hermes packs its strings back to back, so loose regexes match across
-  # neighbours. Hence one exact host pattern plus the developer's own secret
-  # values, matched as fixed strings (names only are printed, never values).
-  BUNDLE="$RUN/index.android.bundle"
-  unzip -p "$LAST" assets/index.android.bundle > "$BUNDLE"
-  LC_ALL=C grep -a -q -F "10.0.2.2:$PORT" "$BUNDLE" || { echo "FAIL: bundle lacks 10.0.2.2:$PORT" >&2; exit 1; }
-  BAD=0
-  if LC_ALL=C grep -a -q -E '(graphql|auth|inference)(\.staging)?\.mera\.news' "$BUNDLE"; then
-    echo "FAIL: bundle contains a prod or staging endpoint host" >&2; BAD=1
-  fi
-  if [ -f .env ]; then
-    while IFS='=' read -r k v; do
-      case "$k" in EXPO_PUBLIC_*DSN|EXPO_PUBLIC_*KEY|EXPO_PUBLIC_*TOKEN|EXPO_PUBLIC_*APP_ID|EXPO_PUBLIC_*CLIENT_ID) ;; *) continue ;; esac
-      v="${v%\"}"; v="${v#\"}"
-      [ "${#v}" -ge 8 ] || continue
-      if LC_ALL=C grep -a -q -F -- "$v" "$BUNDLE"; then echo "FAIL: bundle contains the .env value of $k" >&2; BAD=1; fi
-    done < .env
-  else
-    echo "warn: no .env to check secrets against" >&2
-  fi
-  rm -f "$BUNDLE"
-  [ "$BAD" = 0 ] || exit 1
+if [ "$SKIP_BUILD" = 0 ]; then
+  echo "== step 1: prebuild"
+  ( e2e_env; CI=1 npx expo prebuild --platform android --no-install $( [ "$CLEAN" = 1 ] && echo --clean ) )
+  echo "== step 2: gradle"
+  ( e2e_env; export SENTRY_DISABLE_AUTO_UPLOAD=true; cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process )
+  cp "$APK_OUT" "$LAST"
 fi
+[ -f "$LAST" ] || { echo "error: $LAST missing; run without --skip-build" >&2; exit 1; }
+echo "== step 2: bundle grep"
+# Grep the raw Hermes bytecode: macOS `strings` skips non-Mach-O content, and
+# Hermes packs its strings back to back, so loose regexes match across
+# neighbours. Hence one exact host pattern plus the developer's own secret
+# values, matched as fixed strings (names only are printed, never values).
+BUNDLE="$RUN/index.android.bundle"
+unzip -p "$LAST" assets/index.android.bundle > "$BUNDLE"
+LC_ALL=C grep -a -q -F "10.0.2.2:$PORT" "$BUNDLE" || { echo "FAIL: bundle lacks 10.0.2.2:$PORT" >&2; exit 1; }
+BAD=0
+if LC_ALL=C grep -a -q -E '(graphql|auth|inference)(\.staging)?\.mera\.news' "$BUNDLE"; then
+  echo "FAIL: bundle contains a prod or staging endpoint host" >&2; BAD=1
+fi
+if [ -f .env ]; then
+  while IFS='=' read -r k v; do
+    case "$k" in EXPO_PUBLIC_*DSN|EXPO_PUBLIC_*KEY|EXPO_PUBLIC_*TOKEN|EXPO_PUBLIC_*APP_ID|EXPO_PUBLIC_*CLIENT_ID) ;; *) continue ;; esac
+    v="${v%\"}"; v="${v#\"}"
+    [ "${#v}" -ge 8 ] || continue
+    if LC_ALL=C grep -a -q -F -- "$v" "$BUNDLE"; then echo "FAIL: bundle contains the .env value of $k" >&2; BAD=1; fi
+  done < .env
+else
+  echo "warn: no .env to check secrets against" >&2
+fi
+rm -f "$BUNDLE"
+[ "$BAD" = 0 ] || exit 1
 
 # ---- step 3: mock server -----------------------------------------------------------------
 echo "== step 3: mock server on :$PORT"
-npx tsx test/mock-backend/server.ts --port "$PORT" --log "$RUN/proxy.jsonl" --handlers "$HANDLERS" > "$RUN/mock.log" 2>&1 &
+npx tsx test/mock-backend/server.ts --port "$PORT" --log "$RUN/proxy.jsonl" --deny-delay 3000 --handlers "$HANDLERS" > "$RUN/mock.log" 2>&1 &
 MOCK_PID=$!
 for i in $(seq 1 30); do
   curl -fsS "http://127.0.0.1:$PORT/__control/health" > /dev/null 2>&1 && break
@@ -185,56 +184,53 @@ done
 
 # ---- step 4: boot ------------------------------------------------------------------------
 echo "== step 4: boot $AVD"
-EMU_ARGS=(-no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072)
-[ "$PROXY_MODE" = emulator ] && EMU_ARGS+=(-http-proxy "http://127.0.0.1:$PORT")
 EMU_STARTED=1
-"$EMU" "@$AVD" "${EMU_ARGS[@]}" > "$RUN/emulator.log" 2>&1 &
+"$EMU" "@$AVD" -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 \
+  -http-proxy "http://127.0.0.1:$PORT" > "$RUN/emulator.log" 2>&1 &
 "$ADB" -s "$SERIAL" wait-for-device
 for i in $(seq 1 300); do
   [ "$("$ADB" -s "$SERIAL" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = 1 ] && break
   [ "$i" = 300 ] && { echo "error: emulator not booted after 300 s" >&2; exit 1; }
   sleep 1
 done
-if [ "$PROXY_MODE" = adb ]; then
-  PROXY_SET=1
-  "$ADB" -s "$SERIAL" shell settings put global http_proxy "10.0.2.2:$PORT"
-fi
 "$ADB" -s "$SERIAL" emu screenrecord screenshot "$RUN/launcher.png" || echo "warn: launcher screenshot failed" >&2
 
-# ---- baseline mode: OS traffic with no app installed -------------------------------------
-if [ -n "$BASELINE" ]; then
-  echo "== baseline: recording proxy hosts for ${BASELINE}s"
-  sleep "$BASELINE"
-  node -e "$HOSTS_JS" "$RUN/proxy.jsonl" > "$RUN/baseline-hosts.txt"
-  "$ADB" -s "$SERIAL" shell am start -a android.intent.action.VIEW -d https://example.com > /dev/null
-  sleep 15
-  if ! grep -q 'example\.com' "$RUN/proxy.jsonl"; then
-    echo "FAIL: positive control, example.com never reached the proxy log (the proxy sees nothing)" >&2
-    exit 1
-  fi
-  echo "positive control ok. Baseline host set (paste into $ALLOWLIST):"
-  cat "$RUN/baseline-hosts.txt"
-  exit 0
-fi
-
-# ---- steps 5-6: install and Maestro ------------------------------------------------------
+# ---- step 5: install and the app-socket sampler ------------------------------------------
 echo "== step 5: install"
 "$ADB" -s "$SERIAL" install -r "$LAST"
+APP_UID="$("$ADB" -s "$SERIAL" shell pm list packages -U "$APP_ID" | tr -d '\r' | sed -n 's/.*uid://p' | head -1)"
+[ -n "$APP_UID" ] || { echo "error: could not resolve the uid of $APP_ID" >&2; exit 1; }
+"$ADB" -s "$SERIAL" shell cat /proc/net/tcp6 | head -1 | grep -q local_address \
+  || { echo "error: /proc/net/tcp6 is not readable over adb; the socket check would be blind" >&2; exit 1; }
+: > "$RUN/app-sockets.txt"
+(
+  while :; do
+    "$ADB" -s "$SERIAL" shell cat /proc/net/tcp /proc/net/tcp6 2> /dev/null | tr -d '\r' \
+      | awk -v u="$APP_UID" '$8 == u { print $3 }' >> "$RUN/app-sockets.txt"
+    sleep 1
+  done
+) &
+SAMPLER_PID=$!
+
+# ---- step 6: Maestro ---------------------------------------------------------------------
 echo "== step 6: maestro $FLOWS"
 MAESTRO_RC=0
 MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test "$FLOWS" \
   --test-output-dir "$RUN/maestro" --format junit --output "$RUN/junit.xml" \
   -e MOCK="http://localhost:$PORT" -e EMAIL="$EMAIL" -e OTP="$OTP" -e APP_ID="$APP_ID" -e SCHEME="$SCHEME" || MAESTRO_RC=$?
+kill "$SAMPLER_PID" 2> /dev/null || true
+SAMPLER_PID=""
 "$ADB" -s "$SERIAL" logcat -d > "$RUN/logcat.txt" || true
 grep -q 'WMDatabaseJSIBridge: Successfully installed' "$RUN/logcat.txt" && echo "logcat: WatermelonDB JSI installed" || echo "logcat: no WatermelonDB JSI install line"
 grep -E 'ReactNativeJS.*FATAL|AndroidRuntime: FATAL' "$RUN/logcat.txt" || echo "logcat: no FATAL lines"
 
-# ---- step 7: allowlist -------------------------------------------------------------------
-echo "== step 7: allowlist"
-ALLOW_RC=0
-node -e "$HOSTS_JS" "$RUN/proxy.jsonl" "$ALLOWLIST" || ALLOW_RC=$?
+# ---- step 7: app sockets -----------------------------------------------------------------
+echo "== step 7: app sockets"
+SOCK_RC=0
+node -e "$SOCK_JS" "$RUN/app-sockets.txt" "$PORT" || SOCK_RC=$?
+echo "proxy (diagnostic): $(grep -c '"status":403' "$RUN/proxy.jsonl" || true) foreign connections refused"
 
 # step 8 runs in the EXIT trap
-echo "maestro exit $MAESTRO_RC, allowlist exit $ALLOW_RC, output in $RUN"
+echo "maestro exit $MAESTRO_RC, app-socket exit $SOCK_RC, output in $RUN"
 [ "$MAESTRO_RC" -ne 0 ] && exit "$MAESTRO_RC"
-exit "$ALLOW_RC"
+exit "$SOCK_RC"

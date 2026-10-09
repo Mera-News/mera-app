@@ -14,7 +14,11 @@ export async function startMockServer(opts: {
     port: number;
     handlers: RequestHandler[];
     logFile?: string;
+    /** Hold refused proxy connections open this long, so the e2e lane's 1 s app-socket
+     *  sampler sees them (scripts/e2e-android.sh step 7). */
+    denyDelayMs?: number;
 }): Promise<{ port: number; close(): Promise<void> }> {
+    const denyDelay = opts.denyDelayMs ?? 0;
     let SELF = new Set<string>();
     const log = (
         kind: Kind,
@@ -37,8 +41,10 @@ export async function startMockServer(opts: {
             path = u.pathname + u.search;
             if (!SELF.has(host)) {
                 log('http', { host, method, path, status: 403, via });
-                res.writeHead(403, { 'content-type': 'application/json' });
-                res.end(JSON.stringify({ error: 'forbidden', host }));
+                setTimeout(() => {
+                    res.writeHead(403, { 'content-type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'forbidden', host }));
+                }, denyDelay);
                 return;
             }
         }
@@ -140,7 +146,7 @@ export async function startMockServer(opts: {
         const ok = SELF.has(target);
         log('connect', { host: target, method: 'CONNECT', path: '', status: ok ? 200 : 403, via: 'proxy' });
         if (!ok) {
-            client.end('HTTP/1.1 403 Forbidden\r\n\r\n');
+            setTimeout(() => client.end('HTTP/1.1 403 Forbidden\r\n\r\n'), denyDelay);
             return;
         }
         const upstream = net.connect(boundPort, '127.0.0.1', () => {
@@ -188,6 +194,7 @@ if (/server\.ts$/.test(process.argv[1] ?? '')) {
             port: Number(arg('port', '8790')),
             handlers,
             logFile: arg('log'),
+            denyDelayMs: Number(arg('deny-delay', '0')),
         });
         console.log(`mock-backend listening on ${port}`);
         const stop = () => close().then(() => process.exit(0));
