@@ -19,10 +19,11 @@ import {
 } from '@/test/helpers';
 import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
 
-// Aliased: a function named use* trips react-hooks/rules-of-hooks wherever it is called.
-const strictClock = useStrictClock;
 import type { JsonBodyType } from 'msw';
 import { sealForClient } from '@/test/mock-backend/gateway/crypto';
+
+// Aliased: a function named use* trips react-hooks/rules-of-hooks wherever it is called.
+const strictClock = useStrictClock;
 
 export const ORIGIN = 'http://127.0.0.1:8790';
 export const CHAT_PATH = '/v1/chat/completions';
