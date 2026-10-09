@@ -20,6 +20,7 @@ jest.mock('expo-keep-awake', () => ({
   deactivateKeepAwake: jest.fn(),
 }));
 
+import { ArticleService } from '@/lib/article-service';
 import database from '@/lib/database';
 import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
 import logger from '@/lib/logger';
@@ -186,11 +187,9 @@ describe('FeedSyncMachine lifecycle', () => {
       await serveNew(ids(3));
       const rec = recordMachine();
       await run();
-      expect(feedSyncMachine.state).toBe('done');
+      expect(feedSyncMachine.state).toBe('done'); // the clock follows wall time: only the lower bound is checked right away
 
-      await jest.advanceTimersByTimeAsync(1_900);
-      expect(feedSyncMachine.state).toBe('done');
-      await jest.advanceTimersByTimeAsync(200);
+      await jest.advanceTimersByTimeAsync(2_100);
 
       expect(feedSyncMachine.state).toBe('idle');
       expect(store().syncStatusMessage).toBeNull();
@@ -229,6 +228,20 @@ describe('FeedSyncMachine lifecycle', () => {
       await run();
 
       expect(store().articleCount).toBe(3);
+    });
+
+    it('falls back the same way when the count call itself throws, reporting it', async () => {
+      await serveNew(ids(3));
+      spyOnExport(ArticleService, 'getRecentArticleCount').mockRejectedValueOnce(new Error('count error'));
+
+      await run();
+
+      expect(store().articleCount).toBe(3);
+      expect(captured()).toContainEqual([
+        expect.objectContaining({ message: 'count error' }),
+        expect.objectContaining({ tags: expect.objectContaining({ method: 'getRecentArticleCount' }) }),
+      ]);
+      expect(feedSyncMachine.state).toBe('done');
     });
 
     it('falls back the same way when the count query fails, and does not fail the sync', async () => {

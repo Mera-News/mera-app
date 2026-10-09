@@ -99,6 +99,12 @@ describe('publishSyncError', () => {
     }
   });
 
+  it('falls back to the generic failure headline for a code it has no headline for', () => {
+    publishSyncError('not-a-code' as SyncErrorCode);
+
+    expect(message()).toEqual(expect.objectContaining({ errorCode: 'not-a-code', headlineKey: 'sync.syncFailed', isRecoverable: false }));
+  });
+
   it('carries the daily-limit reset time as retryAt', () => {
     publishSyncError('daily-limit', 1781827200000);
 

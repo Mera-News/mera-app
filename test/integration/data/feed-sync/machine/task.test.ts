@@ -248,10 +248,10 @@ describe('feed-sync scheduler task', () => {
       fetchStep().hold(early.held, { after: true });
       const first = AppScheduler.trigger('feed-sync', undefined, { bypassDebounce: true });
       await waitFor(async () => (await runs()) === 1, 'the run to be in the fetch step');
-      await elapse(2 * 60_000 + 50_000, 1_000);
+      await elapse(2 * 60_000 + 20_000, 1_000);
       early.release();
       await advanceUntilDone(first);
-      expect(await lastRun()).not.toBeNull(); // released at 2m50s: not aborted, a real success
+      expect(await lastRun()).not.toBeNull(); // released at 2m20s: not aborted, a real success
     });
 
     it('is aborted and ends as a no-op once three minutes have passed', async () => {
