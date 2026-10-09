@@ -23,6 +23,7 @@ import { Toast } from '@/components/ui/toast';
 import UndoToast from '@/components/custom/toast/UndoToast';
 import NotifiedToast from '@/components/custom/notifications/NotifiedToast';
 import { initI18nEn, useStrictClock } from '@/test/helpers';
+import { getAll as getNotifications } from '@/lib/database/services/notification-service';
 
 const en = require('@/lib/locales/en.json');
 
@@ -284,9 +285,9 @@ describe('the undo toast', () => {
 // `context` (the notification centre interpolates from it); the transient toast used to resolve
 // the keys with no values at all, so the reader saw 'No published fact checks yet for
 // "{{title}}".' (owner bug, ux1).
-// The persisted row is NOT asserted: showNotifiedToast reaches notify() through a dynamic
-// `await import()`, which Node refuses under Jest ("invoked without --experimental-vm-modules"),
-// so the call lands in the manager's non-fatal catch and no row is written in any test.
+// The persisted row is read back from the real notification service on the in-memory DB:
+// showNotifiedToast reaches notify() through a dynamic `await import()` (harness c8f043ab made
+// those run under Jest).
 describe('showNotifiedToast', () => {
   it('renders the fact-check body with the article title, never a raw placeholder', async () => {
     await toastManager.showNotifiedToast({
@@ -301,6 +302,27 @@ describe('showNotifiedToast', () => {
     expect(el.props.title).toBe('Fact check ready');
     expect(el.props.body).toBe('No published fact checks yet for "Budget vote delayed".');
     expect(el.props.body).not.toMatch(/\{\{/);
+  });
+
+  it('persists the row with the RAW keys and the context, so the inbox can re-resolve them', async () => {
+    await toastManager.showNotifiedToast({
+      type: 'fact_check_done',
+      source: 'fact-check',
+      title: 'factCheck.notify.title',
+      body: 'factCheck.notify.bodyNone',
+      context: { title: 'Budget vote delayed' },
+    });
+    const rows = await getNotifications();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      type: 'fact_check_done',
+      source: 'fact-check',
+      title: 'factCheck.notify.title',
+      body: 'factCheck.notify.bodyNone',
+      status: 'unread',
+    });
+    expect(JSON.parse(rows[0].contextJson!)).toEqual({ title: 'Budget vote delayed' });
+    expect(logger.captureException).not.toHaveBeenCalled();
   });
 
   it('interpolates counts the same way (hygiene, calibration, the plan)', async () => {
