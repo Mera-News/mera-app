@@ -59,6 +59,27 @@ jest.doMock('expo-router', () => {
   };
 });
 
+// 2d. expo-web-browser with the real presentation-style values and the Android Custom Tabs query
+// lib/web-browser-utils.ts calls. Integration only (doMock): the legacy mock is shared and stays.
+jest.doMock('expo-web-browser', () => ({
+  __esModule: true,
+  openBrowserAsync: jest.fn(() => Promise.resolve({ type: 'opened' })),
+  dismissBrowser: jest.fn(),
+  getCustomTabsSupportingBrowsersAsync: jest.fn(() =>
+    Promise.resolve({ browserPackages: [], servicePackages: [], preferredBrowserPackage: null, defaultBrowserPackage: null }),
+  ),
+  WebBrowserPresentationStyle: {
+    FULL_SCREEN: 'fullScreen',
+    PAGE_SHEET: 'pageSheet',
+    FORM_SHEET: 'formSheet',
+    CURRENT_CONTEXT: 'currentContext',
+    OVER_FULL_SCREEN: 'overFullScreen',
+    OVER_CURRENT_CONTEXT: 'overCurrentContext',
+    POPOVER: 'popover',
+    AUTOMATIC: 'automatic',
+  },
+}));
+
 // 3. expo-translate-text: identity translation, same export names as the package.
 jest.mock('expo-translate-text', () => {
   class TranslationError extends Error {}
