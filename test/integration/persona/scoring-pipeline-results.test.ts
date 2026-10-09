@@ -13,16 +13,20 @@ import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import * as pipeline from '@/lib/services/scoring-pipeline';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { gatewayCalls, http, HttpResponse, server } from '@/test/helpers';
+import { appStateModule } from '@/test/helpers/app-state';
 import {
   batches,
+  captureSubmits,
   cleanupWorld,
   currentRun,
   drive,
   gateway,
   holdJobs,
   holdKick,
+  ids,
   jobSubmits,
   later,
+  passTime,
   patchBatch,
   phases,
   resetPipelineWorld,
@@ -152,6 +156,70 @@ describe('relevance completion', () => {
 
     expect(await currentRun()).toBeNull();
     expect((await rows()).a0).toMatchObject({ status: 'unscored', relevance: 0 });
+  });
+
+  it('finishes the batch clean, keeping the score, when the v4 tag gate skips every impactful reason', async () => {
+    // legacyTagReasonGateEnabled (v4, off by default) skips the reason call of a row tagged with a
+    // gated event type and parks it `reason_skipped` at its real score. Every impactful row gated
+    // means an EMPTY reasons bundle: the batch must finish, not wait for a job that was never sent.
+    const cfg = DEFAULT_HARNESS_CONFIG.articlePipeline;
+    const saved = cfg.legacyTagReasonGateEnabled;
+    const script: Script = { scores: { a0: 0.9 } };
+    const batch = await toWaitingRelevance(['a0'], script, { extra: { event_type: 'crime' } });
+    cfg.legacyTagReasonGateEnabled = true;
+    try {
+      await collect(batch, script);
+    } finally {
+      cfg.legacyTagReasonGateEnabled = saved;
+    }
+
+    expect(jobSubmits()).toHaveLength(1); // no reasons job
+    expect((await rows()).a0).toMatchObject({ relevance: 0.8, reason: '', status: 'reason_skipped' });
+    expect(await currentRun()).toBeNull(); // done → finalized
+  });
+
+  it('a failed score call leaves its rows unscored and finishes the batch without a reasons job', async () => {
+    const script: Script = { failScores: true };
+    const batch = await toWaitingRelevance(['a0', 'a1'], script);
+
+    await collect(batch, script);
+
+    // The decoder reports the fallback score for a failed call but marks the ids failed: nothing is
+    // persisted for them, so they re-enter the next run.
+    expect(Object.values(await rows()).every((r) => r.status === 'unscored' && r.relevance === 0)).toBe(true);
+    // no reasons job was ever built (the post-finalize kick may re-submit the rows as a new run)
+    expect(jobSubmits().flatMap((j) => j.calls).every((c) => c.startsWith('score:'))).toBe(true);
+  });
+
+  it.each([
+    ['inactive', 'ExponentPushToken[test]'],
+    ['active', null],
+  ] as const)('the chained reasons job carries the push token only when the app is not on screen (%s)', async (state, token) => {
+    const submits = captureSubmits();
+    const script: Script = { scores: { a0: 0.9 } };
+    const batch = await toWaitingRelevance(['a0'], script);
+    appStateModule.currentState = state; // silent: no poller starts
+
+    await collect(batch, script);
+    await passTime(100);
+
+    expect(submits).toHaveLength(2);
+    expect(submits[1].token).toBe(token);
+  });
+
+  it('skips ids the results do not cover, leaving them out of the maps', async () => {
+    // Older-build shape (isolation patch): the batch lists five more ids than the job had calls for.
+    const script: Script = {};
+    const batch = await toWaitingRelevance(ids(5), script);
+    await patchBatch(0, (b) => {
+      b.candidateIds = [...b.candidateIds, ...ids(5, 'ghost')];
+    });
+
+    await collect(batch, script);
+
+    const b = (await batches())[0];
+    expect(Object.keys(b.relevanceMap ?? {}).sort()).toEqual(ids(5));
+    expect(Object.values(await rows()).every((r) => r.relevance === 0.8)).toBe(true);
   });
 });
 
@@ -317,7 +385,7 @@ describe('soft suppression on the legacy path', () => {
     expect((await rows()).a0.relevance).toBeCloseTo(0.35, 10);
   });
 
-  it('penalises every scored row of a batch, whatever tags it carries (they ride the one legacy prompt)', async () => {
+  it('penalises the MATH-mode rows of a MIXED batch too (they ride the legacy prompt)', async () => {
     // One tagged row and one untagged row: the penalty map is keyed over the WHOLE stage, so
     // neither silently loses its penalty.
     const script: Script = { scores: { a0: 0.5, a1: 0.5 } };
@@ -479,6 +547,24 @@ describe('enqueueOrphanedReasons', () => {
     // submitted as a reasons job
     expect(lastJobCalls()).toEqual(['reason:o0']);
     expect(bs[0].phase).toBe('waiting-reasons');
+  });
+
+  it.each([
+    ['inactive', 'ExponentPushToken[test]'],
+    ['active', null],
+  ] as const)('the reasons-only job carries the push token only when the app is not on screen (%s)', async (state, token) => {
+    const submits = captureSubmits();
+    gateway({}, { pendingPolls: 999 });
+    await warmAttestation();
+    await seedArticles(['o0']);
+    await saveScoringResult('o0', { relevance: 0.8, reason: '', reasonSkipped: false });
+    appStateModule.currentState = state; // silent: no poller starts
+
+    await drive(pipeline.enqueueOrphanedReasons());
+    await passTime(100);
+
+    expect(submits).toHaveLength(1);
+    expect(submits[0].token).toBe(token);
   });
 });
 

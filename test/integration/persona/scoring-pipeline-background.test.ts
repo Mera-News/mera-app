@@ -22,7 +22,6 @@ import {
   jobSubmits,
   later,
   passTime,
-  patchBatch,
   phases,
   resetPipelineWorld,
   rows,
@@ -129,9 +128,7 @@ describe('advanceWaitingForBackground (step a)', () => {
     gateway({}, { pendingPolls: 999 });
     await warmAttestation();
     await seedAndEnqueue(['a0'], { flush: true });
-    await patchBatch(0, (b) => {
-      b.submittedAt = Date.now() - 6 * 3600_000;
-    });
+    later(6 * 3600_000); // the OS wakes the app six hours after the submit
     const submitted = jobSubmits().length;
 
     await drive(advanceWaitingForBackground({ deadlineAt: deadline() }));

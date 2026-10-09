@@ -378,6 +378,8 @@ export interface Script {
   notes?: Record<string, string | null>;
   /** Pass-2 rescore per article id: reply is `{"k","s","reason"}`. */
   rescores?: Record<string, { k: string; s: number }>;
+  /** Every relevance call fails upstream (the job row comes back `ok: false`). */
+  failScores?: boolean;
   /** Reply `{"keep":..., "why":...}` verdicts (legacyNoteDemote) instead of prose. */
   verdicts?: Record<string, { keep: boolean; why?: string } | 'junk'>;
 }
@@ -387,6 +389,7 @@ export function scripted(script: Script = {}): GatewayResponder {
   return (call: GatewayCall) => {
     const user = call.messages.find((m) => m.role === 'user')?.content ?? '';
     if (call.callId?.startsWith('score:')) {
+      if (script.failScores) return { status: 500 };
       // One score per article block, in order; a block whose title is not `Story <id>` gets the default.
       const blocks = user.split(/===== Article \d+ =====/).slice(1);
       return JSON.stringify(

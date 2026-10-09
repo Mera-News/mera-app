@@ -25,6 +25,7 @@ import logger from '@/lib/logger';
 import * as pipeline from '@/lib/services/scoring-pipeline';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { appStateModule } from '@/test/helpers/app-state';
 import {
   attestationRequests,
   gatewayCalls,
@@ -63,6 +64,7 @@ import {
   warmAttestation,
   watchResultsPolls,
   watchTraffic,
+  type Script,
 } from './scoring-pipeline-kit';
 
 // Hoisted above the imports by babel-jest; written here so the imports stay first.
@@ -723,10 +725,7 @@ describe('recover', () => {
     gateway({}, { pendingPolls: 999 });
     await warmAttestation();
     await seedAndEnqueue(['a0'], { flush: true });
-    await patchRun((run) => {
-      run.startedAt = Date.now() - 25 * 3600_000; // > 24h
-      for (const b of run.batches) b.submittedAt = Date.now() - 25 * 3600_000;
-    });
+    later(25 * 3600_000); // nothing moved for over 24h (RUN_ABANDON_MS)
     holdKick(); // abandoned rows stay unscored; the kick would re-enqueue them
 
     const result = await drive(pipeline.recover());
@@ -739,6 +738,8 @@ describe('recover', () => {
     gateway({}, { pendingPolls: 999 });
     await warmAttestation();
     await seedAndEnqueue(['a0'], { flush: true });
+    // An older run with recent activity (an OS task kept submitting to it overnight): isolation
+    // patch, the clock alone cannot age `startedAt` without ageing the submit too.
     await patchRun((run) => {
       run.startedAt = Date.now() - 25 * 3600_000;
     });
@@ -943,10 +944,12 @@ describe('finalize side-effects', () => {
 describe('apply-step throw → attempt cap (MERA-APP-53/55)', () => {
   let decode: jest.SpyInstance;
   beforeEach(() => {
-    // The decoder throws every time the results are applied: the exact loop the fix bounds.
-    decode = jest.spyOn(scoringService, 'decodeResults').mockImplementation(() => {
+    // The decoder throws on both applies (attempt 1 and attempt 2): the exact loop the fix bounds.
+    // Two one-call injections, not a standing mock (R23).
+    const boom = () => {
       throw new Error('Record article_suggestions#a0 not found');
-    });
+    };
+    decode = jest.spyOn(scoringService, 'decodeResults').mockImplementationOnce(boom).mockImplementationOnce(boom);
   });
   afterEach(() => decode.mockRestore());
 
@@ -1266,9 +1269,7 @@ describe('staleness counts from the first check, not the submit', () => {
     gateway({}, { pendingPolls: 999 });
     await warmAttestation();
     await seedAndEnqueue(['a0'], { flush: true });
-    await patchBatch(0, (b) => {
-      b.submittedAt = Date.now() - 6 * 3600_000;
-    });
+    later(6 * 3600_000); // the app is opened six hours after the submit
     const submitted = jobSubmits().length;
 
     await tick();
@@ -1293,12 +1294,14 @@ describe('staleness counts from the first check, not the submit', () => {
     expect(polls).toHaveLength(1);
 
     // Submitted 3h ago: the token is past its TTL, so no GET is sent at all (it would only 401).
-    await patchBatch(0, (b) => {
-      b.submittedAt = Date.now() - 3 * 3600_000;
-    });
+    later(3 * 3600_000);
     await tick();
     expect(polls).toHaveLength(1);
-    expect((await batches())[0]).toMatchObject({ phase: 'waiting-relevance', attempt: 0 });
+    // (the check threw "no auth available" and, three hours on, the batch is stale: requeued)
+    expect(logger.captureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ tags: expect.objectContaining({ step: 'fetch' }) }),
+    );
   });
 });
 
@@ -1364,5 +1367,84 @@ describe('the drain yields to an earlier batch (measured regression)', () => {
     await tickUntil(async () => (await phases())[1] === 'waiting-relevance');
     expect(traffic[0]).toBe('poll');
     expect(traffic.indexOf('submit')).toBeGreaterThan(traffic.indexOf('poll'));
+  });
+});
+
+// The foreground poller is the real driver of a run: every other test in this file turns it off
+// (AppState inactive) and ticks by hand. These run with the app active, so the interval timer,
+// `runPollerTick` and the drain's kick are the thing under test. Fake time is paid in wall time, so
+// each one passes only a few seconds.
+describe('foreground poller', () => {
+  it('drives a run from queued to done on its own', async () => {
+    setAppState('active');
+    gateway({ scores: { a0: 0.9, a1: 0.2 } });
+    await warmAttestation();
+
+    await seedAndEnqueue(['a0', 'a1'], { flush: true });
+    expect((await phases())[0]).toBe('waiting-relevance');
+    await passTime(8_000);
+
+    // relevance → reasons → done, with nobody calling pollTick: the interval did it all
+    expect(await currentRun()).toBeNull();
+    const r = await rows();
+    expect(r.a0).toMatchObject({ relevance: 0.8, reason: 'Why story a0 matters here.', status: 'complete' });
+    expect(r.a1).toMatchObject({ relevance: 0.2, status: 'complete' });
+    expect(useForYouStore.getState().asyncJobPhase).toBe('idle');
+  });
+
+  it('stops ticking when the app leaves the foreground and resumes when it returns', async () => {
+    setAppState('active');
+    gateway({}, { pendingPolls: 999 });
+    await warmAttestation();
+    await seedAndEnqueue(['a0'], { flush: true });
+    const polls = watchResultsPolls();
+
+    setAppState('inactive');
+    await passTime(3_000);
+    expect(polls).toHaveLength(0);
+
+    setAppState('active');
+    setAppState('active'); // a second change event finds the timer already running
+    await passTime(3_000);
+    expect(polls.length).toBeGreaterThan(0);
+  });
+
+  it('_resetForTests stops a poller whose first tick is still pending', async () => {
+    gateway({}, { pendingPolls: 999 });
+    await warmAttestation();
+    await seedAndEnqueue(['a0'], { flush: true });
+    const polls = watchResultsPolls();
+
+    setAppState('active'); // arms the first tick
+    pipeline._resetForTests();
+    await passTime(2_000);
+
+    expect(polls).toHaveLength(0);
+  });
+
+  // Hydration enqueues every few hundred ms and each enqueue drains. A drain that only looked at
+  // fresh submits spent every slot on batches 1-3 while batch 0's finished one-call job went
+  // unpolled for 11s. When the top-ranked action is a poll the drain cannot take, it kicks a poll
+  // tick on the next turn instead of leaving the slot for the interval timer.
+  it('a drain that yields to a due poll kicks a poll tick right away instead of waiting for the interval', async () => {
+    const script: Script = { defaultScore: 0.1 };
+    gateway(script, { pendingPolls: 999 });
+    await warmAttestation();
+    await seedAndEnqueue(ids(5 + 10));
+    await tickUntil(async () => (await waitingCount()) === 2);
+    const [b0, b1] = await batches();
+    // Batch 0 finishes (collected by hand, the way a silent push would). The app counts as
+    // foreground, set without the change event so NO interval timer exists: whatever polls batch 1
+    // next was started by the drain's kick.
+    gateway(script);
+    holdJobs((id) => id !== b0.requestId);
+    appStateModule.currentState = 'active';
+    later();
+    const polls = watchResultsPolls();
+
+    await drive(pipeline.handlePush(b0.requestId, 'foreground')); // → done → afterTerminal → drain
+
+    expect((await phases())[0]).toBe('done');
+    expect(polls).toEqual([b0.requestId, b1.requestId]);
   });
 });
