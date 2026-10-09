@@ -4,6 +4,9 @@ export interface Scenario {
     dailyLimitReached: boolean;
     articles: 'default' | 'empty';
     discovery: boolean;
+    /** Origin for fixture image URLs; null = the request's own origin. The e2e lane's
+     *  negative control points it at a non-mock host so step 7 must turn red. */
+    imageOrigin: string | null;
 }
 
 const DEFAULT_SCENARIO: Scenario = {
@@ -11,6 +14,7 @@ const DEFAULT_SCENARIO: Scenario = {
     dailyLimitReached: false,
     articles: 'default',
     discovery: false,
+    imageOrigin: null,
 };
 
 let current: Scenario = { ...DEFAULT_SCENARIO };

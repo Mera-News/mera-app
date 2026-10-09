@@ -7,7 +7,7 @@
 # refuses every foreign host, so nothing outside reaches a server. That log cannot say WHO asked
 # (the playstore image's OS traffic arrives as raw IPs), so step 7 samples the sockets owned by the
 # app's uid from /proc/net and fails on any remote other than the mock. Denied proxy connections are
-# held open for 3 s so a 1 s sampler sees them.
+# held open for 3 s so the 0.2 s sampler sees them.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -88,7 +88,7 @@ step 1 prebuild$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build)" ): (s
 step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process); cp $APK_OUT $LAST; grep the raw bundle: require 10.0.2.2:$PORT, forbid prod/staging endpoint hosts and every .env secret value (DSN, KEY, TOKEN, APP_ID, CLIENT_ID)
 step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --deny-delay 3000 --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
 step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 -http-proxy http://127.0.0.1:$PORT > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s); screenshot $RUN/launcher.png
-step 5 install: adb -s $SERIAL install -r $LAST; resolve the app uid; require /proc/net/tcp6 readable; start the 1 s app-socket sampler -> $RUN/app-sockets.txt
+step 5 install: adb -s $SERIAL install -r $LAST; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
 step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test $FLOWS --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler; logcat -d > $RUN/logcat.txt; report WMDatabaseJSIBridge install line and FATAL lines
 step 7 app sockets: every sampled app-uid remote must be 10.0.2.2:$PORT (or loopback/unconnected), and at least one must be the mock
 step 8 cleanup (always, idempotent): stop sampler; adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f "@$AVD" to clear; kill mock server
@@ -119,7 +119,7 @@ cleanup() {
   [ "$CLEANED" = 1 ] && return 0
   CLEANED=1
   set +e
-  [ -n "$SAMPLER_PID" ] && kill "$SAMPLER_PID" 2> /dev/null
+  [ -n "$SAMPLER_PID" ] && { pkill -P "$SAMPLER_PID" 2> /dev/null; kill "$SAMPLER_PID" 2> /dev/null; }
   if [ "$EMU_STARTED" = 1 ]; then
     "$ADB" -s "$SERIAL" emu kill > /dev/null 2>&1
     for _ in $(seq 1 60); do pgrep -f "@$AVD" > /dev/null || break; sleep 1; done
@@ -203,12 +203,12 @@ APP_UID="$("$ADB" -s "$SERIAL" shell pm list packages -U "$APP_ID" | tr -d '\r' 
 "$ADB" -s "$SERIAL" shell cat /proc/net/tcp6 | head -1 | grep -q local_address \
   || { echo "error: /proc/net/tcp6 is not readable over adb; the socket check would be blind" >&2; exit 1; }
 : > "$RUN/app-sockets.txt"
+# One on-device loop at 0.2 s (an adb round trip per sample would be ~1 s). TIME_WAIT rows carry
+# uid 0, so a connection opened and closed inside one interval can still slip by; the proxy holds
+# every refused foreign connection 3 s, and D3's negative control measures the direct path.
 (
-  while :; do
-    "$ADB" -s "$SERIAL" shell cat /proc/net/tcp /proc/net/tcp6 2> /dev/null | tr -d '\r' \
-      | awk -v u="$APP_UID" '$8 == u { print $3 }' >> "$RUN/app-sockets.txt"
-    sleep 1
-  done
+  "$ADB" -s "$SERIAL" shell "while :; do cat /proc/net/tcp /proc/net/tcp6; sleep 0.2; done" 2> /dev/null \
+    | tr -d '\r' | awk -v u="$APP_UID" '$8 == u { print $3; fflush() }' >> "$RUN/app-sockets.txt"
 ) &
 SAMPLER_PID=$!
 
@@ -218,7 +218,7 @@ MAESTRO_RC=0
 MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test "$FLOWS" \
   --test-output-dir "$RUN/maestro" --format junit --output "$RUN/junit.xml" \
   -e MOCK="http://localhost:$PORT" -e EMAIL="$EMAIL" -e OTP="$OTP" -e APP_ID="$APP_ID" -e SCHEME="$SCHEME" || MAESTRO_RC=$?
-kill "$SAMPLER_PID" 2> /dev/null || true
+pkill -P "$SAMPLER_PID" 2> /dev/null || true; kill "$SAMPLER_PID" 2> /dev/null || true
 SAMPLER_PID=""
 "$ADB" -s "$SERIAL" logcat -d > "$RUN/logcat.txt" || true
 grep -q 'WMDatabaseJSIBridge: Successfully installed' "$RUN/logcat.txt" && echo "logcat: WatermelonDB JSI installed" || echo "logcat: no WatermelonDB JSI install line"
