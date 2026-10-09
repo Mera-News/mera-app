@@ -4,49 +4,24 @@
 // for any number of subscribers, no interval at all when nothing is mounted or
 // the app is backgrounded, and an immediate catch-up on foreground.
 //
-// `react-native` is replaced with a hand-rolled AppState so the spec can drive
-// foreground/background transitions directly (the module touches nothing else
-// from RN).
+// AppState is the integration setup's drivable one: setAppState() moves `currentState` and
+// calls every 'change' listener, as the OS does.
 
-type Handler = (state: string) => void;
-
-const mockAppState: { currentState: string; handlers: Set<Handler> } = {
-    currentState: 'active',
-    handlers: new Set(),
-};
-
-jest.mock('react-native', () => ({
-    AppState: {
-        get currentState() {
-            return mockAppState.currentState;
-        },
-        addEventListener: (_event: string, handler: Handler) => {
-            mockAppState.handlers.add(handler);
-            return { remove: () => mockAppState.handlers.delete(handler) };
-        },
-    },
-}));
-
-// eslint-disable-next-line import/first
+import { AppState } from 'react-native';
+import { setAppState } from '@/test/helpers';
 import {
     TIME_TICK_MS,
     __resetTimeTickForTests,
     getTimeTick,
     notifyTimeTick,
     subscribeTimeTick,
-} from '../time-tick';
-
-function emitAppState(state: string): void {
-    mockAppState.currentState = state;
-    mockAppState.handlers.forEach((h) => h(state));
-}
+} from '@/lib/time-tick';
 
 describe('time-tick', () => {
     beforeEach(() => {
         jest.useFakeTimers();
-        mockAppState.currentState = 'active';
-        mockAppState.handlers.clear();
         __resetTimeTickForTests();
+        setAppState('active');
     });
 
     afterEach(() => {
@@ -123,7 +98,7 @@ describe('time-tick', () => {
     it('stops ticking while the app is backgrounded', () => {
         const listener = jest.fn();
         subscribeTimeTick(listener);
-        emitAppState('background');
+        setAppState('background');
         expect(jest.getTimerCount()).toBe(0);
 
         jest.advanceTimersByTime(TIME_TICK_MS * 5);
@@ -133,11 +108,11 @@ describe('time-tick', () => {
     it('snaps forward IMMEDIATELY on return to the foreground, without waiting out a tick', () => {
         const listener = jest.fn();
         subscribeTimeTick(listener);
-        emitAppState('background');
+        setAppState('background');
         jest.advanceTimersByTime(TIME_TICK_MS * 5);
 
         const beforeResume = getTimeTick();
-        emitAppState('active');
+        setAppState('active');
         expect(listener).toHaveBeenCalledTimes(1);
         expect(getTimeTick()).toBeGreaterThanOrEqual(beforeResume + TIME_TICK_MS * 5);
         expect(jest.getTimerCount()).toBe(1);
@@ -145,21 +120,26 @@ describe('time-tick', () => {
 
     it('does NOT re-arm on foreground when nothing is mounted any more', () => {
         const unsub = subscribeTimeTick(() => {});
-        emitAppState('background');
+        setAppState('background');
         unsub(); // the last card went away while we were away
-        emitAppState('active');
+        setAppState('active');
         expect(jest.getTimerCount()).toBe(0);
     });
 
     it('removes its AppState listener once the last subscriber leaves', () => {
+        const add = jest.spyOn(AppState, 'addEventListener');
         const unsub = subscribeTimeTick(() => {});
-        expect(mockAppState.handlers.size).toBe(1);
+        expect(add).toHaveBeenCalledTimes(1);
+        expect(add).toHaveBeenCalledWith('change', expect.any(Function));
+        const subscription = add.mock.results[0].value as { remove: () => void };
+        const remove = jest.spyOn(subscription, 'remove');
         unsub();
-        expect(mockAppState.handlers.size).toBe(0);
+        expect(remove).toHaveBeenCalledTimes(1);
+        add.mockRestore();
     });
 
     it('does not arm the interval when subscribing while backgrounded', () => {
-        mockAppState.currentState = 'background';
+        setAppState('background');
         subscribeTimeTick(() => {});
         expect(jest.getTimerCount()).toBe(0);
     });

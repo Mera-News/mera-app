@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 function loadModule() {
-  return require('../visibility-tick') as typeof import('../visibility-tick');
+  return require('@/lib/visibility-tick') as typeof import('@/lib/visibility-tick');
 }
 
 describe('subscribeScrollTick', () => {
