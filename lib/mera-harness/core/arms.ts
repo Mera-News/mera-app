@@ -54,6 +54,9 @@ export interface AgentArm {
   /** Absent means ON: a forced-offer entry sharing no subject word with what
    *  the user or Mera said this exchange is dropped. 'off' is the control. */
   forcedOfferGrounding?: 'off' | 'on';
+  /** Absent means OFF. 'on' gives a forced offer that proposed and said nothing
+   *  one tool-free leg for a closing sentence. */
+  forcedOfferClosing?: 'off' | 'on';
 }
 
 const BASELINE: AgentArm = {
@@ -264,6 +267,11 @@ export function multiSubjectFor(arm: AgentArm): 'off' | 'on' {
 /** Absent means ON (navx2-fu). */
 export function forcedOfferGroundingFor(arm: AgentArm): 'off' | 'on' {
   return arm.forcedOfferGrounding ?? 'on';
+}
+
+/** Absent means OFF until the corpus run passes. */
+export function forcedOfferClosingFor(arm: AgentArm): 'off' | 'on' {
+  return arm.forcedOfferClosing ?? 'off';
 }
 
 export function topicFlowFor(arm: AgentArm): 'current' | 'isolated+combo' {

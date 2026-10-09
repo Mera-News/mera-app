@@ -4,7 +4,7 @@
 // the eval runner wires fakes. A harness green is therefore evidence about the
 // app rather than about a parallel implementation.
 
-import { forcedOfferGroundingFor, multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
+import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
 import {
   claimsSaveHappened,
@@ -68,6 +68,12 @@ import { createAgentTurnState } from './types';
 /** Legs per user turn. It CLAMPS and sets legBudgetHit; it never throws, because
  *  a throw ends an eval run and loses every later script. */
 export const MAX_AGENT_LEGS = 4;
+
+/** The one tool-free leg a silent forced offer gets (forced-offer-closing arm).
+ *  Nothing is saved until the tap, so the sentence must not claim a save. */
+const CLOSING_LINE_NOTE =
+  'You offered the card above. Nothing is saved until the user taps it. '
+  + 'Write ONE short sentence to the user about what you offered. Do not call a tool.';
 
 /**
  * Re-asks allowed when a route leg comes back with no route.
@@ -638,6 +644,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const enforceRoute = routeEnforcementFor(resolveAgentArm(params.promptVariant)) === 'on';
   const multiSubject = multiSubjectFor(resolveAgentArm(params.promptVariant)) === 'on';
   const groundForcedOffer = forcedOfferGroundingFor(resolveAgentArm(params.promptVariant)) === 'on';
+  const closeForcedOffer = forcedOfferClosingFor(resolveAgentArm(params.promptVariant)) === 'on';
 
   // ---- resolve a pending choice BEFORE anything else -----------------------
   // The tap arrives as an ordinary message. Matching it here is what lets the
@@ -772,6 +779,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let legBudgetHit = false;
   /** One closing-sentence leg is allowed after a proposal, never a stream. */
   let silentLegAfterProposal = false;
+  /** The closing leg after a silent forced offer: no tools, and any call it
+   *  writes anyway is dropped (it would stage a second card). */
+  let closingLegNow = false;
   /** Prose written AFTER a skill loaded. The route leg's acknowledgement does
    *  not count: it says the turn began, not that the user was answered. */
   let answeredTheUser = false;
@@ -1087,7 +1097,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // as a model failure.
     // A SAVE ALL TAP's first leg is written by the loop: the offer of every
     // option, through the ordinary save path, so every guard still applies.
-    const result = index === 0 && saveAllOptions !== null ? saveAllLeg(saveAllOptions) : await deps.callModel({
+    const called = index === 0 && saveAllOptions !== null ? saveAllLeg(saveAllOptions) : await deps.callModel({
       role: index === 0 ? 'route' : 'tool',
       model,
       systemPrompt,
@@ -1098,7 +1108,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // re-load at leg 3 after the other tools had already run. Withholding the
       // tool is stronger than answering it, because a tool the model cannot
       // see is one it cannot spend a leg on.
-      tools: toolsForLeg({
+      tools: closingLegNow ? [] : toolsForLeg({
         skillLoaded,
         forcingProposal: forcingProposalNow,
         wideRouteLeg: !enforceRoute,
@@ -1119,6 +1129,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       onDelta: index === 0 && !resumedSkill ? params.onDelta : undefined,
       streamToUser: index === 0 && !resumedSkill,
     });
+    const result = closingLegNow && called.toolCalls.length > 0 ? { ...called, toolCalls: [] } : called;
 
     const leg: AgentLeg = {
       index,
@@ -1810,6 +1821,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       if (proposedSomething) {
         if (silentLegAfterProposal) break;
         silentLegAfterProposal = true;
+        // A FORCED offer stays forced on that leg and usually ends the budget,
+        // so the sentence leg above never comes (forced-offer-closing arm).
+        if (closeForcedOffer && forcingProposalNow) {
+          forcingProposalNow = false;
+          closingLegNow = true;
+          formatErrorNote = CLOSING_LINE_NOTE;
+          if (nextLegIndex >= maxLegsThisTurn + formatRetries) maxLegsThisTurn++;
+        }
       }
       continue;
     }
@@ -1920,6 +1939,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         continuationsSeen.clear();
         forcingProposalNow = false;
         silentLegAfterProposal = false;
+        closingLegNow = false;
         answeredTheUser = false;
         proposedSomething = false;
         reply = '';

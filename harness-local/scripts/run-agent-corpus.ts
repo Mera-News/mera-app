@@ -35,10 +35,12 @@ import { BIG_MODEL } from '../../lib/llm/constants';
 // out as its own package.
 import { agentArmIds, resolveAgentArm } from '../../lib/mera-harness/core/arms';
 import { NULL_CONTROL_ARM, ensureNullControlArm } from '../../lib/mera-harness/eval/null-control';
+import { ensureForcedOfferClosingArms } from '../../lib/mera-harness/eval/forced-offer-closing';
 
 // ONCE, at module scope. registerAgentArm throws on a second registration, so
 // this must not move inside a loop.
 ensureNullControlArm();
+ensureForcedOfferClosingArms();
 
 import { PERSONA_SKILL_IDS } from '../../lib/mera-harness/skills/index.generated';
 import { routeKindsFor } from '../../lib/mera-harness/eval/contract';
@@ -84,6 +86,9 @@ interface Args {
   /** `native` sends a `tools` field (cleartext on the app's wire); `text` is
    *  the app's E2EE text protocol. Several interleave like variants. */
   toolProtocols: ('native' | 'text' | 'text-xml' | 'text-xml-first' | 'text-xml-first-soft' | 'text-marker')[];
+  /** `--pairs variant+protocol,...`: exactly these arms, instead of every
+   *  variant crossed with every protocol. */
+  pairs: { variant: string; protocol: Args['toolProtocols'][number] }[] | null;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -96,6 +101,7 @@ function parseArgs(argv: string[]): Args {
     dryRun: false,
     oneShotVariant: null,
     toolProtocols: ['native'],
+    pairs: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
@@ -112,7 +118,21 @@ function parseArgs(argv: string[]): Args {
         if (!['native', 'text', 'text-xml', 'text-xml-first', 'text-xml-first-soft', 'text-marker'].includes(p)) throw new Error(`harness-local: --tool-protocol takes native,text,text-xml,text-xml-first,text-xml-first-soft,text-marker (got ${p}).`);
       }
       a.toolProtocols = list as Args['toolProtocols'];
+    } else if (f === '--pairs') {
+      a.pairs = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean).map((p) => {
+        const plus = p.indexOf('+');
+        const protocol = plus < 0 ? '' : p.slice(plus + 1);
+        if (plus < 1 || !['native', 'text', 'text-xml', 'text-xml-first', 'text-xml-first-soft', 'text-marker'].includes(protocol)) {
+          throw new Error(`harness-local: --pairs takes variant+protocol,... (got ${p}).`);
+        }
+        return { variant: p.slice(0, plus), protocol: protocol as Args['toolProtocols'][number] };
+      });
     }
+  }
+  if (a.pairs) {
+    // The header and the startup variant check read these two lists.
+    a.variants = [...new Set(a.pairs.map((x) => x.variant))];
+    a.toolProtocols = [...new Set(a.pairs.map((x) => x.protocol))];
   }
   if (!Number.isFinite(a.repeat) || a.repeat < 1) throw new Error('harness-local: --repeat must be 1 or more.');
   if (a.repeat < 3) {
@@ -320,8 +340,9 @@ async function main(): Promise<number> {
     // Variants interleave with models so both arms sit in one run and one time
     // window: NEAR drifts enough between runs that a control arm which could
     // not affect anything still moved a kept count by 7.
-    for (const variant of args.variants) {
-      for (const protocol of args.toolProtocols) {
+    const combos = args.pairs ?? args.variants.flatMap((variant) => args.toolProtocols.map((protocol) => ({ variant, protocol })));
+    for (const { variant, protocol } of combos) {
+      {
       for (const model of args.models) {
         const dry = dryRunModel(rep);
         const arm = `${model}@${variant}${protocol === 'native' ? '' : `+${protocol}`}`;
@@ -470,7 +491,9 @@ async function main(): Promise<number> {
  * MUST be identical, because their spread is the run's noise floor.
  */
 export function armDistinctnessFailures(rows: EvalRow[]): string[] {
-  const TWINS = new Set(['baseline', 'null-control']);
+  // forced-offer-closing changes the LOOP, not the leg-0 prompt, so it and its
+  // twin share baseline's prompt by design. Its wiring shows as tool-free legs.
+  const TWINS = new Set(['baseline', 'null-control', 'forced-offer-closing', 'forced-offer-closing-twin']);
   const byPrompt = new Map<string, Set<string>>();
   for (const r of rows) {
     if (r.legIndex !== 0) continue;
