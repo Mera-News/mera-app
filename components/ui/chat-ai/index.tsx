@@ -441,6 +441,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         </View>
       ) : null}
       <TextInput
+        testID="chat-input"
         ref={inputRef}
         multiline
         keyboardAppearance={keyboard}
