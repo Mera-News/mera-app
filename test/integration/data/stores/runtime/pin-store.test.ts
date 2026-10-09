@@ -41,8 +41,8 @@ import {
   shouldLockAfterBackground,
   usePinStore,
 } from '@/lib/stores/pin-store';
-import { failSecureStore, secureStoreDump, setAppState, useStrictClock } from '@/test/helpers';
-import { resetStore } from './support';
+import { failSecureStore, healSecureStore, secureStoreDump, setAppState, useStrictClock } from '@/test/helpers';
+import { resetStore, settle } from './support';
 
 const NOW = Date.parse('2026-10-09T10:00:00.000Z');
 const SLUG = Constants.expoConfig?.slug;
@@ -200,7 +200,7 @@ describe('pin-store', () => {
     // runPinForceResetOnce is total by contract, so init's own catch is reachable only by making the
     // collaborator throw (R23: one call of a real export). Failing OPEN is right for a lock: failing
     // closed strands the user on a screen no entry can satisfy.
-    it('a reset that throws still leaves the gate OFF and does not block launch', async () => {
+    it('PE18 today: a reset that throws still leaves the gate OFF and does not block launch', async () => {
       await seedLock();
       const err = new Error('keychain');
       spy(pinForceReset, 'runPinForceResetOnce').mockRejectedValueOnce(err);
@@ -211,7 +211,7 @@ describe('pin-store', () => {
       expect(logger.captureException).toHaveBeenCalledWith(err, { tags: { store: 'pin-store', method: 'init' } });
     });
 
-    it('a PIN read that throws leaves the gate OFF too', async () => {
+    it('PE18 today: a PIN read that throws leaves the gate OFF too', async () => {
       await seedLock();
       const err = new Error('keychain locked');
       spy(pinService, 'isPinSet').mockRejectedValueOnce(err);
@@ -220,6 +220,38 @@ describe('pin-store', () => {
 
       expect(store()).toMatchObject({ pinSet: false, lockEnabled: false, locked: false, initialized: true });
       expect(logger.captureException).toHaveBeenCalledWith(err, { tags: { store: 'pin-store', method: 'init' } });
+    });
+
+    // PE20: init() commits `initialized: true` even when its reads failed, so it never re-reads in
+    // this process. A launch before first unlock (a background wake) latches "no lock", and the
+    // foreground that follows opens without the PIN.
+    describe('a launch whose PIN reads failed (before first unlock)', () => {
+      /** Lock on and a PIN set on disk; the launch cannot read either; then the keychain opens. */
+      async function launchWithFailedReads() {
+        await seedLock();
+        failSecureStore(PIN_RECORD_KEY, 'get');
+        failSecureStore(LOCK_FLAG_KEY, 'get');
+        await store().init();
+        healSecureStore(PIN_RECORD_KEY);
+        healSecureStore(LOCK_FLAG_KEY);
+        setAppState('background');
+        jest.setSystemTime(NOW + BACKGROUND_LOCK_THRESHOLD_MS + 1);
+        setAppState('active');
+        await settle();
+      }
+
+      test.failing('PE20 a launch whose PIN reads failed re-reads them on the next foreground and locks', async () => {
+        await launchWithFailedReads();
+        expect(store().locked).toBe(true);
+      });
+
+      it('PE20 today: the failed reads are latched for the process and the foreground opens without the PIN', async () => {
+        await launchWithFailedReads();
+
+        expect(store()).toMatchObject({ pinSet: false, lockEnabled: false, locked: false, initialized: true });
+        expect(await isPinSet()).toBe(true);
+        expect(await isAppLockEnabled()).toBe(true);
+      });
     });
   });
 
