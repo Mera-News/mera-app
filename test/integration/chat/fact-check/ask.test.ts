@@ -186,6 +186,17 @@ describe('the retention of the checked article', () => {
     expect((await retainedAs('a1'))?.suggestion.title_en).toBe('Caller title');
   });
 
+  it('keeps a titleless snapshot when neither the caller nor the server row names the article', async () => {
+    serveChecks({ ask: () => pendingRow({ articleTitle: null, articleUrl: null, publicationName: null }) });
+
+    await requestFactCheck('a1');
+
+    const kept = await retainedAs('a1');
+    expect(kept?.retained).toBe(true);
+    expect(kept?.suggestion.title_en ?? null).toBeNull();
+    expect(await retention.isSuggestionSaved('a1')).toBe(false);
+  });
+
   it('a later degraded keep never overwrites the full snapshot', async () => {
     serveChecks({ ask: () => pendingRow({ articleTitle: 'Row title', publicationName: 'Row Pub' }) });
     await requestFactCheck('a1', 'T', { articleId: 'a1', article: fullArticle('a1') });
