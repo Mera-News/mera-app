@@ -1,7 +1,7 @@
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 
 import { consumePendingPage, resetPendingPage } from '@/components/custom/nav/navigate-to-page';
-import { redirectSystemPath } from '../+native-intent';
+import { redirectSystemPath } from '@/app/+native-intent';
 
 beforeEach(() => resetPendingPage());
 
