@@ -5,6 +5,9 @@
 import { delay, graphql, HttpResponse, server, useFakeClock } from '@/test/helpers';
 import { client, PROBE, recordRequests, resetLinkState, spyLogger, THROTTLE_SHAPES, type ThrottleShape } from './kit';
 
+// The HTML body takes the same branch as the empty body; it is not repeated here.
+const SHAPES = THROTTLE_SHAPES.filter((s) => !s.includes('HTML'));
+
 beforeEach(() => {
     resetLinkState();
     spyLogger();
@@ -24,9 +27,7 @@ function throttledThenSlow(shape: ThrottleShape) {
             state.hits += 1;
             if (state.hits === 1) {
                 const headers = { 'Retry-After': '1' };
-                if (shape === 'HTTP 429 with an empty body' || shape === 'HTTP 429 with an HTML body') {
-                    return new HttpResponse(null, { status: 429, headers });
-                }
+                if (shape === 'HTTP 429 with an empty body') return new HttpResponse(null, { status: 429, headers });
                 return HttpResponse.json(
                     { errors: [{ message: 'slow down', extensions: { code: 'TOO_MANY_REQUESTS' } }] },
                     { status: shape === 'graphql error in a 200' ? 200 : 429, headers },
@@ -75,7 +76,7 @@ describe('control: a plain query', () => {
     });
 });
 
-describe.each(THROTTLE_SHAPES)('cancelled after the re-send started, throttle as %s', (shape) => {
+describe.each(SHAPES)('cancelled after the re-send started, throttle as %s', (shape) => {
     test.failing('B2: the re-sent request is aborted', async () => {
         const { seen } = await cancelAfterResend(shape);
         expect(seen[1].signal.aborted).toBe(true);
@@ -90,7 +91,7 @@ describe.each(THROTTLE_SHAPES)('cancelled after the re-send started, throttle as
 });
 
 describe('cancelled while still waiting', () => {
-    it.each(THROTTLE_SHAPES)('throttle as %s: the re-send never goes out', async (shape) => {
+    it.each(SHAPES)('throttle as %s: the re-send never goes out', async (shape) => {
         const seen = recordRequests();
         throttledThenSlow(shape);
         const sub = client.watchQuery({ query: PROBE, fetchPolicy: 'no-cache' }).subscribe({ next: () => {}, error: () => {} });
