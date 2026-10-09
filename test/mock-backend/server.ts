@@ -189,7 +189,7 @@ if (/server\.ts$/.test(process.argv[1] ?? '')) {
         const path = await import('node:path');
         const target = path.resolve(__dirname, arg('handlers', './stub-handlers')!);
         const mod = await import(target);
-        const handlers: RequestHandler[] = mod.handlers ?? mod.default?.handlers;
+        const handlers: RequestHandler[] = mod.handlers ?? mod.defaultHandlers ?? mod.default?.handlers;
         const { port, close } = await startMockServer({
             port: Number(arg('port', '8790')),
             handlers,

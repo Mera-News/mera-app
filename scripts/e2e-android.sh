@@ -31,7 +31,7 @@ LAST=e2e-output/last-app-e2e.apk
 
 ORIG_ARGS=("$@")
 DRY=0 FLOWS=.maestro/ SKIP_BUILD=0 CLEAN=0
-HANDLERS="${E2E_HANDLERS:-./stub-handlers}"
+HANDLERS="${E2E_HANDLERS:-./handlers}"
 
 usage() {
   echo "usage: $0 [--dry-run] [--flows <path>] [--skip-build] [--clean] [--handlers <module>]" >&2
