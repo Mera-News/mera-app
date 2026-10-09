@@ -284,15 +284,28 @@ describe('on-device mode', () => {
   });
 });
 
-// Pinned, not judged: both guards are stamped after tier 2 whether or not it ran, so facts the first pass
-// could not place wait for the next fact change (the fingerprint is never bypassed). Whether a refused
-// or on-device sweep should leave the fingerprint unstamped is an owner call; reported as such.
-describe('what a skipped tier 2 leaves behind (today)', () => {
-  it('today: a refused gateway call still stamps the cooldown and the fingerprint, so the same facts are not retried', async () => {
+// DA31: both guards are stamped after tier 2 whether or not it ran, so the facts the first pass could not
+// place wait for the next fact change (the fingerprint is never bypassed, even once the cooldown is over).
+describe('DA31: a derivation that could not ask the model is retried later', () => {
+  const answers = geoModel({ Bangalore: { country: 'IN', city: 'Bangalore', role: 'home' } });
+
+  test.failing('DA31: a refused derivation does not arm the cooldown', async () => {
     await facts(BANGALORE);
     server.use(...mockGateway(() => ({ status: 400, body: { error: 'refused' } })));
     await sweep({ now: T0 });
-    server.use(...mockGateway(geoModel({ Bangalore: { country: 'IN', city: 'Bangalore', role: 'home' } })));
+    server.use(...mockGateway(answers));
+
+    const later = await sweep({ now: T0 + 2 * DAY });
+
+    expect(later).toMatchObject({ ran: true, added: 1 });
+    expect(await places()).toEqual([{ countryCode: 'IN', city: 'Bangalore', role: 'home', weight: 1, provenance: 'llm' }]);
+  });
+
+  it('DA31 today: a refused gateway call still stamps the cooldown and the fingerprint, so the same facts are not retried', async () => {
+    await facts(BANGALORE);
+    server.use(...mockGateway(() => ({ status: 400, body: { error: 'refused' } })));
+    await sweep({ now: T0 });
+    server.use(...mockGateway(answers));
 
     const later = await sweep({ now: T0 + 2 * DAY });
 
@@ -300,12 +313,24 @@ describe('what a skipped tier 2 leaves behind (today)', () => {
     expect(await places()).toEqual([]);
   });
 
-  it('today: an on-device sweep stamps the fingerprint, so switching back to the cloud does not place the leftovers', async () => {
+  test.failing('DA31: an on-device derivation leaves the unplaced facts for the cloud', async () => {
     await facts(BANGALORE);
     await setMode('on-device');
     await sweep({ now: T0 });
     await setMode('cloud');
-    server.use(...mockGateway(geoModel({ Bangalore: { country: 'IN', city: 'Bangalore', role: 'home' } })));
+    server.use(...mockGateway(answers));
+
+    const later = await sweep({ now: T0 + 2 * DAY });
+
+    expect(later).toMatchObject({ ran: true, added: 1 });
+  });
+
+  it('DA31 today: an on-device sweep stamps the fingerprint, so switching back to the cloud does not place the leftovers', async () => {
+    await facts(BANGALORE);
+    await setMode('on-device');
+    await sweep({ now: T0 });
+    await setMode('cloud');
+    server.use(...mockGateway(answers));
 
     const later = await sweep({ now: T0 + 2 * DAY });
 

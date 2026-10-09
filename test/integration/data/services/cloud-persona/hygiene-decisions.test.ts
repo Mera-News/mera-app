@@ -25,6 +25,7 @@ import {
   HYGIENE_PENDING_PRESENTATION_CAP,
 } from '@/lib/database/services/hygiene-service';
 import { getRecent } from '@/lib/database/services/persona-change-log-service';
+import { runSanityAudit } from '@/lib/database/services/topic-sanity-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { getByFact } from '@/lib/database/services/topic-service';
 import * as replacementService from '@/lib/database/services/topic-replacement-service';
@@ -481,7 +482,7 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
   // DATA-U11b-6 (OWNER): the same accept REMOVES the proposal although nothing was cleaned, and the audit
   // cursor has moved past the topic, so no sweep proposes it again. The screen's "retry" toast has nothing
   // to retry. Pinned, not judged.
-  it('today: a floor-held accept still removes the proposal, so the contaminated topic is never offered again', async () => {
+  it('OWNER-D1 today: a floor-held accept still removes the proposal, so the contaminated topic is never offered again', async () => {
     await seedContaminated(1);
     await sweep({ now: T0 });
     const [proposal] = await getPendingProposals();
@@ -492,11 +493,28 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
     expect((await sweep({ now: T0 + 30 * DAY })).proposalCount).toBe(0);
   });
 
-  // DATA-U11b-5: the audit hands the proposal `fillTo` = the fact's active-topic count BEFORE the retire.
-  // generateAndReplace asks for `fillTo - active` replacements, and active still includes the topics about
-  // to go, so the headroom is 0 and no request is ever made. "Replace, don't just delete" deletes.
-  test.failing('DATA-U11b-5: accepting restores the fact to the coverage it had, with a minted replacement', async () => {
-    const { fact, proposal } = await contaminatedCricket();
+  // DA29 (DATA-U11b-5): the audit hands the proposal `fillTo` = the fact's active-topic count BEFORE the
+  // retire. generateAndReplace asks for `fillTo - active` replacements, and active still includes the topics
+  // about to go, so the headroom is 0 and no request is ever made. "Replace, don't just delete" deletes.
+  // Reached the way the backfill reaches it: the real audit's verdicts (its own `fillTo`) go through
+  // addSanityProposals, and the reader accepts the stored proposal. Nothing is hand-fed.
+  async function proposalFromTheBackfillPath() {
+    await seedPersona(9);
+    jest.setSystemTime(T0 - 100 * DAY);
+    const { fact, topics } = await seedFactOrdered(CRICKET, [BAD, 'India cricket news', 'World Cup schedule']);
+    jest.setSystemTime(T0);
+    const audit = await advanceUntilDone(
+      runSanityAudit({ facts: (await getFacts()).map((f) => ({ id: f.id, statement: f.statement })) }),
+    );
+    expect(audit.incoherentFacts).toEqual([{ factId: fact.id, topicIds: [topics[0].id], fillTo: 3 }]);
+    expect(await addSanityProposals(audit.incoherentFacts)).toBe(1);
+    const [proposal] = await getPendingProposals();
+    expect(proposal.id).toBe(`incoherent_topics:${fact.id}`);
+    return { fact, bad: topics[0], proposal };
+  }
+
+  test.failing('DA29: accepting a proposal from the backfill path restores the fact to the coverage it had, with a minted replacement', async () => {
+    const { fact, proposal } = await proposalFromTheBackfillPath();
 
     await accept(proposal.id);
 
@@ -505,8 +523,8 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
     expect(active).toContain(REPLACEMENT);
   });
 
-  it('today: accepting a proposal makes no replacement request, and the fact ends one topic short', async () => {
-    const { fact, bad, proposal } = await contaminatedCricket();
+  it('DA29 today: accepting a proposal from the backfill path makes no replacement request, and the fact ends one topic short', async () => {
+    const { fact, bad, proposal } = await proposalFromTheBackfillPath();
     const before = gatewayCalls().length;
 
     const res = await accept(proposal.id);

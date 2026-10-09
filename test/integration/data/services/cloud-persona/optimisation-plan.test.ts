@@ -34,7 +34,8 @@ import { getRecent } from '@/lib/database/services/persona-change-log-service';
 import { getPreferenceKind } from '@/lib/database/services/publication-preference-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { getAll as getSuppressions } from '@/lib/database/services/suppression-service';
-import { getByFact } from '@/lib/database/services/topic-service';
+import { getByFact, retire } from '@/lib/database/services/topic-service';
+import database from '@/lib/database';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import {
   advanceUntilDone,
@@ -411,7 +412,7 @@ describe('runOptimisationCycle: the model reply is validated', () => {
       auto: [`topic_up:${climate.id}`, `topic_up:${space.id}`].sort(),
       review: ['suppress:evt:obituary'],
     };
-    for (const garbage of ['I could not decide.', '{"autoChanges": "all", "reviewItems": 7}', '[1, 2', '']) {
+    for (const garbage of ['I could not decide.', '{"autoChanges": "all", "reviewItems": 7}', '[1, 2', '{not json}', '']) {
       await setSetting('optimisation_last_run_at', '');
       reply(() => garbage);
 
@@ -704,7 +705,7 @@ describe('retire, publication and failure paths on accept', () => {
     expect((await getByFact(cricket.factId!)).find((t) => t.id === cricket.id)!.status).toBe('retired');
   });
 
-  it('turns a gentler alternative to a retire into a down-weight of at most 0.5 (it must name retire_topic itself; a set_topic_weight one is dropped)', async () => {
+  it('OWNER-D2 today: a gentler alternative to a retire turns into a down-weight of at most 0.5 (it must name retire_topic itself; a set_topic_weight one is dropped)', async () => {
     const cricket = await retireDay();
     reply((call) =>
       JSON.stringify({
@@ -773,6 +774,84 @@ describe('retire, publication and failure paths on accept', () => {
     await setSetting('optimisation_rejected_fingerprints', '{not json');
 
     expect(await cycle()).toEqual({ ran: true, autoCount: 2, reviewCount: 1 });
+  });
+});
+
+describe('what accept does when an op cannot change anything', () => {
+  it('reports a nudge the rails refuse (the topic is already at the ceiling) and still settles the plan', async () => {
+    const { topics } = await seedFact('Follows climate', [{ text: 'Climate', weight: 1 }]);
+    for (let i = 0; i < 3; i++) {
+      await verdict(`c${i}`, 'like', { matchedTopics: [{ topicId: topics[0].id, text: 'Climate' }], treePath: TREE.aLotMore }, T0 - DAY + i * 1000);
+    }
+    await cycle();
+
+    const res = await acceptPlan();
+
+    expect(res).toEqual({
+      applied: true,
+      appliedOps: 0,
+      errors: [`topic_up:${topics[0].id}: Nudge budget exhausted; topic weight unchanged`],
+    });
+    expect(await getRecent()).toEqual([]);
+    expect(await countUnprocessedFeedback()).toBe(0);
+  });
+});
+
+describe('a verdict row whose stored context cannot be read', () => {
+  // Rows the service itself never writes: an older build, or a damaged disk, left context_json that is not
+  // an object. The digest must read them as context-free verdicts, not throw.
+  const damaged = async (contextJson: string, ageDays: number) =>
+    database.write(async () => {
+      await database.get('article_feedback').create((r: any) => {
+        r.articleId = `d-${contextJson}`;
+        r.sentiment = 'dislike';
+        r.title = 'Damaged';
+        r.contextJson = contextJson;
+        r.createdAt = new Date(T0 - ageDays * DAY);
+        r.processedAt = null;
+      });
+    });
+
+  it('treats null, a number and broken JSON as no context at all: nothing to propose, and stale rows are swept', async () => {
+    for (const bad of ['null', '7', '{broken']) await damaged(bad, STALE_SIGNAL_MS / DAY + 5);
+
+    const res = await cycle();
+
+    expect(res).toEqual({ ran: true, reason: 'no_candidates', autoCount: 0, reviewCount: 0 });
+    expect(await countUnprocessedFeedback()).toBe(0); // all three were read, found stale, and swept
+    expect(logs.captureException).not.toHaveBeenCalled();
+  });
+});
+
+describe('DA32: accepting a nudge for a topic the reader has since retired', () => {
+  async function retiredBeforeAccept() {
+    const { climate, space } = await actionableDay();
+    await cycle();
+    await retire(space.id);
+    return { climate, space };
+  }
+  const logsFor = async (topicId: string) => (await getRecent()).filter((l) => JSON.parse(l.actionJson).targetId === topicId);
+
+  test.failing('DA32: a nudge on a retired topic is not recorded as applied', async () => {
+    const { space } = await retiredBeforeAccept();
+
+    const res = await acceptPlan();
+
+    expect(res.appliedOps).toBe(2);
+    expect(res.errors).toHaveLength(1);
+    expect(await logsFor(space.id)).toEqual([]);
+  });
+
+  it('DA32 today: a nudge on a retired topic is counted as applied, moves its weight, and writes a change-log row', async () => {
+    const { space } = await retiredBeforeAccept();
+
+    const res = await acceptPlan();
+
+    expect(res).toEqual({ applied: true, appliedOps: 3, errors: [] });
+    const row = (await getByFact(space.factId!)).find((t) => t.id === space.id)!;
+    expect(row.status).toBe('retired');
+    expect(row.weight).toBeCloseTo(0.8);
+    expect(await logsFor(space.id)).toHaveLength(1);
   });
 });
 
