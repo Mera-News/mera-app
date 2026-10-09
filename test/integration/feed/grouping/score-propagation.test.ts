@@ -222,6 +222,21 @@ describe('gateUnscoredForScoring: same-sync election', () => {
     expect(result.heldBackCount).toBe(1);
   });
 
+  it('elects the described candidate whichever side of the comparison it lands on', async () => {
+    // Mirror of the test above: the described row now has the smaller id and the older date, so
+    // it is the "a" of the comparator in one order and the "b" in the other. Election must not
+    // depend on which.
+    await seedUnscored(
+      { id: 'a', hasDescription: true, firstPubDateMs: 1_000 }, // has description → elected
+      { id: 'b', hasDescription: false, firstPubDateMs: 9_000 },
+    );
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.enqueueIds).toEqual(['a']);
+    expect(result.heldBackCount).toBe(1);
+  });
+
   it('enqueues donor-less singletons directly', async () => {
     await seedUnscored(lone('solo-1'), lone('solo-2'));
 
