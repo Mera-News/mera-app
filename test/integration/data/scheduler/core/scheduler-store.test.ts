@@ -1,5 +1,5 @@
-import { useSchedulerStore } from '../scheduler-store';
-import type { Job } from '../scheduler-types';
+import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
+import type { Job } from '@/lib/scheduler/scheduler-types';
 
 // Helper to make a minimal Job fixture
 function makeJob(overrides: Partial<Job> = {}): Job {
