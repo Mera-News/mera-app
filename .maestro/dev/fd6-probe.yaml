@@ -53,7 +53,7 @@ appId: ${APP_ID}
     timeout: 3000
     optional: true
 - takeScreenshot: fd6-e-you-settings
-# f) the Library tab (3rd native tab), its first panel
+# f) native tab item index 2: on this AVD it lands on World, not Library (kept as recorded)
 - tapOn:
     id: ".*navigation_bar_item_icon_view"
     index: 2
@@ -63,3 +63,20 @@ appId: ${APP_ID}
     timeout: 3000
     optional: true
 - takeScreenshot: fd6-f-library
+# g) the Library tab by deep link (the native tab index is unreliable here), its first page at
+#    rest, then a page reached with a pill (pages: saved, checks, visited, stats)
+- openLink: ${SCHEME}:///logged-in/app_container/library
+- extendedWaitUntil:
+    visible:
+      id: "library-pages-pager-panel-saved"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd6-g1-library-rest
+- tapOn:
+    id: "page-pill-checks"
+- extendedWaitUntil:
+    visible:
+      id: "library-pages-pager-panel-checks"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd6-g2-library-checks
