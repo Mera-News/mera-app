@@ -1,6 +1,6 @@
 export { server } from './msw';
 export { http, graphql, HttpResponse, delay } from 'msw';
-export { useFakeClock, advanceUntilSettled, advanceUntilDone } from './clock';
+export { useFakeClock, useStrictClock, advanceUntilSettled, advanceUntilDone, advanceUntil } from './clock';
 export { setAppState } from './app-state';
 export { failSecureStore, secureStoreDump } from './storage';
 export { initI18nEn } from './i18n';
