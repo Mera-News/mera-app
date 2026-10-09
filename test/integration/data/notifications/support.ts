@@ -7,10 +7,11 @@
 // Two things follow from a registry being fresh, and both are handled here:
 //   - lib/database builds its own in-memory store, so the new graph is handed the ORIGINAL
 //     instance (jest.doMock below). It is the same real database, not a stand-in.
-//   - Setup-file mocks (expo-router, the secure store, the Intercom SDK) are rebuilt by their
-//     factories, so assertions about the reloaded graph go through the handles `freshGraph`
-//     returns, never through the test file's own imports of those modules.
-// The notification and logger edges live on globalThis (edge.ts) and ARE shared.
+//   - A mock factory runs again inside an isolated registry UNLESS the main registry already
+//     holds that mock (jest-runtime requireMock). So whether a setup-file mock (expo-router, the
+//     secure store) is shared depends on what the test file loaded first. `freshGraph` loads
+//     expo-router in the main registry before isolating, which makes `router` one object.
+// The notification and logger edges live on globalThis (edge.ts) and are shared outright.
 import { graphql } from 'msw';
 import { server } from '@/test/helpers';
 
@@ -31,7 +32,8 @@ export interface Graph {
   route: Route;
   user: UserStore;
   network: NetworkStore;
-  /** expo-router's `router` as THIS graph holds it. */
+  /** expo-router's `router`. ONE object across every graph (see freshGraph), so a test that boots two
+   *  contexts reads cumulative calls. */
   router: { push: jest.Mock; replace: jest.Mock };
 }
 
@@ -39,6 +41,8 @@ export interface Graph {
 export function freshGraph(env: Record<string, string> = {}): Graph {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const sharedDatabase = require('@/lib/database');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { router } = require('expo-router');
   const saved = Object.fromEntries(Object.keys(env).map((k) => [k, process.env[k]]));
   Object.assign(process.env, env);
   let graph!: Graph;
@@ -51,7 +55,7 @@ export function freshGraph(env: Record<string, string> = {}): Graph {
         route: require('@/lib/stores/pending-notification-route'),
         user: require('@/lib/stores/user-store'),
         network: require('@/lib/stores/network-store'),
-        router: require('expo-router').router,
+        router,
       };
       /* eslint-enable @typescript-eslint/no-require-imports */
     });
@@ -97,4 +101,49 @@ export async function until(condition: () => boolean | Promise<boolean>, what: s
     await new Promise<void>((resolve) => setImmediate(resolve));
   }
   throw new Error(`timed out waiting for ${what}`);
+}
+
+// ---------------------------------------------------------------------------
+// Seeding, through the app's own writers
+// ---------------------------------------------------------------------------
+
+/**
+ * One `article_suggestions` row, landed the way a sync lands it (the row id IS the article id, which
+ * is what `suggestionId` in a notification payload names). With `relevance` the row is then scored.
+ */
+export async function seedSuggestion(id: string, relevance?: number): Promise<void> {
+  const { persistAndLinkV2Suggestions, saveScoringResult } = await import(
+    '@/lib/database/services/article-suggestion-service'
+  );
+  await persistAndLinkV2Suggestions(
+    [
+      {
+        __typename: 'ArticleWithClusters',
+        _id: id,
+        clusters: [],
+        title: `Original ${id}`,
+        title_en: `Harbour report ${id}`,
+        description_en: `Harbour details ${id}`,
+        article_url: `https://example.com/${id}`,
+        image_url: null,
+        country_code: 'NLD',
+        publication_name: 'Test Pub',
+        language_code: 'en',
+        pubDate: new Date(Date.now() - 3_600_000).toISOString(),
+        geo_tags: [],
+        entities: [],
+        event_type: null,
+        category: null,
+        maxClusterSize: 1,
+      } as never,
+    ],
+    new Map(),
+    {
+      matchedTopics: new Map(),
+      headlineScope: new Map(),
+      headlineCountryCode: new Map(),
+      stableClusterId: new Map(),
+    },
+  );
+  if (relevance !== undefined) await saveScoringResult(id, { relevance, reason: '', reasonSkipped: false });
 }
