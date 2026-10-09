@@ -5,7 +5,7 @@ export { seedFacts, setProcessingMode, setWebSearchInChat, type SeedFact } from 
 export { toolCall, reply, systemOf, personMessage, isRouteLeg, toolResultsIn, hasToolResult } from './replies';
 export { installLlama, llamaCalls, llamaReleases, type LlamaCall, type LlamaScript } from './llama';
 export { fileSystemModule, resetFileSystem, placeModelFile } from './fs';
-export { useStrictClock } from './clock';
+export { driveUntilDone, useStrictClock } from './clock';
 
 /** Polls `cond` on real macrotasks until it holds (or throws after `ms`). Under the fake clock
  *  use advanceUntilDone from '@/test/helpers' instead. */

@@ -10,15 +10,14 @@ import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
 import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
 import { __resetOnDeviceGateForTests } from '@/lib/llm/on-device-gate';
 import {
-  advanceUntilDone,
   http,
   HttpResponse,
   server,
   signInFixtureAccount,
-  useFakeClock as installFakeClock,
   type GatewayReply,
   type GatewayResponder,
 } from '@/test/helpers';
+import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
 import type { JsonBodyType } from 'msw';
 import { sealForClient } from '@/test/mock-backend/gateway/crypto';
 
@@ -40,12 +39,12 @@ export async function resetTransport({ signIn = true }: { signIn?: boolean } = {
 
 /** A fake clock on the real clock's value, so JWT, attestation and limiter times agree. */
 export function fakeClock(): void {
-  installFakeClock(Date.now());
+  useStrictClock(Date.now());
 }
 
 /** Drives a promise to completion under the fake clock. */
 export const run = <T>(p: Promise<T>, maxMs = 600_000, stepMs = 100): Promise<T> =>
-  advanceUntilDone(p, maxMs, stepMs);
+  driveUntilDone(p, maxMs, stepMs);
 
 export const respond = (r: GatewayReply): GatewayResponder => () => r;
 

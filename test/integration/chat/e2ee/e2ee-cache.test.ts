@@ -9,7 +9,7 @@ import {
   invalidateCachedAttestation,
 } from '@/lib/e2ee/e2ee-cache';
 import type { ModelAttestation } from '@/lib/e2ee/e2ee-service';
-import { useFakeClock } from '@/test/helpers';
+import { useStrictClock } from '@/test/integration/chat/_helpers';
 
 const TTL_MS = 30 * 60 * 1000; // must match source (30 minutes)
 
@@ -28,7 +28,7 @@ function setNow(ms: number): void {
 
 beforeEach(() => {
   nowMs = START_MS;
-  useFakeClock(START_MS);
+  useStrictClock(START_MS);
   // Wipe the module-level cache between tests by calling clearAttestationCache()
   clearAttestationCache();
 });

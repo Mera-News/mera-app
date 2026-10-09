@@ -11,7 +11,8 @@ import {
 } from '@/lib/e2ee/e2ee-service';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
 import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
-import { advanceUntilDone, attestationRequests, http, HttpResponse, server, signInFixtureAccount, useFakeClock } from '@/test/helpers';
+import { attestationRequests, http, HttpResponse, server, signInFixtureAccount } from '@/test/helpers';
+import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
 import capturedReport from '@/lib/e2ee/__tests__/fixtures/attestation-report.json';
 
 const ROUTE = '*/api/attestation/report';
@@ -34,9 +35,9 @@ interface Seen {
 }
 let seen: Seen[] = [];
 
-const run = <T,>(p: Promise<T>) => advanceUntilDone(p);
+const run = <T,>(p: Promise<T>) => driveUntilDone(p);
 const errorOf = (p: Promise<unknown>) =>
-  advanceUntilDone(p).then(
+  driveUntilDone(p).then(
     () => null,
     (e: Error) => e,
   );
@@ -66,7 +67,7 @@ afterEach(() => {
 });
 
 // Aliased: a function named use* trips react-hooks/rules-of-hooks wherever it is called.
-const fakeClock = useFakeClock;
+const fakeClock = useStrictClock;
 
 async function signedIn(): Promise<void> {
   await signInFixtureAccount();

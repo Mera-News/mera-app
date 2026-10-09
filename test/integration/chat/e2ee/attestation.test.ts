@@ -38,7 +38,6 @@ import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback'
 import { __resetOnDeviceGateForTests, OnDeviceModeError } from '@/lib/llm/on-device-gate';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import {
-  advanceUntilDone,
   attestationRequests,
   defaultResponder,
   http,
@@ -46,8 +45,8 @@ import {
   mockGateway,
   server,
   signInFixtureAccount,
-  useFakeClock,
 } from '@/test/helpers';
+import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
 import { TEST_MODEL_KEYS } from '@/test/mock-backend/gateway/keys';
 
 const ROUTE = '*/api/attestation/report';
@@ -107,13 +106,13 @@ function offCurveHex(): string {
 
 /** Runs a promise to completion on the fake clock and returns its rejection (or null). */
 async function errorOf(p: Promise<unknown>): Promise<Error | null> {
-  return advanceUntilDone(p).then(
+  return driveUntilDone(p).then(
     () => null,
     (e: Error) => e,
   );
 }
 
-const run = <T,>(p: Promise<T>) => advanceUntilDone(p);
+const run = <T,>(p: Promise<T>) => driveUntilDone(p);
 
 const sentryCapture = Sentry.captureException as jest.Mock;
 let captureSpy: jest.SpyInstance | undefined;
@@ -138,7 +137,7 @@ afterEach(() => {
 });
 
 // Aliased: a function named use* trips react-hooks/rules-of-hooks wherever it is called.
-const fakeClock = useFakeClock;
+const fakeClock = useStrictClock;
 
 async function signedIn(): Promise<void> {
   await signInFixtureAccount();
