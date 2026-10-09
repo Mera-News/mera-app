@@ -21,7 +21,8 @@ const ARTICLE_CONTEXT: ChatContext = {
   suggestionId: 's1',
 };
 
-const t = (key: string): string => i18n.t(key);
+// i18n.t takes the typed key union from en.json; these tests pass plain strings.
+const t = (key: string): string => (i18n.t as unknown as (k: string) => string)(key);
 
 beforeAll(initI18nEn);
 
