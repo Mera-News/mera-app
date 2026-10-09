@@ -9,7 +9,7 @@
 // "buffered" — a false negative that would have sent the frame design the wrong
 // way. The fixture must stay incompressible for this check to mean anything.
 
-import { probePakoStreaming } from '../dev-probe';
+import { probePakoStreaming } from '@/lib/backup/dev-probe';
 
 describe('pako streaming under a JS engine', () => {
   const checks = probePakoStreaming();
