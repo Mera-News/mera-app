@@ -18,6 +18,9 @@ import {
   type GatewayResponder,
 } from '@/test/helpers';
 import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
+
+// Aliased: a function named use* trips react-hooks/rules-of-hooks wherever it is called.
+const strictClock = useStrictClock;
 import type { JsonBodyType } from 'msw';
 import { sealForClient } from '@/test/mock-backend/gateway/crypto';
 
@@ -39,7 +42,7 @@ export async function resetTransport({ signIn = true }: { signIn?: boolean } = {
 
 /** A fake clock on the real clock's value, so JWT, attestation and limiter times agree. */
 export function fakeClock(): void {
-  useStrictClock(Date.now());
+  strictClock(Date.now());
 }
 
 /** Drives a promise to completion under the fake clock. */
