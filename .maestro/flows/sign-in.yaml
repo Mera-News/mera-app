@@ -8,8 +8,35 @@ appId: ${APP_ID}
     visible:
       id: "auth-screen"
     timeout: 60000
+- extendedWaitUntil:
+    visible:
+      id: "auth-begin-mera"
+    timeout: 30000
+- tapOn:
+    id: "auth-begin-mera"
+- extendedWaitUntil:
+    visible:
+      id: "auth-checks-continue"
+      enabled: true
+    timeout: 30000
+- tapOn:
+    id: "auth-checks-continue"
+- extendedWaitUntil:
+    visible:
+      id: "auth-begin-with-email"
+    timeout: 30000
 - tapOn:
     id: "auth-begin-with-email"
+- extendedWaitUntil:
+    visible:
+      id: "auth-consent-agree"
+    timeout: 30000
+- tapOn:
+    id: "auth-consent-agree"
+- extendedWaitUntil:
+    visible:
+      id: "auth-email-input"
+    timeout: 30000
 - tapOn:
     id: "auth-email-input"
 - inputText: ${EMAIL}

@@ -116,3 +116,4 @@ __pycache__/
 !.env.e2e
 e2e-output/
 .stryker-tmp/
+modules/*/android/build/

@@ -143,7 +143,7 @@ if [ -z "$BASELINE" ]; then
     echo "== step 1: prebuild"
     ( e2e_env; CI=1 npx expo prebuild --platform android --no-install $( [ "$CLEAN" = 1 ] && echo --clean ) )
     echo "== step 2: gradle"
-    ( e2e_env; export SENTRY_DISABLE_AUTO_UPLOAD=true; cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon )
+    ( e2e_env; export SENTRY_DISABLE_AUTO_UPLOAD=true; cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process )
     cp "$APK_OUT" "$LAST"
   fi
   [ -f "$LAST" ] || { echo "error: $LAST missing; run without --skip-build" >&2; exit 1; }
@@ -174,7 +174,7 @@ done
 
 # ---- step 4: boot ------------------------------------------------------------------------
 echo "== step 4: boot $AVD"
-EMU_ARGS=(-no-boot-anim -no-snapshot-save -gpu swiftshader_indirect)
+EMU_ARGS=(-no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072)
 [ "$PROXY_MODE" = emulator ] && EMU_ARGS+=(-http-proxy "http://127.0.0.1:$PORT")
 EMU_STARTED=1
 "$EMU" "@$AVD" "${EMU_ARGS[@]}" > "$RUN/emulator.log" 2>&1 &

@@ -125,7 +125,15 @@ module.exports = ({ config }) => {
             plugin[0],
             {
               ...plugin[1],
-              android: { ...plugin[1]?.android, usesCleartextTraffic: true },
+              android: {
+                ...plugin[1]?.android,
+                usesCleartextTraffic: true,
+                // ponytail: no R8 in the e2e APK. It ran out of a 2 GB heap
+                // and costs ~25 min; R8/proguard regressions stay the EAS
+                // preview build's job.
+                enableMinifyInReleaseBuilds: false,
+                enableShrinkResourcesInReleaseBuilds: false,
+              },
             },
           ]
         : plugin,

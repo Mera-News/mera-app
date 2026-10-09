@@ -31,7 +31,7 @@
     "test:unit": "jest --selectProjects unit",
     "test:integration": "jest --selectProjects integration --maxWorkers=2",
     "test:mock-backend": "tsx --test test/mock-backend/*.node-test.ts",
-    "test:full": "jest --maxWorkers=2 && npm run test:mock-backend && bash scripts/e2e-android.sh",
+    "test:full": "H=../bin/heavy; [ -x \"$H\" ] || H=; ${H:+$H --all} npx jest --maxWorkers=2 && npm run test:mock-backend && bash scripts/e2e-android.sh",
     "e2e:android": "bash scripts/e2e-android.sh",
     "mock-backend": "tsx test/mock-backend/server.ts",
     "stryker": "stryker run"
