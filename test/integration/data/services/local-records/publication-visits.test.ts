@@ -261,52 +261,43 @@ describe('getVisitsForPublication (dedupe by article id, else URL, else row)', (
     expect(entry.imageUrl).toBe('https://img.example.com/new.jpg');
   });
 
-  // DATA-U10b-4. dedupeVisitRows builds an entry from the FIRST row it meets and only merges a later
-  // row's snapshot fields when that row is newer; the query has no sort. A newest-first row order
-  // therefore drops the older rows' title, suggestion id and pubDate when the newest row lacks them.
-  // Loki returns the rows of a filtered query newest-inserted first (an unfiltered query oldest
-  // first); SQLite's order for the same query is not verified here. Each scenario has a passing
-  // sibling pinning the Loki outcome.
-  describe('a newest visit that lacks a field (DATA-U10b-4)', () => {
+  // DATA-U10b-4 / DA23. dedupeVisitRows builds an entry from the FIRST row it meets and only merges a
+  // later row's snapshot fields when that row is newer; the queries have no sort. So the merged result
+  // depends on row order: a newest row that lacks a title, suggestion id or pubDate hides the older
+  // rows' values when it arrives first. The correct result (freshest non-null field wins) must not
+  // depend on insertion order, so the test builds the same two visits in BOTH orders.
+  // Loki returns the rows of a filtered query newest-inserted first (an unfiltered query oldest first);
+  // SQLite's order for the same query is not verified here.
+  describe('a newest visit that lacks fields (DATA-U10b-4, DA23)', () => {
     const url = 'https://example.com/a';
-    const older = (over: Partial<RecordPublicationVisitInput>) => visitAt(T0 - 5000, { publicationName: 'The Times', countryCode: 'GB', articleUrl: url, ...over });
-    const newest = (over: Partial<RecordPublicationVisitInput>) => visitAt(T0, { publicationName: 'The Times', countryCode: 'GB', articleUrl: url, ...over });
+    const pubDate = new Date('2024-06-01T00:00:00Z');
+    const olderVisit = (): [number, RecordPublicationVisitInput] => [
+      T0 - 5000,
+      { publicationName: 'The Times', countryCode: 'GB', articleUrl: url, titleEn: 'Preserved Title', articleSuggestionId: 'sugg-first', pubDate },
+    ];
+    const newestVisit = (): [number, RecordPublicationVisitInput] => [
+      T0,
+      { publicationName: 'The Times', countryCode: 'GB', articleUrl: url, titleEn: null, articleSuggestionId: null, pubDate: null },
+    ];
+    const merged = async () => {
+      const [entry] = await getVisitsForPublication('The Times', 'GB');
+      return { titleEn: entry.titleEn, articleSuggestionId: entry.articleSuggestionId, pubDate: entry.pubDate, visitedAt: entry.visitedAt };
+    };
 
-    test.failing('does not blank the older visit title', async () => {
-      await older({ titleEn: 'Preserved Title' });
-      await newest({ titleEn: null });
-      expect((await getVisitsForPublication('The Times', 'GB'))[0].titleEn).toBe('Preserved Title');
+    test.failing('the freshest non-null title, suggestion id and pubDate win, whichever order the visits were inserted in', async () => {
+      const expected = { titleEn: 'Preserved Title', articleSuggestionId: 'sugg-first', pubDate: pubDate.getTime(), visitedAt: T0 };
+      for (const order of [[olderVisit, newestVisit], [newestVisit, olderVisit]]) {
+        await clearAllVisits();
+        for (const visit of order) await visitAt(...visit());
+        expect(await merged()).toEqual(expected);
+      }
     });
 
-    it('today: the older visit title is lost', async () => {
-      await older({ titleEn: 'Preserved Title' });
-      await newest({ titleEn: null });
-      expect((await getVisitsForPublication('The Times', 'GB'))[0].titleEn).toBeNull();
-    });
+    it('DA23 today (Loki row order): with the newest visit inserted last, the older title, suggestion id and pubDate are lost', async () => {
+      await visitAt(...olderVisit());
+      await visitAt(...newestVisit());
 
-    test.failing('keeps the suggestion id the older visit had', async () => {
-      await older({ articleSuggestionId: 'sugg-first' });
-      await newest({ articleSuggestionId: null });
-      expect((await getVisitsForPublication('The Times', 'GB'))[0].articleSuggestionId).toBe('sugg-first');
-    });
-
-    it('today: the older visit suggestion id is lost', async () => {
-      await older({ articleSuggestionId: 'sugg-first' });
-      await newest({ articleSuggestionId: null });
-      expect((await getVisitsForPublication('The Times', 'GB'))[0].articleSuggestionId).toBeNull();
-    });
-
-    test.failing('keeps the pubDate the older visit had', async () => {
-      const pubDate = new Date('2024-06-01T00:00:00Z');
-      await older({ pubDate });
-      await newest({ pubDate: null });
-      expect((await getVisitsForPublication('The Times', 'GB'))[0].pubDate).toBe(pubDate.getTime());
-    });
-
-    it('today: the older visit pubDate is lost', async () => {
-      await older({ pubDate: new Date('2024-06-01T00:00:00Z') });
-      await newest({ pubDate: null });
-      expect((await getVisitsForPublication('The Times', 'GB'))[0].pubDate).toBeNull();
+      expect(await merged()).toEqual({ titleEn: null, articleSuggestionId: null, pubDate: null, visitedAt: T0 });
     });
   });
 

@@ -370,18 +370,10 @@ describe('source-name matching', () => {
     expect(map.get('only-p2')?.publisherId).toBe('p2');
   });
 
-  // The doc comment says the FIRST writer of a shared source name wins. "First" is the position in
-  // getActive(), which has no sort. Loki returns a filtered query newest-inserted first, so the
-  // LAST-created subscription wins here. ESCALATED: whether "first" means creation order (then
-  // getActive needs a sort) is an owner call, and SQLite's row order for this query is unverified.
-  test.failing('[dead-candidate] a source name shared by two subscriptions maps to the first-created one', async () => {
-    await upsertSubscription(sub({ publisherId: 'p1', sourceNames: ['shared'] }));
-    await upsertSubscription(sub({ publisherId: 'p2', sourceNames: ['shared'] }));
-
-    expect((await getSubscriptionBySourceName()).get('shared')?.publisherId).toBe('p1');
-  });
-
-  it('[dead-candidate] today, on Loki: a source name shared by two subscriptions maps to the last-created one', async () => {
+  // The doc comment says the FIRST writer of a shared source name wins, but "first" is the position in
+  // getActive(), which has no sort; Loki returns a filtered query newest-inserted first. Dead code that
+  // P4 deletes, so today's outcome is pinned and nothing more.
+  it('[dead-candidate] getSubscriptionBySourceName returns the last-created row today', async () => {
     await upsertSubscription(sub({ publisherId: 'p1', sourceNames: ['shared'] }));
     await upsertSubscription(sub({ publisherId: 'p2', sourceNames: ['shared'] }));
 
