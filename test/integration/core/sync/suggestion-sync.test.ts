@@ -167,6 +167,8 @@ describe('SuggestionSyncService', () => {
       useFakeClock('2026-10-09T09:00:00Z');
     });
 
+    // A whole cloud scoring run (real E2EE both ways, up to 120 poll ticks): seconds of real CPU,
+    // so the 5 s default fails it on a loaded machine. The budget is real time; nothing it asserts is.
     it('enqueues the unscored stories, returns 0, clears the header error, and the gateway scores them', async () => {
       await seedScorableStories();
       useForYouStore.setState({ scoringError: 'generic' });
@@ -189,7 +191,7 @@ describe('SuggestionSyncService', () => {
         expect(row.status).not.toBe('unscored');
         expect(row.relevance).toBeGreaterThan(0.3);
       }
-    });
+    }, 30_000);
 
     it('clears the header scoring error when the pipeline has nothing left to do (idle)', async () => {
       useForYouStore.setState({ scoringError: 'server' });
