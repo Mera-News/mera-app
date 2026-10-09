@@ -4,6 +4,7 @@
 import { createHmac, randomBytes } from 'node:crypto';
 import { http, HttpResponse, type RequestHandler } from 'msw';
 import { FIXTURE_ACCOUNT } from './fixtures/account';
+import { appConfig } from './fixtures/graphql/appConfig';
 
 const COOKIE = 'better-auth.session_token';
 const DAY_MS = 86_400_000;
@@ -52,6 +53,12 @@ const user = (s: Session) => ({
     emailVerified: true,
     name: FIXTURE_ACCOUNT.name,
     image: null,
+    // The fixture user has accepted the published legal versions, so ConsentGate
+    // (components/custom/auth/legal-consent.ts needsConsent) does not prompt.
+    termsVersion: appConfig.termsVersion,
+    termsAcceptedAt: s.createdAt,
+    privacyVersion: appConfig.privacyVersion,
+    privacyAcceptedAt: s.createdAt,
     createdAt: s.createdAt,
     updatedAt: s.createdAt,
 });

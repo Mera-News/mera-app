@@ -1,5 +1,4 @@
 import Constants from 'expo-constants';
-import { authClient, getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
 import { AUTH_ENDPOINT } from '@/lib/config/endpoints';
 import {
   FIXTURE_ACCOUNT,
@@ -10,6 +9,7 @@ import {
   server,
   signInFixtureAccount,
 } from '@/test/helpers';
+import { appConfig } from '@/test/mock-backend/fixtures/graphql/appConfig';
 import { getLastOtpEmail } from '@/test/mock-backend/auth';
 
 // The setup's expo-constants mock has no ExecutionEnvironment, so the real expo-linking
@@ -24,7 +24,16 @@ const COOKIE_KEY = `${Constants.expoConfig?.slug || 'app'}_cookie`;
 
 const jwtPayload = (jwt: string) => JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
 
+// Loaded in beforeAll, after msw has patched fetch: better-auth captures fetch at client creation.
+let authClient: typeof import('@/lib/auth-client').authClient;
+let getJwtToken: typeof import('@/lib/auth-client').getJwtToken;
+let invalidateJwtCache: typeof import('@/lib/auth-client').invalidateJwtCache;
+
 describe('mock auth: email OTP round trip through the real auth client', () => {
+  beforeAll(() => {
+    ({ authClient, getJwtToken, invalidateJwtCache } = require('@/lib/auth-client'));
+  });
+
   // getJwtToken keeps a 30s module-level cache across tests.
   beforeEach(() => invalidateJwtCache());
 
@@ -49,6 +58,17 @@ describe('mock auth: email OTP round trip through the real auth client', () => {
     // Positive control: the Set-Cookie header reached the expo client and the secure store.
     const stored = JSON.parse(secureStoreDump()[COOKIE_KEY]);
     expect(stored['better-auth.session_token'].value).toMatch(/^[\w-]+\./);
+  });
+
+  it('stamps the fixture user with the published legal versions, so ConsentGate stays quiet', async () => {
+    const { needsConsent } = require('@/components/custom/auth/legal-consent') as typeof import('@/components/custom/auth/legal-consent');
+    await signInFixtureAccount();
+    const { data } = await authClient.getSession();
+    const user = data?.user as Parameters<typeof needsConsent>[0];
+    expect(user).toMatchObject({ termsVersion: appConfig.termsVersion, privacyVersion: appConfig.privacyVersion });
+    expect(needsConsent(user, appConfig)).toBe(false);
+    // Control: a bumped published version would prompt.
+    expect(needsConsent(user, { ...appConfig, termsVersion: '2099-01-01' })).toBe(true);
   });
 
   it('rejects a wrong code and stays signed out', async () => {
