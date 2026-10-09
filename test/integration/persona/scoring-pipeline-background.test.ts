@@ -204,10 +204,15 @@ describe('advanceWaitingForBackground (step a)', () => {
     await passTime(500);
     // The foreground recover() waits for the task step already running instead of polling beside it.
     expect(traffic).toEqual(['poll']);
+    // The task skips UI work while the app is not active; the foreground recover must not inherit that.
+    useForYouStore.setState({ asyncJobPhase: 'idle', batchProgress: null });
     release();
     await drive(Promise.all([task, fg]));
 
     expect(await fg).toBe('running');
+    // The foreground recover wrote the header progress itself (its drain pushes UI progress).
+    expect(useForYouStore.getState().asyncJobPhase).toBe('relevance');
+    expect(useForYouStore.getState().batchProgress).not.toBeNull();
   });
 });
 

@@ -189,12 +189,21 @@ describe('model-key validation fail-fast (MERA-APP-39)', () => {
     // The batch must reach a terminal phase and let the run finalize.
     gateway();
     await seedAndEnqueue(ids(25));
-    server.use(http.get('*/api/attestation/report', () => new HttpResponse('always fails', { status: 400 })));
+    let failedAttestations = 0;
+    server.use(
+      http.get('*/api/attestation/report', () => {
+        failedAttestations += 1;
+        return new HttpResponse('always fails', { status: 400 });
+      }),
+    );
     clearAttestationCache();
 
     await tickUntil(async () => (await pipeline.getPipelineStatus()) === 'idle', 30);
 
     expect(await pipeline.getPipelineStatus()).toBe('idle');
+    // Exactly what MAX_BATCH_ATTEMPTS (2) submit attempts cost in failed attestation fetches. A cap of
+    // 3 makes it 9; a missing cap never reaches idle.
+    expect(failedAttestations).toBe(6);
     expect(useForYouStore.getState().lastProcessingRunFinishedAt).not.toBeNull();
     expect(gatewayCalls('job')).toHaveLength(0);
     await letKickPlayOut();

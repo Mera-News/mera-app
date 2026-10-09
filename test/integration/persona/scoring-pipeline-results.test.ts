@@ -385,7 +385,7 @@ describe('soft suppression on the legacy path', () => {
     expect((await rows()).a0.relevance).toBeCloseTo(0.35, 10);
   });
 
-  it('penalises the MATH-mode rows of a MIXED batch too (they ride the legacy prompt)', async () => {
+  it('penalises tagged and untagged rows of one batch alike (both ride the one legacy prompt)', async () => {
     // One tagged row and one untagged row: the penalty map is keyed over the WHOLE stage, so
     // neither silently loses its penalty.
     const script: Script = { scores: { a0: 0.5, a1: 0.5 } };
