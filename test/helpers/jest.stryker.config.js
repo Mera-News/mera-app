@@ -1,4 +1,4 @@
-// Stryker's Jest config: legacy + integration together (R1). STRYKER_EXCLUDE is a comma-separated
+// Stryker's Jest config: legacy + unit + integration together (R1). STRYKER_EXCLUDE is a comma-separated
 // list of test paths (ROOT-relative) to leave out, so a gate "after" run differs from "before" by
 // exactly the replaced tests (R3).
 const path = require('path');
@@ -10,6 +10,6 @@ module.exports = {
   ...base,
   rootDir: root,
   projects: base.projects
-    .filter((p) => p.displayName === 'legacy' || p.displayName === 'integration')
+    .filter((p) => ['legacy', 'unit', 'integration'].includes(p.displayName))
     .map((p) => ({ ...p, rootDir: root, testPathIgnorePatterns: [...(p.testPathIgnorePatterns || ['/node_modules/']), ...exclude] })),
 };
