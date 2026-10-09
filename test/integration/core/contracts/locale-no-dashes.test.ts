@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const LOCALES_DIR = path.resolve(__dirname, '..');
+const LOCALES_DIR = path.resolve(__dirname, '../../../../lib/locales');
 const NON_LATIN = new Set(['ar', 'hi', 'ja', 'ko', 'ru', 'uk', 'th', 'zh-CN', 'zh-TW']);
 const KEEP_LATIN = /Mera Labs B\.V\.|https?:\/\/\S+|[\w.+-]*mera\.news\S*|[\w.+-]+@[\w.-]+/gi;
 

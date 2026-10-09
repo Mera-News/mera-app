@@ -9,7 +9,7 @@
  * through the real Tailwind config and comparing is the only way to make a
  * mismatch fail rather than merely look wrong on screen.
  */
-import { CARD_HERO_HEIGHT, HERO_IMAGE_CLASS, PARALLAX_HEADER_HEIGHT } from '../card-metrics';
+import { CARD_HERO_HEIGHT, HERO_IMAGE_CLASS, PARALLAX_HEADER_HEIGHT } from '@/lib/layout/card-metrics';
 
 /**
  * `h-<n>` in Tailwind's default spacing scale is `n * 0.25rem`. NativeWind

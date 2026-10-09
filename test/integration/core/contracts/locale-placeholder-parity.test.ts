@@ -10,7 +10,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const DIR = path.join(__dirname, '..');
+const DIR = path.join(__dirname, '../../../../lib/locales');
 const VAR = /\{\{\s*([A-Za-z0-9_]+)(?:\s*,[^}]*)?\s*\}\}/g;
 
 type Tree = { [k: string]: string | Tree };
