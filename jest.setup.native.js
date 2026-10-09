@@ -77,6 +77,8 @@ jest.mock('expo-notifications', () => ({
   AndroidImportance: {
     MAX: 5,
   },
+  // Values copied from expo-notifications' own enum; registerForPushNotificationsAsync reads it.
+  IosAuthorizationStatus: { NOT_DETERMINED: 0, DENIED: 1, AUTHORIZED: 2, PROVISIONAL: 3, EPHEMERAL: 4 },
 }));
 
 // Mock react-native Platform. Includes `default` so `import { Platform } from
@@ -124,6 +126,7 @@ jest.mock('@dr.pogodin/react-native-fs', () => ({
 jest.mock('expo-task-manager', () => ({
   defineTask: jest.fn(),
   isTaskRegisteredAsync: jest.fn(() => Promise.resolve(false)),
+  getRegisteredTasksAsync: jest.fn(() => Promise.resolve([])),
   unregisterTaskAsync: jest.fn(() => Promise.resolve()),
 }));
 jest.mock('expo-background-task', () => ({
