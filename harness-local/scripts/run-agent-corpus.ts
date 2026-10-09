@@ -312,6 +312,9 @@ async function main(): Promise<number> {
    *  a call, and (text only) those that needed the one re-ask. */
   const forcedLegs = new Map<string, { forced: number; withCall: number; reasked: number }>();
   const mismatches: string[] = [];
+  /** Per arm: legs sent with NO tools (the forced-offer-closing leg), and those
+   *  on which the model wrote a call anyway (the loop drops it). */
+  const toolFreeLegs = new Map<string, { legs: number; wroteCall: number }>();
   /** Set when a 402 ended the run. The partial rows are still reported: the
    *  instruction is to stop on a spend limit and KEEP what was collected. */
   let spendLimit: SpendLimitError | null = null;
@@ -341,7 +344,10 @@ async function main(): Promise<number> {
     // window: NEAR drifts enough between runs that a control arm which could
     // not affect anything still moved a kept count by 7.
     const combos = args.pairs ?? args.variants.flatMap((variant) => args.toolProtocols.map((protocol) => ({ variant, protocol })));
-    for (const { variant, protocol } of combos) {
+    // Rotated per repeat, so no arm (or pair of twins) always runs in the same
+    // slot of the repeat and NEAR drift cannot move twins together.
+    const shift = rep % combos.length;
+    for (const { variant, protocol } of [...combos.slice(shift), ...combos.slice(0, shift)]) {
       {
       for (const model of args.models) {
         const dry = dryRunModel(rep);
@@ -364,12 +370,14 @@ async function main(): Promise<number> {
               { role: 'system', content: req.systemPrompt },
               ...req.messages.map((m) => (m.role === 'tool' ? { role: 'user', content: m.content } : m)),
             ],
-            ...(req.tools ? { tools: req.tools, tool_choice: toolChoice } : {}),
+            // An empty list is no tools (the closing leg): never `tools: []` on the wire.
+            ...(req.tools?.length ? { tools: req.tools, tool_choice: toolChoice } : {}),
             ...(req.temperature !== undefined ? { temperature: req.temperature } : {}),
             ...(req.maxTokens !== undefined ? { max_tokens: req.maxTokens } : {}),
             chat_template_kwargs: { enable_thinking: req.enableThinking ?? false },
           };
           const forced = toolChoice === 'required';
+          const toolFree = Array.isArray(req.tools) && req.tools.length === 0;
           const stat = forcedLegs.get(arm) ?? { forced: 0, withCall: 0, reasked: 0 };
           forcedLegs.set(arm, stat);
           if (protocol !== 'native' && req.tools) {
@@ -381,6 +389,12 @@ async function main(): Promise<number> {
               stat.forced += 1;
               if (r.toolCalls.length > 0) stat.withCall += 1;
               if (r.reasked) stat.reasked += 1;
+            }
+            if (toolFree) {
+              const t = toolFreeLegs.get(arm) ?? { legs: 0, wroteCall: 0 };
+              t.legs += 1;
+              if (r.toolCalls.length > 0) t.wroteCall += 1;
+              toolFreeLegs.set(arm, t);
             }
             return { ...r, ttVisibleMs: r.ttVisibleMs };
           }
@@ -433,6 +447,22 @@ async function main(): Promise<number> {
     // eslint-disable-next-line no-console
     console.log(`\n${formatCostEstimate(estimateRunCost(planned, catalog))}\n`);
   }
+
+  // THE CLOSING ARMS ARE PROVEN WIRED HERE, because the distinctness check
+  // exempts them: tool-free legs must appear in every closing arm and nowhere else.
+  const wiring: string[] = [];
+  for (const arm of new Set(collected.map((r) => r.arm))) {
+    const closing = /@forced-offer-closing(-twin)?(\+|$)/.test(arm);
+    const n = toolFreeLegs.get(arm)?.legs ?? 0;
+    if (!args.dryRun && closing && n === 0) wiring.push(`  ${arm}: no tool-free leg, so the closing arm never fired`);
+    if (!closing && n > 0) wiring.push(`  ${arm}: ${n} tool-free leg(s) on an arm without the closing leg`);
+  }
+  if (wiring.length > 0) {
+    // eslint-disable-next-line no-console
+    console.error(`\nRUNNER BUG: closing-leg wiring\n${wiring.join('\n')}\n`);
+  }
+  // eslint-disable-next-line no-console
+  console.log(`\nTOOL-FREE LEGS (forced-offer-closing; a call written there is dropped)\n${[...toolFreeLegs].map(([a, t]) => `  ${a.padEnd(60)} legs ${t.legs}  wrote a call ${t.wroteCall}`).join('\n') || '  none'}`);
 
   const armFailures = armDistinctnessFailures(collected);
   if (armFailures.length > 0) {

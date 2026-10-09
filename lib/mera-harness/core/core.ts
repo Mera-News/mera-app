@@ -73,7 +73,7 @@ export const MAX_AGENT_LEGS = 4;
  *  Nothing is saved until the tap, so the sentence must not claim a save. */
 const CLOSING_LINE_NOTE =
   'You offered the card above. Nothing is saved until the user taps it. '
-  + 'Write ONE short sentence to the user about what you offered. Do not call a tool.';
+  + 'Write ONE short sentence to the user about what you offered. Do not ask a question. Do not call a tool.';
 
 /**
  * Re-asks allowed when a route leg comes back with no route.
@@ -782,6 +782,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** The closing leg after a silent forced offer: no tools, and any call it
    *  writes anyway is dropped (it would stage a second card). */
   let closingLegNow = false;
+  /** Pushed AFTER the tool results on the closing leg, so the last thing the
+   *  model reads is the instruction and not the staged save's JSON. */
+  let closingNote: string | null = null;
   /** Prose written AFTER a skill loaded. The route leg's acknowledgement does
    *  not count: it says the turn began, not that the user was answered. */
   let answeredTheUser = false;
@@ -1086,6 +1089,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         role: 'tool',
         content: `${tr.name}: ${escapeUntrusted(JSON.stringify(tr.result), 4000)}`,
       });
+    }
+    if (closingNote !== null) {
+      messages.push({ role: 'user', content: closingNote });
+      closingNote = null;
     }
 
     const inputTokens =
@@ -1819,15 +1826,21 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // buys another leg, and the turn is charged for a sentence the model was
       // never going to add.
       if (proposedSomething) {
-        if (silentLegAfterProposal) break;
+        if (silentLegAfterProposal) {
+          // A reply-gate re-ask that came back silent leaves the flagged reply
+          // in place: count it, as the gate's own survivor path does.
+          if (replyRetries > 0 && claimsSaveHappened(cleanProse(reply))) replyClaimUnfixed = true;
+          break;
+        }
         silentLegAfterProposal = true;
-        // A FORCED offer stays forced on that leg and usually ends the budget,
-        // so the sentence leg above never comes (forced-offer-closing arm).
-        if (closeForcedOffer && forcingProposalNow) {
+        // THE FORCED OFFER ON THE BUDGET'S LAST LEG: the sentence leg above is
+        // swallowed by the cap (forced-offer-closing arm). Only that case: a
+        // mid-budget forced offer keeps its ordinary next leg.
+        if (closeForcedOffer && forcingProposalNow && nextLegIndex >= maxLegsThisTurn + formatRetries) {
           forcingProposalNow = false;
           closingLegNow = true;
-          formatErrorNote = CLOSING_LINE_NOTE;
-          if (nextLegIndex >= maxLegsThisTurn + formatRetries) maxLegsThisTurn++;
+          closingNote = CLOSING_LINE_NOTE;
+          maxLegsThisTurn++;
         }
       }
       continue;
@@ -1940,6 +1953,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         forcingProposalNow = false;
         silentLegAfterProposal = false;
         closingLegNow = false;
+        closingNote = null;
         answeredTheUser = false;
         proposedSomething = false;
         reply = '';

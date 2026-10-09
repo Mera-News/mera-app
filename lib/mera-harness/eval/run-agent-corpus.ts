@@ -295,6 +295,7 @@ export async function runAgentScript(
         replyRetries: isLast ? result.replyRetries : null,
         replyClaimUnfixed: isLast ? result.replyClaimUnfixed : null,
         replyLeakUnfixed: isLast ? result.replyLeakUnfixed : null,
+        reply: isLast ? result.reply : null,
         awaitingUser: isLast && endedOn === 'awaiting_user',
         routeKind: result.routeKind,
         skillLoaded: result.skillLoaded,

@@ -141,6 +141,10 @@ export interface EvalRow {
   replyRetries: number | null;
   replyClaimUnfixed: boolean | null;
   replyLeakUnfixed: boolean | null;
+  /** The turn's final reply, as the loop returns it (the bubble shows it, or
+   *  the acknowledgement when it is empty). LAST row only. Score a closing
+   *  sentence from this, never from a leg's rawOutput. */
+  reply?: string | null;
   awaitingUser: boolean;
   /**
    * THE TURN'S ROUTING VERDICT, repeated on every leg of the turn.
