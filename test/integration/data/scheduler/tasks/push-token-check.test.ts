@@ -36,6 +36,8 @@ import {
   startTest,
 } from './support';
 
+jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
+
 // The setup's expo-notifications mock has no IosAuthorizationStatus, which registerForPushNotificationsAsync
 // reads on iOS before it asks for anything, so every real registration throws under it. This file carries
 // the same mock plus that enum (the notifications SDK is a mockable edge). Reported to the harness owner.

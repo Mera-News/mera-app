@@ -39,6 +39,8 @@ import {
   startTest,
 } from './support';
 
+jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
+
 const TASK = 'feedback-cycle';
 const LAST_RUN = 'optimisation_last_run_at';
 const TREE = { aLotMore: ['more_about_topic', 'a_lot_more'], kindOfEvent: ['not_important_to_me', 'this_kind_of_event'] };

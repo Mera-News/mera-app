@@ -38,6 +38,8 @@ import {
   startTest,
 } from './support';
 
+jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
+
 const TASK = 'entitlement-sync';
 const STARTER_LIMIT = '250';
 

@@ -41,6 +41,8 @@ import {
   startTest,
 } from './support';
 
+jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
+
 const TASK = 'fact-check-reconcile';
 
 /** `order` keeps the asks oldest-first without ageing them anywhere near the 7 day expiry. */

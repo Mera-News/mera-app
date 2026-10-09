@@ -51,6 +51,8 @@ import {
   startTest,
 } from './support';
 
+jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
+
 const TASK = 'inference-recover';
 const STALE_MS = 11 * MIN; // PENDING_TOPICS_STALE_MS is 10 minutes
 

@@ -40,6 +40,8 @@ import {
   startTest,
 } from './support';
 
+jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
+
 const TASK = 'persona-hygiene';
 const STAMP = 'hygiene_last_sweep_at';
 
@@ -111,6 +113,8 @@ describe('the credential gate', () => {
     expect(logs()).toEqual(['hygiene sweep skipped \u2014 no local session credential']);
   });
 
+  // The secure-store adapter turns a synchronous keychain throw into null ("nothing stored"), so the task's own
+  // try/catch around getCookie() is never entered at this seam (an R30 candidate); the outcome is the same.
   it('a keychain that THROWS on the cookie read (locked before first unlock) counts as no credential', async () => {
     await seedPersona();
     failSecureStore(cookieKey(), 'get');

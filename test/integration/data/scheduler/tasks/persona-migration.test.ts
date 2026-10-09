@@ -34,6 +34,8 @@ import {
   startTest,
 } from './support';
 
+jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
+
 const TASK = 'persona-migration';
 const setDbReady = (ready: boolean) => useDatabaseStore.setState({ ready });
 const HOME = 'Lives in Nieuw-West, Amsterdam, Netherlands, Europe';

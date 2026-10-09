@@ -7,6 +7,8 @@ import { gatewayCalls, mockGateway, server } from '@/test/helpers';
 import '@/lib/scheduler/tasks/sanity-backfill-task';
 
 import { getPendingCount } from '@/lib/database/services/hygiene-service';
+import * as topicSanity from '@/lib/database/services/topic-sanity-service';
+import logger from '@/lib/logger';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 
@@ -15,6 +17,7 @@ import {
   MIN,
   T0,
   advanceUntil,
+  captureTaskLogs,
   conditionTypes,
   endTest,
   holdFeedSync,
@@ -33,6 +36,8 @@ import {
   startTest,
 } from './support';
 
+jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
+
 const TASK = 'sanity-backfill';
 const CURSOR = 'sanity_audited_through_ms';
 const STARTED = 'sanity_backfill_started_at';
@@ -45,7 +50,10 @@ beforeEach(async () => {
   await startTest(TASK, { signedIn: true });
   server.use(...mockGateway(sanityModel()));
 });
-afterEach(endTest);
+afterEach(() => {
+  endTest();
+  jest.restoreAllMocks();
+});
 
 /** A fact whose topics are `cricket topic 0..n-1`, plus the contaminated one when asked. */
 async function corpus(count: number, withBad = false) {
@@ -127,6 +135,23 @@ describe('the handler', () => {
     expect(await getSetting(STARTED)).toBeNull();
     expect(await getSetting(CURSOR)).toBeNull();
     expect(lastRunInStore(TASK)).toBe(T0);
+  });
+});
+
+describe('a chunk that fails', () => {
+  it('is not done and not a markNoOp: the task logs "retrying next tick", the pass stays open, and lastRun is stamped', async () => {
+    await corpus(3);
+    jest.spyOn(logger, 'captureException').mockImplementation(() => '');
+    jest.spyOn(topicSanity, 'runSanityAudit').mockRejectedValueOnce(new Error('audit blew up'));
+    const logs = captureTaskLogs(TASK);
+
+    await runTask(TASK);
+
+    expect(logs()).toEqual(['sanity backfill skipped \u2014 retrying next tick']);
+    expect(await getSetting(DONE)).toBeNull();
+    expect(await getSetting(AUDITED)).toBeNull();
+    expect(await jobStatuses(TASK)).toEqual(['completed']);
+    expect(lastRunInStore(TASK)).toBeGreaterThanOrEqual(T0);
   });
 });
 
