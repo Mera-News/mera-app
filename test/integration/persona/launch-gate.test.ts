@@ -13,7 +13,7 @@ import {
 } from '@/components/custom/auth/useLoggedInGate';
 import { __resetLegalConsentLatchForTests } from '@/components/custom/auth/legal-consent';
 import { markOnboardingDone } from '@/components/custom/onboarding/onboarding-done';
-import { _resetForTests as resetAuthBreaker } from '@/lib/auth-failure-breaker';
+import { _resetForTests as resetAuthBreaker, recheckSession } from '@/lib/auth-failure-breaker';
 import { authClient } from '@/lib/auth-client';
 import database from '@/lib/database';
 import { addFact, hasAnyFacts } from '@/lib/database/services/fact-service';
@@ -413,14 +413,16 @@ describe('useLoggedInGate: account switch', () => {
         expect(replaced()).toEqual([[APP_ROUTE]]);
     });
 
-    // U4-N1: lib/stores/index.ts clearPreviousUserData wipes only when cached_user_id is set AND
-    // different, so the persona second opinion in the gate ("a row owned by somebody else proves the
-    // device is contaminated even when the sentinel was lost") upgrades the verdict to a wipe that
-    // then does nothing. With the sentinel lost, the incoming account is routed in on the previous
-    // owner's facts, skipping onboarding.
-    describe('persona row owned by another account, sentinel lost', () => {
+    // U4-N1: the gate's persona second opinion ("a row owned by somebody else proves the device is
+    // contaminated even when the sentinel says otherwise") upgrades a coherent verdict to
+    // wipeAndProceed, but the wipe it then runs is lib/stores/index.ts clearPreviousUserData, which
+    // acts only when cached_user_id is set AND different from the incoming id. Here it matches, so
+    // the upgrade wipes nothing: the incoming account is routed in on the other owner's facts and
+    // skips onboarding. The fix is in clearPreviousUserData (data owns it).
+    describe('persona row owned by another account, sentinel matching the incoming one', () => {
         async function seed() {
             await signIn();
+            await setSetting('cached_user_id', ME);
             await addFact('I follow cricket');
             await persistUserPersona(FOREIGN, personaFor(Date.now(), { userId: FOREIGN }));
         }
@@ -443,6 +445,12 @@ describe('useLoggedInGate: account switch', () => {
             await waitForRoute();
             await drain();
 
+            // The second opinion DID fire (it reports the foreign row)...
+            expect(Sentry.captureMessage).toHaveBeenCalledWith(
+                'Persona rows on this device belong to a different user',
+                expect.anything(),
+            );
+            // ...and the wipe it asked for did nothing.
             expect(await hasAnyFacts()).toBe(true);
             expect(replaced()).toEqual([[APP_ROUTE]]);
         });
@@ -455,6 +463,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
         await signIn();
         await setSetting('cached_user_id', ME);
         await markOnboardingDone();
+        await addFact('I follow Formula 1 racing');
         await setSetting(IDENTITY_FAULT_KEY, '1');
 
         mountGate();
@@ -463,7 +472,9 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
 
         expect(urls.some((u) => u.endsWith('/api/auth/ok'))).toBe(true);
         expect(replaced()).toEqual([[REAUTH]]);
-        expect(await hasAnyFacts()).toBe(false);
+        // Reauth is the server's verdict on a pairing the device cannot fix locally: it never wipes.
+        expect(await hasAnyFacts()).toBe(true);
+        expect(await getSetting('cached_user_id')).toBe(ME);
     });
 
     it('the same fault with the auth server down is deferred: no eject, and the fault stays persisted for the next launch', async () => {
@@ -504,12 +515,13 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
 
     describe('a session the server has already marked dead', () => {
         // The recheck is fired in parallel and never awaited, and everything the gate awaits before
-        // its verdict is local. The persona-owner read is held for a moment so the one-request
-        // recheck settles first; the answer is then deterministic.
-        function holdVerdictBriefly() {
+        // its verdict is local. To make the recheck's answer part of the verdict, the persona-owner
+        // read (a one-call spy, R23) waits for the same deduped recheck promise: the gate attached
+        // its `.then` to that promise first, so its `accountCheck` is set before this resumes.
+        function holdVerdictForRecheck() {
             const real = userPersonaService.assertPersonaOwner;
             track(jest.spyOn(userPersonaService, 'assertPersonaOwner')).mockImplementationOnce(async (id) => {
-                await new Promise((resolve) => setTimeout(resolve, 300));
+                await recheckSession().catch(() => undefined);
                 return real(id);
             });
         }
@@ -523,7 +535,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
             server.use(recheckOnly(() => HttpResponse.json(null)));
-            holdVerdictBriefly();
+            holdVerdictForRecheck();
 
             mountGate();
             await waitForRoute();
@@ -538,7 +550,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await markOnboardingDone();
             useNetworkStore.setState({ serverReachable: false });
             server.use(recheckOnly(() => HttpResponse.json({ message: 'boom' }, { status: 500 })));
-            holdVerdictBriefly();
+            holdVerdictForRecheck();
 
             const hook = mountGate();
             await waitFor(() => expect(hook.result.current.gate).toBe('unreachable'), { timeout: 8000 });
@@ -551,7 +563,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await signIn();
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
-            holdVerdictBriefly();
+            holdVerdictForRecheck();
 
             mountGate();
             await waitForRoute();

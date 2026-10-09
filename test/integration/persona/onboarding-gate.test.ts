@@ -3,6 +3,8 @@
 // mock, and the mock backend for the entitlement warmup.
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
 import Purchases from 'react-native-purchases';
+import { __resetLegalConsentLatchForTests } from '@/components/custom/auth/legal-consent';
+import { __resetLoggedInGateForTests } from '@/components/custom/auth/useLoggedInGate';
 import { useOnboardingGate } from '@/components/custom/onboarding/useOnboardingGate';
 import {
     ONBOARDING_DONE_SETTING_KEY,
@@ -13,6 +15,7 @@ import database from '@/lib/database';
 import { addFact, hasAnyFacts } from '@/lib/database/services/fact-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { configureRevenueCat } from '@/lib/revenuecat';
+import { __resetLocalWipeForTests } from '@/lib/security/local-wipe';
 import {
     IDENTITY_FAULT_KEY,
     __resetIdentityStateForTests,
@@ -76,6 +79,9 @@ afterAll(() => {
 beforeEach(() => {
     inFlight = 0;
     __resetIdentityStateForTests();
+    __resetLoggedInGateForTests();
+    __resetLocalWipeForTests();
+    __resetLegalConsentLatchForTests();
     usePinStore.setState({ pinSet: false, lockEnabled: false, locked: false, lastBackgroundedAt: null, initialized: false });
     useUserStore.setState({
         userId: null,

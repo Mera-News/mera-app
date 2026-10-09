@@ -10,6 +10,7 @@
 process.env.EXPO_PUBLIC_INTERCOM_APP_ID = 'test_intercom_app';
 process.env.EXPO_PUBLIC_INTERCOM_IOS_KEY = 'test_intercom_ios_key';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Intercom from '@intercom/intercom-react-native';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
 import Constants from 'expo-constants';
@@ -69,6 +70,9 @@ const SECURE_STORE_KEYS = [
 ];
 /** Survive every sign-out on purpose, so logging in again resumes the same account (S10). */
 const DEVICE_CREDENTIALS = ['appattest_key_id', 'appattest_key_proven', 'device_attest_device_id'].map(key);
+
+/** The only AsyncStorage key the app has ever written (a since-deleted capability token). */
+const CAPABILITY_TOKEN = 'mera.cycle.capabilityToken';
 
 const LOGIN_SIGNED_OUT = { pathname: '/login', params: { signedOut: '1' } };
 const replaced = () => jest.mocked(router.replace).mock.calls;
@@ -211,6 +215,7 @@ async function seedSignedInDevice(): Promise<void> {
     await secureStore.setItemAsync(key('pin_attempts'), '{"failCount":1,"lockedUntil":0}');
     await secureStore.setItemAsync(key('pin_force_reset_v1'), '1');
     for (const credential of DEVICE_CREDENTIALS) await secureStore.setItemAsync(credential, 'device');
+    await AsyncStorage.setItem(CAPABILITY_TOKEN, 'capability');
     useUserStore.setState({ userId: ME });
 }
 
@@ -234,6 +239,7 @@ async function expectSignedOutAndWiped(): Promise<void> {
     const left = secrets();
     for (const k of SECURE_STORE_KEYS) expect(left[k]).toBeUndefined();
     expect(Object.keys(left).sort()).toEqual([...DEVICE_CREDENTIALS].sort());
+    expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
     expect(await settings.getSetting('cached_user_id')).toBeNull();
     expect(await leftoverSettings()).toEqual([]);
     expect(await factService.hasAnyFacts()).toBe(false);
@@ -348,12 +354,18 @@ describe('signOutAndWipe', () => {
 
     it('signs out and drops the identity sentinel, NAVIGATES, and only then erases', async () => {
         await seedSignedInDevice();
-        let atNavigation: { secrets: Record<string, string>; sentinel: Promise<string | null>; facts: Promise<boolean> };
+        let atNavigation: {
+            secrets: Record<string, string>;
+            sentinel: Promise<string | null>;
+            facts: Promise<boolean>;
+            capability: Promise<string | null>;
+        };
         jest.mocked(router.replace).mockImplementationOnce(() => {
             atNavigation = {
                 secrets: secureStoreDump(),
                 sentinel: settings.getSetting('cached_user_id'),
                 facts: factService.hasAnyFacts(),
+                capability: AsyncStorage.getItem(CAPABILITY_TOKEN),
             };
         });
 
@@ -365,6 +377,7 @@ describe('signOutAndWipe', () => {
         // ...but nothing else is erased yet: THE PROPERTY. The escape works even when the erase breaks.
         expect(atNavigation!.secrets[key('pin_record')]).toBeDefined();
         expect(await atNavigation!.facts).toBe(true);
+        expect(await atNavigation!.capability).toBe('capability');
         expect(await factService.hasAnyFacts()).toBe(false);
     });
 
@@ -419,6 +432,7 @@ describe('wipeAllLocalUserData', () => {
         expect(Object.keys(left).sort()).toEqual([...DEVICE_CREDENTIALS].sort());
         // The S10 inversion: the device credentials are deliberately not in the list.
         expect(await settings.getSetting('has_launched')).toBeNull();
+        expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
         expect(await leftoverSettings()).toEqual([]);
         expect(usePinStore.getState()).toMatchObject({ pinSet: false, lockEnabled: false });
         expect(Purchases.logOut).toHaveBeenCalled();
@@ -441,6 +455,7 @@ describe('wipeAllLocalUserData', () => {
         expect(left[key('session_data')]).toBe(session.sessionData);
         for (const k of SECURE_STORE_KEYS.slice(2)) expect(left[k]).toBeUndefined();
         expect(await settings.getSetting('has_launched')).toBe('1');
+        expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
         expect(await settings.getSetting('cached_user_id')).toBeNull();
         expect(await factService.hasAnyFacts()).toBe(false);
         expect(usePinStore.getState()).toMatchObject({ pinSet: false, lockEnabled: false });
@@ -585,6 +600,7 @@ describe('purgeOrphanedLocalData', () => {
         // Keychain before DB: every secret is gone while the DB still shows the occupant.
         const left = secrets();
         for (const k of SECURE_STORE_KEYS) expect(left[k]).toBeUndefined();
+        expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
         expect(await factService.hasAnyFacts()).toBe(true);
         expect(await launchRoute.readLocalIdentityState()).toBe('absent');
 
@@ -780,18 +796,26 @@ describe('delete account (useDeleteAccount)', () => {
 
         const left = secrets();
         for (const k of SECURE_STORE_KEYS) expect(left[k]).toBeUndefined();
+        expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
     });
 
-    test('B1 today: the PIN record, app-lock flag and backup key survive account deletion', async () => {
+    test('B1 today: the PIN record, app-lock flag, backup key and both E2EE private keys survive account deletion', async () => {
         await deleteWithEverythingSeeded();
 
-        const left = secrets();
-        expect(left[key('pin_record')]).toBeDefined();
-        expect(left[key('app_lock_enabled')]).toBe('1');
-        expect(left[key('backup_key')]).toBeDefined();
-        // The two E2EE keys and the PIN attempt counter go with them: only the stores were cleared.
-        expect(left.async_pipeline_privkey).toBeDefined();
-        expect(left.async_inference_pending_job_privkey).toBeDefined();
+        // Only the session, the device credentials and the stores go: every other secret is still here.
+        expect(Object.keys(secrets()).sort()).toEqual(
+            [
+                key('pin_record'),
+                key('pin_attempts'),
+                key('app_lock_enabled'),
+                key('pin_force_reset_v1'),
+                key('backup_key'),
+                'async_pipeline_privkey',
+                'async_inference_pending_job_privkey',
+            ].sort(),
+        );
+        expect(secureStoreDump()[key('app_lock_enabled')]).toBe('1');
+        expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBe('capability');
     });
 });
 
