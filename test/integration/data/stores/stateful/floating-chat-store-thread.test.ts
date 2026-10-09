@@ -1,8 +1,8 @@
 // navx: a page change keeps the thread only on a quick reopen or while a
 // proposal waits; drafts ride expand() and are consumed once.
 
-import type { StagedProposal } from '../../llm/types';
-import { KEEP_THREAD_MS, useFloatingChatStore } from '../floating-chat-store';
+import type { StagedProposal } from '@/lib/llm/types';
+import { KEEP_THREAD_MS, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 
 const store = () => useFloatingChatStore.getState();
 

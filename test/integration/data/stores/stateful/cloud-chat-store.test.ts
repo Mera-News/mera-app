@@ -1,7 +1,7 @@
 // cloud-chat-store has no external DB dependencies — no mocks needed beyond
 // what jest.setup.js already provides.
 
-import { useCloudChatStore } from '../cloud-chat-store';
+import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import type { ConversationMessage } from '@/lib/llm/types';
 import type { WireMessage } from '@/lib/llm/cloudComplete';
 

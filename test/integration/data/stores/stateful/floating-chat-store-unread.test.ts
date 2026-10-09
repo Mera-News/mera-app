@@ -1,7 +1,7 @@
 // The chat session's busy flag drives the Mera button's unread ring, and a
 // busy or unread thread is never replaced by an open from somewhere else.
 
-import { useFloatingChatStore } from '../floating-chat-store';
+import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 
 const store = () => useFloatingChatStore.getState();
 
