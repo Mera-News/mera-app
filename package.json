@@ -34,7 +34,10 @@
     "test:full": "H=../bin/heavy; [ -x \"$H\" ] || H=; ${H:+$H --all} npx jest --maxWorkers=2 && npm run test:mock-backend && bash scripts/e2e-android.sh",
     "e2e:android": "bash scripts/e2e-android.sh",
     "mock-backend": "tsx test/mock-backend/server.ts",
-    "stryker": "stryker run"
+    "stryker": "stryker run",
+    "stryker:chat": "stryker run --incrementalFile coverage/mutation/chat.incremental.json --mutate \"lib/e2ee/**/*.ts,!lib/e2ee/__tests__/**,lib/llm/cloudComplete.ts,lib/hooks/useCloudPersonaChat.ts\"",
+    "stryker:persona": "stryker run --incrementalFile coverage/mutation/persona.incremental.json --mutate \"lib/billing-service.ts,lib/subscription/**/*.ts,lib/security/**/*.ts,lib/services/scoring-pipeline.ts,!**/__tests__/**\"",
+    "stryker:data": "stryker run --incrementalFile coverage/mutation/data.incremental.json --mutate \"lib/scheduler/feed-sync/**/*.ts,lib/database/services/article-suggestion-service.ts,!**/__tests__/**\""
   },
   "dependencies": {
     "@apollo/client": "^4.0.5",
