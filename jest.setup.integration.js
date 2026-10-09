@@ -11,6 +11,26 @@ delete process.env.EXPO_PUBLIC_E2E;
 // 2. Native-edge mocks shared with the legacy project.
 require('./jest.setup.native.js');
 
+// 2b. expo-constants with the enums real expo-linking reads (the legacy mock in
+// jest.setup.native.js has none, so expo-linking threw on ExecutionEnvironment.StoreClient,
+// and better-auth's expo client reaches expo-linking). 'standalone' = a release build.
+// doMock, not mock: babel hoists jest.mock above the require of jest.setup.native.js, whose
+// own expo-constants mock would then win.
+jest.doMock('expo-constants', () => {
+  const ExecutionEnvironment = { Bare: 'bare', Standalone: 'standalone', StoreClient: 'storeClient' };
+  const AppOwnership = { Expo: 'expo' };
+  const Constants = {
+    executionEnvironment: ExecutionEnvironment.Standalone,
+    appOwnership: null,
+    expoConfig: {
+      scheme: 'exampleapp',
+      slug: 'exampleapp',
+      extra: { eas: { projectId: '00000000-0000-0000-0000-000000000000' } },
+    },
+  };
+  return { __esModule: true, default: Constants, ExecutionEnvironment, AppOwnership };
+});
+
 // 3. expo-translate-text: identity translation, same export names as the package.
 jest.mock('expo-translate-text', () => {
   class TranslationError extends Error {}
@@ -98,10 +118,12 @@ global.console = {
 };
 
 // 11. MSW lifecycle. An unhandled request is recorded and fails the test in afterEach.
+// listen() runs at setup load, BEFORE the test file's imports: better-auth captures
+// globalThis.fetch when createAuthClient runs (lib/auth-client.ts at import), so a module
+// loaded before the patch would send real requests that MSW never sees. Guarded by
+// test/integration/harness/fetch-capture.test.ts.
 const { server, unhandled } = require('./test/helpers/msw');
-beforeAll(() =>
-  server.listen({ onUnhandledRequest: (req) => unhandled.push(`${req.method} ${req.url}`) }),
-);
+server.listen({ onUnhandledRequest: (req) => unhandled.push(`${req.method} ${req.url}`) });
 afterEach(() => {
   server.resetHandlers();
   jest.useRealTimers();

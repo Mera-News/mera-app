@@ -15,3 +15,15 @@ export async function advanceUntilSettled(maxMs = 60_000, stepMs = 50): Promise<
     await jest.advanceTimersByTimeAsync(stepMs);
   }
 }
+
+/** Advances fake time until `promise` settles (or maxMs), then returns it. Use it right after
+ *  starting an async chain: advanceUntilSettled() would return at once while no timer is
+ *  pending yet. */
+export async function advanceUntilDone<T>(promise: Promise<T>, maxMs = 120_000, stepMs = 50): Promise<T> {
+  let done = false;
+  promise.then(() => (done = true), () => (done = true));
+  for (let elapsed = 0; !done && elapsed < maxMs; elapsed += stepMs) {
+    await jest.advanceTimersByTimeAsync(stepMs);
+  }
+  return promise;
+}
