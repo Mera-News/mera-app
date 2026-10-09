@@ -14,7 +14,7 @@ import {
   HttpResponse,
   server,
   signInFixtureAccount,
-  useFakeClock,
+  useFakeClock as freezeClock,
 } from '@/test/helpers';
 
 import { addTask, resetScheduler, settle } from './support';
@@ -22,7 +22,7 @@ import { addTask, resetScheduler, settle } from './support';
 const T0 = Date.UTC(2026, 9, 9, 12, 0, 0);
 
 beforeEach(() => {
-  useFakeClock(T0);
+  freezeClock(T0);
   resetScheduler();
 });
 
@@ -131,7 +131,7 @@ describe('authenticated', () => {
   async function signedIn() {
     jest.useRealTimers();
     await signInFixtureAccount();
-    useFakeClock(T0);
+    freezeClock(T0);
     authPaths.length = 0;
   }
 
