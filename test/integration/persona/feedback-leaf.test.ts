@@ -90,6 +90,15 @@ const pickedAfter = async (d: FeedbackLeafDeps) => {
 
 beforeAll(async () => {
     await initI18nEn();
+    // apply-leaf-actions requires these lazily at call time; warm them outside the first test's budget.
+    /* eslint-disable @typescript-eslint/no-require-imports */
+    require('@/lib/database/services/persona-action-executor');
+    require('@/lib/database/services/persona-change-log-service');
+    require('@/lib/database/services/article-feedback-service');
+    require('@/lib/toast-manager');
+    require('@/lib/i18n');
+    require('@/lib/haptics');
+    /* eslint-enable @typescript-eslint/no-require-imports */
 });
 
 afterEach(() => {
@@ -105,6 +114,7 @@ beforeEach(() => {
 });
 
 describe('a leaf with persona actions', () => {
+    // 15s: this test absorbs the first in-memory DB writes.
     it('writes the preference and the change log, spends the verdict, and shows an Undo toast', async () => {
         await seedVerdict();
         const d = deps();
@@ -125,7 +135,7 @@ describe('a leaf with persona actions', () => {
         expect(toasts()).toEqual([
             expect.objectContaining({ title: 'Got it: feed updated', body: 'Fewer from The Hindu' }),
         ]);
-    });
+    }, 15_000);
 
     it('a topic-weight leaf nudges every matched topic and logs one entry each', async () => {
         const [a, b] = await createTopics([
