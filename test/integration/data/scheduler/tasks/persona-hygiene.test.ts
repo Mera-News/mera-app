@@ -163,7 +163,20 @@ describe('the credential gate', () => {
 });
 
 describe('on the tick', () => {
-  it('without a credential every 5s tick retries; once the credential is back it sweeps ONCE and the weekly cadence arms', async () => {
+  // DA39. The task has no `authenticated` condition, so a signed-out device (cookie gone, no persona) is
+  // handed a job on every 5s tick: the handler markNoOps and the next tick does it again, one new
+  // scheduler_jobs row each time, for as long as the reader sits on the sign-in screen.
+  test.failing('DA39: a signed-out device does not run persona hygiene every tick', async () => {
+    await seedPersona();
+    await loseCookie();
+
+    await initScheduler();
+    await settle(30_000);
+
+    expect(await jobRows(TASK)).toHaveLength(0);
+  });
+
+  it('DA39 today: without a credential every 5s tick retries; once the credential is back it sweeps ONCE and the weekly cadence arms', async () => {
     await seedPersona();
     const restore = await loseCookie();
 
