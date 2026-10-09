@@ -243,13 +243,18 @@ describe('useUserGeoLanguageContext', () => {
   });
 
   it('stays null instead of throwing when the loader fails open', async () => {
-    jest.spyOn(locationService, 'getAll').mockRejectedValue(new Error('db gone'));
+    // Persistent, not Once: the hook may load more than once. Restored below.
+    const getAll = jest.spyOn(locationService, 'getAll').mockRejectedValue(new Error('db gone'));
 
-    const { result } = renderHook(() => useUserGeoLanguageContext());
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 50));
-    });
+    try {
+      const { result } = renderHook(() => useUserGeoLanguageContext());
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
 
-    expect(result.current).toBeNull();
+      expect(result.current).toBeNull();
+    } finally {
+      getAll.mockRestore();
+    }
   });
 });
