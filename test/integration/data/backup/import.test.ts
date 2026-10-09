@@ -11,7 +11,7 @@ import { BackupImportError, inspectBackup } from '@/lib/backup/import';
 import { BACKUP_FORMAT_VERSION, RESTORE_IN_PROGRESS_KEY } from '@/lib/backup/types';
 import { deleteFact, addFact } from '@/lib/database/services/fact-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import { useFakeClock } from '@/test/helpers';
+import { useStrictClock } from '@/test/helpers';
 
 import {
   CARRIED_SETTINGS,
@@ -47,7 +47,7 @@ const T1 = '2026-09-01T10:00:00.000Z';
 
 describe('export -> import round trip on the real database', () => {
   it('puts the persona back exactly as it was, after the device changed in between', async () => {
-    useFakeClock(T0);
+    useStrictClock(T0);
     await seedDevice();
     const before = await persona();
     const { blob } = await exportDevice();
@@ -73,7 +73,7 @@ describe('export -> import round trip on the real database', () => {
   });
 
   it('re-inserts rows with their historical timestamps and a fresh `created` status', async () => {
-    useFakeClock(T0);
+    useStrictClock(T0);
     const seeded = await seedDevice();
     const { blob } = await exportDevice();
     const factBefore = (await rawRows('facts')).find((r) => r.id === seeded.factIds[0])!;
@@ -149,6 +149,16 @@ describe('export -> import round trip on the real database', () => {
     const rows = await rawRows('saved_article_suggestions');
     expect(rows.map((r) => r.id)).toEqual(['s1']);
     expect(rows[0].description_en).toBe(content);
+  });
+
+  it('reads a last row that has no trailing newline, which the exporter never writes but a hand-made blob can', async () => {
+    const blob = await sealedByHand(
+      section('facts', [{ id: 'f1', statement: 'a' }, { id: 'f2', statement: 'b' }]).trimEnd(),
+      { tables: [stat('facts', 2)] },
+    );
+    const result = await importInto(blob);
+    expect(result.perTable.facts).toBe(2);
+    expect((await rawRows('facts')).map((r) => r.id)).toEqual(['f1', 'f2']);
   });
 
   it('clears the torn-restore marker when it finishes', async () => {
@@ -457,6 +467,13 @@ describe('refusals after the restore began', () => {
     await expectTornRefusal(
       await sealedByHand(section('facts', rows), {}, { truncateDeflate: true }),
       'incomplete',
+    );
+  });
+
+  it('refuses a frame that authenticates but is not a deflate stream', async () => {
+    await expectTornRefusal(
+      await sealedByHand(section('facts', []), {}, { rawPayload: Uint8Array.from([0xde, 0xad, 0xbe, 0xef, 0x00, 0x01]) }),
+      'tampered',
     );
   });
 

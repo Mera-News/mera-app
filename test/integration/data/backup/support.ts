@@ -160,7 +160,7 @@ export const BASE_HEADER: BackupHeader = {
 export async function sealedByHand(
   ndjson: string,
   header: Partial<BackupHeader> = {},
-  options: { truncateDeflate?: boolean; key?: Uint8Array } = {},
+  options: { truncateDeflate?: boolean; key?: Uint8Array; rawPayload?: Uint8Array } = {},
 ): Promise<MemoryFile> {
   const blob = new MemoryFile();
   const bytes = new TextEncoder().encode(ndjson);
@@ -168,6 +168,7 @@ export async function sealedByHand(
   const writer = new BlobWriter(options.key ?? KEY, blob, full);
   let payload = pako.deflate(bytes);
   if (options.truncateDeflate) payload = payload.slice(0, payload.length - 24);
+  if (options.rawPayload) payload = new Uint8Array(options.rawPayload);
   await writer.writeFrame(payload, true);
   return blob;
 }

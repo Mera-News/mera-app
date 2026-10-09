@@ -36,7 +36,7 @@ import {
 } from '@/lib/backup/backup-settings';
 import { FORBIDDEN_SETTING_KEYS } from '@/lib/backup/allowlist';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import { useFakeClock } from '@/test/helpers';
+import { useStrictClock } from '@/test/helpers';
 
 const netInfoFetch = NetInfo.fetch as unknown as jest.Mock;
 
@@ -181,14 +181,14 @@ describe('when the scheduler may run', () => {
   });
 
   it('runs immediately the first time, when there is no last run', async () => {
-    useFakeClock('2026-10-01T09:00:00.000Z');
+    useStrictClock('2026-10-01T09:00:00.000Z');
     await setBackupProviderId('icloud');
     await setBackupCadence('daily');
     expect(scheduledBackupIsDue(Date.now())).toBe(true);
   });
 
   it('waits out the cadence interval after a stamped run', async () => {
-    useFakeClock('2026-10-01T09:00:00.000Z');
+    useStrictClock('2026-10-01T09:00:00.000Z');
     await setBackupProviderId('icloud');
     await setBackupCadence('daily');
     const t0 = Date.now();
