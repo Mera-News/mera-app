@@ -15,6 +15,7 @@ import {
   getUnscoredSuggestionsWithFacts,
   type ScoringCandidate,
 } from '@/lib/database/services/article-suggestion-service';
+import * as stageSubscriptionRead from '@/lib/mera-protocol/stage-subscription-read';
 import { addSuppression } from '@/lib/database/services/suppression-service';
 import * as topicService from '@/lib/database/services/topic-service';
 import { createTopics } from '@/lib/database/services/topic-service';
@@ -798,9 +799,8 @@ describe('batchScoreAndReason - on-device path', () => {
 // ===========================================================================
 
 // Wave 7b cutover: the verifier is absorbed into the judge and `feedVerifierEnabled` ships OFF, so
-// the pass returns before it builds a call. The enabled path (demote on an explicit "no", keep on
-// any malformed reply) cannot be reached without flipping the shipped config; it is left to the
-// scout as an R30 candidate.
+// the pass returns before it builds a call. The enabled body is covered below by flipping that
+// owner flag for those tests only (config, like R27, not behaviour).
 describe('runFeedVerifierPass (app shim - second-pass FEED verifier)', () => {
   const scores = () => new Map([['a', 0.9], ['b', 0.6], ['c', 0.2]]);
 
@@ -838,6 +838,67 @@ describe('runFeedVerifierPass (app shim - second-pass FEED verifier)', () => {
     expect(await run(runFeedVerifierPass(rows, map))).toBe(0);
 
     expect(map.get('a')).toBe(0.2);
+    expect(gatewayCalls()).toHaveLength(0);
+  });
+});
+
+describe('runFeedVerifierPass - flag enabled', () => {
+  let flag: { restore(): void };
+  beforeEach(() => {
+    flag = jest.replaceProperty(ART, 'feedVerifierEnabled', true);
+  });
+  afterEach(() => flag.restore());
+
+  const isVerify = (call: GatewayCall) => systemOf(call) === ART.feedVerifierSystemPrompt;
+  /** One verdict per article of the verifier call, in order. */
+  const verdicts = (byId: Record<string, 'yes' | 'no'>): GatewayResponder => (call) =>
+    JSON.stringify(ids(call).map((id) => ({ v: byId[id] ?? 'yes' })));
+
+  it('demotes only the articles the verifier explicitly says no to, and never raises one', async () => {
+    server.use(...mockGateway(verdicts({ a: 'no', b: 'yes', c: 'no' })));
+    const sent = watchBatches();
+    const rows = await seedAndLoad(['a', 'b', 'c']);
+    const map = new Map([['a', 0.9], ['b', 0.6], ['c', 0.2]]);
+
+    const demoted = await run(runFeedVerifierPass(rows, map));
+
+    expect(demoted).toBe(1);
+    // c is below the discard floor, so it is never audited and keeps its score.
+    expect([...map]).toEqual([['a', ART.feedVerifierDemoteScore], ['b', 0.6], ['c', 0.2]]);
+    const [call] = gatewayCalls('batch');
+    expect(isVerify(call)).toBe(true);
+    expect(ids(call)).toEqual(['a', 'b']);
+    expect((await sent())[0].requests[0].max_tokens).toBe(ART.feedVerifierMaxTokens);
+  });
+
+  it('keeps every article when the verifier reply is malformed', async () => {
+    server.use(...mockGateway(() => 'not an array'));
+    const rows = await seedAndLoad(['a']);
+    const map = new Map([['a', 0.9]]);
+
+    expect(await run(runFeedVerifierPass(rows, map))).toBe(0);
+
+    expect(map.get('a')).toBe(0.9);
+    expect(gatewayCalls('batch')).toHaveLength(1);
+  });
+
+  it('fail-open: a verifier request that fails leaves every score unchanged', async () => {
+    server.use(...mockGateway(() => ({ status: 400, body: { error: 'boom' } })));
+    const rows = await seedAndLoad(['a']);
+    const map = new Map([['a', 0.9]]);
+
+    expect(await run(runFeedVerifierPass(rows, map))).toBe(0);
+
+    expect(map.get('a')).toBe(0.9);
+    expect(logger.warn).toHaveBeenCalledWith('[runFeedVerifierPass] verifier failed — scores unchanged', expect.any(Object));
+  });
+
+  it('asks no model for candidates the verifier cannot judge (no related facts)', async () => {
+    server.use(...mockGateway(verdicts({})));
+    const rows = await seedAndLoad(['a'], { factless: true });
+
+    expect(await run(runFeedVerifierPass(rows, new Map([['a', 0.9]])))).toBe(0);
+
     expect(gatewayCalls()).toHaveLength(0);
   });
 });
@@ -938,6 +999,21 @@ describe('processAllUnscored', () => {
     expect(processed).toBe(1);
     expect(logger.captureException).toHaveBeenCalledWith(expect.any(Error), {
       tags: { service: 'scoring-service', method: 'processAllUnscored.retry' },
+    });
+  });
+
+  it('reports the failure to Sentry, and still returns the count, when the subscription-read stage throws', async () => {
+    gateway({ scores: { a: 0.7 } });
+    await seed(['a']);
+    const stage = jest.spyOn(stageSubscriptionRead, 'runSubscriptionReadStage').mockRejectedValueOnce(new Error('db'));
+
+    const processed = await run(processAllUnscored());
+    expect(stage).toHaveBeenCalledTimes(1);
+    stage.mockRestore();
+
+    expect(processed).toBe(1);
+    expect(logger.captureException).toHaveBeenCalledWith(expect.any(Error), {
+      tags: { service: 'scoring-service', method: 'processAllUnscored.subscriptionRead' },
     });
   });
 });
