@@ -51,3 +51,43 @@ describe('a restart while a job is running', () => {
     expect(runs).toBe(2);
   });
 });
+
+// The other half of CH13: chat pauses the queue for exclusive llama.rn access (`pause()`), and
+// start() only returns early on `running`, so a start() during the pause (useModelLifecycle effect
+// 3 on a model reload) flips `paused` to `running` and a second loop runs jobs under chat.
+
+/** Queue started and paused the way chat does, one job already in the table (no notify()), then a
+ *  start() lands. Ticks pass with chat still holding the pause. */
+async function startWhileChatHoldsPause() {
+  const handler = jest.fn(async (..._args: unknown[]) => ({ ran: true }));
+  __setJobHandlerForTests('persona_summary', handler);
+  await startIdle();
+  await driveDone(inferenceQueue.pause());
+  const id = await enqueueJob('persona_summary', {});
+
+  await driveDone(inferenceQueue.start());
+  for (let i = 0; i < 6; i++) await tick(500);
+
+  return { handler, id, stateAfterStart: inferenceQueue.getState() };
+}
+
+describe('a start while chat holds the queue paused', () => {
+  test.failing('CH13: start() while chat holds the queue paused does not run jobs until resume()', async () => {
+    const { handler, id, stateAfterStart } = await startWhileChatHoldsPause();
+
+    expect(stateAfterStart).toBe('paused');
+    expect(handler).not.toHaveBeenCalled();
+
+    inferenceQueue.resume();
+    await untilJob(id, ['done']);
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('CH13 today: start() while chat holds the queue paused runs the job under chat', async () => {
+    const { handler, id, stateAfterStart } = await startWhileChatHoldsPause();
+
+    expect(stateAfterStart).toBe('running');
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect((await jobRow(id))?.status).toBe('done');
+  });
+});
