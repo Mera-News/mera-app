@@ -50,14 +50,29 @@ let titleCursor = 0;
 
 /** Insert complete rows (`scoreRow`: terminal, no note owed) in the order given. */
 export async function seedComplete(rows: readonly (readonly [id: string, relevance: number])[]): Promise<void> {
-  await seedArticles(rows.map(([id]) => ({ id, title: TITLES[titleCursor++ % TITLES.length] + ` (${id})` })));
-  for (const [id, relevance] of rows) await scoreRow(await localId(id), relevance);
+  await withFrozenNow(async () => {
+    await seedArticles(rows.map(([id]) => ({ id, title: TITLES[titleCursor++ % TITLES.length] + ` (${id})` })));
+    for (const [id, relevance] of rows) await scoreRow(await localId(id), relevance);
+  });
+}
+
+// feedScore decays on createdAt, so rows seeded a millisecond apart would reorder: equal-relevance
+// rows only tie (and fall back to id order) when they share one millisecond. Timers stay real.
+async function withFrozenNow(seed: () => Promise<void>): Promise<void> {
+  const frozen = jest.spyOn(Date, 'now').mockReturnValue(Date.now());
+  try {
+    await seed();
+  } finally {
+    frozen.mockRestore();
+  }
 }
 
 /** Insert a scored row whose note is still owed: status `reason_pending`. */
 export async function seedReasonPending(id: string, relevance: number): Promise<void> {
-  await seedArticles([{ id, title: TITLES[titleCursor++ % TITLES.length] + ` (${id})` }]);
-  await saveScoringResult(await localId(id), { relevance, reason: '', reasonSkipped: false });
+  await withFrozenNow(async () => {
+    await seedArticles([{ id, title: TITLES[titleCursor++ % TITLES.length] + ` (${id})` }]);
+    await saveScoringResult(await localId(id), { relevance, reason: '', reasonSkipped: false });
+  });
 }
 
 async function localId(articleId: string): Promise<string> {
