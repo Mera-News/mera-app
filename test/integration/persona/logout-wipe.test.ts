@@ -9,12 +9,17 @@
 // module that reaches the endpoints is required in beforeAll rather than imported.
 process.env.EXPO_PUBLIC_INTERCOM_APP_ID = 'test_intercom_app';
 process.env.EXPO_PUBLIC_INTERCOM_IOS_KEY = 'test_intercom_ios_key';
+// Google Drive likewise: disconnectGoogleDrive() is a no-op unless the web client id is set when
+// lib/config/endpoints first loads (invariant 4b tests below).
+process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID = 'test_google_web_client_id';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Intercom from '@intercom/intercom-react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import { TurboModuleRegistry } from 'react-native';
 import Purchases from 'react-native-purchases';
 import type SettingModel from '@/lib/database/models/Setting';
 import { settleDialog, useDialogQueue } from '@/lib/dialog';
@@ -126,7 +131,14 @@ const track = <T extends jest.SpyInstance>(spy: T): T => {
     return spy;
 };
 
+let registrySpy: jest.SpyInstance;
 beforeAll(async () => {
+    // google-drive.ts caches its "is the native module linked" probe on first use, so the link must
+    // be in place before any test reaches it. Only RNGoogleSignin is answered; the rest passes through.
+    const realGet = TurboModuleRegistry.get.bind(TurboModuleRegistry);
+    registrySpy = jest
+        .spyOn(TurboModuleRegistry, 'get')
+        .mockImplementation(((name: string) => (name === 'RNGoogleSignin' ? {} : realGet(name))) as never);
     server.events.on('request:start', onStart);
     server.events.on('request:end', onEnd);
     authModule = require('@/lib/auth-client');
@@ -155,11 +167,16 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
+    registrySpy.mockRestore();
     server.events.removeListener('request:start', onStart);
     server.events.removeListener('request:end', onEnd);
 });
 
+/** The SDK's own answer to "is a Google account connected": the setup mock defaults to false. */
+const driveConnected = (connected: boolean) => jest.mocked(GoogleSignin.hasPreviousSignIn).mockReturnValue(connected);
+
 beforeEach(() => {
+    driveConnected(true);
     inFlight = 0;
     mockExistingDirs.clear();
     mockDeleteLog.length = 0;
@@ -283,6 +300,28 @@ describe('logout button (useAppPreferences.confirmLogout)', () => {
         expect(replaced()).toEqual([[LOGIN_SIGNED_OUT]]);
     });
 
+    // Invariant 4b: a Drive left connected uploads the next person's persona into a stranger's Drive.
+    it('disconnects Google Drive', async () => {
+        await seedSignedInDevice();
+        const { result } = mount();
+
+        await runConfirming(() => result.current.confirmLogout());
+
+        expect(GoogleSignin.signOut).toHaveBeenCalled();
+    });
+
+    it('with no Drive connected, never signs Google out and still completes', async () => {
+        driveConnected(false);
+        await seedSignedInDevice();
+        const { result } = mount();
+
+        await runConfirming(() => result.current.confirmLogout());
+
+        expect(GoogleSignin.hasPreviousSignIn).toHaveBeenCalled();
+        expect(GoogleSignin.signOut).not.toHaveBeenCalled();
+        await expectSignedOutAndWiped();
+    });
+
     it('declining the dialog changes nothing', async () => {
         await seedSignedInDevice();
         const { result } = mount();
@@ -350,6 +389,25 @@ describe('signOutAndWipe', () => {
 
         await expectSignedOutAndWiped();
         expect(replaced()).toEqual([[LOGIN_SIGNED_OUT]]);
+    });
+
+    it('disconnects Google Drive', async () => {
+        await seedSignedInDevice();
+
+        await wipe.signOutAndWipe();
+
+        expect(GoogleSignin.signOut).toHaveBeenCalled();
+    });
+
+    it('with no Drive connected, never signs Google out and still completes', async () => {
+        driveConnected(false);
+        await seedSignedInDevice();
+
+        await wipe.signOutAndWipe();
+
+        expect(GoogleSignin.hasPreviousSignIn).toHaveBeenCalled();
+        expect(GoogleSignin.signOut).not.toHaveBeenCalled();
+        await expectSignedOutAndWiped();
     });
 
     it('signs out and drops the identity sentinel, NAVIGATES, and only then erases', async () => {
@@ -516,6 +574,26 @@ describe('wipeAllLocalUserData', () => {
                 pinSet: false,
             });
         });
+    });
+
+    it('disconnects Google Drive', async () => {
+        await seedSignedInDevice();
+
+        await wipe.wipeAllLocalUserData();
+
+        expect(GoogleSignin.signOut).toHaveBeenCalled();
+    });
+
+    it('with no Drive connected, never signs Google out and still wipes', async () => {
+        driveConnected(false);
+        await seedSignedInDevice();
+
+        await wipe.wipeAllLocalUserData();
+
+        expect(GoogleSignin.hasPreviousSignIn).toHaveBeenCalled();
+        expect(GoogleSignin.signOut).not.toHaveBeenCalled();
+        expect(await factService.hasAnyFacts()).toBe(false);
+        expect(secureStoreDump()[key('pin_record')]).toBeUndefined();
     });
 
     it('a failing keychain delete does not stop the database wipe', async () => {
@@ -805,6 +883,23 @@ describe('delete account (useDeleteAccount)', () => {
         expect(await settings.getSetting('cached_user_id')).toBeNull();
         expect(Purchases.logOut).toHaveBeenCalled();
         expect(Intercom.logout).toHaveBeenCalled();
+    });
+
+    it('disconnects Google Drive', async () => {
+        await deleteWithEverythingSeeded();
+
+        expect(GoogleSignin.signOut).toHaveBeenCalled();
+    });
+
+    it('with no Drive connected, never signs Google out and still deletes', async () => {
+        driveConnected(false);
+
+        await deleteWithEverythingSeeded();
+
+        expect(GoogleSignin.hasPreviousSignIn).toHaveBeenCalled();
+        expect(GoogleSignin.signOut).not.toHaveBeenCalled();
+        expect(secureStoreDump()[key('cookie')]).toBeUndefined();
+        expect(replaced()).toEqual([[LOGIN_SIGNED_OUT]]);
     });
 
     it('cancelling at either confirmation changes nothing and sends nothing', async () => {
