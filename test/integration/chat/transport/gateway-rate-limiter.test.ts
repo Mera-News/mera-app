@@ -8,7 +8,7 @@ import {
   MIN_GATEWAY_INTERVAL_MS,
   MIN_INTERACTIVE_INTERVAL_MS,
   INTERACTIVE_MAX_PAUSE_MS,
-} from '../gateway-rate-limiter';
+} from '@/lib/llm/gateway-rate-limiter';
 
 const NOW = 1_700_000_000_000;
 
