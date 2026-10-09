@@ -129,11 +129,23 @@ describe('cloudComplete', () => {
     expect(await run(cloudComplete(REQUEST))).toBe('A plain answer with <b>markup</b>.');
   });
 
-  it('falls back to reasoning_content when content is empty', async () => {
+  it('CH16 today: a reasoning-only reply is returned as the answer', async () => {
     serveJson(CHAT_PATH, (seal) => ({
       choices: [{ message: { content: '', reasoning_content: seal('thinking...') }, finish_reason: 'length' }],
     }));
     expect(await run(cloudComplete(REQUEST))).toBe('thinking...');
+  });
+
+  // CH16: the batch path fails loud on this reply; the single call hands the trace to its caller as the answer.
+  test.failing('CH16: a reasoning-only reply fails loud instead of returning the trace', async () => {
+    serveJson(CHAT_PATH, (seal) => ({
+      choices: [{ message: { content: '', reasoning_content: seal('thinking...') }, finish_reason: 'length' }],
+    }));
+
+    const err = await run(errorOf(cloudComplete(REQUEST)));
+
+    expect(err).toBeInstanceOf(Error);
+    expect(err?.message).toContain('reasoning-overran-budget');
   });
 
   it.each([
