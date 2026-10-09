@@ -2,6 +2,7 @@
 // both ways, real limiter, real model fallback. What the model side received comes from the mock's
 // decrypted call log; what is only visible on the wire (temperature, max_tokens, the thinking flag,
 // that nothing is in the clear) comes from the raw request body.
+import { _getBreakerState, _resetForTests as resetBreaker } from '@/lib/auth-failure-breaker';
 import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
 import {
   cloudBatchComplete,
@@ -10,6 +11,7 @@ import {
   UPSTREAM_ALIGNED_TIMEOUT_MS,
 } from '@/lib/llm/cloudComplete';
 import { isFallbackEngaged } from '@/lib/llm/model-fallback';
+import logger from '@/lib/logger';
 import { attestationRequests, gatewayCalls, mockGateway, server, signInFixtureAccount } from '@/test/helpers';
 import {
   BATCH_PATH,
@@ -166,6 +168,52 @@ describe('cloudComplete', () => {
     expect(err?.message).toMatch(/E2EE completion failed: 400/);
     expect(err?.message).toContain('bad request');
     expect(chat.count()).toBe(1);
+  });
+
+  // CH17: the status rides only in the message, so retry.ts and the logger's 401 rule (which read
+  // statusCode / response.status) cannot see it. P3 adds the field and leaves the message text alone.
+  const NON_OK = [401, 503] as const;
+  const failWith = async (status: number) => {
+    server.use(...mockGateway(respond({ status, body: 'gateway said no' })));
+    const err = await run(errorOf(cloudComplete(REQUEST)));
+    expect(err).toBeInstanceOf(Error);
+    return err as Error & { statusCode?: number };
+  };
+
+  test.failing('CH17: a non-ok completion carries its status as a field', async () => {
+    for (const status of NON_OK) {
+      const err = await failWith(status);
+      expect(err.statusCode).toBe(status);
+      expect(err.message).toMatch(new RegExp(`E2EE completion failed: ${status}`));
+    }
+  });
+
+  it('CH17 today: a non-ok completion has no statusCode field', async () => {
+    for (const status of NON_OK) {
+      const err = await failWith(status);
+      expect(err.statusCode).toBeUndefined();
+      expect(err.message).toMatch(new RegExp(`E2EE completion failed: ${status}`));
+    }
+  });
+
+  // The consequence: callers hand the error to logger.captureException, whose 401 rule feeds the auth
+  // breaker from statusCode. A dead session that survives the re-mint never reaches it.
+  test.failing('CH17: a 401 that survives the re-mint reaches the auth breaker', async () => {
+    resetBreaker();
+    const err = await failWith(401);
+
+    logger.captureException(err, { tags: { service: 'cloud-complete-test' } });
+
+    expect(_getBreakerState().consecutiveFailures).toBe(1);
+  });
+
+  it('CH17 today: a 401 that survives the re-mint never reaches the auth breaker', async () => {
+    resetBreaker();
+    const err = await failWith(401);
+
+    logger.captureException(err, { tags: { service: 'cloud-complete-test' } });
+
+    expect(_getBreakerState().consecutiveFailures).toBe(0);
   });
 });
 

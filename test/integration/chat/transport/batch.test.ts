@@ -238,6 +238,31 @@ describe('cloudBatchComplete', () => {
       expect(batch.count()).toBe(1);
     });
 
+    // CH17: same shape as cloudComplete: the status is only in the message text.
+    const NON_OK = [401, 503] as const;
+    const failWith = async (status: number) => {
+      server.use(...mockGateway(respond({ status, body: 'gateway said no' })));
+      const err = await run(errorOf(cloudBatchComplete([call('err')])));
+      expect(err).toBeInstanceOf(Error);
+      return err as Error & { statusCode?: number };
+    };
+
+    test.failing('CH17: a non-ok completion carries its status as a field', async () => {
+      for (const status of NON_OK) {
+        const err = await failWith(status);
+        expect(err.statusCode).toBe(status);
+        expect(err.message).toMatch(new RegExp(`E2EE batch failed: ${status}`));
+      }
+    });
+
+    it('CH17 today: a non-ok completion has no statusCode field', async () => {
+      for (const status of NON_OK) {
+        const err = await failWith(status);
+        expect(err.statusCode).toBeUndefined();
+        expect(err.message).toMatch(new RegExp(`E2EE batch failed: ${status}`));
+      }
+    });
+
     it('moves a stalled primary onto the fallback model for the retry and for later batches', async () => {
       server.use(...mockGateway((c) => (c.model === SMALL_MODEL ? { status: 502 } : 'recovered')));
 
