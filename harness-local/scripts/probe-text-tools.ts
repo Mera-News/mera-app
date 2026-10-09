@@ -148,7 +148,7 @@ async function main(): Promise<number> {
   const repeat = ri === -1 ? 2 : Number(argv[ri + 1]);
   const fi = argv.indexOf('--format');
   const format = (fi !== -1 ? argv[fi + 1] : 'hermes') as ToolFormat;
-  if (!['hermes', 'xml', 'marker'].includes(format)) throw new Error(`--format takes hermes|xml|marker`);
+  if (!['hermes', 'xml', 'xml-first', 'marker'].includes(format)) throw new Error(`--format takes hermes|xml|xml-first|marker`);
   console.log(`tool format: ${format}`); // eslint-disable-line no-console
 
   const jwt = await mintJwt(env.authEndpoint, await getAuthHeaders(env));

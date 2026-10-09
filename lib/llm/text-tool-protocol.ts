@@ -127,8 +127,12 @@ function pyJson(v: unknown): string {
  * `hermes`: the Qwen3 JSON form (`<tool_call>{"name", "arguments"}</tool_call>`).
  * `xml`: the Qwen3-Coder form (`<tool_call><function=..><parameter=..>`), which
  * token-matches what NEAR renders for its Qwen3.6+ models far more closely.
+ * `xml-first`: the same, with the tools block BEFORE the system prompt, the
+ * order Qwen's own template uses.
  */
-export type ToolFormat = 'hermes' | 'xml' | 'marker';
+export type ToolFormat = 'hermes' | 'xml' | 'xml-first' | 'marker';
+
+const isXml = (format: ToolFormat): boolean => format === 'xml' || format === 'xml-first';
 
 /** The one format the app sends. Chosen by the interleaved corpus run (P0 rule 3);
  *  the others stay only as eval arms. */
@@ -183,7 +187,7 @@ export function renderToolsBlock(
     toolChoice === 'required'
       ? '\n\nThis reply must contain at least one <tool_call>.'
       : '';
-  if (format === 'xml') return renderXmlTools(tools) + required;
+  if (isXml(format)) return renderXmlTools(tools) + required;
   const lines = tools
     .map((t) => pyJson({ type: t.type ?? 'function', function: t.function }))
     .join('\n');
@@ -216,7 +220,7 @@ function renderCall(c: TextToolCallIn, format: ToolFormat): string {
     // A malformed history call is replayed as its raw string, like the
     // template's tojson would.
   }
-  if (format === 'xml' && args !== null && typeof args === 'object' && !Array.isArray(args)) {
+  if (isXml(format) && args !== null && typeof args === 'object' && !Array.isArray(args)) {
     const params = Object.entries(args as Record<string, unknown>)
       .map(([k, v]) => `<parameter=${k}>\n${typeof v === 'string' ? v : pyJson(v)}\n</parameter>\n`)
       .join('');
@@ -246,7 +250,8 @@ export function toTextToolMessages(
   for (const m of messages) {
     if (m.role === 'system') {
       if (!blockPlaced) {
-        out.push({ role: 'system', content: m.content ? `${m.content}\n\n${block}` : (block as string) });
+        const joined = format === 'xml-first' ? `${block}\n\n${m.content}` : `${m.content}\n\n${block}`;
+        out.push({ role: 'system', content: m.content ? joined : (block as string) });
         blockPlaced = true;
       } else {
         out.push({ role: 'system', content: m.content });

@@ -83,7 +83,7 @@ interface Args {
   oneShotVariant: string | null;
   /** `native` sends a `tools` field (cleartext on the app's wire); `text` is
    *  the app's E2EE text protocol. Several interleave like variants. */
-  toolProtocols: ('native' | 'text' | 'text-xml' | 'text-marker')[];
+  toolProtocols: ('native' | 'text' | 'text-xml' | 'text-xml-first' | 'text-marker')[];
 }
 
 function parseArgs(argv: string[]): Args {
@@ -109,7 +109,7 @@ function parseArgs(argv: string[]): Args {
     else if (f === '--tool-protocol') {
       const list = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
       for (const p of list) {
-        if (!['native', 'text', 'text-xml', 'text-marker'].includes(p)) throw new Error(`harness-local: --tool-protocol takes native,text,text-xml,text-marker (got ${p}).`);
+        if (!['native', 'text', 'text-xml', 'text-xml-first', 'text-marker'].includes(p)) throw new Error(`harness-local: --tool-protocol takes native,text,text-xml,text-xml-first,text-marker (got ${p}).`);
       }
       a.toolProtocols = list as Args['toolProtocols'];
     }
@@ -354,7 +354,7 @@ async function main(): Promise<number> {
           if (protocol !== 'native' && req.tools) {
             const r = await postBodyStreamTextTools(
               env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta,
-              protocol === 'text-xml' ? 'xml' : protocol === 'text-marker' ? 'marker' : 'hermes',
+              protocol === 'text-xml' ? 'xml' : protocol === 'text-xml-first' ? 'xml-first' : protocol === 'text-marker' ? 'marker' : 'hermes',
             );
             if (forced) {
               stat.forced += 1;
