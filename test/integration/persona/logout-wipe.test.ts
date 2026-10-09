@@ -421,7 +421,7 @@ describe('signOutAndWipe', () => {
 // ---------------------------------------------------------------------------------------------
 
 describe('wipeAllLocalUserData', () => {
-    it('a full wipe clears every secret and leaves has_launched gone: that device reads as signed out', async () => {
+    it('PE19 today: a full wipe clears every secret and leaves has_launched gone: that device reads as signed out', async () => {
         await seedSignedInDevice();
         expect(await settings.getSetting('has_launched')).toBe('1');
 
@@ -440,7 +440,7 @@ describe('wipeAllLocalUserData', () => {
 
     // An ACCOUNT SWITCH: the session keys belong to the account that just signed in, so they are the
     // ONLY thing spared. Every other secret of the previous account still goes.
-    it('keepSession spares only the incoming session, erases the rest, and writes has_launched back (invariant 18)', async () => {
+    it('PE19 today: keepSession spares only the incoming session, erases the rest, and writes has_launched back (invariant 18)', async () => {
         await seedSignedInDevice();
         const session = {
             cookie: secureStoreDump()[key('cookie')],
@@ -460,6 +460,62 @@ describe('wipeAllLocalUserData', () => {
         expect(await factService.hasAnyFacts()).toBe(false);
         expect(usePinStore.getState()).toMatchObject({ pinSet: false, lockEnabled: false });
         expect(Purchases.logOut).toHaveBeenCalled();
+    });
+
+    describe('the one-shot PIN reset marker', () => {
+        /**
+         * The force reset ran once on this install, then the device was wiped (a logout, or an
+         * account switch with `keepSession`); the person signs in, opts into the lock and the app
+         * launches again. Returns what the pin store reads on that launch.
+         */
+        async function launchAfterWipeAndOptIn(opts?: { keepSession: true }) {
+            const { runPinForceResetOnce } = require('@/lib/security/pin-force-reset');
+            await runPinForceResetOnce();
+            await seedSignedInDevice();
+            await wipe.wipeAllLocalUserData(opts);
+            if (!opts) await signIn();
+            await require('@/lib/security/pin-service').setPin('1234');
+            await require('@/lib/security/app-lock-service').setAppLockEnabled(true);
+            usePinStore.setState({
+                pinSet: false,
+                lockEnabled: false,
+                locked: false,
+                lastBackgroundedAt: null,
+                initialized: false,
+            });
+            await usePinStore.getState().init();
+            const read = usePinStore.getState();
+            usePinStore.getState().unlock(); // releases the pin-lock restart hold init took
+            return { pinSet: read.pinSet, lockEnabled: read.lockEnabled };
+        }
+
+        test.failing(
+            'PE19 logout keeps the one-shot PIN reset marker, so a lock turned on after it survives the next launch',
+            async () => {
+                expect(await launchAfterWipeAndOptIn()).toEqual({ lockEnabled: true, pinSet: true });
+            },
+        );
+
+        it('PE19 today: logout deletes the marker, so the reset runs again and drops the lock the person just turned on', async () => {
+            expect(await launchAfterWipeAndOptIn()).toEqual({ lockEnabled: false, pinSet: false });
+        });
+
+        test.failing(
+            'PE19 the account-switch wipe keeps the one-shot PIN reset marker, so a lock turned on after it survives the next launch',
+            async () => {
+                expect(await launchAfterWipeAndOptIn({ keepSession: true })).toEqual({
+                    lockEnabled: true,
+                    pinSet: true,
+                });
+            },
+        );
+
+        it('PE19 today: the account-switch wipe deletes the marker, so the reset runs again and drops the lock', async () => {
+            expect(await launchAfterWipeAndOptIn({ keepSession: true })).toEqual({
+                lockEnabled: false,
+                pinSet: false,
+            });
+        });
     });
 
     it('a failing keychain delete does not stop the database wipe', async () => {

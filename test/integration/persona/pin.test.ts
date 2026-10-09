@@ -114,7 +114,7 @@ describe('pin-service', () => {
         expect(dump()[ATTEMPTS_KEY]).toBeUndefined();
     });
 
-    it('an unreadable record reads as no PIN set', async () => {
+    it('PE8 today: an unreadable record reads as no PIN set', async () => {
         await setPin('1234');
         failSecureStore(RECORD_KEY, 'get');
 
@@ -454,7 +454,7 @@ describe('pin-store init()', () => {
          * Leaves the marker a real restart would: departure tracking armed, the app backgrounded
          * `awayMs` ago (none when null), then requestRestart('ota') writing the settings row.
          */
-        async function restartedAfter(awayMs: number | null) {
+        async function restartedAfter(awayMs: number | null, foregroundForMs = 0) {
             (global as { __DEV__?: boolean }).__DEV__ = false;
             try {
                 await restartContext();
@@ -463,6 +463,8 @@ describe('pin-store init()', () => {
                     jest.advanceTimersByTime(awayMs);
                     setAppState('active');
                 }
+                // Time spent looking at the app after the trip, before the restart fires.
+                if (foregroundForMs > 0) jest.advanceTimersByTime(foregroundForMs);
                 await requestRestart('ota');
             } finally {
                 (global as { __DEV__?: boolean }).__DEV__ = true;
@@ -503,6 +505,29 @@ describe('pin-store init()', () => {
 
             expect(await restartContext()).toMatchObject({ wasJsRestart: true, backgroundedAt: null });
             expect(usePinStore.getState().locked).toBe(false);
+        });
+
+        // The marker keeps the LAST departure stamp. A reader who came back 10 s after leaving and
+        // then used the app for ten minutes is measured against that old stamp, so the restart
+        // reads as a ten-minute absence.
+        test.failing('PE21 an in-app restart long after a short trip does not ask for the PIN', async () => {
+            await enrolDevice();
+            await restartedAfter(10_000, 10 * MIN);
+
+            await usePinStore.getState().init();
+
+            expect((await restartContext()).wasJsRestart).toBe(true);
+            expect(usePinStore.getState().locked).toBe(false);
+        });
+
+        it('PE21 today: an in-app restart long after a short trip asks for the PIN', async () => {
+            await enrolDevice();
+            await restartedAfter(10_000, 10 * MIN);
+
+            await usePinStore.getState().init();
+
+            expect((await restartContext()).wasJsRestart).toBe(true);
+            expect(usePinStore.getState().locked).toBe(true);
         });
 
         it('a real cold start (no marker) still locks at once', async () => {
@@ -613,5 +638,43 @@ describe('an unreadable PIN record at launch', () => {
         expect(usePinStore.getState()).toMatchObject({ lockEnabled: true, pinSet: false, locked: false });
         // Nothing was deleted: the record is still there once the keychain heals.
         expect(dump()[RECORD_KEY]).toBeDefined();
+    });
+});
+
+describe('an unreadable lock flag at launch', () => {
+    /** Lock on, PIN set (or not), then the flag's keychain slot refuses reads for a fresh store and init(). */
+    async function launchWithUnreadableFlag({ pinSet }: { pinSet: boolean }) {
+        if (pinSet) await enrolDevice();
+        else await runPinForceResetOnce();
+        failSecureStore(LOCK_KEY, 'get', new Error('keychain locked'));
+        usePinStore.setState(PIN_STORE_DEFAULTS);
+        await usePinStore.getState().init();
+        return resolveLaunchRoute({ hasIdentity: true, ...usePinStore.getState() });
+    }
+
+    test.failing('PE8b an unreadable lock flag with a PIN record present keeps the lock engaged', async () => {
+        expect(await launchWithUnreadableFlag({ pinSet: true })).toBe('/pin-lock');
+    });
+
+    it('PE8b today: an unreadable lock flag with a PIN record present reads as lock off, so the launch goes straight in', async () => {
+        expect(await launchWithUnreadableFlag({ pinSet: true })).toBe('/logged-in');
+        expect(usePinStore.getState()).toMatchObject({ lockEnabled: false, locked: false });
+    });
+
+    it('an unreadable lock flag with no PIN record opens the app', async () => {
+        expect(await launchWithUnreadableFlag({ pinSet: false })).toBe('/logged-in');
+        expect(usePinStore.getState()).toMatchObject({ pinSet: false, locked: false, initialized: true });
+    });
+
+    test.failing('PE22 an unreadable lock flag never deletes the PIN record', async () => {
+        await launchWithUnreadableFlag({ pinSet: true });
+
+        expect(dump()[RECORD_KEY]).toBeDefined();
+    });
+
+    it('PE22 today: an unreadable lock flag reads as lock off, so init() deletes the PIN record', async () => {
+        await launchWithUnreadableFlag({ pinSet: true });
+
+        expect(dump()[RECORD_KEY]).toBeUndefined();
     });
 });
