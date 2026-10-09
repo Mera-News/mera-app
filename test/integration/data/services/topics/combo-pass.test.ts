@@ -3,7 +3,7 @@
 // scheduler/core does for its synthetic tasks). The queue and the topic_combo handler are driven in
 // combo-pass-queue.test.ts.
 //
-// Replaces combo-pass-service.test.ts (all 30 `it`): enqueue creates N jobs and clears the flag in
+// Replaces combo-pass-service.test.ts (all 31 `it`): enqueue creates N jobs and clears the flag in
 // ONE batch; supersede an earlier pass; mint a pass id; claim up to the limit of the same pass;
 // explicit limit; release defer; release error + destroy at max attempts; resume after a kill; the
 // combo diff (keep, destroy + prune + purge, retire a tracked topic, staged left alone, FULL

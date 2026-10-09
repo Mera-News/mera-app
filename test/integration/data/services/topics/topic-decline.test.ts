@@ -2,7 +2,7 @@
 // the real timer. The window is asserted under a strict clock (time moves only when the test moves
 // it), so "the flush fires by 5 s" and "the clamp holds at 60 s" are upper bounds on fake time.
 //
-// Replaces topic-decline-service.test.ts (all 22 `it`): stages without destroying; decline written
+// Replaces topic-decline-service.test.ts (all 23 `it`): stages without destroying; decline written
 // at stage time; display vs normalised text; undo clears the marker and destroys a decline THIS
 // stage created; undo restores an older decline; unknown token; already committed; flush destroys +
 // purges once; tracked-story guard retires; the decline stands after a retire; no decline at

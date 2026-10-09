@@ -2,7 +2,7 @@
 // generation job, and the rescue sweep that must never error a fact that is only waiting its turn.
 // Real facts, topics and `inference_jobs` rows; faults are key-scoped batch failures (R26).
 //
-// Replaces topic-generation-status-service.test.ts (all 12 `it`): begin stamps pending in one
+// Replaces topic-generation-status-service.test.ts (all 11 `it`): begin stamps pending in one
 // write; begin skips a missing fact; begin writes nothing for an empty list; complete MINTS BEFORE
 // IT STAMPS; a mint that throws leaves the status pending; minting goes through createTopics (dedup
 // floor and metadata pairing); done with no usable texts; fail writes the column and the legacy
