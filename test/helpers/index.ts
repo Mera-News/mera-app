@@ -1,6 +1,6 @@
 export { server } from './msw';
 export { http, graphql, HttpResponse, delay } from 'msw';
-export { useFakeClock, advanceUntilSettled } from './clock';
+export { useFakeClock, advanceUntilSettled, advanceUntilDone } from './clock';
 export { setAppState } from './app-state';
 export { failSecureStore, secureStoreDump } from './storage';
 export { initI18nEn } from './i18n';
@@ -12,5 +12,15 @@ export async function resetDatabase(): Promise<void> {
 }
 export { FIXTURE_ACCOUNT, signInFixtureAccount } from './auth';
 export { resetAuthState } from '../mock-backend/auth';
+export {
+  assertNoGatewayViolations,
+  attestationRequests,
+  defaultResponder,
+  gatewayCalls,
+  gatewayViolations,
+  mockGateway,
+  takeGatewayViolations,
+} from './gateway';
+export type { GatewayCall, GatewayReply, GatewayResponder, GatewayRoute } from './gateway';
 export { mockGql, mockGqlError } from './gql';
 export { fixture } from './fixture';
