@@ -1,11 +1,11 @@
 import { HelpModal } from '@/components/ui/help-modal';
 import { Text } from '@/components/ui/text';
-import { CONTENT_POLICY_URL } from '@/lib/config/branding';
 import { useColors } from '@/lib/theme/tokens';
-import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
-import React, { useRef } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+
+import { useAboutMeraLink } from './useAboutMeraLink';
 
 interface AboutMeraModalProps {
   open: boolean;
@@ -22,20 +22,14 @@ interface AboutMeraModalProps {
 const AboutMeraModal: React.FC<AboutMeraModalProps> = ({ open, onClose }) => {
   const { t } = useTranslation();
   const colors = useColors();
-  // The policy opens once the card is fully gone: iOS will not present the
-  // in-app browser over a Modal still leaving.
-  const wantsPolicy = useRef(false);
+  const { onClosed, onLinkPress } = useAboutMeraLink(onClose);
   const line = { color: colors.ink2, fontSize: 16, lineHeight: 22 } as const;
 
   return (
     <HelpModal
       open={open}
       onClose={onClose}
-      onClosed={() => {
-        if (!wantsPolicy.current) return;
-        wantsPolicy.current = false;
-        void openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL));
-      }}
+      onClosed={onClosed}
       title={t('floatingChat.aboutTitle')}
       testID="about-mera"
     >
@@ -44,10 +38,7 @@ const AboutMeraModal: React.FC<AboutMeraModalProps> = ({ open, onClose }) => {
           {t('floatingChat.guidelinesBefore')}
           <Text
             accessibilityRole="link"
-            onPress={() => {
-              wantsPolicy.current = true;
-              onClose();
-            }}
+            onPress={onLinkPress}
             style={[line, { color: colors.accentText, textDecorationLine: 'underline' }]}
             testID="chat-guidelines-link"
           >
