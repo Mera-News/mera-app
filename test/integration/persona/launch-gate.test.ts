@@ -2,10 +2,13 @@
 // stores, the in-memory DB, the real auth client against the mock backend, the real keychain
 // fake. Only the native edges are faked. The pure identity-gate cases and the install boundary
 // ride in this file because they decide what the gate does.
+import Intercom from '@intercom/intercom-react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as Sentry from '@sentry/react-native';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import { TurboModuleRegistry } from 'react-native';
 import Purchases from 'react-native-purchases';
 import {
     useLoggedInGate,
@@ -22,6 +25,8 @@ import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/s
 import * as userPersonaService from '@/lib/database/services/user-persona-service';
 import { persistUserPersona } from '@/lib/database/services/user-persona-service';
 import { ensureBackupKey } from '@/lib/backup/key-store';
+import * as endpoints from '@/lib/config/endpoints';
+import { configureIntercom, isIntercomEnabled } from '@/lib/intercom';
 import { configureRevenueCat } from '@/lib/revenuecat';
 import { setAppLockEnabled } from '@/lib/security/app-lock-service';
 import {
@@ -125,13 +130,34 @@ const track = <T extends jest.SpyInstance>(spy: T): T => {
     return spy;
 };
 
-beforeAll(() => {
+// Intercom and Google Drive read their keys from lib/config/endpoints, which is fixed when it first
+// loads (before this file runs), and the account-switch wipe logs out of both (invariant 4b). Each is a
+// no-op when unconfigured, so the keys are set on the live bindings the two modules read at call time.
+const sdkKeys: jest.ReplaceProperty<unknown>[] = [];
+let registrySpy: jest.SpyInstance;
+beforeAll(async () => {
+    sdkKeys.push(
+        jest.replaceProperty(endpoints, 'INTERCOM_APP_ID', 'test_intercom_app'),
+        jest.replaceProperty(endpoints, 'INTERCOM_IOS_KEY', 'test_intercom_ios_key'),
+        jest.replaceProperty(endpoints, 'GOOGLE_WEB_CLIENT_ID', 'test_google_web_client_id'),
+    );
+    // google-drive.ts caches its "is the native module linked" probe on first use, so the link must
+    // be in place before any test reaches it. Only RNGoogleSignin is answered.
+    const realGet = TurboModuleRegistry.get.bind(TurboModuleRegistry);
+    registrySpy = jest
+        .spyOn(TurboModuleRegistry, 'get')
+        .mockImplementation(((name: string) => (name === 'RNGoogleSignin' ? {} : realGet(name))) as never);
     server.events.on('request:start', onStart);
     server.events.on('request:end', onEnd);
     configureRevenueCat();
+    // Guard: with the env set too late Intercom would never configure and its assertion would be vacuous.
+    expect(isIntercomEnabled()).toBe(true);
+    expect(await configureIntercom()).toBe(true);
 });
 
 afterAll(() => {
+    registrySpy.mockRestore();
+    for (const key of sdkKeys) key.restore();
     server.events.removeListener('request:start', onStart);
     server.events.removeListener('request:end', onEnd);
 });
@@ -167,6 +193,7 @@ afterEach(async () => {
     cleanup();
     jest.useRealTimers();
     await drain();
+    jest.mocked(GoogleSignin.hasPreviousSignIn).mockReturnValue(false);
     while (spies.length) spies.pop()?.mockRestore();
 });
 
@@ -319,6 +346,23 @@ describe('useLoggedInGate: account switch', () => {
         expect(replaced()).toEqual([['/logged-in/onboarding']]);
     });
 
+    // Invariant 4b: the switch wipe signs both SDKs out, or the next account inherits a stranger's
+    // support conversation and a connected Drive that its backup would upload into.
+    it('logs the previous account out of Intercom and disconnects Google Drive', async () => {
+        await signIn();
+        await setSetting('cached_user_id', FOREIGN);
+        await addFact('I follow cricket');
+        jest.mocked(GoogleSignin.hasPreviousSignIn).mockReturnValue(true);
+
+        mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(await hasAnyFacts()).toBe(false);
+        expect(Intercom.logout).toHaveBeenCalled();
+        expect(GoogleSignin.signOut).toHaveBeenCalled();
+    });
+
     it('a wipe that throws fails closed (blocking state, foreign stamp kept, no route); Try again wipes and routes', async () => {
         await signIn();
         await setSetting('cached_user_id', FOREIGN);
@@ -396,21 +440,58 @@ describe('useLoggedInGate: account switch', () => {
         expect(replaced()).toEqual([['/logged-in/onboarding']]);
     });
 
-    it('a held account switch is an unresolved session: no wipe, and the foreign stamp is kept', async () => {
-        await signIn();
-        await setSetting('cached_user_id', FOREIGN);
-        await addFact('I follow cricket');
-        holdAccountSwitch(ME);
+    // PE25: a held id is unresolved, so the gate opens the CACHED account and routes into the app while
+    // the person is still being asked about the switch on /login, with the held account's cookie in the
+    // keychain.
+    describe('PE25 a held account switch', () => {
+        /** Operation names of every GraphQL request from now on. */
+        function recordOps(): string[] {
+            const ops: string[] = [];
+            const listener = ({ request }: { request: Request }) => {
+                if (!request.url.endsWith('/graphql')) return;
+                void request
+                    .clone()
+                    .json()
+                    .then((b: { operationName?: string }) => {
+                        if (b.operationName) ops.push(b.operationName);
+                    });
+            };
+            server.events.on('request:start', listener);
+            afterEachStops.push(() => server.events.removeListener('request:start', listener));
+            return ops;
+        }
 
-        mountGate();
-        await waitForRoute();
-        await drain();
+        /** The held switch over a device that holds another, onboarded account. */
+        async function mountHeld(): Promise<string[]> {
+            await signIn();
+            await setSetting('cached_user_id', FOREIGN);
+            await addFact('I follow cricket');
+            holdAccountSwitch(ME);
+            const ops = recordOps();
 
-        expect(await hasAnyFacts()).toBe(true);
-        expect(await getSetting('cached_user_id')).toBe(FOREIGN);
-        expect(useUserStore.getState().userId).toBe(FOREIGN);
-        // The device's own account (it has facts) opens the app.
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+            mountGate();
+            await waitFor(() => expect(replaced().length + ops.length).toBeGreaterThan(0), { timeout: 8000 });
+            await drain();
+            return ops;
+        }
+
+        test.failing('PE25 a held account switch neither routes nor fetches as the cached account', async () => {
+            const ops = await mountHeld();
+
+            expect(replaced()).toEqual([]);
+            expect(ops.filter((op) => op === 'GetUserPersona')).toEqual([]);
+        });
+
+        it('PE25 today: a held account switch opens the cached account and fetches its persona', async () => {
+            const ops = await mountHeld();
+
+            expect(await hasAnyFacts()).toBe(true);
+            expect(await getSetting('cached_user_id')).toBe(FOREIGN);
+            expect(useUserStore.getState().userId).toBe(FOREIGN);
+            // The device's own account (it has facts) opens the app.
+            expect(replaced()).toEqual([[APP_ROUTE]]);
+            expect(ops.filter((op) => op === 'GetUserPersona')).toHaveLength(1);
+        });
     });
 
     // U4-N1: the gate's persona second opinion ("a row owned by somebody else proves the device is

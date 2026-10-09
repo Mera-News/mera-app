@@ -13,6 +13,7 @@ import {
 } from '@/components/custom/onboarding/onboarding-done';
 import database from '@/lib/database';
 import { addFact, hasAnyFacts } from '@/lib/database/services/fact-service';
+import * as settingService from '@/lib/database/services/setting-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { configureRevenueCat } from '@/lib/revenuecat';
 import { __resetLocalWipeForTests } from '@/lib/security/local-wipe';
@@ -220,6 +221,128 @@ describe('useOnboardingGate', () => {
         expect(result.current.wipeFailed).toBe(false);
         expect(await hasAnyFacts()).toBe(false);
         expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    // PE24: the launch gate fails closed on a broken identity read, a stamp that does not land and
+    // overlapping runs (invariant 6b (c), (d), (e)); this gate does none of the three.
+    describe('PE24 the gate fails closed like the launch gate', () => {
+        /** Waits for the gate to decide something, whichever way, so a missing failure is not a timeout. */
+        const settled = (
+            result: { current: ReturnType<typeof useOnboardingGate> },
+            onComplete: jest.Mock,
+        ) =>
+            waitFor(
+                () =>
+                    expect(
+                        result.current.wipeFailed || result.current.showOnboarding || onComplete.mock.calls.length > 0,
+                    ).toBe(true),
+                { timeout: 8000 },
+            );
+
+        const failIdentityRead = async () => {
+            await markOnboardingDone();
+            spies.push(jest.spyOn(settingService, 'getSetting').mockRejectedValueOnce(new Error('db unavailable')));
+            const gate = mountGate();
+            await settled(gate.result, gate.onComplete);
+            await drain();
+            return gate;
+        };
+
+        test.failing('PE24 a throwing identity read on the onboarding gate fails closed', async () => {
+            const { result, onComplete } = await failIdentityRead();
+
+            expect(result.current.wipeFailed).toBe(true);
+            expect(onComplete).not.toHaveBeenCalled();
+            expect(result.current.showOnboarding).toBe(false);
+        });
+
+        test('PE24 today: a throwing identity read completes into the previous owner\'s feed', async () => {
+            const { result, onComplete } = await failIdentityRead();
+
+            expect(onComplete).toHaveBeenCalledTimes(1);
+            expect(result.current.wipeFailed).toBe(false);
+        });
+
+        const stampDoesNotLand = async () => {
+            await setSetting('cached_user_id', FOREIGN);
+            await addFact('I follow cricket');
+            const real = settingService.setSetting;
+            spies.push(
+                jest
+                    .spyOn(settingService, 'setSetting')
+                    .mockImplementation((k, v) =>
+                        k === 'cached_user_id' && v === ME ? Promise.resolve(undefined as never) : real(k, v),
+                    ),
+            );
+            const gate = mountGate();
+            await settled(gate.result, gate.onComplete);
+            await drain();
+            return gate;
+        };
+
+        test.failing('PE24 the onboarding gate fails closed when its identity stamp does not land', async () => {
+            const { result } = await stampDoesNotLand();
+
+            expect(result.current.wipeFailed).toBe(true);
+            expect(result.current.showOnboarding).toBe(false);
+        });
+
+        test('PE24 today: the wizard shows with no identity stamp on disk', async () => {
+            const { result } = await stampDoesNotLand();
+
+            expect(result.current.showOnboarding).toBe(true);
+            expect(result.current.wipeFailed).toBe(false);
+            expect(await getSetting('cached_user_id')).toBeNull();
+        });
+
+        /**
+         * Two runs of the effect while the first wipe is held. The hold sits on the RevenueCat logout, the
+         * wipe's first awaited step after the keychain: held at the database reset instead, the second run's
+         * own settings read would queue behind the held writer and never start a wipe at all.
+         */
+        const overlappingRuns = async () => {
+            await setSetting('cached_user_id', FOREIGN);
+            await addFact('I follow cricket');
+            // Only the in-process recording knows who signed in; the session atom settles mid-wipe.
+            recordAuthenticatedUser(ME);
+            let release!: () => void;
+            const held = new Promise<void>((resolve) => {
+                release = resolve;
+            });
+            jest.mocked(Purchases.logOut).mockImplementationOnce(() => held as never);
+            const reset = jest.spyOn(database, 'unsafeResetDatabase');
+            spies.push(reset);
+
+            const onComplete = jest.fn();
+            const hook = renderHook(
+                ({ sessionUserId }: { sessionUserId?: string }) =>
+                    useOnboardingGate({ userId: ME, sessionUserId, onLoginRedirect: jest.fn(), onComplete }),
+                { initialProps: { sessionUserId: undefined as string | undefined } },
+            );
+            await waitFor(() => expect(Purchases.logOut).toHaveBeenCalledTimes(1), { timeout: 8000 });
+            hook.rerender({ sessionUserId: ME });
+            // A second run, if the gate starts one, reaches its own logout within a few ticks; a gate that
+            // shares the wipe never makes the second call.
+            await waitFor(() => expect(Purchases.logOut).toHaveBeenCalledTimes(2), { timeout: 1500 }).catch(
+                () => undefined,
+            );
+            release();
+            await settled(hook.result, onComplete);
+            await drain();
+            return { reset, hook };
+        };
+
+        test.failing('PE24 overlapping onboarding gate runs share one wipe', async () => {
+            const { reset } = await overlappingRuns();
+
+            expect(reset).toHaveBeenCalledTimes(1);
+        });
+
+        test('PE24 today: overlapping onboarding gate runs each reset the database', async () => {
+            const { reset } = await overlappingRuns();
+
+            expect(reset).toHaveBeenCalledTimes(2);
+        });
     });
 
     it('re-rendering with new handler identities does not restart the gate, and the LATEST handler is the one called', async () => {

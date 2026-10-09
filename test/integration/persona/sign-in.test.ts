@@ -162,6 +162,37 @@ describe('the stage the gate opens on', () => {
         read.mockRestore();
     });
 
+    // PE23: the load effect awaits ONE Promise.all over three settings reads and the device checks, so a
+    // single rejected read skips every setter and the phone account's sign-in stays hidden.
+    describe('PE23 a failed settings read on an id-only account', () => {
+        beforeEach(useDevBypass);
+
+        const failOneRead = async () => {
+            await seedAccount(ME);
+            const read = jest.spyOn(settingService, 'getSetting').mockRejectedValueOnce(new Error('db unavailable'));
+            const hook = open();
+            await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
+            // Let the device checks settle too: the dev bypass answers within a few ticks.
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            });
+            read.mockRestore();
+            return hook;
+        };
+
+        test.failing('PE23 a failed settings read still offers sign-in without email', async () => {
+            const hook = await failOneRead();
+
+            expect(hook.result.current).toMatchObject({ availability: 'dev-bypass', canSignInWithoutEmail: true });
+        });
+
+        test('PE23 today: a failed settings read hides sign-in without email', async () => {
+            const hook = await failOneRead();
+
+            expect(hook.result.current).toMatchObject({ availability: 'unavailable', canSignInWithoutEmail: false });
+        });
+    });
+
     it('offers phone sign-in only where the device can attest, and never on Forgot PIN', async () => {
         useDevBypass();
         const offered = open();
