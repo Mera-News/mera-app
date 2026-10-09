@@ -43,6 +43,10 @@ import {
 import appSchema from '@/lib/database/schema';
 import { addFact, deleteFact } from '@/lib/database/services/fact-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
+import NetInfo from '@react-native-community/netinfo';
+
+import { runScheduledBackup } from '@/lib/background/backup-task';
+import logger from '@/lib/logger';
 import { failSecureStore, secureStoreDump } from '@/test/helpers';
 import { resetFileSystem } from '@/test/helpers/fs';
 
@@ -118,7 +122,7 @@ describe('the ordering gate', () => {
     expect(err.reason).toBe('no-key');
   });
 
-  it('a keychain that cannot be read surfaces as the keychain error, not as "not set up"', async () => {
+  it('DA40 today: a keychain that cannot be read surfaces as the keychain error, not as "not set up"', async () => {
     await setUpBackup();
     failSecureStore(BACKUP_KEY_ITEM, 'get', new Error('keychain locked'));
 
@@ -127,6 +131,67 @@ describe('the ordering gate', () => {
     expect(err).not.toBeInstanceOf(BackupServiceError);
     expect(err.message).toBe('keychain locked');
     expect(callsTo('uploadFile')).toHaveLength(0);
+  });
+});
+
+describe('the scheduled backup meets a keychain that cannot be read', () => {
+  // A locked keychain (before the first unlock after a reboot) is a normal state of a phone that
+  // wakes overnight, like "not set up": it needs nothing fixed, so it should not file an event.
+  async function scheduleDaily(): Promise<void> {
+    await setUpBackup();
+    await setSetting('backup_cadence', 'daily');
+    await setSetting('backup_provider', 'icloud');
+    (NetInfo.fetch as unknown as jest.Mock).mockResolvedValueOnce({ type: 'wifi' });
+    failSecureStore(BACKUP_KEY_ITEM, 'get', new Error('keychain locked'));
+  }
+
+  function spyLogger() {
+    return {
+      capture: jest.spyOn(logger, 'captureException').mockImplementation(() => undefined as never),
+      crumb: jest.spyOn(logger, 'addBreadcrumb'),
+    };
+  }
+
+  it('DA40 today: the raw keychain error is captured as an exception', async () => {
+    await scheduleDaily();
+    const { capture, crumb } = spyLogger();
+    try {
+      await runScheduledBackup();
+      expect(capture).toHaveBeenCalledTimes(1);
+      expect((capture.mock.calls[0][0] as Error).message).toBe('keychain locked');
+      expect(crumb).not.toHaveBeenCalledWith('backup: not set up on this device', expect.anything(), expect.anything(), expect.anything());
+    } finally {
+      capture.mockRestore();
+      crumb.mockRestore();
+    }
+  });
+
+  test.failing('DA40: an unreadable keychain exits quietly, with no captured exception', async () => {
+    await scheduleDaily();
+    const { capture, crumb } = spyLogger();
+    try {
+      await runScheduledBackup();
+      expect(capture).not.toHaveBeenCalled();
+      expect(crumb).toHaveBeenCalled();
+    } finally {
+      capture.mockRestore();
+      crumb.mockRestore();
+    }
+  });
+
+  it('a device with no key set up exits on a breadcrumb alone', async () => {
+    await setSetting('backup_cadence', 'daily');
+    await setSetting('backup_provider', 'icloud');
+    (NetInfo.fetch as unknown as jest.Mock).mockResolvedValueOnce({ type: 'wifi' });
+    const { capture, crumb } = spyLogger();
+    try {
+      await runScheduledBackup();
+      expect(capture).not.toHaveBeenCalled();
+      expect(crumb).toHaveBeenCalledWith('backup: not set up on this device', 'backup-task', { reason: 'no-key' }, 'warning');
+    } finally {
+      capture.mockRestore();
+      crumb.mockRestore();
+    }
   });
 });
 

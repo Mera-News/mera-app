@@ -364,6 +364,21 @@ describe('refusals', () => {
     expect(BACKUP_MAX_BYTES).toBe(25 * 1024 * 1024);
   }, 180_000);
 
+  it('refuses a snapshot that would pass the plaintext ceiling, rather than filling the disk', async () => {
+    // 200 MB of rows cannot be seeded; the check reads only the encoded length, so one encode
+    // answers with an oversize one.
+    await seedDevice();
+    const encode = jest
+      .spyOn(TextEncoder.prototype, 'encode')
+      .mockReturnValueOnce({ length: BACKUP_MAX_PLAINTEXT_BYTES + 1 } as never);
+    try {
+      await expect(exportDevice()).rejects.toMatchObject({ name: 'BackupExportError', reason: 'too-large' });
+      expect(encode).toHaveBeenCalled();
+    } finally {
+      encode.mockRestore();
+    }
+  });
+
   it('names a plaintext ceiling well above the ciphertext one', () => {
     // A guard against filling the disk, not a product limit. If these invert, the scratch file
     // would be refused before the blob ever could be.

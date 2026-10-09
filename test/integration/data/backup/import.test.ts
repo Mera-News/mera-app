@@ -490,7 +490,7 @@ describe('refusals after the restore began', () => {
     expect(await restoreWasInterrupted()).toBe(true);
   });
 
-  it('today: a blob refused mid-stream has already cleared the persona it was meant to replace', async () => {
+  it('DA38 today: a blob refused mid-stream has already cleared the persona it was meant to replace', async () => {
     // The clear runs before the first row is parsed, and nothing re-creates the old rows. The
     // torn-restore marker is set, but nothing reads it (lib/backup/lifecycle.ts has no caller and is
     // deleted in P4), so the reader opens the app to an empty persona.
@@ -504,12 +504,26 @@ describe('refusals after the restore began', () => {
     expect(await rawRows('topics')).toEqual([]);
     expect(await restoreWasInterrupted()).toBe(true);
   });
+
+  test.failing('DA38: a blob refused mid-stream leaves the persona it was meant to replace', async () => {
+    // A restore that fails validation should change nothing; the clear must wait until the blob
+    // has been read through, or the reader is left with neither persona.
+    await seedDevice();
+    const factsBefore = (await rawRows('facts')).length;
+    const topicsBefore = (await rawRows('topics')).length;
+    const blob = await sealedByHand('this is not json\n');
+
+    await refusalOf(() => importInto(blob));
+
+    expect((await rawRows('facts')).length).toBe(factsBefore);
+    expect((await rawRows('topics')).length).toBe(topicsBefore);
+  });
 });
 
 describe('a blob naming tables outside the backup set', () => {
   const jobRow = { id: 'job1', task_name: 'feed-sync', status: 'pending' };
 
-  it('today: writes the rows of a table the backup never carries (scheduler_jobs)', async () => {
+  it('DA33 today: writes the rows of a table the backup never carries (scheduler_jobs)', async () => {
     const blob = await sealedByHand(
       `${section('facts', [{ id: 'f1', statement: 'a' }])}${section('scheduler_jobs', [jobRow])}`,
       { tables: [stat('facts', 1), stat('scheduler_jobs', 1)] },
@@ -521,7 +535,7 @@ describe('a blob naming tables outside the backup set', () => {
     expect(result.skippedTables).toEqual([]);
   });
 
-  test.failing('refuses the rows of a table the backup never carries, as it does for a forbidden setting', async () => {
+  test.failing('DA33: refuses the rows of a table the backup never carries, as it does for a forbidden setting', async () => {
     // allowlist.ts: EXCLUDED_TABLES are device-scoped or regenerable, and "a stale scheduler job
     // is actively harmful on the receiving device". The settings table is re-filtered on import
     // for exactly this reason; the other tables are not.
