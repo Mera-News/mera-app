@@ -4,6 +4,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useArticleSuggestionScreen } from '@/components/custom/news-detail/useArticleSuggestionScreen';
 import { visitedToNewsArticle } from '@/components/custom/publication-page/visited-article';
+import database from '@/lib/database';
 import * as suggestions from '@/lib/database/services/article-suggestion-service';
 import { getAllVisitedArticles } from '@/lib/database/services/publication-visit-service';
 import { isSuggestionSaved, saveSuggestion } from '@/lib/database/services/saved-article-suggestion-service';
@@ -88,15 +89,37 @@ describe('a story neither table holds', () => {
         expect(deleteRow).toHaveBeenCalledTimes(1);
     });
 
-    it('does not purge when the read throws: a transient error proves nothing about the row', async () => {
+    // FD7. getSuggestionByServerId swallows every error and returns null, and the saved-table
+    // lookup does the same, so the hook cannot tell "the read failed" from "the row is gone" and
+    // purges the card on one transient DB error. The `.catch` that is meant to protect the row
+    // never runs. components/custom/news-detail/useArticleSuggestionScreen.tsx, the load effect.
+    async function openWhileTheReadFails() {
         await seedSuggestion({ _id: 'kept' });
         const deleteRow = jest.spyOn(suggestions, 'deleteSuggestionByServerId');
-        jest.spyOn(suggestions, 'getSuggestionByServerId').mockRejectedValueOnce(new Error('db busy'));
-        const { result } = mount('kept');
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-        expect(result.current.error).toBe('Failed to load article');
+        // One level below the services: the collection method their reads go through.
+        const collection = database.get('article_suggestions');
+        const fail = jest.spyOn(collection, 'find').mockRejectedValueOnce(new Error('db busy'));
+        try {
+            const { result } = mount('kept');
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            return { result, deleteRow, rows: await suggestions.loadSuggestions() };
+        } finally {
+            fail.mockRestore();
+        }
+    }
+
+    test.failing('a transient read error on an existing row never deletes the card', async () => {
+        const { result, deleteRow, rows } = await openWhileTheReadFails();
         expect(deleteRow).not.toHaveBeenCalled();
-        expect((await suggestions.loadSuggestions()).map((s) => s._id)).toContain('kept');
+        expect(rows.map((s) => s._id)).toContain('kept');
+        expect(result.current.error).toBe('Failed to load article');
+    });
+
+    test('today: a transient read error on an existing row deletes the card as confirmed gone', async () => {
+        const { result, deleteRow, rows } = await openWhileTheReadFails();
+        expect(deleteRow).toHaveBeenCalledTimes(1);
+        expect(rows.map((s) => s._id)).not.toContain('kept');
+        expect(result.current.error).toBe('This story is no longer available');
     });
 });
 
