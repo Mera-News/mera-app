@@ -1,5 +1,6 @@
 // RetryLink end to end: what the real client re-sends after a failure, counted at the server.
 import { ServerError } from '@apollo/client/errors';
+import type { RequestHandler } from 'msw';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { advanceUntilDone, graphql, HttpResponse, mockGqlError, server, useFakeClock } from '@/test/helpers';
 import { client, failOp, failureOf, PROBE, rawOp, recordRequests, resetLinkState, spyLogger } from './kit';
@@ -22,31 +23,38 @@ it('offline: one request and no retry', async () => {
     expect(seen).toHaveLength(1);
 });
 
-// RetryLink's `max: 3` counts the first attempt, so the request is sent 3 times, not 4. The
-// comment beside it in apollo-client.ts says "3 retry attempts" (DATA-U4-3, owner's call which
-// of the two is meant, so no test.failing). The tests below pin the 3.
-const ATTEMPTS = 3;
+// DA6 (owner ruling): a transport or 5xx failure must be sent 4 times, the first plus 3 retries.
+// RetryLink's `max: 3` counts the first attempt, so today the request is sent 3 times. Each shape
+// below is a test.failing that expects the intended 4, beside a passing sibling that pins today's 3
+// (R14). P3 sets `attempts.max` to 4, flips the failing tests and deletes the siblings.
+const INTENDED_SENDS = 4;
+const TODAY_SENDS = 3;
 
-it('online transport failure: retried until three attempts have been made', async () => {
-    const seen = recordRequests();
-    server.use(failOp('LinkProbe'));
-    expect(await run()).toBeTruthy();
-    expect(seen).toHaveLength(ATTEMPTS);
-});
+const shapes: [string, () => RequestHandler, ((err: unknown) => void) | null][] = [
+    ['transport failure', () => failOp('LinkProbe'), null],
+    ['HTTP 500', () => status(500), (err) => expect(ServerError.is(err)).toBe(true)],
+    ['HTTP 502', () => status(502), (err) => expect(ServerError.is(err)).toBe(true)],
+    ['HTTP 503', () => status(503), (err) => expect(ServerError.is(err)).toBe(true)],
+    ['an HTML 502 body', () => rawOp('LinkProbe', () => HttpResponse.html('<h1>502</h1>', { status: 502 })), null],
+];
 
-it.each([500, 502, 503])('online HTTP %i: retried until three attempts have been made', async (code) => {
-    const seen = recordRequests();
-    server.use(status(code));
-    const err = await run();
-    expect(ServerError.is(err)).toBe(true);
-    expect(seen).toHaveLength(ATTEMPTS);
-});
+describe.each(shapes)('online %s', (_name, handler, checkError) => {
+    async function sends(): Promise<number> {
+        const seen = recordRequests();
+        server.use(handler());
+        const err = await run();
+        expect(err).toBeTruthy();
+        checkError?.(err);
+        return seen.length;
+    }
 
-it('an HTML 5xx body is retried too', async () => {
-    const seen = recordRequests();
-    server.use(rawOp('LinkProbe', () => HttpResponse.html('<h1>502</h1>', { status: 502 })));
-    expect(await run()).toBeTruthy();
-    expect(seen).toHaveLength(ATTEMPTS);
+    test.failing('DA6: is sent 4 times, the first attempt plus 3 retries', async () => {
+        expect(await sends()).toBe(INTENDED_SENDS);
+    });
+
+    it('DA6 today: is sent 3 times (RetryLink max counts the first attempt)', async () => {
+        expect(await sends()).toBe(TODAY_SENDS);
+    });
 });
 
 it.each([400, 402, 404, 499])('HTTP %i: no retry', async (code) => {
