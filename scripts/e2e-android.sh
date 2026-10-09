@@ -76,7 +76,7 @@ e2e-android --dry-run (nothing is run, no heavy slot is taken)
 ROOT=$ROOT  RUN=$RUN  mode=$( [ -n "$BASELINE" ] && echo "baseline ${BASELINE}s" || echo lane )  proxy=$PROXY_MODE  flows=$FLOWS  handlers=$HANDLERS
 step 0 preflight: re-exec as E2E_HEAVY_HELD=1 $ROOT/../bin/heavy --all bash $SELF; abort if adb lists an emulator-*; require maestro, $EMU, $ADB; mkdir -p $RUN; trap cleanup EXIT INT TERM
 step 1 prebuild$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build)" )$( [ -n "$BASELINE" ] && echo " (skipped: --baseline)" ): (set -a; . ./.env.e2e; EXPO_NO_DOTENV=1 TMPDIR=$ROOT/e2e-output/.metro-tmp npx expo prebuild --platform android --no-install$( [ "$CLEAN" = 1 ] && echo " --clean" ))
-step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" )$( [ -n "$BASELINE" ] && echo " (skipped: --baseline)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon); cp $APK_OUT $LAST; unzip -p $LAST assets/index.android.bundle | strings > $RUN/bundle-strings.txt; require 10.0.2.2:$PORT, forbid prod hosts / sentry DSN / RevenueCat keys / Intercom keys
+step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" )$( [ -n "$BASELINE" ] && echo " (skipped: --baseline)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon); cp $APK_OUT $LAST; grep the raw bundle: require 10.0.2.2:$PORT, forbid prod/staging endpoint hosts and every .env secret value (DSN, KEY, TOKEN, APP_ID, CLIENT_ID)
 step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
 step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect$( [ "$PROXY_MODE" = emulator ] && echo " -http-proxy http://127.0.0.1:$PORT" ) > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s)$( [ "$PROXY_MODE" = adb ] && echo "; adb shell settings put global http_proxy 10.0.2.2:$PORT" ); screenshot $RUN/launcher.png
 PLAN
@@ -148,17 +148,28 @@ if [ -z "$BASELINE" ]; then
   fi
   [ -f "$LAST" ] || { echo "error: $LAST missing; run without --skip-build" >&2; exit 1; }
   echo "== step 2: bundle grep"
-  unzip -p "$LAST" assets/index.android.bundle | strings > "$RUN/bundle-strings.txt"
-  grep -Fq "10.0.2.2:$PORT" "$RUN/bundle-strings.txt" || { echo "FAIL: bundle lacks 10.0.2.2:$PORT" >&2; exit 1; }
+  # Grep the raw Hermes bytecode: macOS `strings` skips non-Mach-O content, and
+  # Hermes packs its strings back to back, so loose regexes match across
+  # neighbours. Hence one exact host pattern plus the developer's own secret
+  # values, matched as fixed strings (names only are printed, never values).
+  BUNDLE="$RUN/index.android.bundle"
+  unzip -p "$LAST" assets/index.android.bundle > "$BUNDLE"
+  LC_ALL=C grep -a -q -F "10.0.2.2:$PORT" "$BUNDLE" || { echo "FAIL: bundle lacks 10.0.2.2:$PORT" >&2; exit 1; }
   BAD=0
-  while IFS='|' read -r name pat; do
-    if grep -Eq "$pat" "$RUN/bundle-strings.txt"; then echo "FAIL: bundle matches forbidden pattern: $name" >&2; BAD=1; fi
-  done <<'PATTERNS'
-prod-or-staging-host|(graphql|auth|inference)(\.staging)?\.mera\.news
-sentry-dsn|https://[0-9a-f]{32}@[^ ]*sentry\.io
-revenuecat-key|(appl|goog)_[A-Za-z0-9]{16,}
-intercom-key|(android|ios)_sdk-[A-Za-z0-9-]{16,}
-PATTERNS
+  if LC_ALL=C grep -a -q -E '(graphql|auth|inference)(\.staging)?\.mera\.news' "$BUNDLE"; then
+    echo "FAIL: bundle contains a prod or staging endpoint host" >&2; BAD=1
+  fi
+  if [ -f .env ]; then
+    while IFS='=' read -r k v; do
+      case "$k" in EXPO_PUBLIC_*DSN|EXPO_PUBLIC_*KEY|EXPO_PUBLIC_*TOKEN|EXPO_PUBLIC_*APP_ID|EXPO_PUBLIC_*CLIENT_ID) ;; *) continue ;; esac
+      v="${v%\"}"; v="${v#\"}"
+      [ "${#v}" -ge 8 ] || continue
+      if LC_ALL=C grep -a -q -F -- "$v" "$BUNDLE"; then echo "FAIL: bundle contains the .env value of $k" >&2; BAD=1; fi
+    done < .env
+  else
+    echo "warn: no .env to check secrets against" >&2
+  fi
+  rm -f "$BUNDLE"
   [ "$BAD" = 0 ] || exit 1
 fi
 
