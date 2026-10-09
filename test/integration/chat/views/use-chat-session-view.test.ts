@@ -10,6 +10,7 @@ import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import i18n from '@/lib/i18n';
 import { initI18nEn } from '@/test/helpers';
 
 const USER_ID = 'user-1';
@@ -20,12 +21,9 @@ const ARTICLE_CONTEXT: ChatContext = {
   suggestionId: 's1',
 };
 
-let t: (key: string) => string;
+const t = (key: string): string => i18n.t(key);
 
-beforeAll(async () => {
-  await initI18nEn();
-  t = require('@/lib/i18n').default.t.bind(require('@/lib/i18n').default);
-});
+beforeAll(initI18nEn);
 
 beforeEach(() => {
   useFloatingChatStore.getState().reset();
