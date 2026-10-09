@@ -155,6 +155,20 @@ describe('cloud: the skill core, isolated', () => {
     expect(await texts(fact.id)).toEqual(['Alkmaar news', 'North Holland dyke works']);
   });
 
+  // Intended: the declined-topic veto is an exact match on normalized_text, which folds case and
+  // whitespace only. Near-duplicates are the similarity filter's job, not the veto's. Pinned so a
+  // normaliser merge (P4) cannot start stripping punctuation here unnoticed.
+  it('a punctuation variant of a declined topic is NOT vetoed (exact match on case and whitespace only)', async () => {
+    const fact = await pendingFact(JOB, 'profession: job role and industry');
+    await recordDecline('alkmaar street safety', null);
+    reply('["Alkmaar, street safety!"]');
+
+    const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+    expect(out.topics).toEqual(['Alkmaar, street safety!']);
+    expect(await texts(fact.id)).toEqual(['Alkmaar, street safety!']);
+  });
+
   it('"Generate more" that finds nothing new settles done and reports nothing', async () => {
     const captured = jest.spyOn(logger, 'captureMessage');
     const fact = await pendingFact('Lives in Alkmaar, North Holland, Netherlands, EU', HOME);
