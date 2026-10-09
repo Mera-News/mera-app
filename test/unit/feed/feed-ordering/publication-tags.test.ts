@@ -3,7 +3,7 @@ import {
     publicationTagMultiplier,
     rankedRelevance,
     type RankingContext,
-} from '../publication-tags';
+} from '@/lib/feed-ordering/publication-tags';
 
 const ctx = (entries: [string, number][]): RankingContext => ({
     homeCountryAlpha3: null,

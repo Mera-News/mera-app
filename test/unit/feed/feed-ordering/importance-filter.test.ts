@@ -1,4 +1,4 @@
-import { isCulledHeadlineRelevance } from '../importance-filter';
+import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter';
 
 // relevance v3 (2026-08-05) band-ladder unification: `relevanceBandRank` (which
 // this module is built on) moved off its own 0.53/0.77 cutoffs onto the unified

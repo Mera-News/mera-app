@@ -3,7 +3,7 @@ import {
   DASHBOARD_RESORT_INTERVAL_MS,
   msUntilResortDue,
   shouldResort,
-} from '../dashboard-resort';
+} from '@/lib/feed-ordering/dashboard-resort';
 
 const T0 = 1_700_000_000_000;
 const MIN = 60_000;

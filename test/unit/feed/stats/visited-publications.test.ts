@@ -5,7 +5,7 @@ import type {
 import {
   mergeVisitedByName,
   visitsForNames,
-} from '../visited-publications';
+} from '@/lib/stats/visited-publications';
 
 const pub = (
   publicationName: string,
@@ -82,7 +82,7 @@ describe('visitsForNames', () => {
 });
 
 describe('calendarDaysAgo', () => {
-  const { calendarDaysAgo } = require('../visited-publications') as typeof import('../visited-publications');
+  const { calendarDaysAgo } = require('@/lib/stats/visited-publications') as typeof import('@/lib/stats/visited-publications');
   const at = (y: number, m: number, d: number, h: number, min = 0) => new Date(y, m, d, h, min).getTime();
   it('counts calendar days, not 24h spans', () => {
     expect(calendarDaysAgo(at(2026, 9, 6, 23, 50), at(2026, 9, 7, 0, 10))).toBe(1);

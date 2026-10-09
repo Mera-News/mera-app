@@ -6,7 +6,7 @@ import {
   matchingRuleId,
   HERO_TARGET_PX,
   COMPACT_TARGET_PX,
-} from '../upgrade-image-url';
+} from '@/lib/images/upgrade-image-url';
 
 describe('R1 — WordPress size suffix (live: 11/12 hosts improved, 0 broken)', () => {
   const real = 'https://www.alphatv.gr/wp-content/uploads/2026/09/photo-300x200.jpg';

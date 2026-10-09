@@ -12,7 +12,7 @@ import {
   peakDayCount,
   STATS_CARD_IDS,
   type ReadingStats,
-} from '../reading-stats';
+} from '@/lib/stats/reading-stats';
 
 const NOW = Date.UTC(2026, 8, 15, 12, 0, 0);
 const HOUR = 60 * 60 * 1000;

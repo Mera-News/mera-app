@@ -3,7 +3,7 @@ import {
   resetImageStats,
   getImageResolutionReport,
   MIN_HERO_PX,
-} from '../image-resolution-stats';
+} from '@/lib/images/image-resolution-stats';
 
 const sample = (over: Partial<Parameters<typeof recordHeroLoad>[0]> = {}) => ({
   upgraded: false,

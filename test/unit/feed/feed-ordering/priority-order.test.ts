@@ -9,7 +9,7 @@ import {
   relevanceBandRank,
   sortByPriority,
   type PriorityFacts,
-} from '../priority-order';
+} from '@/lib/feed-ordering/priority-order';
 import { bandOf, bandRank, bucketOf, bucketRank } from '@/lib/news-harness/feed-select/ownership';
 
 // relevance v3 (2026-08-05) band-ladder unification: `relevanceBandRank` moved
