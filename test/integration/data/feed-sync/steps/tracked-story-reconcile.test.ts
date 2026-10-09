@@ -16,12 +16,17 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
+import { inferenceQueue } from '@/lib/inference/InferenceQueue';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { getSetting } from '@/lib/database/services/setting-service';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { getAll as getNotifications } from '@/lib/database/services/notification-service';
 import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-service';
 import * as trackedStoryService from '@/lib/database/services/tracked-story-service';
 import {
   getTrackedStoryById,
   observeActive,
+  trackStory,
   type TrackedStoryMemberSnapshot,
 } from '@/lib/database/services/tracked-story-service';
 import { reconcileTrackedStories } from '@/lib/scheduler/feed-sync/tracked-story-reconcile';
@@ -307,6 +312,57 @@ describe('the reconcile as the feed sync runs it', () => {
     await until(
       () => (logger.captureException as jest.Mock).mock.calls.some(([, o]) => o?.tags?.method === 'reconcileTrackedStories'),
       'the reconcile failure to be reported',
+    );
+  });
+
+  it('a tracked_stories read fault: the legacy-migration read swallows it, the reconcile reports it, the step still returns', async () => {
+    await seedInterest('I follow racing', ['formula 1']);
+    const served = serveHydrate();
+    server.use(servePersona({ topics: { 'formula 1': ['n1'] } }), ...served.handlers);
+    const t = makeCtx();
+    const { diff } = await fetchAndDiff(t);
+    failTableQuery('tracked_stories');
+
+    const run = await hydrate(diff, t);
+
+    expect(run.result.insertedCount).toBe(1);
+    await until(
+      () => (logger.captureException as jest.Mock).mock.calls.some(([, o]) => o?.tags?.method === 'reconcileTrackedStories'),
+      'the reconcile failure to be reported',
+    );
+    // getLegacyTrackedForMigration catches its own read failure and returns [], so the
+    // migrate step sees no legacy story and its catch is not reached by this fault
+    expect(logger.warn).toHaveBeenCalledWith(
+      '[tracked-story] getLegacyTrackedForMigration failed',
+      expect.any(Object),
+    );
+    expect(
+      (logger.captureException as jest.Mock).mock.calls.some(([, o]) => o?.tags?.method === 'migrateLegacyTrackedStories'),
+    ).toBe(false);
+  });
+
+  it('a throw out of the legacy migration is reported, and the reconcile and the retention backfill still run', async () => {
+    // on-device mode, one legacy story (no topic): the migrate step enqueues a job, then wakes the
+    // queue, and that wake is the one call outside its per-row try
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
+    await trackStory({ articleId: 'legacy', title: 'Legacy story', originSurface: 'for_you' });
+    const { storyId } = await follow('seed', 'gaza ceasefire');
+    const served = serveHydrate();
+    server.use(servePersona({ topics: { 'gaza ceasefire': ['n1'] } }), ...served.handlers);
+    const t = makeCtx();
+    const { diff } = await fetchAndDiff(t);
+    spyOnExport(inferenceQueue, 'notify').mockImplementation(() => {
+      throw new Error('queue wake failed');
+    });
+
+    const run = await hydrate(diff, t);
+
+    expect(run.result.insertedCount).toBe(1);
+    await until(async () => (await members(storyId)).includes('n1'), 'the reconcile to grow the story');
+    await until(async () => (await getSetting('tracked_story_retention_backfilled')) != null, 'the backfill to stamp');
+    expect(logger.captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'queue wake failed' }),
+      expect.objectContaining({ tags: expect.objectContaining({ method: 'migrateLegacyTrackedStories' }) }),
     );
   });
 });
