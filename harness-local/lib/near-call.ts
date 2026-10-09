@@ -1,4 +1,13 @@
 import { stripLeakedReasoning } from '../../lib/llm/reasoning-leak';
+import {
+  REQUIRED_TOOL_REASK,
+  createToolCallStreamParser,
+  parseToolCallsFromText,
+  toTextToolMessages,
+  type ProtocolMessageIn,
+  type TextToolDefinition,
+  type ToolFormat,
+} from '../../lib/llm/text-tool-protocol';
 // harness-local — the one place a runner posts a completion.
 //
 // Both runners and (from U5) replay-persona-chat.ts go through this, so a
@@ -471,4 +480,65 @@ export async function postBodyStream(
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * The app's TEXT tool wire (lib/llm/text-tool-protocol), over the same streamed
+ * transport. `tools` and `tool_choice` are taken OUT of the body and written
+ * into the system prompt; `<tool_call>` blocks are parsed back out of the
+ * content, so the result has the shape a native call returns. `required` is
+ * re-asked once when no call came back, exactly as the app does it.
+ *
+ * `ttVisibleMs` is re-timed on the first VISIBLE text: a `<tool_call>` block is
+ * content on the wire but never prose.
+ */
+export async function postBodyStreamTextTools(
+  baseUrl: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  onDelta?: (d: { content?: string; reasoning?: string }) => void,
+  format: ToolFormat = 'hermes',
+): Promise<NearStreamResult & { reasked: boolean }> {
+  const { tools, tool_choice: toolChoiceRaw, messages, ...rest } = body;
+  const toolDefs = (tools as TextToolDefinition[] | undefined) ?? [];
+  const toolChoice = typeof toolChoiceRaw === 'string' ? toolChoiceRaw : undefined;
+
+  const send = async (msgs: ProtocolMessageIn[]): Promise<NearStreamResult> => {
+    const started = Date.now();
+    const parser = createToolCallStreamParser(toolDefs, format);
+    let ttVisibleMs: number | null = null;
+    const r = await postBodyStream(
+      baseUrl,
+      apiKey,
+      { ...rest, messages: toTextToolMessages(msgs, toolDefs, toolChoice, format) },
+      timeoutMs,
+      (d) => {
+        if (d.content) {
+          const v = parser.push(d.content);
+          if (v.text) {
+            if (ttVisibleMs === null) ttVisibleMs = Date.now() - started;
+            onDelta?.({ content: v.text });
+          }
+        }
+        if (d.reasoning !== undefined) onDelta?.({ reasoning: d.reasoning });
+      },
+    );
+    if (r.error) return r;
+    const parsed = parseToolCallsFromText(r.content, toolDefs, format);
+    const toolCalls = [...r.toolCalls, ...parsed.calls];
+    return {
+      ...r,
+      content: parsed.text,
+      toolCalls,
+      finishReason: toolCalls.length > 0 && r.finishReason === 'stop' ? 'tool_calls' : r.finishReason,
+      ttVisibleMs,
+    };
+  };
+
+  const msgs = messages as ProtocolMessageIn[];
+  const first = await send(msgs);
+  if (toolChoice !== 'required' || first.error || first.toolCalls.length > 0) return { ...first, reasked: false };
+  const second = await send([...msgs, { role: 'user', content: REQUIRED_TOOL_REASK }]);
+  return { ...second, latencyMs: first.latencyMs + second.latencyMs, reasked: true };
 }

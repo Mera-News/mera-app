@@ -265,6 +265,42 @@ describe('makeAgentDeps streams only the leg the loop marks', () => {
     await deps.callModel({ ...base, streamToUser: true });
     expect(onDelta).toHaveBeenCalledWith({ content: 'hi' });
     expect(callModelViaCloud).toBeDefined();
+    // Only the watched leg streams; every other leg is one envelope.
+    const sent = (cloudChatStream as jest.Mock).mock.calls.map((c) => (c[0] as { stream?: boolean }).stream);
+    expect(sent).toEqual([false, true]);
+  });
+});
+
+describe('a forced leg (tool_choice required) with no call back is re-asked ONCE', () => {
+  const { cloudChatStream } = require('../../llm/cloudComplete');
+  const { REQUIRED_TOOL_REASK } = require('../../llm/text-tool-protocol');
+  async function* text(delta: string) {
+    yield { type: 'text-delta', delta };
+    yield { type: 'finish', reason: 'stop' };
+  }
+  async function* call() {
+    yield { type: 'tool-call-delta', index: 0, id: 'c', name: 'saveExtractedFacts', argumentsDelta: '{}' };
+    yield { type: 'finish', reason: 'tool_calls' };
+  }
+  const base = { role: 'tool' as const, model: 'BIG', systemPrompt: 's', messages: [{ role: 'user' as const, content: 'm' }] };
+  beforeEach(() => (cloudChatStream as jest.Mock).mockReset());
+
+  it('re-asks with the re-ask line last, and returns the second answer', async () => {
+    (cloudChatStream as jest.Mock).mockImplementationOnce(() => text('no call')).mockImplementationOnce(() => call());
+    const out = await callModelViaCloud({ ...base, toolChoice: 'required' });
+    expect(cloudChatStream).toHaveBeenCalledTimes(2);
+    const second = (cloudChatStream as jest.Mock).mock.calls[1][0] as { messages: { role: string; content: string }[] };
+    expect(second.messages[second.messages.length - 1]).toEqual({ role: 'user', content: REQUIRED_TOOL_REASK });
+    expect(out.toolCalls.map((c) => c.name)).toEqual(['saveExtractedFacts']);
+  });
+
+  it('never re-asks twice, and never re-asks an auto leg', async () => {
+    (cloudChatStream as jest.Mock).mockImplementation(() => text('no call'));
+    await callModelViaCloud({ ...base, toolChoice: 'required' });
+    expect(cloudChatStream).toHaveBeenCalledTimes(2);
+    (cloudChatStream as jest.Mock).mockClear();
+    await callModelViaCloud({ ...base, toolChoice: 'auto' });
+    expect(cloudChatStream).toHaveBeenCalledTimes(1);
   });
 });
 
