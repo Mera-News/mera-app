@@ -13,14 +13,17 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
 import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
 import { __resetOnDeviceGateForTests } from '@/lib/llm/on-device-gate';
+import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import * as persistence from '@/lib/scheduler/scheduler-persistence';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import type { TaskDefinition } from '@/lib/scheduler/scheduler-types';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import {
   advanceUntilDone,
+  server,
   signInFixtureAccount,
   useStrictClock as freezeClockAt, // aliased: a use* name inside a plain function trips react-hooks/rules-of-hooks
   type GatewayCall,
@@ -74,6 +77,7 @@ export async function startTest(taskName: string, opts: { signedIn?: boolean } =
 
 export function endTest(): void {
   AppScheduler.dispose();
+  stopRecording.splice(0).forEach((stop) => stop());
 }
 
 /** `AppScheduler.trigger` under the strict clock. */
@@ -165,4 +169,59 @@ export async function seedFactWithTopics(statement: string, texts: string[], ste
   }
   jest.setSystemTime(start);
   return fact;
+}
+
+// ---------------------------------------------------------------------------
+// Sessions
+// ---------------------------------------------------------------------------
+
+/** What the `authenticated` condition and the push-token check read: a persona and a user id in the user store. */
+export function seedLocalUser(persona: Record<string, unknown> = {}, userId = 'user-1'): void {
+  useUserStore.setState({ userId, userPersona: { _id: 'persona-1', ...persona } as never });
+}
+
+/** Every GraphQL operation the app sends from now on, with its variables. Stopped by `endTest()`. */
+export function recordOps() {
+  const sent: { op: string; variables: Record<string, any> }[] = [];
+  const listener = ({ request }: { request: Request }) => {
+    if (!request.url.endsWith('/graphql')) return;
+    void request
+      .clone()
+      .json()
+      .then((b: { operationName?: string; variables?: Record<string, any> }) => {
+        if (b.operationName) sent.push({ op: b.operationName, variables: b.variables ?? {} });
+      });
+  };
+  server.events.on('request:start', listener);
+  stopRecording.push(() => server.events.removeListener('request:start', listener));
+  return {
+    /** Variables of every send of one operation, in order. */
+    of: (op: string): Record<string, any>[] => sent.filter((s) => s.op === op).map((s) => s.variables),
+  };
+}
+const stopRecording: (() => void)[] = [];
+
+/** The `[task] message` lines handlers wrote through `ctx.log`, read from a spy on the real logger (an edge). */
+export function captureTaskLogs(taskName: string): () => string[] {
+  const spy = jest.spyOn(logger, 'info');
+  const prefix = `[${taskName}] `;
+  return () =>
+    spy.mock.calls
+      .map((c) => String(c[0]))
+      .filter((m) => m.startsWith(prefix))
+      .map((m) => m.slice(prefix.length));
+}
+
+/** Stand-in for the `feed-sync` task that counts its runs (the end-of-pass refresh triggers it by name). */
+export function registerFeedSyncCounter(): { runs: number } {
+  const counter = { runs: 0 };
+  AppScheduler.register({
+    name: 'feed-sync',
+    displayName: 'feed-sync (stand-in)',
+    frequency: 0,
+    handler: async () => {
+      counter.runs += 1;
+    },
+  });
+  return counter;
 }
