@@ -191,11 +191,18 @@ jest.mock(
   'react-native/src/private/specs_DEPRECATED/components/AndroidHorizontalScrollContentViewNativeComponent',
   () => ({ __esModule: true, default: 'AndroidHorizontalScrollContentView' }),
 );
+jest.mock(
+  'react-native/src/private/specs_DEPRECATED/components/ActivityIndicatorViewNativeComponent',
+  () => ({ __esModule: true, default: 'ActivityIndicatorView' }),
+);
 jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 jest.mock(
   'react-native-safe-area-context',
   () => require('react-native-safe-area-context/jest/mock').default,
 );
+
+// 9b. RNTL's waitFor / findBy default (1 s) times out under a loaded full run; 5 s everywhere.
+require('@testing-library/react-native').configure({ asyncUtilTimeout: 5000 });
 
 // 10. Console.
 global.console = {
