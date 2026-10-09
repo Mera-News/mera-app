@@ -8,6 +8,7 @@ jest.mock('expo-keep-awake', () => ({
 }));
 
 import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import type { TaskDefinition } from '@/lib/scheduler/scheduler-types';
 import { useFakeClock } from '@/test/helpers';
 
@@ -30,6 +31,7 @@ describe('feed-sync task conditions', () => {
   beforeEach(() => {
     useFakeClock(NOW);
     useForYouStore.setState({ dailyLimitResetAt: null });
+    useSubscriptionStore.getState().reset();
   });
 
   it('has exactly network, authenticated, db-ready and ONE custom condition', () => {
@@ -51,5 +53,31 @@ describe('feed-sync task conditions', () => {
     expect(check()).toBe(false);
     jest.setSystemTime(NOW + 60_000);
     expect(check()).toBe(true);
+  });
+
+  // DA42: the cap latch (`dailyLimitResetAt`, written only by FeedSyncMachine) is never cleared, and
+  // the condition reads nothing else, so a reader who pays after hitting the cap stays held until the
+  // reset time. The paid billing arrives the way the app delivers it after a confirmed purchase:
+  // `refreshUserBillingAfterPurchase` -> `setServerBilling` (the fields below are the server's
+  // `userBilling` shape; the store keeps the tier and drops the counters).
+  describe('a paid upgrade after the daily cap', () => {
+    function holdTheCapThenPay() {
+      const check = ((registeredDefinition().conditions ?? []).find((c) => c.type === 'custom') as {
+        check: () => boolean;
+      }).check;
+      useForYouStore.setState({ dailyLimitResetAt: NOW + 60_000 }); // the cap latched
+      expect(check()).toBe(false);
+      const paid = { subscriptionTier: 'professional', dailyArticleLimit: 1000, articlesUsedToday: 250 };
+      useSubscriptionStore.getState().setServerBilling(paid);
+      return check;
+    }
+
+    test.failing('DA42: a paid upgrade after the cap lets the feed sync run before the reset time', () => {
+      expect(holdTheCapThenPay()()).toBe(true);
+    });
+
+    it('DA42 today: the cap hold stays until the reset time even after a paid upgrade', () => {
+      expect(holdTheCapThenPay()()).toBe(false);
+    });
   });
 });
