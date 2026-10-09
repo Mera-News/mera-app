@@ -157,19 +157,37 @@ function sseStream(
   }
 
   const it = frames();
+  // A client that cancels (Stop, a hedge loser, an idle abort) closes the stream while a pull may
+  // still be awaiting the next frame (a chunkDelayMs wait). Nothing touches the controller once
+  // the stream is cancelled or the request aborted, and every controller call is guarded, so a
+  // late frame can never surface "Invalid state: ReadableStream is already closed".
+  const safely = (f: () => void) => {
+    try {
+      f();
+    } catch {
+      /* the stream closed under us: the client went away */
+    }
+  };
   return new ReadableStream<Uint8Array>(
     {
       async pull(controller) {
+        let res: IteratorResult<unknown>;
         try {
-          const { value, done } = await it.next();
+          res = await it.next();
+        } catch (err) {
+          if (live()) safely(() => controller.error(err));
+          return;
+        }
+        if (!live()) return;
+        const { value, done } = res;
+        safely(() => {
           if (done) controller.close();
           else controller.enqueue(enc.encode(`data: ${typeof value === 'string' ? value : JSON.stringify(value)}\n\n`));
-        } catch (err) {
-          controller.error(err);
-        }
+        });
       },
       cancel() {
         cancelled = true;
+        void it.return(undefined).catch(() => {});
       },
     },
     { highWaterMark: 0 },
