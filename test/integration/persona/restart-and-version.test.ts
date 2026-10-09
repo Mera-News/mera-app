@@ -3,8 +3,7 @@
 // DB and the real Apollo client over MSW. Mocked: expo-updates only, an edge.
 import Constants from 'expo-constants';
 import { renderHook, waitFor } from '@testing-library/react-native';
-import ForceUpdateScreen from '@/components/custom/ForceUpdateScreen';
-import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
+import { useNativeUpdateGate } from '@/components/custom/useNativeUpdateGate';
 import OTASilentUpdater from '@/components/custom/OTASilentUpdater';
 import { AppVersionService } from '@/lib/app-version-service';
 import {
@@ -33,13 +32,6 @@ import logger from '@/lib/logger';
 import { setCurrentPathname } from '@/lib/nav-state';
 import { getAppVersion, getAppVersionLabel, getGitCommit } from '@/lib/version';
 import { mockGql, mockGqlError, server, setAppState, useFakeClock } from '@/test/helpers';
-
-// RN's codegen leaves an `export` in this native-component spec under Jest, and the gate's spinner pulls it in
-// (the same reason the setup stands in for the scroll-view spec). A host-component string takes its place.
-jest.mock('react-native/src/private/specs_DEPRECATED/components/ActivityIndicatorViewNativeComponent', () => ({
-    __esModule: true,
-    default: 'ActivityIndicatorView',
-}));
 
 let mockUpdatesEnabled = true;
 const mockReloadAsync = jest.fn(async () => {});
@@ -648,18 +640,14 @@ describe('restarts and the version floor', () => {
             expo.expoConfig = originalConfig;
         });
 
-        /** The real NativeUpdateGate, driven as a hook: what it renders once the check settles. */
+        /** The update gate's own hook: its status once the check settles. */
         async function gateVerdict(): Promise<'blocked' | 'allowed'> {
             (globalThis as { __DEV__?: boolean }).__DEV__ = false;
-            const hook = renderHook(() => NativeUpdateGate({ children: 'APP' }));
-            const verdict = (): 'blocked' | 'allowed' | 'checking' => {
-                const node = hook.result.current as { type?: unknown; props?: { children?: unknown } };
-                if (node.type === ForceUpdateScreen) return 'blocked';
-                return node.props?.children === 'APP' ? 'allowed' : 'checking';
-            };
-            await waitFor(() => expect(verdict()).not.toBe('checking'));
+            const hook = renderHook(() => useNativeUpdateGate());
+            await waitFor(() => expect(hook.result.current.status).not.toBe('checking'));
+            const verdict = hook.result.current.status;
             hook.unmount();
-            return verdict() as 'blocked' | 'allowed';
+            return verdict as 'blocked' | 'allowed';
         }
 
         beforeEach(() => {
@@ -709,15 +697,15 @@ describe('restarts and the version floor', () => {
         });
 
         it('a floor above the running version hands the blocked screen the store url', async () => {
-        floor('9.0.0');
-        (globalThis as { __DEV__?: boolean }).__DEV__ = false;
-        const hook = renderHook(() => NativeUpdateGate({ children: 'APP' }));
-        await waitFor(() => expect((hook.result.current as { type?: unknown }).type).toBe(ForceUpdateScreen));
-        expect((hook.result.current as { props: { storeUrl: string } }).props.storeUrl).toBe('https://example.com/store');
-        hook.unmount();
-    });
+            floor('9.0.0');
+            (globalThis as { __DEV__?: boolean }).__DEV__ = false;
+            const hook = renderHook(() => useNativeUpdateGate());
+            await waitFor(() => expect(hook.result.current.status).toBe('blocked'));
+            expect(hook.result.current.storeUrl).toBe('https://example.com/store');
+            hook.unmount();
+        });
 
-    it('a GraphQL error is allowed (the check is best-effort)', async () => {
+        it('a GraphQL error is allowed (the check is best-effort)', async () => {
             server.use(mockGqlError('AppVersionInfo', 'INTERNAL_SERVER_ERROR'));
             await expect(AppVersionService.getVersionInfo()).rejects.toBeDefined();
             await expect(gateVerdict()).resolves.toBe('allowed');
