@@ -1449,6 +1449,47 @@ describe('foreground poller', () => {
     expect((await phases())[0]).toBe('done');
     expect(polls).toEqual([b0.requestId, b1.requestId]);
   });
+
+  // The run can end between a drain's kick and the kicked tick: finalize stops the poller (and drops
+  // its AppState subscription), then the kicked tick finds no run and stops a poller that is already
+  // stopped. It must stay stopped: a later foreground return polls nothing.
+  it('a poll tick kicked before the run ended finds it idle and leaves the poller stopped', async () => {
+    const script: Script = { defaultScore: 0.1 };
+    gateway(script, { pendingPolls: 999 });
+    await warmAttestation();
+    await seedAndEnqueue(ids(5 + 10));
+    await tickUntil(async () => (await waitingCount()) === 2);
+    const [b0] = await batches();
+    gateway(script);
+    holdJobs((id) => id !== b0.requestId);
+    appStateModule.currentState = 'active';
+    later(3_000);
+
+    // The clock moves only when the test runs pending timers, so the kick stays pending.
+    jest.useFakeTimers({ advanceTimers: false, doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'], now: Date.now() });
+    const settle = async <T,>(p: Promise<T>): Promise<T> => {
+      let done = false;
+      const q = p.finally(() => {
+        done = true;
+      });
+      for (let i = 0; i < 400 && !done; i++) await new Promise((r) => setImmediate(r));
+      return q;
+    };
+    await settle(pipeline.handlePush(b0.requestId, 'foreground')); // → done → drain yields → kick
+    expect(jest.getTimerCount()).toBeGreaterThan(0);
+
+    holdKick(); // the post-finalize kick re-enqueues nothing
+    await settle(pipeline.abortRun('test')); // finalize stops the poller
+    expect(await currentRun()).toBeNull();
+
+    await jest.runOnlyPendingTimersAsync(); // the kicked tick: no run → stopPoller() again
+    expect(await pipeline.getPipelineStatus()).toBe('idle');
+
+    const polls = watchResultsPolls();
+    setAppState('active');
+    for (let i = 0; i < 5; i++) await jest.runOnlyPendingTimersAsync();
+    expect(polls).toEqual([]);
+  });
 });
 
 // PE13: a drain that yields to a due poll kicks a poll tick at ZERO delay (kickPollTick). When the
