@@ -18,78 +18,48 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-import { invalidateJwtCache } from '@/lib/auth-client';
-import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
-import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { getPipeline } from '@/lib/database/services/scoring-pipeline-store';
+import { HYDRATE_CHUNK_SIZE } from '@/lib/scheduler/feed-sync/feed-sync-steps';
+import logger from '@/lib/logger';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import * as pipeline from '@/lib/services/scoring-pipeline';
-import { __resetSuggestionsRefreshThrottleForTests } from '@/lib/services/SuggestionSyncService';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
-import { useUserStore } from '@/lib/stores/user-store';
 import {
   advanceUntilDone,
   assertNoGatewayViolations,
   attestationRequests,
   gatewayCalls,
   server,
-  setAppState,
-  signInFixtureAccount,
-  useFakeClock,
 } from '@/test/helpers';
 import {
   art,
   cleanupFeedSync,
   fetchAndDiff,
-  hydrate,
+  foreground,
   ids,
   makeCtx,
   resetFeedSyncMemory,
+  resetScoringWorld,
   rowsById,
+  scoredIds,
   seedInterest,
   seedLocation,
   servePersona,
   serveHydrate,
-  type TestCtx,
+  spyOnExport,
+  hydrate,
+  tick,
+  tickUntilScored,
 } from './support';
-
-const NOW = new Date('2026-10-09T10:00:00.000Z').getTime();
-const TITLE = /News Title: Story (\S+)/g;
 
 beforeEach(async () => {
   resetFeedSyncMemory();
-  resetLimiter();
-  resetModelFallback();
-  clearAttestationCache();
-  invalidateJwtCache();
-  __resetSuggestionsRefreshThrottleForTests();
-  setAppState('inactive'); // no foreground poller: this test is the only driver of the run
-  useUserStore.setState({ userPersona: { expoPushToken: 'ExponentPushToken[test]' } as never });
-  await signInFixtureAccount();
-  useFakeClock(NOW);
+  await resetScoringWorld();
 });
 afterEach(() => {
   cleanupFeedSync();
   assertNoGatewayViolations();
 });
-
-/** Article ids the gateway was asked to score, from the decrypted relevance prompts. */
-function scoredIds(): string[] {
-  return gatewayCalls('job')
-    .filter((c) => c.callId?.startsWith('score:'))
-    .flatMap((c) => [...(c.messages.find((m) => m.role === 'user')?.content ?? '').matchAll(TITLE)].map((m) => m[1]));
-}
-
-/** One limiter spacing later, one poll and one drain: what the foreground poller does. */
-async function tick(): Promise<void> {
-  jest.setSystemTime(Date.now() + 1_100);
-  await advanceUntilDone(pipeline.pollTick('foreground'));
-  await advanceUntilDone(pipeline.recover());
-}
-
-async function tickUntilScored(count: number): Promise<void> {
-  for (let i = 0; i < 20 && new Set(scoredIds()).size < count; i++) await tick();
-}
 
 async function prepare(topicIds: string[]) {
   await seedInterest('I follow racing', ['formula 1']);
@@ -99,8 +69,6 @@ async function prepare(topicIds: string[]) {
   return { t, diff };
 }
 
-const foreground = (t: TestCtx, diff: Parameters<typeof hydrate>[0], over = {}) =>
-  advanceUntilDone(hydrate(diff, t, { suppressEnqueue: false, background: false, ...over }));
 
 describe('the foreground enqueue', () => {
   it('hands exactly the persisted, eligible articles to the scoring pipeline, which submits them to the gateway', async () => {
@@ -144,6 +112,50 @@ describe('the foreground enqueue', () => {
   });
 });
 
+describe('the gate and enqueue run per chunk, not once at the end', () => {
+  it('has a pipeline run for the first chunk while the second is still being fetched', async () => {
+    const all = ids(HYDRATE_CHUNK_SIZE + 5);
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await seedInterest('I follow racing', ['formula 1']);
+    server.use(
+      servePersona({ topics: { 'formula 1': all } }),
+      ...serveHydrate({ gate: ({ ids: asked }) => (asked.includes(all[all.length - 1]) ? held : undefined) }).handlers,
+    );
+    const t = makeCtx();
+    const { diff } = await advanceUntilDone(fetchAndDiff(t));
+    let settled = false;
+    const run = hydrate(diff, t, { suppressEnqueue: false, background: false }).finally(() => {
+      settled = true;
+    });
+
+    for (let i = 0; i < 400 && !(await getPipeline()); i++) await jest.advanceTimersByTimeAsync(50);
+
+    expect(settled).toBe(false);
+    expect(await getPipeline()).not.toBeNull();
+    release();
+    await advanceUntilDone(run);
+  });
+
+  it('leaves rows already in a live run alone: a later sync enqueues only its own new rows', async () => {
+    const first = ids(12);
+    const one = await prepare(first);
+    await foreground(one.t, one.diff);
+    await tickUntilScored(first.length);
+
+    const second = ids(6, 'z');
+    server.use(servePersona({ topics: { 'formula 1': [...first, ...second] } }));
+    const { diff } = await advanceUntilDone(fetchAndDiff(one.t));
+    const { result } = await foreground(one.t, diff);
+    await tickUntilScored(first.length + second.length);
+
+    expect(result.enqueuedCount).toBe(second.length);
+    const sent = scoredIds();
+    expect(new Set(sent).size).toBe(sent.length); // nothing scored twice
+    expect(new Set(sent)).toEqual(new Set([...first, ...second]));
+  });
+});
+
 describe('suppressed enqueue', () => {
   it('hands the rows over in the tail flush when the pipeline is idle', async () => {
     const all = ids(pipeline.MIN_DISPATCH + 2);
@@ -154,6 +166,20 @@ describe('suppressed enqueue', () => {
 
     expect(result.enqueuedCount).toBe(0);
     expect(scoredIds().sort()).toEqual(all);
+  });
+
+  it('reports a failing tail flush and still returns the hydrated rows', async () => {
+    const { t, diff } = await prepare(ids(7));
+    spyOnExport(pipeline, 'enqueueUnscoredEligible').mockRejectedValueOnce(new Error('flush failed'));
+
+    const { result } = await foreground(t, diff, { suppressEnqueue: true });
+
+    expect(result.insertedCount).toBe(7);
+    expect(logger.captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'flush failed' }),
+      expect.objectContaining({ tags: expect.objectContaining({ method: 'tailFlush' }) }),
+    );
+    expect(scoredIds()).toEqual([]);
   });
 
   it('leaves the rows to the running pipeline when a scoring run is already in flight', async () => {

@@ -18,20 +18,25 @@ jest.mock('@/lib/logger', () => ({
 
 import { HYDRATE_CHUNK_SIZE } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import { getPipelineStatus } from '@/lib/services/scoring-pipeline';
-import { attestationRequests, gatewayCalls, server } from '@/test/helpers';
+import { advanceUntilDone, attestationRequests, gatewayCalls, server } from '@/test/helpers';
 import {
   art,
   cleanupFeedSync,
   fetchAndDiff,
+  foreground,
   hydrate,
   ids,
   makeCtx,
   resetFeedSyncMemory,
+  resetScoringWorld,
+  scoredIds,
   seedInterest,
   seedTracked,
   servePersona,
   serveHydrate,
   suggestionRows,
+  tick,
+  tickUntilScored,
   type HydrateServe,
 } from './support';
 
@@ -62,12 +67,31 @@ async function prepare(topicIds: string[], serve: HydrateServe = {}) {
 const RESET = '2026-06-26T00:00:00.000Z';
 
 describe('a background run hands nothing to the foreground scoring pipeline', () => {
+  // The same suppressed run twice, on the scoring world of hydrate-enqueue (signed in, fake clock,
+  // pipeline able to reach the gateway). The only difference is the `background` flag.
+  beforeEach(resetScoringWorld);
+
+  async function suppressedRun(background: boolean) {
+    await seedInterest('I follow racing', ['formula 1']);
+    server.use(servePersona({ topics: { 'formula 1': ids(7) } }), ...serveHydrate().handlers);
+    const t = makeCtx();
+    const { diff } = await advanceUntilDone(fetchAndDiff(t));
+    const { result } = await foreground(t, diff, { suppressEnqueue: true, background });
+    await tickUntilScored(7);
+    await tick();
+    return result;
+  }
+
+  it('(control) a suppressed foreground run flushes its rows into the idle pipeline, which reaches the gateway', async () => {
+    await suppressedRun(false);
+
+    expect(scoredIds().sort()).toEqual(ids(7));
+  });
+
   it('persists and returns the scorable ids but enqueues nothing and never flushes a tail', async () => {
-    const { t, diff } = await prepare(ids(7));
+    const result = await suppressedRun(true);
 
-    const { result } = await hydrate(diff, t);
-
-    expect(result.eligibleIds.sort()).toEqual(ids(7));
+    expect([...result.eligibleIds].sort()).toEqual(ids(7));
     expect(result.enqueuedCount).toBe(0);
     expect(gatewayCalls()).toEqual([]);
     expect(attestationRequests()).toBe(0);

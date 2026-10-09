@@ -68,6 +68,18 @@ describe('which retrieval path runs', () => {
     expect(out.serverArticleIds.length).toBeGreaterThan(0);
   });
 
+  it('on the legacy path skips a fact that has no metadata.topics at all', async () => {
+    await markPersonaMigrated();
+    await addFact('I like walking');
+    await addFact('I follow racing', { topics: ['formula 1'] });
+    const sent = recordOps();
+
+    await stepFetchTopicIds('', makeCtx().ctx);
+
+    const [legacy] = await sent.named('GetArticleIdsForTopics');
+    expect(legacy.variables.topics).toEqual([{ topicText: 'formula 1' }]);
+  });
+
   it('on the legacy path an article matched by two topics lists both texts and appears once', async () => {
     await markPersonaMigrated();
     await addFact('I follow racing', { topics: ['alpha', 'beta'] });
@@ -174,6 +186,30 @@ describe('which retrieval path runs', () => {
     await expect(stepFetchTopicIds('', t.ctx)).rejects.toMatchObject({ name: 'AbortError', message: 'aborted' });
 
     expect(await sent.all()).toEqual([]);
+  });
+});
+
+describe('what the step logs', () => {
+  it('names the persona request size and the id count it got back', async () => {
+    await seedInterest('I follow racing', ['formula 1', 'motogp']);
+    server.use(servePersona({ topics: { 'formula 1': ['p1', 'p2'] } }));
+    const t = makeCtx();
+
+    await stepFetchTopicIds('', t.ctx);
+
+    expect(t.log).toHaveBeenCalledWith('fetching persona ids for 2 topics + 1 scopes');
+    expect(t.log).toHaveBeenCalledWith('server returned 2 article ids (persona path)');
+  });
+
+  it('names the legacy request size and the id count it got back', async () => {
+    await markPersonaMigrated();
+    await addFact('I follow racing', { topics: ['alpha', 'beta'] });
+    const t = makeCtx();
+
+    const out = await stepFetchTopicIds('', t.ctx);
+
+    expect(t.log).toHaveBeenCalledWith('fetching ids for 2 topics (legacy path)');
+    expect(t.log).toHaveBeenCalledWith(`server returned ${out.serverArticleIds.length} article ids`);
   });
 });
 

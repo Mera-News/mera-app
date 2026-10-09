@@ -17,6 +17,7 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
+import * as suppressionSweep from '@/lib/services/suppression-sweep';
 import * as suggestionService from '@/lib/database/services/article-suggestion-service';
 import { saveScoringResult } from '@/lib/database/services/article-suggestion-service';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
@@ -326,6 +327,37 @@ describe('what lands in article_suggestions', () => {
     expect((await rowsById()).get('blank')!.status).toBe('complete');
   });
 
+  it('reports only this run\'s rows as eligibleIds: rows an earlier sync left unscored are not reported again', async () => {
+    const { t, diff } = await prepare(['a', 'b']);
+    await hydrate(diff, t);
+    server.use(servePersona({ topics: { 'formula 1': ['a', 'b', 'c'] } }));
+    const next = await fetchAndDiff(t);
+
+    const { result } = await hydrate(next.diff, t);
+
+    expect(result.eligibleIds).toEqual(['c']);
+    expect((await rowsById()).get('a')!.status).toBe('unscored');
+  });
+
+  it('still takes a top-headline row with no English text out of scoring (tombstoned, then culled as relevance 0)', async () => {
+    const { t, diff } = await prepare(['t1'], {
+      article: (id) => (id === 'h1' ? art(id, { title_en: undefined, description_en: undefined }) : art(id)),
+    }, ['h1']);
+
+    const { result } = await hydrate(diff, t);
+
+    expect(result.eligibleIds).toEqual(['t1']);
+    expect(['complete', 'excluded']).toContain((await rowsById()).get('h1')!.status);
+  });
+
+  it('skips the gate when nothing eligible was persisted', async () => {
+    const { t, diff } = await prepare(['blank'], { article: (id) => art(id, { title_en: undefined, description_en: undefined }) });
+
+    await hydrate(diff, t);
+
+    expect(t.log.mock.calls.some(([line]) => String(line).startsWith('gate:'))).toBe(false);
+  });
+
   it('keeps a factless top-headline row scorable', async () => {
     const { t, diff } = await prepare(['t1'], {}, ['h1']);
 
@@ -379,6 +411,23 @@ describe('the daily limit', () => {
     expect(err).toMatchObject({ code: 'daily-limit', resetAt: Date.parse(reset) });
     expect(stats.requests).toHaveLength(HYDRATE_CONCURRENCY);
     expect(await suggestionRows()).toEqual([]);
+  });
+
+  it('cannot be tripped by the quota-free query, even if its body carries the cap fields', async () => {
+    await seedTracked('titan inquiry');
+    const served = serveHydrate({
+      respond: ({ op, ids: asked }) =>
+        op === 'GetArticlesForStories'
+          ? { articles: asked.map((id) => art(id)), dailyLimitReached: true, resetAt: '2026-06-27T00:00:00.000Z' }
+          : undefined,
+    });
+    server.use(servePersona({ topics: { 'titan inquiry': ['s1', 's2'] } }), ...served.handlers);
+    const t = makeCtx();
+    const { diff } = await fetchAndDiff(t);
+
+    const { result } = await hydrate(diff, t);
+
+    expect(result).toMatchObject({ dailyLimitReached: false, resetAt: undefined, insertedCount: 2 });
   });
 
   it('never reads the cap on a followed-story-only run', async () => {
@@ -556,6 +605,26 @@ describe('the gate and the headline cull inside the hydrate', () => {
     expect(copy.reason).toBe(`Covers ${SAME}`);
     // once for the persisted chunk, once for the rows the gate completed without inference
     expect(refreshStore).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports a failing hard-filter reconcile after a propagation and keeps the propagated row', async () => {
+    const SAME = 'Harbour bridge repairs begin in Fixtureville after months of planning delays';
+    const { t, diff } = await prepare(['donor'], {
+      article: (id) => art(id, { title_en: SAME, title: SAME }),
+    });
+    await hydrate(diff, t);
+    await saveScoringResult('donor', { relevance: 0.8, reason: `Covers ${SAME}`, reasonSkipped: false });
+    server.use(servePersona({ topics: { 'formula 1': ['donor', 'copy'] } }));
+    const next = await fetchAndDiff(t);
+    spyOnExport(suppressionSweep, 'purgeHardFilteredSuggestions').mockRejectedValueOnce(new Error('sweep failed'));
+
+    await hydrate(next.diff, t);
+
+    expect(logger.captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'sweep failed' }),
+      expect.objectContaining({ tags: expect.objectContaining({ step: 'reconcile-hard-filters' }) }),
+    );
+    expect((await rowsById()).get('copy')!.status).toBe('complete');
   });
 });
 

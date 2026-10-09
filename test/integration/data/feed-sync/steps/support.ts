@@ -24,7 +24,23 @@ import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode, type ArticleWithClusters } from '@/lib/generated/graphql-types';
-import { delay, graphql, HttpResponse, server } from '@/test/helpers';
+import { invalidateJwtCache } from '@/lib/auth-client';
+import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
+import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
+import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetSuggestionsRefreshThrottleForTests } from '@/lib/services/SuggestionSyncService';
+import { useUserStore } from '@/lib/stores/user-store';
+import {
+  advanceUntilDone,
+  delay,
+  gatewayCalls,
+  graphql,
+  HttpResponse,
+  server,
+  setAppState,
+  signInFixtureAccount,
+  useFakeClock,
+} from '@/test/helpers';
 
 // ---------------------------------------------------------------------------
 // Module memory
@@ -247,6 +263,8 @@ export interface HydrateServe {
   twice?: string[];
   /** Shared, ordered record of what reached the server: `<op>:<n ids>`. */
   timeline?: string[];
+  /** Hold a response until this promise settles (decide per request by its ids). */
+  gate?: (req: { ids: string[]; n: number }) => Promise<void> | undefined;
   /** Hold each response this long (ms), or decide per request by its arrival number (1-based). */
   holdMs?: number | ((n: number) => number);
   /** Decide a response for one request. Return `'resolver-error'` for an `errors[]` inside a 200. */
@@ -277,6 +295,7 @@ export function serveHydrate(serve: HydrateServe = {}) {
       stats.inFlight += 1;
       stats.maxInFlight = Math.max(stats.maxInFlight, stats.inFlight);
       try {
+        await serve.gate?.({ ids: requested, n });
         const hold = typeof serve.holdMs === 'function' ? serve.holdMs(n) : serve.holdMs;
         if (hold) await delay(hold);
         const decided = serve.respond?.({ op, ids: requested, n });
@@ -293,6 +312,10 @@ export function serveHydrate(serve: HydrateServe = {}) {
         if (op === 'GetArticlesForTopicsByIds') {
           body.dailyLimitReached = decided?.dailyLimitReached ?? false;
           body.resetAt = decided?.resetAt ?? null;
+        } else if (decided?.dailyLimitReached) {
+          // the quota-free query selects no cap fields, but a body that carries them must change nothing
+          body.dailyLimitReached = true;
+          body.resetAt = decided.resetAt ?? null;
         }
         return HttpResponse.json({
           data: op === 'GetArticlesForTopicsByIds' ? { articlesForTopicsByIds: body } : { articlesForStories: body },
@@ -485,3 +508,45 @@ export async function until(condition: () => boolean | Promise<boolean>, what: s
 export async function flush(ms = 60): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+// ---------------------------------------------------------------------------
+// The scoring pipeline world (foreground enqueue reaches the gateway mock)
+// ---------------------------------------------------------------------------
+
+export const PIPELINE_NOW = new Date('2026-10-09T10:00:00.000Z').getTime();
+const SCORE_TITLE = /News Title: Story (\S+)/g;
+
+/** Limiter, fallback, attestation and JWT caches, sign-in, a fake clock and no foreground poller. */
+export async function resetScoringWorld(): Promise<void> {
+  resetLimiter();
+  resetModelFallback();
+  clearAttestationCache();
+  invalidateJwtCache();
+  __resetSuggestionsRefreshThrottleForTests();
+  setAppState('inactive'); // no foreground poller: the test is the only driver of the run
+  useUserStore.setState({ userPersona: { expoPushToken: 'ExponentPushToken[test]' } as never });
+  await signInFixtureAccount();
+  useFakeClock(PIPELINE_NOW);
+}
+
+/** Article ids the gateway was asked to score, from the decrypted relevance prompts. */
+export function scoredIds(): string[] {
+  return gatewayCalls('job')
+    .filter((c) => c.callId?.startsWith('score:'))
+    .flatMap((c) => [...(c.messages.find((m) => m.role === 'user')?.content ?? '').matchAll(SCORE_TITLE)].map((m) => m[1]));
+}
+
+/** One limiter spacing later, one poll and one drain: what the foreground poller does. */
+export async function tick(): Promise<void> {
+  jest.setSystemTime(Date.now() + 1_100);
+  await advanceUntilDone(scoringPipeline.pollTick('foreground'));
+  await advanceUntilDone(scoringPipeline.recover());
+}
+
+export async function tickUntilScored(count: number): Promise<void> {
+  for (let i = 0; i < 20 && new Set(scoredIds()).size < count; i++) await tick();
+}
+
+/** `hydrate` with the foreground enqueue ON, driven on the fake clock. */
+export const foreground = (t: TestCtx, diff: DiffResult, over: Partial<HydratePersistEnqueueOptions> = {}) =>
+  advanceUntilDone(hydrate(diff, t, { suppressEnqueue: false, background: false, ...over }));
