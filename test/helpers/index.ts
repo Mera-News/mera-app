@@ -6,10 +6,7 @@ export { failSecureStore, secureStoreDump } from './storage';
 export { initI18nEn } from './i18n';
 export { setScenario, resetScenario, getScenario } from '../mock-backend/scenario';
 
-export async function resetDatabase(): Promise<void> {
-  const database = require('@/lib/database').default;
-  await database.write(() => database.unsafeResetDatabase());
-}
+export { resetDatabase } from './db';
 export { FIXTURE_ACCOUNT, signInFixtureAccount } from './auth';
 export { resetAuthState } from '../mock-backend/auth';
 export {
@@ -24,3 +21,4 @@ export {
 export type { GatewayCall, GatewayReply, GatewayResponder, GatewayRoute } from './gateway';
 export { mockGql, mockGqlError } from './gql';
 export { fixture } from './fixture';
+export { renderHookInScreen } from './screen';

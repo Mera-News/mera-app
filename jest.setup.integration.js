@@ -172,6 +172,15 @@ global.console = {
 // loaded before the patch would send real requests that MSW never sees. Guarded by
 // test/integration/harness/fetch-capture.test.ts.
 const { server, unhandled } = require('./test/helpers/msw');
+// Harness modules the hooks below call, loaded here at setup level: nothing is first required
+// inside a hook (a module that registers hooks on load, such as @testing-library/react-native,
+// fails the test when loaded there). The DB stays lazy so a test's own jest.mock still applies.
+const { assertNoGatewayViolations } = require('./test/helpers/gateway');
+const { resetStorage } = require('./test/helpers/storage');
+const { resetScenario } = require('./test/mock-backend/scenario');
+const { resetAuthState } = require('./test/mock-backend/auth');
+const { resetGatewayState } = require('./test/mock-backend/gateway/handlers');
+const { resetDatabase } = require('./test/helpers/db');
 server.listen({ onUnhandledRequest: (req) => unhandled.push(`${req.method} ${req.url}`) });
 afterEach(() => {
   server.resetHandlers();
@@ -179,7 +188,7 @@ afterEach(() => {
   const u = unhandled.splice(0);
   // E2EE contract breaks (cleartext tool keys, wrong headers, undecryptable envelopes) fail the
   // test; tests that plant one on purpose drain it with takeGatewayViolations().
-  require('./test/helpers/gateway').assertNoGatewayViolations();
+  assertNoGatewayViolations();
   if (u.length) {
     throw new Error('Unhandled requests (add a handler or a server.use override):\n' + u.join('\n'));
   }
@@ -188,9 +197,9 @@ afterAll(() => server.close());
 
 // 12. Per-test reset.
 beforeEach(async () => {
-  require('./test/helpers/storage').resetStorage();
-  require('./test/mock-backend/scenario').resetScenario();
-  require('./test/mock-backend/auth').resetAuthState();
-  require('./test/mock-backend/gateway/handlers').resetGatewayState();
-  await require('./test/helpers').resetDatabase();
+  resetStorage();
+  resetScenario();
+  resetAuthState();
+  resetGatewayState();
+  await resetDatabase();
 });
