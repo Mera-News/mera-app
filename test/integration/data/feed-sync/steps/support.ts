@@ -39,7 +39,7 @@ import {
   server,
   setAppState,
   signInFixtureAccount,
-  useFakeClock,
+  useFakeClock as freezeClockAt, // aliased: a use* name inside a plain function trips react-hooks/rules-of-hooks
 } from '@/test/helpers';
 
 // ---------------------------------------------------------------------------
@@ -526,7 +526,7 @@ export async function resetScoringWorld(): Promise<void> {
   setAppState('inactive'); // no foreground poller: the test is the only driver of the run
   useUserStore.setState({ userPersona: { expoPushToken: 'ExponentPushToken[test]' } as never });
   await signInFixtureAccount();
-  useFakeClock(PIPELINE_NOW);
+  freezeClockAt(PIPELINE_NOW);
 }
 
 /** Article ids the gateway was asked to score, from the decrypted relevance prompts. */
