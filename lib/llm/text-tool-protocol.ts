@@ -128,11 +128,13 @@ function pyJson(v: unknown): string {
  * `xml`: the Qwen3-Coder form (`<tool_call><function=..><parameter=..>`), which
  * token-matches what NEAR renders for its Qwen3.6+ models far more closely.
  * `xml-first`: the same, with the tools block BEFORE the system prompt, the
- * order Qwen's own template uses.
+ * order Qwen's own template uses. `xml-first-soft`: tools-first without the
+ * template's "NO suffix" / "NOT after" lines, so a sentence may follow a call.
  */
-export type ToolFormat = 'hermes' | 'xml' | 'xml-first' | 'marker';
+export type ToolFormat = 'hermes' | 'xml' | 'xml-first' | 'xml-first-soft' | 'marker';
 
-const isXml = (format: ToolFormat): boolean => format === 'xml' || format === 'xml-first';
+const isXml = (format: ToolFormat): boolean => format === 'xml' || format === 'xml-first' || format === 'xml-first-soft';
+const toolsFirst = (format: ToolFormat): boolean => format === 'xml-first' || format === 'xml-first-soft';
 
 /** The one format the app sends. Chosen by the interleaved corpus run (P0 rule 3);
  *  the others stay only as eval arms. */
@@ -159,7 +161,15 @@ const XML_INSTRUCTIONS =
   '- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n' +
   '</IMPORTANT>';
 
-function renderXmlTools(tools: TextToolDefinition[]): string {
+const SOFT_XML_INSTRUCTIONS = XML_INSTRUCTIONS.replace(
+  'If you choose to call a function ONLY reply in the following format with NO suffix:',
+  'If you choose to call a function, use the following format:',
+).replace(
+  'in natural language BEFORE the function call, but NOT after',
+  'in natural language before the function call, and a short sentence to the user after it',
+);
+
+function renderXmlTools(tools: TextToolDefinition[], soft = false): string {
   let out = '# Tools\n\nYou have access to the following functions:\n\n<tools>';
   for (const { function: f } of tools) {
     out += `\n<function>\n<name>${f.name}</name>`;
@@ -174,7 +184,7 @@ function renderXmlTools(tools: TextToolDefinition[]): string {
     }
     out += `${xmlExtra(params, ['type', 'properties'])}\n</parameters>\n</function>`;
   }
-  return `${out}\n</tools>${XML_INSTRUCTIONS}`;
+  return `${out}\n</tools>${soft ? SOFT_XML_INSTRUCTIONS : XML_INSTRUCTIONS}`;
 }
 
 /** The tools block, as Qwen's chat template renders it. */
@@ -187,7 +197,7 @@ export function renderToolsBlock(
     toolChoice === 'required'
       ? '\n\nThis reply must contain at least one <tool_call>.'
       : '';
-  if (isXml(format)) return renderXmlTools(tools) + required;
+  if (isXml(format)) return renderXmlTools(tools, format === 'xml-first-soft') + required;
   const lines = tools
     .map((t) => pyJson({ type: t.type ?? 'function', function: t.function }))
     .join('\n');
@@ -250,7 +260,7 @@ export function toTextToolMessages(
   for (const m of messages) {
     if (m.role === 'system') {
       if (!blockPlaced) {
-        const joined = format === 'xml-first' ? `${block}\n\n${m.content}` : `${m.content}\n\n${block}`;
+        const joined = toolsFirst(format) ? `${block}\n\n${m.content}` : `${m.content}\n\n${block}`;
         out.push({ role: 'system', content: m.content ? joined : (block as string) });
         blockPlaced = true;
       } else {
