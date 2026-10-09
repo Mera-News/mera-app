@@ -457,6 +457,19 @@ describe('a GraphQL error inside a 200 (RESOLVER_ERROR_RETRIES = 1)', () => {
     expect(result.insertedCount).toBe(2);
   });
 
+  it('cancels instead of retrying when the run is aborted while the request fails', async () => {
+    const { t, diff, stats } = await prepare(['a', 'b'], {
+      respond: () => {
+        t.abort();
+        return 'resolver-error';
+      },
+    });
+
+    await expect(hydrate(diff, t)).rejects.toMatchObject({ name: 'AbortError', message: 'aborted' });
+
+    expect(stats.requests).toHaveLength(1);
+  });
+
   it('surfaces after the one retry fails: two requests, then the error', async () => {
     const { t, diff, stats } = await prepare(['a', 'b'], { respond: () => 'resolver-error' });
 

@@ -421,6 +421,26 @@ describe('the order of serverArticleIds decides what the daily cap clips (billin
 });
 
 describe('a resolver error inside a 200', () => {
+  it('cancels instead of retrying when the run is aborted while the request fails', async () => {
+    await seedInterest('I follow racing', ['formula 1']);
+    const t = makeCtx();
+    let calls = 0;
+    server.use(
+      graphql.query('GetArticleIdsForPersona', () => {
+        calls += 1;
+        t.abort();
+        return HttpResponse.json({
+          data: null,
+          errors: [{ message: 'resolver timed out', extensions: { code: 'INTERNAL_SERVER_ERROR' } }],
+        });
+      }),
+    );
+
+    await expect(stepFetchTopicIds('', t.ctx)).rejects.toMatchObject({ name: 'AbortError', message: 'aborted' });
+
+    expect(calls).toBe(1);
+  });
+
   it('is retried once and then surfaces (two requests in all)', async () => {
     await seedInterest('I follow racing', ['formula 1']);
     let calls = 0;

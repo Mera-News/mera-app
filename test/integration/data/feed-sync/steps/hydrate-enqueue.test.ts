@@ -156,6 +156,29 @@ describe('the gate and enqueue run per chunk, not once at the end', () => {
   });
 });
 
+describe('a daily cap that cuts the run short', () => {
+  it('still enqueues what landed before the cap and flags the limit', async () => {
+    const all = ids(HYDRATE_CHUNK_SIZE + 5);
+    await seedInterest('I follow racing', ['formula 1']);
+    const last = all[all.length - 1];
+    server.use(
+      servePersona({ topics: { 'formula 1': all } }),
+      ...serveHydrate({
+        respond: ({ ids: asked }) =>
+          asked.includes(last) ? { articles: [], dailyLimitReached: true, resetAt: '2026-06-26T00:00:00.000Z' } : undefined,
+      }).handlers,
+    );
+    const t = makeCtx();
+    const { diff } = await advanceUntilDone(fetchAndDiff(t));
+
+    const { result } = await foreground(t, diff);
+    await tickUntilScored(HYDRATE_CHUNK_SIZE);
+
+    expect(result).toMatchObject({ dailyLimitReached: true, insertedCount: HYDRATE_CHUNK_SIZE, enqueuedCount: HYDRATE_CHUNK_SIZE });
+    expect(scoredIds().sort()).toEqual(all.slice(0, HYDRATE_CHUNK_SIZE));
+  });
+});
+
 describe('suppressed enqueue', () => {
   it('hands the rows over in the tail flush when the pipeline is idle', async () => {
     const all = ids(pipeline.MIN_DISPATCH + 2);
