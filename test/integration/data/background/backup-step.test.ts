@@ -193,6 +193,18 @@ describe('when it goes wrong', () => {
   });
 });
 
+describe('the Drive destination', () => {
+  it('is resolved from the setting, not the iCloud provider: nothing reaches iCloud, and the run never throws', async () => {
+    await setUpBackup();
+    await setSetting(BACKUP_PROVIDER_KEY, 'google-drive');
+    onWifi();
+
+    await expect(run()).resolves.toBeUndefined();
+
+    expect(remoteNames('icloud')).toEqual([]);
+  });
+});
+
 describe('inside the wake', () => {
   it('runs after the refresh, whatever the refresh did, and an hourly wake backs up only when due', async () => {
     await setUpBackup();

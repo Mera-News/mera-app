@@ -241,6 +241,17 @@ describe('a daily limit reached', () => {
   const capped = () =>
     serveHydrate({ respond: () => ({ articles: [], dailyLimitReached: true }) }).handlers;
 
+  it('a closing mark that cannot be written is a breadcrumb: the run still ends normally', async () => {
+    await serveFresh(6, { hydrate: { respond: () => ({ articles: [], dailyLimitReached: true }) } });
+    failBatchWhere((op) => op.table === 'settings' && op.raw?.key === BG_QUOTA_EXHAUSTED_DAY_KEY);
+
+    const out = await advanceUntilDone(runFetch());
+
+    expect(out.stoppedBy).toBe('done');
+    expect(await persistedSetting(BG_QUOTA_EXHAUSTED_DAY_KEY)).toBeNull();
+    expect(breadcrumbs()).toContain('bg-feed-sync: allowance ledger write failed');
+  });
+
   it('closes background fetches for the rest of that UTC day, and the next day opens them again', async () => {
     const ops = recordOps();
     const { served } = await serveFresh(6);

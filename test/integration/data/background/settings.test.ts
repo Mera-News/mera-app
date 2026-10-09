@@ -310,6 +310,21 @@ describe('the collect gate', () => {
     expect(waited).toBe(true);
   });
 
+  it('keeps answering "running" while a later collect is going, when an earlier one settles first', async () => {
+    let first!: () => void;
+    void trackBackgroundCollect(new Promise<void>((resolve) => (first = resolve)));
+    let second!: () => void;
+    void trackBackgroundCollect(new Promise<void>((resolve) => (second = resolve)));
+
+    first();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(isBackgroundCollectRunning()).toBe(true);
+
+    second();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(isBackgroundCollectRunning()).toBe(false);
+  });
+
   it('gives up at the cap when the collect is still going', async () => {
     void trackBackgroundCollect(never());
     let waited = false;
