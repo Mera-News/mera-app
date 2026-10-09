@@ -129,7 +129,20 @@ module.exports = {
       transformIgnorePatterns: [`node_modules/(?!${ALLOW}|${MSW_ALLOW})`],
       // msw's rettime dependency is ESM-only and ships .mjs, which the preset's
       // transform (\.[jt]sx?$) does not cover.
-      transform: { '\\.mjs$': 'babel-jest' },
+      transform: {
+        // Same babel-jest options as jest-expo's preset, plus import() -> require(): Jest runs
+        // CommonJS, so a real dynamic import rejects (ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG)
+        // and app code that catches it would skip whole branches unseen. Integration only.
+        // Guarded by test/integration/harness/dynamic-import.test.ts.
+        '\\.[jt]sx?$': [
+          'babel-jest',
+          {
+            caller: { name: 'metro', bundler: 'metro', platform: 'ios' },
+            plugins: [require.resolve('./test/helpers/babel-dynamic-import.js')],
+          },
+        ],
+        '\\.mjs$': 'babel-jest',
+      },
       moduleNameMapper: {
         '^expo/fetch$': '<rootDir>/test/helpers/node-fetch.ts',
         '^@/(.*)$': '<rootDir>/$1',
