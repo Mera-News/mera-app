@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Keyboard, StyleSheet, Text as RNText, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
@@ -11,9 +10,9 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { Toast, ToastDescription, useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
-import { authClient, clearAuthStorage } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth-client';
 import { observeFacts } from '@/lib/database/services/fact-service';
 import { OnboardingStage } from '@/lib/generated/graphql-types';
 import { reconcileAppLanguageWithPersona } from '@/lib/language-sync';
@@ -38,6 +37,7 @@ import NotificationSettingsScreen from '../config-mera/NotificationSettingsScree
 import { NextGuardBox } from './NextGuardBox';
 import { markOnboardingDone } from './onboarding-done';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
+import { useServerErrorLogout } from './useServerErrorLogout';
 
 // Two steps (FinalJourney #8, #24): 0 = tell Mera (the persona chat), 1 =
 // notifications. Chat comes first so the reader's first minute is spent on
@@ -79,7 +79,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const { setStep, updatePreferences, setIsInitializing, resetOnboarding } = useOnboardingStore();
 
     const [showServerError, setShowServerError] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const { isLoggingOut, handleServerErrorLogout } = useServerErrorLogout(setShowServerError);
     const offline = !useIsOnline();
     const [guard, setGuard] = useState<Guard>(null);
     const [notificationsOn, setNotificationsOn] = useState(false);
@@ -148,28 +148,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         const resolved = sessionData?.data?.user?.id ?? userPreferences.userId ?? initialUserId;
         if (!resolved) throw new Error('User not authenticated');
         return resolved;
-    };
-
-    const handleServerErrorLogout = async () => {
-        try {
-            setIsLoggingOut(true);
-            setShowServerError(false);
-            // clearAuthStorage() owns the guarded, bounded server sign-out.
-            await clearAuthStorage();
-            router.replace('/');
-        } catch {
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('onboarding.logoutFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('onboarding.logoutFailedDescription')}</ToastDescription>
-                    </Toast>
-                ),
-            });
-        } finally {
-            setIsLoggingOut(false);
-        }
     };
 
     /** Move on from the current step, past its guard. */
