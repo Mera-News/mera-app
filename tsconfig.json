@@ -22,6 +22,10 @@
   "exclude": [
     "harness-local",
     "eval",
-    "node_modules"
+    "node_modules",
+    ".stryker-tmp",
+    "e2e-output",
+    "android",
+    "ios"
   ]
 }
