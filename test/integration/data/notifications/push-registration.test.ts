@@ -351,6 +351,26 @@ describe('setVisibleNotificationsEnabled', () => {
     expect(useUserStore.getState().userPersona?.notificationsEnabled).toBe(false);
   });
 
+  // DA41. expo reports iOS PROVISIONAL authorisation as status 'granted' (the file's own comment in
+  // registerForPushNotificationsAsync says so), and setVisibleNotificationsEnabled only prompts when
+  // status !== 'granted'. Its doc promises "provisional -> full", but a provisional user never sees the
+  // prompt, so visible alerts stay quiet. To be confirmed on a device before the P3 fix.
+  test.failing('DA41: turning on visible notifications from provisional asks for full permission', async () => {
+    signedIn();
+    setPermission('granted', { status: 3 });
+    await run(setVisibleNotificationsEnabled('user-1', true));
+    expect(n.requestPermissionsAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('DA41 today: turning on visible notifications from provisional makes no permission request', async () => {
+    signedIn();
+    setPermission('granted', { status: 3 });
+    const seen = recordOperation('UpdateNotificationsEnabled');
+    await expect(run(setVisibleNotificationsEnabled('user-1', true))).resolves.toBe(true);
+    expect(n.requestPermissionsAsync).not.toHaveBeenCalled();
+    expect(seen).toHaveLength(1);
+  });
+
   it('a server error: false, reported, persona untouched', async () => {
     signedIn({ notificationsEnabled: false });
     server.use(mockGqlError('UpdateNotificationsEnabled', 'INTERNAL_SERVER_ERROR'));
