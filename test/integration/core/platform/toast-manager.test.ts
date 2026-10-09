@@ -325,6 +325,28 @@ describe('showNotifiedToast', () => {
     expect(logger.captureException).not.toHaveBeenCalled();
   });
 
+  it('still shows the toast, with no button, when persisting the row fails, and reports the failure', async () => {
+    // A context that cannot be serialised makes the real notify() reject inside its DB write.
+    const context: Record<string, unknown> = { title: 'Budget vote delayed' };
+    context.self = context;
+    await toastManager.showNotifiedToast({
+      type: 'fact_check_done',
+      source: 'fact-check',
+      title: 'factCheck.notify.title',
+      body: 'factCheck.notify.bodyNone',
+      context,
+      actions: [{ id: 'open', label: 'Open' }],
+    });
+    expect(await getNotifications()).toHaveLength(0);
+    expect(logger.captureException).toHaveBeenCalledWith(expect.any(TypeError), {
+      tags: { component: 'ToastManager', method: 'showNotifiedToast.notify' },
+    });
+    const el = frontEl();
+    expect(el.type).toBe(NotifiedToast);
+    expect(el.props.title).toBe('Fact check ready');
+    expect(el.props.button).toBeUndefined();
+  });
+
   it('interpolates counts the same way (hygiene, calibration, the plan)', async () => {
     await toastManager.showNotifiedToast({
       type: 'hygiene',
