@@ -1,0 +1,65 @@
+# Dev flow: FD6 discriminator (records only, never fails on a missing panel). After sign-in it
+# checks, step by step, whether each pager panel is in the Android accessibility tree. Every check is
+# an optional 3 s wait, so the run's commands.json records COMPLETED (present) or WARNED/SKIPPED
+# (absent) per step, and each step leaves a screenshot.
+# Read the table from <run>/maestro/<ts>/fd6-probe/commands.json in step order.
+# Run: scripts/e2e-android.sh --skip-build --flows .maestro/dev/fd6-probe.yaml (or batched after the
+# green flows in one boot).
+appId: ${APP_ID}
+---
+- runScript: ../scripts/reset-scenario.js
+- runFlow: ../flows/sign-in.yaml
+# a) Feed at rest
+- extendedWaitUntil:
+    visible:
+      id: "feed-pages-pager-panel-feed"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd6-a-feed-rest
+# b) Stories pill
+- tapOn:
+    id: "page-pill-stories"
+- extendedWaitUntil:
+    visible:
+      id: "feed-pages-pager-panel-stories"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd6-b-stories
+# c) back to the Feed pill
+- tapOn:
+    id: "page-pill-feed"
+- extendedWaitUntil:
+    visible:
+      id: "feed-pages-pager-panel-feed"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd6-c-feed-again
+# d) the You tab (4th native tab), no pill tap
+- tapOn:
+    id: ".*navigation_bar_item_icon_view"
+    index: 3
+- extendedWaitUntil:
+    visible:
+      id: "you-pages-pager-panel-profile"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd6-d-you-rest
+# e) the Settings pill
+- tapOn:
+    id: "page-pill-settings"
+- extendedWaitUntil:
+    visible:
+      id: "you-pages-pager-panel-settings"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd6-e-you-settings
+# f) the Library tab (3rd native tab), its first panel
+- tapOn:
+    id: ".*navigation_bar_item_icon_view"
+    index: 2
+- extendedWaitUntil:
+    visible:
+      id: "library-pages-pager-panel-.*"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd6-f-library
