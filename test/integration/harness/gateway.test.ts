@@ -162,6 +162,29 @@ describe('chat: buffered', () => {
     ]);
     expect(gatewayCalls('batch').map((c) => c.messages[1].content)).toEqual(['one', 'two']);
   });
+
+  it('a perItem status fails only that batch item', async () => {
+    server.use(
+      ...mockGateway((c) =>
+        c.messages[1].content === 'two'
+          ? { status: 502, body: { error: 'upstream timed out' }, perItem: true }
+          : `echo:${c.messages[1].content}`,
+      ),
+    );
+    const out = await cloudBatchComplete(
+      [
+        { id: 'a', system: 'sys', prompt: 'one' },
+        { id: 'b', system: 'sys', prompt: 'two' },
+        { id: 'c', system: 'sys', prompt: 'three' },
+      ],
+      SMALL_MODEL,
+    );
+    expect(out).toEqual([
+      { id: 'a', output: 'echo:one' },
+      { id: 'b', output: '', error: 'upstream timed out' },
+      { id: 'c', output: 'echo:three' },
+    ]);
+  });
 });
 
 describe('chat: faults', () => {

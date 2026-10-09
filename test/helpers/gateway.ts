@@ -43,7 +43,9 @@ export interface GatewayCall {
  *   `headerDelayMs` before headers, `chunkDelayMs` between chunks, `stallAfter` N chunks then silence,
  *   `closeAfter` N chunks then the body errors, `reasoning` sends a reasoning_content chunk first;
  * - `{ status }`: a raw unencrypted response (429 + Retry-After, 401, 502, 503, 400 Decryption failed ...).
- *   On the batch route it fails the whole request; on a job call it becomes that call's `ok: false` row.
+ *   On the batch route it fails the whole request, unless `perItem: true`: then only that item fails
+ *   (its result row carries `error.message`, the body's `error` string or "status N"). On a job call
+ *   it becomes that call's `ok: false` row.
  * Web-search and fact-check-claims replies are JSON text: an array of results, or an object
  * such as `{"code":"search-unavailable"}` (a per-query verdict on a batched search).
  */
@@ -59,7 +61,7 @@ export type GatewayReply =
       closeAfter?: number;
       ignoreStream?: boolean;
     }
-  | { status: number; body?: unknown; headers?: Record<string, string> };
+  | { status: number; body?: unknown; headers?: Record<string, string>; perItem?: boolean };
 
 export type GatewayResponder = (call: GatewayCall) => GatewayReply;
 

@@ -281,7 +281,13 @@ const batch = http.post('*/v1/chat/completions/batch', async ({ request }) => {
     // Batch items carry no id on the wire (the client maps results by index), so callId stays unset.
     const call = newCall('batch', request, { model: item.model ?? '', stream: false, algo, messages, headers });
     const reply = state.responder(call);
-    // A `{ status }` reply fails the whole request, as a gateway-level 429/5xx would.
+    // A `{ status }` reply fails the whole request, as a gateway-level 429/5xx would; with
+    // `perItem` only this item fails, as an upstream error on one call of the batch does.
+    if (isStatus(reply) && reply.perItem) {
+      const msg = (reply.body as { error?: unknown } | undefined)?.error;
+      results.push({ index, error: { message: typeof msg === 'string' ? msg : `status ${reply.status}` } });
+      continue;
+    }
     if (isStatus(reply)) return rawResponse(reply);
     wait ||= replyDelay(reply);
     results.push({
