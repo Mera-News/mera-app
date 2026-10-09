@@ -1,4 +1,4 @@
-import { allHeaderLabelsFit, HEADER_METRICS, headerOptionParts, headerOptionWidth, headerTrackMode } from '../fit';
+import { allHeaderLabelsFit, HEADER_METRICS, headerOptionParts, headerOptionWidth, headerTrackMode } from '@/components/ui/segmented-control/fit';
 
 const m = { pad: 17, namesPad: 17, icon: 18, gap: 8, chrome: 10 };
 

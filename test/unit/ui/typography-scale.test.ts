@@ -14,8 +14,8 @@
  *     every step carries explicit leading (React Native treats `lineHeight` as a
  *     hard line box, so a missing one clips Devanagari/Thai/Vietnamese marks).
  */
-import { textStyle } from '../text/styles';
-import { headingStyle } from '../heading/styles';
+import { textStyle } from '@/components/ui/text/styles';
+import { headingStyle } from '@/components/ui/heading/styles';
 import {
   MIN_FONT_SIZE_PX,
   TYPE_SCALE,

@@ -1,4 +1,4 @@
-import { fillAt, settleFill } from '../fill';
+import { fillAt, settleFill } from '@/components/ui/segmented-control/fill';
 
 const boxes = [
     { x: 4, width: 40 },

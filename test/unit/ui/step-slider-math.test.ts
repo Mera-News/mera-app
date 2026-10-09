@@ -1,4 +1,4 @@
-import { ratioToValue, valueToRatio, xToRatio } from '../math';
+import { ratioToValue, valueToRatio, xToRatio } from '@/components/ui/step-slider/math';
 
 describe('step-slider math', () => {
     it('places a value along the track, off-step values included', () => {
