@@ -24,6 +24,7 @@ import database from '@/lib/database';
 import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
 import logger from '@/lib/logger';
 import * as persistence from '@/lib/scheduler/feed-sync/feed-sync-persistence';
+import { publishSyncError, publishSyncStatus } from '@/lib/scheduler/feed-sync/feed-sync-status';
 import * as steps from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import { HYDRATE_CHUNK_SIZE, HYDRATE_CONCURRENCY } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import { InvalidTransitionError, STALE_MACHINE_AGE_MS } from '@/lib/scheduler/feed-sync/feed-sync-types';
@@ -309,6 +310,31 @@ describe('FeedSyncMachine lifecycle', () => {
       expect(rec.published).toEqual([]);
       expect(store().syncStatusMessage).toBeNull();
       rec.stop();
+    });
+
+    // DA51. A clean run is the only proof the earlier failure is over, and this branch publishes
+    // nothing, so the Feed counts card kept the old failure line (or the offline banner) up.
+    const leftovers: [string, () => void][] = [
+      ['failed', () => publishSyncError('server-unreachable', undefined, 'diffing')],
+      ['paused-offline', () => publishSyncStatus('paused-offline', { pausedAtState: 'diffing' })],
+    ];
+
+    test.failing.each(leftovers)('DA51: clears a %s status an earlier run left', async (_state, leave) => {
+      await deviceAlreadyHolds(ids(4), { terminal: true });
+      leave();
+
+      await run();
+
+      expect(store().syncStatusMessage).toBeNull();
+    });
+
+    test.each(leftovers)('DA51 today: keeps a %s status an earlier run left', async (state, leave) => {
+      await deviceAlreadyHolds(ids(4), { terminal: true });
+      leave();
+
+      await run();
+
+      expect(store().syncStatusMessage?.state).toBe(state);
     });
 
     // THE TRAP. Both feed surfaces choose between the preparing card and the all-caught-up card on
