@@ -36,6 +36,7 @@ import {
 import * as gatewayRateLimiter from './gateway-rate-limiter';
 import { sseEvents } from './sse';
 import { estimateTokens } from './tokens';
+import { retryAfterMs } from '../algorithms/retry-after';
 import type { BatchCall, ToolDefinition } from './types';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 import type { PhaseSignal } from '@/lib/services/chat-phase';
@@ -173,12 +174,10 @@ function backoffWithJitter(attempt: number): number {
 /** Parse a `Retry-After` header (integer seconds) into a clamped ms value.
  *  Falls back to {@link DEFAULT_THROTTLE_BACKOFF_MS} when absent or unusable. */
 export function retryAfterMsFrom(headers: Headers | undefined): number {
-  const raw = headers?.get?.('Retry-After');
-  const seconds = raw != null ? Number(raw) : NaN;
-  const ms = Number.isFinite(seconds) && seconds > 0
-    ? seconds * 1000
-    : DEFAULT_THROTTLE_BACKOFF_MS;
-  return Math.min(ms, MAX_RETRY_AFTER_MS);
+  return retryAfterMs(headers?.get('Retry-After'), {
+    defaultMs: DEFAULT_THROTTLE_BACKOFF_MS,
+    maxMs: MAX_RETRY_AFTER_MS,
+  });
 }
 
 /**

@@ -25,6 +25,7 @@ import { randomBytes } from '@noble/ciphers/utils.js';
 import { getJwtToken } from '../auth-client';
 import logger from '../logger';
 import { withRetry } from '../utils/retry';
+import { retryAfterMs } from '../algorithms/retry-after';
 import * as gatewayRateLimiter from '../llm/gateway-rate-limiter';
 import { assertNoCleartextToolFields } from '../llm/text-tool-protocol';
 import { linkedAbort, raceSignal } from '../llm/abort-race';
@@ -281,16 +282,14 @@ async function fetchModelPublicKeyUncached(
     // A 429 here is the throttle MERA-APP-71 actually hit, and this path was
     // the last gateway caller that did not back the device off for it.
     if (res.status === 429) {
-      const retryAfterHeader = res.headers?.get?.('Retry-After');
-      const retryAfterSec = retryAfterHeader ? Number(retryAfterHeader) : NaN;
-      const retryAfterMs =
-        Number.isFinite(retryAfterSec) && retryAfterSec > 0
-          ? Math.min(retryAfterSec * 1000, 60_000)
-          : 30_000;
-      gatewayRateLimiter.pauseFor(retryAfterMs);
+      const pauseMs = retryAfterMs(res.headers.get('Retry-After'), {
+        defaultMs: 30_000,
+        maxMs: 60_000,
+      });
+      gatewayRateLimiter.pauseFor(pauseMs);
       logger.warn(`${TAG} attestation throttled (429) — pausing gateway calls`, {
         model,
-        retryAfterMs,
+        retryAfterMs: pauseMs,
       });
     }
     const body = await res.text().catch(() => '');
@@ -325,8 +324,8 @@ async function fetchModelPublicKeyUncached(
     point65[0] = 0x04;
     point65.set(raw, 1);
     try {
-      // fromBytes does NOT check the curve (per @noble/curves v2) — assertValidity does.
-      secp256k1.Point.fromBytes(point65).assertValidity();
+      // fromBytes checks the curve (per @noble/curves v2) and throws on an off-curve point.
+      secp256k1.Point.fromBytes(point65);
     } catch (cause) {
       const err = new ModelKeyValidationError(
         `NEAR attestation: 64-byte ecdsa key is not a valid secp256k1 point (model=${model})`,
