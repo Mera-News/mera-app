@@ -10,7 +10,7 @@
 // The interesting cases are all the ones where a dash is NOT clause
 // punctuation. Those are what a naive global replace gets wrong, and each of
 // them is a shape that really turns up in reasons.
-import { parseReasonResponse } from '../article-pipeline/scoring';
+import { parseReasonResponse } from '../article-pipeline/scoring-decode';
 import SCORE_FIXTURE from './fixtures/reason-names-score.json';
 
 const decode = (s: string) => parseReasonResponse(s, 'id');

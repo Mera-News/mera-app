@@ -57,13 +57,8 @@ import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-statu
 // Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
 // the one definition of "headline-sourced", shared with the prompt/chunk-size
 // selection the shim's builders run.
-import {
-  isHeadlineScope,
-  isScorableCandidate,
-  // The NOTE pass's keep/demote RULES (`legacyNoteDemote`). Pure and shared, so
-  // the pipeline and the offline goldset replay decide identically.
-  decodeV3NoteResults,
-} from '@/lib/news-harness/article-pipeline/scoring';
+import { isHeadlineScope, isScorableCandidate } from '@/lib/news-harness/article-pipeline/scoring';
+import { decodeV3NoteResults } from '@/lib/news-harness/article-pipeline/scoring-decode';
 // The one definition of "this headline scored too low to exist" — expressed over
 // relevanceBandRank so the cull can never disagree with the band a card prints.
 import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter';

@@ -25,7 +25,6 @@ import {
 } from '../core/ports';
 import type { Fact, HarnessArticle, ScoringCandidate } from '../core/types';
 import {
-  applyFeedVerifierDecisions,
   buildFeedVerifierCalls,
   buildReasonCallsForSubset,
   buildRelevanceCalls,
@@ -33,9 +32,9 @@ import {
   bucketScores,
   applyRescorePolicy,
   chunk,
-  decodeCloudBatchResults,
   REASON_MIN_RAW_SCORE,
 } from './scoring';
+import { applyFeedVerifierDecisions, decodeCloudBatchResults } from './scoring-decode';
 import {
   buildArticleToTopicTexts,
   buildCandidatesFromArticles,

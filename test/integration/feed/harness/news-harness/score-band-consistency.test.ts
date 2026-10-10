@@ -19,7 +19,7 @@ import {
   parseBatchRelevanceResponse,
   newRelevanceDecodeStats,
   type RelevanceDecodeStats,
-} from '@/lib/news-harness/article-pipeline/scoring';
+} from '@/lib/news-harness/article-pipeline/scoring-decode';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import type { HarnessLogger } from '@/lib/news-harness/core/ports';
 

@@ -24,7 +24,7 @@ import {
   parseBatchRelevanceResponse,
   parseReasonResponse,
   newRelevanceDecodeStats,
-} from '../article-pipeline/scoring';
+} from '../article-pipeline/scoring-decode';
 import { DEFAULT_HARNESS_CONFIG } from '../core/config';
 import FIXTURE from './fixtures/glm-leaked-scoring.json';
 import REASON_FIXTURE from './fixtures/glm-leaked-reason.json';

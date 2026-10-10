@@ -20,7 +20,7 @@ import { searchWeb, searchWebBatch } from '@/lib/web-search/web-search-client';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
 import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
 import { LOAD_SKILL_TOOL } from '@/lib/mera-harness/core/tool-contracts';
-import { parseBatchRelevanceResponse } from '@/lib/news-harness/article-pipeline/scoring';
+import { parseBatchRelevanceResponse } from '@/lib/news-harness/article-pipeline/scoring-decode';
 import type { ServerResults } from '@/lib/services/inference-results';
 import {
   advanceUntilDone,

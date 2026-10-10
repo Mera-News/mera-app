@@ -32,11 +32,8 @@ import type { LlmPort, HarnessLogger } from '../core/ports';
 import { NOOP_LOGGER } from '../core/ports';
 import type { BatchCall, ScoringCandidate } from '../core/types';
 import type { HarnessConfig } from '../core/config';
-import {
-  buildScoreCallForChunk,
-  parseBatchRelevanceResponse,
-  chunk,
-} from '../article-pipeline/scoring';
+import { buildScoreCallForChunk, chunk } from '../article-pipeline/scoring';
+import { parseBatchRelevanceResponse } from '../article-pipeline/scoring-decode';
 import {
   applyEntityPenalty,
   computeRelevance,

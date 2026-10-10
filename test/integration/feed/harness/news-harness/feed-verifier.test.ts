@@ -2,11 +2,11 @@
 // and an end-to-end pipeline integration (demotion applies / fail-open /
 // disabled bypass). No module mocks — the harness is dependency-free.
 
+import { buildFeedVerifierCalls } from '@/lib/news-harness/article-pipeline/scoring';
 import {
-  buildFeedVerifierCalls,
   parseFeedVerifierResponse,
   applyFeedVerifierDecisions,
-} from '@/lib/news-harness/article-pipeline/scoring';
+} from '@/lib/news-harness/article-pipeline/scoring-decode';
 import { runArticlePipeline, type PipelinePorts } from '@/lib/news-harness/article-pipeline/pipeline';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { CLOUD_FEED_VERIFIER_SYSTEM_PROMPT } from '@/lib/news-harness/prompts/prompts';

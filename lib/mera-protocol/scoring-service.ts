@@ -46,12 +46,8 @@ import {
   chunk,
   bucketScore,
   bucketScores,
-  parseReasonResult,
   applyRescorePolicy,
-  type ReasonRescore,
-  decodeCloudBatchResults as harnessDecodeCloudBatchResults,
   buildFeedVerifierCalls,
-  applyFeedVerifierDecisions,
   isHeadlineCandidate,
   resolveScoringVariant,
   relevanceSystemPromptFor,
@@ -59,6 +55,12 @@ import {
   CLOUD_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 } from '@/lib/news-harness/article-pipeline/scoring';
+import {
+  parseReasonResult,
+  type ReasonRescore,
+  decodeCloudBatchResults as harnessDecodeCloudBatchResults,
+  applyFeedVerifierDecisions,
+} from '@/lib/news-harness/article-pipeline/scoring-decode';
 import {
   injectArticleMetadata,
   selectTagGatedDemoteIds,
