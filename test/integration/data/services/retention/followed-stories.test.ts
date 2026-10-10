@@ -996,24 +996,12 @@ describe('backfillTrackedStoryRetention', () => {
     return a;
   }
 
-  test.failing('DATA-U9-3: an unreadable tracked_stories table leaves the one-shot flag unset', async () => {
+  test('DATA-U9-3: an unreadable tracked_stories table leaves the one-shot flag unset', async () => {
     await legacyStoryWithUnreadableStories();
 
     await backfillTrackedStoryRetention();
 
     restoreFaults();
     expect(await getSetting('tracked_story_retention_backfilled')).toBeNull();
-  });
-
-  it('DATA-U9-3 today: an unreadable tracked_stories table stamps the flag after retaining nothing', async () => {
-    const a = await legacyStoryWithUnreadableStories();
-
-    expect(await backfillTrackedStoryRetention()).toBe(0);
-
-    restoreFaults();
-    expect(await getSetting('tracked_story_retention_backfilled')).toBeTruthy();
-    // the story's member is never backfilled afterwards
-    expect(await backfillTrackedStoryRetention()).toBe(0);
-    expect(await savedRow(a.articleId)).toBeUndefined();
   });
 });
