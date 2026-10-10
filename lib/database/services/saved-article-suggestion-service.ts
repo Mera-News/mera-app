@@ -18,7 +18,7 @@ import { publishSavedState } from '@/lib/saved-state';
 import database from '../index';
 import logger from '../../logger';
 import { ArticleSuggestionStatus } from '../article-suggestion-status';
-import { listFactChecksForArticle } from './fact-check-record-service';
+import { listFactChecksForArticleStrict } from './fact-check-record-service';
 import {
   isTrackedStoryMember,
   listTrackedMemberArticleIds,
@@ -68,7 +68,7 @@ async function retentionReasonsLive(
   articleId: string,
 ): Promise<{ factCheck: boolean; trackedStory: boolean }> {
   const [checks, tracked] = await Promise.all([
-    listFactChecksForArticle(articleId),
+    listFactChecksForArticleStrict(articleId),
     isTrackedStoryMember(articleId),
   ]);
   return { factCheck: checks.length > 0, trackedStory: tracked };
@@ -254,7 +254,19 @@ export async function deleteSavedSuggestion(serverId: string): Promise<boolean> 
   // destroying here would lose a followed story's article for good once the
   // 48h feed prune has passed. The un-save itself still "works" from the user's
   // view, since the row leaves the Saved screen and the bookmark clears.
-  const reasons = await retentionReasonsLive(row.articleId);
+  let reasons: Awaited<ReturnType<typeof retentionReasonsLive>>;
+  try {
+    reasons = await retentionReasonsLive(row.articleId);
+  } catch (err) {
+    // Unreadable reasons: assume one is live and keep the row as it is.
+    logger.captureException(err, {
+      tags: {
+        service: 'saved-article-suggestion-service',
+        method: 'deleteSavedSuggestion',
+      },
+    });
+    return false;
+  }
   const survivor: RetentionOrigin | null = reasons.factCheck
     ? 'fact_check'
     : reasons.trackedStory
@@ -555,7 +567,7 @@ export async function deleteOrphanedRetention(): Promise<number> {
       if (trackedIds.has(row.articleId)) continue;
       // eslint-disable-next-line no-await-in-loop -- tiny set: one row per
       // retained article, and this runs once a day off the UI path.
-      const refs = await listFactChecksForArticle(row.articleId);
+      const refs = await listFactChecksForArticleStrict(row.articleId);
       if (refs.length === 0) orphans.push(row);
     }
     if (orphans.length === 0) return 0;

@@ -179,23 +179,47 @@ export async function upsertFactCheck(
  * This is the read the panel wants post-v52: an article can carry a legacy
  * whole-article row plus one row per claim the user has picked, and all of them
  * are renderable.
+ *
+ * Answers `[]` when the table cannot be read (already captured). Retention
+ * decisions must use {@link listFactChecksForArticleStrict} instead: there an
+ * empty list reads as "no fact check holds this" and licenses a destroy.
  */
 export async function listFactChecksForArticle(
     articleId: string,
 ): Promise<StoredFactCheck[]> {
-    if (!articleId) return [];
     try {
-        const rows = await collection()
-            .query(Q.where('article_id', articleId), Q.sortBy('requested_at', Q.desc))
-            .fetch();
-        return rows.map(toStored);
+        return await queryFactChecksForArticle(articleId);
     } catch (err) {
-        logger.captureException(err, {
-            tags: { service: 'fact-check-record-service', method: 'listFactChecksForArticle' },
-            extra: { articleId },
-        });
+        captureListFailure(err, articleId);
         return [];
     }
+}
+
+/** Same read, but captures and RETHROWS a failure so retention callers fail closed. */
+export async function listFactChecksForArticleStrict(
+    articleId: string,
+): Promise<StoredFactCheck[]> {
+    try {
+        return await queryFactChecksForArticle(articleId);
+    } catch (err) {
+        captureListFailure(err, articleId);
+        throw err;
+    }
+}
+
+async function queryFactChecksForArticle(articleId: string): Promise<StoredFactCheck[]> {
+    if (!articleId) return [];
+    const rows = await collection()
+        .query(Q.where('article_id', articleId), Q.sortBy('requested_at', Q.desc))
+        .fetch();
+    return rows.map(toStored);
+}
+
+function captureListFailure(err: unknown, articleId: string): void {
+    logger.captureException(err, {
+        tags: { service: 'fact-check-record-service', method: 'listFactChecksForArticle' },
+        extra: { articleId },
+    });
 }
 
 /**

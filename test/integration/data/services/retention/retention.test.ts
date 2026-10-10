@@ -356,20 +356,12 @@ describe('releasing a retention reason', () => {
     return id;
   }
 
-  test.failing('DATA-U9-2: an unreadable fact_checks table keeps the row on release (fails closed)', async () => {
+  test('DATA-U9-2: an unreadable fact_checks table keeps the row on release (fails closed)', async () => {
     const id = await checkedRowWithUnreadableChecks();
 
     await releaseFactCheckRetention(id);
 
     expect(await savedRow(id)).toBeDefined();
-  });
-
-  it('DATA-U9-2 today: an unreadable fact_checks table lets the release destroy a row a fact check still needs', async () => {
-    const id = await checkedRowWithUnreadableChecks();
-
-    expect(await releaseFactCheckRetention(id)).toBe(true);
-
-    expect(await savedRow(id)).toBeUndefined();
   });
 });
 
