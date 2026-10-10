@@ -3,7 +3,7 @@ import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import { clearDeviceAuthCredentials } from '@/lib/device-auth';
 import { showDialog } from '@/lib/dialog';
 import logger from '@/lib/logger';
-import { clearAllStores } from '@/lib/stores';
+import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -67,7 +67,7 @@ export function useDeleteAccount(): () => Promise<void> {
                 router.replace({ pathname: '/login', params: { signedOut: '1' } });
             });
             await new Promise((resolve) => setTimeout(resolve, 0));
-            await cleanupStep('stores', () => clearAllStores());
+            await cleanupStep('wipe', () => wipeAllLocalUserData());
 
             toast.show({
                 placement: 'top',

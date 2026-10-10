@@ -934,31 +934,12 @@ describe('delete account (useDeleteAccount)', () => {
         expect(replaced()).toEqual([]);
     });
 
-    test.failing('B1 deleting the account removes every local secret', async () => {
+    test('B1 deleting the account removes every local secret', async () => {
         await deleteWithEverythingSeeded();
 
         const left = secrets();
         for (const k of SECURE_STORE_KEYS) expect(left[k]).toBeUndefined();
         expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
-    });
-
-    test('B1 today: the PIN record, app-lock flag, backup key and both E2EE private keys survive account deletion', async () => {
-        await deleteWithEverythingSeeded();
-
-        // Only the session, the device credentials and the stores go: every other secret is still here.
-        expect(Object.keys(secrets()).sort()).toEqual(
-            [
-                key('pin_record'),
-                key('pin_attempts'),
-                key('app_lock_enabled'),
-                key('pin_force_reset_v1'),
-                key('backup_key'),
-                'async_pipeline_privkey',
-                'async_inference_pending_job_privkey',
-            ].sort(),
-        );
-        expect(secureStoreDump()[key('app_lock_enabled')]).toBe('1');
-        expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBe('capability');
     });
 });
 
