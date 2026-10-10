@@ -170,7 +170,7 @@ export interface RunRow {
   truncated: boolean;
   /**
    * The model returned a reasoning trace INSIDE `content` instead of in
-   * `reasoning_content`, detected with lib/llm/reasoning-leak. Recorded rather
+   * `reasoning_content`, detected with lib/algorithms/reasoning-leak. Recorded rather
    * than stripped: on a measurement run the leak IS the result.
    *
    * It is not cosmetic. A leaked trace shares the output budget with the

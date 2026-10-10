@@ -115,7 +115,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
 
   // not-interested P4a — contract delta: the chars-proxy (`prompt.length <
   // 8000`) is replaced by the real estimator the runtime budgets against
-  // (lib/llm/tokens::estimateTokens, mirrored inside agent-core). MEASURED
+  // (lib/algorithms/estimate-tokens::estimateTokens, mirrored inside agent-core). MEASURED
   // 2026-07-29: 2080 tokens for the XML path with the D9 suppression wording;
   // the ceiling leaves ~120 tokens of drift room before it fails.
   it('stays under the measured system-prompt token ceiling', () => {

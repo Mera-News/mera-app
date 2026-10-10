@@ -207,7 +207,7 @@ export async function cloudComplete(
   if (!encContent) return '';
 
   // Thinking is OFF here, and on GLM that can leak the trace INTO content as
-  // `trace</think>answer` (lib/llm/reasoning-leak). Strip before the caller
+  // `trace</think>answer` (lib/algorithms/reasoning-leak). Strip before the caller
   // parses it as JSON or shows it as prose.
   return stripLeakedReasoning(decryptContent(encContent, ctx.privateKey, ctx.algo)).trim();
 }
@@ -369,7 +369,7 @@ function mapBatchResults(
     }
 
     try {
-      // Same thinking-off leak guard as cloudComplete — see lib/llm/reasoning-leak.
+      // Same thinking-off leak guard as cloudComplete — see lib/algorithms/reasoning-leak.
       const output = stripLeakedReasoning(decryptContent(encContent, privateKey, algo)).trim();
       if (output.length === 0) {
         logger.warn(`${TAG} batch item decrypted to empty string`, {

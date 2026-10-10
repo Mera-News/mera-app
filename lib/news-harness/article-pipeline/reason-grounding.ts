@@ -29,7 +29,7 @@
  * Weather Update: 18% Less Rain in Madhya Pradesh, Drought-like Conditions in 49
  * Districts; IMD Alert for Next 3 Days" — the intersection is empty.
  *
- * SELF-CONTAINED TOKENIZER, ON PURPOSE. `lib/feed-grouping/story-grouping.ts`
+ * SELF-CONTAINED TOKENIZER, ON PURPOSE. `lib/algorithms/story-grouping.ts`
  * has an equivalent `normalizeTitleTokens`, and this does NOT import it:
  * `lib/news-harness/**` imports nothing from app-land (that is what makes it
  * RN-free and runnable from `harness-local/`), and reaching into feed-grouping

@@ -41,7 +41,7 @@ only the engine (script + labels + configs) lives here, tracked in git.
   the math AND the live legacy tiered LLM scoring call.
 - `sanity-grouping.ts` — offline story-grouping sanity check; replays a feed
   dump (`logs.md` in the cwd, containing `feed dump chunk N/M [...]` log lines)
-  through `lib/feed-grouping/story-grouping.ts` and reports group/dedup counts.
+  through `lib/algorithms/story-grouping.ts` and reports group/dedup counts.
   Run with `npm run eval:grouping` (expects `logs.md` in the repo root).
 
 ## The loop

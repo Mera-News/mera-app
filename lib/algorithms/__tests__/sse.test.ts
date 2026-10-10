@@ -1,4 +1,4 @@
-// Tests for lib/llm/sse.ts — the incremental SSE parser + its reader helper.
+// Tests for lib/algorithms/sse.ts — the incremental SSE parser + its reader helper.
 // Pure module: no mocks, no I/O.
 
 import { SseParser, sseEvents } from '@/lib/algorithms/sse';

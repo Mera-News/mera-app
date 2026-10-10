@@ -191,7 +191,7 @@ export const MAX_PROCESS_RETRIES = 1;
  *  simply dropped. */
 export const REPLY_PROCESS_FALLBACK = "Sorry, I didn't get to that. Could you say it again?";
 
-/** Mirrors lib/llm/tokens.ts::estimateTokens; inlined so this folder imports
+/** Mirrors lib/algorithms/estimate-tokens.ts::estimateTokens; inlined so this folder imports
  *  nothing from the app. */
 export function estimateTokens(text: string): number {
   const cjk = text.match(/[一-鿿㐀-䶿豈-﫿]/g);

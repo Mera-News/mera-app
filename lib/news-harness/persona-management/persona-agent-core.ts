@@ -135,7 +135,7 @@ export const HISTORY_RESERVE_TOKENS = 128;
 /** Defensive trim on a rendered filter phrase (a pattern is user/LLM text). */
 const FILTER_PATTERN_TRUNC = 60;
 
-/** Mirrors lib/llm/tokens.ts::estimateTokens byte-for-byte — inlined so the
+/** Mirrors lib/algorithms/estimate-tokens.ts::estimateTokens byte-for-byte — inlined so the
  *  harness stays free of the lib/llm import graph (same convention as
  *  article-feedback/agent-core.ts). */
 function estimateTokens(text: string): number {

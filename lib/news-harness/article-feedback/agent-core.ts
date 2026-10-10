@@ -286,9 +286,9 @@ function isoDayFromString(value: string | null | undefined): string | null {
 }
 
 /**
- * Token estimator — mirrors lib/llm/tokens.ts::estimateTokens byte-for-byte.
+ * Token estimator — mirrors lib/algorithms/estimate-tokens.ts::estimateTokens byte-for-byte.
  * Kept inline so the harness stays free of the lib/llm import graph (the budget
- * heuristic is stable; if lib/llm/tokens.ts changes, mirror it here).
+ * heuristic is stable; if lib/algorithms/estimate-tokens.ts changes, mirror it here).
  */
 function estimateTokens(text: string): number {
   const cjkPattern = /[一-鿿㐀-䶿豈-﫿]/g;

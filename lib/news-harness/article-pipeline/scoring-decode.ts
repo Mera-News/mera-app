@@ -856,7 +856,7 @@ export function parseReasonResult(
   // live against z-ai/glm-5.3-flash:
   //
   //  - `trace</think>answer` — keep only what follows the LAST closer. This is
-  //    the same rule as lib/llm/reasoning-leak, applied here so it also covers
+  //    the same rule as lib/algorithms/reasoning-leak, applied here so it also covers
   //    the on-device path and harness-local, neither of which goes through
   //    cloudComplete.
   //  - an UNCLOSED `<think>` — the trace was cut before the model finished

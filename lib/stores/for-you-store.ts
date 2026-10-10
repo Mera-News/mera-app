@@ -48,7 +48,7 @@ import { relevancePassesGate } from '@/lib/stores/fact-rows-selector';
  *  (overwritten unconditionally, including when empty). An article can be in
  *  multiple clusters via `cluster-article-link`. The For-You feed collapses
  *  suggestions into a single representative card via union-find over two edge
- *  types (see `lib/feed-grouping/story-grouping.ts`): a shared high-confidence
+ *  types (see `lib/algorithms/story-grouping.ts`): a shared high-confidence
  *  cluster, OR a high title-token Jaccard (the latter bridges the same story
  *  across the server's per-run clustering generations). The detail screen's
  *  "related articles" panel still calls `relatedArticles(articleId)` for the

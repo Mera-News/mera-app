@@ -359,7 +359,7 @@ export interface FeedFunnelReport {
    *  land in DIFFERENT propagation components, i.e. the ones read-story
    *  filtering and score propagation both miss. Counters only: no model is
    *  called, nothing is filtered, and no card changes. See
-   *  `lib/feed-grouping/gray-band-pairs.ts` for how the band was calibrated.
+   *  `lib/algorithms/gray-band-pairs.ts` for how the band was calibrated.
    *
    *  `dedupWithSidecar: 0` means the vector axis had nothing to work with (no
    *  prod article carries a sidecar yet) and the numbers came from the lexical
