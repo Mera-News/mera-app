@@ -1617,7 +1617,8 @@ async function doSubmitRelevance(
     // the chunk size it ACTUALLY used. Persist that value (below) rather than
     // re-deriving it at decode — submit and decode then cannot disagree, which
     // is the only thing standing between a headline batch and scores attributed
-    // to the wrong articles. Absent (older builder) ⇒ the standard size.
+    // to the wrong articles. The builder always returns it; the decode side
+    // falls back to CLOUD_SCORE_CHUNK_SIZE only for a batch persisted without it.
     const scoreChunkSize = bundle.scoreChunkSize;
 
     const ctx = await rebuildE2EEContext(
