@@ -12,6 +12,7 @@ import {
     clearPendingAuthUserId,
     effectiveSessionUserId,
     hasIdentityFault,
+    isAccountSwitchHeld,
     readPendingAuthUserId,
     resolveIdentity,
 } from "@/lib/security/identity-gate";
@@ -107,6 +108,13 @@ export function useLoggedInGate() {
         let identityStamped = false;
 
         const determineRoute = async () => {
+            // A held account switch is a question still open on /login: the
+            // session id is unresolved by design, so opening the cached account
+            // here would pull the person off it and fetch with the held
+            // account's cookie. No route, no stamp, no fetch. Continue mounts a
+            // fresh gate after the hold is released.
+            if (session?.user?.id && isAccountSwitchHeld(session.user.id)) return;
+
             // Identity is local-first: the persisted userId survives a dead
             // session. Fall back to a live session id if nothing is persisted yet.
             const localUserId = await getSetting('cached_user_id');

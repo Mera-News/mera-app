@@ -470,27 +470,18 @@ describe('useLoggedInGate: account switch', () => {
             const ops = recordOps();
 
             mountGate();
-            await waitFor(() => expect(replaced().length + ops.length).toBeGreaterThan(0), { timeout: 8000 });
+            // A correct gate does nothing here, so there is nothing to wait for: settle, then look.
+            await drain();
+            await new Promise((r) => setTimeout(r, 300));
             await drain();
             return ops;
         }
 
-        test.failing('PE25 a held account switch neither routes nor fetches as the cached account', async () => {
+        test('PE25 a held account switch neither routes nor fetches as the cached account', async () => {
             const ops = await mountHeld();
 
             expect(replaced()).toEqual([]);
             expect(ops.filter((op) => op === 'GetUserPersona')).toEqual([]);
-        });
-
-        it('PE25 today: a held account switch opens the cached account and fetches its persona', async () => {
-            const ops = await mountHeld();
-
-            expect(await hasAnyFacts()).toBe(true);
-            expect(await getSetting('cached_user_id')).toBe(FOREIGN);
-            expect(useUserStore.getState().userId).toBe(FOREIGN);
-            // The device's own account (it has facts) opens the app.
-            expect(replaced()).toEqual([[APP_ROUTE]]);
-            expect(ops.filter((op) => op === 'GetUserPersona')).toHaveLength(1);
         });
     });
 
