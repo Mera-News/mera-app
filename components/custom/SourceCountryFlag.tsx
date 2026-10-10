@@ -132,5 +132,3 @@ export const SourceCountryFlag: React.FC<Props> = ({ countryCode, iconClassName 
         </Popover>
     );
 };
-
-export default SourceCountryFlag;

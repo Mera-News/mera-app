@@ -130,18 +130,6 @@ export function notifyTimeTick(): void {
 }
 
 /**
- * Subscribe a component to the shared clock. Returns the current reading, to
- * be passed as `formatTimeAgo`'s `now`.
- *
- * Call this in the LEAF that renders the age, never in a list/screen parent:
- * subscribing high would re-render (and re-derive) the whole subtree once a
- * minute, and any order that parent computes would be recomputed with it.
- */
-export function useTimeTick(): number {
-    return useSyncExternalStore(subscribeTimeTick, getTimeTick, getTimeTick);
-}
-
-/**
  * Subscribe to the shared clock through a value DERIVED from it, e.g. the age
  * label itself. React compares snapshots with `Object.is`, so the component
  * re-renders only when the derived value changes, not on every tick: a

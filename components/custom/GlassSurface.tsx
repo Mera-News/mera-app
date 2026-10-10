@@ -349,5 +349,3 @@ export const GlassPanel: React.FC<GlassPanelProps> = ({
     <Box className={contentClassName}>{children}</Box>
   </Box>
 );
-
-export default GlassPanel;

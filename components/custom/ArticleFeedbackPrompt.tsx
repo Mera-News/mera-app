@@ -301,5 +301,3 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         </Box>
     );
 };
-
-export default ArticleFeedbackPrompt;

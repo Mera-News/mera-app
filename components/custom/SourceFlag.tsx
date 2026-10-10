@@ -33,5 +33,3 @@ export const SourceFlag: React.FC<SourceFlagProps> = ({
     }
     return <Icon as={GlobeIcon} size={size} className={iconClassName} />;
 };
-
-export default SourceFlag;

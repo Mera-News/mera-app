@@ -19,5 +19,3 @@ export function useDebouncedValue<T>(value: T, delayMs: number = DEFAULT_DEBOUNC
 
   return debounced;
 }
-
-export default useDebouncedValue;
