@@ -3,6 +3,7 @@ import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import { clearDeviceAuthCredentials } from '@/lib/device-auth';
 import { showDialog } from '@/lib/dialog';
 import logger from '@/lib/logger';
+import { yieldToEventLoop } from '@/lib/scheduler/idle';
 import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { router } from 'expo-router';
@@ -66,7 +67,7 @@ export function useDeleteAccount(): () => Promise<void> {
                 // actually clears.
                 router.replace({ pathname: '/login', params: { signedOut: '1' } });
             });
-            await new Promise((resolve) => setTimeout(resolve, 0));
+            await yieldToEventLoop();
             await cleanupStep('wipe', () => wipeAllLocalUserData());
 
             toast.show({

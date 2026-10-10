@@ -5,6 +5,7 @@ import { FAQ_URL } from '@/lib/config/branding';
 import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { showDialog } from '@/lib/dialog';
 import { useSupportAction } from '@/lib/intercom';
+import { yieldToEventLoop } from '@/lib/scheduler/idle';
 import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -139,7 +140,7 @@ export function useAppPreferences() {
             // WatermelonDB + Zustand layer. Logout leaves nothing to serve, so
             // there is no offline mode afterwards. Same navigate-then-wipe shape
             // as handleDeleteAccount in ManageDataScreen.tsx.
-            await new Promise((resolve) => setTimeout(resolve, 0));
+            await yieldToEventLoop();
             await wipeAllLocalUserData();
 
             toast.show({
