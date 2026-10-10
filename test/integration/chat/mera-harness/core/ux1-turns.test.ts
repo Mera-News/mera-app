@@ -1,7 +1,8 @@
 // ux1 audit regressions, each driven through the real loop with a scripted
 // model. Every case here failed on the loop as it was before ux1.
 
-import { REPLY_PROCESS_FALLBACK, createAgentState, reconcilePlaceChain, runAgentTurn, type AgentPersona } from '@/lib/mera-harness/core/core';
+import { REPLY_PROCESS_FALLBACK, createAgentState, runAgentTurn, type AgentPersona } from '@/lib/mera-harness/core/core';
+import { reconcilePlaceChain } from '@/lib/mera-harness/core/choice-binding';
 import { CANONICAL_LOCATION_KEY, COMBINED_ORIGIN_KEY, EXPAT_KEY, ORIGIN_KEY } from '@/lib/mera-harness/core/combined-fact';
 import type { AgentDeps, AgentModelResult, Place } from '@/lib/mera-harness/core/types';
 

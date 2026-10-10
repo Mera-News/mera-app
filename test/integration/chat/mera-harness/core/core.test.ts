@@ -3,12 +3,11 @@ import {
   MAX_FORMAT_RETRIES,
   MAX_REPLY_RETRIES,
   REPLY_LEAK_FALLBACK,
-  bindChoicePayloads,
   createAgentState,
-  reconcilePlaceChain,
   runAgentTurn,
   type AgentPersona,
 } from '@/lib/mera-harness/core/core';
+import { bindChoicePayloads, reconcilePlaceChain } from '@/lib/mera-harness/core/choice-binding';
 import { toolsForLeg } from '@/lib/mera-harness/core/tool-contracts';
 import type { AgentDeps, AgentModelResult, Place } from '@/lib/mera-harness/core/types';
 

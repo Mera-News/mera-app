@@ -21,12 +21,10 @@ import {
 import { isLocationKey, isRelationalStatement, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
 import {
   CANONICAL_LOCATION_KEY,
-  COMBINED_ORIGIN_KEY,
   EXPAT_KEY,
   ORIGIN_KEY,
   countryOf,
   expatStatement,
-  toOriginStatement,
   isCombinedOriginFact,
   isExpatStatement,
   isOriginStatement,
@@ -36,6 +34,19 @@ import {
 } from './combined-fact';
 import { factPickStatement, isFactPickChoice, joinFactPick } from './fact-pick';
 import { correctedDistrict, guardPlaceRungs, hyphenatedSpelling, userSaidPlace } from './fuzzy-place';
+import { bindChoicePayloads, expandChoiceLabels, placeFromPayload, reconcilePlaceChain } from './choice-binding';
+import {
+  addExpatStatus,
+  asThirdPersonFact,
+  chainStatement,
+  collapseRepeatedRungs,
+  currentHomeFact,
+  expandCombinedEntry,
+  isHomeEntry,
+  placeRungs,
+  resolveDeleteTargets,
+  withExactKey,
+} from './fact-normalise';
 import { contentJaccard, isSubsetTopic, namesFact } from './topic-similarity';
 
 /** A forced offer's grounding: a shared subject word, or a number the text
@@ -54,7 +65,6 @@ import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
-  AgentChoiceOption,
   AgentDeps,
   AgentLeg,
   AgentModelResult,
@@ -240,138 +250,6 @@ function parseArgs(raw: string): Record<string, unknown> | null {
   }
 }
 
-/** A place the model copied back is reconciled against the candidates the port
- *  ACTUALLY returned this turn, rather than re-derived from a country map the
- *  harness deliberately does not own. Stronger than trusting a copy-verbatim
- *  rule, and it needs no import. */
-export function reconcilePlaceChain(
-  supplied: Record<string, unknown> | null,
-  candidates: Place[],
-  userMessage: string,
-): Place | null {
-  if (candidates.length === 0) return null;
-  const wantedLocality =
-    supplied && typeof supplied.locality === 'string' ? supplied.locality.toLowerCase() : null;
-  const match =
-    (wantedLocality && candidates.find((c) => c.locality.toLowerCase() === wantedLocality)) ||
-    (candidates.length === 1 ? candidates[0] : null);
-  if (!match) return null;
-
-  // `neighbourhood` is the one place field with no GraphQL source, so it is the
-  // one the model can invent. Accept it only when the user actually said it;
-  // otherwise DROP it and keep the rest of the chain, which is still good.
-  // A TYPO-DISTANCE match counts (ux2 D2): "Nieuw-West" against "niew west"
-  // is the canonical spelling of what the user said, and the model can only
-  // propose the district if this accepts it. An invented district of similar
-  // length still fails.
-  const suppliedHood =
-    supplied && typeof supplied.neighbourhood === 'string' ? supplied.neighbourhood.trim() : '';
-  const hood =
-    suppliedHood && userSaidPlace(suppliedHood, userMessage)
-      ? suppliedHood
-      : match.neighbourhood;
-
-  return hood ? { ...match, neighbourhood: hood } : { ...match, neighbourhood: undefined };
-}
-
-/** Pair each chip with the structured value it stands for. Matched by content,
- *  not position: positional pairing silently mis-binds the moment the model
- *  reorders its own options. Unmatched options carry a null payload rather than
- *  a wrong one.
- *
- *  The MOST SPECIFIC match wins, not the first: "Newcastle" is inside
- *  "Newcastle-under-Lyme", and a first-hit match bound that chip to Newcastle,
- *  New South Wales (ux2 batch 27). */
-export function bindChoicePayloads(
-  options: string[],
-  candidates: Place[],
-): { text: string; payload: unknown }[] {
-  return options.map((text) => {
-    const lower = text.toLowerCase();
-    // Score = the characters of the option this candidate's names account
-    // for, so district plus city beats city alone, and a longer city beats a
-    // shorter one it contains. Ties keep the earlier candidate.
-    let hit: Place | null = null;
-    let best = 0;
-    for (const c of candidates) {
-      const score = [c.neighbourhood, c.locality]
-        .map((name) => name?.toLowerCase())
-        .filter((n): n is string => !!n && lower.includes(n))
-        .reduce((sum, n) => sum + n.length, 0);
-      if (score > best) {
-        hit = c;
-        best = score;
-      }
-    }
-    return { text, payload: hit };
-  });
-}
-
-/** A place's chain from lookup data only: district, city, region, country,
- *  with a part that repeats the one before it dropped ("Singapore,
- *  Singapore"). Never invented. */
-function placeChainLabel(p: Place): string {
-  const parts: string[] = [];
-  for (const part of [p.neighbourhood, p.locality, p.admin1, p.countryName]) {
-    const t = part?.trim();
-    if (t && !parts.some((q) => q.toLowerCase() === t.toLowerCase())) parts.push(t);
-  }
-  return parts.join(', ');
-}
-
-/** Everyday names for a country that the lookup data does not spell out. */
-const COUNTRY_ALIASES: Record<string, string[]> = { GB: ['uk', 'britain'], US: ['usa'] };
-
-function namesItsCountry(text: string, p: Place): boolean {
-  const lower = text.toLowerCase();
-  if (p.countryName && lower.includes(p.countryName.toLowerCase())) return true;
-  const words = new Set(lower.split(/[^a-z]+/).filter(Boolean));
-  return words.has(p.countryCode.toLowerCase()) || (COUNTRY_ALIASES[p.countryCode] ?? []).some((a) => words.has(a));
-}
-
-/**
- * A place chip reads as the place it stands for (ux2 batch 27). The model
- * writes chips freely and, with candidates resolved, wrote bare localities 5
- * of 5 times ("Newcastle upon Tyne", "Newcastle", "Newcastle-under-Lyme"): a
- * bare "Newcastle" says nothing about which one. When the chips are not
- * already distinct AND country-bearing, or two share a city, EVERY bound chip
- * takes its lookup chain. An unbound chip stays verbatim. Texts that would
- * collide after expansion keep the model's wording, since the tap is matched
- * back by text.
- */
-export function expandChoiceLabels(bound: AgentChoiceOption[]): AgentChoiceOption[] {
-  const places = bound.map((b) => placeFromPayload(b.payload));
-  if (places.every((p) => p === null)) return bound;
-  const texts = bound.map((b) => b.text.trim().toLowerCase());
-  const distinct = new Set(texts).size === texts.length;
-  const cities = places.filter((p): p is Place => p !== null).map((p) => p.locality.toLowerCase());
-  const sharedCity = new Set(cities).size !== cities.length;
-  const allNameCountry = bound.every((b, i) => places[i] === null || namesItsCountry(b.text, places[i] as Place));
-  if (distinct && !sharedCity && allNameCountry) return bound;
-  const expanded = bound.map((b, i) => {
-    const place = places[i];
-    if (!place) return b;
-    const text = placeChainLabel(place);
-    return text === b.text ? b : { ...b, text, modelText: b.text };
-  });
-  const out = expanded.map((e) => e.text.trim().toLowerCase());
-  return new Set(out).size === out.length ? expanded : bound;
-}
-
-/** A chip payload that is a Place (the only structured payload a chip
- *  carries today), or null. */
-function placeFromPayload(payload: unknown): Place | null {
-  if (!payload || typeof payload !== 'object') return null;
-  const p = payload as Partial<Place>;
-  return typeof p.locality === 'string' && typeof p.countryCode === 'string' ? (p as Place) : null;
-}
-
-/**
- * First-person statements rewritten as facts. Measured on staging: "I am an
- * expat from India", "I live in Nieuw-West, Amsterdam", "Moved to Berlin, ...
- * last month". A fact names the user in the third person and a home is
- * "Lives in ...", or none of the loop's rules recognise it.
- */
 /**
  * The origin a message states PLAINLY, or null: exactly one "I'm (an expat)
  * from X" / "originally from X" naming one to three words, title-cased. Any
@@ -399,204 +277,6 @@ function saveAllLeg(options: readonly string[]): AgentModelResult {
     latencyMs: 0,
     error: null,
   };
-}
-
-function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unknown> {
-  let t = typeof entry.statement === 'string' ? entry.statement.trim() : '';
-  if (!t) return entry;
-  t = t.replace(/^(?:i\s+am|i['’]m|im)\s+(?:an?\s+)?/i, '');
-  // "User is an expat ...", "The user lives in ...", "Is an expat from
-  // India" (all measured on staging). Stripped only when what is left is a
-  // home, an origin or an expat status, so no other fact's wording changes.
-  const bare = t.replace(/^(?:(?:the\s+)?user\s+)?(?:is\s+(?:an?\s+)?)?/i, '');
-  if (bare !== t && (
-    isOriginStatement(bare) || isExpatStatement(bare) || /^expat\b/i.test(bare)
-    || /^(?:(?:have\s+|recently\s+)?moved|live|lives|living|reside|resides)\s+(?:in|to)\s/i.test(bare)
-  )) t = bare;
-  const home = /^(?:i\s+)?(?:(?:have\s+|recently\s+)?moved|live|lives|living|reside|resides)\s+(?:in|to)\s+(.+)$/i.exec(t);
-  if (home) {
-    const where = home[1]
-      .replace(/\s+(?:last\s+(?:week|month|year)|this\s+(?:month|year)|recently|a\s+few\s+(?:weeks|months|years)\s+ago)\.?$/i, '')
-      .replace(/\.$/, '');
-    t = `Lives in ${where}`;
-    // "Nieuw-West, Amsterdam (North Holland, The Netherlands)": the chain is
-    // written in the comma form (measured on staging).
-    t = collapseRepeatedRungs(t.replace(/\s*\(([^()]+)\)\s*$/, ', $1'));
-  } else {
-    t = t.charAt(0).toUpperCase() + t.slice(1);
-  }
-  return t === entry.statement ? entry : { ...entry, statement: t };
-}
-
-/** "Lives in <what the user said>, <region>, <country>, <bloc>": the user's
- *  own first rung is kept when it is finer than the locality (a
- *  neighbourhood), then the looked-up chain. */
-function chainStatement(where: string, place: Place): string {
-  const first = where.split(',')[0].trim();
-  const own = (r: string | undefined) => !!r && first.toLowerCase() === r.toLowerCase();
-  const rungs = [
-    own(place.locality) || own(place.userTerm) ? null : first,
-    // THE USER'S TERM FIRST when it matched only an alias (ux2 D13): "Porto
-    // Santo" resolves to Vila Baleira, and a chain without it names a place the
-    // user never said, so no topic ever mentions Porto Santo.
-    place.userTerm ? `${place.userTerm} (${place.locality})` : place.locality,
-    place.admin1,
-    place.countryName,
-    place.bloc,
-  ].filter((r): r is string => typeof r === 'string' && r.trim().length > 0);
-  return collapseRepeatedRungs(`Lives in ${rungs.join(', ')}`);
-}
-
-/** Append "Expat in <country>" for an origin entry when the user's current
- *  country is known and differs, unless one is already offered or on file. */
-function addExpatStatus(
-  list: Record<string, unknown>[],
-  facts: AgentPersonaFact[],
-  known: readonly Place[],
-): void {
-  const origin = list.find((e) => e.questionnaire_attribute === ORIGIN_KEY);
-  if (!origin) return;
-  if (list.some((e) => e.questionnaire_attribute === EXPAT_KEY)) return;
-  if (facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement))) return;
-  const homeEntry = list.find((e) => isHomeEntry(e));
-  const homeFact = facts.find(
-    (f) => isLocationKey(f.attribute) && !isRelationalStatement(f.statement),
-  );
-  const country = homeEntry
-    ? countryOf(String(homeEntry.statement), known)
-    : homeFact
-      ? countryOf(homeFact.statement, known)
-      : null;
-  if (!country || sameCountry(country, originCountry(String(origin.statement)))) return;
-  list.push({ statement: expatStatement(country), questionnaire_attribute: EXPAT_KEY });
-}
-
-/**
- * A combined origin-and-home entry from the model, expanded into its separate
- * facts; any other entry unchanged. A `replaces` on the combined entry goes
- * with the residence part, the only part that can replace a home.
- */
-function expandCombinedEntry(
-  entry: Record<string, unknown>,
-  known: readonly Place[],
-): Record<string, unknown>[] {
-  const statement = typeof entry.statement === 'string' ? entry.statement : '';
-  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
-  const looksCombined =
-    attribute.trim().toLowerCase() === COMBINED_ORIGIN_KEY
-    || /\b(?:expat|migrant|immigrant|originally|from)\b[^,]*\b(?:living|based|settled|residing)\s+in\b/i.test(statement);
-  const parts = looksCombined ? threeFactsOf(statement, known) : null;
-  if (!parts) return [entry];
-  const out: Record<string, unknown>[] = [
-    { statement: parts.origin, questionnaire_attribute: ORIGIN_KEY },
-  ];
-  if (parts.expat) out.push({ statement: parts.expat, questionnaire_attribute: EXPAT_KEY });
-  out.push({
-    statement: parts.residence,
-    questionnaire_attribute: CANONICAL_LOCATION_KEY,
-    ...(typeof entry.replaces === 'string' ? { replaces: entry.replaces } : {}),
-  });
-  return out;
-}
-
-/**
- * The EXACT key for the three identity kinds. The model writes "origin",
- * "expat" or "location" (measured on staging); the topic generator's home
- * anchor matches the canonical home string byte for byte, and the loop's own
- * rules match these constants. Other kinds are left exactly as written.
- */
-function withExactKey(entry: Record<string, unknown>): Record<string, unknown> {
-  const statement = typeof entry.statement === 'string' ? entry.statement : '';
-  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
-  const key = attribute.split(':')[0].trim().toLowerCase();
-  // The model invents snake-case keys ("origin_country", "country_of_origin",
-  // "residence_city"): every word is read, and the statement check below
-  // decides which fact it is.
-  const words = key.split(/[_\s-]+/).filter(Boolean);
-  const loose = key === '' || words.some((w) => ['origin', 'background', 'expat', 'nationality', 'heritage'].includes(w));
-  const looseHome = key === '' || words.some((w) => ['residence', 'location', 'home', 'city', 'current', 'lives', 'living'].includes(w));
-  if (isExpatStatement(statement) && loose) return { ...entry, questionnaire_attribute: EXPAT_KEY };
-  if (isOriginStatement(statement) && loose) {
-    // "Expat from India" is the ORIGIN, written "From India"; being an expat
-    // is its own fact (see addExpatStatus).
-    return { ...entry, statement: toOriginStatement(statement), questionnaire_attribute: ORIGIN_KEY };
-  }
-  if ((isLocationKey(attribute) || (looseHome && /^lives in\b/i.test(statement.trim())))
-      && !isRelationalStatement(statement)) {
-    return { ...entry, questionnaire_attribute: CANONICAL_LOCATION_KEY };
-  }
-  return entry;
-}
-
-/** An entry that states where the USER lives: the home key, or a residence-
- *  shaped statement with no key at all. */
-function isHomeEntry(entry: Record<string, unknown>): boolean {
-  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : null;
-  if (attribute) return isLocationKey(attribute);
-  return /^lives in\b/i.test(String(entry.statement ?? '').trim());
-}
-
-/** "Lives in Porto, Porto, Portugal" gives "Lives in Porto, Portugal": a rung
- *  equal to the one before it (ignoring "Lives in" and case) is dropped. */
-export function collapseRepeatedRungs(statement: string): string {
-  const parts = statement.split(',').map((p) => p.trim()).filter(Boolean);
-  const bare = (p: string) => p.replace(/^(?:lives|living|based|resides?)\s+in\s+/i, '').toLowerCase();
-  const out: string[] = [];
-  for (const p of parts) {
-    if (out.length > 0 && bare(out[out.length - 1]) === bare(p)) continue;
-    out.push(p);
-  }
-  return out.join(', ');
-}
-
-/**
- * The facts a deleteUserFacts call names, in the order named, deduplicated:
- * `all: true` is every fact; otherwise each entry is an exact id (brackets
- * stripped), else an attribute key that names exactly ONE fact, else a
- * statement equal in comparable form. An entry naming several facts by key
- * names none: the card must never remove more than was meant.
- */
-export function resolveDeleteTargets(
-  args: Record<string, unknown>,
-  facts: AgentPersonaFact[],
-): AgentPersonaFact[] {
-  if (args.all === true) return [...facts];
-  const named = Array.isArray(args.fact_ids) ? (args.fact_ids as unknown[]) : [];
-  const out: AgentPersonaFact[] = [];
-  for (const raw of named) {
-    if (typeof raw !== 'string') continue;
-    const key = raw.trim().replace(/^\[|\]$/g, '');
-    const byId = facts.find((f) => f.id === key);
-    const byAttr = facts.filter((f) => (f.attribute ?? '').trim().toLowerCase() === key.toLowerCase());
-    const byText = facts.filter((f) => comparableStatement(f.statement) === comparableStatement(key));
-    const hit = byId ?? (byAttr.length === 1 ? byAttr[0] : byText.length === 1 ? byText[0] : undefined);
-    if (hit && !out.includes(hit)) out.push(hit);
-  }
-  return out;
-}
-
-/** The user's own current home among the facts on file, or null. */
-function currentHomeFact(
-  facts: AgentPersonaFact[],
-  statement: string,
-): AgentPersonaFact | null {
-  const isResidenceStatement = (s: string) => /^(?:lives|living|based|resides?)\s+in\b/i.test(s.trim());
-  return (
-    facts.find(
-      (f) =>
-        !isCombinedOriginFact(f.attribute)
-        && (isLocationKey(f.attribute) || isResidenceStatement(f.statement))
-        && mayReplace(statement, f.statement)
-        && comparableStatement(f.statement) !== comparableStatement(statement),
-    ) ?? null
-  );
-}
-
-/** Distinct place rungs in a statement ("Porto, Porto, Portugal" is two). */
-function placeRungs(statement: string): number {
-  return new Set(
-    statement.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean),
-  ).size;
 }
 
 /** Only a facts/* turn owes a proposal. A conversation/* turn legitimately
