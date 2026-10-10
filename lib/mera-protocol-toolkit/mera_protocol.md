@@ -244,7 +244,6 @@ Loads the shared base model into memory, ready for inference.
 type ModelState = {
   modelId: string
   loaded: boolean
-  activeAdapterId: string | null  // Currently loaded adapter, if any
   contextWindow: number        // Max tokens
   memoryUsageMB: number
   backend: string              // "metal" | "vulkan" | "cpu"
@@ -254,64 +253,11 @@ type ModelState = {
 
 ### `disposeModel(): Promise<void>`
 
-Unloads the base model and any active adapter from memory. Frees all associated resources.
+Unloads the base model from memory. Frees all associated resources.
 
 ### `getModelState(): ModelState | null`
 
-Returns the current model state (including active adapter), or `null` if no model is loaded.
-
-### Adapters
-
-### `downloadAdapter(config: AdapterDownloadConfig): Promise<AdapterManifest>`
-
-Downloads a LoRA adapter for use with the shared base model.
-
-- **Input:** Adapter identifier, source URL, and target base model
-- **Output:** Manifest describing the downloaded adapter
-- **Rules:**
-    - Adapters are stored in the app's local sandboxed storage (not shared across apps)
-    - Each adapter is validated against its target base model at download time
-    - Multiple adapters can be stored on disk simultaneously
-
-```tsx
-type AdapterDownloadConfig = {
-  adapterId: string            // e.g., "news-relevance", "news-topic-extraction"
-  adapterUrl: string           // URL to LoRA adapter file
-  targetBaseModelId: string    // Must match a downloaded base model
-  expectedChecksum: string     // SHA-256 of adapter artifact
-}
-
-type AdapterManifest = {
-  adapterId: string
-  targetBaseModelId: string
-  version: string
-  sizeBytes: number
-  downloadedAt: string         // ISO timestamp
-  ready: boolean
-}
-```
-
-### `loadAdapter(adapterId: string): Promise<void>`
-
-Hot-swaps the active LoRA adapter on the loaded base model.
-
-- **Rules:**
-    - Base model must already be loaded via `initBaseModel()`
-    - Swapping adapters does **not** reload the base model (swap time: ~50-200ms)
-    - Only one adapter can be active at a time
-    - Passing a different `adapterId` automatically unloads the previous adapter
-
-### `unloadAdapter(): Promise<void>`
-
-Removes the active adapter, reverting to the bare base model.
-
-### `listAdapters(): AdapterManifest[]`
-
-Returns all downloaded adapters available on-device for the current app.
-
-### `deleteAdapter(adapterId: string): Promise<void>`
-
-Deletes a downloaded adapter from local storage.
+Returns the current model state or `null` if no model is loaded.
 
 ### `deleteBaseModel(modelId: string): Promise<void>`
 
@@ -459,8 +405,7 @@ src/mera-protocol-toolkit/
 │
 ├── core/                    # Tools for on-device computation
 │   ├── inference.ts         # infer(), inferStream() — LLM orchestration
-│   ├── modelManager.ts      # downloadBaseModel(), initBaseModel(), disposeModel(), etc.
-│   └── adapterManager.ts    # downloadAdapter(), loadAdapter(), unloadAdapter(), etc.
+│   └── modelManager.ts      # downloadBaseModel(), initBaseModel(), disposeModel(), etc.
 │
 ├── privacy/                 # Tools for protocol-compliant data exchange
 │   ├── noiseInjector.ts     # injectNoise() — enforces Rules #2, #3, #5
@@ -491,15 +436,6 @@ export {
   getModelState,
   deleteBaseModel,
 } from './core/modelManager'
-// === Adapter Lifecycle ===
-export {
-  downloadAdapter,
-  loadAdapter,
-  unloadAdapter,
-  listAdapters,
-  deleteAdapter,
-} from './core/adapterManager'
-
 // === Privacy Layer ===
 export { injectNoise } from './privacy/noiseInjector'
 export { stripNoise } from './privacy/noiseStrip'
@@ -516,8 +452,6 @@ export type {
   BaseModelDownloadConfig,
   BaseModelManifest,
   ModelState,
-  AdapterDownloadConfig,
-  AdapterManifest,
 } from './types'
 ```
 
@@ -543,7 +477,7 @@ Apps achieve protocol compliance by following the rules and (optionally) using t
 │                                                      │
 │  PROTOCOL.md  ← the rules (this file)                │
 │  infer()        inferStream()    ← toolkit tools     │
-│  initBaseModel() loadAdapter()   ← toolkit tools     │
+│  initBaseModel()                 ← toolkit tools     │
 │  injectNoise()  stripNoise()     ← toolkit tools     │
 │  getFacts()                      ← toolkit tools     │
 └──────────────────────────────────────────────────────┘
@@ -554,7 +488,7 @@ Apps achieve protocol compliance by following the rules and (optionally) using t
 ```tsx
 import {
   infer, injectNoise, stripNoise,
-  getFacts, initBaseModel, downloadAdapter
+  getFacts, initBaseModel
 } from 'mera-protocol-toolkit'
 
 // App-specific: generate topics from facts

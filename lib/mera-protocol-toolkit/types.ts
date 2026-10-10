@@ -73,29 +73,10 @@ export type BaseModelManifest = {
 export type ModelState = {
   modelId: string;
   loaded: boolean;
-  activeAdapterId: string | null; // Currently loaded adapter, if any
   contextWindow: number; // Max tokens
   memoryUsageMB: number;
   backend: string; // "metal" | "vulkan" | "cpu"
   inferenceSpeed: number; // Approximate tok/s
-};
-
-// --- Adapter Lifecycle ---
-
-export type AdapterDownloadConfig = {
-  adapterId: string; // e.g., "news-relevance", "news-topic-extraction"
-  adapterUrl: string; // URL to LoRA adapter file
-  targetBaseModelId: string; // Must match a downloaded base model
-  expectedChecksum: string; // SHA-256 of adapter artifact
-};
-
-export type AdapterManifest = {
-  adapterId: string;
-  targetBaseModelId: string;
-  version: string;
-  sizeBytes: number;
-  downloadedAt: string; // ISO timestamp
-  ready: boolean;
 };
 
 // --- System Requirements ---

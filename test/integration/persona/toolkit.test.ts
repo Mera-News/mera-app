@@ -4,7 +4,6 @@
 // works when driven through the barrel alone. Real modelManager, store and downloadService on chat's in-memory
 // expo-file-system and scripted llama.rn.
 import * as toolkit from '@/lib/mera-protocol-toolkit';
-import * as adapterManager from '@/lib/mera-protocol-toolkit/core/adapterManager';
 import * as downloadService from '@/lib/mera-protocol-toolkit/core/downloadService';
 import * as inference from '@/lib/mera-protocol-toolkit/core/inference';
 import * as modelCatalog from '@/lib/mera-protocol-toolkit/core/model-catalog';
@@ -24,7 +23,6 @@ const EXPORTS: [string, Record<string, unknown>, string[]][] = [
         ['downloadBaseModel', 'initBaseModel', 'disposeModel', 'resetContext', 'getModelState', 'isModelDownloaded', 'deleteBaseModel', 'purgeAllBaseModels'],
     ],
     ['model catalogue', modelCatalog, ['MODEL_CATALOG', 'DEFAULT_MODEL_ID', 'RETIRED_MODEL_IDS', 'catalogEntry', 'isRetiredModelId']],
-    ['adapter lifecycle', adapterManager, ['downloadAdapter', 'loadAdapter', 'unloadAdapter', 'listAdapters', 'deleteAdapter']],
     ['download service', downloadService, ['startModelDownload', 'cancelModelDownload', 'isDownloadInProgress']],
     ['system requirements', systemRequirements, ['checkRequirements']],
 ];

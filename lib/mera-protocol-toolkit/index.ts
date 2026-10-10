@@ -28,15 +28,6 @@ export {
 } from './core/model-catalog';
 export type { ModelCatalogEntry } from './core/model-catalog';
 
-// === Adapter Lifecycle ===
-export {
-  downloadAdapter,
-  loadAdapter,
-  unloadAdapter,
-  listAdapters,
-  deleteAdapter,
-} from './core/adapterManager';
-
 // === Download Service ===
 export {
   startModelDownload,
@@ -56,8 +47,6 @@ export type {
   BaseModelDownloadConfig,
   BaseModelManifest,
   ModelState,
-  AdapterDownloadConfig,
-  AdapterManifest,
 
   // System Requirements
   SystemRequirementsResult,

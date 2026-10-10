@@ -40,7 +40,6 @@ export type DownloadProgressInfo = {
 
 let llamaContext: LlamaContext | null = null;
 let currentModelState: ModelState | null = null;
-let activeAdapterId: string | null = null;
 let activeDownload: LegacyFileSystem.DownloadResumable | null = null;
 
 const MODELS_DIR_NAME = 'mera-models';
@@ -334,13 +333,11 @@ export async function initBaseModel(
   }
 
   llamaContext = context;
-  activeAdapterId = null;
   recordModelLoad(resolvedModelId, Date.now() - loadStartedAt);
 
   currentModelState = {
     modelId: resolvedModelId,
     loaded: true,
-    activeAdapterId: null,
     contextWindow: LOCAL_CONTEXT_TOKENS,
     memoryUsageMB: Math.round((context.model?.size ?? 0) / (1024 * 1024)),
     backend: context.gpu ? 'metal' : 'cpu',
@@ -362,20 +359,18 @@ export async function resetContext(): Promise<void> {
     await llamaContext.release().catch(() => {});
     llamaContext = null;
     currentModelState = null;
-    activeAdapterId = null;
   }
   if (modelId) {
     await initBaseModel(modelId);
   }
 }
 
-/** Unloads the base model and any active adapter from memory. */
+/** Unloads the base model from memory. */
 export async function disposeModel(): Promise<void> {
   if (llamaContext) {
     await llamaContext.release();
     llamaContext = null;
     currentModelState = null;
-    activeAdapterId = null;
   }
 }
 
@@ -433,22 +428,11 @@ export async function isModelDownloaded(
 }
 
 // ---------------------------------------------------------------------------
-// Internal accessors (used by inference.ts and adapterManager.ts)
+// Internal accessors (used by inference.ts)
 // ---------------------------------------------------------------------------
 
 export function _getContext(): LlamaContext | null {
   return llamaContext;
-}
-
-export function _getActiveAdapterId(): string | null {
-  return activeAdapterId;
-}
-
-export function _setActiveAdapterId(id: string | null): void {
-  activeAdapterId = id;
-  if (currentModelState) {
-    currentModelState = { ...currentModelState, activeAdapterId: id };
-  }
 }
 
 export function _updateInferenceSpeed(tokPerSec: number): void {
