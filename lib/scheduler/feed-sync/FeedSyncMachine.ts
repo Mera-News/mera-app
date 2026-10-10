@@ -681,11 +681,17 @@ class FeedSyncMachine {
         publishSyncError(errorCode, undefined, failedAtState);
         // No notice and no inbox row for a failed sync (owner Y11): the
         // Feed's Mera icon turns red and its counts card says what happened.
-        await feedPersistence.saveMachineSnapshot({
-          state: 'failed',
-          startedAt: Date.now(),
-          errorCode,
-        });
+        try {
+          await feedPersistence.saveMachineSnapshot({
+            state: 'failed',
+            startedAt: Date.now(),
+            errorCode,
+          });
+        } catch (snapErr) {
+          logger.captureException(snapErr, {
+            tags: { service: 'FeedSyncMachine', step: 'saveMachineSnapshot' },
+          });
+        }
       }
       throw err;
     }

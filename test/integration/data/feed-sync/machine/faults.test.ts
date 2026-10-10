@@ -88,20 +88,11 @@ describe('FeedSyncMachine bookkeeping faults', () => {
       });
     };
 
-    test.failing("DA19: a failed snapshot write does not replace the run's error", async () => {
+    test("DA19: a failed snapshot write does not replace the run's error", async () => {
       await refusePersonaQuery();
       failSnapshotWriteOnce();
 
       await expect(run()).rejects.toThrow('storage backend refused the persona query');
-
-      expect(store().syncStatusMessage).toEqual(expect.objectContaining({ state: 'failed', errorCode: 'storage-error' }));
-    });
-
-    it('DA19 today: start() rejects with the snapshot error, after the run\'s own code was published', async () => {
-      await refusePersonaQuery();
-      failSnapshotWriteOnce();
-
-      await expect(run()).rejects.toThrow('snapshot write failed');
 
       expect(store().syncStatusMessage).toEqual(expect.objectContaining({ state: 'failed', errorCode: 'storage-error' }));
     });
