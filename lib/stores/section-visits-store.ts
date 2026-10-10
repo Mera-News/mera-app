@@ -11,6 +11,11 @@ import { getSetting, setSetting } from '@/lib/database/services/setting-service'
 
 const SETTING_KEY = 'section_last_visited_v1';
 
+const persistVisits = (visits: Record<string, number>) =>
+    setSetting(SETTING_KEY, JSON.stringify(visits)).catch((err) =>
+        logger.captureException(err, { tags: { store: 'section-visits-store' } }),
+    );
+
 /** Feed window is 24h; 7d is a generous retention so we don't grow unbounded
  *  across long-tail facts while still comfortably covering the feed window. */
 export const SECTION_VISIT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -19,6 +24,9 @@ interface SectionVisitsState {
     /** factId → lastVisitedAt epoch ms. */
     visits: Record<string, number>;
     hydrated: boolean;
+    /** The last hydrate's read failed: the stored row was never read, so nothing
+     *  is persisted until a hydrate succeeds (it would overwrite that row). */
+    readFailed: boolean;
     /** One-shot JSON load from settings KV; prunes entries older than retention;
      *  merges any optimistic markVisited that raced ahead (optimistic value wins
      *  if newer). */
@@ -56,6 +64,7 @@ let hydrating: Promise<void> | null = null;
 export const useSectionVisitsStore = create<SectionVisitsState>()((set, get) => ({
     visits: {},
     hydrated: false,
+    readFailed: false,
 
     hydrate: async () => {
         if (hydrating) return hydrating;
@@ -77,10 +86,13 @@ export const useSectionVisitsStore = create<SectionVisitsState>()((set, get) => 
                     }
                 }
 
-                set({ visits: merged, hydrated: true });
+                const unpersisted = get().readFailed;
+                set({ visits: merged, hydrated: true, readFailed: false });
+                // Visits made while the read was failing were never written.
+                if (unpersisted) void persistVisits(merged);
             } catch (err) {
                 logger.captureException(err, { tags: { store: 'section-visits-store' } });
-                set({ hydrated: true });
+                set({ hydrated: true, readFailed: true });
             } finally {
                 hydrating = null;
             }
@@ -96,7 +108,7 @@ export const useSectionVisitsStore = create<SectionVisitsState>()((set, get) => 
         // merged map instead.
         const persist = get().hydrated ? Promise.resolve(next) : get().hydrate().then(() => get().visits);
         persist
-            .then((visits) => setSetting(SETTING_KEY, JSON.stringify(visits)))
+            .then((visits) => (get().readFailed ? undefined : persistVisits(visits)))
             .catch((err) => logger.captureException(err, { tags: { store: 'section-visits-store' } }));
     },
 }));

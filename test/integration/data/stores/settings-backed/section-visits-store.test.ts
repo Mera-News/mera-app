@@ -154,8 +154,8 @@ describe('hydrate', () => {
     });
   });
 
-  // DA48. A hydrate whose read fails still flips `hydrated`, so a markVisited after it persists
-  // the in-memory map (without the stored visits it never read) over the row that is still on disk.
+  // DA48. A hydrate whose read fails still flips `hydrated`; a markVisited after it keeps the visit
+  // in memory but writes nothing (the stored row was never read), until a hydrate succeeds.
   describe('a markVisited after a hydrate whose read failed', () => {
     async function visitAfterFailedRead() {
       const now = Date.now();
@@ -170,14 +170,14 @@ describe('hydrate', () => {
       return { now, stored };
     }
 
-    test.failing('DA48: a failed hydrate read never overwrites the stored visits', async () => {
-      const { stored } = await visitAfterFailedRead();
+    it('DA48: a failed hydrate read never overwrites the stored visits', async () => {
+      const { now, stored } = await visitAfterFailedRead();
       expect(await getSetting(KEY)).toBe(stored);
-    });
 
-    it('DA48 today: the early entry overwrites the stored row', async () => {
-      const { now } = await visitAfterFailedRead();
-      expect(await getSetting(KEY)).toBe(JSON.stringify({ 'fact-early': now }));
+      // The next successful hydrate merges the stored visits with the early one and persists both.
+      await store.getState().hydrate();
+      const both = JSON.stringify({ 'fact-from-db': now - 500, 'fact-early': now });
+      expect(await persisted(KEY, both)).toBe(both);
     });
   });
 });
