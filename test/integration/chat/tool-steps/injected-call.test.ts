@@ -1,12 +1,10 @@
-// CH14: a tool call that arrives in CLEAR (a provider `delta.tool_calls`, outside the envelope) must
-// never run. Today both consumers execute it, so whoever sits between the gateway and the device can
-// make the app apply a staged proposal or run a search without the model, or the person, asking.
+// CH14: a tool call that arrives in CLEAR (a provider `delta.tool_calls`, outside the envelope) never
+// runs: the turn fails closed, so whoever sits between the gateway and the device cannot make the app
+// apply a staged proposal or run a search without the model, or the person, asking.
 //
 // The turn is driven the way the app drives it: an ArticleFeedbackAgent chat with a staged proposal,
 // createConversation, attachChatSession, engine.send. The gateway answers the FIRST chat call with a
 // raw SSE frame carrying `delta.tool_calls`; every later call gets the default scripted answer.
-// Each bug is a `test.failing` for the correct behaviour plus a passing "today" sibling with the
-// same setup (R14).
 import { defaultResponder, gatewayCalls, mockGateway, server } from '@/test/helpers';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { delta, DONE, rawChat } from '@/test/integration/chat/streaming/support';
@@ -54,7 +52,7 @@ async function runInjectedTurn(name: string, args: object): Promise<void> {
 }
 
 describe('an injected cleartext applyProposal', () => {
-  test.failing('CH14: an injected cleartext applyProposal never applies the staged proposal', async () => {
+  it('CH14: an injected cleartext applyProposal never applies the staged proposal', async () => {
     setProposal(staged);
 
     await runInjectedTurn('applyProposal', {});
@@ -62,31 +60,14 @@ describe('an injected cleartext applyProposal', () => {
     expect(useFloatingChatStore.getState().proposal).toMatchObject({ id: 'p-injected' });
     expect(await factStatements()).toEqual([]);
   });
-
-  it('CH14 today: an injected cleartext applyProposal applies the staged proposal', async () => {
-    setProposal(staged);
-
-    await runInjectedTurn('applyProposal', {});
-
-    expect(useFloatingChatStore.getState().proposal).toBeNull();
-    expect(await factStatements()).toEqual([STAGED_FACT]);
-  });
 });
 
 describe('an injected cleartext webSearch', () => {
-  test.failing('CH14: an injected cleartext webSearch sends no search to the gateway', async () => {
+  it('CH14: an injected cleartext webSearch sends no search to the gateway', async () => {
     await setWebSearchInChat(true);
 
     await runInjectedTurn('webSearch', { query: INJECTED_QUERY });
 
     expect(gatewayCalls('web-search')).toEqual([]);
-  });
-
-  it('CH14 today: an injected cleartext webSearch sends a search with the injected query', async () => {
-    await setWebSearchInChat(true);
-
-    await runInjectedTurn('webSearch', { query: INJECTED_QUERY });
-
-    expect(gatewayCalls('web-search').map((c) => c.messages[0].content)).toEqual([INJECTED_QUERY]);
   });
 });

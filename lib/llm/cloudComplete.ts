@@ -280,6 +280,19 @@ export function isCallerAbort(err: unknown): boolean {
   return err instanceof CallerAbortError;
 }
 
+/**
+ * The provider returned a tool call in CLEAR (`delta.tool_calls` or
+ * `message.tool_calls`), outside the E2EE envelope. Nothing proves the model
+ * wrote it, so the turn fails closed: never forwarded, never executed, never
+ * retried and never model evidence. The message carries no call content.
+ */
+export class CleartextToolCallError extends Error {
+  constructor() {
+    super('[CloudLLM] provider returned a cleartext tool call');
+    this.name = 'CleartextToolCallError';
+  }
+}
+
 /** Live per-attempt resources of a response whose body is still being read. */
 interface StreamHandle {
   /** Abort the in-flight body (the per-attempt controller). */
@@ -1533,6 +1546,8 @@ export async function* cloudChatStream(
     // would duplicate the answer.
     // A stop is final: no retry, no model verdict.
     if (isCallerAbort(err) || request.signal?.aborted) throw err;
+    // A cleartext tool call is a privacy failure, not model evidence: no retry.
+    if (err instanceof CleartextToolCallError) throw err;
     if (textYielded) throw err;
     // Already on the fallback (session-engaged, or a hedge winner) — there is
     // no healthier model left to try.
@@ -1598,8 +1613,6 @@ export async function* cloudChatStream(
  *  think block must never run): they arrive as text inside the encrypted
  *  content (text-tool-protocol) and leave as the same `tool-call-delta` events
  *  a native call used to produce, one whole call per event. */
-const NATIVE_CALL_INDEX_OFFSET = 1000;
-
 async function* consumeChatResponse(
   response: Response,
   privateKey: Uint8Array,
@@ -1610,7 +1623,6 @@ async function* consumeChatResponse(
   const think = createThinkStripper();
   const calls = createToolCallStreamParser(tools, APP_TOOL_FORMAT);
   let callIndex = 0;
-  let cleartextReported = false;
   const stamp = Date.now().toString(36);
   function* emit(r: { text: string; calls: { name: string; argumentsRaw: string }[] }): Generator<SseEvent> {
     if (r.text) yield { type: 'text-delta', delta: r.text };
@@ -1626,21 +1638,16 @@ async function* consumeChatResponse(
       continue;
     }
     if (event.type === 'tool-call-delta') {
-      // A provider that lifted a call out of the content sent it in CLEAR. It
-      // is already exposed, so it is reported (never its content) and still
-      // used: dropping it would lose the user's turn and protect nothing.
-      if (!cleartextReported) {
-        cleartextReported = true;
-        logger.captureMessage(`${TAG} provider returned a cleartext tool call`, {
-          level: 'error',
-          fingerprint: ['e2ee-cleartext-tool-call'],
-          tags: { component: 'cloudComplete' },
-        });
-      }
-      // Fragments share their provider index; offset so they cannot merge
-      // into a parsed call's slot.
-      yield { ...event, index: NATIVE_CALL_INDEX_OFFSET + event.index };
-      continue;
+      // A provider that lifted a call out of the content sent it in CLEAR: it
+      // never passed the envelope, so nothing proves the model wrote it. Report
+      // it once (never its content) and fail the turn closed; nothing is
+      // forwarded, so nothing runs.
+      logger.captureMessage(`${TAG} provider returned a cleartext tool call`, {
+        level: 'error',
+        fingerprint: ['e2ee-cleartext-tool-call'],
+        tags: { component: 'cloudComplete' },
+      });
+      throw new CleartextToolCallError();
     }
     if (event.type === 'finish') {
       const tail = think.flush();
@@ -1744,7 +1751,7 @@ async function* consumeSseChat(
 
       // The app never sends a tools field, so a native `delta.tool_calls` here
       // means the provider lifted a call out of the content, in CLEAR.
-      // consumeChatResponse reports it; forwarded so the turn still works.
+      // consumeChatResponse reports it and fails the turn closed.
       for (const tc of delta.tool_calls ?? []) {
         yield {
           type: 'tool-call-delta',

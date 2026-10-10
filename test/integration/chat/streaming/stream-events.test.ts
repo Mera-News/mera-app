@@ -162,70 +162,8 @@ describe('buffered replies with nothing to say', () => {
 });
 
 describe('a provider tool call in CLEAR (never expected, never silently dropped)', () => {
-  it('CH14 today: streamed: forwarded on the offset slot, reported once, no content in the report', async () => {
-    const { handler } = rawChat(() => [
-      delta({ tool_calls: [{ index: 0, id: 'tc-1', function: { name: 'proposeTrack', arguments: '' } }] }),
-      delta({ tool_calls: [{ index: 0, function: { arguments: '{"a":' } }] }),
-      delta({ tool_calls: [{ index: 0, function: { arguments: '1}' } }] }),
-      delta({}, 'tool_calls'),
-      DONE,
-    ]);
-    server.use(handler);
-    const events = await run();
-    const tools = events.filter((e) => e.type === 'tool-call-delta');
-    // The offset keeps fragments together and out of any slot a parsed call would take.
-    expect(tools).toHaveLength(3);
-    expect(tools[0]).toMatchObject({ index: 1000, id: 'tc-1', name: 'proposeTrack', argumentsDelta: '' });
-    expect(tools[1]).toMatchObject({ index: 1000, argumentsDelta: '{"a":' });
-    expect(tools[2]).toMatchObject({ index: 1000, argumentsDelta: '1}' });
-    const { captureMessage } = loggerSpies();
-    expect(captureMessage).toHaveBeenCalledTimes(1);
-    expect(captureMessage.mock.calls[0][1]).toMatchObject({ fingerprint: ['e2ee-cleartext-tool-call'] });
-    expect(JSON.stringify(captureMessage.mock.calls)).not.toContain('{"a":');
-    expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
-  });
-
-  it('CH14 today: buffered: each call on its own offset slot', async () => {
-    const call = (id: string, name: string, args: string) => ({ id, type: 'function', function: { name, arguments: args } });
-    server.use(
-      rawJson(() => ({
-        choices: [
-          {
-            message: { content: '', tool_calls: [call('tc-1', 'update_persona', '{"key":"val"}'), call('tc-2', 'another_tool', '{"x":1}')] },
-            finish_reason: 'tool_calls',
-          },
-        ],
-      })).handler,
-    );
-    const events = await run();
-    expect(events.filter((e) => e.type === 'tool-call-delta')).toEqual([
-      { type: 'tool-call-delta', index: 1000, id: 'tc-1', name: 'update_persona', argumentsDelta: '{"key":"val"}' },
-      { type: 'tool-call-delta', index: 1001, id: 'tc-2', name: 'another_tool', argumentsDelta: '{"x":1}' },
-    ]);
-    expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
-  });
-
-  it('CH14 today: buffered text and a provider call together yield both', async () => {
-    server.use(
-      rawJson((seal) => ({
-        choices: [
-          {
-            message: {
-              content: seal('Doing it.'),
-              tool_calls: [{ id: 'tc', type: 'function', function: { name: 'f', arguments: '{}' } }],
-            },
-            finish_reason: 'tool_calls',
-          },
-        ],
-      })).handler,
-    );
-    const events = await run();
-    expect(events.map((e) => e.type)).toEqual(['text-delta', 'tool-call-delta', 'finish']);
-    expect(textOf(events)).toBe('Doing it.');
-  });
-
   // CH14: a cleartext call never passed the envelope, so nothing proves the model wrote it. Fail closed.
-  test.failing("CH14: a provider's cleartext tool call fails the stream closed, streamed and buffered", async () => {
+  it("CH14: a provider's cleartext tool call fails the stream closed, streamed and buffered", async () => {
     const drain = async () => {
       const yielded: SseEvent[] = [];
       let error: unknown = null;
