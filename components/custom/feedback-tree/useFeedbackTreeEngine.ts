@@ -8,13 +8,13 @@
 // it was named after died with the inline Feed panel, and renaming would touch
 // comments in lib/ that point here.
 
+import { evaluateCondition } from '@/lib/news-harness/feedback-tree/evaluate-condition';
+import { resolveLeafActions } from '@/lib/news-harness/feedback-tree/resolve-leaf-actions';
 import {
-  evaluateCondition,
-  resolveLeafActions,
   type FeedbackTree,
   type FeedbackTreeNode,
   type LocalFeedbackContext,
-} from '@/lib/news-harness/feedback-tree';
+} from '@/lib/news-harness/feedback-tree/types';
 
 export type FeedbackTreeRoot = 'like' | 'dislike';
 

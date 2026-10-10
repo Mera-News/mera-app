@@ -34,20 +34,24 @@ import { getScoringOverrides } from '@/lib/database/services/calibration-service
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
   computeAndScore,
+  type StageCandidate,
+  type StageResult,
+} from '@/lib/news-harness/scoring-engine/run-stage';
+import {
   computeRelevance,
-  applyScoringOverrides,
+  type RelevanceComponents,
+  type ScoringMode,
+} from '@/lib/news-harness/scoring-engine/relevance';
+import { applyScoringOverrides } from '@/lib/news-harness/scoring-engine/calibration';
+import {
   buildPubPrefs,
   normalizeLocation,
   normText,
-  screenHardSuppressionsDetailed,
-  type StageCandidate,
-  type StageResult,
   type PersonaScoringContext,
   type PersonaLocationSnapshot,
-  type RelevanceComponents,
-  type ScoringMode,
   type SoftSuppression,
-} from '@/lib/news-harness/scoring-engine';
+} from '@/lib/news-harness/scoring-engine/persona-context';
+import { screenHardSuppressionsDetailed } from '@/lib/news-harness/scoring-engine/suppression';
 import {
   buildStageCandidateInput,
   getFactWeightById,

@@ -1,16 +1,18 @@
 // Pure persona-summary pipeline tests (RN-free): prompt selection/capping,
 // strict-JSON parsing (incl. malformed → throw), and draft→result assembly.
 
+import { assemblePersonaSummaryStrings } from '@/lib/news-harness/persona-summary/assemble';
 import {
-  assemblePersonaSummaryStrings,
   buildPersonaSummaryPrompt,
-  parsePersonaSummaryOutput,
   selectFactsForSummary,
+} from '@/lib/news-harness/persona-summary/prompt';
+import { parsePersonaSummaryOutput } from '@/lib/news-harness/persona-summary/parser';
+import {
   MAX_FACTS_IN_PROMPT,
   MAX_STATEMENT_CHARS,
   MAX_SUMMARY_STRINGS,
-  type PersonaSummaryFactInput,
-} from '@/lib/news-harness/persona-summary/index';
+} from '@/lib/news-harness/persona-summary/config';
+import { type PersonaSummaryFactInput } from '@/lib/news-harness/persona-summary/types';
 
 function fact(overrides: Partial<PersonaSummaryFactInput>): PersonaSummaryFactInput {
   return {

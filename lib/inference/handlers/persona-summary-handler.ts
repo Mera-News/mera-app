@@ -10,13 +10,13 @@ import { replaceAllSummaryStrings } from '../../database/services/persona-summar
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocal } from '../../llm/completeLocal';
+import { assemblePersonaSummaryStrings } from '../../news-harness/persona-summary/assemble';
 import {
-  assemblePersonaSummaryStrings,
   buildPersonaSummaryPrompt,
-  parsePersonaSummaryOutput,
   selectFactsForSummary,
-  type PersonaSummaryFactInput,
-} from '../../news-harness/persona-summary';
+} from '../../news-harness/persona-summary/prompt';
+import { parsePersonaSummaryOutput } from '../../news-harness/persona-summary/parser';
+import { type PersonaSummaryFactInput } from '../../news-harness/persona-summary/types';
 import logger from '../../logger';
 
 export interface PersonaSummaryPayload {

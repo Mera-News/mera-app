@@ -9,10 +9,8 @@ import { setLlmHeadline } from '../../database/services/tracked-story-service';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocal } from '../../llm/completeLocal';
-import {
-  buildStoryHeadlinePrompt,
-  parseStoryHeadlineOutput,
-} from '../../news-harness/story-headline';
+import { buildStoryHeadlinePrompt } from '../../news-harness/story-headline/prompt';
+import { parseStoryHeadlineOutput } from '../../news-harness/story-headline/parser';
 import logger from '../../logger';
 
 export interface StoryHeadlinePayload {

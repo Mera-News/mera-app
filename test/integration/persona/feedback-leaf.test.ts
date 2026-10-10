@@ -15,7 +15,7 @@ import * as feedbackService from '@/lib/database/services/article-feedback-servi
 import * as changeLog from '@/lib/database/services/persona-change-log-service';
 import { getPreferenceKind } from '@/lib/database/services/publication-preference-service';
 import { createTopics, getActive, getWeightsByIds } from '@/lib/database/services/topic-service';
-import type { FeedbackTreeNode } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTreeNode } from '@/lib/news-harness/feedback-tree/types';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { usePublicationDisplayStore } from '@/lib/stores/publication-display-store';
 import { toastManager } from '@/lib/toast-manager';

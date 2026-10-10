@@ -2,12 +2,9 @@
 // tolerant strict-JSON parsing (happy / markdown-fenced / bare string / garbage
 // / empty).
 
-import {
-  buildStoryHeadlinePrompt,
-  parseStoryHeadlineOutput,
-  MAX_TITLES,
-  MAX_TITLE_CHARS,
-} from '@/lib/news-harness/story-headline/index';
+import { buildStoryHeadlinePrompt } from '@/lib/news-harness/story-headline/prompt';
+import { parseStoryHeadlineOutput } from '@/lib/news-harness/story-headline/parser';
+import { MAX_TITLES, MAX_TITLE_CHARS } from '@/lib/news-harness/story-headline/config';
 
 describe('buildStoryHeadlinePrompt', () => {
   it('numbers titles 1..N and caps to MAX_TITLES', () => {

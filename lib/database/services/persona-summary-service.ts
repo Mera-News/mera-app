@@ -9,7 +9,7 @@
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import type PersonaSummaryStringModel from '../models/PersonaSummaryString';
-import type { PersonaSummaryStringResult } from '../../news-harness/persona-summary';
+import type { PersonaSummaryStringResult } from '../../news-harness/persona-summary/types';
 import logger from '../../logger';
 
 const collection = database.get<PersonaSummaryStringModel>('persona_summary_strings');

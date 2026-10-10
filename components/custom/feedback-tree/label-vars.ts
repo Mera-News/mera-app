@@ -19,11 +19,11 @@
 // `placeValue` (the tag's verbatim field) instead; see resolve-leaf-actions.
 
 import type { TFunction } from 'i18next';
+import { resolveTopicLabel } from '@/lib/news-harness/feedback-tree/resolve-topic-label';
 import {
-  resolveTopicLabel,
   type FeedbackTreeNode,
   type LocalFeedbackContext,
-} from '@/lib/news-harness/feedback-tree';
+} from '@/lib/news-harness/feedback-tree/types';
 
 /** The one node whose label names the article's matched topic ("More about:
  *  Formula 1") instead of the unnamed "More about this topic": its "A lot

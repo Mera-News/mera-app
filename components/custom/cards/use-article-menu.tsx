@@ -2,7 +2,7 @@ import ActionSheet, { ActionSheetRow, type ArticleMenuItem } from '@/components/
 import FeedbackTreeLevel from '@/components/custom/feedback-tree/FeedbackTreeLevel';
 import { feedbackNodeLabel, type FeedbackLabelContext } from '@/components/custom/feedback-tree/label-vars';
 import { leafNeedsConfirm, performFeedbackLeaf } from '@/components/custom/feedback-tree/perform-feedback-leaf';
-import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
 import type { VerdictSentiment } from '@/lib/database/services/article-feedback-service';
 import type { VisitInput } from '@/components/custom/cards/article-actions';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';

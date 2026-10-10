@@ -15,7 +15,7 @@
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
-import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
 
 const firstNonBlank = (xs: readonly (string | null | undefined)[]): string | null =>
   xs.map((x) => x?.trim()).find((x) => !!x) ?? null;

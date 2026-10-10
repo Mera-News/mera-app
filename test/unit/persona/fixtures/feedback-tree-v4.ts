@@ -3,7 +3,7 @@
 // seed 207b2a0, which has never run in prod). Tree-dependent client logic (the
 // flat dislike root) must hold on this AND on the bundled v5.
 /* eslint-disable */
-import type { FeedbackTree } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTree } from '@/lib/news-harness/feedback-tree/types';
 
 export const FEEDBACK_TREE_V4: FeedbackTree = {
   version: 4,

@@ -3,7 +3,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { SHOW_EXTRACTED_METADATA } from '@/lib/config/endpoints';
-import { supranationalName } from '@/lib/news-harness/scoring-engine';
+import { supranationalName } from '@/lib/news-harness/scoring-engine/supranational-codes';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@/lib/theme/tokens';
 import React from 'react';

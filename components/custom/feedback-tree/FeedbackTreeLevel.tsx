@@ -9,7 +9,7 @@ import { ActionSheetRow } from '@/components/custom/cards/ArticleOverflowMenu';
 import { feedbackLabelVars, feedbackNodeLabel, type FeedbackLabelContext } from '@/components/custom/feedback-tree/label-vars';
 import { resolveTreeLevel, type FeedbackTreeRoot } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import { Text } from '@/components/ui/text';
-import type { FeedbackTree, FeedbackTreeNode } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTree, FeedbackTreeNode } from '@/lib/news-harness/feedback-tree/types';
 import type { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';

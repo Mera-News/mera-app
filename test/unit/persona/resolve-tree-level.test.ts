@@ -2,7 +2,7 @@
 // the inert-leaf and dead-branch rules, and branch descent by path. Pure: the
 // pure evaluateCondition / resolveLeafActions run for real.
 
-import type { FeedbackTree, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTree, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
 import { resolveTreeLevel } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 
 const TREE: FeedbackTree = {

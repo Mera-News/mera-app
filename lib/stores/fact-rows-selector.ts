@@ -77,7 +77,7 @@ import {
   type TopicSnapshot,
   type FactSnapshot,
   type LocationSnapshot,
-} from '@/lib/news-harness/feed-select';
+} from '@/lib/news-harness/feed-select/ownership';
 import {
   buildStoryGroups,
   pickRepresentative,

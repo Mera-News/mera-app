@@ -9,7 +9,7 @@
 // denominator line's counts.
 
 import { buildFactRows, type FactRowsSnapshots } from '@/lib/stores/fact-rows-selector';
-import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select';
+import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select/ownership';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';

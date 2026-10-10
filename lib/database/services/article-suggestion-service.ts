@@ -16,11 +16,11 @@ import type { StageCandidateRow } from '@/lib/news-harness/core/types';
 import type {
   ScoredCandidateInput,
   MatchedTopicInput,
-  ArticleGeoTag,
   HeadlineScope,
   RelevanceComponents,
-} from '@/lib/news-harness/scoring-engine';
-import { supranationalName } from '@/lib/news-harness/scoring-engine';
+} from '@/lib/news-harness/scoring-engine/relevance';
+import type { ArticleGeoTag } from '@/lib/news-harness/scoring-engine/geo';
+import { supranationalName } from '@/lib/news-harness/scoring-engine/supranational-codes';
 // The ONE LOW-band top-headline cull predicate. Safe to import from a database
 // service: `importance-filter` → `priority-order` is a two-module, PURE, RN-free
 // leaf (no DB / expo / react-native imports and no edge back into this module),

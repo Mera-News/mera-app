@@ -2,7 +2,7 @@
 // id (the anti-double-charge guard), loadSuggestions and its projection, the unscored queue, and the
 // scored-without-reason sweep. Real services on the in-memory DB. Replaces the matching blocks of
 // lib/database/services/__tests__/article-suggestion-service.test.ts.
-import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select';
+import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select/ownership';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { deleteFact } from '@/lib/database/services/fact-service';
 import {

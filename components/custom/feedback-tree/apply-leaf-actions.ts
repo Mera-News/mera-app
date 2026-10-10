@@ -18,7 +18,7 @@
 //     `useToast` would force a static import and make this a hook again.
 
 import logger from '@/lib/logger';
-import type { ResolvedPersonaAction } from '@/lib/news-harness/feedback-tree';
+import type { ResolvedPersonaAction } from '@/lib/news-harness/feedback-tree/types';
 
 /**
  * Apply a leaf's resolved persona actions and offer an Undo.

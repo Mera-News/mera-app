@@ -62,9 +62,9 @@ import { loadPersonaScoringContext } from '@/lib/mera-protocol/stage-scoring';
 import {
   screenHardSuppressions,
   screenHardSuppressionsDetailed,
-  type ScoredCandidateInput,
-  type SoftSuppression,
-} from '@/lib/news-harness/scoring-engine';
+} from '@/lib/news-harness/scoring-engine/suppression';
+import { type ScoredCandidateInput } from '@/lib/news-harness/scoring-engine/relevance';
+import { type SoftSuppression } from '@/lib/news-harness/scoring-engine/persona-context';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useHardFilterLabelStore } from '@/lib/stores/hard-filter-label-store';
 

@@ -26,7 +26,7 @@ import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select';
+import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select/ownership';
 import {
   getLocalSuggestionServerIds,
   loadSuggestions,

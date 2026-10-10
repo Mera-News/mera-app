@@ -28,7 +28,7 @@ import {
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 export interface DetailFeedbackContext {

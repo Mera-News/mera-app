@@ -19,7 +19,7 @@ import { resolveDetailFeedbackSubject, type DetailFeedbackContext } from '@/comp
 import { openFeedbackChatWithPath } from '@/lib/services/swipe-feedback';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
-import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';

@@ -22,7 +22,7 @@ import {
 import { runPersonaMigrationIfNeeded } from '@/lib/services/persona-migration-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
 import { getHeadlineDepths } from '@/lib/database/services/headline-depth-service';
-import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine';
+import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine/retrieval-profile';
 // The ONE admission predicate ("may this row enter scoring"), shared with the
 // enqueue path and the bundle builders so a headline cannot be admitted by one
 // and dropped by another.

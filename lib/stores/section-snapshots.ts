@@ -11,7 +11,7 @@ import type {
   TopicSnapshot,
   FactSnapshot,
   LocationSnapshot,
-} from '@/lib/news-harness/feed-select';
+} from '@/lib/news-harness/feed-select/ownership';
 import { getActiveTopicSnapshots, countAllTopics } from '@/lib/database/services/topic-service';
 import { getFactSectionSnapshots } from '@/lib/database/services/fact-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';

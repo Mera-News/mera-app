@@ -5,11 +5,11 @@
 
 import { applyLeafActions } from '@/components/custom/feedback-tree/apply-leaf-actions';
 import { openPublicationPreferences } from '@/components/custom/feedback-tree/open-publication-preferences';
+import { resolveLeafActions } from '@/lib/news-harness/feedback-tree/resolve-leaf-actions';
 import {
-    resolveLeafActions,
-    type FeedbackTreeNode,
-    type LocalFeedbackContext,
-} from '@/lib/news-harness/feedback-tree';
+  type FeedbackTreeNode,
+  type LocalFeedbackContext,
+} from '@/lib/news-harness/feedback-tree/types';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { displayPublicationName } from '@/lib/stores/publication-display-store';
