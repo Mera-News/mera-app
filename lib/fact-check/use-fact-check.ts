@@ -181,7 +181,7 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
         // clean poll session. This IS "re-read once on next mount": the
         // effect's first action below is an immediate, unconditional poll.
         setPollGaveUp(false);
-        if (!articleId || localPhase !== 'processing') return;
+        if (!articleId || localPhase === 'terminal') return;
 
         let cancelled = false;
         let timerId: ReturnType<typeof setTimeout> | null = null;
@@ -217,15 +217,17 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
 
         // Only a check this device asked for is fetched. An unasked row (stored
         // before the community lookup went) is not polled, so it reads as
-        // `stalled` rather than spinning forever; it is never hidden.
+        // `stalled` rather than spinning forever; it is never hidden. An ASKED
+        // article with no local row ('absent') is a first ask that failed: the
+        // same bounded poll re-asks it. An unasked absent article just returns.
         void listAskedFactChecks()
             .then((asked) => {
                 if (cancelled) return;
                 if (asked.some((a) => a.articleId === articleId)) poll();
-                else setPollGaveUp(true);
+                else if (localPhase === 'processing') setPollGaveUp(true);
             })
             .catch(() => {
-                if (!cancelled) setPollGaveUp(true);
+                if (!cancelled && localPhase === 'processing') setPollGaveUp(true);
             });
 
         return () => {

@@ -311,7 +311,7 @@ describe('useFactCheck: a failed first ask', () => {
     expect(await storedFor('a1')).toEqual([]);
   }
 
-  test.failing('the panel poll re-asks an article whose first ask failed', async () => {
+  test('the panel poll re-asks an article whose first ask failed', async () => {
     await failedFirstAsk();
     const wire = serveChecks({ ask: () => pendingRow() });
 
@@ -322,20 +322,6 @@ describe('useFactCheck: a failed first ask', () => {
 
     expect(opsOf(wire, ASK_OP).length).toBeGreaterThanOrEqual(1);
     expect(result.current.phase).not.toBe('absent');
-  });
-
-  it('today: the panel shows absent and never re-asks (pins the bug above)', async () => {
-    await failedFirstAsk();
-    const wire = serveChecks({ ask: () => pendingRow() });
-
-    const { result } = renderHook(() => useFactCheck('a1'));
-    await flush();
-    await tick(10 * POLL_INTERVAL_MS);
-    await flush();
-
-    expect(result.current.phase).toBe('absent');
-    expect(opsOf(wire, ASK_OP)).toEqual([]);
-    expect(await askedIds()).toEqual(['a1']);
   });
 });
 
