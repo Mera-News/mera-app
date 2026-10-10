@@ -566,49 +566,9 @@ const cache = new InMemoryCache({
 // Track when cache was last cleared
 let lastCacheClear = Date.now();
 
-// Track per-query cache timestamps for custom TTL support
-const queryTimestamps = new Map<string, number>();
-
-// Create a custom link to track cache age and evict stale data
+// Also expire the cache on each operation: the 10-minute task only runs on schedule or foreground.
 const cacheEvictionLink = new ApolloLink((operation, forward) => {
-    const now = Date.now();
-
-    // Check for per-query TTL in operation context
-    const customTTL = operation.getContext().cacheTTL as number | undefined;
-
-    if (customTTL) {
-        // Generate a cache key based on operation name and variables
-        const cacheKey = `${operation.operationName}:${JSON.stringify(operation.variables)}`;
-        const lastFetch = queryTimestamps.get(cacheKey);
-
-        // If cache is stale for this specific query, evict it
-        if (lastFetch && now - lastFetch > customTTL) {
-            // Evict specific query from cache
-            cache.evict({
-                fieldName: operation.operationName || undefined,
-            });
-            cache.gc(); // Run garbage collection to remove orphaned data
-            queryTimestamps.delete(cacheKey);
-        }
-
-        // Update timestamp when operation starts (optimistic)
-        // This prevents multiple simultaneous requests for the same data
-        queryTimestamps.set(cacheKey, now);
-    }
-
-    // Check if global cache is older than TTL
-    if (now - lastCacheClear > CACHE_TTL_MS) {
-        // Cache is stale, clear it
-        cache.reset().catch((error) => {
-            logger.captureException(error, {
-                tags: { source: 'apollo-cache-eviction', type: 'cache-reset' },
-            });
-        });
-        lastCacheClear = now;
-        // Clear query timestamps when resetting entire cache
-        queryTimestamps.clear();
-    }
-
+    evictExpiredApolloCache();
     return forward(operation);
 });
 
