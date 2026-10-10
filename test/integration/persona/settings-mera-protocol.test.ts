@@ -354,16 +354,9 @@ describe('Mera Protocol settings', () => {
             return mountLoaded();
         }
 
-        test.failing('B5 Mera Protocol settings load from the local identity when the session is gone', async () => {
+        test('B5 Mera Protocol settings load from the local identity when the session is gone', async () => {
             await loadWithoutSession();
             expect(protocol().modelState).toBe('downloaded');
-        });
-
-        test('B5 today: with no session the load throws before checking the model, so it stays "not_downloaded"', async () => {
-            const { result } = await loadWithoutSession();
-            expect(result.current.isLoading).toBe(false);
-            expect(protocol().modelState).toBe('not_downloaded');
-            expect(toastTitles()).toEqual(['Load Failed']);
         });
     });
 });

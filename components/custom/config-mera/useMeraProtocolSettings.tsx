@@ -29,6 +29,8 @@ import {
     useSelectedModelId,
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
+import { getSetting } from '@/lib/database/services/setting-service';
+import { useUserStore } from '@/lib/stores/user-store';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
@@ -134,11 +136,11 @@ export function useMeraProtocolSettings() {
     }, []);
 
     const getCurrentUserId = async (): Promise<string> => {
-        const sessionData = await authClient.getSession();
-        if (!sessionData?.data?.user?.id) {
-            throw new Error('User not authenticated');
-        }
-        return sessionData.data.user.id;
+        // ponytail: three copies (this, useNotificationSettings, OnboardingWizard.getCurrentUserId), merge in P4.
+        const session = await authClient.getSession().catch(() => null);
+        const id = session?.data?.user?.id ?? useUserStore.getState().userId ?? (await getSetting('cached_user_id'));
+        if (!id) throw new Error('User not authenticated');
+        return id;
     };
 
     const checkModelStatus = async () => {
