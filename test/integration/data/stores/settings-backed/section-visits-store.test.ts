@@ -3,7 +3,7 @@
 // ahead of the read. Replaces lib/stores/__tests__/section-visits-store.test.ts
 // (which mocked setting-service).
 import logger from '@/lib/logger';
-import { setSetting } from '@/lib/database/services/setting-service';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { SECTION_VISIT_RETENTION_MS, useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useStrictClock as freezeClockAt } from '@/test/helpers';
 import {
@@ -151,6 +151,33 @@ describe('hydrate', () => {
     it('keeps the stored visits', async () => {
       const now = await visitBeforeHydrate();
       expect(store.getState().visits).toEqual({ 'fact-early': now, 'fact-from-db': now - 500 });
+    });
+  });
+
+  // DA48. A hydrate whose read fails still flips `hydrated`, so a markVisited after it persists
+  // the in-memory map (without the stored visits it never read) over the row that is still on disk.
+  describe('a markVisited after a hydrate whose read failed', () => {
+    async function visitAfterFailedRead() {
+      const now = Date.now();
+      const stored = JSON.stringify({ 'fact-from-db': now - 500 });
+      await seed(stored);
+      failSettingRead(KEY);
+      await store.getState().hydrate();
+      expect(store.getState().hydrated).toBe(true);
+      restoreFaults();
+      store.getState().markVisited('fact-early', now);
+      await flush();
+      return { now, stored };
+    }
+
+    test.failing('DA48: a failed hydrate read never overwrites the stored visits', async () => {
+      const { stored } = await visitAfterFailedRead();
+      expect(await getSetting(KEY)).toBe(stored);
+    });
+
+    it('DA48 today: the early entry overwrites the stored row', async () => {
+      const { now } = await visitAfterFailedRead();
+      expect(await getSetting(KEY)).toBe(JSON.stringify({ 'fact-early': now }));
     });
   });
 });
