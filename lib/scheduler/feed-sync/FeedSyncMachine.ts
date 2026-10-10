@@ -199,9 +199,8 @@ class FeedSyncMachine {
     // `_paused` is per-run bookkeeping living on a singleton, and nothing used
     // to reset it. A run that died while paused left it `true`, so the NEXT run
     // parked at the first `_awaitResumeIfPaused` below waiting for a resume that
-    // could never come: the listener's resume branch requires
-    // `_state === 'paused-offline'`, and the line above just set it to `idle`.
-    // On a stable connection no network event ever fires, so that run hung
+    // could never come: the listener's resume branch fires only on a reconnect
+    // event. On a stable connection no network event ever fires, so that run hung
     // forever — the second way a run went stale and got abandoned.
     // Deliberately NOT folded into `_forceIdle`: the catch-block callers of that
     // helper must not clear a pause the live run legitimately owns.
@@ -233,7 +232,7 @@ class FeedSyncMachine {
         this._transitionTo('paused-offline', runId);
         this._paused = true;
         publishSyncStatus('paused-offline', { pausedAtState });
-      } else if (state.isConnected && !prev.isConnected && this._state === 'paused-offline') {
+      } else if (state.isConnected && !prev.isConnected && this._paused) {
         this._paused = false;
         this._releaseResumeWaiters();
       }

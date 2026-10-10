@@ -109,9 +109,8 @@ describe('FeedSyncMachine offline pause and the wake lock', () => {
 
     // DATA-U6b-1. The link drops while the fetch is in flight and the fetch still lands. The run
     // walks on (paused-offline -> diffing -> hydrating) and parks at the hydrate gate with `_paused`
-    // set, but its state is now 'hydrating'. The reconnect listener resumes only a machine whose
-    // state is 'paused-offline', so coming back online wakes nobody: the run sits parked, holding
-    // the in-flight slot, until a later start() finds it older than the stale window and abandons it.
+    // set, but its state is now 'hydrating'. The reconnect listener resumes on `_paused`, not on the
+    // state, so coming back online still wakes the parked run.
     describe('DATA-U6b-1: the link drops during the fetch, the fetch lands, and the link returns', () => {
       async function dropDuringFetchThenFetchLands() {
         await serveNew(ids(4));
@@ -127,7 +126,7 @@ describe('FeedSyncMachine offline pause and the wake lock', () => {
         return { running, t, sent };
       }
 
-      test.failing('DA15: resumes and finishes once the link is back', async () => {
+      test('DA15: resumes and finishes once the link is back', async () => {
         const { running, t, sent } = await dropDuringFetchThenFetchLands();
         try {
           online();
@@ -136,19 +135,6 @@ describe('FeedSyncMachine offline pause and the wake lock', () => {
         } finally {
           await takeOverStuckRun(running, t);
         }
-      });
-
-      it('DA15: today: stays parked after the link is back, hydrates nothing, and only a takeover after the stale window frees it', async () => {
-        const { running, t, sent } = await dropDuringFetchThenFetchLands();
-
-        online();
-        await expect(waitFor(() => !feedSyncMachine.isRunning(), 'resume', 3_000)).rejects.toThrow(/timed out/);
-
-        expect(feedSyncMachine.state).toBe('hydrating'); // not paused-offline: the resume check never matches
-        expect(feedSyncMachine.isRunning()).toBe(true);
-        expect(await sent.count('GetArticlesForTopicsByIds')).toBe(0);
-        await takeOverStuckRun(running, t);
-        expect(feedSyncMachine.state).toBe('done');
       });
     });
 
