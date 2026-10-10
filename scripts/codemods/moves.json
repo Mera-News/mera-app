@@ -18,8 +18,6 @@
   {"from": "lib/system-check/system-check.ts", "to": "lib/algorithms/system-check.ts", "test": {"from": "lib/system-check/__tests__/system-check.test.ts", "to": "lib/algorithms/__tests__/system-check.test.ts"}},
   {"test": {"from": "lib/__tests__/relevance-utils.test.ts", "to": "test/unit/core/relevance-utils.test.ts"}},
   {"test": {"from": "lib/typography/__tests__/typography.test.ts", "to": "test/unit/core/typography.test.ts"}},
-  {"from": "lib/feed-grouping/story-grouping.ts", "to": "lib/algorithms/story-grouping.ts", "test": {"from": "lib/feed-grouping/__tests__/story-grouping.test.ts", "to": "lib/algorithms/__tests__/story-grouping.test.ts"}},
-  {"from": "lib/feed-grouping/gray-band-pairs.ts", "to": "lib/algorithms/gray-band-pairs.ts", "test": {"from": "lib/feed-grouping/__tests__/gray-band-pairs.test.ts", "to": "lib/algorithms/__tests__/gray-band-pairs.test.ts"}},
   {"from": "lib/feed-grouping/representative-compare.ts", "to": "lib/algorithms/representative-compare.ts", "test": {"from": "lib/feed-grouping/__tests__/representative-compare.test.ts", "to": "lib/algorithms/__tests__/representative-compare.test.ts"}},
   {"from": "lib/feed-grouping/geo-language-priority.ts", "to": "lib/algorithms/geo-language-priority.ts", "test": {"from": "lib/feed-grouping/__tests__/geo-language-priority.test.ts", "to": "lib/algorithms/__tests__/geo-language-priority.test.ts"}},
   {"from": "lib/feed-grouping/related-articles-sort.ts", "to": "lib/algorithms/related-articles-sort.ts", "test": {"from": "lib/feed-grouping/__tests__/related-articles-sort.test.ts", "to": "lib/algorithms/__tests__/related-articles-sort.test.ts"}}
