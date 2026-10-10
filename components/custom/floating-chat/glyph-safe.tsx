@@ -7,8 +7,6 @@
 // non-accessible Views, and must carry the hidden props itself. A labelled
 // button that shows an icon is therefore a childless Pressable laid OVER a
 // hidden visual, never a wrapper around it (`GlyphSafeButton`).
-// Checked by exposedGlyphTexts (lib/__test-helpers__/icon-glyph-a11y.ts) and
-// the source sweep in __tests__/chatIconsHidden.test.ts.
 
 import React from 'react';
 import {
