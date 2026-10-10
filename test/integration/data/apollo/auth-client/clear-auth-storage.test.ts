@@ -16,6 +16,8 @@ import {
 import { authKeys, hits, recordAuth, resetAuthModuleState, subscriptionRequired } from './kit';
 
 const SIGN_OUT = '*/api/auth/sign-out';
+// Taken at load, before any test installs the fake clock, which replaces process.hrtime.
+const realHrtime = process.hrtime.bigint.bind(process.hrtime);
 
 beforeEach(async () => {
     resetAuthModuleState();
@@ -79,9 +81,8 @@ describe('when the server sign-out fails', () => {
 
     it('does not wait forever on a HANGING sign-out: the local wipe is bounded at 5s', async () => {
         const sessionKey = authKeys(secureStoreDump()).session!;
-        // Starting the sign-out makes the client refetch the session, and that response rewrites the
-        // session-data key. The refetch is real I/O, which fake time does not pace: marked here so the
-        // test can see it land.
+        // A session read that lands while the sign-out hangs rewrites the session-data key. It is real I/O,
+        // which fake time does not pace: started here, and marked so the test can see it land.
         const stored = JSON.parse(secureStoreDump()[sessionKey]);
         server.use(
             http.post(SIGN_OUT, () => delay('infinite')),
@@ -90,14 +91,17 @@ describe('when the server sign-out fails', () => {
         useFakeClock(Date.now());
         const startedAt = Date.now();
 
+        void authClient.getSession();
         const clearing = clearAuthStorage();
-        // Let the refetch land before the 5s is driven (real turns, no virtual time). Driven first, 5s
-        // of fake time can pass before the response arrives on a loaded machine, and the late write
-        // then lands after the wipe.
-        for (let turns = 0; !secureStoreDump()[sessionKey]?.includes('refetched'); turns++) {
-            if (turns > 20_000) throw new Error('the session refetch never landed');
+        // Let the read land before the 5s is driven (real turns, no virtual time). Driven first, 5s of
+        // fake time can pass before the response arrives on a loaded machine, and the late write then
+        // lands after the wipe. Bounded by real time through the hrtime captured at load.
+        const waitStart = realHrtime();
+        const refetchLanded = () => secureStoreDump()[sessionKey]?.includes('refetched') === true;
+        while (!refetchLanded() && realHrtime() - waitStart < 3_000_000_000n) {
             await new Promise((resolve) => setImmediate(resolve));
         }
+        expect(refetchLanded()).toBe(true);
         await advanceUntilDone(clearing);
 
         expect(authKeys(secureStoreDump())).toEqual({});
