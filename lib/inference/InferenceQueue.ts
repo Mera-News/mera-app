@@ -91,7 +91,7 @@ const DRAIN_IGNORES: InferenceJobType[] = ['topic_combo'];
  * Idle poll cadence, as a BACKOFF rather than a fixed interval.
  *
  * The loop is already event-driven: every enqueue path calls `notify()`
- * (topic-planning-service, persona-summary-trigger, tool-handlers,
+ * (topic-planning-service, tool-handlers,
  * track-actions, PersonaL1MeraProtocol, FactsList), which wakes the sleep
  * immediately. The poll is a safety net for a path that forgets to notify — not
  * the delivery mechanism — so paying two WatermelonDB round-trips every 2s
