@@ -368,23 +368,12 @@ describe('status mapping', () => {
     expect(granted()).toBe(true);
   });
 
-  // CO2 (core): the 429 pause is Retry-After verbatim. Every other Retry-After reader caps it.
-  test.failing('a 429 Retry-After pause is capped at 60s', async () => {
+  it('a 429 Retry-After pause is capped at 60s', async () => {
     server.use(http.post(JOBS, () => raw(429, { 'Retry-After': '3600' })));
     expect(await send()).toEqual({ status: 'throttled' });
     const granted = backgroundWaiter();
     await jest.advanceTimersByTimeAsync(61_000);
     expect(granted()).toBe(true);
-  });
-
-  it('today a 429 Retry-After of 3600s still holds the background lane for the full hour (CO2 sibling)', async () => {
-    server.use(http.post(JOBS, () => raw(429, { 'Retry-After': '3600' })));
-    expect(await send()).toEqual({ status: 'throttled' });
-    const granted = backgroundWaiter();
-    await jest.advanceTimersByTimeAsync(61_000);
-    expect(granted()).toBe(false);
-    // The pause still has almost the whole hour to run.
-    expect(limiter.msUntilNextGrant()).toBeGreaterThan(3_400_000);
   });
 
   it('409 is in-progress (the key is still reserved), not failed, and does not itself pause the limiter', async () => {

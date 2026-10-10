@@ -11,6 +11,7 @@ import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { withRetry } from '@/lib/utils/retry';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
+import { retryAfterMsFrom } from './cloudComplete';
 import type { ExecutionContext } from './execution-context';
 import { linkedAbort, raceSignal } from './abort-race';
 import {
@@ -365,12 +366,7 @@ export async function sendInferenceRequest(args: {
     // it (it already didn't — only >=500 throws inside the retry closure);
     // instead push the shared rate limiter's next grant out and let the
     // caller decide whether/when to resubmit.
-    const retryAfterHeader = res.headers.get('Retry-After');
-    const retryAfterSec = retryAfterHeader ? Number(retryAfterHeader) : NaN;
-    const retryAfterMs =
-      Number.isFinite(retryAfterSec) && retryAfterSec > 0
-        ? retryAfterSec * 1000
-        : 30_000;
+    const retryAfterMs = retryAfterMsFrom(res.headers);
     gatewayRateLimiter.pauseFor(retryAfterMs);
     logger.warn(
       `${TAG} throttled (429) — pausing gateway calls for ${retryAfterMs}ms`,
