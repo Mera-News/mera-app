@@ -4,7 +4,7 @@
  * Three things have to stay true and none of them are visible in a diff:
  *  1. `<Text size="X">` and `<Heading size="X">` mean the SAME pixels. They were
  *     offset by one step (`Heading size="3xl"` rendered `text-4xl`), which made
- *     TranslatableStatic/TranslatableDynamic — one `size` prop forwarded to
+ *     TranslatableDynamic — one `size` prop forwarded to
  *     either component depending on `as` — render two different sizes for one
  *     value at seven call sites.
  *  2. `lib/typography/scale.ts` mirrors `tailwind.config.js`, because a runtime
@@ -143,7 +143,7 @@ describe('tokenFromClassName', () => {
  * changes and are deliberately allowed.
  */
 describe('no absolute leading overrides on text elements', () => {
-  const TAGS = ['Text', 'Heading', 'TranslatableDynamic', 'TranslatableStatic', 'FeedStatsSentence'];
+  const TAGS = ['Text', 'Heading', 'TranslatableDynamic', 'FeedStatsSentence'];
   const TAG_RE = new RegExp(`<(${TAGS.join('|')})\\b((?:[^<>]|\\{[^{}]*\\})*?)(/?>)`, 'g');
 
   function scan(dir: string, out: string[]): string[] {
