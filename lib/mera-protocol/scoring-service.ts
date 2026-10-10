@@ -345,8 +345,8 @@ export async function batchScoreAndReason(
   // rawScoreMap entry there means "the stage failed", which would hand them
   // FALLBACK_RELEVANCE and add them to failedIds. They are neither scored nor
   // failed; they are terminal by the user's request.
-  excludedIds = stage.excludedIds ?? new Set<string>();
-  excludedValueById = stage.excludedValueById ?? new Map<string, string>();
+  excludedIds = stage.excludedIds;
+  excludedValueById = stage.excludedValueById;
   const active =
     excludedIds.size > 0 ? eligible.filter((c) => !excludedIds.has(c.id)) : eligible;
   if (excludedIds.size > 0) {
