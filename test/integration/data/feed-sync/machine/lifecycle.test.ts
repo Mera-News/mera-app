@@ -252,6 +252,7 @@ describe('FeedSyncMachine lifecycle', () => {
     // last known figure instead of the topic-matched count.
     test('DA43: a real zero from the server is shown as zero', async () => {
       await serveNew(ids(5));
+      store().setCounts(12, 0); // what an earlier run stored: a skipped write would leave 12
       server.use(mockGql('GetRecentArticleCount', { recentArticleCount: 0 }));
 
       await run();
