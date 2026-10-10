@@ -190,6 +190,23 @@ function shapeRow(row: Record<string, unknown>, known: readonly string[]): Shape
  * boots the user into a mixture of two personas.
  */
 export async function importBackup(options: ImportOptions): Promise<ImportResult> {
+  // Pass 1 reads the whole blob (header, every frame, every auth tag) into a sink that writes
+  // nothing, so a blob that fails part-way cannot clear the persona it was meant to replace.
+  // The blob is random access, so pass 2 re-reads it; nothing is buffered between the passes.
+  await restore({ ...options, sink: DISCARD_SINK, onProgress: undefined });
+  return restore(options);
+}
+
+const DISCARD_SINK: RowSink = {
+  beginRestore: async () => {},
+  clearTables: async () => {},
+  createRows: async () => {},
+  upsertSettings: async () => {},
+  finishRestore: async () => {},
+  abortRestore: async () => {},
+};
+
+async function restore(options: ImportOptions): Promise<ImportResult> {
   const { key, blob, sink, knownColumns, schemaVersion, onProgress } = options;
 
   const opened = await openBlob(key, blob);

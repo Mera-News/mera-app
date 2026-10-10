@@ -433,15 +433,18 @@ describe('refusals before anything is touched', () => {
   });
 });
 
-describe('refusals after the restore began', () => {
-  /** Each leaves the torn-restore marker set and never reaches finishRestore. */
-  async function expectTornRefusal(blob: Awaited<ReturnType<typeof sealedByHand>>, reason: string) {
+describe('content refusals before the restore begins', () => {
+  /** Each is caught by the read-through before anything is cleared: the persona is untouched and no marker is set. */
+  async function expectRefusedUntouched(blob: Awaited<ReturnType<typeof sealedByHand>>, reason: string) {
+    await seedDevice();
+    const before = await persona();
     expect(await refusalOf(() => importInto(blob))).toBe(reason);
-    expect(await restoreWasInterrupted()).toBe(true);
+    expect(await persona()).toEqual(before);
+    expect(await restoreWasInterrupted()).toBe(false);
   }
 
   it('refuses a row with no id, which would break every reference to it', async () => {
-    await expectTornRefusal(
+    await expectRefusedUntouched(
       await sealedByHand(section('facts', [{ statement: 'orphan' }]), { tables: [stat('facts', 1)] }),
       'tampered',
     );
@@ -449,29 +452,29 @@ describe('refusals after the restore began', () => {
 
   it('refuses a section whose declared count disagrees with its rows', async () => {
     const body = `${JSON.stringify({ __t: 'facts', __n: 5 })}\n${JSON.stringify({ id: 'f1', statement: 'a' })}\n`;
-    await expectTornRefusal(await sealedByHand(body, { tables: [stat('facts', 5)] }), 'tampered');
+    await expectRefusedUntouched(await sealedByHand(body, { tables: [stat('facts', 5)] }), 'tampered');
   });
 
   it('refuses a row that arrives before any section marker', async () => {
-    await expectTornRefusal(await sealedByHand(`${JSON.stringify({ id: 'f1' })}\n`), 'tampered');
+    await expectRefusedUntouched(await sealedByHand(`${JSON.stringify({ id: 'f1' })}\n`), 'tampered');
   });
 
   it('refuses a line that is not JSON', async () => {
-    await expectTornRefusal(await sealedByHand('this is not json\n'), 'tampered');
+    await expectRefusedUntouched(await sealedByHand('this is not json\n'), 'tampered');
   });
 
   it('refuses a deflate stream cut short, which authenticates perfectly', async () => {
     // Every byte present is genuine and the tag verifies, so the AEAD waves it through. pako reports
     // a truncated stream by producing LESS OUTPUT, so only header.plaintextBytes catches it.
     const rows = Array.from({ length: 400 }, (_, i) => ({ id: `f${i}`, statement: `s${i}` }));
-    await expectTornRefusal(
+    await expectRefusedUntouched(
       await sealedByHand(section('facts', rows), {}, { truncateDeflate: true }),
       'incomplete',
     );
   });
 
   it('refuses a frame that authenticates but is not a deflate stream', async () => {
-    await expectTornRefusal(
+    await expectRefusedUntouched(
       await sealedByHand(section('facts', []), {}, { rawPayload: Uint8Array.from([0xde, 0xad, 0xbe, 0xef, 0x00, 0x01]) }),
       'tampered',
     );
@@ -490,22 +493,7 @@ describe('refusals after the restore began', () => {
     expect(await restoreWasInterrupted()).toBe(true);
   });
 
-  it('DA38 today: a blob refused mid-stream has already cleared the persona it was meant to replace', async () => {
-    // The clear runs before the first row is parsed, and nothing re-creates the old rows. The
-    // torn-restore marker is set, but nothing reads it (lib/backup/lifecycle.ts has no caller and is
-    // deleted in P4), so the reader opens the app to an empty persona.
-    await seedDevice();
-    expect((await rawRows('facts')).length).toBeGreaterThan(0);
-
-    const blob = await sealedByHand('this is not json\n');
-    await refusalOf(() => importInto(blob));
-
-    expect(await rawRows('facts')).toEqual([]);
-    expect(await rawRows('topics')).toEqual([]);
-    expect(await restoreWasInterrupted()).toBe(true);
-  });
-
-  test.failing('DA38: a blob refused mid-stream leaves the persona it was meant to replace', async () => {
+  it('DA38: a blob refused mid-stream leaves the persona it was meant to replace', async () => {
     // A restore that fails validation should change nothing; the clear must wait until the blob
     // has been read through, or the reader is left with neither persona.
     await seedDevice();
