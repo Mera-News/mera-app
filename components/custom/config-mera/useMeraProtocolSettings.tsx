@@ -1,6 +1,5 @@
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
-import { authClient } from '@/lib/auth-client';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import {
     isDownloadInProgress,
@@ -29,8 +28,7 @@ import {
     useSelectedModelId,
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
-import { getSetting } from '@/lib/database/services/setting-service';
-import { useUserStore } from '@/lib/stores/user-store';
+import { resolveCurrentUserId } from '@/lib/security/current-user';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
@@ -94,7 +92,7 @@ export function useMeraProtocolSettings() {
 
         (async () => {
             try {
-                const userId = await getCurrentUserId();
+                const userId = await resolveCurrentUserId();
                 await AccountService.updateProcessingMode(userId, ProcessingMode.OnDevice);
                 store.setProcessingMode(ProcessingMode.OnDevice);
             } catch {
@@ -135,14 +133,6 @@ export function useMeraProtocolSettings() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const getCurrentUserId = async (): Promise<string> => {
-        // ponytail: three copies (this, useNotificationSettings, OnboardingWizard.getCurrentUserId), merge in P4.
-        const session = await authClient.getSession().catch(() => null);
-        const id = session?.data?.user?.id ?? useUserStore.getState().userId ?? (await getSetting('cached_user_id'));
-        if (!id) throw new Error('User not authenticated');
-        return id;
-    };
-
     const checkModelStatus = async () => {
         if (isDownloadInProgress()) return;
         try {
@@ -155,7 +145,7 @@ export function useMeraProtocolSettings() {
 
     const loadSettings = async () => {
         try {
-            const userId = await getCurrentUserId();
+            const userId = await resolveCurrentUserId();
             const userPersona = await AccountService.getUserPersona(userId);
             if (userPersona?.processingMode) {
                 const wantsOnDevice = userPersona.processingMode === ProcessingMode.OnDevice;
@@ -197,7 +187,7 @@ export function useMeraProtocolSettings() {
 
         setIsUpdatingMode(true);
         try {
-            const userId = await getCurrentUserId();
+            const userId = await resolveCurrentUserId();
             await AccountService.updateProcessingMode(userId, mode);
             store.setProcessingMode(mode);
 
@@ -312,7 +302,7 @@ export function useMeraProtocolSettings() {
             // the server mutation hasn't fired yet.
             if (processingMode === ProcessingMode.OnDevice) {
                 try {
-                    const userId = await getCurrentUserId();
+                    const userId = await resolveCurrentUserId();
                     await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
                 } catch {
                     // Server mutation failed: still update locally so the UI
@@ -352,7 +342,7 @@ export function useMeraProtocolSettings() {
     const fallBackToCloud = useCallback(async () => {
         if (processingMode !== ProcessingMode.OnDevice) return;
         try {
-            const userId = await getCurrentUserId();
+            const userId = await resolveCurrentUserId();
             await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
         } catch {
             // Server mutation failed. Still update locally so the UI reflects

@@ -1,10 +1,8 @@
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
-import { authClient } from '@/lib/auth-client';
 import { hasUserDeniedPermissions, setVisibleNotificationsEnabled } from '@/lib/notification-service';
 import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/notificationSlotUtils';
-import { getSetting } from '@/lib/database/services/setting-service';
-import { useUserStore } from '@/lib/stores/user-store';
+import { resolveCurrentUserId } from '@/lib/security/current-user';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -54,14 +52,6 @@ export function useNotificationSettings({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOnboarding]);
 
-    const getCurrentUserId = async (): Promise<string> => {
-        // ponytail: three copies (this, useNotificationSettings, OnboardingWizard.getCurrentUserId), merge in P4.
-        const session = await authClient.getSession().catch(() => null);
-        const id = session?.data?.user?.id ?? useUserStore.getState().userId ?? (await getSetting('cached_user_id'));
-        if (!id) throw new Error('User not authenticated');
-        return id;
-    };
-
     const readOsRefused = async (enabled: boolean) => {
         if (enabled) return;
         try {
@@ -73,7 +63,7 @@ export function useNotificationSettings({
 
     const checkPushStatus = async () => {
         try {
-            const userId = await getCurrentUserId();
+            const userId = await resolveCurrentUserId();
             const userPersona = await AccountService.getUserPersona(userId);
             setNotificationsEnabled(!!userPersona?.notificationsEnabled);
             void readOsRefused(!!userPersona?.notificationsEnabled);
@@ -86,7 +76,7 @@ export function useNotificationSettings({
 
     const loadAllSettings = async () => {
         try {
-            const userId = await getCurrentUserId();
+            const userId = await resolveCurrentUserId();
             const userPersona = await AccountService.getUserPersona(userId);
 
             if (userPersona) {
@@ -121,7 +111,7 @@ export function useNotificationSettings({
     const handleEnableNotifications = async () => {
         setIsEnabling(true);
         try {
-            const userId = await getCurrentUserId();
+            const userId = await resolveCurrentUserId();
             const wasPreviouslyDenied = await hasUserDeniedPermissions();
             const success = await setVisibleNotificationsEnabled(userId, true);
 
@@ -190,7 +180,7 @@ export function useNotificationSettings({
     const handleDisableNotifications = async () => {
         setIsDisabling(true);
         try {
-            const userId = await getCurrentUserId();
+            const userId = await resolveCurrentUserId();
             const ok = await setVisibleNotificationsEnabled(userId, false);
             if (!ok) throw new Error('disable failed');
             setNotificationsEnabled(false);
@@ -254,7 +244,7 @@ export function useNotificationSettings({
         pendingHoursRef.current = null;
         if (mountedRef.current) setSaveState('saving');
         try {
-            const userId = await getCurrentUserId();
+            const userId = await resolveCurrentUserId();
             await AccountService.updateNotificationPreferences(userId, convertLocalHoursToUTC(hours));
             if (mountedRef.current) setSaveState('saved');
         } catch {
@@ -270,7 +260,7 @@ export function useNotificationSettings({
                 ),
             });
         }
-        // getCurrentUserId is a plain helper re-created per render; the save
+        // resolveCurrentUserId is a plain helper re-created per render; the save
         // must not be re-created (and the timer orphaned) on every render.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
