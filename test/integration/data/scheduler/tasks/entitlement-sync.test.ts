@@ -14,7 +14,6 @@ import { getSetting } from '@/lib/database/services/setting-service';
 import { configureRevenueCat } from '@/lib/revenuecat';
 import { resetEntitlementSyncState } from '@/lib/subscription/entitlement-sync';
 import { LAST_KNOWN_TIER_SETTING_KEY } from '@/lib/subscription/last-known-tier';
-import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
@@ -156,20 +155,19 @@ describe('the handler', () => {
 
   it('syncs RevenueCat attributes on every run, even when the entitlement fetch is debounced out, skipping an unchanged payload', async () => {
     configureRevenueCat();
-    useAppLanguageStore.setState({ appLanguage: 'de' });
     await runTask(TASK);
     expect(Purchases.setAttributes).toHaveBeenCalledTimes(1);
-    expect(Purchases.setAttributes).toHaveBeenLastCalledWith(expect.objectContaining({ server_tier: 'individual', app_language: 'de' }));
+    expect(Purchases.setAttributes).toHaveBeenLastCalledWith(expect.objectContaining({ server_tier: 'individual' }));
     await settle(5_000);
 
     await runTask(TASK); // debounced entitlement, unchanged payload
     expect(Purchases.setAttributes).toHaveBeenCalledTimes(1);
     await settle(5_000);
 
-    useAppLanguageStore.setState({ appLanguage: 'fr' });
-    await runTask(TASK); // still debounced, but the language moved mid-session
+    useSubscriptionStore.setState({ serverTier: 'professional' });
+    await runTask(TASK); // still debounced, but the server tier moved mid-session
     expect(Purchases.setAttributes).toHaveBeenCalledTimes(2);
-    expect(Purchases.setAttributes).toHaveBeenLastCalledWith(expect.objectContaining({ app_language: 'fr' }));
+    expect(Purchases.setAttributes).toHaveBeenLastCalledWith(expect.objectContaining({ server_tier: 'professional' }));
   });
 });
 

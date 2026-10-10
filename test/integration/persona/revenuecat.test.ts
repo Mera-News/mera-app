@@ -392,29 +392,39 @@ describe('describeSubscriptions', () => {
 // enforcement point for the privacy contract in lib/observability/app-context.ts.
 
 /** The payload of the Nth `setAttributes` call. */
-const sentAttributes = (Purchases: any, n = 0): Record<string, string> =>
+const sentAttributes = (Purchases: any, n = 0): Record<string, string | null> =>
   Purchases.setAttributes.mock.calls[n][0];
 
-const EXPECTED_KEYS = [
+const KEPT_KEYS = [
   'app_version',
   'app_build',
+  'ota_update_id',
   'platform',
   'os_version',
+  'server_tier',
+];
+
+// Sent as null so RevenueCat deletes what an earlier build stored.
+const RETIRED_KEYS = [
   'device_tier',
-  'ota_update_id',
   'ota_channel',
   'app_language',
   'onboarding_stage',
   'processing_mode',
-  'server_tier',
 ];
+
+const EXPECTED_KEYS = [...KEPT_KEYS, ...RETIRED_KEYS];
+
+/** The attributes that carry a value, i.e. without the null deletions. */
+const valued = (attrs: Record<string, string | null>) =>
+  Object.entries(attrs).filter(([, v]) => v !== null) as [string, string][];
 
 describe('syncRevenueCatAttributes', () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
-  it('sends exactly the eleven agreed attributes', async () => {
+  it('sends exactly the six attributes billing support needs', async () => {
   const { rc, Purchases } = loadWithContext();
     rc.configureRevenueCat();
 
@@ -423,9 +433,8 @@ describe('syncRevenueCatAttributes', () => {
     expect(Purchases.setAttributes).toHaveBeenCalledTimes(1);
     const attrs = sentAttributes(Purchases);
     expect(Object.keys(attrs).sort()).toEqual([...EXPECTED_KEYS].sort());
-    expect(attrs.app_language).toBe('de');
-    expect(attrs.onboarding_stage).toBe('FINISHED');
-    expect(attrs.processing_mode).toBe('CLOUD');
+    for (const key of RETIRED_KEYS) expect(attrs[key]).toBeNull();
+    for (const key of KEPT_KEYS) expect(typeof attrs[key]).toBe('string');
     expect(attrs.server_tier).toBe('individual');
   });
 
@@ -453,7 +462,7 @@ describe('syncRevenueCatAttributes', () => {
 
     await rc.syncRevenueCatAttributes();
 
-    for (const value of Object.values(sentAttributes(Purchases))) {
+    for (const [, value] of valued(sentAttributes(Purchases))) {
       expect(typeof value).toBe('string');
     }
   });
@@ -467,7 +476,7 @@ describe('syncRevenueCatAttributes', () => {
 
     const attrs = sentAttributes(Purchases);
     expect(Object.keys(attrs).length).toBeLessThanOrEqual(50);
-    for (const [key, value] of Object.entries(attrs)) {
+    for (const [key, value] of valued(attrs)) {
       expect(key.length).toBeLessThanOrEqual(40);
       expect(value.length).toBeLessThanOrEqual(500);
     }
@@ -724,5 +733,7 @@ describe('subscriber-attribute privacy contract', () => {
     }
     // And no value smuggles the excluded tier in under another key.
     expect(Object.values(attrs)).not.toContain('professional');
+    // A retired key is only ever a deletion, never a value.
+    for (const key of RETIRED_KEYS) expect(attrs[key]).toBeNull();
   });
 });

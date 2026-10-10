@@ -132,8 +132,10 @@ export function configureRevenueCat(): void {
 // A purpose-limited, PSEUDONYMOUS set of build/device/account facts attached to
 // the RevenueCat customer, so support can triage a paying customer from their
 // app_user_id alone ("which build? which OTA bundle? does our server agree they
-// are Professional?") without us ever asking them for a screenshot — and so the
-// dashboard can segment on them.
+// are Professional?") without us ever asking them for a screenshot. Nothing else:
+// the set is exactly what billing support needs to reproduce a purchase bug
+// (app_version, app_build, ota_update_id), know the store behaviour (platform,
+// os_version) and triage a server/RevenueCat disagreement (server_tier).
 //
 // WHAT MUST NEVER GO IN HERE, and why the list is closed rather than "obvious":
 //   * No `setEmail` / `setDisplayName` / `setPhoneNumber` / `setPushToken`, and
@@ -147,8 +149,10 @@ export function configureRevenueCat(): void {
 //     reading history. That is the product's core invariant (no collection links
 //     a user to a topic) and it does not get an exception for a billing vendor.
 // Values EXCLUDED even though ./observability/runtime-context.ts hands them to
-// us for free: relevance_v4, free_tier_mode, model_state, network_connected,
-// server_reachable, runtime_version, is_embedded_launch. They are Sentry-side
+// us for free: device_tier, ota_channel, app_language, onboarding_stage and
+// processing_mode (not needed for billing support, owner ruling; see
+// RETIRED_ATTRIBUTE_KEYS), plus relevance_v4, free_tier_mode, model_state,
+// network_connected, server_reachable, runtime_version, is_embedded_launch. They are Sentry-side
 // debugging values with no support or segmentation use here, and `send it, it
 // might be handy` is how a purpose-limited set stops being one. Note
 // `subscription_tier` is excluded for the opposite reason: it IS RevenueCat's
@@ -156,15 +160,28 @@ export function configureRevenueCat(): void {
 // carries information, because a disagreement between the two is the defect.
 //
 // RevenueCat's documented limits: max 50 attributes, key <= 40 chars, value <=
-// 500 chars, values must be strings. We send 11 of 50; the coercion below is
+// 500 chars, values must be strings. We send 6 of 50; the coercion below is
 // defensive so a future field can never silently blow a limit at runtime.
 const ATTRIBUTE_KEY_MAX = 40;
 const ATTRIBUTE_VALUE_MAX = 500;
 
 /**
+ * Keys an earlier build sent. They are sent as `null` so RevenueCat deletes the
+ * values it already holds. They ride the unchanged-payload skip below, so they go
+ * out once per payload change and on the forced login sync: harmless, no data.
+ */
+const RETIRED_ATTRIBUTE_KEYS = [
+  'device_tier',
+  'ota_channel',
+  'app_language',
+  'onboarding_stage',
+  'processing_mode',
+] as const;
+
+/**
  * The last payload actually sent, serialized. `syncRevenueCatAttributes` runs on
  * every foreground and every 15-minute scheduler tick, and
- * `syncAttributesAndOfferingsIfNeeded` is a network call — re-sending eleven
+ * `syncAttributesAndOfferingsIfNeeded` is a network call — re-sending six
  * unchanged strings all day is pure waste. Skipping the unchanged case is why
  * the login path forces: attributes are stored per `app_user_id`, so a second
  * user signing in on the same device with a byte-identical map would otherwise
@@ -172,7 +189,7 @@ const ATTRIBUTE_VALUE_MAX = 500;
  */
 let lastAttributesSignature: string | null = null;
 
-function buildSubscriberAttributes(): Record<string, string> {
+function buildSubscriberAttributes(): Record<string, string | null> {
   const app = getStaticAppContext();
   // Deliberately `require`d at call time, not imported at module scope.
   // ./observability/runtime-context.ts reads Zustand stores, and
@@ -191,22 +208,19 @@ function buildSubscriberAttributes(): Record<string, string> {
     app_build: app.app_build,
     platform: app.platform,
     os_version: app.os_version,
-    device_tier: app.device_tier,
     ota_update_id: app.ota_update_id,
-    ota_channel: app.ota_channel,
-    app_language: runtime.app_language,
-    onboarding_stage: runtime.onboarding_stage,
-    processing_mode: runtime.processing_mode,
     server_tier: runtime.server_tier,
   };
 
-  const out: Record<string, string> = {};
+  const out: Record<string, string | null> = {};
   for (const [key, value] of Object.entries(raw)) {
     out[key.slice(0, ATTRIBUTE_KEY_MAX)] = String(value ?? '').slice(
       0,
       ATTRIBUTE_VALUE_MAX,
     );
   }
+  // After the coercion, so a null never counts against the key or length limits.
+  for (const key of RETIRED_ATTRIBUTE_KEYS) out[key] = null;
   return out;
 }
 
