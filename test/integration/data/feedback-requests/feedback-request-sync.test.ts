@@ -255,6 +255,10 @@ describe('ingestFeedbackRequests', () => {
             await ingestFeedbackRequests([req(A)], NOW);
             expect(await getSetting(FEEDBACK_REQUESTS_STATE_KEY)).toBeNull();
             expect(await drawerRows()).toEqual([]);
+
+            await ingestFeedbackRequests([req(A)], NOW + 1);
+            expect(Object.keys(await stateRow())).toEqual([A]);
+            expect(await drawerRows()).toHaveLength(1);
         });
     });
 });
