@@ -10,7 +10,6 @@ import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-se
 import { applyPersonaAction, type PersonaAction } from '@/lib/database/services/persona-action-executor';
 import {
   append,
-  appendMany,
   getById,
   getChangeTargets,
   getRecent,
@@ -81,7 +80,7 @@ const hardNvidia: PersonaAction = {
 // The log itself
 // ---------------------------------------------------------------------------
 
-describe('append / appendMany / getById / getRecent / observeRecent', () => {
+describe('append / getById / getRecent / observeRecent', () => {
   it('append writes an un-reverted row with the serialised action and returns the model', async () => {
     freezeClock(NOON);
 
@@ -97,21 +96,6 @@ describe('append / appendMany / getById / getRecent / observeRecent', () => {
       summary: 'S',
       reverted: false,
     });
-  });
-
-  it('[dead-candidate] appendMany writes every row in one batch with one timestamp, and nothing for an empty list', async () => {
-    freezeClock(NOON);
-    await appendMany([]);
-    expect(await logRows()).toEqual([]);
-
-    await appendMany([
-      { actionType: 'add_topic', action: { targetId: 'a' }, source: 'migration', summary: 'one' },
-      { actionType: 'add_topic', action: { targetId: 'b' }, source: 'migration', summary: 'two' },
-    ]);
-
-    const rows = await rowsOf('persona_change_log');
-    expect(rows.map((r) => r.summary).sort()).toEqual(['one', 'two']);
-    expect(new Set(rows.map((r) => r.createdAt.getTime()))).toEqual(new Set([NOON]));
   });
 
   it('getById finds a row and rejects for an unknown id', async () => {

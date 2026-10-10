@@ -61,25 +61,6 @@ export async function append(input: AppendChangeInput): Promise<PersonaChangeLog
   });
 }
 
-/** Batch append (single write) — used by the silent migration. */
-export async function appendMany(inputs: AppendChangeInput[]): Promise<void> {
-  if (inputs.length === 0) return;
-  await database.write(async () => {
-    const now = new Date();
-    const prepared = inputs.map((input) =>
-      changeLogCollection.prepareCreate((row) => {
-        row.actionType = input.actionType;
-        row.actionJson = JSON.stringify(input.action);
-        row.source = input.source;
-        row.summary = input.summary;
-        row.reverted = false;
-        row.createdAt = now;
-      }),
-    );
-    await database.batch(prepared);
-  });
-}
-
 export async function getById(id: string): Promise<PersonaChangeLogModel> {
   return changeLogCollection.find(id);
 }
