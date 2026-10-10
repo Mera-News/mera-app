@@ -22,6 +22,7 @@ import {
     verifyPin,
 } from '@/lib/security/pin-service';
 import logger from '@/lib/logger';
+import { appStateModule } from '@/test/helpers/app-state';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
 import {
@@ -768,6 +769,19 @@ describe('both PIN reads unreadable at launch (PE20)', () => {
         // The keychain opens on the third read of the record: the launch read it, then two retries.
         expect(reads()).toBe(3);
         expect(usePinStore.getState()).toMatchObject({ pinSet: true, lockEnabled: true, locked: true, unresolved: false });
+    });
+
+    it("a launch whose AppState reads 'unknown' is a foreground launch: it retries and fails closed instead of deferring", async () => {
+        useFakeClock(Date.now());
+        await enrolThenBreakKeychain();
+        const reads = countRecordReads();
+        (appStateModule as { currentState: string }).currentState = 'unknown';
+
+        await advanceUntilDone(usePinStore.getState().init());
+
+        expect(reads()).toBe(4);
+        expect(usePinStore.getState()).toMatchObject({ pinSet: true, lockEnabled: true, locked: true, unresolved: false });
+        setAppState('active');
     });
 
     it('a foreground launch whose keychain stays closed fails closed after 1 + 3 reads, deleting nothing', async () => {

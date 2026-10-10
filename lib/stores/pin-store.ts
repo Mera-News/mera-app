@@ -143,7 +143,9 @@ export const usePinStore = create<PinState>()((set, get) => ({
     // more tries, then it fails CLOSED (Forgot PIN on /pin-lock is the way out). In the background
     // (a wake before first unlock) the person cannot be looking at a PIN screen, so defer: commit
     // "no lock" and let the next foreground re-read (resolveUnresolved).
-    const foreground = AppState.currentState === 'active';
+    // Not 'background', rather than 'active': a foreground launch can read 'unknown' before the first
+    // state event, and would otherwise defer to an active event that never comes.
+    const foreground = AppState.currentState !== 'background';
     let gate = await readGate();
     for (let i = 0; gate == null && foreground && i < GATE_READ_RETRIES; i += 1) {
       await new Promise<void>((resolve) => setTimeout(resolve, GATE_READ_RETRY_MS));
