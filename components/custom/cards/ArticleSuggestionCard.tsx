@@ -103,7 +103,7 @@ const FEED_NOTE_LINES = 4;
  * the reason box, the fact chips (+ their LRU cache), and the __DEV__ relevance
  * readout — and delegates all layout to `ArticleCardBase`.
  *
- * Drop-in for the old `ArticleCard`: same props + memo/stable-handler contract.
+ * Memoized: callers pass stable handlers, so an unchanged row does not re-render.
  */
 const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   suggestion,
