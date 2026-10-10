@@ -3,17 +3,17 @@ import { PAGE_CONTENT_GAP, pageMeta } from '@/components/custom/nav/page-registr
 import TabPages from '@/components/custom/nav/TabPages';
 import type { PageHeaderBinding, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import { DEFAULT_PAGE_ORDER } from '@/lib/navigation/page-order';
-import { useTabBarClearance } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import React, { useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import ProfileHub from './ProfileHub';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
-/** You > Settings: app settings only, plan card first. No Mera button here,
- *  so the list ends above the tab bar, not above the button. */
+/** You > Settings: app settings only, plan card first. Ends above the tab bar
+ *  and the Mera button. */
 const SettingsPage: React.FC<{ readonly header: PageHeaderBinding }> = ({ header }) => {
-    const bottom = useTabBarClearance();
+    const endClearance = useListEndClearance();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.ScrollView>(null);
     usePageScrollTarget(listRef);
@@ -24,7 +24,7 @@ const SettingsPage: React.FC<{ readonly header: PageHeaderBinding }> = ({ header
             onScroll={header.scrollHandler}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingBottom: bottom + 24 }}
+            contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingBottom: endClearance }}
         >
             <AppPreferencesTab />
         </Animated.ScrollView>

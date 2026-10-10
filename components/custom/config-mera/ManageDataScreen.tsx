@@ -43,7 +43,7 @@ interface ManageDataScreenProps {
  */
 const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
-    // Clear of the tab bar on every platform (the shared inset, not a literal).
+    // Ends above the tab bar and the Mera button (lib/navigation/tab-bar.ts LIST_END_RESERVE).
     const endClearance = useListEndClearance();
     const { t } = useTranslation();
     const [isProcessing, setIsProcessing] = useState(false);

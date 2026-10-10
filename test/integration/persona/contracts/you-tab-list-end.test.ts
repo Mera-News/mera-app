@@ -12,6 +12,7 @@ const PAGES = [
   'components/custom/persona-audit/PersonaAuditScreen.tsx',
   'components/custom/hygiene/HygieneReviewScreen.tsx',
   'components/custom/publication-preferences/PublicationPreferencesScreen.tsx',
+  'components/custom/you/YouPages.tsx',
 ];
 
 describe('You-tab scroll pages end above the Mera button', () => {
@@ -20,6 +21,10 @@ describe('You-tab scroll pages end above the Mera button', () => {
     expect(src).toContain('useListEndClearance()');
     const styles = src.match(/contentContainerStyle=\{\{[^\n]*/g) ?? [];
     expect(styles.length).toBeGreaterThan(0);
-    for (const s of styles) expect(s).toMatch(/paddingBottom: \w*[cC]learance\b/);
+    for (const s of styles) {
+      const name = s.match(/paddingBottom: (\w+)/)?.[1];
+      expect(name).toBeDefined();
+      expect(src).toMatch(new RegExp(`const ${name} = useListEndClearance\\(\\)`));
+    }
   });
 });
