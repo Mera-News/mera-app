@@ -651,7 +651,7 @@ describe('splitAlreadyReadArticles', () => {
     expect(out.readCount).toBe(0);
   });
 
-  it('splits by article id only: a stable cluster id on the article or in the persona metadata no longer matches', () => {
+  it('splits by article id only', () => {
     const index = buildReadStoryIndex([
       { articleId: 'by-id', opened: true },
     ]);
