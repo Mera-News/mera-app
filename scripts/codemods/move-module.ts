@@ -18,7 +18,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { planNameMoves, NameMove, NamePlan } from './move-names';
 import {
-  applyEdits, DEFAULT_ROOT, Edit, findRefs, formatSpec, git, MOCK_REFUSE, parse, parseArgs,
+  applyEdits, assertNoOverlap, DEFAULT_ROOT, Edit, findRefs, formatSpec, git, MOCK_REFUSE, parse, parseArgs,
   resolveSpec, walkFiles,
 } from './lib';
 
@@ -133,6 +133,12 @@ for (const [f, es] of plan.edits) {
 }
 specCount += plan.log.length;
 log.push(...plan.log);
+// Before printing or writing (so --check catches it too): one file's edits must never overlap.
+try {
+  for (const [f, es] of edits) assertNoOverlap(f, es);
+} catch (err) {
+  die((err as Error).message);
+}
 for (const w of warnings) console.error(`warning: ${w}`);
 for (const [from, to] of moveMap) log.push(`git mv ${from} ${to}`);
 console.log(log.join('\n'));

@@ -168,6 +168,43 @@ for (const [what, file, re] of [
   assert.equal(snapshot(d), before);
   ok('names move refuses a mocked fromModule (R10)');
 }
+{
+  // One module split into two: entries sharing a fromModule are planned together.
+  const SPLIT2 = [
+    { names: ['m1', 'M3'], fromModule: 'lib/split/src.ts', toModule: 'lib/split/dest.ts' },
+    { names: ['m2'], fromModule: 'lib/split/src.ts', toModule: 'lib/split/dest2.ts' },
+  ];
+  const d = fresh({
+    'lib/split/dest2.ts': 'export const m2 = 2;\n',
+    'lib/multi.ts': "import { m1, m2, kept } from '@/lib/split/src';\nexport { m1, m2, kept };\n",
+  }, SPLIT2);
+  const r = run('move-module.ts', d, '--list', 'moves.json');
+  assert.equal(r.code, 0, r.out);
+  assert.equal(read(d, 'lib/multi.ts'),
+    "import { kept } from '@/lib/split/src';\nimport { m1 } from '@/lib/split/dest';\nimport { m2 } from '@/lib/split/dest2';\nexport { m1, m2, kept };\n");
+  assert.equal(run('move-module.ts', d, '--list', 'moves.json', '--check').out.includes('would move 0 file(s), rewrite 0'), true, 'idempotent');
+  ok('names entries sharing a fromModule split one import across several toModules');
+}
+{
+  const d = fresh({ 'lib/split/dest2.ts': 'export const m1 = 1;\n' }, [
+    { names: ['m1'], fromModule: 'lib/split/src.ts', toModule: 'lib/split/dest.ts' },
+    { names: ['m1'], fromModule: 'lib/split/src.ts', toModule: 'lib/split/dest2.ts' },
+  ]);
+  const before = snapshot(d);
+  const r = run('move-module.ts', d, '--list', 'moves.json');
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /listed for both/);
+  assert.equal(snapshot(d), before);
+  ok('names move refuses one name bound for two toModules');
+}
+{
+  // The overlap guard: two edits to one file must never overlap.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { assertNoOverlap } = require('./lib') as typeof import('./lib');
+  assert.throws(() => assertNoOverlap('f.ts', [{ start: 0, end: 10, text: 'a' }, { start: 5, end: 12, text: 'b' }]), /overlapping edits/);
+  assert.doesNotThrow(() => assertNoOverlap('f.ts', [{ start: 0, end: 5, text: 'a' }, { start: 5, end: 12, text: 'b' }]));
+  ok('overlapping edits are refused');
+}
 // ---- rewrite-barrel ----------------------------------------------------------------------------
 {
   const d = fresh();

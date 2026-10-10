@@ -1,5 +1,5 @@
 [
-  {"_format": "Entries: {from, to, test?: {from, to}} (file move), test-only {test: {from, to}}, or per-name {names: [...], fromModule, toModule} (importers only: move the code by hand first, no re-export left; do not combine with a file move of either module). POSIX paths relative to the app root, extensions included. Append one entry per line; this _format entry is skipped. Run: npx tsx scripts/codemods/move-module.ts --list scripts/codemods/moves.json [--check]. See the header of move-module.ts."},
+  {"_format": "Entries: {from, to, test?: {from, to}} (file move), test-only {test: {from, to}}, or per-name {names: [...], fromModule, toModule} (importers only: move the code by hand first, no re-export left; do not combine with a file move of either module; several per-name entries may share one fromModule to split it into several toModules, each name listed once). POSIX paths relative to the app root, extensions included. Append one entry per line; this _format entry is skipped. Run: npx tsx scripts/codemods/move-module.ts --list scripts/codemods/moves.json [--check]. See the header of move-module.ts."},
   {"from": "lib/section-color.ts", "to": "lib/algorithms/section-color.ts", "test": {"from": "lib/__tests__/section-color.test.ts", "to": "lib/algorithms/__tests__/section-color.test.ts"}},
   {"from": "lib/utils/time-ago.ts", "to": "lib/algorithms/time-ago.ts", "test": {"from": "lib/utils/__tests__/time-ago.test.ts", "to": "lib/algorithms/__tests__/time-ago.test.ts"}},
   {"from": "lib/utils/format-count.ts", "to": "lib/algorithms/format-count.ts", "test": {"from": "lib/utils/__tests__/format-count.test.ts", "to": "lib/algorithms/__tests__/format-count.test.ts"}},
@@ -29,5 +29,7 @@
   {"test": {"from": "components/custom/persona-audit/__tests__/action-display.test.ts", "to": "test/unit/persona/action-display.test.ts"}},
   {"test": {"from": "lib/tutorials/__tests__/menu.test.ts", "to": "test/unit/persona/tutorial-menu.test.ts"}},
   {"test": {"from": "modules/mera-device-attest/__tests__/integrity-error-mapping.test.ts", "to": "test/integration/persona/integrity-error-mapping.test.ts"}},
-  {"from": "lib/e2ee/attestation-verify.ts", "to": "lib/algorithms/attestation-verify.ts", "test": {"from": "test/unit/chat/e2ee/attestation-verify.test.ts", "to": "lib/algorithms/__tests__/attestation-verify.test.ts"}}
+  {"from": "lib/e2ee/attestation-verify.ts", "to": "lib/algorithms/attestation-verify.ts", "test": {"from": "test/unit/chat/e2ee/attestation-verify.test.ts", "to": "lib/algorithms/__tests__/attestation-verify.test.ts"}},
+  {"from": "lib/navigation/legacy-href.ts", "to": "lib/algorithms/legacy-href.ts", "test": {"from": "lib/navigation/__tests__/legacy-href.test.ts", "to": "lib/algorithms/__tests__/legacy-href.test.ts"}},
+  {"from": "lib/database/services/publication-pref-level.ts", "to": "lib/algorithms/publication-pref-level.ts", "test": {"from": "lib/database/services/__tests__/publication-pref-level.test.ts", "to": "lib/algorithms/__tests__/publication-pref-level.test.ts"}}
 ]

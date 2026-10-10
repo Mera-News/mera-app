@@ -130,7 +130,18 @@ export interface Edit {
   text: string;
 }
 
+/** Throws when two edits to one file overlap: applying both would corrupt the file silently. */
+export function assertNoOverlap(file: string, edits: Edit[]): void {
+  const sorted = [...edits].sort((a, b) => a.start - b.start);
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i].start < sorted[i - 1].end) {
+      throw new Error(`overlapping edits in ${file} at offsets ${sorted[i - 1].start}-${sorted[i - 1].end} and ${sorted[i].start}-${sorted[i].end}`);
+    }
+  }
+}
+
 export function applyEdits(text: string, edits: Edit[]): string {
+  assertNoOverlap('(file)', edits);
   let out = text;
   for (const e of [...edits].sort((a, b) => b.start - a.start)) {
     out = out.slice(0, e.start) + e.text + out.slice(e.end);
