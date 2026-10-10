@@ -397,7 +397,7 @@ export class PersonaUpdateAgent implements IAgent {
             result.blocked === true
               ? {
                   blocked: {
-                    reason: (result.blockedReason as string) ?? '',
+                    reason: result.blockedReason as string,
                   },
                 }
               : undefined,

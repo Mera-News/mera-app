@@ -1,17 +1,7 @@
-// askMeraAbout — the one entry every article surface uses to open Mera on an
-// article.
-//
-// It OPENS the chat and sends nothing. `openArticleFeedback(context, message)`
-// looks like the same call and is not: it auto-sends a user turn through
-// `pendingInitialMessage`, which spends a model call before the reader has
-// typed a word. Opening costs zero calls; seeding costs one.
-//
-// Exists because the same `expand({ kind: 'article-suggestion', ... })` shape
-// was written out at every article surface (the card action row, the compact
-// actions sheet) and the shared `•••` menu is about to add a third. One helper
-// keeps the context shape in one place, so a new field reaches every surface.
+// articleChatContext — the one place the 'article-suggestion' chat context shape
+// is built, so a new field reaches every article surface.
 
-import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
+import type { ChatContext } from '@/lib/stores/floating-chat-store';
 
 export interface AskMeraSubject {
   /** At least one of articleId / suggestionId must be set; the agent resolves
@@ -31,13 +21,4 @@ export function articleChatContext(subject: AskMeraSubject): ChatContext | null 
     suggestionId: subject.suggestionId,
     articleTitle: subject.title,
   };
-}
-
-/** Opens the Mera chat on this article. Returns false when there is no id to
- *  open it on, so a caller can tell a no-op from an open. */
-export function askMeraAbout(subject: AskMeraSubject): boolean {
-  const context = articleChatContext(subject);
-  if (!context) return false;
-  useFloatingChatStore.getState().expand(context);
-  return true;
 }
