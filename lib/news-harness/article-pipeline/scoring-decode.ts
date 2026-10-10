@@ -353,7 +353,7 @@ function clampToStakeBand(
  *
  * WHY THE LAST AND NOT THE FIRST. A thinking model writes a draft array while
  * reasoning and its real answer at the end. z-ai/glm-5.3-flash does exactly
- * that: the captured fixture in `__tests__/fixtures/glm-leaked-scoring.json`
+ * that: the captured fixture in `test/fixtures/feed/news-harness/glm-leaked-scoring.json`
  * holds the array twice, once inside the trace and once after `</think>`.
  * Taking the first reads the draft; taking the last reads the conclusion.
  *

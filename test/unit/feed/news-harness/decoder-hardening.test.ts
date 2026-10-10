@@ -24,10 +24,10 @@ import {
   parseBatchRelevanceResponse,
   parseReasonResponse,
   newRelevanceDecodeStats,
-} from '../article-pipeline/scoring-decode';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
-import FIXTURE from './fixtures/glm-leaked-scoring.json';
-import REASON_FIXTURE from './fixtures/glm-leaked-reason.json';
+} from '@/lib/news-harness/article-pipeline/scoring-decode';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import FIXTURE from '@/test/fixtures/feed/news-harness/glm-leaked-scoring.json';
+import REASON_FIXTURE from '@/test/fixtures/feed/news-harness/glm-leaked-reason.json';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 const FALLBACK = CFG.fallbackRelevance;

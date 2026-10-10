@@ -18,15 +18,15 @@
 // only on an extracted `reason` FIELD, that same string would be stripped of
 // its punctuation, collapsed, and persisted as the card's "why this matters to
 // you". It reads almost like a sentence, which is what makes it dangerous.
-import { applyRescorePolicy, bucketScore, bucketScores } from '../article-pipeline/scoring';
+import { applyRescorePolicy, bucketScore, bucketScores } from '@/lib/news-harness/article-pipeline/scoring';
 import {
   decodeCloudBatchResults,
   newReasonDecodeStats,
   parseBatchRelevanceResponse,
   parseReasonResponse,
   parseReasonResult,
-} from '../article-pipeline/scoring-decode';
-import { DEFAULT_HARNESS_CONFIG } from '../core/config';
+} from '@/lib/news-harness/article-pipeline/scoring-decode';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 
 const decode = (out: string) => parseReasonResult(out, 'id');
 
