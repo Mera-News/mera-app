@@ -16,7 +16,6 @@ import {
   createAgentTurnState,
   replaceClauseDashes,
   runAgentTurn,
-  type AgentDeps,
   type AgentLeg,
   type AgentState,
 } from '../mera-harness';
@@ -29,8 +28,20 @@ import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
 import { applyChatPhase, useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
-import { unresolvedGroups } from '../chat-tools/fact-choice-resolution';
-import { estimateTokens } from '../llm/tokens';
+import {
+  detachedCopy,
+  finalizeToolCalls,
+  i18nInstance,
+  isEmptyExtractionCall,
+  parseToolArgs,
+  pendingCardStatements,
+  scheduleFrame,
+  TAG,
+  withCombinedFactMemory,
+  wireMessageTokens,
+  type CloudState,
+  type ToolCallAccumulator,
+} from '@/lib/chat-session/cloud-engine-helpers';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
 import {
@@ -38,200 +49,6 @@ import {
   KNOWLEDGE_TOOL_NAMES,
   MAX_HISTORY_USER_TURNS,
 } from '../news-harness/persona-management/persona-agent-core';
-
-/**
- * The one-time split offer for a combined "origin plus residence" fact is
- * remembered on the device, so a skipped offer is not repeated on every later
- * residence or origin turn. Stored as a JSON list of fact ids.
- */
-const COMBINED_SPLIT_OFFERED_KEY = 'mera_combined_fact_split_offered_v1';
-
-/**
- * Required LAZILY, on purpose. `setting-service` builds its collection at
- * module scope, so a top-level import here constructs a real SQLiteAdapter the
- * moment anything imports this hook, and every suite that renders it dies at
- * load with `initializeJSI`.
- */
-function settings(): typeof import('../database/services/setting-service') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require('../database/services/setting-service');
-}
-
-async function readSplitOffered(): Promise<string[]> {
-  try {
-    const raw = await settings().getSetting(COMBINED_SPLIT_OFFERED_KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function withCombinedFactMemory(deps: AgentDeps): AgentDeps {
-  return {
-    ...deps,
-    combinedFactRewrite: {
-      wasOffered: async (factId) => (await readSplitOffered()).includes(factId),
-      markOffered: async (factId) => {
-        const ids = await readSplitOffered();
-        if (ids.includes(factId)) return;
-        await settings()
-          .setSetting(COMBINED_SPLIT_OFFERED_KEY, JSON.stringify([...ids, factId]))
-          .catch(() => {});
-      },
-    },
-  };
-}
-
-/**
- * Every reading on a fact-choice card in this thread that the user has not
- * answered. The store holds the tool call's staged result; a tap writes an
- * OVERRIDE under `${messageId}::${index}` in the floating-chat store, which
- * wins when present.
- */
-export function pendingCardStatements(messages: ConversationMessage[]): string[] {
-  const overrides = useFloatingChatStore.getState().toolCallResults;
-  const out: string[] = [];
-  for (const m of messages) {
-    if (m.role !== 'assistant' || !m.toolCalls) continue;
-    m.toolCalls.forEach((tc, idx) => {
-      if (tc.name !== 'saveExtractedFacts') return;
-      const result = overrides[`${m.id}::${idx}`] ?? (tc.result as Record<string, unknown> | undefined);
-      for (const g of unresolvedGroups(result)) out.push(...g.options);
-    });
-  }
-  return out;
-}
-
-/** Tool arguments arrive as a JSON string. A malformed one must yield an empty
- *  object rather than throwing: this runs inside the live progress write-back,
- *  and a throw there would kill the turn over a cosmetic row. */
-function parseToolArgs(raw: string): Record<string, unknown> {
-  try {
-    const parsed: unknown = JSON.parse(raw || '{}');
-    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
-  } catch {
-    return {};
-  }
-}
-
-/** Required lazily: lib/i18n pulls the OS translator's native module at load. */
-function i18nInstance(): typeof import('../i18n').default {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return (require('../i18n') as typeof import('../i18n')).default;
-}
-
-const TAG = '[CloudChat]';
-
-type CloudState = ReturnType<typeof useCloudChatStore.getState>;
-
-/** The store's state with every action a no-op: what a disposed engine writes to. */
-function detachedCopy(state: CloudState): CloudState {
-  const copy: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(state)) copy[key] = typeof value === 'function' ? () => {} : value;
-  return copy as unknown as CloudState;
-}
-
-/** Next-frame scheduler for the streaming bubble. RN provides
- *  requestAnimationFrame; the timeout fallback keeps the hook usable under a
- *  test runtime without it. */
-const scheduleFrame = (cb: () => void): void => {
-  if (typeof requestAnimationFrame === 'function') {
-    requestAnimationFrame(cb);
-  } else {
-    setTimeout(cb, 16);
-  }
-};
-
-// Cloud chat carries a TOKEN-BUDGETED window of recent turns (see
-// lib/news-harness/persona-management/history-window.ts). It used to send only
-// the current user turn, which meant a tail of [..., user("Yes")] reached the
-// model as the bare word "Yes" with no trace of the question it answered — the
-// reported bug where Mera responded to a confirmation with "Great, good to see
-// you again!".
-//
-// Fresh facts are still re-loaded from the `facts` table every turn via
-// buildContext() and injected onto the LAST user message only, so a wider
-// window never lets the LLM hallucinate persisted state from a stale assistant
-// claim like "Got it, saved" — the facts block always reflects the database,
-// not the conversation.
-function wireMessageTokens(m: WireMessage): number {
-  const content = typeof m.content === 'string' ? m.content : '';
-  const calls =
-    'tool_calls' in m && m.tool_calls ? JSON.stringify(m.tool_calls) : '';
-  return estimateTokens(content) + estimateTokens(calls);
-}
-
-// ---------------------------------------------------------------------------
-// Accumulate tool-call deltas by index into complete tool calls
-// ---------------------------------------------------------------------------
-
-interface ToolCallAccumulator {
-  id: string;
-  name: string;
-  arguments: string;
-}
-
-interface FinalizedToolCall {
-  id: string;
-  name: string;
-  input: unknown;
-  /** Set when the model's argument JSON could not be parsed. Such a call is
-   *  NEVER executed and never reaches the wire — see the note below. */
-  malformed?: true;
-}
-
-function finalizeToolCalls(
-  accumulators: Map<number, ToolCallAccumulator>,
-): FinalizedToolCall[] {
-  const results: FinalizedToolCall[] = [];
-  for (const [, acc] of accumulators) {
-    if (!acc.name) continue;
-    try {
-      const input = acc.arguments ? JSON.parse(acc.arguments) : {};
-      results.push({ id: acc.id, name: acc.name, input });
-    } catch {
-      // Do NOT substitute `{}`. That turned a truncated or corrupt call into a
-      // well-formed one with no arguments, which the handlers then answered as
-      // an ordinary validation failure ("fact_ids must be a non-empty array") —
-      // telling the model its ARGUMENTS were wrong when in fact its
-      // SERIALIZATION was, and making a dropped call look like a successful
-      // no-op in the logs.
-      logger.warn(`${TAG} Failed to parse tool call arguments`, {
-        name: acc.name,
-        // Lengths only: the arguments are the user's facts, and a warning is a
-        // Sentry breadcrumb in production.
-        argsLength: acc.arguments.length,
-      });
-      logger.captureMessage(`${TAG} malformed tool arguments`, {
-        level: 'warning',
-        tags: { component: 'useCloudPersonaChat' },
-        extra: { tool: acc.name, argsLength: acc.arguments.length },
-      });
-      results.push({ id: acc.id, name: acc.name, input: null, malformed: true });
-    }
-  }
-  return results;
-}
-
-/**
- * True when a tool call "used up" the model's mandatory call without extracting
- * anything — `saveExtractedFacts` with an empty (or malformed) list.
- *
- * Observed in production 2026-08-03: the user states a fact, the model replies
- * conversationally AND calls saveExtractedFacts with
- * `{extracted_user_information: []}`. The call is well-formed, so the
- * zero-tool-call safety net below never fires, executeTool saves nothing, and
- * the fact is silently lost — the failure the user reports as "it just replied
- * to me". Treating this as no call at all routes it back through the same
- * forced-extraction pass that already covers a model skipping the tool.
- */
-function isEmptyExtractionCall(tc: { name: string; input: unknown }): boolean {
-  if (tc.name !== 'saveExtractedFacts') return false;
-  const list = (tc.input as { extracted_user_information?: unknown } | null)
-    ?.extracted_user_information;
-  return !Array.isArray(list) || list.length === 0;
-}
 
 // ---------------------------------------------------------------------------
 // Hook
