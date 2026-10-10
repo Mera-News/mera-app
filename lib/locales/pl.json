@@ -876,7 +876,12 @@
     "promoEndsNoRenew": "Dostęp promocyjny · kończy się {{date}}, nie odnowi się",
     "relevantSoFar": "Na razie trafne",
     "billedAppStore": "Opłata pobierana przez App Store. Możesz anulować w dowolnym momencie na swoim koncie Apple.",
-    "billedPlayStore": "Opłata pobierana przez Google Play. Możesz anulować w dowolnym momencie na swoim koncie Google."
+    "billedPlayStore": "Opłata pobierana przez Google Play. Możesz anulować w dowolnym momencie na swoim koncie Google.",
+    "confirmingTitle": "Potwierdzamy Twój zakup",
+    "confirmingBody": "Zwykle trwa to kilka sekund. Możesz zostać na tym ekranie.",
+    "confirmTimeoutTitle": "Nie udało się jeszcze potwierdzić zakupu",
+    "confirmTimeoutBody": "Jeśli zapłaciłeś, skontaktuj się z pomocą, a sprawę wyjaśnimy.",
+    "checkAgain": "Sprawdź ponownie"
   },
   "tabs": {
     "deck": "Strumień",

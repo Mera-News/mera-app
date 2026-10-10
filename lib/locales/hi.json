@@ -854,7 +854,12 @@
     "promoEndsNoRenew": "प्रोमो एक्सेस · {{date}} को खत्म, नवीनीकरण नहीं होगा",
     "relevantSoFar": "अभी तक काम की",
     "billedAppStore": "App Store के ज़रिए बिलिंग होती है। आप अपने Apple खाते में कभी भी रद्द कर सकते हैं।",
-    "billedPlayStore": "Google Play के ज़रिए बिलिंग होती है। आप अपने Google खाते में कभी भी रद्द कर सकते हैं।"
+    "billedPlayStore": "Google Play के ज़रिए बिलिंग होती है। आप अपने Google खाते में कभी भी रद्द कर सकते हैं।",
+    "confirmingTitle": "आपकी खरीद की पुष्टि हो रही है",
+    "confirmingBody": "इसमें आमतौर पर कुछ सेकंड लगते हैं। आप यहीं रुक सकते हैं।",
+    "confirmTimeoutTitle": "आपकी खरीद की पुष्टि अभी नहीं हो पाई",
+    "confirmTimeoutBody": "अगर आपने भुगतान कर दिया है, तो सहायता टीम से बात करें। हम इसे सुलझा देंगे।",
+    "checkAgain": "दोबारा जाँचें"
   },
   "tabs": {
     "deck": "फीड",

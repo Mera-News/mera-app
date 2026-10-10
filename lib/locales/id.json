@@ -853,7 +853,12 @@
     "promoEndsNoRenew": "Akses promo · berakhir {{date}}, tidak diperpanjang",
     "relevantSoFar": "Relevan sejauh ini",
     "billedAppStore": "Ditagih melalui App Store. Batalkan kapan saja di akun Apple Anda.",
-    "billedPlayStore": "Ditagih melalui Google Play. Batalkan kapan saja di akun Google Anda."
+    "billedPlayStore": "Ditagih melalui Google Play. Batalkan kapan saja di akun Google Anda.",
+    "confirmingTitle": "Mengonfirmasi pembelian Anda",
+    "confirmingBody": "Biasanya hanya butuh beberapa detik. Anda bisa tetap di sini.",
+    "confirmTimeoutTitle": "Pembelian Anda belum bisa dikonfirmasi",
+    "confirmTimeoutBody": "Jika Anda sudah membayar, hubungi dukungan dan kami akan membereskannya.",
+    "checkAgain": "Periksa lagi"
   },
   "tabs": {
     "deck": "Umpan",

@@ -853,7 +853,12 @@
     "promoEndsNoRenew": "프로모 이용권 · {{date}}에 종료, 자동 갱신되지 않음",
     "relevantSoFar": "지금까지 관련 있음",
     "billedAppStore": "App Store를 통해 결제됩니다. Apple 계정에서 언제든지 취소할 수 있습니다.",
-    "billedPlayStore": "Google Play를 통해 결제됩니다. Google 계정에서 언제든지 취소할 수 있습니다."
+    "billedPlayStore": "Google Play를 통해 결제됩니다. Google 계정에서 언제든지 취소할 수 있습니다.",
+    "confirmingTitle": "구매 확인 중",
+    "confirmingBody": "보통 몇 초 정도 걸립니다. 이 화면에서 기다려 주셔도 됩니다.",
+    "confirmTimeoutTitle": "아직 구매를 확인하지 못했습니다",
+    "confirmTimeoutBody": "결제하셨다면 지원팀에 문의해 주세요. 문제를 해결해 드리겠습니다.",
+    "checkAgain": "다시 확인"
   },
   "tabs": {
     "deck": "피드",

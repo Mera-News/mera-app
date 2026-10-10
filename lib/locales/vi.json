@@ -853,7 +853,12 @@
     "promoEndsNoRenew": "Quyền truy cập khuyến mãi · kết thúc {{date}}, sẽ không gia hạn",
     "relevantSoFar": "Có liên quan cho đến lúc này",
     "billedAppStore": "Thanh toán qua App Store. Bạn có thể hủy bất cứ lúc nào trong tài khoản Apple của mình.",
-    "billedPlayStore": "Thanh toán qua Google Play. Bạn có thể hủy bất cứ lúc nào trong tài khoản Google của mình."
+    "billedPlayStore": "Thanh toán qua Google Play. Bạn có thể hủy bất cứ lúc nào trong tài khoản Google của mình.",
+    "confirmingTitle": "Đang xác nhận giao dịch mua của bạn",
+    "confirmingBody": "Thường chỉ mất vài giây. Bạn có thể ở lại đây.",
+    "confirmTimeoutTitle": "Chúng tôi chưa thể xác nhận giao dịch mua của bạn",
+    "confirmTimeoutBody": "Nếu bạn đã thanh toán, hãy liên hệ bộ phận hỗ trợ và chúng tôi sẽ giải quyết.",
+    "checkAgain": "Kiểm tra lại"
   },
   "tabs": {
     "deck": "Bảng tin",

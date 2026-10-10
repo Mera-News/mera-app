@@ -854,7 +854,12 @@
     "promoEndsNoRenew": "Acesso promocional · termina em {{date}}, não renova",
     "relevantSoFar": "Relevantes até agora",
     "billedAppStore": "Cobrado pela App Store. Cancele quando quiser na sua conta da Apple.",
-    "billedPlayStore": "Cobrado pelo Google Play. Cancele quando quiser na sua conta do Google."
+    "billedPlayStore": "Cobrado pelo Google Play. Cancele quando quiser na sua conta do Google.",
+    "confirmingTitle": "Confirmando sua compra",
+    "confirmingBody": "Isso costuma levar alguns segundos. Você pode continuar aqui.",
+    "confirmTimeoutTitle": "Ainda não conseguimos confirmar sua compra",
+    "confirmTimeoutBody": "Se você pagou, fale com o suporte e vamos resolver isso.",
+    "checkAgain": "Verificar novamente"
   },
   "tabs": {
     "deck": "Feed",

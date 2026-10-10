@@ -854,7 +854,12 @@
     "promoEndsNoRenew": "สิทธิ์โปรโมชัน · สิ้นสุด {{date}} จะไม่ต่ออายุ",
     "relevantSoFar": "เกี่ยวข้องในตอนนี้",
     "billedAppStore": "เรียกเก็บเงินผ่าน App Store ยกเลิกได้ตลอดเวลาในบัญชี Apple ของคุณ",
-    "billedPlayStore": "เรียกเก็บเงินผ่าน Google Play ยกเลิกได้ตลอดเวลาในบัญชี Google ของคุณ"
+    "billedPlayStore": "เรียกเก็บเงินผ่าน Google Play ยกเลิกได้ตลอดเวลาในบัญชี Google ของคุณ",
+    "confirmingTitle": "กำลังยืนยันการซื้อของคุณ",
+    "confirmingBody": "โดยปกติใช้เวลาไม่กี่วินาที คุณรอที่หน้านี้ได้เลย",
+    "confirmTimeoutTitle": "ยังยืนยันการซื้อของคุณไม่ได้",
+    "confirmTimeoutBody": "หากคุณชำระเงินแล้ว โปรดติดต่อฝ่ายสนับสนุน เราจะช่วยจัดการให้",
+    "checkAgain": "ตรวจสอบอีกครั้ง"
   },
   "tabs": {
     "deck": "ฟีด",

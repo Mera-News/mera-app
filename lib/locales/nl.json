@@ -854,7 +854,12 @@
     "promoEndsNoRenew": "Promotietoegang · eindigt op {{date}}, wordt niet verlengd",
     "relevantSoFar": "Tot nu toe relevant",
     "billedAppStore": "Betaald via de App Store. Je kunt op elk moment opzeggen in je Apple-account.",
-    "billedPlayStore": "Betaald via Google Play. Je kunt op elk moment opzeggen in je Google-account."
+    "billedPlayStore": "Betaald via Google Play. Je kunt op elk moment opzeggen in je Google-account.",
+    "confirmingTitle": "Je aankoop wordt bevestigd",
+    "confirmingBody": "Dit duurt meestal maar een paar seconden. Je kunt gewoon op dit scherm blijven.",
+    "confirmTimeoutTitle": "We konden je aankoop nog niet bevestigen",
+    "confirmTimeoutBody": "Heb je al betaald? Praat dan met support, dan regelen we het.",
+    "checkAgain": "Opnieuw controleren"
   },
   "tabs": {
     "deck": "Feed",

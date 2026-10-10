@@ -854,7 +854,12 @@
     "promoEndsNoRenew": "Accesso promo · finisce il {{date}}, non si rinnova",
     "relevantSoFar": "Pertinenti finora",
     "billedAppStore": "Addebitato tramite App Store. Annulla quando vuoi dal tuo account Apple.",
-    "billedPlayStore": "Addebitato tramite Google Play. Annulla quando vuoi dal tuo account Google."
+    "billedPlayStore": "Addebitato tramite Google Play. Annulla quando vuoi dal tuo account Google.",
+    "confirmingTitle": "Conferma dell'acquisto in corso",
+    "confirmingBody": "Di solito richiede pochi secondi. Puoi restare qui.",
+    "confirmTimeoutTitle": "Non siamo ancora riusciti a confermare il tuo acquisto",
+    "confirmTimeoutBody": "Se hai già pagato, contatta l'assistenza e sistemeremo tutto.",
+    "checkAgain": "Controlla di nuovo"
   },
   "tabs": {
     "deck": "Notizie",

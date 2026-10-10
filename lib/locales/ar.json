@@ -898,7 +898,12 @@
     "promoEndsNoRenew": "وصول ترويجي · ينتهي في {{date}}، ولن يتجدد",
     "relevantSoFar": "ذات صلة حتى الآن",
     "billedAppStore": "تُحاسَب عبر App Store. يمكنك الإلغاء في أي وقت من حساب Apple الخاص بك.",
-    "billedPlayStore": "تُحاسَب عبر Google Play. يمكنك الإلغاء في أي وقت من حساب Google الخاص بك."
+    "billedPlayStore": "تُحاسَب عبر Google Play. يمكنك الإلغاء في أي وقت من حساب Google الخاص بك.",
+    "confirmingTitle": "جارٍ تأكيد عملية الشراء",
+    "confirmingBody": "يستغرق هذا عادةً بضع ثوانٍ. يمكنك البقاء في هذه الشاشة.",
+    "confirmTimeoutTitle": "لم نتمكن من تأكيد عملية الشراء بعد",
+    "confirmTimeoutBody": "إذا دفعت، فتحدث إلى الدعم وسنحل الأمر.",
+    "checkAgain": "تحقق مرة أخرى"
   },
   "tabs": {
     "deck": "الخلاصة",

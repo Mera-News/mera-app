@@ -854,7 +854,12 @@
     "promoEndsNoRenew": "Promosyon erişimi · {{date}} tarihinde biter, yenilenmez",
     "relevantSoFar": "Şimdiye kadar ilgili",
     "billedAppStore": "Ödeme App Store üzerinden alınır. İstediğiniz zaman Apple hesabınızdan iptal edebilirsiniz.",
-    "billedPlayStore": "Ödeme Google Play üzerinden alınır. İstediğiniz zaman Google hesabınızdan iptal edebilirsiniz."
+    "billedPlayStore": "Ödeme Google Play üzerinden alınır. İstediğiniz zaman Google hesabınızdan iptal edebilirsiniz.",
+    "confirmingTitle": "Satın alımınız onaylanıyor",
+    "confirmingBody": "Bu genellikle birkaç saniye sürer. Bu ekranda bekleyebilirsiniz.",
+    "confirmTimeoutTitle": "Satın alımınız henüz onaylanamadı",
+    "confirmTimeoutBody": "Ödeme yaptıysanız destek ekibimize ulaşın, sorunu çözelim.",
+    "checkAgain": "Tekrar kontrol et"
   },
   "tabs": {
     "deck": "Akış",

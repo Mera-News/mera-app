@@ -854,7 +854,12 @@
     "promoEndsNoRenew": "Acceso de promoción · termina el {{date}}, no se renovará",
     "relevantSoFar": "Relevante por ahora",
     "billedAppStore": "Facturado a través de App Store. Cancela en cualquier momento desde tu cuenta de Apple.",
-    "billedPlayStore": "Facturado a través de Google Play. Cancela en cualquier momento desde tu cuenta de Google."
+    "billedPlayStore": "Facturado a través de Google Play. Cancela en cualquier momento desde tu cuenta de Google.",
+    "confirmingTitle": "Confirmando tu compra",
+    "confirmingBody": "Suele tardar unos segundos. Puedes quedarte aquí.",
+    "confirmTimeoutTitle": "Todavía no hemos podido confirmar tu compra",
+    "confirmTimeoutBody": "Si pagaste, contacta con soporte y lo resolveremos.",
+    "checkAgain": "Comprobar de nuevo"
   },
   "tabs": {
     "deck": "Noticias",

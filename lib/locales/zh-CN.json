@@ -853,7 +853,12 @@
     "promoEndsNoRenew": "促销权益 · {{date}}结束，不会续订",
     "relevantSoFar": "目前相关",
     "billedAppStore": "通过 App Store 扣费。你可以随时在 Apple 账号中取消。",
-    "billedPlayStore": "通过 Google Play 扣费。你可以随时在 Google 账号中取消。"
+    "billedPlayStore": "通过 Google Play 扣费。你可以随时在 Google 账号中取消。",
+    "confirmingTitle": "正在确认你的购买",
+    "confirmingBody": "通常只需几秒钟。你可以留在这个页面等待。",
+    "confirmTimeoutTitle": "暂时无法确认你的购买",
+    "confirmTimeoutBody": "如果你已经付款，请联系客服，我们会帮你处理。",
+    "checkAgain": "再次检查"
   },
   "tabs": {
     "deck": "信息流",

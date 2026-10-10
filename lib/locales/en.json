@@ -122,7 +122,12 @@
     "promoEndsNoRenew": "Promo access · ends {{date}}, won't renew",
     "relevantSoFar": "Relevant so far",
     "billedAppStore": "Billed through the App Store. Cancel any time in your Apple account.",
-    "billedPlayStore": "Billed through Google Play. Cancel any time in your Google account."
+    "billedPlayStore": "Billed through Google Play. Cancel any time in your Google account.",
+    "confirmingTitle": "Confirming your purchase",
+    "confirmingBody": "This usually takes a few seconds. You can stay here.",
+    "confirmTimeoutTitle": "We couldn't confirm your purchase yet",
+    "confirmTimeoutBody": "If you paid, talk to support and we'll sort it out.",
+    "checkAgain": "Check again"
   },
   "feed": {
     "allCaughtUp": "You're all caught up with what impacts you.",

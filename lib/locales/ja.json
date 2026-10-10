@@ -853,7 +853,12 @@
     "promoEndsNoRenew": "プロモ利用・{{date}}に終了、更新はされません",
     "relevantSoFar": "今のところ関連あり",
     "billedAppStore": "請求は App Store を通じて行われます。いつでも Apple アカウントから解約できます。",
-    "billedPlayStore": "請求は Google Play を通じて行われます。いつでも Google アカウントから解約できます。"
+    "billedPlayStore": "請求は Google Play を通じて行われます。いつでも Google アカウントから解約できます。",
+    "confirmingTitle": "購入を確認しています",
+    "confirmingBody": "通常は数秒で完了します。このままお待ちいただけます。",
+    "confirmTimeoutTitle": "まだ購入を確認できていません",
+    "confirmTimeoutBody": "お支払い済みの場合は、サポートにお問い合わせください。確認して対応します。",
+    "checkAgain": "もう一度確認する"
   },
   "tabs": {
     "deck": "フィード",

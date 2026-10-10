@@ -853,7 +853,12 @@
     "promoEndsNoRenew": "促銷權限 · {{date}} 結束，不會續訂",
     "relevantSoFar": "目前相關",
     "billedAppStore": "透過 App Store 計費。你可以隨時在你的 Apple 帳戶中取消。",
-    "billedPlayStore": "透過 Google Play 計費。你可以隨時在你的 Google 帳戶中取消。"
+    "billedPlayStore": "透過 Google Play 計費。你可以隨時在你的 Google 帳戶中取消。",
+    "confirmingTitle": "正在確認你的購買",
+    "confirmingBody": "通常只需幾秒鐘。你可以留在這個畫面等待。",
+    "confirmTimeoutTitle": "暫時無法確認你的購買",
+    "confirmTimeoutBody": "如果你已經付款，請聯絡客服，我們會協助處理。",
+    "checkAgain": "重新檢查"
   },
   "tabs": {
     "deck": "資訊流",

@@ -854,7 +854,12 @@
     "promoEndsNoRenew": "Aktionszugang · endet am {{date}}, verlängert sich nicht",
     "relevantSoFar": "Bisher relevant",
     "billedAppStore": "Abgerechnet über den App Store. Du kannst jederzeit in deinem Apple-Konto kündigen.",
-    "billedPlayStore": "Abgerechnet über Google Play. Du kannst jederzeit in deinem Google-Konto kündigen."
+    "billedPlayStore": "Abgerechnet über Google Play. Du kannst jederzeit in deinem Google-Konto kündigen.",
+    "confirmingTitle": "Dein Kauf wird bestätigt",
+    "confirmingBody": "Das dauert meist nur ein paar Sekunden. Du kannst hier warten.",
+    "confirmTimeoutTitle": "Wir konnten deinen Kauf noch nicht bestätigen",
+    "confirmTimeoutBody": "Falls du bezahlt hast, wende dich an den Support. Wir klären das dann für dich.",
+    "checkAgain": "Erneut prüfen"
   },
   "tabs": {
     "deck": "Nachrichten",
