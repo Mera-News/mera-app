@@ -399,19 +399,6 @@ describe('SuggestionSyncService', () => {
       expect(state.relevantArticleCount).toBe(1); // only relevance > 0.3
     });
 
-    it('falls back to the number of suggestions when there is no server article count yet', async () => {
-      await seedArticles([{ id: 'a' }, { id: 'b' }]);
-      await scoreRow('a', 0.9);
-      await scoreRow('b', 0.5);
-      useForYouStore.setState({ articleCount: 0 });
-
-      await refreshSuggestionsInStoreUnsafe();
-
-      const state = useForYouStore.getState();
-      expect(state.articleCount).toBe(2);
-      expect(state.relevantArticleCount).toBe(2);
-    });
-
     it('keeps two unscored rows (both sort last) and counts both as unscored', async () => {
       await seedArticles([{ id: 'a' }, { id: 'b' }]);
 

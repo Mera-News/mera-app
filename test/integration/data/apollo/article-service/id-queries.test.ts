@@ -37,23 +37,23 @@ describe('getRecentArticleCount', () => {
         expect(await ArticleService.getRecentArticleCount()).toBe(ARTICLE_IDS.length);
     });
 
-    it('returns 0 when the whole response is { data: null }', async () => {
+    it('returns null when the whole response is { data: null }', async () => {
         const logs = spyLogger();
         server.use(mockGql('GetRecentArticleCount', null));
-        expect(await ArticleService.getRecentArticleCount()).toBe(0);
-        // The 0 comes from the `?? 0`, not from the catch: Apollo resolved, nothing was thrown.
+        expect(await ArticleService.getRecentArticleCount()).toBeNull();
+        // The null comes from the `?? null`, not from the catch: Apollo resolved, nothing was thrown.
         expect(logs.crumb).not.toHaveBeenCalledWith(expect.stringContaining('failed'), 'article-service', expect.anything(), expect.anything());
     });
 
-    it('returns 0 when the field is null', async () => {
+    it('returns null when the field is null (a failure: recentArticleCount is Int!)', async () => {
         server.use(mockGql('GetRecentArticleCount', { recentArticleCount: null }));
-        expect(await ArticleService.getRecentArticleCount()).toBe(0);
+        expect(await ArticleService.getRecentArticleCount()).toBeNull();
     });
 
-    it('swallows a server error, returns 0, and leaves a breadcrumb with no capture of its own', async () => {
+    it('swallows a server error, returns null, and leaves a breadcrumb with no capture of its own', async () => {
         const logs = spyLogger();
         server.use(mockGqlError('GetRecentArticleCount', 'INTERNAL_SERVER_ERROR'));
-        await expect(ArticleService.getRecentArticleCount()).resolves.toBe(0);
+        await expect(ArticleService.getRecentArticleCount()).resolves.toBeNull();
         expectNoServiceCapture(logs.capture);
         expect(logs.crumb).toHaveBeenCalledWith(
             expect.stringContaining('getRecentArticleCount failed'),
@@ -67,7 +67,7 @@ describe('getRecentArticleCount', () => {
         const logs = spyLogger();
         useFakeClock(Date.now());
         server.use(failOp('GetRecentArticleCount'));
-        await expect(advanceUntilDone(ArticleService.getRecentArticleCount())).resolves.toBe(0);
+        await expect(advanceUntilDone(ArticleService.getRecentArticleCount())).resolves.toBeNull();
         expect(crumbOf(logs.crumb, 'getRecentArticleCount failed')).toBeDefined();
         expectNoServiceCapture(logs.capture);
     });

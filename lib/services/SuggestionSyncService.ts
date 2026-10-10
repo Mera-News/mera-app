@@ -264,10 +264,9 @@ async function refreshSuggestionsInStore(): Promise<void> {
     hasNextPage: true,
   });
   // Preserve the server-provided articleCount set by FeedSyncMachine; only
-  // update relevantArticleCount. Fall back to suggestions.length when there
-  // is no server count yet (e.g. a standalone scoring pass after a fresh wipe).
+  // update relevantArticleCount.
   const { articleCount } = useForYouStore.getState();
-  useForYouStore.getState().setCounts(articleCount || merged.length, relevantArticleCount);
+  useForYouStore.getState().setCounts(articleCount, relevantArticleCount);
 
   // P6 — republish the "you filtered this, showing it because it's major news"
   // labels for the rows we just put on screen. Hooked HERE, at the one place

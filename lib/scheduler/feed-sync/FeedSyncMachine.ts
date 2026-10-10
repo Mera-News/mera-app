@@ -375,7 +375,7 @@ class FeedSyncMachine {
         steps.stepFetchTopicIds(personaId, ctx),
         ArticleService.getRecentArticleCount().catch((err) => {
           logger.captureException(err, { tags: { service: 'FeedSyncMachine', method: 'getRecentArticleCount' } });
-          return 0;
+          return null;
         }),
       ]);
       coldstartTimeline.mark(
@@ -384,11 +384,13 @@ class FeedSyncMachine {
       );
       // Record the server-wide 24h article count now so subsequent
       // refreshSuggestionsInStore calls (which only know about on-device rows)
-      // don't overwrite it. Falls back to the topic-matched count if the query failed.
-      useForYouStore.getState().setCounts(
-        recentCount || topicResult.serverArticleIds.length,
-        useForYouStore.getState().relevantArticleCount,
-      );
+      // don't overwrite it. A failed query (null) leaves the stored count alone; a real 0 is stored.
+      if (recentCount !== null) {
+        useForYouStore.getState().setCounts(
+          recentCount,
+          useForYouStore.getState().relevantArticleCount,
+        );
+      }
 
       // Step 2: diff (status intentionally not published — see Step 1 note).
       this._transitionTo('diffing', runId);

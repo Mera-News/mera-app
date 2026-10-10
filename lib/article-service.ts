@@ -748,7 +748,7 @@ export class ArticleService {
      * recordAuthFailure() here would only double-count into the same breaker.
      *
      * CONTROL FLOW IS UNCHANGED and must stay that way: ten callers rethrow
-     * after calling this, `getRecentArticleCount` returns 0, and the Explore
+     * after calling this, `getRecentArticleCount` returns null, and the Explore
      * list's `finally` depends on the rejection still arriving.
      */
     private static reportQueryError(
@@ -764,16 +764,17 @@ export class ArticleService {
         );
     }
 
-    static async getRecentArticleCount(): Promise<number> {
+    /** The server's 24h article count, or null when the query failed (a real 0 stays 0). */
+    static async getRecentArticleCount(): Promise<number | null> {
         try {
             const { data } = await client.query<{ recentArticleCount: number }>({
                 query: GET_RECENT_ARTICLE_COUNT,
                 fetchPolicy: 'no-cache',
             });
-            return data?.recentArticleCount ?? 0;
+            return data?.recentArticleCount ?? null;
         } catch (error) {
             this.reportQueryError('getRecentArticleCount', error);
-            return 0;
+            return null;
         }
     }
 

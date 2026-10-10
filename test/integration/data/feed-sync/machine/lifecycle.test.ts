@@ -248,10 +248,9 @@ describe('FeedSyncMachine lifecycle', () => {
       expect(store().articleCount).toBe(25);
     });
 
-    // DA43: `recentCount || topicResult.serverArticleIds.length` cannot tell a real zero from a
-    // failure, and ArticleService.getRecentArticleCount turns a failed query into 0, so both show
-    // the topic-matched count instead of 0 / the last known figure. Each pair shares one setup.
-    test.failing('DA43: a real zero from the server is shown as zero', async () => {
+    // DA43: a real zero from the server is shown as zero, and a failed count query (null) keeps the
+    // last known figure instead of the topic-matched count.
+    test('DA43: a real zero from the server is shown as zero', async () => {
       await serveNew(ids(5));
       server.use(mockGql('GetRecentArticleCount', { recentArticleCount: 0 }));
 
@@ -260,16 +259,7 @@ describe('FeedSyncMachine lifecycle', () => {
       expect(store().articleCount).toBe(0);
     });
 
-    it('DA43 today: a zero from the server is replaced by the number of ids the topics matched', async () => {
-      await serveNew(ids(5));
-      server.use(mockGql('GetRecentArticleCount', { recentArticleCount: 0 }));
-
-      await run();
-
-      expect(store().articleCount).toBe(5);
-    });
-
-    test.failing('DA43: a failed count keeps the last known figure', async () => {
+    test('DA43: a failed count keeps the last known figure', async () => {
       await serveNew(ids(5));
       store().setCounts(12, 0); // what an earlier run stored
       server.use(graphql.query('GetRecentArticleCount', () => HttpResponse.error()));
@@ -277,17 +267,6 @@ describe('FeedSyncMachine lifecycle', () => {
       await run();
 
       expect(store().articleCount).toBe(12);
-      expect(feedSyncMachine.state).toBe('done');
-    });
-
-    it('DA43 today: a failed count query is replaced by the topic-matched count and does not fail the sync', async () => {
-      await serveNew(ids(5));
-      store().setCounts(12, 0);
-      server.use(graphql.query('GetRecentArticleCount', () => HttpResponse.error()));
-
-      await run();
-
-      expect(store().articleCount).toBe(5);
       expect(feedSyncMachine.state).toBe('done');
     });
   });
