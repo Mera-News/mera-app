@@ -6,6 +6,25 @@ appId: ${APP_ID}
 - runFlow: flows/sign-in.yaml
 - tapOn:
     id: "mera-button"
+# Send is disabled while the field is empty.
+- extendedWaitUntil:
+    visible:
+      id: "chat-send"
+      enabled: false
+    timeout: 15000
+# The hide-keyboard button shows only while the keyboard is up, and dismisses it.
+- tapOn:
+    id: "chat-input"
+- extendedWaitUntil:
+    visible:
+      id: "chat-hide-keyboard"
+    timeout: 10000
+- tapOn:
+    id: "chat-hide-keyboard"
+- extendedWaitUntil:
+    notVisible:
+      id: "chat-hide-keyboard"
+    timeout: 10000
 - tapOn:
     id: "chat-input"
 - inputText: "What is new today?"
