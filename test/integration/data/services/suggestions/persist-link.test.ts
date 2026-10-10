@@ -25,7 +25,6 @@ import {
   matched,
   personaMeta,
   row,
-  rowCount,
   seed,
   seedLegacy,
   toComplete,
@@ -443,17 +442,17 @@ describe('a row already on the device', () => {
   });
 });
 
-// KNOWN, DOCUMENTED OPEN: the existing-row read happens OUTSIDE database.write, so two callers (a
-// feed-sync racing a manual refresh) can both read "absent" and both insert. The overlap is the FIRST
-// id in each list, so the losing batch fails on its first operation whichever caller loses, which is
-// also what an atomic SQLite batch does (MERA-APP-6K: "UNIQUE constraint failed").
+// The existing-row read happens INSIDE database.write, so two callers (a feed-sync racing a manual
+// refresh) cannot both read "absent" and both insert. Without that, the overlap (the FIRST id in each
+// list) made the losing batch fail on its first operation, as an atomic SQLite batch does (MERA-APP-6K:
+// "UNIQUE constraint failed").
 describe('two concurrent callers with an overlapping id', () => {
   async function race() {
     const real = database.write.bind(database);
     let release!: () => void;
     const gate = new Promise<void>((resolve) => (release = resolve));
-    // R23b: hold whichever caller reaches database.write first until the other has also done its
-    // existing-row read and arrived, so both are certain to have read "absent". Nothing is replaced.
+    // R23b: hold whichever caller reaches database.write first until the other has also arrived, so the
+    // two writers genuinely contend. Nothing is replaced.
     jest
       .spyOn(database, 'write')
       .mockImplementationOnce((async (work: never) => {
@@ -475,22 +474,10 @@ describe('two concurrent callers with an overlapping id', () => {
     );
   }
 
-  test.failing('persist each id once and reject neither caller', async () => {
+  test('persist each id once and reject neither caller', async () => {
     const results = await race();
 
     expect(results.map((r) => r.status)).toEqual(['fulfilled', 'fulfilled']);
     expect(await idsInDb()).toEqual(['only-a', 'only-b', 'shared']);
-  });
-
-  // R14 sibling: today's outcome. No duplicate row can appear (the id is unique), but the loser rejects and
-  // loses its non-overlapping insert too.
-  test('today: no id is stored twice, but one caller rejects and its own new article is lost', async () => {
-    const results = await race();
-
-    expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
-    const stored = await idsInDb();
-    expect(stored.filter((id) => id === 'shared')).toHaveLength(1);
-    expect(stored.filter((id) => id.startsWith('only-'))).toHaveLength(1);
-    expect(await rowCount()).toBe(2);
   });
 });

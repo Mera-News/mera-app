@@ -1921,12 +1921,11 @@ export async function persistAndLinkV2Suggestions(
   // `personaMeta` maps keyed by article id, which are identical for every copy,
   // so the copies are interchangeable.
   //
-  // NOT fixed here: the existing-row read below still happens outside
-  // `database.write`, so two CONCURRENT callers (feed-sync racing a manual
-  // refresh) could both read "absent" and both insert. Closing that needs the
-  // read moved inside the writer, which the fact resolution between them makes
-  // non-trivial. The in-batch duplicate above is the deterministic cause and
-  // the one the reported failure matches.
+  // The read below happens outside `database.write`, so two CONCURRENT callers
+  // (feed-sync racing a manual refresh) can both read "absent". The writer
+  // therefore re-checks which of those ids are still absent before it creates
+  // anything, so the loser skips what the winner inserted and still inserts its
+  // own.
   const deduped: ArticleWithClusters[] = [];
   const seenIds = new Set<string>();
   for (const a of fetched) {
@@ -2018,6 +2017,17 @@ export async function persistAndLinkV2Suggestions(
     const ops: any[] = [];
     const now = new Date();
 
+    // Atomic with the creates below: a concurrent writer that ran first has
+    // committed its rows by now, and a second create of the same id would reject
+    // this whole batch (the loser's own new article included).
+    const takenNow = new Set(
+      (
+        await articleSuggestionsCol
+          .query(Q.where('id', Q.oneOf(toInsert.map((a) => a._id))))
+          .fetch()
+      ).map((r) => r.id),
+    );
+
     for (const { row, nextClusterJson, nextMatchedTopicsJson } of existingUpdates) {
       ops.push(
         row.prepareUpdate((r) => {
@@ -2028,6 +2038,7 @@ export async function persistAndLinkV2Suggestions(
     }
 
     for (const a of toInsert) {
+      if (takenNow.has(a._id)) continue;
       const matched = personaMeta?.matchedTopics.get(a._id) ?? [];
       // Topic texts: persona path derives them from matchMeta entries; fallback
       // uses the caller-supplied text map. Kept for matched_topic_texts_json
