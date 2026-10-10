@@ -662,25 +662,9 @@ describe('encryptMessages', () => {
     expect(decryptContent(messages[1].content, TEST_MODEL_KEYS.ed25519.secret)).toBe('Hello');
   });
 
-  it('CH18 today: a non-string content is left as is', async () => {
-    const messages = [{ role: 'assistant', content: null as unknown as string }];
-    await run(encryptMessages(messages, MODEL));
-    expect(messages[0].content).toBeNull();
-  });
-
-  it('CH18 today: extra fields are left in clear', async () => {
-    const toolCalls = [{ id: 'tc1', name: 'f' }];
-    const messages = [{ role: 'assistant', content: 'result', tool_calls: toolCalls }];
-
-    await run(encryptMessages(messages, MODEL));
-
-    expect(messages[0].tool_calls).toBe(toolCalls);
-    expect(decryptContent(messages[0].content, TEST_MODEL_KEYS.ed25519.secret)).toBe('result');
-  });
-
   // CH18: a field the envelope does not cover would travel in clear, so only {role, content: string}
   // may be sealed. Latent: every live caller sends exactly that.
-  test.failing('CH18: encryptMessages refuses a non-string content or any field besides role and content', async () => {
+  it('CH18: encryptMessages refuses a non-string content or any field besides role and content', async () => {
     const cases: Record<string, object> = {
       'null content': { role: 'assistant', content: null },
       'array content': { role: 'user', content: [{ type: 'text', text: 'hi' }] },

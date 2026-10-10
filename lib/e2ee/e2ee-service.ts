@@ -26,6 +26,7 @@ import { getJwtToken } from '../auth-client';
 import logger from '../logger';
 import { withRetry } from '../utils/retry';
 import * as gatewayRateLimiter from '../llm/gateway-rate-limiter';
+import { assertNoCleartextToolFields } from '../llm/text-tool-protocol';
 import { linkedAbort, raceSignal } from '../llm/abort-race';
 import { getCachedAttestation, setCachedAttestation } from './e2ee-cache';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
@@ -556,15 +557,31 @@ export async function rebuildE2EEContext(
   };
 }
 
-/** Encrypt every non-empty string `content` in-place and return the context. */
+/**
+ * Encrypt every non-empty `content` in-place and return the context. Fails closed: any
+ * message with a non-string content or a key besides role/content throws before anything
+ * is sealed, because such a field would travel in clear.
+ */
 export async function encryptMessages(
   messages: { role: string; content: string;[k: string]: unknown }[],
   model: string,
   lane: gatewayRateLimiter.GatewayLane = 'background',
 ): Promise<E2EEContext> {
+  // The six tool keys keep their typed CleartextToolDataError (the chat guard's contract).
+  assertNoCleartextToolFields(messages);
+  for (const msg of messages) {
+    if (typeof msg.content !== 'string') {
+      throw new Error(`encryptMessages: content must be a string, got ${typeof msg.content}`);
+    }
+    for (const key of Object.keys(msg)) {
+      if (key !== 'role' && key !== 'content') {
+        throw new Error(`encryptMessages: unsupported message field "${key}"`);
+      }
+    }
+  }
   const ctx = await prepareE2EEContext(model, lane);
   for (const msg of messages) {
-    if (typeof msg.content !== 'string' || msg.content.length === 0) continue;
+    if (msg.content.length === 0) continue;
     msg.content = encryptContent(msg.content, ctx);
   }
   return ctx;
