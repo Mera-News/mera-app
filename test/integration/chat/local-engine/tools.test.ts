@@ -107,10 +107,7 @@ describe('a closing tag split across tokens', () => {
   });
   const splitClose = ['Saving. ', '<tool_call>', callJson, '</tool', '_call>', ' All done.'];
 
-  // The in-call buffer only looks for the closing tag inside the newest token, so a tag split
-  // across tokens is never seen: the call is still run (by the end-of-response rescan) but the
-  // prose after it is swallowed into the unclosed call and dropped from the bubble.
-  test.failing('keeps the prose that follows the call', async () => {
+  it('keeps the prose that follows the call', async () => {
     installLlama(splitClose);
     const { engine } = await attachLocal();
 
@@ -118,18 +115,8 @@ describe('a closing tag split across tokens', () => {
     await turnDone();
 
     expect(lastAssistant()?.content).toBe('Saving.  All done.');
-  });
-
-  it('(pins today) runs the call through the rescan once, and the prose after it is dropped', async () => {
-    installLlama(splitClose);
-    const { engine } = await attachLocal();
-
-    engine.send('I live in Porto');
-    await turnDone();
-
     expect(lastAssistant()?.toolCalls?.map((t) => [t.name, t.status])).toEqual([['saveExtractedFacts', 'done']]);
     expect(stagedFacts()?.[0].options).toEqual(['Lives in Porto']);
-    expect(lastAssistant()?.content).toBe('Saving. ');
   });
 
   it('with the closing tag in one token the prose after the call is kept', async () => {

@@ -160,18 +160,21 @@ function flushBuffer(
 
   while (true) {
     if (insideToolCall) {
-      const closeIdx = remaining.indexOf(TOOL_CALL_CLOSE);
+      // Search the buffered call text PLUS the new chunk: a tag split across tokens
+      // ("</tool" + "_call>") is only whole in the combined text.
+      const combined = toolCallBuffer + remaining;
+      const closeIdx = combined.indexOf(TOOL_CALL_CLOSE);
       // Check if a new <tool_call> appears before the closing tag — LLM sometimes
       // omits </tool_call> between consecutive tool calls.
-      const nextOpenIdx = remaining.indexOf(TOOL_CALL_OPEN);
+      const nextOpenIdx = combined.indexOf(TOOL_CALL_OPEN);
       const implicitClose = nextOpenIdx >= 0 && (closeIdx < 0 || nextOpenIdx < closeIdx);
       const splitIdx = implicitClose ? nextOpenIdx : closeIdx;
 
       if (splitIdx >= 0) {
-        toolCallBuffer += remaining.substring(0, splitIdx);
+        toolCallBuffer = combined.substring(0, splitIdx);
         remaining = implicitClose
-          ? remaining.substring(splitIdx) // keep the <tool_call> opener for next iteration
-          : remaining.substring(splitIdx + TOOL_CALL_CLOSE.length);
+          ? combined.substring(splitIdx) // keep the <tool_call> opener for next iteration
+          : combined.substring(splitIdx + TOOL_CALL_CLOSE.length);
         insideToolCall = false;
         try {
           const parsed = JSON.parse(toolCallBuffer.trim()) as {
@@ -191,7 +194,7 @@ function flushBuffer(
         }
         toolCallBuffer = '';
       } else {
-        toolCallBuffer += remaining;
+        toolCallBuffer = combined;
         return { remaining: '', insideToolCall, toolCallBuffer, events };
       }
     } else {
