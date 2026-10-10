@@ -17,7 +17,7 @@
 
 import { refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import logger from '@/lib/logger';
-import { getOfferingSafe } from '@/lib/revenuecat';
+import { getActiveTier, getCustomerInfoSafe, getOfferingSafe } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { ensureEmailBeforeCheckout } from '@/lib/subscription/email-capture';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
@@ -100,7 +100,9 @@ export async function presentFreeTierPaywall(source: string): Promise<void> {
         // Read non-reactively: this runs in an event handler, and the store is
         // the same `serverTier` `deriveAiAccess` is about to be re-derived from.
         const previousTier = useSubscriptionStore.getState().serverTier;
-        const { billing, confirmed } = await refreshUserBillingAfterPurchase(previousTier);
+        // What the store just sold, so the poll can tell the free Starter grant from a bought plan.
+        const purchasedTier = getActiveTier(await getCustomerInfoSafe());
+        const { billing, confirmed } = await refreshUserBillingAfterPurchase(previousTier, { purchasedTier });
 
         if (confirmed && billing) {
             useSubscriptionStore.getState().setServerBilling(billing);
@@ -114,7 +116,7 @@ export async function presentFreeTierPaywall(source: string): Promise<void> {
             // Only here — the server has agreed. On the unconfirmed branch below
             // the snapshot is the PRE-purchase tier, so a toast there would
             // announce a plan the app is still not showing.
-            showSubscriptionActivatedToast(previousTier, billing.subscriptionTier);
+            showSubscriptionActivatedToast(billing.subscriptionTier);
             return;
         }
 

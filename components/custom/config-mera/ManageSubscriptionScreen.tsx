@@ -2,11 +2,13 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
+import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
+import { useSupportAction } from '@/lib/intercom';
 import { useColors } from '@/lib/theme/tokens';
 import { formatResetTime } from './SettingsUsageCard';
 import { useManageSubscription } from './useManageSubscription';
@@ -29,11 +31,13 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const colors = useColors();
     const counts = useFeedCounts();
     const insets = useSafeAreaInsets();
+    const { openSupport } = useSupportAction();
     const {
         billing,
         priceString,
         loading,
-        activationPending,
+        purchaseStatus,
+        checkAgain,
         isPremium,
         activeEntitlement,
         handleViewPlans,
@@ -111,11 +115,44 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                         showsVerticalScrollIndicator={false}
                     >
                         {/* The purchase went through but our server has not
-                            caught up. Always clears. */}
-                        {activationPending ? (
-                            <Text testID="manage-activation-pending" style={{ color: colors.accentText, fontSize: 14 }}>
-                                {t('subscription.activationDelayed')}
-                            </Text>
+                            confirmed it yet: stay here and wait. The title also
+                            carries `manage-activation-pending` (and the timeout
+                            title `manage-activation-timeout`): the device flow
+                            keys on those ids. */}
+                        {purchaseStatus === 'confirming' ? (
+                            <View testID="manage-confirming-card" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line, alignItems: 'center' }]}>
+                                <ActivityIndicator size="small" color={colors.ink} />
+                                <Text testID="manage-activation-pending" style={{ color: colors.ink, fontSize: 16, fontWeight: '600', textAlign: 'center' }}>{t('subscription.confirmingTitle')}</Text>
+                                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, textAlign: 'center' }}>{t('subscription.confirmingBody')}</Text>
+                            </View>
+                        ) : null}
+                        {/* Both poll budgets are spent. If they paid, support
+                            can sort it out; otherwise they can look again. */}
+                        {purchaseStatus === 'timed-out' ? (
+                            <View testID="manage-timeout-card" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line, alignItems: 'center' }]}>
+                                <MaterialIcons name="warning-amber" size={24} color={colors.warning} />
+                                <Text testID="manage-activation-timeout" style={{ color: colors.ink, fontSize: 16, fontWeight: '600', textAlign: 'center' }}>{t('subscription.confirmTimeoutTitle')}</Text>
+                                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, textAlign: 'center' }}>{t('subscription.confirmTimeoutBody')}</Text>
+                                <Pressable
+                                    testID="manage-support"
+                                    onPress={() => void openSupport()}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t('account.contactSupport')}
+                                    className="self-center flex-row items-center gap-2 rounded-full border border-primary-500 px-5 py-3"
+                                >
+                                    <MaterialIcons name="support-agent" size={20} color={colors.ink} />
+                                    <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{t('account.contactSupport')}</Text>
+                                </Pressable>
+                                <Pressable
+                                    testID="manage-check-again"
+                                    onPress={() => void checkAgain()}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t('subscription.checkAgain')}
+                                    style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+                                >
+                                    <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('subscription.checkAgain')}</Text>
+                                </Pressable>
+                            </View>
                         ) : null}
 
                         {/* Keyed on `isPremium` (a real store entitlement), NOT
@@ -172,6 +209,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                         <Pressable
                             testID="manage-view-plans"
                             onPress={() => void handleViewPlans()}
+                            disabled={purchaseStatus === 'confirming'}
                             accessibilityRole="button"
                             accessibilityLabel={t('subscription.viewPlans')}
                             style={[styles.button, { backgroundColor: colors.accent }]}

@@ -16,7 +16,11 @@ jest.mock('react-native-purchases-ui', () => ({
     PAYWALL_RESULT: { PURCHASED: 'PURCHASED', RESTORED: 'RESTORED', CANCELLED: 'CANCELLED' },
 }));
 
-jest.mock('@/lib/revenuecat', () => ({ getOfferingSafe: jest.fn(async () => null) }));
+jest.mock('@/lib/revenuecat', () => ({
+    getOfferingSafe: jest.fn(async () => null),
+    getCustomerInfoSafe: jest.fn(async () => null),
+    getActiveTier: jest.fn(() => null),
+}));
 jest.mock('@/lib/billing-service', () => ({
     refreshUserBillingAfterPurchase: jest.fn(async () => ({ billing: null, confirmed: false })),
 }));

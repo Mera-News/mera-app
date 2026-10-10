@@ -7,19 +7,26 @@ import { holdRestartAcrossPurchase } from '@/lib/subscriptions/subscribe-flow';
 import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
-import { useCallback, useEffect, useState } from 'react';
+import { rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatPackagePrice, resolvePricePackage } from '@/lib/subscription/plan-price';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
+import type { CustomerInfo } from 'react-native-purchases';
+
+/** `confirming` from the purchase until billing confirms it; `timed-out` when both poll budgets are spent. */
+export type PurchaseStatus = 'idle' | 'confirming' | 'confirmed' | 'timed-out';
 
 export function useManageSubscription() {
     const { t } = useTranslation();
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
     const [priceString, setPriceString] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [purchaseStatus, setPurchaseStatus] = useState<PurchaseStatus>('idle');
+    // What a `checkAgain` needs to rerun the polls: the tier held before paying and the tier the store sold.
+    const purchase = useRef<{ before: string | null; purchasedTier: string | null } | null>(null);
     // A purchase completed but the server has not confirmed the new tier yet.
-    // Same situation, same copy, as NotSubscribedScreen's `activationDelayed`.
-    const [activationPending, setActivationPending] = useState(false);
+    const activationPending = purchaseStatus === 'confirming';
     const customerInfo = useSubscriptionStore((s) => s.customerInfo);
     const setCustomerInfo = useSubscriptionStore((s) => s.setCustomerInfo);
     const isPremium = useSubscriptionStore((s) => s.isPremium);
@@ -27,86 +34,86 @@ export function useManageSubscription() {
     const rcTier = getActiveTier(customerInfo);
     const activeEntitlement = getActiveEntitlementInfo(customerInfo);
 
-    /**
-     * Load every panel on this screen. Pass `awaitTierChangeFrom` after a
-     * completed purchase/restore: the RevenueCat → server webhook is async, so
-     * a single fetch the moment the paywall closes normally still reads the
-     * pre-purchase tier. It retries briefly, then gives up (see
-     * refreshUserBillingAfterPurchase).
-     */
-    const load = useCallback(async (awaitTierChangeFrom?: string | null) => {
-        const isPostPurchase = awaitTierChangeFrom !== undefined;
-        const [billingResult, freshCustomerInfo, offering] = await Promise.all([
-            isPostPurchase
-                ? refreshUserBillingAfterPurchase(awaitTierChangeFrom)
-                : fetchUserBilling().then((b) => ({ billing: b, confirmed: true })),
+    /** The price line, from the active entitlement's product. */
+    const applyStoreInfo = useCallback(
+        (freshCustomerInfo: CustomerInfo | null, offering: Awaited<ReturnType<typeof getOfferingSafe>>) => {
+            if (freshCustomerInfo) setCustomerInfo(freshCustomerInfo);
+            const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;
+            const productId = getActiveEntitlementInfo(info)?.productIdentifier ?? null;
+            setPriceString(
+                formatPackagePrice(
+                    resolvePricePackage(productId, offering),
+                    t('subscription.perMonth'),
+                ),
+            );
+        },
+        [setCustomerInfo, t],
+    );
+
+    /** Load every panel on this screen. */
+    const load = useCallback(async () => {
+        const [billingInfo, freshCustomerInfo, offering] = await Promise.all([
+            fetchUserBilling(),
             getCustomerInfoSafe(),
             getOfferingSafe(),
         ]);
-        const { billing: billingInfo, confirmed } = billingResult;
-
-        // On an UNCONFIRMED post-purchase read, `billingInfo` is the tier the
-        // user had BEFORE they paid. Committing it here is the pre-existing bug
-        // — the screen says the purchase succeeded and then renders the old
-        // plan. Leave the panels showing what they already had and let the
-        // secondary poll below settle it.
-        if (confirmed) {
-            setBilling(billingInfo);
-            // Mirror the server's verdict into the store so the free-tier
-            // state lifts (or falls) app-wide, not just on this screen's usage card.
-            useSubscriptionStore.getState().setServerBilling(billingInfo);
-            // `isPostPurchase &&` is load-bearing: the non-purchase branch above
-            // hardcodes `confirmed: true`, so `if (confirmed)` alone would toast
-            // on every mount and after every customer-center dismissal.
-            if (isPostPurchase) {
-                showSubscriptionActivatedToast(
-                    awaitTierChangeFrom,
-                    billingInfo?.subscriptionTier,
-                );
-            }
-        }
-        setActivationPending(isPostPurchase && !confirmed);
-
-        if (isPostPurchase && !confirmed) {
-            // Longer, still-bounded second look. Always clears the notice, even
-            // unresolved: a DEFERRED App Store plan change never changes the
-            // tier at all, so waiting for one would strand the user in
-            // "activating…" forever.
-            void (async () => {
-                const later = await refreshUserBillingAfterPurchase(awaitTierChangeFrom, {
-                    attempts: 20,
-                    intervalMs: 5000,
-                    backoffFactor: 1,
-                });
-                if (later.billing) {
-                    setBilling(later.billing);
-                    useSubscriptionStore.getState().setServerBilling(later.billing);
-                }
-                // The late poll is gated on
-                // `confirmed`, never on `later.billing` — this branch commits
-                // unconfirmed snapshots on purpose.
-                if (later.confirmed) {
-                    showSubscriptionActivatedToast(
-                        awaitTierChangeFrom,
-                        later.billing?.subscriptionTier,
-                    );
-                }
-                setActivationPending(false);
-            })();
-        }
-
-        if (freshCustomerInfo) setCustomerInfo(freshCustomerInfo);
-
-        const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;
-        const productId = getActiveEntitlementInfo(info)?.productIdentifier ?? null;
-        setPriceString(
-            formatPackagePrice(
-                resolvePricePackage(productId, offering),
-                t('subscription.perMonth'),
-            ),
-        );
+        setBilling(billingInfo);
+        // Mirror the server's verdict into the store so the free-tier
+        // state lifts (or falls) app-wide, not just on this screen's usage card.
+        useSubscriptionStore.getState().setServerBilling(billingInfo);
+        applyStoreInfo(freshCustomerInfo, offering);
         setLoading(false);
-    }, [setCustomerInfo, t]);
+    }, [applyStoreInfo]);
+
+    /**
+     * Poll billing until the server confirms the purchase. The first poll is awaited; the longer second look
+     * runs detached (the caller must not wait on it) and ends in `confirmed` or `timed-out`. The late poll
+     * commits its last snapshot even when unconfirmed, on purpose: it is the server's truth, and a DEFERRED
+     * App Store plan change never changes the tier at all.
+     */
+    const pollPurchase = useCallback(async (before: string | null, purchasedTier: string | null) => {
+        setPurchaseStatus('confirming');
+        const confirm = (confirmedBilling: UserBillingInfo) => {
+            setBilling(confirmedBilling);
+            useSubscriptionStore.getState().setServerBilling(confirmedBilling);
+            void rememberLastKnownTier(confirmedBilling.subscriptionTier ?? 'none');
+            showSubscriptionActivatedToast(confirmedBilling.subscriptionTier);
+            setPurchaseStatus('confirmed');
+        };
+        const first = await refreshUserBillingAfterPurchase(before, { purchasedTier });
+        if (first.confirmed && first.billing) return confirm(first.billing);
+        void (async () => {
+            const later = await refreshUserBillingAfterPurchase(before, {
+                attempts: 20,
+                intervalMs: 5000,
+                backoffFactor: 1,
+                purchasedTier,
+            });
+            if (later.confirmed && later.billing) return confirm(later.billing);
+            if (later.billing) {
+                setBilling(later.billing);
+                useSubscriptionStore.getState().setServerBilling(later.billing);
+            }
+            setPurchaseStatus('timed-out');
+        })();
+    }, []);
+
+    /** After PURCHASED/RESTORED: read what the store sold, then poll for the server to agree. */
+    const confirmPurchase = useCallback(
+        async (before: string | null) => {
+            const [info, offering] = await Promise.all([getCustomerInfoSafe(), getOfferingSafe()]);
+            applyStoreInfo(info, offering);
+            purchase.current = { before, purchasedTier: getActiveTier(info) };
+            await pollPurchase(before, purchase.current.purchasedTier);
+        },
+        [applyStoreInfo, pollPurchase],
+    );
+
+    /** From `timed-out`: rerun both polls for the same purchase. */
+    const checkAgain = async () => {
+        if (purchaseStatus !== 'timed-out' || !purchase.current) return;
+        await pollPurchase(purchase.current.before, purchase.current.purchasedTier);
+    };
 
     useEffect(() => {
         void load();
@@ -132,7 +139,7 @@ export function useManageSubscription() {
         //
         // NOT RELEASED HERE, and deliberately not in a `finally`. The release is
         // timer-owned (see holdRestartAcrossPurchase): this function returns
-        // while `load()` -> `refreshUserBillingAfterPurchase` is still retrying,
+        // while `confirmPurchase` -> `refreshUserBillingAfterPurchase` is still retrying,
         // which is exactly the window the hold exists to cover. Releasing on the
         // way out would release before the thing it protects. The returned
         // immediate release is only valid where nothing was opened and the user
@@ -153,7 +160,7 @@ export function useManageSubscription() {
             // A purchase is a discrete event — refresh on it rather than making
             // the user wait for the next time this screen mounts.
             if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
-                await load(billing?.subscriptionTier ?? null);
+                await confirmPurchase(billing?.subscriptionTier ?? null);
             }
         } catch (error) {
             logger.captureException(error, {
@@ -193,6 +200,8 @@ export function useManageSubscription() {
         priceString,
         loading,
         activationPending,
+        purchaseStatus,
+        checkAgain,
         isPremium,
         activeEntitlement,
         handleViewPlans,

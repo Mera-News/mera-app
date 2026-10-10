@@ -7,24 +7,13 @@
 // and each already branches on `confirmed` the same way. The toast hangs off that
 // same branch everywhere, so it is one behaviour, not five copies.
 //
-// ## It announces a TRANSITION, not an observation
+// ## It announces a CONFIRMED PURCHASE, whatever the plan was before
 //
-// This is the correction for a real bug: a fresh first-time LOGIN produced
-// "🎉 Promo is active" with no purchase anywhere in the session. Two things were
-// wrong, and only the second was cosmetic.
-//
-// 1. The trigger was "we are leaving the paywall gate and the server says a plan
-//    exists" — but `NotSubscribedScreen.checkServerSubscribed()` decides that by
-//    asking whether `userPersonaByUserId` returns 200, and that query carries NO
-//    `SubscriptionGuard` server-side. It returns 200 for everyone. So the gate
-//    exit fired for a user who had never had a plan.
-// 2. `planName()` fell through to `subscription.planPromo` for a `null` tier,
-//    turning "we don't know" into a confident, wrong plan name.
-//
-// Hence the signature: BOTH the previous and the new tier. The toast fires only
-// on `none → <paid>`. Someone who already holds a plan never sees it, and
-// neither does someone merely passing through a gate, because there is no
-// transition to report.
+// A first-time LOGIN once produced "Promo is active" with no purchase anywhere in the session, so the toast
+// must hang only off a server-confirmed purchase (below), never off "a plan exists". Every confirmed purchase
+// shows it, including an upgrade between paid tiers and a Starter bought on top of the free grant: the caller
+// has already established that a purchase happened, so no previous tier is needed. `planName()` returns null
+// for a tier with no plan name rather than inventing one.
 //
 // WHY `confirmed` AND NOT THE APPLE/RevenueCat RESULT: `PAYWALL_RESULT.PURCHASED`
 // only means the STORE took the money. Our server learns about it via the
@@ -70,26 +59,16 @@ function planName(tier: string): string | null {
 }
 
 /**
- * Announce a SERVER-CONFIRMED transition from no plan to a paid plan.
+ * Announce a SERVER-CONFIRMED purchase.
  *
- * @param previousTier the tier held BEFORE the purchase. `'none'` is the only
- *   value that permits a toast. `null`/`undefined` mean "we never read one",
- *   which is NOT the same as "inactive" — we cannot claim a transition we did
- *   not observe, so those stay silent.
- * @param newTier the tier the SERVER reported afterwards. Must be a recognised
- *   paid tier.
+ * @param newTier the tier the SERVER reported afterwards. Silent unless it is a recognised paid tier.
  *
  * Call only on `confirmed: true`. Never on `confirmed: false` — that result is
  * the pre-purchase snapshot and is ambiguous by construction (a slow webhook vs.
  * a deferred App Store plan change), which is why the callers refuse to commit
  * it either.
  */
-export function showSubscriptionActivatedToast(
-    previousTier: string | null | undefined,
-    newTier: string | null | undefined,
-): void {
-    // "Was inactive" — explicitly, not merely "not paid". See @param above.
-    if (previousTier !== 'none') return;
+export function showSubscriptionActivatedToast(newTier: string | null | undefined): void {
     if (newTier == null) return;
 
     const plan = planName(newTier);

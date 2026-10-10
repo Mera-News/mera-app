@@ -214,35 +214,21 @@ describe('billing and entitlement', () => {
             expect(calls()).toBe(3);
         });
 
-        // PE14: the tier string is the only thing compared, so the free Starter grant every account holds reads as a
-        // purchase to anyone whose starting tier was missing or 'none'. Confirming needs a store entitlement.
-        test.failing('PE14: a missing starting tier does not confirm on the free Starter grant', async () => {
+        // PE14: the free Starter grant every account holds is not a purchase, even for a missing or 'none' starting
+        // tier. Confirming Starter needs a store entitlement.
+        test('PE14: a missing starting tier does not confirm on the free Starter grant', async () => {
             const calls = scriptBilling(['none', freeStarter]);
             const result = await refreshUserBillingAfterPurchase(null, { attempts: 3, intervalMs: 10 });
             expect(result).toMatchObject({ confirmed: false, billing: { subscriptionTier: 'starter' } });
             expect(calls()).toBe(3);
         });
 
-        it('PE14 today: a missing tier and "none" are the same starting point, and the free Starter grant confirms', async () => {
-            const calls = scriptBilling(['none', freeStarter]);
-            const result = await refreshUserBillingAfterPurchase(null, { attempts: 3, intervalMs: 10 });
-            expect(result).toMatchObject({ confirmed: true, billing: { subscriptionTier: 'starter' } });
-            expect(calls()).toBe(2);
-        });
-
-        // PE15: the opposite miss. Starter bought on top of the free grant keeps the tier string, so nothing confirms.
-        test.failing('PE15: buying Starter from the free grant confirms', async () => {
+        // PE15: Starter bought on top of the free grant keeps the tier string, so the store entitlement confirms it.
+        test('PE15: buying Starter from the free grant confirms', async () => {
             const calls = scriptBilling([freeStarter, boughtStarter]);
             const result = await refreshUserBillingAfterPurchase('starter', { attempts: 3, intervalMs: 10 });
             expect(result).toMatchObject({ confirmed: true, billing: { subscriptionTier: 'starter', entitlementExpiresAt: BOUGHT_END } });
             expect(calls()).toBe(2);
-        });
-
-        it('PE15 today: buying Starter from the free grant never confirms, the tier string is unchanged', async () => {
-            const calls = scriptBilling([freeStarter, boughtStarter]);
-            const result = await refreshUserBillingAfterPurchase('starter', { attempts: 3, intervalMs: 10 });
-            expect(result).toMatchObject({ confirmed: false, billing: { subscriptionTier: 'starter', entitlementExpiresAt: BOUGHT_END } });
-            expect(calls()).toBe(3);
         });
 
         it('a null server tier reads as "none" too: no change from "none", so unconfirmed', async () => {
@@ -807,32 +793,13 @@ describe('billing and entitlement', () => {
             ['starter', 'Starter is active'],
             ['individual', 'Individual is active'],
             ['professional', 'Professional is active'],
-        ])('announces none -> %s with the real plan name', (tier, title) => {
-            showSubscriptionActivatedToast('none', tier);
+        ])('announces a confirmed %s purchase with the real plan name', (tier, title) => {
+            showSubscriptionActivatedToast(tier);
             expect(shown()).toEqual([[title, 'Your personalized feed, dashboard, followed stories and chat are ready.']]);
         });
 
-        // The reported bug: a first-time LOGIN produced "Promo is active" with no purchase in the session.
-        it.each([['starter'], ['individual'], ['professional']])(
-            'stays silent when the user ALREADY held %s (no transition to report)',
-            (tier) => {
-                showSubscriptionActivatedToast(tier, tier);
-                expect(shown()).toEqual([]);
-            },
-        );
-
-        it('stays silent on an upgrade between paid tiers', () => {
-            showSubscriptionActivatedToast('starter', 'professional');
-            expect(shown()).toEqual([]);
-        });
-
-        it.each([[null], [undefined]])('stays silent when the previous tier is %s: unknown is not "inactive"', (previous) => {
-            showSubscriptionActivatedToast(previous as string | null | undefined, 'starter');
-            expect(shown()).toEqual([]);
-        });
-
         it.each([[null], [undefined], ['none']])('stays silent when the new tier is %s', (tier) => {
-            showSubscriptionActivatedToast('none', tier as string | null | undefined);
+            showSubscriptionActivatedToast(tier as string | null | undefined);
             expect(shown()).toEqual([]);
         });
 
@@ -840,7 +807,7 @@ describe('billing and entitlement', () => {
         it.each([['promo'], ['PROMOTIONAL'], ['mera-news-starter-plan'], ['']])(
             'stays silent for the unmappable tier %p rather than inventing "Promo"',
             (tier) => {
-                showSubscriptionActivatedToast('none', tier);
+                showSubscriptionActivatedToast(tier);
                 expect(shown()).toEqual([]);
             },
         );

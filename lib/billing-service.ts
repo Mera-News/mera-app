@@ -169,14 +169,16 @@ export interface RefreshBillingOptions {
     backoffFactor?: number;
     /** Ceiling for the growing gap. Default 4000ms. */
     maxIntervalMs?: number;
+    /** The tier RevenueCat reports as bought, when known. See `purchaseConfirmed`. */
+    purchasedTier?: string | null;
 }
 
 export interface BillingRefreshResult {
     /** The freshest snapshot read, or null if every attempt failed. */
     billing: UserBillingInfo | null;
     /**
-     * True only when the server actually reported a tier DIFFERENT from
-     * `previousTier` — i.e. the webhook landed and this snapshot is the result
+     * True only when the server's snapshot passes `purchaseConfirmed` (a tier
+     * different from `previousTier`, or a paid Starter) — i.e. the webhook landed and this snapshot is the result
      * of the purchase.
      *
      * False means "we gave up still seeing the old tier". Callers must NOT
@@ -189,8 +191,27 @@ export interface BillingRefreshResult {
 }
 
 /**
+ * Is `billing` the result of the purchase? The tier string alone cannot say: every account reads `'starter'`
+ * on the free grant, which has no store entitlement and so no `entitlementExpiresAt`. A bought plan always
+ * carries one (the webhook writes it from the store entitlement).
+ *
+ * `purchasedTier` is the tier RevenueCat reports as active right after the purchase. With it, the server must
+ * agree on that exact tier. Without it, a `'starter'` reading must be a paid one, and any other tier must
+ * differ from the starting tier.
+ */
+function purchaseConfirmed(billing: UserBillingInfo, before: string, purchasedTier?: string | null): boolean {
+    const tier = normalizeTier(billing.subscriptionTier);
+    const paid = billing.entitlementExpiresAt != null;
+    if (purchasedTier) return tier === purchasedTier && (tier !== 'starter' || paid);
+    // ponytail: with no RevenueCat tier this can confirm early for someone who already pays for Starter and is
+    // upgrading (their old paid Starter reads as confirmed). It only happens when RevenueCat returned nothing.
+    if (tier === 'starter') return paid;
+    return tier !== before && tier !== 'none';
+}
+
+/**
  * Re-fetch billing after a completed purchase or restore, retrying with backoff
- * until the server-side tier differs from `previousTier` or the attempt budget
+ * until the server confirms the purchase (see `purchaseConfirmed`) or the attempt budget
  * runs out.
  *
  * `confirmed: false` is genuinely ambiguous and callers must treat it as
@@ -201,28 +222,6 @@ export interface BillingRefreshResult {
  * is why the right response is a bounded "activating…" state that eventually
  * settles rather than a spinner that waits forever.
  */
-/**
- * A confirmed purchase lands on the persona surface, wherever it was made
- * from (user call, 2026-08-19). Fresh purchasers have no persona yet, so they
- * go through the /logged-in gate, which routes an entitled fact-less account
- * into the onboarding wizard (the persona is what makes the Dashboard worth
- * landing on); accounts that already hold facts go straight to the Dashboard
- * tab. Lazy requires + total catch: this file is imported by non-UI code and
- * a navigation nicety must never fail or delay a purchase refresh.
- */
-async function navigateToPersonaAfterPurchase(): Promise<void> {
-    try {
-        const { hasAnyFacts } =
-            require('@/lib/database/services/fact-service') as typeof import('@/lib/database/services/fact-service');
-        const { router } = require('expo-router') as typeof import('expo-router');
-        const hasFacts = await hasAnyFacts().catch(() => false);
-        router.replace(hasFacts ? '/logged-in/app_container/feed' : '/logged-in');
-    } catch {
-        // Navigation unavailable (tests, headless) — the purchase already
-        // succeeded; staying put is acceptable.
-    }
-}
-
 export async function refreshUserBillingAfterPurchase(
     previousTier: string | null | undefined,
     options: RefreshBillingOptions = {},
@@ -239,17 +238,13 @@ export async function refreshUserBillingAfterPurchase(
         const billing = await fetchUserBilling();
         if (billing) {
             latest = billing;
-            if (normalizeTier(billing.subscriptionTier) !== before) {
+            if (purchaseConfirmed(billing, before, options.purchasedTier)) {
                 // This is the one chokepoint every purchase surface converges
                 // on, which is what makes it the email-at-purchase trigger: an
                 // anonymous (device sign-in) account that just paid is offered
                 // a real email for receipts and recovery. Fire-and-forget — an
                 // email nag must never delay or fail the purchase refresh.
                 void maybeRequestEmailCaptureAfterPurchase();
-                // And the landing (user call, 2026-08-19): a confirmed purchase
-                // sends the user to their persona surface no matter which
-                // screen the purchase started from. Also fire-and-forget.
-                void navigateToPersonaAfterPurchase();
                 return { billing, confirmed: true };
             }
         }

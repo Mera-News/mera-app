@@ -107,11 +107,11 @@ describe('refreshUserBillingAfterPurchase', () => {
 
     it('treats a missing tier and "none" as the same starting point', async () => {
         resolvesWith('none');
-        resolvesWith('starter');
+        resolvesWith('individual');
         const promise = refreshUserBillingAfterPurchase(null, { attempts: 3, intervalMs: 10 });
         await tick(10_000);
         await tick(10_000);
-        await expect(promise).resolves.toEqual({ billing: billing('starter'), confirmed: true });
+        await expect(promise).resolves.toEqual({ billing: billing('individual'), confirmed: true });
         expect(mockQuery).toHaveBeenCalledTimes(2);
     });
 
