@@ -5,8 +5,7 @@
 // topics are too-broad (huge yield, low avg score), and which normalized topic
 // texts are duplicated across facts. No imports of lib/database, lib/stores,
 // expo, react-native, or watermelondb — the RN adapter
-// (lib/database/services/fact-stats-service.ts) maps WatermelonDB rows into
-// these shapes and calls the cores. Compatible-by-construction with the
+// maps WatermelonDB rows into these shapes and calls the cores. Compatible-by-construction with the
 // projection shapes in sections.ts (redeclared here, not imported, to keep this
 // module free of any cross-file coupling).
 
