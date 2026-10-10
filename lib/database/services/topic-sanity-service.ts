@@ -37,6 +37,15 @@ const trackedStoriesCollection = database.get<TrackedStoryModel>('tracked_storie
  *  schema change. Resetting it to 0 re-audits the whole corpus (K-P5). */
 const CURSOR_KEY = 'sanity_audited_through_ms';
 
+/** Consecutive runs that had a failed prompt and could not move the cursor.
+ *  Stored beside the cursor; any forward move resets it. */
+const STALL_KEY = 'sanity_cursor_stall_count';
+
+/** A prompt the model refuses every time holds the cursor just below its
+ *  topics. After this many stalled runs the audit gives up on those topics and
+ *  moves past them, so one refusing prompt cannot pin the pass forever. */
+const SANITY_STALL_LIMIT = 3;
+
 /**
  * Provenances the audit will never judge.
  *  - `tracked`  — backs a followed story; Area I is about to make it
@@ -80,6 +89,9 @@ export interface SanityAuditResult {
    * failed prompt's topics are judged again on the next run.
    */
   nextCursorMs: number | null;
+  /** The stall counter to store with the cursor (`commitSanityCursor`); null
+   *  when it stays as it is. */
+  stallCount: number | null;
 }
 
 const EMPTY: SanityAuditResult = {
@@ -88,6 +100,7 @@ const EMPTY: SanityAuditResult = {
   skipped: false,
   exhausted: false,
   nextCursorMs: null,
+  stallCount: null,
 };
 
 /** A run that never happened. Distinct from EMPTY — see `skipped`. */
@@ -102,12 +115,22 @@ async function readCursor(): Promise<number> {
  *  one-time backfill after the generation prompt was fixed. */
 export async function resetSanityCursor(): Promise<void> {
   await setSetting(CURSOR_KEY, '0');
+  await setSetting(STALL_KEY, '0');
 }
 
-/** Move the audit cursor. Called by the caller of `runSanityAudit` once the
- *  verdicts of that run are stored. */
-export async function commitSanityCursor(ms: number): Promise<void> {
-  await setSetting(CURSOR_KEY, String(ms));
+async function readStall(): Promise<number> {
+  const raw = Number(await getSetting(STALL_KEY));
+  return Number.isFinite(raw) && raw > 0 ? raw : 0;
+}
+
+/** Move the audit cursor and store the stall counter. Called by the caller of
+ *  `runSanityAudit` once the verdicts of that run are stored; a null field
+ *  leaves its row alone. */
+export async function commitSanityCursor(
+  audit: Pick<SanityAuditResult, 'nextCursorMs' | 'stallCount'>,
+): Promise<void> {
+  if (audit.nextCursorMs !== null) await setSetting(CURSOR_KEY, String(audit.nextCursorMs));
+  if (audit.stallCount !== null) await setSetting(STALL_KEY, String(audit.stallCount));
 }
 
 /**
@@ -215,7 +238,22 @@ export async function runSanityAudit(opts?: {
     // prompt's oldest topic (a same-millisecond neighbour that did decode is
     // simply judged twice, which the proposal fingerprints absorb).
     const next = Math.min(decodedMaxMs, failedMinMs - 1);
-    const nextCursorMs = audited > 0 && next > cursorMs ? next : null;
+    let nextCursorMs = audited > 0 && next > cursorMs ? next : null;
+
+    // A prompt that fails on every attempt would hold the cursor here forever.
+    // Only a run where other prompts decoded counts (an outage fails them all
+    // and must not make the audit skip anything).
+    const stalled = await readStall();
+    let stallCount: number | null = null;
+    if (nextCursorMs !== null) {
+      stallCount = stalled > 0 ? 0 : null;
+    } else if (audited > 0 && failedMinMs !== Infinity) {
+      stallCount = stalled + 1;
+      if (stallCount >= SANITY_STALL_LIMIT) {
+        nextCursorMs = plan.maxCreatedAtMs > cursorMs ? plan.maxCreatedAtMs : null;
+        stallCount = 0;
+      }
+    }
 
     const incoherentFacts: HygieneIncoherentFactInput[] = [...flaggedByFact.entries()]
       .map(([factId, topicIds]) => ({
@@ -225,7 +263,7 @@ export async function runSanityAudit(opts?: {
       }))
       .sort((a, b) => (a.factId < b.factId ? -1 : a.factId > b.factId ? 1 : 0));
 
-    return { incoherentFacts, audited, skipped: false, exhausted: false, nextCursorMs };
+    return { incoherentFacts, audited, skipped: false, exhausted: false, nextCursorMs, stallCount };
   } catch (error) {
     // A missing E2EE keypair is a STATE, not a defect: the device has not
     // generated (or has cleared) its credential, so a billed batch could not

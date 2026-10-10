@@ -397,7 +397,7 @@ describe('a prompt that refuses every time must not pin the cursor forever', () 
     );
   const timesSent = (n: number) => sanityTexts(gatewayCalls('batch')).filter((t) => t === `cricket topic ${n}`).length;
 
-  test.failing('DA49: a prompt that refuses every time is skipped after the third stalled run, and the pass finishes', async () => {
+  it('DA49: a prompt that refuses every time is skipped after the third stalled run, and the pass finishes', async () => {
     await seedCorpus(60);
     refuseFirstPromptAlways();
 
@@ -408,17 +408,6 @@ describe('a prompt that refuses every time must not pin the cursor forever', () 
     expect(timesSent(0)).toBe(4);
     expect(await getSetting(CURSOR)).toBe(String(T0 + 59 * 10));
     expect(await isBackfillDone()).toBe(true);
-  });
-
-  it('DA49 today: a prompt that refuses every time is sent again on every run, and the pass stays open', async () => {
-    await seedCorpus(60);
-    refuseFirstPromptAlways();
-
-    for (let i = 0; i < 8; i++) await chunk();
-
-    expect(timesSent(0)).toBe(8);
-    expect(await getSetting(CURSOR)).toBe(String(T0 - 1));
-    expect(await isBackfillDone()).toBe(false);
   });
 });
 

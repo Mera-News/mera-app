@@ -26,6 +26,7 @@ import { getAllTopicSnapshots } from './topic-service';
 import { getSetting, setSetting } from './setting-service';
 import { applyPersonaAction, type PersonaAction } from './persona-action-executor';
 import * as sanityService from './topic-sanity-service';
+import type { SanityAuditResult } from './topic-sanity-service';
 import * as replacementService from './topic-replacement-service';
 import * as changeLogService from './persona-change-log-service';
 
@@ -268,7 +269,7 @@ export async function runHygieneSweep(opts?: {
     // attempted and may well have been billed; only a missing credential means
     // it never ran. Reading a timeout as a skip would withhold the cooldown
     // stamp and re-issue the call on the next sweep.
-    { incoherentFacts: [], audited: 0, skipped: false, exhausted: false, nextCursorMs: null },
+    { incoherentFacts: [], audited: 0, skipped: false, exhausted: false, nextCursorMs: null, stallCount: null },
   );
 
   if (facts.length < MIN_FACTS_FOR_SWEEP) {
@@ -335,8 +336,10 @@ export async function runHygieneSweep(opts?: {
  * Move the sanity audit cursor past what this run judged. Only after the
  * verdicts are stored: a cursor moved first loses them if the write fails.
  */
-async function commitAuditCursor(sanity: { nextCursorMs: number | null }): Promise<void> {
-  if (sanity.nextCursorMs !== null) await sanityService.commitSanityCursor(sanity.nextCursorMs);
+async function commitAuditCursor(
+  sanity: Pick<SanityAuditResult, 'nextCursorMs' | 'stallCount'>,
+): Promise<void> {
+  await sanityService.commitSanityCursor(sanity);
 }
 
 /**
@@ -364,6 +367,7 @@ async function publishSanityOnly(
     incoherentFacts: HygieneAnalyzeInput['incoherentFacts'];
     skipped: boolean;
     nextCursorMs: number | null;
+    stallCount: number | null;
   },
   facts: { id: string; statement: string }[],
   topics: HygieneAnalyzeInput['topics'],

@@ -125,7 +125,7 @@ export async function runSanityBackfillChunk(opts?: {
 
     // The verdicts are stored: only now does the cursor move past them. A failed
     // write above leaves it, so the retry finds the same topics.
-    if (result.nextCursorMs !== null) await commitSanityCursor(result.nextCursorMs);
+    await commitSanityCursor(result);
     await setSetting(AUDITED_KEY, String(auditedTotal));
 
     // COMPLETION, derived — never "we ran, so we're done". Only a plan with
