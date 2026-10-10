@@ -137,7 +137,7 @@ export class SourceService {
     /**
      * Publisher/website search (Item 8, Sources L1). `matchingSources` is the
      * FILTERED subset whose name matched the query: good for resolving a name
-     * to its publisher (publisher-lookup.ts), never a publisher's full source
+     * to its publisher, never a publisher's full source
      * set, so it is not recorded in publisher-source-names. The
      * server rejects queries shorter than 2 characters — callers must not
      * fire below that length (SourcesL1CountryList debounces and gates on it).

@@ -27,17 +27,6 @@ export const getRelevanceLabel = (relevance: number): string => {
     }
 };
 
-const DISPLAY_SECTION_LABELS: Record<string, string> = {
-    'Emergency Priority Articles': 'feed.sections.emergency',
-    'High Priority Articles': 'feed.sections.high',
-    'Medium Priority Articles': 'feed.sections.medium',
-    'Low Priority Articles': 'feed.sections.low',
-    'Unscored Articles': 'feed.sections.unscoredShort',
-};
-
-export const getDisplaySectionLabel = (label: string): string =>
-    DISPLAY_SECTION_LABELS[label] ?? label;
-
 export const getRelevanceColors = (relevance: number): RelevanceColors => {
     // Negative sentinel ("not yet processed") is this file's own concept, not a
     // relevance band — checked before `bandOf`, which only knows about actual
