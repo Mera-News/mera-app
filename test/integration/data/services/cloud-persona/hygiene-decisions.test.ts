@@ -467,28 +467,29 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
   });
 
   // The floor: a fact whose ONLY topics are contaminated would go dark, so the retire is withheld.
-  it('reports NOT-ok when the floor withheld the retire, and logs nothing', async () => {
+  it('reports ok when the floor withheld the retire (OWNER-D1: quietly, no retry toast), and logs nothing', async () => {
     const [{ fact, bad }] = await seedContaminated(1);
     await sweep({ now: T0 });
     const [proposal] = await getPendingProposals();
 
     const res = await accept(proposal.id);
 
-    expect(res).toEqual({ applied: true, ok: false });
+    expect(res).toEqual({ applied: true, ok: true });
     expect((await getByFact(fact.id)).find((t) => t.id === bad.id)!.status).toBe('active');
     expect(await getRecent()).toEqual([]);
   });
 
-  // DATA-U11b-6 (OWNER): the same accept REMOVES the proposal although nothing was cleaned, and the audit
-  // cursor has moved past the topic, so no sweep proposes it again. The screen's "retry" toast has nothing
-  // to retry. Pinned, not judged.
-  it('OWNER-D1 today: a floor-held accept still removes the proposal, so the contaminated topic is never offered again', async () => {
+  // DATA-U11b-6 (OWNER-D1, owner ruled): the same accept REMOVES the proposal although nothing was cleaned, and
+  // the audit cursor has moved past the topic, so no sweep proposes it again. The accept reports ok, so the
+  // screen shows no "retry" toast: there is nothing to retry.
+  it('OWNER-D1: a floor-held accept removes the proposal quietly, so the contaminated topic is never offered again', async () => {
     await seedContaminated(1);
     await sweep({ now: T0 });
     const [proposal] = await getPendingProposals();
 
-    await accept(proposal.id);
+    const res = await accept(proposal.id);
 
+    expect(res).toEqual({ applied: true, ok: true });
     expect(await getPendingProposals()).toEqual([]);
     expect((await sweep({ now: T0 + 30 * DAY })).proposalCount).toBe(0);
   });

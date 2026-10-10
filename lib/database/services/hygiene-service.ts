@@ -559,10 +559,9 @@ async function applyIncoherentTopicsProposal(
   await refillFromBacklog(pending.filter((p) => p.id !== proposal.id));
   notifyChange();
 
-  // floorHeld ⇒ the fact would have gone dark, so the removal was withheld.
-  // Report it as not-fully-ok so the UI shows the retry toast rather than
-  // claiming a cleanup that did not happen.
-  return { applied: true, ok: !outcome.floorHeld };
+  // floorHeld ⇒ the fact would have gone dark, so the removal was withheld. The
+  // proposal is still settled and not re-offered, quietly: no retry toast.
+  return { applied: true, ok: true };
 }
 
 export interface AcceptResult {
