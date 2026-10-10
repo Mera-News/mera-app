@@ -261,13 +261,10 @@ describe('getVisitsForPublication (dedupe by article id, else URL, else row)', (
     expect(entry.imageUrl).toBe('https://img.example.com/new.jpg');
   });
 
-  // DATA-U10b-4 / DA23. dedupeVisitRows builds an entry from the FIRST row it meets and only merges a
-  // later row's snapshot fields when that row is newer; the queries have no sort. So the merged result
-  // depends on row order: a newest row that lacks a title, suggestion id or pubDate hides the older
-  // rows' values when it arrives first. The correct result (freshest non-null field wins) must not
-  // depend on insertion order, so the test builds the same two visits in BOTH orders.
-  // Loki returns the rows of a filtered query newest-inserted first (an unfiltered query oldest first);
-  // SQLite's order for the same query is not verified here.
+  // DATA-U10b-4 / DA23. dedupeVisitRows sorts each article's rows newest first and fills every
+  // snapshot field from the newest row that has it, so a newest row that lacks a title, suggestion
+  // id or pubDate does not hide the older rows' values and the result does not depend on row order.
+  // The test builds the same two visits in BOTH insertion orders.
   describe('a newest visit that lacks fields (DATA-U10b-4, DA23)', () => {
     const url = 'https://example.com/a';
     const pubDate = new Date('2024-06-01T00:00:00Z');
@@ -284,20 +281,13 @@ describe('getVisitsForPublication (dedupe by article id, else URL, else row)', (
       return { titleEn: entry.titleEn, articleSuggestionId: entry.articleSuggestionId, pubDate: entry.pubDate, visitedAt: entry.visitedAt };
     };
 
-    test.failing('the freshest non-null title, suggestion id and pubDate win, whichever order the visits were inserted in', async () => {
+    it('the freshest non-null title, suggestion id and pubDate win, whichever order the visits were inserted in', async () => {
       const expected = { titleEn: 'Preserved Title', articleSuggestionId: 'sugg-first', pubDate: pubDate.getTime(), visitedAt: T0 };
       for (const order of [[olderVisit, newestVisit], [newestVisit, olderVisit]]) {
         await clearAllVisits();
         for (const visit of order) await visitAt(...visit());
         expect(await merged()).toEqual(expected);
       }
-    });
-
-    it('DA23 today (Loki row order): with the newest visit inserted last, the older title, suggestion id and pubDate are lost', async () => {
-      await visitAt(...olderVisit());
-      await visitAt(...newestVisit());
-
-      expect(await merged()).toEqual({ titleEn: null, articleSuggestionId: null, pubDate: null, visitedAt: T0 });
     });
   });
 

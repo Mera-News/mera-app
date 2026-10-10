@@ -155,11 +155,13 @@ export interface VisitedArticle {
  */
 function dedupeVisitRows(rows: PublicationVisitModel[]): VisitedArticle[] {
   const grouped = new Map<string, VisitedArticle>();
-  for (const row of rows) {
+  const tappedAt = (row: PublicationVisitModel) =>
+    row.visitedAt instanceof Date ? row.visitedAt.getTime() : Number(row.visitedAt);
+  // Newest first (id breaks a tie), so the result does not depend on the query's row order.
+  const newestFirst = [...rows].sort((a, b) => tappedAt(b) - tappedAt(a) || (a.id < b.id ? -1 : 1));
+  for (const row of newestFirst) {
     const dedupeKey = row.articleId ?? row.articleUrl ?? `__row_${row.id}`;
-    const visitedAt = row.visitedAt instanceof Date
-      ? row.visitedAt.getTime()
-      : Number(row.visitedAt);
+    const visitedAt = tappedAt(row);
     const pubDate = row.pubDate instanceof Date
       ? row.pubDate.getTime()
       : row.pubDate != null
@@ -168,16 +170,15 @@ function dedupeVisitRows(rows: PublicationVisitModel[]): VisitedArticle[] {
     const existing = grouped.get(dedupeKey);
     if (existing) {
       existing.visitCount += 1;
-      if (visitedAt > existing.visitedAt) {
-        existing.visitedAt = visitedAt;
-        // Prefer the freshest non-null snapshot fields — earlier visits
-        // may pre-date the v23 columns being populated.
-        existing.titleEn = row.titleEn ?? existing.titleEn;
-        existing.titleOriginal = row.titleOriginal ?? existing.titleOriginal;
-        existing.imageUrl = row.imageUrl ?? existing.imageUrl;
-        existing.languageCode = row.languageCode ?? existing.languageCode;
-        existing.pubDate = pubDate ?? existing.pubDate;
-      }
+      // Rows arrive newest first: each snapshot field keeps the freshest
+      // non-null value — earlier visits may pre-date the v23 columns being
+      // populated, and the newest may lack a field an older one has.
+      existing.articleSuggestionId ??= row.articleSuggestionId;
+      existing.titleEn ??= row.titleEn;
+      existing.titleOriginal ??= row.titleOriginal;
+      existing.imageUrl ??= row.imageUrl;
+      existing.languageCode ??= row.languageCode;
+      existing.pubDate ??= pubDate;
     } else {
       grouped.set(dedupeKey, {
         articleId: row.articleId,
