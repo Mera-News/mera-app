@@ -1557,13 +1557,9 @@ describe('PE13 a drain that yields while the limiter slot is busy', () => {
     jest.restoreAllMocks();
   });
 
-  test.failing('PE13 the yielded poll tick waits for the slot instead of re-reading the pipeline while it is busy', async () => {
+  test('PE13 the yielded poll tick waits for the slot instead of re-reading the pipeline while it is busy', async () => {
     // Waiting for the slot, the kicked tick reads the pipeline once the slot is free: at most one
     // generation's worth of reads can land while it is still busy.
     expect(await readsWhileSlotBusy()).toBeLessThanOrEqual(6);
-  });
-
-  test('PE13 today: the yielded poll tick re-kicks at zero delay and re-reads the pipeline on every turn while the slot is busy', async () => {
-    expect(await readsWhileSlotBusy()).toBeGreaterThan(6 * 10);
   });
 });

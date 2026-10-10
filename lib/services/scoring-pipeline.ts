@@ -3345,15 +3345,21 @@ function stopPoller(): void {
   }
 }
 
-/** Run one poller tick on the next turn, for a drain that yielded its slot to
- *  a higher-ranked poll or notes submit. Never inline: a tick awaits drain(),
- *  and the drain that asks is still in flight. */
+/** Run one poller tick for a drain that yielded its slot to a higher-ranked
+ *  poll or notes submit: on the next turn, or when the limiter slot frees if it
+ *  is busy (a tick that fires early cannot poll, yields and kicks again, and
+ *  the JS thread spins). Never inline: a tick awaits drain(), and the drain
+ *  that asks is still in flight. */
 function kickPollTick(): void {
   if (pollKickTimer || AppState.currentState !== 'active') return;
-  pollKickTimer = setTimeout(() => {
-    pollKickTimer = null;
-    void runPollerTick();
-  }, 0);
+  const wait = gatewayRateLimiter.msUntilNextGrant();
+  pollKickTimer = setTimeout(
+    () => {
+      pollKickTimer = null;
+      void runPollerTick();
+    },
+    wait > 0 ? wait + 1 : 0,
+  );
 }
 
 async function runPollerTick(): Promise<void> {
