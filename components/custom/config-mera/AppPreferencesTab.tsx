@@ -13,7 +13,7 @@ import { maskEmail } from '@/lib/utils/mask-email';
 import { getAppVersion, getGitCommit } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
@@ -54,11 +54,7 @@ const AppPreferencesTab: React.FC = () => {
         faqOpening,
         openFaq,
     } = useAppPreferences();
-    useFocusEffect(
-        useCallback(() => {
-            refreshOnFocus();
-        }, []),
-    );
+    useFocusEffect(refreshOnFocus);
 
     const busy = <Spinner size="small" />;
     const version = getAppVersion();

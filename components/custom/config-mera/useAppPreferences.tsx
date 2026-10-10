@@ -183,12 +183,12 @@ export function useAppPreferences() {
     // otherwise invisible here.
     const [, setFocusTick] = React.useState(0);
     const [devMode, setDevMode] = React.useState(false);
-    const refreshOnFocus = () => {
-            setFocusTick((n) => n + 1);
-            getSetting(DEVELOPER_MODE_KEY)
-                .then((v) => setDevMode(v === '1'))
-                .catch(() => { /* off */ });
-    };
+    const refreshOnFocus = useCallback(() => {
+        setFocusTick((n) => n + 1);
+        getSetting(DEVELOPER_MODE_KEY)
+            .then((v) => setDevMode(v === '1'))
+            .catch(() => { /* off */ });
+    }, []);
     const setDeveloperMode = useCallback(
         async (on: boolean) => {
             setDevMode(on);

@@ -142,8 +142,8 @@ export function useOnboardingGate({ userId, sessionUserId, onLoginRedirect, onCo
                 }
                 if (cancelled) return;
                 // Stamp the new owner, and wait until it is on disk.
-                // `cached_user_id` is the ONLY sentinel clearPreviousUserData
-                // keys off, and nothing else on the fresh-login path writes it
+                // `cached_user_id` is the ONLY sentinel the shared wipe
+                // (wipeOnce) keys off, and nothing else on the fresh-login path writes it
                 // (app/logged-in/index.tsx, which this path bypasses, does).
                 // Without it the wipe above is permanently a no-op for a user
                 // who logged in but never cold-started, so the next user on the
