@@ -19,6 +19,7 @@
 // dependency (and its `en` locale) in the shipped bundle for the inverse
 // direction (code → name); here it is used for name → ISO alpha-3.
 import countries from 'i18n-iso-countries';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import {
   formatTopicPlanNotesBlock,
@@ -134,17 +135,6 @@ export const HISTORY_RESERVE_TOKENS = 128;
 
 /** Defensive trim on a rendered filter phrase (a pattern is user/LLM text). */
 const FILTER_PATTERN_TRUNC = 60;
-
-/** Mirrors lib/algorithms/estimate-tokens.ts::estimateTokens byte-for-byte — inlined so the
- *  harness stays free of the lib/llm import graph (same convention as
- *  article-feedback/agent-core.ts). */
-function estimateTokens(text: string): number {
-  const cjkPattern = /[一-鿿㐀-䶿豈-﫿]/g;
-  const cjkMatches = text.match(cjkPattern);
-  const cjkCount = cjkMatches?.length ?? 0;
-  const nonCjkCount = text.length - cjkCount;
-  return Math.ceil(cjkCount / 1.2) + Math.ceil(nonCjkCount / 4);
-}
 
 // ---------------------------------------------------------------------------
 // System prompt
