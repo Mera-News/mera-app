@@ -172,6 +172,29 @@ async function suppressionWasHard(suppressionId: string): Promise<boolean> {
 }
 
 /**
+ * Retire a topic minted by `row`, unless another unreverted mint row names the
+ * same topic. createTopics returns the existing row for a repeat mint, so two
+ * verdicts can log two mints of ONE topic and the first still stands behind it.
+ */
+async function retireMintedTopic(row: PersonaChangeLogModel, topicId: string): Promise<void> {
+  const mints = await changeLogCollection
+    .query(
+      Q.where('action_type', Q.oneOf([ACTION_NAMES.ADD_TOPIC, ACTION_NAMES.ADD_NEGATIVE_TOPIC])),
+      Q.where('reverted', false),
+    )
+    .fetch();
+  const stillMinted = mints.some((m) => {
+    if (m.id === row.id) return false;
+    try {
+      return parseAction(m).targetId === topicId;
+    } catch {
+      return false;
+    }
+  });
+  if (!stillMinted) await topicService.retire(topicId);
+}
+
+/**
  * Reverts a logged persona mutation by applying its inverse, marks the row
  * `reverted`, appends a `revert_change` entry (source 'user'), and then runs
  * whatever retroactive feed sweep the undo requires (D12), the same reconciliation the persona-action-executor seam does,
@@ -181,7 +204,7 @@ async function suppressionWasHard(suppressionId: string): Promise<boolean> {
  *
  * Implemented inversions:
  *   set_topic_weight / set_fact_weight / set_location_weight → restore `before`
- *   add_topic          → retire the created topic
+ *   add_topic          → retire the created topic (unless another unreverted mint names it)
  *   retire_topic       → reactivate the topic
  *   set_high_priority  → restore the prior boolean flag
  *   add_negative_topic → retire the created (negative) topic
@@ -239,7 +262,7 @@ export async function revertChange(changeLogId: string): Promise<boolean> {
       // Inverse of creation is retirement, not deletion — retired rows keep
       // serving dedup/history.
       const targetId = requireTargetId(action, row.id);
-      await topicService.retire(targetId);
+      await retireMintedTopic(row, targetId);
       break;
     }
     case 'retire_topic': {
@@ -263,7 +286,7 @@ export async function revertChange(changeLogId: string): Promise<boolean> {
     case ACTION_NAMES.ADD_NEGATIVE_TOPIC: {
       // Inverse of creation is retirement (mirrors add_topic).
       const targetId = requireTargetId(action, row.id);
-      await topicService.retire(targetId);
+      await retireMintedTopic(row, targetId);
       break;
     }
     case ACTION_NAMES.ADD_SUPPRESSION: {

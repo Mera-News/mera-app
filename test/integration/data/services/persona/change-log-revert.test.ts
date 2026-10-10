@@ -291,18 +291,7 @@ describe('topics', () => {
   describe('the same negative topic minted by two verdicts', () => {
     const mint = () => applyPersonaAction({ action_type: A.ADD_NEGATIVE_TOPIC, topicText: 'cricket' }, 'feedback');
 
-    it('today: undoing the SECOND mint retires the topic the FIRST verdict still stands behind', async () => {
-      const first = await mint();
-      const second = await mint();
-      expect(await rowsOf('topics')).toHaveLength(1);
-
-      await revertChange(second.changeLogId!);
-
-      expect((await rowsOf('topics'))[0].status).toBe('retired');
-      expect((await logRow(first.changeLogId!)).reverted).toBe(false);
-    });
-
-    test.failing('the topic stays live until BOTH mints are undone', async () => {
+    it('the topic stays live until BOTH mints are undone', async () => {
       const first = await mint();
       const second = await mint();
 
