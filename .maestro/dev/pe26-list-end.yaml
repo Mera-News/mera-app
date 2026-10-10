@@ -31,7 +31,8 @@ appId: ${APP_ID}
 - assertNotVisible:
     id: "chat-input"
 
-# The other You-tab pages, each scrolled to its end. Back is the Android back key.
+# The other You-tab pages, each scrolled to its end. Back is the Android back key. Rows are centred
+# before a tap: scrolling UP stops with the row under the floating Profile/Settings header.
 - back
 - back
 - extendedWaitUntil:
@@ -45,6 +46,7 @@ appId: ${APP_ID}
     element:
       id: "settings-row-notifications"
     direction: UP
+    centerElement: true
 - tapOn:
     id: "settings-row-notifications"
 - runFlow:
@@ -55,6 +57,7 @@ appId: ${APP_ID}
     element:
       id: "settings-manage-plan"
     direction: UP
+    centerElement: true
 - tapOn:
     id: "settings-manage-plan"
 - extendedWaitUntil:

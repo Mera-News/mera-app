@@ -1,18 +1,30 @@
 # Dev flow: OWNER-F2 (R76). A failed foreground sync says which step failed in the counts card's lead
 # line (feed-status-lead) with the orange mark (feed-status-lead-mark), and the counts come back once
 # a pull succeeds. The mock's scenario failOperation makes one GraphQL op answer with an error.
-# The device asks for ids with GetArticleIdsForPersona (never GetArticleIdsForTopics), and the fixture
-# ids never change, so the download failure is armed before sign-in: only the first sync downloads.
-# Red until feed's F2-4 lands. Run in the P4-end device run.
+# The device asks for ids with GetArticleIdsForPersona (never GetArticleIdsForTopics). The first sync
+# runs with articles 'empty' so it settles empty (the card shows); switching to the default articles
+# then gives the next pull ids to download, so the download step can fail. A failed FIRST sync keeps
+# the Feed on "Finding your stories" with no card at all (P4-end run 20261011-005123), so it cannot be
+# checked here.
 appId: ${APP_ID}
 ---
-# a) Download step fails on the first sync.
 - runScript: ../scripts/reset-scenario.js
 - runScript:
     file: ../scripts/set-scenario.js
     env:
-      SCENARIO: '{"failOperation":"GetArticlesForTopicsByIds"}'
+      SCENARIO: '{"articles":"empty"}'
 - runFlow: ../flows/sign-in.yaml
+- extendedWaitUntil:
+    visible:
+      id: "feed-status-lead"
+    timeout: 90000
+
+# a) New ids appear, and the download step fails.
+- runScript:
+    file: ../scripts/set-scenario.js
+    env:
+      SCENARIO: '{"articles":"default","failOperation":"GetArticlesForTopicsByIds"}'
+- runFlow: ../flows/pull-feed.yaml
 - extendedWaitUntil:
     visible:
       id: "feed-status-lead"
