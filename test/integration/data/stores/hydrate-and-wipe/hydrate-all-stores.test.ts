@@ -275,10 +275,9 @@ describe('hydrateAllStores: pruneStaleVisits after hydration', () => {
 
 describe('hydrateAllStores: B1, a failing app-language read', () => {
   // The app-language read is the only entry whose failure escapes its own hydrate:
-  // every other store swallows its read error. Today hydrateAllStores' Promise.all
-  // rejects at once, so `ready` flips while the other hydrates are still in flight,
-  // pruneStaleVisits never runs, and app/_layout.tsx never reaches
-  // AppScheduler.onStoresHydrated().
+  // every other store swallows its read error. hydrateAllStores settles every entry,
+  // so `ready` waits for the others, pruneStaleVisits still runs, and
+  // app/_layout.tsx still reaches AppScheduler.onStoresHydrated().
   async function setup() {
     freezeClockAt(Date.now() - 40 * DAY_MS);
     await recordPublicationVisit({ publicationName: 'Old Gazette', countryCode: 'NLD', articleId: 'stale-article' });
@@ -289,24 +288,10 @@ describe('hydrateAllStores: B1, a failing app-language read', () => {
   const staleVisitCount = async () =>
     database.get('publication_visits').query().fetchCount();
 
-  it('B1: today hydrateAllStores rejects, ready flips while another hydrate is pending, and the stale visit survives', async () => {
-    const hold = await setup();
-    const done = run();
-    await expect(done).rejects.toThrow('app_language');
-    await until(ready, 'ready to flip');
-    expect(hold.hits()).toBeGreaterThan(0);
-    expect(useTextScaleStore.getState().hydrated).toBe(false);
-    hold.release();
-    await until(() => useTextScaleStore.getState().hydrated, 'the held hydrate to finish');
-    await flush();
-    expect(await staleVisitCount()).toBe(1);
-  });
-
-  test.failing('B1: hydrateAllStores resolves, ready waits for every other entry, and the stale visit is pruned', async () => {
+  it('B1: hydrateAllStores resolves, ready waits for every other entry, and the stale visit is pruned', async () => {
     const hold = await setup();
     const done = run();
     await flush();
-    // Today ready is already true here.
     expect(ready()).toBe(false);
     hold.release();
     await expect(done).resolves.toBeUndefined();

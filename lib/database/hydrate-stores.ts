@@ -4,7 +4,7 @@
 // WatermelonDB open + migration cost rather than queueing behind 5 unrelated
 // stores — the For You screen subscribes to the store and re-renders the
 // instant the suggestions set() lands. Everything else hydrates in parallel
-// in the background; database-store.ready flips once all of it has finished,
+// in the background; database-store.ready flips once all of it has settled,
 // which is the gate for syncFeed.
 
 import { pruneStaleVisits } from './services/publication-visit-service';
@@ -45,7 +45,7 @@ export function hydrateAllStores(): Promise<void> {
   // resolves once full hydration + backfill is done — callers who need
   // hydrated state (e.g. processingMode, userPersona) can chain on this,
   // but no caller should block first paint on it.
-  return Promise.all([
+  return Promise.allSettled([
     useForYouStore.getState().hydrateMetadataFromDb(),
     useUserStore.getState().hydrateFromDb(),
     useMeraProtocolStore.getState().hydrateFromDb(),
@@ -91,7 +91,17 @@ export function hydrateAllStores(): Promise<void> {
       .then(() => require('../background/backup-task').syncBackupTaskRegistration())
       .catch(() => undefined),
   ])
-    .then(() => {
+    .then((results) => {
+      // One entry rejecting must not skip the rest of the chain or flip `ready`
+      // early: every entry has settled by here, and each failure is reported.
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          logger.captureException(result.reason, {
+            tags: { module: 'hydrate-stores', step: 'hydrate-entry' },
+          });
+        }
+      }
+
       // Fire-and-forget: back-fill the persona's primary language_codes from the
       // (now-hydrated) app UI language for users who picked a language before the
       // sync existed. Deliberately NOT awaited — it must never gate
