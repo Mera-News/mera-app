@@ -1,8 +1,7 @@
-// OWNER-F2 (R76): a failed foreground refresh should lead the counts card with the line naming what
-// worked, from the machine's failedAtState and errorCode. Today the card stays silent and the counts
-// sentence leads. Each `test.failing` expects the new line; its "today:" sibling pins the current
-// outcome (zeroText is null). Driven at useStatsCardLead over the real stores, with the failure
-// published through data's contract (feed-sync-status), plus one pair through the real FeedSyncMachine.
+// OWNER-F2 (R76): a failed foreground refresh leads the counts card with the line naming what
+// worked, from the machine's failedAtState and errorCode. Driven at useStatsCardLead over the real
+// stores, with the failure published through data's contract (feed-sync-status), plus one case
+// through the real FeedSyncMachine.
 import { act, renderHook } from '@testing-library/react-native';
 import { limitUnlockTime } from '@/components/custom/for-you/FeedStatusDetails';
 import { useStatsCardLead } from '@/components/custom/for-you/use-stats-card-lead';
@@ -99,7 +98,7 @@ describe('the counts card lead after a failed refresh', () => {
     ['hydrating', 'offline', 'common.offlineBannerOffline'],
   ];
 
-  test.failing.each(cases)(
+  test.each(cases)(
     'a failed refresh at %s (%s) leads with the line naming what worked',
     async (at, code, key) => {
       failed(at, code);
@@ -108,23 +107,13 @@ describe('the counts card lead after a failed refresh', () => {
     },
   );
 
-  test.each(cases)('today: a failed refresh at %s (%s) leaves the counts line in place', async (at, code) => {
-    failed(at, code);
-    const { result } = await renderLead();
-    expect(result.current.zeroText).toBeNull();
-  });
 
-  test.failing('a refresh paused offline leads with the offline line', async () => {
+  test('a refresh paused offline leads with the offline line', async () => {
     publishSyncStatus('paused-offline', { pausedAtState: 'hydrating' });
     const { result } = await renderLead();
     expect(result.current.zeroText).toBe(t('common.offlineBannerOffline'));
   });
 
-  test('today: a refresh paused offline leaves the counts line in place', async () => {
-    publishSyncStatus('paused-offline', { pausedAtState: 'hydrating' });
-    const { result } = await renderLead();
-    expect(result.current.zeroText).toBeNull();
-  });
 
   test('the daily limit still leads when a failure message is also published', async () => {
     const resetAt = Date.now() + 2 * HOUR;
@@ -139,7 +128,7 @@ describe('the counts card lead after a failed refresh', () => {
     const problem = (opts: { background: boolean }) =>
       startMachine(makeCtx(), opts.background ? { background: backgroundHooks().hooks } : {});
 
-    test.failing('a foreground refresh that cannot look for articles says so on the counts card', async () => {
+    test('a foreground refresh that cannot look for articles says so on the counts card', async () => {
       await signInFixtureAccount();
       await serveNew(ids(3));
       server.use(graphql.query('GetArticleIdsForPersona', () => HttpResponse.error()));
@@ -151,20 +140,6 @@ describe('the counts card lead after a failed refresh', () => {
       expect(result.current.zeroText).toBe(t('feed.syncFailed.fetch'));
     });
 
-    test('today: a foreground refresh that cannot look for articles leaves the counts line in place', async () => {
-      await signInFixtureAccount();
-      await serveNew(ids(3));
-      server.use(graphql.query('GetArticleIdsForPersona', () => HttpResponse.error()));
-      await expect(advanceUntilDone(problem({ background: false }))).rejects.toBeDefined();
-      expect(useForYouStore.getState().syncStatusMessage).toEqual(
-        expect.objectContaining({ state: 'failed', failedAtState: 'fetching-topic-ids' }),
-      );
-      seedCounts();
-
-      const { result } = await renderLead();
-
-      expect(result.current.zeroText).toBeNull();
-    });
 
     test('a background run that fails leaves the counts line in place', async () => {
       await serveNew(ids(3));

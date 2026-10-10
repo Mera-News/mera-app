@@ -1,4 +1,5 @@
-import { cardState, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, type CardStateInput } from '@/components/custom/for-you/card-state';
+import type { FeedSyncState, SyncErrorCode } from '@/lib/scheduler/feed-sync/feed-sync-types';
+import { cardState, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, syncFailureKey, type CardStateInput, type SyncFailure } from '@/components/custom/for-you/card-state';
 
 const base: CardStateInput = {
   mode: 'idle',
@@ -7,7 +8,10 @@ const base: CardStateInput = {
   articleCount: 120,
   analysedCount: 40,
   relevantCount: 6,
+  syncFailure: null,
 };
+
+const failed = (failedAtState?: FeedSyncState, errorCode?: SyncErrorCode): SyncFailure => ({ kind: 'failed', failedAtState, errorCode });
 
 describe('cardState', () => {
   it('says nothing special when every count is there', () => {
@@ -40,6 +44,48 @@ describe('cardState', () => {
   it('blames the connection when offline', () => {
     expect(cardState({ ...base, offline: true, articleCount: 0 })).toBe('offline');
     expect(cardState({ ...base, offline: true })).toBeNull();
+  });
+});
+
+describe('syncFailureKey', () => {
+  it.each([
+    [failed('idle', 'unknown'), 'feed.syncFailed.start'],
+    [failed(undefined, 'unknown'), 'feed.syncFailed.start'],
+    [failed('fetching-topic-ids', 'server-unreachable'), 'feed.syncFailed.fetch'],
+    [failed('diffing', 'unknown'), 'feed.syncFailed.check'],
+    [failed('hydrating', 'server-unreachable'), 'feed.syncFailed.download'],
+    [failed('persisting', 'unknown'), 'feed.syncFailed.download'],
+    [failed('scoring', 'scoring-unavailable'), 'feed.syncFailed.score'],
+    [failed('hydrating', 'storage-error'), 'feed.syncFailed.storage'],
+    [failed('scoring', 'storage-error'), 'feed.syncFailed.storage'],
+    [failed('fetching-topic-ids', 'storage-error'), 'feed.syncFailed.fetch'],
+    [failed('diffing', 'auth-expired'), 'feed.syncFailed.session'],
+    [failed('hydrating', 'offline'), 'common.offlineBannerOffline'],
+    [{ kind: 'paused-offline' } as SyncFailure, 'common.offlineBannerOffline'],
+    [failed('fetching-topic-ids', 'daily-limit'), null],
+    [failed('idle', 'no-topics-configured'), null],
+    [null, null],
+  ])('%j -> %s', (f, key) => {
+    expect(syncFailureKey(f)).toBe(key);
+  });
+});
+
+describe('cardState with a failed refresh', () => {
+  const syncFailure = failed('hydrating', 'server-unreachable');
+  it('beats the counts and the zero states', () => {
+    expect(cardState({ ...base, syncFailure })).toBe('syncFailed');
+    expect(cardState({ ...base, articleCount: 0, analysedCount: 0, relevantCount: 0, offline: true, syncFailure })).toBe('syncFailed');
+    expect(cardState({ ...base, mode: 'processing', syncFailure })).toBe('syncFailed');
+  });
+  it('loses to the limit and the error', () => {
+    expect(cardState({ ...base, mode: 'limited', syncFailure })).toBe('limited');
+    expect(cardState({ ...base, mode: 'error', syncFailure })).toBe('error');
+  });
+  it('stays out when another surface owns the failure', () => {
+    expect(cardState({ ...base, syncFailure: failed('idle', 'daily-limit') })).toBeNull();
+  });
+  it('is an alert', () => {
+    expect(markTone('syncFailed')).toBe('alert');
   });
 });
 

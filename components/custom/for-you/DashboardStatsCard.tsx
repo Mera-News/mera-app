@@ -111,7 +111,7 @@ function StatusMark({ working, size, tone }: { working: boolean; size: number; t
     // row's icon slot centres the hexagon on the slot (the shortcut tile's
     // centre); a mark taller than the 40pt slot overflows it, unclipped.
     return (
-        <View testID="dashboard-stats-card-mark">
+        <View testID="feed-status-lead-mark">
             <MeraLogo size={size} color={tone === 'alert' ? colors.accentMark : colors.ink} animated={working} />
         </View>
     );
@@ -183,7 +183,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                                 size="sm"
                                                 className="text-ink font-medium"
                                                 style={TABULAR}
-                                                testID="dashboard-stats-card-zero"
+                                                testID="feed-status-lead"
                                             >
                                                 {zeroText}
                                             </Text>

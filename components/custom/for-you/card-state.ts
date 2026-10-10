@@ -4,6 +4,8 @@
 //
 //  - 'limited'  the daily article limit: when new articles unlock
 //  - 'error'    scoring failed: what went wrong (the old red status icon)
+//  - 'syncFailed'  a foreground refresh failed or paused offline: the line
+//               names the step that worked and the one that did not
 //  - 'fetched'  nothing published in the last 24 hours
 //  - 'analysed' published, none analysed, and nothing waiting to be (idle):
 //               in `deferred` articles ARE waiting, so "couldn't" is untrue
@@ -11,13 +13,45 @@
 //  - 'offline'  any zero while the device is offline: the reason is the
 //               connection, so the card leads with the offline line instead
 //
-// The limit and the error win over everything. The zeros never show while a
+// The limit, then the error, then a failed refresh win over everything. The zeros never show while a
 // run is in flight (the statsSync* sentence speaks) or with no facts (the
 // no-facts card owns the Feed).
 
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
+import type { FeedSyncState, SyncErrorCode } from '@/lib/scheduler/feed-sync/feed-sync-types';
 
-export type CardState = 'limited' | 'error' | 'fetched' | 'analysed' | 'relevant' | 'offline';
+export type SyncFailure =
+  | { readonly kind: 'failed'; readonly failedAtState?: FeedSyncState; readonly errorCode?: SyncErrorCode }
+  | { readonly kind: 'paused-offline' };
+
+/** The sync message's failure, or null for any other state. */
+export function syncFailureOf(
+  m: { readonly state: string; readonly failedAtState?: FeedSyncState; readonly errorCode?: SyncErrorCode } | null,
+): SyncFailure | null {
+  if (m?.state === 'failed') return { kind: 'failed', failedAtState: m.failedAtState, errorCode: m.errorCode };
+  return m?.state === 'paused-offline' ? { kind: 'paused-offline' } : null;
+}
+
+const FAILED_AT_KEY: Partial<Record<FeedSyncState, string>> = {
+  'fetching-topic-ids': 'feed.syncFailed.fetch',
+  diffing: 'feed.syncFailed.check',
+  hydrating: 'feed.syncFailed.download',
+  persisting: 'feed.syncFailed.download',
+  scoring: 'feed.syncFailed.score',
+};
+
+/** The i18n key of a failure's line; null when another surface owns it (daily limit, no topics). */
+export function syncFailureKey(f: SyncFailure | null): string | null {
+  if (!f) return null;
+  if (f.kind === 'paused-offline' || f.errorCode === 'offline') return 'common.offlineBannerOffline';
+  if (f.errorCode === 'auth-expired') return 'feed.syncFailed.session';
+  if (f.errorCode === 'daily-limit' || f.errorCode === 'no-topics-configured') return null;
+  const at = f.failedAtState;
+  if (f.errorCode === 'storage-error' && (at === 'hydrating' || at === 'scoring')) return 'feed.syncFailed.storage';
+  return (at && FAILED_AT_KEY[at]) || 'feed.syncFailed.start';
+}
+
+export type CardState = 'limited' | 'error' | 'syncFailed' | 'fetched' | 'analysed' | 'relevant' | 'offline';
 
 export interface CardStateInput {
   readonly mode: FeedStatusMode;
@@ -26,11 +60,13 @@ export interface CardStateInput {
   readonly articleCount: number;
   readonly analysedCount: number;
   readonly relevantCount: number;
+  readonly syncFailure: SyncFailure | null;
 }
 
 export function cardState(i: CardStateInput): CardState | null {
   if (i.mode === 'limited') return 'limited';
   if (i.mode === 'error') return 'error';
+  if (syncFailureKey(i.syncFailure)) return 'syncFailed';
   if (i.noFacts || (i.mode !== 'idle' && i.mode !== 'deferred')) return null;
   const zero: CardState | null =
     i.articleCount === 0
@@ -50,7 +86,7 @@ export function cardState(i: CardStateInput): CardState | null {
  *  theme's ink in every other state. */
 export type MarkTone = 'alert' | 'normal';
 export function markTone(state: CardState | null): MarkTone {
-  return state === 'fetched' || state === 'limited' || state === 'analysed' || state === 'error' ? 'alert' : 'normal';
+  return state === 'fetched' || state === 'limited' || state === 'analysed' || state === 'error' || state === 'syncFailed' ? 'alert' : 'normal';
 }
 
 /** The lead row's Mera mark, by the sentence block's height (owner: about

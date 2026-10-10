@@ -36,6 +36,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp, useReducedMotion } from 'react-native-reanimated';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
+import { syncFailureKey, syncFailureOf } from './card-state';
 import { pickScoringProgress } from './status-ink';
 import { useLastProcessedLabel } from './use-last-processed-label';
 
@@ -90,7 +91,9 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
     // `headlineKey` is computed, hence `tAny`.
     const dailyLimitStage = mode === 'limited' ? t('feed.dailyLimit.title') : null;
     const errorStage = mode === 'error' ? t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].title) : null;
-    const stageMessage = dailyLimitStage ?? errorStage ?? (
+    const failureKey = syncFailureKey(syncFailureOf(syncStatusMessage));
+    const failureStage = failureKey ? tAny(failureKey) : null;
+    const stageMessage = dailyLimitStage ?? errorStage ?? failureStage ?? (
         asyncJobPhase === 'relevance'
             ? t('feed.syncToast.relevanceTitle')
             : asyncJobPhase === 'reasons'

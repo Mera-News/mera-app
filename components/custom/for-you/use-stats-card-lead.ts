@@ -3,19 +3,20 @@ import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useIsConnected } from '@/lib/stores/network-store';
-import { useForYouDailyLimitResetAt, useForYouScoringError } from '@/lib/stores/selectors';
+import { useForYouDailyLimitResetAt, useForYouScoringError, useForYouSyncStatusMessage } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 import { formatCount } from '@/lib/utils/format-count';
 import { useTranslation } from 'react-i18next';
 import { limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, joinClauses, type CardState } from './card-state';
+import { cardState, joinClauses, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
 
 /** A state's lead sentence, plain text (owner: no links; the reader finds
  *  Settings and their profile themselves; the limit's and the error's actions
  *  are in the details). */
-function useStateText(kind: CardState | null): string | null {
+function useStateText(kind: CardState | null, failure: SyncFailure | null): string | null {
     const { t, i18n } = useTranslation();
+    const tAny = t as unknown as (key: string) => string;
     const appLanguage = useAppLanguage();
     const { articleCount, analysedCount } = useFeedCounts();
     const resetAt = useForYouDailyLimitResetAt();
@@ -23,6 +24,8 @@ function useStateText(kind: CardState | null): string | null {
     const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
     if (kind === 'limited') return t('feed.dailyLimit.bodyWithTime', { time: limitUnlockTime(resetAt) });
     if (kind === 'error') return t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].message);
+    // The key is computed from the failure, hence `tAny`.
+    if (kind === 'syncFailed') return tAny(syncFailureKey(failure)!);
     if (kind === 'offline') return t('common.offlineBannerOffline');
     if (kind === 'fetched') return t('feed.statsZeroFetched');
     if (kind === 'analysed')
@@ -51,8 +54,9 @@ export function useStatsCardLead() {
     // explaining): with no facts at all the no-facts card owns the Feed.
     const noFacts = useHasFacts() === false;
     const offline = useIsConnected() === false;
-    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount });
-    const zeroText = useStateText(state);
+    const syncFailure = syncFailureOf(useForYouSyncStatusMessage());
+    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount, syncFailure });
+    const zeroText = useStateText(state, syncFailure);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
     return { mode, articleCount, state, zeroText, stateLabel, processing };
