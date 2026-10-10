@@ -1,5 +1,6 @@
 import { ApolloClient, ApolloLink, InMemoryCache, Observable } from '@apollo/client';
 import { CombinedGraphQLErrors, ServerError } from '@apollo/client/errors';
+import { AppState } from 'react-native';
 
 interface GraphQLErrorExtensions {
     exception?: { name?: string };
@@ -15,7 +16,6 @@ import { ErrorLink } from '@apollo/client/link/error';
 import { HttpLink } from '@apollo/client/link/http';
 import { RetryLink } from '@apollo/client/link/retry';
 import { router } from 'expo-router';
-import { AppState } from 'react-native';
 import {
     StatusCodes,
 } from 'http-status-codes';
