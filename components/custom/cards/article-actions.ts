@@ -15,6 +15,7 @@ export function visitFromSuggestion(s: ForYouSuggestion): VisitInput {
         articleId: s.articleId,
         articleSuggestionId: s._id,
         titleEn: s.title_en,
+        titleOriginal: s.title_original,
         languageCode: s.language_code,
         imageUrl: s.image_url,
         pubDate: s.firstPubDate ?? s.createdAt,

@@ -158,16 +158,9 @@ describe('a visit opened from a suggestion', () => {
         return { visit, shown: visitedToNewsArticle(visit) };
     }
 
-    test.failing('a visit opened from a suggestion keeps its original title', async () => {
+    test('a visit opened from a suggestion keeps its original title', async () => {
         const { visit, shown } = await openFromSuggestion();
         expect(visit.titleOriginal).toBe('Nederlandse kop');
         expect(shown.title).toBe('Nederlandse kop');
-    });
-
-    test('today: a visit opened from a suggestion stores no original title, so History shows the English title as the original', async () => {
-        const { visit, shown } = await openFromSuggestion();
-        expect(visit.titleEn).toBe('English title');
-        expect(visit.titleOriginal).toBeNull();
-        expect(shown.title).toBe('English title');
     });
 });

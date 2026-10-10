@@ -475,6 +475,7 @@ export function useArticleSuggestionScreen({
                 articleSuggestionId: suggestion._id,
                 articleUrl: url,
                 titleEn: suggestion.title_en,
+                titleOriginal: suggestion.title_original,
                 languageCode: suggestion.language_code,
                 imageUrl: suggestion.image_url,
                 pubDate: suggestion.firstPubDate ?? suggestion.createdAt,
