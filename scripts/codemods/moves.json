@@ -1,0 +1,21 @@
+[
+  {"_format": "Entries: {from, to, test?: {from, to}} (file move), test-only {test: {from, to}}, or per-name {names: [...], fromModule, toModule} (importers only: move the code by hand first, no re-export left; do not combine with a file move of either module). POSIX paths relative to the app root, extensions included. Append one entry per line; this _format entry is skipped. Run: npx tsx scripts/codemods/move-module.ts --list scripts/codemods/moves.json [--check]. See the header of move-module.ts."},
+  {"from": "lib/section-color.ts", "to": "lib/algorithms/section-color.ts", "test": {"from": "lib/__tests__/section-color.test.ts", "to": "lib/algorithms/__tests__/section-color.test.ts"}},
+  {"from": "lib/utils/time-ago.ts", "to": "lib/algorithms/time-ago.ts", "test": {"from": "lib/utils/__tests__/time-ago.test.ts", "to": "lib/algorithms/__tests__/time-ago.test.ts"}},
+  {"from": "lib/utils/format-count.ts", "to": "lib/algorithms/format-count.ts", "test": {"from": "lib/utils/__tests__/format-count.test.ts", "to": "lib/algorithms/__tests__/format-count.test.ts"}},
+  {"from": "lib/utils/mask-email.ts", "to": "lib/algorithms/mask-email.ts", "test": {"from": "lib/utils/__tests__/mask-email.test.ts", "to": "lib/algorithms/__tests__/mask-email.test.ts"}},
+  {"from": "lib/utils/transient-error.ts", "to": "lib/algorithms/transient-error.ts", "test": {"from": "lib/utils/__tests__/transient-error.test.ts", "to": "lib/algorithms/__tests__/transient-error.test.ts"}},
+  {"from": "lib/secure-url.ts", "to": "lib/algorithms/secure-url.ts", "test": {"from": "lib/__tests__/secure-url.test.ts", "to": "lib/algorithms/__tests__/secure-url.test.ts"}},
+  {"from": "lib/country-utils.ts", "to": "lib/algorithms/country-utils.ts", "test": {"from": "lib/__tests__/country-utils.test.ts", "to": "lib/algorithms/__tests__/country-utils.test.ts"}},
+  {"from": "lib/language-codes.ts", "to": "lib/algorithms/language-codes.ts"},
+  {"from": "lib/language-names.ts", "to": "lib/algorithms/language-names.ts", "test": {"from": "lib/__tests__/language-names.test.ts", "to": "lib/algorithms/__tests__/language-names.test.ts"}},
+  {"from": "lib/notificationSlotUtils.ts", "to": "lib/algorithms/notificationSlotUtils.ts", "test": {"from": "lib/__tests__/notificationSlotUtils.test.ts", "to": "lib/algorithms/__tests__/notificationSlotUtils.test.ts"}},
+  {"from": "lib/publisher-utils.ts", "to": "lib/algorithms/publisher-utils.ts", "test": {"from": "lib/__tests__/publisher-utils.test.ts", "to": "lib/algorithms/__tests__/publisher-utils.test.ts"}},
+  {"from": "lib/services/feedback-tree-snapshot.ts", "to": "lib/algorithms/feedback-tree-snapshot.ts", "test": {"from": "lib/services/__tests__/feedback-tree-snapshot.test.ts", "to": "lib/algorithms/__tests__/feedback-tree-snapshot.test.ts"}},
+  {"from": "lib/typography/policy.ts", "to": "lib/algorithms/policy.ts"},
+  {"from": "lib/typography/scale.ts", "to": "lib/algorithms/scale.ts"},
+  {"from": "lib/theme/tint.ts", "to": "lib/algorithms/tint.ts", "test": {"from": "lib/theme/__tests__/tint.test.ts", "to": "lib/algorithms/__tests__/tint.test.ts"}},
+  {"from": "lib/system-check/system-check.ts", "to": "lib/algorithms/system-check.ts", "test": {"from": "lib/system-check/__tests__/system-check.test.ts", "to": "lib/algorithms/__tests__/system-check.test.ts"}},
+  {"test": {"from": "lib/__tests__/relevance-utils.test.ts", "to": "test/unit/core/relevance-utils.test.ts"}},
+  {"test": {"from": "lib/typography/__tests__/typography.test.ts", "to": "test/unit/core/typography.test.ts"}}
+]
