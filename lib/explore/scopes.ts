@@ -21,8 +21,7 @@
 // City/region derivation was removed in the app-rethink wave because geo-tags
 // are dormant in prod (all null), so those chips showed ~nothing. Each
 // location still contributes its country. The `'city'|'region'` scope-kind
-// members survive only until navx P11 (an Explore test and geo-scope-filter.ts
-// still name them); nothing builds such a scope.
+// members survive only until navx P11 (an Explore test still names them); nothing builds such a scope.
 //
 // Country-code formats (subtle — three different conventions collide here):
 //   • WatermelonDB `locations.countryCode` and `NewsArticle.geo_tags.countryCode`
