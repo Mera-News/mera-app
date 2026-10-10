@@ -33,24 +33,11 @@ export default class Fact extends Model {
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
 
-  @writer async updateFact(
-    statement: string,
-    metadata?: Record<string, string[]>,
-    questionnaire?: {
-      level?: number;
-      levelCategory?: string;
-      attribute?: string;
-    },
-  ) {
+  @writer async updateFact(statement: string, metadata?: Record<string, string[]>) {
     await this.update((fact) => {
       fact.statement = statement;
       if (metadata !== undefined) {
         fact.metadata = metadata;
-      }
-      if (questionnaire) {
-        if (questionnaire.level !== undefined) fact.questionnaireLevel = questionnaire.level;
-        if (questionnaire.levelCategory !== undefined) fact.questionnaireLevelCategory = questionnaire.levelCategory;
-        if (questionnaire.attribute !== undefined) fact.questionnaireAttribute = questionnaire.attribute;
       }
     });
   }

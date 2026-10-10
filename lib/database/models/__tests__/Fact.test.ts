@@ -69,31 +69,7 @@ describe('Fact model', () => {
       expect(instance.metadata).toBeNull();
     });
 
-    it('updates questionnaire fields when provided', async () => {
-      const instance: any = new (Fact as any)();
-      instance.statement = 'stmt';
-      await instance.updateFact('stmt', undefined, {
-        level: 3,
-        levelCategory: 'Core',
-        attribute: 'location: city',
-      });
-      expect(instance.questionnaireLevel).toBe(3);
-      expect(instance.questionnaireLevelCategory).toBe('Core');
-      expect(instance.questionnaireAttribute).toBe('location: city');
-    });
-
-    it('only sets questionnaire subfields that are provided', async () => {
-      const instance: any = new (Fact as any)();
-      instance.statement = 'stmt';
-      instance.questionnaireLevel = 1;
-      instance.questionnaireLevelCategory = 'Existing';
-      // Only provide level — category and attribute should stay untouched
-      await instance.updateFact('stmt', undefined, { level: 5 });
-      expect(instance.questionnaireLevel).toBe(5);
-      expect(instance.questionnaireLevelCategory).toBe('Existing');
-    });
-
-    it('does not touch questionnaire fields when questionnaire arg is omitted', async () => {
+    it('never touches the questionnaire fields', async () => {
       const instance: any = new (Fact as any)();
       instance.statement = 'stmt';
       instance.questionnaireLevel = 2;

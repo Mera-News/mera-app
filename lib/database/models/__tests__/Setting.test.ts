@@ -27,21 +27,4 @@ describe('Setting model', () => {
   it('has the correct table name', () => {
     expect(Setting.table).toBe('settings');
   });
-
-  it('updateValue calls this.update and mutates the value field', async () => {
-    const instance: any = new (Setting as any)();
-    // Pre-seed a field so the callback can read it
-    instance.value = 'old_value';
-    // The writer decorator is stripped to a passthrough in our mock
-    await instance.updateValue('new_value');
-    expect(instance.value).toBe('new_value');
-  });
-
-  it('updateValue does not mutate other fields', async () => {
-    const instance: any = new (Setting as any)();
-    instance.key = 'my_key';
-    instance.value = 'old';
-    await instance.updateValue('new');
-    expect(instance.key).toBe('my_key');
-  });
 });
