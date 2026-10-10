@@ -374,24 +374,13 @@ describe('the audit cursor never skips a topic it did not judge', () => {
     );
   };
 
-  test.failing('DATA-U11b-4: topics minted in the same millisecond are all judged when a chunk boundary falls inside them', async () => {
+  it('DATA-U11b-4: topics minted in the same millisecond are all judged when a chunk boundary falls inside them', async () => {
     await sameMillisecondGroup();
 
     await walkToTheEnd();
 
     const judged = new Set(sanityTexts(gatewayCalls('batch')));
     expect(judged.size).toBe(70);
-  });
-
-  it('today: with a chunk boundary inside a same-millisecond group, the tail of the group is never judged', async () => {
-    await sameMillisecondGroup();
-
-    const first = await chunk();
-    const second = await chunk();
-
-    expect(first.audited).toBe(60);
-    expect(second).toMatchObject({ audited: 0, done: true });
-    expect(new Set(sanityTexts(gatewayCalls('batch'))).size).toBe(60);
   });
 });
 

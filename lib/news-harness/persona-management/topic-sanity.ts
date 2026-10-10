@@ -62,6 +62,9 @@ export interface SanityBatchPlan {
  * topic's createdAt is set at mint and its text never changes afterwards, so
  * nothing can appear BEHIND the cursor — a monotonic cursor is equivalent to a
  * per-row "audited" flag for every row not yet seen, without a schema change.
+ * The cap never cuts a run of topics sharing one createdAtMs (one createTopics
+ * call stamps them alike): the cursor would move past the tail. It stops before
+ * the run, or takes all of it when the run alone exceeds the cap.
  *
  * Topics whose owning fact is missing are skipped (nothing to judge them
  * against). Exclusions that depend on provenance or tracked-story binding are
@@ -78,7 +81,7 @@ export function planSanityBatches(
 
   const statementById = new Map(facts.map((f) => [f.id, f.statement]));
 
-  const eligible = topics
+  const sorted = topics
     .filter((t) => t.createdAtMs > cursorMs && statementById.has(t.factId))
     .sort((a, b) =>
       a.createdAtMs !== b.createdAtMs
@@ -88,8 +91,16 @@ export function planSanityBatches(
           : a.id > b.id
             ? 1
             : 0,
-    )
-    .slice(0, maxTopics);
+    );
+  let end = Math.min(maxTopics, sorted.length);
+  if (end > 0 && end < sorted.length && sorted[end - 1].createdAtMs === sorted[end].createdAtMs) {
+    const ms = sorted[end].createdAtMs;
+    let start = end;
+    while (start > 0 && sorted[start - 1].createdAtMs === ms) start--;
+    if (start > 0) end = start;
+    else while (end < sorted.length && sorted[end].createdAtMs === ms) end++;
+  }
+  const eligible = sorted.slice(0, end);
 
   const calls: BatchCall[] = [];
   const topicIdsByCallId = new Map<string, string[]>();
