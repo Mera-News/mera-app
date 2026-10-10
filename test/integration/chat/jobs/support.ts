@@ -18,33 +18,13 @@ import { __resetSuggestionsRefreshThrottleForTests } from '@/lib/services/Sugges
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { runBackgroundCycle } from '@/lib/background/run-inference-handler';
 import { getPipeline } from '@/lib/database/services/scoring-pipeline-store';
-import { defaultResponder, gatewayCalls, mockGateway, server, setAppState, signInFixtureAccount } from '@/test/helpers';
+import { advanceUntil, advanceUntilDone as drive, defaultResponder, gatewayCalls, mockGateway, server, setAppState, signInFixtureAccount } from '@/test/helpers';
 import { resetChatModules, useStrictClock as strictClock } from '@/test/integration/chat/_helpers';
 
 export const PUSH_TOKEN = 'ExponentPushToken[test]';
 export const JOBS_URL = '/v1/inference/jobs';
 
-const turn = () => new Promise<void>((resolve) => setImmediate(resolve));
-
-/** Steps the (strict) fake clock until `promise` settles; one REAL event-loop turn per step so MSW can answer. */
-export async function drive<T>(promise: Promise<T>, maxMs = 120_000, stepMs = 50): Promise<T> {
-  let done = false;
-  promise.then(() => (done = true), () => (done = true));
-  for (let elapsed = 0; elapsed < maxMs && !done; elapsed += stepMs) {
-    await jest.advanceTimersByTimeAsync(stepMs);
-    await turn();
-  }
-  return promise;
-}
-
-/** Steps the fake clock until `cond()` holds. */
-export async function advanceUntil(cond: () => boolean, maxMs = 120_000, stepMs = 50): Promise<void> {
-  for (let elapsed = 0; elapsed < maxMs && !cond(); elapsed += stepMs) {
-    await jest.advanceTimersByTimeAsync(stepMs);
-    await turn();
-  }
-  if (!cond()) throw new Error('advanceUntil: condition not met');
-}
+export { advanceUntil, drive };
 
 /** Module memory the integration setup does not reset. Does not sign in. */
 export function resetJobModules(): void {

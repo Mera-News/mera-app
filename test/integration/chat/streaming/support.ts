@@ -6,14 +6,10 @@
 // that errors the body, a silent gap before the first chunk). They seal with the mock's own
 // `sealForClient`, so the app still decrypts for real; the mock simply does not record those calls.
 import { http, HttpResponse } from 'msw';
-import { invalidateJwtCache } from '@/lib/auth-client';
-import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
-import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
-import { __resetOnDeviceGateForTests } from '@/lib/llm/on-device-gate';
 import type { SseEvent } from '@/lib/llm/cloudComplete';
 import logger from '@/lib/logger';
 import { assertNoGatewayViolations, server, signInFixtureAccount, type GatewayResponder } from '@/test/helpers';
+import { resetChatModules } from '@/test/integration/chat/_helpers';
 import { sealForClient } from '@/test/mock-backend/gateway/crypto';
 
 export const SECRET_SYSTEM = 'SENTINEL-SYSTEM-7f3a you are the test model';
@@ -44,32 +40,8 @@ export async function until(cond: () => boolean, ms = 3000): Promise<void> {
   if (!cond()) throw new Error('until: condition not met');
 }
 
-const turn = () => new Promise<void>((resolve) => setImmediate(resolve));
-
-/**
- * Fake clock: advance in small steps until `cond()` holds. Every step also yields one REAL event-loop
- * turn (setImmediate is not faked): the helpers' own `advanceUntilDone` only drains microtasks, and a
- * request through MSW needs real macrotask turns to make progress, so a long virtual wait could be
- * stepped through before the network ever got to answer.
- */
-export async function advanceUntil(cond: () => boolean, maxMs = 120_000, stepMs = 50): Promise<void> {
-  for (let elapsed = 0; elapsed < maxMs && !cond(); elapsed += stepMs) {
-    await jest.advanceTimersByTimeAsync(stepMs);
-    await turn();
-  }
-  if (!cond()) throw new Error('advanceUntil: condition not met');
-}
-
-/** `advanceUntil` for a promise: steps the fake clock until it settles, then returns it. */
-export async function drive<T>(promise: Promise<T>, maxMs = 120_000, stepMs = 50): Promise<T> {
-  let done = false;
-  promise.then(() => (done = true), () => (done = true));
-  for (let elapsed = 0; elapsed < maxMs && !done; elapsed += stepMs) {
-    await jest.advanceTimersByTimeAsync(stepMs);
-    await turn();
-  }
-  return promise;
-}
+/** Fake clock helpers: step in small steps with a real event-loop turn per step (MSW needs it to answer). */
+export { advanceUntil, advanceUntilDone as drive } from '@/test/helpers';
 
 /** Raw request bodies of the chat route, as the wire carried them (all still ciphertext). */
 export function captureChatBodies(): string[] {
@@ -105,11 +77,7 @@ export const loggerSpies = (): LoggerSpies => {
 export function installChatHooks(timeoutMs = 30_000): void {
   jest.setTimeout(timeoutMs);
   beforeEach(async () => {
-    resetLimiter();
-    resetModelFallback();
-    __resetOnDeviceGateForTests();
-    clearAttestationCache();
-    invalidateJwtCache();
+    resetChatModules();
     await signInFixtureAccount();
     spies = {
       captureMessage: jest.spyOn(logger, 'captureMessage'),

@@ -1,6 +1,7 @@
 // commitFactChoices: the WRITE half of propose-then-save, against the real fact and topic tables.
 // Nothing runs until a card is tapped; these tests are the tap.
 import { getFacts, getTopicsStatus } from '@/lib/database/services/fact-service';
+import * as geoDerivation from '@/lib/database/services/geo-derivation-service';
 import { runGeoDerivationSweep } from '@/lib/database/services/geo-derivation-service';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { createTopics, getByFact } from '@/lib/database/services/topic-service';
@@ -111,6 +112,20 @@ describe('commitFactChoices', () => {
       (calls) => calls.length > 0,
     );
     expect(warnings).toHaveLength(1);
+    expect(result.savedFacts).toHaveLength(1);
+  });
+
+  it('a geo sweep that rejects is a warning with the error text, never an error at the tap', async () => {
+    // Deterministic twin of the test above: the sweep is documented as never throwing, so the DB
+    // dying under it is a race there; here the rejection is injected on the sweep itself.
+    const warn = jest.spyOn(logger, 'warn');
+    const sweep = jest.spyOn(geoDerivation, 'runGeoDerivationSweep').mockRejectedValueOnce(new Error('sweep boom'));
+
+    const result = await commitFactChoices([{ statement: 'Lives in Amsterdam' }]);
+    await settle();
+
+    sweep.mockRestore();
+    expect(warn).toHaveBeenCalledWith('[fact-commit] Geo derivation failed', { error: 'Error: sweep boom' });
     expect(result.savedFacts).toHaveLength(1);
   });
 

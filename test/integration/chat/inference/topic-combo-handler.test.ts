@@ -243,17 +243,19 @@ describe('a failure that takes the whole batch', () => {
 });
 
 describe('a failure on one call of the batch', () => {
-  // The mock gateway fails a whole batch or none of it, so a per-call error is injected on the
-  // client's batch result (R23: a spy on one call of the real transport, restored in cleanup).
-  const batchResult = (id: string, output: string, error?: string) => ({ id, output, ...(error ? { error } : {}) });
+  // The gateway mock fails one item of a batch with a perItem fault (its result row carries the error).
+  const failFact = (fact: string, error: string, ok: Record<string, string>) =>
+    server.use(
+      ...mockGateway((call) => {
+        const name = /Fact: "([^"]+)"/.exec(call.messages[1].content)?.[1] ?? '';
+        return name === fact ? { status: 502, body: { error }, perItem: true } : (ok[name] ?? '[]');
+      }),
+    );
 
   it('fails that sibling alone; the head still applies', async () => {
     const [, porto, nurse] = await seed([INDIA, PORTO, NURSE]);
     const { jobOf } = await queuePass([nurse.id, porto.id]);
-    jest.spyOn(cloudComplete, 'cloudBatchComplete').mockResolvedValueOnce([
-      batchResult(jobOf(nurse.id), '["Portugal nurse pay dispute"]'),
-      batchResult(jobOf(porto.id), '', 'E2EE decrypt failed'),
-    ]);
+    failFact(PORTO, 'E2EE decrypt failed', { [NURSE]: '["Portugal nurse pay dispute"]' });
 
     await runHead(jobOf(nurse.id), nurse.id);
 
@@ -264,10 +266,7 @@ describe('a failure on one call of the batch', () => {
   it('on the head: the siblings are applied, then the head throws for the queue to settle', async () => {
     const [, porto, nurse] = await seed([INDIA, PORTO, NURSE]);
     const { jobOf } = await queuePass([nurse.id, porto.id]);
-    jest.spyOn(cloudComplete, 'cloudBatchComplete').mockResolvedValueOnce([
-      batchResult(jobOf(nurse.id), '', 'timeout'),
-      batchResult(jobOf(porto.id), '["Porto India direct flights"]'),
-    ]);
+    failFact(NURSE, 'timeout', { [PORTO]: '["Porto India direct flights"]' });
 
     await expect(runHead(jobOf(nurse.id), nurse.id)).rejects.toThrow('timeout');
 
@@ -275,6 +274,9 @@ describe('a failure on one call of the batch', () => {
     expect((await jobRow(jobOf(porto.id)))?.status).toBe('done');
     expect((await jobRow(jobOf(nurse.id)))?.status).toBe('running');
   });
+
+  // The mock answers every call, so a missing result is injected on the client's batch result (R23: a spy, restored in cleanup).
+  const batchResult = (id: string, output: string) => ({ id, output });
 
   it('a call the batch returns nothing for fails that fact alone', async () => {
     const [, porto, nurse] = await seed([INDIA, PORTO, NURSE]);

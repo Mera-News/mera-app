@@ -1,14 +1,10 @@
 // Shared setup for the chat transport seam tests: the resets every file runs in beforeEach, a
 // request recorder for what the gateway mock does not keep (raw bodies, network faults, timings),
 // and a sealed request builder for driving authFetch directly. Not a test file.
-import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
+import { getJwtToken } from '@/lib/auth-client';
 import { _resetForTests as resetBreaker } from '@/lib/auth-failure-breaker';
-import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { encryptContent, prepareE2EEContext } from '@/lib/e2ee/e2ee-service';
 import { SMALL_MODEL } from '@/lib/llm/constants';
-import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
-import { __resetOnDeviceGateForTests } from '@/lib/llm/on-device-gate';
 import {
   http,
   HttpResponse,
@@ -17,7 +13,7 @@ import {
   type GatewayReply,
   type GatewayResponder,
 } from '@/test/helpers';
-import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
+import { driveUntilDone, resetChatModules, useStrictClock } from '@/test/integration/chat/_helpers';
 
 import type { JsonBodyType } from 'msw';
 import { sealForClient } from '@/test/mock-backend/gateway/crypto';
@@ -32,12 +28,8 @@ export const TOKEN_PATH = '/api/auth/token';
 
 /** The resets every transport test starts from. Signed-out cases pass `signIn: false`. */
 export async function resetTransport({ signIn = true }: { signIn?: boolean } = {}): Promise<void> {
-  resetLimiter();
-  resetModelFallback();
-  __resetOnDeviceGateForTests();
+  resetChatModules();
   resetBreaker();
-  clearAttestationCache();
-  invalidateJwtCache();
   if (signIn) await signInFixtureAccount();
 }
 
@@ -108,11 +100,7 @@ export async function sealedInit(content: string, extra: RequestInit = {}): Prom
   };
 }
 
-/** Advances the fake clock until `cond()` holds (or maxMs passes). */
-export async function advanceUntil(cond: () => boolean, maxMs = 30_000, stepMs = 50): Promise<void> {
-  for (let t = 0; t < maxMs && !cond(); t += stepMs) await jest.advanceTimersByTimeAsync(stepMs);
-  if (!cond()) throw new Error('advanceUntil: condition not met');
-}
+export { advanceUntil } from '@/test/helpers';
 
 /**
  * Replaces one gateway route with a reply the responder cannot express (a malformed body, a
