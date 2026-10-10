@@ -288,6 +288,24 @@ export function useMeraProtocolSettings() {
         setShowDeleteModelConfirm(true);
     }, []);
 
+    // The model the user relied on is leaving the device, so on-device processing
+    // falls back to cloud until a new one lands.
+    const fallBackToCloud = useCallback(async () => {
+        if (processingMode !== ProcessingMode.OnDevice) return;
+        try {
+            const userId = await resolveCurrentUserId();
+            await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
+        } catch {
+            // Server mutation failed. Still update locally so the UI reflects
+            // reality; the next settings load will not re-promote OnDevice
+            // without a model on disk.
+        }
+        store.setProcessingMode(ProcessingMode.Cloud);
+        // Reacts only to the inputs listed; `store` and the async helpers are
+        // stable module/singleton refs.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [processingMode]);
+
     const confirmDeleteModel = useCallback(async () => {
         setIsDeletingModel(true);
         setShowDeleteModelConfirm(false);
@@ -297,19 +315,7 @@ export function useMeraProtocolSettings() {
             store.setModelState('not_downloaded');
             store.setDownloadProgress(0);
 
-            // If the user was on on-device mode, fall back to cloud — the model
-            // they relied on is gone. Non-onboarding only; during onboarding
-            // the server mutation hasn't fired yet.
-            if (processingMode === ProcessingMode.OnDevice) {
-                try {
-                    const userId = await resolveCurrentUserId();
-                    await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
-                } catch {
-                    // Server mutation failed: still update locally so the UI
-                    // reflects reality. The next settings load reconciles.
-                }
-                store.setProcessingMode(ProcessingMode.Cloud);
-            }
+            await fallBackToCloud();
             // Also clear on-device intent so the download section collapses.
             setOnDeviceIntent(false);
 
@@ -335,25 +341,7 @@ export function useMeraProtocolSettings() {
         } finally {
             setIsDeletingModel(false);
         }
-    }, [store, toast, selectedModelId, t, processingMode]);
-
-    // Mirrors confirmDeleteModel: the model the user relied on is leaving the
-    // device, so on-device processing falls back to cloud until a new one lands.
-    const fallBackToCloud = useCallback(async () => {
-        if (processingMode !== ProcessingMode.OnDevice) return;
-        try {
-            const userId = await resolveCurrentUserId();
-            await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
-        } catch {
-            // Server mutation failed. Still update locally so the UI reflects
-            // reality; the next settings load will not re-promote OnDevice
-            // without a model on disk.
-        }
-        store.setProcessingMode(ProcessingMode.Cloud);
-        // Reacts only to the inputs listed; `store` and the async helpers are
-        // stable module/singleton refs.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [processingMode]);
+    }, [store, toast, selectedModelId, t, fallBackToCloud]);
 
     const selectModel = useCallback((entry: ModelCatalogEntry) => {
         if (entry.modelId === selectedModelId) return;
