@@ -1,7 +1,7 @@
 // The member-snapshot sanitiser keeps the original-language title (ux2), and
 // old snapshots without it still read.
 
-import { sanitizeSnapshots } from '../TrackedStory';
+import { sanitizeSnapshots } from '@/lib/algorithms/tracked-story-snapshots';
 
 describe('sanitizeSnapshots', () => {
   it('keeps titleOriginal', () => {
