@@ -51,7 +51,6 @@ export { checkRequirements } from './core/systemRequirements';
 export type {
   // Core
   Fact,
-  Query,
   InferParams,
   InferResult,
   BaseModelDownloadConfig,
@@ -59,10 +58,6 @@ export type {
   ModelState,
   AdapterDownloadConfig,
   AdapterManifest,
-
-  // Privacy
-  NoisyQuerySet,
-  NoiseConfig,
 
   // System Requirements
   SystemRequirementsResult,

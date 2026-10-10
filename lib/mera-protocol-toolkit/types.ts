@@ -98,25 +98,6 @@ export type AdapterManifest = {
   ready: boolean;
 };
 
-// --- Privacy Layer ---
-
-export type Query = {
-  text: string; // Query string
-  metadata?: Record<string, unknown>; // App-specific, stripped before transmission
-};
-
-export type NoiseConfig = {
-  k: number; // Target k-anonymity (default: 1000)
-  noiseRatio: number; // Noise queries per real query (default: 0.5-0.7)
-  domainProfile: string; // App-provided distribution profile ID
-};
-
-export type NoisyQuerySet = {
-  queryId: string; // Unique ID for this query cycle
-  timestamp: string; // ISO timestamp
-  queries: string[]; // Real + noise, shuffled, indistinguishable
-};
-
 // --- System Requirements ---
 
 export type RequirementCheckId = 'ram' | 'os_version' | 'chip' | 'storage';
