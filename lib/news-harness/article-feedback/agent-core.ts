@@ -9,6 +9,7 @@
 // expo/react-native module stays in lib/llm/agents/ArticleFeedbackAgent.ts —
 // that thin adapter reads the data and hands plain values to this module.
 
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { SUPPRESSION_KINDS } from '../core/types';
 import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import { proposalRequiresUserChoice } from '../core/proposals';
@@ -283,19 +284,6 @@ function isoDayFromString(value: string | null | undefined): string | null {
   const raw = (value ?? '').trim();
   if (!raw) return null;
   return isoDay(Date.parse(raw));
-}
-
-/**
- * Token estimator — mirrors lib/algorithms/estimate-tokens.ts::estimateTokens byte-for-byte.
- * Kept inline so the harness stays free of the lib/llm import graph (the budget
- * heuristic is stable; if lib/algorithms/estimate-tokens.ts changes, mirror it here).
- */
-function estimateTokens(text: string): number {
-  const cjkPattern = /[一-鿿㐀-䶿豈-﫿]/g;
-  const cjkMatches = text.match(cjkPattern);
-  const cjkCount = cjkMatches?.length ?? 0;
-  const nonCjkCount = text.length - cjkCount;
-  return Math.ceil(cjkCount / 1.2) + Math.ceil(nonCjkCount / 4);
 }
 
 // ---------------------------------------------------------------------------
