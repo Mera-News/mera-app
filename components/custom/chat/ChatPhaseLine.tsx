@@ -15,8 +15,8 @@
 //
 // ## The crossfade uses ONE shared opacity
 //
-// Not a keyed `Animated.View` with `entering`/`exiting`. `ProcessingArea` and
-// `StreamingIndicator` both record why from experience: Reanimated keeps the
+// Not a keyed `Animated.View` with `entering`/`exiting`. `ProcessingArea`
+// records why from experience: Reanimated keeps the
 // exiting copy painted, outside the layout flow, while the new one mounts,
 // which drew two captions on top of each other in a fixed-height row. Fade
 // out, swap at the trough, fade in. Exactly one line is mounted at any instant.
