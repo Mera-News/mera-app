@@ -1,10 +1,7 @@
-// The finish event the stream reports. The provider's finish_reason is collapsed to two values.
+// The finish event the stream reports: stop, tool_calls or length (a token-capped reply).
 //
 // CH1 (bug ledger, chat): a token-capped reply is reported as a plain stop, so a caller cannot tell a
-// cut-off answer from a finished one. Today's behaviour is pinned by the passing sibling
-//   harness/gateway.test.ts > chat: faults > "finish_reason length is reported by the client as a plain stop"
-// and the correct behaviour is the test.failing below. The fix commit flips this to `test` and deletes
-// the sibling.
+// cut-off answer from a finished one. The client now reports `length`, streamed and buffered.
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import { cloudChatStream } from '@/lib/llm/cloudComplete';
 import { mockGateway, server } from '@/test/helpers';
@@ -35,7 +32,7 @@ describe('finish mapping', () => {
 });
 
 describe('CH1: a token-capped reply', () => {
-  test.failing('a token-capped stream reports finish reason length', async () => {
+  it('a token-capped stream reports finish reason length', async () => {
     server.use(...mockGateway(respond({ chunks: ['cut off mid-sen'], finishReason: 'length' })));
     const streamed = await run();
     expect(textOf(streamed)).toBe('cut off mid-sen');

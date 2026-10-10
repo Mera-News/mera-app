@@ -914,7 +914,7 @@ export type SseEvent =
    *  can say the wait is thinking, not a stall. */
   | { type: 'reasoning' }
   | { type: 'tool-call-delta'; index: number; id?: string; name?: string; argumentsDelta: string }
-  | { type: 'finish'; reason: 'stop' | 'tool_calls' | 'error' }
+  | { type: 'finish'; reason: 'stop' | 'tool_calls' | 'length' | 'error' }
   | { type: 'error'; message: string };
 
 // ---------------------------------------------------------------------------
@@ -1703,6 +1703,13 @@ async function* consumeChatResponseRaw(
 }
 
 /** Streaming path: one E2EE envelope per `delta.content`, decrypted as it lands. */
+/** The provider's finish_reason as the client reports it. `length` is kept so a
+ *  caller can tell a token-capped answer from a finished one; anything else
+ *  the client does not act on is a plain stop. */
+function finishReasonOf(raw: string | null | undefined): 'stop' | 'tool_calls' | 'length' {
+  return raw === 'tool_calls' || raw === 'length' ? raw : 'stop';
+}
+
 async function* consumeSseChat(
   response: Response,
   privateKey: Uint8Array,
@@ -1797,7 +1804,7 @@ async function* consumeSseChat(
     handle?.release();
   }
 
-  yield { type: 'finish', reason: finishReason === 'tool_calls' ? 'tool_calls' : 'stop' };
+  yield { type: 'finish', reason: finishReasonOf(finishReason) };
 }
 
 /** Buffered path: a whole non-streaming completion, one envelope for the whole
@@ -1843,7 +1850,6 @@ async function* consumeBufferedChat(
     }
   }
 
-  const reason = choice.finish_reason === 'tool_calls' ? 'tool_calls' : 'stop';
-  yield { type: 'finish', reason };
+  yield { type: 'finish', reason: finishReasonOf(choice.finish_reason) };
 }
 

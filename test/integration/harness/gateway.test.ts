@@ -230,14 +230,6 @@ describe('chat: faults', () => {
     expect(gatewayCalls('chat')).toHaveLength(1);
   });
 
-  it('finish_reason length is reported by the client as a plain stop', async () => {
-    server.use(...mockGateway(respond({ chunks: ['cut off mid-sen'], finishReason: 'length' })));
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
-    expect(text(events)).toBe('cut off mid-sen');
-    // The client collapses everything but tool_calls to 'stop'; truncation is not signalled.
-    expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'stop' });
-  });
-
   it('502 surfaces as E2EE chat failed with the body on responseBody only', async () => {
     server.use(...mockGateway(respond({ status: 502, body: { error: 'upstream gone' } })));
     const err = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e);
