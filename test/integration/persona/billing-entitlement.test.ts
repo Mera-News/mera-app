@@ -448,13 +448,9 @@ describe('billing and entitlement', () => {
                 return fetchSpy.mock.calls.length;
             }
 
-            test.failing('B7 a sync while a forced one is in flight joins it', async () => {
+            test('B7 a sync while a forced one is in flight joins it', async () => {
                 // A, B, then C joins B: two reads in total.
                 await expect(runBClobberScenario(true)).resolves.toBe(2);
-            });
-
-            test('B7 today: A settling clears the in-flight marker, so C starts a third read', async () => {
-                await expect(runBClobberScenario(true)).resolves.toBe(3);
             });
 
             test('a successful first read debounces C, hiding the clobbered marker (two reads)', async () => {

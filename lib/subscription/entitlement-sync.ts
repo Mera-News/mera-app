@@ -42,7 +42,9 @@ export async function syncEntitlement(
         if (lastSyncAt !== null && Date.now() - lastSyncAt < MIN_INTERVAL_MS) return;
     }
 
-    const run = (async () => {
+    // Declared apart from its assignment: the run's own `finally` reads it.
+    let run!: Promise<void>;
+    run = (async () => {
         try {
             // Two queries, on purpose — see fetchUserBillingLapseState. The
             // second is allowed to fail on a server that predates the lapse
@@ -98,7 +100,8 @@ export async function syncEntitlement(
             // skips an unchanged payload.
             void syncRevenueCatAttributes();
         } finally {
-            inFlight = null;
+            // Only the newest run owns the marker: a superseded run settling must not clear a forced one.
+            if (inFlight === run) inFlight = null;
         }
     })();
 
