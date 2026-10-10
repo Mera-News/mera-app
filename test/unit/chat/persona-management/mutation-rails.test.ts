@@ -1,8 +1,6 @@
 import {
   clampWeight,
   nudgeTopicWeight,
-  buildWrongLocationActions,
-  type WrongLocationInput,
 } from '@/lib/news-harness/persona-management/mutation-rails';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 
@@ -60,113 +58,5 @@ describe('nudgeTopicWeight', () => {
     expect(r.appliedDelta).toBeCloseTo(-0.05, 6);
     expect(r.after).toBeCloseTo(0.45, 6);
     expect(r.budgetExceeded).toBe(true);
-  });
-});
-
-describe('buildWrongLocationActions', () => {
-  const baseInput = (
-    over: Partial<WrongLocationInput>,
-  ): WrongLocationInput => ({
-    articleGeo: { city: 'Chennai', region: 'Tamil Nadu', countryCode: 'IN' },
-    matchedTopics: [],
-    locations: [{ city: 'Mumbai', region: 'Maharashtra', countryCode: 'IN' }],
-    ...over,
-  });
-
-  it('mints a negative topic for a sibling place not among user locations', () => {
-    const actions = buildWrongLocationActions(baseInput({}));
-    expect(actions).toHaveLength(1);
-    expect(actions[0]).toEqual({
-      kind: 'add_negative_topic',
-      text: 'news about chennai',
-      weight: R.WRONG_LOCATION_NEG_TOPIC,
-    });
-  });
-
-  it('emits no negative topic when the article place matches a user location', () => {
-    const actions = buildWrongLocationActions(
-      baseInput({
-        articleGeo: { city: 'Mumbai', countryCode: 'IN' },
-      }),
-    );
-    expect(actions).toHaveLength(0);
-  });
-
-  it('adds a soft suppression when bad-context entities are present', () => {
-    const actions = buildWrongLocationActions(
-      baseInput({
-        articleGeo: { city: 'Mumbai', countryCode: 'IN' }, // matches → no neg topic
-        entities: ['Local Politician', 'City Council'],
-      }),
-    );
-    expect(actions).toHaveLength(1);
-    expect(actions[0]).toEqual({
-      kind: 'add_suppression',
-      pattern: 'local politician, city council',
-      keywords: ['local politician', 'city council'],
-      strength: 0.5,
-    });
-    // Soft: strength below the 0.8 hard-suppression cutoff.
-    expect((actions[0] as { strength: number }).strength).toBeLessThan(0.8);
-  });
-
-  it('orders negative-topic before suppression when both fire', () => {
-    const actions = buildWrongLocationActions(
-      baseInput({ entities: ['Some Entity'] }),
-    );
-    expect(actions.map((a) => a.kind)).toEqual([
-      'add_negative_topic',
-      'add_suppression',
-    ]);
-  });
-
-  // The server's geo_tags.countryCode widened to also allow curated
-  // supranational codes ("MIDDLE_EAST", "EU", …). A supranational tag carries
-  // no city/region, so placeName() always falls through to the countryCode
-  // branch — which must produce readable prose ("news about middle east"),
-  // not a raw SCREAMING_SNAKE token with an underscore baked into the
-  // on-device negative-topic search text.
-  describe('supranational geo tags', () => {
-    it('names the humanized place, not the raw underscored token', () => {
-      const actions = buildWrongLocationActions(
-        baseInput({ articleGeo: { countryCode: 'MIDDLE_EAST' } }),
-      );
-      expect(actions).toHaveLength(1);
-      expect(actions[0]).toEqual({
-        kind: 'add_negative_topic',
-        text: 'news about middle east',
-        weight: R.WRONG_LOCATION_NEG_TOPIC,
-      });
-    });
-
-    it('EU (two letters, not a country) is also humanized', () => {
-      // A length-based shortcut would leave this alone as "eu" rather than
-      // resolving it to "european union".
-      const actions = buildWrongLocationActions(
-        baseInput({ articleGeo: { countryCode: 'EU' } }),
-      );
-      expect(actions[0]).toEqual({
-        kind: 'add_negative_topic',
-        text: 'news about european union',
-        weight: R.WRONG_LOCATION_NEG_TOPIC,
-      });
-    });
-
-    it('a mixed geo list still names the first tag that matches no user location', () => {
-      const actions = buildWrongLocationActions(
-        baseInput({
-          articleGeo: [
-            { city: 'Mumbai', countryCode: 'IN' }, // matches the user's location → skipped
-            { countryCode: 'GULF' },
-          ],
-        }),
-      );
-      expect(actions).toHaveLength(1);
-      expect(actions[0]).toEqual({
-        kind: 'add_negative_topic',
-        text: 'news about gulf',
-        weight: R.WRONG_LOCATION_NEG_TOPIC,
-      });
-    });
   });
 });

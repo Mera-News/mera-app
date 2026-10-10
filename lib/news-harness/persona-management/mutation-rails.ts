@@ -1,11 +1,9 @@
 // news-harness — bounded persona-mutation rails (PURE, RN-free).
 //
-// Wave 8 M-P6. The math + compilers behind every on-device persona nudge: the
-// weight clamp, the per-topic per-day nudge budget, the signal→delta lookup,
-// and the wrong-location compiler that turns a "this story is about the wrong
-// place" signal into an ordered list of plain action descriptors. The RN
-// adapter (lib/database/services/mutation-rails-service.ts) executes those
-// descriptors against WatermelonDB — nothing here touches the DB.
+// The math behind every on-device persona nudge: the weight clamp and the
+// per-topic per-day nudge budget. The RN adapter
+// (lib/database/services/mutation-rails-service.ts) applies the result to
+// WatermelonDB; nothing here touches the DB.
 //
 // Style mirrors the sibling pure file persona-migration.ts / fact-rules.ts:
 // plain data in, plain data out, deterministic, config injected (defaults to
@@ -15,7 +13,6 @@ import {
   DEFAULT_HARNESS_CONFIG,
   type HarnessConfig,
 } from '../core/config';
-import { supranationalName } from '../scoring-engine/supranational-codes';
 
 // ── Weight clamp ───────────────────────────────────────────────────────────
 
@@ -69,143 +66,4 @@ export function nudgeTopicWeight(
   const appliedDelta = after - before;
   const budgetExceeded = Math.abs(clampedDelta) < Math.abs(delta);
   return { before, after, appliedDelta, requestedDelta: delta, budgetExceeded };
-}
-
-// (removed: `NudgeSignal` / `signalDelta` — a signal→delta lookup with no
-// production caller. Feedback deltas come from the server-owned feedback tree's
-// leaf actions, resolved by `resolveLeafActions` and applied through
-// `applyPersonaActions`; nothing ever routed a 'show_less' / 'thumbs_down'
-// signal through this rail. The config constants it read (SHOW_LESS,
-// THUMBS_DOWN) are untouched.)
-
-// ── Wrong-location compiler ────────────────────────────────────────────────
-
-/** Lowercase + trim + collapse whitespace — mirror of topic-service's key. */
-function normalizePlace(s: string | null | undefined): string {
-  return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
-}
-
-/** A single article geo tag (the article's tagged place). */
-export interface WrongLocationGeoTag {
-  city?: string | null;
-  region?: string | null;
-  countryCode?: string | null;
-}
-
-/** A user location (never leaves the device). */
-export interface WrongLocationUserLocation {
-  city?: string | null;
-  region?: string | null;
-  countryCode: string;
-}
-
-export interface WrongLocationInput {
-  articleGeo: WrongLocationGeoTag | WrongLocationGeoTag[];
-  matchedTopics: { topicId: string | null; text: string }[];
-  locations: WrongLocationUserLocation[];
-  entities?: string[];
-}
-
-/** The plain action descriptors the RN service executes, in order. */
-export type WrongLocationAction =
-  | { kind: 'add_negative_topic'; text: string; weight: number }
-  | {
-      kind: 'add_suppression';
-      pattern: string;
-      keywords: string[];
-      strength: number;
-    };
-
-/** The most specific human place name of a geo tag (city → region → country).
- *
- * A SUPRANATIONAL country code ("MIDDLE_EAST", "EU", …) carries neither city
- * nor region — the server never emits one alongside a bloc/region code — so
- * it always falls through to this function's country branch. Resolved
- * through {@link supranationalName} first: this text becomes the literal
- * `news about <name>` negative-topic search string in
- * {@link buildWrongLocationActions}, so a raw token would leak an underscore
- * ("news about middle_east") into on-device embedding text. A real ISO
- * alpha-2 country code is unaffected (`supranationalName` returns null for
- * it) and keeps its historical raw-code text. */
-function placeName(g: WrongLocationGeoTag): string | null {
-  const city = normalizePlace(g.city);
-  if (city) return city;
-  const region = normalizePlace(g.region);
-  if (region) return region;
-  const rawCountry = (g.countryCode ?? '').trim();
-  if (!rawCountry) return null;
-  return normalizePlace(supranationalName(rawCountry) ?? rawCountry) || null;
-}
-
-/**
- * True when a geo tag corresponds to a place the user cares about: at the
- * FINEST level where BOTH the tag and the location carry a value, they are
- * equal. A sibling-city tag (same country, different city) matches at neither
- * city nor region → falls through to country; but because city IS present on
- * both, the finest shared level is city, which differs → NOT a match (wrong).
- */
-function geoMatchesLocation(
-  g: WrongLocationGeoTag,
-  l: WrongLocationUserLocation,
-): boolean {
-  const gCity = normalizePlace(g.city);
-  const lCity = normalizePlace(l.city);
-  if (gCity && lCity) return gCity === lCity;
-  const gRegion = normalizePlace(g.region);
-  const lRegion = normalizePlace(l.region);
-  if (gRegion && lRegion) return gRegion === lRegion;
-  return normalizePlace(g.countryCode) === normalizePlace(l.countryCode);
-}
-
-/**
- * Compile a wrong-location feedback signal into an ordered list of plain action
- * descriptors. Deterministic + pure — no DB, no clock.
- *
- * 1. add_negative_topic — for the FIRST article geo tag (input order) that
- *    matches NONE of the user's locations. text = `news about <place>` (the
- *    tag's most specific place, lowercased); weight = WRONG_LOCATION_NEG_TOPIC.
- *    When every tag matches a user location (or no place can be named), no
- *    negative-topic action is emitted.
- * 2. add_suppression (SOFT, strength 0.5 < the 0.8 hard cutoff) — only when the
- *    article carries bad-context `entities`. keywords = entities lowercased;
- *    pattern = a short phrase built from them.
- */
-export function buildWrongLocationActions(
-  input: WrongLocationInput,
-  config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
-): WrongLocationAction[] {
-  const geoTags = Array.isArray(input.articleGeo)
-    ? input.articleGeo
-    : [input.articleGeo];
-  const actions: WrongLocationAction[] = [];
-
-  // 1. Wrong-place negative topic — first tag matching no user location.
-  const wrongTag = geoTags.find(
-    (g) =>
-      placeName(g) != null &&
-      !input.locations.some((l) => geoMatchesLocation(g, l)),
-  );
-  if (wrongTag) {
-    const name = placeName(wrongTag)!;
-    actions.push({
-      kind: 'add_negative_topic',
-      text: `news about ${name}`,
-      weight: config.mutationRails.WRONG_LOCATION_NEG_TOPIC,
-    });
-  }
-
-  // 2. Optional soft suppression from the article's bad-context entities.
-  const keywords = (input.entities ?? [])
-    .map((e) => normalizePlace(e))
-    .filter((e) => e.length > 0);
-  if (keywords.length > 0) {
-    actions.push({
-      kind: 'add_suppression',
-      pattern: keywords.join(', '),
-      keywords,
-      strength: 0.5,
-    });
-  }
-
-  return actions;
 }

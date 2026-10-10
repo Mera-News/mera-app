@@ -342,9 +342,6 @@ describe('DEFAULT_HARNESS_CONFIG.mutationRails', () => {
 
   it('pins the bounded-mutation rail literals (Wave 8 M-P6)', () => {
     expect(m.NUDGE_DAY_BUDGET).toBe(0.3);
-    expect(m.SHOW_LESS).toBe(-0.15);
-    expect(m.THUMBS_DOWN).toBe(-0.1);
-    expect(m.WRONG_LOCATION_NEG_TOPIC).toBe(-0.6);
   });
 });
 

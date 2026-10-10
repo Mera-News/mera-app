@@ -477,12 +477,6 @@ export interface ScoringEngineConfig {
 interface MutationRailsConfig {
   /** Per-topic per-day nudge budget: |Σ deltas today| ≤ this. */
   NUDGE_DAY_BUDGET: number; // 0.3
-  /** "Show less" signal delta on matched topics. */
-  SHOW_LESS: number; // -0.15
-  /** Thumbs-down signal delta. */
-  THUMBS_DOWN: number; // -0.1
-  /** Weight of the location-anchored NEGATIVE topic minted on a wrong-location signal. */
-  WRONG_LOCATION_NEG_TOPIC: number; // -0.6
 }
 
 export interface HarnessConfig {
@@ -634,8 +628,5 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
   },
   mutationRails: {
     NUDGE_DAY_BUDGET: 0.3,
-    SHOW_LESS: -0.15,
-    THUMBS_DOWN: -0.1,
-    WRONG_LOCATION_NEG_TOPIC: -0.6,
   },
 };
