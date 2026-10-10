@@ -11,7 +11,6 @@
 
 import { create } from 'zustand';
 import {
-  deleteSetting,
   getSettingsByPrefix,
   setSetting,
 } from '@/lib/database/services/setting-service';
@@ -106,14 +105,3 @@ export const useTutorialsStore = create<TutorialsState>()((set, get) => ({
     persist(MENU_SEEN_KEY, 'true');
   },
 }));
-
-/**
- * Drop every tutorial row. NOT wired into logout — `clearAllStores()` already
- * resets the whole database — it exists for the "reset my progress" affordance
- * and so a future sweep has one place to call.
- */
-export async function clearTutorialProgress(): Promise<void> {
-  const rows = await getSettingsByPrefix(TUTORIAL_SETTING_PREFIX);
-  await Promise.all(Object.keys(rows).map((key) => deleteSetting(key)));
-  useTutorialsStore.getState().reset();
-}

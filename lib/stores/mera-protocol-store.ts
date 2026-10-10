@@ -277,9 +277,6 @@ export const useProcessingMode = () =>
 export const useIsOnDeviceProcessing = () =>
   useMeraProtocolStore((state) => state.processingMode === ProcessingMode.OnDevice);
 
-export const useInjectNoise = () =>
-  useMeraProtocolStore((state) => state.injectNoise);
-
 export const useWebSearchInChat = () =>
   useMeraProtocolStore((state) => state.webSearchInChat);
 

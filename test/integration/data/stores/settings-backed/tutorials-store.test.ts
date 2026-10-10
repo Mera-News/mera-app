@@ -8,7 +8,6 @@ import {
   TUTORIAL_SETTING_PREFIX,
   chapterCompletedKey,
   chapterIdFromKey,
-  clearTutorialProgress,
   useTutorialsStore,
 } from '@/lib/stores/tutorials-store';
 import { failNextWrite, failPrefixRead, flush, persisted, resetStore, restoreFaults } from './support';
@@ -140,24 +139,6 @@ describe('useTutorialsStore', () => {
     store.getState().markCompleted('feed');
     store.setState({ hydrated: true });
     store.getState().reset();
-    expect(store.getState()).toMatchObject({ menuSeen: false, hydrated: false });
-    expect(store.getState().completed.size).toBe(0);
-  });
-});
-
-describe('clearTutorialProgress', () => {
-  it('deletes every tutorial row, leaves other rows alone, and resets the store', async () => {
-    await setSetting('tutorial_chapter_welcome_completed', 'true');
-    await setSetting('tutorial_menu_seen', 'true');
-    await setSetting('text_scale', '1.3');
-    await store.getState().hydrate();
-    expect(store.getState().completed.has('welcome')).toBe(true);
-
-    await clearTutorialProgress();
-
-    expect(await getSetting('tutorial_chapter_welcome_completed')).toBeNull();
-    expect(await getSetting('tutorial_menu_seen')).toBeNull();
-    expect(await getSetting('text_scale')).toBe('1.3');
     expect(store.getState()).toMatchObject({ menuSeen: false, hydrated: false });
     expect(store.getState().completed.size).toBe(0);
   });
