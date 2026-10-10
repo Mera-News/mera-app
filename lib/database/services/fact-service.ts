@@ -86,7 +86,7 @@ export async function updateFact(
  * devices that have not run the persona-v3 migration, and would drop any other
  * metadata key (e.g. topicGenError) with it.
  *
- * Reads the current metadata, merges case-insensitively (existing order kept,
+ * Reads the current metadata, merges on normalizeTopicText (existing order kept,
  * new texts appended), and writes the whole object back.
  */
 export async function appendFactMetadataTopics(
@@ -98,10 +98,12 @@ export async function appendFactMetadataTopics(
   const current = record.metadata ?? {};
   const existing = Array.isArray(current.topics) ? current.topics : [];
 
-  const seen = new Set(existing.map((t) => t.toLowerCase().trim()));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { normalizeTopicText } = require('./topic-service') as typeof import('./topic-service');
+  const seen = new Set(existing.map(normalizeTopicText));
   const merged = [...existing];
   for (const t of newTopics) {
-    const key = t.toLowerCase().trim();
+    const key = normalizeTopicText(t);
     if (!key || seen.has(key)) continue;
     seen.add(key);
     merged.push(t);

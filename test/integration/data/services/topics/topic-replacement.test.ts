@@ -307,11 +307,9 @@ describe('replaceTopicsForFact: mint and retire land in a SINGLE batch', () => {
 });
 
 // ---------------------------------------------------------------------------
-// B3 (DATA-U8-1): fact-service.appendFactMetadataTopics dedupes with
-// `toLowerCase().trim()`, the topics table with `normalizeTopicText` (which also collapses inner
-// whitespace). generateAndReplace mints into the table (planned on the normalised key) and then
-// appends to the metadata list on the looser key, so "Dutch  politics" lands beside "dutch
-// politics" in `fact.metadata.topics`.
+// B3 (DATA-U8-1): fact-service.appendFactMetadataTopics and the topics table both dedupe with
+// `normalizeTopicText` (which also collapses inner whitespace), so "Dutch  politics" does not land
+// beside "dutch politics" in `fact.metadata.topics`.
 //
 // REACHABLE STATE: a fact whose `metadata.topics` holds a text the table has no row for. The
 // persona-v3 migration leaves exactly that on a legacy fact (metadata-only topics), written here
@@ -333,7 +331,7 @@ describe('B3: the metadata append dedupes on a looser key than the table', () =>
 
   const keys = (texts: string[]) => texts.map(normalizeTopicText);
 
-  test.failing('B3: the metadata list holds no two entries with the same normalizeTopicText key', async () => {
+  it('B3: the metadata list holds no two entries with the same normalizeTopicText key', async () => {
     const fact = await legacyFact();
     reply('["Dutch  politics"]');
 
@@ -342,19 +340,6 @@ describe('B3: the metadata append dedupes on a looser key than the table', () =>
     expect(out).toMatchObject({ ok: true, minted: 1 });
     const topics = keys(await metadataTopics(fact.id));
     expect(new Set(topics).size).toBe(topics.length);
-  });
-
-  it('B3: today, "Dutch  politics" is appended beside "dutch politics" (the duplicate)', async () => {
-    const fact = await legacyFact();
-    reply('["Dutch  politics"]');
-
-    const out = await replace(fact.id, 3, []);
-
-    expect(out).toMatchObject({ ok: true, minted: 1 });
-    // The table minted it once (planned on the normalised key)...
-    expect((await getByFact(fact.id)).filter((t) => t.normalizedText === 'dutch politics')).toHaveLength(1);
-    // ...and the metadata list now holds the same topic twice.
-    expect(await metadataTopics(fact.id)).toEqual(['dutch politics', OK, 'Dutch  politics']);
   });
 
   it('B3 boundary: a RETIRED row keeps its text in the table, so the plan excludes it and nothing is appended', async () => {
