@@ -28,14 +28,14 @@ export function trackBackgroundCollect<T>(work: Promise<T>): Promise<T> {
 export async function waitForBackgroundCollect(maxWaitMs: number): Promise<void> {
   const running = active;
   if (!running) return;
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let timer!: ReturnType<typeof setTimeout>;
   await Promise.race([
     running,
     new Promise<void>((resolve) => {
       timer = setTimeout(resolve, maxWaitMs);
     }),
   ]);
-  if (timer !== undefined) clearTimeout(timer);
+  clearTimeout(timer);
 }
 
 export function isBackgroundCollectRunning(): boolean {

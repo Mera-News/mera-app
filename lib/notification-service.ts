@@ -326,21 +326,17 @@ export async function resolveNotificationRoute(
  *  does not grow app-restart and the PIN service. */
 function gateIsOpen(): boolean {
     if (!isStartupGatePassed()) return false;
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { usePinStore } = require('./stores/pin-store') as typeof import('./stores/pin-store');
-        return usePinStore.getState().locked === false;
-    } catch {
-        return false;
-    }
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { usePinStore } = require('./stores/pin-store') as typeof import('./stores/pin-store');
+    return usePinStore.getState().locked === false;
 }
 
 /**
  * One notification tap, from either path (warm listener or boot). Never throws.
  *
  * ORDER IS THE WHOLE POINT:
- *   1. stash the route on disk. Every background -> active return reloads JS
- *      (lib/app-restart.ts), so a warm tap's own navigation is usually wiped a
+ *   1. stash the route on disk. A background -> active return with a pending OTA
+ *      reloads JS (lib/app-restart.ts), so a warm tap's own navigation can be wiped a
  *      moment later; the startup gate of the NEXT context consumes the row.
  *   2. record the identifier as handled, so the restart boot (where
  *      `getLastNotificationResponseAsync()` still returns this tap) does not

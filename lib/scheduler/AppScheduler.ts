@@ -332,10 +332,10 @@ class _AppScheduler {
    *  immediately on cold start without waiting for the user to background
    *  and re-foreground the app. */
   onStoresHydrated(): void {
-    // A RESTART BOOT IS WARM, not cold. Every background -> foreground return
-    // reloads the app (lib/app-restart.ts), so treating this as a cold start
-    // would hand every single return the 5s floor instead of the 60s one and
-    // put feed-sync on the wire on every return.
+    // A RESTART BOOT IS WARM, not cold. A background -> foreground return with a
+    // pending OTA reloads the app (lib/app-restart.ts), so treating that boot as
+    // a cold start would hand it the 5s floor instead of the 60s one and put
+    // feed-sync on the wire on every such return.
     //
     // SYNCHRONOUS ON PURPOSE — this method must not become async. It fakes a
     // foreground event, and the foreground loop dispatches with `void` in

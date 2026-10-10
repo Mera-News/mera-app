@@ -72,11 +72,9 @@ export type SubmitFeedbackResponseOutcome =
   | { status: 'closed' }
   | { status: 'error'; offline: boolean };
 
-/** GraphQL error codes on a rejection (Apollo 4 `errors`, Apollo 3 `graphQLErrors`). */
+/** GraphQL error codes on a rejection (Apollo 4 `errors`). */
 function graphQLErrorCodes(err: unknown): string[] {
-  if (!err || typeof err !== 'object') return [];
-  const list =
-    (err as { errors?: unknown }).errors ?? (err as { graphQLErrors?: unknown }).graphQLErrors;
+  const list = (err as { errors?: unknown }).errors;
   if (!Array.isArray(list)) return [];
   return list
     .map((e) => (e as { extensions?: { code?: unknown } })?.extensions?.code)
