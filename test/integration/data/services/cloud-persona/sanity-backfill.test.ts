@@ -431,6 +431,20 @@ describe('a prompt that refuses every time must not pin the cursor forever', () 
   });
 });
 
+describe('a chunk whose only prompt refuses every time', () => {
+  it('DA49: is skipped after the third run, and the pass finishes', async () => {
+    const { rows } = await seedCorpus(10);
+    server.use(...mockGateway(() => ({ status: 502, body: { error: 'refused' }, perItem: true })));
+
+    for (let i = 0; i < 6; i++) if ((await chunk()).reason === 'already_done') break;
+
+    // Three runs send the ten topics (no prompt decoded, so nothing moved); the third gives up on them.
+    expect(sanityTexts(gatewayCalls('batch')).filter((t) => t === 'cricket topic 0')).toHaveLength(3);
+    expect(await getSetting(CURSOR)).toBe(String(T0 + (rows.length - 1) * 10));
+    expect(await isBackfillDone()).toBe(true);
+  });
+});
+
 describe('a chunk that dies between the audit and the queue', () => {
   // DATA-U11b-7: the audit advances the cursor as soon as verdicts decode (topic-sanity-service.ts:~172),
   // then the backfill stores the proposals. A write that fails (or a process killed) in between leaves the

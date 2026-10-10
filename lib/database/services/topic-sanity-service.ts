@@ -241,13 +241,14 @@ export async function runSanityAudit(opts?: {
     let nextCursorMs = audited > 0 && next > cursorMs ? next : null;
 
     // A prompt that fails on every attempt would hold the cursor here forever.
-    // Only a run where other prompts decoded counts (an outage fails them all
-    // and must not make the audit skip anything).
+    // An outage throws inside cloudBatchComplete and never reaches here; any
+    // failed prompt here was refused by the batch, so a run where the cursor
+    // could not move counts as stalled.
     const stalled = await readStall();
     let stallCount: number | null = null;
     if (nextCursorMs !== null) {
       stallCount = stalled > 0 ? 0 : null;
-    } else if (audited > 0 && failedMinMs !== Infinity) {
+    } else if (failedMinMs !== Infinity) {
       stallCount = stalled + 1;
       if (stallCount >= SANITY_STALL_LIMIT) {
         nextCursorMs = plan.maxCreatedAtMs > cursorMs ? plan.maxCreatedAtMs : null;
