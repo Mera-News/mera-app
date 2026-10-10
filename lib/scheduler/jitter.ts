@@ -11,6 +11,8 @@
 // Applied ONCE here rather than per task, so a task author cannot forget it and
 // a new task gets it for free.
 
+import { fnv1a32 } from '@/lib/algorithms/fnv1a';
+
 /** Fraction of the base interval the jitter may move it, either way. */
 export const JITTER_RATIO = 0.2;
 
@@ -30,16 +32,6 @@ let sessionSeed = Math.random();
 /** taskName -> factor. The hash runs once per task, not once per tick. */
 const factorCache = new Map<string, number>();
 
-/** FNV-1a over the seeded key, normalised to [0, 1). */
-function hash01(key: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < key.length; i++) {
-    h ^= key.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return (h >>> 0) / 0x1_0000_0000;
-}
-
 /**
  * Stable multiplier in [1 - JITTER_RATIO, 1 + JITTER_RATIO) for this task, for
  * the life of this app session.
@@ -47,7 +39,7 @@ function hash01(key: string): number {
 export function jitterFactor(taskName: string): number {
   const cached = factorCache.get(taskName);
   if (cached !== undefined) return cached;
-  const factor = 1 + JITTER_RATIO * (2 * hash01(`${sessionSeed}:${taskName}`) - 1);
+  const factor = 1 + JITTER_RATIO * (2 * fnv1a32(`${sessionSeed}:${taskName}`) / 0x1_0000_0000 - 1);
   factorCache.set(taskName, factor);
   return factor;
 }

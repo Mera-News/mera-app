@@ -37,6 +37,10 @@ describe('jitterFactor', () => {
     }
   });
 
+  it('pins the factor for a fixed seed and task (hash output must not drift)', () => {
+    expect(jitterFactor('feed-sync')).toBe(1.0563711009919643);
+  });
+
   it('is stable across repeated calls (the cache)', () => {
     const first = jitterFactor('feed-sync');
     for (let i = 0; i < 50; i++) {
