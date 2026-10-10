@@ -1,6 +1,11 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import logger from '@/lib/logger';
 
+/** A plain timer wait; it does not observe an AbortSignal. */
+export function sleep(ms: number): Promise<void> {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
 // GraphQL error codes that are permanent client-side failures — retrying them
 // just multiplies the request storm while the server keeps rejecting. e.g. a
 // 247-topic request that trips the server's BAD_USER_INPUT "too many topics"
@@ -134,7 +139,7 @@ export async function withRetry<T>(
       if (isNonRetryableError(err)) throw err;
       if (attempt === maxRetries) throw err;
       logger.warn(`${tag} retry ${attempt + 1}/${maxRetries}`);
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await sleep(delay);
       delay *= 2;
     }
   }

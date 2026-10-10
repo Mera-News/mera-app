@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import logger from '@/lib/logger';
 import { canonicalizeLanguageCode, primarySubtag } from '@/lib/language-codes';
 import { getLanguageNameIn } from '@/lib/language-names';
+import { sleep } from '@/lib/utils/retry';
 import {
     __resetTranslationQueueForTests,
     enqueueTranslationTask,
@@ -829,7 +830,7 @@ export async function probeTranslationLanguage(
         && !probeTimedOut.get(targetLangCode)
         && Date.now() - started < PROBE_FAST_FAIL_MS
     ) {
-        await new Promise<void>((resolve) => setTimeout(resolve, PROBE_FAST_FAIL_RETRY_MS));
+        await sleep(PROBE_FAST_FAIL_RETRY_MS);
         translated = await translateText('Hello', targetLangCode, { isProbe: true, timeoutMs });
     }
     if (translated != null) return 'success';
@@ -994,9 +995,7 @@ export function translateTextDetailed(
                     error: err instanceof Error ? err.message : String(err),
                 });
                 if (attempt < retryDelays.length) {
-                    await new Promise<void>((resolve) =>
-                        setTimeout(resolve, retryDelays[attempt]),
-                    );
+                    await sleep(retryDelays[attempt]);
                 } else {
                     const message = err instanceof Error ? err.message : String(err);
                     if (err instanceof TranslationTimeoutError) {
