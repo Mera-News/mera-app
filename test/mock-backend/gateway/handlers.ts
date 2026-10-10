@@ -23,7 +23,7 @@ import { gatewayState as state, resetGatewayState, type GatewayJobRow } from './
 
 export { resetGatewayState };
 
-const FIXTURE_PATH = join(__dirname, '../../../lib/e2ee/__tests__/fixtures/attestation-report.json');
+const FIXTURE_PATH = join(__dirname, '../../fixtures/attestation-report.json');
 
 const curveFor = (model: string): GatewayAlgo => state.curveByModel.get(model) ?? 'ed25519';
 const lower = (h: Headers) => Object.fromEntries([...h.entries()].map(([k, v]) => [k.toLowerCase(), v]));

@@ -13,7 +13,7 @@ import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
 import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
 import { attestationRequests, http, HttpResponse, server, signInFixtureAccount } from '@/test/helpers';
 import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
-import capturedReport from '@/lib/e2ee/__tests__/fixtures/attestation-report.json';
+import capturedReport from '@/test/fixtures/attestation-report.json';
 
 const ROUTE = '*/api/attestation/report';
 const MODEL = 'some/model';

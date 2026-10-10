@@ -11,7 +11,7 @@
  * returns `pass` on everything is indistinguishable from one that returns
  * `pass` unconditionally unless something is proven to make it fail.
  */
-import fixture from '@/lib/e2ee/__tests__/fixtures/attestation-report.json';
+import fixture from '@/test/fixtures/attestation-report.json';
 import {
   bytesToHex,
   derSignatureToRaw,
