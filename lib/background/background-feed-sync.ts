@@ -48,15 +48,13 @@ export const BG_MAX_BATCHES = 3;
 
 export type BackgroundFeedSyncStop =
   | 'no-foreground'
-  | 'allowance'
-  | 'target-met'
   | 'deadline'
   | 'error'
   | 'done';
 
 export interface BackgroundFeedSyncResult {
   stoppedBy: BackgroundFeedSyncStop;
-  /** Metered articles the run was allowed to hydrate (0 when it skipped). */
+  /** Metered articles the run was allowed to hydrate (0 when it skipped, or when only followed stories ran). */
   meteredBudget: number;
 }
 
@@ -172,13 +170,14 @@ export async function runBackgroundFeedSync(opts: {
   }
 
   const allowance = await readAllowance(now);
-  if (allowance.perRun <= 0) return { stoppedBy: 'allowance', meteredBudget: 0 };
 
   await hydrateRunPrerequisites();
 
-  const readiness = await measureOpenReadiness(now);
-  const meteredBudget = plannedMeteredFetch(readiness, allowance.perRun);
-  if (meteredBudget <= 0) return { stoppedBy: 'target-met', meteredBudget: 0 };
+  // A spent allowance or a met target stops only the METERED ids. Followed
+  // stories are free and keep updating (owner ruling), so the run goes on with
+  // a metered budget of zero: no metered hydrate, no reservation.
+  const meteredBudget =
+    allowance.perRun > 0 ? plannedMeteredFetch(await measureOpenReadiness(now), allowance.perRun) : 0;
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { useMeraProtocolStore } = require('@/lib/stores/mera-protocol-store') as typeof import('@/lib/stores/mera-protocol-store');

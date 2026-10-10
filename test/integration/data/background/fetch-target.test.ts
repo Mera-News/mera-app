@@ -72,15 +72,14 @@ describe('the reader has to have opened the app within 24h', () => {
 });
 
 describe('the open-ready target: 50 relevant articles from the last 6h', () => {
-  it('skips when 50 relevant fresh articles are already there, and asks the server nothing', async () => {
+  it('hydrates no metered article when 50 relevant fresh articles are already there (followed stories still run)', async () => {
     await seedScored(50);
-    const ops = recordOps();
-    await serveFresh(3);
+    const { served } = await serveFresh(3);
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out).toEqual({ stoppedBy: 'target-met', meteredBudget: 0 });
-    expect(await ops.all()).toEqual([]);
+    expect(out).toEqual({ stoppedBy: 'done', meteredBudget: 0 });
+    expect(served.stats.requests).toEqual([]);
   });
 
   it('does not count an article published more than 6h ago, however well it scored', async () => {
@@ -100,11 +99,12 @@ describe('the open-ready target: 50 relevant articles from the last 6h', () => {
   it('counts pending rows at the default yield (0.33): 10 relevant + 122 pending is expected to cover it', async () => {
     await seedScored(10);
     await seedUnscored(122);
-    await serveFresh(3);
+    const { served } = await serveFresh(3);
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out).toEqual({ stoppedBy: 'target-met', meteredBudget: 0 });
+    expect(out).toEqual({ stoppedBy: 'done', meteredBudget: 0 });
+    expect(served.stats.requests).toEqual([]);
   });
 
   it('fetches for the remaining gap when pending rows fall just short: 120 pending leaves 0.4 of an article, so 2', async () => {

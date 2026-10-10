@@ -33,7 +33,6 @@ import {
   breadcrumbs,
   oid,
   persistedSetting,
-  recordOps,
   rowsById,
   runFetch,
   seedTracked,
@@ -91,7 +90,7 @@ describe('the per-day cap is half of the last known daily limit', () => {
     const more = await serveFresh(30, { first: 100 });
     const second = await advanceUntilDone(runFetch({ now: NOW + 60_000 }));
 
-    expect(second).toEqual({ stoppedBy: 'allowance', meteredBudget: 0 });
+    expect(second).toEqual({ stoppedBy: 'done', meteredBudget: 0 });
     expect(asked(more.served)).toEqual([]);
   });
 
@@ -228,9 +227,6 @@ describe('concurrent chunks', () => {
 });
 
 describe('a daily limit reached', () => {
-  const capped = () =>
-    serveHydrate({ respond: () => ({ articles: [], dailyLimitReached: true }) }).handlers;
-
   it('a closing mark that cannot be written is a breadcrumb: the run still ends normally', async () => {
     await serveFresh(6, { hydrate: { respond: () => ({ articles: [], dailyLimitReached: true }) } });
     failBatchWhere((op) => op.table === 'settings' && op.raw?.key === BG_QUOTA_EXHAUSTED_DAY_KEY);
@@ -242,10 +238,10 @@ describe('a daily limit reached', () => {
     expect(breadcrumbs()).toContain('bg-feed-sync: allowance ledger write failed');
   });
 
-  it('closes background fetches for the rest of that UTC day, and the next day opens them again', async () => {
-    const ops = recordOps();
-    const { served } = await serveFresh(6);
-    server.use(...capped());
+  it('stops metered background fetches for the rest of that UTC day, and the next day opens them again', async () => {
+    await serveFresh(6);
+    const served = serveHydrate({ respond: () => ({ articles: [], dailyLimitReached: true }) });
+    server.use(...served.handlers);
 
     const first = await advanceUntilDone(runFetch());
 
@@ -253,11 +249,12 @@ describe('a daily limit reached', () => {
     expect(await getSetting(BG_QUOTA_EXHAUSTED_DAY_KEY)).toBe(TODAY);
     expect(await ledger()).toBe('0'); // nothing was granted: the reservation is given back
     expect(await rowsById()).toEqual(new Map());
-    const personaCalls = await ops.count('GetArticleIdsForPersona');
+    const firstAsked = asked(served);
+    expect(firstAsked).toHaveLength(6);
 
     const sameDay = await advanceUntilDone(runFetch({ now: NOW + 5 * HOUR - 1 }));
-    expect(sameDay).toEqual({ stoppedBy: 'allowance', meteredBudget: 0 });
-    expect(await ops.count('GetArticleIdsForPersona')).toBe(personaCalls);
+    expect(sameDay).toEqual({ stoppedBy: 'done', meteredBudget: 0 });
+    expect(asked(served)).toEqual(firstAsked); // the ids call still runs for followed stories; no metered hydrate goes out
 
     const tomorrow = Date.UTC(2026, 9, 10, 0, 0, 1);
     jest.setSystemTime(tomorrow);
@@ -265,7 +262,6 @@ describe('a daily limit reached', () => {
     const reopened = await advanceUntilDone(runFetch({ now: tomorrow }));
     expect(reopened.stoppedBy).toBe('done');
     expect(asked(next.served)).toHaveLength(3);
-    void served;
   });
 });
 
@@ -339,6 +335,23 @@ describe('the ObjectId insert-time filter', () => {
     expect(stories.length).toBeLessThanOrEqual(BG_RUN_METERED_CAP);
     expect(stories).not.toContain(old);
     expect(await ledger()).toBe('122'); // free ids are not reserved
+  });
+});
+
+describe('followed stories when the metered allowance is spent (OWNER-F4)', () => {
+  it('still hydrates the free story ids, sends no metered hydrate, and reserves nothing', async () => {
+    await setSetting(BG_ARTICLES_CHARGED_PREFIX + TODAY, '125'); // the whole Starter half
+    await seedTracked('local election');
+    const fresh = [0, 1, 2].map((n) => oid(3000 + n, NOW - 60_000));
+    const served = serveHydrate();
+    server.use(servePersona({ topics: { 'local election': fresh } }), ...served.handlers);
+
+    const out = await advanceUntilDone(runFetch());
+
+    expect(out).toEqual({ stoppedBy: 'done', meteredBudget: 0 });
+    expect(served.stats.requests.map((r) => r.op)).toEqual(['GetArticlesForStories']);
+    expect(asked(served)).toEqual(fresh);
+    expect(await ledger()).toBe('125');
   });
 });
 
