@@ -177,6 +177,22 @@ export async function getSavedSuggestionByServerId(
 }
 
 /**
+ * Strict twin of getSavedSuggestionByServerId: null ONLY for a missing row, any
+ * other failure rethrows. For callers that act on "confirmed gone".
+ */
+export async function findSavedSuggestionByServerId(
+  serverId: string,
+): Promise<ForYouSuggestion | null> {
+  try {
+    return toForYouSuggestion(await savedSuggestionsCol.find(serverId));
+  } catch (err) {
+    // ponytail: 3 copies of the missing-record test (here, article-suggestion-service, inference-results.isRecordNotFoundError); P4 dedupes
+    if (/Record\s+\S+\s+not\s+found/i.test(err instanceof Error ? err.message : String(err))) return null;
+    throw err;
+  }
+}
+
+/**
  * Same lookup, plus whether the row is a user SAVE or RETENTION.
  *
  * The detail screen needs the distinction for one reason: a save is the offline

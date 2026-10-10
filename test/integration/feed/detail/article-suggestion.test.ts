@@ -108,18 +108,11 @@ describe('a story neither table holds', () => {
         }
     }
 
-    test.failing('a transient read error on an existing row never deletes the card', async () => {
+    test('a transient read error on an existing row never deletes the card', async () => {
         const { result, deleteRow, rows } = await openWhileTheReadFails();
         expect(deleteRow).not.toHaveBeenCalled();
         expect(rows.map((s) => s._id)).toContain('kept');
         expect(result.current.error).toBe('Failed to load article');
-    });
-
-    test('today: a transient read error on an existing row deletes the card as confirmed gone', async () => {
-        const { result, deleteRow, rows } = await openWhileTheReadFails();
-        expect(deleteRow).toHaveBeenCalledTimes(1);
-        expect(rows.map((s) => s._id)).not.toContain('kept');
-        expect(result.current.error).toBe('This story is no longer available');
     });
 });
 

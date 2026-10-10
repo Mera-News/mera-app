@@ -6,11 +6,11 @@ import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import {
     deleteSuggestionByServerId,
-    getSuggestionByServerId,
+    findSuggestionByServerId,
 } from '@/lib/database/services/article-suggestion-service';
 import {
     deleteSavedSuggestion,
-    getSavedSuggestionByServerId,
+    findSavedSuggestionByServerId,
     isSuggestionSaved,
     saveSuggestion,
 } from '@/lib/database/services/saved-article-suggestion-service';
@@ -335,10 +335,10 @@ export function useArticleSuggestionScreen({
             return;
         }
         let cancelled = false;
-        getSuggestionByServerId(articleSuggestionId)
+        findSuggestionByServerId(articleSuggestionId)
             // Fall back to the saved table — a saved item's source feed row may
             // have already been pruned by the 48h TTL.
-            .then((row) => row ?? getSavedSuggestionByServerId(articleSuggestionId))
+            .then((row) => row ?? findSavedSuggestionByServerId(articleSuggestionId))
             .then((row) => {
                 if (cancelled) return;
                 if (!row) {

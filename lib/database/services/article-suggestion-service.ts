@@ -1387,6 +1387,23 @@ export async function getSuggestionByServerId(serverId: string): Promise<ForYouS
 }
 
 /**
+ * Strict twin of getSuggestionByServerId: null ONLY for a missing row, any other
+ * failure rethrows. For callers that act on "confirmed gone" (the detail screen
+ * purges the card), where a transient read error must not look like a missing row.
+ */
+export async function findSuggestionByServerId(serverId: string): Promise<ForYouSuggestion | null> {
+  try {
+    const row = await articleSuggestionsCol.find(serverId);
+    const factIds = await loadFactIdsBySuggestion([serverId]);
+    return toForYouSuggestion(row, factIds.get(serverId) ?? []);
+  } catch (err) {
+    // ponytail: 3 copies of the missing-record test (here, saved-article-suggestion-service, inference-results.isRecordNotFoundError); P4 dedupes
+    if (/Record\s+\S+\s+not\s+found/i.test(err instanceof Error ? err.message : String(err))) return null;
+    throw err;
+  }
+}
+
+/**
  * Assemble the context an article-feedback agent needs: the suggestion row,
  * the topic texts that matched it, and the facts that produced those topics.
  * Looks up by `suggestionId` (server id) or, failing that, by `articleId`
