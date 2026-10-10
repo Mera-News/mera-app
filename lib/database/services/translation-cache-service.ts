@@ -152,6 +152,12 @@ export function flushTranslationCacheWrites(): Promise<void> {
             const found = byId.get(id);
             if (found) {
                 return found.prepareUpdate((row) => {
+                    // A different source under the same id is a hash collision:
+                    // the row takes over the newcomer whole, never a mix.
+                    if (row.sourceText !== item.sourceText) {
+                        row.sourceHash = hashSourceText(item.sourceText);
+                        row.sourceText = item.sourceText;
+                    }
                     row.translatedText = item.translatedText;
                     row.lastUsedAt = now;
                 });

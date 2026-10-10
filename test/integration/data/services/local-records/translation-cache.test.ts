@@ -445,23 +445,13 @@ describe('hash collisions', () => {
     expect(await loadTranslationCache('de')).toEqual(new Map([[COLLIDING_B, 'Uebersetzung B']]));
   });
 
-  // DATA-U10b-1. The row update on a hit rewrites translated_text but leaves source_text, and
-  // nothing re-checks source_text on read, so a later colliding text hands its translation to the first.
-  test.failing('a colliding text stored after another never gives the first text the wrong translation', async () => {
+  it('a colliding text stored after another never gives the first text the wrong translation', async () => {
     await store('de', [[COLLIDING_A, 'Uebersetzung A']]);
     await store('de', [[COLLIDING_B, 'Uebersetzung B']]);
 
     const loaded = await loadTranslationCache('de');
     expect(loaded.get(COLLIDING_A) ?? 'Uebersetzung A').toBe('Uebersetzung A');
     expect(loaded.get(COLLIDING_B) ?? 'Uebersetzung B').toBe('Uebersetzung B');
-  });
-
-  it('today: the second colliding text overwrites the first row translation, so the first text maps to the second translation', async () => {
-    await store('de', [[COLLIDING_A, 'Uebersetzung A']]);
-    await store('de', [[COLLIDING_B, 'Uebersetzung B']]);
-
-    expect(await countRows(TABLE)).toBe(1);
-    expect(await loadTranslationCache('de')).toEqual(new Map([[COLLIDING_A, 'Uebersetzung B']]));
   });
 });
 
