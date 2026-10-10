@@ -1,0 +1,70 @@
+# Dev flow: OWNER-F2 (R76). A failed foreground sync says which step failed in the counts card's lead
+# line (feed-status-lead) with the orange mark (feed-status-lead-mark), and the counts come back once
+# a pull succeeds. The mock's scenario failOperation makes one GraphQL op answer with an error.
+# The device asks for ids with GetArticleIdsForPersona (never GetArticleIdsForTopics), and the fixture
+# ids never change, so the download failure is armed before sign-in: only the first sync downloads.
+# Red until feed's F2-4 lands. Run in the P4-end device run.
+appId: ${APP_ID}
+---
+# a) Download step fails on the first sync.
+- runScript: ../scripts/reset-scenario.js
+- runScript:
+    file: ../scripts/set-scenario.js
+    env:
+      SCENARIO: '{"failOperation":"GetArticlesForTopicsByIds"}'
+- runFlow: ../flows/sign-in.yaml
+- extendedWaitUntil:
+    visible:
+      id: "feed-status-lead"
+      text: "Found new articles, but couldn't download them. Pull down to try again."
+    timeout: 90000
+- assertVisible:
+    id: "feed-status-lead-mark"
+- takeScreenshot: f2-download-failed
+
+# b) Cleared: a pull downloads them and the counts line returns.
+- runScript:
+    file: ../scripts/set-scenario.js
+    env:
+      SCENARIO: '{"failOperation":null}'
+- runFlow: ../flows/pull-feed.yaml
+- extendedWaitUntil:
+    notVisible:
+      text: "Found new articles, but couldn't download them. Pull down to try again."
+    timeout: 90000
+- assertVisible:
+    id: "feed-status-lead"
+- assertNotVisible:
+    id: "feed-status-lead-mark"
+- takeScreenshot: f2-counts-after-download
+
+# c) The id lookup fails.
+- runScript:
+    file: ../scripts/set-scenario.js
+    env:
+      SCENARIO: '{"failOperation":"GetArticleIdsForPersona"}'
+- runFlow: ../flows/pull-feed.yaml
+- extendedWaitUntil:
+    visible:
+      id: "feed-status-lead"
+      text: "Couldn't look for new articles. Pull down to try again."
+    timeout: 90000
+- assertVisible:
+    id: "feed-status-lead-mark"
+- takeScreenshot: f2-lookup-failed
+
+# d) Cleared again: the counts line returns.
+- runScript:
+    file: ../scripts/set-scenario.js
+    env:
+      SCENARIO: '{"failOperation":null}'
+- runFlow: ../flows/pull-feed.yaml
+- extendedWaitUntil:
+    notVisible:
+      text: "Couldn't look for new articles. Pull down to try again."
+    timeout: 90000
+- assertVisible:
+    id: "feed-status-lead"
+- assertNotVisible:
+    id: "feed-status-lead-mark"
+- takeScreenshot: f2-counts-after-lookup

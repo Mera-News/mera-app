@@ -17,6 +17,9 @@ export interface Scenario {
     };
     /** Set by the paywall route on PURCHASED; reset with the scenario. */
     purchasedAt: number | null;
+    /** One GraphQL operation name that answers with a GraphQL error instead of data (a failed
+     *  sync step on device, e.g. GetArticleIdsForPersona or GetArticlesForTopicsByIds). */
+    failOperation: string | null;
 }
 
 const DEFAULT_SCENARIO: Scenario = {
@@ -27,6 +30,7 @@ const DEFAULT_SCENARIO: Scenario = {
     imageOrigin: null,
     paywall: { result: 'CANCELLED', upgradeTo: null, confirmAfterMs: 0 },
     purchasedAt: null,
+    failOperation: null,
 };
 
 let current: Scenario = { ...DEFAULT_SCENARIO };

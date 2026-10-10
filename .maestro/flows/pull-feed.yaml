@@ -1,0 +1,11 @@
+# Subflow: pull the Feed down to refresh (its RefreshControl starts a foreground sync).
+appId: ${APP_ID}
+---
+- extendedWaitUntil:
+    visible:
+      id: "feed-screen"
+    timeout: 30000
+- swipe:
+    start: 50%, 30%
+    end: 50%, 80%
+    duration: 600

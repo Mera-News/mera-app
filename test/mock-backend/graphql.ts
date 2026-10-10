@@ -11,6 +11,7 @@
 //   articles: 'empty'   every id op and article list answers empty
 //   imageOrigin         origin of the fixture image URLs (default: the request's own)
 //   paywall             after a scripted purchase, billing ops report `upgradeTo` (billingTier)
+//   failOperation       that one operation answers with a GraphQL error instead of data
 //
 // A transport failure has no helper: `http.post('*/graphql', () => HttpResponse.error())`.
 import { graphql, HttpResponse, type RequestHandler } from 'msw';
@@ -408,6 +409,11 @@ mutation<'submitFeedbackResponse'>('SubmitFeedbackResponse', () => ({
 const toHandler = (op: Op): RequestHandler =>
     (op.kind === 'query' ? graphql.query : graphql.mutation)(op.name, ({ request, variables }) => {
         const scenario = getScenario();
+        if (scenario.failOperation === op.name) {
+            return HttpResponse.json({
+                errors: [{ message: `E2E mock: ${op.name} failed (scenario failOperation)`, extensions: { code: 'INTERNAL_SERVER_ERROR' } }],
+            });
+        }
         const origin = scenario.imageOrigin ?? new URL(request.url).origin;
         return HttpResponse.json({
             data: op.resolve({ origin, now: Date.now(), variables, scenario }) as Record<string, unknown>,
