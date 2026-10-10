@@ -5,6 +5,8 @@
 // writes, store notify, and topic-generation trigger and delegates the decisions
 // to filterNewFacts.
 
+import { normalizeKey } from '@/lib/algorithms/normalize-key';
+
 export const MAX_FACT_LENGTH = 200;
 
 /** A fact entry from the LLM — either a plain string (legacy) or an object with
@@ -87,9 +89,7 @@ export function normalizeFactEntry(entry: FactEntry): NormalizedFactEntry {
 }
 
 /** Canonicalizes a statement for duplicate detection (lowercase, single-spaced). */
-export function normalizeStatement(s: string): string {
-  return s.toLowerCase().trim().replace(/\s+/g, ' ');
-}
+export const normalizeStatement: (s: string) => string = normalizeKey;
 
 /** Meta-conversational statements the LLM sometimes hallucinates as facts. */
 const META_CONVERSATIONAL_PATTERNS = [

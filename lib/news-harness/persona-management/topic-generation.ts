@@ -15,6 +15,7 @@ import {
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   asUntrusted,
 } from '../prompts/prompts';
+import { normalizeKey } from '@/lib/algorithms/normalize-key';
 import { buildAttributeTextToIdMap, isLocationAttribute } from '../prompts/questionnaire-data';
 import { DEFAULT_HARNESS_CONFIG, type TopicGenConfig } from '../core/config';
 import { NOOP_LOGGER, type HarnessLogger } from '../core/ports';
@@ -190,14 +191,6 @@ export function mergeTopicsAppend(existing: string[], incoming: string[]): strin
 // entry into a `topics` row. Kept here so the dedupe is unit-tested without a DB.
 // ---------------------------------------------------------------------------
 
-/** Default normalize — MUST stay byte-identical to
- *  lib/database/services/topic-service.ts::normalizeTopicText so a text minted
- *  here dedupes against a stored row's `normalized_text`. The RN caller passes
- *  its own normalizeTopicText to guarantee the production path never drifts. */
-function defaultNormalizeTopicText(s: string): string {
-  return s.toLowerCase().trim().replace(/\s+/g, ' ');
-}
-
 export interface PlannedTopicRow {
   text: string;
   normalizedText: string;
@@ -212,7 +205,11 @@ export interface PlannedTopicRow {
 export function planLlmTopicRows(
   existingNormalizedTexts: Iterable<string>,
   incomingTexts: string[],
-  normalize: (s: string) => string = defaultNormalizeTopicText,
+  // Default normalize (normalizeKey) MUST stay byte-identical to
+  // lib/database/services/topic-service.ts::normalizeTopicText so a text minted
+  // here dedupes against a stored row's `normalized_text`. The RN caller passes
+  // its own normalizeTopicText to guarantee the production path never drifts.
+  normalize: (s: string) => string = normalizeKey,
 ): PlannedTopicRow[] {
   const seen = new Set<string>();
   for (const n of existingNormalizedTexts) seen.add(n);

@@ -26,6 +26,7 @@
 //
 // Pure: no store, no database, no React. Everything here is unit-testable.
 
+import { fnv1a32 } from '@/lib/algorithms/fnv1a';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 
 /** One reading-group staged by `saveExtractedFacts`, awaiting a tap. */
@@ -91,22 +92,6 @@ export type FactChoiceResolution =
 
 export type GroupResolutions = Record<string, FactChoiceResolution>;
 
-/**
- * FNV-1a 32-bit, hex. Deterministic across bundles and platforms, no deps.
- *
- * Collision risk is irrelevant here: the group's `index` is already part of the
- * key, so a collision would need two groups at the SAME index carrying
- * different text, which cannot happen within one tool result.
- */
-function fnv1a(input: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, '0');
-}
-
 /** Separator inside the hash input. Cannot occur in a fact statement. */
 const HASH_SEP = String.fromCharCode(0);
 
@@ -125,7 +110,7 @@ const HASH_SEP = String.fromCharCode(0);
  */
 export function factChoiceGroupId(index: number, options: string[]): string {
   const key = options.map((o) => o.trim().toLowerCase()).join(HASH_SEP);
-  return `${index}:${fnv1a(key)}`;
+  return `${index}:${fnv1a32(key).toString(16).padStart(8, '0')}`;
 }
 
 /**
