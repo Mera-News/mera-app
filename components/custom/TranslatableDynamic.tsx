@@ -4,7 +4,7 @@ import { Text } from '@/components/ui/text';
 import { canonicalizeLanguageCode } from '@/lib/language-codes';
 import { translateTextDetailed, useTranslationSuppressed } from '@/lib/translation-service';
 import { subscribeTranslationEpoch, visibilityPriority } from '@/lib/translation-queue';
-import { useAppLanguageStore } from '@/lib/stores/app-language-store';
+import { translationCacheKey, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -196,7 +196,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // the whole Map here would re-render every mounted TranslatableDynamic on
     // every translation anywhere (2+ per feed card).
     const cachedTranslation = useAppLanguageStore((s) =>
-        needsTranslation ? s.cache.get(text) : undefined,
+        needsTranslation ? s.cache.get(translationCacheKey(text)) : undefined,
     );
     // A request for THIS text is in flight (same per-key subscription shape as
     // above: a boolean, so only this node re-renders when it flips).

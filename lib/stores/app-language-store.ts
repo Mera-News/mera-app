@@ -12,6 +12,9 @@ import { applyLanguage } from '@/lib/i18n';
 
 const APP_LANGUAGE_KEY = 'app_language';
 
+/** The cache key for a source text: the persisted columns trim, so the in-memory key must too. */
+export const translationCacheKey = (text: string): string => text.trim();
+
 const SUPPORTED_CODES = new Set<string>(SUPPORTED_LANGUAGES.map((l) => l.code));
 
 // Legacy app_language values → iOS translation codes
@@ -145,7 +148,8 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
         // Mutate the existing Map/Set in place — no new references — then bump
         // cacheVersion so zustand notifies. Exactly one bump per call.
         const { cache, pending, appLanguage } = get();
-        cache.set(original, translated);
+        const key = translationCacheKey(original);
+        cache.set(key, translated);
         pending.delete(original);
         set({ cacheVersion: get().cacheVersion + 1 });
         // Persist. Buffered + debounced inside the service, so a fast scroll
@@ -153,7 +157,7 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
         // transaction. This is the single funnel every completed translation
         // passes through, which is why it is the only place that writes.
         try {
-            rememberTranslation(original, appLanguage, translated);
+            rememberTranslation(key, appLanguage, translated);
         } catch {
             // a cache write must never break the render path that produced it
         }

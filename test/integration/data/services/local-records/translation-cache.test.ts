@@ -23,7 +23,7 @@ import {
   TRANSLATION_CACHE_HYDRATE_LIMIT,
   TRANSLATION_CACHE_TTL_DAYS,
 } from '@/lib/database/services/translation-cache-service';
-import { useAppLanguageStore } from '@/lib/stores/app-language-store';
+import { translationCacheKey, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useStrictClock } from '@/test/helpers';
 import { countRows, countWrites, DAY_MS, failNextQuery, quietLogger, resetLocalRecordsMemory, restoreFaults, T0 } from './support';
 
@@ -466,8 +466,8 @@ describe('surrounding whitespace', () => {
     expect(await loadTranslationCache('de')).toEqual(new Map([['Breaking news', 'Eilmeldung']]));
   });
 
-  // The component asks the store's cache for the text as the server sent it. The row comes back
-  // from disk keyed by the trimmed text, so after a restart a padded text no longer finds it.
+  // The persisted row is keyed by the trimmed text, so the store keys its cache by the trimmed text
+  // too, and a padded text finds its translation both in the session and after a restart.
   async function translateThenRestart(): Promise<Map<string, string>> {
     useAppLanguageStore.setState({ appLanguage: 'de' });
     useAppLanguageStore.getState().cacheTranslation(' Breaking news ', ' Eilmeldung ');
@@ -477,16 +477,9 @@ describe('surrounding whitespace', () => {
     return useAppLanguageStore.getState().cache;
   }
 
-  test.failing('DA22: a padded text finds its translation after a restart', async () => {
+  it('DA22: a padded text finds its translation after a restart', async () => {
     const cache = await translateThenRestart();
 
-    expect(cache.get(' Breaking news ')).toBe('Eilmeldung');
-  });
-
-  it('DA22 today: after a restart the padded text misses; only its trimmed form is in the cache', async () => {
-    const cache = await translateThenRestart();
-
-    expect(cache.get(' Breaking news ')).toBeUndefined();
-    expect(cache.get('Breaking news')).toBe('Eilmeldung');
+    expect(cache.get(translationCacheKey(' Breaking news '))).toBe('Eilmeldung');
   });
 });
