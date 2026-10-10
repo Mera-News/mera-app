@@ -1014,7 +1014,18 @@ export async function cloudComplete(
 
   const data = await response.json() as ChatCompletionResponse;
   const msg = data.choices?.[0]?.message;
-  const encContent = msg?.content || msg?.reasoning_content || '';
+  // Fail loud, like the batch path: a trace that exhausts max_tokens leaves
+  // `content` empty, and handing `reasoning_content` back as the answer made
+  // callers parse prose as JSON.
+  if (!msg?.content && msg?.reasoning_content) {
+    logger.warn(`${TAG} completion returned only a reasoning trace`, {
+      finishReason: data.choices?.[0]?.finish_reason,
+      reasoningLength: msg.reasoning_content.length,
+      maxTokensRequested: maxTokens,
+    });
+    throw new Error(`${TAG} reasoning-overran-budget`);
+  }
+  const encContent = msg?.content || '';
   if (!encContent) return '';
 
   // Thinking is OFF here, and on GLM that can leak the trace INTO content as
