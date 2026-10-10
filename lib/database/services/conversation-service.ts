@@ -36,13 +36,6 @@ export interface MessageCursor {
 
 // --- Helpers ---
 
-/** Normalizes a WMDB @date field (Date) or a raw number to epoch millis. */
-function toMillis(value: unknown): number {
-  if (value instanceof Date) return value.getTime();
-  if (typeof value === 'number') return value;
-  return 0;
-}
-
 /** Parses a tool_calls_json string, tolerating corrupt values by returning null. */
 function parseToolCalls(raw: string | null | undefined): ToolCallRecord[] | null {
   if (!raw) return null;
@@ -64,7 +57,7 @@ function toPersistedMessage(record: MessageModel): PersistedMessage {
     role: record.role as MessageRole,
     content: record.content,
     toolCalls: parseToolCalls(record.toolCallsJson),
-    createdAt: toMillis(record.createdAt),
+    createdAt: record.createdAt.getTime(),
   };
 }
 

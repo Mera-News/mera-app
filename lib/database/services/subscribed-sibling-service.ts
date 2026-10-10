@@ -116,14 +116,11 @@ export async function findSubscribedSiblings(
     .query(Q.where('stable_cluster_id', Q.oneOf(clusterIds)))
     .fetch();
 
-  const seen = new Set<string>();
   const out: ArticleSuggestionModel[] = [];
   for (const row of candidates) {
     if (row.id === anchor.id) continue;
-    if (seen.has(row.id)) continue;
     if (!names.has(normalizeSubscriptionName(row.publicationName ?? ''))) continue;
     if (!siblingIsReadable(anchor, row)) continue;
-    seen.add(row.id);
     out.push(row);
   }
 

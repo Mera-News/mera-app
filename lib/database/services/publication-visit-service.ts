@@ -155,18 +155,13 @@ export interface VisitedArticle {
  */
 function dedupeVisitRows(rows: PublicationVisitModel[]): VisitedArticle[] {
   const grouped = new Map<string, VisitedArticle>();
-  const tappedAt = (row: PublicationVisitModel) =>
-    row.visitedAt instanceof Date ? row.visitedAt.getTime() : Number(row.visitedAt);
+  const tappedAt = (row: PublicationVisitModel) => row.visitedAt.getTime();
   // Newest first (id breaks a tie), so the result does not depend on the query's row order.
   const newestFirst = [...rows].sort((a, b) => tappedAt(b) - tappedAt(a) || (a.id < b.id ? -1 : 1));
   for (const row of newestFirst) {
     const dedupeKey = row.articleId ?? row.articleUrl ?? `__row_${row.id}`;
     const visitedAt = tappedAt(row);
-    const pubDate = row.pubDate instanceof Date
-      ? row.pubDate.getTime()
-      : row.pubDate != null
-        ? Number(row.pubDate)
-        : null;
+    const pubDate = row.pubDate ? row.pubDate.getTime() : null;
     const existing = grouped.get(dedupeKey);
     if (existing) {
       existing.visitCount += 1;
@@ -383,9 +378,7 @@ export async function getTopVisitedPublications(opts?: {
     for (const row of rows) {
       const country = row.countryCode ?? null;
       const key = `${row.publicationName} ${country ?? ''}`;
-      const visitedAt = row.visitedAt instanceof Date
-        ? row.visitedAt.getTime()
-        : Number(row.visitedAt);
+      const visitedAt = row.visitedAt.getTime();
       const existing = grouped.get(key);
       if (existing) {
         existing.visitCount += 1;

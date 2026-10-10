@@ -112,10 +112,10 @@ export async function generateAndReplace(
     const [result] = await cloudBatchComplete([call]);
 
     // Step 1 failure ⇒ change nothing at all.
-    if (!result || result.error) {
+    if (result.error) {
       logger.warn('[topic-replacement] generation failed — nothing changed', {
         factId,
-        error: result?.error ?? 'no result',
+        error: result.error,
       });
       return FAILED;
     }

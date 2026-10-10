@@ -275,7 +275,6 @@ function matchesTrackedQuery(
   row: TrackedStoryModel,
   norm: { stableClusterId: string | null; articleId: string | null },
 ): boolean {
-  if (row.status !== 'active') return false; // JS guard (test mock ignores predicate)
   if (norm.stableClusterId && row.stableClusterId === norm.stableClusterId) return true;
   if (norm.articleId && (row.memberArticleIds ?? []).includes(norm.articleId)) return true;
   return false;
@@ -467,7 +466,7 @@ export async function removeMemberSnapshot(id: string, articleId: string): Promi
     const rows = await collection.query(Q.where('id', id)).fetch();
     const record = rows.find((r) => r.id === id);
     if (!record) return true; // story gone, so the member is too
-    const current = record.memberSnapshots ?? [];
+    const current = record.memberSnapshots;
     const next = current.filter((s) => s?.articleId !== target);
     if (next.length === current.length) return true; // not a member: nothing to write
     await database.write(async () => {

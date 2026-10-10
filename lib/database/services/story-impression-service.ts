@@ -22,14 +22,6 @@ const impressionsCollection = database.get<StoryImpressionModel>('story_impressi
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** `@date` columns surface as `Date`, but the test mock hands back raw numbers
- *  (and a partially-written row can be null). Normalize to epoch ms or null. */
-function toMs(v: Date | number | null | undefined): number | null {
-  if (v == null) return null;
-  const t = v instanceof Date ? v.getTime() : Number(v);
-  return Number.isFinite(t) ? t : null;
-}
-
 export interface RecordImpressionInput {
   articleId: string;
   stableClusterId?: string | null;
@@ -115,8 +107,7 @@ export async function getAll(): Promise<StoryImpressionModel[]> {
  * view-inclusive seen set anymore.)
  *
  * Returns article_ids ∪ non-null stable_cluster_ids of opened rows. The
- * `Q.where('opened', true)` is the production filter; the JS `r.opened === true`
- * guard keeps the set opens-only even under the predicate-ignoring test mock.
+ * `Q.where('opened', true)` filter keeps the set opens-only.
  */
 export async function getOpenedSeenSet(): Promise<Set<string>> {
   const { articleIds, clusterIds } = await getOpenedSeenBreakdown();
@@ -177,27 +168,20 @@ export async function getOpenedSeenBreakdown(
   let newestLastSeenAtMs: number | null = null;
 
   for (const r of rows) {
-    // The JS guard keeps the set opens-only even under the predicate-ignoring
-    // test mock. It must live HERE, in the shared builder, and nowhere else.
-    if (r.opened !== true) continue;
     rowCount++;
     if (r.articleId) articleIds.add(r.articleId);
     if (r.stableClusterId) clusterIds.add(r.stableClusterId);
 
-    const first = toMs(r.firstSeenAt);
-    if (first !== null) {
-      oldestFirstSeenAtMs =
-        oldestFirstSeenAtMs === null ? first : Math.min(oldestFirstSeenAtMs, first);
-      const ageMs = nowMs - first;
-      if (ageMs <= DAY_MS) ageBuckets.le24h++;
-      else if (ageMs <= 7 * DAY_MS) ageBuckets.d1to7++;
-      else ageBuckets.d7to30++;
-    }
-    const last = toMs(r.lastSeenAt);
-    if (last !== null) {
-      newestLastSeenAtMs =
-        newestLastSeenAtMs === null ? last : Math.max(newestLastSeenAtMs, last);
-    }
+    const first = r.firstSeenAt.getTime();
+    oldestFirstSeenAtMs =
+      oldestFirstSeenAtMs === null ? first : Math.min(oldestFirstSeenAtMs, first);
+    const ageMs = nowMs - first;
+    if (ageMs <= DAY_MS) ageBuckets.le24h++;
+    else if (ageMs <= 7 * DAY_MS) ageBuckets.d1to7++;
+    else ageBuckets.d7to30++;
+    const last = r.lastSeenAt.getTime();
+    newestLastSeenAtMs =
+      newestLastSeenAtMs === null ? last : Math.max(newestLastSeenAtMs, last);
   }
 
   return {
@@ -229,7 +213,6 @@ export async function getOpenedTitleNorms(): Promise<string[]> {
     .fetch();
   const out: string[] = [];
   for (const r of rows) {
-    if (r.opened !== true) continue;
     const t = (r.titleNorm ?? '').trim();
     if (t) out.push(t);
   }
