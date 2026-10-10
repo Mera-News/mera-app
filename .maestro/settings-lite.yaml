@@ -2,10 +2,6 @@
 # The expected polarity of lite-mode-switch is fixed later on device.
 # Prerequisites: scripts/e2e-android.sh (mock backend, emulator, e2e APK installed).
 appId: ${APP_ID}
-# blocked: ledger FD6, the You tab's pages are absent from the Android accessibility tree.
-# The FD6 fix commit removes this tag; nothing else in the flow changes.
-tags:
-  - blocked
 ---
 - runScript: scripts/reset-scenario.js
 - runFlow: flows/sign-in.yaml
