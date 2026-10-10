@@ -181,13 +181,6 @@
       },
       "stageA11y": "चरण {{index}} / {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "आपातकालीन",
-      "unscoredShort": "अनस्कोर्ड",
-      "high": "उच्च",
-      "medium": "मध्यम",
-      "low": "कम"
-    },
     "syncToast": {
       "relevanceTitle": "प्रासंगिकता की गणना हो रही है",
       "reasonsTitle": "आपके लिए नोट्स लिखे जा रहे हैं",

@@ -181,13 +181,6 @@
       },
       "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}"
     },
-    "sections": {
-      "emergency": "緊急",
-      "unscoredShort": "未評分",
-      "high": "高",
-      "medium": "中",
-      "low": "低"
-    },
     "syncToast": {
       "relevanceTitle": "計算相關性",
       "reasonsTitle": "為您撰寫摘要",

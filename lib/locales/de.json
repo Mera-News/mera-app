@@ -181,13 +181,6 @@
       },
       "stageA11y": "Schritt {{index}} von {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Notfall",
-      "unscoredShort": "Nicht bewertet",
-      "high": "Hoch",
-      "medium": "Mittel",
-      "low": "Niedrig"
-    },
     "syncToast": {
       "relevanceTitle": "Relevanz wird berechnet",
       "reasonsTitle": "Notizen werden verfasst",

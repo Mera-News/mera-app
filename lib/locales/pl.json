@@ -181,13 +181,6 @@
       },
       "stageA11y": "Krok {{index}} z {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Pilne",
-      "unscoredShort": "Nieocenione",
-      "high": "Wysoki",
-      "medium": "Średni",
-      "low": "Niski"
-    },
     "syncToast": {
       "relevanceTitle": "Obliczanie trafności",
       "reasonsTitle": "Pisanie notatek dla Ciebie",

@@ -181,13 +181,6 @@
       },
       "stageA11y": "Bước {{index}} trên {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Khẩn cấp",
-      "unscoredShort": "Chưa chấm điểm",
-      "high": "Cao",
-      "medium": "Trung bình",
-      "low": "Thấp"
-    },
     "syncToast": {
       "relevanceTitle": "Đang tính mức độ liên quan",
       "reasonsTitle": "Đang viết ghi chú cho bạn",

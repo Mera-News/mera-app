@@ -181,13 +181,6 @@
       },
       "stageA11y": "Adım {{index}} / {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Acil",
-      "unscoredShort": "Puansız",
-      "high": "Yüksek",
-      "medium": "Orta",
-      "low": "Düşük"
-    },
     "syncToast": {
       "relevanceTitle": "Alaka düzeyi hesaplanıyor",
       "reasonsTitle": "Notlar yazılıyor",

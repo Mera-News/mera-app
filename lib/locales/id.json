@@ -181,13 +181,6 @@
       },
       "stageA11y": "Langkah {{index}} dari {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Darurat",
-      "unscoredShort": "Belum dinilai",
-      "high": "Tinggi",
-      "medium": "Sedang",
-      "low": "Rendah"
-    },
     "syncToast": {
       "relevanceTitle": "Menghitung relevansi",
       "reasonsTitle": "Menulis catatan untuk Anda",

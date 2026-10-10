@@ -181,13 +181,6 @@
       },
       "stageA11y": "ขั้นที่ {{index}} จาก {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "เหตุฉุกเฉิน",
-      "unscoredShort": "ยังไม่ประเมิน",
-      "high": "สูง",
-      "medium": "กลาง",
-      "low": "ต่ำ"
-    },
     "syncToast": {
       "relevanceTitle": "กำลังคำนวณความเกี่ยวข้อง",
       "reasonsTitle": "กำลังเขียนบันทึกให้คุณ",

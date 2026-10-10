@@ -181,13 +181,6 @@
       },
       "stageA11y": "Крок {{index}} із {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Надзвичайна подія",
-      "unscoredShort": "Без оцінки",
-      "high": "Висока",
-      "medium": "Середня",
-      "low": "Низька"
-    },
     "syncToast": {
       "relevanceTitle": "Обчислення релевантності",
       "reasonsTitle": "Написання нотаток для вас",

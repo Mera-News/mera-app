@@ -181,13 +181,6 @@
       },
       "stageA11y": "Шаг {{index}} из {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Экстренное",
-      "unscoredShort": "Без оценки",
-      "high": "Высокая",
-      "medium": "Средняя",
-      "low": "Низкая"
-    },
     "syncToast": {
       "relevanceTitle": "Рассчитываем релевантность",
       "reasonsTitle": "Готовим пояснения для вас",

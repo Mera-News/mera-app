@@ -181,13 +181,6 @@
       },
       "stageA11y": "Stap {{index}} van {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Noodgeval",
-      "unscoredShort": "Ongepuntueerd",
-      "high": "Hoog",
-      "medium": "Gemiddeld",
-      "low": "Laag"
-    },
     "syncToast": {
       "relevanceTitle": "Relevantie berekenen",
       "reasonsTitle": "Notities voor jou schrijven",

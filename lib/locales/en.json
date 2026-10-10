@@ -223,13 +223,6 @@
       },
       "stageA11y": "Step {{index}} of {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "Emergency",
-      "high": "High",
-      "medium": "Medium",
-      "low": "Low",
-      "unscoredShort": "Unscored"
-    },
     "syncToast": {
       "relevanceTitle": "Calculating relevance",
       "reasonsTitle": "Writing notes for you",

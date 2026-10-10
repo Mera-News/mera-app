@@ -181,13 +181,6 @@
       },
       "stageA11y": "{{total}}단계 중 {{index}}단계: {{name}}"
     },
-    "sections": {
-      "emergency": "긴급",
-      "unscoredShort": "미평가",
-      "high": "높음",
-      "medium": "중간",
-      "low": "낮음"
-    },
     "syncToast": {
       "relevanceTitle": "관련성 계산 중",
       "reasonsTitle": "메모 작성 중",

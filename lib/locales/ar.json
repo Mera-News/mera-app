@@ -181,13 +181,6 @@
       },
       "stageA11y": "الخطوة {{index}} من {{total}}: {{name}}"
     },
-    "sections": {
-      "emergency": "طارئ",
-      "unscoredShort": "غير مُرتَّب",
-      "high": "مرتفع",
-      "medium": "متوسط",
-      "low": "منخفض"
-    },
     "syncToast": {
       "relevanceTitle": "حساب الصلة بالموضوع",
       "reasonsTitle": "كتابة ملاحظات لك",
