@@ -409,18 +409,10 @@ describe('isTracked / findActiveTrackedId / observeTracked', () => {
     return { flags, id };
   }
 
-  test.failing('DATA-U9-4: observeTracked flips when a followed story absorbs the article through the reconcile', async () => {
+  test('DATA-U9-4: observeTracked flips when a followed story absorbs the article through the reconcile', async () => {
     const { flags } = await absorbLater();
 
     expect(await waitFor(() => flags[flags.length - 1] === true)).toBe(true);
-  });
-
-  it('DATA-U9-4 today: observeTracked stays false after the story absorbs the article, though isTracked says true', async () => {
-    const { flags } = await absorbLater();
-
-    expect(await isTracked({ articleId: 'a2' })).toBe(true);
-    await waitFor(() => flags[flags.length - 1] === true, 300);
-    expect(flags[flags.length - 1]).toBe(false);
   });
 
   it('isSubjectTracked and observeSubjectTrackedId read the story a subject belongs to', async () => {

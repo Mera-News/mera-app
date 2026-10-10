@@ -297,7 +297,7 @@ export async function isTracked(query: TrackedMatchQuery): Promise<boolean> {
  * mounted never learned it was now tracking — and the next tap started a second
  * proposal for a story already being followed.
  *
- * `member_article_ids` is in the observed column list on purpose: a story the
+ * `member_article_ids_json` is in the observed column list on purpose: a story the
  * user follows can absorb THIS article later via the topic reconcile, and the
  * button must flip then too, not just when a row is added or removed.
  */
@@ -315,7 +315,7 @@ export function observeTrackedId(query: TrackedMatchQuery) {
   const norm = normalizeTrackedQuery(query);
   return collection
     .query(Q.where('status', 'active'))
-    .observeWithColumns(['member_article_ids', 'status'])
+    .observeWithColumns(['member_article_ids_json', 'status'])
     .pipe(
       map((rows) => {
         if (!norm) return null;
