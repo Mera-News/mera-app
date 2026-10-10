@@ -131,6 +131,7 @@ export function makeUsePublicationArticles(ports: PublicationArticlesPorts) {
     const cursorRef = useRef<string | undefined>(undefined);
     const loadingMoreRef = useRef(false);
     const namesRef = useRef<string[]>([]);
+    const readNamesKeyRef = useRef(namesKey);
     namesRef.current = namesKey ? namesKey.split('\u0000') : [];
 
     const showLocal = useCallback(async (generation: number, names: readonly string[]) => {
@@ -191,9 +192,12 @@ export function makeUsePublicationArticles(ports: PublicationArticlesPorts) {
 
     // Names landing while the on-device list is shown: read it again.
     useEffect(() => {
-      if (!isLocal) return;
+      // The mount run is the first-page effect's job.
+      if (readNamesKeyRef.current === namesKey) return;
+      readNamesKeyRef.current = namesKey;
+      if (!isLocal && !ports.isOffline()) return;
       void showLocal(++generationRef.current, namesRef.current);
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- only a names change re-reads; isLocal is the guard
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- only a names change re-reads; isLocal or offline is the guard
     }, [namesKey]);
 
     // Offline is left by itself when the link comes back.

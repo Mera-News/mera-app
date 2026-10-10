@@ -4,6 +4,8 @@
 // publication-profile-service are module state, reset in beforeEach.
 import { graphql, mockGql, mockGqlError, renderHookInScreen, server } from '@/test/helpers';
 import { act, configure, waitFor } from '@testing-library/react-native';
+import { makeUsePublicationArticles } from '@/lib/hooks/use-publication-articles';
+import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { usePublicationPage } from '@/components/custom/publication-page/usePublicationPage';
 import type { PublicationView } from '@/components/custom/publication-page/open-publication-page';
 import { __resetPublisherOrderSupport } from '@/lib/article-service';
@@ -125,6 +127,34 @@ describe('opening', () => {
     expect(profileCall.vars.newsPublisherId).toBeUndefined(); // exactly one key mode
     expect(result.current.newsPublisherId).toBe(PUB.publisherId);
     expect(result.current.articles.map((a) => a._id)).toEqual(OWN_IDS);
+  });
+});
+
+describe('names landing during the first offline read', () => {
+  it('the earlier, emptier read lands nowhere: the list shows the real names articles', async () => {
+    const art = (id: string) => ({ _id: id }) as NewsArticle;
+    const releases: (() => void)[] = [];
+    const loadLocal = jest.fn((names: readonly string[]) => {
+      const list = names.length > 1 ? [art('a'), art('b')] : [art('a')];
+      if (releases.length > 0) return Promise.resolve(list);
+      return new Promise<NewsArticle[]>((resolve) => releases.push(() => resolve(list)));
+    });
+    const usePubArticles = makeUsePublicationArticles({
+      fetchPage: () => Promise.reject(new Error('offline')),
+      loadLocal,
+      isOffline: () => true,
+      onReconnect: () => () => {},
+    });
+    const { result, rerender } = renderHookInScreen(
+      (p: { names: string[] }) => usePubArticles('pub-1', 'NEWEST', { sourceNames: p.names }),
+      { initialProps: { names: ['One'] } },
+    );
+    await waitFor(() => expect(loadLocal).toHaveBeenCalledTimes(1)); // held: isLocal is not true yet
+    rerender({ names: ['One', 'Two'] });
+    await waitFor(() => expect(loadLocal).toHaveBeenCalledTimes(2));
+    await act(async () => releases[0]());
+    await waitFor(() => expect(result.current.articles.map((a) => a._id)).toEqual(['a', 'b']));
+    expect(result.current.state).toBe('offline');
   });
 });
 
