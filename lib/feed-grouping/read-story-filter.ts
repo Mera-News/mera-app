@@ -19,12 +19,16 @@
  * the English headline at read time (`story-impression-service::recordOpen`,
  * lowercased + whitespace-collapsed) precisely so a re-serve of the SAME story
  * under a different article id / cluster generation can still be recognised. So
- * this module matches on the UNION of three keys, cheapest first:
+ * this module matches on the UNION of two keys, cheapest first:
  *
  *   1. `article_id` equality — the exact same article came back.
- *   2. `stable_cluster_id` equality — kept because when it IS present it is
- *      free and authoritative; it is simply not sufficient on its own.
- *   3. normalized-title Jaccard ≥ 0.55 — the load-bearing signal.
+ *   2. normalized-title Jaccard ≥ 0.55 — the load-bearing signal.
+ *
+ * `stable_cluster_id` is NOT a key (owner ruling F1). It was dropped because it
+ * hid new developments: any later article in a read story's cluster was marked
+ * `already_read` for 48h whatever its headline. It costs nothing to drop, per the
+ * measurements above (28 of 51 impressions carried one; matching on it caught
+ * zero re-serves in the frozen-DB replay).
  *
  * WHY 0.55, AND WHY IT MUST STAY THE PROPAGATION CONSTANT. 0.55 is
  * `TITLE_JACCARD_PROPAGATION_THRESHOLD`, IMPORTED (never re-declared) from
@@ -101,6 +105,7 @@ export interface ReadStoryCandidate {
      *  `id` IS the server `_id` (see `persistAndLinkV2Suggestions`, which sets
      *  `_raw.id = a._id`), so a suggestion's row id is a valid value here. */
     articleId?: string | null;
+    /** Accepted, not matched (owner F1). */
     stableClusterId?: string | null;
     /** English title (`title_en`) or an already-normalized `title_norm`. */
     title?: string | null;
@@ -109,8 +114,6 @@ export interface ReadStoryCandidate {
 export interface ReadStoryIndex {
     /** Article ids of opened impressions. */
     articleIds: Set<string>;
-    /** Non-null stable cluster ids of opened impressions. */
-    stableClusterIds: Set<string>;
     /** Token set per opened impression that had a usable `title_norm`. */
     titleTokenSets: Set<string>[];
     /** token → indices into `titleTokenSets`. Pure BLOCKING, and exact: any pair
@@ -127,7 +130,6 @@ export interface ReadStoryIndex {
 /** The index that matches nothing. Returned by every fail-open path. */
 export const EMPTY_READ_STORY_INDEX: ReadStoryIndex = {
     articleIds: new Set(),
-    stableClusterIds: new Set(),
     titleTokenSets: [],
     titlePostings: new Map(),
     impressionCount: 0,
@@ -145,7 +147,6 @@ export const EMPTY_READ_STORY_INDEX: ReadStoryIndex = {
  */
 export function buildReadStoryIndex(rows: ReadStoryImpressionRow[]): ReadStoryIndex {
     const articleIds = new Set<string>();
-    const stableClusterIds = new Set<string>();
     const titleTokenSets: Set<string>[] = [];
     const titlePostings = new Map<string, number[]>();
     let impressionCount = 0;
@@ -156,9 +157,6 @@ export function buildReadStoryIndex(rows: ReadStoryImpressionRow[]): ReadStoryIn
 
         const articleId = (row.articleId ?? '').trim();
         if (articleId) articleIds.add(articleId);
-
-        const stableClusterId = (row.stableClusterId ?? '').trim();
-        if (stableClusterId) stableClusterIds.add(stableClusterId);
 
         const tokens = normalizeTitleTokens(row.titleNorm);
         if (tokens.size === 0) continue; // no title evidence — the id axes still apply
@@ -171,7 +169,7 @@ export function buildReadStoryIndex(rows: ReadStoryImpressionRow[]): ReadStoryIn
         }
     }
 
-    return { articleIds, stableClusterIds, titleTokenSets, titlePostings, impressionCount };
+    return { articleIds, titleTokenSets, titlePostings, impressionCount };
 }
 
 /**
@@ -188,9 +186,6 @@ export function matchesReadStory(
 
     const articleId = (candidate.articleId ?? '').trim();
     if (articleId && index.articleIds.has(articleId)) return true;
-
-    const stableClusterId = (candidate.stableClusterId ?? '').trim();
-    if (stableClusterId && index.stableClusterIds.has(stableClusterId)) return true;
 
     const tokens = normalizeTitleTokens(candidate.title);
     if (tokens.size === 0) return false;
@@ -218,7 +213,7 @@ export function matchesReadStory(
  * callers hold the result for the whole run rather than rebuilding per chunk.
  *
  * Uses `getAll()` rather than `getOpenedSeenBreakdown()` + `getOpenedTitleNorms()`
- * deliberately: this gate needs the three keys TOGETHER (an id-less title and a
+ * deliberately: this gate needs the keys TOGETHER (an id-less title and a
  * title-less id must stay independently matchable), and those two accessors
  * return them pre-split across two separate queries. The opened filter is
  * re-applied in `buildReadStoryIndex`.

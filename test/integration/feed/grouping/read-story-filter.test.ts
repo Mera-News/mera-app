@@ -47,7 +47,7 @@ function opened(overrides: Partial<ReadStoryImpressionRow> = {}): ReadStoryImpre
 // ===========================================================================
 
 describe('buildReadStoryIndex', () => {
-  it('folds opened rows into the three axes', () => {
+  it('folds opened rows into the two axes', () => {
     const index = buildReadStoryIndex([
       opened({ articleId: 'a1', stableClusterId: 'sc1', titleNorm: 'alpha beta gamma' }),
       opened({ articleId: 'a2' }),
@@ -55,7 +55,6 @@ describe('buildReadStoryIndex', () => {
 
     expect(index.impressionCount).toBe(2);
     expect(index.articleIds).toEqual(new Set(['a1', 'a2']));
-    expect(index.stableClusterIds).toEqual(new Set(['sc1']));
     expect(index.titleTokenSets).toHaveLength(1);
   });
 
@@ -84,7 +83,7 @@ describe('buildReadStoryIndex', () => {
 });
 
 // ===========================================================================
-// matchesReadStory: the three axes
+// matchesReadStory: the two axes
 // ===========================================================================
 
 describe('matchesReadStory', () => {
@@ -94,16 +93,33 @@ describe('matchesReadStory', () => {
     expect(matchesReadStory({ articleId: 'art-2' }, index)).toBe(false);
   });
 
-  it('matches on stable_cluster_id equality even when the article id differs', () => {
+  it('does not match on stable_cluster_id alone: a new headline in a read story still reaches the feed', () => {
     const index = buildReadStoryIndex([
       opened({ articleId: 'art-1', stableClusterId: 'story-9' }),
     ]);
     expect(
       matchesReadStory({ articleId: 'art-2', stableClusterId: 'story-9' }, index),
-    ).toBe(true);
-    expect(
-      matchesReadStory({ articleId: 'art-2', stableClusterId: 'story-8' }, index),
     ).toBe(false);
+  });
+
+  it('still matches a same-cluster candidate whose headline is near-identical (the title key)', () => {
+    const index = buildReadStoryIndex([
+      opened({
+        articleId: 'art-1',
+        stableClusterId: 'story-9',
+        titleNorm: 'anthropic launches claude opus for enterprise customers',
+      }),
+    ]);
+    expect(
+      matchesReadStory(
+        {
+          articleId: 'art-2',
+          stableClusterId: 'story-9',
+          title: 'Anthropic launches Claude Opus for enterprise customers today',
+        },
+        index,
+      ),
+    ).toBe(true);
   });
 
   it('matches a re-serve of the same headline from another publisher (title axis)', () => {

@@ -481,20 +481,18 @@ describe('gateUnscoredForScoring: already-read exclusion', () => {
     expect(result.enqueueIds).toEqual(['development']);
   });
 
-  it('matches on stable_cluster_id, ungated by membership confidence', async () => {
+  it('does not match on stable_cluster_id alone: a new headline in a read story stays', async () => {
     await seedUnscored({
       id: 'fringe',
       title: 'Unrelated headline text',
-      // Confidence far below the propagation gate: irrelevant here, the id
-      // came from the user's own read.
       clusters: [{ clusterId: 'c-fringe', confidence: 1e-38, stableClusterId: 'story-7' }],
     });
     await open('other', { stableClusterId: 'story-7' });
 
     const result = await gateUnscoredForScoring(new Set());
 
-    expect(result.readCount).toBe(1);
-    expect(result.enqueueIds).toEqual([]);
+    expect(result.readCount).toBe(0);
+    expect(result.enqueueIds).toEqual(['fringe']);
   });
 
   it('never lets an already-read row donate to or represent its siblings', async () => {

@@ -651,7 +651,7 @@ describe('splitAlreadyReadArticles', () => {
     expect(out.readCount).toBe(0);
   });
 
-  it('splits by article id, by the stable cluster id on the article, and by the one in the persona metadata', () => {
+  it('splits by article id only: a stable cluster id on the article or in the persona metadata no longer matches', () => {
     const index = buildReadStoryIndex([
       { articleId: 'by-id', opened: true },
       { stableClusterId: 'sc-own', opened: true },
@@ -667,8 +667,8 @@ describe('splitAlreadyReadArticles', () => {
 
     const out = splitAlreadyReadArticles(list, index, personaMeta);
 
-    expect(out.toPersist.map((a) => a._id)).toEqual(['keep']);
-    expect(out.readCount).toBe(3);
+    expect(out.toPersist.map((a) => a._id)).toEqual(['own', 'meta', 'keep']);
+    expect(out.readCount).toBe(1);
   });
 
   it('ignores a scroll-past impression: only opens count', () => {
