@@ -107,12 +107,13 @@ export interface GatewayRequest {
   temperature?: number;
   maxTokens?: number;
   enableThinking: boolean;
-  tools?: unknown[];
-  toolChoice?: 'auto' | 'none';
+  // No tools field, by design: inference is E2EE end to end, tool calls included.
+  // A runner that needs tools puts them as text inside the encrypted messages
+  // (lib/llm/text-tool-protocol, as scripts/probe-text-tools.ts does).
 }
 
 interface RawChoice {
-  message?: { content?: string | null; reasoning_content?: string | null; tool_calls?: { function?: { name?: string; arguments?: string } }[] };
+  message?: { content?: string | null; reasoning_content?: string | null };
   finish_reason?: string;
 }
 
@@ -153,10 +154,6 @@ export async function postGatewayCompletion(
     };
     if (req.temperature !== undefined) body.temperature = req.temperature;
     if (req.maxTokens !== undefined) body.max_tokens = req.maxTokens;
-    if (req.tools) {
-      body.tools = req.tools;
-      body.tool_choice = req.toolChoice ?? 'auto';
-    }
 
     const res = await fetch(`${cfg.inferenceEndpoint}/v1/chat/completions`, {
       method: 'POST',
@@ -212,12 +209,7 @@ export async function postGatewayCompletion(
     const finishReason = choice?.finish_reason ?? '-';
     return {
       content,
-      // Tool arguments come back encrypted too; decrypting them is only worth
-      // doing once a runner actually sends tools through this lane.
-      toolCalls: (choice?.message?.tool_calls ?? []).map((t) => ({
-        name: t.function?.name ?? '?',
-        argumentsRaw: t.function?.arguments ?? '',
-      })),
+      toolCalls: [],
       finishReason,
       truncated: finishReason === 'length',
       usage,
