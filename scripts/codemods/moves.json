@@ -28,6 +28,6 @@
   {"test": {"from": "components/custom/persona-audit/__tests__/change-summary.test.ts", "to": "test/unit/persona/change-summary.test.ts"}},
   {"test": {"from": "components/custom/persona-audit/__tests__/action-display.test.ts", "to": "test/unit/persona/action-display.test.ts"}},
   {"test": {"from": "lib/tutorials/__tests__/menu.test.ts", "to": "test/unit/persona/tutorial-menu.test.ts"}},
-  {"test": {"from": "modules/mera-device-attest/__tests__/integrity-error-mapping.test.ts", "to": "test/unit/persona/integrity-error-mapping.test.ts"}},
+  {"test": {"from": "modules/mera-device-attest/__tests__/integrity-error-mapping.test.ts", "to": "test/integration/persona/integrity-error-mapping.test.ts"}},
   {"from": "lib/e2ee/attestation-verify.ts", "to": "lib/algorithms/attestation-verify.ts", "test": {"from": "test/unit/chat/e2ee/attestation-verify.test.ts", "to": "lib/algorithms/__tests__/attestation-verify.test.ts"}}
 ]
