@@ -347,9 +347,6 @@ const billing = (c: Ctx) =>
     billingFor(billingTier(c.scenario, c.now), c.now, { limitReached: c.scenario.dailyLimitReached });
 query<'userBilling'>('GetUserBilling', (c) => ({ userBilling: billing(c) }));
 query<'userBilling'>('GetUserBillingLapseState', (c) => ({ userBilling: billing(c) }));
-mutation<'acknowledgeLapseInterstitial'>('AcknowledgeLapseInterstitial', (c) => ({
-    acknowledgeLapseInterstitial: { ...billing(c), showLapseInterstitial: false },
-}));
 
 query<'appConfig'>('LegalConsentAppConfig', () => ({ appConfig }));
 query<'appVersionInfo'>('AppVersionInfo', () => ({ appVersionInfo }));

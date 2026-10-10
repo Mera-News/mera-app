@@ -86,7 +86,7 @@ const appOperations = [...new Set(documents.map((d) => d.name))].sort();
 describe('GraphQL handler coverage', () => {
   it('collects the app operations (positive control)', () => {
     expect(appOperations).toContain('GetArticleIdsForPersona');
-    expect(appOperations).toContain('AcknowledgeLapseInterstitial');
+    expect(appOperations).toContain('AdvanceOnboardingStage');
     expect(appOperations.length).toBeGreaterThan(40);
   });
 
