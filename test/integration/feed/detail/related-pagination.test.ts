@@ -244,18 +244,21 @@ describe('useRelatedPagination', () => {
             return { r, seen, whileOffline };
         }
 
-        test.failing('a connectivity blip keeps the pages already loaded', async () => {
+        test('a connectivity blip keeps the pages already loaded', async () => {
             const { r, seen, whileOffline } = await blip();
             expect(whileOffline).toEqual(['a1', 'a2', 'a3', 'b1', 'b2']);
             expect(seen.map((v) => v.after)).toEqual([null, 'c1']);
             expect(ids(r)).toEqual(['a1', 'a2', 'a3', 'b1', 'b2']);
         });
 
-        test('today: a connectivity blip empties the related list and reloads page 1', async () => {
-            const { r, seen, whileOffline } = await blip();
-            expect(whileOffline).toEqual([]);
-            expect(seen.map((v) => v.after)).toEqual([null, 'c1', null]);
-            expect(ids(r)).toEqual(['a1', 'a2', 'a3']);
+        test('opened offline, the first page loads once the device is back online', async () => {
+            const seen = servePages();
+            const r = mount({ isConnected: false });
+            await act(async () => {});
+            expect(seen).toHaveLength(0);
+            r.rerender({ ...BASE, isConnected: true });
+            await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3']));
+            expect(seen.map((v) => v.after)).toEqual([null]);
         });
     });
 });

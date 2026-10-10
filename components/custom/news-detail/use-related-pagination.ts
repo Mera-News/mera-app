@@ -121,6 +121,10 @@ export function useRelatedPagination({
     excludeRef.current = excludeIds;
     const ctxRef = useRef<UserGeoLanguageContext | null>(ctx);
     ctxRef.current = ctx;
+    // Connectivity is read here, not closed over: a dependency would make every
+    // flip rebuild `startFromTop` and reset the list the reader has scrolled into.
+    const isConnectedRef = useRef(isConnected);
+    isConnectedRef.current = isConnected;
 
     const fetchPage = useCallback(
         async (after: string | null, generation: number) => {
@@ -177,7 +181,7 @@ export function useRelatedPagination({
         setHasNextPage(false);
         setIsLoadingMore(false);
         setError(false);
-        if (!articleId || !isConnected) {
+        if (!articleId || !isConnectedRef.current) {
             setIsLoadingInitial(false);
             return;
         }
@@ -185,7 +189,7 @@ export function useRelatedPagination({
         void fetchPage(null, generation).finally(() => {
             if (generationRef.current === generation) setIsLoadingInitial(false);
         });
-    }, [articleId, isConnected, fetchPage]);
+    }, [articleId, fetchPage]);
 
     // First page, and the reset. Keyed on the article and the sort mode: a sort
     // change means the reader asked for a DIFFERENT set of rows at the top, so
@@ -194,6 +198,18 @@ export function useRelatedPagination({
     useEffect(() => {
         startFromTop();
     }, [startFromTop]);
+
+    // Coming back online with nothing loaded: the screen opened offline, so page 1
+    // never went out. Never refetch once pages are loaded.
+    const wasConnectedRef = useRef(isConnected);
+    useEffect(() => {
+        const was = wasConnectedRef.current;
+        wasConnectedRef.current = isConnected;
+        if (was || !isConnected || pagesLoadedRef.current > 0) return;
+        startFromTop();
+        // startFromTop is deliberately not a dependency: this reacts to connectivity only.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isConnected]);
 
     // The exclusion set SETTLING. The suggestion route computes its local
     // siblings only after interactions settle, so page 1 goes out with an empty
