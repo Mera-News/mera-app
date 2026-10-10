@@ -68,13 +68,16 @@ const SECURE_STORE_KEYS = [
     key('pin_record'),
     key('pin_attempts'),
     key('app_lock_enabled'),
-    key('pin_force_reset_v1'),
     key('backup_key'),
     'async_pipeline_privkey',
     'async_inference_pending_job_privkey',
 ];
+/** The once-per-DEVICE PIN reset marker: it outlives every wipe, so the reset never re-runs (PE19). */
+const PIN_RESET_MARKER = key('pin_force_reset_v1');
 /** Survive every sign-out on purpose, so logging in again resumes the same account (S10). */
 const DEVICE_CREDENTIALS = ['appattest_key_id', 'appattest_key_proven', 'device_attest_device_id'].map(key);
+/** Everything a wipe leaves in the keychain. */
+const SURVIVORS = [...DEVICE_CREDENTIALS, PIN_RESET_MARKER];
 
 /** The only AsyncStorage key the app has ever written (a since-deleted capability token). */
 const CAPABILITY_TOKEN = 'mera.cycle.capabilityToken';
@@ -255,7 +258,7 @@ async function leftoverSettings(): Promise<string[]> {
 async function expectSignedOutAndWiped(): Promise<void> {
     const left = secrets();
     for (const k of SECURE_STORE_KEYS) expect(left[k]).toBeUndefined();
-    expect(Object.keys(left).sort()).toEqual([...DEVICE_CREDENTIALS].sort());
+    expect(Object.keys(left).sort()).toEqual([...SURVIVORS].sort());
     expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
     expect(await settings.getSetting('cached_user_id')).toBeNull();
     expect(await leftoverSettings()).toEqual([]);
@@ -479,7 +482,7 @@ describe('signOutAndWipe', () => {
 // ---------------------------------------------------------------------------------------------
 
 describe('wipeAllLocalUserData', () => {
-    it('PE19 today: a full wipe clears every secret and leaves has_launched gone: that device reads as signed out', async () => {
+    it('a full wipe clears every secret but the device-level markers and leaves has_launched gone: that device reads as signed out', async () => {
         await seedSignedInDevice();
         expect(await settings.getSetting('has_launched')).toBe('1');
 
@@ -487,7 +490,7 @@ describe('wipeAllLocalUserData', () => {
 
         const left = secrets();
         for (const k of SECURE_STORE_KEYS) expect(left[k]).toBeUndefined();
-        expect(Object.keys(left).sort()).toEqual([...DEVICE_CREDENTIALS].sort());
+        expect(Object.keys(left).sort()).toEqual([...SURVIVORS].sort());
         // The S10 inversion: the device credentials are deliberately not in the list.
         expect(await settings.getSetting('has_launched')).toBeNull();
         expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
@@ -498,7 +501,7 @@ describe('wipeAllLocalUserData', () => {
 
     // An ACCOUNT SWITCH: the session keys belong to the account that just signed in, so they are the
     // ONLY thing spared. Every other secret of the previous account still goes.
-    it('PE19 today: keepSession spares only the incoming session, erases the rest, and writes has_launched back (invariant 18)', async () => {
+    it('keepSession spares only the incoming session, erases the rest, and writes has_launched back (invariant 18)', async () => {
         await seedSignedInDevice();
         const session = {
             cookie: secureStoreDump()[key('cookie')],
@@ -547,18 +550,14 @@ describe('wipeAllLocalUserData', () => {
             return { pinSet: read.pinSet, lockEnabled: read.lockEnabled };
         }
 
-        test.failing(
+        test(
             'PE19 logout keeps the one-shot PIN reset marker, so a lock turned on after it survives the next launch',
             async () => {
                 expect(await launchAfterWipeAndOptIn()).toEqual({ lockEnabled: true, pinSet: true });
             },
         );
 
-        it('PE19 today: logout deletes the marker, so the reset runs again and drops the lock the person just turned on', async () => {
-            expect(await launchAfterWipeAndOptIn()).toEqual({ lockEnabled: false, pinSet: false });
-        });
-
-        test.failing(
+        test(
             'PE19 the account-switch wipe keeps the one-shot PIN reset marker, so a lock turned on after it survives the next launch',
             async () => {
                 expect(await launchAfterWipeAndOptIn({ keepSession: true })).toEqual({
@@ -567,13 +566,6 @@ describe('wipeAllLocalUserData', () => {
                 });
             },
         );
-
-        it('PE19 today: the account-switch wipe deletes the marker, so the reset runs again and drops the lock', async () => {
-            expect(await launchAfterWipeAndOptIn({ keepSession: true })).toEqual({
-                lockEnabled: false,
-                pinSet: false,
-            });
-        });
     });
 
     it('disconnects Google Drive', async () => {
