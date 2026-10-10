@@ -60,7 +60,6 @@ export type JobStatus =
   | 'completed'
   | 'failed'
   | 'retrying'
-  | 'cancelled'
   | 'stale';
 
 export interface Job {

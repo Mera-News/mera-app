@@ -156,7 +156,7 @@ export async function pruneOldJobs(olderThanMs = 7 * 24 * 60 * 60 * 1000): Promi
     .query(
       Q.or(
         Q.and(
-          Q.where('status', Q.oneOf(['completed', 'failed', 'stale', 'cancelled'])),
+          Q.where('status', Q.oneOf(['completed', 'failed', 'stale'])),
           Q.where('scheduled_at', Q.lt(cutoff)),
         ),
         Q.and(
