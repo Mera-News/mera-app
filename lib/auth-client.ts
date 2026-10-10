@@ -23,13 +23,42 @@ const scheme = Constants.expoConfig?.scheme;
 const APP_SCHEME = Array.isArray(scheme) ? scheme[0] : scheme || 'app';
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
 
+// Set by clearAuthStorage as its first step. A get-session reply that lands after the local wipe makes
+// the expo client write the signed-out account's session back to `${APP_SLUG}_session_data`, and no
+// code inside clearAuthStorage runs after a reply that lands once it has returned. So the write itself
+// is dropped while this is set. A sign-in lifts it: the expo client stores the new cookie before the
+// session cache; a late get-session reply carries no set-cookie, so it cannot lift it.
+let sessionCacheSuspended = false;
+
+// A stored cookie holding a live value. Sign-out writes the same keys back with empty values.
+const hasLiveCookie = (raw: string): boolean => {
+    try {
+        return Object.values(JSON.parse(raw) ?? {}).some((c) => !!(c as { value?: string } | null)?.value);
+    } catch {
+        return false;
+    }
+};
+
+const guardedSecureStore = {
+    ...secureStore,
+    setItem: (key: string, value: string) => {
+        if (key === `${APP_SLUG}_cookie` && hasLiveCookie(value)) sessionCacheSuspended = false;
+        if (key === `${APP_SLUG}_session_data` && sessionCacheSuspended) return;
+        secureStore.setItem(key, value);
+    },
+};
+
+export const __resetSessionCacheGuardForTests = () => {
+    sessionCacheSuspended = false;
+};
+
 export const authClient = createAuthClient({
     baseURL: AUTH_ENDPOINT,
     plugins: [
         expoClient({
             scheme: APP_SCHEME,
             storagePrefix: APP_SLUG,
-            storage: secureStore,
+            storage: guardedSecureStore,
         }),
         emailOTPClient(),
         jwtClient(),
@@ -134,6 +163,7 @@ const SIGN_OUT_TIMEOUT_MS = 5_000;
 // server outage into an aborted logout (nothing local cleared, device
 // relaunched signed in). Here it is guarded and bounded instead.
 export const clearAuthStorage = async () => {
+    sessionCacheSuspended = true;
     invalidateJwtCache();
     // The refusal belonged to the user who just left. Not folded into
     // invalidateJwtCache(), which every 401-recovery path calls — see

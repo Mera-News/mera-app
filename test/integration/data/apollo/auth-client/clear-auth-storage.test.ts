@@ -1,6 +1,6 @@
 // clearAuthStorage through the real client: the server sign-out is guarded and bounded, and the
 // local wipe happens whatever the network does.
-import { authClient, clearAuthStorage, getJwtToken } from '@/lib/auth-client';
+import { __resetSessionCacheGuardForTests, authClient, clearAuthStorage, getJwtToken } from '@/lib/auth-client';
 import { isJwtSubscriptionLocked } from '@/lib/subscription/jwt-subscription-gate';
 import {
     advanceUntilDone,
@@ -16,11 +16,10 @@ import {
 import { authKeys, hits, recordAuth, resetAuthModuleState, subscriptionRequired } from './kit';
 
 const SIGN_OUT = '*/api/auth/sign-out';
-// Taken at load, before any test installs the fake clock, which replaces process.hrtime.
-const realHrtime = process.hrtime.bigint.bind(process.hrtime);
 
 beforeEach(async () => {
     resetAuthModuleState();
+    __resetSessionCacheGuardForTests();
     await signInFixtureAccount();
     // The expo client writes the session-data key on the first session read after sign-in.
     await authClient.getSession();
@@ -80,28 +79,11 @@ describe('when the server sign-out fails', () => {
     });
 
     it('does not wait forever on a HANGING sign-out: the local wipe is bounded at 5s', async () => {
-        const sessionKey = authKeys(secureStoreDump()).session!;
-        // A session read that lands while the sign-out hangs rewrites the session-data key. It is real I/O,
-        // which fake time does not pace: started here, and marked so the test can see it land.
-        const stored = JSON.parse(secureStoreDump()[sessionKey]);
-        server.use(
-            http.post(SIGN_OUT, () => delay('infinite')),
-            http.get('*/api/auth/get-session', () => HttpResponse.json({ ...stored, refetched: true })),
-        );
+        server.use(http.post(SIGN_OUT, () => delay('infinite')));
         useFakeClock(Date.now());
         const startedAt = Date.now();
 
-        void authClient.getSession();
         const clearing = clearAuthStorage();
-        // Let the read land before the 5s is driven (real turns, no virtual time). Driven first, 5s of
-        // fake time can pass before the response arrives on a loaded machine, and the late write then
-        // lands after the wipe. Bounded by real time through the hrtime captured at load.
-        const waitStart = realHrtime();
-        const refetchLanded = () => secureStoreDump()[sessionKey]?.includes('refetched') === true;
-        while (!refetchLanded() && realHrtime() - waitStart < 3_000_000_000n) {
-            await new Promise((resolve) => setImmediate(resolve));
-        }
-        expect(refetchLanded()).toBe(true);
         await advanceUntilDone(clearing);
 
         expect(authKeys(secureStoreDump())).toEqual({});
@@ -153,16 +135,22 @@ describe('when a get-session reply lands late', () => {
         return sessionKey;
     }
 
-    test.failing('DA46: no session data is left in the keychain after logout, even when a get-session reply lands late', async () => {
+    it('DA46: no session data is left in the keychain after logout, even when a get-session reply lands late', async () => {
         const sessionKey = await logoutWithLateSessionReply();
         const left = secureStoreDump()[sessionKey];
         expect(left === undefined || left === '{}').toBe(true);
     });
+});
 
-    it('DA46 today: a late get-session reply rewrites session data after the local wipe', async () => {
-        const sessionKey = await logoutWithLateSessionReply();
-        expect(JSON.parse(secureStoreDump()[sessionKey])).toEqual(expect.objectContaining({ user: expect.anything() }));
-    });
+// The guard that drops a late reply must not outlive the logout: the next sign-in stores its session.
+it('writes the session data of a sign-in that follows the sign-out', async () => {
+    await clearAuthStorage();
+    expect(authKeys(secureStoreDump())).toEqual({});
+
+    await signInFixtureAccount();
+    await authClient.getSession();
+
+    expect(authKeys(secureStoreDump()).session).toBeDefined();
 });
 
 describe('when a secure-store delete fails', () => {
