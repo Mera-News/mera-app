@@ -21,6 +21,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { TurboModuleRegistry } from 'react-native';
 import Purchases from 'react-native-purchases';
+import { resolveLaunchRoute } from '@/lib/algorithms/launch-route';
 import type SettingModel from '@/lib/database/models/Setting';
 import { settleDialog, useDialogQueue } from '@/lib/dialog';
 import {
@@ -768,7 +769,7 @@ describe('hasLocalUserData', () => {
 
 describe('local identity state (what feeds the launch route)', () => {
     const resolve = (hasIdentity: boolean) =>
-        launchRoute.resolveLaunchRoute({ hasIdentity, lockEnabled: false, pinSet: false, locked: false });
+        resolveLaunchRoute({ hasIdentity, lockEnabled: false, pinSet: false, locked: false });
 
     it('after an explicit logout (no cached_user_id, no cookie): no identity, routed to /login', async () => {
         await seedSignedInDevice();
@@ -977,7 +978,7 @@ describe('onboarding server-error logout (useServerErrorLogout)', () => {
         expect(await settings.getSetting('cached_user_id')).toBeNull();
         const hasIdentity = (await launchRoute.readLocalIdentityState()) === 'present';
         expect(
-            launchRoute.resolveLaunchRoute({ hasIdentity, lockEnabled: false, pinSet: false, locked: false }),
+            resolveLaunchRoute({ hasIdentity, lockEnabled: false, pinSet: false, locked: false }),
         ).toBe('/login');
     });
 });

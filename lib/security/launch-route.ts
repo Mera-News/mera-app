@@ -1,45 +1,4 @@
-// Local-first launch routing decision. Kept as a pure function (no imports,
-// no side effects) so the cold-start routing matrix is unit-testable without
-// mocking secure store / the DB.
-//
-// The gate is deliberately offline-first: it never consults the network. A
-// dead server session must not eject the user — identity is a LOCAL fact
-// (persisted userId / auth cookie).
-//
-// The PIN gate is OPT-IN (see app-lock-service.ts). Unless the user turned it
-// on in Settings → Security, an identified user goes straight into the app;
-// this gate never forces PIN setup.
-
-export type LaunchRoute = '/login' | '/pin-lock' | '/logged-in';
-
-export interface LaunchRouteInput {
-  /** A persisted userId or auth cookie exists on this device. */
-  hasIdentity: boolean;
-  /** The user opted into the PIN gate. */
-  lockEnabled: boolean;
-  /** A local PIN record exists. */
-  pinSet: boolean;
-  /** The PIN gate is currently engaged (cold start / >5 min background). */
-  locked: boolean;
-}
-
-export function resolveLaunchRoute({
-  hasIdentity,
-  lockEnabled,
-  pinSet,
-  locked,
-}: LaunchRouteInput): LaunchRoute {
-  // First install / logged-out: nothing local to protect.
-  if (!hasIdentity) return '/login';
-
-  // Opted in + PIN set + gate engaged → require the PIN. `pinSet` is checked
-  // alongside the flag on purpose: a flag with no usable record would strand
-  // the user on a screen no entry can satisfy.
-  if (lockEnabled && pinSet && locked) return '/pin-lock';
-
-  // Lock off, or already unlocked this session.
-  return '/logged-in';
-}
+// Local-first launch identity reads. The pure routing decision lives in lib/algorithms/launch-route.ts.
 
 /**
  * Three-valued because "we could not read" is NOT "nothing is there".
@@ -65,8 +24,7 @@ export type LocalIdentityState = 'present' | 'absent' | 'unknown';
  * server session — that is the whole point, session death must never look like
  * "logged out" to the launch gate. Only an explicit logout clears them.
  *
- * Lazy-requires its deps so launch-route.ts stays import-free for the pure
- * routing test.
+ * Lazy-requires its deps so importing this module stays free of native modules.
  */
 export async function readLocalIdentityState(): Promise<LocalIdentityState> {
   let settingsReadCompleted = false;

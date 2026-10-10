@@ -1,6 +1,6 @@
 // Pure cold-start routing matrix. The identity-state reads that feed `hasIdentity` need the real
 // keychain and settings table, so they are covered in test/integration/persona/logout-wipe.test.ts.
-import { resolveLaunchRoute } from '@/lib/security/launch-route';
+import { resolveLaunchRoute } from '@/lib/algorithms/launch-route';
 
 describe('resolveLaunchRoute — cold-start routing matrix', () => {
   it('no identity → /login (first install / logged out)', () => {

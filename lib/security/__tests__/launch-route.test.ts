@@ -11,7 +11,8 @@ jest.mock('@/lib/utils/secure-store-adapter', () => ({
   secureStore: { getItemAsync: (key: string) => mockGetItemAsync(key) },
 }));
 
-import { hasLocalIdentity, readLocalIdentityState, resolveLaunchRoute } from '../launch-route';
+import { resolveLaunchRoute } from '@/lib/algorithms/launch-route';
+import { hasLocalIdentity, readLocalIdentityState } from '../launch-route';
 
 describe('resolveLaunchRoute — cold-start routing matrix', () => {
   it('no identity → /login (first install / logged out)', () => {

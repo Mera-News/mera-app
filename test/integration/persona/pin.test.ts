@@ -9,7 +9,7 @@ import { useReauthSuccess } from '@/components/custom/auth/useReauthSuccess';
 import { __resetAppRestartForTests, activeHolds, requestRestart, restartContext } from '@/lib/app-restart';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { isAppLockEnabled, readAppLockState, setAppLockEnabled } from '@/lib/security/app-lock-service';
-import { resolveLaunchRoute } from '@/lib/security/launch-route';
+import { resolveLaunchRoute } from '@/lib/algorithms/launch-route';
 import { runPinForceResetOnce } from '@/lib/security/pin-force-reset';
 import {
     changePin,
