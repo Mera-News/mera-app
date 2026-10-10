@@ -34,7 +34,7 @@ The protocol's guarantees are designed to be **unconditional**: once every rule 
 
 The `mera-protocol-toolkit/` folder ships utilities that help apps satisfy the protocol rules:
 
-- On-device LLM lifecycle (`infer`, `inferStream`, shared base model, adapter hot-swapping)
+- On-device LLM lifecycle (`infer`, `inferStream`, shared base model; adapter hot-swapping is Planned)
 - Privacy-preserving query exchange (`injectNoise`, `stripNoise`)
 - Local-only user PII storage (CRUD)
 
@@ -157,7 +157,6 @@ General-purpose on-device LLM inference. This is the **primary computation tool*
 type InferParams = {
   prompt: string               // Full prompt string
   systemPrompt?: string        // Optional system-level instruction
-  adapterId?: string           // LoRA adapter to use (hot-swapped, base model stays loaded)
   maxTokens?: number           // Max output tokens (default: 512)
   temperature?: number         // Sampling temperature (default: 0.3)
   stopSequences?: string[]     // Early termination strings
@@ -176,9 +175,9 @@ type InferResult = {
 
 | App | Call | Purpose |  |
 | --- | --- | --- | --- |
-| mera-news | `infer({ prompt: scoreRelevancePrompt(facts, articles), adapterId: 'news-relevance' })` | Score articles against user profile |  |
-| mera-mental-health | `infer({ prompt: assessMoodPrompt(facts, journalEntry), adapterId: 'mh-mood' })` | Assess mood patterns from journal entries |  |
-| mera-finance | `infer({ prompt: classifyTransactionPrompt(facts, txns), adapterId: 'fin-classify' })` | Classify transactions by personal categories |  |
+| mera-news | `infer({ prompt: scoreRelevancePrompt(facts, articles) })` | Score articles against user profile |  |
+| mera-mental-health | `infer({ prompt: assessMoodPrompt(facts, journalEntry) })` | Assess mood patterns from journal entries |  |
+| mera-finance | `infer({ prompt: classifyTransactionPrompt(facts, txns) })` | Classify transactions by personal categories |  |
 
 ### `inferStream(params: InferParams): AsyncGenerator<string>`
 
@@ -194,6 +193,8 @@ for await (const token of inferStream({ prompt, maxTokens: 256 })) {
 ---
 
 ### Model Lifecycle
+
+> **Planned.** Adapter hot-swapping is not implemented: `InferParams` has no `adapterId`, and the toolkit has no adapter API. Everything in this document about adapters is a specification, not shipped behaviour.
 
 The toolkit separates **base model** management from **adapter** management. The base model is downloaded once and shared across all apps. Adapters are lightweight, app-specific, and hot-swappable without reloading the base model.
 
@@ -237,7 +238,7 @@ Loads the shared base model into memory, ready for inference.
 - **Output:** Model state including capabilities and memory footprint
 - **Rules:**
     - Only one base model can be loaded at a time
-    - The base model stays loaded across adapter swaps
+    - The base model stays loaded across adapter swaps (Planned)
     - Calling `initBaseModel` while a model is loaded will dispose the previous one first
 
 ```tsx
@@ -314,7 +315,7 @@ All operations are local-only. No network calls, no sync.
 | Property | Value |
 | --- | --- |
 | Default base model | Qwen3 4B (4-bit quantized, ~2GB) |
-| Adapter support | LoRA adapters (~20-50MB each) |
+| Adapter support (Planned) | LoRA adapters (~20-50MB each) |
 | Runtime | llama.cpp via llama.rn |
 | Backend | Metal (iOS) / Vulkan (Android) |
 | Context window | 2048 tokens (configurable) |
@@ -324,14 +325,14 @@ The toolkit owns the LLM lifecycle. Apps that use these tools never need to inte
 
 **Shared base model:** The base model (~2GB) is downloaded once and stored in a shared location on the device. All Mera Protocol apps use the same base model, so the user never downloads it twice.
 
-**Adapter hot-swapping:** Apps ship lightweight LoRA adapters (~20-50MB each) that are hot-swapped on top of the loaded base model. Swapping an adapter does not reload the base model, so transitions take ~50-200ms. Apps can have multiple adapters for different tasks:
+**Adapter hot-swapping (Planned):** Apps ship lightweight LoRA adapters (~20-50MB each) that are hot-swapped on top of the loaded base model. Swapping an adapter does not reload the base model, so transitions take ~50-200ms. Apps can have multiple adapters for different tasks:
 
 - `mera-news` ships adapters for user elicitation, topic extraction, and relevance classification
 - `mera-mental-health` ships adapters for mood assessment and symptom recognition
 
 **Memory budget:** ~2GB (base) + ~50MB (one active adapter) = ~2.05GB at inference time, regardless of how many adapters are installed on disk.
 
-**Adapter selection:** Apps pass `adapterId` in `InferParams` to specify which adapter to use for each inference call. The toolkit handles loading and swapping transparently. If no `adapterId` is provided, inference runs on the bare base model.
+**Adapter selection (Planned):** Apps pass `adapterId` in `InferParams` to specify which adapter to use for each inference call. The toolkit handles loading and swapping transparently. If no `adapterId` is provided, inference runs on the bare base model.
 
 ---
 
@@ -495,7 +496,6 @@ import {
 async function generateTopics(facts: Fact[]): Promise<string[]> {
   const result = await infer({
     prompt: buildTopicPrompt(facts),    // news-specific prompt
-    adapterId: 'news-topic-extraction', // hot-swapped, base model stays loaded
     responseFormat: 'json',
     maxTokens: 1024,
   })
@@ -507,7 +507,6 @@ async function generateTopics(facts: Fact[]): Promise<string[]> {
 async function scoreRelevance(facts: Fact[], articles: Article[]) {
   const result = await infer({
     prompt: buildScorePrompt(facts, articles),  // news-specific prompt
-    adapterId: 'news-relevance',                // different adapter, same base model
     responseFormat: 'json',
   })
   return JSON.parse(result.output)
@@ -523,7 +522,6 @@ import { infer, getFacts, injectNoise, stripNoise } from 'mera-protocol-toolkit'
 async function assessMood(facts: Fact[], journalEntry: string) {
   const result = await infer({
     prompt: buildMoodPrompt(facts, journalEntry),  // mental-health prompt
-    adapterId: 'mh-mood',                          // mental-health adapter
     responseFormat: 'json',
   })
   return JSON.parse(result.output)
@@ -533,7 +531,6 @@ async function assessMood(facts: Fact[], journalEntry: string) {
 async function generateWellnessQueries(facts: Fact[]) {
   const result = await infer({
     prompt: buildWellnessQueryPrompt(facts),
-    adapterId: 'mh-wellness-queries',
     responseFormat: 'json',
     maxTokens: 512,
   })

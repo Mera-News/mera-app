@@ -36,7 +36,6 @@ export type Fact = {
 export type InferParams = {
   prompt: string; // Full prompt string
   systemPrompt?: string; // Optional system-level instruction
-  adapterId?: string; // LoRA adapter to use (hot-swapped, base model stays loaded)
   maxTokens?: number; // Max output tokens (default: 512)
   temperature?: number; // Sampling temperature (default: 0.3)
   stopSequences?: string[]; // Early termination strings
