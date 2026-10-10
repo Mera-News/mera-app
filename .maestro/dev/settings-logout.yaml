@@ -1,7 +1,7 @@
-# Dev flow: Settings > Language probes a switch, the switch is cancelled and the app stays in English;
-# then Settings > Log out (signOutAndWipe) returns to the auth screen. Log out runs last: it ends the
-# session. A probe that fails at once (no download possible behind the mock) shows no progress card;
-# the cancel step is then skipped, and English must hold either way.
+# Dev flow: Settings > Language opens its sheet and goes back with no selection, then Settings >
+# Log out (signOutAndWipe) returns to the auth screen. Log out runs last: it ends the session.
+# Never switch the app language on a device or emulator in this lane (owner ruling): the switch
+# logic is covered by language-switch-sheet.test.ts.
 appId: ${APP_ID}
 ---
 - runScript: ../scripts/reset-scenario.js
@@ -17,25 +17,11 @@ appId: ${APP_ID}
     direction: DOWN
 - tapOn:
     id: "settings-row-language"
-- tapOn:
-    id: "language-option-de"
 - extendedWaitUntil:
     visible:
-      id: "language-switch-cancel"
-    timeout: 20000
-    optional: true
-- takeScreenshot: language-probe
-- runFlow:
-    when:
-      visible:
-        id: "language-switch-cancel"
-    commands:
-      - tapOn:
-          id: "language-switch-cancel"
-      - extendedWaitUntil:
-          notVisible:
-            id: "language-switch-progress"
-          timeout: 30000
+      id: "language-option-en"
+    timeout: 15000
+- takeScreenshot: language-sheet
 - tapOn:
     id: "language-back"
 - scrollUntilVisible:
@@ -44,7 +30,6 @@ appId: ${APP_ID}
     direction: DOWN
 - assertVisible:
     text: "Log out"
-- takeScreenshot: language-still-english
 - tapOn:
     id: "settings-row-logout"
 - extendedWaitUntil:
