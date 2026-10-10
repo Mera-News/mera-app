@@ -1,13 +1,45 @@
 # Dev flow: OWNER-F2 (R76). A failed foreground sync says which step failed in the counts card's lead
 # line (feed-status-lead) with the orange mark (feed-status-lead-mark), and the counts come back once
 # a pull succeeds. The mock's scenario failOperation makes one GraphQL op answer with an error.
-# The device asks for ids with GetArticleIdsForPersona (never GetArticleIdsForTopics). The first sync
-# runs with articles 'empty' so it settles empty (the card shows); switching to the default articles
-# then gives the next pull ids to download, so the download step can fail. A failed FIRST sync keeps
-# the Feed on "Finding your stories" with no card at all (P4-end run 20261011-005123), so it cannot be
-# checked here.
+# The device asks for ids with GetArticleIdsForPersona (never GetArticleIdsForTopics); the fixture ids
+# never change, so only a sync with ids it lacks downloads anything.
+# Part 1: the FIRST sync's download fails (armed before sign-in), and a clean pull clears it.
+# Part 2: a fresh sign-in whose first sync settles empty, then later pulls fail and recover.
 appId: ${APP_ID}
 ---
+# Part 1, a) The first sync's download fails: the failure line shows, not the preparing page.
+- runScript: ../scripts/reset-scenario.js
+- runScript:
+    file: ../scripts/set-scenario.js
+    env:
+      SCENARIO: '{"failOperation":"GetArticlesForTopicsByIds"}'
+- runFlow: ../flows/sign-in.yaml
+- extendedWaitUntil:
+    visible:
+      id: "feed-status-lead"
+      text: "Found new articles, but couldn't download them. Pull down to try again."
+    timeout: 90000
+- assertVisible:
+    id: "feed-status-lead-mark"
+- assertNotVisible:
+    id: "feed-preparing-title"
+- takeScreenshot: f2-first-sync-failed
+
+# Part 1, b) Cleared: a pull downloads them and the failure line is gone.
+- runScript:
+    file: ../scripts/set-scenario.js
+    env:
+      SCENARIO: '{"failOperation":null}'
+- runFlow: ../flows/pull-feed.yaml
+- extendedWaitUntil:
+    notVisible:
+      text: "Found new articles, but couldn't download them. Pull down to try again."
+    timeout: 90000
+- assertNotVisible:
+    id: "feed-status-lead-mark"
+- takeScreenshot: f2-first-sync-recovered
+
+# Part 2: a fresh sign-in (sign-in clears app state) whose first sync settles empty.
 - runScript: ../scripts/reset-scenario.js
 - runScript:
     file: ../scripts/set-scenario.js
@@ -19,7 +51,7 @@ appId: ${APP_ID}
       id: "feed-status-lead"
     timeout: 90000
 
-# a) New ids appear, and the download step fails.
+# Part 2, a) New ids appear, and the download step fails.
 - runScript:
     file: ../scripts/set-scenario.js
     env:
@@ -34,7 +66,7 @@ appId: ${APP_ID}
     id: "feed-status-lead-mark"
 - takeScreenshot: f2-download-failed
 
-# b) Cleared: a pull downloads them and the counts line returns.
+# Part 2, b) Cleared: a pull downloads them and the counts line returns.
 - runScript:
     file: ../scripts/set-scenario.js
     env:
@@ -50,7 +82,7 @@ appId: ${APP_ID}
     id: "feed-status-lead-mark"
 - takeScreenshot: f2-counts-after-download
 
-# c) The id lookup fails.
+# Part 2, c) The id lookup fails.
 - runScript:
     file: ../scripts/set-scenario.js
     env:
@@ -65,7 +97,7 @@ appId: ${APP_ID}
     id: "feed-status-lead-mark"
 - takeScreenshot: f2-lookup-failed
 
-# d) Cleared again: the counts line returns.
+# Part 2, d) Cleared again: a clean pull with nothing new to download still clears the line (DA51).
 - runScript:
     file: ../scripts/set-scenario.js
     env:

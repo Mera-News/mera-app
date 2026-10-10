@@ -1,8 +1,9 @@
 # Dev flow: FD11, a second deep link into a route already on its tab's stack must land on that route
 # (it landed on the You tab root: navigateToTabScreen popped and pushed in one tick and lost the push).
 # Each repeated link is followed by a settle (an optional wait on an id that never appears) so the
-# assertion cannot read the screen from before the link took effect.
-# Red until feed's FD11 fix lands. Run in the P4-end device run.
+# assertion cannot read the screen from before the link took effect. Case (b) once ended on a blank
+# screen; the lane reports removeViewAt lines from the logcat it streams through the Maestro step.
+# Case (c) deep-links through a LegacyRedirect route (/logged-in/sources -> You > Sources).
 appId: ${APP_ID}
 ---
 - runScript: ../scripts/reset-scenario.js
@@ -39,3 +40,24 @@ appId: ${APP_ID}
 - takeScreenshot: fd11-b-away-and-back
 - assertVisible:
     id: "appearance-switch-dark"
+
+# c) Away, then through a legacy redirect: display -> manage-subscription -> /logged-in/sources.
+- openLink: ${SCHEME}:///logged-in/preferences/display
+- extendedWaitUntil:
+    visible:
+      id: "appearance-switch-dark"
+    timeout: 15000
+- openLink: ${SCHEME}:///logged-in/preferences/manage-subscription
+- extendedWaitUntil:
+    visible:
+      id: "manage-view-plans"
+    timeout: 15000
+- openLink: ${SCHEME}:///logged-in/sources
+- extendedWaitUntil:
+    visible:
+      id: "fd11-settle-never-present"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd11-c-legacy-redirect
+- assertVisible:
+    id: "publication-preferences-screen"
