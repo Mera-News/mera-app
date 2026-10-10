@@ -15,6 +15,7 @@ import { ErrorLink } from '@apollo/client/link/error';
 import { HttpLink } from '@apollo/client/link/http';
 import { RetryLink } from '@apollo/client/link/retry';
 import { router } from 'expo-router';
+import { AppState } from 'react-native';
 import {
     StatusCodes,
 } from 'http-status-codes';
@@ -313,7 +314,12 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
             // real failure mode is a server that has not deployed the query
             // yet, and whose correct user-visible outcome is falling back to an
             // email support link, not telling the user their news is broken.
-            if (!operation.getContext().noSyncStatus) {
+            //
+            // Also skipped while the app is not foregrounded: a background
+            // fetch (OS wake) publishes no status by design, and the reader
+            // must not open the app to a failure banner for a fetch they never
+            // started. Same synchronous read as the other background gates.
+            if (!operation.getContext().noSyncStatus && AppState.currentState === 'active') {
                 useForYouStore.getState().setSyncStatusMessage({
                     state: 'failed',
                     headlineKey: 'sync.syncFailed',

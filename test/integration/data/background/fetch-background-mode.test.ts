@@ -135,27 +135,16 @@ describe('a run that fails', () => {
     expect(await loadMachineSnapshot()).not.toEqual(expect.objectContaining({ state: 'failed' }));
   });
 
-  // DA37 (DATA-U15-3). The brief and the skill say a background run publishes no status. The machine keeps
-  // that, but the Apollo error link paints the feed-wide 'sync failed' banner for any GraphQL error
-  // that is not an expected code, and it cannot tell a background run from a foreground one. The
-  // reader opens the app to a failure banner for a fetch they never started.
-  test.failing('DA37: a GraphQL error during a background fetch leaves no status for the reader to find', async () => {
+  // DA37 (DATA-U15-3). A background run publishes no status. The Apollo error link paints the
+  // feed-wide 'sync failed' banner for a GraphQL error only while the app is foregrounded, so the
+  // reader does not open the app to a failure banner for a fetch they never started.
+  it('DA37: a GraphQL error during a background fetch leaves no status for the reader to find', async () => {
     await serveFresh(3);
     server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
 
     await advanceUntilDone(runFetch());
 
     expect(store().syncStatusMessage).toBeNull();
-  });
-
-  it("DA37: today: a GraphQL error during a background fetch paints the 'sync failed' banner from the error link", async () => {
-    await serveFresh(3);
-    server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
-
-    const out = await advanceUntilDone(runFetch());
-
-    expect(out.stoppedBy).toBe('error');
-    expect(store().syncStatusMessage).toMatchObject({ state: 'failed', headlineKey: 'sync.syncFailed' });
   });
 
   it('a lost link fails the run rather than parking it', async () => {
