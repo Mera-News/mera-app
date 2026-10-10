@@ -247,18 +247,10 @@ describe('cloudBatchComplete', () => {
       return err as Error & { statusCode?: number };
     };
 
-    test.failing('CH17: a non-ok completion carries its status as a field', async () => {
+    it('CH17: a non-ok completion carries its status as a field', async () => {
       for (const status of NON_OK) {
         const err = await failWith(status);
         expect(err.statusCode).toBe(status);
-        expect(err.message).toMatch(new RegExp(`E2EE batch failed: ${status}`));
-      }
-    });
-
-    it('CH17 today: a non-ok completion has no statusCode field', async () => {
-      for (const status of NON_OK) {
-        const err = await failWith(status);
-        expect(err.statusCode).toBeUndefined();
         expect(err.message).toMatch(new RegExp(`E2EE batch failed: ${status}`));
       }
     });

@@ -164,7 +164,7 @@ describe('cloudComplete', () => {
   });
 
   // CH17: the status rides only in the message, so retry.ts and the logger's 401 rule (which read
-  // statusCode / response.status) cannot see it. P3 adds the field and leaves the message text alone.
+  // statusCode / response.status) must see it. The field rides beside the unchanged message text.
   const NON_OK = [401, 503] as const;
   const failWith = async (status: number) => {
     server.use(...mockGateway(respond({ status, body: 'gateway said no' })));
@@ -173,7 +173,7 @@ describe('cloudComplete', () => {
     return err as Error & { statusCode?: number };
   };
 
-  test.failing('CH17: a non-ok completion carries its status as a field', async () => {
+  it('CH17: a non-ok completion carries its status as a field', async () => {
     for (const status of NON_OK) {
       const err = await failWith(status);
       expect(err.statusCode).toBe(status);
@@ -181,32 +181,15 @@ describe('cloudComplete', () => {
     }
   });
 
-  it('CH17 today: a non-ok completion has no statusCode field', async () => {
-    for (const status of NON_OK) {
-      const err = await failWith(status);
-      expect(err.statusCode).toBeUndefined();
-      expect(err.message).toMatch(new RegExp(`E2EE completion failed: ${status}`));
-    }
-  });
-
   // The consequence: callers hand the error to logger.captureException, whose 401 rule feeds the auth
   // breaker from statusCode. A dead session that survives the re-mint never reaches it.
-  test.failing('CH17: a 401 that survives the re-mint reaches the auth breaker', async () => {
+  it('CH17: a 401 that survives the re-mint reaches the auth breaker', async () => {
     resetBreaker();
     const err = await failWith(401);
 
     logger.captureException(err, { tags: { service: 'cloud-complete-test' } });
 
     expect(_getBreakerState().consecutiveFailures).toBe(1);
-  });
-
-  it('CH17 today: a 401 that survives the re-mint never reaches the auth breaker', async () => {
-    resetBreaker();
-    const err = await failWith(401);
-
-    logger.captureException(err, { tags: { service: 'cloud-complete-test' } });
-
-    expect(_getBreakerState().consecutiveFailures).toBe(0);
   });
 });
 

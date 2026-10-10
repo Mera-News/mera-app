@@ -1009,7 +1009,12 @@ export async function cloudComplete(
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    throw new Error(`E2EE completion failed: ${response.status} ${response.statusText} — ${errorText}`);
+    // statusCode as a FIELD so retry.ts and the logger's 401 rule can see it; the
+    // message text stays as it was (job-defer.ts reads it).
+    throw Object.assign(new Error(`E2EE completion failed: ${response.status} ${response.statusText} — ${errorText}`), {
+      statusCode: response.status,
+      responseBody: errorText,
+    });
   }
 
   const data = await response.json() as ChatCompletionResponse;
@@ -1118,7 +1123,12 @@ export async function cloudBatchComplete(
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    throw new Error(`E2EE batch failed: ${response.status} ${response.statusText} — ${errorText}`);
+    // statusCode as a FIELD so retry.ts and the logger's 401 rule can see it; the
+    // message text stays as it was (job-defer.ts reads it).
+    throw Object.assign(new Error(`E2EE batch failed: ${response.status} ${response.statusText} — ${errorText}`), {
+      statusCode: response.status,
+      responseBody: errorText,
+    });
   }
 
   const data = await response.json() as BatchResponse;
