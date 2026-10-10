@@ -133,11 +133,6 @@ export function scheduledBackupEnabled(): boolean {
   return mirror.provider !== null && SCHEDULABLE_PROVIDERS.includes(mirror.provider);
 }
 
-/** Whether this destination can be written to without the user present. */
-export function providerIsSchedulable(provider: BackupProviderId): boolean {
-  return SCHEDULABLE_PROVIDERS.includes(provider);
-}
-
 function isProviderId(v: string | null): v is BackupProviderId {
   return v === 'icloud' || v === 'google-drive';
 }
@@ -177,11 +172,6 @@ export async function setBackupProviderId(provider: BackupProviderId): Promise<v
   mirror.provider = provider;
   await setSetting(BACKUP_PROVIDER_KEY, provider);
   await syncRegistration();
-}
-
-export async function setBackupWifiOnly(wifiOnly: boolean): Promise<void> {
-  mirror.wifiOnly = wifiOnly;
-  await setSetting(BACKUP_WIFI_ONLY_KEY, wifiOnly ? '1' : '0');
 }
 
 /**

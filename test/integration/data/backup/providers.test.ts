@@ -24,7 +24,7 @@ import {
 } from 'react-native-cloud-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-import { icloudProvider, isICloudSupported, subscribeToICloudAvailability } from '@/lib/backup/providers/icloud';
+import { icloudProvider, isICloudSupported } from '@/lib/backup/providers/icloud';
 import {
   BACKUP_SCOPE,
   BackupProviderError,
@@ -140,14 +140,6 @@ describe('iCloud availability is a runtime question', () => {
   it('reports unavailable rather than throwing at a settings screen', async () => {
     shared.failOn = { method: 'isCloudAvailable', code: 'ERR_UNKNOWN' };
     expect(await icloudProvider.isAvailable()).toBe(false);
-  });
-
-  it('[dead-candidate] subscribes and hands back an unsubscribe', () => {
-    const listener = jest.fn();
-    const off = subscribeToICloudAvailability(listener);
-    expect(shared.listeners.has(listener)).toBe(true);
-    off();
-    expect(shared.listeners.has(listener)).toBe(false);
   });
 });
 

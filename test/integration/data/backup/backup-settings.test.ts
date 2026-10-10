@@ -24,7 +24,6 @@ import {
   backupWifiOnly,
   connectionSatisfiesWifiOnly,
   hydrateBackupSettings,
-  providerIsSchedulable,
   recordBackupFailure,
   recordBackupRun,
   resetBackupSettingsMirror,
@@ -32,7 +31,6 @@ import {
   scheduledBackupIsDue,
   setBackupCadence,
   setBackupProviderId,
-  setBackupWifiOnly,
 } from '@/lib/backup/backup-settings';
 import { FORBIDDEN_SETTING_KEYS } from '@/lib/backup/allowlist';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
@@ -273,25 +271,5 @@ describe('[dead-candidate] helpers with no caller outside this file', () => {
   it('[dead-candidate] backupWifiOnly defaults to ON, so a cellular upload is never silent', async () => {
     await hydrateBackupSettings();
     expect(backupWifiOnly()).toBe(true);
-  });
-
-  it('[dead-candidate] setBackupWifiOnly persists "0" / "1" and the mirror follows', async () => {
-    await setBackupWifiOnly(false);
-    expect(await getSetting(BACKUP_WIFI_ONLY_KEY)).toBe('0');
-    expect(backupWifiOnly()).toBe(false);
-    await setBackupWifiOnly(true);
-    expect(await getSetting(BACKUP_WIFI_ONLY_KEY)).toBe('1');
-
-    await setBackupWifiOnly(false);
-    resetBackupSettingsMirror();
-    await hydrateBackupSettings();
-    expect(backupWifiOnly()).toBe(false);
-  });
-
-  it('[dead-candidate] providerIsSchedulable says which destinations can be written to unattended', () => {
-    // Every provider qualifies today. The check exists because one did not: a "save to a file"
-    // destination needs a share sheet, so it could never be automated.
-    expect(providerIsSchedulable('icloud')).toBe(true);
-    expect(providerIsSchedulable('google-drive')).toBe(true);
   });
 });

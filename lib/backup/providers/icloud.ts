@@ -70,20 +70,4 @@ export const icloudProvider: BackupProvider = {
   remove: (remotePath) => removeRemote(storage(), remotePath),
 };
 
-/**
- * Notifies on iCloud availability changes.
- *
- * The method is `subscribeToCloudAvailability` / `unsubscribeFromCloudAvailability`
- * — not the `onCloudAvailabilityChanged` the plan named, which does not exist.
- * Returns its own unsubscribe so callers do not have to keep the listener
- * reference alive themselves.
- */
-export function subscribeToICloudAvailability(
-  listener: (available: boolean) => void,
-): () => void {
-  const s = storage();
-  s.subscribeToCloudAvailability(listener);
-  return () => s.unsubscribeFromCloudAvailability(listener);
-}
-
 export { REMOTE_DIRECTORY };

@@ -30,7 +30,7 @@ import { RnfsFile } from './adapters/rnfs-file';
 import { watermelonRowSink } from './adapters/watermelon-row-sink';
 import { watermelonRowSource } from './adapters/watermelon-row-source';
 import { exportBackup, type ExportProgress } from './export';
-import { importBackup, inspectBackup, type ImportProgress, type ImportResult } from './import';
+import { importBackup, type ImportProgress, type ImportResult } from './import';
 import { getBackupKey, isRecoveryCodeConfirmed } from './key-store';
 import { REMOTE_DIRECTORY } from './providers/shared';
 import { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from './remote-names';
@@ -219,29 +219,6 @@ export async function verifyProviderAccess(provider: BackupProvider): Promise<vo
 }
 
 // ---- restore --------------------------------------------------------------
-
-/**
- * Header of a remote blob, for the restore preview. Downloads and decrypts
- * nothing beyond the cleartext header, so "backup from <date>, 1,204 facts" is
- * cheap — but for the same reason it is NOT proof the key is right. Only
- * `runRestore` can tell you that.
- */
-export async function inspectRemoteBackup(
-  provider: BackupProvider,
-  remotePath: string,
-): Promise<BackupHeader> {
-  const key = await getBackupKey();
-  if (!key) throw new BackupServiceError('no-key', 'Backup is not set up on this device');
-
-  const scratchDir = ensureDirectory(Paths.cache, BACKUP_SCRATCH_DIRECTORY);
-  const local = new RnfsFile(pathOf(scratchDir, 'inspect.bin'));
-  try {
-    await provider.download(remotePath, local.path);
-    return await inspectBackup(key, local);
-  } finally {
-    await local.remove();
-  }
-}
 
 export async function runRestore(
   provider: BackupProvider,

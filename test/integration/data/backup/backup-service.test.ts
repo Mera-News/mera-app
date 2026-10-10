@@ -4,8 +4,6 @@
 //
 // Replaces lib/backup/__tests__/backup-service.test.ts (all 17 `it`). The legacy suite mocked the
 // codec, the key store, the adapters and the schema; every one of those is real here.
-// Not carried over: none dropped. `inspectRemoteBackup` has no legacy test and no caller outside
-// backup-service, so it gets none here either (dead-code candidate for P4).
 import { File, Paths } from 'expo-file-system';
 
 import { BACKUP_TABLES } from '@/lib/backup/allowlist';
