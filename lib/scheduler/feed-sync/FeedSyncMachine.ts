@@ -369,7 +369,7 @@ class FeedSyncMachine {
       await feedPersistence.updateMachineState('fetching-topic-ids');
 
       await this._awaitResumeIfPaused(runId);
-      if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+      if (ctx.signal.aborted) { this._forceIdle(runId); ctx.markNoOp(); return; }
 
       const [topicResult, recentCount] = await Promise.all([
         steps.stepFetchTopicIds(personaId, ctx),
@@ -395,7 +395,7 @@ class FeedSyncMachine {
       logger.debug('[FeedSyncMachine] → diffing');
       await feedPersistence.updateMachineState('diffing');
 
-      if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+      if (ctx.signal.aborted) { this._forceIdle(runId); ctx.markNoOp(); return; }
       const rawDiff = await steps.stepDiff(topicResult, ctx);
       // Background: the 6h prefilter and the metered budget, BEFORE hydrate, so
       // nothing outside them is ever charged.
@@ -422,7 +422,7 @@ class FeedSyncMachine {
         logger.debug('[FeedSyncMachine] → scoring (no new articles, silent)');
         await feedPersistence.updateMachineState('scoring');
 
-        if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+        if (ctx.signal.aborted) { this._forceIdle(runId); ctx.markNoOp(); return; }
         // Fetch/hydrate is over; scoring owns its own wake lock (the on-device
         // path takes one in SuggestionSyncService, and the cloud path needs
         // none). See `_releaseKeepAwake`.
@@ -477,7 +477,7 @@ class FeedSyncMachine {
       await feedPersistence.updateMachineState('hydrating');
 
       await this._awaitResumeIfPaused(runId);
-      if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+      if (ctx.signal.aborted) { this._forceIdle(runId); ctx.markNoOp(); return; }
 
       const total = diffResult.missingIds.length;
       const hydrateResult = await steps.stepHydratePersistEnqueue(diffResult, ctx, {
@@ -536,7 +536,7 @@ class FeedSyncMachine {
       publish('scoring');
       await feedPersistence.updateMachineState('scoring');
 
-      if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+      if (ctx.signal.aborted) { this._forceIdle(runId); ctx.markNoOp(); return; }
       // Fetch/hydrate is over — hand the lock off (see the no-op branch above).
       this._releaseKeepAwake(runId);
       // See the no-op branch above: the `scoring` transition and its published

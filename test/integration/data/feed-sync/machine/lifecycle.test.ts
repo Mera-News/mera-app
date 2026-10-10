@@ -705,21 +705,13 @@ describe('FeedSyncMachine lifecycle', () => {
       expect(captured()).toEqual([]);
     });
 
-    // DATA-U6b-2 (low). An aborted run returns from wherever it was and never walks the machine back,
-    // so the singleton keeps its mid-run state with nothing in flight. Nothing outside tests reads
-    // `state` or `isRunning()` today, so no reader sees it; the next start() resets it.
+    // DATA-U6b-2. An aborted run returns from wherever it was and walks the machine back to idle,
+    // so the singleton does not keep a mid-run state with nothing in flight.
     describe('DATA-U6b-2: once an aborted run has returned', () => {
-      test.failing('DA16: isRunning() is false, since no run is in flight', async () => {
+      test('DA16: isRunning() is false, since no run is in flight', async () => {
         await abortWhileDiffing({ quiet: true });
 
         expect(feedSyncMachine.isRunning()).toBe(false);
-      });
-
-      it('DA16: today: the machine is left in scoring and isRunning() reports true', async () => {
-        await abortWhileDiffing({ quiet: true });
-
-        expect(feedSyncMachine.state).toBe('scoring');
-        expect(feedSyncMachine.isRunning()).toBe(true);
       });
     });
 
