@@ -183,7 +183,7 @@ describe('generateAndReplace: generate, then mint and retire together', () => {
   it('with no candidate to generate for (already at target), asks no model and retires safely while another topic survives', async () => {
     const { fact, bad } = await cricketWorld();
 
-    const out = await replace(fact.id, 2, [bad.id]);
+    const out = await replace(fact.id, 1, [bad.id]);
 
     expect(gatewayCalls()).toHaveLength(0);
     expect(out).toEqual({ ok: true, minted: 0, retired: 1, floorHeld: false });
@@ -193,7 +193,7 @@ describe('generateAndReplace: generate, then mint and retire together', () => {
   it('with no candidate and nothing left to keep, holds the floor', async () => {
     const { fact, bad, ok } = await cricketWorld();
 
-    const out = await replace(fact.id, 2, [bad.id, ok.id]);
+    const out = await replace(fact.id, 0, [bad.id, ok.id]);
 
     expect(gatewayCalls()).toHaveLength(0);
     expect(out).toEqual({ ok: true, minted: 0, retired: 0, floorHeld: true });

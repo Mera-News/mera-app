@@ -76,6 +76,7 @@ export async function generateAndReplace(
     const target = facts.find((f) => f.id === factId);
     if (!target) return FAILED;
 
+    const retiring = new Set(retireTopicIds);
     const [candidate] = selectTopupCandidates(
       facts.map((f) => ({
         id: f.id,
@@ -85,7 +86,10 @@ export async function generateAndReplace(
         // so an unparseable value degrades to 0 (treated as oldest).
         createdAtMs: toEpochMs(f.createdAt),
       })),
-      topicRows,
+      // `fillTo` is the active count BEFORE the retire, so the topics about to
+      // go must not count as active here, or the headroom is zero and nothing
+      // is ever requested.
+      topicRows.map((t) => (retiring.has(t.id) ? { ...t, isActive: false } : t)),
       {
         mode: 'fillTo',
         fillTargets: new Map([[factId, fillTo]]),

@@ -495,8 +495,8 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
   });
 
   // DA29 (DATA-U11b-5): the audit hands the proposal `fillTo` = the fact's active-topic count BEFORE the
-  // retire. generateAndReplace asks for `fillTo - active` replacements, and active still includes the topics
-  // about to go, so the headroom is 0 and no request is ever made. "Replace, don't just delete" deletes.
+  // retire. generateAndReplace asks for `fillTo - active` replacements with the topics about to go left out
+  // of `active`, or the headroom is 0 and no request is made. "Replace, don't just delete" would delete.
   // Reached the way the backfill reaches it: the real audit's verdicts (its own `fillTo`) go through
   // addSanityProposals, and the reader accepts the stored proposal. Nothing is hand-fed.
   async function proposalFromTheBackfillPath() {
@@ -514,7 +514,7 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
     return { fact, bad: topics[0], proposal };
   }
 
-  test.failing('DA29: accepting a proposal from the backfill path restores the fact to the coverage it had, with a minted replacement', async () => {
+  it('DA29: accepting a proposal from the backfill path restores the fact to the coverage it had, with a minted replacement', async () => {
     const { fact, proposal } = await proposalFromTheBackfillPath();
 
     await accept(proposal.id);
@@ -522,17 +522,5 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
     const active = await activeTexts(fact.id);
     expect(active).toHaveLength(3);
     expect(active).toContain(REPLACEMENT);
-  });
-
-  it('DA29 today: accepting a proposal from the backfill path makes no replacement request, and the fact ends one topic short', async () => {
-    const { fact, bad, proposal } = await proposalFromTheBackfillPath();
-    const before = gatewayCalls().length;
-
-    const res = await accept(proposal.id);
-
-    expect(res).toEqual({ applied: true, ok: true });
-    expect(gatewayCalls()).toHaveLength(before);
-    expect(await activeTexts(fact.id)).toEqual(['India cricket news', 'World Cup schedule']);
-    expect((await getByFact(fact.id)).find((t) => t.id === bad.id)!.status).toBe('retired');
   });
 });
