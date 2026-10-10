@@ -1,8 +1,6 @@
-// useTrackedSubject — shared "is this story followed + toggle" state for the
-// track button that now lives in THREE places (ArticleActionsRow,
-// CompactActionsSheet, ArticleFeedbackPrompt). Each needs the identical
-// mount-restore + optimistic-toggle + haptics logic; the hook removes that
-// triplicated boilerplate (the specific friction it pays for).
+// useTrackedSubject: "is this story followed" state plus the track action, used by
+// use-track-button (the one caller). It keeps the live tracked-id subscription and the
+// open-the-floating-chat-seeded-with-"follow this story" logic out of the button.
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
