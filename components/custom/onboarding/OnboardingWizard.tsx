@@ -137,7 +137,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         return () => {
             const store = useFloatingChatStore.getState();
             store.collapse();
-            store.setSuppressed(false);
         };
     }, []);
 

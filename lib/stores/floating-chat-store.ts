@@ -118,7 +118,6 @@ interface FloatingChatState {
      *  (ChatPopover's phase is not 'closed'). The Mera button hides on it, so
      *  the panel's riding mark and the button are never both shown. */
     chatShown: boolean;
-    suppressed: boolean;
     factMutationVersion: number;
     // Article-feedback flow. `pendingInitialMessage` is auto-sent once by
     // ChatSessionView after the thread mounts; `proposal` is the single
@@ -232,7 +231,6 @@ interface FloatingChatState {
     setBubbleCenter: (c: { x: number; y: number }) => void;
     setGenerating: (v: boolean) => void;
     setChatShown: (v: boolean) => void;
-    setSuppressed: (v: boolean) => void;
     notifyFactMutation: () => void;
     setConversationId: (id: string | null) => void;
     requestNewChat: () => void;
@@ -253,7 +251,6 @@ const initialState = {
     isGenerating: false,
     answerUnread: false,
     chatShown: false,
-    suppressed: false,
     factMutationVersion: 0,
     pendingInitialMessage: null as string | null,
     proposal: null as StagedProposal | null,
@@ -505,7 +502,6 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
 
     setChatShown: (v) => set({ chatShown: v }),
 
-    setSuppressed: (v) => set({ suppressed: v }),
 
     notifyFactMutation: () => set((state) => ({ factMutationVersion: state.factMutationVersion + 1 })),
 
