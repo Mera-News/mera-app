@@ -18,7 +18,6 @@ import { useDatabaseStore } from '@/lib/stores/database-store';
 
 import {
   DAY,
-  HOUR,
   MIN,
   T0,
   advanceUntil,
@@ -37,6 +36,7 @@ import {
   sanityModel,
   setMode,
   settle,
+  seedLocalUser,
   startTest,
 } from './support';
 
@@ -75,12 +75,13 @@ const hygieneRows = async () => (await getNotifications()).filter((n) => n.type 
 beforeEach(async () => {
   resetCloudCallPath();
   await startTest(TASK, { signedIn: true });
+  seedLocalUser(); // the `authenticated` condition needs a persona in the user store
   server.use(...mockGateway(sanityModel()));
 });
 afterEach(endTest);
 
 describe('registration', () => {
-  it('is a weekly timer-only task gated on db-ready plus exactly ONE custom idle check, exclusive, 90s, 2 attempts', () => {
+  it('is a weekly timer-only task gated on db-ready, authenticated plus exactly ONE custom idle check, exclusive, 90s, 2 attempts', () => {
     const def = registeredDefinition('@/lib/scheduler/tasks/persona-hygiene-task');
 
     expect(def).toMatchObject({
@@ -92,7 +93,7 @@ describe('registration', () => {
       timeout: 90_000,
       maxAttempts: 2,
     });
-    expect(conditionTypes(def)).toEqual(['db-ready', 'custom']);
+    expect(conditionTypes(def)).toEqual(['db-ready', 'authenticated', 'custom']);
   });
 });
 
@@ -163,10 +164,9 @@ describe('the credential gate', () => {
 });
 
 describe('on the tick', () => {
-  // DA39. The task has no `authenticated` condition, so a signed-out device (cookie gone, no persona) is
-  // handed a job on every 5s tick: the handler markNoOps and the next tick does it again, one new
-  // scheduler_jobs row each time, for as long as the reader sits on the sign-in screen.
-  test.failing('DA39: a signed-out device does not run persona hygiene every tick', async () => {
+  // DA39. The `authenticated` condition keeps a signed-out device (cookie gone, no persona) from being
+  // handed a job on every 5s tick (a markNoOp and a new scheduler_jobs row each time).
+  test('DA39: a signed-out device does not run persona hygiene every tick', async () => {
     await seedPersona();
     await loseCookie();
 
@@ -174,26 +174,6 @@ describe('on the tick', () => {
     await settle(30_000);
 
     expect(await jobRows(TASK)).toHaveLength(0);
-  });
-
-  it('DA39 today: without a credential every 5s tick retries; once the credential is back it sweeps ONCE and the weekly cadence arms', async () => {
-    await seedPersona();
-    const restore = await loseCookie();
-
-    await initScheduler();
-    await settle(30_000);
-    const retries = (await jobRows(TASK)).length;
-    expect(retries).toBeGreaterThanOrEqual(4);
-    expect(lastRunInStore(TASK)).toBeNull();
-    expect(gatewayCalls()).toHaveLength(0);
-
-    await restore();
-    await advanceUntil(() => lastRunInStore(TASK) !== null, 'the sweep after the credential returned', 20_000);
-    const swept = (await jobRows(TASK)).length;
-    expect(await getPendingCount()).toBe(1);
-
-    await settle(HOUR);
-    expect(await jobRows(TASK)).toHaveLength(swept);
   });
 
   it('a foreground return never starts it (no trigger): it waits for the interval', async () => {

@@ -38,9 +38,10 @@ AppScheduler.register({
   displayName: 'Persona Hygiene Sweep',
   frequency: WEEKLY_MS,
   triggers: [],
-  // db-ready + idle: a low-priority sweep that defers to the feed sync /
-  // inference queue and re-checks on the next tick when the app is busy.
-  conditions: [{ type: 'db-ready' }, { type: 'custom', check: backgroundWorkIsIdle }],
+  // db-ready + authenticated + idle: a low-priority sweep that defers to the feed sync /
+  // inference queue and re-checks on the next tick when the app is busy. `authenticated` keeps
+  // a signed-out device from being handed a no-op job (and a scheduler_jobs row) on every tick.
+  conditions: [{ type: 'db-ready' }, { type: 'authenticated' }, { type: 'custom', check: backgroundWorkIsIdle }],
   // 90s, raised from 30s for the r12 LLM topic-sanity audit (SANITY_RACE_MS is
   // 60s and sits inside this). Safe despite maxAttempts: the audit is wrapped in
   // a race that NEVER rejects, so a slow audit resolves to "no sanity proposals"
