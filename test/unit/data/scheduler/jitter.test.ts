@@ -3,7 +3,7 @@ import {
   __setJitterSeedForTests,
   jitterFactor,
   jitteredInterval,
-} from '../jitter';
+} from '@/lib/scheduler/jitter';
 
 // A spread of real task names plus a few synthetic ones, so a formula change
 // cannot pass by luck on a single string.
