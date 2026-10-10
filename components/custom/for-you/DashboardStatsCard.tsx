@@ -21,7 +21,6 @@
 
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
-import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { setStatusCardExpanded, statsCardShown, useFeedStatusCard } from './feed-status-card';
@@ -36,7 +35,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from '
 import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusActions } from './FeedStatusDetails';
 import { markSizeFor, markTone, type MarkTone } from './card-state';
-import { useStatsCardLead } from './use-stats-card-lead';
+import { useFeedIssue, useStatsCardLead } from './use-stats-card-lead';
 import CardRow, { CARD_RADIUS, CARD_ROW_PAD } from '@/components/custom/feed/CardRow';
 
 
@@ -124,8 +123,7 @@ function StatusMark({ working, size, tone }: { working: boolean; size: number; t
  * there the moment the page slides in, not after it lands.
  */
 export function useStatsCardItem(empty: boolean, hasRows: boolean): React.ReactElement | null {
-    const limited = useFeedStatusMode() === 'limited';
-    const shown = statsCardShown({ limited, empty, hasRows });
+    const shown = statsCardShown({ issue: useFeedIssue(), empty, hasRows });
     // One element per state, so the list header is not re-rendered per render.
     return useMemo(() => (shown ? <DashboardStatsCard testID="feed-status-card" /> : null), [shown]);
 }

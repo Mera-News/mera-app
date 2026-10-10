@@ -6,6 +6,7 @@ import {
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
+import { useFeedIssue } from '@/components/custom/for-you/use-stats-card-lead';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import {
   displayedSuggestionOf,
@@ -810,6 +811,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     lastProcessingRunFinishedAt,
     emptyHere,
     hasRows,
+    issue: useFeedIssue(),
     minimapOn,
     minimapRows,
     minimapFirst,

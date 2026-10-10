@@ -1,5 +1,5 @@
 import type { FeedSyncState, SyncErrorCode } from '@/lib/scheduler/feed-sync/feed-sync-types';
-import { cardState, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, syncFailureKey, type CardStateInput, type SyncFailure } from '@/components/custom/for-you/card-state';
+import { cardState, hasIssue, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, syncFailureKey, type CardStateInput, type SyncFailure } from '@/components/custom/for-you/card-state';
 
 const base: CardStateInput = {
   mode: 'idle',
@@ -124,5 +124,20 @@ describe('joinClauses', () => {
     );
     expect(joinClauses(['a', 'b'], 'th')).toBe('a b');
     expect(joinClauses(['a', 'b'], undefined)).toBe('a b');
+  });
+});
+
+describe('hasIssue', () => {
+  const failedAt = (failedAtState: FeedSyncState, errorCode?: SyncErrorCode): SyncFailure => ({ kind: 'failed', failedAtState, errorCode });
+  it.each([
+    ['idle, no failure', 'idle', null, false],
+    ['limited', 'limited', null, true],
+    ['error', 'error', null, true],
+    ['failed at hydrating', 'idle', failedAt('hydrating', 'server-unreachable'), true],
+    ['paused offline', 'idle', { kind: 'paused-offline' }, true],
+    ['daily-limit failure, idle', 'idle', failedAt('fetching-topic-ids', 'daily-limit'), false],
+    ['no-topics-configured failure, idle', 'idle', failedAt('fetching-topic-ids', 'no-topics-configured'), false],
+  ] as const)('%s', (_name, mode, failure, expected) => {
+    expect(hasIssue(mode, failure)).toBe(expected);
   });
 });

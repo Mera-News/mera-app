@@ -81,6 +81,11 @@ export function cardState(i: CardStateInput): CardState | null {
   return zero && i.offline ? 'offline' : zero;
 }
 
+/** Whether the Feed has an issue to lead with: the limit, a scoring error, or a failed refresh that has a line. */
+export function hasIssue(mode: FeedStatusMode, failure: SyncFailure | null): boolean {
+  return mode === 'limited' || mode === 'error' || syncFailureKey(failure) !== null;
+}
+
 /** The mark's colour (owner): orange (`accentMark`) when Mera is stuck
  *  (nothing fetched, the daily limit, nothing analysed, a scoring error); the
  *  theme's ink in every other state. */

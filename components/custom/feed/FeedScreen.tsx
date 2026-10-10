@@ -81,6 +81,7 @@ import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
 import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
+import { showsProcessingScene } from '@/components/custom/for-you/feed-status-card';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
@@ -275,6 +276,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     lastProcessingRunFinishedAt,
     emptyHere,
     hasRows,
+    issue,
     minimapOn,
     minimapRows,
     minimapFirst,
@@ -359,9 +361,9 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     // Nothing to show (FinalFeed "Feed, empty after a long gap"): the counts
     // card (the list's first item, collapsed: `emptyHere` below) says which state
     // this is; the list shows the shortcuts. They fold away when the first rows
-    // land. The first run after setup (no run has finished) keeps the
-    // processing scene.
-    if (lastProcessingRunFinishedAt !== null) {
+    // land. The first run after setup keeps the processing scene unless an
+    // issue is current (the card then speaks).
+    if (!showsProcessingScene({ runFinished: lastProcessingRunFinishedAt !== null, issue })) {
       return (
         <Animated.View exiting={FadeOut.duration(200)}>
           <FeedShortcuts reading={isFeedProcessing} />

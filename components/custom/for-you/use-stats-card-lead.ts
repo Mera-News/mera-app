@@ -9,7 +9,7 @@ import { formatCount } from '@/lib/algorithms/format-count';
 import { useTranslation } from 'react-i18next';
 import { limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, joinClauses, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
+import { cardState, hasIssue, joinClauses, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
 
 /** A state's lead sentence, plain text (owner: no links; the reader finds
  *  Settings and their profile themselves; the limit's and the error's actions
@@ -40,6 +40,11 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
             i18n.language,
         );
     return null;
+}
+
+/** Whether the Feed has an issue (see `hasIssue`): the card shows and the first-sync scene gives way. */
+export function useFeedIssue(): boolean {
+    return hasIssue(useFeedStatusMode(), syncFailureOf(useForYouSyncStatusMessage()));
 }
 
 /** The counts card's lead line: the mode, the counts, the card state and the

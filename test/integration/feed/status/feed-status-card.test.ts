@@ -1,4 +1,4 @@
-import { resetStatusCard, setStatusCardExpanded, statsCardShown, useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
+import { resetStatusCard, setStatusCardExpanded, showsProcessingScene, statsCardShown, useFeedStatusCard } from '@/components/custom/for-you/feed-status-card';
 
 describe('the counts card state', () => {
     it('starts collapsed; only a tap opens it, and leaving folds it', () => {
@@ -11,11 +11,20 @@ describe('the counts card state', () => {
 });
 
 describe('statsCardShown', () => {
-    const none = { limited: false, empty: false, hasRows: false };
-    it('leads the list with suggestions, an empty Feed past a run, or the limit', () => {
+    const none = { issue: false, empty: false, hasRows: false };
+    it('leads the list with suggestions, an empty Feed past a run, or an issue', () => {
         expect(statsCardShown(none)).toBe(false);
-        for (const k of ['limited', 'empty', 'hasRows'] as const) {
+        for (const k of ['issue', 'empty', 'hasRows'] as const) {
             expect(statsCardShown({ ...none, [k]: true })).toBe(true);
         }
+    });
+});
+
+describe('showsProcessingScene', () => {
+    it('is true only when no run has finished and no issue is current', () => {
+        expect(showsProcessingScene({ runFinished: false, issue: false })).toBe(true);
+        expect(showsProcessingScene({ runFinished: true, issue: false })).toBe(false);
+        expect(showsProcessingScene({ runFinished: false, issue: true })).toBe(false);
+        expect(showsProcessingScene({ runFinished: true, issue: true })).toBe(false);
     });
 });

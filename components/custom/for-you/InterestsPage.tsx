@@ -43,6 +43,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { AppState, View } from 'react-native';
 import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
+import { showsProcessingScene } from '@/components/custom/for-you/feed-status-card';
+import { useFeedIssue } from '@/components/custom/for-you/use-stats-card-lead';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
 interface SortSnapshot {
@@ -116,6 +118,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   const suggestions = useForYouSuggestions();
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
   const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
+  const issue = useFeedIssue();
   const snapshots = useSectionSnapshots('InterestsPage', [hasGeneratedInterests, suggestions.length]);
   const userGeoLanguageCtx = useUserGeoLanguageContext();
   const rows = useMemo(() => {
@@ -169,7 +172,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   } else if (snapshots.facts.size === 0) {
     // Sectioned shows the block alone (no headline rows here, C4).
     empty = <FeedNoFacts view="sectioned" />;
-  } else if (lastProcessingRunFinishedAt !== null) {
+  } else if (!showsProcessingScene({ runFinished: lastProcessingRunFinishedAt !== null, issue })) {
     // Nothing to show, the same as Continuous (FinalFeed "Feed, empty after
     // a long gap"): the counts card leads the list; the shortcuts here.
     empty = (

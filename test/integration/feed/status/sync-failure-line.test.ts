@@ -115,7 +115,6 @@ describe('the counts card lead after a failed refresh', () => {
     expect(result.current.zeroText).toBe(t('common.offlineBannerOffline'));
   });
 
-
   test('the daily limit still leads when a failure message is also published', async () => {
     const resetAt = Date.now() + 2 * HOUR;
     useForYouStore.setState({ dailyLimitResetAt: resetAt });
@@ -187,27 +186,24 @@ describe('a failed first sync', () => {
     expect(useForYouStore.getState().lastProcessingRunFinishedAt).toBeNull();
   };
 
-  test.failing('a failed first sync leads the Feed list with the card', async () => {
+  test('a failed first sync leads the Feed list with the card', async () => {
     publishSyncError('server-unreachable', undefined, 'hydrating');
     const { item, lead } = await card();
     expect(item).not.toBeNull();
     expect(lead.zeroText).toBe(t('feed.syncFailed.download'));
   });
 
-  test('today: a failed first sync shows no card', async () => {
-    publishSyncError('server-unreachable', undefined, 'hydrating');
-    expect((await card()).item).toBeNull();
-  });
-
-  test.failing('a first sync that fails to download leads the Feed list with the card', async () => {
+  test('a first sync that fails to download leads the Feed list with the card', async () => {
     await failFirstSync();
     const { item, lead } = await card();
     expect(item).not.toBeNull();
     expect(lead.zeroText).toBe(t('feed.syncFailed.download'));
   });
 
-  test('today: a first sync that fails to download shows no card', async () => {
-    await failFirstSync();
-    expect((await card()).item).toBeNull();
+  test('the daily limit on a first sync also leads with the card', async () => {
+    useForYouStore.setState({ dailyLimitResetAt: Date.now() + 2 * HOUR });
+    const { item, lead } = await card();
+    expect(item).not.toBeNull();
+    expect(lead.state).toBe('limited');
   });
 });
