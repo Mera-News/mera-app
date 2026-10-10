@@ -1,0 +1,10 @@
+# Subflow: Display settings, pick the appearance. env MODE: light | dark.
+appId: ${APP_ID}
+---
+- openLink: ${SCHEME}:///logged-in/preferences/display
+- extendedWaitUntil:
+    visible:
+      id: "appearance-switch-${MODE}"
+    timeout: 15000
+- tapOn:
+    id: "appearance-switch-${MODE}"

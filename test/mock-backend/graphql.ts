@@ -10,6 +10,7 @@
 //   dailyLimitReached   GetArticlesForTopicsByIds delivers nothing and sets the cap fields
 //   articles: 'empty'   every id op and article list answers empty
 //   imageOrigin         origin of the fixture image URLs (default: the request's own)
+//   paywall             after a scripted purchase, billing ops report `upgradeTo` (billingTier)
 //
 // A transport failure has no helper: `http.post('*/graphql', () => HttpResponse.error())`.
 import { graphql, HttpResponse, type RequestHandler } from 'msw';
@@ -47,7 +48,7 @@ import {
     publisherSearchHit,
 } from './fixtures/graphql/publications';
 import { searchHits } from './fixtures/graphql/search';
-import { getScenario, type Scenario } from './scenario';
+import { billingTier, getScenario, type Scenario } from './scenario';
 
 type Vars = Record<string, any>;
 
@@ -341,7 +342,8 @@ query<'cachedFactCheck'>('GetCachedFactCheck', (c) => ({
 
 // ---- account, billing, config -------------------------------------------------------
 
-const billing = (c: Ctx) => billingFor(c.scenario.tier, c.now, { limitReached: c.scenario.dailyLimitReached });
+const billing = (c: Ctx) =>
+    billingFor(billingTier(c.scenario, c.now), c.now, { limitReached: c.scenario.dailyLimitReached });
 query<'userBilling'>('GetUserBilling', (c) => ({ userBilling: billing(c) }));
 query<'userBilling'>('GetUserBillingLapseState', (c) => ({ userBilling: billing(c) }));
 mutation<'acknowledgeLapseInterstitial'>('AcknowledgeLapseInterstitial', (c) => ({

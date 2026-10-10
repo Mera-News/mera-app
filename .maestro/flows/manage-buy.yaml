@@ -1,0 +1,16 @@
+# Subflow: Manage subscription -> View plans (the E2E paywall stub answers from the scenario), wait
+# for a card, screenshot it. env CARD: testID to wait for; SHOT: screenshot name; WAIT: ms.
+appId: ${APP_ID}
+---
+- openLink: ${SCHEME}:///logged-in/preferences/manage-subscription
+- extendedWaitUntil:
+    visible:
+      id: "manage-view-plans"
+    timeout: 15000
+- tapOn:
+    id: "manage-view-plans"
+- extendedWaitUntil:
+    visible:
+      id: "${CARD}"
+    timeout: ${WAIT}
+- takeScreenshot: ${SHOT}

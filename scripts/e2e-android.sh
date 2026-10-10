@@ -180,6 +180,8 @@ echo "== step 2: bundle grep"
 BUNDLE="$RUN/index.android.bundle"
 unzip -p "$LAST" assets/index.android.bundle > "$BUNDLE"
 LC_ALL=C grep -a -q -F "10.0.2.2:$PORT" "$BUNDLE" || { echo "FAIL: bundle lacks 10.0.2.2:$PORT" >&2; exit 1; }
+# metro.config.js swaps in the scenario-driven paywall stub (lib/e2e/purchases-ui.ts) for this build.
+LC_ALL=C grep -a -q -F "/__e2e/paywall" "$BUNDLE" || { echo "FAIL: bundle lacks the e2e paywall stub" >&2; exit 1; }
 BAD=0
 if LC_ALL=C grep -a -q -E '(graphql|auth|inference)(\.staging)?\.mera\.news' "$BUNDLE"; then
   echo "FAIL: bundle contains a prod or staging endpoint host" >&2; BAD=1

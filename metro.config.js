@@ -20,6 +20,12 @@ const ALIASES = {
     'tslib': require.resolve('tslib/tslib.es6.js'),
 };
 
+// E2E build only (scripts/e2e-android.sh exports .env.e2e): the paywall is answered by the mock
+// backend's scenario, since that build carries no RevenueCat key. Same flag as app.config.js.
+if (process.env.EXPO_PUBLIC_E2E === '1') {
+    ALIASES['react-native-purchases-ui'] = path.resolve(__dirname, 'lib/e2e/purchases-ui.ts');
+}
+
 config.resolver.resolveRequest = (context, moduleName, platform) => {
     if (ALIASES[moduleName]) {
         return context.resolveRequest(context, ALIASES[moduleName], platform);
