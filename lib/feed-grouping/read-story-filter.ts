@@ -235,11 +235,11 @@ export async function loadReadStoryIndex(): Promise<ReadStoryIndex> {
 /**
  * Write rows terminal `already_read` in one batch.
  *
- * Shaped exactly like `article-suggestion-service::batchMarkExcluded` (zeroed
+ * Shaped exactly like `article-suggestion-scoring-writes::batchMarkExcluded` (zeroed
  * scores, cleared reason, `scored_at` stamped only when still null, tolerant of a
  * row hard-deleted underneath an in-flight batch) — but a SEPARATE status, so the
  * Observability funnel can tell "you said not interested" apart from "you already
- * read this". It lives here rather than in `article-suggestion-service` only
+ * read this". It lives here rather than in `article-suggestion-scoring-writes` only
  * because that file is owned by another change in flight; a
  * `batchMarkStatus(ids, status)` helper there would be the cleaner long-term home
  * and would delete this function.

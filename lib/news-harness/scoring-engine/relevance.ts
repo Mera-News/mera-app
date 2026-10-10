@@ -375,7 +375,7 @@ export function applyEntityPenalty(
  *  the judge is gone and every candidate takes the legacy LLM path. It survives
  *  as the ONE remaining producer of `mode`, whose live consumer chain is:
  *  computeRelevance → `components.mode` → persisted in `score_components_json`
- *  → `article-suggestion-service::getScoringModeBreakdown` → the Observability
+ *  → `article-suggestion-diagnostics::getScoringModeBreakdown` → the Observability
  *  feed-funnel's tagged/untagged counters. Since `applyArticleTagPolicy` was
  *  deleted this answers a real question again ("did the server tag this
  *  article?") rather than always reporting 'backstop'. */

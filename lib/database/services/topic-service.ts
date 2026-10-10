@@ -575,7 +575,7 @@ export async function reactivate(topicId: string): Promise<void> {
 }
 
 /** Every topic id currently on the device — the liveness set the suggestion
- *  purge screens against (see article-suggestion-service). Includes retired and
+ *  purge screens against (see article-suggestion-lifecycle). Includes retired and
  *  suppressed rows on purpose: those still EXIST, so a suggestion matching one
  *  is stale, not orphaned, and must not be destroyed.
  *

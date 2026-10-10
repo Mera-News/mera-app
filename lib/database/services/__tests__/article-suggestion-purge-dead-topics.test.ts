@@ -1,4 +1,4 @@
-// article-suggestion-service.purgeSuggestionsForDeadTopics — removes rows that
+// article-suggestion-lifecycle.purgeSuggestionsForDeadTopics — removes rows that
 // survive only because of topics that no longer exist (the other half of the
 // fact-deletion cascade; see topic-service.destroyOrphanedTopics).
 //

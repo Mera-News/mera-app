@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 describe('hasUnknownPubDate', () => {
-  // article-suggestion-service writes `firstPubDate = parseDate(pubDate) ?? now`
+  // article-suggestion-persist writes `firstPubDate = parseDate(pubDate) ?? now`
   // alongside `createdAt = now`, so a feed with no pubDate gets sync time as
   // its publication date and the two are indistinguishable.
   it('is true when firstPubDate is really the sync timestamp', () => {

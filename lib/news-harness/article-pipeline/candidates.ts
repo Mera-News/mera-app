@@ -4,7 +4,7 @@
 // WatermelonDB / RN coupling:
 //   - deriveTopicTexts        ↔ feed-sync-steps.ts::getLocalTopicTextsForPersona
 //   - buildArticleToTopicTexts↔ feed-sync-steps.ts::stepFetchTopicIds (~l.81-89)
-//   - buildCandidatesFromArticles ↔ article-suggestion-service.ts::
+//   - buildCandidatesFromArticles ↔ article-suggestion-persist.ts::
 //        persistAndLinkV2Suggestions + resolveFactsByTopicTexts, producing the
 //        exact ScoringCandidate shape getUnscoredSuggestionsWithFacts returns.
 

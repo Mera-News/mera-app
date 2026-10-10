@@ -23,7 +23,7 @@ const suggestionsCollection = database.get<ArticleSuggestionModel>('article_sugg
 
 /**
  * Epsilon for "this row's publication date is indistinguishable from its sync
- * time". `article-suggestion-service` writes `firstPubDate = parseDate(pubDate)
+ * time". `article-suggestion-persist` writes `firstPubDate = parseDate(pubDate)
  * ?? now` and `createdAt = now` in the same statement, so a feed that supplies
  * no `pubDate` silently gets sync time as its publication date. Treating those
  * two timestamps as equal within a second is how we detect it.

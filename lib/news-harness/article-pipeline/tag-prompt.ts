@@ -53,7 +53,7 @@ export const ARTICLE_METADATA_PREFIX = 'Article Metadata: ';
 // --- parsing ----------------------------------------------------------------
 
 /** Tolerant JSON-array parse. Mirrors `parseJsonArray` in
- *  `lib/database/services/article-suggestion-service.ts`, which is DB-layer and
+ *  `lib/database/services/article-suggestion-mappers.ts`, which is DB-layer and
  *  therefore un-importable from here. Any malformed value yields []. */
 function parseJsonArray<T>(raw: string | null | undefined): T[] {
   if (!raw) return [];

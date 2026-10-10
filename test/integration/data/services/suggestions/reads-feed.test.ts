@@ -1,4 +1,4 @@
-// article-suggestion-service reads that feed the For You store and the scoring queue: every local
+// article-suggestion-reads reads that feed the For You store and the scoring queue: every local
 // id (the anti-double-charge guard), loadSuggestions and its projection, the unscored queue, and the
 // scored-without-reason sweep. Real services on the in-memory DB. Replaces the matching blocks of
 // lib/database/services/__tests__/article-suggestion-service.test.ts.

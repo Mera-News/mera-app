@@ -353,12 +353,12 @@ Verified reachable, not a finding.
 Recorded so the dead items above are credible by contrast.
 
 - **`clusterSize`** → `nudge_browse_related` (`cluster_size_gte: 2`) and the
-  `paywall` branch. Producer exists: `article-suggestion-service.ts:986` reads
+  `paywall` branch. Producer exists: `article-suggestion-reads.ts:543` reads
   `row.maxClusterSize`, fed from the GraphQL `maxClusterSize` field
   (`article-service.ts:478`), and clustering genuinely runs in prod (the `:20`
   `cluster-news` cron is in `cloud-scheduler.tf`). Consumed at
   `InlineFeedbackTree.tsx:118` and `overlay-context.ts:52`. **This wave fixed it.**
-- **`geoText`** → producer at `article-suggestion-service.ts:990` and
+- **`geoText`** → producer at `article-suggestion-reads.ts:549` and
   `detail-feedback-context.ts:116`. The *code* path is wired correctly and
   completely; it yields null in prod only because of D1. Category D, not B — the
   distinction matters, because shipping the cron fixes it with no app change.

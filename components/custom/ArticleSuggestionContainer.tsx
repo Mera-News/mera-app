@@ -158,7 +158,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     // Extraction metadata for the transparency panel (screen variant only —
     // see ExtractedMetadataPanel). `entities`/`eventType` are reachable from
     // both a live article and a local suggestion row; `geoTags` is NOT — the
-    // suggestion mapper (`toForYouSuggestion` in article-suggestion-service.ts)
+    // suggestion mapper (`toForYouSuggestion` in article-suggestion-mappers.ts)
     // never carries `geo_tags_json` onto `ForYouSuggestion`, so a
     // suggestion-sourced screen shows no places even when the server has them.
     const metaEventType = suggestion?.eventType ?? article?.event_type ?? null;

@@ -70,7 +70,7 @@ async function candidatesForRead(limit: number): Promise<ArticleSuggestionModel[
     .query(Q.where('subscription_read_at', null), Q.sortBy('created_at', Q.desc))
     .fetch();
   // Mirrored in JS so the result does not depend on the query engine, matching
-  // the house convention in article-suggestion-service.
+  // the house convention in article-suggestion-reads.
   return rows.filter((r) => r.subscriptionReadAt == null).slice(0, limit);
 }
 

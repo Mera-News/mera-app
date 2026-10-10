@@ -1,4 +1,4 @@
-// article-suggestion-service scoring writes: saveScoringResult, saveReason, the batch markers and
+// article-suggestion-scoring-writes: saveScoringResult, saveReason, the batch markers and
 // score propagation, including the grounded-reason rule and the per-row scorer vintage. Real
 // services on the in-memory DB, so a write is read back as the next reader sees it. Replaces the
 // scoring-write blocks of lib/database/services/__tests__/article-suggestion-service.test.ts.

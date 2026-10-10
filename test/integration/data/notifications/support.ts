@@ -22,7 +22,7 @@ type NetworkStore = typeof import('@/lib/stores/network-store');
 
 /**
  * The modules the service imports STATICALLY, as the reloaded graph holds them. The service also
- * `require`s a few modules lazily at call time (pin-store, article-suggestion-service,
+ * `require`s a few modules lazily at call time (pin-store, article-suggestion-reads,
  * for-you-store, intercom, setting-service from the route). Those resolve from the test file's own
  * registry, because the isolated registry only lasts for the load: assert on them through the test
  * file's imports, never through this handle.

@@ -84,7 +84,7 @@ export function hasImage(s: RepresentativeSortable): boolean {
  *
  * ASC does invert one degenerate case: `parseMs` maps an absent/unparseable date
  * to 0, which used to sink such a row and now floats it to the front. That is
- * unreachable in production — `article-suggestion-service.toForYouSuggestion`
+ * unreachable in production — `article-suggestion-mappers.toForYouSuggestion`
  * builds `firstPubDate` as `row.firstPubDate.toISOString()` off a NON-optional
  * `@date` column, so a corrupt value throws at projection time and never reaches
  * this comparator. It is left as-is (rather than mirroring

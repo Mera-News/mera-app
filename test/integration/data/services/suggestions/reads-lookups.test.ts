@@ -1,4 +1,4 @@
-// article-suggestion-service point lookups: by article id, by server id, the reason gate behind the
+// article-suggestion-reads point lookups: by article id, by server id, the reason gate behind the
 // tap-time routing, the article-feedback context, topic-text and publication-name reads, fact
 // weights, and the pure helpers the module exports. Real services on the in-memory DB. Replaces
 // lib/database/services/__tests__/article-suggestion-reason-lookup.test.ts and the matching blocks

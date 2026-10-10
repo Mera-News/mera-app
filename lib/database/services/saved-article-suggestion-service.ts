@@ -186,7 +186,7 @@ export async function findSavedSuggestionByServerId(
   try {
     return toForYouSuggestion(await savedSuggestionsCol.find(serverId));
   } catch (err) {
-    // ponytail: 3 copies of the missing-record test (here, article-suggestion-service, inference-results.isRecordNotFoundError); P4 dedupes
+    // ponytail: 3 copies of the missing-record test (here, article-suggestion-reads, inference-results.isRecordNotFoundError); P4 dedupes
     if (/Record\s+\S+\s+not\s+found/i.test(err instanceof Error ? err.message : String(err))) return null;
     throw err;
   }

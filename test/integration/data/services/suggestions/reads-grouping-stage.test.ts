@@ -1,4 +1,4 @@
-// article-suggestion-service reads for story grouping, score propagation donors, the hard-filter
+// article-suggestion-reads reads for story grouping, score propagation donors, the hard-filter
 // screen and the headline cull, on the real in-memory DB. The WHERE clauses are the behaviour here,
 // and the old shared mock ignored them. Replaces the grouping, donor, stage and cull blocks of
 // lib/database/services/__tests__/article-suggestion-service.test.ts.

@@ -1,4 +1,4 @@
-// article-suggestion-service diagnostics behind the Observability screen: the shared-note breakdown
+// article-suggestion-diagnostics behind the Observability screen: the shared-note breakdown
 // (is a note copied between articles, i.e. propagation?) and the scoring-mode breakdown. Real rows,
 // real writers. Replaces the getSharedNoteBreakdown block of
 // lib/database/services/__tests__/article-suggestion-service.test.ts.
