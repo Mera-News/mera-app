@@ -8,8 +8,6 @@
 // Not carried over: the "database.write called N times" and "prepareUpdate called once" counts
 // (they counted mock calls; the rows' resulting status is asserted instead).
 // Hygiene notifications stamping getPendingCount() is hygiene-service's rule, not this file's.
-import { Q } from '@nozbe/watermelondb';
-import database from '@/lib/database';
 import {
   clearAll,
   deleteNotification,
@@ -330,10 +328,8 @@ describe('observeUnreadCount (the badge)', () => {
     expect(w.counts).toEqual([0, 1, 2, 1]);
   });
 
-  // DATA-U10c-1. The badge query is observeCount() with its default 250 ms throttle, which is
-  // leading-only: a write that lands inside the window after the one that triggered a fetch is
-  // dropped with no trailing fetch, so the count stays stale until some later write. The skill's
-  // rule is that any count driving UI state must be observeCount(false).
+  // DATA-U10c-1 / DA24. The badge query is observeCount(false): the default 250 ms throttle is
+  // leading-only and would drop a write inside the window, leaving the count stale.
   describe('back-to-back writes inside 250 ms', () => {
     async function twoQuickWrites() {
       const w = await watch();
@@ -345,13 +341,8 @@ describe('observeUnreadCount (the badge)', () => {
       return w.counts;
     }
 
-    test.failing('the badge reaches the true count (2), not the first write\'s', async () => {
+    it('the badge reaches the true count (2), not the first write\'s', async () => {
       expect((await twoQuickWrites()).at(-1)).toBe(2);
-    });
-
-    it('today: the second write is dropped and the badge stays at 1', async () => {
-      expect(await twoQuickWrites()).toEqual([0, 1]);
-      expect(await database.get('notifications').query(Q.where('status', 'unread')).fetchCount()).toBe(2);
     });
   });
 });

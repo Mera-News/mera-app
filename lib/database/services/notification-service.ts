@@ -152,7 +152,7 @@ export async function markActionedBySource(source: string): Promise<number> {
 export function observeUnreadCount() {
   return notificationsCollection
     .query(Q.where('status', 'unread'))
-    .observeCount()
+    .observeCount(false)
     .pipe(distinctUntilChanged());
 }
 
