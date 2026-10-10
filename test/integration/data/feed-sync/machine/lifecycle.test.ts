@@ -43,6 +43,10 @@ import {
   resetScoringWorld,
   rowsById,
   scoredIds,
+  seedInterest,
+  seedTracked,
+  serveHydrate,
+  servePersona,
   spyOnExport,
   tickUntilScored,
 } from '../steps/support';
@@ -421,13 +425,45 @@ describe('FeedSyncMachine lifecycle', () => {
       expect(feedSyncMachine.state).toBe('done');
     });
 
-    it('a fully delivered run clears a banner left by an earlier clip', async () => {
+    it('a fully delivered run clears a banner left by an earlier clip once its reset time has passed', async () => {
       await serveNew(ids(3));
-      store().setDailyLimitResetAt(Date.parse(RESET));
+      store().setDailyLimitResetAt(Date.now() - 1);
 
       await run();
 
       expect(store().dailyLimitResetAt).toBeNull();
+    });
+
+    // Owner ruling: followed stories always keep updating, after the cap too. While the cap holds, the
+    // metered ids stay out of the hydrate (the server would clip them) and the quota-free stories go through.
+    it('while the cap holds, hydrates only the followed-story ids and keeps the banner', async () => {
+      await seedTracked('titan inquiry');
+      await seedInterest('I follow racing', ['formula 1']);
+      const story = ids(3, 's');
+      const metered = ids(3, 'm');
+      const served = serveHydrate();
+      server.use(servePersona({ topics: { 'titan inquiry': story, 'formula 1': metered } }), ...served.handlers);
+      const holdsUntil = Date.now() + 3_600_000;
+      store().setDailyLimitResetAt(holdsUntil);
+
+      await run();
+
+      expect(served.stats.requests.map((r) => r.op)).toEqual(['GetArticlesForStories']);
+      expect([...(await rowsById()).keys()].sort()).toEqual([...story].sort());
+      expect(store().dailyLimitResetAt).toBe(holdsUntil);
+    });
+
+    it('while the cap holds, a run with only metered ids sends no hydrate request and keeps the banner', async () => {
+      await serveNew(ids(3));
+      const holdsUntil = Date.now() + 3_600_000;
+      store().setDailyLimitResetAt(holdsUntil);
+      const sent = recordOps();
+
+      await run();
+
+      expect(await sent.count('GetArticlesForTopicsByIds')).toBe(0);
+      expect([...(await rowsById()).keys()]).toEqual([]);
+      expect(store().dailyLimitResetAt).toBe(holdsUntil);
     });
   });
 

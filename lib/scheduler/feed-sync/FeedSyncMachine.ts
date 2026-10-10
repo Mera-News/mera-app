@@ -400,7 +400,14 @@ class FeedSyncMachine {
       const rawDiff = await steps.stepDiff(topicResult, ctx);
       // Background: the 6h prefilter and the metered budget, BEFORE hydrate, so
       // nothing outside them is ever charged.
-      const diffResult = bg ? bg.shapeDiff(rawDiff) : rawDiff;
+      const shapedDiff = bg ? bg.shapeDiff(rawDiff) : rawDiff;
+      // Followed stories keep updating after the daily cap (owner ruling): while the cap holds, only
+      // the quota-exempt story ids are hydrated and the metered ones wait for the reset.
+      const capResetAt = useForYouStore.getState().dailyLimitResetAt;
+      const capHeld = capResetAt !== null && Date.now() < capResetAt;
+      const diffResult: typeof shapedDiff = capHeld
+        ? { ...shapedDiff, personaIds: [], missingIds: shapedDiff.storyIds ?? [] }
+        : shapedDiff;
 
       if (diffResult.missingIds.length === 0) {
         // No new articles and nothing deleted — but still run scoring in case
@@ -511,14 +518,16 @@ class FeedSyncMachine {
       // Daily cap banner: if this run was partially clipped, surface the "limit
       // reached" notice now (we still delivered what fit) rather than waiting for
       // the next fully-blocked cycle. A fully-unclipped delivery means we're
-      // under the cap — clear it.
-      useForYouStore.getState().setDailyLimitResetAt(
-        hydrateResult.dailyLimitReached
-          ? hydrateResult.resetAt
-            ? Date.parse(hydrateResult.resetAt)
-            : nextUtcMidnightMs()
-          : null,
-      );
+      // under the cap — clear it. A run that sent no metered ids (cap held) says nothing about it.
+      if (!capHeld) {
+        useForYouStore.getState().setDailyLimitResetAt(
+          hydrateResult.dailyLimitReached
+            ? hydrateResult.resetAt
+              ? Date.parse(hydrateResult.resetAt)
+              : nextUtcMidnightMs()
+            : null,
+        );
+      }
       // Final refresh after all chunks (each chunk already requested a
       // throttled refresh) — flush guarantees the last chunk landed exactly.
       if (!bg) await flushSuggestionsRefresh();

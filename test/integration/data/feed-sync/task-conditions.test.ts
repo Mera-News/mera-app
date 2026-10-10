@@ -1,7 +1,8 @@
 // The feed-sync task's condition list, read from the definition it hands to AppScheduler.register
 // (a call-through spy on a fresh scheduler module, so nothing private is read). The behaviour tests
 // in machine/task.test.ts cannot see this: a custom condition that always passes is invisible to
-// them, so only the COUNT pins "exactly one custom condition and no tier gate".
+// them, so only the COUNT pins "no custom condition at all": no tier gate and no daily-cap gate
+// (owner ruling: followed stories keep updating after the cap; the machine drops the metered ids).
 jest.mock('expo-keep-awake', () => ({
   activateKeepAwakeAsync: jest.fn(async () => undefined),
   deactivateKeepAwake: jest.fn(),
@@ -34,46 +35,25 @@ describe('feed-sync task conditions', () => {
     useSubscriptionStore.getState().reset();
   });
 
-  it('has exactly network, authenticated, db-ready and ONE custom condition', () => {
+  it('has exactly network, authenticated and db-ready, and no custom condition', () => {
     const { conditions = [] } = registeredDefinition();
 
-    expect(conditions.map((c) => c.type).sort()).toEqual(['authenticated', 'custom', 'db-ready', 'network']);
-    expect(conditions).toHaveLength(4);
+    expect(conditions.map((c) => c.type).sort()).toEqual(['authenticated', 'db-ready', 'network']);
+    expect(conditions).toHaveLength(3);
   });
 
-  it('the custom condition holds the sync back until dailyLimitResetAt, and lets it through after', () => {
-    const custom = (registeredDefinition().conditions ?? []).filter((c) => c.type === 'custom');
-    expect(custom).toHaveLength(1);
-    const check = (custom[0] as { check: () => boolean }).check;
-
-    expect(check()).toBe(true); // no cap learned yet
-    useForYouStore.setState({ dailyLimitResetAt: NOW + 60_000 });
-    expect(check()).toBe(false);
-    jest.setSystemTime(NOW + 59_999);
-    expect(check()).toBe(false);
-    jest.setSystemTime(NOW + 60_000);
-    expect(check()).toBe(true);
-  });
-
-  // DA42: the cap latch (`dailyLimitResetAt`, written only by FeedSyncMachine) is never cleared, and
-  // the condition reads nothing else, so a reader who pays after hitting the cap stays held until the
-  // reset time. The paid billing arrives the way the app delivers it after a confirmed purchase:
-  // `refreshUserBillingAfterPurchase` -> `setServerBilling` (the fields below are the server's
+  // DA42: the cap latch (`dailyLimitResetAt`, written only by FeedSyncMachine) was never cleared, so a
+  // reader who paid after hitting the cap stayed held until the reset time. The paid billing arrives
+  // the way the app delivers it after a confirmed purchase: `refreshUserBillingAfterPurchase` -> `setServerBilling` (the fields below are the server's
   // `userBilling` shape; the store keeps the tier and drops the counters).
   describe('a paid upgrade after the daily cap', () => {
-    function holdTheCapThenPay() {
-      const check = ((registeredDefinition().conditions ?? []).find((c) => c.type === 'custom') as {
-        check: () => boolean;
-      }).check;
+    test('DA42: a paid upgrade after the cap lifts the hold before the reset time', () => {
       useForYouStore.setState({ dailyLimitResetAt: NOW + 60_000 }); // the cap latched
-      expect(check()).toBe(false);
+
       const paid = { subscriptionTier: 'professional', dailyArticleLimit: 1000, articlesUsedToday: 250 };
       useSubscriptionStore.getState().setServerBilling(paid);
-      return check;
-    }
 
-    test('DA42: a paid upgrade after the cap lets the feed sync run before the reset time', () => {
-      expect(holdTheCapThenPay()()).toBe(true);
+      expect(useForYouStore.getState().dailyLimitResetAt).toBeNull();
     });
   });
 });

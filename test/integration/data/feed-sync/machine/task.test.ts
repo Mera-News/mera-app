@@ -170,11 +170,12 @@ describe('feed-sync scheduler task', () => {
       );
     });
 
-    it('does not run before the daily-cap reset time, and does after', async () => {
-      await blockedThenFixed(
-        () => useForYouStore.setState({ dailyLimitResetAt: T0 + 10 * 60_000 }),
-        () => jest.setSystemTime(T0 + 10 * 60_000 + 1_000),
-      );
+    it('runs before the daily-cap reset time too: followed stories keep updating after the cap', async () => {
+      useForYouStore.setState({ dailyLimitResetAt: T0 + 10 * 60_000 });
+
+      await init();
+
+      await waitFor(async () => (await runs()) === 1, 'the run');
     });
   });
 
