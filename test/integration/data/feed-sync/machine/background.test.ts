@@ -58,7 +58,7 @@ import {
   startMachine,
   watchNetworkSubscriptions,
 } from './support';
-import { COLLECT_WINDOW_MS } from '@/lib/services/scoring-pipeline';
+import { COLLECT_WINDOW_MS } from '@/lib/algorithms/scoring-pipeline-policy';
 
 jest.setTimeout(60_000);
 

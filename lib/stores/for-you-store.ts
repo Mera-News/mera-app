@@ -20,7 +20,7 @@ import type { ScoringErrorKind } from '@/lib/services/scoring-error';
 // preferred over a second structural copy here (which is what
 // `PipelineBatchProgress` below is) because the chunk projection's shape is
 // owned by the module that computes it and two copies can only drift.
-import type { PipelineChunkStates } from '@/lib/services/scoring-pipeline';
+import type { PipelineChunkStates } from '@/lib/algorithms/scoring-pipeline-policy';
 // The render gate — the single source of truth the pre-filters below are kept
 // in lockstep with, rather than a second hardcoded copy of the cutoff. Only a
 // type import flows the other way (fact-rows-selector takes `ForYouSuggestion`

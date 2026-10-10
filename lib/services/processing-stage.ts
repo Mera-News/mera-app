@@ -28,7 +28,7 @@
  * message has been published yet. That is the check the simulator pass is for.
  */
 import type { FeedSyncState } from '@/lib/scheduler/feed-sync/feed-sync-types';
-import type { ChunkState } from '@/lib/services/scoring-pipeline';
+import type { ChunkState } from '@/lib/algorithms/scoring-pipeline-policy';
 
 export const PROCESSING_STAGE_IDS = [
   'fetching',

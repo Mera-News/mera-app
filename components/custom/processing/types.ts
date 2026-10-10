@@ -13,7 +13,7 @@ export {
 
 import { PROCESSING_STAGE_IDS as STAGE_IDS } from '@/lib/services/processing-stage';
 import type { ProcessingStageId } from '@/lib/services/processing-stage';
-import type { ChunkState } from '@/lib/services/scoring-pipeline';
+import type { ChunkState } from '@/lib/algorithms/scoring-pipeline-policy';
 
 const PROCESSING_STAGE_COUNT = STAGE_IDS.length;
 

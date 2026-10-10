@@ -24,6 +24,7 @@ import {
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import * as articleService from '@/lib/database/services/article-suggestion-service';
 import logger from '@/lib/logger';
+import { derivePipelineBatchProgress } from '@/lib/algorithms/scoring-pipeline-policy';
 import * as pipeline from '@/lib/services/scoring-pipeline';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -360,7 +361,7 @@ describe('enqueueCandidates — covered-id bookkeeping', () => {
     expect(batch.candidateIds).toEqual(['rep', 'solo', 'x1', 'x2', 'x3']);
     // Ids without a gate entry cover themselves.
     expect(batch.coveredIds).toEqual(['rep', 'sib1', 'sib2', 'solo', 'x1', 'x2', 'x3']);
-    expect(pipeline.derivePipelineBatchProgress(run).total).toBe(7);
+    expect(derivePipelineBatchProgress(run).total).toBe(7);
   });
 
   it('writes coveredIds even with no gate map, so the denominator survives the submit shrink', async () => {

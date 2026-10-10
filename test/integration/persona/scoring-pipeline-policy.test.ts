@@ -3,9 +3,9 @@
 // lib/services/__tests__/scoring-pipeline.test.ts UNCHANGED. They live in `integration` only because
 // importing scoring-pipeline needs the integration setup; R11 moves them to lib/algorithms in P4.
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
+import { MAX_BATCH_ARTICLES, pickNextGatewayAction } from '@/lib/services/scoring-pipeline';
 import {
   COLLECT_WINDOW_MS,
-  MAX_BATCH_ARTICLES,
   MAX_IN_FLIGHT,
   MAX_IN_FLIGHT_TOTAL,
   deriveReasonsInFlightIds,
@@ -14,9 +14,8 @@ import {
   derivePipelineUiState,
   deriveStaleRunVerdict,
   pendingPollKey,
-  pickNextGatewayAction,
   rampedBatchCap,
-} from '@/lib/services/scoring-pipeline';
+} from '@/lib/algorithms/scoring-pipeline-policy';
 
 const NOW = 1_700_000_000_000;
 

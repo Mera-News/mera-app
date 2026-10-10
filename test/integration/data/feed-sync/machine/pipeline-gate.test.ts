@@ -23,7 +23,8 @@ jest.mock('expo-keep-awake', () => ({
 }));
 
 import logger from '@/lib/logger';
-import { COLLECT_WINDOW_MS, getPipelineStatus, STALE_RUN_GUARD_MS, staleRunVerdict } from '@/lib/services/scoring-pipeline';
+import { getPipelineStatus, staleRunVerdict } from '@/lib/services/scoring-pipeline';
+import { COLLECT_WINDOW_MS, STALE_RUN_GUARD_MS } from '@/lib/algorithms/scoring-pipeline-policy';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import {
   advanceUntilDone,
