@@ -112,11 +112,18 @@ export async function runBackgroundRefresh(now: number = Date.now()): Promise<Re
       await enforceInstallBoundary();
 
       // 3. The keychain probe. It throws while the device has been locked
-      //    since reboot, and reads empty when signed out.
+      //    since reboot, and reads empty when signed out. The async read goes
+      //    to expo-secure-store directly: the sync adapter behind
+      //    `authClient.getCookie()` swallows the throw and answers null.
       let cookie: unknown;
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { authClient } = require('@/lib/auth-client') as typeof import('@/lib/auth-client');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const SecureStore = require('expo-secure-store') as typeof import('expo-secure-store');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const slug = (require('expo-constants') as { default: { expoConfig?: { slug?: string } } }).default.expoConfig?.slug || 'app';
+        await SecureStore.getItemAsync(`${slug}_cookie`);
         cookie = authClient.getCookie();
       } catch {
         return { stoppedBy: 'locked' };

@@ -218,20 +218,13 @@ describe('every normal state of a device exits quietly', () => {
     expectQuiet(paths, { sessionKept: false });
   });
 
-  // DA35 (DATA-U15-1). The brief and the skill say a keychain that throws (locked since reboot) exits
-  // `locked`. The SecureStore adapter's sync read swallows the throw and answers null, which
-  // better-auth turns into an empty cookie, so the probe sees `signed-out`. Both are quiet exits.
-  test.failing('DA35: a keychain that throws on read (locked since reboot) exits locked', async () => {
-    failSecureStore(COOKIE_KEY, 'get', new Error('errSecInteractionNotAllowed'));
-
-    expect(await advanceUntilDone(runBackgroundRefresh(NOW))).toEqual({ stoppedBy: 'locked' });
-  });
-
-  it('DA35: today: a keychain that throws on read exits signed-out, quietly, with the session still stored', async () => {
+  // DA35 (DATA-U15-1). A keychain that throws (locked since reboot) exits `locked`, read async and directly:
+  // the SecureStore adapter's sync read swallows the throw and answers null. Both exits are quiet.
+  it('DA35: a keychain that throws on read (locked since reboot) exits locked', async () => {
     failSecureStore(COOKIE_KEY, 'get', new Error('errSecInteractionNotAllowed'));
     const paths = recordPaths();
 
-    expect(await advanceUntilDone(runBackgroundRefresh(NOW))).toEqual({ stoppedBy: 'signed-out' });
+    expect(await advanceUntilDone(runBackgroundRefresh(NOW))).toEqual({ stoppedBy: 'locked' });
 
     expectQuiet(paths, { sessionKept: true });
   });
