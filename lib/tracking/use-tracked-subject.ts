@@ -89,9 +89,18 @@ export function useTrackedSubject(
       },
       t('trackedStories.trackChatSeed'),
     );
-    // Keyed on the identity fields + current state.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tracked, subject.stableClusterId, subject.articleId, subject.title, subject.surface]);
+  }, [
+    tracked,
+    t,
+    subject.articleId,
+    subject.suggestionId,
+    subject.title,
+    subject.origin,
+    subject.surface,
+    subject.pubDate,
+    subject.stableClusterId,
+    subject.publicationName,
+  ]);
 
   return { tracked, trackedStoryId, startTracking };
 }
