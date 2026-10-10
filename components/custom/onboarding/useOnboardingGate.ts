@@ -1,13 +1,15 @@
 import { isOnboardingDone } from "@/components/custom/onboarding/onboarding-done";
-import { getSetting } from "@/lib/database/services/setting-service";
+import { wipeOnce } from "@/components/custom/auth/useLoggedInGate";
+import { getSetting, setSetting } from "@/lib/database/services/setting-service";
 import logger from "@/lib/logger";
 import {
     clearPendingAuthUserId,
+    effectiveSessionUserId,
     hasIdentityFault,
     readPendingAuthUserId,
     resolveIdentity,
 } from "@/lib/security/identity-gate";
-import { clearPreviousUserData, useUserStore } from "@/lib/stores";
+import { useUserStore } from "@/lib/stores";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { startEntitlementWarmup } from "@/lib/subscription/onboarding-paywall";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -90,6 +92,8 @@ export function useOnboardingGate({ userId, sessionUserId, onLoginRedirect, onCo
                 // holds was proven or merely read off this device's disk.
                 const pendingAuthUserId = readPendingAuthUserId();
 
+                const effective = effectiveSessionUserId(sessionUserId, pendingAuthUserId);
+
                 const verdict = resolveIdentity({
                     // The LIVE session id, never the coalesced `userId` — see
                     // the prop doc. Passing `userId` here would make this
@@ -116,7 +120,11 @@ export function useOnboardingGate({ userId, sessionUserId, onLoginRedirect, onCo
                     // already in flight must be allowed to finish.
                     if (cancelled) return;
                     try {
-                        await clearPreviousUserData(userId);
+                        // The launch gate's single-flight wipe: overlapping runs
+                        // (the session atom settling mid-wipe) share ONE reset.
+                        // resolveIdentity only answers this with an effective id.
+                        if (!effective) throw new Error('wipe without a proven identity');
+                        await wipeOnce(effective);
                     } catch (error) {
                         // ── FAIL CLOSED ──────────────────────────────────
                         // The previous owner's data is still here. Do NOT
@@ -133,16 +141,25 @@ export function useOnboardingGate({ userId, sessionUserId, onLoginRedirect, onCo
                     }
                 }
                 if (cancelled) return;
-                // Stamp the new owner. `cached_user_id` is the ONLY sentinel
-                // clearPreviousUserData keys off, and until now nothing on the
-                // fresh-login path wrote it (setUserId lives in
-                // app/logged-in/index.tsx, which this path bypasses). Without
-                // this the wipe above is permanently a no-op for a user who
-                // logged in but never cold-started, so the next user on the
-                // device would inherit their facts and skip onboarding.
+                // Stamp the new owner, and wait until it is on disk.
+                // `cached_user_id` is the ONLY sentinel clearPreviousUserData
+                // keys off, and nothing else on the fresh-login path writes it
+                // (app/logged-in/index.tsx, which this path bypasses, does).
+                // Without it the wipe above is permanently a no-op for a user
+                // who logged in but never cold-started, so the next user on the
+                // device would inherit their facts and skip onboarding. A stamp
+                // that did not land throws into the catch below (fail closed).
                 // Order matters: wipe first (it may reset the whole DB), stamp
                 // after. Same prologue as app/logged-in/index.tsx.
-                useUserStore.getState().setUserId(userId);
+                if (effective) {
+                    await setSetting('cached_user_id', effective);
+                    if ((await getSetting('cached_user_id')) !== effective) throw new Error('stamp did not land');
+                    useUserStore.getState().adoptLocalUserId(effective);
+                } else {
+                    // Offline / unresolved: the only id is the one already on
+                    // disk, so adopt it in memory and write nothing.
+                    useUserStore.getState().adoptLocalUserId(userId);
+                }
 
                 // Consumed — but only when the value just written to disk IS
                 // the recorded one. On the offline path `userId` came off the
@@ -160,16 +177,18 @@ export function useOnboardingGate({ userId, sessionUserId, onLoginRedirect, onCo
                     useUserStore.getState().setNeedsReauth(true);
                 }
             } catch (error) {
-                // NARROWED. This used to swallow a broken WIPE too, and falling
-                // through to the count on a failed wipe is the leak: the count
-                // is device-global, so it sees the previous owner's facts and
-                // completes onboarding for somebody who never did it. The wipe
-                // now has its own catch above and never reaches this one, which
-                // is left to cover the surrounding READS — a getSetting on a
-                // cold DB must still not strand the user on a spinner.
+                // FAIL CLOSED. Anything that throws before the stamp lands (a
+                // settings read, the probe, the wipe, the stamp itself) tells
+                // us nothing about who owns this device, and the
+                // `onboarding_done` read below is device-global: falling
+                // through to it would complete onboarding for somebody who
+                // never did it. The unchanged `cached_user_id` is the retry
+                // marker; Try again re-runs this.
                 logger.captureException(error, {
                     tags: { component: 'OnboardingScreen', method: 'resolveIdentity' },
                 });
+                if (!cancelled) setWipeFailed(true);
+                return;
             }
 
             // COUPLING, stated because it is invisible: the `onboarding_done`

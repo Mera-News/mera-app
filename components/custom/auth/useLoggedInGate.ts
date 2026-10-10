@@ -476,5 +476,7 @@ export function useLoggedInGate() {
     return { gate, wipeFailed, handleRetry };
 }
 
+export { wipeOnce, forceWipeOnce };
+
 /** Test-only: drops the in-flight account-switch wipe between cases (T-reset). */
 export function __resetLoggedInGateForTests(): void { wipeInFlight = null; }

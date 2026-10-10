@@ -248,19 +248,12 @@ describe('useOnboardingGate', () => {
             return gate;
         };
 
-        test.failing('PE24 a throwing identity read on the onboarding gate fails closed', async () => {
+        test('PE24 a throwing identity read on the onboarding gate fails closed', async () => {
             const { result, onComplete } = await failIdentityRead();
 
             expect(result.current.wipeFailed).toBe(true);
             expect(onComplete).not.toHaveBeenCalled();
             expect(result.current.showOnboarding).toBe(false);
-        });
-
-        test('PE24 today: a throwing identity read completes into the previous owner\'s feed', async () => {
-            const { result, onComplete } = await failIdentityRead();
-
-            expect(onComplete).toHaveBeenCalledTimes(1);
-            expect(result.current.wipeFailed).toBe(false);
         });
 
         const stampDoesNotLand = async () => {
@@ -280,19 +273,11 @@ describe('useOnboardingGate', () => {
             return gate;
         };
 
-        test.failing('PE24 the onboarding gate fails closed when its identity stamp does not land', async () => {
+        test('PE24 the onboarding gate fails closed when its identity stamp does not land', async () => {
             const { result } = await stampDoesNotLand();
 
             expect(result.current.wipeFailed).toBe(true);
             expect(result.current.showOnboarding).toBe(false);
-        });
-
-        test('PE24 today: the wizard shows with no identity stamp on disk', async () => {
-            const { result } = await stampDoesNotLand();
-
-            expect(result.current.showOnboarding).toBe(true);
-            expect(result.current.wipeFailed).toBe(false);
-            expect(await getSetting('cached_user_id')).toBeNull();
         });
 
         /**
@@ -332,16 +317,10 @@ describe('useOnboardingGate', () => {
             return { reset, hook };
         };
 
-        test.failing('PE24 overlapping onboarding gate runs share one wipe', async () => {
+        test('PE24 overlapping onboarding gate runs share one wipe', async () => {
             const { reset } = await overlappingRuns();
 
             expect(reset).toHaveBeenCalledTimes(1);
-        });
-
-        test('PE24 today: overlapping onboarding gate runs each reset the database', async () => {
-            const { reset } = await overlappingRuns();
-
-            expect(reset).toHaveBeenCalledTimes(2);
         });
     });
 
