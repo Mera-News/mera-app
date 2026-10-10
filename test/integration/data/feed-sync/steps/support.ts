@@ -487,8 +487,16 @@ export async function tick(): Promise<void> {
   await advanceUntilDone(scoringPipeline.recover());
 }
 
+// The fake clock patches process.hrtime, so take the real one at module load.
+const realHrtime = process.hrtime.bigint.bind(process.hrtime);
+
+// The gateway mock answers in real time and tickUntilScored may wait up to 15 s for it.
+jest.setTimeout(20_000);
+
+/** Tick until `count` ids are scored, bounded by 15 s of REAL time. */
 export async function tickUntilScored(count: number): Promise<void> {
-  for (let i = 0; i < 20 && new Set(scoredIds()).size < count; i++) await tick();
+  const deadline = realHrtime() + 15_000_000_000n;
+  while (new Set(scoredIds()).size < count && realHrtime() < deadline) await tick();
 }
 
 /** `hydrate` with the foreground enqueue ON, driven on the fake clock. */

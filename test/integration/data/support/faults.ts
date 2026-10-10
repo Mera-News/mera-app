@@ -1,7 +1,6 @@
 // The R26 fault-injection helpers every data seam suite shares. Not a test file.
 // Faults sit on the REAL WatermelonDB collection or adapter (a key-scoped query rule, a gate that
 // holds a read, an atomic batch refusal) and are all put back by `restoreFaults()` in afterEach.
-// feed-sync/steps/support.ts keeps its own frozen copy until G19/G37 delete it.
 import database from '@/lib/database';
 
 export type Rule = {

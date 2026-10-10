@@ -77,7 +77,9 @@ describe('a background run hands nothing to the foreground scoring pipeline', ()
     const t = makeCtx();
     const { diff } = await advanceUntilDone(fetchAndDiff(t));
     const { result } = await foreground(t, diff, { suppressEnqueue: true, background });
-    await tickUntilScored(7);
+    // The background run scores nothing, so tick a fixed 20 times; the control waits for its 7.
+    if (background) for (let i = 0; i < 20; i++) await tick();
+    else await tickUntilScored(7);
     await tick();
     return result;
   }
