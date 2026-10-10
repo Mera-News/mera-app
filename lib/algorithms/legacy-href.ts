@@ -11,7 +11,7 @@
 // Pure: no React, no router, no storage. Returns null for anything that is not
 // an old route, so callers can pass every path through it.
 
-import type { PageId } from './page-order';
+import type { PageId } from '../navigation/page-order';
 
 export interface LegacyTarget {
   /** A current route path, e.g. `/logged-in/app_container/you`. */

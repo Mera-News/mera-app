@@ -10,7 +10,7 @@ import type {
   SourceScopeKind,
 } from '../models/PublicationPreference';
 
-import { normalizePrefName as normalizePublicationName } from './publication-pref-level';
+import { normalizePrefName as normalizePublicationName } from '../../algorithms/publication-pref-level';
 
 const prefsCollection = database.get<PublicationPreferenceModel>('publication_preferences');
 

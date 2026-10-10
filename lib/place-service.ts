@@ -5,7 +5,7 @@ import type { Place } from './generated/graphql-types';
 import logger from './logger';
 // Imported for its `registerLocale(en)` side effect, which the alpha-2 name
 // lookup below needs. Same pattern components/custom/locations uses.
-import './country-utils';
+import './algorithms/country-utils';
 import type { Bloc, Place as HarnessPlace, LookupPlaceResult } from '@/lib/mera-harness';
 
 // [Persona v3] Place typeahead for the locations add-flow. `placeSearch` runs an

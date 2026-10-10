@@ -3,7 +3,7 @@ import type {
     ExportContentOptions,
     ExportWizardRow,
 } from '@/components/custom/saved-suggestions/ExportWizardModal';
-import { getLocalizedLanguageName } from '@/lib/language-names';
+import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { ArticleService } from '@/lib/article-service';
 import { getGroupingRowsByIds } from '@/lib/database/services/article-suggestion-service';
 import { getSavedSuggestionByServerId } from '@/lib/database/services/saved-article-suggestion-service';

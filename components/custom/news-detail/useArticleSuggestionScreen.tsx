@@ -31,12 +31,12 @@ import {
 import {
     orderRelatedArticles,
     type RelatedSortable,
-} from '@/lib/feed-grouping/related-articles-sort';
+} from '@/lib/algorithms/related-articles-sort';
 import { useRelatedPagination } from './use-related-pagination';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { mergeRelatedEntries } from './merge-related-entries';
 import { useIsConnected } from '@/lib/stores/network-store';
-import { secureUrlOrNull } from '@/lib/secure-url';
+import { secureUrlOrNull } from '@/lib/algorithms/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';

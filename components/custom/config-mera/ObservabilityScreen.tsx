@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { TaskProgress } from '@/lib/scheduler/scheduler-types';
 import { getImageResolutionReport } from '@/lib/images/image-resolution-stats';
-import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { type FeedFunnelReport } from '@/lib/stores/feed-diagnostics';
 import { formatProbeReport } from '@/lib/backup/dev-probe';
 import { Box } from '@/components/ui/box';

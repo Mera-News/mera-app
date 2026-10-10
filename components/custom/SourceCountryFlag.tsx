@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/popover';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { getCountryName } from '@/lib/country-utils';
+import { getCountryName } from '@/lib/algorithms/country-utils';
 import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';

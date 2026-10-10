@@ -26,7 +26,7 @@ import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
-import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';

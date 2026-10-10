@@ -7,7 +7,7 @@ import {
   defaultTextScaleForWidth,
   nearestTextScale,
   type TextScale,
-} from '@/lib/typography/scale';
+} from '@/lib/algorithms/scale';
 
 const SETTING_KEY = 'text_scale';
 
@@ -20,7 +20,7 @@ export {
   TEXT_SCALE_STEPS,
   nearestTextScale,
   type TextScale,
-} from '@/lib/typography/scale';
+} from '@/lib/algorithms/scale';
 
 interface TextScaleState {
   /** Multiplier applied to every `fontSize`/`lineHeight` in the app's type

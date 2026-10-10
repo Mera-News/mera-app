@@ -9,7 +9,7 @@ import { fetch as expoFetch } from 'expo/fetch';
 import logger from '@/lib/logger';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { withRetry } from '@/lib/utils/retry';
-import { isTransientNetworkError } from '@/lib/utils/transient-error';
+import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
 import { retryAfterMsFrom } from './cloudComplete';
 import type { ExecutionContext } from './execution-context';

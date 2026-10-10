@@ -6,7 +6,7 @@ import Animated, { runOnJS, useReducedMotion, withTiming } from 'react-native-re
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EASE } from '@/lib/motion';
-import { chapterTitleKey } from '@/lib/tutorials/keys';
+import { chapterTitleKey } from '@/lib/algorithms/tutorial-keys';
 import SlideView from './SlideView';
 import {
     TUTORIAL_ACCENT,

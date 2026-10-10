@@ -11,7 +11,7 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { useLanguageSwitch, type LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
-import { languageCheckStatus } from '@/lib/system-check/system-check';
+import { languageCheckStatus } from '@/lib/algorithms/system-check';
 import { useColors } from '@/lib/theme/tokens';
 import {
     getNativeLanguageName,

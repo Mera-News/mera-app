@@ -47,7 +47,7 @@ import type {
 } from '@/lib/database/services/article-suggestion-service';
 import type { CardStateRecord } from './feed-order-store';
 import type { ForYouSuggestion } from './for-you-store';
-import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 
 /** Max per-article rows in each `samples` array. Share payload only. */
 export const SAMPLE_LIMIT = 25;

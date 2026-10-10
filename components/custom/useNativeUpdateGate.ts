@@ -6,7 +6,7 @@ import { AppVersionService } from '@/lib/app-version-service';
 import { FORCE_UPDATE_CHECK_IN_DEV } from '@/lib/config/endpoints';
 import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
-import { isTransientNetworkError } from '@/lib/utils/transient-error';
+import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
 import { getAppVersion } from '@/lib/version';
 
 type GateStatus = 'checking' | 'allowed' | 'blocked';

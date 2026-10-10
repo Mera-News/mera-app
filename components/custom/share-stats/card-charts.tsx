@@ -35,7 +35,7 @@
 // and the copy needs a plural fan-out in every locale. `card-charts.test.tsx`
 // pins the invariant for exactly that reason.
 
-import { getFlagEmoji } from '@/lib/country-utils';
+import { getFlagEmoji } from '@/lib/algorithms/country-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';

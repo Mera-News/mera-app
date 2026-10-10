@@ -1,5 +1,5 @@
 import React from 'react';
-import { MIN_FONT_SIZE_PX, TYPE_SCALE, type TypeToken } from './scale';
+import { MIN_FONT_SIZE_PX, TYPE_SCALE, type TypeToken } from '../algorithms/scale';
 
 /**
  * The user's in-app text scale, delivered by context rather than by a store

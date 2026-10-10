@@ -5,7 +5,7 @@ import database from '@/lib/database';
 import { toastManager } from '@/lib/toast-manager';
 
 it('a dynamic import resolves to the module, named exports and default', async () => {
-  const named = await import('@/lib/utils/mask-email');
+  const named = await import('@/lib/algorithms/mask-email');
   expect(Object.keys(named).length).toBeGreaterThan(0);
   const cjs = await import('node:path');
   expect(typeof cjs.default.join).toBe('function');

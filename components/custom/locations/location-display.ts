@@ -7,7 +7,7 @@ import countries from 'i18n-iso-countries';
 import type { LocationRole } from '@/lib/database/models/Location';
 // Importing country-utils runs its `registerLocale(en)` side-effect (needed for
 // the alpha-2 ↔ alpha-3 / name lookups below).
-import { getCountryName } from '@/lib/country-utils';
+import { getCountryName } from '@/lib/algorithms/country-utils';
 
 type GlyphName = keyof typeof MaterialIcons.glyphMap;
 

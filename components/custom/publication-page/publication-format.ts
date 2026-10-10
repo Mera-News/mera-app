@@ -2,7 +2,7 @@
 // rows so a host, a badge or a monogram reads the same everywhere. No React,
 // no i18n, no database.
 
-import { secureUrlOrNull } from '@/lib/secure-url';
+import { secureUrlOrNull } from '@/lib/algorithms/secure-url';
 
 /**
  * The publication's HOMEPAGE link, upgraded to https. The catalogue stores

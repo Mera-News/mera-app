@@ -7,7 +7,7 @@ import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
-import { extractDomain } from '@/lib/publisher-utils';
+import { extractDomain } from '@/lib/algorithms/publisher-utils';
 import React, { useMemo } from 'react';
 
 interface ArticleStandaloneCompactCardProps {

@@ -32,7 +32,7 @@
 // nothing is SAVED until hydration has run (a test that records names never
 // reaches the database).
 
-import { normalizePrefName, publisherPrefNames, type PrefRowLike } from './publication-pref-level';
+import { normalizePrefName, publisherPrefNames, type PrefRowLike } from '../../algorithms/publication-pref-level';
 
 /** The settings row the map persists to. */
 export const PUBLISHER_SOURCE_NAMES_SETTING = 'publisher_source_names_cache';

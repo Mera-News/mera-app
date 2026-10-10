@@ -16,7 +16,7 @@
 // app-language change (the whole screen re-renders in the new language
 // anyway).
 
-import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import { useRef } from 'react';
 
 export function useSessionGeoLanguageContext<T extends UserGeoLanguageContext>(

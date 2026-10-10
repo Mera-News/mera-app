@@ -6,7 +6,7 @@
 // re-render per tick is cheap.
 
 import { useForYouLastProcessingRunFinishedAt } from '@/lib/stores/selectors';
-import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

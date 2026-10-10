@@ -18,7 +18,7 @@ import { getCalendars } from 'expo-localization';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import { TIMES_SIDE_PAD, WHEEL_WIDTH, timesLayout } from './notification-times-layout';
+import { TIMES_SIDE_PAD, WHEEL_WIDTH, timesLayout } from '../../../lib/algorithms/notification-times-layout';
 
 /** The toggle starts at the phone's own clock setting; it is not stored. */
 export function deviceUses24h(): boolean {

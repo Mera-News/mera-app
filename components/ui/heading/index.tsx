@@ -3,8 +3,8 @@ import { H1, H2, H3, H4, H5, H6 } from '@expo/html-elements';
 import { headingStyle } from './styles';
 import type { VariantProps } from '@gluestack-ui/utils/nativewind-utils';
 import { cssInterop } from 'nativewind';
-import { tokenFromClassName } from '@/lib/typography/scale';
-import { maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/typography/policy';
+import { tokenFromClassName } from '@/lib/algorithms/scale';
+import { maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/algorithms/policy';
 import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext';
 
 type IHeadingProps = VariantProps<typeof headingStyle> &

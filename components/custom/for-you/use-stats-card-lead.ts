@@ -5,7 +5,7 @@ import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useForYouDailyLimitResetAt, useForYouScoringError, useForYouSyncStatusMessage } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
-import { formatCount } from '@/lib/utils/format-count';
+import { formatCount } from '@/lib/algorithms/format-count';
 import { useTranslation } from 'react-i18next';
 import { limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';

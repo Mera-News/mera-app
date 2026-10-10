@@ -20,7 +20,7 @@
 // SuggestionSyncService.syncFeed() and does not funnel through this handler.
 
 import logger from '@/lib/logger';
-import { isTransientNetworkError } from '@/lib/utils/transient-error';
+import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
 import { getUnscoredSuggestionsWithFacts } from '@/lib/database/services/article-suggestion-service';
 import { buildRelevanceCalls } from '@/lib/mera-protocol/scoring-service';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';

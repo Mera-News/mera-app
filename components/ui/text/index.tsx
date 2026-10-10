@@ -3,8 +3,8 @@ import React from 'react';
 import type { VariantProps } from '@gluestack-ui/utils/nativewind-utils';
 import { Text as RNText } from 'react-native';
 import { textStyle } from './styles';
-import { tokenFromClassName } from '@/lib/typography/scale';
-import { MAX_FONT_SCALE, maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/typography/policy';
+import { tokenFromClassName } from '@/lib/algorithms/scale';
+import { MAX_FONT_SCALE, maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/algorithms/policy';
 import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext';
 
 type ITextProps = React.ComponentProps<typeof RNText> &

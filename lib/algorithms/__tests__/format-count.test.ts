@@ -1,4 +1,4 @@
-import { formatCount } from '@/lib/utils/format-count';
+import { formatCount } from '@/lib/algorithms/format-count';
 
 describe('formatCount', () => {
     it('groups a large count with the given locale', () => {

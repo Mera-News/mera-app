@@ -1,7 +1,7 @@
 // The Settings "Verify attestation" path: fetchAttestationForVerification (nonce'd, uncached) and the
 // verifier over the report the gateway mock serves. Mirrors AttestationVerificationRow.run().
 import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
-import { verifyAttestation, type VerificationReport } from '@/lib/e2ee/attestation-verify';
+import { verifyAttestation, type VerificationReport } from '@/lib/algorithms/attestation-verify';
 import { clearAttestationCache, getCachedAttestation, setCachedAttestation } from '@/lib/e2ee/e2ee-cache';
 import {
   fetchAttestationForVerification,

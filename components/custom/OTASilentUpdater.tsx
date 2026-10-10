@@ -9,7 +9,7 @@ import {
   restartWouldReload,
 } from '@/lib/app-restart';
 import logger from '@/lib/logger';
-import { isTransientNetworkError } from '@/lib/utils/transient-error';
+import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
 
 /**
  * Fetches OTA updates and shows the user NOTHING. Renders null by design.

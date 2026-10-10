@@ -37,7 +37,7 @@ import {
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { useTranslation } from 'react-i18next';
-import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/typography/policy';
+import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/algorithms/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens';

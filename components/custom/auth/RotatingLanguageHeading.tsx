@@ -7,7 +7,7 @@ import i18n from '@/lib/i18n';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { MOTION } from '@/lib/motion';
 
-import { languageHeadingOrder } from './language-heading-order';
+import { languageHeadingOrder } from '../../../lib/algorithms/language-heading-order';
 
 const KEY = 'auth.track.chooseLanguage';
 const HOLD_MS = 2000;

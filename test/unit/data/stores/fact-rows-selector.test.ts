@@ -23,7 +23,7 @@ import {
 } from '@/lib/stores/fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 const NOW = 1_000_000_000_000; // fixed clock

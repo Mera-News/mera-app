@@ -31,7 +31,7 @@ import {
   fetchAttestationForVerification,
   generateAttestationNonce,
 } from '@/lib/e2ee/e2ee-service';
-import { verifyAttestation, type CheckId, type VerificationReport } from '@/lib/e2ee/attestation-verify';
+import { verifyAttestation, type CheckId, type VerificationReport } from '@/lib/algorithms/attestation-verify';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import logger from '@/lib/logger';
 

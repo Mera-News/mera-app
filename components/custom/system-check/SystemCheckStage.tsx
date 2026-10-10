@@ -12,7 +12,7 @@ import { useAppearanceSetting } from '@/lib/theme/theme-store';
 import { hapticLight } from '@/lib/haptics';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
-import { languageCheckStatus } from '@/lib/system-check/system-check';
+import { languageCheckStatus } from '@/lib/algorithms/system-check';
 import { useColors } from '@/lib/theme/tokens';
 import {
     getNativeLanguageName,

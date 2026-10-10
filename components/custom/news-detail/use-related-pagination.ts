@@ -5,8 +5,8 @@ import {
     type ArticleSummary,
     type RelatedArticlesContextInput,
 } from '@/lib/generated/graphql-types';
-import type { RelatedSortMode } from '@/lib/feed-grouping/related-articles-sort';
-import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import type { RelatedSortMode } from '@/lib/algorithms/related-articles-sort';
+import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import logger from '@/lib/logger';
 
 /**

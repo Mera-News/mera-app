@@ -48,7 +48,7 @@ export function isDeferrableError(err: unknown): boolean {
       require('../stores/network-store') as typeof import('../stores/network-store');
     if (useNetworkStore.getState().isConnected !== false) return false;
     const { isTransientNetworkError } =
-      require('../utils/transient-error') as typeof import('../utils/transient-error');
+      require('../algorithms/transient-error') as typeof import('../algorithms/transient-error');
     return isTransientNetworkError(err);
   } catch {
     return false;

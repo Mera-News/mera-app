@@ -18,7 +18,7 @@ import logger from '../logger';
 import {
   APP_FEEDBACK_SCHEMA,
   BUNDLED_FEEDBACK_TREE,
-} from './feedback-tree-snapshot';
+} from '../algorithms/feedback-tree-snapshot';
 import type { FeedbackTree, FeedbackTreeNode } from '../news-harness/feedback-tree/types';
 
 const KEY_JSON = 'feedback_tree.json';

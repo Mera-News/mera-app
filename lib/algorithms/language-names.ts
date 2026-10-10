@@ -29,7 +29,7 @@ import uk from '@cospired/i18n-iso-languages/langs/uk.json';
 import vi from '@cospired/i18n-iso-languages/langs/vi.json';
 import zh from '@cospired/i18n-iso-languages/langs/zh.json';
 
-import { canonicalizeLanguageCode, primarySubtag } from '@/lib/language-codes';
+import { canonicalizeLanguageCode, primarySubtag } from '@/lib/algorithms/language-codes';
 
 for (const pack of [ar, de, en, es, fr, id, it, ja, ko, nl, pl, pt, ru, th, uk, vi, zh]) {
     languages.registerLocale(pack);

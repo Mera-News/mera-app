@@ -12,7 +12,7 @@ import {
     slideBodyKey,
     slideHeadlineKey,
     stepKey,
-} from '@/lib/tutorials/keys';
+} from '@/lib/algorithms/tutorial-keys';
 import type { ChapterId, TutorialSlide } from '@/lib/tutorials/types';
 import AskMeraButton from './AskMeraButton';
 import SceneView from './SceneView';

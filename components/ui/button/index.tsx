@@ -1,5 +1,5 @@
 'use client';
-import { maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/typography/policy';
+import { maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/algorithms/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
 import React from 'react';
 import { createButton } from '@gluestack-ui/core/button/creator';

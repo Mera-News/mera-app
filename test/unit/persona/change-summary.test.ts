@@ -1,4 +1,4 @@
-import { changeSummary, type ChangeContext, type ChangeRow } from '../change-summary';
+import { changeSummary, type ChangeContext, type ChangeRow } from '../../../components/custom/persona-audit/change-summary';
 
 // The key plus its params, so a test reads which template a row picked.
 const t = ((key: string, params?: Record<string, unknown>) => (params ? `${key} ${JSON.stringify(params)}` : key)) as never;

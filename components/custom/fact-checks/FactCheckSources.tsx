@@ -10,7 +10,7 @@ import {
     shouldShowMultipleOrganisationsCaveat,
 } from '@/lib/fact-check/fact-check-state';
 import logger from '@/lib/logger';
-import { isSecureUrl } from '@/lib/secure-url';
+import { isSecureUrl } from '@/lib/algorithms/secure-url';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';

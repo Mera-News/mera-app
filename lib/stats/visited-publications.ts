@@ -7,7 +7,7 @@
 // Like the rest of `lib/stats/`, this adds no table, column or counter. It
 // regroups rows the app already keeps to run Visited.
 
-import { normPublicationName } from '@/lib/feed-grouping/geo-language-priority';
+import { normPublicationName } from '@/lib/algorithms/geo-language-priority';
 import type {
   VisitedArticle,
   VisitedPublication,

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { useColors } from '@/lib/theme/tokens';
-import { maskEmail } from '@/lib/utils/mask-email';
+import { maskEmail } from '@/lib/algorithms/mask-email';
 
 import { styles } from './styles';
 

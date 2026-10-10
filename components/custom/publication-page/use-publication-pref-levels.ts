@@ -5,7 +5,7 @@
 // over more, by the data area's `resolvePrefLevel`.
 
 import { observeActive as observeActivePublicationPreferences } from '@/lib/database/services/publication-preference-service';
-import { resolvePrefLevel, type PrefRowLike, type SourcePrefUiLevel } from '@/lib/database/services/publication-pref-level';
+import { resolvePrefLevel, type PrefRowLike, type SourcePrefUiLevel } from '@/lib/algorithms/publication-pref-level';
 import { useCallback, useEffect, useState } from 'react';
 
 export function usePublicationPrefLevels(): (names: readonly string[]) => SourcePrefUiLevel {

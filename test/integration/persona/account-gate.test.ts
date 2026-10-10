@@ -1,7 +1,7 @@
 // The launch account verdict: which screen a launch lands on once the parallel session check has
 // (or has not) answered. Pure, so it runs with no mocks; the same verdict, through the real
 // breaker and the real gate, is exercised in launch-gate.test.ts.
-import { accountGateVerdict } from '@/components/custom/auth/account-gate';
+import { accountGateVerdict } from '@/lib/algorithms/account-gate';
 
 const base = { outcome: null, isConnected: true, serverReachable: true } as const;
 

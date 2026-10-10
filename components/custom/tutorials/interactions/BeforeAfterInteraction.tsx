@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { hapticLight } from '@/lib/haptics';
-import { beforeAfterKey } from '@/lib/tutorials/keys';
+import { beforeAfterKey } from '@/lib/algorithms/tutorial-keys';
 import type { ChapterId } from '@/lib/tutorials/types';
 import {
     TUTORIAL_ACCENT,

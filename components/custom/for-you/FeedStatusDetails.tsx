@@ -29,7 +29,7 @@ import {
     useForYouScoringError,
     useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
-import { formatCount } from '@/lib/utils/format-count';
+import { formatCount } from '@/lib/algorithms/format-count';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';

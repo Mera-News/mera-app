@@ -8,7 +8,7 @@ import React from 'react';
 import { Dimensions } from 'react-native';
 import { act, renderHook } from '@testing-library/react-native';
 
-import { MAX_FONT_SCALE } from '@/lib/typography/policy';
+import { MAX_FONT_SCALE } from '@/lib/algorithms/policy';
 import { TextScaleProvider } from '@/lib/typography/TextScaleProvider';
 import { useAdaptiveLineClamp } from '@/lib/typography/useAdaptiveLineClamp';
 import { useTextScaleStore, type TextScale } from '@/lib/stores/text-scale-store';

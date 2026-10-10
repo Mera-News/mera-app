@@ -4,7 +4,7 @@
 // pending-notification store. A target that names a page leaves it in the
 // one-shot pending store (no page state in URLs); TabPages opens it on focus.
 import { setPendingPage } from '@/components/custom/nav/navigate-to-page';
-import { normalizeLegacyHref } from '@/lib/navigation/legacy-href';
+import { normalizeLegacyHref } from '@/lib/algorithms/legacy-href';
 
 export function redirectSystemPath({ path }: { path: string; initial: boolean }): string {
   try {

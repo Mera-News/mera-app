@@ -31,7 +31,7 @@ import {
     baseLang,
     normAlpha3,
     normPublicationName,
-} from '@/lib/feed-grouping/geo-language-priority';
+} from '@/lib/algorithms/geo-language-priority';
 import {
     publicationTagMultiplier,
     type PublicationPrefTag,

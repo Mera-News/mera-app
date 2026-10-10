@@ -1,5 +1,5 @@
 import { AccountService } from '@/lib/account-service';
-import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
+import { getCountryName, getFlagEmoji } from '@/lib/algorithms/country-utils';
 import type { LocationRole } from '@/lib/database/models/Location';
 import { addUserLocation } from '@/lib/database/services/location-persona-actions';
 import { hapticLight } from '@/lib/haptics';

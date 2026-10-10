@@ -11,7 +11,7 @@ import logger from '@/lib/logger';
 import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useColors } from '@/lib/theme/tokens';
-import { maskEmail } from '@/lib/utils/mask-email';
+import { maskEmail } from '@/lib/algorithms/mask-email';
 
 interface OTPVerificationViewProps {
     email: string;

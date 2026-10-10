@@ -7,7 +7,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import logger from '@/lib/logger';
-import { isTransientNetworkError } from '@/lib/utils/transient-error';
+import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { useColors } from '@/lib/theme/tokens';
 

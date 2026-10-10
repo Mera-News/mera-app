@@ -1,4 +1,4 @@
-import { sectionColorAtAlpha, sectionGradient } from '@/lib/section-color';
+import { sectionColorAtAlpha, sectionGradient } from '@/lib/algorithms/section-color';
 import React from 'react';
 import { I18nManager, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';

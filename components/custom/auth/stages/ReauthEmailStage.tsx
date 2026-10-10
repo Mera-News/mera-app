@@ -7,7 +7,7 @@ import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { useColors } from '@/lib/theme/tokens';
-import { maskEmail } from '@/lib/utils/mask-email';
+import { maskEmail } from '@/lib/algorithms/mask-email';
 
 import { GateIcon } from './parts';
 import { styles } from './styles';

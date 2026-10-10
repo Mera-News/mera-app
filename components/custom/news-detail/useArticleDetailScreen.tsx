@@ -22,7 +22,7 @@ import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useRelatedPagination } from './use-related-pagination';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
-import { secureUrlOrNull } from '@/lib/secure-url';
+import { secureUrlOrNull } from '@/lib/algorithms/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';

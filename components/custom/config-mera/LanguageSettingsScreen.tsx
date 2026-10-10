@@ -4,7 +4,7 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import LanguageDownloadNotice, { useLanguageDownloadNotice } from '@/components/custom/auth/LanguageDownloadNotice';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import { getNativeLanguageName } from '@/lib/translation-service';
-import { getLocalizedLanguageName } from '@/lib/language-names';
+import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { toastManager } from '@/lib/toast-manager';
 import { requestRestart } from '@/lib/app-restart';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';

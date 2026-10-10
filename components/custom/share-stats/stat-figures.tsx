@@ -16,7 +16,7 @@ import { useCardInk } from '@/components/custom/share-stats/card-theme';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getLocalizedLanguageName } from '@/lib/language-names';
+import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { peakDayCount, roundedMedianHours, type ReadingStats, type StatsCardId, WINDOW_DAYS } from '@/lib/stats/reading-stats';
 import type { TFunction } from 'i18next';
 import React from 'react';

@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { hapticLight } from '@/lib/haptics';
-import { sortBucketKey, sortCardKey } from '@/lib/tutorials/keys';
+import { sortBucketKey, sortCardKey } from '@/lib/algorithms/tutorial-keys';
 import type { ChapterId, SortBucket, SortCard } from '@/lib/tutorials/types';
 import {
     TUTORIAL_ACCENT,

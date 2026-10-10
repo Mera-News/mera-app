@@ -27,7 +27,7 @@ import {
 import { suppressionMatchesCandidate } from '@/lib/news-harness/scoring-engine/suppression';
 import type { SoftSuppression } from '@/lib/news-harness/scoring-engine/persona-context';
 import type { ScoredCandidateInput } from '@/lib/news-harness/scoring-engine/relevance';
-import { BUNDLED_FEEDBACK_TREE } from '@/lib/services/feedback-tree-snapshot';
+import { BUNDLED_FEEDBACK_TREE } from '@/lib/algorithms/feedback-tree-snapshot';
 import { resolveLeafActions } from '@/lib/news-harness/feedback-tree/resolve-leaf-actions';
 import type { FeedbackTreeNode, LocalFeedbackContext, ResolvedPersonaAction } from '@/lib/news-harness/feedback-tree/types';
 

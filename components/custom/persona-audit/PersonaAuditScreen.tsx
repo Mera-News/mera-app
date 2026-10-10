@@ -12,7 +12,7 @@ import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { useColors } from '@/lib/theme/tokens';
 import { toastManager } from '@/lib/toast-manager';
-import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, View } from 'react-native';

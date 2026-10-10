@@ -1,11 +1,11 @@
-import { chaptersAtLevel } from '../chapters';
+import { chaptersAtLevel } from '../../../lib/tutorials/chapters';
 import {
     ADVANCED_UNLOCK_THRESHOLD,
     buildMenuModel,
     countCompletedBasics,
     isAdvancedUnlocked,
     nextChapterId,
-} from '../menu';
+} from '../../../lib/tutorials/menu';
 
 const basicIds = chaptersAtLevel('basic').map((c) => c.id);
 const advancedIds = chaptersAtLevel('advanced').map((c) => c.id);

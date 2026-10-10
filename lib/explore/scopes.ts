@@ -32,7 +32,7 @@
 // alpha-3 (the fetch argument). World fetches with the 'GLOBAL' sentinel.
 
 import countries from 'i18n-iso-countries';
-import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
+import { getCountryName, getFlagEmoji } from '@/lib/algorithms/country-utils';
 
 export type ExploreScopeKind = 'world' | 'country' | 'city' | 'region';
 

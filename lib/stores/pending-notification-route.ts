@@ -32,7 +32,7 @@
 // lib/app-restart.ts).
 
 import logger from '@/lib/logger';
-import { normalizeLegacyHref } from '@/lib/navigation/legacy-href';
+import { normalizeLegacyHref } from '@/lib/algorithms/legacy-href';
 
 /** Every destination a notification tap may open. Route paths never change
  *  here: the harness drives the app by deep link. */

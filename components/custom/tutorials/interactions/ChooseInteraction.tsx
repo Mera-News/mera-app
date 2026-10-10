@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { hapticLight } from '@/lib/haptics';
-import { chooseFeedbackKey, chooseLabelKey } from '@/lib/tutorials/keys';
+import { chooseFeedbackKey, chooseLabelKey } from '@/lib/algorithms/tutorial-keys';
 import type { ChapterId, ChoiceOption } from '@/lib/tutorials/types';
 import {
     TUTORIAL_ACCENT,

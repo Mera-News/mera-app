@@ -21,7 +21,7 @@ import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticLight } from '@/lib/haptics';
-import { tint } from '@/lib/theme/tint';
+import { tint } from '@/lib/algorithms/tint';
 import { useColors, useThemeMode, type ThemeColors, type ThemeMode } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';

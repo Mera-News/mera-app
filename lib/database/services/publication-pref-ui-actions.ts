@@ -42,7 +42,7 @@ import {
   publisherPrefNames,
   resolvePrefLevel,
   type SourcePrefUiLevel,
-} from './publication-pref-level';
+} from '../../algorithms/publication-pref-level';
 
 /**
  * The L1/L2 vocabulary: three levels, no mute. `'none'` clears whatever is

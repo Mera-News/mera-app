@@ -132,7 +132,7 @@ export function classifySuppression(
 
   try {
     const { isTransientNetworkError } =
-      require('./utils/transient-error') as typeof import('./utils/transient-error');
+      require('./algorithms/transient-error') as typeof import('./algorithms/transient-error');
     const { useNetworkStore } =
       require('./stores/network-store') as typeof import('./stores/network-store');
 

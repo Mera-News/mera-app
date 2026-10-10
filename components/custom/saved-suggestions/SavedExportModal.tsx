@@ -5,7 +5,7 @@ import {
     exportDay,
     toExportRows,
 } from '@/lib/saved-articles-export';
-import { getLocalizedLanguageName } from '@/lib/language-names';
+import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ExportFormat } from './export-and-share';

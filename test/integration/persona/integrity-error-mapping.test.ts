@@ -11,7 +11,7 @@ import {
     isIntegrityUnavailableError,
     PERMANENT_INTEGRITY_ERROR_CODES,
     TRANSIENT_INTEGRITY_ERROR_CODES,
-} from '../index';
+} from '../../../modules/mera-device-attest/index';
 
 const integrityError = (message: string) =>
     Object.assign(new Error(message), { code: 'ERR_ATTEST_INTEGRITY_FAILED' });

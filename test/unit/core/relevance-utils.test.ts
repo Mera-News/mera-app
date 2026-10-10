@@ -1,4 +1,4 @@
-import { getRelevanceLabel, getRelevanceColors } from '../relevance-utils';
+import { getRelevanceLabel, getRelevanceColors } from '../../../lib/relevance-utils';
 import { bandOf } from '@/lib/news-harness/feed-select/ownership';
 
 // relevance v3 (2026-08-05) band-ladder unification: both functions now read

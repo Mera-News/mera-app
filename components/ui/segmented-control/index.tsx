@@ -27,7 +27,7 @@ import Animated, {
 import { hapticSelection } from '@/lib/haptics';
 import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
-import { MAX_FONT_SCALE } from '@/lib/typography/policy';
+import { MAX_FONT_SCALE } from '@/lib/algorithms/policy';
 
 import { HEADER_METRICS, headerOptionParts, headerTrackMode } from './fit';
 import { fillAt, settleFill, type OptionBox } from './fill';

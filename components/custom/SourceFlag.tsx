@@ -1,6 +1,6 @@
 import { GlobeIcon, Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { getFlagEmoji } from '@/lib/country-utils';
+import { getFlagEmoji } from '@/lib/algorithms/country-utils';
 import React from 'react';
 
 type SourceFlagSize = 'sm' | 'lg' | 'xl';

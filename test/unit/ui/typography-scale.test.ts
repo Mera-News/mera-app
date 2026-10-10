@@ -22,7 +22,7 @@ import {
   TYPE_TOKENS,
   tokenFromClassName,
   type TypeToken,
-} from '@/lib/typography/scale';
+} from '@/lib/algorithms/scale';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tailwindConfig = require('../../../tailwind.config.js');

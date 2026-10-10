@@ -5,7 +5,7 @@ import database from '@/lib/database';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
 import { gateUnscoredForScoring, propagateToUnscoredSiblings } from '@/lib/feed-grouping/score-propagation';
-import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import logger from '@/lib/logger';
 import {
   loneClusters,

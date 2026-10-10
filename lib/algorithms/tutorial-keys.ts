@@ -11,7 +11,7 @@ import type {
   ChapterId,
   TutorialChapter,
   TutorialSlide,
-} from './types';
+} from '../tutorials/types';
 
 /** Root of the tutorials namespace in every locale file. */
 export const TUTORIALS_NS = 'tutorials';

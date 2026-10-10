@@ -22,7 +22,7 @@ import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
-import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 
 const TAG = '[feed-funnel]';
 

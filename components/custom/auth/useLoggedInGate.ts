@@ -3,7 +3,7 @@ import logger from "@/lib/logger";
 import { clearPreviousUserData } from "@/lib/stores";
 import { isOnboardingDone } from "@/components/custom/onboarding/onboarding-done";
 import { type AccountGateVariant } from "@/components/custom/auth/AccountGateScreen";
-import { accountGateVerdict } from "@/components/custom/auth/account-gate";
+import { accountGateVerdict } from "@/lib/algorithms/account-gate";
 import { recheckSession, type RecheckOutcome } from "@/lib/auth-failure-breaker";
 import { readSupportIdFromUser } from "@/lib/support-id";
 import { getSetting, setSetting } from "@/lib/database/services/setting-service";

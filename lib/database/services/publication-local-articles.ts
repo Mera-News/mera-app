@@ -12,7 +12,7 @@ import database from '../index';
 import { ArticleSuggestionStatus } from '../article-suggestion-status';
 import type ArticleSuggestionModel from '../models/ArticleSuggestion';
 import type { NewsArticle } from '../../generated/graphql-types';
-import { publisherPrefNames } from './publication-pref-level';
+import { publisherPrefNames } from '../../algorithms/publication-pref-level';
 
 /** Cap on rows returned: an offline page is a glance, not an archive. */
 export const PUBLICATION_LOCAL_ARTICLES_LIMIT = 50;

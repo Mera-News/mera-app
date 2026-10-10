@@ -17,7 +17,7 @@
 import { Text } from '@/components/ui/text';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
-import { formatCount } from '@/lib/utils/format-count';
+import { formatCount } from '@/lib/algorithms/format-count';
 import { joinClauses } from './card-state';
 import React from 'react';
 import { useTranslation } from 'react-i18next';

@@ -17,7 +17,7 @@ import { useStartupTabStore } from '@/lib/stores/startup-tab-store';
 import { useTextScaleStore } from '@/lib/stores/text-scale-store';
 import { useAppearanceSetting } from '@/lib/theme/theme-store';
 import { useColors, type ThemeMode } from '@/lib/theme/tokens';
-import { TEXT_SCALE_LABEL_KEYS, TEXT_SCALE_STEPS, type TextScale } from '@/lib/typography/scale';
+import { TEXT_SCALE_LABEL_KEYS, TEXT_SCALE_STEPS, type TextScale } from '@/lib/algorithms/scale';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';

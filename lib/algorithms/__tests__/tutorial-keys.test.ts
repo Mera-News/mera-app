@@ -7,8 +7,8 @@ import {
     slideAskKey,
     slideBodyKey,
     slideHeadlineKey,
-} from '../keys';
-import type { TutorialSlide } from '../types';
+} from '../tutorial-keys';
+import type { TutorialSlide } from '../../tutorials/types';
 
 describe('key derivation', () => {
     it('builds chapter and slide keys from ids alone', () => {

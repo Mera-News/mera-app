@@ -18,7 +18,7 @@ import { OnboardingStage } from '@/lib/generated/graphql-types';
 import { reconcileAppLanguageWithPersona } from '@/lib/language-sync';
 import { SPRING } from '@/lib/motion';
 import { ensurePushTokenRegistered } from '@/lib/notification-service';
-import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/notificationSlotUtils';
+import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/algorithms/notificationSlotUtils';
 import {
     useFloatingChatHasUnresolvedTopicPlans,
     useFloatingChatStore,

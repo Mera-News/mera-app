@@ -16,7 +16,7 @@ import {
 } from '@/lib/stores/feed-list-selector';
 import { FEED_WINDOW_MS } from '@/lib/stores/fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import type { ClusterMembership, ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 const NOW = 1_000_000_000_000; // fixed clock

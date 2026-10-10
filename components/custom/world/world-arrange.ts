@@ -7,7 +7,7 @@ import countries from 'i18n-iso-countries';
 
 import { alpha2OfPage, countryPageId } from '@/components/custom/nav/page-registry';
 import type { ArrangeCountryOption, ArrangeDraft } from '@/components/custom/nav/types';
-import { getCountryName } from '@/lib/country-utils';
+import { getCountryName } from '@/lib/algorithms/country-utils';
 
 /**
  * Options from alpha-3 codes. The `GLOBAL` sentinel and any code with no

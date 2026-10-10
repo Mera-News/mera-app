@@ -34,8 +34,8 @@ import {
   isBreaking,
   isSuggestionOpened,
 } from './fact-rows-selector';
-import { type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
-import { makeRepCompare } from '@/lib/feed-grouping/representative-compare';
+import { type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
+import { makeRepCompare } from '@/lib/algorithms/representative-compare';
 import { isReasonPendingVisible } from '@/lib/feed-ordering/pending-visibility';
 import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';

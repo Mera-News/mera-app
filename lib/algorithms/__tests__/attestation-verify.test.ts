@@ -24,7 +24,7 @@ import {
   INTEL_SGX_ROOT_CA_DER_SHA256,
   type CheckId,
   type CheckResult,
-} from '@/lib/e2ee/attestation-verify';
+} from '@/lib/algorithms/attestation-verify';
 
 const att = fixture.model_attestations[0];
 

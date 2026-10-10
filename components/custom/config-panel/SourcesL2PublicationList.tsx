@@ -6,7 +6,7 @@ import PublicationListRow from '@/components/custom/publication-page/Publication
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { hostOf } from '@/components/custom/publication-page/publication-format';
 import { usePublicationPrefLevels } from '@/components/custom/publication-page/use-publication-pref-levels';
-import { publisherPrefNames } from '@/lib/database/services/publication-pref-level';
+import { publisherPrefNames } from '@/lib/algorithms/publication-pref-level';
 import logger from '@/lib/logger';
 import type { NewsPublisher } from '@/lib/source-service';
 import { SourceService } from '@/lib/source-service';

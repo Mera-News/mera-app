@@ -7,7 +7,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
+import { getCountryName, getFlagEmoji } from '@/lib/algorithms/country-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import React from 'react';

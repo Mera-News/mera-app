@@ -14,7 +14,7 @@
 // Pure: no RN, database or store imports.
 
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import { normPublicationName, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import { normPublicationName, type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 
 const PUBLICATION_TAG_MULTIPLIER = { more: 1.5, fewer: 0.5, subscribed: 2 } as const;
 

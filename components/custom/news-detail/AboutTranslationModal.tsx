@@ -3,7 +3,7 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { HelpModal } from '@/components/ui/help-modal';
 import { Text } from '@/components/ui/text';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
-import { getLocalizedLanguageName } from '@/lib/language-names';
+import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { useColors } from '@/lib/theme/tokens';
 import type { ArticleTranslationSupport } from '@/lib/translation-service';
 import React, { useRef, useState } from 'react';

@@ -42,7 +42,7 @@ import { CHIP_ROW_INSET, chipOpacity, revealOffset } from './chip-row';
 import { headerSideSlots, SIDE_SLOT } from './header-slots';
 import HelpButton, { RingButton } from './HelpButton';
 import { useColors } from '@/lib/theme/tokens';
-import { MAX_FONT_SCALE } from '@/lib/typography/policy';
+import { MAX_FONT_SCALE } from '@/lib/algorithms/policy';
 import type { PageId } from './page-registry';
 import type { PageDot, PagePill } from './types';
 

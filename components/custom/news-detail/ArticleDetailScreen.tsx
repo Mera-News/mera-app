@@ -25,7 +25,7 @@ import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import { RELATED_SORT_LABEL } from '@/components/custom/news-detail/RelatedCoverage';
 import { RELATED_SORT_MODES } from '@/lib/stores/related-sort-store';
-import { secureUrlOrNull } from '@/lib/secure-url';
+import { secureUrlOrNull } from '@/lib/algorithms/secure-url';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@/lib/theme/tokens';
 import { useArticleDetailScreen } from '@/components/custom/news-detail/useArticleDetailScreen';

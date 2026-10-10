@@ -7,7 +7,7 @@ import {
     observeActive as observeActivePublicationPreferences,
     weightToPrefKind,
 } from '@/lib/database/services/publication-preference-service';
-import { normalizePrefName, resolvePrefLevel, type PrefRowLike } from '@/lib/database/services/publication-pref-level';
+import { normalizePrefName, resolvePrefLevel, type PrefRowLike } from '@/lib/algorithms/publication-pref-level';
 import {
     setSourcePrefFromUi,
     type SourcePrefUiLevel,

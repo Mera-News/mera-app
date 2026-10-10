@@ -15,7 +15,7 @@ import { useUIStore } from '@/lib/stores/ui-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { resolveAccountEmailView } from '@/lib/subscription/email-capture';
 import { toastManager } from '@/lib/toast-manager';
-import { TEXT_SCALE_STEPS } from '@/lib/typography/scale';
+import { TEXT_SCALE_STEPS } from '@/lib/algorithms/scale';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { router } from 'expo-router';
 import React, { useCallback, useRef } from 'react';

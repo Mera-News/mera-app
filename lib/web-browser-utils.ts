@@ -2,7 +2,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
 import { REFERRER_SOURCE } from './config/branding';
-import { isSecureUrl } from './secure-url';
+import { isSecureUrl } from './algorithms/secure-url';
 import { useAppLanguageStore } from './stores/app-language-store';
 
 // The website's supported locale codes (mirrors mera-promo-website

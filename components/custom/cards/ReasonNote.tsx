@@ -10,7 +10,7 @@ import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-statu
 import { MOTION, SPRING } from '@/lib/motion';
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import { TYPE_SCALE } from '@/lib/typography/scale';
+import { TYPE_SCALE } from '@/lib/algorithms/scale';
 import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';

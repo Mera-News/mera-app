@@ -1,7 +1,7 @@
 import { Heading } from '@/components/ui/heading';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { canonicalizeLanguageCode } from '@/lib/language-codes';
+import { canonicalizeLanguageCode } from '@/lib/algorithms/language-codes';
 import { translateTextDetailed, useTranslationSuppressed } from '@/lib/translation-service';
 import { subscribeTranslationEpoch, visibilityPriority } from '@/lib/translation-queue';
 import { translationCacheKey, useAppLanguageStore } from '@/lib/stores/app-language-store';

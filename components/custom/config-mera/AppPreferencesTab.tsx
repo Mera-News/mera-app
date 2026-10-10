@@ -9,7 +9,7 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { requestEmailCapture } from '@/lib/subscription/email-capture';
 import { useColors } from '@/lib/theme/tokens';
 import { getNativeLanguageName } from '@/lib/translation-service';
-import { maskEmail } from '@/lib/utils/mask-email';
+import { maskEmail } from '@/lib/algorithms/mask-email';
 import { getAppVersion, getGitCommit } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { router, useFocusEffect, useRouter, type Href } from 'expo-router';

@@ -1,4 +1,4 @@
-import { actionDisplay, isRevertible, sourceLabelKey } from '../action-display';
+import { actionDisplay, isRevertible, sourceLabelKey } from '../../../components/custom/persona-audit/action-display';
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 
 describe('persona-audit action-display', () => {

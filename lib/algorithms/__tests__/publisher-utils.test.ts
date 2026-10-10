@@ -1,4 +1,4 @@
-import { extractDomain } from '@/lib/publisher-utils';
+import { extractDomain } from '@/lib/algorithms/publisher-utils';
 
 describe('extractDomain', () => {
     it('strips protocol, www, and common TLD', () => {

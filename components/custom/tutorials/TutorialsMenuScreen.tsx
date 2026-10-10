@@ -8,7 +8,7 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { hapticLight } from '@/lib/haptics';
 import { buildMenuModel } from '@/lib/tutorials/menu';
-import { chapterSubtitleKey, chapterTitleKey } from '@/lib/tutorials/keys';
+import { chapterSubtitleKey, chapterTitleKey } from '@/lib/algorithms/tutorial-keys';
 import { useTutorialsStore } from '@/lib/stores/tutorials-store';
 import type { ChapterId, ChapterLevel } from '@/lib/tutorials/types';
 import {

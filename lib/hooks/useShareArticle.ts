@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
 import { WEBSITE_URL } from '../config/branding';
 import logger from '../logger';
-import { secureUrlOrNull } from '../secure-url';
+import { secureUrlOrNull } from '../algorithms/secure-url';
 import { useAppLanguage } from '../stores/app-language-store';
 import {
     getArticleTranslatableStatus, resolveUiLocale, type TranslatableStatus,

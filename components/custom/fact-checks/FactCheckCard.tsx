@@ -25,7 +25,7 @@ import { describeCheckedBy, describeOrganisationVerdict } from '@/lib/fact-check
 import type { FactCheckedByEntry } from '@/lib/fact-check/fact-check-types';
 import { isFactCheckDone } from '@/lib/stores/fact-checks-store';
 import { useColors } from '@/lib/theme/tokens';
-import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';

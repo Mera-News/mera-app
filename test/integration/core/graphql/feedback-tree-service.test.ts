@@ -8,7 +8,7 @@ import {
   refreshFeedbackTree,
   resetFeedbackTreeMemo,
 } from '@/lib/services/feedback-tree-service';
-import { APP_FEEDBACK_SCHEMA, BUNDLED_FEEDBACK_TREE } from '@/lib/services/feedback-tree-snapshot';
+import { APP_FEEDBACK_SCHEMA, BUNDLED_FEEDBACK_TREE } from '@/lib/algorithms/feedback-tree-snapshot';
 import { mockGqlError, server } from '@/test/helpers';
 import { failTransport, resetNetworkMemory, serve, spyLogger, underClock } from './kit';
 

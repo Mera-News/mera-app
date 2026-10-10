@@ -1,7 +1,7 @@
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
 import { hasUserDeniedPermissions, setVisibleNotificationsEnabled } from '@/lib/notification-service';
-import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/notificationSlotUtils';
+import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/algorithms/notificationSlotUtils';
 import { resolveCurrentUserId } from '@/lib/security/current-user';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';

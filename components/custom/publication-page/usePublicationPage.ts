@@ -1,8 +1,8 @@
 import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
-import { getCountryName } from '@/lib/country-utils';
+import { getCountryName } from '@/lib/algorithms/country-utils';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
-import { getLocalizedLanguageName } from '@/lib/language-names';
+import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { calendarDaysAgo, formatDayMonth } from '@/lib/stats/visited-publications';
 import { toastManager } from '@/lib/toast-manager';

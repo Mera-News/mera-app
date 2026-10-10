@@ -90,8 +90,8 @@ import {
 } from '@/lib/feed-grouping/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import { type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
-import { makeRepCompare } from '@/lib/feed-grouping/representative-compare';
+import { type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
+import { makeRepCompare } from '@/lib/algorithms/representative-compare';
 import type { ForYouSuggestion } from './for-you-store';
 
 /**

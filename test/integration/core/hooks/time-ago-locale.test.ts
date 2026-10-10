@@ -1,6 +1,6 @@
 // formatTimeAgo's absolute branch (reached with absoluteAfterDays, e.g. from
 // components/custom/article-meta-strings.ts) against the real i18n instance.
-import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import i18n from '@/lib/i18n';
 import { useArticleMetaStrings } from '@/components/custom/article-meta-strings';
 import { renderHook } from '@testing-library/react-native';

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import type { RelatedSortMode } from '@/lib/feed-grouping/related-articles-sort';
+import type { RelatedSortMode } from '@/lib/algorithms/related-articles-sort';
 import logger from '@/lib/logger';
 
 const KEY = 'related_articles_sort';

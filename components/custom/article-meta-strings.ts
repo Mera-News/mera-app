@@ -2,9 +2,9 @@
 // place: ArticleMetaRow draws them, and the card roots read them in their
 // explicit accessibility label, so the two can never say different things.
 
-import { getLocalizedLanguageName } from '@/lib/language-names';
+import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { useTimeTickValue } from '@/lib/time-tick';
-import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { useTranslation } from 'react-i18next';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 

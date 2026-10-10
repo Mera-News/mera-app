@@ -3,8 +3,8 @@ import * as Device from 'expo-device';
 import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 import logger from '@/lib/logger';
-import { canonicalizeLanguageCode, primarySubtag } from '@/lib/language-codes';
-import { getLanguageNameIn } from '@/lib/language-names';
+import { canonicalizeLanguageCode, primarySubtag } from '@/lib/algorithms/language-codes';
+import { getLanguageNameIn } from '@/lib/algorithms/language-names';
 import { sleep } from '@/lib/utils/retry';
 import {
     __resetTranslationQueueForTests,

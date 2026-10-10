@@ -30,7 +30,7 @@ import path from 'path';
 
 import en from '@/lib/locales/en.json';
 import { TUTORIAL_CHAPTERS, chaptersAtLevel, getChapter } from '@/lib/tutorials/chapters';
-import { animationIdFor, keysForChapter, lookupKey } from '@/lib/tutorials/keys';
+import { animationIdFor, keysForChapter, lookupKey } from '@/lib/algorithms/tutorial-keys';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../..');
 

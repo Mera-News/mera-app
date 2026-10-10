@@ -2,7 +2,7 @@
 import React from 'react';
 import { createInput } from '@gluestack-ui/core/input/creator';
 import { View, Pressable, TextInput } from 'react-native';
-import { maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/typography/policy';
+import { maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/algorithms/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
 import {
   tva,

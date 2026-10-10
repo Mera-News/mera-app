@@ -83,7 +83,7 @@ import {
 import {
     repPriorityTier,
     type UserGeoLanguageContext,
-} from '@/lib/feed-grouping/geo-language-priority';
+} from '@/lib/algorithms/geo-language-priority';
 import {
     batchMarkAlreadyRead,
     loadReadStoryIndex,

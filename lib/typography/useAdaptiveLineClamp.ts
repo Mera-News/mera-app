@@ -1,6 +1,6 @@
 import { useWindowDimensions } from 'react-native';
 import { useTextScale } from './TextScaleContext';
-import { MAX_FONT_SCALE } from './policy';
+import { MAX_FONT_SCALE } from '../algorithms/policy';
 
 /**
  * A `numberOfLines` clamp that grows as text grows.

@@ -172,7 +172,7 @@ describe('resolveTreeLevel', () => {
 });
 
 describe('resolveTreeLevel: the flat dislike root (shipped tree)', () => {
-    const { BUNDLED_FEEDBACK_TREE } = require('@/lib/services/feedback-tree-snapshot');
+    const { BUNDLED_FEEDBACK_TREE } = require('@/lib/algorithms/feedback-tree-snapshot');
     const CTX: LocalFeedbackContext = { matchedTopics: [{ topicId: 't1', text: 'cricket' }] };
 
     it('promotes the one-tap "not_important" leaf to the head of the dislike root', () => {

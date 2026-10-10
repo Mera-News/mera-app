@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type PublicationPreferenceModel from '@/lib/database/models/PublicationPreference';
 import type UserPublicationSubscriptionModel from '@/lib/database/models/UserPublicationSubscription';
-import { resolvePrefLevel } from '@/lib/database/services/publication-pref-level';
+import { resolvePrefLevel } from '@/lib/algorithms/publication-pref-level';
 import {
     observeActive,
     weightToPrefKind,
