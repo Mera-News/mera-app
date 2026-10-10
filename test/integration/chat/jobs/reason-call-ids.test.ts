@@ -7,7 +7,7 @@
 // reasons submit; the wire is read with captureJobPosts (gzip body inflated) and gatewayCalls('job').
 // A bug is a `test.failing` for the correct behaviour plus a passing "today" sibling (R14).
 import { runBackgroundCycle } from '@/lib/background/run-inference-handler';
-import { resolveReasonResultIds } from '@/lib/mera-protocol/scoring-service';
+import { buildReasonCallsForSurvivors, resolveReasonCallId, resolveReasonResultIds } from '@/lib/mera-protocol/scoring-service';
 import { gatewayCalls, server } from '@/test/helpers';
 import {
   captureJobPosts,
@@ -77,5 +77,20 @@ describe('reasons call ids', () => {
     );
     // reason:2 is outside the list and dropped; the 24-hex id is an old-form id and passes through.
     expect(out.map((r) => r.id)).toEqual(['reason:a2', 'reason:a1', 'reason:65f1c0a2b3d4e5f607182930', 'score:0']);
+  });
+
+  it('in-process reasons: a survivor with no score gets no call, and positions map only to calls that were made', () => {
+    const candidate = (id: string) =>
+      ({ id, titleEn: `Title ${id}`, descriptionEn: `Description ${id}`, countryCode: null, languageCode: 'en', relatedFacts: [] }) as never;
+    const scores = new Map([
+      ['a1', 0.8],
+      ['a3', 0.9],
+    ]);
+    const bundle = buildReasonCallsForSurvivors([candidate('a1'), candidate('a2'), candidate('a3')], scores, []);
+
+    expect(bundle.calls.map((c) => c.id)).toEqual(['reason:0', 'reason:1']);
+    const ordered = bundle.eligibleCandidates.map((c) => c.id);
+    expect(ordered).toEqual(['a1', 'a3']);
+    expect(resolveReasonCallId('reason:1', ordered)).toBe('reason:a3');
   });
 });

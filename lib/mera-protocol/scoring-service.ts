@@ -477,13 +477,16 @@ export async function batchScoreAndReason(
  * Sync cloud phase-2: build reason BatchCalls for the survivors — candidates
  * whose phase-1 score cleared REASON_THRESHOLD.
  */
-function buildReasonCallsForSurvivors(
+export function buildReasonCallsForSurvivors(
   survivors: ScoringCandidate[],
   scoreMap: Map<string, number>,
   allFactStatements: string[],
 ): CloudCallBundle {
   const calls: BatchCall[] = [];
   const promptsById = new Map<string, string>();
+  // In call order: position n of a `reason:<n>` id maps to called[n], never to a
+  // survivor that was skipped and got no call.
+  const called: ScoringCandidate[] = [];
   const fullUserContext = buildUserContext(allFactStatements);
 
   for (const c of survivors) {
@@ -503,6 +506,7 @@ function buildReasonCallsForSurvivors(
     });
     const reasonId = `reason:${calls.length}`;
     promptsById.set(reasonId, reasonPrompt);
+    called.push(c);
     calls.push({
       id: reasonId,
       // P4b: a TOP-HEADLINE row gets the headline reason prompt (same impact
@@ -523,7 +527,7 @@ function buildReasonCallsForSurvivors(
     calls,
     promptsById,
     chunkIdToCandidates: new Map(),
-    eligibleCandidates: survivors,
+    eligibleCandidates: called,
   };
 }
 
