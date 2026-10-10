@@ -29,6 +29,7 @@ import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import type TranslationCache from '../models/TranslationCache';
 import logger from '../../logger';
+import { fnv1a32 } from '@/lib/algorithms/fnv1a';
 
 /** Rows untouched for this long are swept on the next hydrate. */
 export const TRANSLATION_CACHE_TTL_DAYS = 30;
@@ -66,13 +67,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * `source_text` is stored and compared on read, so the worst case is a miss.
  */
 export function hashSourceText(text: string): string {
-    let hash = 0x811c9dc5;
-    for (let i = 0; i < text.length; i++) {
-        hash ^= text.charCodeAt(i);
-        // 32-bit FNV prime multiply, kept in range via Math.imul.
-        hash = Math.imul(hash, 0x01000193) >>> 0;
-    }
-    return `${hash.toString(16)}${text.length.toString(36)}`;
+    return `${fnv1a32(text).toString(16)}${text.length.toString(36)}`;
 }
 
 /** The WatermelonDB row id for one (text, language) pair — the primary key. */
