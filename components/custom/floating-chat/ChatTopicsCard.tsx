@@ -174,7 +174,6 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
     return () => clearTimeout(timer);
   }, [status, isRetrying]);
 
-
   /** Live chips plus the staged-for-deletion ones, each back at its own index
    *  so removing a chip does not reflow the ones around it. */
   const visible = useMemo(() => {
