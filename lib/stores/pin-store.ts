@@ -3,15 +3,53 @@ import { create } from 'zustand';
 import { holdRestart, restartContext, type RestartContext } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import {
-  isAppLockEnabled as readIsAppLockEnabled,
+  readAppLockState,
   setAppLockEnabled as persistAppLockEnabled,
 } from '@/lib/security/app-lock-service';
-import { clearPin, isPinSet as readIsPinSet } from '@/lib/security/pin-service';
+import { clearPin, readPinRecordState } from '@/lib/security/pin-service';
 import { runPinForceResetOnce } from '@/lib/security/pin-force-reset';
 
 // Re-lock the app when it returns to the foreground after more than this long
 // in the background. Cold start with the lock enabled always locks.
 export const BACKGROUND_LOCK_THRESHOLD_MS = 5 * 60_000;
+
+// A foreground launch whose keychain reads both fail re-reads this many more times, this far apart,
+// before failing closed.
+export const GATE_READ_RETRIES = 3;
+export const GATE_READ_RETRY_MS = 500;
+
+interface Gate {
+  lockEnabled: boolean;
+  pinSet: boolean;
+}
+const FAIL_CLOSED: Gate = { lockEnabled: true, pinSet: true };
+
+const unreadable = (err: unknown) => {
+  logger.captureException(err, { tags: { store: 'pin-store', method: 'init' } });
+  return 'unreadable' as const;
+};
+
+/**
+ * Reads the flag and the PIN record and decides the gate. An unreadable read is never taken as
+ * "off" or "no PIN": the record is the tie-break (a record present means the lock was on, because
+ * the lock-off path always deletes it). Returns null when both reads fail and nothing can be
+ * decided. The one deletion is a record found under a flag that READ as off.
+ */
+async function readGate(): Promise<Gate | null> {
+  const [record, flag] = await Promise.all([
+    readPinRecordState().catch(unreadable),
+    readAppLockState().catch(unreadable),
+  ]);
+  if (flag === 'unreadable') {
+    if (record === 'unreadable') return null;
+    return { lockEnabled: record === 'set', pinSet: record === 'set' };
+  }
+  if (flag === 'on') return { lockEnabled: true, pinSet: record !== 'absent' };
+  // Invariant: lock off ⇒ no PIN record. This is what disables the gate for users who set a PIN
+  // back when it was mandatory; drop the stale hash rather than keep one nobody can reach.
+  if (record === 'set') await clearPin();
+  return { lockEnabled: false, pinSet: false };
+}
 
 /**
  * Pure lock-timing decision, extracted for unit testing. Locks only when the
@@ -37,6 +75,11 @@ interface PinState {
   locked: boolean;
   lastBackgroundedAt: number | null;
   initialized: boolean;
+  /**
+   * In memory only. init() ran in the background (before first unlock) and could read neither the
+   * flag nor the record, so it committed "no lock" to defer; the next foreground re-reads.
+   */
+  unresolved: boolean;
 
   init: () => Promise<void>;
   setPinSet: (v: boolean) => void;
@@ -53,6 +96,7 @@ export const usePinStore = create<PinState>()((set, get) => ({
   locked: false,
   lastBackgroundedAt: null,
   initialized: false,
+  unresolved: false,
 
   // Reads the opt-in flag and the on-device PIN record, and engages the lock on
   // cold start when both are present. Idempotent — safe to call from both the
@@ -73,8 +117,6 @@ export const usePinStore = create<PinState>()((set, get) => ({
   // than reading `wasJsRestartSync()`. Both callers end up on one marker read.
   init: async () => {
     if (get().initialized) return;
-    let pinSet = false;
-    let lockEnabled = false;
     // Fails to "cold start", which is the locking side. An unreadable marker
     // must never be the reason a PIN gate does not engage.
     let restart: RestartContext = {
@@ -87,26 +129,28 @@ export const usePinStore = create<PinState>()((set, get) => ({
     } catch (err) {
       logger.captureException(err, { tags: { store: 'pin-store', method: 'init-restart' } });
     }
+    // One-shot PIN gate reset (see pin-force-reset.ts). Deliberately BEFORE the reads below:
+    // app/index.tsx awaits init() before resolveLaunchRoute, so a device cleared here reports
+    // lockEnabled:false on the very launch that clears it and cannot be routed to /pin-lock on the
+    // way through. Its own try, so a throwing reset never discards the reads.
     try {
-      // One-shot PIN gate reset (see pin-force-reset.ts). Deliberately BEFORE the
-      // reads below: app/index.tsx awaits init() before resolveLaunchRoute, so a
-      // device cleared here reports lockEnabled:false on the very launch that
-      // clears it and cannot be routed to /pin-lock on the way through.
       await runPinForceResetOnce();
-
-      [pinSet, lockEnabled] = await Promise.all([readIsPinSet(), readIsAppLockEnabled()]);
-
-      // Invariant: lock off ⇒ no PIN record. This is what disables the gate for
-      // users who set a PIN back when it was mandatory — they carry a record
-      // but no opt-in flag, so we drop the stale record here rather than keep a
-      // hash nobody can reach. Re-enabling always writes a fresh PIN.
-      if (!lockEnabled && pinSet) {
-        await clearPin();
-        pinSet = false;
-      }
     } catch (err) {
       logger.captureException(err, { tags: { store: 'pin-store', method: 'init' } });
     }
+
+    // Both reads failing is a keychain that is not open yet. In the foreground that is worth a few
+    // more tries, then it fails CLOSED (Forgot PIN on /pin-lock is the way out). In the background
+    // (a wake before first unlock) the person cannot be looking at a PIN screen, so defer: commit
+    // "no lock" and let the next foreground re-read (resolveUnresolved).
+    const foreground = AppState.currentState === 'active';
+    let gate = await readGate();
+    for (let i = 0; gate == null && foreground && i < GATE_READ_RETRIES; i += 1) {
+      await new Promise<void>((resolve) => setTimeout(resolve, GATE_READ_RETRY_MS));
+      gate = await readGate();
+    }
+    const unresolved = gate == null && !foreground;
+    const { lockEnabled, pinSet } = gate ?? (unresolved ? { lockEnabled: false, pinSet: false } : FAIL_CLOSED);
     set({
       pinSet,
       lockEnabled,
@@ -119,6 +163,7 @@ export const usePinStore = create<PinState>()((set, get) => ({
         ? shouldLockAfterBackground(restart.backgroundedAt, Date.now(), pinSet, lockEnabled)
         : lockEnabled && pinSet,
       initialized: true,
+      unresolved,
     });
     syncRestartHold(get().locked);
     ensureRestartHoldSync();
@@ -128,6 +173,7 @@ export const usePinStore = create<PinState>()((set, get) => ({
   setPinSet: (v) =>
     set({
       pinSet: v,
+      unresolved: false,
       // Setting a PIN implies the user just entered it (setup/change), so we
       // don't re-lock here. Clearing a PIN (reauth/logout) also unlocks.
       locked: false,
@@ -145,8 +191,8 @@ export const usePinStore = create<PinState>()((set, get) => ({
     await persistAppLockEnabled(enabled);
     set(
       enabled
-        ? { lockEnabled: true, locked: false }
-        : { lockEnabled: false, pinSet: false, locked: false, lastBackgroundedAt: null },
+        ? { lockEnabled: true, locked: false, unresolved: false }
+        : { lockEnabled: false, pinSet: false, locked: false, lastBackgroundedAt: null, unresolved: false },
     );
   },
 
@@ -218,6 +264,20 @@ function ensureRestartHoldSync(): void {
   });
 }
 
+// The first foreground after a deferred init(): read once more, decide with the same table, and set
+// `locked` with cold-start semantics (the person has not passed the gate in this process). Still
+// unreadable in the foreground fails closed, as init() does.
+async function resolveUnresolved(): Promise<void> {
+  const { lockEnabled, pinSet } = (await readGate()) ?? FAIL_CLOSED;
+  usePinStore.setState({
+    lockEnabled,
+    pinSet,
+    locked: lockEnabled && pinSet,
+    lastBackgroundedAt: null,
+    unresolved: false,
+  });
+}
+
 let appStateSubscribed = false;
 
 // Subscribe once. Record a timestamp when the app truly backgrounds; on the
@@ -231,7 +291,8 @@ function ensureAppStateListener(): void {
     if (status === 'background') {
       usePinStore.getState().markBackgrounded();
     } else if (status === 'active') {
-      usePinStore.getState().handleForeground();
+      if (usePinStore.getState().unresolved) void resolveUnresolved();
+      else usePinStore.getState().handleForeground();
     }
   });
 }

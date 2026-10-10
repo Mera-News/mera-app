@@ -2,13 +2,13 @@
 // store's init() and the reauth handler (invariant 7). Real secure store, DB, SHA-256 and stores;
 // the clock is the only thing faked.
 import { createHash } from 'node:crypto';
-import { act, renderHook } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useReauthSuccess } from '@/components/custom/auth/useReauthSuccess';
 import { __resetAppRestartForTests, activeHolds, requestRestart, restartContext } from '@/lib/app-restart';
 import { setSetting } from '@/lib/database/services/setting-service';
-import { isAppLockEnabled, setAppLockEnabled } from '@/lib/security/app-lock-service';
+import { isAppLockEnabled, readAppLockState, setAppLockEnabled } from '@/lib/security/app-lock-service';
 import { resolveLaunchRoute } from '@/lib/security/launch-route';
 import { runPinForceResetOnce } from '@/lib/security/pin-force-reset';
 import {
@@ -17,13 +17,22 @@ import {
     cooldownForFailCount,
     getCooldownRemainingMs,
     isPinSet,
+    readPinRecordState,
     setPin,
     verifyPin,
 } from '@/lib/security/pin-service';
 import logger from '@/lib/logger';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
-import { FIXTURE_ACCOUNT, failSecureStore, secureStoreDump, setAppState, useFakeClock } from '@/test/helpers';
+import {
+    FIXTURE_ACCOUNT,
+    advanceUntilDone,
+    failSecureStore,
+    healSecureStore,
+    secureStoreDump,
+    setAppState,
+    useFakeClock,
+} from '@/test/helpers';
 
 // The restart marker is written by requestRestart, which only acts on a build with updates on.
 jest.mock('expo-updates', () => ({ isEnabled: true, reloadAsync: jest.fn(async () => undefined) }));
@@ -44,6 +53,7 @@ const PIN_STORE_DEFAULTS = {
     locked: false,
     lastBackgroundedAt: null,
     initialized: false,
+    unresolved: false,
 };
 
 /** A device that has opted in and set a PIN, after the one-shot reset has already run. */
@@ -114,10 +124,21 @@ describe('pin-service', () => {
         expect(dump()[ATTEMPTS_KEY]).toBeUndefined();
     });
 
-    it('PE8 today: an unreadable record reads as no PIN set', async () => {
+    it('readPinRecordState tells an unreadable record from an absent or legacy one, and never rejects', async () => {
+        expect(await readPinRecordState()).toBe('absent');
+        await setPin('1234');
+        expect(await readPinRecordState()).toBe('set');
+
+        await secureStore.setItemAsync(RECORD_KEY, JSON.stringify({ saltHex: 'aa', hashHex: 'bb', createdAt: 1 }));
+        expect(await readPinRecordState()).toBe('absent');
+
+        await secureStore.setItemAsync(RECORD_KEY, '{not json');
+        expect(await readPinRecordState()).toBe('unreadable');
+
         await setPin('1234');
         failSecureStore(RECORD_KEY, 'get');
-
+        expect(await readPinRecordState()).toBe('unreadable');
+        // isPinSet keeps its boolean: only a usable record counts.
         expect(await isPinSet()).toBe(false);
     });
 
@@ -298,6 +319,16 @@ describe('app-lock-service', () => {
         failSecureStore(LOCK_KEY, 'get', new Error('keychain unavailable'));
 
         expect(await isAppLockEnabled()).toBe(false);
+    });
+
+    it('readAppLockState tells on, off and unreadable apart, and never rejects', async () => {
+        expect(await readAppLockState()).toBe('off');
+        await setAppLockEnabled(true);
+        expect(await readAppLockState()).toBe('on');
+        await secureStore.setItemAsync(LOCK_KEY, 'true');
+        expect(await readAppLockState()).toBe('off');
+        failSecureStore(LOCK_KEY, 'get', new Error('keychain unavailable'));
+        expect(await readAppLockState()).toBe('unreadable');
     });
 
     it('propagates a write failure so the caller can keep the UI honest', async () => {
@@ -629,15 +660,8 @@ describe('an unreadable PIN record at launch', () => {
         return resolveLaunchRoute({ hasIdentity: true, ...usePinStore.getState() });
     }
 
-    test.failing('B8 an unreadable PIN record keeps the lock engaged', async () => {
+    test('B8 an unreadable PIN record keeps the lock engaged', async () => {
         expect(await launchWithUnreadableRecord()).toBe('/pin-lock');
-    });
-
-    test('B8 today: an unreadable PIN record reads as no PIN, so the launch goes straight in', async () => {
-        expect(await launchWithUnreadableRecord()).toBe('/logged-in');
-        expect(usePinStore.getState()).toMatchObject({ lockEnabled: true, pinSet: false, locked: false });
-        // Nothing was deleted: the record is still there once the keychain heals.
-        expect(dump()[RECORD_KEY]).toBeDefined();
     });
 });
 
@@ -652,13 +676,8 @@ describe('an unreadable lock flag at launch', () => {
         return resolveLaunchRoute({ hasIdentity: true, ...usePinStore.getState() });
     }
 
-    test.failing('PE8b an unreadable lock flag with a PIN record present keeps the lock engaged', async () => {
+    test('PE8b an unreadable lock flag with a PIN record present keeps the lock engaged', async () => {
         expect(await launchWithUnreadableFlag({ pinSet: true })).toBe('/pin-lock');
-    });
-
-    it('PE8b today: an unreadable lock flag with a PIN record present reads as lock off, so the launch goes straight in', async () => {
-        expect(await launchWithUnreadableFlag({ pinSet: true })).toBe('/logged-in');
-        expect(usePinStore.getState()).toMatchObject({ lockEnabled: false, locked: false });
     });
 
     it('an unreadable lock flag with no PIN record opens the app', async () => {
@@ -666,15 +685,100 @@ describe('an unreadable lock flag at launch', () => {
         expect(usePinStore.getState()).toMatchObject({ pinSet: false, locked: false, initialized: true });
     });
 
-    test.failing('PE22 an unreadable lock flag never deletes the PIN record', async () => {
+    test('PE22 an unreadable lock flag never deletes the PIN record', async () => {
         await launchWithUnreadableFlag({ pinSet: true });
 
         expect(dump()[RECORD_KEY]).toBeDefined();
     });
+});
 
-    it('PE22 today: an unreadable lock flag reads as lock off, so init() deletes the PIN record', async () => {
-        await launchWithUnreadableFlag({ pinSet: true });
+describe('both PIN reads unreadable at launch (PE20)', () => {
+    /** Lock on and a PIN set on disk; the launch cannot read either slot. */
+    async function enrolThenBreakKeychain() {
+        await enrolDevice();
+        failSecureStore(RECORD_KEY, 'get');
+        failSecureStore(LOCK_KEY, 'get');
+        usePinStore.setState(PIN_STORE_DEFAULTS);
+    }
+    const heal = () => {
+        healSecureStore(RECORD_KEY);
+        healSecureStore(LOCK_KEY);
+    };
+    afterEach(() => jest.restoreAllMocks());
 
-        expect(dump()[RECORD_KEY]).toBeUndefined();
+    it('a background launch defers: no lock, nothing deleted, then the next foreground re-reads and locks', async () => {
+        await enrolThenBreakKeychain();
+        setAppState('background');
+
+        await usePinStore.getState().init();
+
+        expect(usePinStore.getState()).toMatchObject({
+            pinSet: false,
+            lockEnabled: false,
+            locked: false,
+            initialized: true,
+            unresolved: true,
+        });
+        expect(resolveLaunchRoute({ hasIdentity: true, ...usePinStore.getState() })).toBe('/logged-in');
+        expect(dump()[RECORD_KEY]).toBeDefined();
+        expect(dump()[LOCK_KEY]).toBe('1');
+
+        heal();
+        setAppState('active');
+        await waitFor(() => expect(usePinStore.getState().unresolved).toBe(false));
+
+        expect(usePinStore.getState()).toMatchObject({ pinSet: true, lockEnabled: true, locked: true });
+        expect(activeHolds()).toContain('pin-lock');
+        expect(dump()[RECORD_KEY]).toBeDefined();
+    });
+
+    it('a background launch on a device with no PIN opens on the foreground and stays open', async () => {
+        await runPinForceResetOnce();
+        failSecureStore(RECORD_KEY, 'get');
+        failSecureStore(LOCK_KEY, 'get');
+        setAppState('background');
+        await usePinStore.getState().init();
+        expect(usePinStore.getState()).toMatchObject({ locked: false, unresolved: true });
+
+        heal();
+        setAppState('active');
+        await waitFor(() => expect(usePinStore.getState().unresolved).toBe(false));
+
+        expect(usePinStore.getState()).toMatchObject({ pinSet: false, lockEnabled: false, locked: false });
+    });
+
+    /** Counts reads of the PIN record slot, calling through; `healAt` heals both slots on that read. */
+    function countRecordReads(healAt = Infinity) {
+        const real = secureStore.getItemAsync.bind(secureStore);
+        let reads = 0;
+        jest.spyOn(secureStore, 'getItemAsync').mockImplementation(async (key: string) => {
+            if (key === RECORD_KEY && ++reads === healAt) heal();
+            return real(key);
+        });
+        return () => reads;
+    }
+
+    it('a foreground launch re-reads up to three times, 500 ms apart, and finds the keychain once it opens', async () => {
+        useFakeClock(Date.now());
+        await enrolThenBreakKeychain();
+        const reads = countRecordReads(3);
+
+        await advanceUntilDone(usePinStore.getState().init());
+
+        // The keychain opens on the third read of the record: the launch read it, then two retries.
+        expect(reads()).toBe(3);
+        expect(usePinStore.getState()).toMatchObject({ pinSet: true, lockEnabled: true, locked: true, unresolved: false });
+    });
+
+    it('a foreground launch whose keychain stays closed fails closed after 1 + 3 reads, deleting nothing', async () => {
+        useFakeClock(Date.now());
+        await enrolThenBreakKeychain();
+        const reads = countRecordReads();
+
+        await advanceUntilDone(usePinStore.getState().init());
+
+        expect(reads()).toBe(4);
+        expect(usePinStore.getState()).toMatchObject({ pinSet: true, lockEnabled: true, locked: true, unresolved: false });
+        expect(dump()[RECORD_KEY]).toBeDefined();
     });
 });

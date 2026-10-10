@@ -41,7 +41,7 @@ import {
   shouldLockAfterBackground,
   usePinStore,
 } from '@/lib/stores/pin-store';
-import { failSecureStore, healSecureStore, secureStoreDump, setAppState, useStrictClock } from '@/test/helpers';
+import { advanceUntilDone, failSecureStore, healSecureStore, secureStoreDump, setAppState, useStrictClock } from '@/test/helpers';
 import { resetStore, settle } from './support';
 
 const NOW = Date.parse('2026-10-09T10:00:00.000Z');
@@ -198,40 +198,41 @@ describe('pin-store', () => {
     });
 
     // runPinForceResetOnce is total by contract, so init's own catch is reachable only by making the
-    // collaborator throw (R23: one call of a real export). Failing OPEN is right for a lock: failing
-    // closed strands the user on a screen no entry can satisfy.
-    it('PE18 today: a reset that throws still leaves the gate OFF and does not block launch', async () => {
+    // collaborator throw (R23: one call of a real export). A throwing reset must not discard the
+    // reads: the gate is decided from them, and a lock that is on stays on.
+    it('PE18 a reset that throws still leaves the gate decided from the reads (lock on, PIN set, locked)', async () => {
       await seedLock();
       const err = new Error('keychain');
       spy(pinForceReset, 'runPinForceResetOnce').mockRejectedValueOnce(err);
 
       await store().init();
 
-      expect(store()).toMatchObject({ pinSet: false, lockEnabled: false, locked: false, initialized: true });
+      expect(store()).toMatchObject({ pinSet: true, lockEnabled: true, locked: true, initialized: true });
       expect(logger.captureException).toHaveBeenCalledWith(err, { tags: { store: 'pin-store', method: 'init' } });
     });
 
-    it('PE18 today: a PIN read that throws leaves the gate OFF too', async () => {
+    it('PE18 a PIN read that throws fails closed: the lock was on, so the gate stays engaged', async () => {
       await seedLock();
       const err = new Error('keychain locked');
-      spy(pinService, 'isPinSet').mockRejectedValueOnce(err);
+      spy(pinService, 'readPinRecordState').mockRejectedValueOnce(err);
 
       await store().init();
 
-      expect(store()).toMatchObject({ pinSet: false, lockEnabled: false, locked: false, initialized: true });
+      expect(store()).toMatchObject({ pinSet: true, lockEnabled: true, locked: true, initialized: true });
       expect(logger.captureException).toHaveBeenCalledWith(err, { tags: { store: 'pin-store', method: 'init' } });
     });
 
-    // PE20: init() commits `initialized: true` even when its reads failed, so it never re-reads in
-    // this process. A launch before first unlock (a background wake) latches "no lock", and the
-    // foreground that follows opens without the PIN.
+    // PE20: a launch whose reads both fail. In the foreground init() re-reads, then fails closed; in
+    // the background it defers and the next foreground re-reads (see test/integration/persona/pin.test.ts).
+    // This one runs with AppState active, so init() takes the foreground path: the strict clock is
+    // driven through its retry waits and the gate still ends locked.
     describe('a launch whose PIN reads failed (before first unlock)', () => {
       /** Lock on and a PIN set on disk; the launch cannot read either; then the keychain opens. */
       async function launchWithFailedReads() {
         await seedLock();
         failSecureStore(PIN_RECORD_KEY, 'get');
         failSecureStore(LOCK_FLAG_KEY, 'get');
-        await store().init();
+        await advanceUntilDone(store().init());
         healSecureStore(PIN_RECORD_KEY);
         healSecureStore(LOCK_FLAG_KEY);
         setAppState('background');
@@ -240,17 +241,9 @@ describe('pin-store', () => {
         await settle();
       }
 
-      test.failing('PE20 a launch whose PIN reads failed re-reads them on the next foreground and locks', async () => {
+      test('PE20 a launch whose PIN reads failed re-reads them on the next foreground and locks', async () => {
         await launchWithFailedReads();
         expect(store().locked).toBe(true);
-      });
-
-      it('PE20 today: the failed reads are latched for the process and the foreground opens without the PIN', async () => {
-        await launchWithFailedReads();
-
-        expect(store()).toMatchObject({ pinSet: false, lockEnabled: false, locked: false, initialized: true });
-        expect(await isPinSet()).toBe(true);
-        expect(await isAppLockEnabled()).toBe(true);
       });
     });
   });

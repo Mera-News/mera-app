@@ -20,10 +20,10 @@
 // there IS now exactly one version marker in this area — `_pin_force_reset_v1`
 // — and it is owned by that file. Do not add a second; extend the shape there.
 //
-// A read failure also resolves to false: the alternative is showing a PIN
-// screen to someone who may have no usable PIN, which is an unrecoverable
-// lockout. The lock protects on-device data that the OS keychain already
-// guards, so failing open is the right trade.
+// isAppLockEnabled() resolves a read failure to false, but the launch gate does
+// not use it: pin-store reads readAppLockState() and decides an unreadable flag
+// from the PIN record (a record present means the lock was on). Forgot PIN on
+// /pin-lock is the way out of every fail-closed state.
 //
 // Invariant maintained by the callers (pin-store): flag off ⇒ no PIN record.
 // Turning the lock off clears the record, and init() clears any record it finds
@@ -37,22 +37,29 @@ import logger from '../logger';
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
 const APP_LOCK_ENABLED_KEY = `${APP_SLUG}_app_lock_enabled`;
 
-/** Whether the user has opted into the PIN gate. Absent / unreadable ⇒ false. */
-export async function isAppLockEnabled(): Promise<boolean> {
+/**
+ * The stored preference, without ever rejecting. A read that throws is
+ * 'unreadable', not 'off': pin-store decides what an unreadable flag means
+ * (it keeps the lock when a PIN record exists).
+ */
+export async function readAppLockState(): Promise<'on' | 'off' | 'unreadable'> {
   const start = Date.now();
   try {
     const raw = await secureStore.getItemAsync(APP_LOCK_ENABLED_KEY);
-    const enabled = raw === '1';
-    logger.info(
-      `[pin-timing] isAppLockEnabled read=${Date.now() - start}ms result=${enabled}`,
-    );
-    return enabled;
+    const state = raw === '1' ? 'on' : 'off';
+    logger.info(`[pin-timing] isAppLockEnabled read=${Date.now() - start}ms result=${state === 'on'}`);
+    return state;
   } catch (err) {
     logger.captureException(err, {
-      tags: { service: 'app-lock-service', method: 'isAppLockEnabled' },
+      tags: { service: 'app-lock-service', method: 'readAppLockState' },
     });
-    return false;
+    return 'unreadable';
   }
+}
+
+/** Whether the user has opted into the PIN gate. Absent / unreadable ⇒ false. */
+export async function isAppLockEnabled(): Promise<boolean> {
+  return (await readAppLockState()) === 'on';
 }
 
 /**

@@ -143,10 +143,28 @@ function isUsableRecord(record: PinRecord): boolean {
   return record.algo === PIN_ALGO;
 }
 
+/**
+ * What the keychain says about the PIN record, without ever rejecting. A failed
+ * read or a record that will not parse is 'unreadable', which is NOT 'absent':
+ * callers that gate the app must not treat "could not look" as "no PIN".
+ * A legacy-algorithm record keeps its old meaning, 'absent' (see above).
+ */
+export type PinRecordState = 'set' | 'absent' | 'unreadable';
+
+export async function readPinRecordState(): Promise<PinRecordState> {
+  try {
+    const raw = await secureStore.getItemAsync(PIN_RECORD_KEY);
+    if (!raw) return 'absent';
+    return isUsableRecord(JSON.parse(raw) as PinRecord) ? 'set' : 'absent';
+  } catch (err) {
+    logger.captureException(err, { tags: { service: 'pin-service', method: 'readPinRecordState' } });
+    return 'unreadable';
+  }
+}
+
 export async function isPinSet(): Promise<boolean> {
   const start = Date.now();
-  const record = await readRecord();
-  const result = record !== null && isUsableRecord(record);
+  const result = (await readPinRecordState()) === 'set';
   logger.info(`[pin-timing] isPinSet read=${Date.now() - start}ms result=${result}`);
   return result;
 }
