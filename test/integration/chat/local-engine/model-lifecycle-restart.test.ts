@@ -93,17 +93,11 @@ async function reloadModelWhileJobRuns(): Promise<{ runs: number; status: string
 }
 
 describe('a model reload while a job is running', () => {
-  test.failing('CH13: a model reload mid-job does not run the job again', async () => {
+  test('CH13: a model reload mid-job does not run the job again', async () => {
     const { runs, status } = await reloadModelWhileJobRuns();
 
     expect(status).toBe('done');
     expect(runs).toBe(1);
   });
 
-  it('CH13 today: a model reload mid-job runs the job twice', async () => {
-    const { runs, status } = await reloadModelWhileJobRuns();
-
-    expect(status).toBe('done');
-    expect(runs).toBe(2);
-  });
 });

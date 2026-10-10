@@ -1,8 +1,7 @@
-// CH13: InferenceQueue.stop() sets `stopped` at once but then waits for the in-flight job, and
-// start() only returns early on `running`. A start() during that wait re-pends the still-`running`
-// row (recoverCrashedJobs), and a second consume loop dequeues it (dequeueJob is a read, not a
-// claim), so the handler runs twice. The real trigger is useModelLifecycle effect 3; the same
-// outcome through the hook is pinned in local-engine/model-lifecycle-restart.test.ts.
+// CH13: a start() during a stop() that is still waiting on an in-flight job must wait for that stop,
+// or it re-pends the still-`running` row and a second loop runs the job again. The real trigger is
+// useModelLifecycle effect 3; the same outcome through the hook is pinned in
+// local-engine/model-lifecycle-restart.test.ts.
 //
 // Real queue, real in-memory DB; the only fake is the handler, through the queue's own seam.
 import { inferenceQueue, __setJobHandlerForTests } from '@/lib/inference/InferenceQueue';
@@ -27,8 +26,7 @@ async function restartWhileJobRuns(): Promise<{ runs: number; status: string | u
   for (let i = 0; i < 6; i++) await tick(500);
 
   job.release();
-  // The stop() is not awaited: with the bug the old loop never sees `stopped` again (the restart
-  // set `running`), so that promise never settles.
+  // The stop() is not awaited: the restart's start() waits for it.
   await driveDone(starting);
   await untilJob(id, ['done']);
   for (let i = 0; i < 6; i++) await tick(500);
@@ -37,24 +35,17 @@ async function restartWhileJobRuns(): Promise<{ runs: number; status: string | u
 }
 
 describe('a restart while a job is running', () => {
-  test.failing('CH13: a start while the previous stop waits on a job does not run that job again', async () => {
+  test('CH13: a start while the previous stop waits on a job does not run that job again', async () => {
     const { runs, status } = await restartWhileJobRuns();
 
     expect(status).toBe('done');
     expect(runs).toBe(1);
   });
 
-  it('CH13 today: a start while the previous stop waits on a job runs that job twice', async () => {
-    const { runs, status } = await restartWhileJobRuns();
-
-    expect(status).toBe('done');
-    expect(runs).toBe(2);
-  });
 });
 
-// The other half of CH13: chat pauses the queue for exclusive llama.rn access (`pause()`), and
-// start() only returns early on `running`, so a start() during the pause (useModelLifecycle effect
-// 3 on a model reload) flips `paused` to `running` and a second loop runs jobs under chat.
+// The other half of CH13: chat pauses the queue for exclusive llama.rn access (`pause()`), and a
+// start() during the pause (useModelLifecycle effect 3 on a model reload) must leave it paused.
 
 /** Queue started and paused the way chat does, one job already in the table (no notify()), then a
  *  start() lands. Ticks pass with chat still holding the pause. */
@@ -72,7 +63,7 @@ async function startWhileChatHoldsPause() {
 }
 
 describe('a start while chat holds the queue paused', () => {
-  test.failing('CH13: start() while chat holds the queue paused does not run jobs until resume()', async () => {
+  test('CH13: start() while chat holds the queue paused does not run jobs until resume()', async () => {
     const { handler, id, stateAfterStart } = await startWhileChatHoldsPause();
 
     expect(stateAfterStart).toBe('paused');
@@ -83,11 +74,4 @@ describe('a start while chat holds the queue paused', () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it('CH13 today: start() while chat holds the queue paused runs the job under chat', async () => {
-    const { handler, id, stateAfterStart } = await startWhileChatHoldsPause();
-
-    expect(stateAfterStart).toBe('running');
-    expect(handler).toHaveBeenCalledTimes(1);
-    expect((await jobRow(id))?.status).toBe('done');
-  });
 });

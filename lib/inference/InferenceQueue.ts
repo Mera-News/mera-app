@@ -116,6 +116,12 @@ const PRUNE_AGE_MS = 60 * 60 * 1000; // 1 hour
 class InferenceQueueImpl {
   private state: QueueState = 'stopped';
   private loopPromise: Promise<void> | null = null;
+  /** The in-flight stop(): a start() during it must wait, or it re-pends the job the old loop is still running. */
+  private stopping: Promise<void> | null = null;
+  /** The in-flight start(): concurrent callers share it so two loops can never be created. */
+  private starting: Promise<void> | null = null;
+  /** Only the first start of a process can find a crash leftover in 'running'; later ones find live jobs. */
+  private recoveredThisProcess = false;
   private wakeResolver: (() => void) | null = null;
   private sleepTimer: ReturnType<typeof setTimeout> | null = null;
   private currentJobPromise: Promise<void> | null = null;
@@ -141,10 +147,21 @@ class InferenceQueueImpl {
    * Idempotent — safe to call multiple times.
    */
   async start(): Promise<void> {
-    if (this.state === 'running') return;
+    if (this.stopping) await this.stopping;
+    // 'paused' is started: chat holds it, and start() must not hand llama.rn back to the queue.
+    if (this.state !== 'stopped') return;
+    this.starting ??= this.doStart().finally(() => {
+      this.starting = null;
+    });
+    return this.starting;
+  }
 
+  private async doStart(): Promise<void> {
     // Recover any jobs that were 'running' when the app crashed
-    await recoverCrashedJobs();
+    if (!this.recoveredThisProcess) {
+      await recoverCrashedJobs();
+      this.recoveredThisProcess = true;
+    }
     // Prune old completed jobs
     const pruneDate = new Date(Date.now() - PRUNE_AGE_MS);
     await pruneCompletedJobs(pruneDate).catch(() => {});
@@ -215,16 +232,19 @@ class InferenceQueueImpl {
    * Waits for the current job to finish, then stops.
    */
   async stop(): Promise<void> {
-    if (this.state === 'stopped') return;
+    if (this.state === 'stopped') return this.stopping ?? undefined;
 
     this.state = 'stopped';
     this.appStateSub?.remove();
     this.appStateSub = null;
     this.wake(); // unblock any sleep
-    if (this.loopPromise) {
-      await this.loopPromise;
-      this.loopPromise = null;
-    }
+    const loop = this.loopPromise;
+    this.loopPromise = null;
+    if (!loop) return;
+    this.stopping = loop.finally(() => {
+      this.stopping = null;
+    });
+    await this.stopping;
   }
 
   /**
@@ -284,8 +304,9 @@ class InferenceQueueImpl {
     this.drainCallbacks.push(callback);
   }
 
-  /** Test seam: clear every defer gate and backoff. */
+  /** Test seam: clear every defer gate and backoff, and forget that this process already recovered. */
   __resetTypeGatesForTests(): void {
+    this.recoveredThisProcess = false;
     this.gateUntil.clear();
     this.deferCount.clear();
   }
