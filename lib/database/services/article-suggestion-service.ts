@@ -29,6 +29,7 @@ import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter
 // The note-vs-article grounding check. Pure, RN-free, no edge back into this
 // module — same import-safety argument as `isCulledHeadlineRelevance` above.
 import { isReasonGrounded } from '@/lib/news-harness/article-pipeline/reason-grounding';
+import { REASON_RELEVANCE_THRESHOLD } from '@/lib/services/inference-results';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 /**
  * Is relevance v3 the scorer producing scores RIGHT NOW? Stamped onto each row
@@ -1251,6 +1252,10 @@ export async function batchPropagateScores(
           r.scoredWithV3 = entry.scoredWithV3 ?? null;
           if (grounded.length > 0) {
             r.reason = grounded;
+            r.status = ArticleSuggestionStatus.Complete;
+          } else if (entry.relevance < REASON_RELEVANCE_THRESHOLD) {
+            // Below the reason gate nothing will ever write a note (inference-results.ts
+            // KEEP/REASON thresholds: no band in between), so finalize like batchMarkReasonSkipped.
             r.status = ArticleSuggestionStatus.Complete;
           } else {
             r.status = ArticleSuggestionStatus.ReasonPending;

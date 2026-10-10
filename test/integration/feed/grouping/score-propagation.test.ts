@@ -89,26 +89,7 @@ describe('gateUnscoredForScoring: donor propagation', () => {
     await expect(scoreOf('cand-1')).resolves.toMatchObject({ relevance: 0.6, reason: 'new' });
   });
 
-  // FD10: batchPropagateScores parks the row reason_pending whenever the donor's note is not
-  // grounded, even when the inherited relevance is under the reason gate (0.4). Nothing writes a
-  // note for such a row, and on-device the orphan sweep (scoring-pipeline.ts:1088) never runs.
-  it('FD10 today: a propagated score below the reason gate is parked reason_pending and never finalized on-device', async () => {
-    await seedUnscored({ id: 'cand-1' });
-    await seedScored({ id: 'donor-weak' }, { relevance: 0.2, reason: '' });
-
-    const result = await gateUnscoredForScoring(new Set());
-
-    // No reason came with the score, so the row is parked for the reason sweep.
-    await expect(scoreOf('cand-1')).resolves.toEqual({
-      relevance: 0.2,
-      reason: '',
-      status: ArticleSuggestionStatus.ReasonPending,
-    });
-    expect(result.propagatedCount).toBe(1);
-    expect(result.enqueueIds).toEqual([]);
-  });
-
-  test.failing('FD10: a propagated score below the reason gate is finalized, never left owing a note', async () => {
+  test('FD10: a propagated score below the reason gate is finalized, never left owing a note', async () => {
     await seedUnscored({ id: 'cand-1' });
     await seedScored({ id: 'donor-weak' }, { relevance: 0.2, reason: '' });
 
