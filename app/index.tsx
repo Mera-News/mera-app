@@ -5,7 +5,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { StyleSheet } from "react-native";
 import { authClient } from "@/lib/auth-client";
 import { enforceInstallBoundary, wasInstallBoundaryReset } from "@/lib/security/install-boundary";
-import { readLocalIdentityState, resolveLaunchRoute, type LaunchRoute } from "@/lib/security/launch-route";
+import { readLocalIdentityStateSettled, resolveLaunchRoute, type LaunchRoute } from "@/lib/security/launch-route";
 import { purgeOrphanedLocalData } from "@/lib/security/local-wipe";
 import { usePinStore } from "@/lib/stores/pin-store";
 import { Redirect } from "expo-router";
@@ -35,7 +35,7 @@ export default function Index() {
       // normal relaunches. See lib/security/install-boundary.ts.
       await enforceInstallBoundary();
 
-      const identityState = await readLocalIdentityState();
+      const identityState = await readLocalIdentityStateSettled();
       let hasIdentity = identityState === 'present';
       // Enhancement: a live session with no persisted identity yet (very first
       // launch after login before /logged-in ran) still counts as identified.

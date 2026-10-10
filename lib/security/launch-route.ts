@@ -112,3 +112,16 @@ export async function readLocalIdentityState(): Promise<LocalIdentityState> {
 export async function hasLocalIdentity(): Promise<boolean> {
   return (await readLocalIdentityState()) === 'present';
 }
+
+export const IDENTITY_READ_ATTEMPTS = 4;
+export const IDENTITY_READ_RETRY_MS = 750;
+
+/** readLocalIdentityState, retried while it says 'unknown' (owner ruling W1). 'present' and 'absent' return at once. */
+export async function readLocalIdentityStateSettled(): Promise<LocalIdentityState> {
+  let state = await readLocalIdentityState();
+  for (let i = 1; i < IDENTITY_READ_ATTEMPTS && state === 'unknown'; i++) {
+    await new Promise((r) => setTimeout(r, IDENTITY_READ_RETRY_MS));
+    state = await readLocalIdentityState();
+  }
+  return state;
+}
