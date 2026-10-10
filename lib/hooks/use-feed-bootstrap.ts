@@ -21,7 +21,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useIsFocused } from '@react-navigation/native';
 import { authClient } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { getForYouActions } from '@/lib/stores/selectors';
@@ -39,7 +38,7 @@ export interface FeedBootstrapState {
   errorMessage: string | null;
 }
 
-export function useFeedBootstrap(): FeedBootstrapState {
+export function useFeedBootstrap(isFocused: boolean): FeedBootstrapState {
   const { t } = useTranslation();
   const { data: session } = authClient.useSession();
   // Identity is a LOCAL fact (lib/security/launch-route.ts). Keying the
@@ -52,7 +51,6 @@ export function useFeedBootstrap(): FeedBootstrapState {
   // the local id is a safe key for a server fetch too.
   const localUserId = useUserStore((s) => s.userId);
   const { fetchUserPersonaOrThrow } = useUserStore();
-  const isFocused = useIsFocused();
   // Reactive subscription: a persisted-false flag (e.g. from a prior transient
   // failure, before this fix, or a confirmed-empty persona) must retrigger the
   // fetch on a later tab visit rather than being sticky for the session.

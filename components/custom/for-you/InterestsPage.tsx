@@ -25,6 +25,7 @@ import {
   shouldResort,
   type ResortTrigger,
 } from '@/lib/feed-ordering/dashboard-resort';
+import { useIsFocused } from '@react-navigation/native';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -57,7 +58,7 @@ export interface InterestsPageProps {
 
 const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   const { t } = useTranslation();
-  const { isLoading, errorMessage } = useFeedBootstrap();
+  const { isLoading, errorMessage } = useFeedBootstrap(useIsFocused());
   const handleSuggestionPress = useOpenSuggestion('sectioned');
   const openedIds = useOpenedStoriesStore((s) => s.ids);
 

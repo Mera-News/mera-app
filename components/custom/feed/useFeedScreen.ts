@@ -31,6 +31,7 @@ import {
   useFeedbackSheet,
   type VerdictStoreAdapter,
 } from './use-feedback-sheet';
+import { useIsFocused } from '@react-navigation/native';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
@@ -92,7 +93,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const { t } = useTranslation();
   const listEndClearance = useListEndClearance();
 
-  const { isLoading, errorMessage } = useFeedBootstrap();
+  const { isLoading, errorMessage } = useFeedBootstrap(useIsFocused());
 
   // Reduce Motion, or the app's own "Static background", which already defaults
   // ON below 6 GB of RAM. Either one means an arriving card simply appears:
