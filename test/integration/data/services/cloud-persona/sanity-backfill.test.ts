@@ -41,6 +41,7 @@ import {
   loseCredential,
   quietLogger,
   resetCloudPersonaMemory,
+  sanityItems,
   sanityModel,
   sanityTexts,
   seedTopics,
@@ -381,6 +382,43 @@ describe('the audit cursor never skips a topic it did not judge', () => {
 
     const judged = new Set(sanityTexts(gatewayCalls('batch')));
     expect(judged.size).toBe(70);
+  });
+});
+
+describe('a prompt that refuses every time must not pin the cursor forever', () => {
+  // DA49: since DA27 the cursor stops one millisecond short of a failed prompt's oldest topic, so a prompt
+  // that the model refuses on every attempt (the same fifteen topics each time) holds the cursor there:
+  // each run re-sends the same chunk, re-bills the fifteen that failed, and nothing ever moves on.
+  const refuseFirstPromptAlways = () =>
+    server.use(
+      ...mockGateway((call) =>
+        sanityItems(call).some((i) => i.text === 'cricket topic 0') ? { status: 502, body: { error: 'refused' }, perItem: true } : sanityModel()(call),
+      ),
+    );
+  const timesSent = (n: number) => sanityTexts(gatewayCalls('batch')).filter((t) => t === `cricket topic ${n}`).length;
+
+  test.failing('DA49: a prompt that refuses every time is skipped after the third stalled run, and the pass finishes', async () => {
+    await seedCorpus(60);
+    refuseFirstPromptAlways();
+
+    for (let i = 0; i < 6; i++) if ((await chunk()).reason === 'already_done') break;
+
+    // Run 1 moves the cursor to just below the refused topics; runs 2 to 4 stall on them (the third
+    // stalled run gives up on them); run 5 finds nothing left.
+    expect(timesSent(0)).toBe(4);
+    expect(await getSetting(CURSOR)).toBe(String(T0 + 59 * 10));
+    expect(await isBackfillDone()).toBe(true);
+  });
+
+  it('DA49 today: a prompt that refuses every time is sent again on every run, and the pass stays open', async () => {
+    await seedCorpus(60);
+    refuseFirstPromptAlways();
+
+    for (let i = 0; i < 8; i++) await chunk();
+
+    expect(timesSent(0)).toBe(8);
+    expect(await getSetting(CURSOR)).toBe(String(T0 - 1));
+    expect(await isBackfillDone()).toBe(false);
   });
 });
 
