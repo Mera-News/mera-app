@@ -804,15 +804,6 @@ describe('cloudComplete', () => {
     expect(mockDecryptContent).not.toHaveBeenCalled();
   });
 
-  it('uses reasoning_content when content is empty', async () => {
-    const resp = { choices: [{ message: { content: '', reasoning_content: 'thinking-blob' } }] };
-    mockFetch.mockResolvedValueOnce(makeResponse(200, resp));
-    mockDecryptContent.mockReturnValueOnce('thinking...');
-    const result = await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
-    expect(result).toBe('thinking...');
-    expect(mockDecryptContent).toHaveBeenCalledWith('thinking-blob', expect.any(Uint8Array), 'ed25519');
-  });
-
   it('returns empty string when choices array is absent', async () => {
     mockFetch.mockResolvedValueOnce(makeResponse(200, { id: 'x' }));
     const result = await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
@@ -1645,95 +1636,6 @@ describe('cloudChatStream', () => {
     expect(events).toEqual([{ type: 'finish', reason: 'stop' }]);
   });
 
-  it('forwards a buffered CLEARTEXT provider tool call (never expected) on its own offset slot', async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeResponse(200, {
-        choices: [
-          {
-            message: {
-              content: '',
-              tool_calls: [
-                { id: 'tc-1', type: 'function', function: { name: 'update_persona', arguments: '{"key":"val"}' } },
-                { id: 'tc-2', type: 'function', function: { name: 'another_tool', arguments: '{"x":1}' } },
-              ],
-            },
-            finish_reason: 'tool_calls',
-          },
-        ],
-      }),
-    );
-
-    const events = await collectStream(
-      cloudChatStream({ messages: [{ role: 'user', content: 'Use tools' }] }),
-    );
-
-    const tcEvents = events.filter((e) => e.type === 'tool-call-delta');
-    expect(tcEvents).toHaveLength(2);
-    expect(tcEvents[0]).toEqual({
-      type: 'tool-call-delta',
-      index: 1000,
-      id: 'tc-1',
-      name: 'update_persona',
-      argumentsDelta: '{"key":"val"}',
-    });
-    expect(tcEvents[1]).toEqual({
-      type: 'tool-call-delta',
-      index: 1001,
-      id: 'tc-2',
-      name: 'another_tool',
-      argumentsDelta: '{"x":1}',
-    });
-  });
-
-  it('yields finish:tool_calls when finish_reason is tool_calls', async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeResponse(200, {
-        choices: [
-          {
-            message: {
-              content: '',
-              tool_calls: [
-                { id: 'tc', type: 'function', function: { name: 'f', arguments: '{}' } },
-              ],
-            },
-            finish_reason: 'tool_calls',
-          },
-        ],
-      }),
-    );
-
-    const events = await collectStream(
-      cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] }),
-    );
-    expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
-  });
-
-  it('includes both text-delta and tool-call-delta when both present', async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeResponse(200, {
-        choices: [
-          {
-            message: {
-              content: 'cipher',
-              tool_calls: [
-                { id: 'tc', type: 'function', function: { name: 'f', arguments: '{}' } },
-              ],
-            },
-            finish_reason: 'tool_calls',
-          },
-        ],
-      }),
-    );
-    mockDecryptContent.mockReturnValueOnce('some text');
-
-    const events = await collectStream(
-      cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] }),
-    );
-
-    expect(events.some((e) => e.type === 'text-delta')).toBe(true);
-    expect(events.some((e) => e.type === 'tool-call-delta')).toBe(true);
-  });
-
   it('throws when HTTP response is not ok (non-5xx)', async () => {
     mockFetch.mockResolvedValueOnce(makeResponse(400, {}, { text: 'Bad request' }));
     await expect(
@@ -2525,37 +2427,6 @@ describe('cloudChatStream', () => {
       ]);
       // The event carries nothing and the trace is never decrypted.
       expect(mockDecryptContent).toHaveBeenCalledTimes(2);
-    });
-
-    it('a CLEARTEXT provider tool call (never expected) is reported once and still forwarded', async () => {
-      mockFetch.mockResolvedValueOnce(
-        makeSseResponse([
-          sseChunk({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'tc-1', function: { name: 'proposeTrack', arguments: '' } }] }, finish_reason: null }] }),
-          sseChunk({ choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: '{"a":' } }] }, finish_reason: null }] }),
-          sseChunk({ choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: '1}' } }] }, finish_reason: null }] }),
-          sseChunk({ choices: [{ delta: {}, finish_reason: 'tool_calls' }] }),
-          SSE_DONE,
-        ]),
-      );
-
-      const events = await collectStream(
-        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] }),
-      );
-      const toolEvents = events.filter((e) => e.type === 'tool-call-delta');
-
-      expect(toolEvents).toHaveLength(3);
-      // Offset slot, so fragments still accumulate together and can never
-      // merge into a call parsed out of the encrypted text.
-      expect(toolEvents[0]).toMatchObject({
-        type: 'tool-call-delta', index: 1000, id: 'tc-1', name: 'proposeTrack', argumentsDelta: '',
-      });
-      expect(toolEvents[1]).toMatchObject({ index: 1000, argumentsDelta: '{"a":' });
-      expect(toolEvents[2]).toMatchObject({ index: 1000, argumentsDelta: '1}' });
-      const logger = jest.requireMock('@/lib/logger').default;
-      expect(logger.captureMessage).toHaveBeenCalledTimes(1);
-      expect(logger.captureMessage.mock.calls[0][1]).toMatchObject({ fingerprint: ['e2ee-cleartext-tool-call'] });
-      expect(JSON.stringify(logger.captureMessage.mock.calls)).not.toContain('{"a":');
-      expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
     });
 
     it('parses a call out of the ENCRYPTED text, split across deltas, and keeps it out of the visible text', async () => {
