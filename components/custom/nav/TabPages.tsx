@@ -55,7 +55,6 @@ import { pageMeta, TAB_LABEL_KEYS, type PageId } from './page-registry';
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
 
-export type { TabPagesProps } from './types';
 
 const TabPages: React.FC<TabPagesProps> = ({
   tab,

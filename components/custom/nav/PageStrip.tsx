@@ -53,14 +53,14 @@ const GLYPH_HIDDEN = {
 } as const;
 
 /** iOS has no tab trait (RN maps `tab` to nothing): button in a tabbar. */
-export function pillA11yRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 'button' | 'tab' } {
+function pillA11yRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 'button' | 'tab' } {
   return os === 'ios' ? { row: 'tabbar', pill: 'button' } : { row: 'tablist', pill: 'tab' };
 }
 const ROLES = pillA11yRoles(Platform.OS);
 
-export const PILL_HEIGHT = 34;
+const PILL_HEIGHT = 34;
 /** Frame padding around a 34pt pill: 44pt touch target. */
-export const PILL_FRAME_PAD = 5;
+const PILL_FRAME_PAD = 5;
 const PILL_GAP = 6;
 /** GlassPanel's hairline edge, drawn outside a chip's own box. */
 const GLASS_EDGE_PX = 1;
@@ -73,7 +73,7 @@ export const HEADER_SIDE_PAD = 6;
 /** The header, measured from the safe-area top: the track at +5, as tall as
  *  the track (46pt at 1.1x), and the header's bottom 5pt under it (+56). */
 export const HEADER_TOP_PAD = 5;
-export const HEADER_ROW_HEIGHT = HEADER_TRACK_HEIGHT;
+const HEADER_ROW_HEIGHT = HEADER_TRACK_HEIGHT;
 export const HEADER_BOTTOM_PAD = 5;
 /** Clear space between the track and a side control. */
 const TRACK_SIDE_GAP = 4;
@@ -87,7 +87,7 @@ export function flagEmoji(alpha2: string): string {
   return String.fromCodePoint(...[...a].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
 }
 
-export interface PageStripProps {
+interface PageStripProps {
   readonly tabLabel: string;
   readonly pages: readonly PagePill[];
   readonly activeId: PageId;

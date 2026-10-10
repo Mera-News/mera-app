@@ -75,7 +75,7 @@ const TAP_SLIDE_MS = 300;
 /** After the active page changes, when to re-measure: the row has landed. */
 const ARRIVAL_TICK_MS = 50;
 
-export interface PagePagerProps {
+interface PagePagerProps {
   readonly index: number;
   readonly count: number;
   readonly keyOf: (i: number) => string;

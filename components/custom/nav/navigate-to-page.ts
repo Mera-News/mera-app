@@ -71,7 +71,7 @@ type StackPopper = () => void;
 const stackPoppers = new Map<TabId, StackPopper>();
 
 /** Register `pop` as `tab`'s stack popper; returns the unregister. */
-export function registerTabStack(tab: TabId, pop: StackPopper): () => void {
+function registerTabStack(tab: TabId, pop: StackPopper): () => void {
   stackPoppers.set(tab, pop);
   return () => {
     if (stackPoppers.get(tab) === pop) stackPoppers.delete(tab);

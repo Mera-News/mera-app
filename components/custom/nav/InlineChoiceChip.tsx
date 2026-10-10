@@ -77,7 +77,7 @@ export interface InlineChoiceChipProps<T extends string | number> {
 /** A floating menu's surface: the same material as every modal and bottom
  *  sheet (ModalMaterial in a clipped container with the theme's edge). The
  *  caller positions it and gives it its shadow. */
-export function ChoiceMenuPanel({ children }: { readonly children: React.ReactNode }) {
+function ChoiceMenuPanel({ children }: { readonly children: React.ReactNode }) {
   const colors = useColors();
   return (
     <View style={[styles.clip, { borderColor: colors.line }]}>

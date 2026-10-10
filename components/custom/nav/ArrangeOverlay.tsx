@@ -67,7 +67,7 @@ import { useMotionAllowed } from '@/lib/motion-gate';
 
 const GLOW_PERIOD_MS = 1600;
 /** Constant: the glow animates colour only, never width. */
-export const PILL_BORDER_WIDTH = 1.5;
+const PILL_BORDER_WIDTH = 1.5;
 
 /** The overlay's theme colours, by part (layout stays in `styles`). */
 function inks(c: ThemeColors, mode: ThemeMode) {
@@ -91,7 +91,7 @@ const GLYPH_HIDDEN = {
   importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-export interface ArrangeOverlayProps {
+interface ArrangeOverlayProps {
   readonly tabLabel: string;
   readonly pages: readonly PagePill[];
   readonly arrange: ArrangeConfig;

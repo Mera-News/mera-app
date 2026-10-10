@@ -12,9 +12,9 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useColors } from '@/lib/theme/tokens';
 
 const RING = 24;
-export const HELP_FRAME = 44;
+const HELP_FRAME = 44;
 
-export interface HelpButtonProps {
+interface HelpButtonProps {
   readonly onPress: () => void;
   /** Spoken name, e.g. "About Saved". */
   readonly label: string;

@@ -10,7 +10,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { useColors } from '@/lib/theme/tokens';
 
-export interface PageTitleRowProps {
+interface PageTitleRowProps {
   readonly title: string;
   readonly trailing?: React.ReactNode;
   readonly testID?: string;

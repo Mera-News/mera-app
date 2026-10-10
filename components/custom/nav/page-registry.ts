@@ -24,12 +24,11 @@ import {
   type CountryPageId,
   type PageId,
   type StaticPageId,
-  type StaticTabId,
   type TabId,
 } from '@/lib/navigation/page-order';
 
 export { DEFAULT_PAGE_ORDER };
-export type { CountryPageId, PageId, StaticPageId, StaticTabId, TabId };
+export type { CountryPageId, PageId, TabId };
 
 /**
  * Space between the tab header's bottom and a tab page's first content: every

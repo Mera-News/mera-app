@@ -19,7 +19,7 @@ import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { useColors } from '@/lib/theme/tokens';
 import type { PageExplainer } from './page-registry';
 
-export interface PageExplainerSheetProps {
+interface PageExplainerSheetProps {
   readonly explainer: PageExplainer | null;
   readonly open: boolean;
   readonly onClose: () => void;

@@ -138,17 +138,6 @@ export function useArticleSubject(): AskMeraSubject | null {
   return useCurrentSurfaceStore((s) => s.article);
 }
 
-/**
- * Where the showing screen's top chrome ends, in window coordinates (pt), so
- * something mounted OUTSIDE that screen (the Mera button in its top corners)
- * can sit below it. Null when the showing screen reports none: callers fall
- * back to their own estimate. A collapsing header reports its EXPANDED bottom
- * at all times, so a reader never moves during a scroll (owner).
- */
-export function useHeaderBottom(): number | null {
-  return useCurrentSurfaceStore((s) => s.headerBottom?.y ?? null);
-}
-
 export function reportHeaderBottom(owner: string, y: number): void {
   const prev = useCurrentSurfaceStore.getState().headerBottom;
   const next = Math.round(y);

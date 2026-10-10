@@ -6,7 +6,7 @@
 /** A page change commits once the (damped) row has moved this much of the width. */
 export const PAGE_COMMIT_FRACTION = 0.3;
 /** ...or on a flick faster than this, in points per second. */
-export const PAGE_COMMIT_VELOCITY = 600;
+const PAGE_COMMIT_VELOCITY = 600;
 /** The row follows the finger at this fraction: a short drag reads as "springs back". */
 export const SWIPE_DAMPING = 0.6;
 /** Past the first or last page the row follows the finger only this much:
