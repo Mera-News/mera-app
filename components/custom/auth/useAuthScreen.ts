@@ -145,16 +145,26 @@ export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true }: Auth
         let cancelled = false;
         (async () => {
             try {
-                const [email, userId, sid, avail, path] = await Promise.all([
-                    getSetting('cached_user_email'),
-                    getSetting('cached_user_id'),
-                    getSetting('cached_support_id'),
-                    deviceSignInAvailability(),
-                    deviceSignInPath(),
+                // The device facts load independently of the cached rows: a failed settings
+                // read must not hide "Begin without email" (it needs only the device).
+                const [rows, device] = await Promise.allSettled([
+                    Promise.all([
+                        getSetting('cached_user_email'),
+                        getSetting('cached_user_id'),
+                        getSetting('cached_support_id'),
+                    ]),
+                    Promise.all([deviceSignInAvailability(), deviceSignInPath()]),
                 ]);
                 if (cancelled) return;
-                setAvailability(avail);
-                setSignInPath(path);
+                if (device.status === 'fulfilled') {
+                    setAvailability(device.value[0]);
+                    setSignInPath(device.value[1]);
+                }
+                if (rows.status === 'rejected') {
+                    setStage('intro');
+                    return;
+                }
+                const [email, userId, sid] = rows.value;
                 setCachedUserId(userId ?? null);
                 setSupportId(sid ?? null);
                 if (email && userId) {

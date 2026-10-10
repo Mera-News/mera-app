@@ -162,8 +162,8 @@ describe('the stage the gate opens on', () => {
         read.mockRestore();
     });
 
-    // PE23: the load effect awaits ONE Promise.all over three settings reads and the device checks, so a
-    // single rejected read skips every setter and the phone account's sign-in stays hidden.
+    // PE23: the device checks load independently of the settings reads, so a single rejected read
+    // still offers the phone account's sign-in.
     describe('PE23 a failed settings read on an id-only account', () => {
         beforeEach(useDevBypass);
 
@@ -180,16 +180,10 @@ describe('the stage the gate opens on', () => {
             return hook;
         };
 
-        test.failing('PE23 a failed settings read still offers sign-in without email', async () => {
+        test('PE23 a failed settings read still offers sign-in without email', async () => {
             const hook = await failOneRead();
 
             expect(hook.result.current).toMatchObject({ availability: 'dev-bypass', canSignInWithoutEmail: true });
-        });
-
-        test('PE23 today: a failed settings read hides sign-in without email', async () => {
-            const hook = await failOneRead();
-
-            expect(hook.result.current).toMatchObject({ availability: 'unavailable', canSignInWithoutEmail: false });
         });
     });
 
