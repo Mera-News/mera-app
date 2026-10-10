@@ -137,27 +137,9 @@ export interface GateResult {
  * Test one grouping row against the read index. A row's WMDB `id` IS the server
  * article id (`persistAndLinkV2Suggestions` sets `_raw.id = a._id`), so it feeds
  * the article-id axis directly.
- *
- * Every membership's `stableClusterId` is offered, UNGATED by confidence, and the
- * asymmetry with `PROPAGATION_OPTIONS` below is deliberate. There the gate exists
- * because a fringe member must not INHERIT a stranger's verdict; here the id came
- * from the user's own read — `use-open-suggestion` snapshots
- * `clusters.find(c => c.stableClusterId)` with no confidence test — so gating
- * would just mean failing to recognise the very story they opened.
  */
-function readCandidateOf(row: SuggestionGroupingRow): {
-    articleId: string;
-    stableClusterId: string | null;
-    title: string | null;
-} {
-    let stableClusterId: string | null = null;
-    for (const m of row.clusters ?? []) {
-        if (m?.stableClusterId) {
-            stableClusterId = m.stableClusterId;
-            break;
-        }
-    }
-    return { articleId: row.id, stableClusterId, title: row.title };
+function readCandidateOf(row: SuggestionGroupingRow): { articleId: string; title: string | null } {
+    return { articleId: row.id, title: row.title };
 }
 
 /**
@@ -393,7 +375,7 @@ export async function gateUnscoredForScoring(
                         // donor's number, so it must be judged at the gate that
                         // number was calibrated for. Reading the recipient's own
                         // (absent) vintage here would gate a v3 score at 0.4.
-                        scoredWithV3: donor.scoredWithV3 ?? null,
+                        scoredWithV3: donor.scoredWithV3,
                     });
                 }
             } else if (groupCandidates.length >= 2) {
@@ -485,7 +467,7 @@ export async function propagateToUnscoredSiblings(
                     reason: donor.reason,
                     // See the note at the other push site: the gate follows the
                     // score's scorer, and the score here is the donor's.
-                    scoredWithV3: donor.scoredWithV3 ?? null,
+                    scoredWithV3: donor.scoredWithV3,
                 });
             }
         }
