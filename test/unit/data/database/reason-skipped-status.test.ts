@@ -19,7 +19,7 @@
 // `status` is a plain text column, so this needed no migration (see the note at
 // the bottom of article-suggestion-status.ts).
 
-import { ArticleSuggestionStatus } from '../article-suggestion-status';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { isComplete, isVisible, RENDER_GATE } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 

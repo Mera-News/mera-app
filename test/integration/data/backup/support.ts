@@ -6,7 +6,7 @@
 import pako from 'pako';
 
 import database from '@/lib/database';
-import { MemoryFile } from '@/lib/backup/__tests__/memory-file';
+import { MemoryFile } from '@/test/unit/data/backup/memory-file';
 import { watermelonRowSink } from '@/lib/backup/adapters/watermelon-row-sink';
 import { watermelonRowSource } from '@/lib/backup/adapters/watermelon-row-source';
 import { knownColumns } from '@/lib/backup/backup-service';

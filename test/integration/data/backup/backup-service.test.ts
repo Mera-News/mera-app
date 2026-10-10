@@ -7,7 +7,7 @@
 import { File, Paths } from 'expo-file-system';
 
 import { BACKUP_TABLES } from '@/lib/backup/allowlist';
-import { MemoryFile } from '@/lib/backup/__tests__/memory-file';
+import { MemoryFile } from '@/test/unit/data/backup/memory-file';
 import { restoreWasInterrupted } from '@/lib/backup/adapters/watermelon-row-sink';
 import {
   BACKUP_KEEP_COUNT,

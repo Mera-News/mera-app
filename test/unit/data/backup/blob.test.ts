@@ -8,8 +8,8 @@
 // IO is an in-memory buffer, which is the point of injecting it: this exercises
 // the real codec with no native module and no device.
 
-import { BlobFormatError, BlobWriter, openBlob } from '../blob';
-import { BACKUP_FORMAT_VERSION, type BackupHeader } from '../types';
+import { BlobFormatError, BlobWriter, openBlob } from '@/lib/backup/blob';
+import { BACKUP_FORMAT_VERSION, type BackupHeader } from '@/lib/backup/types';
 import { MemoryFile as MemoryBlob } from './memory-file';
 
 const KEY = Uint8Array.from({ length: 32 }, (_, i) => i + 1);

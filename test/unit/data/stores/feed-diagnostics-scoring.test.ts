@@ -17,7 +17,7 @@ import {
   computeFeedFunnel,
   feedFunnelScalars,
   type FeedFunnelInput,
-} from '../feed-diagnostics';
+} from '@/lib/stores/feed-diagnostics';
 
 const NOW = Date.UTC(2026, 6, 30, 12);
 const H = 3_600_000;

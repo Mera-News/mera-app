@@ -20,11 +20,11 @@ import {
   gateForRow,
   relevancePassesGate,
   type FactRowsSnapshots,
-} from '../fact-rows-selector';
+} from '@/lib/stores/fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
-import type { ForYouSuggestion } from '../for-you-store';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 const NOW = 1_000_000_000_000; // fixed clock
 const H = 3_600_000;
@@ -1017,7 +1017,7 @@ describe('buildFactRows empty sections (D4)', () => {
 // A single fact can hold two statements joined by "; " (a combined persona
 // fact). A section title shows only the first, so it never runs to five lines.
 describe('primaryStatement', () => {
-  const { primaryStatement } = require('../fact-rows-selector');
+  const { primaryStatement } = require('@/lib/stores/fact-rows-selector');
   it('keeps the part before the first "; "', () => {
     expect(
       primaryStatement(

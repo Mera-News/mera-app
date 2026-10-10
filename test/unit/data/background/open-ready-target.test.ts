@@ -9,7 +9,7 @@ import {
   plannedMeteredFetch,
   FRESH_WINDOW_MS,
   YIELD_DEFAULT,
-} from '../open-ready-target';
+} from '@/lib/background/open-ready-target';
 
 const NOW = Date.UTC(2026, 8, 28, 12, 0, 0);
 const HOUR = 60 * 60 * 1000;

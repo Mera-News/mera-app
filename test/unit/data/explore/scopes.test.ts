@@ -3,7 +3,7 @@ import {
     deriveExploreScopes,
     electPrimaryCountry,
     type ScopeLocationInput,
-} from '../scopes';
+} from '@/lib/explore/scopes';
 
 // `locations` always arrives pre-sorted weight-desc (the location-service query
 // sorts on weight), so fixtures below are written in that order.

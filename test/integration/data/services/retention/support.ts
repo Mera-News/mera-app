@@ -9,7 +9,7 @@ import { Q } from '@nozbe/watermelondb';
 
 import database from '@/lib/database';
 import appSchema from '@/lib/database/schema';
-import { MemoryFile } from '@/lib/backup/__tests__/memory-file';
+import { MemoryFile } from '@/test/unit/data/backup/memory-file';
 import { watermelonRowSink } from '@/lib/backup/adapters/watermelon-row-sink';
 import { exportBackup, type RowPageQuery, type RowSource } from '@/lib/backup/export';
 import { importBackup } from '@/lib/backup/import';

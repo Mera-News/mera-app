@@ -9,7 +9,7 @@ import {
   decodeRecoveryCode,
   encodeRecoveryCode,
   generateBackupKey,
-} from '../crypto';
+} from '@/lib/backup/crypto';
 
 const KEY = Uint8Array.from({ length: 32 }, (_, i) => i * 7 + 3);
 

@@ -1,4 +1,4 @@
-import { SECTION_PREVIEW_COUNT } from '../dashboard-section-selector';
+import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
 
 // The ordering + badge helpers that used to live here were removed: ordering is
 // now the shared lib/feed-ordering/priority-order rule (covered by its own

@@ -8,11 +8,11 @@
 // relevance rules that gate membership, the null-country rule, and the
 // denominator line's counts.
 
-import { buildFactRows, type FactRowsSnapshots } from '../fact-rows-selector';
+import { buildFactRows, type FactRowsSnapshots } from '@/lib/stores/fact-rows-selector';
 import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import type { ForYouSuggestion } from '../for-you-store';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 const NOW = 1_000_000_000_000;
 const H = 3_600_000;

@@ -6,8 +6,8 @@
 // positional semantics — three hand-rolled copies would be three chances for
 // one of them to quietly differ from the RNFS adapter it stands in for.
 
-import type { BlobSink, BlobSource } from '../blob';
-import type { ScratchFile } from '../export';
+import type { BlobSink, BlobSource } from '@/lib/backup/blob';
+import type { ScratchFile } from '@/lib/backup/export';
 
 export class MemoryFile implements BlobSink, BlobSource, ScratchFile {
   bytes = new Uint8Array(0);

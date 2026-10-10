@@ -1,4 +1,4 @@
-import { isDuplicateFeedbackRequestScreen } from '../duplicate-screen';
+import { isDuplicateFeedbackRequestScreen } from '@/components/custom/feedback-request/duplicate-screen';
 
 const ID = '0123456789abcdef01234567';
 const tab = { key: 't', name: 'app_container' };

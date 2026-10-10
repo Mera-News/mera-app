@@ -24,11 +24,11 @@ import {
   SAMPLE_TITLE_MAX,
   type FeedFunnelInput,
   type HydrateProvenance,
-} from '../feed-diagnostics';
-import { FEED_WINDOW_MS } from '../fact-rows-selector';
-import type { FeedListItem } from '../feed-list-selector';
+} from '@/lib/stores/feed-diagnostics';
+import { FEED_WINDOW_MS } from '@/lib/stores/fact-rows-selector';
+import type { FeedListItem } from '@/lib/stores/feed-list-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import type { ClusterMembership, ForYouSuggestion } from '../for-you-store';
+import type { ClusterMembership, ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 const NOW = 1_000_000_000_000; // fixed clock — nothing here reads the wall clock
 const H = 3_600_000;
