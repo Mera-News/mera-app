@@ -22,7 +22,6 @@ if (!fs.existsSync(LIB)) throw new Error(`lib/ not found at ${LIB}`);
 
 /** file (relative to the repo root) → number of createTopics( CALLS. */
 const CALL_SITES: Record<string, number> = {
-  'lib/database/services/mutation-rails-service.ts': 1,
   'lib/database/services/persona-action-executor.ts': 2,
   // syncLlmTopicsForFact delegates here; the declaration itself and the
   // doc-comment mention are stripped below.
@@ -34,7 +33,7 @@ const CALL_SITES: Record<string, number> = {
   'lib/inference/handlers/tracked-story-migrate-handler.ts': 1,
   'lib/tracking/track-actions.ts': 1,
 };
-const EXPECTED_TOTAL = 7;
+const EXPECTED_TOTAL = 6;
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
