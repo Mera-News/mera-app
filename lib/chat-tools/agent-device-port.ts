@@ -72,7 +72,11 @@ export function placeQueryForms(query: string): string[] {
   // Narrow to wide, so the widest tail is tried before the narrowest head.
   for (let i = segments.length - 1; i >= 0; i--) forms.push(segments[i]);
 
-  const words = raw.split(/\s+/).filter(Boolean);
+  // Strip glued punctuation so "Nieuw-West," is looked up as "Nieuw-West".
+  const words = raw
+    .split(/\s+/)
+    .map((w) => w.replace(/^[,.;:!?]+|[,.;:!?]+$/g, ''))
+    .filter(Boolean);
   for (let i = words.length - 1; i >= 0; i--) forms.push(words[i]);
 
   for (const w of words) if (w.includes('-')) forms.push(w);

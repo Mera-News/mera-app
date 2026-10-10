@@ -47,20 +47,10 @@ describe('placeQueryForms', () => {
     expect(placeQueryForms('')).toEqual([]);
   });
 
-  // BUG CANDIDATE (chat-U5b-1): the hyphen pass pushes the whitespace WORD, so a comma still glued
-  // to it ("Nieuw-West,") becomes a lookup form. The server's prefix match can never hold it, so it
-  // costs one wasted placeSearch round trip whenever every earlier form missed.
-  test.failing('never offers a lookup form that still carries a comma', () => {
+  // The hyphen pass once pushed the whitespace WORD with its comma glued on ("Nieuw-West,"), a form
+  // the server's prefix match can never hold: one wasted placeSearch round trip.
+  it('never offers a lookup form that still carries a comma', () => {
     expect(placeQueryForms('Nieuw-West, Amsterdam').filter((f) => f.includes(',') && f !== 'Nieuw-West, Amsterdam')).toEqual([]);
-  });
-
-  it('today: the comma-suffixed hyphen word is the last form tried', () => {
-    expect(placeQueryForms('Nieuw-West, Amsterdam')).toEqual([
-      'Nieuw-West, Amsterdam',
-      'Amsterdam',
-      'Nieuw-West',
-      'Nieuw-West,',
-    ]);
   });
 });
 
