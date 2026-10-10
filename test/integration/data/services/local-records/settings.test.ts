@@ -181,26 +181,15 @@ describe('getSettingsByPrefix (Q.like on Loki)', () => {
     expect(await getSettingsByPrefix('a%b:')).toEqual({ 'a%b:1': 'literal' });
   });
 
-  // DATA-U10b-2. Q.sanitizeLikeString does not escape: it replaces every non-alphanumeric character
-  // with `_`, the one-character LIKE wildcard. The prefix therefore matches the literal character and
-  // any other single character in its place. (For the app's own prefixes, `tutorial_`,
-  // `headline_depth:` and `bg_articles_charged:`, this over-matches only a sibling key that differs
-  // in that one position.)
-  test.failing('an underscore, colon or percent in the prefix matches only itself', async () => {
+  // DATA-U10b-2 / DA21. Q.sanitizeLikeString does not escape: it replaces every non-alphanumeric
+  // character with `_`, the one-character LIKE wildcard, so the LIKE query over-matches. The
+  // service keeps it to narrow by index and filters the rows with key.startsWith(prefix).
+  it('an underscore, colon or percent in the prefix matches only itself', async () => {
     await setSetting('a_b:1', 'literal');
     await setSetting('axb:2', 'x in place of the underscore');
     await setSetting('a%b:3', 'percent in place of the underscore');
     await setSetting('aXb:4', 'X in place of the underscore');
 
     expect(Object.keys(await getSettingsByPrefix('a_b:'))).toEqual(['a_b:1']);
-  });
-
-  it('today: a non-alphanumeric character in the prefix also matches any one other character', async () => {
-    await setSetting('a_b:1', 'literal');
-    await setSetting('axb:2', 'x in place of the underscore');
-    await setSetting('a%b:3', 'percent in place of the underscore');
-    await setSetting('aXXb:5', 'two characters, still no match');
-
-    expect(Object.keys(await getSettingsByPrefix('a_b:')).sort()).toEqual(['a%b:3', 'a_b:1', 'axb:2']);
   });
 });

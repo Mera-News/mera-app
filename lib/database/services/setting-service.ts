@@ -25,7 +25,9 @@ export async function getSettingsByPrefix(
     .query(Q.where('key', Q.like(`${Q.sanitizeLikeString(prefix)}%`)))
     .fetch();
   const out: Record<string, string> = {};
-  for (const record of results) out[record.key] = record.value;
+  // LIKE only narrows by index: sanitizeLikeString turns every non-alphanumeric
+  // character into the one-character wildcard `_`, so the exact prefix is checked here.
+  for (const record of results) if (record.key.startsWith(prefix)) out[record.key] = record.value;
   return out;
 }
 
