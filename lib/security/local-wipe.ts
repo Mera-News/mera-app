@@ -20,6 +20,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import logger from '@/lib/logger';
+import { yieldToEventLoop } from '@/lib/scheduler/idle';
 import { HAS_LAUNCHED_SETTING_KEY } from '@/lib/security/install-boundary';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
 
@@ -292,15 +293,17 @@ export async function wipeAllLocalUserData(
  * session atom synchronously on `signOut()`, and login.tsx would otherwise
  * shortcut on the stale session and bounce the user straight back in.
  *
- * Every step before the wipe is individually guarded, for the same reason the
- * logout path in AppPreferencesTab documents at length: past the point where
+ * Every step before the wipe is individually guarded: past the point where
  * the cookie is gone, the device is half-signed-out and the flow must ALWAYS
- * reach the wipe. The wipe itself is allowed to throw, and the caller decides
- * what that means.
+ * reach the wipe. Stopping in the middle would leave no credentials but a live
+ * `cached_user_id`, which the launch gate reads as 'present', so the orphan
+ * purge never fires and the previous user's data is served offline forever.
+ * The wipe itself is allowed to throw, and the caller decides what that means.
  *
- * NOTE: `components/custom/config-mera/AppPreferencesTab.tsx` performs this same
- * sequence inline for the explicit logout button. It is a second copy, and it is
- * the ordering this function was extracted FROM.
+ * Callers are explicit actions only: the logout button (useAppPreferences), the
+ * identity-switch failure screen and the onboarding server-error eject. A dead
+ * server session must never come here; it keeps its local identity, which is
+ * the point of the offline-first gate in launch-route.ts.
  */
 export async function signOutAndWipe(): Promise<void> {
   try {
@@ -331,6 +334,7 @@ export async function signOutAndWipe(): Promise<void> {
 
   try {
     const { router } = require('expo-router');
+    // Guarded: with nothing pushed, dismissAll() only warns POP_TO_TOP.
     if (router.canDismiss?.()) router.dismissAll();
     router.replace({ pathname: '/login', params: { signedOut: '1' } });
   } catch (err) {
@@ -343,7 +347,7 @@ export async function signOutAndWipe(): Promise<void> {
 
   // Yield a tick so the screens above unmount before their data disappears
   // underneath them.
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await yieldToEventLoop();
   await wipeAllLocalUserData();
 }
 
