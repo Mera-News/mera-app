@@ -377,7 +377,7 @@ export async function getTopVisitedPublications(opts?: {
     const grouped = new Map<string, VisitedPublication>();
     for (const row of rows) {
       const country = row.countryCode ?? null;
-      const key = `${row.publicationName} ${country ?? ''}`;
+      const key = `${row.publicationName}\u0000${country ?? ''}`;
       const visitedAt = row.visitedAt.getTime();
       const existing = grouped.get(key);
       if (existing) {
