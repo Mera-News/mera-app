@@ -30,16 +30,8 @@ export function hydrateAllStores(): Promise<void> {
 
   // Paint-critical: load cached article_suggestions and push them to the
   // store first. No metadata, no expired-cleanup, no other-store gating.
-  // Not awaited (first-paint design). Defense-in-depth catch so any leak
-  // past the store's internal try/catch still reaches Sentry.
-  useForYouStore
-    .getState()
-    .hydrateSuggestionsFromDb()
-    .catch((err: unknown) => {
-      logger.captureException(err, {
-        tags: { module: 'hydrate-stores', step: 'paint-critical-hydrate' },
-      });
-    });
+  // Not awaited (first-paint design). Never rejects: the store catches inside.
+  void useForYouStore.getState().hydrateSuggestionsFromDb();
 
   // Everything else, in parallel, in the background. Returned promise
   // resolves once full hydration + backfill is done — callers who need
@@ -54,7 +46,7 @@ export function hydrateAllStores(): Promise<void> {
     // is known (not after the whole hydrate), so the cached map is on screen
     // with the first cards, and even when an unrelated hydration fails.
     useAppLanguageStore.getState().hydrateFromDb().finally(() => {
-      require('../publication-display-service').installPublicationDisplayNames().catch(() => undefined);
+      void require('../publication-display-service').installPublicationDisplayNames();
     }),
     useAppStateStore.getState().hydrateFromDb(),
     // Not a Zustand store: the publisher -> source-names map behind more/fewer
@@ -112,11 +104,7 @@ export function hydrateAllStores(): Promise<void> {
         });
       });
 
-      return pruneStaleVisits().catch((err: unknown) => {
-        logger.captureException(err, {
-          tags: { module: 'hydrate-stores', step: 'prune-stale-visits' },
-        });
-      });
+      return pruneStaleVisits();
     })
     .finally(() => useDatabaseStore.getState().setReady(true))
     .then(() => undefined);
