@@ -20,7 +20,7 @@ import { COLORS, type ThemeMode } from '@/lib/theme/tokens';
 
 /** The single accent. Same value as the dark palette's `primary-400` and the
  *  `tintColor` on the app's tab bar. */
-export const CARD_ACCENT = 'rgb(231, 138, 83)';
+const CARD_ACCENT = 'rgb(231, 138, 83)';
 
 /**
  * The four levels of ink, brightest first, plus the non-text tones the charts

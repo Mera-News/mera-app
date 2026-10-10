@@ -48,12 +48,11 @@ import React from 'react';
 import { View, type TextStyle } from 'react-native';
 
 /** The shipping export size. Not a preference. */
-export const EXPORT_WIDTH = 1080;
-export const EXPORT_HEIGHT = 1920;
+const EXPORT_WIDTH = 1080;
+const EXPORT_HEIGHT = 1920;
 
 /** The grid every size is authored on. Only `k` changes per device. */
 export const DESIGN_WIDTH = 360;
-export const DESIGN_HEIGHT = 640;
 
 /**
  * Instagram draws its own chrome over both ends of a story. Nothing readable
@@ -63,7 +62,7 @@ export const DESIGN_HEIGHT = 640;
  * left as the plan's stated figure rather than asserted as confirmed. The safe
  * zone is the one thing a simulator cannot sign off: it takes a real post.
  */
-export const SAFE_RESERVE_PX = 250;
+const SAFE_RESERVE_PX = 250;
 
 /**
  * The content box, DERIVED. 1080 x 1420 at 250 clear top and bottom.
@@ -71,7 +70,7 @@ export const SAFE_RESERVE_PX = 250;
  * One constant for the export size, one for the reserve, and the box computed
  * from them, so a change to either cannot leave the other stale.
  */
-export const INK_BOX_HEIGHT_PX = EXPORT_HEIGHT - 2 * SAFE_RESERVE_PX;
+const INK_BOX_HEIGHT_PX = EXPORT_HEIGHT - 2 * SAFE_RESERVE_PX;
 
 /**
  * The logo's own top margin, INSIDE the ink box. Not a boundary.
@@ -90,7 +89,7 @@ export const INK_BOX_HEIGHT_PX = EXPORT_HEIGHT - 2 * SAFE_RESERVE_PX;
  * card renders identically either way; only the arithmetic now says what it
  * means.
  */
-export const LOGO_TOP_MARGIN_PX = 30;
+const LOGO_TOP_MARGIN_PX = 30;
 
 /** Sizes shared by all three cards. Per-card sizes live with their card. No
  *  text size anywhere on a card may fall below 9.5 (see `qualifier`). */
@@ -128,35 +127,6 @@ export function hostSizeForScale(pixelRatio: number): { width: number; height: n
  */
 export const INK_BOX_ASPECT = EXPORT_WIDTH / INK_BOX_HEIGHT_PX;
 
-/**
- * The on-screen card size that fits `available` while preserving the content
- * box's ratio.
- *
- * HEIGHT-BOUND by design. The page is nearly always taller-than-wide relative
- * to 1080/1420 once the header, the screen chrome, the dots, the pill and the
- * tab bar are taken out, so height is what actually runs out, and width follows
- * from the ratio. Where the page is wider than the ratio allows, the card is
- * narrower than the page and LETTERBOXES horizontally — space either side, which
- * is correct, rather than a stretched card or a cropped one.
- *
- * Returns zeroes for a degenerate box so a caller renders nothing instead of a
- * card with a negative dimension.
- */
-export function fitCardToPage(available: { width: number; height: number }): {
-  width: number;
-  height: number;
-} {
-  const w = Number.isFinite(available.width) ? available.width : 0;
-  const h = Number.isFinite(available.height) ? available.height : 0;
-  if (w <= 0 || h <= 0) return { width: 0, height: 0 };
-
-  const byHeight = { width: h * INK_BOX_ASPECT, height: h };
-  if (byHeight.width <= w) return byHeight;
-  // The page is SHORTER than the ratio wants, so width binds instead. Still no
-  // crop and still no stretch: the card simply gets smaller.
-  return { width: w, height: w / INK_BOX_ASPECT };
-}
-
 /** One text style. ALWAYS emits `lineHeight` beside `fontSize`. */
 export function type(
   size: number,
@@ -167,7 +137,7 @@ export function type(
   return { fontSize, lineHeight: Math.ceil(fontSize * leading) };
 }
 
-export interface CardShellProps {
+interface CardShellProps {
   /** "{Card} · last 30 days" or "Right now" alone for a one-figure image; a
    *  packed image is titled "Your last 30 days" and each figure carries its
    *  own label, Right now included (owner: like the Stats page). */

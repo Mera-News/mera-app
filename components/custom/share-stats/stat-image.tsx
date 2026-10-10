@@ -23,14 +23,14 @@ import { useTranslation } from 'react-i18next';
 import { type LayoutChangeEvent, PixelRatio, View } from 'react-native';
 
 /** The space between packed rows, and between the two columns of a row. */
-export const BLOCK_GAP = 14;
+const BLOCK_GAP = 14;
 const COL_GAP = 12;
 
 /** Figures with a chart take a full row; the rest go two to a row. */
 const CHARTED: ReadonlySet<StatsCardId> = new Set(['publications', 'languages', 'days']);
 
 /** A packed row: one charted figure, or up to two short ones. Order kept. */
-export function toUnits(ids: readonly StatsCardId[]): StatsCardId[][] {
+function toUnits(ids: readonly StatsCardId[]): StatsCardId[][] {
     const units: StatsCardId[][] = [];
     for (let i = 0; i < ids.length; i++) {
         const id = ids[i];

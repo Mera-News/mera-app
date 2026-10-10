@@ -64,12 +64,12 @@ interface Props {
 }
 
 /** The modal's side inset: about 3% of the screen, on the 4pt grid. */
-export function sideInset(screenW: number): number {
+function sideInset(screenW: number): number {
     return Math.max(4, Math.round((screenW * 0.03) / 4) * 4);
 }
 
 /** The largest 9:16 image that fits both limits. */
-export function fitPortrait(maxW: number, maxH: number): { width: number; height: number } {
+function fitPortrait(maxW: number, maxH: number): { width: number; height: number } {
     const w = Math.max(0, Math.min(maxW, (maxH * 9) / 16));
     return { width: Math.floor(w), height: Math.floor((w * 16) / 9) };
 }

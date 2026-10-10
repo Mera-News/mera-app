@@ -23,7 +23,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** How fresh switches from hours to days past this many hours. */
-export const FRESH_DAYS_AFTER_HOURS = 48;
+const FRESH_DAYS_AFTER_HOURS = 48;
 
 /** Languages named on the bar; beyond this the remainder band carries them. */
 const LANGUAGES_TOP_N = 4;
@@ -40,7 +40,7 @@ const SIZES = {
  *  text keeps its size (the 9.5pt floor). */
 const PACKED_CHART_SCALE = 0.6;
 
-export type StatVariant = keyof typeof SIZES;
+type StatVariant = keyof typeof SIZES;
 
 /** The card's name ("Publications"). */
 export function statLabel(t: TFunction, id: StatsCardId): string {

@@ -49,7 +49,7 @@ import { View, type TextStyle } from 'react-native';
  * the numbers. A test with its own copy of the sizes keeps passing after a
  * layout change, which is the whole failure this object exists to prevent.
  */
-export const CHART_METRICS = {
+const CHART_METRICS = {
   /** FlagGrid: a cell is a FIXED box, and that is deliberate. Whether it ends
    *  up holding a flag emoji or the globe fallback, the grid's geometry is
    *  identical, so a platform that cannot draw regional-indicator pairs
@@ -127,7 +127,7 @@ export interface FlagGridProps {
  * when `codes.length > maxCells`, so `codes.length >= maxCells + 1`, and the
  * remainder is `codes.length - (maxCells - 1) >= 2`.
  */
-export function splitFlagGrid(
+function splitFlagGrid(
   countryCodes: string[],
   maxCells: number = CHART_METRICS.flagMaxCells,
 ): { shown: string[]; remaining: number } {
@@ -202,7 +202,7 @@ export const FlagGrid: React.FC<FlagGridProps> = ({
 
 // --- ProportionBar ---------------------------------------------------------
 
-export interface ProportionSegment {
+interface ProportionSegment {
   /** Stable key. The remainder band passes its own sentinel. */
   id: string;
   share: number;
@@ -290,7 +290,7 @@ export const ProportionBar: React.FC<ProportionBarProps> = ({ segments, k, textK
 
 // --- HeatGrid --------------------------------------------------------------
 
-export interface HeatDay {
+interface HeatDay {
   dateKey: string;
   count: number;
   /** 0 = Monday .. 6 = Sunday. */
@@ -324,7 +324,7 @@ export interface HeatGridProps {
  * reader, where a linear ramp would put one-article days at an alpha
  * indistinguishable from nothing.
  */
-export function heatLevel(count: number, peak: number): 0 | 1 | 2 | 3 | 4 {
+function heatLevel(count: number, peak: number): 0 | 1 | 2 | 3 | 4 {
   if (!Number.isFinite(count) || count <= 0) return 0;
   if (!Number.isFinite(peak) || peak <= 0) return 1;
   const ratio = Math.min(1, count / peak);
@@ -336,7 +336,7 @@ export function heatLevel(count: number, peak: number): 0 | 1 | 2 | 3 | 4 {
 
 /** The tone for each level. Level 0 is an outlined empty cell rather than a
  *  filled one, so "no reading" reads as absence and not as a dark value. */
-export function heatTone(level: 0 | 1 | 2 | 3 | 4, palette: CardPalette = CARD_PALETTES.dark): string {
+function heatTone(level: 0 | 1 | 2 | 3 | 4, palette: CardPalette = CARD_PALETTES.dark): string {
   return palette.heat[level];
 }
 
@@ -345,7 +345,7 @@ export function heatTone(level: 0 | 1 | 2 | 3 | 4, palette: CardPalette = CARD_P
  * its own weekday column. Returns rows of `HeatDay | null`, null being a pad
  * cell that draws nothing.
  */
-export function heatRows(days: HeatDay[]): (HeatDay | null)[][] {
+function heatRows(days: HeatDay[]): (HeatDay | null)[][] {
   if (days.length === 0) return [];
   const cells: (HeatDay | null)[] = [
     ...Array.from({ length: days[0].weekday }, () => null),
