@@ -705,7 +705,7 @@ describe('retire, publication and failure paths on accept', () => {
     expect((await getByFact(cricket.factId!)).find((t) => t.id === cricket.id)!.status).toBe('retired');
   });
 
-  it('OWNER-D2 today: a gentler alternative to a retire turns into a down-weight of at most 0.5 (it must name retire_topic itself; a set_topic_weight one is dropped)', async () => {
+  it('OWNER-D2: a retire has no gentler alternative: every alternative the model offers for it is dropped, only apply and skip remain', async () => {
     const cricket = await retireDay();
     reply((call) =>
       JSON.stringify({
@@ -717,7 +717,7 @@ describe('retire, publication and failure paths on accept', () => {
             options: [
               { label: 'Drop it', action: 'apply' },
               { label: 'Lower it (dropped)', action: 'alternative', altOps: [{ action_type: 'set_topic_weight', delta: -0.2 }] },
-              { label: 'Just lower it', action: 'alternative', altOps: [{ action_type: 'retire_topic', delta: -0.9 }] },
+              { label: 'Just lower it (dropped)', action: 'alternative', altOps: [{ action_type: 'retire_topic', delta: -0.9 }] },
               { label: 'Raise it (dropped)', action: 'alternative', altOps: [{ action_type: 'retire_topic', delta: 0.2 }] },
               { label: 'No', action: 'skip' },
             ],
@@ -730,14 +730,15 @@ describe('retire, publication and failure paths on accept', () => {
     );
     await cycle();
     const item = (await getPendingPlan())!.reviewItems.find((r) => r.fingerprint === `retire_topic:${cricket.id}`)!;
-    expect(item.options.map((o) => o.label)).toEqual(['Drop it', 'Just lower it', 'No']);
-    expect(item.options[1].altOps).toEqual([{ action_type: 'set_topic_weight', topicId: cricket.id, topicText: 'Cricket', delta: -0.5 }]);
+    expect(item.options.map((o) => [o.label, o.action])).toEqual([
+      ['Drop it', 'apply'],
+      ['No', 'skip'],
+    ]);
 
     await acceptPlan({ reviewChoices: { [item.fingerprint]: 1 }, uncheckedAuto: [] });
 
     const row = (await getByFact(cricket.factId!)).find((t) => t.id === cricket.id)!;
     expect(row.status).toBe('active');
-    expect(row.weight).toBeLessThan(0.5);
   });
 
   it('turns "more from this publication" into a stored publication preference', async () => {

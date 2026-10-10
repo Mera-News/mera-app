@@ -365,7 +365,8 @@ const PLAN_SYSTEM_PROMPT = [
   '    For each: write a short plain-English question, 2-3 options, a defaultIndex',
   '    (your recommended option), and a one-line rationale. Options use',
   '    action "apply" or "skip"; use "alternative" ONLY for a GENTLER version of',
-  '    the SAME change (e.g. lower weight instead of retire) — never a new change.',
+  '    the SAME change (e.g. a smaller weight change, or a weaker filter) —',
+  '    never a new change. A retire has no alternative.',
   '',
   'You may reword and re-sort, but you MUST NOT invent fingerprints or ops, and',
   'every fingerprint you use must come from the input. Prefer the least',
@@ -602,15 +603,6 @@ function validateAltOps(altOps: DigestPersonaAction[], cand: DigestCandidate): D
         ...(base.topicId ? { topicId: base.topicId } : {}),
         ...(base.topicText ? { topicText: base.topicText } : {}),
         delta: alt.delta,
-      });
-    } else if (base.action_type === ACTION_NAMES.RETIRE_TOPIC) {
-      // A gentler "retire" = a down-weight nudge on the same topic.
-      if (typeof alt.delta !== 'number' || alt.delta >= 0) continue;
-      out.push({
-        action_type: ACTION_NAMES.SET_TOPIC_WEIGHT,
-        ...(base.topicId ? { topicId: base.topicId } : {}),
-        ...(base.topicText ? { topicText: base.topicText } : {}),
-        delta: Math.max(-0.5, alt.delta),
       });
     } else if (base.action_type === ACTION_NAMES.ADD_SUPPRESSION) {
       const strength =
