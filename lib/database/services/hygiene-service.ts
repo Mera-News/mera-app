@@ -268,7 +268,7 @@ export async function runHygieneSweep(opts?: {
     // attempted and may well have been billed; only a missing credential means
     // it never ran. Reading a timeout as a skip would withhold the cooldown
     // stamp and re-issue the call on the next sweep.
-    { incoherentFacts: [], audited: 0, skipped: false, exhausted: false },
+    { incoherentFacts: [], audited: 0, skipped: false, exhausted: false, nextCursorMs: null },
   );
 
   if (facts.length < MIN_FACTS_FOR_SWEEP) {
@@ -302,6 +302,7 @@ export async function runHygieneSweep(opts?: {
   // hygiene notification"). Bounded and non-rejecting, so the worst case is
   // zero sanity proposals rather than a failed sweep.
   const sanity = await sanityPromise;
+  if (sanity.nextCursorMs !== null) await sanityService.commitSanityCursor(sanity.nextCursorMs);
   const input: HygieneAnalyzeInput = {
     facts: factInputs,
     topics,
@@ -351,13 +352,18 @@ async function stampSweep(now: number, sanitySkipped: boolean): Promise<void> {
  * the reason is preserved, so the caller's bookkeeping is unchanged.
  */
 async function publishSanityOnly(
-  sanity: { incoherentFacts: HygieneAnalyzeInput['incoherentFacts']; skipped: boolean },
+  sanity: {
+    incoherentFacts: HygieneAnalyzeInput['incoherentFacts'];
+    skipped: boolean;
+    nextCursorMs: number | null;
+  },
   facts: { id: string; statement: string }[],
   topics: HygieneAnalyzeInput['topics'],
   now: number,
   reason: 'too_few_facts' | 'persona_too_young',
 ): Promise<SweepResult> {
   const incoherentFacts = sanity.incoherentFacts ?? [];
+  if (sanity.nextCursorMs !== null) await sanityService.commitSanityCursor(sanity.nextCursorMs);
   // NOTE ON ORDER: every stamp below comes AFTER the work it is recording, and
   // the publishing exit stamps after `publishWithCap`. Stamping up front would
   // arm the six-day cooldown even if the publish then threw — the retry would

@@ -26,7 +26,7 @@ import { isOnDeviceMode } from '../../llm/on-device-gate';
 import logger from '../../logger';
 import { getSetting, setSetting } from './setting-service';
 import { getFacts } from './fact-service';
-import { runSanityAudit, resetSanityCursor } from './topic-sanity-service';
+import { runSanityAudit, resetSanityCursor, commitSanityCursor } from './topic-sanity-service';
 import { addSanityProposals } from './hygiene-service';
 
 const STARTED_KEY = 'sanity_backfill_started_at';
@@ -105,6 +105,7 @@ export async function runSanityBackfillChunk(opts?: {
     // The credential was lost mid-run: nothing ran, so nothing is recorded and
     // the next tick retries.
     if (result.skipped) return { ran: false, audited: 0, proposalsAdded: 0, done: false };
+    if (result.nextCursorMs !== null) await commitSanityCursor(result.nextCursorMs);
 
     const auditedTotal = (await readNumber(AUDITED_KEY)) + result.audited;
     await setSetting(AUDITED_KEY, String(auditedTotal));

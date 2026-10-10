@@ -353,7 +353,7 @@ describe('the audit cursor never skips a topic it did not judge', () => {
     for (let i = 0; i < 6; i++) if ((await chunk()).reason === 'already_done') break;
   }
 
-  test.failing('DATA-U11b-3: a prompt that failed upstream is judged again on a later chunk', async () => {
+  it('DATA-U11b-3: a prompt that failed upstream is judged again on a later chunk', async () => {
     await seedCorpus(60);
     failFirstPromptOnce();
 
@@ -361,19 +361,6 @@ describe('the audit cursor never skips a topic it did not judge', () => {
 
     const judged = new Set(sanityTexts(gatewayCalls('batch').slice(4)).map(topicNumber));
     for (let i = 0; i < 15; i++) expect(judged.has(i)).toBe(true);
-  });
-
-  it('today: the 15 topics of the failed prompt are never sent again, and the chunk still reports 60 audited', async () => {
-    await seedCorpus(60);
-    failFirstPromptOnce();
-
-    const first = await chunk();
-    await walkToTheEnd();
-
-    expect(first.audited).toBe(60);
-    expect(sanityTexts(gatewayCalls('batch').slice(4))).toEqual([]); // nothing was left to judge
-    expect(await getSetting(CURSOR)).toBe(String(T0 + 59 * 10));
-    expect(await isBackfillDone()).toBe(true);
   });
 
   // DATA-U11b-4: planSanityBatches selects `createdAtMs > cursor`. Topics minted in ONE createTopics call

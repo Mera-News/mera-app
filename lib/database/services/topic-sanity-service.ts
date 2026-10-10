@@ -69,12 +69,29 @@ export interface SanityAuditResult {
    * never `audited === 0`.
    */
   exhausted: boolean;
+  /**
+   * Where the audit cursor should move once the caller has PERSISTED this run's
+   * verdicts (`commitSanityCursor`); null when it should stay. The audit never
+   * writes the cursor itself: a cursor moved before the proposals are stored
+   * loses the verdicts when that write fails.
+   *
+   * It is the newest topic of a prompt that decoded, but stops one
+   * millisecond short of the oldest topic of a prompt that failed, so the
+   * failed prompt's topics are judged again on the next run.
+   */
+  nextCursorMs: number | null;
 }
 
-const EMPTY: SanityAuditResult = { incoherentFacts: [], audited: 0, skipped: false, exhausted: false };
+const EMPTY: SanityAuditResult = {
+  incoherentFacts: [],
+  audited: 0,
+  skipped: false,
+  exhausted: false,
+  nextCursorMs: null,
+};
 
 /** A run that never happened. Distinct from EMPTY — see `skipped`. */
-const SKIPPED: SanityAuditResult = { incoherentFacts: [], audited: 0, skipped: true, exhausted: false };
+const SKIPPED: SanityAuditResult = { ...EMPTY, skipped: true };
 
 async function readCursor(): Promise<number> {
   const raw = Number(await getSetting(CURSOR_KEY));
@@ -87,10 +104,17 @@ export async function resetSanityCursor(): Promise<void> {
   await setSetting(CURSOR_KEY, '0');
 }
 
+/** Move the audit cursor. Called by the caller of `runSanityAudit` once the
+ *  verdicts of that run are stored. */
+export async function commitSanityCursor(ms: number): Promise<void> {
+  await setSetting(CURSOR_KEY, String(ms));
+}
+
 /**
  * Run one audit pass. Never throws — any failure yields zero verdicts, which the
- * sweep treats as "nothing to propose this week". The cursor advances ONLY when
- * verdicts actually came back, so a failed or raced-out run is retried intact.
+ * sweep treats as "nothing to propose this week". The cursor is not moved here:
+ * the caller commits `nextCursorMs` after it has stored the verdicts, so a
+ * failed or raced-out run is retried intact.
  */
 export async function runSanityAudit(opts?: {
   facts: SanityFactInput[];
@@ -150,20 +174,30 @@ export async function runSanityAudit(opts?: {
     }
     const factIdByTopicId = new Map(candidates.map((c) => [c.id, c.factId]));
 
-    const flaggedByFact = new Map<string, string[]>();
-    let decodedAny = false;
+    const createdAtById = new Map(candidates.map((c) => [c.id, c.createdAtMs]));
+    const resultById = new Map(results.map((r) => [r.id, r]));
 
-    for (const res of results) {
-      const topicIds = plan.topicIdsByCallId.get(res.id);
-      if (!topicIds) continue;
-      if (res.error) {
+    const flaggedByFact = new Map<string, string[]>();
+    let audited = 0;
+    let decodedMaxMs = 0;
+    let failedMinMs = Infinity;
+
+    for (const [callId, topicIds] of plan.topicIdsByCallId) {
+      const res = resultById.get(callId);
+      if (!res || res.error) {
         logger.warn('[topic-sanity] batch half failed', {
-          id: res.id,
-          error: res.error,
+          id: callId,
+          error: res?.error ?? 'no result',
         });
+        for (const topicId of topicIds) {
+          failedMinMs = Math.min(failedMinMs, createdAtById.get(topicId) ?? 0);
+        }
         continue;
       }
-      decodedAny = true;
+      audited += topicIds.length;
+      for (const topicId of topicIds) {
+        decodedMaxMs = Math.max(decodedMaxMs, createdAtById.get(topicId) ?? 0);
+      }
       for (const topicId of decodeSanityVerdicts(
         res.output,
         topicIds,
@@ -177,11 +211,11 @@ export async function runSanityAudit(opts?: {
       }
     }
 
-    // Only advance once something actually came back; a wholly failed run must
-    // be retried against the same topics next week.
-    if (decodedAny && plan.maxCreatedAtMs > 0) {
-      await setSetting(CURSOR_KEY, String(plan.maxCreatedAtMs));
-    }
+    // Only move once something actually decoded, and never to or past a failed
+    // prompt's oldest topic (a same-millisecond neighbour that did decode is
+    // simply judged twice, which the proposal fingerprints absorb).
+    const next = Math.min(decodedMaxMs, failedMinMs - 1);
+    const nextCursorMs = audited > 0 && next > cursorMs ? next : null;
 
     const incoherentFacts: HygieneIncoherentFactInput[] = [...flaggedByFact.entries()]
       .map(([factId, topicIds]) => ({
@@ -191,11 +225,7 @@ export async function runSanityAudit(opts?: {
       }))
       .sort((a, b) => (a.factId < b.factId ? -1 : a.factId > b.factId ? 1 : 0));
 
-    const audited = [...plan.topicIdsByCallId.values()].reduce(
-      (n, ids) => n + ids.length,
-      0,
-    );
-    return { incoherentFacts, audited, skipped: false, exhausted: false };
+    return { incoherentFacts, audited, skipped: false, exhausted: false, nextCursorMs };
   } catch (error) {
     // A missing E2EE keypair is a STATE, not a defect: the device has not
     // generated (or has cleared) its credential, so a billed batch could not
