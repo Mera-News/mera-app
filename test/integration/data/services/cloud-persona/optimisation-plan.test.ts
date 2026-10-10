@@ -832,7 +832,7 @@ describe('DA32: accepting a nudge for a topic the reader has since retired', () 
   }
   const logsFor = async (topicId: string) => (await getRecent()).filter((l) => JSON.parse(l.actionJson).targetId === topicId);
 
-  test.failing('DA32: a nudge on a retired topic is not recorded as applied', async () => {
+  it('DA32: a nudge on a retired topic is not recorded as applied', async () => {
     const { space } = await retiredBeforeAccept();
 
     const res = await acceptPlan();
@@ -840,18 +840,6 @@ describe('DA32: accepting a nudge for a topic the reader has since retired', () 
     expect(res.appliedOps).toBe(2);
     expect(res.errors).toHaveLength(1);
     expect(await logsFor(space.id)).toEqual([]);
-  });
-
-  it('DA32 today: a nudge on a retired topic is counted as applied, moves its weight, and writes a change-log row', async () => {
-    const { space } = await retiredBeforeAccept();
-
-    const res = await acceptPlan();
-
-    expect(res).toEqual({ applied: true, appliedOps: 3, errors: [] });
-    const row = (await getByFact(space.factId!)).find((t) => t.id === space.id)!;
-    expect(row.status).toBe('retired');
-    expect(row.weight).toBeCloseTo(0.8);
-    expect(await logsFor(space.id)).toHaveLength(1);
   });
 });
 

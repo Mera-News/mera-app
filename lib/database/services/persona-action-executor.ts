@@ -170,7 +170,9 @@ async function dispatch(
           changeLogId: r.changeLogId,
           summary: r.applied
             ? `Nudged topic weight to ${fmt(r.after)}`
-            : 'Nudge budget exhausted; topic weight unchanged',
+            : r.retired
+              ? 'Topic is retired; weight unchanged'
+              : 'Nudge budget exhausted; topic weight unchanged',
         };
       }
       if (typeof action.weight === 'number') {

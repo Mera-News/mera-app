@@ -89,8 +89,10 @@ export async function nudgeTopic(
   topicId: string,
   delta: number,
   source: PersonaChangeLogSource,
-): Promise<{ applied: boolean; after: number; changeLogId?: string }> {
+): Promise<{ applied: boolean; after: number; changeLogId?: string; retired?: boolean }> {
   const topic = await topicsCollection.find(topicId);
+  // A retired topic is history only: nothing to nudge, nothing to log.
+  if (topic.status === 'retired') return { applied: false, after: topic.weight, retired: true };
   const usedAbs = await todayTopicBudgetUsedAbs(topicId);
   const result = nudgeTopicWeight(topic.weight, delta, usedAbs);
 
