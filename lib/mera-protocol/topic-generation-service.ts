@@ -27,7 +27,7 @@ import {
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 
 // Re-export moved pure helpers (canonical home is the harness).
-export { buildBaseUserPrompt, splitCount, mergeTopicsAppend } from '@/lib/news-harness/persona-management/topic-generation';
+export { mergeTopicsAppend } from '@/lib/news-harness/persona-management/topic-generation';
 export type { RealTopicGenInputs };
 
 // SOURCED from the harness config, never re-stated. These were hardcoded 16/14

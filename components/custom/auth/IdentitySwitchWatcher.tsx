@@ -38,11 +38,6 @@ import { useEffect } from 'react';
 /** Once per process. See rule 4. */
 let latched = false;
 
-/** Test-only: reset the per-process latch. */
-export function __resetIdentitySwitchWatcherForTests(): void {
-  latched = false;
-}
-
 export default function IdentitySwitchWatcher() {
   const { data: session } = authClient.useSession();
   const sessionUserId = session?.user?.id;

@@ -106,5 +106,3 @@ export async function applyLeafActions(
     return 0;
   }
 }
-
-export default applyLeafActions;

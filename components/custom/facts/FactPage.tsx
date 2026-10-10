@@ -111,7 +111,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
         openSuggestion,
         taught,
         markRelevant,
-    } = useFactPage({ factId, from, statement, active });
+    } = useFactPage({ factId, from, statement });
 
     // ── Header bottom for the Mera button's top corners ────────────────────
     const [headerBottom, setHeaderBottom] = useState(0);

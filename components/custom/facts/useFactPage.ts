@@ -51,7 +51,6 @@ interface UseFactPageArgs {
     readonly factId: string;
     readonly from: 'feed' | 'you';
     readonly statement: string;
-    readonly active: boolean;
 }
 
 export function useFactPage({ factId, from, statement }: UseFactPageArgs) {

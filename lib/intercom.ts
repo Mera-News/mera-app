@@ -116,14 +116,6 @@ export function isIntercomEnabled(): boolean {
   return !!INTERCOM_APP_ID && !!resolveApiKey();
 }
 
-/**
- * Has initialize() actually resolved? Private to this module's own guards and
- * exported only for tests. Deliberately NOT a UI gate.
- */
-export function isIntercomConfigured(): boolean {
-  return configured;
-}
-
 // Platform key resolved at call time, never at module load, so importing this
 // module is safe where react-native's Platform is not available yet.
 function resolveApiKey(): string {
@@ -457,11 +449,4 @@ export function useSupportAction(onMailFailed?: () => void) {
   }, [onMailFailed]);
 
   return { busy, openSupport };
-}
-
-/** Test seam only. */
-export function __resetIntercomForTests(): void {
-  configured = false;
-  initPromise = null;
-  identityEpoch = 0;
 }

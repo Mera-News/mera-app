@@ -86,7 +86,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
         handleSendCode,
         handleResend,
         handleConfirm,
-    } = useEmailCaptureSheet({ isOpen, onClose, source, onOutcome });
+    } = useEmailCaptureSheet({ isOpen, onClose, onOutcome });
 
     return (
         <Modal

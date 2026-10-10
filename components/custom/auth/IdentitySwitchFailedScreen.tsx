@@ -50,11 +50,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const MAX_RETRIES = 3;
 let retriesUsed = 0;
 
-/** Test-only: reset the per-process retry budget. */
-export function __resetIdentitySwitchRetriesForTests(): void {
-  retriesUsed = 0;
-}
-
 export interface IdentitySwitchFailedScreenProps {
   /**
    * Re-run the wipe. The caller owns it, because the caller is the thing that

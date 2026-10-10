@@ -73,5 +73,3 @@ export function YouPages() {
     // gear, as on the You tab icon.
     return <TabPages tab="you" pages={pills} renderPage={renderPage} testID="you-pages" />;
 }
-
-export default YouPages;

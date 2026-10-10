@@ -10,7 +10,6 @@ import {
     requestEmailOtp,
     type EmailCaptureErrorCode,
     type EmailCaptureOutcome,
-    type EmailCaptureSource,
 } from '@/lib/subscription/email-capture';
 
 type Step = 'email' | 'otp' | 'done' | 'skip-confirm';
@@ -18,7 +17,6 @@ type Step = 'email' | 'otp' | 'done' | 'skip-confirm';
 interface UseEmailCaptureSheetArgs {
     isOpen: boolean;
     onClose: () => void;
-    source?: EmailCaptureSource;
     onOutcome?: (outcome: EmailCaptureOutcome) => void;
 }
 
