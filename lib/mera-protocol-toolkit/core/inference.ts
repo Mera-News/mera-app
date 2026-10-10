@@ -127,13 +127,19 @@ async function inferExclusive(params: InferParams): Promise<InferResult> {
   };
 }
 
-/** Streaming variant of infer(). Yields tokens as they are generated. */
+/**
+ * Streaming variant of infer(). Yields tokens as they are generated. An abort
+ * stops the completion and ends the generator; the lock is still released only
+ * after llama has unwound.
+ */
 export async function* inferStream(
   params: InferParams,
+  signal?: AbortSignal,
 ): AsyncGenerator<string> {
+  if (signal?.aborted) return;
   const release = await acquireLlamaLock();
   try {
-    yield* inferStreamExclusive(params);
+    yield* inferStreamExclusive(params, signal);
   } finally {
     release();
   }
@@ -141,7 +147,10 @@ export async function* inferStream(
 
 async function* inferStreamExclusive(
   params: InferParams,
+  signal?: AbortSignal,
 ): AsyncGenerator<string> {
+  // The abort may have landed while this call queued for the lock.
+  if (signal?.aborted) return;
   const context = _getContext();
   if (!context) {
     throw new Error('No model loaded. Call initBaseModel() first.');
@@ -151,6 +160,7 @@ async function* inferStreamExclusive(
   const tokenQueue: string[] = [];
   let done = false;
   let failure: Error | null = null;
+  let aborted = false;
   let resolveWait: (() => void) | null = null;
   let rejectWait: ((err: Error) => void) | null = null;
 
@@ -197,9 +207,25 @@ async function* inferStreamExclusive(
       rejectWait = null;
     });
 
+  const onAbort = () => {
+    aborted = true;
+    void (async () => {
+      try {
+        await context.stopCompletion();
+      } catch {
+        /* already finished */
+      }
+    })();
+    resolveWait?.();
+    resolveWait = null;
+    rejectWait = null;
+  };
+  signal?.addEventListener('abort', onAbort, { once: true });
+
   try {
     // Yield tokens as they arrive
     while (true) {
+      if (aborted) return;
       if (tokenQueue.length > 0) {
         yield tokenQueue.shift()!;
       } else if (done) {
@@ -222,6 +248,7 @@ async function* inferStreamExclusive(
     // found no waiter to reject; report it here instead of a finished half reply.
     if (failure) throw failure;
   } finally {
+    signal?.removeEventListener('abort', onAbort);
     // The consumer left early (Stop, or any throw): halt llama before the lock
     // is released, or the next completion would interleave with this one in
     // the shared KV cache. `done` is set by the completion's own settle.
