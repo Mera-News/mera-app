@@ -319,22 +319,13 @@ describe('FeedSyncMachine lifecycle', () => {
       ['paused-offline', () => publishSyncStatus('paused-offline', { pausedAtState: 'diffing' })],
     ];
 
-    test.failing.each(leftovers)('DA51: clears a %s status an earlier run left', async (_state, leave) => {
+    test.each(leftovers)('DA51: clears a %s status an earlier run left', async (_state, leave) => {
       await deviceAlreadyHolds(ids(4), { terminal: true });
       leave();
 
       await run();
 
       expect(store().syncStatusMessage).toBeNull();
-    });
-
-    test.each(leftovers)('DA51 today: keeps a %s status an earlier run left', async (state, leave) => {
-      await deviceAlreadyHolds(ids(4), { terminal: true });
-      leave();
-
-      await run();
-
-      expect(store().syncStatusMessage?.state).toBe(state);
     });
 
     // THE TRAP. Both feed surfaces choose between the preparing card and the all-caught-up card on

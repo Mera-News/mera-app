@@ -443,6 +443,11 @@ class FeedSyncMachine {
         // AllCaughtUpCard while the live run is genuinely still hydrating.
         if (this._isCurrentRun(runId)) {
           useForYouStore.getState().setLastSyncAt(Date.now());
+          // This clean run is the only proof an earlier failure or offline pause is
+          // over, and nothing else here publishes. Clearing to null shows nothing, so
+          // the poll stays silent.
+          const leftover = useForYouStore.getState().syncStatusMessage?.state;
+          if (!bg && (leftover === 'failed' || leftover === 'paused-offline')) publishSyncStatus('idle');
         }
         // A cycle that found nothing to do is still a processing run that
         // FINISHED, and it has to say so. `lastProcessingRunFinishedAt` is what
