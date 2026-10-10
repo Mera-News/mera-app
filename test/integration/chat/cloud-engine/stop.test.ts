@@ -125,6 +125,33 @@ describe('stop on a single-shot agent', () => {
   });
 });
 
+describe('stop before the frame renders', () => {
+  it('lands the tokens received but not yet rendered on the stopped bubble', async () => {
+    // Hold every frame: the streaming bubble is written once per frame, so a delta that arrived
+    // after the last frame lives only in the engine until the next one. Stop must flush it.
+    const frames: FrameRequestCallback[] = [];
+    const original = global.requestAnimationFrame;
+    global.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+      frames.push(cb);
+      return frames.length;
+    }) as typeof requestAnimationFrame;
+    try {
+      server.use(...mockGateway(firstCallThen({ chunks: ['The AI Act sorts systems by risk.', ' never sent'], stallAfter: 1 })));
+      const { engine } = await attachCloud(articleAgent());
+      engine.send('Explain the EU AI Act');
+      // A frame is queued only once a delta has been added: the text is received, not rendered.
+      await until(() => frames.length > 0, 10_000, 'a delta arrived');
+      expect(answerOf()?.content ?? '').toBe('');
+
+      stopChatTurn();
+      await until(idle, 5000, 'busy clears after stop');
+      expect(answerOf()).toMatchObject({ stopped: true, content: 'The AI Act sorts systems by risk.' });
+    } finally {
+      global.requestAnimationFrame = original;
+    }
+  });
+});
+
 describe('stop with a hidden turn queued', () => {
   it('cancels the queued turn', async () => {
     server.use(...mockGateway(firstCallThen({ chunks: ['Slow ', 'answer ', 'text.'], stallAfter: 2 })));
