@@ -484,9 +484,13 @@ describe('pin-store init()', () => {
 
         /**
          * Leaves the marker a real restart would: departure tracking armed, the app backgrounded
-         * `awayMs` ago (none when null), then requestRestart('ota') writing the settings row.
+         * `awayMs` ago (none when null), then requestRestart(reason) writing the settings row.
          */
-        async function restartedAfter(awayMs: number | null, foregroundForMs = 0) {
+        async function restartedAfter(
+            awayMs: number | null,
+            foregroundForMs = 0,
+            reason: 'ota' | 'language' = 'ota',
+        ) {
             (global as { __DEV__?: boolean }).__DEV__ = false;
             try {
                 await restartContext();
@@ -497,7 +501,7 @@ describe('pin-store init()', () => {
                 }
                 // Time spent looking at the app after the trip, before the restart fires.
                 if (foregroundForMs > 0) jest.advanceTimersByTime(foregroundForMs);
-                await requestRestart('ota');
+                await requestRestart(reason);
             } finally {
                 (global as { __DEV__?: boolean }).__DEV__ = true;
             }
@@ -539,27 +543,16 @@ describe('pin-store init()', () => {
             expect(usePinStore.getState().locked).toBe(false);
         });
 
-        // The marker keeps the LAST departure stamp. A reader who came back 10 s after leaving and
-        // then used the app for ten minutes is measured against that old stamp, so the restart
-        // reads as a ten-minute absence.
-        test.failing('PE21 an in-app restart long after a short trip does not ask for the PIN', async () => {
+        // A language switch is an in-app action: the reader is looking at the app, whatever stamp the
+        // last trip left. Only the 'ota' restart on a return carries the departure.
+        test('PE21 an in-app restart long after a short trip does not ask for the PIN', async () => {
             await enrolDevice();
-            await restartedAfter(10_000, 10 * MIN);
+            await restartedAfter(10_000, 10 * MIN, 'language');
 
             await usePinStore.getState().init();
 
             expect((await restartContext()).wasJsRestart).toBe(true);
             expect(usePinStore.getState().locked).toBe(false);
-        });
-
-        it('PE21 today: an in-app restart long after a short trip asks for the PIN', async () => {
-            await enrolDevice();
-            await restartedAfter(10_000, 10 * MIN);
-
-            await usePinStore.getState().init();
-
-            expect((await restartContext()).wasJsRestart).toBe(true);
-            expect(usePinStore.getState().locked).toBe(true);
         });
 
         it('a real cold start (no marker) still locks at once', async () => {

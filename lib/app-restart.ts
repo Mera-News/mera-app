@@ -459,10 +459,15 @@ export async function requestRestart(reason: RestartReason): Promise<void> {
       logger.captureException(err, { tags: { module: 'app-restart', method: 'flush' } });
     }
 
+    // The departure stamp is only meaningful to the next boot for 'ota': by construction that is the
+    // restart that fires on a background -> active return (OTASilentUpdater is its only caller, and
+    // a blocked restart is deferred to the next return), so the stamp measures the trip that just
+    // ended. 'language' and 'restore' are in-app actions taken after the PIN gate, so the reader
+    // never left as far as the next boot is concerned: null, which pin-store reads as "never left".
     const payload: MarkerPayload = {
       reason,
       at: lastRestartAt,
-      backgroundedAt,
+      backgroundedAt: reason === 'ota' ? backgroundedAt : null,
       lastForegroundAt,
     };
     // AWAITED. An unawaited write races the reload and the next boot reads a
