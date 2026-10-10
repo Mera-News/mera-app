@@ -113,7 +113,7 @@ export function makeUsePublicationArticles(ports: PublicationArticlesPorts) {
   ): PublicationArticlesResult {
     const pageSize = options?.pageSize ?? PUBLICATION_ARTICLES_PAGE_SIZE;
     // A stable dependency for the name list: a new array each render must not
-    // refetch. The effect rebuilds the list from it.
+    // refetch. The latest list is kept in `namesRef` for the offline reads.
     const namesKey = (options?.sourceNames ?? []).join('\u0000');
 
     const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -130,6 +130,8 @@ export function makeUsePublicationArticles(ports: PublicationArticlesPorts) {
     const generationRef = useRef(0);
     const cursorRef = useRef<string | undefined>(undefined);
     const loadingMoreRef = useRef(false);
+    const namesRef = useRef<string[]>([]);
+    namesRef.current = namesKey ? namesKey.split('\u0000') : [];
 
     const showLocal = useCallback(async (generation: number, names: readonly string[]) => {
       let local: NewsArticle[] = [];
@@ -147,13 +149,12 @@ export function makeUsePublicationArticles(ports: PublicationArticlesPorts) {
 
     useEffect(() => {
       const generation = ++generationRef.current;
-      const names = namesKey ? namesKey.split('\u0000') : [];
       cursorRef.current = undefined;
       loadingMoreRef.current = false;
       setLoadMoreState('idle');
       setRefreshing(false);
       if (ports.isOffline()) {
-        void showLocal(generation, names);
+        void showLocal(generation, namesRef.current);
         return;
       }
       if (!publisherId) {
@@ -179,13 +180,21 @@ export function makeUsePublicationArticles(ports: PublicationArticlesPorts) {
         .catch(() => {
           if (generationRef.current !== generation) return;
           if (ports.isOffline()) {
-            void showLocal(generation, names);
+            void showLocal(generation, namesRef.current);
             return;
           }
           setState('error');
         });
-      // namesKey: the offline list depends on the names.
-    }, [publisherId, order, pageSize, namesKey, attempt, showLocal]);
+      // The names are read through namesRef: they matter only to the offline
+      // list, so their landing must not restart an online first page.
+    }, [publisherId, order, pageSize, attempt, showLocal]);
+
+    // Names landing while the on-device list is shown: read it again.
+    useEffect(() => {
+      if (!isLocal) return;
+      void showLocal(++generationRef.current, namesRef.current);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- only a names change re-reads; isLocal is the guard
+    }, [namesKey]);
 
     // Offline is left by itself when the link comes back.
     useEffect(() => {

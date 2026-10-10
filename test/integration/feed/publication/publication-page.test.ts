@@ -10,6 +10,8 @@ import { __resetPublisherOrderSupport } from '@/lib/article-service';
 import { __resetPublicationProfileSession } from '@/lib/publication-profile-service';
 import { __clearPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
+import { useNetworkStore } from '@/lib/stores/network-store';
+import { seedSuggestion } from '@/test/integration/feed/detail/seed';
 import { articleFixtures } from '@/test/mock-backend/fixtures/articles';
 import { publicationProfileFor } from '@/test/mock-backend/fixtures/graphql/publications';
 
@@ -83,9 +85,6 @@ describe('opening', () => {
   });
 
   describe('the news request count while the profile lands', () => {
-    // BUG: usePublicationArticles keys its effect on the source names, which only the OFFLINE list
-    // needs. Online, the profile landing (names '' -> 'Fixtureville Courier') restarts the effect:
-    // the list blanks to 'loading' and the same page is requested a second time.
     const newsRequests = async () => {
       const sent = record('GetArticlesForPublisher');
       const { result } = open({ publisherId: PUB.publisherId });
@@ -97,12 +96,21 @@ describe('opening', () => {
       return sent.length;
     };
 
-    test.failing('asks for the first page once, whatever the profile later says', async () => {
+    test('asks for the first page once, whatever the profile later says', async () => {
       expect(await newsRequests()).toBe(1);
     });
 
-    it('today: asks for the first page a second time when the profile lands', async () => {
-      expect(await newsRequests()).toBe(2);
+    it('offline at open, the names landing later still fill the on-device list', async () => {
+      await seedSuggestion({ _id: 'local-1', publication_name: PUB.name } as never);
+      useNetworkStore.getState().setIsConnected(false);
+      try {
+        const { result } = open({ rawName: PUB.name, countryCode: PUB.countryCode });
+        await waitFor(() => expect(result.current.news.isLocal).toBe(true));
+        await waitFor(() => expect(result.current.articles.map((a) => a._id)).toEqual(['local-1']));
+        expect(result.current.news.state).toBe('offline');
+      } finally {
+        useNetworkStore.getState().setIsConnected(true);
+      }
     });
   });
 
