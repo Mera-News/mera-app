@@ -96,7 +96,6 @@
   "subscription": {
     "viewPlans": "View plans",
     "managePlan": "Manage plan",
-    "activationDelayed": "Your purchase is being confirmed. This can take a moment. Tap refresh if it doesn't continue.",
     "activatedTitle": "{{plan}} is active",
     "activatedBody": "Your personalized feed, dashboard, followed stories and chat are ready.",
     "planPromo": "Promo",

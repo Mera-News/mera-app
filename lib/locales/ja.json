@@ -825,7 +825,6 @@
     "emptyTitle": "まだ保存したものはありません"
   },
   "subscription": {
-    "activationDelayed": "購入を確認しています。少々お時間がかかる場合があります。進まない場合は更新をタップしてください。",
     "customerCenter": "サブスクリプションを管理・解約",
     "expiresOn": "有効期限",
     "lifetime": "買い切り",

@@ -825,7 +825,6 @@
     "emptyTitle": "还没有保存任何内容"
   },
   "subscription": {
-    "activationDelayed": "正在确认你的购买，这可能需要一点时间。如果没有继续，请点按刷新。",
     "customerCenter": "管理／取消订阅",
     "expiresOn": "到期日",
     "lifetime": "永久",

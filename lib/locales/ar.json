@@ -870,7 +870,6 @@
     "emptyTitle": "لا شيء محفوظ بعد"
   },
   "subscription": {
-    "activationDelayed": "يجري تأكيد عملية الشراء. قد يستغرق هذا لحظة: اضغط على تحديث إذا لم يكتمل.",
     "customerCenter": "إدارة الاشتراك / إلغاؤه",
     "expiresOn": "ينتهي في",
     "lifetime": "مدى الحياة",

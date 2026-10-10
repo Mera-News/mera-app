@@ -825,7 +825,6 @@
     "emptyTitle": "還沒有儲存任何內容"
   },
   "subscription": {
-    "activationDelayed": "正在確認你的購買。這可能需要一點時間。如果沒有繼續，請點按重新整理。",
     "customerCenter": "管理／取消訂閱",
     "expiresOn": "到期日",
     "lifetime": "終身",

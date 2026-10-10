@@ -825,7 +825,6 @@
     "emptyTitle": "아직 저장한 항목이 없습니다"
   },
   "subscription": {
-    "activationDelayed": "구매를 확인하는 중입니다. 잠시 걸릴 수 있으며, 계속되지 않으면 새로고침을 눌러주세요.",
     "customerCenter": "구독 관리 / 취소",
     "expiresOn": "만료일",
     "lifetime": "평생",

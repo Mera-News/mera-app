@@ -831,7 +831,6 @@
     "emptyTitle": "Rien d'enregistré pour l'instant"
   },
   "subscription": {
-    "activationDelayed": "Votre achat est en cours de confirmation. Cela peut prendre un instant : touchez actualiser si cela ne se poursuit pas.",
     "customerCenter": "Gérer / annuler l'abonnement",
     "expiresOn": "Expire le",
     "lifetime": "À vie",
