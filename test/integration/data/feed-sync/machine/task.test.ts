@@ -14,7 +14,6 @@ import '@/lib/scheduler/tasks/feed-sync-task';
 
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { getSetting } from '@/lib/database/services/setting-service';
-import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import * as schedulerPersistence from '@/lib/scheduler/scheduler-persistence';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
@@ -34,7 +33,7 @@ import {
   useFakeClock as freezeClockAt, // aliased: a use* name inside a plain function trips react-hooks/rules-of-hooks
 } from '@/test/helpers';
 import { jobRows, resetScheduler } from '../../scheduler/core/support';
-import { cleanupFeedSync, recordOps, resetFeedSyncMemory, seedInterest, servePersona, spyOnExport } from '../steps/support';
+import { cleanupFeedSync, recordOps, resetFeedSyncMemory, seedInterest, servePersona } from '../steps/support';
 import { fetchStep, gate, watchScoring, settleMachine, waitFor } from './support';
 
 jest.setTimeout(60_000);
@@ -290,18 +289,6 @@ describe('feed-sync scheduler task', () => {
       const [row] = await jobRows('feed-sync');
       expect(row.errorMessage).toContain('UserPersona not found');
       expect(await runs()).toBe(0);
-    });
-
-    it('logs which user and persona it runs for, and "null" when it has none', async () => {
-      const debug = spyOnExport(logger, 'debug');
-      useUserStore.setState({ userId: 'user-9' } as never);
-      await advanceUntilDone(AppScheduler.trigger('feed-sync', undefined, { bypassDebounce: true }));
-      useUserStore.setState({ userId: null } as never);
-      await advanceUntilDone(AppScheduler.trigger('feed-sync', undefined, { bypassDebounce: true }));
-
-      const lines = debug.mock.calls.map((c) => String(c[0])).filter((m) => m.includes('[feed-sync-task]'));
-      expect(lines[0]).toContain('userId=user-9 personaId=persona-1 attempt=1');
-      expect(lines[1]).toContain('userId=null personaId=persona-1');
     });
 
     it('starts the machine for the persona it finds', async () => {

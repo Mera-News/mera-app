@@ -5,7 +5,7 @@ import {
   NETWORK_DEPENDENT_STATES,
   FEED_SYNC_MACHINE_KEY,
   STALE_MACHINE_AGE_MS,
-} from '../feed-sync-types';
+} from '@/lib/scheduler/feed-sync/feed-sync-types';
 
 describe('InvalidTransitionError', () => {
   it('is an Error instance', () => {

@@ -2,6 +2,7 @@
 // app's own services, per-test server handlers for the id and hydrate operations, an ordered
 // request recorder, key-scoped DB faults and the module-memory reset. Not a test file.
 import database from '@/lib/database';
+import { restoreFaults } from '../../support/faults';
 import { addFact } from '@/lib/database/services/fact-service';
 import { getStageRowsByIds, loadSuggestions } from '@/lib/database/services/article-suggestion-service';
 import { upsertLocation } from '@/lib/database/services/location-service';
@@ -449,65 +450,8 @@ export async function retentionRows(): Promise<{ id: string; origin: string | nu
   return rows.map((r: any) => ({ id: r.id as string, origin: (r.origin ?? null) as string | null }));
 }
 
-// ---------------------------------------------------------------------------
-// Fault injection on a real collection (copied from hydrate-and-wipe/support.ts, R26)
-// ---------------------------------------------------------------------------
-
-type Rule = { match: (conditions: unknown[]) => boolean; error: Error };
-const rulesByTable = new Map<string, Rule[]>();
-const spiesByTable = new Map<string, jest.SpyInstance>();
-
-function install(table: string): Rule[] {
-  let rules = rulesByTable.get(table);
-  if (rules) return rules;
-  rules = [];
-  rulesByTable.set(table, rules);
-  const collection = database.get(table) as any;
-  const real = collection.query.bind(collection);
-  const spy = jest.spyOn(collection, 'query').mockImplementation(((...conditions: unknown[]) => {
-    for (const rule of rulesByTable.get(table) ?? []) {
-      if (rule.match(conditions)) throw rule.error;
-    }
-    return real(...conditions);
-  }) as never);
-  spiesByTable.set(table, spy);
-  return rules;
-}
-
-const isKey = (key: string) => (conditions: unknown[]) =>
-  conditions.some((c) => {
-    const w = c as { type?: string; left?: string; comparison?: { right?: { value?: unknown } } };
-    return w?.type === 'where' && w.left === 'key' && w.comparison?.right?.value === key;
-  });
-
-/** Every `settings` read for exactly `key` throws. */
-export function failSettingRead(key: string, error = new Error(`settings read failed for ${key} (injected)`)): void {
-  install('settings').push({ match: isKey(key), error });
-}
-
-/** Every query on `table` throws. */
-export function failTableQuery(table: string, error = new Error(`${table} query failed (injected)`)): void {
-  install(table).push({ match: () => true, error });
-}
-
-export function restoreFaults(): void {
-  for (const spy of spiesByTable.values()) spy.mockRestore();
-  spiesByTable.clear();
-  rulesByTable.clear();
-}
-
-/** Real-timer poll; fails with `what` after `timeoutMs`. */
-export async function until(condition: () => boolean | Promise<boolean>, what: string, timeoutMs = 4000): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (!(await condition())) {
-    if (Date.now() > deadline) throw new Error(`timed out waiting for ${what}`);
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-}
-
-export async function flush(ms = 60): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, ms));
-}
+// Fault injection (R26) and the real-timer waits live in the shared data helpers.
+export { failSettingRead, failTableQuery, until, flush } from '../../support/faults';
 
 // ---------------------------------------------------------------------------
 // The scoring pipeline world (foreground enqueue reaches the gateway mock)
