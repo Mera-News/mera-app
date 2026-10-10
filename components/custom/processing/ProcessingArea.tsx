@@ -36,9 +36,8 @@ interface ProcessingAreaProps {
  *
  * ## The headline crossfade uses ONE shared opacity
  *
- * Not a keyed `Animated.View` with `entering`/`exiting`.
- * `chat/StreamingIndicator.tsx` records why from experience: Reanimated keeps
- * the exiting copy on screen, outside the layout flow, while the new one
+ * Not a keyed `Animated.View` with `entering`/`exiting`:
+ * Reanimated keeps the exiting copy on screen, outside the layout flow, while the new one
  * mounts, which drew two captions on top of each other inside a fixed-height
  * row. Fade out, swap the text at the trough, fade back in. Exactly one
  * headline is mounted at any instant.

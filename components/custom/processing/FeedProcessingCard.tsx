@@ -40,8 +40,7 @@ import { useProcessingSnapshot } from './use-processing-snapshot';
  * `components/custom/__tests__/status-cards.test.tsx` both address this surface
  * by them, and renaming them would break a harness runbook for no gain.
  *
- * What it does NOT keep is `StreamingIndicator`, whose twenty captions are
- * hardcoded English and were rendering untranslated on this exact surface.
+ * Every caption here comes from the locale files; none is hardcoded English.
  */
 const FeedProcessingCard: React.FC = () => {
     const { t } = useTranslation();
