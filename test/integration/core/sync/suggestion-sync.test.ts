@@ -32,6 +32,8 @@ import {
   signInFixtureAccount,
   useFakeClock,
 } from '@/test/helpers';
+import { resetFileSystem } from '@/test/helpers/fs';
+import { installLlama } from '@/test/helpers/llama';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { initLlama } from 'llama.rn';
 import {
@@ -46,28 +48,8 @@ import {
   suggestionRows,
 } from './seed';
 
-// The edges. jest.setup.native.js stubs llama.rn without a resolving toggleNativeLog, which the
-// model manager awaits, so this file supplies the whole module.
-jest.mock('llama.rn', () => ({
-  initLlama: jest.fn(),
-  releaseAllLlama: jest.fn(),
-  loadLlamaModelInfo: jest.fn(async () => ({})),
-  toggleNativeLog: jest.fn(async () => {}),
-  addNativeLogListener: jest.fn(() => ({ remove: jest.fn() })),
-}));
-jest.mock('expo-file-system', () => ({
-  Paths: { cache: '/tmp/mera-cache' },
-  File: class {
-    exists = true;
-    uri = 'file:///tmp/mera-cache/mera-models/model.gguf';
-    info() {
-      return { size: 10 };
-    }
-  },
-  Directory: class {
-    exists = false;
-  },
-}));
+// The edges: llama.rn (scripted by installLlama), expo-file-system (the model file), expo-keep-awake.
+jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModule);
 jest.mock('expo-keep-awake', () => ({
   activateKeepAwakeAsync: jest.fn(async () => {}),
   deactivateKeepAwake: jest.fn(),
@@ -75,20 +57,6 @@ jest.mock('expo-keep-awake', () => ({
 
 const KEEP_AWAKE_TAG = 'mera-scoring-pass';
 const mockInitLlama = initLlama as unknown as jest.Mock;
-
-/** A llama.rn context that answers every completion with `reply` (a bare relevance score). */
-const llamaContext = (reply = '[0.7]') => ({
-  release: jest.fn(async () => {}),
-  gpu: false,
-  model: { size: 0 },
-  completion: jest.fn(async () => ({
-    text: reply,
-    tokens_predicted: 1,
-    tokens_evaluated: 1,
-    truncated: false,
-    timings: {},
-  })),
-});
 
 /** Six stories with nothing in common, so story grouping elects each as its own representative
  *  and the batch clears the cloud dispatch floor. */
@@ -241,8 +209,8 @@ describe('SuggestionSyncService', () => {
   describe('runScoringPass: on-device mode', () => {
     beforeEach(() => {
       useFakeClock('2026-10-09T09:00:00Z');
-      mockInitLlama.mockReset();
-      mockInitLlama.mockResolvedValue(llamaContext());
+      resetFileSystem();
+      installLlama(['[0.7]']);
       useMeraProtocolStore.setState({
         processingMode: ProcessingMode.OnDevice,
         modelState: 'ready',
@@ -279,9 +247,10 @@ describe('SuggestionSyncService', () => {
 
     it('loads the model first when it is not ready, through the loading state', async () => {
       const states: string[] = [];
-      mockInitLlama.mockImplementation(async () => {
+      const scripted = mockInitLlama.getMockImplementation()!;
+      mockInitLlama.mockImplementation(async (...args: unknown[]) => {
         states.push(useMeraProtocolStore.getState().modelState);
-        return llamaContext();
+        return scripted(...args);
       });
       useMeraProtocolStore.setState({ modelState: 'downloaded' });
 

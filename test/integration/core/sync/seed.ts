@@ -1,9 +1,5 @@
 // Seeding for the core/sync seam tests: article_suggestions, facts and topics go in through the
 // app's own services, never as hand-written rows.
-// Load the harness helpers at file-load time: jest.setup.integration.js otherwise requires them inside
-// the first beforeEach, and test/helpers/screen.ts registers @testing-library hooks on load, which
-// Jest refuses once a test is running.
-import '@/test/helpers';
 import database from '@/lib/database';
 import type { PersonaSuppressionKind } from '@/lib/database/models/PersonaSuppression';
 import {

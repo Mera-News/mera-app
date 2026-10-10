@@ -153,9 +153,8 @@ describe('syncAppLanguageToPersona', () => {
     expect(useUserStore.getState().userPersona?.language_codes).toEqual(['en']);
   });
 
-  // CO6: the merge is meant to run against the freshest server persona so it never clobbers
-  // codes the on-device LLM added server-side. user-store.fetchUserPersona swallows a failed fetch
-  // into null, which this function reads as "no codes yet", so a failed fetch writes ['fr'] over them.
+  // CO6: the merge runs against the freshest server persona so it never clobbers codes the
+  // on-device LLM added server-side. When that persona cannot be fetched, nothing is written.
   describe('when the persona fetch fails', () => {
     beforeEach(() => {
       server.use(mockGqlError('GetUserPersona', 'INTERNAL_SERVER_ERROR', { message: 'fetch down' }));

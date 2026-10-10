@@ -1,9 +1,6 @@
 // persona-migration-service: the one-time silent persona v3 migration, run against the real
 // in-memory DB. Facts are seeded through fact-service; assertions read the topics, locations,
 // fact weights, change log and the guard row back.
-// Loaded here so the testing-library hooks it registers attach at file load, not inside the first test
-// (jest.setup.integration.js requires the helpers lazily from its beforeEach).
-import '@/test/helpers';
 import database from '@/lib/database';
 import type FactModel from '@/lib/database/models/Fact';
 import type LocationModel from '@/lib/database/models/Location';

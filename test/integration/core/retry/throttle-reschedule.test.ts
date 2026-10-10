@@ -6,8 +6,6 @@
 // Reached the way the app reaches it: AppScheduler.trigger() enqueues a real job row, the real
 // runner drives the handler, the retry ladder and the persistence layer. The synthetic task and
 // the per-test scheduler reset are the scheduler seam tests' own (data's support.ts).
-import '@/test/helpers';
-
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { jitteredInterval } from '@/lib/scheduler/jitter';
 import { advanceUntilDone } from '@/test/helpers';
