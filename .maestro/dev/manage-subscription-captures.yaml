@@ -1,5 +1,5 @@
 # Dev flow: PE6 Manage subscription captures after a scripted purchase. Confirming card in dark,
-# light and Lite; timeout card in dark and light; the confirmed state in dark (it stays on Manage plan).
+# light (Lite off) and Lite; timeout card in dark and light; the confirmed state in dark (it stays on Manage plan).
 # The paywall is the E2E build's stub (lib/e2e/purchases-ui.ts), answered by the scenario's
 # `paywall` block (test/mock-backend/scenario.ts). The confirming card shows from the purchase
 # through the whole poll budget (first poll, then 20 x 5 s, ~120 s). With upgradeTo, billing reports
@@ -18,8 +18,8 @@ appId: ${APP_ID}
 
 # Confirming, dark; then let it confirm so no poll outlives this step.
 - runFlow:
-    file: ../flows/set-appearance.yaml
-    env: { MODE: dark }
+    file: ../flows/set-display.yaml
+    env: { MODE: dark, LITE: off }
 - runFlow:
     file: ../flows/manage-buy.yaml
     env: { CARD: manage-confirming-card, SHOT: pe6-confirming-dark, WAIT: "15000" }
@@ -35,8 +35,8 @@ appId: ${APP_ID}
     env:
       SCENARIO: '{"tier":"starter","purchasedAt":null,"paywall":{"result":"PURCHASED","upgradeTo":"individual","confirmAfterMs":45000}}'
 - runFlow:
-    file: ../flows/set-appearance.yaml
-    env: { MODE: light }
+    file: ../flows/set-display.yaml
+    env: { MODE: light, LITE: off }
 - runFlow:
     file: ../flows/manage-buy.yaml
     env: { CARD: manage-confirming-card, SHOT: pe6-confirming-light, WAIT: "15000" }
@@ -51,13 +51,8 @@ appId: ${APP_ID}
     env:
       SCENARIO: '{"tier":"starter","purchasedAt":null,"paywall":{"result":"PURCHASED","upgradeTo":"individual","confirmAfterMs":45000}}'
 - runFlow:
-    file: ../flows/set-appearance.yaml
-    env: { MODE: dark }
-- tapOn:
-    id: "lite-mode-switch"
-- assertVisible:
-    id: "lite-mode-switch"
-    checked: true
+    file: ../flows/set-display.yaml
+    env: { MODE: dark, LITE: on }
 - runFlow:
     file: ../flows/manage-buy.yaml
     env: { CARD: manage-confirming-card, SHOT: pe6-confirming-lite, WAIT: "15000" }
@@ -65,12 +60,6 @@ appId: ${APP_ID}
     notVisible:
       id: "manage-confirming-card"
     timeout: 90000
-- openLink: ${SCHEME}:///logged-in/preferences/display
-- tapOn:
-    id: "lite-mode-switch"
-- assertVisible:
-    id: "lite-mode-switch"
-    checked: false
 
 # Timeout, dark: the purchase never confirms.
 - runScript:
@@ -78,16 +67,16 @@ appId: ${APP_ID}
     env:
       SCENARIO: '{"tier":"starter","purchasedAt":null,"paywall":{"result":"PURCHASED","upgradeTo":null,"confirmAfterMs":0}}'
 - runFlow:
-    file: ../flows/set-appearance.yaml
-    env: { MODE: dark }
+    file: ../flows/set-display.yaml
+    env: { MODE: dark, LITE: off }
 - runFlow:
     file: ../flows/manage-buy.yaml
     env: { CARD: manage-timeout-card, SHOT: pe6-timeout-dark, WAIT: "180000" }
 
 # Timeout, light.
 - runFlow:
-    file: ../flows/set-appearance.yaml
-    env: { MODE: light }
+    file: ../flows/set-display.yaml
+    env: { MODE: light, LITE: off }
 - runFlow:
     file: ../flows/manage-buy.yaml
     env: { CARD: manage-timeout-card, SHOT: pe6-timeout-light, WAIT: "180000" }

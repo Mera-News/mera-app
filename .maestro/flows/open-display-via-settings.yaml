@@ -1,0 +1,18 @@
+# Subflow: You tab -> Settings pager panel -> Display, the way a person does (FD6 path), then the
+# Lite switch centred. NativeTabs triggers carry no label on Android; a deep link into this tab left
+# its pages out of the accessibility tree (D4). Centred: low on the right edge, a tap at the
+# switch's centre lands on the floating Mera button.
+appId: ${APP_ID}
+---
+- tapOn:
+    id: ".*navigation_bar_item_icon_view"
+    index: 3
+- tapOn:
+    id: "page-pill-settings"
+- tapOn:
+    id: "settings-row-display"
+- scrollUntilVisible:
+    element:
+      id: "lite-mode-switch"
+    direction: DOWN
+    centerElement: true

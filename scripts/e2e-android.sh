@@ -93,7 +93,7 @@ step 1 prebuild$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build)" ): (s
 step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process); cp $APK_OUT $LAST; grep the raw bundle: require 10.0.2.2:$PORT, forbid prod/staging endpoint hosts and every .env secret value (DSN, KEY, TOKEN, APP_ID, CLIENT_ID)
 step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --deny-delay 3000 --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
 step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 -http-proxy http://127.0.0.1:$PORT > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s); screenshot $RUN/launcher.png
-step 5 install: adb -s $SERIAL install -r $LAST; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
+step 5 install: adb -s $SERIAL install -r $LAST; system animation scales to 0; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
 step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler; logcat -d > $RUN/logcat.txt; report WMDatabaseJSIBridge install line and FATAL lines
 step 7 app sockets: every sampled app-uid remote must be 10.0.2.2:$PORT (or loopback/unconnected), and at least one must be the mock
 step 8 cleanup (always, idempotent): stop sampler; adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f "@$AVD" to clear; kill mock server
@@ -225,6 +225,12 @@ done
 # ---- step 5: install and the app-socket sampler ------------------------------------------
 echo "== step 5: install"
 "$ADB" -s "$SERIAL" install -r "$LAST"
+# System animations off, before any launch (Reanimated reads Reduce Motion at launch). The app's
+# motion gate then parks every loop on a still frame, as Lite does, but keeps the full-mode look.
+# Without it, full mode's animated backdrop on the software GPU slowed each Maestro step to ~100 s.
+for k in window_animation_scale transition_animation_scale animator_duration_scale; do
+  "$ADB" -s "$SERIAL" shell settings put global "$k" 0
+done
 APP_UID="$("$ADB" -s "$SERIAL" shell pm list packages -U "$APP_ID" | tr -d '\r' | sed -n 's/.*uid://p' | head -1)"
 [ -n "$APP_UID" ] || { echo "error: could not resolve the uid of $APP_ID" >&2; exit 1; }
 "$ADB" -s "$SERIAL" shell cat /proc/net/tcp6 | head -1 | grep -q local_address \

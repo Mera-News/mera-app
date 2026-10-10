@@ -1,0 +1,56 @@
+# Subflow: Display settings, set appearance and Lite. env MODE: light | dark; LITE: on | off.
+# Relaunches first (state kept, so the session holds): a second deep link into a route already on
+# the stack landed on the You tab instead of the route, so every call starts from a fresh stack.
+# Lite defaults ON below 6 GB RAM (lib/performance/performance-mode.ts), so the harness AVD (3 GB)
+# starts in Lite: the switch is tapped only when it is not already in the wanted state.
+appId: ${APP_ID}
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "feed-screen"
+    timeout: 60000
+- openLink: ${SCHEME}:///logged-in/preferences/display
+- extendedWaitUntil:
+    visible:
+      id: "appearance-switch-${MODE}"
+    timeout: 15000
+- tapOn:
+    id: "appearance-switch-${MODE}"
+# Centred first: low on the right edge, a tap at its centre lands on the floating Mera button.
+- scrollUntilVisible:
+    element:
+      id: "lite-mode-switch"
+    direction: DOWN
+    centerElement: true
+- runFlow:
+    when:
+      true: ${LITE == 'on'}
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "lite-mode-switch"
+              checked: false
+          commands:
+            - tapOn:
+                id: "lite-mode-switch"
+      - assertVisible:
+          id: "lite-mode-switch"
+          checked: true
+- runFlow:
+    when:
+      true: ${LITE == 'off'}
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "lite-mode-switch"
+              checked: true
+          commands:
+            - tapOn:
+                id: "lite-mode-switch"
+      - assertVisible:
+          id: "lite-mode-switch"
+          checked: false
