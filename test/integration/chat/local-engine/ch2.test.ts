@@ -21,7 +21,6 @@ import {
 } from '@/test/integration/chat/_helpers';
 import {
   attachLocal,
-  expectNothingLeftTheDevice,
   local,
   localToolCall,
   settle,
