@@ -55,5 +55,15 @@ describe('feed-sync task conditions', () => {
 
       expect(useForYouStore.getState().dailyLimitResetAt).toBeNull();
     });
+
+    test('DA42: a Starter billing write keeps the hold, a paid one clears it', () => {
+      useForYouStore.setState({ dailyLimitResetAt: NOW + 60_000 });
+
+      useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'starter' });
+      expect(useForYouStore.getState().dailyLimitResetAt).toBe(NOW + 60_000);
+
+      useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'individual' });
+      expect(useForYouStore.getState().dailyLimitResetAt).toBeNull();
+    });
   });
 });
