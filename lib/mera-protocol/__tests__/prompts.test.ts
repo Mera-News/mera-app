@@ -27,7 +27,7 @@ import {
   NOISE_GENERATION_SYSTEM_PROMPT,
   CLOUD_TOPIC_GEN_RULES_SNIPPET,
   LOCAL_TOPIC_GEN_RULES_SNIPPET,
-} from '../prompts';
+} from '@/lib/news-harness/prompts/prompts';
 
 // ============================================================
 // sanitizeForPrompt

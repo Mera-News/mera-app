@@ -10,10 +10,8 @@
 // Seam note: the prompt-string builders (buildPersonaUpdateStaticPrompt,
 // buildPersonaUpdateContext, buildToolDefinitions) are accepted as INJECTABLE
 // parameters, defaulting to this harness's own canonical imports.
-// PersonaUpdateAgent.ts passes its own imports from the (test-mockable)
-// lib/mera-protocol/prompts shim explicitly, so the frozen
-// PersonaUpdateAgent.test.ts — which mocks that shim module and asserts on the
-// mock call args — keeps passing unmodified. Same pattern as
+// PersonaUpdateAgent.ts passes its own imports explicitly, so a test can mock them.
+// Same pattern as
 // lib/news-harness/persona-management/topic-generation.ts's `systemPrompts`
 // injection and lib/mera-protocol/scoring-service.ts's mockable-seam notes.
 

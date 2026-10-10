@@ -10,7 +10,7 @@ import {
   buildIdToAttributeTextMap,
   type QuestionnaireLevel,
   type QuestionnaireAttribute,
-} from '../questionnaire-data';
+} from '@/lib/news-harness/prompts/questionnaire-data';
 
 // ============================================================
 // Static data shape

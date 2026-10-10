@@ -15,7 +15,7 @@ import {
   LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
   asUntrusted,
-} from './prompts';
+} from '@/lib/news-harness/prompts/prompts';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
   buildBaseUserPrompt,

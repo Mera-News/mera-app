@@ -19,7 +19,7 @@ import {
   buildBatchScoringUserMessage,
   buildLocalReasonUserMessage,
   buildReasonUserMessage,
-} from './prompts';
+} from '@/lib/news-harness/prompts/prompts';
 import {
   batchMarkExcluded,
   countUnscoredSuggestions,

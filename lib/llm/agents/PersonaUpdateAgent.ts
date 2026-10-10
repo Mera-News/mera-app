@@ -16,7 +16,7 @@ import { getActive as getActiveSuppressions } from '../../database/services/supp
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import logger from '../../logger';
-import { buildPersonaUpdateStaticPrompt, buildPersonaUpdateContext, buildToolDefinitions } from '../../mera-protocol/prompts';
+import { buildPersonaUpdateStaticPrompt, buildPersonaUpdateContext, buildToolDefinitions } from '@/lib/news-harness/prompts/prompts';
 import { useAppLanguageStore } from '../../stores/app-language-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
