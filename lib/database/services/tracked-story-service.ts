@@ -210,9 +210,9 @@ export async function listTrackedMemberArticleIds(): Promise<Set<string>> {
         method: 'listTrackedMemberArticleIds',
       },
     });
-    // Same fail-closed reasoning: the sweep treats an unreadable set as "cannot
-    // prove anything is orphaned" and destroys nothing this pass.
-    return new Set<string>();
+    // Rethrows so callers fail closed: an empty Set would read as "nothing is
+    // held" and let the sweep destroy rows a followed story still needs.
+    throw err;
   }
 }
 

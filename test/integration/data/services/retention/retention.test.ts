@@ -546,23 +546,13 @@ describe('the orphan sweep (deleteOrphanedRetention)', () => {
     return s;
   }
 
-  test.failing('DATA-U9-1: an unreadable tracked_stories table destroys nothing (fails closed)', async () => {
+  test('DATA-U9-1: an unreadable tracked_stories table destroys nothing (fails closed)', async () => {
     const s = await storyHeldRowWithUnreadableStories();
 
     await deleteOrphanedRetention();
 
     restoreFaults();
     expect(await originsById()).toEqual({ [s.articleId]: 'tracked_story' });
-  });
-
-  it('DATA-U9-1 today: an unreadable tracked_stories table lets the sweep destroy a row a followed story holds', async () => {
-    const s = await storyHeldRowWithUnreadableStories();
-
-    expect(await deleteOrphanedRetention()).toBe(1);
-
-    restoreFaults();
-    expect(await savedRows()).toEqual([]);
-    expect(s.articleId).toBeTruthy();
   });
 });
 
