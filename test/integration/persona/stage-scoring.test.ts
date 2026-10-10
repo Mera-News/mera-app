@@ -25,7 +25,7 @@ import { ProcessingMode, type ArticleWithClusters } from '@/lib/generated/graphq
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
 import { LOCAL_CONTEXT_TOKENS } from '@/lib/mera-protocol-toolkit/core/context-size';
 import { getInferenceStats, resetInferenceStats } from '@/lib/mera-protocol-toolkit/core/inference-stats';
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import logger from '@/lib/logger';
 import { buildReasonCallsForSubset, buildRelevanceCalls } from '@/lib/mera-protocol/scoring-service';
 import {

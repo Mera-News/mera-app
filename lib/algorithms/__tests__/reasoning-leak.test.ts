@@ -1,4 +1,4 @@
-import { stripLeakedReasoning } from '@/lib/llm/reasoning-leak';
+import { stripLeakedReasoning } from '@/lib/algorithms/reasoning-leak';
 
 describe('stripLeakedReasoning', () => {
   it('drops a closer-only prefix — the GLM 5.3 Flash thinking-off shape', () => {

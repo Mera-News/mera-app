@@ -19,7 +19,7 @@ import {
 } from '@/lib/news-harness/index';
 import { relevanceSystemPromptFor, reasonSystemPromptFor } from '@/lib/news-harness/article-pipeline/scoring';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { undoUx1ReasonLabelRule } from './ux1-reason-label';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;

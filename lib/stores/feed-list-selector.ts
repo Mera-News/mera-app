@@ -27,7 +27,7 @@ import {
   WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
   ENTITY_JACCARD_DISPLAY_THRESHOLD,
   type GroupableItem,
-} from '@/lib/feed-grouping/story-grouping';
+} from '@/lib/algorithms/story-grouping';
 import {
   FEED_WINDOW_MS,
   isVisible,

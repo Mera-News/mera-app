@@ -5,7 +5,7 @@ import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import { getActiveTier } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { useColors } from '@/lib/theme/tokens';
-import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
+import { resolvePlanDisplay } from '@/lib/algorithms/plan-display';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';

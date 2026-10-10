@@ -63,7 +63,7 @@ import {
     normalizeTitleTokens,
     titleJaccard,
     TITLE_JACCARD_PROPAGATION_THRESHOLD,
-} from '@/lib/feed-grouping/story-grouping';
+} from '@/lib/algorithms/story-grouping';
 import logger from '@/lib/logger';
 
 // STATIC GRAPH IS DELIBERATELY PURE: the two database touch-points below use

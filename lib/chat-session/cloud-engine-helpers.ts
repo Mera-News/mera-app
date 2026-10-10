@@ -8,7 +8,7 @@ import type { AgentDeps } from '../mera-harness';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { unresolvedGroups } from '../chat-tools/fact-choice-resolution';
-import { estimateTokens } from '../llm/tokens';
+import { estimateTokens } from '../algorithms/estimate-tokens';
 
 /**
  * The one-time split offer for a combined "origin plus residence" fact is

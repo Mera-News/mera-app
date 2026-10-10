@@ -11,7 +11,7 @@ import {
   formatTopicPlanNotesBlock,
   type TopicPlanNote,
 } from '@/lib/news-harness/persona-management/topic-plan-notes';
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 
 const saved = (statement: string, kept: string[] = [], removed: string[] = []): TopicPlanNote => ({
   kind: 'saved',

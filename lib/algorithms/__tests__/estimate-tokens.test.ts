@@ -1,4 +1,4 @@
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 
 describe('estimateTokens', () => {
   it('returns 0 for an empty string', () => {

@@ -25,7 +25,7 @@ import {
     TITLE_JACCARD_DISPLAY_THRESHOLD,
     WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
     ENTITY_JACCARD_DISPLAY_THRESHOLD,
-} from '@/lib/feed-grouping/story-grouping';
+} from '@/lib/algorithms/story-grouping';
 import {
     orderRelatedArticles,
     type RelatedSortable,

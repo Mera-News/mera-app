@@ -5,7 +5,7 @@
 // difference than it reports, and nothing in the run would say so. The token
 // sizes below are the measured sizes at 68189e7 and are the tripwire.
 
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import {
   PROMPT_ARCHIVE_V1,
   PERSONA_V1,

@@ -4,7 +4,7 @@
 import database from '@/lib/database';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
-import { TITLE_JACCARD_PROPAGATION_THRESHOLD } from '@/lib/feed-grouping/story-grouping';
+import { TITLE_JACCARD_PROPAGATION_THRESHOLD } from '@/lib/algorithms/story-grouping';
 import {
   batchMarkAlreadyRead,
   buildReadStoryIndex,

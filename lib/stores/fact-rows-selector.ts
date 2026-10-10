@@ -87,7 +87,7 @@ import {
   ENTITY_JACCARD_DISPLAY_THRESHOLD,
   SCORE_PROPAGATION_LOOKBACK_MS,
   type GroupableItem,
-} from '@/lib/feed-grouping/story-grouping';
+} from '@/lib/algorithms/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';

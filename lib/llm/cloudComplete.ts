@@ -15,7 +15,7 @@ import {
 import { getCachedAttestation, invalidateCachedAttestation } from '../e2ee/e2ee-cache';
 import logger from '../logger';
 import { CHAT_REASONING_HEADROOM_TOKENS, SMALL_MODEL } from './constants';
-import { stripLeakedReasoning } from './reasoning-leak';
+import { stripLeakedReasoning } from '../algorithms/reasoning-leak';
 import {
   APP_TOOL_FORMAT,
   assertNoCleartextToolFields,
@@ -24,7 +24,7 @@ import {
 } from './text-tool-protocol';
 import { reportModelFailure, resolveModel } from './model-fallback';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
-import { estimateTokens } from './tokens';
+import { estimateTokens } from '../algorithms/estimate-tokens';
 import type { BatchCall, ToolDefinition } from './types';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 import type { PhaseSignal } from '@/lib/services/chat-phase';

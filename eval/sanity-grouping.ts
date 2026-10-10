@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { buildStoryGroups, CLUSTER_CORE_CONFIDENCE_THRESHOLD, TITLE_JACCARD_DISPLAY_THRESHOLD } from '../lib/feed-grouping/story-grouping';
+import { buildStoryGroups, CLUSTER_CORE_CONFIDENCE_THRESHOLD, TITLE_JACCARD_DISPLAY_THRESHOLD } from '../lib/algorithms/story-grouping';
 
 const raw = fs.readFileSync('logs.md', 'utf8');
 const rows: any[] = [];

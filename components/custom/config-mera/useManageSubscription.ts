@@ -1,5 +1,5 @@
 import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
-import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
+import { resolvePlanDisplay } from '@/lib/algorithms/plan-display';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { ensureEmailBeforeCheckout } from '@/lib/subscription/email-capture';

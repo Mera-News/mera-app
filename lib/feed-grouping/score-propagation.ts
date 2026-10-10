@@ -98,7 +98,7 @@ import {
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     SCORE_PROPAGATION_LOOKBACK_MS,
     TITLE_JACCARD_PROPAGATION_THRESHOLD,
-} from '@/lib/feed-grouping/story-grouping';
+} from '@/lib/algorithms/story-grouping';
 import logger from '@/lib/logger';
 
 export interface GateResult {

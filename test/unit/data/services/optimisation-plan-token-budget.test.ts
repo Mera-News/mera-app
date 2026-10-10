@@ -9,7 +9,7 @@
 // worst case, so "bounded by the candidate cap" needed to become a number.
 // This test is that number, and it fails if a future change eats the headroom.
 
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import {
   analyzeFeedback,
   DIGEST_CONSTANTS,

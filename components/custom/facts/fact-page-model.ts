@@ -12,7 +12,7 @@ import {
     pickRepresentative,
     TITLE_JACCARD_DISPLAY_THRESHOLD,
     WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-} from '@/lib/feed-grouping/story-grouping';
+} from '@/lib/algorithms/story-grouping';
 import { FEED_WINDOW_MS, isWithinWindow, relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 import type { FactRowGroup } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';

@@ -10,7 +10,7 @@ import {
   getArticleFeedbackToolDefinitions,
   selectActiveFiltersForContext,
 } from '@/lib/news-harness/article-feedback/agent-core';
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
 import { SUPPRESSION_KINDS } from '@/lib/news-harness/core/types';
 import type {

@@ -5,13 +5,13 @@
 
 import { decryptContent, type SigningAlgo } from '../e2ee/e2ee-service';
 import logger from '../logger';
-import { createThinkStripper } from './think-strip';
+import { createThinkStripper } from '../algorithms/think-strip';
 import {
   APP_TOOL_FORMAT,
   createToolCallStreamParser,
   type TextToolDefinition,
 } from './text-tool-protocol';
-import { sseEvents } from './sse';
+import { sseEvents } from '../algorithms/sse';
 import {
   CallerAbortError,
   CleartextToolCallError,

@@ -30,7 +30,7 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
   RULE_NAME_BAN,
 } from '@/lib/news-harness/prompts/prompts';
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 // The REAL encrypt path, so the wire-size formula below is proved, not assumed.
 // `e2ee-crypto` is the Node-importable half of the E2EE module on purpose.
 import { ed25519 } from '@noble/curves/ed25519.js';

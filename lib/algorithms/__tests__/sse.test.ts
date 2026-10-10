@@ -1,7 +1,7 @@
 // Tests for lib/llm/sse.ts — the incremental SSE parser + its reader helper.
 // Pure module: no mocks, no I/O.
 
-import { SseParser, sseEvents } from '@/lib/llm/sse';
+import { SseParser, sseEvents } from '@/lib/algorithms/sse';
 
 /** A reader over a fixed list of byte chunks, as `sseEvents` consumes it. */
 function makeReader(chunks: Uint8Array[]): ReadableStreamDefaultReader<Uint8Array> {

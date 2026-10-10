@@ -1,4 +1,4 @@
-import { createThinkStripper, stripThinkTags } from '@/lib/llm/think-strip';
+import { createThinkStripper, stripThinkTags } from '@/lib/algorithms/think-strip';
 
 /** Every way to cut `text` into two chunks, plus one chunk per character. */
 function chunkings(text: string): string[][] {

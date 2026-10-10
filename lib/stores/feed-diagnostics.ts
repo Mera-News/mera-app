@@ -40,7 +40,7 @@ import {
   grayBandSweep,
   type DedupCandidate,
   type GrayBandCounters,
-} from '@/lib/feed-grouping/gray-band-pairs';
+} from '@/lib/algorithms/gray-band-pairs';
 import type {
   ScoringModeBreakdown,
   SharedNoteBreakdown,

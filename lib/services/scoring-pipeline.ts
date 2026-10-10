@@ -112,7 +112,7 @@ import {
 // The cold-start predicate reuses the SAME 48h donor lookback the score
 // propagation uses — a table with zero scored donors in that window is exactly
 // a "cold" feed (no scores to render, no siblings to propagate from).
-import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/feed-grouping/story-grouping';
+import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/algorithms/story-grouping';
 
 import {
   BATCH_STALE_MS,

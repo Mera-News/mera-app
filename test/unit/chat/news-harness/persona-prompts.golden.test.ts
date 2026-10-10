@@ -25,7 +25,7 @@
 //     (`TOPIC_GENERATION_SYSTEM_PROMPT` is the legacy name for the cloud one;
 //     the local noise prompt is deliberately the cloud one). Pinned so a future
 //     edit to one half cannot silently fork them.
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import * as viaBarrel from '@/lib/news-harness/prompts/prompts';
 import {
   CLOUD_TOPIC_GEN_RULES_SNIPPET,

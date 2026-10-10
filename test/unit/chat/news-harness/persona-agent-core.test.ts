@@ -20,7 +20,7 @@ import {
   planPersonaPrompt,
   type ContextFact,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import type { ActiveSuppressionView, StagedProposal } from '@/lib/news-harness/core/types';
 import {
   buildToolDefinitions,

@@ -14,10 +14,10 @@ import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
 import type { ConversationMessage, IAgent, ToolCallRecord } from './types';
-import { estimateTokens } from './tokens';
+import { estimateTokens } from '../algorithms/estimate-tokens';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
-import { createThinkStripper } from './think-strip';
+import { createThinkStripper } from '../algorithms/think-strip';
 import {
   HISTORY_RESERVE_TOKENS,
   MAX_HISTORY_USER_TURNS,

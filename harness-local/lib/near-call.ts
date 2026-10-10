@@ -1,4 +1,4 @@
-import { stripLeakedReasoning } from '../../lib/llm/reasoning-leak';
+import { stripLeakedReasoning } from '../../lib/algorithms/reasoning-leak';
 import {
   REQUIRED_TOOL_REASK,
   createToolCallStreamParser,

@@ -17,7 +17,7 @@
 import { cloudBatchComplete, cloudComplete } from '@/lib/llm/cloudComplete';
 import { completeLocal } from '@/lib/llm/completeLocal';
 import { SMALL_MODEL } from '@/lib/llm/constants';
-import { estimateTokens } from '@/lib/llm/tokens';
+import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import logger from '@/lib/logger';
 import { LOCAL_CONTEXT_TOKENS } from '@/lib/mera-protocol-toolkit/core/context-size';
 import { LOCAL_RELEVANCE_SYSTEM_PROMPT } from '@/lib/news-harness/prompts/prompts';

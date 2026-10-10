@@ -11,7 +11,7 @@ import {
   readPendingGroups,
 } from '@/lib/chat-tools/fact-choice-resolution';
 import { isFactPickChoice, joinFactPick } from '@/lib/mera-harness/core/fact-pick';
-import { stripThinkTags } from '@/lib/llm/think-strip';
+import { stripThinkTags } from '@/lib/algorithms/think-strip';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 import type {
   AgentTerminal,

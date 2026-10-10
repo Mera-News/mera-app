@@ -33,7 +33,7 @@ import {
   type PersonaMode,
   type PersonaPromptPlan,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
-import { estimateTokens } from '../tokens';
+import { estimateTokens } from '../../algorithms/estimate-tokens';
 import { normalizeToolName } from '@/lib/news-harness/persona-management/tool-names';
 import {
   chooseOneRefusal,
