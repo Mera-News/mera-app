@@ -4,16 +4,15 @@
 // @testing-library hooks on load.
 import database from '@/lib/database';
 import type PersonaChangeLogModel from '@/lib/database/models/PersonaChangeLog';
-import { loadSuggestions, persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-service';
 import { addFact } from '@/lib/database/services/fact-service';
 import { upsertLocation } from '@/lib/database/services/location-service';
 import { createTopics } from '@/lib/database/services/topic-service';
-import type { ArticleWithClusters } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import { seedArticles, suggestionRows, type SeedArticle } from '@/test/integration/core/sync/seed'; // core's seeder (read-only cross-area import)
 import { useStrictClock as strictClockAt } from '@/test/helpers'; // aliased: a use* name in a plain function trips rules-of-hooks
 import { __resetSuggestionsRefreshThrottleForTests } from '@/lib/services/SuggestionSyncService';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
-import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useHardFilterLabelStore } from '@/lib/stores/hard-filter-label-store';
 
 export const MIN = 60_000;
@@ -93,41 +92,7 @@ export async function seedPlace(
   return upsertLocation({ city, countryCode, role, weight });
 }
 
-export interface SeedArticle {
-  id: string;
-  title?: string;
-  publication?: string | null;
-}
-
-/** Insert articles as `unscored` rows, the way feed-sync hydration writes them. */
-export async function seedArticles(articles: SeedArticle[]): Promise<void> {
-  const fetched = articles.map(
-    (a) =>
-      ({
-        _id: a.id,
-        title: a.title ?? `Title ${a.id}`,
-        title_en: a.title ?? `Title ${a.id}`,
-        description_en: `Description ${a.id}`,
-        publication_name: a.publication ?? null,
-        country_code: null,
-        language_code: 'en',
-        category: null,
-        geo_tags: null,
-        entities: null,
-        pubDate: new Date(Date.now() - 2 * 3600_000).toISOString(),
-        clusters: [],
-      }) as unknown as ArticleWithClusters,
-  );
-  await persistAndLinkV2Suggestions(fetched, new Map(), {
-    matchedTopics: new Map(articles.map((a) => [a.id, [] as { topicId: string | null; text: string }[]])),
-    headlineScope: new Map(),
-  });
-}
-
-/** Every stored suggestion as the Feed sees it, keyed by article id. */
-export async function suggestionRows(): Promise<Record<string, ForYouSuggestion>> {
-  return Object.fromEntries((await loadSuggestions()).map((s) => [s._id, s]));
-}
+export { seedArticles, suggestionRows, type SeedArticle };
 
 export async function statuses(): Promise<Record<string, string>> {
   return Object.fromEntries(Object.entries(await suggestionRows()).map(([id, r]) => [id, r.status]));
@@ -200,23 +165,4 @@ export async function rowById<T = any>(table: string, id: string): Promise<T> {
   return plain(await database.get(table).find(id)) as T;
 }
 
-// ---------------------------------------------------------------------------
-// Fault injection on a real collection (R26): every query on `table` throws until restored.
-// ---------------------------------------------------------------------------
-
-const spies = new Map<string, jest.SpyInstance>();
-
-export function failTableQuery(table: string, error = new Error(`${table} query failed (injected)`)): void {
-  const collection = database.get(table) as any;
-  spies.set(
-    table,
-    jest.spyOn(collection, 'query').mockImplementation((() => {
-      throw error;
-    }) as never),
-  );
-}
-
-export function restoreFaults(): void {
-  for (const spy of spies.values()) spy.mockRestore();
-  spies.clear();
-}
+export { failTableQuery, restoreFaults } from '../../support/faults';

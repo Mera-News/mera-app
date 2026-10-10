@@ -8,6 +8,7 @@ import { Q } from '@nozbe/watermelondb';
 import type { Clause } from '@nozbe/watermelondb/QueryDescription';
 
 import database from '@/lib/database';
+import { restoreFaults } from '../../support/faults';
 import type InferenceJobModel from '@/lib/database/models/InferenceJob';
 import type { InferenceJobType } from '@/lib/database/models/InferenceJob';
 import type TopicModel from '@/lib/database/models/Topic';
@@ -60,7 +61,7 @@ export function resetCloudMemory(): void {
 
 /** Call from `afterEach`. */
 export function cleanupTopics(): void {
-  restoreBatchFault();
+  restoreFaults();
   for (const stop of bodyWatchers.splice(0)) stop();
   __resetPendingForTests();
   __resetComboPassForTests();
@@ -83,15 +84,6 @@ export async function setMode(mode: 'cloud' | 'on-device'): Promise<void> {
  * turn. 1 ms steps keep the fake time a call burns negligible next to the windows under test.
  */
 export const drive = <T,>(promise: Promise<T>): Promise<T> => advanceUntilDone(promise, 120_000, 1);
-
-/** Real-timer poll; fails with `what` after `timeoutMs`. */
-export async function until(condition: () => boolean | Promise<boolean>, what: string, timeoutMs = 4000): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (!(await condition())) {
-    if (Date.now() > deadline) throw new Error(`timed out waiting for ${what}`);
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Seeding, through the app's services
@@ -264,51 +256,7 @@ export async function suggestionIds(): Promise<string[]> {
 // Fault injection on the real database (R23 / R26)
 // ---------------------------------------------------------------------------
 
-let batchSpy: jest.SpyInstance | undefined;
-
-/** One operation of a batch, as the adapter receives it. `raw` is the row for create / update, the id for a destroy. */
-export interface BatchOp {
-  table: string;
-  state: 'create' | 'update' | 'markAsDeleted' | 'destroyPermanently';
-  raw: Record<string, any>;
-}
-
-/**
- * Every batch that includes an operation matching `match` is refused by the ADAPTER: Database.batch
- * has already validated its records and cleared their prepared state, and nothing in the batch is
- * applied. That is what a failed disk write looks like, and it is atomic by construction, so a
- * service that splits the batch in two lands the half that does not match, which an adapter-level
- * count then shows. (Refusing in front of Database.batch instead leaves records "prepared but never
- * batched", which WatermelonDB's own diagnostic rejects.) Restored by `cleanupTopics`.
- */
-export function failBatchWhere(match: (op: BatchOp) => boolean, error = new Error('batch failed (injected)')): void {
-  restoreBatchFault();
-  const adapter = database.adapter as unknown as { batch: (ops: unknown[][]) => Promise<void> };
-  const real = adapter.batch.bind(adapter);
-  batchSpy = jest.spyOn(adapter, 'batch').mockImplementation(((operations: [BatchOp['state'], string, unknown][]) => {
-    const ops = operations.map(([state, table, raw]) => ({ state, table, raw }) as BatchOp);
-    if (ops.some(match)) return Promise.reject(error);
-    return real(operations);
-  }) as never);
-}
-
-export function restoreBatchFault(): void {
-  batchSpy?.mockRestore();
-  batchSpy = undefined;
-  for (const spy of querySpies.splice(0)) spy.mockRestore();
-}
-
-const querySpies: jest.SpyInstance[] = [];
-
-/** Every query on `table` throws (a spy on the real collection, R23/R26). Restored by `cleanupTopics`. */
-export function failTableQuery(table: string, error = new Error(`${table} query failed (injected)`)): void {
-  const collection = database.get(table) as unknown as { query: (...c: unknown[]) => unknown };
-  querySpies.push(
-    jest.spyOn(collection, 'query').mockImplementation((() => {
-      throw error;
-    }) as never),
-  );
-}
+export { failBatchWhere, failTableQuery, until } from '../../support/faults';
 
 // ---------------------------------------------------------------------------
 // Waiting on an observable

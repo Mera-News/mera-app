@@ -4,9 +4,6 @@
 // held because the fake ignored the id and sort clauses. Here deleteSummaryString's
 // Q.where('id', Q.notEq(id)) and getLatestPersonaVersion's desc sort run against real rows.
 //
-// persona-summary-trigger.ts has no test, legacy or here: maybeRegeneratePersonaSummary has no
-// caller, so it is reported as uncovered dead code.
-//
 // Not carried over: "calls database.batch / prepareCreate N times" (mock-call counts; the rows
 // left behind are asserted instead).
 import {

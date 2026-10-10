@@ -3,10 +3,6 @@
 //
 // Replaces lib/backup/__tests__/backup-settings.test.ts (all 15 `it`). The legacy suite mocked the
 // setting service with a Map; the rows are now real. Not carried over: none dropped.
-//
-// Not reachable at this seam: the setters' registration call (`syncBackgroundTaskRegistration`)
-// stops at `TaskManager.getRegisteredTasksAsync`, which the shared expo-task-manager mock does not
-// provide. The setters swallow it, so the preference still persists. lib/background owns that path.
 import NetInfo from '@react-native-community/netinfo';
 
 import database from '@/lib/database';

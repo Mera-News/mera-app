@@ -15,9 +15,8 @@
 //     withheld; counts only ACTIVE rows toward the floor; ignores ids that are not active; ignores
 //     ids of another fact
 //
-// Not carried over: "an empty batch changes nothing" (the `!result` half of topic-replacement-service.ts:111,
-// and the `'no result'` fallback at :114) cannot be reached through the gateway mock, which answers one
-// result row per call, success or failure (R30 candidate). "Still mints even while the retire is
+// Not carried over: "an empty batch changes nothing" (the `!result` guard it covered is gone: the
+// gateway mock answers one result row per call, success or failure). "Still mints even while the retire is
 // withheld" is vacuous (the floor is only held when nothing was planned, so there is nothing to mint);
 // here the held floor asserts an empty mint. "One database.write" / "one database.batch" are asserted
 // by the batch fault. A result carrying an error uses the mock's per-item failure.
@@ -320,7 +319,7 @@ describe('replaceTopicsForFact: mint and retire land in a SINGLE batch', () => {
 // cannot leave the text behind either.
 // ---------------------------------------------------------------------------
 
-describe('B3: the metadata append dedupes on a looser key than the table', () => {
+describe('B3: the metadata append dedupes on the same key as the table', () => {
   /** A legacy fact: "dutch politics" only in metadata.topics, one real topic row, and a second fact to combine with. */
   async function legacyFact() {
     const fact = await addFact(CRICKET, { topics: ['dutch politics'] });

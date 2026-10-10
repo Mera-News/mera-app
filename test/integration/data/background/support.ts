@@ -39,6 +39,14 @@ import {
   type HydrateServe,
 } from '../feed-sync/steps/support';
 import { oid } from '../feed-sync/machine/support';
+import {
+  addRule,
+  failBatchWhere,
+  failSettingRead as failSharedSettingRead,
+  isKey,
+  restoreFaults,
+  type BatchOp,
+} from '../support/faults';
 
 export { servePersona, serveHydrate, seedInterest, seedTracked, recordOps, rowsById, art, spyOnExport } from '../feed-sync/steps/support';
 export { oid, watchScoring, scoreEntries, keepAwake, recordMachine } from '../feed-sync/machine/support';
@@ -174,64 +182,23 @@ export async function seedUnscored(count: number, over: { ageMs?: number; prefix
 // Faults on the real database (R26)
 // ---------------------------------------------------------------------------
 
-const dbSpies: jest.SpyInstance[] = [];
-
-const readsKey = (key: string) => (conditions: unknown[]) =>
-  conditions.some((c) => {
-    const w = c as { type?: string; left?: string; comparison?: { right?: { value?: unknown } } };
-    return w?.type === 'where' && w.left === 'key' && w.comparison?.right?.value === key;
-  });
+export { failBatchWhere };
 
 /** A `settings` read for exactly `key` that never answers: the DB probe hanging. */
 export function hangSettingRead(key: string): void {
-  const collection = database.get('settings') as unknown as { query: (...c: unknown[]) => unknown };
-  const real = collection.query.bind(collection);
-  dbSpies.push(
-    jest.spyOn(collection, 'query').mockImplementation(((...conditions: unknown[]) =>
-      readsKey(key)(conditions) ? { fetch: () => new Promise(() => undefined) } : real(...conditions)) as never),
-  );
+  addRule('settings', { match: isKey(key), gate: new Promise<void>(() => undefined) });
 }
 
 /** A `settings` read for exactly `key` that throws: SQLite not opening. */
 export function failSettingRead(key: string, error = new Error('unable to open database file (injected)')): void {
-  const collection = database.get('settings') as unknown as { query: (...c: unknown[]) => unknown };
-  const real = collection.query.bind(collection);
-  dbSpies.push(
-    jest.spyOn(collection, 'query').mockImplementation(((...conditions: unknown[]) => {
-      if (readsKey(key)(conditions)) throw error;
-      return real(...conditions);
-    }) as never),
-  );
-}
-
-interface BatchOp {
-  table: string;
-  state: string;
-  raw: Record<string, any>;
-}
-
-/**
- * Every batch holding an operation that matches is refused by the ADAPTER, atomically: what a failed
- * disk write looks like. Refusing in front of `Database.batch` would leave records "prepared but not
- * batched", which WatermelonDB's own diagnostic rejects.
- */
-export function failBatchWhere(match: (op: BatchOp) => boolean, error = new Error('batch failed (injected)')): void {
-  const adapter = database.adapter as unknown as { batch: (ops: unknown[][]) => Promise<void> };
-  const real = adapter.batch.bind(adapter);
-  dbSpies.push(
-    jest.spyOn(adapter, 'batch').mockImplementation(((operations: [string, string, unknown][]) => {
-      const ops = operations.map(([state, table, raw]) => ({ state, table, raw }) as BatchOp);
-      if (ops.some(match)) return Promise.reject(error);
-      return real(operations);
-    }) as never),
-  );
+  failSharedSettingRead(key, error);
 }
 
 export const ledgerWrite = (prefix: string) => (op: BatchOp) =>
   op.table === 'settings' && typeof op.raw?.key === 'string' && op.raw.key.startsWith(prefix);
 
 export function restoreDbFaults(): void {
-  for (const spy of dbSpies.splice(0)) spy.mockRestore();
+  restoreFaults();
   for (const stop of stoppers.splice(0)) stop();
 }
 

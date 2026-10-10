@@ -38,25 +38,6 @@ import {
 
 jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
 
-// The setup's expo-notifications mock has no IosAuthorizationStatus, which registerForPushNotificationsAsync
-// reads on iOS before it asks for anything, so every real registration throws under it. This file carries
-// the same mock plus that enum (the notifications SDK is a mockable edge). Reported to the harness owner.
-jest.mock('expo-notifications', () => ({
-  setNotificationHandler: jest.fn(),
-  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
-  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
-  scheduleNotificationAsync: jest.fn(() => Promise.resolve('notification-id')),
-  setBadgeCountAsync: jest.fn(() => Promise.resolve()),
-  getBadgeCountAsync: jest.fn(() => Promise.resolve(0)),
-  getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
-  requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
-  getExpoPushTokenAsync: jest.fn(() => Promise.resolve({ data: 'ExponentPushToken[test-token]' })),
-  setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
-  addPushTokenListener: jest.fn(() => ({ remove: jest.fn() })),
-  IosAuthorizationStatus: { NOT_DETERMINED: 0, DENIED: 1, AUTHORIZED: 2, PROVISIONAL: 3, EPHEMERAL: 4 },
-  AndroidImportance: { MAX: 5 },
-}));
-
 const TASK = 'push-token-check';
 const DEVICE_TOKEN = 'ExponentPushToken[test-token]';
 const UPDATE = 'UpdateExpoPushToken';

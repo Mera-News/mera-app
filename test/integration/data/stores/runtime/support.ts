@@ -8,6 +8,7 @@
 import database from '@/lib/database';
 import * as settingService from '@/lib/database/services/setting-service';
 import { getSetting } from '@/lib/database/services/setting-service';
+import { addRule, isKey, restoreFaults as restoreSharedFaults } from '../../support/faults';
 
 // ---------------------------------------------------------------------------
 // Waiting
@@ -91,56 +92,14 @@ export async function drainWrites(): Promise<void> {
 // Fault injection on a real collection (R26)
 // ---------------------------------------------------------------------------
 
-type Rule = { match: (conditions: unknown[]) => boolean; error?: Error; onHit?: () => void };
-
-const rules: Rule[] = [];
-let querySpy: jest.SpyInstance | null = null;
 let writeSpy: jest.SpyInstance | null = null;
 
-type Where = { type?: string; left?: string; comparison?: { right?: { value?: unknown } } };
-const isKey = (key: string) => (conditions: unknown[]) =>
-  conditions.some((c) => {
-    const w = c as Where;
-    return w?.type === 'where' && w.left === 'key' && w.comparison?.right?.value === key;
-  });
-
-function install(): void {
-  if (querySpy) return;
-  const collection = database.get('settings') as any;
-  const real = collection.query.bind(collection);
-  querySpy = jest.spyOn(collection, 'query').mockImplementation(((...conditions: unknown[]) => {
-    for (const rule of rules) {
-      if (!rule.match(conditions)) continue;
-      rule.onHit?.();
-      if (rule.error) throw rule.error;
-      break;
-    }
-    return real(...conditions);
-  }) as never);
-}
-
-/** Every `settings` read for exactly `key` throws. Other keys are untouched. */
-export function failSettingRead(key: string, error = new Error(`settings read failed for ${key} (injected)`)): void {
-  install();
-  rules.push({ match: isKey(key), error });
-}
-
-const tableSpies = new Map<string, jest.SpyInstance>();
-
-/** Every query on `table` throws, whatever its conditions. */
-export function failTableQuery(table: string, error = new Error(`${table} query failed (injected)`)): void {
-  const collection = database.get(table) as any;
-  tableSpies.get(table)?.mockRestore();
-  tableSpies.set(table, jest.spyOn(collection, 'query').mockImplementation((() => {
-    throw error;
-  }) as never));
-}
+export { failSettingRead, failTableQuery } from '../../support/faults';
 
 /** Counts `settings` reads for exactly `key`, passing them through. */
 export function countSettingReads(key: string): () => number {
   let hits = 0;
-  install();
-  rules.push({ match: isKey(key), onHit: () => (hits += 1) });
+  addRule('settings', { match: isKey(key), onHit: () => (hits += 1) });
   return () => hits;
 }
 
@@ -180,16 +139,13 @@ export function failSettingWrite(key: string, error: Error): void {
   writeFailures.set(key, error);
 }
 
-/** Restores the collection, `database.write` and `setSetting`. Call from afterEach. */
+/** Restores the faulted collections, `database.write` and `setSetting`. Call from afterEach. */
 export function restoreFaults(): void {
-  querySpy?.mockRestore();
+  restoreSharedFaults();
   writeSpy?.mockRestore();
   setSettingSpy?.mockRestore();
   setSettingSpy = null;
   writeCounts.clear();
   writeFailures.clear();
-  for (const spy of tableSpies.values()) spy.mockRestore();
-  tableSpies.clear();
-  querySpy = writeSpy = null;
-  rules.length = 0;
+  writeSpy = null;
 }

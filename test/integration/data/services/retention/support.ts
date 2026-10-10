@@ -17,6 +17,7 @@ import { persistAndLinkV2Suggestions, getSuggestionByArticleId } from '@/lib/dat
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useFactChecksStore } from '@/lib/stores/fact-checks-store';
 import type { ArticleWithClusters } from '@/lib/generated/graphql-types';
+import { restoreFaults as restoreSharedFaults } from '../../support/faults';
 
 // ---------------------------------------------------------------------------
 // Module memory
@@ -239,15 +240,7 @@ export function spyOn<T extends object, K extends keyof T & string>(target: T, m
   return spy;
 }
 
-/** Every `query()` on `table` throws until `restoreFaults()`. */
-export function failTableQuery(table: string, error = new Error(`${table} query failed (injected)`)): void {
-  const collection = database.get(table) as any;
-  spies.push(
-    jest.spyOn(collection, 'query').mockImplementation((() => {
-      throw error;
-    }) as never),
-  );
-}
+export { failTableQuery } from '../../support/faults';
 
 /**
  * The FIRST `find()` on `table` reads the row, then waits for `release()` before handing it back.
@@ -285,6 +278,7 @@ export function holdFirstFind(table: string): { release(): void; reached: Promis
 
 /** Opens every gate and puts every spied method back. Call from `afterEach`. */
 export function restoreFaults(): void {
+  restoreSharedFaults();
   for (const stop of subscriptions.splice(0)) stop();
   for (const open of gates.splice(0)) open();
   for (const spy of spies.splice(0)) spy.mockRestore();
