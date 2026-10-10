@@ -117,6 +117,7 @@ class InferenceQueueImpl {
   private state: QueueState = 'stopped';
   private loopPromise: Promise<void> | null = null;
   private wakeResolver: (() => void) | null = null;
+  private sleepTimer: ReturnType<typeof setTimeout> | null = null;
   private currentJobPromise: Promise<void> | null = null;
   private drainCallbacks: Array<() => void> = [];
   /** Current idle backoff. See POLL_INTERVAL_MIN/MAX. */
@@ -458,8 +459,11 @@ class InferenceQueueImpl {
   private sleep(ms: number): Promise<void> {
     return new Promise<void>((resolve) => {
       this.wakeResolver = resolve;
-      setTimeout(() => {
-        this.wakeResolver = null;
+      // Only clear the resolver if it is still ours: an earlier sleep's timer must never
+      // null the NEXT sleep's resolver (wake() clears the timer, so it cannot fire late).
+      this.sleepTimer = setTimeout(() => {
+        this.sleepTimer = null;
+        if (this.wakeResolver === resolve) this.wakeResolver = null;
         resolve();
       }, ms);
     });
@@ -469,6 +473,10 @@ class InferenceQueueImpl {
     // Any wake is evidence something happened (notify / resume / stop), so the
     // backoff has served its purpose and resets.
     this.idleDelay = POLL_INTERVAL_MIN;
+    if (this.sleepTimer) {
+      clearTimeout(this.sleepTimer);
+      this.sleepTimer = null;
+    }
     if (this.wakeResolver) {
       this.wakeResolver();
       this.wakeResolver = null;

@@ -86,28 +86,13 @@ describe('a notify() lost to an earlier sleep timer', () => {
       await tick(100);
       await then({ id, handler });
     } finally {
-      // With the wake lost, stop() cannot wake the loop either: it leaves at the timer. Do it while
-      // the clock is still fake.
+      // Stop while the clock is still fake.
       await stopQueue();
     }
   }
 
-  // BUG (InferenceQueue.sleep): wake() clears `wakeResolver` but not the timer. When that stale
-  // timer fires it sets `wakeResolver = null` again, which by then belongs to the NEXT sleep, so a
-  // notify() landing in the rest of that sleep wakes nothing.
-  test.failing('a notify() right after an earlier, already-woken sleep timer fired runs the job now', async () => {
+  test('a notify() right after an earlier, already-woken sleep timer fired runs the job now', async () => {
     await scenario(async ({ id }) => {
-      expect((await jobRow(id))?.status).toBe('done');
-    });
-  });
-
-  it('today: that notify() is lost and the job waits for the sleep it landed in to end', async () => {
-    await scenario(async ({ id, handler }) => {
-      expect((await jobRow(id))?.status).toBe('pending');
-      expect(handler).not.toHaveBeenCalled();
-
-      await tick(900); // the second sleep ends at 3 s
-      await turns();
       expect((await jobRow(id))?.status).toBe('done');
     });
   });
