@@ -65,8 +65,8 @@ function matchedTopicIds(json: string | null | undefined): string[] {
 
 /**
  * TOPIC pass — grow every active topic-linked story from suggestions whose
- * matched topics carry its topic id. Appends member ids AND snapshots, fires
- * one quiet notify per grown story, and stamps every examined story checked.
+ * matched topics carry its topic id. Appends member ids AND snapshots, and
+ * stamps every examined story checked. Sends no notification.
  * Never ends a story (the topic keeps linking server-side).
  */
 async function reconcileByTopic(): Promise<void> {

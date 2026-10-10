@@ -373,10 +373,7 @@ class FeedSyncMachine {
 
       const [topicResult, recentCount] = await Promise.all([
         steps.stepFetchTopicIds(personaId, ctx),
-        ArticleService.getRecentArticleCount().catch((err) => {
-          logger.captureException(err, { tags: { service: 'FeedSyncMachine', method: 'getRecentArticleCount' } });
-          return null;
-        }),
+        ArticleService.getRecentArticleCount(),
       ]);
       coldstartTimeline.mark(
         'topic-ids-resolved',
@@ -669,7 +666,7 @@ class FeedSyncMachine {
         if (this._isCurrentRun(runId)) this._forceIdle(runId);
         throw err;
       }
-      if (this._isCurrentRun(runId) && this._state !== 'failed' && this._state !== 'done') {
+      if (this._isCurrentRun(runId) && this._state !== 'done') {
         // FORCE-ASSIGNED, not transitioned. `VALID_TRANSITIONS.idle` is
         // ['fetching-topic-ids'] only, so `_transitionTo('failed')` THREW
         // whenever the catch ran with _state still 'idle' — which is every

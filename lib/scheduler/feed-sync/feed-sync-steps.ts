@@ -869,7 +869,7 @@ export async function stepHydratePersistEnqueue(
         false,
         gate.coveredIdsByRep,
       );
-      pendingDeferred = res?.deferred ?? [];
+      pendingDeferred = res.deferred;
       pendingCoveredIdsByRep = gate.coveredIdsByRep ?? {};
     }
     if (cloudEnqueue) enqueuedCount += gate.enqueueIds.length;
