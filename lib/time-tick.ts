@@ -136,7 +136,7 @@ export function notifyTimeTick(): void {
  * "5h ago" label stays put for an hour. `derive` must return a primitive.
  *
  * Why this exists: every route change fires the clock (lib/nav-state.ts), and
- * with `useTimeTick` every subscribed card on every mounted tab re-rendered on
+ * with a raw clock subscription every card on every mounted tab re-rendered on
  * each tab switch. Measured on a Snapdragon 732G, that was most of the ~0.4s
  * of JS a tab switch cost.
  */

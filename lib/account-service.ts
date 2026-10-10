@@ -544,13 +544,10 @@ export class AccountService {
      */
     static async issueLlmWarning(userId: string, reason: string): Promise<UserPersona> {
         try {
-            const { data, error } = await client.mutate<IssueLlmWarningResponse>({
+            const { data } = await client.mutate<IssueLlmWarningResponse>({
                 mutation: ISSUE_LLM_WARNING,
                 variables: { input: { userId, reason } },
             });
-            if (error) {
-                throw error;
-            }
             const userPersona = data?.issueLlmWarning;
             if (!userPersona) {
                 throw new Error('Failed to issue LLM warning - no data returned');
@@ -577,13 +574,10 @@ export class AccountService {
     }): Promise<UnblockRequest> {
         const { userId, feedback, chatHistory } = params;
         try {
-            const { data, error } = await client.mutate<RequestUnblockResponse>({
+            const { data } = await client.mutate<RequestUnblockResponse>({
                 mutation: REQUEST_UNBLOCK,
                 variables: { input: { userId, feedback, chatHistory } },
             });
-            if (error) {
-                throw error;
-            }
             const request = data?.requestUnblock;
             if (!request) {
                 throw new Error('Failed to request unblock - no data returned');

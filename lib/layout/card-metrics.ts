@@ -12,7 +12,7 @@
  *
  * This is one number with one name. The Tailwind side still cannot import it
  * (utility classes are build-time strings), so `HERO_IMAGE_CLASS` is exported
- * alongside it and `lib/layout/__tests__/card-metrics.test.ts` asserts the two
+ * alongside it and `test/unit/core/card-metrics.test.ts` asserts the two
  * agree — which is the check the comment was standing in for.
  */
 
@@ -23,7 +23,7 @@ export const CARD_HERO_HEIGHT = 192;
 export const HERO_IMAGE_CLASS = 'h-48';
 
 /**
- * Default parallax header height for `SmoothScrollView` / `SmoothFlatList`.
+ * Default parallax header height for `SmoothScrollView`.
  *
  * Equal to the hero by construction: the header IS the card hero when a card is
  * expanded into a detail screen, and the parallax interpolation is calibrated

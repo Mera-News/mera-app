@@ -121,7 +121,7 @@ function stripUnkTokens(value: string): string {
  * A drop-in replacement for <Text>/<Heading> that auto-translates dynamic server content.
  *
  * Use this for dynamic server-generated text (news titles, AI responses, reasons).
- * For static UI strings (buttons, labels, settings), use <TranslatableStatic>.
+ * For static UI strings (buttons, labels, settings), use `t()` directly.
  *
  * Layout behavior: this component renders a single Text/Heading element (no
  * wrapping View), so it drops into any parent layout exactly as a Text would.

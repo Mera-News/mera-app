@@ -229,7 +229,7 @@ async function refreshSuggestionsInStore(): Promise<void> {
   suggestions.sort(byRelevanceDesc);
 
   // A1 identity-preserving merge: reuse the previous object reference for any
-  // row whose display-relevant fields are all unchanged, so ArticleCard's memo
+  // row whose display-relevant fields are all unchanged, so the card's memo
   // skips re-rendering untouched cards. Sorting + derived counts still recompute
   // from the fresh values below (identical, since the merge only swaps refs).
   const prev = useForYouStore.getState().suggestions as ForYouSuggestion[] | undefined;
@@ -316,7 +316,7 @@ function matchedTopicsSig(matched: MatchedTopicRef[] | undefined): string {
   return matched.map((m) => `${m.topicId ?? ''}:${m.text}`).join('|');
 }
 
-/** True when a and b are equal across every field any consumer (ArticleCard,
+/** True when a and b are equal across every field any consumer (ArticleSuggestionCard,
  *  ArticleSuggestionContainer, ArticleMetaRow, and the fact-sectioned feed
  *  selector) reads. Deliberately exhaustive over ForYouSuggestion. */
 function suggestionsDisplayEqual(a: ForYouSuggestion, b: ForYouSuggestion): boolean {

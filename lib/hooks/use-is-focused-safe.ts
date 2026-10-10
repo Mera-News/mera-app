@@ -24,7 +24,7 @@
 // (for-you/FeedStatusShimmer was the fifth until its indeterminate bar was
 // deleted; its replacement is an ActivityIndicator outside the glass, which
 // needs no gate.)
-// Tabs stay mounted (see FocusFreeze @deprecated), so a blurred tab's
+// Tabs stay mounted, so a blurred tab's
 // animations otherwise run forever behind whatever the user is actually
 // looking at. `MeraLogo` is the expensive one: it animates an SVG `<G
 // transform>`, which RNSVG rasterises on the CPU (documented at
