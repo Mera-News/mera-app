@@ -1031,16 +1031,7 @@ describe('processAllUnscored - the reason request fails outright', () => {
     );
   }
 
-  it('today: the whole batch is lost and the row is scored again from scratch next cycle', async () => {
-    reasonsRefused();
-    await seed(['a']);
-
-    await expect(run(processAllUnscored())).rejects.toThrow();
-
-    expect((await stored()).a.status).toBe('unscored');
-  });
-
-  test.failing('keeps the relevance score and leaves the row owed a note', async () => {
+  test('keeps the relevance score and leaves the row owed a note', async () => {
     reasonsRefused();
     await seed(['a']);
 

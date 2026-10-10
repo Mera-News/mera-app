@@ -421,27 +421,36 @@ export async function batchScoreAndReason(
       }
     } else {
       const phase2 = buildReasonCallsForSurvivors(survivors, scoreMap, allFactStatements);
-      const reasonResults = await cloudBatchComplete(phase2.calls, SMALL_MODEL);
-      const orderedIds = phase2.eligibleCandidates.map((c) => c.id);
-      const decodedReasons = decodeCloudBatchResults({
-        batchResults: resolveReasonResultIds(reasonResults, orderedIds),
-        promptsById: new Map(
-          [...phase2.promptsById].map(([id, prompt]) => [
-            resolveReasonCallId(id, orderedIds) ?? id,
-            prompt,
-          ]),
-        ),
-        chunkIdToCandidates: phase2.chunkIdToCandidates,
-      });
-      for (const [id, reason] of decodedReasons.reasonMap) reasonMap.set(id, reason);
-      for (const id of decodedReasons.failedIds) failedIds.add(id);
-      // The pass-2 score replaces pass 1's, IN `scoreMap`, which is still raw
-      // here. `processAllUnscored` snapshots it as `raw_score` and buckets it
-      // into `relevance` immediately after this returns, so both columns end up
-      // describing the same judgement instead of two different ones.
-      for (const [id, rescored] of decodedReasons.rescoreMap) {
-        if (failedIds.has(id) || !scoreMap.has(id)) continue;
-        scoreMap.set(id, applyRescorePolicy(scoreMap.get(id)!, rescored));
+      // A refused request keeps the relevance pass: the rows save as `reason_pending` and the
+      // reason sweep owes them a note, the same outcome as the on-device catch above.
+      try {
+        const reasonResults = await cloudBatchComplete(phase2.calls, SMALL_MODEL);
+        const orderedIds = phase2.eligibleCandidates.map((c) => c.id);
+        const decodedReasons = decodeCloudBatchResults({
+          batchResults: resolveReasonResultIds(reasonResults, orderedIds),
+          promptsById: new Map(
+            [...phase2.promptsById].map(([id, prompt]) => [
+              resolveReasonCallId(id, orderedIds) ?? id,
+              prompt,
+            ]),
+          ),
+          chunkIdToCandidates: phase2.chunkIdToCandidates,
+        });
+        for (const [id, reason] of decodedReasons.reasonMap) reasonMap.set(id, reason);
+        for (const id of decodedReasons.failedIds) failedIds.add(id);
+        // The pass-2 score replaces pass 1's, IN `scoreMap`, which is still raw
+        // here. `processAllUnscored` snapshots it as `raw_score` and buckets it
+        // into `relevance` immediately after this returns, so both columns end up
+        // describing the same judgement instead of two different ones.
+        for (const [id, rescored] of decodedReasons.rescoreMap) {
+          if (failedIds.has(id) || !scoreMap.has(id)) continue;
+          scoreMap.set(id, applyRescorePolicy(scoreMap.get(id)!, rescored));
+        }
+      } catch (err) {
+        logger.warn('[batchScoreAndReason] cloud reason request failed', {
+          count: survivors.length,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   }
