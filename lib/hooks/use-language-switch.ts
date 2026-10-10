@@ -150,8 +150,9 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const setAppLanguage = useAppLanguageStore((s) => s.setAppLanguage);
 
-    const [phase, setPhase] = useState<LanguageSwitchPhase>('idle');
     const [pendingCode, setPendingCode] = useState<string | null>(null);
+    // A switch is in flight exactly while a target code is pending.
+    const phase: LanguageSwitchPhase = pendingCode === null ? 'idle' : 'probing';
 
     // Bumped on every start and every exit. A probe that resolves after its
     // generation has moved on is orphaned: it may still have marked the
@@ -197,7 +198,6 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
     const finish = useCallback(() => {
         generationRef.current += 1;
         revertPreview();
-        setPhase('idle');
         setPendingCode(null);
     }, [revertPreview]);
 
@@ -281,7 +281,6 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
                 previewLanguage(uiLocale);
             }
 
-            setPhase('probing');
             void runProbe(code, generation);
         },
         [appLanguage, busy, runProbe],
