@@ -1,11 +1,9 @@
 // The one way a free-tier surface opens the paywall.
 //
 // Friction this removes (the repo rule: name it or don't add the pattern):
-// four surfaces — FreeTierCard, FreeTierInlineNotice,
-// FreeTierReadOnlyBanner and useTrackButton — each carried a byte-identical
-// resolve-offering → presentPaywall → try/catch block. That is not three
-// similar lines; it is four copies of one behaviour, and all four had drifted
-// into the same bug: none of them re-read entitlement afterwards.
+// every free-tier surface (ExploreSearchResults, useTrackButton) needs the
+// same resolve-offering → presentPaywall → try/catch block, and none of them
+// re-read entitlement afterwards on its own.
 //
 // Why the re-read is the whole point: `deriveAiAccess` consults `serverTier`
 // FIRST and returns 'locked' whenever it is 'none', and `markServerLocked()`
