@@ -20,5 +20,13 @@
   {"test": {"from": "lib/typography/__tests__/typography.test.ts", "to": "test/unit/core/typography.test.ts"}},
   {"from": "lib/feed-grouping/representative-compare.ts", "to": "lib/algorithms/representative-compare.ts", "test": {"from": "lib/feed-grouping/__tests__/representative-compare.test.ts", "to": "lib/algorithms/__tests__/representative-compare.test.ts"}},
   {"from": "lib/feed-grouping/geo-language-priority.ts", "to": "lib/algorithms/geo-language-priority.ts", "test": {"from": "lib/feed-grouping/__tests__/geo-language-priority.test.ts", "to": "lib/algorithms/__tests__/geo-language-priority.test.ts"}},
-  {"from": "lib/feed-grouping/related-articles-sort.ts", "to": "lib/algorithms/related-articles-sort.ts", "test": {"from": "lib/feed-grouping/__tests__/related-articles-sort.test.ts", "to": "lib/algorithms/__tests__/related-articles-sort.test.ts"}}
+  {"from": "lib/feed-grouping/related-articles-sort.ts", "to": "lib/algorithms/related-articles-sort.ts", "test": {"from": "lib/feed-grouping/__tests__/related-articles-sort.test.ts", "to": "lib/algorithms/__tests__/related-articles-sort.test.ts"}},
+  {"from": "components/custom/auth/account-gate.ts", "to": "lib/algorithms/account-gate.ts", "test": {"from": "components/custom/auth/__tests__/account-gate.test.ts", "to": "lib/algorithms/__tests__/account-gate.test.ts"}},
+  {"from": "components/custom/config-mera/notification-times-layout.ts", "to": "lib/algorithms/notification-times-layout.ts", "test": {"from": "components/custom/config-mera/__tests__/notification-times-layout.test.ts", "to": "lib/algorithms/__tests__/notification-times-layout.test.ts"}},
+  {"from": "components/custom/auth/language-heading-order.ts", "to": "lib/algorithms/language-heading-order.ts", "test": {"from": "components/custom/auth/__tests__/language-heading-order.test.ts", "to": "lib/algorithms/__tests__/language-heading-order.test.ts"}},
+  {"from": "lib/tutorials/keys.ts", "to": "lib/algorithms/tutorial-keys.ts", "test": {"from": "lib/tutorials/__tests__/keys.test.ts", "to": "lib/algorithms/__tests__/tutorial-keys.test.ts"}},
+  {"test": {"from": "components/custom/persona-audit/__tests__/change-summary.test.ts", "to": "test/unit/persona/change-summary.test.ts"}},
+  {"test": {"from": "components/custom/persona-audit/__tests__/action-display.test.ts", "to": "test/unit/persona/action-display.test.ts"}},
+  {"test": {"from": "lib/tutorials/__tests__/menu.test.ts", "to": "test/unit/persona/tutorial-menu.test.ts"}},
+  {"test": {"from": "modules/mera-device-attest/__tests__/integrity-error-mapping.test.ts", "to": "test/unit/persona/integrity-error-mapping.test.ts"}}
 ]
