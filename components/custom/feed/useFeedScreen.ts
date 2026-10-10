@@ -201,10 +201,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // ── New cards (FinalFeed #10-11) ──
   // `newSince` is this visit's `lastLeftAt`: fixed while the list is active,
   // so a card stays new until it is seen. Stamped on leaving (blur, unmount).
-  const orderHydratedForNew = useFeedOrderStore((s) => s.hydrated);
   const [newSince, setNewSince] = useState<number | null>(null);
   useEffect(() => {
-    if (!isFocused || !orderHydratedForNew) return;
+    if (!isFocused || !orderHydrated) return;
     if (lastLeftAtMs === null) {
       lastLeftAtMs = deriveLastLeftAt(useFeedOrderStore.getState().cardStates, Date.now());
     }
@@ -212,7 +211,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     return () => {
       lastLeftAtMs = Date.now();
     };
-  }, [isFocused, orderHydratedForNew]);
+  }, [isFocused, orderHydrated]);
   const newSinceRef = useRef(newSince);
   newSinceRef.current = newSince;
 
