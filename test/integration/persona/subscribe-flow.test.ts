@@ -5,7 +5,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import { __resetAppRestartForTests, activeHolds } from '@/lib/app-restart';
 import logger from '@/lib/logger';
-import { buildSubscriptionUrl, MIN_AWAY_MS, onReturnFromBackground, openSubscribePage } from '@/lib/subscriptions/subscribe-flow';
+import { buildSubscriptionUrl, holdRestartAcrossPurchase, MIN_AWAY_MS, onReturnFromBackground, openSubscribePage } from '@/lib/subscriptions/subscribe-flow';
 import { setAppState, useFakeClock } from '@/test/helpers';
 
 const openBrowser = WebBrowser.openBrowserAsync as unknown as jest.Mock;
@@ -155,5 +155,27 @@ describe('onReturnFromBackground', () => {
         jest.advanceTimersByTime(MIN_AWAY_MS + 1);
         setAppState('active');
         expect(onReturn).not.toHaveBeenCalled();
+    });
+});
+
+describe('holdRestartAcrossPurchase release', () => {
+    it('is idempotent: a second release neither throws nor drops another hold', () => {
+        const first = holdRestartAcrossPurchase('purchase');
+        const second = holdRestartAcrossPurchase('purchase');
+
+        first();
+        first();
+        expect(activeHolds()).toEqual(['purchase']);
+
+        second();
+        expect(activeHolds()).toEqual([]);
+    });
+
+    it('releases cleanly after a return has armed the return timer', () => {
+        const release = holdRestartAcrossPurchase('purchase');
+        setAppState('background');
+        setAppState('active');
+        release();
+        expect(activeHolds()).toEqual([]);
     });
 });
