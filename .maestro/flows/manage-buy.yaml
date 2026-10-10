@@ -1,5 +1,6 @@
 # Subflow: Manage subscription -> View plans (the E2E paywall stub answers from the scenario), wait
-# for a card, screenshot it. env CARD: testID to wait for; SHOT: screenshot name; WAIT: ms.
+# for the confirming card (proof this purchase started, not a card left from an earlier one), then
+# for CARD, screenshot it. env CARD: testID to wait for; SHOT: screenshot name; WAIT: ms.
 appId: ${APP_ID}
 ---
 - openLink: ${SCHEME}:///logged-in/preferences/manage-subscription
@@ -9,6 +10,10 @@ appId: ${APP_ID}
     timeout: 15000
 - tapOn:
     id: "manage-view-plans"
+- extendedWaitUntil:
+    visible:
+      id: "manage-confirming-card"
+    timeout: 15000
 - extendedWaitUntil:
     visible:
       id: "${CARD}"

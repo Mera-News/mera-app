@@ -1,11 +1,11 @@
 # Dev flow: PE6 Manage subscription captures after a scripted purchase. Confirming card in dark,
-# light and Lite; timeout card in dark and light; the confirmed landing in dark.
+# light and Lite; timeout card in dark and light; the confirmed state in dark (it stays on Manage plan).
 # The paywall is the E2E build's stub (lib/e2e/purchases-ui.ts), answered by the scenario's
-# `paywall` block (test/mock-backend/scenario.ts). Billing holds `starter` through the post-purchase
-# fast retries (~23 s), so the confirming card shows; with upgradeTo it reports `individual`
-# 45 s after the purchase, without it the late poll (20 x 5 s) gives up and the timeout card shows.
-# Card testIDs, the contract with the screen: manage-activation-pending (confirming),
-# manage-activation-timeout (timeout).
+# `paywall` block (test/mock-backend/scenario.ts). The confirming card shows from the purchase
+# through the whole poll budget (first poll, then 20 x 5 s, ~120 s). With upgradeTo, billing reports
+# `individual` 45 s after the purchase and the card flips to confirmed; without it both polls give
+# up and the timeout card shows. Testids (persona PE6 screen): manage-confirming-card and
+# manage-timeout-card on the cards, manage-activation-pending / -timeout on their titles.
 # Run: scripts/e2e-android.sh --skip-build --flows .maestro/dev/manage-subscription-captures.yaml
 appId: ${APP_ID}
 ---
@@ -22,10 +22,10 @@ appId: ${APP_ID}
     env: { MODE: dark }
 - runFlow:
     file: ../flows/manage-buy.yaml
-    env: { CARD: manage-activation-pending, SHOT: pe6-confirming-dark, WAIT: "60000" }
+    env: { CARD: manage-confirming-card, SHOT: pe6-confirming-dark, WAIT: "15000" }
 - extendedWaitUntil:
     notVisible:
-      id: "manage-activation-pending"
+      id: "manage-confirming-card"
     timeout: 90000
 - takeScreenshot: pe6-confirmed-dark
 
@@ -39,10 +39,10 @@ appId: ${APP_ID}
     env: { MODE: light }
 - runFlow:
     file: ../flows/manage-buy.yaml
-    env: { CARD: manage-activation-pending, SHOT: pe6-confirming-light, WAIT: "60000" }
+    env: { CARD: manage-confirming-card, SHOT: pe6-confirming-light, WAIT: "15000" }
 - extendedWaitUntil:
     notVisible:
-      id: "manage-activation-pending"
+      id: "manage-confirming-card"
     timeout: 90000
 
 # Confirming, Lite (dark).
@@ -60,10 +60,10 @@ appId: ${APP_ID}
     checked: true
 - runFlow:
     file: ../flows/manage-buy.yaml
-    env: { CARD: manage-activation-pending, SHOT: pe6-confirming-lite, WAIT: "60000" }
+    env: { CARD: manage-confirming-card, SHOT: pe6-confirming-lite, WAIT: "15000" }
 - extendedWaitUntil:
     notVisible:
-      id: "manage-activation-pending"
+      id: "manage-confirming-card"
     timeout: 90000
 - openLink: ${SCHEME}:///logged-in/preferences/display
 - tapOn:
@@ -82,7 +82,7 @@ appId: ${APP_ID}
     env: { MODE: dark }
 - runFlow:
     file: ../flows/manage-buy.yaml
-    env: { CARD: manage-activation-timeout, SHOT: pe6-timeout-dark, WAIT: "180000" }
+    env: { CARD: manage-timeout-card, SHOT: pe6-timeout-dark, WAIT: "180000" }
 
 # Timeout, light.
 - runFlow:
@@ -90,4 +90,4 @@ appId: ${APP_ID}
     env: { MODE: light }
 - runFlow:
     file: ../flows/manage-buy.yaml
-    env: { CARD: manage-activation-timeout, SHOT: pe6-timeout-light, WAIT: "180000" }
+    env: { CARD: manage-timeout-card, SHOT: pe6-timeout-light, WAIT: "180000" }
