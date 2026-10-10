@@ -46,6 +46,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         effectiveTier,
         isPaid,
     } = useManageSubscription();
+    const confirming = purchaseStatus === 'confirming';
 
     const formatDate = (iso: string | null | undefined): string | null => {
         if (!iso) return null;
@@ -119,7 +120,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             carries `manage-activation-pending` (and the timeout
                             title `manage-activation-timeout`): the device flow
                             keys on those ids. */}
-                        {purchaseStatus === 'confirming' ? (
+                        {confirming ? (
                             <View testID="manage-confirming-card" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line, alignItems: 'center' }]}>
                                 <ActivityIndicator size="small" color={colors.ink} />
                                 <Text testID="manage-activation-pending" style={{ color: colors.ink, fontSize: 16, fontWeight: '600', textAlign: 'center' }}>{t('subscription.confirmingTitle')}</Text>
@@ -209,12 +210,19 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                         <Pressable
                             testID="manage-view-plans"
                             onPress={() => void handleViewPlans()}
-                            disabled={purchaseStatus === 'confirming'}
+                            disabled={confirming}
                             accessibilityRole="button"
                             accessibilityLabel={t('subscription.viewPlans')}
-                            style={[styles.button, { backgroundColor: colors.accent }]}
+                            accessibilityState={{ disabled: confirming }}
+                            style={[
+                                styles.button,
+                                // A disabled button is neutral grey, never a dimmed accent.
+                                confirming
+                                    ? { backgroundColor: colors.surfaceRaised, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.line }
+                                    : { backgroundColor: colors.accent },
+                            ]}
                         >
-                            <Text style={{ color: colors.onAccent, fontSize: 16, fontWeight: '600' }}>{t('subscription.viewPlans')}</Text>
+                            <Text style={{ color: confirming ? colors.ink3 : colors.onAccent, fontSize: 16, fontWeight: '600' }}>{t('subscription.viewPlans')}</Text>
                         </Pressable>
                         {/* Only with a store subscription: the Customer Center
                             opens onto nothing for a granted Starter account. */}
