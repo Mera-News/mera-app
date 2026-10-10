@@ -284,12 +284,12 @@ describe('on-device mode', () => {
   });
 });
 
-// DA31: both guards are stamped after tier 2 whether or not it ran, so the facts the first pass could not
-// place wait for the next fact change (the fingerprint is never bypassed, even once the cooldown is over).
+// DA31: both guards are stamped only after tier 2 ran, so the facts the first pass could not place
+// are retried by the next sweep (an on-device or refused sweep stamps neither).
 describe('DA31: a derivation that could not ask the model is retried later', () => {
   const answers = geoModel({ Bangalore: { country: 'IN', city: 'Bangalore', role: 'home' } });
 
-  test.failing('DA31: a refused derivation does not arm the cooldown', async () => {
+  it('DA31: a refused derivation does not arm the cooldown', async () => {
     await facts(BANGALORE);
     server.use(...mockGateway(() => ({ status: 400, body: { error: 'refused' } })));
     await sweep({ now: T0 });
@@ -301,19 +301,7 @@ describe('DA31: a derivation that could not ask the model is retried later', () 
     expect(await places()).toEqual([{ countryCode: 'IN', city: 'Bangalore', role: 'home', weight: 1, provenance: 'llm' }]);
   });
 
-  it('DA31 today: a refused gateway call still stamps the cooldown and the fingerprint, so the same facts are not retried', async () => {
-    await facts(BANGALORE);
-    server.use(...mockGateway(() => ({ status: 400, body: { error: 'refused' } })));
-    await sweep({ now: T0 });
-    server.use(...mockGateway(answers));
-
-    const later = await sweep({ now: T0 + 2 * DAY });
-
-    expect(later).toEqual({ ran: false, reason: 'unchanged', added: 0, reweighted: 0 });
-    expect(await places()).toEqual([]);
-  });
-
-  test.failing('DA31: an on-device derivation leaves the unplaced facts for the cloud', async () => {
+  it('DA31: an on-device derivation leaves the unplaced facts for the cloud', async () => {
     await facts(BANGALORE);
     await setMode('on-device');
     await sweep({ now: T0 });
@@ -323,18 +311,5 @@ describe('DA31: a derivation that could not ask the model is retried later', () 
     const later = await sweep({ now: T0 + 2 * DAY });
 
     expect(later).toMatchObject({ ran: true, added: 1 });
-  });
-
-  it('DA31 today: an on-device sweep stamps the fingerprint, so switching back to the cloud does not place the leftovers', async () => {
-    await facts(BANGALORE);
-    await setMode('on-device');
-    await sweep({ now: T0 });
-    await setMode('cloud');
-    server.use(...mockGateway(answers));
-
-    const later = await sweep({ now: T0 + 2 * DAY });
-
-    expect(later.reason).toBe('unchanged');
-    expect(gatewayCalls()).toHaveLength(0);
   });
 });
