@@ -170,6 +170,11 @@ async function* inferStreamExclusive(
   }
   messages.push({ role: 'user', content: params.prompt });
 
+  // The restart stays held until llama has unwound, which can be after the
+  // consumer (and the chat turn's own hold) is gone: a JS reload under a running
+  // native completion hands its callbacks a torn-down runtime.
+  const releaseRestart = holdRestart('local-inference');
+
   // Start completion in background — tokens arrive via callback
   const completionPromise = context
     .completion(
@@ -205,7 +210,8 @@ async function* inferStreamExclusive(
       failure = error;
       rejectWait?.(error);
       rejectWait = null;
-    });
+    })
+    .finally(releaseRestart);
 
   const onAbort = () => {
     aborted = true;
