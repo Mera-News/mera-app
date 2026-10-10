@@ -9,6 +9,7 @@ import database from '@/lib/database';
 import {
   getStageRowsByIds,
   loadSuggestions,
+  deleteSuggestionByServerId,
   persistAndLinkV2Suggestions,
 } from '@/lib/database/services/article-suggestion-service';
 import { createTopics } from '@/lib/database/services/topic-service';
@@ -479,5 +480,40 @@ describe('two concurrent callers with an overlapping id', () => {
 
     expect(results.map((r) => r.status)).toEqual(['fulfilled', 'fulfilled']);
     expect(await idsInDb()).toEqual(['only-a', 'only-b', 'shared']);
+  });
+});
+
+// A prune (deleteOldSuggestions, purgeSuggestionsForDeadTopics, clearSuggestions) can destroy a row
+// this persist planned to update, between the read and the writer.
+describe('a planned update whose row is destroyed before the writer runs', () => {
+  const memberships = (...ids: string[]) =>
+    ids.map((clusterId) => ({ clusterId, confidence: 0.9 })) as never;
+
+  async function persistWhileXIsDestroyed() {
+    await seed([article('x', { clusters: memberships('c-old') })]);
+    const real = database.write.bind(database);
+    // R23: one call, call-through. The destroyer lands after the pre-writer read, before the writer.
+    jest.spyOn(database, 'write').mockImplementationOnce((async (work: never) => {
+      await deleteSuggestionByServerId('x');
+      return real(work);
+    }) as never);
+    return advanceUntilDone(
+      Promise.allSettled([seed([article('x', { clusters: memberships('c-new') }), article('y')])]),
+    );
+  }
+
+  test.failing('DA47: the row is skipped and the rest of the persist lands', async () => {
+    const [res] = await persistWhileXIsDestroyed();
+
+    expect(res.status).toBe('fulfilled');
+    expect(await idsInDb()).toEqual(['y']);
+  });
+
+  test('DA47 today: the whole persist rejects, the new row included', async () => {
+    const [res] = await persistWhileXIsDestroyed();
+
+    expect(res.status).toBe('rejected');
+    expect((res as PromiseRejectedResult).reason.message).toMatch(/deleted record/);
+    expect(await idsInDb()).toEqual([]);
   });
 });
