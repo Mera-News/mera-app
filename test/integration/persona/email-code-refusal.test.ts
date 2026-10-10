@@ -223,8 +223,8 @@ describe('signInWithEmailCode', () => {
     });
 
     describe('when /sign-out never answers', () => {
-        // The refusal waits on authClient.signOut() with no bound of its own, so an unanswered
-        // sign-out leaves the sign-in gate on its spinner and the refused cookie in the keychain.
+        // The refusal bounds authClient.signOut(), so an unanswered sign-out cannot hold the
+        // sign-in gate on its spinner or leave the refused cookie in the keychain.
         const NEVER = () => new Promise<Response>(() => {});
 
         beforeEach(() => {
@@ -241,19 +241,12 @@ describe('signInWithEmailCode', () => {
             return () => result;
         }
 
-        test.failing('B4 the refusal finishes within 6s even when sign-out never answers', async () => {
+        test('B4 the refusal finishes within 6s even when sign-out never answers', async () => {
             const result = await refusalWithin(6000);
 
             expect(result()).toEqual({ kind: 'mismatch' });
             expect(sessionKeys()).toEqual([]);
-        });
-
-        test('B4 today: the refusal is still pending after 6s and the refused cookie is still stored', async () => {
-            const result = await refusalWithin(6000);
-
-            expect(result()).toBeUndefined();
-            expect(sessionKeys()).toContain(COOKIE_KEY);
-            // The hold is taken first, synchronously, so the rest of the app already ignores the account.
+            // The hold is taken first and stays, so the rest of the app keeps ignoring the account.
             expect(isAccountSwitchHeld(OTHER)).toBe(true);
         });
     });

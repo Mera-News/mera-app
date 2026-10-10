@@ -38,6 +38,9 @@ type SignInFn = (body: { email: string; otp: string; expectedUserId?: string }) 
 /** A Mongo ObjectId, the only shape the server accepts for `expectedUserId`. */
 const USER_ID = /^[0-9a-f]{24}$/;
 
+// ponytail: the same bound as lib/auth-client.ts SIGN_OUT_TIMEOUT_MS (data's file); consolidate when it is exported
+const SIGN_OUT_BOUND_MS = 5_000;
+
 const defaultSignIn: SignInFn = (body) =>
     authClient.signIn.emailOtp(body as { email: string; otp: string }) as Promise<SignInResponse>;
 
@@ -97,7 +100,7 @@ export async function signInWithEmailCode(
 async function signOutWrongAccount(userId: string, signOut: () => Promise<void>): Promise<void> {
     holdAccountSwitch(userId);
     try {
-        await signOut();
+        await Promise.race([signOut(), new Promise((resolve) => setTimeout(resolve, SIGN_OUT_BOUND_MS))]);
     } catch (error) {
         logger.captureException(error, { tags: { feature: 'otp', method: 'signOutWrongAccount' } });
     }
