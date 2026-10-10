@@ -9,7 +9,7 @@
 
 import { PACKAGE_TYPE } from 'react-native-purchases';
 import type { PurchasesPackage } from 'react-native-purchases';
-import { formatPackagePrice } from '../plan-price';
+import { formatPackagePrice } from '@/lib/subscription/plan-price';
 
 const pkg = (packageType: string, priceString = '€1.99') =>
     ({ packageType, product: { priceString } } as unknown as PurchasesPackage);

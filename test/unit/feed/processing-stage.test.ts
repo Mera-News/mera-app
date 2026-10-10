@@ -3,7 +3,7 @@ import {
   processingStageIndex,
   resolveProcessingStage,
   type ProcessingStageInput,
-} from '../processing-stage';
+} from '@/lib/services/processing-stage';
 
 const base: ProcessingStageInput = {
   syncState: null,

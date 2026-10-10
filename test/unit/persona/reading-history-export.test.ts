@@ -5,8 +5,8 @@ import {
   READING_HISTORY_WINDOW_DAYS,
   computePublishToReadStats,
   buildReadingHistoryExport,
-} from '../reading-history-export';
-import type { VisitedArticle } from '../database/services/publication-visit-service';
+} from '@/lib/reading-history-export';
+import type { VisitedArticle } from '@/lib/database/services/publication-visit-service';
 
 const NOTE = 'covers the last 30 days';
 

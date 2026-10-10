@@ -6,7 +6,7 @@
 // patch the live Constants object to cover the "version present" branch.
 
 import Constants from 'expo-constants';
-import { getGitCommit, getAppVersion, getAppVersionLabel } from '../version';
+import { getGitCommit, getAppVersion, getAppVersionLabel } from '@/lib/version';
 
 describe('getGitCommit', () => {
   it('returns a string', () => {

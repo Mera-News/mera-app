@@ -11,7 +11,7 @@ import {
   tabBarOverlap,
   tabContentBottomInset,
   tabBarTopFromBottom,
-} from '../tab-bar';
+} from '@/lib/navigation/tab-bar';
 
 describe('tabBarClearance', () => {
   it('on iOS returns the tab inset alone, because it already includes the bar', () => {
