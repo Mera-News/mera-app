@@ -217,6 +217,8 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                     // On-device: nothing ran, the proposal stays. Say why, once.
                     void showCloudOnlyNotice();
                     void load();
+                } else if (res.floorHeld) {
+                    // Nothing was cleaned and nothing failed: the proposal is settled, quietly.
                 } else if (res.applied && res.ok) {
                     toastManager.showSuccess(t('hygiene.appliedTitle'), t('hygiene.appliedBody'));
                 } else {

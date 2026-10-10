@@ -560,8 +560,9 @@ async function applyIncoherentTopicsProposal(
   notifyChange();
 
   // floorHeld ⇒ the fact would have gone dark, so the removal was withheld. The
-  // proposal is still settled and not re-offered, quietly: no retry toast.
-  return { applied: true, ok: true };
+  // proposal is still settled and not re-offered, quietly: no retry toast, and
+  // `floorHeld` tells the screen to show no success toast either.
+  return { applied: true, ok: true, ...(outcome.floorHeld ? { floorHeld: true } : {}) };
 }
 
 export interface AcceptResult {
@@ -571,6 +572,9 @@ export interface AcceptResult {
   applied: boolean;
   /** True when the proposal was found + all ops ran without a hard error. */
   ok: boolean;
+  /** The retire was withheld so the fact would not go dark: the proposal is
+   *  settled but nothing was cleaned, so the caller claims no success. */
+  floorHeld?: boolean;
 }
 
 /**

@@ -474,7 +474,7 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
 
     const res = await accept(proposal.id);
 
-    expect(res).toEqual({ applied: true, ok: true });
+    expect(res).toEqual({ applied: true, ok: true, floorHeld: true });
     expect((await getByFact(fact.id)).find((t) => t.id === bad.id)!.status).toBe('active');
     expect(await getRecent()).toEqual([]);
   });
@@ -489,7 +489,7 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
 
     const res = await accept(proposal.id);
 
-    expect(res).toEqual({ applied: true, ok: true });
+    expect(res).toEqual({ applied: true, ok: true, floorHeld: true });
     expect(await getPendingProposals()).toEqual([]);
     expect((await sweep({ now: T0 + 30 * DAY })).proposalCount).toBe(0);
   });
