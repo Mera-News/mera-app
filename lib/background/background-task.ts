@@ -118,12 +118,10 @@ export async function runBackgroundRefresh(now: number = Date.now()): Promise<Re
       let cookie: unknown;
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { authClient } = require('@/lib/auth-client') as typeof import('@/lib/auth-client');
+        const { authClient, AUTH_COOKIE_KEY } = require('@/lib/auth-client') as typeof import('@/lib/auth-client');
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const SecureStore = require('expo-secure-store') as typeof import('expo-secure-store');
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const slug = (require('expo-constants') as { default: { expoConfig?: { slug?: string } } }).default.expoConfig?.slug || 'app';
-        await SecureStore.getItemAsync(`${slug}_cookie`);
+        await SecureStore.getItemAsync(AUTH_COOKIE_KEY);
         cookie = authClient.getCookie();
       } catch {
         return { stoppedBy: 'locked' };

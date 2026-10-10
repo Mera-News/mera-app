@@ -8,6 +8,7 @@ import { AUTH_ENDPOINT } from "./config/endpoints";
 import { logoutRevenueCat } from "./revenuecat";
 import { logoutIntercom } from "./intercom";
 import logger from "./logger";
+import { sleep } from "./utils/retry";
 import {
     clearJwtSubscriptionLock,
     isJwtSubscriptionLocked,
@@ -22,6 +23,7 @@ import {
 const scheme = Constants.expoConfig?.scheme;
 const APP_SCHEME = Array.isArray(scheme) ? scheme[0] : scheme || 'app';
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
+export const AUTH_COOKIE_KEY = `${APP_SLUG}_cookie`;
 
 // Set by clearAuthStorage as its first step. A get-session reply that lands after the local wipe makes
 // the expo client write the signed-out account's session back to `${APP_SLUG}_session_data`, and no
@@ -42,7 +44,7 @@ const hasLiveCookie = (raw: string): boolean => {
 const guardedSecureStore = {
     ...secureStore,
     setItem: (key: string, value: string) => {
-        if (key === `${APP_SLUG}_cookie` && hasLiveCookie(value)) sessionCacheSuspended = false;
+        if (key === AUTH_COOKIE_KEY && hasLiveCookie(value)) sessionCacheSuspended = false;
         if (key === `${APP_SLUG}_session_data` && sessionCacheSuspended) return;
         secureStore.setItem(key, value);
     },
@@ -85,7 +87,7 @@ export const sendOTP = async (email: string): Promise<{ success: boolean; error?
     } catch (error: any) {
         return {
             success: false,
-            error: error.message || i18next.t('auth.failedToSendBody'),
+            error: error.message,
         };
     }
 };
@@ -132,13 +134,6 @@ export const getJwtToken = async (): Promise<string | null> => {
             _cachedJwtExpiry = Date.now() + JWT_CACHE_TTL_MS;
             return data.token;
         } catch (e) {
-            // The same verdict can arrive as a throw (a client configured with
-            // `throw: true`, or a plugin that rethrows) — classify both paths or
-            // the storm simply moves.
-            if (isSubscriptionRequiredAuthError(e)) {
-                recordJwtSubscriptionLocked();
-                return null;
-            }
             logger.captureException(e, { tags: { service: 'auth-client', method: 'getJwtToken' } });
             return null;
         }
@@ -214,12 +209,12 @@ export const clearAuthStorage = async () => {
     try {
         await Promise.race([
             authClient.signOut(),
-            new Promise((resolve) => setTimeout(resolve, SIGN_OUT_TIMEOUT_MS)),
+            sleep(SIGN_OUT_TIMEOUT_MS),
         ]);
     } catch {
         // Ignore — we still want to wipe local state below.
     }
-    for (const key of [`${APP_SLUG}_cookie`, `${APP_SLUG}_session_data`]) {
+    for (const key of [AUTH_COOKIE_KEY, `${APP_SLUG}_session_data`]) {
         try {
             await secureStore.deleteItemAsync(key);
         } catch {

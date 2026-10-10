@@ -3,6 +3,7 @@
 // jank foreground animations. RN-touching code is fine in lib/scheduler/.
 
 import { InteractionManager } from 'react-native';
+import { sleep } from '@/lib/utils/retry';
 
 /**
  * Resolve after the current interactions/animations have finished. Falls back to
@@ -31,7 +32,7 @@ export function yieldToInteractions(): Promise<void> {
 export function yieldToInteractionsWithTimeout(ms: number): Promise<void> {
   return Promise.race([
     yieldToInteractions(),
-    new Promise<void>((resolve) => setTimeout(resolve, ms)),
+    sleep(ms),
   ]);
 }
 
