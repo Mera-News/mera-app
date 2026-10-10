@@ -384,7 +384,7 @@ export interface Script {
   verdicts?: Record<string, { keep: boolean; why?: string } | 'junk'>;
 }
 
-/** Relevance fences carry the article title; reasons carry the id in the call id. */
+/** Relevance and reasons prompts both carry the article title (`Story <id>`); a reasons call id is only a position. */
 export function scripted(script: Script = {}): GatewayResponder {
   return (call: GatewayCall) => {
     const user = call.messages.find((m) => m.role === 'user')?.content ?? '';
@@ -400,7 +400,7 @@ export function scripted(script: Script = {}): GatewayResponder {
       );
     }
     if (call.callId?.startsWith('reason:')) {
-      const id = call.callId.slice('reason:'.length);
+      const id = /News Title: Story (\S+)/.exec(user)?.[1] ?? '';
       const verdict = script.verdicts?.[id];
       if (verdict === 'junk') return 'I am not JSON';
       if (verdict) return JSON.stringify(verdict);

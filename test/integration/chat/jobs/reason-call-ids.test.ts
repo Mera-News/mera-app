@@ -1,12 +1,13 @@
 // CH15: the call ids of an async scoring job travel OUTSIDE the E2EE envelope (the gateway reads
 // them), so an id that is an article's server _id tells the gateway, per signed-in user, which
 // articles the device judged relevant. Relevance ids are already positional counters (score:N);
-// the reasons job still sends reason:<article id>.
+// the reasons job used to send reason:<article id>; its ids are positional now (reason:N).
 //
 // The pipeline is driven through the real scoring cycle (support.ts: run-background-cycle setup) to a
 // reasons submit; the wire is read with captureJobPosts (gzip body inflated) and gatewayCalls('job').
 // A bug is a `test.failing` for the correct behaviour plus a passing "today" sibling (R14).
 import { runBackgroundCycle } from '@/lib/background/run-inference-handler';
+import { resolveReasonResultIds } from '@/lib/mera-protocol/scoring-service';
 import { gatewayCalls, server } from '@/test/helpers';
 import {
   captureJobPosts,
@@ -52,7 +53,7 @@ describe('relevance call ids', () => {
 });
 
 describe('reasons call ids', () => {
-  test.failing("CH15: no article id leaves the device in a job's call ids", async () => {
+  it("CH15: no article id leaves the device in a job's call ids", async () => {
     const posts = await runToReasonsSubmit();
 
     for (const id of callIds()) {
@@ -68,14 +69,13 @@ describe('reasons call ids', () => {
     }
   });
 
-  it('CH15 today: reasons call ids are reason:<article id>', async () => {
-    const posts = await runToReasonsSubmit();
-
-    const reasons = reasonJobCalls().map((c) => c.callId);
-    expect(reasons.length).toBeGreaterThan(0);
-    for (const id of reasons) expect(SEEDED).toContain((id ?? '').slice('reason:'.length));
-    // The same ids are in the request body the gateway received.
-    const reasonPost = posts.find((p) => p.body?.requests.some((r) => r.id.startsWith('reason:')));
-    expect(reasonPost?.body?.requests.map((r) => r.id).sort()).toEqual(reasons.sort());
+  it('maps a positional result id back to the article id, and still reads an id-form batch from before the fix', () => {
+    const ordered = ['a1', 'a2'];
+    const out = resolveReasonResultIds(
+      [{ id: 'reason:1' }, { id: 'reason:0' }, { id: 'reason:2' }, { id: 'reason:65f1c0a2b3d4e5f607182930' }, { id: 'score:0' }],
+      ordered,
+    );
+    // reason:2 is outside the list and dropped; the 24-hex id is an old-form id and passes through.
+    expect(out.map((r) => r.id)).toEqual(['reason:a2', 'reason:a1', 'reason:65f1c0a2b3d4e5f607182930', 'score:0']);
   });
 });

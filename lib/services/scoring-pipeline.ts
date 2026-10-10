@@ -73,6 +73,7 @@ import {
   buildReasonCallsForSubset,
   buildRelevanceCalls,
   decodeResults,
+  resolveReasonResultIds,
   CLOUD_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 } from '@/lib/mera-protocol/scoring-service';
@@ -2116,8 +2117,11 @@ async function decodeBatch(
   }
   const algo = snap?.run.algo ?? 'ed25519';
   const privKey = hexToBytes(privKeyHex);
-  const batchResults = server.results.map((r) =>
-    toBatchResult(r, privKey, algo),
+  // A reasons call id is `reason:<position>` on the wire (no article id leaves
+  // the device); map it back through the ids persisted at submit, in call order.
+  const batchResults = resolveReasonResultIds(
+    server.results.map((r) => toBatchResult(r, privKey, algo)),
+    batch.reasonCandidateIds ?? [],
   );
   return { batchResults };
 }

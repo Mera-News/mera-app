@@ -208,6 +208,7 @@ jest.mock('@/lib/mera-protocol/scoring-service', () => ({
   buildRelevanceCalls: (...args: any[]) => mockBuildRelevanceCalls(...args),
   buildReasonCallsForSubset: (...args: any[]) => mockBuildReasonCallsForSubset(...args),
   decodeResults: (...args: any[]) => mockDecodeResults(...args),
+  resolveReasonResultIds: (results: any[]) => results,
   runFeedVerifierPass: (...args: any[]) => mockRunFeedVerifierPass(...args),
   CLOUD_SCORE_CHUNK_SIZE: 5,
   REASON_MIN_RAW_SCORE: 0.3,

@@ -506,7 +506,7 @@ describe('buildReasonCallsForSubset', () => {
   it('includes only candidates whose relevance STRICTLY exceeds the threshold', async () => {
     const rows = await seedAndLoad(['a', 'b', 'c']);
     const result = await buildReasonCallsForSubset(rows, { a: 0.5, b: 0.3, c: 0.31 }, 0.3);
-    expect(result.calls.map((c) => c.id).sort()).toEqual(['reason:a', 'reason:c']);
+    expect(result.calls.map((c) => c.id).sort()).toEqual(['reason:0', 'reason:1']);
   });
 
   it('skips ineligible candidates (no title)', async () => {
@@ -519,7 +519,7 @@ describe('buildReasonCallsForSubset', () => {
     const { calls } = await buildReasonCallsForSubset([row], { abc: 0.7 }, 0.3);
     expect(calls).toHaveLength(1);
     expect(calls[0]).toMatchObject({
-      id: 'reason:abc',
+      id: 'reason:0',
       system: ART.reasonSystemPrompt,
       maxTokens: 96,
       temperature: 0.2,
@@ -531,7 +531,7 @@ describe('buildReasonCallsForSubset', () => {
     const rows = await seedAndLoad(['a', 'b']);
     const result = await buildReasonCallsForSubset(rows, { a: 0.8 }, 0.3);
     expect(result.chunkIdToCandidates.size).toBe(0);
-    expect(result.calls.map((c) => c.id)).toEqual(['reason:a']);
+    expect(result.calls.map((c) => c.id)).toEqual(['reason:0']);
   });
 });
 
@@ -549,7 +549,7 @@ describe('P8 - factless headline admission (the live builders)', () => {
   it('buildReasonCallsForSubset admits a factless headline row that scored', async () => {
     const [h] = await seedAndLoad(['h1'], { factless: true, headline: 'COUNTRY' });
     const result = await buildReasonCallsForSubset([h], { h1: 0.65 }, 0.3);
-    expect(result.calls.map((c) => c.id)).toEqual(['reason:h1']);
+    expect(result.calls.map((c) => c.id)).toEqual(['reason:0']);
     expect(result.calls[0].system).toBe(ART.headlineReasonSystemPrompt);
   });
 

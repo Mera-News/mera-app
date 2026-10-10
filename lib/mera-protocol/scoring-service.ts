@@ -422,9 +422,15 @@ export async function batchScoreAndReason(
     } else {
       const phase2 = buildReasonCallsForSurvivors(survivors, scoreMap, allFactStatements);
       const reasonResults = await cloudBatchComplete(phase2.calls, SMALL_MODEL);
+      const orderedIds = phase2.eligibleCandidates.map((c) => c.id);
       const decodedReasons = decodeCloudBatchResults({
-        batchResults: reasonResults,
-        promptsById: phase2.promptsById,
+        batchResults: resolveReasonResultIds(reasonResults, orderedIds),
+        promptsById: new Map(
+          [...phase2.promptsById].map(([id, prompt]) => [
+            resolveReasonCallId(id, orderedIds) ?? id,
+            prompt,
+          ]),
+        ),
         chunkIdToCandidates: phase2.chunkIdToCandidates,
       });
       for (const [id, reason] of decodedReasons.reasonMap) reasonMap.set(id, reason);
@@ -486,7 +492,7 @@ function buildReasonCallsForSurvivors(
       relevance,
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     });
-    const reasonId = `reason:${c.id}`;
+    const reasonId = `reason:${calls.length}`;
     promptsById.set(reasonId, reasonPrompt);
     calls.push({
       id: reasonId,
@@ -660,7 +666,7 @@ export async function buildReasonCallsForSubset(
       relevance: relevanceMap[c.id],
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     });
-    const reasonId = `reason:${c.id}`;
+    const reasonId = `reason:${calls.length}`;
     promptsById.set(reasonId, reasonPrompt);
     calls.push({
       id: reasonId,
@@ -700,6 +706,41 @@ export function decodeCloudBatchResults(params: {
   chunkIdToCandidates: Map<string, ScoringCandidate[]>;
 }): DecodedResults {
   return harnessDecodeCloudBatchResults(params, ARTICLE_CFG, appHarnessLogger);
+}
+
+/**
+ * A reasons call id travels outside the E2EE envelope, so it must not be an
+ * article id: it is `reason:<position>` in the submitted list. This maps a result
+ * id back to `reason:<article id>` for the decoders. A 1-6 digit suffix is a
+ * position (out of range -> null); anything else (a batch submitted before ids
+ * went positional carries `reason:<24-hex id>`) is already an id and passes
+ * through. Non-reason ids pass through untouched.
+ */
+export function resolveReasonCallId(id: string, orderedIds: readonly string[]): string | null {
+  const m = /^reason:(\d{1,6})$/.exec(id);
+  if (!m) return id;
+  const articleId = orderedIds[Number(m[1])];
+  return articleId === undefined ? null : `reason:${articleId}`;
+}
+
+/** {@link resolveReasonCallId} over a result list; a result whose position is unknown is dropped. */
+export function resolveReasonResultIds<T extends { id: string }>(
+  results: T[],
+  orderedIds: readonly string[],
+): T[] {
+  const out: T[] = [];
+  for (const r of results) {
+    const id = resolveReasonCallId(r.id, orderedIds);
+    if (id === null) {
+      logger.warn('[resolveReasonResultIds] result position outside the submitted list', {
+        callId: r.id,
+        submitted: orderedIds.length,
+      });
+      continue;
+    }
+    out.push(id === r.id ? r : { ...r, id });
+  }
+  return out;
 }
 
 /** Exported alias so the reconciler can import a canonical helper name. */

@@ -94,7 +94,7 @@ describe('relevance completion', () => {
     // reasons job submitted this cycle, for the impactful subset only
     const submits = jobSubmits();
     expect(submits).toHaveLength(2);
-    expect(submits[1].calls).toEqual(['reason:a0']);
+    expect(submits[1].calls).toEqual(['reason:0']);
     const b = (await batches())[0];
     expect(b.phase).toBe('waiting-reasons');
     expect(b.requestId).not.toBe(batch.requestId);
@@ -381,7 +381,7 @@ describe('soft suppression on the legacy path', () => {
 
     await collect(batch, script);
 
-    expect(lastJobCalls()).toEqual(['reason:a1']);
+    expect(lastJobCalls()).toEqual(['reason:0']);
     expect((await rows()).a0.relevance).toBeCloseTo(0.35, 10);
   });
 
@@ -545,7 +545,7 @@ describe('enqueueOrphanedReasons', () => {
     expect(bs[0].reasonsOnly).toBe(true);
     expect(bs[0].candidateIds).toEqual(['o0']);
     // submitted as a reasons job
-    expect(lastJobCalls()).toEqual(['reason:o0']);
+    expect(lastJobCalls()).toEqual(['reason:0']);
     expect(bs[0].phase).toBe('waiting-reasons');
   });
 
@@ -593,7 +593,7 @@ describe('top-headline cull — legacy path', () => {
     expect(b.relevanceMap).toEqual({ t0: 0.8 });
     expect(b.rawRelevanceMap).toEqual({ t0: 0.9 });
     expect(b.reasonCandidateIds).toEqual(['t0']);
-    expect(lastJobCalls()).toEqual(['reason:t0']);
+    expect(lastJobCalls()).toEqual(['reason:0']);
   });
 
   it('leaves a MEDIUM headline alone (saved + reason-eligible as normal)', async () => {
@@ -666,7 +666,7 @@ describe("legacyNoteDemote — the legacy path's keep/demote note pass", () => {
     // Absent, not `false` — a legacy run written before this field existed must parse and resume
     // identically, which is what makes the default inert.
     expect((reasonsBatch as { noteMode?: boolean }).noteMode).toBeUndefined();
-    expect(systemOf('reason:a0')).not.toBe(cfg.v3NoteSystemPrompt);
+    expect(systemOf('reason:0')).not.toBe(cfg.v3NoteSystemPrompt);
 
     // Prose decoder: the plain reason is saved verbatim, and nothing is demoted.
     await completeReasons(reasonsBatch);
@@ -681,7 +681,7 @@ describe("legacyNoteDemote — the legacy path's keep/demote note pass", () => {
     // No v3 marker — this is the LEGACY path wearing the note pass. Nothing writes `v3Mode` any
     // more; it exists only to be detected and cleared.
     expect(b.v3Mode).toBeUndefined();
-    expect(systemOf('reason:a0')).toBe(cfg.v3NoteSystemPrompt);
+    expect(systemOf('reason:0')).toBe(cfg.v3NoteSystemPrompt);
   });
 
   it('ON: a kept row gets its sentence; the prose decoder is never consulted', async () => {
@@ -755,14 +755,14 @@ describe('legacyNoteDemote — the orphaned-reason sweep reads the same config',
   it('OFF: reasonsOnly batches carry no marker and request the legacy prompt', async () => {
     const b = await sweep(false);
 
-    expect(systemOf('reason:o0')).not.toBe(cfg.v3NoteSystemPrompt);
+    expect(systemOf('reason:0')).not.toBe(cfg.v3NoteSystemPrompt);
     expect(b.noteMode).toBeUndefined();
   });
 
   it('ON: reasonsOnly batches request the note prompt AND persist the marker', async () => {
     const b = await sweep(true);
 
-    expect(systemOf('reason:o0')).toBe(cfg.v3NoteSystemPrompt);
+    expect(systemOf('reason:0')).toBe(cfg.v3NoteSystemPrompt);
     // Persisted, not re-derived: this batch's results must decode as verdicts even if an OTA turns
     // the flag off while it is in flight.
     expect(b.noteMode).toBe(true);
@@ -811,8 +811,9 @@ describe('reasons in flight', () => {
     await drive(pipeline.handlePush((await batches())[0].requestId, 'foreground'));
 
     const r = await rows();
-    expect(r[rep].reason).toBe(`Why story ${rep} matters here.`);
+    // Both titles are the same line, so the scripted reply names no id; the sibling carries the rep's note.
+    expect(r[rep].reason).toMatch(/matters here\.$/);
     expect(r[dup]).toMatchObject({ status: 'complete', relevance: 0.8 });
-    expect(r[dup].reason).not.toBe('');
+    expect(r[dup].reason).toBe(r[rep].reason);
   });
 });

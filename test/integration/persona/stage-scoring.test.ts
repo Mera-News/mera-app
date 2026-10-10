@@ -508,7 +508,7 @@ describe('relevance v4 - the live builders', () => {
 
     const bundle = await buildReasonCallsForSubset(both, { g0: 0.8, k0: 0.8 }, 0.4, false, ART);
 
-    expect(bundle.calls.map((c) => c.id).sort()).toEqual(['reason:g0', 'reason:k0']);
+    expect(bundle.calls.map((c) => c.id).sort()).toEqual(['reason:0', 'reason:1']);
     expect(bundle.tagGatedDemoteIds ?? []).toEqual([]);
   });
 
@@ -520,7 +520,7 @@ describe('relevance v4 - the live builders', () => {
 
     const bundle = await buildReasonCallsForSubset(both, { g0: 0.8, k0: 0.8 }, 0.4, false, V4_ON);
 
-    expect(bundle.calls.map((c) => c.id)).toEqual(['reason:k0']);
+    expect(bundle.calls.map((c) => c.id)).toEqual(['reason:0']);
     // Skipping the call WITHOUT demoting would leave the row with no note forever.
     expect(bundle.tagGatedDemoteIds).toEqual(['g0']);
   });
