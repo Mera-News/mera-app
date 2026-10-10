@@ -967,11 +967,11 @@ describe('onboarding server-error logout (useServerErrorLogout)', () => {
         expect(secureStoreDump()[key('cookie')]).toBeUndefined();
         expect(Purchases.logOut).toHaveBeenCalled();
         expect(Intercom.logout).toHaveBeenCalled();
-        expect(replaced()).toEqual([['/']]);
+        expect(replaced()).toEqual([[LOGIN_SIGNED_OUT]]);
         expect(result.current.isLoggingOut).toBe(false);
     });
 
-    test.failing('B2 the onboarding logout leaves the device signed out', async () => {
+    test('B2 the onboarding logout leaves the device signed out', async () => {
         await logOutFromOnboarding();
 
         expect(await settings.getSetting('cached_user_id')).toBeNull();
@@ -979,15 +979,5 @@ describe('onboarding server-error logout (useServerErrorLogout)', () => {
         expect(
             launchRoute.resolveLaunchRoute({ hasIdentity, lockEnabled: false, pinSet: false, locked: false }),
         ).toBe('/login');
-    });
-
-    test('B2 today: the identity stamp survives, so the launch gate routes straight back into the app', async () => {
-        await logOutFromOnboarding();
-
-        expect(await settings.getSetting('cached_user_id')).toBe(ME);
-        const hasIdentity = (await launchRoute.readLocalIdentityState()) === 'present';
-        expect(
-            launchRoute.resolveLaunchRoute({ hasIdentity, lockEnabled: false, pinSet: false, locked: false }),
-        ).toBe('/logged-in');
     });
 });

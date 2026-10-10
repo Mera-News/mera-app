@@ -1,9 +1,8 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { clearAuthStorage } from '@/lib/auth-client';
+import { signOutAndWipe } from '@/lib/security/local-wipe';
 
 export function useServerErrorLogout(setShowServerError: (v: boolean) => void) {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -14,9 +13,9 @@ export function useServerErrorLogout(setShowServerError: (v: boolean) => void) {
         try {
             setIsLoggingOut(true);
             setShowServerError(false);
-            // clearAuthStorage() owns the guarded, bounded server sign-out.
-            await clearAuthStorage();
-            router.replace('/');
+            // Signs out (guarded, bounded), drops the identity stamp, routes to
+            // /login and wipes. Only the wipe can still throw.
+            await signOutAndWipe();
         } catch {
             toast.show({
                 placement: 'top',
