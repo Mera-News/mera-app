@@ -41,7 +41,6 @@ describe('a restart while a job is running', () => {
     expect(status).toBe('done');
     expect(runs).toBe(1);
   });
-
 });
 
 // The other half of CH13: chat pauses the queue for exclusive llama.rn access (`pause()`), and a
@@ -73,7 +72,6 @@ describe('a start while chat holds the queue paused', () => {
     await untilJob(id, ['done']);
     expect(handler).toHaveBeenCalledTimes(1);
   });
-
 });
 
 // Two start() calls in flight at once (useModelLifecycle effect 3 next to another caller) share one
@@ -99,8 +97,8 @@ describe('two starts in flight', () => {
   });
 });
 
-// CH19: stop() while start() is still in its setup (recovery, prune, sweeps) sees `stopped`, returns
-// at once, and the start then goes on to run the queue the caller just stopped.
+// CH19: stop() while start() is still in its setup (recovery, prune, sweeps) must wait for that start
+// and then stop it, not return at once and leave the queue running.
 async function stopDuringStartSetup() {
   const handler = jest.fn(async (..._args: unknown[]) => ({ ran: true }));
   __setJobHandlerForTests('persona_summary', handler);
@@ -118,19 +116,11 @@ async function stopDuringStartSetup() {
 }
 
 describe('a stop during start setup', () => {
-  test.failing("CH19: a stop() during start()'s setup leaves the queue stopped", async () => {
+  test("CH19: a stop() during start()'s setup leaves the queue stopped", async () => {
     const { state, handler, status } = await stopDuringStartSetup();
 
     expect(state).toBe('stopped');
     expect(handler).not.toHaveBeenCalled();
     expect(status).toBe('pending');
-  });
-
-  it('CH19 today: a stop() during start()\'s setup is lost and the queue runs', async () => {
-    const { state, handler, status } = await stopDuringStartSetup();
-
-    expect(state).toBe('running');
-    expect(handler).toHaveBeenCalledTimes(1);
-    expect(status).toBe('done');
   });
 });

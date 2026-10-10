@@ -232,6 +232,8 @@ class InferenceQueueImpl {
    * Waits for the current job to finish, then stops.
    */
   async stop(): Promise<void> {
+    // A stop during start's setup must stop what that start began, not be lost to the 'stopped' check.
+    if (this.starting) await this.starting;
     if (this.state === 'stopped') return this.stopping ?? undefined;
 
     this.state = 'stopped';
