@@ -1,3 +1,5 @@
+import { fnv1a32 } from '@/lib/algorithms/fnv1a';
+
 /** Gradient parameters for a fact-row header background. Consumed by the
  *  section-header renderer to composite a left-to-right fade. */
 export interface SectionGradientSpec {
@@ -26,17 +28,8 @@ export interface SectionGradientSpec {
 export const SECTION_SATURATION_PCT = 52;
 export const SECTION_LIGHTNESS_PCT = 64;
 
-/** FNV-1a 32-bit hash — deterministic across launches/screens (no runtime
- *  randomness, no Date/Math.random) so the same factId always maps to the
- *  same color everywhere it's rendered. */
-export function hashString(input: string): number {
-  let hash = 2166136261; // FNV offset basis
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619); // FNV prime
-  }
-  return hash >>> 0; // force unsigned 32-bit
-}
+/** FNV-1a 32-bit (see `lib/algorithms/fnv1a.ts`): deterministic, so a factId maps to the same colour everywhere. */
+export const hashString = fnv1a32;
 
 /**
  * Derives a stable pastel gradient spec for a fact row's header, keyed by

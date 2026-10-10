@@ -13,6 +13,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { useThemeMode } from '@/lib/theme/tokens';
 import { useMotionAllowed } from '@/lib/motion-gate';
+import { fnv1a32 } from '@/lib/algorithms/fnv1a';
 
 /**
  * The app-wide background for the five tab pages: a slowly drifting,
@@ -264,23 +265,12 @@ export function cssBlobLayers(colors: string[]): string {
  * screen, so nothing off-screen is ever rasterised.
  */
 
-/** FNV-1a 32-bit — the same hash `lib/section-color.ts` uses to key a fact's
- *  colour, so a seeded backdrop is stable across launches and screens. */
-function hashString(input: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
 /** mulberry32 — a tiny deterministic PRNG. Given a seed the whole field is
  *  reproducible; given none we fall back to `Math.random` so unseeded surfaces
  *  still differ from each other. */
 function makeRandom(seed?: string): () => number {
   if (seed === undefined) return Math.random;
-  let a = hashString(seed) || 1;
+  let a = fnv1a32(seed) || 1;
   return () => {
     a |= 0;
     a = (a + 0x6d2b79f5) | 0;

@@ -13,6 +13,7 @@ import type { ImpressionSurface } from '@/lib/database/models/StoryImpression';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { normalizeKeyOrEmpty } from '@/lib/algorithms/normalize-key';
 
 /**
  * Returns a stable callback that opens a `ForYouSuggestion`: mark-opened +
@@ -47,8 +48,7 @@ export function useOpenSuggestion(surface: ImpressionSurface) {
           articleId: suggestion.articleId,
           suggestionId: suggestion._id,
           stableClusterId,
-          titleNorm:
-            (suggestion.title_en ?? '').toLowerCase().trim().replace(/\s+/g, ' ') || null,
+          titleNorm: normalizeKeyOrEmpty(suggestion.title_en) || null,
           surface,
         });
       });
