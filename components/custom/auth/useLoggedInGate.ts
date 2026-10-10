@@ -15,6 +15,7 @@ import {
     readPendingAuthUserId,
     resolveIdentity,
 } from "@/lib/security/identity-gate";
+import { wipeAllLocalUserData } from "@/lib/security/local-wipe";
 import { useUserStore } from "@/lib/stores/user-store";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
@@ -59,6 +60,19 @@ async function openPendingNotificationRoute(
 let wipeInFlight: Promise<void> | null = null;
 function wipeOnce(newUserId: string): Promise<void> {
     wipeInFlight ??= clearPreviousUserData(newUserId).finally(() => {
+        wipeInFlight = null;
+    });
+    return wipeInFlight;
+}
+
+/**
+ * The wipe for positive evidence of contamination (a persona row owned by
+ * another account). `clearPreviousUserData` acts only when `cached_user_id` is
+ * set AND differs, so with a matching or missing stamp it wipes nothing; this
+ * wipes unconditionally. Same single-flight slot as `wipeOnce`.
+ */
+function forceWipeOnce(): Promise<void> {
+    wipeInFlight ??= wipeAllLocalUserData({ keepSession: true }).finally(() => {
         wipeInFlight = null;
     });
     return wipeInFlight;
@@ -183,7 +197,18 @@ export function useLoggedInGate() {
                 // 'coherent' to a wipe and is never the gate itself, and it is
                 // deliberately not consulted on 'reauth' — the server has
                 // already said a local fix is guesswork there.
-                if (verdict === 'coherent' && effective && (await assertPersonaOwner(effective))) {
+                //
+                // Asked on 'coherent' (a matching stamp) AND when there is no
+                // stamp at all: resolveIdentity already says 'wipeAndProceed'
+                // then, but clearPreviousUserData wipes nothing without a stamp
+                // to compare, so only the evidence can force a real wipe.
+                let forcedByEvidence = false;
+                if (
+                    effective &&
+                    (verdict === 'coherent' || (verdict === 'wipeAndProceed' && !localUserId)) &&
+                    (await assertPersonaOwner(effective))
+                ) {
+                    forcedByEvidence = true;
                     verdict = 'wipeAndProceed';
                 }
 
@@ -220,7 +245,7 @@ export function useLoggedInGate() {
                     // one and then stamping its stale owner over the live one.
                     if (cancelled) return;
                     try {
-                        await wipeOnce(effective);
+                        await (forcedByEvidence ? forceWipeOnce() : wipeOnce(effective));
                     } catch (error) {
                         // ── FAIL CLOSED ──────────────────────────────────
                         // The previous owner's facts, reading history, saved

@@ -498,8 +498,8 @@ describe('useLoggedInGate: account switch', () => {
     // contaminated even when the sentinel says otherwise") upgrades a coherent verdict to
     // wipeAndProceed, but the wipe it then runs is lib/stores/index.ts clearPreviousUserData, which
     // acts only when cached_user_id is set AND different from the incoming id. Here it matches, so
-    // the upgrade wipes nothing: the incoming account is routed in on the other owner's facts and
-    // skips onboarding. The fix is in clearPreviousUserData (data owns it).
+    // the upgrade wiped nothing: the incoming account was routed in on the other owner's facts and
+    // skipped onboarding. The gate now forces a full wipe on that evidence (forceWipeOnce).
     describe('persona row owned by another account, sentinel matching the incoming one', () => {
         async function seed() {
             await signIn();
@@ -508,7 +508,7 @@ describe('useLoggedInGate: account switch', () => {
             await persistUserPersona(FOREIGN, personaFor(Date.now(), { userId: FOREIGN }));
         }
 
-        test.failing('U4-N1 the previous owner facts are wiped before the incoming account is routed in', async () => {
+        test('U4-N1 the previous owner facts are wiped before the incoming account is routed in', async () => {
             await seed();
 
             mountGate();
@@ -517,23 +517,6 @@ describe('useLoggedInGate: account switch', () => {
 
             expect(await hasAnyFacts()).toBe(false);
             expect(replaced()).toEqual([['/logged-in/onboarding']]);
-        });
-
-        test('U4-N1 today: the previous owner facts survive and the incoming account skips onboarding', async () => {
-            await seed();
-
-            mountGate();
-            await waitForRoute();
-            await drain();
-
-            // The second opinion DID fire (it reports the foreign row)...
-            expect(Sentry.captureMessage).toHaveBeenCalledWith(
-                'Persona rows on this device belong to a different user',
-                expect.anything(),
-            );
-            // ...and the wipe it asked for did nothing.
-            expect(await hasAnyFacts()).toBe(true);
-            expect(replaced()).toEqual([[APP_ROUTE]]);
         });
     });
 
@@ -550,7 +533,7 @@ describe('useLoggedInGate: account switch', () => {
             jest.mocked(Sentry.captureMessage).mockClear();
         }
 
-        test.failing('PE9b the previous owner facts are wiped before the incoming account is routed in', async () => {
+        test('PE9b the previous owner facts are wiped before the incoming account is routed in', async () => {
             await seed();
 
             mountGate();
@@ -559,22 +542,6 @@ describe('useLoggedInGate: account switch', () => {
 
             expect(await hasAnyFacts()).toBe(false);
             expect(replaced()).toEqual([['/logged-in/onboarding']]);
-        });
-
-        test('PE9b today: the second opinion is never asked, the facts survive and the incoming account skips onboarding', async () => {
-            await seed();
-
-            mountGate();
-            await waitForRoute();
-            await drain();
-
-            expect(Sentry.captureMessage).not.toHaveBeenCalledWith(
-                'Persona rows on this device belong to a different user',
-                expect.anything(),
-            );
-            expect(await hasAnyFacts()).toBe(true);
-            expect(await getSetting('cached_user_id')).toBe(ME);
-            expect(replaced()).toEqual([[APP_ROUTE]]);
         });
     });
 });
