@@ -46,10 +46,10 @@ jest.mock('../../logger', () => ({
   default: { captureException: jest.fn(), info: jest.fn(), warn: jest.fn() },
 }));
 
+import { cooldownForFailCount } from '@/lib/algorithms/pin-cooldown';
 import {
   changePin,
   clearPin,
-  cooldownForFailCount,
   getCooldownRemainingMs,
   isPinSet,
   setPin,

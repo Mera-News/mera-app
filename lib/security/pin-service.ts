@@ -26,6 +26,7 @@
 import * as Crypto from 'expo-crypto';
 import { bytesToHex, randomBytes } from '@noble/hashes/utils.js';
 import Constants from 'expo-constants';
+import { cooldownForFailCount } from '../algorithms/pin-cooldown';
 import { secureStore } from '../utils/secure-store-adapter';
 import logger from '../logger';
 
@@ -35,13 +36,6 @@ const PIN_ATTEMPTS_KEY = `${APP_SLUG}_pin_attempts`;
 
 const PIN_ALGO = 'sha256-v1' as const;
 const SALT_LEN = 16;
-
-// Escalating cooldown thresholds. Every wrong attempt increments failCount;
-// each time it crosses a multiple of 5 we impose the corresponding lockout.
-const COOLDOWN_STEP = 5;
-const COOLDOWN_30S = 30_000;
-const COOLDOWN_60S = 60_000;
-const COOLDOWN_5MIN = 5 * 60_000;
 
 interface PinRecord {
   /** KDF/format identity. Records without a matching algo are treated as
@@ -117,18 +111,6 @@ async function resetAttempts(): Promise<void> {
   } catch {
     // ignore — absence is the desired state
   }
-}
-
-/**
- * Cooldown to impose given the *new* total failCount. Returns 0 unless
- * failCount just landed on a COOLDOWN_STEP boundary.
- *   5  → 30s, 10 → 60s, 15+ → 5min (and every 5 thereafter).
- */
-export function cooldownForFailCount(failCount: number): number {
-  if (failCount === 0 || failCount % COOLDOWN_STEP !== 0) return 0;
-  if (failCount >= 15) return COOLDOWN_5MIN;
-  if (failCount >= 10) return COOLDOWN_60S;
-  return COOLDOWN_30S;
 }
 
 // An algo-mismatched record (e.g. a scrypt-era record from before the

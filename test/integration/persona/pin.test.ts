@@ -10,11 +10,11 @@ import { __resetAppRestartForTests, activeHolds, requestRestart, restartContext 
 import { setSetting } from '@/lib/database/services/setting-service';
 import { isAppLockEnabled, readAppLockState, setAppLockEnabled } from '@/lib/security/app-lock-service';
 import { resolveLaunchRoute } from '@/lib/algorithms/launch-route';
+import { cooldownForFailCount } from '@/lib/algorithms/pin-cooldown';
 import { runPinForceResetOnce } from '@/lib/security/pin-force-reset';
 import {
     changePin,
     clearPin,
-    cooldownForFailCount,
     getCooldownRemainingMs,
     isPinSet,
     readPinRecordState,
