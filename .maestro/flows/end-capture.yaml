@@ -1,0 +1,12 @@
+# Subflow: scroll the current page to its end and screenshot it. env SHOT: screenshot name.
+appId: ${APP_ID}
+---
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- takeScreenshot: ${SHOT}

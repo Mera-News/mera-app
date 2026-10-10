@@ -1,7 +1,8 @@
 # Dev flow: PE26, a You-tab scroll page clears the floating Mera button at its end, so every row can
-# be scrolled out from under it. Captures Display scrolled to the end (pe26-display-end: the last
-# row's right edge must sit above the Mera button; judged by eye with persona's contracts test as
-# the gate) and taps that last row, which must open System check, not the chat.
+# be scrolled out from under it. Captures Display, Settings, Notifications, Manage subscription and
+# Facts scrolled to the end (pe26-*-end: the last row's right edge must sit above the Mera button;
+# judged by eye with persona's contracts test as the gate), and taps Display's last row, which must
+# open System check, not the chat.
 # Red until persona's PE26 fix lands. Run in the P4-end device run.
 appId: ${APP_ID}
 ---
@@ -29,3 +30,45 @@ appId: ${APP_ID}
     timeout: 15000
 - assertNotVisible:
     id: "chat-input"
+
+# The other You-tab pages, each scrolled to its end. Back is the Android back key.
+- back
+- back
+- extendedWaitUntil:
+    visible:
+      id: "settings-page"
+    timeout: 15000
+- runFlow:
+    file: ../flows/end-capture.yaml
+    env: { SHOT: pe26-settings-end }
+- scrollUntilVisible:
+    element:
+      id: "settings-row-notifications"
+    direction: UP
+- tapOn:
+    id: "settings-row-notifications"
+- runFlow:
+    file: ../flows/end-capture.yaml
+    env: { SHOT: pe26-notifications-end }
+- back
+- scrollUntilVisible:
+    element:
+      id: "settings-manage-plan"
+    direction: UP
+- tapOn:
+    id: "settings-manage-plan"
+- extendedWaitUntil:
+    visible:
+      id: "manage-view-plans"
+    timeout: 15000
+- runFlow:
+    file: ../flows/end-capture.yaml
+    env: { SHOT: pe26-manage-subscription-end }
+- back
+- tapOn:
+    id: "page-pill-profile"
+- tapOn:
+    id: "profile-facts-view-all"
+- runFlow:
+    file: ../flows/end-capture.yaml
+    env: { SHOT: pe26-facts-end }

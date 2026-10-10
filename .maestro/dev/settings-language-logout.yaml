@@ -1,0 +1,61 @@
+# Dev flow: Settings > Language probes a switch, the switch is cancelled and the app stays in English;
+# then Settings > Log out (signOutAndWipe) returns to the auth screen. Log out runs last: it ends the
+# session. A probe that fails at once (no download possible behind the mock) shows no progress card;
+# the cancel step is then skipped, and English must hold either way.
+appId: ${APP_ID}
+---
+- runScript: ../scripts/reset-scenario.js
+- runFlow: ../flows/sign-in.yaml
+- tapOn:
+    id: ".*navigation_bar_item_icon_view"
+    index: 3
+- tapOn:
+    id: "page-pill-settings"
+- scrollUntilVisible:
+    element:
+      id: "settings-row-language"
+    direction: DOWN
+- tapOn:
+    id: "settings-row-language"
+- tapOn:
+    id: "language-option-de"
+- extendedWaitUntil:
+    visible:
+      id: "language-switch-cancel"
+    timeout: 20000
+    optional: true
+- takeScreenshot: language-probe
+- runFlow:
+    when:
+      visible:
+        id: "language-switch-cancel"
+    commands:
+      - tapOn:
+          id: "language-switch-cancel"
+      - extendedWaitUntil:
+          notVisible:
+            id: "language-switch-progress"
+          timeout: 30000
+- tapOn:
+    id: "language-back"
+- scrollUntilVisible:
+    element:
+      id: "settings-row-logout"
+    direction: DOWN
+- assertVisible:
+    text: "Log out"
+- takeScreenshot: language-still-english
+- tapOn:
+    id: "settings-row-logout"
+- extendedWaitUntil:
+    visible:
+      id: "app-dialog-confirm"
+    timeout: 15000
+- takeScreenshot: logout-confirm
+- tapOn:
+    id: "app-dialog-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "auth-screen"
+    timeout: 30000
+- takeScreenshot: logout-auth-screen
