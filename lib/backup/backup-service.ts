@@ -113,7 +113,11 @@ export async function runBackup(
   provider: BackupProvider,
   onProgress?: (progress: ExportProgress) => void,
 ): Promise<BackupRunResult> {
-  const key = await getBackupKey();
+  // A locked or unreadable keychain (an overnight wake before the first unlock) is a normal state
+  // of a phone, not a fault: the key is not available, which is what `no-key` already means.
+  const key = await getBackupKey().catch(() => {
+    throw new BackupServiceError('no-key', 'The backup key could not be read on this device right now');
+  });
   if (!key) {
     throw new BackupServiceError('no-key', 'Backup is not set up on this device');
   }

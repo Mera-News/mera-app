@@ -121,17 +121,6 @@ describe('the ordering gate', () => {
     expect(err.name).toBe('BackupServiceError');
     expect(err.reason).toBe('no-key');
   });
-
-  it('DA40 today: a keychain that cannot be read surfaces as the keychain error, not as "not set up"', async () => {
-    await setUpBackup();
-    failSecureStore(BACKUP_KEY_ITEM, 'get', new Error('keychain locked'));
-
-    const err = await runBackup(icloudProvider).catch((e) => e);
-
-    expect(err).not.toBeInstanceOf(BackupServiceError);
-    expect(err.message).toBe('keychain locked');
-    expect(callsTo('uploadFile')).toHaveLength(0);
-  });
 });
 
 describe('the scheduled backup meets a keychain that cannot be read', () => {
@@ -152,21 +141,7 @@ describe('the scheduled backup meets a keychain that cannot be read', () => {
     };
   }
 
-  it('DA40 today: the raw keychain error is captured as an exception', async () => {
-    await scheduleDaily();
-    const { capture, crumb } = spyLogger();
-    try {
-      await runScheduledBackup();
-      expect(capture).toHaveBeenCalledTimes(1);
-      expect((capture.mock.calls[0][0] as Error).message).toBe('keychain locked');
-      expect(crumb).not.toHaveBeenCalledWith('backup: not set up on this device', expect.anything(), expect.anything(), expect.anything());
-    } finally {
-      capture.mockRestore();
-      crumb.mockRestore();
-    }
-  });
-
-  test.failing('DA40: an unreadable keychain exits quietly, with no captured exception', async () => {
+  it('DA40: an unreadable keychain exits quietly, with no captured exception', async () => {
     await scheduleDaily();
     const { capture, crumb } = spyLogger();
     try {
