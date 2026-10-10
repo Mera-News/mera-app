@@ -136,26 +136,19 @@ describe('hydrate', () => {
     });
   });
 
-  // DATA-U3-1. A markVisited before hydrate persists the map it holds, which is
-  // empty of the stored visits, so the row is overwritten with the new entry
-  // alone. Hydrate then reads that row: the stored visits are gone from memory
-  // and from disk. (The merge above cannot save them; it only sees what is left.)
+  // DATA-U3-1 / DA7. A markVisited before hydrate waits for the hydrate and persists
+  // the merged map, so the stored visits survive in memory and on disk.
   describe('a markVisited before the first hydrate', () => {
     async function visitBeforeHydrate() {
       const now = Date.now();
       await seed({ 'fact-from-db': now - 500 });
       store.getState().markVisited('fact-early', now);
-      await persisted(KEY, JSON.stringify({ 'fact-early': now }));
       await store.getState().hydrate();
+      await persisted(KEY, JSON.stringify({ 'fact-from-db': now - 500, 'fact-early': now }));
       return now;
     }
 
-    it('pins today: the stored visits are overwritten by the early entry', async () => {
-      const now = await visitBeforeHydrate();
-      expect(store.getState().visits).toEqual({ 'fact-early': now });
-    });
-
-    test.failing('keeps the stored visits', async () => {
+    it('keeps the stored visits', async () => {
       const now = await visitBeforeHydrate();
       expect(store.getState().visits).toEqual({ 'fact-early': now, 'fact-from-db': now - 500 });
     });

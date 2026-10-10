@@ -24,7 +24,7 @@ interface SectionVisitsState {
      *  if newer). */
     hydrate: () => Promise<void>;
     /** visits[factId] = atMs (default Date.now()); persists serialized map
-     *  fire-and-forget. */
+     *  fire-and-forget (after the first hydrate, when not yet hydrated). */
     markVisited: (factId: string, atMs?: number) => void;
 }
 
@@ -91,8 +91,12 @@ export const useSectionVisitsStore = create<SectionVisitsState>()((set, get) => 
     markVisited: (factId, atMs) => {
         const next = { ...get().visits, [factId]: atMs ?? Date.now() };
         set({ visits: next });
-        setSetting(SETTING_KEY, JSON.stringify(next)).catch((err) =>
-            logger.captureException(err, { tags: { store: 'section-visits-store' } }),
-        );
+        // Before the first hydrate `next` lacks the stored visits; persisting it
+        // would overwrite the row. Wait for the (memoised) hydrate and write the
+        // merged map instead.
+        const persist = get().hydrated ? Promise.resolve(next) : get().hydrate().then(() => get().visits);
+        persist
+            .then((visits) => setSetting(SETTING_KEY, JSON.stringify(visits)))
+            .catch((err) => logger.captureException(err, { tags: { store: 'section-visits-store' } }));
     },
 }));
