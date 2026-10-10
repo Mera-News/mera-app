@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 import { openFactPage } from './open-fact-page';
 import { sentenceCase } from './sentence-case';
-import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 
 const FactRow: React.FC<{ readonly fact: Fact }> = ({ fact }) => {
     const { t } = useTranslation();
@@ -39,7 +39,7 @@ const FactRow: React.FC<{ readonly fact: Fact }> = ({ fact }) => {
  * things down live). Add a fact opens the Mera chat.
  */
 const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
-    const bottomInset = useTabContentBottomInset();
+    const bottomInset = useListEndClearance();
     const { t } = useTranslation();
     const colors = useColors();
     const facts = useHubFacts();
