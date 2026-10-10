@@ -50,9 +50,9 @@ languages.registerLocale(langEn as Parameters<typeof languages.registerLocale>[0
  * English name for a language tag, e.g. "pt-PT" -> "Portuguese".
  *
  * Only the `en` pack is registered: this feeds a PROMPT, which is always
- * English, so the 17 other packs `lib/language-names.ts` carries would be ~100KB
+ * English, so the 17 other packs `lib/algorithms/language-names.ts` carries would be ~100KB
  * of dead weight in the harness bundle. That file is also app-land and imports
- * `@/lib/language-codes`, which the harness may not reach.
+ * `@/lib/algorithms/language-codes`, which the harness may not reach.
  *
  * Reduces to the primary subtag because the pack is keyed on bare ISO-639-1:
  * "pt-PT" and "zh-Hans" resolve only after the region or script is dropped.

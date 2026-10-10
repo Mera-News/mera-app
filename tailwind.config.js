@@ -253,7 +253,7 @@ module.exports = {
       // `2xs` previously had NO lineHeight at all and fell back to the font's
       // own metrics (~1.2) — the one step in the scale with no script headroom.
       //
-      // lib/typography/scale.ts mirrors these numbers for the runtime text-size
+      // lib/algorithms/scale.ts mirrors these numbers for the runtime text-size
       // control (a build-time Tailwind value cannot be multiplied at runtime),
       // and components/ui/__tests__/typography-scale.test.ts fails if the two
       // ever disagree.

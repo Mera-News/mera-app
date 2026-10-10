@@ -50,7 +50,7 @@ export type ChapterLevel = 'basic' | 'advanced';
 /**
  * `<chapter>-<slide>` — the filename an animation would ship under, and the key
  * `animation-registry.ts` looks up. Derived, never hand-written: see
- * `animationIdFor()` in `lib/tutorials/keys.ts`.
+ * `animationIdFor()` in `lib/algorithms/tutorial-keys.ts`.
  */
 export type AnimationId = string;
 

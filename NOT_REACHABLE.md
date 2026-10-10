@@ -104,7 +104,7 @@ Unblocking step: commit the `headline-depth` screen + its route + the hub row.
 ### B1. `hasGeoMismatch` — nothing ever sets it, so "Wrong place" is permanently hidden
 Consumer: `lib/news-harness/feedback-tree/evaluate-condition.ts:29-31`
 Type: `lib/news-harness/feedback-tree/types.ts:125`
-Gated node: `lib/services/feedback-tree-snapshot.ts:109-115` (`wrong_place`,
+Gated node: `lib/algorithms/feedback-tree-snapshot.ts:109-115` (`wrong_place`,
 `visibleIf: { has_geo_mismatch: true }`)
 
 Evidence: `grep -rn hasGeoMismatch` over the whole repo returns **four** hits —
@@ -433,7 +433,7 @@ comments contradict each other.
 Impact: no user-visible breakage today. Fix the comment, don't change the code.
 
 ### W2. A stale comment now describes the opposite of what the code does
-`lib/services/feedback-tree-snapshot.ts:232-234`, on `more_news_from_place`:
+`lib/algorithms/feedback-tree-snapshot.ts:232-234`, on `more_news_from_place`:
 
 > No visibleIf: has_geo_mismatch is dislike-specific ("wrong place"); there's no
 > clean inverse. **Shown unconditionally — the leaf no-ops client-side when

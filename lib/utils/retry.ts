@@ -153,7 +153,7 @@ export async function withRetry<T>(
  * `name` is 'AbortError' so it matches the same predicate the Apollo error link
  * already uses to keep a screen unmount from faking a server outage
  * (`isCancellation` in lib/apollo-client.ts); `message` stays the literal
- * 'aborted' that `lib/utils/transient-error.ts` substring-matches on, so both
+ * 'aborted' that `lib/algorithms/transient-error.ts` substring-matches on, so both
  * existing readers keep working unchanged.
  *
  * A cancellation is not a defect: nobody can act on "the user navigated away

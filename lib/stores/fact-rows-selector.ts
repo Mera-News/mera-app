@@ -515,7 +515,7 @@ interface GroupItem extends GroupableItem {
 }
 
 // Representative election (`makeRepCompare`) lives in
-// `@/lib/feed-grouping/representative-compare`, shared with
+// `@/lib/algorithms/representative-compare`, shared with
 // `feed-list-selector`, so the Dashboard and the Feed cannot drift apart on
 // which article fronts a given story. It used to be duplicated in both files,
 // byte-identically and by hand.

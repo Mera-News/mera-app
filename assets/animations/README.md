@@ -23,7 +23,7 @@ so one channel serves every 1.3.1 device.
 
 | | |
 |---|---|
-| Filename, tutorials | `<chapter>-<slide>.json` — exactly `animationIdFor()` in `lib/tutorials/keys.ts` |
+| Filename, tutorials | `<chapter>-<slide>.json` — exactly `animationIdFor()` in `lib/algorithms/tutorial-keys.ts` |
 | Filename, processing | `processing-<stageId>.json` — the six ids in `components/custom/processing/types.ts` |
 | Filename, game | `game-<surface>-<moment>.json` — `components/custom/game-ui/animation-registry.ts` |
 | Format | bodymovin `.json`. **Not** `.lottie` — that needs a Metro `assetExts` change and a dotLottie runtime |

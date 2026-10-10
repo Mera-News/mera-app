@@ -1,6 +1,6 @@
 // User geo/language context — the RN-coupled loader + hook that BUILDS a
 // `UserGeoLanguageContext` from on-device state, feeding the pure priority
-// helpers in `lib/feed-grouping/geo-language-priority.ts`.
+// helpers in `lib/algorithms/geo-language-priority.ts`.
 //
 // This is the only geo/language file that touches WatermelonDB + the Zustand
 // language store; everything downstream (representative election, the merged

@@ -10,7 +10,7 @@ import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext
 type IHeadingProps = VariantProps<typeof headingStyle> &
   React.ComponentPropsWithoutRef<typeof H1> & {
     as?: React.ElementType;
-    /** See `lib/typography/policy.ts`. Defaults to `content`. */
+    /** See `lib/algorithms/policy.ts`. Defaults to `content`. */
     scaleTier?: FontScaleTier;
   };
 

@@ -12,7 +12,7 @@ import { getCountryName } from '@/lib/algorithms/country-utils';
 /**
  * Options from alpha-3 codes. The `GLOBAL` sentinel and any code with no
  * alpha-2 (World pages are keyed by alpha-2) are dropped. Names are English:
- * `lib/country-utils` registers `en` only, a known limit shared with Sources'
+ * `lib/algorithms/country-utils` registers `en` only, a known limit shared with Sources'
  * country search.
  */
 export function toCountryOptions(alpha3s: readonly string[]): ArrangeCountryOption[] {

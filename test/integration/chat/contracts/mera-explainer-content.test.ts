@@ -34,7 +34,7 @@ describe('mera-explainer-content — banned claims', () => {
   // banned is the claim the invariant was always really about: that the
   // HARDWARE or PLATFORM has been proven. It has not — TCB currency,
   // measurement comparison and GPU attestation are all unchecked, and
-  // verification is fail-open (see lib/e2ee/attestation-verify.ts).
+  // verification is fail-open (see lib/algorithms/attestation-verify.ts).
   //
   // These assertions are NEGATION-AWARE on purpose. The corrected copy has to
   // NAME the things Mera does not check ("does not verify the GPU's separate

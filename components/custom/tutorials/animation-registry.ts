@@ -12,7 +12,7 @@
 // disk.**
 //
 // ── Where the id comes from ─────────────────────────────────────────────────
-// `animationIdFor(chapter, slide)` in `lib/tutorials/keys.ts`, computed by
+// `animationIdFor(chapter, slide)` in `lib/algorithms/tutorial-keys.ts`, computed by
 // `SlideView` and handed to `SceneView`. It is DERIVED, so `chapters.ts` has no
 // `animation` field on any slide and turning a hero on never touches a chapter.
 //

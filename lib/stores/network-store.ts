@@ -239,7 +239,7 @@ const INTERNET_PROBE_TIMEOUT_MS = 3_000;
  * `https://` attempt fails to complete (TLS blocked/reset) rather than merely
  * answering something unexpected.
  *
- * This is UNRELATED to `lib/secure-url.ts`'s insecure-URL guard — that guard
+ * This is UNRELATED to `lib/algorithms/secure-url.ts`'s insecure-URL guard — that guard
  * is explicitly scoped to ARTICLE urls opened/shared from feed content (see
  * its own docstring), never to app-infrastructure requests, and this probe
  * never passes through `isSecureUrl`/`secureUrlOrNull`. The `http://` fallback

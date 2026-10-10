@@ -11,7 +11,7 @@ import {
 
 const SETTING_KEY = 'text_scale';
 
-// The step list, labels and `nearestTextScale` live in `lib/typography/scale.ts`
+// The step list, labels and `nearestTextScale` live in `lib/algorithms/scale.ts`
 // so they can be read without pulling the database in — see the note there.
 // Re-exported for convenience at call sites that want both.
 export {

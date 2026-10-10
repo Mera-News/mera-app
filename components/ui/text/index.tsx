@@ -13,7 +13,7 @@ type ITextProps = React.ComponentProps<typeof RNText> &
      * How far OS Dynamic Type may grow this text. Defaults to `content`.
      * Pass `chrome` for labels in a row sized by its neighbours, and `locked`
      * for text inside a box whose height feeds a computed layout — see
-     * `lib/typography/policy.ts`.
+     * `lib/algorithms/policy.ts`.
      */
     scaleTier?: FontScaleTier;
   };

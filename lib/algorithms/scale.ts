@@ -94,7 +94,7 @@ export function tokenFromClassName(className: string | undefined): TypeToken | n
  * The in-app text-size steps, smallest first.
  *
  * These multiply the scale above; they are INDEPENDENT of, and compose with,
- * the OS Dynamic Type setting (`lib/typography/policy.ts` caps the combined
+ * the OS Dynamic Type setting (`lib/algorithms/policy.ts` caps the combined
  * growth). The control exists because plenty of readers want bigger news text
  * without enlarging every other app on their phone — and because the OS control
  * is buried three levels deep in Settings.
@@ -160,7 +160,7 @@ const COMPACT_DEFAULT_WIDTH_THRESHOLD_DP = 380;
  * tall it is.
  *
  * Deliberately ignores the OS `fontScale` (Dynamic Type / system font size).
- * `lib/typography/policy.ts` already composes the in-app scale with the OS
+ * `lib/algorithms/policy.ts` already composes the in-app scale with the OS
  * setting at render time; folding the OS setting into the DEFAULT here as
  * well would make the baseline move whenever the user changed something
  * that has nothing to do with this control.

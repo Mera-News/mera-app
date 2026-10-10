@@ -2,7 +2,7 @@
  * "Verify attestation" — an inline expand row for the Mera Protocol screen.
  *
  * Renders the result of a REAL Intel TDX quote verification (see
- * `lib/e2ee/attestation-verify.ts`), one row per check.
+ * `lib/algorithms/attestation-verify.ts`), one row per check.
  *
  * Two rules this component exists to hold:
  *

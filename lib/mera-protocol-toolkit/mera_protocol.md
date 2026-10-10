@@ -362,7 +362,7 @@ For devices that cannot run on-device inference, the protocol provides an equiva
 > never moves. The Confidential VM guarantee is conditional on the attestation
 > actually being checked, and the check is currently *partial*:
 >
-> **What the client verifies** (`lib/e2ee/attestation-verify.ts`): the Intel TDX
+> **What the client verifies** (`lib/algorithms/attestation-verify.ts`): the Intel TDX
 > quote's signature, the quoting-enclave signature, the attestation-key binding,
 > and the PCK certificate chain up to a **pinned** Intel SGX Root CA — plus, most
 > importantly, that the `signing_public_key` the app encrypts toward is the key

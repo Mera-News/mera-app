@@ -7,7 +7,7 @@
  *     TranslatableDynamic — one `size` prop forwarded to
  *     either component depending on `as` — render two different sizes for one
  *     value at seven call sites.
- *  2. `lib/typography/scale.ts` mirrors `tailwind.config.js`, because a runtime
+ *  2. `lib/algorithms/scale.ts` mirrors `tailwind.config.js`, because a runtime
  *     text-size control cannot read build-time Tailwind tokens and so has to
  *     duplicate them.
  *  3. Nothing in the scale falls below the platform's minimum readable size, and
@@ -73,7 +73,7 @@ describe('Text/Heading scale parity', () => {
   });
 });
 
-describe('lib/typography/scale.ts mirrors tailwind.config.js', () => {
+describe('lib/algorithms/scale.ts mirrors tailwind.config.js', () => {
   it('covers exactly the tokens Tailwind defines', () => {
     expect([...TYPE_TOKENS].sort()).toEqual(Object.keys(tailwindFontSize).sort());
   });

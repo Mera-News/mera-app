@@ -190,7 +190,7 @@ const InputSlot = React.forwardRef<
 type IInputFieldProps = React.ComponentProps<typeof UIInput.Input> &
   VariantProps<typeof inputFieldStyle> & {
     className?: string;
-    /** See `lib/typography/policy.ts`. Defaults to `content`. */
+    /** See `lib/algorithms/policy.ts`. Defaults to `content`. */
     scaleTier?: FontScaleTier;
   };
 

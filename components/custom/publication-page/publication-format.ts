@@ -11,7 +11,7 @@ import { secureUrlOrNull } from '@/lib/algorithms/secure-url';
  * homepage ONLY, `http://` is rewritten to `https://` and the result still has
  * to pass `secureUrlOrNull`; a site that cannot serve https simply fails in
  * the in-app browser. Article links are NOT upgraded: this is a homepage rule,
- * kept here rather than in the shared `lib/secure-url.ts`.
+ * kept here rather than in the shared `lib/algorithms/secure-url.ts`.
  */
 export function homepageUrlOf(url: string | null | undefined): string | null {
     const raw = (url ?? '').trim();

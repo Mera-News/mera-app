@@ -1,6 +1,6 @@
 // Incoming system links (deep links, the QA harness, a push opening a URL)
 // from before navx name routes that moved into the four tabs. Rewrite them
-// before routing: the table is lib/navigation/legacy-href.ts, shared with the
+// before routing: the table is lib/algorithms/legacy-href.ts, shared with the
 // pending-notification store. A target that names a page leaves it in the
 // one-shot pending store (no page state in URLs); TabPages opens it on focus.
 import { setPendingPage } from '@/components/custom/nav/navigate-to-page';

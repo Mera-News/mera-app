@@ -125,7 +125,7 @@ function parseMs(iso: string | null | undefined): number {
 }
 
 // Representative election (`makeRepCompare`) lives in
-// `@/lib/feed-grouping/representative-compare`. It used to be duplicated here
+// `@/lib/algorithms/representative-compare`. It used to be duplicated here
 // and in `fact-rows-selector`, byte-identically and by hand; it is now imported
 // by both so the Feed and the Dashboard cannot drift apart on which article
 // fronts a given story.

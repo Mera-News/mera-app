@@ -336,7 +336,7 @@ const Button = React.forwardRef<
 type IButtonTextProps = React.ComponentPropsWithoutRef<typeof UIButton.Text> &
   VariantProps<typeof buttonTextStyle> & {
     className?: string;
-    /** See `lib/typography/policy.ts`. Defaults to `chrome`. */
+    /** See `lib/algorithms/policy.ts`. Defaults to `chrome`. */
     scaleTier?: FontScaleTier;
   };
 

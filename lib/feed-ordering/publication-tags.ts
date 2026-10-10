@@ -8,7 +8,7 @@
 // Nothing is persisted: a tag change applies at the next Feed session, from the
 // session's context, and undoes cleanly.
 //
-// Kept out of `lib/feed-grouping/geo-language-priority.ts` on purpose: that file
+// Kept out of `lib/algorithms/geo-language-priority.ts` on purpose: that file
 // is mirrored by the server's related sort, and this rule is the app's alone.
 //
 // Pure: no RN, database or store imports.

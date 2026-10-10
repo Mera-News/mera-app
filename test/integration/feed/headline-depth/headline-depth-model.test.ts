@@ -56,7 +56,7 @@ describe('headlineScopeRows', () => {
 // ---------------------------------------------------------------------------
 // The alpha-2 contract. This is the silent-failure trap: `locations.countryCode`
 // is ISO alpha-2 and the builder uppercases it straight into `scope.countryCode`,
-// but `lib/country-utils.ts` speaks alpha-3. Storing 'IND' would write a row that
+// but `lib/algorithms/country-utils.ts` speaks alpha-3. Storing 'IND' would write a row that
 // is never read and produce no error anywhere.
 // ---------------------------------------------------------------------------
 

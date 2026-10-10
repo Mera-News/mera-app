@@ -2,7 +2,7 @@
 //
 // Rules this file lives by:
 //   • i18n KEY STRINGS are never written here. Copy is resolved from ids via
-//     `lib/tutorials/keys.ts`, so a renamed slide breaks a test instead of
+//     `lib/algorithms/tutorial-keys.ts`, so a renamed slide breaks a test instead of
 //     rendering a raw key at a user.
 //   • No `t()`, no JSX, no React import. `chapters.test.ts` imports this module
 //     directly, which is why it can stay fast and hermetic.
