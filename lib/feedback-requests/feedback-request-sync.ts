@@ -57,7 +57,7 @@ export async function ingestFeedbackRequests(
 
   const live = new Set(requests.map((r) => r.id));
 
-  await updateFeedbackRequestsState((s) => {
+  const state = await updateFeedbackRequestsState((s) => {
     fresh.length = 0;
     answeredNow.length = 0;
     let clamped = false;
@@ -87,8 +87,14 @@ export async function ingestFeedbackRequests(
     }
   }, now);
 
+  // A failed state write is reported by the state module and resolves with the state as it
+  // was, so an entry that never landed is absent from it (a fresh one) or still unanswered
+  // (an answered one). Rows are created only for what landed; the retry sees them as new again.
+  const landed = fresh.filter((r) => state[r.id] !== undefined);
+  const answeredLanded = answeredNow.filter((id) => state[id]?.answeredAt !== undefined);
+
   let newRows = 0;
-  for (const r of fresh) {
+  for (const r of landed) {
     await notify({
       type: FEEDBACK_REQUEST_NOTIFICATION_TYPE,
       title: FEEDBACK_REQUEST_NOTIFICATION_TITLE_KEY,
@@ -99,10 +105,10 @@ export async function ingestFeedbackRequests(
     });
     newRows += 1;
   }
-  for (const id of answeredNow) {
+  for (const id of answeredLanded) {
     await markActionedBySource(feedbackRequestNotificationSource(id));
   }
-  return { newRows, answered: answeredNow.length };
+  return { newRows, answered: answeredLanded.length };
 }
 
 export async function syncFeedbackRequests(

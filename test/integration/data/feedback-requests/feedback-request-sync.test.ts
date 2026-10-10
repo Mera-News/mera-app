@@ -249,24 +249,12 @@ describe('ingestFeedbackRequests', () => {
             });
         };
 
-        test.failing('DATA-U16a-1: no drawer row is created for an entry that never reached the state row', async () => {
+        it('DATA-U16a-1: no drawer row is created for an entry that never reached the state row', async () => {
             spyLogger();
             failOneStateWrite();
             await ingestFeedbackRequests([req(A)], NOW);
             expect(await getSetting(FEEDBACK_REQUESTS_STATE_KEY)).toBeNull();
             expect(await drawerRows()).toEqual([]);
-        });
-
-        it('today: the row is created anyway, so the retry duplicates it', async () => {
-            spyLogger();
-            failOneStateWrite();
-            await ingestFeedbackRequests([req(A)], NOW);
-            expect(await getSetting(FEEDBACK_REQUESTS_STATE_KEY)).toBeNull();
-            expect(await drawerRows()).toHaveLength(1);
-
-            await ingestFeedbackRequests([req(A)], NOW + 1);
-            expect(Object.keys(await stateRow())).toEqual([A]);
-            expect(await drawerRows()).toHaveLength(2);
         });
     });
 });
