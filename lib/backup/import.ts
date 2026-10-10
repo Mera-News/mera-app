@@ -301,7 +301,9 @@ export async function importBackup(options: ImportOptions): Promise<ImportResult
         // existing row keeps its own id.
         pending.push({ key: settingKey, value: parsed.value });
       } else {
-        if (!(currentTable in knownColumns)) return; // skippedTables, already reported
+        // Only the tables a restore replaces. A table this build lacks is in skippedTables; one the
+        // backup never carries (scheduler_jobs...) is never cleared first, so it is not written either.
+        if (!clearable.includes(currentTable)) return;
         const { row, dropped } = shapeRow(parsed, knownColumns[currentTable]);
         if (dropped.length > 0) {
           const seenForTable = (droppedColumns[currentTable] ??= new Set<string>());

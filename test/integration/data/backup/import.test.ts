@@ -523,19 +523,7 @@ describe('refusals after the restore began', () => {
 describe('a blob naming tables outside the backup set', () => {
   const jobRow = { id: 'job1', task_name: 'feed-sync', status: 'pending' };
 
-  it('DA33 today: writes the rows of a table the backup never carries (scheduler_jobs)', async () => {
-    const blob = await sealedByHand(
-      `${section('facts', [{ id: 'f1', statement: 'a' }])}${section('scheduler_jobs', [jobRow])}`,
-      { tables: [stat('facts', 1), stat('scheduler_jobs', 1)] },
-    );
-
-    const result = await importInto(blob);
-
-    expect((await rawRows('scheduler_jobs')).map((r) => r.id)).toEqual(['job1']);
-    expect(result.skippedTables).toEqual([]);
-  });
-
-  test.failing('DA33: refuses the rows of a table the backup never carries, as it does for a forbidden setting', async () => {
+  it('DA33: refuses the rows of a table the backup never carries, as it does for a forbidden setting', async () => {
     // allowlist.ts: EXCLUDED_TABLES are device-scoped or regenerable, and "a stale scheduler job
     // is actively harmful on the receiving device". The settings table is re-filtered on import
     // for exactly this reason; the other tables are not.
