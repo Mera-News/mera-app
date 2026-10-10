@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import logger from '@/lib/logger';
 import type { CustomerInfo } from 'react-native-purchases';
 import { getActiveTier, isAnonymousCustomerInfo, type SubscriptionTier } from '@/lib/revenuecat';
 import { deriveAiAccess, type AiAccess } from '@/lib/subscription/ai-access';
@@ -132,9 +133,14 @@ export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
       // feed sync, so without this a reader who pays after hitting the cap stays held until
       // the reset time. Lazy require: for-you-store reaches the database singleton, and this
       // store must not pull it into every suite that imports it.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
-      useForYouStore.getState().setDailyLimitResetAt(null);
+      // Releasing the hold is a side effect of a billing write and must never fail it.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
+        useForYouStore.getState().setDailyLimitResetAt(null);
+      } catch (err) {
+        logger.captureException(err, { tags: { service: 'subscription-store', step: 'clearDailyLimit' } });
+      }
     }
     set({
       // `undefined` (a query that didn't select the field) must not erase a
