@@ -286,5 +286,65 @@ for (const [what, file, re] of [
   assert.match(r.out, /namespace import/);
   ok('namespace import of a multi-source barrel refused');
 }
+// ---- cycles (R83) -------------------------------------------------------------------------------
+{
+  // A tiny repo: commit `base`, then shape the working tree as head (or commit it for --head).
+  const repo = (files: Record<string, string>) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cycles-st-'));
+    made.push(dir);
+    for (const [f, t] of Object.entries(files)) {
+      fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
+      fs.writeFileSync(path.join(dir, f), t);
+    }
+    const g = (...a: string[]) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { cwd: dir, stdio: 'pipe' });
+    g('init', '-q'); g('add', '.'); g('commit', '-q', '-m', 'base');
+    return { dir, g };
+  };
+  const write = (dir: string, f: string, t: string) => {
+    fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
+    fs.writeFileSync(path.join(dir, f), t);
+  };
+  const cyc = (dir: string, ...a: string[]) => run('cycles.ts', dir, '--base', 'HEAD', ...a);
+
+  // planted cycle: a -> b existed, b -> a is new
+  let { dir } = repo({ 'lib/a.ts': "import { b } from './b';\nexport const a = b;\n", 'lib/b.ts': 'export const b = 1;\n' });
+  write(dir, 'lib/b.ts', "import { a } from './a';\nexport const b = 1;\nexport const c = () => a;\n");
+  let r = cyc(dir);
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /newly in a cycle: lib\/a\.ts/);
+  assert.match(r.out, /new cycle/);
+  ok('cycles: a planted cycle is red');
+
+  // a type-only import back is not a runtime cycle
+  write(dir, 'lib/b.ts', "import type { a } from './a';\nexport const b = 1;\nexport type C = typeof a;\n");
+  r = cyc(dir);
+  assert.equal(r.code, 0, r.out);
+  ok('cycles: a type-only import back is not a cycle');
+
+  // splitting a cyclic module keeps the same cycle: green
+  ({ dir } = repo({ 'lib/a.ts': "import { b } from './b';\nexport const a = 1;\nexport const f = () => b;\n", 'lib/b.ts': "import { a } from './a';\nexport const b = a;\n" }));
+  write(dir, 'lib/b.ts', "export { b } from './b2';\n");
+  write(dir, 'lib/b2.ts', "import { a } from './a';\nexport const b = a;\n");
+  r = cyc(dir);
+  assert.equal(r.code, 0, r.out);
+  ok('cycles: splitting a cyclic module is green');
+
+  // a rename of a cyclic module is followed: green
+  const st = repo({ 'lib/a.ts': "import { b } from './b';\nexport const a = 1;\nexport const f = () => b;\n", 'lib/b.ts': "import { a } from './a';\nexport const b = a;\n" });
+  st.g('mv', 'lib/b.ts', 'lib/bb.ts');
+  write(st.dir, 'lib/a.ts', "import { b } from './bb';\nexport const a = 1;\nexport const f = () => b;\n");
+  st.g('add', '.'); st.g('commit', '-q', '-m', 'rename');
+  r = run('cycles.ts', st.dir, '--base', 'HEAD~1', '--head', 'HEAD');
+  assert.equal(r.code, 0, r.out);
+  ok('cycles: a renamed cyclic module is followed');
+
+  // a cycle made only of new files is red
+  write(st.dir, 'lib/c.ts', "import { d } from './d';\nexport const c = 1;\nexport const g = () => d;\n");
+  write(st.dir, 'lib/d.ts', "import { c } from './c';\nexport const d = c;\n");
+  r = run('cycles.ts', st.dir, '--base', 'HEAD');
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /new cycle \(no member was cyclic in base\): lib\/c\.ts <-> lib\/d\.ts/);
+  ok('cycles: a cycle of new files only is red');
+}
 for (const d of made) fs.rmSync(d, { recursive: true, force: true });
 console.log(`all ${n} ok`);
