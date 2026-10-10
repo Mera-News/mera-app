@@ -32,6 +32,7 @@ import type { Verdict } from '@/lib/stores/feed-order-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useCallback, useMemo, useRef } from 'react';
+import { normalizeKeyOrEmpty } from '@/lib/algorithms/normalize-key';
 
 /**
  * Giving feedback on a suggestion counts as reading it — mark it opened (the
@@ -47,7 +48,7 @@ function markSuggestionRead(suggestion: ForYouSuggestion): void {
     articleId: suggestion.articleId,
     suggestionId: suggestion._id,
     stableClusterId,
-    titleNorm: (suggestion.title_en ?? '').toLowerCase().trim().replace(/\s+/g, ' ') || null,
+    titleNorm: normalizeKeyOrEmpty(suggestion.title_en) || null,
     surface: 'swipe',
   });
 }
