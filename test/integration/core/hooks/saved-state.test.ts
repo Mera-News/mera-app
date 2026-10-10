@@ -145,9 +145,9 @@ describe('the saved-article write paths publish', () => {
   });
 });
 
-describe('sign-out (bugs)', () => {
+describe('sign-out', () => {
   // CO1. Saved-state overrides are module memory. The wipe erases the DB, the keychain and every
-  // store, but nothing clears this map, so the next account on the device opens its Feed with the
+  // store, and must clear this map too, or the next account on the device opens its Feed with the
   // previous account's bookmarks still filled (and its un-save tap hits a row that does not exist).
   async function saveThenSignOut() {
     await signInFixtureAccount();
@@ -160,14 +160,8 @@ describe('sign-out (bugs)', () => {
     return s._id;
   }
 
-  test.failing('CO1: sign-out clears saved-state overrides', async () => {
+  test('CO1: sign-out clears saved-state overrides', async () => {
     const id = await saveThenSignOut();
     expect(getSavedOverride(id)).toBeUndefined();
-  });
-
-  test('CO1 (today): the previous account\'s saved-state override survives sign-out', async () => {
-    const id = await saveThenSignOut();
-    expect(await isSuggestionSaved(id)).toBe(false); // the wipe ran: the row is gone
-    expect(getSavedOverride(id)).toBe(true); // the override still says saved
   });
 });

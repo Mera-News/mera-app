@@ -116,6 +116,8 @@ export const clearAllStores = async () => {
     // waiting for its tab. Neither may carry over to the next account.
     resetCurrentSurface();
     resetPendingPage();
+    // The saved flags are module memory; the rows went with the database.
+    require('../saved-state').resetSavedState();
     // The Mera button's corner: its row went with the database, so the next
     // account starts in the default corner.
     resetMeraButtonCorner();

@@ -81,6 +81,15 @@ export function useSavedCount(ids: readonly string[]): number {
   );
 }
 
+/**
+ * Sign-out reset: drop every override and tell mounted readers to re-read. The
+ * listeners stay, since mounted components keep their subscriptions.
+ */
+export function resetSavedState(): void {
+  overrides.clear();
+  emit();
+}
+
 /** Test-only reset — the map is module state and would leak across cases. */
 export function __resetSavedStateForTests(): void {
   overrides.clear();
