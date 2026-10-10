@@ -649,7 +649,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
    * previous message.
    */
   const startTurn = (text: string, hidden: boolean): void => {
-      if (isStreamingRef.current || st().isBlocked) return;
+      if (isStreamingRef.current || st().turnBusy || st().isBlocked) return;
       const trimmed = text.trim();
       if (!trimmed) return;
 

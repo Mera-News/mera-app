@@ -81,7 +81,7 @@ async function reachToolPhase() {
 const userTexts = () => local().messages.filter((m) => m.role === 'user').map((m) => m.content);
 
 describe('a send while the first turn runs its tools', () => {
-  test.failing('is refused, the same as during streaming', async () => {
+  it('is refused, the same as during streaming', async () => {
     const { engine } = await reachToolPhase();
 
     engine.send('second');
@@ -97,26 +97,5 @@ describe('a send while the first turn runs its tools', () => {
     await turnDone();
     expect(llamaCalls()).toHaveLength(1);
     expect(local().messages.find((m) => m.role === 'assistant')?.toolCalls?.[0].status).toBe('done');
-  });
-
-  it('(pins today) starts a second turn on top of the tools, whose cleanup clears the first turn busy flag and hold', async () => {
-    const { engine } = await reachToolPhase();
-    const toolOf = () => local().messages.find((m) => m.role === 'assistant')?.toolCalls?.[0];
-
-    engine.send('second');
-    // The second completion ran and finished while the first turn's search is still in flight.
-    await until(() => llamaCalls().length === 2 && !local().turnBusy, 10_000, 'the second turn to end');
-    expect(userTexts()).toEqual(['first', 'second']);
-    expect(local().messages.at(-1)).toMatchObject({ role: 'assistant', content: 'Second reply.' });
-    // Turn 2's cleanup cleared the flags that turn 1 still needs: busy, the restart hold, the
-    // generating mirror and the queue pause all say the whole thing is over.
-    expect(toolOf()?.status).toBe('pending');
-    expect(local().turnBusy).toBe(false);
-    expect(streamHolds()).toBe(0);
-    expect(inferenceQueue.getState()).toBe('running');
-
-    openGate();
-    await until(() => toolOf()?.status === 'done', 10_000, 'the first turn tool to finish');
-    expectNothingLeftTheDevice();
   });
 });
