@@ -7,9 +7,6 @@
 // persona-summary-trigger.ts has no test, legacy or here: maybeRegeneratePersonaSummary has no
 // caller, so it is reported as uncovered dead code.
 //
-// Unreachable at any seam (R30 candidate): the `Number(m.generatedAt ?? 0)` arm of toRow, line 44.
-// The model's @date getter always returns a Date, and a lost timestamp is Date(0).
-//
 // Not carried over: "calls database.batch / prepareCreate N times" (mock-call counts; the rows
 // left behind are asserted instead).
 import {
@@ -17,7 +14,6 @@ import {
   deleteSummaryString,
   getAllSummaryStrings,
   getLatestPersonaVersion,
-  markAllStale,
   observeSummaryStrings,
   replaceAllSummaryStrings,
   toRow,
@@ -190,7 +186,7 @@ describe('deleteSummaryString', () => {
   });
 });
 
-// [dead-candidate] getAllSummaryStrings and markAllStale have no callers outside tests.
+// [dead-candidate] getAllSummaryStrings is read as a helper by chat's seam tests, so it stays.
 describe('[dead-candidate] getAllSummaryStrings', () => {
   it('maps every row through toRow', async () => {
     await replaceAllSummaryStrings([res('a', ['f1']), res('b', ['f2'])], 'v1');
@@ -202,22 +198,5 @@ describe('[dead-candidate] getAllSummaryStrings', () => {
 
   it('is empty for an empty table', async () => {
     expect(await getAllSummaryStrings()).toEqual([]);
-  });
-});
-
-describe('[dead-candidate] markAllStale', () => {
-  it('marks every string that is not already stale', async () => {
-    await replaceAllSummaryStrings([res('a'), res('b')], 'v1');
-    await markAllStale();
-    expect((await all()).map((r) => r.stale)).toEqual([true, true]);
-  });
-
-  it('is a no-op on an empty table and on strings that are already stale', async () => {
-    await expect(markAllStale()).resolves.toBeUndefined();
-    await replaceAllSummaryStrings([res('a')], 'v1');
-    await markAllStale();
-    await markAllStale();
-
-    expect((await all()).map((r) => r.stale)).toEqual([true]);
   });
 });

@@ -41,7 +41,7 @@ export function toRow(m: PersonaSummaryStringModel): PersonaSummaryStringRow {
     text: m.text,
     linkedFactIds: parseIds(m.linkedFactIdsJson),
     linkedTopicIds: parseIds(m.linkedTopicIdsJson),
-    generatedAt: m.generatedAt instanceof Date ? m.generatedAt.getTime() : Number(m.generatedAt ?? 0),
+    generatedAt: m.generatedAt.getTime(),
     personaVersion: m.personaVersion ?? null,
     stale: m.stale ?? false,
   };
@@ -95,16 +95,6 @@ export async function replaceAllSummaryStrings(
       }),
     );
     await database.batch([...deletes, ...creates]);
-  });
-}
-
-/** Mark every string stale (subtle "updating…" hint while a regen is queued). */
-export async function markAllStale(): Promise<void> {
-  await database.write(async () => {
-    const existing = await collection.query(Q.where('stale', Q.notEq(true))).fetch();
-    if (existing.length === 0) return;
-    const batch = existing.map((r) => r.prepareUpdate((m) => { m.stale = true; }));
-    await database.batch(batch);
   });
 }
 
