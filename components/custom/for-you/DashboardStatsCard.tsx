@@ -111,7 +111,8 @@ function StatusMark({ working, size, tone }: { working: boolean; size: number; t
     // row's icon slot centres the hexagon on the slot (the shortcut tile's
     // centre); a mark taller than the 40pt slot overflows it, unclipped.
     return (
-        <View testID="feed-status-lead-mark">
+        // The id marks the orange (alert) mark only, so a device flow can tell the two tones apart.
+        <View testID={tone === 'alert' ? 'feed-status-lead-mark' : undefined}>
             <MeraLogo size={size} color={tone === 'alert' ? colors.accentMark : colors.ink} animated={working} />
         </View>
     );
@@ -188,7 +189,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                                 {zeroText}
                                             </Text>
                                         ) : countsTop ? (
-                                            <FeedStatsSentence syncing={processing} className="text-ink font-medium" />
+                                            <FeedStatsSentence syncing={processing} className="text-ink font-medium" testID="feed-status-lead" />
                                         ) : (
                                             <StatusLine label={stateLabel} syncing={processing} />
                                         )}

@@ -27,6 +27,7 @@ interface FeedStatsSentenceProps {
   /** While a run is in flight: "N articles are being analysed for you, from M
    *  published in the last 24 hours. K look relevant so far." */
   syncing?: boolean;
+  testID?: string;
 }
 
 /** The five clause keys, spelled out as literals so the typed `t()` still
@@ -50,6 +51,7 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   // above it. The `md` token's own 24px line box applies instead.
   className = 'text-ink-3',
   syncing = false,
+  testID,
 }) => {
   const { t, i18n } = useTranslation();
   const appLanguage = useAppLanguage();
@@ -100,7 +102,7 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
         );
 
   return (
-    <Text size="sm" className={className} style={TABULAR}>
+    <Text size="sm" className={className} style={TABULAR} testID={testID}>
       {sentence}
     </Text>
   );
