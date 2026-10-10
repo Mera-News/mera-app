@@ -268,7 +268,7 @@ export async function runHygieneSweep(opts?: {
     // attempted and may well have been billed; only a missing credential means
     // it never ran. Reading a timeout as a skip would withhold the cooldown
     // stamp and re-issue the call on the next sweep.
-    { incoherentFacts: [], audited: 0, skipped: false },
+    { incoherentFacts: [], audited: 0, skipped: false, exhausted: false },
   );
 
   if (facts.length < MIN_FACTS_FOR_SWEEP) {

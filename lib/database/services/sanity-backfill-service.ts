@@ -119,9 +119,10 @@ export async function runSanityBackfillChunk(opts?: {
       }
     }
 
-    // COMPLETION, derived — never "we ran, so we're done". A chunk that audited
-    // nothing means the cursor has reached the newest topic.
-    const exhausted = result.audited === 0;
+    // COMPLETION, derived — never "we ran, so we're done". Only a plan with
+    // nothing left means the cursor has reached the newest topic; a failed
+    // chunk also audits nothing.
+    const exhausted = result.exhausted;
     const hitCeiling = auditedTotal >= SANITY_BACKFILL_MAX_TOPICS;
     const done = exhausted || hitCeiling;
     if (done) {

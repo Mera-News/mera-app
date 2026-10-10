@@ -62,12 +62,19 @@ export interface SanityAuditResult {
    * hygiene for a transient local state.
    */
   skipped: boolean;
+  /**
+   * The plan had nothing left to audit: the cursor has reached the newest
+   * topic. False for a run that failed or never happened, which also report
+   * `audited: 0` — a caller deciding "the corpus is finished" must read this,
+   * never `audited === 0`.
+   */
+  exhausted: boolean;
 }
 
-const EMPTY: SanityAuditResult = { incoherentFacts: [], audited: 0, skipped: false };
+const EMPTY: SanityAuditResult = { incoherentFacts: [], audited: 0, skipped: false, exhausted: false };
 
 /** A run that never happened. Distinct from EMPTY — see `skipped`. */
-const SKIPPED: SanityAuditResult = { incoherentFacts: [], audited: 0, skipped: true };
+const SKIPPED: SanityAuditResult = { incoherentFacts: [], audited: 0, skipped: true, exhausted: false };
 
 async function readCursor(): Promise<number> {
   const raw = Number(await getSetting(CURSOR_KEY));
@@ -130,7 +137,7 @@ export async function runSanityAudit(opts?: {
     const plan = planSanityBatches(candidates, facts, cursorMs, {
       maxTopics: opts?.maxTopics,
     });
-    if (plan.calls.length === 0) return EMPTY;
+    if (plan.calls.length === 0) return { ...EMPTY, exhausted: true };
 
     const results = await cloudBatchComplete(plan.calls);
 
@@ -188,7 +195,7 @@ export async function runSanityAudit(opts?: {
       (n, ids) => n + ids.length,
       0,
     );
-    return { incoherentFacts, audited, skipped: false };
+    return { incoherentFacts, audited, skipped: false, exhausted: false };
   } catch (error) {
     // A missing E2EE keypair is a STATE, not a defect: the device has not
     // generated (or has cleared) its credential, so a billed batch could not

@@ -9,7 +9,7 @@
 // not reset it again; audits in bounded chunks; no facts neither starts nor finishes the pass; not done
 // while chunks return work; done only when a chunk finds nothing left; a chunk that fails is not done
 // (as DATA-U11b-1 and -2: runSanityAudit never rejects, so the legacy "audit throws" case cannot occur,
-// and the real failures DO finish the pass today); resumes without rewinding; stops at the hard
+// and the real failures leave the pass open); resumes without rewinding; stops at the hard
 // ceiling; every call after completion is cheap; verdicts go through the capped queue; notifies once for
 // the whole pass; does not consume the notification when nothing was added; skips the queue when a
 // chunk finds nothing wrong; on-device skips before touching any state.
@@ -304,7 +304,7 @@ describe('a chunk that could not run must not finish the pass', () => {
   // stamps `sanity_backfill_done_at` having audited nothing.
   const refuse = () => server.use(...mockGateway(() => ({ status: 400, body: { error: 'refused' } })));
 
-  test.failing('DATA-U11b-1: a refused gateway call leaves the pass open, and the next chunk retries the same topics', async () => {
+  it('DATA-U11b-1: a refused gateway call leaves the pass open, and the next chunk retries the same topics', async () => {
     await seedCorpus(150);
     refuse();
 
@@ -318,22 +318,9 @@ describe('a chunk that could not run must not finish the pass', () => {
     expect(sanityTexts(gatewayCalls('batch'))[0]).toBe('cricket topic 0');
   });
 
-  it('today: a refused gateway call on the first chunk marks the whole pass done with nothing audited', async () => {
-    await seedCorpus(150);
-    refuse();
-
-    const res = await chunk();
-
-    expect(res).toEqual({ ran: true, audited: 0, proposalsAdded: 0, done: true });
-    expect(await isBackfillDone()).toBe(true);
-    expect(await getSetting(AUDITED)).toBe('0');
-    expect(await getSetting(CURSOR)).toBe('0');
-    expect(logs.captureException).toHaveBeenCalled();
-  });
-
   // DATA-U11b-2: the same line, reached by a device that lost its credential mid-run
   // (runSanityAudit answers `skipped: true`, which the backfill never reads).
-  test.failing('DATA-U11b-2: a credential lost mid-run leaves the pass open', async () => {
+  it('DATA-U11b-2: a credential lost mid-run leaves the pass open', async () => {
     await seedCorpus(150);
     await loseCredential();
 
@@ -341,17 +328,6 @@ describe('a chunk that could not run must not finish the pass', () => {
 
     expect(res.done).toBe(false);
     expect(await isBackfillDone()).toBe(false);
-  });
-
-  it('today: a credential lost mid-run marks the whole pass done, with no request made', async () => {
-    await seedCorpus(150);
-    await loseCredential();
-
-    const res = await chunk();
-
-    expect(res).toEqual({ ran: true, audited: 0, proposalsAdded: 0, done: true });
-    expect(await isBackfillDone()).toBe(true);
-    expect(gatewayCalls()).toHaveLength(0);
   });
 });
 

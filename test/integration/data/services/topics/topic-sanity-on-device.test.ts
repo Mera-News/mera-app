@@ -19,7 +19,7 @@ beforeEach(async () => {
 });
 afterEach(cleanupTopics);
 
-const SKIPPED = { incoherentFacts: [], audited: 0, skipped: true };
+const SKIPPED = { incoherentFacts: [], audited: 0, skipped: true, exhausted: false };
 
 async function audit() {
   const { fact } = await seedFact('Follows Indian cricket', ['India cricket news', 'Amsterdam cricket festival music tech']);
