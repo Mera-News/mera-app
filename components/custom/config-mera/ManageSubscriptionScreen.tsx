@@ -216,9 +216,9 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             accessibilityState={{ disabled: confirming }}
                             style={[
                                 styles.button,
-                                // A disabled button is neutral grey, never a dimmed accent.
+                                // A disabled button is neutral grey, never a dimmed accent. opacity 1 overrides the primitive's disabled opacity-40.
                                 confirming
-                                    ? { backgroundColor: colors.surfaceRaised, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.line }
+                                    ? { backgroundColor: colors.surfaceRaised, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.line, opacity: 1 }
                                     : { backgroundColor: colors.accent },
                             ]}
                         >
