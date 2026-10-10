@@ -51,8 +51,10 @@ async function interleave() {
   await until(() => answerText().length > 0, 10_000, 'B is streaming');
   expect(gatewayCalls('chat')).toHaveLength(2);
 
-  // A's remaining chunks run out; its finally writes the shared store.
-  await until(() => cloud().status === 'idle', 20_000, 'A settles');
+  // Both replies stream at the same cadence and A started first, so once B has delivered its
+  // seventh chunk A's six have run out and A's turn has settled; B still has three to go.
+  // (The shared store cannot tell us A settled: with the fix, A no longer writes it.)
+  await until(() => answerText().includes('b7 '), 20_000, 'A settles');
   const bText = answerText();
   const drain = async () => {
     await until(() => answerText() === B_FULL, 30_000, 'B finishes on the wire');
@@ -70,7 +72,7 @@ const storedAnswer = async (conversationId: string) => {
   return rows.find((r) => r.role === 'assistant');
 };
 
-test.failing("a turn still running at New chat does not end the next conversation's turn", async () => {
+test("a turn still running at New chat does not end the next conversation's turn", async () => {
   const { b, drain } = await interleave();
   try {
     // A has settled; B is mid-stream and must still read as a running turn.
@@ -82,22 +84,4 @@ test.failing("a turn still running at New chat does not end the next conversatio
   } finally {
     await drain();
   }
-});
-
-it("CH3 today: a turn still running at New chat ends the next conversation's turn early and its row keeps the partial text", async () => {
-  const { b, bText, drain } = await interleave();
-  // B is mid-stream on the wire (partial text, more chunks coming) yet reads idle.
-  expect(bText.length).toBeGreaterThan(0);
-  expect(bText.length).toBeLessThan(B_FULL.length);
-  expect(cloud().agentTurnState?.turnActive).toBe(false);
-  expect(cloud().status).toBe('idle');
-  expect(streamHolds()).toBe(0);
-  expect(useFloatingChatStore.getState().isGenerating).toBe(false);
-
-  await drain();
-  const stored = await storedAnswer(b.conversationId);
-  // The row was written at the premature idle with what B had then, and never rewritten.
-  expect(stored).toBeDefined();
-  expect(stored!.content.length).toBeLessThan(B_FULL.length);
-  expect(B_FULL.startsWith(stored!.content)).toBe(true);
 });

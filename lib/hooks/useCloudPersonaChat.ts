@@ -123,6 +123,15 @@ function i18nInstance(): typeof import('../i18n').default {
 
 const TAG = '[CloudChat]';
 
+type CloudState = ReturnType<typeof useCloudChatStore.getState>;
+
+/** The store's state with every action a no-op: what a disposed engine writes to. */
+function detachedCopy(state: CloudState): CloudState {
+  const copy: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(state)) copy[key] = typeof value === 'function' ? () => {} : value;
+  return copy as unknown as CloudState;
+}
+
 /** Next-frame scheduler for the streaming bubble. RN provides
  *  requestAnimationFrame; the timeout fallback keeps the hook usable under a
  *  test runtime without it. */
@@ -230,6 +239,11 @@ function isEmptyExtractionCall(tc: { name: string; input: unknown }): boolean {
 
 export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   let alive = true;
+  // A New chat disposes this engine while its turn may still run. From then on
+  // the turn reads a frozen copy of its own conversation and writes nowhere, so
+  // it can never end, overwrite or persist into the next conversation's turn.
+  let detached: CloudState | null = null;
+  const cloud = (): CloudState => (alive || !detached ? useCloudChatStore.getState() : detached);
   const isStreamingRef = { current: false };
   /** Covers the WHOLE turn including the fire-and-forget forced-extraction tail,
    *  which outlives isStreamingRef. See startTurn. */
@@ -261,7 +275,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   const setTurnBusy = (next: boolean): void => {
     if (turnBusyRef.current === next) return;
     turnBusyRef.current = next;
-    const store = useCloudChatStore.getState();
+    const store = cloud();
     const current = store.agentTurnState;
     if (current) {
       if (current.turnActive !== next) {
@@ -314,7 +328,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    * about a parallel implementation.
    */
   const runAgentLoopTurn = async (assistantId: string, userMessage: string): Promise<void> => {
-      const store = useCloudChatStore.getState();
+      const store = cloud();
       const persona = await buildAgentPersona(agentRef.current.id);
       // NEW CHAT clears the store's agentTurnState, and this ref has to follow
       // it or the loop keeps a pendingChoice from the previous conversation.
@@ -351,7 +365,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       let armed = true;
       // Cleared as the turn OPENS, so a box never shows the previous turn's
       // terminal while this one is still running.
-      useCloudChatStore.getState().setAgentTerminal(null);
+      cloud().setAgentTerminal(null);
       const flush = () => {
         queued = false;
         if (!armed) return;
@@ -405,7 +419,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           result: leg.toolResults[i]?.result as Record<string, unknown> | undefined,
           status: leg.toolResults[i] ? 'done' : 'pending',
         }));
-        useCloudChatStore.getState().setMessages((prev) =>
+        cloud().setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId ? { ...m, toolCalls: [...(m.toolCalls ?? []), ...records] } : m,
           ),
@@ -461,7 +475,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             lastUserMessage: userMessage,
             lastReply: replaceClauseDashes(acc).trim() || null,
           });
-          useCloudChatStore.getState().setMessages((prev) =>
+          cloud().setMessages((prev) =>
             prev.map((m) =>
               m.id === ackId
                 ? { ...m, content: replaceClauseDashes(acc) }
@@ -482,7 +496,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         // the acknowledgement's slot (the emptied bubble stops rendering); a
         // card-only turn keeps the acknowledgement as its one bubble.
         const answer = out.reply.trim();
-        useCloudChatStore.getState().setMessages((prev) =>
+        cloud().setMessages((prev) =>
           prev.map((m) =>
             m.id === ackId
               ? { ...m, content: answer ? '' : out.acknowledgement }
@@ -491,11 +505,11 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
                 : m,
           ),
         );
-        store.setAgentTurnState({ ...agentStateRef.current.turn });
+        cloud().setAgentTurnState({ ...agentStateRef.current.turn });
         // ON SCREEN, not only in the log. Four distinct terminals used to reach
         // the user as whatever prose the last leg produced, and an empty one as
         // an empty bubble.
-        store.setAgentTerminal(out.terminalReason);
+        cloud().setAgentTerminal(out.terminalReason);
         // WHY A TURN PRODUCED WHAT IT DID, in one line. The abnormal-terminal
         // warn below fires only for a non-settled turn, so a turn that settled
         // having shown the user nothing logged nothing at all and could only be
@@ -532,7 +546,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       assistantId: string,
       context: string,
     ): Promise<void> => {
-      const store = useCloudChatStore.getState();
+      const store = cloud();
       logger.debug(`${TAG} runSingleShot ENTER`, { tools: tools.length, wireMessages: store.wireMessages.length });
 
       // Stream one assistant turn into the bubble identified by `targetId`.
@@ -574,7 +588,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         // assistant(tool_calls) / tool result pair — so the continuation pass,
         // which lands here with the tail [user, assistant(tool_calls), tool],
         // keeps that tail intact.
-        const allWire = useCloudChatStore.getState().wireMessages;
+        const allWire = cloud().wireMessages;
         const startIdx = selectHistoryWindow<WireMessage>({
           entries: allWire,
           budgetTokens: CLOUD_HISTORY_BUDGET_TOKENS,
@@ -641,7 +655,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           // the reply mounted (ux1 C2). Now the reply takes the wait row's
           // slot in one commit.
           if (shown.length > 0) releaseWaitLine();
-          useCloudChatStore.getState().setMessages((prev) =>
+          cloud().setMessages((prev) =>
             prev.map((m) => m.id === targetId ? { ...m, content: shown } : m),
           );
         };
@@ -744,7 +758,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
               function: { name: tc.name, arguments: JSON.stringify(tc.input ?? {}) },
             }))
           : undefined;
-        useCloudChatStore.getState().pushWireMessage(
+        cloud().pushWireMessage(
           wireToolCalls
             ? { role: 'assistant', content: accContent, tool_calls: wireToolCalls }
             : { role: 'assistant', content: accContent },
@@ -786,7 +800,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           input: tc.input,
           status: 'pending' as const,
         }));
-        useCloudChatStore.getState().setMessages((prev) =>
+        cloud().setMessages((prev) =>
           prev.map((m) => m.id === targetId ? { ...m, toolCalls: pendingRecords } : m),
         );
 
@@ -803,7 +817,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           status: 'done' | 'error',
         ) => {
           settled[index] = { result, status };
-          useCloudChatStore.getState().setMessages((prev) =>
+          cloud().setMessages((prev) =>
             prev.map((m) => {
               if (m.id !== targetId) return m;
               const current = m.toolCalls ?? pendingRecords;
@@ -849,14 +863,14 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
               logger.debug(`${TAG} tool result`, { name: tc.name, result: JSON.stringify(result).slice(0, 200), sideEffects });
 
               if (sideEffects?.blocked) {
-                useCloudChatStore.getState().setIsBlocked(true);
-                useCloudChatStore.getState().setBlockedReason(sideEffects.blocked.reason);
+                cloud().setIsBlocked(true);
+                cloud().setBlockedReason(sideEffects.blocked.reason);
               }
               if (sideEffects?.proposal) {
-                useFloatingChatStore.getState().setProposal(sideEffects.proposal);
+                if (alive) useFloatingChatStore.getState().setProposal(sideEffects.proposal);
               }
               if (sideEffects?.proposalResolved) {
-                useFloatingChatStore.getState().resolveProposal(sideEffects.proposalResolved);
+                if (alive) useFloatingChatStore.getState().resolveProposal(sideEffects.proposalResolved);
               }
 
               // Committed HERE, the moment this call settles — not after the
@@ -877,7 +891,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         toolCalls.forEach((tc, i) => {
           if (tc.malformed) return;
           const resultPayload = settled[i]?.result ?? { error: 'no result' };
-          useCloudChatStore.getState().pushWireMessage({
+          cloud().pushWireMessage({
             role: 'tool',
             tool_call_id: tc.id,
             content: JSON.stringify(resultPayload),
@@ -942,7 +956,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       const runForcedExtraction = async (visibleId: string, tools: ToolDefinition[]) => {
         try {
           logger.debug(`${TAG} forced extraction pass (required)`, {
-            wireMessages: useCloudChatStore.getState().wireMessages.length,
+            wireMessages: cloud().wireMessages.length,
             tools: tools.map((t) => t.function.name),
           });
           let forced = await streamOne(visibleId, true, 'required', tools, true);
@@ -964,7 +978,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
       // ---------- First pass ----------
       const placeholder: ConversationMessage = { id: assistantId, role: 'assistant', content: '' };
-      useCloudChatStore.getState().setMessages((prev) => [...prev, placeholder]);
+      cloud().setMessages((prev) => [...prev, placeholder]);
 
       // 'auto' (explicit): a text-only reply finishes in one round trip; the
       // model still calls a tool when the turn warrants one (→ continuation).
@@ -1090,10 +1104,10 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         const followUpId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
         logger.debug(`${TAG} sending follow-up turn`, {
           reason: calledKnowledgeTool ? 'knowledge tool result' : 'no text from LLM',
-          wireMessages: useCloudChatStore.getState().wireMessages.length,
+          wireMessages: cloud().wireMessages.length,
         });
         const followUpPlaceholder: ConversationMessage = { id: followUpId, role: 'assistant', content: '' };
-        useCloudChatStore.getState().setMessages((prev) => [...prev, followUpPlaceholder]);
+        cloud().setMessages((prev) => [...prev, followUpPlaceholder]);
 
         const second = await streamOne(followUpId, true, 'auto');
         throwIfStopped();
@@ -1125,7 +1139,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    *  answer slot when nothing was said, as stopped. The partial text stays. */
   const markStopped = (assistantId: string): void => {
     const ids = new Set([`${assistantId}-ack`, assistantId]);
-    useCloudChatStore.getState().setMessages((prev) => {
+    cloud().setMessages((prev) => {
       const turn = prev.filter((m) => ids.has(m.id));
       const target = [...turn].reverse().find((m) => m.content.trim().length > 0) ?? turn[turn.length - 1];
       return prev.map((m) =>
@@ -1137,7 +1151,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   };
 
   const startTurn = (text: string, visible: boolean) => {
-      const store = useCloudChatStore.getState();
+      const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
       // turnBusyRef, not isStreamingRef: startForcedExtraction dispatches with
       // `void`, so the forced pass OUTLIVES this function's finally. A turn
@@ -1182,7 +1196,9 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       // the IIFE would leave the opening frames of the wait unnarrated, which
       // is the gap this line exists to close.
       useChatPhaseStore.getState().reset();
-      const phase = makePhaseSink(applyChatPhase);
+      const phase = makePhaseSink((p) => {
+        if (alive) applyChatPhase(p);
+      });
       phaseSinkRef.current = phase;
       phase('preparing');
 
@@ -1200,7 +1216,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             // own router prompt and state line, so the log showed a prompt the
             // model never saw (its "Middle East politics" example and its
             // searchNews rule were blamed for a turn they never reached).
-            useCloudChatStore.getState().pushWireMessage({ role: 'user', content: trimmed });
+            cloud().pushWireMessage({ role: 'user', content: trimmed });
             await runAgentLoopTurn(assistantId, trimmed);
             logger.debug(`${TAG} agent loop completed`);
           } else {
@@ -1224,8 +1240,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             // Push only the RAW user text into wireMessages. Context is re-injected
             // fresh onto the last user message in runSingleShot — never persisted,
             // so multi-turn chats don't accumulate N copies of the facts/guide block.
-            useCloudChatStore.getState().pushWireMessage({ role: 'user', content: trimmed });
-            logger.debug(`${TAG} starting runSingleShot`, { wireMessages: useCloudChatStore.getState().wireMessages.length });
+            cloud().pushWireMessage({ role: 'user', content: trimmed });
+            logger.debug(`${TAG} starting runSingleShot`, { wireMessages: cloud().wireMessages.length });
             await runSingleShot(systemPrompt, tools, assistantId, context);
             logger.debug(`${TAG} runSingleShot completed`);
           }
@@ -1234,19 +1250,19 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           if (!turnStop.signal.aborted) {
             const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
             logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
-            useCloudChatStore.getState().setError(msg);
+            cloud().setError(msg);
           }
         } finally {
           if (turnStop.signal.aborted) {
             // The single-shot agents read history from the wire: the visible
             // partial reply belongs there (the persona loop keeps its own state).
             if (!isPersonaAgent(agentRef.current.id)) {
-              const state = useCloudChatStore.getState();
+              const state = cloud();
               const partial = state.messages.find((m) => m.id === assistantId)?.content.trim();
               // Only when nothing of this turn reached the wire yet (it still
               // ends on the user's message): a later pass pushed its own.
               if (partial && state.wireMessages[state.wireMessages.length - 1]?.role === 'user') {
-                useCloudChatStore.getState().pushWireMessage({ role: 'assistant', content: partial });
+                cloud().pushWireMessage({ role: 'assistant', content: partial });
               }
             }
             markStopped(assistantId);
@@ -1257,9 +1273,9 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           // underneath the error banner for the rest of the session.
           phase(null);
           if (phaseSinkRef.current === phase) phaseSinkRef.current = null;
-          useCloudChatStore.getState().setStatus('idle');
+          cloud().setStatus('idle');
           isStreamingRef.current = false;
-          useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);
+          if (alive) useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);
           // The forced pass, when one is running, owns the release instead.
           // Runs on a throw too, so a transport failure ends the turn here.
           if (!forcedPassRef.current) {
@@ -1288,6 +1304,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       stopRef.current.abort();
     },
     dispose: () => {
+      detached = detachedCopy(useCloudChatStore.getState());
       alive = false;
     },
   };
