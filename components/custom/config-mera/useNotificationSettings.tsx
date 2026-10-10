@@ -191,7 +191,8 @@ export function useNotificationSettings({
         setIsDisabling(true);
         try {
             const userId = await getCurrentUserId();
-            await setVisibleNotificationsEnabled(userId, false);
+            const ok = await setVisibleNotificationsEnabled(userId, false);
+            if (!ok) throw new Error('disable failed');
             setNotificationsEnabled(false);
 
             toast.show({

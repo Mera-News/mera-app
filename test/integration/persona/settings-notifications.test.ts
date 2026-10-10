@@ -438,8 +438,8 @@ describe('notification settings', () => {
             expect(requestPermissions).not.toHaveBeenCalled();
         });
 
-        // The service swallows a failed mutation and reports false; the hook ignores that result and flips the switch.
-        test.failing('NB1 a failed disable keeps the switch on and says "Update Failed"', async () => {
+        // The service swallows a failed mutation and reports false; the hook must read it.
+        test('NB1 a failed disable keeps the switch on and says "Update Failed"', async () => {
             server.use(mockGqlError('UpdateNotificationsEnabled', 'INTERNAL_SERVER_ERROR'));
             const { result } = await mount();
 
@@ -449,18 +449,6 @@ describe('notification settings', () => {
 
             expect(result.current.notificationsEnabled).toBe(true);
             expect(toastTitles()).toEqual(['Update Failed']);
-        });
-
-        test('NB1 today: a failed disable still flips the switch off and announces "Notifications Disabled"', async () => {
-            server.use(mockGqlError('UpdateNotificationsEnabled', 'INTERNAL_SERVER_ERROR'));
-            const { result } = await mount();
-
-            await act(async () => {
-                await result.current.handleDisableNotifications();
-            });
-
-            expect(result.current.notificationsEnabled).toBe(false);
-            expect(toastTitles()).toEqual(['Notifications Disabled']);
         });
     });
 });
