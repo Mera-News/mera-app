@@ -707,25 +707,6 @@ function graphQLErrorCodes(err: unknown): string[] {
 // Article Service Class
 export class ArticleService {
     /**
-     * Get the floor of the hour (00 minutes, 00 seconds, 00 milliseconds)
-     * This helps with caching on the backend by ensuring consistent fromDate values within an hour
-     */
-    static getFloorOfHour(date: Date = new Date()): Date {
-        const flooredDate = new Date(date);
-        flooredDate.setMinutes(0, 0, 0);
-        return flooredDate;
-    }
-
-    /**
-     * Get a date from N hours ago, floored to the hour
-     * Example: getFlooredDateHoursAgo(24) returns ISO string of 24 hours ago with 00:00:00.000 time
-     */
-    static getFlooredDateHoursAgo(hoursAgo: number): string {
-        const date = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-        return this.getFloorOfHour(date).toISOString();
-    }
-
-    /**
      * One error-reporting policy for every read query below. Extracted because
      * the rule has to be identical at eleven catch sites — copies of it would
      * drift, and a single drifting copy is enough to re-open a storm.
