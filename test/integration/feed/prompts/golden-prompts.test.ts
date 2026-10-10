@@ -11,6 +11,7 @@
 import {
   buildRelevanceCalls as shimBuildRelevanceCalls,
   buildReasonCallsForSubset as shimBuildReasonCallsForSubset,
+  resolveReasonCallId,
 } from '@/lib/mera-protocol/scoring-service';
 import {
   buildRelevanceCalls as harnessBuildRelevanceCalls,
@@ -51,6 +52,15 @@ const FACT_STATEMENTS = ['Lives in Amsterdam, Netherlands', 'Works in AI'];
 const NONCE = /[a-f0-9]{12}/g;
 const stripNonce = (s: string) => s.replace(NONCE, 'NONCE');
 const stripNonces = (xs: string[]) => xs.map(stripNonce);
+
+// The shim's reason call ids are POSITIONAL (`reason:0`, `reason:1`, ...): the id travels outside
+// the E2EE envelope, so it must not carry an article id. The harness keeps `reason:<article id>`.
+// Identity is compared after mapping each shim id back through the shim's own resolver.
+type ShimReasonBuild = Awaited<ReturnType<typeof shimBuildReasonCallsForSubset>>;
+const shimReasonIds = (shim: ShimReasonBuild) => {
+  const order = shim.eligibleCandidates.map((c) => c.id);
+  return shim.calls.map((c) => resolveReasonCallId(c.id, order));
+};
 
 function candidate(id: string): ScoringCandidate {
   return {
@@ -132,7 +142,8 @@ describe('golden — buildReasonCallsForSubset', () => {
       FACT_STATEMENTS,
     );
 
-    expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
+    expect(shim.calls.map((c) => c.id)).toEqual(['reason:0', 'reason:1']);
+    expect(shimReasonIds(shim)).toEqual(harness.calls.map((c) => c.id));
     expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
     expect(stripNonces(shim.calls.map((c) => c.prompt))).toEqual(
       stripNonces(harness.calls.map((c) => c.prompt)),
@@ -423,9 +434,10 @@ describe('golden — headline variant (P4b routing)', () => {
       FACT_STATEMENTS,
     );
 
-    expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
+    expect(shimReasonIds(shim)).toEqual(harness.calls.map((c) => c.id));
     expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
-    const systemById = new Map(shim.calls.map((c) => [c.id, c.system] as const));
+    const resolved = shimReasonIds(shim);
+    const systemById = new Map(shim.calls.map((c, i) => [resolved[i], c.system] as const));
     expect(systemById.get('reason:h')).toBe(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT);
     expect(systemById.get('reason:s')).toBe(CLOUD_REASON_SYSTEM_PROMPT);
   });
