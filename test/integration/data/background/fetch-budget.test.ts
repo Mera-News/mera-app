@@ -332,20 +332,11 @@ describe('the ObjectId insert-time filter', () => {
     return { out, fresh, old, stories };
   }
 
-  test.failing('DA44: free followed-story ids are bound by the per-run cap, not the metered remainder', async () => {
+  it('DA44: free followed-story ids are bound by the per-run cap, not the metered remainder', async () => {
     const { fresh, old, stories } = await storiesRun();
 
     expect(stories).toEqual(fresh);
     expect(stories.length).toBeLessThanOrEqual(BG_RUN_METERED_CAP);
-    expect(stories).not.toContain(old);
-    expect(await ledger()).toBe('122'); // free ids are not reserved
-  });
-
-  it('DA44 today: window-filters the free followed-story ids and clips them to the metered remainder, without charging them', async () => {
-    const { out, fresh, old, stories } = await storiesRun();
-
-    expect(out.meteredBudget).toBe(3);
-    expect(stories).toEqual(fresh.slice(0, 3));
     expect(stories).not.toContain(old);
     expect(await ledger()).toBe('122'); // free ids are not reserved
   });

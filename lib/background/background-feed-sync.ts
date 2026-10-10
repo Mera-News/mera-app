@@ -26,6 +26,7 @@ import type { BackgroundSyncHooks } from '@/lib/scheduler/feed-sync/feed-sync-ty
 import type { TaskContext } from '@/lib/scheduler/scheduler-types';
 
 import {
+  BG_RUN_METERED_CAP,
   markQuotaExhausted,
   readAllowance,
   reserveCharged,
@@ -112,9 +113,14 @@ export function isRefreshOwed(): boolean {
  * topics. Followed-story ids are free and are only window-filtered, with the
  * same per-run bound so one run stays small.
  */
-export function shapeBackgroundDiff(diff: DiffResult, now: number, meteredBudget: number): DiffResult {
+export function shapeBackgroundDiff(
+  diff: DiffResult,
+  now: number,
+  meteredBudget: number,
+  storyBound: number = BG_RUN_METERED_CAP,
+): DiffResult {
   const fresh = (id: string) => isInsertedWithinWindow(id, now);
-  const storyIds = (diff.storyIds ?? []).filter(fresh).slice(0, meteredBudget);
+  const storyIds = (diff.storyIds ?? []).filter(fresh).slice(0, storyBound);
   const personaIds = (diff.personaIds ?? diff.missingIds).filter(fresh).slice(0, meteredBudget);
   const keep = new Set([...storyIds, ...personaIds]);
   return {
