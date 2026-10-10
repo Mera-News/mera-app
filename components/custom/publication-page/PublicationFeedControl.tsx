@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 /** Every size here. 38pt buttons in a 44pt frame, given back by margins. */
-export const FEED_CONTROL_METRICS = {
+const FEED_CONTROL_METRICS = {
     button: 38,
     target: 44,
     gap: 8,

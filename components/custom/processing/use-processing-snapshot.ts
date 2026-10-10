@@ -48,13 +48,6 @@ const mark: { stage: ProcessingStageId | null; runToken: number | null } = {
   runToken: null,
 };
 
-/** Test seam. Nothing in the app calls this; the mark is released by the area
- *  going invisible or by a new run. */
-export function _resetProcessingStageMarkForTests(): void {
-  mark.stage = null;
-  mark.runToken = null;
-}
-
 /**
  * The one subscription layer under the processing area. Every other component
  * in this directory is presentational and reads only this.

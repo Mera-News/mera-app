@@ -11,7 +11,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { I18nManager, StyleSheet, View } from 'react-native';
 
 const PRESSED_OPACITY = 0.6;
-export const PRESS_DELAY_MS = 130;
+const PRESS_DELAY_MS = 130;
 
 interface PublicationListRowProps {
     /** The RAW publication name; the row shows its display form. */

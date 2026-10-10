@@ -7,9 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DETAIL_BACK_TOP_OFFSET } from '@/components/custom/news-detail/detail-top-bar-metrics';
 
-export { DETAIL_BACK_SIZE, DETAIL_BACK_TOP_OFFSET } from '@/components/custom/news-detail/detail-top-bar-metrics';
-
-export interface DetailTopBarProps {
+interface DetailTopBarProps {
     onBack: () => void;
     /** 'home' on a deep-linked screen with no history behind it. */
     backIcon?: 'back' | 'home';

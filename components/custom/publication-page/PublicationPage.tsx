@@ -27,7 +27,7 @@ import { SOURCE_KIND_META } from './publication-format';
 /** The page body's vertical rhythm, in points (NativeWind space tokens are
  *  rem-scaled at 14pt, so plain numbers keep this exact). Identity, then the
  *  reader's controls, then a hairline and the news. */
-export const PAGE_SPACING = {
+const PAGE_SPACING = {
     top: SUBPAGE_TOP_GAP,
     blockGap: 24,
     sectionGap: 28,
@@ -42,7 +42,7 @@ const PAGE_HEADER_STYLE = {
 } as const;
 const PILL_FRAME_PAD = 5;
 
-export interface PublicationPageProps {
+interface PublicationPageProps {
     readonly publisherId?: string | null;
     /** The raw publication name the entry point had (never a display name). */
     readonly rawName?: string | null;

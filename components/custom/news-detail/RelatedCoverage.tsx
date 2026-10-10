@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
-export interface RelatedRow {
+interface RelatedRow {
     /** The article id. */
     id: string;
     article: NewsArticle;

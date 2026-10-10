@@ -27,16 +27,9 @@ import { useCallback, useEffect, useState } from 'react';
 
 export {
     usePublicationProfile,
-    type PublicationProfile,
     type PublicationProfileKey,
-    type PublicationProfileResult,
-    type PublicationProfileState,
 } from '@/lib/publication-profile-service';
-export {
-    usePublicationArticles,
-    type PublicationArticlesResult,
-    type PublicationArticlesState,
-} from '@/lib/hooks/use-publication-articles';
+export { usePublicationArticles } from '@/lib/hooks/use-publication-articles';
 
 export interface PublicationPrefResult {
     /** The level across every name (fewer wins over more). */
@@ -54,7 +47,7 @@ export interface PublicationPrefResult {
 export type PublicationPrefChoice = SourcePrefUiLevel | 'muted';
 
 /** True when an active named row for any of `names` is a mute. */
-export function isMutedAcross(rows: readonly PrefRowLike[], names: readonly string[]): boolean {
+function isMutedAcross(rows: readonly PrefRowLike[], names: readonly string[]): boolean {
     const wanted = new Set(names.map(normalizePrefName).filter(Boolean));
     return rows.some(
         (row) =>
@@ -128,8 +121,6 @@ export function usePublicationPref(hints: PublicationNameHints): PublicationPref
 
     return { level: resolvePrefLevel(rows, names), muted, busy, names, change };
 }
-
-export type { VisitedArticle };
 
 export interface PublicationHistoryResult {
     readonly state: 'loading' | 'ready';

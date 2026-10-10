@@ -9,7 +9,7 @@ import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export interface ExtractedMetadataGeoTag {
+interface ExtractedMetadataGeoTag {
     city?: string | null;
     region?: string | null;
     countryCode?: string | null;

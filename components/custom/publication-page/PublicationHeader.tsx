@@ -14,7 +14,7 @@ import { homepageUrlOf, hostOf, monogramHueOf, monogramInks, monogramOf } from '
 /** Every header size is here. The letter and each text line carry an
  *  explicit lineHeight: an inline fontSize on the ui Text without one keeps
  *  the size token's smaller line box and clips the glyph (skill Text trap). */
-export const PUBLICATION_HEADER_METRICS = {
+const PUBLICATION_HEADER_METRICS = {
     tile: 56,
     tileRadius: 16,
     letterSize: 26,
@@ -36,7 +36,7 @@ const LINK_FRAME = {
 } as const;
 
 
-export interface PublicationHeaderBadge {
+interface PublicationHeaderBadge {
     readonly label: string;
     readonly color: string;
 }

@@ -36,7 +36,7 @@ const HIDDEN = {
  * caseless scripts (Devanagari, Arabic, CJK) pass through untouched because
  * `toUpperCase()` is the identity there.
  */
-export function titleCasePublication(name: string): string {
+function titleCasePublication(name: string): string {
     return name
         .trim()
         .split(' ')

@@ -51,7 +51,7 @@ export interface LocalArticleSnapshot {
 
 /** Map a saved-suggestion snapshot (ForYouSuggestion) to the NewsArticle shape
  *  the detail screen renders. */
-export const savedSuggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
+const savedSuggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
     _id: s.articleId,
     title: s.title_en ?? s.title_original ?? '',
     title_en_internal_only: s.title_en ?? undefined,
@@ -71,7 +71,7 @@ export const savedSuggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle =
 } as NewsArticle);
 
 /** Map a publication-visit row to the same NewsArticle shape. */
-export const visitToNewsArticle = (
+const visitToNewsArticle = (
     v: VisitedArticle,
     fallbackId: string,
 ): NewsArticle => ({

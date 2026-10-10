@@ -14,7 +14,7 @@
 import { getCurrentPathname } from '@/lib/nav-state';
 import { router } from 'expo-router';
 
-export const PUBLICATION_ROUTE = '/logged-in/publication';
+const PUBLICATION_ROUTE = '/logged-in/publication';
 
 /** The order the page's NEWS is asked for. */
 export type PublicationOrder = 'NEWEST' | 'TOP_HEADLINES';
@@ -93,7 +93,7 @@ export function setPublicationOnTop(keys: readonly string[]): void {
 }
 
 /** Whether `target` is the publication already on top of the stack. */
-export function isPublicationOnTop(target: PublicationTarget): boolean {
+function isPublicationOnTop(target: PublicationTarget): boolean {
     if (getCurrentPathname() !== PUBLICATION_ROUTE || onTopKeys.size === 0) return false;
     return publicationKeysFor(target).some((k) => onTopKeys.has(k));
 }

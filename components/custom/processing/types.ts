@@ -8,10 +8,8 @@
  */
 export {
   PROCESSING_STAGE_IDS,
-  processingStageIndex,
   type ProcessingStageId,
 } from '@/lib/services/processing-stage';
-export type { ChunkState } from '@/lib/services/scoring-pipeline';
 
 import { PROCESSING_STAGE_IDS as STAGE_IDS } from '@/lib/services/processing-stage';
 import type { ProcessingStageId } from '@/lib/services/processing-stage';
@@ -81,17 +79,6 @@ export const PROCESSING_METRICS = {
   barHeight: 4,
   progressLineHeight: 17,
 } as const;
-
-/** What the card actually asks its fixed-height box to draw. */
-export const PROCESSING_CONTENT_HEIGHT =
-  PROCESSING_METRICS.sceneSize +
-  PROCESSING_METRICS.labelGap +
-  PROCESSING_METRICS.labelLineHeight +
-  PROCESSING_METRICS.headlineGap +
-  PROCESSING_METRICS.headlineLineHeight * PROCESSING_METRICS.headlineLines +
-  PROCESSING_METRICS.barGap +
-  PROCESSING_METRICS.barHeight +
-  PROCESSING_METRICS.progressLineHeight;
 
 /** The square animation block inside the card, in points. */
 export const PROCESSING_SCENE_SIZE = PROCESSING_METRICS.sceneSize;
