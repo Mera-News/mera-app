@@ -36,7 +36,7 @@ import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-statu
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export type ArticleSuggestionContainerVariant = 'card' | 'screen';
+type ArticleSuggestionContainerVariant = 'card' | 'screen';
 
 interface BaseProps {
     variant: ArticleSuggestionContainerVariant;
@@ -78,7 +78,7 @@ type ArticleProps = BaseProps & { article: NewsArticle; suggestion?: never };
 
 type ArticleSuggestionContainerProps = SuggestionProps | ArticleProps;
 
-export const SCREEN_HEADER_HEIGHT = 240;
+const SCREEN_HEADER_HEIGHT = 240;
 
 // Geometry of the detail screens' floating back button. Both ArticleDetailScreen
 // and ArticleSuggestionScreen render it at `top: insets.top + 8` with `p-3`

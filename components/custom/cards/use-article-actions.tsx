@@ -25,7 +25,7 @@ import { useSavedOverride } from '@/lib/saved-state';
 /** A verdict's stored states: none → recorded without a reason → a leaf
  *  committed. Both recorded states DISPLAY the same (filled, see
  *  CardActionBar); the split only mirrors the stored `committed` flag. */
-export type VerdictState = 'none' | 'provisional' | 'committed';
+type VerdictState = 'none' | 'provisional' | 'committed';
 
 export interface UseArticleActionsInput {
   /** Origin-aware descriptor of what's being acted on + where. */

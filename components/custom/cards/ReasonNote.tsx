@@ -46,7 +46,7 @@ export function notePendingMode(
     return status === ArticleSuggestionStatus.ReasonPending && reasonWriting ? 'writing' : 'not-yet';
 }
 
-export interface ReasonNoteProps {
+interface ReasonNoteProps {
     /** Persisted relevance, drives the priority chip. */
     relevance: number;
     /** Mera's note. Empty while it is still pending. */
@@ -104,7 +104,7 @@ function useWaitingFacts(topicIds?: string[] | null): string[] {
 }
 
 /** The waiting line: the fact(s) that found the article, then the wait. */
-export const WaitingLine: React.FC<{ facts: string[] }> = ({ facts }) => {
+const WaitingLine: React.FC<{ facts: string[] }> = ({ facts }) => {
     const { t } = useTranslation();
     const ink = { color: useNoteInk().ink };
     if (facts.length === 1) {

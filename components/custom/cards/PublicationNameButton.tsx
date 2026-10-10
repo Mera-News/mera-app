@@ -8,7 +8,7 @@ import { useColors } from '@/lib/theme/tokens';
 
 /** Held before the pressed look shows, so a finger that starts a scroll on
  *  the name does not flash it. Same order as ScrollView's own touch delay. */
-export const NAME_PRESS_DELAY_MS = 130;
+const NAME_PRESS_DELAY_MS = 130;
 const PRESSED_OPACITY = 0.55;
 
 interface PublicationNameButtonProps {

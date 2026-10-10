@@ -2,7 +2,7 @@ import { CARDS_USE_GLASS, CardGlassPlate } from '@/components/custom/cards/CardG
 import { Box } from '@/components/ui/box';
 import React from 'react';
 
-export interface FlatCardSurfaceProps {
+interface FlatCardSurfaceProps {
     /** Outer spacing (margins) for the host's list; the surface itself is fixed. */
     className?: string;
     children: React.ReactNode;

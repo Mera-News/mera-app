@@ -12,7 +12,7 @@ import { useCallback, useRef } from 'react';
 import type { GestureResponderEvent } from 'react-native';
 
 /** Points of finger travel, either axis, beyond which a release is a drag. */
-export const TAP_SLOP = 10;
+const TAP_SLOP = 10;
 
 type Point = { x: number; y: number };
 

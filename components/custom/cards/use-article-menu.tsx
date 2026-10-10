@@ -25,7 +25,7 @@ import { Platform, type AccessibilityActionEvent } from 'react-native';
 
 /** If the Modal never reports its dismissal, run the picked item anyway after
  *  this long. A safety net only: the real signal is the dismissal itself. */
-export const MENU_DISMISS_FALLBACK_MS = 1200;
+const MENU_DISMISS_FALLBACK_MS = 1200;
 
 export interface UseArticleMenuInput {
     /** The article the actions are about. */
@@ -97,7 +97,7 @@ const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) 
 };
 
 /** One level of the sheet's navigation stack. */
-export type SheetLevel =
+type SheetLevel =
     | { kind: 'main' }
     | { kind: 'source' }
     | { kind: 'support' }

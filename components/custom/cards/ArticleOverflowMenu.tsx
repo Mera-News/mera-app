@@ -12,13 +12,13 @@ import { Animated, Easing, LayoutAnimation, Platform, Pressable, View, useWindow
 import { useMotionAllowed } from '@/lib/motion-gate';
 
 /** One slide between levels, both ways (FinalRead #15). */
-export const SHEET_SLIDE_MS = MOTION.supportSubList.duration;
+const SHEET_SLIDE_MS = MOTION.supportSubList.duration;
 const ROW_STYLE = { minHeight: 48, justifyContent: 'center' } as const;
 /** The row label: the SAME class and style on every level of every sheet, so a
  *  pushed level cannot drift from the main ••• rows (batch 11: the old tree
  *  overlay's labels rendered at about a fifth of normal brightness). */
-export const SHEET_ROW_LABEL_CLASS = 'text-ink';
-export const SHEET_ROW_LABEL_STYLE = { fontSize: 15, fontWeight: '600' } as const;
+const SHEET_ROW_LABEL_CLASS = 'text-ink';
+const SHEET_ROW_LABEL_STYLE = { fontSize: 15, fontWeight: '600' } as const;
 const CANCEL_STYLE = {
     minHeight: 48,
     marginTop: 8,
@@ -127,7 +127,7 @@ export const ActionSheetRow: React.FC<ActionSheetRowProps> = ({
     );
 };
 
-export interface ActionSheetProps {
+interface ActionSheetProps {
     /** The sheet is in the tree: open, OR closing and not yet dismissed. */
     mounted: boolean;
     /** The sheet is showing; false slides it away. */

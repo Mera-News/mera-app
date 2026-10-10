@@ -8,8 +8,6 @@
 
 import type { ForYouSuggestion, MatchedTopicRef } from '@/lib/stores/for-you-store';
 
-export type { MatchedTopicRef };
-
 /** The on-screen surface the action was taken on. Open string union so future
  *  surfaces (e.g. a new tab) can pass their own key without a type change. */
 export type FeedbackSurface =

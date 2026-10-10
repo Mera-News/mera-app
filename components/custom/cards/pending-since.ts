@@ -34,11 +34,6 @@ export function pruneReasonsInFlight(inFlight: ReadonlySet<string>): void {
     }
 }
 
-/** Epoch ms `id` was first seen in flight, or null when it never was. */
-export function firstReasonInFlightAt(id: string): number | null {
-    return firstInFlightAt.get(id) ?? null;
-}
-
 /** Test seam: forget every recorded first sight. */
 export function resetReasonInFlightForTest(): void {
     firstInFlightAt.clear();

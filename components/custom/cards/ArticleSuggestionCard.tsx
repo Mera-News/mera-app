@@ -95,7 +95,7 @@ export type { ArticleCardProps };
 /** A card's note is clamped to this many lines, and a Feed card that was
  *  pending this session sizes its note box for them up front, so the note
  *  landing under the reader never changes the card's height. */
-export const FEED_NOTE_LINES = 4;
+const FEED_NOTE_LINES = 4;
 
 /**
  * The suggestion (personalized) full-size card. Owns the suggestion-specific
@@ -126,8 +126,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Card-local saved state — restored across remounts (ported verbatim from
-  // FeedArticleCard, which mirrored ArticleActionsRow). Only wired when the
+  // Card-local saved state, restored across remounts. Only wired when the
   // action row is present (onVerdict provided).
   const savedId = suggestion._id;
   const [savedFromDb, setSavedFromDb] = useState(false);

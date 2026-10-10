@@ -80,7 +80,7 @@ import { useColors } from '@/lib/theme/tokens';
  * was deliberately NOT done — so the class renders 10.5px, not 12, and the sum
  * would land on a fraction.
  */
-export const COMPACT_HEADLINE_LINES = 3;
+const COMPACT_HEADLINE_LINES = 3;
 /** `fontSize.base` line box — the headline's `size="md"`. */
 const HEADLINE_LINE_BOX = 24;
 /** `fontSize.sm` line box. The flag emoji is `text-sm` and is the tallest thing
@@ -104,10 +104,10 @@ const MORE_BUTTON_STYLE = {
 } as const;
 
 
-export const COMPACT_IMAGE_SIZE =
+const COMPACT_IMAGE_SIZE =
   COMPACT_HEADLINE_LINES * HEADLINE_LINE_BOX + FOOTER_GAP + FOOTER_LINE_BOX;
 
-export interface ArticleCompactCardBaseProps {
+interface ArticleCompactCardBaseProps {
   imageUrl?: string | null;
   titleEnglish?: string | null;
   titleOriginal?: string;

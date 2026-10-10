@@ -77,7 +77,7 @@ const CardHalo: React.FC<{ on: boolean; radius: number }> = ({ on, radius }) => 
  * • `metaAccessory` — a small adornment rendered directly under the meta row,
  *                     right-aligned (e.g. the __DEV__ relevance readout).
  */
-export interface ArticleCardBaseProps {
+interface ArticleCardBaseProps {
   imageUrl?: string | null;
   titleEnglish?: string | null;
   titleOriginal?: string;

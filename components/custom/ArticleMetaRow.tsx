@@ -12,7 +12,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-export type ArticleMetaRowVariant = 'card' | 'screen';
+type ArticleMetaRowVariant = 'card' | 'screen';
 
 /** The language label's own cap ("Portuguese (Brazil)" fits). */
 const LANGUAGE_MAX_WIDTH = 120;
@@ -24,7 +24,7 @@ const SIDE_GAP = 8;
  * below: the card VStack's `p-4` top padding (14pt) above and its `space="sm"`
  * gap (7pt) below.
  */
-export const PUBLICATION_HIT = { above: 13, below: 7 } as const;
+const PUBLICATION_HIT = { above: 13, below: 7 } as const;
 
 interface ArticleMetaRowProps {
     pubDate?: string | null;

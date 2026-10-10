@@ -8,7 +8,7 @@ import { useTapGuard } from './use-tap-guard';
 
 type PressableProps = React.ComponentProps<typeof Pressable>;
 
-export interface PressableCardProps extends Omit<PressableProps, 'style'> {
+interface PressableCardProps extends Omit<PressableProps, 'style'> {
     /** The recorded-verdict treatment (0.75), multiplied by the pressed one. */
     dimmed?: boolean;
 }
