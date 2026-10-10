@@ -13,7 +13,7 @@
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 import { INFERENCE_TASK, defineInferenceTask, ensureSilentPushTaskRegistered } from '@/lib/background/inference-task';
-import { loadSuggestions } from '@/lib/database/services/article-suggestion-service';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { __resetAuthReadQuarantineForTests, releaseAuthReadQuarantine } from '@/lib/security/install-boundary-latch';

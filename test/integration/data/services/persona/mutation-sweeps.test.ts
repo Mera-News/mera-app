@@ -2,7 +2,7 @@
 // and which one?" (D12). The decision functions are pure but the module only loads under the integration
 // setup; runSweepFor is exercised against real article_suggestions rows, the real sweep and real stores.
 // Replaces the mocked persona-mutation-sweeps suite.
-import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
+import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
 import {
   runSweepFor,
   sweepForMutation,

@@ -2,11 +2,9 @@
 // app's own services, never as hand-written rows.
 import database from '@/lib/database';
 import type { PersonaSuppressionKind } from '@/lib/database/models/PersonaSuppression';
-import {
-  loadSuggestions,
-  persistAndLinkV2Suggestions,
-  saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { addSuppression } from '@/lib/database/services/suppression-service';
 import logger from '@/lib/logger';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';

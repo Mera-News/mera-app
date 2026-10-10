@@ -21,7 +21,7 @@ import {
 import { deferDelayMs, isDeferrableError } from './job-defer';
 import { getFacts, markOrphanedFactsAsFailed } from '../database/services/fact-service';
 import { destroyOrphanedTopics, getAllTopicIds } from '../database/services/topic-service';
-import { purgeSuggestionsForDeadTopics } from '../database/services/article-suggestion-service';
+import { purgeSuggestionsForDeadTopics } from '../database/services/article-suggestion-lifecycle';
 import { handleTopicGenJob } from './handlers/topic-gen-handler';
 import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';

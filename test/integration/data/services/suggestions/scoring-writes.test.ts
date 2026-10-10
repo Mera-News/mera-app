@@ -10,10 +10,10 @@ import {
   batchMarkReasonSkipped,
   batchPropagateScores,
   batchResetToUnscored,
-  deleteSuggestionsByServerIds,
   saveReason,
   saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-scoring-writes';
+import { deleteSuggestionsByServerIds } from '@/lib/database/services/article-suggestion-lifecycle';
 import { FOREIGN, GROUNDED, HOUR, T0, article, freezeClock, row, seed, toComplete, toExcluded, toReasonPending, withVintage } from './support';
 
 jest.mock('@/lib/logger', () => ({

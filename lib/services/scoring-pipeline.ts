@@ -43,16 +43,18 @@ import {
   getScoredDonorRows,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
+  getStageRowsByIds,
+  getGroupingRowsByIds,
+  type ScoringCandidate,
+} from '@/lib/database/services/article-suggestion-reads';
+import {
   saveReason,
   saveScoringResult,
   batchMarkExcluded,
   batchMarkGateSkipped,
   batchMarkReasonSkipped,
-  getStageRowsByIds,
-  getGroupingRowsByIds,
   batchPropagateScores,
-  type ScoringCandidate,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-scoring-writes';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 // Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
 // the one definition of "headline-sourced", shared with the prompt/chunk-size

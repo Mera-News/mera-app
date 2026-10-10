@@ -112,9 +112,10 @@ export async function until(condition: () => boolean | Promise<boolean>, what: s
  * is what `suggestionId` in a notification payload names). With `relevance` the row is then scored.
  */
 export async function seedSuggestion(id: string, relevance?: number): Promise<void> {
-  const { persistAndLinkV2Suggestions, saveScoringResult } = await import(
-    '@/lib/database/services/article-suggestion-service'
+  const { persistAndLinkV2Suggestions } = await import(
+    '@/lib/database/services/article-suggestion-persist'
   );
+  const { saveScoringResult } = await import('@/lib/database/services/article-suggestion-scoring-writes');
   await persistAndLinkV2Suggestions(
     [
       {

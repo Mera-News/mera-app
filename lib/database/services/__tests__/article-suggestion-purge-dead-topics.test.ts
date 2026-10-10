@@ -18,7 +18,7 @@ jest.mock('@/lib/logger', () => ({
 
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
-import { purgeSuggestionsForDeadTopics } from '../article-suggestion-service';
+import { purgeSuggestionsForDeadTopics } from '../article-suggestion-lifecycle';
 
 const db = database as any;
 

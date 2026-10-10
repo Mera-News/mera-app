@@ -3,17 +3,19 @@
 // and the old shared mock ignored them. Replaces the grouping, donor, stage and cull blocks of
 // lib/database/services/__tests__/article-suggestion-service.test.ts.
 import type { StageCandidateRow } from '@/lib/news-harness/core/types';
+import { batchMarkAsScoredByIds } from '@/lib/database/services/article-suggestion-scoring-writes';
 import {
-  batchMarkAsScoredByIds,
   buildStageCandidateInput,
+  type TopicWeightInfo,
+} from '@/lib/database/services/article-suggestion-mappers';
+import {
   getCullableLowHeadlineIds,
   getGroupingRowsByIds,
   getScoredDonorRows,
   getStageRowsByIds,
   getStageRowsForScreening,
   getUnscoredGroupingRows,
-  type TopicWeightInfo,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-reads';
 import {
   DAY,
   GROUNDED,

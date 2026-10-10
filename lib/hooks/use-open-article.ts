@@ -17,7 +17,9 @@
 
 import { useCallback } from 'react';
 import { router } from 'expo-router';
-import { getReasonedSuggestionIdForArticle } from '@/lib/database/services/article-suggestion-service';
+import {
+  getReasonedSuggestionIdForArticle,
+} from '@/lib/database/services/article-suggestion-reads';
 import logger from '@/lib/logger';
 
 /**

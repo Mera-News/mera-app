@@ -1,10 +1,8 @@
 // Seeding for the core/results seam tests: article_suggestions go in through the app's own services.
 import database from '@/lib/database';
 import type ArticleSuggestionModel from '@/lib/database/models/ArticleSuggestion';
-import {
-  persistAndLinkV2Suggestions,
-  saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import type { ArticleWithClusters } from '@/lib/generated/graphql-types';
 
 /** Insert articles as `unscored` rows (what feed-sync hydration writes). */

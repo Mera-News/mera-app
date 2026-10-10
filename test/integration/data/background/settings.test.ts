@@ -41,7 +41,7 @@ import {
   waitForBackgroundCollect,
 } from '@/lib/background/collect-gate';
 import { measureOpenReadiness } from '@/lib/background/open-ready-target';
-import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
+import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { batchMarkAlreadyRead } from '@/lib/feed-grouping/read-story-filter';
 import { getSetting, getSettingsByPrefix, setSetting } from '@/lib/database/services/setting-service';
 import { BG_REFRESH_ENABLED_KEY, isBgRefreshEnabled } from '@/lib/background/bg-refresh-settings';

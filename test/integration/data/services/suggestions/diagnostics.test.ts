@@ -4,11 +4,13 @@
 // lib/database/services/__tests__/article-suggestion-service.test.ts.
 import {
   batchPropagateScores,
-  getScoringModeBreakdown,
-  getSharedNoteBreakdown,
   saveReason,
   saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-scoring-writes';
+import {
+  getScoringModeBreakdown,
+  getSharedNoteBreakdown,
+} from '@/lib/database/services/article-suggestion-diagnostics';
 import { article, freezeClock, seed, toComplete, toReasonPending } from './support';
 
 beforeEach(() => freezeClock());

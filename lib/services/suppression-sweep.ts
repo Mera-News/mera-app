@@ -52,11 +52,15 @@ import logger from '@/lib/logger';
 import {
   batchMarkExcluded,
   batchResetToUnscored,
+} from '@/lib/database/services/article-suggestion-scoring-writes';
+import {
   buildStageCandidateInput,
+  type TopicWeightInfo,
+} from '@/lib/database/services/article-suggestion-mappers';
+import {
   getStageRowsByIds,
   getStageRowsForScreening,
-  type TopicWeightInfo,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-reads';
 import type { StageCandidateRow } from '@/lib/news-harness/core/types';
 import { loadPersonaScoringContext } from '@/lib/mera-protocol/stage-scoring';
 import {

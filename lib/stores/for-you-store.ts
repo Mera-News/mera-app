@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import logger from '@/lib/logger';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
 import {
-    loadSuggestions,
-    persistFeedMetadata,
-    loadFeedMetadata,
-    clearSuggestions,
-    pruneOrphanedSuggestions,
-    type FeedMetadata,
-} from '@/lib/database/services/article-suggestion-service';
+  persistFeedMetadata,
+  loadFeedMetadata,
+  clearSuggestions,
+  pruneOrphanedSuggestions,
+  type FeedMetadata,
+} from '@/lib/database/services/article-suggestion-lifecycle';
 import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
 import {
     ArticleSuggestionStatus,

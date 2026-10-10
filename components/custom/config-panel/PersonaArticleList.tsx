@@ -4,7 +4,9 @@ import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getArticleSuggestionsByTopicTexts } from '@/lib/database/services/article-suggestion-service';
+import {
+  getArticleSuggestionsByTopicTexts,
+} from '@/lib/database/services/article-suggestion-reads';
 import type ArticleSuggestion from '@/lib/database/models/ArticleSuggestion';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';

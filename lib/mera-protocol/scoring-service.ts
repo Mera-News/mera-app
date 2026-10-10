@@ -22,13 +22,15 @@ import {
 } from '@/lib/news-harness/prompts/prompts';
 import {
   batchMarkExcluded,
+  saveReason,
+  saveScoringResult,
+} from '../database/services/article-suggestion-scoring-writes';
+import {
   countUnscoredSuggestions,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
-  saveReason,
-  saveScoringResult,
   type ScoringCandidate,
-} from '../database/services/article-suggestion-service';
+} from '../database/services/article-suggestion-reads';
 import { getFacts } from '../database/services/fact-service';
 import { isCulledHeadlineRelevance } from '../feed-ordering/importance-filter';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';

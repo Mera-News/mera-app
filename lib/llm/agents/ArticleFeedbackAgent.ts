@@ -14,7 +14,7 @@
 // lib/news-harness/article-feedback/agent-core.ts.
 
 import { getFacts } from '../../database/services/fact-service';
-import { getSuggestionFeedbackContext } from '../../database/services/article-suggestion-service';
+import { getSuggestionFeedbackContext } from '../../database/services/article-suggestion-reads';
 import { markFeedbackProcessedFor } from '../../database/services/article-feedback-service';
 import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
 import { ArticleService } from '../../article-service';

@@ -6,6 +6,10 @@
 import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service';
 import {
   geoTextFromTags,
+  parseClusterMemberships,
+  placeValueFromTags,
+} from '@/lib/database/services/article-suggestion-mappers';
+import {
   getArticleSuggestionsByTopicTexts,
   getDistinctSuggestionPublicationNames,
   getFactWeightById,
@@ -13,11 +17,11 @@ import {
   getSuggestionByArticleId,
   getSuggestionByServerId,
   getSuggestionFeedbackContext,
-  parseClusterMemberships,
-  placeValueFromTags,
+} from '@/lib/database/services/article-suggestion-reads';
+import {
   saveReason,
   saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-scoring-writes';
 import { addFact } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
 import {

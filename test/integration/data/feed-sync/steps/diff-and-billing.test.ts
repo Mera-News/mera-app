@@ -17,7 +17,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import { addFact } from '@/lib/database/services/fact-service';
-import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
+import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { batchMarkAlreadyRead } from '@/lib/feed-grouping/read-story-filter';
 import {
   computeFreeTopicTexts,

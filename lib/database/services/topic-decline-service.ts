@@ -334,7 +334,7 @@ async function doFlush(): Promise<number> {
       const topics = require('./topic-service') as typeof import('./topic-service');
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const suggestions =
-        require('./article-suggestion-service') as typeof import('./article-suggestion-service');
+        require('./article-suggestion-lifecycle') as typeof import('./article-suggestion-lifecycle');
       const purged = await suggestions.purgeSuggestionsForDeadTopics(
         await topics.getAllTopicIds(),
       );

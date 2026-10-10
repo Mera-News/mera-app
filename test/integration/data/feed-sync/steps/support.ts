@@ -4,7 +4,10 @@
 import database from '@/lib/database';
 import { restoreFaults } from '../../support/faults';
 import { addFact } from '@/lib/database/services/fact-service';
-import { getStageRowsByIds, loadSuggestions } from '@/lib/database/services/article-suggestion-service';
+import {
+  getStageRowsByIds,
+  loadSuggestions,
+} from '@/lib/database/services/article-suggestion-reads';
 import { upsertLocation } from '@/lib/database/services/location-service';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { createTopics } from '@/lib/database/services/topic-service';

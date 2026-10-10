@@ -10,7 +10,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getSuggestionByServerId } from '@/lib/database/services/article-suggestion-service';
+import { getSuggestionByServerId } from '@/lib/database/services/article-suggestion-reads';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';

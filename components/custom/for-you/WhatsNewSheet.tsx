@@ -13,7 +13,7 @@ import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import { loadFeedMetadata } from '@/lib/database/services/article-suggestion-service';
+import { loadFeedMetadata } from '@/lib/database/services/article-suggestion-lifecycle';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { tint, useColors } from '@/lib/theme/tokens';

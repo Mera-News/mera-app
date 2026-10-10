@@ -23,7 +23,7 @@
 import {
   geoTextFromTags,
   placeValueFromTags,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-mappers';
 import { suppressionMatchesCandidate } from '@/lib/news-harness/scoring-engine/suppression';
 import type { SoftSuppression } from '@/lib/news-harness/scoring-engine/persona-context';
 import type { ScoredCandidateInput } from '@/lib/news-harness/scoring-engine/relevance';

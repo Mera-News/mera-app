@@ -5,7 +5,7 @@ import type {
 } from '@/components/custom/saved-suggestions/ExportWizardModal';
 import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { ArticleService } from '@/lib/article-service';
-import { getGroupingRowsByIds } from '@/lib/database/services/article-suggestion-service';
+import { getGroupingRowsByIds } from '@/lib/database/services/article-suggestion-reads';
 import { getSavedSuggestionByServerId } from '@/lib/database/services/saved-article-suggestion-service';
 import {
     advanceSeenWatermark,

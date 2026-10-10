@@ -22,12 +22,14 @@ import logger from '@/lib/logger';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import {
   batchMarkExcluded,
-  loadFeedMetadata,
-  loadSuggestions,
-  persistFeedMetadata,
   saveScoringResult,
+} from '@/lib/database/services/article-suggestion-scoring-writes';
+import {
+  loadFeedMetadata,
+  persistFeedMetadata,
   type FeedMetadata,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-lifecycle';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
 import { getFacts, removeFactMetadataTopics } from '@/lib/database/services/fact-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { batchMarkAlreadyRead } from '@/lib/feed-grouping/read-story-filter';

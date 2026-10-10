@@ -23,7 +23,7 @@ import {
   type TrackedStoryMemberSnapshot,
 } from '../database/services/tracked-story-service';
 import { createTopics, retire } from '../database/services/topic-service';
-import { getSuggestionByArticleId } from '../database/services/article-suggestion-service';
+import { getSuggestionByArticleId } from '../database/services/article-suggestion-reads';
 import {
   keepArticleForTrackedStory,
   releaseTrackedStoryRetention,

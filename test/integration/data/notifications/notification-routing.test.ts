@@ -19,7 +19,7 @@ import {
   initRestartContext,
   wasJsRestartSync,
 } from '@/lib/app-restart';
-import * as articleSuggestions from '@/lib/database/services/article-suggestion-service';
+import * as articleSuggestions from '@/lib/database/services/article-suggestion-reads';
 import * as settingService from '@/lib/database/services/setting-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import {

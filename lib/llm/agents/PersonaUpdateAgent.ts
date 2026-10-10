@@ -233,7 +233,7 @@ export class PersonaUpdateAgent implements IAgent {
       const visits =
         require('../../database/services/publication-visit-service') as typeof import('../../database/services/publication-visit-service');
       const suggestions =
-        require('../../database/services/article-suggestion-service') as typeof import('../../database/services/article-suggestion-service');
+        require('../../database/services/article-suggestion-reads') as typeof import('../../database/services/article-suggestion-reads');
       /* eslint-enable @typescript-eslint/no-require-imports */
       const [visited, suggested] = await Promise.all([
         visits.getTopVisitedPublications(),

@@ -149,12 +149,12 @@ export async function deleteFact(id: string): Promise<void> {
   // retrieved must go with them. Without this they linger for the full 48h
   // window as content for a deleted interest — unable to render a Dashboard
   // section (ownership needs the fact) while still counting as "analysed for
-  // you". Lazy require: article-suggestion-service imports this module.
+  // you". Lazy require: article-suggestion-lifecycle imports this module.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const topics = require('./topic-service') as typeof import('./topic-service');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const suggestions =
-    require('./article-suggestion-service') as typeof import('./article-suggestion-service');
+    require('./article-suggestion-lifecycle') as typeof import('./article-suggestion-lifecycle');
   const purged = await suggestions.purgeSuggestionsForDeadTopics(await topics.getAllTopicIds());
   if (purged > 0) {
     logger.warn('[fact-service] Purged suggestions for deleted fact', { factId: id, purged });
@@ -429,13 +429,13 @@ export async function replaceFact(oldId: string, input: NewFactInput): Promise<F
   // Same ordering as deleteFact: the cascade takes the old fact's topics, so
   // the suggestions those topics retrieved must go with them, or they linger
   // for the full 48h window as content for an interest that no longer exists.
-  // Lazy require — article-suggestion-service imports this module.
+  // Lazy require — article-suggestion-lifecycle imports this module.
   if (oldTopics.length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const topics = require('./topic-service') as typeof import('./topic-service');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const suggestions =
-      require('./article-suggestion-service') as typeof import('./article-suggestion-service');
+      require('./article-suggestion-lifecycle') as typeof import('./article-suggestion-lifecycle');
     const purged = await suggestions.purgeSuggestionsForDeadTopics(await topics.getAllTopicIds());
     if (purged > 0) {
       logger.warn('[fact-service] Purged suggestions for replaced fact', { oldId, purged });

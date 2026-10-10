@@ -34,30 +34,36 @@ import {
   getScoredSuggestionsWithoutReasons,
   countUnscoredSuggestions,
   getOldestUnscoredCreatedAt,
-  deleteSuggestionsByServerIds,
-  deleteSuggestionByServerId,
-  deleteOldSuggestions,
-  saveScoringResult,
-  batchMarkAsScoredByIds,
-  batchMarkReasonSkipped,
-  batchPropagateScores,
   getGroupingRowsByIds,
   getUnscoredGroupingRows,
   getScoredDonorRows,
   getCullableLowHeadlineIds,
-  saveReason,
-  getSharedNoteBreakdown,
   getSuggestionByServerId,
+  getArticleSuggestionsByTopicTexts,
+} from '../article-suggestion-reads';
+import {
+  deleteSuggestionsByServerIds,
+  deleteSuggestionByServerId,
+  deleteOldSuggestions,
   clearSuggestions,
   pruneOrphanedSuggestions,
   persistFeedMetadata,
   loadFeedMetadata,
-  getArticleSuggestionsByTopicTexts,
-  persistAndLinkV2Suggestions,
+} from '../article-suggestion-lifecycle';
+import {
+  saveScoringResult,
+  batchMarkAsScoredByIds,
+  batchMarkReasonSkipped,
+  batchPropagateScores,
+  saveReason,
+} from '../article-suggestion-scoring-writes';
+import { getSharedNoteBreakdown } from '../article-suggestion-diagnostics';
+import { persistAndLinkV2Suggestions } from '../article-suggestion-persist';
+import {
   buildStageCandidateInput,
   geoTextFromTags,
   type TopicWeightInfo,
-} from '../article-suggestion-service';
+} from '../article-suggestion-mappers';
 import type { StageCandidateRow } from '@/lib/news-harness/core/types';
 
 const db = database as any;

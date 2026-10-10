@@ -20,7 +20,7 @@ import { router } from 'expo-router';
 import database from '@/lib/database';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type ArticleSuggestionModel from '@/lib/database/models/ArticleSuggestion';
-import { saveScoringResult } from '@/lib/database/services/article-suggestion-service';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { REASON_LOOKUP_TIMEOUT_MS, openArticle, useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
 import { useStrictClock } from '@/test/helpers';

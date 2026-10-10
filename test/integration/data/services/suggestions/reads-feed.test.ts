@@ -12,8 +12,8 @@ import {
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
   loadSuggestions,
-  saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-reads';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import {
   GROUNDED,
   HOUR,

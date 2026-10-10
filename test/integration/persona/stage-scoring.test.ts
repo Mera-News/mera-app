@@ -4,7 +4,11 @@
 // stage-scoring.test.ts, stage-scoring-local.test.ts, headline-exemption-math-stage.test.ts and
 // stage-subscription-read.test.ts (and the relevance-v4 half that reaches this module).
 import { addFact } from '@/lib/database/services/fact-service';
-import { persistAndLinkV2Suggestions, getUnscoredSuggestionsWithFacts, type ScoringCandidate } from '@/lib/database/services/article-suggestion-service';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
+import {
+  getUnscoredSuggestionsWithFacts,
+  type ScoringCandidate,
+} from '@/lib/database/services/article-suggestion-reads';
 import * as calibrationService from '@/lib/database/services/calibration-service';
 import { restoreScoringOverrides } from '@/lib/database/services/calibration-service';
 import database from '@/lib/database';

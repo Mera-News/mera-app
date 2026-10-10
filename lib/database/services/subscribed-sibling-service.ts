@@ -2,7 +2,7 @@ import { Q } from '@nozbe/watermelondb';
 
 import database from '../index';
 import ArticleSuggestionModel from '../models/ArticleSuggestion';
-import { parseClusterMemberships } from './article-suggestion-service';
+import { parseClusterMemberships } from './article-suggestion-mappers';
 import {
   getSubscribedSourceNameSet,
   normalizeSubscriptionName,

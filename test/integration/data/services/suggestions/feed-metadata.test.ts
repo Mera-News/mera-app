@@ -9,7 +9,7 @@ import {
   loadFeedMetadata,
   persistFeedMetadata,
   type FeedMetadata,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-lifecycle';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { advanceUntilDone } from '@/test/helpers';

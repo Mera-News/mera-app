@@ -21,7 +21,7 @@
 
 import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
-import { getUnscoredSuggestionsWithFacts } from '@/lib/database/services/article-suggestion-service';
+import { getUnscoredSuggestionsWithFacts } from '@/lib/database/services/article-suggestion-reads';
 import { buildRelevanceCalls } from '@/lib/mera-protocol/scoring-service';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';

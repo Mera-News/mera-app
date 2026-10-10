@@ -44,7 +44,7 @@ import {
 import type {
   ScoringModeBreakdown,
   SharedNoteBreakdown,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-diagnostics';
 import type { CardStateRecord } from './feed-order-store';
 import type { ForYouSuggestion } from './for-you-store';
 import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';

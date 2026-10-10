@@ -9,14 +9,16 @@ import {
   batchMarkReasonSkipped,
   batchPropagateScores,
   batchResetToUnscored,
+  saveReason,
+  saveScoringResult,
+} from '@/lib/database/services/article-suggestion-scoring-writes';
+import {
   getCullableLowHeadlineIds,
   getScoredDonorRows,
   getScoredSuggestionsWithoutReasons,
   getUnscoredGroupingRows,
   getUnscoredSuggestionsWithFacts,
-  saveReason,
-  saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-reads';
 import {
   DAY,
   GROUNDED,

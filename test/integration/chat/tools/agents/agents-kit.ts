@@ -6,11 +6,9 @@
 import { Q } from '@nozbe/watermelondb';
 import database from '@/lib/database';
 import type InferenceJob from '@/lib/database/models/InferenceJob';
-import {
-  loadSuggestions,
-  persistAndLinkV2Suggestions,
-  saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { addFact, getFacts } from '@/lib/database/services/fact-service';
 import { createTopics, getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import type { ArticleWithClusters } from '@/lib/generated/graphql-types';

@@ -10,10 +10,8 @@ import { fetchModelPublicKey } from '@/lib/e2ee/e2ee-service';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { addFact } from '@/lib/database/services/fact-service';
-import {
-  loadSuggestions,
-  persistAndLinkV2Suggestions,
-} from '@/lib/database/services/article-suggestion-service';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import {
   getPipeline,
   mutatePipeline,

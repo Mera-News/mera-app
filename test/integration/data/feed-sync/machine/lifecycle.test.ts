@@ -21,7 +21,7 @@ jest.mock('expo-keep-awake', () => ({
 }));
 
 import database from '@/lib/database';
-import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
+import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
 import logger from '@/lib/logger';
 import * as persistence from '@/lib/scheduler/feed-sync/feed-sync-persistence';
 import * as steps from '@/lib/scheduler/feed-sync/feed-sync-steps';

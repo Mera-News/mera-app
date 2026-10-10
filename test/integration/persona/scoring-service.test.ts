@@ -7,14 +7,15 @@
 // relevance call from a reason call by its system prompt and reads each article from the
 // `News Title: Story <id>` line.
 import { addFact } from '@/lib/database/services/fact-service';
-import * as articleSuggestionService from '@/lib/database/services/article-suggestion-service';
+import * as scoringWrites from '@/lib/database/services/article-suggestion-scoring-writes';
+import * as suggestionReads from '@/lib/database/services/article-suggestion-reads';
 import {
   loadSuggestions,
-  persistAndLinkV2Suggestions,
-  saveScoringResult,
   getUnscoredSuggestionsWithFacts,
   type ScoringCandidate,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-reads';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import * as stageSubscriptionRead from '@/lib/mera-protocol/stage-subscription-read';
 import { addSuppression } from '@/lib/database/services/suppression-service';
 import * as topicService from '@/lib/database/services/topic-service';
@@ -973,7 +974,7 @@ describe('processAllUnscored', () => {
   it('logs and skips a row whose result cannot be saved, and stops when nothing in the batch succeeded', async () => {
     gateway({ scores: { a: 0.7 } });
     await seed(['a']);
-    const save = jest.spyOn(articleSuggestionService, 'saveScoringResult').mockRejectedValueOnce(new Error('db write error'));
+    const save = jest.spyOn(scoringWrites, 'saveScoringResult').mockRejectedValueOnce(new Error('db write error'));
     const onBatchComplete = jest.fn();
 
     const processed = await run(processAllUnscored(undefined, 20, onBatchComplete));
@@ -991,7 +992,7 @@ describe('processAllUnscored', () => {
   it('reports the failure to Sentry, and still returns the count, when the reason sweep after the loop throws', async () => {
     gateway({ scores: { a: 0.7 } });
     await seed(['a']);
-    const sweep = jest.spyOn(articleSuggestionService, 'getScoredSuggestionsWithoutReasons').mockRejectedValueOnce(new Error('db error'));
+    const sweep = jest.spyOn(suggestionReads, 'getScoredSuggestionsWithoutReasons').mockRejectedValueOnce(new Error('db error'));
 
     const processed = await run(processAllUnscored());
     sweep.mockRestore();
@@ -1199,7 +1200,7 @@ describe('retryMissingReasons - cloud path', () => {
   it('logs the error and leaves the row for the next sync when the note cannot be saved', async () => {
     gateway();
     await seedOwed(['a']);
-    const save = jest.spyOn(articleSuggestionService, 'saveReason').mockRejectedValueOnce(new Error('save failed'));
+    const save = jest.spyOn(scoringWrites, 'saveReason').mockRejectedValueOnce(new Error('save failed'));
 
     // The failed write leaves the row owed. It is asked about once per call, so the next sync recovers it.
     expect(await run(retryMissingReasons())).toBe(0);

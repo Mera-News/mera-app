@@ -34,7 +34,7 @@ import { Q } from '@nozbe/watermelondb';
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import { getReasonedSuggestionIdForArticle } from '../article-suggestion-service';
+import { getReasonedSuggestionIdForArticle } from '../article-suggestion-reads';
 
 const db = database as any;
 

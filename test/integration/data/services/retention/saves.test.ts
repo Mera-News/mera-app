@@ -8,7 +8,8 @@
 // (5), loadSavedSuggestions (3), date parsing on save (2), the Saved-screen reads (3) and the
 // getSavedSuggestionWithKind pair. Retention is in retention.test.ts.
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import { deleteSuggestionsByServerIds, getSuggestionByArticleId } from '@/lib/database/services/article-suggestion-service';
+import { deleteSuggestionsByServerIds } from '@/lib/database/services/article-suggestion-lifecycle';
+import { getSuggestionByArticleId } from '@/lib/database/services/article-suggestion-reads';
 import {
   getSavedSuggestionByServerId,
   getSavedSuggestionWithKind,

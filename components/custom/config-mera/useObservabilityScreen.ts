@@ -19,9 +19,9 @@ import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { computeFeedFunnel, type FeedFunnelReport } from '@/lib/stores/feed-diagnostics';
 import { getOpenedSeenBreakdown } from '@/lib/database/services/story-impression-service';
 import {
-    getScoringModeBreakdown,
-    getSharedNoteBreakdown,
-} from '@/lib/database/services/article-suggestion-service';
+  getScoringModeBreakdown,
+  getSharedNoteBreakdown,
+} from '@/lib/database/services/article-suggestion-diagnostics';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { runBlobPrimitivesProbe, type ProbeReport } from '@/lib/backup/dev-probe';

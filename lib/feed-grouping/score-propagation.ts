@@ -74,12 +74,14 @@
  */
 
 import {
-    batchPropagateScores,
-    getScoredDonorRows,
-    getUnscoredGroupingRows,
-    type SuggestionGroupingRow,
-    type PropagateEntry,
-} from '@/lib/database/services/article-suggestion-service';
+  batchPropagateScores,
+  type PropagateEntry,
+} from '@/lib/database/services/article-suggestion-scoring-writes';
+import {
+  getScoredDonorRows,
+  getUnscoredGroupingRows,
+} from '@/lib/database/services/article-suggestion-reads';
+import { type SuggestionGroupingRow } from '@/lib/database/services/article-suggestion-mappers';
 import {
     repPriorityTier,
     type UserGeoLanguageContext,

@@ -9,9 +9,9 @@ import database from '@/lib/database';
 import {
   getStageRowsByIds,
   loadSuggestions,
-  deleteSuggestionByServerId,
-  persistAndLinkV2Suggestions,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-reads';
+import { deleteSuggestionByServerId } from '@/lib/database/services/article-suggestion-lifecycle';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import { createTopics } from '@/lib/database/services/topic-service';
 import logger from '@/lib/logger';
 import { advanceUntilDone } from '@/test/helpers';

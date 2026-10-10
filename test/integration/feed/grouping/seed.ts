@@ -4,10 +4,8 @@
 import '@/test/helpers';
 import database from '@/lib/database';
 import type ArticleSuggestionModel from '@/lib/database/models/ArticleSuggestion';
-import {
-  persistAndLinkV2Suggestions,
-  saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import type { ArticleWithClusters } from '@/lib/generated/graphql-types';
 
 export interface GroupRowSpec {

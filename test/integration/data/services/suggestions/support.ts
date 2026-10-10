@@ -11,11 +11,13 @@ import {
   batchMarkExcluded,
   batchMarkGateSkipped,
   batchPropagateScores,
-  persistAndLinkV2Suggestions,
   saveScoringResult,
-  type MatchedTopicMeta,
+} from '@/lib/database/services/article-suggestion-scoring-writes';
+import {
+  persistAndLinkV2Suggestions,
   type PersonaPersistMeta,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-persist';
+import { type MatchedTopicMeta } from '@/lib/database/services/article-suggestion-mappers';
 import { addFact } from '@/lib/database/services/fact-service';
 import { createTopics } from '@/lib/database/services/topic-service';
 import { batchMarkAlreadyRead } from '@/lib/feed-grouping/read-story-filter';

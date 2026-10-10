@@ -22,9 +22,9 @@ import {
 } from '@/components/custom/cards/feedback-subject';
 import {
   geoTextFromTags,
-  getSuggestionFeedbackContext,
   placeValueFromTags,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-mappers';
+import { getSuggestionFeedbackContext } from '@/lib/database/services/article-suggestion-reads';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';

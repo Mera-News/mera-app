@@ -16,13 +16,11 @@ import * as limiter from '@/lib/llm/gateway-rate-limiter';
 import * as articleStore from '@/lib/database/services/scoring-pipeline-store';
 import * as scoringService from '@/lib/mera-protocol/scoring-service';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import {
-  deleteSuggestionByServerId,
-  getScoredDonorRows,
-  saveScoringResult,
-} from '@/lib/database/services/article-suggestion-service';
+import { deleteSuggestionByServerId } from '@/lib/database/services/article-suggestion-lifecycle';
+import { getScoredDonorRows } from '@/lib/database/services/article-suggestion-reads';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import * as articleService from '@/lib/database/services/article-suggestion-service';
+import * as articleService from '@/lib/database/services/article-suggestion-reads';
 import logger from '@/lib/logger';
 import { derivePipelineBatchProgress } from '@/lib/algorithms/scoring-pipeline-policy';
 import * as pipeline from '@/lib/services/scoring-pipeline';

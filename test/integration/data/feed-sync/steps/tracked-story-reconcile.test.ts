@@ -21,7 +21,7 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { getAll as getNotifications } from '@/lib/database/services/notification-service';
-import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-service';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import * as trackedStoryService from '@/lib/database/services/tracked-story-service';
 import {
   getTrackedStoryById,

@@ -221,7 +221,7 @@ async function refreshForYouCacheFromDb(): Promise<void> {
     try {
         const [{ useForYouStore }, { loadSuggestions }] = await Promise.all([
             import('./stores/for-you-store'),
-            import('./database/services/article-suggestion-service'),
+            import('./database/services/article-suggestion-reads'),
         ]);
 
         const rows = await loadSuggestions();
@@ -301,7 +301,7 @@ export async function resolveNotificationRoute(
                 // ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG), so a test would
                 // only ever see the catch below.
                 // eslint-disable-next-line @typescript-eslint/no-require-imports
-                const { getSuggestionByServerId } = require('./database/services/article-suggestion-service') as typeof import('./database/services/article-suggestion-service');
+                const { getSuggestionByServerId } = require('./database/services/article-suggestion-reads') as typeof import('./database/services/article-suggestion-reads');
                 if (await getSuggestionByServerId(suggestionId)) {
                     return {
                         pathname: '/logged-in/suggestion-detail',

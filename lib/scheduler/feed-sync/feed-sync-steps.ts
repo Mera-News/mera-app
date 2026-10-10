@@ -5,14 +5,18 @@ import { ArticleService } from '@/lib/article-service';
 import {
   batchMarkAsScoredByIds,
   batchMarkExcluded,
+} from '@/lib/database/services/article-suggestion-scoring-writes';
+import {
   getCullableLowHeadlineIds,
   getLocalSuggestionServerIds,
   getUnscoredSuggestionsWithFacts,
-  persistAndLinkV2Suggestions,
   getFactWeightById,
+} from '@/lib/database/services/article-suggestion-reads';
+import {
+  persistAndLinkV2Suggestions,
   type PersonaPersistMeta,
-  type MatchedTopicMeta,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-persist';
+import { type MatchedTopicMeta } from '@/lib/database/services/article-suggestion-mappers';
 import { getFacts } from '@/lib/database/services/fact-service';
 import {
   getActive as getActiveTopics,

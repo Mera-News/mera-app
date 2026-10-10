@@ -5,7 +5,8 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useArticleSuggestionScreen } from '@/components/custom/news-detail/useArticleSuggestionScreen';
 import { visitedToNewsArticle } from '@/components/custom/publication-page/visited-article';
 import database from '@/lib/database';
-import * as suggestions from '@/lib/database/services/article-suggestion-service';
+import * as suggestions from '@/lib/database/services/article-suggestion-reads';
+import * as lifecycle from '@/lib/database/services/article-suggestion-lifecycle';
 import { getAllVisitedArticles } from '@/lib/database/services/publication-visit-service';
 import { isSuggestionSaved, saveSuggestion } from '@/lib/database/services/saved-article-suggestion-service';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -33,7 +34,7 @@ describe('where the suggestion comes from', () => {
     it('renders from the feed store without touching the DB', async () => {
         const s = await seedSuggestion({ _id: 'in-store' });
         // The DB can no longer supply it, so only the store can have.
-        await suggestions.deleteSuggestionByServerId('in-store');
+        await lifecycle.deleteSuggestionByServerId('in-store');
         putInStore(s);
         const { result } = mount('in-store');
         expect(result.current.isLoading).toBe(false);
@@ -53,7 +54,7 @@ describe('where the suggestion comes from', () => {
     it('falls back to the saved table when the feed row is pruned', async () => {
         const s = await seedSuggestion({ _id: 'pruned', title_en: 'Saved copy' });
         await saveSuggestion(s);
-        await suggestions.deleteSuggestionByServerId('pruned');
+        await lifecycle.deleteSuggestionByServerId('pruned');
         const { result } = mount('pruned');
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.suggestion?._id).toBe('pruned');
@@ -73,7 +74,7 @@ describe('a story neither table holds', () => {
     });
 
     it('sets the error and purges the feed row from the DB and the store once', async () => {
-        const deleteRow = jest.spyOn(suggestions, 'deleteSuggestionByServerId');
+        const deleteRow = jest.spyOn(lifecycle, 'deleteSuggestionByServerId');
         const removeFromStore = jest.spyOn(useForYouStore.getState(), 'removeSuggestion');
         const { result } = mount('gone');
         await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -95,7 +96,7 @@ describe('a story neither table holds', () => {
     // never runs. components/custom/news-detail/useArticleSuggestionScreen.tsx, the load effect.
     async function openWhileTheReadFails() {
         await seedSuggestion({ _id: 'kept' });
-        const deleteRow = jest.spyOn(suggestions, 'deleteSuggestionByServerId');
+        const deleteRow = jest.spyOn(lifecycle, 'deleteSuggestionByServerId');
         // One level below the services: the collection method their reads go through.
         const collection = database.get('article_suggestions');
         const fail = jest.spyOn(collection, 'find').mockRejectedValueOnce(new Error('db busy'));

@@ -9,8 +9,9 @@
 // run-inference-handler-hard-filter.test.ts (3). The push-type -> reason mapping and the request-id
 // routing are in inference-task.test.ts.
 import database from '@/lib/database';
-import * as suggestions from '@/lib/database/services/article-suggestion-service';
-import { loadSuggestions, saveScoringResult } from '@/lib/database/services/article-suggestion-service';
+import * as suggestions from '@/lib/database/services/article-suggestion-reads';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { getPipeline } from '@/lib/database/services/scoring-pipeline-store';
 import { addSuppression } from '@/lib/database/services/suppression-service';
 import { runBackgroundCycle } from '@/lib/background/run-inference-handler';

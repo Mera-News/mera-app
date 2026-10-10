@@ -38,7 +38,7 @@ import { getFacts } from './fact-service';
 import { setSetting } from './setting-service';
 import { getAllNormalizedTexts, getAllTopicIds, normalizeTopicText } from './topic-service';
 import { getAllDeclinedNormalizedTexts } from './topic-decline-service';
-import { purgeSuggestionsForDeadTopics } from './article-suggestion-service';
+import { purgeSuggestionsForDeadTopics } from './article-suggestion-lifecycle';
 
 /** Set when the persona changed and a combination pass is owed. Not backed up
  *  (settings back up by allowlist), which is right: a restore re-runs nothing. */

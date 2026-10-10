@@ -6,7 +6,7 @@
 // pubpref-undo-compare-and-set.
 import { firstValueFrom } from 'rxjs';
 import database from '@/lib/database';
-import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
+import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { applyPersonaAction, type PersonaAction } from '@/lib/database/services/persona-action-executor';
 import {
   append,

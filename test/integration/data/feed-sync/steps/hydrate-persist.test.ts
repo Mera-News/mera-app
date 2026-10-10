@@ -18,8 +18,8 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import * as suppressionSweep from '@/lib/services/suppression-sweep';
-import * as suggestionService from '@/lib/database/services/article-suggestion-service';
-import { saveScoringResult } from '@/lib/database/services/article-suggestion-service';
+import * as suggestionService from '@/lib/database/services/article-suggestion-reads';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
 import { buildReadStoryIndex } from '@/lib/feed-grouping/read-story-filter';
 import * as readStoryFilter from '@/lib/feed-grouping/read-story-filter';

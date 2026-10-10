@@ -1,9 +1,7 @@
 // SuggestionSyncService — scoring and store-refresh helpers.
 // Full sync logic has moved to lib/scheduler/feed-sync/ (FeedSyncMachine).
 
-import {
-  loadSuggestions,
-} from '@/lib/database/services/article-suggestion-service';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type {
   ForYouSuggestion,

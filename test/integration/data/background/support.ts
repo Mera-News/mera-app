@@ -17,7 +17,8 @@ import { _resetForTests as resetBreaker } from '@/lib/auth-failure-breaker';
 import { Q } from '@nozbe/watermelondb';
 
 import database from '@/lib/database';
-import { persistAndLinkV2Suggestions, saveScoringResult } from '@/lib/database/services/article-suggestion-service';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { countAllTopics } from '@/lib/database/services/topic-service';
 import { __resetAuthReadQuarantineForTests } from '@/lib/security/install-boundary-latch';

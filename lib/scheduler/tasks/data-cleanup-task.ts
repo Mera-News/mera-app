@@ -1,4 +1,4 @@
-import { deleteOldSuggestions } from '@/lib/database/services/article-suggestion-service';
+import { deleteOldSuggestions } from '@/lib/database/services/article-suggestion-lifecycle';
 import { deleteOlderThan as deleteOldImpressions } from '@/lib/database/services/story-impression-service';
 import { deleteOlderThan as deleteOldNotifications } from '@/lib/database/services/notification-service';
 import { deleteExpiredFactChecks } from '@/lib/database/services/fact-check-record-service';

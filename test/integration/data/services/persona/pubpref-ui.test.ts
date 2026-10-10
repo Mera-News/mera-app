@@ -3,7 +3,7 @@
 // across all of them (fewer wins, a mute reads as fewer) and is undone by revertSourcePrefChange,
 // never by one revertChange. Replaces the mocked publication-pref-ui-actions suite.
 import database from '@/lib/database';
-import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
+import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { applyPersonaAction } from '@/lib/database/services/persona-action-executor';
 import { revertChange } from '@/lib/database/services/persona-change-log-service';
 import {

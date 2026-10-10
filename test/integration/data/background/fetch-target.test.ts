@@ -13,7 +13,10 @@ jest.mock('expo-keep-awake', () => ({
 
 import { NO_FOREGROUND_SKIP_MS } from '@/lib/background/background-feed-sync';
 import { LAST_FOREGROUND_AT_KEY } from '@/lib/background/bg-refresh-settings';
-import { loadFeedMetadata, persistFeedMetadata } from '@/lib/database/services/article-suggestion-service';
+import {
+  loadFeedMetadata,
+  persistFeedMetadata,
+} from '@/lib/database/services/article-suggestion-lifecycle';
 import { deleteSetting, setSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useDatabaseStore } from '@/lib/stores/database-store';

@@ -54,9 +54,9 @@ import {
 import { screenHardSuppressionsDetailed } from '@/lib/news-harness/scoring-engine/suppression';
 import {
   buildStageCandidateInput,
-  getFactWeightById,
   type TopicWeightInfo,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-mappers';
+import { getFactWeightById } from '@/lib/database/services/article-suggestion-reads';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';

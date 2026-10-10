@@ -5,7 +5,7 @@
 // next "add a filter" sweep and the two halves would fight forever. This also pins the other half
 // of P6: the labels. A filtered-but-shown card must say so; the label is derived from the same
 // matcher over the same rehydrated rows, so it can never under-label.
-import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-service';
+import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { retireSuppression } from '@/lib/database/services/suppression-service';
 import { __resetSuggestionsRefreshThrottleForTests } from '@/lib/services/SuggestionSyncService';
 import {

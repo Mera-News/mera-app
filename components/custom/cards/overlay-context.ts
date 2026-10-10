@@ -55,7 +55,7 @@ export async function buildOverlayContext(
     // business standing up the database just to draw a row of buttons. A
     // `require`, not `await import()`: jest cannot run a bare dynamic import.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getSuggestionFeedbackContext } = require('@/lib/database/services/article-suggestion-service') as typeof import('@/lib/database/services/article-suggestion-service');
+    const { getSuggestionFeedbackContext } = require('@/lib/database/services/article-suggestion-reads') as typeof import('@/lib/database/services/article-suggestion-reads');
     const fb = await getSuggestionFeedbackContext({
       suggestionId: subject.suggestionId,
       articleId: subject.articleId,

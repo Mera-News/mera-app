@@ -4,7 +4,7 @@
 // relevance.ts and suppression.ts are pure algorithms, so their optional-field arms are reached by
 // calling the exported functions directly, because buildStageCandidates always fills the arrays.
 import { addFact } from '@/lib/database/services/fact-service';
-import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-service';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import { addSuppression } from '@/lib/database/services/suppression-service';
 import * as subscriptionService from '@/lib/database/services/user-publication-subscription-service';
 import { createTopics } from '@/lib/database/services/topic-service';

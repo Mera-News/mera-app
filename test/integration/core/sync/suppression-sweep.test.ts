@@ -4,10 +4,8 @@
 // For You stores. The delicate part is D12b: eviction from the Feed tab removes EXACTLY the ids the
 // sweep marked and nothing inferred (tombstone contagion). On the un-exclude side a row blocked by
 // two filters stays excluded until BOTH are gone.
-import {
-  batchMarkExcluded,
-  getStageRowsForScreening,
-} from '@/lib/database/services/article-suggestion-service';
+import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
+import { getStageRowsForScreening } from '@/lib/database/services/article-suggestion-reads';
 import { retireSuppression } from '@/lib/database/services/suppression-service';
 import {
   __resetSuggestionsRefreshThrottleForTests,

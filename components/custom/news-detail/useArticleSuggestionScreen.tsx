@@ -4,10 +4,8 @@ import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import { useReportArticleSurface } from '@/components/custom/nav/current-surface';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import {
-    deleteSuggestionByServerId,
-    findSuggestionByServerId,
-} from '@/lib/database/services/article-suggestion-service';
+import { deleteSuggestionByServerId } from '@/lib/database/services/article-suggestion-lifecycle';
+import { findSuggestionByServerId } from '@/lib/database/services/article-suggestion-reads';
 import {
     deleteSavedSuggestion,
     findSavedSuggestionByServerId,

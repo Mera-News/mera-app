@@ -14,10 +14,8 @@ import logger from '@/lib/logger';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { getJwtToken } from '@/lib/auth-client';
 import { decryptContent, type SigningAlgo } from '@/lib/e2ee/e2ee-service';
-import {
-  batchMarkReasonSkipped,
-  type ScoringCandidate,
-} from '@/lib/database/services/article-suggestion-service';
+import { batchMarkReasonSkipped } from '@/lib/database/services/article-suggestion-scoring-writes';
+import { type ScoringCandidate } from '@/lib/database/services/article-suggestion-reads';
 import { CLOUD_SCORE_CHUNK_SIZE } from '@/lib/mera-protocol/scoring-service';
 import type { ExecutionContext } from '@/lib/llm/execution-context';
 import type { BatchCompletionResult } from '@/lib/llm/cloudComplete';

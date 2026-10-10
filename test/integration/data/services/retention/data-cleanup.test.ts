@@ -10,7 +10,8 @@ import '@/lib/scheduler/tasks/data-cleanup-task';
 
 import database from '@/lib/database';
 import { addFact } from '@/lib/database/services/fact-service';
-import { deleteSuggestionsByServerIds, loadSuggestions } from '@/lib/database/services/article-suggestion-service';
+import { deleteSuggestionsByServerIds } from '@/lib/database/services/article-suggestion-lifecycle';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
 import { upsertFactCheck, listFactChecks } from '@/lib/database/services/fact-check-record-service';
 import { getAll as getNotifications, notify } from '@/lib/database/services/notification-service';
 import { keepArticleForFactCheck, saveStandaloneArticle } from '@/lib/database/services/saved-article-suggestion-service';

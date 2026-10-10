@@ -2,7 +2,7 @@
 // over the pure brain in lib/news-harness/article-feedback/agent-core.ts. Driven with the real
 // in-memory DB and the real stores; no module mocks.
 import type { ArticleWithClusters } from '@/lib/generated/graphql-types';
-import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-service';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import { addFact } from '@/lib/database/services/fact-service';
 import { ArticleFeedbackAgent } from '@/lib/llm/agents/ArticleFeedbackAgent';
 import type { StagedProposal } from '@/lib/news-harness/core/types';

@@ -1,6 +1,7 @@
 // Seeding for the article-detail seam tests: suggestion rows go in through the app's own
 // persist path, then out again as the ForYouSuggestion the screens and the saved table take.
-import { loadSuggestions, persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-service';
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import type { ArticleWithClusters, NewsArticle } from '@/lib/generated/graphql-types';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 

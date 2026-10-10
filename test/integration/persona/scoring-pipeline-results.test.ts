@@ -6,7 +6,7 @@
 // The foreground poller is off (see scoring-pipeline.test.ts): `handlePush(requestId)` collects
 // exactly one batch, `later()` makes a limiter slot free for the notes submit it may chain.
 
-import { saveScoringResult } from '@/lib/database/services/article-suggestion-service';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { addSuppression } from '@/lib/database/services/suppression-service';
 import * as scoringService from '@/lib/mera-protocol/scoring-service';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';

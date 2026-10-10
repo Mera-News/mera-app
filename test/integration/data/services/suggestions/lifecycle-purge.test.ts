@@ -14,7 +14,7 @@ import {
   persistFeedMetadata,
   pruneOrphanedSuggestions,
   purgeSuggestionsForDeadTopics,
-} from '@/lib/database/services/article-suggestion-service';
+} from '@/lib/database/services/article-suggestion-lifecycle';
 import {
   __resetPendingForTests,
   deleteTopicWithDecline,

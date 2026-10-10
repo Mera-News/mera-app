@@ -17,7 +17,7 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-service';
+import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
 import { createTopics } from '@/lib/database/services/topic-service';
 import {
