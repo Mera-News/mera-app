@@ -216,24 +216,14 @@ describe('the ledger is reserved before the request and settled to the grant', (
 });
 
 // DA36 (DATA-U15-2). The hydrate step runs three workers; each reserves with a read-modify-write of the
-// ledger row (`adjustCharged`: read all rows, write current + delta). Two chunks reserved together
-// read the same value, and the second write replaces the first.
+// ledger row (`adjustCharged`), serialized on one chain so two chunks reserved together both land.
 describe('concurrent chunks', () => {
-  test.failing('DA36: two chunks of 25 reserved together are both in the ledger', async () => {
+  it('DA36: two chunks of 25 reserved together are both in the ledger', async () => {
     await serveFresh(50);
 
     await advanceUntilDone(runFetch());
 
     expect(await ledger()).toBe('50');
-  });
-
-  it('DA36: today: the second reservation overwrites the first, so the ledger undercounts by one chunk', async () => {
-    const { served } = await serveFresh(50);
-
-    await advanceUntilDone(runFetch());
-
-    expect(served.stats.requests.map((r) => r.ids.length)).toEqual([25, 25]);
-    expect(await ledger()).toBe('25');
   });
 });
 

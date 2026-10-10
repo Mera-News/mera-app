@@ -70,22 +70,36 @@ export async function readAllowance(now: number): Promise<BackgroundAllowance> {
   return { perRun: Math.min(BG_RUN_METERED_CAP, left), dayCap, chargedToday, exhausted };
 }
 
+let ledgerChain: Promise<void> = Promise.resolve();
+
+/** Test seam: a write a test never released must not block the next test. */
+export function __resetLedgerChainForTests(): void {
+  ledgerChain = Promise.resolve();
+}
+
 /**
  * Move today's ledger by `delta` (a reservation is positive, a correction
  * negative, never below zero), and drop every other day's row so the ledger
  * never grows past one row. `now` is the RUN's start, so a run that crosses
  * midnight reserves and corrects the same day's row.
  */
-export async function adjustCharged(now: number, delta: number): Promise<void> {
-  const day = utcDayKey(now);
-  const key = BG_ARTICLES_CHARGED_PREFIX + day;
-  const rows = await getSettingsByPrefix(BG_ARTICLES_CHARGED_PREFIX);
-  const current = Math.max(0, parseFiniteNumber(rows[key] ?? null) ?? 0);
-  const next = Math.max(0, current + Math.trunc(delta));
-  if (next !== current) await setSetting(key, String(next));
-  for (const staleKey of Object.keys(rows)) {
-    if (staleKey !== key) await deleteSetting(staleKey);
-  }
+export function adjustCharged(now: number, delta: number): Promise<void> {
+  // One chain: the hydrate step's workers reserve together, and each re-reads
+  // the row inside the chain so none overwrites another's write. A failure
+  // rejects to its own caller and never blocks the next entry.
+  const run = ledgerChain.then(async () => {
+    const day = utcDayKey(now);
+    const key = BG_ARTICLES_CHARGED_PREFIX + day;
+    const rows = await getSettingsByPrefix(BG_ARTICLES_CHARGED_PREFIX);
+    const current = Math.max(0, parseFiniteNumber(rows[key] ?? null) ?? 0);
+    const next = Math.max(0, current + Math.trunc(delta));
+    if (next !== current) await setSetting(key, String(next));
+    for (const staleKey of Object.keys(rows)) {
+      if (staleKey !== key) await deleteSetting(staleKey);
+    }
+  });
+  ledgerChain = run.catch(() => undefined);
+  return run;
 }
 
 /** Reserve `requested` metered articles, persisted, before the request goes out. */

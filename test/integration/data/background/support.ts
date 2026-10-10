@@ -10,6 +10,7 @@
 import * as Sentry from '@sentry/react-native';
 import * as SecureStore from 'expo-secure-store';
 
+import { __resetLedgerChainForTests } from '@/lib/background/background-allowance';
 import { runBackgroundFeedSync, __resetBackgroundFeedSyncForTests } from '@/lib/background/background-feed-sync';
 import { LAST_FOREGROUND_AT_KEY } from '@/lib/background/bg-refresh-settings';
 import { _resetForTests as resetBreaker } from '@/lib/auth-failure-breaker';
@@ -74,6 +75,7 @@ export async function wakeWorld(opts: WorldOptions = {}): Promise<void> {
   await resetScoringWorld(); // signs in (releasing the read latch) and installs a fake clock
   resetBreaker();
   __resetBackgroundFeedSyncForTests();
+  __resetLedgerChainForTests();
   __resetInstallBoundaryForTests();
   if (!opts.afterBoundary) __resetAuthReadQuarantineForTests();
   resetBackupSettingsMirror();
@@ -87,8 +89,15 @@ export async function wakeWorld(opts: WorldOptions = {}): Promise<void> {
 }
 
 /** Call from `afterEach`. */
-export function wakeCleanup(): void {
+export async function wakeCleanup(): Promise<void> {
   releaseHolds();
+  // A released run unwinds over a few turns; the machine joins a start() to a run still in flight, so
+  // the next test must not begin before it has finished.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { feedSyncMachine } = require('@/lib/scheduler/feed-sync/FeedSyncMachine') as typeof import('@/lib/scheduler/feed-sync/FeedSyncMachine');
+  for (let turns = 0; feedSyncMachine.isRunning() && turns < 200; turns++) {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
   restoreDbFaults();
   cleanupFeedSync();
 }
