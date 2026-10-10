@@ -75,3 +75,26 @@ describe('a start while chat holds the queue paused', () => {
   });
 
 });
+
+// Two start() calls in flight at once (useModelLifecycle effect 3 next to another caller) share one
+// start, so only one consume loop exists and a job runs once.
+describe('two starts in flight', () => {
+  test('two un-awaited start() calls run a queued job once', async () => {
+    const job = hold();
+    __setJobHandlerForTests('persona_summary', job.handler);
+    const id = await enqueueJob('persona_summary', {});
+
+    const first = inferenceQueue.start();
+    const second = inferenceQueue.start();
+    await driveDone(job.started);
+    // A second loop's first dequeue needs fake time to move.
+    for (let i = 0; i < 6; i++) await tick(500);
+
+    job.release();
+    await driveDone(Promise.all([first, second]));
+    await untilJob(id, ['done']);
+    for (let i = 0; i < 6; i++) await tick(500);
+
+    expect(job.calls).toHaveLength(1);
+  });
+});
