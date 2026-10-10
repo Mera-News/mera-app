@@ -12,8 +12,9 @@
 //     Its presence is what stops a relaunch resetting the cursor again and
 //     re-auditing from scratch every time the app starts.
 //   • `sanity_audited_through_ms`  — how far the corpus has actually been
-//     walked. Owned by topic-sanity-service and advanced ONLY when verdicts
-//     come back, so a chunk killed mid-flight is retried, not skipped.
+//     walked. Owned by topic-sanity-service; this service moves it only
+//     after the chunk's proposals are stored, so a chunk killed or failed
+//     mid-flight is retried, not skipped.
 //   • `sanity_backfill_done_at`    — set ONLY when a chunk comes back with
 //     nothing left to audit (or the hard ceiling is hit). A pass killed halfway
 //     therefore cannot mark itself done: the stamp is written from the
@@ -105,10 +106,8 @@ export async function runSanityBackfillChunk(opts?: {
     // The credential was lost mid-run: nothing ran, so nothing is recorded and
     // the next tick retries.
     if (result.skipped) return { ran: false, audited: 0, proposalsAdded: 0, done: false };
-    if (result.nextCursorMs !== null) await commitSanityCursor(result.nextCursorMs);
 
     const auditedTotal = (await readNumber(AUDITED_KEY)) + result.audited;
-    await setSetting(AUDITED_KEY, String(auditedTotal));
 
     let proposalsAdded = 0;
     if (result.incoherentFacts.length > 0) {
@@ -123,6 +122,11 @@ export async function runSanityBackfillChunk(opts?: {
         await setSetting(NOTIFIED_KEY, '1');
       }
     }
+
+    // The verdicts are stored: only now does the cursor move past them. A failed
+    // write above leaves it, so the retry finds the same topics.
+    if (result.nextCursorMs !== null) await commitSanityCursor(result.nextCursorMs);
+    await setSetting(AUDITED_KEY, String(auditedTotal));
 
     // COMPLETION, derived — never "we ran, so we're done". Only a plan with
     // nothing left means the cursor has reached the newest topic; a failed

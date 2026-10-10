@@ -302,7 +302,6 @@ export async function runHygieneSweep(opts?: {
   // hygiene notification"). Bounded and non-rejecting, so the worst case is
   // zero sanity proposals rather than a failed sweep.
   const sanity = await sanityPromise;
-  if (sanity.nextCursorMs !== null) await sanityService.commitSanityCursor(sanity.nextCursorMs);
   const input: HygieneAnalyzeInput = {
     facts: factInputs,
     topics,
@@ -313,6 +312,7 @@ export async function runHygieneSweep(opts?: {
   const proposals = analyzeHygiene(input);
 
   await publishWithCap(proposals);
+  await commitAuditCursor(sanity);
   await stampSweep(now, sanity.skipped);
   notifyChange();
 
@@ -329,6 +329,14 @@ export async function runHygieneSweep(opts?: {
   }
 
   return { ran: true, proposalCount: proposals.length, sanitySkipped: sanity.skipped };
+}
+
+/**
+ * Move the sanity audit cursor past what this run judged. Only after the
+ * verdicts are stored: a cursor moved first loses them if the write fails.
+ */
+async function commitAuditCursor(sanity: { nextCursorMs: number | null }): Promise<void> {
+  if (sanity.nextCursorMs !== null) await sanityService.commitSanityCursor(sanity.nextCursorMs);
 }
 
 /**
@@ -363,13 +371,13 @@ async function publishSanityOnly(
   reason: 'too_few_facts' | 'persona_too_young',
 ): Promise<SweepResult> {
   const incoherentFacts = sanity.incoherentFacts ?? [];
-  if (sanity.nextCursorMs !== null) await sanityService.commitSanityCursor(sanity.nextCursorMs);
   // NOTE ON ORDER: every stamp below comes AFTER the work it is recording, and
   // the publishing exit stamps after `publishWithCap`. Stamping up front would
   // arm the six-day cooldown even if the publish then threw — the retry would
   // read `reason: 'cooldown'` and the user would lose the proposals for a week.
   // The full-sweep path is ordered the same way for the same reason.
   if (incoherentFacts.length === 0) {
+    await commitAuditCursor(sanity);
     await stampSweep(now, sanity.skipped);
     return {
       ran: false,
@@ -391,6 +399,7 @@ async function publishSanityOnly(
   }).filter((p) => p.kind === 'incoherent_topics');
 
   if (proposals.length === 0) {
+    await commitAuditCursor(sanity);
     await stampSweep(now, sanity.skipped);
     return {
       ran: false,
@@ -401,6 +410,7 @@ async function publishSanityOnly(
   }
 
   await publishWithCap(proposals);
+  await commitAuditCursor(sanity);
   await stampSweep(now, sanity.skipped);
   notifyChange();
   void toastManager.showNotifiedToast({

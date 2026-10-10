@@ -414,7 +414,7 @@ describe('a chunk that dies between the audit and the queue', () => {
   const contaminatedCorpus = () =>
     seedCorpus(60, { text: (i) => (i === 7 ? BAD : `cricket topic ${i}`) });
 
-  test.failing('DATA-U11b-7: the verdicts of a chunk whose queue write failed are found on the retry', async () => {
+  it('DATA-U11b-7: the verdicts of a chunk whose queue write failed are found on the retry', async () => {
     const { fact } = await contaminatedCorpus();
     const spy = failQueueWriteOnce();
 
@@ -425,23 +425,5 @@ describe('a chunk that dies between the audit and the queue', () => {
 
     expect(retry.proposalsAdded).toBe(1);
     expect((await getPendingProposals()).map((p) => p.id)).toEqual([`incoherent_topics:${fact.id}`]);
-  });
-
-  it('today: a failed queue write is captured and the pass stays open, but the contaminated topic is never offered', async () => {
-    await contaminatedCorpus();
-    const spy = failQueueWriteOnce();
-
-    const failed = await chunk();
-    const retry = await chunk();
-    spy.mockRestore();
-
-    expect(failed).toEqual({ ran: false, audited: 0, proposalsAdded: 0, done: false });
-    expect(logs.captureException).toHaveBeenCalledTimes(1);
-    expect(logs.captureException.mock.calls[0][1]).toMatchObject({
-      tags: { service: 'sanity-backfill-service', method: 'runSanityBackfillChunk' },
-    });
-    expect(await getSetting(CURSOR)).toBe(String(T0 + 59 * 10)); // already past the contaminated topic
-    expect(retry).toMatchObject({ ran: true, audited: 0, proposalsAdded: 0, done: true });
-    expect(await getPendingCount()).toBe(0);
   });
 });
