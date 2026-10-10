@@ -4,19 +4,10 @@ import { usePinStore } from "@/lib/stores/pin-store";
 import { router } from "expo-router";
 
 export function useReauthSuccess(reauth: string | undefined) {
-    // Reauth: on successful OTP verify, compare the verified user against the
-    // locally cached one. THREE outcomes, and the third is the one this used to
-    // get wrong.
-    //
-    // This branched on identity ALONE until 2026-09-17, so every same-user
-    // reauth went to /pin-setup — including the three that have nothing to do
-    // with the PIN. A user who tapped the "Sign in again to sync" banner was
-    // walked into an enrolment they never asked for, and completing it wrote
-    // the opt-in flag, after which the launch gate locked them out of their own
-    // app on every cold start. The branch was correct for Forgot PIN, where
-    // `lockEnabled === true` is a precondition; it was inherited unchanged from
-    // the mandatory-PIN era when the lock was made opt-in, because that commit
-    // only touched the branch it was looking at.
+    // On a successful OTP verify, compare the verified user with the locally
+    // cached one. Only Forgot PIN (`reauth === 'pin'`) may reach /pin-setup:
+    // finishing setup writes the opt-in flag, so sending any other reauth there
+    // would lock the user out on every cold start.
     //
     // The guard is the PARAM, not usePinStore.lockEnabled: the store defaults
     // to false and depends on init() having run, so gating on it would mean

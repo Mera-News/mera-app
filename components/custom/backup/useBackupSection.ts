@@ -123,8 +123,6 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
     };
   }, [fail, version]);
 
-  /** Connect (if needed) and prove the credential really works, so a Drive
-   *  scope problem surfaces as an error and never as "no backups". */
   const reportDriveFailure = useCallback((result: Exclude<DriveConnectResult, { ok: true }>) => {
     if (result.reason === 'cancelled') return; // a choice, not an error
     const key =
@@ -145,6 +143,8 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
     );
   }, []);
 
+  /** Connect (if needed) and prove the credential really works, so a Drive
+   *  scope problem surfaces as an error and never as "no backups". */
   const reachProvider = useCallback(
     async (id: BackupProviderId): Promise<BackupProvider | null> => {
       if (id === 'google-drive' && !driveReady) {
