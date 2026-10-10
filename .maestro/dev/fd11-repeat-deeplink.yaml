@@ -1,0 +1,41 @@
+# Dev flow: FD11, a second deep link into a route already on its tab's stack must land on that route
+# (it landed on the You tab root: navigateToTabScreen popped and pushed in one tick and lost the push).
+# Each repeated link is followed by a settle (an optional wait on an id that never appears) so the
+# assertion cannot read the screen from before the link took effect.
+# Red until feed's FD11 fix lands. Run in the P4-end device run.
+appId: ${APP_ID}
+---
+- runScript: ../scripts/reset-scenario.js
+- runFlow: ../flows/sign-in.yaml
+
+# a) The same route twice.
+- openLink: ${SCHEME}:///logged-in/preferences/display
+- extendedWaitUntil:
+    visible:
+      id: "appearance-switch-dark"
+    timeout: 15000
+- openLink: ${SCHEME}:///logged-in/preferences/display
+- extendedWaitUntil:
+    visible:
+      id: "fd11-settle-never-present"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd11-a-same-route
+- assertVisible:
+    id: "appearance-switch-dark"
+
+# b) Away and back: display -> manage-subscription -> display (the shape that failed on device).
+- openLink: ${SCHEME}:///logged-in/preferences/manage-subscription
+- extendedWaitUntil:
+    visible:
+      id: "manage-view-plans"
+    timeout: 15000
+- openLink: ${SCHEME}:///logged-in/preferences/display
+- extendedWaitUntil:
+    visible:
+      id: "fd11-settle-never-present"
+    timeout: 3000
+    optional: true
+- takeScreenshot: fd11-b-away-and-back
+- assertVisible:
+    id: "appearance-switch-dark"

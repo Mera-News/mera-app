@@ -1,0 +1,31 @@
+# Dev flow: PE26, a You-tab scroll page clears the floating Mera button at its end, so every row can
+# be scrolled out from under it. Captures Display scrolled to the end (pe26-display-end: the last
+# row's right edge must sit above the Mera button; judged by eye with persona's contracts test as
+# the gate) and taps that last row, which must open System check, not the chat.
+# Red until persona's PE26 fix lands. Run in the P4-end device run.
+appId: ${APP_ID}
+---
+- runScript: ../scripts/reset-scenario.js
+- runFlow: ../flows/sign-in.yaml
+- tapOn:
+    id: ".*navigation_bar_item_icon_view"
+    index: 3
+- tapOn:
+    id: "page-pill-settings"
+- tapOn:
+    id: "settings-row-display"
+- scrollUntilVisible:
+    element:
+      id: "system-check-open"
+    direction: DOWN
+- swipe:
+    direction: UP
+- takeScreenshot: pe26-display-end
+- tapOn:
+    id: "system-check-open"
+- extendedWaitUntil:
+    visible:
+      id: "settings-system-check"
+    timeout: 15000
+- assertNotVisible:
+    id: "chat-input"
