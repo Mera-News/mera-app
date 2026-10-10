@@ -229,29 +229,4 @@ export async function getSubscribedSourceNameSet(): Promise<Set<string>> {
   return set;
 }
 
-/** Convenience wrapper for a single article's `publication_name`. */
-export async function isSubscribedPublicationName(
-  publicationName: string | null | undefined,
-): Promise<boolean> {
-  if (!publicationName) return false;
-  const set = await getSubscribedSourceNameSet();
-  return set.has(normalizeSubscriptionName(publicationName));
-}
-
-/** Active subscriptions keyed by every source name they cover. */
-export async function getSubscriptionBySourceName(): Promise<
-  Map<string, UserPublicationSubscriptionModel>
-> {
-  const rows = await getActive();
-  const map = new Map<string, UserPublicationSubscriptionModel>();
-  for (const row of rows) {
-    for (const name of parseSourceNames(row.sourceNamesJson)) {
-      // First writer wins. Two publishers claiming the same source name is a
-      // catalogue fault, not something to resolve arbitrarily at render time.
-      if (!map.has(name)) map.set(name, row);
-    }
-  }
-  return map;
-}
-
 export type { UserPublicationSubscriptionStatus };

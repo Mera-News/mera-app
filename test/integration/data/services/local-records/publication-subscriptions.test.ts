@@ -11,9 +11,7 @@ import {
   findByPublisherId,
   getActive,
   getSubscribedSourceNameSet,
-  getSubscriptionBySourceName,
   hasAnsweredForPublisher,
-  isSubscribedPublicationName,
   normalizeSubscriptionName,
   observeActive,
   parseSourceNames,
@@ -332,51 +330,5 @@ describe('source-name matching', () => {
 
   it('is empty with no subscriptions', async () => {
     expect(await getSubscribedSourceNameSet()).toEqual(new Set());
-  });
-
-  it('[dead-candidate] isSubscribedPublicationName matches a source name that differs from the publisher name, and not the publisher name', async () => {
-    await upsertSubscription(sub({ publisherName: 'DPG Media' }));
-
-    expect(await isSubscribedPublicationName('Parool.nl')).toBe(true);
-    expect(await isSubscribedPublicationName('DPG Media')).toBe(false);
-  });
-
-  it('[dead-candidate] isSubscribedPublicationName normalises the incoming name', async () => {
-    await upsertSubscription(sub());
-    expect(await isSubscribedPublicationName('  HET   PAROOL ')).toBe(true);
-  });
-
-  it.each([[null], [undefined], ['']])('[dead-candidate] isSubscribedPublicationName is false for %s', async (input) => {
-    await upsertSubscription(sub());
-    expect(await isSubscribedPublicationName(input as string | null | undefined)).toBe(false);
-  });
-
-  it('[dead-candidate] isSubscribedPublicationName is false once the subscription is cancelled', async () => {
-    const created = await upsertSubscription(sub());
-    await cancelSubscription(created.id);
-    expect(await isSubscribedPublicationName('Het Parool')).toBe(false);
-  });
-
-  it('[dead-candidate] getSubscriptionBySourceName maps every source name of an active subscription, and no cancelled one', async () => {
-    await upsertSubscription(sub({ publisherId: 'p1', sourceNames: ['shared', 'only-p1'] }));
-    await upsertSubscription(sub({ publisherId: 'p2', sourceNames: ['shared', 'only-p2'] }));
-    const gone = await upsertSubscription(sub({ publisherId: 'p3', sourceNames: ['only-p3'] }));
-    await cancelSubscription(gone.id);
-
-    const map = await getSubscriptionBySourceName();
-
-    expect([...map.keys()].sort()).toEqual(['only-p1', 'only-p2', 'shared']);
-    expect(map.get('only-p1')?.publisherId).toBe('p1');
-    expect(map.get('only-p2')?.publisherId).toBe('p2');
-  });
-
-  // The doc comment says the FIRST writer of a shared source name wins, but "first" is the position in
-  // getActive(), which has no sort; Loki returns a filtered query newest-inserted first. Dead code that
-  // P4 deletes, so today's outcome is pinned and nothing more.
-  it('[dead-candidate] getSubscriptionBySourceName returns the last-created row today', async () => {
-    await upsertSubscription(sub({ publisherId: 'p1', sourceNames: ['shared'] }));
-    await upsertSubscription(sub({ publisherId: 'p2', sourceNames: ['shared'] }));
-
-    expect((await getSubscriptionBySourceName()).get('shared')?.publisherId).toBe('p2');
   });
 });
