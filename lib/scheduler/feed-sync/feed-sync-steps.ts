@@ -458,11 +458,9 @@ async function fetchTopicIdsPersona(
     headlineDepthByScope: headlineDepths,
   });
 
-  if (profile.topics.length === 0) {
-    // Topics exist but none has a positive effective weight → nothing to
-    // retrieve (all negative/suppressed). Terminal, same as no-topics.
-    throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
-  }
+  // Topic rows exist (the caller routes a device with none to the legacy path), but none may have a
+  // positive effective weight (all muted, or the last one staged for delete). The request still goes
+  // out with no topics: the headline scopes are always present, so the reader gets headlines.
 
   const textToTopicId = new Map<string, string>();
   for (const t of profile.topics) {

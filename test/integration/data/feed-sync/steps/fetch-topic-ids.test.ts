@@ -17,7 +17,7 @@ jest.mock('@/lib/logger', () => ({
 import { addFact } from '@/lib/database/services/fact-service';
 import { setHeadlineDepth } from '@/lib/database/services/headline-depth-service';
 import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
-import { countAllTopics, getActive } from '@/lib/database/services/topic-service';
+import { countAllTopics } from '@/lib/database/services/topic-service';
 import { stepFetchTopicIds } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import logger from '@/lib/logger';
 import { graphql, HttpResponse, mockGql, server } from '@/test/helpers';
@@ -112,26 +112,9 @@ describe('which retrieval path runs', () => {
     expect(await sent.all()).toEqual([]);
   });
 
-  it('with ONLY staged-for-delete topics, stays on the persona path and never requests the staged text', async () => {
-    await markPersonaMigrated();
-    const { topics } = await seedInterest('I follow racing', ['staged topic']);
-    await deleteTopicWithDecline(topics[0].id, { undoWindowMs: 60_000 });
-    // the fact still lists the staged text: exactly what the legacy path would re-retrieve
-    expect((await getActive()).length).toBe(0);
-    const sent = recordOps();
-
-    // Nothing else is active, so the profile is empty and the step ends terminal. The point is
-    // the path taken: the legacy query (which would carry the staged text) is never sent.
-    await expect(stepFetchTopicIds('', makeCtx().ctx)).rejects.toMatchObject({ code: 'no-topics-configured' });
-
-    expect(await sent.count('GetArticleIdsForTopics')).toBe(0);
-    expect(await sent.count('GetArticleIdsForPersona')).toBe(0);
-  });
-
-  // DA45: with no positive topic the step throws before the headline scopes are used, so a reader
-  // who follows only staged or muted topics gets no headlines at all. The profile always carries a
-  // GLOBAL scope, so the request could still be sent with an empty topic list.
-  test.failing('DA45: staged-only topics still fetch headlines (no topics, GLOBAL plus the country scope)', async () => {
+  // DA45: a reader who follows only staged or muted topics still gets headlines. The profile always
+  // carries a GLOBAL scope, so the request is sent with an empty topic list.
+  test('DA45: staged-only topics still fetch headlines (no topics, GLOBAL plus the country scope)', async () => {
     await markPersonaMigrated();
     const { topics } = await seedInterest('I follow racing', ['staged topic']);
     await deleteTopicWithDecline(topics[0].id, { undoWindowMs: 60_000 });
@@ -140,6 +123,8 @@ describe('which retrieval path runs', () => {
 
     await stepFetchTopicIds('', makeCtx().ctx);
 
+    // the persona path is taken: the legacy query (which would carry the staged text) is never sent
+    expect(await sent.count('GetArticleIdsForTopics')).toBe(0);
     const persona = await sent.named('GetArticleIdsForPersona');
     expect(persona).toHaveLength(1);
     expect(persona[0].variables.query.topics).toEqual([]);
@@ -160,7 +145,7 @@ describe('which retrieval path runs', () => {
     expect(persona.variables.query.topics.map((t: { text: string }) => t.text)).toEqual(['stays']);
   });
 
-  test.failing('DA45: with no positive topic the sync still fetches headlines', async () => {
+  test('DA45: with no positive topic the sync still fetches headlines', async () => {
     await markPersonaMigrated();
     await seedInterest('I follow racing', [{ text: 'muted', weight: -0.5 }]);
     await seedLocation('NL', 0.9);
@@ -175,18 +160,6 @@ describe('which retrieval path runs', () => {
       { scope: 'COUNTRY', countryCode: 'NL' },
       { scope: 'GLOBAL', countryCode: null },
     ]);
-  });
-
-  it('DA45 today: a topic set with no positive weight is terminal, not a legacy fallback, and no request is sent', async () => {
-    await markPersonaMigrated();
-    await seedInterest('I follow racing', [{ text: 'muted', weight: -0.5 }]);
-    await seedLocation('NL', 0.9);
-    const sent = recordOps();
-
-    await expect(stepFetchTopicIds('', makeCtx().ctx)).rejects.toMatchObject({ code: 'no-topics-configured' });
-
-    expect(await sent.count('GetArticleIdsForTopics')).toBe(0);
-    expect(await sent.count('GetArticleIdsForPersona')).toBe(0);
   });
 
   it('runs the persona migration first, so a never-migrated device takes the persona path on its first sync', async () => {
