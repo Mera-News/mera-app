@@ -281,6 +281,18 @@ export function isCallerAbort(err: unknown): boolean {
 }
 
 /**
+ * The SSE stream stalled past its idle window and the reader was cancelled. The
+ * cancelled body ends cleanly, so this is the only signal; it is timeout-class
+ * evidence about the model exactly like an abort.
+ */
+export class StreamIdleError extends Error {
+  constructor() {
+    super('[CloudLLM] chat stream went idle');
+    this.name = 'StreamIdleError';
+  }
+}
+
+/**
  * The provider returned a tool call in CLEAR (`delta.tool_calls` or
  * `message.tool_calls`), outside the E2EE envelope. Nothing proves the model
  * wrote it, so the turn fails closed: never forwarded, never executed, never
@@ -1576,7 +1588,7 @@ export async function* cloudChatStream(
     // Only an abort-class death (idle stall, cancelled body) is model-evidence.
     // A decrypt failure is NOT: model-fallback.ts is explicit that "4xx, auth,
     // E2EE/decrypt and plain network errors say nothing about the model".
-    if (isAbortLike(err) && !isCallerAbort(err)) reportModelFailure(primary);
+    if ((isAbortLike(err) || err instanceof StreamIdleError) && !isCallerAbort(err)) reportModelFailure(primary);
     // The decrypt-failure path above already spent this generator's one retry.
     // Without this check a re-attested request that then died mid-stream would
     // issue a THIRD upstream call for a single user turn.
@@ -1792,7 +1804,7 @@ async function* consumeSseChat(
     }
     // A cancelled reader ends the loop cleanly, so the flag is the only signal.
     if (signal?.aborted) throw new CallerAbortError('cloudChatStream: stopped');
-    if (idleTimedOut) throw new Error(`${TAG} chat stream went idle`);
+    if (idleTimedOut) throw new StreamIdleError();
   } catch (err) {
     // The cancelled body rejects with a plain abort error: re-type it, so it is
     // never read as evidence about the model.

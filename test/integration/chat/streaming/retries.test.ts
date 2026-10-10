@@ -284,13 +284,9 @@ describe('the idle window after the first chunk', () => {
   });
 });
 
-// IDLE1 (candidate, found writing this file): the catch in cloudChatStream says an idle stall is
-// model evidence ("Only an abort-class death (idle stall, cancelled body)"), and the old mocked test
-// asserted the retry goes to the fallback. But a cancelled reader ends its loop CLEANLY (the comment in
-// consumeSseChat says so), so the death that surfaces is `chat stream went idle`, which isAbortLike
-// does not match: reportModelFailure never runs, and a model that stalls open with no first chunk
-// is retried on the same dead primary every turn. Whether Hermes' fetch ends the body cleanly or
-// rejects with AbortError on cancel is unverified; the wire here ends it cleanly.
+// CH4: a cancelled reader ends its loop cleanly, so an idle stall surfaces as a StreamIdleError, which
+// counts as timeout-class evidence like an abort: a model that stalls open with no first chunk
+// engages the session fallback for the one fresh request.
 describe('IDLE1: a stall before the first chunk', () => {
   beforeEach(() => useStrictClock('2026-10-09T00:00:00Z'));
 
@@ -304,13 +300,7 @@ describe('IDLE1: a stall before the first chunk', () => {
     expect(gatewayCalls('chat')).toHaveLength(2);
   }
 
-  it('retries on the same primary and engages nothing (today)', async () => {
-    await stallThenRecover();
-    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, SMALL_MODEL]);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
-  });
-
-  test.failing('is timeout-class evidence: the retry goes to the session fallback', async () => {
+  it('is timeout-class evidence: the retry goes to the session fallback', async () => {
     await stallThenRecover();
     expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, FALLBACK]);
