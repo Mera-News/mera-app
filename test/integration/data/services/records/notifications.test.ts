@@ -9,7 +9,6 @@
 // (they counted mock calls; the rows' resulting status is asserted instead).
 // Hygiene notifications stamping getPendingCount() is hygiene-service's rule, not this file's.
 import {
-  clearAll,
   deleteNotification,
   deleteOlderThan,
   dismiss,
@@ -344,23 +343,5 @@ describe('observeUnreadCount (the badge)', () => {
     it('the badge reaches the true count (2), not the first write\'s', async () => {
       expect((await twoQuickWrites()).at(-1)).toBe(2);
     });
-  });
-});
-
-// [dead-candidate] clearAll has no caller outside tests.
-describe('[dead-candidate] clearAll', () => {
-  it('destroys every row whatever its status and returns the count', async () => {
-    const a = (await notify(input({ source: 'a' })))!.id;
-    await notify(input({ source: 'b' }));
-    await markRead(a);
-
-    await expect(clearAll()).resolves.toBe(2);
-    expect(await countRows('notifications')).toBe(0);
-  });
-
-  it('returns 0 and writes nothing when there are no rows', async () => {
-    const writes = countWrites();
-    await expect(clearAll()).resolves.toBe(0);
-    expect(writes).not.toHaveBeenCalled();
   });
 });
