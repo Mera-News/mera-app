@@ -6,6 +6,7 @@
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
+import { normalizeKey } from '@/lib/algorithms/normalize-key';
 import type TopicModel from '../models/Topic';
 import type FactModel from '../models/Fact';
 import type { TopicProvenance, TopicStatus } from '../models/Topic';
@@ -42,7 +43,7 @@ const NOT_STAGED = Q.where('pending_delete_at', null);
 
 /** Lowercase + trim + collapse whitespace — the dedup + article-match key. */
 export function normalizeTopicText(s: string): string {
-  return s.toLowerCase().trim().replace(/\s+/g, ' ');
+  return normalizeKey(s);
 }
 
 export interface CreateTopicInput {

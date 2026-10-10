@@ -13,13 +13,15 @@
 // Mixed state: fewer wins over more. A reader who once said "fewer" about any
 // of the names has not been overruled by an older "more" on another.
 
+import { normalizeKey } from '@/lib/algorithms/normalize-key';
+
 export type SourcePrefUiLevel = 'none' | 'prioritised' | 'deprioritised';
 
 /** The normalization publication preferences match on: lowercase, trimmed,
  *  inner whitespace collapsed. The ONE definition; the preference service
  *  imports it, so reads and writes cannot drift apart. */
 export function normalizePrefName(s: string): string {
-  return s.toLowerCase().trim().replace(/\s+/g, ' ');
+  return normalizeKey(s);
 }
 
 /** The part of a `publication_preferences` row this module reads. */

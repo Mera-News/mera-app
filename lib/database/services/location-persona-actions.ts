@@ -12,16 +12,13 @@
 //     (NOT invertible — destroyPermanently, nothing to restore)
 
 import * as locationService from './location-service';
+import { normalizeKeyOrEmpty } from '@/lib/algorithms/normalize-key';
 import type { UpsertLocationInput } from './location-service';
 import { applyPersonaAction } from './persona-action-executor';
 import * as changeLogService from './persona-change-log-service';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import type LocationModel from '../models/Location';
 import type { LocationRole } from '../models/Location';
-
-function normalizePlacePart(s: string | null | undefined): string {
-  return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
-}
 
 /** Human label for change-log summaries (English only — summaries are stored raw). */
 function labelFor(city: string | null | undefined, countryCode: string): string {
@@ -48,7 +45,7 @@ export async function addUserLocation(
   const existing = all.find(
     (l) =>
       l.countryCode === input.countryCode &&
-      normalizePlacePart(l.city) === normalizePlacePart(input.city) &&
+      normalizeKeyOrEmpty(l.city) === normalizeKeyOrEmpty(input.city) &&
       l.role === input.role,
   );
 

@@ -5,14 +5,11 @@
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
+import { normalizeKeyOrEmpty } from '@/lib/algorithms/normalize-key';
 import type LocationModel from '../models/Location';
 import type { LocationProvenance, LocationRole } from '../models/Location';
 
 const locationsCollection = database.get<LocationModel>('locations');
-
-function normalizePlacePart(s: string | null | undefined): string {
-  return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
-}
 
 export interface UpsertLocationInput {
   city?: string | null;
@@ -37,7 +34,7 @@ export async function upsertLocation(input: UpsertLocationInput): Promise<Locati
     .fetch();
   const existing = candidates.find(
     (l) =>
-      normalizePlacePart(l.city) === normalizePlacePart(input.city) &&
+      normalizeKeyOrEmpty(l.city) === normalizeKeyOrEmpty(input.city) &&
       l.role === input.role,
   );
 
@@ -133,7 +130,7 @@ export async function setRole(locationId: string, role: LocationRole): Promise<v
       l.id !== locationId &&
       l.role === role &&
       l.countryCode === record.countryCode &&
-      normalizePlacePart(l.city) === normalizePlacePart(record.city),
+      normalizeKeyOrEmpty(l.city) === normalizeKeyOrEmpty(record.city),
   );
   await database.write(async () => {
     const now = new Date();

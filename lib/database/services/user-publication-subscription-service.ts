@@ -1,6 +1,7 @@
 import { Q } from '@nozbe/watermelondb';
 
 import database from '../index';
+import { normalizeKeyOrEmpty } from '@/lib/algorithms/normalize-key';
 import UserPublicationSubscriptionModel, {
   type UserPublicationSubscriptionStatus,
 } from '../models/UserPublicationSubscription';
@@ -21,7 +22,7 @@ const subscriptionsCollection = database.get<UserPublicationSubscriptionModel>(
  * the inversion.
  */
 export function normalizeSubscriptionName(s: string): string {
-  return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
+  return normalizeKeyOrEmpty(s);
 }
 
 /**
