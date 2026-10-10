@@ -93,7 +93,7 @@ describe('publishSyncError', () => {
     ];
     for (const code of codes) {
       publishSyncError(code);
-      expect(message()?.state).toBe('failed');
+      expect(message()).toEqual(expect.objectContaining({ state: 'failed', errorCode: code }));
     }
   });
 
