@@ -10,8 +10,6 @@ import {
   batchMarkReasonSkipped,
   batchPropagateScores,
   batchResetToUnscored,
-  batchSaveComputedScores,
-  batchSaveMathScores,
   deleteSuggestionsByServerIds,
   saveReason,
   saveScoringResult,
@@ -442,57 +440,5 @@ describe('the scorer vintage is a property of each row', () => {
     expect((await snapshot('a2')).scoredWithV3).toBeNull();
     await saveScoringResult('a1', { relevance: 0.5, reason: GROUNDED, reasonSkipped: false });
     expect((await snapshot('a1')).scoredWithV3).toBe(false);
-  });
-});
-
-describe('[dead-candidate] batchSaveMathScores', () => {
-  it('writes the bucketed score, the audit columns and the derived status in one go', async () => {
-    await seed([article('a1'), article('a2')]);
-
-    await batchSaveMathScores(
-      [
-        { id: 'a1', relevance: 0.6, reasonSkipped: false, computedScore: 0.5, rawScore: 0.55, scoreComponentsJson: '{"mode":"math"}' },
-        { id: 'a2', relevance: 0.1, reasonSkipped: true, computedScore: 0.1, rawScore: 0.1, scoreComponentsJson: '{}' },
-        { id: 'gone', relevance: 0.1, reasonSkipped: true, computedScore: 0, rawScore: 0, scoreComponentsJson: '{}' },
-      ],
-      T0 + HOUR,
-    );
-
-    expect(await snapshot('a1')).toMatchObject({ status: 'reason_pending', relevance: 0.6, reason: '', computedScore: 0.5, rawScore: 0.55, scoredAt: T0 + HOUR, scoredWithV3: false });
-    expect(await snapshot('a2')).toMatchObject({ status: 'complete', relevance: 0.1 });
-    await expect(batchSaveMathScores([])).resolves.toBeUndefined();
-  });
-
-  it('is a no-op when every row was deleted since', async () => {
-    await seed([article('a1')]);
-    await deleteSuggestionsByServerIds(['a1']);
-
-    await expect(
-      batchSaveMathScores([{ id: 'a1', relevance: 0.5, reasonSkipped: false, computedScore: 0.5, rawScore: 0.5, scoreComponentsJson: '{}' }]),
-    ).resolves.toBeUndefined();
-  });
-});
-
-describe('[dead-candidate] batchSaveComputedScores', () => {
-  it('writes the audit columns and nothing else', async () => {
-    await seed([article('a1')]);
-    await toReasonPending('a1', 0.7);
-
-    await batchSaveComputedScores([
-      { id: 'a1', computedScore: 0.5, rawScore: 0.6, scoreComponentsJson: '{"mode":"math"}' },
-      { id: 'gone', computedScore: 0, rawScore: 0, scoreComponentsJson: '{}' },
-    ]);
-
-    expect(await snapshot('a1')).toMatchObject({ status: 'reason_pending', relevance: 0.7, computedScore: 0.5, rawScore: 0.6, scoreComponentsJson: '{"mode":"math"}' });
-    await expect(batchSaveComputedScores([])).resolves.toBeUndefined();
-  });
-
-  it('is a no-op when every row was deleted since', async () => {
-    await seed([article('a1')]);
-    await deleteSuggestionsByServerIds(['a1']);
-
-    await expect(
-      batchSaveComputedScores([{ id: 'a1', computedScore: 0.5, rawScore: 0.5, scoreComponentsJson: '{}' }]),
-    ).resolves.toBeUndefined();
   });
 });

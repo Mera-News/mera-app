@@ -6,12 +6,10 @@ import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select/owner
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { deleteFact } from '@/lib/database/services/fact-service';
 import {
-  batchMarkAsScoredByIds,
   countUnscoredSuggestions,
   getLocalSuggestionServerIds,
   getOldestUnscoredCreatedAt,
   getScoredSuggestionsWithoutReasons,
-  getTotalArticleSuggestionCount,
   getUnscoredSuggestionsWithFacts,
   loadSuggestions,
   saveScoringResult,
@@ -481,16 +479,5 @@ describe('getScoredSuggestionsWithoutReasons (the orphaned-reason sweep)', () =>
 
     expect(found).toBeDefined();
     expect(found!.relevance).toBeGreaterThan(0.3);
-  });
-});
-
-describe('[dead-candidate] getTotalArticleSuggestionCount', () => {
-  it('counts every row, whatever its status', async () => {
-    expect(await getTotalArticleSuggestionCount()).toBe(0);
-    await seed(['a1', 'a2', 'a3'].map((id) => article(id)));
-    await toExcluded('a2');
-    await batchMarkAsScoredByIds(['a3']);
-
-    expect(await getTotalArticleSuggestionCount()).toBe(3);
   });
 });

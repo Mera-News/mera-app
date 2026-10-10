@@ -30,6 +30,7 @@ import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter
 // module — same import-safety argument as `isCulledHeadlineRelevance` above.
 import { isReasonGrounded } from '@/lib/news-harness/article-pipeline/reason-grounding';
 import { REASON_RELEVANCE_THRESHOLD } from '@/lib/services/inference-results';
+import { normalizeKeyOrEmpty } from '@/lib/algorithms/normalize-key';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 /**
  * Is relevance v3 the scorer producing scores RIGHT NOW? Stamped onto each row
@@ -226,7 +227,6 @@ async function loadFactIdsBySuggestion(
   ids: string[],
 ): Promise<Map<string, string[]>> {
   const map = new Map<string, string[]>();
-  if (ids.length === 0) return map;
   const links = await articleSuggestionFactsCol
     .query(Q.where('article_suggestion_id', Q.oneOf(ids)))
     .fetch();
@@ -656,83 +656,6 @@ export async function saveScoringResult(
 }
 
 /**
- * Round-3 B1: persist the deterministic math result for a batch of judge-mode
- * rows in ONE write, at SUBMIT time — bucketed `relevance`, `reason:''`, the
- * audit columns (computed/raw/components), a fresh `scored_at`, and the derived
- * status: `complete` for sub-threshold rows (reasonSkipped — terminal, no note
- * owed) else `reason_pending` (the combined judge+notes job fills the note at
- * decode). This makes cards renderable immediately; a later judge failure
- * fail-opens to exactly these persisted scores. Missing rows are skipped.
- */
-export async function batchSaveMathScores(
-  entries: {
-    id: string;
-    relevance: number;
-    reasonSkipped: boolean;
-    computedScore: number;
-    rawScore: number;
-    scoreComponentsJson: string;
-  }[],
-  nowMs: number = Date.now(),
-): Promise<void> {
-  if (entries.length === 0) return;
-  const rows = await Promise.all(
-    entries.map((e) => articleSuggestionsCol.find(e.id).catch(() => null)),
-  );
-  const entryById = new Map(entries.map((e) => [e.id, e]));
-  const present = rows.filter((r): r is ArticleSuggestionModel => r != null);
-  if (present.length === 0) return;
-  await database.write(async () => {
-    await database.batch(
-      present.map((row) => {
-        const e = entryById.get(row.id)!;
-        return row.prepareUpdate((r) => {
-          r.relevance = e.relevance;
-          // See `saveScore`: the vintage is a property of this score, so it is
-          // written unconditionally rather than once-only like `scored_at`.
-          r.scoredWithV3 = isRelevanceV3Active();
-          r.reason = '';
-          r.computedScore = e.computedScore;
-          r.rawScore = e.rawScore;
-          r.scoreComponentsJson = e.scoreComponentsJson;
-          if (r.scoredAt == null) r.scoredAt = nowMs;
-          r.status = e.reasonSkipped
-            ? ArticleSuggestionStatus.Complete
-            : ArticleSuggestionStatus.ReasonPending;
-        });
-      }),
-    );
-  });
-}
-
-/**
- * Round-3 B1: read the persisted RelevanceComponents (+ computed_score) for a
- * small set of ids — the cloud judge-decode path needs them to build a
- * CalibrationCase for each overridden row (the advisory judge score vs the math,
- * with its component breakdown). Rows missing / with unparseable components are
- * simply absent from the returned map. Read-only.
- */
-export async function getComputedComponentsByIds(
-  ids: string[],
-): Promise<Map<string, { computedScore: number | null; components: RelevanceComponents }>> {
-  const out = new Map<string, { computedScore: number | null; components: RelevanceComponents }>();
-  if (ids.length === 0) return out;
-  const rows = await articleSuggestionsCol
-    .query(Q.where('id', Q.oneOf(ids)))
-    .fetch();
-  for (const row of rows) {
-    if (!row.scoreComponentsJson) continue;
-    try {
-      const components = JSON.parse(row.scoreComponentsJson) as RelevanceComponents;
-      out.set(row.id, { computedScore: row.computedScore, components });
-    } catch {
-      // Unparseable audit JSON — skip (calibration just loses this one case).
-    }
-  }
-  return out;
-}
-
-/**
  * How many stored notes are SHARED between articles.
  *
  * WHY THIS IS THE READOUT THAT MATTERS. When a note turns up describing a
@@ -883,37 +806,6 @@ export async function getScoringModeBreakdown(): Promise<ScoringModeBreakdown> {
     }
   }
   return out;
-}
-
-/**
- * Persist the persona-v3 math audit columns for a batch of rows WITHOUT
- * touching relevance/reason/status. Used by the E2EE pipeline at submit time
- * (doSubmitRelevance): the math (computed_score/components) runs on-device
- * before the judge job is sent, so a later judge failure fail-opens to
- * computed_score as the source of truth. One batched write.
- */
-export async function batchSaveComputedScores(
-  entries: { id: string; computedScore: number; rawScore: number; scoreComponentsJson: string }[],
-): Promise<void> {
-  if (entries.length === 0) return;
-  const rows = await Promise.all(
-    entries.map((e) => articleSuggestionsCol.find(e.id).catch(() => null)),
-  );
-  const entryById = new Map(entries.map((e) => [e.id, e]));
-  const present = rows.filter((r): r is ArticleSuggestionModel => r != null);
-  if (present.length === 0) return;
-  await database.write(async () => {
-    await database.batch(
-      present.map((row) => {
-        const e = entryById.get(row.id)!;
-        return row.prepareUpdate((r) => {
-          r.computedScore = e.computedScore;
-          r.rawScore = e.rawScore;
-          r.scoreComponentsJson = e.scoreComponentsJson;
-        });
-      }),
-    );
-  });
 }
 
 /**
@@ -2194,10 +2086,6 @@ async function resolveFactsByTopicTexts(
   return result;
 }
 
-export async function getTotalArticleSuggestionCount(): Promise<number> {
-  return articleSuggestionsCol.query().fetchCount();
-}
-
 
 /**
  * Distinct `publication_name` values present in the local suggestion cache,
@@ -2220,7 +2108,7 @@ export async function getDistinctSuggestionPublicationNames(): Promise<Set<strin
   try {
     const rows = await articleSuggestionsCol.query().fetch();
     for (const row of rows) {
-      const norm = (row.publicationName ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
+      const norm = normalizeKeyOrEmpty(row.publicationName);
       if (norm) names.add(norm);
     }
   } catch (error) {

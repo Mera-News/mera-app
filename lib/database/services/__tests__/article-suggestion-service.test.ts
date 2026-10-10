@@ -53,7 +53,6 @@ import {
   persistFeedMetadata,
   loadFeedMetadata,
   getArticleSuggestionsByTopicTexts,
-  getTotalArticleSuggestionCount,
   persistAndLinkV2Suggestions,
   buildStageCandidateInput,
   geoTextFromTags,
@@ -1387,28 +1386,6 @@ describe('getArticleSuggestionsByTopicTexts', () => {
     ]);
     const result = await getArticleSuggestionsByTopicTexts(['berlin']);
     expect(result).toEqual([]);
-  });
-});
-
-// ===========================================================================
-// getTotalArticleSuggestionCount
-// ===========================================================================
-
-describe('getTotalArticleSuggestionCount', () => {
-  it('returns 0 when no suggestions exist', async () => {
-    db._setRows('article_suggestions', []);
-    const count = await getTotalArticleSuggestionCount();
-    expect(count).toBe(0);
-  });
-
-  it('returns the number of rows in the collection', async () => {
-    db._setRows('article_suggestions', [
-      makeSuggestion({ id: 's1' }),
-      makeSuggestion({ id: 's2' }),
-      makeSuggestion({ id: 's3' }),
-    ]);
-    const count = await getTotalArticleSuggestionCount();
-    expect(count).toBe(3);
   });
 });
 
