@@ -89,6 +89,22 @@ export function survivingPage<T extends string>(
   return pages[Math.max(0, Math.min(lastIndex - 1, pages.length - 1))];
 }
 
+/** The row's box: `count` page widths wide, so every page sits INSIDE it (Android
+ *  drops a child that lies outside its parent's bounds from the accessibility
+ *  tree). LTR grows rightward from 0; RTL grows leftward, so the row still ends at
+ *  the viewport's right edge. */
+export function rowFrame(count: number, width: number, rtl: boolean): { left: number; width: number } {
+  if (count <= 0 || width <= 0) return { left: 0, width };
+  return { left: rtl ? (1 - count) * width : 0, width: count * width };
+}
+
+/** Where a panel's untranslated box starts inside that row: the slot the
+ *  viewport shows at row offset 0 (LTR the first, RTL the last). */
+export function panelLeft(count: number, width: number, rtl: boolean): number {
+  if (count <= 0 || width <= 0) return 0;
+  return rtl ? (count - 1) * width : 0;
+}
+
 /** A tap's slide from page `from` to page `to`: the picked page is laid in
  *  `slot`, the one next to `from`, so the row moves one width and no page in
  *  between shows. `[from, to, slot]`; NO_TRANSIT when nothing slides. */

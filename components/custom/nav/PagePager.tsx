@@ -55,6 +55,8 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import {
   dragFollow,
   NO_TRANSIT,
+  panelLeft,
+  rowFrame,
   SWIPE_ACTIVATE_PX,
   SWIPE_VERTICAL_FAIL_PX,
   swipeOutcome,
@@ -297,7 +299,10 @@ const PagePager: React.FC<PagePagerProps> = ({
   return (
       <GestureDetector gesture={pan}>
         <View style={styles.viewport} onLayout={onLayout} testID={testID}>
-          <Animated.View style={[StyleSheet.absoluteFill, rowStyle]} testID={testID ? `${testID}-row` : undefined}>
+          <Animated.View
+            style={[width > 0 ? { position: 'absolute', top: 0, bottom: 0, ...rowFrame(count, width, rtl) } : StyleSheet.absoluteFill, rowStyle]}
+            testID={testID ? `${testID}-row` : undefined}
+          >
             {mounted.map((i) => {
               const active = i === index;
               const key = keyOf(i);
@@ -306,6 +311,8 @@ const PagePager: React.FC<PagePagerProps> = ({
                   key={key}
                   i={i}
                   step={dir * width}
+                  width={width}
+                  left={panelLeft(count, width, rtl)}
                   transit={transit}
                   testID={testID ? `${testID}-panel-${key}` : undefined}
                   pointerEvents={active && !moving ? 'auto' : 'none'}
@@ -326,12 +333,16 @@ const PagePager: React.FC<PagePagerProps> = ({
 function Panel({
   i,
   step,
+  width,
+  left,
   transit,
   children,
   ...rest
 }: {
   i: number;
   step: number;
+  width: number;
+  left: number;
   transit: SharedValue<Transit>;
   children: React.ReactNode;
   testID?: string;
@@ -344,7 +355,10 @@ function Panel({
     return { opacity: p.hidden ? 0 : 1, transform: [{ translateX: p.slot * step }] };
   }, [i, step]);
   return (
-    <Animated.View {...rest} style={[StyleSheet.absoluteFill, place]}>
+    <Animated.View
+      {...rest}
+      style={[width > 0 ? { position: 'absolute', top: 0, bottom: 0, left, width } : StyleSheet.absoluteFill, place]}
+    >
       {children}
     </Animated.View>
   );

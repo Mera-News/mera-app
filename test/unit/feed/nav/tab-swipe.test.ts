@@ -8,6 +8,8 @@ import {
   swipeWindow,
   NO_TRANSIT,
   tapTransit,
+  rowFrame,
+  panelLeft,
   transitPanel,
   transitProgress,
 } from '@/components/custom/nav/tab-swipe';
@@ -127,5 +129,41 @@ describe('tap slide transit', () => {
     expect(transitPanel(1, t)).toEqual({ slot: 1, hidden: true });
     expect(transitPanel(0, t)).toEqual({ slot: 0, hidden: false });
     expect(transitPanel(1, NO_TRANSIT)).toEqual({ slot: 1, hidden: false });
+  });
+});
+
+describe('rowFrame and panelLeft: every page sits inside the row', () => {
+  it('LTR: the row grows rightward from 0 and the panels start at 0', () => {
+    expect(rowFrame(3, W, false)).toEqual({ left: 0, width: 3 * W });
+    expect(rowFrame(1, W, false)).toEqual({ left: 0, width: W });
+    expect(panelLeft(3, W, false)).toBe(0);
+  });
+
+  it('RTL: the row grows leftward, ends at the right edge, and the panels start at its last slot', () => {
+    expect(rowFrame(3, W, true)).toEqual({ left: -2 * W, width: 3 * W });
+    expect(rowFrame(1, W, true)).toEqual({ left: 0, width: W });
+    expect(panelLeft(3, W, true)).toBe(2 * W);
+    expect(panelLeft(1, W, true)).toBe(0);
+  });
+
+  it('a page at slot i (translateX = dir*i*W) lands inside the row, both directions', () => {
+    for (const rtl of [false, true]) {
+      const dir = rtl ? -1 : 1;
+      const row = rowFrame(3, W, rtl);
+      for (let i = 0; i < 3; i++) {
+        const inRow = panelLeft(3, W, rtl) + dir * i * W;
+        expect(inRow).toBeGreaterThanOrEqual(0);
+        expect(inRow + W).toBeLessThanOrEqual(row.width);
+        // On screen with the row at its page-1 offset (-dir*W): same pixels as before the fix.
+        expect(row.left + inRow - dir * W).toBeCloseTo(dir * (i - 1) * W);
+      }
+    }
+  });
+
+  it('before the first layout (width 0) or with no pages: a zero-offset frame', () => {
+    expect(rowFrame(3, 0, true)).toEqual({ left: 0, width: 0 });
+    expect(rowFrame(0, W, true)).toEqual({ left: 0, width: W });
+    expect(panelLeft(3, 0, true)).toBe(0);
+    expect(panelLeft(0, W, true)).toBe(0);
   });
 });
