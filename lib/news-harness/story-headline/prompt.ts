@@ -7,7 +7,7 @@ import type { StoryHeadlinePrompt } from './types';
 /** System prompt: name the overall story in ONE plain-language headline, strict
  *  JSON. Kept terse to protect the token budget. English-canonical (rendered
  *  via TranslatableDynamic downstream). */
-export const STORY_HEADLINE_SYSTEM_PROMPT =
+const STORY_HEADLINE_SYSTEM_PROMPT =
   `You name an ongoing news story with ONE short headline.
 You are given a numbered list of article titles that all cover the same developing story. Write a single headline that captures the overall story they share.
 

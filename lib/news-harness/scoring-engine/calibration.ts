@@ -53,7 +53,7 @@ export const CALIBRATION_SAMPLE_CAP = 25;
  *  bounds (BASE_MIN/MAX), saturation knees, or geo multipliers, which define the
  *  engine's shape rather than its taste. Any delta targeting a key outside this
  *  set is dropped by clampCalibrationDeltas. */
-export const TUNABLE_CONSTANTS = [
+const TUNABLE_CONSTANTS = [
   'W_TOPIC',
   'W_BREADTH',
   'W_GEO',
@@ -71,7 +71,7 @@ export const TUNABLE_CONSTANTS = [
   'HP_MULT',
 ] as const;
 
-export type TunableConstant = (typeof TUNABLE_CONSTANTS)[number];
+type TunableConstant = (typeof TUNABLE_CONSTANTS)[number];
 
 const TUNABLE_SET: ReadonlySet<string> = new Set(TUNABLE_CONSTANTS);
 
@@ -159,7 +159,7 @@ export function shouldFireNotification(
 
 /** Numeric component snapshot fed to the gateway — the "why the math scored it"
  *  breakdown WITHOUT any article title/description/fact text. */
-export interface CalibrationComponentSnapshot {
+interface CalibrationComponentSnapshot {
   topicComp: number;
   breadthComp: number;
   geoComp: number;

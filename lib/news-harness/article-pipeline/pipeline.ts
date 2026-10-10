@@ -75,7 +75,7 @@ export type ScoreBucketName =
   | 'HIGH'
   | 'EMERGENCY';
 
-export interface PipelineScoreRow {
+interface PipelineScoreRow {
   id: string;
   titleEn: string | null;
   /** PASS 1's raw score. Never overwritten by a rescore: it is the only record

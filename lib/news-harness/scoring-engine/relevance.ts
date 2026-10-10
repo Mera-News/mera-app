@@ -266,7 +266,7 @@ function signedMaxByMagnitude(values: number[]): number {
  * (Wave 14 — previously the summary ranked by raw effectiveWeight and could
  * mislabel the dominant topic).
  */
-export function modulatedTopicWeight(
+function modulatedTopicWeight(
   t: MatchedTopicInput,
   cfg: ScoringEngineConfig,
 ): number {
@@ -315,24 +315,6 @@ function pubPref(
 ): number {
   if (!publicationName) return 0;
   return prefs.get(normText(publicationName)) ?? 0;
-}
-
-/** suppressPenalty: Σ P_SUP·strength over soft suppressions that MATCH the
- *  candidate; capped at P_SUP_CAP. Matching (per kind) is the shared matcher in
- *  suppression.ts — keyword / NULL-kind rows keep byte-identical semantics.
- *
- *  EXPORTED so any future scoring source applies the capped soft penalty by
- *  CALLING this, never by re-deriving it — a second implementation of the cap
- *  is exactly the drift this wave exists to prevent (the hard screen has the
- *  same one-matcher rule via `screenHardSuppressions`). Export only; the maths
- *  are untouched. */
-export function suppressionPenalty(
-  candidate: ScoredCandidateInput,
-  ctx: PersonaScoringContext,
-  cfg: ScoringEngineConfig,
-): number {
-  const { other, entity } = splitSuppressionPenalty(candidate, ctx, cfg);
-  return other + entity;
 }
 
 /**
@@ -496,7 +478,7 @@ export function computeRelevance(
   // (suppression.ts::isHardFilterExempt), so unlike every other candidate it can
   // reach the math while matching a hard "not interested" filter. It must not
   // reach it UNPENALISED: the matching hard rows are folded into the soft list
-  // and run through the SAME `suppressionPenalty` call, so there is still one
+  // and run through the SAME `splitSuppressionPenalty` call, so there is still one
   // matcher and one P_SUP_CAP. Nothing changes for a non-headline row, or for a
   // headline row matching only SOFT filters (which stays killed by the floor-is-
   // before-penalties rule below).

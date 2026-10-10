@@ -474,7 +474,7 @@ export interface ScoringEngineConfig {
  * duplicate it. Every value is a SEED; config.test.ts pins each literal so
  * drift fails loudly.
  */
-export interface MutationRailsConfig {
+interface MutationRailsConfig {
   /** Per-topic per-day nudge budget: |Σ deltas today| ≤ this. */
   NUDGE_DAY_BUDGET: number; // 0.3
   /** "Show less" signal delta on matched topics. */

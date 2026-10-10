@@ -7,7 +7,7 @@ import type { PersonaSummaryFactInput } from './types';
 /** System prompt: warm, plain-language, strict-JSON, cites fact numbers. Kept
  *  terse to protect the token budget. English-canonical (rendered via
  *  TranslatableDynamic downstream). */
-export const PERSONA_SUMMARY_SYSTEM_PROMPT =
+const PERSONA_SUMMARY_SYSTEM_PROMPT =
   `You describe a person back to themselves so they recognise who you think they are.
 You are given a numbered list of facts about the user. Write 4 to 8 short, warm, plain-language lines describing who they are and what they follow.
 

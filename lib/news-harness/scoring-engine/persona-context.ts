@@ -35,7 +35,7 @@ export interface PersonaLocationSnapshot {
 /** What a suppression matches against. Mirrors `SUPPRESSION_KINDS` in
  *  `lib/database/models/PersonaSuppression` (duplicated here so the engine
  *  stays RN-free / DB-free). An absent kind means 'keyword'. */
-export type SuppressionKind =
+type SuppressionKind =
   | 'keyword'
   | 'category'
   | 'event_type'
@@ -121,26 +121,4 @@ export function buildPubPrefs(
     if (key) m.set(key, r.weight);
   }
   return m;
-}
-
-/** Build a normalized entity-interest map from raw {entity, weight} rows. */
-export function buildEntityInterest(
-  rows: { entity: string; weight: number }[],
-): Map<string, number> {
-  const m = new Map<string, number>();
-  for (const r of rows) {
-    const key = normText(r.entity);
-    if (key) m.set(key, r.weight);
-  }
-  return m;
-}
-
-/** Normalize a whole persona context (idempotent). */
-export function normalizePersonaContext(
-  ctx: PersonaScoringContext,
-): PersonaScoringContext {
-  return {
-    ...ctx,
-    locations: ctx.locations.map(normalizeLocation),
-  };
 }

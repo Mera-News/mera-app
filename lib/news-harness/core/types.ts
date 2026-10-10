@@ -422,7 +422,7 @@ export interface ToolExecutionResult {
 
 /** Plain suggestion snapshot the feedback context is built from. Mirrors the
  *  fields the agent reads off the WatermelonDB `ForYouSuggestion` row. */
-export interface FeedbackSuggestion {
+interface FeedbackSuggestion {
   title_en?: UntrustedText | null;
   title_original?: UntrustedText | null;
   publication_name?: UntrustedText | null;

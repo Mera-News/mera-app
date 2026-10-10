@@ -240,7 +240,7 @@ export function headlineSectionWeight(
 /** A cluster membership as story-grouping consumes it. Structurally identical
  *  to `lib/stores/for-you-store`'s ClusterMembership but redeclared here so this
  *  module never imports lib/stores (RN-free constraint). */
-export interface StoryClusterMembership {
+interface StoryClusterMembership {
   clusterId: string;
   confidence: number;
   stableClusterId?: string | null;
@@ -248,7 +248,7 @@ export interface StoryClusterMembership {
 
 /** One matched topic on a suggestion (from `matched_topics_json`). `topicId`
  *  is null for synthetic headline matches. */
-export interface MatchedTopicProjection {
+interface MatchedTopicProjection {
   topicId: string | null;
   text: string;
 }

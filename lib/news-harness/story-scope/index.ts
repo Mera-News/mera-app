@@ -14,10 +14,10 @@ import { asUntrusted } from '../prompts/untrusted-text';
 /** Max titles fed to the scope prompt. */
 export const MAX_SCOPE_TITLES = 8;
 /** Each title truncated to this many chars in the prompt. */
-export const MAX_SCOPE_TITLE_CHARS = 140;
+const MAX_SCOPE_TITLE_CHARS = 140;
 /** Prompt-guidance ceilings for the two generated fields. */
-export const MAX_SCOPE_LABEL_WORDS = 5;
-export const MAX_SCOPE_SEARCH_WORDS = 8;
+const MAX_SCOPE_LABEL_WORDS = 5;
+const MAX_SCOPE_SEARCH_WORDS = 8;
 
 /** The two fields the generator emits for a followed story. */
 export interface StoryScope {

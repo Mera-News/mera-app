@@ -4,7 +4,7 @@
 // diverge:
 //
 //   - SOFT (strength < HARD_SUPPRESSION_STRENGTH) → a capped score penalty,
-//     applied by relevance.ts::suppressionPenalty.
+//     applied by relevance.ts::splitSuppressionPenalty.
 //   - HARD (strength ≥ HARD_SUPPRESSION_STRENGTH) → the candidate is screened
 //     OUT before any scoring work (screenHardSuppressions), invoked from both
 //     orchestrator convergence points — UNLESS it is a top-headline row, which
@@ -172,7 +172,7 @@ export function canHardExclude(s: SoftSuppression): boolean {
  * Such a row is exempt from HARD EXCLUSION only: a filter is about routine
  * coverage, not about hiding major news. It is still penalised — see
  * relevance.ts::computeRelevance, which folds the matching hard filters into the
- * ONE capped `suppressionPenalty` and floors the result at HEADLINE_BASE_FLOOR
+ * ONE capped `splitSuppressionPenalty` and floors the result at HEADLINE_BASE_FLOOR
  * so the row lands at the bottom of what renders rather than vanishing.
  *
  * SCOPE — HARD-FILTER EXCLUSION ONLY. The LOW-band headline cull
@@ -252,7 +252,7 @@ export function screenHardSuppressions(
 /**
  * The hard filters that MATCH this candidate — the penalty side of the P6
  * exemption. Returned as suppression rows (not a boolean) so the caller can hand
- * them straight to `suppressionPenalty`, which owns the cap.
+ * them straight to `splitSuppressionPenalty`, which owns the cap.
  */
 export function matchingHardSuppressions(
   candidate: ScoredCandidateInput,

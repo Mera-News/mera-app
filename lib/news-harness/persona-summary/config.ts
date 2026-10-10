@@ -12,7 +12,6 @@ export const MAX_FACTS_IN_PROMPT = 30;
 export const MAX_STATEMENT_CHARS = 120;
 
 /** We aim for 4–8 strings; the assembler never returns more than this. */
-export const MIN_SUMMARY_STRINGS = 4;
 export const MAX_SUMMARY_STRINGS = 8;
 
 /** Strings longer than this are dropped (kept short + glanceable). */

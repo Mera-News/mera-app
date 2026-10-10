@@ -54,9 +54,9 @@ export interface BuildRetrievalProfileInput {
   headlineDepthByScope?: Readonly<Record<string, number>>;
 }
 
-export type HeadlineScopeKind = 'COUNTRY' | 'GLOBAL';
+type HeadlineScopeKind = 'COUNTRY' | 'GLOBAL';
 
-export interface RetrievalHeadlineScope {
+interface RetrievalHeadlineScope {
   scope: HeadlineScopeKind;
   countryCode?: string; // set for COUNTRY, omitted for GLOBAL
   /** Per-scope depth. Omitted when this scope uses the request-level default,
@@ -64,7 +64,7 @@ export interface RetrievalHeadlineScope {
   limit?: number;
 }
 
-export interface RetrievalProfileTopic {
+interface RetrievalProfileTopic {
   topicId: string;
   text: string;
   limit: number;

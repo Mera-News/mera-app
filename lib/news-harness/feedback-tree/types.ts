@@ -78,7 +78,7 @@ export interface FeedbackTreeAbstractAction {
 /** The closed set of HOST INTENTS a `nudge` leaf can carry. Exported so every
  *  surface that forwards one spells it the same way — the union used to be
  *  re-typed inline in five components, and widening it meant finding all five. */
-export type FeedbackNudge = 'subscribe' | 'browse_related' | 'manage_publication';
+type FeedbackNudge = 'subscribe' | 'browse_related' | 'manage_publication';
 
 /** Terminal node payload. Exactly one flavor is meaningful per leaf. */
 export interface FeedbackTreeLeaf {
