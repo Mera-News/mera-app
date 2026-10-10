@@ -73,6 +73,19 @@ export function isNonRetryableError(error: unknown): boolean {
 }
 
 /**
+ * True when `error` is an HTTP 408 / 429 (read exactly like `isNonRetryableError`
+ * reads the status). Owner rule: throttles are retried by the scheduler with its
+ * growing delay, never by `withRetry`'s tight inner loop, which would re-hit a
+ * server that is shedding load.
+ */
+export function isThrottleError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const ne = error as NetworkLikeError;
+  const status = ne.statusCode ?? ne.response?.status;
+  return status === 408 || status === 429;
+}
+
+/**
  * True when `error` is a 401 / UNAUTHENTICATED, in any of the shapes Apollo
  * Client v4 surfaces it in (GraphQL extensions, network error, wrapped network
  * error).

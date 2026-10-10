@@ -1,12 +1,11 @@
 // CO4 (owner ruling): a background task that gets a 408 or 429 is retried with a growing delay,
-// and once a run succeeds the task is back on its normal frequency. Today
-// isNonRetryableError (lib/utils/retry.ts) files every 4xx, 408 and 429 included, as permanent,
-// so the scheduler runner gives up after the first throttled run.
+// and once a run succeeds the task is back on its normal frequency. isNonRetryableError
+// (lib/utils/retry.ts) files every 4xx as permanent; the scheduler runner exempts throttles
+// via isThrottleError.
 //
 // Reached the way the app reaches it: AppScheduler.trigger() enqueues a real job row, the real
 // runner drives the handler, the retry ladder and the persistence layer. The synthetic task and
-// the per-test scheduler reset are the scheduler seam tests' own (data's support.ts). P3 flips the
-// test.failing to test and deletes the "today" sibling in the same commit (R14).
+// the per-test scheduler reset are the scheduler seam tests' own (data's support.ts).
 import '@/test/helpers';
 
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
@@ -44,7 +43,7 @@ const throttled = (statusCode: number) =>
   Object.assign(new Error(statusCode === 429 ? 'Too Many Requests' : 'Request Timeout'), { statusCode });
 
 describe.each([408, 429])('a background task answered %i', (statusCode) => {
-  test.failing(
+  test(
     'CO4: is retried with a growing delay, and a success puts it back on its normal frequency',
     async () => {
       const task = addTask({ frequency: FREQUENCY_MS, maxAttempts: 3, failWith: throttled(statusCode) });
@@ -78,15 +77,4 @@ describe.each([408, 429])('a background task answered %i', (statusCode) => {
       expect(gap).toBeLessThan(60_000);
     },
   );
-
-  test('CO4 (today): the first throttled run is terminal and nothing is retried', async () => {
-    const task = addTask({ frequency: FREQUENCY_MS, maxAttempts: 3, failWith: throttled(statusCode) });
-
-    await run(task.name);
-    await settle(600_000);
-
-    expect(task.runs).toHaveLength(1);
-    const rows = await jobRows(task.name);
-    expect(rows.map((r) => [r.attempt, r.status, r.retryAt])).toEqual([[1, 'failed', null]]);
-  });
 });

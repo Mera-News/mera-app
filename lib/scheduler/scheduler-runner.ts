@@ -3,7 +3,7 @@ import type { Job, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
 import logger, { classifySuppression } from '@/lib/logger';
-import { isNonRetryableError } from '@/lib/utils/retry';
+import { isNonRetryableError, isThrottleError } from '@/lib/utils/retry';
 
 function defaultBackoff(attempt: number): number {
   return ([30_000, 60_000, 120_000][attempt - 1] ?? 120_000);
@@ -70,6 +70,8 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
     // A non-retryable error (e.g. a 4xx / BAD_USER_INPUT from the server) will
     // never succeed on a retry — rescheduling just re-runs the same doomed
     // request storm. Treat it as terminal: skip the maxAttempts reschedule.
+    // Except a 408 / 429 throttle: that one does clear, so it takes the normal
+    // backoff ladder below.
     // Stamp the failure before anything else in this branch: the 5s tick reads
     // it to decide whether this task may run again, and a failed job does not
     // stamp `lastRun`, so without this the frequency gate stays open and the
@@ -79,7 +81,7 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
       AppScheduler.recordFailure(definition.name);
     }
 
-    const nonRetryable = isNonRetryableError(err);
+    const nonRetryable = isNonRetryableError(err) && !isThrottleError(err);
     if (nonRetryable) {
       logger.addBreadcrumb(
         `[${definition.name}] non-retryable error — skipping reschedule`,
