@@ -40,8 +40,9 @@ export function useTrackedStoriesScreen() {
 
     // EU AI Act Art. 50 transparency: one line under the rows. "All" only
     // when every title on screen is AI-written; a story followed seconds ago
-    // still shows its own title while its headline is written.
-    const llmCount = stories.filter((s) => !!s.llmHeadline).length;
+    // still shows its own title while its headline is written. A topic-text
+    // title counts as AI-written too (owner), as each row already labels it.
+    const llmCount = stories.filter((s) => !!(s.llmHeadline ?? s.topicText)).length;
     const aiNote =
         llmCount === 0
             ? null

@@ -58,12 +58,8 @@ describe('the AI line under followed stories', () => {
       return noteFor(2);
     }
 
-    test.failing('count as AI-written titles in the list line, as each row already says', async () => {
+    test('count as AI-written titles in the list line, as each row already says', async () => {
       expect(await topicTitledNote()).toBe(ALL());
-    });
-
-    test('today: the list line ignores topic text and shows nothing', async () => {
-      expect(await topicTitledNote()).toBeNull();
     });
   });
 });
