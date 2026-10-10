@@ -78,11 +78,9 @@ describe('publishSyncError', () => {
     });
   });
 
-  // KNOWN DEAD RENDER PATH (owned by feed at the render gate; not a ledger entry here). Every code
-  // is published as `state: 'failed'`, and the only live render of `headlineKey` is gated on
-  // `isSyncActive`, which excludes 'failed'. Pinned as a fact so the day the gate is fixed, this is
-  // the line that changes.
-  it('publishes EVERY code as state failed, so no error headline can render today', () => {
+  // Every code is published as `state: 'failed'` with its `errorCode`. `headlineKey` has no
+  // renderer; the Feed counts card chooses the failure line from `errorCode` and `failedAtState`.
+  it("publishes EVERY code as state 'failed' with its code", () => {
     const codes: SyncErrorCode[] = [
       'offline',
       'server-unreachable',
