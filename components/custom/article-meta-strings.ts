@@ -35,7 +35,7 @@ export function useArticleMetaStrings(
     // label) ticking together while re-rendering only when the string changes.
     const emptyLabel = t('feed.justNow');
     const age = useTimeTickValue((now) =>
-        formatTimeAgo(t, pubDate ?? '', { now, emptyLabel, absoluteAfterDays: 7 }),
+        formatTimeAgo(t, pubDate ?? '', { now, emptyLabel, absoluteAfterDays: 7, locale: appLanguage }),
     );
     const publication = useDisplayPublication((publicationName ?? '').trim());
     return {

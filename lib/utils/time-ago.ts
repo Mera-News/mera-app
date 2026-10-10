@@ -36,6 +36,9 @@ export interface FormatTimeAgoOptions {
    *  switches to an absolute `Date#toLocaleDateString()` label instead of
    *  continuing the "Nd ago" ladder. Omit for unlimited days-ago. */
   absoluteAfterDays?: number;
+  /** The BCP 47 tag the absolute date is formatted in. Omit for the device
+   *  locale. A malformed tag falls back to the device locale. */
+  locale?: string;
 }
 
 /**
@@ -46,7 +49,7 @@ export interface FormatTimeAgoOptions {
  * never produces a negative count — it just reads "just now".
  */
 export function formatTimeAgo(t: TFunction, input: TimeAgoInput, opts: FormatTimeAgoOptions = {}): string {
-  const { now = Date.now(), emptyLabel = '', absoluteAfterDays } = opts;
+  const { now = Date.now(), emptyLabel = '', absoluteAfterDays, locale } = opts;
   const ms = toEpochMs(input);
   if (ms == null) return emptyLabel;
 
@@ -59,7 +62,12 @@ export function formatTimeAgo(t: TFunction, input: TimeAgoInput, opts: FormatTim
   if (mins < 60) return t('feed.minutesAgo', { count: mins });
   if (hours < 24) return t('feed.hoursAgo', { count: hours });
   if (absoluteAfterDays != null && days >= absoluteAfterDays) {
-    return new Date(ms).toLocaleDateString();
+    try {
+      return new Date(ms).toLocaleDateString(locale);
+    } catch {
+      // RangeError on a malformed tag: never throw out of a card render.
+      return new Date(ms).toLocaleDateString();
+    }
   }
   return t('feed.daysAgo', { count: days });
 }
