@@ -23,6 +23,7 @@ import {
   TRANSLATION_CACHE_HYDRATE_LIMIT,
   TRANSLATION_CACHE_TTL_DAYS,
 } from '@/lib/database/services/translation-cache-service';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useStrictClock } from '@/test/helpers';
 import { countRows, countWrites, DAY_MS, failNextQuery, quietLogger, resetLocalRecordsMemory, restoreFaults, T0 } from './support';
 
@@ -457,19 +458,35 @@ describe('hash collisions', () => {
 
 describe('surrounding whitespace', () => {
   beforeEach(() => useStrictClock(T0));
+  afterEach(() => useAppLanguageStore.setState(useAppLanguageStore.getInitialState(), true));
 
-  // DATA-U10b-3. source_text and translated_text are @text columns, which trim on write, while the
-  // id is hashed from the untrimmed text. The Map comes back keyed by the trimmed text, which the
-  // store (it looks up the text as the server sent it) never asks for.
-  test.failing('a text with surrounding whitespace is loaded under the key it was remembered with', async () => {
-    await store('de', [[' Breaking news ', ' Eilmeldung ']]);
-
-    expect((await loadTranslationCache('de')).get(' Breaking news ')).toBe(' Eilmeldung ');
-  });
-
-  it('today: the row is stored and loaded trimmed', async () => {
+  it('a padded text is stored and loaded trimmed (the @text column trims on write)', async () => {
     await store('de', [[' Breaking news ', ' Eilmeldung ']]);
 
     expect(await loadTranslationCache('de')).toEqual(new Map([['Breaking news', 'Eilmeldung']]));
+  });
+
+  // The component asks the store's cache for the text as the server sent it. The row comes back
+  // from disk keyed by the trimmed text, so after a restart a padded text no longer finds it.
+  async function translateThenRestart(): Promise<Map<string, string>> {
+    useAppLanguageStore.setState({ appLanguage: 'de' });
+    useAppLanguageStore.getState().cacheTranslation(' Breaking news ', ' Eilmeldung ');
+    await flushTranslationCacheWrites();
+    useAppLanguageStore.getState().clearCache();
+    await useAppLanguageStore.getState().hydrateTranslationCache('de');
+    return useAppLanguageStore.getState().cache;
+  }
+
+  test.failing('DA22: a padded text finds its translation after a restart', async () => {
+    const cache = await translateThenRestart();
+
+    expect(cache.get(' Breaking news ')).toBe('Eilmeldung');
+  });
+
+  it('DA22 today: after a restart the padded text misses; only its trimmed form is in the cache', async () => {
+    const cache = await translateThenRestart();
+
+    expect(cache.get(' Breaking news ')).toBeUndefined();
+    expect(cache.get('Breaking news')).toBe('Eilmeldung');
   });
 });
