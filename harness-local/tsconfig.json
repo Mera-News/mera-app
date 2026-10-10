@@ -19,7 +19,6 @@
     "../lib/mera-protocol-toolkit/types.ts"
   ],
   "exclude": [
-    "**/__tests__/**",
-    "../lib/news-harness/__tests__/**/*"
+    "**/__tests__/**"
   ]
 }
