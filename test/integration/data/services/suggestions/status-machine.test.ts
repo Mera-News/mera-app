@@ -138,11 +138,10 @@ describe('terminal rows stay out of every sweep and queue read', () => {
   });
 });
 
-// A score or a note that lands after the row went terminal overwrites the status: none of the writers
+// A score or a note that lands after the row went terminal must not overwrite the status: each writer
 // guards it. Reachable: a hard filter (retroactive exclude) or the already-read backfill marks a row
-// while its scoring batch is in flight, then the decode calls these. The row comes back with a score
-// above the gate and renders. Whether the guard belongs in the writer or in its callers is a lead
-// decision. The writers that only shift the status (relevance stays 0) are the DA12 block below.
+// while its scoring batch is in flight, then the decode calls these. The writers that only shift the
+// status (relevance stays 0) are the DA12 block below.
 describe('DA12: a terminal row is not moved back by a late score or propagated verdict', () => {
   const late: Record<string, (id: string) => Promise<void>> = {
     saveScoringResult: (id) => saveScoringResult(id, { relevance: 0.9, reason: GROUNDED, reasonSkipped: false }),
@@ -155,7 +154,7 @@ describe('DA12: a terminal row is not moved back by a late score or propagated v
 
   for (const [writer, write] of Object.entries(late)) {
     for (const [status, makeTerminal] of Object.entries(terminal)) {
-      test.failing(`DA12: ${writer} leaves an ${status} row ${status}`, async () => {
+      test(`DA12: ${writer} leaves an ${status} row ${status}`, async () => {
         await seed([article('a1')]);
         await makeTerminal('a1');
 
@@ -163,38 +162,27 @@ describe('DA12: a terminal row is not moved back by a late score or propagated v
 
         expect(await statusOf('a1')).toBe(status);
       });
-
-      // R14 sibling: today's outcome, deleted by the fix that flips the test above.
-      test(`DA12 today: ${writer} turns an ${status} row complete with a score of 0.9`, async () => {
-        await seed([article('a1')]);
-        await makeTerminal('a1');
-
-        await write('a1');
-
-        const [s] = await loadSuggestions();
-        expect(s).toMatchObject({ status: 'complete', relevance: 0.9 });
-      });
     }
   }
 });
 
-// The writers that do not bring a score with them still flip the status of a terminal row (excluded
-// and already_read are never to render, and the funnel counts them apart). Same race as above.
+// The writers that do not bring a score with them also leave a terminal row alone (excluded and
+// already_read are never to render, and the funnel counts them apart). Same race as above.
 describe('DA12: the other writers keep a terminal row terminal', () => {
-  const writers: Record<string, { run: (id: string) => Promise<void>; today: string }> = {
-    saveReason: { run: (id) => saveReason(id, GROUNDED), today: 'complete' },
-    batchMarkAsScoredByIds: { run: (id) => batchMarkAsScoredByIds([id]), today: 'complete' },
-    batchMarkReasonSkipped: { run: (id) => batchMarkReasonSkipped([id]), today: 'complete' },
-    batchMarkGateSkipped: { run: (id) => batchMarkGateSkipped([id]), today: 'reason_skipped' },
+  const writers: Record<string, (id: string) => Promise<void>> = {
+    saveReason: (id) => saveReason(id, GROUNDED),
+    batchMarkAsScoredByIds: (id) => batchMarkAsScoredByIds([id]),
+    batchMarkReasonSkipped: (id) => batchMarkReasonSkipped([id]),
+    batchMarkGateSkipped: (id) => batchMarkGateSkipped([id]),
   };
   const terminal: Record<string, (id: string) => Promise<void>> = {
     excluded: toExcluded,
     already_read: toAlreadyRead,
   };
 
-  for (const [writer, { run, today }] of Object.entries(writers)) {
+  for (const [writer, run] of Object.entries(writers)) {
     for (const [status, makeTerminal] of Object.entries(terminal)) {
-      test.failing(`DA12: ${writer} leaves an ${status} row ${status}`, async () => {
+      test(`DA12: ${writer} leaves an ${status} row ${status}`, async () => {
         await seed([article('a1')]);
         await makeTerminal('a1');
 
@@ -202,36 +190,17 @@ describe('DA12: the other writers keep a terminal row terminal', () => {
 
         expect(await statusOf('a1')).toBe(status);
       });
-
-      // R14 sibling: today's outcome, deleted by the fix that flips the test above.
-      test(`DA12 today: ${writer} turns an ${status} row ${today}`, async () => {
-        await seed([article('a1')]);
-        await makeTerminal('a1');
-
-        await run('a1');
-
-        expect(await statusOf('a1')).toBe(today);
-      });
     }
   }
 
   // `excluded` has one designed exit (the un-exclude sweep, above); `already_read` has none.
-  test.failing('DA12: batchResetToUnscored leaves an already_read row already_read', async () => {
+  test('DA12: batchResetToUnscored leaves an already_read row already_read', async () => {
     await seed([article('a1')]);
     await toAlreadyRead('a1');
 
     await batchResetToUnscored(['a1']);
 
     expect(await statusOf('a1')).toBe('already_read');
-  });
-
-  test('DA12 today: batchResetToUnscored turns an already_read row unscored', async () => {
-    await seed([article('a1')]);
-    await toAlreadyRead('a1');
-
-    await batchResetToUnscored(['a1']);
-
-    expect(await statusOf('a1')).toBe('unscored');
   });
 });
 

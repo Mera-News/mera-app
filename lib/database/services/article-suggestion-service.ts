@@ -597,6 +597,11 @@ function groundedReasonFor(
   return '';
 }
 
+/** `excluded` and `already_read` never render and no late writer may move a row out of them
+ *  (a score or note landing after the row went terminal, DA12). */
+const isTerminalStatus = (status: string): boolean =>
+  status === ArticleSuggestionStatus.Excluded || status === ArticleSuggestionStatus.AlreadyRead;
+
 /**
  * Persists the result of a scoring pass. Callers only invoke this when the
  * relevance step succeeded, so the row leaves `unscored`. The resulting `status`
@@ -626,6 +631,7 @@ export async function saveScoringResult(
   // caller already declared none was owed (`reasonSkipped`).
   const grounded = groundedReasonFor(row, reason, 'score');
   await database.write(async () => {
+    if (isTerminalStatus(row.status)) return;
     await row.update((r) => {
       r.relevance = relevance;
       // Stamp the scorer VINTAGE alongside the score, UNCONDITIONALLY (unlike
@@ -928,7 +934,7 @@ export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
   if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
-      rows.map((row) =>
+      rows.filter((row) => !isTerminalStatus(row.status)).map((row) =>
         row.prepareUpdate((r) => {
           r.relevance = 0;
           r.reason = '';
@@ -1001,7 +1007,7 @@ export async function batchResetToUnscored(ids: string[]): Promise<void> {
   if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
-      rows.map((row) =>
+      rows.filter((row) => row.status !== ArticleSuggestionStatus.AlreadyRead).map((row) =>
         row.prepareUpdate((r) => {
           r.relevance = 0;
           r.reason = '';
@@ -1115,7 +1121,7 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
   if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
-      rows.map((row) =>
+      rows.filter((row) => !isTerminalStatus(row.status)).map((row) =>
         row.prepareUpdate((r) => {
           r.status = ArticleSuggestionStatus.Complete;
         }),
@@ -1149,7 +1155,7 @@ export async function batchMarkGateSkipped(ids: string[]): Promise<void> {
   if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
-      rows.map((row) =>
+      rows.filter((row) => !isTerminalStatus(row.status)).map((row) =>
         row.prepareUpdate((r) => {
           r.status = ArticleSuggestionStatus.ReasonSkipped;
         }),
@@ -1222,7 +1228,7 @@ export async function batchPropagateScores(
   if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
-      rows.map((row) => {
+      rows.filter((row) => !isTerminalStatus(row.status)).map((row) => {
         const entry = entryById.get(row.id)!;
         // `?? ''` is defensive only — the type says string, but this value comes
         // from a donor ROW, and a partially-written row can carry null.
@@ -1270,6 +1276,7 @@ export async function saveReason(
   // exists precisely to fill a missing note, so a wrong one is no progress.
   const grounded = groundedReasonFor(row, reason, 'reason-sweep');
   await database.write(async () => {
+    if (isTerminalStatus(row.status)) return;
     await row.update((r) => {
       r.reason = grounded;
       r.status =
