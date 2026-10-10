@@ -8,7 +8,7 @@ import { AUTH_ENDPOINT } from "./config/endpoints";
 import { logoutRevenueCat } from "./revenuecat";
 import { logoutIntercom } from "./intercom";
 import logger from "./logger";
-import { sleep } from "./utils/retry";
+import { sleep } from "./utils/sleep";
 import {
     clearJwtSubscriptionLock,
     isJwtSubscriptionLocked,

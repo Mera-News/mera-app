@@ -1,10 +1,6 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import logger from '@/lib/logger';
-
-/** A plain timer wait; it does not observe an AbortSignal. */
-export function sleep(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
+import { sleep } from './sleep';
 
 // GraphQL error codes that are permanent client-side failures — retrying them
 // just multiplies the request storm while the server keeps rejecting. e.g. a

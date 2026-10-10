@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import logger from '@/lib/logger';
 import { canonicalizeLanguageCode, primarySubtag } from '@/lib/algorithms/language-codes';
 import { getLanguageNameIn } from '@/lib/algorithms/language-names';
-import { sleep } from '@/lib/utils/retry';
+import { sleep } from '@/lib/utils/sleep';
 import {
     __resetTranslationQueueForTests,
     enqueueTranslationTask,

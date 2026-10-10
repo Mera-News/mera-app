@@ -8,7 +8,7 @@ import { getJwtToken, invalidateJwtCache } from '../auth-client';
 import logger from '../logger';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
 import { retryAfterMs } from '../algorithms/retry-after';
-import { sleep } from '@/lib/utils/retry';
+import { sleep } from '@/lib/utils/sleep';
 
 const TAG = '[CloudLLM]';
 
