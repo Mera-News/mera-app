@@ -21,12 +21,7 @@
 
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
-import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
-import { useHasFacts } from '@/components/custom/feed/use-has-facts';
-import { useIsConnected } from '@/lib/stores/network-store';
-import { useAppLanguage } from '@/lib/stores/app-language-store';
-import { formatCount } from '@/lib/utils/format-count';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { setStatusCardExpanded, statsCardShown, useFeedStatusCard } from './feed-status-card';
@@ -39,12 +34,10 @@ import { Text } from '@/components/ui/text';
 import { useColors } from '@/lib/theme/tokens';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import FeedStatsSentence from './FeedStatsSentence';
-import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, limitUnlockTime } from './FeedStatusDetails';
-import { a11yStateKey } from './status-ink';
-import { cardState, joinClauses, markSizeFor, markTone, type CardState, type MarkTone } from './card-state';
+import FeedStatusDetails, { AnalysingProgress, FeedStatusActions } from './FeedStatusDetails';
+import { markSizeFor, markTone, type MarkTone } from './card-state';
+import { useStatsCardLead } from './use-stats-card-lead';
 import CardRow, { CARD_RADIUS, CARD_ROW_PAD } from '@/components/custom/feed/CardRow';
-import { useForYouDailyLimitResetAt, useForYouScoringError } from '@/lib/stores/selectors';
-import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 
 
 
@@ -70,34 +63,6 @@ function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
 }
 
 const TABULAR = { fontVariant: ['tabular-nums' as const] };
-
-/** A state's lead sentence, plain text (owner: no links; the reader finds
- *  Settings and their profile themselves; the limit's and the error's actions
- *  are in the details). */
-function useStateText(kind: CardState | null): string | null {
-    const { t, i18n } = useTranslation();
-    const appLanguage = useAppLanguage();
-    const { articleCount, analysedCount } = useFeedCounts();
-    const resetAt = useForYouDailyLimitResetAt();
-    const scoringError = useForYouScoringError();
-    const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
-    if (kind === 'limited') return t('feed.dailyLimit.bodyWithTime', { time: limitUnlockTime(resetAt) });
-    if (kind === 'error') return t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].message);
-    if (kind === 'offline') return t('common.offlineBannerOffline');
-    if (kind === 'fetched') return t('feed.statsZeroFetched');
-    if (kind === 'analysed')
-        return joinClauses([t('feed.statsPublished', fmt(articleCount)), t('feed.statsZeroAnalysedTail')], i18n.language);
-    if (kind === 'relevant')
-        return joinClauses(
-            [
-                t('feed.statsPublished', fmt(articleCount)),
-                t('feed.statsAnalysed', fmt(analysedCount)),
-                t('feed.statsZeroRelevantTail'),
-            ],
-            i18n.language,
-        );
-    return null;
-}
 
 /** Expanding and collapsing the details. */
 const DETAILS_MOTION = { duration: 250, easing: Easing.out(Easing.cubic) };
@@ -166,19 +131,8 @@ export function useStatsCardItem(empty: boolean, hasRows: boolean): React.ReactE
 
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {
     const { t } = useTranslation();
-    // `a11yStateKey` is computed from the mode; see its own note on `tAny`.
-    const tAny = t as unknown as (key: string) => string;
-    const mode = useFeedStatusMode();
-    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
+    const { mode, articleCount, state, zeroText, stateLabel, processing } = useStatsCardLead();
     const expanded = useFeedStatusCard((s) => s.expanded);
-    // Not the list's emptiness (an empty Feed past a run, exactly where a zero needs
-    // explaining): with no facts at all the no-facts card owns the Feed.
-    const noFacts = useHasFacts() === false;
-    const offline = useIsConnected() === false;
-    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount });
-    const zeroText = useStateText(state);
-    const stateLabel = tAny(a11yStateKey(mode));
-    const processing = mode === 'processing';
 
     const colors = useColors();
     // The sentence block's height sizes the mark (markSizeFor).
