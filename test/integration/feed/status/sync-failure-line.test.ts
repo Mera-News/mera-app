@@ -3,6 +3,7 @@
 // stores, with the failure published through data's contract (feed-sync-status), plus one case
 // through the real FeedSyncMachine.
 import { act, renderHook } from '@testing-library/react-native';
+import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
 import { limitUnlockTime } from '@/components/custom/for-you/FeedStatusDetails';
 import { useStatsCardLead } from '@/components/custom/for-you/use-stats-card-lead';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -152,5 +153,61 @@ describe('the counts card lead after a failed refresh', () => {
 
       expect(result.current.zeroText).toBeNull();
     });
+  });
+});
+
+describe('a failed first sync', () => {
+  beforeEach(async () => {
+    await initI18nEn();
+    resetFeedSyncMemory();
+    await resetScoringWorld();
+    watchScoring();
+    await addFact('I follow racing');
+    resetFeedCountsMemoForTest();
+    useForYouStore.setState({ lastProcessingRunFinishedAt: null });
+  });
+  afterEach(async () => {
+    await settleMachine();
+    cleanupFeedSync();
+  });
+
+  const card = async () => {
+    const view = renderHook(() => ({ item: useStatsCardItem(false, false), lead: useStatsCardLead() }));
+    await act(async () => {
+      for (let i = 0; i < 5; i++) await new Promise<void>((resolve) => setImmediate(resolve));
+    });
+    return view.result.current;
+  };
+
+  const failFirstSync = async () => {
+    await signInFixtureAccount();
+    await serveNew(ids(3));
+    server.use(graphql.query('GetArticlesForTopicsByIds', () => HttpResponse.error()));
+    await expect(advanceUntilDone(startMachine(makeCtx(), {}))).rejects.toBeDefined();
+    expect(useForYouStore.getState().lastProcessingRunFinishedAt).toBeNull();
+  };
+
+  test.failing('a failed first sync leads the Feed list with the card', async () => {
+    publishSyncError('server-unreachable', undefined, 'hydrating');
+    const { item, lead } = await card();
+    expect(item).not.toBeNull();
+    expect(lead.zeroText).toBe(t('feed.syncFailed.download'));
+  });
+
+  test('today: a failed first sync shows no card', async () => {
+    publishSyncError('server-unreachable', undefined, 'hydrating');
+    expect((await card()).item).toBeNull();
+  });
+
+  test.failing('a first sync that fails to download leads the Feed list with the card', async () => {
+    await failFirstSync();
+    const { item, lead } = await card();
+    expect(item).not.toBeNull();
+    expect(lead.zeroText).toBe(t('feed.syncFailed.download'));
+  });
+
+  test('today: a first sync that fails to download shows no card', async () => {
+    await failFirstSync();
+    expect((await card()).item).toBeNull();
   });
 });
