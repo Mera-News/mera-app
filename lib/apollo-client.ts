@@ -115,6 +115,81 @@ export function throttleWaitMs(retryAfterMs: number | null, attempt: number): nu
     return Math.min(jittered, THROTTLE_MAX_WAIT_MS);
 }
 
+/** Re-sends a throttled operation after its wait. The re-send's outcome is
+ *  handed back through the same decision: ErrorLink gives a retry's result
+ *  straight to the caller, so without this a second throttle would never be
+ *  retried and MAX_THROTTLE_RETRIES would be one re-send in practice. A
+ *  throttle is a TOO_MANY_REQUESTS GraphQL error or an HTTP 429; any other
+ *  outcome reaches the observer untouched. Teardown unsubscribes the re-send
+ *  in flight, however deep the chain has gone. */
+function resendThrottled(
+    operation: ApolloLink.Operation,
+    forward: ApolloLink.ForwardFunction,
+    attempt: number,
+    retryAfterMs: number | null,
+    viaHttp: boolean,
+) {
+    const delay = throttleWaitMs(retryAfterMs, attempt);
+    if (viaHttp) {
+        logger.addBreadcrumb(
+            'HTTP 429 — backing off',
+            'apollo-error-link',
+            {
+                operationName: operation.operationName,
+                attempt,
+                delayMs: Math.round(delay),
+                honouredRetryAfter: retryAfterMs !== null,
+            },
+            'info',
+        );
+    }
+    return new Observable<ApolloLink.Result>((observer) => {
+        let inner: { unsubscribe(): void } | undefined;
+        let again: { unsubscribe(): void } | undefined;
+        const timer = setTimeout(() => {
+            operation.setContext({ throttleRetryCount: attempt + 1 });
+            const mayRetry = attempt + 1 < MAX_THROTTLE_RETRIES;
+            inner = forward(operation).subscribe({
+                next: (result) => {
+                    if (mayRetry && result.errors?.some((e) => e.extensions?.code === 'TOO_MANY_REQUESTS')) {
+                        // The response belongs to this re-send: a body was parsed.
+                        again = resendThrottled(
+                            operation,
+                            forward,
+                            attempt + 1,
+                            parseRetryAfterMs(operation.getContext().response),
+                            false,
+                        ).subscribe(observer);
+                    } else {
+                        observer.next(result);
+                    }
+                },
+                error: (err) => {
+                    if (mayRetry && (err as { statusCode?: number } | undefined)?.statusCode === StatusCodes.TOO_MANY_REQUESTS) {
+                        again = resendThrottled(
+                            operation,
+                            forward,
+                            attempt + 1,
+                            parseRetryAfterMs(ServerError.is(err) ? err.response : undefined),
+                            true,
+                        ).subscribe(observer);
+                    } else {
+                        observer.error(err);
+                    }
+                },
+                complete: () => {
+                    if (!again) observer.complete();
+                },
+            });
+        }, delay);
+        return () => {
+            clearTimeout(timer);
+            inner?.unsubscribe();
+            again?.unsubscribe();
+        };
+    });
+}
+
 // Create error link to handle GraphQL errors (Apollo Client v4 syntax)
 const errorLink = new ErrorLink(({ error, operation, forward }) => {
     // Note: the "active subscription required" 402 (PAYMENT_REQUIRED) is NOT
@@ -199,22 +274,7 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                     const retryAfterMs = parseRetryAfterMs(
                         operation.getContext().response,
                     );
-                    const delay = throttleWaitMs(retryAfterMs, attempt);
-                    return new Observable((observer) => {
-                        let inner: { unsubscribe(): void } | undefined;
-                        const timer = setTimeout(() => {
-                            operation.setContext({ throttleRetryCount: attempt + 1 });
-                            inner = forward(operation).subscribe({
-                                next: (value) => observer.next(value),
-                                error: (err) => observer.error(err),
-                                complete: () => observer.complete(),
-                            });
-                        }, delay);
-                        return () => {
-                            clearTimeout(timer);
-                            inner?.unsubscribe();
-                        };
-                    });
+                    return resendThrottled(operation, forward, attempt, retryAfterMs, false);
                 }
             }
 
@@ -306,33 +366,7 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                 const retryAfterMs = parseRetryAfterMs(
                     ServerError.is(error) ? error.response : undefined,
                 );
-                const delay = throttleWaitMs(retryAfterMs, attempt);
-                logger.addBreadcrumb(
-                    'HTTP 429 — backing off',
-                    'apollo-error-link',
-                    {
-                        operationName: operation.operationName,
-                        attempt,
-                        delayMs: Math.round(delay),
-                        honouredRetryAfter: retryAfterMs !== null,
-                    },
-                    'info',
-                );
-                return new Observable((observer) => {
-                    let inner: { unsubscribe(): void } | undefined;
-                    const timer = setTimeout(() => {
-                        operation.setContext({ throttleRetryCount: attempt + 1 });
-                        inner = forward(operation).subscribe({
-                            next: (value) => observer.next(value),
-                            error: (err) => observer.error(err),
-                            complete: () => observer.complete(),
-                        });
-                    }, delay);
-                    return () => {
-                        clearTimeout(timer);
-                        inner?.unsubscribe();
-                    };
-                });
+                return resendThrottled(operation, forward, attempt, retryAfterMs, true);
             }
         }
 

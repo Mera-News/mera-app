@@ -85,10 +85,9 @@ describe.each(THROTTLE_SHAPES)('throttle as %s', (shape) => {
         expect(waited).toBeLessThanOrEqual(500 + SLOP);
     });
 
-    // BUG DATA-U4-1. MAX_THROTTLE_RETRIES is 3, but the re-send's own outcome is handed to the
-    // caller by ErrorLink without passing through the handler again, so a second throttle is
-    // never retried: one re-send, not three.
-    test.failing('DATA-U4-1: a server that keeps throttling is re-sent three times, four requests in all', async () => {
+    // DATA-U4-1 (DA5). ErrorLink hands a re-send's outcome to the caller, so the re-send is routed
+    // back through the throttle decision: MAX_THROTTLE_RETRIES re-sends, not one.
+    it('DATA-U4-1: a server that keeps throttling is re-sent three times, four requests in all', async () => {
         spyLogger();
         const seen = recordRequests();
         server.use(throttleThenData(shape, { 'Retry-After': '1' }));
@@ -97,17 +96,6 @@ describe.each(THROTTLE_SHAPES)('throttle as %s', (shape) => {
 
         expect(err).toBeTruthy();
         expect(seen).toHaveLength(4);
-    });
-
-    it('DATA-U4-1: today a server that keeps throttling is re-sent once, two requests in all', async () => {
-        spyLogger();
-        const seen = recordRequests();
-        server.use(throttleThenData(shape, { 'Retry-After': '1' }));
-
-        const err = await advanceUntilDone(failureOf(query()));
-
-        expect(err).toBeTruthy();
-        expect(seen).toHaveLength(2);
     });
 });
 
