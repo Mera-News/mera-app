@@ -98,3 +98,39 @@ describe('two starts in flight', () => {
     expect(job.calls).toHaveLength(1);
   });
 });
+
+// CH19: stop() while start() is still in its setup (recovery, prune, sweeps) sees `stopped`, returns
+// at once, and the start then goes on to run the queue the caller just stopped.
+async function stopDuringStartSetup() {
+  const handler = jest.fn(async (..._args: unknown[]) => ({ ran: true }));
+  __setJobHandlerForTests('persona_summary', handler);
+
+  const starting = inferenceQueue.start();
+  const stopping = inferenceQueue.stop();
+  await driveDone(Promise.all([starting, stopping]));
+
+  const state = inferenceQueue.getState();
+  const id = await enqueueJob('persona_summary', {});
+  inferenceQueue.notify();
+  for (let i = 0; i < 6; i++) await tick(500);
+
+  return { state, handler, status: (await jobRow(id))?.status };
+}
+
+describe('a stop during start setup', () => {
+  test.failing("CH19: a stop() during start()'s setup leaves the queue stopped", async () => {
+    const { state, handler, status } = await stopDuringStartSetup();
+
+    expect(state).toBe('stopped');
+    expect(handler).not.toHaveBeenCalled();
+    expect(status).toBe('pending');
+  });
+
+  it('CH19 today: a stop() during start()\'s setup is lost and the queue runs', async () => {
+    const { state, handler, status } = await stopDuringStartSetup();
+
+    expect(state).toBe('running');
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(status).toBe('done');
+  });
+});
