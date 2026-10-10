@@ -72,12 +72,8 @@ describe('feed-sync task conditions', () => {
       return check;
     }
 
-    test.failing('DA42: a paid upgrade after the cap lets the feed sync run before the reset time', () => {
+    test('DA42: a paid upgrade after the cap lets the feed sync run before the reset time', () => {
       expect(holdTheCapThenPay()()).toBe(true);
-    });
-
-    it('DA42 today: the cap hold stays until the reset time even after a paid upgrade', () => {
-      expect(holdTheCapThenPay()()).toBe(false);
     });
   });
 });

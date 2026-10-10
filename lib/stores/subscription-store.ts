@@ -128,6 +128,13 @@ export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
       billing.subscriptionTier !== 'none'
     ) {
       clearJwtSubscriptionLock();
+      // A paid tier ends the daily-cap hold too: `dailyLimitResetAt` is written only by the
+      // feed sync, so without this a reader who pays after hitting the cap stays held until
+      // the reset time. Lazy require: for-you-store reaches the database singleton, and this
+      // store must not pull it into every suite that imports it.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
+      useForYouStore.getState().setDailyLimitResetAt(null);
     }
     set({
       // `undefined` (a query that didn't select the field) must not erase a
