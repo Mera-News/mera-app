@@ -1205,14 +1205,15 @@ describe('retryMissingReasons - cloud path', () => {
     });
   });
 
-  it('logs the error and asks again when the note cannot be saved', async () => {
+  it('logs the error and leaves the row for the next sync when the note cannot be saved', async () => {
     gateway();
     await seedOwed(['a']);
     const save = jest.spyOn(articleSuggestionService, 'saveReason').mockRejectedValueOnce(new Error('save failed'));
 
-    // The failed write leaves the row owed, so the next pass of the loop recovers it.
-    expect(await run(retryMissingReasons())).toBe(1);
+    // The failed write leaves the row owed. It is asked about once per call, so the next sync recovers it.
+    expect(await run(retryMissingReasons())).toBe(0);
     save.mockRestore();
+    expect(await run(retryMissingReasons())).toBe(1);
 
     expect(logger.error).toHaveBeenCalledWith('[retryMissingReasons] saveReason failed', expect.any(Error), { id: 'a' });
   });
@@ -1279,17 +1280,7 @@ describe('retryMissingReasons - an ungrounded note', () => {
     return () => asked;
   }
 
-  it('today: keeps asking about the same owed row until the gateway stops answering', async () => {
-    const asked = ungroundedUntil(4);
-    await seedOwed(['a']);
-
-    await run(retryMissingReasons());
-
-    expect(asked()).toBeGreaterThan(3);
-    expect((await stored()).a.status).toBe('reason_pending');
-  });
-
-  test.failing('asks about an owed row once per sweep, then leaves it for the next sync', async () => {
+  test('asks about an owed row once per sweep, then leaves it for the next sync', async () => {
     const asked = ungroundedUntil(4);
     await seedOwed(['a']);
 

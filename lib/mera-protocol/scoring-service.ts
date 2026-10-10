@@ -959,10 +959,16 @@ export async function processAllUnscored(
 export async function retryMissingReasons(batchSize = 10): Promise<number> {
   const useOnDevice = isOnDeviceMode();
   let totalRecovered = 0;
+  // saveReason drops an ungrounded note, so a row can stay owed after it was asked about. Each
+  // owed row is asked about once per call; the next sync picks up whatever is still owed.
+  const asked = new Set<string>();
 
   while (true) {
-    const batch = await getScoredSuggestionsWithoutReasons(batchSize);
+    const batch = (await getScoredSuggestionsWithoutReasons(batchSize)).filter(
+      (c) => !asked.has(c.id),
+    );
     if (batch.length === 0) break;
+    for (const c of batch) asked.add(c.id);
 
     const reasonMap = new Map<string, string>();
     // Sparse: only rows whose pass-2 response carried a parseable score. An
