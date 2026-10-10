@@ -154,33 +154,11 @@ const cullLowHeadlines = async (): Promise<void> => {
  * ALREADY-READ SCREEN, cheapest apply point (relevance v3 §3). A server-returned
  * article that re-serves a story the user already TAPPED OPEN is never persisted
  * at all: no suggestion row, no scoring pass, nothing to render or evict later.
- * The matching rules (article_id ∪ stable_cluster_id ∪ normalized-title Jaccard
- * ≥ 0.55) and the measurements behind them live in
- * `lib/feed-grouping/read-story-filter.ts`.
- *
- * The stable-cluster id is read from the article's own memberships first and
- * falls back to the persona metadata's per-article map, because the two sources
- * disagree in practice: `matchMeta.stableClusterId` (persona path) is populated
- * for retrieval hits whose membership list may arrive empty, and headline results
- * carry theirs in a parallel array. Taking whichever exists costs one lookup and
- * closes that gap.
+ * The matching rules (article_id ∪ normalized-title Jaccard ≥ 0.55) and the
+ * measurements behind them live in `lib/feed-grouping/read-story-filter.ts`.
  */
-function articleReadCandidate(
-  a: ArticleWithClusters,
-  personaMeta: PersonaPersistMeta | undefined,
-): ReadStoryCandidate {
-  let stableClusterId: string | null = null;
-  for (const m of a.clusters ?? []) {
-    if (m?.stableClusterId) {
-      stableClusterId = m.stableClusterId;
-      break;
-    }
-  }
-  return {
-    articleId: a._id,
-    stableClusterId: stableClusterId ?? personaMeta?.stableClusterId?.get(a._id) ?? null,
-    title: a.title_en ?? a.title ?? null,
-  };
+function articleReadCandidate(a: ArticleWithClusters): ReadStoryCandidate {
+  return { articleId: a._id, title: a.title_en ?? a.title ?? null };
 }
 
 /**
@@ -191,13 +169,12 @@ function articleReadCandidate(
 export function splitAlreadyReadArticles(
   articles: ArticleWithClusters[],
   index: ReadStoryIndex,
-  personaMeta: PersonaPersistMeta | undefined,
 ): { toPersist: ArticleWithClusters[]; readCount: number } {
   if (index.impressionCount === 0) return { toPersist: articles, readCount: 0 };
   const toPersist: ArticleWithClusters[] = [];
   let readCount = 0;
   for (const a of articles) {
-    if (matchesReadStory(articleReadCandidate(a, personaMeta), index)) readCount += 1;
+    if (matchesReadStory(articleReadCandidate(a), index)) readCount += 1;
     else toPersist.push(a);
   }
   return { toPersist, readCount };
@@ -946,7 +923,6 @@ export async function stepHydratePersistEnqueue(
       const { toPersist, readCount: chunkReadSkipped } = splitAlreadyReadArticles(
         chunkArticles,
         readIndex,
-        personaMeta,
       );
       readSkippedTotal += chunkReadSkipped;
       if (chunkReadSkipped > 0) {
@@ -1192,7 +1168,6 @@ async function markIneligibleAndCollectEligible(
             {
               // A suggestion's WMDB row id IS the server article id.
               articleId: c.id,
-              stableClusterId: c.meta?.stableClusterId ?? null,
               title: c.titleEn,
             },
             readIndex,

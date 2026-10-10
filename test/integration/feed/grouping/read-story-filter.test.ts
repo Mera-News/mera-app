@@ -35,7 +35,6 @@ afterEach(() => jest.restoreAllMocks());
 function opened(overrides: Partial<ReadStoryImpressionRow> = {}): ReadStoryImpressionRow {
   return {
     articleId: 'a1',
-    stableClusterId: null,
     titleNorm: null,
     opened: true,
     ...overrides,
@@ -49,7 +48,7 @@ function opened(overrides: Partial<ReadStoryImpressionRow> = {}): ReadStoryImpre
 describe('buildReadStoryIndex', () => {
   it('folds opened rows into the two axes', () => {
     const index = buildReadStoryIndex([
-      opened({ articleId: 'a1', stableClusterId: 'sc1', titleNorm: 'alpha beta gamma' }),
+      opened({ articleId: 'a1', titleNorm: 'alpha beta gamma' }),
       opened({ articleId: 'a2' }),
     ]);
 
@@ -95,10 +94,10 @@ describe('matchesReadStory', () => {
 
   it('does not match on stable_cluster_id alone: a new headline in a read story still reaches the feed', () => {
     const index = buildReadStoryIndex([
-      opened({ articleId: 'art-1', stableClusterId: 'story-9' }),
+      opened({ articleId: 'art-1' }),
     ]);
     expect(
-      matchesReadStory({ articleId: 'art-2', stableClusterId: 'story-9' }, index),
+      matchesReadStory({ articleId: 'art-2' }, index),
     ).toBe(false);
   });
 
@@ -106,7 +105,6 @@ describe('matchesReadStory', () => {
     const index = buildReadStoryIndex([
       opened({
         articleId: 'art-1',
-        stableClusterId: 'story-9',
         titleNorm: 'anthropic launches claude opus for enterprise customers',
       }),
     ]);
@@ -114,7 +112,6 @@ describe('matchesReadStory', () => {
       matchesReadStory(
         {
           articleId: 'art-2',
-          stableClusterId: 'story-9',
           title: 'Anthropic launches Claude Opus for enterprise customers today',
         },
         index,

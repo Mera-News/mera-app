@@ -645,7 +645,7 @@ describe('splitAlreadyReadArticles', () => {
   it('returns the input array itself, counting nothing, when no read is recorded', () => {
     const list = [art('a'), art('b')];
 
-    const out = splitAlreadyReadArticles(list, buildReadStoryIndex([]), undefined);
+    const out = splitAlreadyReadArticles(list, buildReadStoryIndex([]));
 
     expect(out.toPersist).toBe(list);
     expect(out.readCount).toBe(0);
@@ -654,8 +654,6 @@ describe('splitAlreadyReadArticles', () => {
   it('splits by article id only: a stable cluster id on the article or in the persona metadata no longer matches', () => {
     const index = buildReadStoryIndex([
       { articleId: 'by-id', opened: true },
-      { stableClusterId: 'sc-own', opened: true },
-      { stableClusterId: 'sc-meta', opened: true },
     ]);
     const list = [
       art('by-id'),
@@ -663,9 +661,7 @@ describe('splitAlreadyReadArticles', () => {
       art('meta', { clusters: [] }),
       art('keep'),
     ];
-    const personaMeta = { matchedTopics: new Map(), stableClusterId: new Map([['meta', 'sc-meta']]) };
-
-    const out = splitAlreadyReadArticles(list, index, personaMeta);
+    const out = splitAlreadyReadArticles(list, index);
 
     expect(out.toPersist.map((a) => a._id)).toEqual(['own', 'meta', 'keep']);
     expect(out.readCount).toBe(1);
@@ -674,7 +670,7 @@ describe('splitAlreadyReadArticles', () => {
   it('ignores a scroll-past impression: only opens count', () => {
     const index = buildReadStoryIndex([{ articleId: 'a', opened: false }]);
 
-    const out = splitAlreadyReadArticles([art('a')], index, undefined);
+    const out = splitAlreadyReadArticles([art('a')], index);
 
     expect(out.readCount).toBe(0);
   });

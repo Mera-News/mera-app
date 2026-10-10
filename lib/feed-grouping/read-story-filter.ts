@@ -88,7 +88,6 @@ export const READ_STORY_TITLE_JACCARD_THRESHOLD = TITLE_JACCARD_PROPAGATION_THRE
  *  WatermelonDB model, so the pure builder is testable without a database. */
 export interface ReadStoryImpressionRow {
     articleId?: string | null;
-    stableClusterId?: string | null;
     /** Snapshot of the English headline at read time (already lowercased +
      *  whitespace-collapsed by `recordOpen`). Re-normalized here anyway —
      *  `normalizeTitleTokens` is idempotent over that shape. */
@@ -105,8 +104,6 @@ export interface ReadStoryCandidate {
      *  `id` IS the server `_id` (see `persistAndLinkV2Suggestions`, which sets
      *  `_raw.id = a._id`), so a suggestion's row id is a valid value here. */
     articleId?: string | null;
-    /** Accepted, not matched (owner F1). */
-    stableClusterId?: string | null;
     /** English title (`title_en`) or an already-normalized `title_norm`. */
     title?: string | null;
 }
