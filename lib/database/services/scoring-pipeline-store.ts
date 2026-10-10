@@ -1,8 +1,7 @@
 // Scoring-pipeline run store — persistent state for the multi-batch cloud
-// scoring pipeline (the ~19-batch successor to the single-slot async
-// inference job in `async-job-service.ts`).
+// scoring pipeline (~19 batches per run).
 //
-// Mirrors async-job-service's doctrine:
+// Doctrine:
 //   - Non-secret run/batch metadata lives in the unencrypted WatermelonDB
 //     `settings` row (key `async_pipeline_run`) so it survives cold-start and a
 //     submit → push → reconcile cycle that spans a process restart.
@@ -36,8 +35,8 @@ const PIPELINE_PRIVKEY_KEY = 'async_pipeline_privkey';
 
 // Legacy keys from the single-slot async-job design, cleaned up once per
 // process on first `getPipeline`. `async_inference_pending_job` +
-// `async_inference_pending_job_privkey` were async-job-service's own constants
-// (module-private there); `mera.cycle.capabilityToken` was the AsyncStorage key
+// `async_inference_pending_job_privkey` were the old single-slot job's constants;
+// `mera.cycle.capabilityToken` was the AsyncStorage key
 // of the now-deleted `lib/llm/capability-token.ts` — kept here as a literal so
 // the cleanup still purges installs that wrote it.
 const LEGACY_PENDING_JOB_KEY = 'async_inference_pending_job';
@@ -345,7 +344,7 @@ export async function getPipeline(): Promise<{
 /**
  * Clear the run: settings row first, then the keychain secret. A secret without
  * a row is harmless (getPipeline returns null and never surfaces it), so this
- * ordering is safe — it mirrors async-job-service's clear ordering.
+ * ordering is safe.
  */
 export async function clearPipeline(): Promise<void> {
   await deleteSetting(PIPELINE_KEY);
