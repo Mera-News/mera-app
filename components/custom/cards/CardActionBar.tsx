@@ -6,9 +6,8 @@
 //   - ArticleSuggestionCard — the For You feed (FeedScreen) and the fact feed
 //     (FactFeedScreen).
 //   - ArticleFeedbackPrompt — the article + suggestion DETAIL screens.
-//   - ArticleActionsRow — the standalone card (Saved list).
-// The latter two used to hand-roll their own row of 48pt round,
-// primary-orange-outlined buttons. They were converted to this component
+// ArticleFeedbackPrompt used to hand-roll its own row of 48pt round,
+// primary-orange-outlined buttons. It was converted to this component
 // for card parity. A picked Like and a picked Not for me both fill the
 // app's orange (FinalMotion "Touch"), and pop once to 118% as they do.
 //
@@ -20,8 +19,8 @@
 //
 // The Mera glyph is DELIBERATELY here as well as on the rationale block
 // ("Mera's voice" — see ArticleSuggestionCard). It was briefly removed from this
-// row, which left suggestion cards inconsistent with standalone cards
-// (ArticleActionsRow always kept its Mera button). View consistency across card
+// row, which left suggestion cards inconsistent with the other card types.
+// View consistency across card
 // types won: both entry points call the SAME handler, and this one is the
 // canonical affordance carrying `card-action-mera` — the rationale glyph is
 // `rationale-mera`.

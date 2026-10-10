@@ -67,9 +67,8 @@ export interface FeedbackSubject {
 
 /**
  * Snapshot the subject's contextual extras for the persisted feedback row's
- * `context_json`. Shared by every actions surface (ArticleActionsRow /
- * the compact rows / the swipe feed) so the stored provenance shape is
- * identical everywhere.
+ * `context_json`. Shared by every actions surface (the compact rows / the swipe feed) so the stored
+ * provenance shape is identical everywhere.
  */
 export function buildContextJson(subject: FeedbackSubject): string | null {
   const snapshot: Record<string, unknown> = {};
