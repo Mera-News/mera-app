@@ -82,10 +82,10 @@ describe('the latch', () => {
 
     it('an AbortError with no timeout marker does not count, so navigation cannot fake an outage', async () => {
         // The one fault MSW cannot produce: fetch itself rejecting with an AbortError (R23, one
-        // call each). Three operations of three attempts each.
+        // call each). Three operations of four attempts each.
         spyLogger();
         const failFetch = jest.spyOn(globalThis, 'fetch');
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < 12; i++) {
             failFetch.mockRejectedValueOnce(Object.assign(new Error('Aborted'), { name: 'AbortError' }));
         }
         for (let i = 0; i < 3; i++) {

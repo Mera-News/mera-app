@@ -23,12 +23,9 @@ it('offline: one request and no retry', async () => {
     expect(seen).toHaveLength(1);
 });
 
-// DA6 (owner ruling): a transport or 5xx failure must be sent 4 times, the first plus 3 retries.
-// RetryLink's `max: 3` counts the first attempt, so today the request is sent 3 times. Each shape
-// below is a test.failing that expects the intended 4, beside a passing sibling that pins today's 3
-// (R14). P3 sets `attempts.max` to 4, flips the failing tests and deletes the siblings.
+// DA6 (owner ruling): a transport or 5xx failure is sent 4 times, the first plus 3 retries.
+// RetryLink's `max` counts the first attempt, so it is 4.
 const INTENDED_SENDS = 4;
-const TODAY_SENDS = 3;
 
 const shapes: [string, () => RequestHandler, ((err: unknown) => void) | null][] = [
     ['transport failure', () => failOp('LinkProbe'), null],
@@ -48,12 +45,8 @@ describe.each(shapes)('online %s', (_name, handler, checkError) => {
         return seen.length;
     }
 
-    test.failing('DA6: is sent 4 times, the first attempt plus 3 retries', async () => {
+    it('DA6: is sent 4 times, the first attempt plus 3 retries', async () => {
         expect(await sends()).toBe(INTENDED_SENDS);
-    });
-
-    it('DA6 today: is sent 3 times (RetryLink max counts the first attempt)', async () => {
-        expect(await sends()).toBe(TODAY_SENDS);
     });
 });
 

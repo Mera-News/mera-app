@@ -516,7 +516,7 @@ export function shouldRetryOperation(error: unknown): boolean {
 // This prevents infinite error loops when network is unavailable
 const retryLink = new RetryLink({
     attempts: {
-        max: 3, // Maximum 3 retry attempts
+        max: 4, // Counts the first send: 4 sends in all, the first plus 3 retries
         retryIf: (error) => shouldRetryOperation(error),
     },
     delay: {
