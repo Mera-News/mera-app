@@ -10,35 +10,12 @@ import {
   server,
   useStrictClock,
 } from '@/test/helpers';
-import { act, configure, waitFor } from '@testing-library/react-native';
+import { act, waitFor } from '@testing-library/react-native';
 import { useScopeArticleList } from '@/components/custom/explore/useScopeArticleList';
 import { HUNG_LOAD_MS } from '@/components/custom/explore/useScopeArticleList';
 import { __resetExploreWindowSupport } from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import { articlesForCountry, newsArticle, pageOf, stableClusterId } from '@/test/mock-backend/fixtures/articles';
-
-// Native edges the shared integration setup does not cover for this hook's module chain (it pulls
-// ScopeArticleList and so the card menus): gesture-handler cannot be parsed by Jest, and
-// reanimated's mock lacks useComposedEventHandler. Same stand-ins as the Feed screen seam tests.
-jest.mock('react-native-gesture-handler', () => ({
-  Gesture: {},
-  GestureDetector: ({ children }: { children: unknown }) => children,
-  GestureHandlerRootView: ({ children }: { children: unknown }) => children,
-}));
-// components/ui/button renders ActivityIndicator, whose codegen native-component spec Jest cannot
-// parse either; a host-component string stands in.
-jest.mock('react-native/Libraries/Components/ActivityIndicator/ActivityIndicatorViewNativeComponent', () => ({
-  __esModule: true,
-  default: 'ActivityIndicator',
-}));
-jest.mock('react-native-reanimated', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  ...require('react-native-reanimated/mock'),
-  useComposedEventHandler: () => () => {},
-}));
-
-// Several suites share the machine; waitFor's 1 s default is a flake source under load.
-configure({ asyncUtilTimeout: 5000 });
 
 const WORLD: ExploreScope = { id: 'world', kind: 'world', label: '', icon: 'public', countryCodeAlpha3: null };
 const NLD: ExploreScope = {

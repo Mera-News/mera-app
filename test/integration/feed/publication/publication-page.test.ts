@@ -3,7 +3,7 @@
 // nothing (the page has no timers of its own). Session flags in article-service and
 // publication-profile-service are module state, reset in beforeEach.
 import { graphql, mockGql, mockGqlError, renderHookInScreen, server } from '@/test/helpers';
-import { act, configure, waitFor } from '@testing-library/react-native';
+import { act, waitFor } from '@testing-library/react-native';
 import { makeUsePublicationArticles } from '@/lib/hooks/use-publication-articles';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { usePublicationPage } from '@/components/custom/publication-page/usePublicationPage';
@@ -16,9 +16,6 @@ import { useNetworkStore } from '@/lib/stores/network-store';
 import { seedSuggestion } from '@/test/integration/feed/detail/seed';
 import { articleFixtures } from '@/test/mock-backend/fixtures/articles';
 import { publicationProfileFor } from '@/test/mock-backend/fixtures/graphql/publications';
-
-// Several suites share the machine; waitFor's 1 s default is a flake source under load.
-configure({ asyncUtilTimeout: 5000 });
 
 const [PUB, OTHER] = articleFixtures.publications;
 /** The fixture outlet's own articles (three), newest first. */

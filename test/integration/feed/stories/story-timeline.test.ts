@@ -3,7 +3,7 @@
 // (tracked-story-service, topic-service). Focus is the hook's `onFocus`, called by the test along
 // with its cleanup. Faked: nothing (the screen has no timers).
 import { renderHookInScreen } from '@/test/helpers';
-import { act, configure, waitFor } from '@testing-library/react-native';
+import { act, waitFor } from '@testing-library/react-native';
 import { useStoryTimelineScreen } from '@/components/custom/tracked-stories/useStoryTimelineScreen';
 import {
   applyUpdates,
@@ -12,9 +12,6 @@ import {
   type TrackedStoryMemberSnapshot,
 } from '@/lib/database/services/tracked-story-service';
 import { createTopics, getAllByNormalizedText } from '@/lib/database/services/topic-service';
-
-// Several suites share the machine; waitFor's 1 s default is a flake source under load.
-configure({ asyncUtilTimeout: 5000 });
 
 const T0 = Date.UTC(2026, 9, 1, 12, 0, 0);
 const snap = (articleId: string, hoursAfter: number): TrackedStoryMemberSnapshot => ({

@@ -13,18 +13,6 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { resetForYouStore, scoreRow, seedArticles, settleWrites } from '../../core/sync/seed';
 
-// Native edges the shared integration setup does not cover for this hook's module chain:
-// gesture-handler (Jest cannot parse it) and reanimated's useComposedEventHandler (absent from
-// react-native-reanimated/mock). Ask the harness for shared versions, then drop these.
-jest.mock('react-native-gesture-handler', () => ({
-  Gesture: {},
-  GestureDetector: ({ children }: { children: unknown }) => children,
-  GestureHandlerRootView: ({ children }: { children: unknown }) => children,
-}));
-jest.mock('react-native-reanimated', () => ({
-  ...require('react-native-reanimated/mock'),
-  useComposedEventHandler: () => () => {},
-}));
 
 export { scoreRow, seedArticles, settleWrites };
 
