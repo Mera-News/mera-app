@@ -42,11 +42,6 @@ function GatheringBar({ label }: { readonly label: string }) {
     );
 }
 
-/** A first load still running after this is treated as hung: the page says
- *  Mera can't be reached instead of promising stories "in a few seconds".
- *  The request stays in flight and still lands if it ever answers. */
-export const HUNG_LOAD_MS = 15_000;
-
 const SKELETON_ROWS = 3;
 const SKELETON_THUMB = 64;
 const skeletonBar = (width: `${number}%`, fill: string, height = 12) => ({
@@ -97,42 +92,6 @@ function SkeletonRows() {
 }
 
 
-/**
- * Append `next` to `previous`, dropping any headline whose article id is
- * already present (and any repeat WITHIN `next`).
- *
- * `topHeadlinesForCountry` paginates by OFFSET into a materialized edition
- * (`encodeOffsetCursor` / `entries.slice(offset, offset + first)` in the
- * server's top-headlines.service.ts), and that edition is rebuilt hourly. So a
- * page-2 slice taken after a rebuild can legitimately re-serve rows the client
- * already has from page 1. React's "Encountered two children with the same
- * key" is only the symptom; the bug is the duplicated ARTICLE, so the fix is to
- * render it once rather than to make the key unique — a key suffixed with the
- * index would silence the warning and leave the duplicate row on screen.
- *
- * Rows with no `_id` pass through untouched: `keyExtractor` falls back to
- * `article-${index}` for those, so collapsing them by their (empty) id would
- * merge genuinely different rows — the opposite mistake.
- */
-export function appendUniqueHeadlines(
-    previous: readonly TopHeadline[],
-    next: readonly TopHeadline[],
-): TopHeadline[] {
-    const seen = new Set<string>();
-    for (const headline of previous) {
-        const id = headline.article?._id;
-        if (id) seen.add(id);
-    }
-    const additions = next.filter((headline) => {
-        const id = headline.article?._id;
-        if (!id) return true;
-        if (seen.has(id)) return false;
-        seen.add(id);
-        return true;
-    });
-    return additions.length === 0 ? [...previous] : [...previous, ...additions];
-}
-
 interface ScopeArticleListProps {
     readonly scope: ExploreScope;
     /**
@@ -169,8 +128,8 @@ interface ScopeArticleListProps {
  * A World page's article list (World or one country). DIRECT server-paginated
  * `topHeadlinesForCountry` — no scoring, no suggestions, nothing persisted.
  * Every scope (World or country) fetches a single `topHeadlinesForCountry`
- * page per load, straight through — no client-side geo filtering (see
- * lib/explore/geo-scope-filter.ts, deprecated). Each row keeps its headline's
+ * page per load, straight through — no client-side geo filtering.
+ * Each row keeps its headline's
  * `stableClusterId`/`clusterSize` metadata so downstream feedback actions can
  * carry the story's cross-run identity (see `subjectExtras` in renderItem).
  * Pull-to-refresh — and the World tab-icon re-tap — refetch page 1 for the

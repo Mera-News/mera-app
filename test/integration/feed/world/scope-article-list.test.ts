@@ -12,7 +12,7 @@ import {
 } from '@/test/helpers';
 import { act, configure, waitFor } from '@testing-library/react-native';
 import { useScopeArticleList } from '@/components/custom/explore/useScopeArticleList';
-import { HUNG_LOAD_MS } from '@/components/custom/explore/ScopeArticleList';
+import { HUNG_LOAD_MS } from '@/components/custom/explore/useScopeArticleList';
 import { __resetExploreWindowSupport } from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import { articlesForCountry, newsArticle, pageOf, stableClusterId } from '@/test/mock-backend/fixtures/articles';
