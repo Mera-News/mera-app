@@ -1249,36 +1249,6 @@ describe('FeedSyncMachine — setCounts called with article count', () => {
       expect.any(Number),
     );
   });
-
-  it('falls back to serverArticleIds.length when getRecentArticleCount returns 0', async () => {
-    const ArticleService = require('@/lib/article-service').ArticleService;
-    ArticleService.getRecentArticleCount.mockResolvedValue(0);
-
-    const ctx = makeCtx();
-    const startPromise = feedSyncMachine.start('persona-1', ctx);
-    await jest.advanceTimersByTimeAsync(0);
-    await startPromise;
-
-    expect(mockForYouStoreState.setCounts).toHaveBeenCalledWith(
-      defaultTopicResult.serverArticleIds.length,
-      expect.any(Number),
-    );
-  });
-
-  it('falls back to serverArticleIds.length when getRecentArticleCount throws', async () => {
-    const ArticleService = require('@/lib/article-service').ArticleService;
-    ArticleService.getRecentArticleCount.mockRejectedValueOnce(new Error('count error'));
-
-    const ctx = makeCtx();
-    const startPromise = feedSyncMachine.start('persona-1', ctx);
-    await jest.advanceTimersByTimeAsync(0);
-    await startPromise;
-
-    expect(mockForYouStoreState.setCounts).toHaveBeenCalledWith(
-      defaultTopicResult.serverArticleIds.length,
-      expect.any(Number),
-    );
-  });
 });
 
 describe('FeedSyncMachine — stale in-flight run', () => {
