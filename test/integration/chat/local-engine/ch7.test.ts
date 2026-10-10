@@ -46,28 +46,12 @@ async function stopBeforeFirstToken(): Promise<number> {
   return stoppedAt;
 }
 
-test.failing('Stop before the first token ends the turn without waiting for a token', async () => {
+it('Stop before the first token ends the turn without waiting for a token', async () => {
   const stoppedAt = await stopBeforeFirstToken();
 
   await until(() => !local().turnBusy, FIRST_TOKEN_MS / 2, 'turn end within half the first-token wait');
   expect(Date.now() - stoppedAt).toBeLessThan(FIRST_TOKEN_MS / 2);
   expect(llamaCalls()[0].stopped).toBe(true);
   expect(llamaCalls()[0].delivered).toEqual([]);
-  expectNothingLeftTheDevice();
-});
-
-it('CH7 today: Stop before the first token waits for that token, then ends the turn', async () => {
-  const stoppedAt = await stopBeforeFirstToken();
-
-  await new Promise((r) => setTimeout(r, FIRST_TOKEN_MS / 2));
-  expect(local().turnBusy).toBe(true);
-
-  await turnDone(10_000);
-  expect(Date.now() - stoppedAt).toBeGreaterThanOrEqual(FIRST_TOKEN_MS - 100);
-  // The token loop saw the flag on the first token and left; llama was halted after it.
-  expect(llamaCalls()[0].delivered).toEqual(['Never']);
-  expect(llamaCalls()[0].stopped).toBe(true);
-  const last = local().messages.filter((m) => m.role === 'assistant').at(-1);
-  expect(last?.content ?? '').toBe('');
   expectNothingLeftTheDevice();
 });

@@ -286,9 +286,12 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
   const agentRef = { current: initialAgent };
   const isStreamingRef = { current: false };
   const initializedRef = { current: false };
-  /** THE STOP BUTTON, for the turn in flight. Read between tokens: leaving the
-   *  token loop makes the toolkit halt llama before it frees its lock. */
+  /** THE STOP BUTTON, for the turn in flight. Read by the token loop and at the
+   *  early-exit points before a completion starts. */
   const stopRef = { requested: false };
+  /** Aborted by Stop: wakes the turn at once and tells the toolkit to halt llama,
+   *  neither of which waits for a token. One per turn. */
+  const abortRef = { current: new AbortController() };
 
   /**
    * The wait line's sink for the turn in flight.
@@ -311,6 +314,8 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
       phase?.(coldModel ? 'deviceLoading' : 'devicePreparing');
       await inferenceQueue.pause();
       try {
+        // Stop pressed while the queue paused: end the turn, start no completion.
+        if (stopRef.requested) return;
         // Initialize model on first use (model may already be loaded by useModelLifecycle)
         if (!initializedRef.current) {
           if (getModelState() === null) {
@@ -324,6 +329,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
           // assembly and the token-budget pass.
           phase?.('devicePreparing');
         }
+        if (stopRef.requested) return;
 
         // Build system prompt (needsToolFormatInPrompt=true for local LLM)
         let systemPrompt: string;
@@ -405,56 +411,79 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
         // Generation has started and no token has been flushed yet.
         phase?.('deviceThinking');
 
-        for await (const token of inferStream({
+        // Driven by hand rather than `for await`: Stop must end the turn NOW, but the
+        // generator only ends once llama has unwound (it holds the lock until then).
+        // So each step races the abort, and on abort the generator is returned
+        // WITHOUT being awaited; the toolkit finishes releasing in the background.
+        const signal = abortRef.current.signal;
+        const aborted = new Promise<'aborted'>((resolve) => {
+          if (signal.aborted) resolve('aborted');
+          else signal.addEventListener('abort', () => resolve('aborted'), { once: true });
+        });
+        const it = inferStream({
           systemPrompt,
           prompt,
           maxTokens: MAX_OUTPUT_TOKENS,
           temperature: 0.4,
-        })) {
-          if (stopRef.requested) break;
-          // Think tags go BEFORE the tool-call parser: its `<` holdback plus the
-          // end-of-stream `startsWith('<')` discard would otherwise swallow the
-          // reply after a stray tag, and a <tool_call> inside a think block
-          // must never run. `fullResponse` feeds the rescan, so it is stripped too.
-          const visibleToken = thinkStripper.push(token);
-          if (!visibleToken) continue;
-          fullResponse += visibleToken;
-          pendingBuffer += visibleToken;
+        }, signal)[Symbol.asyncIterator]();
+        let finished = false;
+        try {
+          while (true) {
+            const pending = it.next();
+            pending.catch(() => {}); // an abandoned step may reject later; nobody is waiting
+            const step = await Promise.race([pending, aborted]);
+            if (step === 'aborted' || stopRef.requested) break;
+            if (step.done) { finished = true; break; }
+            const token = step.value;
+            // Think tags go BEFORE the tool-call parser: its `<` holdback plus the
+            // end-of-stream `startsWith('<')` discard would otherwise swallow the
+            // reply after a stray tag, and a <tool_call> inside a think block
+            // must never run. `fullResponse` feeds the rescan, so it is stripped too.
+            const visibleToken = thinkStripper.push(token);
+            if (!visibleToken) continue;
+            fullResponse += visibleToken;
+            pendingBuffer += visibleToken;
 
-          const flushed = flushBuffer(pendingBuffer, insideToolCall, toolCallBuffer);
-          pendingBuffer = flushed.remaining;
-          insideToolCall = flushed.insideToolCall;
-          toolCallBuffer = flushed.toolCallBuffer;
+            const flushed = flushBuffer(pendingBuffer, insideToolCall, toolCallBuffer);
+            pendingBuffer = flushed.remaining;
+            insideToolCall = flushed.insideToolCall;
+            toolCallBuffer = flushed.toolCallBuffer;
 
-          for (const event of flushed.events) {
-            if (event.type === 'text-delta') {
-              // Real text. The bubble is the liveness signal from here.
-              // NOT a second store write per token: the sink swallows a repeat,
-              // so this costs one `set` on the first delta and nothing after.
-              // That matters more here than on the cloud path, which has no rAF
-              // batching on this loop at all.
-              phase?.(null);
-              accContent += event.delta;
-              setMessages((prev) =>
-                prev.map((m) => m.id === assistantId ? { ...m, content: accContent } : m),
-              );
-            } else if (event.type === 'tool-call') {
-              logger.debug(`${TAG} tool call detected (XML)`, { name: event.name, inputKeys: Object.keys(event.input as Record<string, unknown>) });
-              const tc: ToolCallRecord = {
-                id: event.id,
-                name: event.name,
-                input: event.input,
-                status: 'pending',
-              };
-              accToolCalls.push(tc);
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? { ...m, toolCalls: [...(m.toolCalls ?? []), tc] }
-                    : m,
-                ),
-              );
+            for (const event of flushed.events) {
+              if (event.type === 'text-delta') {
+                // Real text. The bubble is the liveness signal from here.
+                // NOT a second store write per token: the sink swallows a repeat,
+                // so this costs one `set` on the first delta and nothing after.
+                // That matters more here than on the cloud path, which has no rAF
+                // batching on this loop at all.
+                phase?.(null);
+                accContent += event.delta;
+                setMessages((prev) =>
+                  prev.map((m) => m.id === assistantId ? { ...m, content: accContent } : m),
+                );
+              } else if (event.type === 'tool-call') {
+                logger.debug(`${TAG} tool call detected (XML)`, { name: event.name, inputKeys: Object.keys(event.input as Record<string, unknown>) });
+                const tc: ToolCallRecord = {
+                  id: event.id,
+                  name: event.name,
+                  input: event.input,
+                  status: 'pending',
+                };
+                accToolCalls.push(tc);
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId
+                      ? { ...m, toolCalls: [...(m.toolCalls ?? []), tc] }
+                      : m,
+                  ),
+                );
+              }
             }
+          }
+        } finally {
+          if (!finished) {
+            const left = it.return(undefined).catch(() => {});
+            if (!stopRef.requested) await left;
           }
         }
 
@@ -670,6 +699,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
       setMessages(newMessages);
 
       stopRef.requested = false;
+      abortRef.current = new AbortController();
       isStreamingRef.current = true;
       setStatus('streaming');
       setTurnBusy(true);
@@ -690,6 +720,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
     },
     stop: () => {
       stopRef.requested = true;
+      abortRef.current.abort();
     },
     dispose: () => {
       alive = false;
