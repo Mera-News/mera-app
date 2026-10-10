@@ -12,7 +12,6 @@ export {
     useFloatingChatIsExpanded,
     useFloatingChatFactMutationVersion,
     useFloatingChatIsGenerating,
-    useFloatingChatSuppressed,
 } from './floating-chat-store';
 export { useAppStateStore, useIsNavigationReady, useIsAppInitialized, useLastAuthenticatedUserId } from './app-state-store';
 export { useFeedbackStore, useFeedbackVisible } from './feedback-store';

@@ -534,7 +534,6 @@ export const useFloatingChatAnswerUnread = () => useFloatingChatStore((state) =>
 /** The chat is open or still moving: the Mera button stays hidden. */
 export const useFloatingChatShown = () =>
     useFloatingChatStore((state) => state.isExpanded || state.chatShown);
-export const useFloatingChatSuppressed = () => useFloatingChatStore((state) => state.suppressed);
 export const useFloatingChatConversationId = () => useFloatingChatStore((state) => state.conversationId);
 export const useFloatingChatProposal = () => useFloatingChatStore((state) => state.proposal);
 export const useFloatingChatResolvedProposals = () =>
