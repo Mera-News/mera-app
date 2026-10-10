@@ -167,8 +167,6 @@ export const RAMP_CALLS: readonly number[] = [1, 2, 5, 10];
 export function rampedBatchCap(rank: number, chunkSize: number, maxArticles: number): number {
   return Math.min(maxArticles, RAMP_CALLS[Math.min(rank, RAMP_CALLS.length - 1)] * chunkSize);
 }
-/** @deprecated Legacy alias for the dispatch floor. Use MIN_DISPATCH. */
-export const MIN_RUN_CANDIDATES = MIN_DISPATCH;
 /** Escape hatch: if the oldest unscored row has been waiting this long, dispatch
  *  the sub-MIN_DISPATCH remainder too — unscored articles don't render, so the
  *  floor could otherwise hide a 1-4 article day indefinitely. */
@@ -1484,7 +1482,7 @@ async function doSubmit(
  */
 async function scoringHarnessConfig(): Promise<HarnessConfig> {
   try {
-    return (await effectiveHarnessConfig()) ?? DEFAULT_HARNESS_CONFIG;
+    return await effectiveHarnessConfig();
   } catch {
     return DEFAULT_HARNESS_CONFIG;
   }
@@ -1513,10 +1511,8 @@ async function doSubmitRelevance(
   // computed scores we persist so a judge failure fail-opens to the math.
   const math = await computeMathStage(subset);
 
-  // HARD "not interested" filters. `?? new Set()` because the orchestrator
-  // tests mock computeMathStage with the pre-wave shape — a missing field must
-  // mean "nothing excluded", never a crash.
-  const excludedIds = math.excludedIds ?? new Set<string>();
+  // HARD "not interested" filters.
+  const excludedIds = math.excludedIds;
   let active = subset;
   if (excludedIds.size > 0) {
     logger.debug(
@@ -1607,8 +1603,8 @@ async function doSubmitRelevance(
     // soft filters takes the exact pre-change code path.
     const suppressPenaltyMap: Record<string, number> = {};
     for (const c of math.stage) {
-      const penalty = math.componentsMap.get(c.input.id)?.suppressPenalty ?? 0;
-      if (penalty > 0) suppressPenaltyMap[c.input.id] = penalty;
+      const penalty = math.componentsMap.get(c.input.id)?.suppressPenalty;
+      if (penalty !== undefined && penalty > 0) suppressPenaltyMap[c.input.id] = penalty;
     }
     const penalisedCount = Object.keys(suppressPenaltyMap).length;
     if (penalisedCount > 0) {
@@ -1622,7 +1618,7 @@ async function doSubmitRelevance(
     // re-deriving it at decode — submit and decode then cannot disagree, which
     // is the only thing standing between a headline batch and scores attributed
     // to the wrong articles. Absent (older builder) ⇒ the standard size.
-    const scoreChunkSize = bundle.scoreChunkSize ?? CLOUD_SCORE_CHUNK_SIZE;
+    const scoreChunkSize = bundle.scoreChunkSize;
 
     const ctx = await rebuildE2EEContext(
       SMALL_MODEL,
@@ -2467,7 +2463,7 @@ async function propagateNotesToCoveredSiblings(
         id: r.id,
         relevance: r.relevance,
         reason: noteFor.get(r.id) ?? '',
-        scoredWithV3: r.scoredWithV3 ?? null,
+        scoredWithV3: r.scoredWithV3,
       }));
     if (entries.length > 0) await batchPropagateScores(entries);
   } catch (err) {
