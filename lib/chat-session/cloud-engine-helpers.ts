@@ -38,7 +38,7 @@ async function readSplitOffered(): Promise<string[]> {
   }
 }
 
-export function withCombinedFactMemory(deps: AgentDeps): AgentDeps {
+function withCombinedFactMemory(deps: AgentDeps): AgentDeps {
   return {
     ...deps,
     combinedFactRewrite: {
@@ -77,7 +77,7 @@ export function pendingCardStatements(messages: ConversationMessage[]): string[]
 /** Tool arguments arrive as a JSON string. A malformed one must yield an empty
  *  object rather than throwing: this runs inside the live progress write-back,
  *  and a throw there would kill the turn over a cosmetic row. */
-export function parseToolArgs(raw: string): Record<string, unknown> {
+function parseToolArgs(raw: string): Record<string, unknown> {
   try {
     const parsed: unknown = JSON.parse(raw || '{}');
     return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
@@ -87,17 +87,17 @@ export function parseToolArgs(raw: string): Record<string, unknown> {
 }
 
 /** Required lazily: lib/i18n pulls the OS translator's native module at load. */
-export function i18nInstance(): typeof import('../i18n').default {
+function i18nInstance(): typeof import('../i18n').default {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return (require('../i18n') as typeof import('../i18n')).default;
 }
 
-export const TAG = '[CloudChat]';
+const TAG = '[CloudChat]';
 
-export type CloudState = ReturnType<typeof useCloudChatStore.getState>;
+type CloudState = ReturnType<typeof useCloudChatStore.getState>;
 
 /** The store's state with every action a no-op: what a disposed engine writes to. */
-export function detachedCopy(state: CloudState): CloudState {
+function detachedCopy(state: CloudState): CloudState {
   const copy: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(state)) copy[key] = typeof value === 'function' ? () => {} : value;
   return copy as unknown as CloudState;
@@ -106,7 +106,7 @@ export function detachedCopy(state: CloudState): CloudState {
 /** Next-frame scheduler for the streaming bubble. RN provides
  *  requestAnimationFrame; the timeout fallback keeps the hook usable under a
  *  test runtime without it. */
-export const scheduleFrame = (cb: () => void): void => {
+const scheduleFrame = (cb: () => void): void => {
   if (typeof requestAnimationFrame === 'function') {
     requestAnimationFrame(cb);
   } else {
@@ -126,7 +126,7 @@ export const scheduleFrame = (cb: () => void): void => {
 // window never lets the LLM hallucinate persisted state from a stale assistant
 // claim like "Got it, saved" — the facts block always reflects the database,
 // not the conversation.
-export function wireMessageTokens(m: WireMessage): number {
+function wireMessageTokens(m: WireMessage): number {
   const content = typeof m.content === 'string' ? m.content : '';
   const calls =
     'tool_calls' in m && m.tool_calls ? JSON.stringify(m.tool_calls) : '';
@@ -137,7 +137,7 @@ export function wireMessageTokens(m: WireMessage): number {
 // Accumulate tool-call deltas by index into complete tool calls
 // ---------------------------------------------------------------------------
 
-export interface ToolCallAccumulator {
+interface ToolCallAccumulator {
   id: string;
   name: string;
   arguments: string;
@@ -152,7 +152,7 @@ interface FinalizedToolCall {
   malformed?: true;
 }
 
-export function finalizeToolCalls(
+function finalizeToolCalls(
   accumulators: Map<number, ToolCallAccumulator>,
 ): FinalizedToolCall[] {
   const results: FinalizedToolCall[] = [];
@@ -197,9 +197,22 @@ export function finalizeToolCalls(
  * to me". Treating this as no call at all routes it back through the same
  * forced-extraction pass that already covers a model skipping the tool.
  */
-export function isEmptyExtractionCall(tc: { name: string; input: unknown }): boolean {
+function isEmptyExtractionCall(tc: { name: string; input: unknown }): boolean {
   if (tc.name !== 'saveExtractedFacts') return false;
   const list = (tc.input as { extracted_user_information?: unknown } | null)
     ?.extracted_user_information;
   return !Array.isArray(list) || list.length === 0;
 }
+
+export {
+  withCombinedFactMemory,
+  parseToolArgs,
+  i18nInstance,
+  TAG,
+  detachedCopy,
+  scheduleFrame,
+  wireMessageTokens,
+  finalizeToolCalls,
+  isEmptyExtractionCall,
+};
+export type { CloudState, ToolCallAccumulator };
