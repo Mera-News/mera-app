@@ -234,7 +234,10 @@ jest.mock(
   'react-native/src/private/specs_DEPRECATED/components/ActivityIndicatorViewNativeComponent',
   () => ({ __esModule: true, default: 'ActivityIndicatorView' }),
 );
-jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+jest.mock('react-native-reanimated', () => ({
+  ...require('react-native-reanimated/mock'),
+  useComposedEventHandler: () => () => {},
+}));
 jest.mock(
   'react-native-safe-area-context',
   () => require('react-native-safe-area-context/jest/mock').default,

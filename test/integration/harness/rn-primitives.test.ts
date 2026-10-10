@@ -6,3 +6,7 @@ it('ActivityIndicator loads and RNTL waits 5 s', () => {
   expect(require('react-native').ActivityIndicator).toBeDefined();
   expect(getConfig().asyncUtilTimeout).toBe(5000);
 });
+
+it('the shared reanimated mock carries useComposedEventHandler', () => {
+  expect(typeof require('react-native-reanimated').useComposedEventHandler).toBe('function');
+});
