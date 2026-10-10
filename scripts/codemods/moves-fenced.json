@@ -5,5 +5,6 @@
   {"from": "lib/llm/sse.ts", "to": "lib/algorithms/sse.ts", "test": {"from": "test/unit/chat/llm/sse.test.ts", "to": "lib/algorithms/__tests__/sse.test.ts"}},
   {"from": "lib/llm/think-strip.ts", "to": "lib/algorithms/think-strip.ts", "test": {"from": "test/unit/chat/llm/think-strip.test.ts", "to": "lib/algorithms/__tests__/think-strip.test.ts"}},
   {"from": "lib/llm/reasoning-leak.ts", "to": "lib/algorithms/reasoning-leak.ts", "test": {"from": "test/unit/chat/llm/reasoning-leak.test.ts", "to": "lib/algorithms/__tests__/reasoning-leak.test.ts"}},
-  {"from": "lib/llm/tokens.ts", "to": "lib/algorithms/estimate-tokens.ts", "test": {"from": "test/unit/chat/llm/tokens.test.ts", "to": "lib/algorithms/__tests__/estimate-tokens.test.ts"}}
+  {"from": "lib/llm/tokens.ts", "to": "lib/algorithms/estimate-tokens.ts", "test": {"from": "test/unit/chat/llm/tokens.test.ts", "to": "lib/algorithms/__tests__/estimate-tokens.test.ts"}},
+  {"from": "lib/subscription/plan-display.ts", "to": "lib/algorithms/plan-display.ts", "test": {"from": "lib/subscription/__tests__/plan-display.test.ts", "to": "lib/algorithms/__tests__/plan-display.test.ts"}}
 ]
