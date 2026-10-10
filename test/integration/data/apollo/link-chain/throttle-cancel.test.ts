@@ -77,16 +77,9 @@ describe('control: a plain query', () => {
 });
 
 describe.each(SHAPES)('cancelled after the re-send started, throttle as %s', (shape) => {
-    test.failing('B2: the re-sent request is aborted', async () => {
+    it('B2: the re-sent request is aborted', async () => {
         const { seen } = await cancelAfterResend(shape);
         expect(seen[1].signal.aborted).toBe(true);
-    });
-
-    it('B2: today the re-sent request is not aborted and runs to completion', async () => {
-        const { seen, state } = await cancelAfterResend(shape);
-        expect(seen[1].signal.aborted).toBe(false);
-        await advance(10_000);
-        expect(state.answered).toBe(1);
     });
 });
 

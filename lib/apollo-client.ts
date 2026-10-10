@@ -201,15 +201,19 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                     );
                     const delay = throttleWaitMs(retryAfterMs, attempt);
                     return new Observable((observer) => {
+                        let inner: { unsubscribe(): void } | undefined;
                         const timer = setTimeout(() => {
                             operation.setContext({ throttleRetryCount: attempt + 1 });
-                            forward(operation).subscribe({
+                            inner = forward(operation).subscribe({
                                 next: (value) => observer.next(value),
                                 error: (err) => observer.error(err),
                                 complete: () => observer.complete(),
                             });
                         }, delay);
-                        return () => clearTimeout(timer);
+                        return () => {
+                            clearTimeout(timer);
+                            inner?.unsubscribe();
+                        };
                     });
                 }
             }
@@ -315,15 +319,19 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                     'info',
                 );
                 return new Observable((observer) => {
+                    let inner: { unsubscribe(): void } | undefined;
                     const timer = setTimeout(() => {
                         operation.setContext({ throttleRetryCount: attempt + 1 });
-                        forward(operation).subscribe({
+                        inner = forward(operation).subscribe({
                             next: (value) => observer.next(value),
                             error: (err) => observer.error(err),
                             complete: () => observer.complete(),
                         });
                     }, delay);
-                    return () => clearTimeout(timer);
+                    return () => {
+                        clearTimeout(timer);
+                        inner?.unsubscribe();
+                    };
                 });
             }
         }
