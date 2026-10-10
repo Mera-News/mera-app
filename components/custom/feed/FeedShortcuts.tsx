@@ -29,17 +29,13 @@ import CardRow, { CARD_RADIUS } from './CardRow';
 
 /** Per-process caption choice: one random index per pool, never stored. */
 const picks = new Map<string, number>();
-export function captionIndex(pool: string, size: number, random: () => number = Math.random): number {
+function captionIndex(pool: string, size: number, random: () => number = Math.random): number {
   let i = picks.get(pool);
   if (i === undefined || i >= size) {
     i = Math.floor(random() * size);
     picks.set(pool, i);
   }
   return i;
-}
-/** Tests only. */
-export function resetCaptionPicks(): void {
-  picks.clear();
 }
 
 /** Lazy, so the card graph never loads the SQLite singleton at import. */

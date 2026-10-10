@@ -28,7 +28,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
 import { skip } from 'rxjs/operators';
 
-export const SNAPSHOT_RELOAD_DEBOUNCE_MS = 300;
+const SNAPSHOT_RELOAD_DEBOUNCE_MS = 300;
 
 /** Every focus reloads the snapshots; an identical reload must not hand the
  *  sections list a new object, or every section re-renders on each return

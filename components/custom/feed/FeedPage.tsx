@@ -20,7 +20,7 @@ import { resetStatusCard } from '@/components/custom/for-you/feed-status-card';
 import FeedScreen from './FeedScreen';
 import { useFeedView } from './feed-view-prefs';
 
-export interface FeedPageProps {
+interface FeedPageProps {
   readonly active: boolean;
   readonly header: PageHeaderBinding;
 }

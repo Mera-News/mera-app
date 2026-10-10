@@ -27,7 +27,7 @@ import { useColors } from '@/lib/theme/tokens';
 
 const HERO_SIZE = 64;
 
-export interface ForYouEmptyStateProps {
+interface ForYouEmptyStateProps {
   /** Drawn when there is no `animationId`. */
   readonly icon?: keyof typeof MaterialIcons.glyphMap;
   /** An outline glyph the icon font lacks (Fact checks' shield-check), drawn

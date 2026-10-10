@@ -3,12 +3,12 @@ import { AccessibilityInfo } from 'react-native';
 
 /** Show nothing for this long first: a cache that loads fast never flashes a
  *  skeleton. */
-export const SKELETON_DELAY_MS = 200;
+const SKELETON_DELAY_MS = 200;
 /** Safety cap only: stop waiting for the local read after this long, so a read
  *  that hangs can never leave the skeleton up for good. The real signal is
  *  `suggestionsHydrated`. It was a 3s guess, and a cold launch whose local read
  *  took ~13s showed "all caught up" for the gap before the cards arrived. */
-export const CANDIDATES_WAIT_MS = 20_000;
+const CANDIDATES_WAIT_MS = 20_000;
 
 export interface FeedWarmupInput {
     /** The persisted order store has hydrated (true even when hydrate failed). */

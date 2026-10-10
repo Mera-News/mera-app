@@ -13,8 +13,8 @@ import { create } from 'zustand';
 
 export type FeedView = 'continuous' | 'sectioned';
 
-export const FEED_VIEW_SETTING_KEY = 'feed_view';
-export const FEED_MINIMAP_SETTING_KEY = 'feed_minimap';
+const FEED_VIEW_SETTING_KEY = 'feed_view';
+const FEED_MINIMAP_SETTING_KEY = 'feed_minimap';
 
 interface FeedViewPrefsState {
   view: FeedView;
@@ -29,7 +29,7 @@ export const useFeedView = (): FeedView => useFeedViewPrefs((s) => s.view);
 export const useFeedMinimap = (): boolean => useFeedViewPrefs((s) => s.minimap);
 
 /** Unknown or absent reads as the default, so an older or newer row is safe. */
-export function parseFeedView(raw: string | null | undefined): FeedView {
+function parseFeedView(raw: string | null | undefined): FeedView {
   return raw === 'sectioned' ? 'sectioned' : 'continuous';
 }
 

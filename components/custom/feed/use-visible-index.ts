@@ -46,7 +46,7 @@ export interface SeenBand {
 /** Whether a measured row's bottom edge sits in the band. A zero-width
  *  measure (a node not in the tree measures all zeros) keeps the
  *  vertical-only answer, as TranslatableDynamic's on-screen check does. */
-export function inSeenBand(band: SeenBand, x: number, y: number, w: number, h: number): boolean {
+function inSeenBand(band: SeenBand, x: number, y: number, w: number, h: number): boolean {
   const bottom = y + h;
   if (!(bottom >= band.top && bottom <= band.bottom)) return false;
   if (w > 0 && band.left !== undefined && band.right !== undefined) {
@@ -74,10 +74,10 @@ interface MeasurableRow {
  *
  *  The bottom-edge band rule is what keeps the shorter window honest: a card
  *  whose end is still under the tab bar does not count. */
-export const DWELL_READ_SECONDS = 1.5;
+const DWELL_READ_SECONDS = 1.5;
 
 /** {@link DWELL_READ_SECONDS} in ms — what the dwell timer actually compares. */
-export const SKIP_DWELL_MS = DWELL_READ_SECONDS * 1000;
+const SKIP_DWELL_MS = DWELL_READ_SECONDS * 1000;
 
 /** Re-measure delays after the on-screen set changes (TranslatableDynamic's
  *  ladder): a Fabric cell with no committed position yet never calls back. */

@@ -16,11 +16,11 @@ export const CARD_RADIUS = 16;
 /** The row's padding on every side, inside the card's 1pt edge. */
 export const CARD_ROW_PAD = 12;
 /** Between the slots and the text column. */
-export const CARD_ROW_GAP = 12;
+const CARD_ROW_GAP = 12;
 /** The icon slot (the shortcut's 40pt tile). */
-export const CARD_ICON_SLOT = 40;
+const CARD_ICON_SLOT = 40;
 /** The chevron slot (a 22pt glyph). */
-export const CARD_CHEVRON = 22;
+const CARD_CHEVRON = 22;
 
 const HIDDEN = {
   accessible: false,
@@ -28,7 +28,7 @@ const HIDDEN = {
   importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-export interface CardRowProps {
+interface CardRowProps {
   /** Centred in the 40pt slot; may be larger and overflow it (never clipped). */
   readonly icon: React.ReactNode;
   /** The text column (flex 1). */

@@ -51,7 +51,7 @@ interface SortSnapshot {
   openedIds: Set<string>;
 }
 
-export interface InterestsPageProps {
+interface InterestsPageProps {
   readonly active: boolean;
   readonly header: PageHeaderBinding;
 }

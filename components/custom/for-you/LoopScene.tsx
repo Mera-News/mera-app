@@ -9,7 +9,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { useMotionAllowed } from '@/lib/motion-gate';
 
-export interface LoopSceneProps {
+interface LoopSceneProps {
   /** A `require()`d bodymovin file from one of the animation registries. */
   readonly source: unknown;
   readonly size: number;

@@ -100,4 +100,4 @@ export async function chooseHeadlineDepth(
   await setHeadlineDepth(scopeKey, depth);
 }
 
-export { DEFAULT_HEADLINE_LIMIT_PER_SCOPE, GLOBAL_SCOPE_KEY, MAX_HEADLINE_DEPTH };
+export { DEFAULT_HEADLINE_LIMIT_PER_SCOPE };

@@ -32,7 +32,7 @@ function trackedService(): typeof import('@/lib/database/services/tracked-story-
 }
 
 /** Stories' dot: something new in a followed story (a dot, never a count). */
-export function useStoriesDot(): PageDot {
+function useStoriesDot(): PageDot {
   const [unseen, setUnseen] = useState(0);
   useEffect(() => {
     const sub = trackedService()

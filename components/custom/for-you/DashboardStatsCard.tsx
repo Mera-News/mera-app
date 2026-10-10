@@ -49,7 +49,7 @@ import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 
 
 
-export interface DashboardStatsCardProps {
+interface DashboardStatsCardProps {
     readonly testID?: string;
 }
 
@@ -140,7 +140,7 @@ function ExpandingDetails({ open, children }: { open: boolean; children: React.R
 /** The Mera mark, always at the sentence's start (owner): moving while a run
  *  is in flight, a still frame when idle. MeraLogo itself holds still in Lite,
  *  under Reduce Motion and off screen. */
-export function StatusMark({ working, size, tone }: { working: boolean; size: number; tone: MarkTone }) {
+function StatusMark({ working, size, tone }: { working: boolean; size: number; tone: MarkTone }) {
     const colors = useColors();
     // MeraLogo centres its glyph in a square box, so centring the box in the
     // row's icon slot centres the hexagon on the slot (the shortcut tile's

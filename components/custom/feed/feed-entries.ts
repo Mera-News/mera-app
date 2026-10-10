@@ -249,7 +249,7 @@ export function effectiveBand(
 // prefix like any other move. Tier 0 only, same reason as staleness.
 
 /** Added to an unseen pending row's band; one past the bottom band (4). */
-export const PENDING_BAND_OFFSET = 5;
+const PENDING_BAND_OFFSET = 5;
 
 /**
  * True when a row has a score but no note to show. The twin of

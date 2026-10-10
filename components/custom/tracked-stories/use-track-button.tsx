@@ -24,7 +24,7 @@ import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-pay
 import { router } from 'expo-router';
 import { useCallback } from 'react';
 
-export type FollowOutcome = 'tracked' | 'locked' | 'start';
+type FollowOutcome = 'tracked' | 'locked' | 'start';
 
 export interface UseTrackButton {
   /** Whether an active story already covers this subject (label + state). */

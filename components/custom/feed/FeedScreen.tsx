@@ -231,7 +231,7 @@ const FeedRow = React.memo(function FeedRow({
   );
 });
 
-export interface FeedScreenProps {
+interface FeedScreenProps {
   /** The visible page of the focused Feed tab (TabPages). */
   readonly active: boolean;
   /** The tab's one collapsing header. */

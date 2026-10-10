@@ -30,12 +30,12 @@ const TICK_HEIGHT = 3;
 const TICK_SEEN = 11;
 const TICK_NEW = 16;
 
-export interface MinimapRow {
+interface MinimapRow {
   readonly id: string;
   readonly suggestion: ForYouSuggestion;
 }
 
-export interface FeedMinimapProps {
+interface FeedMinimapProps {
   readonly rows: readonly MinimapRow[];
   readonly newSince: number | null;
   /** Index range of the rows on screen (shared values, set by the screen). */
