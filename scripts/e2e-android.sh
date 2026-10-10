@@ -94,7 +94,7 @@ step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle g
 step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --deny-delay 3000 --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
 step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 -http-proxy http://127.0.0.1:$PORT > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s); screenshot $RUN/launcher.png
 step 5 install: adb -s $SERIAL install -r $LAST; system animation scales to 0; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
-step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler; logcat -d > $RUN/logcat.txt; report WMDatabaseJSIBridge install line and FATAL lines
+step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler and the logcat stream (started at step 5) -> $RUN/logcat.txt; report the WMDatabaseJSIBridge install line, FATAL lines and removeViewAt lines
 step 7 app sockets: every sampled app-uid remote must be 10.0.2.2:$PORT (or loopback/unconnected), and at least one must be the mock
 step 8 cleanup (always, idempotent): stop sampler; adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f "@$AVD" to clear; kill mock server
 exit code: maestro's if non-zero, else step 7's
@@ -119,12 +119,13 @@ if "$ADB" devices | grep -q '^emulator-'; then
 fi
 mkdir -p "$RUN"
 
-MOCK_PID="" EMU_STARTED=0 SAMPLER_PID="" CLEANED=0
+MOCK_PID="" EMU_STARTED=0 SAMPLER_PID="" LOGCAT_PID="" CLEANED=0
 cleanup() {
   [ "$CLEANED" = 1 ] && return 0
   CLEANED=1
   set +e
   [ -n "$SAMPLER_PID" ] && { pkill -P "$SAMPLER_PID" 2> /dev/null; kill "$SAMPLER_PID" 2> /dev/null; }
+  [ -n "$LOGCAT_PID" ] && kill "$LOGCAT_PID" 2> /dev/null
   if [ "$EMU_STARTED" = 1 ]; then
     "$ADB" -s "$SERIAL" emu kill > /dev/null 2>&1
     for _ in $(seq 1 60); do pgrep -f "@$AVD" > /dev/null || break; sleep 1; done
@@ -244,6 +245,11 @@ APP_UID="$("$ADB" -s "$SERIAL" shell pm list packages -U "$APP_ID" | tr -d '\r' 
     | tr -d '\r' | awk -v u="$APP_UID" '$8 == u { print $3, $4; fflush() }' >> "$RUN/app-sockets.txt"
 ) &
 SAMPLER_PID=$!
+# logcat streamed to the run for the whole Maestro step: a dump at the end would hold only the
+# device ring buffer (~20 min), losing an early flow's errors.
+"$ADB" -s "$SERIAL" logcat -c || true
+"$ADB" -s "$SERIAL" logcat -v threadtime > "$RUN/logcat.txt" 2> /dev/null &
+LOGCAT_PID=$!
 
 # ---- step 6: Maestro ---------------------------------------------------------------------
 echo "== step 6: maestro ${FLOWS[*]}"
@@ -254,9 +260,13 @@ MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test "${FLOWS[@]}" \
   -e IMAGE_ORIGIN="${IMAGE_ORIGIN:-}" || MAESTRO_RC=$?
 pkill -P "$SAMPLER_PID" 2> /dev/null || true; kill "$SAMPLER_PID" 2> /dev/null || true
 SAMPLER_PID=""
-"$ADB" -s "$SERIAL" logcat -d > "$RUN/logcat.txt" || true
+kill "$LOGCAT_PID" 2> /dev/null || true
+LOGCAT_PID=""
 grep -q 'WMDatabaseJSIBridge: Successfully installed' "$RUN/logcat.txt" && echo "logcat: WatermelonDB JSI installed" || echo "logcat: no WatermelonDB JSI install line"
 grep -E 'ReactNativeJS.*FATAL|AndroidRuntime: FATAL' "$RUN/logcat.txt" || echo "logcat: no FATAL lines"
+# removeViewAt: the native view-tree error a lost stack push left behind (FD11).
+grep -E 'removeViewAt' "$RUN/logcat.txt" | head -5 || true
+echo "logcat: $(grep -c 'removeViewAt' "$RUN/logcat.txt" || true) removeViewAt lines"
 
 # ---- step 7: app sockets -----------------------------------------------------------------
 echo "== step 7: app sockets"
