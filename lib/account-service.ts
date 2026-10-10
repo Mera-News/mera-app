@@ -304,7 +304,7 @@ export class AccountService {
      */
     private static async updateNotificationWindowMutation(userId: string, preferredNotificationWindow: number[]): Promise<UserPersona> {
         try {
-            const { data, error } = await client.mutate<UpdateNotificationWindowResponse>({
+            const { data } = await client.mutate<UpdateNotificationWindowResponse>({
                 mutation: UPDATE_NOTIFICATION_WINDOW,
                 variables: {
                     input: {
@@ -313,9 +313,6 @@ export class AccountService {
                     },
                 },
             });
-            if (error) {
-                throw error;
-            }
             const userPersona = data?.updateNotificationWindow;
             if (!userPersona) {
                 throw new Error('Failed to update notification window - no data returned');
@@ -335,7 +332,7 @@ export class AccountService {
      */
     static async updateExpoPushTokenMutation(userId: string, expoPushToken: string | null): Promise<UserPersona> {
         try {
-            const { data, error } = await client.mutate<UpdateExpoPushTokenResponse>({
+            const { data } = await client.mutate<UpdateExpoPushTokenResponse>({
                 mutation: UPDATE_EXPO_PUSH_TOKEN,
                 variables: {
                     input: {
@@ -344,9 +341,6 @@ export class AccountService {
                     },
                 },
             });
-            if (error) {
-                throw error;
-            }
             const userPersona = data?.updateExpoPushToken;
             if (!userPersona) {
                 throw new Error('Failed to update expo push token - no data returned');
@@ -366,7 +360,7 @@ export class AccountService {
      */
     static async deleteExpoPushToken(userId: string): Promise<UserPersona> {
         try {
-            const { data, error } = await client.mutate<DeleteExpoPushTokenResponse>({
+            const { data } = await client.mutate<DeleteExpoPushTokenResponse>({
                 mutation: DELETE_EXPO_PUSH_TOKEN,
                 variables: {
                     input: {
@@ -374,9 +368,6 @@ export class AccountService {
                     },
                 },
             });
-            if (error) {
-                throw error;
-            }
             const userPersona = data?.deleteExpoPushToken;
             if (!userPersona) {
                 throw new Error('Failed to delete expo push token - no data returned');
@@ -430,16 +421,13 @@ export class AccountService {
         stage: OnboardingStage,
     ): Promise<UserPersona> {
         try {
-            const { data, error } = await client.mutate<AdvanceOnboardingStageResponse>({
+            const { data } = await client.mutate<AdvanceOnboardingStageResponse>({
                 mutation: ADVANCE_ONBOARDING_STAGE,
                 variables: {
                     userId,
                     stage,
                 },
             });
-            if (error) {
-                throw error;
-            }
             const userPersona = data?.advanceOnboardingStage;
             if (!userPersona) {
                 throw new Error('Failed to advance onboarding stage - no data returned');
@@ -461,11 +449,10 @@ export class AccountService {
      */
     static async updateNotificationsEnabled(userId: string, enabled: boolean): Promise<UserPersona> {
         try {
-            const { data, error } = await client.mutate<UpdateNotificationsEnabledResponse>({
+            const { data } = await client.mutate<UpdateNotificationsEnabledResponse>({
                 mutation: UPDATE_NOTIFICATIONS_ENABLED,
                 variables: { input: { userId, enabled } },
             });
-            if (error) throw error;
             const userPersona = data?.updateNotificationsEnabled;
             if (!userPersona) {
                 throw new Error('Failed to update notifications enabled flag - no data returned');
@@ -486,7 +473,7 @@ export class AccountService {
      */
     static async updateProcessingMode(userId: string, mode: ProcessingMode): Promise<UserPersona> {
         try {
-            const { data, error } = await client.mutate<UpdateProcessingModeResponse>({
+            const { data } = await client.mutate<UpdateProcessingModeResponse>({
                 mutation: UPDATE_PROCESSING_MODE,
                 variables: {
                     input: {
@@ -495,9 +482,6 @@ export class AccountService {
                     },
                 },
             });
-            if (error) {
-                throw error;
-            }
             const userPersona = data?.updateProcessingMode;
             if (!userPersona) {
                 throw new Error('Failed to update processing mode - no data returned');
@@ -530,7 +514,7 @@ export class AccountService {
         config: { language_codes?: string[] },
     ): Promise<UserPersona> {
         try {
-            const { data, error } = await client.mutate<UpdateUserConfigResponse>({
+            const { data } = await client.mutate<UpdateUserConfigResponse>({
                 mutation: UPDATE_USER_CONFIG,
                 variables: {
                     input: {
@@ -539,9 +523,6 @@ export class AccountService {
                     },
                 },
             });
-            if (error) {
-                throw error;
-            }
             const userPersona = data?.updateUserConfig;
             if (!userPersona) {
                 throw new Error('Failed to update user config - no data returned');

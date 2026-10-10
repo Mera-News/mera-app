@@ -37,18 +37,7 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
   if (!onDevice) {
     const setScoringError = useForYouStore.getState().setScoringError;
 
-    let result: Awaited<ReturnType<typeof runBackgroundCycle>>;
-    try {
-      result = await runBackgroundCycle('scoring-pass');
-    } catch (err) {
-      logger.captureException(err, {
-        tags: { service: 'SuggestionSyncService', method: 'runScoringPass.cycle' },
-      });
-      // Surface the failure in the header status row immediately (every failure,
-      // no waiting). Cleared when the next sync cycle starts.
-      setScoringError(classifyScoringError());
-      throw err; // surface to FeedSyncMachine so the failed stage is recorded
-    }
+    const result = await runBackgroundCycle('scoring-pass');
 
     if (result === 'error') {
       // Transient backend failure (network error, server down, expired endpoint).
