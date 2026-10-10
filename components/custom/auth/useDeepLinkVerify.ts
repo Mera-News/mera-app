@@ -1,8 +1,8 @@
-import { authClient } from '@/lib/auth-client';
-import { setSetting } from '@/lib/database/services/setting-service';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { useUserStore } from '@/lib/stores/user-store';
 import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
+import { signInWithEmailCode } from './email-code-sign-in';
 import { silentlyAcceptLegal } from './legal-consent';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
@@ -27,39 +27,25 @@ export function useDeepLinkVerify({ otp, email, type }: Props) {
 
         (async () => {
             try {
-                const { data, error } = await authClient.signIn.emailOtp({ email, otp });
-                if (error || !data?.user) {
-                    logger.warn('[DeepLinkVerify] OTP sign-in failed', { error: error?.message });
+                // The same refusal the sign-in gate uses (invariant 19): a link for another
+                // account than this device holds is refused, not signed in and wiped.
+                const expected = await getSetting('cached_user_id').catch(() => null);
+                const result = await signInWithEmailCode(email, otp, expected);
+                if (result.kind !== 'ok') {
+                    logger.warn('[DeepLinkVerify] OTP sign-in failed', { kind: result.kind });
                     router.replace('/login');
                 } else {
-                    // The THIRD doorway, and it carries the identical race:
-                    // this replaces straight to /logged-in/onboarding, whose
-                    // gate runs long before better-auth's session atom settles.
-                    // Instrumented here as well as in OTPVerificationView
-                    // because this route never touches app/logged-in/index.tsx,
-                    // so a recording made only there would never be read on
-                    // this path. See identity-gate.ts for why it is module
-                    // state and not a route param.
-                    recordAuthenticatedUser(data.user.id);
+                    // Mirrors OTPVerificationView: record the account before navigating
+                    // (identity-gate.ts says why it is module state and not a route param),
+                    // resolve any pending re-auth prompt and identity fault, and stamp the
+                    // current legal versions silently (email users accepted at sign-up).
+                    recordAuthenticatedUser(result.userId);
                     setSetting('cached_user_email', email).catch(() => {});
-                    // A successful sign-in resolves any pending re-auth prompt
-                    // and any identity fault, exactly as OTPVerificationView
-                    // and AuthScreen's device sign-in do. This doorway did
-                    // NEITHER until 2026-09-17, so a user who re-authenticated
-                    // from the emailed link landed in the shell with the "Sign
-                    // in again to sync" banner still up and feed-sync still
-                    // paused — having just done the only thing that was ever
-                    // going to fix it. Nothing downstream clears the flag:
-                    // hydrateFromDb only ever restores `true`.
                     useUserStore.getState().setNeedsReauth(false);
                     clearIdentityFault().catch(() => {});
-                    // Email users accepted the terms at their original
-                    // sign-up — stamp the current versions silently so the
-                    // consent surfaces never prompt them. Mirrored from
-                    // AuthScreen.handleVerificationSuccess because this route
-                    // bypasses AuthScreen entirely.
-                    void silentlyAcceptLegal(data.user.id);
-                    router.replace('/logged-in/onboarding');
+                    void silentlyAcceptLegal(result.userId);
+                    // Through the launch gate, which stamps, checks the account and routes on.
+                    router.replace('/logged-in');
                 }
             } catch (err: any) {
                 logger.captureException(err, { tags: { feature: 'otp', method: 'deep-link-verify' } });

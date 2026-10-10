@@ -67,7 +67,7 @@ describe('useDeepLinkVerify', () => {
         expect(signIns).toEqual([]);
     });
 
-    it('the fixture code with no cached account signs in, records the account and goes to onboarding', async () => {
+    it('the fixture code with no cached account signs in, records the account and goes through the launch gate', async () => {
         // A sign-in that arrives while the app still shows the re-auth prompt and an identity fault.
         useUserStore.getState().setNeedsReauth(true);
         await setSetting(IDENTITY_FAULT_KEY, '1');
@@ -76,7 +76,7 @@ describe('useDeepLinkVerify', () => {
         mount({ otp: CODE, email: EMAIL });
         await routed();
 
-        expect(replace()).toHaveBeenCalledWith('/logged-in/onboarding');
+        expect(replace()).toHaveBeenCalledWith('/logged-in');
         expect(readPendingAuthUserId()).toBe(ME);
         expect(secureStoreDump()[COOKIE_KEY]).toBeDefined();
         expect(useUserStore.getState().needsReauth).toBe(false);
@@ -124,30 +124,19 @@ describe('useDeepLinkVerify', () => {
 
     describe('a link for the fixture account on a device that holds ANOTHER account', () => {
         // The sign-in gate refuses a code for a different account (invariant 19); this doorway
-        // never reads cached_user_id, so the same code signs the new account in and routes on to
-        // the wiping gate.
+        // uses the same refusal.
         const mountForeign = async () => {
             await setSetting('cached_user_id', OTHER);
             mount({ otp: CODE, email: EMAIL });
             await routed();
         };
 
-        test.failing('B3 a deep link for another account is refused like the sign-in gate does', async () => {
+        test('B3 a deep link for another account is refused like the sign-in gate does', async () => {
             await mountForeign();
 
             expect(replace()).not.toHaveBeenCalledWith('/logged-in/onboarding');
             expect(await getSetting('cached_user_id')).toBe(OTHER);
             expect(secureStoreDump()[COOKIE_KEY]).toBeUndefined();
-        });
-
-        test('B3 today: the link signs the other account in and routes to onboarding', async () => {
-            await mountForeign();
-
-            expect(replace()).toHaveBeenCalledWith('/logged-in/onboarding');
-            expect(secureStoreDump()[COOKIE_KEY]).toBeDefined();
-            expect(readPendingAuthUserId()).toBe(ME);
-            // The stamp is untouched here: the gate behind the route does the wiping.
-            expect(await getSetting('cached_user_id')).toBe(OTHER);
         });
     });
 });
