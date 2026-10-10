@@ -234,7 +234,16 @@
     },
     "statsZeroFetched": "Mera kon nog geen artikelen ophalen. Het blijft het proberen. Als dit blijft gebeuren, neem dan contact op met support.",
     "statsZeroAnalysedTail": "maar Mera kon er voor jou nog geen analyseren. Het blijft het proberen. Als dit blijft gebeuren, neem dan contact op met support.",
-    "statsZeroRelevantTail": "maar nog niets lijkt relevant. Bekijk je profiel of neem contact op met support."
+    "statsZeroRelevantTail": "maar nog niets lijkt relevant. Bekijk je profiel of neem contact op met support.",
+    "syncFailed": {
+      "start": "Het vernieuwen van je Feed kon niet starten. Trek omlaag om het opnieuw te proberen.",
+      "fetch": "Kon niet naar nieuwe artikelen zoeken. Trek omlaag om het opnieuw te proberen.",
+      "check": "Nieuwe artikelen gevonden, maar kon niet controleren welke nieuw zijn. Trek omlaag om het opnieuw te proberen.",
+      "download": "Nieuwe artikelen gevonden, maar kon ze niet downloaden. Trek omlaag om het opnieuw te proberen.",
+      "score": "Nieuwe artikelen gedownload, maar kon niet bepalen welke belangrijk voor je zijn. Trek omlaag om het opnieuw te proberen.",
+      "storage": "Nieuwe artikelen gedownload, maar kon ze niet op je telefoon opslaan. Trek omlaag om het opnieuw te proberen.",
+      "session": "Kon je Feed niet vernieuwen omdat je sessie is verlopen. Log opnieuw in om verder te gaan."
+    }
   },
   "relevance": {
     "emergency": "Noodgeval",

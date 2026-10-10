@@ -234,7 +234,16 @@
     },
     "statsZeroFetched": "Mera konnte noch keine Artikel laden. Mera versucht es weiter. Wenn das immer wieder passiert, wende dich an den Support.",
     "statsZeroAnalysedTail": "aber Mera konnte noch nichts davon für dich auswerten. Mera versucht es weiter. Wenn das immer wieder passiert, wende dich an den Support.",
-    "statsZeroRelevantTail": "aber bisher wirkt nichts davon relevant. Prüfe dein Profil oder wende dich an den Support."
+    "statsZeroRelevantTail": "aber bisher wirkt nichts davon relevant. Prüfe dein Profil oder wende dich an den Support.",
+    "syncFailed": {
+      "start": "Die Aktualisierung deiner Nachrichten konnte nicht starten. Zum erneuten Versuchen nach unten ziehen.",
+      "fetch": "Es konnte nicht nach neuen Artikeln gesucht werden. Zum erneuten Versuchen nach unten ziehen.",
+      "check": "Neue Artikel gefunden, aber es konnte nicht geprüft werden, welche neu sind. Zum erneuten Versuchen nach unten ziehen.",
+      "download": "Neue Artikel gefunden, aber sie konnten nicht heruntergeladen werden. Zum erneuten Versuchen nach unten ziehen.",
+      "score": "Neue Artikel heruntergeladen, aber es konnte nicht ermittelt werden, welche für dich wichtig sind. Zum erneuten Versuchen nach unten ziehen.",
+      "storage": "Neue Artikel heruntergeladen, aber sie konnten nicht auf deinem Handy gespeichert werden. Zum erneuten Versuchen nach unten ziehen.",
+      "session": "Deine Nachrichten konnten nicht aktualisiert werden, weil deine Sitzung abgelaufen ist. Melde dich erneut an, um weiterzumachen."
+    }
   },
   "relevance": {
     "emergency": "Notfall",

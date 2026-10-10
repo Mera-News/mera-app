@@ -234,7 +234,16 @@
     },
     "statsZeroFetched": "Mera aún no pudo obtener ningún artículo. Seguirá intentándolo. Si esto sigue pasando, contacta con soporte.",
     "statsZeroAnalysedTail": "pero Mera aún no pudo analizar ninguno para ti. Seguirá intentándolo. Si esto sigue pasando, contacta con soporte.",
-    "statsZeroRelevantTail": "pero ninguno parece relevante todavía. Revisa tu perfil o contacta con soporte."
+    "statsZeroRelevantTail": "pero ninguno parece relevante todavía. Revisa tu perfil o contacta con soporte.",
+    "syncFailed": {
+      "start": "No se pudo empezar a actualizar tus Noticias. Desliza hacia abajo para intentarlo de nuevo.",
+      "fetch": "No se pudieron buscar artículos nuevos. Desliza hacia abajo para intentarlo de nuevo.",
+      "check": "Se encontraron artículos nuevos, pero no se pudo comprobar cuáles son nuevos. Desliza hacia abajo para intentarlo de nuevo.",
+      "download": "Se encontraron artículos nuevos, pero no se pudieron descargar. Desliza hacia abajo para intentarlo de nuevo.",
+      "score": "Se descargaron artículos nuevos, pero no se pudo determinar cuáles te importan. Desliza hacia abajo para intentarlo de nuevo.",
+      "storage": "Se descargaron artículos nuevos, pero no se pudieron guardar en tu teléfono. Desliza hacia abajo para intentarlo de nuevo.",
+      "session": "No se pudieron actualizar tus Noticias porque tu sesión caducó. Vuelve a iniciar sesión para continuar."
+    }
   },
   "relevance": {
     "emergency": "Emergencia",

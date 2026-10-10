@@ -269,6 +269,15 @@
       "continuous": "Continuous feed",
       "sectioned": "Sectioned feed",
       "title": "View"
+    },
+    "syncFailed": {
+      "start": "Couldn't start refreshing your Feed. Pull down to try again.",
+      "fetch": "Couldn't look for new articles. Pull down to try again.",
+      "check": "Found new articles, but couldn't check which ones are new. Pull down to try again.",
+      "download": "Found new articles, but couldn't download them. Pull down to try again.",
+      "score": "Downloaded new articles, but couldn't work out which ones matter to you. Pull down to try again.",
+      "storage": "Downloaded new articles, but couldn't save them on your phone. Pull down to try again.",
+      "session": "Couldn't refresh your Feed because your session expired. Sign in again to continue."
     }
   },
   "relevance": {

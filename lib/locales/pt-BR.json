@@ -234,7 +234,16 @@
     },
     "statsZeroFetched": "O Mera ainda não conseguiu buscar nenhum artigo. Ele vai continuar tentando. Se isso continuar acontecendo, entre em contato com o suporte.",
     "statsZeroAnalysedTail": "mas o Mera ainda não conseguiu analisar nenhum deles para você. Ele vai continuar tentando. Se isso continuar acontecendo, entre em contato com o suporte.",
-    "statsZeroRelevantTail": "mas nenhum parece relevante ainda. Revise seu perfil ou entre em contato com o suporte."
+    "statsZeroRelevantTail": "mas nenhum parece relevante ainda. Revise seu perfil ou entre em contato com o suporte.",
+    "syncFailed": {
+      "start": "Não foi possível começar a atualizar seu Feed. Puxe para baixo para tentar de novo.",
+      "fetch": "Não foi possível procurar novos artigos. Puxe para baixo para tentar de novo.",
+      "check": "Novos artigos foram encontrados, mas não foi possível verificar quais são novos. Puxe para baixo para tentar de novo.",
+      "download": "Novos artigos foram encontrados, mas não foi possível baixá-los. Puxe para baixo para tentar de novo.",
+      "score": "Novos artigos foram baixados, mas não foi possível identificar quais importam para você. Puxe para baixo para tentar de novo.",
+      "storage": "Novos artigos foram baixados, mas não foi possível salvá-los no seu celular. Puxe para baixo para tentar de novo.",
+      "session": "Não foi possível atualizar seu Feed porque sua sessão expirou. Faça login novamente para continuar."
+    }
   },
   "relevance": {
     "emergency": "Emergência",

@@ -250,7 +250,16 @@
     },
     "statsZeroFetched": "Mera nie zdołała jeszcze pobrać żadnych artykułów. Będzie dalej próbować. Jeśli problem się powtarza, skontaktuj się z pomocą.",
     "statsZeroAnalysedTail": "ale Mera nie zdołała jeszcze przeanalizować dla Ciebie żadnego z nich. Będzie dalej próbować. Jeśli problem się powtarza, skontaktuj się z pomocą.",
-    "statsZeroRelevantTail": "ale na razie żaden nie wygląda na trafny. Sprawdź swój profil albo skontaktuj się z pomocą."
+    "statsZeroRelevantTail": "ale na razie żaden nie wygląda na trafny. Sprawdź swój profil albo skontaktuj się z pomocą.",
+    "syncFailed": {
+      "start": "Nie udało się rozpocząć odświeżania Strumienia. Pociągnij w dół, aby spróbować ponownie.",
+      "fetch": "Nie udało się wyszukać nowych artykułów. Pociągnij w dół, aby spróbować ponownie.",
+      "check": "Znaleziono nowe artykuły, ale nie udało się sprawdzić, które są nowe. Pociągnij w dół, aby spróbować ponownie.",
+      "download": "Znaleziono nowe artykuły, ale nie udało się ich pobrać. Pociągnij w dół, aby spróbować ponownie.",
+      "score": "Pobrano nowe artykuły, ale nie udało się ustalić, które są dla Ciebie ważne. Pociągnij w dół, aby spróbować ponownie.",
+      "storage": "Pobrano nowe artykuły, ale nie udało się zapisać ich na telefonie. Pociągnij w dół, aby spróbować ponownie.",
+      "session": "Nie udało się odświeżyć Strumienia, bo Twoja sesja wygasła. Zaloguj się ponownie, aby kontynuować."
+    }
   },
   "relevance": {
     "emergency": "Pilne",

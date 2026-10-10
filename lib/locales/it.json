@@ -234,7 +234,16 @@
     },
     "statsZeroFetched": "Mera non è ancora riuscita a recuperare nessun articolo. Continuerà a provare. Se succede ancora, contatta l'assistenza.",
     "statsZeroAnalysedTail": "ma Mera non è ancora riuscita ad analizzarne nessuno per te. Continuerà a provare. Se succede ancora, contatta l'assistenza.",
-    "statsZeroRelevantTail": "ma nessuno sembra ancora rilevante. Controlla il tuo profilo o contatta l'assistenza."
+    "statsZeroRelevantTail": "ma nessuno sembra ancora rilevante. Controlla il tuo profilo o contatta l'assistenza.",
+    "syncFailed": {
+      "start": "Impossibile avviare l'aggiornamento delle tue Notizie. Trascina verso il basso per riprovare.",
+      "fetch": "Impossibile cercare nuovi articoli. Trascina verso il basso per riprovare.",
+      "check": "Trovati nuovi articoli, ma impossibile verificare quali sono nuovi. Trascina verso il basso per riprovare.",
+      "download": "Trovati nuovi articoli, ma impossibile scaricarli. Trascina verso il basso per riprovare.",
+      "score": "Nuovi articoli scaricati, ma impossibile capire quali ti interessano. Trascina verso il basso per riprovare.",
+      "storage": "Nuovi articoli scaricati, ma impossibile salvarli sul telefono. Trascina verso il basso per riprovare.",
+      "session": "Impossibile aggiornare le tue Notizie perché la sessione è scaduta. Accedi di nuovo per continuare."
+    }
   },
   "relevance": {
     "emergency": "Emergenza",

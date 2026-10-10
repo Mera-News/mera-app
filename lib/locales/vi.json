@@ -234,7 +234,16 @@
     },
     "statsZeroFetched": "Mera chưa thể tải bài viết nào. Mera sẽ tiếp tục thử. Nếu tình trạng này vẫn tiếp diễn, hãy liên hệ bộ phận hỗ trợ.",
     "statsZeroAnalysedTail": "nhưng Mera chưa thể phân tích bài viết nào cho bạn. Mera sẽ tiếp tục thử. Nếu tình trạng này vẫn tiếp diễn, hãy liên hệ bộ phận hỗ trợ.",
-    "statsZeroRelevantTail": "nhưng chưa bài nào có vẻ phù hợp. Hãy xem lại hồ sơ của bạn hoặc liên hệ bộ phận hỗ trợ."
+    "statsZeroRelevantTail": "nhưng chưa bài nào có vẻ phù hợp. Hãy xem lại hồ sơ của bạn hoặc liên hệ bộ phận hỗ trợ.",
+    "syncFailed": {
+      "start": "Không thể bắt đầu làm mới Bảng tin. Kéo xuống để thử lại.",
+      "fetch": "Không thể tìm bài viết mới. Kéo xuống để thử lại.",
+      "check": "Đã tìm thấy bài viết mới, nhưng không thể kiểm tra bài nào là mới. Kéo xuống để thử lại.",
+      "download": "Đã tìm thấy bài viết mới, nhưng không thể tải xuống. Kéo xuống để thử lại.",
+      "score": "Đã tải bài viết mới, nhưng không thể xác định bài nào quan trọng với bạn. Kéo xuống để thử lại.",
+      "storage": "Đã tải bài viết mới, nhưng không thể lưu vào điện thoại của bạn. Kéo xuống để thử lại.",
+      "session": "Không thể làm mới Bảng tin vì phiên của bạn đã hết hạn. Đăng nhập lại để tiếp tục."
+    }
   },
   "relevance": {
     "emergency": "Khẩn cấp",

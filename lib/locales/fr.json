@@ -239,7 +239,16 @@
     },
     "statsZeroFetched": "Mera n'a pas encore pu récupérer d'articles. Mera continuera d'essayer. Si cela continue, contactez le support.",
     "statsZeroAnalysedTail": "mais Mera n'a pas encore pu en analyser pour vous. Mera continuera d'essayer. Si cela continue, contactez le support.",
-    "statsZeroRelevantTail": "mais aucun ne semble pertinent pour l'instant. Vérifiez votre profil ou contactez le support."
+    "statsZeroRelevantTail": "mais aucun ne semble pertinent pour l'instant. Vérifiez votre profil ou contactez le support.",
+    "syncFailed": {
+      "start": "Impossible de lancer l'actualisation de votre Fil d'actu. Tirez vers le bas pour réessayer.",
+      "fetch": "Impossible de rechercher de nouveaux articles. Tirez vers le bas pour réessayer.",
+      "check": "De nouveaux articles ont été trouvés, mais impossible de vérifier lesquels sont nouveaux. Tirez vers le bas pour réessayer.",
+      "download": "De nouveaux articles ont été trouvés, mais impossible de les télécharger. Tirez vers le bas pour réessayer.",
+      "score": "De nouveaux articles ont été téléchargés, mais impossible de déterminer ceux qui comptent pour vous. Tirez vers le bas pour réessayer.",
+      "storage": "De nouveaux articles ont été téléchargés, mais impossible de les enregistrer sur votre téléphone. Tirez vers le bas pour réessayer.",
+      "session": "Impossible d'actualiser votre Fil d'actu, car votre session a expiré. Reconnectez-vous pour continuer."
+    }
   },
   "relevance": {
     "emergency": "Urgence",

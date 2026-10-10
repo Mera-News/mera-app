@@ -234,7 +234,16 @@
     },
     "statsZeroFetched": "Mera belum bisa mengambil artikel apa pun. Mera akan terus mencoba. Jika hal ini terus terjadi, hubungi dukungan.",
     "statsZeroAnalysedTail": "tetapi Mera belum bisa menganalisisnya untuk Anda. Mera akan terus mencoba. Jika hal ini terus terjadi, hubungi dukungan.",
-    "statsZeroRelevantTail": "tetapi belum ada yang terlihat relevan. Tinjau profil Anda atau hubungi dukungan."
+    "statsZeroRelevantTail": "tetapi belum ada yang terlihat relevan. Tinjau profil Anda atau hubungi dukungan.",
+    "syncFailed": {
+      "start": "Tidak dapat mulai memuat ulang Umpan Anda. Tarik ke bawah untuk mencoba lagi.",
+      "fetch": "Tidak dapat mencari artikel baru. Tarik ke bawah untuk mencoba lagi.",
+      "check": "Artikel baru ditemukan, tetapi tidak dapat memeriksa mana yang baru. Tarik ke bawah untuk mencoba lagi.",
+      "download": "Artikel baru ditemukan, tetapi tidak dapat mengunduhnya. Tarik ke bawah untuk mencoba lagi.",
+      "score": "Artikel baru sudah diunduh, tetapi tidak dapat menentukan mana yang penting bagi Anda. Tarik ke bawah untuk mencoba lagi.",
+      "storage": "Artikel baru sudah diunduh, tetapi tidak dapat menyimpannya di ponsel Anda. Tarik ke bawah untuk mencoba lagi.",
+      "session": "Tidak dapat memuat ulang Umpan Anda karena sesi Anda berakhir. Masuk kembali untuk melanjutkan."
+    }
   },
   "relevance": {
     "emergency": "Darurat",

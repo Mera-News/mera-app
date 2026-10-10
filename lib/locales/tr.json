@@ -234,7 +234,16 @@
     },
     "statsZeroFetched": "Mera henüz hiç makale getiremedi. Denemeye devam edecek. Bu durum sürerse destek ekibiyle iletişime geç.",
     "statsZeroAnalysedTail": "ama Mera henüz senin için hiçbirini analiz edemedi. Denemeye devam edecek. Bu durum sürerse destek ekibiyle iletişime geç.",
-    "statsZeroRelevantTail": "ama henüz hiçbiri alakalı görünmüyor. Profilini gözden geçir veya destek ekibiyle iletişime geç."
+    "statsZeroRelevantTail": "ama henüz hiçbiri alakalı görünmüyor. Profilini gözden geçir veya destek ekibiyle iletişime geç.",
+    "syncFailed": {
+      "start": "Akışını yenileme başlatılamadı. Tekrar denemek için aşağı çek.",
+      "fetch": "Yeni makaleler aranamadı. Tekrar denemek için aşağı çek.",
+      "check": "Yeni makaleler bulundu ama hangilerinin yeni olduğu kontrol edilemedi. Tekrar denemek için aşağı çek.",
+      "download": "Yeni makaleler bulundu ama indirilemedi. Tekrar denemek için aşağı çek.",
+      "score": "Yeni makaleler indirildi ama hangilerinin senin için önemli olduğu belirlenemedi. Tekrar denemek için aşağı çek.",
+      "storage": "Yeni makaleler indirildi ama telefonuna kaydedilemedi. Tekrar denemek için aşağı çek.",
+      "session": "Oturumunun süresi dolduğu için Akışın yenilenemedi. Devam etmek için tekrar giriş yap."
+    }
   },
   "relevance": {
     "emergency": "Acil",
