@@ -425,6 +425,23 @@ describe('an attempted audit that gave no verdicts is NOT a skip', () => {
     expect((await sweep({ now: T0 + 1000 })).ran).toBe(true);
   });
 
+  it('keeps the sanity cursor when publishing throws, so the retry finds the same verdicts', async () => {
+    await cricketPersona(MIN_FACTS_FOR_SWEEP);
+    const real = settingService.setSetting;
+    const spy = jest.spyOn(settingService, 'setSetting').mockImplementation(async (key, value) => {
+      if (key === 'hygiene_pending_proposals') throw new Error('disk full');
+      return real(key, value);
+    });
+
+    await expect(sweep({ now: T0, force: true })).rejects.toThrow('disk full');
+    spy.mockRestore();
+
+    expect(await getSetting('sanity_audited_through_ms')).toBeNull();
+    await sweep({ now: T0 + 1000 });
+    expect((await getPendingProposals()).map((p) => p.kind)).toContain('incoherent_topics');
+    expect(await getSetting('sanity_audited_through_ms')).not.toBeNull();
+  });
+
   it('never fires a SECOND notification: one sweep publishes once, cleanups and verdicts together', async () => {
     await cricketPersona(MIN_FACTS_FOR_SWEEP);
 

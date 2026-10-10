@@ -383,6 +383,26 @@ describe('the audit cursor never skips a topic it did not judge', () => {
     const judged = new Set(sanityTexts(gatewayCalls('batch')));
     expect(judged.size).toBe(70);
   });
+
+  it('a same-millisecond run that straddles the cap and does not start the chunk ends the chunk before it, and the next chunk takes the whole run', async () => {
+    await seedCorpus(50);
+    strictClockAt(T0 + 10_000);
+    const other = await addFact('Follows Dutch politics');
+    await seedTopics(
+      other.id,
+      Array.from({ length: 20 }, (_, i) => `politics topic ${i}`),
+    );
+
+    const first = await chunk();
+    const firstTexts = sanityTexts(gatewayCalls('batch'));
+    const second = await chunk();
+
+    // 50 distinct topics, then 20 sharing one millisecond: the cap of 60 would cut the run after 10.
+    expect(first.audited).toBe(50);
+    expect(firstTexts.some((t) => t.startsWith('politics'))).toBe(false);
+    expect(second.audited).toBe(20);
+    expect(new Set(sanityTexts(gatewayCalls('batch'))).size).toBe(70);
+  });
 });
 
 describe('a prompt that refuses every time must not pin the cursor forever', () => {
