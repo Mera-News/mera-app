@@ -2050,7 +2050,18 @@ export async function persistAndLinkV2Suggestions(
       ).map((r) => r.id),
     );
 
+    // A prune can destroy a planned row between the read above and this writer;
+    // preparing an update on it would throw and fail the whole batch.
+    const stillThere = new Set(
+      (
+        await articleSuggestionsCol
+          .query(Q.where('id', Q.oneOf(existingUpdates.map((u) => u.row.id))))
+          .fetch()
+      ).map((r) => r.id),
+    );
+
     for (const { row, nextClusterJson, nextMatchedTopicsJson } of existingUpdates) {
+      if (!stillThere.has(row.id)) continue;
       ops.push(
         row.prepareUpdate((r) => {
           if (nextClusterJson !== undefined) r.clusterMembershipsJson = nextClusterJson;

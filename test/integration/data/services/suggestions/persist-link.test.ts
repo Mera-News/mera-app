@@ -502,18 +502,10 @@ describe('a planned update whose row is destroyed before the writer runs', () =>
     );
   }
 
-  test.failing('DA47: the row is skipped and the rest of the persist lands', async () => {
+  test('DA47: the row is skipped and the rest of the persist lands', async () => {
     const [res] = await persistWhileXIsDestroyed();
 
     expect(res.status).toBe('fulfilled');
     expect(await idsInDb()).toEqual(['y']);
-  });
-
-  test('DA47 today: the whole persist rejects, the new row included', async () => {
-    const [res] = await persistWhileXIsDestroyed();
-
-    expect(res.status).toBe('rejected');
-    expect((res as PromiseRejectedResult).reason.message).toMatch(/deleted record/);
-    expect(await idsInDb()).toEqual([]);
   });
 });
