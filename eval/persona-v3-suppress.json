@@ -1,5 +1,5 @@
 {
-  "provenance": "build-persona-v3.js over .local-test-data/persona.json | COPY of persona-v3.json with ONLY `suppressions` populated. Fixture for the structured-not-interested wave: persona-v3.json has suppressions: [], so suppressionPenalty() returns 0 without executing the matcher. Strengths straddle the 0.8 HARD cut-off on purpose: the 0.3/0.5/0.7 rows must stay byte-identical through the matcher extraction AND the hard screen; the 0.8 row is the only one the hard screen may remove.",
+  "provenance": "build-persona-v3.js over .local-test-data/persona.json | COPY of persona-v3.json with ONLY `suppressions` populated. Fixture for the structured-not-interested wave: persona-v3.json has suppressions: [], so splitSuppressionPenalty() returns 0 without executing the matcher. Strengths straddle the 0.8 HARD cut-off on purpose: the 0.3/0.5/0.7 rows must stay byte-identical through the matcher extraction AND the hard screen; the 0.8 row is the only one the hard screen may remove.",
   "seedWeight": 0.75,
   "facts": [
     {

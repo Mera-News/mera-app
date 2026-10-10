@@ -6,7 +6,7 @@
 // --persona overrides the default eval/persona-v3.json. Used to hold a second,
 // suppression-carrying fixture (eval/persona-v3-suppress.json) so the keyword
 // matcher is exercised at corpus scale — persona-v3.json has suppressions: [],
-// which means suppressionPenalty() returns 0 without executing a single line.
+// which means splitSuppressionPenalty() returns 0 without executing a single line.
 //
 // Both engines emit the SAME shape (id, titleEn, rawScore, wrongLocation, …) so
 // eval-golden.js reports tiers + the wrong-location leak counter identically:
