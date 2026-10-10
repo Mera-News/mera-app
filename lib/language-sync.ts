@@ -66,7 +66,8 @@ export async function syncAppLanguageToPersona(
     // the LLM set server-side that we simply haven't loaded locally yet.
     let persona = store.userId === userId ? store.userPersona : null;
     if (!persona) {
-      persona = await store.fetchUserPersona(userId);
+      // OrThrow: a failed fetch must reach the catch below, not read as "no codes yet".
+      persona = await store.fetchUserPersonaOrThrow(userId);
     }
 
     const existing: string[] = persona?.language_codes ?? [];

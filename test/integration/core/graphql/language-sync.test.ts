@@ -153,7 +153,7 @@ describe('syncAppLanguageToPersona', () => {
     expect(useUserStore.getState().userPersona?.language_codes).toEqual(['en']);
   });
 
-  // CO-NEW-1: the merge is meant to run against the freshest server persona so it never clobbers
+  // CO6: the merge is meant to run against the freshest server persona so it never clobbers
   // codes the on-device LLM added server-side. user-store.fetchUserPersona swallows a failed fetch
   // into null, which this function reads as "no codes yet", so a failed fetch writes ['fr'] over them.
   describe('when the persona fetch fails', () => {
@@ -167,14 +167,9 @@ describe('syncAppLanguageToPersona', () => {
       }));
     });
 
-    test.failing('CO-NEW-1: leaves the server language_codes alone when the persona could not be fetched', async () => {
+    test('CO6: leaves the server language_codes alone when the persona could not be fetched', async () => {
       await syncAppLanguageToPersona('fr', { userId: 'u4' });
       expect(updates).toEqual([]);
-    });
-
-    test('CO-NEW-1 (today): overwrites language_codes with just the picked language', async () => {
-      await expect(syncAppLanguageToPersona('fr', { userId: 'u4' })).resolves.toBeUndefined();
-      expect(updates).toEqual([{ input: { userId: 'u4', language_codes: ['fr'] } }]);
     });
   });
 });
