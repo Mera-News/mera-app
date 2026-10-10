@@ -102,6 +102,10 @@ export async function runSanityBackfillChunk(opts?: {
       maxTopics: BACKFILL_CHUNK_TOPICS,
     });
 
+    // The credential was lost mid-run: nothing ran, so nothing is recorded and
+    // the next tick retries.
+    if (result.skipped) return { ran: false, audited: 0, proposalsAdded: 0, done: false };
+
     const auditedTotal = (await readNumber(AUDITED_KEY)) + result.audited;
     await setSetting(AUDITED_KEY, String(auditedTotal));
 

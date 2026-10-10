@@ -326,8 +326,9 @@ describe('a chunk that could not run must not finish the pass', () => {
 
     const res = await chunk();
 
-    expect(res.done).toBe(false);
+    expect(res).toEqual({ ran: false, audited: 0, proposalsAdded: 0, done: false });
     expect(await isBackfillDone()).toBe(false);
+    expect(await getSetting(AUDITED)).toBeNull();
   });
 });
 
