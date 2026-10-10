@@ -260,8 +260,8 @@ export function useNotificationSettings({
                 ),
             });
         }
-        // resolveCurrentUserId is a plain helper re-created per render; the save
-        // must not be re-created (and the timer orphaned) on every render.
+        // toast and t stay out of the deps on purpose: the save must not be
+        // re-created (and its timer orphaned) on every render.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
