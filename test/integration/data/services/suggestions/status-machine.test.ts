@@ -9,7 +9,6 @@ import {
   batchMarkReasonSkipped,
   batchPropagateScores,
   batchResetToUnscored,
-  loadSuggestions,
   getCullableLowHeadlineIds,
   getScoredDonorRows,
   getScoredSuggestionsWithoutReasons,
@@ -205,10 +204,10 @@ describe('DA12: the other writers keep a terminal row terminal', () => {
 });
 
 // The grounding check lets a note with no content tokens through ("contentless, not wrong"), and a
-// whitespace-only note from the gateway is exactly that. The row lands complete with nothing to read,
-// out of reach of the sweep that only selects reason_pending, so it never gets its note.
+// whitespace-only note from the gateway is exactly that. It is treated as no note, so the row stays
+// reason_pending for the sweep that only selects reason_pending.
 describe('DA14: a whitespace-only note is not a note', () => {
-  test.failing('DA14: saveReason keeps the row reason-owed', async () => {
+  test('DA14: saveReason keeps the row reason-owed', async () => {
     await seed([article('a1')]);
     await toReasonPending('a1');
 
@@ -217,26 +216,11 @@ describe('DA14: a whitespace-only note is not a note', () => {
     expect(await statusOf('a1')).toBe('reason_pending');
   });
 
-  test.failing('DA14: saveScoringResult keeps the row reason-owed', async () => {
+  test('DA14: saveScoringResult keeps the row reason-owed', async () => {
     await seed([article('a1')]);
 
     await saveScoringResult('a1', { relevance: 0.8, reason: '   ', reasonSkipped: false });
 
     expect(await statusOf('a1')).toBe('reason_pending');
-  });
-
-  test('DA14 today: saveReason and saveScoringResult mark the row complete with a blank note', async () => {
-    await seed([article('a1'), article('a2')]);
-    await toReasonPending('a1');
-
-    await saveReason('a1', '   ');
-    await saveScoringResult('a2', { relevance: 0.8, reason: '   ', reasonSkipped: false });
-
-    for (const id of ['a1', 'a2']) {
-      expect(await loadSuggestions().then((rows) => rows.find((s) => s._id === id))).toMatchObject({
-        status: 'complete',
-        reason: '   ',
-      });
-    }
   });
 });

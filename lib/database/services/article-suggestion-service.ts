@@ -570,7 +570,7 @@ function groundedReasonFor(
    *  this whole change exists to answer. */
   source: 'score' | 'reason-sweep' | 'propagation',
 ): string {
-  if (reason.length === 0) return reason;
+  if (reason.trim().length === 0) return '';
   const geoTags = parseJsonArray<{ city?: string; region?: string; countryCode?: string }>(
     row.geoTagsJson,
   ).flatMap((g) =>
