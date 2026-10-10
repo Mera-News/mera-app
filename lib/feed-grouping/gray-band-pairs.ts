@@ -96,14 +96,14 @@ const SIDECAR_BYTES = SIDECAR_BITS / 8;
  * bar itself (anything at or above it is already merged, so it can never be
  * enumerated here anyway).
  */
-export const GRAY_BAND_LEXICAL_LOWER = 0.3;
+const GRAY_BAND_LEXICAL_LOWER = 0.3;
 
 /**
  * Hard cap on pairs returned per sweep. Bounds the cost of anything a caller
  * might later do per pair, and bounds the diagnostics payload. Pairs are
  * returned closest-first, so the cap drops the weakest candidates.
  */
-export const MAX_GRAY_BAND_PAIRS = 60;
+const MAX_GRAY_BAND_PAIRS = 60;
 
 /** Item shape the enumerator consumes: a `GroupableItem` (so the existing
  *  grouping options, tokenizer and union-find apply unchanged) plus the

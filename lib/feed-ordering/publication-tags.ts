@@ -16,7 +16,7 @@
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { normPublicationName, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 
-export const PUBLICATION_TAG_MULTIPLIER = { more: 1.5, fewer: 0.5, subscribed: 2 } as const;
+const PUBLICATION_TAG_MULTIPLIER = { more: 1.5, fewer: 0.5, subscribed: 2 } as const;
 
 export type PublicationPrefTag = 'more' | 'fewer' | 'mute' | null;
 
@@ -35,7 +35,7 @@ export function publicationTagMultiplier(pref: PublicationPrefTag, subscribed: b
 }
 
 /** The multiplier for an article's publication name; 1 without a context. */
-export function publicationMultiplier(
+function publicationMultiplier(
     publicationName: string | null | undefined,
     ctx: RankingContext | null | undefined,
 ): number {

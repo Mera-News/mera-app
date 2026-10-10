@@ -16,7 +16,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { upgradeImageUrl } from './upgrade-image-url';
 
-export type UpgradeStage = 'upgraded' | 'original' | 'failed';
+type UpgradeStage = 'upgraded' | 'original' | 'failed';
 
 export interface UpgradedImageSource {
   /** What to hand the <Image>. `null` once both candidates have failed. */

@@ -59,7 +59,7 @@ export const WINDOW_MS = WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
 /** One row of the opt-in "top publications" list. Name plus country only —
  *  article titles are never included under any setting. */
-export interface TopPublication {
+interface TopPublication {
   publicationName: string;
   countryCode: string | null;
   /** Total taps on this publication's articles inside the window. */
@@ -75,7 +75,7 @@ export interface TopPublication {
  * with one prolific publisher is not flattened to the same width as one with
  * six occasional ones.
  */
-export interface CountryShare {
+interface CountryShare {
   countryCode: string;
   /** Total taps on this country's articles inside the window. */
   visitCount: number;
@@ -103,7 +103,7 @@ export interface CountryShare {
  * rows without one are counted nowhere rather than bucketed as "unknown" —
  * an unknown bucket in a proportion bar is a segment the reader cannot act on.
  */
-export interface LanguageShare {
+interface LanguageShare {
   languageCode: string;
   visitCount: number;
 }
@@ -132,7 +132,7 @@ export interface DayRead {
   weekday: number;
 }
 
-export interface KeptNow {
+interface KeptNow {
   /** Rows in `saved_article_suggestions` that are real user saves. Retention
    *  rows (`origin` 'fact_check' or 'tracked_story') are excluded upstream by
    *  `loadSavedItems`, so a followed story's members never inflate this and
@@ -416,7 +416,7 @@ export function availableCards(stats: ReadingStats): StatsCardId[] {
  * late-evening read on tomorrow for every reader east of Greenwich, and an
  * early-morning one on yesterday for every reader west of it).
  */
-export function localDateKey(ms: number): string {
+function localDateKey(ms: number): string {
   return new Date(ms).toLocaleDateString('en-CA', {
     year: 'numeric',
     month: '2-digit',

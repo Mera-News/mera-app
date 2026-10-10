@@ -87,7 +87,7 @@ export const MERA_BUTTON_BAR_GAP = 13;
 /** The Mera button's distance from the screen's left or right edge. */
 export const MERA_BUTTON_EDGE = 14;
 /** Clear space between a list's last item and the button's top edge. */
-export const LIST_END_CONTENT_GAP = 12;
+const LIST_END_CONTENT_GAP = 12;
 /** What every list ends with ABOVE the tab bar, so nothing sits under the
  *  button. Derived, never a literal: the 172pt in the design is this plus the
  *  bar, measured from the screen bottom on iOS (inset 85 already includes the
@@ -150,7 +150,7 @@ export function foldTabBarTop(prev: TabBarTopState, top: number, windowHeight: n
 }
 
 /** Null until a tab has measured. */
-export const useTabBarTopStore = create<TabBarTopState>(() => ({ top: null, windowHeight: null }));
+const useTabBarTopStore = create<TabBarTopState>(() => ({ top: null, windowHeight: null }));
 
 export function useTabBarTop(): number | null {
   return useTabBarTopStore((s) => s.top);

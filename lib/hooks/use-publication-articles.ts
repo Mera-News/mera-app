@@ -66,9 +66,9 @@ export interface PublicationArticlesResult {
   refresh: () => Promise<void>;
 }
 
-export const PUBLICATION_ARTICLES_PAGE_SIZE = 20;
+const PUBLICATION_ARTICLES_PAGE_SIZE = 20;
 
-export const defaultPublicationArticlesPorts: PublicationArticlesPorts = {
+const defaultPublicationArticlesPorts: PublicationArticlesPorts = {
   fetchPage: (publisherId, order, after, first) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { ArticleService } = require('@/lib/article-service') as typeof import('@/lib/article-service');

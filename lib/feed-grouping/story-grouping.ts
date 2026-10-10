@@ -173,8 +173,8 @@ export const WEIGHTED_JACCARD_DISPLAY_THRESHOLD = 0.28;
  * match on exactly two ("possible"+"kidnapping"); requiring three would lose
  * them.
  */
-export const WEIGHTED_JACCARD_ANCHOR_DF_MAX = 8;
-export const WEIGHTED_JACCARD_MIN_ANCHORS = 2;
+const WEIGHTED_JACCARD_ANCHOR_DF_MAX = 8;
+const WEIGHTED_JACCARD_MIN_ANCHORS = 2;
 
 // --- Entity-overlap edge (4) — DISPLAY only -------------------------------
 //
@@ -208,7 +208,7 @@ export const ENTITY_JACCARD_DISPLAY_THRESHOLD = 0.6;
  *  plausibly the same event. This is what keeps the three Anthropic-hack cards
  *  apart from "Nexus … Google-backed Anthropic data center" and "The Pentagon's
  *  Case Against Anthropic", which share only `Anthropic`. */
-export const ENTITY_MIN_SHARED = 2;
+const ENTITY_MIN_SHARED = 2;
 
 /**
  * Rare-ENTITY anchor: the pair must share at least one entity whose document
@@ -231,7 +231,7 @@ export const ENTITY_MIN_SHARED = 2;
  * (df ≥ 2 by definition) could never qualify.
  */
 export const ENTITY_ANCHOR_DF_FLOOR = 8;
-export const ENTITY_ANCHOR_DF_RATIO_MAX = 0.05;
+const ENTITY_ANCHOR_DF_RATIO_MAX = 0.05;
 
 /** Rare-entity DF cap for a pool of `n` items. See `ENTITY_ANCHOR_DF_FLOOR`. */
 export function entityAnchorDfMax(n: number): number {
@@ -243,7 +243,7 @@ export function entityAnchorDfMax(n: number): number {
  *  subject matter, catching entity-tag collisions between unrelated events that
  *  happen to involve the same two organisations. 1, not 2: cross-language
  *  coverage frequently shares only the organisation name. */
-export const ENTITY_MIN_SHARED_TITLE_TOKENS = 1;
+const ENTITY_MIN_SHARED_TITLE_TOKENS = 1;
 
 /**
  * Title-token Jaccard bar for a DISPLAY merge (collapsing cards in the feed).

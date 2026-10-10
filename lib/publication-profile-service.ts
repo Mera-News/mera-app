@@ -31,7 +31,7 @@ import { rememberPublisherSourceNames } from '@/lib/database/services/publisher-
 import type { QueryPublicationProfileArgs } from '@/lib/generated/graphql-types';
 
 /** One publication, as the page shows it. */
-export interface PublicationProfile {
+interface PublicationProfile {
   newsPublisherId: string;
   name: string;
   /** The name in the reader's language, when the server has one. */
@@ -55,7 +55,7 @@ export type PublicationProfileKey =
   | { readonly publisherId: string }
   | { readonly rawName: string; readonly countryCode: string | null | undefined };
 
-export type PublicationProfileState =
+type PublicationProfileState =
   | 'loading'
   | 'ready'
   | 'error'
@@ -63,7 +63,7 @@ export type PublicationProfileState =
   | 'unsupported'
   | 'notFound';
 
-export interface PublicationProfileResult {
+interface PublicationProfileResult {
   state: PublicationProfileState;
   /** Set only in `ready`. */
   profile: PublicationProfile | null;
@@ -72,7 +72,7 @@ export interface PublicationProfileResult {
 }
 
 /** The server does not know `publicationProfile` (an app ahead of its server). */
-export class PublicationProfileUnsupportedError extends Error {
+class PublicationProfileUnsupportedError extends Error {
   readonly unsupported = true as const;
   constructor() {
     super('publicationProfile is not supported by this server');
@@ -90,7 +90,7 @@ export interface PublicationProfilePorts {
   onReconnect(listener: () => void): () => void;
 }
 
-export const PUBLICATION_PROFILE = gql`
+const PUBLICATION_PROFILE = gql`
   query PublicationProfile(
     $newsPublisherId: ID
     $name: String
@@ -138,7 +138,7 @@ function str(v: unknown): string | null {
 }
 
 /** Defensive shape check: a partial or malformed row is "not found", never a crash. */
-export function toPublicationProfile(raw: unknown): PublicationProfile | null {
+function toPublicationProfile(raw: unknown): PublicationProfile | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
   const id = str(r.newsPublisherId);
@@ -161,7 +161,7 @@ export function toPublicationProfile(raw: unknown): PublicationProfile | null {
 }
 
 /** The variables for a key: exactly one of the two modes, as the server requires. */
-export function profileVariables(key: PublicationProfileKey, language: string): QueryPublicationProfileArgs {
+function profileVariables(key: PublicationProfileKey, language: string): QueryPublicationProfileArgs {
   // Exactly one key mode: the server answers BAD_PROFILE_KEY to a mix.
   const vars: QueryPublicationProfileArgs = { language };
   if ('publisherId' in key) {
@@ -174,7 +174,7 @@ export function profileVariables(key: PublicationProfileKey, language: string): 
 }
 
 /** The network half of the default ports. Exported for tests. */
-export async function fetchPublicationProfile(
+async function fetchPublicationProfile(
   key: PublicationProfileKey,
   appLanguage: string,
 ): Promise<PublicationProfile | null> {
@@ -203,7 +203,7 @@ export async function fetchPublicationProfile(
   }
 }
 
-export const defaultPublicationProfilePorts: PublicationProfilePorts = {
+const defaultPublicationProfilePorts: PublicationProfilePorts = {
   fetch: fetchPublicationProfile,
   isOffline: () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -241,7 +241,7 @@ function keyParts(key: PublicationProfileKey | null | undefined): [string, strin
  * The hook factory, so tests can pass their own ports. The app uses
  * {@link usePublicationProfile}.
  */
-export function makeUsePublicationProfile(ports: PublicationProfilePorts) {
+function makeUsePublicationProfile(ports: PublicationProfilePorts) {
   return function usePublicationProfileWith(
     key: PublicationProfileKey | null | undefined,
   ): PublicationProfileResult {
