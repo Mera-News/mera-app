@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExportHistory } from './use-export-history';
-import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { setConfirmTopicDelete, shouldConfirmTopicDelete } from '@/components/custom/facts/topic-delete-confirm';
 import { Switch } from '@/components/ui/switch';
 
@@ -44,7 +44,7 @@ interface ManageDataScreenProps {
 const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
     // Clear of the tab bar on every platform (the shared inset, not a literal).
-    const bottomInset = useTabContentBottomInset();
+    const endClearance = useListEndClearance();
     const { t } = useTranslation();
     const [isProcessing, setIsProcessing] = useState(false);
     const { exporting, exportHistory } = useExportHistory('ManageDataScreen');
@@ -124,7 +124,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             <View style={{ paddingTop: insets.top }}>
                 <DrillDownHeader title={t('you.settings.yourData')} onBack={onBack} />
             </View>
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottomInset }}>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: endClearance }}>
                 <Help>{t('manageData.intro')}</Help>
                 <View style={{ height: 12 }} />
                 <Group>

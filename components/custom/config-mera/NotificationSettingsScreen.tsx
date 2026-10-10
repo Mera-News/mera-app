@@ -17,7 +17,7 @@ import NotificationTimes from './NotificationTimes';
 import { useNotificationSettings } from './useNotificationSettings';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { useColors } from '@/lib/theme/tokens';
-import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
+import { useListEndClearance, useTabContentBottomInset } from '@/lib/navigation/tab-bar';
 
 
 interface NotificationSettingsScreenProps {
@@ -53,6 +53,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     const toast = useToast();
     const insets = useSafeAreaInsets();
     const bottomInset = useTabContentBottomInset();
+    const endClearance = useListEndClearance();
     const {
         isLoading,
         saveState,
@@ -210,7 +211,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         <ScrollView
             testID="notifications-scroll"
             className="flex-1"
-            contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottomInset }}
+            contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: endClearance }}
             showsVerticalScrollIndicator={false}
         >
             {/* First launch: the wizard draws the title and the why. Off is one

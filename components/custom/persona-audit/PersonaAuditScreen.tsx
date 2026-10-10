@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, View } from 'react-native';
 import { isRevertible, sourceLabelKey } from './action-display';
 import { changeSummary, type ChangeContext } from './change-summary';
-import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 
 interface PersonaAuditScreenProps {
     readonly onBack: () => void;
@@ -47,7 +47,7 @@ function dayLabel(date: Date, today: string, language: string | undefined): stri
  * has no inverse (`isRevertible`).
  */
 const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
-    const bottomInset = useTabContentBottomInset();
+    const endClearance = useListEndClearance();
     const { t, i18n } = useTranslation();
     const colors = useColors();
     const [rows, setRows] = useState<PersonaChangeLogModel[]>([]);
@@ -204,7 +204,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                     data={days}
                     keyExtractor={(day) => day.label}
                     renderItem={renderDay}
-                    contentContainerStyle={{ paddingBottom: bottomInset }}
+                    contentContainerStyle={{ paddingBottom: endClearance }}
                     showsVerticalScrollIndicator={false}
                 />
             )}

@@ -12,7 +12,7 @@ import type PublicationPreferenceModel from '@/lib/database/models/PublicationPr
 import type { PublicationPrefKind } from '@/lib/database/services/publication-preference-service';
 import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import logger from '@/lib/logger';
-import { useTabBarClearance } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native';
@@ -43,7 +43,7 @@ const TAG_KEY: Record<PublicationPrefKind, 'you.sources.more' | 'you.sources.few
 const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const { publications, scopes, isLoading } = useAdjustedSources();
-    const bottom = useTabBarClearance();
+    const endClearance = useListEndClearance();
     const [searching, setSearching] = useState(false);
     // Keyed on `pref.id`, never the label: a scope "India" and a publication
     // called "India" must not lock each other.
@@ -144,7 +144,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                     keyExtractor={(item) => (item.type === 'scope' ? item.scope.group.key : item.pub.key)}
                     renderItem={renderItem}
                     keyboardShouldPersistTaps="handled"
-                    contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottom + 24 }}
+                    contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: endClearance }}
                     showsVerticalScrollIndicator={false}
                     ListHeaderComponent={
                         <VStack>

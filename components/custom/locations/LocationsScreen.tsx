@@ -36,7 +36,7 @@ import {
   weightForBucket,
   type WeightBucket,
 } from './location-display';
-import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 
 interface Props {
   readonly onBack: () => void;
@@ -62,7 +62,7 @@ export const WEATHER_UI_ENABLED = false;
  * adds a place.
  */
 const LocationsScreen: React.FC<Props> = ({ onBack }) => {
-  const bottomInset = useTabContentBottomInset();
+  const endClearance = useListEndClearance();
   const { t } = useTranslation();
   const colors = useColors();
   const [locations, setLocations] = useState<LocationModel[]>([]);
@@ -204,7 +204,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
       <ScrollView
         testID="places-list"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottomInset, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: endClearance, gap: 12 }}
       >
         <Help>{t('locations.intro')}</Help>
         <Group>{locations.map(renderPlace)}</Group>

@@ -34,7 +34,7 @@ import {
     BG_REFRESH_TITLE_KEY,
     bgRefreshDescriptionKey,
 } from '@/lib/background/bg-refresh-ui';
-import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useMeraProtocolSettings } from './useMeraProtocolSettings';
 
 interface MeraProtocolSettingsScreenProps {
@@ -44,7 +44,7 @@ interface MeraProtocolSettingsScreenProps {
 const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     onBack,
 }) => {
-    const bottomInset = useTabContentBottomInset();
+    const endClearance = useListEndClearance();
     const { t } = useTranslation();
     const colors = useColors();
     const {
@@ -578,7 +578,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
                 </Box>
 
-                <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: bottomInset }}>
+                <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: endClearance }}>
                     {renderContent()}
                 </ScrollView>
 

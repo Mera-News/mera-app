@@ -27,7 +27,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { FlatList, View } from 'react-native';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import { useTabContentBottomInset } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 
 
 interface HygieneReviewScreenProps {
@@ -170,7 +170,7 @@ function orderedFacts(item: HygieneProposal, byId: Map<string, Fact>): Fact[] {
  * good) or Keep both.
  */
 const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => {
-    const bottomInset = useTabContentBottomInset();
+    const endClearance = useListEndClearance();
     const { t } = useTranslation();
     const colors = useColors();
     const [items, setItems] = useState<HygieneProposal[]>([]);
@@ -326,7 +326,7 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                     data={items}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottomInset }}
+                    contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: endClearance }}
                     showsVerticalScrollIndicator={false}
                     ListHeaderComponent={
                         <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginHorizontal: 18, marginBottom: 12 }}>
