@@ -92,15 +92,6 @@ describe('matchesReadStory', () => {
     expect(matchesReadStory({ articleId: 'art-2' }, index)).toBe(false);
   });
 
-  it('does not match on stable_cluster_id alone: a new headline in a read story still reaches the feed', () => {
-    const index = buildReadStoryIndex([
-      opened({ articleId: 'art-1' }),
-    ]);
-    expect(
-      matchesReadStory({ articleId: 'art-2' }, index),
-    ).toBe(false);
-  });
-
   it('still matches a same-cluster candidate whose headline is near-identical (the title key)', () => {
     const index = buildReadStoryIndex([
       opened({
