@@ -12,16 +12,11 @@ import type FactModel from '../models/Fact';
 import type PersonaChangeLogModel from '../models/PersonaChangeLog';
 import type { PersonaChangeLogSource } from '../models/PersonaChangeLog';
 import * as topicService from './topic-service';
-import * as locationService from './location-service';
-import * as suppressionService from './suppression-service';
 import * as changeLogService from './persona-change-log-service';
-import logger from '../../logger';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import {
   nudgeTopicWeight,
   clampWeight,
-  buildWrongLocationActions,
-  type WrongLocationInput,
 } from '../../news-harness/persona-management/mutation-rails';
 
 const topicsCollection = database.get<TopicModel>('topics');
@@ -194,66 +189,4 @@ export async function nudgeFactWeight(
     summary: `Adjusted fact weight ${fmt(before ?? 1)} → ${fmt(after)}`,
   });
   return { applied: true, changeLogId: row.id };
-}
-
-/** Wrong-location input MINUS the user's locations — those are loaded here. */
-export type ApplyWrongLocationInput = Omit<WrongLocationInput, 'locations'>;
-
-/**
- * Execute a wrong-location feedback signal: load the user's locations, compile
- * the ordered action descriptors via the pure `buildWrongLocationActions`, then
- * apply each (mint a location-anchored NEGATIVE topic; optionally add a SOFT
- * suppression from the article's bad-context entities). Each applied action
- * appends its own invertible change-log row. Wrapped defensively per-action so
- * one failing write can't abort the rest.
- */
-export async function applyWrongLocation(
-  input: ApplyWrongLocationInput,
-  source: PersonaChangeLogSource = 'feedback',
-): Promise<void> {
-  const locations = (await locationService.getAll()).map((l) => ({
-    city: l.city,
-    region: l.region,
-    countryCode: l.countryCode,
-  }));
-  const actions = buildWrongLocationActions({ ...input, locations });
-
-  for (const action of actions) {
-    try {
-      if (action.kind === 'add_negative_topic') {
-        const [created] = await topicService.createTopics([
-          {
-            text: action.text,
-            weight: action.weight,
-            status: 'active',
-            provenance: 'feedback',
-          },
-        ]);
-        if (!created) continue;
-        await changeLogService.append({
-          actionType: ACTION_NAMES.ADD_NEGATIVE_TOPIC,
-          action: { targetId: created.id, text: action.text },
-          source,
-          summary: `Added negative topic: ${action.text}`,
-        });
-      } else {
-        const suppression = await suppressionService.addSuppression({
-          pattern: action.pattern,
-          keywords: action.keywords,
-          strength: action.strength,
-          source: 'feedback',
-        });
-        await changeLogService.append({
-          actionType: ACTION_NAMES.ADD_SUPPRESSION,
-          action: { targetId: suppression.id },
-          source,
-          summary: `Suppressed: ${action.pattern}`,
-        });
-      }
-    } catch (error) {
-      logger.captureException(error, {
-        tags: { service: 'mutation-rails', method: 'applyWrongLocation' },
-      });
-    }
-  }
 }

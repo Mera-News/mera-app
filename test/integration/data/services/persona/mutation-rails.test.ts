@@ -2,23 +2,19 @@
 // absolute set, pin, fact nudge), on the real DB. The budget query is a real `Q.where` now, so the day
 // window (local midnight), the per-topic scope and which log rows count are all under test.
 import database from '@/lib/database';
-import { applyWrongLocation, nudgeFactWeight, nudgeTopic, setTopicHighPriority, setTopicWeightAbsolute } from '@/lib/database/services/mutation-rails-service';
+import { nudgeFactWeight, nudgeTopic, setTopicHighPriority, setTopicWeightAbsolute } from '@/lib/database/services/mutation-rails-service';
 import { append } from '@/lib/database/services/persona-change-log-service';
-import { getActive as activeSuppressions } from '@/lib/database/services/suppression-service';
 import {
   DAY,
   NOON,
   freezeClock,
-  failTableQuery,
   logRows,
   logsOf,
   quietLogger,
   resetPersonaMemory,
   restoreFaults,
   rowById,
-  rowsOf,
   seedInterest,
-  seedPlace,
   settleWrites,
 } from './support';
 
@@ -279,48 +275,5 @@ describe('nudgeFactWeight', () => {
   it('an unknown fact rejects without a row', async () => {
     await expect(nudgeFactWeight('ghost', 0.1, 'feedback')).rejects.toThrow();
     expect(await logRows()).toEqual([]);
-  });
-});
-
-describe('[dead-candidate] applyWrongLocation', () => {
-  const mumbai = { city: 'Mumbai', countryCode: 'IN' };
-
-  it("mints a negative topic for the first tag matching none of the user's places, plus a soft suppression from bad-context entities", async () => {
-    await seedPlace('NL', 'Amsterdam');
-
-    await applyWrongLocation({ articleGeo: [mumbai], matchedTopics: [], entities: ['Bollywood Gossip'] });
-
-    const [topic] = await rowsOf('topics');
-    expect(topic).toMatchObject({ text: 'news about mumbai', weight: -0.6, status: 'active', provenance: 'feedback' });
-    const active = await activeSuppressions();
-    expect(active).toHaveLength(1);
-    expect(active[0]).toMatchObject({ pattern: 'bollywood gossip', strength: 0.5, source: 'feedback' });
-    expect(active[0].keywords).toEqual(['bollywood gossip']);
-    expect((await logRows()).map((r) => [r.actionType, r.source])).toEqual([['add_negative_topic', 'feedback'], ['add_suppression', 'feedback']]);
-    expect((await logsOf('add_negative_topic'))[0].action).toEqual({ targetId: topic.id, text: 'news about mumbai' });
-    expect((await logsOf('add_suppression'))[0].action).toEqual({ targetId: active[0].id });
-  });
-
-  it("a tag that matches one of the user's places mints nothing; an explicit source is logged", async () => {
-    await seedPlace('IN', 'Mumbai');
-
-    await applyWrongLocation({ articleGeo: [mumbai], matchedTopics: [], entities: ['x'] }, 'chat');
-
-    expect(await rowsOf('topics')).toEqual([]);
-    expect((await logRows()).map((r) => [r.actionType, r.source])).toEqual([['add_suppression', 'chat']]);
-  });
-
-  it('one failing write does not abort the rest: it is captured and the suppression still lands', async () => {
-    failTableQuery('topics');
-
-    await applyWrongLocation({ articleGeo: [mumbai], matchedTopics: [], entities: ['gossip'] });
-
-    restoreFaults();
-    expect(await rowsOf('topics')).toEqual([]);
-    expect(await activeSuppressions()).toHaveLength(1);
-    expect(logs.captureException).toHaveBeenCalledWith(expect.any(Error), {
-      tags: { service: 'mutation-rails', method: 'applyWrongLocation' },
-    });
-    expect((await logRows()).map((r) => r.actionType)).toEqual(['add_suppression']);
   });
 });
