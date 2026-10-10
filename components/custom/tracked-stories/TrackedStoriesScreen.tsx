@@ -169,7 +169,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 </PressableCard>
             );
         },
-        [t, c, openTimeline],
+        [t, c, openTimeline, setMenuTarget, setConfirmTarget],
     );
 
     const keyExtractor = useCallback((item: TrackedStoryModel) => item.id, []);
