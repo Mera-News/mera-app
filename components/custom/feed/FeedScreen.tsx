@@ -308,7 +308,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
