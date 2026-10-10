@@ -107,6 +107,60 @@ describe('when the server sign-out fails', () => {
     });
 });
 
+// A session read that is still in flight when the user logs out (the client also starts one itself
+// after a sign-out) writes its reply to the session-data key when it lands, so the signed-out account's
+// id and email come back into the keychain after the local wipe.
+describe('when a get-session reply lands late', () => {
+    // Each hop (request, reply, keychain write) is real I/O that fake time does not pace, so the test
+    // lets real turns pass for it and drives fake time only for the 5.5 s hold on the reply.
+    const realTurns = async (turns: number, done: () => boolean = () => false) => {
+        for (let i = 0; i < turns && !done(); i++) await new Promise((resolve) => setImmediate(resolve));
+    };
+
+    beforeEach(() => {
+        useFakeClock(Date.now());
+    });
+
+    async function logoutWithLateSessionReply(): Promise<string> {
+        const sessionKey = authKeys(secureStoreDump()).session!;
+        const stored = JSON.parse(secureStoreDump()[sessionKey]);
+        let requested = false;
+        let replied = false;
+        server.use(
+            http.get('*/api/auth/get-session', async () => {
+                requested = true;
+                await delay(5_500);
+                replied = true;
+                return HttpResponse.json(stored);
+            }),
+        );
+        void authClient.getSession();
+        await realTurns(20_000, () => requested);
+        if (!requested) throw new Error('the session read never started');
+        await advanceUntilDone(clearAuthStorage());
+        expect(authKeys(secureStoreDump())).toEqual({});
+        expect(replied).toBe(false);
+
+        await jest.advanceTimersByTimeAsync(6_000);
+        await realTurns(20_000, () => replied);
+        if (!replied) throw new Error('the late reply never arrived');
+        // The client writes the reply to the keychain a few turns after the response.
+        await realTurns(2_000);
+        return sessionKey;
+    }
+
+    test.failing('DA46: no session data is left in the keychain after logout, even when a get-session reply lands late', async () => {
+        const sessionKey = await logoutWithLateSessionReply();
+        const left = secureStoreDump()[sessionKey];
+        expect(left === undefined || left === '{}').toBe(true);
+    });
+
+    it('DA46 today: a late get-session reply rewrites session data after the local wipe', async () => {
+        const sessionKey = await logoutWithLateSessionReply();
+        expect(JSON.parse(secureStoreDump()[sessionKey])).toEqual(expect.objectContaining({ user: expect.anything() }));
+    });
+});
+
 describe('when a secure-store delete fails', () => {
     it('does not throw, and still deletes the other key', async () => {
         const { cookie, session } = authKeys(secureStoreDump());
