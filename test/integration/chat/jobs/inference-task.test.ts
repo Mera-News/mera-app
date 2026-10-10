@@ -17,6 +17,8 @@ import { loadSuggestions } from '@/lib/database/services/article-suggestion-serv
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { __resetAuthReadQuarantineForTests, releaseAuthReadQuarantine } from '@/lib/security/install-boundary-latch';
+import { HAS_LAUNCHED_SETTING_KEY, __resetInstallBoundaryForTests } from '@/lib/security/install-boundary';
+import { setSetting } from '@/lib/database/services/setting-service';
 import * as executionContext from '@/lib/llm/execution-context';
 import logger from '@/lib/logger';
 import * as pipeline from '@/lib/services/scoring-pipeline';
@@ -218,6 +220,9 @@ describe('before the install boundary has run', () => {
       clearAttestationCache();
       invalidateJwtCache();
       __resetAuthReadQuarantineForTests();
+      // A fresh process has not run the boundary yet, on an install that has launched before.
+      __resetInstallBoundaryForTests();
+      await setSetting(HAS_LAUNCHED_SETTING_KEY, '1');
       // What enforceInstallBoundary() does in its finally, once it has run.
       if (boundaryRan) releaseAuthReadQuarantine();
     }
@@ -231,13 +236,8 @@ describe('before the install boundary has run', () => {
     expect(await wakeAndCountReasonJobs(true, true)).toBeGreaterThan(0);
   });
 
-  // CO3: inference-task never awaits enforceInstallBoundary(), so in a cold process the reasons
-  // submit cannot attest (no JWT can be minted) and the owed notes wait for the next foreground.
-  test.failing('a cold silent-push wake submits the reasons job (enforceInstallBoundary runs first)', async () => {
+  test('a cold silent-push wake submits the reasons job (enforceInstallBoundary runs first)', async () => {
     expect(await wakeAndCountReasonJobs(true)).toBeGreaterThan(0);
   });
 
-  it('today a cold silent-push wake collects the scores but sends no reasons job (CO3 sibling)', async () => {
-    expect(await wakeAndCountReasonJobs(true)).toBe(0);
-  });
 });

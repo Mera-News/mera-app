@@ -89,6 +89,13 @@ export function defineInferenceTask(): void {
 
   TaskManager.defineTask(INFERENCE_TASK, async (body) => {
     try {
+      // A silent-push wake can start a cold process that never ran app/index.tsx.
+      // Until the install boundary has run, the auth cookie reads as null here,
+      // so no JWT can be minted for the reasons submit. Same step as the OS
+      // background task (background-task.ts); it latches once per process.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { enforceInstallBoundary } = require('@/lib/security/install-boundary') as typeof import('@/lib/security/install-boundary');
+      await enforceInstallBoundary();
       // expo-notifications registerTaskAsync delivers the push payload in
       // body.data.notification.request.content.data. Fall back to 'silent-push'
       // if the shape is anything else.
