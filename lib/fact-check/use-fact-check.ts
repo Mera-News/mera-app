@@ -187,16 +187,21 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
         let timerId: ReturnType<typeof setTimeout> | null = null;
         const startedAt = Date.now();
 
+        const next = () => {
+            if (cancelled) return;
+            if (Date.now() - startedAt >= POLL_CEILING_MS) {
+                setPollGaveUp(true);
+                return;
+            }
+            timerId = setTimeout(poll, POLL_INTERVAL_MS);
+        };
+
         const poll = () => {
             if (cancelled) return;
             requestFactCheck(articleId)
                 .then((outcome) => {
                     if (cancelled || outcome.terminal) return;
-                    if (Date.now() - startedAt >= POLL_CEILING_MS) {
-                        setPollGaveUp(true);
-                        return;
-                    }
-                    timerId = setTimeout(poll, POLL_INTERVAL_MS);
+                    next();
                 })
                 .catch(() => {
                     // `requestFactCheck` is documented to never reject (it
@@ -206,12 +211,7 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
                     // must not become an unhandled rejection, and must not
                     // silently stop polling either: treat it exactly like a
                     // non-terminal response and try again next interval.
-                    if (cancelled) return;
-                    if (Date.now() - startedAt >= POLL_CEILING_MS) {
-                        setPollGaveUp(true);
-                        return;
-                    }
-                    timerId = setTimeout(poll, POLL_INTERVAL_MS);
+                    next();
                 });
         };
 

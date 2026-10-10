@@ -174,20 +174,19 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
     return () => clearTimeout(timer);
   }, [status, isRetrying]);
 
-  const live = rows;
 
   /** Live chips plus the staged-for-deletion ones, each back at its own index
    *  so removing a chip does not reflow the ones around it. */
   const visible = useMemo(() => {
-    if (pendingDelete.length === 0) return live;
-    const out = [...live];
+    if (pendingDelete.length === 0) return rows;
+    const out = [...rows];
     // Ascending, so each insertion lands before the next index is used.
     for (const { chip, index } of [...pendingDelete].sort((a, b) => a.index - b.index)) {
       if (out.some((c) => c.id === chip.id)) continue;
       out.splice(Math.min(index, out.length), 0, chip);
     }
     return out;
-  }, [live, pendingDelete]);
+  }, [rows, pendingDelete]);
 
   // `handleRemove` needs the index a chip occupied at the moment it was
   // tapped, and reading it from a ref keeps that handler out of the memo's

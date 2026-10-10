@@ -194,15 +194,13 @@ export default function MeraChatSession() {
     }
     let cancelled = false;
     fetchMessagesForConversation(conversationId)
+      .catch((error) => {
+        logger.error('[MeraChatSession] failed to load resume messages', { error: String(error) });
+        return [];
+      })
       .then((msgs) => {
         if (cancelled) return;
         setResumeMessages(msgs);
-        setResumeLoadedForId(conversationId);
-      })
-      .catch((error) => {
-        logger.error('[MeraChatSession] failed to load resume messages', { error: String(error) });
-        if (cancelled) return;
-        setResumeMessages([]);
         setResumeLoadedForId(conversationId);
       });
     return () => {

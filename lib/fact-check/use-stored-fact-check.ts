@@ -40,10 +40,9 @@ export function useStoredFactCheck(
     useEffect(() => {
         if (!articleId || !enabled) return;
         let cancelled = false;
-        void (async () => {
-            const rows = await listFactChecksForArticle(articleId);
+        void listFactChecksForArticle(articleId).then((rows) => {
             if (!cancelled) setStored(rows);
-        })();
+        });
         return () => { cancelled = true; };
     }, [articleId, enabled]);
 

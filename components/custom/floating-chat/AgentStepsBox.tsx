@@ -11,7 +11,7 @@ import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, withTiming } from 'react-native-reanimated';
 import { GlyphSafeButton } from './glyph-safe';
@@ -144,12 +144,8 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
 
   // Keyed on WHICH step is pending, so the clock restarts per step rather than
   // carrying a stale "slow" over to the next one.
-  const lastPendingId = useRef<string | null>(null);
   useEffect(() => {
-    if (lastPendingId.current !== pendingId) {
-      lastPendingId.current = pendingId;
-      setSlow(false);
-    }
+    setSlow(false);
     if (pendingId === null) return;
     const timer = setTimeout(() => setSlow(true), SLOW_STEP_MS);
     return () => clearTimeout(timer);

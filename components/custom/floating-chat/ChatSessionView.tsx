@@ -47,23 +47,8 @@ export interface ChatSessionViewProps {
   composerPlaceholder?: string;
 }
 
-export default function ChatSessionView({
-  messages,
-  status,
-  sendMessage,
-  sendHiddenTurn,
-  isBlocked,
-  blockedReason,
-  error,
-  context,
-  userId,
-  conversationId,
-  resumeMessages,
-  isLoading,
-  loadingMessage,
-  composerTrailing,
-  composerPlaceholder,
-}: ChatSessionViewProps) {
+export default function ChatSessionView(props: ChatSessionViewProps) {
+  const { isLoading, loadingMessage, context, userId, conversationId, composerTrailing, composerPlaceholder } = props;
   const styles = useStyles();
   const {
     t,
@@ -87,20 +72,7 @@ export default function ChatSessionView({
     handleSend,
     composerHint,
     handleUnblockSubmitted,
-  } = useChatSessionView({
-    messages,
-    status,
-    sendMessage,
-    sendHiddenTurn,
-    isBlocked,
-    blockedReason,
-    error,
-    context,
-    userId,
-    conversationId,
-    resumeMessages,
-    isLoading,
-  });
+  } = useChatSessionView(props);
 
   if (isLoading) {
     return (
