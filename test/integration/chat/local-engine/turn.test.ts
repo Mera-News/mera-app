@@ -240,10 +240,9 @@ describe('a failing completion', () => {
     expectNothingLeftTheDevice();
   });
 
-  // A completion that rejects in the same tick as its last token reaches inferStream's `.catch`
-  // after the token already woke the waiting reader, so `rejectWait` finds nothing to reject and
-  // the failure is swallowed: the half reply is shown as a finished answer.
-  test.failing('a completion that fails right after its last token is reported as an error', async () => {
+  // A completion that rejects in the same tick as its last token has no waiting reader to reject;
+  // the failure must still surface as an error, not as a finished half reply.
+  test('a completion that fails right after its last token is reported as an error', async () => {
     installLlama({ tokens: ['Half', ' a'], error: 'boom' });
     await initBaseModel();
     const { engine } = await attachLocal();
@@ -252,19 +251,5 @@ describe('a failing completion', () => {
     await turnDone();
 
     expect(local().error).toBe('Inference failed: boom');
-  });
-
-  it('(pins today) a completion that fails right after its last token ends as a normal turn with the half reply', async () => {
-    installLlama({ tokens: ['Half', ' a'], error: 'boom' });
-    await initBaseModel();
-    const { engine } = await attachLocal();
-
-    engine.send('hi');
-    await turnDone();
-
-    expect(local().error).toBeNull();
-    expect(lastAssistant()?.content).toBe('Half a');
-    expect(streamHolds()).toBe(0);
-    expect(inferenceQueue.getState()).not.toBe('paused');
   });
 });

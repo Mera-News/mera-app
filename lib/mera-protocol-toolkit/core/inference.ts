@@ -150,6 +150,7 @@ async function* inferStreamExclusive(
   // Use a queue to bridge the callback-based API with the async generator
   const tokenQueue: string[] = [];
   let done = false;
+  let failure: Error | null = null;
   let resolveWait: (() => void) | null = null;
   let rejectWait: ((err: Error) => void) | null = null;
 
@@ -191,6 +192,7 @@ async function* inferStreamExclusive(
       done = true;
       const error =
         err instanceof Error ? err : new Error(String(err));
+      failure = error;
       rejectWait?.(error);
       rejectWait = null;
     });
@@ -215,6 +217,10 @@ async function* inferStreamExclusive(
     while (tokenQueue.length > 0) {
       yield tokenQueue.shift()!;
     }
+
+    // A rejection that landed while the reader was busy with queued tokens
+    // found no waiter to reject; report it here instead of a finished half reply.
+    if (failure) throw failure;
   } finally {
     // The consumer left early (Stop, or any throw): halt llama before the lock
     // is released, or the next completion would interleave with this one in
