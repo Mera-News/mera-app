@@ -1,9 +1,21 @@
 import {
     REASON_WRITING_BACKSTOP_MS,
     noteReasonInFlight,
+    pruneReasonsInFlight,
 } from '@/components/custom/cards/pending-since';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useEffect, useState } from 'react';
+
+let pruneInstalled = false;
+
+/** Forget an id's first sight the moment it leaves the in-flight set, whether or not its row is mounted. */
+function installPrune(): void {
+    if (pruneInstalled) return;
+    pruneInstalled = true;
+    useForYouStore.subscribe((s, prev) => {
+        if (s.reasonsInFlightIds !== prev.reasonsInFlightIds) pruneReasonsInFlight(s.reasonsInFlightIds);
+    });
+}
 
 /**
  * Whether the Feed card for suggestion `id` may say "Writing a note" right now.
@@ -14,7 +26,7 @@ import { useEffect, useState } from 'react';
  *    `pushUiProgress`; ids are article_suggestions ids, i.e.
  *    `ForYouSuggestion._id`, never `articleId`), and
  *  - less than `REASON_WRITING_BACKSTOP_MS` has passed since this process first
- *    saw it in flight.
+ *    saw it in flight since it last entered the set.
  *
  * The in-flight set is the real end signal: when a batch finishes, fails or
  * expires at the gateway, the id leaves the set and the card stops claiming
@@ -25,18 +37,20 @@ import { useEffect, useState } from 'react';
  * database at module scope.
  */
 export function useReasonWriting(id: string): boolean {
+    installPrune();
     const inFlight = useForYouStore((s) => s.reasonsInFlightIds.has(id));
     const anchor = inFlight ? noteReasonInFlight(id) : null;
-    const [expiredFor, setExpiredFor] = useState<string | null>(null);
+    // The anchor that expired, not the id: a re-entry gets a new anchor and starts fresh.
+    const [expiredAnchor, setExpiredAnchor] = useState<number | null>(null);
     const expired =
         anchor !== null &&
-        (expiredFor === id || Date.now() - anchor >= REASON_WRITING_BACKSTOP_MS);
+        (expiredAnchor === anchor || Date.now() - anchor >= REASON_WRITING_BACKSTOP_MS);
 
     useEffect(() => {
         if (anchor === null || expired) return;
         // One-shot, no polling: flips once when the backstop passes.
         const timer = setTimeout(
-            () => setExpiredFor(id),
+            () => setExpiredAnchor(anchor),
             anchor + REASON_WRITING_BACKSTOP_MS - Date.now(),
         );
         return () => clearTimeout(timer);

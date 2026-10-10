@@ -1,6 +1,7 @@
 /**
  * How long the Feed card may say "Writing a note" for one row, counted from the
- * first moment THIS PROCESS saw that row's reasons in flight. Mirrors the
+ * first moment THIS PROCESS saw that row's reasons in flight since it last
+ * entered the in-flight set. Mirrors the
  * pipeline's own stale bound (`MARK_STALE_MS` in for-you/use-mark-active.ts,
  * mirrored rather than imported because that module sits in an unowned
  * directory). The in-flight set is the real end signal; this only stops a
@@ -12,7 +13,8 @@
  */
 export const REASON_WRITING_BACKSTOP_MS = 15 * 60_000;
 
-/** Row id → epoch ms this process first saw its reasons in flight. Module
+/** Row id → epoch ms this process first saw its reasons in flight (dropped when
+ *  the id leaves the set, see `pruneReasonsInFlight`). Module
  *  level, so list virtualisation (unmount + remount) cannot restart the clock,
  *  and a cold launch starts it fresh, which is what "first sight" means. */
 const firstInFlightAt = new Map<string, number>();
@@ -23,6 +25,13 @@ export function noteReasonInFlight(id: string, nowMs: number = Date.now()): numb
     if (seen !== undefined) return seen;
     firstInFlightAt.set(id, nowMs);
     return nowMs;
+}
+
+/** Forget every id that is no longer in flight, so a later re-entry gets a fresh anchor. */
+export function pruneReasonsInFlight(inFlight: ReadonlySet<string>): void {
+    for (const id of firstInFlightAt.keys()) {
+        if (!inFlight.has(id)) firstInFlightAt.delete(id);
+    }
 }
 
 /** Epoch ms `id` was first seen in flight, or null when it never was. */

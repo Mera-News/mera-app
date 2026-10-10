@@ -53,9 +53,7 @@ describe('useReasonWriting', () => {
         expect(second.result.current).toBe(false);
     });
 
-    // FD2: first sight is never cleared when an id leaves the set (pending-since.ts), and
-    // `expiredFor` is never cleared either (use-reason-in-flight.ts), so a row that is rescored
-    // later never shows the writing state again.
+    // FD2: first sight is forgotten when an id leaves the set, so a rescored row starts a fresh backstop.
     describe('a row back in flight after leaving', () => {
         const backInFlightAfter20Minutes = async () => {
             const hook = renderHook(() => useReasonWriting('s1'));
@@ -67,14 +65,9 @@ describe('useReasonWriting', () => {
             return hook;
         };
 
-        test.failing('a row back in flight after leaving shows the writing state again', async () => {
+        test('a row back in flight after leaving shows the writing state again', async () => {
             const { result } = await backInFlightAfter20Minutes();
             expect(result.current).toBe(true);
-        });
-
-        test('today: a row back in flight after 15 minutes reads as no note at once', async () => {
-            const { result } = await backInFlightAfter20Minutes();
-            expect(result.current).toBe(false);
         });
     });
 });
