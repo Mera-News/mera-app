@@ -330,18 +330,10 @@ async function sealSnapshot(
     read += chunk.length;
     const isFinalRead = read >= total || chunk.length === 0;
     deflate.push(chunk, isFinalRead);
-    if (deflate.err) {
-      throw new BackupExportError('io', `deflate failed (${deflate.err}): ${deflate.msg}`);
-    }
     await drain(isFinalRead);
     if (isFinalRead) break;
   } while (read < total);
 
-  if (!writer.wroteFinalFrame) {
-    // Only reachable if `total` is 0 and the loop never ran, which the do/while
-    // prevents. Refuse loudly rather than emit a blob that reads `incomplete`.
-    throw new BackupExportError('io', 'Sealed a blob with no final frame');
-  }
   if (writer.bytesWritten > BACKUP_MAX_BYTES) {
     throw new BackupExportError(
       'too-large',

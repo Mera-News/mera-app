@@ -55,8 +55,8 @@ export const BACKUP_TABLES: readonly string[] = [
  * A restore's semantics are "replace the persona", not "merge these tables".
  * Deriving the clear list from the blob's own `header.tables[]` instead would
  * mean a blob declaring a subset restores its persona ON TOP of the tables it
- * did not declare — which is exactly the mixed persona `lifecycle.ts` exists to
- * prevent. Today's exporter always emits every section, so the two agree and
+ * did not declare: a restore that clears only the declared tables would mix two
+ * personas. Today's exporter always emits every section, so the two agree and
  * nothing fails; that is what makes it worth pinning rather than leaving to
  * coincidence.
  *

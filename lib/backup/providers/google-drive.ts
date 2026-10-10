@@ -66,13 +66,9 @@ export function isGoogleDriveConfigured(): boolean {
 let nativeLinked: boolean | null = null;
 function googleSigninNativeLinked(): boolean {
   if (nativeLinked !== null) return nativeLinked;
-  try {
-    const { TurboModuleRegistry } =
-      require('react-native') as typeof import('react-native');
-    nativeLinked = TurboModuleRegistry.get('RNGoogleSignin') != null;
-  } catch {
-    nativeLinked = false;
-  }
+  const { TurboModuleRegistry } =
+    require('react-native') as typeof import('react-native');
+  nativeLinked = TurboModuleRegistry.get('RNGoogleSignin') != null;
   return nativeLinked;
 }
 
