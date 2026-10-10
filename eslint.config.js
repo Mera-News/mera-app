@@ -45,7 +45,9 @@ module.exports = defineConfig([
               message: ALGORITHMS_PURE,
               allowTypeImports: true,
             },
-            { group: ['@/*', '!@/lib/algorithms/*'], message: ALGORITHMS_PURE, allowTypeImports: true },
+            // A regex, not a gitignore group: a negated child (`!@/lib/algorithms/*`) cannot re-include
+            // a path whose parent `@/*` already matched, so the group form flagged algorithm-to-algorithm imports.
+            { regex: '^@/(?!lib/algorithms/)', message: ALGORITHMS_PURE, allowTypeImports: true },
             { group: ['../*', '../**'], message: ALGORITHMS_PURE, allowTypeImports: true },
           ],
         },
