@@ -17,7 +17,6 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import { getPipeline } from '@/lib/database/services/scoring-pipeline-store';
-import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { PERSONA_V3_MIGRATION_KEY } from '@/lib/services/persona-migration-service';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
@@ -251,12 +250,14 @@ describe('the tracked-story reconcile with an image', () => {
     };
     await trackStoryWithProposal(subject, { label: 'Label gaza', searchText: 'gaza ceasefire' });
     const story = (await firstValueFrom(observeActive())).find((s) => s.topicText === 'gaza ceasefire')!;
-    const topicId = story.topicId as string;
-    await persistAndLinkV2Suggestions(
-      [art('img1', { image_url: 'https://example.com/img1.jpg' })],
-      new Map(),
-      { matchedTopics: new Map([['img1', [{ topicId, text: topicId }]]]) },
+    // the real sync path persists and links the article: the followed topic's text is what the server matched
+    server.use(
+      servePersona({ topics: { 'gaza ceasefire': ['img1'] } }),
+      ...serveHydrate({ article: (id) => art(id, { image_url: 'https://example.com/img1.jpg' }) }).handlers,
     );
+    const t = makeCtx();
+    const { diff } = await fetchAndDiff(t);
+    await hydrate(diff, t);
 
     await reconcileTrackedStories();
 
