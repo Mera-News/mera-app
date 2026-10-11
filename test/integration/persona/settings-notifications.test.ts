@@ -459,10 +459,12 @@ describe('notification settings', () => {
             await waitFor(() => expect(result.current.osRefused).toBe(true));
             act(() => result.current.openDeviceSettings());
             unmount();
+            permissions.mockClear();
             permissions.mockResolvedValue({ status: 'granted' });
             setAppState('background');
             setAppState('active');
-            await new Promise((r) => setTimeout(r, 50));
+            // A live listener reads the permission synchronously on 'active', so no wait is needed.
+            expect(permissions).not.toHaveBeenCalled();
             expect(sent).toEqual([]);
         });
     });
