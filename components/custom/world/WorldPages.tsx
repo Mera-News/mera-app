@@ -1,5 +1,5 @@
-import ScopeArticleList, { EXPLORE_WINDOWS_HOURS, type ExploreWindowHours } from '@/components/custom/explore/ScopeArticleList';
-import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
+import ScopeArticleList, { /* EXPLORE_WINDOWS_HOURS, */ type ExploreWindowHours } from '@/components/custom/explore/ScopeArticleList';
+// import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import { PAGE_META, alpha2OfPage } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type {
@@ -11,7 +11,7 @@ import { addWorldCountry, removeWorldCountry, useWorldPages } from '@/lib/explor
 import { setWorldPageOrder } from '@/lib/navigation/page-order';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { router } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo /* , useState */ } from 'react';
 import { useTranslation } from 'react-i18next';
 import { allCountryOptions, commitWorldDraft, searchCountryOptions } from './world-arrange';
 
@@ -21,8 +21,9 @@ const DEFAULT_WINDOW: ExploreWindowHours = 24;
  * The World tab: World, then one page per country, in the reader's order
  * (`useWorldPages`, lib/explore/world-pages). Each page is a
  * `ScopeArticleList` (direct server-paginated top headlines, nothing scored
- * or stored). The header's top row carries the ACTIVE page's 6/12/24/48h
- * window chip, session state per page.
+ * or stored). Every page shows the last 24 hours. The 6/12/24/48h window
+ * chip (and the empty state's "Show 48 hours") is COMMENTED OUT, not deleted
+ * (owner: liked, but buggy); restore the commented lines to bring it back.
  *
  * Arrange (a long press on a page name) adds a country through the overlay's
  * search, removes one with its ×, and reorders; nothing is written before ✓
@@ -39,11 +40,12 @@ export function WorldPages() {
     const { pages, loaded } = useWorldPages();
     const listEndClearance = useListEndClearance();
 
-    // Session-only, per page; a page keeps its window while warm in the pager.
-    const [windows, setWindows] = useState<Readonly<Record<string, ExploreWindowHours>>>({});
-    const setWindowFor = useCallback((pageId: string, hours: ExploreWindowHours) => {
-        setWindows((prev) => (prev[pageId] === hours ? prev : { ...prev, [pageId]: hours }));
-    }, []);
+    // Window chip off (owner): every page is DEFAULT_WINDOW. Restore with the chip below.
+    // // Session-only, per page; a page keeps its window while warm in the pager.
+    // const [windows, setWindows] = useState<Readonly<Record<string, ExploreWindowHours>>>({});
+    // const setWindowFor = useCallback((pageId: string, hours: ExploreWindowHours) => {
+    //     setWindows((prev) => (prev[pageId] === hours ? prev : { ...prev, [pageId]: hours }));
+    // }, []);
 
     const pills: PagePill[] = useMemo(
         () =>
@@ -81,7 +83,7 @@ export function WorldPages() {
         ({ pageId, active, header }: PageRenderProps) => {
             const page = pages.find((p) => p.id === pageId);
             if (!page) return null;
-            const hours = windows[pageId] ?? DEFAULT_WINDOW;
+            const hours = DEFAULT_WINDOW; // windows[pageId] ?? DEFAULT_WINDOW;
             return (
                 <ScopeArticleList
                     // A window change is a fresh list: new first page, cursor
@@ -89,7 +91,7 @@ export function WorldPages() {
                     key={hours}
                     scope={page.scope}
                     windowHours={hours}
-                    onWindowChange={(next) => setWindowFor(pageId, next)}
+                    // onWindowChange={(next) => setWindowFor(pageId, next)}
                     active={active}
                     // Gate the QUERY, not the mount: before locations emit, the
                     // country pages are the device-country fallback.
@@ -100,22 +102,22 @@ export function WorldPages() {
                 />
             );
         },
-        [pages, windows, setWindowFor, loaded, listEndClearance],
+        [pages, /* windows, setWindowFor, */ loaded, listEndClearance],
     );
 
-    const renderTitleChip = useCallback(
-        (pageId: string) => (
-            <InlineChoiceChip
-                options={EXPLORE_WINDOWS_HOURS}
-                value={windows[pageId] ?? DEFAULT_WINDOW}
-                labelOf={(h) => t(`explore.window.label${h}`)}
-                a11yLabelOf={(h) => t(`explore.window.a11y${h}`)}
-                onChange={(next) => setWindowFor(pageId, next)}
-                testID="explore-window"
-            />
-        ),
-        [windows, setWindowFor, t],
-    );
+    // const renderTitleChip = useCallback(
+    //     (pageId: string) => (
+    //         <InlineChoiceChip
+    //             options={EXPLORE_WINDOWS_HOURS}
+    //             value={windows[pageId] ?? DEFAULT_WINDOW}
+    //             labelOf={(h) => t(`explore.window.label${h}`)}
+    //             a11yLabelOf={(h) => t(`explore.window.a11y${h}`)}
+    //             onChange={(next) => setWindowFor(pageId, next)}
+    //             testID="explore-window"
+    //         />
+    //     ),
+    //     [windows, setWindowFor, t],
+    // );
 
     return (
         <TabPages
@@ -125,7 +127,7 @@ export function WorldPages() {
             onSearch={openSearch}
             arrange={arrange}
             title={t('tabs.exploreTitle')}
-            renderTitleChip={renderTitleChip}
+            // renderTitleChip={renderTitleChip}
             testID="world-pages"
         />
     );
