@@ -36,6 +36,8 @@ import { useIsFocused } from '@react-navigation/native';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
+import { useAnchorPastHeader } from '@/components/custom/feed/use-anchor-past-header';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
@@ -731,7 +733,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
       lastOffsetShared.value = e.contentOffset.y;
     },
   });
-  const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
+  // The list pads by headerHeight + PAGE_CONTENT_GAP (FeedScreen's CONTENT_TOP_GAP).
+  const { pastHeader, onListHeaderLayout, anchorHandler } = useAnchorPastHeader(headerHeight + PAGE_CONTENT_GAP);
+  const onScroll = useComposedEventHandler([scrollHandler, tickHandler, anchorHandler]);
 
   // ── Empty-state chain (the same priority as the Interests page's) ──
   const hasFacts = useHasFacts();
@@ -795,6 +799,8 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     viewabilityConfigCallbackPairs,
     onScrollToIndexFailed,
     onScroll,
+    pastHeader,
+    onListHeaderLayout,
     flushSkips,
     refreshing,
     onRefresh,

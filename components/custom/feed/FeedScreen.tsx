@@ -107,7 +107,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshControl } from 'react-native';
+import { RefreshControl, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
@@ -260,6 +260,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     viewabilityConfigCallbackPairs,
     onScrollToIndexFailed,
     onScroll,
+    pastHeader,
+    onListHeaderLayout,
     flushSkips,
     refreshing,
     onRefresh,
@@ -380,7 +382,11 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
 
   // The list's first item: the no-facts block, or the counts card.
   const cardItem = useStatsCardItem(emptyHere, hasRows);
-  const headerNode = useMemo(() => (noFacts ? <FeedNoFacts view="continuous" /> : cardItem), [noFacts, cardItem]);
+  // Wrapped to measure it for `pastHeader` (use-anchor-past-header).
+  const headerNode = useMemo(() => {
+    const item = noFacts ? <FeedNoFacts view="continuous" /> : cardItem;
+    return item ? <View onLayout={onListHeaderLayout}>{item}</View> : null;
+  }, [noFacts, cardItem, onListHeaderLayout]);
 
   return (
     // No backdrop and no header: the tab (TabPages) draws both.
@@ -423,13 +429,21 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
         // can now only fire at the top, which is precisely where we want it.
         // The two changes are a pair: this is unsafe without the pin.
         //
+        // ONLY once the counts card (the list header) is fully above the
+        // viewport (`pastHeader`). VirtualizedList adds 1 to minIndexForVisible
+        // for a header, so iOS anchors the first ROW, never the card: with the
+        // card on screen every change in its height moved the offset, so it
+        // opened UPWARD under the tab header, and its settling at launch read as
+        // a scroll down and hid the header. While the card shows no row is
+        // above the viewport, so there is nothing to anchor.
+        //
         // NEVER while the list has no rows (a new account: title row, empty
         // block, maybe headlines in the header only). With nothing to anchor,
         // iOS's MVCP adjust set the offset, the scroll worklet re-laid the
         // header, the next mount adjusted again: a main-thread loop at 100%
         // CPU with the list never drawn (captured, navx2).
         maintainVisibleContentPosition={
-          listData.length > 0 ? { minIndexForVisible: 0, autoscrollToTopThreshold: 100 } : undefined
+          listData.length > 0 && pastHeader ? { minIndexForVisible: 0, autoscrollToTopThreshold: 100 } : undefined
         }
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}

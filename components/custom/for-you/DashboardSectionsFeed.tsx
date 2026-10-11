@@ -21,6 +21,7 @@ import { Text } from '@/components/ui/text';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useAnchorPastHeader } from '@/components/custom/feed/use-anchor-past-header';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, StyleSheet, View } from 'react-native';
@@ -267,7 +268,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
       lastOffsetShared.value = e.contentOffset.y;
     },
   });
-  const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
+  // MVCP only once the counts card is fully above the viewport (see the hook).
+  const { pastHeader, onListHeaderLayout, anchorHandler } = useAnchorPastHeader(headerHeight + PAGE_CONTENT_GAP);
+  const onScroll = useComposedEventHandler([scrollHandler, tickHandler, anchorHandler]);
 
   const renderItem = useCallback(
     ({ item }: { item: SectionItem }) => {
@@ -310,7 +313,11 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         keyExtractor={(it) => it.key}
         renderItem={renderItem}
         ListHeaderComponent={
-          ListHeaderComponent ? <View style={{ marginBottom: PAGE_TITLE_GAP }}>{ListHeaderComponent}</View> : null
+          ListHeaderComponent ? (
+            <View style={{ marginBottom: PAGE_TITLE_GAP }} onLayout={onListHeaderLayout}>
+              {ListHeaderComponent}
+            </View>
+          ) : null
         }
         ListEmptyComponent={ListEmptyComponent}
         refreshControl={
@@ -369,8 +376,11 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         // card. `minIndexForVisible` is kept, so position is still anchored.
         // Not while there are no sections: with nothing to anchor, iOS's MVCP
         // adjust and the scroll worklet loop on the main thread (see
-        // FeedScreen).
-        maintainVisibleContentPosition={sectionData.length > 0 ? { minIndexForVisible: 0 } : undefined}
+        // FeedScreen). Not while the counts card shows either: iOS anchors
+        // the first section, never the header, so the card opened upward.
+        maintainVisibleContentPosition={
+          sectionData.length > 0 && pastHeader ? { minIndexForVisible: 0 } : undefined
+        }
       />
     </Box>
   );
