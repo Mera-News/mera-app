@@ -205,8 +205,26 @@ async function writeRejected(fingerprints: string[]): Promise<void> {
 
 // ── Public getters ─────────────────────────────────────────────────────────
 
+/**
+ * Pending and backlog with every proposal whose fact is gone dropped, and the
+ * drop persisted. A proposal is stored at sweep time; a fact deleted or merged
+ * afterwards left it pending for good, as a card naming nothing whose Accept
+ * acted on nothing. A proposal that names no fact is kept.
+ */
+async function readLive(): Promise<{ pending: HygieneProposal[]; backlog: HygieneProposal[] }> {
+  const [pending, backlog, facts] = await Promise.all([readPending(), readBacklog(), getFacts()]);
+  const factIds = new Set(facts.map((f) => f.id));
+  const alive = (p: HygieneProposal) => (p.targetFactIds ?? []).every((id) => factIds.has(id));
+  const live = { pending: pending.filter(alive), backlog: backlog.filter(alive) };
+  if (live.pending.length !== pending.length || live.backlog.length !== backlog.length) {
+    await publishWithCap([...live.pending, ...live.backlog]);
+    return readLive();
+  }
+  return live;
+}
+
 export async function getPendingProposals(): Promise<HygieneProposal[]> {
-  return readPending();
+  return (await readLive()).pending;
 }
 
 /**
@@ -221,7 +239,7 @@ export async function getPendingProposals(): Promise<HygieneProposal[]> {
  * bug.
  */
 export async function getPendingCount(): Promise<number> {
-  const [pending, backlog] = await Promise.all([readPending(), readBacklog()]);
+  const { pending, backlog } = await readLive();
   return pending.length + backlog.length;
 }
 

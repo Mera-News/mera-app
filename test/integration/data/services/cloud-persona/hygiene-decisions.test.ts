@@ -13,7 +13,7 @@
 // corpus-wide pass cannot surface a wall, additive across chunks, rejected memory, empty no-op, notify
 // only when asked, the notification stamps the outstanding total, also past the cap).
 // Not carried: nothing. `mockGenerateAndReplace`, the mocked executor and fact service are the real ones.
-import { deleteFact, getFacts, getFactSectionSnapshots } from '@/lib/database/services/fact-service';
+import { addFact, deleteFact, getFacts, getFactSectionSnapshots } from '@/lib/database/services/fact-service';
 import {
   acceptProposal,
   addSanityProposals,
@@ -522,5 +522,35 @@ describe('accept: an incoherent_topics proposal is one generate-then-retire unit
     const active = await activeTexts(fact.id);
     expect(active).toHaveLength(3);
     expect(active).toContain(REPLACEMENT);
+  });
+});
+
+describe('a proposal whose fact is gone', () => {
+  // A suggestion is stored at sweep time; deleting or merging its fact later left it pending for
+  // good, as a card that names nothing (no fact to show) and an Accept that acts on nothing.
+  const proposal = (id: string, factId: string): HygieneProposal => ({
+    id,
+    kind: 'incoherent_topics',
+    subject: undefined as unknown as HygieneProposal['subject'],
+    targetFactIds: [factId],
+    targetTopicIds: [],
+    ops: [{ type: 'generate_replacements', factId, fillTo: 3 }] as HygieneProposal['ops'],
+    invertible: true,
+  });
+
+  it('is dropped from the pending list, the backlog and the count, and the drop is persisted', async () => {
+    const live = await addFact('Follows Formula 1');
+    await setSetting('hygiene_pending_proposals', JSON.stringify([proposal('p-live', live.id), proposal('p-dead', 'deleted-fact')]));
+    await setSetting('hygiene_proposal_backlog', JSON.stringify([proposal('b-dead', 'also-deleted')]));
+
+    expect((await getPendingProposals()).map((p) => p.id)).toEqual(['p-live']);
+    expect(await getPendingCount()).toBe(1);
+    expect(JSON.parse((await getSetting('hygiene_pending_proposals')) ?? '[]').map((p: HygieneProposal) => p.id)).toEqual(['p-live']);
+    expect(JSON.parse((await getSetting('hygiene_proposal_backlog')) ?? '[]')).toEqual([]);
+  });
+
+  it('keeps a proposal that names no fact', async () => {
+    await setSetting('hygiene_pending_proposals', JSON.stringify([{ ...proposal('p-topic', 'x'), targetFactIds: [] }]));
+    expect((await getPendingProposals()).map((p) => p.id)).toEqual(['p-topic']);
   });
 });
