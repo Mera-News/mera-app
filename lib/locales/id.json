@@ -1161,8 +1161,6 @@
     "notificationBody_one": "Mera menemukan {{count}} pembersihan untuk profil Anda.",
     "notificationBody_other": "Mera menemukan {{count}} hal untuk dirapikan di profil Anda.",
     "reviewChip": "Tinjau",
-    "title": "Rapikan profil Anda",
-    "intro": "Mera menemukan ini. Tidak ada yang berubah sampai Anda memilih.",
     "accept": "Terima",
     "reject": "Tolak",
     "effectTooBroad": "Menurunkan bobot minat ini agar menarik lebih sedikit cerita yang tidak relevan.",
@@ -1174,8 +1172,6 @@
     "applyFailedBody": "Silakan coba lagi nanti.",
     "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini.",
     "effectLocationConflict": "Menyimpan tempat yang lebih baru dan menghapus yang lama.",
-    "emptyBody": "Mera menyarankan pembersihan di sini saat dua fakta tumpang tindih atau salah satunya tidak lagi relevan.",
-    "emptyTitle": "Tidak ada yang perlu dirapikan",
     "keepBoth": "Simpan keduanya",
     "merge": "Gabungkan",
     "mergeNote": "Penggabungan menghapus fakta kedua. Tindakan ini tidak dapat dibatalkan.",
@@ -1618,7 +1614,7 @@
             "steps": {
               "0": "Anda berbicara dengan Mera dan itu mendengarkan untuk bit yang tahan lama.",
               "1": "Anda memberitahunya dengan terang-terangan: 'Saya pindah ke Lisbon.'",
-              "2": "Anda menambah atau menghapusnya sendiri di tab Anda."
+              "2": "Anda menambah atau menghapusnya sendiri di tab Profil."
             }
           },
           "to-topics": {
@@ -1643,7 +1639,7 @@
           },
           "importance": {
             "headline": "Beberapa fakta lebih penting dari yang lain",
-            "body": "Di tab Anda, buka fakta Anda dan ketuk apa pun yang Mera ketahui tentang Anda untuk menaikkan atau menurunkan bobotnya, menulis ulang, atau menghapusnya. Menurunkan bobot lebih lembut daripada menghapus, dan biasanya langkah pertama yang lebih baik.",
+            "body": "Di tab Profil, buka fakta Anda dan ketuk apa pun yang Mera ketahui tentang Anda untuk menaikkan atau menurunkan bobotnya, menulis ulang, atau menghapusnya. Menurunkan bobot lebih lembut daripada menghapus, dan biasanya langkah pertama yang lebih baik.",
             "ask": "Bagaimana cara saya mengubah seberapa penting salah satu fakta saya?"
           },
           "your-profile": {
@@ -1905,7 +1901,7 @@
               },
               "settings": {
                 "label": "Pengaturan",
-                "feedback": "Bukan. Pengaturan adalah halaman di tab Anda, dan negara tidak ada di sana."
+                "feedback": "Bukan. Pengaturan adalah tab tersendiri, dan negara tidak ada di sana."
               }
             }
           },
@@ -1928,7 +1924,7 @@
             "headline": "Di mana sumber tinggal",
             "body": "Satu layar untuk semua penerbit yang Anda atur.",
             "steps": {
-              "0": "Tab Anda, lalu Sumber.",
+              "0": "Tab Profil, lalu Sumber.",
               "1": "\"Lebih sedikit dari\" di menu ••• sebuah berita langsung berlaku, dengan Urungkan, lalu penerbitnya muncul di bawah Diatur."
             },
             "ask": "Di mana saya mengelola sumber mana yang saya lihat?"
@@ -2098,7 +2094,7 @@
             "headline": "Di mana saklar berada",
             "body": "Beberapa ketukan dari mana saja di aplikasi.",
             "steps": {
-              "0": "Tab Anda, lalu Pengaturan.",
+              "0": "Tab Pengaturan.",
               "1": "Mera Protocol."
             },
             "ask": "Di mana layar Mera Protocol?"
@@ -2711,7 +2707,6 @@
       "adjusted_other": "{{count}} diubah",
       "changes": "Perubahan pada profil Anda",
       "subtitle": "Apa yang Mera ketahui tentang Anda. Ini tetap di ponsel ini.",
-      "tidyUp": "Rapikan profil Anda",
       "topicCount_one": "{{count}} topik",
       "topicCount_other": "{{count}} topik"
     },

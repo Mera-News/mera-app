@@ -1162,8 +1162,6 @@
     "notificationBody_one": "Mera encontró {{count}} limpieza para tu perfil.",
     "notificationBody_other": "Mera encontró {{count}} limpiezas para tu perfil.",
     "reviewChip": "Revisar",
-    "title": "Ordena tu perfil",
-    "intro": "Mera detectó esto. No cambia nada hasta que tú elijas.",
     "accept": "Aceptar",
     "reject": "Descartar",
     "effectTooBroad": "Reduce el peso de este interés para que atraiga menos noticias fuera de tema.",
@@ -1175,8 +1173,6 @@
     "applyFailedBody": "Por favor, inténtalo de nuevo más tarde.",
     "effectIncoherentTopics": "Reemplaza estos temas con otros mejores para este interés.",
     "effectLocationConflict": "Conserva el lugar más reciente y elimina el anterior.",
-    "emptyBody": "Mera sugiere limpiezas aquí cuando dos hechos se solapan o uno queda obsoleto.",
-    "emptyTitle": "Nada que ordenar",
     "keepBoth": "Conservar ambos",
     "merge": "Combinar",
     "mergeNote": "Combinar elimina el segundo hecho. Esto no se puede deshacer.",
@@ -1620,7 +1616,7 @@
             "steps": {
               "0": "Hablas con Mera y ella escucha los trozos duraderos.",
               "1": "Le dices directamente: 'Me mudé a Lisboa.'",
-              "2": "Los agregas o los quitas tú mismo en la pestaña Tú."
+              "2": "Los agregas o los quitas tú mismo en la pestaña Perfil."
             }
           },
           "to-topics": {
@@ -1645,7 +1641,7 @@
           },
           "importance": {
             "headline": "Algunos datos importan más que otros",
-            "body": "En la pestaña Tú, abre tus datos y toca cualquier cosa que Mera sepa sobre ti para subir o bajar cuánto cuenta, reformularla o quitarla. Bajarla es más suave que borrarla, y suele ser mejor como primer paso.",
+            "body": "En la pestaña Perfil, abre tus datos y toca cualquier cosa que Mera sepa sobre ti para subir o bajar cuánto cuenta, reformularla o quitarla. Bajarla es más suave que borrarla, y suele ser mejor como primer paso.",
             "ask": "¿Cómo cambio la importancia de uno de mis datos?"
           },
           "your-profile": {
@@ -1907,7 +1903,7 @@
               },
               "settings": {
                 "label": "Ajustes",
-                "feedback": "No. Ajustes es una página de la pestaña Tú, y los países no están ahí."
+                "feedback": "No. Ajustes es una pestaña propia, y los países no están ahí."
               }
             }
           },
@@ -1930,7 +1926,7 @@
             "headline": "Dónde viven las fuentes",
             "body": "Una sola pantalla para todas las publicaciones que ajustaste.",
             "steps": {
-              "0": "La pestaña Tú, luego Fuentes.",
+              "0": "La pestaña Perfil, luego Fuentes.",
               "1": "«Menos de» en el menú ••• de un artículo se aplica al instante, con Deshacer, y la publicación aparece después en Ajustadas."
             },
             "ask": "¿Dónde gestiono qué fuentes veo?"
@@ -2100,7 +2096,7 @@
             "headline": "Dónde están los interruptores",
             "body": "A unos pocos toques desde cualquier lugar de la app.",
             "steps": {
-              "0": "La pestaña Tú, luego Ajustes.",
+              "0": "La pestaña Ajustes.",
               "1": "Mera Protocol."
             },
             "ask": "¿Dónde está la pantalla de Mera Protocol?"
@@ -2714,7 +2710,6 @@
       "adjusted_other": "{{count}} ajustados",
       "changes": "Cambios en tu perfil",
       "subtitle": "Lo que Mera sabe de ti. Se queda en este teléfono.",
-      "tidyUp": "Ordena tu perfil",
       "topicCount_one": "{{count}} tema",
       "topicCount_other": "{{count}} temas"
     },

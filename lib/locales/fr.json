@@ -1168,8 +1168,6 @@
     "notificationBody_one": "Mera a trouvé {{count}} nettoyage pour votre profil.",
     "notificationBody_other": "Mera a trouvé {{count}} nettoyages pour votre profil.",
     "reviewChip": "Vérifier",
-    "title": "Ranger votre profil",
-    "intro": "Mera a repéré cela. Rien ne change tant que vous n'avez pas choisi.",
     "accept": "Accepter",
     "reject": "Ignorer",
     "effectTooBroad": "Réduit la pondération de cet intérêt afin qu'il attire moins d'articles hors sujet.",
@@ -1181,8 +1179,6 @@
     "applyFailedBody": "Veuillez réessayer plus tard.",
     "effectIncoherentTopics": "Remplace ces sujets par de meilleurs pour cet intérêt.",
     "effectLocationConflict": "Garde le lieu le plus récent et supprime l'ancien.",
-    "emptyBody": "Mera suggère ici des nettoyages lorsque deux faits se chevauchent ou qu'un fait devient obsolète.",
-    "emptyTitle": "Rien à ranger",
     "keepBoth": "Garder les deux",
     "merge": "Fusionner",
     "mergeNote": "La fusion supprime le second fait. Cette action est irréversible.",
@@ -1626,7 +1622,7 @@
             "steps": {
               "0": "Vous parlez à Mera et elle écoute les bits durables.",
               "1": "Vous le dites franchement : \"Je me suis installé à Lisbonne.\"",
-              "2": "Vous les ajoutez ou les supprimez vous-même dans l'onglet Vous."
+              "2": "Vous les ajoutez ou les supprimez vous-même dans l'onglet Profil."
             }
           },
           "to-topics": {
@@ -1651,7 +1647,7 @@
           },
           "importance": {
             "headline": "Certains faits comptent plus que d'autres",
-            "body": "Dans l'onglet Vous, ouvrez vos faits et touchez ce que Mera sait de vous pour augmenter ou réduire son poids, le reformuler ou le supprimer. Baisser son poids est plus doux que de le supprimer, et c'est souvent le meilleur premier réflexe.",
+            "body": "Dans l'onglet Profil, ouvrez vos faits et touchez ce que Mera sait de vous pour augmenter ou réduire son poids, le reformuler ou le supprimer. Baisser son poids est plus doux que de le supprimer, et c'est souvent le meilleur premier réflexe.",
             "ask": "Comment je change l'importance d'un de mes faits ?"
           },
           "your-profile": {
@@ -1913,7 +1909,7 @@
               },
               "settings": {
                 "label": "Paramètres",
-                "feedback": "Non. Paramètres est une page de l'onglet Vous, et les pays n'y sont pas."
+                "feedback": "Non. Paramètres est un onglet à part, et les pays n'y sont pas."
               }
             }
           },
@@ -1936,7 +1932,7 @@
             "headline": "Où vivent les sources",
             "body": "Une seule page pour toutes les sources que vous avez ajustées.",
             "steps": {
-              "0": "L'onglet Vous, puis Sources.",
+              "0": "L'onglet Profil, puis Sources.",
               "1": "« Moins de » dans le menu ••• d'un article s'applique tout de suite, avec Annuler, puis la source apparaît sous Ajustées."
             },
             "ask": "Où je gère quelles sources je vois ?"
@@ -2106,7 +2102,7 @@
             "headline": "Où les commutateurs sont",
             "body": "Quelques touches depuis n'importe où dans l'application.",
             "steps": {
-              "0": "L'onglet Vous, puis Paramètres.",
+              "0": "L'onglet Paramètres.",
               "1": "Mera Protocol."
             },
             "ask": "Où est l'écran Mera Protocol ?"
@@ -2720,7 +2716,6 @@
       "adjusted_other": "{{count}} modifiés",
       "changes": "Modifications de votre profil",
       "subtitle": "Ce que Mera sait de vous. Cela reste sur ce téléphone.",
-      "tidyUp": "Ranger votre profil",
       "topicCount_one": "{{count}} sujet",
       "topicCount_other": "{{count}} sujets"
     },

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 // lib/navigation/tab-bar.ts LIST_END_RESERVE: a list ends above the Mera button,
-// not just above the tab bar. A new You-tab scroll page that forgets this fails here.
+// not just above the tab bar. A new Profile or Settings scroll page that forgets this fails here.
 const PAGES = [
   'components/custom/config-mera/DisplaySettingsScreen.tsx',
   'components/custom/config-mera/NotificationSettingsScreen.tsx',
@@ -10,12 +10,11 @@ const PAGES = [
   'components/custom/config-mera/ManageDataScreen.tsx',
   'components/custom/locations/LocationsScreen.tsx',
   'components/custom/persona-audit/PersonaAuditScreen.tsx',
-  'components/custom/hygiene/HygieneReviewScreen.tsx',
   'components/custom/publication-preferences/PublicationPreferencesScreen.tsx',
   'components/custom/you/YouPages.tsx',
 ];
 
-describe('You-tab scroll pages end above the Mera button', () => {
+describe('Profile and Settings scroll pages end above the Mera button', () => {
   it.each(PAGES)('%s', (rel) => {
     const src = fs.readFileSync(path.resolve(__dirname, '../../../..', rel), 'utf8');
     expect(src).toContain('useListEndClearance()');

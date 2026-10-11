@@ -1162,8 +1162,6 @@
     "notificationBody_one": "A Mera encontrou {{count}} limpeza para o seu perfil.",
     "notificationBody_other": "A Mera encontrou {{count}} limpezas para o seu perfil.",
     "reviewChip": "Revisar",
-    "title": "Organize seu perfil",
-    "intro": "A Mera notou isto. Nada muda até você escolher.",
     "accept": "Aceitar",
     "reject": "Dispensar",
     "effectTooBroad": "Reduz o peso deste interesse para que traga menos notícias fora do tema.",
@@ -1175,8 +1173,6 @@
     "applyFailedBody": "Tente novamente mais tarde.",
     "effectIncoherentTopics": "Substitui estes tópicos por melhores para este interesse.",
     "effectLocationConflict": "Mantém o lugar mais recente e remove o anterior.",
-    "emptyBody": "A Mera sugere arrumações aqui quando dois fatos se sobrepõem ou um fica desatualizado.",
-    "emptyTitle": "Nada para arrumar",
     "keepBoth": "Manter os dois",
     "merge": "Unir",
     "mergeNote": "Unir remove o segundo fato. Isso não dá para desfazer.",
@@ -1620,7 +1616,7 @@
             "steps": {
               "0": "Você fala com Mera e ele ouve as partes duráveis.",
               "1": "Você diz claramente: 'Mudei para Lisboa.'",
-              "2": "Você mesmo adiciona ou remove na aba Você."
+              "2": "Você mesmo adiciona ou remove na aba Perfil."
             }
           },
           "to-topics": {
@@ -1645,7 +1641,7 @@
           },
           "importance": {
             "headline": "Alguns fatos importam mais que outros",
-            "body": "Na aba Você, abra seus fatos e toque em qualquer coisa que o Mera sabe sobre você para aumentar ou diminuir o peso dela, reescrever ou remover. Diminuir é mais suave que apagar, e geralmente é a melhor primeira opção.",
+            "body": "Na aba Perfil, abra seus fatos e toque em qualquer coisa que o Mera sabe sobre você para aumentar ou diminuir o peso dela, reescrever ou remover. Diminuir é mais suave que apagar, e geralmente é a melhor primeira opção.",
             "ask": "Como mudo o quanto um fato meu importa?"
           },
           "your-profile": {
@@ -1907,7 +1903,7 @@
               },
               "settings": {
                 "label": "Configurações",
-                "feedback": "Não. Configurações é uma página da aba Você, e os países não ficam lá."
+                "feedback": "Não. Configurações é uma aba própria, e os países não ficam lá."
               }
             }
           },
@@ -1930,7 +1926,7 @@
             "headline": "Onde fontes vivem",
             "body": "Uma tela para todas as publicações que você ajustou.",
             "steps": {
-              "0": "A aba Você, depois Fontes.",
+              "0": "A aba Perfil, depois Fontes.",
               "1": "«Menos de» no menu ••• de um artigo vale na hora, com Desfazer, e a publicação passa a aparecer em Ajustadas."
             },
             "ask": "Onde eu gerencio quais fontes vejo?"
@@ -2100,7 +2096,7 @@
             "headline": "Onde os switches estão",
             "body": "A poucos toques de qualquer lugar do app.",
             "steps": {
-              "0": "A aba Você, depois Configurações.",
+              "0": "A aba Configurações.",
               "1": "Mera Protocol."
             },
             "ask": "Onde fica a tela do Mera Protocol?"
@@ -2714,7 +2710,6 @@
       "adjusted_other": "{{count}} ajustados",
       "changes": "Mudanças no seu perfil",
       "subtitle": "O que a Mera sabe sobre você. Fica neste celular.",
-      "tidyUp": "Organize seu perfil",
       "topicCount_one": "{{count}} tema",
       "topicCount_other": "{{count}} temas"
     },

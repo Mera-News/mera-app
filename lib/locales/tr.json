@@ -1164,8 +1164,6 @@
     "notificationBody_one": "Mera profilin için {{count}} temizlik önerisi buldu.",
     "notificationBody_other": "Mera profilin için {{count}} temizlik önerisi buldu.",
     "reviewChip": "İncele",
-    "title": "Profilinizi düzenleyin",
-    "intro": "Mera bunu fark etti. Siz seçene kadar hiçbir şey değişmez.",
     "accept": "Kabul et",
     "reject": "Reddet",
     "effectTooBroad": "Bu ilgi alanının ağırlığını azaltarak daha az alakasız haber çekmesini sağlar.",
@@ -1177,8 +1175,6 @@
     "applyFailedBody": "Lütfen daha sonra tekrar dene.",
     "effectIncoherentTopics": "Bu ilgi alanı için bu konuları daha iyi olanlarla değiştirir.",
     "effectLocationConflict": "Yeni yeri tutar, eskisini kaldırır.",
-    "emptyBody": "İki bilgi birbirine benzediğinde ya da biri eskidiğinde Mera temizlik önerilerini burada gösterir.",
-    "emptyTitle": "Düzenlenecek bir şey yok",
     "keepBoth": "İkisini de tut",
     "merge": "Birleştir",
     "mergeNote": "Birleştirme ikinci bilgiyi kaldırır. Bu geri alınamaz.",
@@ -1622,7 +1618,7 @@
             "steps": {
               "0": "Sen Mera'yla konuşuyorsun ve o dayanıklı bitleri dinliyor.",
               "1": "Bunu açık söylüyorsun: \"Lizbon'a taşındım.\"",
-              "2": "Bunları Siz sekmesinden kendiniz eklersiniz veya kaldırırsınız."
+              "2": "Bunları Profil sekmesinden kendiniz eklersiniz veya kaldırırsınız."
             }
           },
           "to-topics": {
@@ -1647,7 +1643,7 @@
           },
           "importance": {
             "headline": "Bazı gerçekler diğerlerinden daha önemli",
-            "body": "Siz sekmesinde bilgilerinizi açın ve Mera'nın sizin hakkınızda bildiği herhangi bir şeye dokunarak ağırlığını artırın ya da azaltın, yeniden ifade edin veya kaldırın. Ağırlığı düşürmek silmekten daha yumuşaktır ve genelde daha iyi ilk adımdır.",
+            "body": "Profil sekmesinde bilgilerinizi açın ve Mera'nın sizin hakkınızda bildiği herhangi bir şeye dokunarak ağırlığını artırın ya da azaltın, yeniden ifade edin veya kaldırın. Ağırlığı düşürmek silmekten daha yumuşaktır ve genelde daha iyi ilk adımdır.",
             "ask": "Gerçeklerinden birinin ne kadar önemli olduğunu nasıl değiştirebilirim?"
           },
           "your-profile": {
@@ -1909,7 +1905,7 @@
               },
               "settings": {
                 "label": "Ayarlar",
-                "feedback": "Hayır. Ayarlar Siz sekmesinin bir sayfasıdır ve ülkeler orada değil."
+                "feedback": "Hayır. Ayarlar kendi başına bir sekmedir ve ülkeler orada değil."
               }
             }
           },
@@ -1932,7 +1928,7 @@
             "headline": "Kaynaklar nerede yaşıyor",
             "body": "Ayarladığınız tüm yayıncılar için tek bir ekran.",
             "steps": {
-              "0": "Siz sekmesi, sonra Kaynaklar.",
+              "0": "Profil sekmesi, sonra Kaynaklar.",
               "1": "Bir haberin ••• menüsündeki \"Daha az\" seçeneği hemen geçerli olur, Geri al ile birlikte, ardından yayıncı Ayarlananlar altında görünür."
             },
             "ask": "Hangi kaynakları gördüğümü nereden yönetirim?"
@@ -2102,7 +2098,7 @@
             "headline": "Anahtarlar nerede",
             "body": "Uygulamanın her yerinden birkaç dokunuş.",
             "steps": {
-              "0": "Siz sekmesi, sonra Ayarlar.",
+              "0": "Ayarlar sekmesi.",
               "1": "Mera Protokolü."
             },
             "ask": "Mera Protokolü ekranı nerede?"
@@ -2716,7 +2712,6 @@
       "adjusted_other": "{{count}} ayarlandı",
       "changes": "Profilinizdeki değişiklikler",
       "subtitle": "Mera hakkınızda ne biliyor. Bu telefonda kalır.",
-      "tidyUp": "Profilinizi düzenleyin",
       "topicCount_one": "{{count}} konu",
       "topicCount_other": "{{count}} konu"
     },

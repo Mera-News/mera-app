@@ -4,7 +4,7 @@ import { router, type Href } from 'expo-router';
  *  it through its own stack route, `feed/interest`. */
 export function openFactPage(fact: { readonly id: string; readonly statement: string }): void {
     router.push({
-        pathname: '/logged-in/app_container/you/fact',
+        pathname: '/logged-in/app_container/profile/fact',
         params: { factId: fact.id, statement: fact.statement },
     } as Href);
 }

@@ -3,7 +3,6 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { deleteNotification, markAllRead, observeAll } from '@/lib/database/services/notification-service';
-import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import { hapticLight } from '@/lib/haptics';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
@@ -12,7 +11,7 @@ import logger from '@/lib/logger';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { StyleSheet, View } from 'react-native';
@@ -26,6 +25,7 @@ import {
 } from './notification-actions';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { HygieneSuggestionCard, useHygieneSuggestions } from './HygieneSuggestionCard';
 
 /** "now" / "5m" / "2h" / "3d", as the board draws it, in the app language. */
 function relativeTime(t: TFunction<'translation'>, date: Date): string {
@@ -70,33 +70,18 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     const endClearance = useListEndClearance();
     // Lite / Reduce Motion: a deleted row leaves at once.
     const motion = useMotionAllowed();
-    const [items, setItems] = useState<NotificationModel[]>([]);
-
-    // A hygiene row stamps its count when written, and later sweeps add to the
-    // same review list: the live count wins while there is anything left.
-    const [hygienePending, setHygienePending] = useState<number | null>(null);
+    const [rows, setRows] = useState<NotificationModel[]>([]);
+    // Tidy-up suggestions are cards above the rows, so their "Tidy up your
+    // profile" notice row (still written, for the toast and the dot) is hidden.
+    const items = useMemo(() => rows.filter((n) => n.type !== 'hygiene'), [rows]);
+    const suggestions = useHygieneSuggestions();
     // Every row's time column is as wide as the widest age laid out so far, so a
     // longer localized short form never clips and the titles still line up.
     const [timeWidth, setTimeWidth] = useState(TIME_COLUMN);
-    useEffect(() => {
-        let cancelled = false;
-        const refresh = () => {
-            getPendingCount()
-                .then((n) => { if (!cancelled) setHygienePending(n); })
-                .catch(() => {});
-        };
-        refresh();
-        const unsubscribe = subscribeHygieneChange(refresh);
-        return () => {
-            cancelled = true;
-            unsubscribe();
-        };
-    }, []);
-
     // Newest first. Rows of types no longer kept (written before Y11, alive
     // for 90 days) stay hidden.
     useEffect(() => {
-        const sub = observeAll().subscribe((rows) => setItems(rows.filter((n) => !NOT_KEPT_NOTICE_TYPES.has(n.type))));
+        const sub = observeAll().subscribe((all) => setRows(all.filter((n) => !NOT_KEPT_NOTICE_TYPES.has(n.type))));
         return () => sub.unsubscribe();
     }, []);
 
@@ -104,16 +89,15 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     // screen, and again when a row lands while it is. Never on unmount: a
     // warmed neighbour that was never shown must not clear anything. Keyed on
     // "any unread", so the write's own re-emit cannot loop.
-    const hasUnread = items.some((n) => n.status === 'unread');
+    // Hidden hygiene rows count too: they light the dot.
+    const hasUnread = rows.some((n) => n.status === 'unread');
     useEffect(() => {
         if (active && hasUnread) void markAllRead();
     }, [active, hasUnread]);
 
     const renderItem = useCallback(
         ({ item: n, index }: { item: NotificationModel; index: number }) => {
-            const stored = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
-            const params =
-                n.type === 'hygiene' && hygienePending !== null && hygienePending > 0 ? { ...stored, count: hygienePending } : stored;
+            const params = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
             // Just the title; a row without one shows its body's first line, so
             // a row is never blank. A feedback request's body is free text:
             // never through t(), whose separators would mangle a question.
@@ -192,7 +176,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                 </Animated.View>
             );
         },
-        [hygienePending, colors, t, items.length, motion, timeWidth],
+        [colors, t, items.length, motion, timeWidth],
     );
 
     const empty = (
@@ -218,7 +202,22 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             itemLayoutAnimation={motion ? LinearTransition.duration(180) : undefined}
-            ListEmptyComponent={empty}
+            ListHeaderComponent={
+                suggestions.items.length > 0 ? (
+                    <View testID="hygiene-suggestions">
+                        {suggestions.items.map((item) => (
+                            <HygieneSuggestionCard
+                                key={item.id}
+                                item={item}
+                                busy={suggestions.actingId === item.id}
+                                onAccept={suggestions.accept}
+                                onDismiss={suggestions.dismiss}
+                            />
+                        ))}
+                    </View>
+                ) : null
+            }
+            ListEmptyComponent={suggestions.items.length > 0 ? null : empty}
             initialNumToRender={12}
             showsVerticalScrollIndicator={false}
             onScroll={header.scrollHandler}

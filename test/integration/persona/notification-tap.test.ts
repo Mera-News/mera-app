@@ -10,6 +10,7 @@ import { deleteNotification, getAll, notify, type NotifyInput } from '@/lib/data
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { consumePendingNotificationRoute } from '@/lib/stores/pending-notification-route';
 import { initI18nEn } from '@/test/helpers';
+import { consumePendingPage, resetPendingPage } from '@/components/custom/nav/navigate-to-page';
 
 const nav = router as unknown as { push: jest.Mock; navigate: jest.Mock };
 
@@ -28,14 +29,16 @@ beforeAll(async () => {
 
 beforeEach(() => {
     useFloatingChatStore.getState().reset();
+    resetPendingPage();
 });
 
 describe('tapNotification', () => {
-    it('hygiene opens Tidy up in the You tab and marks the row actioned', async () => {
+    it('hygiene opens the inbox, where its suggestions are cards, and marks the row actioned', async () => {
         const row = await seed({ type: 'hygiene', actions: [{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }] });
         await tapNotification(row);
-        expect(nav.navigate).toHaveBeenCalledWith('/logged-in/app_container/you');
-        expect(nav.push).toHaveBeenCalledWith({ pathname: '/logged-in/app_container/you/hygiene-review', params: {} });
+        expect(nav.navigate).toHaveBeenCalledWith('/logged-in/app_container/feed');
+        expect(consumePendingPage('feed')?.page).toBe('notifications');
+        expect(nav.push).not.toHaveBeenCalled();
         expect(useFloatingChatStore.getState().isExpanded).toBe(false);
         expect(await statusOf(row.id)).toBe('actioned');
     });
@@ -95,7 +98,7 @@ describe('tapNotification', () => {
             ],
         });
         await tapNotification(row);
-        expect(nav.push).toHaveBeenCalledTimes(1);
+        expect(nav.navigate).toHaveBeenCalledTimes(1);
         expect(useFloatingChatStore.getState().isExpanded).toBe(false);
     });
 });
@@ -147,7 +150,7 @@ describe('tapNotification: failures', () => {
         const row = await seed({ type: 'hygiene', actions: [{ id: 'review-hygiene' }] });
         await deleteNotification(row.id);
         await tapNotification(row);
-        expect(nav.push).toHaveBeenCalledWith({ pathname: '/logged-in/app_container/you/hygiene-review', params: {} });
+        expect(consumePendingPage('feed')?.page).toBe('notifications');
     });
 });
 

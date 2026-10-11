@@ -1161,8 +1161,6 @@
     "notificationBody_one": "梅拉為你的個人資料發現了 {{count}} 項整理建議。",
     "notificationBody_other": "梅拉為你的個人資料發現了 {{count}} 項整理建議。",
     "reviewChip": "查看",
-    "title": "整理你的個人資料",
-    "intro": "梅拉注意到了這件事。在你做出選擇之前，什麼都不會改變。",
     "accept": "接受",
     "reject": "忽略",
     "effectTooBroad": "降低此興趣的權重，使其帶來的偏題內容更少。",
@@ -1174,8 +1172,6 @@
     "applyFailedBody": "請稍後再試。",
     "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。",
     "effectLocationConflict": "保留較新的地點，移除較舊的地點。",
-    "emptyBody": "當兩項事實重疊，或某項事實過時，梅拉會在這裡建議整理。",
-    "emptyTitle": "沒有需要整理的內容",
     "keepBoth": "兩者都保留",
     "merge": "合併",
     "mergeNote": "合併會移除第二項事實。此操作無法復原。",
@@ -1905,7 +1901,7 @@
               },
               "settings": {
                 "label": "設定",
-                "feedback": "不對。「設定」是「我的」標籤中的一個頁面，那裡沒有國家。"
+                "feedback": "不對。「設定」是獨立的標籤，那裡沒有國家。"
               }
             }
           },
@@ -2098,7 +2094,7 @@
             "headline": "開關在哪裡",
             "body": "在應用程式內任何位置，點幾下就能到。",
             "steps": {
-              "0": "「我的」標籤，然後是「設定」。",
+              "0": "「設定」標籤。",
               "1": "梅拉協定。"
             },
             "ask": "梅拉協定畫面在哪裡？"
@@ -2711,7 +2707,6 @@
       "adjusted_other": "已調整 {{count}} 項",
       "changes": "個人資料的變更",
       "subtitle": "梅拉對你的了解。資料只保存在這支手機上。",
-      "tidyUp": "整理你的個人資料",
       "topicCount_one": "{{count}} 個主題",
       "topicCount_other": "{{count}} 個主題"
     },

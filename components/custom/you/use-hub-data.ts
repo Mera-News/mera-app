@@ -2,12 +2,10 @@
 // source as the screen its row opens, so Profile never disagrees with the
 // screen behind it.
 
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type Location from '@/lib/database/models/Location';
 import { observeFacts } from '@/lib/database/services/fact-service';
-import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
 import { observeByFact } from '@/lib/database/services/topic-service';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
@@ -50,21 +48,4 @@ export function useHubPlaces(): readonly Location[] | null {
         return () => sub.unsubscribe();
     }, []);
     return rows;
-}
-
-/** How many cleanups wait, the same total the review screen shows. */
-export function useHubCleanup(): { readonly count: number } {
-    const [count, setCount] = useState(0);
-    const refresh = useCallback(() => {
-        getPendingCount()
-            .then(setCount)
-            .catch(() => { /* keep the last count */ });
-    }, []);
-    useFocusEffect(
-        useCallback(() => {
-            refresh();
-            return subscribeHygieneChange(refresh);
-        }, [refresh]),
-    );
-    return { count };
 }

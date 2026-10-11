@@ -1161,8 +1161,6 @@
     "notificationBody_one": "Mera tìm thấy {{count}} dọn dẹp cho hồ sơ của bạn.",
     "notificationBody_other": "Mera đã tìm thấy {{count}} mục cần dọn dẹp trong hồ sơ của bạn.",
     "reviewChip": "Xem xét",
-    "title": "Dọn dẹp hồ sơ của bạn",
-    "intro": "Mera đã phát hiện điều này. Không có gì thay đổi cho đến khi bạn chọn.",
     "accept": "Chấp nhận",
     "reject": "Bỏ qua",
     "effectTooBroad": "Giảm trọng số của sở thích này để nó kéo về ít bài viết lạc chủ đề hơn.",
@@ -1174,8 +1172,6 @@
     "applyFailedBody": "Vui lòng thử lại sau.",
     "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này.",
     "effectLocationConflict": "Giữ nơi mới hơn và xóa nơi cũ.",
-    "emptyBody": "Mera sẽ gợi ý dọn dẹp ở đây khi hai dữ kiện trùng nhau hoặc một dữ kiện đã cũ.",
-    "emptyTitle": "Không có gì cần dọn dẹp",
     "keepBoth": "Giữ cả hai",
     "merge": "Gộp",
     "mergeNote": "Gộp sẽ xóa dữ kiện thứ hai. Không thể hoàn tác.",
@@ -1618,7 +1614,7 @@
             "steps": {
               "0": "Bạn nói chuyện với Mera và nó nghe những phần bền vững.",
               "1": "Bạn nói rõ ràng: 'Tôi chuyển đến Lisbon.'",
-              "2": "Bạn tự thêm hoặc xóa chúng trong tab Bạn."
+              "2": "Bạn tự thêm hoặc xóa chúng trong tab Hồ sơ."
             }
           },
           "to-topics": {
@@ -1643,7 +1639,7 @@
           },
           "importance": {
             "headline": "Một số thông tin quan trọng hơn những thông tin khác",
-            "body": "Trong tab Bạn, mở các thông tin về bạn và chạm vào bất kỳ điều gì Mera biết để tăng hoặc giảm mức quan trọng, viết lại hoặc xóa nó. Giảm xuống nhẹ nhàng hơn xóa, và thường là cách thử đầu tiên tốt hơn.",
+            "body": "Trong tab Hồ sơ, mở các thông tin về bạn và chạm vào bất kỳ điều gì Mera biết để tăng hoặc giảm mức quan trọng, viết lại hoặc xóa nó. Giảm xuống nhẹ nhàng hơn xóa, và thường là cách thử đầu tiên tốt hơn.",
             "ask": "Làm thế nào để tôi thay đổi mức độ quan trọng của một trong những thông tin của tôi?"
           },
           "your-profile": {
@@ -1905,7 +1901,7 @@
               },
               "settings": {
                 "label": "Cài đặt",
-                "feedback": "Không phải. Cài đặt là một trang của tab Bạn và không có quốc gia ở đó."
+                "feedback": "Không phải. Cài đặt là một tab riêng và không có quốc gia ở đó."
               }
             }
           },
@@ -1928,7 +1924,7 @@
             "headline": "Nơi các nguồn sống",
             "body": "Một màn hình cho mọi nguồn báo bạn đã điều chỉnh.",
             "steps": {
-              "0": "Tab Bạn, rồi Nguồn.",
+              "0": "Tab Hồ sơ, rồi Nguồn.",
               "1": "\"Ít hơn từ\" trong menu ••• của một bài viết có hiệu lực ngay, kèm Hoàn tác, và nguồn báo đó sẽ hiện trong mục Đã điều chỉnh."
             },
             "ask": "Tôi quản lý những nguồn nào tôi thấy ở đâu?"
@@ -2098,7 +2094,7 @@
             "headline": "Nơi các công tắc",
             "body": "Chỉ vài lần chạm từ bất kỳ đâu trong ứng dụng.",
             "steps": {
-              "0": "Tab Bạn, rồi Cài đặt.",
+              "0": "Tab Cài đặt.",
               "1": "Mera Protocol."
             },
             "ask": "Mera Protocol ở đâu?"
@@ -2711,7 +2707,6 @@
       "adjusted_other": "{{count}} đã điều chỉnh",
       "changes": "Thay đổi đối với hồ sơ của bạn",
       "subtitle": "Những gì Mera biết về bạn. Thông tin này được lưu trên điện thoại này.",
-      "tidyUp": "Dọn dẹp hồ sơ của bạn",
       "topicCount_one": "{{count}} chủ đề",
       "topicCount_other": "{{count}} chủ đề"
     },

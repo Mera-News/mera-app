@@ -3,5 +3,5 @@
 import { TabScreenRedirect } from '@/components/custom/nav/LegacyRedirect';
 
 export default function LegacyRoute() {
-  return <TabScreenRedirect tab="you" screen="activity" />;
+  return <TabScreenRedirect tab="profile" screen="activity" />;
 }

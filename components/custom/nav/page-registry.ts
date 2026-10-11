@@ -1,4 +1,4 @@
-// The four-tab shell's page table: which tab each page lives in, its pill
+// The five-tab shell's page table: which tab each page lives in, its pill
 // label and what the ? beside its title explains.
 //
 // RN-free and i18n-free on purpose: the Mera button, the startup gate and
@@ -47,7 +47,7 @@ export const PAGE_SIDE_INSET = 14;
 export const PAGE_TITLE_GAP = 10;
 
 /** Bottom-tab order. Also the cross-tab swipe order. */
-export const TAB_ORDER: readonly TabId[] = ['feed', 'world', 'library', 'you'];
+export const TAB_ORDER: readonly TabId[] = ['feed', 'world', 'library', 'profile', 'you'];
 
 /** A key of the app's typed dictionary (typed off en.json), so pages can
  *  `t(meta.labelKey)` with no cast. */
@@ -114,7 +114,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
   checks: { tab: 'library', labelKey: 'factCheck.dashboard.listTitle', keepMounted: false, explainer: null },
   visited: { tab: 'library', labelKey: 'publicationPage.history', keepMounted: false, explainer: null },
   stats: { tab: 'library', labelKey: 'nav.page.stats', keepMounted: false, explainer: null },
-  profile: { tab: 'you', labelKey: 'tabs.profile', keepMounted: false, explainer: null },
+  profile: { tab: 'profile', labelKey: 'tabs.profile', keepMounted: false, explainer: null },
   settings: { tab: 'you', labelKey: 'tabs.settings', keepMounted: false, explainer: null },
   // The inbox (NotificationsScreen embedded), the Feed tab's last page (owner:
   // the Feed is everything new). Not `settings:notifications`, the
@@ -143,7 +143,9 @@ export const TAB_LABEL_KEYS: Readonly<Record<TabId, I18nKey>> = {
   feed: 'tabs.deck',
   world: 'tabs.world',
   library: 'tabs.library',
-  you: 'tabs.you',
+  profile: 'tabs.profile',
+  // The `you` tab is Settings (its folder name predates the Profile tab).
+  you: 'tabs.settings',
 };
 
 const COUNTRY_PREFIX = 'country:';
@@ -182,7 +184,6 @@ export type SurfaceId =
   | 'facts'
   | 'locations'
   | 'sources'
-  | 'hygiene'
   | 'activity'
   | 'settings:display'
   | 'settings:mera-protocol'
@@ -193,12 +194,9 @@ export type SurfaceId =
   | 'search'
   | 'article';
 
+const PROFILE_STACK_SURFACES: ReadonlySet<string> = new Set(['facts', 'locations', 'sources', 'activity']);
+
 const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
-  'facts',
-  'locations',
-  'sources',
-  'hygiene',
-  'activity',
   'settings:display',
   'settings:mera-protocol',
   'settings:notifications',
@@ -211,6 +209,7 @@ const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
 export function tabForSurface(surface: SurfaceId): TabId | null {
   if (surface === 'search' || surface === 'article') return null;
   if (surface.startsWith('interest:')) return 'feed';
+  if (PROFILE_STACK_SURFACES.has(surface)) return 'profile';
   if (YOU_STACK_SURFACES.has(surface)) return 'you';
   return tabOfPage(surface as PageId);
 }

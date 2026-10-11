@@ -1,4 +1,4 @@
-// One fact, inside the You tab's stack (Profile > Facts > a fact).
+// One fact, inside the Profile tab's stack (Profile > Facts > a fact).
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import FactPage from '@/components/custom/facts/FactPage';

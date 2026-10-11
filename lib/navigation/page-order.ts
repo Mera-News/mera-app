@@ -23,7 +23,7 @@
 import { create } from 'zustand';
 import logger from '@/lib/logger';
 
-export type TabId = 'feed' | 'world' | 'library' | 'you';
+export type TabId = 'feed' | 'world' | 'library' | 'profile' | 'you';
 export type StaticPageId =
   | 'feed'
   | 'stories'
@@ -45,7 +45,8 @@ export type StaticTabId = Exclude<TabId, 'world'>;
 export const DEFAULT_PAGE_ORDER: Readonly<Record<StaticTabId, readonly StaticPageId[]>> = {
   feed: ['feed', 'stories', 'notifications'],
   library: ['saved', 'checks', 'visited', 'stats'],
-  you: ['profile', 'settings'],
+  profile: ['profile'],
+  you: ['settings'],
 };
 
 export const WORLD_ORDER_SETTING_KEY = 'nav_order_world';

@@ -1192,8 +1192,6 @@
     "notificationBody_many": "Mera znalazła {{count}} elementów do uporządkowania w Twoim profilu.",
     "notificationBody_other": "Mera znalazła {{count}} elementu do uporządkowania w Twoim profilu.",
     "reviewChip": "Przejrzyj",
-    "title": "Uporządkuj swój profil",
-    "intro": "Mera to zauważyła. Nic się nie zmieni, dopóki nie wybierzesz.",
     "accept": "Akceptuj",
     "reject": "Odrzuć",
     "effectTooBroad": "Obniża wagę tego zainteresowania, aby przyciągało mniej niezwiązanych z tematem wiadomości.",
@@ -1205,8 +1203,6 @@
     "applyFailedBody": "Spróbuj ponownie później.",
     "effectIncoherentTopics": "Zastępuje te tematy lepszymi dla tego zainteresowania.",
     "effectLocationConflict": "Zachowuje nowsze miejsce i usuwa starsze.",
-    "emptyBody": "Mera proponuje tu porządki, gdy dwa fakty się pokrywają albo jeden się zdezaktualizuje.",
-    "emptyTitle": "Nic do uporządkowania",
     "keepBoth": "Zachowaj oba",
     "merge": "Połącz",
     "mergeNote": "Połączenie usuwa drugi fakt. Nie można tego cofnąć.",
@@ -1658,7 +1654,7 @@
             "steps": {
               "0": "Rozmawiam z Mera i to słyszy trwałe bity.",
               "1": "Powiadomiasz bezpośrednio: 'Przeniosłem się do Lizbony.'",
-              "2": "Dodajesz je lub usuwasz sam na karcie Ty."
+              "2": "Dodajesz je lub usuwasz sam na karcie Profil."
             }
           },
           "to-topics": {
@@ -1683,7 +1679,7 @@
           },
           "importance": {
             "headline": "Niektóre fakty są ważniejsze niż inne",
-            "body": "Na karcie Ty otwórz swoje fakty i dotknij wszystkiego, co Mera o tobie wie, aby zmienić, jak bardzo się liczy, przeformułować to albo usunąć. Zmniejszenie wagi jest łagodniejsze niż usunięcie i zwykle to lepszy pierwszy krok.",
+            "body": "Na karcie Profil otwórz swoje fakty i dotknij wszystkiego, co Mera o tobie wie, aby zmienić, jak bardzo się liczy, przeformułować to albo usunąć. Zmniejszenie wagi jest łagodniejsze niż usunięcie i zwykle to lepszy pierwszy krok.",
             "ask": "Jak zmienić, jak ważny jest jeden z moich faktów?"
           },
           "your-profile": {
@@ -1945,7 +1941,7 @@
               },
               "settings": {
                 "label": "Ustawienia",
-                "feedback": "Nie. Ustawienia to strona karty Ty, a krajów tam nie ma."
+                "feedback": "Nie. Ustawienia to osobna karta, a krajów tam nie ma."
               }
             }
           },
@@ -1968,7 +1964,7 @@
             "headline": "Gdzie żyją źródła",
             "body": "Jeden ekran dla każdego wydawcy, którego zmieniłeś.",
             "steps": {
-              "0": "Karta Ty, potem Źródła.",
+              "0": "Karta Profil, potem Źródła.",
               "1": "“Mniej z” w menu ••• artykułu działa od razu, z opcją Cofnij, a wydawca pojawia się potem w sekcji Zmienione."
             },
             "ask": "Gdzie zarządzam, które źródła widzę?"
@@ -2138,7 +2134,7 @@
             "headline": "Gdzie są przełączniki",
             "body": "Kilka dotknięć z dowolnego miejsca w aplikacji.",
             "steps": {
-              "0": "Karta Ty, potem Ustawienia.",
+              "0": "Karta Ustawienia.",
               "1": "Mera Protocol."
             },
             "ask": "Gdzie jest ekran Mera Protocol?"
@@ -2794,7 +2790,6 @@
       "adjusted_other": "{{count}} zmienionych",
       "changes": "Zmiany w Twoim profilu",
       "subtitle": "Co Mera o Tobie wie. Zostaje na tym telefonie.",
-      "tidyUp": "Uporządkuj swój profil",
       "topicCount_one": "{{count}} temat",
       "topicCount_few": "{{count}} tematy",
       "topicCount_many": "{{count}} tematów",

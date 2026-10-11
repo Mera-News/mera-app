@@ -5,8 +5,9 @@
 // worked out from the window, the bottom inset and the tab's index. Close
 // enough for "it went into the Feed"; a near miss is hidden by the fade.
 
-/** The Feed is the first of the four tabs. */
-const TAB_COUNT = 4;
+/** The Feed is the first of the five tabs (`TAB_ORDER` in nav/page-registry;
+ *  not imported, since its module chain loads the logger into this pure one). */
+const TAB_COUNT = 5;
 const INBOX_TAB_INDEX = 0;
 
 export interface Point {

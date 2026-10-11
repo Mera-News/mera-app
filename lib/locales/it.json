@@ -1162,8 +1162,6 @@
     "notificationBody_one": "Mera ha trovato {{count}} elemento da riordinare nel tuo profilo.",
     "notificationBody_other": "Mera ha trovato {{count}} elementi da riordinare nel tuo profilo.",
     "reviewChip": "Rivedi",
-    "title": "Riordina il tuo profilo",
-    "intro": "Mera ha notato questo. Non cambia nulla finché non scegli.",
     "accept": "Accetta",
     "reject": "Ignora",
     "effectTooBroad": "Riduce il peso di questo interesse così da attirare meno storie fuori tema.",
@@ -1175,8 +1173,6 @@
     "applyFailedBody": "Per favore riprova più tardi.",
     "effectIncoherentTopics": "Sostituisce questi argomenti con argomenti migliori per questo interesse.",
     "effectLocationConflict": "Mantiene il luogo più recente e rimuove quello vecchio.",
-    "emptyBody": "Mera suggerisce qui le pulizie quando due fatti si sovrappongono o uno diventa obsoleto.",
-    "emptyTitle": "Niente da riordinare",
     "keepBoth": "Tieni entrambi",
     "merge": "Unisci",
     "mergeNote": "Unire elimina il secondo fatto. Non si può annullare.",
@@ -1620,7 +1616,7 @@
             "steps": {
               "0": "Tu parli a Mera e ascolta le parti durevoli.",
               "1": "Tu lo dici esplicitamente: \"Mi sono trasferito a Lisbona.\"",
-              "2": "Li aggiungi o li rimuovi tu stesso nella scheda Tu."
+              "2": "Li aggiungi o li rimuovi tu stesso nella scheda Profilo."
             }
           },
           "to-topics": {
@@ -1645,7 +1641,7 @@
           },
           "importance": {
             "headline": "Alcuni fatti importano più di altri",
-            "body": "Nella scheda Tu, apri i tuoi fatti e tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularla o rimuoverla. Abbassarla è più delicato che eliminarla, e di solito è la prima mossa migliore.",
+            "body": "Nella scheda Profilo, apri i tuoi fatti e tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularla o rimuoverla. Abbassarla è più delicato che eliminarla, e di solito è la prima mossa migliore.",
             "ask": "Come cambio quanto importante è uno dei miei fatti?"
           },
           "your-profile": {
@@ -1907,7 +1903,7 @@
               },
               "settings": {
                 "label": "Impostazioni",
-                "feedback": "No. Impostazioni è una pagina della scheda Tu, e i paesi non sono lì."
+                "feedback": "No. Impostazioni è una scheda a sé, e i paesi non sono lì."
               }
             }
           },
@@ -1930,7 +1926,7 @@
             "headline": "Dove vivono le fonti",
             "body": "Una sola schermata per ogni testata che hai regolato.",
             "steps": {
-              "0": "La scheda Tu, poi Fonti.",
+              "0": "La scheda Profilo, poi Fonti.",
               "1": "«Meno da» nel menu ••• di un articolo ha effetto subito, con Annulla, e la testata compare poi in Modificate."
             },
             "ask": "Dove gestisco quali fonti vedo?"
@@ -2100,7 +2096,7 @@
             "headline": "Dove sono gli interruttori",
             "body": "A pochi tocchi da qualsiasi punto dell'app.",
             "steps": {
-              "0": "La scheda Tu, poi Impostazioni.",
+              "0": "La scheda Impostazioni.",
               "1": "Mera Protocol."
             },
             "ask": "Dove è la schermata di Mera Protocol?"
@@ -2714,7 +2710,6 @@
       "adjusted_other": "{{count}} modificati",
       "changes": "Modifiche al tuo profilo",
       "subtitle": "Ciò che Mera sa di te. Resta su questo telefono.",
-      "tidyUp": "Riordina il tuo profilo",
       "topicCount_one": "{{count}} argomento",
       "topicCount_other": "{{count}} argomenti"
     },

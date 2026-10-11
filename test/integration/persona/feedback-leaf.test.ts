@@ -245,12 +245,12 @@ describe('a leaf with no persona actions', () => {
 });
 
 describe('nudge leaves', () => {
-    it('manage_publication opens Sources in the You tab after the sheet closes', () => {
+    it('manage_publication opens Sources in the Profile tab after the sheet closes', () => {
         const d = deps();
         performFeedbackLeaf(leafNode({ nudge: 'manage_publication' }), PATH, d);
         expect(d.onLeafPicked).toHaveBeenCalledWith(PATH, 0, true);
-        expect(nav.navigate).toHaveBeenCalledWith('/logged-in/app_container/you');
-        expect(nav.push).toHaveBeenCalledWith({ pathname: '/logged-in/app_container/you/sources', params: {} });
+        expect(nav.navigate).toHaveBeenCalledWith('/logged-in/app_container/profile');
+        expect(nav.push).toHaveBeenCalledWith({ pathname: '/logged-in/app_container/profile/sources', params: {} });
     });
 
     it('subscribe names the publication by its display name', () => {

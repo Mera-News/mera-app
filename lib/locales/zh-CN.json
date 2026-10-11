@@ -1161,8 +1161,6 @@
     "notificationBody_one": "梅拉为您的资料发现了 {{count}} 项整理内容。",
     "notificationBody_other": "梅拉为你的资料发现了 {{count}} 项可整理内容。",
     "reviewChip": "查看",
-    "title": "整理你的资料",
-    "intro": "梅拉发现了这一点。在你选择之前，什么都不会改变。",
     "accept": "接受",
     "reject": "忽略",
     "effectTooBroad": "降低此兴趣的权重，使其带来的偏题内容更少。",
@@ -1174,8 +1172,6 @@
     "applyFailedBody": "请稍后再试。",
     "effectIncoherentTopics": "将此兴趣的这些主题替换为更好的。",
     "effectLocationConflict": "保留较新的地点，移除较旧的地点。",
-    "emptyBody": "当两个事实有重叠或某个事实过时时，梅拉会在这里提出整理建议。",
-    "emptyTitle": "没有需要整理的内容",
     "keepBoth": "两个都保留",
     "merge": "合并",
     "mergeNote": "合并会删除第二个事实。此操作无法撤消。",
@@ -1905,7 +1901,7 @@
               },
               "settings": {
                 "label": "设置",
-                "feedback": "不对。“设置”是“我的”标签中的一个页面，那里没有国家。"
+                "feedback": "不对。“设置”是一个单独的标签，那里没有国家。"
               }
             }
           },
@@ -2098,7 +2094,7 @@
             "headline": "开关在哪里",
             "body": "在应用内任何位置，点几下就能到。",
             "steps": {
-              "0": "“我的”标签，然后是“设置”。",
+              "0": "“设置”标签。",
               "1": "梅拉协议。"
             },
             "ask": "梅拉协议屏幕在哪里？"
@@ -2711,7 +2707,6 @@
       "adjusted_other": "已调整 {{count}} 项",
       "changes": "你的资料变更",
       "subtitle": "梅拉了解的关于你的信息。保存在这部手机上。",
-      "tidyUp": "整理你的资料",
       "topicCount_one": "{{count}} 个主题",
       "topicCount_other": "{{count}} 个主题"
     },

@@ -1,7 +1,7 @@
 // What tapping an inbox row or its one button does. Shared by the inbox page
 // (NotificationsScreen) and the notice's button (NotifiedToast), so a notice
 // and its inbox row can never do different things.
-import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { markActioned, markRead } from '@/lib/database/services/notification-service';
 import logger from '@/lib/logger';
@@ -100,7 +100,8 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
             openChatWith(resolveText('calibration.chatIntro', parseJson<Record<string, unknown>>(n.contextJson) ?? undefined));
             return;
         case 'review-hygiene':
-            navigateToTabScreen('you', 'hygiene-review');
+            // The suggestions are cards at the top of the inbox.
+            navigateToPage('notifications');
             return;
         case 'review-plan':
             useFloatingChatStore.getState().openOptimisationPlan();
@@ -112,7 +113,7 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
 
 /**
  * An inbox row tap: exactly what the row's button did when rows were cards
- * (its FIRST action: hygiene opens Tidy up, calibration the recalibration
+ * (its FIRST action: hygiene opens the inbox's suggestions, calibration the recalibration
  * chat, a finished fact check its article, an optimisation plan the plan);
  * a row with no action (a feedback question) opens as before.
  */
