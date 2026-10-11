@@ -22,6 +22,19 @@ describe('normalizeLegacyHref', () => {
       '/logged-in/fact-feed?factId=f1&statement=Lives%20in%20Berlin&via=section',
       { pathname: `${TABS}/feed/interest`, params: { factId: 'f1', statement: 'Lives in Berlin', via: 'section' } },
     ],
+    // The tab-screen stubs.
+    ['/logged-in/preferences/display', { pathname: `${TABS}/you/display` }],
+    ['/logged-in/preferences/manage-data?restore=1', { pathname: `${TABS}/you/backup`, params: { restore: '1' } }],
+    ['/logged-in/preferences/manage-data', { pathname: `${TABS}/you/data` }],
+    ['/logged-in/preferences/manage-data?restore=0', { pathname: `${TABS}/you/data` }],
+    ['/logged-in/preferences/notifications', { pathname: `${TABS}/you/notifications` }],
+    ['/logged-in/preferences/mera-protocol', { pathname: `${TABS}/you/mera-protocol` }],
+    ['/logged-in/hygiene-review', { pathname: `${TABS}/you/hygiene-review` }],
+    ['/logged-in/locations', { pathname: `${TABS}/you/locations` }],
+    ['/logged-in/publication-preferences', { pathname: `${TABS}/you/sources` }],
+    ['/logged-in/sources', { pathname: `${TABS}/you/sources` }],
+    ['/logged-in/persona-audit', { pathname: `${TABS}/you/activity` }],
+    ['/logged-in/facts', { pathname: `${TABS}/you/facts` }],
   ])('%s', (href, target) => {
     expect(normalizeLegacyHref(href)).toEqual(target);
   });

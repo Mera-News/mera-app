@@ -49,4 +49,17 @@ describe('+native-intent', () => {
       redirectSystemPath({ path: '/logged-in/fact-feed?factId=f1&statement=Lives%20in%20Berlin', initial: true }),
     ).toBe('/logged-in/app_container/feed/interest?factId=f1&statement=Lives+in+Berlin');
   });
+
+  it('sends an old You-screen link straight to its tab route, not to a stub', () => {
+    expect(redirectSystemPath({ path: '/logged-in/preferences/display', initial: true })).toBe(
+      '/logged-in/app_container/you/display',
+    );
+    expect(redirectSystemPath({ path: 'meraapp://logged-in/publication-preferences', initial: true })).toBe(
+      '/logged-in/app_container/you/sources',
+    );
+    expect(redirectSystemPath({ path: '/logged-in/preferences/manage-data?restore=1', initial: true })).toBe(
+      '/logged-in/app_container/you/backup?restore=1',
+    );
+    expect(consumePendingPage('you')).toBeNull();
+  });
 });
