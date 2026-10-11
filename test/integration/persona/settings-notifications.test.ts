@@ -16,6 +16,7 @@ import {
     mockGql,
     mockGqlError,
     server,
+    setAppState,
     signInFixtureAccount,
     useFakeClock,
 } from '@/test/helpers';
@@ -412,6 +413,51 @@ describe('notification settings', () => {
             });
 
             await waitFor(() => expect(onEnabledChange).toHaveBeenLastCalledWith(true));
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    describe('coming back from phone Settings', () => {
+        beforeEach(() => {
+            serverPersona({ notificationsEnabled: false });
+            permissions.mockResolvedValue({ status: 'denied' });
+        });
+
+        // Refused, taps "Open Device Settings", leaves the app, comes back with `after` as the phone's answer.
+        async function tripToSettings(after: 'granted' | 'denied') {
+            const sent = recordMutation('UpdateNotificationsEnabled', 'updateNotificationsEnabled');
+            const hook = await mount();
+            await waitFor(() => expect(hook.result.current.osRefused).toBe(true));
+            act(() => (hook.result.current as unknown as { openDeviceSettings?: () => void }).openDeviceSettings?.());
+            setAppState('background');
+            permissions.mockResolvedValue({ status: after });
+            await act(async () => {
+                setAppState('active');
+                await new Promise((r) => setTimeout(r, 50));
+            });
+            return { ...hook, sent };
+        }
+
+        test.failing('returning from Settings with permission now granted finishes turning on: switch on, osRefused false, UpdateNotificationsEnabled(true) sent', async () => {
+            const { result, sent } = await tripToSettings('granted');
+            await waitFor(() => expect(result.current.notificationsEnabled).toBe(true));
+            expect(result.current.osRefused).toBe(false);
+            expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, enabled: true }]);
+        });
+
+        it('today: returning from Settings with permission now granted leaves the switch off and sends nothing', async () => {
+            const { result, sent } = await tripToSettings('granted');
+            expect(result.current.notificationsEnabled).toBe(false);
+            expect(result.current.osRefused).toBe(true);
+            expect(sent).toEqual([]);
+        });
+
+        it('returning still refused changes nothing and shows no new toast', async () => {
+            const { result, sent } = await tripToSettings('denied');
+            expect(result.current.notificationsEnabled).toBe(false);
+            expect(result.current.osRefused).toBe(true);
+            expect(sent).toEqual([]);
+            expect(toastTitles()).toEqual([]);
         });
     });
 
