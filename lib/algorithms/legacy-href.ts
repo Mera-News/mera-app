@@ -8,9 +8,6 @@
 // (components/custom/nav). `params` carries only what the destination route
 // itself reads (`card` for Stats, the interest route's own params).
 //
-// The tab-screen stubs map to their You-stack route, so a system link never
-// mounts a stub (a stub's dismiss + tab jump + push loses the push).
-//
 // Pure: no React, no router, no storage. Returns null for anything that is not
 // an old route, so callers can pass every path through it.
 
@@ -51,20 +48,6 @@ const RULES: Readonly<Record<string, Rule>> = {
     pathname: `${TABS}/feed/interest`,
     params: pick(p, ['factId', 'statement', 'via']),
   }),
-  // The tab-screen stubs (You's stack).
-  '/logged-in/preferences/display': () => ({ pathname: `${TABS}/you/display` }),
-  '/logged-in/preferences/manage-data': (p) =>
-    p.restore === '1'
-      ? { pathname: `${TABS}/you/backup`, params: { restore: '1' } }
-      : { pathname: `${TABS}/you/data` },
-  '/logged-in/preferences/notifications': () => ({ pathname: `${TABS}/you/notifications` }),
-  '/logged-in/preferences/mera-protocol': () => ({ pathname: `${TABS}/you/mera-protocol` }),
-  '/logged-in/hygiene-review': () => ({ pathname: `${TABS}/you/hygiene-review` }),
-  '/logged-in/locations': () => ({ pathname: `${TABS}/you/locations` }),
-  '/logged-in/publication-preferences': () => ({ pathname: `${TABS}/you/sources` }),
-  '/logged-in/sources': () => ({ pathname: `${TABS}/you/sources` }),
-  '/logged-in/persona-audit': () => ({ pathname: `${TABS}/you/activity` }),
-  '/logged-in/facts': () => ({ pathname: `${TABS}/you/facts` }),
 };
 
 function parseQuery(query: string): Record<string, string> {
