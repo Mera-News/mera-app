@@ -14,8 +14,8 @@ import type { appendReferrer, openInAppBrowser } from '../web-browser-utils';
  * here therefore drags the native DB adapter into every suite that touches
  * this module, and it now has a second class of importer that has no business
  * with a browser at all: `holdRestartAcrossPurchase` is imported by checkout
- * surfaces. `present-free-tier-paywall.test.ts` failed exactly this way before
- * the require moved. The type-only import above is erased at compile time.
+ * surfaces, whose suites would otherwise load the native DB adapter. The
+ * type-only import above is erased at compile time.
  */
 function webBrowserUtils(): {
   appendReferrer: typeof appendReferrer;
