@@ -17,9 +17,8 @@ import {
   adoptRecoveryCode,
   clearBackupKey,
   ensureBackupKey,
-  getBackupKey,
   getRecoveryCode,
-  isRecoveryCodeConfirmed,
+  isBackupConfigured,
   markRecoveryCodeConfirmed,
 } from '@/lib/backup/key-store';
 import {
@@ -94,11 +93,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
         setIcloudReady(ic);
         setDriveReady(gd);
         setBgAvailable(bg);
-        // The KEY too, not just the confirmation row: with a provider set and
-        // the key gone, every scheduled run fails `no-key` while this read
-        // "on" (MERA-APP-7Z). `getBackupKey` is the read `runBackup` refuses on.
-        const configured =
-          backupProviderId() !== null && (await isRecoveryCodeConfirmed()) && (await getBackupKey()) !== null;
+        const configured = await isBackupConfigured();
         if (cancelled) return;
         setState((prev) => (prev === 'setup' && !configured ? prev : configured ? 'on' : 'off'));
         const id = backupProviderId();

@@ -29,6 +29,7 @@ import {
   setBackupProviderId,
 } from '@/lib/backup/backup-settings';
 import { FORBIDDEN_SETTING_KEYS } from '@/lib/backup/allowlist';
+import { clearBackupKey, ensureBackupKey, isBackupConfigured, markRecoveryCodeConfirmed } from '@/lib/backup/key-store';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { useStrictClock } from '@/test/helpers';
 
@@ -267,5 +268,39 @@ describe('[dead-candidate] helpers with no caller outside this file', () => {
   it('[dead-candidate] backupWifiOnly defaults to ON, so a cellular upload is never silent', async () => {
     await hydrateBackupSettings();
     expect(backupWifiOnly()).toBe(true);
+  });
+});
+
+describe('isBackupConfigured, the one "backup is on" rule (Backup screen and the Your data row)', () => {
+  beforeEach(async () => {
+    await clearBackupKey();
+  });
+
+  it('is on with a provider, a confirmed code and the key', async () => {
+    await setBackupProviderId('icloud');
+    await setBackupCadence('daily');
+    await ensureBackupKey();
+    await markRecoveryCodeConfirmed();
+    expect(await isBackupConfigured()).toBe(true);
+  });
+
+  // The Your data row read cadence + provider alone and said On here while every scheduled run
+  // failed `no-key`; the Backup screen said off.
+  it('is off when the key is gone, though cadence and provider are still set', async () => {
+    await setBackupProviderId('icloud');
+    await setBackupCadence('daily');
+    expect(await isBackupConfigured()).toBe(false);
+  });
+
+  it('is off while the recovery code is unconfirmed', async () => {
+    await setBackupProviderId('icloud');
+    await ensureBackupKey();
+    expect(await isBackupConfigured()).toBe(false);
+  });
+
+  it('is off with no provider', async () => {
+    await ensureBackupKey();
+    await markRecoveryCodeConfirmed();
+    expect(await isBackupConfigured()).toBe(false);
   });
 });

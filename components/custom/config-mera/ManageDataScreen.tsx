@@ -3,7 +3,7 @@ import WhatMeraKeepsCard from '@/components/custom/config-mera/WhatMeraKeepsCard
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
 import { Spinner } from '@/components/ui/spinner';
-import { backupCadence, backupProviderId } from '@/lib/backup/backup-settings';
+import { isBackupConfigured } from '@/lib/backup/key-store';
 import database from '@/lib/database';
 import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
@@ -49,11 +49,14 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const { exporting, exportHistory } = useExportHistory('ManageDataScreen');
 
-    // The backup value reads the synchronous mirror; re-read on focus so a
-    // change made on the Backup screen shows on return.
-    const [, setFocusTick] = useState(0);
-    useFocusEffect(useCallback(() => setFocusTick((n) => n + 1), []));
-    const backupOn = backupCadence() !== 'off' && backupProviderId() !== null;
+    // The Backup screen's own rule (provider, confirmed code, key), re-read on
+    // focus so a change made there shows on return. Null until read: no value.
+    const [backupOn, setBackupOn] = useState<boolean | null>(null);
+    useFocusEffect(
+        useCallback(() => {
+            void isBackupConfigured().then(setBackupOn, () => setBackupOn(false));
+        }, []),
+    );
     // Ask before deleting a topic: on until the delete dialog's "Don't ask
     // again"; re-read on focus so that choice shows here.
     const [askTopicDelete, setAskTopicDelete] = useState(true);
@@ -133,7 +136,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                         leadingIcon="cloud-upload"
                         title={t('backup.title')}
                         subtitle={t('manageData.backupHint')}
-                        value={backupOn ? t('you.settings.on') : t('you.settings.off')}
+                        value={backupOn === null ? undefined : backupOn ? t('you.settings.on') : t('you.settings.off')}
                         onPress={() => router.push('/logged-in/app_container/you/backup' as Href)}
                     />
                 </Group>

@@ -30,6 +30,7 @@ import Constants from 'expo-constants';
 import { getSetting, setSetting, deleteSetting } from '@/lib/database/services/setting-service';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
 
+import { backupProviderId } from './backup-settings';
 import { decodeRecoveryCode, encodeRecoveryCode, generateBackupKey } from './crypto';
 
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
@@ -104,4 +105,14 @@ export async function isRecoveryCodeConfirmed(): Promise<boolean> {
 
 export async function markRecoveryCodeConfirmed(): Promise<void> {
   await setSetting(RECOVERY_CODE_CONFIRMED_KEY, '1');
+}
+
+/**
+ * The ONE "backup is on" rule, for the Backup screen and the Your data row: a
+ * provider, a confirmed recovery code AND the key. With the key gone every
+ * scheduled run fails `no-key` (MERA-APP-7Z), so a row reading only the
+ * cadence and provider said On over a backup that was not running.
+ */
+export async function isBackupConfigured(): Promise<boolean> {
+  return backupProviderId() !== null && (await isRecoveryCodeConfirmed()) && (await getBackupKey()) !== null;
 }
