@@ -14,8 +14,11 @@
 // tool. PASS only if the RAW response bytes carry no `tool_calls` key and no
 // sentinel in clear, for every model, streamed and buffered. Positive control:
 // the decrypted text must hold a parsed call carrying the sentinel, or the row
-// proves nothing. Negative control: the same ask with a NATIVE `tools` field
-// must show the sentinel in clear, or the detector is blind.
+// proves nothing.
+//
+// NO LIVE NEGATIVE CONTROL (owner ruling R89): nothing here sends tools in
+// clear, so nothing proves the detector would see a leak. A PASS means only
+// that no leak was seen.
 //
 // RULE 2 (history). An assistant turn holding `<tool_call>` text and a user
 // turn holding `<tool_response>` text (both encrypted) decrypt without a 400
@@ -156,32 +159,10 @@ async function main(): Promise<number> {
   let rule1 = true;
   let rule1Rows = 0;
   let rule2 = true;
-  let negativeBlind = false;
 
   for (const model of models) {
     const att = await fetchModelKey({ inferenceEndpoint: env.inferenceEndpoint, jwt }, model);
     log(`\n=== ${model} (${att.algo})`);
-
-    // Negative control: a native tools field must leak the sentinel, or the detector is blind.
-    {
-      const s = sentinel();
-      const ctx = prepareContext(att);
-      const cap = await post(env.inferenceEndpoint, jwt, ctx, {
-        ...base(model, false),
-        messages: encrypt(
-          [
-            { role: 'system', content: 'You are a helpful assistant.' },
-            { role: 'user', content: `Store my code ${s} with the tool.` },
-          ],
-          ctx,
-        ),
-        tools: [TOOL],
-        tool_choice: 'required',
-      });
-      const leaked = cap.raw.includes(s);
-      if (!leaked) negativeBlind = true;
-      log(`  negative control (native tools, buffered): status ${cap.status}, sentinel in clear: ${leaked ? 'YES (detector sees it)' : 'NO (BLIND)'}, tool_calls key: ${cap.raw.includes('"tool_calls"')}`);
-    }
 
     for (const stream of [true, false]) {
       for (let r = 0; r < repeat; r++) {
@@ -251,10 +232,9 @@ async function main(): Promise<number> {
 
   log(
     `\nRULE 1 (privacy): ${rule1 ? 'PASS' : 'FAIL'} over ${rule1Rows} rows` +
-      `${negativeBlind ? '  !! a negative control was BLIND, so a PASS here is not evidence' : ''}` +
       `\nRULE 2 (history): ${rule2 ? 'PASS' : 'FAIL'}`,
   );
-  return rule1 && rule2 && !negativeBlind ? 0 : 1;
+  return rule1 && rule2 ? 0 : 1;
 }
 
 if (process.argv[1]?.includes('probe-text-tools')) {
