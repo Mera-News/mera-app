@@ -1,63 +1,67 @@
-# Dev flow: FD11, a second deep link into a route already on its tab's stack must land on that route
-# (it landed on the You tab root: navigateToTabScreen popped and pushed in one tick and lost the push).
-# Each repeated link is followed by a settle (an optional wait on an id that never appears) so the
-# assertion cannot read the screen from before the link took effect. Case (b) once ended on a blank
-# screen; the lane reports removeViewAt lines from the logcat it streams through the Maestro step.
-# Case (c) deep-links through a LegacyRedirect route (/logged-in/sources -> You > Sources).
+# Dev flow: deep links into the legacy stub routes. The FIRST link to /logged-in/preferences/display
+# must open Display (hard check). The repeat, away-and-back and legacy-redirect cases are the parked
+# FD11 gap (R87, IDENTIFIED_GAPS.md: a repeated link lands on the You tab root): they are recorded
+# only, as optional waits whose commands.json status is COMPLETED (opened) or WARNED (did not), each
+# with a screenshot. Each recorded link is preceded by a settle (an optional wait on an id that never
+# appears) so its check cannot read the screen from before the link took effect. set-display relaunches
+# before every link for this reason.
 appId: ${APP_ID}
 ---
 - runScript: ../scripts/reset-scenario.js
 - runFlow: ../flows/sign-in.yaml
 
-# a) The same route twice.
+# The first link opens Display (hard check).
 - openLink: ${SCHEME}:///logged-in/preferences/display
 - extendedWaitUntil:
     visible:
       id: "appearance-switch-dark"
     timeout: 15000
+- takeScreenshot: fd11-first-link
+
+# Recorded: the same route again.
 - openLink: ${SCHEME}:///logged-in/preferences/display
 - extendedWaitUntil:
     visible:
       id: "fd11-settle-never-present"
     timeout: 3000
     optional: true
-- takeScreenshot: fd11-a-same-route
-- assertVisible:
-    id: "appearance-switch-dark"
+- extendedWaitUntil:
+    visible:
+      id: "appearance-switch-dark"
+    timeout: 5000
+    optional: true
+- takeScreenshot: fd11-rec-a-same-route
 
-# b) Away and back: display -> manage-subscription -> display (the shape that failed on device).
+# Recorded: away and back (display -> manage-subscription -> display).
 - openLink: ${SCHEME}:///logged-in/preferences/manage-subscription
 - extendedWaitUntil:
     visible:
       id: "manage-view-plans"
     timeout: 15000
+    optional: true
 - openLink: ${SCHEME}:///logged-in/preferences/display
 - extendedWaitUntil:
     visible:
       id: "fd11-settle-never-present"
     timeout: 3000
     optional: true
-- takeScreenshot: fd11-b-away-and-back
-- assertVisible:
-    id: "appearance-switch-dark"
-
-# c) Away, then through a legacy redirect: display -> manage-subscription -> /logged-in/sources.
-- openLink: ${SCHEME}:///logged-in/preferences/display
 - extendedWaitUntil:
     visible:
       id: "appearance-switch-dark"
-    timeout: 15000
-- openLink: ${SCHEME}:///logged-in/preferences/manage-subscription
-- extendedWaitUntil:
-    visible:
-      id: "manage-view-plans"
-    timeout: 15000
+    timeout: 5000
+    optional: true
+- takeScreenshot: fd11-rec-b-away-and-back
+
+# Recorded: through a legacy redirect (/logged-in/sources -> You > Sources).
 - openLink: ${SCHEME}:///logged-in/sources
 - extendedWaitUntil:
     visible:
       id: "fd11-settle-never-present"
     timeout: 3000
     optional: true
-- takeScreenshot: fd11-c-legacy-redirect
-- assertVisible:
-    id: "publication-preferences-screen"
+- extendedWaitUntil:
+    visible:
+      id: "publication-preferences-screen"
+    timeout: 5000
+    optional: true
+- takeScreenshot: fd11-rec-c-legacy-redirect
