@@ -101,8 +101,10 @@ export async function registerForPushNotificationsAsync(
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted' && !alreadyProvisional) {
-        const requestOpts = allowProvisional
-            ? { ios: { provisional: true } as Notifications.IosNotificationPermissionsRequest }
+        // Typed, never cast: native drops an unknown key and, with no option left,
+        // asks for the full alert instead of provisional.
+        const requestOpts: Notifications.NotificationPermissionsRequest | undefined = allowProvisional
+            ? { ios: { allowProvisional: true } }
             : undefined;
         const { status } = await Notifications.requestPermissionsAsync(requestOpts);
         finalStatus = status;
@@ -644,9 +646,12 @@ export async function setVisibleNotificationsEnabled(
     if (!userId) return false;
 
     if (enabled) {
-        // Upgrade from provisional → full. If already granted, this is a no-op.
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        if (existingStatus !== 'granted') {
+        // Upgrade from provisional → full. expo reports iOS provisional as 'granted',
+        // so the iOS status decides. If already fully granted, this is a no-op.
+        const { status: existingStatus, ios } = await Notifications.getPermissionsAsync();
+        const provisional =
+            Platform.OS === 'ios' && ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
+        if (existingStatus !== 'granted' || provisional) {
             const { status } = await Notifications.requestPermissionsAsync();
             if (status !== 'granted') return false;
         }
