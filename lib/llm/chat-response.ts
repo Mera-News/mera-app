@@ -290,8 +290,6 @@ async function* consumeBufferedChat(
     const rawContent = choice.message.content;
     logger.debug(`${TAG} E2EE response content`, {
       contentLen: rawContent.length,
-      prefix: rawContent.slice(0, 80),
-      suffix: rawContent.slice(-40),
       responseId: data.id,
       model: data.model,
       finishReason: choice.finish_reason,
