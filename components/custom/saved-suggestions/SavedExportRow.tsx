@@ -1,5 +1,5 @@
 // Saved's pinned row (FinalLibrary #1): "3 saved" with its ?, then the glass
-// Export button, on the header's own material (the `chrome` token and a
+// Export button, TRANSPARENT like the Library header (owner: no fill, no
 // hairline). It sits under the page header and rides with it, so it never
 // scrolls away and never hangs alone under the status bar; the list scrolls
 // beneath it. Only while something is saved (#3: the empty page has no pinned
@@ -88,9 +88,6 @@ const useStyles = themedStyles((c) => StyleSheet.create({
         height: SAVED_EXPORT_ROW_HEIGHT,
         paddingHorizontal: PAGE_SIDE_INSET,
         justifyContent: 'center',
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: c.line,
-        backgroundColor: c.chrome,
         overflow: 'hidden',
         zIndex: 5,
     },
