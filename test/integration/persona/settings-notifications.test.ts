@@ -428,7 +428,7 @@ describe('notification settings', () => {
             const sent = recordMutation('UpdateNotificationsEnabled', 'updateNotificationsEnabled');
             const hook = await mount();
             await waitFor(() => expect(hook.result.current.osRefused).toBe(true));
-            act(() => (hook.result.current as unknown as { openDeviceSettings?: () => void }).openDeviceSettings?.());
+            act(() => hook.result.current.openDeviceSettings());
             setAppState('background');
             permissions.mockResolvedValue({ status: after });
             await act(async () => {
@@ -438,18 +438,11 @@ describe('notification settings', () => {
             return { ...hook, sent };
         }
 
-        test.failing('returning from Settings with permission now granted finishes turning on: switch on, osRefused false, UpdateNotificationsEnabled(true) sent', async () => {
+        it('returning from Settings with permission now granted finishes turning on: switch on, osRefused false, UpdateNotificationsEnabled(true) sent', async () => {
             const { result, sent } = await tripToSettings('granted');
             await waitFor(() => expect(result.current.notificationsEnabled).toBe(true));
             expect(result.current.osRefused).toBe(false);
             expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, enabled: true }]);
-        });
-
-        it('today: returning from Settings with permission now granted leaves the switch off and sends nothing', async () => {
-            const { result, sent } = await tripToSettings('granted');
-            expect(result.current.notificationsEnabled).toBe(false);
-            expect(result.current.osRefused).toBe(true);
-            expect(sent).toEqual([]);
         });
 
         it('returning still refused changes nothing and shows no new toast', async () => {
@@ -458,6 +451,19 @@ describe('notification settings', () => {
             expect(result.current.osRefused).toBe(true);
             expect(sent).toEqual([]);
             expect(toastTitles()).toEqual([]);
+        });
+
+        it('leaves no AppState listener behind on unmount', async () => {
+            const sent = recordMutation('UpdateNotificationsEnabled', 'updateNotificationsEnabled');
+            const { result, unmount } = await mount();
+            await waitFor(() => expect(result.current.osRefused).toBe(true));
+            act(() => result.current.openDeviceSettings());
+            unmount();
+            permissions.mockResolvedValue({ status: 'granted' });
+            setAppState('background');
+            setAppState('active');
+            await new Promise((r) => setTimeout(r, 50));
+            expect(sent).toEqual([]);
         });
     });
 

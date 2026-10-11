@@ -4,6 +4,7 @@ import { hasUserDeniedPermissions, setVisibleNotificationsEnabled } from '@/lib/
 import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/algorithms/notificationSlotUtils';
 import { resolveCurrentUserId } from '@/lib/security/current-user';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 /** Quiet period after the last change before the hours are saved. */
@@ -108,7 +109,7 @@ export function useNotificationSettings({
     // separate — handled at app boot by ensurePushTokenRegistered and kept
     // registered regardless of this flag so silent result-ready pushes still
     // deliver.
-    const handleEnableNotifications = async () => {
+    const enable = async ({ fromSettingsReturn = false } = {}) => {
         setIsEnabling(true);
         try {
             const userId = await resolveCurrentUserId();
@@ -119,17 +120,20 @@ export function useNotificationSettings({
                 const isDeniedNow = await hasUserDeniedPermissions();
                 if (isDeniedNow || wasPreviouslyDenied) {
                     setOsRefused(true);
-                    toast.show({
-                        placement: 'top',
-                        render: () => (
-                            <Toast action="error" variant="solid">
-                                <ToastTitle>{t('notifications.permissionRequiredTitle')}</ToastTitle>
-                                <ToastDescription>
-                                    {t('notifications.permissionRequiredDescription')}
-                                </ToastDescription>
-                            </Toast>
-                        ),
-                    });
+                    // Coming back from Settings the info box is already on screen.
+                    if (!fromSettingsReturn) {
+                        toast.show({
+                            placement: 'top',
+                            render: () => (
+                                <Toast action="error" variant="solid">
+                                    <ToastTitle>{t('notifications.permissionRequiredTitle')}</ToastTitle>
+                                    <ToastDescription>
+                                        {t('notifications.permissionRequiredDescription')}
+                                    </ToastDescription>
+                                </Toast>
+                            ),
+                        });
+                    }
                 } else {
                     toast.show({
                         placement: 'top',
@@ -175,6 +179,30 @@ export function useNotificationSettings({
         } finally {
             setIsEnabling(false);
         }
+    };
+
+    const handleEnableNotifications = () => enable();
+
+    // The button press is the intent: when the app comes back to the foreground after it, finish turning on
+    // if the person allowed notifications in phone Settings. Once per trip; still refused changes nothing.
+    const pendingEnableRef = useRef(false);
+    const enableRef = useRef(enable);
+    enableRef.current = enable;
+    useEffect(() => {
+        const sub = AppState.addEventListener('change', (state) => {
+            if (state !== 'active' || !pendingEnableRef.current) return;
+            pendingEnableRef.current = false;
+            void (async () => {
+                if (await hasUserDeniedPermissions()) return;
+                await enableRef.current({ fromSettingsReturn: true });
+            })();
+        });
+        return () => sub.remove();
+    }, []);
+
+    const openDeviceSettings = () => {
+        pendingEnableRef.current = true;
+        void Linking.openSettings();
     };
 
     const handleDisableNotifications = async () => {
@@ -303,6 +331,7 @@ export function useNotificationSettings({
         osRefused,
         selectedHours,
         handleEnableNotifications,
+        openDeviceSettings,
         handleDisableNotifications,
         handleHoursChange,
     };

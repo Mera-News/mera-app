@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import React from 'react';
 import { ScrollView } from '@/components/ui/scroll-view';
-import { Linking, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import NotificationTimes from './NotificationTimes';
@@ -63,6 +63,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         osRefused,
         selectedHours,
         handleEnableNotifications,
+        openDeviceSettings,
         handleDisableNotifications,
         handleHoursChange,
     } = useNotificationSettings({
@@ -173,7 +174,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     </Text>
                     <Pressable
                         testID="notifications-open-device-settings"
-                        onPress={() => Linking.openSettings()}
+                        onPress={openDeviceSettings}
                         accessibilityRole="button"
                         accessibilityLabel={t('notifications.openDeviceSettings')}
                         className="self-start flex-row items-center rounded-full px-4"
