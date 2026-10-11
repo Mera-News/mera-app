@@ -83,7 +83,15 @@ describe('registerForPushNotificationsAsync', () => {
       expect(n.requestPermissionsAsync).not.toHaveBeenCalled();
     });
 
-    it('undetermined: asks with the provisional iOS option on the boot path, then registers', async () => {
+    // DA52. expo's option is `allowProvisional`. Native drops the unknown `provisional` key and, with
+    // no option left, asks for alert + badge + sound: the full alert, unprompted (seen on a device).
+    test.failing('DA52: undetermined: asks for provisional only on the boot path, then registers', async () => {
+      setPermission('undetermined');
+      await expect(run(registerForPushNotificationsAsync(true))).resolves.toBe(TOKEN);
+      expect(n.requestPermissionsAsync).toHaveBeenCalledWith({ ios: { allowProvisional: true } });
+    });
+
+    it('DA52 today: undetermined: the boot path sends the unrecognised `provisional` key, then registers', async () => {
       setPermission('undetermined');
       await expect(run(registerForPushNotificationsAsync(true))).resolves.toBe(TOKEN);
       expect(n.requestPermissionsAsync).toHaveBeenCalledWith({ ios: { provisional: true } });
@@ -351,10 +359,9 @@ describe('setVisibleNotificationsEnabled', () => {
     expect(useUserStore.getState().userPersona?.notificationsEnabled).toBe(false);
   });
 
-  // DA41. expo reports iOS PROVISIONAL authorisation as status 'granted' (the file's own comment in
-  // registerForPushNotificationsAsync says so), and setVisibleNotificationsEnabled only prompts when
-  // status !== 'granted'. Its doc promises "provisional -> full", but a provisional user never sees the
-  // prompt, so visible alerts stay quiet. To be confirmed on a device before the P3 fix.
+  // DA41. expo reports iOS PROVISIONAL authorisation as status 'granted', and setVisibleNotificationsEnabled
+  // only prompts when status !== 'granted', so a provisional user turning alerts on never sees the
+  // prompt. Unreachable until DA52 makes the boot path really ask for provisional; fixed with it (R90).
   test.failing('DA41: turning on visible notifications from provisional asks for full permission', async () => {
     signedIn();
     setPermission('granted', { status: 3 });
@@ -369,6 +376,14 @@ describe('setVisibleNotificationsEnabled', () => {
     await expect(run(setVisibleNotificationsEnabled('user-1', true))).resolves.toBe(true);
     expect(n.requestPermissionsAsync).not.toHaveBeenCalled();
     expect(seen).toHaveLength(1);
+  });
+
+  it('Android has no provisional level: granted means granted, no prompt', async () => {
+    (Platform as { OS: string }).OS = 'android';
+    signedIn();
+    setPermission('granted', { status: 3 });
+    await expect(run(setVisibleNotificationsEnabled('user-1', true))).resolves.toBe(true);
+    expect(n.requestPermissionsAsync).not.toHaveBeenCalled();
   });
 
   it('a server error: false, reported, persona untouched', async () => {
