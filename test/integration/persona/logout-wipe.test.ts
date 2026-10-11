@@ -443,6 +443,28 @@ describe('signOutAndWipe', () => {
         expect(await factService.hasAnyFacts()).toBe(false);
     });
 
+    it('with nothing pushed, pops no stack and still lands on the signed-out login', async () => {
+        await seedSignedInDevice();
+        jest.mocked(router.canDismiss).mockReturnValueOnce(false);
+
+        await wipe.signOutAndWipe();
+
+        expect(router.dismissAll).not.toHaveBeenCalled();
+        expect(replaced()).toEqual([[LOGIN_SIGNED_OUT]]);
+    });
+
+    it('with a stack pushed, pops it before landing on the signed-out login', async () => {
+        await seedSignedInDevice();
+        jest.mocked(router.canDismiss).mockReturnValueOnce(true);
+
+        await wipe.signOutAndWipe();
+
+        expect(router.dismissAll).toHaveBeenCalledTimes(1);
+        expect(jest.mocked(router.dismissAll).mock.invocationCallOrder[0])
+            .toBeLessThan(jest.mocked(router.replace).mock.invocationCallOrder[0]);
+        expect(replaced()).toEqual([[LOGIN_SIGNED_OUT]]);
+    });
+
     it('still erases when sign-out itself throws', async () => {
         await seedSignedInDevice();
         track(jest.spyOn(authModule, 'clearAuthStorage')).mockRejectedValueOnce(new Error('network down'));
