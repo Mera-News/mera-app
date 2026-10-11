@@ -1,0 +1,39 @@
+# Dev flow: FD11 discriminator (records only, never fails on a missing screen). Deep-links straight to
+# the current You-stack routes, bypassing the legacy stubs and their rewrite, with a relaunch before
+# each so neither inherits the other's stack. Each check is an optional wait: the run's commands.json
+# records COMPLETED (the screen opened) or WARNED (it did not), and each step leaves a screenshot.
+# Read it from <run>/maestro/<ts>/fd11-direct-probe/commands.json in step order.
+appId: ${APP_ID}
+---
+- runScript: ../scripts/reset-scenario.js
+- runFlow: ../flows/sign-in.yaml
+
+# a) /logged-in/app_container/you/display
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "feed-screen"
+    timeout: 60000
+- openLink: ${SCHEME}:///logged-in/app_container/you/display
+- extendedWaitUntil:
+    visible:
+      id: "appearance-switch-dark"
+    timeout: 15000
+    optional: true
+- takeScreenshot: fd11-direct-a-you-display
+
+# b) /logged-in/app_container/you/sources
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "feed-screen"
+    timeout: 60000
+- openLink: ${SCHEME}:///logged-in/app_container/you/sources
+- extendedWaitUntil:
+    visible:
+      id: "publication-preferences-screen"
+    timeout: 15000
+    optional: true
+- takeScreenshot: fd11-direct-b-you-sources
