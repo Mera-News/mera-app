@@ -217,7 +217,7 @@ async function* consumeSseChat(
         chunk = JSON.parse(payload) as ChatCompletionChunk;
       } catch {
         logger.debug(`${TAG} unparseable SSE payload (skipped)`, {
-          prefix: payload.slice(0, 80),
+          length: payload.length,
         });
         continue;
       }

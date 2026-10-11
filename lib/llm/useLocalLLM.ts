@@ -336,7 +336,6 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
         try {
           systemPrompt = await agentRef.current.buildSystemPrompt(true);
           logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
-          logger.debug(`${TAG} system prompt content`, { content: systemPrompt });
         } catch (err) {
           throw new Error(`Failed to build system prompt: ${String(err)}`);
         }
@@ -347,7 +346,6 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
           try {
             context = await agentRef.current.buildContext();
             logger.debug(`${TAG} context built`, { length: context.length });
-            logger.debug(`${TAG} context content`, { content: context });
           } catch (err) {
             logger.warn(`${TAG} buildContext failed, proceeding without context`, {
               error: String(err),
@@ -399,8 +397,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
         setMessages([...conversationMessages, placeholder]);
 
         // Stream inference
-        logger.debug(`${TAG} LLM input — systemPrompt`, { systemPrompt });
-        logger.debug(`${TAG} LLM input — prompt`, { prompt });
+        logger.debug(`${TAG} LLM input`, { systemPromptLength: systemPrompt.length, promptLength: prompt.length });
         logger.debug(`${TAG} starting inference stream`, { messageCount: conversationMessages.length, maxTokens: MAX_OUTPUT_TOKENS });
         let pendingBuffer = '';
         let insideToolCall = false;
@@ -600,7 +597,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
           try {
             logger.debug(`${TAG} executing tool`, { name: tc.name, inputKeys: Object.keys(tc.input as Record<string, unknown>) });
             const { result, sideEffects } = await agentRef.current.executeTool(tc.name, tc.input);
-            logger.debug(`${TAG} tool result`, { name: tc.name, result: JSON.stringify(result).slice(0, 200), sideEffects });
+            logger.debug(`${TAG} tool result`, { name: tc.name, resultLength: JSON.stringify(result).length, sideEffects: sideEffects ? Object.keys(sideEffects) : [] });
 
             if (sideEffects?.blocked) {
               setIsBlocked(true);
@@ -685,7 +682,7 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
       const trimmed = text.trim();
       if (!trimmed) return;
 
-      logger.debug(`${TAG} startTurn`, { text: trimmed, hidden });
+      logger.debug(`${TAG} startTurn`, { length: trimmed.length, hidden });
       setError(null);
 
       const userMsg: ConversationMessage = {

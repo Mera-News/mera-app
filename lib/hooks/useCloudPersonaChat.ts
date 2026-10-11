@@ -199,23 +199,22 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       };
 
       const onLeg = (leg: AgentLeg) => {
-        // WHAT THE MODEL SAW AND SAID, per leg: the state line is the only
-        // context the loop carries between turns, and a forced leg is where a
-        // fact can appear that nobody said. Debug only (console under
-        // EXPO_PUBLIC_VERBOSE_LOGS, breadcrumb in dev builds, nothing in prod).
+        // The SHAPE of each leg: which tools, how many facts it proposed, and
+        // sizes. Never content: no inference text in any log, dev builds
+        // included (owner ruling).
         logger.debug(`${TAG} agent leg`, {
           leg: leg.index,
           role: leg.role,
           forced: leg.forced === true,
-          state: (leg.messages[0]?.content ?? '').slice(0, 800),
+          stateLength: (leg.messages[0]?.content ?? '').length,
           tools: leg.toolCalls.map((c) => c.name),
-          proposed: leg.toolCalls
+          proposedCount: leg.toolCalls
             .filter((c) => c.name === 'saveExtractedFacts')
-            .flatMap((c) => {
+            .reduce((n, c) => {
               const list = parseToolArgs(c.argumentsRaw).extracted_user_information;
-              return Array.isArray(list) ? list.map((e) => String((e as { statement?: unknown })?.statement ?? '')) : [];
-            }),
-          text: leg.rawOutput.slice(0, 200),
+              return n + (Array.isArray(list) ? list.length : 0);
+            }, 0),
+          textLength: leg.rawOutput.length,
         });
         // Live progress rows: the result only arrives at the end of a turn that
         // can run ~10s, so the steps box would otherwise sit empty and then
@@ -492,7 +491,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           if (eventCount <= 5 || event.type === 'finish' || event.type === 'error') {
             logger.debug(`${TAG} SSE event #${eventCount}`, {
               type: event.type,
-              ...(event.type === 'text-delta' ? { delta: event.delta.slice(0, 50) } : {}),
+              ...(event.type === 'text-delta' ? { deltaLength: event.delta.length } : {}),
               ...(event.type === 'tool-call-delta' ? { name: event.name } : {}),
             });
           }
@@ -677,7 +676,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
               const callName = resolved ?? tc.name;
               logger.debug(`${TAG} executing tool`, { name: callName, inputKeys: Object.keys(tc.input as Record<string, unknown>) });
               const { result, sideEffects } = await agentRef.current.executeTool(callName, tc.input);
-              logger.debug(`${TAG} tool result`, { name: tc.name, result: JSON.stringify(result).slice(0, 200), sideEffects });
+              logger.debug(`${TAG} tool result`, { name: tc.name, resultLength: JSON.stringify(result).length, sideEffects: sideEffects ? Object.keys(sideEffects) : [] });
 
               if (sideEffects?.blocked) {
                 cloud().setIsBlocked(true);
@@ -987,7 +986,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       const trimmed = text.trim();
       if (!trimmed) return;
 
-      logger.debug(`${TAG} sendMessage proceeding`, { text: trimmed });
+      logger.debug(`${TAG} sendMessage proceeding`, { length: trimmed.length });
       store.setError(null);
 
       if (visible) {
@@ -1039,7 +1038,6 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           } else {
             const systemPrompt = await agentRef.current.buildSystemPrompt(false);
             logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
-            logger.debug(`${TAG} system prompt content`, { content: systemPrompt });
 
             const tools = agentRef.current.getToolDefinitions?.() ?? [];
             logger.debug(`${TAG} tool definitions`, { count: tools.length, names: tools.map(t => t.function.name) });
@@ -1049,7 +1047,6 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
               try {
                 context = await agentRef.current.buildContext();
                 logger.debug(`${TAG} context built`, { length: context.length });
-                logger.debug(`${TAG} context content`, { content: context });
               } catch (err) {
                 logger.warn(`${TAG} buildContext failed, proceeding without context`, { error: String(err) });
               }

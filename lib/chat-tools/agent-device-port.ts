@@ -277,16 +277,11 @@ export async function lookupPlaceWithFallback(
       const trusted = fallbackCandidates(out.places, form);
       if (trusted === null) {
         logger.debug(`${TAG} discarded a fallback form its matches do not name`, {
-          asked: args.query,
-          form,
-          candidates: out.places.map((p) => p.locality),
+          candidateCount: out.places.length,
         });
         continue;
       }
-      logger.debug(`${TAG} place resolved on a fallback form`, {
-        asked: args.query,
-        matched: form,
-      });
+      logger.debug(`${TAG} place resolved on a fallback form`);
       const unmatched = unmatchedWords(args.query, form);
       return {
         ...out,

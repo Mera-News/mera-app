@@ -151,7 +151,7 @@ export async function handleSaveExtractedFacts(
         length: r.statement.length,
       });
     } else if (r.reason === 'meta') {
-      logger.debug('Rejected meta-conversational fact', { statement: r.statement });
+      logger.debug('Rejected meta-conversational fact', { length: r.statement.length });
     }
   }
 
