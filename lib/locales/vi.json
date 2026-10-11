@@ -896,7 +896,13 @@
     "headlineSectionGlobal": "Tin tức từ khắp thế giới",
     "headlineSectionCountry": "Tin tức từ {{country}}",
     "sectionStories_one": "{{count}} câu chuyện",
-    "sectionStories_other": "{{count}} câu chuyện"
+    "sectionStories_other": "{{count}} câu chuyện",
+    "nextSection": "Tiếp theo: {{title}}",
+    "sectionPrefix": "Tin tức về:",
+    "emptySection": {
+      "awaiting": "Đang tìm tin về chủ đề này. Tin sẽ xuất hiện sau lần làm mới tiếp theo.",
+      "none": "Chưa có tin nào đủ khớp với chủ đề này để hiển thị."
+    }
   },
   "feedStatus": {
     "idle": "Đã cập nhật",
@@ -2597,7 +2603,9 @@
   },
   "interests": {
     "emptyTitle": "Mera chưa biết bạn quan tâm đến điều gì",
-    "learnAbout": "Tìm hiểu cách thêm dữ kiện"
+    "learnAbout": "Tìm hiểu cách thêm dữ kiện",
+    "backToInterests": "Quay lại Mối quan tâm",
+    "findingStories": "Mera đang tìm câu chuyện cho mối quan tâm này. Những câu chuyện đầu tiên sẽ hiện ở đây sau vài giây."
   },
   "world": {
     "gathering": "Đang thu thập tin hôm nay từ {{country}}. Những câu chuyện đầu tiên sẽ hiện sau vài giây.",

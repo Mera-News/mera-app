@@ -921,7 +921,13 @@
     "sectionStories_one": "{{count}} історія",
     "sectionStories_few": "{{count}} історії",
     "sectionStories_many": "{{count}} історій",
-    "sectionStories_other": "{{count}} історії"
+    "sectionStories_other": "{{count}} історії",
+    "nextSection": "Далі: {{title}}",
+    "sectionPrefix": "Новини про:",
+    "emptySection": {
+      "awaiting": "Шукаємо матеріали на цю тему. Вони з'являться після наступного оновлення.",
+      "none": "Поки жоден матеріал не пасує до цієї теми достатньо близько."
+    }
   },
   "feedStatus": {
     "idle": "Оновлено",
@@ -2659,7 +2665,9 @@
   },
   "interests": {
     "emptyTitle": "Мера ще не знає ваших інтересів",
-    "learnAbout": "Дізнайтеся, як додати факти"
+    "learnAbout": "Дізнайтеся, як додати факти",
+    "backToInterests": "Назад до інтересів",
+    "findingStories": "Мера добирає історії за цим інтересом. Перші з'являться тут за кілька секунд."
   },
   "world": {
     "gathering": "Збираємо сьогоднішні новини: {{country}}. Перші історії з'являться за кілька секунд.",

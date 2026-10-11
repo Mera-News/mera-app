@@ -897,7 +897,13 @@
     "headlineSectionGlobal": "Titulares del mundo",
     "headlineSectionCountry": "Titulares de {{country}}",
     "sectionStories_one": "{{count}} historia",
-    "sectionStories_other": "{{count}} historias"
+    "sectionStories_other": "{{count}} historias",
+    "nextSection": "Siguiente: {{title}}",
+    "sectionPrefix": "Noticias sobre:",
+    "emptySection": {
+      "awaiting": "Buscando noticias sobre esto. Aparecerán tras la próxima actualización.",
+      "none": "Todavía no hay ninguna noticia que encaje lo bastante con esto."
+    }
   },
   "feedStatus": {
     "idle": "Al día",
@@ -2599,7 +2605,9 @@
   },
   "interests": {
     "emptyTitle": "Mera aún no conoce tus intereses",
-    "learnAbout": "Aprende a añadir hechos"
+    "learnAbout": "Aprende a añadir hechos",
+    "backToInterests": "Volver a Intereses",
+    "findingStories": "Mera está buscando historias para este interés. Las primeras aparecerán aquí en unos segundos."
   },
   "world": {
     "gathering": "Reuniendo las noticias de hoy de {{country}}. Las primeras historias aparecerán en unos segundos.",

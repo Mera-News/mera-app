@@ -896,7 +896,13 @@
     "headlineSectionGlobal": "전 세계 뉴스",
     "headlineSectionCountry": "{{country}} 뉴스",
     "sectionStories_one": "스토리 {{count}}개",
-    "sectionStories_other": "스토리 {{count}}개"
+    "sectionStories_other": "스토리 {{count}}개",
+    "nextSection": "다음: {{title}}",
+    "sectionPrefix": "관련 뉴스:",
+    "emptySection": {
+      "awaiting": "이 주제의 기사를 찾고 있습니다. 다음 새로고침 후에 표시됩니다.",
+      "none": "아직 이 주제와 충분히 맞는 기사가 없습니다."
+    }
   },
   "feedStatus": {
     "idle": "최신 상태입니다",
@@ -2597,7 +2603,9 @@
   },
   "interests": {
     "emptyTitle": "메라가 아직 내 관심사를 몰라요",
-    "learnAbout": "사실 추가하는 방법 알아보기"
+    "learnAbout": "사실 추가하는 방법 알아보기",
+    "backToInterests": "관심사로 돌아가기",
+    "findingStories": "메라가 이 관심사의 스토리를 찾고 있어요. 첫 스토리가 몇 초 안에 여기에 나타나요."
   },
   "world": {
     "gathering": "{{country}}의 오늘 뉴스를 모으는 중이에요. 첫 스토리가 몇 초 안에 나타나요.",

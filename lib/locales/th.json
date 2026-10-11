@@ -897,7 +897,13 @@
     "headlineSectionGlobal": "ข่าวสารจากทั่วโลก",
     "headlineSectionCountry": "ข่าวสารจาก{{country}}",
     "sectionStories_one": "{{count}} เรื่อง",
-    "sectionStories_other": "{{count}} เรื่อง"
+    "sectionStories_other": "{{count}} เรื่อง",
+    "nextSection": "ถัดไป: {{title}}",
+    "sectionPrefix": "ข่าวเกี่ยวกับ:",
+    "emptySection": {
+      "awaiting": "กำลังหาข่าวเรื่องนี้ ข่าวจะแสดงหลังการรีเฟรชครั้งถัดไป",
+      "none": "ยังไม่มีข่าวที่ตรงกับเรื่องนี้มากพอจะแสดง"
+    }
   },
   "feedStatus": {
     "idle": "อัปเดตล่าสุด",
@@ -2598,7 +2604,9 @@
   },
   "interests": {
     "emptyTitle": "เมร่า ยังไม่รู้ว่าคุณสนใจอะไร",
-    "learnAbout": "เรียนรู้วิธีเพิ่มข้อเท็จจริง"
+    "learnAbout": "เรียนรู้วิธีเพิ่มข้อเท็จจริง",
+    "backToInterests": "กลับไปที่ความสนใจ",
+    "findingStories": "เมร่า กำลังหาเรื่องราวสำหรับความสนใจนี้ เรื่องแรกจะปรากฏที่นี่ในไม่กี่วินาที"
   },
   "world": {
     "gathering": "กำลังรวบรวมข่าววันนี้จาก{{country}} เรื่องแรกจะปรากฏในไม่กี่วินาที",

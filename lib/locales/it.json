@@ -897,7 +897,13 @@
     "headlineSectionGlobal": "Titoli dal mondo",
     "headlineSectionCountry": "Titoli da {{country}}",
     "sectionStories_one": "{{count}} storia",
-    "sectionStories_other": "{{count}} storie"
+    "sectionStories_other": "{{count}} storie",
+    "nextSection": "Avanti: {{title}}",
+    "sectionPrefix": "Notizie su:",
+    "emptySection": {
+      "awaiting": "Cerchiamo notizie su questo. Arriveranno dopo il prossimo aggiornamento.",
+      "none": "Nessuna notizia per ora è abbastanza vicina a questo da essere mostrata."
+    }
   },
   "feedStatus": {
     "idle": "Aggiornato",
@@ -2599,7 +2605,9 @@
   },
   "interests": {
     "emptyTitle": "Mera non conosce ancora i tuoi interessi",
-    "learnAbout": "Scopri come aggiungere fatti"
+    "learnAbout": "Scopri come aggiungere fatti",
+    "backToInterests": "Torna a Interessi",
+    "findingStories": "Mera sta cercando storie per questo interesse. Le prime compaiono qui tra pochi secondi."
   },
   "world": {
     "gathering": "Sto raccogliendo le notizie di oggi da {{country}}. Le prime storie compaiono tra pochi secondi.",

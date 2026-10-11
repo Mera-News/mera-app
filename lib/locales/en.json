@@ -465,7 +465,13 @@
     "headlineSectionGlobal": "Headlines from the world",
     "headlineSectionCountry": "Headlines from {{country}}",
     "sectionStories_one": "{{count}} story",
-    "sectionStories_other": "{{count}} stories"
+    "sectionStories_other": "{{count}} stories",
+    "nextSection": "Next: {{title}}",
+    "sectionPrefix": "News about:",
+    "emptySection": {
+      "awaiting": "Looking for stories about this. They show up after the next refresh.",
+      "none": "No story here yet fits this closely enough to show."
+    }
   },
   "feedStatus": {
     "idle": "Up to date",
@@ -2601,7 +2607,9 @@
   },
   "interests": {
     "emptyTitle": "Mera doesn't know your interests yet",
-    "learnAbout": "Learn how to add facts"
+    "learnAbout": "Learn how to add facts",
+    "backToInterests": "Back to Interests",
+    "findingStories": "Mera is finding stories for this interest. The first ones appear here in a few seconds."
   },
   "world": {
     "gathering": "Gathering today's news from {{country}}. The first stories appear in a few seconds.",

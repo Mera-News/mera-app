@@ -902,7 +902,13 @@
     "headlineSectionGlobal": "Titres du monde",
     "headlineSectionCountry": "Titres de {{country}}",
     "sectionStories_one": "{{count}} histoire",
-    "sectionStories_other": "{{count}} histoires"
+    "sectionStories_other": "{{count}} histoires",
+    "nextSection": "Suivant : {{title}}",
+    "sectionPrefix": "Actualités sur :",
+    "emptySection": {
+      "awaiting": "Recherche d'articles sur ce sujet. Ils apparaîtront après la prochaine actualisation.",
+      "none": "Aucun article ne correspond encore assez à ce sujet pour être affiché."
+    }
   },
   "feedStatus": {
     "idle": "À jour",
@@ -2605,7 +2611,9 @@
   },
   "interests": {
     "emptyTitle": "Mera ne connaît pas encore vos centres d'intérêt",
-    "learnAbout": "Découvrir comment ajouter des faits"
+    "learnAbout": "Découvrir comment ajouter des faits",
+    "backToInterests": "Retour aux centres d'intérêt",
+    "findingStories": "Mera cherche des actualités pour ce centre d'intérêt. Les premières s'afficheront ici dans quelques secondes."
   },
   "world": {
     "gathering": "Collecte des actualités du jour pour {{country}}. Les premières s'afficheront dans quelques secondes.",

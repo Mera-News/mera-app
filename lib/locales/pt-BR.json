@@ -897,7 +897,13 @@
     "headlineSectionGlobal": "Notícias do mundo",
     "headlineSectionCountry": "Notícias de {{country}}",
     "sectionStories_one": "{{count}} história",
-    "sectionStories_other": "{{count}} histórias"
+    "sectionStories_other": "{{count}} histórias",
+    "nextSection": "Próximo: {{title}}",
+    "sectionPrefix": "Notícias sobre:",
+    "emptySection": {
+      "awaiting": "Procurando notícias sobre isso. Elas aparecem depois da próxima atualização.",
+      "none": "Ainda nenhuma notícia combina o bastante com isso para aparecer."
+    }
   },
   "feedStatus": {
     "idle": "Atualizado",
@@ -2599,7 +2605,9 @@
   },
   "interests": {
     "emptyTitle": "A Mera ainda não conhece seus interesses",
-    "learnAbout": "Saiba como adicionar fatos"
+    "learnAbout": "Saiba como adicionar fatos",
+    "backToInterests": "Voltar para Interesses",
+    "findingStories": "A Mera está buscando histórias para este interesse. As primeiras aparecem aqui em alguns segundos."
   },
   "world": {
     "gathering": "Reunindo as notícias de hoje de {{country}}. As primeiras histórias aparecem em alguns segundos.",

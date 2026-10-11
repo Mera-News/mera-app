@@ -896,7 +896,13 @@
     "headlineSectionGlobal": "全球新闻",
     "headlineSectionCountry": "{{country}}新闻",
     "sectionStories_one": "{{count}} 条报道",
-    "sectionStories_other": "{{count}} 条报道"
+    "sectionStories_other": "{{count}} 条报道",
+    "nextSection": "下一个：{{title}}",
+    "sectionPrefix": "关于：",
+    "emptySection": {
+      "awaiting": "正在寻找相关新闻，下次刷新后会显示。",
+      "none": "暂时还没有与此足够贴近、可以显示的新闻。"
+    }
   },
   "feedStatus": {
     "idle": "已是最新",
@@ -2597,7 +2603,9 @@
   },
   "interests": {
     "emptyTitle": "梅拉还不了解你的兴趣",
-    "learnAbout": "了解如何添加事实"
+    "learnAbout": "了解如何添加事实",
+    "backToInterests": "返回兴趣",
+    "findingStories": "梅拉正在为这个兴趣寻找报道。几秒钟后，第一批报道就会出现在这里。"
   },
   "world": {
     "gathering": "正在汇集{{country}}今天的新闻。几秒钟后，第一批报道就会出现。",

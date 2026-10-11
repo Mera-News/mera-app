@@ -896,7 +896,13 @@
     "headlineSectionGlobal": "Berita dari seluruh dunia",
     "headlineSectionCountry": "Berita dari {{country}}",
     "sectionStories_one": "{{count}} cerita",
-    "sectionStories_other": "{{count}} cerita"
+    "sectionStories_other": "{{count}} cerita",
+    "nextSection": "Berikutnya: {{title}}",
+    "sectionPrefix": "Berita tentang:",
+    "emptySection": {
+      "awaiting": "Mencari berita tentang ini. Berita akan muncul setelah penyegaran berikutnya.",
+      "none": "Belum ada berita yang cukup cocok untuk ditampilkan di sini."
+    }
   },
   "feedStatus": {
     "idle": "Terkini",
@@ -2597,7 +2603,9 @@
   },
   "interests": {
     "emptyTitle": "Mera belum tahu minat Anda",
-    "learnAbout": "Pelajari cara menambahkan fakta"
+    "learnAbout": "Pelajari cara menambahkan fakta",
+    "backToInterests": "Kembali ke Minat",
+    "findingStories": "Mera sedang mencari cerita untuk minat ini. Cerita pertama akan muncul di sini dalam beberapa detik."
   },
   "world": {
     "gathering": "Mengumpulkan berita hari ini dari {{country}}. Cerita pertama akan muncul dalam beberapa detik.",

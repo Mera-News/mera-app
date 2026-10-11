@@ -897,7 +897,13 @@
     "headlineSectionGlobal": "विश्व की सुर्खियाँ",
     "headlineSectionCountry": "{{country}} की सुर्खियाँ",
     "sectionStories_one": "{{count}} स्टोरी",
-    "sectionStories_other": "{{count}} स्टोरीज़"
+    "sectionStories_other": "{{count}} स्टोरीज़",
+    "nextSection": "अगला: {{title}}",
+    "sectionPrefix": "इस बारे में समाचार:",
+    "emptySection": {
+      "awaiting": "इस बारे में ख़बरें खोजी जा रही हैं। वे अगले रीफ़्रेश के बाद दिखेंगी।",
+      "none": "अभी तक कोई ख़बर इससे इतनी मेल नहीं खाती कि यहाँ दिखे।"
+    }
   },
   "feedStatus": {
     "idle": "अप टू डेट",
@@ -2601,7 +2607,9 @@
   },
   "interests": {
     "emptyTitle": "मेरा ऐप अभी आपकी रुचियाँ नहीं जानता",
-    "learnAbout": "तथ्य कैसे जोड़ें, यह जानें"
+    "learnAbout": "तथ्य कैसे जोड़ें, यह जानें",
+    "backToInterests": "रुचियों पर वापस जाएं",
+    "findingStories": "मेरा इस रुचि के लिए स्टोरीज़ ढूंढ रहा है। पहली स्टोरीज़ कुछ सेकंड में यहां दिखेंगी।"
   },
   "world": {
     "gathering": "{{country}} की आज की खबरें जुटाई जा रही हैं। पहली स्टोरीज़ कुछ सेकंड में दिखेंगी।",

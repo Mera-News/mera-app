@@ -921,7 +921,13 @@
     "sectionStories_one": "{{count}} historia",
     "sectionStories_few": "{{count}} historie",
     "sectionStories_many": "{{count}} historii",
-    "sectionStories_other": "{{count}} historii"
+    "sectionStories_other": "{{count}} historii",
+    "nextSection": "Dalej: {{title}}",
+    "sectionPrefix": "Wiadomości o:",
+    "emptySection": {
+      "awaiting": "Szukamy artykułów na ten temat. Pojawią się po następnym odświeżeniu.",
+      "none": "Żaden artykuł nie pasuje jeszcze na tyle dobrze, by go tu pokazać."
+    }
   },
   "feedStatus": {
     "idle": "Aktualne",
@@ -2655,7 +2661,9 @@
   },
   "interests": {
     "emptyTitle": "Mera jeszcze nie zna Twoich zainteresowań",
-    "learnAbout": "Dowiedz się, jak dodawać fakty"
+    "learnAbout": "Dowiedz się, jak dodawać fakty",
+    "backToInterests": "Wróć do Zainteresowań",
+    "findingStories": "Mera szuka historii dla tego zainteresowania. Pierwsze pojawią się tutaj za kilka sekund."
   },
   "world": {
     "gathering": "Zbieramy dzisiejsze wiadomości z kraju: {{country}}. Pierwsze pojawią się za kilka sekund.",

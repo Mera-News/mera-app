@@ -897,7 +897,13 @@
     "headlineSectionGlobal": "Schlagzeilen aus der Welt",
     "headlineSectionCountry": "Schlagzeilen aus {{country}}",
     "sectionStories_one": "{{count}} Geschichte",
-    "sectionStories_other": "{{count}} Geschichten"
+    "sectionStories_other": "{{count}} Geschichten",
+    "nextSection": "Weiter: {{title}}",
+    "sectionPrefix": "Nachrichten zu:",
+    "emptySection": {
+      "awaiting": "Mera sucht Artikel zu diesem Thema. Sie erscheinen nach der nächsten Aktualisierung.",
+      "none": "Noch passt keine Meldung eng genug, um hier zu erscheinen."
+    }
   },
   "feedStatus": {
     "idle": "Aktuell",
@@ -2599,7 +2605,9 @@
   },
   "interests": {
     "emptyTitle": "Mera kennt deine Interessen noch nicht",
-    "learnAbout": "Erfahre, wie du Fakten hinzufügst"
+    "learnAbout": "Erfahre, wie du Fakten hinzufügst",
+    "backToInterests": "Zurück zu Interessen",
+    "findingStories": "Mera sucht Geschichten für dieses Interesse. Die ersten erscheinen hier in ein paar Sekunden."
   },
   "world": {
     "gathering": "Die Nachrichten von heute aus {{country}} werden gesammelt. Die ersten Meldungen erscheinen in ein paar Sekunden.",

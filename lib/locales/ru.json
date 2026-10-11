@@ -921,7 +921,13 @@
     "sectionStories_one": "{{count}} история",
     "sectionStories_few": "{{count}} истории",
     "sectionStories_many": "{{count}} историй",
-    "sectionStories_other": "{{count}} историй"
+    "sectionStories_other": "{{count}} историй",
+    "nextSection": "Далее: {{title}}",
+    "sectionPrefix": "Новости о:",
+    "emptySection": {
+      "awaiting": "Ищем материалы на эту тему. Они появятся после следующего обновления.",
+      "none": "Пока ни один материал не подходит к этой теме достаточно близко."
+    }
   },
   "feedStatus": {
     "idle": "Обновлено",
@@ -2655,7 +2661,9 @@
   },
   "interests": {
     "emptyTitle": "Мера пока не знает ваших интересов",
-    "learnAbout": "Как добавлять факты"
+    "learnAbout": "Как добавлять факты",
+    "backToInterests": "Назад к интересам",
+    "findingStories": "Мера подбирает истории по этому интересу. Первые появятся здесь через несколько секунд."
   },
   "world": {
     "gathering": "Собираем сегодняшние новости: {{country}}. Первые истории появятся через несколько секунд.",

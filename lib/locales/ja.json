@@ -896,7 +896,13 @@
     "headlineSectionGlobal": "世界のニュース",
     "headlineSectionCountry": "{{country}}のニュース",
     "sectionStories_one": "{{count}}件のストーリー",
-    "sectionStories_other": "{{count}}件のストーリー"
+    "sectionStories_other": "{{count}}件のストーリー",
+    "nextSection": "次へ：{{title}}",
+    "sectionPrefix": "関連ニュース：",
+    "emptySection": {
+      "awaiting": "この話題の記事を探しています。次の更新後に表示されます。",
+      "none": "表示できるほど近い記事はまだありません。"
+    }
   },
   "feedStatus": {
     "idle": "最新の状態です",
@@ -2597,7 +2603,9 @@
   },
   "interests": {
     "emptyTitle": "メラはまだあなたの関心を知りません",
-    "learnAbout": "ファクトの追加方法を見る"
+    "learnAbout": "ファクトの追加方法を見る",
+    "backToInterests": "関心に戻る",
+    "findingStories": "メラがこの関心に合うストーリーを探しています。最初の記事は数秒でここに表示されます。"
   },
   "world": {
     "gathering": "{{country}}の今日のニュースを集めています。最初のストーリーは数秒で表示されます。",

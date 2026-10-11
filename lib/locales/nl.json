@@ -897,7 +897,13 @@
     "headlineSectionGlobal": "Nieuws uit de wereld",
     "headlineSectionCountry": "Nieuws uit {{country}}",
     "sectionStories_one": "{{count}} verhaal",
-    "sectionStories_other": "{{count}} verhalen"
+    "sectionStories_other": "{{count}} verhalen",
+    "nextSection": "Volgende: {{title}}",
+    "sectionPrefix": "Nieuws over:",
+    "emptySection": {
+      "awaiting": "Mera zoekt verhalen hierover. Ze verschijnen na de volgende verversing.",
+      "none": "Nog geen verhaal past hier goed genoeg bij om te tonen."
+    }
   },
   "feedStatus": {
     "idle": "Actueel",
@@ -2599,7 +2605,9 @@
   },
   "interests": {
     "emptyTitle": "Mera kent je interesses nog niet",
-    "learnAbout": "Leer hoe je feiten toevoegt"
+    "learnAbout": "Leer hoe je feiten toevoegt",
+    "backToInterests": "Terug naar Interesses",
+    "findingStories": "Mera zoekt verhalen voor deze interesse. De eerste verschijnen hier over een paar seconden."
   },
   "world": {
     "gathering": "Het nieuws van vandaag uit {{country}} wordt verzameld. De eerste verhalen verschijnen over een paar seconden.",

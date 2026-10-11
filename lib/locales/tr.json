@@ -897,7 +897,13 @@
     "headlineSectionGlobal": "Dünya haberleri",
     "headlineSectionCountry": "{{country}} haberleri",
     "sectionStories_one": "{{count}} haber",
-    "sectionStories_other": "{{count}} haber"
+    "sectionStories_other": "{{count}} haber",
+    "nextSection": "Sonraki: {{title}}",
+    "sectionPrefix": "Haberler:",
+    "emptySection": {
+      "awaiting": "Bununla ilgili haberler aranıyor. Bir sonraki yenilemeden sonra görünecekler.",
+      "none": "Henüz buraya yeterince uyan bir haber yok."
+    }
   },
   "feedStatus": {
     "idle": "Güncel",
@@ -2601,7 +2607,9 @@
   },
   "interests": {
     "emptyTitle": "Mera ilgi alanlarınızı henüz bilmiyor",
-    "learnAbout": "Bilgi eklemeyi öğrenin"
+    "learnAbout": "Bilgi eklemeyi öğrenin",
+    "backToInterests": "İlgi alanlarına dön",
+    "findingStories": "Mera bu ilgi alanı için hikayeler arıyor. İlkleri birkaç saniye içinde burada görünür."
   },
   "world": {
     "gathering": "{{country}} ülkesinin bugünkü haberleri toplanıyor. İlk hikayeler birkaç saniye içinde görünür.",

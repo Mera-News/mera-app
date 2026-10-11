@@ -945,7 +945,13 @@
     "sectionStories_two": "قصتان",
     "sectionStories_few": "{{count}} قصص",
     "sectionStories_many": "{{count}} قصة",
-    "sectionStories_other": "{{count}} قصة"
+    "sectionStories_other": "{{count}} قصة",
+    "nextSection": "التالي: {{title}}",
+    "sectionPrefix": "أخبار عن:",
+    "emptySection": {
+      "awaiting": "نبحث عن قصص حول هذا. ستظهر بعد التحديث التالي.",
+      "none": "لا توجد قصة هنا بعد تطابق هذا بما يكفي لعرضها."
+    }
   },
   "feedStatus": {
     "idle": "على اطلاع",
@@ -2717,7 +2723,9 @@
   },
   "interests": {
     "emptyTitle": "ميرا لا يعرف اهتماماتك بعد",
-    "learnAbout": "تعرّف على كيفية إضافة الحقائق"
+    "learnAbout": "تعرّف على كيفية إضافة الحقائق",
+    "backToInterests": "العودة إلى الاهتمامات",
+    "findingStories": "ميرا يبحث عن قصص لهذا الاهتمام. ستظهر أولى القصص هنا خلال ثوانٍ."
   },
   "world": {
     "gathering": "نجمع أخبار اليوم من {{country}}. ستظهر أولى القصص خلال ثوانٍ.",
