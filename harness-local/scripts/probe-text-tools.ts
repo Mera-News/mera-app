@@ -4,6 +4,7 @@
 //     --target staging --graphql-endpoint https://graphql.staging.mera.news/graphql \
 //     --auth-endpoint https://auth.staging.mera.news \
 //     --inference-endpoint https://inference.staging.mera.news [--models a,b] [--repeat n] [--format hermes|xml|marker]
+//   npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/probe-text-tools.ts --offline
 //
 // Through the REAL staging gateway, with the app's own envelope and the app's
 // own text-tool codec (lib/llm/text-tool-protocol). Two rules, fixed before the
@@ -16,9 +17,12 @@
 // the decrypted text must hold a parsed call carrying the sentinel, or the row
 // proves nothing.
 //
-// NO LIVE NEGATIVE CONTROL (owner ruling R89): nothing here sends tools in
-// clear, so nothing proves the detector would see a leak. A PASS means only
-// that no leak was seen.
+// NEGATIVE CONTROL, OFFLINE ONLY (owner ruling R89). Nothing here sends tools
+// in clear. Instead, every run first feeds analyse() a hand-built leaky response
+// (clear `tool_calls` carrying a fresh sentinel, streamed and buffered) and
+// fails with "detector blind" unless every leak sign fires. That proves the
+// detector is not blind; it cannot show that the live provider's leak shape is
+// unchanged. `--offline` runs only that control, with no network.
 //
 // RULE 2 (history). An assistant turn holding `<tool_call>` text and a user
 // turn holding `<tool_response>` text (both encrypted) decrypt without a 400
@@ -78,6 +82,80 @@ function leaves(v: unknown, out: string[]): void {
   else if (v && typeof v === 'object') Object.values(v).forEach((x) => leaves(x, out));
 }
 
+interface Analysis {
+  /** Every non-hex string leaf of every JSON frame, in order: where clear text would hide. */
+  clearStrings: string[];
+  /** Every content / reasoning_content value. */
+  envelopes: string[];
+  /** The content values alone, in order (what gets decrypted). */
+  contents: string[];
+}
+
+/** The pure detector over raw response bytes: no network, no keys. */
+function analyse(raw: string, stream: boolean): Analysis {
+  const out: Analysis = { clearStrings: [], envelopes: [], contents: [] };
+  const frames: unknown[] = stream
+    ? raw
+        .split('\n')
+        .filter((l) => l.startsWith('data:'))
+        .map((l) => l.slice(5).trim())
+        .filter((l) => l && l !== '[DONE]')
+        .map((l) => JSON.parse(l) as unknown)
+    : [JSON.parse(raw) as unknown];
+  for (const f of frames) {
+    const all: string[] = [];
+    leaves(f, all);
+    out.clearStrings.push(...all.filter((s) => !HEX.test(s)));
+    const choice = (f as { choices?: { delta?: Record<string, unknown>; message?: Record<string, unknown> }[] })
+      .choices?.[0];
+    const part = choice?.delta ?? choice?.message ?? {};
+    for (const k of ['content', 'reasoning_content']) {
+      const v = part[k];
+      if (typeof v === 'string' && v.length > 0) {
+        out.envelopes.push(v);
+        if (k === 'content') out.contents.push(v);
+      }
+    }
+  }
+  return out;
+}
+
+/** The leak signs a RULE 1 row reads, for one sentinel. */
+function leakSigns(raw: string, a: Pick<Analysis, 'clearStrings' | 'envelopes'>, s: string) {
+  return {
+    keyPresent: raw.includes('"tool_calls"'),
+    sentinelRaw: raw.includes(s),
+    sentinelClear: a.clearStrings.join('').includes(s),
+    allHex: a.envelopes.every((e) => HEX.test(e)),
+  };
+}
+
+/**
+ * The offline negative control: a hand-built response whose clear `tool_calls`
+ * carry a fresh sentinel, streamed and buffered. Every leak sign must fire, or
+ * the detector is blind and no PASS from this run means anything.
+ */
+function offlineControl(): { ok: boolean; detail: string } {
+  const s = sentinel();
+  const call = { id: 'c1', type: 'function', function: { name: 'record_code', arguments: JSON.stringify({ code: s }) } };
+  const buffered = JSON.stringify({
+    choices: [{ message: { role: 'assistant', content: null, tool_calls: [call] }, finish_reason: 'tool_calls' }],
+  });
+  const streamed =
+    `data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, ...call }] } }] })}\n\n` +
+    `data: ${JSON.stringify({ choices: [{ delta: {}, finish_reason: 'tool_calls' }] })}\n\ndata: [DONE]\n\n`;
+  const rows = ([['buffered', buffered, false], ['streamed', streamed, true]] as const).map(([label, raw, stream]) => {
+    const signs = leakSigns(raw, analyse(raw, stream), s);
+    return { label, seen: signs.keyPresent && signs.sentinelRaw && signs.sentinelClear, signs };
+  });
+  return {
+    ok: rows.every((r) => r.seen),
+    detail: rows
+      .map((r) => `${r.label}: ${r.seen ? 'leak seen' : 'MISSED'} (key ${r.signs.keyPresent}, raw ${r.signs.sentinelRaw}, clear ${r.signs.sentinelClear})`)
+      .join('; '),
+  };
+}
+
 async function post(
   endpoint: string,
   jwt: string,
@@ -92,33 +170,14 @@ async function post(
   const raw = await res.text();
   const cap: Capture = { status: res.status, raw, clearStrings: [], envelopes: [], decrypted: '', decryptError: null };
   if (!res.ok) return cap;
-  const frames: unknown[] = body.stream
-    ? raw
-        .split('\n')
-        .filter((l) => l.startsWith('data:'))
-        .map((l) => l.slice(5).trim())
-        .filter((l) => l && l !== '[DONE]')
-        .map((l) => JSON.parse(l) as unknown)
-    : [JSON.parse(raw) as unknown];
-  for (const f of frames) {
-    const all: string[] = [];
-    leaves(f, all);
-    cap.clearStrings.push(...all.filter((s) => !HEX.test(s)));
-    const choice = (f as { choices?: { delta?: Record<string, unknown>; message?: Record<string, unknown> }[] })
-      .choices?.[0];
-    const part = choice?.delta ?? choice?.message ?? {};
-    for (const k of ['content', 'reasoning_content']) {
-      const v = part[k];
-      if (typeof v === 'string' && v.length > 0) {
-        cap.envelopes.push(v);
-        if (k === 'content') {
-          try {
-            cap.decrypted += decryptContent(v, ctx.privateKey, ctx.algo);
-          } catch (err) {
-            cap.decryptError = err instanceof Error ? err.message : String(err);
-          }
-        }
-      }
+  const a = analyse(raw, !!body.stream);
+  cap.clearStrings = a.clearStrings;
+  cap.envelopes = a.envelopes;
+  for (const v of a.contents) {
+    try {
+      cap.decrypted += decryptContent(v, ctx.privateKey, ctx.algo);
+    } catch (err) {
+      cap.decryptError = err instanceof Error ? err.message : String(err);
     }
   }
   return cap;
@@ -140,6 +199,9 @@ function base(model: string, stream: boolean) {
 
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);
+  const control = offlineControl();
+  console.log(`offline negative control: ${control.ok ? 'PASS' : 'FAIL, detector blind'}  ${control.detail}`);
+  if (argv.includes('--offline')) return control.ok ? 0 : 1;
   applyTargetOverride(argv);
   applyEndpointOverrides(argv);
   const env = loadHarnessEnv({ require: 'staging' });
@@ -179,11 +241,8 @@ async function main(): Promise<number> {
         );
         const body: Record<string, unknown> = { ...base(model, stream), messages: encrypt(msgs, ctx) };
         const cap = await post(env.inferenceEndpoint, jwt, ctx, body);
-        const keyPresent = cap.raw.includes('"tool_calls"');
+        const { keyPresent, sentinelRaw, sentinelClear, allHex } = leakSigns(cap.raw, cap, s);
         const keyPopulated = /"tool_calls"\s*:\s*\[\s*\{/.test(cap.raw);
-        const sentinelRaw = cap.raw.includes(s);
-        const sentinelClear = cap.clearStrings.join('').includes(s);
-        const allHex = cap.envelopes.every((e) => HEX.test(e));
         const parsed = parseToolCallsFromText(cap.decrypted, [TOOL], format);
         const call = parsed.calls.find((c) => c.name === 'record_code');
         const positive = !!call && call.argumentsRaw.includes(s);
@@ -231,10 +290,11 @@ async function main(): Promise<number> {
   }
 
   log(
-    `\nRULE 1 (privacy): ${rule1 ? 'PASS' : 'FAIL'} over ${rule1Rows} rows` +
+    `\nOFFLINE CONTROL: ${control.ok ? 'PASS' : 'FAIL, detector blind, so a RULE 1 PASS here is not evidence'}` +
+      `\nRULE 1 (privacy): ${rule1 ? 'PASS' : 'FAIL'} over ${rule1Rows} rows` +
       `\nRULE 2 (history): ${rule2 ? 'PASS' : 'FAIL'}`,
   );
-  return rule1 && rule2 ? 0 : 1;
+  return control.ok && rule1 && rule2 ? 0 : 1;
 }
 
 if (process.argv[1]?.includes('probe-text-tools')) {
