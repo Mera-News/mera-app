@@ -206,8 +206,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 return;
             }
             if (factCount === 0) {
-                // Next sits beside the input, so the keyboard can be up: the guard
-                // sits near the bottom and would land behind it.
+                // The keyboard can be up from the chat input: the guard sits near
+                // the bottom and would land behind it.
                 Keyboard.dismiss();
                 setGuard('no-facts');
                 return;
@@ -244,9 +244,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                         <MeraLogo size={28} animated />
                         <RNText style={[styles.name, { color: colors.ink }]}>Mera</RNText>
                     </View>
-                    <RNText style={[styles.step, { color: colors.ink3 }]}>
-                        {t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
-                    </RNText>
+                    <View style={styles.who}>
+                        <RNText style={[styles.step, { color: colors.ink3 }]}>
+                            {t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
+                        </RNText>
+                        {nextButton}
+                    </View>
                 </View>
 
                 {currentStep === 0 ? (
@@ -259,7 +262,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                         <View style={styles.flex}>
                             <PersonaUpdateChatStep
                                 userId={userPreferences.userId}
-                                composerTrailing={nextButton}
                                 composerPlaceholder={t('onboarding.composerPlaceholder')}
                             />
                         </View>
@@ -281,7 +283,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                                 enableRequest={enableRequest}
                             />
                         </View>
-                        <View style={styles.footer}>{nextButton}</View>
                     </>
                 )}
 
@@ -351,8 +352,7 @@ const styles = StyleSheet.create({
     remind: { paddingHorizontal: 20, paddingTop: 16, gap: 10, marginBottom: 12 },
     title: { fontSize: 26, fontWeight: '700' },
     body: { fontSize: 15, lineHeight: 22 },
-    footer: { paddingHorizontal: 20, paddingBottom: 12 },
-    next: { height: 44, paddingHorizontal: 20 },
+    next: { height: 36, paddingHorizontal: 16 },
     guard: { position: 'absolute', left: 16, right: 16 },
 });
 
