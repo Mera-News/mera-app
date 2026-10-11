@@ -938,7 +938,6 @@
     "removeFailed": "Không thể xóa bài này khỏi câu chuyện. Hãy thử lại.",
     "emptyBodyMera": "Hãy theo dõi một câu chuyện đang diễn biến và Mera sẽ cập nhật nó ở đây. Chạm vào nút Mera để theo dõi.",
     "followedSince": "Theo dõi từ {{date}}",
-    "headlinesByMera": "Tiêu đề do Mera viết",
     "learnAbout": "Tìm hiểu về Câu chuyện",
     "nextNote": "Mera thêm các đưa tin mới ở đây khi câu chuyện phát triển.",
     "stopFollowing": "Ngừng theo dõi",
@@ -1614,7 +1613,7 @@
             "steps": {
               "0": "Bạn nói chuyện với Mera và nó nghe những phần bền vững.",
               "1": "Bạn nói rõ ràng: 'Tôi chuyển đến Lisbon.'",
-              "2": "Bạn tự thêm hoặc xóa chúng trong tab Hồ sơ."
+              "2": "Bạn tự thêm hoặc xóa chúng trong tab Bạn."
             }
           },
           "to-topics": {
@@ -1639,7 +1638,7 @@
           },
           "importance": {
             "headline": "Một số thông tin quan trọng hơn những thông tin khác",
-            "body": "Trong tab Hồ sơ, mở các thông tin về bạn và chạm vào bất kỳ điều gì Mera biết để tăng hoặc giảm mức quan trọng, viết lại hoặc xóa nó. Giảm xuống nhẹ nhàng hơn xóa, và thường là cách thử đầu tiên tốt hơn.",
+            "body": "Trong tab Bạn, mở các thông tin về bạn và chạm vào bất kỳ điều gì Mera biết để tăng hoặc giảm mức quan trọng, viết lại hoặc xóa nó. Giảm xuống nhẹ nhàng hơn xóa, và thường là cách thử đầu tiên tốt hơn.",
             "ask": "Làm thế nào để tôi thay đổi mức độ quan trọng của một trong những thông tin của tôi?"
           },
           "your-profile": {
@@ -1901,7 +1900,7 @@
               },
               "settings": {
                 "label": "Cài đặt",
-                "feedback": "Không phải. Cài đặt là một tab riêng và không có quốc gia ở đó."
+                "feedback": "Không phải. Cài đặt là một trang của tab Bạn và không có quốc gia ở đó."
               }
             }
           },
@@ -1924,7 +1923,7 @@
             "headline": "Nơi các nguồn sống",
             "body": "Một màn hình cho mọi nguồn báo bạn đã điều chỉnh.",
             "steps": {
-              "0": "Tab Hồ sơ, rồi Nguồn.",
+              "0": "Tab Bạn, rồi Nguồn.",
               "1": "\"Ít hơn từ\" trong menu ••• của một bài viết có hiệu lực ngay, kèm Hoàn tác, và nguồn báo đó sẽ hiện trong mục Đã điều chỉnh."
             },
             "ask": "Tôi quản lý những nguồn nào tôi thấy ở đâu?"
@@ -2094,7 +2093,7 @@
             "headline": "Nơi các công tắc",
             "body": "Chỉ vài lần chạm từ bất kỳ đâu trong ứng dụng.",
             "steps": {
-              "0": "Tab Cài đặt.",
+              "0": "Tab Bạn, rồi Cài đặt.",
               "1": "Mera Protocol."
             },
             "ask": "Mera Protocol ở đâu?"

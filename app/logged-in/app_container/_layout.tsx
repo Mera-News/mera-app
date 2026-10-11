@@ -41,12 +41,11 @@ export default function AppLayout() {
         feed: useTabDot('feed'),
         world: useTabDot('world'),
         library: useTabDot('library'),
-        profile: useTabDot('profile'),
         you: useTabDot('you'),
     };
     // The item label is the only thing VoiceOver reads (a blank badge adds
     // nothing), so a dot is spoken there.
-    const label = (key: 'tabs.deck' | 'tabs.world' | 'tabs.library' | 'tabs.profile' | 'tabs.settings', on: boolean) =>
+    const label = (key: 'tabs.deck' | 'tabs.world' | 'tabs.library' | 'tabs.you', on: boolean) =>
         on ? t('nav.tabNewA11y', { label: t(key) }) : t(key);
 
     // The Feed's dot (everything new): its own (first stories landed while
@@ -85,8 +84,7 @@ export default function AppLayout() {
                     badgeBackgroundColor={colors.accent}
                     minimizeBehavior="onScrollDown"
                 >
-                    {/* Five tabs, Feed, World, Library, Profile, Settings (the `you`
-                        folder), each a folder
+                    {/* navx: four tabs, Feed, World, Library, You, each a folder
                         with its own Stack. `disableScrollToTop` because the
                         tab's visible page handles a re-tap in JS (TabPages +
                         nav/page-scroll: scroll up, then refresh where the page
@@ -124,24 +122,15 @@ export default function AppLayout() {
                         <Icon sf={{ default: 'books.vertical', selected: 'books.vertical' }} src={<VectorIcon family={MaterialIcons} name="menu-book" />} />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger
-                        name="profile"
-                        disableScrollToTop
-                        unstable_nativeProps={tabA11y(label('tabs.profile', dot.profile))}
-                    >
-                        <Label hidden>{t('tabs.profile')}</Label>
-                        <Badge hidden={!dot.profile} />
-                        <Icon sf={{ default: 'person', selected: 'person' }} src={<VectorIcon family={MaterialIcons} name="person-outline" />} />
-                    </NativeTabs.Trigger>
-                    <NativeTabs.Trigger
                         name="you"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(label('tabs.settings', dot.you))}
+                        unstable_nativeProps={tabA11y(label('tabs.you', dot.you))}
                     >
-                        <Label hidden>{t('tabs.settings')}</Label>
+                        <Label hidden>{t('tabs.you')}</Label>
                         <Badge hidden={!dot.you} />
-                        {/* The `you` folder is Settings (owner): the gear, an SF Symbol and the
-                            Material font glyph, so no native asset (OTA-able). */}
-                        <Icon sf={{ default: 'gearshape', selected: 'gearshape' }} src={<VectorIcon family={MaterialIcons} name="settings" />} />
+                        {/* You holds Profile and Settings; its icon is the person (owner).
+                            An SF Symbol and the Material font glyph, so no native asset (OTA-able). */}
+                        <Icon sf={{ default: 'person', selected: 'person' }} src={<VectorIcon family={MaterialIcons} name="person-outline" />} />
                     </NativeTabs.Trigger>
                 </NativeTabs>
             </ErrorBoundary>

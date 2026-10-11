@@ -939,7 +939,6 @@
     "removeFailed": "Der Artikel konnte nicht aus der Geschichte entfernt werden. Versuch es noch einmal.",
     "emptyBodyMera": "Folge einer sich entwickelnden Geschichte und Mera hält sie hier aktuell. Tippe auf die Mera-Taste, um einer zu folgen.",
     "followedSince": "Gefolgt seit {{date}}",
-    "headlinesByMera": "Schlagzeilen von Mera geschrieben",
     "learnAbout": "Mehr über Geschichten erfahren",
     "nextNote": "Mera fügt hier neue Berichterstattung hinzu, sobald sich die Geschichte entwickelt.",
     "stopFollowing": "Nicht mehr folgen",
@@ -1616,7 +1615,7 @@
             "steps": {
               "0": "Du sprichst mit Mera und es hört auf die dauerhaften Bits.",
               "1": "Du sagst es offen: 'Ich bin nach Lissabon gezogen.'",
-              "2": "Du fügst sie im Tab Profil selbst hinzu oder entfernst sie."
+              "2": "Du fügst sie im Tab Du selbst hinzu oder entfernst sie."
             }
           },
           "to-topics": {
@@ -1641,7 +1640,7 @@
           },
           "importance": {
             "headline": "Einige Fakten sind wichtiger als andere",
-            "body": "Öffne im Tab Profil deine Fakten und tippe auf alles, was Mera über dich weiß, um zu ändern, wie stark es zählt, es umzuformulieren oder zu entfernen. Etwas herunterzustufen ist sanfter als Löschen und meist der bessere erste Schritt.",
+            "body": "Öffne im Tab Du deine Fakten und tippe auf alles, was Mera über dich weiß, um zu ändern, wie stark es zählt, es umzuformulieren oder zu entfernen. Etwas herunterzustufen ist sanfter als Löschen und meist der bessere erste Schritt.",
             "ask": "Wie ändere ich, wie wichtig einer meiner Fakten ist?"
           },
           "your-profile": {
@@ -1903,7 +1902,7 @@
               },
               "settings": {
                 "label": "Einstellungen",
-                "feedback": "Nein. Einstellungen ist ein eigener Tab, und Länder findest du dort nicht."
+                "feedback": "Nein. Einstellungen ist eine Seite im Tab Du, und Länder findest du dort nicht."
               }
             }
           },
@@ -1926,7 +1925,7 @@
             "headline": "Wo Quellen leben",
             "body": "Eine Übersicht für alle Quellen, die du angepasst hast.",
             "steps": {
-              "0": "Der Tab Profil, dann Quellen.",
+              "0": "Der Tab Du, dann Quellen.",
               "1": "„Weniger von“ im Menü ••• eines Artikels wirkt sofort, mit Rückgängig, und die Quelle erscheint dann unter Angepasst."
             },
             "ask": "Wo verwalte ich, welche Quellen ich sehe?"
@@ -2096,7 +2095,7 @@
             "headline": "Wo die Schalter sind",
             "body": "Ein paar Taps von überall in der App.",
             "steps": {
-              "0": "Der Tab Einstellungen.",
+              "0": "Der Tab Du, dann Einstellungen.",
               "1": "Mera Protocol."
             },
             "ask": "Wo ist der Mera Protocol-Bildschirm?"

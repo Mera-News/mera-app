@@ -963,7 +963,6 @@
     "removeFailed": "Nie udało się usunąć tego artykułu z historii. Spróbuj ponownie.",
     "emptyBodyMera": "Śledź rozwijającą się historię, a Mera będzie ją tutaj aktualizować. Stuknij przycisk Mera, aby jakąś śledzić.",
     "followedSince": "Obserwowana od {{date}}",
-    "headlinesByMera": "Nagłówki pisane przez Mera",
     "learnAbout": "Dowiedz się o Historiach",
     "nextNote": "Mera dodaje tu nowe doniesienia w miarę rozwoju historii.",
     "stopFollowing": "Przestań obserwować",
@@ -1654,7 +1653,7 @@
             "steps": {
               "0": "Rozmawiam z Mera i to słyszy trwałe bity.",
               "1": "Powiadomiasz bezpośrednio: 'Przeniosłem się do Lizbony.'",
-              "2": "Dodajesz je lub usuwasz sam na karcie Profil."
+              "2": "Dodajesz je lub usuwasz sam na karcie Ty."
             }
           },
           "to-topics": {
@@ -1679,7 +1678,7 @@
           },
           "importance": {
             "headline": "Niektóre fakty są ważniejsze niż inne",
-            "body": "Na karcie Profil otwórz swoje fakty i dotknij wszystkiego, co Mera o tobie wie, aby zmienić, jak bardzo się liczy, przeformułować to albo usunąć. Zmniejszenie wagi jest łagodniejsze niż usunięcie i zwykle to lepszy pierwszy krok.",
+            "body": "Na karcie Ty otwórz swoje fakty i dotknij wszystkiego, co Mera o tobie wie, aby zmienić, jak bardzo się liczy, przeformułować to albo usunąć. Zmniejszenie wagi jest łagodniejsze niż usunięcie i zwykle to lepszy pierwszy krok.",
             "ask": "Jak zmienić, jak ważny jest jeden z moich faktów?"
           },
           "your-profile": {
@@ -1941,7 +1940,7 @@
               },
               "settings": {
                 "label": "Ustawienia",
-                "feedback": "Nie. Ustawienia to osobna karta, a krajów tam nie ma."
+                "feedback": "Nie. Ustawienia to strona karty Ty, a krajów tam nie ma."
               }
             }
           },
@@ -1964,7 +1963,7 @@
             "headline": "Gdzie żyją źródła",
             "body": "Jeden ekran dla każdego wydawcy, którego zmieniłeś.",
             "steps": {
-              "0": "Karta Profil, potem Źródła.",
+              "0": "Karta Ty, potem Źródła.",
               "1": "“Mniej z” w menu ••• artykułu działa od razu, z opcją Cofnij, a wydawca pojawia się potem w sekcji Zmienione."
             },
             "ask": "Gdzie zarządzam, które źródła widzę?"
@@ -2134,7 +2133,7 @@
             "headline": "Gdzie są przełączniki",
             "body": "Kilka dotknięć z dowolnego miejsca w aplikacji.",
             "steps": {
-              "0": "Karta Ustawienia.",
+              "0": "Karta Ty, potem Ustawienia.",
               "1": "Mera Protocol."
             },
             "ask": "Gdzie jest ekran Mera Protocol?"

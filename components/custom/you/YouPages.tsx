@@ -10,7 +10,7 @@ import Animated from 'react-native-reanimated';
 import ProfileHub from './ProfileHub';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
-/** Settings: app settings only, plan card first. Ends above the tab bar
+/** You > Settings: app settings only, plan card first. Ends above the tab bar
  *  and the Mera button. */
 const SettingsPage: React.FC<{ readonly header: PageHeaderBinding }> = ({ header }) => {
     const endClearance = useListEndClearance();
@@ -37,34 +37,39 @@ const ICONS: Readonly<Record<string, NonNullable<PagePill['icon']>>> = {
     settings: 'settings',
 };
 
-/** One tab's page set as pills: its fixed order from `DEFAULT_PAGE_ORDER`. */
-function usePills(tab: 'profile' | 'you'): PagePill[] {
+/**
+ * The You tab: Profile and Settings, a fixed group (the inbox is Library's). Only World
+ * is arranged, so a stored `nav_order_you` is never read here. The page to
+ * open (an old /settings link) arrives through `navigateToPage`'s one-shot
+ * request, never a URL param.
+ */
+export function YouPages() {
     const { t } = useTranslation();
     // Registry label keys are computed, so they go through an untyped t.
     const tAny = useMemo(() => t as unknown as (key: string) => string, [t]);
-    return useMemo(
-        () => DEFAULT_PAGE_ORDER[tab].map((id) => ({ id, label: tAny(pageMeta(id).labelKey), icon: ICONS[id] })),
-        [tab, tAny],
-    );
-}
 
-/** The Profile tab: the Profile page alone (owner: Profile is its own tab again). */
-export function ProfilePages() {
-    const pills = usePills('profile');
-    const renderPage = useCallback(
-        ({ active, header }: PageRenderProps) => <ProfileHub header={header} active={active} />,
-        [],
+    const pills: PagePill[] = useMemo(
+        () =>
+            DEFAULT_PAGE_ORDER.you.map((id) => ({
+                id,
+                label: tAny(pageMeta(id).labelKey),
+                icon: ICONS[id],
+            })),
+        [tAny],
     );
-    return <TabPages tab="profile" pages={pills} renderPage={renderPage} testID="profile-pages" />;
-}
 
-/**
- * The Settings tab (the `you` folder, named before Profile left it): the
- * Settings page alone. The page to open (an old /settings link) arrives
- * through `navigateToPage`'s one-shot request, never a URL param.
- */
-export function YouPages() {
-    const pills = usePills('you');
-    const renderPage = useCallback(({ header }: PageRenderProps) => <SettingsPage header={header} />, []);
+    const renderPage = useCallback(({ pageId, active, header }: PageRenderProps) => {
+        switch (pageId) {
+            case 'profile':
+                return <ProfileHub header={header} active={active} />;
+            case 'settings':
+                return <SettingsPage header={header} />;
+            default:
+                return null;
+        }
+    }, []);
+
+    // Icons and names (the default fit rule): Profile the person, Settings the
+    // gear, as on the You tab icon.
     return <TabPages tab="you" pages={pills} renderPage={renderPage} testID="you-pages" />;
 }

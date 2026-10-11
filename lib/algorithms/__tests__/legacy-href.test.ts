@@ -4,7 +4,8 @@ const TABS = '/logged-in/app_container';
 
 describe('normalizeLegacyHref', () => {
   it.each([
-    // The old tabs (Profile is a tab again, so it is left alone below).
+    // The four old tabs.
+    [`${TABS}/profile`, { pathname: `${TABS}/you`, page: 'profile' }],
     [`${TABS}/for_you`, { pathname: `${TABS}/feed` }],
     [`${TABS}/around`, { pathname: `${TABS}/world` }],
     [`${TABS}/settings`, { pathname: `${TABS}/you`, page: 'settings' }],
@@ -15,13 +16,13 @@ describe('normalizeLegacyHref', () => {
     ['/logged-in/saved-suggestions', { pathname: `${TABS}/library`, page: 'saved' }],
     ['/logged-in/visited-publications', { pathname: `${TABS}/library`, page: 'visited' }],
     ['/logged-in/notifications', { pathname: `${TABS}/feed`, page: 'notifications' }],
-    ['/logged-in/profile-advanced', { pathname: `${TABS}/profile` }],
-    ['/logged-in/config-panel', { pathname: `${TABS}/profile` }],
-    // Profile's screens moved out of the You (Settings) stack; Tidy up is the inbox.
-    [`${TABS}/you/sources`, { pathname: `${TABS}/profile/sources` }],
+    ['/logged-in/profile-advanced', { pathname: `${TABS}/you`, page: 'profile' }],
+    ['/logged-in/config-panel', { pathname: `${TABS}/you`, page: 'profile' }],
+    // The short-lived Profile tab's screens are back in the You stack; Tidy up is the inbox.
+    [`${TABS}/profile/sources`, { pathname: `${TABS}/you/sources` }],
     [
-      `${TABS}/you/fact?factId=f1&statement=F1&x=y`,
-      { pathname: `${TABS}/profile/fact`, params: { factId: 'f1', statement: 'F1' } },
+      `${TABS}/profile/fact?factId=f1&statement=F1&x=y`,
+      { pathname: `${TABS}/you/fact`, params: { factId: 'f1', statement: 'F1' } },
     ],
     [`${TABS}/you/hygiene-review`, { pathname: `${TABS}/feed`, page: 'notifications' }],
     ['/logged-in/hygiene-review', { pathname: `${TABS}/feed`, page: 'notifications' }],
@@ -49,7 +50,7 @@ describe('normalizeLegacyHref', () => {
     expect(normalizeLegacyHref(href)).toEqual({ pathname: `${TABS}/world` });
   });
 
-  it.each([`${TABS}/feed`, `${TABS}/profile`, `${TABS}/you/backup`, '/logged-in/article-detail?articleId=a1', '/logged-in/fact-feed-x', '', '/'])(
+  it.each([`${TABS}/feed`, `${TABS}/you/sources`, `${TABS}/you/backup`, '/logged-in/article-detail?articleId=a1', '/logged-in/fact-feed-x', '', '/'])(
     'leaves %p alone',
     (href) => {
       expect(normalizeLegacyHref(href)).toBeNull();

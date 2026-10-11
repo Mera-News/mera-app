@@ -939,7 +939,6 @@
     "removeFailed": "Impossibile rimuovere questo articolo dalla storia. Riprova.",
     "emptyBodyMera": "Segui una storia in evoluzione e Mera la tiene aggiornata qui. Tocca il pulsante di Mera per seguirne una.",
     "followedSince": "Seguita dal {{date}}",
-    "headlinesByMera": "Titoli scritti da Mera",
     "learnAbout": "Scopri le Storie",
     "nextNote": "Mera aggiunge qui nuovi articoli man mano che la storia si sviluppa.",
     "stopFollowing": "Smetti di seguire",
@@ -1616,7 +1615,7 @@
             "steps": {
               "0": "Tu parli a Mera e ascolta le parti durevoli.",
               "1": "Tu lo dici esplicitamente: \"Mi sono trasferito a Lisbona.\"",
-              "2": "Li aggiungi o li rimuovi tu stesso nella scheda Profilo."
+              "2": "Li aggiungi o li rimuovi tu stesso nella scheda Tu."
             }
           },
           "to-topics": {
@@ -1641,7 +1640,7 @@
           },
           "importance": {
             "headline": "Alcuni fatti importano più di altri",
-            "body": "Nella scheda Profilo, apri i tuoi fatti e tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularla o rimuoverla. Abbassarla è più delicato che eliminarla, e di solito è la prima mossa migliore.",
+            "body": "Nella scheda Tu, apri i tuoi fatti e tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularla o rimuoverla. Abbassarla è più delicato che eliminarla, e di solito è la prima mossa migliore.",
             "ask": "Come cambio quanto importante è uno dei miei fatti?"
           },
           "your-profile": {
@@ -1903,7 +1902,7 @@
               },
               "settings": {
                 "label": "Impostazioni",
-                "feedback": "No. Impostazioni è una scheda a sé, e i paesi non sono lì."
+                "feedback": "No. Impostazioni è una pagina della scheda Tu, e i paesi non sono lì."
               }
             }
           },
@@ -1926,7 +1925,7 @@
             "headline": "Dove vivono le fonti",
             "body": "Una sola schermata per ogni testata che hai regolato.",
             "steps": {
-              "0": "La scheda Profilo, poi Fonti.",
+              "0": "La scheda Tu, poi Fonti.",
               "1": "«Meno da» nel menu ••• di un articolo ha effetto subito, con Annulla, e la testata compare poi in Modificate."
             },
             "ask": "Dove gestisco quali fonti vedo?"
@@ -2096,7 +2095,7 @@
             "headline": "Dove sono gli interruttori",
             "body": "A pochi tocchi da qualsiasi punto dell'app.",
             "steps": {
-              "0": "La scheda Impostazioni.",
+              "0": "La scheda Tu, poi Impostazioni.",
               "1": "Mera Protocol."
             },
             "ask": "Dove è la schermata di Mera Protocol?"

@@ -56,7 +56,7 @@ describe('applyPageOrder against DEFAULT_PAGE_ORDER', () => {
   });
 
   it('an empty stored list reads as the defaults', () => {
-    expect(applyPageOrder([], DEFAULT_PAGE_ORDER.you)).toEqual(['settings']);
+    expect(applyPageOrder([], DEFAULT_PAGE_ORDER.you)).toEqual(['profile', 'settings']);
   });
 
   it.each(['feed', 'library', 'you'] as const)('a seeded nav_order_%s row reads through parsePageOrder and applyPageOrder', async (tab) => {

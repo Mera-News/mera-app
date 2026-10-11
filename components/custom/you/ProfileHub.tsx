@@ -20,10 +20,12 @@ import { useActiveTopicTexts, useHubFacts, useHubPlaces } from './use-hub-data';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 
-/** Screens pushed inside the Profile tab's stack. */
-type ProfileScreen = 'facts' | 'locations' | 'sources' | 'activity';
-const openProfile = (screen: ProfileScreen) => router.push(`/logged-in/app_container/profile/${screen}` as Href);
+/** Screens pushed inside the You (Settings) tab's stack. */
+type YouScreen = 'facts' | 'locations' | 'sources' | 'activity';
+const openYou = (screen: YouScreen) => router.push(`/logged-in/app_container/you/${screen}` as Href);
 
+/** Facts shown before View all (owner: 4); places stay at 2. */
+const FACTS_SHOWN = 4;
 const SHOWN = 2;
 
 const FactRow: React.FC<{ readonly fact: Fact }> = ({ fact }) => {
@@ -48,7 +50,7 @@ interface ProfileHubProps {
 }
 
 /**
- * The Profile tab: what Mera knows about you, a few of each with View all.
+ * You > Profile: what Mera knows about you, a few of each with View all.
  * Facts and Places always render (their empty lines say how they fill).
  * Tidy-up suggestions are cards in Feed > Notifications, not here.
  *
@@ -102,12 +104,12 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
                 {facts && facts.length === 0 ? (
                     <Row testID="profile-facts-empty" title={t('you.profile.factsEmpty')} titleColor={colors.ink2} />
                 ) : null}
-                {(facts ?? []).slice(0, SHOWN).map((fact) => <FactRow key={fact.id} fact={fact} />)}
+                {(facts ?? []).slice(0, FACTS_SHOWN).map((fact) => <FactRow key={fact.id} fact={fact} />)}
                 {facts && facts.length > 0 ? (
                     <ViewAll
                         testID="profile-facts-view-all"
                         label={t('you.profile.viewAll', { count: facts.length })}
-                        onPress={() => openProfile('facts')}
+                        onPress={() => openYou('facts')}
                     />
                 ) : null}
             </Group>
@@ -122,7 +124,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
                         trailing={
                             <Text style={{ color: colors.accentText, fontSize: 14, fontWeight: '600' }}>{t('you.profile.addCity')}</Text>
                         }
-                        onPress={() => openProfile('locations')}
+                        onPress={() => openYou('locations')}
                     />
                 ) : null}
                 {(places ?? []).slice(0, SHOWN).map((loc) => {
@@ -134,7 +136,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
                             title={composeLocationLabel(loc)}
                             titleLines={1}
                             trailing={<Badge icon={meta.icon} label={t(`locations.roles.${meta.labelKey}`)} />}
-                            onPress={() => openProfile('locations')}
+                            onPress={() => openYou('locations')}
                             hideChevron
                         />
                     );
@@ -143,7 +145,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
                     <ViewAll
                         testID="profile-places-view-all"
                         label={t('you.profile.viewAll', { count: places.length })}
-                        onPress={() => openProfile('locations')}
+                        onPress={() => openYou('locations')}
                     />
                 ) : null}
             </Group>
@@ -154,9 +156,9 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
                     title={t('you.profile.sources')}
                     value={sourceCount > 0 ? t('you.profile.adjusted', { count: sourceCount }) : undefined}
                     subtitle={sourceCount > 0 ? undefined : t('you.profile.sourcesEmpty')}
-                    onPress={() => openProfile('sources')}
+                    onPress={() => openYou('sources')}
                 />
-                <Row testID="profile-row-changes" title={t('you.profile.changes')} onPress={() => openProfile('activity')} />
+                <Row testID="profile-row-changes" title={t('you.profile.changes')} onPress={() => openYou('activity')} />
             </Group>
         </Animated.ScrollView>
     );

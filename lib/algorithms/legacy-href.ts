@@ -32,26 +32,27 @@ const pick = (params: Record<string, string>, keys: readonly string[]): Record<s
 };
 
 const RULES: Readonly<Record<string, Rule>> = {
-  // The old tabs (`profile` is a tab again, so it is no longer rewritten).
+  // The four old tabs.
   [`${TABS}/for_you`]: () => ({ pathname: `${TABS}/feed` }),
   [`${TABS}/around`]: () => ({ pathname: `${TABS}/world` }),
+  [`${TABS}/profile`]: () => ({ pathname: `${TABS}/you`, page: 'profile' }),
   [`${TABS}/settings`]: () => ({ pathname: `${TABS}/you`, page: 'settings' }),
   // The six root stubs.
   '/logged-in/share-stats': () => ({ pathname: `${TABS}/library`, page: 'stats' }),
   '/logged-in/saved-suggestions': () => ({ pathname: `${TABS}/library`, page: 'saved' }),
   '/logged-in/visited-publications': () => ({ pathname: `${TABS}/library`, page: 'visited' }),
   '/logged-in/notifications': () => ({ pathname: `${TABS}/feed`, page: 'notifications' }),
-  '/logged-in/profile-advanced': () => ({ pathname: `${TABS}/profile` }),
-  '/logged-in/config-panel': () => ({ pathname: `${TABS}/profile` }),
+  '/logged-in/profile-advanced': () => ({ pathname: `${TABS}/you`, page: 'profile' }),
+  '/logged-in/config-panel': () => ({ pathname: `${TABS}/you`, page: 'profile' }),
+  // Tidy up's suggestions live in the inbox now.
   '/logged-in/hygiene-review': () => ({ pathname: `${TABS}/feed`, page: 'notifications' }),
-  // Profile's screens, before Profile was its own tab again. Tidy up's
-  // suggestions live in the inbox now.
-  [`${TABS}/you/facts`]: () => ({ pathname: `${TABS}/profile/facts` }),
-  [`${TABS}/you/fact`]: (p) => ({ pathname: `${TABS}/profile/fact`, params: pick(p, ['factId', 'statement']) }),
-  [`${TABS}/you/locations`]: () => ({ pathname: `${TABS}/profile/locations` }),
-  [`${TABS}/you/sources`]: () => ({ pathname: `${TABS}/profile/sources` }),
-  [`${TABS}/you/activity`]: () => ({ pathname: `${TABS}/profile/activity` }),
   [`${TABS}/you/hygiene-review`]: () => ({ pathname: `${TABS}/feed`, page: 'notifications' }),
+  // A short-lived Profile tab (OTA 0aa67414) held these; they are in the You stack again.
+  [`${TABS}/profile/facts`]: () => ({ pathname: `${TABS}/you/facts` }),
+  [`${TABS}/profile/fact`]: (p) => ({ pathname: `${TABS}/you/fact`, params: pick(p, ['factId', 'statement']) }),
+  [`${TABS}/profile/locations`]: () => ({ pathname: `${TABS}/you/locations` }),
+  [`${TABS}/profile/sources`]: () => ({ pathname: `${TABS}/you/sources` }),
+  [`${TABS}/profile/activity`]: () => ({ pathname: `${TABS}/you/activity` }),
   '/logged-in/fact-feed': (p) => ({
     pathname: `${TABS}/feed/interest`,
     params: pick(p, ['factId', 'statement', 'via']),

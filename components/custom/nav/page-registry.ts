@@ -1,4 +1,4 @@
-// The five-tab shell's page table: which tab each page lives in, its pill
+// The four-tab shell's page table: which tab each page lives in, its pill
 // label and what the ? beside its title explains.
 //
 // RN-free and i18n-free on purpose: the Mera button, the startup gate and
@@ -47,7 +47,7 @@ export const PAGE_SIDE_INSET = 14;
 export const PAGE_TITLE_GAP = 10;
 
 /** Bottom-tab order. Also the cross-tab swipe order. */
-export const TAB_ORDER: readonly TabId[] = ['feed', 'world', 'library', 'profile', 'you'];
+export const TAB_ORDER: readonly TabId[] = ['feed', 'world', 'library', 'you'];
 
 /** A key of the app's typed dictionary (typed off en.json), so pages can
  *  `t(meta.labelKey)` with no cast. */
@@ -106,7 +106,9 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
     keepMounted: false,
     explainer: {
       titleKey: 'sources.topHeadlines',
-      paragraphKeys: ['world.explainer.top1', 'world.explainer.window', 'world.explainer.same'],
+      // 'world.explainer.window' (the time switch) is out while WorldPages' window chip is
+      // commented out; put it back with the chip.
+      paragraphKeys: ['world.explainer.top1', 'world.explainer.same'],
       chapter: 'explore',
     },
   },
@@ -114,7 +116,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
   checks: { tab: 'library', labelKey: 'factCheck.dashboard.listTitle', keepMounted: false, explainer: null },
   visited: { tab: 'library', labelKey: 'publicationPage.history', keepMounted: false, explainer: null },
   stats: { tab: 'library', labelKey: 'nav.page.stats', keepMounted: false, explainer: null },
-  profile: { tab: 'profile', labelKey: 'tabs.profile', keepMounted: false, explainer: null },
+  profile: { tab: 'you', labelKey: 'tabs.profile', keepMounted: false, explainer: null },
   settings: { tab: 'you', labelKey: 'tabs.settings', keepMounted: false, explainer: null },
   // The inbox (NotificationsScreen embedded), the Feed tab's last page (owner:
   // the Feed is everything new). Not `settings:notifications`, the
@@ -133,7 +135,8 @@ const COUNTRY_PAGE_META: PageMeta = {
   ...PAGE_META.world,
   explainer: {
     titleKey: 'sources.topHeadlines',
-    paragraphKeys: ['world.explainer.country1', 'world.explainer.window', 'world.explainer.countrySame'],
+    // 'world.explainer.window' returns with the window chip (see PAGE_META.world).
+    paragraphKeys: ['world.explainer.country1', 'world.explainer.countrySame'],
     chapter: 'explore',
   },
 };
@@ -143,9 +146,7 @@ export const TAB_LABEL_KEYS: Readonly<Record<TabId, I18nKey>> = {
   feed: 'tabs.deck',
   world: 'tabs.world',
   library: 'tabs.library',
-  profile: 'tabs.profile',
-  // The `you` tab is Settings (its folder name predates the Profile tab).
-  you: 'tabs.settings',
+  you: 'tabs.you',
 };
 
 const COUNTRY_PREFIX = 'country:';
@@ -194,9 +195,11 @@ export type SurfaceId =
   | 'search'
   | 'article';
 
-const PROFILE_STACK_SURFACES: ReadonlySet<string> = new Set(['facts', 'locations', 'sources', 'activity']);
-
 const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
+  'facts',
+  'locations',
+  'sources',
+  'activity',
   'settings:display',
   'settings:mera-protocol',
   'settings:notifications',
@@ -209,7 +212,6 @@ const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
 export function tabForSurface(surface: SurfaceId): TabId | null {
   if (surface === 'search' || surface === 'article') return null;
   if (surface.startsWith('interest:')) return 'feed';
-  if (PROFILE_STACK_SURFACES.has(surface)) return 'profile';
   if (YOU_STACK_SURFACES.has(surface)) return 'you';
   return tabOfPage(surface as PageId);
 }

@@ -939,7 +939,6 @@
     "removeFailed": "Não foi possível remover este artigo da história. Tente de novo.",
     "emptyBodyMera": "Acompanhe uma história em andamento e a Mera a mantém atualizada aqui. Toque no botão da Mera para acompanhar uma.",
     "followedSince": "Seguindo desde {{date}}",
-    "headlinesByMera": "Manchetes escritas pela Mera",
     "learnAbout": "Saiba mais sobre Histórias",
     "nextNote": "A Mera adiciona novas coberturas aqui conforme a história avança.",
     "stopFollowing": "Deixar de seguir",
@@ -1616,7 +1615,7 @@
             "steps": {
               "0": "Você fala com Mera e ele ouve as partes duráveis.",
               "1": "Você diz claramente: 'Mudei para Lisboa.'",
-              "2": "Você mesmo adiciona ou remove na aba Perfil."
+              "2": "Você mesmo adiciona ou remove na aba Você."
             }
           },
           "to-topics": {
@@ -1641,7 +1640,7 @@
           },
           "importance": {
             "headline": "Alguns fatos importam mais que outros",
-            "body": "Na aba Perfil, abra seus fatos e toque em qualquer coisa que o Mera sabe sobre você para aumentar ou diminuir o peso dela, reescrever ou remover. Diminuir é mais suave que apagar, e geralmente é a melhor primeira opção.",
+            "body": "Na aba Você, abra seus fatos e toque em qualquer coisa que o Mera sabe sobre você para aumentar ou diminuir o peso dela, reescrever ou remover. Diminuir é mais suave que apagar, e geralmente é a melhor primeira opção.",
             "ask": "Como mudo o quanto um fato meu importa?"
           },
           "your-profile": {
@@ -1903,7 +1902,7 @@
               },
               "settings": {
                 "label": "Configurações",
-                "feedback": "Não. Configurações é uma aba própria, e os países não ficam lá."
+                "feedback": "Não. Configurações é uma página da aba Você, e os países não ficam lá."
               }
             }
           },
@@ -1926,7 +1925,7 @@
             "headline": "Onde fontes vivem",
             "body": "Uma tela para todas as publicações que você ajustou.",
             "steps": {
-              "0": "A aba Perfil, depois Fontes.",
+              "0": "A aba Você, depois Fontes.",
               "1": "«Menos de» no menu ••• de um artigo vale na hora, com Desfazer, e a publicação passa a aparecer em Ajustadas."
             },
             "ask": "Onde eu gerencio quais fontes vejo?"
@@ -2096,7 +2095,7 @@
             "headline": "Onde os switches estão",
             "body": "A poucos toques de qualquer lugar do app.",
             "steps": {
-              "0": "A aba Configurações.",
+              "0": "A aba Você, depois Configurações.",
               "1": "Mera Protocol."
             },
             "ask": "Onde fica a tela do Mera Protocol?"

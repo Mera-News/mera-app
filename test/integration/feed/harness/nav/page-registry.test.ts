@@ -32,11 +32,10 @@ describe('page-registry', () => {
     }
   });
 
-  it('keeps the inbox last in the Feed, Library static, Profile and Settings one page each', () => {
+  it('keeps the inbox last in the Feed, Library static and Settings in You', () => {
     expect(DEFAULT_PAGE_ORDER.feed).toEqual(['feed', 'stories', 'notifications']);
     expect(DEFAULT_PAGE_ORDER.library).toEqual(['saved', 'checks', 'visited', 'stats']);
-    expect(DEFAULT_PAGE_ORDER.profile).toEqual(['profile']);
-    expect(DEFAULT_PAGE_ORDER.you).toEqual(['settings']);
+    expect(DEFAULT_PAGE_ORDER.you).toEqual(['profile', 'settings']);
     expect(tabOfPage('notifications')).toBe('feed');
   });
 
@@ -59,15 +58,14 @@ describe('page-registry', () => {
   it('maps surfaces to tabs, Search to none', () => {
     expect(tabForSurface('search')).toBeNull();
     expect(tabForSurface('interest:abc')).toBe('feed');
-    expect(tabForSurface('sources')).toBe('profile');
-    expect(tabForSurface('facts')).toBe('profile');
+    expect(tabForSurface('sources')).toBe('you');
     expect(tabForSurface('settings:notifications')).toBe('you');
     expect(tabForSurface('settings:backup')).toBe('you');
     expect(tabForSurface('checks')).toBe('library');
     expect(tabForSurface('country:NL')).toBe('world');
   });
 
-  it('orders tabs Feed, World, Library, Profile, Settings', () => {
-    expect(TAB_ORDER).toEqual(['feed', 'world', 'library', 'profile', 'you']);
+  it('orders tabs Feed, World, Library, You', () => {
+    expect(TAB_ORDER).toEqual(['feed', 'world', 'library', 'you']);
   });
 });

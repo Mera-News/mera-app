@@ -939,7 +939,6 @@
     "removeFailed": "Dit artikel kon niet uit het verhaal worden verwijderd. Probeer het opnieuw.",
     "emptyBodyMera": "Volg een zich ontwikkelend verhaal en Mera houdt het hier bij. Tik op de Mera-knop om er een te volgen.",
     "followedSince": "Gevolgd sinds {{date}}",
-    "headlinesByMera": "Koppen geschreven door Mera",
     "learnAbout": "Meer over Verhalen",
     "nextNote": "Mera voegt hier nieuwe berichtgeving toe naarmate het verhaal zich ontwikkelt.",
     "stopFollowing": "Stoppen met volgen",
@@ -1616,7 +1615,7 @@
             "steps": {
               "0": "Je praat met Mera en het luistert naar de duurzame bits.",
               "1": "Je zegt het ronduit: 'Ik ben naar Lissabon verhuisd.'",
-              "2": "Je voegt ze toe of verwijdert ze zelf op het tabblad Profiel."
+              "2": "Je voegt ze toe of verwijdert ze zelf op het tabblad Jij."
             }
           },
           "to-topics": {
@@ -1641,7 +1640,7 @@
           },
           "importance": {
             "headline": "Sommige feiten zijn belangrijker dan andere",
-            "body": "Open op het tabblad Profiel je feiten en tik op alles wat Mera over je weet om te wijzigen hoeveel het meetelt, het anders te formuleren of het te verwijderen. Iets lager zetten is zachter dan verwijderen en meestal de betere eerste stap.",
+            "body": "Open op het tabblad Jij je feiten en tik op alles wat Mera over je weet om te wijzigen hoeveel het meetelt, het anders te formuleren of het te verwijderen. Iets lager zetten is zachter dan verwijderen en meestal de betere eerste stap.",
             "ask": "Hoe wijzig ik hoe belangrijk één van mijn feiten is?"
           },
           "your-profile": {
@@ -1903,7 +1902,7 @@
               },
               "settings": {
                 "label": "Instellingen",
-                "feedback": "Nee. Instellingen is een eigen tabblad, en landen staan daar niet."
+                "feedback": "Nee. Instellingen is een pagina van het tabblad Jij, en landen staan daar niet."
               }
             }
           },
@@ -1926,7 +1925,7 @@
             "headline": "Waar bronnen leven",
             "body": "Eén scherm voor elke uitgever die je hebt aangepast.",
             "steps": {
-              "0": "Het tabblad Profiel, dan Bronnen.",
+              "0": "Het tabblad Jij, dan Bronnen.",
               "1": "“Minder van” in het menu ••• van een artikel werkt meteen, met Ongedaan maken, en de uitgever staat dan onder Aangepast."
             },
             "ask": "Waar beheer ik welke bronnen ik zie?"
@@ -2096,7 +2095,7 @@
             "headline": "Waar de schakelaars zijn",
             "body": "Een paar tikken vanaf elke plek in de app.",
             "steps": {
-              "0": "Het tabblad Instellingen.",
+              "0": "Het tabblad Jij, dan Instellingen.",
               "1": "Mera Protocol."
             },
             "ask": "Waar is het Mera Protocol-scherm?"

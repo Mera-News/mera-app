@@ -23,7 +23,9 @@ const DEFAULT_WINDOW: ExploreWindowHours = 24;
  * `ScopeArticleList` (direct server-paginated top headlines, nothing scored
  * or stored). Every page shows the last 24 hours. The 6/12/24/48h window
  * chip (and the empty state's "Show 48 hours") is COMMENTED OUT, not deleted
- * (owner: liked, but buggy); restore the commented lines to bring it back.
+ * (owner: liked, but buggy); restore the commented lines to bring it back, and
+ * `world.explainer.window` in page-registry's explainers. The header title
+ * reads "Top headlines" (owner), not "Explore".
  *
  * Arrange (a long press on a page name) adds a country through the overlay's
  * search, removes one with its ×, and reorders; nothing is written before ✓
@@ -126,7 +128,7 @@ export function WorldPages() {
             renderPage={renderPage}
             onSearch={openSearch}
             arrange={arrange}
-            title={t('tabs.exploreTitle')}
+            title={t('sources.topHeadlines')}
             // renderTitleChip={renderTitleChip}
             testID="world-pages"
         />

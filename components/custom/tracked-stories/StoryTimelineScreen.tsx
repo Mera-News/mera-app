@@ -56,7 +56,6 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const colors = useColors();
     const {
         headline,
-        isLlmHeadline,
         stableClusterId,
         cards,
         isLoading,
@@ -201,9 +200,10 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                 className="text-ink"
                             />
                         )}
-                        {/* Followed since, and the AI disclosure when the
-                            headline is Mera's (EU AI Act Art. 50). Wraps, never truncates. */}
-                        {followedSinceMs || isLlmHeadline || cards.length > 0 ? (
+                        {/* Followed since, article and new counts. No "Headlines written
+                            by Mera" here (owner); the Stories list carries the AI line, and
+                            an export still labels AI headlines. Wraps, never truncates. */}
+                        {followedSinceMs || cards.length > 0 ? (
                             <Text size="xs" style={{ color: colors.ink3, marginTop: 2 }}>
                                 {[
                                     followedSinceMs
@@ -213,7 +213,6 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                         : null,
                                     cards.length > 0 ? t('trackedStories.articlesCount', { count: cards.length }) : null,
                                     newAtOpen > 0 ? t('trackedStories.updatesBadge', { count: newAtOpen }) : null,
-                                    isLlmHeadline ? t('trackedStories.headlinesByMera') : null,
                                 ]
                                     .filter(Boolean)
                                     .join(' · ')}

@@ -123,7 +123,7 @@ export function navigateToPage(page: PageId, opts: NavigateToPageOptions = {}): 
 }
 
 /**
- * Open a screen pushed inside a tab's stack (`profile/sources`), on top of that
+ * Open a screen pushed inside a tab's stack (`you/sources`), on top of that
  * tab's ROOT: same dismiss and pop order as `navigateToPage`, then a push.
  * The tab keeps whatever page it was on.
  */

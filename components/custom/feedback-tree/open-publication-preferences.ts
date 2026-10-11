@@ -17,16 +17,16 @@
 import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
 import logger from '@/lib/logger';
 
-/** Sources, a screen in the Profile tab's stack. */
+/** Sources, a screen in the You tab's stack (navx). */
 export const PUBLICATION_PREFERENCES_SCREEN = 'sources' as const;
 
-/** Open the boost / downrank / mute screen on top of the Profile tab. From a root
+/** Open the boost / downrank / mute screen on top of the You tab. From a root
  *  push (an article's detail) that is dismissed first; a tab's own stack is
  *  never popped. Never throws: a failed navigation must not take down the
  *  feedback surface that invoked it. */
 export function openPublicationPreferences(): void {
   try {
-    navigateToTabScreen('profile', PUBLICATION_PREFERENCES_SCREEN);
+    navigateToTabScreen('you', PUBLICATION_PREFERENCES_SCREEN);
   } catch (err) {
     logger.captureException(err, {
       tags: { component: 'feedback-tree', method: 'openPublicationPreferences' },

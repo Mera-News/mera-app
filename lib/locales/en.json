@@ -507,7 +507,6 @@
     "removeFailed": "Couldn't remove this article from the story. Try again.",
     "emptyBodyMera": "Follow a developing story and Mera keeps it up to date here. Tap the Mera button to follow one.",
     "followedSince": "Followed since {{date}}",
-    "headlinesByMera": "Headlines written by Mera",
     "learnAbout": "Learn about Stories",
     "nextNote": "Mera adds new coverage here as the story develops.",
     "stopFollowing": "Stop following",
@@ -1735,7 +1734,7 @@
             "steps": {
               "0": "You talk to Mera and it listens for the durable bits.",
               "1": "You tell it outright: \"I moved to Lisbon.\"",
-              "2": "You add or remove them yourself on the Profile tab."
+              "2": "You add or remove them yourself on the You tab."
             }
           },
           "to-topics": {
@@ -1760,7 +1759,7 @@
           },
           "importance": {
             "headline": "Some facts matter more than others",
-            "body": "On the Profile tab, open your facts and tap anything Mera knows about you to raise or lower how much it counts, reword it, or remove it. Turning something down is gentler than deleting it, and usually the better first move.",
+            "body": "On the You tab, open your facts and tap anything Mera knows about you to raise or lower how much it counts, reword it, or remove it. Turning something down is gentler than deleting it, and usually the better first move.",
             "ask": "How do I change how important one of my facts is?"
           },
           "your-profile": {
@@ -2022,7 +2021,7 @@
               },
               "settings": {
                 "label": "Settings",
-                "feedback": "No. Settings is its own tab, and countries are not there."
+                "feedback": "No. Settings is a page of the You tab, and countries are not there."
               }
             }
           },
@@ -2045,7 +2044,7 @@
             "headline": "Where sources live",
             "body": "One screen for every publication you adjusted.",
             "steps": {
-              "0": "The Profile tab, then Sources.",
+              "0": "The You tab, then Sources.",
               "1": "\"Fewer from\" in an article's ••• menu takes effect at once, with Undo, and the publication then shows under Adjusted."
             },
             "ask": "Where do I manage which sources I see?"
@@ -2215,7 +2214,7 @@
             "headline": "Where the switches are",
             "body": "A few taps from anywhere in the app.",
             "steps": {
-              "0": "The Settings tab.",
+              "0": "The You tab, then Settings.",
               "1": "Mera Protocol."
             },
             "ask": "Where is the Mera Protocol screen?"

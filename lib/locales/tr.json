@@ -941,7 +941,6 @@
     "removeFailed": "Bu makale haberden kaldırılamadı. Tekrar dene.",
     "emptyBodyMera": "Gelişen bir hikayeyi takip edin, Mera onu burada güncel tutsun. Birini takip etmek için Mera düğmesine dokunun.",
     "followedSince": "{{date}} tarihinden beri takip ediliyor",
-    "headlinesByMera": "Başlıklar Mera tarafından yazıldı",
     "learnAbout": "Haberler hakkında bilgi edinin",
     "nextNote": "Haber geliştikçe Mera buraya yeni haberler ekler.",
     "stopFollowing": "Takibi bırak",
@@ -1618,7 +1617,7 @@
             "steps": {
               "0": "Sen Mera'yla konuşuyorsun ve o dayanıklı bitleri dinliyor.",
               "1": "Bunu açık söylüyorsun: \"Lizbon'a taşındım.\"",
-              "2": "Bunları Profil sekmesinden kendiniz eklersiniz veya kaldırırsınız."
+              "2": "Bunları Siz sekmesinden kendiniz eklersiniz veya kaldırırsınız."
             }
           },
           "to-topics": {
@@ -1643,7 +1642,7 @@
           },
           "importance": {
             "headline": "Bazı gerçekler diğerlerinden daha önemli",
-            "body": "Profil sekmesinde bilgilerinizi açın ve Mera'nın sizin hakkınızda bildiği herhangi bir şeye dokunarak ağırlığını artırın ya da azaltın, yeniden ifade edin veya kaldırın. Ağırlığı düşürmek silmekten daha yumuşaktır ve genelde daha iyi ilk adımdır.",
+            "body": "Siz sekmesinde bilgilerinizi açın ve Mera'nın sizin hakkınızda bildiği herhangi bir şeye dokunarak ağırlığını artırın ya da azaltın, yeniden ifade edin veya kaldırın. Ağırlığı düşürmek silmekten daha yumuşaktır ve genelde daha iyi ilk adımdır.",
             "ask": "Gerçeklerinden birinin ne kadar önemli olduğunu nasıl değiştirebilirim?"
           },
           "your-profile": {
@@ -1905,7 +1904,7 @@
               },
               "settings": {
                 "label": "Ayarlar",
-                "feedback": "Hayır. Ayarlar kendi başına bir sekmedir ve ülkeler orada değil."
+                "feedback": "Hayır. Ayarlar Siz sekmesinin bir sayfasıdır ve ülkeler orada değil."
               }
             }
           },
@@ -1928,7 +1927,7 @@
             "headline": "Kaynaklar nerede yaşıyor",
             "body": "Ayarladığınız tüm yayıncılar için tek bir ekran.",
             "steps": {
-              "0": "Profil sekmesi, sonra Kaynaklar.",
+              "0": "Siz sekmesi, sonra Kaynaklar.",
               "1": "Bir haberin ••• menüsündeki \"Daha az\" seçeneği hemen geçerli olur, Geri al ile birlikte, ardından yayıncı Ayarlananlar altında görünür."
             },
             "ask": "Hangi kaynakları gördüğümü nereden yönetirim?"
@@ -2098,7 +2097,7 @@
             "headline": "Anahtarlar nerede",
             "body": "Uygulamanın her yerinden birkaç dokunuş.",
             "steps": {
-              "0": "Ayarlar sekmesi.",
+              "0": "Siz sekmesi, sonra Ayarlar.",
               "1": "Mera Protokolü."
             },
             "ask": "Mera Protokolü ekranı nerede?"

@@ -47,7 +47,7 @@ const INITIAL: CurrentSurfaceState = {
   surface: null,
   arrangeOpen: false,
   headerBottom: null,
-  tabDots: { feed: false, world: false, library: false, profile: false, you: false },
+  tabDots: { feed: false, world: false, library: false, you: false },
   article: null,
   tabHeaderBottom: null,
 };
