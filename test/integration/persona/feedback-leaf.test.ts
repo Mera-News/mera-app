@@ -95,11 +95,16 @@ beforeAll(async () => {
     require('@/lib/database/services/persona-action-executor');
     require('@/lib/database/services/persona-change-log-service');
     require('@/lib/database/services/article-feedback-service');
+    // A mute runs the purge sweep, which persona-mutation-sweeps requires lazily.
+    require('@/lib/services/suppression-sweep');
     require('@/lib/toast-manager');
+    // toast-manager in turn requires the toast UI lazily on its first toast; that cold load takes seconds.
+    require('@/components/custom/toast/UndoToast');
+    require('@/components/ui/toast');
     require('@/lib/i18n');
     require('@/lib/haptics');
     /* eslint-enable @typescript-eslint/no-require-imports */
-});
+}, 60_000);
 
 afterEach(() => {
     jest.restoreAllMocks();
@@ -114,7 +119,6 @@ beforeEach(() => {
 });
 
 describe('a leaf with persona actions', () => {
-    // 15s: this test absorbs the first in-memory DB writes.
     it('writes the preference and the change log, spends the verdict, and shows an Undo toast', async () => {
         await seedVerdict();
         const d = deps();
@@ -135,7 +139,7 @@ describe('a leaf with persona actions', () => {
         expect(toasts()).toEqual([
             expect.objectContaining({ title: 'Got it: feed updated', body: 'Fewer from The Hindu' }),
         ]);
-    }, 15_000);
+    });
 
     it('a topic-weight leaf nudges every matched topic and logs one entry each', async () => {
         const [a, b] = await createTopics([

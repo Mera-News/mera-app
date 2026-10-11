@@ -197,7 +197,12 @@ describe('purchase', () => {
     beforeAll(async () => {
         await initI18nEn();
         toastManager.setToastInstance(toastApi);
-    });
+        // toast-manager requires the toast UI module lazily, on the first toast it shows. Its cold load takes
+        // seconds (more under machine load) and would otherwise be charged to whichever test confirms a
+        // purchase first, timing it out. Pay it once here, outside any test.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        require('@/components/ui/toast');
+    }, 60_000);
 
     beforeEach(() => {
         stops.splice(0).forEach((stop) => stop());
