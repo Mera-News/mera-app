@@ -28,6 +28,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 
 export const NEXT_FOOTER_INK = '#FFFFFF';
 /** A dark base under the panel's gradient, so the white ink reads in both
@@ -57,13 +58,17 @@ export type NextSectionFooterProps =
 
 const NextSectionFooter: React.FC<NextSectionFooterProps> = (props) => {
   const { t } = useTranslation();
+  // Before the branch, so hook order never changes. The back row sits on the
+  // bare backdrop, so it takes the theme's ink; NEXT_FOOTER_INK (white) is only
+  // for the next panel, which has the dark FOOTER_FILL under it.
+  const colors = useColors();
 
   if (props.kind === 'back') {
     return (
       <View className="items-center py-6 px-4">
         <HStack className="items-center" space="xs" pointerEvents="none" {...HIDDEN}>
-          <MaterialIcons name="arrow-back" size={18} color={NEXT_FOOTER_INK} {...HIDDEN} />
-          <Text size="md" className="font-semibold" style={{ color: NEXT_FOOTER_INK }}>
+          <MaterialIcons name="arrow-back" size={18} color={colors.ink} {...HIDDEN} />
+          <Text size="md" className="font-semibold" style={{ color: colors.ink }}>
             {t('trackedStories.emptyCta')}
           </Text>
         </HStack>

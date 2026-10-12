@@ -3,7 +3,6 @@ import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggesti
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { GlassHeaderAndroidBackdrop, GlassPlate, useGlassHeader } from '@/components/custom/GlassSurface';
-import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import NextSectionFooter from '@/components/custom/for-you/NextSectionFooter';
 import { openSectionedFeed } from '@/components/custom/feed/feed-view-prefs';
@@ -28,6 +27,8 @@ import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
+import { useColors } from '@/lib/theme/tokens';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -83,6 +84,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const insets = useSafeAreaInsets();
   // The header's scrim and tint for the current theme (GlassSurface).
   const glassHeader = useGlassHeader();
+  const colors = useColors();
   const suggestions = useForYouSuggestions();
   const openedIds = useOpenedStoriesStore((s) => s.ids);
   const handlePress = useOpenSuggestion('sectioned');
@@ -133,7 +135,13 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const allRows: FactRow[] = useMemo(() => {
     if (!snapshots) return [];
     const { rows } = buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
-    return rows;
+    // A muted publication's stories leave the list, as in the Sectioned view
+    // (DashboardSectionsFeed): filtered once here, so this page's cards, its
+    // count and the Next hop's skip all match the header the reader tapped.
+    return rows.map((r) => ({
+      ...r,
+      groups: r.groups.filter((g) => !isMutedPublication(g.data.publication_name, userGeoLanguageCtx)),
+    }));
   }, [snapshots, suggestions, openedIds, userGeoLanguageCtx]);
 
   const groups: FactRowGroup[] = useMemo(() => {
@@ -321,7 +329,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
       testID="fact-feed-empty-section"
     />
   ) : (
-    <AllCaughtUpCard />
+    <ForYouEmptyState icon="check-circle-outline" body={t('feed.allCaughtUp')} testID="fact-feed-empty" />
   );
 
   return (
@@ -345,7 +353,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
           scrolling underneath it, so it has no reason to be opaque, and a flat
           black band here would punch a hole in the very gradient this screen
           is supposed to show. Translucent dark keeps the small
-          `text-typography-500` prefix readable over a bright blob while the
+          `text-ink-2` prefix readable over a bright blob while the
           field still reads as continuous top-to-bottom.
 
           No border here: the HStack below already owns the divider, and a
@@ -369,7 +377,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         <GlassHeaderAndroidBackdrop />
         <GlassPlate tint={glassHeader.tint} />
         <HStack
-          className="items-center px-4 pb-3 border-b border-gray-900"
+          className="items-center px-4 pb-3 border-b border-line"
           style={{ paddingTop: insets.top + 12 }}
           space="sm"
         >
@@ -381,7 +389,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
             <MaterialIcons
               name="arrow-back"
               size={24}
-              color="#FFFFFF"
+              color={colors.ink}
               accessible={false}
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
@@ -405,10 +413,10 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
                 is app copy already in the reader's language — running it through
                 TranslatableDynamic would machine-translate a localized string. */}
             {!isHeadline && (
-              <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
+              <Text size="xs" className="text-ink-2">{t('forYou.sectionPrefix')}</Text>
             )}
             {isHeadline ? (
-              <Text size="lg" bold numberOfLines={1} className="text-white">
+              <Text size="lg" bold numberOfLines={1} className="text-ink">
                 {statement}
               </Text>
             ) : (
@@ -420,7 +428,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
                 // Two lines, then an ellipsis: a long fact title keeps its
                 // meaning without pushing the list down the screen.
                 numberOfLines={2}
-                className="text-white"
+                className="text-ink"
               />
             )}
           </View>
