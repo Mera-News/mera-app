@@ -168,6 +168,17 @@ describe('when the publication is not found or the server is old', () => {
     expect(sent).toEqual([]);
   });
 
+  it('opened by a raw name with no country: no profile request is fired (the server answers BAD_PROFILE_KEY to a name-only key)', async () => {
+    const sent = record('PublicationProfile', 'GetArticlesForPublisher', 'GetArticlesForPublisherNoOrder');
+    const { result } = open({ rawName: PUB.name, countryCode: null });
+    await waitFor(() => expect(result.current.state).toBe('notFound'));
+    expect(result.current.newsPublisherId).toBeNull();
+    expect(result.current.newsAvailable).toBe(false);
+    expect(result.current.articles).toEqual([]);
+    await act(async () => {}); // let any stray request show up
+    expect(sent).toEqual([]);
+  });
+
   it('PublicationProfile answering not found, opened by id: the page shows no news (the id was asked once, while the profile was still loading)', async () => {
     server.use(mockGql('PublicationProfile', { publicationProfile: null }));
     const { result } = open({ publisherId: PUB.publisherId });

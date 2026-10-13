@@ -264,6 +264,14 @@ function makeUsePublicationProfile(ports: PublicationProfilePorts) {
         settle('notFound');
         return;
       }
+      if (!publisherId && !countryCode) {
+        // A raw name alone cannot resolve: the server requires name AND
+        // countryCode (or a newsPublisherId), and answers BAD_PROFILE_KEY to a
+        // name-only key. Don't fire a doomed request; show what the entry point
+        // knew (same degrade as an empty key).
+        settle('notFound');
+        return;
+      }
       if (unsupportedThisSession) {
         settle('unsupported');
         return;
