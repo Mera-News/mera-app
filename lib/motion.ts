@@ -46,7 +46,6 @@ export const MOTION = {
     launchLogo: { duration: 300 },
     savedToCounter: { duration: 300 },
     halo: { fade: 600 },
-    glow: { fade: 400 },
     shimmer: { loop: 1600, delay: 200, contentFade: 150 },
     chat: { open: 320, close: 200, reduce: 200 },
     /** Chat answer words fading in. */

@@ -89,7 +89,6 @@ import { useReasonWriting } from '@/components/custom/cards/use-reason-in-flight
 import { resolveFeedRowDisplay } from '@/components/custom/feed/feed-row-display';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import { arrivedAtOf, isNewCard, type FeedEntry } from './feed-entries';
-import NewCardsGlow from './NewCardsGlow';
 import FeedMinimap, { MINIMAP_LIST_INSET } from './FeedMinimap';
 import { useFeedScreen } from './useFeedScreen';
 import type { CardFeedbackHandlers } from './use-feedback-sheet';
@@ -284,7 +283,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     minimapFirst,
     minimapLast,
     jumpToRow,
-    glowOn,
     headerHeight,
     windowHeight,
   } = useFeedScreen({ isFocused, header });
@@ -512,8 +510,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
         updateCellsBatchingPeriod={50}
         removeClippedSubviews={false}
       />
-      {/* After the list, so the list stays the first child. */}
-      <NewCardsGlow visible={glowOn} />
       {minimapOn ? (
         <FeedMinimap
           rows={minimapRows}

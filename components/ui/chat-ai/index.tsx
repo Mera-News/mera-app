@@ -43,8 +43,7 @@ import { useMotionAllowed } from '@/lib/motion-gate';
 import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens';
 
 const ACCENT = 'rgb(231, 138, 83)';
-// Bubble surfaces float on the #1a1a1a panel: assistant slightly lighter than
-// the panel, user lighter still, so the two roles read apart without borders.
+// Bubble surfaces float on the panel; both roles share one, split by alignment.
 // Input field surface (kept distinct from the user bubble tone).
 // The transient bubble's outline, at rest and at the top of its pulse. NEUTRAL,
 // not ACCENT: the panel keeps the only orange outline in the chat, and a second
@@ -220,7 +219,7 @@ export interface MessageContentProps {
    * Outlined and unfilled, with no shadow. The shadow is the load-bearing half:
    * a solid bubble floats off the panel and reads as something that was said,
    * and a provisional one must not. The border is NEUTRAL, not the accent —
-   * see `bubbleAssistant` below, the panel keeps the only orange outline in
+   * see `bubbleSurface` below, the panel keeps the only orange outline in
    * the chat and a second one competes with it.
    */
   variant?: 'solid' | 'transient';
@@ -255,7 +254,7 @@ const MessageContent = forwardRef<View, MessageContentProps>(function MessageCon
     testID,
     style: [
       styles.bubble,
-      role === 'user' ? styles.bubbleUser : styles.bubbleAssistant,
+      styles.bubbleSurface,
       variant === 'transient' && styles.bubbleTransient,
       style,
     ],
@@ -572,14 +571,12 @@ const useStyles = themedStyles((c, mode) => StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
-  bubbleUser: {
-    backgroundColor: tint(c.ink, 0.18),
-  },
-  bubbleAssistant: {
-    // No border — the panel keeps the only orange outline. Role is signaled by
-    // surface tone + alignment instead. Light: the white card surface with a
-    // hairline (a translucent grey read as dirty on the light panel); dark keeps
-    // the raised tint.
+  bubbleSurface: {
+    // Both roles share one solid surface; alignment alone tells them apart.
+    // The user side was a translucent ink tint, which Android's elevation
+    // shadow showed through as a grey smudge. Light: the white card surface
+    // with a hairline (a translucent grey read as dirty on the light panel);
+    // dark: the raised tint.
     ...(mode === 'light'
       ? { backgroundColor: c.panel, borderWidth: StyleSheet.hairlineWidth, borderColor: c.panelBorder }
       : { backgroundColor: c.surfaceRaised }),

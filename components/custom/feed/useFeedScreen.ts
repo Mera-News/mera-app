@@ -526,12 +526,12 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     },
     [],
   );
-  const glowOn = isFocused && newBelow && !minimapOn;
+  const newBelowUnmapped = isFocused && newBelow && !minimapOn;
   useEffect(() => {
-    if (!glowOn || announcedNewBelow) return;
+    if (!newBelowUnmapped || announcedNewBelow) return;
     announcedNewBelow = true;
     AccessibilityInfo.announceForAccessibility(t('feed.newStoriesBelowA11y'));
-  }, [glowOn, t]);
+  }, [newBelowUnmapped, t]);
 
   // Seed the pin the first time the list is non-empty. This is NOT redundant
   // with the extend inside the ingest effect: on a cold launch the first ingest
@@ -823,7 +823,6 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     minimapFirst,
     minimapLast,
     jumpToRow,
-    glowOn,
     headerHeight,
     windowHeight,
   };

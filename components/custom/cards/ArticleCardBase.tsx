@@ -22,38 +22,6 @@ import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
 import { recordHeroLoad } from '@/lib/images/image-resolution-stats';
 import { useTranslation } from 'react-i18next';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { MOTION } from '@/lib/motion';
-import { useColors } from '@/lib/theme/tokens';
-
-/** A new card's orange edge (FinalMotion "Signals"): fades away over 600 ms
- *  once the card counts as seen; Reduce Motion switches it off at once. */
-const CardHalo: React.FC<{ on: boolean; radius: number }> = ({ on, radius }) => {
-  const colors = useColors();
-  const opacity = useSharedValue(on ? 1 : 0);
-  React.useEffect(() => {
-    opacity.value = withTiming(on ? 1 : 0, { duration: MOTION.halo.fade, easing: Easing.out(Easing.ease) });
-  }, [on, opacity]);
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          borderRadius: radius,
-          borderWidth: 1.5,
-          borderColor: colors.accent,
-        },
-        style,
-      ]}
-    />
-  );
-};
 
 /**
  * ArticleCardBase — the full-size feed card CHROME, extracted verbatim from
@@ -151,7 +119,8 @@ interface ArticleCardBaseProps {
   /** What the card's children say, read last in the root's label (the
    *  filtered-but-shown notice, the AI-note flag, the note as displayed). */
   spokenTail?: readonly (string | null | undefined | false)[];
-  /** The new-card halo: on while unseen, fades away when it turns false. */
+  /** The new-card halo: an orange shadow while unseen, fading when it turns
+   *  false. Drawn by the `flat` surface only (the Feed's). */
   halo?: boolean;
 }
 
@@ -316,7 +285,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
         </VStack>
       </Box>
       {footer ? <Box className="px-4 pb-4 pt-2">{footer}</Box> : null}
-      {halo !== undefined ? <CardHalo on={halo} radius={flat ? 14 : 6} /> : null}
     </>
   );
 
@@ -331,7 +299,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
     >
       {flat ? (
         // The shared floating surface (also the followed-story rows').
-        <FlatCardSurface className="mb-3">{innerContent}</FlatCardSurface>
+        <FlatCardSurface className="mb-3" halo={halo}>{innerContent}</FlatCardSurface>
       ) : CARDS_USE_GLASS ? (
         // The plate must hang off an UNPADDED box, so the margin + radius +
         // clipping move out to this wrapper and the `Card` keeps its own
