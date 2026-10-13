@@ -24,7 +24,6 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector, type PanGesture } from 'react-native-gesture-handler';
 import Animated, {
-  FadeIn,
   FadeOut,
   useAnimatedStyle,
   useReducedMotion,
@@ -44,9 +43,6 @@ import { openMeraChat } from './open-mera-chat';
 const LOGO_REST = 38;
 const LOGO_WORKING = 52;
 const REST_SCALE = LOGO_REST / LOGO_WORKING;
-/** The unread ring: 2pt, 5pt clear of the disc (FinalMeraChat #11). */
-const RING_GAP = 5;
-const RING_WIDTH = 2;
 const TOOLTIP_MAX_WIDTH = 190;
 const TOOLTIP_GAP = 10;
 
@@ -100,7 +96,8 @@ export interface MeraButtonProps {
   /** Mera is working on the reader's request with the chat closed: the logo
    *  grows and its cards scroll. */
   readonly working?: boolean;
-  /** Mera's answer is waiting unread: an orange ring circles the button. */
+  /** Mera's answer is waiting unread. Read out in the label only; no ring
+   *  (owner: the orange ring was removed). */
   readonly unread?: boolean;
   /** The chat a tap opens, when not the page's own (the article page opens
    *  Mera on its article). */
@@ -228,13 +225,6 @@ const MeraButton: React.FC<MeraButtonProps> = ({
           style={[styles.circle, { backgroundColor: look.disc }]}
           testID="mera-button"
         >
-          {unread && (
-            <Animated.View
-              entering={reduceMotion ? undefined : FadeIn.duration(MOTION.status.open)}
-              style={[styles.ring, { borderColor: colors.accentMark }]}
-              testID="mera-button-ring"
-            />
-          )}
           {/* The cone sweeps at rest; the mark itself holds it still off
               screen, in Lite mode and under Reduce Motion. */}
           <Animated.View style={growStyle}>
@@ -273,15 +263,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
-  },
-  ring: {
-    position: 'absolute',
-    top: -(RING_GAP + RING_WIDTH),
-    left: -(RING_GAP + RING_WIDTH),
-    right: -(RING_GAP + RING_WIDTH),
-    bottom: -(RING_GAP + RING_WIDTH),
-    borderRadius: MERA_BUTTON_SIZE / 2 + RING_GAP + RING_WIDTH,
-    borderWidth: RING_WIDTH,
   },
   tooltip: {
     maxWidth: TOOLTIP_MAX_WIDTH,
