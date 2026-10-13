@@ -100,8 +100,8 @@ const FEED_NOTE_LINES = 4;
 /**
  * The suggestion (personalized) full-size card. Owns the suggestion-specific
  * chrome moved out of `ArticleSuggestionContainer`'s card path — status gating,
- * the reason box, the fact chips (+ their LRU cache), and the __DEV__ relevance
- * readout — and delegates all layout to `ArticleCardBase`.
+ * the reason box and the fact chips (+ their LRU cache) — and delegates all
+ * layout to `ArticleCardBase`. No score is drawn on the card in any build (owner).
  *
  * Memoized: callers pass stable handlers, so an unchanged row does not re-render.
  */
@@ -297,14 +297,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     pendingMode === 'not-yet' ? t('feed.reasonNotYet') : null,
   ];
 
-  const metaAccessory = __DEV__ && relevanceReady ? (
-    <Box className="px-2 py-0.5 rounded bg-background-50">
-      <Text size="xs" className="text-typography-400 font-mono">
-        {relevance.toFixed(2)}
-      </Text>
-    </Box>
-  ) : undefined;
-
   // Action row lives in the base's `footer` slot.
   // `horizontalPadding = 0` because the footer wrapper already insets it.
   const actionBar = onVerdict ? (
@@ -347,7 +339,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       flat={flat}
       onPress={() => onPress(suggestion)}
       halo={halo}
-      metaAccessory={metaAccessory}
       metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
       spokenPriority={spokenPriority}

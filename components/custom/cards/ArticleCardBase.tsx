@@ -9,7 +9,6 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
-import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import PressableCard from '@/components/custom/cards/PressableCard';
 import FlatCardSurface from '@/components/custom/cards/FlatCardSurface';
@@ -30,7 +29,7 @@ import { useTranslation } from 'react-i18next';
  *
  * Layout:
  *   Pressable → elevated Card → hero (192px, ONLY when there is a real image
- *   that loaded) → VStack{ meta row (+ metaAccessory), title, children }.
+ *   that loaded) → VStack{ meta row, title, children }.
  *
  * An article with no image renders no image region at all: the card starts at
  * the meta row. It used to get a shortened 112px band carrying a dimmed Mera
@@ -40,10 +39,8 @@ import { useTranslation } from 'react-i18next';
  * (VStack `pt-4` vs the footer's `pb-4`, both sitting inside the same wrapper
  * padding). Do not "fix" the spacing here.
  *
- * • `children`      — variant chrome rendered under the title (reason box, fact
- *                     chips, actions row, …).
- * • `metaAccessory` — a small adornment rendered directly under the meta row,
- *                     right-aligned (e.g. the __DEV__ relevance readout).
+ * • `children` — variant chrome rendered under the title (reason box, fact
+ *                chips, actions row, …).
  */
 interface ArticleCardBaseProps {
   imageUrl?: string | null;
@@ -82,7 +79,6 @@ interface ArticleCardBaseProps {
   flat?: boolean;
   onPress?: () => void;
   children?: React.ReactNode;
-  metaAccessory?: React.ReactNode;
   /** A control row pinned at the bottom of the card, below the content region
    *  (e.g. the like/dislike action bar). When omitted the card is unchanged
    *  (pixel-identical). */
@@ -147,7 +143,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   flat = false,
   onPress,
   children,
-  metaAccessory,
   footer,
   testID,
   metaRowRightReserve = 0,
@@ -261,9 +256,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               showRecency={showRecency}
               onPublicationPress={onPublicationPress}
             />
-            {metaAccessory ? (
-              <HStack className="self-end mt-1">{metaAccessory}</HStack>
-            ) : null}
           </Box>
           {/* No title at all: the app's own fallback copy, already in the
               reader's language, never runtime-translated. */}
