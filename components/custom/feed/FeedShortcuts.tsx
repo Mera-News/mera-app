@@ -192,7 +192,7 @@ const FeedShortcuts: React.FC<{ readonly reading: boolean }> = ({ reading }) => 
   );
 };
 
-const useStyles = themedStyles((c) => StyleSheet.create({
+const useStyles = themedStyles((c, mode) => StyleSheet.create({
   // No side margin of its own: the column's edges are the list's inset.
   wrap: { gap: 10, marginTop: 4 },
   header: { color: c.ink2 },
@@ -201,7 +201,9 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
     borderColor: c.line,
-    backgroundColor: c.surface,
+    // Paper in light like every Feed content card (ContentPlate); the light
+    // `surface` is a dark tint that greys the gradient.
+    backgroundColor: mode === 'light' ? c.panel : c.surface,
     justifyContent: 'center',
   },
   tile: {

@@ -1,4 +1,5 @@
 import { sectionColorAtAlpha, sectionGradient } from '@/lib/algorithms/section-color';
+import { useThemeMode } from '@/lib/theme/tokens';
 import React from 'react';
 import { I18nManager, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -27,6 +28,11 @@ interface SectionGradientPanelProps {
  *  background instead of as SVG. */
 const ANDROID_CSS_GRADIENT = Platform.OS === 'android';
 
+/** Light theme: the pastel at half its dark-theme strength. Over white paper
+ *  cards a 0.30 start read as a pink slab around every card (owner,
+ *  2026-10-13); half keeps the section's hue as a quiet band. */
+const LIGHT_SECTION_STRENGTH = 0.5;
+
 const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
   factId,
   borderRadius = 12,
@@ -34,6 +40,8 @@ const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
   children,
 }) => {
   const spec = sectionGradient(factId);
+  const startOpacity =
+    useThemeMode() === 'light' ? spec.startOpacity * LIGHT_SECTION_STRENGTH : spec.startOpacity;
   const gradId = `grad-${factId}`;
   // Left-to-right in LTR; flip the stops' x extents in RTL so the solid edge
   // hugs the leading (text) side.
@@ -77,7 +85,7 @@ const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
               // the solid ink stays on the text-leading edge under RTL.
               experimental_backgroundImage:
                 `linear-gradient(to ${I18nManager.isRTL ? 'left' : 'right'}, ` +
-                `${sectionColorAtAlpha(spec.hue, spec.startOpacity)} 0%, ` +
+                `${sectionColorAtAlpha(spec.hue, startOpacity)} 0%, ` +
                 `${sectionColorAtAlpha(spec.hue, spec.endOpacity)} 100%)`,
             } as unknown as ViewStyle
           }
@@ -91,7 +99,7 @@ const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
       >
         <Defs>
           <LinearGradient id={gradId} x1={x1} y1="0" x2={x2} y2="0">
-            <Stop offset="0" stopColor={spec.base} stopOpacity={spec.startOpacity} />
+            <Stop offset="0" stopColor={spec.base} stopOpacity={startOpacity} />
             <Stop offset="1" stopColor={spec.base} stopOpacity={spec.endOpacity} />
           </LinearGradient>
         </Defs>

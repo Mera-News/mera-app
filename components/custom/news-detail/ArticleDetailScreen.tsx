@@ -257,7 +257,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         here either, on rows mirrored before they did. */}
                     {orphanFactChecks.length > 0 && (
                         <Box className="w-full mt-6" testID="article-detail-orphan-fact-check">
-                            <Text size="sm" className="text-typography-400 text-center mb-3">
+                            <Text size="sm" className="text-ink-3 text-center mb-3">
                                 {t('factCheck.dashboard.articleGone')}
                             </Text>
                             <VStack space="sm">

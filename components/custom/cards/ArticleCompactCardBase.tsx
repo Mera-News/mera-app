@@ -299,7 +299,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   // line box, and this is the most-translated text in the app —
                   // Devanagari/Thai marks sit above it and get sliced. Dropping
                   // the class lets the `md` token's own 24px line box apply.
-                  className="font-medium"
+                  className="font-semibold text-ink"
                   numberOfLines={headlineLines}
                   onDisplayChange={(d) => setShownTitle(d.displayedText)}
                 />
@@ -334,7 +334,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   >
                     <Text
                       size="xs"
-                      className="text-typography-500"
+                      className="font-medium text-ink-3"
                       numberOfLines={1}
                       ellipsizeMode="tail"
                     >
@@ -344,7 +344,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 ) : meta.publication ? (
                   <Text
                     size="xs"
-                    className="text-typography-500"
+                    className="font-medium text-ink-3"
                     numberOfLines={1}
                     ellipsizeMode="tail"
                     style={{ flexShrink: 1 }}
@@ -355,7 +355,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   <Box />
                 )}
                 {statusLabel ? (
-                  <Text size="xs" className="text-typography-500" numberOfLines={1} style={{ flexShrink: 0 }}>
+                  <Text size="xs" className="font-medium text-ink-3" numberOfLines={1} style={{ flexShrink: 0 }}>
                     {`· ${statusLabel}`}
                   </Text>
                 ) : null}

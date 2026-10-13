@@ -1,4 +1,4 @@
-import { GLASS_EDGE, TranslucentPlate } from '@/components/custom/GlassSurface';
+import { ContentPlate, GLASS_EDGE } from '@/components/custom/GlassSurface';
 
 /**
  * The article cards' background plate.
@@ -41,7 +41,8 @@ export const CARDS_USE_GLASS = true;
  *  needs one or it has no defined edge against the page. */
 export const GLASS_CARD_EDGE = GLASS_EDGE;
 
-/** Absolute-fill translucent background for a card. */
-export const CardGlassPlate = TranslucentPlate;
+/** Absolute-fill background for a card: glass in dark, paper in light (see
+ *  `ContentPlate`). */
+export const CardGlassPlate = ContentPlate;
 
 export default CardGlassPlate;

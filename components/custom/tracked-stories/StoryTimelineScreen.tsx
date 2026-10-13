@@ -165,7 +165,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     ) : (
         <Box className="items-center justify-center py-20 px-8" testID={`story-timeline-${emptyReason}`}>
             <MaterialIcons name="error-outline" size={40} color={colors.ink2} />
-            <Text size="sm" className="text-typography-400 text-center mt-4">
+            <Text size="sm" className="text-ink-3 text-center mt-4">
                 {emptyReason === 'gone'
                     ? t('articleDetail.storyUnavailable')
                     : t('trackedStories.timelineLoadFailed')}

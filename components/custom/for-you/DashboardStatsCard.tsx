@@ -160,7 +160,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
             {/* The shortcut cards' geometry (CardRow; owner: the cards look
                 identical): their radius, their 1pt edge and the same row, so
                 text, icon centre and chevron line up with the shortcuts. */}
-            <GlassPanel radius={CARD_RADIUS} testID={testID}>
+            <GlassPanel radius={CARD_RADIUS} testID={testID} paper>
                     <>
                         {/* A hidden visual (CardRow) under a CHILDLESS labelled
                             button: a glyph inside a button surfaces on iOS as
