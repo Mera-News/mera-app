@@ -20,6 +20,7 @@ import {
 import type { BatchCall } from '@/lib/llm/types';
 import {
   encryptContent,
+  NoCredentialError,
   type E2EEContext,
 } from '@/lib/e2ee/e2ee-service';
 import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
@@ -233,7 +234,11 @@ export async function sendInferenceRequest(args: {
       authHeader = `Bearer ${jwt}`;
     } else {
       if (!capabilityToken) {
-        throw new Error(
+        // NoCredentialError, not a plain Error: the scoring pipeline's quiet
+        // classifier maps it to 'no-auth' (batch stops, no Sentry event, no
+        // auth-breaker report) — a foreground submit with no mintable JWT and
+        // no chained capability token is a missing credential, not a defect.
+        throw new NoCredentialError(
           'sendInferenceRequest: foreground has no JWT and no capability token',
         );
       }

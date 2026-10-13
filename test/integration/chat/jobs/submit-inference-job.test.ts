@@ -11,6 +11,7 @@
 import { getJwtToken } from '@/lib/auth-client';
 import * as authClient from '@/lib/auth-client';
 import { _getBreakerState } from '@/lib/auth-failure-breaker';
+import { NoCredentialError } from '@/lib/e2ee/e2ee-service';
 import * as limiter from '@/lib/llm/gateway-rate-limiter';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import { bytesToHex, sendInferenceRequest } from '@/lib/llm/submitInferenceJob';
@@ -209,13 +210,15 @@ describe('auth per execution context', () => {
     expect(posts[0].headers.authorization).toBe('Bearer fallback-cap');
   });
 
-  it('foreground with neither a JWT nor a capability token throws and sends nothing', async () => {
+  it('foreground with neither a JWT nor a capability token throws a NoCredentialError and sends nothing', async () => {
     const ctx = await drive(context());
     server.use(http.get('*/api/auth/token', () => raw(401)));
     authClient.invalidateJwtCache();
+    // NoCredentialError, never a plain Error: the scoring pipeline's quiet
+    // classifier maps it to 'no-auth' (no Sentry event, no auth-breaker report).
     await expect(
       drive(sendInferenceRequest({ bundle: bundleOf(1) as never, ctx, token: null, model: SMALL_MODEL, context: 'foreground' })),
-    ).rejects.toThrow('foreground has no JWT and no capability token');
+    ).rejects.toBeInstanceOf(NoCredentialError);
     expect(gatewayCalls('job')).toHaveLength(0);
   });
 
