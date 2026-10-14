@@ -18,7 +18,7 @@ const RelatedErrorRow: React.FC<RelatedErrorRowProps> = ({ onRetry }) => {
     const { t } = useTranslation();
     return (
         <HStack className="items-center justify-between py-2" space="md" testID="related-error">
-            <Text size="sm" className="text-typography-400 flex-1">
+            <Text size="sm" className="text-ink-3 flex-1">
                 {t('articleDetail.relatedLoadFailed')}
             </Text>
             <Pressable

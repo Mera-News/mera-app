@@ -109,7 +109,7 @@ export const FeedNoFacts: React.FC<{ readonly view: 'continuous' | 'sectioned' }
   const c = useColors();
   return (
     <View style={{ gap: 12 }} testID={`feed-no-facts-${view}`}>
-      <GlassPanel radius={12} contentClassName="px-4 py-3">
+      <GlassPanel radius={12} contentClassName="px-4 py-3" paper>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ paddingTop: 1 }}>
             <MeraLogo size={20} color={c.accentMark} animated={false} />

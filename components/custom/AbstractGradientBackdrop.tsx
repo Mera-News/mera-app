@@ -687,9 +687,12 @@ const Field = ANDROID_STATIC_CSS ? CssBlobField : BlobField;
  */
 const BASE_HIDDEN = { opacity: 0 } as const;
 
-/** Light theme (FinalLight boards): the same field at about half strength over
- *  white, one opacity on the whole backdrop (GPU only, every layer follows). */
-const LIGHT_FIELD = { opacity: 0.5 } as const;
+/** Light theme: the same field at under a third of its strength over white, one
+ *  opacity on the whole backdrop (GPU only, every layer follows). Light cards are
+ *  solid paper (CardGlassPlate), so the field shows only in the gaps between them
+ *  and behind the header; at the boards' 0.5 it read as a pink wash (owner,
+ *  2026-10-13). */
+const LIGHT_FIELD = { opacity: 0.3 } as const;
 
 const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed, frame }) => {
   const light = useThemeMode() === 'light';

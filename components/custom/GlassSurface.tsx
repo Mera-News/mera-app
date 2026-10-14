@@ -289,6 +289,26 @@ export const TranslucentPlate: React.FC<{ style?: StyleProp<ViewStyle> }> = ({ s
   />
 );
 
+/**
+ * The plate for CONTENT cards (article cards, the Feed's counts card): the
+ * translucent `TranslucentPlate` in dark, SOLID paper in light (owner,
+ * 2026-10-13).
+ *
+ * The light `surface` token is a 7% BLACK tint, so translucent content over the
+ * light theme's pastel gradient read as dirty mauve, and twice over inside a
+ * section's tinted panel. Dark works because its lift is white over a dark
+ * field. So light content is an opaque `panel` (white) plate; the hairline edge
+ * and the card's soft shadow do the lifting, and the gradient shows only in the
+ * gaps. Chrome-like surfaces (World's chips) keep `TranslucentPlate`.
+ */
+export const ContentPlate: React.FC = () => {
+  const colors = useColors();
+  if (useThemeMode() === 'light') {
+    return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.panel }]} />;
+  }
+  return <TranslucentPlate />;
+};
+
 export interface GlassPanelProps {
   /** Corner radius in points. Applied as a style, not a class — see `GlassPlate`. */
   radius?: number;
@@ -307,6 +327,9 @@ export interface GlassPanelProps {
   fallbackClassName?: string;
   /** Draw the hairline edge. Default true. */
   edge?: boolean;
+  /** A CONTENT surface: solid paper in light (`ContentPlate`). Default false,
+   *  which keeps the translucent plate for chips and chrome-like pills. */
+  paper?: boolean;
   /**
    * @deprecated Ignored. It tuned the glass plate's tint; this panel no longer
    * uses a glass plate. Kept so existing call sites still compile.
@@ -336,6 +359,7 @@ export const GlassPanel: React.FC<GlassPanelProps> = ({
   contentClassName = '',
   fallbackClassName = 'bg-background-0',
   edge = true,
+  paper = false,
   style,
   testID,
   children,
@@ -345,7 +369,7 @@ export const GlassPanel: React.FC<GlassPanelProps> = ({
     className={[className, edge ? GLASS_EDGE : ''].filter(Boolean).join(' ')}
     style={[{ borderRadius: radius, overflow: 'hidden' }, style]}
   >
-    <TranslucentPlate />
+    {paper ? <ContentPlate /> : <TranslucentPlate />}
     <Box className={contentClassName}>{children}</Box>
   </Box>
 );

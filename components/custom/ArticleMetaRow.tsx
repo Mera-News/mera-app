@@ -101,8 +101,9 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     // derivation, which must NOT move on a clock tick.
 
     const isCard = variant === 'card';
-    const ageColor = isCard ? 'text-typography-600' : 'text-ink-2';
-    const secondaryColor = isCard ? 'text-typography-500' : 'text-ink-2';
+    // Semantic inks, never the gluestack ramp (it inverts between themes).
+    const ageColor = isCard ? 'font-medium text-ink-3' : 'text-ink-2';
+    const secondaryColor = isCard ? 'font-medium text-ink-3' : 'text-ink-2';
     const colors = useColors();
     const iconColor = isCard ? colors.ink3 : colors.ink2;
 
@@ -162,7 +163,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
         showFlag ? (
                 <Box style={{ flexShrink: 0 }} testID="meta-flag">
                     {isCard ? (
-                        <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
+                        <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-ink-3" />
                     ) : (
                         <SourceCountryFlag countryCode={countryCode} iconClassName="text-ink-2" />
                     )}
