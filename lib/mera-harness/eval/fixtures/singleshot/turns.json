@@ -1,0 +1,202 @@
+[
+  {
+    "id": "follow-dutch-cabinet",
+    "agent": "follow-story",
+    "message": "the dutch cabinet formation talks",
+    "expect": "proposeTrack",
+    "search": [
+      "Dutch coalition talks stall over asylum policy",
+      "Informateur hands report to Dutch parliament",
+      "Netherlands parties agree on outline coalition deal",
+      "Dutch election winner seeks fourth coalition partner"
+    ]
+  },
+  {
+    "id": "follow-gaza-ceasefire",
+    "agent": "follow-story",
+    "message": "I want to follow the gaza ceasefire negotiations",
+    "expect": "proposeTrack",
+    "search": [
+      "Mediators press Israel and Hamas on second phase of ceasefire",
+      "Cairo hosts new round of Gaza truce talks",
+      "Aid convoys enter Gaza as ceasefire holds"
+    ]
+  },
+  {
+    "id": "follow-eu-ai-act",
+    "agent": "follow-story",
+    "message": "EU AI act enforcement",
+    "expect": "proposeTrack",
+    "search": [
+      "EU AI Office publishes guidance for general-purpose AI models",
+      "Brussels opens first AI Act compliance review",
+      "Tech firms lobby to delay AI Act high-risk rules"
+    ]
+  },
+  {
+    "id": "follow-champions-league",
+    "agent": "follow-story",
+    "message": "follow PSV in the champions league this season",
+    "expect": "proposeTrack",
+    "search": [
+      "PSV draw with Juventus in Champions League league phase",
+      "PSV coach names squad for Champions League trip",
+      "Champions League standings after matchday three"
+    ]
+  },
+  {
+    "id": "follow-assam-floods",
+    "agent": "follow-story",
+    "message": "the floods in assam",
+    "expect": "proposeTrack",
+    "search": [
+      "Assam floods displace thousands as Brahmaputra rises",
+      "Kaziranga park flooded, animals move to higher ground",
+      "Centre releases relief funds for flood-hit northeast"
+    ]
+  },
+  {
+    "id": "follow-us-shutdown",
+    "agent": "follow-story",
+    "message": "us government shutdown",
+    "expect": "proposeTrack",
+    "search": [
+      "US government shutdown enters second week",
+      "Senate vote on stopgap funding bill fails again",
+      "Federal workers miss paychecks as shutdown drags on"
+    ]
+  },
+  {
+    "id": "follow-amsterdam-rents",
+    "agent": "follow-story",
+    "message": "rent rules for housing in amsterdam",
+    "expect": "proposeTrack",
+    "search": [
+      "Amsterdam landlords sell rental homes after new rent law",
+      "Dutch housing minister proposes changes to rent cap",
+      "Amsterdam mid-rent supply falls, data shows"
+    ]
+  },
+  {
+    "id": "follow-ukraine-grain",
+    "agent": "follow-story",
+    "message": "ukraine's grain exports through the black sea",
+    "expect": "proposeTrack",
+    "search": [
+      "Ukraine grain shipments via Odesa reach record month",
+      "Russian drone strike hits Danube port grain terminal",
+      "Black Sea shipping insurance costs rise again"
+    ]
+  },
+  {
+    "id": "follow-bitcoin-etf",
+    "agent": "follow-story",
+    "message": "bitcoin etf inflows",
+    "expect": "proposeTrack",
+    "search": [
+      "Bitcoin ETFs record largest weekly inflow this year",
+      "BlackRock bitcoin fund passes new asset milestone",
+      "SEC weighs new crypto ETF applications"
+    ]
+  },
+  {
+    "id": "follow-nobody-knows",
+    "agent": "follow-story",
+    "message": "the strike at the port of rotterdam",
+    "expect": "proposeTrack",
+    "search": []
+  },
+  {
+    "id": "article-follow-1",
+    "agent": "article",
+    "message": "Follow this story",
+    "expect": "proposeTrack",
+    "article": {
+      "title": "Dutch coalition talks stall over asylum policy",
+      "publication": "NL Times",
+      "description": "Negotiations to form a new Dutch government stalled on Tuesday after two parties failed to agree on limits to asylum intake, the informateur said.",
+      "related": [
+        "Informateur hands report to Dutch parliament",
+        "Netherlands parties agree on outline coalition deal",
+        "Dutch election winner seeks fourth coalition partner"
+      ]
+    },
+    "search": [
+      "Informateur hands report to Dutch parliament",
+      "Netherlands parties agree on outline coalition deal"
+    ]
+  },
+  {
+    "id": "article-follow-2",
+    "agent": "article",
+    "message": "I want to keep up with this",
+    "expect": "proposeTrack",
+    "article": {
+      "title": "Assam floods displace thousands as Brahmaputra rises",
+      "publication": "The Hindu",
+      "description": "More than 200,000 people across 14 districts of Assam have been affected as the Brahmaputra crossed the danger mark at several points.",
+      "related": [
+        "Kaziranga park flooded, animals move to higher ground",
+        "Centre releases relief funds for flood-hit northeast"
+      ]
+    },
+    "search": [
+      "Kaziranga park flooded, animals move to higher ground"
+    ]
+  },
+  {
+    "id": "article-factcheck-1",
+    "agent": "article",
+    "message": "Is the 200,000 people figure actually true?",
+    "expect": "proposeFactCheck",
+    "article": {
+      "title": "Assam floods displace thousands as Brahmaputra rises",
+      "publication": "The Hindu",
+      "description": "More than 200,000 people across 14 districts of Assam have been affected as the Brahmaputra crossed the danger mark at several points.",
+      "related": []
+    },
+    "search": []
+  },
+  {
+    "id": "article-factcheck-2",
+    "agent": "article",
+    "message": "Can you check whether this claim holds up?",
+    "expect": "proposeFactCheck",
+    "article": {
+      "title": "Bitcoin ETFs record largest weekly inflow this year",
+      "publication": "CoinDesk",
+      "description": "US spot bitcoin ETFs took in 3.2 billion dollars last week, the largest weekly inflow of the year, led by BlackRock's IBIT fund.",
+      "related": []
+    },
+    "search": []
+  },
+  {
+    "id": "article-why-shown",
+    "agent": "article",
+    "message": "Why was this shown to me?",
+    "expect": "answer",
+    "article": {
+      "title": "Amsterdam mid-rent supply falls, data shows",
+      "publication": "Het Parool",
+      "description": "The number of mid-rent homes offered in Amsterdam fell by a fifth in the past year, according to figures from the city.",
+      "related": []
+    },
+    "search": []
+  },
+  {
+    "id": "article-summary",
+    "agent": "article",
+    "message": "What is new in this compared to last week?",
+    "expect": "answer",
+    "article": {
+      "title": "EU AI Office publishes guidance for general-purpose AI models",
+      "publication": "Euractiv",
+      "description": "The EU AI Office released its guidance on how providers of general-purpose AI models should meet transparency and copyright obligations under the AI Act.",
+      "related": ["Brussels opens first AI Act compliance review"]
+    },
+    "search": [
+      "Brussels opens first AI Act compliance review",
+      "Tech firms lobby to delay AI Act high-risk rules"
+    ]
+  }
+]

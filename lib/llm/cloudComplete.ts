@@ -407,9 +407,9 @@ export type WireMessage =
 
 export interface CloudChatStreamRequest {
   messages: WireMessage[];
-  /** Defaults to TRUE, which is what every pre-existing caller gets. The agent
-   *  loop passes false: measured, the trace buys nothing on a tool-routing leg
-   *  and costs the whole budget on the topic path. */
+  /** Defaults to TRUE. The agent loop passes false (the trace buys nothing on a
+   *  tool-routing leg), and so does a single-shot agent whose `chatThinking`
+   *  is false (follow a story). */
   enableThinking?: boolean;
   /** Defaults to TRUE. FALSE for a step nobody watches arrive: the answer is
    *  then ONE envelope, one decrypt, instead of one ECDH per token. Tool calls
@@ -532,6 +532,7 @@ export async function* cloudChatStream(
     const baseHeaders = await getAuthHeaders();
     logger.debug('[chat-timing] jwt fetch (chat)', { ms: Date.now() - jwtStartMs });
 
+    const thinking = request.enableThinking ?? true;
     const body: Record<string, unknown> = {
       messages,
       // Each streamed delta is its own E2EE envelope, so streaming and E2EE
@@ -539,15 +540,14 @@ export async function* cloudChatStream(
       // buffered: one envelope (see `stream` on the request).
       stream: request.stream ?? true,
       model: sendModel,
-      chat_template_kwargs: { enable_thinking: request.enableThinking ?? true },
+      chat_template_kwargs: { enable_thinking: thinking },
     };
     if (request.temperature !== undefined) body.temperature = request.temperature;
-    // Thinking is ON above, and on a reasoning model the trace is billed and
-    // capped inside the same max_tokens as the visible answer. The caller's
-    // budget is for the answer; the headroom is for the trace — see
-    // CHAT_REASONING_HEADROOM_TOKENS for the measurement behind the number.
+    // With thinking on, the trace is billed and capped inside the same
+    // max_tokens as the visible answer, so the caller's budget gets headroom
+    // for it (see CHAT_REASONING_HEADROOM_TOKENS). With it off there is no trace.
     if (request.maxTokens !== undefined) {
-      body.max_tokens = request.maxTokens + CHAT_REASONING_HEADROOM_TOKENS;
+      body.max_tokens = request.maxTokens + (thinking ? CHAT_REASONING_HEADROOM_TOKENS : 0);
     }
     if (request.maxCompletionTokens !== undefined) body.max_completion_tokens = request.maxCompletionTokens;
     if (request.topP !== undefined) body.top_p = request.topP;

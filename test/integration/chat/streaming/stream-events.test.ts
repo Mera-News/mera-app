@@ -233,6 +233,15 @@ describe('the request body', () => {
     expect(body.max_tokens).toBe(256 + CHAT_REASONING_HEADROOM_TOKENS);
   });
 
+  it('sends the answer budget alone while thinking is off: there is no trace to make room for', async () => {
+    const bodies = captureChatBodies();
+    server.use(...mockGateway(respond('ok')));
+    await run({ maxTokens: 256, enableThinking: false });
+    const body = JSON.parse(bodies[0]);
+    expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
+    expect(body.max_tokens).toBe(256);
+  });
+
   it('forwards maxCompletionTokens untouched, and enableThinking false', async () => {
     const bodies = captureChatBodies();
     server.use(...mockGateway(respond('ok')));
