@@ -32,6 +32,11 @@ import type { IAgent, ToolDefinition, ToolExecutionResult } from '../types';
 export class FollowStoryAgent implements IAgent {
   readonly id: string;
 
+  /** Thinking OFF. Measured 2026-10-14 (run-singleshot-corpus, BIG_MODEL):
+   *  proposeTrack passed the pre-registered bar (10/12 vs 11/12, noise 1) and
+   *  turn time fell from p50 7.3s / p90 13.9s to 3.3s / 4.3s. */
+  readonly chatThinking = false;
+
   constructor(private readonly userId: string) {
     this.id = `follow-story-${userId}`;
   }

@@ -99,6 +99,12 @@ export interface IAgent {
    * forced call fabricates user consent for a change nobody asked for.
    */
   getForcedExtractionTools?(): ToolDefinition[];
+  /**
+   * The thinking gear of this agent's single-shot cloud chat calls. Absent =
+   * on (cloudChatStream's default). Set false only on a pass of
+   * harness-local/scripts/run-singleshot-corpus.ts for this agent.
+   */
+  readonly chatThinking?: boolean;
   /** Execute a tool call by name and return result + optional side effects. */
   executeTool(name: string, input: unknown): Promise<ToolExecutionResult>;
   /** Optional: load prior conversation from local storage on mount. */

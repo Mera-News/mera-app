@@ -435,6 +435,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           stream: !suppressText,
           model: BIG_MODEL,
           maxTokens: CHAT_MAX_OUTPUT_TOKENS,
+          enableThinking: agentRef.current.chatThinking,
           // `suppressText` IS THE GATE, not a null sink ref. The forced
           // extraction pass is dispatched with `void`, so it starts BEFORE
           // `startTurn`'s finally has cleared the ref and would otherwise
