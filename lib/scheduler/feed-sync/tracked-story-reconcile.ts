@@ -1,9 +1,10 @@
 // Tracked-Story Reconcile — piggybacks on every feed sync to grow followed
-// stories from articles the sync JUST persisted, with zero extra network calls.
+// stories, with zero extra network calls.
 //
 // A followed story is a user-owned TOPIC, linked server-side every cycle by the
-// persona query. We match freshly-persisted suggestions whose `matched_topics`
-// carry the story's `topic_id`, grow the story, and remember a lean card
+// persona query. We match local suggestions whose stored `matched_topics`, OR
+// this sync's server answer, carry the story's `topic_id` (a row persisted
+// before the topic existed only ever appears in the latter), grow the story, and remember a lean card
 // snapshot per new member so the timeline renders it without a server round
 // trip. Topic-linked stories NEVER auto-end from a quiet run — the topic keeps
 // linking server-side, so quiet ≠ dead (we deliberately do NOT end them here).
@@ -63,25 +64,41 @@ function matchedTopicIds(json: string | null | undefined): string[] {
   }
 }
 
+/** This sync's server answer: article id → the topics it matched. */
+export type ServerTopicMatches = ReadonlyMap<string, readonly { topicId: string | null }[]>;
+
 /**
  * TOPIC pass — grow every active topic-linked story from suggestions whose
  * matched topics carry its topic id. Appends member ids AND snapshots, and
  * stamps every examined story checked. Sends no notification.
  * Never ends a story (the topic keeps linking server-side).
  */
-async function reconcileByTopic(): Promise<void> {
+async function reconcileByTopic(serverMatches?: ServerTopicMatches): Promise<void> {
   const stories = await getActiveForTopicReconcile();
   if (stories.length === 0) return;
 
   const suggestionsCol = database.get<ArticleSuggestionModel>('article_suggestions');
+  const serverIds = serverMatches ? [...serverMatches.keys()] : [];
   const rows = await suggestionsCol
-    .query(Q.where('matched_topics_json', Q.notEq(null)))
+    .query(
+      serverIds.length > 0
+        ? Q.or(
+            Q.where('matched_topics_json', Q.notEq(null)),
+            Q.where('id', Q.oneOf(serverIds)),
+          )
+        : Q.where('matched_topics_json', Q.notEq(null)),
+    )
     .fetch();
 
-  // Invert: topicId → suggestion rows that matched it.
+  // Invert: topicId → suggestion rows that matched it, from the row's stored
+  // matches AND this sync's server answer. A row persisted before the topic
+  // existed (the coverage a story was just followed from) never gets the new
+  // topic id stored, so only the server answer can place it.
   const rowsByTopicId = new Map<string, ArticleSuggestionModel[]>();
   for (const row of rows) {
-    for (const topicId of matchedTopicIds(row.matchedTopicsJson)) {
+    const topicIds = new Set(matchedTopicIds(row.matchedTopicsJson));
+    for (const m of serverMatches?.get(row.id) ?? []) if (m.topicId) topicIds.add(m.topicId);
+    for (const topicId of topicIds) {
       const bucket = rowsByTopicId.get(topicId) ?? [];
       bucket.push(row);
       rowsByTopicId.set(topicId, bucket);
@@ -93,6 +110,11 @@ async function reconcileByTopic(): Promise<void> {
       const candidates = rowsByTopicId.get(story.topicId) ?? [];
       const existing = new Set(story.memberArticleIds);
       const fresh = candidates.filter((r) => !existing.has(r.id));
+      logger.info('[tracked-story-reconcile] story matched', {
+        id: story.id,
+        matched: candidates.length,
+        fresh: fresh.length,
+      });
 
       if (fresh.length > 0) {
         await applyUpdates(story.id, {
@@ -128,6 +150,6 @@ async function reconcileByTopic(): Promise<void> {
  * currently on-device. A followed story is a topic, so growth matches by
  * `topic_id`.
  */
-export async function reconcileTrackedStories(): Promise<void> {
-  await reconcileByTopic();
+export async function reconcileTrackedStories(serverMatches?: ServerTopicMatches): Promise<void> {
+  await reconcileByTopic(serverMatches);
 }

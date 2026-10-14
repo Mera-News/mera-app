@@ -417,6 +417,11 @@ class FeedSyncMachine {
         // shimmer. Internal transitions + snapshot clearing + setLastSyncAt still
         // run so the machine stays consistent. If scoring actually finds work,
         // the scoring-pipeline publishes its own header progress independently.
+        // Nothing to persist, so the persist step's tracked-story growth never
+        // runs; a story just followed from a feed card has all its coverage
+        // already on device and grows only from this run's server answer.
+        steps.growTrackedStories(diffResult.personaMeta?.matchedTopics);
+
         this._transitionTo('scoring', runId);
         logger.debug('[FeedSyncMachine] → scoring (no new articles, silent)');
         await feedPersistence.updateMachineState('scoring');

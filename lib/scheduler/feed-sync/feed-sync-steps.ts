@@ -76,7 +76,7 @@ import { createCancellationError, withRetry } from '@/lib/utils/retry';
 const RESOLVER_ERROR_RETRIES = 1;
 import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
-import { reconcileTrackedStories } from './tracked-story-reconcile';
+import { reconcileTrackedStories, type ServerTopicMatches } from './tracked-story-reconcile';
 import {
   backfillTrackedStoryRetention,
   migrateLegacyTrackedStories,
@@ -530,6 +530,9 @@ async function fetchTopicIdsPersona(
 
   // Invert per-topic results → per-article matched topics.
   for (const tr of res.topicResults ?? []) {
+    if (freeTopicTexts.has(normalizeTopicText(tr.topicText))) {
+      ctx.log(`followed story "${tr.topicText}": server returned ${tr.articleIds?.length ?? 0} ids`);
+    }
     const topicId = textToTopicId.get(tr.topicText) ?? null;
     const metaByArticle = new Map(
       (tr.matchMeta ?? []).map((m) => [m.articleId, m]),
@@ -692,6 +695,51 @@ export async function stepDiff(
     personaIds,
     personaMeta,
   };
+}
+
+/**
+ * Fire-and-forget growth of every followed story from this run. `serverMatches`
+ * is the run's server answer (article id → matched topics), so rows already on
+ * device join a story too. Never throws.
+ */
+export function growTrackedStories(serverMatches?: ServerTopicMatches): void {
+  // First upgrade any legacy stable-cluster follows to the
+  // topic model (one-shot + idempotent — a cheap no-op once none remain), THEN
+  // grow every followed topic from whatever this run just persisted (the
+  // suggestions' matched_topics). Chained so a just-migrated story also grows
+  // this same cycle. Runs after every persist attempt — including a
+  // partial/daily-limit-clipped one, since whatever landed is still a valid
+  // reconcile source — AND on a run with nothing new to download, because the
+  // server answer alone places rows already on device (a story just followed
+  // from a feed card). Must never fail or delay the sync itself.
+  migrateLegacyTrackedStories()
+    .catch((err) => {
+      logger.captureException(err, {
+        tags: { component: 'feed-sync-steps', method: 'migrateLegacyTrackedStories' },
+      });
+    })
+    .finally(() => {
+      reconcileTrackedStories(serverMatches)
+        .catch((err) => {
+          logger.captureException(err, {
+            tags: { component: 'feed-sync-steps', method: 'reconcileTrackedStories' },
+          });
+        })
+        .finally(() => {
+          // One-shot, self-disabling: retain the members of stories followed
+          // before retention existed, for whichever of them are still inside
+          // the 48h suggestion window. Last in the chain so it sees the members
+          // this cycle just added.
+          backfillTrackedStoryRetention().catch((err) => {
+            logger.captureException(err, {
+              tags: {
+                component: 'feed-sync-steps',
+                method: 'backfillTrackedStoryRetention',
+              },
+            });
+          });
+        });
+    });
 }
 
 /**
@@ -1059,41 +1107,7 @@ export async function stepHydratePersistEnqueue(
       (readSkippedTotal > 0 ? `, already read ${readSkippedTotal}` : ''),
   );
 
-  // Fire-and-forget: first upgrade any legacy stable-cluster follows to the
-  // topic model (one-shot + idempotent — a cheap no-op once none remain), THEN
-  // grow every followed topic from whatever this run just persisted (the
-  // suggestions' matched_topics). Chained so a just-migrated story also grows
-  // this same cycle. Runs after every persist attempt — including a
-  // partial/daily-limit-clipped one, since whatever landed is still a valid
-  // reconcile source — but must never fail or delay the sync itself.
-  migrateLegacyTrackedStories()
-    .catch((err) => {
-      logger.captureException(err, {
-        tags: { component: 'feed-sync-steps', method: 'migrateLegacyTrackedStories' },
-      });
-    })
-    .finally(() => {
-      reconcileTrackedStories()
-        .catch((err) => {
-          logger.captureException(err, {
-            tags: { component: 'feed-sync-steps', method: 'reconcileTrackedStories' },
-          });
-        })
-        .finally(() => {
-          // One-shot, self-disabling: retain the members of stories followed
-          // before retention existed, for whichever of them are still inside
-          // the 48h suggestion window. Last in the chain so it sees the members
-          // this cycle just added.
-          backfillTrackedStoryRetention().catch((err) => {
-            logger.captureException(err, {
-              tags: {
-                component: 'feed-sync-steps',
-                method: 'backfillTrackedStoryRetention',
-              },
-            });
-          });
-        });
-    });
+  growTrackedStories(diffResult.personaMeta?.matchedTopics);
 
   return {
     insertedCount,

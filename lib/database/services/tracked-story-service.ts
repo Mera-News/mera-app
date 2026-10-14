@@ -15,13 +15,17 @@ export type { TrackedStoryMemberSnapshot } from '../models/TrackedStory';
 
 const collection = database.get<TrackedStoryModel>('tracked_stories');
 
-/** Newest-first cap on a story's remembered member article ids. EXPORTED because
- *  the story card shows a member COUNT: at the cap the real total is unknowable
- *  from the row, so the UI must render "30+" rather than a wrong exact "30". */
-export const MAX_MEMBER_IDS = 30;
+/** Newest-first cap on a story's remembered member article ids, the reconcile's
+ *  already-counted ledger. It must hold every member still on device (the 48-72h
+ *  suggestion window): an id that falls off reads as new on the next sync and is
+ *  counted again, which once ran a hot story's "N new" into the thousands at 30.
+ *  ponytail: fixed ceiling, prune to ids still on device if a story ever exceeds it. */
+export const MAX_MEMBER_IDS = 2000;
 
-/** Newest-first (by pubDate) cap on a story's remembered member snapshots. */
-const MAX_MEMBER_SNAPSHOTS = 50;
+/** Newest-first (by pubDate) cap on a story's remembered member snapshots: the
+ *  most a timeline can show. ~470 bytes each (measured), so ~1 MB of JSON at the
+ *  cap, parsed whole whenever the row is read. */
+const MAX_MEMBER_SNAPSHOTS = 2000;
 
 /**
  * Merge new member snapshots into an existing set: new snapshots win on id
@@ -364,7 +368,7 @@ export async function markSeen(id: string): Promise<void> {
 
 /**
  * Grow a story with newly-found member articles: prepend the new ids
- * (newest-first, capped at 30), bump `unseen_count`, stamp `last_update_at`,
+ * (newest-first, capped at MAX_MEMBER_IDS), bump `unseen_count`, stamp `last_update_at`,
  * and reset the miss streak. Optionally refresh the "latest" pointer. Never
  * throws.
  *
@@ -436,14 +440,10 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
  * So the id IS the record of the removal, and keeping it needs no deny list, no
  * tombstone column, and no change to how the reconcile grows.
  *
- * THE GUARANTEE IS BOUNDED, and the bound is {@link MAX_MEMBER_IDS}.
- * `applyUpdates` prepends newest-first and slices to 30, so a story that keeps
- * growing eventually evicts this id off the tail — and if the article's
- * `article_suggestions` row is still on-device at that point (48h window,
- * reconcile every 60s), the next sync re-adds the member and its snapshot, and
- * the dismissed card comes back. It takes a story gathering 30+ further members
- * within 48h, which a hot story can. Anything stronger needs state this row
- * does not have; do not "fix" it by re-introducing a member-id deny list.
+ * THE GUARANTEE IS BOUNDED, and the bound is {@link MAX_MEMBER_IDS}: a story
+ * gathering that many further members while this article's row is still on
+ * device would evict the id and bring the card back. Do not "fix" it by
+ * re-introducing a member-id deny list.
  *
  * The member COUNT on the stories list is derived from `member_article_ids`, so
  * it deliberately still counts this article: the story really did gather that
