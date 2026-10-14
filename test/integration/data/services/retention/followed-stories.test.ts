@@ -29,6 +29,7 @@ import * as topicService from '@/lib/database/services/topic-service';
 import { getAllByNormalizedText } from '@/lib/database/services/topic-service';
 import {
   MAX_MEMBER_IDS,
+  MAX_MEMBER_SNAPSHOTS,
   advanceSeenWatermark,
   applyUpdates,
   backfillSnapshotSource,
@@ -521,15 +522,16 @@ describe('applyUpdates', () => {
   });
 
   it('caps the member ids at MAX_MEMBER_IDS, newest first', async () => {
-    expect(MAX_MEMBER_IDS).toBe(30);
+    // It must hold every member still on device, or an evicted id is counted as new again.
+    expect(MAX_MEMBER_IDS).toBe(2000);
     const { id } = await trackStory({ articleId: 'seed', title: 'T', originSurface: 'x' });
-    await applyUpdates(id, { newMemberIds: Array.from({ length: 29 }, (_, i) => `old${i}`) });
-    expect((await memberIds(id))).toHaveLength(30);
+    await applyUpdates(id, { newMemberIds: Array.from({ length: MAX_MEMBER_IDS - 1 }, (_, i) => `old${i}`) });
+    expect((await memberIds(id))).toHaveLength(MAX_MEMBER_IDS);
 
     await applyUpdates(id, { newMemberIds: ['n1', 'n2', 'n3'] });
 
     const ids = await memberIds(id);
-    expect(ids).toHaveLength(30);
+    expect(ids).toHaveLength(MAX_MEMBER_IDS);
     expect(ids.slice(0, 3)).toEqual(['n1', 'n2', 'n3']);
     // the seed was the oldest and fell off the tail
     expect(ids).not.toContain('seed');
@@ -549,24 +551,25 @@ describe('applyUpdates', () => {
     ].map((s) => expect.objectContaining(s)));
   });
 
-  it('caps the snapshots at 50 by pubDate and leaves them alone when none are passed', async () => {
+  it('caps the snapshots at MAX_MEMBER_SNAPSHOTS by pubDate and leaves them alone when none are passed', async () => {
+    expect(MAX_MEMBER_SNAPSHOTS).toBe(2000);
     const { id } = await trackStory({ articleId: 'seed', title: 'T', originSurface: 'x', initialSnapshot: snap('seed', 1) });
     await applyUpdates(id, {
       newMemberIds: [],
-      newSnapshots: Array.from({ length: 49 }, (_, i) => snap(`old${i}`, i + 2)),
+      newSnapshots: Array.from({ length: MAX_MEMBER_SNAPSHOTS - 1 }, (_, i) => snap(`old${i}`, i + 2)),
     });
-    expect((await story(id)).memberSnapshots).toHaveLength(50);
+    expect((await story(id)).memberSnapshots).toHaveLength(MAX_MEMBER_SNAPSHOTS);
 
     await applyUpdates(id, { newMemberIds: ['n1'], newSnapshots: [snap('n1', 10_000)] });
 
     const shots = (await story(id)).memberSnapshots;
-    expect(shots).toHaveLength(50);
+    expect(shots).toHaveLength(MAX_MEMBER_SNAPSHOTS);
     expect(shots[0].articleId).toBe('n1');
     // the oldest (the seed, pubDateMs 1) is the one dropped
     expect(shots.some((s) => s.articleId === 'seed')).toBe(false);
 
     await applyUpdates(id, { newMemberIds: ['n2'] });
-    expect((await story(id)).memberSnapshots).toHaveLength(50);
+    expect((await story(id)).memberSnapshots).toHaveLength(MAX_MEMBER_SNAPSHOTS);
     expect((await story(id)).memberSnapshots[0].articleId).toBe('n1');
   });
 

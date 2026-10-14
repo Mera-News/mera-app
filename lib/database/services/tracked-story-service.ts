@@ -25,7 +25,7 @@ export const MAX_MEMBER_IDS = 2000;
 /** Newest-first (by pubDate) cap on a story's remembered member snapshots: the
  *  most a timeline can show. ~470 bytes each (measured), so ~1 MB of JSON at the
  *  cap, parsed whole whenever the row is read. */
-const MAX_MEMBER_SNAPSHOTS = 2000;
+export const MAX_MEMBER_SNAPSHOTS = 2000;
 
 /**
  * Merge new member snapshots into an existing set: new snapshots win on id
