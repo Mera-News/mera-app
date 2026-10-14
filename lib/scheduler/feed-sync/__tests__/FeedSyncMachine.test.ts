@@ -93,6 +93,7 @@ jest.mock('@/lib/scheduler/feed-sync/feed-sync-steps', () => ({
   stepDiff: (...args: any[]) => mockStepDiff(...args),
   stepHydratePersistEnqueue: (...args: any[]) => mockStepHydratePersistEnqueue(...args),
   stepScore: (...args: any[]) => mockStepScore(...args),
+  growTrackedStories: jest.fn(),
 }));
 
 jest.mock('@/lib/services/SuggestionSyncService', () => ({

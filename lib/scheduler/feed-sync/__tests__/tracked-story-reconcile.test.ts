@@ -121,6 +121,38 @@ describe('reconcileTrackedStories — topic path', () => {
     expect(snap).toEqual(expect.objectContaining({ title: 'Tokyo rain', titleOriginal: '東京で雨', languageCode: 'ja' }));
   });
 
+  // A just-followed story's coverage is usually ALREADY on the device (it was
+  // followed from a feed card), persisted before the topic existed, so its
+  // stored matched_topics can never carry the new topic id. The sync's own
+  // server answer does: those rows must join too.
+  it('grows from rows already on device that this sync matched to the topic', async () => {
+    mockGetActiveForTopicReconcile.mockResolvedValue([
+      { id: 't1', topicId: 'top-1', memberArticleIds: ['a1'] },
+    ]);
+    mockFetch.mockResolvedValue([
+      sug('a1', ['top-9']),
+      sug('a4', ['top-9'], { titleEn: 'Earlier coverage' }),
+      sug('a5', ['top-9']),
+    ]);
+
+    await reconcileTrackedStories(
+      new Map([
+        ['a1', [{ topicId: 'top-1' }]],
+        ['a4', [{ topicId: 'top-9' }, { topicId: 'top-1' }]],
+        ['a6', [{ topicId: 'top-1' }]], // not on device: nothing to snapshot
+      ]),
+    );
+
+    expect(mockApplyUpdates).toHaveBeenCalledTimes(1);
+    expect(mockApplyUpdates).toHaveBeenCalledWith(
+      't1',
+      expect.objectContaining({
+        newMemberIds: ['a4'],
+        newSnapshots: [expect.objectContaining({ articleId: 'a4', title: 'Earlier coverage' })],
+      }),
+    );
+  });
+
   it('stamps but does not grow / notify when no fresh members match', async () => {
     mockGetActiveForTopicReconcile.mockResolvedValue([
       { id: 't1', topicId: 'top-1', memberArticleIds: ['a1'] },

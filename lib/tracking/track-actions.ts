@@ -85,8 +85,8 @@ function snapshotFromSubject(subject: FeedbackSubject): TrackedStoryMemberSnapsh
  * executeProposalActions). Mints a `topics` row keyed on the accepted SEARCH
  * text (the durable link the persona query grows from), then creates the local
  * TrackedStory carrying that topic id, the display LABEL as its headline, and
- * the originating article as its first snapshot. Returns once the row exists;
- * subsequent members arrive via the topic reconcile on the next fetch cycle.
+ * the originating article as its first snapshot. Returns once the row exists,
+ * then starts a feed sync whose topic reconcile fills in the coverage.
  */
 export async function trackStoryWithProposal(
   subject: FeedbackSubject,
@@ -161,6 +161,40 @@ export async function trackStoryWithProposal(
     title: subject.title,
     publicationName: subject.publicationName,
   });
+
+  // 4. Fetch the story's coverage now rather than at the next 5-minute tick.
+  if (topicId) void syncFollowedStoryNow();
+}
+
+/**
+ * Run a feed sync for a story just followed. A sync already in flight read the
+ * topics before this one existed, so wait it out and run once more. Story ids
+ * are quota-exempt, so this costs the reader nothing. Never throws.
+ */
+async function syncFollowedStoryNow(): Promise<void> {
+  try {
+    // Call-time requires: the scheduler pulls the WatermelonDB singleton and
+    // every task module, which must stay out of this module's import graph.
+    const { AppScheduler } =
+      require('../scheduler/AppScheduler') as typeof import('../scheduler/AppScheduler');
+    const { useSchedulerStore } =
+      require('../scheduler/scheduler-store') as typeof import('../scheduler/scheduler-store');
+    const run = () => AppScheduler.trigger('feed-sync', undefined, { bypassDebounce: true });
+    if ((await run()) !== 'busy') return;
+    await new Promise<void>((resolve) => {
+      const done = () => !useSchedulerStore.getState().isRunning('feed-sync');
+      if (done()) return resolve();
+      const unsub = useSchedulerStore.subscribe(() => {
+        if (done()) {
+          unsub();
+          resolve();
+        }
+      });
+    });
+    await run();
+  } catch (err) {
+    logger.warn('[track-actions] follow sync failed', { error: String(err) });
+  }
 }
 
 /**
