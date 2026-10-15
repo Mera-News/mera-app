@@ -119,6 +119,16 @@ describe('getUnscoredGroupingRows', () => {
 
     expect(await getUnscoredGroupingRows()).toEqual([]);
   });
+
+  it('comes back newest published first, which is the order cloud scoring dispatches in', async () => {
+    await seed([
+      article('mid', { pubDate: '2026-10-08T06:00:00.000Z' }),
+      article('old', { pubDate: '2026-10-07T06:00:00.000Z' }),
+      article('new', { pubDate: '2026-10-08T09:00:00.000Z' }),
+    ]);
+
+    expect((await getUnscoredGroupingRows()).map((r) => r.id)).toEqual(['new', 'mid', 'old']);
+  });
 });
 
 describe('getScoredDonorRows(sinceMs)', () => {

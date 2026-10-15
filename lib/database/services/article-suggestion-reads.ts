@@ -101,16 +101,19 @@ import type { ScoringCandidate } from '@/lib/news-harness/core/types';
 
 export type { ScoringCandidate };
 
+/** Unscored rows, newest published first: what scoring reads next, so the day
+ *  after a reading hold goes to today's news. Never gated by the hold (the
+ *  dispatch site is); bookkeeping callers need every row. */
 export async function getUnscoredSuggestionsWithFacts(
   limit?: number,
 ): Promise<ScoringCandidate[]> {
+  const newestFirst = [
+    Q.where('status', ArticleSuggestionStatus.Unscored),
+    Q.sortBy('first_pub_date', Q.desc),
+  ];
   const rows = await (limit !== undefined
-    ? articleSuggestionsCol
-        .query(Q.where('status', ArticleSuggestionStatus.Unscored), Q.take(limit))
-        .fetch()
-    : articleSuggestionsCol
-        .query(Q.where('status', ArticleSuggestionStatus.Unscored))
-        .fetch());
+    ? articleSuggestionsCol.query(...newestFirst, Q.take(limit)).fetch()
+    : articleSuggestionsCol.query(...newestFirst).fetch());
   if (rows.length === 0) return [];
 
   const ids = rows.map((r) => r.id);
@@ -234,10 +237,11 @@ export async function getGroupingRowsByIds(ids: string[]): Promise<SuggestionGro
   return rows.filter((r) => idSet.has(r.id)).map(toGroupingRow);
 }
 
-/** All currently-unscored rows as grouping rows. */
+/** All currently-unscored rows as grouping rows, newest published first: the
+ *  gate keeps this order into `enqueueIds`, so it is cloud dispatch order. */
 export async function getUnscoredGroupingRows(): Promise<SuggestionGroupingRow[]> {
   const rows = await articleSuggestionsCol
-    .query(Q.where('status', ArticleSuggestionStatus.Unscored))
+    .query(Q.where('status', ArticleSuggestionStatus.Unscored), Q.sortBy('first_pub_date', Q.desc))
     .fetch();
   return rows
     .filter((r) => r.status === ArticleSuggestionStatus.Unscored)

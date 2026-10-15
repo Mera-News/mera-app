@@ -410,6 +410,17 @@ describe('the unscored queue', () => {
       expect(await getUnscoredSuggestionsWithFacts(2)).toHaveLength(2);
       expect(await getUnscoredSuggestionsWithFacts()).toHaveLength(3);
     });
+
+    it('comes back newest published first, and a limit takes the newest', async () => {
+      await seed([
+        article('mid', { pubDate: '2026-10-08T06:00:00.000Z' }),
+        article('old', { pubDate: '2026-10-07T06:00:00.000Z' }),
+        article('new', { pubDate: '2026-10-08T09:00:00.000Z' }),
+      ]);
+
+      expect((await getUnscoredSuggestionsWithFacts()).map((c) => c.id)).toEqual(['new', 'mid', 'old']);
+      expect((await getUnscoredSuggestionsWithFacts(2)).map((c) => c.id)).toEqual(['new', 'mid']);
+    });
   });
 });
 
