@@ -1,5 +1,6 @@
 // The "new card" rule behind the halo, the bottom glow and the minimap.
 import { arrivedAtOf, deriveLastLeftAt, isNewCard } from '@/components/custom/feed/feed-entries';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 
 const seen = (at: number): CardStateRecord => ({ state: 'viewed', at } as CardStateRecord);
@@ -28,5 +29,10 @@ describe('arrivedAtOf', () => {
   it('prefers the scoring time, then the local creation time', () => {
     expect(arrivedAtOf({ scoredAt: 5, createdAt: '1970-01-01T00:00:00.010Z' })).toBe(5);
     expect(arrivedAtOf({ scoredAt: null, createdAt: '1970-01-01T00:00:00.010Z' })).toBe(10);
+  });
+  it('a row Mera has not read never counts as arrived, so a download alone is not new', () => {
+    const row = { scoredAt: null, createdAt: '1970-01-01T00:00:00.010Z', status: ArticleSuggestionStatus.Unscored };
+    expect(isNewCard(arrivedAtOf(row), false, 0)).toBe(false);
+    expect(arrivedAtOf({ ...row, status: ArticleSuggestionStatus.Complete })).toBe(10);
   });
 });

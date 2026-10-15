@@ -36,7 +36,7 @@ import {
 } from './fact-rows-selector';
 import { type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import { makeRepCompare } from '@/lib/algorithms/representative-compare';
-import { isReasonPendingVisible } from '@/lib/feed-ordering/pending-visibility';
+import { isReasonPendingVisible, isUnscoredVisible } from '@/lib/feed-ordering/pending-visibility';
 import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { ForYouSuggestion } from './for-you-store';
@@ -184,6 +184,18 @@ export interface BuildFeedListOptions {
    *  Default false: output is byte-identical for every other caller (the
    *  diagnostics and the funnel log). */
   includeReasonPending?: boolean;
+  /** The Continuous view only: also admit `unscored` rows inside the window
+   *  (`isUnscoredVisible`). Inside a story a scored member always fronts, so a
+   *  card fronted by an unscored row means EVERY member is unscored: that is
+   *  a not-read card (feed/not-read-tail.ts). */
+  includeUnscored?: boolean;
+}
+
+/** Fronting rank inside a story: a member with its note, then one still
+ *  waiting for it, then one Mera has not read. */
+function statusRank(s: ForYouSuggestion): number {
+  if (s.status === ArticleSuggestionStatus.Complete) return 0;
+  return s.status === ArticleSuggestionStatus.Unscored ? 2 : 1;
 }
 
 /**
@@ -210,17 +222,20 @@ export function buildFeedList(
 ): FeedListItem[] {
   const cutoffMs = nowMs - FEED_WINDOW_MS;
   const includePending = opts.includeReasonPending === true;
+  const includeUnscored = opts.includeUnscored === true;
   const baseRepCompare = makeRepCompare(userCtx);
-  // With pending rows in the pool, a member whose note exists fronts the
-  // story ahead of one still being written; the shared rule decides the rest.
+  // With pending or unscored rows in the pool, a member whose note exists
+  // fronts the story ahead of one still being written, and either ahead of
+  // one Mera has not read (`statusRank`); the shared rule decides the rest.
   // Without them every member is complete and this is the shared rule exactly.
-  const repCompareForGroups: (a: GroupItem, b: GroupItem) => number = includePending
-    ? (a, b) => {
-        const pa = a.s.status === ArticleSuggestionStatus.Complete ? 0 : 1;
-        const pb = b.s.status === ArticleSuggestionStatus.Complete ? 0 : 1;
-        return pa !== pb ? pa - pb : baseRepCompare(a, b);
-      }
-    : baseRepCompare;
+  const repCompareForGroups: (a: GroupItem, b: GroupItem) => number =
+    includePending || includeUnscored
+      ? (a, b) => {
+          const pa = statusRank(a.s);
+          const pb = statusRank(b.s);
+          return pa !== pb ? pa - pb : baseRepCompare(a, b);
+        }
+      : baseRepCompare;
 
   // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS). Same gate the
   //    swipe deck / fact-rows feeds use, so every surface agrees on what is
@@ -229,7 +244,9 @@ export function buildFeedList(
   //    screen excludes new ones, this catches rows scored before the mute).
   const visible = suggestions.filter(
     (s) =>
-      (isVisible(s, cutoffMs) || (includePending && isReasonPendingVisible(s, cutoffMs))) &&
+      (isVisible(s, cutoffMs) ||
+        (includePending && isReasonPendingVisible(s, cutoffMs)) ||
+        (includeUnscored && isUnscoredVisible(s, cutoffMs))) &&
       !isMutedPublication(s.publication_name, userCtx),
   );
   if (visible.length === 0) return [];

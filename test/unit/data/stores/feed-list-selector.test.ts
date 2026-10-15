@@ -636,3 +636,48 @@ describe('buildFeedList — source preferences (source-pref, D1/D3/D4)', () => {
     );
   });
 });
+
+describe('buildFeedList — includeUnscored (the Continuous view only)', () => {
+  const u = (o: Partial<ForYouSuggestion> = {}) =>
+    sugg({ status: ArticleSuggestionStatus.Unscored, relevance: 0, ...o });
+
+  it('admits unscored rows inside the window only with the option', () => {
+    const rows = [u(), sugg()];
+    expect(buildFeedList(rows, new Set(), NOW)).toHaveLength(1);
+    expect(buildFeedList(rows, new Set(), NOW, null, { includeUnscored: true })).toHaveLength(2);
+    const old = u({ firstPubDate: new Date(NOW - FEED_WINDOW_MS - H).toISOString() });
+    expect(buildFeedList([old], new Set(), NOW, null, { includeUnscored: true })).toHaveLength(0);
+  });
+
+  it('never admits terminal states', () => {
+    const rows = [
+      sugg({ status: ArticleSuggestionStatus.Excluded }),
+      sugg({ status: ArticleSuggestionStatus.AlreadyRead }),
+      sugg({ status: ArticleSuggestionStatus.ReasonSkipped }),
+    ];
+    expect(buildFeedList(rows, new Set(), NOW, null, { includeUnscored: true, includeReasonPending: true })).toHaveLength(0);
+  });
+
+  it('a mixed story is fronted by a scored member, even an older one without an image', () => {
+    const scored = sugg({ _id: 'sc', clusters: [cluster('st')], firstPubDate: new Date(NOW - 5 * H).toISOString() });
+    const unreadMember = u({ _id: 'un', clusters: [cluster('st')], image_url: 'https://x/i.jpg', firstPubDate: new Date(NOW - 9 * H).toISOString() });
+    const list = buildFeedList([unreadMember, scored], new Set(), NOW, null, { includeUnscored: true, includeReasonPending: true });
+    expect(list).toHaveLength(1);
+    expect(list[0].suggestion._id).toBe('sc');
+    expect(list[0].memberCount).toBe(2);
+  });
+
+  it('a pending member fronts ahead of an unscored one', () => {
+    const pending = sugg({ _id: 'pe', status: ArticleSuggestionStatus.ReasonPending, clusters: [cluster('st2')] });
+    const unreadMember = u({ _id: 'un2', clusters: [cluster('st2')], image_url: 'https://x/i.jpg' });
+    const list = buildFeedList([unreadMember, pending], new Set(), NOW, null, { includeUnscored: true, includeReasonPending: true });
+    expect(list[0].suggestion._id).toBe('pe');
+  });
+
+  it('a story whose members are all unscored is fronted by an unscored row (a not-read card)', () => {
+    const list = buildFeedList([u({ clusters: [cluster('st3')] }), u({ clusters: [cluster('st3')] })], new Set(), NOW, null, { includeUnscored: true });
+    expect(list).toHaveLength(1);
+    expect(list[0].suggestion.status).toBe(ArticleSuggestionStatus.Unscored);
+  });
+});
+

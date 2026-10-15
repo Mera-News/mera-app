@@ -369,8 +369,14 @@ export function countUnviewed(
 // launch glows nothing.
 
 /** When this row reached the phone: scored (it can render from then), else
- *  created. NaN when neither parses, which never counts as new. */
-export function arrivedAtOf(s: Pick<ForYouSuggestion, 'scoredAt' | 'createdAt'>): number {
+ *  created. NaN when neither parses, which never counts as new. A row Mera has
+ *  not read is NaN too: "new" means a new pick, so a download alone lights no
+ *  halo, no minimap mark and no "New stories below"; once Mera reads it, its
+ *  `scoredAt` decides. */
+export function arrivedAtOf(
+  s: Pick<ForYouSuggestion, 'scoredAt' | 'createdAt'> & Partial<Pick<ForYouSuggestion, 'status'>>,
+): number {
+  if (s.status === ArticleSuggestionStatus.Unscored) return Number.NaN;
   return s.scoredAt ?? Date.parse(s.createdAt);
 }
 

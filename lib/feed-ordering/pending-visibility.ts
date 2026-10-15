@@ -8,8 +8,11 @@
 // arrived in the background are readable the moment the app opens. The card's
 // note field then says "Writing a note" until the note lands.
 //
-// Deliberately NOT widened to `unscored`: with no relevance there is no band to
-// sort by and no gate to clear, and most of a fetch scores below the gate.
+// `unscored` rows (Mera has not read them) are admitted separately, by
+// `isUnscoredVisible`, in the Continuous view only: every article reaches the
+// Feed and plans meter only Mera's reading, so a row Mera has not read yet is
+// shown after every scored card (the not-read tail, feed/not-read-tail.ts).
+// There is no band and no gate for it, only the window.
 //
 // PURE: RN-free, no store or database imports beyond the pure selector module.
 
@@ -26,4 +29,16 @@ export function isReasonPendingVisible(s: ForYouSuggestion, cutoffMs: number): b
     passesRenderGate(s) &&
     isWithinWindow(s, cutoffMs)
   );
+}
+
+/** Mera has not read this row yet. The ONE predicate for the not-read tail,
+ *  the card's "hasn't read" line and the detail screen's. */
+export function isNotRead(s: Pick<ForYouSuggestion, 'status'>): boolean {
+  return s.status === ArticleSuggestionStatus.Unscored;
+}
+
+/** A row Mera has not read, inside the publication window. Continuous view
+ *  only (`buildFeedList`'s `includeUnscored`). Terminal states never pass. */
+export function isUnscoredVisible(s: ForYouSuggestion, cutoffMs: number): boolean {
+  return isNotRead(s) && isWithinWindow(s, cutoffMs);
 }
