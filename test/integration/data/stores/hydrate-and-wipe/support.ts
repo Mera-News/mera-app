@@ -5,6 +5,7 @@ import { __clearPublisherSourceNames } from '@/lib/database/services/publisher-s
 import { resetPageOrders } from '@/lib/navigation/page-order';
 import { resetMeraButtonCorner } from '@/components/custom/mera-button/corner';
 import { resetFeedViewPrefs } from '@/components/custom/feed/feed-view-prefs';
+import { resetReadHold } from '@/lib/subscription/read-hold';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useAppStateStore } from '@/lib/stores/app-state-store';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
@@ -53,6 +54,7 @@ export function resetHydrationMemory(): void {
   resetBackupSettingsMirror();
   resetFeedViewPrefs();
   resetMeraButtonCorner();
+  resetReadHold();
   for (const store of hydratedStores) {
     (store as unknown as { setState(s: unknown, replace: true): void }).setState(
       (store as unknown as { getInitialState(): unknown }).getInitialState(),

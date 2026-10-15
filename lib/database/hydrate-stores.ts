@@ -72,6 +72,10 @@ export function hydrateAllStores(): Promise<void> {
     // memoised load the startup gate awaits, so the Feed never opens in one
     // view and jumps to the other. Never rejects.
     require('@/components/custom/feed/feed-view-prefs').loadFeedViewPrefs(),
+    // Not a Zustand store: the gateway's daily reading hold (a settings row
+    // mirrored in memory), loaded before any scoring path can ask
+    // `isReadHeld()`. Never rejects.
+    require('../subscription/read-hold').hydrateReadHold(),
     // Not a Zustand store: a synchronous mirror of the backup preferences,
     // read by the settings section and by the background task's guards.
     require('../backup/backup-settings')

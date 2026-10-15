@@ -127,6 +127,9 @@ export const clearAllStores = async () => {
     // the next record writes the previous account's publishers into the new
     // account's row.
     resetPublisherSourceNames();
+    // The read hold is a memory mirror of a settings row that went with the
+    // reset above: without this the next account starts held.
+    require('../subscription/read-hold').resetReadHold();
 
     // LAST, and deliberately so. The device's memory of its last resolved
     // subscription tier (lib/subscription/last-known-tier.ts). Without this,

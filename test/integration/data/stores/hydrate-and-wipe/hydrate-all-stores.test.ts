@@ -20,6 +20,7 @@ import { MERA_BUTTON_LOOK_KEY, useDisplayPrefsStore } from '@/lib/stores/display
 import { writePerformanceOverride } from '@/lib/performance/performance-mode';
 import { useMeraCornerStore } from '@/components/custom/mera-button/corner';
 import { useFeedViewPrefs } from '@/components/custom/feed/feed-view-prefs';
+import { getReadHold, isReadHeld, resetReadHold, setReadHold } from '@/lib/subscription/read-hold';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useAppStateStore } from '@/lib/stores/app-state-store';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
@@ -191,6 +192,20 @@ describe('hydrateAllStores: seeded settings come back', () => {
 
   it('flips database-store.ready once everything has landed', () => {
     expect(ready()).toBe(true);
+  });
+});
+
+describe('hydrateAllStores: the read hold', () => {
+  it('restores a persisted hold before ready flips, so no scoring path reads it empty', async () => {
+    const resetAt = Date.now() + 60 * 60 * 1000;
+    await setReadHold({ resetAt, used: 1 });
+    resetReadHold(); // a cold start: the row is on disk, memory is empty
+    expect(getReadHold().resetAt).toBeNull();
+
+    await run();
+    expect(ready()).toBe(true);
+    expect(getReadHold()).toEqual({ resetAt, used: 1 });
+    expect(isReadHeld()).toBe(true);
   });
 });
 

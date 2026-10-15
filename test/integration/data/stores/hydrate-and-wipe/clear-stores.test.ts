@@ -33,6 +33,7 @@ import {
 } from '@/components/custom/mera-button/corner';
 import { loadFeedViewPrefs, useFeedViewPrefs } from '@/components/custom/feed/feed-view-prefs';
 import { readLastKnownTier, rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
+import { getReadHold, hydrateReadHold, isReadHeld, setReadHold } from '@/lib/subscription/read-hold';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
@@ -228,6 +229,18 @@ describe('clearAllStores: module mirrors', () => {
     await setSetting('feed_view', 'sectioned');
     await loadFeedViewPrefs();
     expect(useFeedViewPrefs.getState().view).toBe('sectioned');
+  });
+
+  it('forgets the read hold, so the next account never starts held', async () => {
+    await setReadHold({ resetAt: Date.now() + 60 * 60 * 1000, used: 1 });
+    expect(isReadHeld()).toBe(true);
+
+    await clearAllStores();
+    expect(isReadHeld()).toBe(false);
+    expect(getReadHold()).toEqual({ resetAt: null, used: null });
+    // The row went with the database, so the next hydrate finds nothing either.
+    await hydrateReadHold();
+    expect(isReadHeld()).toBe(false);
   });
 
   it('clears the last-known subscription tier', async () => {
