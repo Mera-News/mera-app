@@ -189,11 +189,8 @@
       "completedMessage": "フィードの準備ができました"
     },
     "dailyLimit": {
-      "body": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は明日解放されます。",
       "bodyWithTime": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は{{time}}に解放されます。",
-      "title": "1日の記事上限に達しました",
-      "freeTitle": "今日の記事はここまでです",
-      "freeBodyWithTime": "今日メラがお届けした記事はすべて揃っています。端末にある記事を読んでみてください。次の記事は{{time}}に届きます。"
+      "title": "1日の記事上限に達しました"
     },
     "analysingProgress": "{{total}}件中{{done}}件の記事を分析中",
     "statsPublishedPending_other": "{{formatted}}件の記事が過去24時間に公開されました。",
@@ -869,11 +866,9 @@
     "starterFreeTitle": "Starter をご利用中です。無料です",
     "starterFreeBody": "すべてのアカウントに、スターターの全機能を無料で含めています。すべての興味、チャット、ファクトチェック、フォロー中のストーリーが使えます。興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。対応した電話では、どのプランでもこの電話上での読書は無制限です。",
     "analysedForYou": "メラが読みました",
-    "articlesUsedToday": "今日使った記事",
     "available24h": "利用可能（過去24時間）",
     "discarded": "破棄",
     "localOnly": "メラがすでに保持している情報をもとに、この電話上で算出しています。それ以外の情報は記録されません。",
-    "ofLimit": "/ {{limit}}",
     "promoEndsNoRenew": "プロモ利用・{{date}}に終了、更新はされません",
     "relevantSoFar": "今のところ関連あり",
     "billedAppStore": "請求は App Store を通じて行われます。いつでも Apple アカウントから解約できます。",
@@ -2757,10 +2752,7 @@
     },
     "settings": {
       "yourPlan": "ご利用中のプラン",
-      "usage_other": "今日は{{limit}}件中{{count}}件の記事",
-      "usageNoLimit_other": "今日は{{count}}件の記事",
       "usageOffline": "利用状況はオンラインのときに表示されます",
-      "resetsAt": "{{time}}にリセット",
       "addEmail": "メールアドレスを追加",
       "addEmailHint": "任意です。アカウントとプランを別の電話に移す場合や、メラからのメールを受け取る場合にだけ必要です。",
       "appLock": "アプリロック",

@@ -189,11 +189,8 @@
       "completedMessage": "Twój kanał jest gotowy"
     },
     "dailyLimit": {
-      "body": "Na razie nie można pobrać nowych artykułów. Przeglądaj artykuły już zapisane na urządzeniu. Nowe artykuły odblokują się jutro.",
       "bodyWithTime": "Na razie nie można pobrać nowych artykułów. Przeglądaj artykuły już zapisane na urządzeniu. Nowe artykuły odblokują się o {{time}}.",
-      "title": "Osiągnięto dzienny limit artykułów",
-      "freeTitle": "To wszystkie dzisiejsze artykuły",
-      "freeBodyWithTime": "Masz wszystko, co Mera wysłała dzisiaj. Przejrzyj to, co jest na urządzeniu. Więcej pojawi się o {{time}}."
+      "title": "Osiągnięto dzienny limit artykułów"
     },
     "analysingProgress": "Analizowanie {{done}} z {{total}} artykułów",
     "statsPublishedPending_one": "{{formatted}} artykuł został opublikowany w ciągu ostatnich 24 godzin.",
@@ -901,11 +898,9 @@
     "starterFreeTitle": "Masz plan Starter, za darmo",
     "starterFreeBody": "Każde konto zawiera pełny plan Starter bez opłat: wszystkie twoje zainteresowania, czat, sprawdzanie faktów i śledzone historie. Każdy artykuł pasujący do twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Na obsługiwanych telefonach czytanie na telefonie jest nieograniczone w każdym planie.",
     "analysedForYou": "Przeczytane przez Merę",
-    "articlesUsedToday": "Artykuły użyte dzisiaj",
     "available24h": "Dostępne, ostatnie 24 godziny",
     "discarded": "Odrzucone",
     "localOnly": "Obliczone na tym telefonie z tego, co Mera już przechowuje. Nic dodatkowego nie jest zapisywane.",
-    "ofLimit": "z {{limit}}",
     "promoEndsNoRenew": "Dostęp promocyjny · kończy się {{date}}, nie odnowi się",
     "relevantSoFar": "Na razie trafne",
     "billedAppStore": "Opłata pobierana przez App Store. Możesz anulować w dowolnym momencie na swoim koncie Apple.",
@@ -2851,16 +2846,7 @@
     },
     "settings": {
       "yourPlan": "Twój plan",
-      "usage_one": "{{count}} z {{limit}} artykułów dzisiaj",
-      "usage_few": "{{count}} z {{limit}} artykułów dzisiaj",
-      "usage_many": "{{count}} z {{limit}} artykułów dzisiaj",
-      "usage_other": "{{count}} z {{limit}} artykułów dzisiaj",
-      "usageNoLimit_one": "{{count}} artykuł dzisiaj",
-      "usageNoLimit_few": "{{count}} artykuły dzisiaj",
-      "usageNoLimit_many": "{{count}} artykułów dzisiaj",
-      "usageNoLimit_other": "{{count}} artykułu dzisiaj",
       "usageOffline": "Zużycie pokaże się, gdy będziesz online",
-      "resetsAt": "Resetuje się o {{time}}",
       "addEmail": "Dodaj e-mail",
       "addEmailHint": "Opcjonalnie. Tylko jeśli chcesz przenieść konto i plan na inny telefon albo dostawać e-maile od Mera.",
       "appLock": "Blokada aplikacji",

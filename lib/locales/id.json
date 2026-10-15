@@ -189,11 +189,8 @@
       "completedMessage": "Feed Anda sudah siap"
     },
     "dailyLimit": {
-      "body": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda: artikel baru terbuka besok.",
       "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda: artikel baru terbuka pada {{time}}.",
-      "title": "Batas artikel harian tercapai",
-      "freeTitle": "Itu artikel untuk hari ini",
-      "freeBodyWithTime": "Anda punya semua yang Mera kirim hari ini. Jelajahi yang ada di perangkat Anda. Lainnya datang pukul {{time}}."
+      "title": "Batas artikel harian tercapai"
     },
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
     "statsPublishedPending_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
@@ -869,11 +866,9 @@
     "starterFreeTitle": "Anda memakai Starter, gratis",
     "starterFreeBody": "Setiap akun mendapat paket Pemula lengkap tanpa biaya: semua minat Anda, chat, cek fakta, dan cerita yang diikuti. Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket.",
     "analysedForYou": "Dibaca oleh Mera",
-    "articlesUsedToday": "Artikel yang dipakai hari ini",
     "available24h": "Tersedia, 24 jam terakhir",
     "discarded": "Dibuang",
     "localOnly": "Dihitung di ponsel ini dari yang sudah disimpan Mera. Tidak ada yang dicatat tambahan.",
-    "ofLimit": "dari {{limit}}",
     "promoEndsNoRenew": "Akses promo · berakhir {{date}}, tidak diperpanjang",
     "relevantSoFar": "Relevan sejauh ini",
     "billedAppStore": "Ditagih melalui App Store. Batalkan kapan saja di akun Apple Anda.",
@@ -2757,10 +2752,7 @@
     },
     "settings": {
       "yourPlan": "Paket Anda",
-      "usage_other": "{{count}} dari {{limit}} artikel hari ini",
-      "usageNoLimit_other": "{{count}} artikel hari ini",
       "usageOffline": "Penggunaan tampil saat Anda online",
-      "resetsAt": "Direset pada {{time}}",
       "addEmail": "Tambah email",
       "addEmailHint": "Opsional. Hanya jika Anda ingin memindahkan akun dan paket ke ponsel lain, atau menerima email dari Mera.",
       "appLock": "Kunci aplikasi",

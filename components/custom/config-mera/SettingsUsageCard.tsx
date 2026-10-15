@@ -10,34 +10,18 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-
-/** "02:00" in the reader's own time and locale; null when unusable. */
-export function formatResetTime(resetAt: string | null | undefined, language?: string): string | null {
-    if (!resetAt) return null;
-    const date = new Date(resetAt);
-    if (Number.isNaN(date.getTime())) return null;
-    try {
-        return date.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' });
-    } catch {
-        return date.toLocaleTimeString();
-    }
-}
+import ReadingMeter, { useReadingFetch } from './ReadingMeter';
 
 /**
  * The plan card at the TOP of Settings (FinalSettings #1): plan name, Manage
- * plan (the only plan entry in Settings), the usage line with the reset time
- * on the right, and a thin meter.
- *
- * The usage figure is `articlesUsedToday`: articles DELIVERED in the current
- * UTC day. Say "articles today", never "analysed": no analysed-count ledger
- * exists. Offline there is no figure at all; the old fallback was the all-time
- * local suggestion count, which read as a false "today".
+ * plan (the only plan entry in Settings), then the reading meter. Offline with
+ * nothing known the meter says so; it never shows a made-up figure.
  *
  * Billing is fetched on focus (the tab stays mounted) and again whenever the
  * shared server tier changes, so a purchase made elsewhere shows here at once.
  */
 const SettingsUsageCard: React.FC = () => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const colors = useColors();
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
 
@@ -93,15 +77,7 @@ const SettingsUsageCard: React.FC = () => {
                 return planDisplay.pending ? t('subscription.planPending', { plan: name }) : name;
             })();
 
-    const used = billing?.articlesUsedToday ?? 0;
-    const limit = billing?.dailyArticleLimit;
-    const hasLimit = typeof limit === 'number' && limit > 0;
-    const usageLine = !billing
-        ? t('you.settings.usageOffline')
-        : hasLimit
-            ? t('you.settings.usage', { count: used, limit })
-            : t('you.settings.usageNoLimit', { count: used });
-    const reset = billing ? formatResetTime(billing.resetAt, i18n?.language) : null;
+    const reading = useReadingFetch(billing?.subscriptionTier);
 
     return (
         <View
@@ -141,19 +117,7 @@ const SettingsUsageCard: React.FC = () => {
                     <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '600' }}>{t('subscription.managePlan')}</Text>
                 </Pressable>
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-                <Text testID="settings-usage-line" style={{ color: colors.muted, fontSize: 13, flexShrink: 1 }}>
-                    {usageLine}
-                </Text>
-                {reset ? (
-                    <Text style={{ color: colors.ink2, fontSize: 13 }}>{t('you.settings.resetsAt', { time: reset })}</Text>
-                ) : null}
-            </View>
-            {hasLimit ? (
-                <View style={{ height: 4, borderRadius: 2, backgroundColor: colors.trackFill, overflow: 'hidden' }}>
-                    <View style={{ width: `${Math.min(100, (used / (limit as number)) * 100)}%`, height: 4, backgroundColor: colors.accent }} />
-                </View>
-            ) : null}
+            <ReadingMeter size="card" {...reading} />
         </View>
     );
 };

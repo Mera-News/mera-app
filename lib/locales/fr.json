@@ -189,11 +189,8 @@
       "completedMessage": "Votre fil est prêt"
     },
     "dailyLimit": {
-      "body": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil. De nouveaux articles seront débloqués demain.",
       "bodyWithTime": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil. De nouveaux articles seront débloqués à {{time}}.",
-      "title": "Limite quotidienne d'articles atteinte",
-      "freeTitle": "Voilà les articles du jour",
-      "freeBodyWithTime": "Vous avez tout ce que Mera a envoyé aujourd'hui. Parcourez ce qui est sur votre appareil. D'autres arrivent à {{time}}."
+      "title": "Limite quotidienne d'articles atteinte"
     },
     "analysingProgress": "Analyse de {{done}} sur {{total}} articles",
     "statsPublishedPending_one": "{{formatted}} article a été publié au cours des 24 dernières heures.",
@@ -878,11 +875,9 @@
     "starterFreeTitle": "Vous êtes sur Starter, gratuitement",
     "starterFreeBody": "Chaque compte inclut le forfait Starter complet sans frais : tous vos centres d'intérêt, le chat, les vérifications et les histoires suivies. Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Sur les téléphones compatibles, la lecture sur le téléphone est illimitée sur chaque forfait.",
     "analysedForYou": "Lus par Mera",
-    "articlesUsedToday": "Articles utilisés aujourd'hui",
     "available24h": "Disponibles, 24 dernières heures",
     "discarded": "Écartés",
     "localOnly": "Calculé sur ce téléphone à partir de ce que Mera conserve déjà. Rien de supplémentaire n'est enregistré.",
-    "ofLimit": "sur {{limit}}",
     "promoEndsNoRenew": "Accès promotionnel · se termine le {{date}}, sans renouvellement",
     "relevantSoFar": "Pertinents pour l'instant",
     "billedAppStore": "Facturé par l'App Store. Annulez à tout moment dans votre compte Apple.",
@@ -2769,12 +2764,7 @@
     },
     "settings": {
       "yourPlan": "Votre forfait",
-      "usage_one": "{{count}} article sur {{limit}} aujourd'hui",
-      "usage_other": "{{count}} articles sur {{limit}} aujourd'hui",
-      "usageNoLimit_one": "{{count}} article aujourd'hui",
-      "usageNoLimit_other": "{{count}} articles aujourd'hui",
       "usageOffline": "L'utilisation s'affiche quand vous êtes en ligne",
-      "resetsAt": "Réinitialisation à {{time}}",
       "addEmail": "Ajouter un e-mail",
       "addEmailHint": "Facultatif. Seulement si vous voulez transférer votre compte et votre forfait sur un autre téléphone, ou recevoir les e-mails de Mera.",
       "appLock": "Verrouillage de l'app",

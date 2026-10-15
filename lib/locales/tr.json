@@ -189,11 +189,8 @@
       "completedMessage": "Haber akışın hazır"
     },
     "dailyLimit": {
-      "body": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın. Yeni makaleler yarın açılır.",
       "bodyWithTime": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın. Yeni makaleler {{time}} saatinde açılır.",
-      "title": "Günlük makale sınırına ulaşıldı",
-      "freeTitle": "Bugünün makaleleri bu kadar",
-      "freeBodyWithTime": "Mera'nın bugün gönderdiği her şey elinizde. Cihazınızdakilere göz atın. Yenileri {{time}} saatinde geliyor."
+      "title": "Günlük makale sınırına ulaşıldı"
     },
     "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
     "statsPublishedPending_one": "{{formatted}} makale son 24 saatte yayınlandı.",
@@ -873,11 +870,9 @@
     "starterFreeTitle": "Starter kullanıyorsunuz, ücretsiz",
     "starterFreeBody": "Her hesap, tam Starter planını ücretsiz içerir: tüm ilgi alanların, sohbet, doğruluk kontrolleri ve takip ettiğin haberler. İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır.",
     "analysedForYou": "Mera tarafından okundu",
-    "articlesUsedToday": "Bugün kullanılan makaleler",
     "available24h": "Kullanılabilir, son 24 saat",
     "discarded": "Atılan",
     "localOnly": "Mera'nın zaten tuttuklarından bu telefonda hesaplandı. Ayrıca hiçbir şey kaydedilmez.",
-    "ofLimit": "{{limit}} üzerinden",
     "promoEndsNoRenew": "Promosyon erişimi · {{date}} tarihinde biter, yenilenmez",
     "relevantSoFar": "Şimdiye kadar ilgili",
     "billedAppStore": "Ödeme App Store üzerinden alınır. İstediğiniz zaman Apple hesabınızdan iptal edebilirsiniz.",
@@ -2765,12 +2760,7 @@
     },
     "settings": {
       "yourPlan": "Planınız",
-      "usage_one": "Bugün {{limit}} makaleden {{count}}",
-      "usage_other": "Bugün {{limit}} makaleden {{count}}",
-      "usageNoLimit_one": "Bugün {{count}} makale",
-      "usageNoLimit_other": "Bugün {{count}} makale",
       "usageOffline": "Kullanım çevrimiçi olduğunuzda görünür",
-      "resetsAt": "{{time}} tarihinde sıfırlanır",
       "addEmail": "E-posta ekleyin",
       "addEmailHint": "İsteğe bağlı. Yalnızca hesabınızı ve planınızı başka bir telefona taşımak ya da Mera'nın e-postalarını almak isterseniz.",
       "appLock": "Uygulama kilidi",

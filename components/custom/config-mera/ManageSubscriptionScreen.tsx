@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useSupportAction } from '@/lib/intercom';
 import { useColors } from '@/lib/theme/tokens';
-import { formatResetTime } from './SettingsUsageCard';
+import ReadingMeter, { useReadingFetch } from './ReadingMeter';
 import { useManageSubscription } from './useManageSubscription';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 
@@ -33,7 +33,6 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const insets = useSafeAreaInsets();
     const { openSupport } = useSupportAction();
     const {
-        billing,
         priceString,
         loading,
         purchaseStatus,
@@ -88,9 +87,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         return `${activeEntitlement.willRenew ? t('subscription.renewsOn') : t('subscription.expiresOn')} ${date}`;
     })();
 
-    const usedToday = billing?.articlesUsedToday ?? 0;
-    const dailyLimit = billing?.dailyArticleLimit ?? 0;
-    const reset = billing ? formatResetTime(billing.resetAt, i18n?.language) : null;
+    const reading = useReadingFetch(effectiveTier);
     const discarded = Math.max(0, counts.analysedCount - counts.relevantCount);
     const number = (n: number) => n.toLocaleString(i18n?.language);
 
@@ -176,24 +173,10 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             {planLine ? <Text style={{ color: colors.ink2, fontSize: 14 }}>{planLine}</Text> : null}
                         </View>
 
-                        {billing ? (
-                            <View testID="manage-usage" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-                                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-                                    <Text style={{ color: colors.ink, fontSize: 28, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{number(usedToday)}</Text>
-                                    {dailyLimit > 0 ? (
-                                        <Text style={{ color: colors.ink2, fontSize: 15 }}>{t('subscription.ofLimit', { limit: number(dailyLimit) })}</Text>
-                                    ) : null}
-                                    <View style={{ flex: 1 }} />
-                                    {reset ? <Text style={{ color: colors.ink2, fontSize: 13 }}>{t('you.settings.resetsAt', { time: reset })}</Text> : null}
-                                </View>
-                                {dailyLimit > 0 ? (
-                                    <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.trackFill, overflow: 'hidden' }}>
-                                        <View style={{ width: `${Math.min(100, (usedToday / dailyLimit) * 100)}%`, height: 6, backgroundColor: colors.accent }} />
-                                    </View>
-                                ) : null}
-                                <Text style={{ color: colors.ink2, fontSize: 13 }}>{t('subscription.articlesUsedToday')}</Text>
-                            </View>
-                        ) : null}
+                        <View testID="manage-usage" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+                            <ReadingMeter size="screen" {...reading} />
+                            <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('subscription.readingExplainer')}</Text>
+                        </View>
 
                         {/* The last 24 hours: the same four numbers the Feed's
                             status card uses (useFeedCounts), so no new counter. */}

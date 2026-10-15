@@ -189,11 +189,8 @@
       "completedMessage": "您的動態已準備就緒"
     },
     "dailyLimit": {
-      "body": "目前無法擷取新文章。你可以瀏覽裝置上已有的文章，新文章明天會解鎖。",
       "bodyWithTime": "目前無法擷取新文章。你可以瀏覽裝置上已有的文章，新文章將於 {{time}} 解鎖。",
-      "title": "已達每日文章上限",
-      "freeTitle": "今天的文章就這些",
-      "freeBodyWithTime": "梅拉今天傳送給你的內容，你都已經收到了。你可以瀏覽裝置上已有的文章。更多內容將於 {{time}} 送達。"
+      "title": "已達每日文章上限"
     },
     "analysingProgress": "正在分析 {{total}} 篇文章中的第 {{done}} 篇",
     "statsPublishedPending_other": "過去 24 小時內發佈了{{formatted}}篇文章。",
@@ -869,11 +866,9 @@
     "starterFreeTitle": "您正在使用 Starter，免費",
     "starterFreeBody": "每個帳號都免費包含完整的入門版方案：你所有的興趣、聊天、事實查核，以及你追蹤的報導。每篇符合你興趣的文章都會進入你的資訊流。梅拉會閱讀它們、把雜訊放到一旁，並把重要的內容提上來。在支援的手機上，所有方案的手機端閱讀都不受限。",
     "analysedForYou": "已由梅拉閱讀",
-    "articlesUsedToday": "今日已使用的文章",
     "available24h": "可用，過去 24 小時",
     "discarded": "已捨棄",
     "localOnly": "根據梅拉已保存的資料，在這支手機上計算。不會另外記錄任何內容。",
-    "ofLimit": "上限 {{limit}}",
     "promoEndsNoRenew": "促銷權限 · {{date}} 結束，不會續訂",
     "relevantSoFar": "目前相關",
     "billedAppStore": "透過 App Store 計費。你可以隨時在你的 Apple 帳戶中取消。",
@@ -2757,10 +2752,7 @@
     },
     "settings": {
       "yourPlan": "你的方案",
-      "usage_other": "今天已讀 {{count}} 篇，上限 {{limit}} 篇",
-      "usageNoLimit_other": "今天已讀 {{count}} 篇",
       "usageOffline": "連上網路後才會顯示用量",
-      "resetsAt": "於 {{time}} 重設",
       "addEmail": "新增電子郵件",
       "addEmailHint": "選填。只有在你想把帳號和方案轉移到另一支手機，或想收到梅拉的電子郵件時才需要。",
       "appLock": "App 鎖定",

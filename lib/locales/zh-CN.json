@@ -189,11 +189,8 @@
       "completedMessage": "您的资讯已准备就绪"
     },
     "dailyLimit": {
-      "body": "暂时无法获取新文章。你可以浏览设备上已有的文章，新文章将于明天解锁。",
       "bodyWithTime": "暂时无法获取新文章。你可以浏览设备上已有的文章，新文章将于 {{time}} 解锁。",
-      "title": "已达每日文章上限",
-      "freeTitle": "今天的文章就这些",
-      "freeBodyWithTime": "梅拉今天发送的内容你都已收到。看看设备上已有的文章吧。{{time}} 会有更多。"
+      "title": "已达每日文章上限"
     },
     "analysingProgress": "正在分析 {{done}}/{{total}} 篇文章",
     "statsPublishedPending_other": "过去24小时内发布了{{formatted}}篇文章。",
@@ -869,11 +866,9 @@
     "starterFreeTitle": "你正在使用 Starter，免费",
     "starterFreeBody": "每个账号都免费包含完整的入门版方案：你的所有兴趣、聊天、事实核查和已关注的报道。每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。在支持的手机上，所有方案的手机端阅读都不限量。",
     "analysedForYou": "梅拉已阅读",
-    "articlesUsedToday": "今日已使用的文章数",
     "available24h": "可用，过去24小时",
     "discarded": "已丢弃",
     "localOnly": "根据梅拉已保存的内容在这部手机上计算。不记录任何额外信息。",
-    "ofLimit": "共 {{limit}}",
     "promoEndsNoRenew": "促销权益 · {{date}}结束，不会续订",
     "relevantSoFar": "目前相关",
     "billedAppStore": "通过 App Store 扣费。你可以随时在 Apple 账号中取消。",
@@ -2757,10 +2752,7 @@
     },
     "settings": {
       "yourPlan": "你的方案",
-      "usage_other": "今天已读 {{count}} 篇，上限 {{limit}} 篇",
-      "usageNoLimit_other": "今天已读 {{count}} 篇",
       "usageOffline": "联网后才会显示用量",
-      "resetsAt": "{{time}}重置",
       "addEmail": "添加电子邮箱",
       "addEmailHint": "可选。只有在你想将账户迁移到另一部手机，或接收梅拉的邮件时才需要。",
       "appLock": "应用锁",

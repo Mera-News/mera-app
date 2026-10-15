@@ -190,11 +190,8 @@
     },
     "analysingProgress": "{{total}}개 중 {{done}}개 기사 분석 중",
     "dailyLimit": {
-      "body": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 내일 잠금 해제됩니다.",
       "bodyWithTime": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 {{time}}에 잠금 해제됩니다.",
-      "title": "일일 기사 한도에 도달했습니다",
-      "freeTitle": "오늘의 기사는 여기까지입니다",
-      "freeBodyWithTime": "메라가 오늘 보낸 기사를 모두 받았습니다. 기기에 있는 기사를 살펴보세요. {{time}}에 더 도착합니다."
+      "title": "일일 기사 한도에 도달했습니다"
     },
     "statsPublishedPending_other": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
     "statsPublished_other": "지난 24시간 동안 {{formatted}}개의 기사가 게재되었으며,",
@@ -869,11 +866,9 @@
     "starterFreeTitle": "Starter를 무료로 이용 중입니다",
     "starterFreeBody": "모든 계정에 스타터 플랜 전체가 무료로 포함됩니다. 모든 관심사, 채팅, 팩트체크, 팔로우 중인 스토리를 쓸 수 있습니다. 회원님의 관심사와 맞는 기사는 모두 피드에 도착합니다. 메라가 기사를 읽고, 불필요한 내용은 걸러내며, 중요한 내용을 위로 올립니다. 지원되는 휴대폰에서는 모든 요금제에서 휴대폰에서 읽기가 무제한입니다.",
     "analysedForYou": "메라가 읽음",
-    "articlesUsedToday": "오늘 사용한 기사",
     "available24h": "사용 가능, 지난 24시간",
     "discarded": "제외됨",
     "localOnly": "메라가 이미 보관하고 있는 정보로 이 휴대폰에서 계산합니다. 추가로 기록되는 것은 없습니다.",
-    "ofLimit": "{{limit}} 중",
     "promoEndsNoRenew": "프로모 이용권 · {{date}}에 종료, 자동 갱신되지 않음",
     "relevantSoFar": "지금까지 관련 있음",
     "billedAppStore": "App Store를 통해 결제됩니다. Apple 계정에서 언제든지 취소할 수 있습니다.",
@@ -2757,10 +2752,7 @@
     },
     "settings": {
       "yourPlan": "내 요금제",
-      "usage_other": "오늘 기사 {{limit}}개 중 {{count}}개",
-      "usageNoLimit_other": "오늘 기사 {{count}}개",
       "usageOffline": "사용량은 온라인일 때 표시돼요",
-      "resetsAt": "{{time}}에 초기화",
       "addEmail": "이메일 추가",
       "addEmailHint": "선택 사항입니다. 계정과 요금제를 다른 휴대폰으로 옮기거나 메라 이메일을 받고 싶을 때만 추가하세요.",
       "appLock": "앱 잠금",

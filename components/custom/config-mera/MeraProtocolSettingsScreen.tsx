@@ -23,8 +23,9 @@ import { Switch } from '@/components/ui/switch';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
 import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
-import { Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import React, { useRef } from 'react';
+import { AccessibilityInfo, findNodeHandle, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
@@ -83,6 +84,28 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     } = useMeraProtocolSettings();
     const insets = useSafeAreaInsets();
 
+    // `?focus=on-device` (the reading meter's "on this phone" link): once per
+    // mount, scroll the On this phone row into view and give it screen-reader focus.
+    const { focus } = useLocalSearchParams<{ focus?: string }>();
+    const scrollRef = useRef<ScrollView>(null);
+    const onDeviceRowRef = useRef<View>(null);
+    const focused = useRef(false);
+    const focusOnDeviceRow = () => {
+        const row = onDeviceRowRef.current;
+        const scroll = scrollRef.current;
+        if (focus !== 'on-device' || focused.current || !row || !scroll) return;
+        focused.current = true;
+        row.measureLayout(
+            scroll.getInnerViewNode() as never,
+            (_x, y) => {
+                scroll.scrollTo({ y: Math.max(0, y - 16), animated: false });
+                const handle = findNodeHandle(row);
+                if (handle != null) AccessibilityInfo.setAccessibilityFocus(handle);
+            },
+            () => {},
+        );
+    };
+
     // "Where Mera reads your news" (FinalSettings #11): On this phone is
     // always shown, for transparency, and disabled with the reason when the
     // phone can't run it; Private cloud says what it is. Beta stays on
@@ -96,6 +119,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         return (
             <Pressable
                 key={mode}
+                // The kit Pressable types its ref as the styled wrapper; at runtime it is the host View.
+                ref={onDevice ? (onDeviceRowRef as never) : undefined}
+                onLayout={onDevice ? focusOnDeviceRow : undefined}
                 testID={onDevice ? 'mode-on-device' : 'mode-cloud'}
                 onPress={() => selectMode(mode)}
                 disabled={isUpdatingMode || cantRun}
@@ -578,7 +604,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
                 </Box>
 
-                <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: endClearance }}>
+                <ScrollView ref={scrollRef} className="flex-1" contentContainerStyle={{ paddingBottom: endClearance }}>
                     {renderContent()}
                 </ScrollView>
 

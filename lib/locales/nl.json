@@ -190,11 +190,8 @@
     },
     "analysingProgress": "{{done}} van {{total}} artikelen analyseren",
     "dailyLimit": {
-      "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden morgen ontgrendeld.",
       "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden om {{time}} ontgrendeld.",
-      "title": "Daglimiet voor artikelen bereikt",
-      "freeTitle": "Dit zijn de artikelen van vandaag",
-      "freeBodyWithTime": "Je hebt alles wat Mera vandaag heeft gestuurd. Bekijk wat er op je apparaat staat. Om {{time}} komt er meer bij."
+      "title": "Daglimiet voor artikelen bereikt"
     },
     "statsPublishedPending_one": "{{formatted}} artikel is gepubliceerd in de afgelopen 24 uur.",
     "statsPublishedPending_other": "{{formatted}} artikelen zijn gepubliceerd in de afgelopen 24 uur.",
@@ -873,11 +870,9 @@
     "starterFreeTitle": "Je zit op Starter, gratis",
     "starterFreeBody": "Elk account bevat het volledige Starter-abonnement zonder kosten: al je interesses, chat, factchecks en gevolgde verhalen. Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Op ondersteunde telefoons is lezen op de telefoon onbeperkt, bij elk abonnement.",
     "analysedForYou": "Gelezen door Mera",
-    "articlesUsedToday": "Vandaag gebruikte artikelen",
     "available24h": "Beschikbaar, laatste 24 uur",
     "discarded": "Weggegooid",
     "localOnly": "Berekend op deze telefoon uit wat Mera al bewaart. Er wordt niets extra vastgelegd.",
-    "ofLimit": "van {{limit}}",
     "promoEndsNoRenew": "Promotietoegang · eindigt op {{date}}, wordt niet verlengd",
     "relevantSoFar": "Tot nu toe relevant",
     "billedAppStore": "Betaald via de App Store. Je kunt op elk moment opzeggen in je Apple-account.",
@@ -2763,12 +2758,7 @@
     },
     "settings": {
       "yourPlan": "Jouw abonnement",
-      "usage_one": "{{count}} van {{limit}} artikelen vandaag",
-      "usage_other": "{{count}} van {{limit}} artikelen vandaag",
-      "usageNoLimit_one": "{{count}} artikel vandaag",
-      "usageNoLimit_other": "{{count}} artikelen vandaag",
       "usageOffline": "Gebruik wordt getoond als je online bent",
-      "resetsAt": "Wordt gereset om {{time}}",
       "addEmail": "E-mailadres toevoegen",
       "addEmailHint": "Optioneel. Alleen als je je account naar een andere telefoon wilt verhuizen of Mera's e-mails wilt ontvangen.",
       "appLock": "App-vergrendeling",

@@ -189,11 +189,8 @@
       "completedMessage": "Seu feed está pronto"
     },
     "dailyLimit": {
-      "body": "Nenhum novo artigo pode ser buscado por enquanto. Explore os artigos já disponíveis no seu dispositivo. Novos artigos serão liberados amanhã.",
       "bodyWithTime": "Nenhum novo artigo pode ser buscado por enquanto. Explore os artigos já disponíveis no seu dispositivo. Novos artigos serão liberados às {{time}}.",
-      "title": "Limite diário de artigos atingido",
-      "freeTitle": "Esses são os artigos de hoje",
-      "freeBodyWithTime": "Você tem tudo o que a Mera enviou hoje. Veja o que está no seu dispositivo. Mais chegam às {{time}}."
+      "title": "Limite diário de artigos atingido"
     },
     "analysingProgress": "Analisando {{done}} de {{total}} artigos",
     "statsPublishedPending_one": "{{formatted}} artigo foi publicado nas últimas 24 horas.",
@@ -873,11 +870,9 @@
     "starterFreeTitle": "Você está no Starter, grátis",
     "starterFreeBody": "Toda conta inclui o plano Starter completo sem custo: todos os seus interesses, chat, checagens e histórias acompanhadas. Cada artigo que combina com seus interesses chega ao seu Feed. O Mera lê, deixa de lado o que é ruído e destaca o que importa. Em celulares compatíveis, a leitura neste celular é ilimitada em todos os planos.",
     "analysedForYou": "Lido pelo Mera",
-    "articlesUsedToday": "Artigos usados hoje",
     "available24h": "Disponível, últimas 24 horas",
     "discarded": "Descartados",
     "localOnly": "Calculado neste celular a partir do que a Mera já guarda. Nada extra é registrado.",
-    "ofLimit": "de {{limit}}",
     "promoEndsNoRenew": "Acesso promocional · termina em {{date}}, não renova",
     "relevantSoFar": "Relevantes até agora",
     "billedAppStore": "Cobrado pela App Store. Cancele quando quiser na sua conta da Apple.",
@@ -2763,12 +2758,7 @@
     },
     "settings": {
       "yourPlan": "Seu plano",
-      "usage_one": "{{count}} de {{limit}} artigos hoje",
-      "usage_other": "{{count}} de {{limit}} artigos hoje",
-      "usageNoLimit_one": "{{count}} artigo hoje",
-      "usageNoLimit_other": "{{count}} artigos hoje",
       "usageOffline": "O uso aparece quando você está on-line",
-      "resetsAt": "Renova às {{time}}",
       "addEmail": "Adicionar um e-mail",
       "addEmailHint": "Opcional. Só se você quiser levar sua conta e seu plano para outro celular, ou receber e-mails da Mera.",
       "appLock": "Bloqueio do app",

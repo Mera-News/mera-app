@@ -189,11 +189,8 @@
       "completedMessage": "Bản tin của bạn đã sẵn sàng"
     },
     "dailyLimit": {
-      "body": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn. Bài viết mới sẽ mở khóa vào ngày mai.",
       "bodyWithTime": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn. Bài viết mới sẽ mở khóa vào lúc {{time}}.",
-      "title": "Đã đạt giới hạn bài viết hằng ngày",
-      "freeTitle": "Đó là các bài viết của hôm nay",
-      "freeBodyWithTime": "Bạn đã có mọi thứ Mera gửi hôm nay. Hãy xem những gì có trên thiết bị của bạn. Sẽ có thêm vào lúc {{time}}."
+      "title": "Đã đạt giới hạn bài viết hằng ngày"
     },
     "analysingProgress": "Đang phân tích {{done}}/{{total}} bài viết",
     "statsPublishedPending_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
@@ -869,11 +866,9 @@
     "starterFreeTitle": "Bạn đang dùng Starter, miễn phí",
     "starterFreeBody": "Mọi tài khoản đều có trọn gói Cơ bản miễn phí: tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi. Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Trên các điện thoại được hỗ trợ, việc đọc trên điện thoại không giới hạn ở mọi gói.",
     "analysedForYou": "Mera đã đọc",
-    "articlesUsedToday": "Bài viết đã dùng hôm nay",
     "available24h": "Còn lại, trong 24 giờ qua",
     "discarded": "Đã loại bỏ",
     "localOnly": "Được tính trên điện thoại này từ những gì Mera vốn đã lưu. Không ghi thêm gì.",
-    "ofLimit": "trên {{limit}}",
     "promoEndsNoRenew": "Quyền truy cập khuyến mãi · kết thúc {{date}}, sẽ không gia hạn",
     "relevantSoFar": "Có liên quan cho đến lúc này",
     "billedAppStore": "Thanh toán qua App Store. Bạn có thể hủy bất cứ lúc nào trong tài khoản Apple của mình.",
@@ -2757,10 +2752,7 @@
     },
     "settings": {
       "yourPlan": "Gói của bạn",
-      "usage_other": "{{count}} trên {{limit}} bài hôm nay",
-      "usageNoLimit_other": "{{count}} bài hôm nay",
       "usageOffline": "Mức sử dụng hiện khi bạn trực tuyến",
-      "resetsAt": "Đặt lại lúc {{time}}",
       "addEmail": "Thêm email",
       "addEmailHint": "Không bắt buộc. Chỉ khi bạn muốn chuyển tài khoản và gói sang điện thoại khác, hoặc nhận email từ Mera.",
       "appLock": "Khóa ứng dụng",
