@@ -1081,6 +1081,12 @@ export type UserBillingInfo = {
   grantExpiresAt?: Maybe<Scalars['String']['output']>;
   /** True if this user has ever held a paid tier (now or in the past). False is what selects the app's first-open paywall over the softer lapse interstitial. */
   hasEverSubscribed: Scalars['Boolean']['output'];
+  /** This plan's daily cloud reading as a multiple of Starter's (Starter 1). */
+  planMultiplier: Scalars['Int']['output'];
+  /** Next 00:00 UTC, when cloud reading resets. */
+  readingResetAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Share of today's cloud reading used, 0 to 1 (bytes read / the day's limit, capped at 1). 0 when nothing was read today. Null when the server cannot see the reading meter. */
+  readingUsed?: Maybe<Scalars['Float']['output']>;
   /** ISO timestamp of the next UTC midnight — when usage resets. */
   resetAt: Scalars['String']['output'];
   /** True when the user has lapsed out of a paid tier and has not yet acknowledged the interstitial for THAT lapse. Call acknowledgeLapseInterstitial once it has been shown; a later lapse flips this back to true on its own. */

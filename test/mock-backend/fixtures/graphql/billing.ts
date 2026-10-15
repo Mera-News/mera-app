@@ -8,11 +8,17 @@ const nextUtcMidnight = (now: number): string => new Date((Math.floor(now / DAY_
 
 // Invented limits for the paid tiers; only Starter's 250 is the real product number.
 const LIMIT: Record<Tier, number> = { none: 0, starter: 250, individual: 1000, professional: 2500 };
+/** The plan's cloud reading as a multiple of Starter's; an unentitled account reads as Starter. */
+const MULTIPLIER: Record<Tier, number> = { none: 1, starter: 1, individual: 5, professional: 20 };
 
 /** What `userBilling` reports for a tier. Starter is the unpaid default the server
  *  grants for 14 days (`grantExpiresAt` set, nothing from the store); the paid tiers
  *  carry an `entitlementExpiresAt` and no grant; `none` is unentitled with no history. */
-export function billingFor(tier: Tier, now: number, opts: { limitReached?: boolean } = {}): UserBillingInfo {
+export function billingFor(
+    tier: Tier,
+    now: number,
+    opts: { limitReached?: boolean; readingUsed?: number | null } = {},
+): UserBillingInfo {
     const paid = tier === 'individual' || tier === 'professional';
     const limit = LIMIT[tier];
     return {
@@ -25,6 +31,9 @@ export function billingFor(tier: Tier, now: number, opts: { limitReached?: boole
         resetAt: nextUtcMidnight(now),
         hasEverSubscribed: paid,
         showLapseInterstitial: false,
+        planMultiplier: MULTIPLIER[tier],
+        readingUsed: opts.readingUsed === undefined ? 0 : opts.readingUsed,
+        readingResetAt: nextUtcMidnight(now),
     };
 }
 

@@ -7,6 +7,7 @@
 //
 // Scenario (see ./scenario) is read at resolve time:
 //   tier                billing ops report it ('none' = unentitled, 'starter' = 250/day)
+//   readingUsed         billing's readingUsed (0..1, null = meter not visible); planMultiplier follows tier
 //   dailyLimitReached   GetArticlesForTopicsByIds delivers nothing and sets the cap fields
 //   articles: 'empty'   every id op and article list answers empty
 //   imageOrigin         origin of the fixture image URLs (default: the request's own)
@@ -344,7 +345,10 @@ query<'cachedFactCheck'>('GetCachedFactCheck', (c) => ({
 // ---- account, billing, config -------------------------------------------------------
 
 const billing = (c: Ctx) =>
-    billingFor(billingTier(c.scenario, c.now), c.now, { limitReached: c.scenario.dailyLimitReached });
+    billingFor(billingTier(c.scenario, c.now), c.now, {
+        limitReached: c.scenario.dailyLimitReached,
+        readingUsed: c.scenario.readingUsed,
+    });
 query<'userBilling'>('GetUserBilling', (c) => ({ userBilling: billing(c) }));
 query<'userBilling'>('GetUserBillingLapseState', (c) => ({ userBilling: billing(c) }));
 

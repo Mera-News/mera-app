@@ -1074,6 +1074,19 @@ type UserBillingInfo {
   """
   hasEverSubscribed: Boolean!
 
+  """
+  This plan's daily cloud reading as a multiple of Starter's (Starter 1).
+  """
+  planMultiplier: Int!
+
+  """Next 00:00 UTC, when cloud reading resets."""
+  readingResetAt: DateTime
+
+  """
+  Share of today's cloud reading used, 0 to 1 (bytes read / the day's limit, capped at 1). 0 when nothing was read today. Null when the server cannot see the reading meter.
+  """
+  readingUsed: Float
+
   """ISO timestamp of the next UTC midnight — when usage resets."""
   resetAt: String!
 

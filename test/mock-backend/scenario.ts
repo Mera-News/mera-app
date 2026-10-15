@@ -2,6 +2,8 @@
 export interface Scenario {
     tier: 'starter' | 'individual' | 'professional' | 'none';
     dailyLimitReached: boolean;
+    /** What billing reports as `readingUsed` (0..1; null = the server cannot see the meter). */
+    readingUsed: number | null;
     articles: 'default' | 'empty';
     discovery: boolean;
     /** Origin for fixture image URLs; null = the request's own origin. The e2e lane's
@@ -25,6 +27,7 @@ export interface Scenario {
 const DEFAULT_SCENARIO: Scenario = {
     tier: 'starter',
     dailyLimitReached: false,
+    readingUsed: 0,
     articles: 'default',
     discovery: false,
     imageOrigin: null,
