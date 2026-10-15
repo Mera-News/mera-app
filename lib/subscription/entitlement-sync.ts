@@ -5,7 +5,11 @@
 // calls this: app foreground, login, a completed purchase, and a 402 from a
 // guarded query.
 
-import { fetchUserBilling, fetchUserBillingLapseState } from '@/lib/billing-service';
+import {
+    fetchUserBilling,
+    fetchUserBillingLapseState,
+    fetchUserReading,
+} from '@/lib/billing-service';
 import { syncRevenueCatAttributes } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
@@ -49,9 +53,12 @@ export async function syncEntitlement(
             // Two queries, on purpose — see fetchUserBillingLapseState. The
             // second is allowed to fail on a server that predates the lapse
             // fields without taking the tier down with it.
+            // The reading meter is a third, quiet query for the same reason;
+            // it mirrors itself into the read hold.
             const [billing, lapseState] = await Promise.all([
                 fetchUserBilling(),
                 fetchUserBillingLapseState(),
+                fetchUserReading(),
             ]);
             if (billing) {
                 useSubscriptionStore.getState().setServerBilling(billing);
@@ -65,17 +72,6 @@ export async function syncEntitlement(
                 // Fire-and-forget: a settings write must never delay or fail an
                 // entitlement sync.
                 void rememberLastKnownTier(billing.subscriptionTier ?? 'none');
-                // The background refresh may spend at most half of this per
-                // UTC day, and a background wake cannot ask the server. Same
-                // fire-and-forget contract; lazy so this module does not open
-                // SQLite at import.
-                try {
-                    // eslint-disable-next-line @typescript-eslint/no-require-imports
-                    const { rememberDailyArticleLimit } = require('@/lib/background/bg-refresh-settings') as typeof import('@/lib/background/bg-refresh-settings');
-                    void rememberDailyArticleLimit(billing.dailyArticleLimit);
-                } catch {
-                    // Background falls back to the Starter limit.
-                }
                 // Only a successful read counts towards the debounce. A failed
                 // fetch that started the clock would leave a device that was
                 // briefly offline stuck on stale entitlement for a full minute

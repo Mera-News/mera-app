@@ -12,7 +12,9 @@ import {
 } from '@/lib/billing-service';
 import database from '@/lib/database';
 import * as settingService from '@/lib/database/services/setting-service';
-import { LAST_DAILY_ARTICLE_LIMIT_KEY } from '@/lib/background/bg-refresh-settings';
+import { getReadHold, isReadHeld, resetReadHold, setReadHold } from '@/lib/subscription/read-hold';
+import { getPlanRaisedAt, resetPlanRiseForTests } from '@/lib/subscription/plan-rise';
+import * as authClient from '@/lib/auth-client';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import {
     aiAccessFromLastKnownTier,
@@ -145,6 +147,8 @@ describe('billing and entitlement', () => {
         useSubscriptionStore.getState().reset();
         _resetJwtSubscriptionGateForTests();
         resetToastQueue();
+        resetReadHold();
+        resetPlanRiseForTests();
         fetchSpy = jest.spyOn(billingService, 'fetchUserBilling');
     });
 
@@ -301,10 +305,48 @@ describe('billing and entitlement', () => {
             await settled(readLastKnownTier, 'individual');
         });
 
-        it('records the daily article limit for the background refresh allowance', async () => {
-            setScenario({ tier: 'individual' });
+        it('mirrors the reading meter into the read hold, and holds only once the day is used up', async () => {
+            setScenario({ tier: 'individual', readingUsed: 0.4 });
             await syncEntitlement();
-            await settled(() => settingService.getSetting(LAST_DAILY_ARTICLE_LIMIT_KEY), '1000');
+            await waitFor(() => expect(getReadHold().used).toBe(0.4));
+            expect(isReadHeld()).toBe(false);
+
+            resetEntitlementSyncState();
+            setScenario({ tier: 'individual', readingUsed: 1 });
+            await syncEntitlement({ force: true });
+            await waitFor(() => expect(isReadHeld()).toBe(true));
+            expect(getReadHold().used).toBe(1);
+        });
+
+        it('a lower reading figure never ends a hold', async () => {
+            await setReadHold({ resetAt: Date.now() + 3_600_000, used: 1 });
+            setScenario({ tier: 'starter', readingUsed: 0.2 });
+            await syncEntitlement({ force: true });
+            await waitFor(() => expect(getReadHold().used).toBe(0.2));
+            expect(isReadHeld()).toBe(true);
+        });
+
+        it('a tier that rises ends the hold and drops the cached JWT at once; the first read only records', async () => {
+            const invalidate = jest.spyOn(authClient, 'invalidateJwtCache');
+            setScenario({ tier: 'starter', readingUsed: 1 });
+            await syncEntitlement({ force: true });
+            await waitFor(() => expect(isReadHeld()).toBe(true));
+            expect(invalidate).not.toHaveBeenCalled();
+            expect(getPlanRaisedAt()).toBeNull();
+
+            setScenario({ tier: 'professional', readingUsed: 0.05 });
+            await syncEntitlement({ force: true });
+            await waitFor(() => expect(isReadHeld()).toBe(false));
+            expect(invalidate).toHaveBeenCalledTimes(1);
+            expect(getPlanRaisedAt()).not.toBeNull();
+        });
+
+        it('the reading query failing takes nothing else down and reports nothing', async () => {
+            server.use(mockGqlError('GetUserReading', 'GRAPHQL_VALIDATION_FAILED'));
+            setScenario({ tier: 'individual' });
+            await syncEntitlement({ force: true });
+            await settled(readLastKnownTier, 'individual');
+            expect(getReadHold().used).toBeNull();
         });
 
         it('records no limit and no tier when the fetch failed: a silent server is not a resolution', async () => {
@@ -313,7 +355,6 @@ describe('billing and entitlement', () => {
             // Let any stray fire-and-forget write land before asserting its absence.
             await new Promise((r) => setTimeout(r, 30));
             await expect(readLastKnownTier()).resolves.toBeNull();
-            await expect(settingService.getSetting(LAST_DAILY_ARTICLE_LIMIT_KEY)).resolves.toBeNull();
             expect(useSubscriptionStore.getState().serverTier).toBeNull();
         });
 

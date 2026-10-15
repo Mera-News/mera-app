@@ -351,6 +351,7 @@ const billing = (c: Ctx) =>
     });
 query<'userBilling'>('GetUserBilling', (c) => ({ userBilling: billing(c) }));
 query<'userBilling'>('GetUserBillingLapseState', (c) => ({ userBilling: billing(c) }));
+query<'userBilling'>('GetUserReading', (c) => ({ userBilling: billing(c) }));
 
 query<'appConfig'>('LegalConsentAppConfig', () => ({ appConfig }));
 query<'appVersionInfo'>('AppVersionInfo', () => ({ appVersionInfo }));

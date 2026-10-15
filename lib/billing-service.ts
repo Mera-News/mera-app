@@ -3,6 +3,8 @@ import client from './apollo-client';
 import { UserBillingInfo } from './generated/graphql-types';
 import logger from './logger';
 import { maybeRequestEmailCaptureAfterPurchase } from './subscription/email-capture';
+import { noteBillingTier } from './subscription/plan-rise';
+import { setReadHold } from './subscription/read-hold';
 
 const GET_USER_BILLING = gql`
   query GetUserBilling {
@@ -74,6 +76,60 @@ interface UserBillingResponse {
     userBilling: UserBillingInfo;
 }
 
+// The reading meter, DELIBERATELY its own query, for the reason the lapse split
+// above gives: selecting a field the deployed server does not know fails the
+// WHOLE operation, and these three are new. Split, a server without them costs
+// one swallowed error and takes nothing else down. Merge into GET_USER_BILLING
+// once the server change is live in prod.
+const GET_USER_READING = gql`
+  query GetUserReading {
+    userBilling {
+      readingUsed
+      readingResetAt
+      planMultiplier
+    }
+  }
+`;
+
+/** The reading meter as the server reports it. `readingUsed` is the share of
+ *  today's cloud reading used (0..1), null when the meter is unreachable. */
+export interface UserReading {
+    readingUsed: number | null;
+    readingResetAt: string | null;
+    planMultiplier: number;
+}
+
+/**
+ * Fetch the reading meter and mirror it into the read hold. Quiet on failure
+ * (see GET_USER_READING): returns null and reports nothing.
+ *
+ * `resetAt` is written ONLY when the day is used up: the server's
+ * `readingResetAt` is the next reset whether or not anything is held, and
+ * writing it unconditionally would hold every user. A lower `readingUsed`
+ * never ends a hold either; only a tier rise does (plan-rise.ts).
+ */
+export async function fetchUserReading(): Promise<UserReading | null> {
+    try {
+        const { data } = await client.query<{ userBilling: UserReading }>({
+            query: GET_USER_READING,
+            fetchPolicy: 'no-cache',
+        });
+        const reading = data?.userBilling ?? null;
+        if (!reading) return null;
+        const used = typeof reading.readingUsed === 'number' ? reading.readingUsed : null;
+        const resetAt = reading.readingResetAt ? Date.parse(reading.readingResetAt) : NaN;
+        if (used != null && used >= 1 && Number.isFinite(resetAt)) {
+            await setReadHold({ used, resetAt });
+        } else if (used != null) {
+            await setReadHold({ used });
+        }
+        return reading;
+    } catch {
+        // Intentionally not reported. See the query's comment.
+        return null;
+    }
+}
+
 /**
  * Fetch the current user's billing/quota snapshot from the server — the DB is
  * the source of truth for tier and daily article limit (RevenueCat customerInfo
@@ -86,7 +142,10 @@ export async function fetchUserBilling(): Promise<UserBillingInfo | null> {
             query: GET_USER_BILLING,
             fetchPolicy: 'no-cache',
         });
-        return data?.userBilling ?? null;
+        const billing = data?.userBilling ?? null;
+        // A tier that rose since the last read applies now (plan-rise.ts).
+        if (billing) noteBillingTier(billing.subscriptionTier);
+        return billing;
     } catch (error) {
         logger.captureException(error, {
             tags: { component: 'billing-service', method: 'fetchUserBilling' },

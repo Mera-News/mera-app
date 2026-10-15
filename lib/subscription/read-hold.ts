@@ -48,6 +48,10 @@ interface State {
 const EMPTY: State = { resetAt: null, holdUntil: null, used: null, usedDay: null, updatedAt: null };
 
 let state: State = { ...EMPTY };
+/** True once this process has read the row or written the hold: a later
+ *  hydrate (a background entry point) must not overwrite a newer in-memory
+ *  value with a row whose write is still in flight. */
+let loaded = false;
 let snapshot: ReadHold | null = null;
 const listeners = new Set<() => void>();
 
@@ -197,6 +201,7 @@ export async function setReadHold(
     next.usedDay = next.used == null ? null : utcDay(now);
   }
   state = next;
+  loaded = true;
   emit();
   try {
     await settingService().setSetting(READ_HOLD_KEY, JSON.stringify(state));
@@ -205,12 +210,16 @@ export async function setReadHold(
   }
 }
 
-/** Restore the persisted hold. Runs inside hydrateAllStores' Promise.all and
- *  at the background entry points, so it never rejects. */
+/** Restore the persisted hold, once per process. Runs inside hydrateAllStores'
+ *  Promise.all and at the background entry points, so it never rejects. */
 export async function hydrateReadHold(): Promise<void> {
+  if (loaded) return;
   try {
     const raw = await settingService().getSetting(READ_HOLD_KEY);
-    if (!raw) return;
+    if (!raw) {
+      loaded = true;
+      return;
+    }
     const parsed = JSON.parse(raw) as Partial<State>;
     const num = (v: unknown): number | null =>
       typeof v === 'number' && Number.isFinite(v) ? v : null;
@@ -221,6 +230,7 @@ export async function hydrateReadHold(): Promise<void> {
       usedDay: typeof parsed.usedDay === 'string' ? parsed.usedDay : null,
       updatedAt: num(parsed.updatedAt),
     };
+    loaded = true;
     emit();
   } catch {
     // Unreadable row: no hold is the safe reading; the next 429 restores it.
@@ -231,5 +241,6 @@ export async function hydrateReadHold(): Promise<void> {
  *  resets the settings row itself). */
 export function resetReadHold(): void {
   state = { ...EMPTY };
+  loaded = false;
   emit();
 }
