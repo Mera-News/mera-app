@@ -42,6 +42,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import MeraLogo from '@/components/custom/MeraLogo';
 import ModalMaterial from '@/components/custom/ModalMaterial';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
@@ -141,9 +142,9 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                     ) : null}
 
                     {question && phase.kind !== 'loading' && phase.kind !== 'load-error' ? (
-                        <Text testID="feedback-request-question" style={styles.question}>
-                            {question}
-                        </Text>
+                        // The question is written in English on the server;
+                        // render it in the app's language like any server text.
+                        <TranslatableDynamic text={question} style={styles.question} />
                     ) : null}
 
                     {showsTextArea ? (
