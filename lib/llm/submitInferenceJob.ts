@@ -28,6 +28,12 @@ import { recordAuthFailure } from '@/lib/auth-failure-breaker';
 import pako from 'pako';
 import { Directory, File, Paths } from 'expo-file-system';
 import { INFERENCE_ENDPOINT, DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
+import {
+  isReadHeld,
+  nextUtcMidnight,
+  serverNowFromDateHeader,
+  setReadHold,
+} from '@/lib/subscription/read-hold';
 
 const TAG = '[submitInferenceJob]';
 
@@ -52,6 +58,10 @@ function reportSubmitFailure(err: unknown, status: string): void {
 }
 
 /** Outcome of a single `sendInferenceRequest` call.
+ *  - `read-held`: the day's cloud reading is used up (a 429
+ *    `daily-quota-exceeded`, or a hold already in force, in which case nothing
+ *    was sent). The read hold is set; requeue with the SAME key and attempt
+ *    count. Never a failure, never reported, never a limiter pause.
  *  - `throttled`: the gateway returned 429 — transient, non-terminal (the
  *    rate limiter was already told to back off via `pauseFor`).
  *  - `in-progress`: 409, the gateway still holds this `Idempotency-Key`'s
@@ -62,6 +72,7 @@ function reportSubmitFailure(err: unknown, status: string): void {
  *  - `failed`: a definite failure; the caller may mint a new key. */
 export type SendInferenceOutcome =
   | { status: 'ok'; requestId: string; capabilityToken: string }
+  | { status: 'read-held' }
   | { status: 'throttled' }
   | { status: 'in-progress' }
   | { status: 'no-auth' }
@@ -131,6 +142,10 @@ export async function sendInferenceRequest(args: {
     singleAttempt = false,
     signal,
   } = args;
+
+  // The one place a job is POSTed, so the one gate every caller passes. While
+  // the day's reading is used up, sending would only collect another 429.
+  if (isReadHeld()) return { status: 'read-held' };
 
   if (DUMP_QUERIES_ENABLED) {
     dumpPromptsForDev(bundle.calls).catch((err: unknown) => {
@@ -281,6 +296,11 @@ export async function sendInferenceRequest(args: {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Content-Encoding': 'gzip',
+    // Tells the gateway this client understands the reading meter's 429
+    // contract. Without it (shipped bundles) the gateway refuses over-limit
+    // submits with a 402, which those bundles treat as a plain failure and
+    // never as a limiter pause.
+    'X-Mera-Reading': '1',
   };
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
   const doSubmitPost = (bearer: string): Promise<Response> =>
@@ -365,6 +385,19 @@ export async function sendInferenceRequest(args: {
     }
   }
 
+  const quota = await dailyQuotaRefusal(res);
+  if (quota) {
+    // The day's reading is used up. NOT a throttle: Retry-After runs to the
+    // daily reset, and pausing the shared limiter for it would stall chat,
+    // attestation and every poll. Hold cloud scoring instead.
+    await setReadHold(
+      { resetAt: quota.resetAt, used: 1 },
+      { serverNow: serverNowFromDateHeader(res.headers.get('Date')) },
+    );
+    logger.debug(`${TAG} daily reading used up — holding until ${new Date(quota.resetAt).toISOString()}`);
+    return { status: 'read-held' };
+  }
+
   if (res.status === 429) {
     // Transient, non-terminal — the gateway is asking us to back off, not
     // reporting a permanent failure. Don't let withRetry burn attempts on
@@ -409,6 +442,14 @@ export async function sendInferenceRequest(args: {
     return { status: 'failed' };
   }
 
+  const usedHeader = res.headers.get('X-Mera-Reading-Used');
+  if (usedHeader != null && usedHeader.trim() !== '') {
+    const used = Number(usedHeader);
+    if (Number.isFinite(used)) {
+      void setReadHold({ used }, { serverNow: serverNowFromDateHeader(res.headers.get('Date')) });
+    }
+  }
+
   const { requestId, capabilityToken: issuedCapabilityToken } =
     (await res.json()) as {
       requestId: string;
@@ -440,6 +481,31 @@ export async function sendInferenceRequest(args: {
     status: 'ok',
     requestId,
     capabilityToken: issuedCapabilityToken ?? '',
+  };
+}
+
+/**
+ * A 429 (or the 402 the gateway sends clients without `X-Mera-Reading`) whose
+ * body is `{code:'daily-quota-exceeded', resetAt}`. Returns the reset as epoch
+ * ms; without a usable `resetAt` it is the next 00:00 UTC, which the contract
+ * fixes (Retry-After is capped at 60s for this client and says nothing about
+ * the reset). Anything else, a non-JSON body included, is null and keeps its
+ * ordinary handling. Reads the body as text, no `clone()`: the later branches
+ * either never read it (429) or tolerate an empty read (402).
+ */
+async function dailyQuotaRefusal(res: Response): Promise<{ resetAt: number } | null> {
+  if (res.status !== 429 && res.status !== 402) return null;
+  let body: { code?: unknown; resetAt?: unknown } | null = null;
+  try {
+    body = JSON.parse(await res.text()) as { code?: unknown; resetAt?: unknown };
+  } catch {
+    return null;
+  }
+  if (!body || body.code !== 'daily-quota-exceeded') return null;
+  const parsed = typeof body.resetAt === 'string' ? Date.parse(body.resetAt) : NaN;
+  if (Number.isFinite(parsed)) return { resetAt: parsed };
+  return {
+    resetAt: nextUtcMidnight(serverNowFromDateHeader(res.headers.get('Date')) ?? Date.now()),
   };
 }
 

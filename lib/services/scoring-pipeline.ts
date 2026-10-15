@@ -79,6 +79,7 @@ import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/c
 import { useUserStore } from '@/lib/stores/user-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { hydrateReadHold, isReadHeld } from '@/lib/subscription/read-hold';
 import {
   discardLowRelevance,
   fetchResults,
@@ -721,6 +722,10 @@ async function persistCandidateBatches(
 ): Promise<{ deferred: string[]; hadRun: boolean; dispatched: number }> {
   const snap = await getPipeline();
   const hadRun = snap !== null;
+  // The day's cloud reading is used up: make no new batches. The rows stay
+  // unscored and the next enqueue after the reset picks them up. Nothing is
+  // deferred, so feed-sync has nothing to flush and no loop starts.
+  if (isReadHeld()) return { deferred: [], hadRun, dispatched: 0 };
 
   const existing = snap ? nonTerminalCandidateIds(snap.run) : new Set<string>();
   const fresh = ids.filter((id) => !existing.has(id));
@@ -979,6 +984,13 @@ async function runGatewayActions(
       pendingPolls,
     });
     if (!action) return 'idle';
+    // While held, every POST would come back 429: skip submits of both kinds
+    // so the loop moves on to polls (jobs already in flight still land) and
+    // ends, instead of re-picking the same requeued batch.
+    if ((action.kind === 'submit' || action.kind === 'submit-reasons') && isReadHeld()) {
+      skip.add(action.batchId);
+      continue;
+    }
     // The drain cannot poll or submit notes (see doDrain): when one of those
     // is the top-ranked action, stop rather than spend the slot out of order.
     // Except a poll of a job submitted less than a tick ago: it cannot be
@@ -1153,7 +1165,12 @@ function isRetryLater(status: SendInferenceOutcome['status']): boolean {
   // A held reservation lasts up to a minute on the gateway; back the whole
   // device off briefly rather than re-driving the same key every tick.
   if (status === 'in-progress') gatewayRateLimiter.pauseFor(IN_PROGRESS_PAUSE_MS);
-  return status === 'throttled' || status === 'in-progress' || status === 'no-auth';
+  return (
+    status === 'throttled' ||
+    status === 'in-progress' ||
+    status === 'no-auth' ||
+    status === 'read-held'
+  );
 }
 
 async function doSubmit(
@@ -2883,6 +2900,8 @@ export async function handlePush(
   requestId: string | undefined,
   context: 'foreground' | 'background',
 ): Promise<void> {
+  // A silent-push wake never runs hydrateAllStores.
+  await hydrateReadHold();
   if (requestId) {
     const snap = await getPipeline();
     if (!snap) return;
@@ -3136,6 +3155,7 @@ export type BackgroundStopReason =
   | 'no-auth'
   | 'on-device'
   | 'throttled'
+  | 'read-hold'
   | 'error';
 
 export interface AdvanceWaitingResult {
@@ -3219,11 +3239,15 @@ export async function advanceWaitingForBackground(opts: {
   return asTaskStep<AdvanceWaitingResult>({ ...result, stoppedBy: 'error' }, async () => {
     const { io, dispose } = deadlineController(opts.deadlineAt);
     try {
+      // A background wake never runs hydrateAllStores.
+      await hydrateReadHold();
       const snap = await getPipeline();
       if (!snap) return { ...result, stoppedBy: 'no-run' };
 
-      // 1. Reasons owed by batches whose relevance is already applied.
+      // 1. Reasons owed by batches whose relevance is already applied. Skipped
+      //    while held; collecting finished jobs below costs no reading.
       for (const b of snap.run.batches) {
+        if (isReadHeld()) break;
         if (b.phase !== 'needs-reasons-submit') continue;
         if (timeLeft(opts.deadlineAt) < TASK_NO_NEW_POST_MS) {
           return { ...result, stoppedBy: 'deadline' };
@@ -3294,6 +3318,10 @@ export async function submitScoringForBackground(opts: {
   maxBatches?: number;
 }): Promise<SubmitScoringResult> {
   if (isOnDeviceProcessing()) return { submitted: 0, stoppedBy: 'on-device' };
+  // A background wake never runs hydrateAllStores; without this every cold
+  // wake would spend one POST rediscovering the 429.
+  await hydrateReadHold();
+  if (isReadHeld()) return { submitted: 0, stoppedBy: 'read-hold' };
   const maxBatches = opts.maxBatches ?? MAX_IN_FLIGHT;
   const result: SubmitScoringResult = { submitted: 0, stoppedBy: 'done' };
   return asTaskStep<SubmitScoringResult>({ ...result, stoppedBy: 'error' }, async () => {
@@ -3376,6 +3404,11 @@ export async function submitScoringForBackground(opts: {
         }
         if (step === 'throttled' || step === 'in-progress') {
           result.stoppedBy = 'throttled';
+          break;
+        }
+        // The batch went back to queued; continuing would re-pick it.
+        if (step === 'read-held') {
+          result.stoppedBy = 'read-hold';
           break;
         }
         // 'empty' / 'lost' / 'failed': move on to the next queued batch.
