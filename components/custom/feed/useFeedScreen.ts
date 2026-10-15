@@ -28,7 +28,7 @@ import {
   type FeedEntry,
 } from './feed-entries';
 import { useFeedMinimap, useFeedShow } from './feed-view-prefs';
-import { applyFeedShow, foldNotReadTail, newNotReadTailSession, type NotReadTailSession } from './not-read-tail';
+import { applyFeedShow, foldNotReadTail, newNotReadTailSession, showsNotReadDivider, type NotReadTailSession } from './not-read-tail';
 import { setNotReadWaiting } from '@/components/custom/for-you/feed-status-card';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { formatCount } from '@/lib/algorithms/format-count';
@@ -502,6 +502,12 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     [scoredRows, folded, show],
   );
   const allRowsCount = scoredRows.length + folded.tail.length;
+  // The divider says "below are articles Mera hasn't read yet": only while
+  // one tail card still shows one (live rows, so a read lifts it at once).
+  const notReadDividerOn = useMemo(
+    () => showsNotReadDivider(folded.tail, (it) => displayedSuggestionOf(it, liveById, rowSessionRef.current)),
+    [folded, liveById],
+  );
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
 
@@ -896,6 +902,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     picksCount,
     show,
     readHeld: readHeld.held,
+    notReadDividerOn,
     notReadLine,
     tailCount: folded.tail.length,
     scoredCount: scoredRows.length,

@@ -2,6 +2,7 @@
 // every scored card, newest first, membership frozen per reading session.
 import {
   applyFeedShow,
+  showsNotReadDivider,
   foldNotReadTail,
   newNotReadTailSession,
   TAIL_RENDER_CAP,
@@ -149,5 +150,27 @@ describe('applyFeedShow', () => {
   });
   it('Not read by Mera = the tail only', () => {
     expect(applyFeedShow(scored, tail, 'unread')).toEqual({ rows: tail, picks: 0 });
+  });
+});
+
+describe('showsNotReadDivider', () => {
+  const own = (it: FeedListItem) => it.suggestion;
+  it('shows while at least one tail card still shows a not-read article', () => {
+    expect(showsNotReadDivider([item('a'), unread('b', 1)], own)).toBe(true);
+  });
+  it('hides once every tail row is read, though the rows stay in place', () => {
+    const s = newNotReadTailSession();
+    foldNotReadTail(s, [unread('a', 1), unread('b', 2)]);
+    const out = foldNotReadTail(s, [item('a'), item('b')]);
+    expect(ids(out.tail)).toEqual(['a', 'b']);
+    expect(showsNotReadDivider(out.tail, own)).toBe(false);
+  });
+  it('judges the article the card shows, not a stale list item', () => {
+    const stale = unread('a', 1);
+    const live = item('a');
+    expect(showsNotReadDivider([stale], () => live.suggestion)).toBe(false);
+  });
+  it('is false for an empty tail', () => {
+    expect(showsNotReadDivider([], own)).toBe(false);
   });
 });

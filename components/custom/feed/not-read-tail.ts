@@ -131,3 +131,15 @@ export function applyFeedShow(
   if (show === 'unread') return { rows: [...tail], picks: 0 };
   return { rows: [...scored, ...tail], picks: scored.length };
 }
+
+/** Whether the picks/not-read divider is true: at least one tail card still
+ *  SHOWS an article Mera has not read. Tail rows that Mera read stay in place
+ *  for the session (R3), so once every one of them is read the divider goes.
+ *  `shown` is the article a card shows (feed-row-display's
+ *  `displayedSuggestionOf`), never the possibly stale list item. */
+export function showsNotReadDivider(
+  tail: readonly FeedListItem[],
+  shown: (it: FeedListItem) => Pick<FeedListItem['suggestion'], 'status'>,
+): boolean {
+  return tail.some((it) => isNotRead(shown(it)));
+}

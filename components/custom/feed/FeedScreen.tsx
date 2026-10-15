@@ -267,6 +267,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     show,
     readHeld,
     notReadLine,
+    notReadDividerOn,
     tailCount,
     scoredCount,
     allRowsCount,
@@ -314,7 +315,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       return (
       <FeedRow
         item={item}
-        divider={show === 'all' && index === picksCount && picksCount > 0 ? notReadDivider : undefined}
+        divider={show === 'all' && notReadDividerOn && index === picksCount && picksCount > 0 ? notReadDivider : undefined}
         readHeld={readHeld}
         notReadLine={notReadLine}
         suggestion={display.suggestion}
@@ -334,7 +335,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, readHeld, notReadLine],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerOn, readHeld, notReadLine],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
