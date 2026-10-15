@@ -19,8 +19,6 @@ export type SyncErrorCode =
   | 'server-unreachable'
   | 'auth-expired'
   | 'no-topics-configured'
-  // Nothing produces it; test/unit/feed/for-you/card-state.test.ts still names it. Goes with that test.
-  | 'daily-limit'
   | 'storage-error'
   | 'scoring-unavailable'
   | 'unknown';

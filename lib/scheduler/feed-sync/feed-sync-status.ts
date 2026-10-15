@@ -58,7 +58,6 @@ export function publishSyncError(
     'server-unreachable':  'sync.serverUnavailable',
     'auth-expired':        'sync.sessionExpired',
     'no-topics-configured': 'sync.noTopics',
-    'daily-limit':         'sync.dailyLimitReached',
     'storage-error':       'sync.storageFull',
     'scoring-unavailable': 'sync.syncFailed',
     unknown:               'sync.syncFailed',

@@ -62,7 +62,7 @@ describe('syncFailureKey', () => {
     [failed('diffing', 'auth-expired'), 'feed.syncFailed.session'],
     [failed('hydrating', 'offline'), 'common.offlineBannerOffline'],
     [{ kind: 'paused-offline' } as SyncFailure, 'common.offlineBannerOffline'],
-    [failed('fetching-topic-ids', 'daily-limit'), 'feed.syncFailed.fetch'],
+    [failed('fetching-topic-ids', 'unknown'), 'feed.syncFailed.fetch'],
     [failed('idle', 'no-topics-configured'), null],
     [null, null],
   ])('%j -> %s', (f, key) => {
@@ -82,7 +82,7 @@ describe('cardState with a failed refresh', () => {
     expect(cardState({ ...base, mode: 'error', syncFailure })).toBe('error');
   });
   it('stays out when another surface owns the failure', () => {
-    expect(cardState({ ...base, syncFailure: failed('idle', 'daily-limit') })).toBe('syncFailed');
+    expect(cardState({ ...base, syncFailure: failed('idle', 'unknown') })).toBe('syncFailed');
   });
   it('is an alert', () => {
     expect(markTone('syncFailed')).toBe('alert');
@@ -135,7 +135,7 @@ describe('hasIssue', () => {
     ['error', 'error', null, true],
     ['failed at hydrating', 'idle', failedAt('hydrating', 'server-unreachable'), true],
     ['paused offline', 'idle', { kind: 'paused-offline' }, true],
-    ['daily-limit failure, idle', 'idle', failedAt('fetching-topic-ids', 'daily-limit'), true],
+    ['unknown failure, idle', 'idle', failedAt('fetching-topic-ids', 'unknown'), true],
     ['no-topics-configured failure, idle', 'idle', failedAt('fetching-topic-ids', 'no-topics-configured'), false],
   ] as const)('%s', (_name, mode, failure, expected) => {
     expect(hasIssue(mode, failure)).toBe(expected);
