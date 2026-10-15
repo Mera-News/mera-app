@@ -240,7 +240,9 @@
     "notRead": {
       "line": "O Mera ainda não leu isto.",
       "a11y": "Ainda não lido pelo Mera",
-      "divider": "Isso é tudo que o Mera escolheu. Abaixo, estão os artigos que o Mera ainda não leu."
+      "divider": "Isso é tudo que o Mera escolheu. Abaixo, estão os artigos que o Mera ainda não leu.",
+      "heldToday": "O Mera ainda não leu isto, porque já usou a leitura de hoje. O Mera volta a ler hoje às {{time}}.",
+      "heldTomorrow": "O Mera ainda não leu isto, porque já usou a leitura de hoje. O Mera volta a ler amanhã às {{time}}."
     },
     "show": {
       "title": "Mostrar",

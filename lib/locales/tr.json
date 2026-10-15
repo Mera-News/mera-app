@@ -240,7 +240,9 @@
     "notRead": {
       "line": "Mera bunu henüz okumadı.",
       "a11y": "Mera henüz okumadı",
-      "divider": "Mera'nın seçtiği her şey bu kadar. Aşağıda Mera'nın henüz okumadığı makaleler var."
+      "divider": "Mera'nın seçtiği her şey bu kadar. Aşağıda Mera'nın henüz okumadığı makaleler var.",
+      "heldToday": "Mera bunu henüz okumadı, çünkü bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
+      "heldTomorrow": "Mera bunu henüz okumadı, çünkü bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
     },
     "show": {
       "title": "Göster",

@@ -240,7 +240,9 @@
     "notRead": {
       "line": "Mera chưa đọc nội dung này.",
       "a11y": "Mera chưa đọc",
-      "divider": "Đó là tất cả những gì Mera đã chọn. Bên dưới là các bài viết Mera chưa đọc."
+      "divider": "Đó là tất cả những gì Mera đã chọn. Bên dưới là các bài viết Mera chưa đọc.",
+      "heldToday": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
+      "heldTomorrow": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}."
     },
     "show": {
       "title": "Hiển thị",

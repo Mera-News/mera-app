@@ -274,7 +274,9 @@
     "notRead": {
       "line": "Mera hasn't read this yet.",
       "a11y": "Not read by Mera yet",
-      "divider": "That's everything Mera picked. Below are articles Mera hasn't read yet."
+      "divider": "That's everything Mera picked. Below are articles Mera hasn't read yet.",
+      "heldToday": "Mera hasn't read this because today's reading is used up. Mera reads again today at {{time}}.",
+      "heldTomorrow": "Mera hasn't read this because today's reading is used up. Mera reads again tomorrow at {{time}}."
     },
     "show": {
       "title": "Show",

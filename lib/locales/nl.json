@@ -240,7 +240,9 @@
     "notRead": {
       "line": "Mera heeft dit nog niet gelezen.",
       "a11y": "Nog niet gelezen door Mera",
-      "divider": "Dat is alles wat Mera heeft gekozen. Hieronder staan artikelen die Mera nog niet heeft gelezen."
+      "divider": "Dat is alles wat Mera heeft gekozen. Hieronder staan artikelen die Mera nog niet heeft gelezen.",
+      "heldToday": "Mera heeft dit nog niet gelezen omdat het lezen voor vandaag al op is. Mera leest vandaag weer om {{time}}.",
+      "heldTomorrow": "Mera heeft dit nog niet gelezen omdat het lezen voor vandaag al op is. Mera leest morgen weer om {{time}}."
     },
     "show": {
       "title": "Tonen",

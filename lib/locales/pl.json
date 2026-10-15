@@ -256,7 +256,9 @@
     "notRead": {
       "line": "Mera jeszcze tego nie przeczytała.",
       "a11y": "Jeszcze nieprzeczytane przez Merę",
-      "divider": "To wszystko, co wybrała Mera. Poniżej są artykuły, których Mera jeszcze nie przeczytała."
+      "divider": "To wszystko, co wybrała Mera. Poniżej są artykuły, których Mera jeszcze nie przeczytała.",
+      "heldToday": "Mera jeszcze tego nie przeczytała, bo wykorzystała dzisiejszą porcję czytania. Ponownie czyta dzisiaj o {{time}}.",
+      "heldTomorrow": "Mera jeszcze tego nie przeczytała, bo wykorzystała dzisiejszą porcję czytania. Ponownie czyta jutro o {{time}}."
     },
     "show": {
       "title": "Pokaż",

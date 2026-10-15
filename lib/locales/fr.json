@@ -245,7 +245,9 @@
     "notRead": {
       "line": "Mera n'a pas encore lu cet article.",
       "a11y": "Pas encore lu par Mera",
-      "divider": "Voilà tout ce que Mera a sélectionné. Ci-dessous, les articles que Mera n'a pas encore lus."
+      "divider": "Voilà tout ce que Mera a sélectionné. Ci-dessous, les articles que Mera n'a pas encore lus.",
+      "heldToday": "Mera n'a pas encore lu cet article, car Mera a utilisé la lecture du jour. Mera reprend la lecture aujourd'hui à {{time}}.",
+      "heldTomorrow": "Mera n'a pas encore lu cet article, car Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}."
     },
     "show": {
       "title": "Afficher",

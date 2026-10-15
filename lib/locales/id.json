@@ -240,7 +240,9 @@
     "notRead": {
       "line": "Mera belum membaca ini.",
       "a11y": "Belum dibaca Mera",
-      "divider": "Itu semua yang dipilih Mera. Di bawah ini artikel yang belum dibaca Mera."
+      "divider": "Itu semua yang dipilih Mera. Di bawah ini artikel yang belum dibaca Mera.",
+      "heldToday": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
+      "heldTomorrow": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}."
     },
     "show": {
       "title": "Tampilkan",
