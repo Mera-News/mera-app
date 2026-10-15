@@ -25,7 +25,17 @@ import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useRef } from 'react';
-import { AccessibilityInfo, findNodeHandle, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+    AccessibilityInfo,
+    findNodeHandle,
+    type LayoutChangeEvent,
+    Linking,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    View,
+} from 'react-native';
+import { protocolFocusPlan } from './protocol-focus';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
@@ -88,22 +98,39 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     // mount, scroll the On this phone row into view and give it screen-reader focus.
     const { focus } = useLocalSearchParams<{ focus?: string }>();
     const scrollRef = useRef<ScrollView>(null);
-    const onDeviceRowRef = useRef<View>(null);
-    const focused = useRef(false);
-    const focusOnDeviceRow = () => {
-        const row = onDeviceRowRef.current;
-        const scroll = scrollRef.current;
-        if (focus !== 'on-device' || focused.current || !row || !scroll) return;
-        focused.current = true;
-        row.measureLayout(
-            scroll.getInnerViewNode() as never,
-            (_x, y) => {
-                scroll.scrollTo({ y: Math.max(0, y - 16), animated: false });
-                const handle = findNodeHandle(row);
-                if (handle != null) AccessibilityInfo.setAccessibilityFocus(handle);
-            },
-            () => {},
-        );
+    // Two layout events feed protocolFocusPlan: the section's y within the scroll
+    // content, and the row's native tag from the row's OWN layout event (the kit
+    // Pressable's ref is not a native component, so it cannot be measured).
+    const focusState = useRef<{ done: boolean; sectionY: number | null; rowTag: number | null }>({
+        done: false,
+        sectionY: null,
+        rowTag: null,
+    });
+    const tryFocusOnDeviceRow = () => {
+        const plan = protocolFocusPlan({ focus, ...focusState.current });
+        if (!plan || !scrollRef.current) return;
+        focusState.current.done = true;
+        scrollRef.current.scrollTo({ y: plan.scrollY, animated: false });
+        AccessibilityInfo.setAccessibilityFocus(plan.tag);
+    };
+    const onSectionLayout = (e: LayoutChangeEvent) => {
+        focusState.current.sectionY = e.nativeEvent.layout.y;
+        tryFocusOnDeviceRow();
+    };
+    const onDeviceRowLayout = (e: LayoutChangeEvent) => {
+        // The event's currentTarget is the row's native host; nativeEvent.target is its tag.
+        let tag: number | null = null;
+        try {
+            tag = findNodeHandle(e.currentTarget as never);
+        } catch {
+            tag = null;
+        }
+        if (tag == null) {
+            const target = (e.nativeEvent as { target?: unknown }).target;
+            tag = typeof target === 'number' ? target : null;
+        }
+        focusState.current.rowTag = tag;
+        tryFocusOnDeviceRow();
     };
 
     // "Where Mera reads your news" (FinalSettings #11): On this phone is
@@ -119,9 +146,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         return (
             <Pressable
                 key={mode}
-                // The kit Pressable types its ref as the styled wrapper; at runtime it is the host View.
-                ref={onDevice ? (onDeviceRowRef as never) : undefined}
-                onLayout={onDevice ? focusOnDeviceRow : undefined}
+                onLayout={onDevice ? onDeviceRowLayout : undefined}
                 testID={onDevice ? 'mode-on-device' : 'mode-cloud'}
                 onPress={() => selectMode(mode)}
                 disabled={isUpdatingMode || cantRun}
@@ -144,7 +169,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
     const renderContent = () => (
         <>
-            <View style={{ paddingHorizontal: 14, marginBottom: 20 }}>
+            <View onLayout={onSectionLayout} style={{ paddingHorizontal: 14, marginBottom: 20 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={{ flex: 1 }}>
                         <GroupLabel>{t('meraProtocol.whereReads')}</GroupLabel>
