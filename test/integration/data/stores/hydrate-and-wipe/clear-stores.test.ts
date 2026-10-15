@@ -220,11 +220,12 @@ describe('clearAllStores: module mirrors', () => {
   it('puts the Feed view prefs back to their defaults and re-reads the rows on the next load', async () => {
     await setSetting('feed_view', 'sectioned');
     await setSetting('feed_minimap', 'true');
+    await setSetting('feed_show', 'picks');
     await loadFeedViewPrefs();
-    expect(useFeedViewPrefs.getState()).toEqual({ view: 'sectioned', minimap: true });
+    expect(useFeedViewPrefs.getState()).toEqual({ view: 'sectioned', minimap: true, show: 'picks' });
 
     await clearAllStores();
-    expect(useFeedViewPrefs.getState()).toEqual({ view: 'continuous', minimap: false });
+    expect(useFeedViewPrefs.getState()).toEqual({ view: 'continuous', minimap: false, show: 'all' });
 
     await setSetting('feed_view', 'sectioned');
     await loadFeedViewPrefs();
