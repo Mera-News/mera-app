@@ -189,10 +189,6 @@
       "completedMessage": "Je feed is gereed"
     },
     "analysingProgress": "{{done}} van {{total}} artikelen analyseren",
-    "dailyLimit": {
-      "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden om {{time}} ontgrendeld.",
-      "title": "Daglimiet voor artikelen bereikt"
-    },
     "statsPublishedPending_one": "{{formatted}} artikel is gepubliceerd in de afgelopen 24 uur.",
     "statsPublishedPending_other": "{{formatted}} artikelen zijn gepubliceerd in de afgelopen 24 uur.",
     "statsPublished_one": "{{formatted}} artikel is gepubliceerd in de afgelopen 24 uur,",
@@ -942,7 +938,6 @@
     "analysed": "Geanalyseerd",
     "relevant": "Tot nu toe relevant",
     "lastProcessed": "Laatst verwerkt",
-    "limitUpgrade": "Of <0>upgrade je abonnement</0>.",
     "tryNow": "Nu proberen",
     "seePlans": "Abonnementen bekijken",
     "readOnPhone": "Lees in plaats daarvan op deze telefoon",

@@ -188,10 +188,6 @@
       "completedTitle": "Tamamlandı",
       "completedMessage": "Haber akışın hazır"
     },
-    "dailyLimit": {
-      "bodyWithTime": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın. Yeni makaleler {{time}} saatinde açılır.",
-      "title": "Günlük makale sınırına ulaşıldı"
-    },
     "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
     "statsPublishedPending_one": "{{formatted}} makale son 24 saatte yayınlandı.",
     "statsPublishedPending_other": "{{formatted}} makale son 24 saatte yayınlandı.",
@@ -942,7 +938,6 @@
     "analysed": "Analiz edildi",
     "relevant": "Şimdiye kadar ilgili",
     "lastProcessed": "Son işlenme",
-    "limitUpgrade": "Ya da <0>planınızı yükseltin</0>.",
     "tryNow": "Şimdi dene",
     "seePlans": "Planları gör",
     "readOnPhone": "Bunun yerine bu telefonda oku",

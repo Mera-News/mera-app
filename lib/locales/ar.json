@@ -188,10 +188,6 @@
       "completedTitle": "اكتمل",
       "completedMessage": "موجز أخبارك جاهز"
     },
-    "dailyLimit": {
-      "bodyWithTime": "لا يمكن جلب مقالات جديدة في الوقت الحالي. تصفّح المقالات الموجودة على جهازك. تُتاح مقالات جديدة في {{time}}.",
-      "title": "تم بلوغ الحد اليومي للمقالات"
-    },
     "analysingProgress": "جارٍ تحليل {{done}} من {{total}} مقالة",
     "statsPublishedPending_zero": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
     "statsPublishedPending_one": "تم نشر {{formatted}} مقالة في آخر 24 ساعة.",
@@ -1002,7 +998,6 @@
     "analysed": "تم التحليل",
     "relevant": "ذات صلة حتى الآن",
     "lastProcessed": "آخر معالجة",
-    "limitUpgrade": "أو <0>رقِّ خطتك</0>.",
     "tryNow": "جرّب الآن",
     "seePlans": "عرض الخطط",
     "readOnPhone": "اقرأ على هذا الهاتف بدلًا من ذلك",

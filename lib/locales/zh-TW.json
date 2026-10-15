@@ -188,10 +188,6 @@
       "completedTitle": "全部完成",
       "completedMessage": "您的動態已準備就緒"
     },
-    "dailyLimit": {
-      "bodyWithTime": "目前無法擷取新文章。你可以瀏覽裝置上已有的文章，新文章將於 {{time}} 解鎖。",
-      "title": "已達每日文章上限"
-    },
     "analysingProgress": "正在分析 {{total}} 篇文章中的第 {{done}} 篇",
     "statsPublishedPending_other": "過去 24 小時內發佈了{{formatted}}篇文章。",
     "statsPublished_other": "過去 24 小時內發佈了{{formatted}}篇文章，",
@@ -938,7 +934,6 @@
     "analysed": "已分析",
     "relevant": "目前相關",
     "lastProcessed": "上次處理",
-    "limitUpgrade": "或<0>升級你的方案</0>。",
     "tryNow": "立即試試",
     "seePlans": "查看方案",
     "readOnPhone": "改為在這支手機上閱讀",

@@ -188,10 +188,6 @@
       "completedTitle": "完了しました",
       "completedMessage": "フィードの準備ができました"
     },
-    "dailyLimit": {
-      "bodyWithTime": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は{{time}}に解放されます。",
-      "title": "1日の記事上限に達しました"
-    },
     "analysingProgress": "{{total}}件中{{done}}件の記事を分析中",
     "statsPublishedPending_other": "{{formatted}}件の記事が過去24時間に公開されました。",
     "statsPublished_other": "過去24時間に{{formatted}}件の記事が公開され、",
@@ -938,7 +934,6 @@
     "analysed": "分析済み",
     "relevant": "今のところ関連あり",
     "lastProcessed": "最終処理",
-    "limitUpgrade": "または、<0>プランをアップグレード</0>してください。",
     "tryNow": "今すぐ試す",
     "seePlans": "プランを見る",
     "readOnPhone": "代わりにこの電話で読む",

@@ -188,10 +188,6 @@
       "completedTitle": "सब पूरा हुआ",
       "completedMessage": "आपकी फ़ीड तैयार है"
     },
-    "dailyLimit": {
-      "bodyWithTime": "अभी कोई नया लेख नहीं लाया जा सकता। अपने डिवाइस पर पहले से मौजूद लेख देखें: नए लेख {{time}} बजे अनलॉक होंगे।",
-      "title": "दैनिक लेख सीमा पूरी हो गई"
-    },
     "analysingProgress": "{{total}} में से {{done}} लेखों का विश्लेषण हो रहा है",
     "statsPublishedPending_one": "{{formatted}} लेख पिछले 24 घंटों में प्रकाशित हुआ।",
     "statsPublishedPending_other": "{{formatted}} लेख पिछले 24 घंटों में प्रकाशित हुए।",
@@ -942,7 +938,6 @@
     "analysed": "विश्लेषित",
     "relevant": "अभी तक काम की",
     "lastProcessed": "आख़िरी बार प्रोसेस किया गया",
-    "limitUpgrade": "या <0>अपना प्लान अपग्रेड करें</0>।",
     "tryNow": "अभी आज़माएं",
     "seePlans": "प्लान देखें",
     "readOnPhone": "इसके बजाय इस फ़ोन पर पढ़ें",

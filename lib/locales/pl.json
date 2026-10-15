@@ -188,10 +188,6 @@
       "completedTitle": "Wszystko gotowe",
       "completedMessage": "Twój kanał jest gotowy"
     },
-    "dailyLimit": {
-      "bodyWithTime": "Na razie nie można pobrać nowych artykułów. Przeglądaj artykuły już zapisane na urządzeniu. Nowe artykuły odblokują się o {{time}}.",
-      "title": "Osiągnięto dzienny limit artykułów"
-    },
     "analysingProgress": "Analizowanie {{done}} z {{total}} artykułów",
     "statsPublishedPending_one": "{{formatted}} artykuł został opublikowany w ciągu ostatnich 24 godzin.",
     "statsPublishedPending_few": "{{formatted}} artykuły zostały opublikowane w ciągu ostatnich 24 godzin.",
@@ -972,7 +968,6 @@
     "analysed": "Przeanalizowane",
     "relevant": "Na razie trafne",
     "lastProcessed": "Ostatnio przetworzono",
-    "limitUpgrade": "Albo <0>ulepsz swój plan</0>.",
     "tryNow": "Spróbuj teraz",
     "seePlans": "Zobacz plany",
     "readOnPhone": "Czytaj zamiast tego na tym telefonie",
@@ -1016,7 +1011,7 @@
     "starterTitle": "Starter na nasz koszt",
     "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
     "starterArticlesTitle": "Każdy pasujący artykuł",
-    "starterArticlesBody": "Każdy artykuł pasujący do twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne.",
+    "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne.",
     "starterInterestsTitle": "Wszystkie twoje zainteresowania",
     "starterInterestsBody": "Dodaj ich tyle, ile chcesz. Mera śledzi każde.",
     "starterChatTitle": "Czat i sprawdzanie faktów",

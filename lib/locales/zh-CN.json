@@ -188,10 +188,6 @@
       "completedTitle": "全部完成",
       "completedMessage": "您的资讯已准备就绪"
     },
-    "dailyLimit": {
-      "bodyWithTime": "暂时无法获取新文章。你可以浏览设备上已有的文章，新文章将于 {{time}} 解锁。",
-      "title": "已达每日文章上限"
-    },
     "analysingProgress": "正在分析 {{done}}/{{total}} 篇文章",
     "statsPublishedPending_other": "过去24小时内发布了{{formatted}}篇文章。",
     "statsPublished_other": "过去 24 小时内发布了 {{formatted}} 篇文章，",
@@ -938,7 +934,6 @@
     "analysed": "已分析",
     "relevant": "目前相关",
     "lastProcessed": "上次处理",
-    "limitUpgrade": "或<0>升级你的套餐</0>。",
     "tryNow": "立即试用",
     "seePlans": "查看方案",
     "readOnPhone": "改为在这部手机上阅读",

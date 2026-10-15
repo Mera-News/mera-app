@@ -188,10 +188,6 @@
       "completedTitle": "Alles erledigt",
       "completedMessage": "Dein Feed ist bereit"
     },
-    "dailyLimit": {
-      "bodyWithTime": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind. Neue Artikel werden um {{time}} freigeschaltet.",
-      "title": "Tägliches Artikellimit erreicht"
-    },
     "analysingProgress": "{{done}} von {{total}} Artikeln werden analysiert",
     "statsPublishedPending_one": "{{formatted}} Artikel wurde in den letzten 24 Stunden veröffentlicht.",
     "statsPublishedPending_other": "{{formatted}} Artikel wurden in den letzten 24 Stunden veröffentlicht.",
@@ -942,7 +938,6 @@
     "analysed": "Analysiert",
     "relevant": "Bisher relevant",
     "lastProcessed": "Zuletzt verarbeitet",
-    "limitUpgrade": "Oder <0>wechsle deinen Tarif</0>.",
     "tryNow": "Jetzt testen",
     "seePlans": "Tarife ansehen",
     "readOnPhone": "Stattdessen auf diesem Telefon lesen",

@@ -189,10 +189,6 @@
       "completedMessage": "피드가 준비되었습니다"
     },
     "analysingProgress": "{{total}}개 중 {{done}}개 기사 분석 중",
-    "dailyLimit": {
-      "bodyWithTime": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 {{time}}에 잠금 해제됩니다.",
-      "title": "일일 기사 한도에 도달했습니다"
-    },
     "statsPublishedPending_other": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
     "statsPublished_other": "지난 24시간 동안 {{formatted}}개의 기사가 게재되었으며,",
     "statsAnalysed_other": "회원님을 위해 {{formatted}}개가 분석되었고,",
@@ -938,7 +934,6 @@
     "analysed": "분석됨",
     "relevant": "지금까지 관련 있음",
     "lastProcessed": "마지막 처리",
-    "limitUpgrade": "또는 <0>요금제를 업그레이드</0>하세요.",
     "tryNow": "지금 시도",
     "seePlans": "요금제 보기",
     "readOnPhone": "대신 이 휴대폰에서 읽기",

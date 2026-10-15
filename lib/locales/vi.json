@@ -188,10 +188,6 @@
       "completedTitle": "Hoàn tất",
       "completedMessage": "Bản tin của bạn đã sẵn sàng"
     },
-    "dailyLimit": {
-      "bodyWithTime": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn. Bài viết mới sẽ mở khóa vào lúc {{time}}.",
-      "title": "Đã đạt giới hạn bài viết hằng ngày"
-    },
     "analysingProgress": "Đang phân tích {{done}}/{{total}} bài viết",
     "statsPublishedPending_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
     "statsPublished_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
@@ -938,7 +934,6 @@
     "analysed": "Đã phân tích",
     "relevant": "Có liên quan cho đến lúc này",
     "lastProcessed": "Xử lý lần cuối",
-    "limitUpgrade": "Hoặc <0>nâng cấp gói của bạn</0>.",
     "tryNow": "Thử ngay",
     "seePlans": "Xem các gói",
     "readOnPhone": "Thay vào đó, đọc trên điện thoại này",

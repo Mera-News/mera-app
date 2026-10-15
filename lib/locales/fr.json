@@ -188,10 +188,6 @@
       "completedTitle": "Tout est prêt",
       "completedMessage": "Votre fil est prêt"
     },
-    "dailyLimit": {
-      "bodyWithTime": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil. De nouveaux articles seront débloqués à {{time}}.",
-      "title": "Limite quotidienne d'articles atteinte"
-    },
     "analysingProgress": "Analyse de {{done}} sur {{total}} articles",
     "statsPublishedPending_one": "{{formatted}} article a été publié au cours des 24 dernières heures.",
     "statsPublishedPending_many": "{{formatted}} articles ont été publiés au cours des 24 dernières heures.",
@@ -947,7 +943,6 @@
     "analysed": "Analysés",
     "relevant": "Pertinent pour l'instant",
     "lastProcessed": "Dernier traitement",
-    "limitUpgrade": "Ou <0>passez à un forfait supérieur</0>.",
     "tryNow": "Essayer maintenant",
     "seePlans": "Voir les forfaits",
     "readOnPhone": "Lire plutôt sur ce téléphone",

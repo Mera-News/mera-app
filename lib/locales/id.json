@@ -188,10 +188,6 @@
       "completedTitle": "Selesai",
       "completedMessage": "Feed Anda sudah siap"
     },
-    "dailyLimit": {
-      "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda: artikel baru terbuka pada {{time}}.",
-      "title": "Batas artikel harian tercapai"
-    },
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
     "statsPublishedPending_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
     "statsPublished_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
@@ -938,7 +934,6 @@
     "analysed": "Dianalisis",
     "relevant": "Relevan sejauh ini",
     "lastProcessed": "Terakhir diproses",
-    "limitUpgrade": "Atau <0>tingkatkan paket Anda</0>.",
     "tryNow": "Coba sekarang",
     "seePlans": "Lihat paket",
     "readOnPhone": "Baca di ponsel ini saja",

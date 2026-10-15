@@ -131,10 +131,6 @@
     "allCaughtUp": "You're all caught up with what impacts you.",
     "pullDownToRetry": "Pull down to retry",
     "offlineCached": "Offline: showing cached content",
-    "dailyLimit": {
-      "title": "Daily article limit reached",
-      "bodyWithTime": "No new articles can be fetched for now. Browse the articles already on your device. New articles unlock at {{time}}."
-    },
     "newBadge": "NEW",
     "newsCluster": "News Cluster",
     "justNow": "Just now",
@@ -510,7 +506,6 @@
     "analysed": "Analysed",
     "relevant": "Relevant so far",
     "lastProcessed": "Last processed",
-    "limitUpgrade": "Or <0>upgrade your plan</0>.",
     "tryNow": "Try now",
     "seePlans": "See plans",
     "readOnPhone": "Read on this phone instead",

@@ -188,10 +188,6 @@
       "completedTitle": "Tutto fatto",
       "completedMessage": "Il tuo feed è pronto"
     },
-    "dailyLimit": {
-      "bodyWithTime": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo: nuovi articoli si sbloccano alle {{time}}.",
-      "title": "Limite giornaliero di articoli raggiunto"
-    },
     "analysingProgress": "Analisi di {{done}} di {{total}} articoli",
     "statsPublishedPending_one": "{{formatted}} articolo è stato pubblicato nelle ultime 24 ore.",
     "statsPublishedPending_other": "{{formatted}} articoli sono stati pubblicati nelle ultime 24 ore.",
@@ -942,7 +938,6 @@
     "analysed": "Analizzati",
     "relevant": "Pertinenti finora",
     "lastProcessed": "Ultima elaborazione",
-    "limitUpgrade": "Oppure <0>passa a un piano superiore</0>.",
     "tryNow": "Prova ora",
     "seePlans": "Vedi piani",
     "readOnPhone": "Leggi invece su questo telefono",
