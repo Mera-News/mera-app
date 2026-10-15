@@ -2,6 +2,7 @@ import { Text } from '@/components/ui/text';
 import { fetchUserReading } from '@/lib/billing-service';
 import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
+import { formatClockTime } from '@/lib/subscription/clock-time';
 import { getPlanRaisedAt, tierMultiplier } from '@/lib/subscription/plan-rise';
 import { getReadHoldUpdatedAt, isReadHeld, useReadHold } from '@/lib/subscription/read-hold';
 import { useColors } from '@/lib/theme/tokens';
@@ -10,18 +11,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { readingMeterModel } from './reading-meter-model';
-
-/** "02:00" in the reader's own time and locale; null when unusable. */
-export function formatResetTime(at: string | number | null | undefined, language?: string): string | null {
-    if (at == null || at === '') return null;
-    const date = new Date(at);
-    if (Number.isNaN(date.getTime())) return null;
-    try {
-        return date.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' });
-    } catch {
-        return date.toLocaleTimeString();
-    }
-}
 
 /**
  * Fetches the reading meter on mount and on every focus (the tab stays
@@ -109,7 +98,7 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, multiplier, s
     const percentText = m.done
         ? t('you.settings.readingDone')
         : t('you.settings.readingUsed', { percent: new Intl.NumberFormat(lang, { style: 'percent' }).format(percent / 100) });
-    const time = formatResetTime(m.resetAt, lang) ?? '';
+    const time = formatClockTime(m.resetAt, lang) ?? '';
     const height = size === 'screen' ? 6 : 4;
     const small = { color: colors.ink2, fontSize: 13 } as const;
 
@@ -131,7 +120,7 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, multiplier, s
             </View>
             <Text style={small}>{t(m.resetDay === 'today' ? 'you.settings.resetsTodayAt' : 'you.settings.resetsTomorrowAt', { time })}</Text>
             {m.lastUpdatedAt != null ? (
-                <Text style={small}>{t('you.settings.lastUpdated', { time: formatResetTime(m.lastUpdatedAt, lang) ?? '' })}</Text>
+                <Text style={small}>{t('you.settings.lastUpdated', { time: formatClockTime(m.lastUpdatedAt, lang) ?? '' })}</Text>
             ) : null}
             <Text style={small}>
                 {m.multiplierKey === 'base' ? t('you.settings.planMultiplierBase') : t('you.settings.planMultiplier', { n: multiplier })}
