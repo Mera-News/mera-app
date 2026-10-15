@@ -3,6 +3,7 @@ import CardActionBar from '@/components/custom/cards/CardActionBar';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
 import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
+import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
@@ -282,6 +283,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       maxNoteLines={FEED_NOTE_LINES}
       reserveNoteLines={reserveNoteSpace ? FEED_NOTE_LINES : undefined}
     />
+  ) : isNotRead(suggestion) ? (
+    <Text size="sm" className="text-ink-3" testID="card-not-read">
+      {t('feed.notRead.line')}
+    </Text>
   ) : null;
   // What the card root reads after the meta strings: the chip's priority
   // (only where the chip renders), then the filtered-but-shown notice, the
@@ -289,6 +294,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const spokenPriority = reasonBoxEl ? relevanceSpokenLabel(t, relevance) : null;
   const spokenTail = [
     hardFilterLabelEl && hardFilterLabel ? t('notInterested.cardExemptLabel', { filter: hardFilterLabel }) : null,
+    isNotRead(suggestion) ? t('feed.notRead.a11y') : null,
     reason ? t('aiDisclosure.short') : null,
     reason ? shownReason ?? reason : null,
     // The indicator is hidden from screen readers; the root says it instead.

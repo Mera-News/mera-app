@@ -3,7 +3,10 @@ import {
     noteReasonInFlight,
     pruneReasonsInFlight,
 } from '@/components/custom/cards/pending-since';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useProcessingMode } from '@/lib/stores/mera-protocol-store';
+import { isReadHeld, useReadHold } from '@/lib/subscription/read-hold';
 import { useEffect, useState } from 'react';
 
 let pruneInstalled = false;
@@ -39,7 +42,11 @@ function installPrune(): void {
 export function useReasonWriting(id: string): boolean {
     installPrune();
     const inFlight = useForYouStore((s) => s.reasonsInFlightIds.has(id));
-    const anchor = inFlight ? noteReasonInFlight(id) : null;
+    // A cloud batch held by the daily reading limit is not being written.
+  const hold = useReadHold();
+  const mode = useProcessingMode();
+  const held = mode !== ProcessingMode.OnDevice && hold.resetAt != null && isReadHeld();
+  const anchor = inFlight ? noteReasonInFlight(id) : null;
     // The anchor that expired, not the id: a re-entry gets a new anchor and starts fresh.
     const [expiredAnchor, setExpiredAnchor] = useState<number | null>(null);
     const expired =
@@ -56,5 +63,5 @@ export function useReasonWriting(id: string): boolean {
         return () => clearTimeout(timer);
     }, [anchor, expired, id]);
 
-    return inFlight && !expired;
+    return inFlight && !expired && !held;
 }

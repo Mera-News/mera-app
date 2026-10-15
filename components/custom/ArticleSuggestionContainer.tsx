@@ -31,6 +31,7 @@ import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
+import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import React from 'react';
@@ -232,6 +233,10 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             topicIds={suggestion?.userTopicIds}
             testID="detail-reason"
         />
+    ) : isSuggestion && suggestion && isNotRead(suggestion) ? (
+        <Text size="sm" className="text-ink-3" testID="detail-not-read">
+            {t('feed.notRead.line')}
+        </Text>
     ) : null;
 
     if (isCard) {
