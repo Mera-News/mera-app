@@ -180,7 +180,7 @@ describe('FeedSyncMachine re-entrancy and abandonment', () => {
       expect(captured()).toEqual([]);
     });
 
-    it('its terminal branch (a daily-limit reject) cannot knock the LIVE run out of hydrating', async () => {
+    it('its terminal branch (a no-topics-configured reject) cannot knock the LIVE run out of hydrating', async () => {
       await serveNew(ids(5));
       const heldA = gate();
       const original = steps.stepFetchTopicIds;
@@ -189,7 +189,7 @@ describe('FeedSyncMachine re-entrancy and abandonment', () => {
         calls += 1;
         if (calls > 1) return original(personaId, ctx);
         await heldA.held;
-        throw Object.assign(new Error('daily-limit'), { code: 'daily-limit' });
+        throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
       });
       const runA = startMachine();
       await waitFor(() => calls === 1, 'run A to reach the fetch step');

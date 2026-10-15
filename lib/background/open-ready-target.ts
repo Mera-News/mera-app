@@ -22,11 +22,15 @@ import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-statu
 import { relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 
 export const OPEN_READY_TARGET = 50;
+/** Most new articles one background run fetches, whatever the target asks for:
+ *  every fetched article is later read in the cloud, which spends the reader's
+ *  daily reading. */
+export const BG_RUN_CAP = 50;
 export const FRESH_WINDOW_MS = 6 * 60 * 60 * 1000;
 export const YIELD_DEFAULT = 0.33;
 export const YIELD_MIN_SAMPLE = 20;
 /** Floor on the yield used for sizing, so a device whose last rows all missed
- *  the gate cannot ask for an unbounded fetch. The per-run cap binds anyway. */
+ *  the gate cannot ask for an unbounded fetch. BG_RUN_CAP binds anyway. */
 export const YIELD_FLOOR = 0.05;
 
 export interface OpenReadiness {
@@ -124,13 +128,13 @@ export async function measureOpenReadiness(now: number): Promise<OpenReadiness> 
 }
 
 /**
- * Metered articles to hydrate this run: zero once the expected count reaches
- * the target, otherwise enough to close the gap at the measured yield, never
- * more than the allowance lets this run spend.
+ * Articles to hydrate this run: zero once the expected count reaches the
+ * target, otherwise enough to close the gap at the measured yield, never more
+ * than `cap`.
  */
-export function plannedMeteredFetch(readiness: OpenReadiness, allowance: number): number {
+export function plannedFetch(readiness: OpenReadiness, cap: number = BG_RUN_CAP): number {
   const expected = readiness.relevant6h + readiness.yield * readiness.pending6h;
   if (expected >= OPEN_READY_TARGET) return 0;
   const needed = Math.ceil((OPEN_READY_TARGET - expected) / readiness.yield);
-  return Math.max(0, Math.min(needed, allowance));
+  return Math.max(0, Math.min(needed, cap));
 }

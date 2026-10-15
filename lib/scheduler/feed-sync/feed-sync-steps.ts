@@ -225,17 +225,6 @@ export interface HydratePersistEnqueueResult {
   insertedCount: number;
   /** Total eligible ids handed to the scoring pipeline across all chunks. */
   enqueuedCount: number;
-  /** True when the daily delivery cap clipped this run (partial or full). On a
-   *  partial clip we still deliver what landed; the machine surfaces the limit
-   *  banner immediately. A full clip with NOTHING delivered throws `daily-limit`
-   *  instead. */
-  dailyLimitReached: boolean;
-  /** ISO reset timestamp, set only when `dailyLimitReached`. */
-  resetAt?: string;
-  /** Articles the METERED query delivered (granted) this run. Followed-story
-   *  chunks are quota-free and not counted. Feeds the background allowance
-   *  ledger, which must record what the server granted, not what was asked. */
-  meteredDelivered: number;
   /** Persisted ids this run found scorable, in chunk order. A background run
    *  hands these to its bounded submit in place of the foreground enqueue. */
   eligibleIds: string[];
@@ -261,15 +250,6 @@ export interface HydratePersistEnqueueOptions {
    *  `enqueueUnscoredEligible`, which would drain with a foreground context. The
    *  run's own submit takes `eligibleIds` instead. */
   background?: boolean;
-  /** Called before EVERY metered request attempt with the ids it asks for.
-   *  The server charges the daily allowance inside that request, so a ledger
-   *  that must never undercount reserves here, before anything can be charged.
-   *  A retry is a second request and reserves again. */
-  reserveMetered?: (requested: number) => Promise<void>;
-  /** Called after a metered request answered, with what it cost. `granted` is
-   *  the server's charge: every requested id unless the response reports the
-   *  daily cap, in which case it is what was delivered. */
-  settleMetered?: (requested: number, granted: number) => Promise<void>;
 }
 
 export async function stepFetchTopicIds(
@@ -578,33 +558,15 @@ async function fetchTopicIdsPersona(
     });
   }
 
-  // BILLING GUARANTEE — insertion order is load-bearing, do not reorder.
-  //
-  // THIS DECIDES WHAT EVERY USER LOSES TO TRUNCATION, EVERY DAY. It is not a
-  // guard for an edge case. Every account without a purchase now holds Starter
-  // (granted server-side, 250 articles per UTC day), and a typical persona asks
-  // for far more than that in a single sync — roughly 20 topics at up to 40
-  // each plus six headline scopes at 20 is on the order of 900 ids. So the cap
-  // clips essentially every reader on essentially every day, and the ONLY thing
-  // deciding whether it clips their own interests or the generic headlines is
-  // the order of this array.
+  // TOPICS FIRST, HEADLINES LAST: insertion order is load-bearing, do not reorder.
   //
   // `matchedTopics` is a Map, so `[...keys()]` yields INSERTION order, and the
-  // topic loop above runs before the headline loop. The server truncates a
-  // clipped response in pure request order, so topic-matched articles are
-  // charged FIRST and top headlines are what the cap clips. Sorting this array,
-  // swapping the two loops, or merging them would hand a reader a feed of
-  // global headlines instead of the subjects they actually chose — and every
-  // existing test would still pass, because the metadata assertions here hold
-  // regardless of order. Two tests below pin the order itself; they are the
-  // only thing standing between a refactor and that outcome.
-  //
-  // SCOPE, honestly: this is exact at the id-list level and SOFT at the
-  // hydration boundary. `chunkArray(personaIds, 25)` is drained by a pool of
-  // HYDRATE_CONCURRENCY = 3 workers, so three chunks are in flight at once and
-  // the clip lands within roughly +/-3 chunks (~75 articles) of the boundary,
-  // not on it. The guarantee is "headlines are clipped before interests", not
-  // "article N exactly".
+  // topic loop above runs before the headline loop. Whatever later trims this
+  // list by position trims headlines before the reader's own subjects: the
+  // background run's per-run fetch cap (`shapeBackgroundDiff`), and the
+  // progressive render, which shows the first chunks first. Sorting this array,
+  // swapping the two loops or merging them would still pass every metadata
+  // assertion here; two order tests pin the order itself.
   const serverArticleIds = [...matchedTopics.keys()];
   logger.debug(`[feed-sync-steps] articleIdsForPersona returned ${serverArticleIds.length} article ids`);
   ctx.log(`server returned ${serverArticleIds.length} article ids (persona path)`);
@@ -708,7 +670,7 @@ export function growTrackedStories(serverMatches?: ServerTopicMatches): void {
   // grow every followed topic from whatever this run just persisted (the
   // suggestions' matched_topics). Chained so a just-migrated story also grows
   // this same cycle. Runs after every persist attempt — including a
-  // partial/daily-limit-clipped one, since whatever landed is still a valid
+  // partial one (a server that still caps downloads), since whatever landed is still a valid
   // reconcile source — AND on a run with nothing new to download, because the
   // server answer alone places rows already on device (a story just followed
   // from a feed card). Must never fail or delay the sync itself.
@@ -755,11 +717,9 @@ export function growTrackedStories(serverMatches?: ServerTopicMatches): void {
  * run concurrently (the gate re-derives its candidates from ALL unscored,
  * not-in-flight rows, and enqueueCandidates applies the strict quantum gate).
  *
- * Daily-limit semantics: the server charges the delivery cap here and clips the
- * response. If the cap leaves NOTHING to deliver on the whole run, throw a
- * terminal `daily-limit` error (decided AFTER the pool drains so a parallel dry
- * chunk can't pre-empt a sibling that did deliver). If it hits after some chunks
- * already landed, stop launching new chunks and keep what landed.
+ * A server that still caps downloads answers with fewer articles (a granted
+ * prefix, possibly none) and no error. What arrives is persisted; the ids that
+ * did not arrive stay new-to-device and are asked for again on the next sync.
  */
 export async function stepHydratePersistEnqueue(
   diffResult: DiffResult,
@@ -783,10 +743,6 @@ export async function stepHydratePersistEnqueue(
   // Everything downstream of the response is IDENTICAL for both: same persist,
   // same link, same gate, same enqueue. The only thing that differs is which
   // server query delivered the rows.
-  //
-  // Story chunks are listed FIRST so that, if the metered path later trips the
-  // daily cap and stops the pool, the followed-story articles the user
-  // explicitly asked for have already landed.
   const chunks: { ids: string[]; free: boolean }[] = [
     ...chunkArray(storyIds, HYDRATE_CHUNK_SIZE).map((ids) => ({
       ids,
@@ -800,14 +756,9 @@ export async function stepHydratePersistEnqueue(
 
   let completedIds = 0;
   let insertedCount = 0;
-  let deliveredAny = false;
-  let dailyLimitReached = false;
-  let resetAt: string | undefined;
   let enqueuedCount = 0;
-  let meteredDelivered = 0;
   const collectedEligibleIds: string[] = [];
-  // Set once a chunk hits the cap dry (0 articles) or a mid-run abort/pause
-  // ends — stops the pool from launching further chunks.
+  // Set on a mid-run abort: stops the pool from launching further chunks.
   let stopLaunching = false;
 
   // Lazy require (not a static import) breaks the module-load cycle
@@ -934,44 +885,17 @@ export async function stepHydratePersistEnqueue(
       const onChunkProgress = (chunkCompleted: number) =>
         opts.onProgress(completedIds + chunkCompleted);
 
-      const response: {
-        articles: ArticleWithClusters[];
-        // Only the metered query can report the cap. The quota-exempt one has
-        // no cap to hit, so these are absent on its result type by design.
-        dailyLimitReached?: boolean;
-        resetAt?: string;
-      } = await withRetry(
-        async () => {
-          if (free) return ArticleService.getArticlesForStories(chunk, onChunkProgress);
-          // Reserve BEFORE the request: a process killed after the server
-          // charged and before any write would otherwise leave the ledger
-          // short. A request that never answers keeps its reservation.
-          await opts.reserveMetered?.(chunk.length);
-          return ArticleService.getArticlesForTopicsByIds(chunk, onChunkProgress);
-        },
+      const response: { articles: ArticleWithClusters[] } = await withRetry(
+        () =>
+          free
+            ? ArticleService.getArticlesForStories(chunk, onChunkProgress)
+            : ArticleService.getArticlesForTopicsByIds(chunk, onChunkProgress),
         ctx.signal,
         RESOLVER_ERROR_RETRIES,
       );
       const chunkArticles = response.articles;
-      if (response.dailyLimitReached) {
-        dailyLimitReached = true;
-        resetAt = resetAt ?? response.resetAt;
-      }
-      if (!free) {
-        // Without the cap the server granted (and charged) every id, even one
-        // whose document is gone and was not delivered, so the reservation
-        // stands. With the cap it granted a prefix, which is what arrived.
-        const granted = response.dailyLimitReached
-          ? Math.min(chunk.length, chunkArticles.length)
-          : chunk.length;
-        await opts.settleMetered?.(chunk.length, granted);
-      }
 
-      // ALREADY-READ SCREEN. Deliberately NOT folded into the `deliveredAny` /
-      // daily-limit bookkeeping below, which stays on the RAW response length:
-      // the server delivered (and charged for) these articles, so a chunk that
-      // is entirely already-read is a delivered chunk, not the dry chunk that
-      // signals the cap.
+      // ALREADY-READ SCREEN.
       const { toPersist, readCount: chunkReadSkipped } = splitAlreadyReadArticles(
         chunkArticles,
         readIndex,
@@ -980,11 +904,6 @@ export async function stepHydratePersistEnqueue(
       if (chunkReadSkipped > 0) {
         ctx.log(`skipped ${chunkReadSkipped} already-read articles`);
       }
-
-      if (chunkArticles.length > 0) {
-        deliveredAny = true;
-      }
-      if (!free) meteredDelivered += chunkArticles.length;
 
       if (toPersist.length > 0) {
         const { insertedCount: chunkInserted } =
@@ -1030,23 +949,12 @@ export async function stepHydratePersistEnqueue(
       logger.debug(
         `[feed-sync-steps] chunk ${i + 1}/${chunks.length}: persisted ${toPersist.length}`,
       );
-
-      // Daily cap ran dry for this chunk (nothing delivered) — stop launching
-      // further chunks. The throw-vs-keep decision is made AFTER the pool drains.
-      if (dailyLimitReached && chunkArticles.length === 0) {
-        stopLaunching = true;
-        logger.debug(
-          '[feed-sync-steps] daily limit hit — stopping the hydration pool',
-        );
-        return;
-      }
     }
   };
 
   const poolSize = Math.min(HYDRATE_CONCURRENCY, Math.max(1, chunks.length));
   await Promise.all(Array.from({ length: poolSize }, () => worker()));
-  // Drain any still-pending serialized gate invocation before deciding the
-  // outcome / returning.
+  // Drain any still-pending serialized gate invocation before returning.
   await gateChain;
 
   // Every propagation write of this run is now committed — sweep the LOW-band
@@ -1093,15 +1001,6 @@ export async function stepHydratePersistEnqueue(
     }
   }
 
-  // Daily-limit outcome: throw ONLY if the cap blocked the entire run.
-  if (dailyLimitReached && !deliveredAny) {
-    logger.info('[feed-sync-steps] daily article-delivery limit reached');
-    throw Object.assign(new Error('daily-limit'), {
-      code: 'daily-limit',
-      resetAt: resetAt ? Date.parse(resetAt) : undefined,
-    });
-  }
-
   ctx.log(
     `hydrated+persisted ${insertedCount} records, enqueued ${enqueuedCount}` +
       (readSkippedTotal > 0 ? `, already read ${readSkippedTotal}` : ''),
@@ -1112,9 +1011,6 @@ export async function stepHydratePersistEnqueue(
   return {
     insertedCount,
     enqueuedCount,
-    dailyLimitReached,
-    resetAt,
-    meteredDelivered,
     eligibleIds: collectedEligibleIds,
   };
 }

@@ -121,7 +121,7 @@ jest.mock('expo-keep-awake', () => ({
   deactivateKeepAwake: (...args: any[]) => mockDeactivateKeepAwake(...args),
 }));
 
-// The machine emits notification-center-backed toasts on failure/daily-limit.
+// The machine emits notification-center-backed toasts on failure.
 // Those go through the real toast-manager (DB write + toast render), which is
 // out of scope for this unit test — stub it so it neither touches WatermelonDB
 // nor logs to Sentry.
@@ -184,7 +184,6 @@ beforeEach(() => {
   mockStepHydratePersistEnqueue.mockResolvedValue({
     insertedCount: 2,
     enqueuedCount: 2,
-    dailyLimitReached: false,
   });
   mockStepScore.mockResolvedValue(2);
   mockRefreshSuggestionsInStoreUnsafe.mockResolvedValue(undefined);
@@ -523,7 +522,7 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
   it('reports hydration progress via reportProgress callback', async () => {
     mockStepHydratePersistEnqueue.mockImplementation(async (_diff, _ctx, opts) => {
       opts.onProgress(1);
-      return { insertedCount: 1, enqueuedCount: 1, dailyLimitReached: false };
+      return { insertedCount: 1, enqueuedCount: 1 };
     });
 
     const ctx = makeCtx();
@@ -551,8 +550,7 @@ describe('FeedSyncMachine — new-articles stamp (F16)', () => {
     mockStepHydratePersistEnqueue.mockResolvedValueOnce({
       insertedCount: 0,
       enqueuedCount: 0,
-      dailyLimitReached: false,
-    });
+      });
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
     await jest.advanceTimersByTimeAsync(0);
@@ -758,100 +756,6 @@ describe('FeedSyncMachine — no-topics-configured is a normal terminal outcome'
   });
 });
 
-describe('FeedSyncMachine — daily-limit is a normal terminal outcome', () => {
-  const RESET_AT = 1781827200000;
-  beforeEach(() => {
-    mockStepHydratePersistEnqueue.mockRejectedValue(
-      Object.assign(new Error('daily-limit'), {
-        code: 'daily-limit',
-        resetAt: RESET_AT,
-      }),
-    );
-    mockClassifyError.mockReturnValue('daily-limit');
-  });
-
-  it('resolves without throwing (job completes, no retry) and resets to idle', async () => {
-    await expect(
-      feedSyncMachine.start('persona-1', makeCtx()),
-    ).resolves.toBeUndefined();
-    expect(feedSyncMachine.state).toBe('idle');
-  });
-
-  it('writes no notice or inbox row (Y11: the Feed icon carries the limit)', async () => {
-    const { toastManager } = require('@/lib/toast-manager');
-    await feedSyncMachine.start('persona-1', makeCtx());
-    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
-  });
-
-  it('sets the sticky daily-limit reset time for the banner', async () => {
-    await feedSyncMachine.start('persona-1', makeCtx());
-    expect(mockForYouStoreState.setDailyLimitResetAt).toHaveBeenCalledWith(
-      RESET_AT,
-    );
-  });
-
-  it('publishes the daily-limit sync error and does not capture to Sentry', async () => {
-    await feedSyncMachine.start('persona-1', makeCtx());
-    expect(mockPublishSyncError).toHaveBeenCalledWith(
-      'daily-limit',
-      RESET_AT,
-      expect.any(String),
-    );
-    expect(mockCaptureException).not.toHaveBeenCalled();
-  });
-
-  it('falls back to the next UTC midnight when the error omits resetAt', async () => {
-    mockStepHydratePersistEnqueue.mockRejectedValue(
-      Object.assign(new Error('daily-limit'), { code: 'daily-limit' }),
-    );
-
-    await feedSyncMachine.start('persona-1', makeCtx());
-
-    const arg = mockForYouStoreState.setDailyLimitResetAt.mock.calls.find(
-      (c) => typeof c[0] === 'number',
-    )?.[0] as number;
-    expect(typeof arg).toBe('number');
-    // Computed reset is a future 00:00:00.000 UTC instant.
-    const d = new Date(arg);
-    expect(d.getUTCHours()).toBe(0);
-    expect(d.getUTCMinutes()).toBe(0);
-    expect(arg).toBeGreaterThan(Date.now());
-  });
-});
-
-describe('FeedSyncMachine — clears the daily-limit banner on successful delivery', () => {
-  it('calls setDailyLimitResetAt(null) after a successful persist', async () => {
-    await feedSyncMachine.start('persona-1', makeCtx());
-    expect(mockForYouStoreState.setDailyLimitResetAt).toHaveBeenCalledWith(null);
-  });
-});
-
-describe('FeedSyncMachine — partial cap surfaces the banner while still delivering', () => {
-  it('sets the reset time (not null) and still persists the granted articles', async () => {
-    mockStepHydratePersistEnqueue.mockResolvedValue({
-      insertedCount: 1,
-      enqueuedCount: 1,
-      dailyLimitReached: true,
-      resetAt: '2026-06-26T00:00:00.000Z',
-    });
-
-    const ctx = makeCtx();
-    const startPromise = feedSyncMachine.start('persona-1', ctx);
-    await jest.advanceTimersByTimeAsync(0);
-    await startPromise;
-
-    // Granted articles are still delivered (no terminal throw on a partial clip).
-    expect(mockStepHydratePersistEnqueue).toHaveBeenCalled();
-    // Banner is surfaced immediately with the server's reset time.
-    expect(mockForYouStoreState.setDailyLimitResetAt).toHaveBeenCalledWith(
-      Date.parse('2026-06-26T00:00:00.000Z'),
-    );
-    expect(mockForYouStoreState.setDailyLimitResetAt).not.toHaveBeenCalledWith(
-      null,
-    );
-  });
-});
-
 describe('FeedSyncMachine — abort signal handling', () => {
   it('returns early without completing when signal is aborted during scoring', async () => {
     const controller = new AbortController();
@@ -867,7 +771,7 @@ describe('FeedSyncMachine — abort signal handling', () => {
     // Abort before scoring step runs
     mockStepHydratePersistEnqueue.mockImplementation(async () => {
       controller.abort();
-      return { insertedCount: 0, enqueuedCount: 0, dailyLimitReached: false };
+      return { insertedCount: 0, enqueuedCount: 0 };
     });
 
     const startPromise = feedSyncMachine.start('persona-1', ctx);
@@ -1331,7 +1235,7 @@ describe('FeedSyncMachine — stale in-flight run', () => {
 
   it('an abandoned run\'s terminal branch cannot make the LIVE run throw', async () => {
     // Direction 2 — the LIVE run throws, which a guard on `_transitionTo` alone
-    // would NOT catch. Zombie A rejects with `daily-limit` and hits the
+    // would NOT catch. Zombie A rejects with `no-topics-configured` and hits the
     // `this._state = 'idle'` force-reset while live run B sits at `hydrating`.
     // B's next legal transition (hydrating → scoring) is then evaluated as
     // `idle → scoring` and throws from B, which owns the current runId.
@@ -1348,16 +1252,16 @@ describe('FeedSyncMachine — stale in-flight run', () => {
     let releaseB: (() => void) | null = null;
     mockStepHydratePersistEnqueue.mockImplementationOnce(
       () => new Promise((resolve) => {
-        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2, dailyLimitReached: false });
+        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2 });
       }),
     );
     const pB = feedSyncMachine.start('persona-1', makeCtx());
     await jest.advanceTimersByTimeAsync(0);
     expect(feedSyncMachine.state).toBe('hydrating');
 
-    // A's rejection routes to the `daily-limit` force-reset branch.
-    mockClassifyError.mockReturnValueOnce('daily-limit');
-    (failA as unknown as (err: Error) => void)?.(new Error('daily-limit'));
+    // A's rejection routes to the `no-topics-configured` force-reset branch.
+    mockClassifyError.mockReturnValueOnce('no-topics-configured');
+    (failA as unknown as (err: Error) => void)?.(new Error('no-topics-configured'));
     await jest.advanceTimersByTimeAsync(0);
     await expect(pA).resolves.toBeUndefined();
 
@@ -1387,7 +1291,7 @@ describe('FeedSyncMachine — stale in-flight run', () => {
     let releaseB: (() => void) | null = null;
     mockStepHydratePersistEnqueue.mockImplementationOnce(
       () => new Promise((resolve) => {
-        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2, dailyLimitReached: false });
+        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2 });
       }),
     );
     const pB = feedSyncMachine.start('persona-1', makeCtx());
@@ -1430,7 +1334,7 @@ describe('FeedSyncMachine — stale in-flight run', () => {
     let releaseB: (() => void) | null = null;
     mockStepHydratePersistEnqueue.mockImplementationOnce(
       () => new Promise((resolve) => {
-        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2, dailyLimitReached: false });
+        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2 });
       }),
     );
     const pB = feedSyncMachine.start('persona-1', makeCtx());
@@ -1626,9 +1530,6 @@ describe('FeedSyncMachine — background mode', () => {
     return {
       shapeDiff: jest.fn((d: any) => d),
       submit: jest.fn(async () => {}),
-      onHydrated: jest.fn(async () => {}),
-      reserveMetered: jest.fn(async () => {}),
-      settleMetered: jest.fn(async () => {}),
       refreshStore: jest.fn(async () => {}),
       ...overrides,
     } as any;
@@ -1638,8 +1539,6 @@ describe('FeedSyncMachine — background mode', () => {
     mockStepHydratePersistEnqueue.mockResolvedValue({
       insertedCount: 2,
       enqueuedCount: 0,
-      dailyLimitReached: false,
-      meteredDelivered: 2,
       eligibleIds: ['art-1', 'art-2'],
     });
   });
@@ -1650,7 +1549,6 @@ describe('FeedSyncMachine — background mode', () => {
 
     expect(mockStepScore).not.toHaveBeenCalled();
     expect(hooks.submit).toHaveBeenCalledWith(['art-1', 'art-2']);
-    expect(hooks.onHydrated).toHaveBeenCalledWith({ meteredDelivered: 2, dailyLimitReached: false });
   });
 
   it('never enqueues through the foreground path and skips the tail flush', async () => {
@@ -1658,14 +1556,6 @@ describe('FeedSyncMachine — background mode', () => {
     const opts = mockStepHydratePersistEnqueue.mock.calls[0][2];
     expect(opts.suppressEnqueue).toBe(true);
     expect(opts.background).toBe(true);
-  });
-
-  it('hands the allowance reserve and settle hooks to the hydrate step', async () => {
-    const hooks = makeHooks();
-    await feedSyncMachine.start('', makeCtx(), { background: hooks });
-    const opts = mockStepHydratePersistEnqueue.mock.calls[0][2];
-    expect(opts.reserveMetered).toBe(hooks.reserveMetered);
-    expect(opts.settleMetered).toBe(hooks.settleMetered);
   });
 
   it('shapes the diff before hydrate', async () => {
@@ -1713,19 +1603,6 @@ describe('FeedSyncMachine — background mode', () => {
     expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
     expect(mockPublishSyncError).not.toHaveBeenCalled();
     expect(mockSaveMachineSnapshot).not.toHaveBeenCalledWith(expect.objectContaining({ state: 'failed' }));
-  });
-
-  it('on a daily-limit throw: records it for the allowance, but no toast and no notice stamp', async () => {
-    mockStepHydratePersistEnqueue.mockRejectedValueOnce(
-      Object.assign(new Error('daily-limit'), { code: 'daily-limit' }),
-    );
-    mockClassifyError.mockReturnValue('daily-limit');
-    const hooks = makeHooks();
-    await feedSyncMachine.start('', makeCtx(), { background: hooks });
-
-    expect(hooks.onHydrated).toHaveBeenCalledWith({ meteredDelivered: 0, dailyLimitReached: true });
-    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
-    expect(mockPublishSyncError).not.toHaveBeenCalled();
   });
 
   it('routes the per-chunk store refresh through the hook', async () => {

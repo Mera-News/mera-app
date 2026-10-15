@@ -1,7 +1,7 @@
 // FeedSyncMachine in BACKGROUND mode (`start('', ctx, { background: hooks })`, the `mera-background`
 // OS task): nobody is watching, so no wake lock, no status, no toast, no offline pause, no
 // foreground enqueue or flush, and the bounded background submit stands in for the scoring step.
-// The hooks are assembled from the real allowance ledger, freshness shaping and scoring submit.
+// The hooks are assembled from the real freshness shaping and scoring submit.
 // Replaces the background-mode block of lib/scheduler/feed-sync/__tests__/FeedSyncMachine.test.ts.
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
@@ -21,16 +21,13 @@ jest.mock('expo-keep-awake', () => ({
 }));
 
 import database from '@/lib/database';
-import { getSetting } from '@/lib/database/services/setting-service';
-import { BG_ARTICLES_CHARGED_PREFIX, BG_QUOTA_EXHAUSTED_DAY_KEY } from '@/lib/background/bg-refresh-settings';
-import { utcDayKey } from '@/lib/background/background-allowance';
 import logger from '@/lib/logger';
-import * as persistence from '@/lib/scheduler/feed-sync/feed-sync-persistence';
 import { toastManager } from '@/lib/toast-manager';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { advanceUntilDone, assertNoGatewayViolations, gatewayCalls, graphql, HttpResponse, server } from '@/test/helpers';
 import {
+  art,
   cleanupFeedSync,
   makeCtx,
   resetFeedSyncMemory,
@@ -115,15 +112,6 @@ describe('FeedSyncMachine in background mode', () => {
       expect(hooks.calls.postsAtSubmit).toEqual([0]);
     });
 
-    it('keeps the allowance ledger: reserved before the request, corrected to what the server granted', async () => {
-      await serveFresh(6);
-      const hooks = backgroundHooks();
-
-      await run(hooks);
-
-      expect(await getSetting(BG_ARTICLES_CHARGED_PREFIX + utcDayKey(hooks.now))).toBe('6');
-    });
-
     it('shapes the diff first: an id inserted more than 6h ago is never hydrated', async () => {
       const { fresh, old, served } = await serveFresh(3, { stale: 2 });
       const hooks = backgroundHooks();
@@ -133,7 +121,6 @@ describe('FeedSyncMachine in background mode', () => {
       const asked = served.stats.requests.flatMap((r) => r.ids);
       expect(asked.sort()).toEqual([...fresh].sort());
       expect(asked.some((id) => old.includes(id))).toBe(false);
-      expect(await getSetting(BG_ARTICLES_CHARGED_PREFIX + utcDayKey(hooks.now))).toBe('3');
     });
 
     it('routes the per-chunk store refresh through the hook, and flushes nothing itself', async () => {
@@ -236,31 +223,21 @@ describe('FeedSyncMachine in background mode', () => {
       rec.stop();
     });
 
-    it('a daily-limit clip whose snapshot cannot be cleared still ends quietly', async () => {
-      await serveFresh(3);
-      server.use(...serveHydrate({ respond: () => ({ articles: [], dailyLimitReached: true }) }).handlers);
-      spyOnExport(persistence, 'clearMachineSnapshot').mockRejectedValueOnce(new Error('snap clear error'));
+    it('a server that still caps downloads: what arrives is kept, the run ends quietly with no status', async () => {
+      const { fresh } = await serveFresh(4);
+      server.use(
+        ...serveHydrate({ respond: ({ ids }) => ({ articles: ids.slice(0, 1).map((id) => art(id)), dailyLimitReached: true }) })
+          .handlers,
+      );
+      const rec = recordMachine();
 
       await expect(run(backgroundHooks())).resolves.toBeUndefined();
 
-      expect(feedSyncMachine.state).toBe('idle');
-    });
-
-    it('a full daily-limit clip is recorded for the allowance, quietly: no status, no notice', async () => {
-      const { fresh } = await serveFresh(4);
-      server.use(...serveHydrate({ respond: () => ({ articles: [], dailyLimitReached: true }) }).handlers);
-      const hooks = backgroundHooks();
-      const rec = recordMachine();
-
-      await expect(run(hooks)).resolves.toBeUndefined();
-
-      expect(await getSetting(BG_QUOTA_EXHAUSTED_DAY_KEY)).toBe(utcDayKey(hooks.now));
       expect(rec.published).toEqual([]);
-      expect(feedSyncMachine.state).toBe('idle');
-      expect(await loadMachineSnapshot()).toBeNull();
-      expect(await rowsById()).toEqual(new Map());
+      expect(feedSyncMachine.state).toBe('done');
+      expect([...(await rowsById()).keys()]).toHaveLength(1);
+      expect(fresh).toContain([...(await rowsById()).keys()][0]);
       expect(captured()).toEqual([]);
-      expect(fresh).toHaveLength(4);
       rec.stop();
     });
   });

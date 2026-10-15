@@ -236,14 +236,6 @@ interface ForYouState {
     // null when the pipeline is healthy / idle.
     scoringError: ScoringErrorKind | null;
 
-    // Daily delivery cap — epoch ms of the next reset (00:00 UTC) while the
-    // user is over their daily article-delivery limit, else null. Sticky:
-    // set when a sync is fully blocked by the cap, cleared when a sync
-    // delivers new articles or once the reset time passes. Drives a persistent
-    // "limit reached" banner that survives the transient fetch/diff statuses
-    // each polling cycle publishes.
-    dailyLimitResetAt: number | null;
-
     // Hydration progress — number of article-suggestion records fetched from
     // the server during a syncFeed pass. Drives a progress bar in the For You
     // header for users with large id sets (a 2000-id hydration takes 30+ s).
@@ -302,7 +294,6 @@ interface ForYouState {
     setSyncStatusMessage: (msg: SyncStatusMessage | null) => void;
     setLastSyncAt: (ts: number) => void;
     setScoringError: (kind: ScoringErrorKind | null) => void;
-    setDailyLimitResetAt: (ts: number | null) => void;
     setHydrationProgress: (completed: number, total: number) => void;
     resetHydrationProgress: () => void;
     markProcessingRunFinished: () => void;
@@ -329,7 +320,6 @@ const initialState = {
     syncStatusMessage: null as SyncStatusMessage | null,
     lastSyncAt: null as number | null,
     scoringError: null as ScoringErrorKind | null,
-    dailyLimitResetAt: null as number | null,
     hydrationCompleted: 0,
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
@@ -473,8 +463,6 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     setLastSyncAt: (ts) => set({ lastSyncAt: ts }),
 
     setScoringError: (kind) => set({ scoringError: kind }),
-
-    setDailyLimitResetAt: (ts) => set({ dailyLimitResetAt: ts }),
 
     setHydrationProgress: (completed, total) =>
         set({ hydrationCompleted: completed, hydrationTotal: total }),

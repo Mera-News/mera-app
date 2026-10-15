@@ -40,21 +40,6 @@ export const FETCH_WHILE_SCORING = true;
  *  every future sync for the rest of the session. */
 export const INFLIGHT_STALE_MS = 4 * 60 * 1000;
 
-/** Epoch ms of the next 00:00 UTC — fallback reset time for the daily cap when
- *  the server response didn't carry one. */
-function nextUtcMidnightMs(): number {
-  const now = new Date();
-  return Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate() + 1,
-    0,
-    0,
-    0,
-    0,
-  );
-}
-
 const VALID_TRANSITIONS: Partial<Record<FeedSyncState, FeedSyncState[]>> = {
   idle:                 ['fetching-topic-ids'],
   'fetching-topic-ids': ['diffing', 'paused-offline', 'failed'],
@@ -398,14 +383,7 @@ class FeedSyncMachine {
       const rawDiff = await steps.stepDiff(topicResult, ctx);
       // Background: the 6h prefilter and the metered budget, BEFORE hydrate, so
       // nothing outside them is ever charged.
-      const shapedDiff = bg ? bg.shapeDiff(rawDiff) : rawDiff;
-      // Followed stories keep updating after the daily cap (owner ruling): while the cap holds, only
-      // the quota-exempt story ids are hydrated and the metered ones wait for the reset.
-      const capResetAt = useForYouStore.getState().dailyLimitResetAt;
-      const capHeld = capResetAt !== null && Date.now() < capResetAt;
-      const diffResult: typeof shapedDiff = capHeld
-        ? { ...shapedDiff, personaIds: [], missingIds: shapedDiff.storyIds ?? [] }
-        : shapedDiff;
+      const diffResult = bg ? bg.shapeDiff(rawDiff) : rawDiff;
 
       if (diffResult.missingIds.length === 0) {
         // No new articles and nothing deleted — but still run scoring in case
@@ -504,15 +482,7 @@ class FeedSyncMachine {
         // drains with a foreground context. Its own submit follows below.
         suppressEnqueue: suppressScoring || bg !== undefined,
         background: bg !== undefined,
-        reserveMetered: bg?.reserveMetered,
-        settleMetered: bg?.settleMetered,
       });
-      if (bg) {
-        await bg.onHydrated({
-          meteredDelivered: hydrateResult.meteredDelivered,
-          dailyLimitReached: hydrateResult.dailyLimitReached,
-        });
-      }
       useForYouStore.getState().resetHydrationProgress();
       // "Updated just now" means NEW ARTICLES arrived, not "a sync ran". The
       // 5-minute poll finishes a run (and must keep stamping
@@ -523,19 +493,6 @@ class FeedSyncMachine {
         useForYouStore.getState().markNewArticlesArrived();
       }
 
-      // Daily cap banner: if this run was partially clipped, surface the "limit
-      // reached" notice now (we still delivered what fit) rather than waiting for
-      // the next fully-blocked cycle. A fully-unclipped delivery means we're
-      // under the cap — clear it. A run that sent no metered ids (cap held) says nothing about it.
-      if (!capHeld) {
-        useForYouStore.getState().setDailyLimitResetAt(
-          hydrateResult.dailyLimitReached
-            ? hydrateResult.resetAt
-              ? Date.parse(hydrateResult.resetAt)
-              : nextUtcMidnightMs()
-            : null,
-        );
-      }
       // Final refresh after all chunks (each chunk already requested a
       // throttled refresh) — flush guarantees the last chunk landed exactly.
       if (!bg) await flushSuggestionsRefresh();
@@ -604,52 +561,6 @@ class FeedSyncMachine {
         if (this._isCurrentRun(runId) && !bg) {
           publishSyncError('no-topics-configured', undefined, this._state);
         }
-        this._forceIdle(runId); // bypasses the transition guard — valid from any state
-        try {
-          await feedPersistence.clearMachineSnapshot();
-        } catch (snapErr) {
-          logger.captureException(snapErr, {
-            tags: { service: 'FeedSyncMachine', step: 'clearMachineSnapshot' },
-          });
-        }
-        return;
-      }
-
-      // `daily-limit` is a normal terminal "no more today" outcome (the user
-      // hit their daily article-delivery cap), not a failure. Surface the
-      // "resumes at X" notice (retryAt = server resetAt), reset to idle, and
-      // return WITHOUT throwing — no retry, no Sentry error.
-      if (errorCode === 'daily-limit') {
-        const resetAt = (err as { resetAt?: number }).resetAt;
-        const store = useForYouStore.getState();
-        // Sticky banner state: persists across the transient fetch/diff
-        // statuses each polling cycle publishes, so the "limit reached" notice
-        // stays visible until a sync delivers articles again or the reset
-        // passes. Fall back to the next UTC midnight if the server omitted it.
-        // `setDailyLimitResetAt` is deliberately NOT
-        // ownership-gated: the cap really was hit, and that is a global fact
-        // about the user's day, not per-run state. Only the header status is
-        // gated, because it reads `this._state` as `failedAtState` and would
-        // otherwise describe the LIVE run's position.
-        store.setDailyLimitResetAt(resetAt ?? nextUtcMidnightMs());
-        if (bg) {
-          // Nothing was delivered. Close background for the rest of the UTC
-          // day; the reader sees the limit on the Feed icon at the next open.
-          await bg.onHydrated({ meteredDelivered: 0, dailyLimitReached: true });
-          this._forceIdle(runId);
-          try {
-            await feedPersistence.clearMachineSnapshot();
-          } catch {
-            // The next run overwrites it.
-          }
-          return;
-        }
-        if (this._isCurrentRun(runId)) {
-          publishSyncError('daily-limit', resetAt, this._state);
-        }
-
-        // No notice and no inbox row (owner Y11): the Feed's Mera icon
-        // carries the limit state.
         this._forceIdle(runId); // bypasses the transition guard — valid from any state
         try {
           await feedPersistence.clearMachineSnapshot();
@@ -762,7 +673,7 @@ class FeedSyncMachine {
    *
    * THE OWNERSHIP CHECK IS NOT DEFENSIVE, IT IS THE OTHER HALF OF THE BUG.
    * These force-resets sit on terminal branches an ABANDONED run can still
-   * reach. Zombie A rejecting with `daily-limit` used to set `_state = 'idle'`
+   * reach. A zombie A rejecting with a terminal error used to set `_state = 'idle'`
    * while live run B sat at `hydrating`; B's next perfectly legal
    * `hydrating → scoring` was then evaluated as `idle → scoring` and threw —
    * from B, which owns the current `runId`. A guard on `_transitionTo` alone

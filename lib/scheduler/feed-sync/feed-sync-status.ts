@@ -46,8 +46,7 @@ export function publishSyncError(
   // Sync failures reach the reader through the Feed counts card instead:
   // `syncFailureKey` in `components/custom/for-you/card-state.ts` picks a
   // `feed.syncFailed.*` line from `errorCode` and `failedAtState`, so the step that
-  // failed is named there. The daily-cap notice is driven separately, off
-  // `dailyLimitResetAt`.
+  // failed is named there.
   //
   // WHY NOTHING IS DELETED. The `sync.*` keys stay in 20 locale dictionaries and the
   // entries stay here: removing them is a 20-locale pass for strings no user can
@@ -98,12 +97,6 @@ export function classifyError(err: unknown): SyncErrorCode {
     }
     if (msg.includes('storage') || msg.includes('disk')) {
       return 'storage-error';
-    }
-    if (
-      (err as { code?: string }).code === 'daily-limit' ||
-      msg === 'daily-limit'
-    ) {
-      return 'daily-limit';
     }
     if ((err as { code?: string }).code === 'no-topics-configured') {
       return 'no-topics-configured';

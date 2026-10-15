@@ -31,8 +31,8 @@ export interface NotifyInput {
    * (e.g. two separate hygiene reviews), and capping those globally would
    * silently drop real notifications. Set `true` only for callers whose
    * repeat firing on the same day is known to be the SAME event repeating,
-   * not a new one — currently FeedSyncMachine's daily-limit and sync-failed
-   * toasts (both retrigger on the 60s scheduler re-arm).
+   * not a new one, such as FeedSyncMachine's sync-failed toast (it retriggers
+   * on the 60s scheduler re-arm).
    */
   dedupeDaily?: boolean;
 }
@@ -54,8 +54,7 @@ function startOfTodayUtcMs(): number {
  * True when a notification with the same `(type, source)` was already
  * created today (UTC). Used only when a caller opts in via
  * `NotifyInput.dedupeDaily`. Keyed on the full tuple, not `type` alone, so
- * distinct event types from the same source (e.g. feed-sync's daily-limit vs
- * sync-failed) still notify independently.
+ * distinct event types from the same source still notify independently.
  */
 async function hasNotifiedToday(type: string, source: string): Promise<boolean> {
   const today = utcDayString(new Date());

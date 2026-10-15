@@ -103,12 +103,6 @@ describe('publishSyncError', () => {
     expect(message()).toEqual(expect.objectContaining({ errorCode: 'not-a-code', headlineKey: 'sync.syncFailed', isRecoverable: false }));
   });
 
-  it('carries the daily-limit reset time as retryAt', () => {
-    publishSyncError('daily-limit', 1781827200000);
-
-    expect(message()).toEqual(expect.objectContaining({ errorCode: 'daily-limit', retryAt: 1781827200000 }));
-  });
-
   it('carries retryAt and the state the machine failed at', () => {
     publishSyncError('offline', 12345, 'hydrating');
 
@@ -125,8 +119,7 @@ describe('classifyError', () => {
     ['the no-topics message', new Error('no-topics-configured'), 'no-topics-configured'],
     ['a message containing no-topics-configured', new Error('Error: no-topics-configured for user'), 'no-topics-configured'],
     ['code no-topics-configured', Object.assign(new Error('some error'), { code: 'no-topics-configured' }), 'no-topics-configured'],
-    ['code daily-limit', Object.assign(new Error('daily-limit'), { code: 'daily-limit' }), 'daily-limit'],
-    ['the daily-limit message', new Error('daily-limit'), 'daily-limit'],
+    ['a leftover daily-limit code: nothing is a limit outcome any more', Object.assign(new Error('daily-limit'), { code: 'daily-limit' }), 'unknown'],
     ['a network message', new Error('network request failed'), 'server-unreachable'],
     ['a fetch message', new Error('fetch failed'), 'server-unreachable'],
     ['a timeout message', new Error('request timeout'), 'server-unreachable'],

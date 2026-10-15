@@ -9,7 +9,6 @@ import '@/lib/scheduler/tasks/entitlement-sync-task';
 
 import Purchases from 'react-native-purchases';
 
-import { LAST_DAILY_ARTICLE_LIMIT_KEY } from '@/lib/background/bg-refresh-settings';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { configureRevenueCat } from '@/lib/revenuecat';
 import { resetEntitlementSyncState } from '@/lib/subscription/entitlement-sync';
@@ -40,7 +39,6 @@ import {
 jest.setTimeout(30_000); // the tick tests step minutes of fake time, which an instrumented run can stretch
 
 const TASK = 'entitlement-sync';
-const STARTER_LIMIT = '250';
 
 /** Both settings writes are fire-and-forget, so the job ends before they land: poll until the row appears. */
 async function settledSetting(key: string): Promise<string | null> {
@@ -94,24 +92,22 @@ describe('registration', () => {
 });
 
 describe('the handler', () => {
-  it('reads billing into the store and writes the device memory: last known tier and last daily article limit', async () => {
+  it('reads billing into the store and writes the device memory: the last known tier', async () => {
     expect(await runTask(TASK)).toBe('ran');
 
     expect(useSubscriptionStore.getState().serverTier).toBe('individual');
     expect(await settledSetting(LAST_KNOWN_TIER_SETTING_KEY)).toBe('individual');
-    expect(await settledSetting(LAST_DAILY_ARTICLE_LIMIT_KEY)).toBe('1000');
     expect(await jobStatuses(TASK)).toEqual(['completed']);
     expect(lastRunInStore(TASK)).toBeGreaterThanOrEqual(T0);
     expect(await lastRunPersisted(TASK)).toBe(lastRunInStore(TASK));
   });
 
-  it('follows the server tier: Starter writes the Starter limit', async () => {
+  it('follows the server tier: Starter is remembered as Starter', async () => {
     setScenario({ tier: 'starter' });
 
     await runTask(TASK);
 
     expect(await settledSetting(LAST_KNOWN_TIER_SETTING_KEY)).toBe('starter');
-    expect(await settledSetting(LAST_DAILY_ARTICLE_LIMIT_KEY)).toBe(STARTER_LIMIT);
   });
 
   it('a second run inside the sync debounce (60s) makes no billing request, so a changed verdict waits; after it, it is read', async () => {
@@ -129,12 +125,12 @@ describe('the handler', () => {
     await runTask(TASK);
     expect(billing.calls()).toBe(2);
     expect(useSubscriptionStore.getState().serverTier).toBe('professional');
-    expect(await settledSetting(LAST_DAILY_ARTICLE_LIMIT_KEY)).toBe('2500');
+    expect(await settledSetting(LAST_KNOWN_TIER_SETTING_KEY)).toBe('professional');
   });
 
-  it('a failed billing read keeps the last known tier and limit, completes the job, and is not debounced (the next run retries at once)', async () => {
+  it('a failed billing read keeps the last known tier, completes the job, and is not debounced (the next run retries at once)', async () => {
     await runTask(TASK);
-    await settledSetting(LAST_DAILY_ARTICLE_LIMIT_KEY);
+    await settledSetting(LAST_KNOWN_TIER_SETTING_KEY);
     await settle(61_000);
     setScenario({ tier: 'professional' });
     server.use(mockGqlError('GetUserBilling', 'INTERNAL_SERVER_ERROR'), mockGqlError('GetUserBillingLapseState', 'INTERNAL_SERVER_ERROR'));
@@ -144,7 +140,6 @@ describe('the handler', () => {
     expect(await jobStatuses(TASK)).toEqual(['completed', 'completed']);
     expect(useSubscriptionStore.getState().serverTier).toBe('individual');
     expect(await getSetting(LAST_KNOWN_TIER_SETTING_KEY)).toBe('individual');
-    expect(await getSetting(LAST_DAILY_ARTICLE_LIMIT_KEY)).toBe('1000');
 
     server.resetHandlers();
     setScenario({ tier: 'professional' });

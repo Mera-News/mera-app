@@ -143,7 +143,7 @@ export async function runBackgroundRefresh(now: number = Date.now()): Promise<Re
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { runBackgroundFeedSync } = require('./background-feed-sync') as typeof import('./background-feed-sync');
       const fetched = await runBackgroundFeedSync({ deadlineAt });
-      breadcrumb('fetch finished', { stoppedBy: fetched.stoppedBy, budget: fetched.meteredBudget });
+      breadcrumb('fetch finished', { stoppedBy: fetched.stoppedBy, budget: fetched.fetchBudget });
       return { stoppedBy: 'done', fetch: fetched.stoppedBy };
     } catch (err) {
       logger.captureException(err, { tags: { service: 'background-task', step: 'refresh' } });

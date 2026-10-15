@@ -254,11 +254,8 @@ describe('classifyError', () => {
     expect(classifyError(new Error('no-topics-configured'))).toBe('no-topics-configured');
   });
 
-  it('returns daily-limit for a daily-limit coded error or message', () => {
-    expect(
-      classifyError(Object.assign(new Error('daily-limit'), { code: 'daily-limit' })),
-    ).toBe('daily-limit');
-    expect(classifyError(new Error('daily-limit'))).toBe('daily-limit');
+  it('a leftover daily-limit error is no longer its own outcome', () => {
+    expect(classifyError(Object.assign(new Error('daily-limit'), { code: 'daily-limit' }))).toBe('unknown');
   });
 
   it('returns no-topics-configured when message includes no-topics-configured', () => {

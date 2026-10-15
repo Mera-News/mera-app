@@ -8,7 +8,6 @@
 // Scenario (see ./scenario) is read at resolve time:
 //   tier                billing ops report it ('none' = unentitled, 'starter' = 250/day)
 //   readingUsed         billing's readingUsed (0..1, null = meter not visible); planMultiplier follows tier
-//   dailyLimitReached   GetArticlesForTopicsByIds delivers nothing and sets the cap fields
 //   articles: 'empty'   every id op and article list answers empty
 //   imageOrigin         origin of the fixture image URLs (default: the request's own)
 //   paywall             after a scripted purchase, billing ops report `upgradeTo` (billingTier)
@@ -38,7 +37,7 @@ import {
 } from './fixtures/articles';
 import { FIXTURE_ACCOUNT } from './fixtures/account';
 import { appConfig, appVersionInfo } from './fixtures/graphql/appConfig';
-import { billingFor, nextUtcMidnight } from './fixtures/graphql/billing';
+import { billingFor } from './fixtures/graphql/billing';
 import { factCheckFor } from './fixtures/graphql/factCheck';
 import { feedbackRequests } from './fixtures/graphql/feedback';
 import { personaFor, unblockRequestFor } from './fixtures/graphql/persona';
@@ -144,20 +143,15 @@ query<'articleIdsForTopics'>('GetArticleIdsForTopics', (c) => {
     };
 });
 
-// Cap exhausted: nothing is delivered and the reset time is set, which is the shape
-// feed-sync turns into its 'daily-limit' outcome.
-query<'articlesForTopicsByIds'>('GetArticlesForTopicsByIds', (c) => {
-    const capped = c.scenario.dailyLimitReached;
-    return {
-        articlesForTopicsByIds: {
-            __typename: 'ArticlesForTopicsByIdsResponse',
-            articles:
-                capped || isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
-            dailyLimitReached: capped,
-            resetAt: capped ? nextUtcMidnight(c.now) : null,
-        },
-    };
-});
+// Never truncates: every requested article that exists is delivered.
+query<'articlesForTopicsByIds'>('GetArticlesForTopicsByIds', (c) => ({
+    articlesForTopicsByIds: {
+        __typename: 'ArticlesForTopicsByIdsResponse',
+        articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
+        dailyLimitReached: false,
+        resetAt: null,
+    },
+}));
 
 // Quota-exempt sibling: never capped.
 query<'articlesForStories'>('GetArticlesForStories', (c) => ({
@@ -345,10 +339,7 @@ query<'cachedFactCheck'>('GetCachedFactCheck', (c) => ({
 // ---- account, billing, config -------------------------------------------------------
 
 const billing = (c: Ctx) =>
-    billingFor(billingTier(c.scenario, c.now), c.now, {
-        limitReached: c.scenario.dailyLimitReached,
-        readingUsed: c.scenario.readingUsed,
-    });
+    billingFor(billingTier(c.scenario, c.now), c.now, { readingUsed: c.scenario.readingUsed });
 query<'userBilling'>('GetUserBilling', (c) => ({ userBilling: billing(c) }));
 query<'userBilling'>('GetUserBillingLapseState', (c) => ({ userBilling: billing(c) }));
 query<'userBilling'>('GetUserReading', (c) => ({ userBilling: billing(c) }));

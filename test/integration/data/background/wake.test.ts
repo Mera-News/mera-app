@@ -93,7 +93,7 @@ describe('the order of a wake', () => {
     expect(firstReached(order)).toEqual(['toggle', 'boundary', 'cookie', 'collect', 'fetch', 'backup']);
   });
 
-  it('is the whole job end to end: fresh articles fetched and persisted, submitted for scoring, the ledger kept', async () => {
+  it('is the whole job end to end: fresh articles fetched and persisted, submitted for scoring', async () => {
     const { fresh } = await serveFresh(3);
 
     const result = await advanceUntilDone(runBackgroundWake());
@@ -101,7 +101,6 @@ describe('the order of a wake', () => {
     expect(result).toBe(BackgroundTaskResult.Success);
     expect([...(await rowsById()).keys()].sort()).toEqual([...fresh].sort());
     expect(gatewayCalls('job').length).toBeGreaterThan(0); // the bounded submit reached the gateway
-    expect(await getSetting('bg_articles_charged:2026-10-09')).toBe('3');
     expect(sentryEvents()).toEqual([]);
   });
 

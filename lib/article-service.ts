@@ -530,8 +530,8 @@ const GET_ARTICLE_IDS_FOR_TOPICS = gql`
 // [Flow v2] GraphQL Query: hydrate full article records for IDs the app
 // doesn't already have locally. Returns ArticleWithClusters which includes
 // per-cluster membership confidence for the For-You feed's collapse logic.
-// The daily-delivery cap is charged here (the server's delivery point), so a
-// clipped response carries `dailyLimitReached` + `resetAt`.
+// A server that still caps downloads answers with fewer articles, never an
+// error. Its `dailyLimitReached`/`resetAt` are not selected: nothing reads them.
 const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
   query GetArticlesForTopicsByIds($articleIds: [ID!]!) {
     articlesForTopicsByIds(articleIds: $articleIds) {
@@ -561,17 +561,13 @@ const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
         category
         maxClusterSize
       }
-      dailyLimitReached
-      resetAt
     }
   }
 `;
 
 // [r12] Quota-EXEMPT sibling of GET_ARTICLES_FOR_TOPICS_BY_IDS, for articles
 // that reached the device ONLY because the user follows a story. Identical
-// selection set minus the cap fields: this query is never charged against the
-// daily article limit, so `dailyLimitReached` is always false and `resetAt`
-// always absent — selecting them would be dead weight on every request.
+// selection set; this query is never charged against a daily article limit.
 const GET_ARTICLES_FOR_STORIES = gql`
   query GetArticlesForStories($articleIds: [ID!]!) {
     articlesForStories(articleIds: $articleIds) {
@@ -903,18 +899,16 @@ export class ArticleService {
      * Fetch full article records for a set of IDs. Returns the hydrated
      * `articles` (with per-cluster membership
      * `clusters { clusterId confidence stableClusterId }` for the feed's collapse
-     * logic) plus the daily-delivery-cap signal — the
-     * cap is charged server-side at this delivery point, so `dailyLimitReached`
-     * is true (with `resetAt`) when the cap clipped the response. `CHUNK` is 50
-     * because the server rejects an `articlesForTopicsByIds` call carrying more
-     * than 50 ids: the two limits are one contract and must move together. The
-     * flags are OR'd across chunks.
+     * logic). A server still capping downloads returns a granted prefix of each
+     * chunk, so fewer articles than ids is normal. `CHUNK` is 50 because the
+     * server rejects an `articlesForTopicsByIds` call carrying more than 50 ids:
+     * the two limits are one contract and must move together.
      */
     static async getArticlesForTopicsByIds(
         articleIds: string[],
         onProgress?: (completed: number, total: number) => void,
-    ): Promise<{ articles: ArticleWithClusters[]; dailyLimitReached: boolean; resetAt?: string }> {
-        if (articleIds.length === 0) return { articles: [], dailyLimitReached: false };
+    ): Promise<{ articles: ArticleWithClusters[] }> {
+        if (articleIds.length === 0) return { articles: [] };
 
         const CHUNK = 50;
         const CONCURRENCY = 5;
@@ -923,8 +917,6 @@ export class ArticleService {
             batches.push(articleIds.slice(i, i + CHUNK));
         }
         const results: ArticleWithClusters[] = [];
-        let dailyLimitReached = false;
-        let resetAt: string | undefined;
         let completedIds = 0;
         onProgress?.(0, articleIds.length);
 
@@ -946,17 +938,13 @@ export class ArticleService {
                         });
                         const rows = data?.articlesForTopicsByIds?.articles ?? [];
                         if (rows.length) results.push(...rows);
-                        if (data?.articlesForTopicsByIds?.dailyLimitReached) {
-                            dailyLimitReached = true;
-                            resetAt = resetAt ?? data.articlesForTopicsByIds.resetAt ?? undefined;
-                        }
                         completedIds += batch.length;
                         onProgress?.(completedIds, articleIds.length);
                     }
                 },
             );
             await Promise.all(workers);
-            return { articles: results, dailyLimitReached, resetAt };
+            return { articles: results };
         } catch (error) {
             // apollo-error-link already captures this to Sentry — breadcrumb only
             // here to avoid double- (previously triple-) reporting.
@@ -973,10 +961,8 @@ export class ArticleService {
     /**
      * Quota-EXEMPT hydration for articles that reached the device ONLY because
      * the user follows a story. Same payload as
-     * {@link getArticlesForTopicsByIds}; the difference is purely billing —
-     * nothing fetched here counts against the daily article cap, so there is no
-     * `dailyLimitReached`/`resetAt` to report and the caller never has to handle
-     * a clipped response.
+     * {@link getArticlesForTopicsByIds}; the difference is purely billing:
+     * nothing fetched here counts against a daily article cap.
      *
      * ONLY the feed-sync partition may call this. The caller must have
      * established that every topic which matched these ids is a followed-story

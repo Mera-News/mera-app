@@ -2,8 +2,8 @@
 // the next open, persist them, and hand them to the bounded background submit.
 //
 // It drives the ordinary FeedSyncMachine in BACKGROUND MODE (see
-// `BackgroundSyncHooks`) rather than a copy of it, so the persist, link, gate
-// and billing-partition rules stay in one place.
+// `BackgroundSyncHooks`) rather than a copy of it, so the persist, link and
+// gate rules stay in one place.
 //
 // What makes a background wake different, and why each guard exists:
 //   - Nothing is hydrated. `mera-protocol-store` would report CLOUD for an
@@ -11,8 +11,9 @@
 //     `metaFromState(get())`, which from an unhydrated store overwrites the
 //     saved feed metadata with defaults. Both are hydrated first.
 //   - The fetch is sized by the open-ready target, not by what the server has:
-//     the ids are prefiltered by ObjectId insert time and capped by the
-//     allowance BEFORE hydrate, because hydrate is where the server charges.
+//     the ids are prefiltered by ObjectId insert time and capped at BG_RUN_CAP
+//     BEFORE hydrate. Every article fetched here is then read in the cloud,
+//     which spends the reader's daily reading.
 //   - Store refreshes only matter when someone is looking. A refresh is owed
 //     (the dirty flag) and paid once the run settles, if the app is then
 //     active, or on the next activation otherwise.
@@ -25,18 +26,12 @@ import type { DiffResult } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import type { BackgroundSyncHooks } from '@/lib/scheduler/feed-sync/feed-sync-types';
 import type { TaskContext } from '@/lib/scheduler/scheduler-types';
 
-import {
-  BG_RUN_METERED_CAP,
-  markQuotaExhausted,
-  readAllowance,
-  reserveCharged,
-  settleCharged,
-} from './background-allowance';
 import { readLastForegroundAt } from './bg-refresh-settings';
 import {
+  BG_RUN_CAP,
   isInsertedWithinWindow,
   measureOpenReadiness,
-  plannedMeteredFetch,
+  plannedFetch,
 } from './open-ready-target';
 
 /** No fetch when the reader has not opened the app for this long: a user who
@@ -54,8 +49,8 @@ export type BackgroundFeedSyncStop =
 
 export interface BackgroundFeedSyncResult {
   stoppedBy: BackgroundFeedSyncStop;
-  /** Metered articles the run was allowed to hydrate (0 when it skipped, or when only followed stories ran). */
-  meteredBudget: number;
+  /** Articles the run was allowed to hydrate (0 when it skipped, or when only followed stories ran). */
+  fetchBudget: number;
 }
 
 // --- Store refresh owed to the reader ---------------------------------------
@@ -105,21 +100,21 @@ export function isRefreshOwed(): boolean {
 // --- The diff shaping --------------------------------------------------------
 
 /**
- * Keep only ids inserted inside the freshness window, then cap the METERED set
- * at `meteredBudget`. Order is preserved, and the persona ids arrive topics
+ * Keep only ids inserted inside the freshness window, then cap the persona set
+ * at `fetchBudget`. Order is preserved, and the persona ids arrive topics
  * first and headlines last, so a cap clips headlines before the reader's own
- * topics. Followed-story ids are free and are only window-filtered, with the
+ * topics. Followed-story ids keep updating whatever the target says, with the
  * same per-run bound so one run stays small.
  */
 export function shapeBackgroundDiff(
   diff: DiffResult,
   now: number,
-  meteredBudget: number,
-  storyBound: number = BG_RUN_METERED_CAP,
+  fetchBudget: number,
+  storyBound: number = BG_RUN_CAP,
 ): DiffResult {
   const fresh = (id: string) => isInsertedWithinWindow(id, now);
   const storyIds = (diff.storyIds ?? []).filter(fresh).slice(0, storyBound);
-  const personaIds = (diff.personaIds ?? diff.missingIds).filter(fresh).slice(0, meteredBudget);
+  const personaIds = (diff.personaIds ?? diff.missingIds).filter(fresh).slice(0, fetchBudget);
   const keep = new Set([...storyIds, ...personaIds]);
   return {
     ...diff,
@@ -166,18 +161,14 @@ export async function runBackgroundFeedSync(opts: {
 
   const lastForeground = await readLastForegroundAt();
   if (lastForeground === null || now - lastForeground > NO_FOREGROUND_SKIP_MS) {
-    return { stoppedBy: 'no-foreground', meteredBudget: 0 };
+    return { stoppedBy: 'no-foreground', fetchBudget: 0 };
   }
-
-  const allowance = await readAllowance(now);
 
   await hydrateRunPrerequisites();
 
-  // A spent allowance or a met target stops only the METERED ids. Followed
-  // stories are free and keep updating (owner ruling), so the run goes on with
-  // a metered budget of zero: no metered hydrate, no reservation.
-  const meteredBudget =
-    allowance.perRun > 0 ? plannedMeteredFetch(await measureOpenReadiness(now), allowance.perRun) : 0;
+  // A met target stops only the persona ids. Followed stories keep updating
+  // (owner ruling), so the run goes on with a budget of zero for the rest.
+  const fetchBudget = plannedFetch(await measureOpenReadiness(now));
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { useMeraProtocolStore } = require('@/lib/stores/mera-protocol-store') as typeof import('@/lib/stores/mera-protocol-store');
@@ -188,7 +179,7 @@ export async function runBackgroundFeedSync(opts: {
   const abortTimer = setTimeout(() => controller.abort(), remaining);
 
   const hooks: BackgroundSyncHooks = {
-    shapeDiff: (diff) => shapeBackgroundDiff(diff, now, meteredBudget),
+    shapeDiff: (diff) => shapeBackgroundDiff(diff, now, fetchBudget),
     // On-device mode fetches and persists only: scoring needs the local model,
     // which a background run never loads.
     submit: onDevice
@@ -202,30 +193,6 @@ export async function runBackgroundFeedSync(opts: {
             maxBatches: BG_MAX_BATCHES,
           });
         },
-    // Reserve before, correct after: see background-allowance.ts. The
-    // reservation is awaited and NOT caught: a ledger that cannot be written
-    // must not let a charge through unrecorded, so the request is not sent.
-    reserveMetered: (requested) => reserveCharged(now, requested),
-    settleMetered: async (requested, granted) => {
-      try {
-        await settleCharged(now, requested, granted);
-      } catch (err) {
-        // A failed correction leaves the ledger high, the safe direction.
-        logger.addBreadcrumb('bg-feed-sync: allowance correction failed', 'background', {
-          error: String(err),
-        }, 'warning');
-      }
-    },
-    onHydrated: async ({ dailyLimitReached }) => {
-      if (!dailyLimitReached) return;
-      try {
-        await markQuotaExhausted(now);
-      } catch (err) {
-        logger.addBreadcrumb('bg-feed-sync: allowance ledger write failed', 'background', {
-          error: String(err),
-        }, 'warning');
-      }
-    },
     refreshStore: async () => {
       // Owed until the run settles, even if paid progressively here: a reader
       // who opened mid-run sees chunks land, and still gets the final refresh.
@@ -264,5 +231,5 @@ export async function runBackgroundFeedSync(opts: {
   });
   const stoppedBy = await Promise.race([run, deadline]);
   if (deadlineTimer !== undefined) clearTimeout(deadlineTimer);
-  return { stoppedBy, meteredBudget };
+  return { stoppedBy, fetchBudget };
 }

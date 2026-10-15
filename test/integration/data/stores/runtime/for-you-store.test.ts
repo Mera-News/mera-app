@@ -146,7 +146,6 @@ describe('useForYouStore', () => {
         suggestionsHydrated: false,
         lastProcessingRunFinishedAt: null,
         lastNewArticlesAt: null,
-        dailyLimitResetAt: null,
       });
       expect(store().reasonsInFlightIds.size).toBe(0);
     });
@@ -227,7 +226,7 @@ describe('useForYouStore', () => {
       expect(store().reasonsInFlightIds).toBe(inFlight);
     });
 
-    it('sync status, last sync, scoring error and daily limit are stored and cleared', () => {
+    it('sync status, last sync and scoring error are stored and cleared', () => {
       const msg = { state: 'scoring' as const, headlineKey: 'key', isRecoverable: false };
       store().setSyncStatusMessage(msg as never);
       expect(store().syncStatusMessage).toEqual(msg);
@@ -241,11 +240,6 @@ describe('useForYouStore', () => {
       expect(store().scoringError).toBe('server');
       store().setScoringError(null);
       expect(store().scoringError).toBeNull();
-
-      store().setDailyLimitResetAt(NOW + 3_600_000);
-      expect(store().dailyLimitResetAt).toBe(NOW + 3_600_000);
-      store().setDailyLimitResetAt(null);
-      expect(store().dailyLimitResetAt).toBeNull();
     });
 
     it('hydration progress sets both fields and resets both', () => {
@@ -260,7 +254,6 @@ describe('useForYouStore', () => {
       store().setUnscoredCount(3);
       store().setSyncStatusMessage(null);
       store().setLastSyncAt(1);
-      store().setDailyLimitResetAt(5);
       store().setAsyncJobPhase('relevance', 1, 2);
       await settle();
       expect(await getSetting(META_KEY)).toBeNull();

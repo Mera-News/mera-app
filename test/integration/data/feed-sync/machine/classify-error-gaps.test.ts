@@ -8,8 +8,7 @@ describe('classifyError arms', () => {
   it.each([
     ['a no-topics-configured message', new Error('no-topics-configured'), 'no-topics-configured'],
     ['a 401 message', new Error('401 unauthenticated'), 'auth-expired'],
-    ['a daily-limit code with another message', withCode('cap', 'daily-limit'), 'daily-limit'],
-    ['a daily-limit message with no code', new Error('daily-limit'), 'daily-limit'],
+    ['a daily-limit code is no longer its own outcome', withCode('cap', 'daily-limit'), 'unknown'],
     ['a no-topics-configured code with another message', withCode('boom', 'no-topics-configured'), 'no-topics-configured'],
     ['a no-push-token code', withCode('boom', 'no-push-token'), 'scoring-unavailable'],
     ['anything else', new Error('boom'), 'unknown'],

@@ -4,8 +4,8 @@
 // DB (rows seeded through the sync and scoring writers) and the real machine.
 //
 // Replaces lib/background/__tests__/background-feed-sync.test.ts ("when it does not fetch at all"
-// and the prerequisite-hydration and budget-sizing cases). Those mocked the readiness measure, the
-// allowance and the stores; the numbers here are read from real rows.
+// and the prerequisite-hydration and budget-sizing cases). Those mocked the readiness measure and
+// the stores; the numbers here are read from real rows.
 jest.mock('expo-keep-awake', () => ({
   activateKeepAwakeAsync: jest.fn(async () => undefined),
   deactivateKeepAwake: jest.fn(),
@@ -49,7 +49,7 @@ describe('the reader has to have opened the app within 24h', () => {
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out).toEqual({ stoppedBy: 'no-foreground', meteredBudget: 0 });
+    expect(out).toEqual({ stoppedBy: 'no-foreground', fetchBudget: 0 });
     expect(await ops.all()).toEqual([]);
     expect(await rowsById()).toEqual(new Map());
   });
@@ -68,7 +68,7 @@ describe('the reader has to have opened the app within 24h', () => {
     await deleteSetting(LAST_FOREGROUND_AT_KEY);
     const ops = recordOps();
 
-    expect(await advanceUntilDone(runFetch())).toEqual({ stoppedBy: 'no-foreground', meteredBudget: 0 });
+    expect(await advanceUntilDone(runFetch())).toEqual({ stoppedBy: 'no-foreground', fetchBudget: 0 });
 
     expect(await ops.all()).toEqual([]);
   });
@@ -81,7 +81,7 @@ describe('the open-ready target: 50 relevant articles from the last 6h', () => {
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out).toEqual({ stoppedBy: 'done', meteredBudget: 0 });
+    expect(out).toEqual({ stoppedBy: 'done', fetchBudget: 0 });
     expect(served.stats.requests).toEqual([]);
   });
 
@@ -106,7 +106,7 @@ describe('the open-ready target: 50 relevant articles from the last 6h', () => {
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out).toEqual({ stoppedBy: 'done', meteredBudget: 0 });
+    expect(out).toEqual({ stoppedBy: 'done', fetchBudget: 0 });
     expect(served.stats.requests).toEqual([]);
   });
 
@@ -117,7 +117,7 @@ describe('the open-ready target: 50 relevant articles from the last 6h', () => {
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out.meteredBudget).toBe(2); // ceil(0.4 / 0.33)
+    expect(out.fetchBudget).toBe(2); // ceil(0.4 / 0.33)
   });
 
   it('uses 0.33 as the yield until 20 rows are scored: 19 scored sizes the fetch at the 50 cap, not at the gap of 31', async () => {
@@ -126,7 +126,7 @@ describe('the open-ready target: 50 relevant articles from the last 6h', () => {
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out.meteredBudget).toBe(50); // min(50, ceil(31 / 0.33) = 94)
+    expect(out.fetchBudget).toBe(50); // min(50, ceil(31 / 0.33) = 94)
   });
 
   it("from 20 scored rows on, uses this device's own pass ratio: 20 of 20 pass, so the gap of 30 is fetched as 30", async () => {
@@ -135,7 +135,7 @@ describe('the open-ready target: 50 relevant articles from the last 6h', () => {
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out.meteredBudget).toBe(30);
+    expect(out.fetchBudget).toBe(30);
   });
 
   it('a weaker device asks for more: 30 of 40 passing (0.75) with a gap of 20 fetches 27', async () => {
@@ -145,17 +145,7 @@ describe('the open-ready target: 50 relevant articles from the last 6h', () => {
 
     const out = await advanceUntilDone(runFetch());
 
-    expect(out.meteredBudget).toBe(27); // ceil(20 / 0.75)
-  });
-
-  it('never fetches more than the day allowance has left, whatever the gap', async () => {
-    await seedScored(40); // gap 10 at yield 1
-    await setSetting('bg_articles_charged:2026-10-09', '120'); // 5 left of the Starter half
-    await serveFresh(60);
-
-    const out = await advanceUntilDone(runFetch());
-
-    expect(out.meteredBudget).toBe(5);
+    expect(out.fetchBudget).toBe(27); // ceil(20 / 0.75)
   });
 });
 

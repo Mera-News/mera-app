@@ -177,7 +177,7 @@ describe('a run that fails', () => {
     await jest.advanceTimersByTimeAsync(1);
     await advanceUntilDone(Promise.resolve());
 
-    expect(outcome).toEqual({ stoppedBy: 'deadline', meteredBudget: 50 });
+    expect(outcome).toEqual({ stoppedBy: 'deadline', fetchBudget: 50 });
     wire.release();
     await advanceUntilSettled();
   });

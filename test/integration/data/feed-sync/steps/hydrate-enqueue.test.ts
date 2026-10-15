@@ -156,8 +156,8 @@ describe('the gate and enqueue run per chunk, not once at the end', () => {
   });
 });
 
-describe('a daily cap that cuts the run short', () => {
-  it('still enqueues what landed before the cap and flags the limit', async () => {
+describe('a server that still caps downloads', () => {
+  it('enqueues what landed; the empty chunk is just shorter', async () => {
     const all = ids(HYDRATE_CHUNK_SIZE + 5);
     await seedInterest('I follow racing', ['formula 1']);
     const last = all[all.length - 1];
@@ -174,7 +174,7 @@ describe('a daily cap that cuts the run short', () => {
     const { result } = await foreground(t, diff);
     await tickUntilScored(HYDRATE_CHUNK_SIZE);
 
-    expect(result).toMatchObject({ dailyLimitReached: true, insertedCount: HYDRATE_CHUNK_SIZE, enqueuedCount: HYDRATE_CHUNK_SIZE });
+    expect(result).toMatchObject({ insertedCount: HYDRATE_CHUNK_SIZE, enqueuedCount: HYDRATE_CHUNK_SIZE });
     expect(scoredIds().sort()).toEqual(all.slice(0, HYDRATE_CHUNK_SIZE));
   });
 });

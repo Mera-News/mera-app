@@ -129,21 +129,6 @@ export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
       billing.subscriptionTier !== 'none'
     ) {
       clearJwtSubscriptionLock();
-      // A PAID tier ends the daily-cap hold too: `dailyLimitResetAt` is written only by the feed
-      // sync, so without this a reader who pays after hitting the cap stays held until the reset
-      // time. Starter is the capped free tier and entitlement-sync writes it every 15 minutes, so it
-      // must not release the hold. Lazy require: for-you-store reaches the database singleton, and
-      // this store must not pull it into every suite that imports it. Releasing the hold is a side
-      // effect of a billing write and must never fail it.
-      if (billing.subscriptionTier !== 'starter') {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
-          useForYouStore.getState().setDailyLimitResetAt(null);
-        } catch (err) {
-          logger.captureException(err, { tags: { service: 'subscription-store', step: 'clearDailyLimit' } });
-        }
-      }
     }
     set({
       // `undefined` (a query that didn't select the field) must not erase a

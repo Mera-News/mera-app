@@ -19,6 +19,7 @@ export type SyncErrorCode =
   | 'server-unreachable'
   | 'auth-expired'
   | 'no-topics-configured'
+  // Nothing produces it; test/unit/feed/for-you/card-state.test.ts still names it. Goes with that test.
   | 'daily-limit'
   | 'storage-error'
   | 'scoring-unavailable'
@@ -72,18 +73,11 @@ export const STALE_MACHINE_AGE_MS = 2 * 60 * 60 * 1000;
  */
 export interface BackgroundSyncHooks {
   /** Trim the new-to-device ids before anything is hydrated: the 6h ObjectId
-   *  prefilter and the metered budget. Nothing outside the result is charged. */
+   *  prefilter and the per-run fetch budget. */
   shapeDiff: (diff: import('./feed-sync-steps').DiffResult) => import('./feed-sync-steps').DiffResult;
   /** Submit the persisted, scorable ids. Null in on-device mode, where a
    *  background run fetches and persists only. */
   submit: ((articleIds: string[]) => Promise<void>) | null;
-  /** The allowance ledger, reserved before each metered request and corrected
-   *  down after it answers. See `HydratePersistEnqueueOptions.reserveMetered`. */
-  reserveMetered: (requested: number) => Promise<void>;
-  settleMetered: (requested: number, granted: number) => Promise<void>;
-  /** How the metered hydrate ended. Called on the daily-limit throw too, with
-   *  nothing delivered. */
-  onHydrated: (outcome: { meteredDelivered: number; dailyLimitReached: boolean }) => Promise<void>;
   /** The store refresh, which the caller runs only when a reader can see it. */
   refreshStore: () => Promise<void>;
 }

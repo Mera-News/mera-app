@@ -4,7 +4,6 @@
 import { clearMachineSnapshot, loadMachineSnapshot } from '@/lib/scheduler/feed-sync/feed-sync-persistence';
 import * as persistence from '@/lib/scheduler/feed-sync/feed-sync-persistence';
 import * as steps from '@/lib/scheduler/feed-sync/feed-sync-steps';
-import { markQuotaExhausted, reserveCharged, settleCharged } from '@/lib/background/background-allowance';
 import { BG_MAX_BATCHES, shapeBackgroundDiff } from '@/lib/background/background-feed-sync';
 import { submitScoringForBackground } from '@/lib/services/scoring-pipeline';
 import { feedSyncMachine, INFLIGHT_STALE_MS } from '@/lib/scheduler/feed-sync/FeedSyncMachine';
@@ -233,8 +232,7 @@ export const oid = (n: number, ms = Date.now()): string =>
 
 /**
  * The hooks the OS task passes (`lib/background/background-feed-sync.ts`), assembled from the real
- * pieces it uses: the freshness shaping, the allowance ledger (reserve, settle, quota-exhausted) and
- * the bounded scoring submit. Only the store refresh is recorded in place of the app-state-gated one.
+ * pieces it uses: the freshness shaping and the bounded scoring submit. Only the store refresh is recorded in place of the app-state-gated one.
  */
 export function backgroundHooks(opts: { submit?: boolean; budget?: number; now?: number } = {}) {
   const now = opts.now ?? Date.now();
@@ -250,11 +248,6 @@ export function backgroundHooks(opts: { submit?: boolean; budget?: number; now?:
             calls.postsAtSubmit.push(gatewayCalls('job').length);
             await submitScoringForBackground({ deadlineAt: now + 60_000, articleIds, maxBatches: BG_MAX_BATCHES });
           },
-    reserveMetered: (requested) => reserveCharged(now, requested),
-    settleMetered: (requested, granted) => settleCharged(now, requested, granted),
-    onHydrated: async ({ dailyLimitReached }) => {
-      if (dailyLimitReached) await markQuotaExhausted(now);
-    },
     refreshStore: async () => {
       calls.refresh += 1;
     },

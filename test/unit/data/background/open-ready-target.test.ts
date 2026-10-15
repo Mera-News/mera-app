@@ -6,7 +6,7 @@ import {
   computeOpenReadiness,
   isInsertedWithinWindow,
   objectIdTimestampMs,
-  plannedMeteredFetch,
+  plannedFetch,
   FRESH_WINDOW_MS,
   YIELD_DEFAULT,
 } from '@/lib/background/open-ready-target';
@@ -103,23 +103,23 @@ describe('the measured yield', () => {
 
 describe('how much to fetch', () => {
   it('fetches nothing once 50 relevant fresh articles are ready', () => {
-    expect(plannedMeteredFetch({ relevant6h: 50, pending6h: 0, yield: 0.33, yieldSample: 100 }, 50)).toBe(0);
+    expect(plannedFetch({ relevant6h: 50, pending6h: 0, yield: 0.33, yieldSample: 100 }, 50)).toBe(0);
   });
 
   it('counts pending rows at the yield, so pending results stop an over-fetch', () => {
     // 30 relevant + 0.5 * 40 pending = 50 expected.
-    expect(plannedMeteredFetch({ relevant6h: 30, pending6h: 40, yield: 0.5, yieldSample: 100 }, 50)).toBe(0);
+    expect(plannedFetch({ relevant6h: 30, pending6h: 40, yield: 0.5, yieldSample: 100 }, 50)).toBe(0);
   });
 
   it('sizes the fetch by the measured yield', () => {
     // 40 relevant, need 10 more at 0.5 → 20 articles.
-    expect(plannedMeteredFetch({ relevant6h: 40, pending6h: 0, yield: 0.5, yieldSample: 100 }, 50)).toBe(20);
+    expect(plannedFetch({ relevant6h: 40, pending6h: 0, yield: 0.5, yieldSample: 100 }, 50)).toBe(20);
     // Same gap at 0.25 → 40.
-    expect(plannedMeteredFetch({ relevant6h: 40, pending6h: 0, yield: 0.25, yieldSample: 100 }, 50)).toBe(40);
+    expect(plannedFetch({ relevant6h: 40, pending6h: 0, yield: 0.25, yieldSample: 100 }, 50)).toBe(40);
   });
 
-  it('never exceeds what the allowance lets this run spend', () => {
-    expect(plannedMeteredFetch({ relevant6h: 0, pending6h: 0, yield: 0.33, yieldSample: 0 }, 50)).toBe(50);
-    expect(plannedMeteredFetch({ relevant6h: 0, pending6h: 0, yield: 0.33, yieldSample: 0 }, 12)).toBe(12);
+  it('never exceeds the cap it is given', () => {
+    expect(plannedFetch({ relevant6h: 0, pending6h: 0, yield: 0.33, yieldSample: 0 }, 50)).toBe(50);
+    expect(plannedFetch({ relevant6h: 0, pending6h: 0, yield: 0.33, yieldSample: 0 }, 12)).toBe(12);
   });
 });

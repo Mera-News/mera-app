@@ -18,7 +18,6 @@ import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import * as schedulerPersistence from '@/lib/scheduler/scheduler-persistence';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
-import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import {
@@ -168,24 +167,14 @@ describe('feed-sync scheduler task', () => {
         },
       );
     });
-
-    it('runs before the daily-cap reset time too: followed stories keep updating after the cap', async () => {
-      useForYouStore.setState({ dailyLimitResetAt: T0 + 10 * 60_000 });
-
-      await init();
-
-      await waitFor(async () => (await runs()) === 1, 'the run');
-    });
   });
 
   describe('no tier gate', () => {
     // Under starter-free every account holds Starter at read time, so there is no tier for which
-    // skipping the sync is correct. With every other condition passing and the cap's reset past, the
-    // task runs for an unentitled account and for one with no billing row at all. A reintroduced tier
+    // skipping the sync is correct. With every other condition passing, the task runs for an unentitled account and for one with no billing row at all. A reintroduced tier
     // condition (or any added custom one) blocks it here.
     it.each(['none', 'starter'] as const)('runs for an account on tier %s', async (tier) => {
       setScenario({ tier });
-      useForYouStore.setState({ dailyLimitResetAt: T0 - 60_000 });
 
       await init();
 

@@ -118,11 +118,6 @@ export const useForYouSyncStatusMessage = () =>
 export const useForYouScoringError = () =>
     useForYouStore((s) => s.scoringError);
 
-/** Epoch ms of the daily-cap reset while the user is over their delivery
- *  limit, else null. Reactive — drives the persistent "limit reached" banner. */
-export const useForYouDailyLimitResetAt = () =>
-    useForYouStore((s) => s.dailyLimitResetAt);
-
 /** Get all ForYouStore actions (non-reactive, stable references) */
 export const getForYouActions = () => {
     const state = useForYouStore.getState();

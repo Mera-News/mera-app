@@ -17,7 +17,7 @@ const MULTIPLIER: Record<Tier, number> = { none: 1, starter: 1, individual: 5, p
 export function billingFor(
     tier: Tier,
     now: number,
-    opts: { limitReached?: boolean; readingUsed?: number | null } = {},
+    opts: { readingUsed?: number | null } = {},
 ): UserBillingInfo {
     const paid = tier === 'individual' || tier === 'professional';
     const limit = LIMIT[tier];
@@ -25,7 +25,7 @@ export function billingFor(
         __typename: 'UserBillingInfo',
         subscriptionTier: tier,
         dailyArticleLimit: limit,
-        articlesUsedToday: opts.limitReached ? limit : 0,
+        articlesUsedToday: 0,
         entitlementExpiresAt: paid ? new Date(now + 30 * DAY_MS).toISOString() : null,
         grantExpiresAt: tier === 'starter' ? new Date(now + 10 * DAY_MS).toISOString() : null,
         resetAt: nextUtcMidnight(now),
@@ -36,8 +36,6 @@ export function billingFor(
         readingResetAt: nextUtcMidnight(now),
     };
 }
-
-export { nextUtcMidnight };
 
 /** Static snapshots for `fixture()`: timestamps are anchored at the epoch-day of the
  *  moment the module loaded, so they are only for shape assertions. */

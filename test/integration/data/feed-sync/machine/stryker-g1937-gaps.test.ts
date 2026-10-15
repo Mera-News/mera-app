@@ -155,20 +155,4 @@ describe('FeedSyncMachine: mutants only the legacy suites killed (G19/G37)', () 
       expect(batchesAtLastRequest).toBeGreaterThan(0);
     });
   });
-
-  describe('the background hydrate result reaches the hook', () => {
-    it('calls onHydrated once with the metered count and the cap flag of the hydrate', async () => {
-      const fresh = Array.from({ length: 6 }, (_, i) => oid(i + 1));
-      await seedInterest('I follow racing', ['formula 1']);
-      const served = serveHydrate();
-      server.use(servePersona({ topics: { 'formula 1': fresh } }), ...served.handlers);
-      const hooks = backgroundHooks();
-      const onHydrated = jest.fn(hooks.hooks.onHydrated);
-
-      await advanceUntilDone(startMachine(undefined, { background: { ...hooks.hooks, onHydrated } }));
-
-      expect(onHydrated).toHaveBeenCalledTimes(1);
-      expect(onHydrated).toHaveBeenCalledWith({ meteredDelivered: 6, dailyLimitReached: false });
-    });
-  });
 });

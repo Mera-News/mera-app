@@ -29,7 +29,7 @@ import {
   splitAlreadyReadArticles,
 } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import logger from '@/lib/logger';
-import { setScenario, server } from '@/test/helpers';
+import { server } from '@/test/helpers';
 import {
   art,
   cleanupFeedSync,
@@ -131,7 +131,7 @@ describe('chunking and concurrency', () => {
     expect(chunks).toContainEqual([...topicIds.slice(HYDRATE_CHUNK_SIZE), ...headlineIds]);
   });
 
-  it('launches the followed-story chunks first, so a cap tripped by the metered chunks cannot starve them', async () => {
+  it('a metered query that delivers nothing still lets every followed-story article land', async () => {
     await seedTracked('titan inquiry');
     await seedInterest('I follow racing', ['formula 1']);
     const story = ids(HYDRATE_CHUNK_SIZE + 5, 's');
@@ -145,10 +145,8 @@ describe('chunking and concurrency', () => {
 
     const { result } = await hydrate(diff, t);
 
-    // pool of 3 over [story, story, metered...]: both story chunks are in the first launch
     expect(result.insertedCount).toBe(story.length);
     expect((await suggestionRows()).map((r) => r._id).sort()).toEqual([...story].sort());
-    expect(result.dailyLimitReached).toBe(true);
   });
 
   it('falls back to the metered query for a diff that never went through the partition', async () => {
@@ -171,9 +169,6 @@ describe('chunking and concurrency', () => {
     expect(result).toEqual({
       insertedCount: 0,
       enqueuedCount: 0,
-      dailyLimitReached: false,
-      resetAt: undefined,
-      meteredDelivered: 0,
       eligibleIds: [],
     });
   });
@@ -367,53 +362,36 @@ describe('what lands in article_suggestions', () => {
   });
 });
 
-describe('the daily limit', () => {
-  it('throws the terminal daily-limit error, with resetAt in ms, when the cap left nothing to deliver', async () => {
-    // the mock backend's own cap: its default hydrate handler answers empty, with the reset time
-    setScenario({ dailyLimitReached: true });
-    await seedInterest('I follow racing', ['formula 1']);
-    server.use(servePersona({ topics: { 'formula 1': ['a', 'b'] } }));
-    const t = makeCtx();
-    const { diff } = await fetchAndDiff(t);
-
-    const err = await hydrate(diff, t).catch((e) => e);
-
-    expect(err).toMatchObject({ message: 'daily-limit', code: 'daily-limit' });
-    expect(new Date(err.resetAt).getUTCHours()).toBe(0);
-    expect(err.resetAt).toBeGreaterThan(Date.now());
-  });
-
-  it('decides after the pool drains: a dry chunk does not pre-empt a sibling that delivered, and later chunks are not launched', async () => {
+// Until the server's download cap is switched off, articlesForTopicsByIds may answer a granted
+// prefix, possibly empty, with dailyLimitReached set. The app does not select that flag: a capped
+// answer is just a shorter one.
+describe('a server that still caps downloads', () => {
+  it('a dry chunk keeps what its siblings delivered, and every chunk is still asked for', async () => {
     const reset = '2026-06-26T00:00:00.000Z';
     const { t, diff, stats } = await prepare(ids(HYDRATE_CHUNK_SIZE * 5), {
-      // the first chunk answers dry at once; the other two in flight answer later and deliver
-      holdMs: (n) => (n === 1 ? 5 : 100),
       respond: ({ n }) => (n === 1 ? DRY(reset) : undefined),
     });
 
     const { result } = await hydrate(diff, t);
 
-    expect(stats.requests).toHaveLength(HYDRATE_CONCURRENCY);
-    expect(result.dailyLimitReached).toBe(true);
-    expect(result.resetAt).toBe(reset);
-    expect(result.insertedCount).toBe(HYDRATE_CHUNK_SIZE * 2);
-    expect((await suggestionRows())).toHaveLength(HYDRATE_CHUNK_SIZE * 2);
+    expect(stats.requests).toHaveLength(5);
+    expect(result.insertedCount).toBe(HYDRATE_CHUNK_SIZE * 4);
+    expect(await suggestionRows()).toHaveLength(HYDRATE_CHUNK_SIZE * 4);
   });
 
-  it('with every started chunk dry, stops launching and throws only after the pool drained', async () => {
-    const reset = '2026-06-27T00:00:00.000Z';
+  it('every chunk dry: an ordinary empty hydrate, never a terminal error', async () => {
     const { t, diff, stats } = await prepare(ids(HYDRATE_CHUNK_SIZE * 5), {
-      respond: () => DRY(reset),
+      respond: () => DRY('2026-06-27T00:00:00.000Z'),
     });
 
-    const err = await hydrate(diff, t).catch((e) => e);
+    const { result } = await hydrate(diff, t);
 
-    expect(err).toMatchObject({ code: 'daily-limit', resetAt: Date.parse(reset) });
-    expect(stats.requests).toHaveLength(HYDRATE_CONCURRENCY);
+    expect(result.insertedCount).toBe(0);
+    expect(stats.requests).toHaveLength(5);
     expect(await suggestionRows()).toEqual([]);
   });
 
-  it('cannot be tripped by the quota-free query, even if its body carries the cap fields', async () => {
+  it('a quota-free body that carries the cap fields changes nothing', async () => {
     await seedTracked('titan inquiry');
     const served = serveHydrate({
       respond: ({ op, ids: asked }) =>
@@ -427,10 +405,10 @@ describe('the daily limit', () => {
 
     const { result } = await hydrate(diff, t);
 
-    expect(result).toMatchObject({ dailyLimitReached: false, resetAt: undefined, insertedCount: 2 });
+    expect(result.insertedCount).toBe(2);
   });
 
-  it('never reads the cap on a followed-story-only run', async () => {
+  it('a followed-story-only run never calls the metered query', async () => {
     await seedTracked('titan inquiry');
     const served = serveHydrate({ respond: ({ op }) => (op === 'GetArticlesForTopicsByIds' ? DRY('2026-06-27T00:00:00.000Z') : undefined) });
     server.use(servePersona({ topics: { 'titan inquiry': ['s1', 's2'] } }), ...served.handlers);
@@ -440,7 +418,6 @@ describe('the daily limit', () => {
     const { result } = await hydrate(diff, t);
 
     expect(served.stats.requests.map((r) => r.op)).toEqual(['GetArticlesForStories']);
-    expect(result.dailyLimitReached).toBe(false);
     expect(result.insertedCount).toBe(2);
   });
 });
@@ -523,7 +500,7 @@ describe('already-read exclusion', () => {
     expect(result.eligibleIds).toEqual(['later']);
   });
 
-  it('counts a chunk that was entirely already read as delivered: no daily-limit throw', async () => {
+  it('a chunk that was entirely already read persists nothing and throws nothing', async () => {
     await recordOpen({ articleId: 'r1', titleNorm: null, surface: 'feed' });
     const { t, diff } = await prepare(['r1'], {
       respond: () => ({ articles: [art('r1')], dailyLimitReached: true, resetAt: '2026-06-27T00:00:00.000Z' }),
@@ -531,7 +508,6 @@ describe('already-read exclusion', () => {
 
     const { result } = await hydrate(diff, t);
 
-    expect(result.dailyLimitReached).toBe(true);
     expect(result.insertedCount).toBe(0);
   });
 

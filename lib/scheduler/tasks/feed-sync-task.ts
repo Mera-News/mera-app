@@ -28,8 +28,7 @@ AppScheduler.register({
     // The condition this replaced (`getAiAccess() !== 'locked'`) existed
     // because the four queries sat behind SubscriptionGuard and a locked device
     // fired four 402s a minute forever. Those guards are gone and the queries
-    // answer for everyone; cap-reached returns HTTP 200 with
-    // `dailyLimitReached: true` rather than throwing.
+    // answer for everyone.
     //
     // "Skip a pointless round trip" and "skip the sync" are NOT the same
     // predicate, which is the trap if you ever reintroduce a gate here. The
@@ -40,10 +39,6 @@ AppScheduler.register({
     // bypasses `_conditionsMet` entirely, so pull-to-refresh and the tab re-tap
     // run this task with none of its conditions applied — a check placed only
     // here is ungated on the manual path. Put it in the task's steps.
-
-    // NO DAILY-CAP CONDITION either. Followed stories keep updating after the cap (the quota-exempt
-    // `articlesForStories` path), so the server does not "just clip again" for them. While the cap holds,
-    // FeedSyncMachine leaves the metered ids out of the hydrate instead.
   ],
   timeout: 3 * 60 * 1000,
   maxAttempts: 3,

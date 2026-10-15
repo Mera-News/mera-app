@@ -375,92 +375,57 @@ describe('FeedSyncMachine lifecycle', () => {
     });
   });
 
-  describe('the daily cap', () => {
+  // The download cap is gone from the app: a server that still caps (until its env flips) only
+  // answers with fewer articles, and the machine never enters a limit outcome.
+  describe('a server that still caps downloads', () => {
     const RESET = '2026-10-10T00:00:00.000Z';
 
-    it('a full clip is a normal outcome: banner up, status published, back to idle, resolved, no Sentry', async () => {
+    it('a full clip is an ordinary run: done, no error status, no Sentry, no failed snapshot', async () => {
       await serveNew(ids(4), { respond: () => ({ articles: [], dailyLimitReached: true, resetAt: RESET }) });
-      const notified = quietToasts();
+      const saved = spyOnExport(persistence, 'saveMachineSnapshot');
 
       await expect(run()).resolves.toBeUndefined();
 
-      expect(store().dailyLimitResetAt).toBe(Date.parse(RESET));
-      expect(store().syncStatusMessage).toEqual(
-        expect.objectContaining({ errorCode: 'daily-limit', retryAt: Date.parse(RESET), failedAtState: 'hydrating' }),
-      );
-      expect(feedSyncMachine.state).toBe('idle');
-      expect(await loadMachineSnapshot()).toBeNull();
+      expect(feedSyncMachine.state).toBe('done');
+      expect(store().syncStatusMessage?.errorCode).toBeUndefined();
+      expect(saved).not.toHaveBeenCalledWith(expect.objectContaining({ state: 'failed' }));
       expect(captured()).toEqual([]);
-      expect(notified).not.toHaveBeenCalled(); // Y11: the Feed icon carries the limit, no notice
-      expect(await database.get('notifications').query().fetchCount()).toBe(0);
+      expect([...(await rowsById()).keys()]).toEqual([]);
     });
 
-    it('falls back to the next UTC midnight when the server names no reset time', async () => {
-      await serveNew(ids(4), { respond: () => ({ articles: [], dailyLimitReached: true }) });
-
-      await run();
-
-      const now = new Date(Date.now());
-      expect(store().dailyLimitResetAt).toBe(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-    });
-
-    it('a partial clip still delivers what fit and raises the banner with the server reset time', async () => {
+    it('a partial clip delivers what fit, and the next sync asks for the rest again', async () => {
       const all = ids(4);
-      await serveNew(all, {
-        respond: ({ ids: asked }) => ({
-          articles: asked.slice(0, 1).map((id) => art(id)),
-          dailyLimitReached: true,
-          resetAt: RESET,
-        }),
+      let capped = true;
+      const served = await serveNew(all, {
+        respond: ({ ids: asked }) =>
+          capped ? { articles: asked.slice(0, 1).map((id) => art(id)), dailyLimitReached: true, resetAt: RESET } : undefined,
       });
 
       await run();
 
       expect([...(await rowsById()).keys()]).toEqual([all[0]]);
-      expect(store().dailyLimitResetAt).toBe(Date.parse(RESET));
       expect(store().lastNewArticlesAt).toEqual(expect.any(Number));
       expect(feedSyncMachine.state).toBe('done');
-    });
 
-    it('a fully delivered run clears a banner left by an earlier clip once its reset time has passed', async () => {
-      await serveNew(ids(3));
-      store().setDailyLimitResetAt(Date.now() - 1);
-
+      capped = false;
       await run();
 
-      expect(store().dailyLimitResetAt).toBeNull();
+      expect(served.stats.requests.at(-1)!.ids).toEqual(all.slice(1));
+      expect([...(await rowsById()).keys()].sort()).toEqual([...all].sort());
     });
 
-    // Owner ruling: followed stories always keep updating, after the cap too. While the cap holds, the
-    // metered ids stay out of the hydrate (the server would clip them) and the quota-free stories go through.
-    it('while the cap holds, hydrates only the followed-story ids and keeps the banner', async () => {
+    it('followed stories and interests are both hydrated on every run', async () => {
       await seedTracked('titan inquiry');
       await seedInterest('I follow racing', ['formula 1']);
       const story = ids(3, 's');
       const metered = ids(3, 'm');
       const served = serveHydrate();
       server.use(servePersona({ topics: { 'titan inquiry': story, 'formula 1': metered } }), ...served.handlers);
-      const holdsUntil = Date.now() + 3_600_000;
-      store().setDailyLimitResetAt(holdsUntil);
 
       await run();
 
-      expect(served.stats.requests.map((r) => r.op)).toEqual(['GetArticlesForStories']);
-      expect([...(await rowsById()).keys()].sort()).toEqual([...story].sort());
-      expect(store().dailyLimitResetAt).toBe(holdsUntil);
-    });
-
-    it('while the cap holds, a run with only metered ids sends no hydrate request and keeps the banner', async () => {
-      await serveNew(ids(3));
-      const holdsUntil = Date.now() + 3_600_000;
-      store().setDailyLimitResetAt(holdsUntil);
-      const sent = recordOps();
-
-      await run();
-
-      expect(await sent.count('GetArticlesForTopicsByIds')).toBe(0);
-      expect([...(await rowsById()).keys()]).toEqual([]);
-      expect(store().dailyLimitResetAt).toBe(holdsUntil);
+      expect(served.stats.requests.map((r) => r.op).sort()).toEqual(['GetArticlesForStories', 'GetArticlesForTopicsByIds']);
+      expect([...(await rowsById()).keys()].sort()).toEqual([...story, ...metered].sort());
     });
   });
 
@@ -484,19 +449,6 @@ describe('FeedSyncMachine lifecycle', () => {
 
   describe('a terminal outcome whose snapshot cannot be cleared', () => {
     it('no-topics-configured: still ends quietly and reports the snapshot failure', async () => {
-      spyOnExport(persistence, 'clearMachineSnapshot').mockRejectedValueOnce(new Error('snap clear error'));
-
-      await expect(run()).resolves.toBeUndefined();
-
-      expect(feedSyncMachine.state).toBe('idle');
-      expect(captured()).toContainEqual([
-        expect.objectContaining({ message: 'snap clear error' }),
-        expect.objectContaining({ tags: expect.objectContaining({ step: 'clearMachineSnapshot' }) }),
-      ]);
-    });
-
-    it('daily-limit: still ends quietly and reports the snapshot failure', async () => {
-      await serveNew(ids(4), { respond: () => ({ articles: [], dailyLimitReached: true }) });
       spyOnExport(persistence, 'clearMachineSnapshot').mockRejectedValueOnce(new Error('snap clear error'));
 
       await expect(run()).resolves.toBeUndefined();

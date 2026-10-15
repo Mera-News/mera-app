@@ -10,7 +10,6 @@
 import * as Sentry from '@sentry/react-native';
 import * as SecureStore from 'expo-secure-store';
 
-import { __resetLedgerChainForTests } from '@/lib/background/background-allowance';
 import { runBackgroundFeedSync, __resetBackgroundFeedSyncForTests } from '@/lib/background/background-feed-sync';
 import { LAST_FOREGROUND_AT_KEY } from '@/lib/background/bg-refresh-settings';
 import { _resetForTests as resetBreaker } from '@/lib/auth-failure-breaker';
@@ -84,7 +83,6 @@ export async function wakeWorld(opts: WorldOptions = {}): Promise<void> {
   await resetScoringWorld(); // signs in (releasing the read latch) and installs a fake clock
   resetBreaker();
   __resetBackgroundFeedSyncForTests();
-  __resetLedgerChainForTests();
   __resetInstallBoundaryForTests();
   if (!opts.afterBoundary) __resetAuthReadQuarantineForTests();
   resetBackupSettingsMirror();
@@ -194,9 +192,6 @@ export function hangSettingRead(key: string): void {
 export function failSettingRead(key: string, error = new Error('unable to open database file (injected)')): void {
   failSharedSettingRead(key, error);
 }
-
-export const ledgerWrite = (prefix: string) => (op: BatchOp) =>
-  op.table === 'settings' && typeof op.raw?.key === 'string' && op.raw.key.startsWith(prefix);
 
 export function restoreDbFaults(): void {
   restoreFaults();

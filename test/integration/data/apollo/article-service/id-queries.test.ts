@@ -3,7 +3,7 @@
 // (quota-charged and quota-exempt), chunked at 50 ids.
 import ArticleService from '@/lib/article-service';
 import type { PersonaQueryInput, TopicPaginationInput } from '@/lib/generated/graphql-types';
-import { advanceUntilDone, mockGql, mockGqlError, server, setScenario, useFakeClock } from '@/test/helpers';
+import { advanceUntilDone, mockGql, mockGqlError, server, useFakeClock } from '@/test/helpers';
 import {
     ARTICLE_IDS,
     COUNTRY_HEADLINE_IDS,
@@ -353,17 +353,16 @@ describe('getArticlesForTopicsByIds', () => {
 
     it('returns an empty result for no ids without sending a request', async () => {
         const sent = recordOps();
-        expect(await ArticleService.getArticlesForTopicsByIds([])).toEqual({ articles: [], dailyLimitReached: false });
+        expect(await ArticleService.getArticlesForTopicsByIds([])).toEqual({ articles: [] });
         expect(await sentOf(sent)).toHaveLength(0);
     });
 
-    it('hydrates the fixture articles for one chunk and reports no cap', async () => {
+    it('hydrates the fixture articles for one chunk, with nothing but the articles in the result', async () => {
         const wanted = ARTICLE_IDS.slice(0, 3);
         const sent = recordOps();
         const result = await ArticleService.getArticlesForTopicsByIds([...wanted]);
         expect(result.articles.map((a) => a._id).sort()).toEqual([...wanted].sort());
-        expect(result.dailyLimitReached).toBe(false);
-        expect(result.resetAt).toBeUndefined();
+        expect(Object.keys(result)).toEqual(['articles']);
         expect(await sentOf(sent, 'GetArticlesForTopicsByIds')).toHaveLength(1);
     });
 
@@ -392,23 +391,23 @@ describe('getArticlesForTopicsByIds', () => {
         expect(second).toHaveLength(10);
     });
 
-    it('ORs dailyLimitReached across chunks and surfaces the resetAt of the capped one', async () => {
+    it('a server that still caps downloads just returns fewer articles: no error, the cap fields never selected', async () => {
+        // The granted prefix of each chunk, the way articlesForTopicsByIds clips while
+        // the server's download cap is on. The extra fields are not in the document.
         server.use(
-            hydrate('GetArticlesForTopicsByIds', 'articlesForTopicsByIds', (asked) =>
-                asked.includes('id-50') ? { dailyLimitReached: true, resetAt: '2026-06-25T00:00:00.000Z' } : {},
-            ),
+            hydrate('GetArticlesForTopicsByIds', 'articlesForTopicsByIds', (asked) => ({
+                articles: asked.slice(0, 2).map(articleWithClusters),
+                dailyLimitReached: true,
+                resetAt: '2026-06-25T00:00:00.000Z',
+            })),
         );
+        const sent = recordOps();
         const result = await ArticleService.getArticlesForTopicsByIds(ids(51));
-        expect(result.dailyLimitReached).toBe(true);
-        expect(result.resetAt).toBe('2026-06-25T00:00:00.000Z');
-    });
-
-    it('surfaces the cap exactly as the default server serves it: nothing delivered, a reset time', async () => {
-        setScenario({ dailyLimitReached: true });
-        const result = await ArticleService.getArticlesForTopicsByIds([...ARTICLE_IDS.slice(0, 3)]);
-        expect(result.articles).toEqual([]);
-        expect(result.dailyLimitReached).toBe(true);
-        expect(result.resetAt).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/));
+        expect(result.articles.map((a) => a._id).sort()).toEqual(['id-0', 'id-1', 'id-50'].sort());
+        expect(Object.keys(result)).toEqual(['articles']);
+        const [first] = await sentOf(sent, 'GetArticlesForTopicsByIds');
+        expect(first.query).toContain('articlesForTopicsByIds');
+        expect(first.query).not.toMatch(/dailyLimitReached|resetAt/);
     });
 
     it('reports progress from (0, total) up to (total, total)', async () => {
@@ -421,11 +420,10 @@ describe('getArticlesForTopicsByIds', () => {
         expect(progress.map(([done]) => done)).toEqual([...progress.map(([done]) => done)].sort((a, b) => a - b));
     });
 
-    it('treats a null field as an empty, uncapped result', async () => {
+    it('treats a null field as an empty result', async () => {
         server.use(mockGql('GetArticlesForTopicsByIds', { articlesForTopicsByIds: null }));
         const result = await ArticleService.getArticlesForTopicsByIds(['id1']);
-        expect(result.articles).toEqual([]);
-        expect(result.dailyLimitReached).toBe(false);
+        expect(result).toEqual({ articles: [] });
     });
 
     it('rethrows with an error-level breadcrumb and no capture of its own', async () => {
@@ -450,8 +448,7 @@ describe('getArticlesForStories', () => {
         expect(await sentOf(sent)).toHaveLength(0);
     });
 
-    it('hydrates the fixture articles and is never capped, even when the daily limit is reached', async () => {
-        setScenario({ dailyLimitReached: true });
+    it('hydrates the fixture articles', async () => {
         const wanted = ARTICLE_IDS.slice(0, 3);
         const result = await ArticleService.getArticlesForStories([...wanted]);
         expect(result.articles.map((a) => a._id).sort()).toEqual([...wanted].sort());

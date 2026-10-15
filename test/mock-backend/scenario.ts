@@ -1,7 +1,6 @@
 // Mutable state shared by the Jest handlers and the Maestro control endpoint.
 export interface Scenario {
     tier: 'starter' | 'individual' | 'professional' | 'none';
-    dailyLimitReached: boolean;
     /** What billing reports as `readingUsed` (0..1; null = the server cannot see the meter). */
     readingUsed: number | null;
     articles: 'default' | 'empty';
@@ -26,7 +25,6 @@ export interface Scenario {
 
 const DEFAULT_SCENARIO: Scenario = {
     tier: 'starter',
-    dailyLimitReached: false,
     readingUsed: 0,
     articles: 'default',
     discovery: false,

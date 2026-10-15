@@ -199,7 +199,7 @@ describe('the greedy gate across chunks', () => {
   });
 });
 
-describe('an empty, uncapped chunk', () => {
+describe('an empty chunk', () => {
   it('does not stop the pool: a chunk launched after it is still requested and saved', async () => {
     // 4 chunks, 3 workers: the 4th is launched only by the worker whose chunk came back empty
     const all = ids(HYDRATE_CHUNK_SIZE * 4);
@@ -211,7 +211,6 @@ describe('an empty, uncapped chunk', () => {
     const { result } = await hydrate(diff, t);
 
     expect(served.stats.requests.map((r) => r.op)).toEqual(Array(4).fill('GetArticlesForTopicsByIds'));
-    expect(result.dailyLimitReached).toBe(false);
     expect(result.insertedCount).toBe(HYDRATE_CHUNK_SIZE * 3);
     expect((await rowsById()).has(all[all.length - 1])).toBe(true);
   });
