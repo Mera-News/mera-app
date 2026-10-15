@@ -133,7 +133,9 @@ describe('the read hold in the scoring pipeline', () => {
     const keyBefore = (await batches())[0].idemKey;
     setReadMeter({ resetAt: null });
 
-    await passTime(RESET - Date.now() + MAX_JITTER + 1_000);
+    // Jump the fake clock past the hold end. passTime would step through 2.5h of timers 50ms at
+    // a time (~180k turns), which is what made this test load-sensitive.
+    jest.setSystemTime(RESET + MAX_JITTER + 1_000);
     expect(isReadHeld()).toBe(false);
     await tickUntil(async () => (await phases())[0] === 'waiting-relevance');
 
