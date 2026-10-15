@@ -2,7 +2,7 @@
 // (owner): ONE lead row (Mera mark, sentence, ⌄) for every state, so the card
 // has one layout. RN-free, so it is tested alone.
 //
-//  - 'limited'  the daily article limit: when new articles unlock
+//  - 'limited'  the read hold: when Mera reads again
 //  - 'error'    scoring failed: what went wrong (the old red status icon)
 //  - 'syncFailed'  a foreground refresh failed or paused offline: the line
 //               names the step that worked and the one that did not
@@ -40,15 +40,24 @@ const FAILED_AT_KEY: Partial<Record<FeedSyncState, string>> = {
   scoring: 'feed.syncFailed.score',
 };
 
-/** The i18n key of a failure's line; null when another surface owns it (daily limit, no topics). */
+/** The i18n key of a failure's line; null when another surface owns it (no topics). */
 export function syncFailureKey(f: SyncFailure | null): string | null {
   if (!f) return null;
   if (f.kind === 'paused-offline' || f.errorCode === 'offline') return 'common.offlineBannerOffline';
   if (f.errorCode === 'auth-expired') return 'feed.syncFailed.session';
-  if (f.errorCode === 'daily-limit' || f.errorCode === 'no-topics-configured') return null;
+  if (f.errorCode === 'no-topics-configured') return null;
   const at = f.failedAtState;
   if (f.errorCode === 'storage-error' && (at === 'hydrating' || at === 'scoring')) return 'feed.syncFailed.storage';
   return (at && FAILED_AT_KEY[at]) || 'feed.syncFailed.start';
+}
+
+/** The limited sentence's key: names the unread articles below only when a
+ *  number of them is known and above zero. */
+export function readHoldSentenceKey(day: 'today' | 'tomorrow', waiting: number | null) {
+  const w = waiting != null && waiting > 0;
+  return day === 'today'
+    ? w ? ('feed.readHold.waitingToday' as const) : ('feed.readHold.bodyToday' as const)
+    : w ? ('feed.readHold.waitingTomorrow' as const) : ('feed.readHold.bodyTomorrow' as const);
 }
 
 export type CardState = 'limited' | 'error' | 'syncFailed' | 'fetched' | 'analysed' | 'relevant' | 'offline';

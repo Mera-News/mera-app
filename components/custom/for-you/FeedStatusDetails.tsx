@@ -5,8 +5,8 @@
 //   state's title), scoring progress with its bar, Published / Analysed /
 //   Relevant so far, Last processed. Values roll to a new number
 //   (FinalFeedStatus #2); Reduce Motion swaps.
-// - `FeedStatusActions`: the limit's "Or upgrade your plan." and Manage plan,
-//   or a problem's Try now. Nothing in any other mode.
+// - `FeedStatusActions`: the read hold's See plans, Read on this phone instead
+//   and Show all articles, or a problem's Try now. Nothing in any other mode.
 //
 // The counts come from the shared minute-clock `useFeedCounts`, so they match
 // the sentence on level 1.
@@ -32,10 +32,16 @@ import {
 import { formatCount } from '@/lib/algorithms/format-count';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp, useReducedMotion } from 'react-native-reanimated';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
+import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
+import { useSubscriptionTier } from '@/lib/stores/subscription-store';
+import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
+import { setFeedShow, setFeedView } from '@/components/custom/feed/feed-view-prefs';
+import { getCalendars } from 'expo-localization';
+import { useNotReadWaiting } from './feed-status-card';
 import { syncFailureKey, syncFailureOf } from './card-state';
 import { pickScoringProgress } from './status-ink';
 import { useLastProcessedLabel } from './use-last-processed-label';
@@ -89,7 +95,7 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
 
     // Cloud/device phases take precedence over the raw sync-machine state.
     // `headlineKey` is computed, hence `tAny`.
-    const dailyLimitStage = mode === 'limited' ? t('feed.dailyLimit.title') : null;
+    const dailyLimitStage = mode === 'limited' ? t('feedStatus.modeLimited') : null;
     const errorStage = mode === 'error' ? t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].title) : null;
     const failureKey = syncFailureKey(syncFailureOf(syncStatusMessage));
     const failureStage = failureKey ? tAny(failureKey) : null;
@@ -161,45 +167,77 @@ export function AnalysingProgress() {
  *  "unlock at .". */
 export function limitUnlockTime(resetAt: number | null, now: Date = new Date()): string {
     const at = resetAt ?? Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-    return new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    let hour12: boolean | undefined;
+    try {
+        const uses24h = getCalendars()[0]?.uses24hourClock;
+        hour12 = uses24h == null ? undefined : !uses24h;
+    } catch {
+        // No calendar: the locale's own clock.
+    }
+    return new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12 });
 }
 
-/** The daily limit's and the error's actions, under the details (the lead
- *  row says the state): "Or upgrade your plan." and Manage plan at the limit,
- *  Try now on a problem. Nothing in any other mode. */
+/** The read hold's and the error's actions, under the details (the lead row
+ *  says the state): See plans, Read on this phone instead and Show all
+ *  articles at the hold, Try now on a problem. Nothing in any other mode. */
 export const FeedStatusActions: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }) => {
     const { t } = useTranslation();
     const router = useRouter();
     const { onRefresh } = useFeedSyncRefresh();
     const colors = useColors();
     const styles = useStyles();
+    const tier = useSubscriptionTier();
+    const waiting = useNotReadWaiting();
+    // Resolved once: whether this phone can run Mera's reading itself.
+    const [canReadOnPhone, setCanReadOnPhone] = React.useState(false);
+    React.useEffect(() => {
+        let alive = true;
+        checkRequirements().then(
+            (r) => alive && setCanReadOnPhone(r.supported),
+            () => undefined,
+        );
+        return () => {
+            alive = false;
+        };
+    }, []);
     if (mode !== 'limited' && mode !== 'error') return null;
-    const managePlan = () => router.push('/logged-in/preferences/manage-subscription' as never);
-    const pill = (label: string, onPress: () => void, testID: string) => (
+    const pill = (label: string, onPress: () => void, testID: string, outline = false) => (
         <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} testID={testID} style={styles.pillFrame}>
-            <View style={styles.pill}>
-                <Text style={[ROW_TYPE, { color: colors.onAccent, fontWeight: '600' }]}>{label}</Text>
+            <View style={outline ? styles.pillOutline : styles.pill}>
+                <Text style={[ROW_TYPE, { color: outline ? colors.ink : colors.onAccent, fontWeight: '600' }]}>{label}</Text>
             </View>
         </Pressable>
     );
     if (mode === 'limited') {
         return (
-            <VStack className="mt-2" testID="feed-status-daily-limit">
-                <Text style={[ROW_TYPE, { color: colors.ink }]}>
-                    <Trans
-                        i18nKey="feedStatus.limitUpgrade"
-                        components={[
-                            <Text
-                                key="upgrade"
-                                onPress={managePlan}
-                                accessibilityRole="link"
-                                style={[ROW_TYPE, { color: colors.accentText }]}
-                            />,
-                        ]}
-                    />
-                </Text>
-                <HStack className="justify-end mt-2">
-                    {pill(t('subscription.managePlan'), managePlan, 'feed-status-manage-subscription')}
+            <VStack className="mt-2" testID="feed-status-read-hold">
+                <HStack className="justify-end mt-2 flex-wrap" style={{ gap: 8 }}>
+                    {tier !== 'professional'
+                        ? pill(
+                              t('feedStatus.seePlans'),
+                              () => router.push('/logged-in/preferences/manage-subscription' as never),
+                              'feed-status-see-plans',
+                          )
+                        : null}
+                    {canReadOnPhone
+                        ? pill(
+                              t('feedStatus.readOnPhone'),
+                              () => navigateToTabScreen('you', 'mera-protocol', { params: { focus: 'on-device' } }),
+                              'feed-status-read-on-phone',
+                              true,
+                          )
+                        : null}
+                    {waiting === null
+                        ? pill(
+                              t('feed.show.showAll'),
+                              () => {
+                                  setFeedView('continuous');
+                                  setFeedShow('all');
+                              },
+                              'feed-status-show-all',
+                              true,
+                          )
+                        : null}
                 </HStack>
             </VStack>
         );
@@ -218,6 +256,7 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     // height (never hitSlop: QA measures a hitSlop target as its glyph box).
     pillFrame: { minHeight: 44, justifyContent: 'center', marginVertical: -7 },
     pill: { backgroundColor: c.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+    pillOutline: { borderColor: c.ink, borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
 }));
 
 export default FeedStatusDetails;

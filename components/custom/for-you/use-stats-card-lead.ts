@@ -3,13 +3,15 @@ import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useIsConnected } from '@/lib/stores/network-store';
-import { useForYouDailyLimitResetAt, useForYouScoringError, useForYouSyncStatusMessage } from '@/lib/stores/selectors';
+import { useForYouScoringError, useForYouSyncStatusMessage } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 import { formatCount } from '@/lib/algorithms/format-count';
 import { useTranslation } from 'react-i18next';
+import { useReadHold, resetDayWord } from '@/lib/subscription/read-hold';
+import { useNotReadWaiting } from './feed-status-card';
 import { limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, hasIssue, joinClauses, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
+import { cardState, hasIssue, joinClauses, readHoldSentenceKey, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
 
 /** A state's lead sentence, plain text (owner: no links; the reader finds
  *  Settings and their profile themselves; the limit's and the error's actions
@@ -19,10 +21,15 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
     const tAny = t as unknown as (key: string) => string;
     const appLanguage = useAppLanguage();
     const { articleCount, analysedCount } = useFeedCounts();
-    const resetAt = useForYouDailyLimitResetAt();
+    const { resetAt } = useReadHold();
+    const waiting = useNotReadWaiting();
     const scoringError = useForYouScoringError();
     const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
-    if (kind === 'limited') return t('feed.dailyLimit.bodyWithTime', { time: limitUnlockTime(resetAt) });
+    if (kind === 'limited') {
+        const count = waiting ?? 0;
+        const day = resetDayWord(resetAt ?? Date.now());
+        return t(readHoldSentenceKey(day, waiting), { count, formatted: formatCount(count, appLanguage), time: limitUnlockTime(resetAt) });
+    }
     if (kind === 'error') return t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].message);
     // The key is computed from the failure, hence `tAny`.
     if (kind === 'syncFailed') return tAny(syncFailureKey(failure)!);

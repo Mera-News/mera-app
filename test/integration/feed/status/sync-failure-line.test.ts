@@ -4,6 +4,7 @@
 // through the real FeedSyncMachine.
 import { act, renderHook } from '@testing-library/react-native';
 import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
+import { resetReadHold, setReadHold } from '@/lib/subscription/read-hold';
 import { limitUnlockTime } from '@/components/custom/for-you/FeedStatusDetails';
 import { useStatsCardLead } from '@/components/custom/for-you/use-stats-card-lead';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -80,6 +81,7 @@ describe('the counts card lead after a failed refresh', () => {
     seedCounts();
   });
   afterEach(async () => {
+    resetReadHold();
     await settleMachine();
     cleanupFeedSync();
   });
@@ -115,13 +117,13 @@ describe('the counts card lead after a failed refresh', () => {
     expect(result.current.zeroText).toBe(t('common.offlineBannerOffline'));
   });
 
-  test('the daily limit still leads when a failure message is also published', async () => {
+  test('the read hold still leads when a failure message is also published', async () => {
     const resetAt = Date.now() + 2 * HOUR;
-    useForYouStore.setState({ dailyLimitResetAt: resetAt });
+    await setReadHold({ resetAt });
     failed('fetching-topic-ids', 'server-unreachable');
     const { result } = await renderLead();
     expect(result.current.state).toBe('limited');
-    expect(result.current.zeroText).toBe(t('feed.dailyLimit.bodyWithTime', { time: limitUnlockTime(resetAt) }));
+    expect(result.current.zeroText).toContain(limitUnlockTime(resetAt));
   });
 
   describe('through the real FeedSyncMachine', () => {
@@ -166,6 +168,7 @@ describe('a failed first sync', () => {
     useForYouStore.setState({ lastProcessingRunFinishedAt: null });
   });
   afterEach(async () => {
+    resetReadHold();
     await settleMachine();
     cleanupFeedSync();
   });
@@ -200,8 +203,8 @@ describe('a failed first sync', () => {
     expect(lead.zeroText).toBe(t('feed.syncFailed.download'));
   });
 
-  test('the daily limit on a first sync also leads with the card', async () => {
-    useForYouStore.setState({ dailyLimitResetAt: Date.now() + 2 * HOUR });
+  test('the read hold on a first sync also leads with the card', async () => {
+    await setReadHold({ resetAt: Date.now() + 2 * HOUR });
     const { item, lead } = await card();
     expect(item).not.toBeNull();
     expect(lead.state).toBe('limited');
