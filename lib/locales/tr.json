@@ -834,8 +834,7 @@
     "sessionExpired": "Oturum süresi doldu, lütfen tekrar giriş yap",
     "noTopics": "Haberlerini görmek için konu ekle",
     "storageFull": "Cihaz depolama alanını boşalt ve tekrar dene",
-    "syncFailed": "En son içerik yüklenemedi. Yenilemek için aşağı çek.",
-    "dailyLimitReached": "Bugünkü makale sınırına ulaştınız. Daha fazla haber yarın."
+    "syncFailed": "En son içerik yüklenemedi. Yenilemek için aşağı çek."
   },
   "savedSuggestions": {
     "removedToastMessage": "Kayıtlılardan kaldırıldı",

@@ -834,8 +834,7 @@
     "sessionExpired": "Sitzung abgelaufen: bitte melde dich erneut an",
     "noTopics": "Füge Themen hinzu, um deine Nachrichten zu sehen",
     "storageFull": "Gib Gerätespeicher frei und versuche es erneut",
-    "syncFailed": "Die neuesten Inhalte konnten nicht geladen werden. Zum Aktualisieren nach unten ziehen.",
-    "dailyLimitReached": "Du hast das heutige Artikellimit erreicht. Mehr News gibt es morgen."
+    "syncFailed": "Die neuesten Inhalte konnten nicht geladen werden. Zum Aktualisieren nach unten ziehen."
   },
   "savedSuggestions": {
     "removedToastMessage": "Aus Gespeichertem entfernt",

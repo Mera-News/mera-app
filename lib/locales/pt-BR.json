@@ -834,8 +834,7 @@
     "sessionExpired": "Sessão expirada: por favor, faça login novamente",
     "noTopics": "Adicione tópicos para ver suas notícias",
     "storageFull": "Libere armazenamento no dispositivo e tente novamente",
-    "syncFailed": "Não conseguimos carregar o conteúdo mais recente. Puxe para atualizar.",
-    "dailyLimitReached": "Você atingiu o limite de artigos de hoje. Mais notícias amanhã."
+    "syncFailed": "Não conseguimos carregar o conteúdo mais recente. Puxe para atualizar."
   },
   "savedSuggestions": {
     "removedToastMessage": "Removido dos salvos",

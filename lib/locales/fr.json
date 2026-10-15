@@ -839,8 +839,7 @@
     "sessionExpired": "Session expirée : veuillez vous reconnecter",
     "noTopics": "Ajoutez des sujets pour voir vos actualités",
     "storageFull": "Libérez de l'espace sur l'appareil et réessayez",
-    "syncFailed": "Nous n'avons pas pu charger les derniers contenus. Tirez pour actualiser.",
-    "dailyLimitReached": "Vous avez atteint la limite d'articles du jour. Plus d'actualités demain."
+    "syncFailed": "Nous n'avons pas pu charger les derniers contenus. Tirez pour actualiser."
   },
   "savedSuggestions": {
     "removedToastMessage": "Retiré des enregistrés",

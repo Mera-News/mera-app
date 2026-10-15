@@ -830,8 +830,7 @@
     "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요",
     "noTopics": "토픽을 추가하여 뉴스를 확인하세요",
     "storageFull": "기기 저장 공간을 확보하고 다시 시도해 주세요",
-    "syncFailed": "최신 콘텐츠를 불러올 수 없습니다. 당겨서 새로고침해 주세요.",
-    "dailyLimitReached": "오늘의 기사 한도에 도달했습니다. 새로운 뉴스는 내일 제공됩니다."
+    "syncFailed": "최신 콘텐츠를 불러올 수 없습니다. 당겨서 새로고침해 주세요."
   },
   "savedSuggestions": {
     "removedToastMessage": "저장 목록에서 제거됨",

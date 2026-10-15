@@ -834,8 +834,7 @@
     "sessionExpired": "Sessie verlopen: log opnieuw in",
     "noTopics": "Voeg onderwerpen toe om je nieuws te zien",
     "storageFull": "Maak opslagruimte vrij op je apparaat en probeer het opnieuw",
-    "syncFailed": "We konden de nieuwste inhoud niet laden. Trek omlaag om te vernieuwen.",
-    "dailyLimitReached": "Je hebt de daglimiet voor artikelen bereikt. Morgen meer nieuws."
+    "syncFailed": "We konden de nieuwste inhoud niet laden. Trek omlaag om te vernieuwen."
   },
   "savedSuggestions": {
     "removedToastMessage": "Verwijderd uit opgeslagen",

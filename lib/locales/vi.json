@@ -830,8 +830,7 @@
     "sessionExpired": "Phiên đã hết hạn, vui lòng đăng nhập lại",
     "noTopics": "Thêm chủ đề để xem tin tức của bạn",
     "storageFull": "Hãy giải phóng dung lượng thiết bị và thử lại",
-    "syncFailed": "Chúng tôi không thể tải nội dung mới nhất. Kéo để làm mới.",
-    "dailyLimitReached": "Bạn đã đạt giới hạn bài viết hôm nay. Thêm tin vào ngày mai."
+    "syncFailed": "Chúng tôi không thể tải nội dung mới nhất. Kéo để làm mới."
   },
   "savedSuggestions": {
     "removedToastTitle": "Đã xóa",

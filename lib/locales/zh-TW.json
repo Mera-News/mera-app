@@ -830,8 +830,7 @@
     "sessionExpired": "工作階段已過期，請重新登入",
     "noTopics": "新增主題以查看您的新聞",
     "storageFull": "請釋放裝置儲存空間後再試",
-    "syncFailed": "無法載入最新內容。下拉以重新整理。",
-    "dailyLimitReached": "你已達今日文章上限。更多新聞明天見。"
+    "syncFailed": "無法載入最新內容。下拉以重新整理。"
   },
   "savedSuggestions": {
     "removedToastMessage": "已從儲存項目移除",

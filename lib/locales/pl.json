@@ -862,8 +862,7 @@
     "sessionExpired": "Sesja wygasła: zaloguj się ponownie",
     "noTopics": "Dodaj tematy, aby zobaczyć swoje wiadomości",
     "storageFull": "Zwolnij miejsce na urządzeniu i spróbuj ponownie",
-    "syncFailed": "Nie udało się załadować najnowszych treści. Pociągnij, aby odświeżyć.",
-    "dailyLimitReached": "Osiągnięto dzisiejszy limit artykułów. Więcej wiadomości jutro."
+    "syncFailed": "Nie udało się załadować najnowszych treści. Pociągnij, aby odświeżyć."
   },
   "savedSuggestions": {
     "removedToastMessage": "Usunięto z zapisanych",

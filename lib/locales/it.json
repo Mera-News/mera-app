@@ -834,8 +834,7 @@
     "sessionExpired": "Sessione scaduta. Effettua di nuovo l'accesso",
     "noTopics": "Aggiungi argomenti per vedere le tue notizie",
     "storageFull": "Libera spazio sul dispositivo e riprova",
-    "syncFailed": "Impossibile caricare i contenuti più recenti. Trascina per aggiornare.",
-    "dailyLimitReached": "Hai raggiunto il limite di articoli di oggi. Altre notizie domani."
+    "syncFailed": "Impossibile caricare i contenuti più recenti. Trascina per aggiornare."
   },
   "savedSuggestions": {
     "removedToastMessage": "Rimosso dai salvati",

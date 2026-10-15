@@ -830,8 +830,7 @@
     "sessionExpired": "会话已过期，请重新登录",
     "noTopics": "添加话题以查看您的新闻",
     "storageFull": "请释放设备存储空间后重试",
-    "syncFailed": "无法加载最新内容，下拉可刷新。",
-    "dailyLimitReached": "你已达到今日文章上限。更多新闻明天见。"
+    "syncFailed": "无法加载最新内容，下拉可刷新。"
   },
   "savedSuggestions": {
     "removedToastMessage": "已从收藏中移除",

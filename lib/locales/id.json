@@ -830,8 +830,7 @@
     "sessionExpired": "Sesi berakhir. Silakan masuk kembali",
     "noTopics": "Tambah topik untuk melihat berita Anda",
     "storageFull": "Bebaskan penyimpanan perangkat dan coba lagi",
-    "syncFailed": "Kami tidak dapat memuat konten terbaru. Tarik untuk memuat ulang.",
-    "dailyLimitReached": "Anda telah mencapai batas artikel hari ini. Lebih banyak berita besok."
+    "syncFailed": "Kami tidak dapat memuat konten terbaru. Tarik untuk memuat ulang."
   },
   "savedSuggestions": {
     "removedToastTitle": "Dihapus",
