@@ -312,6 +312,10 @@ const batch = http.post('*/v1/chat/completions/batch', async ({ request }) => {
 
 const jobId = (n: number) => n.toString(16).padStart(24, '0');
 
+/** What the gateway answers a held submit that lacks `X-Mera-Reading: 1` (an
+ *  old bundle): a plain failure that never pauses its shared limiter. */
+export const OLD_CLIENT_QUOTA_STATUS = 402;
+
 const submitJob = http.post('*/v1/inference/jobs', async ({ request }) => {
   const headers = lower(request.headers);
   if (!headers['authorization']) return unauthorized();
@@ -326,6 +330,16 @@ const submitJob = http.post('*/v1/inference/jobs', async ({ request }) => {
   const key = headers['idempotency-key'];
   const replayed = key ? state.jobKeys.get(key) : undefined;
   if (replayed) return HttpResponse.json({ requestId: replayed, capabilityToken: `cap.${replayed}` }, { status: 202 });
+
+  // The reading meter: after auth and the replay, before anything reaches upstream.
+  const meter = state.readMeter;
+  const now = Date.now();
+  if (meter.resetAt !== null && now < meter.resetAt) {
+    const body = { code: 'daily-quota-exceeded', resetAt: new Date(meter.resetAt).toISOString() };
+    if (headers['x-mera-reading'] !== '1') return HttpResponse.json(body, { status: OLD_CLIENT_QUOTA_STATUS });
+    const retryAfter = Math.min(60, Math.ceil((meter.resetAt - now) / 1000));
+    return HttpResponse.json(body, { status: 429, headers: { 'Retry-After': String(retryAfter) } });
+  }
 
   const session = Object.fromEntries(Object.entries(body.e2eeSession ?? {}).map(([k, v]) => [k.toLowerCase(), v]));
   const sessionRule = checkE2eeHeaders({ authorization: 'x', ...session }, body.requests[0]?.body.model ?? '');
@@ -369,7 +383,9 @@ const submitJob = http.post('*/v1/inference/jobs', async ({ request }) => {
   const requestId = jobId(state.jobs.size + 1);
   state.jobs.set(requestId, { requestId, calls, results: rows, polls: 0, idempotencyKey: key });
   if (key) state.jobKeys.set(key, requestId);
-  return HttpResponse.json({ requestId, capabilityToken: `cap.${requestId}` }, { status: 202 });
+  const usedHeader: Record<string, string> =
+    meter.used === null ? {} : { 'X-Mera-Reading-Used': String(meter.used) };
+  return HttpResponse.json({ requestId, capabilityToken: `cap.${requestId}` }, { status: 202, headers: usedHeader });
 });
 
 const jobResults = http.get('*/v1/inference/jobs/:id/results', ({ request, params }) => {
