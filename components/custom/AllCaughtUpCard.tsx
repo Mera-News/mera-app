@@ -15,8 +15,18 @@ import MeraLogo from './MeraLogo';
  * STILL (nothing on the Feed moves unless the feed is updating). An EMPTY
  * Feed never shows it: the empty chain shows the counts card and the
  * shortcuts instead (FinalFeed "Feed, empty after a long gap").
+ *
+ * The same card is the ONE divider between Mera's picks and the articles Mera
+ * has not read (owner, R4): `title` replaces the headline, and with a title
+ * and no `body` the cycling message is left out.
  */
-const AllCaughtUpCard: React.FC = () => {
+interface AllCaughtUpCardProps {
+    readonly title?: string;
+    readonly body?: string;
+    readonly testID?: string;
+}
+
+const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID = 'all-caught-up-card' }) => {
     const { t } = useTranslation();
 
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,14 +38,16 @@ const AllCaughtUpCard: React.FC = () => {
     const animationsActive = useAnimationsActive();
     // Lite / Reduce Motion: the first message stays; nothing cycles.
     const motion = useMotionAllowed();
+    const cycling = title === undefined && body === undefined;
     useEffect(() => {
-        if (!animationsActive || !motion) return;
+        if (!animationsActive || !motion || !cycling) return;
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) => (prevIndex + 1) % messages.length);
         }, 3000);
 
         return () => clearInterval(interval);
-    }, [messages.length, animationsActive, motion]);
+    }, [messages.length, animationsActive, motion, cycling]);
+    const bodyText = cycling ? messages[currentIndex] : body;
 
     // `px-4` mirrors ArticleCardBase's own content padding, so the
     // text column starts on the same vertical line as every neighbouring card's.
@@ -53,13 +65,15 @@ const AllCaughtUpCard: React.FC = () => {
                 size="lg"
                 className="text-ink text-center font-semibold mb-2"
             >
-                {t('feed.allCaughtUp')}
+                {title ?? t('feed.allCaughtUp')}
             </Text>
 
             {/* Cycling mindfulness message — the "put the phone down" nudge. */}
-            <Text size="sm" className="text-ink-2 text-center">
-                {messages[currentIndex]}
-            </Text>
+            {bodyText ? (
+                <Text size="sm" className="text-ink-2 text-center">
+                    {bodyText}
+                </Text>
+            ) : null}
 
         </Box>
     );
@@ -76,7 +90,7 @@ const AllCaughtUpCard: React.FC = () => {
     // opaque `bg-background-0` comes back, exactly as ArticleCardBase does it.
     return (
         <Box
-            testID="all-caught-up-card"
+            testID={testID}
             className="mb-3 rounded-2xl shadow-hard-2"
         >
             <Box

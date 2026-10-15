@@ -27,7 +27,12 @@ import {
   isNewCard,
   type FeedEntry,
 } from './feed-entries';
-import { useFeedMinimap } from './feed-view-prefs';
+import { useFeedMinimap, useFeedShow } from './feed-view-prefs';
+import { applyFeedShow, foldNotReadTail, newNotReadTailSession, type NotReadTailSession } from './not-read-tail';
+import { setNotReadWaiting } from '@/components/custom/for-you/feed-status-card';
+import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
+import { formatCount } from '@/lib/algorithms/format-count';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
   useFeedbackSheet,
   type VerdictStoreAdapter,
@@ -59,7 +64,7 @@ import {
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, AppState, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, AppState, findNodeHandle, useWindowDimensions } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
@@ -144,12 +149,30 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // The Feed also admits scored rows whose note is still being written
   // (`includeReasonPending`): articles whose relevance arrived in the
   // background are readable at once, and the card says "Writing a note".
-  const candidates = useMemo(
+  // And rows Mera has not read (`includeUnscored`): every article reaches the
+  // Feed. Those never enter the order store; they are the session's not-read
+  // tail (not-read-tail.ts), after every scored card.
+  const allCandidates = useMemo(
     () =>
       buildFeedList(suggestions, EMPTY_SET, Date.now(), userGeoLanguageCtx, {
         includeReasonPending: true,
+        includeUnscored: true,
       }),
     [suggestions, userGeoLanguageCtx],
+  );
+  // The not-read tail, frozen per reading session (replaced in resetSession,
+  // which bumps `sessionEpoch`). Folding mutates the session, idempotently.
+  const tailSessionRef = useRef<NotReadTailSession>(newNotReadTailSession());
+  const folded = useMemo(
+    () => foldNotReadTail(tailSessionRef.current, allCandidates),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allCandidates, sessionEpoch],
+  );
+  // What the order store sees: scored stories only, minus the ones the tail
+  // holds this session (a story never shows twice).
+  const candidates = useMemo(
+    () => allCandidates.filter((c) => !isNotRead(c.suggestion) && !folded.withheld.has(c.id)),
+    [allCandidates, folded],
   );
   // Live rows by suggestion id, for `resolveFeedRowDisplay` (see FeedRow).
   const liveById = useMemo(() => new Map(suggestions.map((s) => [s._id, s])), [suggestions]);
@@ -184,6 +207,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // pin from the PRE-ingest list without depending on `listData` (which would
   // re-run the effect on every re-sort).
   const listDataRef = useRef<FeedListItem[]>([]);
+  // The SCORED rows only, in sorted order: what the pinned prefix is
+  // extended over, so a not-read card can never be pinned above a pick.
+  const scoredRowsRef = useRef<FeedListItem[]>([]);
 
   // ── Freeze boundary + skip dwell (viewability → refs only; no store/DB
   //    writes mid-scroll). `FeedRow` subscribes to the opened set per row for
@@ -267,7 +293,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     }
   });
 
-  const { viewabilityConfigCallbackPairs, flushSkips, deepestSeenIdRef, resetDeepestSeen, registerRow } =
+  const { viewabilityConfigCallbackPairs, flushSkips, deepestSeenIdRef, resetDeepestSeen, registerRow, rowNode } =
     useVisibleIndex(renderedIdsRef, seenBandRef, onScreenChangedRef);
 
   // The list ref forwards to the underlying FlatList, so the re-tap's
@@ -324,6 +350,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     // Re-elect representatives and forget "was pending": the list returns to
     // the top on every reset, so nothing changes under a reader.
     rowSessionRef.current = newFeedRowSession();
+    // The not-read tail's membership is per session too: rows Mera read rise
+    // into their bands, and rows that left the pool drop out, here.
+    tailSessionRef.current = newNotReadTailSession();
     setSessionEpoch((e) => e + 1);
     refreshPartitionSnapshot();
     setPinnedIds([]);
@@ -418,7 +447,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   useEffect(() => {
     if (!isFocused || !orderHydrated || !openedHydrated) return;
     setPinnedIds((prev) =>
-      extendPinnedIds(prev, listDataRef.current, deepestSeenIdRef.current),
+      extendPinnedIds(prev, scoredRowsRef.current, deepestSeenIdRef.current),
     );
     useFeedOrderStore
       .getState()
@@ -447,7 +476,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // not the store's: the store fronts a story with a member that has a note,
   // while the card keeps its first article. `liveById` is a dep so a note
   // landing re-sorts the row up into its band.
-  const { rows: listData } = useMemo(
+  const { rows: scoredRows } = useMemo(
     () =>
       sortFeedEntries(
         data,
@@ -460,8 +489,24 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
       ),
     [data, partitionSnapshot, pinnedIds, liveById, userGeoLanguageCtx],
   );
+  scoredRowsRef.current = scoredRows;
+
+  // The Show filter (feed_show): Mera's picks, then the not-read tail. The
+  // unfiltered lists keep feeding the pin (scored rows) and the empty chain.
+  const show = useFeedShow();
+  const { rows: listData, picks: picksCount } = useMemo(
+    () => applyFeedShow(scoredRows, folded.tail, show),
+    [scoredRows, folded, show],
+  );
+  const allRowsCount = scoredRows.length + folded.tail.length;
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
+
+  // The counts card names the articles waiting below while the tail shows.
+  useEffect(() => {
+    setNotReadWaiting(show === 'picks' ? null : folded.notReadArticles);
+  }, [show, folded]);
+  useEffect(() => () => setNotReadWaiting(null), []);
 
   // ── Which cards just arrived ──────────────────────────────────────────────
   //
@@ -508,11 +553,14 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     recomputeNewBelowRef.current();
   }, [listData, newSince]);
   const minimapSetting = useFeedMinimap();
-  // Drawn only with rows to map: an empty Feed keeps equal side margins.
-  const minimapOn = minimapSetting && listData.length > 0;
+  // Mera's picks only (owner, R4): no ticks for not-read rows. They lead the
+  // rendered list, so a tick's index is its row's. Drawn only with rows to
+  // map: an empty Feed keeps equal side margins.
+  const mappedCount = show === 'unread' ? 0 : picksCount;
+  const minimapOn = minimapSetting && mappedCount > 0;
   const minimapRows = useMemo(
-    () => (minimapOn ? listData.map((it) => ({ id: it.id, suggestion: it.suggestion })) : []),
-    [minimapOn, listData],
+    () => (minimapOn ? listData.slice(0, mappedCount).map((it) => ({ id: it.id, suggestion: it.suggestion })) : []),
+    [minimapOn, listData, mappedCount],
   );
   const jumpToRow = useCallback((index: number) => {
     listRef.current?.scrollToIndex({ index, animated: false, viewPosition: 0 });
@@ -540,9 +588,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // against an empty pin and reproduce the mid-list-open jump this phase exists
   // to remove.
   useEffect(() => {
-    if (listData.length === 0 || pinnedIds.length > 0) return;
-    setPinnedIds(extendPinnedIds([], listData, deepestSeenIdRef.current));
-  }, [listData, pinnedIds.length, deepestSeenIdRef]);
+    if (scoredRows.length === 0 || pinnedIds.length > 0) return;
+    setPinnedIds(extendPinnedIds([], scoredRows, deepestSeenIdRef.current));
+  }, [scoredRows, pinnedIds.length, deepestSeenIdRef]);
 
   // DEV-only: the FIRST commit at which this screen actually has cards. A
   // useEFFECT, not the memo body above — the memo runs during render, BEFORE
@@ -562,16 +610,16 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const unviewedCount = useMemo(
     () =>
       countUnviewed(
-        listData,
+        scoredRows,
         partitionSnapshot.cardStates,
         partitionSnapshot.openedArticleIds,
       ),
-    [listData, partitionSnapshot],
+    [scoredRows, partitionSnapshot],
   );
 
   // DEV-only Metro log of the whole funnel + the rendered cards. Compiled out of
   // release builds; throttled and count-gated in dev (see the hook).
-  useFeedFunnelLog(listData, unviewedCount, userGeoLanguageCtx);
+  useFeedFunnelLog(scoredRows, unviewedCount, userGeoLanguageCtx);
 
   // ── Feedback sheet (shared plumbing) ──
   // The verdict store is `feed-order-store`, keyed by the rep-switch-safe
@@ -715,9 +763,46 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
       // in above the cards the reader is now looking at, which read as a
       // second jump right after the refresh. Floor-sized (the reader is at the
       // top), and still monotonic from here.
-      setPinnedIds((prev) => extendPinnedIds(prev, listDataRef.current, null));
+      setPinnedIds((prev) => extendPinnedIds(prev, scoredRowsRef.current, null));
     });
   }, [partitionSnapshot, listData]);
+
+  // A Show switch is a new reading session: re-sort, back to the top, no
+  // arrival motion for the whole list, then say what is shown and move
+  // screen-reader focus to the first row (owner, R7).
+  const appLanguage = useAppLanguage();
+  const lastShowRef = useRef(show);
+  // The partition the switch happened under: the announcement waits for the
+  // NEXT one, the re-sorted list.
+  const pendingShowAnnounceRef = useRef<object | null>(null);
+  useEffect(() => {
+    if (lastShowRef.current === show) return;
+    lastShowRef.current = show;
+    seenRowIdsRef.current = null;
+    pendingScrollResetRef.current = true;
+    pendingShowAnnounceRef.current = partitionSnapshot;
+    resetSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, resetSession]);
+  useEffect(() => {
+    const switchedUnder = pendingShowAnnounceRef.current;
+    if (!switchedUnder || switchedUnder === partitionSnapshot) return;
+    pendingShowAnnounceRef.current = null;
+    const label = show === 'picks' ? t('feed.show.picks') : show === 'unread' ? t('feed.show.unread') : t('feed.show.all');
+    const count = listData.reduce((n, it) => n + it.memberCount, 0);
+    AccessibilityInfo.announceForAccessibility(
+      t('feed.show.announce', { show: label, count, formatted: formatCount(count, appLanguage) }),
+    );
+    const firstId = listData[0]?.id;
+    if (!firstId) return;
+    // After the scroll reset's frame, so the first row is mounted at the top.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const tag = findNodeHandle(rowNode(firstId) as never);
+        if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
+      }),
+    );
+  }, [partitionSnapshot, listData, show, t, appLanguage, rowNode]);
 
   // Compose the collapsible-header handler with a scroll-tick notifier (drives
   // deferred TranslatableDynamic translation as items enter the viewport) —
@@ -754,12 +839,12 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // under a collapsed header when the user most needs it.
   useEffect(() => {
     const isEmptyState =
-      data.length === 0 &&
+      allRowsCount === 0 &&
       (noFacts || isFeedProcessing || lastProcessingRunFinishedAt === null);
     if (errorMessage || isEmptyState) {
       reveal();
     }
-  }, [errorMessage, data.length, noFacts, isFeedProcessing, lastProcessingRunFinishedAt, reveal]);
+  }, [errorMessage, allRowsCount, noFacts, isFeedProcessing, lastProcessingRunFinishedAt, reveal]);
 
   // F2: while the local cache is still loading on launch, the list is empty for
   // a reason that is NOT "nothing to show". Draw nothing for 200ms, then a
@@ -768,7 +853,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     orderHydrated,
     openedHydrated,
     candidateCount: candidates.length,
-    renderedCount: listData.length,
+    renderedCount: allRowsCount,
     ingested: ingestedCandidates,
     suggestionsHydrated,
     announcement: t('feed.loadingA11y'),
@@ -777,19 +862,26 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // An empty Feed past its first run still leads with the counts card
   // (collapsed), the same branch of the empty chain that shows the shortcuts.
   // Without `active`, so the card is already there as the page slides in.
+  // The UNFILTERED lists: a Show filter with nothing to show is its own empty
+  // state (FeedScreen), not the Feed's.
   const emptyHere =
-    listData.length === 0 &&
+    allRowsCount === 0 &&
     warmup !== 'blank' &&
     warmup !== 'skeleton' &&
     !isLoading &&
     !errorMessage &&
     !noFacts &&
     lastProcessingRunFinishedAt !== null;
-  const hasRows = listData.length > 0;
+  const hasRows = allRowsCount > 0;
 
   return {
     listRef,
     listData,
+    picksCount,
+    show,
+    tailCount: folded.tail.length,
+    scoredCount: scoredRows.length,
+    allRowsCount,
     liveById,
     rowSessionRef,
     arrivingIdsRef,

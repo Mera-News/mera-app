@@ -80,7 +80,8 @@
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
-import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
+import ForYouEmptyState, { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
+import { setFeedShow } from '@/components/custom/feed/feed-view-prefs';
 import { showsProcessingScene } from '@/components/custom/for-you/feed-status-card';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
@@ -143,6 +144,7 @@ const ARRIVAL_ENTERING = (delay: number) =>
  *  resolve the suggestion → list-item verdict key via the screen's adapter. */
 const FeedRow = React.memo(function FeedRow({
   item,
+  divider,
   suggestion,
   reserveNoteSpace,
   onPress,
@@ -155,6 +157,9 @@ const FeedRow = React.memo(function FeedRow({
   newSince,
 }: {
   item: FeedListItem;
+  /** The one divider between Mera's picks and the not-read tail, drawn above
+   *  the first not-read card (Show: All only). */
+  divider?: string;
   /** What the card renders: the session-frozen representative's LIVE row
    *  (`resolveFeedRowDisplay`). Never `item.suggestion` directly: the store
    *  re-elects representatives and keeps a stale copy of a row that left the
@@ -205,6 +210,7 @@ const FeedRow = React.memo(function FeedRow({
           : ARRIVAL_ENTERING(enterDelay)
       }
     >
+    {divider ? <AllCaughtUpCard title={divider} testID="feed-not-read-divider" /> : null}
     <ArticleSuggestionCard
       suggestion={suggestion}
       reasonWriting={reasonWriting}
@@ -250,6 +256,11 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
   const {
     listRef,
     listData,
+    picksCount,
+    show,
+    tailCount,
+    scoredCount,
+    allRowsCount,
     liveById,
     rowSessionRef,
     arrivingIdsRef,
@@ -287,12 +298,14 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     windowHeight,
   } = useFeedScreen({ isFocused, header });
 
+  const notReadDivider = t('feed.notRead.divider');
   const renderItem = useCallback(
     ({ item, index }: { item: FeedEntry; index: number }) => {
       const display = resolveFeedRowDisplay(item, liveById, rowSessionRef.current);
       return (
       <FeedRow
         item={item}
+        divider={show === 'all' && index === picksCount && picksCount > 0 ? notReadDivider : undefined}
         suggestion={display.suggestion}
         reserveNoteSpace={display.reserveNoteSpace}
         onPress={openSuggestion}
@@ -310,7 +323,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
@@ -358,6 +371,20 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     // No facts: the block sits in the list header (above any top headlines,
     // C4), so the empty list itself says nothing more.
     if (noFacts) return null;
+    // A Show filter with nothing in it (the Feed itself has rows): its own
+    // empty block, never a bare list (owner, R7).
+    if (allRowsCount > 0) {
+      return show === 'picks' ? (
+        <ForYouEmptyState
+          icon="auto-awesome"
+          body={t('feed.show.emptyPicks')}
+          action={{ label: t('feed.show.showAll'), onPress: () => setFeedShow('all'), testID: 'feed-show-empty-show-all' }}
+          testID="feed-show-empty-picks"
+        />
+      ) : (
+        <ForYouEmptyState icon="done-all" body={t('feed.show.emptyUnread')} testID="feed-show-empty-unread" />
+      );
+    }
     // Nothing to show (FinalFeed "Feed, empty after a long gap"): the counts
     // card (the list's first item, collapsed: `emptyHere` below) says which state
     // this is; the list shows the shortcuts. They fold away when the first rows
@@ -381,10 +408,23 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
   // The list's first item: the no-facts block, or the counts card.
   const cardItem = useStatsCardItem(emptyHere, hasRows);
   // Wrapped to measure it for `pastHeader` (use-anchor-past-header).
+  // First run with only not-read cards: the processing scene stays on top,
+  // the tail below it (owner, R4).
+  const processingOnTop =
+    !noFacts &&
+    scoredCount === 0 &&
+    tailCount > 0 &&
+    showsProcessingScene({ runFinished: lastProcessingRunFinishedAt !== null, issue });
   const headerNode = useMemo(() => {
     const item = noFacts ? <FeedNoFacts view="continuous" /> : cardItem;
-    return item ? <View onLayout={onListHeaderLayout}>{item}</View> : null;
-  }, [noFacts, cardItem, onListHeaderLayout]);
+    if (!item && !processingOnTop) return null;
+    return (
+      <View onLayout={onListHeaderLayout}>
+        {item}
+        {processingOnTop ? <FeedProcessingCard /> : null}
+      </View>
+    );
+  }, [noFacts, cardItem, onListHeaderLayout, processingOnTop]);
 
   return (
     // No backdrop and no header: the tab (TabPages) draws both.

@@ -257,6 +257,9 @@ export function useVisibleIndex(
     return cb;
   }, []);
 
+  /** The registered view of a mounted row, for moving screen-reader focus. */
+  const rowNode = useCallback((id: string): MeasurableRow | null => rowNodesRef.current.get(id) ?? null, []);
+
   // Built ONCE via a ref (FlatList forbids mutating this prop after mount).
   const pairs = useRef([
     {
@@ -329,5 +332,6 @@ export function useVisibleIndex(
     deepestSeenIdRef,
     resetDeepestSeen,
     registerRow,
+    rowNode,
   };
 }
