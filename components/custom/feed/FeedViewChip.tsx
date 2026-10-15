@@ -11,12 +11,20 @@ import { tabSwipeProgress } from '@/components/custom/nav/swipe-progress';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-import { type FeedView, setFeedView, useFeedView } from './feed-view-prefs';
+import {
+  type FeedShow,
+  type FeedView,
+  setFeedShow,
+  setFeedView,
+  useFeedShow,
+  useFeedView,
+} from './feed-view-prefs';
 
 const VIEWS: readonly FeedView[] = ['continuous', 'sectioned'];
 /** The style glyphs, distinct at chip size: one card in a running stream
  *  (`view-day`) for Continuous; blocks of different sizes, grouped
  *  (`dashboard`), for Sectioned. The menu rows use the same pair. */
+const SHOWS: readonly FeedShow[] = ['all', 'picks', 'unread'];
 const VIEW_ICON = { continuous: 'view-day', sectioned: 'dashboard' } as const;
 const iconOf = (v: FeedView) => VIEW_ICON[v];
 
@@ -30,6 +38,7 @@ function chipOpacity(progress: number, at: number): number {
 const FeedViewChip: React.FC<{ readonly pageIndex: number }> = ({ pageIndex }) => {
   const { t } = useTranslation();
   const view = useFeedView();
+  const show = useFeedShow();
   const onFeed = useCurrentSurface() === 'feed';
   const progress = tabSwipeProgress('feed');
   const fade = useAnimatedStyle(() => ({ opacity: chipOpacity(progress.value, pageIndex) }));
@@ -37,6 +46,13 @@ const FeedViewChip: React.FC<{ readonly pageIndex: number }> = ({ pageIndex }) =
     (v: FeedView) => (v === 'sectioned' ? t('feed.view.sectioned') : t('feed.view.continuous')),
     [t],
   );
+  const showLabel = useCallback(
+    (o: string) =>
+      t(o === 'picks' ? 'feed.show.picks' : o === 'unread' ? 'feed.show.unread' : 'feed.show.all'),
+    [t],
+  );
+  const sectioned = view === 'sectioned';
+  const marker = !sectioned && show !== 'all';
   return (
     <Animated.View
       style={fade}
@@ -55,6 +71,22 @@ const FeedViewChip: React.FC<{ readonly pageIndex: number }> = ({ pageIndex }) =
         menuTitle={t('feed.view.title')}
         menuAlign="leading"
         testID="feed-view-chip"
+        rowRole="radio"
+        marker={marker}
+        a11ySuffix={marker ? `, ${t('feed.show.a11y', { show: showLabel(show) })}` : ''}
+        sections={[
+          {
+            title: t('feed.show.title'),
+            options: SHOWS,
+            value: show,
+            labelOf: showLabel,
+            a11yLabelOf: showLabel,
+            onChange: (o) => setFeedShow(o as FeedShow),
+            testID: 'feed-show',
+            disabled: sectioned,
+            note: sectioned ? t('feed.show.sectionedNote') : undefined,
+          },
+        ]}
       />
     </Animated.View>
   );

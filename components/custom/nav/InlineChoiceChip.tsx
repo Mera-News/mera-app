@@ -50,6 +50,22 @@ const HIDDEN = {
   importantForAccessibility: 'no-hide-descendants',
 } as const;
 
+/** A titled group of rows under the main ones (the Feed's "Show"). */
+export interface ChoiceSection {
+  readonly title: string;
+  readonly options: readonly string[];
+  readonly value: string;
+  readonly labelOf: (option: string) => string;
+  readonly a11yLabelOf: (option: string) => string;
+  readonly onChange: (option: string) => void;
+  /** Rows: `${testID}-${option}`; note: `${testID}-note`. */
+  readonly testID: string;
+  /** Rows are inert and dimmed. */
+  readonly disabled?: boolean;
+  /** A muted line under the title. */
+  readonly note?: string;
+}
+
 export interface InlineChoiceChipProps<T extends string | number> {
   readonly options: readonly T[];
   readonly value: T;
@@ -72,6 +88,14 @@ export interface InlineChoiceChipProps<T extends string | number> {
    *  chip at the row's end) or `leading` (the Feed's View chip at the row's
    *  start). Mirrored in RTL. */
   readonly menuAlign?: 'leading' | 'trailing';
+  /** Groups of rows after the main ones, in the same panel. */
+  readonly sections?: readonly ChoiceSection[];
+  /** The role of every row (default `menuitem`; `radio` for a choice group). */
+  readonly rowRole?: 'menuitem' | 'radio';
+  /** An 8pt accent dot at the glyph's top-right; never changes the chip's width. */
+  readonly marker?: boolean;
+  /** Appended to the chip's spoken label only (not the rows'). */
+  readonly a11ySuffix?: string;
 }
 
 /** A floating menu's surface: the same material as every modal and bottom
@@ -107,6 +131,10 @@ export default function InlineChoiceChip<T extends string | number>({
   iconOf,
   menuTitle,
   menuAlign = 'trailing',
+  sections,
+  rowRole = 'menuitem',
+  marker = false,
+  a11ySuffix = '',
 }: InlineChoiceChipProps<T>) {
   const colors = useColors();
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
@@ -134,42 +162,93 @@ export default function InlineChoiceChip<T extends string | number>({
   }, [window.width]);
   const close = useCallback(() => setAnchor(null), []);
 
+  const row = (
+    option: string | number,
+    picked: boolean,
+    label: string,
+    a11y: string,
+    onPick: () => void,
+    rowTestID: string | undefined,
+    rowDisabled = false,
+    icon?: keyof typeof MaterialIcons.glyphMap,
+  ) => (
+    <Pressable
+      key={String(option)}
+      onPress={() => {
+        close();
+        if (!picked) {
+          void hapticSelection();
+          onPick();
+        }
+      }}
+      disabled={rowDisabled}
+      accessibilityRole={rowRole}
+      accessibilityLabel={a11y}
+      accessibilityState={{ checked: picked, disabled: rowDisabled }}
+      testID={rowTestID}
+      style={[styles.row, rowDisabled ? styles.disabled : null]}
+    >
+      <View style={styles.check} {...HIDDEN}>
+        {picked ? <MaterialIcons name="check" size={18} color={colors.accentMark} /> : null}
+      </View>
+      {icon ? <MaterialIcons name={icon} size={18} color={colors.ink2} {...HIDDEN} /> : null}
+      <Text
+        numberOfLines={1}
+        maxFontSizeMultiplier={1}
+        style={[styles.rowLabel, { color: colors.ink, fontWeight: picked ? '600' : '400' }]}
+        {...HIDDEN}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
   const rows = (live: boolean) =>
-    options.map((option) => {
-      const picked = option === value;
-      return (
-        <Pressable
-          key={String(option)}
-          onPress={() => {
-            close();
-            if (!picked) {
-              void hapticSelection();
-              onChange(option);
-            }
-          }}
-          accessibilityRole="menuitem"
-          accessibilityLabel={a11yLabelOf(option)}
-          accessibilityState={{ checked: picked }}
-          testID={live ? `${testID}-${option}` : undefined}
-          style={styles.row}
+    options.map((option) =>
+      row(
+        option,
+        option === value,
+        labelOf(option),
+        a11yLabelOf(option),
+        () => onChange(option),
+        live ? `${testID}-${option}` : undefined,
+        false,
+        iconOf?.(option),
+      ),
+    );
+  const sectionRows = (live: boolean) =>
+    sections?.map((sec) => (
+      <View key={sec.testID}>
+        <Text
+          maxFontSizeMultiplier={1}
+          style={[styles.menuTitle, { color: colors.muted }]}
+          accessibilityRole="header"
+          {...(live ? null : HIDDEN)}
         >
-          <View style={styles.check} {...HIDDEN}>
-            {picked ? <MaterialIcons name="check" size={18} color={colors.accentMark} /> : null}
-          </View>
-          {iconOf ? (
-            <MaterialIcons name={iconOf(option)} size={18} color={colors.ink2} {...HIDDEN} />
-          ) : null}
+          {sec.title}
+        </Text>
+        {sec.note ? (
           <Text
-            numberOfLines={1}
             maxFontSizeMultiplier={1}
-            style={[styles.rowLabel, { color: colors.ink, fontWeight: picked ? '600' : '400' }]}
-            {...HIDDEN}
+            style={[styles.note, { color: colors.muted }]}
+            testID={live ? `${sec.testID}-note` : undefined}
+            {...(live ? null : HIDDEN)}
           >
-            {labelOf(option)}
+            {sec.note}
           </Text>
-        </Pressable>
-      );
-    });
+        ) : null}
+        {sec.options.map((o) =>
+          row(
+            o,
+            o === sec.value,
+            sec.labelOf(o),
+            sec.a11yLabelOf(o),
+            () => sec.onChange(o),
+            live ? `${sec.testID}-${o}` : undefined,
+            sec.disabled,
+          ),
+        )}
+      </View>
+    ));
   const panel = (live: boolean) => (
     <ChoiceMenuPanel>
       {menuTitle ? (
@@ -183,6 +262,7 @@ export default function InlineChoiceChip<T extends string | number>({
         </Text>
       ) : null}
       {rows(live)}
+      {sectionRows(live)}
     </ChoiceMenuPanel>
   );
   const [pressed, setPressed] = useState(false);
@@ -200,7 +280,9 @@ export default function InlineChoiceChip<T extends string | number>({
               ? [
                   styles.iconPill,
                   // Glass only while pressed or open (the view-picker look).
-                  pressed || anchor ? { backgroundColor: colors.glass, borderColor: colors.trackBorder } : null,
+                  pressed || anchor
+                    ? { backgroundColor: colors.glass, borderColor: colors.trackBorder }
+                    : null,
                 ]
               : [styles.pill, { backgroundColor: colors.glass, borderColor: colors.trackBorder }]
           }
@@ -223,6 +305,14 @@ export default function InlineChoiceChip<T extends string | number>({
           />
         </View>
       </View>
+      {marker ? (
+        <View
+          pointerEvents="none"
+          style={[styles.marker, { backgroundColor: colors.accentMark }]}
+          testID={`${testID}-marker`}
+          {...HIDDEN}
+        />
+      ) : null}
       <Pressable
         onPress={open}
         onPressIn={() => setPressed(true)}
@@ -230,7 +320,7 @@ export default function InlineChoiceChip<T extends string | number>({
         disabled={disabled}
         style={StyleSheet.absoluteFill}
         accessibilityRole="button"
-        accessibilityLabel={a11yLabelOf(value)}
+        accessibilityLabel={a11yLabelOf(value) + a11ySuffix}
         accessibilityState={{ expanded: anchor !== null, disabled }}
         testID={`${testID}-toggle`}
       />
@@ -338,6 +428,23 @@ const styles = StyleSheet.create({
     paddingLeft: 5,
     paddingRight: 3,
   },
-  menuTitle: { fontSize: 12, lineHeight: 16, fontWeight: '600', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  menuTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  note: { fontSize: 12, lineHeight: 16, paddingHorizontal: 16, paddingBottom: 4 },
+  // Over the glyph's top-right inside the 44pt chip; absolute, so no width.
+  marker: {
+    position: 'absolute',
+    top: 8,
+    left: 22,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
   rowLabel: { fontSize: 15, lineHeight: 20 },
 });
