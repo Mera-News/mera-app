@@ -22,41 +22,17 @@ import {
     useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
-import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { isReadHeld, useReadHold } from '@/lib/subscription/read-hold';
-import { useProcessingMode } from '@/lib/stores/mera-protocol-store';
+import { useReadHeld } from '@/components/custom/cards/use-read-held';
 import { useForYouScoringError, useForYouUnscoredCount } from '@/lib/stores/selectors';
-import { useEffect, useReducer } from 'react';
-import { AppState } from 'react-native';
-
-const HOLD_RECHECK_MS = 60_000;
 
 export function useFeedStatusMode(): FeedStatusMode {
     const schedulerRunning = useFeedSyncRunning();
     const isFeedProcessing = useIsFeedProcessing();
     const scoringError = useForYouScoringError();
     const unscoredCount = useForYouUnscoredCount();
-    const processingMode = useProcessingMode();
-    const hold = useReadHold();
-    const [, recheck] = useReducer((n: number) => n + 1, 0);
-
-    // The hold ends on a jittered device-clock instant that emits nothing, so
-    // while one is set, look again every minute and when the app comes back.
-    const holding = hold.resetAt != null;
-    useEffect(() => {
-        if (!holding) return;
-        const timer = setInterval(recheck, HOLD_RECHECK_MS);
-        const sub = AppState.addEventListener('change', (s) => {
-            if (s === 'active') recheck();
-        });
-        return () => {
-            clearInterval(timer);
-            sub.remove();
-        };
-    }, [holding]);
-
-    // On-device reading is never held (see read-hold.ts).
-    const held = processingMode !== ProcessingMode.OnDevice && holding && isReadHeld(Date.now());
+    // On-device reading is never held; re-checked every minute and on
+    // foreground while a hold is set (use-read-held.ts).
+    const { held } = useReadHeld();
 
     if (held) return 'limited';
     if (schedulerRunning || isFeedProcessing) return 'processing';

@@ -3,10 +3,8 @@ import {
     noteReasonInFlight,
     pruneReasonsInFlight,
 } from '@/components/custom/cards/pending-since';
-import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { useReadHeld } from '@/components/custom/cards/use-read-held';
 import { useForYouStore } from '@/lib/stores/for-you-store';
-import { useProcessingMode } from '@/lib/stores/mera-protocol-store';
-import { isReadHeld, useReadHold } from '@/lib/subscription/read-hold';
 import { useEffect, useState } from 'react';
 
 let pruneInstalled = false;
@@ -40,12 +38,16 @@ function installPrune(): void {
  * database at module scope.
  */
 export function useReasonWriting(id: string): boolean {
+    // A cloud batch held by the daily reading limit is not being written.
+    const { held } = useReadHeld();
+    return useReasonInFlight(id) && !held;
+}
+
+/** `useReasonWriting` without the hold, for a list that reads the hold ONCE
+ *  and applies it per row (FeedScreen): no hold subscription per card. */
+export function useReasonInFlight(id: string): boolean {
     installPrune();
     const inFlight = useForYouStore((s) => s.reasonsInFlightIds.has(id));
-    // A cloud batch held by the daily reading limit is not being written.
-    const hold = useReadHold();
-    const mode = useProcessingMode();
-    const held = mode !== ProcessingMode.OnDevice && hold.resetAt != null && isReadHeld();
     const anchor = inFlight ? noteReasonInFlight(id) : null;
     // The anchor that expired, not the id: a re-entry gets a new anchor and starts fresh.
     const [expiredAnchor, setExpiredAnchor] = useState<number | null>(null);
@@ -63,5 +65,5 @@ export function useReasonWriting(id: string): boolean {
         return () => clearTimeout(timer);
     }, [anchor, expired, id]);
 
-    return inFlight && !expired && !held;
+    return inFlight && !expired;
 }

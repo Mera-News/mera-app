@@ -40,7 +40,6 @@ import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequir
 import { useSubscriptionTier } from '@/lib/stores/subscription-store';
 import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
 import { setFeedShow, setFeedView } from '@/components/custom/feed/feed-view-prefs';
-import { getCalendars } from 'expo-localization';
 import { useNotReadWaiting } from './feed-status-card';
 import { syncFailureKey, syncFailureOf } from './card-state';
 import { pickScoringProgress } from './status-ink';
@@ -160,22 +159,7 @@ export function AnalysingProgress() {
     );
 }
 
-/** When new articles unlock, in the device's own clock. The cap resets at
- *  00:00 UTC, so "tomorrow" would be false west of UTC. The sync machine
- *  always stores a reset instant; without one (an injected mode, a cleared
- *  store) the next UTC midnight IS the reset, so the sentence never reads
- *  "unlock at .". */
-export function limitUnlockTime(resetAt: number | null, now: Date = new Date()): string {
-    const at = resetAt ?? Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-    let hour12: boolean | undefined;
-    try {
-        const uses24h = getCalendars()[0]?.uses24hourClock;
-        hour12 = uses24h == null ? undefined : !uses24h;
-    } catch {
-        // No calendar: the locale's own clock.
-    }
-    return new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12 });
-}
+export { limitUnlockTime } from '@/components/custom/cards/reset-time';
 
 /** The read hold's and the error's actions, under the details (the lead row
  *  says the state): See plans, Read on this phone instead and Show all

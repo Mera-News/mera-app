@@ -5,6 +5,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import { resetStatusCard, setNotReadWaiting } from '@/components/custom/for-you/feed-status-card';
 import { limitUnlockTime } from '@/components/custom/for-you/FeedStatusDetails';
 import { useStatsCardLead } from '@/components/custom/for-you/use-stats-card-lead';
+import { useReadHeld } from '@/components/custom/cards/use-read-held';
 import { addFact } from '@/lib/database/services/fact-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { resetFeedCountsMemoForTest } from '@/lib/hooks/use-feed-counts';
@@ -104,4 +105,14 @@ describe('the counts card while the read hold is set', () => {
     const { result } = await renderLead();
     expect(result.current.mode).not.toBe('limited');
   });
+
+  it('the not-read line follows the same hold: held in the cloud, never on the phone', async () => {
+    await setReadHold({ resetAt: NOON + 2 * HOUR });
+    const cloud = renderHook(() => useReadHeld());
+    expect(cloud.result.current).toEqual({ held: true, resetAt: NOON + 2 * HOUR });
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
+    const phone = renderHook(() => useReadHeld());
+    expect(phone.result.current).toEqual({ held: false, resetAt: null });
+  });
 });
+

@@ -86,6 +86,9 @@ interface ArticleCardProps {
    *  land under the reader. A card complete at first render keeps its natural
    *  height. */
   reserveNoteSpace?: boolean;
+  /** The not-read line, resolved once by the list (it names the reading
+   *  hold while one is set, see not-read-line.ts). Omitted: the plain line. */
+  notReadLine?: string;
   /** A new card's halo (FinalMotion "Signals"): on while the card is unseen,
    *  fades away when it turns false. Omitted: no halo. */
   halo?: boolean;
@@ -123,6 +126,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   metaRowRightReserve,
   reasonWriting,
   reserveNoteSpace = false,
+  notReadLine,
   halo,
 }) => {
   const { t } = useTranslation();
@@ -285,7 +289,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     />
   ) : isNotRead(suggestion) ? (
     <Text size="sm" className="text-ink-3" testID="card-not-read">
-      {t('feed.notRead.line')}
+      {notReadLine ?? t('feed.notRead.line')}
     </Text>
   ) : null;
   // What the card root reads after the meta strings: the chip's priority
@@ -294,7 +298,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const spokenPriority = reasonBoxEl ? relevanceSpokenLabel(t, relevance) : null;
   const spokenTail = [
     hardFilterLabelEl && hardFilterLabel ? t('notInterested.cardExemptLabel', { filter: hardFilterLabel }) : null,
-    isNotRead(suggestion) ? t('feed.notRead.a11y') : null,
+    isNotRead(suggestion) ? notReadLine ?? t('feed.notRead.a11y') : null,
     reason ? t('aiDisclosure.short') : null,
     reason ? shownReason ?? reason : null,
     // The indicator is hidden from screen readers; the root says it instead.

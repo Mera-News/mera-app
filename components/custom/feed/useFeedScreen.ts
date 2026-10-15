@@ -33,6 +33,9 @@ import { setNotReadWaiting } from '@/components/custom/for-you/feed-status-card'
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { formatCount } from '@/lib/algorithms/format-count';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
+import { useReadHeld } from '@/components/custom/cards/use-read-held';
+import { notReadLineKey } from '@/components/custom/cards/not-read-line';
+import { limitUnlockTime } from '@/components/custom/cards/reset-time';
 import {
   useFeedbackSheet,
   type VerdictStoreAdapter,
@@ -502,6 +505,19 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
 
+  // The reading hold, read ONCE for the whole list (no subscription per
+  // card): rows skip the writing state while held, and not-read cards say
+  // why Mera skipped them and when it reads again (owner). Undefined when
+  // not held, so the card keeps its plain line and spoken label.
+  const readHeld = useReadHeld();
+  const notReadLine = useMemo(
+    () =>
+      readHeld.held
+        ? t(notReadLineKey({ held: true, resetAt: readHeld.resetAt }), { time: limitUnlockTime(readHeld.resetAt) })
+        : undefined,
+    [readHeld.held, readHeld.resetAt, t],
+  );
+
   // The counts card names the articles waiting below while the tail shows.
   useEffect(() => {
     setNotReadWaiting(show === 'picks' ? null : folded.notReadArticles);
@@ -879,6 +895,8 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     listData,
     picksCount,
     show,
+    readHeld: readHeld.held,
+    notReadLine,
     tailCount: folded.tail.length,
     scoredCount: scoredRows.length,
     allRowsCount,

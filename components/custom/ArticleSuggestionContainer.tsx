@@ -32,6 +32,9 @@ import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
+import { useReadHeld } from '@/components/custom/cards/use-read-held';
+import { notReadLineKey } from '@/components/custom/cards/not-read-line';
+import { limitUnlockTime } from '@/components/custom/cards/reset-time';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import React from 'react';
@@ -180,6 +183,8 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const relevance = suggestion?.relevance ?? 0;
     const reason = relevanceReady ? suggestion?.reason ?? '' : '';
     const pendingMode = suggestion ? notePendingMode(suggestion, reasonWriting) : undefined;
+    // The detail screen reads the hold itself (one subscription per screen).
+    const readHeld = useReadHeld();
 
     const isCard = variant === 'card';
     const displayTitle = titleEnglish || t('feed.newsCluster');
@@ -235,7 +240,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         />
     ) : isSuggestion && suggestion && isNotRead(suggestion) ? (
         <Text size="sm" className="text-ink-3" testID="detail-not-read">
-            {t('feed.notRead.line')}
+            {t(notReadLineKey(readHeld), { time: limitUnlockTime(readHeld.resetAt) })}
         </Text>
     ) : null;
 
