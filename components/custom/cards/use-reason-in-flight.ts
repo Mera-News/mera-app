@@ -43,10 +43,10 @@ export function useReasonWriting(id: string): boolean {
     installPrune();
     const inFlight = useForYouStore((s) => s.reasonsInFlightIds.has(id));
     // A cloud batch held by the daily reading limit is not being written.
-  const hold = useReadHold();
-  const mode = useProcessingMode();
-  const held = mode !== ProcessingMode.OnDevice && hold.resetAt != null && isReadHeld();
-  const anchor = inFlight ? noteReasonInFlight(id) : null;
+    const hold = useReadHold();
+    const mode = useProcessingMode();
+    const held = mode !== ProcessingMode.OnDevice && hold.resetAt != null && isReadHeld();
+    const anchor = inFlight ? noteReasonInFlight(id) : null;
     // The anchor that expired, not the id: a re-entry gets a new anchor and starts fresh.
     const [expiredAnchor, setExpiredAnchor] = useState<number | null>(null);
     const expired =

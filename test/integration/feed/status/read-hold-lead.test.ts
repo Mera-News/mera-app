@@ -18,6 +18,8 @@ import { resetFeedSyncMemory, resetScoringWorld } from '../../data/feed-sync/ste
 jest.setTimeout(60_000);
 
 const HOUR = 3_600_000;
+/** Local noon: "today" and "tomorrow" cannot flip under the test near midnight. */
+const NOON = new Date(2026, 9, 15, 12, 0, 0).getTime();
 const t = i18n.t.bind(i18n) as unknown as (key: string, options?: object) => string;
 
 async function renderLead() {
@@ -37,7 +39,19 @@ describe('the counts card while the read hold is set', () => {
     resetFeedCountsMemoForTest();
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
   });
+  beforeEach(() => {
+    // Only the clock is faked; timers and promises stay real for the stores.
+    jest.useFakeTimers({
+      now: NOON,
+      doNotFake: [
+        'nextTick', 'setImmediate', 'clearImmediate', 'setTimeout', 'clearTimeout',
+        'setInterval', 'clearInterval', 'queueMicrotask', 'hrtime', 'performance',
+        'requestAnimationFrame', 'cancelAnimationFrame', 'requestIdleCallback', 'cancelIdleCallback',
+      ],
+    });
+  });
   afterEach(() => {
+    jest.useRealTimers();
     resetReadHold();
     setNotReadWaiting(null);
     resetStatusCard();
@@ -45,7 +59,7 @@ describe('the counts card while the read hold is set', () => {
   });
 
   it('is limited, and names the unread articles when a count is known', async () => {
-    const resetAt = Date.now() + 1000;
+    const resetAt = NOON + 2 * HOUR;
     await setReadHold({ resetAt });
     setNotReadWaiting(3);
     const { result } = await renderLead();
@@ -56,7 +70,7 @@ describe('the counts card while the read hold is set', () => {
   });
 
   it('uses the count-less sentence when nothing is known to be waiting', async () => {
-    const resetAt = Date.now() + 1000;
+    const resetAt = NOON + 2 * HOUR;
     await setReadHold({ resetAt });
     const { result } = await renderLead();
     expect(result.current.zeroText).toBe(t('feed.readHold.bodyToday', { time: limitUnlockTime(resetAt) }));
