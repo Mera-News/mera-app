@@ -243,6 +243,29 @@
       "score": "Đã tải bài viết mới, nhưng không thể xác định bài nào quan trọng với bạn. Kéo xuống để thử lại.",
       "storage": "Đã tải bài viết mới, nhưng không thể lưu vào điện thoại của bạn. Kéo xuống để thử lại.",
       "session": "Không thể làm mới Bảng tin vì phiên của bạn đã hết hạn. Đăng nhập lại để tiếp tục."
+    },
+    "notRead": {
+      "line": "Mera chưa đọc nội dung này.",
+      "a11y": "Mera chưa đọc",
+      "divider": "Đó là tất cả những gì Mera đã chọn. Bên dưới là các bài viết Mera chưa đọc."
+    },
+    "show": {
+      "title": "Hiển thị",
+      "all": "Tất cả",
+      "picks": "Mera chọn cho bạn",
+      "unread": "Mera chưa đọc",
+      "a11y": "Đang hiển thị {{show}}",
+      "sectionedNote": "Có trong Bảng tin liên tục",
+      "announce_other": "Đang hiển thị {{show}}, {{formatted}} bài viết",
+      "emptyPicks": "Mera chưa chọn gì cho bạn.",
+      "emptyUnread": "Mera đã đọc hết mọi thứ ở đây.",
+      "showAll": "Hiển thị tất cả bài viết"
+    },
+    "readHold": {
+      "waitingToday_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại hôm nay lúc {{time}}.",
+      "waitingTomorrow_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
+      "bodyToday": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
+      "bodyTomorrow": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}."
     }
   },
   "relevance": {
@@ -461,14 +484,14 @@
     "speedReason": "Lý do: {{ms}} ms mỗi bài",
     "speedResetNote": "Đo trong lần đồng bộ gần nhất. Sẽ bị xóa khi khởi động lại ứng dụng.",
     "bgRefreshTitle": "Làm mới trong nền",
-    "bgRefreshCloudIos": "Mera tải các bài viết mới khi ứng dụng đóng và bắt đầu xếp hạng chúng cho bạn. Điện thoại của bạn quyết định khi nào điều này xảy ra. Có thể không chạy ở Chế độ nguồn điện thấp hoặc khi Làm mới ứng dụng trong nền bị tắt. Tiêu tốn một ít pin và dữ liệu, cũng như tối đa một nửa giới hạn bài viết hàng ngày của bạn. Điều này không thay đổi việc sao lưu. Không có gì được chia sẻ ngoài những gì Mera đã sử dụng khi ứng dụng đang mở.",
-    "bgRefreshCloudAndroid": "Mera tải các bài viết mới khi ứng dụng đóng và bắt đầu xếp hạng chúng cho bạn. Điện thoại của bạn quyết định khi nào điều này xảy ra. Có thể không chạy khi Trình tiết kiệm pin được bật. Tiêu tốn một ít pin và dữ liệu, cũng như tối đa một nửa giới hạn bài viết hàng ngày của bạn. Điều này không thay đổi việc sao lưu. Không có gì được chia sẻ ngoài những gì Mera đã sử dụng khi ứng dụng đang mở.",
-    "bgRefreshOnDevice": "Mera tải các bài viết mới khi ứng dụng đóng. Điện thoại của bạn xếp hạng chúng khi bạn mở ứng dụng. Tiêu tốn một ít pin và dữ liệu, cũng như tối đa một nửa giới hạn bài viết hàng ngày của bạn. Điều này không thay đổi việc sao lưu.",
+    "bgRefreshCloudIos": "Mera tải các bài viết mới khi ứng dụng đóng và bắt đầu xếp hạng chúng cho bạn. Điện thoại của bạn quyết định khi nào điều này xảy ra. Có thể không chạy ở Chế độ nguồn điện thấp hoặc khi Làm mới ứng dụng trong nền bị tắt. Tiêu tốn một ít pin và dữ liệu, cũng như một phần lượt đọc hằng ngày của Mera dành cho bạn. Điều này không thay đổi việc sao lưu. Không có gì được chia sẻ ngoài những gì Mera đã sử dụng khi ứng dụng đang mở.",
+    "bgRefreshCloudAndroid": "Mera tải các bài viết mới khi ứng dụng đóng và bắt đầu xếp hạng chúng cho bạn. Điện thoại của bạn quyết định khi nào điều này xảy ra. Có thể không chạy khi Trình tiết kiệm pin được bật. Tiêu tốn một ít pin và dữ liệu, cũng như một phần lượt đọc hằng ngày của Mera dành cho bạn. Điều này không thay đổi việc sao lưu. Không có gì được chia sẻ ngoài những gì Mera đã sử dụng khi ứng dụng đang mở.",
+    "bgRefreshOnDevice": "Mera tải các bài viết mới khi ứng dụng đóng. Điện thoại của bạn xếp hạng chúng khi bạn mở ứng dụng. Tiêu tốn một ít pin và dữ liệu. Điều này không thay đổi việc sao lưu.",
     "cantRun": "Điện thoại này không chạy được",
     "chatGroup": "Trò chuyện",
     "encrypted": "Được mã hóa. Mera không thể đọc.",
-    "explainerCan": "Với “Trên điện thoại này”, Mera AI chạy trên điện thoại của bạn, còn tin tức vẫn được lấy qua mạng. Với “Đám mây riêng”, AI chạy ở dạng được mã hóa, nên Mera không thể đọc.",
-    "explainerCant": "Với “Trên điện thoại này”, Mera AI chạy trên điện thoại của bạn, còn tin tức vẫn được lấy qua mạng. Việc này cần một điện thoại đủ mạnh. Chiếc này không đủ, nên Mera dùng “Đám mây riêng”.",
+    "explainerCan": "Với “Trên điện thoại này”, Mera AI chạy trên điện thoại của bạn, việc đọc không giới hạn, còn tin tức vẫn được lấy qua mạng. Với “Đám mây riêng”, AI chạy ở dạng được mã hóa, nên Mera không thể đọc, và gói của bạn quy định Mera đọc bao nhiêu mỗi ngày.",
+    "explainerCant": "Với “Trên điện thoại này”, Mera AI chạy trên các điện thoại được hỗ trợ với việc đọc không giới hạn, còn tin tức vẫn được lấy qua mạng. Chiếc điện thoại này không chạy được, nên Mera dùng “Đám mây riêng”, và gói của bạn quy định Mera đọc bao nhiêu mỗi ngày.",
     "staysPrivateBody": "Mera Protocol luôn bật. Các dữ kiện của bạn không bao giờ rời khỏi điện thoại này khi chưa được mã hóa.",
     "staysPrivateTitle": "Dữ liệu của bạn vẫn riêng tư",
     "webSearchShort": "Chỉ những từ tìm kiếm rời khỏi điện thoại của bạn, thông qua máy chủ của Mera. Công cụ tìm kiếm không bao giờ biết bạn là ai.",
@@ -497,7 +520,7 @@
       "signInRecordIos": "Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple rằng đây là ứng dụng thật không được giữ lại.",
       "signInRecordAndroid": "Một bản ghi đăng nhập cho điện thoại này, không phải ID điện thoại của bạn, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Google rằng đây là ứng dụng thật không được giữ lại.",
       "signInRecordGeneric": "Nếu không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple hoặc Google rằng đây là ứng dụng thật không được giữ lại.",
-      "usage": "Số bài viết được gửi đến điện thoại này mỗi ngày, để áp dụng giới hạn gói của bạn, và những ngày bạn dùng Mera. Được giữ trong 90 ngày. Các lần đăng nhập không lưu địa chỉ IP hay thông tin trình duyệt.",
+      "usage": "Lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn mỗi ngày và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), số bài viết được gửi đến điện thoại này mỗi ngày, thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera. Được giữ trong 90 ngày. Các lần đăng nhập không lưu địa chỉ IP hay thông tin trình duyệt.",
       "topics": "Cụm từ chủ đề, chỉ lưu theo văn bản, không có gì liên kết chúng với bạn, và bị xóa sau 14 ngày không dùng.",
       "privacyLink": "Đọc chính sách quyền riêng tư"
     },
@@ -844,8 +867,8 @@
     "planPending": "{{plan}} · đang kích hoạt",
     "perMonth": "/tháng",
     "starterFreeTitle": "Bạn đang dùng Starter, miễn phí",
-    "starterFreeBody": "Chúng tôi muốn bạn thấy Mera dùng để làm gì, nên mọi tài khoản đều có trọn gói Starter miễn phí. Đó là 250 bài mỗi ngày, tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi.",
-    "analysedForYou": "Đã phân tích cho bạn",
+    "starterFreeBody": "Mọi tài khoản đều có trọn gói Cơ bản miễn phí: tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi. Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Trên các điện thoại được hỗ trợ, việc đọc trên điện thoại không giới hạn ở mọi gói.",
+    "analysedForYou": "Mera đã đọc",
     "articlesUsedToday": "Bài viết đã dùng hôm nay",
     "available24h": "Còn lại, trong 24 giờ qua",
     "discarded": "Đã loại bỏ",
@@ -859,7 +882,8 @@
     "confirmingBody": "Thường chỉ mất vài giây. Bạn có thể ở lại đây.",
     "confirmTimeoutTitle": "Chúng tôi chưa thể xác nhận giao dịch mua của bạn",
     "confirmTimeoutBody": "Nếu bạn đã thanh toán, hãy liên hệ bộ phận hỗ trợ và chúng tôi sẽ giải quyết.",
-    "checkAgain": "Kiểm tra lại"
+    "checkAgain": "Kiểm tra lại",
+    "readingExplainer": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói của bạn quy định Mera đọc bao nhiêu mỗi ngày: gói Cá nhân có lượt đọc gấp 5x gói Cơ bản, gói Chuyên nghiệp gấp 20x. Trên các điện thoại được hỗ trợ, việc đọc trên điện thoại không giới hạn ở mọi gói."
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -911,7 +935,7 @@
     "expandA11y": "Hiển thị chi tiết trạng thái bản tin",
     "modeProcessing": "Đang cập nhật bảng tin của bạn",
     "modeError": "Sự cố bảng tin",
-    "modeLimited": "Đã đạt giới hạn bài viết hằng ngày",
+    "modeLimited": "Mera đã dùng hết lượt đọc hôm nay",
     "syncDoneA11y": "Bảng tin của bạn đã được cập nhật.",
     "collapseA11y": "Ẩn chi tiết trạng thái bản tin",
     "deviceProgress": "Chấm điểm trên thiết bị",
@@ -920,7 +944,10 @@
     "relevant": "Có liên quan cho đến lúc này",
     "lastProcessed": "Xử lý lần cuối",
     "limitUpgrade": "Hoặc <0>nâng cấp gói của bạn</0>.",
-    "tryNow": "Thử ngay"
+    "tryNow": "Thử ngay",
+    "seePlans": "Xem các gói",
+    "readOnPhone": "Thay vào đó, đọc trên điện thoại này",
+    "readingAgainA11y": "Mera đang đọc lại."
   },
   "trackedStories": {
     "emptyTitle": "Chưa theo dõi câu chuyện nào",
@@ -957,8 +984,8 @@
     "gotIt": "Đã hiểu",
     "starterTitle": "Starter do chúng tôi mời",
     "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
-    "starterArticlesTitle": "250 bài mỗi ngày",
-    "starterArticlesBody": "Mera phân tích tối đa 250 bài mỗi ngày cho bạn.",
+    "starterArticlesTitle": "Mọi bài viết phù hợp",
+    "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên.",
     "starterInterestsTitle": "Tất cả mối quan tâm của bạn",
     "starterInterestsBody": "Thêm bao nhiêu tùy bạn. Mera theo dõi tất cả.",
     "starterChatTitle": "Trò chuyện và kiểm chứng",
@@ -969,8 +996,8 @@
   "notificationCenter": {
     "title": "Thông báo",
     "empty": "Bạn đã xem hết rồi",
-    "dailyLimitTitle": "Đã đạt giới hạn tin tức hằng ngày",
-    "dailyLimitBody": "Bạn đã đạt giới hạn bài viết hôm nay. Giới hạn này sẽ sớm được đặt lại.",
+    "dailyLimitTitle": "Mera đã dùng hết lượt đọc hôm nay",
+    "dailyLimitBody": "Mera sẽ đọc cho bạn trở lại sau khi lượt đọc được đặt lại mỗi ngày.",
     "emptyBody": "Mọi việc cần bạn, như dọn dẹp hồ sơ hay một câu hỏi từ Mera, sẽ hiện ở đây.",
     "settingsLink": "Cài đặt thông báo",
     "help": {
@@ -1806,7 +1833,7 @@
             "steps": {
               "0": "Các cụm chủ đề ngắn, vì vậy có cái gì đó để đối sánh những câu chuyện với.",
               "1": "Cách bạn đăng nhập, bằng email hoặc bằng điện thoại này, và bạn đang dùng gói nào.",
-              "2": "Các bài viết điện thoại của bạn yêu cầu, được đếm theo ngày để giữ giới hạn của gói công bằng."
+              "2": "Các bài viết điện thoại của bạn yêu cầu, và văn bản đã mã hóa mà Mera gửi để đọc cho bạn, được đếm theo ngày để áp dụng gói của bạn."
             },
             "ask": "Ứng dụng gửi những gì cho máy chủ của bạn?"
           },
@@ -1824,7 +1851,7 @@
           },
           "what-we-keep": {
             "headline": "Những gì chúng tôi giữ lại",
-            "body": "Email đăng nhập của bạn, nếu bạn đã thêm. Bạn đang dùng gói nào. Số bài viết được gửi đến bạn mỗi ngày và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Nếu bạn dùng Mera không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
+            "body": "Email đăng nhập của bạn, nếu bạn đã thêm. Bạn đang dùng gói nào. Số bài viết được gửi đến bạn mỗi ngày, lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Nếu bạn dùng Mera không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
             "ask": "Mera lưu trữ những gì về tôi trên máy chủ của nó?"
           }
         }
@@ -2753,7 +2780,18 @@
       "privateCloud": "Đám mây riêng",
       "signedInPhone": "Đăng nhập bằng điện thoại này",
       "version": "Phiên bản {{version}} · Mera Labs B.V.",
-      "yourData": "Dữ liệu của bạn"
+      "yourData": "Dữ liệu của bạn",
+      "readingToday": "Lượt đọc hôm nay của Mera",
+      "readingUsed": "Đã dùng {{percent}}",
+      "readingDone": "Xong cho hôm nay",
+      "resetsTodayAt": "Đặt lại hôm nay lúc {{time}}",
+      "resetsTomorrowAt": "Đặt lại ngày mai lúc {{time}}",
+      "lastUpdated": "Cập nhật lần cuối {{time}}",
+      "onDeviceUnlimited": "Đọc trên thiết bị: không giới hạn",
+      "readingOnPhone": "Mera đang đọc trên điện thoại này.",
+      "newPlanApplies": "Gói mới của bạn đã có hiệu lực.",
+      "planMultiplierBase": "Lượt đọc hằng ngày của gói Cơ bản",
+      "planMultiplier": "Gấp {{n}}x lượt đọc của gói Cơ bản"
     },
     "notifications": {
       "push": "Thông báo đẩy",

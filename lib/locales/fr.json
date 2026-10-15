@@ -248,6 +248,32 @@
       "score": "De nouveaux articles ont été téléchargés, mais impossible de déterminer ceux qui comptent pour vous. Tirez vers le bas pour réessayer.",
       "storage": "De nouveaux articles ont été téléchargés, mais impossible de les enregistrer sur votre téléphone. Tirez vers le bas pour réessayer.",
       "session": "Impossible d'actualiser votre Fil d'actu, car votre session a expiré. Reconnectez-vous pour continuer."
+    },
+    "notRead": {
+      "line": "Mera n'a pas encore lu cet article.",
+      "a11y": "Pas encore lu par Mera",
+      "divider": "Voilà tout ce que Mera a sélectionné. Ci-dessous, les articles que Mera n'a pas encore lus."
+    },
+    "show": {
+      "title": "Afficher",
+      "all": "Tous",
+      "picks": "Choix de Mera",
+      "unread": "Pas encore lu par Mera",
+      "a11y": "Affichage : {{show}}",
+      "sectionedNote": "Disponible dans la vue Fil continu",
+      "announce_one": "Affichage : {{show}}, {{formatted}} article",
+      "announce_other": "Affichage : {{show}}, {{formatted}} articles",
+      "emptyPicks": "Mera n'a encore rien sélectionné pour vous.",
+      "emptyUnread": "Mera a lu tout ce qui se trouve ici.",
+      "showAll": "Afficher tous les articles"
+    },
+    "readHold": {
+      "waitingToday_one": "Mera a utilisé la lecture du jour. {{formatted}} article ci-dessous n'est pas encore lu. Mera reprend la lecture aujourd'hui à {{time}}.",
+      "waitingToday_other": "Mera a utilisé la lecture du jour. {{formatted}} articles ci-dessous ne sont pas encore lus. Mera reprend la lecture aujourd'hui à {{time}}.",
+      "waitingTomorrow_one": "Mera a utilisé la lecture du jour. {{formatted}} article ci-dessous n'est pas encore lu. Mera reprend la lecture demain à {{time}}.",
+      "waitingTomorrow_other": "Mera a utilisé la lecture du jour. {{formatted}} articles ci-dessous ne sont pas encore lus. Mera reprend la lecture demain à {{time}}.",
+      "bodyToday": "Mera a utilisé la lecture du jour. Mera reprend la lecture aujourd'hui à {{time}}.",
+      "bodyTomorrow": "Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}."
     }
   },
   "relevance": {
@@ -466,14 +492,14 @@
     "speedReason": "Raisons : {{ms}} ms par article",
     "speedResetNote": "Mesuré lors de votre dernière synchronisation. Effacé au redémarrage de l'app.",
     "bgRefreshTitle": "Actualisation en arrière-plan",
-    "bgRefreshCloudIos": "Mera récupère les nouveaux articles lorsque l'application est fermée et commence à les classer pour vous. Votre téléphone décide quand cela se produit. Cela peut ne pas fonctionner en Mode Économie d'énergie ou lorsque l'actualisation en arrière-plan est désactivée. Utilise de la batterie et des données, et jusqu'à la moitié de votre limite quotidienne d'articles. Cela ne change pas la sauvegarde. Rien n'est partagé au-delà de ce que Mera utilise déjà lorsque l'application est ouverte.",
-    "bgRefreshCloudAndroid": "Mera récupère les nouveaux articles lorsque l'application est fermée et commence à les classer pour vous. Votre téléphone décide quand cela se produit. Cela peut ne pas fonctionner quand l'Économiseur de batterie est activé. Utilise de la batterie et des données, et jusqu'à la moitié de votre limite quotidienne d'articles. Cela ne change pas la sauvegarde. Rien n'est partagé au-delà de ce que Mera utilise déjà lorsque l'application est ouverte.",
-    "bgRefreshOnDevice": "Mera récupère les nouveaux articles lorsque l'application est fermée. Votre téléphone les classe lorsque vous ouvrez l'application. Utilise de la batterie et des données, et jusqu'à la moitié de votre limite quotidienne d'articles. Cela ne change pas la sauvegarde.",
+    "bgRefreshCloudIos": "Mera récupère les nouveaux articles lorsque l'application est fermée et commence à les classer pour vous. Votre téléphone décide quand cela se produit. Cela peut ne pas fonctionner en Mode Économie d'énergie ou lorsque l'actualisation en arrière-plan est désactivée. Utilise de la batterie et des données, et une partie de la lecture quotidienne de Mera pour vous. Cela ne change pas la sauvegarde. Rien n'est partagé au-delà de ce que Mera utilise déjà lorsque l'application est ouverte.",
+    "bgRefreshCloudAndroid": "Mera récupère les nouveaux articles lorsque l'application est fermée et commence à les classer pour vous. Votre téléphone décide quand cela se produit. Cela peut ne pas fonctionner quand l'Économiseur de batterie est activé. Utilise de la batterie et des données, et une partie de la lecture quotidienne de Mera pour vous. Cela ne change pas la sauvegarde. Rien n'est partagé au-delà de ce que Mera utilise déjà lorsque l'application est ouverte.",
+    "bgRefreshOnDevice": "Mera récupère les nouveaux articles lorsque l'application est fermée. Votre téléphone les classe lorsque vous ouvrez l'application. Utilise de la batterie et des données. Cela ne change pas la sauvegarde.",
     "cantRun": "Ce téléphone ne peut pas l'exécuter",
     "chatGroup": "Chat",
     "encrypted": "Chiffré. Mera ne peut pas le lire.",
-    "explainerCan": "Avec « Sur ce téléphone », Mera AI s'exécute sur votre téléphone, et les actualités arrivent toujours en ligne. Avec « Cloud privé », il s'exécute chiffré, donc Mera ne peut pas le lire.",
-    "explainerCant": "Avec « Sur ce téléphone », Mera AI s'exécute sur votre téléphone, et les actualités arrivent toujours en ligne. Il faut pour cela un téléphone performant. Celui-ci ne l'est pas, donc Mera utilise « Cloud privé ».",
+    "explainerCan": "Avec « Sur ce téléphone », Mera AI s'exécute sur votre téléphone, la lecture est illimitée, et les actualités arrivent toujours en ligne. Avec « Cloud privé », il s'exécute chiffré, donc Mera ne peut pas le lire, et votre forfait définit combien Mera lit chaque jour.",
+    "explainerCant": "Avec « Sur ce téléphone », Mera AI s'exécute sur les téléphones compatibles avec une lecture illimitée, et les actualités arrivent toujours en ligne. Celui-ci ne peut pas le faire tourner, donc Mera utilise « Cloud privé », et votre forfait définit combien Mera lit chaque jour.",
     "staysPrivateBody": "Mera Protocol est toujours actif. Vos faits ne quittent jamais ce téléphone sans être chiffrés.",
     "staysPrivateTitle": "Vos données restent privées",
     "webSearchShort": "Seuls les mots de recherche quittent votre téléphone, via le serveur de Mera. Le moteur de recherche ne sait jamais qui vous êtes.",
@@ -502,7 +528,7 @@
       "signInRecordIos": "Une trace de connexion pour ce téléphone, supprimée avec votre compte. La vérification d'Apple indiquant qu'il s'agit de la vraie app n'est pas conservée.",
       "signInRecordAndroid": "Une trace de connexion pour ce téléphone, pas l'identifiant de votre téléphone, supprimée avec votre compte. La vérification de Google indiquant qu'il s'agit de la vraie app n'est pas conservée.",
       "signInRecordGeneric": "Sans e-mail, une trace de connexion pour ce téléphone, supprimée avec votre compte. La vérification d'Apple ou de Google indiquant qu'il s'agit de la vraie app n'est pas conservée.",
-      "usage": "Un décompte quotidien des articles envoyés à ce téléphone, pour appliquer la limite de votre forfait, et les jours où vous avez utilisé Mera. Conservé pendant 90 jours. Les connexions ne gardent ni adresse IP ni détails du navigateur.",
+      "usage": "Combien de texte chiffré Mera a envoyé pour être lu pour vous chaque jour, et en combien de requêtes (jamais le texte lui-même), combien d'articles ont été envoyés à ce téléphone chaque jour, quand vous avez atteint la lecture quotidienne de votre forfait, et les jours où vous avez utilisé Mera. Conservé pendant 90 jours. Les connexions ne gardent ni adresse IP ni détails du navigateur.",
       "topics": "Les expressions de sujet, stockées par leur seul texte sans rien qui les relie à vous, et supprimées après 14 jours sans utilisation.",
       "privacyLink": "Lire la politique de confidentialité"
     },
@@ -850,8 +876,8 @@
     "planPending": "{{plan}} · activation",
     "perMonth": "/mois",
     "starterFreeTitle": "Vous êtes sur Starter, gratuitement",
-    "starterFreeBody": "Nous voulons que vous voyiez à quoi sert Mera, alors chaque compte inclut le forfait Starter complet sans frais. Cela fait 250 articles par jour, tous vos centres d'intérêt, le chat, les vérifications et les histoires suivies.",
-    "analysedForYou": "Analysés pour vous",
+    "starterFreeBody": "Chaque compte inclut le forfait Starter complet sans frais : tous vos centres d'intérêt, le chat, les vérifications et les histoires suivies. Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Sur les téléphones compatibles, la lecture sur le téléphone est illimitée sur chaque forfait.",
+    "analysedForYou": "Lus par Mera",
     "articlesUsedToday": "Articles utilisés aujourd'hui",
     "available24h": "Disponibles, 24 dernières heures",
     "discarded": "Écartés",
@@ -865,7 +891,8 @@
     "confirmingBody": "Cela prend généralement quelques secondes. Vous pouvez rester ici.",
     "confirmTimeoutTitle": "Nous n'avons pas encore pu confirmer votre achat",
     "confirmTimeoutBody": "Si vous avez payé, contactez le support et nous réglerons cela.",
-    "checkAgain": "Vérifier à nouveau"
+    "checkAgain": "Vérifier à nouveau",
+    "readingExplainer": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Votre forfait définit combien Mera lit chaque jour : Individuel reçoit 5x la lecture de Starter, Professionnel 20x. Sur les téléphones compatibles, la lecture sur le téléphone est illimitée sur chaque forfait."
   },
   "tabs": {
     "deck": "Fil d'actu",
@@ -917,7 +944,7 @@
     "expandA11y": "Afficher les détails de l'état du fil",
     "modeProcessing": "Mise à jour de votre fil",
     "modeError": "Problème de fil",
-    "modeLimited": "Limite quotidienne d'articles atteinte",
+    "modeLimited": "Mera a utilisé la lecture du jour",
     "syncDoneA11y": "Ton fil est à jour.",
     "collapseA11y": "Masquer les détails de l'état du fil",
     "deviceProgress": "Évaluation sur l'appareil",
@@ -926,7 +953,10 @@
     "relevant": "Pertinent pour l'instant",
     "lastProcessed": "Dernier traitement",
     "limitUpgrade": "Ou <0>passez à un forfait supérieur</0>.",
-    "tryNow": "Essayer maintenant"
+    "tryNow": "Essayer maintenant",
+    "seePlans": "Voir les forfaits",
+    "readOnPhone": "Lire plutôt sur ce téléphone",
+    "readingAgainA11y": "Mera reprend la lecture."
   },
   "trackedStories": {
     "emptyTitle": "Aucune actualité suivie pour l'instant",
@@ -963,8 +993,8 @@
     "gotIt": "Compris",
     "starterTitle": "Starter est offert",
     "starterIntro": "Pour que vous voyiez à quoi sert Mera, chaque compte inclut désormais le forfait Starter complet, sans frais.",
-    "starterArticlesTitle": "250 articles par jour",
-    "starterArticlesBody": "Mera analyse jusqu'à 250 articles pour vous chaque jour.",
+    "starterArticlesTitle": "Chaque article correspondant",
+    "starterArticlesBody": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel.",
     "starterInterestsTitle": "Tous vos centres d'intérêt",
     "starterInterestsBody": "Ajoutez-en autant que vous voulez. Mera les suit tous.",
     "starterChatTitle": "Chat et vérifications",
@@ -975,8 +1005,8 @@
   "notificationCenter": {
     "title": "Notifications",
     "empty": "Vous êtes à jour",
-    "dailyLimitTitle": "Limite quotidienne d'actualités atteinte",
-    "dailyLimitBody": "Vous avez atteint la limite d'articles du jour. Elle se réinitialise bientôt.",
+    "dailyLimitTitle": "Mera a utilisé la lecture du jour",
+    "dailyLimitBody": "Mera reprend sa lecture pour vous après la réinitialisation quotidienne.",
     "emptyBody": "Tout ce qui demande votre attention, comme un nettoyage de profil ou une question de Mera, apparaît ici.",
     "settingsLink": "Paramètres des notifications",
     "help": {
@@ -1814,7 +1844,7 @@
             "steps": {
               "0": "De courtes expressions de sujet, pour avoir de quoi comparer les actualités.",
               "1": "Votre façon de vous connecter, par e-mail ou avec ce téléphone, et le forfait que vous avez.",
-              "2": "Les articles que demande votre téléphone, comptés par jour pour garder ce forfait honnête."
+              "2": "Les articles que demande votre téléphone, et le texte chiffré que Mera envoie pour être lu pour vous, comptés par jour pour appliquer votre forfait."
             },
             "ask": "Qu'est-ce que l'application envoie aux serveurs de Mera ?"
           },
@@ -1832,7 +1862,7 @@
           },
           "what-we-keep": {
             "headline": "Ce que nous gardons",
-            "body": "Votre e-mail de connexion, si vous en avez ajouté un. Le forfait que vous avez. Un décompte quotidien des articles qui vous sont envoyés et des jours où vous avez utilisé Mera, conservé 90 jours. Vos horaires de notification, votre langue et votre choix de traitement. Les réponses que vous envoyez aux questions de l'équipe Mera. Si vous utilisez Mera sans e-mail, une trace de connexion pour ce téléphone, supprimée avec votre compte. Les expressions de sujet sont mises en cache par leur seul texte, sans rien qui indique qui les a demandées, et supprimées après quatorze jours sans utilisation.",
+            "body": "Votre e-mail de connexion, si vous en avez ajouté un. Le forfait que vous avez. Un décompte quotidien des articles qui vous sont envoyés, le volume de texte chiffré que Mera a envoyé pour être lu pour vous et en combien de requêtes (jamais le texte lui-même), le moment où vous avez atteint la lecture quotidienne de votre forfait, et les jours où vous avez utilisé Mera, conservé 90 jours. Vos horaires de notification, votre langue et votre choix de traitement. Les réponses que vous envoyez aux questions de l'équipe Mera. Si vous utilisez Mera sans e-mail, une trace de connexion pour ce téléphone, supprimée avec votre compte. Les expressions de sujet sont mises en cache par leur seul texte, sans rien qui indique qui les a demandées, et supprimées après quatorze jours sans utilisation.",
             "ask": "Qu'est-ce que Mera stocke de moi sur ses serveurs ?"
           }
         }
@@ -2764,7 +2794,18 @@
       "privateCloud": "Cloud privé",
       "signedInPhone": "Connecté avec ce téléphone",
       "version": "Version {{version}} · Mera Labs B.V.",
-      "yourData": "Vos données"
+      "yourData": "Vos données",
+      "readingToday": "Lecture de Mera aujourd'hui",
+      "readingUsed": "{{percent}} utilisé",
+      "readingDone": "Terminé pour aujourd'hui",
+      "resetsTodayAt": "Réinitialisation aujourd'hui à {{time}}",
+      "resetsTomorrowAt": "Réinitialisation demain à {{time}}",
+      "lastUpdated": "Dernière mise à jour à {{time}}",
+      "onDeviceUnlimited": "Lecture sur l'appareil : illimitée",
+      "readingOnPhone": "Mera lit sur ce téléphone.",
+      "newPlanApplies": "Votre nouveau forfait s'applique dès maintenant.",
+      "planMultiplierBase": "Lecture quotidienne Starter",
+      "planMultiplier": "{{n}}x la lecture de Starter"
     },
     "notifications": {
       "push": "Notifications push",

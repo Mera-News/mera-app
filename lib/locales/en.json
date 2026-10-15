@@ -111,8 +111,8 @@
     "active": "Active",
     "planPending": "{{plan}} · activating",
     "starterFreeTitle": "You're on Starter, free",
-    "starterFreeBody": "We want you to see what Mera is for, so every account includes the full Starter plan at no cost. That is 250 articles a day, all your interests, chat, fact checks and followed stories.",
-    "analysedForYou": "Analysed for you",
+    "starterFreeBody": "Every account includes the full Starter plan at no cost: all your interests, chat, fact checks and followed stories. Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. On supported phones, reading on the phone is unlimited on every plan.",
+    "analysedForYou": "Read by Mera",
     "articlesUsedToday": "Articles used today",
     "available24h": "Available, last 24 hours",
     "discarded": "Discarded",
@@ -126,7 +126,8 @@
     "confirmingBody": "This usually takes a few seconds. You can stay here.",
     "confirmTimeoutTitle": "We couldn't confirm your purchase yet",
     "confirmTimeoutBody": "If you paid, talk to support and we'll sort it out.",
-    "checkAgain": "Check again"
+    "checkAgain": "Check again",
+    "readingExplainer": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Your plan sets how much Mera reads each day: Individual gets 5x the reading of Starter, Professional 20x. On supported phones, reading on the phone is unlimited on every plan."
   },
   "feed": {
     "allCaughtUp": "You're all caught up with what impacts you.",
@@ -278,6 +279,32 @@
       "score": "Downloaded new articles, but couldn't work out which ones matter to you. Pull down to try again.",
       "storage": "Downloaded new articles, but couldn't save them on your phone. Pull down to try again.",
       "session": "Couldn't refresh your Feed because your session expired. Sign in again to continue."
+    },
+    "notRead": {
+      "line": "Mera hasn't read this yet.",
+      "a11y": "Not read by Mera yet",
+      "divider": "That's everything Mera picked. Below are articles Mera hasn't read yet."
+    },
+    "show": {
+      "title": "Show",
+      "all": "All",
+      "picks": "Mera's picks",
+      "unread": "Not read by Mera",
+      "a11y": "Showing {{show}}",
+      "sectionedNote": "Available in the Continuous view",
+      "announce_one": "Showing {{show}}, {{formatted}} article",
+      "announce_other": "Showing {{show}}, {{formatted}} articles",
+      "emptyPicks": "Mera hasn't picked anything for you yet.",
+      "emptyUnread": "Mera has read everything here.",
+      "showAll": "Show all articles"
+    },
+    "readHold": {
+      "waitingToday_one": "Mera has used today's reading. {{formatted}} article below is still unread. Mera reads again today at {{time}}.",
+      "waitingToday_other": "Mera has used today's reading. {{formatted}} articles below are still unread. Mera reads again today at {{time}}.",
+      "waitingTomorrow_one": "Mera has used today's reading. {{formatted}} article below is still unread. Mera reads again tomorrow at {{time}}.",
+      "waitingTomorrow_other": "Mera has used today's reading. {{formatted}} articles below are still unread. Mera reads again tomorrow at {{time}}.",
+      "bodyToday": "Mera has used today's reading. Mera reads again today at {{time}}.",
+      "bodyTomorrow": "Mera has used today's reading. Mera reads again tomorrow at {{time}}."
     }
   },
   "relevance": {
@@ -480,7 +507,7 @@
     "expandA11y": "Show feed status details",
     "modeProcessing": "Updating your feed",
     "modeError": "Feed problem",
-    "modeLimited": "Daily article limit reached",
+    "modeLimited": "Mera has used today's reading",
     "syncDoneA11y": "Your feed is up to date.",
     "collapseA11y": "Hide feed status details",
     "deviceProgress": "On-device scoring",
@@ -489,7 +516,10 @@
     "relevant": "Relevant so far",
     "lastProcessed": "Last processed",
     "limitUpgrade": "Or <0>upgrade your plan</0>.",
-    "tryNow": "Try now"
+    "tryNow": "Try now",
+    "seePlans": "See plans",
+    "readOnPhone": "Read on this phone instead",
+    "readingAgainA11y": "Mera is reading again."
   },
   "trackedStories": {
     "followChatIntro": "Tell me what you'd like to follow and I'll set it up.",
@@ -528,8 +558,8 @@
     "gotIt": "Got it",
     "starterTitle": "Starter is on us",
     "starterIntro": "To help you see what Mera is for, every account now includes the full Starter plan at no cost.",
-    "starterArticlesTitle": "250 articles a day",
-    "starterArticlesBody": "Mera analyses up to 250 articles for you every day.",
+    "starterArticlesTitle": "Every matching article",
+    "starterArticlesBody": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters.",
     "starterInterestsTitle": "All your interests",
     "starterInterestsBody": "Add as many as you like. Mera follows every one.",
     "starterChatTitle": "Chat and fact checks",
@@ -540,8 +570,8 @@
   "notificationCenter": {
     "title": "Notifications",
     "empty": "You're all caught up",
-    "dailyLimitTitle": "Daily news limit reached",
-    "dailyLimitBody": "You've reached today's article limit. It resets soon.",
+    "dailyLimitTitle": "Mera has used today's reading",
+    "dailyLimitBody": "Mera reads for you again after the daily reset.",
     "emptyBody": "Anything that needs you, like a profile cleanup or a question from Mera, shows up here.",
     "settingsLink": "Notification settings",
     "help": {
@@ -719,14 +749,14 @@
     "speedReason": "Reasons: {{ms}} ms per article",
     "speedResetNote": "Measured during your last sync. Clears when the app restarts.",
     "bgRefreshTitle": "Background refresh",
-    "bgRefreshCloudIos": "Mera gets new articles while the app is closed and starts ranking them for you. Your phone decides when this happens. It may not run in Low Power Mode or when Background App Refresh is off. Uses some battery and data, and up to half of your daily article limit. This doesn't change Backup. Nothing is shared beyond what Mera already uses when the app is open.",
-    "bgRefreshCloudAndroid": "Mera gets new articles while the app is closed and starts ranking them for you. Your phone decides when this happens. It may not run when Battery Saver is on. Uses some battery and data, and up to half of your daily article limit. This doesn't change Backup. Nothing is shared beyond what Mera already uses when the app is open.",
-    "bgRefreshOnDevice": "Mera gets new articles while the app is closed. Your phone ranks them when you open the app. Uses some battery and data, and up to half of your daily article limit. This doesn't change Backup.",
+    "bgRefreshCloudIos": "Mera gets new articles while the app is closed and starts ranking them for you. Your phone decides when this happens. It may not run in Low Power Mode or when Background App Refresh is off. Uses some battery and data, and part of Mera's daily reading for you. This doesn't change Backup. Nothing is shared beyond what Mera already uses when the app is open.",
+    "bgRefreshCloudAndroid": "Mera gets new articles while the app is closed and starts ranking them for you. Your phone decides when this happens. It may not run when Battery Saver is on. Uses some battery and data, and part of Mera's daily reading for you. This doesn't change Backup. Nothing is shared beyond what Mera already uses when the app is open.",
+    "bgRefreshOnDevice": "Mera gets new articles while the app is closed. Your phone ranks them when you open the app. Uses some battery and data. This doesn't change Backup.",
     "cantRun": "This phone can't run it",
     "chatGroup": "Chat",
     "encrypted": "Encrypted. Mera can't read it.",
-    "explainerCan": "With On this phone, Mera AI runs on your phone, and news still comes online. With Private cloud, it runs encrypted, so Mera can't read it.",
-    "explainerCant": "With On this phone, Mera AI runs on your phone, and news still comes online. That needs a capable phone. This one isn't, so Mera uses Private cloud.",
+    "explainerCan": "With On this phone, Mera AI runs on your phone, reading is unlimited, and news still comes online. With Private cloud, it runs encrypted, so Mera can't read it, and your plan sets how much Mera reads each day.",
+    "explainerCant": "With On this phone, Mera AI runs on supported phones with unlimited reading, and news still comes online. This phone can't run it, so Mera uses Private cloud, and your plan sets how much Mera reads each day.",
     "staysPrivateBody": "Mera Protocol is always on. Your facts never leave this phone unencrypted.",
     "staysPrivateTitle": "Your data stays private",
     "webSearchShort": "Only the search words leave your phone, through Mera's server. The search engine never learns who you are.",
@@ -755,7 +785,7 @@
       "signInRecordIos": "A sign-in record for this phone, deleted with your account. Apple's check that this is the real app is not kept.",
       "signInRecordAndroid": "A sign-in record for this phone, not your phone's ID, deleted with your account. Google's check that this is the real app is not kept.",
       "signInRecordGeneric": "Without an email, a sign-in record for this phone, deleted with your account. The Apple or Google check that this is the real app is not kept.",
-      "usage": "A daily count of articles sent to this phone, to apply your plan's limit, and which days you used Mera. Kept for 90 days. Sign-ins keep no IP address or browser details.",
+      "usage": "How much encrypted text Mera sent to be read for you each day and in how many requests (never the text itself), how many articles were sent to this phone each day, when you reached your plan's daily reading, and which days you used Mera. Kept for 90 days. Sign-ins keep no IP address or browser details.",
       "topics": "Topic phrases, stored by their text alone with nothing linking them to you, and deleted after 14 days unused.",
       "privacyLink": "Read the privacy policy"
     },
@@ -1927,7 +1957,7 @@
             "steps": {
               "0": "Short topic phrases, so there is something to match stories against.",
               "1": "How you sign in, by email or by this phone, and which plan you are on.",
-              "2": "The articles your phone asks for, counted per day to keep that plan honest."
+              "2": "The articles your phone asks for, and the encrypted text Mera sends to be read for you, counted per day to apply your plan."
             },
             "ask": "What does the app send to your servers?"
           },
@@ -1945,7 +1975,7 @@
           },
           "what-we-keep": {
             "headline": "What we do keep",
-            "body": "Your login email, if you added one. Which plan you are on. A per-day count of articles sent to you and which days you used Mera, kept for 90 days. Your notification times, language and processing choice. Answers you send to Mera team questions. If you use Mera without an email, a sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
+            "body": "Your login email, if you added one. Which plan you are on. A per-day count of articles sent to you, how much encrypted text Mera sent to be read for you and in how many requests (never the text itself), when you reached your plan's daily reading, and which days you used Mera, kept for 90 days. Your notification times, language and processing choice. Answers you send to Mera team questions. If you use Mera without an email, a sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
             "ask": "What does Mera store about me on its servers?"
           }
         }
@@ -2760,7 +2790,18 @@
       "privateCloud": "Private cloud",
       "signedInPhone": "Signed in with this phone",
       "version": "Version {{version}} · Mera Labs B.V.",
-      "yourData": "Your data"
+      "yourData": "Your data",
+      "readingToday": "Mera's reading today",
+      "readingUsed": "{{percent}} used",
+      "readingDone": "Done for today",
+      "resetsTodayAt": "Resets today at {{time}}",
+      "resetsTomorrowAt": "Resets tomorrow at {{time}}",
+      "lastUpdated": "Last updated {{time}}",
+      "onDeviceUnlimited": "On-device reading: unlimited",
+      "readingOnPhone": "Mera is reading on this phone.",
+      "newPlanApplies": "Your new plan applies now.",
+      "planMultiplierBase": "Starter daily reading",
+      "planMultiplier": "{{n}}x the reading of Starter"
     },
     "notifications": {
       "push": "Push notifications",

@@ -243,6 +243,29 @@
       "score": "Artikel baru sudah diunduh, tetapi tidak dapat menentukan mana yang penting bagi Anda. Tarik ke bawah untuk mencoba lagi.",
       "storage": "Artikel baru sudah diunduh, tetapi tidak dapat menyimpannya di ponsel Anda. Tarik ke bawah untuk mencoba lagi.",
       "session": "Tidak dapat memuat ulang Umpan Anda karena sesi Anda berakhir. Masuk kembali untuk melanjutkan."
+    },
+    "notRead": {
+      "line": "Mera belum membaca ini.",
+      "a11y": "Belum dibaca Mera",
+      "divider": "Itu semua yang dipilih Mera. Di bawah ini artikel yang belum dibaca Mera."
+    },
+    "show": {
+      "title": "Tampilkan",
+      "all": "Semua",
+      "picks": "Pilihan Mera",
+      "unread": "Belum dibaca Mera",
+      "a11y": "Menampilkan {{show}}",
+      "sectionedNote": "Tersedia di Feed berkelanjutan",
+      "announce_other": "Menampilkan {{show}}, {{formatted}} artikel",
+      "emptyPicks": "Mera belum memilih apa pun untuk Anda.",
+      "emptyUnread": "Mera sudah membaca semua di sini.",
+      "showAll": "Tampilkan semua artikel"
+    },
+    "readHold": {
+      "waitingToday_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi hari ini pukul {{time}}.",
+      "waitingTomorrow_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi besok pukul {{time}}.",
+      "bodyToday": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
+      "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}."
     }
   },
   "relevance": {
@@ -461,14 +484,14 @@
     "speedReason": "Alasan: {{ms}} md per artikel",
     "speedResetNote": "Diukur saat sinkronisasi terakhir Anda. Dihapus saat aplikasi dimulai ulang.",
     "bgRefreshTitle": "Penyegaran Latar Belakang",
-    "bgRefreshCloudIos": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan dalam Mode Daya Rendah atau saat Penyegaran App Latar Belakang dimatikan. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
-    "bgRefreshCloudAndroid": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan saat Penghemat Baterai aktif. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
-    "bgRefreshOnDevice": "Mera mendapatkan artikel baru saat aplikasi ditutup. Ponsel Anda mengurutkannya saat Anda membuka aplikasi. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan.",
+    "bgRefreshCloudIos": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan dalam Mode Daya Rendah atau saat Penyegaran App Latar Belakang dimatikan. Menggunakan sedikit baterai dan data, serta sebagian dari pembacaan harian Mera untuk Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
+    "bgRefreshCloudAndroid": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan saat Penghemat Baterai aktif. Menggunakan sedikit baterai dan data, serta sebagian dari pembacaan harian Mera untuk Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
+    "bgRefreshOnDevice": "Mera mendapatkan artikel baru saat aplikasi ditutup. Ponsel Anda mengurutkannya saat Anda membuka aplikasi. Menggunakan sedikit baterai dan data. Ini tidak mengubah pencadangan.",
     "cantRun": "Ponsel ini tidak bisa menjalankannya",
     "chatGroup": "Obrolan",
     "encrypted": "Terenkripsi. Mera tidak bisa membacanya.",
-    "explainerCan": "Dengan “Di ponsel ini”, Mera AI berjalan di ponsel Anda, dan berita tetap datang lewat internet. Dengan “Cloud pribadi”, AI berjalan dalam keadaan terenkripsi, jadi Mera tidak bisa membacanya.",
-    "explainerCant": "Dengan “Di ponsel ini”, Mera AI berjalan di ponsel Anda, dan berita tetap datang lewat internet. Itu memerlukan ponsel yang mumpuni. Ponsel ini tidak, jadi Mera memakai “Cloud pribadi”.",
+    "explainerCan": "Dengan “Di ponsel ini”, Mera AI berjalan di ponsel Anda, pembacaan tidak terbatas, dan berita tetap datang lewat internet. Dengan “Cloud pribadi”, AI berjalan dalam keadaan terenkripsi, jadi Mera tidak bisa membacanya, dan paket Anda menentukan seberapa banyak Mera membaca setiap hari.",
+    "explainerCant": "Dengan “Di ponsel ini”, Mera AI berjalan di ponsel yang didukung dengan pembacaan tanpa batas, dan berita tetap datang lewat internet. Ponsel ini tidak bisa menjalankannya, jadi Mera memakai “Cloud pribadi”, dan paket Anda menentukan seberapa banyak Mera membaca setiap hari.",
     "staysPrivateBody": "Mera Protocol selalu aktif. Fakta Anda tidak pernah meninggalkan ponsel ini dalam keadaan tidak terenkripsi.",
     "staysPrivateTitle": "Data Anda tetap pribadi",
     "webSearchShort": "Hanya kata pencarian yang keluar dari ponsel Anda, lewat server Mera. Mesin pencari tidak pernah tahu siapa Anda.",
@@ -497,7 +520,7 @@
       "signInRecordIos": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple bahwa ini aplikasi asli tidak disimpan.",
       "signInRecordAndroid": "Catatan masuk untuk ponsel ini, bukan ID ponsel Anda, dihapus bersama akun Anda. Pemeriksaan Google bahwa ini aplikasi asli tidak disimpan.",
       "signInRecordGeneric": "Tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple atau Google bahwa ini aplikasi asli tidak disimpan.",
-      "usage": "Hitungan harian artikel yang dikirim ke ponsel ini, untuk menerapkan batas paket Anda, dan hari-hari saat Anda memakai Mera. Disimpan selama 90 hari. Proses masuk tidak menyimpan alamat IP atau detail browser.",
+      "usage": "Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim ke ponsel ini setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera. Disimpan selama 90 hari. Proses masuk tidak menyimpan alamat IP atau detail browser.",
       "topics": "Frasa topik, disimpan hanya berdasarkan teksnya tanpa apa pun yang mengaitkannya dengan Anda, dan dihapus setelah 14 hari tidak dipakai.",
       "privacyLink": "Baca kebijakan privasi"
     },
@@ -844,8 +867,8 @@
     "planPending": "{{plan}} · sedang diaktifkan",
     "perMonth": "/bulan",
     "starterFreeTitle": "Anda memakai Starter, gratis",
-    "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti.",
-    "analysedForYou": "Dianalisis untuk Anda",
+    "starterFreeBody": "Setiap akun mendapat paket Pemula lengkap tanpa biaya: semua minat Anda, chat, cek fakta, dan cerita yang diikuti. Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket.",
+    "analysedForYou": "Dibaca oleh Mera",
     "articlesUsedToday": "Artikel yang dipakai hari ini",
     "available24h": "Tersedia, 24 jam terakhir",
     "discarded": "Dibuang",
@@ -859,7 +882,8 @@
     "confirmingBody": "Biasanya hanya butuh beberapa detik. Anda bisa tetap di sini.",
     "confirmTimeoutTitle": "Pembelian Anda belum bisa dikonfirmasi",
     "confirmTimeoutBody": "Jika Anda sudah membayar, hubungi dukungan dan kami akan membereskannya.",
-    "checkAgain": "Periksa lagi"
+    "checkAgain": "Periksa lagi",
+    "readingExplainer": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Paket Anda menentukan seberapa banyak Mera membaca setiap hari: Individu mendapat 5x pembacaan Pemula, Profesional 20x. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket."
   },
   "tabs": {
     "deck": "Umpan",
@@ -911,7 +935,7 @@
     "expandA11y": "Tampilkan detail status feed",
     "modeProcessing": "Memperbarui feed Anda",
     "modeError": "Masalah pada feed",
-    "modeLimited": "Batas artikel harian tercapai",
+    "modeLimited": "Mera sudah memakai pembacaan hari ini",
     "syncDoneA11y": "Feed kamu sudah terkini.",
     "collapseA11y": "Sembunyikan detail status feed",
     "deviceProgress": "Penilaian di perangkat",
@@ -920,7 +944,10 @@
     "relevant": "Relevan sejauh ini",
     "lastProcessed": "Terakhir diproses",
     "limitUpgrade": "Atau <0>tingkatkan paket Anda</0>.",
-    "tryNow": "Coba sekarang"
+    "tryNow": "Coba sekarang",
+    "seePlans": "Lihat paket",
+    "readOnPhone": "Baca di ponsel ini saja",
+    "readingAgainA11y": "Mera sedang membaca lagi."
   },
   "trackedStories": {
     "emptyTitle": "Belum ada cerita yang diikuti",
@@ -957,8 +984,8 @@
     "gotIt": "Mengerti",
     "starterTitle": "Starter dari kami",
     "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
-    "starterArticlesTitle": "250 artikel sehari",
-    "starterArticlesBody": "Mera menganalisis hingga 250 artikel untuk Anda setiap hari.",
+    "starterArticlesTitle": "Setiap artikel yang cocok",
+    "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting.",
     "starterInterestsTitle": "Semua minat Anda",
     "starterInterestsBody": "Tambahkan sebanyak yang Anda mau. Mera mengikuti semuanya.",
     "starterChatTitle": "Chat dan cek fakta",
@@ -969,8 +996,8 @@
   "notificationCenter": {
     "title": "Notifikasi",
     "empty": "Anda sudah mengikuti semua update",
-    "dailyLimitTitle": "Batas berita harian tercapai",
-    "dailyLimitBody": "Anda telah mencapai batas artikel hari ini. Akan direset sebentar lagi.",
+    "dailyLimitTitle": "Mera sudah memakai pembacaan hari ini",
+    "dailyLimitBody": "Mera membaca untuk Anda lagi setelah reset harian.",
     "emptyBody": "Apa pun yang membutuhkan Anda, seperti pembersihan profil atau pertanyaan dari Mera, muncul di sini.",
     "settingsLink": "Pengaturan notifikasi",
     "help": {
@@ -1806,7 +1833,7 @@
             "steps": {
               "0": "Frasa topik pendek, jadi ada sesuatu untuk mencocokkan cerita.",
               "1": "Cara Anda masuk, lewat email atau ponsel ini, dan paket yang Anda pakai.",
-              "2": "Artikel yang diminta ponsel Anda, dihitung per hari agar batas paket tetap adil."
+              "2": "Artikel yang diminta ponsel Anda, serta teks terenkripsi yang Mera kirim untuk dibaca bagi Anda, dihitung per hari untuk menerapkan paket Anda."
             },
             "ask": "Apa yang dikirim aplikasi ke server Anda?"
           },
@@ -1824,7 +1851,7 @@
           },
           "what-we-keep": {
             "headline": "Apa yang kami simpan",
-            "body": "Email masuk Anda, jika Anda menambahkannya. Paket yang Anda pakai. Hitungan harian artikel yang dikirim ke Anda dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Jika Anda memakai Mera tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
+            "body": "Email masuk Anda, jika Anda menambahkannya. Paket yang Anda pakai. Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim kepada Anda setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Jika Anda memakai Mera tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
             "ask": "Apa yang disimpan Mera tentang saya di servernya?"
           }
         }
@@ -2753,7 +2780,18 @@
       "privateCloud": "Cloud pribadi",
       "signedInPhone": "Masuk dengan ponsel ini",
       "version": "Versi {{version}} · Mera Labs B.V.",
-      "yourData": "Data Anda"
+      "yourData": "Data Anda",
+      "readingToday": "Pembacaan Mera hari ini",
+      "readingUsed": "{{percent}} terpakai",
+      "readingDone": "Selesai untuk hari ini",
+      "resetsTodayAt": "Direset hari ini pukul {{time}}",
+      "resetsTomorrowAt": "Direset besok pukul {{time}}",
+      "lastUpdated": "Terakhir diperbarui {{time}}",
+      "onDeviceUnlimited": "Pembacaan di ponsel: tanpa batas",
+      "readingOnPhone": "Mera sedang membaca di ponsel ini.",
+      "newPlanApplies": "Paket baru Anda berlaku sekarang.",
+      "planMultiplierBase": "Pembacaan harian Pemula",
+      "planMultiplier": "{{n}}x pembacaan Pemula"
     },
     "notifications": {
       "push": "Notifikasi push",

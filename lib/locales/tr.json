@@ -243,6 +243,32 @@
       "score": "Yeni makaleler indirildi ama hangilerinin senin için önemli olduğu belirlenemedi. Tekrar denemek için aşağı çek.",
       "storage": "Yeni makaleler indirildi ama telefonuna kaydedilemedi. Tekrar denemek için aşağı çek.",
       "session": "Oturumunun süresi dolduğu için Akışın yenilenemedi. Devam etmek için tekrar giriş yap."
+    },
+    "notRead": {
+      "line": "Mera bunu henüz okumadı.",
+      "a11y": "Mera henüz okumadı",
+      "divider": "Mera'nın seçtiği her şey bu kadar. Aşağıda Mera'nın henüz okumadığı makaleler var."
+    },
+    "show": {
+      "title": "Göster",
+      "all": "Tümü",
+      "picks": "Mera'nın seçtikleri",
+      "unread": "Mera tarafından okunmadı",
+      "a11y": "{{show}} gösteriliyor",
+      "sectionedNote": "Sürekli akışta kullanılabilir",
+      "announce_one": "{{show}} gösteriliyor, {{formatted}} makale",
+      "announce_other": "{{show}} gösteriliyor, {{formatted}} makale",
+      "emptyPicks": "Mera senin için henüz bir şey seçmedi.",
+      "emptyUnread": "Mera buradaki her şeyi okudu.",
+      "showAll": "Tüm makaleleri göster"
+    },
+    "readHold": {
+      "waitingToday_one": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera bugün {{time}} saatinde yeniden okur.",
+      "waitingToday_other": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera bugün {{time}} saatinde yeniden okur.",
+      "waitingTomorrow_one": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera yarın {{time}} saatinde yeniden okur.",
+      "waitingTomorrow_other": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera yarın {{time}} saatinde yeniden okur.",
+      "bodyToday": "Mera bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
+      "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
     }
   },
   "relevance": {
@@ -461,14 +487,14 @@
     "speedReason": "Gerekçeler: makale başına {{ms}} ms",
     "speedResetNote": "Son eşitlemen sırasında ölçüldü. Uygulama yeniden başladığında silinir.",
     "bgRefreshTitle": "Arka Planda Yenileme",
-    "bgRefreshCloudIos": "Mera uygulama kapalıyken yeni makaleler alır ve bunları senin için sıralamaya başlar. Telefonun bunun ne zaman olacağına karar verir. Düşük Güç Modu açıkken veya Arka Planda Yenileme kapalıyken çalışmayabilir. Biraz pil ve veri tüketir ve günlük makale sınırının yarısına kadar kullanabilir. Bu, yedeklemeyi değiştirmez. Uygulama açıkken Mera'nın zaten kullandığı şeyden başka hiçbir şey paylaşılmaz.",
-    "bgRefreshCloudAndroid": "Mera uygulama kapalıyken yeni makaleler alır ve bunları senin için sıralamaya başlar. Telefonun bunun ne zaman olacağına karar verir. Pil Tasarrufu açıkken çalışmayabilir. Biraz pil ve veri tüketir ve günlük makale sınırının yarısına kadar kullanabilir. Bu, yedeklemeyi değiştirmez. Uygulama açıkken Mera'nın zaten kullandığı şeyden başka hiçbir şey paylaşılmaz.",
-    "bgRefreshOnDevice": "Mera uygulama kapalıyken yeni makaleler alır. Telefonun, uygulamayı açtığında bunları sıralar. Biraz pil ve veri tüketir ve günlük makale sınırının yarısına kadar kullanabilir. Bu, yedeklemeyi değiştirmez.",
+    "bgRefreshCloudIos": "Mera uygulama kapalıyken yeni makaleler alır ve bunları senin için sıralamaya başlar. Telefonun bunun ne zaman olacağına karar verir. Düşük Güç Modu açıkken veya Arka Planda Yenileme kapalıyken çalışmayabilir. Biraz pil ve veri tüketir ve Mera'nın senin için yaptığı günlük okumanın bir kısmını kullanır. Bu, yedeklemeyi değiştirmez. Uygulama açıkken Mera'nın zaten kullandığı şeyden başka hiçbir şey paylaşılmaz.",
+    "bgRefreshCloudAndroid": "Mera uygulama kapalıyken yeni makaleler alır ve bunları senin için sıralamaya başlar. Telefonun bunun ne zaman olacağına karar verir. Pil Tasarrufu açıkken çalışmayabilir. Biraz pil ve veri tüketir ve Mera'nın senin için yaptığı günlük okumanın bir kısmını kullanır. Bu, yedeklemeyi değiştirmez. Uygulama açıkken Mera'nın zaten kullandığı şeyden başka hiçbir şey paylaşılmaz.",
+    "bgRefreshOnDevice": "Mera uygulama kapalıyken yeni makaleler alır. Telefonun, uygulamayı açtığında bunları sıralar. Biraz pil ve veri tüketir. Bu, yedeklemeyi değiştirmez.",
     "cantRun": "Bu telefon çalıştıramaz",
     "chatGroup": "Sohbet",
     "encrypted": "Şifreli. Mera okuyamaz.",
-    "explainerCan": "“Bu telefonda” seçiliyken Mera AI telefonda çalışır, haberler ise yine çevrimiçi gelir. “Özel bulut” seçiliyken şifreli çalışır, bu yüzden Mera onu okuyamaz.",
-    "explainerCant": "“Bu telefonda” seçiliyken Mera AI telefonda çalışır, haberler ise yine çevrimiçi gelir. Bunun için güçlü bir telefon gerekir. Bu telefon yeterli değil, bu yüzden Mera “Özel bulut” kullanır.",
+    "explainerCan": "“Bu telefonda” seçiliyken Mera AI telefonda çalışır, okuma sınırsızdır ve haberler yine çevrimiçi gelir. “Özel bulut” seçiliyken şifreli çalışır, bu yüzden Mera onu okuyamaz. Planın, Mera'nın her gün ne kadar okuyacağını belirler.",
+    "explainerCant": "“Bu telefonda” seçiliyken Mera AI desteklenen telefonlarda sınırsız okumayla çalışır, haberler ise yine çevrimiçi gelir. Bu telefon bunu çalıştıramaz, bu yüzden Mera “Özel bulut” kullanır. Planın, Mera'nın her gün ne kadar okuyacağını belirler.",
     "staysPrivateBody": "Mera Protokolü her zaman açıktır. Bilgileriniz bu telefondan asla şifresiz çıkmaz.",
     "staysPrivateTitle": "Verileriniz gizli kalır",
     "webSearchShort": "Telefonundan yalnızca arama kelimeleri, Mera'nın sunucusu üzerinden çıkar. Arama motoru senin kim olduğunu hiçbir zaman öğrenmez.",
@@ -497,7 +523,7 @@
       "signInRecordIos": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "signInRecordAndroid": "Bu telefon için telefonunuzun kimliği olmayan, hesabınızla birlikte silinen bir giriş kaydı. Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "signInRecordGeneric": "E-posta yoksa, bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
-      "usage": "Planının sınırını uygulamak için bu telefona gönderilen makalelerin günlük sayısı ve Mera'yı hangi günler kullandığın. 90 gün saklanır. Girişlerde IP adresi veya tarayıcı bilgisi saklanmaz.",
+      "usage": "Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), her gün bu telefona kaç makale gönderildiği, planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın. 90 gün saklanır. Girişlerde IP adresi veya tarayıcı bilgisi saklanmaz.",
       "topics": "Konu ifadeleri, yalnızca metinleriyle ve sizinle hiçbir bağlantı olmadan saklanır, 14 gün kullanılmazsa silinir.",
       "privacyLink": "Gizlilik politikasını okuyun"
     },
@@ -845,8 +871,8 @@
     "planPending": "{{plan}} · etkinleştiriliyor",
     "perMonth": "/ay",
     "starterFreeTitle": "Starter kullanıyorsunuz, ücretsiz",
-    "starterFreeBody": "Mera'nın ne işe yaradığını görmenizi istiyoruz, bu yüzden her hesap tam Starter planını ücretsiz içeriyor. Bu, günde 250 haber, tüm ilgi alanlarınız, sohbet, doğruluk kontrolleri ve takip edilen haberler demek.",
-    "analysedForYou": "Sizin için analiz edildi",
+    "starterFreeBody": "Her hesap, tam Starter planını ücretsiz içerir: tüm ilgi alanların, sohbet, doğruluk kontrolleri ve takip ettiğin haberler. İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır.",
+    "analysedForYou": "Mera tarafından okundu",
     "articlesUsedToday": "Bugün kullanılan makaleler",
     "available24h": "Kullanılabilir, son 24 saat",
     "discarded": "Atılan",
@@ -860,7 +886,8 @@
     "confirmingBody": "Bu genellikle birkaç saniye sürer. Bu ekranda bekleyebilirsiniz.",
     "confirmTimeoutTitle": "Satın alımınız henüz onaylanamadı",
     "confirmTimeoutBody": "Ödeme yaptıysanız destek ekibimize ulaşın, sorunu çözelim.",
-    "checkAgain": "Tekrar kontrol et"
+    "checkAgain": "Tekrar kontrol et",
+    "readingExplainer": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Planın, Mera'nın her gün ne kadar okuyacağını belirler: Bireysel planda Başlangıç'ın 5x okuması, Profesyonel planda 20x okuma vardır. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır."
   },
   "tabs": {
     "deck": "Akış",
@@ -912,7 +939,7 @@
     "expandA11y": "Akış durumu ayrıntılarını göster",
     "modeProcessing": "Akışınız güncelleniyor",
     "modeError": "Akış sorunu",
-    "modeLimited": "Günlük makale sınırına ulaşıldı",
+    "modeLimited": "Mera bugünkü okumasını kullandı",
     "syncDoneA11y": "Akışın güncel.",
     "collapseA11y": "Akış durumu ayrıntılarını gizle",
     "deviceProgress": "Cihaz üzerinde puanlama",
@@ -921,7 +948,10 @@
     "relevant": "Şimdiye kadar ilgili",
     "lastProcessed": "Son işlenme",
     "limitUpgrade": "Ya da <0>planınızı yükseltin</0>.",
-    "tryNow": "Şimdi dene"
+    "tryNow": "Şimdi dene",
+    "seePlans": "Planları gör",
+    "readOnPhone": "Bunun yerine bu telefonda oku",
+    "readingAgainA11y": "Mera yeniden okuyor."
   },
   "trackedStories": {
     "emptyTitle": "Henüz takip edilen haber yok",
@@ -960,8 +990,8 @@
     "gotIt": "Anladım",
     "starterTitle": "Starter bizden",
     "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
-    "starterArticlesTitle": "Günde 250 haber",
-    "starterArticlesBody": "Mera her gün sizin için en fazla 250 haberi analiz eder.",
+    "starterArticlesTitle": "Eşleşen her haber",
+    "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır.",
     "starterInterestsTitle": "Tüm ilgi alanlarınız",
     "starterInterestsBody": "İstediğiniz kadar ekleyin. Mera hepsini takip eder.",
     "starterChatTitle": "Sohbet ve doğruluk kontrolü",
@@ -972,8 +1002,8 @@
   "notificationCenter": {
     "title": "Bildirimler",
     "empty": "Her şeyi okudun",
-    "dailyLimitTitle": "Günlük haber sınırına ulaşıldı",
-    "dailyLimitBody": "Bugünkü makale sınırına ulaştın. Yakında sıfırlanacak.",
+    "dailyLimitTitle": "Mera bugünkü okumasını kullandı",
+    "dailyLimitBody": "Mera, günlük sıfırlamadan sonra senin için yeniden okur.",
     "emptyBody": "Profil temizliği ya da Mera'dan bir soru gibi sizden bir şey isteyen her şey burada görünür.",
     "settingsLink": "Bildirim ayarları",
     "help": {
@@ -1810,7 +1840,7 @@
             "steps": {
               "0": "Kısa konu ifadeleri, böylece hikayelerle eşleşecek bir şey var.",
               "1": "Nasıl giriş yaptığınız, e-postayla veya bu telefonla, ve hangi planda olduğunuz.",
-              "2": "Telefonunun istediği makaleler, planı dürüst tutmak için günlük olarak sayılır."
+              "2": "Telefonunun istediği makaleler ve Mera'nın senin için okunmak üzere gönderdiği şifreli metin, planını uygulamak için günlük olarak sayılır."
             },
             "ask": "Uygulama sunucularınıza ne gönderiyor?"
           },
@@ -1828,7 +1858,7 @@
           },
           "what-we-keep": {
             "headline": "Ne tuttuğumuz",
-            "body": "Eklediysen giriş e-postan. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Mera'yı e-posta olmadan kullanıyorsan, bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
+            "body": "Eklediysen giriş e-postan. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Mera'yı e-posta olmadan kullanıyorsan, bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
             "ask": "Mera sunucularında benim hakkımda ne saklıyor?"
           }
         }
@@ -2760,7 +2790,18 @@
       "privateCloud": "Özel bulut",
       "signedInPhone": "Bu telefonla giriş yapıldı",
       "version": "Sürüm {{version}} · Mera Labs B.V.",
-      "yourData": "Verileriniz"
+      "yourData": "Verileriniz",
+      "readingToday": "Mera'nın bugünkü okuması",
+      "readingUsed": "{{percent}} kullanıldı",
+      "readingDone": "Bugün için tamam",
+      "resetsTodayAt": "Bugün {{time}} saatinde sıfırlanır",
+      "resetsTomorrowAt": "Yarın {{time}} saatinde sıfırlanır",
+      "lastUpdated": "Son güncelleme: {{time}}",
+      "onDeviceUnlimited": "Telefonda okuma: sınırsız",
+      "readingOnPhone": "Mera bu telefonda okuyor.",
+      "newPlanApplies": "Yeni planın hemen geçerli.",
+      "planMultiplierBase": "Başlangıç günlük okuma",
+      "planMultiplier": "Başlangıç'ın {{n}}x okuması"
     },
     "notifications": {
       "push": "Anlık bildirimler",

@@ -243,6 +243,32 @@
       "score": "Nieuwe artikelen gedownload, maar kon niet bepalen welke belangrijk voor je zijn. Trek omlaag om het opnieuw te proberen.",
       "storage": "Nieuwe artikelen gedownload, maar kon ze niet op je telefoon opslaan. Trek omlaag om het opnieuw te proberen.",
       "session": "Kon je Feed niet vernieuwen omdat je sessie is verlopen. Log opnieuw in om verder te gaan."
+    },
+    "notRead": {
+      "line": "Mera heeft dit nog niet gelezen.",
+      "a11y": "Nog niet gelezen door Mera",
+      "divider": "Dat is alles wat Mera heeft gekozen. Hieronder staan artikelen die Mera nog niet heeft gelezen."
+    },
+    "show": {
+      "title": "Tonen",
+      "all": "Alles",
+      "picks": "Keuzes van Mera",
+      "unread": "Nog niet gelezen door Mera",
+      "a11y": "Toont {{show}}",
+      "sectionedNote": "Beschikbaar in de doorlopende feed",
+      "announce_one": "Toont {{show}}, {{formatted}} artikel",
+      "announce_other": "Toont {{show}}, {{formatted}} artikelen",
+      "emptyPicks": "Mera heeft nog niets voor je gekozen.",
+      "emptyUnread": "Mera heeft hier alles gelezen.",
+      "showAll": "Alle artikelen tonen"
+    },
+    "readHold": {
+      "waitingToday_one": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikel hieronder is nog niet gelezen. Mera leest vandaag weer om {{time}}.",
+      "waitingToday_other": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikelen hieronder zijn nog niet gelezen. Mera leest vandaag weer om {{time}}.",
+      "waitingTomorrow_one": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikel hieronder is nog niet gelezen. Mera leest morgen weer om {{time}}.",
+      "waitingTomorrow_other": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikelen hieronder zijn nog niet gelezen. Mera leest morgen weer om {{time}}.",
+      "bodyToday": "Mera heeft het lezen voor vandaag gebruikt. Mera leest vandaag weer om {{time}}.",
+      "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}."
     }
   },
   "relevance": {
@@ -461,14 +487,14 @@
     "speedReason": "Redenen: {{ms}} ms per artikel",
     "speedResetNote": "Gemeten tijdens je laatste synchronisatie. Wordt gewist wanneer de app opnieuw start.",
     "bgRefreshTitle": "Achtergrondverversing",
-    "bgRefreshCloudIos": "Mera haalt nieuwe artikelen op terwijl de app is gesloten en begint ze voor je in te delen. Je telefoon bepaalt wanneer dit gebeurt. Het werkt mogelijk niet in de energiebesparingsmodus of wanneer Achtergrondverversing uit staat. Gebruikt wat batterij en data, en tot de helft van je dagelijkse artikellimiet. Dit verandert niets aan de back-up. Niets wordt gedeeld behalve wat Mera al gebruikt als de app open is.",
-    "bgRefreshCloudAndroid": "Mera haalt nieuwe artikelen op terwijl de app is gesloten en begint ze voor je in te delen. Je telefoon bepaalt wanneer dit gebeurt. Het werkt mogelijk niet wanneer Batterijbesparing aan staat. Gebruikt wat batterij en data, en tot de helft van je dagelijkse artikellimiet. Dit verandert niets aan de back-up. Niets wordt gedeeld behalve wat Mera al gebruikt als de app open is.",
-    "bgRefreshOnDevice": "Mera haalt nieuwe artikelen op terwijl de app is gesloten. Je telefoon deelt ze in als je de app opent. Gebruikt wat batterij en data, en tot de helft van je dagelijkse artikellimiet. Dit verandert niets aan de back-up.",
+    "bgRefreshCloudIos": "Mera haalt nieuwe artikelen op terwijl de app is gesloten en begint ze voor je in te delen. Je telefoon bepaalt wanneer dit gebeurt. Het werkt mogelijk niet in de energiebesparingsmodus of wanneer Achtergrondverversing uit staat. Gebruikt wat batterij en data, en een deel van het dagelijkse lezen van Mera voor jou. Dit verandert niets aan de back-up. Er wordt niets gedeeld behalve wat Mera al gebruikt als de app open is.",
+    "bgRefreshCloudAndroid": "Mera haalt nieuwe artikelen op terwijl de app is gesloten en begint ze voor je in te delen. Je telefoon bepaalt wanneer dit gebeurt. Het werkt mogelijk niet wanneer Batterijbesparing aan staat. Gebruikt wat batterij en data, en een deel van het dagelijkse lezen van Mera voor jou. Dit verandert niets aan de back-up. Er wordt niets gedeeld behalve wat Mera al gebruikt als de app open is.",
+    "bgRefreshOnDevice": "Mera haalt nieuwe artikelen op terwijl de app is gesloten. Je telefoon deelt ze in als je de app opent. Gebruikt wat batterij en data. Dit verandert niets aan de back-up.",
     "cantRun": "Deze telefoon kan het niet draaien",
     "chatGroup": "Chat",
     "encrypted": "Versleuteld. Mera kan het niet lezen.",
-    "explainerCan": "Met ‘Op deze telefoon’ draait Mera AI op je telefoon, en het nieuws komt nog steeds online binnen. Met ‘Privécloud’ draait het versleuteld, zodat Mera het niet kan lezen.",
-    "explainerCant": "Met ‘Op deze telefoon’ draait Mera AI op je telefoon, en het nieuws komt nog steeds online binnen. Daarvoor is een krachtige telefoon nodig. Deze is dat niet, dus Mera gebruikt ‘Privécloud’.",
+    "explainerCan": "Met ‘Op deze telefoon’ draait Mera AI op je telefoon, is lezen onbeperkt en komt het nieuws nog steeds online binnen. Met ‘Privécloud’ draait het versleuteld, zodat Mera het niet kan lezen, en je abonnement bepaalt hoeveel Mera per dag leest.",
+    "explainerCant": "Met ‘Op deze telefoon’ draait Mera AI op ondersteunde telefoons met onbeperkt lezen, en komt het nieuws nog steeds online binnen. Deze telefoon kan dat niet, dus Mera gebruikt ‘Privécloud’, en je abonnement bepaalt hoeveel Mera per dag leest.",
     "staysPrivateBody": "Het Mera Protocol staat altijd aan. Je feiten verlaten deze telefoon nooit onversleuteld.",
     "staysPrivateTitle": "Je gegevens blijven privé",
     "webSearchShort": "Alleen de zoekwoorden verlaten je telefoon, via de server van Mera. De zoekmachine komt nooit te weten wie je bent.",
@@ -497,7 +523,7 @@
       "signInRecordIos": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple dat dit de echte app is, bewaren we niet.",
       "signInRecordAndroid": "Een inlogregistratie voor deze telefoon, niet de ID van je telefoon, die met je account wordt verwijderd. De controle van Google dat dit de echte app is, bewaren we niet.",
       "signInRecordGeneric": "Zonder e-mail een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple of Google dat dit de echte app is, bewaren we niet.",
-      "usage": "Een dagelijkse telling van de artikelen die naar deze telefoon zijn gestuurd, om de limiet van je abonnement toe te passen, en op welke dagen je Mera hebt gebruikt. Bewaard gedurende 90 dagen. Bij inloggen bewaren we geen IP-adres of browsergegevens.",
+      "usage": "Hoeveel versleutelde tekst Mera per dag naar het lezen voor je heeft gestuurd en in hoeveel verzoeken (nooit de tekst zelf), hoeveel artikelen er per dag naar deze telefoon zijn gestuurd, wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt. Bewaard gedurende 90 dagen. Bij inloggen bewaren we geen IP-adres of browsergegevens.",
       "topics": "Onderwerpzinnen, alleen op hun tekst opgeslagen zonder iets dat ze aan jou koppelt, en verwijderd na 14 dagen zonder gebruik.",
       "privacyLink": "Lees het privacybeleid"
     },
@@ -845,8 +871,8 @@
     "planPending": "{{plan}} · activering",
     "perMonth": "/maand",
     "starterFreeTitle": "Je zit op Starter, gratis",
-    "starterFreeBody": "We willen dat je ziet waar Mera voor is, dus elk account bevat het volledige Starter-plan zonder kosten. Dat is 250 artikelen per dag, al je interesses, chat, factchecks en gevolgde verhalen.",
-    "analysedForYou": "Voor jou geanalyseerd",
+    "starterFreeBody": "Elk account bevat het volledige Starter-abonnement zonder kosten: al je interesses, chat, factchecks en gevolgde verhalen. Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Op ondersteunde telefoons is lezen op de telefoon onbeperkt, bij elk abonnement.",
+    "analysedForYou": "Gelezen door Mera",
     "articlesUsedToday": "Vandaag gebruikte artikelen",
     "available24h": "Beschikbaar, laatste 24 uur",
     "discarded": "Weggegooid",
@@ -860,7 +886,8 @@
     "confirmingBody": "Dit duurt meestal maar een paar seconden. Je kunt gewoon op dit scherm blijven.",
     "confirmTimeoutTitle": "We konden je aankoop nog niet bevestigen",
     "confirmTimeoutBody": "Heb je al betaald? Praat dan met support, dan regelen we het.",
-    "checkAgain": "Opnieuw controleren"
+    "checkAgain": "Opnieuw controleren",
+    "readingExplainer": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Je abonnement bepaalt hoeveel Mera per dag leest: Individueel krijgt 5x het lezen van Starter, Professioneel 20x. Op ondersteunde telefoons is lezen op de telefoon onbeperkt, bij elk abonnement."
   },
   "tabs": {
     "deck": "Feed",
@@ -912,7 +939,7 @@
     "expandA11y": "Feedstatus-details tonen",
     "modeProcessing": "Je feed wordt bijgewerkt",
     "modeError": "Probleem met de feed",
-    "modeLimited": "Daglimiet voor artikelen bereikt",
+    "modeLimited": "Mera heeft het lezen voor vandaag gebruikt",
     "syncDoneA11y": "Je feed is bijgewerkt.",
     "collapseA11y": "Feedstatus-details verbergen",
     "deviceProgress": "Scoren op apparaat",
@@ -921,7 +948,10 @@
     "relevant": "Tot nu toe relevant",
     "lastProcessed": "Laatst verwerkt",
     "limitUpgrade": "Of <0>upgrade je abonnement</0>.",
-    "tryNow": "Nu proberen"
+    "tryNow": "Nu proberen",
+    "seePlans": "Abonnementen bekijken",
+    "readOnPhone": "Lees in plaats daarvan op deze telefoon",
+    "readingAgainA11y": "Mera leest weer."
   },
   "trackedStories": {
     "emptyTitle": "Nog geen verhalen gevolgd",
@@ -958,8 +988,8 @@
     "gotIt": "Begrepen",
     "starterTitle": "Starter krijg je van ons",
     "starterIntro": "Zodat je ziet waar Mera voor is, bevat elk account nu het volledige Starter-plan zonder kosten.",
-    "starterArticlesTitle": "250 artikelen per dag",
-    "starterArticlesBody": "Mera analyseert elke dag tot 250 artikelen voor je.",
+    "starterArticlesTitle": "Elk passend artikel",
+    "starterArticlesBody": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren.",
     "starterInterestsTitle": "Al je interesses",
     "starterInterestsBody": "Voeg er zoveel toe als je wilt. Mera volgt ze allemaal.",
     "starterChatTitle": "Chat en factchecks",
@@ -970,8 +1000,8 @@
   "notificationCenter": {
     "title": "Meldingen",
     "empty": "Je bent helemaal bij",
-    "dailyLimitTitle": "Dagelijkse nieuwslimiet bereikt",
-    "dailyLimitBody": "Je hebt de daglimiet voor artikelen bereikt. Deze wordt binnenkort gereset.",
+    "dailyLimitTitle": "Mera heeft het lezen voor vandaag gebruikt",
+    "dailyLimitBody": "Mera leest weer voor je na de dagelijkse reset.",
     "emptyBody": "Alles wat jouw aandacht vraagt, zoals een opruiming van je profiel of een vraag van Mera, verschijnt hier.",
     "settingsLink": "Meldingsinstellingen",
     "help": {
@@ -1808,7 +1838,7 @@
             "steps": {
               "0": "Korte onderwerpsfrasen, dus er is iets om verhalen tegenaan te passen.",
               "1": "Hoe je inlogt, met e-mail of met deze telefoon, en welk abonnement je hebt.",
-              "2": "De artikelen die je telefoon opvraagt, per dag geteld om dat abonnement eerlijk te houden."
+              "2": "De artikelen die je telefoon opvraagt, en de versleutelde tekst die Mera naar het lezen voor je stuurt, per dag geteld om je abonnement toe te passen."
             },
             "ask": "Wat stuurt de app naar jullie servers?"
           },
@@ -1826,7 +1856,7 @@
           },
           "what-we-keep": {
             "headline": "Wat we houden",
-            "body": "Je inlog-e-mailadres, als je er een hebt toegevoegd. Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Als je Mera zonder e-mail gebruikt, een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
+            "body": "Je inlog-e-mailadres, als je er een hebt toegevoegd. Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd, hoeveel versleutelde tekst Mera naar het lezen voor je heeft gestuurd en in hoeveel verzoeken (nooit de tekst zelf), wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Als je Mera zonder e-mail gebruikt, een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
             "ask": "Wat slaat Mera op haar servers over mij op?"
           }
         }
@@ -2758,7 +2788,18 @@
       "privateCloud": "Privécloud",
       "signedInPhone": "Ingelogd met deze telefoon",
       "version": "Versie {{version}} · Mera Labs B.V.",
-      "yourData": "Je gegevens"
+      "yourData": "Je gegevens",
+      "readingToday": "Het lezen van Mera vandaag",
+      "readingUsed": "{{percent}} gebruikt",
+      "readingDone": "Voor vandaag klaar",
+      "resetsTodayAt": "Wordt vandaag om {{time}} gereset",
+      "resetsTomorrowAt": "Wordt morgen om {{time}} gereset",
+      "lastUpdated": "Laatst bijgewerkt {{time}}",
+      "onDeviceUnlimited": "Lezen op deze telefoon: onbeperkt",
+      "readingOnPhone": "Mera leest op deze telefoon.",
+      "newPlanApplies": "Je nieuwe abonnement geldt nu.",
+      "planMultiplierBase": "Dagelijks lezen met Starter",
+      "planMultiplier": "{{n}}x het lezen van Starter"
     },
     "notifications": {
       "push": "Pushmeldingen",

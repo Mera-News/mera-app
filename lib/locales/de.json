@@ -243,6 +243,32 @@
       "score": "Neue Artikel heruntergeladen, aber es konnte nicht ermittelt werden, welche für dich wichtig sind. Zum erneuten Versuchen nach unten ziehen.",
       "storage": "Neue Artikel heruntergeladen, aber sie konnten nicht auf deinem Handy gespeichert werden. Zum erneuten Versuchen nach unten ziehen.",
       "session": "Deine Nachrichten konnten nicht aktualisiert werden, weil deine Sitzung abgelaufen ist. Melde dich erneut an, um weiterzumachen."
+    },
+    "notRead": {
+      "line": "Mera hat das noch nicht gelesen.",
+      "a11y": "Noch nicht von Mera gelesen",
+      "divider": "Das war alles, was Mera ausgewählt hat. Darunter stehen Artikel, die Mera noch nicht gelesen hat."
+    },
+    "show": {
+      "title": "Anzeigen",
+      "all": "Alle",
+      "picks": "Auswahl von Mera",
+      "unread": "Noch nicht von Mera gelesen",
+      "a11y": "Zeigt {{show}}",
+      "sectionedNote": "Verfügbar in der Ansicht Fortlaufender Feed",
+      "announce_one": "Zeigt {{show}}, {{formatted}} Artikel",
+      "announce_other": "Zeigt {{show}}, {{formatted}} Artikel",
+      "emptyPicks": "Mera hat noch nichts für dich ausgewählt.",
+      "emptyUnread": "Mera hat hier alles gelesen.",
+      "showAll": "Alle Artikel anzeigen"
+    },
+    "readHold": {
+      "waitingToday_one": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten ist noch ungelesen. Mera liest heute um {{time}} wieder.",
+      "waitingToday_other": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten sind noch ungelesen. Mera liest heute um {{time}} wieder.",
+      "waitingTomorrow_one": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten ist noch ungelesen. Mera liest morgen um {{time}} wieder.",
+      "waitingTomorrow_other": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten sind noch ungelesen. Mera liest morgen um {{time}} wieder.",
+      "bodyToday": "Mera hat das heutige Lesekontingent genutzt. Mera liest heute um {{time}} wieder.",
+      "bodyTomorrow": "Mera hat das heutige Lesekontingent genutzt. Mera liest morgen um {{time}} wieder."
     }
   },
   "relevance": {
@@ -461,14 +487,14 @@
     "speedReason": "Begründungen: {{ms}} ms pro Artikel",
     "speedResetNote": "Bei der letzten Synchronisierung gemessen. Wird beim Neustart der App gelöscht.",
     "bgRefreshTitle": "Hintergrundaktualisierung",
-    "bgRefreshCloudIos": "Mera lädt neue Artikel, wenn die App geschlossen ist, und beginnt sie für dich zu bewerten. Dein Telefon entscheidet, wann dies geschieht. Es funktioniert möglicherweise nicht im Stromsparmodus oder wenn die Hintergrundaktualisierung aus ist. Nutzt etwas Akku und Daten und bis zur Hälfte deines täglichen Artikellimits. Das ändert nichts am Backup. Nichts wird über das hinaus geteilt, was Mera bereits nutzt, wenn die App offen ist.",
-    "bgRefreshCloudAndroid": "Mera lädt neue Artikel, wenn die App geschlossen ist, und beginnt sie für dich zu bewerten. Dein Telefon entscheidet, wann dies geschieht. Es funktioniert möglicherweise nicht, wenn der Energiesparmodus an ist. Nutzt etwas Akku und Daten und bis zur Hälfte deines täglichen Artikellimits. Das ändert nichts am Backup. Nichts wird über das hinaus geteilt, was Mera bereits nutzt, wenn die App offen ist.",
-    "bgRefreshOnDevice": "Mera lädt neue Artikel, wenn die App geschlossen ist. Dein Telefon bewertet sie, wenn du die App öffnest. Nutzt etwas Akku und Daten und bis zur Hälfte deines täglichen Artikellimits. Das ändert nichts am Backup.",
+    "bgRefreshCloudIos": "Mera lädt neue Artikel, wenn die App geschlossen ist, und beginnt sie für dich zu bewerten. Dein Telefon entscheidet, wann dies geschieht. Es funktioniert möglicherweise nicht im Stromsparmodus oder wenn die Hintergrundaktualisierung aus ist. Nutzt etwas Akku und Daten und einen Teil des täglichen Lesekontingents von Mera für dich. Das ändert nichts am Backup. Nichts wird über das hinaus geteilt, was Mera bereits nutzt, wenn die App offen ist.",
+    "bgRefreshCloudAndroid": "Mera lädt neue Artikel, wenn die App geschlossen ist, und beginnt sie für dich zu bewerten. Dein Telefon entscheidet, wann dies geschieht. Es funktioniert möglicherweise nicht, wenn der Energiesparmodus an ist. Nutzt etwas Akku und Daten und einen Teil des täglichen Lesekontingents von Mera für dich. Das ändert nichts am Backup. Nichts wird über das hinaus geteilt, was Mera bereits nutzt, wenn die App offen ist.",
+    "bgRefreshOnDevice": "Mera lädt neue Artikel, wenn die App geschlossen ist. Dein Telefon bewertet sie, wenn du die App öffnest. Nutzt etwas Akku und Daten. Das ändert nichts am Backup.",
     "cantRun": "Dieses Telefon kann es nicht ausführen",
     "chatGroup": "Chat",
     "encrypted": "Verschlüsselt. Mera kann es nicht lesen.",
-    "explainerCan": "Mit „Auf diesem Telefon“ läuft Mera KI auf deinem Telefon, und die Nachrichten kommen weiterhin online. Mit „Private Cloud“ läuft sie verschlüsselt, sodass Mera sie nicht lesen kann.",
-    "explainerCant": "Mit „Auf diesem Telefon“ läuft Mera KI auf deinem Telefon, und die Nachrichten kommen weiterhin online. Dafür braucht es ein leistungsfähiges Telefon. Dieses ist es nicht, deshalb nutzt Mera „Private Cloud“.",
+    "explainerCan": "Mit „Auf diesem Telefon“ läuft Mera KI auf deinem Telefon, das Lesen ist unbegrenzt, und die Nachrichten kommen weiterhin online. Mit „Private Cloud“ läuft sie verschlüsselt, sodass Mera sie nicht lesen kann, und dein Tarif legt fest, wie viel Mera jeden Tag liest.",
+    "explainerCant": "Mit „Auf diesem Telefon“ läuft Mera KI auf unterstützten Telefonen mit unbegrenztem Lesen, und die Nachrichten kommen weiterhin online. Dieses Telefon kann Mera KI nicht ausführen, deshalb nutzt Mera „Private Cloud“, und dein Tarif legt fest, wie viel Mera jeden Tag liest.",
     "staysPrivateBody": "Mera Protocol ist immer aktiv. Deine Fakten verlassen dieses Telefon nie unverschlüsselt.",
     "staysPrivateTitle": "Deine Daten bleiben privat",
     "webSearchShort": "Nur die Suchbegriffe verlassen dein Telefon, über den Server von Mera. Die Suchmaschine erfährt nie, wer du bist.",
@@ -497,7 +523,7 @@
       "signInRecordIos": "Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Apples Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
       "signInRecordAndroid": "Ein Anmeldeeintrag für dieses Telefon, nicht die ID deines Telefons, der mit deinem Konto gelöscht wird. Googles Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
       "signInRecordGeneric": "Ohne E-Mail ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Prüfung von Apple oder Google, ob dies die echte App ist, wird nicht gespeichert.",
-      "usage": "Eine tägliche Zahl der an dieses Telefon gesendeten Artikel, um das Limit deines Tarifs anzuwenden, und die Tage, an denen du Mera genutzt hast. Wird 90 Tage aufbewahrt. Anmeldungen speichern keine IP-Adresse und keine Browserdaten.",
+      "usage": "Eine tägliche Zahl der an dieses Telefon gesendeten Artikel, wie viel verschlüsselter Text Mera jeden Tag zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast. Wird 90 Tage aufbewahrt. Anmeldungen speichern keine IP-Adresse und keine Browserdaten.",
       "topics": "Themenbegriffe, nur nach ihrem Text gespeichert, ohne Verbindung zu dir, und nach 14 Tagen ohne Nutzung gelöscht.",
       "privacyLink": "Datenschutzerklärung lesen"
     },
@@ -845,8 +871,8 @@
     "planPending": "{{plan}} · wird aktiviert",
     "perMonth": "/Monat",
     "starterFreeTitle": "Du bist auf Starter, kostenlos",
-    "starterFreeBody": "Wir möchten, dass du siehst, wofür Mera da ist. Deshalb enthält jedes Konto den vollen Starter-Plan kostenlos: 250 Artikel pro Tag, alle deine Interessen, Chat, Faktenchecks und verfolgte Geschichten.",
-    "analysedForYou": "Für dich analysiert",
+    "starterFreeBody": "Jedes Konto enthält den vollen Starter-Plan kostenlos: alle deine Interessen, Chat, Faktenchecks und verfolgte Geschichten. Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Auf unterstützten Telefonen ist das Lesen auf dem Telefon in jedem Tarif unbegrenzt.",
+    "analysedForYou": "Von Mera gelesen",
     "articlesUsedToday": "Heute genutzte Artikel",
     "available24h": "Verfügbar, letzte 24 Stunden",
     "discarded": "Verworfen",
@@ -860,7 +886,8 @@
     "confirmingBody": "Das dauert meist nur ein paar Sekunden. Du kannst hier warten.",
     "confirmTimeoutTitle": "Wir konnten deinen Kauf noch nicht bestätigen",
     "confirmTimeoutBody": "Falls du bezahlt hast, wende dich an den Support. Wir klären das dann für dich.",
-    "checkAgain": "Erneut prüfen"
+    "checkAgain": "Erneut prüfen",
+    "readingExplainer": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Dein Tarif legt fest, wie viel Mera jeden Tag liest: Einzelperson bekommt 5x so viel Lesen wie Starter, Professional 20x. Auf unterstützten Telefonen ist das Lesen auf dem Telefon in jedem Tarif unbegrenzt."
   },
   "tabs": {
     "deck": "Nachrichten",
@@ -912,7 +939,7 @@
     "expandA11y": "Feed-Status-Details anzeigen",
     "modeProcessing": "Dein Feed wird aktualisiert",
     "modeError": "Problem mit dem Feed",
-    "modeLimited": "Tageslimit für Artikel erreicht",
+    "modeLimited": "Mera hat das heutige Lesekontingent genutzt",
     "syncDoneA11y": "Dein Feed ist aktuell.",
     "collapseA11y": "Feed-Status-Details verbergen",
     "deviceProgress": "Bewertung auf dem Gerät",
@@ -921,7 +948,10 @@
     "relevant": "Bisher relevant",
     "lastProcessed": "Zuletzt verarbeitet",
     "limitUpgrade": "Oder <0>wechsle deinen Tarif</0>.",
-    "tryNow": "Jetzt testen"
+    "tryNow": "Jetzt testen",
+    "seePlans": "Tarife ansehen",
+    "readOnPhone": "Stattdessen auf diesem Telefon lesen",
+    "readingAgainA11y": "Mera liest wieder."
   },
   "trackedStories": {
     "emptyTitle": "Noch keine gefolgten Geschichten",
@@ -958,8 +988,8 @@
     "gotIt": "Verstanden",
     "starterTitle": "Starter geht auf uns",
     "starterIntro": "Damit du siehst, wofür Mera da ist, enthält jetzt jedes Konto den vollen Starter-Plan kostenlos.",
-    "starterArticlesTitle": "250 Artikel pro Tag",
-    "starterArticlesBody": "Mera analysiert täglich bis zu 250 Artikel für dich.",
+    "starterArticlesTitle": "Jeder passende Artikel",
+    "starterArticlesBody": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist.",
     "starterInterestsTitle": "Alle deine Interessen",
     "starterInterestsBody": "Füge so viele hinzu, wie du möchtest. Mera verfolgt jedes einzelne.",
     "starterChatTitle": "Chat und Faktenchecks",
@@ -970,8 +1000,8 @@
   "notificationCenter": {
     "title": "Benachrichtigungen",
     "empty": "Du bist auf dem neuesten Stand",
-    "dailyLimitTitle": "Tägliches Nachrichtenlimit erreicht",
-    "dailyLimitBody": "Du hast das heutige Artikellimit erreicht. Es wird bald zurückgesetzt.",
+    "dailyLimitTitle": "Mera hat das heutige Lesekontingent genutzt",
+    "dailyLimitBody": "Mera liest für dich nach dem täglichen Zurücksetzen wieder.",
     "emptyBody": "Alles, was deine Aufmerksamkeit braucht, etwa eine Profilbereinigung oder eine Frage von Mera, erscheint hier.",
     "settingsLink": "Benachrichtigungseinstellungen",
     "help": {
@@ -1808,7 +1838,7 @@
             "steps": {
               "0": "Kurze Topicsätze, damit es etwas zum Abgleichen von Geschichten gegen gibt.",
               "1": "Wie du dich anmeldest, per E-Mail oder mit diesem Telefon, und welchen Tarif du hast.",
-              "2": "Die Artikel, die dein Telefon anfragt, pro Tag gezählt, damit dieser Tarif fair bleibt."
+              "2": "Die Artikel, die dein Telefon anfragt, und der verschlüsselte Text, den Mera zum Lesen für dich sendet, pro Tag gezählt, um deinen Tarif anzuwenden."
             },
             "ask": "Was sendet die App an deine Server?"
           },
@@ -1826,7 +1856,7 @@
           },
           "what-we-keep": {
             "headline": "Was wir behalten",
-            "body": "Deine Anmelde-E-Mail, falls du eine hinzugefügt hast. Welchen Tarif du hast. Eine tägliche Zahl der an dich gesendeten Artikel und die Tage, an denen du Mera genutzt hast, 90 Tage aufbewahrt. Deine Benachrichtigungszeiten, deine Sprache und deine Verarbeitungswahl. Antworten, die du auf Fragen des Mera-Teams schickst. Wenn du Mera ohne E-Mail nutzt, einen Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenphrasen werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht.",
+            "body": "Deine Anmelde-E-Mail, falls du eine hinzugefügt hast. Welchen Tarif du hast. Eine tägliche Zahl der an dich gesendeten Artikel, wie viel verschlüsselter Text Mera zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast, 90 Tage aufbewahrt. Deine Benachrichtigungszeiten, deine Sprache und deine Verarbeitungswahl. Antworten, die du auf Fragen des Mera-Teams schickst. Wenn du Mera ohne E-Mail nutzt, einen Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenphrasen werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht.",
             "ask": "Was speichert Mera über mich auf seinen Servern?"
           }
         }
@@ -2758,7 +2788,18 @@
       "privateCloud": "Private Cloud",
       "signedInPhone": "Mit diesem Telefon angemeldet",
       "version": "Version {{version}} · Mera Labs B.V.",
-      "yourData": "Deine Daten"
+      "yourData": "Deine Daten",
+      "readingToday": "Mera liest heute",
+      "readingUsed": "{{percent}} genutzt",
+      "readingDone": "Für heute erledigt",
+      "resetsTodayAt": "Wird heute um {{time}} zurückgesetzt",
+      "resetsTomorrowAt": "Wird morgen um {{time}} zurückgesetzt",
+      "lastUpdated": "Zuletzt aktualisiert {{time}}",
+      "onDeviceUnlimited": "Lesen auf dem Telefon: unbegrenzt",
+      "readingOnPhone": "Mera liest auf diesem Telefon.",
+      "newPlanApplies": "Dein neuer Tarif gilt jetzt.",
+      "planMultiplierBase": "Tägliches Lesen im Starter-Tarif",
+      "planMultiplier": "{{n}}x das Lesen im Starter-Tarif"
     },
     "notifications": {
       "push": "Push-Benachrichtigungen",
