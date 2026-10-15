@@ -30,7 +30,9 @@ export function formatResetTime(at: string | number | null | undefined, language
  */
 export function useReadingFetch(tier: string | null | undefined): ReadingMeterProps {
     const [reading, setReading] = useState<{ used: number | null; multiplier: number } | null>(null);
-    const [online, setOnline] = useState(false);
+    // null until the first answer: unknown is drawn as online (the stored figure, no
+    // "Last updated"), or every focus would flash the offline line before the fetch lands.
+    const [online, setOnline] = useState<boolean | null>(null);
     useFocusEffect(
         useCallback(() => {
             let live = true;
@@ -44,7 +46,7 @@ export function useReadingFetch(tier: string | null | undefined): ReadingMeterPr
             };
         }, []),
     );
-    return { used: reading?.used ?? null, online, multiplier: reading?.multiplier ?? tierMultiplier(tier) };
+    return { used: reading?.used ?? null, online: online !== false, multiplier: reading?.multiplier ?? tierMultiplier(tier) };
 }
 
 export interface ReadingMeterProps {

@@ -117,6 +117,14 @@ describe('the hold', () => {
     expect(getReadHold().used).toBe(1);
   });
 
+  it('a write that arrives before hydrate keeps the stored hold', async () => {
+    await setReadHold({ resetAt: MIDNIGHT, used: 1 });
+    resetReadHold(); // a fresh process: memory empty, row kept, nothing hydrated yet
+    await setReadHold({ used: 0.3 });
+    expect(isReadHeld()).toBe(true);
+    expect(getReadHold()).toEqual({ resetAt: MIDNIGHT, used: 0.3 });
+  });
+
   it('hydrate never rejects on a bad row', async () => {
     mockStore.set(READ_HOLD_KEY, '{not json');
     await expect(hydrateReadHold()).resolves.toBeUndefined();

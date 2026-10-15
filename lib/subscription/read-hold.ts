@@ -178,6 +178,9 @@ export async function setReadHold(
   patch: Partial<ReadHold>,
   opts: { serverNow?: number | null } = {},
 ): Promise<void> {
+  // A write can arrive before boot hydration (a 202, the launch billing read).
+  // Merging into empty memory would persist over the stored hold and lose it.
+  if (!loaded) await hydrateReadHold();
   const now = Date.now();
   const next: State = { ...state, updatedAt: now };
   if (patch.resetAt !== undefined) {
