@@ -9,11 +9,23 @@ import { create } from 'zustand';
 
 interface FeedStatusCardState {
     readonly expanded: boolean;
+    /** Articles Mera has not read, below the picks: written by the Continuous
+     *  list while its not-read tail is shown (Show = All or Not read by
+     *  Mera), null otherwise (Sectioned, Mera's picks, unmounted). The limited
+     *  sentence names it only when it is a number. */
+    readonly notReadWaiting: number | null;
 }
 
 export const useFeedStatusCard = create<FeedStatusCardState>()(() => ({
     expanded: false,
+    notReadWaiting: null,
 }));
+
+export const useNotReadWaiting = (): number | null => useFeedStatusCard((s) => s.notReadWaiting);
+
+export function setNotReadWaiting(n: number | null): void {
+    if (useFeedStatusCard.getState().notReadWaiting !== n) useFeedStatusCard.setState({ notReadWaiting: n });
+}
 
 /** Whether the Feed list leads with the card. */
 export function statsCardShown(i: { issue: boolean; empty: boolean; hasRows: boolean }): boolean {
