@@ -126,6 +126,7 @@ export const BACKUP_SETTING_KEYS: readonly string[] = [
   'nav_order_world',
   'feed_view',
   'feed_minimap',
+  'feed_show',
 ];
 
 /**
