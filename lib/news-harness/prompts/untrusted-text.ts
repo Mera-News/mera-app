@@ -22,10 +22,13 @@ export type UntrustedText = string & { readonly __untrusted: unique symbol };
 
 /**
  * Structural markers that must never survive into a prompt: they are the tags
- * our own prompt scaffolding uses, so a publisher emitting one could close our
+ * our own prompt scaffolding uses (chat harness `<surface>`, `<state>`,
+ * `<known_facts>` and the `<function=` / `<parameter=` tool-call forms
+ * included; `\b` keeps `<statement>` prose intact), so a publisher emitting one could close our
  * context or open a turn that looks like ours.
  */
-const STRUCTURAL_TAG = /<\/?(?:context|tool_call|system|user|assistant)[^>]*>/gi;
+const STRUCTURAL_TAG =
+  /<\/?(?:context|tool_call|system|user|assistant)[^>]*>|<\/?(?:surface|state|known_facts)\b[^>]*>|<function=[^>]*>|<parameter=[^>]*>|<\/(?:function|parameter)\s*>/gi;
 
 /**
  * How many strip passes we will run before giving up. Stripping is applied to a

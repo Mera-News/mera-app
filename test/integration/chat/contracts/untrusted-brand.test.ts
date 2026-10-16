@@ -62,4 +62,33 @@ describe('UntrustedText brand', () => {
   it('strips a nested structural tag rather than creating one', () => {
     expect(asUntrusted('<<context>context>')).not.toMatch(/<\/?context[^>]*>/i);
   });
+  describe('chat harness tags', () => {
+    it.each(['surface', 'state', 'known_facts'])('strips <%s> in open and close form', (tag) => {
+      expect(asUntrusted(`a <${tag}>b</${tag}> c <${tag} x="1">d`)).toBe('a b c d');
+    });
+
+    it.each([
+      ['<function=search>x</function>', 'x'],
+      ['<parameter=q>x</parameter>', 'x'],
+    ])('strips tool-call form %s', (raw, out) => {
+      expect(asUntrusted(raw)).toBe(out);
+    });
+
+    it('strips nested forgeries to a fixpoint', () => {
+      expect(asUntrusted('<<surface>surface>')).not.toMatch(/<\/?surface/i);
+      expect(asUntrusted('<<function=f>function=f>')).not.toMatch(/<function=/i);
+      expect(asUntrusted('<</parameter>/parameter>')).not.toMatch(/<\/parameter/i);
+    });
+
+    it('leaves ordinary prose with < and > unchanged', () => {
+      const prose = 'Rates fell when x < 5 and y > 3, per the statement';
+      expect(asUntrusted(prose)).toBe(prose);
+      expect(asUntrusted('<statement>ok</statement>')).toBe('<statement>ok</statement>');
+    });
+
+    it('is idempotent on the new tags', () => {
+      const once = asUntrusted('<<surface>surface> <known_facts> <function=a> </state>', 5000);
+      expect(asUntrusted(once, 5000)).toBe(once);
+    });
+  });
 });
