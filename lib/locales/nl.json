@@ -496,7 +496,9 @@
     "webSearchShort": "Alleen de zoekwoorden verlaten je telefoon, via de server van Mera. De zoekmachine komt nooit te weten wie je bent.",
     "whereReads": "Waar Mera je nieuws leest",
     "whileClosed": "Terwijl Mera gesloten is",
-    "deleting": "Verwijderen…"
+    "deleting": "Verwijderen…",
+    "onDeviceNeedsCloud": "Sommige chatfuncties hebben Privécloud nodig.",
+    "explainerOnPhoneLimits": "Op deze telefoon kan Mera het nieuws en het web niet doorzoeken, en ook geen feiten controleren."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart 'Publicaties die je leest' op het tabblad Bronnen en de per-publicatiegeschiedenis worden gereset naar leeg. Niets anders wordt beïnvloed en er worden geen servergegevens aangeraakt, want de servers van Mera hebben deze gegevens nooit gehad.",
@@ -711,7 +713,10 @@
     "guidelinesLink": "contentrichtlijnen",
     "aiSubtitle": "Een AI, geen mens",
     "aboutTitle": "Over Mera",
-    "mayMistakes": "Mera kan fouten maken, dus controleer belangrijk nieuws bij de bron."
+    "mayMistakes": "Mera kan fouten maken, dus controleer belangrijk nieuws bij de bron.",
+    "cardWaitingHint": "Tik hierboven op een optie, of typ ja",
+    "cardCancelled": "Oké, er is niets veranderd",
+    "changeUndone": "Ongedaan gemaakt"
   },
   "articleFeedback": {
     "thumbsUpMessage": "Ik vond dit artikel leuk: \"{{title}}\". Ik zou graag meer van dit soort suggesties zien.",
@@ -2423,7 +2428,14 @@
     "doneInSteps_one": "Klaar in {{count}} stap",
     "doneInSteps_other": "Klaar in {{count}} stappen",
     "doneInStepsShow_one": "Klaar in {{count}} stap, toon stappen",
-    "doneInStepsShow_other": "Klaar in {{count}} stappen, toon stappen"
+    "doneInStepsShow_other": "Klaar in {{count}} stappen, toon stappen",
+    "proposeChanges": "Ik zet de wijziging klaar",
+    "applyProposal": "Ik maak de wijziging die we hebben afgesproken",
+    "cancelProposal": "Ik laat het zoals het was",
+    "proposeTrack": "Ik zet het verhaal klaar om te volgen",
+    "proposeFactCheck": "Ik zet de factcheck klaar",
+    "searchNews": "Ik zoek door het nieuws",
+    "cardRefused": "Dat kon ik niet vinden, dus er is niets veranderd"
   },
   "skillPhrase": {
     "residence": "waar je woont",
@@ -2431,8 +2443,9 @@
     "interests": "je interesses",
     "origin": "waar je vandaan komt",
     "family": "je gezin",
-    "newFact": "een nieuw gegeven",
-    "topics": "je onderwerpen"
+    "feedTuning": "je feed",
+    "followStory": "een verhaal om te volgen",
+    "factCheck": "een bewering om te controleren"
   },
   "askChoice": {
     "answeredA11y": "al beantwoord",
@@ -2851,7 +2864,13 @@
     "library": "Vraag me naar alles in het nieuws, of vertel me wat je graag leest.",
     "facts": "Je bekijkt je feiten. Wat wil je wijzigen?",
     "sources": "Vraag me naar een uitgever, of vertel me wat je volgt.",
-    "settings": "Vraag me wat ik kan doen, of hoe Mera met je gegevens omgaat."
+    "settings": "Vraag me wat ik kan doen, of hoe Mera met je gegevens omgaat.",
+    "onDevice": {
+      "feed": "Je bent op je Feed. Vertel me iets over jezelf, dan stem ik af wat hier verschijnt.",
+      "library": "Vertel me wat je graag leest, dan hou ik daar rekening mee voor je Feed.",
+      "world": "Vertel me welke plekken voor je belangrijk zijn, dan hou ik daar rekening mee voor je Feed.",
+      "sources": "Vertel me wat je volgt, dan hou ik daar rekening mee voor je Feed."
+    }
   },
   "meraDraft": {
     "changeInterest": "Wijzig mijn interesse “{{statement}}” in ",

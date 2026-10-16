@@ -493,7 +493,9 @@
     "webSearchShort": "スマートフォンから外に出るのは検索語だけで、メラのサーバーを経由します。検索エンジンがあなたが誰かを知ることはありません。",
     "whereReads": "メラがあなたのニュースを読む場所",
     "whileClosed": "メラを閉じている間",
-    "deleting": "削除しています…"
+    "deleting": "削除しています…",
+    "onDeviceNeedsCloud": "一部のチャット機能には「プライベートクラウド」が必要です。",
+    "explainerOnPhoneLimits": "「この電話上」では、メラはニュースやウェブの検索、事実確認ができません。"
   },
   "manageData": {
     "viewingHistoryModalDescription": "開いた記事のローカルログを消去します。「ソース」タブの「読んでいた出版社」カードと各出版社の履歴が空にリセットされます。他のものには影響せず、サーバー上のデータにも触れません。メラのサーバーはこのデータを受け取ったことがないためです。",
@@ -707,7 +709,10 @@
     "guidelinesLink": "コンテンツガイドライン",
     "aiSubtitle": "人ではなくAI",
     "aboutTitle": "メラについて",
-    "mayMistakes": "メラは間違えることがあるので、重要なニュースは情報源で確認してください。"
+    "mayMistakes": "メラは間違えることがあるので、重要なニュースは情報源で確認してください。",
+    "cardWaitingHint": "上の選択肢をタップするか、「はい」と入力してください",
+    "cardCancelled": "わかりました。何も変更していません",
+    "changeUndone": "元に戻しました"
   },
   "articleFeedback": {
     "thumbsUpMessage": "この記事が気に入りました:「{{title}}」。このような提案をもっと見たいです。",
@@ -2418,7 +2423,14 @@
     "doneInSteps_one": "{{count}}ステップで完了",
     "doneInSteps_other": "{{count}}ステップで完了",
     "doneInStepsShow_one": "{{count}}ステップで完了、手順を表示",
-    "doneInStepsShow_other": "{{count}}ステップで完了、手順を表示"
+    "doneInStepsShow_other": "{{count}}ステップで完了、手順を表示",
+    "proposeChanges": "変更を準備しています",
+    "applyProposal": "お決めいただいた変更を反映しています",
+    "cancelProposal": "そのままにしています",
+    "proposeTrack": "フォローするストーリーを準備しています",
+    "proposeFactCheck": "ファクトチェックを準備しています",
+    "searchNews": "ニュースを確認しています",
+    "cardRefused": "見つからなかったため、何も変更されていません"
   },
   "skillPhrase": {
     "residence": "お住まいの場所",
@@ -2426,8 +2438,9 @@
     "interests": "ご興味",
     "origin": "ご出身",
     "family": "ご家族",
-    "newFact": "新しい情報",
-    "topics": "ご関心のトピック"
+    "feedTuning": "あなたのフィード",
+    "followStory": "フォローするストーリー",
+    "factCheck": "確認する主張"
   },
   "askChoice": {
     "answeredA11y": "回答済み",
@@ -2845,7 +2858,13 @@
     "library": "ニュースについて何でも聞いてください。好きな読み物も教えてください。",
     "facts": "ファクトを見ています。何を変更しますか？",
     "sources": "メディアについて聞いてください。フォローしていることを教えてください。",
-    "settings": "私にできることや、メラがあなたのデータをどう扱うかを聞いてください。"
+    "settings": "私にできることや、メラがあなたのデータをどう扱うかを聞いてください。",
+    "onDevice": {
+      "feed": "フィードを見ています。あなたのことを教えていただければ、ここに表示される内容を調整します。",
+      "library": "好きな読み物を教えてください。フィードに反映しておきます。",
+      "world": "気になる地域を教えてください。フィードに反映しておきます。",
+      "sources": "フォローしているものを教えてください。フィードに反映しておきます。"
+    }
   },
   "meraDraft": {
     "changeInterest": "関心「{{statement}}」を次に変更: ",

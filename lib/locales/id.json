@@ -493,7 +493,9 @@
     "webSearchShort": "Hanya kata pencarian yang keluar dari ponsel Anda, lewat server Mera. Mesin pencari tidak pernah tahu siapa Anda.",
     "whereReads": "Di mana Mera membaca berita Anda",
     "whileClosed": "Saat Mera ditutup",
-    "deleting": "Menghapus…"
+    "deleting": "Menghapus…",
+    "onDeviceNeedsCloud": "Beberapa fitur chat memerlukan “Cloud pribadi”.",
+    "explainerOnPhoneLimits": "Di ponsel ini, Mera tidak bisa mencari berita atau web, atau memeriksa fakta."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu \"Publikasi yang Anda baca\" di tab Sumber dan riwayat per-publikasi akan direset menjadi kosong. Tidak ada hal lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah memiliki data ini.",
@@ -707,7 +709,10 @@
     "guidelinesLink": "pedoman konten",
     "aiSubtitle": "AI, bukan orang",
     "aboutTitle": "Tentang Mera",
-    "mayMistakes": "Mera bisa membuat kesalahan, jadi periksa berita penting di sumbernya."
+    "mayMistakes": "Mera bisa membuat kesalahan, jadi periksa berita penting di sumbernya.",
+    "cardWaitingHint": "Ketuk salah satu pilihan di atas, atau ketik ya",
+    "cardCancelled": "Baik, tidak ada yang berubah",
+    "changeUndone": "Diurungkan"
   },
   "articleFeedback": {
     "thumbsUpMessage": "Saya suka artikel ini: \"{{title}}\". Saya ingin melihat lebih banyak saran seperti ini.",
@@ -2418,7 +2423,14 @@
     "doneInSteps_one": "Selesai dalam {{count}} langkah",
     "doneInSteps_other": "Selesai dalam {{count}} langkah",
     "doneInStepsShow_one": "Selesai dalam {{count}} langkah, tampilkan langkah",
-    "doneInStepsShow_other": "Selesai dalam {{count}} langkah, tampilkan langkah"
+    "doneInStepsShow_other": "Selesai dalam {{count}} langkah, tampilkan langkah",
+    "proposeChanges": "Menyiapkan perubahan",
+    "applyProposal": "Menerapkan perubahan yang sudah disepakati",
+    "cancelProposal": "Membiarkannya seperti semula",
+    "proposeTrack": "Menyiapkan cerita yang akan diikuti",
+    "proposeFactCheck": "Menyiapkan pemeriksaan fakta",
+    "searchNews": "Menelusuri berita",
+    "cardRefused": "Tidak bisa menemukannya, jadi tidak ada yang berubah"
   },
   "skillPhrase": {
     "residence": "tempat tinggalmu",
@@ -2426,8 +2438,9 @@
     "interests": "minatmu",
     "origin": "asalmu",
     "family": "keluargamu",
-    "newFact": "informasi baru",
-    "topics": "topikmu"
+    "feedTuning": "feed Anda",
+    "followStory": "cerita yang ingin diikuti",
+    "factCheck": "klaim yang perlu diperiksa"
   },
   "askChoice": {
     "answeredA11y": "sudah dijawab",
@@ -2845,7 +2858,13 @@
     "library": "Tanyakan apa saja tentang berita, atau beri tahu saya apa yang suka Anda baca.",
     "facts": "Anda sedang melihat fakta Anda. Apa yang ingin Anda ubah?",
     "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang Anda ikuti.",
-    "settings": "Tanyakan kepada saya apa yang bisa saya lakukan, atau bagaimana Mera menangani data Anda."
+    "settings": "Tanyakan kepada saya apa yang bisa saya lakukan, atau bagaimana Mera menangani data Anda.",
+    "onDevice": {
+      "feed": "Anda ada di Feed. Beri tahu saya tentang diri Anda, dan saya akan menyesuaikan apa yang muncul di sini.",
+      "library": "Beri tahu saya apa yang suka Anda baca, dan saya akan menyimpannya untuk Feed Anda.",
+      "world": "Beri tahu saya tempat mana yang penting bagi Anda, dan saya akan menyimpannya untuk Feed Anda.",
+      "sources": "Beri tahu saya apa yang Anda ikuti, dan saya akan menyimpannya untuk Feed Anda."
+    }
   },
   "meraDraft": {
     "changeInterest": "Ubah minat saya \"{{statement}}\" menjadi ",

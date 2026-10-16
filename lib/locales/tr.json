@@ -496,7 +496,9 @@
     "webSearchShort": "Telefonundan yalnızca arama kelimeleri, Mera'nın sunucusu üzerinden çıkar. Arama motoru senin kim olduğunu hiçbir zaman öğrenmez.",
     "whereReads": "Mera haberlerinizi nerede okur",
     "whileClosed": "Mera kapalıyken",
-    "deleting": "Siliniyor…"
+    "deleting": "Siliniyor…",
+    "onDeviceNeedsCloud": "Bazı sohbet özellikleri için “Özel bulut” gerekiyor.",
+    "explainerOnPhoneLimits": "“Bu telefonda” modunda Mera haberlerde ya da web'de arama yapamaz ve iddiaları kontrol edemez."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanıp boşalır. Başka hiçbir şey etkilenmez ve sunucu verisine dokunulmaz, çünkü Mera'nın sunucularında bu veri hiç olmadı.",
@@ -711,7 +713,10 @@
     "guidelinesLink": "içerik yönergelerine uyar",
     "aiSubtitle": "Bir yapay zeka, bir insan değil",
     "aboutTitle": "Mera hakkında",
-    "mayMistakes": "Mera hata yapabilir, bu yüzden önemli haberleri kaynağından kontrol edin."
+    "mayMistakes": "Mera hata yapabilir, bu yüzden önemli haberleri kaynağından kontrol edin.",
+    "cardWaitingHint": "Yukarıdan bir seçeneğe dokun ya da evet yaz",
+    "cardCancelled": "Tamam, hiçbir şey değişmedi",
+    "changeUndone": "Geri alındı"
   },
   "articleFeedback": {
     "thumbsUpMessage": "Bu makaleyi beğendim: \"{{title}}\". Bunun gibi daha fazla öneri görmek isterim.",
@@ -2425,7 +2430,14 @@
     "doneInSteps_one": "{{count}} adımda tamamlandı",
     "doneInSteps_other": "{{count}} adımda tamamlandı",
     "doneInStepsShow_one": "{{count}} adımda tamamlandı, adımları göster",
-    "doneInStepsShow_other": "{{count}} adımda tamamlandı, adımları göster"
+    "doneInStepsShow_other": "{{count}} adımda tamamlandı, adımları göster",
+    "proposeChanges": "Değişikliği hazırlıyorum",
+    "applyProposal": "Kabul ettiğin değişikliği yapıyorum",
+    "cancelProposal": "Olduğu gibi bırakıyorum",
+    "proposeTrack": "Takip edilecek haberi hazırlıyorum",
+    "proposeFactCheck": "Doğruluk kontrolünü hazırlıyorum",
+    "searchNews": "Haberlere bakıyorum",
+    "cardRefused": "Bulamadım, bu yüzden hiçbir şey değişmedi"
   },
   "skillPhrase": {
     "residence": "yaşadığın yeri",
@@ -2433,8 +2445,9 @@
     "interests": "ilgi alanlarını",
     "origin": "nereli olduğunu",
     "family": "aileni",
-    "newFact": "yeni bir bilgiyi",
-    "topics": "konularını"
+    "feedTuning": "akışını",
+    "followStory": "takip edilecek bir haberi",
+    "factCheck": "kontrol edilecek bir iddiayı"
   },
   "askChoice": {
     "answeredA11y": "zaten yanıtlandı",
@@ -2853,7 +2866,13 @@
     "library": "Bana haberlerdeki herhangi bir şeyi sorun veya ne okumayı sevdiğinizi söyleyin.",
     "facts": "Gerçeklerinize bakıyorsunuz. Neyi değiştirmek istersiniz?",
     "sources": "Bana bir yayını sorun veya neyi takip ettiğinizi söyleyin.",
-    "settings": "Neler yapabileceğimi ya da Mera'nın verilerinizi nasıl ele aldığını sorun."
+    "settings": "Neler yapabileceğimi ya da Mera'nın verilerinizi nasıl ele aldığını sorun.",
+    "onDevice": {
+      "feed": "Akışındasın. Bana kendinden biraz anlat, burada ne çıkacağını ayarlayayım.",
+      "library": "Bana ne okumayı sevdiğini anlat, bunu akışın için aklımda tutayım.",
+      "world": "Bana hangi yerlerin senin için önemli olduğunu anlat, bunu akışın için aklımda tutayım.",
+      "sources": "Bana neleri takip ettiğini anlat, bunu akışın için aklımda tutayım."
+    }
   },
   "meraDraft": {
     "changeInterest": "\"{{statement}}\" ilgi alanımı şuna değiştir: ",

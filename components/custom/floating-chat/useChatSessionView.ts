@@ -39,9 +39,6 @@ import type { ChatSessionViewProps } from './ChatSessionView';
 // the key is not in the union yet. One cast, no `defaultValue` — an inline
 // English default is how English has previously shipped into 19 locale files.
 type PendingLocaleKey = 'factCheck.chatSeed';
-// `floatingChat.cardWaitingHint` / `floatingChat.cardCancelled` await the
-// 20-locale splice; one narrowing cast each, removed once they land.
-type PendingFloatingKey = 'factChoice.pendingHint';
 
 export function useChatSessionView(props: ChatSessionViewProps) {
   const {
@@ -586,7 +583,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     unresolvedFactChoices > 0
       ? t('factChoice.pendingHint')
       : proposalCardWaiting
-        ? t('floatingChat.cardWaitingHint' as PendingFloatingKey)
+        ? t('floatingChat.cardWaitingHint')
         : null;
 
   // A card resolved by TYPING (the turn carried applyProposal or cancelProposal)
@@ -622,7 +619,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       void AccessibilityInfo.announceForAccessibility(
         status === 'applied'
           ? t('articleFeedback.proposalApplied')
-          : t('floatingChat.cardCancelled' as PendingFloatingKey),
+          : t('floatingChat.cardCancelled'),
       );
     }
   }, [resolvedProposals, messages, userTurns, t]);

@@ -493,7 +493,9 @@
     "webSearchShort": "Chỉ những từ tìm kiếm rời khỏi điện thoại của bạn, thông qua máy chủ của Mera. Công cụ tìm kiếm không bao giờ biết bạn là ai.",
     "whereReads": "Nơi Mera đọc tin của bạn",
     "whileClosed": "Khi Mera đóng",
-    "deleting": "Đang xóa…"
+    "deleting": "Đang xóa…",
+    "onDeviceNeedsCloud": "Một số tính năng trò chuyện cần “Đám mây riêng”.",
+    "explainerOnPhoneLimits": "Trên điện thoại này, Mera không thể tìm tin tức hay trang web, cũng không thể kiểm chứng thông tin."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ \"Ấn phẩm bạn đang đọc\" trong tab Nguồn và lịch sử theo từng ấn phẩm sẽ trở về trạng thái trống. Không có gì khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị chạm đến, vì máy chủ của Mera chưa bao giờ có dữ liệu này.",
@@ -707,7 +709,10 @@
     "guidelinesLink": "hướng dẫn nội dung",
     "aiSubtitle": "Một AI, không phải người",
     "aboutTitle": "Giới thiệu về Mera",
-    "mayMistakes": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra các tin quan trọng tại nguồn gốc."
+    "mayMistakes": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra các tin quan trọng tại nguồn gốc.",
+    "cardWaitingHint": "Chọn một tùy chọn phía trên, hoặc gõ “có”",
+    "cardCancelled": "Được rồi, chưa có gì thay đổi",
+    "changeUndone": "Đã hoàn tác"
   },
   "articleFeedback": {
     "thumbsUpMessage": "Tôi thích bài viết này: \"{{title}}\". Tôi muốn xem thêm gợi ý như thế này.",
@@ -2418,7 +2423,14 @@
     "doneInSteps_one": "Hoàn tất sau {{count}} bước",
     "doneInSteps_other": "Hoàn tất sau {{count}} bước",
     "doneInStepsShow_one": "Hoàn tất sau {{count}} bước, hiện các bước",
-    "doneInStepsShow_other": "Hoàn tất sau {{count}} bước, hiện các bước"
+    "doneInStepsShow_other": "Hoàn tất sau {{count}} bước, hiện các bước",
+    "proposeChanges": "Đang chuẩn bị thay đổi",
+    "applyProposal": "Đang thực hiện thay đổi bạn đã đồng ý",
+    "cancelProposal": "Giữ nguyên như cũ",
+    "proposeTrack": "Đang chuẩn bị câu chuyện để theo dõi",
+    "proposeFactCheck": "Đang chuẩn bị kiểm chứng thông tin",
+    "searchNews": "Đang tìm trong tin tức",
+    "cardRefused": "Không tìm thấy, nên chưa có gì thay đổi"
   },
   "skillPhrase": {
     "residence": "nơi bạn sống",
@@ -2426,8 +2438,9 @@
     "interests": "sở thích của bạn",
     "origin": "nơi bạn đến từ",
     "family": "gia đình bạn",
-    "newFact": "một thông tin mới",
-    "topics": "chủ đề của bạn"
+    "feedTuning": "nguồn tin của bạn",
+    "followStory": "một câu chuyện để theo dõi",
+    "factCheck": "một thông tin cần kiểm chứng"
   },
   "askChoice": {
     "answeredA11y": "đã trả lời",
@@ -2845,7 +2858,13 @@
     "library": "Hãy hỏi tôi về bất cứ điều gì trong tin tức, hoặc cho tôi biết bạn thích đọc gì.",
     "facts": "Bạn đang xem thông tin của mình. Bạn muốn đổi gì?",
     "sources": "Hãy hỏi tôi về một ấn phẩm, hoặc cho tôi biết bạn theo dõi gì.",
-    "settings": "Hãy hỏi mình xem mình làm được gì, hoặc Mera xử lý dữ liệu của bạn như thế nào."
+    "settings": "Hãy hỏi mình xem mình làm được gì, hoặc Mera xử lý dữ liệu của bạn như thế nào.",
+    "onDevice": {
+      "feed": "Bạn đang ở Bảng tin. Hãy cho mình biết về bạn, mình sẽ điều chỉnh những gì hiện ở đây.",
+      "library": "Hãy cho mình biết bạn thích đọc gì, mình sẽ ghi nhớ để điều chỉnh Bảng tin của bạn.",
+      "world": "Hãy cho mình biết những nơi nào quan trọng với bạn, mình sẽ ghi nhớ để điều chỉnh Bảng tin của bạn.",
+      "sources": "Hãy cho mình biết bạn theo dõi những gì, mình sẽ ghi nhớ để điều chỉnh Bảng tin của bạn."
+    }
   },
   "meraDraft": {
     "changeInterest": "Đổi mối quan tâm \"{{statement}}\" của tôi thành ",

@@ -625,10 +625,6 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   );
 };
 
-// "Floating chat" keys not yet in the dictionaries (opus-main splices all 20
-// locales); one narrowing cast each, removed once they land so tsc proves them.
-type PendingKey = 'articleFeedback.proposalApplied';
-
 /**
  * A change applied because the reader typed yes. Undo reverts each change-log
  * row, then the row reads "Undone". `undoable` is decided by the deriver (it
@@ -669,7 +665,7 @@ export const AppliedByTypingCard: React.FC<{ changeLogIds: string[]; undoable: b
       />
       <Text size="xs" style={styles.statusText}>
         {done
-          ? t('floatingChat.changeUndone' as PendingKey)
+          ? t('floatingChat.changeUndone')
           : t('articleFeedback.proposalApplied')}
       </Text>
       {undoable && !done && (

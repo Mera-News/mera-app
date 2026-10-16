@@ -85,10 +85,6 @@ function firstLine(value: unknown): string {
 
 type TFn = TFunction;
 
-// Keys whose en text awaits the 20-locale splice: one narrowing cast each,
-// removed once they land so tsc proves them.
-type PendingKey = 'agentSteps.working';
-
 /** The three key->text tables, built once per language. Pure given `t`, so a
  *  table test needs no render. */
 export function stepTables(t: TFn) {
@@ -102,12 +98,12 @@ export function stepTables(t: TFn) {
     'agentSteps.removing': t('agentSteps.removing'),
     'agentSteps.asking': t('agentSteps.asking'),
     'agentSteps.working': t('agentSteps.working'),
-    'agentSteps.proposeChanges': t('agentSteps.proposeChanges' as PendingKey),
-    'agentSteps.applyProposal': t('agentSteps.applyProposal' as PendingKey),
-    'agentSteps.cancelProposal': t('agentSteps.cancelProposal' as PendingKey),
-    'agentSteps.proposeTrack': t('agentSteps.proposeTrack' as PendingKey),
-    'agentSteps.proposeFactCheck': t('agentSteps.proposeFactCheck' as PendingKey),
-    'agentSteps.searchNews': t('agentSteps.searchNews' as PendingKey),
+    'agentSteps.proposeChanges': t('agentSteps.proposeChanges'),
+    'agentSteps.applyProposal': t('agentSteps.applyProposal'),
+    'agentSteps.cancelProposal': t('agentSteps.cancelProposal'),
+    'agentSteps.proposeTrack': t('agentSteps.proposeTrack'),
+    'agentSteps.proposeFactCheck': t('agentSteps.proposeFactCheck'),
+    'agentSteps.searchNews': t('agentSteps.searchNews'),
     // The wait line's own copy, so the box says the same thing the line
     // would (ux2 batch 25, D6). A pool: its first line.
     'chatPhases.webSearch': firstLine(t('chatPhases.webSearch', { returnObjects: true })),
@@ -119,9 +115,9 @@ export function stepTables(t: TFn) {
     'skillPhrase.interests': t('skillPhrase.interests'),
     'skillPhrase.origin': t('skillPhrase.origin'),
     'skillPhrase.family': t('skillPhrase.family'),
-    'skillPhrase.feedTuning': t('skillPhrase.feedTuning' as 'skillPhrase.work'),
-    'skillPhrase.followStory': t('skillPhrase.followStory' as 'skillPhrase.work'),
-    'skillPhrase.factCheck': t('skillPhrase.factCheck' as 'skillPhrase.work'),
+    'skillPhrase.feedTuning': t('skillPhrase.feedTuning'),
+    'skillPhrase.followStory': t('skillPhrase.followStory'),
+    'skillPhrase.factCheck': t('skillPhrase.factCheck'),
   };
 
   const CONSEQUENCE: Record<string, string> = {
@@ -132,7 +128,7 @@ export function stepTables(t: TFn) {
     'agentSteps.consequence.loadSkill': t('agentSteps.consequence.loadSkill'),
     'agentSteps.consequence.writeUp': t('agentSteps.consequence.writeUp'),
     'agentSteps.consequence.removing': t('agentSteps.consequence.removing'),
-    'agentSteps.cardRefused': t('agentSteps.cardRefused' as PendingKey),
+    'agentSteps.cardRefused': t('agentSteps.cardRefused'),
   };
   return { PLAIN_LABEL, SKILL_PHRASE, CONSEQUENCE };
 }

@@ -493,7 +493,9 @@
     "webSearchShort": "검색어만 메라 서버를 거쳐 휴대폰 밖으로 나갑니다. 검색 엔진은 회원님이 누구인지 알 수 없습니다.",
     "whereReads": "메라가 뉴스를 읽는 곳",
     "whileClosed": "메라가 닫혀 있는 동안",
-    "deleting": "삭제 중…"
+    "deleting": "삭제 중…",
+    "onDeviceNeedsCloud": "일부 채팅 기능은 프라이빗 클라우드가 필요해요.",
+    "explainerOnPhoneLimits": "이 휴대폰에서는 메라가 뉴스나 웹을 검색하거나 사실 여부를 확인할 수 없어요."
   },
   "manageData": {
     "viewingHistoryModalDescription": "열어본 기사의 로컬 기록을 지웁니다. 소스 탭의 '읽은 발행사' 카드와 발행사별 기록이 비어 있는 상태로 초기화됩니다. 다른 항목에는 영향이 없으며, 메라 서버에는 이 데이터가 없었으므로 서버 데이터도 변경되지 않습니다.",
@@ -707,7 +709,10 @@
     "guidelinesLink": "콘텐츠 가이드라인을",
     "aiSubtitle": "사람이 아닌 AI",
     "aboutTitle": "메라 정보",
-    "mayMistakes": "메라는 실수할 수 있으니 중요한 뉴스는 원문에서 확인하세요."
+    "mayMistakes": "메라는 실수할 수 있으니 중요한 뉴스는 원문에서 확인하세요.",
+    "cardWaitingHint": "위 옵션을 누르거나 '네'라고 입력하세요",
+    "cardCancelled": "알겠어요, 아무것도 바뀌지 않았어요",
+    "changeUndone": "되돌렸어요"
   },
   "articleFeedback": {
     "thumbsUpMessage": "이 기사가 마음에 들었어요: \"{{title}}\". 이런 추천을 더 보고 싶어요.",
@@ -2418,7 +2423,14 @@
     "doneInSteps_one": "{{count}}단계 만에 완료",
     "doneInSteps_other": "{{count}}단계 만에 완료",
     "doneInStepsShow_one": "{{count}}단계 만에 완료, 단계 보기",
-    "doneInStepsShow_other": "{{count}}단계 만에 완료, 단계 보기"
+    "doneInStepsShow_other": "{{count}}단계 만에 완료, 단계 보기",
+    "proposeChanges": "변경 사항을 준비하고 있어요",
+    "applyProposal": "말씀하신 대로 변경하고 있어요",
+    "cancelProposal": "바꾸지 않고 그대로 두고 있어요",
+    "proposeTrack": "팔로우할 스토리를 준비하고 있어요",
+    "proposeFactCheck": "팩트체크를 준비하고 있어요",
+    "searchNews": "뉴스를 찾아보고 있어요",
+    "cardRefused": "찾지 못해서 아무것도 바뀌지 않았어요"
   },
   "skillPhrase": {
     "residence": "사는 곳",
@@ -2426,8 +2438,9 @@
     "interests": "관심사",
     "origin": "출신지",
     "family": "가족",
-    "newFact": "새로운 정보",
-    "topics": "관심 주제"
+    "feedTuning": "맞춤 피드",
+    "followStory": "팔로우할 스토리",
+    "factCheck": "팩트체크할 주장"
   },
   "askChoice": {
     "answeredA11y": "이미 답변함",
@@ -2845,7 +2858,13 @@
     "library": "뉴스에 대해 무엇이든 물어보세요. 읽고 싶은 글도 알려 주세요.",
     "facts": "내 사실을 보고 있어요. 무엇을 바꾸고 싶으세요?",
     "sources": "매체에 대해 물어보세요. 팔로우하는 것을 알려 주세요.",
-    "settings": "제가 할 수 있는 일이나 메라가 데이터를 다루는 방식을 물어보세요."
+    "settings": "제가 할 수 있는 일이나 메라가 데이터를 다루는 방식을 물어보세요.",
+    "onDevice": {
+      "feed": "지금 피드를 보고 계시네요. 나에 대해 알려 주시면 여기에 보이는 내용을 맞춰 드릴게요.",
+      "library": "어떤 글을 읽고 싶은지 알려 주시면 피드에 반영해 둘게요.",
+      "world": "관심 있는 지역을 알려 주시면 피드에 반영해 둘게요.",
+      "sources": "팔로우하는 것을 알려 주시면 피드에 반영해 둘게요."
+    }
   },
   "meraDraft": {
     "changeInterest": "내 관심사 \"{{statement}}\"을(를) 다음으로 바꿀래요: ",

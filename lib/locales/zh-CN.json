@@ -493,7 +493,9 @@
     "webSearchShort": "只有搜索词会通过梅拉的服务器离开你的手机。搜索引擎永远不会知道你是谁。",
     "whereReads": "梅拉在哪里阅读你的新闻",
     "whileClosed": "梅拉关闭时",
-    "deleting": "正在删除…"
+    "deleting": "正在删除…",
+    "onDeviceNeedsCloud": "部分聊天功能需要“私有云”。",
+    "explainerOnPhoneLimits": "在这部手机上，梅拉无法搜索新闻或网页，也无法核实事实。"
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你已打开文章的本地记录。「来源」标签中的「你正在阅读的出版物」卡片及各出版物的历史记录将重置为空。其他内容不受影响，也不会触及任何服务器数据，因为梅拉的服务器从未有过这些数据。",
@@ -707,7 +709,10 @@
     "guidelinesLink": "内容指南",
     "aiSubtitle": "AI，而非真人",
     "aboutTitle": "关于梅拉",
-    "mayMistakes": "梅拉可能会出错，因此请在原始来源核实重要新闻。"
+    "mayMistakes": "梅拉可能会出错，因此请在原始来源核实重要新闻。",
+    "cardWaitingHint": "点选上方的选项，或输入“是”",
+    "cardCancelled": "好的，没有任何更改",
+    "changeUndone": "已撤销"
   },
   "articleFeedback": {
     "thumbsUpMessage": "我喜欢这篇文章:「{{title}}」。我想看到更多类似的推荐。",
@@ -2418,7 +2423,14 @@
     "doneInSteps_one": "已完成 {{count}} 步",
     "doneInSteps_other": "已完成 {{count}} 步",
     "doneInStepsShow_one": "已完成 {{count}} 步，显示步骤",
-    "doneInStepsShow_other": "已完成 {{count}} 步，显示步骤"
+    "doneInStepsShow_other": "已完成 {{count}} 步，显示步骤",
+    "proposeChanges": "正在设置更改",
+    "applyProposal": "正在按你同意的方式进行更改",
+    "cancelProposal": "保持原样",
+    "proposeTrack": "正在设置要关注的故事",
+    "proposeFactCheck": "正在设置事实核查",
+    "searchNews": "正在浏览新闻",
+    "cardRefused": "没有找到，因此未做任何更改"
   },
   "skillPhrase": {
     "residence": "你居住的地方",
@@ -2426,8 +2438,9 @@
     "interests": "你的兴趣",
     "origin": "你来自哪里",
     "family": "你的家人",
-    "newFact": "一条新信息",
-    "topics": "你的主题"
+    "feedTuning": "你的信息流",
+    "followStory": "一个要关注的故事",
+    "factCheck": "一项需要核实的说法"
   },
   "askChoice": {
     "answeredA11y": "已回答",
@@ -2845,7 +2858,13 @@
     "library": "问我任何新闻相关的问题，或者告诉我你喜欢读什么。",
     "facts": "你正在查看你的事实。你想更改什么？",
     "sources": "问我某个出版物的情况，或者告诉我你关注什么。",
-    "settings": "问我能做什么，或问梅拉如何处理你的数据。"
+    "settings": "问我能做什么，或问梅拉如何处理你的数据。",
+    "onDevice": {
+      "feed": "你正在查看你的信息流。告诉我你的情况，我会调整这里显示的内容。",
+      "library": "告诉我你喜欢读什么，我会记在心里，用于你的信息流。",
+      "world": "告诉我哪些地方对你重要，我会记在心里，用于你的信息流。",
+      "sources": "告诉我你关注什么，我会记在心里，用于你的信息流。"
+    }
   },
   "meraDraft": {
     "changeInterest": "将我的兴趣“{{statement}}”改为 ",

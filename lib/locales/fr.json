@@ -501,7 +501,9 @@
     "webSearchShort": "Seuls les mots de recherche quittent votre téléphone, via le serveur de Mera. Le moteur de recherche ne sait jamais qui vous êtes.",
     "whereReads": "Où Mera lit vos actualités",
     "whileClosed": "Pendant que Mera est fermé",
-    "deleting": "Suppression…"
+    "deleting": "Suppression…",
+    "onDeviceNeedsCloud": "Certaines fonctions du chat nécessitent le « Cloud privé ».",
+    "explainerOnPhoneLimits": "Sur ce téléphone, Mera ne peut pas chercher dans l'actualité ni sur le web, ni vérifier les faits."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Efface le journal local des articles que vous avez ouverts. La carte « Publications que vous lisez » dans l'onglet Sources et l'historique par publication seront réinitialisés à vide. Rien d'autre n'est affecté et aucune donnée serveur n'est touchée, puisque les serveurs de Mera n'ont jamais eu ces données.",
@@ -716,7 +718,10 @@
     "guidelinesLink": "règles de contenu",
     "aiSubtitle": "Un assistant IA, pas une personne",
     "aboutTitle": "À propos de Mera",
-    "mayMistakes": "Mera peut faire des erreurs, alors vérifiez les informations importantes auprès de la source."
+    "mayMistakes": "Mera peut faire des erreurs, alors vérifiez les informations importantes auprès de la source.",
+    "cardWaitingHint": "Appuyez sur une option ci-dessus, ou tapez oui",
+    "cardCancelled": "D'accord, rien n'a changé",
+    "changeUndone": "Annulé"
   },
   "articleFeedback": {
     "thumbsUpMessage": "J'ai aimé cet article : \"{{title}}\". J'aimerais voir plus de suggestions comme celle-ci.",
@@ -2429,7 +2434,14 @@
     "doneInSteps_one": "Terminé en {{count}} étape",
     "doneInSteps_other": "Terminé en {{count}} étapes",
     "doneInStepsShow_one": "Terminé en {{count}} étape, afficher les étapes",
-    "doneInStepsShow_other": "Terminé en {{count}} étapes, afficher les étapes"
+    "doneInStepsShow_other": "Terminé en {{count}} étapes, afficher les étapes",
+    "proposeChanges": "Je prépare la modification",
+    "applyProposal": "Je fais la modification convenue",
+    "cancelProposal": "Je laisse les choses en l'état",
+    "proposeTrack": "Je prépare le sujet à suivre",
+    "proposeFactCheck": "Je prépare la vérification des faits",
+    "searchNews": "Je parcours l'actualité",
+    "cardRefused": "Je n'ai rien trouvé, donc rien n'a changé"
   },
   "skillPhrase": {
     "residence": "l'endroit où tu vis",
@@ -2437,8 +2449,9 @@
     "interests": "tes centres d'intérêt",
     "origin": "d'où tu viens",
     "family": "ta famille",
-    "newFact": "une nouvelle information",
-    "topics": "tes sujets"
+    "feedTuning": "votre fil",
+    "followStory": "un sujet à suivre",
+    "factCheck": "une affirmation à vérifier"
   },
   "askChoice": {
     "answeredA11y": "déjà répondu",
@@ -2857,7 +2870,13 @@
     "library": "Posez-moi une question sur l'actualité, ou dites-moi ce que vous aimez lire.",
     "facts": "Vous regardez vos faits. Que voulez-vous modifier ?",
     "sources": "Posez-moi une question sur une publication, ou dites-moi ce que vous suivez.",
-    "settings": "Demandez-moi ce que je peux faire, ou comment Mera gère vos données."
+    "settings": "Demandez-moi ce que je peux faire, ou comment Mera gère vos données.",
+    "onDevice": {
+      "feed": "Vous êtes sur votre fil. Parlez-moi de vous et j'ajusterai ce qui apparaît ici.",
+      "library": "Dites-moi ce que vous aimez lire et je le garderai en tête pour votre fil.",
+      "world": "Dites-moi quels lieux comptent pour vous et je les garderai en tête pour votre fil.",
+      "sources": "Dites-moi ce que vous suivez et je le garderai en tête pour votre fil."
+    }
   },
   "meraDraft": {
     "changeInterest": "Changer mon centre d'intérêt \"{{statement}}\" en ",

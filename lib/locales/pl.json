@@ -520,7 +520,9 @@
     "webSearchShort": "Z telefonu, przez serwer Mera, wychodzą tylko słowa wyszukiwania. Wyszukiwarka nigdy nie dowiaduje się, kim jesteś.",
     "whereReads": "Gdzie Mera czyta Twoje wiadomości",
     "whileClosed": "Gdy Mera jest zamknięta",
-    "deleting": "Usuwanie…"
+    "deleting": "Usuwanie…",
+    "onDeviceNeedsCloud": "Niektóre funkcje czatu wymagają trybu „Prywatna chmura”.",
+    "explainerOnPhoneLimits": "Na tym telefonie Mera nie może przeszukiwać wiadomości ani internetu, ani sprawdzać faktów."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta „Publikacje, które czytasz” w zakładce Źródła oraz historia poszczególnych publikacji zostaną zresetowane do zera. Nic innego nie jest dotknięte i żadne dane na serwerze nie są zmieniane, bo serwery Mera nigdy ich nie miały.",
@@ -737,7 +739,10 @@
     "guidelinesLink": "zasad dotyczących treści",
     "aiSubtitle": "AI, a nie człowiek",
     "aboutTitle": "O Mera",
-    "mayMistakes": "Mera może popełniać błędy, dlatego sprawdzaj ważne wiadomości u źródła."
+    "mayMistakes": "Mera może popełniać błędy, dlatego sprawdzaj ważne wiadomości u źródła.",
+    "cardWaitingHint": "Wybierz opcję powyżej albo napisz „tak”",
+    "cardCancelled": "Dobrze, nic się nie zmieniło",
+    "changeUndone": "Cofnięto"
   },
   "articleFeedback": {
     "thumbsUpMessage": "Podobał mi się ten artykuł: \"{{title}}\". Chciałbym widzieć więcej takich sugestii.",
@@ -2483,7 +2488,14 @@
     "doneInStepsShow_one": "Gotowe w {{count}} kroku, pokaż kroki",
     "doneInStepsShow_few": "Gotowe w {{count}} krokach, pokaż kroki",
     "doneInStepsShow_many": "Gotowe w {{count}} krokach, pokaż kroki",
-    "doneInStepsShow_other": "Gotowe w {{count}} krokach, pokaż kroki"
+    "doneInStepsShow_other": "Gotowe w {{count}} krokach, pokaż kroki",
+    "proposeChanges": "Przygotowuję zmianę",
+    "applyProposal": "Wprowadzam zmianę, na którą się zgodziłeś",
+    "cancelProposal": "Zostawiam wszystko bez zmian",
+    "proposeTrack": "Przygotowuję historię do śledzenia",
+    "proposeFactCheck": "Przygotowuję sprawdzenie faktów",
+    "searchNews": "Przeglądam wiadomości",
+    "cardRefused": "Nie udało się tego znaleźć, więc nic się nie zmieniło"
   },
   "skillPhrase": {
     "residence": "miejsce, w którym mieszkasz",
@@ -2491,8 +2503,9 @@
     "interests": "twoje zainteresowania",
     "origin": "skąd pochodzisz",
     "family": "twoją rodzinę",
-    "newFact": "nową informację",
-    "topics": "twoje tematy"
+    "feedTuning": "twój Kanał",
+    "followStory": "historię do śledzenia",
+    "factCheck": "twierdzenie do sprawdzenia"
   },
   "askChoice": {
     "answeredA11y": "już odpowiedziano",
@@ -2939,7 +2952,13 @@
     "library": "Zapytaj mnie o cokolwiek z wiadomości albo powiedz, co lubisz czytać.",
     "facts": "Oglądasz swoje fakty. Co chcesz zmienić?",
     "sources": "Zapytaj mnie o wydawcę albo powiedz, co śledzisz.",
-    "settings": "Zapytaj mnie, co potrafię, albo jak Mera obchodzi się z Twoimi danymi."
+    "settings": "Zapytaj mnie, co potrafię, albo jak Mera obchodzi się z Twoimi danymi.",
+    "onDevice": {
+      "feed": "Jesteś w swoim Kanale. Opowiedz mi o sobie, a dopasuję to, co tu się pokazuje.",
+      "library": "Powiedz mi, co lubisz czytać, a zapamiętam to dla twojego Kanału.",
+      "world": "Powiedz mi, które miejsca są dla ciebie ważne, a zapamiętam je dla twojego Kanału.",
+      "sources": "Powiedz mi, co śledzisz, a zapamiętam to dla twojego Kanału."
+    }
   },
   "meraDraft": {
     "changeInterest": "Zmień moje zainteresowanie „{{statement}}” na ",

@@ -143,9 +143,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         const selected = onDevice ? onDeviceIntent : !onDeviceIntent;
         const cantRun = onDevice && deviceSupported === false;
         const title = onDevice ? t('you.settings.onThisPhone') : t('you.settings.privateCloud');
-        // TODO(onemera S2): convert the two `as never` keys to typed t() once opus-main splices the locales.
         const subtitle = onDevice
-            ? (onDeviceSubtitleKind(cantRun) === 'cantRun' ? t('meraProtocol.cantRun') : t('meraProtocol.onDeviceNeedsCloud' as never))
+            ? (onDeviceSubtitleKind(cantRun) === 'cantRun' ? t('meraProtocol.cantRun') : t('meraProtocol.onDeviceNeedsCloud'))
             : t('meraProtocol.encrypted');
         return (
             <Pressable
@@ -185,7 +184,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     {modeRow(ProcessingMode.Cloud)}
                 </Group>
                 <View style={{ marginTop: 8 }}>
-                    <Help>{deviceSupported === false ? t('meraProtocol.explainerCant') : `${t('meraProtocol.explainerCan')} ${t('meraProtocol.explainerOnPhoneLimits' as never)}`}</Help>
+                    <Help>{deviceSupported === false ? t('meraProtocol.explainerCant') : `${t('meraProtocol.explainerCan')} ${t('meraProtocol.explainerOnPhoneLimits')}`}</Help>
                 </View>
             </View>
 
