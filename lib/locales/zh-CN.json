@@ -202,7 +202,6 @@
     "loadingA11y": "正在加载你的动态",
     "translatingCaption": "正在翻译…",
     "reasonWritingA11y": "正在撰写笔记",
-    "reasonNotYet": "暂无此文章的笔记。",
     "findingStories": "正在为你寻找报道",
     "findingStoriesBody": "准备好后会立即显示在这里",
     "processingOffline": "你已离线。恢复联网后，你的报道就会送达。",
@@ -261,7 +260,9 @@
       "waitingTomorrow_other": "梅拉已用完今日阅读量。下方还有 {{formatted}} 篇文章未阅读。梅拉将于明天 {{time}} 再次阅读。",
       "bodyToday": "梅拉已用完今日阅读量。梅拉将于今天 {{time}} 再次阅读。",
       "bodyTomorrow": "梅拉已用完今日阅读量。梅拉将于明天 {{time}} 再次阅读。"
-    }
+    },
+    "noteHeldToday": "今日阅读量已用完，梅拉将于今天 {{time}} 之后撰写这条说明。",
+    "noteHeldTomorrow": "今日阅读量已用完，梅拉将于明天 {{time}} 之后撰写这条说明。"
   },
   "relevance": {
     "emergency": "紧急",

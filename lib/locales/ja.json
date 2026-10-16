@@ -202,7 +202,6 @@
     "loadingA11y": "フィードを読み込んでいます",
     "translatingCaption": "翻訳中…",
     "reasonWritingA11y": "メモ作成中",
-    "reasonNotYet": "この記事にはまだメモがありません。",
     "findingStories": "あなたのストーリーを探しています",
     "findingStoriesBody": "準備ができ次第、ここに表示されます",
     "processingOffline": "オフラインです。オンラインに戻るとストーリーが届きます。",
@@ -261,7 +260,9 @@
       "waitingTomorrow_other": "メラは今日の読書を使い切りました。下の{{formatted}}件の記事はまだ未読です。メラは明日の{{time}}にまた読み始めます。",
       "bodyToday": "メラは今日の読書を使い切りました。今日の{{time}}に、メラがまた読み始めます。",
       "bodyTomorrow": "メラは今日の読書を使い切りました。明日の{{time}}に、メラがまた読み始めます。"
-    }
+    },
+    "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の解説を書きます。",
+    "noteHeldTomorrow": "メラは今日の読書を使い切りました。そのため、明日の{{time}}以降に、メラがこの記事の解説を書きます。"
   },
   "relevance": {
     "emergency": "緊急",

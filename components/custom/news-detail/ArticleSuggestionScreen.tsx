@@ -78,7 +78,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         isSaved,
         isLoading,
         error,
-        reasonWriting,
         openedIds,
         factCheckPhase,
         aiAccess,
@@ -181,7 +180,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 suggestion={suggestion}
                 variant="screen"
                 read={read}
-                reasonWriting={reasonWriting}
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}

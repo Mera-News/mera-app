@@ -202,7 +202,6 @@
     "loadingA11y": "Dein Feed wird geladen",
     "translatingCaption": "Wird übersetzt…",
     "reasonWritingA11y": "Notiz wird geschrieben",
-    "reasonNotYet": "Noch keine Notiz zu diesem Artikel.",
     "findingStories": "Deine Geschichten werden gesucht",
     "findingStoriesBody": "Sie erscheinen hier, sobald sie fertig sind",
     "processingOffline": "Du bist offline. Deine Geschichten kommen, sobald du wieder online bist.",
@@ -264,7 +263,9 @@
       "waitingTomorrow_other": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten sind noch ungelesen. Mera liest morgen um {{time}} wieder.",
       "bodyToday": "Mera hat das heutige Lesekontingent genutzt. Mera liest heute um {{time}} wieder.",
       "bodyTomorrow": "Mera hat das heutige Lesekontingent genutzt. Mera liest morgen um {{time}} wieder."
-    }
+    },
+    "noteHeldToday": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diese Notiz heute ab {{time}}.",
+    "noteHeldTomorrow": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diese Notiz morgen ab {{time}}."
   },
   "relevance": {
     "emergency": "Notfall",

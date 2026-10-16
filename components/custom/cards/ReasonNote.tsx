@@ -6,10 +6,9 @@ import { useMatchedFacts, useNoteInk } from '@/components/custom/cards/FactChips
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
-import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { MOTION, SPRING } from '@/lib/motion';
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
-import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import type { ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
 import { TYPE_SCALE } from '@/lib/algorithms/scale';
 import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext';
 import React, { useEffect, useState } from 'react';
@@ -18,33 +17,7 @@ import { useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp, FadeOutUp, ZoomIn } from 'react-native-reanimated';
 import { useMotionAllowed } from '@/lib/motion-gate';
 
-/**
- * The state of a note that is not there yet, shared by the Feed card and the
- * detail screen so the two can never disagree:
- *  - `writing`: the row's reasons are in flight: the moving Mera logo beside
- *    the fact that found the article and "Please wait while Mera writes the
- *    reason".
- *  - `not-yet`: nothing is in flight for it (or the backstop passed); a static
- *    line, so the box is never empty and never claims work that is not
- *    happening.
- */
-export type ReasonNotePendingMode = 'writing' | 'not-yet';
-
-/**
- * The ONE rule for which pending state a scored row shows. Undefined when the
- * row is unscored, has its note, or is `complete` (a complete row with no note
- * shows its fact chips instead). `reasonWriting` is `useReasonWriting(row._id)`:
- * the live in-flight set, never a timer.
- */
-export function notePendingMode(
-    s: Pick<ForYouSuggestion, 'status' | 'reason'>,
-    reasonWriting: boolean,
-): ReasonNotePendingMode | undefined {
-    const status = s.status;
-    if (!status || status === ArticleSuggestionStatus.Unscored) return undefined;
-    if (s.reason || status === ArticleSuggestionStatus.Complete) return undefined;
-    return status === ArticleSuggestionStatus.ReasonPending && reasonWriting ? 'writing' : 'not-yet';
-}
+export { notePendingMode, type ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
 
 interface ReasonNoteProps {
     /** Persisted relevance, drives the priority chip. */
@@ -57,6 +30,9 @@ interface ReasonNoteProps {
     /** The pending state (see {@link notePendingMode}). Applies only while
      *  `reason` is empty. */
     pendingMode?: ReasonNotePendingMode;
+    /** The `held` line (why and when Mera writes the note), resolved once
+     *  by the host's list from its one `useReadHeld`. */
+    heldLine?: string;
     /** The host speaks the pending state in its own label (the Feed card's
      *  root), so the slot is hidden from VoiceOver and TalkBack. */
     pendingSpokenByHost?: boolean;
@@ -178,7 +154,8 @@ const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxH
  *                            Mera writes the reason.
  *   note      [priority] ..................... [✦ AI-generated]
  *             Mera's note, full width.
- *   not-yet   [priority] ......... No note for this article yet.
+ *   held      [priority] ...... Today's reading is used up, so Mera will
+ *                               write this note after 01:00 tomorrow.
  *
  * No chip while the note is being written (the fact is what the reader learns
  * first). When the note lands in a MOUNTED box (never on mount, never on a
@@ -192,6 +169,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     testID,
     onNoteDisplayChange,
     pendingMode,
+    heldLine,
     pendingSpokenByHost = false,
     topicIds,
     maxNoteLines,
@@ -223,7 +201,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     }, [wordByWord]);
 
     // Fixed box on the Feed: badge row + the reserved lines, scaled with the
-    // text, so writing, note and not-yet all draw the same height.
+    // text, so writing, note and held all draw the same height.
     const chipHeight = CHIP_HEIGHT * (lineHeight / TYPE_SCALE[NOTE_TOKEN].lineHeight);
     const boxHeight = reserveNoteLines
         ? 12 - BADGE_ROW_PADDING + 2 * BADGE_ROW_PADDING + chipHeight + 4 + reserveNoteLines * lineHeight + 12
@@ -274,15 +252,15 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                 </Animated.View>
                 {reason ? (
                     <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={note.ai} />
-                ) : pending === 'not-yet' ? (
+                ) : pending === 'held' ? (
                     <Animated.View
                         entering={sawWriting ? FadeIn.duration(250) : undefined}
                         style={{ flex: 1, alignItems: 'flex-end' }}
-                        testID={testID ? `${testID}-not-yet` : undefined}
+                        testID={testID ? `${testID}-held` : undefined}
                         {...hideSlot}
                     >
                         <Text size={NOTE_TOKEN} style={{ color: note.ink, textAlign: 'right' }}>
-                            {t('feed.reasonNotYet')}
+                            {heldLine}
                         </Text>
                     </Animated.View>
                 ) : null}

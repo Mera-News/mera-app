@@ -212,7 +212,6 @@
     "loadingA11y": "Wczytywanie Twojego kanału",
     "translatingCaption": "Tłumaczenie…",
     "reasonWritingA11y": "notatka jest pisana",
-    "reasonNotYet": "Do tego artykułu nie ma jeszcze notatki.",
     "findingStories": "Szukamy Twoich historii",
     "findingStoriesBody": "Pojawią się tutaj, gdy tylko będą gotowe",
     "processingOffline": "Jesteś offline. Twoje historie pojawią się, gdy wrócisz do sieci.",
@@ -286,7 +285,9 @@
       "waitingTomorrow_other": "Mera wykorzystała dzisiejsze czytanie. {{formatted}} artykułów poniżej jest nadal nieprzeczytanych. Mera czyta ponownie jutro o {{time}}.",
       "bodyToday": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta dzisiaj o {{time}}.",
       "bodyTomorrow": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta jutro o {{time}}."
-    }
+    },
+    "noteHeldToday": "Mera napisze tę notatkę dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
+    "noteHeldTomorrow": "Mera napisze tę notatkę jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania."
   },
   "relevance": {
     "emergency": "Pilne",

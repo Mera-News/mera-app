@@ -86,7 +86,6 @@ import { showsProcessingScene } from '@/components/custom/for-you/feed-status-ca
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
-import { useReasonInFlight } from '@/components/custom/cards/use-reason-in-flight';
 import { resolveFeedRowDisplay } from '@/components/custom/feed/feed-row-display';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import { arrivedAtOf, isNewCard, type FeedEntry } from './feed-entries';
@@ -145,7 +144,7 @@ const ARRIVAL_ENTERING = (delay: number) =>
 const FeedRow = React.memo(function FeedRow({
   item,
   divider,
-  readHeld,
+  noteHeldLine,
   notReadLine,
   suggestion,
   reserveNoteSpace,
@@ -162,8 +161,9 @@ const FeedRow = React.memo(function FeedRow({
   /** The one divider between Mera's picks and the not-read tail, drawn above
    *  the first not-read card (Show: All only). */
   divider?: string;
-  /** The reading hold, read once by the list: no writing state while held. */
-  readHeld: boolean;
+  /** The held note line, resolved once by the list while the reading hold
+   *  is set; undefined otherwise (a pending note shows the writing state). */
+  noteHeldLine: string | undefined;
   /** The not-read line naming the hold, or undefined (the plain line). */
   notReadLine: string | undefined;
   /** What the card renders: the session-frozen representative's LIVE row
@@ -201,10 +201,6 @@ const FeedRow = React.memo(function FeedRow({
   const hasCardState = useFeedOrderStore((s) => !!s.cardStates[item.id]);
   const seen = openedExactly || hasCardState;
   const isNew = newSince !== null && isNewCard(arrivedAtOf(suggestion), seen, newSince);
-  // Whether "Writing a note" is true right now (reasons in flight, within the
-  // backstop). Read here, not in the card: the store must stay out of the card
-  // graph.
-  const reasonWriting = useReasonInFlight(suggestion._id) && !readHeld;
   return (
     // The wrapper is UNCONDITIONAL and only `entering` varies, so the tree
     // shape never changes between renders of the same row.
@@ -219,7 +215,7 @@ const FeedRow = React.memo(function FeedRow({
     {divider ? <AllCaughtUpCard title={divider} testID="feed-not-read-divider" /> : null}
     <ArticleSuggestionCard
       suggestion={suggestion}
-      reasonWriting={reasonWriting}
+      noteHeldLine={noteHeldLine}
       notReadLine={notReadLine}
       reserveNoteSpace={reserveNoteSpace}
       onPress={onPress}
@@ -265,7 +261,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     listData,
     picksCount,
     show,
-    readHeld,
+    noteHeldLine,
     notReadLine,
     notReadDividerOn,
     tailCount,
@@ -316,7 +312,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       <FeedRow
         item={item}
         divider={show === 'all' && notReadDividerOn && index === picksCount && picksCount > 0 ? notReadDivider : undefined}
-        readHeld={readHeld}
+        noteHeldLine={noteHeldLine}
         notReadLine={notReadLine}
         suggestion={display.suggestion}
         reserveNoteSpace={display.reserveNoteSpace}
@@ -335,7 +331,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerOn, readHeld, notReadLine],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerOn, noteHeldLine, notReadLine],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);

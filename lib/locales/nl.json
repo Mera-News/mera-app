@@ -202,7 +202,6 @@
     "loadingA11y": "Je feed wordt geladen",
     "translatingCaption": "Vertalen…",
     "reasonWritingA11y": "notitie schrijven",
-    "reasonNotYet": "Nog geen notitie voor dit artikel.",
     "findingStories": "Je verhalen worden gezocht",
     "findingStoriesBody": "Ze verschijnen hier zodra ze klaar zijn",
     "processingOffline": "Je bent offline. Je verhalen komen zodra je weer online bent.",
@@ -264,7 +263,9 @@
       "waitingTomorrow_other": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikelen hieronder zijn nog niet gelezen. Mera leest morgen weer om {{time}}.",
       "bodyToday": "Mera heeft het lezen voor vandaag gebruikt. Mera leest vandaag weer om {{time}}.",
       "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}."
-    }
+    },
+    "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas vandaag na {{time}}.",
+    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas morgen na {{time}}."
   },
   "relevance": {
     "emergency": "Noodgeval",

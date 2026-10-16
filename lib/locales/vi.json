@@ -202,7 +202,6 @@
     "loadingA11y": "Đang tải bảng tin của bạn",
     "translatingCaption": "Đang dịch…",
     "reasonWritingA11y": "đang viết ghi chú",
-    "reasonNotYet": "Chưa có ghi chú cho bài viết này.",
     "findingStories": "Đang tìm câu chuyện cho bạn",
     "findingStoriesBody": "Chúng sẽ hiện ở đây ngay khi sẵn sàng",
     "processingOffline": "Bạn đang ngoại tuyến. Các câu chuyện của bạn sẽ đến khi bạn có mạng trở lại.",
@@ -261,7 +260,9 @@
       "waitingTomorrow_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
       "bodyToday": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
       "bodyTomorrow": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}."
-    }
+    },
+    "noteHeldToday": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết ghi chú này sau {{time}} hôm nay.",
+    "noteHeldTomorrow": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết ghi chú này sau {{time}} vào ngày mai."
   },
   "relevance": {
     "emergency": "Khẩn cấp",

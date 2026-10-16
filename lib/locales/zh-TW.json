@@ -202,7 +202,6 @@
     "loadingA11y": "正在載入你的動態",
     "translatingCaption": "正在翻譯…",
     "reasonWritingA11y": "正在撰寫筆記",
-    "reasonNotYet": "暫無此文章的筆記。",
     "findingStories": "正在為你尋找報導",
     "findingStoriesBody": "準備好後會立即顯示在這裡",
     "processingOffline": "你目前離線。恢復連線後，你的報導就會送達。",
@@ -261,7 +260,9 @@
       "waitingTomorrow_other": "梅拉已用完今日的閱讀額度。下方有 {{formatted}} 篇文章尚未閱讀。梅拉將於明天 {{time}} 再次閱讀。",
       "bodyToday": "梅拉已用完今日的閱讀額度。梅拉將於今天 {{time}} 再次閱讀。",
       "bodyTomorrow": "梅拉已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。"
-    }
+    },
+    "noteHeldToday": "今日的閱讀額度已用完，梅拉將於今天 {{time}} 之後撰寫這則說明。",
+    "noteHeldTomorrow": "今日的閱讀額度已用完，梅拉將於明天 {{time}} 之後撰寫這則說明。"
   },
   "relevance": {
     "emergency": "緊急",

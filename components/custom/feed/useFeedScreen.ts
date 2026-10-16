@@ -34,7 +34,7 @@ import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { formatCount } from '@/lib/algorithms/format-count';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useReadHeld } from '@/components/custom/cards/use-read-held';
-import { notReadLineKey } from '@/components/custom/cards/not-read-line';
+import { noteHeldLineKey, notReadLineKey } from '@/components/custom/cards/not-read-line';
 import { limitUnlockTime } from '@/components/custom/cards/reset-time';
 import {
   useFeedbackSheet,
@@ -512,7 +512,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
 
   // The reading hold, read ONCE for the whole list (no subscription per
-  // card): rows skip the writing state while held, and not-read cards say
+  // card): pending notes say when they will be written while held, and not-read cards say
   // why Mera skipped them and when it reads again (owner). Undefined when
   // not held, so the card keeps its plain line and spoken label.
   const readHeld = useReadHeld();
@@ -520,6 +520,15 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     () =>
       readHeld.held
         ? t(notReadLineKey({ held: true, resetAt: readHeld.resetAt }), { time: limitUnlockTime(readHeld.resetAt) })
+        : undefined,
+    [readHeld.held, readHeld.resetAt, t],
+  );
+  // The same hold for a pending note: says when Mera writes it. Undefined when
+  // not held, so the card shows the writing state.
+  const noteHeldLine = useMemo(
+    () =>
+      readHeld.held
+        ? t(noteHeldLineKey({ resetAt: readHeld.resetAt }), { time: limitUnlockTime(readHeld.resetAt) })
         : undefined,
     [readHeld.held, readHeld.resetAt, t],
   );
@@ -901,7 +910,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     listData,
     picksCount,
     show,
-    readHeld: readHeld.held,
+    noteHeldLine,
     notReadDividerOn,
     notReadLine,
     tailCount: folded.tail.length,

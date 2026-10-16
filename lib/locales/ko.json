@@ -202,7 +202,6 @@
     "loadingA11y": "피드를 불러오는 중",
     "translatingCaption": "번역 중…",
     "reasonWritingA11y": "메모 작성 중",
-    "reasonNotYet": "이 기사에 대한 메모가 아직 없습니다.",
     "findingStories": "내 스토리를 찾는 중",
     "findingStoriesBody": "준비되는 대로 여기에 나타나요",
     "processingOffline": "오프라인 상태예요. 다시 온라인이 되면 스토리가 도착해요.",
@@ -261,7 +260,9 @@
       "waitingTomorrow_other": "메라가 오늘 읽기 분량을 모두 사용했습니다. 아래 기사 {{formatted}}개는 아직 읽지 않았습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
       "bodyToday": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
       "bodyTomorrow": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 내일 {{time}}에 다시 읽습니다."
-    }
+    },
+    "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 오늘 {{time}} 이후에 작성합니다.",
+    "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 내일 {{time}} 이후에 작성합니다."
   },
   "relevance": {
     "emergency": "긴급",

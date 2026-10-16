@@ -76,11 +76,10 @@ interface ArticleCardProps {
   /** Pass-through to `ArticleCardBase` — space kept clear at the meta row for a
    *  host-owned control floating over the card's top-right (Saved list). */
   metaRowRightReserve?: number;
-  /** Whether this row's note is being written right now (its reasons are in
-   *  flight, within the backstop; see `useReasonWriting`). A `reason_pending`
-   *  row shows "Writing a note" when true, else "No note for this article
-   *  yet." Omitted: false. */
-  reasonWriting?: boolean;
+  /** Set only while the cloud reading hold is: the line a pending note shows
+   *  instead of the writing state (why, and when Mera writes it), resolved
+   *  once by the list. Omitted: a pending note shows the writing state. */
+  noteHeldLine?: string;
   /** The Feed only: reserve two lines for the note in every state, because
    *  this card was pending at some point this session and its note can still
    *  land under the reader. A card complete at first render keeps its natural
@@ -124,7 +123,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   flat = false,
   onSaveToggled,
   metaRowRightReserve,
-  reasonWriting,
+  noteHeldLine,
   reserveNoteSpace = false,
   notReadLine,
   halo,
@@ -263,18 +262,16 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     </Box>
   ) : null;
 
-  const factChipsEl = reasonReady && !reason ? <FactChips topicIds={suggestion.userTopicIds} /> : null;
+  // `reason_skipped` (the off-by-default v4 tag gate) has no pending state
+  // and gets the chips too.
+  const factChipsEl = (reasonReady || status === ArticleSuggestionStatus.ReasonSkipped) && !reason ? <FactChips topicIds={suggestion.userTopicIds} /> : null;
 
   // The note as displayed (it may be translated), for the card's spoken label.
   const [shownReason, setShownReason] = useState<string | null>(null);
-  // One rule with the detail screen (`notePendingMode`): "Writing a note"
-  // only while its reasons are in flight, otherwise the static not-yet line.
-  // That covers a note the gate declined (`reason_skipped`) and a row whose
-  // status left the pool while it sat on screen: the live row reaches this
-  // card, and dropping the box would shrink the card under the reader.
-  // `complete` without a note keeps its fact chips. Surfaces that pass no
-  // `reasonWriting` (Saved, the fact feed) never see a live batch.
-  const pendingMode = notePendingMode(suggestion, reasonWriting ?? false);
+  // One rule with the detail screen (`notePendingMode`): a `reason_pending`
+  // row is writing, or under the reading hold says when it will be. Surfaces
+  // that pass no `noteHeldLine` (Saved, the fact feed) show writing.
+  const pendingMode = notePendingMode(suggestion, noteHeldLine != null);
   const reasonBoxEl = relevanceReady && (reason || pendingMode) ? (
     <ReasonNote
       relevance={relevance}
@@ -282,6 +279,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       testID="card-reason"
       onNoteDisplayChange={setShownReason}
       pendingMode={pendingMode}
+      heldLine={noteHeldLine}
       pendingSpokenByHost
       topicIds={suggestion.userTopicIds}
       maxNoteLines={FEED_NOTE_LINES}
@@ -304,7 +302,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     // The indicator is hidden from screen readers; the root says it instead.
     // No live region: the label simply reads the note once it has landed.
     pendingMode === 'writing' ? t('feed.reasonWritingA11y') : null,
-    pendingMode === 'not-yet' ? t('feed.reasonNotYet') : null,
+    pendingMode === 'held' ? noteHeldLine : null,
   ];
 
   // Action row lives in the base's `footer` slot.

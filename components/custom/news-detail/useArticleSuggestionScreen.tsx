@@ -17,7 +17,6 @@ import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types'
 import logger from '@/lib/logger';
 import { useSavedOverride } from '@/lib/saved-state';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
-import { useReasonWriting } from '@/components/custom/cards/use-reason-in-flight';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import {
     buildStoryGroups,
@@ -122,9 +121,6 @@ export function useArticleSuggestionScreen({
         storeSuggestion ?? null,
     );
     const suggestions = useForYouStore((s) => s.suggestions);
-    // The Feed card's own "is the note being written" signal, so the two
-    // surfaces show the same pending state for this row.
-    const reasonWriting = useReasonWriting(articleSuggestionId);
     const openedIds = useOpenedStoriesStore((s) => s.ids);
 
     // Mirror the title variant the reader currently sees (original vs
@@ -493,7 +489,6 @@ export function useArticleSuggestionScreen({
         isSaved,
         isLoading,
         error,
-        reasonWriting,
         openedIds,
         factCheckPhase,
         aiAccess,

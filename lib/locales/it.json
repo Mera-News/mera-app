@@ -202,7 +202,6 @@
     "loadingA11y": "Caricamento del tuo feed",
     "translatingCaption": "Traduzione in corso…",
     "reasonWritingA11y": "scrittura di una nota",
-    "reasonNotYet": "Ancora nessuna nota per questo articolo.",
     "findingStories": "Sto cercando le tue storie",
     "findingStoriesBody": "Compaiono qui appena sono pronte",
     "processingOffline": "Sei offline. Le tue storie arrivano appena torni online.",
@@ -264,7 +263,9 @@
       "waitingTomorrow_other": "Mera ha usato la lettura di oggi. {{formatted}} articoli qui sotto non sono ancora stati letti. Mera legge di nuovo domani alle {{time}}.",
       "bodyToday": "Mera ha usato la lettura di oggi. Mera legge di nuovo oggi alle {{time}}.",
       "bodyTomorrow": "Mera ha usato la lettura di oggi. Mera legge di nuovo domani alle {{time}}."
-    }
+    },
+    "noteHeldToday": "Mera ha usato la lettura di oggi, quindi scriverà questa nota dopo le {{time}} di oggi.",
+    "noteHeldTomorrow": "Mera ha usato la lettura di oggi, quindi scriverà questa nota dopo le {{time}} di domani."
   },
   "relevance": {
     "emergency": "Emergenza",

@@ -1,6 +1,6 @@
 // The not-read line: the plain line, or why Mera skipped the article and when
 // it reads again while the reading hold is set (owner).
-import { notReadLineKey } from '@/components/custom/cards/not-read-line';
+import { nextResetAt, noteHeldLineKey, notReadLineKey } from '@/components/custom/cards/not-read-line';
 
 const H = 3_600_000;
 /** Local noon, so today and tomorrow cannot flip under the test. */
@@ -18,5 +18,19 @@ describe('notReadLineKey', () => {
   });
   it('falls back to the plain line when held without a reset instant', () => {
     expect(notReadLineKey({ held: true, resetAt: null, now: NOON })).toBe('feed.notRead.line');
+  });
+});
+
+describe('noteHeldLineKey', () => {
+  it('names today when the reset falls on the phone\'s date today', () => {
+    expect(noteHeldLineKey({ resetAt: NOON + 2 * H, now: NOON })).toBe('feed.noteHeldToday');
+  });
+  it('names tomorrow when the reset falls on the next local date', () => {
+    expect(noteHeldLineKey({ resetAt: NOON + 18 * H, now: NOON })).toBe('feed.noteHeldTomorrow');
+  });
+  it('without a reset instant, picks the day of the next UTC midnight, the instant limitUnlockTime shows', () => {
+    const fallback = Date.UTC(2026, 9, new Date(NOON).getUTCDate() + 1);
+    expect(nextResetAt(null, NOON)).toBe(fallback);
+    expect(noteHeldLineKey({ resetAt: null, now: NOON })).toBe(noteHeldLineKey({ resetAt: fallback, now: NOON }));
   });
 });

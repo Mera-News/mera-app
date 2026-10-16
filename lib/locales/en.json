@@ -236,7 +236,6 @@
     "loadingA11y": "Loading your feed",
     "translatingCaption": "Translating…",
     "reasonWritingA11y": "note being written",
-    "reasonNotYet": "No note for this article yet.",
     "findingStories": "Finding your stories",
     "findingStoriesBody": "They appear here as soon as they're ready",
     "processingOffline": "You're offline. Your stories arrive once you're back online.",
@@ -298,7 +297,9 @@
       "waitingTomorrow_other": "Mera has used today's reading. {{formatted}} articles below are still unread. Mera reads again tomorrow at {{time}}.",
       "bodyToday": "Mera has used today's reading. Mera reads again today at {{time}}.",
       "bodyTomorrow": "Mera has used today's reading. Mera reads again tomorrow at {{time}}."
-    }
+    },
+    "noteHeldToday": "Today's reading is used up, so Mera will write this note after {{time}} today.",
+    "noteHeldTomorrow": "Today's reading is used up, so Mera will write this note after {{time}} tomorrow."
   },
   "relevance": {
     "emergency": "Emergency",

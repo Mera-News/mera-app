@@ -45,6 +45,7 @@ import {
   type PriorityFacts,
   type SeenTier,
 } from '@/lib/feed-ordering/priority-order';
+import { notePendingMode } from '@/components/custom/cards/note-pending-mode';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { isMutedPublication, rankedRelevance, type RankingContext } from '@/lib/feed-ordering/publication-tags';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
@@ -252,15 +253,13 @@ export function effectiveBand(
 const PENDING_BAND_OFFSET = 5;
 
 /**
- * True when a row has a score but no note to show. The twin of
- * `notePendingMode` (cards/ReasonNote.tsx), which decides "Writing a note" /
- * "No note yet" on the card from the same fields; inlined because that module
- * imports react-native. Keep the two in step.
+ * True when a row's note is pending (`reason_pending` with no note), whether
+ * it shows the writing state or the held line: the card's own rule,
+ * `notePendingMode` (cards/note-pending-mode.ts), so the sort and the card
+ * cannot disagree.
  */
 export function isAwaitingNote(s: Pick<ForYouSuggestion, 'status' | 'reason'>): boolean {
-  const status = s.status;
-  if (!status || status === ArticleSuggestionStatus.Unscored) return false;
-  return !s.reason && status !== ArticleSuggestionStatus.Complete;
+  return notePendingMode(s, false) !== undefined;
 }
 
 /** Project a Feed row onto the shared ordering facts. */

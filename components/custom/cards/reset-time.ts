@@ -2,6 +2,7 @@
 // and the not-read line; the clock rule itself (the device's 12/24h setting)
 // is ONE helper, `formatClockTime`, shared with the reading meter.
 
+import { nextResetAt } from '@/components/custom/cards/not-read-line';
 import { formatClockTime } from '@/lib/subscription/clock-time';
 
 /** When Mera reads again, in the device's own clock. Reading resets at
@@ -9,6 +10,5 @@ import { formatClockTime } from '@/lib/subscription/clock-time';
  *  instant (an injected mode, a cleared store) the next UTC midnight IS the
  *  reset, so the sentence never reads "again at .". */
 export function limitUnlockTime(resetAt: number | null, now: Date = new Date()): string {
-    const at = resetAt ?? Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-    return formatClockTime(at) ?? '';
+    return formatClockTime(nextResetAt(resetAt, now.getTime())) ?? '';
 }

@@ -202,7 +202,6 @@
     "loadingA11y": "Memuat feed kamu",
     "translatingCaption": "Menerjemahkan…",
     "reasonWritingA11y": "menulis catatan",
-    "reasonNotYet": "Belum ada catatan untuk artikel ini.",
     "findingStories": "Mencari cerita untuk Anda",
     "findingStoriesBody": "Cerita akan muncul di sini begitu siap",
     "processingOffline": "Anda sedang offline. Cerita Anda akan datang setelah Anda online lagi.",
@@ -261,7 +260,9 @@
       "waitingTomorrow_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi besok pukul {{time}}.",
       "bodyToday": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
       "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}."
-    }
+    },
+    "noteHeldToday": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
+    "noteHeldTomorrow": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}."
   },
   "relevance": {
     "emergency": "Darurat",

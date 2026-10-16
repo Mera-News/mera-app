@@ -483,10 +483,10 @@ describe('pending-note sink (tier 0 only)', () => {
     suggestion: { ...it.suggestion, status: ArticleSuggestionStatus.Complete, reason: 'Why it matters.' },
   });
 
-  it('isAwaitingNote mirrors notePendingMode: scored, not complete, no reason', () => {
+  it('isAwaitingNote mirrors notePendingMode: reason_pending with no note only', () => {
     const S = ArticleSuggestionStatus;
     expect(isAwaitingNote({ status: S.ReasonPending, reason: '' })).toBe(true);
-    expect(isAwaitingNote({ status: S.ReasonSkipped, reason: '' })).toBe(true);
+    expect(isAwaitingNote({ status: S.ReasonSkipped, reason: '' })).toBe(false);
     expect(isAwaitingNote({ status: S.ReasonPending, reason: 'Done.' })).toBe(false);
     expect(isAwaitingNote({ status: S.Complete, reason: '' })).toBe(false);
     expect(isAwaitingNote({ status: S.Unscored, reason: '' })).toBe(false);

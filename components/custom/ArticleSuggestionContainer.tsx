@@ -33,7 +33,7 @@ import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { useReadHeld } from '@/components/custom/cards/use-read-held';
-import { notReadLineKey } from '@/components/custom/cards/not-read-line';
+import { noteHeldLineKey, notReadLineKey } from '@/components/custom/cards/not-read-line';
 import { limitUnlockTime } from '@/components/custom/cards/reset-time';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -71,10 +71,6 @@ interface BaseProps {
      *  instance) — fires whenever the displayed title variant changes so the
      *  detail screen can share whichever title the reader currently sees. */
     onTitleDisplayChange?: (state: TranslatableDisplayState) => void;
-    /** Whether this suggestion's note is being written right now
-     *  (`useReasonWriting`). Same input, same rule (`notePendingMode`) as the
-     *  Feed card, so the two always show the same pending state. */
-    reasonWriting?: boolean;
 }
 
 type SuggestionProps = BaseProps & { suggestion: ForYouSuggestion; article?: never };
@@ -113,7 +109,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         aboveReason,
         read = false,
         onTitleDisplayChange,
-        reasonWriting = false,
     } = props;
 
     const suggestion = 'suggestion' in props ? props.suggestion : undefined;
@@ -182,9 +177,10 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const reasonReady = status === ArticleSuggestionStatus.Complete;
     const relevance = suggestion?.relevance ?? 0;
     const reason = relevanceReady ? suggestion?.reason ?? '' : '';
-    const pendingMode = suggestion ? notePendingMode(suggestion, reasonWriting) : undefined;
-    // The detail screen reads the hold itself (one subscription per screen).
+    // The detail screen reads the hold itself (one subscription per screen),
+    // the same input and rule (`notePendingMode`) as the Feed card.
     const readHeld = useReadHeld();
+    const pendingMode = suggestion ? notePendingMode(suggestion, readHeld.held) : undefined;
 
     const isCard = variant === 'card';
     const displayTitle = titleEnglish || t('feed.newsCluster');
@@ -225,8 +221,9 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         />
     );
 
-    // Same chips as the Feed card for a complete, note-less row.
-    const factChipsEl = isSuggestion && reasonReady && !reason ? (
+    // Same chips as the Feed card for a complete (or reason_skipped), note-less row.
+    const factChipsEl =
+        isSuggestion && (reasonReady || status === ArticleSuggestionStatus.ReasonSkipped) && !reason ? (
         <FactChips topicIds={suggestion?.userTopicIds} />
     ) : null;
 
@@ -235,6 +232,11 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             relevance={relevance}
             reason={reason}
             pendingMode={pendingMode}
+            heldLine={
+                pendingMode === 'held'
+                    ? t(noteHeldLineKey({ resetAt: readHeld.resetAt }), { time: limitUnlockTime(readHeld.resetAt) })
+                    : undefined
+            }
             topicIds={suggestion?.userTopicIds}
             testID="detail-reason"
         />

@@ -207,7 +207,6 @@
     "loadingA11y": "Chargement de votre fil",
     "translatingCaption": "Traduction…",
     "reasonWritingA11y": "rédaction d'une note",
-    "reasonNotYet": "Pas encore de note pour cet article.",
     "findingStories": "Recherche de vos actualités",
     "findingStoriesBody": "Elles s'affichent ici dès qu'elles sont prêtes",
     "processingOffline": "Vous êtes hors connexion. Vos actualités arriveront une fois la connexion rétablie.",
@@ -269,7 +268,9 @@
       "waitingTomorrow_other": "Mera a utilisé la lecture du jour. {{formatted}} articles ci-dessous ne sont pas encore lus. Mera reprend la lecture demain à {{time}}.",
       "bodyToday": "Mera a utilisé la lecture du jour. Mera reprend la lecture aujourd'hui à {{time}}.",
       "bodyTomorrow": "Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}."
-    }
+    },
+    "noteHeldToday": "Mera a utilisé la lecture du jour, donc Mera écrira cette note aujourd'hui après {{time}}.",
+    "noteHeldTomorrow": "Mera a utilisé la lecture du jour, donc Mera écrira cette note demain après {{time}}."
   },
   "relevance": {
     "emergency": "Urgence",

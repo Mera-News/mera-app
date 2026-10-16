@@ -202,7 +202,6 @@
     "loadingA11y": "Akışın yükleniyor",
     "translatingCaption": "Çevriliyor…",
     "reasonWritingA11y": "not yazılıyor",
-    "reasonNotYet": "Bu makale için henüz not yok.",
     "findingStories": "Hikayeleriniz aranıyor",
     "findingStoriesBody": "Hazır olur olmaz burada görünürler",
     "processingOffline": "Çevrimdışısınız. Hikayeleriniz tekrar çevrimiçi olduğunuzda gelir.",
@@ -264,7 +263,9 @@
       "waitingTomorrow_other": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera yarın {{time}} saatinde yeniden okur.",
       "bodyToday": "Mera bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
       "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
-    }
+    },
+    "noteHeldToday": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu bugün {{time}} saatinde yazacak.",
+    "noteHeldTomorrow": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu yarın {{time}} saatinde yazacak."
   },
   "relevance": {
     "emergency": "Acil",
