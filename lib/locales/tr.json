@@ -879,7 +879,7 @@
     "confirmTimeoutTitle": "Satın alımınız henüz onaylanamadı",
     "confirmTimeoutBody": "Ödeme yaptıysanız destek ekibimize ulaşın, sorunu çözelim.",
     "checkAgain": "Tekrar kontrol et",
-    "readingExplainer": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Planın, Mera'nın her gün ne kadar okuyacağını belirler: Bireysel planda Başlangıç'ın 5x okuması, Profesyonel planda 20x okuma vardır. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır."
+    "readingExplainer": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Planın, Mera'nın bulutta her gün ne kadar okuyacağını belirler: Başlangıç 10 MB, Bireysel 50 MB, Profesyonel 200 MB. Mera, okumayı uçtan uca şifreleme üzerinden yapar, bu yüzden hangi haberleri ya da kaç tane okuduğunu göremez. Bu nedenle planlar haber sayısıyla değil, megabayt (MB) ile ölçülür. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır."
   },
   "tabs": {
     "deck": "Akış",
@@ -982,7 +982,7 @@
     "starterTitle": "Starter bizden",
     "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
     "starterArticlesTitle": "Eşleşen her haber",
-    "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır.",
+    "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Başlangıç, günde 10 MB bulut okuması içerir.",
     "starterInterestsTitle": "Tüm ilgi alanlarınız",
     "starterInterestsBody": "İstediğiniz kadar ekleyin. Mera hepsini takip eder.",
     "starterChatTitle": "Sohbet ve doğruluk kontrolü",
@@ -2786,8 +2786,8 @@
       "onDeviceUnlimited": "Telefonda okuma: sınırsız",
       "readingOnPhone": "Mera bu telefonda okuyor.",
       "newPlanApplies": "Yeni planın hemen geçerli.",
-      "planMultiplierBase": "Başlangıç günlük okuma",
-      "planMultiplier": "Başlangıç'ın {{n}}x okuması"
+      "planMultiplierBase": "Günde 10 MB bulut okuması",
+      "planMultiplier": "Günde {{mb}} MB bulut okuması, Başlangıç'ın {{n}}x okuması"
     },
     "notifications": {
       "push": "Anlık bildirimler",

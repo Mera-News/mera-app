@@ -884,7 +884,7 @@
     "confirmTimeoutTitle": "Nous n'avons pas encore pu confirmer votre achat",
     "confirmTimeoutBody": "Si vous avez payé, contactez le support et nous réglerons cela.",
     "checkAgain": "Vérifier à nouveau",
-    "readingExplainer": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Votre forfait définit combien Mera lit chaque jour : Individuel reçoit 5x la lecture de Starter, Professionnel 20x. Sur les téléphones compatibles, la lecture sur le téléphone est illimitée sur chaque forfait."
+    "readingExplainer": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Votre forfait définit combien Mera lit dans le cloud chaque jour : Starter 10 Mo, Individuel 50 Mo, Professionnel 200 Mo. Mera lit pour vous grâce au chiffrement de bout en bout, donc il ne peut voir ni quels articles il lit ni combien. C'est pourquoi les forfaits se mesurent en mégaoctets, et non en articles. Sur les téléphones compatibles, la lecture sur le téléphone est illimitée sur chaque forfait."
   },
   "tabs": {
     "deck": "Fil d'actu",
@@ -985,7 +985,7 @@
     "starterTitle": "Starter est offert",
     "starterIntro": "Pour que vous voyiez à quoi sert Mera, chaque compte inclut désormais le forfait Starter complet, sans frais.",
     "starterArticlesTitle": "Chaque article correspondant",
-    "starterArticlesBody": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel.",
+    "starterArticlesBody": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Starter inclut 10 Mo de lecture dans le cloud par jour.",
     "starterInterestsTitle": "Tous vos centres d'intérêt",
     "starterInterestsBody": "Ajoutez-en autant que vous voulez. Mera les suit tous.",
     "starterChatTitle": "Chat et vérifications",
@@ -2790,8 +2790,8 @@
       "onDeviceUnlimited": "Lecture sur l'appareil : illimitée",
       "readingOnPhone": "Mera lit sur ce téléphone.",
       "newPlanApplies": "Votre nouveau forfait s'applique dès maintenant.",
-      "planMultiplierBase": "Lecture quotidienne Starter",
-      "planMultiplier": "{{n}}x la lecture de Starter"
+      "planMultiplierBase": "10 Mo de lecture dans le cloud par jour",
+      "planMultiplier": "{{mb}} Mo de lecture dans le cloud par jour, {{n}}x Starter"
     },
     "notifications": {
       "push": "Notifications push",

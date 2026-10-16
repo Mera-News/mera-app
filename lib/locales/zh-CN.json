@@ -875,7 +875,7 @@
     "confirmTimeoutTitle": "暂时无法确认你的购买",
     "confirmTimeoutBody": "如果你已经付款，请联系客服，我们会帮你处理。",
     "checkAgain": "再次检查",
-    "readingExplainer": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。你的方案决定梅拉每天阅读多少：个人版的阅读量是入门版的 5 倍，专业版是 20 倍。在支持的手机上，所有方案的手机端阅读都不限量。"
+    "readingExplainer": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。你的方案决定梅拉每天在云端阅读多少：入门版 10 MB，个人版 50 MB，专业版 200 MB。梅拉的阅读经过端到端加密，因此它无法看到自己读了哪些文章，也无法统计数量。这就是方案以 MB 计量、而不是按文章计量的原因。在支持的手机上，所有方案的手机端阅读都不限量。"
   },
   "tabs": {
     "deck": "信息流",
@@ -976,7 +976,7 @@
     "starterTitle": "Starter 由我们买单",
     "starterIntro": "为了让你看到梅拉是做什么的，现在每个账号都免费包含完整的 Starter 计划。",
     "starterArticlesTitle": "每一篇匹配的文章",
-    "starterArticlesBody": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。",
+    "starterArticlesBody": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。入门版每天包含 10 MB 的云端阅读量。",
     "starterInterestsTitle": "你的所有兴趣",
     "starterInterestsBody": "想加多少都可以。梅拉会关注每一个。",
     "starterChatTitle": "聊天和事实核查",
@@ -2778,8 +2778,8 @@
       "onDeviceUnlimited": "设备端阅读：不限量",
       "readingOnPhone": "梅拉正在这部手机上阅读。",
       "newPlanApplies": "你的新方案现已生效。",
-      "planMultiplierBase": "入门版每日阅读量",
-      "planMultiplier": "入门版阅读量的 {{n}} 倍"
+      "planMultiplierBase": "每天 10 MB 的云端阅读量",
+      "planMultiplier": "每天 {{mb}} MB 的云端阅读量，是入门版的 {{n}} 倍"
     },
     "notifications": {
       "push": "推送通知",

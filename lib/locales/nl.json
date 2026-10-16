@@ -879,7 +879,7 @@
     "confirmTimeoutTitle": "We konden je aankoop nog niet bevestigen",
     "confirmTimeoutBody": "Heb je al betaald? Praat dan met support, dan regelen we het.",
     "checkAgain": "Opnieuw controleren",
-    "readingExplainer": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Je abonnement bepaalt hoeveel Mera per dag leest: Individueel krijgt 5x het lezen van Starter, Professioneel 20x. Op ondersteunde telefoons is lezen op de telefoon onbeperkt, bij elk abonnement."
+    "readingExplainer": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Je abonnement bepaalt hoeveel Mera per dag in de cloud leest: Starter 10 MB, Individueel 50 MB, Professioneel 200 MB. Mera leest voor je via end-to-endversleuteling, dus het kan niet zien welke artikelen het leest of hoeveel. Daarom worden abonnementen in megabytes gemeten, niet in artikelen. Op ondersteunde telefoons is lezen op de telefoon onbeperkt, bij elk abonnement."
   },
   "tabs": {
     "deck": "Feed",
@@ -980,7 +980,7 @@
     "starterTitle": "Starter krijg je van ons",
     "starterIntro": "Zodat je ziet waar Mera voor is, bevat elk account nu het volledige Starter-plan zonder kosten.",
     "starterArticlesTitle": "Elk passend artikel",
-    "starterArticlesBody": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren.",
+    "starterArticlesBody": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Starter bevat 10 MB lezen in de cloud per dag.",
     "starterInterestsTitle": "Al je interesses",
     "starterInterestsBody": "Voeg er zoveel toe als je wilt. Mera volgt ze allemaal.",
     "starterChatTitle": "Chat en factchecks",
@@ -2784,8 +2784,8 @@
       "onDeviceUnlimited": "Lezen op deze telefoon: onbeperkt",
       "readingOnPhone": "Mera leest op deze telefoon.",
       "newPlanApplies": "Je nieuwe abonnement geldt nu.",
-      "planMultiplierBase": "Dagelijks lezen met Starter",
-      "planMultiplier": "{{n}}x het lezen van Starter"
+      "planMultiplierBase": "10 MB lezen in de cloud per dag",
+      "planMultiplier": "{{mb}} MB lezen in de cloud per dag, {{n}}x Starter"
     },
     "notifications": {
       "push": "Pushmeldingen",

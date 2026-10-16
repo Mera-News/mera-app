@@ -879,7 +879,7 @@
     "confirmTimeoutTitle": "Non siamo ancora riusciti a confermare il tuo acquisto",
     "confirmTimeoutBody": "Se hai già pagato, contatta l'assistenza e sistemeremo tutto.",
     "checkAgain": "Controlla di nuovo",
-    "readingExplainer": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta. Il tuo piano stabilisce quanto Mera legge ogni giorno: Individuale ha 5x la lettura di Base, Professionale 20x. Sui telefoni supportati, la lettura sul telefono è illimitata in ogni piano."
+    "readingExplainer": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta. Il tuo piano stabilisce quanto Mera legge nel cloud ogni giorno: Base 10 MB, Individuale 50 MB, Professionale 200 MB. Mera legge per te tramite crittografia end-to-end, quindi non può vedere quali articoli legge né quanti. Per questo i piani si misurano in megabyte, non in articoli. Sui telefoni supportati, la lettura sul telefono è illimitata in ogni piano."
   },
   "tabs": {
     "deck": "Notizie",
@@ -980,7 +980,7 @@
     "starterTitle": "Starter offriamo noi",
     "starterIntro": "Perché tu veda a cosa serve Mera, ogni account include ora il piano Starter completo senza costi.",
     "starterArticlesTitle": "Ogni articolo che corrisponde",
-    "starterArticlesBody": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta.",
+    "starterArticlesBody": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta. Il piano Base include 10 MB di lettura nel cloud al giorno.",
     "starterInterestsTitle": "Tutti i tuoi interessi",
     "starterInterestsBody": "Aggiungine quanti vuoi. Mera li segue tutti.",
     "starterChatTitle": "Chat e fact checking",
@@ -2784,8 +2784,8 @@
       "onDeviceUnlimited": "Lettura su questo telefono: illimitata",
       "readingOnPhone": "Mera sta leggendo su questo telefono.",
       "newPlanApplies": "Il tuo nuovo piano è già attivo.",
-      "planMultiplierBase": "Lettura giornaliera di Base",
-      "planMultiplier": "{{n}}x la lettura del piano Base"
+      "planMultiplierBase": "10 MB di lettura nel cloud al giorno",
+      "planMultiplier": "{{mb}} MB di lettura nel cloud al giorno, {{n}}x Base"
     },
     "notifications": {
       "push": "Notifiche push",

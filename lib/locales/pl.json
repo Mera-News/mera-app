@@ -907,7 +907,7 @@
     "confirmTimeoutTitle": "Nie udało się jeszcze potwierdzić zakupu",
     "confirmTimeoutBody": "Jeśli zapłaciłeś, skontaktuj się z pomocą, a sprawę wyjaśnimy.",
     "checkAgain": "Sprawdź ponownie",
-    "readingExplainer": "Każdy artykuł pasujący do twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Twój plan określa, ile Mera czyta każdego dnia. Plan Indywidualny daje 5x więcej czytania niż plan Starter, a plan Profesjonalny 20x więcej. Na obsługiwanych telefonach czytanie na telefonie jest nieograniczone w każdym planie."
+    "readingExplainer": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Twój plan określa, ile Mera czyta w chmurze każdego dnia: Starter 10 MB, Indywidualny 50 MB, Profesjonalny 200 MB. Mera czyta za Ciebie dzięki szyfrowaniu end-to-end, więc nie widzi, które artykuły czyta ani ile ich jest. Dlatego plany mierzy się w megabajtach, a nie w artykułach. Na obsługiwanych telefonach czytanie na telefonie jest nieograniczone w każdym planie."
   },
   "tabs": {
     "deck": "Strumień",
@@ -1012,7 +1012,7 @@
     "starterTitle": "Starter na nasz koszt",
     "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
     "starterArticlesTitle": "Każdy pasujący artykuł",
-    "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne.",
+    "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Starter obejmuje 10 MB czytania w chmurze dziennie.",
     "starterInterestsTitle": "Wszystkie twoje zainteresowania",
     "starterInterestsBody": "Dodaj ich tyle, ile chcesz. Mera śledzi każde.",
     "starterChatTitle": "Czat i sprawdzanie faktów",
@@ -2872,8 +2872,8 @@
       "onDeviceUnlimited": "Czytanie na telefonie: bez limitu",
       "readingOnPhone": "Mera czyta na tym telefonie.",
       "newPlanApplies": "Twój nowy plan obowiązuje już teraz.",
-      "planMultiplierBase": "Dzienne czytanie w planie Starter",
-      "planMultiplier": "{{n}}x więcej czytania niż w planie Starter"
+      "planMultiplierBase": "10 MB czytania w chmurze dziennie",
+      "planMultiplier": "{{mb}} MB czytania w chmurze dziennie, {{n}}x Starter"
     },
     "notifications": {
       "push": "Powiadomienia push",

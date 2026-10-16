@@ -879,7 +879,7 @@
     "confirmTimeoutTitle": "Wir konnten deinen Kauf noch nicht bestätigen",
     "confirmTimeoutBody": "Falls du bezahlt hast, wende dich an den Support. Wir klären das dann für dich.",
     "checkAgain": "Erneut prüfen",
-    "readingExplainer": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Dein Tarif legt fest, wie viel Mera jeden Tag liest: Einzelperson bekommt 5x so viel Lesen wie Starter, Professional 20x. Auf unterstützten Telefonen ist das Lesen auf dem Telefon in jedem Tarif unbegrenzt."
+    "readingExplainer": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Dein Tarif legt fest, wie viel Mera jeden Tag in der Cloud liest: Starter 10 MB, Einzelperson 50 MB, Professional 200 MB. Mera liest für dich über Ende-zu-Ende-Verschlüsselung und kann deshalb nicht sehen, welche Artikel gelesen werden oder wie viele. Darum werden Tarife in Megabyte gemessen und nicht in Artikeln. Auf unterstützten Telefonen ist das Lesen auf dem Telefon in jedem Tarif unbegrenzt."
   },
   "tabs": {
     "deck": "Nachrichten",
@@ -980,7 +980,7 @@
     "starterTitle": "Starter geht auf uns",
     "starterIntro": "Damit du siehst, wofür Mera da ist, enthält jetzt jedes Konto den vollen Starter-Plan kostenlos.",
     "starterArticlesTitle": "Jeder passende Artikel",
-    "starterArticlesBody": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist.",
+    "starterArticlesBody": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Der Starter-Tarif umfasst 10 MB tägliches Lesen in der Cloud.",
     "starterInterestsTitle": "Alle deine Interessen",
     "starterInterestsBody": "Füge so viele hinzu, wie du möchtest. Mera verfolgt jedes einzelne.",
     "starterChatTitle": "Chat und Faktenchecks",
@@ -2784,8 +2784,8 @@
       "onDeviceUnlimited": "Lesen auf dem Telefon: unbegrenzt",
       "readingOnPhone": "Mera liest auf diesem Telefon.",
       "newPlanApplies": "Dein neuer Tarif gilt jetzt.",
-      "planMultiplierBase": "Tägliches Lesen im Starter-Tarif",
-      "planMultiplier": "{{n}}x das Lesen im Starter-Tarif"
+      "planMultiplierBase": "10 MB tägliches Lesen in der Cloud",
+      "planMultiplier": "{{mb}} MB tägliches Lesen in der Cloud, {{n}}x Starter"
     },
     "notifications": {
       "push": "Push-Benachrichtigungen",

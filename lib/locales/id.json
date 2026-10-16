@@ -875,7 +875,7 @@
     "confirmTimeoutTitle": "Pembelian Anda belum bisa dikonfirmasi",
     "confirmTimeoutBody": "Jika Anda sudah membayar, hubungi dukungan dan kami akan membereskannya.",
     "checkAgain": "Periksa lagi",
-    "readingExplainer": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Paket Anda menentukan seberapa banyak Mera membaca setiap hari: Individu mendapat 5x pembacaan Pemula, Profesional 20x. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket."
+    "readingExplainer": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Paket Anda menentukan seberapa banyak Mera membaca di cloud setiap hari: Pemula 10 MB, Individu 50 MB, Profesional 200 MB. Mera membaca untuk Anda melalui enkripsi ujung-ke-ujung, jadi Mera tidak bisa melihat artikel mana saja yang dibacanya atau berapa banyak. Itu sebabnya paket diukur dalam megabyte, bukan artikel. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket."
   },
   "tabs": {
     "deck": "Umpan",
@@ -976,7 +976,7 @@
     "starterTitle": "Starter dari kami",
     "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
     "starterArticlesTitle": "Setiap artikel yang cocok",
-    "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting.",
+    "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Pemula sudah termasuk 10 MB pembacaan cloud sehari.",
     "starterInterestsTitle": "Semua minat Anda",
     "starterInterestsBody": "Tambahkan sebanyak yang Anda mau. Mera mengikuti semuanya.",
     "starterChatTitle": "Chat dan cek fakta",
@@ -2778,8 +2778,8 @@
       "onDeviceUnlimited": "Pembacaan di ponsel: tanpa batas",
       "readingOnPhone": "Mera sedang membaca di ponsel ini.",
       "newPlanApplies": "Paket baru Anda berlaku sekarang.",
-      "planMultiplierBase": "Pembacaan harian Pemula",
-      "planMultiplier": "{{n}}x pembacaan Pemula"
+      "planMultiplierBase": "Pembacaan cloud 10 MB sehari",
+      "planMultiplier": "Pembacaan cloud {{mb}} MB sehari, {{n}}x Pemula"
     },
     "notifications": {
       "push": "Notifikasi push",

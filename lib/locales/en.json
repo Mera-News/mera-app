@@ -125,7 +125,7 @@
     "confirmTimeoutTitle": "We couldn't confirm your purchase yet",
     "confirmTimeoutBody": "If you paid, talk to support and we'll sort it out.",
     "checkAgain": "Check again",
-    "readingExplainer": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Your plan sets how much Mera reads each day: Individual gets 5x the reading of Starter, Professional 20x. On supported phones, reading on the phone is unlimited on every plan."
+    "readingExplainer": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Your plan sets how much Mera reads in the cloud each day: Starter 10 MB, Individual 50 MB, Professional 200 MB. Mera reads for you through end-to-end encryption, so it can't see which articles it reads or how many. That's why plans are measured in megabytes, not articles. On supported phones, reading on the phone is unlimited on every plan."
   },
   "feed": {
     "allCaughtUp": "You're all caught up with what impacts you.",
@@ -551,7 +551,7 @@
     "starterTitle": "Starter is on us",
     "starterIntro": "To help you see what Mera is for, every account now includes the full Starter plan at no cost.",
     "starterArticlesTitle": "Every matching article",
-    "starterArticlesBody": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters.",
+    "starterArticlesBody": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Starter includes 10 MB of cloud reading a day.",
     "starterInterestsTitle": "All your interests",
     "starterInterestsBody": "Add as many as you like. Mera follows every one.",
     "starterChatTitle": "Chat and fact checks",
@@ -2786,8 +2786,8 @@
       "onDeviceUnlimited": "On-device reading: unlimited",
       "readingOnPhone": "Mera is reading on this phone.",
       "newPlanApplies": "Your new plan applies now.",
-      "planMultiplierBase": "Starter daily reading",
-      "planMultiplier": "{{n}}x the reading of Starter"
+      "planMultiplierBase": "10 MB of cloud reading a day",
+      "planMultiplier": "{{mb}} MB of cloud reading a day, {{n}}x Starter"
     },
     "notifications": {
       "push": "Push notifications",

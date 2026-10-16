@@ -1,0 +1,282 @@
+{
+  "ar": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 ميغابايت من القراءة في السحابة يوميًا",
+        "planMultiplier": "{{mb}} ميغابايت من القراءة في السحابة يوميًا، {{n}}x من مبتدئ"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "كل مقالة تطابق اهتماماتك تصل إلى الخلاصة الخاصة بك. تقرأها ميرا، وتستبعد الضوضاء وتُبرز ما يهم. تحدد خطتك مقدار ما تقرأه ميرا في السحابة يوميًا: مبتدئ 10 ميغابايت، وفردي 50 ميغابايت، واحترافي 200 ميغابايت. تمرّ قراءة ميرا عبر التشفير من طرف إلى طرف، لذلك لا تستطيع أن ترى أي المقالات تقرأها ولا كم عددها. ولهذا تُقاس الخطط بالميغابايت لا بعدد المقالات. على الهواتف المدعومة، القراءة على الهاتف غير محدودة في كل خطة."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "كل مقالة تطابق اهتماماتك تصل إلى الخلاصة الخاصة بك. تقرأها ميرا، وتستبعد الضوضاء وتُبرز ما يهم. تتضمن خطة مبتدئ 10 ميغابايت من القراءة في السحابة يوميًا."
+    }
+  },
+  "de": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 MB tägliches Lesen in der Cloud",
+        "planMultiplier": "{{mb}} MB tägliches Lesen in der Cloud, {{n}}x Starter"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Dein Tarif legt fest, wie viel Mera jeden Tag in der Cloud liest: Starter 10 MB, Einzelperson 50 MB, Professional 200 MB. Mera liest für dich über Ende-zu-Ende-Verschlüsselung und kann deshalb nicht sehen, welche Artikel gelesen werden oder wie viele. Darum werden Tarife in Megabyte gemessen und nicht in Artikeln. Auf unterstützten Telefonen ist das Lesen auf dem Telefon in jedem Tarif unbegrenzt."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Der Starter-Tarif umfasst 10 MB tägliches Lesen in der Cloud."
+    }
+  },
+  "en": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 MB of cloud reading a day",
+        "planMultiplier": "{{mb}} MB of cloud reading a day, {{n}}x Starter"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Your plan sets how much Mera reads in the cloud each day: Starter 10 MB, Individual 50 MB, Professional 200 MB. Mera reads for you through end-to-end encryption, so it can't see which articles it reads or how many. That's why plans are measured in megabytes, not articles. On supported phones, reading on the phone is unlimited on every plan."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Starter includes 10 MB of cloud reading a day."
+    }
+  },
+  "es": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 MB de lectura en la nube al día",
+        "planMultiplier": "{{mb}} MB de lectura en la nube al día, {{n}}x Starter"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Cada artículo que coincide con tus intereses llega a Noticias. Mera los lee, deja de lado el ruido y destaca lo que importa. Tu plan define cuánto lee Mera en la nube cada día: Starter 10 MB, Individual 50 MB, Profesional 200 MB. Mera lee por ti con cifrado de extremo a extremo, así que no puede ver qué artículos lee ni cuántos. Por eso los planes se miden en megabytes, no en artículos. En los teléfonos compatibles, leer en el teléfono es ilimitado en todos los planes."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Cada artículo que coincide con tus intereses llega a Noticias. Mera los lee, deja de lado el ruido y destaca lo que importa. Starter incluye 10 MB de lectura en la nube al día."
+    }
+  },
+  "fr": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 Mo de lecture dans le cloud par jour",
+        "planMultiplier": "{{mb}} Mo de lecture dans le cloud par jour, {{n}}x Starter"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Votre forfait définit combien Mera lit dans le cloud chaque jour : Starter 10 Mo, Individuel 50 Mo, Professionnel 200 Mo. Mera lit pour vous grâce au chiffrement de bout en bout, donc il ne peut voir ni quels articles il lit ni combien. C'est pourquoi les forfaits se mesurent en mégaoctets, et non en articles. Sur les téléphones compatibles, la lecture sur le téléphone est illimitée sur chaque forfait."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Starter inclut 10 Mo de lecture dans le cloud par jour."
+    }
+  },
+  "hi": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "रोज़ 10 MB क्लाउड रीडिंग",
+        "planMultiplier": "रोज़ {{mb}} MB क्लाउड रीडिंग, Starter से {{n}}x"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "आपकी रुचियों से मेल खाने वाला हर लेख आपकी फीड तक पहुँचता है। मेरा ऐप उन्हें पढ़ता है, फ़ालतू बातें अलग रखता है और जो ज़रूरी है उसे आगे लाता है। आपका प्लान तय करता है कि मेरा ऐप हर दिन क्लाउड में कितना पढ़ेगा: Starter 10 MB, इंडिविजुअल 50 MB, प्रोफेशनल 200 MB। मेरा ऐप एंड-टू-एंड एन्क्रिप्शन के ज़रिए आपके लिए पढ़ता है, इसलिए वह यह नहीं देख सकता कि कौन से लेख पढ़े या कितने। इसीलिए प्लान लेखों की गिनती से नहीं, मेगाबाइट में नापे जाते हैं। समर्थित फ़ोन पर, हर प्लान में फ़ोन पर पढ़ना असीमित है।"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "आपकी रुचियों से मेल खाने वाला हर लेख आपकी फीड तक पहुँचता है। मेरा ऐप उन्हें पढ़ता है, फ़ालतू बातें अलग रखता है और जो ज़रूरी है उसे आगे लाता है। Starter में हर दिन 10 MB क्लाउड रीडिंग शामिल है।"
+    }
+  },
+  "id": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "Pembacaan cloud 10 MB sehari",
+        "planMultiplier": "Pembacaan cloud {{mb}} MB sehari, {{n}}x Pemula"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Paket Anda menentukan seberapa banyak Mera membaca di cloud setiap hari: Pemula 10 MB, Individu 50 MB, Profesional 200 MB. Mera membaca untuk Anda melalui enkripsi ujung-ke-ujung, jadi Mera tidak bisa melihat artikel mana saja yang dibacanya atau berapa banyak. Itu sebabnya paket diukur dalam megabyte, bukan artikel. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Pemula sudah termasuk 10 MB pembacaan cloud sehari."
+    }
+  },
+  "it": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 MB di lettura nel cloud al giorno",
+        "planMultiplier": "{{mb}} MB di lettura nel cloud al giorno, {{n}}x Base"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta. Il tuo piano stabilisce quanto Mera legge nel cloud ogni giorno: Base 10 MB, Individuale 50 MB, Professionale 200 MB. Mera legge per te tramite crittografia end-to-end, quindi non può vedere quali articoli legge né quanti. Per questo i piani si misurano in megabyte, non in articoli. Sui telefoni supportati, la lettura sul telefono è illimitata in ogni piano."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta. Il piano Base include 10 MB di lettura nel cloud al giorno."
+    }
+  },
+  "ja": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "1日10 MBのクラウド読書量",
+        "planMultiplier": "1日のクラウド読書量は{{mb}} MB、スターターの{{n}}倍"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。プランによって、メラが1日にクラウドで読む量が決まります。スターターは10 MB、個人は50 MB、プロフェッショナルは200 MBです。メラの読書はエンドツーエンド暗号化で行われるため、どの記事を何本読んだかは見えません。そのため、プランは記事数ではなくメガバイトで測ります。対応した電話では、この電話上での読書はどのプランでも無制限です。"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。スターターには、1日10 MBのクラウド読書が含まれます。"
+    }
+  },
+  "ko": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "하루 10 MB의 클라우드 읽기량",
+        "planMultiplier": "하루 {{mb}} MB의 클라우드 읽기량, 스타터 대비 {{n}}배"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "회원님의 관심사와 맞는 기사는 모두 피드에 도착합니다. 메라가 기사를 읽고, 불필요한 내용은 걸러내며, 중요한 내용을 위로 올립니다. 요금제에 따라 메라가 클라우드에서 하루에 읽는 양이 정해집니다. 스타터 10 MB, 개인 50 MB, 프로페셔널 200 MB입니다. 메라는 종단간 암호화를 통해 회원님을 대신해 기사를 읽기 때문에, 어떤 기사를 몇 개 읽는지 알 수 없습니다. 그래서 요금제는 기사 수가 아니라 메가바이트 단위로 측정합니다. 지원되는 휴대폰에서는 모든 요금제에서 휴대폰에서 읽기가 무제한입니다."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "회원님의 관심사와 맞는 기사는 모두 피드에 도착합니다. 메라가 기사를 읽고, 불필요한 내용은 걸러내며, 중요한 내용을 위로 올립니다. 스타터에는 하루 10 MB의 클라우드 읽기량이 포함됩니다."
+    }
+  },
+  "nl": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 MB lezen in de cloud per dag",
+        "planMultiplier": "{{mb}} MB lezen in de cloud per dag, {{n}}x Starter"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Je abonnement bepaalt hoeveel Mera per dag in de cloud leest: Starter 10 MB, Individueel 50 MB, Professioneel 200 MB. Mera leest voor je via end-to-endversleuteling, dus het kan niet zien welke artikelen het leest of hoeveel. Daarom worden abonnementen in megabytes gemeten, niet in artikelen. Op ondersteunde telefoons is lezen op de telefoon onbeperkt, bij elk abonnement."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Starter bevat 10 MB lezen in de cloud per dag."
+    }
+  },
+  "pl": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 MB czytania w chmurze dziennie",
+        "planMultiplier": "{{mb}} MB czytania w chmurze dziennie, {{n}}x Starter"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Twój plan określa, ile Mera czyta w chmurze każdego dnia: Starter 10 MB, Indywidualny 50 MB, Profesjonalny 200 MB. Mera czyta za Ciebie dzięki szyfrowaniu end-to-end, więc nie widzi, które artykuły czyta ani ile ich jest. Dlatego plany mierzy się w megabajtach, a nie w artykułach. Na obsługiwanych telefonach czytanie na telefonie jest nieograniczone w każdym planie."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Starter obejmuje 10 MB czytania w chmurze dziennie."
+    }
+  },
+  "pt-BR": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 MB de leitura na nuvem por dia",
+        "planMultiplier": "{{mb}} MB de leitura na nuvem por dia, {{n}}x o Starter"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Cada artigo que combina com seus interesses chega ao seu Feed. O Mera lê, deixa de lado o que é ruído e destaca o que importa. Seu plano define quanto o Mera lê na nuvem por dia: Starter 10 MB, Individual 50 MB, Profissional 200 MB. O Mera lê para você por meio de criptografia de ponta a ponta, então não consegue saber quais artigos lê nem quantos. Por isso os planos são medidos em megabytes, e não em artigos. Em celulares compatíveis, a leitura neste celular é ilimitada em todos os planos."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Cada artigo que combina com seus interesses chega ao seu Feed. O Mera lê, deixa de lado o que é ruído e destaca o que importa. O Starter inclui 10 MB de leitura na nuvem por dia."
+    }
+  },
+  "ru": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 МБ облачного чтения в день",
+        "planMultiplier": "{{mb}} МБ облачного чтения в день, в {{n}}x больше, чем на тарифе Стартер"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Каждая статья, которая соответствует вашим интересам, попадает в Ленту. Мера читает их, отсеивает лишнее и поднимает то, что важно. Ваш тариф задаёт, сколько Мера читает в облаке каждый день: Стартер 10 МБ, Индивидуальный 50 МБ, Профессиональный 200 МБ. Мера читает за вас через сквозное шифрование, поэтому не видит, какие статьи читает и сколько их. Поэтому тарифы измеряются в мегабайтах, а не в статьях. На поддерживаемых телефонах чтение на телефоне не ограничено на любом тарифе."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Каждая статья, которая соответствует вашим интересам, попадает в Ленту. Мера читает их, отсеивает лишнее и поднимает то, что важно. На тарифе Стартер входит 10 МБ облачного чтения в день."
+    }
+  },
+  "th": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "การอ่านบนคลาวด์ 10 MB ต่อวัน",
+        "planMultiplier": "การอ่านบนคลาวด์ {{mb}} MB ต่อวัน, {{n}}x ของ Starter"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "ทุกบทความที่ตรงกับความสนใจของคุณจะไปถึงฟีดของคุณ เมร่า อ่านบทความเหล่านั้น คัดเนื้อหาที่ไม่จำเป็นออก และดันสิ่งสำคัญขึ้นมา แผนของคุณกำหนดว่าเมร่าจะอ่านบนคลาวด์ได้วันละเท่าไร Starter 10 MB, รายบุคคล 50 MB, มืออาชีพ 200 MB เมร่าอ่านให้คุณผ่านการเข้ารหัสแบบ end-to-end จึงมองไม่เห็นว่าอ่านบทความไหนหรือกี่บทความ นั่นคือเหตุผลที่แผนวัดเป็นเมกะไบต์ ไม่ได้วัดเป็นจำนวนบทความ บนโทรศัพท์ที่รองรับ การอ่านบนโทรศัพท์ไม่จำกัดในทุกแผน"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "ทุกบทความที่ตรงกับความสนใจของคุณจะไปถึงฟีดของคุณ เมร่า อ่านบทความเหล่านั้น คัดเนื้อหาที่ไม่จำเป็นออก และดันสิ่งสำคัญขึ้นมา Starter มีการอ่านบนคลาวด์ 10 MB ต่อวัน"
+    }
+  },
+  "tr": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "Günde 10 MB bulut okuması",
+        "planMultiplier": "Günde {{mb}} MB bulut okuması, Başlangıç'ın {{n}}x okuması"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Planın, Mera'nın bulutta her gün ne kadar okuyacağını belirler: Başlangıç 10 MB, Bireysel 50 MB, Profesyonel 200 MB. Mera, okumayı uçtan uca şifreleme üzerinden yapar, bu yüzden hangi haberleri ya da kaç tane okuduğunu göremez. Bu nedenle planlar haber sayısıyla değil, megabayt (MB) ile ölçülür. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Başlangıç, günde 10 MB bulut okuması içerir."
+    }
+  },
+  "uk": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 МБ читання у хмарі на день",
+        "planMultiplier": "{{mb}} МБ читання у хмарі на день, у {{n}}x більше, ніж на тарифі Стартовий"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Кожна стаття, що відповідає вашим інтересам, потрапляє до вашої стрічки. Мера читає їх, відсіює шум і піднімає те, що важливо. Ваш тариф визначає, скільки Мера читає у хмарі щодня: Стартовий 10 МБ, Індивідуальний 50 МБ, Професійний 200 МБ. Мера читає для вас через наскрізне шифрування, тож не бачить, які статті читає і скільки їх. Тому тарифи вимірюються в мегабайтах, а не в статтях. На підтримуваних телефонах читання на телефоні необмежене на кожному тарифі."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Кожна стаття, що відповідає вашим інтересам, потрапляє до вашої стрічки. Мера читає їх, відсіює шум і піднімає те, що важливо. Стартовий включає 10 МБ читання у хмарі на день."
+    }
+  },
+  "vi": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "10 MB lượt đọc trên đám mây mỗi ngày",
+        "planMultiplier": "{{mb}} MB lượt đọc trên đám mây mỗi ngày, gấp {{n}}x gói Cơ bản"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói của bạn quy định Mera đọc bao nhiêu trên đám mây mỗi ngày: gói Cơ bản 10 MB, gói Cá nhân 50 MB, gói Chuyên nghiệp 200 MB. Mera đọc cho bạn qua mã hóa đầu cuối, nên Mera không thể thấy mình đọc những bài nào hay đọc bao nhiêu bài. Đó là lý do gói được tính bằng megabyte, không tính theo số bài viết. Trên các điện thoại được hỗ trợ, việc đọc trên điện thoại không giới hạn ở mọi gói."
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói Cơ bản bao gồm 10 MB lượt đọc trên đám mây mỗi ngày."
+    }
+  },
+  "zh-CN": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "每天 10 MB 的云端阅读量",
+        "planMultiplier": "每天 {{mb}} MB 的云端阅读量，是入门版的 {{n}} 倍"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。你的方案决定梅拉每天在云端阅读多少：入门版 10 MB，个人版 50 MB，专业版 200 MB。梅拉的阅读经过端到端加密，因此它无法看到自己读了哪些文章，也无法统计数量。这就是方案以 MB 计量、而不是按文章计量的原因。在支持的手机上，所有方案的手机端阅读都不限量。"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。入门版每天包含 10 MB 的云端阅读量。"
+    }
+  },
+  "zh-TW": {
+    "you": {
+      "settings": {
+        "planMultiplierBase": "每天 10 MB 的雲端閱讀量",
+        "planMultiplier": "每天 {{mb}} MB 的雲端閱讀量，為入門版的{{n}}倍"
+      }
+    },
+    "subscription": {
+      "readingExplainer": "每篇符合你興趣的文章都會進入你的資訊流。梅拉會閱讀它們、把雜訊放到一旁，並把重要的內容提上來。你的方案決定梅拉每天在雲端閱讀多少：入門版 10 MB、個人版 50 MB、專業版 200 MB。梅拉的閱讀採用端對端加密，因此無法看出它讀了哪些文章，也無法計算數量。這就是方案以 MB 計算、而不是以文章計算的原因。在支援的手機上，所有方案的手機端閱讀都不受限。"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "每篇符合你興趣的文章都會進入你的資訊流。梅拉會閱讀它們、把雜訊放到一旁，並把重要的內容提上來。入門版每天包含 10 MB 的雲端閱讀量。"
+    }
+  }
+}

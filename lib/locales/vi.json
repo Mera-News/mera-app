@@ -875,7 +875,7 @@
     "confirmTimeoutTitle": "Chúng tôi chưa thể xác nhận giao dịch mua của bạn",
     "confirmTimeoutBody": "Nếu bạn đã thanh toán, hãy liên hệ bộ phận hỗ trợ và chúng tôi sẽ giải quyết.",
     "checkAgain": "Kiểm tra lại",
-    "readingExplainer": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói của bạn quy định Mera đọc bao nhiêu mỗi ngày: gói Cá nhân có lượt đọc gấp 5x gói Cơ bản, gói Chuyên nghiệp gấp 20x. Trên các điện thoại được hỗ trợ, việc đọc trên điện thoại không giới hạn ở mọi gói."
+    "readingExplainer": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói của bạn quy định Mera đọc bao nhiêu trên đám mây mỗi ngày: gói Cơ bản 10 MB, gói Cá nhân 50 MB, gói Chuyên nghiệp 200 MB. Mera đọc cho bạn qua mã hóa đầu cuối, nên Mera không thể thấy mình đọc những bài nào hay đọc bao nhiêu bài. Đó là lý do gói được tính bằng megabyte, không tính theo số bài viết. Trên các điện thoại được hỗ trợ, việc đọc trên điện thoại không giới hạn ở mọi gói."
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -976,7 +976,7 @@
     "starterTitle": "Starter do chúng tôi mời",
     "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
     "starterArticlesTitle": "Mọi bài viết phù hợp",
-    "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên.",
+    "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói Cơ bản bao gồm 10 MB lượt đọc trên đám mây mỗi ngày.",
     "starterInterestsTitle": "Tất cả mối quan tâm của bạn",
     "starterInterestsBody": "Thêm bao nhiêu tùy bạn. Mera theo dõi tất cả.",
     "starterChatTitle": "Trò chuyện và kiểm chứng",
@@ -2778,8 +2778,8 @@
       "onDeviceUnlimited": "Đọc trên thiết bị: không giới hạn",
       "readingOnPhone": "Mera đang đọc trên điện thoại này.",
       "newPlanApplies": "Gói mới của bạn đã có hiệu lực.",
-      "planMultiplierBase": "Lượt đọc hằng ngày của gói Cơ bản",
-      "planMultiplier": "Gấp {{n}}x lượt đọc của gói Cơ bản"
+      "planMultiplierBase": "10 MB lượt đọc trên đám mây mỗi ngày",
+      "planMultiplier": "{{mb}} MB lượt đọc trên đám mây mỗi ngày, gấp {{n}}x gói Cơ bản"
     },
     "notifications": {
       "push": "Thông báo đẩy",

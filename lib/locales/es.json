@@ -879,7 +879,7 @@
     "confirmTimeoutTitle": "Todavía no hemos podido confirmar tu compra",
     "confirmTimeoutBody": "Si pagaste, contacta con soporte y lo resolveremos.",
     "checkAgain": "Comprobar de nuevo",
-    "readingExplainer": "Cada artículo que coincide con tus intereses llega a Noticias. Mera los lee, deja de lado el ruido y destaca lo que importa. Tu plan define cuánto lee Mera cada día: Individual tiene 5x la lectura de Starter, Profesional 20x. En los teléfonos compatibles, leer en el teléfono es ilimitado en todos los planes."
+    "readingExplainer": "Cada artículo que coincide con tus intereses llega a Noticias. Mera los lee, deja de lado el ruido y destaca lo que importa. Tu plan define cuánto lee Mera en la nube cada día: Starter 10 MB, Individual 50 MB, Profesional 200 MB. Mera lee por ti con cifrado de extremo a extremo, así que no puede ver qué artículos lee ni cuántos. Por eso los planes se miden en megabytes, no en artículos. En los teléfonos compatibles, leer en el teléfono es ilimitado en todos los planes."
   },
   "tabs": {
     "deck": "Noticias",
@@ -980,7 +980,7 @@
     "starterTitle": "Starter corre por nuestra cuenta",
     "starterIntro": "Para que veas para qué sirve Mera, todas las cuentas incluyen ahora el plan Starter completo sin coste.",
     "starterArticlesTitle": "Cada artículo que coincida",
-    "starterArticlesBody": "Cada artículo que coincide con tus intereses llega a Noticias. Mera los lee, deja de lado el ruido y destaca lo que importa.",
+    "starterArticlesBody": "Cada artículo que coincide con tus intereses llega a Noticias. Mera los lee, deja de lado el ruido y destaca lo que importa. Starter incluye 10 MB de lectura en la nube al día.",
     "starterInterestsTitle": "Todos tus intereses",
     "starterInterestsBody": "Añade los que quieras. Mera sigue todos.",
     "starterChatTitle": "Chat y verificaciones",
@@ -2784,8 +2784,8 @@
       "onDeviceUnlimited": "Lectura en el teléfono: ilimitada",
       "readingOnPhone": "Mera está leyendo en este teléfono.",
       "newPlanApplies": "Tu nuevo plan ya se aplica.",
-      "planMultiplierBase": "Lectura diaria de Starter",
-      "planMultiplier": "{{n}}x la lectura de Starter"
+      "planMultiplierBase": "10 MB de lectura en la nube al día",
+      "planMultiplier": "{{mb}} MB de lectura en la nube al día, {{n}}x Starter"
     },
     "notifications": {
       "push": "Notificaciones push",
