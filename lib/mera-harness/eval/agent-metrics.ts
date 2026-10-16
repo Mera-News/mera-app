@@ -4,7 +4,7 @@
 // cost. Every block below states what it must NOT be read as, because most of
 // these numbers have a way of looking good for the wrong reason.
 
-import { hasBannedDash, proseOf } from './copy-rules';
+import { REPLY_SCRIPT_MIN_SHARE, hasBannedDash, proseOf, scriptShare } from './copy-rules';
 import type { EvalRow, ScriptTurn, TurnEnd } from './types';
 
 // ---------------------------------------------------------------------------
@@ -513,4 +513,71 @@ export function proseReport(rows: readonly EvalRow[]): ProseReport {
     if (hasBannedDash(text)) bannedDash += 1;
   }
   return { rowsWithProse, bannedDash };
+}
+
+// ---------------------------------------------------------------------------
+// Reply checks (replyScript / replyExcludes / replyMatches)
+// ---------------------------------------------------------------------------
+
+export interface ReplyCheckTally {
+  /** Turns with a non-empty final reply: the denominator. */
+  checked: number;
+  passed: number;
+  /** Turns that ended with an empty reply. Counted apart: an empty reply passes
+   *  every exclude and fails every script check for a reason that has nothing
+   *  to do with what was written. */
+  noReply: number;
+  /** Turns with a transport error on any leg. Apart for the same reason. */
+  errored: number;
+  misses: { scriptId: string; turnIndex: number; repeat: number; arm: string; reply: string; detail: string }[];
+}
+
+export interface ReplyCheckReport {
+  script: ReplyCheckTally;
+  excludes: ReplyCheckTally;
+  matches: ReplyCheckTally;
+}
+
+const emptyTally = (): ReplyCheckTally => ({ checked: 0, passed: 0, noReply: 0, errored: 0, misses: [] });
+
+/**
+ * Scores the turn's FINAL reply, `reply` on its last row: what the bubble
+ * shows. Never a leg's rawOutput, which a later leg overwrites.
+ */
+export function replyCheckReport(
+  turns: readonly TurnRows[],
+  expectFor: (scriptId: string, turnIndex: number) => ScriptTurn['expect'] | null,
+): ReplyCheckReport {
+  const out: ReplyCheckReport = { script: emptyTally(), excludes: emptyTally(), matches: emptyTally() };
+  for (const t of turns) {
+    const ex = expectFor(t.scriptId, t.turnIndex);
+    if (!ex) continue;
+    const errored = t.endedOn === 'transport_error' || t.legs.some((l) => l.error !== null);
+    const last = t.legs[t.legs.length - 1];
+    const reply = (last?.reply ?? '').trim();
+    const lower = reply.toLowerCase();
+    const checks: [keyof ReplyCheckReport, boolean, () => string | null][] = [
+      ['script', ex.replyScript !== undefined, () => {
+        const share = scriptShare(reply, ex.replyScript!);
+        return share !== null && share >= REPLY_SCRIPT_MIN_SHARE ? null : `share ${share === null ? 'none' : share.toFixed(2)}`;
+      }],
+      ['excludes', ex.replyExcludes !== undefined, () => {
+        const hit = ex.replyExcludes!.filter((x) => lower.includes(x));
+        return hit.length === 0 ? null : `contains ${hit.join(', ')}`;
+      }],
+      ['matches', ex.replyMatches !== undefined, () =>
+        ex.replyMatches!.some((m) => lower.includes(m)) ? null : `none of ${ex.replyMatches!.join(', ')}`],
+    ];
+    for (const [key, active, judge] of checks) {
+      if (!active) continue;
+      const tally = out[key];
+      if (errored) { tally.errored += 1; continue; }
+      if (reply === '') { tally.noReply += 1; continue; }
+      tally.checked += 1;
+      const detail = judge();
+      if (detail === null) tally.passed += 1;
+      else tally.misses.push({ scriptId: t.scriptId, turnIndex: t.turnIndex, repeat: t.repeat, arm: t.arm, reply, detail });
+    }
+  }
+  return out;
 }

@@ -11,12 +11,16 @@
   "declinedTopics": [],
   "turns": [
     { "index": 0, "user": "How does Mera handle my data?",
-      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3 } },
+      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3,
+        "replyExcludes": ["menu", "learn about mera"] } },
     { "index": 1, "user": "How much does my plan give me each day?",
-      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3 } },
+      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3,
+        "replyExcludes": ["menu", "learn about mera", "250", "articles a day", "articles per day"], "replyMatches": ["mb", "megabyte"] } },
     { "index": 2, "user": "Can anyone read the app's code?",
-      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3 } },
+      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3,
+        "replyExcludes": ["menu", "learn about mera"] } },
     { "index": 3, "user": "What do you know about me so far?",
-      "expect": { "routeKind": "question", "skill": "conversation/question", "tools": ["load_skill"], "legs": 2 } }
+      "expect": { "routeKind": "question", "skill": "conversation/question", "tools": ["load_skill"], "legs": 2,
+        "replyExcludes": ["menu", "learn about mera"] } }
   ]
 }

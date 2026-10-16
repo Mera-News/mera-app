@@ -211,7 +211,22 @@ export interface ScriptExpect {
    *  fixture expects FEWER legs and ending early there is correct. */
   endedOn?: TurnEnd;
   proposals?: ExpectedProposal[];
+  /** Checks on the turn's FINAL reply (`reply` on its last row), the text the
+   *  bubble shows. Scored only over turns that HAVE a reply; an empty reply and
+   *  a transport error are counted apart, never folded in (`replyCheckReport`).
+   *
+   *  `replyScript`: the share of letters (`\p{L}`) in that script must be at
+   *  least REPLY_SCRIPT_MIN_SHARE. Combining marks (`\p{M}`, the matras) are
+   *  not letters and drop out of both sides, and Latin brand words ("Mera",
+   *  "MB") stay a minority in any real sentence. */
+  replyScript?: ReplyScript;
+  /** Lowercase substrings NONE of which may appear in the lowercased reply. */
+  replyExcludes?: string[];
+  /** Lowercase substrings, at least ONE of which must appear. */
+  replyMatches?: string[];
 }
+
+export type ReplyScript = 'devanagari';
 
 export interface ExpectedProposal {
   /** Lowercase substrings, ALL of which must appear. Never a full-phrase
@@ -273,6 +288,10 @@ export interface ScriptPersona {
     placeChain?: import('./contract').Place;
   }[];
   topics: { id: string; text: string }[];
+  /** The app language, passed to the loop as `AgentPersona.languageName`.
+   *  Absent is what the device sends today (useCloudPersonaChat builds the
+   *  persona without it), which gives the "match the user's language" rule. */
+  languageName?: string;
 }
 
 // ---------------------------------------------------------------------------

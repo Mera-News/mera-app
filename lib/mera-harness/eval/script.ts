@@ -14,6 +14,7 @@ import type {
   AgentScript,
   FakeSimilarFactsAnswer,
   FakeLookupPlaceAnswer,
+  ReplyScript,
   ScriptPersona,
   ScriptTurn,
 } from './types';
@@ -28,6 +29,8 @@ export interface ParseOptions {
    *  exposes the list. */
   skillIds: readonly string[];
 }
+
+const REPLY_SCRIPTS: readonly ReplyScript[] = ['devanagari'];
 
 const FACT_KINDS: readonly FactKind[] = [
   'residence',
@@ -101,7 +104,11 @@ function parsePersona(scriptId: string, raw: unknown): ScriptPersona {
   if (!rec) fail(scriptId, 'has no persona object.');
   const facts = Array.isArray(rec.facts) ? rec.facts : [];
   const topics = Array.isArray(rec.topics) ? rec.topics : [];
+  if ('languageName' in rec && (typeof rec.languageName !== 'string' || rec.languageName.trim() === '')) {
+    fail(scriptId, 'persona languageName must be a non-empty string, or absent.');
+  }
   return {
+    ...(typeof rec.languageName === 'string' ? { languageName: rec.languageName } : {}),
     facts: facts.map((f, i) => {
       const fr = asRecord(f);
       if (!fr || typeof fr.statement !== 'string' || typeof fr.id !== 'string') {
@@ -175,9 +182,34 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
       legs,
       endedOn: (ex.endedOn as ScriptTurn['expect']['endedOn']) ?? 'settled',
       proposals: (ex.proposals as ScriptTurn['expect']['proposals']) ?? undefined,
+      replyScript: parseReplyScript(scriptId, i, ex.replyScript),
+      replyExcludes: parseNeedles(scriptId, i, 'replyExcludes', ex.replyExcludes),
+      replyMatches: parseNeedles(scriptId, i, 'replyMatches', ex.replyMatches),
     },
     fakeTools: parseFakeTools(scriptId, i, rec.fakeTools),
   };
+}
+
+function parseReplyScript(scriptId: string, i: number, raw: unknown): ReplyScript | undefined {
+  if (raw === undefined) return undefined;
+  if (!REPLY_SCRIPTS.includes(raw as ReplyScript)) {
+    fail(scriptId, `turn ${i} replyScript '${String(raw)}' is not one of: ${REPLY_SCRIPTS.join(', ')}.`);
+  }
+  return raw as ReplyScript;
+}
+
+/** The reply is lowercased before matching, so an uppercase needle can never
+ *  hit: "MB" would fail every reply and "Menu" would pass every one. */
+function parseNeedles(scriptId: string, i: number, field: string, raw: unknown): string[] | undefined {
+  if (raw === undefined) return undefined;
+  if (!Array.isArray(raw) || raw.length === 0 || raw.some((x) => typeof x !== 'string' || x === '')) {
+    fail(scriptId, `turn ${i} ${field} must be a non-empty array of non-empty strings.`);
+  }
+  const bad = (raw as string[]).filter((x) => x !== x.toLowerCase());
+  if (bad.length > 0) {
+    fail(scriptId, `turn ${i} ${field} must be lowercase (the reply is lowercased first): ${bad.join(', ')}.`);
+  }
+  return raw as string[];
 }
 
 function parseFakeTools(scriptId: string, i: number, raw: unknown): ScriptTurn['fakeTools'] {

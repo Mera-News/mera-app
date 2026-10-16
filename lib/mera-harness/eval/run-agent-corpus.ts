@@ -9,6 +9,7 @@
 
 import { personaPromptFor, resolveAgentArm } from '../core/arms';
 import { createAgentState, runAgentTurn, type AgentPersona, type AgentState } from '../core/core';
+import { loadSkill as realLoadSkill } from '../core/skill-loader';
 import type { AgentDeps, AgentModelRequest, AgentModelResult, AgentTurnState } from './contract';
 import { createFakeTools, type FakeToolsHandle } from './fake-tools';
 import type {
@@ -42,6 +43,17 @@ export interface RunAgentCorpusOptions {
    */
   promptVariant?: string;
   skillIds?: readonly string[];
+  /**
+   * Defaults to the REAL loader, which composes the body exactly as the app
+   * sends it. Until hindifix E this was a stub returning `skill:<id>`, so every
+   * skill leg of every agent corpus run sent that literal string as its system
+   * prompt: routing (leg 0) was measured, everything after it was not.
+   */
+  loadSkill?: (id: string) => string | null;
+  /** Replaces the fake's placeholder explainMera. The real reference text lives
+   *  in lib/chat-tools, which this folder cannot import, so the CLI injects it;
+   *  a reply scored on what the plan gives needs the text that states it. */
+  explainMera?: (args: { topics: string[] }) => Promise<Record<string, unknown>>;
   /** The choice a fixture makes is AUTHORITATIVE. When an arm offers options
    *  that do not contain it, this fires and the fixture's text is sent anyway:
    *  letting each arm follow its own offered options would fork the script per
@@ -178,6 +190,7 @@ function personaFor(script: AgentScript): AgentPersona {
       attribute: f.questionnaireAttribute,
     })),
     surface: 'CONFIG',
+    languageName: script.persona.languageName,
   };
 }
 
@@ -221,8 +234,8 @@ export async function runAgentScript(
 
     const deps: AgentDeps = {
       callModel,
-      tools: fakes.port,
-      loadSkill: (id: string) => (skillIds.includes(id) ? `skill:${id}` : null),
+      tools: opts.explainMera ? { ...fakes.port, explainMera: opts.explainMera } : fakes.port,
+      loadSkill: opts.loadSkill ?? realLoadSkill,
       skillIds: () => skillIds,
       now,
     };

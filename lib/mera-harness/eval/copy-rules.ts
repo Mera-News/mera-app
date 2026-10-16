@@ -53,3 +53,26 @@ export function proseOf(rawOutput: string): string {
   text = text.replace(/\{[\s\S]*?"extracted_user_information"[\s\S]*?\}\s*\}/g, '');
   return text.trim();
 }
+
+/** A reply checked with `replyScript` passes at or above this share. 0.6, not
+ *  0.9: Latin brand and unit words ("Mera", "MB", "Mera Protocol") are correct
+ *  in a Hindi sentence and take a real bite out of a short one, while an
+ *  English reply scores near 0, so nothing sits near the line by accident. */
+export const REPLY_SCRIPT_MIN_SHARE = 0.6;
+
+const SCRIPT_LETTER: Record<'devanagari', RegExp> = {
+  devanagari: /\p{Script=Devanagari}/u,
+};
+
+/**
+ * Share of LETTERS (`\p{L}`) written in `script`. Combining marks (`\p{M}`,
+ * the Devanagari matras and virama) are not letters, so they count on neither
+ * side; digits and punctuation are ignored. Null when the text has no letters
+ * at all, which is a reply nobody can call Hindi or English.
+ */
+export function scriptShare(text: string, script: 'devanagari'): number | null {
+  const letters = text.match(/\p{L}/gu) ?? [];
+  if (letters.length === 0) return null;
+  const re = SCRIPT_LETTER[script];
+  return letters.filter((c) => re.test(c)).length / letters.length;
+}

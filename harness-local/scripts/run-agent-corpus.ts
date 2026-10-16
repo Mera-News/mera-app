@@ -59,10 +59,27 @@ import {
   percentile,
   proseReport,
   proposalReport,
+  replyCheckReport,
   thinkingGearReport,
   toolValidityReport,
 } from '../../lib/mera-harness/eval/agent-metrics';
 import type { AgentScript, EvalModelRequest, EvalModelResult, EvalRow } from '../../lib/mera-harness/eval/types';
+import { REPLY_SCRIPT_MIN_SHARE } from '../../lib/mera-harness/eval/copy-rules';
+import { MERA_EXPLAINER_SECTIONS } from '../../lib/chat-tools/mera-explainer-content';
+
+/** explainMera as the device answers it (handleExplainMera, minus its lazy
+ *  require): the REAL reference text. The eval's own fake returns a
+ *  placeholder, and a plan answer scored against a placeholder can only pass
+ *  by inventing the figure. */
+async function realExplainMera(args: { topics: string[] }): Promise<Record<string, unknown>> {
+  const sections = MERA_EXPLAINER_SECTIONS as Record<string, string>;
+  const availableTopics = Object.keys(sections);
+  const topics = Array.isArray(args.topics) ? args.topics.slice(0, 3) : [];
+  if (topics.length === 0) return { error: 'topics must be a non-empty array of topic ids', availableTopics };
+  const unknown = topics.filter((t) => typeof t !== 'string' || !(t in sections));
+  if (unknown.length > 0) return { error: `Unknown topic(s): ${unknown.map(String).join(', ')}`, availableTopics };
+  return { sections: [...new Set(topics)].map((topic) => ({ topic, text: sections[topic] })) };
+}
 
 /**
  * Route kinds a fixture may name, derived from the skill library.
@@ -420,6 +437,7 @@ async function main(): Promise<number> {
             model,
             repeat: rep,
             skillIds: PERSONA_SKILL_IDS,
+            explainMera: realExplainMera,
             onChoiceOptionMismatch: (d) =>
               mismatches.push(`  ${script.id} turn ${d.turnIndex}: expected "${d.expected}", offered ${JSON.stringify(d.offered)}`),
           });
@@ -602,6 +620,22 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
   out.push(`\nPROPOSALS (offered statements, sanitised; matches all present, excludes none)  ${props.met}/${props.expected}`);
   for (const m of props.misses.slice(0, 8)) {
     out.push(`  MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: wanted [${m.wanted.join(', ')}] offered ${JSON.stringify(m.offered)}`);
+  }
+
+  const rc = replyCheckReport(turns, (id, idx) =>
+    scripts.find((s) => s.id === id)?.turns.find((t) => t.index === idx)?.expect ?? null);
+  out.push('\nREPLY CHECKS (the turn\u2019s FINAL reply; passed / turns WITH a reply; empty and errored apart)');
+  const labels = {
+    script: `script (>= ${REPLY_SCRIPT_MIN_SHARE} of letters)`,
+    excludes: 'excludes (none present)',
+    matches: 'matches (any present)',
+  } as const;
+  for (const k of ['script', 'excludes', 'matches'] as const) {
+    const c = rc[k];
+    out.push(`  ${labels[k].padEnd(30)} ${c.passed}/${c.checked}  no reply ${c.noReply}  errored ${c.errored}`);
+    for (const m of c.misses.slice(0, 6)) {
+      out.push(`    MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: ${m.detail} ${JSON.stringify(m.reply.slice(0, 120))}`);
+    }
   }
 
   const tools = toolValidityReport(rows);
