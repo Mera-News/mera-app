@@ -78,6 +78,13 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   // "what can I do for you" line (article vs. suggestion variant); everything
   // else keeps the persona intro.
   const webSearch = useWebSearchInChat();
+  // The claim picker is CLOUD-only — `proposeFactCheck` is neither declared nor
+  // described in the LOCAL prompt (its rules are ~1,200 tokens against a ~3,072
+  // budget, and the check needs the cloud regardless). A chip offering it in
+  // on-device mode would send a turn to an agent with no such tool, which is the
+  // exact silent mis-wire the `generic` and `follow-story` branches below already
+  // exist to prevent. Same signal the agent reads, so the three gates agree.
+  const isOnDevice = useIsOnDeviceProcessing();
   // Computed keys from the page table, so `t` takes them untyped (the
   // en.json presence test in mera-button covers every one).
   const tKey = t as unknown as (key: string, opts?: Record<string, string>) => string;
@@ -99,7 +106,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
           context.page &&
           !originalWelcome
         ? // Opened from the Mera button: the page's own first line.
-          tKey(introKeyFor(context.page, webSearch))
+          tKey(introKeyFor(context.page, webSearch && !isOnDevice, isOnDevice))
         : context.kind === 'follow-story'
           ? // The FAB seeds "I want to follow a story", so the persona intro
             // ("tell me about yourself…") would answer a question nobody asked.
@@ -157,14 +164,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   // what the web said at that moment, not a stored verdict.
   const quickFactChecks = useFloatingChatQuickFactChecks();
   const toolCallResults = useFloatingChatToolCallResults();
-
-  // The claim picker is CLOUD-only — `proposeFactCheck` is neither declared nor
-  // described in the LOCAL prompt (its rules are ~1,200 tokens against a ~3,072
-  // budget, and the check needs the cloud regardless). A chip offering it in
-  // on-device mode would send a turn to an agent with no such tool, which is the
-  // exact silent mis-wire the `generic` and `follow-story` branches below already
-  // exist to prevent. Same signal the agent reads, so the three gates agree.
-  const isOnDevice = useIsOnDeviceProcessing();
 
   // The wait line's phase, for the steps box's live row (ux2 batch 25, D6).
   const waitPhase = useChatPhaseStore((st) => (st.view.kind === 'phase' ? st.view.id : null));
@@ -294,7 +293,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       !originalWelcome
     ) {
       const subject = context.kind === 'persona' ? context.subject : undefined;
-      return pageStarters(context.page, webSearch, subject).map((s) => ({
+      return pageStarters(context.page, webSearch, subject, isOnDevice).map((s) => ({
         key: s.labelKey,
         label: tKey(s.labelKey),
         message: tKey(s.draftKey, s.draftOptions ? { ...s.draftOptions } : undefined),

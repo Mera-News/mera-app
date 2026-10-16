@@ -5,15 +5,15 @@
 // here and not in nav/page-registry so the one lane that writes chat copy owns
 // them.
 //
-// EVERY HINT IS SOMETHING THE ROUTED AGENT CAN DO TODAY, on cloud and on
-// device (owner ruling, navx). The persona agent saves, changes and removes
-// facts and answers questions (with web search when it is on); the
+// A HINT MUST BE SOMETHING THE CURRENT ENGINE CAN DO (owner ruling, navx). The
+// persona agent saves, changes and removes facts and answers questions; the
 // follow-story agent can only `proposeTrack`. Hints that need a proposal tool
 // (countries, source mutes, topic weights) come back with
 // plans/ready_to_implement/mera-settings-proposals.
 //
-// A starter marked `web` needs "Web search in chat". While that setting is off
-// it is skipped.
+// `web` needs "Web search in chat" AND the cloud engine: on device there is no
+// lookup of any kind. `cloud` marks a hint only the cloud engine can do, and is
+// skipped on device. The page openers follow the same rule (introKeyFor).
 
 import type { SurfaceId } from '@/components/custom/nav/page-registry';
 import type { ChatContext, MeraPageKey } from '@/lib/stores/floating-chat-store';
@@ -21,6 +21,7 @@ import type { ChatContext, MeraPageKey } from '@/lib/stores/floating-chat-store'
 interface HintDef {
   readonly key: string;
   readonly web?: true;
+  readonly cloud?: true;
 }
 
 const ASK_NEWS: HintDef = { key: 'meraHints.askNews', web: true };
@@ -92,9 +93,11 @@ export function interestFactId(surface: string | null | undefined): string | nul
   return id.length > 0 ? id : null;
 }
 
-/** The page's starter keys, minus web ones while web search is off. */
-export function hintKeys(page: MeraPageKey, webSearch: boolean): string[] {
-  return (POOLS[page] ?? []).filter((h) => webSearch || !h.web).map((h) => h.key);
+/** The page's starter keys, minus what this engine cannot do. */
+export function hintKeys(page: MeraPageKey, webSearch: boolean, onDevice = false): string[] {
+  return (POOLS[page] ?? [])
+    .filter((h) => !(h.cloud && onDevice) && (!h.web || (webSearch && !onDevice)))
+    .map((h) => h.key);
 }
 
 /** The chat the button opens. `subject` is the fact statement on One interest. */
@@ -108,10 +111,20 @@ export function chatContextFor(page: MeraPageKey, subject?: string): ChatContext
   };
 }
 
-/** The intro line the chat opens with (client-side, zero model calls). */
-export function introKeyFor(page: MeraPageKey, webSearch: boolean): string {
+/**
+ * The intro line the chat opens with (client-side, zero model calls).
+ * `webAvailable` is the web-search setting AND the cloud engine. On device the
+ * pages that would promise a lookup open with a line that promises none.
+ */
+export function introKeyFor(page: MeraPageKey, webAvailable: boolean, onDevice = false): string {
   if (page === 'stories') return 'trackedStories.followChatIntro';
-  if (page === 'checks' && !webSearch) return 'meraIntro.checksNoWeb';
+  if (onDevice) {
+    if (page === 'checks') return 'chat.cloudOnlyNotice';
+    if (page === 'feed' || page === 'library' || page === 'world' || page === 'sources') {
+      return `meraIntro.onDevice.${page}`;
+    }
+  }
+  if (page === 'checks' && !webAvailable) return 'meraIntro.checksNoWeb';
   return `meraIntro.${page}`;
 }
 
@@ -132,8 +145,9 @@ export function pageStarters(
   page: MeraPageKey,
   webSearch: boolean,
   subject?: string,
+  onDevice = false,
 ): PageStarter[] {
-  return hintKeys(page, webSearch).map((labelKey) => {
+  return hintKeys(page, webSearch, onDevice).map((labelKey) => {
     if (page === 'interest' && subject) {
       const draftKey =
         labelKey === 'meraHints.interest.remove'
@@ -152,6 +166,7 @@ export function allKeys(): string[] {
   for (const page of Object.keys(POOLS) as MeraPageKey[]) {
     keys.add(introKeyFor(page, true));
     keys.add(introKeyFor(page, false));
+    keys.add(introKeyFor(page, true, true));
   }
   keys.add('meraDraft.changeInterest');
   keys.add('meraDraft.removeInterest');

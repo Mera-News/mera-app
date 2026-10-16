@@ -104,6 +104,35 @@ it('Checks says so when web search is off', () => {
   expect(introKeyFor('stories', false)).toBe('trackedStories.followChatIntro');
 });
 
+describe('per engine', () => {
+  it('web hints show only on cloud with web search on', () => {
+    expect(hintKeys('feed', true, false)).toContain('meraHints.askNews');
+    expect(hintKeys('feed', true, true)).not.toContain('meraHints.askNews');
+    expect(hintKeys('checks', true, true)).toEqual([]);
+    expect(pageStarters('library', true, undefined, true).map((s) => s.labelKey)).toEqual([
+      'meraHints.library.likeToRead',
+    ]);
+  });
+
+  it('fact hints stay on device', () => {
+    expect(hintKeys('facts', true, true)).toEqual(hintKeys('facts', true, false));
+  });
+
+  it('on-device openers promise no lookup', () => {
+    expect(introKeyFor('checks', true, true)).toBe('chat.cloudOnlyNotice');
+    for (const page of ['feed', 'library', 'world', 'sources'] as const) {
+      expect(introKeyFor(page, true, true)).toBe(`meraIntro.onDevice.${page}`);
+      expect(introKeyFor(page, true, false)).toBe(`meraIntro.${page}`);
+    }
+    expect(introKeyFor('facts', true, true)).toBe('meraIntro.facts');
+    expect(introKeyFor('stories', true, true)).toBe('trackedStories.followChatIntro');
+  });
+
+  it('checksNoWeb only on cloud with the setting off', () => {
+    expect(introKeyFor('checks', false, false)).toBe('meraIntro.checksNoWeb');
+  });
+});
+
 describe('pageStarters', () => {
   it('a starter drafts its own hint text', () => {
     expect(pageStarters('facts', true)).toEqual([
