@@ -68,6 +68,13 @@ describe('readingMeterModel', () => {
     expect(m({ onDeviceSupported: true }).showUnlimitedLine).toBe(true);
   });
 
+  it('states each plan in MB: 10 x the multiplier, Starter (and anything below) at 10', () => {
+    expect(m({ multiplier: 1 })).toMatchObject({ multiplierKey: 'base', planMb: 10, multiplier: 1 });
+    expect(m({ multiplier: 5 })).toMatchObject({ multiplierKey: 'n', planMb: 50, multiplier: 5 });
+    expect(m({ multiplier: 20 })).toMatchObject({ multiplierKey: 'n', planMb: 200, multiplier: 20 });
+    expect(m({ multiplier: 0 })).toMatchObject({ multiplierKey: 'base', planMb: 10, multiplier: 1 });
+  });
+
   it('multiplier key is base at 1 or less, n above', () => {
     expect(m({ multiplier: 1 }).multiplierKey).toBe('base');
     expect(m({ multiplier: 5 }).multiplierKey).toBe('n');

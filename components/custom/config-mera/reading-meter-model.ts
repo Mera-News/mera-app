@@ -2,6 +2,7 @@
 // Inputs come from the read hold, the reading query and the processing mode;
 // ReadingMeter.tsx only draws the result.
 
+import { READING_BASE_MB } from '@/lib/subscription/plan-rise';
 import { nextUtcMidnight, resetDayWord } from '@/lib/subscription/read-hold';
 
 export interface ReadingMeterInput {
@@ -29,6 +30,10 @@ export interface ReadingMeterModel {
   showOnPhoneLine: boolean;
   showUnlimitedLine: boolean;
   multiplierKey: 'base' | 'n';
+  /** The plan's daily cloud reading in MB: READING_BASE_MB × multiplier. */
+  planMb: number;
+  /** The multiplier the plan line names (at least 1). */
+  multiplier: number;
   showNewPlan: boolean;
   showOfflineOnly: boolean;
 }
@@ -53,6 +58,8 @@ export function readingMeterModel(i: ReadingMeterInput): ReadingMeterModel {
     showOnPhoneLine: i.onDevice,
     showUnlimitedLine: i.onDeviceSupported,
     multiplierKey: i.multiplier <= 1 ? 'base' : 'n',
+    planMb: READING_BASE_MB * Math.max(1, i.multiplier),
+    multiplier: Math.max(1, i.multiplier),
     showNewPlan: i.planRaised,
     showOfflineOnly: !i.online && percent == null,
   };

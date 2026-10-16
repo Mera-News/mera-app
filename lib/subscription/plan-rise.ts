@@ -20,6 +20,15 @@ const MULTIPLIER: Readonly<Record<string, number>> = {
   professional: 20,
 };
 
+/**
+ * Starter's daily cloud reading in decimal MB. Must match the infra's
+ * READ_BUDGET_BASE_BYTES (10,000,000) divided by 1e6; a plan's day is this
+ * times its multiplier.
+ * ponytail: duplicated constant; expose the limit from the server if it ever
+ * changes per user.
+ */
+export const READING_BASE_MB = 10;
+
 /** 1 for Starter, none and anything unknown. */
 export function tierMultiplier(tier: string | null | undefined): number {
   return (tier && MULTIPLIER[tier]) || 1;

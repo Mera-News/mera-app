@@ -123,7 +123,7 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, multiplier, s
                 <Text style={small}>{t('you.settings.lastUpdated', { time: formatClockTime(m.lastUpdatedAt, lang) ?? '' })}</Text>
             ) : null}
             <Text style={small}>
-                {m.multiplierKey === 'base' ? t('you.settings.planMultiplierBase') : t('you.settings.planMultiplier', { n: multiplier })}
+                {m.multiplierKey === 'base' ? t('you.settings.planMultiplierBase') : t('you.settings.planMultiplier', { mb: m.planMb, n: m.multiplier })}
             </Text>
             {m.showUnlimitedLine ? <Text style={small}>{t('you.settings.onDeviceUnlimited')}</Text> : null}
             {m.showOnPhoneLine ? <Text style={small}>{t('you.settings.readingOnPhone')}</Text> : null}
