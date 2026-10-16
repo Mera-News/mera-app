@@ -21,6 +21,7 @@ import {
 } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import { Switch } from '@/components/ui/switch';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
+import { onDeviceSubtitleKind } from '@/components/custom/config-mera/on-device-subtitle';
 import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -142,7 +143,10 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         const selected = onDevice ? onDeviceIntent : !onDeviceIntent;
         const cantRun = onDevice && deviceSupported === false;
         const title = onDevice ? t('you.settings.onThisPhone') : t('you.settings.privateCloud');
-        const subtitle = onDevice ? (cantRun ? t('meraProtocol.cantRun') : undefined) : t('meraProtocol.encrypted');
+        // TODO(onemera S2): convert the two `as never` keys to typed t() once opus-main splices the locales.
+        const subtitle = onDevice
+            ? (onDeviceSubtitleKind(cantRun) === 'cantRun' ? t('meraProtocol.cantRun') : t('meraProtocol.onDeviceNeedsCloud' as never))
+            : t('meraProtocol.encrypted');
         return (
             <Pressable
                 key={mode}
@@ -181,7 +185,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     {modeRow(ProcessingMode.Cloud)}
                 </Group>
                 <View style={{ marginTop: 8 }}>
-                    <Help>{deviceSupported === false ? t('meraProtocol.explainerCant') : t('meraProtocol.explainerCan')}</Help>
+                    <Help>{deviceSupported === false ? t('meraProtocol.explainerCant') : `${t('meraProtocol.explainerCan')} ${t('meraProtocol.explainerOnPhoneLimits' as never)}`}</Help>
                 </View>
             </View>
 
