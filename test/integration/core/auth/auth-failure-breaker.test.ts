@@ -713,8 +713,8 @@ describe('the event says WHICH cause it was', () => {
 
 describe('recordAuthSuccess does not retract a verdict it cannot have earned', () => {
   it('does NOT clear needsReauth when a credential was held: public queries succeed on a dead session', async () => {
-    // A rejected cookie is still a cookie, and the server answers public operations anyway. Clearing
-    // here flipped a confirmed-dead verdict back on the next Explore query, so the gate never showed.
+    // A rejected cookie is still a cookie, and the server answers public operations (AppVersionInfo)
+    // anyway. Clearing here flipped a confirmed-dead verdict back, so the gate never showed.
     useUserStore.setState({ needsReauth: true });
     await succeed();
     expect(needsReauth()).toBe(true);

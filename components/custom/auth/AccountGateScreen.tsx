@@ -19,8 +19,8 @@ interface AccountGateScreenProps {
     onRetry: () => void;
 }
 
-/** "Mera keeps trying" on the unreachable variant: this often, while shown. */
-const UNREACHABLE_RETRY_MS = 20_000;
+/** "Mera keeps trying": this often, while shown. */
+const RETRY_MS = 20_000;
 
 /**
  * The launch gate when Mera cannot confirm the account (FinalStart #6, #7): one
@@ -41,22 +41,24 @@ export default function AccountGateScreen({ variant, onRetry }: AccountGateScree
     const { busy, openSupport } = useSupportAction();
     const isConnected = useNetworkStore((s) => s.isConnected);
     const serverReachable = useNetworkStore((s) => s.serverReachable);
+    const internetReachable = useNetworkStore((s) => s.internetReachable);
 
     useEffect(() => {
         releaseSplash('account-gate');
     }, []);
 
-    // Back online, or the server answering again: try at once.
+    // Back online, or the server answering again: try at once. Offline with a
+    // link (captive portal) waits for the internet, or this would loop.
     useEffect(() => {
-        if (variant === 'offline' && isConnected) onRetry();
+        if (variant === 'offline' && isConnected && internetReachable) onRetry();
         if (variant === 'unreachable' && serverReachable) onRetry();
-    }, [variant, isConnected, serverReachable, onRetry]);
+    }, [variant, isConnected, internetReachable, serverReachable, onRetry]);
 
+    // Both keep trying: nothing re-probes a captive portal once it is signed in.
     useEffect(() => {
-        if (variant !== 'unreachable') return;
-        const id = setInterval(onRetry, UNREACHABLE_RETRY_MS);
+        const id = setInterval(onRetry, RETRY_MS);
         return () => clearInterval(id);
-    }, [variant, onRetry]);
+    }, [onRetry]);
 
     const offline = variant === 'offline';
     return (

@@ -2,6 +2,7 @@ import { router, usePathname } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
+import { recheckSession } from '@/lib/auth-failure-breaker';
 import { useUserStore } from '@/lib/stores/user-store';
 
 /**
@@ -9,8 +10,11 @@ import { useUserStore } from '@/lib/stores/user-store';
  * ReauthBanner): when the app comes back to the foreground with the persisted
  * needsReauth verdict, the reader goes to /login?reauth=1, the one gate screen.
  * Never mid-read: only on a return, and the launch case is LoggedInGate's.
- * It never signs anyone out; local data and the PIN stay (only the Log out
- * button logs out). Renders nothing.
+ * The server is asked first (the same deduped recheck): only `dead` routes, so
+ * a wrong verdict heals here instead of stranding a live account at the gate;
+ * offline leaves the reader in the app until a later return. It never signs
+ * anyone out; local data and the PIN stay (only the Log out button logs out).
+ * Renders nothing.
  */
 export default function ReauthOnReturn() {
     const pathname = usePathname();
@@ -27,7 +31,10 @@ export default function ReauthOnReturn() {
             // Only from the app itself: the PIN screen and the gate own their
             // own routes, and a root push (an article) is still "in the app".
             if (!pathRef.current.startsWith('/logged-in')) return;
-            router.replace({ pathname: '/login', params: { reauth: '1' } });
+            void recheckSession().then((outcome) => {
+                if (outcome !== 'dead' || !pathRef.current.startsWith('/logged-in')) return;
+                router.replace({ pathname: '/login', params: { reauth: '1' } });
+            });
         });
         return () => sub.remove();
     }, []);

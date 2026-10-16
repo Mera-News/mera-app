@@ -1,7 +1,7 @@
 jest.mock('@/lib/auth-failure-breaker', () => ({}));
 import { accountGateVerdict } from '../account-gate';
 
-const base = { outcome: null, isConnected: true, serverReachable: true } as const;
+const base = { outcome: null, isConnected: true, serverReachable: true, internetReachable: true } as const;
 
 describe('accountGateVerdict', () => {
     it('opens the app while the check is still running', () => {
@@ -18,9 +18,13 @@ describe('accountGateVerdict', () => {
         expect(accountGateVerdict({ ...base, isConnected: false })).toBe('offline');
         expect(accountGateVerdict({ ...base, isConnected: false, outcome: 'dead' })).toBe('offline');
     });
-    it('gates unreachable only when inconclusive AND already marked unreachable', () => {
+    it('gates unreachable only when inconclusive AND the server probe failed', () => {
         expect(accountGateVerdict({ ...base, outcome: 'inconclusive' })).toBe('tabs');
         expect(accountGateVerdict({ ...base, outcome: 'inconclusive', serverReachable: false })).toBe('unreachable');
         expect(accountGateVerdict({ ...base, serverReachable: false })).toBe('tabs');
+    });
+    it('blames the network, not Mera, when the internet is unreachable too', () => {
+        const down = { ...base, outcome: 'inconclusive', serverReachable: false } as const;
+        expect(accountGateVerdict({ ...down, internetReachable: false })).toBe('offline');
     });
 });

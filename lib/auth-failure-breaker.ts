@@ -372,7 +372,8 @@ export function recordAuthSuccess(): void {
   const wasOpen = breakerOpen;
   consecutiveFailures = 0;
   // Never clears needs_reauth. "Error-free" is not "authenticated": the server
-  // answers public operations (Explore's) for a REJECTED cookie too, so a
+  // answers public operations (AppVersionInfo: 200 on staging for a junk
+  // cookie, while Explore's headlines 401) for a REJECTED cookie too, so a
   // cookie being present proves nothing. Clearing here flipped a confirmed-dead
   // verdict back within seconds and the sign-in gate never showed. Only server
   // truth (triggerRecheck 'alive', which the foreground self-heal runs) or a

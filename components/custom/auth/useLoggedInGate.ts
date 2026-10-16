@@ -18,7 +18,7 @@ import {
 } from "@/lib/security/identity-gate";
 import { wipeAllLocalUserData } from "@/lib/security/local-wipe";
 import { useUserStore } from "@/lib/stores/user-store";
-import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
+import { probeInternetReachable, probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
@@ -391,15 +391,19 @@ export function useLoggedInGate() {
                         }),
                     ]);
                     clearTimeout(capTimer);
-                    // Inconclusive: ask whether Mera itself is up, so an outage
-                    // shows "Mera can't be reached". Bounded at 3s inside.
-                    if (accountCheck === 'inconclusive') await probeServerReachable();
+                    // Inconclusive: is Mera up, and if not, is the internet?
+                    // Mera down = "can't be reached"; neither = offline. Each
+                    // probe is bounded at 3s inside.
+                    if (accountCheck === 'inconclusive' && !(await probeServerReachable())) {
+                        await probeInternetReachable();
+                    }
                 }
                 const network = useNetworkStore.getState();
                 const gateVerdict = accountGateVerdict({
                     outcome: accountCheck,
                     isConnected: network.isConnected,
                     serverReachable: network.serverReachable,
+                    internetReachable: network.internetReachable,
                 });
                 if (cancelled) return;
                 if (gateVerdict === 'reauth') {

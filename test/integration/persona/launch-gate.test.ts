@@ -638,10 +638,30 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             server.use(
                 recheckOnly(() => HttpResponse.json({ message: 'boom' }, { status: 500 })),
                 http.get('*/api/auth/ok', () => new HttpResponse(null, { status: 503 })),
+                http.get('*/generate_204', () => new HttpResponse(null, { status: 204 })),
+                http.get('*/hotspot-detect.html', () => HttpResponse.text('Success')),
             );
 
             const hook = mountGate();
             await waitFor(() => expect(hook.result.current.gate).toBe('unreachable'), { timeout: 8000 });
+            await drain();
+
+            expect(replaced()).toEqual([]);
+        });
+
+        it('a link with no internet behind it (captive portal) is offline, never blamed on Mera', async () => {
+            await signIn();
+            await setSetting('cached_user_id', ME);
+            await markOnboardingDone();
+            server.use(
+                recheckOnly(() => HttpResponse.error()),
+                http.get('*/api/auth/ok', () => HttpResponse.error()),
+                http.get('*/generate_204', () => HttpResponse.text('portal login', { status: 200 })),
+                http.get('*/hotspot-detect.html', () => HttpResponse.text('portal login', { status: 200 })),
+            );
+
+            const hook = mountGate();
+            await waitFor(() => expect(hook.result.current.gate).toBe('offline'), { timeout: 8000 });
             await drain();
 
             expect(replaced()).toEqual([]);
