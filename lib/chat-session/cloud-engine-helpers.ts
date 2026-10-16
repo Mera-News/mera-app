@@ -4,7 +4,9 @@
 import logger from '../logger';
 import type { WireMessage } from '@/lib/llm/cloudComplete';
 import type { ConversationMessage } from '../llm/types';
-import type { AgentDeps } from '../mera-harness';
+import type { AgentDeps, AgentState, PendingProposalView } from '../mera-harness';
+import type { ToolExecutionResult } from '../news-harness/core/types';
+import { proposalRequiresUserChoice } from '../news-harness/core/proposals';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { unresolvedGroups } from '../chat-tools/fact-choice-resolution';
@@ -72,6 +74,67 @@ export function pendingCardStatements(messages: ConversationMessage[]): string[]
     });
   }
   return out;
+}
+
+/**
+ * What a tool's execution asks the chat to do: block it, stage a card, settle
+ * the waiting card. ONE place for both the single-shot path and the harness
+ * card tools. `cloud` is the engine's own (possibly detached) store handle; the
+ * floating-chat writes are skipped once the engine is disposed.
+ */
+export function applyToolSideEffects(
+  sideEffects: ToolExecutionResult['sideEffects'],
+  { alive, cloud = useCloudChatStore.getState() }: { alive: boolean; cloud?: CloudState },
+): void {
+  if (!sideEffects) return;
+  if (sideEffects.blocked) {
+    cloud.setIsBlocked(true);
+    cloud.setBlockedReason(sideEffects.blocked.reason);
+  }
+  if (sideEffects.proposal && alive) useFloatingChatStore.getState().setProposal(sideEffects.proposal);
+  if (sideEffects.proposalResolved && alive) {
+    useFloatingChatStore.getState().resolveProposal(sideEffects.proposalResolved);
+  }
+}
+
+/**
+ * Actions a typed "yes" must never apply: they skip the loop's save
+ * normalisation, the M6 delete gate, mayReplace and the topic veto. Only the
+ * card's tap runs those paths.
+ */
+export const HARNESS_TAP_ONLY: ReadonlySet<string> = new Set([
+  'run_calibration',
+  'fact_check_claim',
+  'add_fact',
+  'update_fact',
+  'delete_fact',
+  'add_topics',
+  'remove_topics',
+]);
+
+/** The card on screen, as the loop sees it; null once it is settled or absent. */
+export function pendingProposalView(): PendingProposalView | null {
+  const { proposal: p, resolvedProposals } = useFloatingChatStore.getState();
+  if (!p || resolvedProposals[p.id]) return null;
+  const chooseOne = proposalRequiresUserChoice(p);
+  return {
+    id: p.id,
+    summary: p.explanation || p.actions.map((a) => (a as { label?: string }).label ?? a.type).join(', '),
+    chooseOne,
+    appliable: !chooseOne && !p.actions.some((a) => HARNESS_TAP_ONLY.has(a.type)),
+  };
+}
+
+/** The user's active filters for the loop's state; best effort. */
+export async function activeFiltersView(): Promise<NonNullable<AgentState['activeFilters']>> {
+  try {
+    // Lazy: the suppression service builds its collection at module scope.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const rows = await (require('../database/services/suppression-service') as typeof import('../database/services/suppression-service')).getActive();
+    return rows.map((r) => ({ id: r.id, pattern: r.pattern }));
+  } catch {
+    return [];
+  }
 }
 
 /** Tool arguments arrive as a JSON string. A malformed one must yield an empty

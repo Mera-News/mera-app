@@ -33,6 +33,9 @@ import {
   i18nInstance,
   parseToolArgs,
   pendingCardStatements,
+  activeFiltersView,
+  applyToolSideEffects,
+  pendingProposalView,
   scheduleFrame,
   TAG,
   withCombinedFactMemory,
@@ -148,6 +151,10 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       agentStateRef.current.pendingCardStatements = pendingCardStatements(store.messages);
       // Facts are re-read every turn; only the TURN half persists.
       agentStateRef.current.persona = persona;
+      // The card on screen and the filters it could retire, so a typed yes or no
+      // can settle the card and `retire_suppression` names a real id.
+      agentStateRef.current.pendingProposal = pendingProposalView();
+      agentStateRef.current.activeFilters = await activeFiltersView();
 
       // TWO BUBBLES PER TURN. The acknowledgement streams into its own bubble
       // and is never replaced; the answer lands in the second one, which also
@@ -253,6 +260,11 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             },
             (signal) => phaseSinkRef.current?.(signal),
             stopRef.current.signal,
+            {
+              execute: (name, args) => agentRef.current.executeTool(name, args),
+              onSideEffects: (se) => applyToolSideEffects(se, { alive, cloud: cloud() }),
+              pending: pendingProposalView,
+            },
           )),
           onLeg,
           // Mera's two replacement lines, in the reader's language.
@@ -280,6 +292,13 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             lastUserMessage: userMessage,
             lastReply: replaceClauseDashes(acc).trim() || null,
           });
+          // A card staged on THIS turn goes with it; an earlier turn's card, and
+          // an apply that already completed, stay as they were.
+          const card = agentStateRef.current.turn.lastCard;
+          const shown = useFloatingChatStore.getState().proposal;
+          if (alive && card && card.turn === agentStateRef.current.turn.turnNumber && shown && card.proposalId === shown.id) {
+            useFloatingChatStore.getState().setProposal(null);
+          }
           cloud().setMessages((prev) =>
             prev.map((m) =>
               m.id === ackId
@@ -649,16 +668,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
               const { result, sideEffects } = await agentRef.current.executeTool(callName, tc.input);
               logger.debug(`${TAG} tool result`, { name: tc.name, resultLength: JSON.stringify(result).length, sideEffects: sideEffects ? Object.keys(sideEffects) : [] });
 
-              if (sideEffects?.blocked) {
-                cloud().setIsBlocked(true);
-                cloud().setBlockedReason(sideEffects.blocked.reason);
-              }
-              if (sideEffects?.proposal) {
-                if (alive) useFloatingChatStore.getState().setProposal(sideEffects.proposal);
-              }
-              if (sideEffects?.proposalResolved) {
-                if (alive) useFloatingChatStore.getState().resolveProposal(sideEffects.proposalResolved);
-              }
+              applyToolSideEffects(sideEffects, { alive, cloud: cloud() });
 
               // Committed HERE, the moment this call settles — not after the
               // slowest sibling.

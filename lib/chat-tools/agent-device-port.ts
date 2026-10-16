@@ -15,6 +15,7 @@ import type {
   FindSimilarFactsResult,
   LookupPlaceArgs,
   LookupPlaceResult,
+  PendingProposalView,
   Place,
 } from '@/lib/mera-harness';
 import { isCombinedOriginFact, isLocationKey, isRelationalStatement, loadSkill, skillIds } from '@/lib/mera-harness';
@@ -33,6 +34,9 @@ import { SUPPORTED_LANGUAGES } from '../translation-service';
 import { canonicalizeLanguageCode } from '../algorithms/language-codes';
 import type { AgentPersona } from '@/lib/mera-harness';
 import logger from '../logger';
+import { isFallbackEngaged } from '../llm/model-fallback';
+import { userTapOnlyRefusal } from '../news-harness/core/proposals';
+import type { ToolExecutionResult } from '../news-harness/core/types';
 
 const TAG = '[AgentPort]';
 
@@ -311,11 +315,34 @@ function isOwnHomeFact(f: { statement: string; questionnaireAttribute?: string |
   );
 }
 
+/** The engine's hooks for the three card tools: its own `executeTool` (so no
+ *  consent logic is re-implemented here), the store sinks, and the card on screen. */
+export interface CardToolDeps {
+  execute(name: string, args: Record<string, unknown>): Promise<ToolExecutionResult>;
+  onSideEffects(sideEffects: ToolExecutionResult['sideEffects']): void;
+  pending(): PendingProposalView | null;
+}
+
 export function makeAgentToolPort(
   userMessage: string,
   onPhase?: (signal: PhaseSignal) => void,
+  cards?: CardToolDeps,
 ): AgentToolPort {
+  const runCard = async (name: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
+    const { result, sideEffects } = await cards!.execute(name, args);
+    cards!.onSideEffects(sideEffects);
+    return result;
+  };
   return {
+    ...(cards
+      ? {
+          proposeChanges: (args: Record<string, unknown>) => runCard('proposeChanges', args),
+          // A card that only a tap may apply is refused here, before the agent is asked.
+          applyProposal: async (): Promise<Record<string, unknown>> =>
+            cards.pending()?.appliable ? runCard('applyProposal', {}) : userTapOnlyRefusal(),
+          cancelProposal: () => runCard('cancelProposal', {}),
+        }
+      : {}),
     async findSimilarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult> {
       const similar = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
       // THE CURRENT HOME, always, on a residence lookup. Similarity is word
@@ -454,8 +481,10 @@ async function callModelOnce(
     model: modelId,
     maxTokens: req.maxTokens ?? CHAT_MAX_OUTPUT_TOKENS,
     // Thinking OFF on every agent call. Measured: the trace buys nothing here
-    // and costs the whole budget on the topic path.
-    enableThinking: req.enableThinking ?? false,
+    // and costs the whole budget on the topic path. Forced off again while the
+    // session fallback is engaged: the BIG fallback truncates with thinking on
+    // (12 of 19 persona turns).
+    enableThinking: isFallbackEngaged(modelId) ? false : (req.enableThinking ?? false),
     onPhase,
     signal: stop,
   });
@@ -502,8 +531,9 @@ export function makeAgentDeps(
   /** The Stop button. Once aborted, no further model call or tool runs: the
    *  loop sees a resolved `error` and ends the turn with no new legs. */
   stop?: AbortSignal,
+  cards?: CardToolDeps,
 ): AgentDeps {
-  const tools = makeAgentToolPort(userMessage, onPhase);
+  const tools = makeAgentToolPort(userMessage, onPhase, cards);
   return {
     // Only the leg the loop marks `streamToUser` reaches the bubble. Passing
     // `onDelta` on every leg streamed each later leg's text into the
@@ -558,6 +588,9 @@ function haltable(port: AgentToolPort, stop: AbortSignal): AgentToolPort {
     deleteUserFacts: (a) => halted(() => port.deleteUserFacts(a)),
     ...(port.webSearch ? { webSearch: (a: { queries: string[] }) => halted(() => port.webSearch!(a)) } : {}),
     ...(port.explainMera ? { explainMera: (a: { topics: string[] }) => halted(() => port.explainMera!(a)) } : {}),
+    ...(port.proposeChanges ? { proposeChanges: (a: Record<string, unknown>) => halted(() => port.proposeChanges!(a)) } : {}),
+    ...(port.applyProposal ? { applyProposal: () => halted(() => port.applyProposal!()) } : {}),
+    ...(port.cancelProposal ? { cancelProposal: () => halted(() => port.cancelProposal!()) } : {}),
   };
 }
 
