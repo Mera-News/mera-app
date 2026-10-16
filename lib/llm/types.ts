@@ -85,21 +85,6 @@ export interface IAgent {
   /** Return tool definitions in OpenAI JSON Schema format (for cloud chat). */
   getToolDefinitions?(): ToolDefinition[];
   /**
-   * The tools the FORCED-EXTRACTION repair pass may use (cloud path only).
-   *
-   * That pass reruns a turn with `tool_choice:'required'` when the first pass
-   * returned text but zero tool calls. `'required'` obliges >=1 call, so
-   * whatever is in this payload WILL be called and executed — including on a
-   * purely conversational turn ("hi", "thanks"). It must therefore contain
-   * ONLY tools whose empty-argument call is a harmless no-op.
-   *
-   * Absent or empty => the forced pass is SKIPPED ENTIRELY for this agent.
-   * That is the correct default: an agent whose tools stage or apply changes
-   * (propose/confirm surfaces) must never be forced to call one, because a
-   * forced call fabricates user consent for a change nobody asked for.
-   */
-  getForcedExtractionTools?(): ToolDefinition[];
-  /**
    * The thinking gear of this agent's single-shot cloud chat calls. Absent =
    * on (cloudChatStream's default). Set false only on a pass of
    * harness-local/scripts/run-singleshot-corpus.ts for this agent.

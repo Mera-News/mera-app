@@ -1,6 +1,6 @@
 // THE STOP BUTTON AND A TOOL CALL (items 8 and 9 of the hand-off): a cancelled stream never executes
-// a half-parsed call, and a Stop between the forced leg and its re-ask runs neither the re-ask nor
-// the calls.
+// a half-parsed call, and a Stop between the persona loop's forced leg and its re-ask runs neither
+// the re-ask nor the calls.
 //
 // Not repeated here, held elsewhere:
 //  - Stop mid-text with the call chunk NOT yet arrived (the call bytes are never in the parser):
@@ -33,7 +33,7 @@ import {
   type GatewayCall,
 } from '@/test/helpers';
 import { isRouteLeg, reply, resetChatModules, toolCall } from '@/test/integration/chat/_helpers';
-import { attachCloud, busy, cloud, forcedPassAgent, settle, textOf } from './kit';
+import { attachCloud, busy, cloud, noteAgent, settle, textOf } from './kit';
 
 jest.setTimeout(60_000);
 
@@ -77,7 +77,7 @@ describe('item 8: Stop with a call half-parsed', () => {
       for await (const e of cloudChatStream({
         model: SMALL_MODEL,
         messages: [{ role: 'user', content: 'Save my note' }],
-        tools: [forcedPassAgent([]).getToolDefinitions!()[0]],
+        tools: [noteAgent([]).getToolDefinitions!()[0]],
         signal: stop.signal,
       })) {
         events.push(e);
@@ -100,7 +100,7 @@ describe('item 8: Stop with a call half-parsed', () => {
 
   it('single-shot engine: the partial text stays as stopped, the tool is never run, no further call is sent', async () => {
     server.use(...mockGateway(() => stalledOn(HALF_CALL('recordNote', 'note'))));
-    const { engine } = await attachCloud(forcedPassAgent(executed));
+    const { engine } = await attachCloud(noteAgent(executed));
     engine.send('Save my note');
     await advanceUntil(() => (cloud().messages.find((m) => m.role === 'assistant')?.content ?? '').includes('Saving'));
 
@@ -113,7 +113,7 @@ describe('item 8: Stop with a call half-parsed', () => {
     expect(bubble?.toolCalls).toBeUndefined();
     expect(executed).toEqual([]);
     expect(cloud().error).toBeNull();
-    // One call, cut by the Stop; the forced pass (owed by a prose first pass) never started.
+    // One call, cut by the Stop; nothing further is sent.
     expect(chatCalls()).toHaveLength(1);
     expect(chatCalls()[0].aborted).toBe(true);
     expect(chatCalls().some((c) => c.messages.some((m) => m.content === REQUIRED_TOOL_REASK))).toBe(false);
@@ -235,42 +235,6 @@ describe('item 9: Stop between the forced leg and its re-ask', () => {
     expect(seen).toHaveLength(2);
     expect(chatCalls()).toHaveLength(2);
     expect(lastContent(chatCalls()[1])).toBe(REQUIRED_TOOL_REASK);
-  });
-
-  it('single-shot pass, no call back: the re-ask is not sent, nothing runs, the turn ends not busy', async () => {
-    server.use(...mockGateway(() => 'Noted, thanks.'));
-    const seen = wrapForced(() => stopChatTurn());
-    const { engine } = await attachCloud(forcedPassAgent(executed));
-
-    engine.send('I live in Porto');
-    expect(busy()).toBe(true);
-    await idleAfterStop();
-
-    // The first pass and the forced leg only.
-    expect(seen.map((r) => r.toolChoice)).toEqual(['auto', 'required']);
-    expect(chatCalls()).toHaveLength(2);
-    expect(chatCalls().some((c) => c.messages.some((m) => m.content === REQUIRED_TOOL_REASK))).toBe(false);
-    expect(executed).toEqual([]);
-    expect(busy()).toBe(false);
-    expect(cloud().status).toBe('idle');
-    expect(cloud().error).toBeNull();
-    expect(cloud().messages.every((m) => m.toolCalls === undefined)).toBe(true);
-  });
-
-  it('single-shot pass, a call came back: it is not executed once the Stop has landed', async () => {
-    server.use(...mockGateway((c) => (c.index === 0 ? 'Noted, thanks.' : toolCall('recordNote', { note: 'SENTINEL_NOTE_8d02' }))));
-    const seen = wrapForced(() => stopChatTurn());
-    const { engine } = await attachCloud(forcedPassAgent(executed));
-
-    engine.send('I live in Porto');
-    await idleAfterStop();
-
-    expect(seen.map((r) => r.toolChoice)).toEqual(['auto', 'required']);
-    expect(chatCalls()).toHaveLength(2);
-    expect(executed).toEqual([]);
-    expect(cloud().messages.every((m) => m.toolCalls === undefined)).toBe(true);
-    expect(busy()).toBe(false);
-    expect(cloud().error).toBeNull();
   });
 });
 

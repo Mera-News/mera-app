@@ -16,7 +16,7 @@
 // tool this agent now carries, so a reader who asks about something outside the
 // app gets an answer instead of a shrug. Nothing about the original failure is
 // reopened by it: `saveExtractedFacts` is still absent, so is every other
-// mutating tool, `getForcedExtractionTools()` is still empty, and every name
+// mutating tool, and every name
 // this class is not offering is still refused below.
 
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
@@ -99,16 +99,6 @@ export class TutorialHelpAgent implements IAgent {
    *  MUTATING tool stays absent — see the class comment. */
   getToolDefinitions(): ToolDefinition[] {
     return getTutorialHelpToolDefinitions(this.webSearchEnabled());
-  }
-
-  /**
-   * Empty ⇒ the cloud path SKIPS the forced-extraction repair pass entirely.
-   * That pass reruns a turn with `tool_choice:'required'`, so anything listed
-   * here WOULD be called on a purely conversational turn. For a help agent every
-   * turn is conversational, which makes the correct list empty twice over.
-   */
-  getForcedExtractionTools(): ToolDefinition[] {
-    return [];
   }
 
   async executeTool(name: string, input: unknown): Promise<ToolExecutionResult> {

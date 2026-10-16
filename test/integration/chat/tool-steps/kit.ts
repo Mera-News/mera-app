@@ -3,7 +3,7 @@
 // Everything runs against the real gateway mock (real E2EE both ways), real auth, the real limiter,
 // the real stores and the in-memory DB. A turn is driven the way the app drives it:
 // createConversation, attachChatSession, engine.send. "Busy" is the whole-turn signal
-// (agentTurnState.turnActive), never `status`: the forced pass outlives `status`.
+// (agentTurnState.turnActive), never `status`.
 import { attachChatSession } from '@/lib/chat-session/chat-session';
 import { createConversation } from '@/lib/database/services/conversation-service';
 import type { SseEvent } from '@/lib/llm/cloudComplete';
@@ -22,7 +22,7 @@ export async function collect(gen: AsyncGenerator<SseEvent>): Promise<SseEvent[]
 export const textOf = (events: SseEvent[]): string =>
   events.flatMap((e) => (e.type === 'text-delta' ? [e.delta] : [])).join('');
 
-/** One harmless tool, declared both for the turn and for the forced pass. */
+/** One harmless tool. */
 export const NOTE_TOOL = {
   type: 'function' as const,
   function: {
@@ -34,15 +34,14 @@ export const NOTE_TOOL = {
 
 /**
  * A plain IAgent the engine drives through the public API. Its id does not start with `persona-`,
- * so the engine runs it through `runSingleShot` (the only path that owns the single-shot forced
- * pass). Its one tool is a no-op that records every call it is asked to run.
+ * so the engine runs it through `runSingleShot`. Its one tool is a no-op that records every call
+ * it is asked to run.
  */
-export function forcedPassAgent(executed: { name: string; input: unknown }[]): IAgent {
+export function noteAgent(executed: { name: string; input: unknown }[]): IAgent {
   return {
-    id: 'forced-pass-test-agent',
-    buildSystemPrompt: async () => 'You are the forced pass test agent.',
+    id: 'note-test-agent',
+    buildSystemPrompt: async () => 'You are the note test agent.',
     getToolDefinitions: () => [NOTE_TOOL],
-    getForcedExtractionTools: () => [NOTE_TOOL],
     executeTool: async (name, input) => {
       executed.push({ name, input });
       return { result: { recorded: true } };

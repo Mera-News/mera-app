@@ -56,11 +56,8 @@ interface SeqEntry {
  * `turnActive` is the TURN-SCOPED flag from P1's agent turn state. It is
  * deliberately not `status` / `isStreaming` / `isStreamingRef`: all three are
  * named as though they were stream-scoped, behave turn-scoped nearly
- * everywhere, and go idle EARLY during a forced-extraction pass
- * (`useCloudPersonaChat` sets status idle unconditionally but releases
- * `turnBusyRef` only when no forced pass is running). Keying on one of those
- * paints a healthy turn as interrupted in that window, and P1's multi-leg loop
- * widens it to every gap between legs.
+ * everywhere, and the on-device engine sets `status` idle BEFORE its tools run.
+ * Keying on one of those paints a healthy turn as interrupted in that window.
  *
  * `undefined` means the flag is not wired yet. The fallback is deliberately the
  * SAFE direction: collapse on "everything settled" (the old behaviour) and mark

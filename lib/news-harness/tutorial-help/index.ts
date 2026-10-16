@@ -148,8 +148,7 @@ export function parseTutorialRoute(
  * This agent exists because routing a tutorial question at `PersonaUpdateAgent`
  * silently wrote to the reader's profile. A READ-ONLY lookup reopens none of
  * that: it cannot save a fact, cannot change a setting, cannot follow a story.
- * The list stays a list of one, and `getForcedExtractionTools()` stays empty —
- * a forced pass here would search on a turn that only said "thanks".
+ * The list stays a list of one.
  */
 export function getTutorialHelpToolDefinitions(webSearchEnabled: boolean): ToolDefinition[] {
   if (!webSearchEnabled) return [];

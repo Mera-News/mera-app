@@ -185,10 +185,7 @@ interface FloatingChatState {
     // cleared aggressively — a nonce that outlives its thread would fire a
     // "you rejected my topics" reply into a brand-new conversation.
     topicPlanTurnRequest: number | null;
-    // True from the moment that turn is dispatched until it settles. Read by
-    // useCloudPersonaChat's forcedExtractionTools(): a forced
-    // `tool_choice:'required'` would oblige saveExtractedFacts on the very turn
-    // whose note says to save nothing.
+    // True from the moment that turn is dispatched until it settles.
     topicPlanTurnInFlight: boolean;
     // Quick fact checks started in THIS thread, oldest-first. See
     // QuickFactCheckEntry: in-memory only, never persisted, cleared whenever the

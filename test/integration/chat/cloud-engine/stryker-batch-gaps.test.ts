@@ -1,6 +1,6 @@
 // lib/hooks/useCloudPersonaChat.ts (the cloud engine) and lib/llm/completeLocal.ts: the arms only
 // legacy suites reached.
-//  - an agent that does not declare getForcedExtractionTools at all (the optional IAgent method),
+//  - a single-shot agent answering in prose (one call, no second pass),
 //  - a single-shot turn stopped before any text arrived.
 // Driven the way the app drives a turn (createConversation, attachChatSession, engine.send, the
 // Send button's stopChatTurn) against the gateway mock.
@@ -31,15 +31,14 @@ beforeEach(async () => {
 
 const answerOf = () => cloud().messages.find((m) => m.role === 'assistant' && !m.id.endsWith('-ack'));
 
-describe('an agent with no getForcedExtractionTools', () => {
-  // The contract (IAgent) says absent means the forced-extraction pass is skipped entirely.
+describe('a single-shot agent answering in prose', () => {
   const plainAgent = (): IAgent => ({
     id: 'plain-agent-1',
     buildSystemPrompt: async () => 'You are a plain test agent. Answer in one sentence.',
     executeTool: async () => ({ result: {} }) as never,
   });
 
-  it('answers in prose and ends the turn with no forced second call', async () => {
+  it('answers in prose and ends the turn with no second call', async () => {
     server.use(...mockGateway(() => 'A plain answer.'));
     const { engine } = await attachCloud(plainAgent());
 
@@ -48,7 +47,6 @@ describe('an agent with no getForcedExtractionTools', () => {
 
     expect(cloud().error).toBeNull();
     expect(answerOf()?.content).toBe('A plain answer.');
-    // Prose with no tool call would owe a forced pass for an agent that opted in; this one did not.
     await new Promise((r) => setTimeout(r, 500));
     expect(gatewayCalls('chat')).toHaveLength(1);
   });

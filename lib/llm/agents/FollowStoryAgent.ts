@@ -118,15 +118,6 @@ export class FollowStoryAgent implements IAgent {
     return getFollowStoryToolDefinitions(mode, webSearch);
   }
 
-  /**
-   * NO forced-extraction pass — same reasoning as ArticleFeedbackAgent, and
-   * sharper here: `tool_choice:'required'` would oblige a `proposeTrack` call on
-   * a purely conversational turn, staging a follow the user never asked for.
-   */
-  getForcedExtractionTools(): ToolDefinition[] {
-    return [];
-  }
-
   // --- IAgent: tool execution ---
 
   async executeTool(name: string, input: unknown): Promise<ToolExecutionResult> {

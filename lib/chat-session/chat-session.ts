@@ -13,7 +13,7 @@
 // - writes finished messages to the `messages` table (`toPersist`).
 //
 // BUSY IS THE WHOLE TURN on either engine, never `status`: both engines keep
-// doing real work (the cloud forced-extraction pass, on-device tool
+// doing real work (the cloud loop's device tools between legs, on-device tool
 // execution) after their text has stopped.
 
 import { holdRestart } from '@/lib/app-restart';
@@ -146,7 +146,7 @@ export function attachChatSession(opts: AttachOptions): ChatEngine {
 
 /**
  * THE STOP BUTTON. Aborts whatever the live engine is doing: the stream, the
- * agent loop's next leg, any tool not yet started, the forced pass, a queued
+ * agent loop's next leg, any tool not yet started, a queued
  * hidden turn. A no-op when nothing is busy. The engine settles itself (busy
  * clears through its own store, which `sync` mirrors), so the composer is ready
  * at once and no "answer ready" ring is left behind.

@@ -285,8 +285,7 @@ export class PersonaUpdateAgent implements IAgent {
     // `mode` gates the CLOUD-only knowledge tool (explainMera). Derived exactly
     // as buildSystemPrompt derives it, from the same store — not cached from the
     // last buildSystemPrompt call, because this method is also called
-    // standalone (executeTool's name normalisation, the forced-extraction
-    // payload) on an agent whose prompt was never built this turn.
+    // standalone (executeTool's name normalisation) on an agent whose prompt was never built this turn.
     //
     // `webSearchInChat` gates the web-search DECLARATION, and it is read from
     // the same non-reactive snapshot for the same reason: this method is also
@@ -303,28 +302,6 @@ export class PersonaUpdateAgent implements IAgent {
       this.turnPlan.filterTools,
       mode,
       protocol.webSearchInChat === true,
-    );
-  }
-
-  /**
-   * Forced-extraction payload: `saveExtractedFacts` and NOTHING ELSE.
-   *
-   * The forced pass runs with tool_choice:'required', so every tool listed here
-   * can be called on a turn the user never asked anything of ("hi", "thanks").
-   * `saveExtractedFacts` is the only persona tool that is safe under that
-   * pressure: with no facts to extract the model emits an empty array and
-   * `handleSaveExtractedFacts` returns { factsSaved: 0 } without touching the
-   * database (lib/chat-tools/tool-handlers.ts).
-   *
-   * Everything else is deliberately excluded. `deleteUserFacts` is destructive;
-   * `runCalibration` takes NO arguments, which makes it the cheapest possible
-   * way for a model to satisfy 'required' — forcing it would fabricate exactly
-   * the confirmation the calibration flow exists to require; and the proposal
-   * tools stage or apply changes.
-   */
-  getForcedExtractionTools(): ToolDefinition[] {
-    return this.getToolDefinitions().filter(
-      (d) => d.function.name === 'saveExtractedFacts',
     );
   }
 
@@ -359,9 +336,7 @@ export class PersonaUpdateAgent implements IAgent {
       }
 
       // KNOWLEDGE tool (CLOUD only). Pure read of a frozen reference document —
-      // no database, no network, no sideEffects. Deliberately absent from
-      // getForcedExtractionTools(): that payload runs with tool_choice:'required'
-      // and must stay saveExtractedFacts-only.
+      // no database, no network, no sideEffects.
       case 'explainMera': {
         const result = await handleExplainMera(args);
         return { result };

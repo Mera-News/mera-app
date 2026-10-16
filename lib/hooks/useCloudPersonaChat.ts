@@ -8,7 +8,6 @@ import type { ChatEngine } from '@/lib/chat-session/engine';
 import logger from '../logger';
 import { CallerAbortError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
-import { REQUIRED_TOOL_REASK } from '../llm/text-tool-protocol';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import {
@@ -32,7 +31,6 @@ import {
   detachedCopy,
   finalizeToolCalls,
   i18nInstance,
-  isEmptyExtractionCall,
   parseToolArgs,
   pendingCardStatements,
   scheduleFrame,
@@ -62,15 +60,12 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   let detached: CloudState | null = null;
   const cloud = (): CloudState => (alive || !detached ? useCloudChatStore.getState() : detached);
   const isStreamingRef = { current: false };
-  /** Covers the WHOLE turn including the fire-and-forget forced-extraction tail,
-   *  which outlives isStreamingRef. See startTurn. */
+  /** Covers the WHOLE turn: every leg and the device tool work between them.
+   *  See startTurn. */
   const turnBusyRef = { current: false };
-  /** True while the forced pass owns the busy release. */
-  const forcedPassRef = { current: false };
   /** THE STOP BUTTON. One controller per turn; `stop()` aborts it, which cancels
    *  the stream on both hedge legs, and every later step of the turn checks it
-   *  (no more legs, no tool calls, no forced pass). Kept after the turn ends so
-   *  the forced pass, which outlives it, is stoppable too. */
+   *  (no more legs, no tool calls). */
   const stopRef: { current: AbortController } = { current: new AbortController() };
   const throwIfStopped = (): void => {
     if (stopRef.current.signal.aborted) throw new CallerAbortError('turn stopped');
@@ -80,14 +75,10 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    * Sets `turnBusyRef` AND mirrors it onto the store's `agentTurnState`, so the
    * two cannot drift. Every write to `turnBusyRef` goes through here.
    *
-   * `turnActive` must be true across every leg AND every gap between them --
-   * device tool execution and the fire-and-forget forced pass -- and false only
-   * at turn end or transport failure. That is `turnBusyRef`'s lifetime, NOT
-   * `isStreamingRef`'s and NOT `status`'s: `startForcedExtraction` dispatches
-   * with `void`, so the forced pass outlives `startTurn`'s `finally` and both
-   * of those read idle while real work is still in flight. Deriving the flag
-   * from streaming state renders a live turn as interrupted, which is exactly
-   * the failure the interruption state exists to report.
+   * `turnActive` must be true across every leg AND every gap between them
+   * (device tool execution) and false only at turn end or transport failure.
+   * Deriving it from `status` renders a live turn as interrupted, which is
+   * exactly the failure the interruption state exists to report.
    */
   const setTurnBusy = (next: boolean): void => {
     if (turnBusyRef.current === next) return;
@@ -130,9 +121,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    *
    * A REF, not a parameter, because `runAgentLoopTurn` and `runSingleShot` are
    * separate callbacks that `startTurn` chooses between, and the mark has to
-   * be per TURN rather than per path. Null is load-bearing: a forced-extraction
-   * pass calls `runSingleShot` directly, outside any turn, and a hidden pass
-   * must not narrate a wait nobody is watching.
+   * be per TURN rather than per path. Null outside a turn.
    */
   const phaseSinkRef: { current: PhaseSink | null } = { current: null };
 
@@ -383,17 +372,6 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       const streamOne = async (
         targetId: string,
         includeContext: boolean,
-        toolChoice: 'required' | 'auto' = 'auto',
-        // Overrides the turn's tool payload (forced-extraction pass only).
-        toolsOverride?: ToolDefinition[],
-        // When true, text deltas are accumulated but NEVER written into
-        // `targetId`. The forced pass needs this: it targets the VISIBLE
-        // assistant bubble so its tool calls render and persist, and without
-        // this flag its own prose would overwrite — mid-turn — the reply the
-        // user is already reading (accContent restarts at '' on every call).
-        suppressText = false,
-        // Appended AFTER the context injection: the forced pass's one re-ask.
-        reask?: string,
       ): Promise<{ accContent: string; toolCalls: ReturnType<typeof finalizeToolCalls> }> => {
         let accContent = '';
         const toolCallAccumulators = new Map<number, ToolCallAccumulator>();
@@ -424,25 +402,17 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             ];
           }
         }
-        if (reask) windowed = [...windowed, { role: 'user', content: reask }];
         logger.debug(`${TAG} wire window`, { total: allWire.length, sent: windowed.length });
 
         const stream = cloudChatStream({
           messages: [{ role: 'system', content: systemPrompt }, ...windowed],
-          tools: toolsOverride ?? tools,
-          toolChoice,
-          // The forced pass's text is never shown: one envelope, one decrypt.
-          stream: !suppressText,
+          tools,
+          toolChoice: 'auto',
+          stream: true,
           model: BIG_MODEL,
           maxTokens: CHAT_MAX_OUTPUT_TOKENS,
           enableThinking: agentRef.current.chatThinking,
-          // `suppressText` IS THE GATE, not a null sink ref. The forced
-          // extraction pass is dispatched with `void`, so it starts BEFORE
-          // `startTurn`'s finally has cleared the ref and would otherwise
-          // re-narrate a wait that is already over: measured here, it walked
-          // the line back to "encrypting" after the answer was on screen.
-          // Same reason the content render is gated on this flag.
-          onPhase: suppressText ? undefined : (signal) => phaseSinkRef.current?.(signal),
+          onPhase: (signal) => phaseSinkRef.current?.(signal),
           signal: stopRef.current.signal,
         });
 
@@ -503,7 +473,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             // reasoning at all.
           } else if (event.type === 'text-delta') {
             accContent += event.delta;
-            if (!suppressText) scheduleContentRender();
+            scheduleContentRender();
           } else if (event.type === 'tool-call-delta') {
             // No handover here: the wait row stays until text lands or the
             // steps box takes over, never an empty bubble in between.
@@ -535,7 +505,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         const cleaned = replaceClauseDashes(accContent);
         if (cleaned !== accContent) {
           accContent = cleaned;
-          if (!suppressText) renderContent();
+          renderContent();
         }
         } catch (err) {
           // STOP: land the tokens already received before the exception
@@ -716,90 +686,13 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         });
       };
 
-      // ---------- Forced extraction safety-net (GATED) ----------
-      //
-      // GATE (P0). This pass runs with tool_choice:'required', which obliges the
-      // model to emit >=1 tool call from whatever payload we hand it — and
-      // executeToolsAndPushResults then really RUNS it. On a purely
-      // conversational turn ("hi", "thanks") that means a tool call the user
-      // never asked for. Three conditions must therefore hold before it fires:
-      //
-      //  1. The agent opts in via getForcedExtractionTools() with a NON-EMPTY
-      //     payload of tools whose empty-argument call is a harmless no-op.
-      //     ArticleFeedbackAgent returns [] — every tool it has stages or
-      //     applies a change, so a forced call there fabricates consent.
-      //  2. No proposal is pending — otherwise 'required' can pick
-      //     applyProposal and apply it without the user confirming.
-      //  3. (LANDS WITH P2) No invocation intent is pending — a
-      //     notification-initiated action such as runCalibration takes NO
-      //     arguments, which makes it the cheapest possible way for a model to
-      //     satisfy 'required'. When the pendingIntent channel is added, add
-      //     `if (store.pendingIntent) return [];` below. P2 MUST NOT ship
-      //     without that line.
-      const forcedExtractionTools = (): ToolDefinition[] => {
-        const store = useFloatingChatStore.getState();
-        if (store.proposal) return [];
-        //  4. No topic-plan reply turn is in flight. That turn's note tells the
-        //     model to save NOTHING, and 'required' would oblige
-        //     saveExtractedFacts — forcing the one action the note forbids.
-        if (store.topicPlanTurnInFlight) return [];
-        return agentRef.current.getForcedExtractionTools?.() ?? [];
-      };
-
-      // ---------- Forced extraction safety-net ----------
-      // The first pass runs with tool_choice:'auto' for a fast, single-round-trip
-      // reply — but 'auto' lets the model answer conversationally and skip the
-      // mandatory saveExtractedFacts call (the BIG primary has been observed to
-      // do exactly this on fact-worthy messages). When the first pass returns text but ZERO tool
-      // calls, run a background pass with tool_choice:'required' so extraction
-      // always happens, WITHOUT blocking the reply the user already sees. It
-      // streams into a hidden id that is never inserted via setMessages, so no
-      // second bubble renders; the side effects that matter (fact save →
-      // topic-gen, conflict/proposal cards) still fire from executeTool. Runs at
-      // most once — 'required' obliges ≥1 tool call, so there is no recursion.
-      // Targets the VISIBLE assistant bubble (not a throwaway hidden id) with
-      // text suppressed, so the tool calls it produces actually render as fact /
-      // conflict cards and get captured by the chat session's persistence. The previous
-      // hidden id was never inserted into `messages`, so every setMessages
-      // against it was a silent no-op: the user saw nothing and nothing
-      // persisted.
-      //
-      // Pushes NOTHING to wireMessages. This pass is a side effect, not a
-      // conversational turn — its text was never shown to the user, so putting
-      // it on the wire would make history diverge from what the user actually
-      // read (harmless while the window was 1 message, actively misleading once
-      // it widens). The facts it saves reach the next turn anyway: buildContext()
-      // re-reads them from the `facts` table every turn.
-      const runForcedExtraction = async (visibleId: string, tools: ToolDefinition[]) => {
-        try {
-          logger.debug(`${TAG} forced extraction pass (required)`, {
-            wireMessages: cloud().wireMessages.length,
-            tools: tools.map((t) => t.function.name),
-          });
-          let forced = await streamOne(visibleId, true, 'required', tools, true);
-          throwIfStopped();
-          // `required` has no text equivalent (tools travel inside the
-          // envelope): no call back means ONE re-ask, never more.
-          if (forced.toolCalls.length === 0) {
-            forced = await streamOne(visibleId, true, 'required', tools, true, REQUIRED_TOOL_REASK);
-            throwIfStopped();
-          }
-          if (forced.toolCalls.length > 0) {
-            await executeToolsAndPushResults(visibleId, forced.toolCalls);
-          }
-        } catch (err) {
-          if (err instanceof CallerAbortError) return;
-          logger.error(`${TAG} forced extraction failed`, undefined, { error: String(err) });
-        }
-      };
-
       // ---------- First pass ----------
       const placeholder: ConversationMessage = { id: assistantId, role: 'assistant', content: '' };
       cloud().setMessages((prev) => [...prev, placeholder]);
 
       // 'auto' (explicit): a text-only reply finishes in one round trip; the
       // model still calls a tool when the turn warrants one (→ continuation).
-      const first = await streamOne(assistantId, true, 'auto');
+      const first = await streamOne(assistantId, true);
       throwIfStopped();
       pushAssistantToWire(first.accContent, first.toolCalls);
 
@@ -809,41 +702,15 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
       // ---------- Knowledge tools ----------
       // A knowledge tool (explainMera) returns REFERENCE TEXT that only matters
-      // if the model gets to read it, so it changes two decisions below. Names
-      // are resolved through normalizeToolName against the agent's OWN live
-      // definitions — the same repair every other name comparison in this file
-      // uses, so a model that emits `explain_mera` is still recognised.
-      // NAME only — deliberately blind to `malformed`. The two consumers below
-      // want opposite things from a malformed knowledge call, so the split is
-      // made at the call site rather than baked in here:
-      //
-      //  - extraction: a malformed explainMera is still NOT extraction. Folding
-      //    the malformed check in here would let a truncated knowledge call fall
-      //    through both predicates, flip `extractedSomething` true, and disable
-      //    the very safety net fix (ii) exists to protect — the same silent
-      //    fact loss, reached by the other door. Malformed calls are real:
-      //    finalizeToolCalls keeps them and captureMessage reports them.
-      //  - continuation: a malformed call IS excluded (see below), because it
-      //    never reached the wire and produced no result to read back.
+      // if the model gets to read it. Names are resolved through
+      // normalizeToolName against the agent's OWN live definitions, so a model
+      // that emits `explain_mera` is still recognised.
       const isKnowledgeName = (tc: { name: string }): boolean => {
         const known = (agentRef.current.getToolDefinitions?.() ?? []).map(
           (d) => d.function.name,
         );
         return KNOWLEDGE_TOOL_NAMES.has(normalizeToolName(tc.name, known) ?? tc.name);
       };
-
-      // Did the turn actually extract anything? Zero tool calls and an EMPTY
-      // saveExtractedFacts call both mean no — see isEmptyExtractionCall.
-      //
-      // A knowledge call is not extraction either. Left counted, a turn whose
-      // only tool call was explainMera would flip this true and silently skip
-      // the forced-extraction safety net — so the user states a fact while
-      // asking a question about Mera, and the fact is lost. Excluded HERE at the
-      // call site rather than inside isEmptyExtractionCall, whose name and
-      // production-incident docstring are specifically about saveExtractedFacts.
-      const extractedSomething = first.toolCalls.some(
-        (tc) => !isEmptyExtractionCall(tc) && !isKnowledgeName(tc),
-      );
 
       // Malformed IS excluded here: such a call never reached the wire
       // (pushAssistantToWire drops it) and was never executed, so no `tool`
@@ -877,46 +744,12 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         });
       }
 
-      // Forced extraction is owed on the original condition, unchanged: the user
-      // already has a reply but nothing was extracted. With no text the
-      // continuation is the better instrument (visible reply AND another chance
-      // at the tool), where a hidden forced pass would leave the bubble blank.
-      const needsForcedExtraction = !extractedSomething && first.accContent.trim() !== '';
-
-      // Gate (P0): only run when the agent supplies a payload of tools that are
-      // safe to be FORCED. Empty => skip entirely. See forcedExtractionTools.
-      const startForcedExtraction = () => {
-        if (stopRef.current.signal.aborted) return;
-        const forcedTools = forcedExtractionTools();
-        if (forcedTools.length > 0) {
-          forcedPassRef.current = true;
-          void runForcedExtraction(assistantId, forcedTools).finally(() => {
-            forcedPassRef.current = false;
-            setTurnBusy(false);
-            flushPendingHiddenTurn();
-          });
-        } else {
-          logger.debug(`${TAG} forced extraction skipped (gate)`, {
-            reason: useFloatingChatStore.getState().proposal
-              ? 'proposal pending'
-              : 'agent supplies no forced-extraction tools',
-          });
-        }
-      };
-
       // ---------- Continuation pass ----------
       // When the model returns tool calls but no conversational text — or ran a
       // knowledge tool — post the tool results back and let it produce a real
       // reply in a fresh bubble. Capped at one continuation: if the second turn
       // also drops text, leave the bubble blank rather than looping, and a
       // knowledge tool re-called there is a wasted call, not a recursion.
-      //
-      // EXCLUSIVE AND ORDERED with forced extraction. Both branches can now be
-      // owed by the same turn (knowledge call + text + nothing extracted), and
-      // runForcedExtraction is deliberately un-awaited — two streams in flight
-      // at once would interleave pushWireMessage / pushAssistantToWire against
-      // the same store. So the continuation takes precedence, is awaited, and
-      // forced extraction runs only afterwards and only if still warranted.
       if (needsContinuation) {
         const followUpId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
         logger.debug(`${TAG} sending follow-up turn`, {
@@ -926,23 +759,13 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         const followUpPlaceholder: ConversationMessage = { id: followUpId, role: 'assistant', content: '' };
         cloud().setMessages((prev) => [...prev, followUpPlaceholder]);
 
-        const second = await streamOne(followUpId, true, 'auto');
+        const second = await streamOne(followUpId, true);
         throwIfStopped();
         pushAssistantToWire(second.accContent, second.toolCalls);
         if (second.toolCalls.length > 0) {
           await executeToolsAndPushResults(followUpId, second.toolCalls);
         }
-
-        // "Still warranted": the continuation gets its own shot at the tool, so
-        // an extraction there discharges the debt the first pass left.
-        const secondExtracted = second.toolCalls.some(
-          (tc) => !isEmptyExtractionCall(tc) && !isKnowledgeName(tc),
-        );
-        if (needsForcedExtraction && !secondExtracted) startForcedExtraction();
-        return;
       }
-
-      if (needsForcedExtraction) startForcedExtraction();
     };
 
   /**
@@ -970,11 +793,9 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   const startTurn = (text: string, visible: boolean) => {
       const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
-      // turnBusyRef, not isStreamingRef: startForcedExtraction dispatches with
-      // `void`, so the forced pass OUTLIVES this function's finally. A turn
-      // started in that window would push a `user` wire message before the
-      // forced pass appends its `tool` replies, leaving an orphan `tool` with no
-      // matching `tool_calls` — which most OpenAI-compatible endpoints reject.
+      // A turn started while one runs would push a `user` wire message between
+      // an `assistant(tool_calls)` and its `tool` replies, which most
+      // OpenAI-compatible endpoints reject.
       if (turnBusyRef.current || isStreamingRef.current || store.isBlocked) {
         if (!visible) {
           // Queued rather than dropped: the user tapped Discard and is owed a
@@ -1091,12 +912,9 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           cloud().setStatus('idle');
           isStreamingRef.current = false;
           if (alive) useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);
-          // The forced pass, when one is running, owns the release instead.
           // Runs on a throw too, so a transport failure ends the turn here.
-          if (!forcedPassRef.current) {
-            setTurnBusy(false);
-            flushPendingHiddenTurn();
-          }
+          setTurnBusy(false);
+          flushPendingHiddenTurn();
         }
       })();
     };

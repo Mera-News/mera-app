@@ -702,24 +702,15 @@ export type MeraExplainerTopicId = (typeof MERA_EXPLAINER_TOPIC_IDS)[number];
  * Tools that return REFERENCE TEXT for the model to answer from, and change
  * nothing.
  *
- * Two turn-loop rules in useCloudPersonaChat key off this set, and both exist
- * because a knowledge tool is the first persona tool whose RESULT is the point:
+ * A turn-loop rule in useCloudPersonaChat keys off this set, because a
+ * knowledge tool is the first persona tool whose RESULT is the point: a turn that called one must run the continuation pass even though it
+ * produced text, or the tool result is pushed to the wire and never read, and
+ * the model answers from memory, the exact failure the tool exists to prevent.
  *
- *  1. A turn that called one must run the continuation pass even though it
- *     produced text, or the tool result is pushed to the wire and never read —
- *     the model would answer from memory, which is the exact failure the tool
- *     exists to prevent.
- *  2. Calling one is NOT extraction. Left uncounted, a bare `explainMera` call
- *     would flip `extractedSomething` true and silently disable the
- *     forced-extraction safety net for that turn.
- *
- * `searchNews` and `webSearch` join it for exactly the same reason: both are
- * READS whose RESULT is the point. Left out of this set, a turn whose only tool
- * call was a search would (1) skip the continuation pass, so the headlines the
- * model asked for are pushed to the wire and never read — it then answers from
- * memory, which for a news search means inventing articles — and (2) flip
- * `extractedSomething` true, disabling the forced-extraction net for a turn
- * where the user may well have stated a fact while asking their question.
+ * `searchNews` and `webSearch` join it for the same reason: both are READS
+ * whose RESULT is the point. Left out, a turn whose only tool call was a search
+ * would skip the continuation, and for a news search answering from memory
+ * means inventing articles.
  *
  * useCloudPersonaChat reads this set dynamically (`KNOWLEDGE_TOOL_NAMES.has`),
  * so adding a name here is the whole wiring.

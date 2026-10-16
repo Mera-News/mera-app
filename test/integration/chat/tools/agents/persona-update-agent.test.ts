@@ -288,17 +288,6 @@ describe('getToolDefinitions', () => {
   });
 });
 
-// The forced pass runs with tool_choice:'required', so anything listed here can be called on a turn
-// the user asked nothing of. Both search tools must stay out of it: a forced `webSearch` would send
-// a query the user never typed.
-describe('getForcedExtractionTools', () => {
-  it('is saveExtractedFacts and nothing else, even with web search enabled', async () => {
-    await setWebSearchInChat(true);
-    const names = make('CONFIG').getForcedExtractionTools().map((t) => t.function.name);
-    expect(names).toEqual(['saveExtractedFacts']);
-  });
-});
-
 describe('executeTool', () => {
   it('stages the offered facts for saveExtractedFacts: the handler writes nothing', async () => {
     const result = await make().executeTool('saveExtractedFacts', { extracted_user_information: ['Lives in Porto'] });

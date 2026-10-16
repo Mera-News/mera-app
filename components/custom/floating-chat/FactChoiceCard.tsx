@@ -15,10 +15,9 @@
 // derive exactly as they did before. That rewrite is why this card needs no
 // changes anywhere in the emission logic.
 //
-// Deliberately NOT built on ProposalCard: `forcedExtractionTools()` returns []
-// while a staged proposal exists, and facts are extracted on nearly every turn,
-// so routing this through the proposal slot would disable the forced-extraction
-// safety net for the whole pending window.
+// Deliberately NOT built on ProposalCard: there is ONE proposal slot, and facts
+// are offered on nearly every turn, so a fact card there would replace any
+// filter or follow card the user has not answered yet.
 
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';

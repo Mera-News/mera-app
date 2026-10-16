@@ -128,11 +128,6 @@ describe('FollowStoryAgent: identity and prompt', () => {
     expect(gatewayCalls('web-search').map((c) => c.messages[0].content)).toEqual(['Sporting CP news']);
     expect(web.result).toMatchObject({ searched: true });
   });
-
-  // A forced pass with tool_choice:'required' would stage a follow nobody asked for on "thanks".
-  it('declares no forced-extraction tools', () => {
-    expect(makeAgent().getForcedExtractionTools()).toEqual([]);
-  });
 });
 
 describe('FollowStoryAgent: buildContext', () => {

@@ -55,12 +55,6 @@ describe('TutorialHelpAgent', () => {
     expect(gatewayCalls('web-search')).toEqual([]);
   });
 
-  it('offers no forced-extraction tools either, so that pass is skipped', () => {
-    // A non-empty list here would be called with `tool_choice:'required'` on a purely
-    // conversational turn, which every turn here is.
-    expect(new TutorialHelpAgent('u1', null).getForcedExtractionTools()).toEqual([]);
-  });
-
   it('refuses an invented tool call instead of throwing, and writes nothing to the profile', async () => {
     const warn = spyWarn();
     const agent = new TutorialHelpAgent('u1', null);
