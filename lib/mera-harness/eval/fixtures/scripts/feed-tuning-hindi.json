@@ -1,0 +1,63 @@
+{
+  "id": "feed-tuning-hindi",
+  "cohort": "feed-tuning-hindi",
+  "note": "onemera S1, Hindi: a filter card from a Hindi request, no apply on thanks, apply on a Hindi yes, replies in Devanagari.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Jaipur, Rajasthan, India, Asia",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "Hindi"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "मुझे क्रिकेट की खबरें मत दिखाओ",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "add_suppression"
+          ]
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 1,
+      "user": "धन्यवाद",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 2,
+      "user": "हाँ, कर दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "applied": true
+        },
+        "replyScript": "devanagari"
+      }
+    }
+  ]
+}

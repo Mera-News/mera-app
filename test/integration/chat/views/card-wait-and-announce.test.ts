@@ -15,19 +15,17 @@ import { initI18nEn } from '@/test/helpers';
 
 const t = (key: string): string => (i18n.t as unknown as (k: string) => string)(key);
 
-const PROPOSAL: StagedProposal = {
-  id: 'p1',
-  explanation: 'x',
-  expectedEffects: 'y',
-  actions: [{ type: 'add_fact', statement: 'Lives in Porto' }],
-};
+const FILTER = { type: 'add_suppression' as const, suppressionPattern: 'celebrity gossip' };
+const PROPOSAL: StagedProposal = { id: 'p1', explanation: 'x', expectedEffects: 'y', actions: [FILTER] };
+/** A card holding a tap-only action: a typed yes never applies it. */
+const TAP_ONLY: StagedProposal = { ...PROPOSAL, actions: [{ type: 'add_fact', statement: 'Lives in Porto' }] };
 
 const proposeCall: ToolCallRecord = {
   id: 'tc-propose',
   name: 'proposeChanges',
-  input: { actions: [{ type: 'add_fact', statement: 'Lives in Porto' }] },
+  input: { actions: [FILTER] },
   status: 'done',
-  result: { awaiting: 'user', id: 'p1', actions: [{ type: 'add_fact', statement: 'Lives in Porto' }] },
+  result: { awaiting: 'user', id: 'p1', actions: [FILTER] },
 };
 const user = (id: string, content: string): ConversationMessage => ({ id, role: 'user', content });
 const asst = (id: string, toolCalls: ToolCallRecord[]): ConversationMessage => ({
@@ -72,6 +70,19 @@ describe('composerHint while a card waits', () => {
     useFloatingChatStore.getState().setProposal(PROPOSAL);
     const { result } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
     expect(result.current.composerHint).toBe(t('floatingChat.cardWaitingHint'));
+  });
+
+  it('asks for a tap, never a typed yes, when only a tap applies the card', () => {
+    useFloatingChatStore.getState().setProposal(TAP_ONLY);
+    const { result } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    expect(result.current.composerHint).toBe(t('floatingChat.cardTapHint'));
+  });
+
+  it('asks for a tap on-device, where the loop that reads a typed yes does not run', () => {
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
+    useFloatingChatStore.getState().setProposal(PROPOSAL);
+    const { result } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    expect(result.current.composerHint).toBe(t('floatingChat.cardTapHint'));
   });
 
   it('shows no hint without a store proposal, or once it resolved', () => {

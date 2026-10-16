@@ -1,0 +1,241 @@
+{
+  "id": "feed-tuning",
+  "cohort": "feed-tuning",
+  "note": "onemera S1. Filters and sources on a card: stage the right kind, apply only on agreement (an acknowledgement battery applies nothing), drop on a decline, ask which topic for a bare 'see less of a topic', and keep 'I am not interested in X' a fact.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Utrecht, Utrecht, Netherlands, EU",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "English",
+    "knownOutlets": [
+      "The Hindu"
+    ],
+    "activeFilters": [
+      {
+        "id": "s1",
+        "pattern": "crypto"
+      }
+    ]
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "Stop showing me celebrity gossip",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "add_suppression"
+          ]
+        }
+      }
+    },
+    {
+      "index": 1,
+      "user": "thanks",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 2,
+      "user": "cool",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 3,
+      "user": "hmm",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 4,
+      "user": "what does that card do?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 5,
+      "user": "yes please",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "applied": true
+        }
+      }
+    },
+    {
+      "index": 6,
+      "user": "Show me crypto news again",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "retire_suppression"
+          ]
+        }
+      }
+    },
+    {
+      "index": 7,
+      "user": "no, leave it",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 8,
+      "user": "Mute The Hindu",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 9,
+      "user": "ok",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 10,
+      "user": "yes, do it",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "applied": true
+        }
+      }
+    },
+    {
+      "index": 11,
+      "user": "More news from Dutch sources please",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_source_scope_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 12,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 13,
+      "user": "See less of a topic",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled"
+      }
+    },
+    {
+      "index": 14,
+      "user": "football transfer rumours",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "add_suppression"
+          ]
+        }
+      }
+    },
+    {
+      "index": 15,
+      "user": "I am not interested in golf",
+      "expect": {
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "legs": 3,
+        "endedOn": "awaiting-user"
+      }
+    }
+  ]
+}

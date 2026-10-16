@@ -32,6 +32,8 @@ import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
 import { renderableTerminal } from './types';
+import { HARNESS_TAP_ONLY } from '@/lib/chat-session/cloud-engine-helpers';
+import { proposalRequiresUserChoice } from '@/lib/news-harness/core/proposals';
 import type { ChatSessionViewProps } from './ChatSessionView';
 
 // `factCheck.chipQuickFactCheck` lands with agent A1's `en.json` splice (see
@@ -579,11 +581,22 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     storeProposal !== null &&
     lastProposalCard !== null &&
     resolvedProposals[lastProposalCard.proposal.id] === undefined;
+  // "or type yes" only where a typed yes can apply the card: cloud, one option,
+  // nothing tap-only. Anywhere else the hint must not invite a yes that does
+  // nothing.
+  const typedYesApplies =
+    storeProposal !== null &&
+    !isOnDevice &&
+    !proposalRequiresUserChoice(storeProposal) &&
+    !storeProposal.actions.some((a) => HARNESS_TAP_ONLY.has(a.type));
   const composerHint =
     unresolvedFactChoices > 0
       ? t('factChoice.pendingHint')
       : proposalCardWaiting
-        ? t('floatingChat.cardWaitingHint')
+        ? typedYesApplies
+          ? t('floatingChat.cardWaitingHint')
+          : // Lands with the next locale splice; the cast goes with it.
+            t('floatingChat.cardTapHint' as 'floatingChat.cardWaitingHint')
         : null;
 
   // A card resolved by TYPING (the turn carried applyProposal or cancelProposal)
