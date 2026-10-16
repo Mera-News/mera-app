@@ -227,6 +227,12 @@ export interface ScriptExpect {
   /** Checks on the CARD this turn staged or settled (CARDS block). Absent
    *  means the turn is not scored on cards. */
   card?: ExpectedCard;
+  /** Lowercase substrings no fact OFFERED this turn may contain: the leak
+   *  guard (an earlier subject must never ride into an unrelated fact). */
+  offerExcludes?: string[];
+  /** true: this turn offers no fact at all ("follow this" before following
+   *  exists in this chat must not become an interest fact). */
+  noOffer?: true;
 }
 
 /** The four action kinds a persona card carries (core/tool-contracts.ts
@@ -289,7 +295,15 @@ export interface ScriptTurn {
   fakeTools?: {
     lookup_place?: FakeLookupPlaceAnswer[];
     find_similar_facts?: FakeSimilarFactsAnswer[];
+    /** What a web search returns this turn, so the turn really names a subject.
+     *  Matched by `query` substring (lowercase, absent = any query). */
+    webSearch?: FakeWebSearchAnswer[];
   };
+}
+
+export interface FakeWebSearchAnswer {
+  query?: string;
+  results: { title: string; url: string; snippet: string }[];
 }
 
 export interface AgentScript {

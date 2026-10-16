@@ -1,0 +1,292 @@
+{
+  "id": "backref-hindi",
+  "cohort": "backref-hindi",
+  "note": "onemera S1.5, Hindi (languageName Hindi): the same back-references and leak guard, replies in Devanagari.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Jaipur, Rajasthan, India, Asia",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "Hindi"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "कज़ीरंगा नेशनल पार्क क्या है?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Kaziranga National Park",
+                "url": "https://news.example.org/a",
+                "snippet": "Kaziranga in Assam, India, is home to two thirds of the world's one-horned rhinos."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "इसे मेरी रुचियों में जोड़ दो",
+      "expect": {
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "tools": [
+          "load_skill",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "kaziranga"
+            ],
+            "kind": "interest",
+            "placeChain": null,
+            "replaces": null
+          }
+        ],
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 2,
+      "user": "लखनऊ के बारे में बताओ",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Lucknow, capital of Uttar Pradesh",
+                "url": "https://news.example.org/a",
+                "snippet": "Lucknow is the capital of Uttar Pradesh, known for its Mughal-era buildings and food."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "मेरे माता-पिता वहाँ रहते हैं",
+      "expect": {
+        "routeKind": "family",
+        "skill": "facts/family",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "lucknow"
+            ],
+            "kind": "family",
+            "placeChain": null,
+            "replaces": null
+          }
+        ],
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Lucknow",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Lucknow",
+                  "admin1": "Uttar Pradesh",
+                  "countryCode": "IN",
+                  "countryName": "India",
+                  "bloc": "Asia"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Lucknow, India",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Lucknow",
+                  "admin1": "Uttar Pradesh",
+                  "countryCode": "IN",
+                  "countryName": "India",
+                  "bloc": "Asia"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Lucknow, Uttar Pradesh",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Lucknow",
+                  "admin1": "Uttar Pradesh",
+                  "countryCode": "IN",
+                  "countryName": "India",
+                  "bloc": "Asia"
+                }
+              ]
+            }
+          },
+          {
+            "query": "लखनऊ",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Lucknow",
+                  "admin1": "Uttar Pradesh",
+                  "countryCode": "IN",
+                  "countryName": "India",
+                  "bloc": "Asia"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "आज क्रिकेट में क्या हुआ?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "India beat Australia in the second Test",
+                "url": "https://news.example.org/a",
+                "snippet": "India won the second Test against Australia by six wickets in Delhi on Sunday."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "user": "मैं एक स्कूल में शिक्षक हूँ",
+      "expect": {
+        "routeKind": "profession",
+        "skill": "facts/profession",
+        "tools": [
+          "load_skill",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "teacher"
+            ],
+            "kind": "profession",
+            "placeChain": null,
+            "replaces": null
+          }
+        ],
+        "offerExcludes": [
+          "cricket",
+          "australia",
+          "test match"
+        ],
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 6,
+      "user": "दिल्ली के प्रदूषण पर क्या चल रहा है?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Delhi air quality turns severe",
+                "url": "https://news.example.org/a",
+                "snippet": "Delhi's air quality index crossed 400 on Monday as stubble burning resumed."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 7,
+      "user": "ठीक है, इसे फॉलो करो",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2,
+        "endedOn": "settled",
+        "noOffer": true,
+        "replyScript": "devanagari"
+      }
+    }
+  ]
+}

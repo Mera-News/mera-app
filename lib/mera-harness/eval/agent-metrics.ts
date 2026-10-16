@@ -306,6 +306,46 @@ export function proposalReport(
   return { expected, met, misses };
 }
 
+/**
+ * OFFER GUARDS: a turn that must offer nothing (`noOffer`) or nothing naming an
+ * earlier subject (`offerExcludes`, the leak guard). Over the statements the
+ * fake save ACCEPTED, like `proposalReport`.
+ */
+export interface OfferGuardReport {
+  checked: number;
+  passed: number;
+  misses: { scriptId: string; turnIndex: number; repeat: number; offered: string[] }[];
+}
+
+export function offerGuardReport(
+  turns: readonly TurnRows[],
+  expectFor: (scriptId: string, turnIndex: number) => ScriptTurn['expect'] | null,
+): OfferGuardReport {
+  let checked = 0;
+  let passed = 0;
+  const misses: OfferGuardReport['misses'] = [];
+  for (const t of turns) {
+    const ex = expectFor(t.scriptId, t.turnIndex);
+    if (!ex || (!ex.noOffer && !(ex.offerExcludes ?? []).length)) continue;
+    checked += 1;
+    const offered = t.legs.flatMap((l) =>
+      l.toolCalls
+        .filter((c) => c.name === 'saveExtractedFacts')
+        .flatMap((c) => {
+          const r = c.result as { accepted?: unknown } | null;
+          return Array.isArray(r?.accepted) ? r.accepted.filter((x): x is string => typeof x === 'string') : [];
+        }),
+    );
+    const leaked = offered.some((s) => (ex.offerExcludes ?? []).some((x) => s.toLowerCase().includes(x)));
+    if ((ex.noOffer && offered.length > 0) || leaked) {
+      misses.push({ scriptId: t.scriptId, turnIndex: t.turnIndex, repeat: t.repeat, offered });
+    } else {
+      passed += 1;
+    }
+  }
+  return { checked, passed, misses };
+}
+
 // ---------------------------------------------------------------------------
 // Time to first prose
 // ---------------------------------------------------------------------------

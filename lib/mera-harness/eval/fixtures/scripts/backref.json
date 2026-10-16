@@ -1,0 +1,371 @@
+{
+  "id": "backref",
+  "cohort": "backref",
+  "note": "onemera S1.5. A message that points back at the previous answer acts on that answer's subject (follow this before S3 offers nothing and says so; add this to my interests; my parents live there; update my places with it). LEAK GUARD: after an answer about X, an unrelated fact never names X.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Utrecht, Utrecht, Netherlands, EU",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "English"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "What is happening with the Dutch coalition talks?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Dutch coalition talks stall over asylum policy",
+                "url": "https://news.example.org/a",
+                "snippet": "Talks between the four parties to form a new Dutch cabinet stalled on Tuesday over asylum rules."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "okay, I want to follow this",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2,
+        "endedOn": "settled",
+        "noOffer": true
+      }
+    },
+    {
+      "index": 2,
+      "user": "What is the Kaziranga national park?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Kaziranga National Park",
+                "url": "https://news.example.org/a",
+                "snippet": "Kaziranga in Assam, India, is home to two thirds of the world's one-horned rhinos."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "add this to my interests",
+      "expect": {
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "tools": [
+          "load_skill",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "kaziranga"
+            ],
+            "kind": "interest",
+            "placeChain": null,
+            "replaces": null
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "Tell me about Leiden",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Leiden, city of the oldest Dutch university",
+                "url": "https://news.example.org/a",
+                "snippet": "Leiden in South Holland is home to the Netherlands' oldest university, founded in 1575."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "user": "my parents live there",
+      "expect": {
+        "routeKind": "family",
+        "skill": "facts/family",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "leiden"
+            ],
+            "kind": "family",
+            "placeChain": null,
+            "replaces": null
+          }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Leiden",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Leiden",
+                  "admin1": "South Holland",
+                  "countryCode": "NL",
+                  "countryName": "Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Leiden, Netherlands",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Leiden",
+                  "admin1": "South Holland",
+                  "countryCode": "NL",
+                  "countryName": "Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Leiden, South Holland",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Leiden",
+                  "admin1": "South Holland",
+                  "countryCode": "NL",
+                  "countryName": "Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "index": 6,
+      "user": "What is Haarlem like?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Haarlem, a city west of Amsterdam",
+                "url": "https://news.example.org/a",
+                "snippet": "Haarlem is the capital of North Holland, known for its old centre and the Grote Kerk."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 7,
+      "user": "update my places with it",
+      "expect": {
+        "routeKind": "residence",
+        "skill": "facts/residence",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "haarlem"
+            ],
+            "kind": "residence",
+            "placeChain": null,
+            "replaces": null
+          }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Haarlem",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Haarlem",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Haarlem, Netherlands",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Haarlem",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Haarlem, North Holland",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Haarlem",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "index": 8,
+      "user": "Who won the Tour de France this year?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Pogacar wins the Tour de France",
+                "url": "https://news.example.org/a",
+                "snippet": "Tadej Pogacar won the Tour de France on Sunday, his fourth overall victory."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 9,
+      "user": "I work as a nurse at a hospital",
+      "expect": {
+        "routeKind": "profession",
+        "skill": "facts/profession",
+        "tools": [
+          "load_skill",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "nurse"
+            ],
+            "kind": "profession",
+            "placeChain": null,
+            "replaces": null
+          }
+        ],
+        "offerExcludes": [
+          "tour de france",
+          "pogacar",
+          "cycling",
+          "cyclist"
+        ]
+      }
+    }
+  ]
+}

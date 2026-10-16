@@ -74,6 +74,7 @@ import {
   proseReport,
   proposalReport,
   cardReport,
+  offerGuardReport,
   replyCheckReport,
   thinkingGearReport,
   toolValidityReport,
@@ -569,7 +570,7 @@ export function armDistinctnessFailures(rows: EvalRow[]): string[] {
   // twin share baseline's prompt by design. Its wiring shows as tool-free legs.
   // pre-S1 and its twin (onemera) are the same code under two names: their spread is
   // the noise floor, so they send one leg-0 prompt by design.
-  const TWINS = new Set(['baseline', 'null-control', 'forced-offer-closing', 'forced-offer-closing-twin', 'pre-S1', 'pre-S1-twin']);
+  const TWINS = new Set(['baseline', 'null-control', 'forced-offer-closing', 'forced-offer-closing-twin', 'pre-S1', 'pre-S1-twin', 'pre-S1.5', 'pre-S1.5-twin']);
   const byPrompt = new Map<string, Set<string>>();
   for (const r of rows) {
     if (r.legIndex !== 0) continue;
@@ -643,6 +644,13 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
   out.push(`\nPROPOSALS (offered statements, sanitised; matches all present, excludes none)  ${props.met}/${props.expected}`);
   for (const m of props.misses.slice(0, 8)) {
     out.push(`  MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: wanted [${m.wanted.join(', ')}] offered ${JSON.stringify(m.offered)}`);
+  }
+
+  const guards = offerGuardReport(turns, (id, idx) =>
+    scripts.find((s) => s.id === id)?.turns.find((t) => t.index === idx)?.expect ?? null);
+  out.push(`\nOFFER GUARDS (noOffer and offerExcludes; the leak guard must be ${guards.checked}/${guards.checked})  ${guards.passed}/${guards.checked}`);
+  for (const m of guards.misses.slice(0, 8)) {
+    out.push(`  MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: offered ${JSON.stringify(m.offered)}`);
   }
 
   const cards = cardReport(turns, (id, idx) =>

@@ -4,7 +4,8 @@
 // the eval runner wires fakes. A harness green is therefore evidence about the
 // app rather than about a parallel implementation.
 
-import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
+import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, recentConversationFor, resolveAgentArm, routeEnforcementFor } from './arms';
+import { pointsBack, renderRecentBlock, subjectsOf, withExchange } from './back-reference';
 import { brandRule, buildRouterPrompt, fixBrandSpelling, voiceRules, type PersonaSurface } from './router-prompt';
 import {
   claimsChangeHappened,
@@ -382,6 +383,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const multiSubject = multiSubjectFor(resolveAgentArm(params.promptVariant)) === 'on';
   const groundForcedOffer = forcedOfferGroundingFor(resolveAgentArm(params.promptVariant)) === 'on';
   const closeForcedOffer = forcedOfferClosingFor(resolveAgentArm(params.promptVariant)) === 'on';
+  /** Every leg carries the recent conversation (S1.5); 'off' is its control. */
+  const recentOn = recentConversationFor(resolveAgentArm(params.promptVariant)) === 'on';
+  /** What this turn is about, carried to the next turn as `lastSubjects`. */
+  const subjectsThisTurn: string[] = [];
 
   // ---- resolve a pending choice BEFORE anything else -----------------------
   // The tap arrives as an ordinary message. Matching it here is what lets the
@@ -706,12 +711,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       lastQuestion,
       resumedSkill || lastQuestion !== null ? turn.lastUserMessage : null,
       turn.resolvedChoice?.text,
+      // A message that points back may name a subject only the recent
+      // conversation carries ("add that to my interests" after an answer).
+      // Only then: otherwise a fact from an earlier message must never be
+      // offered in this one.
+      ...(recentOn && pointsBack(userMessage)
+        ? [...turn.lastSubjects, ...turn.recentExchanges.flatMap((x) => [x.user, x.reply])]
+        : []),
       ...[...placeCandidates, ...resolvedPlacesThisTurn].flatMap((p) => [
         p.neighbourhood, p.userTerm, p.locality, p.admin1, p.countryName, p.bloc,
       ]),
     ]
       .filter(Boolean)
       .join(' ');
+
+  const recentBlock = renderRecentBlock(turn.recentExchanges, turn.lastSubjects);
+  const recentMessage: { role: 'user'; content: string }[] = recentBlock ? [{ role: 'user', content: recentBlock }] : [];
 
   /** Route legs re-asked after producing no route. Raises this turn's leg
    *  ceiling so a re-ask does not cost the turn a leg of real work. */
@@ -826,12 +841,15 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             },
           ]
         : []),
+      // THE RECENT CONVERSATION, on every leg (S1.5). The block carries its own
+      // rule: read it only when the message points back.
+      ...(recentOn ? recentMessage : []),
       // THE ANTECEDENT, on any turn that answers a question. The loop sends no
       // history, and the trailing question alone is often a pronoun: "Would
       // you like to keep an eye on any particular thread of this?" reached the
       // model with no subject, "Yes follow it" was read as consent, and the
       // forced offer guessed Israel for a Ukraine answer (navx2-fu).
-      ...(!resumedSkill && lastQuestion !== null && turn.lastUserMessage
+      ...(!recentOn && !resumedSkill && lastQuestion !== null && turn.lastUserMessage
         ? [
             {
               role: 'user' as const,
@@ -847,7 +865,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // one sentence, which institution proposed it?" reached the model with no
       // "it". What the reader can see is context, so a conversation turn gets
       // the one previous exchange, bounded, under the same no-facts guard.
-      ...(!resumedSkill &&
+      ...(!recentOn &&
+      !resumedSkill &&
       lastQuestion === null &&
       skillLoaded?.startsWith('conversation/') &&
       turn.lastUserMessage
@@ -1113,6 +1132,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const queries = Array.isArray(args.queries)
           ? (args.queries as unknown[]).filter((q): q is string => typeof q === 'string' && q.trim().length > 0).slice(0, 4)
           : [];
+        subjectsThisTurn.push(...queries);
         const out = deps.tools.webSearch
           ? queries.length > 0
             ? await deps.tools.webSearch({ queries })
@@ -1133,6 +1153,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const topics = Array.isArray(args.topics)
           ? (args.topics as unknown[]).filter((t): t is string => typeof t === 'string' && t.trim().length > 0).slice(0, 3)
           : [];
+        subjectsThisTurn.push(...topics);
         const out = deps.tools.explainMera
           ? topics.length > 0
             ? await deps.tools.explainMera({ topics })
@@ -1643,6 +1664,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         if (typeof out.error !== 'string') {
           proposedSomething = true;
           cardThisTurn = 'staged';
+          for (const a of Array.isArray(args.actions) ? (args.actions as Record<string, unknown>[]) : []) {
+            const subject = a?.suppressionPattern ?? a?.publicationId ?? a?.scopeCountry;
+            if (typeof subject === 'string') subjectsThisTurn.push(subject);
+          }
           terminatedByCard = true;
           turn.lastCard = {
             proposalId: typeof out.proposalId === 'string' ? out.proposalId : null,
@@ -2242,6 +2267,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // Held for the turn that answers, which arrives carrying only a chip label.
   turn.lastUserMessage = userMessage;
   turn.lastReply = (reply.trim() || acknowledgement.trim()) || null;
+  // The exchange the reader just saw, and what it was about (S1.5).
+  turn.recentExchanges = withExchange(turn.recentExchanges, userMessage, turn.lastReply ?? '');
+  turn.lastSubjects = subjectsOf([...subjectsThisTurn, ...proposals.map((p) => p.statement)]);
   // CONSUMED. `resolvedChoice` was set and never cleared, so it stayed true for
   // the rest of the conversation and everything gated on it silently widened
   // from "the user confirmed this turn" to "the user has confirmed something,
