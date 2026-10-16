@@ -309,6 +309,22 @@ describe('hindifix F: the about-mera answer leg', () => {
     expect(await run('मेरी बेटी मीरा क्या पढ़े?', 'मीरा के लिए 10 MB।')).toBe('मीरा के लिए 10 MB।');
     expect(fixBrandSpelling('Mira reads it.', 'English', '')).toBe('Mira reads it.');
   });
+
+  // Facts are stored in English ("Has a daughter named Meera"), so the context
+  // guard cannot see a name the user gave on an earlier turn. The rewrite runs
+  // only on a turn that answered about Mera itself.
+  it('a person named मीरा in a question-turn reply keeps her name', async () => {
+    const h = harness([
+      res({ content: 'ठीक है।', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'आपकी बेटी मीरा पढ़ाई करती है।' }),
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState({ ...HINDI, facts: [{ id: 'd', statement: 'Has a daughter named Meera' }] }),
+      userMessage: 'मेरे बारे में आप क्या जानते हैं?',
+      deps: h.deps,
+    });
+    expect(out.reply).toBe('आपकी बेटी मीरा पढ़ाई करती है।');
+  });
 });
 
 // hindifix F: the staging Delhi turn (run 20261016-124853-hfE-after) shipped

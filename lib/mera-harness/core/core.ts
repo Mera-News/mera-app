@@ -2072,9 +2072,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     ? [...new Set([...turn.offeredStatements, ...offeredThisTurn])]
     : offeredThisTurn;
   // The app's own spelling of its name, after every check above (hindifix F).
-  const brandContext = [userMessage, ...state.persona.facts.map((f) => f.statement)].join('\n');
-  reply = fixBrandSpelling(reply, state.persona.languageName, brandContext);
-  acknowledgement = fixBrandSpelling(acknowledgement, state.persona.languageName, brandContext);
+  // Only on a turn that answered about Mera itself: facts are stored in
+  // English, so "मीरा" the user's daughter cannot be told from a misspelt
+  // brand on any other turn.
+  if (skillsLoaded.includes('conversation/about-mera')) {
+    const brandContext = [userMessage, ...state.persona.facts.map((f) => f.statement)].join('\n');
+    reply = fixBrandSpelling(reply, state.persona.languageName, brandContext);
+    acknowledgement = fixBrandSpelling(acknowledgement, state.persona.languageName, brandContext);
+  }
   turn.lastTurnAskedQuestion = turn.pendingChoice !== null || /\?\s*$/.test(reply);
   // The chip question wins over the prose one: when both exist the chips are
   // what is on screen, so they are what the next message answers.
