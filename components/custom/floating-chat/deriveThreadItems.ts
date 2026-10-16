@@ -5,7 +5,7 @@
 // older messages (`history`), and a few flags, and produces a flat
 // `ChatThreadItem[]` ordered newest-LAST (ChatThread inverts internally).
 
-import type { ConversationMessage } from '@/lib/llm/types';
+import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
 import {
   readGroupResolutions,
   readPendingGroups,
@@ -72,6 +72,14 @@ function placeProposalCardsLast(items: ChatThreadItem[]): ChatThreadItem[] {
   return out;
 }
 
+/** The change-log ids of an applyProposal that really changed something, else null. */
+function appliedByTyping(tc: ToolCallRecord): string[] | null {
+  const r = asRecord(tc.result);
+  if (!r || typeof r.applied !== 'number' || r.applied <= 0) return null;
+  const ids = toStringArray(r.changeLogIds);
+  return ids.length > 0 ? ids : null;
+}
+
 // ---------------------------------------------------------------------------
 // Message → thread items
 // ---------------------------------------------------------------------------
@@ -122,6 +130,20 @@ function emitMessage(
           key: `proposal-${message.id}-${idx}`,
           proposal,
         });
+        return;
+      }
+      // A change applied by a typed yes: one row, with Undo until the user
+      // sends another message (same rule as a skipped card).
+      if (tc.name === 'applyProposal') {
+        const applied = appliedByTyping(tc);
+        if (applied) {
+          cards.push({
+            kind: 'applied-by-typing',
+            key: `applied-${message.id}-${idx}`,
+            changeLogIds: applied,
+            undoable: !stale && !answeredAsk,
+          });
+        }
         return;
       }
       // ask_choice: chips under this bubble. Derived from the tool INPUT, and

@@ -625,7 +625,73 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   );
 };
 
+// "Floating chat" keys not yet in the dictionaries (opus-main splices all 20
+// locales); one narrowing cast each, removed once they land so tsc proves them.
+type PendingKey = 'articleFeedback.proposalApplied';
+
+/**
+ * A change applied because the reader typed yes. Undo reverts each change-log
+ * row, then the row reads "Undone". `undoable` is decided by the deriver (it
+ * goes false once a later user message exists).
+ */
+export const AppliedByTypingCard: React.FC<{ changeLogIds: string[]; undoable: boolean }> = ({
+  changeLogIds,
+  undoable,
+}) => {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
+  const [phase, setPhase] = useState<'idle' | 'undoing' | 'undone'>('idle');
+
+  const undo = async () => {
+    if (phase !== 'idle') return;
+    setPhase('undoing');
+    try {
+      // LAZY: the service builds WatermelonDB collections at module scope.
+      const { revertChange } =
+        require('@/lib/database/services/persona-change-log-service') as typeof import('@/lib/database/services/persona-change-log-service');
+      for (const id of changeLogIds) await revertChange(id);
+      setPhase('undone');
+    } catch {
+      // Nothing was rolled back that we can name; offer the tap again.
+      setPhase('idle');
+    }
+  };
+
+  const done = phase === 'undone';
+  return (
+    <View style={styles.statusRow} testID="applied-by-typing">
+      <MaterialIcons
+        {...DECORATIVE_ICON_A11Y}
+        name={done ? 'undo' : 'check-circle'}
+        size={16}
+        color={done ? colors.ink3 : colors.accentMark}
+      />
+      <Text size="xs" style={styles.statusText}>
+        {done
+          ? t('floatingChat.changeUndone' as PendingKey)
+          : t('articleFeedback.proposalApplied')}
+      </Text>
+      {undoable && !done && (
+        <GlyphSafeButton
+          onPress={undo}
+          disabled={phase === 'undoing'}
+          accessibilityLabel={t('topicPlan.undo')}
+          visualStyle={styles.undoVisual}
+          testID="applied-by-typing-undo"
+        >
+          <Text size="xs" style={styles.undoText}>
+            {t('topicPlan.undo')}
+          </Text>
+        </GlyphSafeButton>
+      )}
+    </View>
+  );
+};
+
 const useStyles = themedStyles((c) => StyleSheet.create({
+  undoVisual: { paddingHorizontal: 8, paddingVertical: 4 },
+  undoText: { color: c.accentText },
   card: {
     backgroundColor: tint(c.accent, 0.08),
     borderRadius: 14,

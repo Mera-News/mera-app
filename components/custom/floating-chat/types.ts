@@ -154,6 +154,10 @@ export type ChatThreadItem =
       pendingDelete?: PendingDelete;
     }
   | { kind: 'proposal-card'; key: string; proposal: StagedProposal }
+  // A change applied because the reader TYPED yes (applyProposal), with the
+  // change-log rows that undo it. `undoable` is false once a later user
+  // message exists or the row is from an earlier conversation.
+  | { kind: 'applied-by-typing'; key: string; changeLogIds: string[]; undoable: boolean }
   // Round-4 C5 — pinned interactive daily-optimisation-plan card at the top of an
   // `optimisation-plan` chat thread. Loads the pending plan from the service.
   | { kind: 'optimisation-plan-card'; key: string }

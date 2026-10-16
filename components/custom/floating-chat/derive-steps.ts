@@ -43,6 +43,10 @@ function offersSomething(tc: ToolCallRecord): boolean {
   if (tc.name === 'saveExtractedFacts') {
     return readPendingGroups(r).length > 0 || (Array.isArray(r.savedFacts) && r.savedFacts.length > 0);
   }
+  // A staged card (not a refused one: that returned early on `error` above).
+  if (tc.name === 'proposeChanges' || tc.name === 'proposeTrack' || tc.name === 'proposeFactCheck') {
+    return true;
+  }
   return tc.name === 'deleteUserFacts';
 }
 

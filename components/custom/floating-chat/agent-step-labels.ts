@@ -38,6 +38,12 @@ const LABEL_KEY: Record<string, string> = {
   deleteUserFacts: 'agentSteps.removing',
   ask_choice: 'agentSteps.asking',
   webSearch: 'chatPhases.webSearch',
+  proposeChanges: 'agentSteps.proposeChanges',
+  applyProposal: 'agentSteps.applyProposal',
+  cancelProposal: 'agentSteps.cancelProposal',
+  proposeTrack: 'agentSteps.proposeTrack',
+  proposeFactCheck: 'agentSteps.proposeFactCheck',
+  searchNews: 'agentSteps.searchNews',
 };
 
 /**
@@ -47,12 +53,13 @@ const LABEL_KEY: Record<string, string> = {
  */
 const SKILL_PHRASE_KEY: Record<string, string> = {
   'facts/residence': 'skillPhrase.residence',
-  'facts/work': 'skillPhrase.work',
-  'facts/interests': 'skillPhrase.interests',
+  'facts/profession': 'skillPhrase.work',
+  'facts/interest': 'skillPhrase.interests',
   'facts/origin': 'skillPhrase.origin',
   'facts/family': 'skillPhrase.family',
-  'facts/new': 'skillPhrase.newFact',
-  'topics/generate': 'skillPhrase.topics',
+  'conversation/feed-tuning': 'skillPhrase.feedTuning',
+  'conversation/follow-story': 'skillPhrase.followStory',
+  'conversation/fact-check': 'skillPhrase.factCheck',
 };
 
 /** What a failed step cost. Keyed by tool; everything else gets the generic. */
@@ -118,6 +125,15 @@ export interface ToolCallLike {
   name: string;
   input: unknown;
   status: AgentStepStatus;
+  result?: unknown;
+}
+
+/** A refused card: `proposeChanges` answered with an `error`. No card is drawn
+ *  for it (derive-proposals), so the box carries the one failure line. */
+export const CARD_REFUSED_CONSEQUENCE_KEY = 'agentSteps.cardRefused' as const;
+
+function isRefusedCard(tc: ToolCallLike): boolean {
+  return tc.name === 'proposeChanges' && typeof asRecord(tc.result)?.error === 'string';
 }
 
 /**
@@ -135,7 +151,8 @@ export function stepsForMessage(
   if (!toolCalls || toolCalls.length === 0) return [];
   return toolCalls.map((tc, idx) => {
     const stranded = interrupted && tc.status === 'pending';
-    const status: AgentStepStatus = stranded ? 'error' : tc.status;
+    const refused = !stranded && isRefusedCard(tc);
+    const status: AgentStepStatus = stranded || refused ? 'error' : tc.status;
     const { labelKey, labelValues } = labelForToolCall(tc.name, tc.input);
     const step: AgentStep = {
       id: `${messageId}::${idx}`,
@@ -145,7 +162,8 @@ export function stepsForMessage(
       status,
     };
     if (labelValues) step.labelValues = labelValues;
-    if (status === 'error') step.consequenceKey = consequenceKeyFor(tc.name, stranded);
+    if (refused) step.consequenceKey = CARD_REFUSED_CONSEQUENCE_KEY;
+    else if (status === 'error') step.consequenceKey = consequenceKeyFor(tc.name, stranded);
     return step;
   });
 }
@@ -188,7 +206,7 @@ export function continuingStep(anchorId: string, labelKey: string = GENERIC_LABE
  *  `saveExtractedFacts` counts even though it only STAGES — the turn produced a
  *  card the user must still act on, and the box is the record of how it got
  *  there. This means "touched the persona pipeline", not "wrote a row". */
-export const MUTATING_TOOLS = new Set(['saveExtractedFacts', 'deleteUserFacts']);
+export const MUTATING_TOOLS = new Set(['saveExtractedFacts', 'deleteUserFacts', 'applyProposal']);
 
 export function changedDataFrom(steps: AgentStep[]): boolean {
   return steps.some((s) => s.toolName !== undefined && MUTATING_TOOLS.has(s.toolName));
