@@ -71,7 +71,7 @@ describe('the control: one skill per turn is what ships', () => {
     const h = harness([ROUTE_TWO, res({ toolCalls: [save('Lives in Berlin')] }), res({ content: 'Here it is.' })]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'PM in Berlin', deps: h.deps });
     expect(out.skillsLoaded).toEqual(['facts/residence']);
-    expect(h.calls.some((c) => c.systemPrompt === 'PROFESSION SKILL BODY')).toBe(false);
+    expect(h.calls.some((c) => c.systemPrompt.startsWith('PROFESSION SKILL BODY'))).toBe(false);
     expect(buildRouterPrompt({ surface: 'CONFIG', answerPending: false })).not.toContain('Several subjects');
   });
 });
@@ -104,7 +104,7 @@ describe('the multi-subject arm', () => {
       ['Product manager', 'topics/profession'],
     ]);
     // The second segment never reads the first one's lookups.
-    const profLeg = h.calls.find((c) => c.systemPrompt === 'PROFESSION SKILL BODY');
+    const profLeg = h.calls.find((c) => c.systemPrompt.startsWith('PROFESSION SKILL BODY'));
     expect(profLeg?.messages.some((m) => m.content.startsWith('lookup_place'))).toBe(false);
     expect(profLeg?.messages[0].content).toContain('You handle only the profession part');
     expect(out.reply).toBe('Berlin it is. And the job.');
@@ -124,7 +124,7 @@ describe('the multi-subject arm', () => {
     );
     const out = await runAgentTurn({ state, userMessage: 'PM in Berlin', deps: h.deps, promptVariant: MULTI_SUBJECT_ARM_ID });
 
-    const profLegs = h.calls.filter((c) => c.systemPrompt === 'PROFESSION SKILL BODY');
+    const profLegs = h.calls.filter((c) => c.systemPrompt.startsWith('PROFESSION SKILL BODY'));
     expect(profLegs.length).toBeGreaterThan(0);
     expect(profLegs.every((c) => !c.tools.includes('ask_choice'))).toBe(true);
     expect(profLegs[0].messages[0].content).toContain('A question about another part is already waiting');

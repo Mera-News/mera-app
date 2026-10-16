@@ -290,6 +290,9 @@ export interface AgentToolPort {
   /** The web, from the device. ABSENT when the user switched "Web search in
    *  chat" off, and then the tool is not declared at all. */
   webSearch?(args: { queries: string[] }): Promise<Record<string, unknown>>;
+  /** Mera's own reference text on the topics asked for. Declared only on the
+   *  `conversation/about-mera` leg, and only when the port offers it. */
+  explainMera?(args: { topics: string[] }): Promise<Record<string, unknown>>;
 }
 
 export interface AgentDeps {

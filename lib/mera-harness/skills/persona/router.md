@@ -48,7 +48,9 @@ the skill has even loaded. Repeat what you heard and stop.
   small talk, and it routes to `facts/interest`.
 - **fact_update**: the turn changes something Known Facts already carries, on the same subject: a
   move, a new job, a correction of the world.
-- **question**: the turn asks something. About the news, about Mera itself, about what Mera holds.
+- **question**: the turn asks something. About the news, or about what Mera holds on them.
+- **about_mera**: the turn asks about Mera itself: how it works, how news is found, privacy, what
+  the servers keep, encryption, plans and limits, the licence.
 - **topic_request**: the turn asks for topics. More, fewer, different, or about a named thing.
 - **chat**: greeting, navigation, thanks, off-topic, abuse. Nothing stated and nothing asked.
 
@@ -59,6 +61,8 @@ Tie-breaks, applied in this order:
   A different subject is never a correction: "my parents live in Bhopal" does not replace "I live in
   Porto Santo". Match on the attribute key, which is the text before ": " in Known Facts.
 - "Stop showing me X" and "I am not interested in X" are **fact_update**, not chat.
+- A question about Mera itself is **about_mera**, never question or chat. "What do you hold on me"
+  is question.
 - Between **question** and **chat**, pick question.
 - Between **new_fact** and **chat**, pick new_fact. A fact skill is allowed to propose nothing, so
   the cost of being wrong is one empty turn. Chat cannot propose anything, so the cost of being
@@ -103,6 +107,7 @@ there is always one that fits.
 | fact_update, the user disputing what Mera produced ("no, that is not what I said", "delete that", "why did you save that") | `conversation/correction` |
 | topic_request | `conversation/question` |
 | question | `conversation/question` |
+| about_mera | `conversation/about-mera` |
 | chat | `conversation/question` |
 
 `conversation/question` also handles greetings, navigation and off-topic redirects, branching

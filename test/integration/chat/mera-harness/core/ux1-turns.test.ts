@@ -284,7 +284,7 @@ describe('Q3: a typed yes continues the question it answers', () => {
     ], { deleteUserFacts });
     const out = await runAgentTurn({ state, userMessage: 'Yes please add it.', deps: t2.deps });
 
-    expect(t2.calls[0].systemPrompt).toBe('INTEREST SKILL BODY');
+    expect(t2.calls[0].systemPrompt.startsWith('INTEREST SKILL BODY')).toBe(true);
     expect(t2.calls[0].stateLine).toContain('They answered yes to your question: "Want me to add the Champions League?"');
     expect(out.typedYesResume).toBe(true);
     expect(deleteUserFacts).not.toHaveBeenCalled();
@@ -376,7 +376,7 @@ describe('F7 ruling: a typed reply while a card waits', () => {
     const h = harness([res({ content: 'Fine, leaving it out.' })]);
     const out = await runAgentTurn({ state, userMessage: 'No thanks', deps: h.deps });
     expect(out.typedYesResume).toBe(true);
-    expect(h.calls[0].systemPrompt).toBe('INTEREST SKILL BODY');
+    expect(h.calls[0].systemPrompt.startsWith('INTEREST SKILL BODY')).toBe(true);
     expect(h.calls[0].stateLine).toContain('They answered no to your question');
   });
 

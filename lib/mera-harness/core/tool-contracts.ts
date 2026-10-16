@@ -189,6 +189,49 @@ export const WEB_SEARCH_TOOL: ToolDefinition = {
   },
 };
 
+/**
+ * The ids `explainMera` answers on. Declared HERE because the harness imports
+ * nothing from news-harness; a test pins this list to MERA_EXPLAINER_TOPIC_IDS
+ * so the two cannot drift.
+ */
+export const EXPLAIN_MERA_TOPIC_IDS = [
+  'what_is_mera',
+  'privacy_what_leaves_device',
+  'privacy_what_we_store',
+  'encryption_and_inference',
+  'how_news_works',
+  'source_available',
+  'plans_and_limits',
+  'known_gaps',
+] as const;
+
+/**
+ * MERA'S OWN REFERENCE TEXT, for a question about Mera itself. Declared only on
+ * the `conversation/about-mera` leg, and only when the device offers it. Its
+ * arguments are topic ids, and the result travels inside the E2EE envelope.
+ */
+export const EXPLAIN_MERA_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'explainMera',
+    description:
+      `Returns Mera's own reference text on 1 to 3 topics. Answer a question about Mera only from what it returns. Topics: ${EXPLAIN_MERA_TOPIC_IDS.join(', ')}.`,
+    parameters: {
+      type: 'object',
+      properties: {
+        topics: {
+          type: 'array',
+          items: { type: 'string', enum: [...EXPLAIN_MERA_TOPIC_IDS] },
+          minItems: 1,
+          maxItems: 3,
+          description: '1 to 3 topic ids.',
+        },
+      },
+      required: ['topics'],
+    },
+  },
+};
+
 export const DELETE_FACTS_TOOL: ToolDefinition = {
   type: 'function',
   function: {
@@ -237,6 +280,8 @@ export function toolsForLeg(opts: {
   /** The device offers web search (the setting is on). Declared on facts and
    *  question legs only, never on the route or forced leg. */
   webSearch?: boolean;
+  /** The device offers explainMera. Declared on `conversation/about-mera` only. */
+  explainMera?: boolean;
 }): ToolDefinition[] {
   const tools = toolsForLegUnfiltered(opts);
   const withSearch =
@@ -246,9 +291,13 @@ export function toolsForLeg(opts: {
     && (opts.skillLoaded.startsWith('facts/') || opts.skillLoaded === 'conversation/question')
       ? [...tools, WEB_SEARCH_TOOL]
       : tools;
+  const withExplain =
+    opts.explainMera === true && !opts.forcingProposal && opts.skillLoaded === 'conversation/about-mera'
+      ? [...withSearch, EXPLAIN_MERA_TOOL]
+      : withSearch;
   return opts.allowChoice === false
-    ? withSearch.filter((t) => t.function.name !== 'ask_choice')
-    : withSearch;
+    ? withExplain.filter((t) => t.function.name !== 'ask_choice')
+    : withExplain;
 }
 
 function toolsForLegUnfiltered(opts: {

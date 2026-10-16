@@ -168,3 +168,22 @@ describe('mera-explainer-content — shape', () => {
     }
   });
 });
+
+// Since readcap a plan meters megabytes of cloud reading a day, not articles:
+// Mera reads through end-to-end encryption and cannot see which or how many
+// articles it reads. A daily article count here is a false limit the chat
+// would state as fact.
+describe('mera-explainer-content — plans', () => {
+  it('names no daily article-count limit', () => {
+    const plans = MERA_EXPLAINER_SECTIONS.plans_and_limits;
+    expect(plans).not.toMatch(/\b250\b|\b1,000\b|\b10,000\b/);
+    expect(plans).not.toMatch(/articles? (?:analysed|analyzed)[^.]*a day/i);
+    expect(plans).toMatch(/10 MB/);
+    expect(plans).toMatch(/50 MB/);
+    expect(plans).toMatch(/200 MB/);
+  });
+
+  it('says what the servers keep in the same terms as the plans', () => {
+    expect(MERA_EXPLAINER_SECTIONS.privacy_what_we_store).not.toMatch(/count of how many articles were analysed/i);
+  });
+});

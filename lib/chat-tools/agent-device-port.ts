@@ -24,7 +24,7 @@ import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { REQUIRED_TOOL_REASK } from '../llm/text-tool-protocol';
 import type { PhaseSignal } from '@/lib/services/chat-phase';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
-import { handleDeleteUserFacts, handleSaveExtractedFacts } from './tool-handlers';
+import { handleDeleteUserFacts, handleExplainMera, handleSaveExtractedFacts } from './tool-handlers';
 import { handleWebSearch } from './web-search-handler';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { getFacts } from '../database/services/fact-service';
@@ -347,6 +347,8 @@ export function makeAgentToolPort(
     deleteUserFacts(args) {
       return handleDeleteUserFacts(args as unknown as Record<string, unknown>);
     },
+    // Mera's own reference text; pure and lazy, no network.
+    explainMera: (a: { topics: string[] }) => handleExplainMera(a),
     // GATE 1: offered only while "Web search in chat" is on, so the loop never
     // declares the tool otherwise. `handleWebSearch` re-checks the setting
     // before any await (gate 2), for a switch flipped mid-turn.
@@ -552,6 +554,7 @@ function haltable(port: AgentToolPort, stop: AbortSignal): AgentToolPort {
     saveExtractedFacts: (a) => halted(() => port.saveExtractedFacts(a)),
     deleteUserFacts: (a) => halted(() => port.deleteUserFacts(a)),
     ...(port.webSearch ? { webSearch: (a: { queries: string[] }) => halted(() => port.webSearch!(a)) } : {}),
+    ...(port.explainMera ? { explainMera: (a: { topics: string[] }) => halted(() => port.explainMera!(a)) } : {}),
   };
 }
 

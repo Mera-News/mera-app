@@ -8,7 +8,13 @@
 //   mera-promo-website/lib/i18n/dictionaries/en.json      (faq, solution, innovations)
 //   mera-promo-website/public/assets/privacy-policy.md    (2, 7, 10, 11)
 //   mera-app/README.md
-//   mera-app/lib/locales/en.json                          (configPanel.privacy*, meraProtocol.*)
+//   mera-app/lib/locales/en.json                          (configPanel.privacy*, meraProtocol.*,
+//                                                          subscription.readingExplainer,
+//                                                          you.settings.planMultiplier, feed.notRead.*)
+//
+// plans_and_limits and the daily reading record in privacy_what_we_store move
+// with any plan or privacy change: they went stale once, when plans moved from
+// articles to megabytes of cloud reading.
 //
 // The whitepaper PDF is deliberately NOT a source: it is stale on several
 // material points and uses a licence label this product does not claim.
@@ -22,7 +28,7 @@
 // top-level import of this file anywhere.
 //
 // ── THREE HARD INVARIANTS, ENFORCED BY A BUILD-FAILING TEST ──
-// (see lib/chat-tools/__tests__/mera-explainer-content.test.ts, which regexes the
+// (see test/integration/chat/contracts/mera-explainer-content.test.ts, which regexes the
 //  RAW FILE TEXT — comments included, because this repository is published)
 //
 // 1. The licence label. Mera's licence is not OSI-approved; the stronger,
@@ -84,7 +90,7 @@ The gap between a fact and a topic is the whole point. "Lives in Jordaan, Amster
 Two honest caveats. First, chat with Mera is a separate thing from the topic payload: on the cloud path your messages ARE sent for the AI to process, encrypted, and discarded afterwards. Ask about encryption for how that works. Second, switching devices or logging out means rebuilding your profile from scratch, precisely because there is no server-side copy to restore.`,
 
   // ---------------------------------------------------------------------------
-  privacy_what_we_store: `Tied to your account, Mera's servers hold a deliberately short list: the email address you sign in with, if you added one, your sign-in session records (no IP address or browser details are kept on them), your subscription status and entitlement, a per-day count of how many articles were analysed for your account (this is how a plan's daily limit is enforced), and the billing records the app stores send when your subscription changes. Billing records are kept for 7 years where Dutch law requires it. The rest lives until you delete your account, apart from the time limits listed at the end.
+  privacy_what_we_store: `Tied to your account, Mera's servers hold a deliberately short list: the email address you sign in with, if you added one, your sign-in session records (no IP address or browser details are kept on them), your subscription status and entitlement, a daily reading record (how much encrypted text Mera was sent to read for you each day, never the text itself, the number of those requests, the number of articles delivered to your Feed, and the day's allowance and the time it was reached; this is how your plan is applied), and the billing records the app stores send when your subscription changes. Billing records are kept for 7 years where Dutch law requires it. The rest lives until you delete your account, apart from the time limits listed at the end.
 
 If you use Mera without an email, the phone itself is how you sign in, so Mera keeps a sign-in record for it: on iPhone, the App Attest key Apple creates for this app install; on Android, a keyed one-way hash of the Android ID, never the ID itself. The Apple or Google check that this is the genuine app on a real device is verified at sign-in and not kept. The record exists to let you sign in without email, to confirm the real app on a real device, and to limit how fast accounts can be created. When the account is deleted, the device record goes with it, so nothing about the phone remains. It also means an account without email lives on that phone: lose the phone, or reinstall on iPhone, and the account cannot be reached unless an email was added.
 
@@ -94,7 +100,7 @@ The topic phrases you send ARE stored, and it matters exactly how. They go into 
 
 Not stored on Mera's servers at all: your personal facts (beyond the sign-in email), interest profiles, reading history, article-open or dismissal history, which articles became notifications, the reasoning behind them, AI inputs and outputs, location data, contacts, or any browsing outside Mera.
 
-One retention window is still unbounded and is being worked on: submitted unblock transcripts. Per-day analysis counts are kept 90 days, and an account without email that stays inactive for 12 months is deleted unless it is on a paid plan. Request timestamps are kept 90 days, crash logs 30.`,
+One retention window is still unbounded and is being worked on: submitted unblock transcripts. The daily reading record is kept 90 days and holds no content, article text, topics or chat, and an account without email that stays inactive for 12 months is deleted unless it is on a paid plan. Request timestamps are kept 90 days, crash logs 30.`,
 
   // ---------------------------------------------------------------------------
   encryption_and_inference: `Relevance scoring is real AI work, and it runs in one of two places, your choice, subject to what your phone supports.
@@ -130,15 +136,19 @@ What is being built is one new repository with four deployable parts, all source
 None of that is finished. It is described in the future tense on purpose.`,
 
   // ---------------------------------------------------------------------------
-  plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not run out. Starter covers up to 250 candidate articles analysed for you a day, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
+  plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not expire. Starter includes 10 MB of cloud reading a day, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
 
-Above Starter there are two paid plans, Individual and Professional, and they differ from Starter in exactly one thing: how many candidate articles can be analysed for you per day. Individual covers up to 1,000 a day and Professional up to 10,000. The plans screen in the app is the authority on those figures, because it reads them from the store rather than from anything written down here.
+Every article that matches your interests reaches your Feed, on every plan. Mera reads them, sets aside the noise and lifts what matters. What a plan sets is how much Mera reads for you in the cloud each day: Starter 10 MB, Individual 50 MB (5 times Starter) and Professional 200 MB (20 times Starter). Settings in the app shows your plan's figure and how much of today's reading is used.
+
+Why megabytes and not articles: Mera reads for you through end-to-end encryption, so it cannot see which articles it reads or how many. What it can measure is how much encrypted text it was sent to read, so that is what a plan counts.
+
+On supported phones, reading on the phone itself is unlimited on every plan and is never counted. Only reading in the cloud is.
+
+The day's cloud reading resets at midnight UTC, shown in your own time in the app. When it is used up, articles still reach your Feed, marked as not read by Mera yet, and Mera reads again after the reset.
 
 Prices are deliberately not quoted here. They are set per country and per currency by the App Store and Google Play, and the exact figure for where you are is shown on the plans screen in the app, which reads it from the store rather than from anything written down in advance. Any number quoted from memory would eventually be the wrong one for somebody.
 
-Every plan includes the complete Mera experience. There is no feature held back behind a higher tier: same personalisation, same alerts, same explanations, same languages, same chat. Only the daily analysis capacity changes.
-
-"Article analysis capacity" means the number of candidate articles an AI can examine for you in a day to decide whether, and why, each one actually matters to you. It is not the number of articles you will be shown; the great majority of candidates are analysed and then discarded as not relevant to you. That analysis is the expensive part, and the per-day count of it is one of the few things Mera's servers hold against your account.
+Every plan includes the complete Mera experience. There is no feature held back behind a higher tier: same personalisation, same alerts, same explanations, same languages, same chat. Only the daily cloud reading changes.
 
 Separately from the plan, you control interruptions: up to 24 alert opportunities per day at times you choose, with life-safety emergencies as the one exception that always breaks through.
 

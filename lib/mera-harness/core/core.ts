@@ -5,7 +5,7 @@
 // app rather than about a parallel implementation.
 
 import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
-import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
+import { buildRouterPrompt, voiceRules, type PersonaSurface } from './router-prompt';
 import {
   claimsSaveHappened,
   cleanProse,
@@ -403,6 +403,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // params, passed by the eval runner, and read nowhere.
     arm: params.promptVariant,
   });
+  // A loaded body REPLACES the router prompt, which is the only place the
+  // language and punctuation rules live. Re-appended last, so they are the
+  // final thing the model reads on every skill leg.
+  const skillPrompt = (body: string): string => `${body}\n\n${voiceRules(state.persona.languageName)}`;
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;
   /** Every skill this turn ran, in order. One entry unless the multi-subject
@@ -441,7 +445,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     if (body !== null) {
       skillLoaded = turn.lastSkill;
       routeKind = routeKindFromSkill(turn.lastSkill);
-      systemPrompt = body;
+      systemPrompt = skillPrompt(body);
       resumedSkill = true;
       skillsLoaded.push(turn.lastSkill);
     }
@@ -767,7 +771,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     for (const tr of toolResultsThisTurn) {
       messages.push({
         role: 'tool',
-        content: `${tr.name}: ${escapeUntrusted(JSON.stringify(tr.result), 4000)}`,
+        // explainMera's sections run 1.3 to 2.8KB each and up to three come
+        // back; the next leg answers ONLY from them, so a cut is a wrong answer.
+        content: `${tr.name}: ${escapeUntrusted(JSON.stringify(tr.result), tr.name === 'explainMera' ? 12000 : 4000)}`,
       });
     }
     if (closingNote !== null) {
@@ -803,6 +809,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // earlier one is waiting on the user.
         allowChoice: askingSkill === null,
         webSearch: typeof deps.tools.webSearch === 'function',
+        explainMera: typeof deps.tools.explainMera === 'function',
       }) as unknown[],
       toolChoice: forcingProposalNow ? 'required' : 'auto',
       // FALSE on every call: measured, thinking on returned empty content on 8
@@ -922,7 +929,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // The loaded body becomes the NEXT leg's system prompt. It is not a
           // tool result the model reads back: each leg is assembled from
           // scratch, so "which skill is loaded" is simply which prompt we build.
-          systemPrompt = body;
+          systemPrompt = skillPrompt(body);
           const out = { id, loaded: true };
           leg.toolResults.push({ name: call.name, result: out });
           toolResultsThisTurn.push({ name: call.name, result: out });
@@ -985,6 +992,26 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             ? await deps.tools.webSearch({ queries })
             : { error: 'queries must be a non-empty array of strings', searched: false }
           : { error: 'web search is not available', searched: false };
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (!isRepeat) {
+          sawContinuationTool = true;
+          continuationsSeen.add(callKey);
+        }
+        continue;
+      }
+
+      if (call.name === 'explainMera') {
+        // Mera's own reference text. No port method means it was not declared,
+        // so a call is answered, never run.
+        const topics = Array.isArray(args.topics)
+          ? (args.topics as unknown[]).filter((t): t is string => typeof t === 'string' && t.trim().length > 0).slice(0, 3)
+          : [];
+        const out = deps.tools.explainMera
+          ? topics.length > 0
+            ? await deps.tools.explainMera({ topics })
+            : { error: 'topics must be a non-empty array of topic ids' }
+          : { error: 'explainMera is not available' };
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -1575,9 +1602,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         continue;
       }
     }
+    // `conversation/about-mera` proposes nothing, and its answer describes what
+    // Mera stores in the very words a save claim uses ("saved on your phone").
     const gateKind = leaksInternals(finalReply)
       ? ('leak' as const)
-      : claimsSaveHappened(finalReply)
+      : skillLoaded !== 'conversation/about-mera' && claimsSaveHappened(finalReply)
         ? ('save-claim' as const)
         : null;
     if (gateKind !== null) {
@@ -1626,7 +1655,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         skillLoaded = next;
         skillsLoaded.push(next);
         routeKind = routeKindFromSkill(next);
-        systemPrompt = body;
+        systemPrompt = skillPrompt(body);
         placeCandidates = [];
         similarFactCount = null;
         existingFacts = [];

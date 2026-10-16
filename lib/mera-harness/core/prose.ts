@@ -259,9 +259,9 @@ const INTERNALS = new RegExp(
     '<\\s*/?\\s*state\\s*>' +
     '|<\\s*/?\\s*known_facts\\s*>' +
     '|known_facts' +
-    '|load_skill|saveExtractedFacts|find_similar_facts|lookup_place|ask_choice|deleteUserFacts' +
+    '|load_skill|saveExtractedFacts|find_similar_facts|lookup_place|ask_choice|deleteUserFacts|explainMera' +
     '|\\bfacts/(?:residence|interest|origin|family|profession|generic)\\b' +
-    '|\\bconversation/(?:question|correction)\\b' +
+    '|\\bconversation/(?:question|correction|about-mera)\\b' +
     '|\\btopics/(?:residence|interest|origin|family|profession|generic)\\b' +
     '|the state (?:notes|line|says|tells|block)' +
     '|\\[assistant thinking\\]' +

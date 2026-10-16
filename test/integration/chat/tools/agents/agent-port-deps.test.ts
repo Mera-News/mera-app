@@ -109,6 +109,26 @@ describe('a forced leg (tool_choice required) with no call back is re-asked ONCE
   });
 });
 
+describe('hindifix A: explainMera through the device port', () => {
+  it('offers explainMera and answers from the real reference text, with no network', async () => {
+    const requests = countRequests('/graphql');
+    const deps = makeAgentDeps('how does mera handle my data', jest.fn());
+    const out = await deps.tools.explainMera?.({ topics: ['plans_and_limits'] });
+    const sections = (out as { sections: { topic: string; text: string }[] }).sections;
+    expect(sections.map((x) => x.topic)).toEqual(['plans_and_limits']);
+    expect(sections[0].text).toContain('10 MB');
+    expect(requests()).toBe(0);
+    expect(gatewayCalls('chat')).toEqual([]);
+  });
+
+  it('answers "stopped" after Stop', async () => {
+    const stop = new AbortController();
+    const deps = makeAgentDeps('msg', jest.fn(), undefined, stop.signal);
+    stop.abort();
+    await expect(deps.tools.explainMera?.({ topics: ['what_is_mera'] })).resolves.toEqual({ error: 'stopped' });
+  });
+});
+
 describe('ux2 D10: web search through the device port', () => {
   it('offers webSearch while the setting is on and runs it on the device: one gateway search per query', async () => {
     await setWebSearchInChat(true);

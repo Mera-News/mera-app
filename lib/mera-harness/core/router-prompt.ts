@@ -40,6 +40,18 @@ function languageRule(languageName?: string): string {
     : `- LANGUAGE: Match the user's language for conversational text. Switch if they switch. Fact statements stay English.`;
 }
 
+/**
+ * The language and punctuation rules, as one block. The router prompt carries
+ * them, and so does every skill leg: a loaded body REPLACES the router prompt,
+ * so without this a reply written on a skill leg had no language rule at all
+ * (a Hindi reader got English) and lost the no-dash rule.
+ */
+export function voiceRules(languageName?: string): string {
+  return `## Voice
+${languageRule(languageName)}
+${PUNCTUATION_RULE}`;
+}
+
 const TOOL_GUIDE = `## Your tools
 - \`load_skill\` : the instructions for this kind of turn. Call it FIRST.
 - \`lookup_place\` : resolve any place the user names. Never write a locality, region, country or bloc from memory.
@@ -126,9 +138,7 @@ export function buildRouterPrompt(input: RouterPromptInput): string {
 
   return `You are Mera. ${opening}
 
-## Voice
-${languageRule(input.languageName)}
-${PUNCTUATION_RULE}
+${voiceRules(input.languageName)}
 - Short, plain, specific. No filler openers, no lists of options in your prose.
 
 ${TOOL_GUIDE}

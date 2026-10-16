@@ -172,6 +172,19 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
       };
     },
 
+    // Canned and offline, like webSearch: the eval scores whether the turn
+    // asked for the right topics and answered from the result, not the prose
+    // of the real reference text (which lives outside the harness).
+    async explainMera(args: { topics: string[] }): Promise<Record<string, unknown>> {
+      count('explainMera');
+      return {
+        sections: args.topics.map((topic) => ({
+          topic,
+          text: `Mera's reference text on ${topic}. Answer only from what is written here.`,
+        })),
+      };
+    },
+
     async deleteUserFacts(args: { fact_ids: string[] }): Promise<Record<string, unknown>> {
       count('deleteUserFacts');
       // Observed, never refused here. See the header: the gate is the loop's.

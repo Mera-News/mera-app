@@ -104,6 +104,8 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
       schemaValid = Array.isArray(parsed.fact_ids);
     } else if (name === 'webSearch') {
       schemaValid = Array.isArray(parsed.queries) && parsed.queries.length >= 1;
+    } else if (name === 'explainMera') {
+      schemaValid = Array.isArray(parsed.topics) && parsed.topics.length >= 1;
     }
   }
   return { name, argumentsRaw, parsed, schemaValid, unknownTool: !knownTools.has(name), result };
@@ -121,7 +123,7 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
  */
 const KNOWN_TOOLS = new Set([
   'load_skill', 'find_similar_facts', 'findSimilarFacts', 'lookup_place', 'lookupPlace',
-  'ask_choice', 'saveExtractedFacts', 'deleteUserFacts', 'webSearch',
+  'ask_choice', 'saveExtractedFacts', 'deleteUserFacts', 'webSearch', 'explainMera',
   // Loop-written, never the model's: the "Save as I wrote it" chip (ux2 D9).
   'saveAsWritten',
 ]);

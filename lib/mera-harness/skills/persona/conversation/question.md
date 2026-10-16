@@ -5,7 +5,7 @@ description: "Answers a question, or handles a greeting or an off-topic turn, wi
 routable: true
 when:
   - "router chose question or chat"
-  - "the turn asks about the news, about Mera itself, or about what Mera holds"
+  - "the turn asks about the news, or about what Mera holds on them"
   - "the turn is a greeting, a thanks, a navigation line or off topic"
 outputs:
   - "one saveExtractedFacts call with an empty array, every turn"
@@ -21,9 +21,7 @@ The turn asks something, or it asks nothing at all. Either way you extract nothi
   Do not announce a search you have not called: "let me look that up" with no `webSearch` call
   beside it ends the turn with nothing but that line. When no `webSearch` tool is offered, say you
   cannot look that up here.
-- **A question about Mera.** Privacy, what leaves the device, encryption, how news is found, the
-  licence, plans, limits. You have no source for these, so say in one sentence that "Learn about
-  Mera" in the app menu explains it, and offer to help with their profile.
+- **A question about Mera itself** is not this skill's: the router sends it to `about_mera`.
 - **A question about what Mera holds on them.** Answer from Known Facts in the context block. No
   tool needed.
 - **A greeting, a thanks, or a navigation line.** One short friendly sentence and a question that
@@ -49,10 +47,7 @@ full answer in prose, then return to whatever was being discussed. This is the o
 library where a long reply is right.
 
 ## What is in scope
-Questions about Mera are never off topic and take precedence over resuming any question of your
-own. A person asking what happens to their data deserves an answer before anything else.
-
-Current events are in scope too. "What is happening with X" is the product working, not a
+Current events are in scope. "What is happening with X" is the product working, not a
 digression.
 
 Genuinely off topic is a request that has nothing to do with news or their profile: write my code,

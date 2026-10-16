@@ -1,0 +1,22 @@
+{
+  "id": "about-mera",
+  "cohort": "about-mera",
+  "note": "Questions about Mera itself. Each must load conversation/about-mera and call explainMera, never answer from memory or send the person to a menu. A question about what Mera holds on them stays conversation/question.",
+  "persona": {
+    "facts": [
+      { "id": "f1", "statement": "Lives in Ghent, East Flanders, Belgium", "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)", "kind": "residence" }
+    ],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    { "index": 0, "user": "How does Mera handle my data?",
+      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3 } },
+    { "index": 1, "user": "How much does my plan give me each day?",
+      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3 } },
+    { "index": 2, "user": "Can anyone read the app's code?",
+      "expect": { "routeKind": "about-mera", "skill": "conversation/about-mera", "tools": ["load_skill", "explainMera"], "legs": 3 } },
+    { "index": 3, "user": "What do you know about me so far?",
+      "expect": { "routeKind": "question", "skill": "conversation/question", "tools": ["load_skill"], "legs": 2 } }
+  ]
+}

@@ -44,6 +44,7 @@ const SKILL_IDS = [
   'topics/interest',
   'conversation/question',
   'conversation/correction',
+  'conversation/about-mera',
 ] as const;
 type SkillId = (typeof SKILL_IDS)[number];
 
