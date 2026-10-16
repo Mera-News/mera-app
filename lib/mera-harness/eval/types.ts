@@ -288,9 +288,10 @@ export interface ScriptPersona {
     placeChain?: import('./contract').Place;
   }[];
   topics: { id: string; text: string }[];
-  /** The app language, passed to the loop as `AgentPersona.languageName`.
-   *  Absent is what the device sends today (useCloudPersonaChat builds the
-   *  persona without it), which gives the "match the user's language" rule. */
+  /** The app language, passed to the loop as `AgentPersona.languageName`. It
+   *  stands in for what `buildAgentPersona` resolves on the device (the eval
+   *  drives runAgentTurn directly). Absent gives the "match the user's
+   *  language" rule, which is what the device sent before hindifix A3. */
   languageName?: string;
 }
 

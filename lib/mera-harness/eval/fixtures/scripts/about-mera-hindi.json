@@ -1,7 +1,7 @@
 {
   "id": "about-mera-hindi",
   "cohort": "about-mera-hindi",
-  "note": "hindifix. The owner's Hindi-phone case: a question about Mera was answered in English and sent to 'Learn about Mera' in the menu. Every reply must be in Devanagari (replyScript, letters only, Latin brand words like Mera and MB allowed) and none may redirect to a menu. The plan turn must name the MB figure and no article count. The Delhi turn is the bug (a) check on a non-about-mera skill leg. languageName Hindi: the app-language rule, which the device does NOT send today.",
+  "note": "hindifix. The owner's Hindi-phone case: a question about Mera was answered in English and sent to 'Learn about Mera' in the menu. Every reply must be in Devanagari (replyScript, letters only, Latin brand words like Mera and MB allowed) and none may redirect to a menu. The plan turn must name the MB figure and no article count. The Delhi turn is the bug (a) check on a non-about-mera skill leg. languageName Hindi stands in for the app language buildAgentPersona resolves on the device (hindifix A3).",
   "persona": {
     "facts": [
       {
