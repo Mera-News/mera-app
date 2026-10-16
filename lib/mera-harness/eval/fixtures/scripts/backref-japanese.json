@@ -1,0 +1,128 @@
+{
+  "id": "backref-japanese",
+  "cohort": "backref-japanese",
+  "note": "onemera S1.5, Japanese (languageName Japanese): the back-reference gate on a script without spaces (それ), and its own leak guard.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Osaka, Osaka, Japan, Asia",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "Japanese"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "京都の祇園祭って何？",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Gion Matsuri, Kyoto's July festival",
+                "url": "https://news.example.org/a",
+                "snippet": "The Gion Matsuri in Kyoto runs through July, with the Yamaboko float procession on the 17th."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "それを私の興味に追加して",
+      "expect": {
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "tools": [
+          "load_skill",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "gion"
+            ],
+            "kind": "interest",
+            "placeChain": null,
+            "replaces": null
+          }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "今日のサッカーの結果は？",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "endedOn": "settled"
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "Japan beat Korea 2-1 in Saitama",
+                "url": "https://news.example.org/a",
+                "snippet": "Japan beat South Korea 2-1 in a friendly in Saitama on Tuesday evening."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "私は看護師です",
+      "expect": {
+        "routeKind": "profession",
+        "skill": "facts/profession",
+        "tools": [
+          "load_skill",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "endedOn": "settled",
+        "proposals": [
+          {
+            "statementMatches": [
+              "nurse"
+            ],
+            "kind": "profession",
+            "placeChain": null,
+            "replaces": null
+          }
+        ],
+        "offerExcludes": [
+          "soccer",
+          "football",
+          "korea",
+          "saitama"
+        ]
+      }
+    }
+  ]
+}

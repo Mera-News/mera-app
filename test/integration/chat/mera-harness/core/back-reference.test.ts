@@ -17,6 +17,22 @@ describe('pointsBack', () => {
     'ajoute ça à mes centres d’intérêt',
     'मेरे माता-पिता वहाँ रहते हैं',
     'इसे फॉलो करो',
+    'それを私の興味に追加して',
+    '我想关注这个',
+    '我想關注這個',
+    'ติดตามเรื่องนี้ให้หน่อย',
+    '그것을 관심사에 추가해 줘',
+    'أضف هذا إلى اهتماماتي',
+    'добавь это в мои интересы',
+    'додай це до моїх інтересів',
+    'aggiungi questo ai miei interessi',
+    'tambahkan ini ke minat saya',
+    'dodaj to do moich zainteresowań',
+    'bunu ilgi alanlarıma ekle',
+    'thêm cái này vào sở thích của tôi',
+    'adicione isso aos meus interesses',
+    'añade esto a mis intereses',
+    'füge das dort hinzu',
   ])('"%s" points back', (m) => expect(pointsBack(m)).toBe(true));
 
   it.each([
@@ -24,6 +40,12 @@ describe('pointsBack', () => {
     'I work as a nurse in Leiden',
     'ik woon in het centrum',
     'Stop showing me celebrity gossip',
+    '私は看護師です',
+    '我是一名护士',
+    'ฉันเป็นพยาบาล',
+    '저는 간호사입니다',
+    'أعمل ممرضة',
+    'Я работаю медсестрой',
   ])('"%s" does not', (m) => expect(pointsBack(m)).toBe(false));
 });
 
