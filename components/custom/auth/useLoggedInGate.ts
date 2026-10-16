@@ -35,6 +35,8 @@ import {
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 
+/** How long the start screen waits for the launch account check (nav-redesign-v2 plan #6/#7). */
+const LAUNCH_ACCOUNT_CHECK_CAP_MS = 8_000;
 
 /**
  * After the startup tab is in place: the gate is passed, so a notification tap
@@ -139,16 +141,14 @@ export function useLoggedInGate() {
 
             const userStore = useUserStore.getState();
 
-            // The launch account check, in PARALLEL and never awaited: a
-            // normal launch pays nothing for it. Whatever it has settled to by
-            // the time the route is decided is all it gets to say.
+            // The launch account check, started in PARALLEL with the local
+            // reads below and awaited (capped) only at the verdict, so a
+            // normal launch pays only whatever the check takes beyond them.
             let accountCheck: RecheckOutcome | null = null;
-            void recheckSession()
+            const accountCheckSettled = recheckSession()
+                .catch((): RecheckOutcome => 'inconclusive')
                 .then((o) => {
                     accountCheck = o;
-                })
-                .catch(() => {
-                    accountCheck = 'inconclusive';
                 });
 
             try {
@@ -316,10 +316,8 @@ export function useLoggedInGate() {
                 // Ordering: this MUST come after clearPreviousUserData above,
                 // which resets the user store (zeroing needsReauth). And it is
                 // not redundant with the flag recordOwnershipFault already set:
-                // recordAuthSuccess clears needsReauth on ANY error-free
-                // operation, including unauthenticated ones that prove nothing
-                // about the userId the 403 was about. Only OTP success clears
-                // the persisted fault itself.
+                // that store reset zeroed it. Only OTP success clears the
+                // persisted fault itself.
                 if (cancelled) return;
                 if (ownershipFault) {
                     userStore.setNeedsReauth(true);
@@ -380,8 +378,23 @@ export function useLoggedInGate() {
                 // comes out of.
                 // Definite answers only (account-gate.ts): a dead session
                 // signs in again, a phone with no connection or a server
-                // already marked unreachable gets the gate; anything still
-                // running opens the app.
+                // marked unreachable gets the gate. FinalStart #2: a check
+                // still running keeps the start screen up until it answers;
+                // never awaiting it opened a dead session straight into an
+                // app whose every query failed. Past the cap it opens the app.
+                if (useNetworkStore.getState().isConnected) {
+                    let capTimer: ReturnType<typeof setTimeout> | undefined;
+                    await Promise.race([
+                        accountCheckSettled,
+                        new Promise<void>((resolve) => {
+                            capTimer = setTimeout(resolve, LAUNCH_ACCOUNT_CHECK_CAP_MS);
+                        }),
+                    ]);
+                    clearTimeout(capTimer);
+                    // Inconclusive: ask whether Mera itself is up, so an outage
+                    // shows "Mera can't be reached". Bounded at 3s inside.
+                    if (accountCheck === 'inconclusive') await probeServerReachable();
+                }
                 const network = useNetworkStore.getState();
                 const gateVerdict = accountGateVerdict({
                     outcome: accountCheck,

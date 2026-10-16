@@ -16,13 +16,12 @@ import {
 } from '@/components/custom/auth/useLoggedInGate';
 import { __resetLegalConsentLatchForTests } from '@/components/custom/auth/legal-consent';
 import { markOnboardingDone } from '@/components/custom/onboarding/onboarding-done';
-import { _resetForTests as resetAuthBreaker, recheckSession } from '@/lib/auth-failure-breaker';
+import { _resetForTests as resetAuthBreaker } from '@/lib/auth-failure-breaker';
 import { authClient } from '@/lib/auth-client';
 import database from '@/lib/database';
 import { addFact, hasAnyFacts } from '@/lib/database/services/fact-service';
 import * as settingService from '@/lib/database/services/setting-service';
 import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
-import * as userPersonaService from '@/lib/database/services/user-persona-service';
 import { persistUserPersona } from '@/lib/database/services/user-persona-service';
 import { ensureBackupKey } from '@/lib/backup/key-store';
 import * as endpoints from '@/lib/config/endpoints';
@@ -593,18 +592,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
         expect(replaced()).toEqual([]);
     });
 
-    describe('a session the server has already marked dead', () => {
-        // The recheck is fired in parallel and never awaited, and everything the gate awaits before
-        // its verdict is local. To make the recheck's answer part of the verdict, the persona-owner
-        // read (a one-call spy, R23) waits for the same deduped recheck promise: the gate attached
-        // its `.then` to that promise first, so its `accountCheck` is set before this resumes.
-        function holdVerdictForRecheck() {
-            const real = userPersonaService.assertPersonaOwner;
-            track(jest.spyOn(userPersonaService, 'assertPersonaOwner')).mockImplementationOnce(async (id) => {
-                await recheckSession().catch(() => undefined);
-                return real(id);
-            });
-        }
+    describe('the launch account check', () => {
         const recheckOnly = (reply: () => Response) =>
             http.get('*/api/auth/get-session', ({ request }) =>
                 new URL(request.url).searchParams.has('disableCookieCache') ? reply() : undefined,
@@ -615,7 +603,6 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
             server.use(recheckOnly(() => HttpResponse.json(null)));
-            holdVerdictForRecheck();
 
             mountGate();
             await waitForRoute();
@@ -624,13 +611,34 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             expect(replaced()).toEqual([[REAUTH]]);
         });
 
-        it('an inconclusive check on a server already marked unreachable shows the unreachable gate in place', async () => {
+        it('a dead session routes to sign in even when the check answers after the local reads', async () => {
+            // The board's start screen stays up while the check runs: a slow answer still gates.
             await signIn();
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
-            useNetworkStore.setState({ serverReachable: false });
-            server.use(recheckOnly(() => HttpResponse.json({ message: 'boom' }, { status: 500 })));
-            holdVerdictForRecheck();
+            server.use(
+                http.get('*/api/auth/get-session', async ({ request }) => {
+                    if (!new URL(request.url).searchParams.has('disableCookieCache')) return undefined;
+                    await new Promise((resolve) => setTimeout(resolve, 400));
+                    return HttpResponse.json(null);
+                }),
+            );
+
+            mountGate();
+            await waitForRoute();
+            await drain();
+
+            expect(replaced()).toEqual([[REAUTH]]);
+        });
+
+        it('Mera down at a cold start shows the unreachable gate, not an app whose queries fail', async () => {
+            await signIn();
+            await setSetting('cached_user_id', ME);
+            await markOnboardingDone();
+            server.use(
+                recheckOnly(() => HttpResponse.json({ message: 'boom' }, { status: 500 })),
+                http.get('*/api/auth/ok', () => new HttpResponse(null, { status: 503 })),
+            );
 
             const hook = mountGate();
             await waitFor(() => expect(hook.result.current.gate).toBe('unreachable'), { timeout: 8000 });
@@ -643,7 +651,6 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await signIn();
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
-            holdVerdictForRecheck();
 
             mountGate();
             await waitForRoute();

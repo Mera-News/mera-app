@@ -371,20 +371,12 @@ export function recordAuthFailure(): void {
 export function recordAuthSuccess(): void {
   const wasOpen = breakerOpen;
   consecutiveFailures = 0;
-  // "Error-free response" is NOT the same as "authenticated response". The
-  // Apollo success link calls this for ANY result without errors, including
-  // ones for operations that carried no credential and needed none - and
-  // clearing needs_reauth on one of those retracts a confirmed-dead verdict
-  // that nothing re-establishes until the next trip. app/logged-in/index.tsx
-  // already carries a local workaround for this exact defect.
-  //
-  // We cannot see the operation from here, but we can see whether there was a
-  // credential to authenticate WITH: an empty cookie means this success cannot
-  // have been ours. Narrow, and it fails safe - a present cookie behaves
-  // exactly as before.
-  if (safeGetCookie()) {
-    setNeedsReauth(false);
-  }
+  // Never clears needs_reauth. "Error-free" is not "authenticated": the server
+  // answers public operations (Explore's) for a REJECTED cookie too, so a
+  // cookie being present proves nothing. Clearing here flipped a confirmed-dead
+  // verdict back within seconds and the sign-in gate never showed. Only server
+  // truth (triggerRecheck 'alive', which the foreground self-heal runs) or a
+  // sign-in clears it.
   if (wasOpen) {
     breakerOpen = false;
     resumeFeedSync();
@@ -406,9 +398,9 @@ export function onAppForeground(): void {
   //
   // This used to be a bare `if (getNeedsReauth()) return;` placed below the
   // guard on the next line, which made needs_reauth permanent: nothing else
-  // clears it. recordAuthSuccess only clears when safeGetCookie() is non-empty
-  // (6c056e3, correctly — an error-free response for an operation that carried
-  // no credential proves nothing), hydrateFromDb only ever restores `true`, and
+  // clears it. recordAuthSuccess never clears it (an error-free response, even
+  // with a cookie, proves nothing: public operations succeed on a rejected
+  // session), hydrateFromDb only ever restores `true`, and
   // the one path that CAN clear it is triggerRecheck's 'alive' branch, which
   // this early return made unreachable. So a single wrong verdict survived
   // every cold start and every OTA until the user signed in by hand.
@@ -521,7 +513,7 @@ export function onNetworkReconnect(): void {
  * (mirrors auth-client's _pendingJwtRequest pattern).
  *  - alive     → transient: reset counter, close breaker, resume feed-sync.
  *  - dead      → set the persisted needsReauth flag (no eject); feed-sync stays
- *                paused and a banner prompts re-login. Local data + PIN survive.
+ *                paused and the sign-in gate takes over. Local data + PIN survive.
  *  - offline   → 'inconclusive': keep breaker open; a later recordAuthFailure
  *                retries after cooldown.
  */
@@ -670,9 +662,8 @@ function triggerRecheck(): Promise<RecheckOutcome> {
 /**
  * The launch account check (LoggedInGate) asks the same server-truth question
  * through the same deduped run, so a launch never fires a second /get-session
- * beside the breaker's own. Start it in parallel and never await it on the
- * routing path: `dead` before routing goes to sign-in, anything else opens the
- * tabs (no added cold-launch latency).
+ * beside the breaker's own. Started in parallel with the gate's local reads
+ * and awaited, capped, at the verdict: `dead` goes to sign-in.
  */
 export function recheckSession(): Promise<RecheckOutcome> {
   return triggerRecheck();

@@ -4,12 +4,11 @@ export type AccountGateVerdict = 'tabs' | 'reauth' | 'offline' | 'unreachable';
 
 /**
  * Where a launch goes once its route is otherwise decided (FinalStart, Q1).
- * The account check runs in parallel and is never awaited, so `outcome` is
- * null when it has not settled yet: that is the normal fast path and opens the
- * app. Only DEFINITE answers gate:
+ * The gate awaits the account check up to a cap, so `outcome` is null only
+ * when the check outlived it, which opens the app. Only DEFINITE answers gate:
  *  - the phone says it has no connection (no probe needed): offline;
  *  - the server said this session is dead: sign in again;
- *  - the check came back inconclusive AND the server is already marked
+ *  - the check came back inconclusive AND the probe after it found the server
  *    unreachable: Mera can't be reached.
  * Anything else, including a check that could not read the credential, opens
  * the app. A `dead` that lands later is the foreground gate's (ReauthOnReturn).

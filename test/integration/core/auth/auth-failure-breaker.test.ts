@@ -266,8 +266,9 @@ describe('recordAuthSuccess: reset', () => {
     expect(feedSyncPaused()).toBe(true);
 
     await succeed();
-    // The success clears the flag and resumes the poller.
-    expect(needsReauth()).toBe(false);
+    // The success closes the breaker but keeps the dead verdict: only a recheck or a sign-in
+    // clears it (the scheduler's auth pre-flight still holds feed-sync off while it is set).
+    expect(needsReauth()).toBe(true);
     expect(feedSyncPaused()).toBe(false);
     expect(_getBreakerState().breakerOpen).toBe(false);
   });
@@ -711,10 +712,12 @@ describe('the event says WHICH cause it was', () => {
 });
 
 describe('recordAuthSuccess does not retract a verdict it cannot have earned', () => {
-  it('clears needsReauth when a credential was actually held', async () => {
+  it('does NOT clear needsReauth when a credential was held: public queries succeed on a dead session', async () => {
+    // A rejected cookie is still a cookie, and the server answers public operations anyway. Clearing
+    // here flipped a confirmed-dead verdict back on the next Explore query, so the gate never showed.
     useUserStore.setState({ needsReauth: true });
     await succeed();
-    expect(needsReauth()).toBe(false);
+    expect(needsReauth()).toBe(true);
   });
 
   it('does NOT clear needsReauth when there was no cookie to authenticate with', async () => {
