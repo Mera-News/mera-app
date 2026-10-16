@@ -27,7 +27,7 @@ import { createJsonlWriter, hashMessages, newRowId, type CallType, type RunRow }
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
-import { postBodyStream, postBodyStreamTextTools, SpendLimitError } from '../lib/near-call';
+import { DEFAULT_STALL_TIMEOUT_MS, postBodyStream, postBodyStreamTextTools, SpendLimitError } from '../lib/near-call';
 import { BIG_MODEL } from '../../lib/llm/constants';
 // The AGENT's arms live in the harness's own module, not in
 // news-harness/prompts/prompt-variants: adding them there reddened a test
@@ -117,6 +117,8 @@ interface Args {
   repeatStart: number;
   variants: string[];
   dryRun: boolean;
+  /** Abort a model call that sends no byte for this long; retried once, then error "stall". */
+  stallTimeoutMs: number;
   oneShotVariant: string | null;
   /** `native` sends a `tools` field (cleartext on the app's wire); `text` is
    *  the app's E2EE text protocol. Several interleave like variants. */
@@ -135,6 +137,7 @@ function parseArgs(argv: string[]): Args {
     repeatStart: 0,
     variants: ['baseline'],
     dryRun: false,
+    stallTimeoutMs: DEFAULT_STALL_TIMEOUT_MS,
     oneShotVariant: null,
     toolProtocols: ['native'],
     pairs: null,
@@ -149,6 +152,7 @@ function parseArgs(argv: string[]): Args {
     else if (f === '--variant') a.variants = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
     else if (f === '--one-shot-variant') a.oneShotVariant = argv[++i] ?? null;
     else if (f === '--dry-run') a.dryRun = true;
+    else if (f === '--stall-timeout-ms') a.stallTimeoutMs = Number(argv[++i]);
     else if (f === '--tool-protocol') {
       const list = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
       for (const p of list) {
@@ -369,10 +373,14 @@ async function main(): Promise<number> {
   const evalRowsPath = join(run.dir, 'eval-rows.jsonl');
   const evalRows = createWriteStream(evalRowsPath, { flags: 'a' });
 
+  // One entry per model call, shifted per emitted leg row (the loop emits a
+  // turn's rows in call order, after all its calls). Lets the eval row carry
+  // stallRetries without touching lib/mera-harness.
+  const stallQueue: number[] = [];
   const emit = (row: EvalRow): void => {
     collected.push(row);
     rows.write(toRunRow(row, runId, catalog));
-    evalRows.write(`${JSON.stringify(row)}\n`);
+    evalRows.write(`${JSON.stringify({ ...row, stallRetries: stallQueue.shift() ?? 0 })}\n`);
   };
 
   try {
@@ -396,7 +404,7 @@ async function main(): Promise<number> {
             promptChars: req.messages.reduce((n, m) => n + m.content.length, 0),
             maxOutputTokens: req.maxTokens ?? 1024,
           });
-          if (args.dryRun) return dry(req);
+          if (args.dryRun) { stallQueue.push(0); return dry(req); }
           // AS THE APP SENDS IT: callModelViaCloud turns a tool result into a
           // user turn, and the leg's own tool_choice is honoured ('required' on
           // the forced leg). Both arms get both, so they differ in the wire only.
@@ -422,7 +430,9 @@ async function main(): Promise<number> {
             const r = await postBodyStreamTextTools(
               env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta,
               protocol === 'text-xml' ? 'xml' : protocol === 'text-xml-first' ? 'xml-first' : protocol === 'text-xml-first-soft' ? 'xml-first-soft' : protocol === 'text-marker' ? 'marker' : 'hermes',
+              { stallTimeoutMs: args.stallTimeoutMs },
             );
+            stallQueue.push(r.stallRetries ?? 0);
             if (forced) {
               stat.forced += 1;
               if (r.toolCalls.length > 0) stat.withCall += 1;
@@ -436,7 +446,8 @@ async function main(): Promise<number> {
             }
             return { ...r, ttVisibleMs: r.ttVisibleMs };
           }
-          const r = await postBodyStream(env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta);
+          const r = await postBodyStream(env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta, { stallTimeoutMs: args.stallTimeoutMs });
+          stallQueue.push(r.stallRetries ?? 0);
           if (forced) {
             stat.forced += 1;
             if (r.toolCalls.length > 0) stat.withCall += 1;

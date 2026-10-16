@@ -396,6 +396,18 @@ export function createStreamAccumulator(
 
 export interface NearStreamResult extends NearResult {
   ttVisibleMs: number | null;
+  /** Stalled attempts that were retried (0 or 1). Absent on non-stream results. */
+  stallRetries?: number;
+}
+
+/** The error string of a call that stalled on both attempts. Greppable on purpose. */
+export const STALL_ERROR = 'stall';
+export const DEFAULT_STALL_TIMEOUT_MS = 45_000;
+
+export interface StreamOptions {
+  /** Abort when no response byte arrives for this long (first byte and between
+   *  chunks). 0 or absent disables it. A stalled call is retried ONCE. */
+  stallTimeoutMs?: number;
 }
 
 /**
@@ -410,10 +422,41 @@ export async function postBodyStream(
   body: Record<string, unknown>,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   onDelta?: (d: { content?: string; reasoning?: string }) => void,
+  opts: StreamOptions = {},
+): Promise<NearStreamResult> {
+  // The same body object both times, so the request is byte-identical.
+  const first = await streamAttempt(baseUrl, apiKey, body, timeoutMs, onDelta, opts);
+  if (first.error !== STALL_ERROR) return { ...first, stallRetries: 0 };
+  const second = await streamAttempt(baseUrl, apiKey, body, timeoutMs, onDelta, opts);
+  return { ...second, latencyMs: first.latencyMs + second.latencyMs, stallRetries: 1 };
+}
+
+async function streamAttempt(
+  baseUrl: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+  timeoutMs: number,
+  onDelta: ((d: { content?: string; reasoning?: string }) => void) | undefined,
+  opts: StreamOptions,
 ): Promise<NearStreamResult> {
   const started = Date.now();
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const stallMs = opts.stallTimeoutMs ?? 0;
+
+  // Timers reject a promise that every await is raced against, because an
+  // abort alone is not guaranteed to unblock a body read that never starts.
+  let rejectDead!: (e: Error) => void;
+  const dead = new Promise<never>((_, rej) => { rejectDead = rej; });
+  dead.catch(() => undefined);
+  const total = setTimeout(() => { controller.abort(); rejectDead(new Error('total timeout')); }, timeoutMs);
+  let stallTimer: ReturnType<typeof setTimeout> | undefined;
+  let stalled = false;
+  const armStall = (): void => {
+    if (!stallMs) return;
+    clearTimeout(stallTimer);
+    stallTimer = setTimeout(() => { stalled = true; rejectDead(new StallError()); controller.abort(); }, stallMs);
+  };
+  const guard = <T>(p: Promise<T>): Promise<T> => Promise.race([p, dead]);
 
   const fail = (error: string): NearStreamResult => ({
     content: '', toolCalls: [], finishReason: '-', truncated: false, usage: null,
@@ -421,20 +464,22 @@ export async function postBodyStream(
   });
 
   try {
-    const res = await fetch(`${baseUrl}/chat/completions`, {
+    armStall();
+    const res = await guard(fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({ ...body, stream: true, stream_options: { include_usage: true } }),
       signal: controller.signal,
-    });
+    }));
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
+      const text = await guard(res.text()).catch((e) => { if (stalled || e instanceof StallError) throw e; return ''; });
       // 402 is the budget, not the call: it ends the run on the FIRST refusal
       // rather than recording the same answer across every remaining call.
       if (res.status === 402) {
         const limitErr = parseSpendLimit(text);
         if (limitErr) throw limitErr;
       }
+      // Any 4xx/5xx is an answer, never a stall: no retry.
       return fail(`HTTP ${res.status}: ${text.slice(0, 300)}`);
     }
     if (!res.body) return fail('stream: response carried no body');
@@ -445,7 +490,11 @@ export async function postBodyStream(
     // forward rather than parsed. Feeding a half line to the accumulator
     // silently drops a whole frame.
     let buffered = '';
-    for await (const chunk of res.body as unknown as AsyncIterable<Uint8Array>) {
+    const reader = res.body.getReader();
+    for (;;) {
+      const { done, value: chunk } = await guard(reader.read());
+      if (done) break;
+      armStall();
       buffered += decoder.decode(chunk, { stream: true });
       const lines = buffered.split('\n');
       buffered = lines.pop() ?? '';
@@ -476,11 +525,16 @@ export async function postBodyStream(
     };
   } catch (err) {
     if (err instanceof SpendLimitError) throw err;
+    if (stalled || err instanceof StallError) return fail(STALL_ERROR);
     return fail(err instanceof Error ? `${err.name}: ${err.message}` : String(err));
   } finally {
-    clearTimeout(timer);
+    clearTimeout(total);
+    clearTimeout(stallTimer);
+    controller.abort();
   }
 }
+
+class StallError extends Error {}
 
 /**
  * The app's TEXT tool wire (lib/llm/text-tool-protocol), over the same streamed
@@ -499,6 +553,7 @@ export async function postBodyStreamTextTools(
   timeoutMs = DEFAULT_TIMEOUT_MS,
   onDelta?: (d: { content?: string; reasoning?: string }) => void,
   format: ToolFormat = 'hermes',
+  opts: StreamOptions = {},
 ): Promise<NearStreamResult & { reasked: boolean }> {
   const { tools, tool_choice: toolChoiceRaw, messages, ...rest } = body;
   const toolDefs = (tools as TextToolDefinition[] | undefined) ?? [];
@@ -523,6 +578,7 @@ export async function postBodyStreamTextTools(
         }
         if (d.reasoning !== undefined) onDelta?.({ reasoning: d.reasoning });
       },
+      opts,
     );
     if (r.error) return r;
     const parsed = parseToolCallsFromText(r.content, toolDefs, format);
@@ -540,5 +596,10 @@ export async function postBodyStreamTextTools(
   const first = await send(msgs);
   if (toolChoice !== 'required' || first.error || first.toolCalls.length > 0) return { ...first, reasked: false };
   const second = await send([...msgs, { role: 'user', content: REQUIRED_TOOL_REASK }]);
-  return { ...second, latencyMs: first.latencyMs + second.latencyMs, reasked: true };
+  return {
+    ...second,
+    latencyMs: first.latencyMs + second.latencyMs,
+    stallRetries: (first.stallRetries ?? 0) + (second.stallRetries ?? 0),
+    reasked: true,
+  };
 }
