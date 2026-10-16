@@ -81,12 +81,19 @@
       "index": 2,
       "user": "Do not show me anything about Bollywood",
       "expect": {
-        "routeKind": "interest",
-        "skill": "facts/interest",
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
         "tools": [
-          "load_skill"
+          "load_skill",
+          "proposeChanges"
         ],
-        "legs": 2
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "add_suppression"
+          ]
+        }
       }
     }
   ]
