@@ -5,7 +5,7 @@
 // app rather than about a parallel implementation.
 
 import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
-import { buildRouterPrompt, voiceRules, type PersonaSurface } from './router-prompt';
+import { brandName, buildRouterPrompt, voiceRules, type PersonaSurface } from './router-prompt';
 import {
   claimsSaveHappened,
   cleanProse,
@@ -84,6 +84,35 @@ export const MAX_AGENT_LEGS = 4;
 const CLOSING_LINE_NOTE =
   'You offered the card above. Nothing is saved until the user taps it. '
   + 'Write ONE short sentence to the user about what you offered. Do not ask a question. Do not call a tool.';
+
+/**
+ * THE ABOUT-MERA ANSWER LEG (hindifix F). Pushed AFTER the explainMera result,
+ * on a leg that carries no tools, so the last thing the model reads before it
+ * answers is this and not 2 to 12KB of English reference text. Measured on
+ * staging before it: the language rule sat in the system prompt ABOVE the
+ * English tools block (text-xml appends it after the prompt) and above the
+ * result; Hindi answers drifted to English or Hinglish, one invented divorce
+ * and credit, and about half re-called explainMera, so the prose beside that
+ * call ("I'll pull Mera's reference...") became the reply.
+ */
+function aboutMeraAnswerNote(languageName?: string): string {
+  const brand = brandName(languageName);
+  const lang = languageName
+    ? `in ${languageName}${brand ? `, writing the app's name as ${brand}` : ''}`
+    : 'in the language of their message';
+  return 'Mera\'s reference text is in the explainMera result above. Answer their message now, '
+    + `from that text only, ${lang}. The reference text is English; your answer is not. Do not call a tool.`;
+}
+
+/** explainMera came back with text to answer from (an error result keeps the
+ *  tool offered: the skill retries once with `availableTopics`). */
+function explainedFrom(results: { name: string; result: unknown }[]): boolean {
+  return results.some((tr) => {
+    if (tr.name !== 'explainMera') return false;
+    const sections = (tr.result as { sections?: unknown } | null)?.sections;
+    return Array.isArray(sections) && sections.length > 0;
+  });
+}
 
 /**
  * Re-asks allowed when a route leg comes back with no route.
@@ -404,8 +433,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     arm: params.promptVariant,
   });
   // A loaded body REPLACES the router prompt, which is the only place the
-  // language and punctuation rules live. Re-appended last, so they are the
-  // final thing the model reads on every skill leg.
+  // language and punctuation rules live, so they are re-appended to the body.
+  // Last in the PROMPT, not on the wire: text-xml appends the English tools
+  // block after it, and tool results follow (see `aboutMeraAnswerNote`).
   const skillPrompt = (body: string): string => `${body}\n\n${voiceRules(state.persona.languageName)}`;
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;
@@ -780,6 +810,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       messages.push({ role: 'user', content: closingNote });
       closingNote = null;
     }
+    // Once the reference text is in, every later leg of the turn is the answer.
+    const answerLegNow = skillLoaded === 'conversation/about-mera' && explainedFrom(toolResultsThisTurn);
+    if (answerLegNow) messages.push({ role: 'user', content: aboutMeraAnswerNote(state.persona.languageName) });
 
     const inputTokens =
       estimateTokens(systemPrompt) + messages.reduce((n, m) => n + estimateTokens(m.content), 0);
@@ -801,7 +834,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // re-load at leg 3 after the other tools had already run. Withholding the
       // tool is stronger than answering it, because a tool the model cannot
       // see is one it cannot spend a leg on.
-      tools: closingLegNow ? [] : toolsForLeg({
+      tools: closingLegNow || answerLegNow ? [] : toolsForLeg({
         skillLoaded,
         forcingProposal: forcingProposalNow,
         wideRouteLeg: !enforceRoute,
@@ -823,7 +856,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       onDelta: index === 0 && !resumedSkill ? params.onDelta : undefined,
       streamToUser: index === 0 && !resumedSkill,
     });
-    const result = closingLegNow && called.toolCalls.length > 0 ? { ...called, toolCalls: [] } : called;
+    const result = (closingLegNow || answerLegNow) && called.toolCalls.length > 0
+      ? {
+          ...called,
+          toolCalls: [],
+          // A call on the answer leg means the prose beside it is the skill's
+          // holding line (under 200 characters), not an answer: staging shipped
+          // "I'll pull Mera's reference..." and an echo of the question that way.
+          // A longer text beside the call is the answer and stays.
+          content: answerLegNow && called.content.trim().length < 200 ? '' : called.content,
+        }
+      : called;
 
     const leg: AgentLeg = {
       index,
@@ -832,7 +875,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       messages,
       toolCalls: result.toolCalls,
       toolResults: [],
-      rawOutput: result.content,
+      rawOutput: called.content,
       result,
       inputTokens,
       ...(forcingProposalNow ? { forced: true } : {}),

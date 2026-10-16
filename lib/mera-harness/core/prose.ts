@@ -272,6 +272,15 @@ const INTERNALS = new RegExp(
     // "questionnaire_attribute": "interests"}]}` and matched nothing here.
     // snake_case keys, so they cannot collide with English.
     '|extracted_user_information|questionnaire_attribute|topic_skill_id|fact_ids|placeChain|countryHint' +
+    '|\\bwebSearch\\b' +
+    // NARRATED ARGUMENTS, in words. Staging (hindifix F): "This is a move.
+    // Same key, different place (Delhi vs Jaipur). Set replaces to h." shipped
+    // as a reply. Shapes, not bare words: "Delhi replaces your Jaipur home" and
+    // "the key change" are ordinary sentences.
+    '|\\bset\\s+(?:replaces|key|attribute|kind|statement|query|topics|fact_?id|id)\\s+(?:to|=)' +
+    '|\\breplaces\\s*(?:to\\b|[:=])' +
+    '|\\b(?:same|different)\\s+(?:attribute\\s+)?key\\b' +
+    '|\\battribute\\s+key\\b' +
     '|\\bthe user\\b' +
     '|\\btheir residence\\b' +
     ')',

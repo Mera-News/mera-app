@@ -5,6 +5,8 @@
 import { createAgentState, runAgentTurn, type AgentPersona } from '@/lib/mera-harness/core/core';
 import { MULTI_SUBJECT_ARM_ID } from '@/lib/mera-harness/core/arms';
 import { EXPLAIN_MERA_TOOL } from '@/lib/mera-harness/core/tool-contracts';
+import { voiceRules } from '@/lib/mera-harness/core/router-prompt';
+import { leaksInternals } from '@/lib/mera-harness/core/prose';
 import { loadSkill, renderSkillIndex, skillIds } from '@/lib/mera-harness/core/skill-loader';
 import { PERSONA_SKILL_INDEX } from '@/lib/mera-harness/skills/index.generated';
 import type { AgentDeps, AgentModelResult, Place } from '@/lib/mera-harness/core/types';
@@ -186,5 +188,147 @@ describe('conversation/about-mera answers from explainMera', () => {
     expect(renderSkillIndex()).toContain('conversation/about-mera');
     expect(loadSkill('router')).toContain('conversation/about-mera');
     expect(loadSkill('conversation/question')).not.toContain('Learn about Mera');
+  });
+});
+
+// hindifix F: staging run 20261016-124*-hfE-after. About half the about-mera
+// turns called explainMera AGAIN on the answer leg and the prose written beside
+// that call became the reply ("I'll pull Mera's reference...", an echo of the
+// question); the one answer leg that did not re-call wrote 43 tokens about
+// divorce and credit after 3.7KB of English reference text, with the language
+// rule buried above the tools block. Once the text has arrived, the next leg is
+// the answer: no tools, and a note AFTER the result naming the language.
+describe('hindifix F: the about-mera answer leg', () => {
+  const ROUTE = res({ content: 'एक पल।', toolCalls: [tc('load_skill', { id: 'conversation/about-mera' })] });
+  const SECTIONS = { sections: [{ topic: 'plans_and_limits', text: 'Starter includes 10 MB of cloud reading a day.' }] };
+  const CALL = res({ content: 'एक पल।', toolCalls: [tc('explainMera', { topics: ['plans_and_limits'] })] });
+
+  it('is tool-free and ends on a note naming the language and the Hindi brand spelling', async () => {
+    const explainMera = jest.fn(async () => SECTIONS);
+    const h = harness([ROUTE, CALL, res({ content: 'स्टार्टर में रोज़ 10 MB मिलते हैं।' })], { explainMera });
+    const out = await runAgentTurn({ state: createAgentState(HINDI), userMessage: 'मेरे प्लान में रोज़ कितना मिलता है?', deps: h.deps });
+    expect(h.calls[1].tools).toContain('explainMera');
+    expect(h.calls[2].tools).toEqual([]);
+    const last = h.calls[2].messages[h.calls[2].messages.length - 1];
+    expect(last.role).toBe('user');
+    expect(last.content).toContain('Hindi');
+    expect(last.content).toContain('मेरा ऐप');
+    expect(last.content).toMatch(/only/i);
+    expect(out.reply).toBe('स्टार्टर में रोज़ 10 MB मिलते हैं।');
+  });
+
+  it('without a language, the note says the language of their message', async () => {
+    const h = harness([ROUTE, CALL, res({ content: 'Starter gives 10 MB a day.' })], { explainMera: async () => SECTIONS });
+    await runAgentTurn({
+      state: createAgentState({ surface: 'CONFIG', facts: [] }),
+      userMessage: 'How much do I get a day?',
+      deps: h.deps,
+    });
+    const last = h.calls[2].messages[h.calls[2].messages.length - 1];
+    expect(last.content).toContain('the language of their message');
+  });
+
+  it('a call written on the answer leg is dropped and never becomes the reply', async () => {
+    const explainMera = jest.fn(async () => SECTIONS);
+    const h = harness(
+      [
+        ROUTE,
+        CALL,
+        res({ content: "I'll pull Mera's reference on how it works.", toolCalls: [tc('explainMera', { topics: ['what_is_mera'] })] }),
+        res({ content: 'स्टार्टर में रोज़ 10 MB मिलते हैं।' }),
+      ],
+      { explainMera },
+    );
+    const out = await runAgentTurn({ state: createAgentState(HINDI), userMessage: 'मेरे प्लान में रोज़ कितना मिलता है?', deps: h.deps });
+    expect(explainMera).toHaveBeenCalledTimes(1);
+    expect(out.reply).not.toContain('pull');
+  });
+
+  it('an error result keeps explainMera offered for the retry the skill asks for', async () => {
+    const h = harness(
+      [ROUTE, CALL, res({ content: 'ठीक है।' })],
+      { explainMera: async () => ({ error: 'Unknown topic(s): x', availableTopics: ['plans_and_limits'] }) },
+    );
+    await runAgentTurn({ state: createAgentState(HINDI), userMessage: 'प्लान?', deps: h.deps });
+    expect(h.calls[2].tools).toContain('explainMera');
+  });
+
+  it('the Hindi voice rules carry the brand spelling, other languages do not', () => {
+    expect(voiceRules('Hindi')).toContain('मेरा ऐप');
+    // The lines Hindi adds carry no dash: only the ban clause may name one.
+    const english = voiceRules('English').split('\n');
+    expect(voiceRules('Hindi').split('\n').filter((l) => !english.includes(l)).join('\n')).not.toMatch(/[–—]/);
+    expect(voiceRules('English')).not.toContain('मेरा');
+    expect(voiceRules(undefined)).not.toContain('मेरा');
+  });
+});
+
+// hindifix F: the staging Delhi turn (run 20261016-124853-hfE-after) shipped
+// "This is a move. Same key, different place (Delhi vs Jaipur). Set replaces
+// to h." as the reply and `replyLeakUnfixed` was false: the model narrated its
+// own tool arguments and the leak check knew only tool NAMES and snake_case keys.
+describe('hindifix F: narrated tool arguments are a leak', () => {
+  const DELHI = 'This is a move. Same key, different place (Delhi vs Jaipur). Set replaces to h.';
+  const JAIPUR: AgentPersona = {
+    surface: 'CONFIG',
+    languageName: 'Hindi',
+    facts: [{
+      id: 'h',
+      statement: 'Lives in Jaipur, Rajasthan, India, Asia',
+      attribute: 'location: neighborhood/area, city, and country (preserve specifics)',
+    }],
+  };
+  const DELHI_PLACE: Place = { locality: 'Delhi', admin1: 'Delhi', countryCode: 'IN', countryName: 'India', bloc: 'Asia' };
+
+  it('the detector fires on the exact staging reply and its shapes', () => {
+    expect(leaksInternals(DELHI)).toBe(true);
+    expect(leaksInternals('Set key to location.')).toBe(true);
+    expect(leaksInternals('Same attribute key, so it replaces: h')).toBe(true);
+    expect(leaksInternals('I will run webSearch for that.')).toBe(true);
+    // Ordinary sentences with the same words stay clean.
+    expect(leaksInternals('Delhi replaces your Jaipur home. Tap the card to confirm.')).toBe(false);
+    expect(leaksInternals('The key change is that the plan is free.')).toBe(false);
+    expect(leaksInternals('You can set alerts to daily in the app.')).toBe(false);
+  });
+
+  function replay(over: AgentModelResult[]) {
+    return harness(
+      [
+        res({ content: 'Got it, you live in Delhi.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ content: '', toolCalls: [tc('lookup_place', { query: 'Delhi' }), tc('find_similar_facts', { kind: 'residence' })] }),
+        ...over,
+      ],
+      {
+        lookupPlace: async () => ({ status: 'resolved', places: [DELHI_PLACE] }),
+        findSimilarFacts: async () => ({
+          candidates: [{ factId: 'h', statement: JAIPUR.facts[0].statement, attribute: JAIPUR.facts[0].attribute ?? null, overlap: 1 }],
+        }),
+      },
+    );
+  }
+
+  it('replayed beside the card, the narration is dropped and counted', async () => {
+    const save = tc('saveExtractedFacts', {
+      extracted_user_information: [{
+        statement: 'Lives in Delhi, Delhi, India, Asia',
+        questionnaire_attribute: 'location: neighborhood/area, city, and country (preserve specifics)',
+        replaces: 'h',
+      }],
+    });
+    const h = replay([res({ content: DELHI, toolCalls: [save] }), res({ content: DELHI }), res({ content: DELHI })]);
+    const out = await runAgentTurn({ state: createAgentState(JAIPUR), userMessage: 'मैं दिल्ली में रहता हूँ', deps: h.deps });
+    expect(out.proposals.length).toBeGreaterThan(0);
+    expect(out.reply).toBe('');
+    expect(out.replyLeakUnfixed).toBe(true);
+  });
+
+  it('replayed with no card, the narration is replaced by the fallback line', async () => {
+    const h = harness(
+      [res({ content: 'ठीक है।', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }), res({ content: DELHI }), res({ content: DELHI })],
+    );
+    const out = await runAgentTurn({ state: createAgentState(JAIPUR), userMessage: 'मेरे बारे में?', deps: h.deps });
+    expect(out.reply).not.toBe(DELHI);
+    expect(out.reply.length).toBeGreaterThan(0);
+    expect(out.replyLeakUnfixed).toBe(true);
   });
 });

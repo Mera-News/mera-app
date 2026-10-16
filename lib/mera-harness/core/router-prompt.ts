@@ -47,9 +47,20 @@ function languageRule(languageName?: string): string {
  * (a Hindi reader got English) and lost the no-dash rule.
  */
 export function voiceRules(languageName?: string): string {
+  const brand = brandName(languageName);
   return `## Voice
-${languageRule(languageName)}
+${languageRule(languageName)}${brand ? `\n- NAME: In ${languageName} text write the app's name as ${brand}, never मिरा, मीरा or मिस्टर.` : ''}
 ${PUNCTUATION_RULE}`;
+}
+
+/**
+ * The app's name as the app's own copy spells it, where the model gets it
+ * wrong. Hindi only: staging wrote "मिरा" and "मिस्टर", and the Hindi locale
+ * writes "मेरा ऐप" because "मेरा" alone reads as "my". Other scripts are
+ * unmeasured, so they get no line.
+ */
+export function brandName(languageName?: string): string | null {
+  return languageName === 'Hindi' ? 'मेरा ऐप' : null;
 }
 
 const TOOL_GUIDE = `## Your tools
