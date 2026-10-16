@@ -34,6 +34,7 @@ export type {
   FindSimilarFactsResult,
   LoadSkillResult,
   LookupPlaceResult,
+  PendingProposalView,
   Place,
   SimilarFactCandidate,
 } from '../core/types';

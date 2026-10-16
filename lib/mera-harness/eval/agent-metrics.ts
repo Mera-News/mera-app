@@ -4,6 +4,7 @@
 // cost. Every block below states what it must NOT be read as, because most of
 // these numbers have a way of looking good for the wrong reason.
 
+import { claimsChangeHappened } from '../core/prose';
 import { REPLY_SCRIPT_MIN_SHARE, hasBannedDash, proseOf, scriptShare } from './copy-rules';
 import type { EvalRow, ScriptTurn, TurnEnd } from './types';
 
@@ -578,6 +579,133 @@ export function replyCheckReport(
       if (detail === null) tally.passed += 1;
       else tally.misses.push({ scriptId: t.scriptId, turnIndex: t.turnIndex, repeat: t.repeat, arm: t.arm, reply, detail });
     }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Cards (proposeChanges / applyProposal / cancelProposal)
+// ---------------------------------------------------------------------------
+
+export interface CardTurn {
+  scriptId: string;
+  turnIndex: number;
+  repeat: number;
+  /** A card was staged this turn (a proposeChanges result with no error). */
+  staged: boolean;
+  /** Action kinds on the staged card, from the port's SANITISED result. */
+  kinds: string[];
+  /** applyProposal calls in ANY leg, executed or refused. */
+  applyAttempts: number;
+  /** Attempts that returned no error. */
+  applyExecuted: number;
+  /** Attempts the loop or port refused (an `error` result). */
+  applyRefused: number;
+  /** The final reply says a change already happened (claimsChangeHappened). */
+  claimsChange: boolean;
+}
+
+export interface CardReport {
+  turns: CardTurn[];
+  staged: number;
+  /** Per kind, how many staged cards carried it. */
+  kinds: Record<string, number>;
+  applyAttempts: number;
+  applyExecuted: number;
+  applyRefused: number;
+  claimsChange: number;
+  /** A change claim on a turn where nothing was applied: the claim is false,
+   *  whatever card sits beside it. */
+  claimsWithoutApply: number;
+  /** Turns whose fixture carries `expect.card`, and how many met it. */
+  expected: number;
+  met: number;
+  misses: { scriptId: string; turnIndex: number; repeat: number; detail: string }[];
+}
+
+/** Per TURN, aggregated over its legs: a card is staged on one leg and the
+ *  reply written on another, so a per-leg reading would mislabel both. */
+export function cardTurn(t: TurnRows): CardTurn {
+  const kinds: string[] = [];
+  let staged = false;
+  let attempts = 0;
+  let executed = 0;
+  for (const l of t.legs) {
+    for (const c of l.toolCalls) {
+      const r = c.result && typeof c.result === 'object' ? (c.result as Record<string, unknown>) : null;
+      const ok = r !== null && typeof r.error !== 'string';
+      if (c.name === 'proposeChanges' && ok) {
+        staged = true;
+        const acts = Array.isArray(r.actions) ? r.actions : [];
+        for (const a of acts) {
+          const k = (a as { type?: unknown } | null)?.type;
+          if (typeof k === 'string') kinds.push(k);
+        }
+      } else if (c.name === 'applyProposal') {
+        attempts += 1;
+        if (ok) executed += 1;
+      }
+    }
+  }
+  const last = t.legs[t.legs.length - 1];
+  return {
+    scriptId: t.scriptId,
+    turnIndex: t.turnIndex,
+    repeat: t.repeat,
+    staged,
+    kinds,
+    applyAttempts: attempts,
+    applyExecuted: executed,
+    applyRefused: attempts - executed,
+    claimsChange: claimsChangeHappened((last?.reply ?? '').trim()),
+  };
+}
+
+export function cardReport(
+  turns: readonly TurnRows[],
+  expectFor: (scriptId: string, turnIndex: number) => ScriptTurn['expect'] | null,
+): CardReport {
+  const out: CardReport = {
+    turns: [],
+    staged: 0,
+    kinds: {},
+    applyAttempts: 0,
+    applyExecuted: 0,
+    applyRefused: 0,
+    claimsChange: 0,
+    claimsWithoutApply: 0,
+    expected: 0,
+    met: 0,
+    misses: [],
+  };
+  for (const t of turns) {
+    const c = cardTurn(t);
+    out.turns.push(c);
+    if (c.staged) out.staged += 1;
+    for (const k of new Set(c.kinds)) out.kinds[k] = (out.kinds[k] ?? 0) + 1;
+    out.applyAttempts += c.applyAttempts;
+    out.applyExecuted += c.applyExecuted;
+    out.applyRefused += c.applyRefused;
+    if (c.claimsChange) {
+      out.claimsChange += 1;
+      if (c.applyExecuted === 0) out.claimsWithoutApply += 1;
+    }
+    const want = expectFor(t.scriptId, t.turnIndex)?.card;
+    if (!want) continue;
+    // An errored turn ended early; its missing card is not the agent's miss.
+    if (t.endedOn === 'transport_error') continue;
+    out.expected += 1;
+    const why: string[] = [];
+    if (want.kinds) {
+      const missing = want.kinds.filter((k) => !c.kinds.includes(k));
+      if (!c.staged) why.push('no card staged');
+      else if (missing.length > 0) why.push(`card lacks ${missing.join(', ')} (has ${c.kinds.join(', ')})`);
+    }
+    if (want.applied === true && c.applyExecuted === 0) why.push('no applyProposal executed');
+    if (want.applied === false && c.applyExecuted > 0) why.push('applyProposal executed');
+    if (want.noApply && c.applyAttempts > 0) why.push(`applyProposal attempted x${c.applyAttempts}`);
+    if (why.length === 0) out.met += 1;
+    else out.misses.push({ scriptId: t.scriptId, turnIndex: t.turnIndex, repeat: t.repeat, detail: why.join('; ') });
   }
   return out;
 }

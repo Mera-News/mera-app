@@ -10,8 +10,10 @@
 // choice reply with no question before it does not crash, it sends a bare
 // option string as if the user had typed it. All three are load errors.
 
+import { CARD_ACTION_KINDS } from './types';
 import type {
   AgentScript,
+  ExpectedCard,
   FakeSimilarFactsAnswer,
   FakeLookupPlaceAnswer,
   ReplyScript,
@@ -107,8 +109,25 @@ function parsePersona(scriptId: string, raw: unknown): ScriptPersona {
   if ('languageName' in rec && (typeof rec.languageName !== 'string' || rec.languageName.trim() === '')) {
     fail(scriptId, 'persona languageName must be a non-empty string, or absent.');
   }
+  const knownOutlets = rec.knownOutlets;
+  if (knownOutlets !== undefined && (!Array.isArray(knownOutlets) || knownOutlets.some((o) => typeof o !== 'string'))) {
+    fail(scriptId, 'persona knownOutlets must be an array of strings, or absent.');
+  }
+  const activeFilters = rec.activeFilters;
+  if (
+    activeFilters !== undefined &&
+    (!Array.isArray(activeFilters) ||
+      activeFilters.some((f) => {
+        const fr = asRecord(f);
+        return !fr || typeof fr.id !== 'string' || typeof fr.pattern !== 'string';
+      }))
+  ) {
+    fail(scriptId, 'persona activeFilters must be an array of { id, pattern } strings, or absent.');
+  }
   return {
     ...(typeof rec.languageName === 'string' ? { languageName: rec.languageName } : {}),
+    ...(knownOutlets !== undefined ? { knownOutlets: knownOutlets as string[] } : {}),
+    ...(activeFilters !== undefined ? { activeFilters: activeFilters as { id: string; pattern: string }[] } : {}),
     facts: facts.map((f, i) => {
       const fr = asRecord(f);
       if (!fr || typeof fr.statement !== 'string' || typeof fr.id !== 'string') {
@@ -185,8 +204,34 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
       replyScript: parseReplyScript(scriptId, i, ex.replyScript),
       replyExcludes: parseNeedles(scriptId, i, 'replyExcludes', ex.replyExcludes),
       replyMatches: parseNeedles(scriptId, i, 'replyMatches', ex.replyMatches),
+      card: parseCard(scriptId, i, ex.card),
     },
     fakeTools: parseFakeTools(scriptId, i, rec.fakeTools),
+  };
+}
+
+function parseCard(scriptId: string, i: number, raw: unknown): ExpectedCard | undefined {
+  if (raw === undefined) return undefined;
+  const c = asRecord(raw);
+  if (!c) fail(scriptId, `turn ${i} expect.card must be an object.`);
+  const kinds = c.kinds;
+  if (kinds !== undefined) {
+    const bad = !Array.isArray(kinds) || kinds.length === 0 || kinds.some((k) => !CARD_ACTION_KINDS.includes(k as never));
+    if (bad) fail(scriptId, `turn ${i} expect.card.kinds must be a non-empty list of: ${CARD_ACTION_KINDS.join(', ')}.`);
+  }
+  if (c.applied !== undefined && typeof c.applied !== 'boolean') {
+    fail(scriptId, `turn ${i} expect.card.applied must be a boolean.`);
+  }
+  if (c.noApply !== undefined && c.noApply !== true) {
+    fail(scriptId, `turn ${i} expect.card.noApply can only be true.`);
+  }
+  if (c.noApply === true && c.applied === true) {
+    fail(scriptId, `turn ${i} expect.card asks for applied: true and noApply: true at once.`);
+  }
+  return {
+    ...(kinds !== undefined ? { kinds: kinds as string[] } : {}),
+    ...(c.applied !== undefined ? { applied: c.applied as boolean } : {}),
+    ...(c.noApply === true ? { noApply: true as const } : {}),
   };
 }
 

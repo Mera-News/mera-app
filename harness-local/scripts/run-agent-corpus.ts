@@ -35,12 +35,26 @@ import { BIG_MODEL } from '../../lib/llm/constants';
 // out as its own package.
 import { agentArmIds, resolveAgentArm } from '../../lib/mera-harness/core/arms';
 import { NULL_CONTROL_ARM, ensureNullControlArm } from '../../lib/mera-harness/eval/null-control';
-import { ensureForcedOfferClosingArms } from '../../lib/mera-harness/eval/forced-offer-closing';
+import {
+  closingWiringFailures,
+  ensureForcedOfferClosingArms,
+  isClosingLeg,
+} from '../../lib/mera-harness/eval/forced-offer-closing';
 
 // ONCE, at module scope. registerAgentArm throws on a second registration, so
 // this must not move inside a loop.
 ensureNullControlArm();
 ensureForcedOfferClosingArms();
+// The onemera arms are the scout's file, landing separately. A require inside a
+// try, not an import: with the file absent the runner still works and the arms
+// are simply unknown (an unknown --variant then fails at startup, as any typo).
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const onemera = require('../../lib/mera-harness/eval/onemera-arms') as { ensureOnemeraArms?: () => void };
+  onemera.ensureOnemeraArms?.();
+} catch (err) {
+  if ((err as { code?: string }).code !== 'MODULE_NOT_FOUND') throw err;
+}
 
 import { PERSONA_SKILL_IDS } from '../../lib/mera-harness/skills/index.generated';
 import { routeKindsFor } from '../../lib/mera-harness/eval/contract';
@@ -59,6 +73,7 @@ import {
   percentile,
   proseReport,
   proposalReport,
+  cardReport,
   replyCheckReport,
   thinkingGearReport,
   toolValidityReport,
@@ -399,7 +414,8 @@ async function main(): Promise<number> {
             chat_template_kwargs: { enable_thinking: req.enableThinking ?? false },
           };
           const forced = toolChoice === 'required';
-          const toolFree = Array.isArray(req.tools) && req.tools.length === 0;
+          // A CLOSING leg only: the about-mera answer leg is tool-free too.
+          const toolFree = isClosingLeg(req);
           const stat = forcedLegs.get(arm) ?? { forced: 0, withCall: 0, reasked: 0 };
           forcedLegs.set(arm, stat);
           if (protocol !== 'native' && req.tools) {
@@ -473,13 +489,7 @@ async function main(): Promise<number> {
 
   // THE CLOSING ARMS ARE PROVEN WIRED HERE, because the distinctness check
   // exempts them: tool-free legs must appear in every closing arm and nowhere else.
-  const wiring: string[] = [];
-  for (const arm of new Set(collected.map((r) => r.arm))) {
-    const closing = /@forced-offer-closing(-twin)?(\+|$)/.test(arm);
-    const n = toolFreeLegs.get(arm)?.legs ?? 0;
-    if (!args.dryRun && closing && n === 0) wiring.push(`  ${arm}: no tool-free leg, so the closing arm never fired`);
-    if (!closing && n > 0) wiring.push(`  ${arm}: ${n} tool-free leg(s) on an arm without the closing leg`);
-  }
+  const wiring = closingWiringFailures(collected.map((r) => r.arm), toolFreeLegs, args.dryRun);
   if (wiring.length > 0) {
     // eslint-disable-next-line no-console
     console.error(`\nRUNNER BUG: closing-leg wiring\n${wiring.join('\n')}\n`);
@@ -546,7 +556,9 @@ async function main(): Promise<number> {
 export function armDistinctnessFailures(rows: EvalRow[]): string[] {
   // forced-offer-closing changes the LOOP, not the leg-0 prompt, so it and its
   // twin share baseline's prompt by design. Its wiring shows as tool-free legs.
-  const TWINS = new Set(['baseline', 'null-control', 'forced-offer-closing', 'forced-offer-closing-twin']);
+  // pre-S1 and its twin (onemera) are the same code under two names: their spread is
+  // the noise floor, so they send one leg-0 prompt by design.
+  const TWINS = new Set(['baseline', 'null-control', 'forced-offer-closing', 'forced-offer-closing-twin', 'pre-S1', 'pre-S1-twin']);
   const byPrompt = new Map<string, Set<string>>();
   for (const r of rows) {
     if (r.legIndex !== 0) continue;
@@ -620,6 +632,17 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
   out.push(`\nPROPOSALS (offered statements, sanitised; matches all present, excludes none)  ${props.met}/${props.expected}`);
   for (const m of props.misses.slice(0, 8)) {
     out.push(`  MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: wanted [${m.wanted.join(', ')}] offered ${JSON.stringify(m.offered)}`);
+  }
+
+  const cards = cardReport(turns, (id, idx) =>
+    scripts.find((s) => s.id === id)?.turns.find((t) => t.index === idx)?.expect ?? null);
+  out.push('\nCARDS (per turn, aggregated over its legs; an apply ATTEMPT counts in any leg, executed or refused)');
+  out.push(`  cards staged ${cards.staged}  kinds ${Object.entries(cards.kinds).map(([k, n]) => `${k} x${n}`).join(', ') || 'none'}`);
+  out.push(`  applyProposal attempted ${cards.applyAttempts}  executed ${cards.applyExecuted}  refused ${cards.applyRefused}`);
+  out.push(`  change claimed in the final reply ${cards.claimsChange}  (of which nothing applied ${cards.claimsWithoutApply})`);
+  out.push(`  expect.card met ${cards.met}/${cards.expected}`);
+  for (const m of cards.misses.slice(0, 8)) {
+    out.push(`    MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: ${m.detail}`);
   }
 
   const rc = replyCheckReport(turns, (id, idx) =>

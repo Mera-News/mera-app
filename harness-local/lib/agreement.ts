@@ -33,7 +33,7 @@ export function readJsonl(path: string): RunRow[] {
  */
 export function cellKey(row: RunRow): string {
   return [
-    row.cohort, row.callType, row.turnIndex, row.arm, row.variant, row.lane, row.modelRequested,
+    turnKey(row),
     // Legs of one turn are NOT repeats of each other. Without this every leg
     // lands in one cell, leg 1 and leg 3 get compared as repeats, and
     // promptDeterministic raises a false RUNNER BUG on every multi-leg turn.
@@ -42,6 +42,13 @@ export function cellKey(row: RunRow): string {
     // before and only the key string changes.
     row.legIndex ?? '-',
   ].join(' | ');
+}
+
+/** `cellKey` without the leg: the unit that has repeats. Leg counts are ragged
+ *  across repeats (one repeat ends early, another runs a re-ask), so "how many
+ *  repeats ran" is a property of the TURN, never of one leg index. */
+export function turnKey(row: RunRow): string {
+  return [row.cohort, row.callType, row.turnIndex, row.arm, row.variant, row.lane, row.modelRequested].join(' | ');
 }
 
 /** A reasoning trace in the content, by either tell: a think tag, which
@@ -226,6 +233,10 @@ export interface AgreementReport {
   rowsScored: number;
   duplicateRows: number;
   integrityFailures: string[];
+  /** A leg index some repeats of a turn never reached, though the TURN ran in
+   *  3 or more repeats. Not missing data: the turn simply took fewer legs there.
+   *  Reported apart from THIN CELL, which stays an integrity failure. */
+  raggedLegs: string[];
   cells: CellAgreement[];
   arms: ArmRollup[];
   callTypes: CallTypeRollup[];
@@ -257,7 +268,17 @@ export function computeAgreement(
   }
 
   const integrityFailures: string[] = [];
+  const raggedLegs: string[] = [];
   const cells: CellAgreement[] = [];
+  // Distinct repeats per TURN. A leg cell below 3 rows is thin only when its
+  // turn also ran in fewer than 3 repeats.
+  const repeatsByTurn = new Map<string, Set<number>>();
+  for (const row of scored) {
+    const k = turnKey(row);
+    const set = repeatsByTurn.get(k);
+    if (set) set.add(row.repeat);
+    else repeatsByTurn.set(k, new Set([row.repeat]));
+  }
 
   for (const [key, cellRows] of byCell) {
     const hashes = new Set(cellRows.map((r) => r.promptHash));
@@ -335,7 +356,13 @@ export function computeAgreement(
       countRespected,
     });
 
-    if (cellRows.length < 3) {
+    const turnRepeats = repeatsByTurn.get(turnKey(cellRows[0]))?.size ?? 0;
+    if (cellRows.length < 3 && cellRows[0].legIndex != null && turnRepeats >= 3) {
+      raggedLegs.push(
+        `RAGGED LEG: "${key}" reached in ${cellRows.length} of ${turnRepeats} repeats; ` +
+          'the turn ran fewer legs in the others. Not missing rows.',
+      );
+    } else if (cellRows.length < 3) {
       integrityFailures.push(
         `THIN CELL: "${key}" has ${cellRows.length} repeat(s). A floor needs 3 or more; ` +
           'one comparison is a coin flip.',
@@ -511,6 +538,7 @@ export function computeAgreement(
     rowsScored: scored.length,
     duplicateRows: rows.length - scored.length,
     integrityFailures,
+    raggedLegs,
     cells: cells.sort((a, b) => a.key.localeCompare(b.key)),
     arms: arms.sort((a, b) => a.arm.localeCompare(b.arm)),
   };
@@ -529,6 +557,15 @@ export function formatAgreementReport(r: AgreementReport): string {
     for (const f of r.integrityFailures) out.push(`  ! ${f}`);
   } else {
     out.push('integrity: every cell held one prompt hash and one nonce across its repeats.');
+  }
+  if (r.raggedLegs.length > 0) {
+    out.push('');
+    out.push(
+      `RAGGED LEGS (${r.raggedLegs.length} leg cells reached in fewer repeats than their turn ran; ` +
+        'leg counts differ per repeat by design, so these are not thin and not integrity failures):',
+    );
+    for (const f of r.raggedLegs.slice(0, 5)) out.push(`  ~ ${f}`);
+    if (r.raggedLegs.length > 5) out.push(`  ~ ... and ${r.raggedLegs.length - 5} more`);
   }
 
   out.push('');

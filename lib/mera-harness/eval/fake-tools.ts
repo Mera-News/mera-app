@@ -25,9 +25,10 @@ import type {
   AgentTurnState,
   FindSimilarFactsResult,
   LookupPlaceResult,
+  PendingProposalView,
   Place,
 } from './contract';
-import type { AgentScript, ScriptPersona, ScriptTurn } from './types';
+import { CARD_ACTION_KINDS, type AgentScript, type ScriptPersona, type ScriptTurn } from './types';
 
 export interface FakeToolLog {
   /** Per tool name, how many times it was called THIS TURN. The choice test
@@ -48,6 +49,9 @@ export interface FakeToolLog {
    *  would carry, so a choice reply maps back to its STRUCTURED payload rather
    *  than a bare display string. */
   placePayloads: Map<string, Place>;
+  /** applyProposal calls that reached the port. The metric reads the rows, not
+   *  this; it is here so a test can see the port was reached. */
+  appliedCards: { proposalId: string; actions: Record<string, unknown>[] }[];
   savedFacts: { statement: string; replaces: string | null; place: unknown }[];
   deleted: string[];
 }
@@ -59,10 +63,13 @@ export function freshLog(): FakeToolLog {
     similarFactsWithoutKind: 0,
     ungatedDeletesReachingPort: [],
     placePayloads: new Map(),
+    appliedCards: [],
     savedFacts: [],
     deleted: [],
   };
 }
+
+const foldOutlet = (o: string): string => o.trim().toLowerCase().replace(/\s+/g, ' ');
 
 function normaliseQuery(q: string): string {
   return q.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -79,6 +86,12 @@ export interface FakeToolsHandle {
   log: FakeToolLog;
   persona: ScriptPersona;
   declined: Set<string>;
+  /** The card on the fake screen, as the loop's state sees it, or null. Held
+   *  across TURNS of a script like the device holds it: a staged card is still
+   *  waiting on the next turn until applyProposal / cancelProposal clears it. */
+  pendingProposal(): PendingProposalView | null;
+  /** The filters the loop's `<filters>` state lists; apply and retire change it. */
+  activeFilters(): { id: string; pattern: string }[];
   /** Called between turns. Clears the per-turn counters and points the fakes
    *  at this turn's scripted answers; the persona mutations carry forward,
    *  because they are the conversation. */
@@ -94,6 +107,11 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
   const log = freshLog();
   let turn: ScriptTurn | null = null;
   let state: AgentTurnState | null = null;
+  const filters = (persona.activeFilters ??= []);
+  const outlets = new Set((persona.knownOutlets ?? []).map(foldOutlet));
+  let card: { view: PendingProposalView; actions: Record<string, unknown>[] } | null = null;
+  let cardCount = 0;
+  let filterCount = 0;
 
   const count = (name: string): void => {
     log.calls[name] = (log.calls[name] ?? 0) + 1;
@@ -204,6 +222,60 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
       log.deleted.push(...deleted);
       return { deleted };
     },
+
+    // CARDS. Staging changes nothing; the slot is what the next turn's state
+    // reports. The device's sanitizer decides what a card may hold; the fake
+    // mirrors the one rule an eval needs: an outlet the persona does not know
+    // is refused, so a model that invents one is seen doing it.
+    async proposeChanges(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+      count('proposeChanges');
+      const raw = Array.isArray(args.actions) ? args.actions : [];
+      const actions: Record<string, unknown>[] = [];
+      for (const a of raw) {
+        const rec = a && typeof a === 'object' ? (a as Record<string, unknown>) : null;
+        const type = typeof rec?.type === 'string' ? rec.type : '';
+        if (!rec || !CARD_ACTION_KINDS.includes(type as never)) {
+          return { error: `unsupported action type: ${type || '(none)'}` };
+        }
+        if (type === 'set_publication_pref') {
+          const name = typeof rec.publicationId === 'string' ? rec.publicationId : '';
+          if (!outlets.has(foldOutlet(name))) return { error: `unknown publication: ${name || '(none)'}` };
+        }
+        actions.push({ ...rec });
+      }
+      if (actions.length === 0) return { error: 'no actions to stage' };
+      cardCount += 1;
+      const proposalId = `card-${cardCount}`;
+      const summary = typeof args.explanation === 'string' ? args.explanation : actions.map((a) => String(a.type)).join(', ');
+      // All four kinds are applicable by typing and none is an alternative.
+      card = { view: { id: proposalId, summary, chooseOne: false, appliable: true }, actions };
+      return { staged: true, proposalId, actions };
+    },
+
+    async applyProposal(): Promise<Record<string, unknown>> {
+      count('applyProposal');
+      if (!card) return { error: 'No card is waiting.' };
+      const done = card;
+      card = null;
+      for (const a of done.actions) {
+        if (a.type === 'add_suppression') {
+          filterCount += 1;
+          filters.push({ id: `sup-${filterCount}`, pattern: String(a.suppressionPattern ?? '') });
+        } else if (a.type === 'retire_suppression') {
+          const at = filters.findIndex((f) => f.id === a.suppressionId);
+          if (at >= 0) filters.splice(at, 1);
+        }
+      }
+      log.appliedCards.push({ proposalId: done.view.id, actions: done.actions });
+      return { applied: done.actions.length, errors: [] };
+    },
+
+    async cancelProposal(): Promise<Record<string, unknown>> {
+      count('cancelProposal');
+      if (!card) return { error: 'No card is waiting.' };
+      card = null;
+      return { cancelled: true };
+    },
   };
 
   return {
@@ -211,6 +283,8 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
     log,
     persona,
     declined,
+    pendingProposal: () => (card ? { ...card.view } : null),
+    activeFilters: () => filters.map((f) => ({ ...f })),
     beginTurn(next: ScriptTurn, turnState: AgentTurnState | null): void {
       turn = next;
       state = turnState;

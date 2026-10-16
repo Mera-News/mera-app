@@ -224,6 +224,30 @@ export interface ScriptExpect {
   replyExcludes?: string[];
   /** Lowercase substrings, at least ONE of which must appear. */
   replyMatches?: string[];
+  /** Checks on the CARD this turn staged or settled (CARDS block). Absent
+   *  means the turn is not scored on cards. */
+  card?: ExpectedCard;
+}
+
+/** The four action kinds a persona card carries (core/tool-contracts.ts
+ *  PROPOSE_CHANGES_TOOL). Re-declared: the eval scores the model's arguments
+ *  and must not move when the tool contract's enum does. */
+export const CARD_ACTION_KINDS = [
+  'add_suppression',
+  'retire_suppression',
+  'set_publication_pref',
+  'set_source_scope_pref',
+] as const;
+
+export interface ExpectedCard {
+  /** Every listed kind must be among the staged card's action kinds, and a card
+   *  must have been staged this turn. */
+  kinds?: string[];
+  /** true: an applyProposal call EXECUTED (no error) this turn. false: none
+   *  executed (a refused attempt is allowed; use noApply to forbid attempts). */
+  applied?: boolean;
+  /** true: NO applyProposal call at all this turn, executed or refused. */
+  noApply?: true;
 }
 
 export type ReplyScript = 'devanagari';
@@ -288,6 +312,12 @@ export interface ScriptPersona {
     placeChain?: import('./contract').Place;
   }[];
   topics: { id: string; text: string }[];
+  /** Outlets `set_publication_pref` may name (case and spacing folded). The fake
+   *  card tool refuses any other, as the device's sanitizer does. Absent: none. */
+  knownOutlets?: string[];
+  /** The user's active filters at the start of the script, as the loop's
+   *  `<filters>` state lists them. The fake card tool adds and retires them. */
+  activeFilters?: { id: string; pattern: string }[];
   /** The app language, passed to the loop as `AgentPersona.languageName`. It
    *  stands in for what `buildAgentPersona` resolves on the device (the eval
    *  drives runAgentTurn directly). Absent gives the "match the user's

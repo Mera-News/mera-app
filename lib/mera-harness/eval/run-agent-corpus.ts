@@ -116,6 +116,8 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
       schemaValid = Array.isArray(parsed.fact_ids);
     } else if (name === 'webSearch') {
       schemaValid = Array.isArray(parsed.queries) && parsed.queries.length >= 1;
+    } else if (name === 'proposeChanges') {
+      schemaValid = Array.isArray(parsed.actions) && parsed.actions.length >= 1;
     } else if (name === 'explainMera') {
       schemaValid = Array.isArray(parsed.topics) && parsed.topics.length >= 1;
     }
@@ -136,6 +138,7 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
 const KNOWN_TOOLS = new Set([
   'load_skill', 'find_similar_facts', 'findSimilarFacts', 'lookup_place', 'lookupPlace',
   'ask_choice', 'saveExtractedFacts', 'deleteUserFacts', 'webSearch', 'explainMera',
+  'proposeChanges', 'applyProposal', 'cancelProposal',
   // Loop-written, never the model's: the "Save as I wrote it" chip (ux2 D9).
   'saveAsWritten',
 ]);
@@ -182,6 +185,29 @@ function endedOnFor(
   return 'settled';
 }
 
+/**
+ * Each call's result, paired BY INDEX within the leg. The loop pushes one result
+ * per call in call order, so the Nth result answers the Nth call. Pairing by NAME
+ * (the old Map) gave two calls to the same tool in one leg the LAST result.
+ *
+ * The name is checked, not trusted: a call the loop dropped without a result
+ * would shift every later pair. On a mismatch the call takes the first unused
+ * result of its own name, and null when there is none.
+ */
+export function resultsByIndex(
+  calls: readonly { name: string }[],
+  results: readonly { name: string; result: unknown }[],
+): unknown[] {
+  const used = new Set<number>();
+  return calls.map((c, i) => {
+    let at = results[i]?.name === c.name && !used.has(i) ? i : -1;
+    if (at < 0) at = results.findIndex((r, j) => r.name === c.name && !used.has(j));
+    if (at < 0) return null;
+    used.add(at);
+    return results[at].result;
+  });
+}
+
 function personaFor(script: AgentScript): AgentPersona {
   return {
     facts: script.persona.facts.map((f) => ({
@@ -215,6 +241,10 @@ export async function runAgentScript(
   for (const turn of script.turns) {
     const userMessage = resolveUserMessage(turn, state.turn, script, opts);
     fakes.beginTurn(turn, state.turn);
+    // The card slot and the filters live in the fake across turns, like the
+    // device's screen: a card staged on turn N is still waiting on turn N+1.
+    state.pendingProposal = fakes.pendingProposal();
+    state.activeFilters = fakes.activeFilters();
 
     const turnStartedAtMs = now();
     const captured: CapturedRequest[] = [];
@@ -269,7 +299,7 @@ export async function runAgentScript(
     result.legs.forEach((leg, i) => {
       const cap = captured[i];
       const isLast = i === result.legs.length - 1;
-      const toolResults = new Map(leg.toolResults.map((t) => [t.name, t.result]));
+      const resultFor = resultsByIndex(leg.toolCalls, leg.toolResults);
       opts.sink({
         scriptId: script.id,
         cohort: script.cohort,
@@ -289,8 +319,8 @@ export async function runAgentScript(
         messages: leg.messages,
         toolSchemaNames: cap?.toolNames ?? [],
         rawOutput: leg.rawOutput,
-        toolCalls: leg.toolCalls.map((t) =>
-          parseToolCall(t.name, t.argumentsRaw, KNOWN_TOOLS, toolResults.get(t.name) ?? null),
+        toolCalls: leg.toolCalls.map((t, ti) =>
+          parseToolCall(t.name, t.argumentsRaw, KNOWN_TOOLS, resultFor[ti]),
         ),
         turnStartedAtMs,
         legStartedAtMs: cap?.startedAtMs ?? turnStartedAtMs,
