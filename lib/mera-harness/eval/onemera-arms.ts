@@ -28,9 +28,11 @@ export function ensureOnemeraArms(): void {
   const add = (arm: Parameters<typeof registerAgentArm>[0]): void => {
     if (!have.has(arm.id)) registerAgentArm(arm);
   };
-  add({ id: 'pre-S1', description: 'S1 control: feed-tuning hidden, shipped router.', hideSkills: S1_SKILLS });
-  add({ id: 'pre-S1-twin', description: 'Twin of pre-S1, for the noise floor.', hideSkills: S1_SKILLS });
-  add({ id: 'S1', description: 'S1 candidate: feed-tuning and its router row.', routerBody: S1_ROUTER_BODY });
+  // S1 is measured without the S1.5 recent block on all three arms, so the S1
+  // gate measures S1 alone whatever commit it runs at.
+  add({ id: 'pre-S1', description: 'S1 control: feed-tuning hidden, shipped router.', hideSkills: S1_SKILLS, recentConversation: 'off' });
+  add({ id: 'pre-S1-twin', description: 'Twin of pre-S1, for the noise floor.', hideSkills: S1_SKILLS, recentConversation: 'off' });
+  add({ id: 'S1', description: 'S1 candidate: feed-tuning and its router row.', routerBody: S1_ROUTER_BODY, recentConversation: 'off' });
   // S1.5: the control has no recent-conversation block (the old antecedent and
   // conversation-only blocks) on the S1 router; the candidate has the block on
   // every leg and the back-reference routing line.
