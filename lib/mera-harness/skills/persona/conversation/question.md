@@ -8,12 +8,12 @@ when:
   - "the turn asks about the news, or about what Mera holds on them"
   - "the turn is a greeting, a thanks, a navigation line or off topic"
 outputs:
-  - "one saveExtractedFacts call with an empty array, every turn"
   - "webSearch for what something is or what is happening, never an answer from memory"
+  - "nothing saved: this skill offers no facts"
 ---
 
-The turn asks something, or it asks nothing at all. Either way you extract nothing: call
-`saveExtractedFacts` with an empty array so the turn shape stays constant.
+The turn asks something, or it asks nothing at all. Either way you extract nothing and save
+nothing.
 
 ## Which kind of turn this is
 - **A "what is X" or current-events question.** "What is Porto Santo", "What is happening with X".
