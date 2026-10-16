@@ -47,20 +47,50 @@ function languageRule(languageName?: string): string {
  * (a Hindi reader got English) and lost the no-dash rule.
  */
 export function voiceRules(languageName?: string): string {
-  const brand = brandName(languageName);
   return `## Voice
-${languageRule(languageName)}${brand ? `\n- NAME: In ${languageName} text write the app's name as ${brand}, never मिरा, मीरा or मिस्टर.` : ''}
+${languageRule(languageName)}
 ${PUNCTUATION_RULE}`;
 }
 
 /**
  * The app's name as the app's own copy spells it, where the model gets it
- * wrong. Hindi only: staging wrote "मिरा" and "मिस्टर", and the Hindi locale
- * writes "मेरा ऐप" because "मेरा" alone reads as "my". Other scripts are
- * unmeasured, so they get no line.
+ * wrong. Hindi only: staging wrote "मिरा", "मीरा", "मैरा" and "मर्रा", and the
+ * Hindi locale writes "मेरा ऐप" because "मेरा" alone reads as "my". Other
+ * scripts are unmeasured, so they get nothing.
  */
-export function brandName(languageName?: string): string | null {
-  return languageName === 'Hindi' ? 'मेरा ऐप' : null;
+const BRAND: Record<string, { name: string; misspelt: string[] }> = {
+  Hindi: { name: 'मेरा ऐप', misspelt: ['मिरा', 'मीरा', 'मैरा', 'मर्रा'] },
+};
+
+/**
+ * The skill legs' name line. Positive only: naming the wrong spellings in it
+ * primed them (staging round 2: 4 misspelt replies against 0 without it). Not
+ * on the router prompt, whose bytes the route leg's accuracy was measured on.
+ */
+export function brandRule(languageName?: string): string {
+  const b = languageName ? BRAND[languageName] : undefined;
+  return b ? `- NAME: In ${languageName} text the app's name is ${b.name}, as the app itself writes it.` : '';
+}
+
+/**
+ * Rewrites a misspelt brand to the app's own spelling, deterministically: a
+ * prompt line alone did not hold (prose emphasis is not a lever on this
+ * model). A misspelling the user typed or a fact holds is left alone, since
+ * "मीरा" is also a person's name.
+ */
+const DEV_WORD = '\\u0900-\\u0963\\u0966-\\u097F';
+
+export function fixBrandSpelling(text: string, languageName: string | undefined, context: string): string {
+  const b = languageName ? BRAND[languageName] : undefined;
+  if (!b || !text) return text;
+  let out = text;
+  for (const w of b.misspelt) {
+    if (context.includes(w)) continue;
+    // Whole word only: no Devanagari letter or sign on either side (the
+    // danda, U+0964/5, is punctuation and ends a word).
+    out = out.replace(new RegExp(`(^|[^${DEV_WORD}])${w}(?:\\s+ऐप)?(?![${DEV_WORD}])`, 'g'), `$1${b.name}`);
+  }
+  return out;
 }
 
 const TOOL_GUIDE = `## Your tools

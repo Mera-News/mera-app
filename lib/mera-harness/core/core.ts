@@ -5,7 +5,7 @@
 // app rather than about a parallel implementation.
 
 import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
-import { brandName, buildRouterPrompt, voiceRules, type PersonaSurface } from './router-prompt';
+import { brandRule, buildRouterPrompt, fixBrandSpelling, voiceRules, type PersonaSurface } from './router-prompt';
 import {
   claimsSaveHappened,
   cleanProse,
@@ -95,16 +95,15 @@ const CLOSING_LINE_NOTE =
  * and credit, and about half re-called explainMera, so the prose beside that
  * call ("I'll pull Mera's reference...") became the reply.
  */
-function aboutMeraAnswerNote(languageName?: string): string {
-  const brand = brandName(languageName);
-  const lang = languageName
-    ? `in ${languageName}${brand ? `, writing the app's name as ${brand}` : ''}`
-    : 'in the language of their message';
+function aboutMeraAnswerNote(userMessage: string, languageName?: string): string {
+  const lang = languageName ? `in ${languageName}` : 'in the language of their message';
   // Only for a non-English reader: said to everyone, it sent a Ghent persona's
   // English question back in Dutch (staging round 1).
   const notEnglish = languageName && languageName !== 'English' ? ' The reference text is English; your answer is not.' : '';
-  return 'Mera\'s reference text is in the explainMera result above. Answer their message now, '
-    + `from that text only, ${lang}.${notEnglish} Do not call a tool.`;
+  // The question is QUOTED: "their message" after a tool result was read as
+  // ambiguous, and two round-2 answers said the question had been cut off.
+  return `Their question: "${escapeUntrusted(userMessage, 500)}". Mera's reference text is in the explainMera `
+    + `result above. Answer that question now, from that text only, ${lang}.${notEnglish} Do not call a tool.`;
 }
 
 /** An about-mera leg that answered before calling explainMera. Staging: the
@@ -447,7 +446,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // language and punctuation rules live, so they are re-appended to the body.
   // Last in the PROMPT, not on the wire: text-xml appends the English tools
   // block after it, and tool results follow (see `aboutMeraAnswerNote`).
-  const skillPrompt = (body: string): string => `${body}\n\n${voiceRules(state.persona.languageName)}`;
+  const brandLine = brandRule(state.persona.languageName);
+  const skillPrompt = (body: string): string =>
+    `${body}\n\n${voiceRules(state.persona.languageName)}${brandLine ? `\n${brandLine}` : ''}`;
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;
   /** Every skill this turn ran, in order. One entry unless the multi-subject
@@ -825,7 +826,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
     // Once the reference text is in, every later leg of the turn is the answer.
     const answerLegNow = skillLoaded === 'conversation/about-mera' && explainedFrom(toolResultsThisTurn);
-    if (answerLegNow) messages.push({ role: 'user', content: aboutMeraAnswerNote(state.persona.languageName) });
+    if (answerLegNow) messages.push({ role: 'user', content: aboutMeraAnswerNote(userMessage, state.persona.languageName) });
 
     const inputTokens =
       estimateTokens(systemPrompt) + messages.reduce((n, m) => n + estimateTokens(m.content), 0);
@@ -2070,6 +2071,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   turn.offeredStatements = resumedSkill
     ? [...new Set([...turn.offeredStatements, ...offeredThisTurn])]
     : offeredThisTurn;
+  // The app's own spelling of its name, after every check above (hindifix F).
+  const brandContext = [userMessage, ...state.persona.facts.map((f) => f.statement)].join('\n');
+  reply = fixBrandSpelling(reply, state.persona.languageName, brandContext);
+  acknowledgement = fixBrandSpelling(acknowledgement, state.persona.languageName, brandContext);
   turn.lastTurnAskedQuestion = turn.pendingChoice !== null || /\?\s*$/.test(reply);
   // The chip question wins over the prose one: when both exist the chips are
   // what is on screen, so they are what the next message answers.

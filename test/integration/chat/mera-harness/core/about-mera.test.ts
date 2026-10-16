@@ -5,7 +5,7 @@
 import { createAgentState, runAgentTurn, type AgentPersona } from '@/lib/mera-harness/core/core';
 import { MULTI_SUBJECT_ARM_ID } from '@/lib/mera-harness/core/arms';
 import { EXPLAIN_MERA_TOOL } from '@/lib/mera-harness/core/tool-contracts';
-import { voiceRules } from '@/lib/mera-harness/core/router-prompt';
+import { brandRule, fixBrandSpelling, voiceRules } from '@/lib/mera-harness/core/router-prompt';
 import { leaksInternals } from '@/lib/mera-harness/core/prose';
 import { loadSkill, renderSkillIndex, skillIds } from '@/lib/mera-harness/core/skill-loader';
 import { PERSONA_SKILL_INDEX } from '@/lib/mera-harness/skills/index.generated';
@@ -203,7 +203,7 @@ describe('hindifix F: the about-mera answer leg', () => {
   const SECTIONS = { sections: [{ topic: 'plans_and_limits', text: 'Starter includes 10 MB of cloud reading a day.' }] };
   const CALL = res({ content: 'एक पल।', toolCalls: [tc('explainMera', { topics: ['plans_and_limits'] })] });
 
-  it('is tool-free and ends on a note naming the language and the Hindi brand spelling', async () => {
+  it('is tool-free and ends on a note naming the language and quoting the question', async () => {
     const explainMera = jest.fn(async () => SECTIONS);
     const h = harness([ROUTE, CALL, res({ content: 'स्टार्टर में रोज़ 10 MB मिलते हैं।' })], { explainMera });
     const out = await runAgentTurn({ state: createAgentState(HINDI), userMessage: 'मेरे प्लान में रोज़ कितना मिलता है?', deps: h.deps });
@@ -212,7 +212,9 @@ describe('hindifix F: the about-mera answer leg', () => {
     const last = h.calls[2].messages[h.calls[2].messages.length - 1];
     expect(last.role).toBe('user');
     expect(last.content).toContain('Hindi');
-    expect(last.content).toContain('मेरा ऐप');
+    // Round 2: "Answer their message" after a tool result read as ambiguous and
+    // two answers said the question was cut off. The note quotes it.
+    expect(last.content).toContain('मेरे प्लान में रोज़ कितना मिलता है?');
     expect(last.content).toMatch(/only/i);
     expect(out.reply).toBe('स्टार्टर में रोज़ 10 MB मिलते हैं।');
   });
@@ -278,13 +280,34 @@ describe('hindifix F: the about-mera answer leg', () => {
     expect(h.calls[2].tools).toContain('explainMera');
   });
 
-  it('the Hindi voice rules carry the brand spelling, other languages do not', () => {
-    expect(voiceRules('Hindi')).toContain('मेरा ऐप');
-    // The lines Hindi adds carry no dash: only the ban clause may name one.
-    const english = voiceRules('English').split('\n');
-    expect(voiceRules('Hindi').split('\n').filter((l) => !english.includes(l)).join('\n')).not.toMatch(/[–—]/);
-    expect(voiceRules('English')).not.toContain('मेरा');
-    expect(voiceRules(undefined)).not.toContain('मेरा');
+  it('the Hindi brand line rides on skill legs only, positively worded, and never on the router', async () => {
+    const h = harness([
+      res({ content: 'ठीक है।', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'नमस्ते।' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(HINDI), userMessage: 'नमस्ते', deps: h.deps });
+    expect(h.calls[0].systemPrompt).not.toContain('मेरा ऐप');
+    expect(h.calls[1].systemPrompt).toContain('मेरा ऐप');
+    // Round 2: naming the bad spellings in the rule primed them (4 of 9 vs 0).
+    expect(h.calls[1].systemPrompt).not.toMatch(/मिरा|मीरा|मिस्टर/);
+    expect(h.calls[1].systemPrompt).not.toMatch(/NAME[^\n]*[–—]/);
+    expect(voiceRules('Hindi')).not.toContain('मेरा ऐप');
+    expect(brandRule('English')).toBe('');
+    expect(brandRule(undefined)).toBe('');
+  });
+
+  it('a misspelt Hindi brand is rewritten in the reply, unless the user wrote that word', async () => {
+    const run = async (msg: string, answer: string) => {
+      const h = harness([ROUTE, CALL, res({ content: answer })], { explainMera: async () => SECTIONS });
+      return (await runAgentTurn({ state: createAgentState(HINDI), userMessage: msg, deps: h.deps })).reply;
+    };
+    expect(await run('प्लान?', 'मिरा ऐप में रोज़ 10 MB मिलते हैं।')).toBe('मेरा ऐप में रोज़ 10 MB मिलते हैं।');
+    expect(await run('प्लान?', 'मीरा एक न्यूज़ असिस्टेंट है।')).toBe('मेरा ऐप एक न्यूज़ असिस्टेंट है।');
+    expect(await run('प्लान?', 'मैरा और मर्रा।')).toBe('मेरा ऐप और मेरा ऐप।');
+    expect(await run('प्लान?', 'मिराज नहीं।')).toBe('मिराज नहीं।');
+    // A person's name the user typed stays.
+    expect(await run('मेरी बेटी मीरा क्या पढ़े?', 'मीरा के लिए 10 MB।')).toBe('मीरा के लिए 10 MB।');
+    expect(fixBrandSpelling('Mira reads it.', 'English', '')).toBe('Mira reads it.');
   });
 });
 
