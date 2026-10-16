@@ -28,6 +28,9 @@ import { handleDeleteUserFacts, handleExplainMera, handleSaveExtractedFacts } fr
 import { handleWebSearch } from './web-search-handler';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { getFacts } from '../database/services/fact-service';
+import { useAppLanguageStore } from '../stores/app-language-store';
+import { SUPPORTED_LANGUAGES } from '../translation-service';
+import { canonicalizeLanguageCode } from '../algorithms/language-codes';
 import type { AgentPersona } from '@/lib/mera-harness';
 import logger from '../logger';
 
@@ -569,6 +572,18 @@ export function logAgentTurn(reason: string, unknownTools: string[]): void {
 
 
 /**
+ * The app language's English name ("Hindi"), which pins every reply. Without
+ * it the loop is told only to match the user's language, and a reader on a
+ * Hindi app who types English, or whose question loads a skill, gets English.
+ */
+function appLanguageName(): string {
+  const code = canonicalizeLanguageCode(useAppLanguageStore.getState().appLanguage) ?? 'en';
+  const match = SUPPORTED_LANGUAGES.find((l) => l.code === code)
+    ?? SUPPORTED_LANGUAGES.find((l) => l.code === code.split('-')[0]);
+  return match?.name ?? 'English';
+}
+
+/**
  * The persona the loop reasons over, read fresh EVERY turn.
  *
  * Never cached across turns: the facts table is the authority, and a cached
@@ -577,7 +592,7 @@ export function logAgentTurn(reason: string, unknownTools: string[]): void {
  */
 export async function buildAgentPersona(
   agentId: string,
-  languageName?: string,
+  languageName: string = appLanguageName(),
 ): Promise<AgentPersona> {
   const facts = await getFacts();
   return {

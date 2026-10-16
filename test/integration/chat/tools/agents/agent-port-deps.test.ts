@@ -265,3 +265,33 @@ describe('makeAgentDeps honours Stop', () => {
     expect(out.proposals).toHaveLength(0);
   });
 });
+
+// hindifix: the app never passed its language into the loop, so every reply was
+// told only to "match the user's language" instead of being pinned to the app's.
+describe('buildAgentPersona pins the app language', () => {
+  it.each([
+    ['hi', 'Hindi'],
+    ['zh-CN', 'Chinese (Simplified)'],
+    ['en', 'English'],
+  ])('app language %s reaches the loop as %s', async (code, name) => {
+    const { useAppLanguageStore } = require('@/lib/stores/app-language-store') as typeof import('@/lib/stores/app-language-store');
+    const { buildAgentPersona } = require('@/lib/chat-tools/agent-device-port') as typeof import('@/lib/chat-tools/agent-device-port');
+    useAppLanguageStore.setState({ appLanguage: code });
+
+    const persona = await buildAgentPersona('persona-ONBOARDING');
+
+    expect(persona.languageName).toBe(name);
+  });
+
+  it('the pinned language is in the system prompt the gateway receives', async () => {
+    server.use(...mockGateway(() => 'ok'));
+    const { useAppLanguageStore } = require('@/lib/stores/app-language-store') as typeof import('@/lib/stores/app-language-store');
+    const { buildAgentPersona } = require('@/lib/chat-tools/agent-device-port') as typeof import('@/lib/chat-tools/agent-device-port');
+    useAppLanguageStore.setState({ appLanguage: 'hi' });
+
+    const state = createAgentState(await buildAgentPersona('persona-ONBOARDING'));
+    await runAgentTurn({ state, userMessage: 'नमस्ते', deps: makeAgentDeps('नमस्ते', jest.fn()) });
+
+    expect(gatewayCalls('chat')[0].messages[0].content).toContain('**Hindi**');
+  });
+});
