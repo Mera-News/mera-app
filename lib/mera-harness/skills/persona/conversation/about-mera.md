@@ -9,6 +9,11 @@ when:
 outputs:
   - "leg 1: one short holding line and one explainMera call with 1 to 3 topic ids"
   - "leg 2: the full answer in plain words, only from what explainMera returned"
+tools:
+  - "find_similar_facts"
+  - "lookup_place"
+  - "ask_choice"
+  - "explainMera"
 ---
 
 The turn asks about Mera itself. Answer it, from Mera's own reference text, which `explainMera`

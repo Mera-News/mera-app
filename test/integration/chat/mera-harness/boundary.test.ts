@@ -30,6 +30,9 @@ const FORBIDDEN: { pattern: RegExp; why: string }[] = [
   { pattern: /(^|\/)harness-local(\/|$)/, why: 'harness-local' },
   { pattern: /(^|\/)logger$/, why: 'the app logger' },
   { pattern: /(^|\/)place-service$/, why: 'place-service (Bloc is declared HERE instead)' },
+  // The proposal sanitizers and article brains live there and run in the
+  // device port; the harness only dispatches to port methods.
+  { pattern: /(^|\/)news-harness(\/|$)/, why: 'news-harness (its brains run in the device port)' },
 ];
 
 const IMPORT_RE = /(?:^|\n)\s*(?:import|export)[\s\S]*?from\s*['"]([^'"]+)['"]/g;
@@ -92,9 +95,11 @@ describe('lib/mera-harness is RN-free', () => {
       import { useRef } from 'react';
       import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
       import { getFacts } from '../database/services/fact-service';
+      import { decideProposeChanges } from '../../news-harness/article-feedback/agent-core';
     `;
     const bad = offendersIn(rnDriver);
     expect(bad.map((b) => b.spec).sort()).toEqual([
+      '../../news-harness/article-feedback/agent-core',
       '../database/services/fact-service',
       '@/lib/stores/cloud-chat-store',
       'react',

@@ -49,6 +49,11 @@ export interface StateLineInput {
   finerArea?: string | null;
   /** Several subjects in one message: this leg handles one of them. */
   segmentScope?: { mine: string; others: string[]; questionPending: boolean } | null;
+  /** The card waiting for the user, and whether this leg can answer it. */
+  pendingCard?: { summary: string; chooseOne: boolean; appliable: boolean } | null;
+  /** A card was staged or answered earlier in THIS turn: the model cannot see
+   *  its own earlier calls, so the line says so. */
+  cardThisTurn?: 'staged' | 'applied' | 'cancelled' | null;
 }
 
 export function buildStateLine(input: StateLineInput): string {
@@ -140,6 +145,26 @@ export function buildStateLine(input: StateLineInput): string {
     parts.push(
       `Cards already waiting for the user: ${rows}. Never offer these again, in any wording; `
       + 'the user can still answer them.',
+    );
+  }
+
+  if (input.cardThisTurn) {
+    parts.push(
+      input.cardThisTurn === 'staged'
+        ? 'You put a card on screen this turn. Do not stage another; say in one short sentence what it offers.'
+        : input.cardThisTurn === 'applied'
+          ? 'You applied the waiting card this turn. Say in one short sentence what changed.'
+          : 'You dropped the waiting card this turn. Say in one short sentence that nothing changed.',
+    );
+  } else if (input.pendingCard) {
+    const card = `A card is waiting for the user: "${escapeUntrusted(input.pendingCard.summary, 300)}".`;
+    parts.push(
+      input.pendingCard.appliable
+        ? `${card} If this message agrees to it, in any language, call applyProposal. If it declines, call `
+          + 'cancelProposal. Anything else leaves the card waiting; never say it is done.'
+        : `${card} ${input.pendingCard.chooseOne ? 'It offers options, and only' : 'Only'} a tap on the card `
+          + 'applies it: if they agree, say "Tap the one you want on the card above." If it declines, call '
+          + 'cancelProposal. Never say it is done.',
     );
   }
 

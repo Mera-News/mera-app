@@ -22,6 +22,7 @@ export type {
   LoadSkillResult,
   LookupPlaceArgs,
   LookupPlaceResult,
+  PendingProposalView,
   Place,
   PlaceChain,
   SimilarFactCandidate,
@@ -65,7 +66,9 @@ export {
 } from './core/topic-call';
 
 export {
+  APPLY_PROPOSAL_TOOL,
   ASK_CHOICE_TOOL,
+  CANCEL_PROPOSAL_TOOL,
   CONTINUATION_TOOLS,
   FIND_SIMILAR_FACTS_TOOL,
   HARNESS_TOOLS,
@@ -73,6 +76,8 @@ export {
   LOOKUP_PLACE_TOOL,
   MAX_CHOICE_OPTIONS,
   MIN_CHOICE_OPTIONS,
+  PROPOSE_CHANGES_TOOL,
+  SKILL_TOOL_ORDER,
   validateChoiceOptions,
   type ToolDefinition,
 } from './core/tool-contracts';
@@ -101,6 +106,8 @@ export {
   renderSkillIndex,
   skillIds,
   skillIndexRows,
+  skillThinking,
+  skillTools,
   type SkillId,
   type SkillIndexRow,
 } from './core/skill-loader';

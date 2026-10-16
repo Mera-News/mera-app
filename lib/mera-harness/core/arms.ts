@@ -57,6 +57,13 @@ export interface AgentArm {
   /** Absent means OFF. 'on' gives a forced offer that proposed and said nothing
    *  one tool-free leg for a closing sentence. */
   forcedOfferClosing?: 'off' | 'on';
+  /** Skills this arm hides: absent from the router's index, and a load_skill
+   *  for one answers "unknown skill id". The control for a step that adds a
+   *  destination, so the before is measured with the destination absent. */
+  hideSkills?: readonly string[];
+  /** Whole replacement for router.md's procedure (a value, like
+   *  `routerPrompt`): a router change is measured as an arm before it ships. */
+  routerBody?: string;
 }
 
 const BASELINE: AgentArm = {

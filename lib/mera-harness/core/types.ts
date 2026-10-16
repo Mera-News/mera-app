@@ -204,6 +204,14 @@ export interface AgentTurnState {
    * still sitting on screen unanswered.
    */
   offeredStatements: string[];
+  /** Counts turns, so a waiting card and a waiting chip question can be
+   *  ordered: the most recent ask is the one a reply answers. */
+  turnNumber: number;
+  /** The turn whose `ask_choice` is waiting, or null. */
+  choiceTurn: number | null;
+  /** The last card this loop staged: which skill staged it (resumed when the
+   *  route leg applies or drops it) and on which turn. */
+  lastCard: { proposalId: string | null; skill: string; turn: number } | null;
 }
 
 export function createAgentTurnState(): AgentTurnState {
@@ -219,7 +227,23 @@ export function createAgentTurnState(): AgentTurnState {
     lastReply: null,
     confirmedPlace: null,
     offeredStatements: [],
+    turnNumber: 0,
+    choiceTurn: null,
+    lastCard: null,
   };
+}
+
+/**
+ * The card waiting for the user's tap or agreement, as the driver sees it
+ * before a turn. `summary` is device-written text describing the card.
+ */
+export interface PendingProposalView {
+  id: string;
+  summary: string;
+  /** Alternatives: only the tap knows which one, so typing never applies it. */
+  chooseOne: boolean;
+  /** Typed agreement may apply it: one option and no tap-only action. */
+  appliable: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -293,6 +317,13 @@ export interface AgentToolPort {
   /** Mera's own reference text on the topics asked for. Declared only on the
    *  `conversation/about-mera` leg, and only when the port offers it. */
   explainMera?(args: { topics: string[] }): Promise<Record<string, unknown>>;
+  /** Stage a card (filters and sources). The result carries `proposalId` and
+   *  the sanitized `actions`, or `error` when nothing could be staged. */
+  proposeChanges?(args: Record<string, unknown>): Promise<Record<string, unknown>>;
+  /** Apply the waiting card: the user agreed in words. */
+  applyProposal?(): Promise<Record<string, unknown>>;
+  /** Drop the waiting card: the user declined. */
+  cancelProposal?(): Promise<Record<string, unknown>>;
 }
 
 export interface AgentDeps {

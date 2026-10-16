@@ -248,6 +248,32 @@ export function claimsSaveHappened(text: string): boolean {
 }
 
 /**
+ * A reply saying a card's change already HAPPENED ("I've muted the Daily
+ * Mail", "X is now hidden") on a turn that only staged it. Nothing changes until
+ * the user taps the card or agrees to it. Precision-first, like the save claim:
+ * a future or conditional sentence ("once you tap, you won't see it") is true.
+ */
+const CHANGE_VERB = 'muted|hidden|filtered(?:\\s+out)?|blocked|removed (?:that|the|your) filter|turned (?:it |that )?down|boosted';
+const CHANGE_SAFE = /\b(?:tap|once you|when you|if you|after you|will|would|can|could|card)\b/i;
+const CHANGE_CLAIM = new RegExp(
+  '(' +
+    `i(?:'ve|\u2019ve| have)\\s+(?:just\\s+)?(?:${CHANGE_VERB})\\b` +
+    `|\\b(?:is|are)\\s+now\\s+(?:${CHANGE_VERB})\\b` +
+    `|\\byou(?:'re|\u2019re| are) now following\\b` +
+    `|\\bdone[,.!]\\s*(?:i(?:'ve|\u2019ve| have)\\s+)?(?:${CHANGE_VERB})\\b` +
+  ')',
+  'i',
+);
+
+export function claimsChangeHappened(text: string): boolean {
+  const t = text ?? '';
+  if (!t.trim()) return false;
+  return t
+    .split(/(?<=[.!?])\s+/)
+    .some((sentence) => CHANGE_CLAIM.test(sentence) && !CHANGE_SAFE.test(sentence));
+}
+
+/**
  * Scaffolding that belongs to the loop and must never appear in a bubble.
  *
  * The state block, the tool names, the skill ids, a thinking marker, and third
@@ -259,7 +285,7 @@ const INTERNALS = new RegExp(
     '<\\s*/?\\s*state\\s*>' +
     '|<\\s*/?\\s*known_facts\\s*>' +
     '|known_facts' +
-    '|load_skill|saveExtractedFacts|find_similar_facts|lookup_place|ask_choice|deleteUserFacts|explainMera' +
+    '|load_skill|saveExtractedFacts|find_similar_facts|lookup_place|ask_choice|deleteUserFacts|explainMera|proposeChanges|applyProposal|cancelProposal|searchNews|proposeTrack|proposeFactCheck' +
     '|\\bfacts/(?:residence|interest|origin|family|profession|generic)\\b' +
     '|\\bconversation/(?:question|correction|about-mera)\\b' +
     '|\\btopics/(?:residence|interest|origin|family|profession|generic)\\b' +

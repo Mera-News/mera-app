@@ -250,26 +250,138 @@ export const DELETE_FACTS_TOOL: ToolDefinition = {
 };
 
 /**
+ * A CARD the user confirms: filters and source preferences (the persona's four
+ * kinds). Staging changes nothing; the card's tap, or the user agreeing in
+ * words (`applyProposal`), applies it. ENDS THE TURN, like `ask_choice`.
+ */
+export const PROPOSE_CHANGES_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'proposeChanges',
+    description:
+      'Put a change on a card for the user to confirm. Nothing changes until they agree. Use for "stop showing me X" '
+      + '(add_suppression), "show me X again" (retire_suppression with an id from <filters>), more or less or mute of a '
+      + 'named outlet (set_publication_pref) and "prefer <country> sources" (set_source_scope_pref). This ENDS your turn.',
+    parameters: {
+      type: 'object',
+      properties: {
+        explanation: { type: 'string', description: 'What the card does, one sentence.' },
+        expected_effects: { type: 'string', description: 'What changes in their news, one sentence.' },
+        actions: {
+          type: 'array',
+          description: 'The smallest list of changes.',
+          items: {
+            type: 'object',
+            properties: {
+              type: {
+                type: 'string',
+                enum: ['add_suppression', 'retire_suppression', 'set_publication_pref', 'set_source_scope_pref'],
+              },
+              suppressionPattern: { type: 'string', description: 'add_suppression: the phrase to hide, in English, in their own words.' },
+              suppressionStrength: { type: 'number', description: 'add_suppression: 0.9 never show it, 0.5 less of it.' },
+              suppressionId: { type: 'string', description: 'retire_suppression: an id from <filters>. Never invent one.' },
+              publicationId: { type: 'string', description: 'set_publication_pref: the outlet name exactly as they said it.' },
+              scopeCountry: { type: 'string', description: 'set_source_scope_pref: the country in English.' },
+              publicationPref: {
+                type: 'string',
+                enum: ['boost', 'deprioritize', 'mute'],
+                description: 'set_source_scope_pref takes boost or deprioritize only.',
+              },
+            },
+            required: ['type'],
+          },
+        },
+      },
+      required: ['explanation', 'expected_effects', 'actions'],
+    },
+  },
+};
+
+/** The user agreed, in words, to the card that is waiting. Offered only while
+ *  that card may be applied by typing (one option, nothing tap-only). */
+export const APPLY_PROPOSAL_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'applyProposal',
+    description: 'Apply the card that is waiting, because the user just agreed to it. Never on anything else they said.',
+    parameters: { type: 'object', properties: {}, required: [] },
+  },
+};
+
+/** The user declined the card that is waiting. */
+export const CANCEL_PROPOSAL_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'cancelProposal',
+    description: 'Drop the card that is waiting, because the user said no to it.',
+    parameters: { type: 'object', properties: {}, required: [] },
+  },
+};
+
+/** What the driver says about the card waiting for the user, for the tools a
+ *  leg may carry. */
+export interface PendingCardTools {
+  /** Typed agreement may apply it (one option, nothing tap-only). */
+  appliable: boolean;
+}
+
+/** Every tool a skill's `tools:` list may name, in declaration order. Pinned
+ *  to the generator's KNOWN_SKILL_TOOLS by a test. */
+export const SKILL_TOOL_ORDER = [
+  'find_similar_facts', 'lookup_place', 'ask_choice', 'saveExtractedFacts', 'deleteUserFacts',
+  'webSearch', 'explainMera', 'proposeChanges', 'applyProposal', 'cancelProposal',
+] as const;
+
+const SKILL_TOOL_DEFS: Record<(typeof SKILL_TOOL_ORDER)[number], ToolDefinition> = {
+  find_similar_facts: FIND_SIMILAR_FACTS_TOOL,
+  lookup_place: LOOKUP_PLACE_TOOL,
+  ask_choice: ASK_CHOICE_TOOL,
+  saveExtractedFacts: SAVE_FACTS_TOOL,
+  deleteUserFacts: DELETE_FACTS_TOOL,
+  webSearch: WEB_SEARCH_TOOL,
+  explainMera: EXPLAIN_MERA_TOOL,
+  proposeChanges: PROPOSE_CHANGES_TOOL,
+  applyProposal: APPLY_PROPOSAL_TOOL,
+  cancelProposal: CANCEL_PROPOSAL_TOOL,
+};
+
+/**
+ * The tools a skill lists, for an id with no `tools:` frontmatter (a skill a
+ * test injects). The generated index carries the same lists for every real
+ * skill, and a test pins the two to agree.
+ */
+function fallbackSkillTools(skillId: string): readonly string[] {
+  if (skillId.startsWith('facts/')) {
+    return ['find_similar_facts', 'lookup_place', 'ask_choice', 'saveExtractedFacts', 'deleteUserFacts', 'webSearch'];
+  }
+  if (skillId === 'conversation/correction') {
+    return ['find_similar_facts', 'lookup_place', 'ask_choice', 'saveExtractedFacts', 'deleteUserFacts'];
+  }
+  if (skillId === 'conversation/question') return ['find_similar_facts', 'lookup_place', 'ask_choice', 'webSearch'];
+  if (skillId === 'conversation/about-mera') return ['find_similar_facts', 'lookup_place', 'ask_choice', 'explainMera'];
+  return ['find_similar_facts', 'lookup_place', 'ask_choice'];
+}
+
+/**
  * The tools a leg is offered, which is NOT one fixed list.
  *
- * WHY THIS EXISTS. `HARNESS_TOOLS` was the whole payload on every leg, and it
- * holds only the four discovery tools: saveExtractedFacts and deleteUserFacts
- * were never offered at all. Across 480 fact turns there was ONE save, and the
- * invented names `add_fact`, `save_fact` and `update_fact` were the model
- * reaching for a tool it could see the need for and could not see. No amount
- * of prompting fixes a tool that is not in the payload.
- *
- *  - ROUTER leg (nothing loaded): the four discovery tools. Nothing to save
- *    yet, and offering a writer here invites a save before the guideline that
- *    shapes it has been read.
- *  - FACTS leg: discovery minus load_skill, PLUS the two writers.
- *  - ANY OTHER skill: discovery minus load_skill. A conversation turn has
- *    nothing to write.
+ *  - ROUTE leg (nothing loaded): `load_skill`, and while a card waits and is
+ *    the most recent ask, `applyProposal` (when appliable) and
+ *    `cancelProposal`: a reply that agrees to the card is answered there
+ *    instead of being routed as a new intent.
+ *  - SKILL leg: the skill's own `tools:` list, filtered by what the device
+ *    offers (web search, explainMera, the card tools) and the card's state.
  *  - FORCED leg: saveExtractedFacts and ask_choice only, the two calls that
  *    answer "propose something now".
+ *
+ * WHY THE ROUTE LEG GETS ONE TOOL: of 99 G2d route legs that loaded no skill,
+ * 9 discharged "call a tool" with a discovery tool instead of routing. A tool
+ * the model cannot see is one it cannot spend a leg on.
  */
 export function toolsForLeg(opts: {
   skillLoaded: string | null;
+  /** The skill's `tools:` list, or null to use the built-in fallback. */
+  skillTools?: readonly string[] | null;
   forcingProposal?: boolean;
   /** The `pre-enforcement` control arm only: the route leg carries all four
    *  discovery tools, as it did when the 99 no-route legs were measured. */
@@ -277,66 +389,41 @@ export function toolsForLeg(opts: {
   /** False once another segment of the same turn has asked its question: one
    *  question per turn, so later segments put other readings on the card. */
   allowChoice?: boolean;
-  /** The device offers web search (the setting is on). Declared on facts and
-   *  question legs only, never on the route or forced leg. */
+  /** The device offers web search (the setting is on). */
   webSearch?: boolean;
-  /** The device offers explainMera. Declared on `conversation/about-mera` only. */
+  /** The device offers explainMera. */
   explainMera?: boolean;
+  /** The device offers the card tools. */
+  cards?: boolean;
+  /** The card waiting for the user, or null. */
+  pendingCard?: PendingCardTools | null;
+  /** The waiting card is the most recent ask, so the route leg may answer it. */
+  cardOnRouteLeg?: boolean;
 }): ToolDefinition[] {
-  const tools = toolsForLegUnfiltered(opts);
-  const withSearch =
-    opts.webSearch === true
-    && !opts.forcingProposal
-    && opts.skillLoaded !== null
-    && (opts.skillLoaded.startsWith('facts/') || opts.skillLoaded === 'conversation/question')
-      ? [...tools, WEB_SEARCH_TOOL]
-      : tools;
-  const withExplain =
-    opts.explainMera === true && !opts.forcingProposal && opts.skillLoaded === 'conversation/about-mera'
-      ? [...withSearch, EXPLAIN_MERA_TOOL]
-      : withSearch;
-  return opts.allowChoice === false
-    ? withExplain.filter((t) => t.function.name !== 'ask_choice')
-    : withExplain;
+  if (opts.forcingProposal) return withoutChoice([SAVE_FACTS_TOOL, ASK_CHOICE_TOOL], opts.allowChoice);
+  const cardTools = (): ToolDefinition[] =>
+    opts.cards && opts.pendingCard
+      ? [...(opts.pendingCard.appliable ? [APPLY_PROPOSAL_TOOL] : []), CANCEL_PROPOSAL_TOOL]
+      : [];
+  if (opts.skillLoaded === null) {
+    if (opts.wideRouteLeg) return withoutChoice([...HARNESS_TOOLS], opts.allowChoice);
+    return [LOAD_SKILL_TOOL, ...(opts.cardOnRouteLeg ? cardTools() : [])];
+  }
+  const listed = new Set(opts.skillTools ?? fallbackSkillTools(opts.skillLoaded));
+  const offered = SKILL_TOOL_ORDER.filter((name) => {
+    if (!listed.has(name)) return false;
+    if (name === 'webSearch') return opts.webSearch === true;
+    if (name === 'explainMera') return opts.explainMera === true;
+    if (name === 'proposeChanges') return opts.cards === true;
+    if (name === 'applyProposal') return opts.cards === true && opts.pendingCard?.appliable === true;
+    if (name === 'cancelProposal') return opts.cards === true && !!opts.pendingCard;
+    return true;
+  });
+  return withoutChoice(offered.map((name) => SKILL_TOOL_DEFS[name]), opts.allowChoice);
 }
 
-function toolsForLegUnfiltered(opts: {
-  skillLoaded: string | null;
-  forcingProposal?: boolean;
-  wideRouteLeg?: boolean;
-}): ToolDefinition[] {
-  if (opts.forcingProposal) return [SAVE_FACTS_TOOL, ASK_CHOICE_TOOL];
-  // THE ROUTE LEG GETS ONE TOOL.
-  //
-  // It used to get all four, and the route leg has exactly one job. Of the 99
-  // G2d route legs that loaded no skill, 9 discharged "call a tool" with a
-  // discovery tool instead of routing: `find_similar_facts` and `lookup_place`
-  // belong to the loaded skill, which has the guideline that says what to do
-  // with the answer. A tool the model cannot see is one it cannot spend a leg
-  // on, which is the same reasoning that took `load_skill` off every leg after
-  // the first.
-  //
-  // mini-swe-agent runs its whole loop on ONE action for this reason: the
-  // narrower the action space, the less there is to get wrong.
-  if (opts.skillLoaded === null) return opts.wideRouteLeg ? [...HARNESS_TOOLS] : [LOAD_SKILL_TOOL];
-  const discovery = HARNESS_TOOLS.filter((t) => t.function.name !== 'load_skill');
-  // A SKILL TOLD TO WRITE MUST BE GIVEN THE MEANS.
-  //
-  // `conversation/correction` does not start with `facts/`, so the prefix test
-  // alone denied it both writers while its own body says "Call deleteUserFacts
-  // with the attribute keys of the facts to remove" and its frontmatter
-  // promises "at most one saveExtractedFacts element and at most one
-  // deleteUserFacts call". On device the model did the only thing left to it:
-  // refused in prose and told the user to go tap a trash can in the app. The
-  // payload contradicted the guideline, which is the same defect class as
-  // HARNESS_TOOLS omitting saveExtractedFacts entirely (1 save in 480 turns).
-  //
-  // Deletion stays gated on `turn.resolvedChoice` in the loop, so offering the
-  // tool here does not make a silent wipe reachable: it makes the confirmation
-  // reachable.
-  const writes = opts.skillLoaded.startsWith('facts/')
-    || opts.skillLoaded === 'conversation/correction';
-  return writes ? [...discovery, SAVE_FACTS_TOOL, DELETE_FACTS_TOOL] : discovery;
+function withoutChoice(tools: ToolDefinition[], allowChoice?: boolean): ToolDefinition[] {
+  return allowChoice === false ? tools.filter((t) => t.function.name !== 'ask_choice') : tools;
 }
 
 export const MIN_CHOICE_OPTIONS = 2;

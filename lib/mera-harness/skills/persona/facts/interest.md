@@ -12,6 +12,13 @@ outputs:
   - "one saveExtractedFacts call, one element per distinct interest"
   - "the canonical questionnaire key for the kind of interest it is"
   - "no question in the reply for a plain interest"
+tools:
+  - "find_similar_facts"
+  - "lookup_place"
+  - "ask_choice"
+  - "saveExtractedFacts"
+  - "deleteUserFacts"
+  - "webSearch"
 ---
 
 A pastime, a sport, a team, a musician, a genre, a game. This is also where anything lands that is

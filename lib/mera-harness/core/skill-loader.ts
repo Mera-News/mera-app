@@ -131,10 +131,27 @@ export function skillIndexRows(): SkillIndexRow[] {
 }
 
 /** One line per routable skill, for the router system prompt. */
-export function renderSkillIndex(): string {
+export function renderSkillIndex(hide: readonly string[] = []): string {
   return skillIndexRows()
+    .filter((row) => !hide.includes(row.id))
     // Colon, not an em dash: the router prompt bans the character, and 12 of
     // them in its own skill index is the prompt modelling what it forbids.
     .map((row) => `- ${row.id}: ${row.when[0] ?? row.description}`)
     .join('\n');
+}
+
+/**
+ * The tools a skill's legs are offered, from its `tools:` frontmatter, or null
+ * for an id the generated index does not hold (a test's injected skill).
+ */
+export function skillTools(id: string): readonly string[] | null {
+  const entry = PERSONA_SKILL_INDEX.find((e) => e.id === id) as { tools?: readonly string[] } | undefined;
+  return entry && entry.tools && entry.tools.length > 0 ? entry.tools : null;
+}
+
+/** Thinking on for this skill's legs (`thinking: true`). Absent means off. */
+export function skillThinking(id: string | null): boolean {
+  if (id === null) return false;
+  const entry = PERSONA_SKILL_INDEX.find((e) => e.id === id) as { thinking?: boolean } | undefined;
+  return entry?.thinking === true;
 }

@@ -11,6 +11,13 @@ outputs:
   - "one leg issuing lookup_place and find_similar_facts together, then one saveExtractedFacts call"
   - "the residence element carries only rungs lookup_place returned, plus the attribute key location: neighborhood/area, city, and country (preserve specifics)"
   - "ask_choice, never prose, for an ambiguous place; a replacement is set with replaces and never asked first"
+tools:
+  - "find_similar_facts"
+  - "lookup_place"
+  - "ask_choice"
+  - "saveExtractedFacts"
+  - "deleteUserFacts"
+  - "webSearch"
 ---
 
 The turn is about where the user themselves lives. Offer it. Never save it.

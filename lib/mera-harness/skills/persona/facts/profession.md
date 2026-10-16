@@ -11,6 +11,13 @@ outputs:
   - "one saveExtractedFacts call, one element per distinct professional fact"
   - "attribute key profession: role, employer, and field"
   - "no place in the statement"
+tools:
+  - "find_similar_facts"
+  - "lookup_place"
+  - "ask_choice"
+  - "saveExtractedFacts"
+  - "deleteUserFacts"
+  - "webSearch"
 ---
 
 What the user does for a living. Specific enough to retrieve news, and anchored to nothing.

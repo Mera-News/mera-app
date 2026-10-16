@@ -10,6 +10,12 @@ when:
 outputs:
   - "at most one saveExtractedFacts element and at most one deleteUserFacts call (ids or all: true)"
   - "nothing new extracted in the same turn"
+tools:
+  - "find_similar_facts"
+  - "lookup_place"
+  - "ask_choice"
+  - "saveExtractedFacts"
+  - "deleteUserFacts"
 ---
 
 Mera got something wrong and the user is saying so. Fix that one thing.

@@ -7,6 +7,7 @@
 import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
 import { brandRule, buildRouterPrompt, fixBrandSpelling, voiceRules, type PersonaSurface } from './router-prompt';
 import {
+  claimsChangeHappened,
   claimsSaveHappened,
   cleanProse,
   comparableStatement,
@@ -62,9 +63,10 @@ function namesSomethingSaid(statement: string, text: string): boolean {
  *  "Follows Formula 1" / "Follows Formula E" is 0.5). */
 const NEAR_TWIN_JACCARD = 0.6;
 import { buildStateLine, escapeUntrusted } from './state-line';
-import { loadSkill as defaultLoadSkill } from './skill-loader';
+import { loadSkill as defaultLoadSkill, skillThinking, skillTools } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
+  PendingProposalView,
   AgentDeps,
   AgentLeg,
   AgentModelResult,
@@ -183,7 +185,14 @@ export const MAX_REPLY_RETRIES = 1;
  * has forbidden the save wording since the skill was written, and 10% of G4
  * turns used it anyway.
  */
-export function replyFormatError(kind: 'save-claim' | 'leak' | 'process'): string {
+export function replyFormatError(kind: 'save-claim' | 'change-claim' | 'leak' | 'process'): string {
+  if (kind === 'change-claim') {
+    return (
+      'Your reply says the change already happened. Nothing changes until the user taps the card or '
+      + 'agrees to it, so that is not true yet. Rewrite the reply: say what the card will do. Do not '
+      + 'say anything is muted, hidden, filtered or followed now.'
+    );
+  }
   if (kind === 'process') {
     return (
       'Your reply describes what you are about to do instead of answering. The user sees it as '
@@ -261,6 +270,12 @@ export interface AgentState {
    * still on screen. Exact repeats are dropped; the model is told the rest.
    */
   pendingCardStatements?: string[];
+  /** The card (filters, sources) waiting for the user's tap or agreement, set
+   *  by the driver before each turn from what is on screen. */
+  pendingProposal?: PendingProposalView | null;
+  /** The user's active filters, set by the driver before each turn. Listed on
+   *  legs that can stage a card, so `retire_suppression` names a real id. */
+  activeFilters?: { id: string; pattern: string }[];
 }
 
 export function createAgentState(persona: AgentPersona): AgentState {
@@ -356,7 +371,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const model = params.model ?? 'BIG';
   const leakFallback = params.fallbacks?.leak ?? REPLY_LEAK_FALLBACK;
   const processFallback = params.fallbacks?.process ?? REPLY_PROCESS_FALLBACK;
-  const loadSkillFn = deps.loadSkill ?? defaultLoadSkill;
+  /** Skills the arm hides behave as if they did not exist (a step's control). */
+  const hiddenSkills = resolveAgentArm(params.promptVariant).hideSkills ?? [];
+  const loadSkillFn = (id: string): string | null =>
+    hiddenSkills.includes(id) ? null : (deps.loadSkill ?? defaultLoadSkill)(id);
   /** OFF only on the `pre-enforcement` control arm, which reproduces the loop
    *  as measured: a route leg that produced no route ends the turn, and the
    *  route leg carries all four discovery tools. */
@@ -413,8 +431,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     : isPlainNo(userMessage)
       ? 'no'
       : null;
+  // THE MOST RECENT ASK IS THE ONE A REPLY ANSWERS. A waiting card newer than
+  // the waiting chip question takes a plain yes or no (on the route leg, as
+  // applyProposal / cancelProposal), so the older question is not resumed.
+  turn.turnNumber += 1;
+  const pendingCard = state.pendingProposal ?? null;
+  const cardTurn = pendingCard && turn.lastCard && turn.lastCard.proposalId === pendingCard.id ? turn.lastCard.turn : 0;
+  const cardIsNewest =
+    pendingCard !== null && (turn.pendingChoice === null || cardTurn > (turn.choiceTurn ?? 0));
+  /** The skill a route-leg answer to the card resumes. */
+  const cardSkill =
+    pendingCard && turn.lastCard && turn.lastCard.proposalId === pendingCard.id
+      ? turn.lastCard.skill
+      : 'conversation/feed-tuning';
   const typedYesResume =
-    turn.resolvedChoice === null
+    !cardIsNewest
+    && turn.resolvedChoice === null
     && turn.lastQuestion !== null
     && turn.lastSkill !== null
     && turn.lastSkill.startsWith('facts/')
@@ -545,6 +577,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let sawNoMatch = false;
   /** A removal card is on screen this turn; it is the question. */
   let deleteCardOffered = false;
+  /** The device offers the card tools (filters and sources). */
+  const cardsOffered = typeof deps.tools.proposeChanges === 'function';
+  /** A card staged, applied or dropped earlier in THIS turn. The model never
+   *  sees its own earlier calls, so the state line says so. */
+  let cardThisTurn: 'staged' | 'applied' | 'cancelled' | null = null;
+  /** applyProposal applied something with no errors: a change claim is true. */
+  let appliedCleanly = false;
+  /** The loaded skill may stage a card. */
+  const stagesCards = (): boolean =>
+    skillLoaded !== null && (skillTools(skillLoaded) ?? []).includes('proposeChanges');
   /** An unverified home was held back because it would replace the verified
    *  home on file; the chip offers the user's own words instead. */
   let heldBackUnverifiedHome = false;
@@ -733,6 +775,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       answeredYesTo: typedYesResume && plainAnswer === 'yes' ? lastQuestion : null,
       answeredNoTo: typedYesResume && plainAnswer === 'no' ? lastQuestion : null,
       pendingCards: pendingCardList,
+      pendingCard: pendingCard && (skillLoaded !== null ? stagesCards() : cardIsNewest)
+        ? { summary: pendingCard.summary, chooseOne: pendingCard.chooseOne, appliable: pendingCard.appliable }
+        : null,
+      cardThisTurn,
       finerArea: finerArea?.words ?? null,
       segmentScope:
         skillsLoaded.length + queuedSkills.length > 1 && routeKind
@@ -751,6 +797,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const messages: { role: 'system' | 'user' | 'assistant' | 'tool'; content: string }[] = [
       { role: 'user', content: `<state>${stateLine}</state>` },
       { role: 'user', content: `<known_facts>\n${formatKnownFacts(state.persona.facts)}\n</known_facts>` },
+      // THE USER'S FILTERS, on legs that can stage a card only:
+      // `retire_suppression` must name a real id, and nothing else needs them.
+      ...(stagesCards() && (state.activeFilters ?? []).length > 0
+        ? [
+            {
+              role: 'user' as const,
+              content: `<filters>\n${(state.activeFilters ?? [])
+                .slice(0, 20)
+                .map((f) => `- [${escapeUntrusted(f.id, 60)}] ${escapeUntrusted(f.pattern, 120)}`)
+                .join('\n')}\n</filters>`,
+            },
+          ]
+        : []),
       // THE MESSAGE THE QUESTION WAS ABOUT, on a resumed turn only.
       //
       // A chip tap arrives as its own label and nothing else, so the resumed
@@ -837,7 +896,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // as a model failure.
     // A SAVE ALL TAP's first leg is written by the loop: the offer of every
     // option, through the ordinary save path, so every guard still applies.
-    const called = index === 0 && saveAllOptions !== null ? saveAllLeg(saveAllOptions) : await deps.callModel({
+    const called: AgentModelResult = index === 0 && saveAllOptions !== null ? saveAllLeg(saveAllOptions) : await deps.callModel({
       role: index === 0 ? 'route' : 'tool',
       model,
       systemPrompt,
@@ -857,11 +916,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         allowChoice: askingSkill === null,
         webSearch: typeof deps.tools.webSearch === 'function',
         explainMera: typeof deps.tools.explainMera === 'function',
+        skillTools: skillLoaded === null ? null : skillTools(skillLoaded),
+        cards: cardsOffered,
+        pendingCard: cardThisTurn === null && pendingCard ? { appliable: pendingCard.appliable } : null,
+        cardOnRouteLeg: cardIsNewest && index === 0 && !resumedSkill,
       }) as unknown[],
       toolChoice: forcingProposalNow ? 'required' : 'auto',
-      // FALSE on every call: measured, thinking on returned empty content on 8
-      // of 10 probes at 8-10s against 0.8-1.0s and a valid answer every time.
-      enableThinking: false,
+      // OFF unless the loaded skill says `thinking: true`, and always off on the
+      // route leg: measured, thinking on returned empty content on 8 of 10
+      // route probes at 8-10s against 0.8-1.0s and a valid answer every time.
+      enableThinking: skillLoaded === null ? false : skillThinking(skillLoaded),
       // ONLY THE ROUTE LEG STREAMS. It is the acknowledgement and is never
       // replaced; every later leg's text used to stream into the same bubble
       // and was then swapped for the final reply, so the text the user was
@@ -930,6 +994,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
     let sawContinuationTool = false;
     let terminatedByChoice = false;
+    /** A card was staged on this leg: like ask_choice, it ends the turn. */
+    let terminatedByCard = false;
 
     for (let call of result.toolCalls) {
       let args = parseArgs(call.argumentsRaw);
@@ -976,7 +1042,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         }
         const body = loadSkillFn(id);
         if (body === null) {
-          const out = { error: 'unknown skill id', availableSkills: [...deps.skillIds()] };
+          const out = {
+            error: 'unknown skill id',
+            availableSkills: deps.skillIds().filter((sid) => !hiddenSkills.includes(sid)),
+          };
           leg.toolResults.push({ name: call.name, result: out });
           toolResultsThisTurn.push({ name: call.name, result: out });
         } else {
@@ -1095,6 +1164,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         if (result.content.trim() && !(index === 0 && !resumedSkill)) reply = '';
       }
 
+      if (call.name === 'ask_choice' && cardThisTurn === 'staged') {
+        // The card already asks; one question per turn.
+        const out = { error: 'A card is already on screen. Ask nothing more.' };
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        continue;
+      }
+
       if (call.name === 'ask_choice' && deleteCardOffered) {
         // The delete card already asks; a chip question would ask twice.
         const out = { error: 'The removal card already asks the user. Ask nothing more.' };
@@ -1177,6 +1254,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         proposedSomething = true;
         const chips = expandChoiceLabels(bindChoicePayloads(args.options, placeCandidates));
         turn.pendingChoice = { question, options: chips };
+        turn.choiceTurn = turn.turnNumber;
         // The THREAD draws its chips from this call's arguments and sends the
         // tapped text back, so it carries the same texts as pendingChoice.
         const shownOptions = chips.map((c) => c.text);
@@ -1550,6 +1628,62 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         continue;
       }
 
+      // ---- CARDS: filters and source preferences --------------------------
+      // Staged by the port (its sanitizer decides what the card holds); applied
+      // by the user's tap, or by applyProposal when the user agrees in words to
+      // a card that may be applied that way.
+      if (call.name === 'proposeChanges') {
+        const out: Record<string, unknown> = !deps.tools.proposeChanges
+          ? { error: 'proposeChanges is not available' }
+          : terminatedByChoice || deleteCardOffered || cardThisTurn !== null
+            ? { error: 'One card or question per turn. Ask nothing more.' }
+            : await deps.tools.proposeChanges(args);
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (typeof out.error !== 'string') {
+          proposedSomething = true;
+          cardThisTurn = 'staged';
+          terminatedByCard = true;
+          turn.lastCard = {
+            proposalId: typeof out.proposalId === 'string' ? out.proposalId : null,
+            skill: skillLoaded ?? cardSkill,
+            turn: turn.turnNumber,
+          };
+        }
+        continue;
+      }
+
+      if (call.name === 'applyProposal' || call.name === 'cancelProposal') {
+        const applying: boolean = call.name === 'applyProposal';
+        const run = applying ? deps.tools.applyProposal : deps.tools.cancelProposal;
+        const out: Record<string, unknown> = !run || !pendingCard || cardThisTurn !== null
+          ? { error: 'No card is waiting.' }
+          : applying && !pendingCard.appliable
+            ? { error: 'Only a tap on the card applies it. Tell them to tap the one they want on the card above.' }
+            : await run();
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (typeof out.error !== 'string') {
+          proposedSomething = true;
+          cardThisTurn = applying ? 'applied' : 'cancelled';
+          const errors = Array.isArray(out.errors) ? out.errors : [];
+          appliedCleanly = applying && Number(out.applied ?? 0) > 0 && errors.length === 0;
+          // ON THE ROUTE LEG: the reply answered the card, so the skill that
+          // staged it writes the closing sentence on the next leg.
+          if (skillLoaded === null) {
+            const body = loadSkillFn(cardSkill);
+            if (body !== null) {
+              skillLoaded = cardSkill;
+              skillsLoaded.push(cardSkill);
+              routeKind = routeKindFromSkill(cardSkill);
+              systemPrompt = skillPrompt(body);
+              sawContinuationTool = true;
+            }
+          }
+        }
+        continue;
+      }
+
       // An INVENTED tool name. `add_fact` and `update_fact` were both observed
       // on the corpus. Recorded and counted, never a silent no-op: an
       // unrecognised call that produced an error nobody reads is
@@ -1561,8 +1695,18 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
     params.onLeg?.(leg);
 
-    if (terminatedByChoice) {
+    if (terminatedByChoice || terminatedByCard) {
       if (terminalReason === 'settled') terminalReason = 'awaiting-user';
+      // THE SENTENCE BESIDE A CARD IS THE REPLY, and the card ends the turn
+      // before the reply gate, so a false "I've muted it" is caught here: one
+      // tool-free leg rewrites it.
+      if (terminatedByCard && replyRetries < MAX_REPLY_RETRIES && claimsChangeHappened(cleanProse(reply))) {
+        replyRetries++;
+        formatErrorNote = replyFormatError('change-claim');
+        closingLegNow = true;
+        maxLegsThisTurn = Math.max(maxLegsThisTurn, nextLegIndex + 1);
+        continue;
+      }
       break;
     }
     // A leg carrying an acknowledgement AND a forcing call must CONTINUE: the
@@ -1673,11 +1817,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
     // `conversation/about-mera` proposes nothing, and its answer describes what
     // Mera stores in the very words a save claim uses ("saved on your phone").
+    // A change claim is checked wherever a card could be on screen; both claims
+    // are TRUE after an apply that went through and staged nothing new.
     const gateKind = leaksInternals(finalReply)
       ? ('leak' as const)
-      : skillLoaded !== 'conversation/about-mera' && claimsSaveHappened(finalReply)
-        ? ('save-claim' as const)
-        : null;
+      : appliedCleanly
+        ? null
+        : skillLoaded !== 'conversation/about-mera' && claimsSaveHappened(finalReply)
+          ? ('save-claim' as const)
+          : (cardThisTurn !== null || stagesCards()) && claimsChangeHappened(finalReply)
+            ? ('change-claim' as const)
+            : null;
     if (gateKind !== null) {
       if (replyRetries < MAX_REPLY_RETRIES) {
         replyRetries++;
@@ -2088,6 +2238,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     : trailingQuestion(cleanProse(reply));
   turn.lastRoute = routeKind;
   turn.lastSkill = skillLoaded;
+  if (turn.pendingChoice === null) turn.choiceTurn = null;
   // Held for the turn that answers, which arrives carrying only a chip label.
   turn.lastUserMessage = userMessage;
   turn.lastReply = (reply.trim() || acknowledgement.trim()) || null;

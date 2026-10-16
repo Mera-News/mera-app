@@ -45,6 +45,7 @@ const SKILL_IDS = [
   'conversation/question',
   'conversation/correction',
   'conversation/about-mera',
+  'conversation/feed-tuning',
 ] as const;
 type SkillId = (typeof SKILL_IDS)[number];
 
@@ -94,6 +95,16 @@ const ROUTER_ESCAPE_HATCH = [
   'skip the load_skill',
 ];
 
+/**
+ * Every tool a skill's `tools:` list may name, in the order `toolsForLeg`
+ * declares them. Pinned to `SKILL_TOOL_ORDER` in core/tool-contracts.ts by a
+ * test; kept here because the generator imports nothing from the core.
+ */
+export const KNOWN_SKILL_TOOLS = [
+  'find_similar_facts', 'lookup_place', 'ask_choice', 'saveExtractedFacts', 'deleteUserFacts',
+  'webSearch', 'explainMera', 'proposeChanges', 'applyProposal', 'cancelProposal',
+] as const;
+
 /** Router and fact skills run thinking off, so no phrasing that invites a trace. */
 const DELIBERATION_BANNED = [
   'reason about', 'consider whether', 'think through', 'weigh whether', 'decide based on',
@@ -117,6 +128,10 @@ interface Skill {
   when: string[];
   outputs: string[];
   examples: string[];
+  /** The tools this skill's legs are offered (routable skills only). */
+  tools: string[];
+  /** Thinking on for this skill's legs. Absent means off. */
+  thinking: boolean;
   body: string;
 }
 
@@ -169,11 +184,14 @@ function parseFrontmatter(file: string, text: string): Omit<Skill, 'id'> & { id:
       catch { fail(file, ln, 'list item is not valid JSON string syntax'); }
       continue;
     }
-    const listKey = /^(when|outputs|examples):$/.exec(raw);
+    const listKey = /^(when|outputs|examples|tools):$/.exec(raw);
     if (listKey) { current = listKey[1]; lists[current] = lists[current] ?? []; continue; }
     const boolKey = /^routable: (true|false)$/.exec(raw);
     if (boolKey) { current = null; bools.routable = boolKey[1] === 'true'; continue; }
     if (/^routable:/.test(raw)) { fail(file, ln, 'routable must be exactly true or false'); current = null; continue; }
+    const thinkingKey = /^thinking: (true|false)$/.exec(raw);
+    if (thinkingKey) { current = null; bools.thinking = thinkingKey[1] === 'true'; continue; }
+    if (/^thinking:/.test(raw)) { fail(file, ln, 'thinking must be exactly true or false'); current = null; continue; }
 
     const scalarKey = /^(id|name|description): (.*)$/.exec(raw);
     if (scalarKey) {
@@ -197,7 +215,8 @@ function parseFrontmatter(file: string, text: string): Omit<Skill, 'id'> & { id:
   return {
     id: scalars.id ?? '', routable: bools.routable ?? false,
     name: scalars.name ?? '', description: scalars.description ?? '',
-    when: lists.when ?? [], outputs: lists.outputs ?? [], examples: lists.examples ?? [], body,
+    when: lists.when ?? [], outputs: lists.outputs ?? [], examples: lists.examples ?? [],
+    tools: lists.tools ?? [], thinking: bools.thinking ?? false, body,
   };
 }
 
@@ -206,6 +225,10 @@ function estimateTokens(s: string): number { return Math.ceil(s.length / 4); }
 function readSkills(personaDir: string): Skill[] {
   const files = walk(personaDir);
   const byId = new Map<string, Skill>();
+  // A facts leaf is composed onto this preamble, so a tool the preamble names
+  // is named on every facts leg.
+  const preambleFile = path.join(personaDir, 'facts', 'generic.md');
+  const factsPreamble = fs.existsSync(preambleFile) ? fs.readFileSync(preambleFile, 'utf8') : '';
 
   for (const file of files) {
     const rel = path.relative(personaDir, file).replace(/\\/g, '/');
@@ -262,6 +285,24 @@ function readSkills(personaDir: string): Skill[] {
       (pathId.startsWith('facts/') || pathId.startsWith('conversation/'));
     if (parsed.routable !== expectedRoutable) {
       fail(file, null, `routable is ${parsed.routable} but "${pathId}" must be ${expectedRoutable}: router destinations are facts/* and conversation/* EXCLUDING the preambles`);
+    }
+
+    // A SKILL THAT NAMES A TOOL MUST BE OFFERED IT, and the payload is this
+    // list. A body naming a tool its legs never get instructs the model to
+    // call nothing (conversation/question once named searchNews this way).
+    if (parsed.routable) {
+      if (parsed.tools.length === 0) fail(file, null, 'a routable skill must list its tools');
+      for (const t of parsed.tools) {
+        if (!(KNOWN_SKILL_TOOLS as readonly string[]).includes(t)) fail(file, null, `tools lists "${t}", which is not a harness tool`);
+      }
+      const named = pathId.startsWith('facts/') ? `${body}\n${factsPreamble}` : body;
+      for (const t of KNOWN_SKILL_TOOLS) {
+        if (new RegExp(`\\b${t}\\b`).test(named) && !parsed.tools.includes(t)) {
+          fail(file, null, `body names ${t} but tools does not list it`);
+        }
+      }
+    } else if (parsed.tools.length) {
+      fail(file, null, 'only a routable skill lists tools');
     }
 
     const required = PREAMBLE_SECTIONS[pathId];
@@ -359,6 +400,8 @@ function render(skills: Skill[]): string {
     L.push(`    routable: ${s.routable},`);
     L.push(`    when: [${s.when.map((w) => JSON.stringify(w)).join(', ')}],`);
     L.push(`    examples: [${s.examples.map((e) => JSON.stringify(e)).join(', ')}],`);
+    L.push(`    tools: [${s.tools.map((t) => JSON.stringify(t)).join(', ')}],`);
+    L.push(`    thinking: ${s.thinking},`);
     L.push('  },');
   }
   // No type annotation on this binding. An annotation erases `as const`, the

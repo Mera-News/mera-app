@@ -11,6 +11,13 @@ outputs:
   - "one saveExtractedFacts call, one element per distinct family fact"
   - "a relative's place carries its own attribute key and never touches the user's residence fact"
   - "ask_choice, never prose, for a place choice or a replacement"
+tools:
+  - "find_similar_facts"
+  - "lookup_place"
+  - "ask_choice"
+  - "saveExtractedFacts"
+  - "deleteUserFacts"
+  - "webSearch"
 ---
 
 The household, the relatives, and what has changed. The user is the subject of none of it.

@@ -139,6 +139,12 @@ Ask at most one question, and only in your LAST message of the turn. Never ask t
 
 function routerProcedure(arm?: string): string {
   if (routerProcedureFor(resolveAgentArm(arm)) === 'inline-legacy') return LEGACY_PROCEDURE;
+  const body = resolveAgentArm(arm).routerBody;
+  if (body !== undefined) return body.trim();
+  return shippedRouterBody();
+}
+
+function shippedRouterBody(): string {
   const body = loadSkill('router');
   if (body === null || body.trim() === '') {
     throw new Error(
@@ -185,7 +191,7 @@ ${voiceRules(input.languageName)}
 ${TOOL_GUIDE}
 
 ## Skill index
-${renderSkillIndex()}
+${renderSkillIndex(resolveAgentArm(input.arm).hideSkills)}
 
 ${routerProcedure(input.arm)}${routerAddendum(input.arm)}${pendingLine}
 

@@ -10,6 +10,13 @@ when:
 outputs:
   - "an origin element, an expat-status element when the user lives in another country, and a residence element when the turn names the city, each under its own key"
   - "ask_choice, never prose, for an ambiguous place; a replacement is set with replaces and never asked first"
+tools:
+  - "find_similar_facts"
+  - "lookup_place"
+  - "ask_choice"
+  - "saveExtractedFacts"
+  - "deleteUserFacts"
+  - "webSearch"
 ---
 
 Where the user is FROM. An expat is THREE facts, each offered as its own element: where they are

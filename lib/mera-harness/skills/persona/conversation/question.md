@@ -10,6 +10,11 @@ when:
 outputs:
   - "webSearch for what something is or what is happening, never an answer from memory"
   - "nothing saved: this skill offers no facts"
+tools:
+  - "find_similar_facts"
+  - "lookup_place"
+  - "ask_choice"
+  - "webSearch"
 ---
 
 The turn asks something, or it asks nothing at all. Either way you extract nothing and save

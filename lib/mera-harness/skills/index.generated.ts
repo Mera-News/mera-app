@@ -9,6 +9,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: false,
     when: ["every persona-agent turn, before anything else"],
     examples: [],
+    tools: [],
+    thinking: false,
   },
   {
     id: "facts/generic",
@@ -16,6 +18,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: false,
     when: ["always, ahead of any facts leaf", "never alone: this is a preamble, not a destination"],
     examples: [],
+    tools: [],
+    thinking: false,
   },
   {
     id: "facts/residence",
@@ -23,6 +27,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: true,
     when: ["router chose new_fact or fact_update with subject residence", "trigger phrases: I live in / I moved to / I am based in / I study in / my flat / my neighbourhood", "signal: the user names a place and the sentence subject is the user"],
     examples: [],
+    tools: ["find_similar_facts", "lookup_place", "ask_choice", "saveExtractedFacts", "deleteUserFacts", "webSearch"],
+    thinking: false,
   },
   {
     id: "facts/origin",
@@ -30,6 +36,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: true,
     when: ["router chose new_fact or fact_update with subject origin", "trigger phrases: originally from / I am from / grew up in / my heritage / expat / migrant / moved here from", "signal: the turn names a country of origin, whether or not it also names where they live now"],
     examples: [],
+    tools: ["find_similar_facts", "lookup_place", "ask_choice", "saveExtractedFacts", "deleteUserFacts", "webSearch"],
+    thinking: false,
   },
   {
     id: "facts/profession",
@@ -37,6 +45,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: true,
     when: ["router chose new_fact or fact_update with subject profession", "trigger phrases: I work / I am a / my job / my employer / I study / I am training as", "signal: the turn names a role, an employer, a field or an industry"],
     examples: [],
+    tools: ["find_similar_facts", "lookup_place", "ask_choice", "saveExtractedFacts", "deleteUserFacts", "webSearch"],
+    thinking: false,
   },
   {
     id: "facts/family",
@@ -44,6 +54,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: true,
     when: ["router chose new_fact or fact_update with subject family", "trigger phrases: my partner / my kids / my parents / my sister / I look after / we are expecting", "signal: the turn says where a relative lives or is staying, or names a life event"],
     examples: [],
+    tools: ["find_similar_facts", "lookup_place", "ask_choice", "saveExtractedFacts", "deleteUserFacts", "webSearch"],
+    thinking: false,
   },
   {
     id: "facts/interest",
@@ -51,6 +63,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: true,
     when: ["router chose new_fact or fact_update with subject interest", "trigger phrases: I play / I enjoy / I follow / I support / I am into / I watch / I listen to / I collect", "signal: a pastime, a sport, a club, a musician, a genre, a game, a show, a possession or an opinion", "the catch-all: any stated fact that is none of residence, origin, profession or family"],
     examples: [],
+    tools: ["find_similar_facts", "lookup_place", "ask_choice", "saveExtractedFacts", "deleteUserFacts", "webSearch"],
+    thinking: false,
   },
   {
     id: "topics/generic",
@@ -58,6 +72,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: false,
     when: ["always, ahead of any topics leaf", "never alone: this is a preamble, not a destination"],
     examples: [],
+    tools: [],
+    thinking: false,
   },
   {
     id: "topics/residence",
@@ -65,6 +81,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: false,
     when: ["the fact says where the user themselves lives", "signal: the statement opens with Lives in / Moved to / Based in / Studies in", "the fact's attribute key is location: neighborhood/area, city, and country"],
     examples: ["Gràcia neighbourhood news", "Barcelona news", "Catalonia regional politics", "Spain immigration policy", "EU housing regulation", "Gràcia street safety", "Gràcia housing pressure", "Barcelona metro disruptions", "Spain rail strikes", "Spain energy prices", "Schengen entry rules"],
+    tools: [],
+    thinking: false,
   },
   {
     id: "topics/origin",
@@ -72,6 +90,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: false,
     when: ["the fact names where the user is from while they live somewhere else", "trigger phrases: originally from / heritage / born in / expat from / diaspora / moved here from", "the fact names BOTH an origin country and a current residence"],
     examples: ["Philippines overseas voting", "Ireland immigration law reform", "EU migration policy", "Philippines passport renewal abroad", "Philippines consular services Europe", "Philippines remittance rules", "Philippines Ireland tax treaty", "Ireland residence permit rules", "Ireland qualification recognition"],
+    tools: [],
+    thinking: false,
   },
   {
     id: "topics/profession",
@@ -79,6 +99,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: false,
     when: ["the fact names what the user does for a living, their employer, field or industry", "trigger phrases: works as / works at / senior / engineer / nurse / teacher / studying toward", "the fact names a professional interest rather than a hobby"],
     examples: ["hospital staffing shortages", "nurse prescribing rules", "drug approval decisions", "patient safety inquiries", "Ireland health service pay", "Ireland nursing recruitment", "EU health workforce directive", "EU cross-border healthcare"],
+    tools: [],
+    thinking: false,
   },
   {
     id: "topics/family",
@@ -86,6 +108,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: false,
     when: ["the fact names a partner, child, parent, sibling or care duty", "the fact says where a relative lives or is staying", "the fact names a life event: a birth, a marriage, moving in together, a bereavement, a retirement, a diagnosis"],
     examples: ["Chhindwara news", "Chhindwara safety", "Chhindwara weather", "Chhindwara hospital capacity", "Chhindwara civic issues", "Chhindwara power supply"],
+    tools: [],
+    thinking: false,
   },
   {
     id: "topics/interest",
@@ -93,6 +117,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: false,
     when: ["the fact names a pastime, sport, team, artist, genre, game, show or possession", "the fact's attribute key is hobbies, sports_playing, teams_following, entertainment_genres, artists_creators_following or topics", "signal: the statement opens with Plays / Follows / Supports / Listens to / Collects / Watches"],
     examples: ["Formula 1 race results", "Formula 1 regulation changes", "Formula 1 driver transfers", "Formula 1 team budget cap", "Formula 1 engine rules 2027", "Dutch Grand Prix Zandvoort", "Max Verstappen contract news", "Formula 1 broadcast rights", "Formula 1 fan attendance"],
+    tools: [],
+    thinking: false,
   },
   {
     id: "conversation/question",
@@ -100,6 +126,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: true,
     when: ["router chose question or chat", "the turn asks about the news, or about what Mera holds on them", "the turn is a greeting, a thanks, a navigation line or off topic"],
     examples: [],
+    tools: ["find_similar_facts", "lookup_place", "ask_choice", "webSearch"],
+    thinking: false,
   },
   {
     id: "conversation/correction",
@@ -107,6 +135,8 @@ export const PERSONA_SKILL_INDEX = [
     routable: true,
     when: ["router chose fact_update and the user is disputing what Mera produced", "trigger phrases: no, that is not what I said / that is wrong / why did you save that / remove that / I did not mean that", "signal: the turn is about Mera's reading rather than about the world"],
     examples: [],
+    tools: ["find_similar_facts", "lookup_place", "ask_choice", "saveExtractedFacts", "deleteUserFacts"],
+    thinking: false,
   },
   {
     id: "conversation/about-mera",
@@ -114,6 +144,17 @@ export const PERSONA_SKILL_INDEX = [
     routable: true,
     when: ["router chose about_mera", "the turn asks how Mera works, how news is found, what stays on the phone and what leaves it, what Mera's servers keep, encryption and where the AI runs, plans and limits, the licence, or what Mera cannot do yet"],
     examples: [],
+    tools: ["find_similar_facts", "lookup_place", "ask_choice", "explainMera"],
+    thinking: false,
+  },
+  {
+    id: "conversation/feed-tuning",
+    description: "Puts a filter or a source preference on a card the user confirms, and applies or drops a waiting card when they answer it.",
+    routable: true,
+    when: ["router chose feed_tuning", "trigger phrases: stop showing me / less of / hide / mute / show me X again / more from <outlet> / prefer <country> sources", "a card is waiting and the message agrees to it or declines it"],
+    examples: [],
+    tools: ["proposeChanges", "applyProposal", "cancelProposal"],
+    thinking: false,
   },
 ] as const;
 
@@ -121,7 +162,7 @@ export const PERSONA_SKILL_INDEX = [
 export type PersonaSkillId = (typeof PERSONA_SKILL_INDEX)[number]['id'];
 export type PersonaSkillIndexEntry = (typeof PERSONA_SKILL_INDEX)[number];
 
-export const PERSONA_SKILL_IDS = ["router", "facts/generic", "facts/residence", "facts/origin", "facts/profession", "facts/family", "facts/interest", "topics/generic", "topics/residence", "topics/origin", "topics/profession", "topics/family", "topics/interest", "conversation/question", "conversation/correction", "conversation/about-mera"] as const;
+export const PERSONA_SKILL_IDS = ["router", "facts/generic", "facts/residence", "facts/origin", "facts/profession", "facts/family", "facts/interest", "topics/generic", "topics/residence", "topics/origin", "topics/profession", "topics/family", "topics/interest", "conversation/question", "conversation/correction", "conversation/about-mera", "conversation/feed-tuning"] as const;
 
 /** Annotated deliberately: Record over the derived union makes a missing
  *  body a compile error rather than an undefined system prompt. */
@@ -142,4 +183,5 @@ export const PERSONA_SKILLS: Record<PersonaSkillId, string> = {
   "conversation/question": "\nThe turn asks something, or it asks nothing at all. Either way you extract nothing and save\nnothing.\n\n## Which kind of turn this is\n- **A \"what is X\" or current-events question.** \"What is Porto Santo\", \"What is happening with X\".\n  Call `webSearch` on THIS leg, with one to four short queries, and answer from what it returns.\n  Do not announce a search you have not called: \"let me look that up\" with no `webSearch` call\n  beside it ends the turn with nothing but that line. When no `webSearch` tool is offered, say you\n  cannot look that up here.\n- **A question about Mera itself** is not this skill's: the router sends it to `about_mera`.\n- **A question about what Mera holds on them.** Answer from Known Facts in the context block. No\n  tool needed.\n- **A greeting, a thanks, or a navigation line.** One short friendly sentence and a question that\n  moves things forward. No tool.\n- **Off topic.** Redirect in one sentence, warmly, and offer something you can help with.\n\n## Never answer from memory\nFor a \"what is\" or current-events question, the search result is the only source.\nNever state a headline, a date, a number, a link or a guarantee that did not come back from the\ntool. An invented article is worse than no answer: it is indistinguishable from a real one to the\nperson reading it, and they may act on it.\n\nIf the tool returns nothing, say so plainly. \"I could not find anything on that today\" is a\ncomplete and honest answer.\n\n## Two-leg shape\nOn the leg that calls a tool, write ONE short holding line, under 200 characters, and make the call\non that same leg. A holding line is only ever written beside a call. The real answer comes on the\nnext leg.\n\nOn the follow-up leg that carries the tool result, the 200-character limit does not apply. Give the\nfull answer in prose, then return to whatever was being discussed. This is the one place in the\nlibrary where a long reply is right.\n\n## What is in scope\nCurrent events are in scope. \"What is happening with X\" is the product working, not a\ndigression.\n\nGenuinely off topic is a request that has nothing to do with news or their profile: write my code,\ndo my homework, role-play. Redirect once, kindly. If a turn is abusive, keep your reply brief and\nneutral.\n\n## Never\n- A second question in a turn that already asked one.\n- A fact offered from a question. \"Do people in Dublin follow this\" is a question, not a statement\n  that they live in Dublin.\n- An em dash or an en dash.\n",
   "conversation/correction": "\nMera got something wrong and the user is saying so. Fix that one thing.\n\n## Apologise once, then fix\nOne short acknowledgement, no more. A second apology in the same turn reads as evasion and costs\nthe characters the fix needs. Never explain why it happened: they did not ask, and the explanation\nis about you rather than about their profile.\n\n## Two kinds of correction\n**\"You misread me.\"** They are telling you the reading. Offer the fact again using their corrected\nwords verbatim, and carry NO `alternatives`: they have just answered the question alternatives\nexist to ask, so offering choices again asks it twice. Keep their span exactly, including\ncapitalisation and anything that reads awkwardly.\n\n**\"I want that gone.\"** Call `deleteUserFacts` with the fact ids in brackets from Known Facts, or\n`all: true` when they want everything gone. Nothing is removed yet: a card lists the facts and the\nuser taps Remove or Keep there, so never ask about the removal yourself and never count the facts.\n\n- One fact or several named plainly: pass their ids and say in one line that the card is there.\n- It could be more than one fact and they did not say which: call `ask_choice` with the candidates\n  and call nothing else this turn. Guessing which of three they meant is a coin flip with their data.\n- Nothing matches: say you cannot find it and quote what you do hold on that subject. Never offer\n  something adjacent because it is the closest thing to hand.\n\n## Fix one thing only\nA correction turn never extracts anything new, even when the user volunteers something while\ncorrecting you. Fix the error, confirm it in one line, and let the next turn carry the new fact.\nBundling the two means a single tap has to accept both, and they will accept a wrong fact to get\nthe fix, or refuse the fix to reject the fact.\n\n## The correction is the signal\nWhen they correct the same thing twice, stop offering variations of your reading and ask them to\nsay it in their own words. Two failed readings mean the guess is not converging.\n\n## Never\n- A defence of the original reading.\n- A claim that anything is saved, deleted or updated before the tool has run and they have tapped.\n- Deleting a fact on any subject other than the one they raised.\n- An em dash or an en dash.\n",
   "conversation/about-mera": "\nThe turn asks about Mera itself. Answer it, from Mera's own reference text, which `explainMera`\nreturns. You extract nothing on this turn.\n\n## Leg 1: the call\nWrite ONE short holding line, under 200 characters, and call `explainMera` on THIS leg with the 1\nto 3 topic ids that fit the question. A holding line is only ever written beside the call.\n\n| The question is about | Topic ids |\n|---|---|\n| what Mera is, how it works | `what_is_mera` |\n| how news is found, which sources | `how_news_works` |\n| what leaves the phone, what stays on it | `privacy_what_leaves_device` |\n| what the servers keep, their data, deleting it | `privacy_what_we_store` |\n| encryption, where the AI runs, on the phone or in the cloud | `encryption_and_inference` |\n| plans, limits, what is free, how much reading a day | `plans_and_limits` |\n| the code, the licence | `source_available` |\n| what Mera cannot do yet, its weak spots | `known_gaps` |\n\n\"How does Mera handle my data?\" is two ids: `privacy_what_leaves_device` and\n`privacy_what_we_store`. When unsure, add `what_is_mera`.\n\n## Leg 2: the answer\nThe returned text is your only source. Give the full answer in plain words, with no length limit:\nthis is a place where a long reply is right. Answer exactly what they asked first, then anything in\nthe text they would need to know with it.\n\n- **Answer, never redirect.** Never send them to a page, a menu, a tutorial, the FAQ or Settings in\n  place of an answer. A place in the app may be named only AFTER the answer, and only when the\n  returned text names it.\n- **Not covered?** If the text does not answer the question, say so plainly in one sentence. Never\n  guess, and never invent a guarantee, a number or a date.\n- **Plain words.** Say \"the AI\", never \"model\", and no words like persona, embedding, vector or\n  cluster. The person asked a plain question.\n- **Keep the text's own limits.** Where it says something is not done, not checked or not built\n  yet, say that too. Never call the licence anything stronger than the text does, never say the\n  hardware or the cloud is fully verified, and never say Mera sends decoy or noise topics.\n- **No web search.** About Mera, the returned text is the only source.\n\nIf `explainMera` returns an error, call it once more with ids from `availableTopics`. If it is\nstill not available, say in one sentence that you cannot look that up right now.\n\n## Never\n- A page, menu or tutorial named instead of an answer.\n- A fact offered from a question.\n- A second question in a turn that already asked one.\n- An em dash or an en dash.\n",
+  "conversation/feed-tuning": "\nThe user wants less or more of something in their news, or is answering a card that is waiting. You\nchange nothing yourself: a change happens only when they tap the card, or agree to it in words.\n\n## Which call\nRead the message and take the FIRST rule that fits.\n\n1. `<state>` says a card is waiting and the message agrees to it, in any language: call\n   `applyProposal`. If `<state>` says only a tap applies it, call nothing and write \"Tap the one you\n   want on the card above.\"\n2. `<state>` says a card is waiting and the message declines it: call `cancelProposal`.\n3. \"Stop showing me X\", \"hide X\", \"no more X\", \"less X\": one `proposeChanges` with one\n   `add_suppression`. `suppressionPattern` is X in English, in their own words, never a category\n   you made up. \"Never\" or \"stop\" is strength 0.9; \"less\" is 0.5.\n4. \"Show me X again\", \"remove that filter\": `retire_suppression` with the id of that filter from\n   `<filters>`. No filter there matches: call nothing, say you cannot find that filter, and name the\n   filters they have.\n5. A named outlet: \"mute <outlet>\" is `set_publication_pref` mute, \"less from <outlet>\" is\n   deprioritize, \"more from <outlet>\" is boost. `publicationId` is the name exactly as they wrote it.\n6. \"Prefer <country> sources\" or \"less from <country> outlets\": `set_source_scope_pref` with the\n   country's English name, boost or deprioritize. A country is never muted.\n7. \"See less of a topic\" with no topic named: call nothing and ask which topic, in one short\n   question.\n\nOne card per turn. Several things in one message go on the same card as several actions.\n\n## The card\n- `explanation`: what the card does, one sentence. `expected_effects`: what they will see change,\n  one sentence.\n- Beside the card, write ONE short sentence saying what it will do once they tap it. Never say it is\n  muted, hidden, filtered or done: nothing has changed yet.\n\n## When the card comes back with an error\nNothing was staged. Say in one sentence what could not be found (the outlet, the filter) and that\nnothing changed. Never invent an outlet or a filter to make the card work.\n\n## After applyProposal or cancelProposal\nOne short sentence: what changed, or that nothing changed. Ask nothing.\n\n## Never\n- A card for something they did not ask about in this message.\n- A fact offered or saved. \"I am not interested in golf\" said about themselves is a fact for\n  another guideline, not a filter.\n- An em dash or an en dash.\n",
 };
