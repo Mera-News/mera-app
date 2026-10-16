@@ -100,9 +100,20 @@ function aboutMeraAnswerNote(languageName?: string): string {
   const lang = languageName
     ? `in ${languageName}${brand ? `, writing the app's name as ${brand}` : ''}`
     : 'in the language of their message';
+  // Only for a non-English reader: said to everyone, it sent a Ghent persona's
+  // English question back in Dutch (staging round 1).
+  const notEnglish = languageName && languageName !== 'English' ? ' The reference text is English; your answer is not.' : '';
   return 'Mera\'s reference text is in the explainMera result above. Answer their message now, '
-    + `from that text only, ${lang}. The reference text is English; your answer is not. Do not call a tool.`;
+    + `from that text only, ${lang}.${notEnglish} Do not call a tool.`;
 }
+
+/** An about-mera leg that answered before calling explainMera. Staging: the
+ *  holding line was an echo of the question, no call came, and the echo
+ *  shipped as the answer. Re-asked once; the answer only ever comes from the
+ *  returned text. */
+const EXPLAIN_FIRST_NOTE =
+  'You wrote an answer without calling explainMera. Call explainMera on THIS leg with the topic ids that fit '
+  + 'their message; the answer comes only from the text it returns.';
 
 /** explainMera came back with text to answer from (an error result keeps the
  *  tool offered: the skill retries once with `availableTopics`). */
@@ -499,6 +510,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** Pushed AFTER the tool results on the closing leg, so the last thing the
    *  model reads is the instruction and not the staged save's JSON. */
   let closingNote: string | null = null;
+  /** One re-ask for an about-mera leg that answered without the reference text. */
+  let explainReasked = false;
   /** Prose written AFTER a skill loaded. The route leg's acknowledgement does
    *  not count: it says the turn began, not that the user was answered. */
   let answeredTheUser = false;
@@ -1619,6 +1632,18 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     if (forcingProposalNow && !proposedSomething) {
       terminalReason = 'no-proposal';
       break;
+    }
+
+    if (
+      skillLoaded === 'conversation/about-mera'
+      && typeof deps.tools.explainMera === 'function'
+      && !explainReasked
+      && !toolResultsThisTurn.some((tr) => tr.name === 'explainMera')
+    ) {
+      explainReasked = true;
+      formatErrorNote = EXPLAIN_FIRST_NOTE;
+      maxLegsThisTurn++;
+      continue;
     }
 
     // ---- THE REPLY GATE -------------------------------------------------

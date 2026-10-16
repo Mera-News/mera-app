@@ -226,6 +226,31 @@ describe('hindifix F: the about-mera answer leg', () => {
     });
     const last = h.calls[2].messages[h.calls[2].messages.length - 1];
     expect(last.content).toContain('the language of their message');
+    // Round 1 told every reader "your answer is not [English]", and a Ghent
+    // persona's English question was answered in Dutch.
+    expect(last.content).not.toMatch(/answer is not/);
+  });
+
+  it('an English reader is not told to avoid English', async () => {
+    const h = harness([ROUTE, CALL, res({ content: 'Starter gives 10 MB a day.' })], { explainMera: async () => SECTIONS });
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] }), userMessage: 'How much?', deps: h.deps });
+    const last = h.calls[2].messages[h.calls[2].messages.length - 1];
+    expect(last.content).toContain('in English');
+    expect(last.content).not.toMatch(/answer is not/);
+  });
+
+  // Staging round 1: leg 1 echoed the question ("Can anyone read the app's
+  // code?") and called nothing, and the echo shipped as the answer.
+  it('prose before any explainMera call is re-asked once, never shipped', async () => {
+    const explainMera = jest.fn(async () => SECTIONS);
+    const h = harness(
+      [ROUTE, res({ content: "Can anyone read the app's code?" }), CALL, res({ content: 'स्टार्टर में रोज़ 10 MB मिलते हैं।' })],
+      { explainMera },
+    );
+    const out = await runAgentTurn({ state: createAgentState(HINDI), userMessage: 'प्लान?', deps: h.deps });
+    expect(explainMera).toHaveBeenCalledTimes(1);
+    expect(h.calls[2].messages.some((m) => /explainMera/.test(m.content) && m.role === 'user')).toBe(true);
+    expect(out.reply).toBe('स्टार्टर में रोज़ 10 MB मिलते हैं।');
   });
 
   it('a call written on the answer leg is dropped and never becomes the reply', async () => {
