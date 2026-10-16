@@ -916,7 +916,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // A SAVE ALL TAP's first leg is written by the loop: the offer of every
     // option, through the ordinary save path, so every guard still applies.
     const called: AgentModelResult = index === 0 && saveAllOptions !== null ? saveAllLeg(saveAllOptions) : await deps.callModel({
-      role: index === 0 ? 'route' : 'tool',
+      // A RESUMED turn's first leg is a skill leg, not a route: it carries the
+      // skill body, and counting it as a route leg made two arms that resumed the
+      // same skill read as one arm (S1 re-run, RUNNER BUG false positive).
+      role: index === 0 && !resumedSkill ? 'route' : 'tool',
       model,
       systemPrompt,
       messages,
@@ -967,7 +970,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
     const leg: AgentLeg = {
       index,
-      role: index === 0 ? 'route' : 'tool',
+      // A RESUMED turn's first leg is a skill leg, not a route: it carries the
+      // skill body, and counting it as a route leg made two arms that resumed the
+      // same skill read as one arm (S1 re-run, RUNNER BUG false positive).
+      role: index === 0 && !resumedSkill ? 'route' : 'tool',
       systemPrompt,
       messages,
       toolCalls: result.toolCalls,

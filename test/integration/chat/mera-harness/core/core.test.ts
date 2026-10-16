@@ -1590,3 +1590,41 @@ describe('TestFlight regressions', () => {
     expect(out.replyLeakUnfixed).toBe(true);
   });
 });
+
+describe('leg roles', () => {
+  it('a resumed turn\'s first leg is a skill leg, not a route leg', async () => {
+    const state = createAgentState(PERSONA);
+    state.turn.lastQuestion = 'Shall I add chess?';
+    state.turn.lastSkill = 'facts/interest';
+    state.turn.lastUserMessage = 'I play chess';
+    const roles: string[] = [];
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'Offered.', toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Plays chess' }] })] }),
+      modelResult({ content: 'Tap to confirm.' }),
+    ]);
+    const callModel = deps.callModel;
+    deps.callModel = async (req) => {
+      roles.push(req.role);
+      return callModel(req);
+    };
+    const out = await runAgentTurn({ state, userMessage: 'yes', deps });
+    expect(out.typedYesResume).toBe(true);
+    expect(roles[0]).toBe('tool');
+    expect(out.legs[0].role).toBe('tool');
+  });
+
+  it('an ordinary turn\'s first leg is the route leg', async () => {
+    const roles: string[] = [];
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      modelResult({ content: 'Hi.' }),
+    ]);
+    const callModel = deps.callModel;
+    deps.callModel = async (req) => {
+      roles.push(req.role);
+      return callModel(req);
+    };
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hello', deps });
+    expect(roles).toEqual(['route', 'tool']);
+  });
+});
