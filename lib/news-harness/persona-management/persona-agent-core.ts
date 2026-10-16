@@ -580,8 +580,11 @@ export function decidePersonaProposeChanges(
     actions,
   };
 
+  // The SANITIZED actions are echoed: the card is rebuilt from this result, and
+  // rebuilding it from the model's raw input drew (and applied on tap) an
+  // outlet or a structured value this function had dropped.
   return {
-    result: { staged: true, actionCount: actions.length, proposalId: proposal.id },
+    result: { staged: true, actionCount: actions.length, proposalId: proposal.id, actions },
     sideEffects: { proposal },
   };
 }

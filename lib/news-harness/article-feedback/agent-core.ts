@@ -1053,12 +1053,15 @@ export function decideProposeChanges(
   };
 
   // proposalId is echoed in the result so deriveThreadItems can key the rebuilt
-  // proposal card to store.proposal / resolvedProposals.
+  // proposal card to store.proposal / resolvedProposals. The SANITIZED actions
+  // are echoed so the card is rebuilt from them, never from the raw input: an
+  // uncorroborated structured filter is downgraded here and must stay so.
   return {
     result: {
       staged: true,
       actionCount: actions.length,
       proposalId: proposal.id,
+      actions,
       ...(proposal.chooseOne ? { chooseOne: true } : {}),
     },
     sideEffects: { proposal },

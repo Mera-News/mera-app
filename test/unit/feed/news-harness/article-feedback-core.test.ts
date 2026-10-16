@@ -825,6 +825,7 @@ describe('decideProposeChanges', () => {
       staged: true,
       actionCount: 1,
       proposalId: result.sideEffects?.proposal?.id,
+      actions: result.sideEffects?.proposal?.actions,
     });
     expect(result.sideEffects?.proposal?.actions).toHaveLength(1);
     expect(result.sideEffects?.proposal?.id).toMatch(/^proposal-/);

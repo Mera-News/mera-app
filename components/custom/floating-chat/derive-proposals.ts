@@ -13,9 +13,10 @@ import { asRecord, toStringArray } from './derive-fact-cards';
 // ---------------------------------------------------------------------------
 //
 // The article-feedback agent stages persona changes via a `proposeChanges`
-// tool call whose INPUT carries { explanation, expected_effects, actions[] }.
-// We rebuild a StagedProposal defensively from that input so a persisted (and
-// therefore resumed) proposal re-renders its confirm card. `applyProposal` /
+// tool call whose INPUT carries { explanation, expected_effects, actions[] }
+// and whose RESULT echoes the sanitized `actions`. We rebuild a StagedProposal
+// defensively from that echo (the input only for rows persisted before it) so a
+// persisted (and therefore resumed) proposal re-renders its confirm card. `applyProposal` /
 // `cancelProposal` tool calls surface nothing — they only mutate store state.
 //
 // Proposal id reconciliation: the agent generates the StagedProposal id as its
@@ -39,8 +40,8 @@ import { asRecord, toStringArray } from './derive-fact-cards';
  *
  * The cost of that split is real (it is exactly what silently dropped
  * structured filters and `retire_suppression` from every resumed card), so it
- * is EXPORTED and covered by the action-type coverage test that walks both
- * agents' tool enums.
+ * is EXPORTED and covered by `proposal-card-actions.test.ts`, which walks
+ * every ProposalAction kind from staging through this parser.
  */
 export function parseProposalAction(value: unknown): ProposalAction | null {
   const rec = asRecord(value);
@@ -110,8 +111,14 @@ export function parseProposalAction(value: unknown): ProposalAction | null {
       // drift that makes a resumed card mean something different from the one
       // the user first saw. Unresolvable ⇒ null ⇒ the action is dropped, same
       // as at staging time.
+      // A sanitized echo (`result.actions`) carries the resolved `label`
+      // instead, which resolves back to the same code.
       const resolved = resolveCountryScope(
-        typeof rec.scopeCountry === 'string' ? rec.scopeCountry : '',
+        typeof rec.scopeCountry === 'string'
+          ? rec.scopeCountry
+          : typeof rec.label === 'string'
+            ? rec.label
+            : '',
       );
       const pref = typeof rec.publicationPref === 'string' ? rec.publicationPref.trim() : '';
       // No `mute`: nothing implements a scope exclusion, so a mute is rejected
@@ -188,7 +195,16 @@ export function deriveProposal(toolCall: ToolCallRecord): StagedProposal | null 
   if (typeof asRecord(toolCall.result)?.error === 'string') return null;
 
   const input = asRecord(toolCall.input) ?? {};
-  const rawActions = Array.isArray(input.actions) ? input.actions : [];
+  // The sanitizer's echo wins: the input is what the MODEL asked for, and an
+  // action the sanitizer dropped or downgraded (an invented outlet, an
+  // uncorroborated filter value) was drawn and applied on tap when the card was
+  // rebuilt from it. Rows persisted before the echo existed fall back to input.
+  const echoed = asRecord(toolCall.result)?.actions;
+  const rawActions = Array.isArray(echoed)
+    ? echoed
+    : Array.isArray(input.actions)
+      ? input.actions
+      : [];
   const actions: ProposalAction[] = [];
   for (const raw of rawActions) {
     const action = parseProposalAction(raw);

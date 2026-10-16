@@ -333,7 +333,12 @@ describe('executeTool: proposeChanges', () => {
       actions: [{ type: 'remove_topics', fact_id: factId, topics: ['AI'] }],
     });
 
-    expect(result.result).toEqual({ staged: true, actionCount: 1, proposalId: result.sideEffects?.proposal?.id });
+    expect(result.result).toEqual({
+      staged: true,
+      actionCount: 1,
+      proposalId: result.sideEffects?.proposal?.id,
+      actions: result.sideEffects?.proposal?.actions,
+    });
     expect(result.sideEffects?.proposal?.actions).toHaveLength(1);
     expect(result.sideEffects?.proposal?.id).toMatch(/^proposal-/);
   });
@@ -431,7 +436,12 @@ describe('executeTool: proposeChanges', () => {
         { type: 'submit_feature_request', title: 'Mute a publication', summary: 'Allow users to mute a publication so its articles stop appearing.' },
       ],
     });
-    expect(result.result).toEqual({ staged: true, actionCount: 1, proposalId: result.sideEffects?.proposal?.id });
+    expect(result.result).toEqual({
+      staged: true,
+      actionCount: 1,
+      proposalId: result.sideEffects?.proposal?.id,
+      actions: result.sideEffects?.proposal?.actions,
+    });
     expect(result.sideEffects?.proposal?.actions[0]).toEqual({
       type: 'submit_feature_request',
       title: 'Mute a publication',
