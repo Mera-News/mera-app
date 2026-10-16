@@ -163,6 +163,18 @@ describe('answering a waiting card', () => {
     expect(out.reply).toBe('I have muted The Hindu.');
   });
 
+  it('the waiting-card line separates clear agreement from an acknowledgement (owner ruling)', async () => {
+    const { deps, requests } = harness([res({ content: 'Tap the card above, or say yes to do it.', toolCalls: [tc('load_skill', { id: 'conversation/feed-tuning' })] }), res({ content: 'Tap the card above, or say yes to do it.' })]);
+    const state = createAgentState(PERSONA);
+    state.pendingProposal = pending(true);
+    await runAgentTurn({ state, userMessage: 'cool', deps });
+
+    const line = stateOf(requests[0]);
+    expect(line).toContain('Clear agreement applies it: "yes", "do it", "go ahead", "sure", "please do"');
+    expect(line).toContain('"ok", "okay", "cool", "thanks", "nice", "great", "hmm"');
+    expect(line).toContain('only acknowledge: call nothing and say "Tap the card above, or say yes to do it."');
+  });
+
   it('a card only a tap applies offers no apply, and the line says to tap', async () => {
     const { deps, requests } = harness([
       res({ content: 'Tap the one you want on the card above.', toolCalls: [tc('load_skill', { id: 'conversation/feed-tuning' })] }),

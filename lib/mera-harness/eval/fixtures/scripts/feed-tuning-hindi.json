@@ -1,7 +1,7 @@
 {
   "id": "feed-tuning-hindi",
   "cohort": "feed-tuning-hindi",
-  "note": "onemera S1, Hindi: a filter card from a Hindi request, no apply on thanks, apply on a Hindi yes, replies in Devanagari.",
+  "note": "onemera S1, Hindi: a filter card from a Hindi request; thanks, ठीक है and बढ़िया only acknowledge (no apply); a Hindi yes applies; replies in Devanagari.",
   "persona": {
     "facts": [
       {
@@ -36,8 +36,8 @@
       "index": 1,
       "user": "धन्यवाद",
       "expect": {
-        "routeKind": "question",
-        "skill": "conversation/question",
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
         "legs": 2,
         "endedOn": "settled",
         "card": {
@@ -47,6 +47,32 @@
     },
     {
       "index": 2,
+      "user": "ठीक है",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 3,
+      "user": "बढ़िया",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 4,
       "user": "हाँ, कर दो",
       "expect": {
         "routeKind": "feed-tuning",

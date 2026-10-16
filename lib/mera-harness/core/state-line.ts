@@ -158,10 +158,15 @@ export function buildStateLine(input: StateLineInput): string {
     );
   } else if (input.pendingCard) {
     const card = `A card is waiting for the user: "${escapeUntrusted(input.pendingCard.summary, 300)}".`;
+    // OWNER RULING: a card applies only on a tap or CLEAR agreement. Staging
+    // measured "cool" applying it 4 of 5 and "ok" 5 of 5 when this line said
+    // only "agrees to it". The two lists are the literal test.
     parts.push(
       input.pendingCard.appliable
-        ? `${card} If this message agrees to it, in any language, call applyProposal. If it declines, call `
-          + 'cancelProposal. Anything else leaves the card waiting; never say it is done.'
+        ? `${card} Clear agreement applies it: "yes", "do it", "go ahead", "sure", "please do", or the same in `
+          + 'any language. Then call applyProposal. "ok", "okay", "cool", "thanks", "nice", "great", "hmm" and the '
+          + 'same in any language only acknowledge: call nothing and say "Tap the card above, or say yes to do it." '
+          + 'A decline calls cancelProposal. Anything else leaves the card waiting; never say it is done.'
         : `${card} ${input.pendingCard.chooseOne ? 'It offers options, and only' : 'Only'} a tap on the card `
           + 'applies it: if they agree, say "Tap the one you want on the card above." If it declines, call '
           + 'cancelProposal. Never say it is done.',

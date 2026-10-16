@@ -1,7 +1,7 @@
 {
   "id": "feed-tuning",
   "cohort": "feed-tuning",
-  "note": "onemera S1. Filters and sources on a card: stage the right kind, apply only on agreement (an acknowledgement battery applies nothing), drop on a decline, ask which topic for a bare 'see less of a topic', and keep 'I am not interested in X' a fact.",
+  "note": "onemera S1. Filters and sources on a card: stage the right kind; apply only on CLEAR agreement (owner ruling: an acknowledgement such as thanks, cool, hmm, ok, okay, nice, great applies nothing and the reply points at the card); drop on a decline; ask which topic for a bare 'see less of a topic'; keep 'I am not interested in X' a fact.",
   "persona": {
     "facts": [
       {
@@ -44,8 +44,8 @@
       "index": 1,
       "user": "thanks",
       "expect": {
-        "routeKind": "question",
-        "skill": "conversation/question",
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
         "legs": 2,
         "endedOn": "settled",
         "card": {
@@ -57,8 +57,8 @@
       "index": 2,
       "user": "cool",
       "expect": {
-        "routeKind": "question",
-        "skill": "conversation/question",
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
         "legs": 2,
         "endedOn": "settled",
         "card": {
@@ -70,8 +70,8 @@
       "index": 3,
       "user": "hmm",
       "expect": {
-        "routeKind": "question",
-        "skill": "conversation/question",
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
         "legs": 2,
         "endedOn": "settled",
         "card": {
@@ -83,8 +83,8 @@
       "index": 4,
       "user": "what does that card do?",
       "expect": {
-        "routeKind": "question",
-        "skill": "conversation/question",
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
         "legs": 2,
         "endedOn": "settled",
         "card": {
@@ -94,6 +94,58 @@
     },
     {
       "index": 5,
+      "user": "ok",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 6,
+      "user": "okay",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 7,
+      "user": "nice",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 8,
+      "user": "great",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 9,
       "user": "yes please",
       "expect": {
         "routeKind": "feed-tuning",
@@ -106,7 +158,7 @@
       }
     },
     {
-      "index": 6,
+      "index": 10,
       "user": "Show me crypto news again",
       "expect": {
         "routeKind": "feed-tuning",
@@ -121,7 +173,7 @@
       }
     },
     {
-      "index": 7,
+      "index": 11,
       "user": "no, leave it",
       "expect": {
         "routeKind": "feed-tuning",
@@ -134,7 +186,7 @@
       }
     },
     {
-      "index": 8,
+      "index": 12,
       "user": "Mute The Hindu",
       "expect": {
         "routeKind": "feed-tuning",
@@ -149,11 +201,11 @@
       }
     },
     {
-      "index": 9,
+      "index": 13,
       "user": "ok",
       "expect": {
-        "routeKind": "question",
-        "skill": "conversation/question",
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
         "legs": 2,
         "endedOn": "settled",
         "card": {
@@ -162,7 +214,7 @@
       }
     },
     {
-      "index": 10,
+      "index": 14,
       "user": "yes, do it",
       "expect": {
         "routeKind": "feed-tuning",
@@ -175,7 +227,7 @@
       }
     },
     {
-      "index": 11,
+      "index": 15,
       "user": "More news from Dutch sources please",
       "expect": {
         "routeKind": "feed-tuning",
@@ -190,7 +242,7 @@
       }
     },
     {
-      "index": 12,
+      "index": 16,
       "user": "no thanks",
       "expect": {
         "routeKind": "feed-tuning",
@@ -203,7 +255,7 @@
       }
     },
     {
-      "index": 13,
+      "index": 17,
       "user": "See less of a topic",
       "expect": {
         "routeKind": "feed-tuning",
@@ -213,7 +265,7 @@
       }
     },
     {
-      "index": 14,
+      "index": 18,
       "user": "football transfer rumours",
       "expect": {
         "routeKind": "feed-tuning",
@@ -228,7 +280,7 @@
       }
     },
     {
-      "index": 15,
+      "index": 19,
       "user": "I am not interested in golf",
       "expect": {
         "routeKind": "interest",
