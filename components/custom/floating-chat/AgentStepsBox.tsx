@@ -11,10 +11,11 @@ import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, withTiming } from 'react-native-reanimated';
 import { GlyphSafeButton } from './glyph-safe';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import type { AgentStep, AgentTerminal } from './types';
 
@@ -82,6 +83,80 @@ function firstLine(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+type TFn = TFunction;
+
+// Keys whose en text awaits the 20-locale splice: one narrowing cast each,
+// removed once they land so tsc proves them.
+type PendingKey = 'agentSteps.working';
+
+/** The three key->text tables, built once per language. Pure given `t`, so a
+ *  table test needs no render. */
+export function stepTables(t: TFn) {
+  /** Step labels with no interpolation. A key absent here renders the generic
+   *  line, which is what keeps an unmapped tool from showing a dot-path. */
+  const PLAIN_LABEL: Record<string, string> = {
+    'agentSteps.legStart': t('agentSteps.legStart'),
+    'agentSteps.loadSkillGeneric': t('agentSteps.loadSkillGeneric'),
+    'agentSteps.findSimilarFacts': t('agentSteps.findSimilarFacts'),
+    'agentSteps.writeUp': t('agentSteps.writeUp'),
+    'agentSteps.removing': t('agentSteps.removing'),
+    'agentSteps.asking': t('agentSteps.asking'),
+    'agentSteps.working': t('agentSteps.working'),
+    'agentSteps.proposeChanges': t('agentSteps.proposeChanges' as PendingKey),
+    'agentSteps.applyProposal': t('agentSteps.applyProposal' as PendingKey),
+    'agentSteps.cancelProposal': t('agentSteps.cancelProposal' as PendingKey),
+    'agentSteps.proposeTrack': t('agentSteps.proposeTrack' as PendingKey),
+    'agentSteps.proposeFactCheck': t('agentSteps.proposeFactCheck' as PendingKey),
+    'agentSteps.searchNews': t('agentSteps.searchNews' as PendingKey),
+    // The wait line's own copy, so the box says the same thing the line
+    // would (ux2 batch 25, D6). A pool: its first line.
+    'chatPhases.webSearch': firstLine(t('chatPhases.webSearch', { returnObjects: true })),
+  };
+
+  const SKILL_PHRASE: Record<string, string> = {
+    'skillPhrase.residence': t('skillPhrase.residence'),
+    'skillPhrase.work': t('skillPhrase.work'),
+    'skillPhrase.interests': t('skillPhrase.interests'),
+    'skillPhrase.origin': t('skillPhrase.origin'),
+    'skillPhrase.family': t('skillPhrase.family'),
+    'skillPhrase.feedTuning': t('skillPhrase.feedTuning' as 'skillPhrase.work'),
+    'skillPhrase.followStory': t('skillPhrase.followStory' as 'skillPhrase.work'),
+    'skillPhrase.factCheck': t('skillPhrase.factCheck' as 'skillPhrase.work'),
+  };
+
+  const CONSEQUENCE: Record<string, string> = {
+    'agentSteps.consequence.generic': t('agentSteps.consequence.generic'),
+    'agentSteps.consequence.interrupted': t('agentSteps.consequence.interrupted'),
+    'agentSteps.consequence.lookupPlace': t('agentSteps.consequence.lookupPlace'),
+    'agentSteps.consequence.findSimilarFacts': t('agentSteps.consequence.findSimilarFacts'),
+    'agentSteps.consequence.loadSkill': t('agentSteps.consequence.loadSkill'),
+    'agentSteps.consequence.writeUp': t('agentSteps.consequence.writeUp'),
+    'agentSteps.consequence.removing': t('agentSteps.consequence.removing'),
+    'agentSteps.cardRefused': t('agentSteps.cardRefused' as PendingKey),
+  };
+  return { PLAIN_LABEL, SKILL_PHRASE, CONSEQUENCE };
+}
+
+/** A step's label. The two interpolating keys are handled explicitly; every
+ *  other key comes from the table, and an unknown one falls back rather than
+ *  rendering its own name. */
+export function stepLabel(
+  step: AgentStep,
+  t: TFn,
+  tables: Pick<ReturnType<typeof stepTables>, 'PLAIN_LABEL' | 'SKILL_PHRASE'>,
+): string {
+  const values = step.labelValues;
+  if (step.labelKey === 'agentSteps.loadSkill' && values?.topicKey) {
+    const phrase = tables.SKILL_PHRASE[values.topicKey];
+    if (phrase) return t('agentSteps.loadSkill', { topic: phrase });
+    return tables.PLAIN_LABEL['agentSteps.loadSkillGeneric'];
+  }
+  if (step.labelKey === 'agentSteps.lookupPlace' && values?.query) {
+    return t('agentSteps.lookupPlace', { query: values.query });
+  }
+  return tables.PLAIN_LABEL[step.labelKey] ?? tables.PLAIN_LABEL['agentSteps.working'];
+}
+
 const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   steps,
   collapsed,
@@ -97,40 +172,7 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   // of a finished turn, nothing about the turn changes.
   const [reopened, setReopened] = useState(false);
 
-  /** Step labels with no interpolation. A key absent here renders the generic
-   *  line, which is what keeps an unmapped tool from showing a dot-path. */
-  const PLAIN_LABEL: Record<string, string> = {
-    'agentSteps.legStart': t('agentSteps.legStart'),
-    'agentSteps.loadSkillGeneric': t('agentSteps.loadSkillGeneric'),
-    'agentSteps.findSimilarFacts': t('agentSteps.findSimilarFacts'),
-    'agentSteps.writeUp': t('agentSteps.writeUp'),
-    'agentSteps.removing': t('agentSteps.removing'),
-    'agentSteps.asking': t('agentSteps.asking'),
-    'agentSteps.working': t('agentSteps.working'),
-    // The wait line's own copy, so the box says the same thing the line
-    // would (ux2 batch 25, D6). A pool: its first line.
-    'chatPhases.webSearch': firstLine(t('chatPhases.webSearch', { returnObjects: true })),
-  };
-
-  const SKILL_PHRASE: Record<string, string> = {
-    'skillPhrase.residence': t('skillPhrase.residence'),
-    'skillPhrase.work': t('skillPhrase.work'),
-    'skillPhrase.interests': t('skillPhrase.interests'),
-    'skillPhrase.origin': t('skillPhrase.origin'),
-    'skillPhrase.family': t('skillPhrase.family'),
-    'skillPhrase.newFact': t('skillPhrase.newFact'),
-    'skillPhrase.topics': t('skillPhrase.topics'),
-  };
-
-  const CONSEQUENCE: Record<string, string> = {
-    'agentSteps.consequence.generic': t('agentSteps.consequence.generic'),
-    'agentSteps.consequence.interrupted': t('agentSteps.consequence.interrupted'),
-    'agentSteps.consequence.lookupPlace': t('agentSteps.consequence.lookupPlace'),
-    'agentSteps.consequence.findSimilarFacts': t('agentSteps.consequence.findSimilarFacts'),
-    'agentSteps.consequence.loadSkill': t('agentSteps.consequence.loadSkill'),
-    'agentSteps.consequence.writeUp': t('agentSteps.consequence.writeUp'),
-    'agentSteps.consequence.removing': t('agentSteps.consequence.removing'),
-  };
+  const { PLAIN_LABEL, SKILL_PHRASE, CONSEQUENCE } = useMemo(() => stepTables(t), [t]);
 
   // Gates the one-shot COLLAPSE/entry transition only. Deliberately not the
   // pending spinner: `use-is-focused-safe`'s own docstring says this hook must
@@ -151,21 +193,7 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
     return () => clearTimeout(timer);
   }, [pendingId]);
 
-  /** A step's label. The two interpolating keys are handled explicitly; every
-   *  other key comes from the table, and an unknown one falls back rather than
-   *  rendering its own name. */
-  const labelFor = (step: AgentStep): string => {
-    const values = step.labelValues;
-    if (step.labelKey === 'agentSteps.loadSkill' && values?.topicKey) {
-      const phrase = SKILL_PHRASE[values.topicKey];
-      if (phrase) return t('agentSteps.loadSkill', { topic: phrase });
-      return PLAIN_LABEL['agentSteps.loadSkillGeneric'];
-    }
-    if (step.labelKey === 'agentSteps.lookupPlace' && values?.query) {
-      return t('agentSteps.lookupPlace', { query: values.query });
-    }
-    return PLAIN_LABEL[step.labelKey] ?? PLAIN_LABEL['agentSteps.working'];
-  };
+  const labelFor = (step: AgentStep): string => stepLabel(step, t, { PLAIN_LABEL, SKILL_PHRASE });
 
   // ONE sentence per terminal, and the terminal outranks the step tally: a turn
   // whose every step succeeded and which then routed nothing is a failure the

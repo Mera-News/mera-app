@@ -38,7 +38,7 @@ import AskChoiceCard from './AskChoiceCard';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
-import ProposalCard from './ProposalCard';
+import ProposalCard, { AppliedByTypingCard } from './ProposalCard';
 import QuickFactCheckCard from './QuickFactCheckCard';
 import FactChoiceCard from './FactChoiceCard';
 import FactChoiceBulkRow from './FactChoiceBulkRow';
@@ -292,6 +292,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       case 'proposal-card':
         return <ProposalCard proposal={item.proposal} isLast={item.key === lastProposalKey} />;
+
+      case 'applied-by-typing':
+        return <AppliedByTypingCard changeLogIds={item.changeLogIds} undoable={item.undoable} />;
 
       case 'topic-plan-card':
         return <TopicPlanCard factId={item.factId} factStatement={item.factStatement} />;
