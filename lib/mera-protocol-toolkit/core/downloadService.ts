@@ -201,6 +201,48 @@ export async function promoteToOnDevice(): Promise<boolean> {
   }
 }
 
+/**
+ * Undoes a local Private cloud fallback once On this phone can run again (Apple
+ * Intelligence finished getting ready, say), without the settings screen. For the
+ * app's foreground handler. Acts only when the phone is on Cloud locally, nothing
+ * downloads (a download promotes by itself), the phone is runnable and the cached
+ * persona says OnDevice; the server persona then confirms the intent, since a
+ * Private cloud pick does not rewrite the cached copy. Sends no mutation: the
+ * server already says OnDevice. Returns whether the phone moved to OnDevice.
+ */
+export async function restoreOnDeviceIfRunnable(): Promise<boolean> {
+  /* eslint-disable @typescript-eslint/no-require-imports */
+  const { useUserStore } = require('../../stores/user-store') as typeof import('../../stores/user-store');
+  /* eslint-enable @typescript-eslint/no-require-imports */
+  const cached = useUserStore.getState().userPersona;
+  if (cached?.processingMode !== ProcessingMode.OnDevice) return false;
+  if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.Cloud) return false;
+  if (isDownloadInProgress()) return false;
+  if (!(await isModelDownloaded().catch(() => false))) return false;
+  try {
+    /* eslint-disable @typescript-eslint/no-require-imports */
+    const { resolveCurrentUserId } =
+      require('../../security/current-user') as typeof import('../../security/current-user');
+    const { AccountService } = require('../../account-service') as typeof import('../../account-service');
+    /* eslint-enable @typescript-eslint/no-require-imports */
+    const persona = await AccountService.getUserPersona(await resolveCurrentUserId());
+    if (!persona) return false;
+    useUserStore.getState().setUserPersona(persona);
+    // Re-checked after the awaits: the reader may have switched or started a download meanwhile.
+    const store = useMeraProtocolStore.getState();
+    if (persona.processingMode !== ProcessingMode.OnDevice || store.processingMode !== ProcessingMode.Cloud || isDownloadInProgress()) {
+      return false;
+    }
+    store.setProcessingMode(ProcessingMode.OnDevice);
+    store.setModelState('downloaded');
+    store.setDownloadProgress(100);
+    return true;
+  } catch {
+    // Offline or signed out: stay on Cloud; the next foreground tries again.
+    return false;
+  }
+}
+
 /** The screen keeps this in step with the reader's on-device intent. */
 export function setPromoteWhenDone(value: boolean): void {
   promoteWhenDone = value;

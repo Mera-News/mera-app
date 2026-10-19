@@ -13,6 +13,7 @@ import {
     downloadFailureKind,
     getDownloadBytes,
     isDownloadInProgress,
+    restoreOnDeviceIfRunnable,
     setPromoteWhenDone,
     startModelDownloads,
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
@@ -20,10 +21,11 @@ import { cancelActiveDownload, downloadBaseModel, isModelDownloaded } from '@/li
 import { RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useUserStore } from '@/lib/stores/user-store';
+import { retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 import { placeDownloadedModel } from '@/test/helpers/fs';
 import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
-import { installOnDeviceLlm } from '@/test/helpers/on-device-llm';
+import { installOnDeviceLlm, setOnDeviceLlmAvailability } from '@/test/helpers/on-device-llm';
 import { __resetAppRestartForTests, activeHolds } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -431,5 +433,83 @@ describe('downloadBaseModel', () => {
         expect(last().cancelAsync).toHaveBeenCalledTimes(1);
         last().resolveCancelled();
         await run;
+    });
+});
+
+describe('restoreOnDeviceIfRunnable: a local Cloud fallback ends once On this phone can run again', () => {
+    const cachedPersona = (processingMode: ProcessingMode) =>
+        useUserStore.setState({ userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode }) });
+    /** The server persona's mode; the default fixture is not relied on. */
+    const serverMode = (processingMode: ProcessingMode) =>
+        server.use(
+            graphql.query('GetUserPersona', () =>
+                HttpResponse.json({ data: { userPersonaByUserId: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode }) } }),
+            ),
+        );
+
+    beforeEach(async () => {
+        useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
+        await signInFixtureAccount();
+        await setTextEngine('native');
+        placeDownloadedModel(RELEVANCE_MODEL.modelId);
+        cachedPersona(ProcessingMode.OnDevice);
+        serverMode(ProcessingMode.OnDevice);
+        // Boot with Apple Intelligence still getting ready: the boot rule falls back to Cloud locally.
+        installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
+        useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice, modelState: 'downloaded', downloadProgress: 100 });
+        await retireLegacyModels();
+        expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+    });
+
+    afterEach(async () => {
+        await setTextEngine('mera');
+        __resetTextEngineForTests();
+        useUserStore.setState({ userPersona: null });
+    });
+
+    it('moves the phone back to OnDevice locally and sends no mutation', async () => {
+        const sent = recordModeUpdates();
+        setOnDeviceLlmAvailability({ available: true, reason: null });
+        await expect(restoreOnDeviceIfRunnable()).resolves.toBe(true);
+        expect(protocol()).toMatchObject({ processingMode: ProcessingMode.OnDevice, modelState: 'downloaded', downloadProgress: 100 });
+        expect(sent).toEqual([]);
+    });
+
+    it('stays on Cloud while On this phone still cannot run', async () => {
+        await expect(restoreOnDeviceIfRunnable()).resolves.toBe(false);
+        expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+    });
+
+    it('stays on Cloud when the cached persona says Cloud', async () => {
+        cachedPersona(ProcessingMode.Cloud);
+        setOnDeviceLlmAvailability({ available: true, reason: null });
+        await expect(restoreOnDeviceIfRunnable()).resolves.toBe(false);
+        expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+    });
+
+    it('stays on Cloud when the reader picked Private cloud and only the server knows it, and refreshes the cache', async () => {
+        serverMode(ProcessingMode.Cloud);
+        setOnDeviceLlmAvailability({ available: true, reason: null });
+        await expect(restoreOnDeviceIfRunnable()).resolves.toBe(false);
+        expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+        expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.Cloud);
+    });
+
+    it('stays on Cloud while a download runs (the download promotes by itself)', async () => {
+        setOnDeviceLlmAvailability({ available: true, reason: null });
+        // Only the relevance model is required on the native engine; make it missing so a download starts.
+        resetFileSystem();
+        startModelDownloads();
+        await started();
+        placeDownloadedModel(RELEVANCE_MODEL.modelId);
+        await expect(restoreOnDeviceIfRunnable()).resolves.toBe(false);
+        expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+    });
+
+    it('stays on Cloud when the server cannot be reached', async () => {
+        server.use(graphql.query('GetUserPersona', () => HttpResponse.json({ errors: [{ message: 'down' }] })));
+        setOnDeviceLlmAvailability({ available: true, reason: null });
+        await expect(restoreOnDeviceIfRunnable()).resolves.toBe(false);
+        expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
     });
 });

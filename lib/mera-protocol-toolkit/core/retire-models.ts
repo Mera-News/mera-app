@@ -35,16 +35,21 @@ export async function retireLegacyModels(): Promise<void> {
 
   const store = useMeraProtocolStore.getState();
   if (store.processingMode !== ProcessingMode.OnDevice) return;
-
-  let downloaded = false;
-  try {
-    downloaded = await isModelDownloaded();
-  } catch {
-    downloaded = false;
-  }
-  if (downloaded) return;
+  if ((await localModeFor(ProcessingMode.OnDevice)) === ProcessingMode.OnDevice) return;
 
   store.setProcessingMode(ProcessingMode.Cloud);
   store.setModelState('not_downloaded');
   store.setDownloadProgress(0);
+}
+
+/**
+ * The mode this phone may run for a given server persona mode: OnDevice only
+ * when On this phone can run now, else Cloud. Every copy of the server mode into
+ * the local store goes through this, so the local Private cloud fallback is never
+ * undone by a persona read while the server keeps the on-device intent.
+ */
+export async function localModeFor(mode: ProcessingMode): Promise<ProcessingMode> {
+  if (mode !== ProcessingMode.OnDevice) return mode;
+  const runnable = await isModelDownloaded().catch(() => false);
+  return runnable ? mode : ProcessingMode.Cloud;
 }

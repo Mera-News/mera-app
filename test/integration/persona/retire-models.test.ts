@@ -5,7 +5,9 @@
 // stands. Real modelManager over chat's in-memory expo-file-system, real store, settings
 // rows, user store and Apollo over MSW. Faults: a one-call spy on the real deleteBaseModel (R23) and a GraphQL error.
 import { waitFor } from '@testing-library/react-native';
-import { retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
+import { localModeFor, retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
+import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
+import { installOnDeviceLlm } from '@/test/helpers/on-device-llm';
 import * as modelManager from '@/lib/mera-protocol-toolkit/core/modelManager';
 import { DEFAULT_MODEL_ID, RELEVANCE_MODEL, RETIRED_MODEL_IDS, TEXT_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
@@ -18,6 +20,7 @@ import { FIXTURE_ACCOUNT, graphql, HttpResponse, server, signInFixtureAccount } 
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 
 jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 const { Directory, File, Paths } = fileSystemModule;
 const modelDirExists = (id: string) => new Directory(Paths.cache, 'mera-models', id).exists;
@@ -176,5 +179,32 @@ describe('the boot purge (purgeAllBaseModels) after a local Cloud fallback', () 
         await modelManager.purgeAllBaseModels();
         expect(modelDirExists(TEXT_MODEL.modelId)).toBe(false);
         expect(modelDirExists(RELEVANCE_MODEL.modelId)).toBe(false);
+    });
+});
+
+describe('localModeFor: the local copy of a server persona mode', () => {
+    it('a server OnDevice with the Mera AI models engine and only the relevance file on disk stays Cloud locally', async () => {
+        await putModelOnDisk(RELEVANCE_MODEL.modelId);
+        await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.Cloud);
+    });
+
+    it('keeps OnDevice when both files are on disk, and passes Cloud through', async () => {
+        await putBothOnDisk();
+        await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.OnDevice);
+        await expect(localModeFor(ProcessingMode.Cloud)).resolves.toBe(ProcessingMode.Cloud);
+    });
+
+    it('with Apple Intelligence as the engine, the relevance file plus availability is enough, and unavailability is Cloud', async () => {
+        await putModelOnDisk(RELEVANCE_MODEL.modelId);
+        await setTextEngine('native');
+        try {
+            installOnDeviceLlm({ availability: { available: true, reason: null } });
+            await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.OnDevice);
+            installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
+            await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.Cloud);
+        } finally {
+            await setTextEngine('mera');
+            __resetTextEngineForTests();
+        }
     });
 });

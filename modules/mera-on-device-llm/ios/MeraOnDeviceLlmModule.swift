@@ -192,12 +192,14 @@ public class MeraOnDeviceLlmModule: Module {
 
     // Streams deltas as `onToken { id, delta }`, then `onDone { id }` or
     // `onError { id, code }`. The framework's stream yields cumulative snapshots;
-    // only the new suffix is sent.
+    // only the new suffix is sent, cut on unicode scalars: a snapshot can end
+    // inside a grapheme cluster (a combining mark, a flag, an emoji modifier),
+    // and a Character count or hasPrefix would then stall the rest of the reply.
     Function("startStream") { (id: String, instructions: String, prompt: String, args: GenerationArgs) in
       #if canImport(FoundationModels)
       if #available(iOS 26.0, *) {
         let task = Task { [weak self] in
-          var sent = ""
+          var sentScalars = 0
           do {
             // Held for the whole loop: the docs do not say the stream retains
             // its session, and a released local could end the stream early.
@@ -205,10 +207,11 @@ public class MeraOnDeviceLlmModule: Module {
             defer { withExtendedLifetime(session) {} }
             let stream = session.streamResponse(to: prompt, options: Afm.options(args))
             for try await snapshot in stream {
-              let text = snapshot.content
-              if text.count > sent.count, text.hasPrefix(sent) {
-                let delta = String(text.dropFirst(sent.count))
-                sent = text
+              let scalars = snapshot.content.unicodeScalars
+              let count = scalars.count
+              if count > sentScalars {
+                let delta = String(String.UnicodeScalarView(scalars.dropFirst(sentScalars)))
+                sentScalars = count
                 self?.sendEvent("onToken", ["id": id, "delta": delta])
               }
             }

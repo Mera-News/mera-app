@@ -50,7 +50,11 @@ export {
   startModelDownloads,
   cancelModelDownload,
   isDownloadInProgress,
+  restoreOnDeviceIfRunnable,
 } from './core/downloadService';
+
+// === Local mode rule (OnDevice only when On this phone can run) ===
+export { localModeFor } from './core/retire-models';
 
 // === System Requirements ===
 export { checkRequirements } from './core/systemRequirements';

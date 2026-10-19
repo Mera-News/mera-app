@@ -8,6 +8,7 @@ import * as downloadService from '@/lib/mera-protocol-toolkit/core/downloadServi
 import * as inference from '@/lib/mera-protocol-toolkit/core/inference';
 import * as modelCatalog from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import * as modelManager from '@/lib/mera-protocol-toolkit/core/modelManager';
+import * as retireModels from '@/lib/mera-protocol-toolkit/core/retire-models';
 import * as systemRequirements from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 import * as textEngine from '@/lib/mera-protocol-toolkit/core/text-engine';
 import { getInferenceStats, resetInferenceStats } from '@/lib/mera-protocol-toolkit/core/inference-stats';
@@ -45,7 +46,8 @@ const EXPORTS: [string, Record<string, unknown>, string[]][] = [
         ],
     ],
     ['model catalogue', modelCatalog, ['MODEL_CATALOG', 'TEXT_MODEL', 'RELEVANCE_MODEL', 'DEFAULT_MODEL_ID', 'RETIRED_MODEL_IDS', 'isRetiredModelId']],
-    ['download service', downloadService, ['onDeviceModelsStatus', 'startModelDownloads', 'cancelModelDownload', 'isDownloadInProgress']],
+    ['download service', downloadService, ['onDeviceModelsStatus', 'startModelDownloads', 'cancelModelDownload', 'isDownloadInProgress', 'restoreOnDeviceIfRunnable']],
+    ['local mode rule', retireModels, ['localModeFor']],
     ['text engine', textEngine, ['getTextEngine', 'setTextEngine', 'peekTextEngine', 'useTextEngine', 'nativeEngineAvailability', 'DEFAULT_TEXT_ENGINE']],
     ['system requirements', systemRequirements, ['checkRequirements']],
 ];
