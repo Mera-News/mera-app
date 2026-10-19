@@ -185,7 +185,10 @@ describe('startModelDownloads', () => {
     });
 
     it('with the on-device intent, the pair landing promotes the phone to OnDevice and says so', async () => {
-        useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
+        useUserStore.setState({
+            userId: FIXTURE_ACCOUNT.userId,
+            userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
+        });
         await signInFixtureAccount();
         const sent = recordModeUpdates();
         startModelDownloads({ promote: true });
@@ -196,6 +199,8 @@ describe('startModelDownloads', () => {
         await until(() => protocol().processingMode === ProcessingMode.OnDevice);
 
         expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: ProcessingMode.OnDevice }]);
+        // The cached persona the boot purge reads now carries the intent too.
+        expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.OnDevice);
         await until(() => notificationIds().length === 1);
         expect(scheduled.mock.calls[0][0].content.body).toBe('Mera now runs on this phone.');
     });

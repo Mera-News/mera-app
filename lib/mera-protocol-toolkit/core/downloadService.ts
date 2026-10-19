@@ -185,10 +185,15 @@ export async function promoteToOnDevice(): Promise<boolean> {
     const { resolveCurrentUserId } =
       require('../../security/current-user') as typeof import('../../security/current-user');
     const { AccountService } = require('../../account-service') as typeof import('../../account-service');
+    const { useUserStore } = require('../../stores/user-store') as typeof import('../../stores/user-store');
     /* eslint-enable @typescript-eslint/no-require-imports */
     const userId = await resolveCurrentUserId();
     await AccountService.updateProcessingMode(userId, ProcessingMode.OnDevice);
     useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.OnDevice);
+    // The cached persona carries the intent the boot purge reads: keep it in step
+    // so a later local Cloud fallback never loses the files.
+    const persona = useUserStore.getState().userPersona;
+    if (persona) useUserStore.getState().setUserPersona({ ...persona, processingMode: ProcessingMode.OnDevice });
     return true;
   } catch (err) {
     logger.warn('[DownloadService] promotion to on-device failed', { error: String(err) });
