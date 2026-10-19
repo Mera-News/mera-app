@@ -9,6 +9,7 @@ import ReauthOnReturn from '@/components/custom/auth/ReauthOnReturn';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
+import MoveToPhoneHost from '@/components/custom/auth/MoveToPhoneHost';
 import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
 
 export default function LoggedInLayout() {
@@ -191,6 +192,9 @@ export default function LoggedInLayout() {
       {/* Renders nothing. Pops a live feedback request up once per request
           when nothing else is on screen; see its header for what it waits on. */}
       <FeedbackRequestAutoShowHost />
+      {/* Renders nothing until asked: the email account's move to phone sign-in
+          (inbox offer, confirm dialog, full-screen progress). */}
+      <MoveToPhoneHost />
       {/* Renders nothing — a mounted effect, and the catch-all for an account
           switch that got past the gates. It has to live HERE rather than on a
           screen: the gates unmount as soon as they route, and the case this

@@ -4,6 +4,7 @@
 // store are read back. Mocked: nothing of our own (expo-router and expo-notifications are the setup's native fakes).
 import { t } from 'i18next';
 import { router } from 'expo-router';
+import { __resetMoveToPhoneForTests, subscribeMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { tapNotification, NOT_KEPT_NOTICE_TYPES } from '@/components/custom/notifications/notification-actions';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { deleteNotification, getAll, notify, type NotifyInput } from '@/lib/database/services/notification-service';
@@ -86,6 +87,18 @@ describe('tapNotification', () => {
         const row = await seed({ type: 'agent_note', actions: [{ id: 'something-new', label: 'Ask about this' }] });
         await tapNotification(row);
         expect(useFloatingChatStore.getState().pendingInitialMessage).toBe('Ask about this');
+        expect(await statusOf(row.id)).toBe('actioned');
+    });
+
+    it('the move to phone offer asks the host to open the move and marks the row actioned', async () => {
+        __resetMoveToPhoneForTests();
+        const asked = jest.fn();
+        const stop = subscribeMoveToPhone(asked);
+        const row = await seed({ type: 'move_to_phone', actions: [{ id: 'move-to-phone', labelKey: 'moveToPhone.settingsRow' }] });
+        await tapNotification(row);
+        stop();
+        expect(asked).toHaveBeenCalledTimes(1);
+        expect(useFloatingChatStore.getState().isExpanded).toBe(false);
         expect(await statusOf(row.id)).toBe('actioned');
     });
 
