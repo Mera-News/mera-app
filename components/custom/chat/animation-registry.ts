@@ -37,7 +37,23 @@ export type ChatStepKind = 'think' | 'skill' | 'facts' | 'place' | 'write' | 're
 
 type ChatAnimationId = ChatStripId | `chat-step-${ChatStepKind}`;
 
-export const CHAT_ANIMATIONS: Partial<Record<ChatAnimationId, unknown>> = {};
+export const CHAT_ANIMATIONS: Record<ChatAnimationId, unknown> = {
+  'chat-strip-phone': require('@/assets/animations/chat-strip-phone.json'),
+  'chat-strip-attest': require('@/assets/animations/chat-strip-attest.json'),
+  'chat-strip-secure': require('@/assets/animations/chat-strip-secure.json'),
+  'chat-strip-think': require('@/assets/animations/chat-strip-think.json'),
+  'chat-strip-retry': require('@/assets/animations/chat-strip-retry.json'),
+  'chat-strip-return': require('@/assets/animations/chat-strip-return.json'),
+  'chat-strip-device': require('@/assets/animations/chat-strip-device.json'),
+  'chat-step-think': require('@/assets/animations/chat-step-think.json'),
+  'chat-step-skill': require('@/assets/animations/chat-step-skill.json'),
+  'chat-step-facts': require('@/assets/animations/chat-step-facts.json'),
+  'chat-step-place': require('@/assets/animations/chat-step-place.json'),
+  'chat-step-write': require('@/assets/animations/chat-step-write.json'),
+  'chat-step-remove': require('@/assets/animations/chat-step-remove.json'),
+  'chat-step-ask': require('@/assets/animations/chat-step-ask.json'),
+  'chat-step-web': require('@/assets/animations/chat-step-web.json'),
+};
 
 /**
  * The strips that play once and rest on their LAST frame (progress 1 when
