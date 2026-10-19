@@ -408,7 +408,7 @@
     "settingUpdateFailedTitle": "Aktualisierung fehlgeschlagen",
     "settingUpdateFailedDescription": "Der Verarbeitungsmodus konnte nicht aktualisiert werden. Bitte versuche es erneut.",
     "deleteFailedTitle": "Löschen fehlgeschlagen",
-    "deleteFailedDescription": "Das Modell konnte nicht gelöscht werden. Bitte versuche es erneut.",
+    "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
     "attestationTitle": "Attestation überprüfen",
     "attestationSubtitle": "Überprüfe, dass die Cloud-KI in echter Intel TDX-Hardware läuft und dass der Schlüssel, zu dem deine Daten verschlüsselt sind, von dort aus kam.",
     "attestationVerifyButton": "Überprüfung ausführen",
@@ -434,7 +434,7 @@
     "attestationCheckTcbStatus": "Plattform-Patch-Level ist aktuell",
     "attestationCheckGpuAttestation": "GPU-Attestation",
     "attestationNotCheckedLabel": "nicht überprüft",
-    "attestationScopeNotice": "Dies überprüft das oben angezeigte Modell. Mera verwendet mehr als ein Cloud-Modell (Chat verwendet ein anderes, und jedes hat ein Backup), also deckt ein Erfolg hier dieses Modell ab, nicht jede Anfrage.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "Überprüftes Modell",
     "webSearchTitle": "Websuche im Chat",
     "extractedMetadataPanelHeading": "Extrahierte Metadaten",
@@ -499,7 +499,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Löscht das lokale Protokoll der von dir geöffneten Artikel. Die Karte \"Zuletzt gelesene Publikationen\" im Tab \"Quellen\" sowie der Verlauf pro Publikation werden zurückgesetzt. Nichts anderes ist betroffen, und es werden keine Serverdaten berührt, da die Server von Mera diese Daten nie hatten.",
@@ -619,7 +620,7 @@
     "networkErrorTitle": "Netzwerkfehler"
   },
   "download": {
-    "modelDownloading": "KI-Modell wird heruntergeladen...",
+    "modelDownloading": "Downloading Mera AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol ist jetzt einsatzbereit.",
     "completeTitle": "Download abgeschlossen",

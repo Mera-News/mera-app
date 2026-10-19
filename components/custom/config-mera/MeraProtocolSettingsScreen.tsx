@@ -88,6 +88,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         textEngine,
         selectEngine,
         showEngineGroup,
+        waitingForNative,
         nativeAvailable,
         nativeReasonKey,
         isDownloading,
@@ -165,9 +166,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 onLayout={onDevice ? onDeviceRowLayout : undefined}
                 testID={onDevice ? 'mode-on-device' : 'mode-cloud'}
                 onPress={() => selectMode(mode)}
-                disabled={isUpdatingMode || cantRun}
+                disabled={isUpdatingMode || isDeletingModel || cantRun}
                 accessibilityRole="radio"
-                accessibilityState={{ selected, checked: selected, disabled: isUpdatingMode || cantRun }}
+                accessibilityState={{ selected, checked: selected, disabled: isUpdatingMode || isDeletingModel || cantRun }}
                 accessibilityLabel={[title, onDevice ? t('common.beta') : null, subtitle].filter(Boolean).join(', ')}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16, opacity: cantRun ? 0.45 : 1 }}
             >
@@ -188,7 +189,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         const apple = engine === 'native';
         const selected = textEngine === engine;
         // Not while a download runs: it keeps the file set it started with.
-        const disabled = isDownloading || (apple && !nativeAvailable);
+        const disabled = isDownloading || isDeletingModel || (apple && !nativeAvailable);
         const title = apple ? t('meraProtocol.engineApple') : t('meraProtocol.engineMera');
         const reason = apple && nativeReasonKey ? t(nativeReasonKey) : null;
         return (
@@ -260,9 +261,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             </View>
                         ) : null}
                     </View>
-                    {!runnable && missingBytes > 0 ? (
+                    {(!runnable && missingBytes > 0) || waitingForNative ? (
                         <View style={{ marginBottom: 8 }}>
-                            <Help>{t('meraProtocol.modelsHelp')}</Help>
+                            <Help>{t(waitingForNative ? 'meraProtocol.modelsWaitingNative' : 'meraProtocol.modelsHelp')}</Help>
                         </View>
                     ) : null}
                     <Group>

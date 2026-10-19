@@ -678,7 +678,7 @@
     "attestationCheckTcbStatus": "Platform patch level is current",
     "attestationCheckGpuAttestation": "GPU attestation",
     "attestationNotCheckedLabel": "not checked",
-    "attestationScopeNotice": "This checks the model shown above. Mera uses more than one cloud model (chat uses a different one, and each has a backup), so a pass here covers this model, not every request.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "Model checked",
     "title": "Mera Protocol",
     "webSearchTitle": "Web search in chat",
@@ -699,8 +699,8 @@
     "modeUpdatedCloudDescription": "Mera Protocol is now using end-to-end encrypted cloud inference.",
     "settingUpdateFailedTitle": "Update Failed",
     "settingUpdateFailedDescription": "Failed to update processing mode. Please try again.",
-    "deleteFailedTitle": "Delete Failed",
-    "deleteFailedDescription": "Failed to delete the model. Please try again.",
+    "deleteFailedTitle": "Couldn't delete",
+    "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
     "loadFailedDescription": "Failed to load Mera Protocol settings.",
     "loadFailedTitle": "Load Failed",
     "speedTitle": "Speed on this device",
@@ -758,7 +758,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "exportHistoryTitle": "Export reading history",
@@ -969,11 +970,11 @@
     "networkErrorTitle": "Network Error"
   },
   "download": {
-    "modelDownloading": "Downloading AI model...",
+    "modelDownloading": "Downloading Mera AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol is now ready for use.",
-    "completeTitle": "Download Complete",
-    "failedTitle": "Download Failed",
+    "completeTitle": "Download complete",
+    "failedTitle": "Download failed",
     "failedConnection": "Check your connection and try again.",
     "failedServer": "The download server had a problem. Try again later.",
     "failedDamaged": "The download was damaged. Try again.",

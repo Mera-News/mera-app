@@ -405,7 +405,7 @@
     "settingUpdateFailedTitle": "更新失败",
     "settingUpdateFailedDescription": "无法更新处理模式，请重试。",
     "deleteFailedTitle": "删除失败",
-    "deleteFailedDescription": "无法删除模型，请重试。",
+    "deleteFailedDescription": "梅拉 AI models weren't deleted. Try again.",
     "attestationTitle": "验证证明",
     "attestationSubtitle": "检查云端AI是否在真实的Intel TDX硬件中运行，以及您的数据加密到的密钥是否来自其内部。",
     "attestationVerifyButton": "运行验证",
@@ -431,7 +431,7 @@
     "attestationCheckTcbStatus": "平台补丁级别是最新的",
     "attestationCheckGpuAttestation": "GPU证明",
     "attestationNotCheckedLabel": "未检查",
-    "attestationScopeNotice": "这里检查的是上方显示的模型。梅拉会使用多个云端模型（聊天使用另一个模型，每个模型都有备用），因此这里的通过结果只涵盖此模型，并不代表每个请求。",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "已检查的模型",
     "webSearchTitle": "聊天中的网络搜索",
     "extractedMetadataPanelHeading": "提取的元数据",
@@ -495,7 +495,8 @@
     "nativeOsTooOld": "Apple Intelligence needs iOS 26 or later.",
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你已打开文章的本地记录。「来源」标签中的「你正在阅读的出版物」卡片及各出版物的历史记录将重置为空。其他内容不受影响，也不会触及任何服务器数据，因为梅拉的服务器从未有过这些数据。",
@@ -614,7 +615,7 @@
     "networkErrorTitle": "网络错误"
   },
   "download": {
-    "modelDownloading": "正在下载 AI 模型...",
+    "modelDownloading": "Downloading 梅拉 AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "梅拉协议现已可以使用。",
     "completeTitle": "下载完成",

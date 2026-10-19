@@ -432,7 +432,7 @@
     "settingUpdateFailedTitle": "Aktualizacja nieudana",
     "settingUpdateFailedDescription": "Nie udało się zaktualizować trybu przetwarzania. Spróbuj ponownie.",
     "deleteFailedTitle": "Usuwanie nieudane",
-    "deleteFailedDescription": "Nie udało się usunąć modelu. Spróbuj ponownie.",
+    "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
     "attestationTitle": "Zweryfikuj poświadczenie",
     "attestationSubtitle": "Sprawdź, czy sztuczna inteligencja w chmurze działa na prawdziwym sprzęcie Intel TDX i czy klucz, do którego Twoje dane są szyfrowane, pochodzi z wnętrza.",
     "attestationVerifyButton": "Uruchom weryfikację",
@@ -458,7 +458,7 @@
     "attestationCheckTcbStatus": "Poziom poprawki platformy jest aktualny",
     "attestationCheckGpuAttestation": "Poświadczenie GPU",
     "attestationNotCheckedLabel": "niesprawdzane",
-    "attestationScopeNotice": "To sprawdza model pokazany powyżej. Mera używa więcej niż jednego modelu chmury (chat używa innego, a każdy ma kopię zapasową), więc zaliczenie tutaj obejmuje ten model, nie każde żądanie.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "Sprawdzony model",
     "webSearchTitle": "Wyszukiwanie w sieci w czacie",
     "extractedMetadataPanelHeading": "Wyekstrahowane Metadane",
@@ -525,7 +525,8 @@
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
     "speedRefused_few": "Apple Intelligence declined {{count}} requests",
     "speedRefused_many": "Apple Intelligence declined {{count}} requests",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta „Publikacje, które czytasz” w zakładce Źródła oraz historia poszczególnych publikacji zostaną zresetowane do zera. Nic innego nie jest dotknięte i żadne dane na serwerze nie są zmieniane, bo serwery Mera nigdy ich nie miały.",
@@ -647,7 +648,7 @@
     "networkErrorTitle": "Błąd sieci"
   },
   "download": {
-    "modelDownloading": "Pobieranie modelu AI...",
+    "modelDownloading": "Downloading Mera AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol jest gotowy do użycia.",
     "completeTitle": "Pobieranie ukończone",

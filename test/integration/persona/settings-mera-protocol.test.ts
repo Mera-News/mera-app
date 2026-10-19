@@ -482,6 +482,10 @@ describe('Mera Protocol settings', () => {
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(true);
             expect(result.current.nativeReasonKey).toBe(NATIVE_REASON_KEYS.appleIntelligenceNotEnabled);
+            // Nothing is missing, yet it cannot run: the section says Mera is on Private cloud.
+            expect(result.current.missingBytes).toBe(0);
+            expect(result.current.waitingForNative).toBe(true);
+            expect(i18n.t('meraProtocol.modelsWaitingNative')).toBe('Mera uses Private cloud until Apple Intelligence is ready.');
             expect(sent).toEqual([]);
             expect(promote).not.toHaveBeenCalled();
 
@@ -490,6 +494,7 @@ describe('Mera Protocol settings', () => {
                 await result.current.refresh();
             });
             expect(promote).toHaveBeenCalledTimes(1);
+            expect(result.current.waitingForNative).toBe(false);
         });
 
         it('coming back to the app re-reads Apple Intelligence', async () => {
@@ -680,6 +685,50 @@ describe('Mera Protocol settings', () => {
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(false);
             expect(result.current.onDiskBytes).toBe(0);
+        });
+
+        it('an engine tap while the delete runs does not promote the phone', async () => {
+            jest.spyOn(textEngine, 'nativeEngineAvailability').mockResolvedValue({ available: true, reason: null } as never);
+            const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
+            // Only the Apple Intelligence file is on disk: the phone is on Private cloud, the intent is kept,
+            // and picking Apple Intelligence would make it runnable (and promote) if the delete did not block it.
+            resetFileSystem();
+            placeDownloadedModel(KEV_ID);
+            // Hold the server write so the delete is mid-flight.
+            let release!: () => void;
+            const gate = new Promise<void>((r) => { release = r; });
+            server.use(
+                graphql.mutation('UpdateProcessingMode', async ({ variables }) => {
+                    await gate;
+                    const input = (variables as { input: { userId: string; mode: string } }).input;
+                    return HttpResponse.json({
+                        data: { updateProcessingMode: personaFor(Date.now(), { userId: input.userId, processingMode: input.mode as ProcessingMode }) },
+                    });
+                }),
+            );
+            const { result } = await mountLoaded();
+            let pending!: Promise<void>;
+            act(() => {
+                pending = result.current.handleDeleteModels();
+            });
+            await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+            await act(async () => {
+                settleDialog(useDialogQueue.getState().queue[0].id, true);
+            });
+            await waitFor(() => expect(result.current.isDeletingModel).toBe(true));
+
+            await act(async () => {
+                await result.current.selectEngine('native');
+            });
+            expect(promote).not.toHaveBeenCalled();
+
+            await act(async () => {
+                release();
+                await pending;
+            });
+            expect(promote).not.toHaveBeenCalled();
+            expect(result.current.isDeletingModel).toBe(false);
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
         });
 
         it('cancelling the confirm changes nothing', async () => {

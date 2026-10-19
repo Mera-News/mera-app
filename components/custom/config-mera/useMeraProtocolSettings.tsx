@@ -67,6 +67,7 @@ export const NATIVE_REASON_KEYS = {
 export const MODELS_SECTION_KEYS = [
     'meraProtocol.modelsTitle',
     'meraProtocol.modelsHelp',
+    'meraProtocol.modelsWaitingNative',
     'meraProtocol.modelsRowTitle',
     'meraProtocol.modelsRowSubtitle',
     'meraProtocol.modelRowReady',
@@ -164,6 +165,13 @@ export function useMeraProtocolSettings() {
     useEffect(() => {
         intentRef.current = onDeviceIntent;
     }, [onDeviceIntent]);
+    // Set for the whole delete: nothing may promote the phone while its files are being removed.
+    const deletingRef = useRef(false);
+
+    // Apple Intelligence is the chosen engine, nothing is left to download and it cannot run yet.
+    // Without a line the section would show files on disk and no way forward.
+    const waitingForNative =
+        onDeviceIntent && status != null && textEngine === 'native' && !runnable && missingBytes === 0;
 
     // Reads what is on disk and whether Apple Intelligence can be used. Pure: changes no mode.
     const readStatus = useCallback(async () => {
@@ -182,7 +190,7 @@ export function useMeraProtocolSettings() {
     // when it can, else falls back to Private cloud on this phone only (the server persona and the
     // intent are kept). A running download promotes by itself when it lands.
     const applyIntent = useCallback(async (next: ModelsStatus) => {
-        if (!intentRef.current || isDownloadInProgress()) return;
+        if (!intentRef.current || deletingRef.current || isDownloadInProgress()) return;
         const current = useMeraProtocolStore.getState().processingMode;
         if (next.runnable) {
             if (current !== ProcessingMode.OnDevice) await promoteToOnDevice();
@@ -392,6 +400,7 @@ export function useMeraProtocolSettings() {
             destructive: true,
         });
         if (!ok) return;
+        deletingRef.current = true;
         setIsDeletingModel(true);
         try {
             await fallBackToCloud();
@@ -414,6 +423,7 @@ export function useMeraProtocolSettings() {
                 ),
             });
         } finally {
+            deletingRef.current = false;
             setIsDeletingModel(false);
         }
         // `store` is a stable singleton ref.
@@ -441,6 +451,7 @@ export function useMeraProtocolSettings() {
         missingBytes,
         onDiskBytes,
         runnable,
+        waitingForNative,
         modelsSizeBytes,
         textEngine,
         selectEngine,

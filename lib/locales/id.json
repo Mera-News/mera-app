@@ -405,7 +405,7 @@
     "settingUpdateFailedTitle": "Pembaruan Gagal",
     "settingUpdateFailedDescription": "Gagal memperbarui mode pemrosesan. Silakan coba lagi.",
     "deleteFailedTitle": "Gagal Menghapus",
-    "deleteFailedDescription": "Gagal menghapus model. Silakan coba lagi.",
+    "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
     "attestationTitle": "Verifikasi atestasi",
     "attestationSubtitle": "Periksa bahwa AI cloud berjalan di perangkat keras Intel TDX asli, dan bahwa kunci tempat data Anda dienkripsi berasal dari dalamnya.",
     "attestationVerifyButton": "Jalankan verifikasi",
@@ -431,7 +431,7 @@
     "attestationCheckTcbStatus": "Tingkat patch platform saat ini",
     "attestationCheckGpuAttestation": "Atestasi GPU",
     "attestationNotCheckedLabel": "tidak diperiksa",
-    "attestationScopeNotice": "Ini memeriksa model yang ditampilkan di atas. Mera menggunakan lebih dari satu model cloud (chat menggunakan yang berbeda, dan masing-masing memiliki cadangan), jadi pass di sini mencakup model ini, bukan setiap permintaan.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "Model diperiksa",
     "webSearchTitle": "Pencarian web dalam chat",
     "extractedMetadataPanelHeading": "Metadata yang Diekstrak",
@@ -495,7 +495,8 @@
     "nativeOsTooOld": "Apple Intelligence needs iOS 26 or later.",
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu \"Publikasi yang Anda baca\" di tab Sumber dan riwayat per-publikasi akan direset menjadi kosong. Tidak ada hal lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah memiliki data ini.",
@@ -614,7 +615,7 @@
     "networkErrorTitle": "Kesalahan Jaringan"
   },
   "download": {
-    "modelDownloading": "Mengunduh AI model...",
+    "modelDownloading": "Downloading Mera AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol siap digunakan.",
     "completeTitle": "Unduhan Selesai",

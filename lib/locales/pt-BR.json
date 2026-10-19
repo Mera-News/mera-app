@@ -408,7 +408,7 @@
     "settingUpdateFailedTitle": "Falha na Atualização",
     "settingUpdateFailedDescription": "Falha ao atualizar o modo de processamento. Por favor, tente novamente.",
     "deleteFailedTitle": "Falha ao Excluir",
-    "deleteFailedDescription": "Falha ao excluir o modelo. Por favor, tente novamente.",
+    "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
     "attestationTitle": "Verificar atestação",
     "attestationSubtitle": "Verifique se a IA na nuvem está rodando em hardware genuíno Intel TDX e se a chave para a qual seus dados são criptografados veio de dentro dele.",
     "attestationVerifyButton": "Executar verificação",
@@ -434,7 +434,7 @@
     "attestationCheckTcbStatus": "Nível de patch da plataforma está atualizado",
     "attestationCheckGpuAttestation": "Atestação de GPU",
     "attestationNotCheckedLabel": "não verificado",
-    "attestationScopeNotice": "Isto verifica o modelo mostrado acima. Mera usa mais de um modelo de nuvem (chat usa um diferente, e cada um tem um backup), então um sucesso aqui cobre este modelo, não cada solicitação.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "Modelo verificado",
     "webSearchTitle": "Busca na web no chat",
     "extractedMetadataPanelHeading": "Metadados Extraídos",
@@ -499,7 +499,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Limpa o registro local dos artigos que você abriu. O card \"Publicações que você tem lido\" na aba Fontes e o histórico por publicação serão redefinidos para vazio. Nada mais é afetado, e nenhum dado do servidor é tocado, pois os servidores da Mera nunca tiveram esses dados.",
@@ -619,7 +620,7 @@
     "networkErrorTitle": "Erro de rede"
   },
   "download": {
-    "modelDownloading": "Baixando modelo de IA...",
+    "modelDownloading": "Downloading Mera AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "O Mera Protocol está pronto para uso.",
     "completeTitle": "Download concluído",

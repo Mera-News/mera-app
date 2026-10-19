@@ -432,7 +432,7 @@
     "settingUpdateFailedTitle": "Ошибка обновления",
     "settingUpdateFailedDescription": "Не удалось обновить режим обработки. Пожалуйста, попробуйте ещё раз.",
     "deleteFailedTitle": "Ошибка удаления",
-    "deleteFailedDescription": "Не удалось удалить модель. Пожалуйста, попробуйте ещё раз.",
+    "deleteFailedDescription": "Мера AI models weren't deleted. Try again.",
     "attestationTitle": "Проверить аттестацию",
     "attestationSubtitle": "Убедитесь, что облачный ИИ работает на настоящем оборудовании Intel TDX и что ключ, на который зашифрованы ваши данные, пришёл из него.",
     "attestationVerifyButton": "Запустить проверку",
@@ -458,7 +458,7 @@
     "attestationCheckTcbStatus": "Уровень патчей платформы актуален",
     "attestationCheckGpuAttestation": "Аттестация GPU",
     "attestationNotCheckedLabel": "не проверено",
-    "attestationScopeNotice": "Это проверяет модель выше. Мера использует несколько облачных моделей (для чата другая, и у каждой есть резервная), поэтому успешная проверка относится к этой модели, а не к каждому запросу.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "Проверенная модель",
     "webSearchTitle": "Веб-поиск в чате",
     "extractedMetadataPanelHeading": "Извлеченные Метаданные",
@@ -525,7 +525,8 @@
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
     "speedRefused_few": "Apple Intelligence declined {{count}} requests",
     "speedRefused_many": "Apple Intelligence declined {{count}} requests",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Очищает локальный журнал открытых вами статей. Карточка «Издания, которые вы читаете» на вкладке «Источники» и история по каждому изданию сбросятся до пустых. Ничего другого не затрагивается, и данные на сервере не изменяются, так как серверы Меры никогда не получали эти данные.",
@@ -647,7 +648,7 @@
     "networkErrorTitle": "Ошибка сети"
   },
   "download": {
-    "modelDownloading": "Загрузка модели ИИ...",
+    "modelDownloading": "Downloading Мера AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "Протокол Мера готов к использованию.",
     "completeTitle": "Загрузка завершена",

@@ -405,7 +405,7 @@
     "settingUpdateFailedTitle": "更新に失敗しました",
     "settingUpdateFailedDescription": "処理モードの更新に失敗しました。もう一度お試しください。",
     "deleteFailedTitle": "削除に失敗しました",
-    "deleteFailedDescription": "モデルの削除に失敗しました。もう一度お試しください。",
+    "deleteFailedDescription": "メラ AI models weren't deleted. Try again.",
     "attestationTitle": "認証を検証",
     "attestationSubtitle": "クラウドAIが本物のIntel TDXハードウェアで実行されていること、およびデータが暗号化されているキーがそれから来ていることを確認してください。",
     "attestationVerifyButton": "検証を実行",
@@ -431,7 +431,7 @@
     "attestationCheckTcbStatus": "プラットフォームパッチレベルは現在です",
     "attestationCheckGpuAttestation": "GPU認証",
     "attestationNotCheckedLabel": "確認されていません",
-    "attestationScopeNotice": "ここでは上に表示されたモデルを確認します。メラは複数のクラウドモデルを使っています（チャットは別のモデルを使い、それぞれにバックアップがあります）。そのため、ここで合格となるのはこのモデルだけで、すべてのリクエストが対象というわけではありません。",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "チェックされたモデル",
     "webSearchTitle": "チャット内のウェブ検索",
     "extractedMetadataPanelHeading": "抽出されたメタデータ",
@@ -495,7 +495,8 @@
     "nativeOsTooOld": "Apple Intelligence needs iOS 26 or later.",
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "メラ uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "開いた記事のローカルログを消去します。「ソース」タブの「読んでいた出版社」カードと各出版社の履歴が空にリセットされます。他のものには影響せず、サーバー上のデータにも触れません。メラのサーバーはこのデータを受け取ったことがないためです。",
@@ -614,7 +615,7 @@
     "networkErrorTitle": "ネットワークエラー"
   },
   "download": {
-    "modelDownloading": "AIモデルをダウンロード中...",
+    "modelDownloading": "Downloading メラ AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "メラ・プロトコルを利用できるようになりました。",
     "completeTitle": "ダウンロード完了",

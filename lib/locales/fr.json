@@ -413,7 +413,7 @@
     "settingUpdateFailedTitle": "Échec de la mise à jour",
     "settingUpdateFailedDescription": "Impossible de mettre à jour le mode de traitement. Veuillez réessayer.",
     "deleteFailedTitle": "Échec de la suppression",
-    "deleteFailedDescription": "Impossible de supprimer le modèle. Veuillez réessayer.",
+    "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
     "attestationTitle": "Vérifier l'attestation",
     "attestationSubtitle": "Vérifiez que l'IA en nuage fonctionne dans un véritable matériel Intel TDX, et que la clé à laquelle vos données sont chiffrées provient de son intérieur.",
     "attestationVerifyButton": "Exécuter la vérification",
@@ -439,7 +439,7 @@
     "attestationCheckTcbStatus": "Le niveau de correctif de la plateforme est à jour",
     "attestationCheckGpuAttestation": "Attestation GPU",
     "attestationNotCheckedLabel": "non vérifié",
-    "attestationScopeNotice": "Cela vérifie le modèle affiché ci-dessus. Mera utilise plus d'un modèle en nuage (le chat en utilise un différent, et chacun a une sauvegarde), donc une réussite ici couvre ce modèle, pas chaque demande.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "Modèle vérifié",
     "webSearchTitle": "Recherche Web en chat",
     "extractedMetadataPanelHeading": "Métadonnées extraites",
@@ -504,7 +504,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Efface le journal local des articles que vous avez ouverts. La carte « Publications que vous lisez » dans l'onglet Sources et l'historique par publication seront réinitialisés à vide. Rien d'autre n'est affecté et aucune donnée serveur n'est touchée, puisque les serveurs de Mera n'ont jamais eu ces données.",
@@ -624,7 +625,7 @@
     "networkErrorTitle": "Erreur réseau"
   },
   "download": {
-    "modelDownloading": "Téléchargement de l'AI Model...",
+    "modelDownloading": "Downloading Mera AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol est maintenant prêt à être utilisé.",
     "completeTitle": "Téléchargement terminé",

@@ -405,7 +405,7 @@
     "settingUpdateFailedTitle": "อัปเดตไม่สำเร็จ",
     "settingUpdateFailedDescription": "ไม่สามารถอัปเดตโหมดการประมวลผลได้ กรุณาลองอีกครั้ง",
     "deleteFailedTitle": "ลบไม่สำเร็จ",
-    "deleteFailedDescription": "ไม่สามารถลบโมเดลได้ กรุณาลองอีกครั้ง",
+    "deleteFailedDescription": "เมร่า AI models weren't deleted. Try again.",
     "attestationTitle": "ยืนยันการรับรอง",
     "attestationSubtitle": "ตรวจสอบว่า AI ในคลาวด์ทำงานในฮาร์ดแวร์ Intel TDX ที่แท้จริง และกุญแจที่ข้อมูลของคุณถูกเข้ารหัส มาจากภายในนั้น",
     "attestationVerifyButton": "เรียกใช้การยืนยัน",
@@ -431,7 +431,7 @@
     "attestationCheckTcbStatus": "ระดับแพตช์แพลตฟอร์มเป็นปัจจุบัน",
     "attestationCheckGpuAttestation": "การรับรอง GPU",
     "attestationNotCheckedLabel": "ยังไม่ตรวจสอบ",
-    "attestationScopeNotice": "การตรวจสอบนี้ดูโมเดลที่แสดงด้านบน เมร่า ใช้โมเดลคลาวด์มากกว่าหนึ่งตัว (แชทใช้อีกตัวหนึ่ง และแต่ละตัวมีตัวสำรอง) ดังนั้นผลที่ผ่านตรงนี้ครอบคลุมเฉพาะโมเดลนี้ ไม่ใช่ทุกคำขอ",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "ตรวจสอบโมเดล",
     "webSearchTitle": "ค้นหาเว็บในแชท",
     "extractedMetadataPanelHeading": "ข้อมูลเมตาดาต้าที่สกัดมา",
@@ -495,7 +495,8 @@
     "nativeOsTooOld": "Apple Intelligence needs iOS 26 or later.",
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "เมร่า uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "ล้างบันทึกในเครื่องของบทความที่คุณเปิด การ์ด \"สำนักพิมพ์ที่คุณอ่าน\" ในแท็บแหล่งข่าวและประวัติรายสำนักพิมพ์จะถูกรีเซ็ตเป็นว่างเปล่า ไม่กระทบข้อมูลอื่น และไม่มีข้อมูลบนเซิร์ฟเวอร์ถูกแตะต้อง เพราะเซิร์ฟเวอร์ของ เมร่า ไม่เคยมีข้อมูลนี้",
@@ -615,7 +616,7 @@
     "networkErrorTitle": "เครือข่ายผิดพลาด"
   },
   "download": {
-    "modelDownloading": "กำลังดาวน์โหลด AI Model...",
+    "modelDownloading": "Downloading เมร่า AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "เมร่า โปรโตคอล พร้อมใช้งานแล้ว",
     "completeTitle": "ดาวน์โหลดเสร็จแล้ว",

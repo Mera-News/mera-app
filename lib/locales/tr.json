@@ -408,7 +408,7 @@
     "settingUpdateFailedTitle": "Güncelleme Başarısız",
     "settingUpdateFailedDescription": "İşleme modu güncellenemedi. Lütfen tekrar dene.",
     "deleteFailedTitle": "Silme Başarısız",
-    "deleteFailedDescription": "Model silinemedi. Lütfen tekrar dene.",
+    "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
     "attestationTitle": "Tasdiki doğrula",
     "attestationSubtitle": "Bulut yapay zekasının gerçek Intel TDX donanımında çalıştığını ve verilerinizin şifrelendiği anahtarın bu donanımın içinden geldiğini kontrol edin.",
     "attestationVerifyButton": "Doğrulamayı çalıştır",
@@ -434,7 +434,7 @@
     "attestationCheckTcbStatus": "Platform yaması düzey güncel",
     "attestationCheckGpuAttestation": "GPU tasdiki",
     "attestationNotCheckedLabel": "kontrol edilmedi",
-    "attestationScopeNotice": "Bu, yukarıda gösterilen modeli kontrol eder. Mera birden fazla bulut modeli kullanır (sohbet farklı bir model kullanır ve her birinin bir yedeği vardır), bu yüzden buradaki başarılı sonuç yalnızca bu modeli kapsar, her isteği değil.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "Kontrol edilen model",
     "webSearchTitle": "Sohbette web araması",
     "extractedMetadataPanelHeading": "Çıkarılan Meta Veriler",
@@ -499,7 +499,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanıp boşalır. Başka hiçbir şey etkilenmez ve sunucu verisine dokunulmaz, çünkü Mera'nın sunucularında bu veri hiç olmadı.",
@@ -619,7 +620,7 @@
     "networkErrorTitle": "Ağ hatası"
   },
   "download": {
-    "modelDownloading": "AI modeli indiriliyor...",
+    "modelDownloading": "Downloading Mera AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "Mera Protocol artık kullanıma hazır.",
     "completeTitle": "İndirme tamamlandı",

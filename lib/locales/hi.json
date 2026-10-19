@@ -408,7 +408,7 @@
     "settingUpdateFailedTitle": "अपडेट विफल",
     "settingUpdateFailedDescription": "प्रोसेसिंग मोड अपडेट करने में विफल। कृपया पुनः प्रयास करें।",
     "deleteFailedTitle": "हटाना विफल",
-    "deleteFailedDescription": "मॉडल हटाने में विफल। कृपया पुनः प्रयास करें।",
+    "deleteFailedDescription": "मेरा AI models weren't deleted. Try again.",
     "attestationTitle": "प्रमाणीकरण सत्यापित करें",
     "attestationSubtitle": "जाँचें कि क्लाउड AI असली Intel TDX हार्डवेयर के अंदर चल रहा है, और कि आपका डेटा जिस कुंजी से एन्क्रिप्ट होता है, वह उसी के अंदर से आई है।",
     "attestationVerifyButton": "सत्यापन चलाएं",
@@ -434,7 +434,7 @@
     "attestationCheckTcbStatus": "प्लेटफ़ॉर्म पैच स्तर वर्तमान है",
     "attestationCheckGpuAttestation": "GPU प्रमाणीकरण",
     "attestationNotCheckedLabel": "जाँची नहीं गई",
-    "attestationScopeNotice": "यह ऊपर दिखाए गए मॉडल की जाँच करता है। मेरा ऐप एक से ज़्यादा क्लाउड मॉडल इस्तेमाल करता है। चैट एक अलग मॉडल इस्तेमाल करता है, और हर एक का बैकअप है। इसलिए यहाँ का पास सिर्फ़ इस मॉडल को कवर करता है, हर अनुरोध को नहीं।",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "मॉडल जाँचा गया",
     "webSearchTitle": "चैट में वेब खोज",
     "extractedMetadataPanelHeading": "निकाला गया मेटाडेटा",
@@ -499,7 +499,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "मेरा uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "आपके द्वारा खोले गए लेखों का लोकल लॉग साफ़ करता है। Sources टैब का \"आप जो प्रकाशन पढ़ रहे हैं\" कार्ड और प्रत्येक प्रकाशन का इतिहास खाली हो जाएगा। बाक़ी कुछ प्रभावित नहीं होता और किसी सर्वर डेटा को छुआ नहीं जाता, क्योंकि मेरा ऐप के सर्वर के पास यह डेटा कभी था ही नहीं।",
@@ -619,7 +620,7 @@
     "networkErrorTitle": "नेटवर्क त्रुटि"
   },
   "download": {
-    "modelDownloading": "AI Model डाउनलोड हो रहा है...",
+    "modelDownloading": "Downloading मेरा AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "मेरा प्रोटोकॉल अब इस्तेमाल के लिए तैयार है।",
     "completeTitle": "डाउनलोड पूरा हुआ",

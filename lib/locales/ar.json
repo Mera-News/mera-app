@@ -456,7 +456,7 @@
     "settingUpdateFailedTitle": "فشل التحديث",
     "settingUpdateFailedDescription": "فشل تحديث وضع المعالجة. يرجى المحاولة مرة أخرى.",
     "deleteFailedTitle": "فشل الحذف",
-    "deleteFailedDescription": "فشل حذف النموذج. يرجى المحاولة مرة أخرى.",
+    "deleteFailedDescription": "ميرا AI models weren't deleted. Try again.",
     "attestationTitle": "تحقق من الشهادة",
     "attestationSubtitle": "تحقق من أن ذكاء اصطناعي السحابة يعمل في أجهزة Intel TDX الحقيقية، وأن المفتاح الذي يتم تشفير بياناتك إليه جاء من داخله.",
     "attestationVerifyButton": "تشغيل التحقق",
@@ -482,7 +482,7 @@
     "attestationCheckTcbStatus": "مستوى تصحيح المنصة حديث",
     "attestationCheckGpuAttestation": "شهادة GPU",
     "attestationNotCheckedLabel": "لم يتم فحصه",
-    "attestationScopeNotice": "هذا يفحص النموذج المعروض أعلاه. يستخدم ميرا أكثر من نموذج سحابي (الدردشة تستخدم نموذجًا مختلفًا، ولكل منها نموذج احتياطي)، لذا فالنجاح هنا يغطي هذا النموذج، وليس كل طلب.",
+    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
     "attestationModelLabel": "النموذج المفحوص",
     "webSearchTitle": "البحث عن الويب في الدردشة",
     "extractedMetadataPanelHeading": "البيانات الوصفية المستخرجة",
@@ -551,7 +551,8 @@
     "speedRefused_two": "Apple Intelligence declined {{count}} requests",
     "speedRefused_few": "Apple Intelligence declined {{count}} requests",
     "speedRefused_many": "Apple Intelligence declined {{count}} requests",
-    "speedRefused_other": "Apple Intelligence declined {{count}} requests"
+    "speedRefused_other": "Apple Intelligence declined {{count}} requests",
+    "modelsWaitingNative": "ميرا uses Private cloud until Apple Intelligence is ready."
   },
   "manageData": {
     "viewingHistoryModalDescription": "يمسح السجل المحلي للمقالات التي فتحتها. ستعود بطاقة \"المنشورات التي كنت تقرأها\" في تبويب المصادر وسجل كل منشور إلى الحالة الفارغة. لا يتأثر أي شيء آخر ولا تُمسّ أي بيانات على الخادم، لأن خوادم ميرا لم تحصل على هذه البيانات أصلًا.",
@@ -675,7 +676,7 @@
     "networkErrorTitle": "خطأ في الشبكة"
   },
   "download": {
-    "modelDownloading": "جارٍ تنزيل نموذج الذكاء الاصطناعي...",
+    "modelDownloading": "Downloading ميرا AI models",
     "modelProgress": "{{percent}}%",
     "completeBody": "أصبح بروتوكول ميرا جاهزًا للاستخدام.",
     "completeTitle": "اكتمل التنزيل",
