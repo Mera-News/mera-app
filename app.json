@@ -23,6 +23,9 @@
       "bundleIdentifier": "com.mera.news",
       "appleTeamId": "Q8RA98G9S9",
       "icon": "./assets/icons/ios-dark.png",
+      "entitlements": {
+        "com.apple.developer.kernel.increased-memory-limit": true
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "Mera does not record audio. This notice is required because an on-device AI component references the microphone API. The microphone is never accessed without your permission.",
