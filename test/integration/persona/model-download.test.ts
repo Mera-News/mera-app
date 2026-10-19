@@ -17,7 +17,12 @@ import {
     setPromoteWhenDone,
     startModelDownloads,
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
-import { cancelActiveDownload, downloadBaseModel, isModelDownloaded } from '@/lib/mera-protocol-toolkit/core/modelManager';
+import {
+    cancelActiveDownload,
+    downloadBaseModel,
+    isModelDownloaded,
+    purgeAllBaseModels,
+} from '@/lib/mera-protocol-toolkit/core/modelManager';
 import { RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useUserStore } from '@/lib/stores/user-store';
@@ -200,7 +205,9 @@ describe('startModelDownloads', () => {
         last().finish();
         await until(() => protocol().processingMode === ProcessingMode.OnDevice);
 
-        expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: ProcessingMode.OnDevice }]);
+        // The intent is saved when the download starts, and again by the promotion.
+        const onDevice = { userId: FIXTURE_ACCOUNT.userId, mode: ProcessingMode.OnDevice };
+        expect(sent).toEqual([onDevice, onDevice]);
         // The cached persona the boot purge reads now carries the intent too.
         expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.OnDevice);
         await until(() => notificationIds().length === 1);
@@ -208,20 +215,27 @@ describe('startModelDownloads', () => {
     });
 
     it('an intent withdrawn mid-download promotes nothing', async () => {
+        useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
+        await signInFixtureAccount();
         const sent = recordModeUpdates();
         startModelDownloads({ promote: true });
         await started();
+        await until(() => sent.length === 1);
+        // The screen's Private cloud pick writes Cloud itself; the download only stops promoting.
         setPromoteWhenDone(false);
         last().finish();
         await started(2);
         last().finish();
         await until(() => protocol().modelState === 'downloaded');
-        expect(sent).toEqual([]);
+        expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: ProcessingMode.OnDevice }]);
         expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
     });
 
     it('with the native text engine, only the relevance model downloads, and promotion needs the native model available', async () => {
-        useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
+        useUserStore.setState({
+            userId: FIXTURE_ACCOUNT.userId,
+            userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
+        });
         await signInFixtureAccount();
         const sent = recordModeUpdates();
         await setTextEngine('native');
@@ -234,16 +248,73 @@ describe('startModelDownloads', () => {
             last().finish();
             await until(() => protocol().modelState === 'downloaded');
             expect(downloads).toHaveLength(1);
-            // The native model is not ready, so On this phone cannot run yet: nothing is promoted.
-            expect(sent).toEqual([]);
-            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            // And the notification does not claim it is ready.
+            // The native model is not ready, so On this phone cannot run yet: the phone stays on Cloud
+            // locally, while the server and the cached persona keep the on-device intent (the D6 split
+            // state), so the next foreground promotes and the boot purge keeps the file.
             await until(() => notificationIds().length === 1);
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+            expect(sent.length).toBeGreaterThan(0);
+            expect(sent.every((s) => s.mode === ProcessingMode.OnDevice)).toBe(true);
+            expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.OnDevice);
+            // And the notification does not claim it is ready.
             expect(scheduled.mock.calls[0][0].content.body).toBe('Mera uses Private cloud until Apple Intelligence is ready.');
+
+            // The next cold boot sees local Cloud and runs the purge: the file stays.
+            await purgeAllBaseModels();
+            await expect(isModelDownloaded(RELEVANCE_MODEL.modelId)).resolves.toBe(true);
         } finally {
             await setTextEngine('mera');
             __resetTextEngineForTests();
         }
+    });
+
+    it('a promoting download killed partway keeps the finished file through the boot purge, so a retry fetches only the rest', async () => {
+        useUserStore.setState({
+            userId: FIXTURE_ACCOUNT.userId,
+            userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
+        });
+        await signInFixtureAccount();
+        const sent = recordModeUpdates();
+        startModelDownloads({ promote: true });
+        await started();
+        last().finish();
+        await started(2);
+        await until(() => sent.length === 1);
+        expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.OnDevice);
+
+        // The app dies here; the next cold boot is on Cloud locally and runs the purge.
+        await purgeAllBaseModels();
+        await expect(isModelDownloaded(TEXT_MODEL.modelId)).resolves.toBe(true);
+    });
+
+    it('picking On this phone mid-download saves the intent, since the screen sends no write while it cannot run', async () => {
+        useUserStore.setState({
+            userId: FIXTURE_ACCOUNT.userId,
+            userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
+        });
+        await signInFixtureAccount();
+        const sent = recordModeUpdates();
+        startModelDownloads();
+        await started();
+        setPromoteWhenDone(true);
+        await until(() => useUserStore.getState().userPersona?.processingMode === ProcessingMode.OnDevice);
+        expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: ProcessingMode.OnDevice }]);
+        expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+    });
+
+    it('an intent withdrawn while its save is in flight leaves the cached persona on Cloud', async () => {
+        useUserStore.setState({
+            userId: FIXTURE_ACCOUNT.userId,
+            userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
+        });
+        await signInFixtureAccount();
+        const sent = recordModeUpdates();
+        startModelDownloads({ promote: true });
+        setPromoteWhenDone(false);
+        await until(() => sent.length === 1);
+        await started();
+        await new Promise((r) => setTimeout(r, 50));
+        expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.Cloud);
     });
 
     it('a second start while one runs does not start a second download', async () => {

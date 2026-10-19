@@ -174,12 +174,17 @@ async function notify(identifier: string, title: string, body: string): Promise<
 // ---------------------------------------------------------------------------
 
 /**
- * Switches processing to OnDevice: the server persona first, then the store.
- * Returns false and changes nothing when the server write fails. Lazy requires:
- * this module is in the toolkit barrel, and AccountService must not enter the
- * graph of every completeLocal importer.
+ * Writes the on-device intent to the server persona and the cached copy, and
+ * leaves the local mode alone (D6 split state). The boot purge reads the cached
+ * copy, so files a promoting download fetched survive a restart even while On
+ * this phone cannot run yet, and restoreOnDeviceIfRunnable finishes the switch
+ * once it can. Lazy requires: this module is in the toolkit barrel, and
+ * AccountService must not enter the graph of every completeLocal importer.
+ * Returns false and changes nothing locally when the server write fails, or
+ * when `stillWanted` says the reader withdrew the intent while it was in flight
+ * (their Private cloud pick wrote Cloud and the cache must keep it).
  */
-export async function promoteToOnDevice(): Promise<boolean> {
+async function writeOnDeviceIntent(stillWanted: () => boolean = () => true): Promise<boolean> {
   try {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const { resolveCurrentUserId } =
@@ -187,18 +192,31 @@ export async function promoteToOnDevice(): Promise<boolean> {
     const { AccountService } = require('../../account-service') as typeof import('../../account-service');
     const { useUserStore } = require('../../stores/user-store') as typeof import('../../stores/user-store');
     /* eslint-enable @typescript-eslint/no-require-imports */
-    const userId = await resolveCurrentUserId();
-    await AccountService.updateProcessingMode(userId, ProcessingMode.OnDevice);
-    useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.OnDevice);
-    // The cached persona carries the intent the boot purge reads: keep it in step
-    // so a later local Cloud fallback never loses the files.
+    await AccountService.updateProcessingMode(await resolveCurrentUserId(), ProcessingMode.OnDevice);
+    if (!stillWanted()) return false;
     const persona = useUserStore.getState().userPersona;
     if (persona) useUserStore.getState().setUserPersona({ ...persona, processingMode: ProcessingMode.OnDevice });
     return true;
   } catch (err) {
-    logger.warn('[DownloadService] promotion to on-device failed', { error: String(err) });
+    logger.warn('[DownloadService] saving the on-device intent failed', { error: String(err) });
     return false;
   }
+}
+
+/** A download that will promote saves the intent up front, so a kill partway keeps the files (D5). */
+function saveIntentForDownload(): void {
+  void writeOnDeviceIntent(() => promoteWhenDone);
+}
+
+/**
+ * Switches processing to OnDevice: the server persona and its cached copy first,
+ * then the store. Returns false and changes nothing locally when the server
+ * write fails.
+ */
+export async function promoteToOnDevice(): Promise<boolean> {
+  if (!(await writeOnDeviceIntent())) return false;
+  useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.OnDevice);
+  return true;
 }
 
 /**
@@ -245,7 +263,10 @@ export async function restoreOnDeviceIfRunnable(): Promise<boolean> {
 
 /** The screen keeps this in step with the reader's on-device intent. */
 export function setPromoteWhenDone(value: boolean): void {
+  const turnedOn = value && !promoteWhenDone;
   promoteWhenDone = value;
+  // A mid-download pick of On this phone sends no write of its own while it cannot run yet.
+  if (turnedOn && downloadPromise) saveIntentForDownload();
 }
 
 /** Whether a running download will switch the phone to OnDevice when it lands. */
@@ -270,6 +291,7 @@ export function isDownloadInProgress(): boolean {
 export function startModelDownloads(opts: { promote?: boolean } = {}): void {
   if (downloadPromise) return;
   promoteWhenDone = opts.promote ?? false;
+  if (promoteWhenDone) saveIntentForDownload();
 
   const store = useMeraProtocolStore.getState();
   store.setModelState('downloading');
@@ -312,6 +334,9 @@ export function startModelDownloads(opts: { promote?: boolean } = {}): void {
       const shouldPromote =
         promoteWhenDone && runnable && useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
       const promoted = shouldPromote ? await promoteToOnDevice() : false;
+      // Cannot run yet: the intent stays saved (again, in case the write at the start failed) so the
+      // boot purge keeps the files and the next foreground promotes once it can run.
+      if (promoteWhenDone && !runnable) await writeOnDeviceIntent(() => promoteWhenDone);
       // Landed but cannot run yet (the native engine is still unavailable): never say "ready".
       const body = promoted
         ? 'download.onDeviceReady'
