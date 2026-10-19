@@ -11,6 +11,8 @@
 //     ("Mera used what it already knew"), never a provider string — the app has
 //     already shipped an English provider error to users in every locale once.
 
+import { stepKindForTool } from '@/lib/services/chat-phase';
+import type { LiveTool } from '@/lib/llm/chat-phase-store';
 import type { AgentStep, AgentStepStatus } from './types';
 
 // TOOL NAMES are string literals here on purpose, for now. P1's tool-name
@@ -157,6 +159,7 @@ export function stepsForMessage(
     const step: AgentStep = {
       id: `${messageId}::${idx}`,
       kind: 'tool',
+      glyph: stepKindForTool(tc.name),
       toolName: tc.name,
       labelKey,
       status,
@@ -173,6 +176,7 @@ export function legStartStep(messageId: string, settled: boolean): AgentStep {
   return {
     id: `${messageId}::leg`,
     kind: 'leg-start',
+    glyph: 'think',
     labelKey: 'agentSteps.legStart',
     status: settled ? 'done' : 'pending',
   };
@@ -192,12 +196,19 @@ export function legStartStep(messageId: string, settled: boolean): AgentStep {
  * in all twenty dictionaries, rather than minting a key for a row that says
  * exactly that.
  */
-export function continuingStep(anchorId: string, labelKey: string = GENERIC_LABEL_KEY): AgentStep {
+export function continuingStep(
+  anchorId: string,
+  liveTool: LiveTool | null = null,
+  retried = false,
+): AgentStep {
+  const base = { id: `${anchorId}::continuing`, kind: 'leg-start' as const, status: 'pending' as const };
+  if (liveTool) {
+    return { ...base, ...labelForToolCall(liveTool.toolName, liveTool.args), glyph: liveTool.kind };
+  }
   return {
-    id: `${anchorId}::continuing`,
-    kind: 'leg-start',
-    labelKey,
-    status: 'pending',
+    ...base,
+    labelKey: retried ? 'chatPhases.retrying' : GENERIC_LABEL_KEY,
+    glyph: 'working',
   };
 }
 

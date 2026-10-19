@@ -28,7 +28,7 @@ const tables = stepTables(fakeT);
 const textOf = (tool: string, input: unknown = {}) => {
   const { labelKey, labelValues } = labelForToolCall(tool, input);
   return stepLabel(
-    { id: 'x', kind: 'tool', toolName: tool, labelKey, labelValues, status: 'done' },
+    { id: 'x', kind: 'tool', glyph: 'working', toolName: tool, labelKey, labelValues, status: 'done' },
     fakeT,
     tables,
   );

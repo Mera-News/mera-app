@@ -9,6 +9,7 @@ import {
   labelArg,
   labelForToolCall,
   legStartStep,
+  continuingStep,
   MAX_LABEL_ARG,
   stepsForMessage,
 } from '@/components/custom/floating-chat/agent-step-labels';
@@ -143,5 +144,51 @@ describe('legStartStep and changedDataFrom', () => {
     expect(changedDataFrom(stepsForMessage('m', [{ name: 'deleteUserFacts', input: {}, status: 'done' }], false))).toBe(true);
     expect(changedDataFrom(stepsForMessage('m', [{ name: 'lookup_place', input: {}, status: 'done' }], false))).toBe(false);
     expect(changedDataFrom([legStartStep('m', true)])).toBe(false);
+  });
+});
+
+describe('step glyphs', () => {
+  it.each([
+    ['load_skill', 'skill'],
+    ['find_similar_facts', 'facts'],
+    ['lookup_place', 'place'],
+    ['saveExtractedFacts', 'write'],
+    ['deleteUserFacts', 'remove'],
+    ['ask_choice', 'ask'],
+    ['webSearch', 'web'],
+    ['explainMera', 'working'],
+    ['somethingNew', 'working'],
+  ])('%s gets glyph %s', (name, glyph) => {
+    expect(stepsForMessage('m', [{ name, input: {}, status: 'done' }], false)[0].glyph).toBe(glyph);
+  });
+
+  it('a leg start is a think glyph', () => {
+    expect(legStartStep('m', true).glyph).toBe('think');
+  });
+});
+
+describe('continuingStep', () => {
+  it('uses the live tool label and its kind as glyph, keeping the id', () => {
+    expect(
+      continuingStep('u1', { kind: 'place', toolName: 'lookup_place', args: { query: 'manhattan' } }, false),
+    ).toEqual({
+      id: 'u1::continuing',
+      kind: 'leg-start',
+      labelKey: 'agentSteps.lookupPlace',
+      labelValues: { query: 'manhattan' },
+      glyph: 'place',
+      status: 'pending',
+    });
+  });
+  it('says retrying when retried and nothing is live', () => {
+    expect(continuingStep('u1', null, true)).toMatchObject({ labelKey: 'chatPhases.retrying', glyph: 'working' });
+  });
+  it('a live tool wins over retried', () => {
+    expect(
+      continuingStep('u1', { kind: 'web', toolName: 'webSearch', args: {} }, true).labelKey,
+    ).toBe('chatPhases.webSearch');
+  });
+  it('defaults to working', () => {
+    expect(continuingStep('u1')).toMatchObject({ labelKey: 'agentSteps.working', glyph: 'working', status: 'pending' });
   });
 });

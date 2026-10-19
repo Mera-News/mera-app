@@ -1,5 +1,6 @@
 import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
 import { readPendingGroups } from '@/lib/chat-tools/fact-choice-resolution';
+import type { LiveTool } from '@/lib/llm/chat-phase-store';
 import type { AgentStep, AgentTerminal, ChatThreadItem } from './types';
 import {
   changedDataFrom,
@@ -73,7 +74,7 @@ export function buildTurnBoxes(
   stale: boolean,
   turnActive: boolean | undefined,
   agentTerminal: AgentTerminal | null,
-  waitPhase: string | null = null,
+  live: { liveTool: LiveTool | null; retried: boolean } = { liveTool: null, retried: false },
 ): Map<string, AgentStepsItem> {
   const turns: TurnAccum[] = [];
   let current: TurnAccum | null = null;
@@ -169,11 +170,12 @@ export function buildTurnBoxes(
     const full: AgentStep[] = [
       legStartStep(turn.firstAssistantId ?? turn.anchorId, true),
       ...mergedSteps,
-      // The live row carries the wait line's phase when it is the web search
-      // (ux2 batch 25, D6): the wait line itself is suppressed while a box is
-      // live, so "Searching the web from your device…" could never show.
-      ...(active ? [continuingStep(turn.anchorId, waitPhase === 'webSearch' ? 'chatPhases.webSearch' : undefined)] : []),
+      // The live row names the tool the phone is running right now.
+      ...(active ? [continuingStep(turn.anchorId, live.liveTool, live.retried)] : []),
     ];
+
+    const terminal =
+      isLast && !(agentTerminal === 'no-proposal' && turn.offered) ? (agentTerminal ?? null) : null;
 
     out.set(turn.anchorId, {
       kind: 'agent-steps',
@@ -186,9 +188,9 @@ export function buildTurnBoxes(
       // older box would relabel a turn that ended for a different reason.
       // "Mera didn't find anything to add" beside the card it just offered
       // (ux2 D5 backstop): a turn that put a card on screen did find something.
-      terminal:
-        isLast && !(agentTerminal === 'no-proposal' && turn.offered) ? (agentTerminal ?? null) : null,
+      terminal,
       interrupted,
+      answered: !interrupted && terminal === null,
       changedData: changedDataFrom(full),
       latest: isLast && !stale,
     });
