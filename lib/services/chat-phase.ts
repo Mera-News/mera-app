@@ -31,13 +31,13 @@
  *    arrived or the turn died; "nothing published yet" is the store's `idle`,
  *    which renders the opening pool so a caller that forgets to publish
  *    degrades to a sentence rather than to an empty bubble. See
- *    `ChatPhaseView` in `lib/llm/chat-phase-store.ts`.
+ *    `ChatPhaseView` below and the store in `lib/llm/chat-phase-store.ts`.
  */
 
 /**
  * The cloud phases, in the order they can legally advance.
  *
- * `retrying` is ranked LAST on purpose. The 10s hedge, the model fallback and
+ * `retrying` outranks every phase a model call publishes, on purpose. The 10s hedge, the model fallback and
  * both stream retries all re-enter the request builder, which would otherwise
  * report `securing` again and walk the reader back to "encrypting" at the exact
  * moment they have been waiting longest.
@@ -58,8 +58,10 @@
 export const CLOUD_PHASE_ORDER = [
   'preparing',
   'queued',
-  'securing',
+  // A cold call fetches the model's key FIRST and seals the message with it
+  // after, so `securing` must be able to follow `attesting`.
   'attesting',
+  'securing',
   'thinking',
   'retrying',
   // The persona agent's web search (ux2 D10). Published by the device port
@@ -88,6 +90,15 @@ export const CHAT_PHASE_IDS = [...CLOUD_PHASE_ORDER, ...DEVICE_PHASE_ORDER] as c
  * a phase to advance to, subject to the mark.
  */
 export type PhaseSignal = ChatPhaseId | 'reset' | null;
+
+/**
+ * What the wait line is narrating. THREE STATES, NOT A NULLABLE PHASE: see
+ * `lib/llm/chat-phase-store.ts`, which owns the store and re-exports this.
+ */
+export type ChatPhaseView =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'phase'; readonly id: ChatPhaseId }
+  | { readonly kind: 'released' };
 
 function orderFor(id: ChatPhaseId): readonly ChatPhaseId[] | null {
   if ((CLOUD_PHASE_ORDER as readonly string[]).includes(id)) return CLOUD_PHASE_ORDER;
@@ -171,4 +182,88 @@ export function makePhaseSink(apply: PhaseApply): PhaseSink {
     displayed = next;
     apply(next);
   };
+}
+
+/** The phases a model call publishes from inside `cloudChatStream`. Only these
+ *  mean the phone has handed work to the model, so only these end a live tool. */
+const MODEL_CALL_PHASES: ReadonlySet<ChatPhaseId> = new Set<ChatPhaseId>([
+  'queued',
+  'attesting',
+  'securing',
+  'thinking',
+  'retrying',
+]);
+
+export function isModelCallPhase(id: ChatPhaseId): boolean {
+  return MODEL_CALL_PHASES.has(id);
+}
+
+/**
+ * What the encryption strip draws. The handover's `return` is NOT here: the UI
+ * plays it on the first visible token, which is not a phase.
+ */
+export type StripState =
+  | 'phone'
+  | 'attest'
+  | 'secure'
+  | 'think'
+  | 'retry'
+  | 'devicePreparing'
+  | 'deviceLoading'
+  | 'deviceThinking';
+
+const CLOUD_STRIP: Partial<Record<ChatPhaseId, StripState>> = {
+  attesting: 'attest',
+  securing: 'secure',
+  thinking: 'think',
+  retrying: 'retry',
+};
+
+/**
+ * The strip state, from the phase and nothing else. NEVER READS A ROW LABEL:
+ * a sealed letter is drawn only for a phase `cloudChatStream` published, so
+ * nothing sealed crosses the line while the phone does plain work (a place
+ * lookup, a web search) that is not end-to-end encrypted.
+ *
+ * Precedence on cloud: work on the phone beats every phase except `retrying`,
+ * which is a real resend. `preparing`, `queued` and `webSearch` are phone work
+ * too. On device nothing is sealed or sent, so `deviceWork` changes nothing.
+ */
+export function stripStateFor(
+  view: ChatPhaseView,
+  deviceWork: boolean,
+  engine: 'cloud' | 'local',
+): StripState | null {
+  if (engine === 'local') {
+    if (view.kind === 'released') return null;
+    if (view.kind === 'phase' && (DEVICE_PHASE_ORDER as readonly string[]).includes(view.id)) {
+      return view.id as DevicePhaseId;
+    }
+    return 'devicePreparing';
+  }
+  if (view.kind === 'phase' && view.id === 'retrying') return 'retry';
+  if (deviceWork) return 'phone';
+  if (view.kind === 'released') return null;
+  if (view.kind === 'idle') return 'phone';
+  return CLOUD_STRIP[view.id] ?? 'phone';
+}
+
+/** The step kinds shared by the strip, the step rows and the glyph registry. */
+export type StepKind = 'think' | 'skill' | 'facts' | 'place' | 'write' | 'remove' | 'ask' | 'web' | 'working';
+
+/** Keyed by the CONTRACT tool name the model calls, never by a label and never
+ *  by the port's method name (`lookupPlace` is not `lookup_place`). */
+const STEP_KIND_BY_TOOL: Readonly<Record<string, StepKind>> = {
+  find_similar_facts: 'facts',
+  lookup_place: 'place',
+  saveExtractedFacts: 'write',
+  deleteUserFacts: 'remove',
+  ask_choice: 'ask',
+  webSearch: 'web',
+  load_skill: 'skill',
+};
+
+/** `explainMera` and any unknown name are generic work. */
+export function stepKindForTool(toolName: string): StepKind {
+  return Object.prototype.hasOwnProperty.call(STEP_KIND_BY_TOOL, toolName) ? STEP_KIND_BY_TOOL[toolName] : 'working';
 }
