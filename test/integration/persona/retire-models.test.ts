@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Boot-time retirement of on-device models (`retireLegacyModels`): the retired ids' files are deleted, a retired
 // selection is remapped at hydrate, and an OnDevice user without BOTH models on disk falls back to Cloud LOCALLY
-// ONLY (the server persona keeps the on-device intent). Real modelManager over chat's in-memory expo-file-system, real store, settings
+// ONLY (the server persona keeps the on-device intent), and the boot purge leaves the files alone while that intent
+// stands. Real modelManager over chat's in-memory expo-file-system, real store, settings
 // rows, user store and Apollo over MSW. Faults: a one-call spy on the real deleteBaseModel (R23) and a GraphQL error.
 import { waitFor } from '@testing-library/react-native';
 import { retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
@@ -150,5 +151,30 @@ describe('the OnDevice rule: both models on disk', () => {
         await retireLegacyModels();
         expect(store().processingMode).toBe(ProcessingMode.Cloud);
         expect(sent).toEqual([]);
+    });
+});
+
+describe('the boot purge (purgeAllBaseModels) after a local Cloud fallback', () => {
+    const personaMode = (processingMode: ProcessingMode) =>
+        useUserStore.setState({ userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode }) });
+
+    it('keeps the files while the persona keeps the on-device intent', async () => {
+        await putModelOnDisk(RELEVANCE_MODEL.modelId);
+        personaMode(ProcessingMode.OnDevice);
+        // Boot N: one model alone falls back to Cloud locally. Boot N+1 runs the purge for local Cloud.
+        await retireLegacyModels();
+        expect(store().processingMode).toBe(ProcessingMode.Cloud);
+
+        await modelManager.purgeAllBaseModels();
+
+        expect(modelDirExists(RELEVANCE_MODEL.modelId)).toBe(true);
+    });
+
+    it('wipes every model file once the persona says Cloud', async () => {
+        await putBothOnDisk();
+        personaMode(ProcessingMode.Cloud);
+        await modelManager.purgeAllBaseModels();
+        expect(modelDirExists(TEXT_MODEL.modelId)).toBe(false);
+        expect(modelDirExists(RELEVANCE_MODEL.modelId)).toBe(false);
     });
 });

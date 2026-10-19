@@ -67,6 +67,28 @@ private enum Afm {
     if error is CancellationError {
       return OnDeviceLlmException("ERR_AFM_CANCELLED", "The request was cancelled")
     }
+    // Built with Xcode 27 or later, the framework throws LanguageModelError on
+    // iOS 27 and GenerationError (deprecated in 27) on iOS 26. The iOS 26 SDK
+    // has no LanguageModelError, hence the compile-time guard: Xcode 27 ships
+    // Swift 6.4, every Xcode 26 release ships 6.3 or earlier.
+    #if compiler(>=6.4)
+    if #available(iOS 27.0, *), let modelError = error as? LanguageModelError {
+      switch modelError {
+      case .guardrailViolation:
+        return OnDeviceLlmException("ERR_AFM_GUARDRAIL", "Apple's safety guardrails declined the request")
+      case .refusal:
+        return OnDeviceLlmException("ERR_AFM_REFUSAL", "The model declined the request")
+      case .contextSizeExceeded:
+        return OnDeviceLlmException("ERR_AFM_CONTEXT", "The request exceeds the model's context window")
+      case .unsupportedLanguageOrLocale:
+        return OnDeviceLlmException("ERR_AFM_LANGUAGE", "The model does not support this language")
+      case .rateLimited:
+        return OnDeviceLlmException("ERR_AFM_BUSY", "The model is busy")
+      default:
+        return OnDeviceLlmException("ERR_AFM_UNKNOWN", "The on-device Apple model failed")
+      }
+    }
+    #endif
     if let generation = error as? LanguageModelSession.GenerationError {
       switch generation {
       case .guardrailViolation:
@@ -177,7 +199,11 @@ public class MeraOnDeviceLlmModule: Module {
         let task = Task { [weak self] in
           var sent = ""
           do {
-            let stream = Afm.session(instructions).streamResponse(to: prompt, options: Afm.options(args))
+            // Held for the whole loop: the docs do not say the stream retains
+            // its session, and a released local could end the stream early.
+            let session = Afm.session(instructions)
+            defer { withExtendedLifetime(session) {} }
+            let stream = session.streamResponse(to: prompt, options: Afm.options(args))
             for try await snapshot in stream {
               let text = snapshot.content
               if text.count > sent.count, text.hasPrefix(sent) {

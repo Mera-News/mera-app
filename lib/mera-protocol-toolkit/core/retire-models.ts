@@ -1,7 +1,8 @@
 // Boot-time retirement of on-device models no longer in the catalogue.
 //
-// Runs once after hydrateAllStores(), for OnDevice users only (Cloud users
-// already have every model purged by the boot step in use-app-root). Nothing
+// Runs once after hydrateAllStores(), for OnDevice users only. Local Cloud
+// users go through the boot purge in use-app-root instead, which deletes every
+// model file only when the cached persona has no on-device intent either. Nothing
 // here may block boot: every failure is captured and swallowed.
 
 import { ProcessingMode } from '@/lib/generated/graphql-types';

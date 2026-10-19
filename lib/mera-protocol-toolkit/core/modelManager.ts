@@ -22,6 +22,7 @@ import {
 import logger from '../../logger';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
+import { useUserStore } from '../../stores/user-store';
 import { LOCAL_CONTEXT_TOKENS } from './context-size';
 import { holdRestart } from '../../app-restart';
 import { recordModelLoad } from './inference-stats';
@@ -466,11 +467,16 @@ export function deleteOnDeviceModels(): Promise<void> {
 }
 
 /**
- * Wipes the whole `mera-models/` cache directory, every model id. Used by the
- * boot-time purge for Cloud users. Refuses while a model is loaded.
+ * Wipes the whole `mera-models/` cache directory, every model id, for a reader
+ * with no on-device intent. Used by the boot-time purge for Cloud users.
+ *
+ * A no-op while the cached persona says OnDevice: that is the local Cloud
+ * fallback (D6), where the intent is kept and the files must survive so a retry
+ * fetches only what is missing. Refuses while a model is loaded.
  */
 export function purgeAllBaseModels(): Promise<void> {
   return withLlamaLock(async () => {
+    if (useUserStore.getState().userPersona?.processingMode === ProcessingMode.OnDevice) return;
     if (llamaContext) {
       throw new Error('Cannot purge models while one is loaded. Dispose it first.');
     }
