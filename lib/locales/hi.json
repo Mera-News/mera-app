@@ -434,8 +434,7 @@
     "attestationCheckTcbStatus": "प्लेटफ़ॉर्म पैच स्तर वर्तमान है",
     "attestationCheckGpuAttestation": "GPU प्रमाणीकरण",
     "attestationNotCheckedLabel": "जाँची नहीं गई",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "मॉडल जाँचा गया",
+    "attestationScopeNotice": "This checks the cloud AI मेरा uses right now. A pass here doesn't cover every request मेरा makes.",
     "webSearchTitle": "चैट में वेब खोज",
     "extractedMetadataPanelHeading": "निकाला गया मेटाडेटा",
     "extractedMetadataEventTypeLabel": "घटना प्रकार",
@@ -500,7 +499,8 @@
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "मेरा uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "मेरा uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while मेरा AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "आपके द्वारा खोले गए लेखों का लोकल लॉग साफ़ करता है। Sources टैब का \"आप जो प्रकाशन पढ़ रहे हैं\" कार्ड और प्रत्येक प्रकाशन का इतिहास खाली हो जाएगा। बाक़ी कुछ प्रभावित नहीं होता और किसी सर्वर डेटा को छुआ नहीं जाता, क्योंकि मेरा ऐप के सर्वर के पास यह डेटा कभी था ही नहीं।",

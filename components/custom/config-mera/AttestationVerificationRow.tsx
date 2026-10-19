@@ -204,8 +204,6 @@ export function AttestationVerificationRow() {
                 to avoid. */}
             {state.phase === 'done' && (
               <Text className="text-ink-3 text-xs mt-2" testID="attestation-scope-notice">
-                {t('meraProtocol.attestationModelLabel')}: {SMALL_MODEL}
-                {'\n'}
                 {t('meraProtocol.attestationScopeNotice')}
               </Text>
             )}

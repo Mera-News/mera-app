@@ -482,8 +482,7 @@
     "attestationCheckTcbStatus": "مستوى تصحيح المنصة حديث",
     "attestationCheckGpuAttestation": "شهادة GPU",
     "attestationNotCheckedLabel": "لم يتم فحصه",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "النموذج المفحوص",
+    "attestationScopeNotice": "This checks the cloud AI ميرا uses right now. A pass here doesn't cover every request ميرا makes.",
     "webSearchTitle": "البحث عن الويب في الدردشة",
     "extractedMetadataPanelHeading": "البيانات الوصفية المستخرجة",
     "extractedMetadataEventTypeLabel": "نوع الحدث",
@@ -552,7 +551,8 @@
     "speedRefused_few": "Apple Intelligence declined {{count}} requests",
     "speedRefused_many": "Apple Intelligence declined {{count}} requests",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "ميرا uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "ميرا uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while ميرا AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "يمسح السجل المحلي للمقالات التي فتحتها. ستعود بطاقة \"المنشورات التي كنت تقرأها\" في تبويب المصادر وسجل كل منشور إلى الحالة الفارغة. لا يتأثر أي شيء آخر ولا تُمسّ أي بيانات على الخادم، لأن خوادم ميرا لم تحصل على هذه البيانات أصلًا.",

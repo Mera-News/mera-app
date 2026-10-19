@@ -36,6 +36,7 @@ import {
     useProcessingMode,
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import { resolveCurrentUserId } from '@/lib/security/current-user';
 import NetInfo from '@react-native-community/netinfo';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -101,6 +102,12 @@ export const MODELS_SECTION_KEYS = [
     'download.onDeviceReady',
     ...Object.values(NATIVE_REASON_KEYS),
 ] as const;
+
+/** Keeps the cached server persona in step with a mode the server just accepted (the boot purge reads it). */
+function cacheProcessingMode(mode: ProcessingMode): void {
+    const persona = useUserStore.getState().userPersona;
+    if (persona) useUserStore.getState().setUserPersona({ ...persona, processingMode: mode });
+}
 
 type ModelsStatus = { missingBytes: number; onDiskBytes: number; runnable: boolean };
 
@@ -299,6 +306,10 @@ export function useMeraProtocolSettings() {
 
     const selectMode = async (mode: ProcessingMode) => {
         const wantsOnDevice = mode === ProcessingMode.OnDevice;
+        // The intent mirrors the server persona. Read it before it is overwritten below: the local mode
+        // is already Private cloud in the split state (server on-device, files missing), so comparing
+        // against it would never write the reader's choice to the server.
+        const hadIntent = intentRef.current;
 
         // Always reflect intent locally: it drives the help line and the download button.
         setOnDeviceIntent(wantsOnDevice);
@@ -308,13 +319,14 @@ export function useMeraProtocolSettings() {
         // If on-device isn't runnable yet, the contextual UI we just revealed
         // is the feedback. Don't persist or toast.
         if (wantsOnDevice && !onDeviceAvailable) return;
-        if (mode === processingMode) return;
+        if (mode === processingMode && wantsOnDevice === hadIntent) return;
 
         setIsUpdatingMode(true);
         try {
             const userId = await resolveCurrentUserId();
             await AccountService.updateProcessingMode(userId, mode);
             store.setProcessingMode(mode);
+            cacheProcessingMode(mode);
 
             toast.show({
                 placement: 'top',
@@ -334,6 +346,8 @@ export function useMeraProtocolSettings() {
                 ),
             });
         } catch {
+            // The server still holds what it held: the intent goes back with it.
+            setOnDeviceIntent(hadIntent);
             toast.show({
                 placement: 'top',
                 render: () => (
@@ -353,6 +367,8 @@ export function useMeraProtocolSettings() {
         async (engine: TextEngine) => {
             if (engine === textEngine) return;
             await setTextEngine(engine);
+            // The figures are the previous engine's: start clean rather than mix them in.
+            resetInferenceStats();
             await refresh();
         },
         [textEngine, refresh],
@@ -383,6 +399,7 @@ export function useMeraProtocolSettings() {
         try {
             const userId = await resolveCurrentUserId();
             await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
+            cacheProcessingMode(ProcessingMode.Cloud);
         } catch {
             // Server mutation failed. Still update locally so the UI reflects
             // reality; the next settings load will not re-promote OnDevice

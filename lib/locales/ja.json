@@ -431,8 +431,7 @@
     "attestationCheckTcbStatus": "プラットフォームパッチレベルは現在です",
     "attestationCheckGpuAttestation": "GPU認証",
     "attestationNotCheckedLabel": "確認されていません",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "チェックされたモデル",
+    "attestationScopeNotice": "This checks the cloud AI メラ uses right now. A pass here doesn't cover every request メラ makes.",
     "webSearchTitle": "チャット内のウェブ検索",
     "extractedMetadataPanelHeading": "抽出されたメタデータ",
     "extractedMetadataEventTypeLabel": "イベントタイプ",
@@ -496,7 +495,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "メラ uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "メラ uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while メラ AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "開いた記事のローカルログを消去します。「ソース」タブの「読んでいた出版社」カードと各出版社の履歴が空にリセットされます。他のものには影響せず、サーバー上のデータにも触れません。メラのサーバーはこのデータを受け取ったことがないためです。",

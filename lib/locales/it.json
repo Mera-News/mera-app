@@ -434,8 +434,7 @@
     "attestationCheckTcbStatus": "Il livello di patch della piattaforma è attuale",
     "attestationCheckGpuAttestation": "Attestazione GPU",
     "attestationNotCheckedLabel": "non controllato",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "Modello controllato",
+    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
     "webSearchTitle": "Ricerca web in chat",
     "extractedMetadataPanelHeading": "Metadati Estratti",
     "extractedMetadataEventTypeLabel": "Tipo di evento",
@@ -500,7 +499,8 @@
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while Mera AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Cancella il registro locale degli articoli che hai aperto. La scheda Fonti con la sezione \"Pubblicazioni che stai leggendo\" e la cronologia per pubblicazione verranno azzerate. Nient'altro viene modificato e nessun dato sui server viene toccato, perché i server di Mera non hanno mai avuto questi dati.",

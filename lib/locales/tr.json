@@ -434,8 +434,7 @@
     "attestationCheckTcbStatus": "Platform yaması düzey güncel",
     "attestationCheckGpuAttestation": "GPU tasdiki",
     "attestationNotCheckedLabel": "kontrol edilmedi",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "Kontrol edilen model",
+    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
     "webSearchTitle": "Sohbette web araması",
     "extractedMetadataPanelHeading": "Çıkarılan Meta Veriler",
     "extractedMetadataEventTypeLabel": "Olay türü",
@@ -500,7 +499,8 @@
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while Mera AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanıp boşalır. Başka hiçbir şey etkilenmez ve sunucu verisine dokunulmaz, çünkü Mera'nın sunucularında bu veri hiç olmadı.",

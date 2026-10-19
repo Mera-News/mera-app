@@ -434,8 +434,7 @@
     "attestationCheckTcbStatus": "Nível de patch da plataforma está atualizado",
     "attestationCheckGpuAttestation": "Atestação de GPU",
     "attestationNotCheckedLabel": "não verificado",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "Modelo verificado",
+    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
     "webSearchTitle": "Busca na web no chat",
     "extractedMetadataPanelHeading": "Metadados Extraídos",
     "extractedMetadataEventTypeLabel": "Tipo de evento",
@@ -500,7 +499,8 @@
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while Mera AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Limpa o registro local dos artigos que você abriu. O card \"Publicações que você tem lido\" na aba Fontes e o histórico por publicação serão redefinidos para vazio. Nada mais é afetado, e nenhum dado do servidor é tocado, pois os servidores da Mera nunca tiveram esses dados.",

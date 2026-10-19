@@ -431,8 +431,7 @@
     "attestationCheckTcbStatus": "平台修補程式級別為最新",
     "attestationCheckGpuAttestation": "GPU認證",
     "attestationNotCheckedLabel": "未檢查",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "已檢查的模型",
+    "attestationScopeNotice": "This checks the cloud AI 梅拉 uses right now. A pass here doesn't cover every request 梅拉 makes.",
     "webSearchTitle": "聊天中的網路搜尋",
     "extractedMetadataPanelHeading": "提取的元數據",
     "extractedMetadataEventTypeLabel": "事件類型",
@@ -496,7 +495,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while 梅拉 AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你已開啟文章的本機記錄。「來源」標籤中的「你正在閱讀的媒體」卡片及各媒體的歷史記錄將重設為空。其他資料不受影響，也不會動到任何伺服器資料，因為梅拉的伺服器從未有這份資料。",

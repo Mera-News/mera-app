@@ -458,8 +458,7 @@
     "attestationCheckTcbStatus": "Poziom poprawki platformy jest aktualny",
     "attestationCheckGpuAttestation": "Poświadczenie GPU",
     "attestationNotCheckedLabel": "niesprawdzane",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "Sprawdzony model",
+    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
     "webSearchTitle": "Wyszukiwanie w sieci w czacie",
     "extractedMetadataPanelHeading": "Wyekstrahowane Metadane",
     "extractedMetadataEventTypeLabel": "Typ zdarzenia",
@@ -526,7 +525,8 @@
     "speedRefused_few": "Apple Intelligence declined {{count}} requests",
     "speedRefused_many": "Apple Intelligence declined {{count}} requests",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while Mera AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta „Publikacje, które czytasz” w zakładce Źródła oraz historia poszczególnych publikacji zostaną zresetowane do zera. Nic innego nie jest dotknięte i żadne dane na serwerze nie są zmieniane, bo serwery Mera nigdy ich nie miały.",

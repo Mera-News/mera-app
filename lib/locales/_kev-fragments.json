@@ -1,10 +1,11 @@
 {
   "ar": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI ميرا uses right now. A pass here doesn't cover every request ميرا makes.",
       "deleteFailedTitle": "فشل الحذف",
       "deleteFailedDescription": "ميرا AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "ميرا uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "ميرا uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while ميرا AI models download"
     },
     "download": {
       "modelDownloading": "Downloading ميرا AI models",
@@ -14,10 +15,11 @@
   },
   "de": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Löschen fehlgeschlagen",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -27,10 +29,11 @@
   },
   "en": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Couldn't delete",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -40,10 +43,11 @@
   },
   "es": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Error al eliminar",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -53,10 +57,11 @@
   },
   "fr": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Échec de la suppression",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -66,10 +71,11 @@
   },
   "hi": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI मेरा uses right now. A pass here doesn't cover every request मेरा makes.",
       "deleteFailedTitle": "हटाना विफल",
       "deleteFailedDescription": "मेरा AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "मेरा uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "मेरा uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while मेरा AI models download"
     },
     "download": {
       "modelDownloading": "Downloading मेरा AI models",
@@ -79,10 +85,11 @@
   },
   "id": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Gagal Menghapus",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -92,10 +99,11 @@
   },
   "it": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Eliminazione non riuscita",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -105,10 +113,11 @@
   },
   "ja": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI メラ uses right now. A pass here doesn't cover every request メラ makes.",
       "deleteFailedTitle": "削除に失敗しました",
       "deleteFailedDescription": "メラ AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "メラ uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "メラ uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while メラ AI models download"
     },
     "download": {
       "modelDownloading": "Downloading メラ AI models",
@@ -118,10 +127,11 @@
   },
   "ko": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI 메라 uses right now. A pass here doesn't cover every request 메라 makes.",
       "deleteFailedTitle": "삭제 실패",
       "deleteFailedDescription": "메라 AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "메라 uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "메라 uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while 메라 AI models download"
     },
     "download": {
       "modelDownloading": "Downloading 메라 AI models",
@@ -131,10 +141,11 @@
   },
   "nl": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Verwijderen mislukt",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -144,10 +155,11 @@
   },
   "pl": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Usuwanie nieudane",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -157,10 +169,11 @@
   },
   "pt-BR": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Falha ao Excluir",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -170,10 +183,11 @@
   },
   "ru": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Мера uses right now. A pass here doesn't cover every request Мера makes.",
       "deleteFailedTitle": "Ошибка удаления",
       "deleteFailedDescription": "Мера AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Мера AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Мера AI models",
@@ -183,10 +197,11 @@
   },
   "th": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI เมร่า uses right now. A pass here doesn't cover every request เมร่า makes.",
       "deleteFailedTitle": "ลบไม่สำเร็จ",
       "deleteFailedDescription": "เมร่า AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "เมร่า uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "เมร่า uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while เมร่า AI models download"
     },
     "download": {
       "modelDownloading": "Downloading เมร่า AI models",
@@ -196,10 +211,11 @@
   },
   "tr": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Silme Başarısız",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -209,10 +225,11 @@
   },
   "uk": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Мера uses right now. A pass here doesn't cover every request Мера makes.",
       "deleteFailedTitle": "Не вдалося видалити",
       "deleteFailedDescription": "Мера AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Мера AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Мера AI models",
@@ -222,10 +239,11 @@
   },
   "vi": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
       "deleteFailedTitle": "Xóa thất bại",
       "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
     },
     "download": {
       "modelDownloading": "Downloading Mera AI models",
@@ -235,10 +253,11 @@
   },
   "zh-CN": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI 梅拉 uses right now. A pass here doesn't cover every request 梅拉 makes.",
       "deleteFailedTitle": "删除失败",
       "deleteFailedDescription": "梅拉 AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while 梅拉 AI models download"
     },
     "download": {
       "modelDownloading": "Downloading 梅拉 AI models",
@@ -248,10 +267,11 @@
   },
   "zh-TW": {
     "meraProtocol": {
-      "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
+      "attestationScopeNotice": "This checks the cloud AI 梅拉 uses right now. A pass here doesn't cover every request 梅拉 makes.",
       "deleteFailedTitle": "刪除失敗",
       "deleteFailedDescription": "梅拉 AI models weren't deleted. Try again.",
-      "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready."
+      "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while 梅拉 AI models download"
     },
     "download": {
       "modelDownloading": "Downloading 梅拉 AI models",

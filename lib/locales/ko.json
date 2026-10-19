@@ -431,8 +431,7 @@
     "attestationCheckTcbStatus": "플랫폼 패치 수준 최신",
     "attestationCheckGpuAttestation": "GPU 증명",
     "attestationNotCheckedLabel": "미확인",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "확인된 모델",
+    "attestationScopeNotice": "This checks the cloud AI 메라 uses right now. A pass here doesn't cover every request 메라 makes.",
     "webSearchTitle": "채팅에서 웹 검색",
     "extractedMetadataPanelHeading": "추출된 메타데이터",
     "extractedMetadataEventTypeLabel": "이벤트 유형",
@@ -496,7 +495,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "메라 uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "메라 uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while 메라 AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "열어본 기사의 로컬 기록을 지웁니다. 소스 탭의 '읽은 발행사' 카드와 발행사별 기록이 비어 있는 상태로 초기화됩니다. 다른 항목에는 영향이 없으며, 메라 서버에는 이 데이터가 없었으므로 서버 데이터도 변경되지 않습니다.",

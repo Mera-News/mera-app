@@ -458,8 +458,7 @@
     "attestationCheckTcbStatus": "Уровень патчей платформы актуален",
     "attestationCheckGpuAttestation": "Аттестация GPU",
     "attestationNotCheckedLabel": "не проверено",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "Проверенная модель",
+    "attestationScopeNotice": "This checks the cloud AI Мера uses right now. A pass here doesn't cover every request Мера makes.",
     "webSearchTitle": "Веб-поиск в чате",
     "extractedMetadataPanelHeading": "Извлеченные Метаданные",
     "extractedMetadataEventTypeLabel": "Тип события",
@@ -526,7 +525,8 @@
     "speedRefused_few": "Apple Intelligence declined {{count}} requests",
     "speedRefused_many": "Apple Intelligence declined {{count}} requests",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while Мера AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Очищает локальный журнал открытых вами статей. Карточка «Издания, которые вы читаете» на вкладке «Источники» и история по каждому изданию сбросятся до пустых. Ничего другого не затрагивается, и данные на сервере не изменяются, так как серверы Меры никогда не получали эти данные.",

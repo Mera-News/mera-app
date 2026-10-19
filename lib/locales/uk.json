@@ -458,8 +458,7 @@
     "attestationCheckTcbStatus": "Рівень патчів платформи актуальний",
     "attestationCheckGpuAttestation": "Засвідчення GPU",
     "attestationNotCheckedLabel": "не перевірено",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "Перевірена модель",
+    "attestationScopeNotice": "This checks the cloud AI Мера uses right now. A pass here doesn't cover every request Мера makes.",
     "webSearchTitle": "Веб-пошук у чаті",
     "extractedMetadataPanelHeading": "Видобуті метадані",
     "extractedMetadataEventTypeLabel": "Тип подій",
@@ -526,7 +525,8 @@
     "speedRefused_few": "Apple Intelligence declined {{count}} requests",
     "speedRefused_many": "Apple Intelligence declined {{count}} requests",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while Мера AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Очищає локальний журнал статей, які ви відкривали. Картка «Видання, які ви читаєте» на вкладці «Джерела» та історія за кожним виданням скинуться до порожнього стану. Інше не зачіпається, і серверні дані не змінюються, бо на серверах Мери цих даних ніколи не було.",

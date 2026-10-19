@@ -11,6 +11,13 @@ import {
     useMeraProtocolSettings,
 } from '@/components/custom/config-mera/useMeraProtocolSettings';
 import * as textEngine from '@/lib/mera-protocol-toolkit/core/text-engine';
+import {
+    getInferenceStats,
+    hasAnyStat,
+    recordCompletion,
+    recordModelLoad,
+    resetInferenceStats,
+} from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import i18n from '@/lib/i18n';
 import database from '@/lib/database';
 import { setSetting } from '@/lib/database/services/setting-service';
@@ -106,6 +113,14 @@ const toastTitles = () =>
         return String(first.props.children);
     });
 
+/** Seeds the cached server persona the boot purge and restoreOnDeviceIfRunnable read. */
+function cachePersonaMode(mode: ProcessingMode): void {
+    useUserStore.getState().setUserPersona(
+        personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: mode }) as never,
+    );
+}
+const cachedMode = () => useUserStore.getState().userPersona?.processingMode;
+
 async function mountLoaded() {
     const hook = renderHook(() => useMeraProtocolSettings());
     await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
@@ -141,7 +156,8 @@ describe('Mera Protocol settings', () => {
         textEngine.__resetTextEngineForTests();
         resetToastQueue();
         useMeraProtocolStore.setState(initialProtocol);
-        useUserStore.setState({ userId: null });
+        useUserStore.setState({ userId: null, userPersona: null });
+        resetInferenceStats();
     });
 
     afterEach(async () => {
@@ -222,6 +238,54 @@ describe('Mera Protocol settings', () => {
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(false);
             expect(toastTitles()).toEqual(['Switched to cloud']);
+        });
+
+        it('cloud: the cached persona follows, so the boot purge and the restore read the truth', async () => {
+            recordModeUpdates();
+            const { result } = await mountLoaded();
+            cachePersonaMode(ProcessingMode.OnDevice);
+
+            await act(async () => {
+                await result.current.selectMode(ProcessingMode.Cloud);
+            });
+
+            expect(cachedMode()).toBe(ProcessingMode.Cloud);
+        });
+
+        it('split state (server on-device, phone on Private cloud): picking Private cloud writes CLOUD, clears the intent and the promote flag', async () => {
+            // Only one file on disk: the phone is on Private cloud locally while the server keeps the intent.
+            resetFileSystem();
+            placeDownloadedModel(KEV_ID);
+            const sent = recordModeUpdates();
+            const promoteFlag = jest.spyOn(downloadService, 'setPromoteWhenDone');
+            const { result } = await mountLoaded();
+            cachePersonaMode(ProcessingMode.OnDevice);
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+            expect(result.current.onDeviceIntent).toBe(true);
+
+            await act(async () => {
+                await result.current.selectMode(ProcessingMode.Cloud);
+            });
+
+            expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: 'CLOUD' }]);
+            expect(result.current.onDeviceIntent).toBe(false);
+            expect(promoteFlag).toHaveBeenLastCalledWith(false);
+            expect(cachedMode()).toBe(ProcessingMode.Cloud);
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+        });
+
+        it('a failed write in the split state keeps the on-device intent the server still holds', async () => {
+            resetFileSystem();
+            placeDownloadedModel(KEV_ID);
+            const { result } = await mountLoaded();
+            server.use(mockGqlError('UpdateProcessingMode', 'INTERNAL_SERVER_ERROR'));
+
+            await act(async () => {
+                await result.current.selectMode(ProcessingMode.Cloud);
+            });
+
+            expect(result.current.onDeviceIntent).toBe(true);
+            expect(toastTitles()).toEqual(['Update Failed']);
         });
 
         it('a server error leaves the store unchanged and says so', async () => {
@@ -561,9 +625,32 @@ describe('Mera Protocol settings', () => {
         });
 
         it('the delete confirm and the cellular confirm name no model', async () => {
+            const wording = (d: { title: string; body?: string; confirmLabel?: string; cancelLabel?: string }) =>
+                `${d.title} ${d.body} ${d.confirmLabel} ${d.cancelLabel}`;
+            // The cellular confirm: raised by a download on mobile data with files still missing.
+            jest.spyOn(NetInfo, 'fetch').mockResolvedValue({ type: 'cellular', isConnected: true } as never);
+            const started = jest.spyOn(downloadService, 'startModelDownloads').mockImplementation(() => {});
+            serverMode(ProcessingMode.OnDevice);
+            useDialogQueue.setState({ queue: [] });
+            const missing = await mountLoaded();
+            let download!: Promise<void>;
+            act(() => {
+                download = missing.result.current.handleDownload();
+            });
+            await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+            const cellular = useDialogQueue.getState().queue[0];
+            expect(cellular.title).toBe('Download on mobile data?');
+            expect(wording(cellular)).not.toMatch(/kev|qwen|two models/i);
+            await act(async () => {
+                settleDialog(cellular.id, false);
+                await download;
+            });
+            expect(started).not.toHaveBeenCalled();
+            missing.unmount();
+
+            // The delete confirm: raised with both files on disk.
             placeDownloadedModel(TEXT_ID);
             placeDownloadedModel(KEV_ID);
-            serverMode(ProcessingMode.OnDevice);
             useDialogQueue.setState({ queue: [] });
             const { result } = await mountLoaded();
             let pending!: Promise<void>;
@@ -572,11 +659,50 @@ describe('Mera Protocol settings', () => {
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
             const dialog = useDialogQueue.getState().queue[0];
-            expect(`${dialog.title} ${dialog.body} ${dialog.confirmLabel} ${dialog.cancelLabel}`).not.toMatch(/kev|qwen|two models/i);
+            expect(dialog.title).toBe('Delete Mera AI models?');
+            expect(wording(dialog)).not.toMatch(/kev|qwen|two models/i);
             await act(async () => {
                 settleDialog(dialog.id, false);
                 await pending;
             });
+        });
+
+        it('the declined-request line reads in the singular for one', () => {
+            expect(i18n.t('meraProtocol.speedRefused', { count: 1 })).toBe('Apple Intelligence declined 1 request');
+            expect(i18n.t('meraProtocol.speedRefused', { count: 3 })).toBe('Apple Intelligence declined 3 requests');
+        });
+
+        it('the engine reason for a download names no model', () => {
+            expect(i18n.t('meraProtocol.engineUnavailableDownloading')).toBe('Unavailable while Mera AI models download');
+        });
+
+        it('switching engines drops the figures measured on the previous one', async () => {
+            spyAvailability(available);
+            serverMode(ProcessingMode.Cloud);
+            recordModelLoad('text', 1200);
+            recordCompletion({ label: 'reason', latencyMs: 900, genTokPerSec: 20 });
+            expect(hasAnyStat(getInferenceStats())).toBe(true);
+            const { result } = await mountLoaded();
+
+            await act(async () => {
+                await result.current.selectEngine('native');
+            });
+
+            expect(hasAnyStat(getInferenceStats())).toBe(false);
+            expect(result.current.inferenceStats.genTokPerSec).toBeNull();
+        });
+
+        it('choosing the engine already in force keeps the figures', async () => {
+            spyAvailability(available);
+            serverMode(ProcessingMode.Cloud);
+            recordCompletion({ label: 'reason', latencyMs: 900, genTokPerSec: 20 });
+            const { result } = await mountLoaded();
+
+            await act(async () => {
+                await result.current.selectEngine('mera');
+            });
+
+            expect(getInferenceStats().genTokPerSec).toBe(20);
         });
     });
 
@@ -741,6 +867,23 @@ describe('Mera Protocol settings', () => {
             expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
             await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(true);
             await expect(isModelDownloaded(KEV_ID)).resolves.toBe(true);
+        });
+
+        it('the cached persona follows the Private cloud fallback, but not a failed write', async () => {
+            recordModeUpdates();
+            const { result } = await mountLoaded();
+            cachePersonaMode(ProcessingMode.OnDevice);
+            await deleteAnswering(result, true);
+            expect(cachedMode()).toBe(ProcessingMode.Cloud);
+
+            putModelsOnDisk();
+            serverMode(ProcessingMode.OnDevice);
+            server.use(mockGqlError('UpdateProcessingMode', 'INTERNAL_SERVER_ERROR'));
+            const again = await mountLoaded();
+            cachePersonaMode(ProcessingMode.OnDevice);
+            await deleteAnswering(again.result, true);
+            // The server never heard CLOUD, so the cache still says what the server holds.
+            expect(cachedMode()).toBe(ProcessingMode.OnDevice);
         });
 
         it('falls back to cloud locally even when the mutation fails', async () => {

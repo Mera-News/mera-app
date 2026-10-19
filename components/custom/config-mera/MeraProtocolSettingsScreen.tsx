@@ -192,6 +192,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         const disabled = isDownloading || isDeletingModel || (apple && !nativeAvailable);
         const title = apple ? t('meraProtocol.engineApple') : t('meraProtocol.engineMera');
         const reason = apple && nativeReasonKey ? t(nativeReasonKey) : null;
+        // A radio disabled by a running download says why, for a screen reader.
+        const busyReason = isDownloading ? t('meraProtocol.engineUnavailableDownloading') : null;
         return (
             <Pressable
                 key={engine}
@@ -200,7 +202,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 disabled={disabled}
                 accessibilityRole="radio"
                 accessibilityState={{ selected, checked: selected, disabled }}
-                accessibilityLabel={[title, reason].filter(Boolean).join(', ')}
+                accessibilityLabel={[title, reason ?? busyReason].filter(Boolean).join(', ')}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16, opacity: disabled ? 0.45 : 1 }}
             >
                 <MaterialIcons name={selected ? 'radio-button-checked' : 'radio-button-unchecked'} size={22} color={selected ? colors.accent : colors.ink3} />
@@ -255,6 +257,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     onPress={handleDeleteModels}
                                     disabled={isDeletingModel}
                                     accessibilityRole="button"
+                                    accessibilityState={{ disabled: isDeletingModel }}
                                     accessibilityLabel={t('meraProtocol.deleteModelsLabel')}
                                     style={StyleSheet.absoluteFill}
                                 />
@@ -393,7 +396,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             {t('meraProtocol.speedLoad', { seconds: secondsText(totalLoadMs(inferenceStats) ?? 0) })}
                         </Text>
                     )}
-                    {inferenceStats.genTokPerSec != null && (
+                    {textEngine !== 'native' && inferenceStats.genTokPerSec != null && (
                         <Text size="xs" className="text-ink-2">
                             {t('meraProtocol.speedGeneration', { tokPerSec: inferenceStats.genTokPerSec })}
                         </Text>

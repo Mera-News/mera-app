@@ -431,8 +431,7 @@
     "attestationCheckTcbStatus": "平台补丁级别是最新的",
     "attestationCheckGpuAttestation": "GPU证明",
     "attestationNotCheckedLabel": "未检查",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "已检查的模型",
+    "attestationScopeNotice": "This checks the cloud AI 梅拉 uses right now. A pass here doesn't cover every request 梅拉 makes.",
     "webSearchTitle": "聊天中的网络搜索",
     "extractedMetadataPanelHeading": "提取的元数据",
     "extractedMetadataEventTypeLabel": "事件类型",
@@ -496,7 +495,8 @@
     "nativeUnknown": "Apple Intelligence isn't available right now.",
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while 梅拉 AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你已打开文章的本地记录。「来源」标签中的「你正在阅读的出版物」卡片及各出版物的历史记录将重置为空。其他内容不受影响，也不会触及任何服务器数据，因为梅拉的服务器从未有过这些数据。",

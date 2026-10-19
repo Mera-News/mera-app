@@ -434,8 +434,7 @@
     "attestationCheckTcbStatus": "Plattform-Patch-Level ist aktuell",
     "attestationCheckGpuAttestation": "GPU-Attestation",
     "attestationNotCheckedLabel": "nicht überprüft",
-    "attestationScopeNotice": "This checks the cloud AI that ranks your news. Chat uses a separate one, and each has a backup, so a pass here doesn't cover every request.",
-    "attestationModelLabel": "Überprüftes Modell",
+    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
     "webSearchTitle": "Websuche im Chat",
     "extractedMetadataPanelHeading": "Extrahierte Metadaten",
     "extractedMetadataEventTypeLabel": "Ereignistyp",
@@ -500,7 +499,8 @@
     "speedLoad": "Load time: {{seconds}} s",
     "speedRefused_one": "Apple Intelligence declined {{count}} request",
     "speedRefused_other": "Apple Intelligence declined {{count}} requests",
-    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready."
+    "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+    "engineUnavailableDownloading": "Unavailable while Mera AI models download"
   },
   "manageData": {
     "viewingHistoryModalDescription": "Löscht das lokale Protokoll der von dir geöffneten Artikel. Die Karte \"Zuletzt gelesene Publikationen\" im Tab \"Quellen\" sowie der Verlauf pro Publikation werden zurückgesetzt. Nichts anderes ist betroffen, und es werden keine Serverdaten berührt, da die Server von Mera diese Daten nie hatten.",
