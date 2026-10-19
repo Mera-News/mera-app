@@ -13,7 +13,7 @@ import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { resetEntitlementSyncState } from '@/lib/subscription/entitlement-sync';
 import { toastManager } from '@/lib/toast-manager';
 import { resetToastQueue, toastApi, useToastQueue } from '@/lib/toast/toast-queue';
-import { initI18nEn } from '@/test/helpers';
+import { initI18nEn, useFakeClock } from '@/test/helpers';
 
 const restorePurchases = (Purchases as unknown as { restorePurchases: jest.Mock }).restorePurchases;
 const originalOS = Platform.OS;
@@ -43,6 +43,9 @@ beforeAll(async () => {
 }, 60_000);
 
 beforeEach(() => {
+    // The purchase hold arms a five-minute ceiling timer and toasts arm their own: on a real
+    // clock they keep the worker alive after the run ("Jest did not exit").
+    useFakeClock(Date.now(), { advanceTimers: true });
     __resetAppRestartForTests();
     resetEntitlementSyncState();
     useSubscriptionStore.getState().reset();

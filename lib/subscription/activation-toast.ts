@@ -31,7 +31,6 @@
 
 import i18next from 'i18next';
 import { Platform } from 'react-native';
-import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { showDialog } from '@/lib/dialog';
 import { toastManager } from '@/lib/toast-manager';
 
@@ -98,6 +97,10 @@ const INVOICES_NOTE_KEY = 'invoices_note_shown';
 /** Where receipts go, told once per device after the first confirmed purchase. */
 async function showInvoicesNoteOnce(plan: string, t: (k: string, o?: Record<string, unknown>) => string): Promise<void> {
     try {
+        // Lazy: this module sits on the paywall import path of six surfaces, and a
+        // static settings import would open the database in all their suites.
+        const { getSetting, setSetting } =
+            require('@/lib/database/services/setting-service') as typeof import('@/lib/database/services/setting-service');
         if (await getSetting(INVOICES_NOTE_KEY)) return;
         await setSetting(INVOICES_NOTE_KEY, '1');
         await showDialog({

@@ -27,7 +27,7 @@ import { __resetFeedbackRequestStateForTests, updateFeedbackRequestsState } from
 import { markStartupGatePassed } from '@/lib/stores/pending-notification-route';
 import { useUserStore } from '@/lib/stores/user-store';
 import { __resetDeviceAttestForTests } from '@/modules/mera-device-attest';
-import { FIXTURE_ACCOUNT, HttpResponse, http, initI18nEn, server, signInFixtureAccount } from '@/test/helpers';
+import { FIXTURE_ACCOUNT, HttpResponse, http, initI18nEn, server, signInFixtureAccount, useFakeClock } from '@/test/helpers';
 import { t } from 'i18next';
 
 const mockAttest = {
@@ -84,6 +84,9 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+    // Timers the flow arms (toasts, holds, the session refresh) must not outlive the run on a
+    // real clock ("Jest did not exit").
+    useFakeClock(Date.now(), { advanceTimers: true });
     __resetMoveToPhoneForTests();
     __resetDeviceAttestForTests();
     useDialogQueue.setState({ queue: [] });

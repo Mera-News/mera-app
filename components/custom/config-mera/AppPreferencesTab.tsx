@@ -207,6 +207,15 @@ const AppPreferencesTab: React.FC = () => {
                     onPress={() => void restore()}
                     trailing={restoring ? busy : undefined}
                 />
+            </Group>
+            {/* Under Restore purchases (owner mockup): where a plan lives and who sends receipts. */}
+            <View style={{ paddingHorizontal: 4, paddingTop: 8, paddingBottom: 12, gap: 8 }}>
+                <Text style={{ color: colors.ink3, fontSize: 13 }}>{t('subscription.platformSwitch')}</Text>
+                <Text style={{ color: colors.ink3, fontSize: 13 }}>
+                    {t(Platform.OS === 'ios' ? 'subscription.invoicesAppStore' : 'subscription.invoicesPlayStore')}
+                </Text>
+            </View>
+            <Group>
                 <Row
                     testID="settings-row-delete-account"
                     leadingIcon="delete-forever"
@@ -224,12 +233,6 @@ const AppPreferencesTab: React.FC = () => {
                     hideChevron
                 />
             </Group>
-            <View style={{ paddingHorizontal: 4, paddingTop: 8, gap: 8 }}>
-                <Text style={{ color: colors.ink3, fontSize: 13 }}>{t('subscription.platformSwitch')}</Text>
-                <Text style={{ color: colors.ink3, fontSize: 13 }}>
-                    {t(Platform.OS === 'ios' ? 'subscription.invoicesAppStore' : 'subscription.invoicesPlayStore')}
-                </Text>
-            </View>
 
             {devMode ? (
                 <>
