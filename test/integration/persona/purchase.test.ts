@@ -1,6 +1,6 @@
 // The PRIMARY purchase route (You > Settings > Manage plan > View Plans) through `useManageSubscription`,
 // and the shared free-tier paywall chokepoint (`presentFreeTierPaywall`). Real stores, Apollo over MSW,
-// in-memory DB, real app-restart holds, real email-before-checkout gate, real toast queue. Mocked: the
+// in-memory DB, real app-restart holds, real toast queue. Mocked: the
 // RevenueCat paywall SDK (an edge), driven per test.
 import Purchases from 'react-native-purchases';
 import RevenueCatUI from 'react-native-purchases-ui';
@@ -8,14 +8,7 @@ import { act, configure, renderHook, waitFor } from '@testing-library/react-nati
 import { useManageSubscription } from '@/components/custom/config-mera/useManageSubscription';
 import { __resetAppRestartForTests, activeHolds } from '@/lib/app-restart';
 import database from '@/lib/database';
-import { getSetting } from '@/lib/database/services/setting-service';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
-import {
-    __resetEmailCaptureForTests,
-    completeEmailCapture,
-    EMAIL_CAPTURE_SKIPPED_SETTING_KEY,
-    subscribeEmailCapture,
-} from '@/lib/subscription/email-capture';
 import { resetEntitlementSyncState } from '@/lib/subscription/entitlement-sync';
 import { readLastKnownTier } from '@/lib/subscription/last-known-tier';
 import { configureRevenueCat } from '@/lib/revenuecat';
@@ -97,26 +90,6 @@ function paywallBuys(tier: string) {
         rcReports(tier);
         return 'PURCHASED';
     });
-}
-
-/** The account's session as the auth client reads it: this is what decides whether the email gate raises. */
-function sessionEmail(email: string, isAnonymous = false) {
-    server.use(
-        http.get('*/api/auth/get-session', () =>
-            HttpResponse.json({
-                session: { id: 's1', userId: 'u1', token: 't', expiresAt: '2030-01-01T00:00:00.000Z', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-                user: { id: 'u1', email, isAnonymous, emailVerified: true, name: 'x', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-            }),
-        ),
-    );
-}
-const anonymousAccount = () => sessionEmail('x@anon.mera.news', true);
-
-/** Raises of the email sheet, in order. Subscribing is what stands in for the mounted EmailCaptureHost. */
-function mountEmailHost(): string[] {
-    const seen: string[] = [];
-    subscribeEmailCapture((source) => seen.push(source));
-    return seen;
 }
 
 /** Polls on the (auto-advancing) clock until the condition holds. */
@@ -207,7 +180,6 @@ describe('purchase', () => {
     beforeEach(() => {
         stops.splice(0).forEach((stop) => stop());
         __resetAppRestartForTests();
-        __resetEmailCaptureForTests();
         resetEntitlementSyncState();
         useSubscriptionStore.getState().reset();
         resetToastQueue();
@@ -223,44 +195,6 @@ describe('purchase', () => {
 
     // ---------------------------------------------------------------------------------------------
     describe('the restart hold', () => {
-        it('is taken BEFORE the email gate resolves, and is not released when handleViewPlans returns', async () => {
-            anonymousAccount();
-            const raised = mountEmailHost();
-            const hook = await mountSettled();
-
-            const flow = hook.result.current.handleViewPlans();
-            await until(() => raised.length > 0);
-            // The gate is pending (the capture request is up) and the hold is already in place.
-            expect(raised).toEqual(['checkout']);
-            expect(activeHolds()).toEqual(['purchase']);
-            expect(presentPaywall).not.toHaveBeenCalled();
-
-            completeEmailCapture('verified');
-            await act(async () => {
-                await advanceUntilDone(flow);
-            });
-
-            expect(presentPaywall).toHaveBeenCalledTimes(1);
-            // Timer-owned: nothing in the flow released it, on any path.
-            expect(activeHolds()).toEqual(['purchase']);
-        });
-
-        it('is still held when a dismissed email gate aborts checkout', async () => {
-            anonymousAccount();
-            const raised = mountEmailHost();
-            const hook = await mountSettled();
-
-            const flow = hook.result.current.handleViewPlans();
-            await until(() => raised.length > 0);
-            completeEmailCapture('dismissed');
-            await act(async () => {
-                await advanceUntilDone(flow);
-            });
-
-            expect(presentPaywall).not.toHaveBeenCalled();
-            expect(activeHolds()).toEqual(['purchase']);
-        });
-
         it('is released 20s after a true return from background, not before', async () => {
             const hook = await mountSettled();
             await viewPlans(hook);
@@ -323,101 +257,11 @@ describe('purchase', () => {
             expect(activeHolds()).toEqual([]);
         });
 
-        it('presentFreeTierPaywall takes it ahead of the gate too, and keeps it on a dismissed gate and a throwing sheet', async () => {
+        it('presentFreeTierPaywall takes it, and keeps it when the sheet throws', async () => {
             fakeClock(NOW, { advanceTimers: true });
-            anonymousAccount();
-            const raised = mountEmailHost();
-
-            const flow = presentFreeTierPaywall('test');
-            await until(() => raised.length > 0);
-            expect(activeHolds()).toEqual(['purchase']);
-            completeEmailCapture('dismissed');
-            await advanceUntilDone(flow);
-            expect(presentPaywall).not.toHaveBeenCalled();
-            expect(activeHolds()).toEqual(['purchase']);
-
-            __resetEmailCaptureForTests();
             presentPaywall.mockRejectedValueOnce(new Error('sheet failed'));
             await advanceUntilDone(presentFreeTierPaywall('test'));
-            expect(activeHolds()).toEqual(['purchase', 'purchase']);
-        });
-    });
-
-    // ---------------------------------------------------------------------------------------------
-    describe('email before checkout', () => {
-        it('an anonymous account raises a checkout capture request; a dismissed sheet never presents the paywall', async () => {
-            anonymousAccount();
-            const raised = mountEmailHost();
-            const hook = await mountSettled();
-
-            const flow = hook.result.current.handleViewPlans();
-            await until(() => raised.length > 0);
-            expect(raised).toEqual(['checkout']);
-            completeEmailCapture('dismissed');
-            await act(async () => {
-                await advanceUntilDone(flow);
-            });
-
-            expect(presentPaywall).not.toHaveBeenCalled();
-        });
-
-        it('a skip presents the paywall and writes the email_capture_skipped row', async () => {
-            anonymousAccount();
-            const raised = mountEmailHost();
-            const hook = await mountSettled();
-
-            const flow = hook.result.current.handleViewPlans();
-            await until(() => raised.length > 0);
-            completeEmailCapture('skipped');
-            await act(async () => {
-                await advanceUntilDone(flow);
-            });
-
-            expect(presentPaywall).toHaveBeenCalledTimes(1);
-            await until(async () => (await getSetting(EMAIL_CAPTURE_SKIPPED_SETTING_KEY)) === '1');
-        });
-
-        it('a verified email presents the paywall', async () => {
-            anonymousAccount();
-            const raised = mountEmailHost();
-            const hook = await mountSettled();
-
-            const flow = hook.result.current.handleViewPlans();
-            await until(() => raised.length > 0);
-            completeEmailCapture('verified');
-            await act(async () => {
-                await advanceUntilDone(flow);
-            });
-
-            expect(presentPaywall).toHaveBeenCalledTimes(1);
-            await expect(getSetting(EMAIL_CAPTURE_SKIPPED_SETTING_KEY)).resolves.toBeNull();
-        });
-
-        it('an account with a real email goes straight to the paywall, no sheet', async () => {
-            sessionEmail('real@example.com');
-            const raised = mountEmailHost();
-            const hook = await mountSettled();
-
-            await viewPlans(hook);
-
-            expect(raised).toEqual([]);
-            expect(presentPaywall).toHaveBeenCalledTimes(1);
-        });
-
-        it('presentFreeTierPaywall honours the same gate: dismissed means no paywall and no sync', async () => {
-            fakeClock(NOW, { advanceTimers: true });
-            anonymousAccount();
-            const raised = mountEmailHost();
-            const reads = countBillingReads();
-
-            const flow = presentFreeTierPaywall('test');
-            await until(() => raised.length > 0);
-            completeEmailCapture('dismissed');
-            await advanceUntilDone(flow);
-            await jest.advanceTimersByTimeAsync(200);
-
-            expect(presentPaywall).not.toHaveBeenCalled();
-            expect(reads()).toBe(0);
+            expect(activeHolds()).toEqual(['purchase']);
         });
     });
 

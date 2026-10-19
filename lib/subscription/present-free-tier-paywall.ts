@@ -17,7 +17,6 @@ import { refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import logger from '@/lib/logger';
 import { getActiveTier, getCustomerInfoSafe, getOfferingSafe } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
-import { ensureEmailBeforeCheckout } from '@/lib/subscription/email-capture';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
 import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
 import { rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
@@ -57,16 +56,13 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
  * ## The restart hold
  *
  * Every true background -> foreground return restarts the app. This whole
- * function is one long departure-and-return: the email gate sends the user to
- * their mail app for a code, and the hosted paywall hands off to the store's
+ * function is one long departure-and-return: the hosted paywall hands off to the store's
  * own purchase sheet. A restart on the return destroys the completion path —
  * the entitlement round trip below is thrown away mid-flight and the user has
  * paid for something the app does not know about.
  *
- * The hold is taken at the TOP, ahead of `ensureEmailBeforeCheckout()` rather
- * than just ahead of `presentPaywall`, because the mail-app trip is a real
- * departure on both platforms and it is the one the user is most likely to
- * take. It is NOT released anywhere in here, on any path including the early
+ * The hold is taken at the TOP, ahead of `presentPaywall`, because the hosted
+ * paywall hands off to the store's purchase sheet, a real departure. It is NOT released anywhere in here, on any path including the early
  * return and the catch: `holdRestartAcrossPurchase` releases on its own timers
  * (20s after the user comes back, and a five-minute ceiling regardless), which
  * is why the early return needs no extra code and why a `finally` would be
@@ -77,9 +73,6 @@ export async function presentFreeTierPaywall(source: string): Promise<void> {
     // Before the first thing that can send the user out of the app.
     holdRestartAcrossPurchase('purchase');
     try {
-        // S10: paying users key on a verified email — the required attach step
-        // runs BEFORE the sheet. A dismissal aborts checkout quietly.
-        if (!(await ensureEmailBeforeCheckout())) return;
         const offering = await getOfferingSafe();
         const result = await RevenueCatUI.presentPaywall({
             ...(offering ? { offering } : {}),

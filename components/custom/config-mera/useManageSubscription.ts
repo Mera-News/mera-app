@@ -2,7 +2,6 @@ import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing
 import { resolvePlanDisplay } from '@/lib/algorithms/plan-display';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { ensureEmailBeforeCheckout } from '@/lib/subscription/email-capture';
 import { holdRestartAcrossPurchase } from '@/lib/subscriptions/subscribe-flow';
 import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
@@ -132,10 +131,7 @@ export function useManageSubscription() {
         // return that throws away the entitlement refresh below, mid-flight:
         // they paid and the app does not know.
         //
-        // TAKEN AHEAD OF `ensureEmailBeforeCheckout()`, not just ahead of the
-        // paywall. That gate sends the user to their mail app for a code, which
-        // is a true departure on both platforms — and the one that arrives back
-        // with a half-finished checkout behind it.
+        // TAKEN AHEAD OF the paywall, which hands off to the store's purchase sheet.
         //
         // NOT RELEASED HERE, and deliberately not in a `finally`. The release is
         // timer-owned (see holdRestartAcrossPurchase): this function returns
@@ -147,9 +143,6 @@ export function useManageSubscription() {
         // uncalled and the two timers own it.
         holdRestartAcrossPurchase('purchase');
         try {
-            // S10: verified email is required before checkout for anonymous
-            // accounts; a dismissed sheet aborts quietly.
-            if (!(await ensureEmailBeforeCheckout())) return;
             const offering = await getOfferingSafe();
             // Browsing/upgrading from settings — show a close button so the user
             // can dismiss without purchasing (unlike the hard gate).

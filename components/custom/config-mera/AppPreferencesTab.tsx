@@ -6,7 +6,6 @@ import { Text } from '@/components/ui/text';
 import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { requestEmailCapture } from '@/lib/subscription/email-capture';
 import { useColors } from '@/lib/theme/tokens';
 import { getNativeLanguageName } from '@/lib/translation-service';
 import { maskEmail } from '@/lib/algorithms/mask-email';
@@ -179,16 +178,6 @@ const AppPreferencesTab: React.FC = () => {
                         leadingIcon="smartphone"
                         title={t('you.settings.signedInPhone')}
                         subtitle={t('you.settings.noEmailNeeded')}
-                    />
-                )}
-                {/* Optional, says what it is for, never nudged (owner). */}
-                {displayEmail ? null : (
-                    <Row
-                        testID="settings-row-add-email"
-                        leadingIcon="alternate-email"
-                        title={t('you.settings.addEmail')}
-                        subtitle={t('you.settings.addEmailHint')}
-                        onPress={() => requestEmailCapture('settings')}
                     />
                 )}
                 <Row
