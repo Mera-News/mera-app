@@ -28,7 +28,6 @@
     "otpPlaceholder": "6-stelligen Code eingeben",
     "invalidEmailDescription": "Bitte gib eine gültige E-Mail-Adresse ein",
     "networkError": "Netzwerkfehler. Bitte versuche es erneut.",
-    "sentTo": "Wir haben einen Code gesendet an",
     "invalidOtp": "Bitte gib einen gültigen 6-stelligen OTP-Code ein",
     "invalidOtpServer": "Ungültiger OTP-Code. Bitte versuche es erneut.",
     "otpError": "Bei der Verifizierung ist ein Fehler aufgetreten. Bitte versuche es erneut.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Erneut versuchen",
     "identitySwitchSignOut": "Abmelden und neu starten",
     "deviceSignInWorking": "Du wirst angemeldet",
-    "deviceSignInFailed": "Etwas ist schiefgelaufen. Versuche es erneut oder melde dich mit E-Mail an.",
-    "deviceSignInDenied": "Dieses Gerät konnte nicht bestätigt werden. Versuche es erneut oder melde dich mit E-Mail an.",
-    "deviceSignInUnavailable": "Die Anmeldung ist gerade nicht verfügbar. Versuche es in ein paar Minuten erneut oder melde dich mit E-Mail an.",
+    "deviceSignInFailed": "Etwas ist schiefgelaufen. Versuche es erneut.",
+    "deviceSignInDenied": "Dieses Gerät konnte nicht bestätigt werden. Versuche es erneut.",
     "tryAgain": "Erneut versuchen",
     "learnAboutMera": "Mera kennenlernen",
-    "alreadyHaveAccount": "Mit E-Mail anmelden",
     "continue": "Weiter",
     "sourceCode": "Quellcode",
     "failedToSendBody": "OTP konnte nicht gesendet werden",
     "signingYouIn": "Du wirst angemeldet…",
-    "signInWithoutEmail": "Ohne E-Mail anmelden",
+    "signInWithoutEmail": "Mit diesem Telefon anmelden",
     "differentAccount": {
-      "title": "Ohne E-Mail anmelden?",
+      "title": "Mit diesem Telefon anmelden?",
       "body": "Wir löschen alles, was Mera auf diesem Telefon für {{email}} speichert. Das Konto selbst wird nicht gelöscht. Bist du sicher?",
       "continue": "Entfernen und weiter",
       "useEmail": "Mein Konto behalten",
       "bodyGeneric": "Wir löschen alles, was Mera auf diesem Telefon für dieses Konto speichert. Das Konto selbst wird nicht gelöscht. Bist du sicher?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Dein Konto ist an dieses Telefon gebunden. Wenn du Mera löschst oder das Telefon verlierst, beginnst du mit einem neuen Konto. Backup und Wiederherstellung in den Einstellungen kann deine Daten sichern.",
-      "reset": "Dein Konto ist an dieses Telefon gebunden. Wenn du das Telefon zurücksetzt oder verlierst, beginnst du mit einem neuen Konto. Backup und Wiederherstellung in den Einstellungen kann deine Daten sichern."
-    },
     "track": {
       "beforeYouStart": "Bevor du beginnst",
-      "beginCaption": "Mera meldet dich mit diesem Telefon an. Du musst dir nichts merken.",
+      "beginCaption": "Keine E-Mail, Telefonnummer oder Passwort. Nichts, was du dir merken musst.",
       "beginMera": "Mera starten",
       "beginTitle": "Wie möchtest du beginnen?",
-      "beginWithoutEmail": "Ohne E-Mail beginnen",
+      "beginWithoutEmail": "Mit diesem Telefon anmelden",
       "checkEmailTitle": "Prüfe deine E-Mail",
       "chooseLanguage": "Wähle deine Sprache",
       "codeA11y": "6-stelliger Code",
@@ -82,26 +75,25 @@
       "notHereTitle": "{{language}} ist auf diesem Telefon noch nicht verfügbar",
       "phoneLanguage": "Die Sprache deines Telefons",
       "sendCode": "Code senden",
-      "sentTo": "Wir haben einen 6-stelligen Code an {{email}} gesendet.",
       "useDifferentEmail": "Andere E-Mail-Adresse verwenden",
       "welcome": "Willkommen bei Mera",
       "wrongCode": "Dieser Code hat nicht funktioniert. Prüfe ihn oder fordere einen neuen an.",
       "noSheetTitle": "Dein iPhone hat den Download nicht geöffnet",
       "noSheetBody": "Versuch es noch einmal, oder öffne auf deinem iPhone die Einstellungen, dann Allgemein, dann Sprache und Region, dann Übersetzungssprachen, und lade dort {{language}} herunter.",
-      "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
-      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+      "sentToIfAccount": "Wenn zu dieser E-Mail ein Mera-Konto gehört, haben wir dir einen Code geschickt. Neu bei Mera? Tippe auf „Mit diesem Telefon anmelden“.",
+      "noCodeUsePhone": "Keinen Code bekommen? Tippe auf „Mit diesem Telefon anmelden“."
     },
-    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
-    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
-    "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
-    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
-    "supportedPhones": "Supported phones",
+    "emailLegacyHint": "Nur für Personen, die sich früher mit E-Mail angemeldet haben. Neue Nutzer können sich nicht mehr mit E-Mail anmelden.",
+    "phoneCheckTemporary": "Dieses Telefon konnte nicht geprüft werden. Prüfe deine Verbindung und versuche es erneut.",
+    "phoneUnsupportedAndroid": "Mera braucht Google Play auf diesem Telefon, um dich anzumelden. Telefone ohne Google Play werden nicht unterstützt.",
+    "phoneUnsupportedIos": "Dieses iPhone kann die Anmeldung mit Telefon nicht nutzen.",
+    "supportedPhones": "Unterstützte Telefone",
     "emailEnded": {
-      "title": "Email sign-in has ended",
-      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
-      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+      "title": "Anmeldung mit E-Mail ist beendet",
+      "bodyIos": "Die Anmeldung mit E-Mail endete am {{date}}. Melde dich mit diesem Telefon an, um neu anzufangen. Dein Tarif kommt über den App Store zurück, und deine gespeicherten Artikel kommen aus deinem Backup zurück.",
+      "bodyAndroid": "Die Anmeldung mit E-Mail endete am {{date}}. Melde dich mit diesem Telefon an, um neu anzufangen. Dein Tarif kommt über Google Play zurück, und deine gespeicherten Artikel kommen aus deinem Backup zurück."
     },
-    "phoneNotSupported": "This phone isn't supported"
+    "phoneNotSupported": "Dieses Telefon wird nicht unterstützt"
   },
   "account": {
     "contactSupport": "Mit dem Support sprechen"
@@ -528,12 +520,12 @@
     "exportHistoryEmptyDescription": "Du hast in den letzten 30 Tagen keine Artikel gelesen.",
     "keeps": {
       "title": "Was Mera über dich speichert",
-      "emailAndPlan": "Deine E-Mail und dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
+      "emailAndPlan": "Deine E-Mail, bis du zur Anmeldung mit Telefon wechselst oder sie am 30. Oktober 2026 gelöscht wird, und dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
       "plan": "Dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
-      "emailIfAdded": "Deine E-Mail, falls du eine hinzugefügt hast, und dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
+      "emailIfAdded": "Dein Tarif. Mera fragt nie nach einer E-Mail, und eine E-Mail von früher wird am 30. Oktober 2026 gelöscht. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
       "signInRecordIos": "Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Apples Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
       "signInRecordAndroid": "Ein Anmeldeeintrag für dieses Telefon, nicht die ID deines Telefons, der mit deinem Konto gelöscht wird. Googles Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
-      "signInRecordGeneric": "Ohne E-Mail ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Prüfung von Apple oder Google, ob dies die echte App ist, wird nicht gespeichert.",
+      "signInRecordGeneric": "Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Prüfung von Apple oder Google, ob dies die echte App ist, wird nicht gespeichert.",
       "usage": "Eine tägliche Zahl der an dieses Telefon gesendeten Artikel, wie viel verschlüsselter Text Mera jeden Tag zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast. Wird 90 Tage aufbewahrt. Anmeldungen speichern keine IP-Adresse und keine Browserdaten.",
       "topics": "Themenbegriffe, nur nach ihrem Text gespeichert, ohne Verbindung zu dir, und nach 14 Tagen ohne Nutzung gelöscht.",
       "privacyLink": "Datenschutzerklärung lesen"
@@ -577,11 +569,11 @@
     "contentPolicy": "Inhaltsrichtlinie",
     "faq": "FAQ",
     "reportBug": "Fehler melden",
-    "deleteAccountConfirmGrace": "Dein Konto wird zum Löschen vorgemerkt, mit einer Frist von 30 Tagen. Wenn dein Konto eine E-Mail hat, melde dich innerhalb dieser 30 Tage damit an, um das Löschen abzubrechen. Ein Konto ohne E-Mail kann nicht mehr angemeldet werden, daher lässt sich sein Löschen nicht abbrechen.",
+    "deleteAccountConfirmGrace": "Dein Konto wird zum Löschen vorgemerkt und nach 30 Tagen endgültig gelöscht. Dieses Telefon kann sich nicht mehr damit anmelden. Das kann nicht rückgängig gemacht werden.",
     "deleteAccountWarningGrace": "⚠️ Nach 30 Tagen werden deine Kontodaten endgültig entfernt. Abrechnungsunterlagen werden 7 Jahre lang für die Buchhaltung aufbewahrt. Das lässt sich nicht rückgängig machen.",
     "finalConfirmationBodyGrace": "Dies plant dein Konto zur permanenten Löschung in 30 Tagen.",
     "accountDeletionScheduledTitle": "Löschung geplant",
-    "accountDeletionScheduledDescription": "Dein Konto wird in 30 Tagen endgültig gelöscht. Wenn es eine E-Mail hat, melde dich vorher damit an, um das Löschen abzubrechen."
+    "accountDeletionScheduledDescription": "Dein Konto wird in 30 Tagen endgültig gelöscht."
   },
   "configPanel": {
     "factDeletedTitle": "Fakt gelöscht",
@@ -899,14 +891,14 @@
     "confirmTimeoutBody": "Falls du bezahlt hast, wende dich an den Support. Wir klären das dann für dich.",
     "checkAgain": "Erneut prüfen",
     "readingExplainer": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Dein Tarif legt fest, wie viel Mera jeden Tag in der Cloud liest: Starter 10 MB, Einzelperson 50 MB, Professional 200 MB. Mera liest für dich über Ende-zu-Ende-Verschlüsselung und kann deshalb nicht sehen, welche Artikel gelesen werden oder wie viele. Darum werden Tarife in Megabyte gemessen und nicht in Artikeln. Auf unterstützten Telefonen ist das Lesen auf dem Telefon in jedem Tarif unbegrenzt.",
-    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Mera can't see plans on other stores, so it can't refund any overlap.",
-    "invoicesAppStore": "Mera has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
-    "invoicesPlayStore": "Mera has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
-    "planBack": "Your plan is back.",
-    "restoreNoneApple": "No plan found on this Apple Account.",
-    "restoreNoneGoogle": "No plan found on this Google Account.",
-    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
-    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
+    "platformSwitch": "Wechselst du zwischen iPhone und Android? Dein Tarif bleibt bei deinem alten Store. Kündige ihn dort und abonniere dann hier. Mera kann Tarife in anderen Stores nicht sehen und deshalb auch keine doppelten Zahlungen erstatten.",
+    "invoicesAppStore": "Mera kann dir keine E-Mails schicken, daher sendet Apple deine Belege und Rechnungen an die E-Mail-Adresse deines Apple-Accounts.",
+    "invoicesPlayStore": "Mera kann dir keine E-Mails schicken, daher sendet Google Play deine Belege an die E-Mail-Adresse deines Google-Kontos.",
+    "planBack": "Dein Tarif ist wieder da.",
+    "restoreNoneApple": "Auf diesem Apple-Account wurde kein Tarif gefunden.",
+    "restoreNoneGoogle": "Auf diesem Google-Konto wurde kein Tarif gefunden.",
+    "restoreFailedAppStore": "Der App Store ist nicht erreichbar. Versuche es erneut.",
+    "restoreFailedPlayStore": "Google Play ist nicht erreichbar. Versuche es erneut."
   },
   "tabs": {
     "deck": "Nachrichten",
@@ -1557,9 +1549,9 @@
     "retry": "Erneut versuchen",
     "welcomeBody": "Tippe auf \"Zustimmen und weiter\", um unsere Nutzungsbedingungen und Datenschutzerklärung zu akzeptieren.",
     "deviceNotice": {
-      "appAttest": "Keine E-Mail nötig. Mera meldet dich mit diesem Telefon an. Apple bestätigt, dass dies die echte Mera App auf einem echten iPhone ist, gegen Fake-Konten. Solange du ein Konto hast, speichern wir einen Anmeldeeintrag.",
-      "playIntegrity": "Keine E-Mail nötig. Mera meldet dich mit diesem Telefon an. Google bestätigt, dass dies die echte Mera App auf einem echten Android-Telefon ist, gegen Fake-Konten. Wir speichern einen Anmeldeeintrag, nicht die ID deines Telefons.",
-      "generic": "Keine E-Mail nötig. Mera meldet dich mit diesem Telefon an. Solange du ein Konto hast, speichern wir einen Anmeldeeintrag für dieses Telefon."
+      "appAttest": "Mera meldet dich mit diesem Telefon an. Apple bestätigt, dass dies die echte Mera App auf einem echten iPhone ist, gegen Fake-Konten. Solange du ein Konto hast, speichern wir einen Anmeldeeintrag.",
+      "playIntegrity": "Mera meldet dich mit diesem Telefon an. Google bestätigt, dass dies die echte Mera App auf einem echten Android-Telefon ist, gegen Fake-Konten. Wir speichern einen Anmeldeeintrag, nicht die ID deines Telefons.",
+      "generic": "Mera meldet dich mit diesem Telefon an. Solange du ein Konto hast, speichern wir einen Anmeldeeintrag für dieses Telefon."
     }
   },
   "tutorials": {
@@ -1855,7 +1847,7 @@
             "body": "Die wichtigsten Dinge, und warum jedes davon hinausgeht.",
             "steps": {
               "0": "Kurze Topicsätze, damit es etwas zum Abgleichen von Geschichten gegen gibt.",
-              "1": "Wie du dich anmeldest, per E-Mail oder mit diesem Telefon, und welchen Tarif du hast.",
+              "1": "Wie du dich anmeldest, nämlich mit diesem Telefon (oder bis 30. Oktober 2026 mit einer E-Mail von früher), und welchen Tarif du hast.",
               "2": "Die Artikel, die dein Telefon anfragt, und der verschlüsselte Text, den Mera zum Lesen für dich sendet, pro Tag gezählt, um deinen Tarif anzuwenden."
             },
             "ask": "Was sendet die App an deine Server?"
@@ -1874,7 +1866,7 @@
           },
           "what-we-keep": {
             "headline": "Was wir behalten",
-            "body": "Deine Anmelde-E-Mail, falls du eine hinzugefügt hast. Welchen Tarif du hast. Eine tägliche Zahl der an dich gesendeten Artikel, wie viel verschlüsselter Text Mera zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast, 90 Tage aufbewahrt. Deine Benachrichtigungszeiten, deine Sprache und deine Verarbeitungswahl. Antworten, die du auf Fragen des Mera-Teams schickst. Wenn du Mera ohne E-Mail nutzt, einen Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenphrasen werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht.",
+            "body": "Welchen Tarif du hast. Eine E-Mail nur für ein Konto, das sich früher mit E-Mail angemeldet hat, wird am 30. Oktober 2026 gelöscht. Eine tägliche Zahl der an dich gesendeten Artikel, wie viel verschlüsselter Text Mera zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast, 90 Tage aufbewahrt. Deine Benachrichtigungszeiten, deine Sprache und deine Verarbeitungswahl. Antworten, die du auf Fragen des Mera-Teams schickst. Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenphrasen werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht.",
             "ask": "Was speichert Mera über mich auf seinen Servern?"
           }
         }
@@ -2227,20 +2219,6 @@
     "mailFailedTitle": "Mail-App konnte nicht geöffnet werden",
     "mailFailedBody": "Kopiere unsere Support-Adresse und schreib uns aus einer beliebigen Mail-App.",
     "copyAddress": "Adresse kopieren"
-  },
-  "emailCapture": {
-    "title": "E-Mail-Adresse hinzufügen",
-    "subtitle": "Erhalte Belege per E-Mail und stelle dein Konto wieder her, wenn du das Telefon wechselst.",
-    "continue": "Weiter",
-    "notNow": "Nicht jetzt",
-    "confirm": "Bestätigen",
-    "added": "E-Mail-Adresse hinzugefügt",
-    "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}.",
-    "skip": "Ohne E-Mail fortfahren",
-    "skipTitle": "Ohne E-Mail fortfahren?",
-    "skipBody1": "Ohne E-Mail kann dein Konto nicht auf eine andere Plattform umziehen. Wenn du zwischen iOS und Android wechselst, startest du dort mit einem neuen Konto.",
-    "skipBody2": "Der Support kann deinen Kauf nur über deine Support-ID finden. Kopiere sie und bewahre sie sicher auf.",
-    "skipConfirm": "Weiter zur Zahlung"
   },
   "videoPlayer": {
     "closeA11y": "Video schließen",
@@ -2790,8 +2768,6 @@
     "settings": {
       "yourPlan": "Dein Tarif",
       "usageOffline": "Die Nutzung wird angezeigt, wenn du online bist",
-      "addEmail": "E-Mail hinzufügen",
-      "addEmailHint": "Optional. Nur wenn du dein Konto auf ein anderes Telefon mitnehmen möchtest oder die E-Mails von Mera erhalten willst.",
       "appLock": "App-Sperre",
       "backupOff": "Backup aus",
       "backupOn": "Backup an",
@@ -2821,7 +2797,7 @@
       "newPlanApplies": "Dein neuer Tarif gilt jetzt.",
       "planMultiplierBase": "10 MB tägliches Lesen in der Cloud",
       "planMultiplier": "{{mb}} MB tägliches Lesen in der Cloud, {{n}}x Starter",
-      "restorePurchases": "Restore purchases"
+      "restorePurchases": "Käufe wiederherstellen"
     },
     "notifications": {
       "push": "Push-Benachrichtigungen",
@@ -2935,26 +2911,26 @@
     "newest": "Neueste zuerst"
   },
   "moveToPhone": {
-    "dialogTitle": "Sign in with this phone instead",
-    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
-    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
-    "confirm": "Move account",
-    "cancel": "Not now",
-    "progressTitle": "Moving your account to this phone",
+    "dialogTitle": "Stattdessen mit diesem Telefon anmelden",
+    "dialogBody": "Wir melden dich mit diesem Telefon an, verschieben dein Konto auf dieses Telefon und löschen deine E-Mail aus unserer Datenbank.",
+    "dialogSettingsHint": "Du kannst das bis {{date}} in den Einstellungen tun.",
+    "confirm": "Konto verschieben",
+    "cancel": "Nicht jetzt",
+    "progressTitle": "Dein Konto wird auf dieses Telefon verschoben",
     "steps": {
-      "checking": "Checking this phone",
-      "linking": "Linking your account",
-      "removing": "Removing your email",
-      "done": "Done"
+      "checking": "Dieses Telefon wird geprüft",
+      "linking": "Dein Konto wird verknüpft",
+      "removing": "Deine E-Mail wird entfernt",
+      "done": "Fertig"
     },
-    "failed": "This didn't finish. Your account still works. Try again in a moment.",
-    "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
-    "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
-    "success": "Signed in with this phone. Your email is deleted.",
-    "close": "Close",
-    "inboxTitle": "Email sign-in ends {{date}}",
-    "inboxBody": "Switch to phone sign-in to keep your account.",
-    "settingsRow": "Move to phone sign-in",
-    "settingsRowHint": "Email sign-in ends {{date}}."
+    "failed": "Das hat nicht geklappt. Dein Konto funktioniert weiterhin. Versuche es in einem Moment noch einmal.",
+    "unsupportedIos": "Auf diesem Telefon ist die Anmeldung mit Telefon nicht möglich, daher funktioniert Mera hier ab {{date}} nicht mehr. Wenn du für Mera bezahlst, kündige deinen Tarif vorher im App Store.",
+    "unsupportedAndroid": "Auf diesem Telefon ist die Anmeldung mit Telefon nicht möglich, daher funktioniert Mera hier ab {{date}} nicht mehr. Wenn du für Mera bezahlst, kündige deinen Tarif vorher bei Google Play.",
+    "success": "Du bist mit diesem Telefon angemeldet. Deine E-Mail wurde gelöscht.",
+    "close": "Schließen",
+    "inboxTitle": "Anmeldung mit E-Mail endet am {{date}}",
+    "inboxBody": "Wechsle zur Anmeldung mit Telefon, um dein Konto zu behalten.",
+    "settingsRow": "Zur Anmeldung mit Telefon wechseln",
+    "settingsRowHint": "Die Anmeldung mit E-Mail endet am {{date}}."
   }
 }

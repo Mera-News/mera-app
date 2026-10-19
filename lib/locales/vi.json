@@ -28,7 +28,6 @@
     "otpPlaceholder": "Nhập mã 6 chữ số",
     "invalidEmailDescription": "Vui lòng nhập địa chỉ email hợp lệ",
     "networkError": "Lỗi mạng. Vui lòng thử lại.",
-    "sentTo": "Chúng tôi đã gửi mã đến",
     "invalidOtp": "Vui lòng nhập mã OTP 6 chữ số hợp lệ",
     "invalidOtpServer": "Mã OTP không hợp lệ. Vui lòng thử lại.",
     "otpError": "Đã xảy ra lỗi trong quá trình xác minh. Vui lòng thử lại.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Thử lại",
     "identitySwitchSignOut": "Đăng xuất và bắt đầu lại",
     "deviceSignInWorking": "Đang đăng nhập",
-    "deviceSignInFailed": "Đã xảy ra lỗi. Hãy thử lại hoặc đăng nhập bằng email.",
-    "deviceSignInDenied": "Không thể xác minh thiết bị này. Hãy thử lại hoặc đăng nhập bằng email.",
-    "deviceSignInUnavailable": "Hiện không thể đăng nhập. Hãy thử lại sau vài phút hoặc đăng nhập bằng email.",
+    "deviceSignInFailed": "Đã xảy ra lỗi. Hãy thử lại.",
+    "deviceSignInDenied": "Không thể xác minh thiết bị này. Hãy thử lại.",
     "tryAgain": "Thử lại",
     "learnAboutMera": "Tìm hiểu về Mera",
-    "alreadyHaveAccount": "Đăng nhập bằng email",
     "continue": "Tiếp tục",
     "sourceCode": "Mã nguồn",
     "failedToSendBody": "Gửi mã OTP thất bại",
     "signingYouIn": "Đang đăng nhập cho bạn…",
-    "signInWithoutEmail": "Đăng nhập không cần email",
+    "signInWithoutEmail": "Đăng nhập bằng điện thoại này",
     "differentAccount": {
-      "title": "Đăng nhập không cần email?",
+      "title": "Đăng nhập bằng điện thoại này?",
       "body": "Chúng tôi sẽ xóa mọi thứ Mera lưu trên điện thoại này cho {{email}}. Bản thân tài khoản không bị xóa. Bạn có chắc không?",
       "continue": "Xóa và tiếp tục",
       "useEmail": "Giữ tài khoản của tôi",
       "bodyGeneric": "Chúng tôi sẽ xóa mọi thứ Mera lưu trên điện thoại này cho tài khoản này. Bản thân tài khoản không bị xóa. Bạn có chắc không?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Tài khoản của bạn gắn với điện thoại này. Nếu bạn xóa Mera hoặc mất điện thoại, bạn sẽ bắt đầu một tài khoản mới. Sao lưu và khôi phục trong Cài đặt có thể giữ dữ liệu của bạn.",
-      "reset": "Tài khoản của bạn gắn với điện thoại này. Nếu bạn đặt lại hoặc mất điện thoại, bạn sẽ bắt đầu một tài khoản mới. Sao lưu và khôi phục trong Cài đặt có thể giữ dữ liệu của bạn."
-    },
     "track": {
       "beforeYouStart": "Trước khi bắt đầu",
-      "beginCaption": "Mera đăng nhập bạn bằng điện thoại này. Không cần nhớ gì cả.",
+      "beginCaption": "Không cần email, số điện thoại hay mật khẩu. Không có gì để nhớ.",
       "beginMera": "Bắt đầu với Mera",
       "beginTitle": "Bạn muốn bắt đầu như thế nào?",
-      "beginWithoutEmail": "Bắt đầu không cần email",
+      "beginWithoutEmail": "Đăng nhập bằng điện thoại này",
       "checkEmailTitle": "Hãy kiểm tra email của bạn",
       "chooseLanguage": "Chọn ngôn ngữ của bạn",
       "codeA11y": "Mã 6 chữ số",
@@ -82,26 +75,25 @@
       "notHereTitle": "Điện thoại này chưa có {{language}}",
       "phoneLanguage": "Ngôn ngữ điện thoại của bạn",
       "sendCode": "Gửi mã",
-      "sentTo": "Chúng tôi đã gửi mã 6 chữ số đến {{email}}.",
       "useDifferentEmail": "Dùng email khác",
       "welcome": "Chào mừng bạn đến với Mera",
       "wrongCode": "Mã này không đúng. Hãy kiểm tra lại, hoặc gửi mã mới.",
       "noSheetTitle": "iPhone của bạn chưa mở được bản tải xuống",
       "noSheetBody": "Hãy thử lại, hoặc mở Cài đặt trên iPhone, chọn Cài đặt chung, rồi Ngôn ngữ & Vùng, và cuối cùng là Ngôn ngữ dịch để tải {{language}}.",
-      "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
-      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+      "sentToIfAccount": "Nếu email này có tài khoản Mera, chúng tôi đã gửi mã đến email đó. Mới dùng Mera? Hãy dùng “Đăng nhập bằng điện thoại này”.",
+      "noCodeUsePhone": "Chưa nhận được mã? Hãy dùng “Đăng nhập bằng điện thoại này”."
     },
-    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
-    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
-    "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
-    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
-    "supportedPhones": "Supported phones",
+    "emailLegacyHint": "Chỉ dành cho những người từng đăng nhập bằng email. Người dùng mới không thể đăng nhập bằng email nữa.",
+    "phoneCheckTemporary": "Không thể kiểm tra điện thoại này. Hãy kiểm tra kết nối và thử lại.",
+    "phoneUnsupportedAndroid": "Mera cần Google Play trên điện thoại này để đăng nhập cho bạn. Điện thoại không có Google Play chưa được hỗ trợ.",
+    "phoneUnsupportedIos": "iPhone này không thể dùng đăng nhập bằng điện thoại.",
+    "supportedPhones": "Điện thoại được hỗ trợ",
     "emailEnded": {
-      "title": "Email sign-in has ended",
-      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
-      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+      "title": "Đăng nhập bằng email đã kết thúc",
+      "bodyIos": "Đăng nhập bằng email đã kết thúc vào {{date}}. Hãy đăng nhập bằng điện thoại này để bắt đầu lại. Gói của bạn sẽ quay lại từ App Store, và các bài viết đã lưu sẽ quay lại từ bản sao lưu.",
+      "bodyAndroid": "Đăng nhập bằng email đã kết thúc vào {{date}}. Hãy đăng nhập bằng điện thoại này để bắt đầu lại. Gói của bạn sẽ quay lại từ Google Play, và các bài viết đã lưu sẽ quay lại từ bản sao lưu."
     },
-    "phoneNotSupported": "This phone isn't supported"
+    "phoneNotSupported": "Điện thoại này không được hỗ trợ"
   },
   "account": {
     "contactSupport": "Trò chuyện với bộ phận hỗ trợ"
@@ -525,12 +517,12 @@
     "exportHistoryEmptyDescription": "Bạn chưa đọc bất kỳ bài viết nào trong 30 ngày qua.",
     "keeps": {
       "title": "Mera giữ gì về bạn",
-      "emailAndPlan": "Email và gói của bạn. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
+      "emailAndPlan": "Email của bạn, cho đến khi bạn chuyển sang đăng nhập bằng điện thoại hoặc cho đến khi email bị xóa vào ngày 30 tháng 10 năm 2026, và gói của bạn. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
       "plan": "Gói của bạn. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
-      "emailIfAdded": "Email của bạn nếu bạn đã thêm, và gói của bạn. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
+      "emailIfAdded": "Gói của bạn. Mera không bao giờ yêu cầu email, và mọi email từ trước đó sẽ bị xóa vào ngày 30 tháng 10 năm 2026. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
       "signInRecordIos": "Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple rằng đây là ứng dụng thật không được giữ lại.",
       "signInRecordAndroid": "Một bản ghi đăng nhập cho điện thoại này, không phải ID điện thoại của bạn, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Google rằng đây là ứng dụng thật không được giữ lại.",
-      "signInRecordGeneric": "Nếu không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple hoặc Google rằng đây là ứng dụng thật không được giữ lại.",
+      "signInRecordGeneric": "Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple hoặc Google rằng đây là ứng dụng thật không được giữ lại.",
       "usage": "Lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn mỗi ngày và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), số bài viết được gửi đến điện thoại này mỗi ngày, thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera. Được giữ trong 90 ngày. Các lần đăng nhập không lưu địa chỉ IP hay thông tin trình duyệt.",
       "topics": "Cụm từ chủ đề, chỉ lưu theo văn bản, không có gì liên kết chúng với bạn, và bị xóa sau 14 ngày không dùng.",
       "privacyLink": "Đọc chính sách quyền riêng tư"
@@ -573,11 +565,11 @@
     "contentPolicy": "Chính sách nội dung",
     "faq": "Câu hỏi thường gặp",
     "reportBug": "Báo lỗi",
-    "deleteAccountConfirmGrace": "Tài khoản của bạn sẽ được lên lịch xóa, với thời gian ân hạn 30 ngày. Nếu tài khoản có email, hãy đăng nhập bằng email đó trong 30 ngày này để hủy. Tài khoản không có email không thể đăng nhập lại, nên không thể hủy việc xóa.",
+    "deleteAccountConfirmGrace": "Tài khoản của bạn sẽ được lên lịch xóa và bị xóa vĩnh viễn sau 30 ngày. Điện thoại này không thể đăng nhập lại vào tài khoản đó. Không thể hoàn tác.",
     "deleteAccountWarningGrace": "⚠️ Sau 30 ngày, dữ liệu tài khoản của bạn sẽ bị xóa vĩnh viễn. Hồ sơ thanh toán được giữ 7 năm để phục vụ sổ sách kế toán. Không thể hoàn tác.",
     "finalConfirmationBodyGrace": "Điều này lên lịch tài khoản của bạn để xóa vĩnh viễn trong 30 ngày.",
     "accountDeletionScheduledTitle": "Xóa đã được lên lịch",
-    "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn sau 30 ngày. Nếu tài khoản có email, hãy đăng nhập bằng email đó trước thời điểm đó để hủy."
+    "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn sau 30 ngày."
   },
   "configPanel": {
     "factDeletedTitle": "Đã xóa thông tin",
@@ -895,14 +887,14 @@
     "confirmTimeoutBody": "Nếu bạn đã thanh toán, hãy liên hệ bộ phận hỗ trợ và chúng tôi sẽ giải quyết.",
     "checkAgain": "Kiểm tra lại",
     "readingExplainer": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói của bạn quy định Mera đọc bao nhiêu trên đám mây mỗi ngày: gói Cơ bản 10 MB, gói Cá nhân 50 MB, gói Chuyên nghiệp 200 MB. Mera đọc cho bạn qua mã hóa đầu cuối, nên Mera không thể thấy mình đọc những bài nào hay đọc bao nhiêu bài. Đó là lý do gói được tính bằng megabyte, không tính theo số bài viết. Trên các điện thoại được hỗ trợ, việc đọc trên điện thoại không giới hạn ở mọi gói.",
-    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Mera can't see plans on other stores, so it can't refund any overlap.",
-    "invoicesAppStore": "Mera has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
-    "invoicesPlayStore": "Mera has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
-    "planBack": "Your plan is back.",
-    "restoreNoneApple": "No plan found on this Apple Account.",
-    "restoreNoneGoogle": "No plan found on this Google Account.",
-    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
-    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
+    "platformSwitch": "Chuyển giữa iPhone và Android? Gói của bạn vẫn thuộc cửa hàng cũ. Hãy hủy gói ở đó, rồi đăng ký ở đây. Mera không thể thấy gói trên các cửa hàng khác, nên không thể hoàn tiền cho phần trùng lặp.",
+    "invoicesAppStore": "Mera không có cách nào gửi email cho bạn, nên Apple gửi biên lai và hóa đơn của bạn đến email trong Tài khoản Apple.",
+    "invoicesPlayStore": "Mera không có cách nào gửi email cho bạn, nên Google Play gửi biên lai của bạn đến email trong Tài khoản Google.",
+    "planBack": "Gói của bạn đã trở lại.",
+    "restoreNoneApple": "Không tìm thấy gói nào trên Tài khoản Apple này.",
+    "restoreNoneGoogle": "Không tìm thấy gói nào trên Tài khoản Google này.",
+    "restoreFailedAppStore": "Không thể kết nối với App Store. Hãy thử lại.",
+    "restoreFailedPlayStore": "Không thể kết nối với Google Play. Hãy thử lại."
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -1552,9 +1544,9 @@
     "retry": "Thử lại",
     "welcomeBody": "Nhấn \"Đồng ý và tiếp tục\" để chấp nhận Điều khoản dịch vụ và Chính sách quyền riêng tư của chúng tôi.",
     "deviceNotice": {
-      "appAttest": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Apple xác nhận đây là ứng dụng Mera thật trên iPhone thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập khi bạn còn tài khoản.",
-      "playIntegrity": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Google xác nhận đây là ứng dụng Mera thật trên điện thoại Android thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập, không phải ID điện thoại của bạn.",
-      "generic": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Chúng tôi giữ một bản ghi đăng nhập cho điện thoại này khi bạn còn tài khoản."
+      "appAttest": "Mera đăng nhập cho bạn bằng điện thoại này. Apple xác nhận đây là ứng dụng Mera thật trên iPhone thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập khi bạn còn tài khoản.",
+      "playIntegrity": "Mera đăng nhập cho bạn bằng điện thoại này. Google xác nhận đây là ứng dụng Mera thật trên điện thoại Android thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập, không phải ID điện thoại của bạn.",
+      "generic": "Mera đăng nhập cho bạn bằng điện thoại này. Chúng tôi giữ một bản ghi đăng nhập cho điện thoại này khi bạn còn tài khoản."
     }
   },
   "tutorials": {
@@ -1850,7 +1842,7 @@
             "body": "Những điều chính, và lý do mỗi điều được gửi đi.",
             "steps": {
               "0": "Các cụm chủ đề ngắn, vì vậy có cái gì đó để đối sánh những câu chuyện với.",
-              "1": "Cách bạn đăng nhập, bằng email hoặc bằng điện thoại này, và bạn đang dùng gói nào.",
+              "1": "Cách bạn đăng nhập, là điện thoại này (hoặc, cho đến ngày 30 tháng 10 năm 2026, một email từ trước đó), và gói bạn đang dùng.",
               "2": "Các bài viết điện thoại của bạn yêu cầu, và văn bản đã mã hóa mà Mera gửi để đọc cho bạn, được đếm theo ngày để áp dụng gói của bạn."
             },
             "ask": "Ứng dụng gửi những gì cho máy chủ của bạn?"
@@ -1869,7 +1861,7 @@
           },
           "what-we-keep": {
             "headline": "Những gì chúng tôi giữ lại",
-            "body": "Email đăng nhập của bạn, nếu bạn đã thêm. Bạn đang dùng gói nào. Số bài viết được gửi đến bạn mỗi ngày, lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Nếu bạn dùng Mera không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
+            "body": "Bạn đang dùng gói nào. Email chỉ dành cho tài khoản đã đăng nhập bằng email trước đây, và sẽ bị xóa vào ngày 30 tháng 10 năm 2026. Số bài viết được gửi đến bạn mỗi ngày, lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
             "ask": "Mera lưu trữ những gì về tôi trên máy chủ của nó?"
           }
         }
@@ -2222,20 +2214,6 @@
     "mailFailedTitle": "Không mở được ứng dụng email",
     "mailFailedBody": "Sao chép địa chỉ hỗ trợ và gửi email cho chúng tôi từ bất kỳ ứng dụng email nào.",
     "copyAddress": "Sao chép địa chỉ"
-  },
-  "emailCapture": {
-    "title": "Thêm email của bạn",
-    "subtitle": "Nhận biên lai qua email và khôi phục tài khoản khi bạn đổi điện thoại.",
-    "continue": "Tiếp tục",
-    "notNow": "Để sau",
-    "confirm": "Xác nhận",
-    "added": "Đã thêm email",
-    "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}.",
-    "skip": "Tiếp tục không cần email",
-    "skipTitle": "Tiếp tục mà không có email?",
-    "skipBody1": "Không có email, tài khoản của bạn không thể chuyển sang nền tảng khác. Nếu bạn chuyển giữa iOS và Android, bạn sẽ bắt đầu với tài khoản mới ở đó.",
-    "skipBody2": "Bộ phận hỗ trợ chỉ có thể tìm thấy giao dịch mua của bạn bằng Support ID. Hãy sao chép và lưu ở nơi an toàn.",
-    "skipConfirm": "Tiếp tục thanh toán"
   },
   "videoPlayer": {
     "closeA11y": "Đóng video",
@@ -2784,8 +2762,6 @@
     "settings": {
       "yourPlan": "Gói của bạn",
       "usageOffline": "Mức sử dụng hiện khi bạn trực tuyến",
-      "addEmail": "Thêm email",
-      "addEmailHint": "Không bắt buộc. Chỉ khi bạn muốn chuyển tài khoản và gói sang điện thoại khác, hoặc nhận email từ Mera.",
       "appLock": "Khóa ứng dụng",
       "backupOff": "Đã tắt sao lưu",
       "backupOn": "Đã bật sao lưu",
@@ -2815,7 +2791,7 @@
       "newPlanApplies": "Gói mới của bạn đã có hiệu lực.",
       "planMultiplierBase": "10 MB lượt đọc trên đám mây mỗi ngày",
       "planMultiplier": "{{mb}} MB lượt đọc trên đám mây mỗi ngày, gấp {{n}}x gói Cơ bản",
-      "restorePurchases": "Restore purchases"
+      "restorePurchases": "Khôi phục giao dịch mua"
     },
     "notifications": {
       "push": "Thông báo đẩy",
@@ -2929,26 +2905,26 @@
     "newest": "Mới nhất trước"
   },
   "moveToPhone": {
-    "dialogTitle": "Sign in with this phone instead",
-    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
-    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
-    "confirm": "Move account",
-    "cancel": "Not now",
-    "progressTitle": "Moving your account to this phone",
+    "dialogTitle": "Thay vào đó, đăng nhập bằng điện thoại này",
+    "dialogBody": "Chúng tôi sẽ đăng nhập bạn bằng điện thoại này, chuyển tài khoản của bạn sang điện thoại này và xóa email của bạn khỏi cơ sở dữ liệu của chúng tôi.",
+    "dialogSettingsHint": "Bạn có thể làm việc này trong Cài đặt cho đến {{date}}.",
+    "confirm": "Chuyển tài khoản",
+    "cancel": "Để sau",
+    "progressTitle": "Đang chuyển tài khoản của bạn sang điện thoại này",
     "steps": {
-      "checking": "Checking this phone",
-      "linking": "Linking your account",
-      "removing": "Removing your email",
-      "done": "Done"
+      "checking": "Đang kiểm tra điện thoại này",
+      "linking": "Đang liên kết tài khoản của bạn",
+      "removing": "Đang xóa email của bạn",
+      "done": "Xong"
     },
-    "failed": "This didn't finish. Your account still works. Try again in a moment.",
-    "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
-    "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
-    "success": "Signed in with this phone. Your email is deleted.",
-    "close": "Close",
-    "inboxTitle": "Email sign-in ends {{date}}",
-    "inboxBody": "Switch to phone sign-in to keep your account.",
-    "settingsRow": "Move to phone sign-in",
-    "settingsRowHint": "Email sign-in ends {{date}}."
+    "failed": "Việc này chưa hoàn tất. Tài khoản của bạn vẫn hoạt động. Hãy thử lại sau ít phút.",
+    "unsupportedIos": "Điện thoại này không thể dùng đăng nhập bằng điện thoại, nên Mera sẽ ngừng hoạt động trên đó vào {{date}}. Nếu bạn đang trả phí cho Mera, hãy hủy gói trên App Store trước thời điểm đó.",
+    "unsupportedAndroid": "Điện thoại này không thể dùng đăng nhập bằng điện thoại, nên Mera sẽ ngừng hoạt động trên đó vào {{date}}. Nếu bạn đang trả phí cho Mera, hãy hủy gói trên Google Play trước thời điểm đó.",
+    "success": "Bạn đã đăng nhập bằng điện thoại này. Email của bạn đã bị xóa.",
+    "close": "Đóng",
+    "inboxTitle": "Đăng nhập bằng email kết thúc vào {{date}}",
+    "inboxBody": "Chuyển sang đăng nhập bằng điện thoại để giữ tài khoản của bạn.",
+    "settingsRow": "Chuyển sang đăng nhập bằng điện thoại",
+    "settingsRowHint": "Đăng nhập bằng email kết thúc vào {{date}}."
   }
 }

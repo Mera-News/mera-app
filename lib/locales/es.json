@@ -28,7 +28,6 @@
     "otpPlaceholder": "Ingresa el código de 6 dígitos",
     "invalidEmailDescription": "Por favor, ingresa una dirección de correo electrónico válida",
     "networkError": "Error de red. Por favor, inténtalo de nuevo.",
-    "sentTo": "Hemos enviado un código a",
     "invalidOtp": "Por favor, ingresa un código OTP válido de 6 dígitos",
     "invalidOtpServer": "Código OTP no válido. Por favor, inténtalo de nuevo.",
     "otpError": "Ocurrió un error durante la verificación. Por favor, inténtalo de nuevo.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Reintentar",
     "identitySwitchSignOut": "Cerrar sesión y empezar de nuevo",
     "deviceSignInWorking": "Iniciando sesión",
-    "deviceSignInFailed": "Algo salió mal. Vuelve a intentarlo o inicia sesión con tu correo.",
-    "deviceSignInDenied": "No pudimos verificar este dispositivo. Vuelve a intentarlo o inicia sesión con tu correo.",
-    "deviceSignInUnavailable": "El inicio de sesión no está disponible en este momento. Inténtalo en unos minutos o inicia sesión con tu correo.",
+    "deviceSignInFailed": "Algo salió mal. Vuelve a intentarlo.",
+    "deviceSignInDenied": "No pudimos verificar este dispositivo. Vuelve a intentarlo.",
     "tryAgain": "Reintentar",
     "learnAboutMera": "Conoce Mera",
-    "alreadyHaveAccount": "Iniciar sesión con tu correo",
     "continue": "Continuar",
     "sourceCode": "Código fuente",
     "failedToSendBody": "No se pudo enviar el código OTP",
     "signingYouIn": "Iniciando sesión…",
-    "signInWithoutEmail": "Iniciar sesión sin correo",
+    "signInWithoutEmail": "Iniciar sesión con este teléfono",
     "differentAccount": {
-      "title": "¿Iniciar sesión sin correo?",
+      "title": "¿Iniciar sesión con este teléfono?",
       "body": "Borraremos todo lo que Mera guarda en este teléfono para {{email}}. La cuenta en sí no se elimina. ¿Seguro?",
       "continue": "Eliminar y continuar",
       "useEmail": "Conservar mi cuenta",
       "bodyGeneric": "Borraremos todo lo que Mera guarda en este teléfono para esta cuenta. La cuenta en sí no se elimina. ¿Seguro?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Tu cuenta está vinculada a este teléfono. Si eliminas Mera o pierdes el teléfono, empezarás con una cuenta nueva. Copia de seguridad y restauración, en Ajustes, puede conservar tus datos.",
-      "reset": "Tu cuenta está vinculada a este teléfono. Si restableces o pierdes el teléfono, empezarás con una cuenta nueva. Copia de seguridad y restauración, en Ajustes, puede conservar tus datos."
-    },
     "track": {
       "beforeYouStart": "Antes de empezar",
-      "beginCaption": "Mera te inicia sesión con este teléfono. No hay nada que recordar.",
+      "beginCaption": "Sin correo, sin número de teléfono ni contraseña. Nada que recordar.",
       "beginMera": "Empezar con Mera",
       "beginTitle": "¿Cómo quieres empezar?",
-      "beginWithoutEmail": "Empezar sin correo",
+      "beginWithoutEmail": "Iniciar sesión con este teléfono",
       "checkEmailTitle": "Revisa tu correo",
       "chooseLanguage": "Elige tu idioma",
       "codeA11y": "Código de 6 dígitos",
@@ -82,26 +75,25 @@
       "notHereTitle": "{{language}} todavía no está en este teléfono",
       "phoneLanguage": "Idioma de tu teléfono",
       "sendCode": "Enviar código",
-      "sentTo": "Enviamos un código de 6 dígitos a {{email}}.",
       "useDifferentEmail": "Usar otro correo",
       "welcome": "Bienvenido a Mera",
       "wrongCode": "Ese código no funcionó. Revísalo o pide uno nuevo.",
       "noSheetTitle": "Tu iPhone no abrió la descarga",
       "noSheetBody": "Vuelve a intentarlo, o abre Ajustes en tu iPhone, luego General, después Idioma y región, y por último Idiomas de traducción para descargar {{language}}.",
-      "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
-      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+      "sentToIfAccount": "Si este correo tiene una cuenta de Mera, hemos enviado un código a esa dirección. ¿Eres nuevo en Mera? Usa \"Iniciar sesión con este teléfono\".",
+      "noCodeUsePhone": "¿No recibiste un código? Usa \"Iniciar sesión con este teléfono\"."
     },
-    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
-    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
-    "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
-    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
-    "supportedPhones": "Supported phones",
+    "emailLegacyHint": "Solo para quienes iniciaron sesión con correo antes. Los usuarios nuevos ya no pueden iniciar sesión con correo.",
+    "phoneCheckTemporary": "No pudimos comprobar este teléfono. Revisa tu conexión e inténtalo de nuevo.",
+    "phoneUnsupportedAndroid": "Mera necesita Google Play en este teléfono para iniciar tu sesión. Los teléfonos sin Google Play no son compatibles.",
+    "phoneUnsupportedIos": "Este iPhone no puede usar el inicio de sesión con teléfono.",
+    "supportedPhones": "Teléfonos compatibles",
     "emailEnded": {
-      "title": "Email sign-in has ended",
-      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
-      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+      "title": "El inicio de sesión con correo ha terminado",
+      "bodyIos": "El inicio de sesión con correo terminó el {{date}}. Inicia sesión con este teléfono para empezar de nuevo. Tu plan vuelve desde la App Store, y tus artículos guardados vuelven desde tu copia de seguridad.",
+      "bodyAndroid": "El inicio de sesión con correo terminó el {{date}}. Inicia sesión con este teléfono para empezar de nuevo. Tu plan vuelve desde Google Play, y tus artículos guardados vuelven desde tu copia de seguridad."
     },
-    "phoneNotSupported": "This phone isn't supported"
+    "phoneNotSupported": "Este teléfono no es compatible"
   },
   "account": {
     "contactSupport": "Hablar con soporte"
@@ -528,12 +520,12 @@
     "exportHistoryEmptyDescription": "No has leído ningún artículo en los últimos 30 días.",
     "keeps": {
       "title": "Qué guarda Mera sobre ti",
-      "emailAndPlan": "Tu correo y tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
+      "emailAndPlan": "Tu correo, hasta que pases al inicio de sesión con teléfono o hasta que se elimine el 30 de octubre de 2026, y tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
       "plan": "Tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
-      "emailIfAdded": "Tu correo si añadiste uno, y tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
+      "emailIfAdded": "Tu plan. Mera nunca pide un correo, y cualquier correo de antes se elimina el 30 de octubre de 2026. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
       "signInRecordIos": "Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple de que es la app real no se guarda.",
       "signInRecordAndroid": "Un registro de inicio de sesión de este teléfono, no el ID de tu teléfono, que se borra con tu cuenta. La comprobación de Google de que es la app real no se guarda.",
-      "signInRecordGeneric": "Sin correo, un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple o Google de que es la app real no se guarda.",
+      "signInRecordGeneric": "Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple o Google de que es la app real no se guarda.",
       "usage": "Cuánto texto cifrado envió Mera para que lo leyera por ti cada día y en cuántas solicitudes (nunca el texto en sí), cuántos artículos se enviaron a este teléfono cada día, cuándo alcanzaste la lectura diaria de tu plan y qué días usaste Mera. Se conserva durante 90 días. Los inicios de sesión no guardan dirección IP ni datos del navegador.",
       "topics": "Frases de temas, guardadas solo por su texto sin nada que las vincule contigo, y borradas tras 14 días sin uso.",
       "privacyLink": "Leer la política de privacidad"
@@ -577,11 +569,11 @@
     "contentPolicy": "Política de contenido",
     "faq": "Preguntas frecuentes",
     "reportBug": "Informar de un error",
-    "deleteAccountConfirmGrace": "Tu cuenta quedará programada para eliminarse, con un periodo de gracia de 30 días. Si tu cuenta tiene correo, inicia sesión con él en esos 30 días para cancelar. Una cuenta sin correo no puede volver a iniciar sesión, así que su eliminación no se puede cancelar.",
+    "deleteAccountConfirmGrace": "Tu cuenta se programará para eliminarse y se borrará para siempre después de 30 días. Este teléfono no podrá volver a iniciar sesión en ella. Esto no se puede deshacer.",
     "deleteAccountWarningGrace": "⚠️ Después de 30 días, los datos de tu cuenta se eliminan permanentemente. Los registros de facturación se conservan durante 7 años por motivos contables. No se puede deshacer.",
     "finalConfirmationBodyGrace": "Esto programa tu cuenta para eliminación permanente en 30 días.",
     "accountDeletionScheduledTitle": "Eliminación programada",
-    "accountDeletionScheduledDescription": "Tu cuenta se eliminará de forma permanente en 30 días. Si tiene correo, inicia sesión con él antes para cancelar."
+    "accountDeletionScheduledDescription": "Tu cuenta se eliminará de forma permanente en 30 días."
   },
   "configPanel": {
     "factDeletedTitle": "Hecho eliminado",
@@ -899,14 +891,14 @@
     "confirmTimeoutBody": "Si pagaste, contacta con soporte y lo resolveremos.",
     "checkAgain": "Comprobar de nuevo",
     "readingExplainer": "Cada artículo que coincide con tus intereses llega a Noticias. Mera los lee, deja de lado el ruido y destaca lo que importa. Tu plan define cuánto lee Mera en la nube cada día: Starter 10 MB, Individual 50 MB, Profesional 200 MB. Mera lee por ti con cifrado de extremo a extremo, así que no puede ver qué artículos lee ni cuántos. Por eso los planes se miden en megabytes, no en artículos. En los teléfonos compatibles, leer en el teléfono es ilimitado en todos los planes.",
-    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Mera can't see plans on other stores, so it can't refund any overlap.",
-    "invoicesAppStore": "Mera has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
-    "invoicesPlayStore": "Mera has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
-    "planBack": "Your plan is back.",
-    "restoreNoneApple": "No plan found on this Apple Account.",
-    "restoreNoneGoogle": "No plan found on this Google Account.",
-    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
-    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
+    "platformSwitch": "¿Cambias entre iPhone y Android? Tu plan se queda en la tienda anterior. Cancélalo allí y luego suscríbete aquí. Mera no puede ver los planes de otras tiendas, así que no puede reembolsar ningún solapamiento.",
+    "invoicesAppStore": "Mera no tiene forma de enviarte correos, así que Apple envía tus recibos y facturas al correo de tu cuenta de Apple.",
+    "invoicesPlayStore": "Mera no tiene forma de enviarte correos, así que Google Play envía tus recibos al correo de tu cuenta de Google.",
+    "planBack": "Tu plan ha vuelto.",
+    "restoreNoneApple": "No se encontró ningún plan en esta cuenta de Apple.",
+    "restoreNoneGoogle": "No se encontró ningún plan en esta cuenta de Google.",
+    "restoreFailedAppStore": "No se pudo conectar con la App Store. Inténtalo de nuevo.",
+    "restoreFailedPlayStore": "No se pudo conectar con Google Play. Inténtalo de nuevo."
   },
   "tabs": {
     "deck": "Noticias",
@@ -1557,9 +1549,9 @@
     "retry": "Intentar de nuevo",
     "welcomeBody": "Toca \"Aceptar y continuar\" para aceptar nuestros Términos del Servicio y la Política de Privacidad.",
     "deviceNotice": {
-      "appAttest": "No necesitas correo. Mera inicia tu sesión con este teléfono. Apple confirma que es la app real de Mera en un iPhone real, para frenar las cuentas falsas. Guardamos un registro de inicio de sesión mientras tengas una cuenta.",
-      "playIntegrity": "No necesitas correo. Mera inicia tu sesión con este teléfono. Google confirma que es la app real de Mera en un teléfono Android real, para frenar las cuentas falsas. Guardamos un registro de inicio de sesión, no el ID de tu teléfono.",
-      "generic": "No necesitas correo. Mera inicia tu sesión con este teléfono. Guardamos un registro de inicio de sesión de este teléfono mientras tengas una cuenta."
+      "appAttest": "Mera inicia tu sesión con este teléfono. Apple confirma que es la app real de Mera en un iPhone real, para frenar las cuentas falsas. Guardamos un registro de inicio de sesión mientras tengas una cuenta.",
+      "playIntegrity": "Mera inicia tu sesión con este teléfono. Google confirma que es la app real de Mera en un teléfono Android real, para frenar las cuentas falsas. Guardamos un registro de inicio de sesión, no el ID de tu teléfono.",
+      "generic": "Mera inicia tu sesión con este teléfono. Guardamos un registro de inicio de sesión de este teléfono mientras tengas una cuenta."
     }
   },
   "tutorials": {
@@ -1855,7 +1847,7 @@
             "body": "Lo principal, y por qué sale cada cosa.",
             "steps": {
               "0": "Frases de temas cortos, así hay algo que comparar historias contra.",
-              "1": "Cómo inicias sesión, con correo o con este teléfono, y qué plan tienes.",
+              "1": "Cómo inicias sesión, que es este teléfono (o, hasta el 30 de octubre de 2026, un correo de antes), y qué plan tienes.",
               "2": "Los artículos que pide tu teléfono, y el texto cifrado que Mera envía para que lo lea por ti, contados por día para aplicar tu plan."
             },
             "ask": "¿Qué envía la app a los servidores de Mera?"
@@ -1874,7 +1866,7 @@
           },
           "what-we-keep": {
             "headline": "Lo que sí guardamos",
-            "body": "Tu correo de acceso, si añadiste uno. Qué plan tienes. Un recuento diario de artículos enviados a ti, cuánto texto cifrado envió Mera para que lo leyera por ti y en cuántas solicitudes (nunca el texto en sí), cuándo alcanzaste la lectura diaria de tu plan, y los días en que usaste Mera, que se conserva durante 90 días. Tus horarios de notificaciones, tu idioma y tu modo de procesamiento. Las respuestas que envías a las preguntas del equipo de Mera. Si usas Mera sin correo, un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. Las frases de temas se guardan en caché solo por su texto, sin nada que registre quién las pidió, y se eliminan tras catorce días sin uso.",
+            "body": "Qué plan tienes. Un correo solo para las cuentas que iniciaron sesión con correo antes, eliminado el 30 de octubre de 2026. Un recuento diario de artículos enviados a ti, cuánto texto cifrado envió Mera para que lo leyera por ti y en cuántas solicitudes (nunca el texto en sí), cuándo alcanzaste la lectura diaria de tu plan, y los días en que usaste Mera, que se conserva durante 90 días. Tus horarios de notificaciones, tu idioma y tu modo de procesamiento. Las respuestas que envías a las preguntas del equipo de Mera. Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. Las frases de temas se guardan en caché solo por su texto, sin nada que registre quién las pidió, y se eliminan tras catorce días sin uso.",
             "ask": "¿Qué almacena Mera sobre mí en sus servidores?"
           }
         }
@@ -2227,20 +2219,6 @@
     "mailFailedTitle": "No se pudo abrir tu app de correo",
     "mailFailedBody": "Copia nuestra dirección de soporte y escríbenos desde cualquier app de correo.",
     "copyAddress": "Copiar dirección"
-  },
-  "emailCapture": {
-    "title": "Añade tu correo",
-    "subtitle": "Recibe recibos por correo y recupera tu cuenta si cambias de teléfono.",
-    "continue": "Continuar",
-    "notNow": "Ahora no",
-    "confirm": "Confirmar",
-    "added": "Correo añadido",
-    "addedDetail": "Los recibos y la recuperación de la cuenta usarán {{email}}.",
-    "skip": "Continuar sin correo",
-    "skipTitle": "¿Continuar sin correo electrónico?",
-    "skipBody1": "Sin un correo, tu cuenta no puede pasar a otra plataforma. Si cambias entre iOS y Android, empezarás con una cuenta nueva.",
-    "skipBody2": "Soporte solo puede encontrar tu compra con tu ID de soporte. Cópialo y guárdalo en un lugar seguro.",
-    "skipConfirm": "Continuar al pago"
   },
   "videoPlayer": {
     "closeA11y": "Cerrar video",
@@ -2790,8 +2768,6 @@
     "settings": {
       "yourPlan": "Tu plan",
       "usageOffline": "El uso se muestra cuando tienes conexión",
-      "addEmail": "Añadir un correo",
-      "addEmailHint": "Opcional. Solo si quieres mover tu cuenta y tu plan a otro teléfono, o recibir correos de Mera.",
       "appLock": "Bloqueo de la app",
       "backupOff": "Copia de seguridad desactivada",
       "backupOn": "Copia de seguridad activada",
@@ -2821,7 +2797,7 @@
       "newPlanApplies": "Tu nuevo plan ya se aplica.",
       "planMultiplierBase": "10 MB de lectura en la nube al día",
       "planMultiplier": "{{mb}} MB de lectura en la nube al día, {{n}}x Starter",
-      "restorePurchases": "Restore purchases"
+      "restorePurchases": "Restaurar compras"
     },
     "notifications": {
       "push": "Notificaciones push",
@@ -2935,26 +2911,26 @@
     "newest": "Más recientes primero"
   },
   "moveToPhone": {
-    "dialogTitle": "Sign in with this phone instead",
-    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
-    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
-    "confirm": "Move account",
-    "cancel": "Not now",
-    "progressTitle": "Moving your account to this phone",
+    "dialogTitle": "Inicia sesión con este teléfono en su lugar",
+    "dialogBody": "Te iniciaremos sesión con este teléfono, pasaremos tu cuenta a él y eliminaremos tu correo de nuestra base de datos.",
+    "dialogSettingsHint": "Puedes hacerlo en Ajustes hasta el {{date}}.",
+    "confirm": "Mover cuenta",
+    "cancel": "Ahora no",
+    "progressTitle": "Pasando tu cuenta a este teléfono",
     "steps": {
-      "checking": "Checking this phone",
-      "linking": "Linking your account",
-      "removing": "Removing your email",
-      "done": "Done"
+      "checking": "Comprobando este teléfono",
+      "linking": "Vinculando tu cuenta",
+      "removing": "Eliminando tu correo",
+      "done": "Listo"
     },
-    "failed": "This didn't finish. Your account still works. Try again in a moment.",
-    "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
-    "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
-    "success": "Signed in with this phone. Your email is deleted.",
-    "close": "Close",
-    "inboxTitle": "Email sign-in ends {{date}}",
-    "inboxBody": "Switch to phone sign-in to keep your account.",
-    "settingsRow": "Move to phone sign-in",
-    "settingsRowHint": "Email sign-in ends {{date}}."
+    "failed": "No se pudo terminar. Tu cuenta sigue funcionando. Inténtalo de nuevo en un momento.",
+    "unsupportedIos": "Este teléfono no puede usar el inicio de sesión con teléfono, así que Mera dejará de funcionar en él el {{date}}. Si pagas por Mera, cancela tu plan en la App Store antes de esa fecha.",
+    "unsupportedAndroid": "Este teléfono no puede usar el inicio de sesión con teléfono, así que Mera dejará de funcionar en él el {{date}}. Si pagas por Mera, cancela tu plan en Google Play antes de esa fecha.",
+    "success": "Has iniciado sesión con este teléfono. Tu correo ha sido eliminado.",
+    "close": "Cerrar",
+    "inboxTitle": "El inicio de sesión con correo termina el {{date}}",
+    "inboxBody": "Cambia al inicio de sesión con teléfono para conservar tu cuenta.",
+    "settingsRow": "Pasar al inicio de sesión con teléfono",
+    "settingsRowHint": "El inicio de sesión con correo termina el {{date}}."
   }
 }

@@ -28,7 +28,6 @@
     "otpPlaceholder": "6 haneli kodu girin",
     "invalidEmailDescription": "Lütfen geçerli bir e-posta adresi girin",
     "networkError": "Ağ hatası. Lütfen tekrar deneyin.",
-    "sentTo": "Şu adrese bir kod gönderdik:",
     "invalidOtp": "Lütfen geçerli bir 6 haneli OTP kodu girin",
     "invalidOtpServer": "Geçersiz OTP kodu. Lütfen tekrar deneyin.",
     "otpError": "Doğrulama sırasında bir hata oluştu. Lütfen tekrar deneyin.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Tekrar dene",
     "identitySwitchSignOut": "Çıkış yap ve baştan başla",
     "deviceSignInWorking": "Giriş yapılıyor",
-    "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin veya e-posta ile giriş yapın.",
-    "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin veya e-posta ile giriş yapın.",
-    "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
+    "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin.",
+    "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin.",
     "tryAgain": "Tekrar dene",
     "learnAboutMera": "Mera'yı tanıyın",
-    "alreadyHaveAccount": "E-posta ile giriş yap",
     "continue": "Devam et",
     "sourceCode": "Kaynak kodu",
     "failedToSendBody": "OTP gönderilemedi",
     "signingYouIn": "Giriş yapılıyor…",
-    "signInWithoutEmail": "E-posta olmadan giriş yap",
+    "signInWithoutEmail": "Bu telefonla giriş yap",
     "differentAccount": {
-      "title": "E-posta olmadan giriş yapılsın mı?",
+      "title": "Bu telefonla giriş yapılsın mı?",
       "body": "Mera'nın bu telefonda {{email}} için tuttuğu her şeyi sileceğiz. Hesabın kendisi silinmez. Emin misin?",
       "continue": "Kaldır ve devam et",
       "useEmail": "Hesabımı koru",
       "bodyGeneric": "Mera'nın bu telefonda bu hesap için tuttuğu her şeyi sileceğiz. Hesabın kendisi silinmez. Emin misin?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Hesabınız bu telefona bağlıdır. Mera'yı silerseniz veya telefonu kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir.",
-      "reset": "Hesabınız bu telefona bağlıdır. Telefonu sıfırlarsanız veya kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir."
-    },
     "track": {
       "beforeYouStart": "Başlamadan önce",
-      "beginCaption": "Mera, bu telefonla giriş yapmanı sağlar. Hatırlanacak bir şey yok.",
+      "beginCaption": "E-posta, telefon numarası veya şifre yok. Hatırlanacak bir şey yok.",
       "beginMera": "Mera'yı başlat",
       "beginTitle": "Nasıl başlamak istersiniz?",
-      "beginWithoutEmail": "E-posta olmadan başla",
+      "beginWithoutEmail": "Bu telefonla giriş yap",
       "checkEmailTitle": "E-postanızı kontrol edin",
       "chooseLanguage": "Dilinizi seçin",
       "codeA11y": "6 haneli kod",
@@ -82,26 +75,25 @@
       "notHereTitle": "{{language}} henüz bu telefonda yok",
       "phoneLanguage": "Telefonunuzun dili",
       "sendCode": "Kodu gönder",
-      "sentTo": "{{email}} adresine 6 haneli bir kod gönderdik.",
       "useDifferentEmail": "Başka bir e-posta kullan",
       "welcome": "Mera'ya hoş geldiniz",
       "wrongCode": "Bu kod işe yaramadı. Kontrol edin ya da yeni bir kod isteyin.",
       "noSheetTitle": "iPhone'unuz indirmeyi açamadı",
       "noSheetBody": "Tekrar deneyin ya da iPhone'unuzda Ayarlar'ı açın, ardından Genel, Dil ve Bölge, Çeviri Dilleri bölümüne gidip {{language}} dilini indirin.",
-      "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
-      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+      "sentToIfAccount": "Bu e-posta bir Mera hesabına aitse, ona bir kod gönderdik. Mera'da yeni misin? \"Bu telefonla giriş yap\"ı kullan.",
+      "noCodeUsePhone": "Kod gelmedi mi? \"Bu telefonla giriş yap\"ı kullan."
     },
-    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
-    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
-    "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
-    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
-    "supportedPhones": "Supported phones",
+    "emailLegacyHint": "Yalnızca daha önce e-postayla giriş yapanlar için. Yeni kullanıcılar artık e-posta ile devam edemez.",
+    "phoneCheckTemporary": "Bu telefon kontrol edilemedi. Bağlantını kontrol edip tekrar dene.",
+    "phoneUnsupportedAndroid": "Mera'nın seni giriş yaptırabilmesi için bu telefonda Google Play gerekir. Google Play olmayan telefonlar desteklenmiyor.",
+    "phoneUnsupportedIos": "Bu iPhone telefonla giriş yapamaz.",
+    "supportedPhones": "Desteklenen telefonlar",
     "emailEnded": {
-      "title": "Email sign-in has ended",
-      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
-      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+      "title": "E-posta ile giriş sona erdi",
+      "bodyIos": "E-posta ile giriş {{date}} tarihinde sona erdi. Yeniden başlamak için bu telefonla giriş yap. Planın App Store'dan geri gelir, kaydettiğin makaleler de yedeğinden geri gelir.",
+      "bodyAndroid": "E-posta ile giriş {{date}} tarihinde sona erdi. Yeniden başlamak için bu telefonla giriş yap. Planın Google Play'den geri gelir, kaydettiğin makaleler de yedeğinden geri gelir."
     },
-    "phoneNotSupported": "This phone isn't supported"
+    "phoneNotSupported": "Bu telefon desteklenmiyor"
   },
   "account": {
     "contactSupport": "Destek ekibiyle görüşün"
@@ -528,12 +520,12 @@
     "exportHistoryEmptyDescription": "Son 30 gün içinde hiçbir makale okumadınız.",
     "keeps": {
       "title": "Mera sizinle ilgili neleri saklar",
-      "emailAndPlan": "E-postanız ve planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+      "emailAndPlan": "E-postanız, telefonla girişe geçene ya da 30 Ekim 2026'da silinene kadar, bir de planınız saklanır. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
       "plan": "Planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
-      "emailIfAdded": "Eklediyseniz e-postanız ve planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+      "emailIfAdded": "Planınız. Mera hiçbir zaman e-posta istemez, önceden eklenmiş her e-posta 30 Ekim 2026'da silinir. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
       "signInRecordIos": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "signInRecordAndroid": "Bu telefon için telefonunuzun kimliği olmayan, hesabınızla birlikte silinen bir giriş kaydı. Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
-      "signInRecordGeneric": "E-posta yoksa, bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
+      "signInRecordGeneric": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "usage": "Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), her gün bu telefona kaç makale gönderildiği, planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın. 90 gün saklanır. Girişlerde IP adresi veya tarayıcı bilgisi saklanmaz.",
       "topics": "Konu ifadeleri, yalnızca metinleriyle ve sizinle hiçbir bağlantı olmadan saklanır, 14 gün kullanılmazsa silinir.",
       "privacyLink": "Gizlilik politikasını okuyun"
@@ -577,11 +569,11 @@
     "contentPolicy": "İçerik Politikası",
     "faq": "SSS",
     "reportBug": "Hata bildir",
-    "deleteAccountConfirmGrace": "Hesabınız 30 günlük bir bekleme süresiyle silinmek üzere planlanır. Hesabınızın e-postası varsa, iptal etmek için bu 30 gün içinde onunla giriş yapın. E-postası olmayan bir hesaba tekrar giriş yapılamaz, bu yüzden silinmesi iptal edilemez.",
+    "deleteAccountConfirmGrace": "Hesabınız 30 günlük bir bekleme süresiyle silinmek üzere planlanır. Bu telefon bu hesaba bir daha giriş yapamaz. Bu geri alınamaz.",
     "deleteAccountWarningGrace": "⚠️ 30 gün sonra hesap verilerin kalıcı olarak kaldırılır. Faturalama kayıtları muhasebe için 7 yıl saklanır. Bu geri alınamaz.",
     "finalConfirmationBodyGrace": "Bu, hesabınızı 30 gün içinde kalıcı silme için planlar.",
     "accountDeletionScheduledTitle": "Silme Planlandı",
-    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek. E-postası varsa, iptal etmek için daha önce onunla giriş yapın."
+    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek."
   },
   "configPanel": {
     "factDeletedTitle": "Gerçek silindi",
@@ -899,14 +891,14 @@
     "confirmTimeoutBody": "Ödeme yaptıysanız destek ekibimize ulaşın, sorunu çözelim.",
     "checkAgain": "Tekrar kontrol et",
     "readingExplainer": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Planın, Mera'nın bulutta her gün ne kadar okuyacağını belirler: Başlangıç 10 MB, Bireysel 50 MB, Profesyonel 200 MB. Mera, okumayı uçtan uca şifreleme üzerinden yapar, bu yüzden hangi haberleri ya da kaç tane okuduğunu göremez. Bu nedenle planlar haber sayısıyla değil, megabayt (MB) ile ölçülür. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır.",
-    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Mera can't see plans on other stores, so it can't refund any overlap.",
-    "invoicesAppStore": "Mera has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
-    "invoicesPlayStore": "Mera has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
-    "planBack": "Your plan is back.",
-    "restoreNoneApple": "No plan found on this Apple Account.",
-    "restoreNoneGoogle": "No plan found on this Google Account.",
-    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
-    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
+    "platformSwitch": "iPhone ile Android arasında mı geçiş yapıyorsun? Planın eski mağazanda kalır. Onu orada iptal et, sonra burada abone ol. Mera diğer mağazalardaki planları göremez, bu yüzden çakışan ücretleri geri ödeyemez.",
+    "invoicesAppStore": "Mera sana e-posta gönderemez, bu yüzden makbuzlarını ve faturalarını Apple, Apple Hesabındaki e-postaya gönderir.",
+    "invoicesPlayStore": "Mera sana e-posta gönderemez, bu yüzden makbuzlarını Google Play, Google Hesabındaki e-postaya gönderir.",
+    "planBack": "Planın geri geldi.",
+    "restoreNoneApple": "Bu Apple Hesabında plan bulunamadı.",
+    "restoreNoneGoogle": "Bu Google Hesabında plan bulunamadı.",
+    "restoreFailedAppStore": "App Store'a ulaşılamadı. Tekrar dene.",
+    "restoreFailedPlayStore": "Google Play'e ulaşılamadı. Tekrar dene."
   },
   "tabs": {
     "deck": "Akış",
@@ -1559,9 +1551,9 @@
     "retry": "Tekrar Dene",
     "welcomeBody": "Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmek için \"Kabul et ve devam et\"e dokunun.",
     "deviceNotice": {
-      "appAttest": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Apple, bunun gerçek bir iPhone'daki gerçek Mera uygulaması olduğunu onaylar. Hesabınız olduğu sürece bir giriş kaydı saklarız.",
-      "playIntegrity": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Google, bunun gerçek bir Android telefondaki gerçek Mera uygulaması olduğunu onaylar. Telefonunuzun kimliğini değil, bir giriş kaydı saklarız.",
-      "generic": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Hesabınız olduğu sürece bu telefon için bir giriş kaydı saklarız."
+      "appAttest": "Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Apple, bunun gerçek bir iPhone'daki gerçek Mera uygulaması olduğunu onaylar. Hesabınız olduğu sürece bir giriş kaydı saklarız.",
+      "playIntegrity": "Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Google, bunun gerçek bir Android telefondaki gerçek Mera uygulaması olduğunu onaylar. Telefonunuzun kimliğini değil, bir giriş kaydı saklarız.",
+      "generic": "Mera bu telefonla oturumunuzu açar. Hesabınız olduğu sürece bu telefon için bir giriş kaydı saklarız."
     }
   },
   "tutorials": {
@@ -1857,7 +1849,7 @@
             "body": "Başlıca şeyler ve her birinin neden dışarı çıktığı.",
             "steps": {
               "0": "Kısa konu ifadeleri, böylece hikayelerle eşleşecek bir şey var.",
-              "1": "Nasıl giriş yaptığınız, e-postayla veya bu telefonla, ve hangi planda olduğunuz.",
+              "1": "Giriş yöntemin, bu telefon (ya da 30 Ekim 2026'ya kadar, daha önce kalmış bir e-posta) ve hangi planda olduğun.",
               "2": "Telefonunun istediği makaleler ve Mera'nın senin için okunmak üzere gönderdiği şifreli metin, planını uygulamak için günlük olarak sayılır."
             },
             "ask": "Uygulama sunucularınıza ne gönderiyor?"
@@ -1876,7 +1868,7 @@
           },
           "what-we-keep": {
             "headline": "Ne tuttuğumuz",
-            "body": "Eklediysen giriş e-postan. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Mera'yı e-posta olmadan kullanıyorsan, bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
+            "body": "Yalnızca daha önce e-postayla giriş yapmış bir hesabın e-postası, 30 Ekim 2026'da silinir. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
             "ask": "Mera sunucularında benim hakkımda ne saklıyor?"
           }
         }
@@ -2229,20 +2221,6 @@
     "mailFailedTitle": "E-posta uygulaman açılamadı",
     "mailFailedBody": "Destek adresimizi kopyala ve herhangi bir e-posta uygulamasından bize yaz.",
     "copyAddress": "Adresi kopyala"
-  },
-  "emailCapture": {
-    "title": "E-postanı ekle",
-    "subtitle": "Makbuzları e-postayla al ve telefon değiştirirsen hesabını kurtar.",
-    "continue": "Devam",
-    "notNow": "Şimdi değil",
-    "confirm": "Onayla",
-    "added": "E-posta eklendi",
-    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak.",
-    "skip": "E-posta olmadan devam et",
-    "skipTitle": "E-posta olmadan devam edilsin mi?",
-    "skipBody1": "E-posta olmadan hesabınız başka bir platforma taşınamaz. iOS ile Android arasında geçiş yaparsanız orada yeni bir hesapla başlarsınız.",
-    "skipBody2": "Destek, satın alımınızı yalnızca destek kimliğinizle bulabilir. Kopyalayın ve güvenli bir yerde saklayın.",
-    "skipConfirm": "Ödemeye devam et"
   },
   "videoPlayer": {
     "closeA11y": "Videoyu kapat",
@@ -2792,8 +2770,6 @@
     "settings": {
       "yourPlan": "Planınız",
       "usageOffline": "Kullanım çevrimiçi olduğunuzda görünür",
-      "addEmail": "E-posta ekleyin",
-      "addEmailHint": "İsteğe bağlı. Yalnızca hesabınızı ve planınızı başka bir telefona taşımak ya da Mera'nın e-postalarını almak isterseniz.",
       "appLock": "Uygulama kilidi",
       "backupOff": "Yedekleme kapalı",
       "backupOn": "Yedekleme açık",
@@ -2823,7 +2799,7 @@
       "newPlanApplies": "Yeni planın hemen geçerli.",
       "planMultiplierBase": "Günde 10 MB bulut okuması",
       "planMultiplier": "Günde {{mb}} MB bulut okuması, Başlangıç'ın {{n}}x okuması",
-      "restorePurchases": "Restore purchases"
+      "restorePurchases": "Satın alımları geri yükle"
     },
     "notifications": {
       "push": "Anlık bildirimler",
@@ -2937,26 +2913,26 @@
     "newest": "Yeni olanlar ilk"
   },
   "moveToPhone": {
-    "dialogTitle": "Sign in with this phone instead",
-    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
-    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
-    "confirm": "Move account",
-    "cancel": "Not now",
-    "progressTitle": "Moving your account to this phone",
+    "dialogTitle": "Bunun yerine bu telefonla giriş yap",
+    "dialogBody": "Bu telefonla giriş yapmanı sağlayacağız, hesabını bu telefona taşıyacağız ve e-postanı veritabanımızdan sileceğiz.",
+    "dialogSettingsHint": "{{date}} tarihine kadar bunu Ayarlar'dan yapabilirsin.",
+    "confirm": "Hesabı taşı",
+    "cancel": "Şimdi değil",
+    "progressTitle": "Hesabın bu telefona taşınıyor",
     "steps": {
-      "checking": "Checking this phone",
-      "linking": "Linking your account",
-      "removing": "Removing your email",
-      "done": "Done"
+      "checking": "Bu telefon kontrol ediliyor",
+      "linking": "Hesabın bağlanıyor",
+      "removing": "E-postan kaldırılıyor",
+      "done": "Tamam"
     },
-    "failed": "This didn't finish. Your account still works. Try again in a moment.",
-    "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
-    "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
-    "success": "Signed in with this phone. Your email is deleted.",
-    "close": "Close",
-    "inboxTitle": "Email sign-in ends {{date}}",
-    "inboxBody": "Switch to phone sign-in to keep your account.",
-    "settingsRow": "Move to phone sign-in",
-    "settingsRowHint": "Email sign-in ends {{date}}."
+    "failed": "Bu işlem tamamlanamadı. Hesabın hâlâ çalışıyor. Birazdan tekrar dene.",
+    "unsupportedIos": "Bu telefon telefonla giriş yapamaz, bu yüzden Mera {{date}} tarihinde bu telefonda çalışmayı bırakır. Mera için ödeme yapıyorsan, bundan önce planını App Store'dan iptal et.",
+    "unsupportedAndroid": "Bu telefon telefonla giriş yapamaz, bu yüzden Mera {{date}} tarihinde bu telefonda çalışmayı bırakır. Mera için ödeme yapıyorsan, bundan önce planını Google Play'den iptal et.",
+    "success": "Bu telefonla giriş yapıldı. E-postan silindi.",
+    "close": "Kapat",
+    "inboxTitle": "E-posta ile giriş {{date}} tarihinde sona eriyor",
+    "inboxBody": "Hesabını korumak için telefonla girişe geç.",
+    "settingsRow": "Telefonla girişe geç",
+    "settingsRowHint": "E-posta ile giriş {{date}} tarihinde sona eriyor."
   }
 }

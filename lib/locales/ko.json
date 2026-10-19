@@ -28,7 +28,6 @@
     "otpPlaceholder": "6자리 코드를 입력하세요",
     "invalidEmailDescription": "올바른 이메일 주소를 입력해 주세요",
     "networkError": "네트워크 오류가 발생했습니다. 다시 시도해 주세요.",
-    "sentTo": "다음 주소로 코드를 발송했습니다",
     "invalidOtp": "유효한 6자리 OTP 코드를 입력해 주세요",
     "invalidOtpServer": "OTP 코드가 올바르지 않습니다. 다시 시도해 주세요.",
     "otpError": "인증 중 오류가 발생했습니다. 다시 시도해 주세요.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "다시 시도",
     "identitySwitchSignOut": "로그아웃하고 다시 시작",
     "deviceSignInWorking": "로그인하는 중",
-    "deviceSignInFailed": "문제가 발생했습니다. 다시 시도하거나 이메일로 로그인하세요.",
-    "deviceSignInDenied": "이 기기를 확인할 수 없습니다. 다시 시도하거나 이메일로 로그인하세요.",
-    "deviceSignInUnavailable": "지금은 로그인할 수 없습니다. 몇 분 후에 다시 시도하거나 이메일로 로그인하세요.",
+    "deviceSignInFailed": "문제가 발생했습니다. 다시 시도해 주세요.",
+    "deviceSignInDenied": "이 기기를 확인할 수 없습니다. 다시 시도해 주세요.",
     "tryAgain": "다시 시도",
     "learnAboutMera": "메라 알아보기",
-    "alreadyHaveAccount": "이메일로 로그인",
     "continue": "계속",
     "sourceCode": "소스 코드",
     "failedToSendBody": "OTP를 보내지 못했습니다",
     "signingYouIn": "로그인하는 중…",
-    "signInWithoutEmail": "이메일 없이 로그인",
+    "signInWithoutEmail": "이 휴대폰으로 로그인",
     "differentAccount": {
-      "title": "이메일 없이 로그인할까요?",
+      "title": "이 휴대폰으로 로그인할까요?",
       "body": "{{email}} 계정으로 메라가 이 휴대폰에 보관하는 모든 것을 삭제합니다. 계정 자체는 삭제되지 않습니다. 계속하시겠습니까?",
       "continue": "삭제하고 계속",
       "useEmail": "내 계정 유지",
       "bodyGeneric": "이 계정으로 메라가 이 휴대폰에 보관하는 모든 것을 삭제합니다. 계정 자체는 삭제되지 않습니다. 계속하시겠습니까?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "계정이 이 휴대폰에 연결되어 있습니다. 메라를 삭제하거나 휴대폰을 잃어버리면 새 계정으로 시작하게 됩니다. 설정의 백업 및 복원으로 데이터를 지킬 수 있습니다.",
-      "reset": "계정이 이 휴대폰에 연결되어 있습니다. 휴대폰을 초기화하거나 잃어버리면 새 계정으로 시작하게 됩니다. 설정의 백업 및 복원으로 데이터를 지킬 수 있습니다."
-    },
     "track": {
       "beforeYouStart": "시작하기 전에",
-      "beginCaption": "메라는 이 휴대폰으로 로그인합니다. 기억할 것은 없습니다.",
+      "beginCaption": "이메일, 전화번호, 비밀번호가 필요 없습니다. 기억할 것은 없습니다.",
       "beginMera": "메라 시작하기",
       "beginTitle": "어떻게 시작하시겠어요?",
-      "beginWithoutEmail": "이메일 없이 시작",
+      "beginWithoutEmail": "이 휴대폰으로 로그인",
       "checkEmailTitle": "이메일을 확인하세요",
       "chooseLanguage": "언어를 선택하세요",
       "codeA11y": "6자리 코드",
@@ -82,26 +75,25 @@
       "notHereTitle": "이 휴대폰에는 아직 {{language}}이(가) 없습니다",
       "phoneLanguage": "휴대폰 언어",
       "sendCode": "코드 보내기",
-      "sentTo": "{{email}}(으)로 6자리 코드를 보냈습니다.",
       "useDifferentEmail": "다른 이메일 사용",
       "welcome": "메라에 오신 것을 환영합니다",
       "wrongCode": "코드가 맞지 않습니다. 확인하시거나 새 코드를 다시 보내 주세요.",
       "noSheetTitle": "iPhone에서 다운로드를 열지 못했습니다",
       "noSheetBody": "다시 시도하거나 iPhone 설정을 열고 일반, 언어 및 지역, 번역 언어 순서로 이동해 {{language}}을(를) 다운로드하세요.",
-      "sentToIfAccount": "If this email has a 메라 account, we've sent it a code. New to 메라? Use Sign in with this phone.",
-      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+      "sentToIfAccount": "이 이메일에 메라 계정이 있다면 코드를 보냈습니다. 메라가 처음이신가요? '이 휴대폰으로 로그인'을 누르세요.",
+      "noCodeUsePhone": "코드를 받지 못하셨나요? '이 휴대폰으로 로그인'을 누르세요."
     },
-    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
-    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
-    "phoneUnsupportedAndroid": "메라 needs Google Play on this phone to sign you in. Phones without it aren't supported.",
-    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
-    "supportedPhones": "Supported phones",
+    "emailLegacyHint": "이메일로 전에 로그인했던 분만 해당합니다. 새 사용자는 더 이상 이메일로 로그인할 수 없습니다.",
+    "phoneCheckTemporary": "이 휴대폰을 확인할 수 없습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.",
+    "phoneUnsupportedAndroid": "메라에 로그인하려면 이 휴대폰에 Google Play가 필요합니다. Google Play가 없는 휴대폰은 지원되지 않습니다.",
+    "phoneUnsupportedIos": "이 iPhone에서는 휴대폰 로그인을 사용할 수 없습니다.",
+    "supportedPhones": "지원되는 휴대폰",
     "emailEnded": {
-      "title": "Email sign-in has ended",
-      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
-      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+      "title": "이메일 로그인이 종료되었습니다",
+      "bodyIos": "이메일 로그인은 {{date}}에 종료되었습니다. 이 휴대폰으로 로그인하면 다시 시작할 수 있습니다. 요금제는 App Store에서 돌아오고, 저장한 기사는 백업에서 돌아옵니다.",
+      "bodyAndroid": "이메일 로그인은 {{date}}에 종료되었습니다. 이 휴대폰으로 로그인하면 다시 시작할 수 있습니다. 요금제는 Google Play에서 돌아오고, 저장한 기사는 백업에서 돌아옵니다."
     },
-    "phoneNotSupported": "This phone isn't supported"
+    "phoneNotSupported": "이 휴대폰은 지원되지 않습니다"
   },
   "account": {
     "contactSupport": "지원팀에 문의"
@@ -525,12 +517,12 @@
     "exportHistoryEmptyDescription": "지난 30일간 읽은 기사가 없습니다.",
     "keeps": {
       "title": "메라가 보관하는 내 정보",
-      "emailAndPlan": "이메일과 요금제. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
+      "emailAndPlan": "이메일은 휴대폰 로그인으로 바꾸거나 2026년 10월 30일에 삭제되기 전까지 보관하고, 요금제도 보관합니다. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
       "plan": "요금제. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
-      "emailIfAdded": "추가했다면 이메일, 그리고 요금제. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
+      "emailIfAdded": "요금제. 메라는 이메일을 요구하지 않으며, 이전에 추가한 이메일은 2026년 10월 30일에 삭제됩니다. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
       "signInRecordIos": "이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Apple의 검사 결과는 보관하지 않습니다.",
       "signInRecordAndroid": "휴대폰 ID가 아닌 이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Google의 검사 결과는 보관하지 않습니다.",
-      "signInRecordGeneric": "이메일이 없다면 이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Apple 또는 Google의 검사 결과는 보관하지 않습니다.",
+      "signInRecordGeneric": "이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Apple 또는 Google의 검사 결과는 보관하지 않습니다.",
       "usage": "메라가 매일 회원님을 위해 읽도록 보낸 암호화된 텍스트의 양과 요청 횟수(텍스트 내용 자체는 제외), 이 휴대폰으로 보낸 기사 수, 요금제의 하루 읽기 분량에 도달한 시점, 메라를 사용한 날짜를 하루 단위로 기록합니다. 90일 동안 보관합니다. 로그인 시 IP 주소나 브라우저 정보는 보관하지 않습니다.",
       "topics": "주제 문구. 텍스트로만 저장되고 나와 연결되는 정보가 없으며, 14일 동안 쓰이지 않으면 삭제됩니다.",
       "privacyLink": "개인정보처리방침 읽기"
@@ -573,11 +565,11 @@
     "contentPolicy": "콘텐츠 정책",
     "faq": "자주 묻는 질문",
     "reportBug": "버그 신고",
-    "deleteAccountConfirmGrace": "계정이 30일의 유예 기간과 함께 삭제 예약됩니다. 계정에 이메일이 있다면 30일 안에 그 이메일로 로그인해 삭제를 취소하세요. 이메일이 없는 계정은 다시 로그인할 수 없으므로 삭제를 취소할 수 없습니다.",
+    "deleteAccountConfirmGrace": "계정은 30일의 유예 기간이 지난 뒤 영구적으로 삭제되도록 예약됩니다. 이 휴대폰으로는 다시 로그인할 수 없습니다. 이 작업은 되돌릴 수 없습니다.",
     "deleteAccountWarningGrace": "⚠️ 30일 후에는 계정 데이터가 영구적으로 삭제됩니다. 결제 기록은 장부 관리를 위해 7년간 보관됩니다. 이 작업은 되돌릴 수 없습니다.",
     "finalConfirmationBodyGrace": "계정이 30일 후 영구 삭제되도록 예약됩니다.",
     "accountDeletionScheduledTitle": "삭제 예약됨",
-    "accountDeletionScheduledDescription": "계정이 30일 후 영구 삭제됩니다. 이메일이 있다면 그 전에 그 이메일로 로그인해 취소하세요."
+    "accountDeletionScheduledDescription": "계정은 30일 후 영구적으로 삭제됩니다."
   },
   "configPanel": {
     "factDeletedTitle": "사실 삭제됨",
@@ -895,14 +887,14 @@
     "confirmTimeoutBody": "결제하셨다면 지원팀에 문의해 주세요. 문제를 해결해 드리겠습니다.",
     "checkAgain": "다시 확인",
     "readingExplainer": "회원님의 관심사와 맞는 기사는 모두 피드에 도착합니다. 메라가 기사를 읽고, 불필요한 내용은 걸러내며, 중요한 내용을 위로 올립니다. 요금제에 따라 메라가 클라우드에서 하루에 읽는 양이 정해집니다. 스타터 10 MB, 개인 50 MB, 프로페셔널 200 MB입니다. 메라는 종단간 암호화를 통해 회원님을 대신해 기사를 읽기 때문에, 어떤 기사를 몇 개 읽는지 알 수 없습니다. 그래서 요금제는 기사 수가 아니라 메가바이트 단위로 측정합니다. 지원되는 휴대폰에서는 모든 요금제에서 휴대폰에서 읽기가 무제한입니다.",
-    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. 메라 can't see plans on other stores, so it can't refund any overlap.",
-    "invoicesAppStore": "메라 has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
-    "invoicesPlayStore": "메라 has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
-    "planBack": "Your plan is back.",
-    "restoreNoneApple": "No plan found on this Apple Account.",
-    "restoreNoneGoogle": "No plan found on this Google Account.",
-    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
-    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
+    "platformSwitch": "iPhone과 Android 사이를 오가시나요? 요금제는 이전 스토어에 남아 있습니다. 거기서 취소한 다음 여기서 구독하세요. 메라는 다른 스토어의 요금제를 볼 수 없으므로 겹치는 금액을 환불할 수 없습니다.",
+    "invoicesAppStore": "메라는 회원님께 이메일을 보낼 방법이 없으므로, 영수증과 청구서는 Apple이 Apple 계정의 이메일로 보냅니다.",
+    "invoicesPlayStore": "메라는 회원님께 이메일을 보낼 방법이 없으므로, 영수증은 Google Play가 Google 계정의 이메일로 보냅니다.",
+    "planBack": "요금제가 돌아왔습니다.",
+    "restoreNoneApple": "이 Apple 계정에서 요금제를 찾을 수 없습니다.",
+    "restoreNoneGoogle": "이 Google 계정에서 요금제를 찾을 수 없습니다.",
+    "restoreFailedAppStore": "App Store에 연결할 수 없습니다. 다시 시도해 주세요.",
+    "restoreFailedPlayStore": "Google Play에 연결할 수 없습니다. 다시 시도해 주세요."
   },
   "tabs": {
     "deck": "피드",
@@ -1552,9 +1544,9 @@
     "retry": "다시 시도",
     "welcomeBody": "\"동의하고 계속\"을 탭하면 서비스 약관과 개인정보 처리방침에 동의하게 됩니다.",
     "deviceNotice": {
-      "appAttest": "이메일이 필요 없습니다. 메라가 이 휴대폰으로 로그인해 드립니다. 가짜 계정을 막기 위해 Apple이 실제 iPhone의 진짜 메라 앱인지 확인합니다. 계정이 있는 동안 로그인 기록을 보관합니다.",
-      "playIntegrity": "이메일이 필요 없습니다. 메라가 이 휴대폰으로 로그인해 드립니다. 가짜 계정을 막기 위해 Google이 실제 Android 휴대폰의 진짜 메라 앱인지 확인합니다. 휴대폰 ID가 아닌 로그인 기록만 보관합니다.",
-      "generic": "이메일이 필요 없습니다. 메라가 이 휴대폰으로 로그인해 드립니다. 계정이 있는 동안 이 휴대폰의 로그인 기록을 보관합니다."
+      "appAttest": "메라가 이 휴대폰으로 로그인해 드립니다. 가짜 계정을 막기 위해 Apple이 실제 iPhone의 진짜 메라 앱인지 확인합니다. 계정이 있는 동안 로그인 기록을 보관합니다.",
+      "playIntegrity": "메라가 이 휴대폰으로 로그인해 드립니다. 가짜 계정을 막기 위해 Google이 실제 Android 휴대폰의 진짜 메라 앱인지 확인합니다. 휴대폰 ID가 아닌 로그인 기록만 보관합니다.",
+      "generic": "메라가 이 휴대폰으로 로그인해 드립니다. 계정이 있는 동안 이 휴대폰의 로그인 기록을 보관합니다."
     }
   },
   "tutorials": {
@@ -1850,7 +1842,7 @@
             "body": "주요 항목과 각각 전송되는 이유입니다.",
             "steps": {
               "0": "짧은 주제 문구, 스토리와 비교할 것이 있도록.",
-              "1": "로그인 방법(이메일 또는 이 휴대폰)과 사용 중인 요금제.",
+              "1": "로그인 방법(이 휴대폰, 또는 2026년 10월 30일까지는 이전에 쓰던 이메일)과 사용 중인 요금제.",
               "2": "휴대폰이 요청한 기사와 메라가 회원님을 위해 읽도록 보내는 암호화된 텍스트를 하루 단위로 세어, 요금제를 적용합니다."
             },
             "ask": "앱이 서버로 전송하는 것은 무엇입니까?"
@@ -1869,7 +1861,7 @@
           },
           "what-we-keep": {
             "headline": "우리가 유지하는 것",
-            "body": "추가했다면 로그인 이메일. 사용 중인 요금제. 회원님께 보낸 기사 수를 하루 단위로 센 값, 메라가 회원님을 위해 읽도록 보낸 암호화된 텍스트의 양과 요청 횟수(텍스트 내용 자체는 제외), 요금제의 하루 읽기 분량에 도달한 시점, 메라를 사용한 날짜를 90일 동안 보관. 알림 시간, 언어, 처리 방식 선택. 메라 팀의 질문에 보낸 답변. 이메일 없이 메라를 사용한다면 이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 주제 문구는 텍스트로만 캐시되고 누가 요청했는지는 기록되지 않으며, 14일 동안 쓰이지 않으면 삭제됩니다.",
+            "body": "이전에 이메일로 로그인한 계정에만 이메일이 있으며, 2026년 10월 30일에 삭제됩니다. 사용 중인 요금제. 회원님께 보낸 기사 수를 하루 단위로 센 값, 메라가 회원님을 위해 읽도록 보낸 암호화된 텍스트의 양과 요청 횟수(텍스트 내용 자체는 제외), 요금제의 하루 읽기 분량에 도달한 시점, 메라를 사용한 날짜를 90일 동안 보관. 알림 시간, 언어, 처리 방식 선택. 메라 팀의 질문에 보낸 답변. 이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 주제 문구는 텍스트로만 캐시되고 누가 요청했는지는 기록되지 않으며, 14일 동안 쓰이지 않으면 삭제됩니다.",
             "ask": "메라가 서버에 회원님에 대해 저장하는 정보는 무엇인가요?"
           }
         }
@@ -2222,20 +2214,6 @@
     "mailFailedTitle": "메일 앱을 열 수 없습니다",
     "mailFailedBody": "지원 주소를 복사해 아무 메일 앱에서나 이메일을 보내 주세요.",
     "copyAddress": "주소 복사"
-  },
-  "emailCapture": {
-    "title": "이메일 추가",
-    "subtitle": "이메일로 영수증을 받고 휴대전화를 바꿔도 계정을 복구할 수 있습니다.",
-    "continue": "계속",
-    "notNow": "나중에",
-    "confirm": "확인",
-    "added": "이메일이 추가되었습니다",
-    "addedDetail": "영수증과 계정 복구에 {{email}}을(를) 사용합니다.",
-    "skip": "이메일 없이 계속",
-    "skipTitle": "이메일 없이 계속할까요?",
-    "skipBody1": "이메일이 없으면 계정을 다른 플랫폼으로 옮길 수 없습니다. iOS와 Android 간에 전환하면 새 계정으로 시작하게 됩니다.",
-    "skipBody2": "지원팀은 지원 ID로만 구매 내역을 찾을 수 있습니다. 복사해서 안전한 곳에 보관하세요.",
-    "skipConfirm": "결제 계속하기"
   },
   "videoPlayer": {
     "closeA11y": "동영상 닫기",
@@ -2784,8 +2762,6 @@
     "settings": {
       "yourPlan": "내 요금제",
       "usageOffline": "사용량은 온라인일 때 표시돼요",
-      "addEmail": "이메일 추가",
-      "addEmailHint": "선택 사항입니다. 계정과 요금제를 다른 휴대폰으로 옮기거나 메라 이메일을 받고 싶을 때만 추가하세요.",
       "appLock": "앱 잠금",
       "backupOff": "백업 꺼짐",
       "backupOn": "백업 켜짐",
@@ -2815,7 +2791,7 @@
       "newPlanApplies": "새 요금제가 지금 적용됩니다.",
       "planMultiplierBase": "하루 10 MB의 클라우드 읽기량",
       "planMultiplier": "하루 {{mb}} MB의 클라우드 읽기량, 스타터 대비 {{n}}배",
-      "restorePurchases": "Restore purchases"
+      "restorePurchases": "구입 항목 복원"
     },
     "notifications": {
       "push": "푸시 알림",
@@ -2929,26 +2905,26 @@
     "newest": "최신순"
   },
   "moveToPhone": {
-    "dialogTitle": "Sign in with this phone instead",
-    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
-    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
-    "confirm": "Move account",
-    "cancel": "Not now",
-    "progressTitle": "Moving your account to this phone",
+    "dialogTitle": "대신 이 휴대폰으로 로그인",
+    "dialogBody": "이 휴대폰으로 로그인하고, 계정을 이 휴대폰으로 옮긴 뒤, 회원님의 이메일을 메라 데이터베이스에서 삭제합니다.",
+    "dialogSettingsHint": "{{date}}까지 설정에서 이 작업을 할 수 있습니다.",
+    "confirm": "계정 옮기기",
+    "cancel": "나중에",
+    "progressTitle": "계정을 이 휴대폰으로 옮기는 중",
     "steps": {
-      "checking": "Checking this phone",
-      "linking": "Linking your account",
-      "removing": "Removing your email",
-      "done": "Done"
+      "checking": "이 휴대폰 확인 중",
+      "linking": "계정 연결 중",
+      "removing": "이메일 삭제 중",
+      "done": "완료"
     },
-    "failed": "This didn't finish. Your account still works. Try again in a moment.",
-    "unsupportedIos": "This phone can't use phone sign-in, so 메라 stops working on it on {{date}}. If you pay for 메라, cancel your plan in the App Store before then.",
-    "unsupportedAndroid": "This phone can't use phone sign-in, so 메라 stops working on it on {{date}}. If you pay for 메라, cancel your plan in Google Play before then.",
-    "success": "Signed in with this phone. Your email is deleted.",
-    "close": "Close",
-    "inboxTitle": "Email sign-in ends {{date}}",
-    "inboxBody": "Switch to phone sign-in to keep your account.",
-    "settingsRow": "Move to phone sign-in",
-    "settingsRowHint": "Email sign-in ends {{date}}."
+    "failed": "완료되지 않았습니다. 계정은 여전히 사용할 수 있습니다. 잠시 후 다시 시도해 주세요.",
+    "unsupportedIos": "이 휴대폰은 휴대폰 로그인을 지원하지 않아 {{date}}에 메라를 사용할 수 없게 됩니다. 메라 요금제를 결제하고 있다면, 그 전에 App Store에서 요금제를 취소하세요.",
+    "unsupportedAndroid": "이 휴대폰은 휴대폰 로그인을 지원하지 않아 {{date}}에 메라를 사용할 수 없게 됩니다. 메라 요금제를 결제하고 있다면, 그 전에 Google Play에서 요금제를 취소하세요.",
+    "success": "이 휴대폰으로 로그인했습니다. 이메일은 삭제되었습니다.",
+    "close": "닫기",
+    "inboxTitle": "이메일 로그인은 {{date}}에 끝납니다",
+    "inboxBody": "휴대폰 로그인으로 바꾸면 계정을 계속 사용할 수 있습니다.",
+    "settingsRow": "휴대폰 로그인으로 전환",
+    "settingsRowHint": "이메일 로그인은 {{date}}에 끝납니다."
   }
 }

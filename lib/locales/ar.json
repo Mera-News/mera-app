@@ -28,7 +28,6 @@
     "otpPlaceholder": "أدخل الرمز المكوّن من 6 أرقام",
     "invalidEmailDescription": "يرجى إدخال عنوان بريد إلكتروني صالح",
     "networkError": "خطأ في الشبكة. يرجى المحاولة مرة أخرى.",
-    "sentTo": "لقد أرسلنا رمزًا إلى",
     "invalidOtp": "يرجى إدخال رمز OTP صالح مكوّن من 6 أرقام",
     "invalidOtpServer": "رمز OTP غير صالح. يرجى المحاولة مرة أخرى.",
     "otpError": "حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "إعادة المحاولة",
     "identitySwitchSignOut": "تسجيل الخروج والبدء من جديد",
     "deviceSignInWorking": "جارٍ تسجيل دخولك",
-    "deviceSignInFailed": "حدث خطأ ما. حاول مرة أخرى أو سجّل الدخول بالبريد الإلكتروني.",
-    "deviceSignInDenied": "تعذّر التحقق من هذا الجهاز. حاول مرة أخرى أو سجّل الدخول بالبريد الإلكتروني.",
-    "deviceSignInUnavailable": "تسجيل الدخول غير متاح حاليًا. حاول بعد بضع دقائق أو سجّل الدخول بالبريد الإلكتروني.",
+    "deviceSignInFailed": "حدث خطأ ما. حاول مرة أخرى.",
+    "deviceSignInDenied": "تعذّر التحقق من هذا الجهاز. حاول مرة أخرى.",
     "tryAgain": "إعادة المحاولة",
     "learnAboutMera": "تعرّف على ميرا",
-    "alreadyHaveAccount": "تسجيل الدخول بالبريد الإلكتروني",
     "continue": "متابعة",
     "sourceCode": "الكود المصدري",
     "failedToSendBody": "فشل إرسال رمز OTP",
     "signingYouIn": "جارٍ تسجيل دخولك…",
-    "signInWithoutEmail": "تسجيل الدخول بدون بريد إلكتروني",
+    "signInWithoutEmail": "تسجيل الدخول بهذا الهاتف",
     "differentAccount": {
-      "title": "تسجيل الدخول بدون بريد إلكتروني؟",
+      "title": "تسجيل الدخول بهذا الهاتف؟",
       "body": "سنمسح كل ما يحتفظ به ميرا على هذا الهاتف لـ {{email}}. الحساب نفسه لا يُحذف. هل أنت متأكد؟",
       "continue": "إزالة والمتابعة",
       "useEmail": "الاحتفاظ بحسابي",
       "bodyGeneric": "سنمسح كل ما يحتفظ به ميرا على هذا الهاتف لهذا الحساب. الحساب نفسه لا يُحذف. هل أنت متأكد؟"
     },
-    "deviceSignInCaption": {
-      "uninstall": "حسابك مرتبط بهذا الهاتف. إذا حذفت ميرا أو فقدت الهاتف، فستبدأ بحساب جديد. يمكن للنسخ الاحتياطي والاستعادة في الإعدادات الاحتفاظ ببياناتك.",
-      "reset": "حسابك مرتبط بهذا الهاتف. إذا أعدت ضبط الهاتف أو فقدته، فستبدأ بحساب جديد. يمكن للنسخ الاحتياطي والاستعادة في الإعدادات الاحتفاظ ببياناتك."
-    },
     "track": {
       "beforeYouStart": "قبل أن تبدأ",
-      "beginCaption": "يسجّل ميرا دخولك بهذا الهاتف. لا شيء تحتاج إلى تذكّره.",
+      "beginCaption": "لا بريد إلكتروني ولا رقم هاتف ولا كلمة مرور. لا شيء تحتاج إلى تذكّره.",
       "beginMera": "ابدأ مع ميرا",
       "beginTitle": "كيف تريد أن تبدأ؟",
-      "beginWithoutEmail": "ابدأ بدون بريد إلكتروني",
+      "beginWithoutEmail": "تسجيل الدخول بهذا الهاتف",
       "checkEmailTitle": "تحقق من بريدك الإلكتروني",
       "chooseLanguage": "اختر لغتك",
       "codeA11y": "رمز من 6 أرقام",
@@ -82,26 +75,25 @@
       "notHereTitle": "{{language}} غير متوفرة على هذا الهاتف بعد",
       "phoneLanguage": "لغة هاتفك",
       "sendCode": "إرسال الرمز",
-      "sentTo": "أرسلنا رمزًا من 6 أرقام إلى {{email}}.",
       "useDifferentEmail": "استخدم بريدًا إلكترونيًا آخر",
       "welcome": "أهلًا بك في ميرا",
       "wrongCode": "هذا الرمز غير صحيح. تحقق منه، أو أعد إرسال رمز جديد.",
       "noSheetTitle": "لم يفتح iPhone الخاص بك التنزيل",
       "noSheetBody": "حاول مرة أخرى، أو افتح الإعدادات على iPhone، ثم انتقل إلى عام، ثم اللغة والمنطقة، ثم لغات الترجمة لتنزيل {{language}}.",
-      "sentToIfAccount": "If this email has a ميرا account, we've sent it a code. New to ميرا? Use Sign in with this phone.",
-      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+      "sentToIfAccount": "إذا كان لهذا البريد الإلكتروني حساب في ميرا، فقد أرسلنا إليه رمزًا. جديد في ميرا؟ استخدم \"تسجيل الدخول بهذا الهاتف\".",
+      "noCodeUsePhone": "لم يصلك الرمز؟ استخدم \"تسجيل الدخول بهذا الهاتف\"."
     },
-    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
-    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
-    "phoneUnsupportedAndroid": "ميرا needs Google Play on this phone to sign you in. Phones without it aren't supported.",
-    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
-    "supportedPhones": "Supported phones",
+    "emailLegacyHint": "للأشخاص الذين سجّلوا الدخول بالبريد الإلكتروني من قبل فقط. لم يعد بإمكان المستخدمين الجدد تسجيل الدخول بالبريد الإلكتروني.",
+    "phoneCheckTemporary": "تعذّر التحقق من هذا الهاتف. تحقّق من اتصالك وحاول مرة أخرى.",
+    "phoneUnsupportedAndroid": "يحتاج ميرا إلى Google Play على هذا الهاتف لتسجيل دخولك. الهواتف التي لا تحتويه غير مدعومة.",
+    "phoneUnsupportedIos": "هذا الآيفون لا يمكنه استخدام تسجيل الدخول بالهاتف.",
+    "supportedPhones": "الهواتف المدعومة",
     "emailEnded": {
-      "title": "Email sign-in has ended",
-      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
-      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+      "title": "انتهى تسجيل الدخول بالبريد الإلكتروني",
+      "bodyIos": "انتهى تسجيل الدخول بالبريد الإلكتروني في {{date}}. سجّل الدخول بهذا الهاتف لتبدأ من جديد. تعود خطتك من App Store، وتعود مقالاتك المحفوظة من نسختك الاحتياطية.",
+      "bodyAndroid": "انتهى تسجيل الدخول بالبريد الإلكتروني في {{date}}. سجّل الدخول بهذا الهاتف لتبدأ من جديد. تعود خطتك من Google Play، وتعود مقالاتك المحفوظة من نسختك الاحتياطية."
     },
-    "phoneNotSupported": "This phone isn't supported"
+    "phoneNotSupported": "هذا الهاتف غير مدعوم"
   },
   "account": {
     "contactSupport": "تحدث إلى الدعم"
@@ -576,12 +568,12 @@
     "exportHistoryEmptyDescription": "لم تقرأ أي مقالات في آخر 30 يوم.",
     "keeps": {
       "title": "ما تحتفظ به ميرا عنك",
-      "emailAndPlan": "بريدك الإلكتروني وخطتك. نحتفظ بسجلات الفوترة من App Store أو Google Play طوال المدة التي يفرضها القانون.",
+      "emailAndPlan": "بريدك الإلكتروني، حتى تنتقل إلى تسجيل الدخول بالهاتف أو حتى يُحذف في 30 أكتوبر 2026، وكذلك خطتك. نحتفظ بسجلات الفوترة من App Store أو Google Play طوال المدة التي يفرضها القانون.",
       "plan": "خطتك. نحتفظ بسجلات الفوترة من App Store أو Google Play طوال المدة التي يفرضها القانون.",
-      "emailIfAdded": "بريدك الإلكتروني إن أضفته، وخطتك. نحتفظ بسجلات الفوترة من App Store أو Google Play طوال المدة التي يفرضها القانون.",
+      "emailIfAdded": "خطتك. لا يطلب ميرا بريدًا إلكترونيًا أبدًا، وأي بريد إلكتروني من قبل يُحذف في 30 أكتوبر 2026. نحتفظ بسجلات الفوترة من App Store أو Google Play طوال المدة التي يفرضها القانون.",
       "signInRecordIos": "سجل تسجيل دخول لهذا الهاتف، يُحذف مع حسابك. لا نحتفظ بفحص Apple الذي يؤكد أن هذا هو التطبيق الحقيقي.",
       "signInRecordAndroid": "سجل تسجيل دخول لهذا الهاتف، وليس معرّف هاتفك، يُحذف مع حسابك. لا نحتفظ بفحص Google الذي يؤكد أن هذا هو التطبيق الحقيقي.",
-      "signInRecordGeneric": "من دون بريد إلكتروني، سجل تسجيل دخول لهذا الهاتف، يُحذف مع حسابك. لا نحتفظ بفحص Apple أو Google الذي يؤكد أن هذا هو التطبيق الحقيقي.",
+      "signInRecordGeneric": "سجل تسجيل دخول لهذا الهاتف، يُحذف مع حسابك. لا نحتفظ بفحص Apple أو Google الذي يؤكد أن هذا هو التطبيق الحقيقي.",
       "usage": "حجم النص المشفّر الذي أرسلته ميرا لتُقرأ لك يوميًا وعدد الطلبات (لا النص نفسه أبدًا)، وعدد المقالات المرسلة إلى هذا الهاتف يوميًا، ومتى وصلت إلى القراءة اليومية لخطتك، والأيام التي استخدمت فيها ميرا. يُحفظ لمدة 90 يومًا. لا تحتفظ عمليات تسجيل الدخول بعنوان IP أو تفاصيل المتصفح.",
       "topics": "عبارات المواضيع، تُخزَّن بنصها وحده من دون أي شيء يربطها بك، وتُحذف بعد 14 يومًا من عدم الاستخدام.",
       "privacyLink": "اقرأ سياسة الخصوصية"
@@ -629,11 +621,11 @@
     "contentPolicy": "سياسة المحتوى",
     "faq": "الأسئلة الشائعة",
     "reportBug": "الإبلاغ عن خطأ",
-    "deleteAccountConfirmGrace": "ستتم جدولة حسابك للحذف، مع فترة سماح مدتها 30 يومًا. إذا كان لحسابك بريد إلكتروني، فسجّل الدخول به خلال هذه الأيام الثلاثين للإلغاء. لا يمكن تسجيل الدخول مجددًا إلى حساب بلا بريد إلكتروني، لذا لا يمكن إلغاء حذفه.",
+    "deleteAccountConfirmGrace": "ستتم جدولة حسابك للحذف، وسيُحذف نهائيًا بعد 30 يومًا. لا يمكن لهذا الهاتف تسجيل الدخول إليه مجددًا. لا يمكن التراجع عن هذا.",
     "deleteAccountWarningGrace": "⚠️ بعد 30 يومًا، تُحذف بيانات حسابك نهائيًا. تُحفظ سجلات الفوترة لمدة 7 سنوات لأغراض المحاسبة. لا يمكنك التراجع عن هذا.",
     "finalConfirmationBodyGrace": "هذا يجدول حسابك للحذف الدائم في 30 يومًا.",
     "accountDeletionScheduledTitle": "حذف مجدول",
-    "accountDeletionScheduledDescription": "سيُحذف حسابك نهائيًا بعد 30 يومًا. إذا كان له بريد إلكتروني، فسجّل الدخول به قبل ذلك للإلغاء."
+    "accountDeletionScheduledDescription": "سيُحذف حسابك نهائيًا خلال 30 يومًا."
   },
   "configPanel": {
     "factDeletedTitle": "تم حذف الحقيقة",
@@ -955,14 +947,14 @@
     "confirmTimeoutBody": "إذا دفعت، فتحدث إلى الدعم وسنحل الأمر.",
     "checkAgain": "تحقق مرة أخرى",
     "readingExplainer": "كل مقالة تطابق اهتماماتك تصل إلى الخلاصة الخاصة بك. تقرأها ميرا، وتستبعد الضوضاء وتُبرز ما يهم. تحدد خطتك مقدار ما تقرأه ميرا في السحابة يوميًا: مبتدئ 10 ميغابايت، وفردي 50 ميغابايت، واحترافي 200 ميغابايت. تمرّ قراءة ميرا عبر التشفير من طرف إلى طرف، لذلك لا تستطيع أن ترى أي المقالات تقرأها ولا كم عددها. ولهذا تُقاس الخطط بالميغابايت لا بعدد المقالات. على الهواتف المدعومة، القراءة على الهاتف غير محدودة في كل خطة.",
-    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. ميرا can't see plans on other stores, so it can't refund any overlap.",
-    "invoicesAppStore": "ميرا has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
-    "invoicesPlayStore": "ميرا has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
-    "planBack": "Your plan is back.",
-    "restoreNoneApple": "No plan found on this Apple Account.",
-    "restoreNoneGoogle": "No plan found on this Google Account.",
-    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
-    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
+    "platformSwitch": "هل تنتقل بين iPhone وAndroid؟ تبقى خطتك مع متجرك القديم. ألغِها هناك، ثم اشترك هنا. لا يستطيع ميرا رؤية الخطط في المتاجر الأخرى، لذا لا يمكنه استرداد أي تداخل.",
+    "invoicesAppStore": "ليس لدى ميرا طريقة لمراسلتك، لذا يرسل Apple إيصالاتك وفواتيرك إلى البريد الإلكتروني في حساب Apple الخاص بك.",
+    "invoicesPlayStore": "ليس لدى ميرا طريقة لمراسلتك، لذا يرسل Google Play إيصالاتك إلى البريد الإلكتروني في حساب Google الخاص بك.",
+    "planBack": "عادت خطتك.",
+    "restoreNoneApple": "لم نعثر على أي خطة في حساب Apple هذا.",
+    "restoreNoneGoogle": "لم نعثر على أي خطة في حساب Google هذا.",
+    "restoreFailedAppStore": "تعذّر الوصول إلى App Store. حاول مرة أخرى.",
+    "restoreFailedPlayStore": "تعذّر الوصول إلى Google Play. حاول مرة أخرى."
   },
   "tabs": {
     "deck": "الخلاصة",
@@ -1651,9 +1643,9 @@
     "retry": "حاول مرة أخرى",
     "welcomeBody": "انقر على \"الموافقة والمتابعة\" لقبول شروط الخدمة وسياسة الخصوصية.",
     "deviceNotice": {
-      "appAttest": "لا حاجة إلى بريد إلكتروني. يسجّل ميرا دخولك بهذا الهاتف. تؤكد Apple أن هذا تطبيق ميرا الحقيقي على iPhone حقيقي، لمنع الحسابات المزيفة. نحتفظ بسجل تسجيل دخول ما دام لديك حساب.",
-      "playIntegrity": "لا حاجة إلى بريد إلكتروني. يسجّل ميرا دخولك بهذا الهاتف. تؤكد Google أن هذا تطبيق ميرا الحقيقي على هاتف Android حقيقي، لمنع الحسابات المزيفة. نحتفظ بسجل تسجيل دخول، وليس بمعرّف هاتفك.",
-      "generic": "لا حاجة إلى بريد إلكتروني. تسجّل ميرا دخولك بهذا الهاتف. نحتفظ بسجل تسجيل دخول لهذا الهاتف ما دام لديك حساب."
+      "appAttest": "يسجّل ميرا دخولك بهذا الهاتف. تؤكد Apple أن هذا تطبيق ميرا الحقيقي على iPhone حقيقي، لمنع الحسابات المزيفة. نحتفظ بسجل تسجيل دخول ما دام لديك حساب.",
+      "playIntegrity": "يسجّل ميرا دخولك بهذا الهاتف. تؤكد Google أن هذا تطبيق ميرا الحقيقي على هاتف Android حقيقي، لمنع الحسابات المزيفة. نحتفظ بسجل تسجيل دخول، وليس بمعرّف هاتفك.",
+      "generic": "تسجّل ميرا دخولك بهذا الهاتف. نحتفظ بسجل تسجيل دخول لهذا الهاتف ما دام لديك حساب."
     }
   },
   "tutorials": {
@@ -1949,7 +1941,7 @@
             "body": "أهم الأشياء، وسبب خروج كل منها.",
             "steps": {
               "0": "عبارات موضوع قصيرة، حتى توجد شيء لمطابقة القصص ضده.",
-              "1": "طريقة تسجيل دخولك، بالبريد الإلكتروني أو بهذا الهاتف، والخطة التي تستخدمها.",
+              "1": "طريقة تسجيل دخولك، وهي هذا الهاتف (أو، حتى 30 أكتوبر 2026، بريد إلكتروني من قبل)، والخطة التي تستخدمها.",
               "2": "المقالات التي يطلبها هاتفك، والنص المشفّر الذي ترسله ميرا لتُقرأ لك، يُحسبان يوميًا لتطبيق خطتك."
             },
             "ask": "ماذا يرسل التطبيق إلى خوادمك؟"
@@ -1968,7 +1960,7 @@
           },
           "what-we-keep": {
             "headline": "ما نحتفظ به",
-            "body": "بريد تسجيل الدخول، إن أضفته. الخطة التي تستخدمها. عدد يومي للمقالات المرسلة إليك، وحجم النص المشفّر الذي أرسلته ميرا لتُقرأ لك وعدد الطلبات (لا النص نفسه أبدًا)، ومتى وصلت إلى القراءة اليومية لخطتك، والأيام التي استخدمت فيها ميرا، يُحفظ لمدة 90 يومًا. أوقات إشعاراتك ولغتك وخيار المعالجة. الإجابات التي ترسلها على أسئلة فريق ميرا. وإذا كنت تستخدم ميرا من دون بريد إلكتروني، سجل تسجيل دخول لهذا الهاتف يُحذف مع حسابك. تُخزَّن عبارات المواضيع مؤقتًا بنصها وحده، من دون تسجيل من طلبها، وتُحذف بعد أربعة عشر يومًا من عدم الاستخدام.",
+            "body": "الخطة التي تستخدمها. بريد إلكتروني فقط لحساب سجّل الدخول بواحد من قبل، ويُحذف في 30 أكتوبر 2026. عدد يومي للمقالات المرسلة إليك، وحجم النص المشفّر الذي أرسلته ميرا لتُقرأ لك وعدد الطلبات (لا النص نفسه أبدًا)، ومتى وصلت إلى القراءة اليومية لخطتك، والأيام التي استخدمت فيها ميرا، يُحفظ لمدة 90 يومًا. أوقات إشعاراتك ولغتك وخيار المعالجة. الإجابات التي ترسلها على أسئلة فريق ميرا. سجل تسجيل دخول لهذا الهاتف، يُحذف مع حسابك. تُخزَّن عبارات المواضيع مؤقتًا بنصها وحده، من دون تسجيل من طلبها، وتُحذف بعد أربعة عشر يومًا من عدم الاستخدام.",
             "ask": "ماذا يخزن ميرا عني على خوادمه؟"
           }
         }
@@ -2329,20 +2321,6 @@
     "mailFailedTitle": "تعذّر فتح تطبيق البريد",
     "mailFailedBody": "انسخ عنوان الدعم وأرسل إلينا رسالة من أي تطبيق بريد.",
     "copyAddress": "نسخ العنوان"
-  },
-  "emailCapture": {
-    "title": "أضف بريدك الإلكتروني",
-    "subtitle": "احصل على الإيصالات عبر البريد الإلكتروني واسترجع حسابك إذا غيّرت هاتفك.",
-    "continue": "متابعة",
-    "notNow": "ليس الآن",
-    "confirm": "تأكيد",
-    "added": "تمت إضافة البريد الإلكتروني",
-    "addedDetail": "سيتم استخدام {{email}} للإيصالات واسترجاع الحساب.",
-    "skip": "المتابعة بدون بريد إلكتروني",
-    "skipTitle": "هل تريد المتابعة بدون بريد إلكتروني؟",
-    "skipBody1": "بدون بريد إلكتروني، لا يمكن نقل حسابك إلى منصة أخرى. إذا انتقلت بين iOS وAndroid، فستبدأ بحساب جديد هناك.",
-    "skipBody2": "لا يمكن للدعم العثور على عملية الشراء إلا من خلال معرّف الدعم الخاص بك. انسخه واحتفظ به في مكان آمن.",
-    "skipConfirm": "المتابعة إلى الدفع"
   },
   "videoPlayer": {
     "closeA11y": "إغلاق الفيديو",
@@ -2972,8 +2950,6 @@
     "settings": {
       "yourPlan": "خطتك",
       "usageOffline": "يظهر الاستخدام عند الاتصال بالإنترنت",
-      "addEmail": "أضف بريدًا إلكترونيًا",
-      "addEmailHint": "اختياري. فقط إذا أردت نقل حسابك وخطتك إلى هاتف آخر، أو تلقي رسائل ميرا.",
       "appLock": "قفل التطبيق",
       "backupOff": "النسخ الاحتياطي متوقف",
       "backupOn": "النسخ الاحتياطي مفعّل",
@@ -3003,7 +2979,7 @@
       "newPlanApplies": "تطبق خطتك الجديدة الآن.",
       "planMultiplierBase": "10 ميغابايت من القراءة في السحابة يوميًا",
       "planMultiplier": "{{mb}} ميغابايت من القراءة في السحابة يوميًا، {{n}}x من مبتدئ",
-      "restorePurchases": "Restore purchases"
+      "restorePurchases": "استعادة المشتريات"
     },
     "notifications": {
       "push": "الإشعارات الفورية",
@@ -3117,26 +3093,26 @@
     "newest": "الأحدث أولاً"
   },
   "moveToPhone": {
-    "dialogTitle": "Sign in with this phone instead",
-    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
-    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
-    "confirm": "Move account",
-    "cancel": "Not now",
-    "progressTitle": "Moving your account to this phone",
+    "dialogTitle": "سجّل الدخول بهذا الهاتف بدلًا من ذلك",
+    "dialogBody": "سنسجّل دخولك بهذا الهاتف، وننقل حسابك إليه، ونحذف بريدك الإلكتروني من قاعدة بياناتنا.",
+    "dialogSettingsHint": "يمكنك فعل ذلك في الإعدادات حتى {{date}}.",
+    "confirm": "نقل الحساب",
+    "cancel": "ليس الآن",
+    "progressTitle": "جارٍ نقل حسابك إلى هذا الهاتف",
     "steps": {
-      "checking": "Checking this phone",
-      "linking": "Linking your account",
-      "removing": "Removing your email",
-      "done": "Done"
+      "checking": "جارٍ التحقق من هذا الهاتف",
+      "linking": "جارٍ ربط حسابك",
+      "removing": "جارٍ حذف بريدك الإلكتروني",
+      "done": "تم"
     },
-    "failed": "This didn't finish. Your account still works. Try again in a moment.",
-    "unsupportedIos": "This phone can't use phone sign-in, so ميرا stops working on it on {{date}}. If you pay for ميرا, cancel your plan in the App Store before then.",
-    "unsupportedAndroid": "This phone can't use phone sign-in, so ميرا stops working on it on {{date}}. If you pay for ميرا, cancel your plan in Google Play before then.",
-    "success": "Signed in with this phone. Your email is deleted.",
-    "close": "Close",
-    "inboxTitle": "Email sign-in ends {{date}}",
-    "inboxBody": "Switch to phone sign-in to keep your account.",
-    "settingsRow": "Move to phone sign-in",
-    "settingsRowHint": "Email sign-in ends {{date}}."
+    "failed": "لم تكتمل العملية. حسابك ما زال يعمل. حاول مرة أخرى بعد قليل.",
+    "unsupportedIos": "لا يمكن لهذا الهاتف استخدام تسجيل الدخول بالهاتف، لذا يتوقف ميرا عن العمل فيه في {{date}}. إذا كنت تدفع مقابل ميرا، فألغِ خطتك في App Store قبل ذلك.",
+    "unsupportedAndroid": "لا يمكن لهذا الهاتف استخدام تسجيل الدخول بالهاتف، لذا يتوقف ميرا عن العمل فيه في {{date}}. إذا كنت تدفع مقابل ميرا، فألغِ خطتك في Google Play قبل ذلك.",
+    "success": "سجّلت الدخول بهذا الهاتف. تم حذف بريدك الإلكتروني.",
+    "close": "إغلاق",
+    "inboxTitle": "ينتهي تسجيل الدخول بالبريد الإلكتروني في {{date}}",
+    "inboxBody": "انتقل إلى تسجيل الدخول بالهاتف للاحتفاظ بحسابك.",
+    "settingsRow": "الانتقال إلى تسجيل الدخول بالهاتف",
+    "settingsRowHint": "ينتهي تسجيل الدخول بالبريد الإلكتروني في {{date}}."
   }
 }
