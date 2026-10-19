@@ -236,11 +236,12 @@ describe('stripStateFor', () => {
     // A device id on a cloud turn cannot happen; it must still not draw a sealed letter.
     deviceLoading: 'phone', devicePreparing: 'phone', deviceThinking: 'phone',
   };
-  // Work on the phone beats every cloud phase except a retry, which is a real resend.
+  // Work on the phone beats every cloud phase, a retry included: the view stays on `retrying` after
+  // the retried call, and a tool run there must never draw sealed traffic over plain GraphQL work.
   const CLOUD_DEVICE_WORK: Record<string, StripState | null> = {
     idle: 'phone', released: 'phone',
     preparing: 'phone', queued: 'phone', attesting: 'phone', securing: 'phone',
-    thinking: 'phone', retrying: 'retry', webSearch: 'phone',
+    thinking: 'phone', retrying: 'phone', webSearch: 'phone',
     deviceLoading: 'phone', devicePreparing: 'phone', deviceThinking: 'phone',
   };
   // On device nothing is sealed or sent; deviceWork changes nothing.

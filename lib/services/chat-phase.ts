@@ -225,9 +225,11 @@ const CLOUD_STRIP: Partial<Record<ChatPhaseId, StripState>> = {
  * nothing sealed crosses the line while the phone does plain work (a place
  * lookup, a web search) that is not end-to-end encrypted.
  *
- * Precedence on cloud: work on the phone beats every phase except `retrying`,
- * which is a real resend. `preparing`, `queued` and `webSearch` are phone work
- * too. On device nothing is sealed or sent, so `deviceWork` changes nothing.
+ * Precedence on cloud: work on the phone beats EVERY phase, `retrying`
+ * included. The view stays on `retrying` until the next call publishes, so a
+ * tool after a retried call would otherwise draw sealed traffic over plain
+ * GraphQL or web work; the retry words ride in the trailing row instead.
+ * `preparing`, `queued` and `webSearch` are phone work too. On device nothing is sealed or sent, so `deviceWork` changes nothing.
  */
 export function stripStateFor(
   view: ChatPhaseView,
@@ -241,7 +243,6 @@ export function stripStateFor(
     }
     return 'devicePreparing';
   }
-  if (view.kind === 'phase' && view.id === 'retrying') return 'retry';
   if (deviceWork) return 'phone';
   if (view.kind === 'released') return null;
   if (view.kind === 'idle') return 'phone';
