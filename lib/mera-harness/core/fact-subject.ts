@@ -72,6 +72,27 @@ export function isLocationKey(attribute: string | null | undefined): boolean {
   return LOCATION_KEYS.has(attributeKey(attribute));
 }
 
+/** The multi-valued interest keys (facts/interest's table). A person holds many
+ *  facts under each, so a shared key alone says nothing about which one a new
+ *  fact would replace. */
+const INTEREST_KEYS = new Set([
+  'hobbies', 'sports_playing', 'teams_following', 'entertainment_genres', 'artists_creators_following', 'topics',
+]);
+
+export function isInterestKey(attribute: string | null | undefined): boolean {
+  return INTEREST_KEYS.has(attributeKey(attribute));
+}
+
+/** The verbs an interest fact is phrased with. Never its subject: "Supports
+ *  Ajax" and "Supports Feyenoord" share only the verb, and `namesFact` keeps
+ *  every word outside its own frame list. */
+const INTEREST_FRAME = /\b(?:no longer|plays|playing|supports|supporting|listens|listening|watches|watching|interested|fan|fans)\b/gi;
+
+/** The statement with its interest verbs removed, for a subject check. */
+export function interestSubject(statement: string): string {
+  return statement.replace(INTEREST_FRAME, ' ');
+}
+
 /**
  * May a fact under `candidateAttribute` REPLACE one under `targetAttribute`?
  *

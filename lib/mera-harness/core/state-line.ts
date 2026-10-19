@@ -144,7 +144,16 @@ export function buildStateLine(input: StateLineInput): string {
     const rows = input.pendingCards.slice(0, 6).map((s) => `"${escapeUntrusted(s, 120)}"`).join('; ');
     parts.push(
       `Cards already waiting for the user: ${rows}. Never offer these again, in any wording; `
-      + 'the user can still answer them.',
+      + 'the user can still answer them.'
+      // A FACT CARD APPLIES ONLY ON A TAP. Said only when no proposal card
+      // waits (that branch carries its own rule) and no typed yes or no
+      // resumes a question (F7): "ok" beside a fact card got "All set", which
+      // nothing on screen had done.
+      + (input.pendingCard || input.cardThisTurn || input.answeredYesTo || input.answeredNoTo
+        ? ''
+        : ' Only a tap on a card applies it. If the message only agrees or acknowledges ("yes", "ok", '
+          + '"sure", "thanks", or the same in any language), call nothing and say "Tap the one you want on '
+          + 'the card above." Never say it is done or all set.'),
     );
   }
 

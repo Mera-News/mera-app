@@ -20,7 +20,7 @@ import {
   narratesProcess,
   trailingQuestion,
 } from './prose';
-import { isLocationKey, isRelationalStatement, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
+import { interestSubject, isInterestKey, isLocationKey, isRelationalStatement, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
 import {
   CANONICAL_LOCATION_KEY,
   EXPAT_KEY,
@@ -87,6 +87,11 @@ export const MAX_AGENT_LEGS = 4;
 const CLOSING_LINE_NOTE =
   'You offered the card above. Nothing is saved until the user taps it. '
   + 'Write ONE short sentence to the user about what you offered. Do not ask a question. Do not call a tool.';
+
+/** The tool-free leg after an offer that was already a card on screen. */
+const WAITING_CARD_NOTE =
+  'What they asked for is already on the card waiting above, and only their tap adds it. '
+  + 'Write ONE short sentence telling them to tap Add on that card. Do not say it is done. Do not call a tool.';
 
 /**
  * THE ABOUT-MERA ANSWER LEG (hindifix F). Pushed AFTER the explainMera result,
@@ -700,6 +705,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
   /** True for the ONE forced leg. */
   let forcingProposalNow = false;
+  /** The skill already answered "no new card": an explicit empty save, or an
+   *  offer that was a card still waiting on screen. Never forced after it:
+   *  a forced leg after "stop showing me cricket" invented "No longer follows
+   *  cricket news" as a replace of an unrelated fact. */
+  let noOfferIsTheAnswer = false;
+  /** Waiting cards by their compared form, so the note quotes them as shown. */
+  const waitingCards = new Map(pendingCardList.map((s) => [s.trim().toLowerCase(), s]));
   /** Everything a forced offer may draw its subject from: this message, the
    *  question it answers and the message that question followed, a tapped
    *  chip, the places looked up this turn, and the facts on file (the loop's
@@ -749,6 +761,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       && isFactSkill(skillLoaded)
       && !proposedSomething
       && !forcingProposalNow
+      && !noOfferIsTheAnswer
     ) {
       forcingProposalNow = true;
       forcedProposal = true;
@@ -770,7 +783,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // still failed the proposal test. Keying only on `proposedSomething`
       // makes every correct refusal look broken.
       terminalReason =
-        proposedSomething || answeredTheUser
+        proposedSomething || answeredTheUser || noOfferIsTheAnswer
           ? 'settled'
           : forcedProposal
             ? 'no-proposal'
@@ -1021,6 +1034,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     let terminatedByChoice = false;
     /** A card was staged on this leg: like ask_choice, it ends the turn. */
     let terminatedByCard = false;
+    /** This leg's offer was a card already waiting (see the save handler). */
+    let pointedAtWaitingCard = false;
 
     for (let call of result.toolCalls) {
       let args = parseArgs(call.argumentsRaw);
@@ -1321,6 +1336,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           .map(asThirdPersonFact)
           .flatMap((e) => expandCombinedEntry(e, placeCandidates))
           .map(withExactKey);
+        // AN EXPLICIT EMPTY SAVE IS THE SKILL'S ANSWER, like a reply that
+        // declares nothing to add: facts/interest offers nothing for "I stopped
+        // following X", and the forced leg overrode that with a negative fact.
+        if (
+          !forcingProposalNow
+          && Array.isArray(args.extracted_user_information)
+          && args.extracted_user_information.length === 0
+        ) {
+          noOfferIsTheAnswer = true;
+        }
         // A HOME THE MODEL DID NOT LOOK UP is looked up by the loop, once:
         // an unresolved "Nieuw-West, Amsterdam" has no country, so it can
         // anchor nothing and carries no expat status. Only when the country is
@@ -1382,6 +1407,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // have to land HERE or they are cosmetic. Same failure shape as
         // `runAgentTurn` having no callers and `legCapped` being hardcoded.
         const sanitised: Record<string, unknown>[] = [];
+        /** Offers dropped because that card is still waiting on screen. */
+        const alreadyWaiting: string[] = [];
         // ONE CURRENT HOME PER TURN. The model offered "Lives in Porto,
         // Portugal, EU" and "Lives in Porto, Porto, Portugal, EU" as two
         // Replace cards on device (ux1 C1). Within a call the richest chain
@@ -1441,6 +1468,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // composer. Measured from TestFlight: two "Which one did you mean?"
           // cards offering the same two readings of the same Bhopal fact.
           if (proposedStatements.has(statement.toLowerCase())) {
+            const waiting = waitingCards.get(statement.toLowerCase());
+            if (waiting !== undefined && !alreadyWaiting.includes(waiting)) alreadyWaiting.push(waiting);
             reProposals++;
             continue;
           }
@@ -1460,7 +1489,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // move take two confirmations for one decision. The chip is still
           // required for anything ELSE: a replace across keys is a judgement
           // the user has to make before the card, not on it.
-          const sameKey = !!replaceTarget && sameAttributeKey(entryAttribute, replaceTarget.attribute);
+          // A MULTI-VALUED INTEREST KEY is not consent on its own: a person holds
+          // many facts under `topics`, and "No longer follows cricket news" was
+          // offered as a replace of "Follows the war in Ukraine" on the key
+          // alone. There the new fact must name the old one's subject, its interest verb aside.
+          const sameKey = !!replaceTarget
+            && sameAttributeKey(entryAttribute, replaceTarget.attribute)
+            && (!isInterestKey(entryAttribute)
+              || namesFact(interestSubject(statement), interestSubject(replaceTarget.statement)));
           let replaces = wantsReplace && (turn.resolvedChoice || sameKey) ? wantsReplace : null;
           // THE OLD COMBINED FACT GOES WITH ITS OWN ORIGIN HALF. An origin element
           // offered while a combined origin-and-home fact is on file replaces it
@@ -1613,6 +1649,18 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           offeredThisTurn.push(statement.toLowerCase());
         }
         if (sanitised.length > 0) proposedSomething = true;
+        // THE OFFER IS ALREADY A CARD ON SCREEN ("follow this" after the card
+        // that offers it). The port is not called: its empty-list answer reads
+        // as `staged: true`, and the next leg said "I'm on it". The model is
+        // told to point at the card, on a closing leg (below).
+        if (sanitised.length === 0 && alreadyWaiting.length > 0) {
+          noOfferIsTheAnswer = true;
+          pointedAtWaitingCard = true;
+          const out = { staged: false, alreadyWaiting };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          continue;
+        }
         const out = await deps.tools.saveExtractedFacts({
           extracted_user_information: sanitised,
           proposals,
@@ -1757,6 +1805,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       break;
     }
 
+    // POINTED AT A WAITING CARD: one tool-free leg that reads the note. On
+    // device the dropped offer came with prose written BEFORE the result
+    // ("Sounds good, I'm on it."), so settling on this leg ships that claim.
+    if (pointedAtWaitingCard) {
+      reply = '';
+      forcingProposalNow = false;
+      closingLegNow = true;
+      closingNote = WAITING_CARD_NOTE;
+      maxLegsThisTurn = Math.max(maxLegsThisTurn, nextLegIndex + 1 - formatRetries);
+      continue;
+    }
     if (sawContinuationTool) continue;
     if (!legText.trim()) {
       // A leg that acted and said nothing owes the user a closing sentence, and
@@ -1799,6 +1858,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       isFactSkill(skillLoaded)
       && !proposedSomething
       && !forcingProposalNow
+      && !noOfferIsTheAnswer
       && !declaresNothingToAdd(cleanProse(reply))
     ) {
       forcingProposalNow = true;
@@ -1834,7 +1894,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // claim. On a facts turn that has offered nothing, the fix is the offer
     // itself, not better wording: the forced leg runs instead of a re-ask.
     if (!leaksInternals(finalReply) && narratesProcess(finalReply)) {
-      if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow) {
+      if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow && !noOfferIsTheAnswer) {
         forcingProposalNow = true;
         forcedProposal = true;
         continue;
@@ -1917,6 +1977,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         closingNote = null;
         answeredTheUser = false;
         proposedSomething = false;
+        noOfferIsTheAnswer = false;
         reply = '';
         formatErrorNote = null;
         terminalReason = 'settled';
