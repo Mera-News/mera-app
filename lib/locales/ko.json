@@ -87,8 +87,21 @@
       "welcome": "메라에 오신 것을 환영합니다",
       "wrongCode": "코드가 맞지 않습니다. 확인하시거나 새 코드를 다시 보내 주세요.",
       "noSheetTitle": "iPhone에서 다운로드를 열지 못했습니다",
-      "noSheetBody": "다시 시도하거나 iPhone 설정을 열고 일반, 언어 및 지역, 번역 언어 순서로 이동해 {{language}}을(를) 다운로드하세요."
-    }
+      "noSheetBody": "다시 시도하거나 iPhone 설정을 열고 일반, 언어 및 지역, 번역 언어 순서로 이동해 {{language}}을(를) 다운로드하세요.",
+      "sentToIfAccount": "If this email has a 메라 account, we've sent it a code. New to 메라? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "메라 needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "지원팀에 문의"
@@ -881,7 +894,15 @@
     "confirmTimeoutTitle": "아직 구매를 확인하지 못했습니다",
     "confirmTimeoutBody": "결제하셨다면 지원팀에 문의해 주세요. 문제를 해결해 드리겠습니다.",
     "checkAgain": "다시 확인",
-    "readingExplainer": "회원님의 관심사와 맞는 기사는 모두 피드에 도착합니다. 메라가 기사를 읽고, 불필요한 내용은 걸러내며, 중요한 내용을 위로 올립니다. 요금제에 따라 메라가 클라우드에서 하루에 읽는 양이 정해집니다. 스타터 10 MB, 개인 50 MB, 프로페셔널 200 MB입니다. 메라는 종단간 암호화를 통해 회원님을 대신해 기사를 읽기 때문에, 어떤 기사를 몇 개 읽는지 알 수 없습니다. 그래서 요금제는 기사 수가 아니라 메가바이트 단위로 측정합니다. 지원되는 휴대폰에서는 모든 요금제에서 휴대폰에서 읽기가 무제한입니다."
+    "readingExplainer": "회원님의 관심사와 맞는 기사는 모두 피드에 도착합니다. 메라가 기사를 읽고, 불필요한 내용은 걸러내며, 중요한 내용을 위로 올립니다. 요금제에 따라 메라가 클라우드에서 하루에 읽는 양이 정해집니다. 스타터 10 MB, 개인 50 MB, 프로페셔널 200 MB입니다. 메라는 종단간 암호화를 통해 회원님을 대신해 기사를 읽기 때문에, 어떤 기사를 몇 개 읽는지 알 수 없습니다. 그래서 요금제는 기사 수가 아니라 메가바이트 단위로 측정합니다. 지원되는 휴대폰에서는 모든 요금제에서 휴대폰에서 읽기가 무제한입니다.",
+    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. 메라 can't see plans on other stores, so it can't refund any overlap.",
+    "invoicesAppStore": "메라 has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "메라 has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "tabs": {
     "deck": "피드",
@@ -2793,7 +2814,8 @@
       "readingOnPhone": "메라가 이 휴대폰에서 읽고 있습니다.",
       "newPlanApplies": "새 요금제가 지금 적용됩니다.",
       "planMultiplierBase": "하루 10 MB의 클라우드 읽기량",
-      "planMultiplier": "하루 {{mb}} MB의 클라우드 읽기량, 스타터 대비 {{n}}배"
+      "planMultiplier": "하루 {{mb}} MB의 클라우드 읽기량, 스타터 대비 {{n}}배",
+      "restorePurchases": "Restore purchases"
     },
     "notifications": {
       "push": "푸시 알림",
@@ -2905,5 +2927,28 @@
     "relevance": "최고 일치도",
     "oldest": "가장 오래된 순",
     "newest": "최신순"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so 메라 stops working on it on {{date}}. If you pay for 메라, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so 메라 stops working on it on {{date}}. If you pay for 메라, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   }
 }

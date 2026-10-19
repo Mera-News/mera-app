@@ -87,8 +87,21 @@
       "welcome": "Selamat datang di Mera",
       "wrongCode": "Kode itu tidak berhasil. Periksa lagi, atau kirim kode baru.",
       "noSheetTitle": "iPhone Anda tidak membuka unduhan",
-      "noSheetBody": "Coba lagi, atau buka Pengaturan di iPhone Anda, lalu Umum, lalu Bahasa & Wilayah, lalu Bahasa Terjemahan untuk mengunduh {{language}}."
-    }
+      "noSheetBody": "Coba lagi, atau buka Pengaturan di iPhone Anda, lalu Umum, lalu Bahasa & Wilayah, lalu Bahasa Terjemahan untuk mengunduh {{language}}.",
+      "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "Hubungi dukungan"
@@ -881,7 +894,15 @@
     "confirmTimeoutTitle": "Pembelian Anda belum bisa dikonfirmasi",
     "confirmTimeoutBody": "Jika Anda sudah membayar, hubungi dukungan dan kami akan membereskannya.",
     "checkAgain": "Periksa lagi",
-    "readingExplainer": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Paket Anda menentukan seberapa banyak Mera membaca di cloud setiap hari: Pemula 10 MB, Individu 50 MB, Profesional 200 MB. Mera membaca untuk Anda melalui enkripsi ujung-ke-ujung, jadi Mera tidak bisa melihat artikel mana saja yang dibacanya atau berapa banyak. Itu sebabnya paket diukur dalam megabyte, bukan artikel. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket."
+    "readingExplainer": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Paket Anda menentukan seberapa banyak Mera membaca di cloud setiap hari: Pemula 10 MB, Individu 50 MB, Profesional 200 MB. Mera membaca untuk Anda melalui enkripsi ujung-ke-ujung, jadi Mera tidak bisa melihat artikel mana saja yang dibacanya atau berapa banyak. Itu sebabnya paket diukur dalam megabyte, bukan artikel. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket.",
+    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Mera can't see plans on other stores, so it can't refund any overlap.",
+    "invoicesAppStore": "Mera has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "Mera has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "tabs": {
     "deck": "Umpan",
@@ -2793,7 +2814,8 @@
       "readingOnPhone": "Mera sedang membaca di ponsel ini.",
       "newPlanApplies": "Paket baru Anda berlaku sekarang.",
       "planMultiplierBase": "Pembacaan cloud 10 MB sehari",
-      "planMultiplier": "Pembacaan cloud {{mb}} MB sehari, {{n}}x Pemula"
+      "planMultiplier": "Pembacaan cloud {{mb}} MB sehari, {{n}}x Pemula",
+      "restorePurchases": "Restore purchases"
     },
     "notifications": {
       "push": "Notifikasi push",
@@ -2905,5 +2927,28 @@
     "relevance": "Kecocokan terbaik",
     "oldest": "Paling lama pertama",
     "newest": "Terbaru pertama"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   }
 }

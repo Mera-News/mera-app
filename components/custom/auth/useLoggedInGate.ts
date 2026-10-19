@@ -21,6 +21,7 @@ import { useUserStore } from "@/lib/stores/user-store";
 import { probeInternetReachable, probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
+import { bindPhoneOnce } from "@/components/custom/auth/move-to-phone";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { readStartupTab } from "@/lib/navigation/startup-tab";
 import { loadPageOrders } from "@/lib/navigation/page-order";
@@ -340,6 +341,10 @@ export function useLoggedInGate() {
                     void loginRevenueCat(userId).then((info) => {
                         if (info) useSubscriptionStore.getState().setCustomerInfo(info);
                     });
+                    // Binds this phone to an email account once, silently, so
+                    // it still signs in after every email is deleted. Never
+                    // blocks and never signs anyone out; retries next launch.
+                    void bindPhoneOnce(userId);
                     // The server's verdict, which outranks RevenueCat's mirror
                     // above. Forced: this is a fresh session, and the 60s
                     // debounce must not make a returning user wait a minute to

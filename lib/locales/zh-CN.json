@@ -87,8 +87,21 @@
       "welcome": "欢迎使用梅拉",
       "wrongCode": "验证码不正确。请检查，或重新发送新的验证码。",
       "noSheetTitle": "你的 iPhone 未能开始下载",
-      "noSheetBody": "请重试，或在 iPhone 上打开“设置”，依次前往“通用”、“语言与地区”、“翻译语言”，下载 {{language}}。"
-    }
+      "noSheetBody": "请重试，或在 iPhone 上打开“设置”，依次前往“通用”、“语言与地区”、“翻译语言”，下载 {{language}}。",
+      "sentToIfAccount": "If this email has a 梅拉 account, we've sent it a code. New to 梅拉? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "梅拉 needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "联系支持团队"
@@ -881,7 +894,15 @@
     "confirmTimeoutTitle": "暂时无法确认你的购买",
     "confirmTimeoutBody": "如果你已经付款，请联系客服，我们会帮你处理。",
     "checkAgain": "再次检查",
-    "readingExplainer": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。你的方案决定梅拉每天在云端阅读多少：入门版 10 MB，个人版 50 MB，专业版 200 MB。梅拉的阅读经过端到端加密，因此它无法看到自己读了哪些文章，也无法统计数量。这就是方案以 MB 计量、而不是按文章计量的原因。在支持的手机上，所有方案的手机端阅读都不限量。"
+    "readingExplainer": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。你的方案决定梅拉每天在云端阅读多少：入门版 10 MB，个人版 50 MB，专业版 200 MB。梅拉的阅读经过端到端加密，因此它无法看到自己读了哪些文章，也无法统计数量。这就是方案以 MB 计量、而不是按文章计量的原因。在支持的手机上，所有方案的手机端阅读都不限量。",
+    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. 梅拉 can't see plans on other stores, so it can't refund any overlap.",
+    "invoicesAppStore": "梅拉 has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "梅拉 has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "tabs": {
     "deck": "信息流",
@@ -2793,7 +2814,8 @@
       "readingOnPhone": "梅拉正在这部手机上阅读。",
       "newPlanApplies": "你的新方案现已生效。",
       "planMultiplierBase": "每天 10 MB 的云端阅读量",
-      "planMultiplier": "每天 {{mb}} MB 的云端阅读量，是入门版的 {{n}} 倍"
+      "planMultiplier": "每天 {{mb}} MB 的云端阅读量，是入门版的 {{n}} 倍",
+      "restorePurchases": "Restore purchases"
     },
     "notifications": {
       "push": "推送通知",
@@ -2905,5 +2927,28 @@
     "relevance": "最佳匹配",
     "oldest": "最早优先",
     "newest": "最新优先"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so 梅拉 stops working on it on {{date}}. If you pay for 梅拉, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so 梅拉 stops working on it on {{date}}. If you pay for 梅拉, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   }
 }

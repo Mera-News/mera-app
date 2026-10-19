@@ -87,8 +87,21 @@
       "welcome": "Добро пожаловать в Меру",
       "wrongCode": "Код не подошёл. Проверьте его или запросите новый.",
       "noSheetTitle": "Ваш iPhone не открыл загрузку",
-      "noSheetBody": "Попробуйте ещё раз или откройте Настройки на iPhone, затем Основные, затем Язык и регион, затем Языки перевода, и загрузите {{language}}."
-    }
+      "noSheetBody": "Попробуйте ещё раз или откройте Настройки на iPhone, затем Основные, затем Язык и регион, затем Языки перевода, и загрузите {{language}}.",
+      "sentToIfAccount": "If this email has a Мера account, we've sent it a code. New to Мера? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "Мера needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "Связаться с поддержкой"
@@ -913,7 +926,15 @@
     "confirmTimeoutTitle": "Пока не удалось подтвердить покупку",
     "confirmTimeoutBody": "Если вы оплатили, обратитесь в поддержку, и мы во всём разберёмся.",
     "checkAgain": "Проверить снова",
-    "readingExplainer": "Каждая статья, которая соответствует вашим интересам, попадает в Ленту. Мера читает их, отсеивает лишнее и поднимает то, что важно. Ваш тариф задаёт, сколько Мера читает в облаке каждый день: Стартер 10 МБ, Индивидуальный 50 МБ, Профессиональный 200 МБ. Мера читает за вас через сквозное шифрование, поэтому не видит, какие статьи читает и сколько их. Поэтому тарифы измеряются в мегабайтах, а не в статьях. На поддерживаемых телефонах чтение на телефоне не ограничено на любом тарифе."
+    "readingExplainer": "Каждая статья, которая соответствует вашим интересам, попадает в Ленту. Мера читает их, отсеивает лишнее и поднимает то, что важно. Ваш тариф задаёт, сколько Мера читает в облаке каждый день: Стартер 10 МБ, Индивидуальный 50 МБ, Профессиональный 200 МБ. Мера читает за вас через сквозное шифрование, поэтому не видит, какие статьи читает и сколько их. Поэтому тарифы измеряются в мегабайтах, а не в статьях. На поддерживаемых телефонах чтение на телефоне не ограничено на любом тарифе.",
+    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Мера can't see plans on other stores, so it can't refund any overlap.",
+    "invoicesAppStore": "Мера has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "Мера has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "tabs": {
     "deck": "Лента",
@@ -2887,7 +2908,8 @@
       "readingOnPhone": "Мера читает на этом телефоне.",
       "newPlanApplies": "Ваш новый тариф уже действует.",
       "planMultiplierBase": "10 МБ облачного чтения в день",
-      "planMultiplier": "{{mb}} МБ облачного чтения в день, в {{n}}x больше, чем на тарифе Стартер"
+      "planMultiplier": "{{mb}} МБ облачного чтения в день, в {{n}}x больше, чем на тарифе Стартер",
+      "restorePurchases": "Restore purchases"
     },
     "notifications": {
       "push": "Push-уведомления",
@@ -2999,5 +3021,28 @@
     "relevance": "Лучше всего подходит",
     "oldest": "Старые в начале",
     "newest": "Новые в начале"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so Мера stops working on it on {{date}}. If you pay for Мера, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so Мера stops working on it on {{date}}. If you pay for Мера, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   }
 }

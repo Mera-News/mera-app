@@ -87,8 +87,21 @@
       "welcome": "मेरा ऐप में आपका स्वागत है",
       "wrongCode": "यह कोड काम नहीं किया। इसे जाँचें, या नया कोड फिर से भेजें।",
       "noSheetTitle": "आपके iPhone ने डाउनलोड नहीं खोला",
-      "noSheetBody": "फिर कोशिश करें। या अपने iPhone पर सेटिंग्स खोलें, फिर सामान्य, फिर भाषा और क्षेत्र, फिर अनुवाद भाषाएँ पर जाएँ, और {{language}} डाउनलोड करें।"
-    }
+      "noSheetBody": "फिर कोशिश करें। या अपने iPhone पर सेटिंग्स खोलें, फिर सामान्य, फिर भाषा और क्षेत्र, फिर अनुवाद भाषाएँ पर जाएँ, और {{language}} डाउनलोड करें।",
+      "sentToIfAccount": "If this email has a मेरा account, we've sent it a code. New to मेरा? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "मेरा needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "सहायता टीम से बात करें"
@@ -885,7 +898,15 @@
     "confirmTimeoutTitle": "आपकी खरीद की पुष्टि अभी नहीं हो पाई",
     "confirmTimeoutBody": "अगर आपने भुगतान कर दिया है, तो सहायता टीम से बात करें। हम इसे सुलझा देंगे।",
     "checkAgain": "दोबारा जाँचें",
-    "readingExplainer": "आपकी रुचियों से मेल खाने वाला हर लेख आपकी फीड तक पहुँचता है। मेरा ऐप उन्हें पढ़ता है, फ़ालतू बातें अलग रखता है और जो ज़रूरी है उसे आगे लाता है। आपका प्लान तय करता है कि मेरा ऐप हर दिन क्लाउड में कितना पढ़ेगा: Starter 10 MB, इंडिविजुअल 50 MB, प्रोफेशनल 200 MB। मेरा ऐप एंड-टू-एंड एन्क्रिप्शन के ज़रिए आपके लिए पढ़ता है, इसलिए वह यह नहीं देख सकता कि कौन से लेख पढ़े या कितने। इसीलिए प्लान लेखों की गिनती से नहीं, मेगाबाइट में नापे जाते हैं। समर्थित फ़ोन पर, हर प्लान में फ़ोन पर पढ़ना असीमित है।"
+    "readingExplainer": "आपकी रुचियों से मेल खाने वाला हर लेख आपकी फीड तक पहुँचता है। मेरा ऐप उन्हें पढ़ता है, फ़ालतू बातें अलग रखता है और जो ज़रूरी है उसे आगे लाता है। आपका प्लान तय करता है कि मेरा ऐप हर दिन क्लाउड में कितना पढ़ेगा: Starter 10 MB, इंडिविजुअल 50 MB, प्रोफेशनल 200 MB। मेरा ऐप एंड-टू-एंड एन्क्रिप्शन के ज़रिए आपके लिए पढ़ता है, इसलिए वह यह नहीं देख सकता कि कौन से लेख पढ़े या कितने। इसीलिए प्लान लेखों की गिनती से नहीं, मेगाबाइट में नापे जाते हैं। समर्थित फ़ोन पर, हर प्लान में फ़ोन पर पढ़ना असीमित है।",
+    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. मेरा can't see plans on other stores, so it can't refund any overlap.",
+    "invoicesAppStore": "मेरा has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "मेरा has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "tabs": {
     "deck": "फीड",
@@ -2801,7 +2822,8 @@
       "readingOnPhone": "मेरा ऐप इस फ़ोन पर पढ़ रहा है।",
       "newPlanApplies": "आपका नया प्लान अभी से लागू है।",
       "planMultiplierBase": "रोज़ 10 MB क्लाउड रीडिंग",
-      "planMultiplier": "रोज़ {{mb}} MB क्लाउड रीडिंग, Starter से {{n}}x"
+      "planMultiplier": "रोज़ {{mb}} MB क्लाउड रीडिंग, Starter से {{n}}x",
+      "restorePurchases": "Restore purchases"
     },
     "notifications": {
       "push": "पुश नोटिफ़िकेशन",
@@ -2913,5 +2935,28 @@
     "relevance": "सबसे अच्छी मेल",
     "oldest": "सबसे पुराना पहले",
     "newest": "सबसे नया पहले"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so मेरा stops working on it on {{date}}. If you pay for मेरा, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so मेरा stops working on it on {{date}}. If you pay for मेरा, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   }
 }

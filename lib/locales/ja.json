@@ -87,8 +87,21 @@
       "welcome": "メラへようこそ",
       "wrongCode": "そのコードは使えませんでした。確認するか、新しいコードを再送信してください。",
       "noSheetTitle": "iPhoneでダウンロードを開けませんでした",
-      "noSheetBody": "もう一度お試しください。または、iPhoneの設定を開き、「一般」「言語と地域」「翻訳言語」の順に進んで、{{language}}をダウンロードしてください。"
-    }
+      "noSheetBody": "もう一度お試しください。または、iPhoneの設定を開き、「一般」「言語と地域」「翻訳言語」の順に進んで、{{language}}をダウンロードしてください。",
+      "sentToIfAccount": "If this email has a メラ account, we've sent it a code. New to メラ? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "メラ needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "サポートに問い合わせる"
@@ -881,7 +894,15 @@
     "confirmTimeoutTitle": "まだ購入を確認できていません",
     "confirmTimeoutBody": "お支払い済みの場合は、サポートにお問い合わせください。確認して対応します。",
     "checkAgain": "もう一度確認する",
-    "readingExplainer": "興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。プランによって、メラが1日にクラウドで読む量が決まります。スターターは10 MB、個人は50 MB、プロフェッショナルは200 MBです。メラの読書はエンドツーエンド暗号化で行われるため、どの記事を何本読んだかは見えません。そのため、プランは記事数ではなくメガバイトで測ります。対応した電話では、この電話上での読書はどのプランでも無制限です。"
+    "readingExplainer": "興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。プランによって、メラが1日にクラウドで読む量が決まります。スターターは10 MB、個人は50 MB、プロフェッショナルは200 MBです。メラの読書はエンドツーエンド暗号化で行われるため、どの記事を何本読んだかは見えません。そのため、プランは記事数ではなくメガバイトで測ります。対応した電話では、この電話上での読書はどのプランでも無制限です。",
+    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. メラ can't see plans on other stores, so it can't refund any overlap.",
+    "invoicesAppStore": "メラ has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "メラ has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "tabs": {
     "deck": "フィード",
@@ -2793,7 +2814,8 @@
       "readingOnPhone": "メラはこの電話で読んでいます。",
       "newPlanApplies": "新しいプランがすぐに適用されます。",
       "planMultiplierBase": "1日10 MBのクラウド読書量",
-      "planMultiplier": "1日のクラウド読書量は{{mb}} MB、スターターの{{n}}倍"
+      "planMultiplier": "1日のクラウド読書量は{{mb}} MB、スターターの{{n}}倍",
+      "restorePurchases": "Restore purchases"
     },
     "notifications": {
       "push": "プッシュ通知",
@@ -2905,5 +2927,28 @@
     "relevance": "最も一致したもの",
     "oldest": "古い順",
     "newest": "新しい順"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so メラ stops working on it on {{date}}. If you pay for メラ, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so メラ stops working on it on {{date}}. If you pay for メラ, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   }
 }

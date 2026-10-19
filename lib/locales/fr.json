@@ -87,8 +87,21 @@
       "welcome": "Bienvenue dans Mera",
       "wrongCode": "Ce code n'a pas fonctionné. Vérifiez-le ou renvoyez-en un nouveau.",
       "noSheetTitle": "Votre iPhone n'a pas ouvert le téléchargement",
-      "noSheetBody": "Réessayez, ou ouvrez Réglages sur votre iPhone, puis Général, puis Langue et région, puis Langues de traduction pour télécharger {{language}}."
-    }
+      "noSheetBody": "Réessayez, ou ouvrez Réglages sur votre iPhone, puis Général, puis Langue et région, puis Langues de traduction pour télécharger {{language}}.",
+      "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "Contacter l'assistance"
@@ -890,7 +903,15 @@
     "confirmTimeoutTitle": "Nous n'avons pas encore pu confirmer votre achat",
     "confirmTimeoutBody": "Si vous avez payé, contactez le support et nous réglerons cela.",
     "checkAgain": "Vérifier à nouveau",
-    "readingExplainer": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Votre forfait définit combien Mera lit dans le cloud chaque jour : Starter 10 Mo, Individuel 50 Mo, Professionnel 200 Mo. Mera lit pour vous grâce au chiffrement de bout en bout, donc il ne peut voir ni quels articles il lit ni combien. C'est pourquoi les forfaits se mesurent en mégaoctets, et non en articles. Sur les téléphones compatibles, la lecture sur le téléphone est illimitée sur chaque forfait."
+    "readingExplainer": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Votre forfait définit combien Mera lit dans le cloud chaque jour : Starter 10 Mo, Individuel 50 Mo, Professionnel 200 Mo. Mera lit pour vous grâce au chiffrement de bout en bout, donc il ne peut voir ni quels articles il lit ni combien. C'est pourquoi les forfaits se mesurent en mégaoctets, et non en articles. Sur les téléphones compatibles, la lecture sur le téléphone est illimitée sur chaque forfait.",
+    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Mera can't see plans on other stores, so it can't refund any overlap.",
+    "invoicesAppStore": "Mera has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "Mera has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "tabs": {
     "deck": "Fil d'actu",
@@ -2805,7 +2826,8 @@
       "readingOnPhone": "Mera lit sur ce téléphone.",
       "newPlanApplies": "Votre nouveau forfait s'applique dès maintenant.",
       "planMultiplierBase": "10 Mo de lecture dans le cloud par jour",
-      "planMultiplier": "{{mb}} Mo de lecture dans le cloud par jour, {{n}}x Starter"
+      "planMultiplier": "{{mb}} Mo de lecture dans le cloud par jour, {{n}}x Starter",
+      "restorePurchases": "Restore purchases"
     },
     "notifications": {
       "push": "Notifications push",
@@ -2917,5 +2939,28 @@
     "relevance": "Meilleure correspondance",
     "oldest": "Les plus anciens en premier",
     "newest": "Les plus récents en premier"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   }
 }

@@ -288,6 +288,11 @@ jest.mock('react-native-purchases', () => ({
       Promise.resolve({ current: null, all: {} }),
     ),
     getAppUserID: jest.fn(() => Promise.resolve('test-user-id')),
+    // The store sync (a mint or a move) and the Settings Restore row.
+    syncPurchases: jest.fn(() => Promise.resolve()),
+    restorePurchases: jest.fn(() =>
+      Promise.resolve({ entitlements: { active: {} } }),
+    ),
   },
   LOG_LEVEL: {
     VERBOSE: 'VERBOSE',

@@ -6,6 +6,7 @@
 // the auth-service webhook) remains the source of truth for entitlements; the
 // client uses these helpers for purchasing, the paywall, and optimistic UI.
 
+import i18next from 'i18next';
 import { Platform } from 'react-native';
 import Purchases, {
   CustomerInfo,
@@ -291,6 +292,9 @@ export async function loginRevenueCat(
     // throw by construction, so it costs correctness nothing to make the
     // ordering deterministic.
     await syncRevenueCatAttributes({ force: true });
+    // A store sync owed to THIS user (a fresh mint, or a move to phone
+    // sign-in) runs only now that RevenueCat is identified as them.
+    if (pendingStoreSyncUserId === userId) void runStoreSync(userId);
     return customerInfo;
   } catch (e) {
     logger.captureException(e, {
@@ -299,6 +303,83 @@ export async function loginRevenueCat(
     });
     return null;
   }
+}
+
+// ─── Store purchases sync ───────────────────────────────────────────────────
+//
+// The plan follows the Apple or Google account, but ONLY at two moments
+// (owner): when device sign-in MINTS a new account, and right after a move to
+// phone sign-in. Never on resume: two phones on one store account (or Family
+// Sharing) would move the plan back and forth on every launch. Restore
+// purchases in Settings is the manual path.
+//
+// `syncPurchases`, never `syncPurchasesForResult`: the older call exists in
+// every native SDK the live binaries carry. On iOS it never shows an Apple
+// Account prompt (RevenueCat iOS 5.x `syncPurchases(completion:)` docs);
+// `restorePurchases` can, which is why only the Restore button calls that.
+
+let pendingStoreSyncUserId: string | null = null;
+let storeSyncInFlight: Promise<void> | null = null;
+
+/**
+ * Owe a store sync to `userId`. Runs at once when RevenueCat is already
+ * identified as that user (a move to phone sign-in, signed in), else at that
+ * user's next `loginRevenueCat` (a mint: the gate identifies them after the
+ * sign-in screen). Never syncs onto another identity: right after a mint the
+ * SDK may still hold the PREVIOUS account, and a sync there would hand the
+ * store plan to it.
+ * ponytail: held in memory, so a kill between the mint and the gate drops it;
+ * Restore purchases covers that case.
+ */
+export function requestStorePurchasesSync(userId: string): void {
+  if (!userId) return;
+  pendingStoreSyncUserId = userId;
+  if (!configured) return;
+  void (async () => {
+    try {
+      if ((await Purchases.getAppUserID()) === userId) await runStoreSync(userId);
+    } catch {
+      // Left pending for the next loginRevenueCat.
+    }
+  })();
+}
+
+function runStoreSync(userId: string): Promise<void> {
+  if (storeSyncInFlight) return storeSyncInFlight;
+  storeSyncInFlight = (async () => {
+    try {
+      if (!configured || pendingStoreSyncUserId !== userId) return;
+      const before = getActiveTier(await getCustomerInfoSafe());
+      await Purchases.syncPurchases();
+      pendingStoreSyncUserId = null;
+      const info = await getCustomerInfoSafe();
+      // Lazy: the store and entitlement-sync both import this module.
+      const { useSubscriptionStore } =
+        require('@/lib/stores/subscription-store') as typeof import('@/lib/stores/subscription-store');
+      if (info) useSubscriptionStore.getState().setCustomerInfo(info);
+      const { syncEntitlement } =
+        require('@/lib/subscription/entitlement-sync') as typeof import('@/lib/subscription/entitlement-sync');
+      void syncEntitlement({ force: true });
+      // A plan the store just handed back: say so once, so someone on a new
+      // phone does not buy it twice.
+      if (before === null && getActiveTier(info) !== null) {
+        const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
+        toastManager.showInfo(i18next.t('subscription.planBack'));
+      }
+    } catch (e) {
+      // Stays pending: the next loginRevenueCat for this user retries.
+      logger.warn('[revenuecat] store sync failed', { error: String(e) });
+    } finally {
+      storeSyncInFlight = null;
+    }
+  })();
+  return storeSyncInFlight;
+}
+
+/** Test seam. */
+export function __resetStoreSyncForTests(): void {
+  pendingStoreSyncUserId = null;
+  storeSyncInFlight = null;
 }
 
 /**

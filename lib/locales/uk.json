@@ -87,8 +87,21 @@
       "welcome": "Ласкаво просимо до Мери",
       "wrongCode": "Цей код не підійшов. Перевірте його або надішліть новий.",
       "noSheetTitle": "Ваш iPhone не відкрив завантаження",
-      "noSheetBody": "Спробуйте ще раз або відкрийте Налаштування на iPhone, далі Основні, далі Мова та регіон і Мови перекладу, щоб завантажити {{language}}."
-    }
+      "noSheetBody": "Спробуйте ще раз або відкрийте Налаштування на iPhone, далі Основні, далі Мова та регіон і Мови перекладу, щоб завантажити {{language}}.",
+      "sentToIfAccount": "If this email has a Мера account, we've sent it a code. New to Мера? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "Мера needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "Звернутися до підтримки"
@@ -913,7 +926,15 @@
     "confirmTimeoutTitle": "Поки що не вдалося підтвердити покупку",
     "confirmTimeoutBody": "Якщо ви сплатили, зверніться до підтримки, і ми все владнаємо.",
     "checkAgain": "Перевірити ще раз",
-    "readingExplainer": "Кожна стаття, що відповідає вашим інтересам, потрапляє до вашої стрічки. Мера читає їх, відсіює шум і піднімає те, що важливо. Ваш тариф визначає, скільки Мера читає у хмарі щодня: Стартовий 10 МБ, Індивідуальний 50 МБ, Професійний 200 МБ. Мера читає для вас через наскрізне шифрування, тож не бачить, які статті читає і скільки їх. Тому тарифи вимірюються в мегабайтах, а не в статтях. На підтримуваних телефонах читання на телефоні необмежене на кожному тарифі."
+    "readingExplainer": "Кожна стаття, що відповідає вашим інтересам, потрапляє до вашої стрічки. Мера читає їх, відсіює шум і піднімає те, що важливо. Ваш тариф визначає, скільки Мера читає у хмарі щодня: Стартовий 10 МБ, Індивідуальний 50 МБ, Професійний 200 МБ. Мера читає для вас через наскрізне шифрування, тож не бачить, які статті читає і скільки їх. Тому тарифи вимірюються в мегабайтах, а не в статтях. На підтримуваних телефонах читання на телефоні необмежене на кожному тарифі.",
+    "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Мера can't see plans on other stores, so it can't refund any overlap.",
+    "invoicesAppStore": "Мера has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "Мера has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "tabs": {
     "deck": "Стрічка",
@@ -2891,7 +2912,8 @@
       "readingOnPhone": "Мера читає на цьому телефоні.",
       "newPlanApplies": "Ваш новий тариф діє зараз.",
       "planMultiplierBase": "10 МБ читання у хмарі на день",
-      "planMultiplier": "{{mb}} МБ читання у хмарі на день, у {{n}}x більше, ніж на тарифі Стартовий"
+      "planMultiplier": "{{mb}} МБ читання у хмарі на день, у {{n}}x більше, ніж на тарифі Стартовий",
+      "restorePurchases": "Restore purchases"
     },
     "notifications": {
       "push": "Push-сповіщення",
@@ -3003,5 +3025,28 @@
     "relevance": "Найкраще збіг",
     "oldest": "Найстаріше спочатку",
     "newest": "Найновіше спочатку"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so Мера stops working on it on {{date}}. If you pay for Мера, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so Мера stops working on it on {{date}}. If you pay for Мера, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   }
 }

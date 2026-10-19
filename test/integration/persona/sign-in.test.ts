@@ -365,6 +365,8 @@ describe('signing in with this phone', () => {
         });
 
         it('native attestation that reports the platform unsupported maps to unsupported', async () => {
+            // Native path: in a dev build the token would win over attestation.
+            delete process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN;
             mockAttest.isSupported.mockResolvedValue(true);
             mockAttest.generateKey.mockRejectedValue(Object.assign(new Error('no'), { code: 'ERR_ATTEST_UNSUPPORTED' }));
 
@@ -372,6 +374,8 @@ describe('signing in with this phone', () => {
         });
 
         it('native attestation that fails maps to failed with the reason', async () => {
+            // Native path: in a dev build the token would win over attestation.
+            delete process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN;
             mockAttest.isSupported.mockResolvedValue(true);
             mockAttest.attestKey.mockRejectedValue(
                 Object.assign(new Error('apple'), { code: 'ERR_ATTEST_SERVER_UNAVAILABLE' }),
