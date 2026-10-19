@@ -3,7 +3,6 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { HStack } from '@/components/ui/hstack';
-import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { Spinner } from '@/components/ui/spinner';
@@ -15,6 +14,8 @@ import {
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
 import {
     MODEL_CATALOG,
+    RELEVANCE_MODEL,
+    TEXT_MODEL,
 } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import {
     averageMs,
@@ -48,7 +49,9 @@ import {
     bgRefreshDescriptionKey,
 } from '@/lib/background/bg-refresh-ui';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import { useMeraProtocolSettings } from './useMeraProtocolSettings';
+import { gbText, useMeraProtocolSettings } from './useMeraProtocolSettings';
+
+const secondsText = (ms: number): string => (ms / 1000).toFixed(1);
 
 interface MeraProtocolSettingsScreenProps {
     onBack?: () => void;
@@ -66,33 +69,28 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         requirementsResult,
         showRequirements,
         setShowRequirements,
-        showDeleteModelConfirm,
-        setShowDeleteModelConfirm,
         isDeletingModel,
-        isSwitchingModel,
-        pendingSwitchTo,
-        setPendingSwitchTo,
         processingMode,
         isOnDevice,
-        selectedModelId,
-        modelState,
-        downloadProgress,
         store,
         webSearchInChat,
-        currentModel,
         inferenceStats,
         deviceSupported,
         onDeviceIntent,
         bgRefreshEnabled,
         toggleBgRefresh,
-        handleDownloadModel,
-        handleDeleteModel,
-        confirmDeleteModel,
-        confirmSwitchModel,
-        selectModel,
-        getModelStatusText,
-        getModelStatusColor,
         selectMode,
+        onDisk,
+        missingBytes,
+        bothOnDisk,
+        anyOnDisk,
+        isDownloading,
+        downloadBytes,
+        failureKind,
+        storageShort,
+        freeUpSize,
+        handleDownload,
+        handleDeleteModels,
     } = useMeraProtocolSettings();
     const insets = useSafeAreaInsets();
 
@@ -189,181 +187,199 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </View>
             </View>
 
-            {/* Model Management Section — only relevant when the user wants
-                on-device AND the device can actually run it. Otherwise this
-                whole concept is implementation detail the user shouldn't see. */}
+            {/* AI models: both files, one download. Only relevant when the reader
+                wants on-device AND the phone can run it; otherwise it is detail. */}
             {onDeviceIntent && deviceSupported === true && (
-                <>
-                    <Box className="mx-5 mb-6 border-b border-line" />
-
-                    <Box className="px-5 mb-6">
-                        <HStack className="items-center justify-between mb-1">
-                            <Text className="text-ink text-lg font-semibold">{t('meraProtocol.aiModel')}</Text>
-                            {(modelState === 'downloaded' || modelState === 'ready') && (
-                                <Pressable
-                                    onPress={handleDeleteModel}
-                                    className="bg-surface rounded-full p-2"
+                <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-models">
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ flex: 1 }}>
+                            <GroupLabel>{t('meraProtocol.modelsTitle')}</GroupLabel>
+                        </View>
+                        {anyOnDisk && !isDownloading ? (
+                            <View style={{ width: 44, height: 44 }}>
+                                {/* The visual is hidden and the labelled Pressable has no children,
+                                    so a screen reader never reads the icon font's glyph. */}
+                                <View
+                                    pointerEvents="none"
+                                    accessibilityElementsHidden
+                                    importantForAccessibility="no-hide-descendants"
+                                    style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
                                 >
-                                    <MaterialIcons name="delete-outline" size={20} color={colors.negative} />
-                                </Pressable>
-                            )}
-                        </HStack>
-                        <Text size="xs" className="text-ink-3 mb-3">
-                            {t('meraProtocol.modelRequiredForOnDevice')}
-                        </Text>
+                                    <MaterialIcons name="delete-outline" size={22} color={colors.negative} />
+                                </View>
+                                <Pressable
+                                    testID="mera-protocol-delete-models"
+                                    onPress={handleDeleteModels}
+                                    disabled={isDeletingModel}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t('meraProtocol.deleteModelsLabel')}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                            </View>
+                        ) : null}
+                    </View>
+                    {!bothOnDisk ? (
+                        <View style={{ marginBottom: 8 }}>
+                            <Help>{t('meraProtocol.modelsHelp')}</Help>
+                        </View>
+                    ) : null}
+                    <Group>
+                        {MODEL_CATALOG.map((entry) => {
+                            const ready = !!onDisk[entry.modelId];
+                            const role = t(entry.role === 'text' ? 'meraProtocol.modelRoleText' : 'meraProtocol.modelRoleRelevance');
+                            const size = `${gbText(entry.sizeBytes)} GB`;
+                            return (
+                                <View
+                                    key={entry.modelId}
+                                    testID={`mera-protocol-model-${entry.modelId.replace(/^mera-/, '')}`}
+                                    accessible
+                                    accessibilityLabel={t(ready ? 'meraProtocol.modelRowReady' : 'meraProtocol.modelRowMissing', {
+                                        model: entry.label,
+                                        role,
+                                        size,
+                                    })}
+                                >
+                                    <Row
+                                        title={entry.label}
+                                        subtitle={role}
+                                        value={size}
+                                        trailing={
+                                            ready ? (
+                                                <View
+                                                    accessibilityElementsHidden
+                                                    importantForAccessibility="no-hide-descendants"
+                                                    style={{ width: 20, alignItems: 'center' }}
+                                                >
+                                                    <MaterialIcons name="check" size={20} color={colors.positive} />
+                                                </View>
+                                            ) : null
+                                        }
+                                    />
+                                </View>
+                            );
+                        })}
+                    </Group>
+                    {/* Siblings of the rows, never inside them: a link nested in a row
+                        steals the row's accessibility activation. */}
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, marginHorizontal: 4 }}>
+                        {MODEL_CATALOG.map((entry) => (
+                            <Pressable
+                                key={entry.modelId}
+                                testID={`mera-protocol-model-license-${entry.modelId.replace(/^mera-/, '')}`}
+                                onPress={() => { void Linking.openURL(entry.licenseUrl); }}
+                                accessibilityRole="link"
+                                style={{ minHeight: 44, justifyContent: 'center' }}
+                            >
+                                <Text size="xs" className="text-ink-3 underline">
+                                    {t('meraProtocol.modelLicenseLink', { model: entry.label })}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </View>
 
-                        {/* Model picker: one model on disk at a time. */}
-                        <Text size="xs" className="text-ink-2 mb-2">
-                            {t('meraProtocol.chooseModel')}
-                        </Text>
-                        <VStack space="sm" className="mb-4">
-                            {MODEL_CATALOG.map((entry) => {
-                                const selected = entry.modelId === selectedModelId;
-                                const locked = modelState === 'downloading' || isSwitchingModel;
-                                return (
-                                    <VStack key={entry.modelId} space="xs">
-                                        <Pressable
-                                            testID={`mera-protocol-model-option-${entry.modelId.replace(/^mera-/, '')}`}
-                                            onPress={() => selectModel(entry)}
-                                            disabled={locked}
-                                            accessibilityRole="radio"
-                                            accessibilityLabel={`${entry.label}, ${`${(entry.sizeBytes / 1e9).toFixed(1)} GB`}`}
-                                            accessibilityState={{ selected, disabled: locked }}
-                                            className={
-                                                'rounded-lg px-4 py-3 border ' +
-                                                (selected
-                                                    ? 'border-positive bg-surface-raised'
-                                                    : 'border-line bg-surface') +
-                                                (locked && !selected ? ' opacity-50' : '')
-                                            }
-                                        >
-                                            <HStack space="md" className="items-center">
-                                                <MaterialIcons
-                                                    name={selected ? 'radio-button-checked' : 'radio-button-unchecked'}
-                                                    size={20}
-                                                    color={selected ? colors.positive : colors.ink2}
-                                                />
-                                                <Text className={'flex-1 font-medium ' + (selected ? 'text-positive' : 'text-ink')}>
-                                                    {entry.label}
-                                                </Text>
-                                                <Text size="xs" className="text-ink-2">
-                                                    {`${(entry.sizeBytes / 1e9).toFixed(1)} GB`}
-                                                </Text>
-                                            </HStack>
-                                        </Pressable>
-                                        {/* A sibling of the row, never inside it: a link nested in a
-                                            selectable row steals the row's accessibility activation. */}
-                                        <Pressable
-                                            testID={`mera-protocol-model-license-${entry.modelId.replace(/^mera-/, '')}`}
-                                            onPress={() => { void Linking.openURL(entry.licenseUrl); }}
-                                            accessibilityRole="link"
-                                            hitSlop={6}
-                                            className="self-start ml-4"
-                                        >
-                                            <Text size="xs" className="text-ink-3 underline">
-                                                {t('meraProtocol.modelLicense', { license: entry.licenseName })}
-                                            </Text>
-                                        </Pressable>
-                                    </VStack>
-                                );
-                            })}
-                        </VStack>
-
-                        {/* Model Status */}
-                        <HStack space="md" className="items-center mb-4">
-                            <Box
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: getModelStatusColor() }}
-                            />
-                            <Text className="text-ink-2 text-sm">{getModelStatusText()}</Text>
-                        </HStack>
-
-                        {/* Download Progress Bar */}
-                        {modelState === 'downloading' && (
-                            <Box className="mb-4">
-                                <Progress value={downloadProgress} size="sm" className="mb-2">
+                    <VStack space="md" className="mt-2">
+                        {isDownloading ? (
+                            <>
+                                <Text size="sm" className="text-ink-2">
+                                    {t('meraProtocol.downloadingOf', {
+                                        done: gbText(downloadBytes.doneBytes),
+                                        total: gbText(downloadBytes.totalBytes),
+                                    })}
+                                </Text>
+                                <Progress
+                                    value={downloadBytes.totalBytes > 0 ? (downloadBytes.doneBytes / downloadBytes.totalBytes) * 100 : 0}
+                                    size="sm"
+                                >
                                     <ProgressFilledTrack />
                                 </Progress>
-                            </Box>
-                        )}
-
-                        {/* Action Buttons */}
-                        <VStack space="md">
-                            {modelState === 'not_downloaded' && (
-                                <Button
-                                    action="primary"
-                                    variant="solid"
-                                    size="md"
-                                    onPress={handleDownloadModel}
-                                >
-                                    <MaterialIcons name="cloud-download" size={18} color={colors.ink} style={{ marginRight: 8 }} />
-                                    <ButtonText>
-                                        {t('meraProtocol.downloadModelNamed', { model: currentModel.label, size: `${(currentModel.sizeBytes / 1e9).toFixed(1)} GB` })}
-                                    </ButtonText>
-                                </Button>
-                            )}
-
-                            {/* Cancel Download stays enabled even when read-only: it aborts a
-                                transfer the user already started (up to ~2.8GB), not a settings
-                                change — disabling it would strand them mid-download. */}
-                            {modelState === 'downloading' && (
                                 <Button
                                     action="negative"
                                     variant="outline"
                                     size="md"
                                     onPress={cancelModelDownload}
+                                    accessibilityLabel={t('meraProtocol.cancelDownloadAction')}
                                 >
                                     <MaterialIcons name="close" size={18} color={colors.negative} style={{ marginRight: 8 }} />
-                                    <ButtonText className="text-negative">{t('meraProtocol.cancelDownload')}</ButtonText>
+                                    <ButtonText className="text-negative">{t('meraProtocol.cancelDownloadAction')}</ButtonText>
                                 </Button>
-                            )}
-
-                            {modelState === 'error' && (
+                            </>
+                        ) : failureKind ? (
+                            <>
+                                <Text size="sm" className="text-negative" testID="mera-protocol-download-error">
+                                    {failureKind === 'space'
+                                        ? t('meraProtocol.errorSpace', { size: freeUpSize })
+                                        : t(failureKind === 'damaged' ? 'meraProtocol.errorFile' : 'meraProtocol.errorFinish')}
+                                </Text>
                                 <Button
                                     action="primary"
                                     variant="solid"
                                     size="md"
-                                    onPress={handleDownloadModel}
+                                    onPress={handleDownload}
+                                    isDisabled={storageShort}
+                                    accessibilityLabel={t('meraProtocol.tryAgain')}
                                 >
                                     <MaterialIcons name="refresh" size={18} color={colors.ink} style={{ marginRight: 8 }} />
-                                    <ButtonText>{t('meraProtocol.retryDownload')}</ButtonText>
+                                    <ButtonText>{t('meraProtocol.tryAgain')}</ButtonText>
                                 </Button>
-                            )}
-                        </VStack>
+                            </>
+                        ) : !bothOnDisk ? (
+                            <>
+                                {storageShort ? (
+                                    <Text size="sm" className="text-negative" testID="mera-protocol-free-up">
+                                        {t('meraProtocol.freeUpToDownload', { size: freeUpSize })}
+                                    </Text>
+                                ) : null}
+                                <Button
+                                    action="primary"
+                                    variant="solid"
+                                    size="md"
+                                    onPress={handleDownload}
+                                    isDisabled={storageShort}
+                                    testID="mera-protocol-download"
+                                    accessibilityLabel={t('meraProtocol.downloadAction', { size: `${gbText(missingBytes)} GB` })}
+                                >
+                                    <MaterialIcons name="cloud-download" size={18} color={colors.ink} style={{ marginRight: 8 }} />
+                                    <ButtonText>{t('meraProtocol.downloadAction', { size: `${gbText(missingBytes)} GB` })}</ButtonText>
+                                </Button>
+                            </>
+                        ) : null}
+                    </VStack>
 
-                        {/* Speed on this device: in memory only, never stored or sent. */}
-                        {hasAnyStat(inferenceStats) && (
-                            <VStack space="xs" className="mt-4" testID="mera-protocol-speed">
-                                <Text className="text-ink text-sm font-semibold">
-                                    {t('meraProtocol.speedTitle')}
+                    {/* Speed on this device: in memory only, never stored or sent. */}
+                    {hasAnyStat(inferenceStats) && (
+                        <VStack space="xs" className="mt-4" testID="mera-protocol-speed">
+                            <GroupLabel>{t('meraProtocol.speedTitle')}</GroupLabel>
+                            {inferenceStats.loadMs.text != null && (
+                                <Text size="xs" className="text-ink-2">
+                                    {t('meraProtocol.speedLoadsIn', { model: TEXT_MODEL.label, seconds: secondsText(inferenceStats.loadMs.text) })}
                                 </Text>
-                                {inferenceStats.loadMs.text != null && (
-                                    <Text size="xs" className="text-ink-2">
-                                        {t('meraProtocol.speedLoad', { seconds: (inferenceStats.loadMs.text / 1000).toFixed(1) })}
-                                    </Text>
-                                )}
-                                {inferenceStats.genTokPerSec != null && (
-                                    <Text size="xs" className="text-ink-2">
-                                        {t('meraProtocol.speedGeneration', { tokPerSec: inferenceStats.genTokPerSec })}
-                                    </Text>
-                                )}
-                                {averageMs(inferenceStats.relevance) != null && (
-                                    <Text size="xs" className="text-ink-2">
-                                        {t('meraProtocol.speedRelevance', { ms: averageMs(inferenceStats.relevance) })}
-                                    </Text>
-                                )}
-                                {averageMs(inferenceStats.reason) != null && (
-                                    <Text size="xs" className="text-ink-2">
-                                        {t('meraProtocol.speedReason', { ms: averageMs(inferenceStats.reason) })}
-                                    </Text>
-                                )}
-                                <Text size="xs" className="text-ink-3">
-                                    {t('meraProtocol.speedResetNote')}
+                            )}
+                            {inferenceStats.loadMs.relevance != null && (
+                                <Text size="xs" className="text-ink-2">
+                                    {t('meraProtocol.speedLoadsIn', { model: RELEVANCE_MODEL.label, seconds: secondsText(inferenceStats.loadMs.relevance) })}
                                 </Text>
-                            </VStack>
-                        )}
-                    </Box>
-                </>
+                            )}
+                            {inferenceStats.genTokPerSec != null && (
+                                <Text size="xs" className="text-ink-2">
+                                    {t('meraProtocol.speedGeneration', { tokPerSec: inferenceStats.genTokPerSec })}
+                                </Text>
+                            )}
+                            {averageMs(inferenceStats.relevance) != null && (
+                                <Text size="xs" className="text-ink-2">
+                                    {t('meraProtocol.speedRanking', { seconds: secondsText(averageMs(inferenceStats.relevance) ?? 0) })}
+                                </Text>
+                            )}
+                            {averageMs(inferenceStats.reason) != null && (
+                                <Text size="xs" className="text-ink-2">
+                                    {t('meraProtocol.speedNotes', { seconds: secondsText(averageMs(inferenceStats.reason) ?? 0) })}
+                                </Text>
+                            )}
+                            <Text size="xs" className="text-ink-3">
+                                {t('meraProtocol.speedResetNote')}
+                            </Text>
+                        </VStack>
+                    )}
+                </View>
             )}
 
             {/* Background refresh. The copy follows the mode the run will
@@ -443,7 +459,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 to run on-device on a device that can't support it. Cloud-mode
                 users (the default) never see this; Mera Protocol works fine for
                 them via the Cloud TEE LLM regardless of device specs. */}
-            {onDeviceIntent && requirementsResult && requirementsResult.supported === false && (
+            {onDeviceIntent && requirementsResult && deviceSupported === false && (
                 <Box className="px-5 mb-6">
                     <Box className="p-4 rounded-lg border bg-surface border-negative">
                         <Pressable onPress={() => setShowRequirements(prev => !prev)}>
@@ -504,97 +520,12 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                         <Text className="text-ink-2 text-sm">{t('meraProtocol.chipLabel')}</Text>
                                     </HStack>
                                 )}
-                                <HStack space="sm" className="items-center">
-                                    <MaterialIcons
-                                        name={requirementsResult.failedCheck === 'storage' ? 'cancel' : 'check-circle'}
-                                        size={16}
-                                        color={requirementsResult.failedCheck === 'storage' ? colors.negative : colors.positive}
-                                    />
-                                    <Text className="text-ink-2 text-sm">
-                                        {t('meraProtocol.storageLabel')}{requirementsResult.deviceInfo.freeStorageGB != null ? ` (yours: ${requirementsResult.deviceInfo.freeStorageGB}GB free)` : ''}
-                                    </Text>
-                                </HStack>
                             </VStack>
                         )}
                     </Box>
                 </Box>
             )}
 
-            {/* Delete AI Model Confirmation Modal */}
-            <Modal isOpen={showDeleteModelConfirm} onClose={() => setShowDeleteModelConfirm(false)} size="sm">
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader className="border-line pb-4">
-                        <Text className="text-xl font-semibold text-negative">{t('meraProtocol.deleteTitle')}</Text>
-                    </ModalHeader>
-                    <ModalBody className="py-6">
-                        <Text className="text-ink text-base leading-relaxed">
-                            {t('meraProtocol.deleteModelDescription', { model: currentModel.label, size: `${(currentModel.sizeBytes / 1e9).toFixed(1)} GB` })}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-line pt-4">
-                        <VStack className="w-full" space="md">
-                            <Button
-                                action="negative"
-                                onPress={confirmDeleteModel}
-                                disabled={isDeletingModel}
-                                className="w-full"
-                            >
-                                <ButtonText>
-                                    {isDeletingModel ? t('meraProtocol.deleting') : t('meraProtocol.deleteButton')}
-                                </ButtonText>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                action="secondary"
-                                onPress={() => setShowDeleteModelConfirm(false)}
-                                className="w-full"
-                            >
-                                <ButtonText>{t('common.cancel')}</ButtonText>
-                            </Button>
-                        </VStack>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-
-            {/* Switch Model Confirmation Modal */}
-            <Modal isOpen={pendingSwitchTo !== null} onClose={() => setPendingSwitchTo(null)} size="sm">
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader className="border-line pb-4">
-                        <Text className="text-xl font-semibold text-ink">{t('meraProtocol.switchModelTitle')}</Text>
-                    </ModalHeader>
-                    <ModalBody className="py-6">
-                        <Text className="text-ink text-base leading-relaxed">
-                            {t('meraProtocol.switchModelDescription', {
-                                current: currentModel.label,
-                                new: pendingSwitchTo?.label ?? '',
-                            })}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-line pt-4">
-                        <VStack className="w-full" space="md">
-                            <Button
-                                action="primary"
-                                onPress={confirmSwitchModel}
-                                isDisabled={isSwitchingModel}
-                                className="w-full"
-                                testID="mera-protocol-switch-model-confirm"
-                            >
-                                <ButtonText>{t('meraProtocol.switchModelConfirm')}</ButtonText>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                action="secondary"
-                                onPress={() => setPendingSwitchTo(null)}
-                                className="w-full"
-                            >
-                                <ButtonText>{t('common.cancel')}</ButtonText>
-                            </Button>
-                        </VStack>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
         </>
     );
 

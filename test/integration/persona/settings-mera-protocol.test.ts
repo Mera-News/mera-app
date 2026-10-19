@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // You > Settings > Mera Protocol through `useMeraProtocolSettings`: loading the persona's processing mode,
-// switching it, promoting an on-device intent once the model lands, and deleting the model. Real hook,
+// switching it, the one download for both on-device models (Qwen text + Kev relevance), and deleting them. Real hook,
 // stores, Apollo over MSW, auth client, in-memory DB, the REAL modelManager on chat's in-memory file system
 // (the model "on disk" is a manifest the manager reads) and the real toast queue. Mocked: the file system
 // module (an expo-* edge) and the llama.rn / device natives from the setup.
@@ -9,15 +9,16 @@ import { useMeraProtocolSettings } from '@/components/custom/config-mera/useMera
 import database from '@/lib/database';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
+import * as downloadService from '@/lib/mera-protocol-toolkit/core/downloadService';
+import { MODEL_CATALOG } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { isModelDownloaded } from '@/lib/mera-protocol-toolkit/core/modelManager';
+import { STORAGE_MARGIN_BYTES } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
+import { settleDialog, useDialogQueue } from '@/lib/dialog';
+import NetInfo from '@react-native-community/netinfo';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { resetToastQueue, useToastQueue } from '@/lib/toast/toast-queue';
-import {
-    fileSystemModule,
-    placeModelFile,
-    resetFileSystem,
-} from '@/test/integration/chat/_helpers';
+import { placeDownloadedModel, resetFileSystem } from '@/test/helpers/fs';
 import {
     FIXTURE_ACCOUNT,
     graphql,
@@ -39,6 +40,18 @@ jest.mock('expo-device', () => ({
         return mockTotalMemory;
     },
 }));
+// Free space on the phone, settable per test. The setup's react-native-fs mock has no getFSInfo.
+let mockFreeBytes = 100e9;
+jest.mock('@dr.pogodin/react-native-fs', () => ({
+    DocumentDirectoryPath: '/tmp/mera-test',
+    CachesDirectoryPath: '/tmp/mera-test-cache',
+    exists: jest.fn(() => Promise.resolve(false)),
+    mkdir: jest.fn(() => Promise.resolve()),
+    unlink: jest.fn(() => Promise.resolve()),
+    stat: jest.fn(() => Promise.resolve({ size: 0 })),
+    getFSInfo: jest.fn(() => Promise.resolve({ freeSpace: mockFreeBytes, totalSpace: 200e9 })),
+    stopDownload: jest.fn(),
+}));
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
 
 // MSW answers on real I/O while the fake clock ticks, so the default one-second wait is too tight.
@@ -46,13 +59,12 @@ configure({ asyncUtilTimeout: 20_000 });
 
 const protocol = () => useMeraProtocolStore.getState();
 
-/** Puts the selected model on disk the way a finished download leaves it: the file and the ready manifest. */
-async function putModelOnDisk(): Promise<void> {
-    const id = protocol().selectedModelId;
-    placeModelFile(id);
-    await new fileSystemModule.File(fileSystemModule.Paths.cache, 'mera-models', id, 'manifest.json').write(
-        JSON.stringify({ modelId: id, ready: true }),
-    );
+const TEXT_ID = MODEL_CATALOG[0].modelId;
+const KEV_ID = MODEL_CATALOG[1].modelId;
+
+/** Puts both on-device models on disk the way finished downloads leave them. */
+function putModelsOnDisk(): void {
+    MODEL_CATALOG.forEach((m) => placeDownloadedModel(m.modelId));
 }
 
 /** The server persona's processing mode. */
@@ -136,7 +148,7 @@ describe('Mera Protocol settings', () => {
         });
 
         it('a persona on-device with the model on disk: on-device and "downloaded"', async () => {
-            await putModelOnDisk();
+            putModelsOnDisk();
             serverMode(ProcessingMode.OnDevice);
 
             const { result } = await mountLoaded();
@@ -177,7 +189,7 @@ describe('Mera Protocol settings', () => {
     describe('selectMode', () => {
         beforeEach(async () => {
             await signInFixtureAccount();
-            await putModelOnDisk();
+            putModelsOnDisk();
             serverMode(ProcessingMode.OnDevice);
         });
 
@@ -238,106 +250,259 @@ describe('Mera Protocol settings', () => {
     });
 
     // ---------------------------------------------------------------------------------------------
-    describe('auto-promote', () => {
+    describe('the download', () => {
+        let started: Array<{ promote?: boolean } | undefined>;
         beforeEach(async () => {
             await signInFixtureAccount();
             serverMode(ProcessingMode.OnDevice);
+            started = [];
+            jest.spyOn(downloadService, 'startModelDownloads').mockImplementation((opts) => {
+                started.push(opts);
+            });
         });
 
-        it('intent on-device + supported device + the model lands: UpdateProcessingMode(ON_DEVICE) is sent ONCE', async () => {
-            const sent = recordModeUpdates();
-            // No model yet: the mode stays cloud, the intent is kept.
-            await mountLoaded();
-            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            expect(sent).toEqual([]);
-
-            // The download service reports completion.
-            await putModelOnDisk();
-            act(() => protocol().setModelState('downloaded'));
-
-            await waitFor(() => expect(protocol().processingMode).toBe(ProcessingMode.OnDevice));
-            expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: 'ON_DEVICE' }]);
-            // Settled: no further sends.
-            await new Promise((r) => setTimeout(r, 50));
-            expect(sent).toHaveLength(1);
-        });
-
-        it('an unsupported device is never promoted', async () => {
-            // 2 GB of RAM fails the 6 GB requirement.
-            mockTotalMemory = 2 * 1024 * 1024 * 1024;
-            const sent = recordModeUpdates();
+        it('with neither file on disk: the whole pair is missing and the reader\'s on-device intent is passed as promote', async () => {
             const { result } = await mountLoaded();
-            await waitFor(() => expect(result.current.deviceSupported).toBe(false));
+            expect(result.current.bothOnDisk).toBe(false);
+            expect(result.current.anyOnDisk).toBe(false);
+            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes + MODEL_CATALOG[1].sizeBytes);
 
-            await putModelOnDisk();
-            act(() => protocol().setModelState('downloaded'));
-            await new Promise((r) => setTimeout(r, 100));
+            await act(async () => {
+                await result.current.handleDownload();
+            });
 
-            expect(sent).toEqual([]);
+            expect(started).toEqual([{ promote: true }]);
+        });
+
+        it('with one file on disk: the button size is only what is still missing, and the row is ready', async () => {
+            placeDownloadedModel(TEXT_ID);
+            const { result } = await mountLoaded();
+
+            expect(result.current.onDisk).toEqual({ [TEXT_ID]: true, [KEV_ID]: false });
+            expect(result.current.missingBytes).toBe(MODEL_CATALOG[1].sizeBytes);
+            expect(result.current.anyOnDisk).toBe(true);
+            expect(result.current.bothOnDisk).toBe(false);
+            // One file is not enough: the persona stays on Private cloud.
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
         });
 
-        it('a failing promotion leaves the mode as it was', async () => {
-            server.use(mockGqlError('UpdateProcessingMode', 'INTERNAL_SERVER_ERROR'));
-            await mountLoaded();
+        it('with both files on disk: nothing is missing', async () => {
+            putModelsOnDisk();
+            const { result } = await mountLoaded();
+            expect(result.current.onDisk).toEqual({ [TEXT_ID]: true, [KEV_ID]: true });
+            expect(result.current.missingBytes).toBe(0);
+            expect(result.current.bothOnDisk).toBe(true);
+        });
 
-            await putModelOnDisk();
-            act(() => protocol().setModelState('downloaded'));
-            await new Promise((r) => setTimeout(r, 100));
+        it('a cloud reader downloads without promote', async () => {
+            serverMode(ProcessingMode.Cloud);
+            const { result } = await mountLoaded();
+            await act(async () => {
+                await result.current.handleDownload();
+            });
+            expect(started).toEqual([{ promote: false }]);
+        });
 
-            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+        it('picking Private cloud mid-download tells the download not to promote', async () => {
+            const promoteFlag = jest.spyOn(downloadService, 'setPromoteWhenDone');
+            const { result } = await mountLoaded();
+
+            await act(async () => {
+                await result.current.selectMode(ProcessingMode.Cloud);
+            });
+
+            expect(promoteFlag).toHaveBeenLastCalledWith(false);
+        });
+
+        it('on mobile data: asks first, and a "Wait for Wi-Fi" starts nothing', async () => {
+            jest.spyOn(NetInfo, 'fetch').mockResolvedValue({ type: 'cellular', isConnected: true } as never);
+            useDialogQueue.setState({ queue: [] });
+            const { result } = await mountLoaded();
+
+            let pending!: Promise<void>;
+            act(() => {
+                pending = result.current.handleDownload();
+            });
+            await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+            const dialog = useDialogQueue.getState().queue[0];
+            expect(dialog.title).toBe('Download on mobile data?');
+            expect(dialog.body).toBe('This uses 5.8 GB of data.');
+            expect(dialog.confirmLabel).toBe('Download');
+            expect(dialog.cancelLabel).toBe('Wait for Wi-Fi');
+
+            await act(async () => {
+                settleDialog(dialog.id, false);
+                await pending;
+            });
+            expect(started).toEqual([]);
+        });
+
+        it('on mobile data: "Download" starts it', async () => {
+            jest.spyOn(NetInfo, 'fetch').mockResolvedValue({ type: 'cellular', isConnected: true } as never);
+            useDialogQueue.setState({ queue: [] });
+            const { result } = await mountLoaded();
+
+            let pending!: Promise<void>;
+            act(() => {
+                pending = result.current.handleDownload();
+            });
+            await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+            await act(async () => {
+                settleDialog(useDialogQueue.getState().queue[0].id, true);
+                await pending;
+            });
+            expect(started).toEqual([{ promote: true }]);
+        });
+
+        it('on Wi-Fi: no question', async () => {
+            jest.spyOn(NetInfo, 'fetch').mockResolvedValue({ type: 'wifi', isConnected: true } as never);
+            useDialogQueue.setState({ queue: [] });
+            const { result } = await mountLoaded();
+            await act(async () => {
+                await result.current.handleDownload();
+            });
+            expect(useDialogQueue.getState().queue).toEqual([]);
+            expect(started).toHaveLength(1);
         });
     });
 
     // ---------------------------------------------------------------------------------------------
-    describe('deleting the model', () => {
+    describe('storage and support', () => {
         beforeEach(async () => {
             await signInFixtureAccount();
-            await putModelOnDisk();
             serverMode(ProcessingMode.OnDevice);
         });
+        afterEach(() => {
+            mockFreeBytes = 100e9;
+        });
 
-        it('while on-device: the model leaves the disk, the store and the server fall back to cloud', async () => {
+        it('too little free space: the row stays enabled, Download is blocked, and the shortfall is named', async () => {
+            mockFreeBytes = 3e9;
+            const { result } = await mountLoaded();
+            await waitFor(() => expect(result.current.storageShort).toBe(true));
+
+            // Not "this phone can't run it".
+            expect(result.current.deviceSupported).toBe(true);
+            const needed = result.current.missingBytes + STORAGE_MARGIN_BYTES;
+            expect(result.current.freeUpSize).toBe(`${(Math.ceil((needed - 3e9) / 1e8) / 10).toFixed(1)} GB`);
+        });
+
+        it('an unsupported phone (RAM) is not supported, with no storage message', async () => {
+            mockTotalMemory = 2 * 1024 * 1024 * 1024;
+            const { result } = await mountLoaded();
+            await waitFor(() => expect(result.current.deviceSupported).toBe(false));
+            expect(result.current.storageShort).toBe(false);
+        });
+
+        it('an unsupported device is never switched to on-device', async () => {
+            mockTotalMemory = 2 * 1024 * 1024 * 1024;
+            putModelsOnDisk();
             const sent = recordModeUpdates();
+            const { result } = await mountLoaded();
+            await waitFor(() => expect(result.current.deviceSupported).toBe(false));
+            await act(async () => {
+                await result.current.selectMode(ProcessingMode.OnDevice);
+            });
+            expect(sent).toEqual([]);
+        });
+
+        it('a failed download reads its kind from the error', async () => {
+            const { result } = await mountLoaded();
+            act(() => protocol().setModelError('Download failed: checksum mismatch'));
+            expect(result.current.failureKind).toBe('damaged');
+            act(() => protocol().setModelError('HTTP status 503'));
+            expect(result.current.failureKind).toBe('server');
+            act(() => protocol().setModelError('ENOSPC: no space left'));
+            expect(result.current.failureKind).toBe('space');
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    describe('deleting the models', () => {
+        beforeEach(async () => {
+            await signInFixtureAccount();
+            putModelsOnDisk();
+            serverMode(ProcessingMode.OnDevice);
+            useDialogQueue.setState({ queue: [] });
+        });
+
+        /** Starts the delete, answers its confirm, and waits for it to finish. */
+        async function deleteAnswering(result: { current: { handleDeleteModels: () => Promise<void> } }, confirmed: boolean) {
+            let pending!: Promise<void>;
+            act(() => {
+                pending = result.current.handleDeleteModels();
+            });
+            await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+            const dialog = useDialogQueue.getState().queue[0];
+            await act(async () => {
+                settleDialog(dialog.id, confirmed);
+                await pending;
+            });
+            return dialog;
+        }
+
+        it('confirms in words, then switches to Private cloud BEFORE removing both files', async () => {
+            // The state of the disk at the moment the server hears "CLOUD".
+            const diskAtSwitch: boolean[] = [];
+            server.use(
+                graphql.mutation('UpdateProcessingMode', async ({ variables }) => {
+                    const input = (variables as { input: { userId: string; mode: string } }).input;
+                    diskAtSwitch.push(
+                        (await isModelDownloaded(TEXT_ID)) && (await isModelDownloaded(KEV_ID)),
+                    );
+                    return HttpResponse.json({
+                        data: { updateProcessingMode: personaFor(Date.now(), { userId: input.userId, processingMode: input.mode as ProcessingMode }) },
+                    });
+                }),
+            );
             const { result } = await mountLoaded();
             expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
 
-            await act(async () => {
-                await result.current.confirmDeleteModel();
-            });
+            const dialog = await deleteAnswering(result, true);
 
-            await expect(isModelDownloaded(protocol().selectedModelId)).resolves.toBe(false);
+            expect(dialog.body).toBe('This removes the AI models (5.8 GB) from this phone. Mera will use Private cloud.');
+            expect(dialog.destructive).toBe(true);
+            expect(diskAtSwitch).toEqual([true]);
+            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
+            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
             expect(protocol().modelState).toBe('not_downloaded');
             expect(protocol().downloadProgress).toBe(0);
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: 'CLOUD' }]);
             expect(result.current.onDeviceIntent).toBe(false);
-            expect(toastTitles()).toEqual(['Model Deleted']);
+            expect(result.current.anyOnDisk).toBe(false);
+        });
+
+        it('cancelling the confirm changes nothing', async () => {
+            const sent = recordModeUpdates();
+            const { result } = await mountLoaded();
+
+            await deleteAnswering(result, false);
+
+            expect(sent).toEqual([]);
+            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
+            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(true);
+            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(true);
         });
 
         it('falls back to cloud locally even when the mutation fails', async () => {
             const { result } = await mountLoaded();
             server.use(mockGqlError('UpdateProcessingMode', 'INTERNAL_SERVER_ERROR'));
 
-            await act(async () => {
-                await result.current.confirmDeleteModel();
-            });
+            await deleteAnswering(result, true);
 
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            expect(protocol().modelState).toBe('not_downloaded');
-            await expect(isModelDownloaded(protocol().selectedModelId)).resolves.toBe(false);
+            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
+            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
         });
 
-        it('while on cloud: the model leaves the disk and no mutation is sent', async () => {
+        it('while on cloud: both files leave the disk and no mutation is sent', async () => {
             serverMode(ProcessingMode.Cloud);
             const sent = recordModeUpdates();
             const { result } = await mountLoaded();
 
-            await act(async () => {
-                await result.current.confirmDeleteModel();
-            });
+            await deleteAnswering(result, true);
 
-            await expect(isModelDownloaded(protocol().selectedModelId)).resolves.toBe(false);
+            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
             expect(sent).toEqual([]);
         });
     });
@@ -349,7 +514,7 @@ describe('Mera Protocol settings', () => {
         async function loadWithoutSession() {
             await setSetting('cached_user_id', FIXTURE_ACCOUNT.userId);
             useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
-            await putModelOnDisk();
+            putModelsOnDisk();
             protocol().setModelState('not_downloaded');
             return mountLoaded();
         }
