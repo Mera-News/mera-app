@@ -22,6 +22,7 @@ import {
   buildAgentPersona,
   isPersonaAgent,
   makeAgentDeps,
+  type ToolSignal,
 } from '../chat-tools/agent-device-port';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
@@ -238,6 +239,16 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         );
       };
 
+      // The live step row. Written only while THIS turn still owns the line:
+      // a tool past its Stop guard finishes on its own, and its `end` must not
+      // clear the next turn's row.
+      const turnSink = phaseSinkRef.current;
+      const onTool: ToolSignal = (event, tool) => {
+        if (!alive || turnSink === null || phaseSinkRef.current !== turnSink) return;
+        if (event === 'start') useChatPhaseStore.getState().toolStarted(tool);
+        else useChatPhaseStore.getState().toolEnded();
+      };
+
       try {
         const out = await runAgentTurn({
           state: agentStateRef.current,
@@ -265,6 +276,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
               onSideEffects: (se) => applyToolSideEffects(se, { alive, cloud: cloud() }),
               pending: pendingProposalView,
             },
+            onTool,
           )),
           onLeg,
           // Mera's two replacement lines, in the reader's language.
@@ -650,44 +662,54 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           (d) => d.function.name,
         );
 
-        await Promise.all(
-          toolCalls.map(async (tc, i) => {
-            // Never execute a call whose arguments did not parse — surface it
-            // as an error the user can see instead of running it with {}.
-            if (tc.malformed) {
-              writeBack(
-                i,
-                { error: 'malformed tool arguments — call was not executed' },
-                'error',
-              );
-              return;
-            }
-            try {
-              const resolved = normalizeToolName(tc.name, knownNames);
-              if (resolved && resolved !== tc.name) {
-                logger.warn(`${TAG} repaired tool name`, { from: tc.name, to: resolved });
-              } else if (!resolved) {
-                logger.warn(`${TAG} unresolvable tool name`, {
-                  name: tc.name,
-                  candidates: knownNames,
-                });
+        // The whole batch is work on the phone, not a model call, so the strip
+        // rests there (searchNews is a plain GraphQL query). Only while this
+        // turn owns the line: the forced pass runs after the sink is cleared.
+        const turnSink = phaseSinkRef.current;
+        const ownsLine = () => alive && turnSink !== null && phaseSinkRef.current === turnSink;
+        if (ownsLine()) useChatPhaseStore.getState().setDeviceWork(true);
+        try {
+          await Promise.all(
+            toolCalls.map(async (tc, i) => {
+              // Never execute a call whose arguments did not parse — surface it
+              // as an error the user can see instead of running it with {}.
+              if (tc.malformed) {
+                writeBack(
+                  i,
+                  { error: 'malformed tool arguments — call was not executed' },
+                  'error',
+                );
+                return;
               }
-              const callName = resolved ?? tc.name;
-              logger.debug(`${TAG} executing tool`, { name: callName, inputKeys: Object.keys(tc.input as Record<string, unknown>) });
-              const { result, sideEffects } = await agentRef.current.executeTool(callName, tc.input);
-              logger.debug(`${TAG} tool result`, { name: tc.name, resultLength: JSON.stringify(result).length, sideEffects: sideEffects ? Object.keys(sideEffects) : [] });
+              try {
+                const resolved = normalizeToolName(tc.name, knownNames);
+                if (resolved && resolved !== tc.name) {
+                  logger.warn(`${TAG} repaired tool name`, { from: tc.name, to: resolved });
+                } else if (!resolved) {
+                  logger.warn(`${TAG} unresolvable tool name`, {
+                    name: tc.name,
+                    candidates: knownNames,
+                  });
+                }
+                const callName = resolved ?? tc.name;
+                logger.debug(`${TAG} executing tool`, { name: callName, inputKeys: Object.keys(tc.input as Record<string, unknown>) });
+                const { result, sideEffects } = await agentRef.current.executeTool(callName, tc.input);
+                logger.debug(`${TAG} tool result`, { name: tc.name, resultLength: JSON.stringify(result).length, sideEffects: sideEffects ? Object.keys(sideEffects) : [] });
 
-              applyToolSideEffects(sideEffects, { alive, cloud: cloud() });
+                applyToolSideEffects(sideEffects, { alive, cloud: cloud() });
 
-              // Committed HERE, the moment this call settles — not after the
-              // slowest sibling.
-              writeBack(i, result, 'done');
-            } catch (err) {
-              logger.error(`${TAG} Tool execution failed`, undefined, { tool: tc.name, error: String(err) });
-              writeBack(i, { error: String(err) }, 'error');
-            }
-          }),
-        );
+                // Committed HERE, the moment this call settles — not after the
+                // slowest sibling.
+                writeBack(i, result, 'done');
+              } catch (err) {
+                logger.error(`${TAG} Tool execution failed`, undefined, { tool: tc.name, error: String(err) });
+                writeBack(i, { error: String(err) }, 'error');
+              }
+            }),
+          );
+        } finally {
+          if (ownsLine()) useChatPhaseStore.getState().setDeviceWork(false);
+        }
 
         // The WIRE push stays here, after every call has settled: the wire is
         // ordered, and a `role:'tool'` message must follow its
