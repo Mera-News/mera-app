@@ -12,9 +12,10 @@ describe('assistant rows share the thread edge', () => {
 
   it('the plain, streaming and wait replies are bare bubbles', () => {
     // Nothing but comments and the empty-reply guard sits between Message and
-    // the bubble: no sibling that could reserve a left gutter.
+    // the bubble: no sibling that could reserve a left gutter. The bubble may
+    // take props (the first-words handover fades its surface in).
     expect(src).toMatch(
-      /<Message role="assistant">[\s\S]{0,1400}?<View style={styles\.replyRow}>\s*<MessageContent role="assistant">/,
+      /<Message role="assistant">[\s\S]{0,1400}?<View style={styles\.replyRow}>\s*<MessageContent role="assistant"[^>]*>/,
     );
     expect(src).toMatch(/<Message role="assistant">\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<WaitBubble>/);
   });
