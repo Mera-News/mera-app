@@ -212,6 +212,13 @@ export interface AgentTurnState {
   /** The last card this loop staged: which skill staged it (resumed when the
    *  route leg applies or drops it) and on which turn. */
   lastCard: { proposalId: string | null; skill: string; turn: number } | null;
+  /** The last two exchanges the reader saw (their message, Mera's visible
+   *  reply), oldest first. Every leg carries them, so a message that points
+   *  back ("follow this", "my parents live there") has its subject. */
+  recentExchanges: { user: string; reply: string }[];
+  /** What the last turn was about: its web search queries, explainMera topics,
+   *  offered statements and card subjects. Named first when a message points back. */
+  lastSubjects: string[];
 }
 
 export function createAgentTurnState(): AgentTurnState {
@@ -230,6 +237,8 @@ export function createAgentTurnState(): AgentTurnState {
     turnNumber: 0,
     choiceTurn: null,
     lastCard: null,
+    recentExchanges: [],
+    lastSubjects: [],
   };
 }
 

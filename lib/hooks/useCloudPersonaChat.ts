@@ -292,6 +292,15 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             lastUserMessage: userMessage,
             lastReply: replaceClauseDashes(acc).trim() || null,
           });
+          // The loop has already recorded this exchange with its own view of
+          // the reply; the reader saw the partial text instead.
+          {
+            const t = agentStateRef.current.turn;
+            t.recentExchanges = [
+              ...t.recentExchanges.slice(0, -1),
+              { user: userMessage, reply: t.lastReply ?? '' },
+            ];
+          }
           // A card staged on THIS turn goes with it; an earlier turn's card, and
           // an apply that already completed, stay as they were.
           const card = agentStateRef.current.turn.lastCard;

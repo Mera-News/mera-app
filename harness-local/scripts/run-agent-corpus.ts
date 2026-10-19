@@ -14,6 +14,7 @@
 // Node-only: never imported by the app bundle.
 
 import { createWriteStream, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { TWINS, leg0Collisions } from '../lib/arm-distinctness';
 import { join } from 'node:path';
 
 import { loadHarnessEnv } from '../config/env';
@@ -74,6 +75,7 @@ import {
   proseReport,
   proposalReport,
   cardReport,
+  offerGuardReport,
   replyCheckReport,
   thinkingGearReport,
   toolValidityReport,
@@ -316,6 +318,19 @@ async function main(): Promise<number> {
           `(${err instanceof Error ? err.message : String(err)})`,
       );
     }
+  }
+
+  // PREFLIGHT: the arms must build different leg-0 prompts, twins excepted.
+  // Checked before the first call, on a dry run and a live run alike.
+  const leg0 = leg0Collisions(args.variants);
+  // eslint-disable-next-line no-console
+  console.log(`\nLEG-0 ROUTER PROMPT per arm (sha256, CONFIG + ONBOARDING, English)\n${args.variants.map((v) => `  ${v.padEnd(28)} ${leg0.hashes[v]}${TWINS.has(v) ? '  (twin set)' : ''}`).join('\n')}`);
+  if (leg0.failures.length > 0) {
+    // eslint-disable-next-line no-console
+    console.error(
+      `\nRUNNER BUG: two arms build the SAME leg-0 router prompt, so they are not arms.\n${leg0.failures.map((f) => `  ${f}`).join('\n')}\n  Nothing was sent.\n`,
+    );
+    return 1;
   }
 
   const scripts = loadScripts(args.scriptsDir);
@@ -565,14 +580,14 @@ async function main(): Promise<number> {
  * MUST be identical, because their spread is the run's noise floor.
  */
 export function armDistinctnessFailures(rows: EvalRow[]): string[] {
-  // forced-offer-closing changes the LOOP, not the leg-0 prompt, so it and its
-  // twin share baseline's prompt by design. Its wiring shows as tool-free legs.
-  // pre-S1 and its twin (onemera) are the same code under two names: their spread is
-  // the noise floor, so they send one leg-0 prompt by design.
-  const TWINS = new Set(['baseline', 'null-control', 'forced-offer-closing', 'forced-offer-closing-twin', 'pre-S1', 'pre-S1-twin']);
+  // TWINS (lib/arm-distinctness.ts): controls and their twins, and the closing
+  // arms, share a leg-0 prompt by design.
   const byPrompt = new Map<string, Set<string>>();
   for (const r of rows) {
-    if (r.legIndex !== 0) continue;
+    // ROUTE legs only. A resumed turn's first leg carries a skill body, the same
+    // on every arm by design (it is not a route, and the loop labels it a skill
+    // leg); counting it voided the S1 re-run.
+    if (r.legIndex !== 0 || r.callType !== 'agent-route') continue;
     const key = `${r.scriptId}:${r.turnIndex}:${hashMessages([{ role: 'system', content: r.systemPrompt }])}`;
     let seen = byPrompt.get(key);
     if (!seen) byPrompt.set(key, (seen = new Set()));
@@ -643,6 +658,13 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
   out.push(`\nPROPOSALS (offered statements, sanitised; matches all present, excludes none)  ${props.met}/${props.expected}`);
   for (const m of props.misses.slice(0, 8)) {
     out.push(`  MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: wanted [${m.wanted.join(', ')}] offered ${JSON.stringify(m.offered)}`);
+  }
+
+  const guards = offerGuardReport(turns, (id, idx) =>
+    scripts.find((s) => s.id === id)?.turns.find((t) => t.index === idx)?.expect ?? null);
+  out.push(`\nOFFER GUARDS (noOffer and offerExcludes; the leak guard must be ${guards.checked}/${guards.checked})  ${guards.passed}/${guards.checked}`);
+  for (const m of guards.misses.slice(0, 8)) {
+    out.push(`  MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: offered ${JSON.stringify(m.offered)}`);
   }
 
   const cards = cardReport(turns, (id, idx) =>

@@ -67,6 +67,10 @@ describe('stop on the persona loop', () => {
     expect(cloud().error).toBeNull();
     expect(answerOf()?.content).toBe('');
     expect(cloud().messages.filter((m) => m.role === 'assistant' && m.content === 'E2E fixture answer.')).toHaveLength(1);
+    // What the reader SAW of the stopped turn is the earlier exchange the next turn reads (S1.5).
+    const recent = gatewayCalls('chat')[1].messages.map((m) => m.content).find((c) => c.includes('<recent>')) ?? '';
+    expect(recent).toContain('They said: What is new today?');
+    expect(recent).toContain('You replied: One moment while I look');
   });
 
   it('between legs: the stopped turn keeps its text, drops its tool calls and sends no further leg', async () => {

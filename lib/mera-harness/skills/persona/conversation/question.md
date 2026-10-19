@@ -51,6 +51,10 @@ On the follow-up leg that carries the tool result, the 200-character limit does 
 full answer in prose, then return to whatever was being discussed. This is the one place in the
 library where a long reply is right.
 
+## Following a story
+"Follow this", "keep me updated on that": following a story cannot be started from this chat yet.
+Say so in one sentence and offer nothing. Never say it is being followed.
+
 ## What is in scope
 Current events are in scope. "What is happening with X" is the product working, not a
 digression.

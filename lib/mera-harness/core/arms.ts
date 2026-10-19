@@ -64,6 +64,9 @@ export interface AgentArm {
   /** Whole replacement for router.md's procedure (a value, like
    *  `routerPrompt`): a router change is measured as an arm before it ships. */
   routerBody?: string;
+  /** Absent means ON: every leg carries the last two exchanges. 'off' is the
+   *  S1.5 control: the old antecedent and conversation-only blocks. */
+  recentConversation?: 'off' | 'on';
 }
 
 const BASELINE: AgentArm = {
@@ -279,6 +282,11 @@ export function forcedOfferGroundingFor(arm: AgentArm): 'off' | 'on' {
 /** Absent means OFF until the corpus run passes. */
 export function forcedOfferClosingFor(arm: AgentArm): 'off' | 'on' {
   return arm.forcedOfferClosing ?? 'off';
+}
+
+/** Absent means ON (S1.5). */
+export function recentConversationFor(arm: AgentArm): 'off' | 'on' {
+  return arm.recentConversation ?? 'on';
 }
 
 export function topicFlowFor(arm: AgentArm): 'current' | 'isolated+combo' {

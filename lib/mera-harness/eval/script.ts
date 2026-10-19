@@ -205,6 +205,8 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
       replyExcludes: parseNeedles(scriptId, i, 'replyExcludes', ex.replyExcludes),
       replyMatches: parseNeedles(scriptId, i, 'replyMatches', ex.replyMatches),
       card: parseCard(scriptId, i, ex.card),
+      offerExcludes: parseNeedles(scriptId, i, 'offerExcludes', ex.offerExcludes),
+      ...(ex.noOffer === true ? { noOffer: true as const } : {}),
     },
     fakeTools: parseFakeTools(scriptId, i, rec.fakeTools),
   };
@@ -262,6 +264,24 @@ function parseFakeTools(scriptId: string, i: number, raw: unknown): ScriptTurn['
   if (!rec) return undefined;
 
   const lookup = Array.isArray(rec.lookup_place) ? rec.lookup_place : [];
+  const web = Array.isArray(rec.webSearch) ? rec.webSearch : [];
+  const webAnswers = web.map((a, j) => {
+    const ar = asRecord(a);
+    const results = ar && Array.isArray(ar.results) ? ar.results : null;
+    if (!ar || !results || results.some((r) => {
+      const rr = asRecord(r);
+      return !rr || typeof rr.title !== 'string' || typeof rr.url !== 'string' || typeof rr.snippet !== 'string';
+    })) {
+      fail(scriptId, `turn ${i} webSearch answer ${j} needs results of { title, url, snippet }.`);
+    }
+    if (ar.query !== undefined && (typeof ar.query !== 'string' || ar.query !== ar.query.toLowerCase())) {
+      fail(scriptId, `turn ${i} webSearch answer ${j} query must be a lowercase string, or absent.`);
+    }
+    return {
+      ...(typeof ar.query === 'string' ? { query: ar.query } : {}),
+      results: results as { title: string; url: string; snippet: string }[],
+    };
+  });
   const similar = Array.isArray(rec.find_similar_facts) ? rec.find_similar_facts : [];
 
   const lookupAnswers: FakeLookupPlaceAnswer[] = lookup.map((a, j) => {
@@ -301,6 +321,7 @@ function parseFakeTools(scriptId: string, i: number, raw: unknown): ScriptTurn['
   return {
     lookup_place: lookupAnswers.length > 0 ? lookupAnswers : undefined,
     find_similar_facts: similarAnswers.length > 0 ? similarAnswers : undefined,
+    webSearch: webAnswers.length > 0 ? webAnswers : undefined,
   };
 }
 

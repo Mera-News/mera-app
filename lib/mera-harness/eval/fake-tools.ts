@@ -178,16 +178,28 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
       return { accepted, rejected };
     },
 
-    // Deterministic and offline: the eval never reaches the web. An empty,
-    // honestly-labelled answer, so a turn that searched is scored on what it
-    // did with "nothing found" rather than on a fixture's invented results.
+    // Deterministic and offline: the eval never reaches the web. A turn may
+    // SCRIPT what a query returns (so it really names a subject); an unscripted
+    // query is an honestly-labelled empty answer. The SHAPES are the device's
+    // (lib/chat-tools/web-search-handler.ts): one query gives the single entry,
+    // several give the batch.
     async webSearch(args: { queries: string[] }): Promise<Record<string, unknown>> {
       count('webSearch');
-      return {
-        searched: true,
-        searches: args.queries.map((query) => ({ query, searched: true, results: [] })),
-        note: 'The search returned nothing. Answer from what you already have.',
+      const scripted = turn?.fakeTools?.webSearch ?? [];
+      const entry = (query: string): Record<string, unknown> => {
+        const hit = scripted.find((a) => a.query === undefined || query.toLowerCase().includes(a.query));
+        return hit && hit.results.length > 0
+          ? { query, searched: true, results: hit.results }
+          : {
+              query,
+              searched: true,
+              results: [],
+              note: 'The search returned nothing for this query. Say you could not find anything on the web for it, and answer from what you already have.',
+            };
       };
+      if (args.queries.length === 1) return entry(args.queries[0]);
+      const searches = args.queries.map(entry);
+      return { searched: true, searches };
     },
 
     // Canned and offline, like webSearch: the eval scores whether the turn

@@ -9,6 +9,7 @@ import {
 } from '@/lib/mera-harness/core/core';
 import { bindChoicePayloads, reconcilePlaceChain } from '@/lib/mera-harness/core/choice-binding';
 import { toolsForLeg } from '@/lib/mera-harness/core/tool-contracts';
+import { registerAgentArm, resetAgentArmsForTest } from '@/lib/mera-harness/core/arms';
 import type { AgentDeps, AgentModelResult, Place } from '@/lib/mera-harness/core/types';
 
 const AMS: Place = {
@@ -1358,9 +1359,10 @@ describe('TestFlight regressions', () => {
     expect(firstLeg).toContain('my parents live in bhopal');
   });
 
-  it('does NOT inject the earlier message on an ordinary turn', async () => {
+  it('the earlier messages ride on every leg in the guarded recent block, never loose (S1.5)', async () => {
     const state = createAgentState(PERSONA);
     state.turn.lastUserMessage = 'my parents live in bhopal';
+    state.turn.recentExchanges = [{ user: 'my parents live in bhopal', reply: 'Here is the reading to confirm.' }];
     const { deps, calls } = scriptedDeps([
       modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
       modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Works as a software engineer' }] })] }),
@@ -1369,18 +1371,28 @@ describe('TestFlight regressions', () => {
 
     await runAgentTurn({ state, userMessage: 'I work as a software engineer', deps });
 
-    const firstLeg = calls[0].messages.map((m) => m.content).join('\n');
-    expect(firstLeg).not.toContain('my parents live in bhopal');
+    for (const c of calls) {
+      const sent = c.messages.map((m) => m.content);
+      const recent = sent.find((m) => m.startsWith('<recent>')) ?? '';
+      expect(recent).toContain('They said: my parents live in bhopal');
+      expect(recent).toContain('If the message does not point back, never offer, save or follow anything');
+      // Only inside the block: the old loose antecedent lines are gone.
+      expect(sent.filter((m) => m.includes('my parents live in bhopal'))).toEqual([recent]);
+      // Above the current message, which stays last of the conversation.
+      expect(sent.indexOf(recent)).toBeLessThan(sent.indexOf('I work as a software engineer'));
+    }
   });
 
-  it('a conversation follow-up reads the earlier exchange, a fact turn still does not', async () => {
+  it('a conversation follow-up reads the earlier exchange on every leg, the route leg included', async () => {
     const state = createAgentState(PERSONA);
     const { deps: t1 } = scriptedDeps([
       modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'conversation/question' })] }),
       modelResult({ content: 'The AI Act is an EU law that sorts AI systems by risk.' }),
     ]);
     await runAgentTurn({ state, userMessage: 'Explain how the EU AI Act works', deps: t1 });
-    expect(state.turn.lastReply).toContain('sorts AI systems by risk');
+    expect(state.turn.recentExchanges).toEqual([
+      { user: 'Explain how the EU AI Act works', reply: 'The AI Act is an EU law that sorts AI systems by risk.' },
+    ]);
 
     const { deps: t2, calls } = scriptedDeps([
       modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'conversation/question' })] }),
@@ -1388,27 +1400,78 @@ describe('TestFlight regressions', () => {
     ]);
     await runAgentTurn({ state, userMessage: 'In one sentence, which institution proposed it?', deps: t2 });
 
-    const route = calls[0].messages.map((m) => m.content).join('\n');
-    const answer = calls[1].messages.map((m) => m.content).join('\n');
-    // The route leg stays slim; the conversation leg gets the exchange.
-    expect(route).not.toContain('Earlier in this chat');
-    expect(answer).toContain('Earlier in this chat');
-    expect(answer).toContain('Explain how the EU AI Act works');
-    expect(answer).toContain('sorts AI systems by risk');
+    for (const c of calls) {
+      const sent = c.messages.map((m) => m.content).join('\n');
+      expect(sent).toContain('They said: Explain how the EU AI Act works');
+      expect(sent).toContain('You replied: The AI Act is an EU law that sorts AI systems by risk.');
+    }
+    // Two exchanges kept, oldest first.
+    expect(state.turn.recentExchanges.map((x) => x.user)).toEqual([
+      'Explain how the EU AI Act works',
+      'In one sentence, which institution proposed it?',
+    ]);
   });
 
-  it('a facts turn after a conversation turn never sees the earlier exchange', async () => {
-    const state = createAgentState(PERSONA);
-    state.turn.lastUserMessage = 'Explain how the EU AI Act works';
-    state.turn.lastReply = 'The AI Act is an EU law.';
-    const { deps, calls } = scriptedDeps([
-      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
-      modelResult({ content: 'Noted.' }),
-    ]);
-    await runAgentTurn({ state, userMessage: 'I work as a software engineer', deps });
-    for (const c of calls) {
-      expect(c.messages.map((m) => m.content).join('\n')).not.toContain('Earlier in this chat');
+  it('the control arm (recent conversation off) keeps the old conversation-only block', async () => {
+    registerAgentArm({ id: 'pre-recent', description: 'control', recentConversation: 'off' });
+    try {
+      const state = createAgentState(PERSONA);
+      state.turn.lastUserMessage = 'Explain how the EU AI Act works';
+      state.turn.lastReply = 'The AI Act is an EU law.';
+      state.turn.recentExchanges = [{ user: 'Explain how the EU AI Act works', reply: 'The AI Act is an EU law.' }];
+      const { deps, calls } = scriptedDeps([
+        modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'conversation/question' })] }),
+        modelResult({ content: 'The Commission.' }),
+      ]);
+      await runAgentTurn({ state, userMessage: 'who proposed it?', deps, promptVariant: 'pre-recent' });
+      const route = calls[0].messages.map((m) => m.content).join('\n');
+      const answer = calls[1].messages.map((m) => m.content).join('\n');
+      expect(route).not.toContain('<recent>');
+      expect(route).not.toContain('Earlier in this chat');
+      expect(answer).toContain('Earlier in this chat');
+    } finally {
+      resetAgentArmsForTest();
     }
+  });
+
+  describe('a forced offer may name a subject from the recent conversation only when the message points back', () => {
+    async function afterAnAnswerAboutPortoSanto(message: string, forced: string) {
+      const state = createAgentState(PERSONA);
+      const { deps: t1 } = scriptedDeps([
+        modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'conversation/question' })] }),
+        modelResult({ content: 'Looking it up.', toolCalls: [tc2('webSearch', { queries: ['Porto Santo island'] })] }),
+        modelResult({ content: 'Porto Santo is a small island near Madeira with a long sandy beach.' }),
+      ], { webSearch: async ({ queries }) => ({ query: queries[0], searched: true, results: [] }) });
+      await runAgentTurn({ state, userMessage: 'What is Porto Santo?', deps: t1 });
+      expect(state.turn.lastSubjects).toEqual(['Porto Santo island']);
+
+      const saves: string[][] = [];
+      const { deps: t2 } = scriptedDeps([
+        modelResult({ content: 'Got it.', toolCalls: [tc2('load_skill', { id: 'facts/interest' })] }),
+        modelResult({ content: 'Nice.' }),
+        modelResult({ toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: forced }] })] }),
+        modelResult({ content: 'One card for you.' }),
+      ], {
+        saveExtractedFacts: async (args) => {
+          saves.push(((args.extracted_user_information as { statement: string }[]) ?? []).map((e) => e.statement));
+          return { staged: true };
+        },
+      });
+      const out = await runAgentTurn({ state, userMessage: message, deps: t2 });
+      return { out, saves: saves.flat() };
+    }
+
+    it('back-reference: "add that to my interests" keeps the subject only the search named', async () => {
+      const { out, saves } = await afterAnAnswerAboutPortoSanto('add that to my interests', 'Follows Porto Santo news');
+      expect(out.forcedProposal).toBe(true);
+      expect(saves).toEqual(['Follows Porto Santo news']);
+    });
+
+    it('LEAK GUARD: an unrelated new fact never carries the earlier subject', async () => {
+      const { out, saves } = await afterAnAnswerAboutPortoSanto('I enjoy rowing on weekends', 'Follows Porto Santo news');
+      expect(out.forcedProposal).toBe(true);
+      expect(saves).toEqual([]);
+    });
   });
 
   it('the choice is CONSUMED, so the turn after it routes normally again', async () => {
@@ -1525,5 +1588,43 @@ describe('TestFlight regressions', () => {
     expect(out.terminalReason).not.toBe('settled');
     expect(out.reply).toBe(REPLY_LEAK_FALLBACK);
     expect(out.replyLeakUnfixed).toBe(true);
+  });
+});
+
+describe('leg roles', () => {
+  it('a resumed turn\'s first leg is a skill leg, not a route leg', async () => {
+    const state = createAgentState(PERSONA);
+    state.turn.lastQuestion = 'Shall I add chess?';
+    state.turn.lastSkill = 'facts/interest';
+    state.turn.lastUserMessage = 'I play chess';
+    const roles: string[] = [];
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'Offered.', toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Plays chess' }] })] }),
+      modelResult({ content: 'Tap to confirm.' }),
+    ]);
+    const callModel = deps.callModel;
+    deps.callModel = async (req) => {
+      roles.push(req.role);
+      return callModel(req);
+    };
+    const out = await runAgentTurn({ state, userMessage: 'yes', deps });
+    expect(out.typedYesResume).toBe(true);
+    expect(roles[0]).toBe('tool');
+    expect(out.legs[0].role).toBe('tool');
+  });
+
+  it('an ordinary turn\'s first leg is the route leg', async () => {
+    const roles: string[] = [];
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      modelResult({ content: 'Hi.' }),
+    ]);
+    const callModel = deps.callModel;
+    deps.callModel = async (req) => {
+      roles.push(req.role);
+      return callModel(req);
+    };
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hello', deps });
+    expect(roles).toEqual(['route', 'tool']);
   });
 });

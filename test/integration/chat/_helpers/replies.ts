@@ -22,9 +22,10 @@ const content = (call: GatewayCall, role: string): string =>
 
 export const systemOf = (call: GatewayCall): string => content(call, 'system');
 
-// The persona loop sends each leg with NO history: system prompt, <state>, <known_facts>, optional
-// context lines, the person's message, then this leg's tool results as `<tool_response>name: {...}`.
-const HARNESS_LINES = /^(<state>|<known_facts>|<tool_response>|They were answering|Their previous message|Earlier in this chat)/;
+// The persona loop sends each leg as: system prompt, <state>, <known_facts>, optional <filters>,
+// optional context lines, the <recent> conversation block, the person's message, then this leg's
+// tool results as `<tool_response>name: {...}`.
+const HARNESS_LINES = /^(<state>|<known_facts>|<filters>|<recent>|<tool_response>|They were answering|Their previous message|Earlier in this chat)/;
 
 /** The person's own message in a persona-loop leg (the first user turn the loop did not write). */
 export function personMessage(call: GatewayCall): string {
