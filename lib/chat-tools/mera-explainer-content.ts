@@ -105,7 +105,7 @@ One retention window is still unbounded and is being worked on: submitted unbloc
   // ---------------------------------------------------------------------------
   encryption_and_inference: `Relevance scoring is real AI work, and it runs in one of two places, your choice, subject to what your phone supports.
 
-On-device: if your device can run the models locally, everything happens offline on your phone and nothing about the analysis leaves it at all. This needs a capable device and two model downloads, about 5.8 GB together: one model for chat, notes and topics (2.7 GB) and one that ranks your feed (3.0 GB). Mera uses the cloud until both are downloaded.
+On-device: if your device can run the models locally, everything happens offline on your phone and nothing about the analysis leaves it at all. This needs a capable device and one download of Mera AI models, about 5.8 GB. On an iPhone with Apple Intelligence, chat and notes can use Apple Intelligence instead, which makes the download smaller. Mera uses the cloud until the download finishes.
 
 Cloud: otherwise the work runs inside a trusted execution environment, a hardware-isolated enclave the operator cannot look into. Your app fetches the enclave's attestation report, takes the public key it publishes, and encrypts the request to that key end to end (X25519 key exchange, XChaCha20-Poly1305 for the payload). The request is unreadable in transit and unreadable to Mera. It is decrypted only inside the enclave, the result comes back encrypted to your device, and everything is wiped once the computation finishes. Nothing from it is retained.
 
