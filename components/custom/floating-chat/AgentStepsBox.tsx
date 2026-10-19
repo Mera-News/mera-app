@@ -15,7 +15,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, withTiming } from 'react-native-reanimated';
 import { GlyphSafeButton } from './glyph-safe';
-import type { TFunction } from 'i18next';
+import { stepLabel, stepTables } from './agent-step-labels';
 import { useTranslation } from 'react-i18next';
 import type { AgentStep, AgentTerminal } from './types';
 
@@ -28,15 +28,6 @@ import type { AgentStep, AgentTerminal } from './types';
  * a hang.
  */
 export const SLOW_STEP_MS = 8_000;
-
-// THIS FILE IS THE ONE PLACE A STEP KEY BECOMES TEXT.
-//
-// Every key below is a LITERAL inside a `t()` call, so tsc checks it against
-// the union generated from en.json: a key that never reached the dictionaries
-// is a build error, not a raw dot-path rendered at a user. That is also why
-// the key tables live here rather than in the pure label module — `t()`'s
-// overloads pin the option shape per key, so a key held in a variable cannot
-// be passed to it at all.
 
 function boxEntering() {
   'worklet';
@@ -75,82 +66,6 @@ export interface AgentStepsBoxProps {
   failedCount: number;
   terminal: AgentTerminal | null;
   interrupted: boolean;
-}
-
-export /** The first line of a phrase pool, or the value itself when it is a string. */
-function firstLine(value: unknown): string {
-  if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : '';
-  return typeof value === 'string' ? value : '';
-}
-
-type TFn = TFunction;
-
-/** The three key->text tables, built once per language. Pure given `t`, so a
- *  table test needs no render. */
-export function stepTables(t: TFn) {
-  /** Step labels with no interpolation. A key absent here renders the generic
-   *  line, which is what keeps an unmapped tool from showing a dot-path. */
-  const PLAIN_LABEL: Record<string, string> = {
-    'agentSteps.legStart': t('agentSteps.legStart'),
-    'agentSteps.loadSkillGeneric': t('agentSteps.loadSkillGeneric'),
-    'agentSteps.findSimilarFacts': t('agentSteps.findSimilarFacts'),
-    'agentSteps.writeUp': t('agentSteps.writeUp'),
-    'agentSteps.removing': t('agentSteps.removing'),
-    'agentSteps.asking': t('agentSteps.asking'),
-    'agentSteps.working': t('agentSteps.working'),
-    'agentSteps.proposeChanges': t('agentSteps.proposeChanges'),
-    'agentSteps.applyProposal': t('agentSteps.applyProposal'),
-    'agentSteps.cancelProposal': t('agentSteps.cancelProposal'),
-    'agentSteps.proposeTrack': t('agentSteps.proposeTrack'),
-    'agentSteps.proposeFactCheck': t('agentSteps.proposeFactCheck'),
-    'agentSteps.searchNews': t('agentSteps.searchNews'),
-    // The wait line's own copy, so the box says the same thing the line
-    // would (ux2 batch 25, D6). A pool: its first line.
-    'chatPhases.webSearch': firstLine(t('chatPhases.webSearch', { returnObjects: true })),
-  };
-
-  const SKILL_PHRASE: Record<string, string> = {
-    'skillPhrase.residence': t('skillPhrase.residence'),
-    'skillPhrase.work': t('skillPhrase.work'),
-    'skillPhrase.interests': t('skillPhrase.interests'),
-    'skillPhrase.origin': t('skillPhrase.origin'),
-    'skillPhrase.family': t('skillPhrase.family'),
-    'skillPhrase.feedTuning': t('skillPhrase.feedTuning'),
-    'skillPhrase.followStory': t('skillPhrase.followStory'),
-    'skillPhrase.factCheck': t('skillPhrase.factCheck'),
-  };
-
-  const CONSEQUENCE: Record<string, string> = {
-    'agentSteps.consequence.generic': t('agentSteps.consequence.generic'),
-    'agentSteps.consequence.interrupted': t('agentSteps.consequence.interrupted'),
-    'agentSteps.consequence.lookupPlace': t('agentSteps.consequence.lookupPlace'),
-    'agentSteps.consequence.findSimilarFacts': t('agentSteps.consequence.findSimilarFacts'),
-    'agentSteps.consequence.loadSkill': t('agentSteps.consequence.loadSkill'),
-    'agentSteps.consequence.writeUp': t('agentSteps.consequence.writeUp'),
-    'agentSteps.consequence.removing': t('agentSteps.consequence.removing'),
-    'agentSteps.cardRefused': t('agentSteps.cardRefused'),
-  };
-  return { PLAIN_LABEL, SKILL_PHRASE, CONSEQUENCE };
-}
-
-/** A step's label. The two interpolating keys are handled explicitly; every
- *  other key comes from the table, and an unknown one falls back rather than
- *  rendering its own name. */
-export function stepLabel(
-  step: AgentStep,
-  t: TFn,
-  tables: Pick<ReturnType<typeof stepTables>, 'PLAIN_LABEL' | 'SKILL_PHRASE'>,
-): string {
-  const values = step.labelValues;
-  if (step.labelKey === 'agentSteps.loadSkill' && values?.topicKey) {
-    const phrase = tables.SKILL_PHRASE[values.topicKey];
-    if (phrase) return t('agentSteps.loadSkill', { topic: phrase });
-    return tables.PLAIN_LABEL['agentSteps.loadSkillGeneric'];
-  }
-  if (step.labelKey === 'agentSteps.lookupPlace' && values?.query) {
-    return t('agentSteps.lookupPlace', { query: values.query });
-  }
-  return tables.PLAIN_LABEL[step.labelKey] ?? tables.PLAIN_LABEL['agentSteps.working'];
 }
 
 const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({

@@ -13,7 +13,10 @@
 
 import { stepKindForTool } from '@/lib/services/chat-phase';
 import type { LiveTool } from '@/lib/llm/chat-phase-store';
+import type { TFunction } from 'i18next';
 import type { AgentStep, AgentStepStatus } from './types';
+
+type TFn = TFunction;
 
 // TOOL NAMES are string literals here on purpose, for now. P1's tool-name
 // constants land at '@/lib/mera-harness', which today contains only `skills/`
@@ -60,8 +63,6 @@ const SKILL_PHRASE_KEY: Record<string, string> = {
   'facts/origin': 'skillPhrase.origin',
   'facts/family': 'skillPhrase.family',
   'conversation/feed-tuning': 'skillPhrase.feedTuning',
-  'conversation/follow-story': 'skillPhrase.followStory',
-  'conversation/fact-check': 'skillPhrase.factCheck',
 };
 
 /** What a failed step cost. Keyed by tool; everything else gets the generic. */
@@ -221,4 +222,87 @@ export const MUTATING_TOOLS = new Set(['saveExtractedFacts', 'deleteUserFacts', 
 
 export function changedDataFrom(steps: AgentStep[]): boolean {
   return steps.some((s) => s.toolName !== undefined && MUTATING_TOOLS.has(s.toolName));
+}
+
+// THIS FILE IS THE ONE PLACE A STEP KEY BECOMES TEXT.
+//
+// Every key below is a LITERAL inside a `t()` call, so tsc checks it against
+// the union generated from en.json: a key that never reached the dictionaries
+// is a build error, not a raw dot-path rendered at a user. That is also why
+// the tables are built from `t` rather than holding resolved text — `t()`'s
+// overloads pin the option shape per key, so a key held in a variable cannot
+// be passed to it at all.
+
+/** The first line of a phrase pool, or the value itself when it is a string. */
+export function firstLine(value: unknown): string {
+  if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : '';
+  return typeof value === 'string' ? value : '';
+}
+
+/** The three key->text tables, built once per language. Pure given `t`, so a
+ *  table test needs no render. */
+export function stepTables(t: TFn) {
+  /** Step labels with no interpolation. A key absent here renders the generic
+   *  line, which is what keeps an unmapped tool from showing a dot-path. */
+  const PLAIN_LABEL: Record<string, string> = {
+    'agentSteps.legStart': t('agentSteps.legStart'),
+    'agentSteps.loadSkillGeneric': t('agentSteps.loadSkillGeneric'),
+    'agentSteps.findSimilarFacts': t('agentSteps.findSimilarFacts'),
+    'agentSteps.writeUp': t('agentSteps.writeUp'),
+    'agentSteps.removing': t('agentSteps.removing'),
+    'agentSteps.asking': t('agentSteps.asking'),
+    'agentSteps.working': t('agentSteps.working'),
+    'agentSteps.proposeChanges': t('agentSteps.proposeChanges'),
+    'agentSteps.applyProposal': t('agentSteps.applyProposal'),
+    'agentSteps.cancelProposal': t('agentSteps.cancelProposal'),
+    'agentSteps.proposeTrack': t('agentSteps.proposeTrack'),
+    'agentSteps.proposeFactCheck': t('agentSteps.proposeFactCheck'),
+    'agentSteps.searchNews': t('agentSteps.searchNews'),
+    // The wait line's own copy, so the box says the same thing the line
+    // would (ux2 batch 25, D6). A pool: its first line.
+    'chatPhases.webSearch': firstLine(t('chatPhases.webSearch', { returnObjects: true })),
+    // A retry in a tool turn: the trailing row carries the retry words.
+    'chatPhases.retrying': firstLine(t('chatPhases.retrying', { returnObjects: true })),
+  };
+
+  const SKILL_PHRASE: Record<string, string> = {
+    'skillPhrase.residence': t('skillPhrase.residence'),
+    'skillPhrase.work': t('skillPhrase.work'),
+    'skillPhrase.interests': t('skillPhrase.interests'),
+    'skillPhrase.origin': t('skillPhrase.origin'),
+    'skillPhrase.family': t('skillPhrase.family'),
+    'skillPhrase.feedTuning': t('skillPhrase.feedTuning'),
+  };
+
+  const CONSEQUENCE: Record<string, string> = {
+    'agentSteps.consequence.generic': t('agentSteps.consequence.generic'),
+    'agentSteps.consequence.interrupted': t('agentSteps.consequence.interrupted'),
+    'agentSteps.consequence.lookupPlace': t('agentSteps.consequence.lookupPlace'),
+    'agentSteps.consequence.findSimilarFacts': t('agentSteps.consequence.findSimilarFacts'),
+    'agentSteps.consequence.loadSkill': t('agentSteps.consequence.loadSkill'),
+    'agentSteps.consequence.writeUp': t('agentSteps.consequence.writeUp'),
+    'agentSteps.consequence.removing': t('agentSteps.consequence.removing'),
+    'agentSteps.cardRefused': t('agentSteps.cardRefused'),
+  };
+  return { PLAIN_LABEL, SKILL_PHRASE, CONSEQUENCE };
+}
+
+/** A step's label. The two interpolating keys are handled explicitly; every
+ *  other key comes from the table, and an unknown one falls back rather than
+ *  rendering its own name. */
+export function stepLabel(
+  step: AgentStep,
+  t: TFn,
+  tables: Pick<ReturnType<typeof stepTables>, 'PLAIN_LABEL' | 'SKILL_PHRASE'>,
+): string {
+  const values = step.labelValues;
+  if (step.labelKey === 'agentSteps.loadSkill' && values?.topicKey) {
+    const phrase = tables.SKILL_PHRASE[values.topicKey];
+    if (phrase) return t('agentSteps.loadSkill', { topic: phrase });
+    return tables.PLAIN_LABEL['agentSteps.loadSkillGeneric'];
+  }
+  if (step.labelKey === 'agentSteps.lookupPlace' && values?.query) {
+    return t('agentSteps.lookupPlace', { query: values.query });
+  }
+  return tables.PLAIN_LABEL[step.labelKey] ?? tables.PLAIN_LABEL['agentSteps.working'];
 }
