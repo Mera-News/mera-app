@@ -14,7 +14,10 @@ import type { SystemRequirementsResult, RequirementCheckId } from '../types';
 const MIN_RAM_BYTES = 6 * 1024 * 1024 * 1024; // 6 GB
 const MIN_IOS_VERSION = 16; // Metal compute shaders
 const MIN_ANDROID_API_LEVEL = 29; // Android 10
-const MIN_FREE_STORAGE_BYTES = 2.5 * 1024 * 1024 * 1024; // ~2.5 GB for model
+// Free space needed beyond the bytes still to download, in decimal bytes (what
+// iOS Settings shows). Only what is MISSING counts: once both models are on
+// disk, low free space must never make the phone read as unsupported.
+export const STORAGE_MARGIN_BYTES = 500_000_000;
 
 // ---------------------------------------------------------------------------
 // iOS chip detection
@@ -65,7 +68,14 @@ function checkIOSChip(
 // Main check function
 // ---------------------------------------------------------------------------
 
-export async function checkRequirements(): Promise<SystemRequirementsResult> {
+/**
+ * Whether this phone can run on-device processing. `bytesToDownload` is what
+ * the models still need on disk (the settings screen passes it); other callers
+ * only ask whether the phone can run it and pass nothing.
+ */
+export async function checkRequirements(
+  { bytesToDownload = 0 }: { bytesToDownload?: number } = {},
+): Promise<SystemRequirementsResult> {
   const platform =
     Platform.OS === 'ios'
       ? 'ios'
@@ -84,10 +94,11 @@ export async function checkRequirements(): Promise<SystemRequirementsResult> {
 
   // Storage check (async)
   let freeStorageGB: number | null = null;
+  let freeBytes: number | null = null;
   try {
     const fsInfo = await RNFS.getFSInfo();
-    freeStorageGB =
-      Math.round((fsInfo.freeSpace / (1024 * 1024 * 1024)) * 10) / 10;
+    freeBytes = fsInfo.freeSpace;
+    freeStorageGB = Math.round((fsInfo.freeSpace / 1e9) * 10) / 10;
   } catch {
     // getFSInfo can fail on some devices — skip storage check
   }
@@ -147,13 +158,11 @@ export async function checkRequirements(): Promise<SystemRequirementsResult> {
     }
   }
 
-  // --- Check 4: Storage ---
-  if (
-    freeStorageGB !== null &&
-    freeStorageGB * 1024 * 1024 * 1024 < MIN_FREE_STORAGE_BYTES
-  ) {
+  // --- Check 4: Storage (only for what is still to download) ---
+  const neededBytes = bytesToDownload > 0 ? bytesToDownload + STORAGE_MARGIN_BYTES : 0;
+  if (freeBytes !== null && freeBytes < neededBytes) {
     return fail(
-      `Requires at least 2.5 GB free storage. Your device has ${freeStorageGB} GB free.`,
+      `Requires ${Math.round((neededBytes / 1e9) * 10) / 10} GB free storage. Your device has ${freeStorageGB} GB free.`,
       'storage',
     );
   }

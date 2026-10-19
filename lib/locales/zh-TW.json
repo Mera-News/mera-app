@@ -621,7 +621,9 @@
     "failedTitle": "下載失敗",
     "failedConnection": "請檢查你的網路連線，然後再試一次。",
     "failedServer": "下載伺服器發生問題。請稍後再試。",
-    "failedDamaged": "下載的檔案已損毀。請再試一次。"
+    "failedDamaged": "下載的檔案已損毀。請再試一次。",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "正在啟動聊天...",

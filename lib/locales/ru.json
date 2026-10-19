@@ -651,7 +651,9 @@
     "failedTitle": "Ошибка загрузки",
     "failedConnection": "Проверьте подключение и попробуйте ещё раз.",
     "failedServer": "У сервера загрузки возникла проблема. Попробуйте позже.",
-    "failedDamaged": "Загрузка повреждена. Попробуйте ещё раз."
+    "failedDamaged": "Загрузка повреждена. Попробуйте ещё раз.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "Запуск чата...",

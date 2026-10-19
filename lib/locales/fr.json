@@ -630,7 +630,9 @@
     "failedTitle": "Échec du téléchargement",
     "failedConnection": "Vérifiez votre connexion et réessayez.",
     "failedServer": "Le serveur de téléchargement a rencontré un problème. Réessayez plus tard.",
-    "failedDamaged": "Le téléchargement était endommagé. Réessayez."
+    "failedDamaged": "Le téléchargement était endommagé. Réessayez.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "Démarrage de la conversation...",

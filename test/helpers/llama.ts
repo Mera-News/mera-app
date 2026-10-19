@@ -7,6 +7,8 @@
 //
 // Tokens are delivered one per macrotask (setImmediate, which the fake clock leaves real), so a
 // stop between tokens is observable. `tokenDelayMs` uses setTimeout instead (fake-clock driven).
+import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { MODEL_CATALOG, RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { placeModelFile } from './fs';
 
@@ -34,29 +36,82 @@ export type LlamaScript =
       error?: string;
     };
 
-const state: { calls: LlamaCall[]; script: (call: LlamaCall) => LlamaScript; releases: number } = {
+/** One Kev `decide()` call: the request, and what the script answered (or threw). */
+export interface DecideCall {
+  request: { state: unknown; questions: Record<string, unknown> };
+}
+/** A Kev answer: the `score` of each question (0..levels-1), or an error to throw. */
+export type DecideScript = { scores: Record<string, number> } | { error: string };
+
+const state: {
+  calls: LlamaCall[];
+  script: (call: LlamaCall) => LlamaScript;
+  releases: number;
+  loads: string[];
+  live: number;
+  maxLive: number;
+  decideCalls: DecideCall[];
+  decideScript: (call: DecideCall) => DecideScript;
+} = {
   calls: [],
   script: () => [],
   releases: 0,
+  loads: [],
+  live: 0,
+  maxLive: 0,
+  decideCalls: [],
+  decideScript: () => ({ scores: { rel: 2 } }),
 };
 
 /** Every completion so far, in order. Live objects. */
 export const llamaCalls = (): LlamaCall[] => state.calls;
 /** How many times a loaded context was released (model reloads, disposes). */
 export const llamaReleases = (): number => state.releases;
+/** The model id of every context loaded so far, in order. */
+export const llamaLoads = (): string[] => state.loads;
+/** The most contexts that were ever alive at once (must stay 1: never two models in memory). */
+export const llamaMaxLive = (): number => state.maxLive;
+/** Every Kev `decide()` so far, in order. */
+export const decideCalls = (): DecideCall[] => state.decideCalls;
+
+/** Scripts Kev's answers for the next `decide()` calls (default: score 2 for `rel`). */
+export function installDecide(script: DecideScript | ((call: DecideCall) => DecideScript)): void {
+  state.decideScript = typeof script === 'function' ? script : () => script;
+}
 
 const nextTick = (ms?: number) =>
   new Promise<void>((r) => (ms ? setTimeout(r, ms) : setImmediate(r)));
 
-function makeContext() {
+const modelIdOf = (path: string): string => path.split('/').slice(-2)[0];
+
+function makeContext(modelPath: string) {
   let current: { call: LlamaCall; wake: (() => void) | null } | null = null;
+  let released = false;
+  const isKev = modelIdOf(modelPath) === RELEVANCE_MODEL.modelId;
+  state.loads.push(modelIdOf(modelPath));
+  state.live += 1;
+  state.maxLive = Math.max(state.maxLive, state.live);
   return {
     gpu: false,
-    model: { size: 1024 * 1024 * 1024 },
+    model: isKev
+      ? { size: 1024 * 1024 * 1024, decision: { type: 'kev', nOptionsMax: 16, imageInput: false, textGeneration: false } }
+      : { size: 1024 * 1024 * 1024 },
+    async decide(request: DecideCall['request']) {
+      if (!isKev) throw new Error('this model is not a decision model of a supported type');
+      const call: DecideCall = { request };
+      state.decideCalls.push(call);
+      await nextTick();
+      const answer = state.decideScript(call);
+      if ('error' in answer) throw new Error(answer.error);
+      const answers: Record<string, { type: 'score'; score: number }> = {};
+      for (const [id, score] of Object.entries(answer.scores)) answers[id] = { type: 'score', score };
+      return { model: 'Kev-4B', answers, usage: { input_tokens: 100, output_tokens: 0 } };
+    },
     async completion(
       params: Record<string, unknown> & { messages?: { role: string; content: string }[] },
       onToken?: (data: { token: string }) => void,
     ) {
+      if (isKev) throw new Error('completion() is not available for this decision model');
       const call: LlamaCall = { messages: params.messages ?? [], params, stopped: false, delivered: [] };
       state.calls.push(call);
       const raw = state.script(call);
@@ -96,24 +151,34 @@ function makeContext() {
       current.wake?.();
     },
     async release() {
+      if (released) return;
+      released = true;
       state.releases += 1;
+      state.live -= 1;
     },
   };
 }
 
 /**
- * Gives the llama.rn mock a scripted context and puts the selected model's file on the in-memory
- * disk (the test file must mock expo-file-system with ./fs). `script` is fixed, or a function of
- * the call (read `call.messages` to answer by prompt).
+ * Gives the llama.rn mock a scripted context, puts BOTH on-device model files on the in-memory disk
+ * (the test file must mock expo-file-system with ./fs) and sets processing to on-device, the only
+ * mode in which the toolkit loads a model. `script` is fixed, or a function of the call (read
+ * `call.messages` to answer by prompt). Kev's answers come from `installDecide`.
  */
 export function installLlama(script: LlamaScript | ((call: LlamaCall) => LlamaScript)): void {
   state.calls = [];
   state.releases = 0;
+  state.loads = [];
+  state.live = 0;
+  state.maxLive = 0;
+  state.decideCalls = [];
+  state.decideScript = () => ({ scores: { rel: 2 } });
   state.script = typeof script === 'function' ? script : () => script;
   const llama = jest.requireMock('llama.rn') as Record<string, jest.Mock>;
-  llama.initLlama.mockImplementation(async () => makeContext());
+  llama.initLlama.mockImplementation(async (params: { model: string }) => makeContext(params.model));
   llama.loadLlamaModelInfo.mockResolvedValue({});
   llama.toggleNativeLog.mockResolvedValue(undefined);
   llama.addNativeLogListener.mockReturnValue({ remove: () => {} });
-  placeModelFile(useMeraProtocolStore.getState().selectedModelId);
+  for (const m of MODEL_CATALOG) placeModelFile(m.modelId);
+  useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
 }

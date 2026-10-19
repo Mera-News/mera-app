@@ -54,10 +54,9 @@ export type InferResult = {
 // --- Model Lifecycle ---
 
 export type BaseModelDownloadConfig = {
-  modelId: string; // e.g., "mera-qwen3-4b"
-  modelUrl: string; // URL to GGUF base model
-  expectedChecksum: string; // SHA-256 of final artifact
-  storageBudgetMB?: number; // Max local storage allowed
+  modelId: string; // e.g., "mera-kev-4b"
+  modelUrl: string; // URL to the GGUF
+  sizeBytes: number; // Exact size; any other size is a damaged download
 };
 
 export type BaseModelManifest = {

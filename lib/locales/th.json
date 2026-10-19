@@ -622,7 +622,9 @@
     "failedTitle": "ดาวน์โหลดไม่สำเร็จ",
     "failedConnection": "ตรวจสอบการเชื่อมต่อของคุณแล้วลองอีกครั้ง",
     "failedServer": "เซิร์ฟเวอร์ดาวน์โหลดมีปัญหา ลองอีกครั้งในภายหลัง",
-    "failedDamaged": "การดาวน์โหลดเสียหาย ลองอีกครั้ง"
+    "failedDamaged": "การดาวน์โหลดเสียหาย ลองอีกครั้ง",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "กำลังเริ่มแชท...",

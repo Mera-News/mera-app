@@ -18,6 +18,7 @@ import {
 } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import {
     averageMs,
+    hasAnyStat,
 } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import { Switch } from '@/components/ui/switch';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
@@ -226,7 +227,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                             onPress={() => selectModel(entry)}
                                             disabled={locked}
                                             accessibilityRole="radio"
-                                            accessibilityLabel={`${entry.label}, ${entry.sizeLabel}`}
+                                            accessibilityLabel={`${entry.label}, ${`${(entry.sizeBytes / 1e9).toFixed(1)} GB`}`}
                                             accessibilityState={{ selected, disabled: locked }}
                                             className={
                                                 'rounded-lg px-4 py-3 border ' +
@@ -246,7 +247,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                                     {entry.label}
                                                 </Text>
                                                 <Text size="xs" className="text-ink-2">
-                                                    {entry.sizeLabel}
+                                                    {`${(entry.sizeBytes / 1e9).toFixed(1)} GB`}
                                                 </Text>
                                             </HStack>
                                         </Pressable>
@@ -297,7 +298,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                 >
                                     <MaterialIcons name="cloud-download" size={18} color={colors.ink} style={{ marginRight: 8 }} />
                                     <ButtonText>
-                                        {t('meraProtocol.downloadModelNamed', { model: currentModel.label, size: currentModel.sizeLabel })}
+                                        {t('meraProtocol.downloadModelNamed', { model: currentModel.label, size: `${(currentModel.sizeBytes / 1e9).toFixed(1)} GB` })}
                                     </ButtonText>
                                 </Button>
                             )}
@@ -331,14 +332,14 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         </VStack>
 
                         {/* Speed on this device: in memory only, never stored or sent. */}
-                        {inferenceStats.modelId === selectedModelId && (
+                        {hasAnyStat(inferenceStats) && (
                             <VStack space="xs" className="mt-4" testID="mera-protocol-speed">
                                 <Text className="text-ink text-sm font-semibold">
                                     {t('meraProtocol.speedTitle')}
                                 </Text>
-                                {inferenceStats.loadMs != null && (
+                                {inferenceStats.loadMs.text != null && (
                                     <Text size="xs" className="text-ink-2">
-                                        {t('meraProtocol.speedLoad', { seconds: (inferenceStats.loadMs / 1000).toFixed(1) })}
+                                        {t('meraProtocol.speedLoad', { seconds: (inferenceStats.loadMs.text / 1000).toFixed(1) })}
                                     </Text>
                                 )}
                                 {inferenceStats.genTokPerSec != null && (
@@ -528,7 +529,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     </ModalHeader>
                     <ModalBody className="py-6">
                         <Text className="text-ink text-base leading-relaxed">
-                            {t('meraProtocol.deleteModelDescription', { model: currentModel.label, size: currentModel.sizeLabel })}
+                            {t('meraProtocol.deleteModelDescription', { model: currentModel.label, size: `${(currentModel.sizeBytes / 1e9).toFixed(1)} GB` })}
                         </Text>
                     </ModalBody>
                     <ModalFooter className="border-t border-line pt-4">

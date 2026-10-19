@@ -621,7 +621,9 @@
     "failedTitle": "Tải xuống thất bại",
     "failedConnection": "Kiểm tra kết nối của bạn và thử lại.",
     "failedServer": "Máy chủ tải xuống gặp sự cố. Vui lòng thử lại sau.",
-    "failedDamaged": "Bản tải xuống bị hỏng. Hãy thử lại."
+    "failedDamaged": "Bản tải xuống bị hỏng. Hãy thử lại.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "Đang bắt đầu trò chuyện...",

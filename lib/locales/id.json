@@ -621,7 +621,9 @@
     "failedTitle": "Unduhan Gagal",
     "failedConnection": "Periksa koneksi Anda lalu coba lagi.",
     "failedServer": "Server unduhan sedang bermasalah. Coba lagi nanti.",
-    "failedDamaged": "Unduhan rusak. Coba lagi."
+    "failedDamaged": "Unduhan rusak. Coba lagi.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "Memulai obrolan...",

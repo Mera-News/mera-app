@@ -255,8 +255,8 @@ describe('the local LLM port', () => {
   });
 
   it('is the cloud port in cloud mode', async () => {
+    installLlama([]); // sets on-device; the mode under test comes after it
     mode('cloud');
-    installLlama([]);
     server.use(...mockGateway(() => '[0.5]'));
 
     const [res] = await run(getScoringLlmPort().batchComplete([call()], {}));

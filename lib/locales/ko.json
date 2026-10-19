@@ -621,7 +621,9 @@
     "failedTitle": "다운로드 실패",
     "failedConnection": "연결을 확인하고 다시 시도해 주세요.",
     "failedServer": "다운로드 서버에 문제가 있었습니다. 나중에 다시 시도해 주세요.",
-    "failedDamaged": "다운로드한 파일이 손상되었습니다. 다시 시도해 주세요."
+    "failedDamaged": "다운로드한 파일이 손상되었습니다. 다시 시도해 주세요.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "채팅 시작 중...",

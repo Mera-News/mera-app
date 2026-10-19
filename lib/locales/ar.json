@@ -677,7 +677,9 @@
     "failedTitle": "فشل التنزيل",
     "failedConnection": "تحقق من اتصالك وحاول مرة أخرى.",
     "failedServer": "واجه خادم التنزيل مشكلة. حاول مرة أخرى لاحقًا.",
-    "failedDamaged": "كان التنزيل تالفًا. حاول مرة أخرى."
+    "failedDamaged": "كان التنزيل تالفًا. حاول مرة أخرى.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "جارٍ بدء المحادثة...",

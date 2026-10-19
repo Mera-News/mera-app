@@ -1,10 +1,12 @@
-// inference.ts wraps llama.rn context. We mock _getContext and _updateInferenceSpeed.
+// inference.ts wraps llama.rn context. We mock _getContext, _ensureLoaded and _updateInferenceSpeed
+// (the real swap is covered by toolkit.test.ts).
 // jest.mock() is hoisted above variable declarations, so the factory must be
 // self-contained. We grab the mock fn refs from the module after import.
 
 jest.mock('@/lib/mera-protocol-toolkit/core/modelManager', () => ({
   __esModule: true,
   _getContext: jest.fn(),
+  _ensureLoaded: jest.fn(async () => null),
   _updateInferenceSpeed: jest.fn(),
   // Provide all other exports from modelManager so transitive imports don't crash
   getModelState: jest.fn(() => null),
@@ -49,6 +51,12 @@ describe('infer', () => {
   it('throws when no model is loaded', async () => {
     mockGetContext.mockReturnValueOnce(null);
     await expect(infer(BASE_PARAMS)).rejects.toThrow('No model loaded. Call initBaseModel() first.');
+  });
+
+  it('makes the TEXT model resident inside the lock before the completion', async () => {
+    mockCompletion.mockResolvedValueOnce({ text: 'ok', tokens_predicted: 1, tokens_evaluated: 1, truncated: false, timings: null });
+    await infer(BASE_PARAMS);
+    expect(modelManager._ensureLoaded).toHaveBeenCalledWith('mera-qwen3.5-4b-instruct');
   });
 
   it('calls context.completion with system prompt and user message', async () => {
@@ -169,8 +177,8 @@ describe('infer', () => {
     );
   });
 
-  it('adds response_format json_object when responseFormat="json" on a model whose grammar works (Qwen)', async () => {
-    mockGetModelState.mockReturnValue(loadedModel('mera-qwen3.5-2b'));
+  it('adds response_format json_object when responseFormat="json" on a model whose grammar works (the text model)', async () => {
+    mockGetModelState.mockReturnValue(loadedModel('mera-qwen3.5-4b-instruct'));
     mockCompletion.mockResolvedValueOnce({
       text: '{}',
       tokens_predicted: 2,
@@ -187,8 +195,8 @@ describe('infer', () => {
     );
   });
 
-  it('sends NO grammar for responseFormat="json" on an LFM model (its grammar breaks the call)', async () => {
-    mockGetModelState.mockReturnValue(loadedModel('mera-lfm2-2.6b'));
+  it('sends NO grammar for responseFormat="json" on a model whose grammar is off (or unknown)', async () => {
+    mockGetModelState.mockReturnValue(loadedModel('mera-kev-4b'));
     mockCompletion.mockResolvedValueOnce({
       text: '{"a":1}',
       tokens_predicted: 2,
@@ -387,7 +395,7 @@ describe('inferStream', () => {
   });
 
   it('adds json response_format in streaming mode when responseFormat="json"', async () => {
-    mockGetModelState.mockReturnValue(loadedModel('mera-qwen3.5-2b'));
+    mockGetModelState.mockReturnValue(loadedModel('mera-qwen3.5-4b-instruct'));
     mockCompletion.mockImplementation(async (_opts: any, _cb: any) => ({
       text: '{}',
       tokens_predicted: 2,

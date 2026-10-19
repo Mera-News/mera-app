@@ -621,7 +621,9 @@
     "failedTitle": "下载失败",
     "failedConnection": "请检查网络连接，然后重试。",
     "failedServer": "下载服务器出现问题。请稍后再试。",
-    "failedDamaged": "下载的文件已损坏。请重试。"
+    "failedDamaged": "下载的文件已损坏。请重试。",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "正在启动对话...",

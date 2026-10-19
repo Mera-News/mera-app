@@ -1,58 +1,21 @@
-// Inference Engine — On-device LLM inference via llama.rn
-// Wraps llama.rn completion API with toolkit's InferParams/InferResult types
+// Inference Engine: on-device inference via llama.rn.
+//   infer / inferStream  completions on the TEXT model
+//   decide               Kev decisions on the RELEVANCE model
+// Each takes the llama lock (llama-lock.ts) once and makes its model resident
+// inside it (modelManager._ensureLoaded), swapping out the other model if needed.
 
+import type { DecisionRequest, DecisionResult } from 'llama.rn';
 import type { InferParams, InferResult } from '../types';
 import { holdRestart } from '../../app-restart';
 import { recordCompletion } from './inference-stats';
-import { supportsJsonGrammar } from './model-catalog';
-import { _getContext, _updateInferenceSpeed, getModelState } from './modelManager';
-
-// llama.rn holds ONE context for the whole app and a completion mutates its KV
-// cache in place, so two overlapping calls interleave: the second one's prefill
-// lands on top of the first one's state. That corrupts the output and makes the
-// `timings` this file reports meaningless, which is why any latency measurement
-// taken before this lock existed could not be trusted. Every entry point that
-// touches the context is serialised through one chain.
-let llamaChain: Promise<unknown> = Promise.resolve();
-
-/** Runs `fn` once every earlier llama caller has settled. */
-function withLlamaLock<T>(fn: () => Promise<T>): Promise<T> {
-  // `.then(fn, fn)` runs fn whether the previous holder resolved OR rejected —
-  // one failed completion must not wedge every later one behind it.
-  const run = llamaChain.then(fn, fn);
-  llamaChain = run.catch(() => {});
-  return run;
-}
-
-/**
- * Manual acquire for `inferStream`, which spans many awaits and so cannot be
- * expressed as a single promise. Resolves once the lock is held; the caller
- * MUST release it in a `finally`, or every later llama call waits forever.
- *
- * `for await` always calls the generator's `.return()` on break/throw, so the
- * `finally` runs and this is safe for every consumer today. The one shape that
- * would deadlock is a consumer driving `.next()` by hand and abandoning the
- * generator without `.return()`: nothing releases, and since this file is the
- * single chokepoint for all on-device inference, the whole engine goes quiet
- * with no error. Iterate with `for await`.
- */
-function acquireLlamaLock(): Promise<() => void> {
-  let release!: () => void;
-  const held = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  const acquired = llamaChain.then(
-    () => release,
-    () => release,
-  );
-  llamaChain = acquired.then(() => held);
-  return acquired;
-}
+import { acquireLlamaLock, withLlamaLock } from './llama-lock';
+import { RELEVANCE_MODEL, supportsJsonGrammar, TEXT_MODEL } from './model-catalog';
+import { _ensureLoaded, _getContext, _updateInferenceSpeed, getModelState } from './modelManager';
 
 /**
  * The JSON grammar is applied only for a model whose tokenizer supports it
- * (see `jsonGrammar` in model-catalog.ts). For the LFM family the grammar
- * breaks the call outright, so the prompt's own instruction carries the format.
+ * (see `jsonGrammar` in model-catalog.ts). Elsewhere the prompt's own
+ * instruction carries the format.
  */
 function wantsJsonGrammar(params: InferParams): boolean {
   return params.responseFormat === 'json' && supportsJsonGrammar(getModelState()?.modelId);
@@ -78,6 +41,7 @@ export function infer(params: InferParams): Promise<InferResult> {
 // be disposed while a caller queues, and `latencyMs` must measure the completion
 // rather than the time spent waiting for the lock.
 async function inferExclusive(params: InferParams): Promise<InferResult> {
+  await _ensureLoaded(TEXT_MODEL.modelId);
   const context = _getContext();
   if (!context) {
     throw new Error('No model loaded. Call initBaseModel() first.');
@@ -150,6 +114,9 @@ async function* inferStreamExclusive(
   signal?: AbortSignal,
 ): AsyncGenerator<string> {
   // The abort may have landed while this call queued for the lock.
+  if (signal?.aborted) return;
+  await _ensureLoaded(TEXT_MODEL.modelId);
+  // ...or while the text model loaded, which can take seconds after a swap.
   if (signal?.aborted) return;
   const context = _getContext();
   if (!context) {
@@ -271,4 +238,26 @@ async function* inferStreamExclusive(
 
   // Ensure the completion promise has settled
   await completionPromise;
+}
+
+/**
+ * One Kev decision (`context.decide()`, the TypeSafe `/v1/systemone` shape) on
+ * the RELEVANCE model. The lock is taken per request, so a chat turn can step in
+ * between two articles; the cost is a model swap each way.
+ */
+export function decide<R extends DecisionRequest>(request: R): Promise<DecisionResult<R['questions']>> {
+  return withLlamaLock(async () => {
+    const release = holdRestart('local-inference');
+    try {
+      await _ensureLoaded(RELEVANCE_MODEL.modelId);
+      const context = _getContext();
+      if (!context) throw new Error('No model loaded.');
+      const startTime = Date.now();
+      const result = await context.decide(request);
+      recordCompletion({ label: 'relevance', latencyMs: Date.now() - startTime });
+      return result as DecisionResult<R['questions']>;
+    } finally {
+      release();
+    }
+  });
 }

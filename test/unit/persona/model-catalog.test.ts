@@ -1,46 +1,48 @@
 import {
   DEFAULT_MODEL_ID,
   MODEL_CATALOG,
+  RELEVANCE_MODEL,
   RETIRED_MODEL_IDS,
-  catalogEntry,
+  TEXT_MODEL,
   isRetiredModelId,
   supportsJsonGrammar,
 } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 
 describe('model catalogue', () => {
-  it('offers exactly the two small models', () => {
-    expect(MODEL_CATALOG.map((m) => m.modelId)).toEqual(['mera-lfm2-2.6b', 'mera-qwen3.5-2b']);
+  it('holds exactly the two on-device models, text first (the download order)', () => {
+    expect(MODEL_CATALOG).toEqual([TEXT_MODEL, RELEVANCE_MODEL]);
+    expect(TEXT_MODEL).toMatchObject({ modelId: 'mera-qwen3.5-4b-instruct', role: 'text', sizeBytes: 2_740_937_888 });
+    expect(RELEVANCE_MODEL).toMatchObject({ modelId: 'mera-kev-4b', role: 'relevance', sizeBytes: 3_033_489_824 });
   });
 
-  it('every entry downloads a Q4_K_M GGUF from a resolve/main URL and names its licence', () => {
+  it('every entry downloads a Q4_K_M GGUF pinned to a HuggingFace commit and names its licence', () => {
     for (const m of MODEL_CATALOG) {
-      expect(m.modelUrl).toMatch(/^https:\/\/huggingface\.co\/[^/]+\/[^/]+\/resolve\/main\/[^/]+-Q4_K_M\.gguf$/);
-      expect(m.licenseName.length).toBeGreaterThan(0);
+      expect(m.modelUrl).toMatch(/^https:\/\/huggingface\.co\/[^/]+\/[^/]+\/resolve\/[0-9a-f]{40}\/[^/]+-Q4_K_M\.gguf$/);
+      expect(m.licenseName).toBe('Apache 2.0');
       expect(m.licenseUrl).toMatch(/^https:\/\//);
     }
   });
 
-  it('the default is in the catalogue and is not retired', () => {
-    expect(MODEL_CATALOG.some((m) => m.modelId === DEFAULT_MODEL_ID)).toBe(true);
+  it('the default is the text model and is not retired', () => {
+    expect(DEFAULT_MODEL_ID).toBe(TEXT_MODEL.modelId);
     expect(isRetiredModelId(DEFAULT_MODEL_ID)).toBe(false);
   });
 
-  it('retires both old Qwen 4B ids and the reasoning-only LFM2.5, and no catalogue id', () => {
-    expect(RETIRED_MODEL_IDS).toEqual(['mera-qwen3.5-4b', 'mera-qwen3-4b', 'mera-lfm2.5-2.6b']);
+  it('retires every earlier model id, and no catalogue id', () => {
+    expect(RETIRED_MODEL_IDS).toEqual([
+      'mera-qwen3.5-4b',
+      'mera-qwen3-4b',
+      'mera-lfm2.5-2.6b',
+      'mera-lfm2-2.6b',
+      'mera-qwen3.5-2b',
+    ]);
     for (const m of MODEL_CATALOG) expect(isRetiredModelId(m.modelId)).toBe(false);
   });
 
-  it('catalogEntry falls back to the default for a retired or unknown id', () => {
-    expect(catalogEntry('mera-lfm2-2.6b').modelId).toBe('mera-lfm2-2.6b');
-    expect(catalogEntry('mera-lfm2.5-2.6b').modelId).toBe(DEFAULT_MODEL_ID);
-    expect(catalogEntry('mera-qwen3.5-4b').modelId).toBe(DEFAULT_MODEL_ID);
-    expect(catalogEntry('nonsense').modelId).toBe(DEFAULT_MODEL_ID);
-  });
-
-  it('the JSON grammar is on for Qwen only, and off for anything unknown', () => {
-    expect(supportsJsonGrammar('mera-qwen3.5-2b')).toBe(true);
-    expect(supportsJsonGrammar('mera-lfm2-2.6b')).toBe(false);
-    expect(supportsJsonGrammar('mera-lfm2.5-2.6b')).toBe(false);
+  it('the JSON grammar is on for the text model only, and off for anything unknown', () => {
+    expect(supportsJsonGrammar(TEXT_MODEL.modelId)).toBe(true);
+    expect(supportsJsonGrammar(RELEVANCE_MODEL.modelId)).toBe(false);
+    expect(supportsJsonGrammar('mera-qwen3.5-2b')).toBe(false);
     expect(supportsJsonGrammar(null)).toBe(false);
   });
 });

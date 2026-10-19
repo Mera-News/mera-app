@@ -621,7 +621,9 @@
     "failedTitle": "ダウンロード失敗",
     "failedConnection": "接続を確認して、もう一度お試しください。",
     "failedServer": "ダウンロードサーバーに問題が発生しました。しばらくしてからもう一度お試しください。",
-    "failedDamaged": "ダウンロードしたファイルが破損していました。もう一度お試しください。"
+    "failedDamaged": "ダウンロードしたファイルが破損していました。もう一度お試しください。",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "チャットを開始中...",

@@ -1,0 +1,122 @@
+{
+  "ar": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "de": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "en": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "es": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "fr": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "hi": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "id": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "it": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "ja": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "ko": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "nl": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "pl": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "pt-BR": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "ru": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "th": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "tr": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "uk": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "vi": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "zh-CN": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  },
+  "zh-TW": {
+    "download": {
+      "onDeviceReady": "Mera now runs on this phone.",
+      "failedSpace": "Not enough space on this phone. Free up space and try again."
+    }
+  }
+}

@@ -625,7 +625,9 @@
     "failedTitle": "Download mislukt",
     "failedConnection": "Controleer je verbinding en probeer het opnieuw.",
     "failedServer": "De downloadserver had een probleem. Probeer het later opnieuw.",
-    "failedDamaged": "De download was beschadigd. Probeer het opnieuw."
+    "failedDamaged": "De download was beschadigd. Probeer het opnieuw.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "Chat starten...",

@@ -3,7 +3,7 @@ import { AccountService } from '@/lib/account-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import {
     isDownloadInProgress,
-    startModelDownload,
+    startModelDownloads,
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
 import {
     deleteBaseModel,
@@ -12,7 +12,7 @@ import {
 } from '@/lib/mera-protocol-toolkit/core/modelManager';
 import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 import {
-    catalogEntry,
+    TEXT_MODEL,
     type ModelCatalogEntry,
 } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import {
@@ -59,7 +59,7 @@ export function useMeraProtocolSettings() {
     const store = useMeraProtocolStore();
     const webSearchInChat = useWebSearchInChat();
 
-    const currentModel = catalogEntry(selectedModelId);
+    const currentModel = TEXT_MODEL;
     const inferenceStats = useInferenceStats();
     const modelDownloaded = modelState === 'downloaded' || modelState === 'ready';
 
@@ -268,11 +268,7 @@ export function useMeraProtocolSettings() {
             });
             return;
         }
-        startModelDownload({
-            modelId: currentModel.modelId,
-            modelUrl: currentModel.modelUrl,
-            expectedChecksum: currentModel.expectedChecksum,
-        });
+        startModelDownloads({ promote: onDeviceIntent });
         toast.show({
             placement: 'top',
             render: () => (
@@ -282,7 +278,7 @@ export function useMeraProtocolSettings() {
                 </Toast>
             ),
         });
-    }, [toast, currentModel, t]);
+    }, [toast, onDeviceIntent, t]);
 
     const handleDeleteModel = useCallback(() => {
         setShowDeleteModelConfirm(true);

@@ -625,7 +625,9 @@
     "failedTitle": "डाउनलोड विफल",
     "failedConnection": "अपना कनेक्शन जाँचें और फिर कोशिश करें।",
     "failedServer": "डाउनलोड सर्वर में कोई समस्या आई। बाद में फिर कोशिश करें।",
-    "failedDamaged": "डाउनलोड खराब हो गया। फिर कोशिश करें।"
+    "failedDamaged": "डाउनलोड खराब हो गया। फिर कोशिश करें।",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "चैट शुरू हो रही है...",

@@ -4,7 +4,7 @@
 // ============================================================
 
 // === Core Inference ===
-export { infer, inferStream } from './core/inference';
+export { infer, inferStream, decide } from './core/inference';
 
 // === Base Model Lifecycle ===
 export {
@@ -14,23 +14,27 @@ export {
   resetContext,
   getModelState,
   isModelDownloaded,
+  isTextModelResident,
   deleteBaseModel,
+  deleteOnDeviceModels,
   purgeAllBaseModels,
+  LocalModelsOffError,
 } from './core/modelManager';
 
 // === Model Catalogue ===
 export {
   MODEL_CATALOG,
+  TEXT_MODEL,
+  RELEVANCE_MODEL,
   DEFAULT_MODEL_ID,
   RETIRED_MODEL_IDS,
-  catalogEntry,
   isRetiredModelId,
 } from './core/model-catalog';
-export type { ModelCatalogEntry } from './core/model-catalog';
+export type { ModelCatalogEntry, ModelRole } from './core/model-catalog';
 
 // === Download Service ===
 export {
-  startModelDownload,
+  startModelDownloads,
   cancelModelDownload,
   isDownloadInProgress,
 } from './core/downloadService';

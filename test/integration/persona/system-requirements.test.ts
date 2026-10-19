@@ -39,8 +39,8 @@ afterAll(() => {
 });
 
 const GB = 1024 * 1024 * 1024;
-const ENOUGH_STORAGE = 4 * GB; // > 2.5 GB threshold
-const LOW_STORAGE = 1 * GB;   // < 2.5 GB threshold
+const ENOUGH_STORAGE = 4 * GB;
+const BOTH_MODELS = 5_774_427_712; // 2,740,937,888 + 3,033,489,824 bytes still to download
 
 describe('checkRequirements', () => {
   beforeEach(() => {
@@ -231,26 +231,32 @@ describe('checkRequirements', () => {
     });
   });
 
-  describe('storage check', () => {
-    it('fails when free storage is below 2.5 GB', async () => {
-      mockGetFSInfo.mockResolvedValue({ freeSpace: LOW_STORAGE }); // 1 GB
-      const result = await checkRequirements();
+  describe('storage check (only the bytes still to download count)', () => {
+    it('fails when free storage is below what is missing plus the 0.5 GB margin, in decimal GB', async () => {
+      mockGetFSInfo.mockResolvedValue({ freeSpace: 6_000_000_000 });
+      const result = await checkRequirements({ bytesToDownload: BOTH_MODELS });
       expect(result.supported).toBe(false);
       expect(result.failedCheck).toBe('storage');
-      expect(result.reason).toMatch(/2\.5 GB free storage/);
+      expect(result.reason).toMatch(/6\.3 GB free storage/);
+      expect(result.deviceInfo.freeStorageGB).toBe(6);
     });
 
-    it('passes when free storage is exactly 2.5 GB', async () => {
-      mockGetFSInfo.mockResolvedValue({ freeSpace: 2.5 * GB });
-      const result = await checkRequirements();
+    it('passes with exactly what is missing plus the margin', async () => {
+      mockGetFSInfo.mockResolvedValue({ freeSpace: BOTH_MODELS + 500_000_000 });
+      const result = await checkRequirements({ bytesToDownload: BOTH_MODELS });
       expect(result.failedCheck).not.toBe('storage');
+    });
+
+    it('never fails on storage once nothing is left to download, however full the phone is', async () => {
+      mockGetFSInfo.mockResolvedValue({ freeSpace: 1_000 });
+      expect((await checkRequirements()).supported).toBe(true);
+      expect((await checkRequirements({ bytesToDownload: 0 })).supported).toBe(true);
     });
 
     it('skips storage check when getFSInfo throws', async () => {
       mockGetFSInfo.mockRejectedValue(new Error('FS unavailable'));
-      const result = await checkRequirements();
+      const result = await checkRequirements({ bytesToDownload: BOTH_MODELS });
       expect(result.deviceInfo.freeStorageGB).toBeNull();
-      // Should not fail on storage
       expect(result.failedCheck).not.toBe('storage');
     });
   });

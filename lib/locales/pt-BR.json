@@ -625,7 +625,9 @@
     "failedTitle": "Falha no download",
     "failedConnection": "Verifique sua conexão e tente novamente.",
     "failedServer": "O servidor de download teve um problema. Tente novamente mais tarde.",
-    "failedDamaged": "O download foi danificado. Tente novamente."
+    "failedDamaged": "O download foi danificado. Tente novamente.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
     "startingChat": "Iniciando conversa...",
