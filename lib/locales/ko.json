@@ -461,7 +461,7 @@
     "onDeviceNeedsCloud": "일부 채팅 기능은 프라이빗 클라우드가 필요해요.",
     "explainerOnPhoneLimits": "이 휴대폰에서는 메라가 뉴스나 웹을 검색하거나 사실 여부를 확인할 수 없어요.",
     "modelsTitle": "AI models",
-    "modelsHelp": "Mera uses Private cloud until both models are downloaded.",
+    "modelsHelp": "메라 uses Private cloud until both models are downloaded.",
     "modelRoleText": "Chat, notes and topics",
     "modelRoleRelevance": "Ranks your feed",
     "modelRowReady": "{{model}}, {{role}}, {{size}}, downloaded",
@@ -473,7 +473,7 @@
     "tryAgain": "Try again",
     "deleteModelsLabel": "Delete models",
     "deleteModelsTitle": "Delete AI models?",
-    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. Mera will use Private cloud.",
+    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. 메라 will use Private cloud.",
     "cellularTitle": "Download on mobile data?",
     "cellularBody": "This uses {{size}} of data.",
     "cellularConfirm": "Download",
@@ -611,7 +611,7 @@
     "failedConnection": "연결을 확인하고 다시 시도해 주세요.",
     "failedServer": "다운로드 서버에 문제가 있었습니다. 나중에 다시 시도해 주세요.",
     "failedDamaged": "다운로드한 파일이 손상되었습니다. 다시 시도해 주세요.",
-    "onDeviceReady": "Mera now runs on this phone.",
+    "onDeviceReady": "메라 now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {

@@ -488,7 +488,7 @@
     "onDeviceNeedsCloud": "Некоторым функциям чата нужен режим «Частное облако».",
     "explainerOnPhoneLimits": "На этом телефоне Мера не может искать новости и информацию в интернете или проверять факты.",
     "modelsTitle": "AI models",
-    "modelsHelp": "Mera uses Private cloud until both models are downloaded.",
+    "modelsHelp": "Мера uses Private cloud until both models are downloaded.",
     "modelRoleText": "Chat, notes and topics",
     "modelRoleRelevance": "Ranks your feed",
     "modelRowReady": "{{model}}, {{role}}, {{size}}, downloaded",
@@ -500,7 +500,7 @@
     "tryAgain": "Try again",
     "deleteModelsLabel": "Delete models",
     "deleteModelsTitle": "Delete AI models?",
-    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. Mera will use Private cloud.",
+    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. Мера will use Private cloud.",
     "cellularTitle": "Download on mobile data?",
     "cellularBody": "This uses {{size}} of data.",
     "cellularConfirm": "Download",
@@ -641,7 +641,7 @@
     "failedConnection": "Проверьте подключение и попробуйте ещё раз.",
     "failedServer": "У сервера загрузки возникла проблема. Попробуйте позже.",
     "failedDamaged": "Загрузка повреждена. Попробуйте ещё раз.",
-    "onDeviceReady": "Mera now runs on this phone.",
+    "onDeviceReady": "Мера now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {

@@ -461,7 +461,7 @@
     "onDeviceNeedsCloud": "ฟีเจอร์แชทบางอย่างต้องใช้ “คลาวด์ส่วนตัว”",
     "explainerOnPhoneLimits": "เมื่อเลือก “บนโทรศัพท์เครื่องนี้” เมร่าค้นหาข่าวหรือเว็บ หรือตรวจสอบข้อเท็จจริงไม่ได้",
     "modelsTitle": "AI models",
-    "modelsHelp": "Mera uses Private cloud until both models are downloaded.",
+    "modelsHelp": "เมร่า uses Private cloud until both models are downloaded.",
     "modelRoleText": "Chat, notes and topics",
     "modelRoleRelevance": "Ranks your feed",
     "modelRowReady": "{{model}}, {{role}}, {{size}}, downloaded",
@@ -473,7 +473,7 @@
     "tryAgain": "Try again",
     "deleteModelsLabel": "Delete models",
     "deleteModelsTitle": "Delete AI models?",
-    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. Mera will use Private cloud.",
+    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. เมร่า will use Private cloud.",
     "cellularTitle": "Download on mobile data?",
     "cellularBody": "This uses {{size}} of data.",
     "cellularConfirm": "Download",
@@ -612,7 +612,7 @@
     "failedConnection": "ตรวจสอบการเชื่อมต่อของคุณแล้วลองอีกครั้ง",
     "failedServer": "เซิร์ฟเวอร์ดาวน์โหลดมีปัญหา ลองอีกครั้งในภายหลัง",
     "failedDamaged": "การดาวน์โหลดเสียหาย ลองอีกครั้ง",
-    "onDeviceReady": "Mera now runs on this phone.",
+    "onDeviceReady": "เมร่า now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {

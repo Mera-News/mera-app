@@ -464,7 +464,7 @@
     "onDeviceNeedsCloud": "कुछ चैट सुविधाओं के लिए “प्राइवेट क्लाउड” चाहिए।",
     "explainerOnPhoneLimits": "इस फ़ोन पर, मेरा ऐप खबरें या वेब नहीं खोज सकता, और न ही तथ्यों की जाँच कर सकता है।",
     "modelsTitle": "AI models",
-    "modelsHelp": "Mera uses Private cloud until both models are downloaded.",
+    "modelsHelp": "मेरा uses Private cloud until both models are downloaded.",
     "modelRoleText": "Chat, notes and topics",
     "modelRoleRelevance": "Ranks your feed",
     "modelRowReady": "{{model}}, {{role}}, {{size}}, downloaded",
@@ -476,7 +476,7 @@
     "tryAgain": "Try again",
     "deleteModelsLabel": "Delete models",
     "deleteModelsTitle": "Delete AI models?",
-    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. Mera will use Private cloud.",
+    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. मेरा will use Private cloud.",
     "cellularTitle": "Download on mobile data?",
     "cellularBody": "This uses {{size}} of data.",
     "cellularConfirm": "Download",
@@ -615,7 +615,7 @@
     "failedConnection": "अपना कनेक्शन जाँचें और फिर कोशिश करें।",
     "failedServer": "डाउनलोड सर्वर में कोई समस्या आई। बाद में फिर कोशिश करें।",
     "failedDamaged": "डाउनलोड खराब हो गया। फिर कोशिश करें।",
-    "onDeviceReady": "Mera now runs on this phone.",
+    "onDeviceReady": "मेरा now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {

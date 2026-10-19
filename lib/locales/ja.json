@@ -461,7 +461,7 @@
     "onDeviceNeedsCloud": "一部のチャット機能には「プライベートクラウド」が必要です。",
     "explainerOnPhoneLimits": "「この電話上」では、メラはニュースやウェブの検索、事実確認ができません。",
     "modelsTitle": "AI models",
-    "modelsHelp": "Mera uses Private cloud until both models are downloaded.",
+    "modelsHelp": "メラ uses Private cloud until both models are downloaded.",
     "modelRoleText": "Chat, notes and topics",
     "modelRoleRelevance": "Ranks your feed",
     "modelRowReady": "{{model}}, {{role}}, {{size}}, downloaded",
@@ -473,7 +473,7 @@
     "tryAgain": "Try again",
     "deleteModelsLabel": "Delete models",
     "deleteModelsTitle": "Delete AI models?",
-    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. Mera will use Private cloud.",
+    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. メラ will use Private cloud.",
     "cellularTitle": "Download on mobile data?",
     "cellularBody": "This uses {{size}} of data.",
     "cellularConfirm": "Download",
@@ -611,7 +611,7 @@
     "failedConnection": "接続を確認して、もう一度お試しください。",
     "failedServer": "ダウンロードサーバーに問題が発生しました。しばらくしてからもう一度お試しください。",
     "failedDamaged": "ダウンロードしたファイルが破損していました。もう一度お試しください。",
-    "onDeviceReady": "Mera now runs on this phone.",
+    "onDeviceReady": "メラ now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {

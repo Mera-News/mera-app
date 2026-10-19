@@ -512,7 +512,7 @@
     "onDeviceNeedsCloud": "تحتاج بعض ميزات المحادثة إلى «السحابة الخاصة».",
     "explainerOnPhoneLimits": "على هذا الهاتف، لا يستطيع ميرا البحث في الأخبار أو على الويب، ولا التحقق من الحقائق.",
     "modelsTitle": "AI models",
-    "modelsHelp": "Mera uses Private cloud until both models are downloaded.",
+    "modelsHelp": "ميرا uses Private cloud until both models are downloaded.",
     "modelRoleText": "Chat, notes and topics",
     "modelRoleRelevance": "Ranks your feed",
     "modelRowReady": "{{model}}, {{role}}, {{size}}, downloaded",
@@ -524,7 +524,7 @@
     "tryAgain": "Try again",
     "deleteModelsLabel": "Delete models",
     "deleteModelsTitle": "Delete AI models?",
-    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. Mera will use Private cloud.",
+    "deleteModelsBody": "This removes the AI models ({{size}}) from this phone. ميرا will use Private cloud.",
     "cellularTitle": "Download on mobile data?",
     "cellularBody": "This uses {{size}} of data.",
     "cellularConfirm": "Download",
@@ -667,7 +667,7 @@
     "failedConnection": "تحقق من اتصالك وحاول مرة أخرى.",
     "failedServer": "واجه خادم التنزيل مشكلة. حاول مرة أخرى لاحقًا.",
     "failedDamaged": "كان التنزيل تالفًا. حاول مرة أخرى.",
-    "onDeviceReady": "Mera now runs on this phone.",
+    "onDeviceReady": "ميرا now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again."
   },
   "chat": {
