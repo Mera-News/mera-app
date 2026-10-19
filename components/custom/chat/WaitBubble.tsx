@@ -10,7 +10,7 @@ import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { DEVICE_WORD_LINES } from './chat-phases';
+import { DEVICE_WORD_LINES, WAIT_ROW_WIDTH } from './chat-phases';
 import ChatPhaseLine, { usePhaseLine } from './ChatPhaseLine';
 import EncryptionStrip from './EncryptionStrip';
 import { useAnnounce } from './phase-announcer';
@@ -92,7 +92,11 @@ export const WaitBubble: React.FC<WaitBubbleProps> = ({
 };
 
 const styles = StyleSheet.create({
-  row: { paddingVertical: 8, paddingHorizontal: 14, justifyContent: 'center' },
+  // A WIDTH OF ITS OWN. The assistant message row aligns its child to the
+  // start, so a row without one shrink-wraps its content, and the strip's
+  // `width: '100%'` (and the device words' `flex: 1`) resolved to 0: the
+  // strip never drew. The wait row is the board's 272pt strip plus its insets.
+  row: { width: '100%', maxWidth: WAIT_ROW_WIDTH, paddingVertical: 8, paddingHorizontal: 14, justifyContent: 'center' },
   localRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   words: { flex: 1, justifyContent: 'center' },
   cloudWords: { marginTop: 6 },

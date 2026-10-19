@@ -7,6 +7,7 @@
 // liveness drawing must not freeze on a backgrounded chat.
 
 import { LayeredMark } from '@/components/custom/MeraLogo';
+import logger from '@/lib/logger';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { stripStateFor } from '@/lib/services/chat-phase';
@@ -21,6 +22,7 @@ import StaticStrip from './StaticStrip';
 import {
   initStripDisplay,
   markFor,
+  markLayout,
   reduceStripDisplay,
   stripColorFilters,
   stripPlayback,
@@ -106,12 +108,16 @@ export const EncryptionStrip: React.FC<EncryptionStripProps> = ({
   const mark = markFor(display.shown, rest);
   const box = mark.place === 'phone' ? CHAT_DEVICE_SCREEN_BOX : CHAT_STRIP_MARK_BOX;
   const [width, setWidth] = useState<number>(box.stripW);
-  const k = width / box.stripW;
-  const markSize = box.h * k;
-  const cx = (box.x + box.w / 2) * k;
-  const cy = STRIP_HEIGHT / 2 + (box.y + box.h / 2 - STRIP_HEIGHT / 2) * k;
+  const place = markLayout(box, width);
   const device = playback.device;
   const stripW = device ? CHAT_DEVICE_SCREEN_BOX.stripW : CHAT_STRIP_MARK_BOX.stripW;
+
+  // Dev only: which drawing the strip chose, once per change, so a capture can
+  // tell the Lottie from the resting svg without reading pixels.
+  const choice = `${playback.kind}:${playback.kind === 'lottie' ? playback.id : device ? 'device' : 'cloud'}:${display.shown}:${motion ? 'motion' : 'still'}`;
+  useEffect(() => {
+    if (__DEV__) logger.info('[EncryptionStrip] draw', { host, choice });
+  }, [host, choice]);
 
   return (
     <View
@@ -139,14 +145,14 @@ export const EncryptionStrip: React.FC<EncryptionStripProps> = ({
         pointerEvents="none"
         style={{
           position: 'absolute',
-          left: cx - markSize / 2,
-          top: cy - markSize / 2,
-          width: markSize,
-          height: markSize,
+          left: place.left,
+          top: place.top,
+          width: place.size,
+          height: place.size,
           opacity: mark.opacity,
         }}
       >
-        <LayeredMark size={markSize} color={colors.ink} cone cards={false} still={!mark.animated} />
+        <LayeredMark size={place.size} color={colors.ink} cone cards={false} still={!mark.animated} />
       </View>
     </View>
   );

@@ -145,6 +145,30 @@ export function markFor(shown: DrawnStrip | null, rest: boolean): MarkPlacement 
   };
 }
 
+export interface MarkBox {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  readonly stripW: number;
+  readonly stripH: number;
+}
+
+/**
+ * Where the square `LayeredMark` box goes over a strip drawn `measuredWidth`
+ * wide. The drawing scales by width (`contain`, centred in the 32pt height), so
+ * the mark scales with it. A width that is not measured yet, or measured 0 (a
+ * parent with no width of its own), keeps the board's own size: a 0 would draw
+ * a 0pt mark, which is how the wait row's mark vanished after one frame.
+ */
+export function markLayout(box: MarkBox, measuredWidth: number): { size: number; left: number; top: number } {
+  const k = measuredWidth > 0 ? Math.min(1, measuredWidth / box.stripW) : 1;
+  const size = box.h * k;
+  const cx = (box.x + box.w / 2) * k;
+  const cy = box.stripH / 2 + (box.y + box.h / 2 - box.stripH / 2) * k;
+  return { size, left: cx - size / 2, top: cy - size / 2 };
+}
+
 // ── Colours ─────────────────────────────────────────────────────────────────
 // Android applies colour filters SRC_ATOP, so a translucent filter blends with
 // the authored colour. Every filter is therefore OPAQUE: the token flattened

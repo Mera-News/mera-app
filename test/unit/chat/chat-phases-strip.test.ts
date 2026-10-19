@@ -9,6 +9,7 @@ import {
   flatten,
   initStripDisplay,
   markFor,
+  markLayout,
   reduceStripDisplay,
   stripColorFilters,
   stripPlayback,
@@ -18,6 +19,7 @@ import {
   type StripFileId,
 } from '@/components/custom/chat/strip-display';
 import { COLORS } from '@/lib/theme/tokens';
+import { CHAT_DEVICE_SCREEN_BOX, CHAT_STRIP_MARK_BOX } from '@/components/custom/chat/animation-registry';
 import type { StripState } from '@/lib/services/chat-phase';
 
 const target = (state: StripState | null, sealedSeq: number, motion = true): StripEvent => ({
@@ -169,5 +171,32 @@ describe('stripColorFilters', () => {
     const row = stripColorFilters(COLORS.dark, 'row');
     const box = stripColorFilters(COLORS.dark, 'box');
     expect(box[1].color).not.toBe(row[1].color);
+  });
+});
+
+describe('markLayout', () => {
+  it('puts the mark at the model end, as tall as the phone, at full width', () => {
+    const at = markLayout(CHAT_STRIP_MARK_BOX, 272);
+    expect(at.size).toBeCloseTo(30);
+    expect(at.left + at.size / 2).toBeCloseTo(255);
+    expect(at.top).toBeCloseTo(1);
+  });
+
+  it('scales with a narrower strip, centred in the 32pt height', () => {
+    const at = markLayout(CHAT_STRIP_MARK_BOX, 136);
+    expect(at.size).toBeCloseTo(15);
+    expect(at.top + at.size / 2).toBeCloseTo(16);
+  });
+
+  it('never draws a 0pt mark when the strip measured 0 wide (a parent with no width)', () => {
+    // The wait row once shrink-wrapped its content: onLayout gave 0 and the mark vanished.
+    expect(markLayout(CHAT_STRIP_MARK_BOX, 0).size).toBeCloseTo(30);
+    expect(markLayout(CHAT_DEVICE_SCREEN_BOX, 0).size).toBeCloseTo(19.8);
+  });
+
+  it('sits on the phone screen on device', () => {
+    const at = markLayout(CHAT_DEVICE_SCREEN_BOX, 28);
+    expect(at.left + at.size / 2).toBeCloseTo(14);
+    expect(at.top + at.size / 2).toBeCloseTo(15);
   });
 });

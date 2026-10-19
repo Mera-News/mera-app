@@ -79,6 +79,8 @@ export function phaseLineHeight(language: string): number {
 /** The strip's drawn height. It never scales vertically (width scales only
  *  below 272pt), so every height below can assume it. */
 export const STRIP_HEIGHT = 32;
+/** The wait row's width: the 272pt strip plus the bubble's 14pt text insets. */
+export const WAIT_ROW_WIDTH = 272 + 28;
 const ROW_PAD = 8;
 const WORDS_GAP = 6;
 /** Lines reserved for the words: three under the cloud strip, two beside the

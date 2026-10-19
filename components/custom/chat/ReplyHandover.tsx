@@ -26,6 +26,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import EncryptionStrip from './EncryptionStrip';
+import { WAIT_ROW_WIDTH } from './chat-phases';
 import { useWaitRowHeight } from './use-wait-row-height';
 
 export interface StreamingReplyInfo {
@@ -44,8 +45,6 @@ const LIFT_MS = 200;
 /** Where the first line sits under the strip: the phase words' offset. */
 const GLIDE_FROM = 38;
 const LIFT_BY = 4;
-/** The wait row's width: the 272pt strip plus the bubble's 14pt insets. */
-const ROW_WIDTH = 272 + 28;
 /** What the thread's own insets leave on a narrow screen. */
 const THREAD_INSET = 48;
 
@@ -110,7 +109,7 @@ export const StreamingBubble = forwardRef<View, StreamingBubbleProps>(function S
       style={[
         style,
         info ? { minHeight: rowHeight } : null,
-        overlay ? [styles.overlaying, { minWidth: Math.min(ROW_WIDTH, width - THREAD_INSET) }] : null,
+        overlay ? [styles.overlaying, { minWidth: Math.min(WAIT_ROW_WIDTH, width - THREAD_INSET) }] : null,
       ]}
     >
       {overlay && <Animated.View pointerEvents="none" style={[styles.fill, fill, surfaceStyle]} />}
