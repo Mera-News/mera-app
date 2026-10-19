@@ -12,12 +12,14 @@ import { maskEmail } from '@/lib/algorithms/mask-email';
 import { getAppVersion, getGitCommit } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import SettingsUsageCard from './SettingsUsageCard';
 import { useAppPreferences } from './useAppPreferences';
+import { useRestorePurchases } from './useRestorePurchases';
+import { emailCutoffLabel, isEmailAccount, requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
@@ -33,7 +35,7 @@ const youScreen = (screen: YouSettingsScreen) => `/logged-in/app_container/you/$
  */
 const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const colors = useColors();
     const {
         supportBusy,
@@ -54,6 +56,15 @@ const AppPreferencesTab: React.FC = () => {
         openFaq,
     } = useAppPreferences();
     useFocusEffect(refreshOnFocus);
+    const { restoring, restore } = useRestorePurchases();
+    // The move row is for accounts that still have an email (a displayed one, or the stored row / session).
+    const [emailAccount, setEmailAccount] = useState(false);
+    useEffect(() => {
+        let live = true;
+        void isEmailAccount().then((yes) => { if (live) setEmailAccount(yes); });
+        return () => { live = false; };
+    }, [displayEmail]);
+    const showMoveRow = emailAccount || !!displayEmail;
 
     const busy = <Spinner size="small" />;
     const version = getAppVersion();
@@ -180,6 +191,22 @@ const AppPreferencesTab: React.FC = () => {
                         subtitle={t('you.settings.noEmailNeeded')}
                     />
                 )}
+                {showMoveRow ? (
+                    <Row
+                        testID="settings-row-move-to-phone"
+                        leadingIcon="smartphone"
+                        title={t('moveToPhone.settingsRow')}
+                        subtitle={t('moveToPhone.settingsRowHint', { date: emailCutoffLabel(i18n.language) })}
+                        onPress={() => void requestMoveToPhone()}
+                    />
+                ) : null}
+                <Row
+                    testID="settings-row-restore-purchases"
+                    leadingIcon="restore"
+                    title={t('you.settings.restorePurchases')}
+                    onPress={() => void restore()}
+                    trailing={restoring ? busy : undefined}
+                />
                 <Row
                     testID="settings-row-delete-account"
                     leadingIcon="delete-forever"
@@ -197,6 +224,12 @@ const AppPreferencesTab: React.FC = () => {
                     hideChevron
                 />
             </Group>
+            <View style={{ paddingHorizontal: 4, paddingTop: 8, gap: 8 }}>
+                <Text style={{ color: colors.ink3, fontSize: 13 }}>{t('subscription.platformSwitch')}</Text>
+                <Text style={{ color: colors.ink3, fontSize: 13 }}>
+                    {t(Platform.OS === 'ios' ? 'subscription.invoicesAppStore' : 'subscription.invoicesPlayStore')}
+                </Text>
+            </View>
 
             {devMode ? (
                 <>

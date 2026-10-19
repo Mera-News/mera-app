@@ -737,3 +737,20 @@ describe('subscriber-attribute privacy contract', () => {
     for (const key of RETIRED_KEYS) expect(attrs[key]).toBeNull();
   });
 });
+
+describe('restoreRevenueCatPurchases', () => {
+  beforeEach(() => jest.resetModules());
+
+  it('returns the CustomerInfo the store restore answers with', async () => {
+    const { rc, Purchases } = load();
+    const info = customerInfo({ 'mera-news-starter-plan': { isActive: true } });
+    Purchases.restorePurchases.mockResolvedValueOnce(info);
+    await expect(rc.restoreRevenueCatPurchases()).resolves.toBe(info);
+  });
+
+  it('throws when the store cannot be reached', async () => {
+    const { rc, Purchases } = load();
+    Purchases.restorePurchases.mockRejectedValueOnce(new Error('offline'));
+    await expect(rc.restoreRevenueCatPurchases()).rejects.toThrow('offline');
+  });
+});

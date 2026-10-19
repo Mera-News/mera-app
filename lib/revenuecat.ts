@@ -537,6 +537,15 @@ export async function getCustomerInfoSafe(): Promise<CustomerInfo | null> {
   }
 }
 
+/**
+ * Ask the store for this account's past purchases (Settings > Restore purchases).
+ * Returns the CustomerInfo; throws when the store can't be reached (the caller maps
+ * that to its own message). On iOS this can show the Apple Account sheet.
+ */
+export async function restoreRevenueCatPurchases(): Promise<CustomerInfo> {
+  return Purchases.restorePurchases();
+}
+
 /*
  * REMOVED (r13): `TRIAL_PRODUCT_ID`, `TrialAvailability` and
  * `getTrialAvailability`.

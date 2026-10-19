@@ -207,6 +207,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                         >
                             <Text style={{ color: confirming ? colors.ink3 : colors.onAccent, fontSize: 16, fontWeight: '600' }}>{t('subscription.viewPlans')}</Text>
                         </Pressable>
+                        <Text style={{ color: colors.ink3, fontSize: 13, textAlign: 'center', marginHorizontal: 4 }}>{t('subscription.platformSwitch')}</Text>
                         {/* Only with a store subscription: the Customer Center
                             opens onto nothing for a granted Starter account. */}
                         {isPremium ? (

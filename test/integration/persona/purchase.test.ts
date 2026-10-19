@@ -14,6 +14,7 @@ import { readLastKnownTier } from '@/lib/subscription/last-known-tier';
 import { configureRevenueCat } from '@/lib/revenuecat';
 import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { PURCHASE_HOLD_AFTER_RETURN_MS, PURCHASE_HOLD_CEILING_MS } from '@/lib/subscriptions/subscribe-flow';
+import { useDialogQueue } from '@/lib/dialog';
 import { toastManager } from '@/lib/toast-manager';
 import { resetToastQueue, toastApi, useToastQueue } from '@/lib/toast/toast-queue';
 import { seedFacts } from '@/test/integration/chat/_helpers';
@@ -183,6 +184,7 @@ describe('purchase', () => {
         resetEntitlementSyncState();
         useSubscriptionStore.getState().reset();
         resetToastQueue();
+        useDialogQueue.setState({ queue: [] });
         setAppState('active');
         presentPaywall.mockResolvedValue('CANCELLED');
         rcReports(null);
@@ -322,6 +324,31 @@ describe('purchase', () => {
 
             expect(reads()).toBe(2);
             expect(hook.result.current.billing?.subscriptionTier).toBe('professional');
+            // A restore says the plan is back and never shows the receipts note.
+            expect(toastTitles()).toEqual(['Your plan is back.']);
+            expect(useDialogQueue.getState().queue).toEqual([]);
+        });
+
+        it('the receipts note shows once, after the first confirmed purchase only', async () => {
+            scriptBilling(['starter', 'individual']);
+            paywallBuys('individual');
+            const hook = await mountSettled();
+
+            await viewPlans(hook);
+            await settleBackgroundWork();
+            const first = useDialogQueue.getState().queue;
+            expect(first).toHaveLength(1);
+            expect(first[0]).toMatchObject({ title: 'Individual is active', confirmLabel: 'OK' });
+            expect(first[0].cancelLabel).toBeUndefined();
+            expect(first[0].body).toMatch(/receipts/);
+
+            useDialogQueue.setState({ queue: [] });
+            scriptBilling(['individual', 'professional']);
+            paywallBuys('professional');
+            await viewPlans(hook);
+            await settleBackgroundWork();
+            expect(toastTitles()).toContain('Professional is active');
+            expect(useDialogQueue.getState().queue).toEqual([]);
         });
 
         // PE15 / PE17: the account holds the free Starter grant (a grant window, no store entitlement).

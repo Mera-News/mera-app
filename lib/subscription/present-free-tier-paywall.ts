@@ -107,7 +107,7 @@ export async function presentFreeTierPaywall(source: string): Promise<void> {
             // Only here — the server has agreed. On the unconfirmed branch below
             // the snapshot is the PRE-purchase tier, so a toast there would
             // announce a plan the app is still not showing.
-            showSubscriptionActivatedToast(billing.subscriptionTier);
+            showSubscriptionActivatedToast(billing.subscriptionTier, result === PAYWALL_RESULT.RESTORED);
             return;
         }
 
