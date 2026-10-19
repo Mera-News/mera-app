@@ -38,7 +38,8 @@ import {
 } from '@/lib/stores/mera-protocol-store';
 import { resolveCurrentUserId } from '@/lib/security/current-user';
 import NetInfo from '@react-native-community/netinfo';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
     loadBgRefreshToggle,
@@ -159,8 +160,13 @@ export function useMeraProtocolSettings() {
         processingMode === ProcessingMode.OnDevice,
     );
 
-    // Fresh on mount, on every screen focus, after an engine switch and when a download ends.
-    const refresh = useCallback(async () => {
+    const intentRef = useRef(onDeviceIntent);
+    useEffect(() => {
+        intentRef.current = onDeviceIntent;
+    }, [onDeviceIntent]);
+
+    // Reads what is on disk and whether Apple Intelligence can be used. Pure: changes no mode.
+    const readStatus = useCallback(async () => {
         const [next, availability] = await Promise.all([
             onDeviceModelsStatus(),
             nativeEngineAvailability().catch(
@@ -171,6 +177,34 @@ export function useMeraProtocolSettings() {
         setNative(availability);
         return next;
     }, []);
+
+    // While the reader wants On this phone, the phone follows what can run: it moves to On this phone
+    // when it can, else falls back to Private cloud on this phone only (the server persona and the
+    // intent are kept). A running download promotes by itself when it lands.
+    const applyIntent = useCallback(async (next: ModelsStatus) => {
+        if (!intentRef.current || isDownloadInProgress()) return;
+        const current = useMeraProtocolStore.getState().processingMode;
+        if (next.runnable) {
+            if (current !== ProcessingMode.OnDevice) await promoteToOnDevice();
+        } else if (current === ProcessingMode.OnDevice) {
+            useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.Cloud);
+        }
+    }, []);
+
+    // Fresh on screen focus, when the app returns to the foreground (Apple Intelligence can be
+    // switched on in iOS Settings) and after an engine switch.
+    const refresh = useCallback(async () => {
+        const next = await readStatus();
+        await applyIntent(next);
+        return next;
+    }, [readStatus, applyIntent]);
+
+    useEffect(() => {
+        const sub = AppState.addEventListener('change', (state) => {
+            if (state === 'active') void refresh();
+        });
+        return () => sub.remove();
+    }, [refresh]);
 
     useEffect(() => {
         void getTextEngine();
@@ -192,9 +226,9 @@ export function useMeraProtocolSettings() {
     // A download that ends (or is cancelled) changes what is on disk.
     useEffect(() => {
         if (modelState === 'downloaded' || modelState === 'not_downloaded' || modelState === 'error') {
-            void refresh();
+            void readStatus();
         }
-    }, [modelState, refresh]);
+    }, [modelState, readStatus]);
 
     // Background refresh (the `mera-background` OS task). Default ON; read from
     // settings, not a store, because the OS task reads the same row.
@@ -227,7 +261,7 @@ export function useMeraProtocolSettings() {
         try {
             const userId = await resolveCurrentUserId();
             const userPersona = await AccountService.getUserPersona(userId);
-            const { runnable: canRun } = await refresh();
+            const { runnable: canRun } = await readStatus();
             if (userPersona?.processingMode) {
                 const wantsOnDevice = userPersona.processingMode === ProcessingMode.OnDevice;
                 // A download started with the on-device intent is still that intent, even though the
@@ -306,23 +340,14 @@ export function useMeraProtocolSettings() {
         }
     };
 
-    // The text engine for chat and notes. While the reader wants On this phone, the phone
-    // moves to it when it can run, else it falls back to Private cloud on this phone only
-    // (the server persona and the intent are kept).
+    // The text engine for chat and notes. refresh() applies the On this phone intent to it.
     const selectEngine = useCallback(
         async (engine: TextEngine) => {
             if (engine === textEngine) return;
             await setTextEngine(engine);
-            const next = await refresh();
-            if (!onDeviceIntent) return;
-            const current = useMeraProtocolStore.getState().processingMode;
-            if (next.runnable) {
-                if (current !== ProcessingMode.OnDevice) await promoteToOnDevice();
-            } else if (current === ProcessingMode.OnDevice) {
-                useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.Cloud);
-            }
+            await refresh();
         },
-        [textEngine, refresh, onDeviceIntent],
+        [textEngine, refresh],
     );
 
     // One download for whatever is still missing. The toolkit promotes to OnDevice
@@ -343,9 +368,10 @@ export function useMeraProtocolSettings() {
     }, [missingBytes, onDeviceIntent, t]);
 
     // The models the reader relied on are leaving the phone, so processing falls
-    // back to cloud, locally and on the server, BEFORE the files go.
+    // back to cloud, locally and on the server, BEFORE the files go. The server write follows
+    // the intent, not the local mode: the local mode is already Cloud when the models cannot run.
     const fallBackToCloud = useCallback(async () => {
-        if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice) return;
+        if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice && !onDeviceIntent) return;
         try {
             const userId = await resolveCurrentUserId();
             await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
@@ -355,7 +381,7 @@ export function useMeraProtocolSettings() {
             // without both models on disk.
         }
         useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.Cloud);
-    }, []);
+    }, [onDeviceIntent]);
 
     const handleDeleteModels = useCallback(async () => {
         const ok = await showDialog({
@@ -376,7 +402,7 @@ export function useMeraProtocolSettings() {
             store.setModelState('not_downloaded');
             store.setDownloadProgress(0);
             resetInferenceStats();
-            await refresh();
+            await readStatus();
         } catch {
             toast.show({
                 placement: 'top',
@@ -392,7 +418,7 @@ export function useMeraProtocolSettings() {
         }
         // `store` is a stable singleton ref.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [onDiskBytes, fallBackToCloud, refresh, toast, t]);
+    }, [onDiskBytes, fallBackToCloud, readStatus, toast, t]);
 
     return {
         isLoading,

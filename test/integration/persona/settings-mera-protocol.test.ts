@@ -21,6 +21,7 @@ import { isModelDownloaded } from '@/lib/mera-protocol-toolkit/core/modelManager
 import { STORAGE_MARGIN_BYTES } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 import { settleDialog, useDialogQueue } from '@/lib/dialog';
 import NetInfo from '@react-native-community/netinfo';
+import { AppState } from 'react-native';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { resetToastQueue, useToastQueue } from '@/lib/toast/toast-queue';
@@ -438,6 +439,75 @@ describe('Mera Protocol settings', () => {
             expect(promote).not.toHaveBeenCalled();
             // Setting the engine deleted nothing.
             await expect(isModelDownloaded(KEV_ID)).resolves.toBe(true);
+            // The text model shows as still to download.
+            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
+            expect(result.current.modelsSizeBytes).toBe(MODEL_CATALOG[0].sizeBytes);
+            expect(result.current.runnable).toBe(false);
+        });
+
+        it('round trip: Apple Intelligence then Mera AI models again brings the text model download back', async () => {
+            spyAvailability(available);
+            placeDownloadedModel(KEV_ID);
+            serverMode(ProcessingMode.Cloud);
+            jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
+            const { result } = await mountLoaded();
+            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
+
+            await act(async () => {
+                await result.current.selectEngine('native');
+            });
+            expect(result.current.missingBytes).toBe(0);
+
+            await act(async () => {
+                await result.current.selectEngine('mera');
+            });
+            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
+            expect(result.current.runnable).toBe(false);
+        });
+
+        it('a refresh follows Apple Intelligence going away and coming back, locally only', async () => {
+            const availability = spyAvailability(available);
+            placeDownloadedModel(KEV_ID);
+            await textEngine.setTextEngine('native');
+            serverMode(ProcessingMode.OnDevice);
+            const sent = recordModeUpdates();
+            const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
+            const { result } = await mountLoaded();
+            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
+
+            availability.mockResolvedValue({ available: false, reason: 'appleIntelligenceNotEnabled' } as never);
+            await act(async () => {
+                await result.current.refresh();
+            });
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+            expect(result.current.onDeviceIntent).toBe(true);
+            expect(result.current.nativeReasonKey).toBe(NATIVE_REASON_KEYS.appleIntelligenceNotEnabled);
+            expect(sent).toEqual([]);
+            expect(promote).not.toHaveBeenCalled();
+
+            availability.mockResolvedValue(available as never);
+            await act(async () => {
+                await result.current.refresh();
+            });
+            expect(promote).toHaveBeenCalledTimes(1);
+        });
+
+        it('coming back to the app re-reads Apple Intelligence', async () => {
+            let onChange: ((state: string) => void) | undefined;
+            jest.spyOn(AppState, 'addEventListener').mockImplementation(((_: string, cb: (state: string) => void) => {
+                onChange = cb;
+                return { remove: jest.fn() };
+            }) as never);
+            const availability = spyAvailability({ available: false, reason: 'appleIntelligenceNotEnabled' });
+            serverMode(ProcessingMode.Cloud);
+            const { result } = await mountLoaded();
+            expect(result.current.nativeAvailable).toBe(false);
+
+            availability.mockResolvedValue(available as never);
+            await act(async () => {
+                onChange?.('active');
+            });
+            await waitFor(() => expect(result.current.nativeAvailable).toBe(true));
         });
 
         it.each(Object.entries(NATIVE_REASON_KEYS))('%s: the Apple Intelligence row is unavailable with its reason', async (code, key) => {
@@ -633,6 +703,23 @@ describe('Mera Protocol settings', () => {
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
             await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
+        });
+
+        it('with the phone on Private cloud only because the models cannot run: the server still hears CLOUD', async () => {
+            // Server OnDevice but only one of the two files on disk: local Cloud, intent kept, trash shown.
+            resetFileSystem();
+            placeDownloadedModel(KEV_ID);
+            const sent = recordModeUpdates();
+            const { result } = await mountLoaded();
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+            expect(result.current.onDeviceIntent).toBe(true);
+            expect(result.current.onDiskBytes).toBeGreaterThan(0);
+
+            await deleteAnswering(result, true);
+
+            expect(sent.map((s) => s.mode)).toEqual(['CLOUD']);
+            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
+            expect(result.current.onDeviceIntent).toBe(false);
         });
 
         it('while on cloud: both files leave the disk and no mutation is sent', async () => {

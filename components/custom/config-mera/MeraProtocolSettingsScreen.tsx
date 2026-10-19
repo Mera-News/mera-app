@@ -187,7 +187,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const engineRow = (engine: TextEngine) => {
         const apple = engine === 'native';
         const selected = textEngine === engine;
-        const disabled = apple && !nativeAvailable;
+        // Not while a download runs: it keeps the file set it started with.
+        const disabled = isDownloading || (apple && !nativeAvailable);
         const title = apple ? t('meraProtocol.engineApple') : t('meraProtocol.engineMera');
         const reason = apple && nativeReasonKey ? t(nativeReasonKey) : null;
         return (
@@ -259,7 +260,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             </View>
                         ) : null}
                     </View>
-                    {!runnable ? (
+                    {!runnable && missingBytes > 0 ? (
                         <View style={{ marginBottom: 8 }}>
                             <Help>{t('meraProtocol.modelsHelp')}</Help>
                         </View>
