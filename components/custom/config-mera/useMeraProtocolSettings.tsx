@@ -5,16 +5,22 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import {
     downloadFailureKind,
     isDownloadInProgress,
+    onDeviceModelsStatus,
+    promoteToOnDevice,
     setPromoteWhenDone,
     startModelDownloads,
     useDownloadBytes,
     willPromoteWhenDone,
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
-import { MODEL_CATALOG } from '@/lib/mera-protocol-toolkit/core/model-catalog';
+import { deleteOnDeviceModels } from '@/lib/mera-protocol-toolkit/core/modelManager';
 import {
-    deleteOnDeviceModels,
-    isModelDownloaded,
-} from '@/lib/mera-protocol-toolkit/core/modelManager';
+    nativeEngineAvailability,
+    setTextEngine,
+    useTextEngine,
+    getTextEngine,
+    type TextEngine,
+} from '@/lib/mera-protocol-toolkit/core/text-engine';
+import type { OnDeviceLlmAvailability } from '@/modules/mera-on-device-llm';
 import {
     checkRequirements,
     STORAGE_MARGIN_BYTES,
@@ -42,6 +48,60 @@ import {
 /** Decimal gigabytes with one place, the way the catalogue sizes read. */
 export const gbText = (bytes: number): string => (bytes / 1e9).toFixed(1);
 
+/**
+ * Why Apple Intelligence cannot be picked, by availability code. `unsupportedPlatform`
+ * has no line: the whole Chat and notes group is hidden there. Copy never names a model.
+ */
+export const NATIVE_REASON_KEYS = {
+    deviceNotEligible: 'meraProtocol.nativeDeviceNotEligible',
+    appleIntelligenceNotEnabled: 'meraProtocol.nativeNotEnabled',
+    modelNotReady: 'meraProtocol.nativeNotReady',
+    appLanguageNotSupported: 'meraProtocol.nativeAppLanguage',
+    deviceLanguageNotSupported: 'meraProtocol.nativeDeviceLanguage',
+    osTooOld: 'meraProtocol.nativeOsTooOld',
+    unknown: 'meraProtocol.nativeUnknown',
+} as const;
+
+/** Every key the models section and the engine group can show, for the no-model-names test. */
+export const MODELS_SECTION_KEYS = [
+    'meraProtocol.modelsTitle',
+    'meraProtocol.modelsHelp',
+    'meraProtocol.modelsRowTitle',
+    'meraProtocol.modelsRowSubtitle',
+    'meraProtocol.modelRowReady',
+    'meraProtocol.modelRowMissing',
+    'meraProtocol.modelLicenseLink',
+    'meraProtocol.downloadAction',
+    'meraProtocol.downloadingOf',
+    'meraProtocol.cancelDownloadAction',
+    'meraProtocol.tryAgain',
+    'meraProtocol.deleteModelsLabel',
+    'meraProtocol.deleteModelsTitle',
+    'meraProtocol.deleteModelsBody',
+    'meraProtocol.cellularTitle',
+    'meraProtocol.cellularBody',
+    'meraProtocol.cellularConfirm',
+    'meraProtocol.cellularWait',
+    'meraProtocol.freeUpToDownload',
+    'meraProtocol.errorFinish',
+    'meraProtocol.errorFile',
+    'meraProtocol.errorSpace',
+    'meraProtocol.chatNotesTitle',
+    'meraProtocol.engineMera',
+    'meraProtocol.engineApple',
+    'meraProtocol.speedTitle',
+    'meraProtocol.speedLoad',
+    'meraProtocol.speedGeneration',
+    'meraProtocol.speedRanking',
+    'meraProtocol.speedNotes',
+    'meraProtocol.speedRefused',
+    'meraProtocol.speedResetNote',
+    'download.onDeviceReady',
+    ...Object.values(NATIVE_REASON_KEYS),
+] as const;
+
+type ModelsStatus = { missingBytes: number; onDiskBytes: number; runnable: boolean };
+
 export function useMeraProtocolSettings() {
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(true);
@@ -49,8 +109,11 @@ export function useMeraProtocolSettings() {
     const [requirementsResult, setRequirementsResult] = useState<SystemRequirementsResult | null>(null);
     const [showRequirements, setShowRequirements] = useState(false);
     const [isDeletingModel, setIsDeletingModel] = useState(false);
-    // Which catalogue models are on disk, by id.
-    const [onDisk, setOnDisk] = useState<Record<string, boolean>>({});
+    // What the chosen engine still needs, what is on disk, and whether On this phone can run.
+    const [status, setStatus] = useState<ModelsStatus | null>(null);
+    // Apple Intelligence availability, re-read on every focus (it can change while the app runs).
+    const [native, setNative] = useState<OnDeviceLlmAvailability | null>(null);
+    const textEngine = useTextEngine();
 
     const processingMode = useProcessingMode();
     const isOnDevice = processingMode === ProcessingMode.OnDevice;
@@ -62,18 +125,24 @@ export function useMeraProtocolSettings() {
 
     const toast = useToast();
 
-    const missing = MODEL_CATALOG.filter((m) => !onDisk[m.modelId]);
-    const missingBytes = missing.reduce((sum, m) => sum + m.sizeBytes, 0);
-    const bothOnDisk = missing.length === 0;
-    const anyOnDisk = MODEL_CATALOG.some((m) => onDisk[m.modelId]);
-    const onDiskBytes = MODEL_CATALOG.filter((m) => onDisk[m.modelId]).reduce((sum, m) => sum + m.sizeBytes, 0);
+    const missingBytes = status?.missingBytes ?? 0;
+    const onDiskBytes = status?.onDiskBytes ?? 0;
+    const runnable = status?.runnable ?? false;
+    // One row, one size: what is still to download, else what the files take.
+    const modelsSizeBytes = missingBytes > 0 ? missingBytes : onDiskBytes;
+    // The engine group is iOS only: Android reports unsupportedPlatform.
+    const showEngineGroup = native != null && native.reason !== 'unsupportedPlatform';
+    const nativeReasonKey =
+        native && !native.available && native.reason && native.reason !== 'unsupportedPlatform'
+            ? NATIVE_REASON_KEYS[native.reason]
+            : null;
     const isDownloading = modelState === 'downloading';
 
     // A storage-only failure is not "this phone can't run it": On this phone stays
     // selectable and only Download is blocked.
     const storageShort = requirementsResult?.failedCheck === 'storage';
     const deviceSupported = requirementsResult ? requirementsResult.supported || storageShort : null;
-    const onDeviceAvailable = deviceSupported !== false && bothOnDisk;
+    const onDeviceAvailable = deviceSupported !== false && runnable;
 
     // GB the reader must free: what the download needs (plus the margin) less what is free.
     const freeGb = requirementsResult?.deviceInfo.freeStorageGB ?? null;
@@ -90,13 +159,21 @@ export function useMeraProtocolSettings() {
         processingMode === ProcessingMode.OnDevice,
     );
 
-    const refreshDisk = useCallback(async () => {
-        const entries = await Promise.all(
-            MODEL_CATALOG.map(async (m) => [m.modelId, await isModelDownloaded(m.modelId).catch(() => false)] as const),
-        );
-        const next = Object.fromEntries(entries);
-        setOnDisk(next);
+    // Fresh on mount, on every screen focus, after an engine switch and when a download ends.
+    const refresh = useCallback(async () => {
+        const [next, availability] = await Promise.all([
+            onDeviceModelsStatus(),
+            nativeEngineAvailability().catch(
+                (): OnDeviceLlmAvailability => ({ available: false, reason: 'unsupportedPlatform' }),
+            ),
+        ]);
+        setStatus(next);
+        setNative(availability);
         return next;
+    }, []);
+
+    useEffect(() => {
+        void getTextEngine();
     }, []);
 
     // The requirement check counts the storage the download still needs. Not while
@@ -115,9 +192,9 @@ export function useMeraProtocolSettings() {
     // A download that ends (or is cancelled) changes what is on disk.
     useEffect(() => {
         if (modelState === 'downloaded' || modelState === 'not_downloaded' || modelState === 'error') {
-            void refreshDisk();
+            void refresh();
         }
-    }, [modelState, refreshDisk]);
+    }, [modelState, refresh]);
 
     // Background refresh (the `mera-background` OS task). Default ON; read from
     // settings, not a store, because the OS task reads the same row.
@@ -150,20 +227,19 @@ export function useMeraProtocolSettings() {
         try {
             const userId = await resolveCurrentUserId();
             const userPersona = await AccountService.getUserPersona(userId);
-            const disk = await refreshDisk();
-            const allOnDisk = MODEL_CATALOG.every((m) => disk[m.modelId]);
+            const { runnable: canRun } = await refresh();
             if (userPersona?.processingMode) {
                 const wantsOnDevice = userPersona.processingMode === ProcessingMode.OnDevice;
                 // A download started with the on-device intent is still that intent, even though the
                 // server says Cloud until the pair lands and the download promotes the phone.
                 setOnDeviceIntent(wantsOnDevice || willPromoteWhenDone());
-                // Never promote OnDevice without both files on disk (a retired model,
-                // or one the OS evicted from Caches). Keep the intent so the download
-                // section shows; the download promotes once it lands.
-                const runnable = !wantsOnDevice || allOnDisk;
-                store.setProcessingMode(runnable ? userPersona.processingMode : ProcessingMode.Cloud);
+                // Never promote OnDevice before it can run (a retired model, or one the OS
+                // evicted from Caches). Keep the intent so the download section shows; the
+                // download promotes once it lands.
+                const ok = !wantsOnDevice || canRun;
+                store.setProcessingMode(ok ? userPersona.processingMode : ProcessingMode.Cloud);
             }
-            if (!isDownloadInProgress()) store.setModelState(allOnDisk ? 'downloaded' : 'not_downloaded');
+            if (!isDownloadInProgress()) store.setModelState(canRun ? 'downloaded' : 'not_downloaded');
         } catch {
             toast.show({
                 placement: 'top',
@@ -230,6 +306,25 @@ export function useMeraProtocolSettings() {
         }
     };
 
+    // The text engine for chat and notes. While the reader wants On this phone, the phone
+    // moves to it when it can run, else it falls back to Private cloud on this phone only
+    // (the server persona and the intent are kept).
+    const selectEngine = useCallback(
+        async (engine: TextEngine) => {
+            if (engine === textEngine) return;
+            await setTextEngine(engine);
+            const next = await refresh();
+            if (!onDeviceIntent) return;
+            const current = useMeraProtocolStore.getState().processingMode;
+            if (next.runnable) {
+                if (current !== ProcessingMode.OnDevice) await promoteToOnDevice();
+            } else if (current === ProcessingMode.OnDevice) {
+                useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.Cloud);
+            }
+        },
+        [textEngine, refresh, onDeviceIntent],
+    );
+
     // One download for whatever is still missing. The toolkit promotes to OnDevice
     // when both files land, if the reader's intent says so.
     const handleDownload = useCallback(async () => {
@@ -281,7 +376,7 @@ export function useMeraProtocolSettings() {
             store.setModelState('not_downloaded');
             store.setDownloadProgress(0);
             resetInferenceStats();
-            await refreshDisk();
+            await refresh();
         } catch {
             toast.show({
                 placement: 'top',
@@ -297,7 +392,7 @@ export function useMeraProtocolSettings() {
         }
         // `store` is a stable singleton ref.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [onDiskBytes, fallBackToCloud, refreshDisk, toast, t]);
+    }, [onDiskBytes, fallBackToCloud, refresh, toast, t]);
 
     return {
         isLoading,
@@ -316,10 +411,16 @@ export function useMeraProtocolSettings() {
         bgRefreshEnabled,
         toggleBgRefresh,
         selectMode,
-        onDisk,
+        refresh,
         missingBytes,
-        bothOnDisk,
-        anyOnDisk,
+        onDiskBytes,
+        runnable,
+        modelsSizeBytes,
+        textEngine,
+        selectEngine,
+        showEngineGroup,
+        nativeAvailable: native?.available ?? false,
+        nativeReasonKey,
         isDownloading,
         downloadBytes,
         failureKind,
