@@ -1,12 +1,15 @@
 // The read hold in the scoring pipeline: a 429 daily-quota-exceeded pauses cloud scoring without
 // burning an attempt, reporting, or retrying before the reset; the hold survives a reload; and
 // dispatch resumes after the reset. Real pipeline, real limiter, gateway mock with setReadMeter.
+import * as SecureStore from 'expo-secure-store';
+import { getSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import * as pipeline from '@/lib/services/scoring-pipeline';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
-import { getReadHold, isReadHeld, resetReadHold } from '@/lib/subscription/read-hold';
-import { server } from '@/test/helpers';
+import { noteBillingTier, resetPlanRiseForTests } from '@/lib/subscription/plan-rise';
+import { getReadHold, isReadHeld, READ_HOLD_KEY, resetReadHold } from '@/lib/subscription/read-hold';
+import { server, setAppState } from '@/test/helpers';
 import { setReadMeter } from '@/test/mock-backend/gateway/state';
 import {
   batches,
@@ -52,6 +55,7 @@ function countJobPosts(): () => number {
 beforeEach(async () => {
   await resetPipelineWorld();
   resetReadHold();
+  resetPlanRiseForTests();
 });
 afterEach(cleanupWorld);
 
@@ -142,5 +146,81 @@ describe('the read hold in the scoring pipeline', () => {
     const [b0] = await batches();
     expect(b0).toMatchObject({ phase: 'waiting-relevance', attempt: 0, idemKey: keyBefore });
     await letKickPlayOut();
+  });
+});
+
+// The foreground poller under the hold. A held run with nothing in flight has nothing to poll or
+// submit, so the poller parks instead of re-reading the run (SQLite + keychain) every 750ms, and
+// wakes when the hold ends: early on a plan rise, or at the hold end (expiry emits nothing).
+describe('the foreground poller under the read hold', () => {
+  /** Let fake time pass with a real turn per step, so MSW answers. True once `cond` holds. */
+  async function waitFor(cond: () => Promise<boolean> | boolean, ms: number): Promise<boolean> {
+    for (let t = 0; t < ms; t += 50) {
+      if (await cond()) return true;
+      await jest.advanceTimersByTimeAsync(50);
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+    return cond();
+  }
+  const firstWaiting = async () => (await phases())[0] === 'waiting-relevance';
+
+  /** Held mid-run, then the app comes to the foreground and the poller starts. */
+  async function heldInForeground() {
+    const posts = await holdMidRun();
+    setAppState('active');
+    await drive(pipeline.recover());
+    return posts;
+  }
+
+  /** Background the app and let the post-finalize kick play out, so no fetch outlives the test. */
+  async function wrapUp() {
+    setAppState('inactive');
+    await waitFor(() => false, 3_000);
+  }
+
+  it('parks while held: no submits and almost no run reads over 30s', async () => {
+    const posts = await heldInForeground();
+    await waitFor(() => false, 2_000); // the first poller tick runs and parks
+    const reads = jest.spyOn(SecureStore, 'getItemAsync');
+
+    await waitFor(() => false, 30_000);
+
+    expect(posts()).toBe(1);
+    expect(reads.mock.calls.length).toBeLessThan(5);
+    expect(isReadHeld()).toBe(true);
+    reads.mockRestore();
+    await wrapUp();
+  });
+
+  it('a plan rise clears the hold and the parked poller resubmits batch 0 with the same key', async () => {
+    await heldInForeground();
+    await waitFor(() => false, 2_000);
+    const keyBefore = (await batches())[0].idemKey;
+    setReadMeter({ resetAt: null });
+
+    noteBillingTier('starter');
+    noteBillingTier('individual');
+
+    expect(Date.now()).toBeLessThan(RESET);
+    expect(await waitFor(firstWaiting, 10_000)).toBe(true);
+    expect((await batches())[0]).toMatchObject({ phase: 'waiting-relevance', attempt: 0, idemKey: keyBefore });
+    await wrapUp();
+  });
+
+  it('the hold end wakes the parked poller with nothing else happening', async () => {
+    await heldInForeground();
+    await waitFor(() => false, 2_000);
+    const keyBefore = (await batches())[0].idemKey;
+    setReadMeter({ resetAt: null });
+    const { holdUntil } = JSON.parse((await getSetting(READ_HOLD_KEY)) ?? '{}') as { holdUntil: number };
+
+    // One jump to just before the hold end: a parked poller has no interval to step through.
+    await jest.advanceTimersByTimeAsync(holdUntil - Date.now() - 2_000);
+    expect(isReadHeld()).toBe(true);
+    expect((await phases())[0]).toBe('queued');
+
+    expect(await waitFor(firstWaiting, 10_000)).toBe(true);
+    expect((await batches())[0]).toMatchObject({ attempt: 0, idemKey: keyBefore });
+    await wrapUp();
   });
 });
