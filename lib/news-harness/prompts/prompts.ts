@@ -816,19 +816,51 @@ ${REASON_V2_RULES_RESCORE}`;
 // parseV3NoteResponse (the `legacyNoteDemote` pass-2 decoder) shares it.)
 // ---------------------------------------------------------------------------
 
+/**
+ * The prompt's own `Relevance Score: 0.62` label, echoed back by the model.
+ * Replace with `'$1'` to keep the boundary it matched after.
+ *
+ * Only an ECHOED LABEL, never prose: it must sit at the start of the text, a
+ * line, or a sentence (a `##` or `-` marker allowed), carry the prompt's colon,
+ * and carry a number. Without the colon, "work. Relevance score 0.8 reflects
+ * that." is prose and stripping it ships "work. reflects that.". Callers strip
+ * an echoed "Why this matters to you:" first, so a label behind it starts the text. The old unanchored form ate
+ * "relevance score." out of "warranting a high-relevance score." and shipped
+ * "warranting a high-", hiding the phrase from the score guard that would have
+ * rejected the whole note. Not `^`-only: the local reason builder puts the
+ * label LAST, so a trailing echo is real.
+ */
+export const ECHOED_SCORE_LABEL = /(^|[.!?]\s*)[#\-\s]*\*?\*?Relevance Score:\s*\d[\d.]*\*?\*?/gim;
+
+/**
+ * Cut to `max` characters at a word boundary.
+ *
+ * The prompt asks for 25 words or fewer, so reaching the cap already means
+ * something went wrong upstream. The old `slice(0, max)` then made it visibly
+ * broken by cutting mid-word. No ellipsis: a trailing "…" dresses a failure up
+ * as an intentional summary. A single token longer than the cap has no boundary
+ * to cut at, so it is hard-cut rather than emptied.
+ */
+export function cutAtWordBoundary(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max);
+  const lastSpace = slice.lastIndexOf(' ');
+  return (lastSpace > 0 ? slice.slice(0, lastSpace) : slice).trimEnd();
+}
+
 /** Strip the markdown/prefix noise the reason parser also strips, collapse
  *  whitespace, and cap the length (same 200-char cap as parseReasonResponse, so
  *  a note cannot exceed what the legacy path could persist). */
 function cleanWhy(raw: string): string {
-  return raw
+  const text = raw
     .replace(/\*?\*?\[User facts\]\*?\*?.*$/gm, '')
-    .replace(/\*?\*?Relevance Score:?\s*[\d.]+\*?\*?/gi, '')
     .replace(/\*?\*?Why this matters to you:?\*?\*?\s*/gi, '')
+    .replace(ECHOED_SCORE_LABEL, '$1')
     .replace(/[*#]+/g, '')
     .replace(/\n+/g, ' ')
     .replace(/\s{2,}/g, ' ')
-    .trim()
-    .slice(0, 200);
+    .trim();
+  return cutAtWordBoundary(text, 200);
 }
 
 
