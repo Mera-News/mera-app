@@ -21,6 +21,7 @@ import {
 } from '@/lib/security/identity-gate';
 import { useUserStore } from '@/lib/stores/user-store';
 
+import { emailSignInEnded } from './move-to-phone';
 import { acceptLegal, fetchLegalVersions, markLegalAcceptedThisProcess, silentlyAcceptLegal } from './legal-consent';
 
 /** The success variant: what a device sign-in hands its caller. */
@@ -72,6 +73,15 @@ async function signInWithPhone(expectedUserId: string | null): Promise<PhoneSign
     return { kind: 'failed', reason: result.reason };
 }
 
+/**
+ * Where an unsupported phone goes from Before you start. Only the gate (an
+ * account with an email) has an email path left; a new user stays put and
+ * sees "This phone isn't supported" (email is legacy-only).
+ */
+function unsupportedExit(cachedEmail: string | null, now?: number): 'reauth-email' | null {
+    return cachedEmail && !emailSignInEnded(now) ? 'reauth-email' : null;
+}
+
 type Stage =
     | 'loading'
     | 'intro'
@@ -82,6 +92,7 @@ type Stage =
     | 'email'
     | 'otp'
     | 'reauth-email'
+    | 'email-ended'
     | 'reauth-otp'
     | 'reauth-no-email'
     | 'reauth-mismatch'
@@ -97,6 +108,7 @@ const TRACK: Partial<Record<Stage, number>> = {
     email: 4,
     otp: 5,
     'reauth-email': 0,
+    'email-ended': 0,
     'reauth-no-email': 0,
     'reauth-otp': 1,
     'reauth-mismatch': 2,
@@ -114,9 +126,11 @@ interface AuthScreenProps {
      * someone holds the phone, which is exactly who the PIN guards against.
      */
     allowDeviceSignIn?: boolean;
+    /** The clock, for the email cutoff (tests inject it). */
+    now?: number;
 }
 
-export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true }: AuthScreenProps) {
+export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true, now }: AuthScreenProps) {
     const [stage, setStage] = useState<Stage>('loading');
     const [forward, setForward] = useState(true);
     const [pendingEmail, setPendingEmail] = useState('');
@@ -169,7 +183,7 @@ export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true }: Auth
                 setSupportId(sid ?? null);
                 if (email && userId) {
                     setCachedEmail(email);
-                    setStage('reauth-email');
+                    setStage(emailSignInEnded(now) ? 'email-ended' : 'reauth-email');
                 } else if (userId) {
                     setStage('reauth-no-email');
                 } else {
@@ -193,7 +207,7 @@ export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true }: Auth
     // The gate leaves the app on Android Back (FinalStart #9): there is nothing
     // behind it to go back to.
     useEffect(() => {
-        if (!stage.startsWith('reauth')) return;
+        if (!stage.startsWith('reauth') && stage !== 'email-ended') return;
         const sub = BackHandler.addEventListener('hardwareBackPress', () => {
             if (stage === 'reauth-otp' || stage === 'reauth-mismatch') {
                 go(cachedEmail ? 'reauth-email' : 'reauth-no-email');
@@ -210,6 +224,7 @@ export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true }: Auth
     }, [stage, go, cachedEmail]);
 
     // ── Handlers ──────────────────────────────────────────────────────────
+    const emailEnded = emailSignInEnded(now);
     const canSignInWithoutEmail = allowDeviceSignIn && availability !== 'unavailable';
 
     const finishDeviceSignIn = (result: DeviceSignInSuccess) => {
@@ -269,6 +284,7 @@ export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true }: Auth
         tourOpen,
         setTourOpen,
         canSignInWithoutEmail,
+        emailEnded,
         finishDeviceSignIn,
         askSwitch,
         handleVerificationSuccess,
@@ -277,5 +293,5 @@ export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true }: Auth
     };
 }
 
-export { signInWithPhone };
+export { signInWithPhone, unsupportedExit };
 export type { AuthScreenProps, DeviceSignInSuccess, Stage };

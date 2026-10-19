@@ -10,7 +10,7 @@ import {
     __resetLegalConsentLatchForTests,
     wasLegalAcceptedThisProcess,
 } from '@/components/custom/auth/legal-consent';
-import { signInWithPhone, useAuthScreen, type DeviceSignInSuccess } from '@/components/custom/auth/useAuthScreen';
+import { signInWithPhone, unsupportedExit, useAuthScreen, type DeviceSignInSuccess } from '@/components/custom/auth/useAuthScreen';
 import * as settingService from '@/lib/database/services/setting-service';
 import { __resetDeviceAttestForTests } from '@/modules/mera-device-attest';
 import {
@@ -482,5 +482,80 @@ describe('Android Back on the gate', () => {
         gate.unmount();
 
         expect(removed).toBe(registered);
+    });
+});
+
+describe('the legacy email path and an unsupported phone', () => {
+    it('a new user whose phone cannot attest stays on Begin and has no email exit from consent', async () => {
+        const hook = renderHook(() => useAuthScreen({}));
+        await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
+
+        expect(hook.result.current.canSignInWithoutEmail).toBe(false);
+        expect(hook.result.current.cachedEmail).toBeNull();
+        expect(unsupportedExit(hook.result.current.cachedEmail)).toBeNull();
+        expect(hook.result.current.stage).toBe('intro');
+    });
+
+    it('a cached-email user whose phone cannot attest still reaches the email gate', async () => {
+        await seedAccount(ME, EMAIL);
+        const hook = renderHook(() => useAuthScreen({}));
+        await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
+
+        expect(unsupportedExit(hook.result.current.cachedEmail)).toBe('reauth-email');
+    });
+
+    it('the legacy email link still opens the email stage through consent', async () => {
+        const hook = renderHook(() => useAuthScreen({}));
+        await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
+
+        act(() => {
+            hook.result.current.setConsentFor('email');
+            hook.result.current.setConsentFrom('begin');
+            hook.result.current.go('consent');
+        });
+        expect(hook.result.current).toMatchObject({ stage: 'consent', consentFor: 'email' });
+        act(() => hook.result.current.go('email'));
+        expect(hook.result.current.stage).toBe('email');
+    });
+});
+
+describe('after the email cutoff', () => {
+    const BEFORE = new Date(2026, 9, 29, 12).getTime();
+    const AFTER = new Date(2026, 9, 30, 0, 0, 1).getTime();
+
+    it('a cached email opens the gate before the cutoff and "email ended" from it', async () => {
+        await seedAccount(ME, EMAIL);
+        const before = renderHook(() => useAuthScreen({ now: BEFORE }));
+        await waitFor(() => expect(before.result.current.stage).toBe('reauth-email'));
+        expect(before.result.current.emailEnded).toBe(false);
+
+        const after = renderHook(() => useAuthScreen({ now: AFTER }));
+        await waitFor(() => expect(after.result.current.stage).toBe('email-ended'));
+        expect(after.result.current.emailEnded).toBe(true);
+    });
+
+    it('an unsupported phone has no email gate to return to', async () => {
+        expect(unsupportedExit(EMAIL, BEFORE)).toBe('reauth-email');
+        expect(unsupportedExit(EMAIL, AFTER)).toBeNull();
+    });
+
+    it('Android Back leaves the app from the ended screen', async () => {
+        await seedAccount(ME, EMAIL);
+        const exit = jest.spyOn(BackHandler, 'exitApp').mockImplementation(() => {});
+        let handler: (() => boolean | null | undefined) | undefined;
+        const add = jest.spyOn(BackHandler, 'addEventListener').mockImplementation(((_e: string, h: () => boolean) => {
+            handler = h;
+            return { remove: () => {} };
+        }) as never);
+        const hook = renderHook(() => useAuthScreen({ now: AFTER }));
+        await waitFor(() => expect(hook.result.current.stage).toBe('email-ended'));
+
+        act(() => {
+            handler?.();
+        });
+
+        expect(exit).toHaveBeenCalledTimes(1);
+        add.mockRestore();
+        exit.mockRestore();
     });
 });

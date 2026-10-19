@@ -13,16 +13,12 @@
 // Import-light on purpose (one type import), so each branch is testable
 // without mocking Platform.
 
-import type { DeviceSignInPath } from '@/lib/device-auth';
+import type { DeviceSignInFailureReason, DeviceSignInPath } from '@/lib/device-auth';
 
 export type ConsentNoticeKey =
     | 'consent.deviceNotice.appAttest'
     | 'consent.deviceNotice.playIntegrity'
     | 'consent.deviceNotice.generic';
-
-export type DeviceSignInCaptionKey =
-    | 'auth.deviceSignInCaption.uninstall'
-    | 'auth.deviceSignInCaption.reset';
 
 /** The line shown above "Agree and continue". Null when the device cannot
  *  sign in without email at all (the consent step is then unreachable). */
@@ -40,17 +36,21 @@ export function consentNoticeKey(path: DeviceSignInPath): ConsentNoticeKey | nul
     }
 }
 
-/** The consequence caption under "Sign in without email": what loses the
- *  account. Only ANDROID_ID survives an uninstall. */
-export function deviceSignInCaptionKey(path: DeviceSignInPath): DeviceSignInCaptionKey | null {
-    switch (path) {
-        case 'play-integrity':
-            return 'auth.deviceSignInCaption.reset';
-        case 'app-attest':
-        case 'play-integrity-uuid':
-        case 'dev-bypass':
-            return 'auth.deviceSignInCaption.uninstall';
+/** The line under a failed phone sign-in. A bad connection or a busy server is
+ *  temporary; a refusal and an unknown error each have their own line. */
+export function deviceFailureKey(reason: DeviceSignInFailureReason) {
+    switch (reason) {
+        case 'network':
+        case 'attestation-unavailable':
+            return 'auth.phoneCheckTemporary' as const;
+        case 'attestation-denied':
+            return 'auth.deviceSignInDenied' as const;
         default:
-            return null;
+            return 'auth.deviceSignInFailed' as const;
     }
+}
+
+/** The permanent "this phone can't sign in" line, per platform. */
+export function phoneUnsupportedKey(os: string) {
+    return os === 'ios' ? ('auth.phoneUnsupportedIos' as const) : ('auth.phoneUnsupportedAndroid' as const);
 }

@@ -3,14 +3,14 @@ import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import ConsentContent from '@/components/custom/auth/ConsentContent';
-import { consentNoticeKey } from '@/components/custom/auth/device-sign-in-copy';
+import { consentNoticeKey, deviceFailureKey } from '@/components/custom/auth/device-sign-in-copy';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Button, ButtonText } from '@/components/ui/button';
 import type { DeviceSignInFailureReason, DeviceSignInPath } from '@/lib/device-auth';
 import { useColors } from '@/lib/theme/tokens';
 
 import { signInWithPhone, type DeviceSignInSuccess } from '../useAuthScreen';
-import { BackArrow } from './parts';
+import { BackArrow, PhoneUnsupported } from './parts';
 import { styles } from './styles';
 
 // ── 5 · Before you start ─────────────────────────────────────────────────────
@@ -22,7 +22,7 @@ function ConsentStage({
     onAgreedForEmail,
     onSignedIn,
     onDifferentAccount,
-    onUseEmail,
+    onUnsupportedToEmail,
     onBack,
 }: {
     mode: 'device' | 'email';
@@ -31,13 +31,15 @@ function ConsentStage({
     onAgreedForEmail: () => void;
     onSignedIn: (result: DeviceSignInSuccess) => void;
     onDifferentAccount: (result: DeviceSignInSuccess) => void;
-    onUseEmail: () => void;
+    /** Only the gate has an email to fall back to; a new user stays here. */
+    onUnsupportedToEmail?: () => void;
     onBack: () => void;
 }) {
     const { t } = useTranslation();
     const colors = useColors();
     const [working, setWorking] = useState(false);
     const [failure, setFailure] = useState<DeviceSignInFailureReason | null>(null);
+    const [unsupported, setUnsupported] = useState(false);
 
     const agree = async () => {
         if (working) return;
@@ -47,6 +49,7 @@ function ConsentStage({
         }
         setWorking(true);
         setFailure(null);
+        setUnsupported(false);
         const outcome = await signInWithPhone(expectedUserId);
         if (outcome.kind === 'signed-in') {
             onSignedIn(outcome.result); // leave `working`: this screen is replaced
@@ -54,17 +57,15 @@ function ConsentStage({
         }
         setWorking(false);
         if (outcome.kind === 'different') onDifferentAccount(outcome.result);
-        else if (outcome.kind === 'unsupported') onUseEmail();
+        else if (outcome.kind === 'unsupported') {
+            if (onUnsupportedToEmail) onUnsupportedToEmail();
+            else setUnsupported(true);
+        }
         else setFailure(outcome.reason);
     };
 
     const noticeKey = mode === 'device' ? consentNoticeKey(signInPath) : null;
-    const failureText =
-        failure === 'attestation-denied'
-            ? t('auth.deviceSignInDenied')
-            : failure === 'attestation-unavailable'
-              ? t('auth.deviceSignInUnavailable')
-              : t('auth.deviceSignInFailed');
+    const failureText = failure ? t(deviceFailureKey(failure)) : '';
 
     return (
         <View style={styles.pad} testID="auth-consent">
@@ -99,14 +100,9 @@ function ConsentStage({
                             <Button variant="outline" action="secondary" onPress={() => void agree()} testID="auth-device-retry">
                                 <ButtonText>{t('auth.tryAgain')}</ButtonText>
                             </Button>
-                            {/* A new user whose device cannot attest gets an account
-                                minted through email here: never account-ownership
-                                framing (the key name is historical). */}
-                            <Button variant="outline" action="secondary" onPress={onUseEmail} testID="auth-use-email-failure">
-                                <ButtonText>{t('auth.alreadyHaveAccount')}</ButtonText>
-                            </Button>
                         </View>
                     ) : null}
+                    {unsupported ? <PhoneUnsupported testID="auth-device-unsupported" /> : null}
                 </ConsentContent>
             </ScrollView>
         </View>
