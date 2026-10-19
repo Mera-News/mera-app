@@ -39,35 +39,15 @@ export type PhaseDef = (typeof CHAT_PHASES)[number];
  * ITS POOL MUST STAY ENGINE-NEUTRAL. It is a cloud-ordered id, but the `idle`
  * view renders it on the on-device engine too, where a line mentioning
  * encryption or a server would be a false claim. The device honesty check in
- * `__tests__/chat-phases.test.ts` covers the three `device*` pools, so this
+ * `test/unit/chat/chat-phases.test.ts` covers the three `device*` pools, so this
  * one needs its own assertion and has one.
  */
 export const OPENING_PHASE_ID: ChatPhaseId = 'preparing';
 
-/**
- * The rotation rhythm, stated as the two numbers a reader actually cares about
- * rather than as one period they have to do arithmetic on.
- *
- * A sentence is fully legible for `PHASE_LINE_HOLD_MS`, then the swap to the
- * next one takes `PHASE_TRANSITION_MS` end to end: half fading the old line
- * out, half fading the new one in. `PHASE_CYCLE_MS` is derived, so changing
- * either number cannot leave the interval and the fade disagreeing.
- *
- * A full second of crossfade is unusually slow for a UI transition and that is
- * the point: this text is read, not glanced at, and a quick swap under a
- * reader's eye is what makes cycling copy feel like a flickering spinner.
- */
-export const PHASE_LINE_HOLD_MS = 2000;
-export const PHASE_TRANSITION_MS = 1000;
-/** Each half of the crossfade. */
-export const FADE_MS = PHASE_TRANSITION_MS / 2;
-/** Interval between swaps: the legible hold plus both halves of the fade. */
-export const PHASE_CYCLE_MS = PHASE_LINE_HOLD_MS + PHASE_TRANSITION_MS;
-
 export function chatPhaseDef(id: ChatPhaseId): PhaseDef {
   const found = CHAT_PHASES.find((p) => p.id === id);
   // Unreachable: `ChatPhaseId` is a closed union and the table is exhaustive
-  // over it, asserted in `__tests__/chat-phases.test.ts` ("the registry covers
+  // over it, asserted in `test/unit/chat/chat-phases.test.ts` ("the registry covers
   // every phase id").
   if (!found) throw new Error(`[chat-phase] unknown phase ${id}`);
   return found;

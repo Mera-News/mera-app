@@ -18,7 +18,7 @@ import { Text } from '@/components/ui/text';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +37,8 @@ export interface StatusIndicatorProps {
    *  that turns done draws its tick in (the chat's steps, FinalMeraChat #7).
    *  Off: the plain spinner and a still tick (the facts row). */
   live?: boolean;
+  /** Replaces the leading glyph for pending and done (a `StepGlyph`). Error keeps its own. */
+  glyph?: ReactNode;
   testID?: string;
 }
 
@@ -46,6 +48,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   errorText,
   size = 'sm',
   live = false,
+  glyph: glyphNode,
   testID,
 }) => {
   const { t } = useTranslation();
@@ -74,8 +77,10 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
     // hidden (ux2 batch 26): on iOS a glyph under ANY accessible ancestor
     // surfaces as its own StaticText, hidden props and all.
     <View style={styles.row}>
-      <View style={[styles.glyph, { width: glyph, height: glyph }]}>
-        {status === 'pending' && live ? (
+      <View style={[styles.glyph, { width: glyphNode ? 20 : glyph, height: glyphNode ? 20 : glyph }]}>
+        {glyphNode && status !== 'error' ? (
+          glyphNode
+        ) : status === 'pending' && live ? (
           <MeraLogo size={glyph} color={colors.ink} animated />
         ) : status === 'pending' ? (
           // Not an element of its own: the state word is in the label beside it.
