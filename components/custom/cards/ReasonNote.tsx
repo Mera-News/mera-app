@@ -6,7 +6,7 @@ import { useMatchedFacts, useNoteInk } from '@/components/custom/cards/FactChips
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
-import { MOTION, SPRING } from '@/lib/motion';
+import { MOTION } from '@/lib/motion';
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
 import type { ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
 import { TYPE_SCALE } from '@/lib/algorithms/scale';
@@ -14,7 +14,7 @@ import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, FadeInUp, FadeOutUp, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { useMotionAllowed } from '@/lib/motion-gate';
 
 export { notePendingMode, type ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
@@ -150,18 +150,20 @@ const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxH
 /**
  * The AI note block, ONE layout for the Feed card and the detail screen.
  *
- *   writing   [moving logo]  Suggested for your fact: X. Please wait while
+ *   writing   [priority]
+ *             [moving logo]  Suggested for your fact: X. Please wait while
  *                            Mera writes the reason.
  *   note      [priority] ..................... [✦ AI-generated]
  *             Mera's note, full width.
  *   held      [priority] ...... Today's reading is used up, so Mera will
  *                               write this note after 01:00 tomorrow.
  *
- * No chip while the note is being written (the fact is what the reader learns
- * first). When the note lands in a MOUNTED box (never on mount, never on a
- * remount or a translation swap), the wait lifts away, the chip pops and the
- * words rise in one by one; Reduce Motion, Lite, a translated app and scripts
- * without spaces get the whole note fading in instead.
+ * The chip shows as soon as the row has a relevance, in every state (owner,
+ * 2026-10-20: a score that exists is shown, it does not wait for the note).
+ * When the note lands in a MOUNTED box (never on mount, never on a remount or
+ * a translation swap), the wait lifts away and the words rise in one by one;
+ * Reduce Motion, Lite, a translated app and scripts without spaces get the
+ * whole note fading in instead.
  */
 const ReasonNote: React.FC<ReasonNoteProps> = ({
     relevance,
@@ -223,9 +225,12 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     if (pending === 'writing') {
         return (
             <Box testID={testID} className="rounded-lg px-3 pb-3" style={boxStyle}>
+                <HStack style={{ paddingVertical: BADGE_ROW_PADDING }} testID={testID ? `${testID}-badge-row` : undefined}>
+                    <RelevanceChip relevance={relevance} />
+                </HStack>
                 <Animated.View
                     exiting={FadeOutUp.duration(180)}
-                    style={{ flex: boxHeight ? 1 : undefined, flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: BADGE_ROW_PADDING }}
+                    style={{ flex: boxHeight ? 1 : undefined, flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 }}
                     testID={testID ? `${testID}-writing` : undefined}
                     {...hideSlot}
                 >
@@ -247,9 +252,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                 style={{ paddingVertical: BADGE_ROW_PADDING }}
                 testID={testID ? `${testID}-badge-row` : undefined}
             >
-                <Animated.View entering={revealing ? ZoomIn.springify().damping(SPRING.like.damping) : undefined}>
-                    <RelevanceChip relevance={relevance} />
-                </Animated.View>
+                <RelevanceChip relevance={relevance} />
                 {reason ? (
                     <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={note.ai} />
                 ) : pending === 'held' ? (
