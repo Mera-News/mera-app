@@ -91,3 +91,47 @@ export const WAIT_LINE_MAX_LINES = 3;
  */
 export const WAIT_LINE_HEIGHT = 21;
 export const WAIT_ROW_TEXT_HEIGHT = WAIT_LINE_HEIGHT * 2;
+
+/**
+ * The wait line's line height per script. Devanagari and Thai stack marks
+ * above and below the line, and Arabic carries marks too, so 21pt clips them.
+ */
+const TALL_SCRIPT_LINE_HEIGHT: Readonly<Record<string, number>> = { hi: 25, th: 25, ar: 24 };
+
+export function phaseLineHeight(language: string): number {
+  return TALL_SCRIPT_LINE_HEIGHT[language.split('-')[0]] ?? WAIT_LINE_HEIGHT;
+}
+
+/** The strip's drawn height. It never scales vertically (width scales only
+ *  below 272pt), so every height below can assume it. */
+export const STRIP_HEIGHT = 32;
+const ROW_PAD = 8;
+const WORDS_GAP = 6;
+/** Lines reserved for the words: three under the cloud strip, two beside the
+ *  phone on device. */
+export const CLOUD_WORD_LINES = 3;
+export const DEVICE_WORD_LINES = 2;
+
+/**
+ * The wait row's height, which a streaming reply also holds so the thread
+ * never moves at the first token. Computed, never a constant: the words grow
+ * with the reader's text size and with the script.
+ *
+ * Cloud: pad + strip + [gap + 3 lines] + pad, so 117 with words and 48
+ * without at 1x in English. Device: one row, the phone beside two lines of
+ * words, so 58 at 1x.
+ */
+export function waitRowHeight(input: {
+  showWords: boolean;
+  engine: 'cloud' | 'local';
+  /** The effective text scale (OS font scale, capped, times the app's own). */
+  textScale: number;
+  language: string;
+}): number {
+  const line = phaseLineHeight(input.language) * input.textScale;
+  if (input.engine === 'local') {
+    return ROW_PAD * 2 + Math.max(STRIP_HEIGHT, DEVICE_WORD_LINES * line);
+  }
+  const words = input.showWords ? WORDS_GAP + CLOUD_WORD_LINES * line : 0;
+  return ROW_PAD * 2 + STRIP_HEIGHT + words;
+}
