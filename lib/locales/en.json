@@ -2406,7 +2406,6 @@
     "removing": "Removing what you asked me to remove",
     "asking": "Putting a question to you",
     "working": "Working on it",
-    "slow": "Still working, slow connection",
     "legCapSentence": "That took more steps than Mera can do at once. Ask again to carry on.",
     "interrupted": "This was interrupted. Ask again to carry on.",
     "summaryFailed": "Something didn't work",
@@ -2426,7 +2425,6 @@
     "noProposalSentence": "Mera didn't find anything to add from that.",
     "unknownToolSentence": "Something went wrong on Mera's side. Ask again to carry on.",
     "malformedChoiceSentence": "Mera couldn't show you the options. Ask again to carry on.",
-    "boxTitle": "Mera is working",
     "doneInSteps_one": "Done in {{count}} step",
     "doneInSteps_other": "Done in {{count}} steps",
     "doneInStepsShow_one": "Done in {{count}} step, show steps",
@@ -2445,9 +2443,7 @@
     "interests": "your interests",
     "origin": "where you're from",
     "family": "your family",
-    "feedTuning": "your feed",
-    "followStory": "a story to follow",
-    "factCheck": "a claim to check"
+    "feedTuning": "your feed"
   },
   "askChoice": {
     "answeredA11y": "already answered",
@@ -2485,10 +2481,10 @@
       "Getting your phone ready to answer."
     ],
     "deviceThinking": [
-      "Thinking it through on your phone. Nothing leaves your device."
+      "Thinking it through on your phone."
     ],
     "webSearch": [
-      "Searching the web from your device…"
+      "Searching the web through Mera’s server…"
     ]
   },
   "savedExport": {

@@ -2404,7 +2404,6 @@
     "removing": "Ich entferne, worum du gebeten hast",
     "asking": "Ich stelle dir eine Frage",
     "working": "Ich arbeite daran",
-    "slow": "Läuft noch, langsame Verbindung",
     "legCapSentence": "Das waren mehr Schritte, als Mera auf einmal schafft. Frag noch einmal, um fortzufahren.",
     "interrupted": "Das wurde unterbrochen. Frag noch einmal, um fortzufahren.",
     "summaryFailed": "Etwas hat nicht geklappt",
@@ -2424,7 +2423,6 @@
     "noProposalSentence": "Mera hat daraus nichts zum Hinzufügen gefunden.",
     "unknownToolSentence": "Auf Meras Seite ist etwas schiefgelaufen. Frag noch einmal, um fortzufahren.",
     "malformedChoiceSentence": "Mera konnte dir die Optionen nicht zeigen. Frag noch einmal, um fortzufahren.",
-    "boxTitle": "Mera arbeitet",
     "doneInSteps_one": "In {{count}} Schritt erledigt",
     "doneInSteps_other": "In {{count}} Schritten erledigt",
     "doneInStepsShow_one": "In {{count}} Schritt erledigt, Schritte anzeigen",
@@ -2443,9 +2441,7 @@
     "interests": "deine Interessen",
     "origin": "deine Herkunft",
     "family": "deine Familie",
-    "feedTuning": "deinem Feed",
-    "followStory": "einer Geschichte zum Verfolgen",
-    "factCheck": "einer Behauptung zum Prüfen"
+    "feedTuning": "deinem Feed"
   },
   "askChoice": {
     "answeredA11y": "bereits beantwortet",
@@ -2483,10 +2479,10 @@
       "Dein Handy wird für die Antwort vorbereitet."
     ],
     "deviceThinking": [
-      "Wird auf deinem Handy durchdacht. Nichts verlässt dein Gerät."
+      "Wird auf deinem Handy durchdacht."
     ],
     "webSearch": [
-      "Suche im Web von deinem Gerät aus…"
+      "Suche im Web über den Server von Mera…"
     ]
   },
   "savedExport": {

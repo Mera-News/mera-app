@@ -2399,7 +2399,6 @@
     "removing": "正在删除你要求删除的内容",
     "asking": "正在向你提问",
     "working": "正在处理",
-    "slow": "仍在处理，网络较慢",
     "legCapSentence": "这超出了梅拉一次能完成的步骤数。再问一次即可继续。",
     "interrupted": "这次处理中断了。再问一次即可继续。",
     "summaryFailed": "有一项没有成功",
@@ -2419,7 +2418,6 @@
     "noProposalSentence": "梅拉没有从中找到可以添加的内容。",
     "unknownToolSentence": "梅拉这边出了点问题。再问一次即可继续。",
     "malformedChoiceSentence": "梅拉没能显示选项。再问一次即可继续。",
-    "boxTitle": "梅拉正在工作",
     "doneInSteps_one": "已完成 {{count}} 步",
     "doneInSteps_other": "已完成 {{count}} 步",
     "doneInStepsShow_one": "已完成 {{count}} 步，显示步骤",
@@ -2438,9 +2436,7 @@
     "interests": "你的兴趣",
     "origin": "你来自哪里",
     "family": "你的家人",
-    "feedTuning": "你的信息流",
-    "followStory": "一个要关注的故事",
-    "factCheck": "一项需要核实的说法"
+    "feedTuning": "你的信息流"
   },
   "askChoice": {
     "answeredA11y": "已回答",
@@ -2478,10 +2474,10 @@
       "正在让手机准备回答。"
     ],
     "deviceThinking": [
-      "正在手机上思考。没有任何内容离开你的设备。"
+      "正在手机上思考。"
     ],
     "webSearch": [
-      "正在从你的设备搜索网页…"
+      "正在通过梅拉的服务器搜索网页…"
     ]
   },
   "savedExport": {

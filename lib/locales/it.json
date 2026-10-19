@@ -2404,7 +2404,6 @@
     "removing": "Rimuovo quello che mi hai chiesto",
     "asking": "Ti faccio una domanda",
     "working": "Ci sto lavorando",
-    "slow": "Ancora in corso, connessione lenta",
     "legCapSentence": "Ci sono voluti più passaggi di quanti Mera possa farne in una volta. Chiedi di nuovo per continuare.",
     "interrupted": "È stato interrotto. Chiedi di nuovo per continuare.",
     "summaryFailed": "Qualcosa non ha funzionato",
@@ -2424,7 +2423,6 @@
     "noProposalSentence": "Mera non ha trovato nulla da aggiungere da questo.",
     "unknownToolSentence": "Qualcosa è andato storto da parte di Mera. Chiedi di nuovo per continuare.",
     "malformedChoiceSentence": "Mera non è riuscita a mostrarti le opzioni. Chiedi di nuovo per continuare.",
-    "boxTitle": "Mera sta lavorando",
     "doneInSteps_one": "Completato in {{count}} passaggio",
     "doneInSteps_other": "Completato in {{count}} passaggi",
     "doneInStepsShow_one": "Completato in {{count}} passaggio, mostra i passaggi",
@@ -2443,9 +2441,7 @@
     "interests": "i tuoi interessi",
     "origin": "da dove vieni",
     "family": "la tua famiglia",
-    "feedTuning": "il tuo Feed",
-    "followStory": "una storia da seguire",
-    "factCheck": "un'affermazione da verificare"
+    "feedTuning": "il tuo Feed"
   },
   "askChoice": {
     "answeredA11y": "già risposto",
@@ -2483,10 +2479,10 @@
       "Preparo il telefono a rispondere."
     ],
     "deviceThinking": [
-      "Ci penso sul tuo telefono. Nulla lascia il dispositivo."
+      "Ci penso sul tuo telefono."
     ],
     "webSearch": [
-      "Ricerca sul web dal tuo dispositivo…"
+      "Ricerca sul web tramite il server di Mera…"
     ]
   },
   "savedExport": {

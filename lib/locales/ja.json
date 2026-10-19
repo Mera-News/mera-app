@@ -2399,7 +2399,6 @@
     "removing": "ご依頼の内容を削除しています",
     "asking": "質問を用意しています",
     "working": "対応しています",
-    "slow": "処理中です。接続が遅くなっています",
     "legCapSentence": "一度に実行できる手順の上限に達しました。続けるにはもう一度お尋ねください。",
     "interrupted": "処理が中断されました。続けるにはもう一度お尋ねください。",
     "summaryFailed": "うまくいかない処理がありました",
@@ -2419,7 +2418,6 @@
     "noProposalSentence": "ここから追加できるものは見つかりませんでした。",
     "unknownToolSentence": "メラ側で問題が発生しました。続けるには、もう一度聞いてください。",
     "malformedChoiceSentence": "メラは選択肢を表示できませんでした。続けるには、もう一度聞いてください。",
-    "boxTitle": "メラが作業中です",
     "doneInSteps_one": "{{count}}ステップで完了",
     "doneInSteps_other": "{{count}}ステップで完了",
     "doneInStepsShow_one": "{{count}}ステップで完了、手順を表示",
@@ -2438,9 +2436,7 @@
     "interests": "ご興味",
     "origin": "ご出身",
     "family": "ご家族",
-    "feedTuning": "あなたのフィード",
-    "followStory": "フォローするストーリー",
-    "factCheck": "確認する主張"
+    "feedTuning": "あなたのフィード"
   },
   "askChoice": {
     "answeredA11y": "回答済み",
@@ -2478,10 +2474,10 @@
       "スマホが回答の準備をしています。"
     ],
     "deviceThinking": [
-      "スマホで考えています。何もデバイスの外に出ません。"
+      "スマホで考えています。"
     ],
     "webSearch": [
-      "デバイスからウェブを検索しています…"
+      "メラのサーバー経由でウェブを検索しています…"
     ]
   },
   "savedExport": {

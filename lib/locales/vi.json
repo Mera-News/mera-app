@@ -2399,7 +2399,6 @@
     "removing": "Đang xóa những gì bạn yêu cầu",
     "asking": "Đang đặt một câu hỏi cho bạn",
     "working": "Đang xử lý",
-    "slow": "Vẫn đang chạy, kết nối chậm",
     "legCapSentence": "Việc này cần nhiều bước hơn mức Mera làm được một lần. Hãy hỏi lại để tiếp tục.",
     "interrupted": "Việc này đã bị gián đoạn. Hãy hỏi lại để tiếp tục.",
     "summaryFailed": "Có phần chưa thực hiện được",
@@ -2419,7 +2418,6 @@
     "noProposalSentence": "Mera không tìm thấy gì để thêm từ việc này.",
     "unknownToolSentence": "Có lỗi xảy ra ở phía Mera. Hãy hỏi lại để tiếp tục.",
     "malformedChoiceSentence": "Mera không thể hiển thị các lựa chọn. Hãy hỏi lại để tiếp tục.",
-    "boxTitle": "Mera đang làm việc",
     "doneInSteps_one": "Hoàn tất sau {{count}} bước",
     "doneInSteps_other": "Hoàn tất sau {{count}} bước",
     "doneInStepsShow_one": "Hoàn tất sau {{count}} bước, hiện các bước",
@@ -2438,9 +2436,7 @@
     "interests": "sở thích của bạn",
     "origin": "nơi bạn đến từ",
     "family": "gia đình bạn",
-    "feedTuning": "nguồn tin của bạn",
-    "followStory": "một câu chuyện để theo dõi",
-    "factCheck": "một thông tin cần kiểm chứng"
+    "feedTuning": "nguồn tin của bạn"
   },
   "askChoice": {
     "answeredA11y": "đã trả lời",
@@ -2478,10 +2474,10 @@
       "Đang chuẩn bị điện thoại để trả lời."
     ],
     "deviceThinking": [
-      "Đang suy nghĩ trên điện thoại của bạn. Không gì rời khỏi thiết bị."
+      "Đang suy nghĩ trên điện thoại của bạn."
     ],
     "webSearch": [
-      "Đang tìm trên web từ thiết bị của bạn…"
+      "Đang tìm trên web qua máy chủ của Mera…"
     ]
   },
   "savedExport": {

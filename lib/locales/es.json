@@ -2404,7 +2404,6 @@
     "removing": "Eliminando lo que me pediste",
     "asking": "Te voy a hacer una pregunta",
     "working": "Trabajando en ello",
-    "slow": "Sigue en curso, conexión lenta",
     "legCapSentence": "Eso llevó más pasos de los que Mera puede hacer de una vez. Pregunta otra vez para continuar.",
     "interrupted": "Esto se interrumpió. Pregunta otra vez para continuar.",
     "summaryFailed": "Algo no funcionó",
@@ -2424,7 +2423,6 @@
     "noProposalSentence": "Mera no encontró nada que añadir de eso.",
     "unknownToolSentence": "Algo falló por parte de Mera. Pregunta otra vez para continuar.",
     "malformedChoiceSentence": "Mera no pudo mostrarte las opciones. Pregunta otra vez para continuar.",
-    "boxTitle": "Mera está trabajando",
     "doneInSteps_one": "Listo en {{count}} paso",
     "doneInSteps_other": "Listo en {{count}} pasos",
     "doneInStepsShow_one": "Listo en {{count}} paso, mostrar pasos",
@@ -2443,9 +2441,7 @@
     "interests": "tus intereses",
     "origin": "de dónde eres",
     "family": "tu familia",
-    "feedTuning": "tu Feed",
-    "followStory": "una historia que seguir",
-    "factCheck": "una afirmación que comprobar"
+    "feedTuning": "tu Feed"
   },
   "askChoice": {
     "answeredA11y": "ya respondido",
@@ -2483,10 +2479,10 @@
       "Preparando tu teléfono para responder."
     ],
     "deviceThinking": [
-      "Pensándolo en tu teléfono. Nada sale de tu dispositivo."
+      "Pensándolo en tu teléfono."
     ],
     "webSearch": [
-      "Buscando en la web desde tu dispositivo…"
+      "Buscando en la web a través del servidor de Mera…"
     ]
   },
   "savedExport": {

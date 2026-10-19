@@ -2406,7 +2406,6 @@
     "removing": "İstediğin şeyi kaldırıyorum",
     "asking": "Sana bir soru soruyorum",
     "working": "Üzerinde çalışıyorum",
-    "slow": "Hâlâ sürüyor, bağlantı yavaş",
     "legCapSentence": "Bu, Mera'nın bir seferde yapabileceğinden fazla adım gerektirdi. Devam etmek için tekrar sor.",
     "interrupted": "Bu yarıda kaldı. Devam etmek için tekrar sor.",
     "summaryFailed": "Bir şey çalışmadı",
@@ -2426,7 +2425,6 @@
     "noProposalSentence": "Mera bundan ekleyecek bir şey bulamadı.",
     "unknownToolSentence": "Mera tarafında bir şeyler ters gitti. Devam etmek için tekrar sor.",
     "malformedChoiceSentence": "Mera seçenekleri gösteremedi. Devam etmek için tekrar sor.",
-    "boxTitle": "Mera çalışıyor",
     "doneInSteps_one": "{{count}} adımda tamamlandı",
     "doneInSteps_other": "{{count}} adımda tamamlandı",
     "doneInStepsShow_one": "{{count}} adımda tamamlandı, adımları göster",
@@ -2445,9 +2443,7 @@
     "interests": "ilgi alanlarını",
     "origin": "nereli olduğunu",
     "family": "aileni",
-    "feedTuning": "akışını",
-    "followStory": "takip edilecek bir haberi",
-    "factCheck": "kontrol edilecek bir iddiayı"
+    "feedTuning": "akışını"
   },
   "askChoice": {
     "answeredA11y": "zaten yanıtlandı",
@@ -2485,10 +2481,10 @@
       "Telefonun yanıt vermeye hazırlanıyor."
     ],
     "deviceThinking": [
-      "Telefonunda düşünülüyor. Hiçbir şey cihazından çıkmaz."
+      "Telefonunda düşünülüyor."
     ],
     "webSearch": [
-      "Cihazından web'de aranıyor…"
+      "Mera'nın sunucusu üzerinden web'de aranıyor…"
     ]
   },
   "savedExport": {
