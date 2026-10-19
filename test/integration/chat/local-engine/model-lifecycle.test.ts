@@ -6,10 +6,20 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
-import { disposeModel, getModelState, RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit';
+import {
+  cancelModelDownload,
+  disposeModel,
+  getModelState,
+  isDownloadInProgress,
+  RELEVANCE_MODEL,
+  startModelDownloads,
+  TEXT_MODEL,
+} from '@/lib/mera-protocol-toolkit';
 import { useAppStateStore } from '@/lib/stores/app-state-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
-import { setAppState } from '@/test/helpers';
+import { useUserStore } from '@/lib/stores/user-store';
+import { FIXTURE_ACCOUNT, graphql, HttpResponse, server, setAppState, signInFixtureAccount } from '@/test/helpers';
+import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 import { placeDownloadedModel } from '@/test/helpers/fs';
 import {
   installLlama,
@@ -21,6 +31,11 @@ import {
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+// A model download that never lands: the foreground restore must wait it out.
+jest.mock('expo-file-system/legacy', () => ({
+  FileSystemSessionType: { BACKGROUND: 0, FOREGROUND: 1 },
+  createDownloadResumable: () => ({ downloadAsync: () => new Promise(() => {}), cancelAsync: async () => {} }),
+}));
 
 const initLlama = () => (jest.requireMock('llama.rn') as { initLlama: jest.Mock }).initLlama;
 const protocol = () => useMeraProtocolStore.getState();
@@ -235,6 +250,65 @@ describe('returning to the foreground', () => {
     setAppState('active');
     await settleTicks();
 
+    expect(initLlama()).not.toHaveBeenCalled();
+  });
+});
+
+describe('returning to the foreground after a local Private cloud fallback', () => {
+  let personaReads = 0;
+
+  beforeEach(async () => {
+    personaReads = 0;
+    useUserStore.setState({
+      userId: FIXTURE_ACCOUNT.userId,
+      userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.OnDevice }),
+    });
+    await signInFixtureAccount();
+    server.use(
+      graphql.query('GetUserPersona', () => {
+        personaReads++;
+        return HttpResponse.json({
+          data: { userPersonaByUserId: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.OnDevice }) },
+        });
+      }),
+    );
+    // The split state: the server keeps the on-device intent, the phone runs Cloud locally.
+    await setProcessingMode('cloud');
+    useAppStateStore.getState().setAppInitialized(true);
+  });
+
+  afterEach(async () => {
+    await cancelModelDownload();
+    useUserStore.setState({ userPersona: null });
+  });
+
+  it('moves the phone back to OnDevice once On this phone can run, and loads the model', async () => {
+    await markDownloaded();
+    renderHook(() => useModelLifecycle());
+    await waitFor(() => expect(inferenceQueue.getState()).toBe('running'));
+
+    setAppState('background');
+    setAppState('active');
+
+    await waitFor(() => expect(protocol().processingMode).toBe(ProcessingMode.OnDevice));
+    await waitFor(() => expect(protocol().modelState).toBe('ready'));
+    expect(initLlama()).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing while a download runs, even when On this phone could run', async () => {
+    placeDownloadedModel(TEXT_MODEL.modelId);
+    startModelDownloads();
+    expect(isDownloadInProgress()).toBe(true);
+    // Only the running download stands in the way now.
+    placeDownloadedModel(RELEVANCE_MODEL.modelId);
+    renderHook(() => useModelLifecycle());
+
+    setAppState('background');
+    setAppState('active');
+    await settleTicks();
+
+    expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+    expect(personaReads).toBe(0);
     expect(initLlama()).not.toHaveBeenCalled();
   });
 });

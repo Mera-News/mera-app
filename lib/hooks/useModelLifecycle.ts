@@ -4,7 +4,13 @@
 
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
-import { disposeModel, initBaseModel, isModelDownloaded } from '@/lib/mera-protocol-toolkit';
+import {
+  disposeModel,
+  initBaseModel,
+  isDownloadInProgress,
+  isModelDownloaded,
+  restoreOnDeviceIfRunnable,
+} from '@/lib/mera-protocol-toolkit';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import { useIsAppInitialized } from '@/lib/stores/app-state-store';
 import {
@@ -71,6 +77,10 @@ export function useModelLifecycle(): void {
 
     const subscription = AppState.addEventListener('change', async (nextState) => {
       if (nextState === 'active') {
+        // Ends a local Private cloud fallback once On this phone can run again. A
+        // running download promotes by itself. Fire and forget: when it flips the
+        // mode, Effect 1 loads the model.
+        if (!isDownloadInProgress()) void restoreOnDeviceIfRunnable().catch(() => false);
         // If model should be loaded but somehow isn't (e.g. native context was
         // invalidated by the OS), reload it.
         if (

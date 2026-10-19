@@ -33,6 +33,7 @@ import {
   initBaseModel,
   isModelDownloaded,
 } from '@/lib/mera-protocol-toolkit/core/modelManager';
+import { localModeFor } from '@/lib/mera-protocol-toolkit';
 import { resetChatSession } from '@/lib/chat-session/chat-session';
 import {
   useFloatingChatConversationId,
@@ -116,9 +117,10 @@ export default function MeraChatSession() {
         ]);
 
         if (persona?.processingMode) {
+          // OnDevice only when On this phone can run: a server OnDevice must not undo the local Private cloud fallback.
           useMeraProtocolStore
             .getState()
-            .setProcessingMode(persona.processingMode);
+            .setProcessingMode(await localModeFor(persona.processingMode));
         }
 
         const currentSurface = facts.length > 0 ? 'CONFIG' : 'ONBOARDING';

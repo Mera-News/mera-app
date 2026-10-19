@@ -237,6 +237,9 @@ describe('startModelDownloads', () => {
             // The native model is not ready, so On this phone cannot run yet: nothing is promoted.
             expect(sent).toEqual([]);
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+            // And the notification does not claim it is ready.
+            await until(() => notificationIds().length === 1);
+            expect(scheduled.mock.calls[0][0].content.body).toBe('Mera uses Private cloud until Apple Intelligence is ready.');
         } finally {
             await setTextEngine('mera');
             __resetTextEngineForTests();

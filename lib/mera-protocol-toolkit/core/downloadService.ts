@@ -308,17 +308,18 @@ export function startModelDownloads(opts: { promote?: boolean } = {}): void {
       useMeraProtocolStore.getState().setModelState('downloaded');
       useMeraProtocolStore.getState().setDownloadProgress(100);
 
+      const runnable = await isModelDownloaded().catch(() => false);
       const shouldPromote =
-        promoteWhenDone &&
-        useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice &&
-        (await isModelDownloaded().catch(() => false));
+        promoteWhenDone && runnable && useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
       const promoted = shouldPromote ? await promoteToOnDevice() : false;
+      // Landed but cannot run yet (the native engine is still unavailable): never say "ready".
+      const body = promoted
+        ? 'download.onDeviceReady'
+        : promoteWhenDone && !runnable
+          ? 'meraProtocol.modelsWaitingNative'
+          : 'download.completeBody';
       if (canNotify && isCurrent()) {
-        await notify(
-          'model-download-complete',
-          i18next.t('download.completeTitle'),
-          i18next.t(promoted ? 'download.onDeviceReady' : 'download.completeBody'),
-        );
+        await notify('model-download-complete', i18next.t('download.completeTitle'), i18next.t(body));
       }
     } catch (error) {
       // Cancelled (or superseded): the cancel already set the state. Not a failure.
