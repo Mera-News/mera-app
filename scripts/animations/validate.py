@@ -1,23 +1,36 @@
 """
 Mechanical gate for every bodymovin file in mera-app/assets/animations/.
 
-Eighteen pieces cannot each have a device round trip, so everything in the
+These pieces cannot each have a device round trip, so everything in the
 asset contract that a machine can decide is decided here and the capture is
 left to answer the one question a script cannot: does the piece read as its
-idea at 200pt.
+idea at its size.
+
+Three canvas families, chosen by filename (`canvas_for`):
+  - `chat-strip-device`        140 x 160    (exact id, ahead of the prefix)
+  - `chat-strip-*`            1360 x 160    the 272 x 32 secure-wait strip at 5x
+  - `chat-step-*`              100 x 100    the 20 x 20 step glyph at 5x
+  - everything else           1000 x 1000
+Match the exact prefixes `chat-strip-` and `chat-step-`, never `chat-`:
+`chat-where-mera-is` is a tutorial hero.
 
 Checks, in contract order:
 
-  1  canvas 1000 x 1000
-  2  transparent: no full-canvas background shape
+  1  canvas per family
+  2  transparent: no shape covering 90% of the canvas
   3  seamless loop, 2.0 to 4.0 s  (duration from op/fr; seam proved per property)
      - or, for a DECLARED one-shot, 0.3 to 2.0 s with no seam requirement
   4  accent rgb(231,138,83) is the ONLY chromatic colour; everything else is
      greyscale, i.e. white at a reduced opacity
   5  <= 150 KB
   6  vector only: no image layers, empty `assets`, no expression fields
-  7  subject inside the middle 70%: a frame-by-frame bbox sweep, not a guess
-  8  frame 0 is the composition AT REST, in both modes
+  7  subject inside the safe box: a frame-by-frame bbox sweep, not a guess.
+     1000 family: the middle 70%, because a scene block is contained and
+     letterboxed. Chat families render at exact size, so the box is the whole
+     canvas, measured on geometry PLUS half the stroke width
+  8  the resting frame is the composition AT REST, in both modes. The resting
+     frame is 0, except for a chat-strip one-shot, which rests on its LAST
+     frame (the app shows progress 1 when motion is off)
      8a nothing may be dark at frame 0, ever
      8b no named family of two or more layers may be entirely dark at frame 0
         while reaching real brightness elsewhere, unless it is declared in
@@ -26,6 +39,16 @@ Checks, in contract order:
 Check 7 is the one that earns its keep. The spike FAILED it and had to correct
 it: the phone body first spanned 74% of canvas height and was shrunk from
 680x740 to 386x680. A capture finds that late; this finds it free.
+
+Chat families only (themed at runtime with lottie-react-native colorFilters):
+  9  every drawn layer is named exactly `ink`, `ink3` or `accent` (a track
+     matte source, `td: 1`, is exempt: it is never drawn). Native code builds
+     the keypath `<name>.**`, so any other name is never recoloured
+ 10  no animated colour: a colour filter replaces the whole colour property,
+     so a colour change must be an opacity crossfade between role layers
+ 11  cloud strips draw nothing in the model end (x 244.47..265.54 of 272): the
+     app lays the real MeraLogo there (CHAT_STRIP_MARK_BOX in
+     components/custom/chat/animation-registry.ts)
 
 Usage:  python3 validate.py <dir-or-file> [...]
 Exit 0 iff every file passes every check.
@@ -50,15 +73,19 @@ Exit 0 iff every file passes every check.
 # one-shot cannot silently pass under the relaxed rules.
 #
 # Mirrored by ONE_SHOT_IDS in
-# components/custom/processing/__tests__/animation-assets.test.ts, which derives
-# its game half from GAME_REWARD_IDS. The two lists must move together; this is
-# the copy `tsc` cannot reach.
+# test/integration/feed/contracts/animation-assets.test.ts, which derives it
+# from GAME_REWARD_IDS and CHAT_ONE_SHOT_IDS. The lists must move together;
+# this is the copy `tsc` cannot reach.
 #
 # It lists only ids whose FILE IS ON DISK here. An entry for an absent asset
 # would pre-authorise the relaxed band for a piece nobody has reviewed, which is
 # the same mistake as a registry entry without a file, one layer down.
 ONE_SHOT_IDS = {
     "game-mark-earn",
+    "chat-strip-attest",
+    "chat-strip-secure",
+    "chat-strip-retry",
+    "chat-strip-return",
 }
 ONE_SHOT_LO, ONE_SHOT_HI = 0.3, 2.0
 import json
@@ -67,9 +94,27 @@ import os
 import sys
 
 ACCENT = (231 / 255, 138 / 255, 83 / 255)
-SAFE_LO, SAFE_HI = 150.0, 850.0
 MAX_BYTES = 150 * 1024
 EPS = 1e-3
+
+CHAT_ROLES = ("ink", "ink3", "accent")
+# The model end of a cloud strip, in canvas units (strip units x 5).
+MARK_X_LO, MARK_X_HI = 244.47 * 5, (244.47 + 21.07) * 5
+
+
+def canvas_for(asset_id):
+    """(w, h, chat) for a file id. Exact ids first, then exact prefixes."""
+    if asset_id == "chat-strip-device":
+        return 140, 160, True
+    if asset_id.startswith("chat-strip-"):
+        return 1360, 160, True
+    if asset_id.startswith("chat-step-"):
+        return 100, 100, True
+    return 1000, 1000, False
+
+
+def is_matte(layer):
+    return layer.get("td") == 1
 
 # Below this, a mark on a black ground is not the subject. Check 7 is asking
 # where the COMPOSITION sits, and the first frame of a fade-in is not part of
@@ -227,23 +272,46 @@ def prop_frames(prop):
 
 # ── check 7: bbox sweep ─────────────────────────────────────────────────────
 
-def _shape_extents(it):
+def _shape_extents(it, stroke_pad=False):
     """Local corner points for every drawable in a group.
 
     A rect is given its four real corners, not a circumscribed radius: the
     circle around a 386x680 phone body is 391 wide against the body's own 193,
     and reporting that as the subject's extent fails a piece that is well
     inside the safe box. A circle is squared off, which is exact for it.
+
+    A path (`sh`) is measured on its vertices AND its curve control points.
+    A cubic lies inside the hull of its four points, so this can over-report
+    a curve but never under-report it; vertices alone miss a pin's round top.
+
+    `stroke_pad` widens every box by half the group's widest stroke, for the
+    chat families whose box is the canvas edge itself.
     """
+    pad = 0.0
+    if stroke_pad:
+        widths = [eval_prop(i.get("w"), 0)[0] for i in it if i.get("ty") == "st"]
+        pad = max(widths) / 2.0 if widths else 0.0
     out = []
     for item in it:
         ty = item.get("ty")
-        if ty not in ("el", "rc"):
+        if ty in ("el", "rc"):
+            p = eval_prop(item["p"], 0)
+            s = eval_prop(item["s"], 0)
+            hw = s[0] / 2.0 + pad
+            hh = (s[1] if len(s) > 1 else s[0]) / 2.0 + pad
+        elif ty == "sh":
+            k = item["ks"]["k"]
+            pts = []
+            for n, v in enumerate(k["v"]):
+                pts.append(v)
+                pts.append((v[0] + k["i"][n][0], v[1] + k["i"][n][1]))
+                pts.append((v[0] + k["o"][n][0], v[1] + k["o"][n][1]))
+            lo_x, hi_x = min(q[0] for q in pts), max(q[0] for q in pts)
+            lo_y, hi_y = min(q[1] for q in pts), max(q[1] for q in pts)
+            p = ((lo_x + hi_x) / 2.0, (lo_y + hi_y) / 2.0)
+            hw, hh = (hi_x - lo_x) / 2.0 + pad, (hi_y - lo_y) / 2.0 + pad
+        else:
             continue
-        p = eval_prop(item["p"], 0)
-        s = eval_prop(item["s"], 0)
-        hw = s[0] / 2.0
-        hh = (s[1] if len(s) > 1 else s[0]) / 2.0
         out.append([
             (p[0] - hw, p[1] - hh), (p[0] + hw, p[1] - hh),
             (p[0] + hw, p[1] + hh), (p[0] - hw, p[1] + hh),
@@ -251,12 +319,15 @@ def _shape_extents(it):
     return out
 
 
-def layer_bbox_sweep(layer, total_frames):
+def layer_bbox_sweep(layer, total_frames, stroke_pad=False):
     """Worst-case world bbox of a layer over its whole visible life.
 
     A layer that is fully transparent at a frame contributes nothing at that
     frame: an invisible mark outside the safe box is not a composition problem.
+    A track matte source is never drawn and contributes nothing at all.
     """
+    if is_matte(layer):
+        return None
     ks = layer.get("ks", {})
     groups = [sh for sh in layer.get("shapes", []) if sh.get("ty") == "gr"]
     if not groups:
@@ -281,7 +352,7 @@ def layer_bbox_sweep(layer, total_frames):
             ga = eval_prop(gtr["a"], frame) if gtr else [0, 0]
             gs = eval_prop(gtr["s"], frame) if gtr else [100, 100]
             gsx, gsy = gs[0] / 100.0, (gs[1] if len(gs) > 1 else gs[0]) / 100.0
-            for corners in _shape_extents(it):
+            for corners in _shape_extents(it, stroke_pad):
                 for lp in corners:
                     # group transform, then layer transform
                     x = (lp[0] - ga[0]) * gsx + gp[0]
@@ -331,6 +402,45 @@ def seam_problems(layer, total_frames):
             f"layer '{layer.get('nm')}' property '{name}' does not close its "
             f"loop: {first} -> {last}"
         )
+
+    # The same rule for everything animated INSIDE the shapes: group
+    # transforms, trim paths, dash offsets, shape size and position. A group
+    # whose own opacity is 0 at both ends is exempt like a layer.
+    def walk(items, where):
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            if item.get("ty") == "gr":
+                it = item.get("it", [])
+                gtr = next((i for i in it if i.get("ty") == "tr"), None)
+                if gtr is not None and eval_prop(gtr.get("o"), 0)[0] <= 1.0 \
+                        and eval_prop(gtr.get("o"), total_frames)[0] <= 1.0:
+                    continue
+                walk(it, item.get("nm"))
+                continue
+            props = [(k, v) for k, v in item.items() if isinstance(v, dict)]
+            dashes = item.get("d") if isinstance(item.get("d"), list) else []
+            props += [(d.get("n"), d.get("v")) for d in dashes if isinstance(d, dict)]
+            for name, prop in props:
+                if not isinstance(prop, dict) or prop.get("a", 0) != 1:
+                    continue
+                kfs = prop.get("k") or []
+                if not kfs or not isinstance(kfs[0], dict) or "s" not in kfs[0]:
+                    continue
+                first = _as_list(kfs[0]["s"])
+                last = _as_list(kfs[-1]["s"])
+                if all(abs(a - b) < EPS for a, b in zip(first, last)):
+                    continue
+                if name == "r":
+                    delta = last[0] - first[0]
+                    if abs(delta % 360.0) < EPS or abs(delta % 360.0 - 360.0) < EPS:
+                        continue
+                problems.append(
+                    f"layer '{layer.get('nm')}' shape '{where}' {item.get('ty')} "
+                    f"property '{name}' does not close its loop: {first} -> {last}"
+                )
+
+    walk(layer.get("shapes", []), None)
     return problems
 
 
@@ -358,6 +468,16 @@ def layer_opacity_at(layer, frame, total):
     return best
 
 
+def family_name(layer):
+    """A themed layer is named by its colour ROLE, so many layers share a
+    name; what the layer draws is its group's name, and that is the family."""
+    if layer.get("nm") in CHAT_ROLES:
+        groups = [sh for sh in layer.get("shapes", []) if sh.get("ty") == "gr"]
+        if groups and groups[0].get("nm"):
+            return family_of(groups[0]["nm"])
+    return family_of(layer.get("nm"))
+
+
 def family_of(name):
     """'line-3' -> 'line'. A trailing -<digits> is the index within a family.
 
@@ -370,30 +490,32 @@ def family_of(name):
     return head if sep and head and tail.isdigit() else name
 
 
-def frame0_rest_problems(doc, asset_id, total):
+def frame0_rest_problems(doc, asset_id, total, rest=0):
+    """Check 8 at the resting frame `rest` (0, or the last frame for a
+    chat-strip one-shot)."""
     problems = []
-    layers = doc.get("layers", [])
+    layers = [l for l in doc.get("layers", []) if not is_matte(l)]
     if not layers:
         return problems
 
     # 8a - no allowlist, in either mode.
-    if not any(layer_opacity_at(l, 0, total) >= VISIBLE_OPACITY for l in layers):
+    if not any(layer_opacity_at(l, rest, total) >= VISIBLE_OPACITY for l in layers):
         problems.append(
-            f"nothing is lit at frame 0: every layer is below the "
-            f"{VISIBLE_OPACITY:.0f}% visible floor, so a reader holding frame 0 "
+            f"nothing is lit at frame {rest}: every layer is below the "
+            f"{VISIBLE_OPACITY:.0f}% visible floor, so a reader holding frame {rest} "
             f"sees an empty box rather than the composition at rest"
         )
 
     # 8b - per named family, with a reasoned allowlist.
     families = {}
     for layer in layers:
-        families.setdefault(family_of(layer.get("nm")), []).append(layer)
+        families.setdefault(family_name(layer), []).append(layer)
 
     used = set()
     for fam, members in sorted(families.items()):
         if len(members) < 2:
             continue
-        if any(layer_opacity_at(m, 0, total) >= VISIBLE_OPACITY for m in members):
+        if any(layer_opacity_at(m, rest, total) >= VISIBLE_OPACITY for m in members):
             continue
         peak = max(
             layer_opacity_at(m, f, total)
@@ -419,7 +541,7 @@ def frame0_rest_problems(doc, asset_id, total):
             continue
         problems.append(
             f"family '{fam}-*' ({len(members)} layers) is entirely dark at "
-            f"frame 0 but reaches {peak:.0f}% elsewhere, so a held frame 0 "
+            f"frame {rest} but reaches {peak:.0f}% elsewhere, so a held frame {rest} "
             f"drops it from the composition. Give it a dim rest state, or "
             f"declare it in FRAME0_REST_EXCEPTIONS with a reason"
         )
@@ -464,18 +586,48 @@ def colour_problems(layer):
     return problems
 
 
-def background_problems(layer):
+def background_problems(layer, w=1000, h=1000):
     problems = []
     for group in layer.get("shapes", []):
         for item in walk_items([group]):
             if not isinstance(item, dict) or item.get("ty") not in ("el", "rc"):
                 continue
             s = eval_prop(item.get("s"), 0)
-            if len(s) >= 2 and s[0] >= 900 and s[1] >= 900:
+            if len(s) >= 2 and s[0] >= 0.9 * w and s[1] >= 0.9 * h:
                 problems.append(
                     f"layer '{layer.get('nm')}': shape {s} covers the canvas, "
                     f"which is a background the app is supposed to show through"
                 )
+    return problems
+
+
+def chat_problems(layer, asset_id, total):
+    """Checks 9-11, chat families only."""
+    if is_matte(layer):
+        return []
+    problems = []
+    nm = layer.get("nm")
+    if nm not in CHAT_ROLES:
+        problems.append(
+            f"layer '{nm}' is not named ink, ink3 or accent, so the app's "
+            f"colorFilters never recolour it in the light theme"
+        )
+    for group in layer.get("shapes", []):
+        for item in walk_items([group]):
+            if isinstance(item, dict) and item.get("ty") in ("fl", "st") \
+                    and isinstance(item.get("c"), dict) and item["c"].get("a") == 1:
+                problems.append(
+                    f"layer '{nm}' animates a colour, which a colour filter "
+                    f"overrides: crossfade two role layers instead"
+                )
+    if asset_id.startswith("chat-strip-") and asset_id != "chat-strip-device":
+        box = layer_bbox_sweep(layer, total, stroke_pad=True)
+        if box is not None and box[2] > MARK_X_LO + EPS and box[0] < MARK_X_HI - EPS:
+            problems.append(
+                f"layer '{nm}' draws into the model end (x {box[0]:.0f}..{box[2]:.0f} "
+                f"meets {MARK_X_LO:.0f}..{MARK_X_HI:.0f}), where the app lays the "
+                f"real MeraLogo"
+            )
     return problems
 
 
@@ -499,8 +651,10 @@ def validate(path, one_shot=False):
         except Exception as exc:                                  # noqa: BLE001
             return size, None, [f"not valid JSON: {exc}"]
 
-    if doc.get("w") != 1000 or doc.get("h") != 1000:
-        problems.append(f"canvas is {doc.get('w')}x{doc.get('h')}, contract says 1000x1000")
+    asset_id = os.path.splitext(os.path.basename(path))[0]
+    cw, ch, chat = canvas_for(asset_id)
+    if doc.get("w") != cw or doc.get("h") != ch:
+        problems.append(f"canvas is {doc.get('w')}x{doc.get('h')}, contract says {cw}x{ch}")
 
     fr = doc.get("fr") or 30
     total = doc.get("op", 0)
@@ -524,21 +678,27 @@ def validate(path, one_shot=False):
         if layer.get("ty") == 2:
             problems.append(f"layer '{layer.get('nm')}' is an IMAGE layer")
         problems += colour_problems(layer)
-        problems += background_problems(layer)
+        problems += background_problems(layer, cw, ch)
         problems += expression_problems(layer)
+        if chat:
+            problems += chat_problems(layer, asset_id, total)
         if not one_shot:
             problems += seam_problems(layer, total)
 
-    # Check 8 runs in BOTH modes. A one-shot is held at frame 0 by exactly the
-    # same readers, and playing once is not a reason to start from nothing.
-    problems += frame0_rest_problems(
-        doc, os.path.splitext(os.path.basename(path))[0], total
-    )
+    # Check 8 runs in BOTH modes. A one-shot is held at its resting frame by
+    # exactly the same readers, and playing once is not a reason to rest on
+    # nothing. A chat-strip one-shot rests on its LAST frame.
+    rest = total if (one_shot and asset_id.startswith("chat-strip-")) else 0
+    problems += frame0_rest_problems(doc, asset_id, total, rest)
 
+    if chat:
+        safe = (0.0, 0.0, float(cw), float(ch))
+    else:
+        safe = (0.15 * cw, 0.15 * ch, 0.85 * cw, 0.85 * ch)
     lo_x = lo_y = float("inf")
     hi_x = hi_y = float("-inf")
     for layer in doc.get("layers", []):
-        box = layer_bbox_sweep(layer, total)
+        box = layer_bbox_sweep(layer, total, stroke_pad=chat)
         if box is None:
             continue
         lo_x, lo_y = min(lo_x, box[0]), min(lo_y, box[1])
@@ -548,10 +708,12 @@ def validate(path, one_shot=False):
         bounds = None
     else:
         bounds = (lo_x, lo_y, hi_x, hi_y)
-        if lo_x < SAFE_LO - EPS or lo_y < SAFE_LO - EPS or hi_x > SAFE_HI + EPS or hi_y > SAFE_HI + EPS:
+        if lo_x < safe[0] - EPS or lo_y < safe[1] - EPS or hi_x > safe[2] + EPS or hi_y > safe[3] + EPS:
+            where = "the canvas (geometry plus half stroke)" if chat else "the middle 70%"
             problems.append(
-                f"subject leaves the middle 70%: x {lo_x:.0f}..{hi_x:.0f}, "
-                f"y {lo_y:.0f}..{hi_y:.0f}, allowed {SAFE_LO:.0f}..{SAFE_HI:.0f}"
+                f"subject leaves {where}: x {lo_x:.0f}..{hi_x:.0f}, "
+                f"y {lo_y:.0f}..{hi_y:.0f}, allowed x {safe[0]:.0f}..{safe[2]:.0f}, "
+                f"y {safe[1]:.0f}..{safe[3]:.0f}"
             )
     return size, (duration, bounds), problems
 
