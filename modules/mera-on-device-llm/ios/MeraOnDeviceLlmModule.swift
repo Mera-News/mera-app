@@ -11,11 +11,12 @@
 // prompt or output text; JS branches on the stable `ERR_AFM_*` codes.
 
 import ExpoModulesCore
+import Foundation
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
 
-internal final class OnDeviceLlmException: Exception {
+internal final class OnDeviceLlmException: Exception, @unchecked Sendable {
   private let codeValue: String
   private let reasonValue: String
 
@@ -67,25 +68,39 @@ private enum Afm {
     if error is CancellationError {
       return OnDeviceLlmException("ERR_AFM_CANCELLED", "The request was cancelled")
     }
-    // Built with Xcode 27 or later, the framework throws LanguageModelError on
-    // iOS 27 and GenerationError (deprecated in 27) on iOS 26. The iOS 26 SDK
-    // has no LanguageModelError, hence the compile-time guard: Xcode 27 ships
-    // Swift 6.4, every Xcode 26 release ships 6.3 or earlier.
+    // Built with Xcode 27 or later, the framework throws LanguageModelError,
+    // SystemLanguageModel.Error and LanguageModelSession.Error on iOS 27, and
+    // GenerationError (deprecated in 27) on iOS 26. The iOS 26 SDK has none of
+    // the three, hence the compile-time guard: Xcode 27 ships Swift 6.4, every
+    // Xcode 26 release ships 6.3 or earlier.
     #if compiler(>=6.4)
-    if #available(iOS 27.0, *), let modelError = error as? LanguageModelError {
-      switch modelError {
-      case .guardrailViolation:
-        return OnDeviceLlmException("ERR_AFM_GUARDRAIL", "Apple's safety guardrails declined the request")
-      case .refusal:
-        return OnDeviceLlmException("ERR_AFM_REFUSAL", "The model declined the request")
-      case .contextSizeExceeded:
-        return OnDeviceLlmException("ERR_AFM_CONTEXT", "The request exceeds the model's context window")
-      case .unsupportedLanguageOrLocale:
-        return OnDeviceLlmException("ERR_AFM_LANGUAGE", "The model does not support this language")
-      case .rateLimited:
-        return OnDeviceLlmException("ERR_AFM_BUSY", "The model is busy")
-      default:
-        return OnDeviceLlmException("ERR_AFM_UNKNOWN", "The on-device Apple model failed")
+    if #available(iOS 27.0, *) {
+      if let systemError = error as? SystemLanguageModel.Error, case .assetsUnavailable = systemError {
+        return unavailableException()
+      }
+      if let sessionError = error as? LanguageModelSession.Error {
+        switch sessionError {
+        case .concurrentRequests:
+          return OnDeviceLlmException("ERR_AFM_BUSY", "The model is busy")
+        default:
+          return OnDeviceLlmException("ERR_AFM_UNKNOWN", "The on-device Apple model failed")
+        }
+      }
+      if let modelError = error as? LanguageModelError {
+        switch modelError {
+        case .guardrailViolation:
+          return OnDeviceLlmException("ERR_AFM_GUARDRAIL", "Apple's safety guardrails declined the request")
+        case .refusal:
+          return OnDeviceLlmException("ERR_AFM_REFUSAL", "The model declined the request")
+        case .contextSizeExceeded:
+          return OnDeviceLlmException("ERR_AFM_CONTEXT", "The request exceeds the model's context window")
+        case .unsupportedLanguageOrLocale:
+          return OnDeviceLlmException("ERR_AFM_LANGUAGE", "The model does not support this language")
+        case .rateLimited:
+          return OnDeviceLlmException("ERR_AFM_BUSY", "The model is busy")
+        default:
+          return OnDeviceLlmException("ERR_AFM_UNKNOWN", "The on-device Apple model failed")
+        }
       }
     }
     #endif
@@ -116,16 +131,18 @@ public class MeraOnDeviceLlmModule: Module {
   private var streams: [String: Task<Void, Never>] = [:]
   private let streamsLock = NSLock()
 
-  private func setStream(_ id: String, _ task: Task<Void, Never>?) {
-    streamsLock.lock()
-    streams[id] = task
-    streamsLock.unlock()
-  }
-
   private func takeStream(_ id: String) -> Task<Void, Never>? {
     streamsLock.lock()
     defer { streamsLock.unlock() }
     return streams.removeValue(forKey: id)
+  }
+
+  private func takeAllStreams() -> [Task<Void, Never>] {
+    streamsLock.lock()
+    defer { streamsLock.unlock() }
+    let running = Array(streams.values)
+    streams.removeAll()
+    return running
   }
 
   public func definition() -> ModuleDefinition {
@@ -148,9 +165,14 @@ public class MeraOnDeviceLlmModule: Module {
         case .available:
           let appSupported = model.supportsLocale(Locale(identifier: appLanguage))
           let deviceSupported = model.supportsLocale(Locale.current)
-          let reason: Any = !appSupported
-            ? "appLanguageNotSupported"
-            : (!deviceSupported ? "deviceLanguageNotSupported" : NSNull())
+          let reason: Any
+          if !appSupported {
+            reason = "appLanguageNotSupported"
+          } else if !deviceSupported {
+            reason = "deviceLanguageNotSupported"
+          } else {
+            reason = NSNull()
+          }
           return [
             "available": appSupported && deviceSupported,
             "reason": reason,
@@ -159,8 +181,6 @@ public class MeraOnDeviceLlmModule: Module {
           ]
         case .unavailable(let reason):
           return ["available": false, "reason": Afm.reason(reason)]
-        @unknown default:
-          return ["available": false, "reason": "unknown"]
         }
       }
       #endif
@@ -195,17 +215,23 @@ public class MeraOnDeviceLlmModule: Module {
     // only the new suffix is sent, cut on unicode scalars: a snapshot can end
     // inside a grapheme cluster (a combining mark, a flag, an emoji modifier),
     // and a Character count or hasPrefix would then stall the rest of the reply.
-    Function("startStream") { (id: String, instructions: String, prompt: String, args: GenerationArgs) in
+    Function("startStream") { [weak self] (id: String, instructions: String, prompt: String, args: GenerationArgs) in
+      guard let self else { return }
       #if canImport(FoundationModels)
       if #available(iOS 26.0, *) {
-        let task = Task { [weak self] in
+        let options = Afm.options(args)
+        // Registered under the lock the task's own clean-up takes, so a stream
+        // that fails at once cannot remove its entry before it is stored.
+        streamsLock.lock()
+        defer { streamsLock.unlock() }
+        streams[id] = Task { [weak self] in
           var sentScalars = 0
           do {
             // Held for the whole loop: the docs do not say the stream retains
             // its session, and a released local could end the stream early.
             let session = Afm.session(instructions)
             defer { withExtendedLifetime(session) {} }
-            let stream = session.streamResponse(to: prompt, options: Afm.options(args))
+            let stream = session.streamResponse(to: prompt, options: options)
             for try await snapshot in stream {
               let scalars = snapshot.content.unicodeScalars
               let count = scalars.count
@@ -218,11 +244,13 @@ public class MeraOnDeviceLlmModule: Module {
             try Task.checkCancellation()
             self?.sendEvent("onDone", ["id": id])
           } catch {
-            self?.sendEvent("onError", ["id": id, "code": Afm.map(error).code])
+            // A cancel() or OnDestroy may surface as a framework error rather
+            // than CancellationError; JS still expects ERR_AFM_CANCELLED.
+            let code = Task.isCancelled ? "ERR_AFM_CANCELLED" : Afm.map(error).code
+            self?.sendEvent("onError", ["id": id, "code": code])
           }
           _ = self?.takeStream(id)
         }
-        setStream(id, task)
         return
       }
       #endif
@@ -231,6 +259,12 @@ public class MeraOnDeviceLlmModule: Module {
 
     Function("cancel") { (id: String) in
       takeStream(id)?.cancel()
+    }
+
+    // The JS runtime is going away (reload or teardown): stop every stream so
+    // none keeps the model busy for a listener that no longer exists.
+    OnDestroy {
+      takeAllStreams().forEach { $0.cancel() }
     }
   }
 }
