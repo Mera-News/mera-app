@@ -991,7 +991,7 @@ describe('processAllUnscored - on-device pass', () => {
     await useMode('on-device');
   });
 
-  const queue = (state: 'running' | 'stopped' = 'running') => {
+  const queue = (state: 'running' | 'paused' | 'stopped' = 'running') => {
     jest.spyOn(inferenceQueue, 'getState').mockReturnValue(state);
     const pause = jest.spyOn(inferenceQueue, 'pause').mockImplementation(async () => {
       events.push('pause');
@@ -1063,6 +1063,17 @@ describe('processAllUnscored - on-device pass', () => {
 
     expect(pause).not.toHaveBeenCalled();
     expect(resume).not.toHaveBeenCalled();
+  });
+
+  it('holds the queue even when a chat turn already paused it (the pause is ref-counted)', async () => {
+    installLocal();
+    const { pause, resume } = queue('paused');
+    await seed(['a']);
+
+    await run(processAllUnscored());
+
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(resume).toHaveBeenCalledTimes(1);
   });
 
   it('runs the notes sweep when nothing was unscored', async () => {
@@ -1306,6 +1317,19 @@ describe('retryMissingReasons - on-device path', () => {
     expect(await run(retryMissingReasons(1))).toBe(3);
 
     expect(events).toEqual(['note:top', 'note:mid', 'note:low']);
+  });
+
+  it('finalizes a row owed a note below the 0.4 gate instead of writing it one', async () => {
+    installLocal();
+    await seedOwed(['stale'], {}, 0.3);
+    await seedOwed(['kept'], {}, 0.6);
+
+    expect(await run(retryMissingReasons())).toBe(1);
+
+    expect(events).toEqual(['note:kept']);
+    const rows = await stored();
+    expect(rows.stale.status).not.toBe('reason_pending');
+    expect(rows.stale.reason ?? '').toBe('');
   });
 
   it('skips candidates that cannot be scored (no related facts, not a headline)', async () => {

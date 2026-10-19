@@ -22,6 +22,7 @@ import {
 } from '@/lib/news-harness/prompts/prompts';
 import {
   batchMarkExcluded,
+  batchMarkReasonSkipped,
   saveReason,
   saveScoringResult,
 } from '../database/services/article-suggestion-scoring-writes';
@@ -818,12 +819,15 @@ export async function processAllUnscored(
   // Lazy require, like stage-subscription-read below: the queue reaches the database at import.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { inferenceQueue } = require('@/lib/inference/InferenceQueue') as typeof import('@/lib/inference/InferenceQueue');
-  const wasRunning = inferenceQueue.getState() === 'running';
+  // The pause is ref-counted, so hold it even when a chat turn already paused the queue: that
+  // turn's resume must not hand llama back to queued jobs in the middle of this pass. A stopped
+  // queue takes no pause (and gets no resume).
+  const holds = inferenceQueue.getState() !== 'stopped';
   try {
-    if (wasRunning) await inferenceQueue.pause();
+    if (holds) await inferenceQueue.pause();
     return await scoreUnscoredRows(onProgress, batchSize, onBatchComplete);
   } finally {
-    if (wasRunning) inferenceQueue.resume();
+    if (holds) inferenceQueue.resume();
   }
 }
 
@@ -989,8 +993,15 @@ async function scoreUnscoredRows(
  * first so a stopped pass leaves the best rows with notes. Each note is saved as it lands.
  */
 async function writeNotesOnDevice(): Promise<number> {
-  const owed = await getScoredSuggestionsWithoutReasons();
-  if (owed.length === 0) return 0;
+  const all = await getScoredSuggestionsWithoutReasons();
+  if (all.length === 0) return 0;
+  // Rows below the feed's gate get no note on this phone. A row saved pending before that rule
+  // (an earlier pass, or an update from the single-model build) is finalized here, or it would be
+  // read on every sweep for its 48 hours.
+  const gate = ARTICLE_CFG.lowPriorityScore;
+  const below = all.filter((c) => typeof c.relevance === 'number' && c.relevance < gate).map((c) => c.id);
+  if (below.length > 0) await batchMarkReasonSkipped(below);
+  const owed = all.filter((c) => typeof c.relevance !== 'number' || c.relevance >= gate);
   owed.sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0));
   const fullUserContext = buildUserContext(await loadAllFactStatements());
   let written = 0;

@@ -177,6 +177,14 @@ describe('Mera Protocol settings', () => {
             expect(result.current.onDeviceIntent).toBe(false);
         });
 
+        it('reopened while a download that will promote runs: the on-device intent shows, though the server says cloud', async () => {
+            serverMode(ProcessingMode.Cloud);
+            jest.spyOn(downloadService, 'willPromoteWhenDone').mockReturnValue(true);
+            const { result } = await mountLoaded();
+            expect(result.current.onDeviceIntent).toBe(true);
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+        });
+
         it('a failing persona read shows "Load Failed" and still ends loading', async () => {
             server.use(mockGqlError('GetUserPersona', 'INTERNAL_SERVER_ERROR'));
             const { result } = await mountLoaded();

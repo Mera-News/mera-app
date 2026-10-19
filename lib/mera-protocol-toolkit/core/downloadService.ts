@@ -175,6 +175,11 @@ export function setPromoteWhenDone(value: boolean): void {
   promoteWhenDone = value;
 }
 
+/** Whether a running download will switch the phone to OnDevice when it lands. */
+export function willPromoteWhenDone(): boolean {
+  return downloadPromise !== null && promoteWhenDone;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------

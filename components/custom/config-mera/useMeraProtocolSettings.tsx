@@ -8,6 +8,7 @@ import {
     setPromoteWhenDone,
     startModelDownloads,
     useDownloadBytes,
+    willPromoteWhenDone,
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
 import { MODEL_CATALOG } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import {
@@ -153,7 +154,9 @@ export function useMeraProtocolSettings() {
             const allOnDisk = MODEL_CATALOG.every((m) => disk[m.modelId]);
             if (userPersona?.processingMode) {
                 const wantsOnDevice = userPersona.processingMode === ProcessingMode.OnDevice;
-                setOnDeviceIntent(wantsOnDevice);
+                // A download started with the on-device intent is still that intent, even though the
+                // server says Cloud until the pair lands and the download promotes the phone.
+                setOnDeviceIntent(wantsOnDevice || willPromoteWhenDone());
                 // Never promote OnDevice without both files on disk (a retired model,
                 // or one the OS evicted from Caches). Keep the intent so the download
                 // section shows; the download promotes once it lands.
