@@ -46,12 +46,12 @@ describe('the opening phases', () => {
     expect(seen).toEqual(['reset', 'securing', 'thinking']);
   });
 
-  it('a cold cache says attesting instead, which is what the first send of a launch pays', async () => {
+  it('a cold cache says attesting, then securing once the fetched key has sealed the message', async () => {
     server.use(...mockGateway(respond('ok')));
     clearAttestationCache();
     const { seen, start } = watch();
     await start();
-    expect(seen).toEqual(['reset', 'attesting', 'thinking']);
+    expect(seen).toEqual(['reset', 'attesting', 'securing', 'thinking']);
   });
 
   it('thinking is not reported before the response resolves', async () => {
@@ -65,6 +65,28 @@ describe('the opening phases', () => {
     expect(seen).toEqual(['reset', 'securing']);
     await done;
     expect(seen).toEqual(['reset', 'securing', 'thinking']);
+  });
+
+  it('a BUFFERED request says thinking once it is sent, not when its headers arrive', async () => {
+    // A buffered answer's headers come only when the whole answer is done, so a headers route would
+    // leave the leg on securing for the model's entire think time.
+    server.use(...mockGateway(respond({ chunks: ['ok'], headerDelayMs: 2000 })));
+    await warm();
+    const { seen, start } = watch({ stream: false });
+    const done = start();
+    await until(() => gatewayCalls('chat').length === 1);
+    expect(seen).toEqual(['reset', 'securing', 'thinking']);
+    const events = await done;
+    expect(textOf(events)).toBe('ok');
+    expect(seen).toEqual(['reset', 'securing', 'thinking']);
+  });
+
+  it('a cold buffered request walks attesting, securing, thinking, each once', async () => {
+    server.use(...mockGateway(respond('ok')));
+    clearAttestationCache();
+    const { seen, start } = watch({ stream: false });
+    await start();
+    expect(seen).toEqual(['reset', 'attesting', 'securing', 'thinking']);
   });
 
   it('thinking is reported even though the stream carries no reasoning at all', async () => {
