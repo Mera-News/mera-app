@@ -17,6 +17,6 @@ describe('assistant rows share the thread edge', () => {
     expect(src).toMatch(
       /<Message role="assistant">[\s\S]{0,1400}?<View style={styles\.replyRow}>\s*<MessageContent role="assistant"[^>]*>/,
     );
-    expect(src).toMatch(/<Message role="assistant">\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<WaitBubble>/);
+    expect(src).toMatch(/<Message role="assistant">\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<WaitBubble[\s>]/);
   });
 });

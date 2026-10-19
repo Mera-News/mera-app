@@ -63,14 +63,8 @@ export { CHAT_PHASE_IDS };
  */
 export const WAIT_LINE_MAX_LINES = 3;
 
-/**
- * The wait row's text height: two lines of the wait line's 21pt line height.
- * `ChatPhaseLine` reserves it, and a STREAMING reply bubble holds at least it,
- * so the reply takes the wait row's slot without moving the thread at the
- * first token (ux1 C2).
- */
+/** The wait line's line height for most scripts (see `phaseLineHeight`). */
 export const WAIT_LINE_HEIGHT = 21;
-export const WAIT_ROW_TEXT_HEIGHT = WAIT_LINE_HEIGHT * 2;
 
 /**
  * The wait line's line height per script. Devanagari and Thai stack marks

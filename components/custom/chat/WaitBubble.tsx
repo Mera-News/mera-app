@@ -24,8 +24,6 @@ export interface WaitBubbleProps {
   /** The loop's acknowledgement is on screen above this row. */
   ackShowing?: boolean;
   engine?: 'cloud' | 'local';
-  /** Ignored: the row draws its own words. Kept until ChatThread stops passing them. */
-  children?: React.ReactNode;
 }
 
 export const WaitBubble: React.FC<WaitBubbleProps> = ({

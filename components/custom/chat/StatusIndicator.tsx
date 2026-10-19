@@ -13,14 +13,12 @@
 // and no `errorText` is given it falls back to a generic localised line, so
 // the failure is always in WORDS and never colour or a glyph alone.
 
-import MeraLogo from '@/components/custom/MeraLogo';
 import { Text } from '@/components/ui/text';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 
@@ -33,11 +31,9 @@ export interface StatusIndicatorProps {
   /** Already localised consequence text. NEVER a raw error or an Error. */
   errorText?: string;
   size?: 'sm' | 'md';
-  /** Pending shows the moving Mera mark instead of a spinner, and a step
-   *  that turns done draws its tick in (the chat's steps, FinalMeraChat #7).
-   *  Off: the plain spinner and a still tick (the facts row). */
-  live?: boolean;
-  /** Replaces the leading glyph for pending and done (a `StepGlyph`). Error keeps its own. */
+  /** Replaces the leading glyph for pending and done: the chat's steps pass a
+   *  `StepGlyph` (its own loop, the landing tick). Without it: the plain
+   *  spinner and a still tick (the facts row). Error keeps its own. */
   glyph?: ReactNode;
   testID?: string;
 }
@@ -47,7 +43,6 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   label,
   errorText,
   size = 'sm',
-  live = false,
   glyph: glyphNode,
   testID,
 }) => {
@@ -80,8 +75,6 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
       <View style={[styles.glyph, { width: glyphNode ? 20 : glyph, height: glyphNode ? 20 : glyph }]}>
         {glyphNode && status !== 'error' ? (
           glyphNode
-        ) : status === 'pending' && live ? (
-          <MeraLogo size={glyph} color={colors.ink} animated />
         ) : status === 'pending' ? (
           // Not an element of its own: the state word is in the label beside it.
           <ActivityIndicator
@@ -91,15 +84,13 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
             testID={testID && `${testID}-spinner`}
           />
         ) : (
-          <Animated.View entering={live ? ZoomIn.duration(180) : undefined}>
-            <MaterialIcons
-              {...DECORATIVE_ICON_A11Y}
-              name={status === 'done' ? 'check' : 'block'}
-              size={glyph}
-              color={status === 'done' ? colors.accentMark : colors.negative}
-              testID={testID && `${testID}-${status}`}
-            />
-          </Animated.View>
+          <MaterialIcons
+            {...DECORATIVE_ICON_A11Y}
+            name={status === 'done' ? 'check' : 'block'}
+            size={glyph}
+            color={status === 'done' ? colors.accentMark : colors.negative}
+            testID={testID && `${testID}-${status}`}
+          />
         )}
       </View>
 

@@ -45,11 +45,6 @@ import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens'
 const ACCENT = 'rgb(231, 138, 83)';
 // Bubble surfaces float on the panel; both roles share one, split by alignment.
 // Input field surface (kept distinct from the user bubble tone).
-// The transient bubble's outline, at rest and at the top of its pulse. NEUTRAL,
-// not ACCENT: the panel keeps the only orange outline in the chat, and a second
-// one competes with it rather than reading as a different kind of thing.
-export const GLOW_DIM = 'rgba(255, 255, 255, 0.14)';
-export const GLOW_BRIGHT = 'rgba(255, 255, 255, 0.52)';
 // Uniform chat type scale — assistant markdown, user bubble, and the input all
 // share this size/line-height so the conversation reads as one system.
 /** Composer ceiling at 1x — about 6.6 lines of 15/21. Scaled at the call site. */
@@ -227,13 +222,13 @@ export interface MessageContentProps {
   /**
    * Container override, and the reason this file imports no animation library.
    *
-   * The wait bubble's outline breathes, which needs a Reanimated
-   * `Animated.View`. Importing Reanimated HERE would force every present and
+   * The streaming reply's first-words handover fades its surface in, which
+   * needs a Reanimated `Animated.View`. Importing Reanimated HERE would force every present and
    * future test that renders any chat primitive to mock a native module:
    * adding it cost `__tests__/prompt-input-a11y.test.tsx` immediately, with
    * "Native part of Worklets doesn't seem to be initialized". These are shared
    * primitives, so the dependency belongs in the one feature that wants it.
-   * See `components/custom/chat/WaitBubble.tsx`.
+   * See `components/custom/chat/ReplyHandover.tsx`.
    */
   as?: React.ComponentType<any>;
   /** Merged last, so a caller's animated style wins over the variant. */

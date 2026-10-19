@@ -3,8 +3,7 @@
 // prompt input. Everything comes in via props (ChatThreadProps) — no data
 // fetching, no stores.
 
-import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
-import { WAIT_ROW_TEXT_HEIGHT } from '@/components/custom/chat/chat-phases';
+import { StreamingBubble, StreamingReplyContext } from '@/components/custom/chat/ReplyHandover';
 import WaitBubble from '@/components/custom/chat/WaitBubble';
 import { Text } from '@/components/ui/text';
 import {
@@ -197,6 +196,15 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       case 'message': {
         const { message } = item;
+        const streamingInfo =
+          item.streaming === true
+            ? {
+                id: message.id,
+                showWords: item.showWords ?? false,
+                engine: item.engine ?? 'cloud',
+                handover: item.handover ?? false,
+              }
+            : null;
         const inner =
           message.role === 'user' ? (
             <Message role="user">
@@ -213,24 +221,23 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   left edge (the steps box, cards and input start there). The
                   bubble takes the user side's 88% max width, mirrored. */}
               {message.content.trim().length > 0 ? (
-              // A ROW, as the avatar gutter's row was: the bubble is a flex item
-              // of a definite-width row (flexShrink 1, so its 88% maxWidth
-              // holds) instead of a shrink-wrapped child of a column. Without
-              // it a long reply's last paragraph kept a stale text layout and
-              // was clipped at the bubble's right edge.
+              // THE SLOT. While it streams the reply holds the wait row's
+              // height and plays the first-words handover (ReplyHandover), so
+              // it takes the row's place without moving the thread.
+              <StreamingReplyContext.Provider value={streamingInfo}>
+              {/* A ROW, as the avatar gutter's row was: the bubble is a flex item
+                  of a definite-width row (flexShrink 1, so its 88% maxWidth
+                  holds) instead of a shrink-wrapped child of a column. Without
+                  it a long reply's last paragraph kept a stale text layout and
+                  was clipped at the bubble's right edge. */}
               <View style={styles.replyRow}>
-              <MessageContent role="assistant">
-                {/* THE SLOT. While streaming the reply holds at least the
-                    wait row's height, so it takes the row's place at the
-                    first token without moving the thread (ux1 C2). */}
-                <View
-                  testID="mera-reply-slot"
-                  style={item.streaming === true ? styles.replySlotStreaming : undefined}
-                >
+              <MessageContent role="assistant" as={streamingInfo ? StreamingBubble : undefined}>
+                <View testID="mera-reply-slot">
                   <MessageResponse>{message.content}</MessageResponse>
                 </View>
               </MessageContent>
               </View>
+              </StreamingReplyContext.Provider>
               ) : null}
               {message.stopped ? (
                 <Text size="xs" style={styles.stoppedLine} testID="chat-stopped">
@@ -239,8 +246,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
               ) : null}
             </Message>
           );
-        // Only animate in live-session bubbles; history pages load without replay.
-        return item.key.startsWith('live-') ? (
+        // Only animate in live-session bubbles; history pages load without
+        // replay. A reply taking the wait row's slot does not spring in: the
+        // handover is its entrance.
+        return item.key.startsWith('live-') && !item.handover ? (
           <Animated.View entering={MESSAGE_ENTERING}>{inner}</Animated.View>
         ) : (
           inner
@@ -256,6 +265,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             failedCount={item.failedCount}
             terminal={item.terminal}
             interrupted={item.interrupted}
+            answered={item.answered}
           />
         );
 
@@ -375,18 +385,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       case 'typing':
         return (
           <Message role="assistant">
-            {/* Outlined, unfilled and breathing, so a provisional bubble
-                never reads as something that was said. */}
-            <WaitBubble>
-              {/* A sentence that tracks the real phase, not a rotating word.
-                  The word was decorative and said the same thing whether the
-                  device was queued behind prewarm, fetching an attestation
-                  key or waiting out the model's 3-8s time to first token, so
-                  a long wait read as a frozen screen. The line subscribes to
-                  the phase store itself, so a phase tick re-renders one
-                  Text rather than this whole thread. */}
-              <ChatPhaseLine />
-            </WaitBubble>
+            {/* The borderless wait row: the encryption strip, and the phase
+                words on a conversation's first message, on device, or after
+                a retry. Not a bubble: the acknowledgement, then the reply, is
+                the turn's one bubble. */}
+            <WaitBubble showWords={item.showWords} ackShowing={item.ackShowing} engine={item.engine} />
           </Message>
         );
 
@@ -536,9 +539,6 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     color: c.ink3,
     marginTop: 4,
     marginHorizontal: 4,
-  },
-  replySlotStreaming: {
-    minHeight: WAIT_ROW_TEXT_HEIGHT,
   },
   historyButtonRow: {
     alignItems: 'center',
