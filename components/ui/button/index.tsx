@@ -56,8 +56,8 @@ cssInterop(PrimitiveIcon, {
  * Two shapes worth looking at before touching this: `variant="link"` sets
  * `px-0`, so its pill is invisible and harmless, and a FULL-WIDTH button reads
  * very differently as a pill than as a rectangle. The precedent for the wide
- * one is good — `components/custom/subscription/EmailCaptureSheet.tsx` shipped
- * `h-14 rounded-full` by hand and it stayed.
+ * one is good: the old email capture page shipped `h-14 rounded-full` by hand
+ * and it stayed.
  */
 // DISABLED IS NEUTRAL GREY (owner), never a dimmed accent: a solid button
 // takes the quiet `surface-raised` fill, an outline the `line` edge, and every
