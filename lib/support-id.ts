@@ -7,8 +7,10 @@
 // ride every support surface automatically and the user never has to copy it.
 //
 // Source of truth is the session user payload (`user.supportId`, a custom
-// Better Auth user field). There is no local cache: every consumer hides its
-// UI when the id is absent, per the wave rule "don't guess silently".
+// Better Auth user field). The launch gate also saves it in the
+// `cached_support_id` settings row so the Settings footer and the sign-in gate
+// can show it with no session (offline, dead session). Every consumer hides its
+// UI when neither has a valid id, per the wave rule "don't guess silently".
 //
 // CYCLE NOTE: this module imports auth-client, and auth-client imports
 // lib/intercom (logoutIntercom) — so lib/intercom must require THIS module
@@ -36,6 +38,12 @@ export function readSupportIdFromUser(user: unknown): string | null {
     return candidate;
   }
   return null;
+}
+
+/** The id to show: the session's when there is one, else the copy saved on
+ *  this phone (`cached_support_id`). Both go through the same validation. */
+export function resolveSupportId(sessionUser: unknown, cached: string | null): string | null {
+  return readSupportIdFromUser(sessionUser) ?? readSupportIdFromUser({ supportId: cached });
 }
 
 /**

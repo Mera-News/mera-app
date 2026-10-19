@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { Platform, View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import SettingsUsageCard from './SettingsUsageCard';
+import SupportIdCopy from './SupportIdCopy';
 import { useAppPreferences } from './useAppPreferences';
 import { useRestorePurchases } from './useRestorePurchases';
 import { emailCutoffLabel, isEmailAccount, requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
@@ -263,6 +264,8 @@ const AppPreferencesTab: React.FC = () => {
                     {link(t('preferences.contentPolicy'), withAppLanguage(CONTENT_POLICY_URL), 'settings-link-content')}
                     {link(t('auth.sourceCode'), GITHUB_URL, 'settings-link-source-code')}
                 </View>
+                {/* Always shown when known, so anyone can quote it to support. */}
+                <SupportIdCopy testID="settings-support-id" footer />
                 {/* Three taps here within 1.5 s toggle developer mode. */}
                 <Pressable testID="settings-version" onPress={onVersionTap} accessible={false} style={{ minHeight: 44, justifyContent: 'center' }}>
                     <Text style={{ color: colors.ink3, fontSize: 12 }}>{versionText}</Text>
