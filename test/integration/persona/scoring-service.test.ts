@@ -23,6 +23,8 @@ import { createTopics } from '@/lib/database/services/topic-service';
 import { ProcessingMode, type ArticleWithClusters } from '@/lib/generated/graphql-types';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
+import { inferenceQueue } from '@/lib/inference/InferenceQueue';
+import { RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import logger from '@/lib/logger';
 import {
   CLOUD_SCORE_CHUNK_SIZE,
@@ -38,10 +40,7 @@ import {
   runFeedVerifierPass,
 } from '@/lib/mera-protocol/scoring-service';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import {
-  LOCAL_REASON_SYSTEM_PROMPT,
-  LOCAL_RELEVANCE_SYSTEM_PROMPT,
-} from '@/lib/news-harness/prompts/prompts';
+import { LOCAL_REASON_SYSTEM_PROMPT } from '@/lib/news-harness/prompts/prompts';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import {
   advanceUntilDone,
@@ -55,7 +54,7 @@ import {
   type GatewayCall,
   type GatewayResponder,
 } from '@/test/helpers';
-import { installLlama, llamaCalls, type LlamaCall } from '@/test/helpers/llama';
+import { decideCalls, installDecide, installLlama, llamaCalls, llamaLoads, llamaMaxLive, type LlamaCall } from '@/test/helpers/llama';
 import { resetFileSystem } from '@/test/helpers/fs';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
 
@@ -204,17 +203,27 @@ const localUserOf = (c: LlamaCall) => c.messages.find((m) => m.role === 'user')?
 const LOCAL_TITLE = /News Title: Story (\S+) saga/;
 
 interface LocalScript {
-  scores?: Record<string, string>;
+  /** Kev level (0..3) per article id; default 3, the top level. */
+  levels?: Record<string, number>;
   notes?: Record<string, string | { error: string }>;
 }
 
-/** On-device model: a bare `[0.62]` for the relevance prompt, a sentence for the reason prompt. */
+/** Everything the two on-device models did, in order: 'decide:<id>' and 'note:<id>'. */
+let events: string[] = [];
+
+/** On-device models: Kev answers a level per article, the text model writes a note. */
 function installLocal(script: LocalScript = {}): void {
+  events = [];
   installLlama((call) => {
     const id = LOCAL_TITLE.exec(localUserOf(call))?.[1] ?? '';
-    if (localSystemOf(call) === LOCAL_RELEVANCE_SYSTEM_PROMPT) return [script.scores?.[id] ?? '[0.7]'];
+    events.push(`note:${id}`);
     const note = script.notes?.[id] ?? `Local note on story ${id}.`;
     return typeof note === 'string' ? [note] : { tokens: [], error: note.error };
+  });
+  installDecide((call) => {
+    const id = /Story (\w+) saga/.exec(JSON.stringify(call.request.state))?.[1] ?? '';
+    events.push(`decide:${id}`);
+    return { scores: { rel: script.levels?.[id] ?? 3 } };
   });
 }
 
@@ -713,57 +722,27 @@ describe('batchScoreAndReason - on-device path', () => {
     await useMode('on-device');
   });
 
-  it('scores through completeLocal, one article per call, then writes the reason locally', async () => {
-    installLocal({ scores: { a: '[0.7]' } });
+  it('scores through Kev, one article per decide, and writes no note inline', async () => {
+    installLocal();
     const [c] = await seedAndLoad(['a']);
 
     const { scoreMap, reasonMap } = await run(batchScoreAndReason([c]));
 
-    expect(scoreMap.get('a')).toBe(0.7);
-    expect(reasonMap.get('a')).toBe('Local note on story a.');
+    expect(scoreMap.get('a')).toBeCloseTo(1, 5);
+    expect(reasonMap.size).toBe(0);
     expect(gatewayCalls()).toHaveLength(0);
-    const calls = llamaCalls();
-    expect(calls.map(localSystemOf)).toEqual([LOCAL_RELEVANCE_SYSTEM_PROMPT, LOCAL_REASON_SYSTEM_PROMPT]);
-    // The relevance answer is a bare `[0.62]`: 24 tokens, plain text rather than the JSON grammar.
-    expect(calls[0].params.n_predict).toBe(24);
-    expect(calls[0].params.response_format).toBeUndefined();
-    expect(calls[1].params.response_format).toBeUndefined();
+    expect(decideCalls()).toHaveLength(1);
+    expect(llamaCalls()).toHaveLength(0);
   });
 
-  // The two builders differ only in field order, and that order is the point: the local one leads
-  // with the fact bank so llama.cpp's prefix cache can reuse it across a batch.
-  it('builds the reason message with the LOCAL builder, never the shared one', async () => {
+  it('a Kev failure leaves the math score standing', async () => {
     installLocal();
-    const [c] = await seedAndLoad(['a']);
-    await run(batchScoreAndReason([c]));
-
-    const reason = localUserOf(llamaCalls()[1]);
-    expect(reason.startsWith('User Context: ')).toBe(true);
-    expect(reason.startsWith('Relevance Score:')).toBe(false);
-    expect(reason.endsWith('Relevance Score: 0.7')).toBe(true);
-  });
-
-  it('a broken local pass (empty text) falls back to 0.3 and writes no reason', async () => {
-    installLocal({ scores: { a: '' } });
-    const [c] = await seedAndLoad(['a']);
-
-    const { scoreMap, reasonMap, failedIds } = await run(batchScoreAndReason([c]));
-
-    expect(llamaCalls().length).toBeGreaterThan(0);
-    expect(scoreMap.get('a')).toBe(0.3);
-    expect(reasonMap.has('a')).toBe(false);
-    // The row is not "failed": the stage answered, with the fallback score.
-    expect(failedIds.size).toBe(0);
-    expect(logger.warn).toHaveBeenCalledWith('local_relevance_empty_output', expect.any(Object));
-  });
-
-  it('a local completion that throws leaves the math score standing', async () => {
-    installLlama((call) => (localSystemOf(call) === LOCAL_RELEVANCE_SYSTEM_PROMPT ? { tokens: [], error: 'native crash' } : ['x']));
+    installDecide({ error: 'native crash' });
     const [c] = await seedAndLoad(['a']);
 
     const { scoreMap, failedIds } = await run(batchScoreAndReason([c]));
 
-    expect(llamaCalls().length).toBeGreaterThan(0);
+    expect(decideCalls()).toHaveLength(1);
     expect(failedIds.size).toBe(0);
     expect(scoreMap.get('a')).toBeGreaterThan(0);
     expect(scoreMap.get('a')).not.toBe(0.3);
@@ -779,21 +758,9 @@ describe('batchScoreAndReason - on-device path', () => {
 
     expect(failedIds.has('a')).toBe(true);
     expect(scoreMap.get('a')).toBe(0.3);
-    expect(llamaCalls()).toHaveLength(0);
-  });
-
-  it('logs a warning when the local reason call fails; the candidate keeps its score and no reason is stored', async () => {
-    installLocal({ notes: { a: { error: 'reason error' } } });
-    const [c] = await seedAndLoad(['a']);
-
-    const { scoreMap, reasonMap } = await run(batchScoreAndReason([c]));
-
-    expect(scoreMap.get('a')).toBe(0.7);
-    expect(reasonMap.has('a')).toBe(false);
-    expect(logger.warn).toHaveBeenCalledWith('[batchScoreAndReason] local reason failed', expect.objectContaining({ id: 'a' }));
+    expect(decideCalls()).toHaveLength(0);
   });
 });
-
 
 // ===========================================================================
 // runFeedVerifierPass
@@ -1019,6 +986,96 @@ describe('processAllUnscored', () => {
   });
 });
 
+describe('processAllUnscored - on-device pass', () => {
+  beforeEach(async () => {
+    await useMode('on-device');
+  });
+
+  const queue = (state: 'running' | 'stopped' = 'running') => {
+    jest.spyOn(inferenceQueue, 'getState').mockReturnValue(state);
+    const pause = jest.spyOn(inferenceQueue, 'pause').mockImplementation(async () => {
+      events.push('pause');
+    });
+    const resume = jest.spyOn(inferenceQueue, 'resume').mockImplementation(() => {
+      events.push('resume');
+    });
+    return { pause, resume };
+  };
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('decides every article before the first note, loads each model once and never holds two', async () => {
+    installLocal();
+    queue();
+    await seed(['a', 'b', 'c']);
+
+    expect(await run(processAllUnscored(undefined, 2))).toBe(3);
+
+    const firstNote = events.findIndex((e) => e.startsWith('note:'));
+    const lastDecide = events.map((e) => e.startsWith('decide:')).lastIndexOf(true);
+    expect(lastDecide).toBeGreaterThanOrEqual(2);
+    expect(lastDecide).toBeLessThan(firstNote);
+    expect(events.filter((e) => e.startsWith('note:'))).toHaveLength(3);
+    expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId, TEXT_MODEL.modelId]);
+    expect(llamaMaxLive()).toBe(1);
+    const rows = await stored();
+    expect(rows.a.reason).toBe('Local note on story a.');
+  });
+
+  it('saves a row below the 0.4 gate as reasonSkipped and writes it no note', async () => {
+    installLocal({ levels: { a: 0, b: 3 } });
+    queue();
+    await seed(['a', 'b']);
+
+    await run(processAllUnscored());
+
+    const rows = await stored();
+    expect(rows.a.relevance).toBeLessThan(0.4);
+    expect(rows.a.reason ?? '').toBe('');
+    expect(rows.a.status).not.toBe('reason_pending');
+    expect(events).not.toContain('note:a');
+    expect(rows.b.reason).toBe('Local note on story b.');
+  });
+
+  it('holds the queue for the pass and resumes it afterwards, even when the pass throws', async () => {
+    installLocal();
+    const { pause, resume } = queue();
+    await seed(['a']);
+
+    await run(processAllUnscored());
+
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(resume).toHaveBeenCalledTimes(1);
+    expect(events[0]).toBe('pause');
+    expect(events.at(-1)).toBe('resume');
+
+    jest.spyOn(suggestionReads, 'countUnscoredSuggestions').mockRejectedValueOnce(new Error('db'));
+    await expect(run(processAllUnscored())).rejects.toThrow('db');
+    expect(resume).toHaveBeenCalledTimes(2);
+  });
+
+  it('leaves a queue that was not running alone', async () => {
+    installLocal();
+    const { pause, resume } = queue('stopped');
+    await seed(['a']);
+
+    await run(processAllUnscored());
+
+    expect(pause).not.toHaveBeenCalled();
+    expect(resume).not.toHaveBeenCalled();
+  });
+
+  it('runs the notes sweep when nothing was unscored', async () => {
+    installLocal();
+    queue();
+    await seedOwed(['a']);
+
+    expect(await run(processAllUnscored())).toBe(0);
+
+    expect((await stored()).a.reason).toBe('Local note on story a.');
+  });
+});
+
 // The on-device lane catches a failed reason call per candidate and keeps the score. The cloud
 // lane sends ONE batch for every survivor and does not catch a request that fails outright, so a
 // reason outage throws away a relevance pass that had already succeeded.
@@ -1226,7 +1283,7 @@ describe('retryMissingReasons - on-device path', () => {
     await useMode('on-device');
   });
 
-  it('asks the local model for each owed row and stores the note', async () => {
+  it('asks the local model for each owed row and stores the note, built with the LOCAL builder', async () => {
     installLocal();
     await seedOwed(['a']);
 
@@ -1234,7 +1291,21 @@ describe('retryMissingReasons - on-device path', () => {
 
     expect((await stored()).a.reason).toBe('Local note on story a.');
     expect(gatewayCalls()).toHaveLength(0);
-    expect(llamaCalls().map(localSystemOf)).toEqual([LOCAL_REASON_SYSTEM_PROMPT]);
+    const calls = llamaCalls();
+    expect(calls.map(localSystemOf)).toEqual([LOCAL_REASON_SYSTEM_PROMPT]);
+    // The local builder leads with the fact bank so llama.cpp can reuse it across the sweep.
+    expect(localUserOf(calls[0]).startsWith('User Context: ')).toBe(true);
+  });
+
+  it('fetches every owed row at once and writes the most relevant first', async () => {
+    installLocal();
+    await seedOwed(['low'], {}, 0.4);
+    await seedOwed(['top'], {}, 1);
+    await seedOwed(['mid'], {}, 0.6);
+
+    expect(await run(retryMissingReasons(1))).toBe(3);
+
+    expect(events).toEqual(['note:top', 'note:mid', 'note:low']);
   });
 
   it('skips candidates that cannot be scored (no related facts, not a headline)', async () => {
@@ -1250,7 +1321,7 @@ describe('retryMissingReasons - on-device path', () => {
     await seedOwed(['a']);
 
     expect(await run(retryMissingReasons())).toBe(0);
-    expect(logger.warn).toHaveBeenCalledWith('[retryMissingReasons] local reason generation failed', expect.objectContaining({ id: 'a' }));
+    expect(logger.warn).toHaveBeenCalledWith('[writeNotesOnDevice] note failed', expect.objectContaining({ id: 'a' }));
   });
 });
 

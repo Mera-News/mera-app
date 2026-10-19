@@ -33,7 +33,9 @@ import {
   useFakeClock,
 } from '@/test/helpers';
 import { resetFileSystem } from '@/test/helpers/fs';
-import { installLlama } from '@/test/helpers/llama';
+import { installLlama, llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
+import * as suggestionReads from '@/lib/database/services/article-suggestion-reads';
+import { RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { initLlama } from 'llama.rn';
 import {
@@ -210,7 +212,7 @@ describe('SuggestionSyncService', () => {
     beforeEach(() => {
       useFakeClock('2026-10-09T09:00:00Z');
       resetFileSystem();
-      installLlama(['[0.7]']);
+      installLlama(['A short note.']);
       useMeraProtocolStore.setState({
         processingMode: ProcessingMode.OnDevice,
         modelState: 'ready',
@@ -245,20 +247,22 @@ describe('SuggestionSyncService', () => {
       expect(useForYouStore.getState().unscoredCount).toBe(0);
     });
 
-    it('loads the model first when it is not ready, through the loading state', async () => {
-      const states: string[] = [];
-      const scripted = mockInitLlama.getMockImplementation()!;
-      mockInitLlama.mockImplementation(async (...args: unknown[]) => {
-        states.push(useMeraProtocolStore.getState().modelState);
-        return scripted(...args);
-      });
+    it('does not preload a model: nothing to score loads nothing and leaves the model state alone', async () => {
       useMeraProtocolStore.setState({ modelState: 'downloaded' });
 
       await advanceUntilDone(runScoringPass());
 
-      expect(states).toEqual(['loading']);
-      expect(mockInitLlama).toHaveBeenCalledTimes(1);
-      expect(useMeraProtocolStore.getState().modelState).toBe('ready');
+      expect(mockInitLlama).not.toHaveBeenCalled();
+      expect(useMeraProtocolStore.getState().modelState).toBe('downloaded');
+    });
+
+    it('loads each model once per sync, Kev for scoring then the text model for notes, never two at once', async () => {
+      await seedScorableStories();
+
+      await advanceUntilDone(runScoringPass(2));
+
+      expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId, TEXT_MODEL.modelId]);
+      expect(llamaMaxLive()).toBe(1);
     });
 
     it('does not load the model when it is already ready and there is nothing to score', async () => {
@@ -294,8 +298,7 @@ describe('SuggestionSyncService', () => {
 
     it('on failure: rethrows, captures, lowers the flag and releases the screen, without marking the run finished', async () => {
       const err = new Error('on-device error');
-      mockInitLlama.mockRejectedValue(err);
-      useMeraProtocolStore.setState({ modelState: 'downloaded' });
+      jest.spyOn(suggestionReads, 'countUnscoredSuggestions').mockRejectedValueOnce(err);
 
       await expect(advanceUntilDone(runScoringPass())).rejects.toThrow('on-device error');
 

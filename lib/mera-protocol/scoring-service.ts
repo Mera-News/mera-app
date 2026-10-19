@@ -402,60 +402,41 @@ export async function batchScoreAndReason(
     );
   });
 
-  if (survivors.length > 0) {
+  // On this phone the notes are written after the whole pass (retryMissingReasons), so each model
+  // loads once per sync.
+  if (survivors.length > 0 && !useOnDevice) {
     const allFactStatements = await loadAllFactStatements();
-    const fullUserContext = buildUserContext(allFactStatements);
-    if (useOnDevice) {
-      for (const c of survivors) {
-        const relevance = scoreMap.get(c.id)!;
-        try {
-          const { reason, rescore } = await generateReasonForCandidate(
-            c,
-            fullUserContext,
-            relevance,
-          );
-          if (reason) reasonMap.set(c.id, reason);
-          if (rescore) scoreMap.set(c.id, rescore.score);
-        } catch (err) {
-          logger.warn('[batchScoreAndReason] local reason failed', {
-            id: c.id,
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
+    const phase2 = buildReasonCallsForSurvivors(survivors, scoreMap, allFactStatements);
+    // A refused request keeps the relevance pass: the rows save as `reason_pending` and the
+    // reason sweep owes them a note, the same outcome as the on-device catch above.
+    try {
+      const reasonResults = await cloudBatchComplete(phase2.calls, SMALL_MODEL);
+      const orderedIds = phase2.eligibleCandidates.map((c) => c.id);
+      const decodedReasons = decodeCloudBatchResults({
+        batchResults: resolveReasonResultIds(reasonResults, orderedIds),
+        promptsById: new Map(
+          [...phase2.promptsById].map(([id, prompt]) => [
+            resolveReasonCallId(id, orderedIds) ?? id,
+            prompt,
+          ]),
+        ),
+        chunkIdToCandidates: phase2.chunkIdToCandidates,
+      });
+      for (const [id, reason] of decodedReasons.reasonMap) reasonMap.set(id, reason);
+      for (const id of decodedReasons.failedIds) failedIds.add(id);
+      // The pass-2 score replaces pass 1's, IN `scoreMap`, which is still raw
+      // here. `processAllUnscored` snapshots it as `raw_score` and buckets it
+      // into `relevance` immediately after this returns, so both columns end up
+      // describing the same judgement instead of two different ones.
+      for (const [id, rescored] of decodedReasons.rescoreMap) {
+        if (failedIds.has(id) || !scoreMap.has(id)) continue;
+        scoreMap.set(id, applyRescorePolicy(scoreMap.get(id)!, rescored));
       }
-    } else {
-      const phase2 = buildReasonCallsForSurvivors(survivors, scoreMap, allFactStatements);
-      // A refused request keeps the relevance pass: the rows save as `reason_pending` and the
-      // reason sweep owes them a note, the same outcome as the on-device catch above.
-      try {
-        const reasonResults = await cloudBatchComplete(phase2.calls, SMALL_MODEL);
-        const orderedIds = phase2.eligibleCandidates.map((c) => c.id);
-        const decodedReasons = decodeCloudBatchResults({
-          batchResults: resolveReasonResultIds(reasonResults, orderedIds),
-          promptsById: new Map(
-            [...phase2.promptsById].map(([id, prompt]) => [
-              resolveReasonCallId(id, orderedIds) ?? id,
-              prompt,
-            ]),
-          ),
-          chunkIdToCandidates: phase2.chunkIdToCandidates,
-        });
-        for (const [id, reason] of decodedReasons.reasonMap) reasonMap.set(id, reason);
-        for (const id of decodedReasons.failedIds) failedIds.add(id);
-        // The pass-2 score replaces pass 1's, IN `scoreMap`, which is still raw
-        // here. `processAllUnscored` snapshots it as `raw_score` and buckets it
-        // into `relevance` immediately after this returns, so both columns end up
-        // describing the same judgement instead of two different ones.
-        for (const [id, rescored] of decodedReasons.rescoreMap) {
-          if (failedIds.has(id) || !scoreMap.has(id)) continue;
-          scoreMap.set(id, applyRescorePolicy(scoreMap.get(id)!, rescored));
-        }
-      } catch (err) {
-        logger.warn('[batchScoreAndReason] cloud reason request failed', {
-          count: survivors.length,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
+    } catch (err) {
+      logger.warn('[batchScoreAndReason] cloud reason request failed', {
+        count: survivors.length,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -819,14 +800,53 @@ export async function runFeedVerifierPass(
 
 // --- Main entry: score every unscored row ---
 
+type BatchUpdates = { id: string; relevance: number; reason: string | null }[];
+
+/**
+ * On this phone the pass is two phases so each model loads once per sync: Kev scores every
+ * unscored row, then the text model writes the notes (the sweep at the end). Queued background
+ * jobs are held off for the whole pass, and the sweep runs even when nothing was unscored, since
+ * an earlier pass may have left notes owed.
+ */
 export async function processAllUnscored(
   onProgress?: (completed: number, total: number) => void,
   batchSize = 20,
-  onBatchComplete?: (updates: { id: string; relevance: number; reason: string | null }[]) => void,
+  onBatchComplete?: (updates: BatchUpdates) => void,
+): Promise<number> {
+  if (!isOnDeviceMode()) return scoreUnscoredRows(onProgress, batchSize, onBatchComplete);
+
+  // Lazy require, like stage-subscription-read below: the queue reaches the database at import.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { inferenceQueue } = require('@/lib/inference/InferenceQueue') as typeof import('@/lib/inference/InferenceQueue');
+  const wasRunning = inferenceQueue.getState() === 'running';
+  try {
+    if (wasRunning) await inferenceQueue.pause();
+    return await scoreUnscoredRows(onProgress, batchSize, onBatchComplete);
+  } finally {
+    if (wasRunning) inferenceQueue.resume();
+  }
+}
+
+async function sweepNotes(batchSize: number): Promise<void> {
+  // Non-fatal: rows that stay owed are picked up by the next pass.
+  try {
+    await retryMissingReasons(batchSize);
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-service', method: 'processAllUnscored.retry' },
+    });
+  }
+}
+
+async function scoreUnscoredRows(
+  onProgress: ((completed: number, total: number) => void) | undefined,
+  batchSize: number,
+  onBatchComplete: ((updates: BatchUpdates) => void) | undefined,
 ): Promise<number> {
   const totalUnscored = await countUnscoredSuggestions();
   if (totalUnscored === 0) {
     onProgress?.(0, 0);
+    if (isOnDeviceMode()) await sweepNotes(batchSize);
     return 0;
   }
 
@@ -892,7 +912,11 @@ export async function processAllUnscored(
         // REASON_THRESHOLD = 0 → reasons generated for every row, including
         // sub-DISCARD-floor low-relevance ones. Skip flag now only fires if
         // phase-2 was bypassed entirely.
-        const reasonSkipped = relevance < REASON_THRESHOLD;
+        // On this phone a note costs a model swap and seconds, so a row below the feed's gate
+        // (0.4) is never written one.
+        const reasonSkipped = isOnDeviceMode()
+          ? relevance < ARTICLE_CFG.lowPriorityScore
+          : relevance < REASON_THRESHOLD;
         try {
           await saveScoringResult(candidate.id, {
             relevance,
@@ -931,13 +955,7 @@ export async function processAllUnscored(
 
   // After scoring fresh rows, sweep any previously-scored rows whose reason
   // generation failed (reason_generation_completed = false). Non-fatal.
-  try {
-    await retryMissingReasons(batchSize);
-  } catch (err) {
-    logger.captureException(err, {
-      tags: { service: 'scoring-service', method: 'processAllUnscored.retry' },
-    });
-  }
+  await sweepNotes(batchSize);
 
   // Subscription reads: how a publication the user PAYS FOR covered each of
   // these stories. Last, non-fatal, and cheap to skip — it exits on its first
@@ -966,6 +984,39 @@ export async function processAllUnscored(
   return totalProcessed;
 }
 
+/**
+ * On-device notes, written after the scoring pass: every row still owed one, highest relevance
+ * first so a stopped pass leaves the best rows with notes. Each note is saved as it lands.
+ */
+async function writeNotesOnDevice(): Promise<number> {
+  const owed = await getScoredSuggestionsWithoutReasons();
+  if (owed.length === 0) return 0;
+  owed.sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0));
+  const fullUserContext = buildUserContext(await loadAllFactStatements());
+  let written = 0;
+  for (const candidate of owed) {
+    // isScorableCandidate covers both the text and the fact test. A pure TOP-HEADLINE row is
+    // factless by design and must still get its note.
+    if (!isScorableCandidate(candidate)) continue;
+    try {
+      const { reason } = await generateReasonForCandidate(
+        candidate,
+        fullUserContext,
+        candidate.relevance ?? 0.7,
+      );
+      if (!reason) continue;
+      await saveReason(candidate.id, reason);
+      written += 1;
+    } catch (err) {
+      logger.warn('[writeNotesOnDevice] note failed', {
+        id: candidate.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+  return written;
+}
+
 // --- Reason retry: regenerate reasons for rows where the first pass returned empty ---
 
 /**
@@ -975,6 +1026,7 @@ export async function processAllUnscored(
  */
 export async function retryMissingReasons(batchSize = 10): Promise<number> {
   const useOnDevice = isOnDeviceMode();
+  if (useOnDevice) return writeNotesOnDevice();
   let totalRecovered = 0;
   // saveReason drops an ungrounded note, so a row can stay owed after it was asked about. Each
   // owed row is asked about once per call; the next sync picks up whatever is still owed.
@@ -994,31 +1046,7 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
     const allFactStatements = await loadAllFactStatements();
     const fullUserContext = buildUserContext(allFactStatements);
 
-    if (useOnDevice) {
-      // Local path — sequential.
-      for (const candidate of batch) {
-        // isScorableCandidate covers both the text and the fact test. A pure
-        // TOP-HEADLINE row is factless by design, so the old fact `continue`
-        // stranded it in `reason_pending` forever once its first reason attempt
-        // failed — this is the recovery path for exactly that row.
-        if (!isScorableCandidate(candidate)) continue;
-        const relevance = candidate.relevance ?? 0.7;
-        try {
-          const { reason, rescore } = await generateReasonForCandidate(
-            candidate,
-            fullUserContext,
-            relevance,
-          );
-          if (reason) reasonMap.set(candidate.id, reason);
-          if (rescore) rescoreMap.set(candidate.id, rescore.score);
-        } catch (err) {
-          logger.warn('[retryMissingReasons] local reason generation failed', {
-            id: candidate.id,
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
-      }
-    } else {
+    {
       // Cloud path — single batch call for all reason prompts in this batch.
       const calls: BatchCall[] = [];
       const promptsById = new Map<string, string>();
