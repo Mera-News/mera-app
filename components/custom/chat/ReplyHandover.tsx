@@ -62,12 +62,20 @@ export const StreamingBubble = forwardRef<View, StreamingBubbleProps>(function S
   { style, testID, children },
   ref,
 ) {
-  const info = useContext(StreamingReplyContext);
+  const live = useContext(StreamingReplyContext);
+  // THE SLOT IS HELD FOR THE BUBBLE'S LIFE. The context clears when the stream
+  // ends; releasing the wait row's height then shrank a short reply under the
+  // reader and moved the thread above it. Only a reply that took the wait
+  // row's place (`handover`) holds it: a persona answer lands beside its box.
+  // ponytail: a short reply keeps the row's height until the chat remounts.
+  const [held, setHeld] = useState<StreamingReplyInfo | null>(null);
+  if (live?.handover && held?.id !== live.id) setHeld(live);
+  const info = live ?? held;
   const motion = useMotionAllowed();
   const colors = useColors();
   const mode = useThemeMode();
   const { width } = useWindowDimensions();
-  const rowHeight = useWaitRowHeight(info?.showWords ?? false, info?.engine ?? 'cloud');
+  const rowHeight = useWaitRowHeight(held?.showWords ?? false, held?.engine ?? 'cloud');
   const [overlay, setOverlay] = useState(
     () => !!info && info.handover && info.engine === 'cloud' && motion && !played.has(info.id),
   );
@@ -108,7 +116,7 @@ export const StreamingBubble = forwardRef<View, StreamingBubbleProps>(function S
       testID={testID}
       style={[
         style,
-        info ? { minHeight: rowHeight } : null,
+        held ? { minHeight: rowHeight } : null,
         overlay ? [styles.overlaying, { minWidth: Math.min(WAIT_ROW_WIDTH, width - THREAD_INSET) }] : null,
       ]}
     >

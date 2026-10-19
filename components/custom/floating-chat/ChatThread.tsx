@@ -221,9 +221,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   left edge (the steps box, cards and input start there). The
                   bubble takes the user side's 88% max width, mirrored. */}
               {message.content.trim().length > 0 ? (
-              // THE SLOT. While it streams the reply holds the wait row's
-              // height and plays the first-words handover (ReplyHandover), so
-              // it takes the row's place without moving the thread.
+              // THE SLOT. A reply that takes the wait row's place holds the
+              // row's height and plays the first-words handover
+              // (ReplyHandover). The bubble is ALWAYS `StreamingBubble`: a
+              // container that changed type when the stream ended remounted
+              // the bubble, which flashed and re-landed it.
               <StreamingReplyContext.Provider value={streamingInfo}>
               {/* A ROW, as the avatar gutter's row was: the bubble is a flex item
                   of a definite-width row (flexShrink 1, so its 88% maxWidth
@@ -231,7 +233,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   it a long reply's last paragraph kept a stale text layout and
                   was clipped at the bubble's right edge. */}
               <View style={styles.replyRow}>
-              <MessageContent role="assistant" as={streamingInfo ? StreamingBubble : undefined}>
+              <MessageContent role="assistant" as={StreamingBubble}>
                 <View testID="mera-reply-slot">
                   <MessageResponse>{message.content}</MessageResponse>
                 </View>
@@ -248,9 +250,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           );
         // Only animate in live-session bubbles; history pages load without
         // replay. A reply taking the wait row's slot does not spring in: the
-        // handover is its entrance.
-        return item.key.startsWith('live-') && !item.handover ? (
-          <Animated.View entering={MESSAGE_ENTERING}>{inner}</Animated.View>
+        // handover is its entrance. The wrapper itself never comes or goes
+        // with `handover` (it clears when the stream ends): a wrapper that
+        // appeared then remounted the finished reply with the spring.
+        return item.key.startsWith('live-') ? (
+          <Animated.View entering={item.handover ? undefined : MESSAGE_ENTERING}>{inner}</Animated.View>
         ) : (
           inner
         );

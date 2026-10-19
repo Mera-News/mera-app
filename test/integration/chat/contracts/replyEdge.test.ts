@@ -20,3 +20,18 @@ describe('assistant rows share the thread edge', () => {
     expect(src).toMatch(/<Message role="assistant">\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<WaitBubble[\s>]/);
   });
 });
+
+// The reply bubble keeps ONE tree from its first token to the end of the
+// stream. When the container type, or the entering wrapper, followed
+// `streaming` / `handover`, the end of the stream remounted the bubble: the
+// surface vanished, the text dimmed for a frame and re-landed lower.
+describe('a finished reply keeps the streaming bubble', () => {
+  it('the assistant bubble is always StreamingBubble', () => {
+    expect(src).toMatch(/<MessageContent role="assistant" as=\{StreamingBubble\}>/);
+  });
+
+  it('the entering wrapper does not come or go with the handover', () => {
+    expect(src).not.toMatch(/startsWith\('live-'\)\s*&&\s*!item\.handover/);
+    expect(src).toMatch(/entering=\{item\.handover \? undefined : MESSAGE_ENTERING\}/);
+  });
+});
