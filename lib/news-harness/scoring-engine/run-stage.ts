@@ -80,7 +80,17 @@ export interface StageResult {
   exemptedValueById: Map<string, string>;
 }
 
+/** Scores every candidate in ONE call; returns app-scale relevance (0..1) per
+ *  id. A missing id keeps the math score. Must not throw for a partial answer. */
+export type RelevanceScorer = (
+  candidates: ScoringCandidate[],
+  factStatements: string[],
+) => Promise<Map<string, number>>;
+
 export interface ComputeAndScoreOptions {
+  /** Replaces the LLM score call (step 2) when set, e.g. Kev on-device. The
+   *  soft-suppression, entity and headline-floor penalties still apply. */
+  relevanceScorer?: RelevanceScorer;
   /** Reference "now" (fixed in eval/replay for determinism). No longer affects
    *  the math since Round-3 A2 removed freshness decay. */
   nowMs?: number;
@@ -161,12 +171,57 @@ export async function computeAndScore(
     rawScoreMap.set(c.input.id, r.score); // fail-open default; the LLM overwrites
   }
 
-  // --- 2. LEGACY tiered LLM score for EVERY active candidate -----------------
+  // --- 2. score for EVERY active candidate ------------------------------------
   // `c.legacy` is the ScoringCandidate the tiered prompt needs; math-only
   // callers (the offline eval) omit it and get the math score untouched, which
   // is also what `skipLlm` buys.
   const scorable = opts.skipLlm ? [] : active.filter((c) => c.legacy);
-  if (scorable.length > 0) {
+
+  // The LLM (or injected scorer) knows nothing about the user's filters, so its
+  // score REPLACES the math score that carried them. Re-apply the SAME
+  // penalties the math already computed for this candidate (components.*, via
+  // the one kind-aware matcher in suppression.ts): no second matcher, no
+  // second cap. Applied AT the overwrite site, never to a fail-open math score,
+  // which already carries them (that would double-count). A candidate matching
+  // nothing is written untouched, so the no-filter path stays byte-identical.
+  let penalised = 0;
+  const applyScore = (id: string, score: number) => {
+    const comps = componentsMap.get(id);
+    const penalty = comps?.suppressPenalty ?? 0;
+    let next = score;
+    if (penalty > 0) {
+      penalised += 1;
+      next = Math.max(0, next - penalty);
+    }
+    // ENTITY share: applied against ENTITY_PENALTY_FLOOR rather than subtracted
+    // outright (entity extraction is 68.8% correct, so it may lower a rank but
+    // never push a row out). Same helper `computeRelevance` uses.
+    const entityPenalty = comps?.entityPenalty ?? 0;
+    if (entityPenalty > 0) {
+      if (penalty <= 0) penalised += 1;
+      next = applyEntityPenalty(next, entityPenalty, eng);
+    }
+    // P6 - DEMOTED, NEVER REMOVED: an exempt top headline carries a HARD
+    // filter's penalty in `suppressPenalty`; floor it so it cannot vanish.
+    if (comps?.hardFilterExempt) {
+      next = Math.max(next, eng.HEADLINE_BASE_FLOOR);
+    }
+    rawScoreMap.set(id, next);
+  };
+
+  if (scorable.length > 0 && opts.relevanceScorer) {
+    // Injected scorer (Kev on-device): ONE call with every scorable candidate,
+    // no prompts, no batchComplete. It returns app-scale relevance (0..1); a
+    // missing id keeps the math score already in rawScoreMap.
+    const scored = await opts.relevanceScorer(
+      scorable.map((c) => c.legacy!),
+      opts.factStatements ?? [],
+    );
+    for (const c of scorable) {
+      const score = scored.get(c.input.id);
+      if (score !== undefined) applyScore(c.input.id, score);
+    }
+  } else if (scorable.length > 0) {
     const facts = opts.factStatements ?? [];
     const chunks = chunk(scorable, pipe.articlesPerScorePrompt);
     const calls: BatchCall[] = chunks.map((chunkItems, idx) => {
@@ -185,7 +240,6 @@ export async function computeAndScore(
     });
     const results = await llm.batchComplete(calls, { model: pipe.model });
     const resultById = new Map(results.map((r) => [r.id, r]));
-    let penalised = 0;
     chunks.forEach((chunkItems, idx) => {
       const result = resultById.get(`score:${idx}`);
       if (!result || result.error) {
@@ -200,59 +254,14 @@ export async function computeAndScore(
         pipe,
         logger,
       );
-      // SOFT suppression. The LLM knows nothing about the
-      // user's "shown less" filters, so its score REPLACES the math score that
-      // carried the penalty — which left soft filters inert for every untagged
-      // article (and, with enrichment unshipped, that is all of them). Re-apply
-      // the SAME penalty the math already computed for this candidate
-      // (components.suppressPenalty = Σ P_SUP·strength capped at P_SUP_CAP, via
-      // the one kind-aware matcher in suppression.ts). No second matcher, no
-      // second cap.
-      //
-      // Applied AT the overwrite site, not in a later sweep: a failed chunk
-      // fail-opens to the math score above, which ALREADY has the penalty
-      // subtracted — penalising that again would double-count.
-      //
-      // A candidate matching nothing takes the untouched `scores[i]` write, so
-      // the no-filter path stays byte-identical to the pre-change behaviour.
-      // Only the lower bound can bite: the parser already clamps to [0, 1.1] and
-      // the penalty is non-negative, so the score can only fall.
-      chunkItems.forEach((c, i) => {
-        const comps = componentsMap.get(c.input.id);
-        const penalty = comps?.suppressPenalty ?? 0;
-        let next = scores[i];
-        if (penalty > 0) {
-          penalised += 1;
-          next = Math.max(0, next - penalty);
-        }
-        // The ENTITY share is applied separately, against ENTITY_PENALTY_FLOOR
-        // rather than subtracted outright: entity extraction is 68.8% correct,
-        // so an entity filter may lower a row's rank but must never push it out
-        // of the feed. Same helper `computeRelevance` uses on the fail-open
-        // score, so the two paths cannot disagree about what "nudge, never
-        // delete" means.
-        const entityPenalty = comps?.entityPenalty ?? 0;
-        if (entityPenalty > 0) {
-          if (penalty <= 0) penalised += 1;
-          next = applyEntityPenalty(next, entityPenalty, eng);
-        }
-        // P6 — DEMOTED, NEVER REMOVED. An exempt top headline carries a HARD
-        // filter's penalty in `suppressPenalty` (folded in by computeRelevance),
-        // and the LLM score it is subtracted from is not guaranteed to survive
-        // it. Without this floor such a headline would vanish, which is
-        // exclusion under another name.
-        if (comps?.hardFilterExempt) {
-          next = Math.max(next, eng.HEADLINE_BASE_FLOOR);
-        }
-        rawScoreMap.set(c.input.id, next);
-      });
+      chunkItems.forEach((c, i) => applyScore(c.input.id, scores[i]));
     });
-    if (penalised > 0) {
-      logger.debug('[computeAndScore] soft filters penalised candidates', {
-        penalised,
-        of: scorable.length,
-      });
-    }
+  }
+  if (penalised > 0) {
+    logger.debug('[computeAndScore] soft filters penalised candidates', {
+      penalised,
+      of: scorable.length,
+    });
   }
 
   return {
