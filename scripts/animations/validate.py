@@ -49,6 +49,9 @@ Chat families only (themed at runtime with lottie-react-native colorFilters):
  11  cloud strips draw nothing in the model end (x 244.47..265.54 of 272): the
      app lays the real MeraLogo there (CHAT_STRIP_MARK_BOX in
      components/custom/chat/animation-registry.ts)
+ 12  keyframe times strictly increase (a zero or negative segment is a
+     divide by zero in a player's progress maths). Chat families only: three
+     shipped 1000 x 1000 files break this today
 
 Usage:  python3 validate.py <dir-or-file> [...]
 Exit 0 iff every file passes every check.
@@ -620,6 +623,25 @@ def chat_problems(layer, asset_id, total):
                     f"layer '{nm}' animates a colour, which a colour filter "
                     f"overrides: crossfade two role layers instead"
                 )
+    def times(node):
+        if isinstance(node, dict):
+            kfs = node.get("k")
+            if node.get("a") == 1 and isinstance(kfs, list) and kfs \
+                    and isinstance(kfs[0], dict) and "t" in kfs[0]:
+                ts = [k["t"] for k in kfs]
+                if any(b <= a for a, b in zip(ts, ts[1:])):
+                    problems.append(
+                        f"layer '{nm}' has keyframe times that do not strictly "
+                        f"increase {ts}: a player divides by the segment length"
+                    )
+            for v_ in node.values():
+                times(v_)
+        elif isinstance(node, list):
+            for v_ in node:
+                times(v_)
+
+    times(layer.get("ks"))
+    times(layer.get("shapes"))
     if asset_id.startswith("chat-strip-") and asset_id != "chat-strip-device":
         box = layer_bbox_sweep(layer, total, stroke_pad=True)
         if box is not None and box[2] > MARK_X_LO + EPS and box[0] < MARK_X_HI - EPS:

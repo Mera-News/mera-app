@@ -328,8 +328,9 @@ def glyph_think():
     lit = []
     for j, x in enumerate((6.8, 10, 13.2)):
         a = round(j * 0.2 * FR)
-        o = keys(cycles(2, period, [(0, [0]), (a, [0]), (a + f(0.3), [100]),
-                                    (a + f(0.7), [0]), (period, [0])]))
+        pulse = [(0, [0])] + ([(a, [0])] if a else []) + [
+            (a + f(0.3), [100]), (a + f(0.7), [0]), (period, [0])]
+        o = keys(cycles(2, period, pulse))
         lit.append((f"dot-lit-{j + 1}", [circle(x, 9.2, 1.1), fill(ACCENT)], o))
     accent = lay(ind(), "accent", [(nm, items) for nm, items, _ in lit], op)
     for g, (_, _, o) in zip(accent["shapes"], lit):

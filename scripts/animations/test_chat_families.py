@@ -122,6 +122,11 @@ def main():
         bad = glyph_doc(end_keys=keys([(0, [0]), (156, [100])]))
         check(tmp, "trim seam", "chat-step-write", bad, "does not close its loop", failures)
 
+        # keyframe times must strictly increase
+        bad = glyph_doc(end_keys=keys([(0, [100]), (0, [100]), (156, [100])]))
+        check(tmp, "duplicate keyframe time", "chat-step-write", bad,
+              "do not strictly increase", failures)
+
         # a chat-strip one-shot rests on its LAST frame
         fade_in = keys([(0, [0]), (120, [100])])
         fade_out = keys([(0, [100]), (120, [0])])
