@@ -15,6 +15,7 @@ export {
   getModelState,
   isModelDownloaded,
   isTextModelResident,
+  requiredModels,
   deleteBaseModel,
   deleteOnDeviceModels,
   purgeAllBaseModels,
@@ -32,8 +33,20 @@ export {
 } from './core/model-catalog';
 export type { ModelCatalogEntry, ModelRole } from './core/model-catalog';
 
+// === Text engine (Qwen or the platform's own on-device model) ===
+export {
+  getTextEngine,
+  setTextEngine,
+  peekTextEngine,
+  useTextEngine,
+  nativeEngineAvailability,
+  DEFAULT_TEXT_ENGINE,
+} from './core/text-engine';
+export type { TextEngine } from './core/text-engine';
+
 // === Download Service ===
 export {
+  onDeviceModelsStatus,
   startModelDownloads,
   cancelModelDownload,
   isDownloadInProgress,

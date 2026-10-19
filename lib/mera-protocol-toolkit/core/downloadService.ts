@@ -1,11 +1,14 @@
-// Download Service: fetches every on-device model that is not on disk yet.
+// Download Service: fetches the model files the chosen text engine needs that
+// are not on disk yet (the relevance model always; the text model unless the
+// native engine writes text). User-facing, this is ONE download, "Mera AI
+// models": nothing here exposes a model name or a per-model size for display.
 //
 // SEQUENTIAL (text model, then Kev), under ONE download generation and ONE
-// `model-download` restart hold for the whole pair. Progress is byte-weighted
-// over what is missing. A retry fetches only what is still missing. When the
-// pair lands and the reader asked for on-device processing, the phone is
-// promoted to OnDevice here, from the download path, so it happens even when the
-// settings screen is no longer open.
+// `model-download` restart hold for the whole set. Progress is byte-weighted
+// over what is missing. A retry fetches only what is still missing. When the set
+// lands, On this phone can run (isModelDownloaded()), and the reader asked for
+// on-device processing, the phone is promoted to OnDevice here, from the
+// download path, so it happens even when the settings screen is no longer open.
 
 import { useSyncExternalStore } from 'react';
 import * as Notifications from 'expo-notifications';
@@ -19,6 +22,7 @@ import {
   cancelActiveDownload,
   downloadBaseModel,
   isModelDownloaded,
+  requiredModels,
   type DownloadProgressInfo,
 } from './modelManager';
 
@@ -83,10 +87,32 @@ export function useDownloadBytes(): DownloadBytes {
   );
 }
 
-/** The catalogue models not on disk yet, in download order. */
+/**
+ * What the screen shows, name-free: the bytes still to download for the chosen
+ * text engine, the bytes of model files on disk (any, for the delete confirm),
+ * and whether On this phone can run now.
+ */
+export async function onDeviceModelsStatus(): Promise<{
+  missingBytes: number;
+  onDiskBytes: number;
+  runnable: boolean;
+}> {
+  const missing = await missingModels();
+  let onDiskBytes = 0;
+  for (const m of MODEL_CATALOG) {
+    if (await isModelDownloaded(m.modelId).catch(() => false)) onDiskBytes += m.sizeBytes;
+  }
+  return {
+    missingBytes: missing.reduce((sum, m) => sum + m.sizeBytes, 0),
+    onDiskBytes,
+    runnable: await isModelDownloaded().catch(() => false),
+  };
+}
+
+/** The models the chosen text engine needs that are not on disk yet, in download order. */
 export async function missingModels(): Promise<ModelCatalogEntry[]> {
   const missing: ModelCatalogEntry[] = [];
-  for (const m of MODEL_CATALOG) {
+  for (const m of await requiredModels()) {
     if (!(await isModelDownloaded(m.modelId).catch(() => false))) missing.push(m);
   }
   return missing;
@@ -237,7 +263,8 @@ export function startModelDownloads(opts: { promote?: boolean } = {}): void {
 
       const shouldPromote =
         promoteWhenDone &&
-        useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
+        useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice &&
+        (await isModelDownloaded().catch(() => false));
       const promoted = shouldPromote ? await promoteToOnDevice() : false;
       if (canNotify && isCurrent()) {
         await notify(

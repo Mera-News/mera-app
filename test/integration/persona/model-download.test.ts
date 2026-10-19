@@ -22,6 +22,8 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useUserStore } from '@/lib/stores/user-store';
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 import { placeDownloadedModel } from '@/test/helpers/fs';
+import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
+import { installOnDeviceLlm } from '@/test/helpers/on-device-llm';
 import { __resetAppRestartForTests, activeHolds } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -29,6 +31,7 @@ import { fileSystemModule, resetFileSystem, until } from '@/test/integration/cha
 import { FIXTURE_ACCOUNT, graphql, HttpResponse, initI18nEn, server, signInFixtureAccount } from '@/test/helpers';
 
 jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 jest.mock('@/lib/mera-protocol-toolkit/core/model-catalog', () => {
     const actual = jest.requireActual('@/lib/mera-protocol-toolkit/core/model-catalog');
     const TEXT = { ...actual.TEXT_MODEL, sizeBytes: 4 };
@@ -208,6 +211,29 @@ describe('startModelDownloads', () => {
         await until(() => protocol().modelState === 'downloaded');
         expect(sent).toEqual([]);
         expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+    });
+
+    it('with the native text engine, only the relevance model downloads, and promotion needs the native model available', async () => {
+        useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
+        await signInFixtureAccount();
+        const sent = recordModeUpdates();
+        await setTextEngine('native');
+        try {
+            installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
+            startModelDownloads({ promote: true });
+            await started();
+            expect(last().url).toBe(RELEVANCE_MODEL.modelUrl);
+            expect(getDownloadBytes()).toEqual({ doneBytes: 0, totalBytes: 4 });
+            last().finish();
+            await until(() => protocol().modelState === 'downloaded');
+            expect(downloads).toHaveLength(1);
+            // The native model is not ready, so On this phone cannot run yet: nothing is promoted.
+            expect(sent).toEqual([]);
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+        } finally {
+            await setTextEngine('mera');
+            __resetTextEngineForTests();
+        }
     });
 
     it('a second start while one runs does not start a second download', async () => {

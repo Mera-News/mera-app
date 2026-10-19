@@ -4,7 +4,9 @@ import {
   hasAnyStat,
   recordCompletion,
   recordModelLoad,
+  recordRefusal,
   resetInferenceStats,
+  totalLoadMs,
 } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 
 beforeEach(() => resetInferenceStats());
@@ -48,5 +50,22 @@ describe('inference stats (in memory only)', () => {
     resetInferenceStats();
     expect(getInferenceStats().loadMs).toEqual({ text: null, relevance: null });
     expect(hasAnyStat(getInferenceStats())).toBe(false);
+  });
+});
+
+describe('refusals and the combined load time', () => {
+  it('counts native-engine refusals, which alone make the readout show', () => {
+    recordRefusal();
+    recordRefusal();
+    expect(getInferenceStats().refused).toBe(2);
+    expect(hasAnyStat(getInferenceStats())).toBe(true);
+  });
+
+  it('totalLoadMs sums what loaded, null before anything did', () => {
+    expect(totalLoadMs(getInferenceStats())).toBeNull();
+    recordModelLoad('relevance', 3000);
+    expect(totalLoadMs(getInferenceStats())).toBe(3000);
+    recordModelLoad('text', 2000);
+    expect(totalLoadMs(getInferenceStats())).toBe(5000);
   });
 });

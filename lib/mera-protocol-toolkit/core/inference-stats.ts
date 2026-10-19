@@ -28,6 +28,8 @@ export type InferenceStats = {
   relevance: Average;
   /** Text-model note (reason) completions. */
   reason: Average;
+  /** Native-engine calls the model declined (a guardrail or a refusal). Failed calls, never crashes. */
+  refused: number;
 };
 
 const EMPTY: InferenceStats = {
@@ -36,6 +38,7 @@ const EMPTY: InferenceStats = {
   genTokPerSec: null,
   relevance: { count: 0, totalMs: 0 },
   reason: { count: 0, totalMs: 0 },
+  refused: 0,
 };
 
 let stats: InferenceStats = EMPTY;
@@ -61,8 +64,14 @@ export function hasAnyStat(s: InferenceStats): boolean {
     s.loadMs.relevance != null ||
     s.genTokPerSec != null ||
     s.relevance.count > 0 ||
-    s.reason.count > 0
+    s.reason.count > 0 ||
+    s.refused > 0
   );
+}
+
+/** A native-engine call the model declined. */
+export function recordRefusal(): void {
+  emit({ ...stats, refused: stats.refused + 1 });
 }
 
 /** Called once a model has loaded. Keeps every other figure. */
@@ -88,6 +97,12 @@ export function recordCompletion(input: {
     next[input.label] = { count: prev.count + 1, totalMs: prev.totalMs + input.latencyMs };
   }
   emit(next);
+}
+
+/** Load time of every model loaded so far, summed (the screen shows one figure, never per model). */
+export function totalLoadMs(s: InferenceStats): number | null {
+  const parts = [s.loadMs.text, s.loadMs.relevance].filter((v): v is number => v != null);
+  return parts.length > 0 ? parts.reduce((a, b) => a + b, 0) : null;
 }
 
 /** Average milliseconds per call for `label`, or null before the first call. */

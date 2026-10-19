@@ -1,16 +1,115 @@
-// Inference Engine: on-device inference via llama.rn.
-//   infer / inferStream  completions on the TEXT model
-//   decide               Kev decisions on the RELEVANCE model
-// Each takes the llama lock (llama-lock.ts) once and makes its model resident
-// inside it (modelManager._ensureLoaded), swapping out the other model if needed.
+// Inference Engine: on-device inference.
+//   infer / inferStream  text, on the stored TEXT ENGINE (text-engine.ts): the
+//                        downloaded text model through llama.rn, or the
+//                        platform's own model (Apple Foundation Models) through
+//                        mera-on-device-llm
+//   decide               Kev decisions on the RELEVANCE model (llama.rn)
+// Each takes the llama lock (llama-lock.ts) once. A llama.rn call makes its
+// model resident inside it (modelManager._ensureLoaded), swapping out the other
+// model if needed; the native engine runs out of process and loads nothing, but
+// stays on the same chain so calls never overlap.
 
 import type { DecisionRequest, DecisionResult } from 'llama.rn';
 import type { InferParams, InferResult } from '../types';
 import { holdRestart } from '../../app-restart';
-import { recordCompletion } from './inference-stats';
+import { recordCompletion, recordRefusal } from './inference-stats';
 import { acquireLlamaLock, withLlamaLock } from './llama-lock';
 import { RELEVANCE_MODEL, supportsJsonGrammar, TEXT_MODEL } from './model-catalog';
-import { _ensureLoaded, _getContext, _updateInferenceSpeed, getModelState } from './modelManager';
+import {
+  _assertOnDeviceMode,
+  _ensureLoaded,
+  _getContext,
+  _releaseTextModel,
+  _updateInferenceSpeed,
+  getModelState,
+} from './modelManager';
+import { getTextEngine } from './text-engine';
+import {
+  isOnDeviceLlmRefusal,
+  respond as nativeRespond,
+  stream as nativeStream,
+  type OnDeviceLlmOptions,
+} from '@/modules/mera-on-device-llm';
+
+/** What the native engine takes. It has no stop sequences, no grammar and no
+ *  thinking switch: the JSON jobs carry the format in words and are parsed from
+ *  the text, and no caller passes stop sequences. */
+function nativeOptions(params: InferParams): OnDeviceLlmOptions {
+  return { temperature: params.temperature ?? 0.3, maxTokens: params.maxTokens ?? 512 };
+}
+
+/** A guardrail or refusal is a failed call, counted in the speed readout. */
+function countRefusal(error: unknown): never {
+  if (isOnDeviceLlmRefusal(error)) recordRefusal();
+  throw error;
+}
+
+async function inferNative(params: InferParams): Promise<InferResult> {
+  _assertOnDeviceMode();
+  // The downloaded text model is idle while the native engine writes; give its memory back.
+  await _releaseTextModel();
+  const startTime = Date.now();
+  const output = await nativeRespond(params.systemPrompt ?? '', params.prompt, nativeOptions(params)).catch(
+    countRefusal,
+  );
+  const latencyMs = Date.now() - startTime;
+  recordCompletion({ label: params.label, latencyMs });
+  return { output, tokensUsed: 0, latencyMs, truncated: false };
+}
+
+async function* inferStreamNative(params: InferParams, signal?: AbortSignal): AsyncGenerator<string> {
+  _assertOnDeviceMode();
+  await _releaseTextModel();
+  if (signal?.aborted) return;
+
+  const queue: string[] = [];
+  let done = false;
+  let failure: Error | null = null;
+  let wake: (() => void) | null = null;
+  const notify = () => {
+    wake?.();
+    wake = null;
+  };
+  const handle = nativeStream(params.systemPrompt ?? '', params.prompt, nativeOptions(params), {
+    onToken: (delta) => {
+      queue.push(delta);
+      notify();
+    },
+    onDone: () => {
+      done = true;
+      notify();
+    },
+    onError: (error) => {
+      done = true;
+      if (error.code !== 'ERR_AFM_CANCELLED') failure = error;
+      notify();
+    },
+  });
+  const onAbort = () => {
+    handle.cancel();
+    notify();
+  };
+  signal?.addEventListener('abort', onAbort, { once: true });
+  try {
+    while (true) {
+      if (signal?.aborted) return;
+      if (queue.length > 0) {
+        yield queue.shift()!;
+      } else if (done) {
+        break;
+      } else {
+        await new Promise<void>((resolve) => {
+          wake = resolve;
+        });
+      }
+    }
+    if (failure) countRefusal(failure);
+  } finally {
+    signal?.removeEventListener('abort', onAbort);
+    // The consumer left early (Stop, or any throw): stop the native stream.
+    if (!done) handle.cancel();
+  }
+}
 
 /**
  * The JSON grammar is applied only for a model whose tokenizer supports it
@@ -41,6 +140,7 @@ export function infer(params: InferParams): Promise<InferResult> {
 // be disposed while a caller queues, and `latencyMs` must measure the completion
 // rather than the time spent waiting for the lock.
 async function inferExclusive(params: InferParams): Promise<InferResult> {
+  if ((await getTextEngine()) === 'native') return inferNative(params);
   await _ensureLoaded(TEXT_MODEL.modelId);
   const context = _getContext();
   if (!context) {
@@ -115,6 +215,10 @@ async function* inferStreamExclusive(
 ): AsyncGenerator<string> {
   // The abort may have landed while this call queued for the lock.
   if (signal?.aborted) return;
+  if ((await getTextEngine()) === 'native') {
+    yield* inferStreamNative(params, signal);
+    return;
+  }
   await _ensureLoaded(TEXT_MODEL.modelId);
   // ...or while the text model loaded, which can take seconds after a swap.
   if (signal?.aborted) return;

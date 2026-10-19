@@ -26,7 +26,9 @@ import { LOCAL_CONTEXT_TOKENS } from './context-size';
 import { holdRestart } from '../../app-restart';
 import { recordModelLoad } from './inference-stats';
 import { withLlamaLock } from './llama-lock';
-import { MODEL_CATALOG, RELEVANCE_MODEL, TEXT_MODEL } from './model-catalog';
+import { MODEL_CATALOG, RELEVANCE_MODEL, TEXT_MODEL, type ModelCatalogEntry } from './model-catalog';
+import { getTextEngine, nativeEngineAvailability, peekTextEngine } from './text-engine';
+import { prewarm as prewarmNative } from '@/modules/mera-on-device-llm';
 import type {
   BaseModelDownloadConfig,
   BaseModelManifest,
@@ -334,6 +336,18 @@ async function loadModel(
   return currentModelState;
 }
 
+/** Throws LocalModelsOffError unless processing is set to on-device. */
+export function _assertOnDeviceMode(): void {
+  if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice) {
+    throw new LocalModelsOffError();
+  }
+}
+
+/** Releases the TEXT model if it is the resident one. Unlocked. */
+export async function _releaseTextModel(): Promise<void> {
+  if (currentModelState?.modelId === TEXT_MODEL.modelId) await _releaseModel();
+}
+
 /**
  * Makes `modelId` the resident model, swapping if another one is loaded.
  * Unlocked: call only while holding the llama lock. Refuses outside on-device
@@ -343,9 +357,7 @@ export async function _ensureLoaded(
   modelId: string,
   onProgress?: (progress: number) => void,
 ): Promise<ModelState> {
-  if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice) {
-    throw new LocalModelsOffError();
-  }
+  _assertOnDeviceMode();
   if (currentModelState?.modelId === modelId && llamaContext) return currentModelState;
   return loadModel(modelId, onProgress);
 }
@@ -354,19 +366,36 @@ export async function _ensureLoaded(
 // Public lifecycle: each takes the llama lock exactly once.
 // ---------------------------------------------------------------------------
 
+/** What `initBaseModel` reports when the native engine writes the text. */
+export const NATIVE_ENGINE_STATE: ModelState = {
+  modelId: 'native',
+  loaded: true,
+  contextWindow: LOCAL_CONTEXT_TOKENS,
+  memoryUsageMB: 0,
+  backend: 'native',
+  inferenceSpeed: 0,
+};
+
 /**
- * Makes the TEXT model resident (a no-op when it already is) and reports it in
- * the UI modelState: `loading`, then `ready`, or the error. Callers never need
- * it for correctness (infer / inferStream load the text model themselves); it
- * is a preload. The relevance model loads only inside `decide`.
+ * Makes the text engine ready and reports it in the UI modelState: `loading`,
+ * then `ready`, or the error. With 'mera' it loads the TEXT model (a no-op when
+ * it already is resident); with the native engine it loads nothing (the model runs
+ * out of process), only prewarms it. Callers never need this for correctness
+ * (infer / inferStream get their engine ready themselves); it is a preload.
+ * The relevance model loads only inside `decide`.
  */
 export async function initBaseModel(
   modelId: string = TEXT_MODEL.modelId,
   onProgress?: (progress: number) => void,
 ): Promise<ModelState> {
+  const engine = await getTextEngine();
   return withLlamaLock(async () => {
-    if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice) {
-      throw new LocalModelsOffError();
+    _assertOnDeviceMode();
+    if (engine === 'native' && modelId === TEXT_MODEL.modelId) {
+      await _releaseTextModel();
+      prewarmNative();
+      useMeraProtocolStore.getState().setModelState('ready');
+      return NATIVE_ENGINE_STATE;
     }
     const resident = currentModelState?.modelId === modelId && llamaContext;
     if (!resident) useMeraProtocolStore.getState().setModelState('loading');
@@ -401,8 +430,13 @@ export function getModelState(): ModelState | null {
   return currentModelState;
 }
 
-/** True while the TEXT model is the resident one. Sync, for UI wait lines. */
+/**
+ * True when a text call can start without loading a model first: the native
+ * engine is chosen (it loads nothing), or the TEXT model is resident. Sync, for
+ * UI wait lines.
+ */
 export function isTextModelResident(): boolean {
+  if (peekTextEngine() === 'native') return true;
   return llamaContext !== null && currentModelState?.modelId === TEXT_MODEL.modelId;
 }
 
@@ -453,13 +487,27 @@ export function cancelActiveDownload(): void {
 }
 
 /**
- * Whether a model is downloaded and ready. With no argument: whether EVERY
- * on-device model is, which is the rule On this phone needs (both files).
+ * The model files On this phone needs for the chosen text engine: the relevance
+ * model always, plus the text model unless the native engine writes the text.
+ * Download order.
+ */
+export async function requiredModels(): Promise<ModelCatalogEntry[]> {
+  return (await getTextEngine()) === 'native' ? [RELEVANCE_MODEL] : [...MODEL_CATALOG];
+}
+
+/**
+ * Whether a model is downloaded and ready. With no argument: whether On this
+ * phone can run: the relevance model on disk AND (the text model on disk, or the
+ * native engine chosen and available right now). Availability is asked fresh
+ * every time.
  */
 export async function isModelDownloaded(modelId?: string): Promise<boolean> {
   if (modelId === undefined) {
-    for (const m of MODEL_CATALOG) {
+    for (const m of await requiredModels()) {
       if (!(await isModelDownloaded(m.modelId))) return false;
+    }
+    if ((await getTextEngine()) === 'native') {
+      return (await nativeEngineAvailability()).available;
     }
     return true;
   }
