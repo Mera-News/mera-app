@@ -8,6 +8,9 @@ import type Setting from '@/lib/database/models/Setting';
 import schema from '@/lib/database/schema';
 import logger from '@/lib/logger';
 import { useExportHistory } from './use-export-history';
+import { clearFeedCacheAndResync } from './clear-feed-cache';
+import { showDialog } from '@/lib/dialog';
+import { toastManager } from '@/lib/toast-manager';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -280,6 +283,31 @@ export function useObservabilityScreen() {
 
     const { exporting: isExportingHistory, exportHistory: handleExportHistory } = useExportHistory('ObservabilityScreen');
 
+    // Developer tool: wipes every downloaded article, score and note, then re-syncs so the
+    // whole feed is fetched and scored again (e.g. after switching the on-device engine).
+    const [isClearingFeed, setIsClearingFeed] = useState(false);
+    const handleClearFeedCache = useCallback(async () => {
+        const confirmed = await showDialog({
+            title: 'Clear feed cache?',
+            body: 'This deletes every downloaded article, score and note on this phone, then fetches and scores your news again. Your facts and topics stay.',
+            confirmLabel: 'Clear',
+            cancelLabel: 'Cancel',
+            destructive: true,
+        });
+        if (!confirmed) return;
+        setIsClearingFeed(true);
+        try {
+            await clearFeedCacheAndResync();
+            toastManager.showSuccess('Feed cache cleared', 'Mera is fetching and scoring your news again.');
+            void refresh();
+        } catch (err) {
+            logger.captureException(err, { tags: { component: 'ObservabilityScreen', method: 'clearFeedCache' } });
+            toastManager.showError('Could not clear the feed cache', 'Try again.');
+        } finally {
+            setIsClearingFeed(false);
+        }
+    }, [refresh]);
+
     const [copied, setCopied] = useState(false);
 
     // Backup blob probe — __DEV__ only, see the section at the bottom of the render.
@@ -402,6 +430,8 @@ export function useObservabilityScreen() {
         copied,
         isExportingHistory,
         handleExportHistory,
+        isClearingFeed,
+        handleClearFeedCache,
         articleCount,
         relevantArticleCount,
         relevantPct,

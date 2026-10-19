@@ -310,6 +310,8 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         copied,
         isExportingHistory,
         handleExportHistory,
+        isClearingFeed,
+        handleClearFeedCache,
         articleCount,
         relevantArticleCount,
         relevantPct,
@@ -457,6 +459,27 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         </Text>
                         <Text size="xs" className="text-ink-3 mt-0.5">
                             {t('manageData.exportHistoryDescription')}
+                        </Text>
+                    </VStack>
+                </Pressable>
+
+                {/* Clear feed cache: re-fetch and re-score everything (developer tool, English). */}
+                <Pressable
+                    testID="observability-clear-feed-cache"
+                    className="flex-row items-center py-3 px-3 mb-2 border border-line rounded-xl bg-surface"
+                    onPress={() => void handleClearFeedCache()}
+                    disabled={isClearingFeed}
+                    accessibilityRole="button"
+                    accessibilityLabel={isClearingFeed ? 'Clearing feed cache' : 'Clear feed cache'}
+                    accessibilityState={{ disabled: isClearingFeed }}
+                >
+                    <MaterialIcons name="delete-sweep" size={18} color={colors.negative} />
+                    <VStack className="ml-3 flex-1">
+                        <Text size="sm" className="text-ink">
+                            {isClearingFeed ? 'Clearing feed cache' : 'Clear feed cache'}
+                        </Text>
+                        <Text size="xs" className="text-ink-3 mt-0.5">
+                            Deletes downloaded articles, scores and notes, then fetches and scores again
                         </Text>
                     </VStack>
                 </Pressable>
