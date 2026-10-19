@@ -6,11 +6,11 @@
 import type { ChatEngine } from '@/lib/chat-session/engine';
 import { useLocalChatStore, type LocalChatState } from '@/lib/chat-session/local-chat-store';
 import { CHAT_MAX_OUTPUT_TOKENS } from './constants';
-import { getModelState, inferStream, initBaseModel } from '../mera-protocol-toolkit';
+import { inferStream, isTextModelResident } from '../mera-protocol-toolkit';
+import { LOCAL_CONTEXT_TOKENS } from '../mera-protocol-toolkit/core/context-size';
 import { inferenceQueue } from '../inference/InferenceQueue';
 import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
 import { applyChatPhase, useChatPhaseStore } from './chat-phase-store';
-import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
 import type { ConversationMessage, IAgent, ToolCallRecord } from './types';
@@ -35,7 +35,7 @@ import {
 // cannot make the LLM hallucinate persisted state from a stale assistant claim.
 const TOOL_CALL_OPEN = '<tool_call>';
 const TOOL_CALL_CLOSE = '</tool_call>';
-const TOTAL_TOKEN_LIMIT = 4096;
+const TOTAL_TOKEN_LIMIT = Math.min(4096, LOCAL_CONTEXT_TOKENS);
 // Shared with the CLOUD chat path (lib/llm/constants) so a conversation can't be
 // cut at two different lengths depending on which engine served the turn.
 const MAX_OUTPUT_TOKENS = CHAT_MAX_OUTPUT_TOKENS;
@@ -285,7 +285,6 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
 
   const agentRef = { current: initialAgent };
   const isStreamingRef = { current: false };
-  const initializedRef = { current: false };
   /** THE STOP BUTTON, for the turn in flight. Read by the token loop and at the
    *  early-exit points before a completion starts. */
   const stopRef = { requested: false };
@@ -306,29 +305,16 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
   const runInference = async (conversationMessages: ConversationMessage[]): Promise<void> => {
       // Chosen SYNCHRONOUSLY, before the first await. `inferenceQueue.pause()`
       // waits for whatever job holds llama.rn's single context to finish, and
-      // on a cold turn `initBaseModel` follows it: both are real seconds the
-      // user sits through, and publishing after them would miss the part of
-      // the wait that most needs a sentence.
-      const coldModel = !initializedRef.current && getModelState() === null;
+      // on a cold turn `inferStream` then loads the text model inside the
+      // toolkit's lock: both are real seconds the user sits through, and
+      // publishing after them would miss the part of the wait that most needs
+      // a sentence.
+      const coldModel = !isTextModelResident();
       const phase = phaseSinkRef.current;
       phase?.(coldModel ? 'deviceLoading' : 'devicePreparing');
       await inferenceQueue.pause();
       try {
         // Stop pressed while the queue paused: end the turn, start no completion.
-        if (stopRef.requested) return;
-        // Initialize model on first use (model may already be loaded by useModelLifecycle)
-        if (!initializedRef.current) {
-          if (getModelState() === null) {
-            const { setModelState } = useMeraProtocolStore.getState();
-            setModelState('loading');
-            await initBaseModel();
-            setModelState('ready');
-          }
-          initializedRef.current = true;
-          // The model is up; everything from here to the first token is prompt
-          // assembly and the token-budget pass.
-          phase?.('devicePreparing');
-        }
         if (stopRef.requested) return;
 
         // Build system prompt (needsToolFormatInPrompt=true for local LLM)
@@ -405,8 +391,10 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
         let fullResponse = '';
         const thinkStripper = createThinkStripper();
 
-        // Generation has started and no token has been flushed yet.
-        phase?.('deviceThinking');
+        // Generation has started and no token has been flushed yet. A cold turn is
+        // still loading inside inferStream, so it keeps deviceLoading until the
+        // first text (the sink only moves forward, and the first delta releases it).
+        if (!coldModel) phase?.('deviceThinking');
 
         // Driven by hand rather than `for await`: Stop must end the turn NOW, but the
         // generator only ends once llama has unwound (it holds the lock until then).

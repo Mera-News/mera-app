@@ -1,5 +1,6 @@
 // InferenceQueue — Singleton FIFO consumer for on-device LLM jobs.
-// Serializes all non-chat llama.rn access. Supports pause/resume for chat priority.
+// Runs queued on-device LLM jobs one at a time. The toolkit's llama lock is the only serialiser of
+// llama.rn; pause/resume only gives chat priority over queued jobs.
 
 import { AppState } from 'react-native';
 
@@ -104,7 +105,7 @@ const DRAIN_IGNORES: InferenceJobType[] = ['topic_combo'];
  * (`wake()` — i.e. notify/resume/stop — or a successful dequeue).
  *
  * `POLL_INTERVAL_MIN` is ALSO the fixed cadence of the `paused` branch, which
- * must NOT back off: paused means chat is holding exclusive llama.rn access
+ * must NOT back off: paused means chat has priority over queued jobs
  * (useLocalLLM), and a slow re-check there is a slow hand-back to the queue.
  */
 const POLL_INTERVAL_MIN = 2000;
@@ -115,6 +116,8 @@ const PRUNE_AGE_MS = 60 * 60 * 1000; // 1 hour
 
 class InferenceQueueImpl {
   private state: QueueState = 'stopped';
+  /** Outstanding pause() calls; the queue restarts only when resume() brings it back to 0. */
+  private pauseDepth = 0;
   private loopPromise: Promise<void> | null = null;
   /** The in-flight stop(): a start() during it must wait, or it re-pends the job the old loop is still running. */
   private stopping: Promise<void> | null = null;
@@ -237,6 +240,7 @@ class InferenceQueueImpl {
     if (this.state === 'stopped') return this.stopping ?? undefined;
 
     this.state = 'stopped';
+    this.pauseDepth = 0;
     this.appStateSub?.remove();
     this.appStateSub = null;
     this.wake(); // unblock any sleep
@@ -251,15 +255,16 @@ class InferenceQueueImpl {
 
   /**
    * Pause processing and wait for the current job to finish.
-   * Used when chat needs exclusive llama.rn access.
-   * Must be awaited to guarantee no concurrent llamaContext usage.
+   * Gives chat priority over queued jobs; it is NOT exclusive llama.rn access.
+   * The toolkit lock is the only serialiser (scoring calls completeLocal outside this queue).
    */
   async pause(): Promise<void> {
-    if (this.state === 'running') {
-      this.state = 'paused';
-      if (this.currentJobPromise) {
-        await this.currentJobPromise;
-      }
+    if (this.state === 'stopped') return;
+    // Ref-counted: a chat turn mid scoring pass must not un-pause the pass's hold.
+    this.pauseDepth += 1;
+    this.state = 'paused';
+    if (this.currentJobPromise) {
+      await this.currentJobPromise;
     }
   }
 
@@ -267,7 +272,8 @@ class InferenceQueueImpl {
    * Resume processing after a pause.
    */
   resume(): void {
-    if (this.state === 'paused') {
+    if (this.pauseDepth > 0) this.pauseDepth -= 1;
+    if (this.pauseDepth === 0 && this.state === 'paused') {
       this.state = 'running';
       this.wake(); // unblock the sleep so it picks up jobs immediately
     }
@@ -289,7 +295,7 @@ class InferenceQueueImpl {
   /**
    * Synchronous "is on-device inference busy right now?" signal for low-priority
    * background schedulers to yield to. True when a job is actively executing OR
-   * the queue is paused for chat's exclusive llama.rn access. Deliberately does
+   * the queue is paused so chat has priority. Deliberately does
    * NOT count merely-pending jobs (the loop is idle between polls, and those
    * polls now back off to 30s) — this is a best-effort "something important is
    * running" check, not a backlog gauge.

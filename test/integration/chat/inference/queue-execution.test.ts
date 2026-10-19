@@ -5,10 +5,12 @@
 // Replaces from lib/inference/__tests__/InferenceQueue.test.ts: executes a topic_gen job; marks the
 // job failed when the handler throws; resets the llama context on an empty-message error; unknown
 // job type; resetContext error after a native crash; a thrown string; the null-error fallback.
-import { disposeModel, initBaseModel } from '@/lib/mera-protocol-toolkit';
+import { decide, disposeModel, initBaseModel, RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit';
 import { inferenceQueue, __setJobHandlerForTests } from '@/lib/inference/InferenceQueue';
 import logger from '@/lib/logger';
-import { installLlama, llamaReleases, resetFileSystem } from '@/test/integration/chat/_helpers';
+import { completeLocal } from '@/lib/llm/completeLocal';
+import { installLlama, llamaReleases, resetFileSystem, until } from '@/test/integration/chat/_helpers';
+import { llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
 import { cleanup, enqueueJob, hold, jobRow, prepare, tick, untilJob } from './kit';
 
 // Hoisted above the imports by babel-jest.
@@ -118,28 +120,43 @@ describe('a handler that fails', () => {
     expect(llamaReleases()).toBe(0);
   });
 
-  it('a native crash (no message) releases the context and loads the model again', async () => {
+  it('a native crash (no message) releases the context; the next job loads the text model lazily and runs on it', async () => {
     installLlama(['x']);
     await initBaseModel();
     expect(initLlama()).toHaveBeenCalledTimes(1);
     __setJobHandlerForTests('persona_summary', async () => {
       throw new Error('');
     });
-    const id = await enqueueJob('persona_summary', {}, { maxAttempts: 1 });
-
+    const crashing = await enqueueJob('persona_summary', {}, { maxAttempts: 1 });
     await inferenceQueue.start();
-    await untilJob(id, ['gone']);
-    await tick(0);
+    await untilJob(crashing, ['gone']);
+    await until(() => llamaReleases() === 1, 5000, 'context release');
+    // Releasing is all the reset does: no reload until a job needs the model.
+    expect(initLlama()).toHaveBeenCalledTimes(1);
 
-    expect(llamaReleases()).toBe(1);
+    __setJobHandlerForTests('story_headline', async () => ({ answer: await completeLocal({ systemPrompt: 's', prompt: 'p' }) }));
+    const after = await enqueueJob('story_headline', {});
+    inferenceQueue.notify();
+    const row = await untilJob(after, ['done']);
+    expect(row).toMatchObject({ result: { answer: 'x' } });
     expect(initLlama()).toHaveBeenCalledTimes(2);
+    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId, TEXT_MODEL.modelId]);
+    expect(llamaMaxLive()).toBe(1);
   });
 
   it('a context reset that itself fails is logged and the queue carries on with the next job', async () => {
     const error = jest.spyOn(logger, 'error');
+    // The resident context refuses to release: the reset after the crash fails.
     installLlama(['x']);
+    const installed = initLlama().getMockImplementation()!;
+    initLlama().mockImplementationOnce(async (p: unknown) => {
+      const ctx = await installed(p);
+      ctx.release = async () => {
+        throw new Error('context reset failed');
+      };
+      return ctx;
+    });
     await initBaseModel();
-    initLlama().mockRejectedValueOnce(new Error('context reset failed'));
     __setJobHandlerForTests('persona_summary', async () => {
       throw new Error('');
     });
@@ -150,10 +167,28 @@ describe('a handler that fails', () => {
 
     await inferenceQueue.start();
     await untilJob(after, ['done']);
+    await untilJob(crashing, ['gone']);
+    await until(() => error.mock.calls.some((c) => c[0] === '[InferenceQueue] Context reset failed'), 5000, 'reset failure log');
 
     expect(await jobRow(crashing)).toBeNull();
     expect(error).toHaveBeenCalledWith('[InferenceQueue] Context reset failed', expect.any(Error));
     expect(next).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('a job after the relevance model was swapped in', () => {
+  it('a topic_gen job runs on the text model, loaded in its place', async () => {
+    installLlama(['topics']);
+    await decide({ state: {}, questions: { rel: { type: 'score' } } } as never);
+    __setJobHandlerForTests('topic_gen', async () => ({ answer: await completeLocal({ systemPrompt: 's', prompt: 'p' }) }));
+    const id = await enqueueJob('topic_gen', {});
+
+    await inferenceQueue.start();
+    const row = await untilJob(id, ['done']);
+
+    expect(row).toMatchObject({ result: { answer: 'topics' } });
+    expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId, TEXT_MODEL.modelId]);
+    expect(llamaMaxLive()).toBe(1);
   });
 });
 

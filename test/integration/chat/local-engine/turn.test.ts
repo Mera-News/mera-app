@@ -8,10 +8,19 @@ import { activeHolds } from '@/lib/app-restart';
 import { fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
 import { enqueueJob, getQueueStats } from '@/lib/database/services/inference-job-service';
 import { __setJobHandlerForTests, inferenceQueue } from '@/lib/inference/InferenceQueue';
-import { disposeModel, initBaseModel } from '@/lib/mera-protocol-toolkit';
+import { stopChatTurn } from '@/lib/chat-session/chat-session';
+import {
+  decide,
+  disposeModel,
+  initBaseModel,
+  isTextModelResident,
+  RELEVANCE_MODEL,
+  TEXT_MODEL,
+} from '@/lib/mera-protocol-toolkit';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import '@/test/helpers';
+import { llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
 import {
   installLlama,
   llamaCalls,
@@ -34,6 +43,8 @@ import {
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+
+const initLlama = () => (jest.requireMock('llama.rn') as { initLlama: jest.Mock }).initLlama;
 
 jest.setTimeout(30_000);
 
@@ -136,10 +147,9 @@ describe('a plain turn', () => {
 });
 
 describe('the wait line', () => {
-  it('a cold model publishes deviceLoading, then the text; the model state goes loading then ready', async () => {
+  it('a cold model publishes deviceLoading until the first token; inferStream loads the text model once and chat writes no model state', async () => {
     installLlama(['Hello', ' there', '.']);
     await disposeModel();
-    useMeraProtocolStore.getState().setModelState('downloaded');
     const states: string[] = [];
     const unsub = useMeraProtocolStore.subscribe((s) => {
       if (states.at(-1) !== s.modelState) states.push(s.modelState);
@@ -152,8 +162,9 @@ describe('the wait line', () => {
     unsub();
     phases.stop();
 
-    expect(phases.seen).toEqual(['deviceLoading', 'devicePreparing', 'deviceThinking', 'released']);
-    expect(states).toEqual(['loading', 'ready']);
+    expect(phases.seen).toEqual(['deviceLoading', 'released']);
+    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId]);
+    expect(states).toEqual([]);
     expect(lastAssistant()?.content).toBe('Hello there.');
     expectNothingLeftTheDevice();
   });
@@ -161,7 +172,6 @@ describe('the wait line', () => {
   it('a loaded model skips deviceLoading and leaves the model state alone', async () => {
     installLlama(['Hello', ' there', '.']);
     await initBaseModel();
-    useMeraProtocolStore.getState().setModelState('ready');
     const states: string[] = [];
     const unsub = useMeraProtocolStore.subscribe((s) => states.push(s.modelState));
     const phases = samplePhases();
@@ -174,6 +184,63 @@ describe('the wait line', () => {
 
     expect(phases.seen).toEqual(['devicePreparing', 'deviceThinking', 'released']);
     expect(states).toEqual([]);
+  });
+});
+
+describe('the relevance model swapped in between turns', () => {
+  beforeEach(async () => {
+    await disposeModel();
+  });
+
+  it('the second turn completes on the text context; kev completion() is never called and two contexts are never live', async () => {
+    installLlama(['Hello', ' there', '.']);
+    const { engine } = await attachLocal();
+    engine.send('hi');
+    await turnDone();
+    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId]);
+
+    // A scoring pass steps in between the turns and leaves kev resident.
+    await decide({ state: {}, questions: { rel: { type: 'score' } } } as never);
+    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId, RELEVANCE_MODEL.modelId]);
+    expect(isTextModelResident()).toBe(false);
+
+    engine.send('again');
+    await turnDone();
+
+    expect(local().error).toBeNull();
+    expect(lastAssistant()?.content).toBe('Hello there.');
+    expect(llamaCalls()).toHaveLength(2);
+    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId, RELEVANCE_MODEL.modelId, TEXT_MODEL.modelId]);
+    expect(llamaMaxLive()).toBe(1);
+  });
+
+  it('Stop pressed during the text-model load starts no completion, ends the turn stopped, and the next turn runs', async () => {
+    installLlama(['Fine', '.']);
+    const real = initLlama().getMockImplementation()!;
+    let openGate!: () => void;
+    const gate = new Promise<void>((r) => { openGate = r; });
+    initLlama().mockImplementationOnce(async (p: unknown) => {
+      await gate;
+      return real(p);
+    });
+    const { engine } = await attachLocal();
+
+    engine.send('hi');
+    await until(() => initLlama().mock.calls.length === 1, 5000, 'model load started');
+    stopChatTurn();
+    openGate();
+    await turnDone();
+
+    expect(llamaCalls()).toHaveLength(0);
+    expect(local()).toMatchObject({ status: 'idle', turnBusy: false });
+    expect(streamHolds()).toBe(0);
+    expect(inferenceQueue.getState()).not.toBe('paused');
+
+    engine.send('again');
+    await turnDone();
+    expect(lastAssistant()?.content).toBe('Fine.');
+    expect(llamaCalls()).toHaveLength(1);
+    expect(llamaMaxLive()).toBe(1);
   });
 });
 

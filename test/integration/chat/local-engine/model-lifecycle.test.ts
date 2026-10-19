@@ -6,12 +6,12 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
-import { disposeModel, getModelState } from '@/lib/mera-protocol-toolkit';
+import { disposeModel, getModelState, RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit';
 import { useAppStateStore } from '@/lib/stores/app-state-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { setAppState } from '@/test/helpers';
+import { placeDownloadedModel } from '@/test/helpers/fs';
 import {
-  fileSystemModule,
   installLlama,
   llamaReleases,
   resetChatModules,
@@ -25,12 +25,9 @@ jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs
 const initLlama = () => (jest.requireMock('llama.rn') as { initLlama: jest.Mock }).initLlama;
 const protocol = () => useMeraProtocolStore.getState();
 
-/** Marks the selected model as downloaded: the manifest isDownloaded reads. */
+/** Both on-device models downloaded: the file and the manifest isModelDownloaded() reads. */
 async function markDownloaded(): Promise<void> {
-  const id = protocol().selectedModelId;
-  await new fileSystemModule.File(fileSystemModule.Paths.cache, 'mera-models', id, 'manifest.json').write(
-    JSON.stringify({ modelId: id, ready: true }),
-  );
+  for (const m of [TEXT_MODEL, RELEVANCE_MODEL]) placeDownloadedModel(m.modelId);
 }
 
 const settleTicks = () => new Promise((r) => setTimeout(r, 100));

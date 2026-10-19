@@ -5,9 +5,10 @@
 import { activeHolds } from '@/lib/app-restart';
 import { completeLocal, LocalTruncatedReasoningError } from '@/lib/llm/completeLocal';
 import logger from '@/lib/logger';
-import { disposeModel, initBaseModel } from '@/lib/mera-protocol-toolkit';
+import { decide, disposeModel, initBaseModel, RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import '@/test/helpers';
+import { llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
 import {
   installLlama,
   llamaCalls,
@@ -35,13 +36,11 @@ beforeEach(async () => {
   resetChatModules();
   resetFileSystem();
   await disposeModel();
-  useMeraProtocolStore.getState().setModelState('downloaded');
 });
 
 describe('model initialization', () => {
-  it('does NOT load the model when one is already loaded', async () => {
+  it('does NOT load the model when the text model is already resident', async () => {
     await ready('hello world');
-    useMeraProtocolStore.getState().setModelState('ready');
     const states: string[] = [];
     const unsub = useMeraProtocolStore.subscribe((s) => states.push(s.modelState));
 
@@ -52,7 +51,7 @@ describe('model initialization', () => {
     expect(states).toEqual([]);
   });
 
-  it('loads the model first when none is loaded: the model state goes loading then ready', async () => {
+  it('loads the text model inside infer() when none is loaded, and writes no model state', async () => {
     installLlama(['hello world']);
     const states: string[] = [];
     const unsub = useMeraProtocolStore.subscribe((s) => {
@@ -62,8 +61,24 @@ describe('model initialization', () => {
     await expect(ask()).resolves.toBe('hello world');
     unsub();
 
-    expect(initLlama()).toHaveBeenCalledTimes(1);
-    expect(states).toEqual(['loading', 'ready']);
+    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId]);
+    expect(states).toEqual([]);
+  });
+
+  it('loads the text model when the relevance model is resident, never holding two contexts', async () => {
+    installLlama(['from text']);
+    await decide({ state: {}, questions: { rel: { type: 'score' } } } as never);
+    expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId]);
+    const states: string[] = [];
+    const unsub = useMeraProtocolStore.subscribe((s) => states.push(s.modelState));
+
+    await expect(ask()).resolves.toBe('from text');
+    unsub();
+
+    expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId, TEXT_MODEL.modelId]);
+    expect(llamaMaxLive()).toBe(1);
+    expect(llamaCalls()).toHaveLength(1);
+    expect(states).toEqual([]);
   });
 });
 
@@ -123,13 +138,6 @@ describe('request forwarding', () => {
     await ready('{}');
     await ask({ responseFormat: 'json' });
     expect(llamaCalls()[0].params).toMatchObject({ response_format: { type: 'json_object' } });
-  });
-
-  it('sends no grammar for a model that does not support it, even for json', async () => {
-    useMeraProtocolStore.getState().setSelectedModelId('mera-lfm2-2.6b');
-    await ready('{}');
-    await ask({ responseFormat: 'json' });
-    expect(llamaCalls()[0].params).not.toHaveProperty('response_format');
   });
 
   it('maps responseFormat text to no grammar', async () => {

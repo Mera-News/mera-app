@@ -9,12 +9,12 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { enqueueJob } from '@/lib/database/services/inference-job-service';
 import { inferenceQueue, __setJobHandlerForTests } from '@/lib/inference/InferenceQueue';
-import { disposeModel } from '@/lib/mera-protocol-toolkit';
+import { disposeModel, RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit';
 import { useAppStateStore } from '@/lib/stores/app-state-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { setAppState } from '@/test/helpers';
+import { placeDownloadedModel } from '@/test/helpers/fs';
 import {
-  fileSystemModule,
   installLlama,
   resetChatModules,
   resetFileSystem,
@@ -30,10 +30,7 @@ const protocol = () => useMeraProtocolStore.getState();
 const settle = (ms = 300) => new Promise((r) => setTimeout(r, ms));
 
 async function markDownloaded(): Promise<void> {
-  const id = protocol().selectedModelId;
-  await new fileSystemModule.File(fileSystemModule.Paths.cache, 'mera-models', id, 'manifest.json').write(
-    JSON.stringify({ modelId: id, ready: true }),
-  );
+  for (const m of [TEXT_MODEL, RELEVANCE_MODEL]) placeDownloadedModel(m.modelId);
 }
 
 async function stopQueue(): Promise<void> {

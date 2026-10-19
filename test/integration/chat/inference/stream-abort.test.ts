@@ -6,6 +6,7 @@
 
 jest.mock('@/lib/mera-protocol-toolkit/core/modelManager', () => ({
   __esModule: true,
+  _ensureLoaded: jest.fn(async () => undefined),
   _getContext: jest.fn(),
   _updateInferenceSpeed: jest.fn(),
   // Provide all other exports from modelManager so transitive imports don't crash
@@ -17,6 +18,7 @@ jest.mock('@/lib/mera-protocol-toolkit/core/modelManager', () => ({
   purgeAllBaseModels: jest.fn(),
   cancelActiveDownload: jest.fn(),
   isModelDownloaded: jest.fn(),
+  isTextModelResident: jest.fn(() => true),
   resetContext: jest.fn(),
   _getActiveAdapterId: jest.fn(() => null),
   _setActiveAdapterId: jest.fn(),

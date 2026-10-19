@@ -2,9 +2,8 @@
 // Extracted from LocalInferenceEngine.complete() after engine deletion in Phase 5.
 // Calls infer() from mera-protocol-toolkit directly.
 
-import { getModelState, infer as localInfer, initBaseModel } from '../mera-protocol-toolkit';
+import { infer as localInfer } from '../mera-protocol-toolkit';
 import type { InferenceLabel } from '../mera-protocol-toolkit/core/inference-stats';
-import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import logger from '../logger';
 
 /** Thrown when a thinking-enabled completion ran out of budget mid-reasoning,
@@ -29,13 +28,7 @@ export interface LocalCompleteRequest {
 }
 
 export async function completeLocal(request: LocalCompleteRequest): Promise<string> {
-  if (getModelState() === null) {
-    const { setModelState } = useMeraProtocolStore.getState();
-    setModelState('loading');
-    await initBaseModel();
-    setModelState('ready');
-  }
-
+  // infer() loads the text model inside the toolkit's lock.
   const result = await localInfer({
     systemPrompt: request.systemPrompt,
     prompt: request.prompt,
