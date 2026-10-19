@@ -22,10 +22,15 @@ export const KEV_QUESTIONS = {
   },
 } as const;
 
-/** Kev score (0..1) that maps to the feed's 0.4 gate. Measured on goldset-348 (cloud kev-4b, full
- *  precision and fp8 identical): a cut of 0.62 gives about the same feed size as the small model's
- *  0.4 gate, ~96 rows. */
-export const KEV_CUT = 0.62;
+/** Kev score (0..1) that maps to the feed's 0.4 gate.
+ *  Cloud kev-4b (goldset-348, full precision and fp8 identical): 0.62 kept about the small model's
+ *  feed size (~28%, ~96 of 348 rows). On the phone (Kev-4B Q4_K_M on llama.rn 0.13.0-rc.7, iPhone 18
+ *  Pro, 2026-10-19) the same model scores much lower: over 97 real articles the median k was 0.20,
+ *  the max 0.63, and 0.62 let 1 row through. 0.29 is the top-28% point of that sample, so it keeps
+ *  the cloud feed size on the phone's own scale.
+ *  ponytail: fitted on one unlabelled evening of one feed; refit on goldset-348 run through the same
+ *  Q4 file before trusting the bands above the gate. */
+export const KEV_CUT = 0.29;
 
 const DESCRIPTION_CHARS = 500;
 const LEVELS_MAX = KEV_QUESTIONS.rel.criteria.length - 1;

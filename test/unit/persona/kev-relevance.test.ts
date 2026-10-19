@@ -15,7 +15,7 @@ const candidate = (over: Record<string, unknown> = {}) => ({
 });
 
 describe('kevToRelevance', () => {
-  it('pins the ends and the cut: 0 -> 0, 0.62 -> 0.4, 1 -> 1', () => {
+  it('pins the ends and the cut: 0 -> 0, KEV_CUT -> 0.4, 1 -> 1', () => {
     expect(kevToRelevance(0)).toBe(0);
     expect(kevToRelevance(KEV_CUT)).toBeCloseTo(0.4, 10);
     expect(kevToRelevance(1)).toBeCloseTo(1, 10);
@@ -32,10 +32,13 @@ describe('kevToRelevance', () => {
     expect(kevToRelevance(1.5)).toBe(1);
   });
 
-  it('puts the four levels on the right side of the 0.4 gate: levels 0 and 1 below, 2 and 3 above', () => {
+  it('uses the on-device cut: the phone sample top-28% point (k 0.29) is the 0.4 gate', () => {
+    // On the phone a pure "Low" answer (k 1/3) is already above the gate: the on-device scores
+    // are compressed, so the cut sits below level 1. Level 0 stays below, level 3 at the top.
+    expect(KEV_CUT).toBeCloseTo(0.29, 10);
     const levels = [0, 1, 2, 3].map((l) => kevToRelevance(l / (KEV_QUESTIONS.rel.criteria.length - 1)));
-    expect(levels[1]).toBeLessThan(0.4);
-    expect(levels[2]).toBeGreaterThan(0.4);
+    expect(levels[0]).toBeLessThan(0.4);
+    expect(levels[3]).toBe(1);
   });
 });
 
