@@ -8,11 +8,6 @@ import database from '@/lib/database';
 import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { showDialog } from '@/lib/dialog';
-import { AppScheduler } from '@/lib/scheduler/AppScheduler';
-import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
-import * as scoringPipeline from '@/lib/services/scoring-pipeline';
-import { useForYouStore } from '@/lib/stores';
-import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { toastManager } from '@/lib/toast-manager';
 import { Q } from '@nozbe/watermelondb';
 import { router, useFocusEffect, type Href } from 'expo-router';
@@ -21,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExportHistory } from './use-export-history';
+import { clearFeedCacheAndResync } from './clear-feed-cache';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { setConfirmTopicDelete, shouldConfirmTopicDelete } from '@/components/custom/facts/topic-delete-confirm';
 import { Switch } from '@/components/ui/switch';
@@ -98,16 +94,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     // Re-anchor the DEV cold-start timeline: this clear is the new t0.
                     coldstartTimeline.arm('cache-clear:factsTopics');
                     await deleteTables(FACTS_AND_TOPICS_TABLES);
-                    await useForYouStore.getState().clearData();
-                    // The persisted feed order points at now-gone suggestions.
-                    useFeedOrderStore.getState().reset();
-                    // The orphaned scoring run must be force-cleared before the
-                    // re-sync (the clear-feed deadlock), AFTER clearData so its
-                    // finished stamp is not nulled.
-                    await scoringPipeline.abortRun('cache-clear');
-                    if (!useSchedulerStore.getState().isRunning('feed-sync')) {
-                        void AppScheduler.trigger('feed-sync');
-                    }
+                    await clearFeedCacheAndResync();
                 } else {
                     await clearAllVisits();
                 }
