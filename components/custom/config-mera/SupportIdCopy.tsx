@@ -1,20 +1,26 @@
+import { requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
+import { maskEmail } from '@/lib/algorithms/mask-email';
 import { authClient } from '@/lib/auth-client';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { hapticLight } from '@/lib/haptics';
-import { resolveSupportId } from '@/lib/support-id';
+import { useUserStore } from '@/lib/stores/user-store';
+import { resolveAccountEmailView } from '@/lib/subscription/email-capture';
+import { accountHandle, resolveSupportId, type AccountHandle } from '@/lib/support-id';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-/** The account's Support ID: the session's, else the copy saved on this phone,
- *  so it still shows offline or with a dead session. Null hides the UI. */
-export function useSupportId(): string | null {
+/** Who this account is, for support: the Support ID (the session's, else the
+ *  copy saved on this phone, so it shows offline), else an old email account's
+ *  real email. Null hides the UI. */
+export function useAccountHandle(): AccountHandle | null {
     const { data: session } = authClient.useSession();
+    const storedEmail = useUserStore((s) => s.userEmail);
     const [cached, setCached] = useState<string | null>(null);
     useEffect(() => {
         let live = true;
@@ -23,21 +29,24 @@ export function useSupportId(): string | null {
             .catch(() => undefined);
         return () => { live = false; };
     }, []);
-    return resolveSupportId(session?.user ?? null, cached);
+    const sessionUser = session?.user ?? null;
+    const { displayEmail } = resolveAccountEmailView({ storedEmail, sessionUser });
+    return accountHandle(resolveSupportId(sessionUser, cached), displayEmail ?? null);
 }
 
 interface Props {
-    /** The text's testID; the copy button is `${testID}-copy`. */
+    /** The text's testID; the button beside it is `${testID}-copy` or `${testID}-move`. */
     testID: string;
     /** The Settings footer's small grey line instead of the card's body text. */
     footer?: boolean;
 }
 
-/** "Support ID: 1234567" with a copy button. Renders nothing without an id. */
+/** "Support ID: 1234567" with a copy button, or, for an email account that has
+ *  no Support ID yet, its masked email with a "!" that opens the move dialog. */
 const SupportIdCopy: React.FC<Props> = ({ testID, footer = false }) => {
     const { t } = useTranslation();
     const colors = useColors();
-    const supportId = useSupportId();
+    const handle = useAccountHandle();
 
     const [copied, setCopied] = useState(false);
     const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,10 +56,9 @@ const SupportIdCopy: React.FC<Props> = ({ testID, footer = false }) => {
         },
         [],
     );
-    const handleCopy = async () => {
-        if (!supportId) return;
+    const handleCopy = async (value: string) => {
         try {
-            await Clipboard.setStringAsync(supportId);
+            await Clipboard.setStringAsync(value);
         } catch {
             return;
         }
@@ -60,39 +68,54 @@ const SupportIdCopy: React.FC<Props> = ({ testID, footer = false }) => {
         copyTimer.current = setTimeout(() => setCopied(false), 1800);
     };
 
-    if (!supportId) return null;
+    if (!handle) return null;
 
-    const label = t('support.supportId', { id: supportId });
+    const isEmail = handle.kind === 'email';
+    const label = isEmail ? maskEmail(handle.value) : t('support.supportId', { id: handle.value });
     return (
         <HStack accessible={false} space="sm" className={footer ? 'items-center justify-center' : 'items-center'}>
             {footer ? (
-                <Text testID={testID} selectable style={{ color: colors.ink3, fontSize: 12 }}>
+                <Text testID={testID} selectable={!isEmail} style={{ color: colors.ink3, fontSize: 12 }}>
                     {label}
                 </Text>
             ) : (
-                <Text testID={testID} selectable size="sm" className="text-ink">
+                <Text testID={testID} selectable={!isEmail} size="sm" className="text-ink">
                     {label}
                 </Text>
             )}
-            <Pressable
-                testID={`${testID}-copy`}
-                onPress={() => {
-                    void handleCopy();
-                }}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={copied ? t('support.copied') : t('support.copySupportId')}
-                className="items-center justify-center"
-                style={{ minHeight: 44, minWidth: 44 }}
-            >
-                {copied ? (
-                    <Text size="sm" className="text-primary-400">
-                        {t('support.copied')}
-                    </Text>
-                ) : (
-                    <MaterialIcons name="content-copy" size={footer ? 14 : 16} color={footer ? colors.ink3 : colors.ink2} />
-                )}
-            </Pressable>
+            {isEmail ? (
+                <Pressable
+                    testID={`${testID}-move`}
+                    onPress={() => requestMoveToPhone()}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={t('moveToPhone.settingsRow')}
+                    className="items-center justify-center"
+                    style={{ minHeight: 44, minWidth: 44 }}
+                >
+                    <MaterialIcons name="error-outline" size={footer ? 16 : 18} color={colors.accentMark} />
+                </Pressable>
+            ) : (
+                <Pressable
+                    testID={`${testID}-copy`}
+                    onPress={() => {
+                        void handleCopy(handle.value);
+                    }}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={copied ? t('support.copied') : t('support.copySupportId')}
+                    className="items-center justify-center"
+                    style={{ minHeight: 44, minWidth: 44 }}
+                >
+                    {copied ? (
+                        <Text size="sm" className="text-primary-400">
+                            {t('support.copied')}
+                        </Text>
+                    ) : (
+                        <MaterialIcons name="content-copy" size={footer ? 14 : 16} color={footer ? colors.ink3 : colors.ink2} />
+                    )}
+                </Pressable>
+            )}
         </HStack>
     );
 };
