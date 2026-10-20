@@ -226,23 +226,36 @@ export class KevBusyError extends Error {
   }
 }
 
-/** llama_decode's -3: ggml-metal failed a command buffer (iOS refuses GPU work
- *  from the background). ggml-metal keeps that error: every later decode on the
- *  context fails the same way until the context is recreated. */
+/** llama_decode's -3. iOS refuses GPU work from the background, and ggml-metal
+ *  notices only when it next waits on the GPU: the call that was running returns
+ *  normally with output the GPU never wrote, and the context is marked failed, so
+ *  every LATER decode returns -3 until the context is recreated. */
 const GPU_FAILED = /\(error -3\)/;
 
 /** `=== 'background'`, never `!== 'active'`: iOS reports `inactive` for the app
  *  switcher and Control Center, where the GPU still runs (app-restart.ts). */
 const inBackground = () => AppState.currentState === 'background';
 
+/** Bumped on every move to the background. A decide that saw it change ran while
+ *  iOS may have refused its GPU work, so its answer cannot be trusted. The event
+ *  is delivered before iOS suspends JS, so it is counted even when the answer
+ *  arrives only after the return to the foreground. */
+let backgroundMoves = 0;
+AppState.addEventListener('change', (state) => {
+  if (state === 'background') backgroundMoves += 1;
+});
+
 /**
  * One Kev decision (`context.decide()`, the TypeSafe `/v1/systemone` shape) on
  * the RELEVANCE model. The lock is taken per request, so a chat turn can step in
  * between two articles; Kev stays resident, so it costs no reload.
  *
- * In the background it refuses (KevBusyError) without touching the GPU. A GPU
- * failure releases the context, because it would fail every later call; in the
+ * In the background it refuses (KevBusyError) without touching the GPU. An
+ * answer from a call the app left the screen under is dropped and the context
+ * released (busy); a GPU failure (-3) releases the context too, and in the
  * foreground Kev is reloaded and the request asked once more.
+ * ponytail: a GPU failure in the FOREGROUND (memory pressure) also poisons the
+ * answer before the -3, and nothing here can see it.
  */
 export function decide<R extends DecisionRequest>(request: R): Promise<DecisionResult<R['questions']>> {
   return withLlamaLock(async () => {
@@ -254,11 +267,17 @@ export function decide<R extends DecisionRequest>(request: R): Promise<DecisionR
         const context = _getContext();
         if (!context) throw new Error('No model loaded.');
         const startTime = Date.now();
+        const movesBefore = backgroundMoves;
         try {
           const result = await context.decide(request);
+          if (backgroundMoves !== movesBefore) {
+            await _releaseModel();
+            throw new KevBusyError('The app left the screen while Kev ran');
+          }
           recordCompletion({ label: 'relevance', latencyMs: Date.now() - startTime });
           return result as DecisionResult<R['questions']>;
         } catch (error) {
+          if (error instanceof KevBusyError) throw error;
           if (!(error instanceof Error) || !GPU_FAILED.test(error.message)) throw error;
           await _releaseModel();
           if (attempt > 1) throw new KevBusyError('Kev failed on the GPU twice');

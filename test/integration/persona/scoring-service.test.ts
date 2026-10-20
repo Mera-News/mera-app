@@ -1033,15 +1033,19 @@ describe('processAllUnscored - on-device pass', () => {
     expect(rows.a.reason).toBe('Local note on story a.');
   });
 
-  it('the app leaving the screen mid-pass leaves the rest unscored, never on the math score, and the next pass ranks them', async () => {
+  // The app goes to the background during the second decide: iOS refuses the GPU work. That call
+  // either returns unwritten output (ggml-metal notices only on the next call) or fails with -3.
+  it.each([
+    ['returns', { scores: { rel: 3 } }],
+    ['fails', { error: KEV_GPU_FAILED }],
+  ] as const)('the app leaving the screen while Kev ranks (the call %s) leaves the rest unscored, never on the math score, and the next pass ranks them', async (_how, answer) => {
     installLocal();
     queue();
-    // The app goes to the background during the second decide: iOS fails the GPU work.
     let decides = 0;
     installDecide(() => {
       if (++decides !== 2) return { scores: { rel: 3 } };
       setAppState('background');
-      return { error: KEV_GPU_FAILED };
+      return answer;
     });
     await seed(['a', 'b', 'c']);
     const statuses = async () => Object.values(await stored()).map((r) => r.status);

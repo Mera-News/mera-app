@@ -199,6 +199,22 @@ describe('Kev on llama.rn, the text on the built-in model, through the barrel', 
             await expect(toolkit.decide(REQUEST)).resolves.toMatchObject({ answers: { rel: { score: 2 } } });
         });
 
+        it('an answer from a decide the app left the screen under is not trusted: busy, and the context released', async () => {
+            // ggml-metal notices the refused GPU work only on the NEXT call (-3); this one returns
+            // whatever the output buffers held.
+            installLlama(['never']);
+            installDecide(() => {
+                setAppState('background');
+                setAppState('active');
+                return { scores: { rel: 3 } };
+            });
+
+            await expect(toolkit.decide(REQUEST)).rejects.toMatchObject(BUSY);
+
+            expect(llamaReleases()).toBe(1);
+            expect(toolkit.getModelState()).toBeNull();
+        });
+
         it('any other Kev error reaches the caller as it is and keeps Kev resident', async () => {
             installLlama(['never']);
             installDecide({ error: 'failed to evaluate the decision prompt (error 1)' });
