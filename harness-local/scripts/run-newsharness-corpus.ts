@@ -20,6 +20,13 @@
 // per-user delivery cap is untouched. Staging credentials are still required,
 // and refused unless they are staging (lib/staging-guard).
 //
+// --engine afm|qwen-local|nano-proxy runs the ON-DEVICE NOTES pass only
+// (lib/news-harness/on-device/notes), as scoring-service.ts does on the phone:
+// plain text, temperature and budget from the reason config, read with
+// parseReasonResult. There is no Kev in the harness, so the relevance score is a
+// STAND-IN: the goldset's v1Relevance, gated at reasonRelevanceThreshold. --limit
+// caps the gated articles. Rows are `reason` rows for rater-export.
+//
 // Node-only: never imported by the app bundle.
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -67,7 +74,12 @@ import {
   type BatchCall,
   type RelevanceDecodeStats,
   type ScoringCandidate,
+  buildUserContext,
+  parseReasonResult,
+  resolveCountryName,
 } from '../../lib/news-harness';
+import { buildNotePrompt } from '../../lib/news-harness/on-device/notes/prompt';
+import { assertEngineReady, callLocal, isTransportError, parseEngine, type LocalEngine } from '../lib/engine';
 import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
 import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-archive-v1';
 
@@ -85,6 +97,8 @@ interface GoldsetArticle {
   /** Present on goldset-348, absent on the synthetic injected fixture. Carried
    *  through to the row so the golden join needs no second lookup. */
   verdict?: string | null;
+  /** The v1 relevance score: the on-device notes pass's stand-in for Kev. */
+  v1Relevance?: number | null;
   /** Publisher display name + language tag. Optional: older fixtures (and the
    *  synthetic injected fixture) predate these fields. Absent here means the
    *  built prompt carries no `Publication:` line at all — the same
@@ -226,8 +240,66 @@ function dryRunOutput(callType: CallType, count: number, seed: number): string {
   return `[${entries.join(',')}]`;
 }
 
+/** The on-device notes pass over the goldset's gated articles. */
+async function mainOnDevice(engine: LocalEngine, args: Args): Promise<number> {
+  await assertEngineReady(engine);
+  const config = DEFAULT_HARNESS_CONFIG.articlePipeline;
+  const goldset = JSON.parse(readFileSync(args.fixture, 'utf8')) as Goldset;
+  const factStatements = goldset.personaFacts.map((f) => f.statement);
+  const userContext = buildUserContext(factStatements);
+  const gated = goldset.articles.filter((a) => (a.v1Relevance ?? 0) >= config.reasonRelevanceThreshold).slice(0, args.limit);
+  const candidates = toCandidates(gated);
+  const relevanceById = new Map(gated.map((a) => [a.articleId, a.v1Relevance ?? 0]));
+  const verdictById = new Map(gated.map((a) => [a.articleId, a.verdict ?? null]));
+  const run = createRunWriter({ label: args.label === 'newsharness' ? `notes-${engine}` : args.label });
+  const rows = createJsonlWriter({ dir: run.dir });
+  const runId = run.dir.split('/').pop() ?? args.label;
+  console.log(`run      : ${runId}\nrun dir  : ${run.dir}\nengine   : ${engine} (on-device notes)\narticles : ${candidates.length} at or above ${config.reasonRelevanceThreshold} (v1Relevance stand-in for Kev)\nrepeat   : ${args.repeat}\n`);
+  let written = 0;
+  for (let rep = 0; rep < args.repeat; rep++) {
+    for (const [ri, c] of candidates.entries()) {
+      const relevance = relevanceById.get(c.id) ?? 0;
+      const { system, prompt } = buildNotePrompt({
+        userContext,
+        articleTitle: c.titleEn ?? '',
+        articleDescription: c.descriptionEn ?? '',
+        articleCountry: resolveCountryName(c.countryCode),
+        relevance,
+        relatedFacts: c.relatedFacts.map((f) => f.statement),
+      });
+      const r = await callLocal(engine, { system, prompt, maxTokens: config.reasonMaxTokens, temperature: config.reasonTemperature });
+      if (r.error && isTransportError(r.error)) throw new Error(`harness-local: ${engine} transport failure on ${c.id}: ${r.error}`);
+      const reason = r.error ? null : parseReasonResult(r.content, c.id, prompt).reason;
+      rows.write({
+        rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
+        cohort: 'goldset', turnIndex: ri, arm: `${engine}@ondevice`, callType: 'reason',
+        interleaveGroup: `reason:${ri}`, lane: engine, surface: 'SCORING', variant: 'ondevice-notes',
+        promptHash: promptHash(system, prompt), promptDeterministic: false,
+        fenceNonce: extractFenceNonce(prompt), modelRequested: engine, modelSent: engine,
+        fallbackFrom: null, hedged: false,
+        input: { systemPrompt: system, messages: [{ role: 'user', content: prompt }], toolSchemaNames: [] },
+        personaStateIn: { factCount: factStatements.length, topicCount: 0, factsInPrompt: factStatements.length, turnsInPrompt: 1 },
+        rawOutput: r.content, toolCalls: [],
+        parsedSchema: reason === null ? null : { reason, score: relevance },
+        items: [{ id: c.id, verdict: verdictById.get(c.id) ?? null }],
+        requestedCount: null, returnedCount: null, personaStateDelta: null,
+        finishReason: r.finishReason, truncated: r.truncated, reasoningLeak: hasReasoningLeak(r.content),
+        usage: r.usage, cost: null, latencyMs: r.latencyMs, ttVisibleMs: null, error: r.error,
+      });
+      written++;
+      console.log(`r${rep} ${String(ri).padStart(3)} ${relevance.toFixed(2)} ${r.error ?? reason}`);
+    }
+  }
+  await rows.close();
+  run.finish({ args, engine, rows: rows.path, notes: written });
+  console.log(`\nblind export: npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/rater-export.ts ${run.dir} --merge <other engine run> --call-type reason --repeat 0`);
+  return 0;
+}
+
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);
+  const engine = parseEngine(argv);
+  if (engine !== 'cloud') return mainOnDevice(engine, parseArgs(argv));
   // Both overrides run BEFORE the env file is read, so a flag beats the file
   // without any runner editing a file the user also edits.
   applyTargetOverride(argv);
