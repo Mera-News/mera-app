@@ -599,6 +599,16 @@ describe('follow-story on Kev', () => {
     expect(out.reply).toBe('kevChat.reply.pickOnCard');
   });
 
+  it('on the story options (tap only), a longer no is a new story: decline is not offered, a plain no still cancels', async () => {
+    stageChange(true);
+    kevScript = { intent: { follow_a_named_story: 0.9, question_or_other: 0.1 } };
+    writerReply = { reply: 'Pick one below.', options: [{ label: 'The Other Story', search: 'other story' }] };
+    expect((await turn(follow(), [], 'no, I meant the <other event>')).names).toEqual(['proposeTrack']);
+    expect(offeredIntents()).not.toContain('decline_card');
+    stageChange(true);
+    expect((await turn(follow(), [], 'no thanks')).names).toEqual(['cancelProposal']);
+  });
+
   it('a writer failure asks which story, never an error', async () => {
     kevScript = { intent: { follow_a_named_story: 0.9, question_or_other: 0.1 } };
     writerReply = new Error('refused');

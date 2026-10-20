@@ -72,7 +72,11 @@ interface DecideInput extends FollowKevInput {
 function intentKeys(input: FollowKevInput): FollowKevIntent[] {
   return FOLLOW_KEV_INTENTS.filter((k) => {
     if (k === 'agree_to_card') return input.pending != null && !input.pending.tapOnly;
-    if (k === 'decline_card') return input.pending != null;
+    // A choose-one card of story options takes no typed yes, and a plain "no" is
+    // read by the consent rule before Kev. Anything longer that says no to it
+    // ("no, I meant the <other story>") names another story: offering decline
+    // here made Kev cancel instead of following it.
+    if (k === 'decline_card') return input.pending != null && !input.pending.tapOnly;
     return true;
   });
 }
