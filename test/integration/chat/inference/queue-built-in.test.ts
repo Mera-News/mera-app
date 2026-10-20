@@ -6,6 +6,7 @@
 //     queue with them instead of failing its fact ("please delete and retry").
 // Real queue, real topic_gen handler and toolkit; the native module and the file system are faked.
 import { addFact, getTopicsStatus } from '@/lib/database/services/fact-service';
+import { getTrackedStoryById, trackStory } from '@/lib/database/services/tracked-story-service';
 import { startTopicGeneration } from '@/lib/chat-tools/tool-handlers';
 import { inferenceQueue, __setJobHandlerForTests } from '@/lib/inference/InferenceQueue';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
@@ -110,6 +111,23 @@ describe('busy and unavailable defer, never fail', () => {
     await untilJob(job.id, ['done']);
     expect(await getTopicsStatus(fact.id)).toBe('error');
   });
+
+  it('busy on a tracked-story migrate: the job waits with no attempt spent, the story stays legacy, then migrates', async () => {
+    const story = await driveDone(trackStory({ articleId: 'a1', title: 'Floods hit Assam', originSurface: 'feed' }));
+    installOnDeviceLlm({ reply: { error: 'ERR_AFM_BUSY' } });
+    const id = await enqueueJob('tracked_story_migrate', { trackedStoryId: story.id, titles: ['Floods hit Assam'] });
+
+    await inferenceQueue.start();
+    await untilMessage(id);
+    expect(await jobRow(id)).toMatchObject({ status: 'pending', attempts: 0 });
+    expect((await getTrackedStoryById(story.id))?.topicId ?? null).toBeNull();
+
+    installOnDeviceLlm({ reply: '{"label":"Assam floods","search":"assam floods"}' });
+    setAppState('background');
+    setAppState('active');
+    expect((await untilJob(id, ['done']))?.status).toBe('done');
+    expect((await getTrackedStoryById(story.id))?.llmHeadline).toBe('Assam floods');
+  }, 30_000);
 
   it('busy defers a job type the queue does not otherwise defer', async () => {
     const { OnDeviceLlmError } = jest.requireActual('@/modules/mera-on-device-llm') as typeof import('@/modules/mera-on-device-llm');

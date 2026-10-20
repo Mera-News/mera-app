@@ -16,6 +16,7 @@ import {
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocal } from '../../llm/completeLocal';
+import { isOnDeviceDeferrable } from '../job-defer';
 import { buildStoryScopePrompt, parseStoryScopeOutput } from '../../news-harness/story-scope';
 import logger from '../../logger';
 
@@ -83,6 +84,8 @@ export async function handleTrackedStoryMigrateJob(
       });
     }
   } catch (err) {
+    // The built-in model said "not now" (busy, unavailable): the queue defers the job.
+    if (isOnDeviceDeferrable(err)) throw err;
     // Transport failure — leave the story unmigrated (no write).
     logger.warn('[tracked-story-migrate] completion failed', { error: String(err) });
     return { ok: false };
