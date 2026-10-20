@@ -237,6 +237,32 @@ describe('localModeFor: the local copy of a server persona mode', () => {
         await expect(localModeFor(ProcessingMode.Cloud)).resolves.toBe(ProcessingMode.Cloud);
     });
 
+    it('a persona read that moves an OnDevice phone to Cloud shows the notice; one on Cloud already shows none', async () => {
+        await putModelOnDisk(KEV);
+        installOnDeviceLlm({ availability: { available: false, reason: 'appleIntelligenceNotEnabled' } });
+        useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
+        await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.Cloud);
+        expect(await notices()).toEqual([]);
+
+        useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
+        await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.Cloud);
+        expect(await notices()).toHaveLength(1);
+    });
+
+    it('the stored OnDevice mode survives hydrate, so the boot retirement is the one that moves it, with the notice', async () => {
+        installOnDeviceLlm({ platformModel: null, availability: { available: false, reason: 'unsupportedPlatform' } });
+        await putModelOnDisk(KEV);
+        await setSetting('mera_processing_mode', ProcessingMode.OnDevice);
+        useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
+        await store().hydrateFromDb();
+        expect(store().processingMode).toBe(ProcessingMode.OnDevice);
+
+        await retireLegacyModels();
+
+        expect(store().processingMode).toBe(ProcessingMode.Cloud);
+        expect(await notices()).toHaveLength(1);
+    });
+
     it('the built-in model unavailable, or Kev missing, is Cloud', async () => {
         await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.Cloud);
         await putModelOnDisk(KEV);

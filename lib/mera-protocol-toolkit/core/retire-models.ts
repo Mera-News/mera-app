@@ -50,7 +50,6 @@ export async function retireLegacyModels(): Promise<void> {
   store.setProcessingMode(ProcessingMode.Cloud);
   store.setModelState('not_downloaded');
   store.setDownloadProgress(0);
-  await showFallbackNotice();
 }
 
 /** Lazy: the toast manager reaches components, and this module is in the toolkit barrel. */
@@ -75,10 +74,14 @@ async function showFallbackNotice(): Promise<void> {
  * The mode this phone may run for a given server persona mode: OnDevice only
  * when On this phone can run now, else Cloud. Every copy of the server mode into
  * the local store goes through this, so the local Private cloud fallback is never
- * undone by a persona read while the server keeps the on-device intent.
+ * undone by a persona read while the server keeps the on-device intent. When the
+ * answer moves a phone that is on OnDevice now to Cloud, the reader is told
+ * (D37): the notice fires here, where every such move passes.
  */
 export async function localModeFor(mode: ProcessingMode): Promise<ProcessingMode> {
   if (mode !== ProcessingMode.OnDevice) return mode;
   const runnable = await isModelDownloaded().catch(() => false);
-  return runnable ? mode : ProcessingMode.Cloud;
+  if (runnable) return mode;
+  if (useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice) await showFallbackNotice();
+  return ProcessingMode.Cloud;
 }
