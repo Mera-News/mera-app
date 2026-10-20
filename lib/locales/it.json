@@ -2891,10 +2891,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Scrivi al supporto",
     "enterCode": "Inserisci il codice",
     "getHelp": "Chiedi aiuto",
-    "noEmailBody": "Riprova più tardi. Se continua, scrivici un'email includendo il tuo ID di supporto.",
+    "noEmailBody": "Qualcosa è andato storto durante l'accesso su questo telefono. Contatta l'assistenza oppure reimposta questo telefono e accedi di nuovo.",
     "noEmailTitle": "C'è un problema con il tuo account",
     "offlineBody": "Mera ha bisogno di una connessione per verificare il tuo account prima di aprirsi.",
     "offlineTitle": "Sei offline",
@@ -2905,7 +2904,12 @@
     "unreachableTitle": "Impossibile raggiungere Mera",
     "mismatchTitle": "Questa email appartiene a un altro account",
     "mismatchBody": "Accedi con l'email di questo account, oppure chiedi aiuto.",
-    "mismatchOtherEmail": "Usa un'altra email"
+    "mismatchOtherEmail": "Usa un'altra email",
+    "contactSupport": "Contatta l'assistenza",
+    "resetPhone": "Reimposta questo telefono e accedi di nuovo",
+    "resetTitle": "Reimpostare questo telefono?",
+    "resetBody": "Verrai disconnesso e i dati di Mera su questo telefono verranno cancellati, compreso quello che hai detto a Mera. Il tuo account non viene eliminato e i modelli di IA scaricati restano. Se usi il backup, il tuo codice di recupero riporta i tuoi dati.",
+    "resetConfirm": "Reimposta"
   },
   "relatedSort": {
     "relevance": "Miglior corrispondenza",

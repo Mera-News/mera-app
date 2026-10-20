@@ -2893,10 +2893,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Email support",
     "enterCode": "Enter the code",
     "getHelp": "Get help",
-    "noEmailBody": "Please try again later. If it keeps happening, email us and include your Support ID.",
+    "noEmailBody": "Something went wrong signing in on this phone. Contact support, or reset this phone and sign in again.",
     "noEmailTitle": "There's a problem with your account",
     "offlineBody": "Mera needs a connection to check your account before it opens.",
     "offlineTitle": "You're offline",
@@ -2907,7 +2906,12 @@
     "unreachableTitle": "Mera can't be reached",
     "mismatchTitle": "This email belongs to a different account",
     "mismatchBody": "Sign in with the email on this account, or get help.",
-    "mismatchOtherEmail": "Use another email"
+    "mismatchOtherEmail": "Use another email",
+    "contactSupport": "Contact support",
+    "resetPhone": "Reset this phone and sign in again",
+    "resetTitle": "Reset this phone?",
+    "resetBody": "This signs you out and clears Mera's data on this phone, including what you've told Mera. Your account isn't deleted, and downloaded AI models stay. If you use backup, your recovery code brings your data back.",
+    "resetConfirm": "Reset"
   },
   "relatedSort": {
     "relevance": "Best match",

@@ -2884,10 +2884,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Email dukungan",
     "enterCode": "Masukkan kode",
     "getHelp": "Minta bantuan",
-    "noEmailBody": "Silakan coba lagi nanti. Jika terus terjadi, kirim email kepada kami dan sertakan ID Dukungan Anda.",
+    "noEmailBody": "Terjadi masalah saat masuk di ponsel ini. Hubungi dukungan, atau reset ponsel ini lalu masuk lagi.",
     "noEmailTitle": "Ada masalah dengan akun Anda",
     "offlineBody": "Mera perlu koneksi untuk memeriksa akun Anda sebelum dibuka.",
     "offlineTitle": "Anda sedang offline",
@@ -2898,7 +2897,12 @@
     "unreachableTitle": "Mera tidak dapat dihubungi",
     "mismatchTitle": "Email ini milik akun lain",
     "mismatchBody": "Masuk dengan email di akun ini, atau minta bantuan.",
-    "mismatchOtherEmail": "Gunakan email lain"
+    "mismatchOtherEmail": "Gunakan email lain",
+    "contactSupport": "Hubungi dukungan",
+    "resetPhone": "Reset ponsel ini dan masuk lagi",
+    "resetTitle": "Reset ponsel ini?",
+    "resetBody": "Anda akan keluar dan data Mera di ponsel ini akan dihapus, termasuk yang sudah Anda ceritakan kepada Mera. Akun Anda tidak dihapus, dan model AI yang sudah diunduh tetap ada. Jika Anda menggunakan cadangan, kode pemulihan Anda dapat mengembalikan data Anda.",
+    "resetConfirm": "Reset"
   },
   "relatedSort": {
     "relevance": "Kecocokan terbaik",

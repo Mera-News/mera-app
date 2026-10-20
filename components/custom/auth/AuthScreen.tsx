@@ -37,7 +37,7 @@ import { ReauthEmailStage } from './stages/ReauthEmailStage';
 import { ReauthMismatchStage } from './stages/ReauthMismatchStage';
 import { ReauthNoEmailStage } from './stages/ReauthNoEmailStage';
 import { LOGO_TOP, styles } from './stages/styles';
-import { signInWithPhone, unsupportedExit, useAuthScreen, type AuthScreenProps, type Stage } from './useAuthScreen';
+import { unsupportedExit, useAuthScreen, type AuthScreenProps, type Stage } from './useAuthScreen';
 
 /** The one logo: where and how big it sits on each stage (FinalJourney "One logo"). */
 const LOGO_FULL = 150;
@@ -58,8 +58,8 @@ const LOGO: Partial<Record<Stage, 'center' | 'top' | 'slot'>> = {
  * with the language list, checks, how to begin, before you start, email and
  * code). A device whose account needs signing in again lands on the gate:
  * reauth-email (a code to the account's own masked address) or reauth-no-email
- * (the phone check again). Neither ever switches accounts on its own: moving to
- * the phone's account always asks first.
+ * (contact support, or reset this phone back to the track). Neither ever
+ * switches accounts on its own: moving to the phone's account always asks first.
  */
 const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSignIn = true }) => {
     const { t } = useTranslation();
@@ -93,6 +93,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         handleVerificationSuccess,
         handleSwitchContinue,
         handleSwitchKeep,
+        leaveGate,
     } = useAuthScreen({ onLoginSuccess, allowDeviceSignIn });
 
     // ── The hoisted logo ──────────────────────────────────────────────────
@@ -305,16 +306,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
             break;
         case 'reauth-no-email':
             body = (
-                <ReauthNoEmailStage
-                    supportId={supportId}
-                    onTryAgain={async () => {
-                        const outcome = await signInWithPhone(cachedUserId);
-                        if (outcome.kind === 'signed-in') finishDeviceSignIn(outcome.result);
-                        else if (outcome.kind === 'different') askSwitch(outcome.result);
-                        else return false;
-                        return true;
-                    }}
-                />
+                <ReauthNoEmailStage supportId={supportId} onReset={leaveGate} />
             );
             break;
         default:

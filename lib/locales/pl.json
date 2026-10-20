@@ -2981,10 +2981,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Napisz do wsparcia",
     "enterCode": "Wpisz kod",
     "getHelp": "Uzyskaj pomoc",
-    "noEmailBody": "Spróbuj ponownie później. Jeśli to się powtarza, napisz do nas e-mailem i podaj swój identyfikator pomocy.",
+    "noEmailBody": "Coś poszło nie tak podczas logowania na tym telefonie. Skontaktuj się z pomocą albo zresetuj ten telefon i zaloguj się ponownie.",
     "noEmailTitle": "Jest problem z Twoim kontem",
     "offlineBody": "Mera potrzebuje połączenia, żeby sprawdzić Twoje konto, zanim się otworzy.",
     "offlineTitle": "Jesteś offline",
@@ -2995,7 +2994,12 @@
     "unreachableTitle": "Nie można połączyć się z Mera",
     "mismatchTitle": "Ten e-mail należy do innego konta",
     "mismatchBody": "Zaloguj się e-mailem przypisanym do tego konta albo poproś o pomoc.",
-    "mismatchOtherEmail": "Użyj innego e-maila"
+    "mismatchOtherEmail": "Użyj innego e-maila",
+    "contactSupport": "Skontaktuj się z pomocą",
+    "resetPhone": "Zresetuj ten telefon i zaloguj się ponownie",
+    "resetTitle": "Zresetować ten telefon?",
+    "resetBody": "Nastąpi wylogowanie, a dane Mera na tym telefonie zostaną usunięte, w tym to, co przekazano Mera. Twoje konto nie zostanie usunięte, a pobrane modele AI zostaną. Jeśli korzystasz z kopii zapasowej, odzyskasz dane za pomocą kodu odzyskiwania.",
+    "resetConfirm": "Resetuj"
   },
   "relatedSort": {
     "relevance": "Najlepsze dopasowanie",

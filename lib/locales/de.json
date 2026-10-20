@@ -2891,10 +2891,9 @@
     }
   },
   "gate": {
-    "emailSupport": "E-Mail an den Support",
     "enterCode": "Code eingeben",
     "getHelp": "Hilfe holen",
-    "noEmailBody": "Bitte versuche es später noch einmal. Tritt der Fehler weiter auf, schreib uns eine E-Mail mit deiner Support-ID.",
+    "noEmailBody": "Beim Anmelden auf diesem Telefon ist etwas schiefgelaufen. Wende dich an den Support oder setz dieses Telefon zurück und melde dich neu an.",
     "noEmailTitle": "Mit deinem Konto gibt es ein Problem",
     "offlineBody": "Mera braucht eine Verbindung, um dein Konto zu prüfen, bevor es sich öffnet.",
     "offlineTitle": "Du bist offline",
@@ -2905,7 +2904,12 @@
     "unreachableTitle": "Mera ist nicht erreichbar",
     "mismatchTitle": "Diese E-Mail gehört zu einem anderen Konto",
     "mismatchBody": "Melde dich mit der E-Mail-Adresse an, die zu diesem Konto gehört, oder hol dir Hilfe.",
-    "mismatchOtherEmail": "Andere E-Mail-Adresse verwenden"
+    "mismatchOtherEmail": "Andere E-Mail-Adresse verwenden",
+    "contactSupport": "Support kontaktieren",
+    "resetPhone": "Telefon zurücksetzen und neu anmelden",
+    "resetTitle": "Dieses Telefon zurücksetzen?",
+    "resetBody": "Du wirst abgemeldet und die Daten von Mera auf diesem Telefon werden gelöscht, auch alles, was du Mera erzählt hast. Dein Konto wird nicht gelöscht und heruntergeladene KI-Modelle bleiben erhalten. Wenn du Backups nutzt, holst du deine Daten mit deinem Wiederherstellungscode zurück.",
+    "resetConfirm": "Zurücksetzen"
   },
   "relatedSort": {
     "relevance": "Beste Übereinstimmung",

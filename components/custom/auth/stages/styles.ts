@@ -48,15 +48,6 @@ const styles = StyleSheet.create({
     pillAction: { fontSize: 14, fontWeight: '600' },
     copy: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
     actions: { alignSelf: 'stretch', gap: 12 },
-    iconRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 4 },
-    iconAction: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        borderWidth: StyleSheet.hairlineWidth,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
     gateIcon: {
         width: 64,
         height: 64,

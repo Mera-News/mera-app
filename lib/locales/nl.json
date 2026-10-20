@@ -2891,10 +2891,9 @@
     }
   },
   "gate": {
-    "emailSupport": "E-mail naar support",
     "enterCode": "Voer de code in",
     "getHelp": "Hulp krijgen",
-    "noEmailBody": "Probeer het later opnieuw. Blijft het gebeuren, mail ons dan en voeg je Support-ID toe.",
+    "noEmailBody": "Er ging iets mis bij het inloggen op deze telefoon. Neem contact op met support, of reset deze telefoon en log opnieuw in.",
     "noEmailTitle": "Er is een probleem met je account",
     "offlineBody": "Mera heeft een verbinding nodig om je account te controleren voordat het opent.",
     "offlineTitle": "Je bent offline",
@@ -2905,7 +2904,12 @@
     "unreachableTitle": "Mera is niet bereikbaar",
     "mismatchTitle": "Dit e-mailadres hoort bij een ander account",
     "mismatchBody": "Log in met het e-mailadres van dit account, of krijg hulp.",
-    "mismatchOtherEmail": "Gebruik een ander e-mailadres"
+    "mismatchOtherEmail": "Gebruik een ander e-mailadres",
+    "contactSupport": "Contact opnemen met support",
+    "resetPhone": "Deze telefoon resetten en opnieuw inloggen",
+    "resetTitle": "Deze telefoon resetten?",
+    "resetBody": "Je wordt uitgelogd en de gegevens van Mera op deze telefoon worden gewist, ook wat je Mera hebt verteld. Je account wordt niet verwijderd en gedownloade AI-modellen blijven staan. Gebruik je back-ups, dan haal je je gegevens terug met je herstelcode.",
+    "resetConfirm": "Resetten"
   },
   "relatedSort": {
     "relevance": "Beste match",

@@ -1,49 +1,23 @@
 import * as Clipboard from 'expo-clipboard';
-import React, { useEffect, useRef, useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
-import { SUPPORT_EMAIL } from '@/lib/config/branding';
-import { showFeedback } from '@/lib/feedback';
 import { hapticLight } from '@/lib/haptics';
-import { useSupportAction } from '@/lib/intercom';
-import { buildSupportMailtoUrl } from '@/lib/support-id';
 import { useColors } from '@/lib/theme/tokens';
 
-import { GateIcon, IconAction } from './parts';
+import { useAccountProblem } from '../useAccountProblem';
+import { GateIcon } from './parts';
 import { styles } from './styles';
 
 // ── The gate: an account without an email ───────────────────────────────────
 
-function ReauthNoEmailStage({
-    supportId,
-    onTryAgain,
-}: {
-    supportId: string | null;
-    /** True when it led somewhere (signed in, or the switch question). */
-    onTryAgain: () => Promise<boolean>;
-}) {
+function ReauthNoEmailStage({ supportId, onReset }: { supportId: string | null; onReset: () => void }) {
     const { t } = useTranslation();
     const colors = useColors();
-    const { openSupport } = useSupportAction();
-    const [working, setWorking] = useState(false);
-    const [failed, setFailed] = useState(false);
+    const { contactSupport, resetThisPhone, supportBusy, resetting } = useAccountProblem({ onReset });
     const [copied, setCopied] = useState(false);
-    const mounted = useRef(true);
-    useEffect(() => () => {
-        mounted.current = false;
-    }, []);
-
-    const tryAgain = async () => {
-        if (working) return;
-        setWorking(true);
-        setFailed(false);
-        const ok = await onTryAgain().catch(() => false);
-        if (!mounted.current) return;
-        setWorking(false);
-        if (!ok) setFailed(true);
-    };
 
     const copy = async () => {
         if (!supportId) return;
@@ -77,25 +51,22 @@ function ReauthNoEmailStage({
                     </Pressable>
                 </View>
             ) : null}
-            {failed ? (
-                <Text style={[styles.text, styles.centerText, { color: colors.negative }]}>{t('auth.deviceSignInFailed')}</Text>
-            ) : null}
             <View style={styles.flex} />
             <View style={styles.actions}>
-                <Button action="primary" onPress={() => void tryAgain()} isDisabled={working} testID="reauth-try-again">
-                    {working ? <ButtonSpinner /> : null}
-                    <ButtonText>{t('auth.tryAgain')}</ButtonText>
+                <Button action="primary" onPress={() => void contactSupport()} isDisabled={supportBusy || resetting} testID="reauth-contact-support">
+                    {supportBusy ? <ButtonSpinner /> : null}
+                    <ButtonText>{t('gate.contactSupport')}</ButtonText>
                 </Button>
-                <View style={styles.iconRow}>
-                    <IconAction icon="support-agent" label={t('account.contactSupport')} onPress={() => void openSupport()} testID="reauth-talk-to-support" />
-                    <IconAction icon="bug-report" label={t('preferences.reportBug')} onPress={() => showFeedback()} testID="reauth-report-bug" />
-                    <IconAction
-                        icon="mail-outline"
-                        label={t('gate.emailSupport')}
-                        onPress={() => void Linking.openURL(buildSupportMailtoUrl(SUPPORT_EMAIL, supportId)).catch(() => undefined)}
-                        testID="reauth-email-support"
-                    />
-                </View>
+                <Button
+                    variant="outline"
+                    action="secondary"
+                    onPress={() => void resetThisPhone()}
+                    isDisabled={supportBusy || resetting}
+                    testID="reauth-reset-phone"
+                >
+                    {resetting ? <ButtonSpinner /> : null}
+                    <ButtonText>{t('gate.resetPhone')}</ButtonText>
+                </Button>
             </View>
         </View>
     );
