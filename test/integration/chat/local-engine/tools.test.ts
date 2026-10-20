@@ -48,6 +48,8 @@ const schemaOf = (i: number) =>
 
 describe('a structured persona turn', () => {
   beforeEach(() => installLlama([saveFactReply()]));
+  let clock: jest.SpyInstance | undefined;
+  afterEach(() => clock?.mockRestore());
 
   it('status goes idle before the tool runs while turnBusy stays true; the record goes pending then done as a fresh object', async () => {
     const { engine } = await attachLocal(personaAgent());
@@ -74,6 +76,10 @@ describe('a structured persona turn', () => {
   });
 
   it('shows the reply whole and stages the fact on saveExtractedFacts: nothing written to the facts table', async () => {
+    // The scripted reply can land in the user row's millisecond, and rows on one created_at sort
+    // by id ('asst-' before 'user-'). A clock that always moves keeps the order real.
+    let now = Date.now();
+    clock = jest.spyOn(Date, 'now').mockImplementation(() => ++now);
     const { engine, conversationId } = await attachLocal(personaAgent());
     engine.send('I live somewhere new');
     await turnDone();
