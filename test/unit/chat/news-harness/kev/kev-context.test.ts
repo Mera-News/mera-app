@@ -42,9 +42,9 @@ describe('intentLine', () => {
     );
   });
 
-  it('adds the runner-up when it is within 0.2', () => {
-    expect(intentLine(choice({ remove_fact: 0.5, share_new_fact: 0.35, question_or_chat: 0.15 }), INTENT)).toBe(
-      'What the user wants: remove a saved fact (unsure, 0.50), or maybe: share a new fact about themselves (0.35)',
+  it('adds the runner-up when it is within the unsure margin', () => {
+    expect(intentLine(choice({ remove_fact: 0.5, share_new_fact: 0.38, question_or_chat: 0.12 }), INTENT)).toBe(
+      'What the user wants: remove a saved fact (unsure, 0.50), or maybe: share a new fact about themselves (0.38)',
     );
   });
 

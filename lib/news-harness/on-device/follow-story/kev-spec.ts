@@ -166,8 +166,10 @@ export async function runFollowKevTurn(
     // The two follows are one act: a close call between them reads to the writer as
     // "not named yet", and it asks again instead of writing options. Name the act plainly.
     line =
-      intent === 'follow_this_story' || intent === 'follow_a_named_story'
-        ? `What the user wants: ${INTENT_CRITERIA[intent]}`
+      intent === 'follow_a_named_story'
+        ? `What the user wants: follow the story in their latest message: "${chat.subject.slice(0, 200)}"`
+        : intent === 'follow_this_story'
+          ? `What the user wants: ${INTENT_CRITERIA[intent]}`
         : formatDecision(run.questions, run.answers, { labels: { intent: 'What the user wants' } });
   } else {
     line = `What the user wants: ${INTENT_CRITERIA[intent]}`;

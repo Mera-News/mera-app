@@ -260,7 +260,7 @@ describe('persona chat on Kev', () => {
     const a = await addFact('Follows <sport one>');
     await addFact('Follows <sport two>');
     // No fact reaches the card's 0.25 floor and "none" is not sure either: ask.
-    kevScript = { intent: { remove_fact: 0.9, question_or_chat: 0.1 }, target: { f1: 0.24, f2: 0.23, none: 0.53 } };
+    kevScript = { intent: { remove_fact: 0.9, question_or_chat: 0.1 }, target: { f1: 0.24, f2: 0.23, none: 0.38 } };
     const thread: ConversationMessage[] = [];
     const agent = persona();
     const asked = await turn(agent, thread, 'I do not do that anymore');

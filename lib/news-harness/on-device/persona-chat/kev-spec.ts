@@ -191,7 +191,7 @@ const REPLY_SCHEMA: JsonSchema = {
 
 const TASK: Record<PersonaIntent | 'not_found', string> = {
   share_new_fact:
-    'Write each new fact the user just shared as a short statement in English, keeping their names and places, with an attribute. The user taps to save, so never say saved.',
+    'Write each new fact the user just shared as a short statement in English, keeping their names and places, with an attribute. Leave out anything the saved facts already say. The user taps to save, so never say saved.',
   correct_fact:
     'Write the fact as it is now, one short statement in English that replaces the quoted fact. The user taps to save, so never say saved.',
   remove_fact: 'A card lists the fact for the user to tap Remove or Keep. Point to the card; never say it is removed.',

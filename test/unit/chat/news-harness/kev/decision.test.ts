@@ -83,19 +83,19 @@ describe('margin', () => {
 });
 
 describe('isUnsure (D39)', () => {
-  it('uses 0.6 and 0.2 by default', () => {
-    expect(UNSURE_MIN_CONFIDENCE).toBe(0.6);
-    expect(UNSURE_MIN_MARGIN).toBe(0.2);
+  it('uses 0.4 and 0.15 by default (D39 as tuned in P6d)', () => {
+    expect(UNSURE_MIN_CONFIDENCE).toBe(0.4);
+    expect(UNSURE_MIN_MARGIN).toBe(0.15);
   });
   it('is sure with a clear lead', () => {
     expect(isUnsure(choice({ a: 0.85, b: 0.1, c: 0.05 }))).toBe(false);
   });
   it('is unsure under the confidence floor', () => {
-    expect(isUnsure(choice({ a: 0.55, b: 0.25, c: 0.2 }))).toBe(true);
+    expect(isUnsure(choice({ a: 0.38, b: 0.32, c: 0.3 }))).toBe(true);
   });
   it('is unsure on a close call above the floor', () => {
-    expect(isUnsure(choice({ a: 0.61, b: 0.39 }))).toBe(false);
-    expect(isUnsure(choice({ a: 0.6, b: 0.41 }))).toBe(true);
+    expect(isUnsure(choice({ a: 0.58, b: 0.42 }))).toBe(false);
+    expect(isUnsure(choice({ a: 0.56, b: 0.44 }))).toBe(true);
   });
   it('sits exactly on the thresholds as sure', () => {
     expect(isUnsure({ probabilities: { a: 0.6, b: 0.4 } }, { minMargin: 0.2 })).toBe(false);

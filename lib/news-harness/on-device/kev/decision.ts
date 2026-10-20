@@ -61,10 +61,15 @@ export async function runDecision<I, D, Q extends DecisionQuestions>(
   return { decision: spec.read(answers, input), questions, answers };
 }
 
-/** D39: below this top probability Mera asks instead of acting. */
-export const UNSURE_MIN_CONFIDENCE = 0.6;
+/**
+ * D39: below this top probability Mera asks instead of acting. D39 set 0.6 and 0.2;
+ * P6d moved them on the dev split (ask rate and accuracy both improved). Kev answers
+ * at its GGUF temperature (2.4), so its probabilities are soft: over 5 to 7 options a
+ * clear reading often tops out near 0.5.
+ */
+export const UNSURE_MIN_CONFIDENCE = 0.4;
 /** D39: a top-2 gap below this is a close call, so Mera asks. */
-export const UNSURE_MIN_MARGIN = 0.2;
+export const UNSURE_MIN_MARGIN = 0.15;
 
 export interface Ranked<K extends string = string> {
   key: K;
