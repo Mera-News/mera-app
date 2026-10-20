@@ -58,6 +58,14 @@ describe('checkRequirements', () => {
   });
 
   describe('the built-in text model (Apple Intelligence, Gemini Nano)', () => {
+    it('fails on Android during the iOS-only beta, even with Gemini Nano available', async () => {
+      mockPlatformOS.OS = 'android';
+      mockDevice.platformApiLevel = 34;
+      const result = await checkRequirements();
+      expect(result.supported).toBe(false);
+      expect(result.failedCheck).toBe('built_in');
+    });
+
     it.each([
       ['no built-in model on this phone', 'unsupportedPlatform' as const],
       ['a phone that is not eligible', 'deviceNotEligible' as const],

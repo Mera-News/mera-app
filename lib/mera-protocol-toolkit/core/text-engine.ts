@@ -59,10 +59,22 @@ function appLanguage(): string {
 }
 
 /**
+ * Platforms where On this phone is offered during the beta (owner, 2026-10-20:
+ * iOS only for now). The Gemini Nano module still ships; adding 'android' here
+ * turns it on.
+ */
+export const ON_DEVICE_BETA_PLATFORMS: ReadonlySet<string> = new Set(['ios']);
+
+/**
  * Whether the platform's built-in model can run now, with the reason when it
  * cannot. Never cached: it can be switched on, or finish downloading, while the
- * app runs. Cheap enough to call on every focus.
+ * app runs. Cheap enough to call on every focus. A platform outside the beta
+ * reads as having no built-in model, so every gate (the requirements check, the
+ * screen, the Feed pill, the reading meter) says this phone cannot run it.
  */
 export function builtInAvailability(): Promise<OnDeviceLlmAvailability> {
+  if (!ON_DEVICE_BETA_PLATFORMS.has(Platform.OS)) {
+    return Promise.resolve({ available: false, reason: 'unsupportedPlatform' });
+  }
   return onDeviceLlmAvailability(appLanguage());
 }
