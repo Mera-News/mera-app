@@ -44,11 +44,11 @@ export const ARTICLE_KEV_INTENTS = [
 export type ArticleKevIntent = (typeof ARTICLE_KEV_INTENTS)[number];
 
 const INTENT_CRITERIA: Record<ArticleKevIntent, string> = {
-  answer_question: 'asks about the article or why Mera suggested it',
-  follow_story: 'wants to follow this story and get updates on it',
-  see_less: 'wants fewer articles like this one',
-  see_more: 'wants more articles like this one',
-  mute_source: 'wants nothing more from this publication',
+  answer_question: 'asks a question about the article: what happened, whether it is true, what is new, or why Mera showed it',
+  follow_story: 'asks to follow this story and get updates on it',
+  see_less: 'wants fewer articles on this subject, or on one of matched_topics',
+  see_more: 'wants more articles on this subject, or on one of matched_topics',
+  mute_source: 'wants nothing more from this publication or website',
   agree_to_card: 'agrees to the change on the waiting card',
   decline_card: 'declines the change on the waiting card',
 };
@@ -127,7 +127,7 @@ export const articleIntentSpec: DecisionSpec<
   questions: (input) => ({
     intent: {
       type: 'choice',
-      instructions: 'What does the user want Mera to do about this article?',
+      instructions: 'What does the user want Mera to do with user_message about this article?',
       criteria: Object.fromEntries(intentKeys(input).map((k) => [k, INTENT_CRITERIA[k]])) as Record<ArticleKevIntent, string>,
     },
   }),

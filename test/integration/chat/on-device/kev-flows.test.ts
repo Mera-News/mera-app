@@ -150,7 +150,7 @@ describe('persona chat on Kev', () => {
     expect((await getFacts()).map((f) => f.statement)).toEqual(['Lives in <town>']);
     // The writer reads Kev's decision as plain words, never JSON, after the identity line.
     expect(writes[0].system.startsWith('You are Mera, made by Mera.')).toBe(true);
-    expect(writes[0].prompt).toContain('What the user wants: shares something new about themselves');
+    expect(writes[0].prompt).toContain('What the user wants: tells Mera something about their own life');
     expect(writes[0].prompt).not.toMatch(/[{}]/);
     expect(Object.keys(writes[0].schema.properties).sort()).toEqual(['facts', 'reply']);
     expect(out.trace).toMatchObject({ intent: 'share_new_fact', source: 'kev', asked: false, wrote: true });
@@ -496,7 +496,7 @@ describe('article chat on Kev', () => {
     const agent = await article();
     stageChange();
     kevScript = { intent: { decline_card: 0.9, answer_question: 0.1 } };
-    const { names } = await turn(agent, [], 'no, leave it as it is');
+    const { names } = await turn(agent, [], "no, I'd rather keep my feed the way it is");
     expect(offeredIntents()).toEqual(expect.arrayContaining(['agree_to_card', 'decline_card']));
     expect(names).toEqual(['cancelProposal']);
     expect(proposal()).toBeNull();
@@ -542,6 +542,9 @@ describe('follow-story on Kev', () => {
     const { names, out } = await turn(follow(), [], 'that one');
     expect(names).toEqual([]);
     expect(out.trace.asked).toBe(false);
+    // The writer reads one plain act, never the close call (it would ask "which story?" again).
+    expect(writes[0].prompt).toContain('What the user wants: wants to follow the story already named earlier in this chat');
+    expect(writes[0].prompt).not.toContain('or maybe');
   });
 
   it('unsure between following and a question: chips, nothing written', async () => {

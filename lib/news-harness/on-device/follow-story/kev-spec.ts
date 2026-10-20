@@ -39,11 +39,11 @@ export const FOLLOW_KEV_INTENTS = [
 export type FollowKevIntent = (typeof FOLLOW_KEV_INTENTS)[number];
 
 const INTENT_CRITERIA: Record<FollowKevIntent, string> = {
-  follow_this_story: 'wants to follow the story already named in this chat',
-  follow_a_named_story: 'names a news story to follow, or says they want to follow one',
+  follow_this_story: 'wants to follow the story already named earlier in this chat',
+  follow_a_named_story: 'names a news story or subject they want to follow',
   question_or_other: 'asks a question or wants something other than following a story',
   agree_to_card: 'agrees to the change on the waiting card',
-  decline_card: 'declines the change on the waiting card',
+  decline_card: 'says no to the waiting card without naming another story',
 };
 
 const INTENT_LABEL_KEYS: Partial<Record<FollowKevIntent, string>> = {
@@ -163,7 +163,12 @@ export async function runFollowKevTurn(
       return done(trace.intent as FollowKevIntent, ports.t('kevChat.askIntent'), veto);
     }
     intent = trace.intent as FollowKevIntent;
-    line = formatDecision(run.questions, run.answers, { labels: { intent: 'What the user wants' } });
+    // The two follows are one act: a close call between them reads to the writer as
+    // "not named yet", and it asks again instead of writing options. Name the act plainly.
+    line =
+      intent === 'follow_this_story' || intent === 'follow_a_named_story'
+        ? `What the user wants: ${INTENT_CRITERIA[intent]}`
+        : formatDecision(run.questions, run.answers, { labels: { intent: 'What the user wants' } });
   } else {
     line = `What the user wants: ${INTENT_CRITERIA[intent]}`;
   }

@@ -87,7 +87,7 @@ const SPLIT_FILE: Record<Flow, string> = { persona: 'persona-chat', article: 'ar
 
 // --- Fixtures ---------------------------------------------------------------
 
-interface Fixture {
+export interface Fixture {
   id: string;
   flow: Flow;
   clear: boolean;
@@ -117,7 +117,7 @@ function personaFacts(f: Raw): PersonaChatContext['facts'] {
     .reverse();
 }
 
-function loadFixtures(flow: Flow, split: string): Fixture[] {
+export function loadFixtures(flow: Flow, split: string): Fixture[] {
   const splits = JSON.parse(readFileSync(join(FIXTURES, 'splits', `${SPLIT_FILE[flow]}.json`), 'utf8')) as Record<string, string[]>;
   const ids = splits[split];
   if (!ids) throw new Error(`harness-local: no split ${split} for ${flow}`);
@@ -251,7 +251,7 @@ async function runSingle(engine: LocalEngine, f: Fixture): Promise<Single> {
   };
 }
 
-function runKev(f: Fixture, ports: KevPorts): Promise<KevTurnResult> {
+export function runKev(f: Fixture, ports: KevPorts): Promise<KevTurnResult> {
   const pending = f.pending ? { text: describePending(f.pending)!, tapOnly: proposalRequiresUserChoice(f.pending) } : null;
   const messages: KevMessage[] = f.messages;
   if (f.flow === 'persona') {

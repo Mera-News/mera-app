@@ -47,13 +47,14 @@ export const PERSONA_INTENTS = [
 export type PersonaIntent = (typeof PERSONA_INTENTS)[number];
 
 const INTENT_CRITERIA: Record<PersonaIntent, string> = {
-  share_new_fact: 'shares something new about themselves: where they live, their work, family or interests',
-  remove_fact: 'wants a saved fact removed or forgotten',
-  correct_fact: 'says a saved fact has changed or is wrong',
+  share_new_fact:
+    'tells Mera something about their own life: where they live, work, family, health, beliefs, plans, hobbies or the news they want',
+  remove_fact: 'asks Mera to delete, remove or forget one of the saved_facts',
+  correct_fact: 'says one of the saved_facts has changed, and says what it is now',
   agree_to_card: 'agrees to the change on the waiting card',
   decline_card: 'declines the change on the waiting card',
-  question_or_chat: 'asks a question or chats, sharing nothing new about themselves',
-  thanks_or_ack: 'only thanks or acknowledges',
+  question_or_chat: 'asks Mera a question or makes small talk, and tells nothing about their own life',
+  thanks_or_ack: 'only says thanks, ok or similar',
 };
 
 /** Chip text per reading (i18n keys). thanks_or_ack has none: it merges into chatting. */
@@ -122,7 +123,7 @@ export const personaIntentSpec: DecisionSpec<
   questions: (input) => ({
     intent: {
       type: 'choice',
-      instructions: 'What does the user want Mera to do with their latest message?',
+      instructions: 'What does the user want Mera to do with user_message?',
       criteria: Object.fromEntries(intentKeys(input).map((k) => [k, INTENT_CRITERIA[k]])) as Record<PersonaIntent, string>,
     },
   }),

@@ -15,7 +15,7 @@ describe('classifyConsent', () => {
     },
   );
 
-  it.each(['no', 'No.', 'nope', 'nah', 'no thanks', 'no thank you', 'cancel', 'never mind', 'nevermind', 'don’t', 'not now', 'forget it', "don't do it", 'do not do that', "please don't", "no, don't", 'no, keep it', 'not yet', 'stop'])(
+  it.each(['no', 'No.', 'nope', 'nah', 'no thanks', 'no thank you', 'cancel', 'never mind', 'nevermind', 'don’t', 'not now', 'forget it', "don't do it", 'do not do that', "please don't", "no, don't", 'no, keep it', 'not yet', 'stop', 'no, leave it as it is'])(
     '%p declines',
     (text) => {
       expect(classifyConsent(text)).toBe('decline');
