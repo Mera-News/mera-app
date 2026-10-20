@@ -106,7 +106,9 @@ beforeAll(async () => {
     await initI18nEn();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
+    // The engine in force is pinned: with no row it is derived from what is on disk.
+    await setTextEngine('qwen');
     downloads.length = 0;
     resetFileSystem();
     __resetAppRestartForTests();
@@ -238,7 +240,7 @@ describe('startModelDownloads', () => {
         });
         await signInFixtureAccount();
         const sent = recordModeUpdates();
-        await setTextEngine('native');
+        await setTextEngine('afm');
         try {
             installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
             startModelDownloads({ promote: true });
@@ -263,7 +265,7 @@ describe('startModelDownloads', () => {
             await purgeAllBaseModels();
             await expect(isModelDownloaded(RELEVANCE_MODEL.modelId)).resolves.toBe(true);
         } finally {
-            await setTextEngine('mera');
+            await setTextEngine('qwen');
             __resetTextEngineForTests();
         }
     });
@@ -524,7 +526,7 @@ describe('restoreOnDeviceIfRunnable: a local Cloud fallback ends once On this ph
     beforeEach(async () => {
         useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
         await signInFixtureAccount();
-        await setTextEngine('native');
+        await setTextEngine('afm');
         placeDownloadedModel(RELEVANCE_MODEL.modelId);
         cachedPersona(ProcessingMode.OnDevice);
         serverMode(ProcessingMode.OnDevice);
@@ -536,7 +538,7 @@ describe('restoreOnDeviceIfRunnable: a local Cloud fallback ends once On this ph
     });
 
     afterEach(async () => {
-        await setTextEngine('mera');
+        await setTextEngine('qwen');
         __resetTextEngineForTests();
         useUserStore.setState({ userPersona: null });
     });

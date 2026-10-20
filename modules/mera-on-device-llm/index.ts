@@ -1,12 +1,15 @@
-// JS surface of the local mera-on-device-llm Expo module: Apple Foundation
-// Models (the on-device Apple Intelligence model), iOS 26 and later only.
+// JS surface of the local mera-on-device-llm Expo module: the phone's built-in
+// model. Apple Foundation Models (Apple Intelligence) on iOS 26 and later,
+// Gemini Nano (ML Kit GenAI Prompt API, AICore) on Android 8 and later.
 //
-// Resolution is lazy and guarded: on Android, in jest, or in any build without
-// the native module, `availability()` answers `unsupportedPlatform` and every
-// call rejects with ERR_AFM_UNAVAILABLE, so callers have one unavailable path.
-// Nothing here caches availability: Apple Intelligence can be switched on, or
-// its model finish downloading, while the app runs.
+// Resolution is lazy and guarded: in jest, or in any build without the native
+// module, `availability()` answers `unsupportedPlatform`, `platformModel()` is
+// null and every call rejects with ERR_AFM_UNAVAILABLE, so callers have one
+// unavailable path. Nothing here caches availability: the built-in model can be
+// switched on, or finish downloading, while the app runs. The ERR_AFM_* codes
+// are internal and shared by both platforms.
 
+import { Platform } from 'react-native';
 import { requireNativeModule } from 'expo-modules-core';
 
 export type OnDeviceLlmUnavailableReason =
@@ -16,6 +19,7 @@ export type OnDeviceLlmUnavailableReason =
   | 'appLanguageNotSupported'
   | 'deviceLanguageNotSupported'
   | 'osTooOld'
+  | 'needsSystemUpdate'
   | 'unsupportedPlatform'
   | 'unknown';
 
@@ -43,6 +47,8 @@ interface NativeOnDeviceLlm {
   availability(appLanguage: string): Promise<{ available: boolean; reason: string | null }>;
   prewarm(instructions: string): void;
   respond(instructions: string, prompt: string, args: OnDeviceLlmOptions): Promise<string>;
+  respondStructured(instructions: string, prompt: string, schemaJson: string, args: OnDeviceLlmOptions): Promise<string>;
+  contextSize(): Promise<number | null>;
   startStream(id: string, instructions: string, prompt: string, args: OnDeviceLlmOptions): void;
   cancel(id: string): void;
   addListener(event: 'onToken', listener: (e: { id: string; delta: string }) => void): Subscription;
@@ -66,7 +72,7 @@ function resolveNative(): NativeOnDeviceLlm | null {
 export class OnDeviceLlmError extends Error {
   readonly code: OnDeviceLlmErrorCode;
   constructor(code: OnDeviceLlmErrorCode) {
-    super(`On-device Apple model call failed (${code})`);
+    super(`On-device built-in model call failed (${code})`);
     this.name = 'OnDeviceLlmError';
     this.code = code;
   }
@@ -101,9 +107,30 @@ const KNOWN_REASONS: readonly string[] = [
   'appLanguageNotSupported',
   'deviceLanguageNotSupported',
   'osTooOld',
+  'needsSystemUpdate',
 ];
 
-/** Whether the on-device Apple model can run now, for Mera's app language. */
+/** Which built-in model this platform has, if the native module is present. */
+export function platformModel(): 'afm' | 'nano' | null {
+  if (!resolveNative()) return null;
+  if (Platform.OS === 'ios') return 'afm';
+  if (Platform.OS === 'android') return 'nano';
+  return null;
+}
+
+/** The built-in model's context window in tokens (input plus output), or null when unknown. */
+export async function contextSize(): Promise<number | null> {
+  const native = resolveNative();
+  if (!native) return null;
+  try {
+    const n = await native.contextSize();
+    return typeof n === 'number' && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Whether the built-in model can run now, for Mera's app language. */
 export async function availability(appLanguage: string): Promise<OnDeviceLlmAvailability> {
   const native = resolveNative();
   if (!native) return { available: false, reason: 'unsupportedPlatform' };
@@ -135,6 +162,26 @@ export async function respond(
   if (!native) throw new OnDeviceLlmError('ERR_AFM_UNAVAILABLE');
   try {
     return await native.respond(instructions, prompt, options);
+  } catch (e) {
+    throw toError((e as { code?: unknown } | null)?.code);
+  }
+}
+
+/**
+ * A reply shaped by `schemaJson` (a JSON Schema subset: object, string with enum,
+ * integer, number, boolean, array). Resolves to JSON TEXT: guided generation on
+ * Apple, plain text on Android, so the caller still extracts and validates it.
+ */
+export async function respondStructured(
+  instructions: string,
+  prompt: string,
+  schemaJson: string,
+  options: OnDeviceLlmOptions = {},
+): Promise<string> {
+  const native = resolveNative();
+  if (!native) throw new OnDeviceLlmError('ERR_AFM_UNAVAILABLE');
+  try {
+    return await native.respondStructured(instructions, prompt, schemaJson, options);
   } catch (e) {
     throw toError((e as { code?: unknown } | null)?.code);
   }

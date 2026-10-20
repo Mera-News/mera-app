@@ -46,7 +46,7 @@ import {
 } from '@/lib/background/bg-refresh-ui';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { gbText, useMeraProtocolSettings } from './useMeraProtocolSettings';
-import type { TextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
+import { builtInEngine, isBuiltInEngine, type TextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 
 /** Both model files are Apache 2.0, so one link covers them. */
 const MODELS_LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
@@ -186,7 +186,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
     // One radio per engine, each ONE accessible element (a disabled row's label carries its reason).
     const engineRow = (engine: TextEngine) => {
-        const apple = engine === 'native';
+        const apple = isBuiltInEngine(engine);
         const selected = textEngine === engine;
         // Not while a download runs: it keeps the file set it started with.
         const disabled = isDownloading || isDeletingModel || (apple && !nativeAvailable);
@@ -381,8 +381,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-engine">
                     <GroupLabel>{t('meraProtocol.chatNotesTitle')}</GroupLabel>
                     <Group>
-                        {engineRow('mera')}
-                        {engineRow('native')}
+                        {engineRow('qwen')}
+                        {engineRow(builtInEngine() ?? 'afm')}
                     </Group>
                 </View>
             )}
@@ -396,7 +396,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             {t('meraProtocol.speedLoad', { seconds: secondsText(totalLoadMs(inferenceStats) ?? 0) })}
                         </Text>
                     )}
-                    {textEngine !== 'native' && inferenceStats.genTokPerSec != null && (
+                    {!isBuiltInEngine(textEngine) && inferenceStats.genTokPerSec != null && (
                         <Text size="xs" className="text-ink-2">
                             {t('meraProtocol.speedGeneration', { tokPerSec: inferenceStats.genTokPerSec })}
                         </Text>

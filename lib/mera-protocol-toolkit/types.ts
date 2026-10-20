@@ -1,4 +1,5 @@
 import type { InferenceLabel } from './core/inference-stats';
+import type { TextEngine } from './core/text-engine';
 
 // ============================================================
 // Mera Protocol Toolkit — Type Definitions
@@ -42,6 +43,7 @@ export type InferParams = {
   responseFormat?: 'text' | 'json'; // Hint for structured output
   enableThinking?: boolean; // Enable Qwen3 thinking mode (default: false)
   label?: InferenceLabel; // Which caller this is, for the in-memory speed readout
+  engine?: TextEngine; // The engine the prompt was built for; the stored choice when omitted
 };
 
 export type InferResult = {

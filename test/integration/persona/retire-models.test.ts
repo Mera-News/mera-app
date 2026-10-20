@@ -53,6 +53,8 @@ function recordModeUpdates(): { userId: string; mode: string }[] {
 let captured: jest.SpyInstance;
 
 beforeEach(async () => {
+    // The engine in force is pinned: with no row it is derived from what is on disk.
+    await setTextEngine('qwen');
     resetFileSystem();
     useMeraProtocolStore.setState({
         processingMode: ProcessingMode.OnDevice,
@@ -196,14 +198,14 @@ describe('localModeFor: the local copy of a server persona mode', () => {
 
     it('with Apple Intelligence as the engine, the relevance file plus availability is enough, and unavailability is Cloud', async () => {
         await putModelOnDisk(RELEVANCE_MODEL.modelId);
-        await setTextEngine('native');
+        await setTextEngine('afm');
         try {
             installOnDeviceLlm({ availability: { available: true, reason: null } });
             await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.OnDevice);
             installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
             await expect(localModeFor(ProcessingMode.OnDevice)).resolves.toBe(ProcessingMode.Cloud);
         } finally {
-            await setTextEngine('mera');
+            await setTextEngine('qwen');
             __resetTextEngineForTests();
         }
     });

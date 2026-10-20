@@ -12,7 +12,7 @@ import * as retireModels from '@/lib/mera-protocol-toolkit/core/retire-models';
 import * as systemRequirements from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 import * as textEngine from '@/lib/mera-protocol-toolkit/core/text-engine';
 import { getInferenceStats, resetInferenceStats } from '@/lib/mera-protocol-toolkit/core/inference-stats';
-import { getSetting } from '@/lib/database/services/setting-service';
+import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import {
     installOnDeviceLlm,
@@ -36,7 +36,7 @@ const store = () => useMeraProtocolStore.getState();
 const REQUEST = { state: { article: { title: 't' } }, questions: { rel: { type: 'score' as const, instructions: 'q', criteria: ['a', 'b', 'c', 'd'] } } };
 
 const EXPORTS: [string, Record<string, unknown>, string[]][] = [
-    ['core inference', inference, ['infer', 'inferStream', 'decide']],
+    ['core inference', inference, ['infer', 'inferStream', 'inferStructured', 'contextSize', 'decide', 'StructuredOutputError']],
     [
         'base model lifecycle',
         modelManager,
@@ -48,7 +48,7 @@ const EXPORTS: [string, Record<string, unknown>, string[]][] = [
     ['model catalogue', modelCatalog, ['MODEL_CATALOG', 'TEXT_MODEL', 'RELEVANCE_MODEL', 'DEFAULT_MODEL_ID', 'RETIRED_MODEL_IDS', 'isRetiredModelId']],
     ['download service', downloadService, ['onDeviceModelsStatus', 'startModelDownloads', 'cancelModelDownload', 'isDownloadInProgress', 'restoreOnDeviceIfRunnable']],
     ['local mode rule', retireModels, ['localModeFor']],
-    ['text engine', textEngine, ['getTextEngine', 'setTextEngine', 'peekTextEngine', 'useTextEngine', 'nativeEngineAvailability', 'DEFAULT_TEXT_ENGINE']],
+    ['text engine', textEngine, ['getTextEngine', 'setTextEngine', 'peekTextEngine', 'useTextEngine', 'builtInEngine', 'builtInAvailability', 'isBuiltInEngine', 'DEFAULT_TEXT_ENGINE']],
     ['system requirements', systemRequirements, ['checkRequirements']],
 ];
 
@@ -68,6 +68,7 @@ describe('the two-model lifecycle through the barrel', () => {
         resetFileSystem();
         jest.spyOn(logger, 'info').mockImplementation(() => {});
         await toolkit.disposeModel();
+        await textEngine.setTextEngine('qwen');
         useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice, modelState: 'downloaded', modelError: null });
     });
 
@@ -209,11 +210,12 @@ describe('the two-model lifecycle through the barrel', () => {
     });
 });
 
-describe('the native text engine (Apple Foundation Models)', () => {
+describe("the built-in text engine (Apple Foundation Models, Gemini Nano)", () => {
     beforeEach(async () => {
         resetFileSystem();
         jest.spyOn(logger, 'info').mockImplementation(() => {});
         await toolkit.disposeModel();
+        await textEngine.setTextEngine('qwen');
         textEngine.__resetTextEngineForTests();
         resetInferenceStats();
         installOnDeviceLlm({ reply: 'From the phone.' });
@@ -221,23 +223,65 @@ describe('the native text engine (Apple Foundation Models)', () => {
     });
 
     afterEach(async () => {
-        await textEngine.setTextEngine('mera');
+        await textEngine.setTextEngine('qwen');
         textEngine.__resetTextEngineForTests();
         jest.restoreAllMocks();
     });
 
-    it('defaults to the downloaded models, and the choice is stored in its own settings row', async () => {
-        expect(await toolkit.getTextEngine()).toBe('mera');
-        await toolkit.setTextEngine('native');
-        expect(toolkit.peekTextEngine()).toBe('native');
-        expect(await getSetting('mera_text_engine')).toBe('native');
+    it('the choice is stored in its own settings row and read back', async () => {
+        await toolkit.setTextEngine('afm');
+        expect(toolkit.peekTextEngine()).toBe('afm');
+        expect(await getSetting('mera_text_engine')).toBe('afm');
         textEngine.__resetTextEngineForTests();
-        expect(await toolkit.getTextEngine()).toBe('native');
+        expect(await toolkit.getTextEngine()).toBe('afm');
+    });
+
+    describe('with no stored row', () => {
+        beforeEach(async () => {
+            await deleteSetting('mera_text_engine');
+            textEngine.__resetTextEngineForTests();
+        });
+
+        it.each([
+            ['the text model on disk', { qwenOnDisk: true, platformModel: 'afm' as const, available: true }, 'qwen'],
+            ['no text model, Apple Intelligence ready', { qwenOnDisk: false, platformModel: 'afm' as const, available: true }, 'afm'],
+            ['no text model, Gemini Nano ready', { qwenOnDisk: false, platformModel: 'nano' as const, available: true }, 'nano'],
+            ['no text model, built-in not ready', { qwenOnDisk: false, platformModel: 'afm' as const, available: false }, 'qwen'],
+            ['no text model, no built-in model', { qwenOnDisk: false, platformModel: null, available: true }, 'qwen'],
+        ])('%s: %s -> %s', async (_label, c, expected) => {
+            installOnDeviceLlm({
+                platformModel: c.platformModel,
+                availability: c.available ? { available: true, reason: null } : { available: false, reason: 'modelNotReady' },
+            });
+            if (c.qwenOnDisk) placeDownloadedModel(TEXT);
+            expect(await toolkit.getTextEngine()).toBe(expected);
+            // Derived, never stored.
+            expect(await getSetting('mera_text_engine')).toBeNull();
+        });
+
+        it('re-derives on every read: the text model landing switches a derived built-in default to it', async () => {
+            expect(await toolkit.getTextEngine()).toBe('afm');
+            placeDownloadedModel(TEXT);
+            expect(await toolkit.getTextEngine()).toBe('qwen');
+            expect(toolkit.peekTextEngine()).toBe('qwen');
+        });
+
+        it.each([
+            ['mera', 'afm' as const, 'qwen'],
+            ['native', 'afm' as const, 'afm'],
+            ['native', 'nano' as const, 'nano'],
+            ['afm', 'nano' as const, 'nano'],
+        ])('migrates an old row %s on %s to %s', async (row, platformModel, expected) => {
+            installOnDeviceLlm({ platformModel, availability: { available: false, reason: 'modelNotReady' } });
+            await setSetting('mera_text_engine', row);
+            textEngine.__resetTextEngineForTests();
+            expect(await toolkit.getTextEngine()).toBe(expected);
+        });
     });
 
     it('infer goes to the native model with the instructions, prompt and options, and loads no llama model', async () => {
         installLlama(['never']);
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         const out = await toolkit.infer({ systemPrompt: 'Be brief.', prompt: 'Hi', maxTokens: 64, temperature: 0.2, label: 'reason' });
         expect(out).toMatchObject({ output: 'From the phone.', truncated: false });
         expect(onDeviceLlmCalls()).toEqual([
@@ -251,7 +295,7 @@ describe('the native text engine (Apple Foundation Models)', () => {
         installLlama(['x']);
         await toolkit.initBaseModel();
         expect(llamaLoads()).toEqual([TEXT]);
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         await toolkit.infer({ prompt: 'p' });
         expect(toolkit.getModelState()).toBeNull();
         await toolkit.decide(REQUEST);
@@ -264,7 +308,7 @@ describe('the native text engine (Apple Foundation Models)', () => {
 
     it('streams native tokens in order', async () => {
         installOnDeviceLlm({ reply: ['Hel', 'lo', '.'] });
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         const tokens: string[] = [];
         for await (const t of toolkit.inferStream({ prompt: 'p' })) tokens.push(t);
         expect(tokens).toEqual(['Hel', 'lo', '.']);
@@ -272,7 +316,7 @@ describe('the native text engine (Apple Foundation Models)', () => {
 
     it('an abort cancels the native stream and ends it quietly', async () => {
         installOnDeviceLlm({ reply: ['a', 'b', 'c', 'd'] });
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         const ac = new AbortController();
         const tokens: string[] = [];
         for await (const t of toolkit.inferStream({ prompt: 'p' }, ac.signal)) {
@@ -285,7 +329,7 @@ describe('the native text engine (Apple Foundation Models)', () => {
 
     it('a guardrail or refusal is a failed call, never a crash, and is counted', async () => {
         installOnDeviceLlm({ reply: { error: 'ERR_AFM_GUARDRAIL' } });
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         await expect(toolkit.infer({ prompt: 'p' })).rejects.toMatchObject({ code: 'ERR_AFM_GUARDRAIL' });
         await expect(
             (async () => {
@@ -301,7 +345,7 @@ describe('the native text engine (Apple Foundation Models)', () => {
     });
 
     it('refuses outside on-device mode, like the downloaded models', async () => {
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
         await expect(toolkit.infer({ prompt: 'p' })).rejects.toBeInstanceOf(toolkit.LocalModelsOffError);
         await expect(toolkit.initBaseModel()).rejects.toBeInstanceOf(toolkit.LocalModelsOffError);
@@ -310,7 +354,7 @@ describe('the native text engine (Apple Foundation Models)', () => {
 
     it('initBaseModel only prewarms the native model and reports ready; the text model counts as resident', async () => {
         installLlama(['x']);
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         await toolkit.initBaseModel();
         expect(store().modelState).toBe('ready');
         expect(onDeviceLlmPrewarms()).toBe(1);
@@ -319,7 +363,7 @@ describe('the native text engine (Apple Foundation Models)', () => {
     });
 
     it('On this phone needs only the relevance model plus an available native model, asked fresh every time', async () => {
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         expect((await toolkit.requiredModels()).map((m) => m.modelId)).toEqual([KEV]);
         expect(await toolkit.isModelDownloaded()).toBe(false);
 
@@ -331,15 +375,15 @@ describe('the native text engine (Apple Foundation Models)', () => {
         setOnDeviceLlmAvailability({ available: true, reason: null });
         expect(await toolkit.isModelDownloaded()).toBe(true);
 
-        await toolkit.setTextEngine('mera');
+        await toolkit.setTextEngine('qwen');
         expect(await toolkit.isModelDownloaded()).toBe(false);
     });
 
     it('availability is asked with the APP language, never the cached answer', async () => {
         useAppLanguageStore.setState({ appLanguage: 'de' });
-        await toolkit.nativeEngineAvailability();
+        await toolkit.builtInAvailability();
         setOnDeviceLlmAvailability({ available: false, reason: 'modelNotReady' });
-        expect(await toolkit.nativeEngineAvailability()).toEqual({ available: false, reason: 'modelNotReady' });
+        expect(await toolkit.builtInAvailability()).toEqual({ available: false, reason: 'modelNotReady' });
         expect(onDeviceLlmAvailabilityReads()).toEqual(['de', 'de']);
         useAppLanguageStore.setState({ appLanguage: 'en' });
     });
@@ -347,7 +391,7 @@ describe('the native text engine (Apple Foundation Models)', () => {
     it('onDeviceModelsStatus is name-free: bytes still to download for the chosen engine, bytes on disk, runnable', async () => {
         const total = modelCatalog.TEXT_MODEL.sizeBytes + modelCatalog.RELEVANCE_MODEL.sizeBytes;
         expect(await toolkit.onDeviceModelsStatus()).toEqual({ missingBytes: total, onDiskBytes: 0, runnable: false });
-        await toolkit.setTextEngine('native');
+        await toolkit.setTextEngine('afm');
         expect(await toolkit.onDeviceModelsStatus()).toEqual({
             missingBytes: modelCatalog.RELEVANCE_MODEL.sizeBytes,
             onDiskBytes: 0,
@@ -358,6 +402,84 @@ describe('the native text engine (Apple Foundation Models)', () => {
             missingBytes: 0,
             onDiskBytes: modelCatalog.RELEVANCE_MODEL.sizeBytes,
             runnable: true,
+        });
+    });
+
+    it('Gemini Nano follows the same rule: Kev on disk and Nano available', async () => {
+        installOnDeviceLlm({ platformModel: 'nano' });
+        await toolkit.setTextEngine('nano');
+        placeDownloadedModel(KEV);
+        expect(await toolkit.isModelDownloaded()).toBe(true);
+        setOnDeviceLlmAvailability({ available: false, reason: 'needsSystemUpdate' });
+        expect(await toolkit.isModelDownloaded()).toBe(false);
+    });
+
+    it('a call names its engine: the prompt built for the built-in model runs there whatever is stored', async () => {
+        installLlama(['never']);
+        await toolkit.setTextEngine('qwen');
+        await toolkit.infer({ prompt: 'p', engine: 'afm' });
+        expect(onDeviceLlmCalls()).toHaveLength(1);
+        expect(llamaLoads()).toEqual([]);
+    });
+
+    it('contextSize: the built-in model reports its own window, Qwen runs at the local context size', async () => {
+        installOnDeviceLlm({ contextSize: 3000 });
+        await expect(toolkit.contextSize('afm')).resolves.toBe(3000);
+        await expect(toolkit.contextSize('qwen')).resolves.toBe(4096);
+        installOnDeviceLlm({ contextSize: null });
+        await toolkit.setTextEngine('afm');
+        await expect(toolkit.contextSize()).resolves.toBeNull();
+    });
+
+    describe('inferStructured', () => {
+        const SCHEMA = {
+            type: 'object' as const,
+            properties: {
+                reply: { type: 'string' as const },
+                options: { type: 'array' as const, items: { type: 'string' as const }, minItems: 1, maxItems: 4 },
+            },
+            required: ['reply', 'options'],
+        };
+        const ask = (engine?: 'afm' | 'nano' | 'qwen') =>
+            toolkit.inferStructured<{ reply: string; options: string[] }>({ system: 'S', prompt: 'P', schema: SCHEMA, engine });
+
+        it('built-in: sends the schema as JSON text and reads the value out of fences and prose', async () => {
+            installOnDeviceLlm({ reply: 'Sure:\n```json\n{"reply":"Hi","options":["a","b"]}\n```\nDone.' });
+            await expect(ask('afm')).resolves.toEqual({ reply: 'Hi', options: ['a', 'b'] });
+            expect(onDeviceLlmCalls()).toEqual([
+                expect.objectContaining({ kind: 'structured', instructions: 'S', prompt: 'P', schemaJson: JSON.stringify(SCHEMA) }),
+            ]);
+        });
+
+        it('a reply that misses the schema is retried once with a reminder', async () => {
+            const replies = ['no json here', '{"reply":"Hi","options":["a"]}'];
+            installOnDeviceLlm({ platformModel: 'nano', reply: () => replies.shift()! });
+            await expect(ask('nano')).resolves.toEqual({ reply: 'Hi', options: ['a'] });
+            const calls = onDeviceLlmCalls();
+            expect(calls).toHaveLength(2);
+            expect(calls[1].prompt).toMatch(/^P\n\nReply with only JSON/);
+        });
+
+        it('a missing required key counts as a miss; two misses throw a typed error that is not deferrable', async () => {
+            installOnDeviceLlm({ reply: '{"reply":"Hi"}' });
+            const err = await ask('afm').catch((e: unknown) => e);
+            expect(err).toBeInstanceOf(toolkit.StructuredOutputError);
+            expect(err).toMatchObject({ code: 'ERR_STRUCTURED_OUTPUT' });
+            expect(onDeviceLlmCalls()).toHaveLength(2);
+        });
+
+        it('an engine error is never retried: busy reaches the caller as it is', async () => {
+            installOnDeviceLlm({ reply: { error: 'ERR_AFM_BUSY' } });
+            await expect(ask('afm')).rejects.toMatchObject({ code: 'ERR_AFM_BUSY' });
+            expect(onDeviceLlmCalls()).toHaveLength(1);
+        });
+
+        it('qwen: runs llama.rn under a json_schema grammar of the same schema', async () => {
+            installLlama(['{"reply":"Hi","options":["a"]}']);
+            placeDownloadedModel(TEXT);
+            await expect(ask('qwen')).resolves.toEqual({ reply: 'Hi', options: ['a'] });
+            expect(llamaCalls()[0].params.response_format).toEqual({ type: 'json_schema', json_schema: { schema: SCHEMA } });
+            expect(onDeviceLlmCalls()).toEqual([]);
         });
     });
 });

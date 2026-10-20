@@ -233,13 +233,13 @@ describe('on-device relevance - Kev', () => {
     expect(llamaCalls()).toHaveLength(0);
   });
 
-  it('the local port still completes a single prompt as JSON (the subscription read)', async () => {
-    installLlama(['{"ok":true}']);
+  it('the local port completes the subscription read as plain text: no JSON grammar to quote its SKIP', async () => {
+    installLlama(['SKIP']);
 
     const out = await run(getScoringLlmPort().complete({ systemPrompt: 's', prompt: 'p', maxTokens: 10, temperature: 0 }));
 
-    expect(out).toBe('{"ok":true}');
-    expect(llamaCalls()[0].params.response_format).toEqual({ type: 'json_object' });
+    expect(out).toBe('SKIP');
+    expect(llamaCalls()[0].params.response_format).toBeUndefined();
   });
 });
 

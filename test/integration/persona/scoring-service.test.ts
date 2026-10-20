@@ -56,10 +56,14 @@ import {
 } from '@/test/helpers';
 import { decideCalls, installDecide, installLlama, llamaCalls, llamaLoads, llamaMaxLive, type LlamaCall } from '@/test/helpers/llama';
 import { resetFileSystem } from '@/test/helpers/fs';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
+import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
+import { deleteSetting } from '@/lib/database/services/setting-service';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 jest.setTimeout(30_000);
 
@@ -80,6 +84,8 @@ async function useMode(mode: 'cloud' | 'on-device'): Promise<void> {
 beforeEach(async () => {
   resetChatModules();
   resetFileSystem();
+  // No built-in model unless a test asks for one: the text engine stays the downloaded model.
+  installOnDeviceLlm({ platformModel: null });
   await disposeModel();
   seededTopic = null;
   useMeraProtocolStore.getState().setModelState('downloaded');
@@ -1346,6 +1352,30 @@ describe('retryMissingReasons - on-device path', () => {
 
     expect(await run(retryMissingReasons())).toBe(0);
     expect(logger.warn).toHaveBeenCalledWith('[writeNotesOnDevice] note failed', expect.objectContaining({ id: 'a' }));
+  });
+
+  describe('on the built-in model', () => {
+    afterEach(async () => {
+      await deleteSetting('mera_text_engine');
+      __resetTextEngineForTests();
+    });
+
+    it('stops the sweep on busy and leaves every remaining row reason_pending', async () => {
+      installOnDeviceLlm({ reply: ({ prompt }) => (prompt.includes('Story top saga') ? 'Local note on story top.' : { error: 'ERR_AFM_BUSY' }) });
+      await setTextEngine('afm');
+      await seedOwed(['top'], {}, 1);
+      await seedOwed(['mid'], {}, 0.8);
+      await seedOwed(['low'], {}, 0.6);
+
+      await run(retryMissingReasons());
+
+      // top answered, mid was busy, low was never asked.
+      expect(onDeviceLlmCalls()).toHaveLength(2);
+      const rows = await stored();
+      expect(rows.mid.status).toBe('reason_pending');
+      expect(rows.low.status).toBe('reason_pending');
+      expect(logger.warn).not.toHaveBeenCalledWith('[writeNotesOnDevice] note failed', expect.anything());
+    });
   });
 });
 

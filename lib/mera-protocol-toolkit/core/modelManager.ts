@@ -28,7 +28,7 @@ import { holdRestart } from '../../app-restart';
 import { recordModelLoad } from './inference-stats';
 import { withLlamaLock } from './llama-lock';
 import { MODEL_CATALOG, RELEVANCE_MODEL, TEXT_MODEL, type ModelCatalogEntry } from './model-catalog';
-import { getTextEngine, nativeEngineAvailability, peekTextEngine } from './text-engine';
+import { builtInAvailability, getTextEngine, isBuiltInEngine, peekTextEngine, type TextEngine } from './text-engine';
 import { prewarm as prewarmNative } from '@/modules/mera-on-device-llm';
 import type {
   BaseModelDownloadConfig,
@@ -367,7 +367,7 @@ export async function _ensureLoaded(
 // Public lifecycle: each takes the llama lock exactly once.
 // ---------------------------------------------------------------------------
 
-/** What `initBaseModel` reports when the native engine writes the text. */
+/** What `initBaseModel` reports when the built-in model writes the text. */
 export const NATIVE_ENGINE_STATE: ModelState = {
   modelId: 'native',
   loaded: true,
@@ -379,9 +379,10 @@ export const NATIVE_ENGINE_STATE: ModelState = {
 
 /**
  * Makes the text engine ready and reports it in the UI modelState: `loading`,
- * then `ready`, or the error. With 'mera' it loads the TEXT model (a no-op when
- * it already is resident); with the native engine it loads nothing (the model runs
- * out of process), only prewarms it. Callers never need this for correctness
+ * then `ready`, or the error. With 'qwen' it loads the TEXT model (a no-op when
+ * it already is resident); with a built-in model it loads nothing (the model runs
+ * out of process), only prewarms it, and still writes `ready`: the queue and the
+ * chat loader start only on it. Callers never need this for correctness
  * (infer / inferStream get their engine ready themselves); it is a preload.
  * The relevance model loads only inside `decide`.
  */
@@ -392,7 +393,7 @@ export async function initBaseModel(
   const engine = await getTextEngine();
   return withLlamaLock(async () => {
     _assertOnDeviceMode();
-    if (engine === 'native' && modelId === TEXT_MODEL.modelId) {
+    if (isBuiltInEngine(engine) && modelId === TEXT_MODEL.modelId) {
       await _releaseTextModel();
       prewarmNative();
       useMeraProtocolStore.getState().setModelState('ready');
@@ -437,7 +438,7 @@ export function getModelState(): ModelState | null {
  * UI wait lines.
  */
 export function isTextModelResident(): boolean {
-  if (peekTextEngine() === 'native') return true;
+  if (isBuiltInEngine(peekTextEngine())) return true;
   return llamaContext !== null && currentModelState?.modelId === TEXT_MODEL.modelId;
 }
 
@@ -493,28 +494,31 @@ export function cancelActiveDownload(): void {
 }
 
 /**
- * The model files On this phone needs for the chosen text engine: the relevance
- * model always, plus the text model unless the native engine writes the text.
- * Download order.
+ * The model files On this phone needs for the text engine in force: the
+ * relevance model always, plus the text model unless the built-in model writes
+ * the text. Download order.
  */
 export async function requiredModels(): Promise<ModelCatalogEntry[]> {
-  return (await getTextEngine()) === 'native' ? [RELEVANCE_MODEL] : [...MODEL_CATALOG];
+  return modelsFor(await getTextEngine());
+}
+
+function modelsFor(engine: TextEngine): ModelCatalogEntry[] {
+  return isBuiltInEngine(engine) ? [RELEVANCE_MODEL] : [...MODEL_CATALOG];
 }
 
 /**
- * Whether a model is downloaded and ready. With no argument: whether On this
- * phone can run: the relevance model on disk AND (the text model on disk, or the
- * native engine chosen and available right now). Availability is asked fresh
- * every time.
+ * Whether a model is downloaded and ready. With no argument, the runnable rule:
+ * whether On this phone can run. The relevance model on disk AND the chosen text
+ * option ready: the text model on disk for 'qwen', or the built-in model
+ * available right now for 'afm' / 'nano'. Availability is asked fresh every time.
  */
 export async function isModelDownloaded(modelId?: string): Promise<boolean> {
   if (modelId === undefined) {
-    for (const m of await requiredModels()) {
+    const engine = await getTextEngine();
+    for (const m of modelsFor(engine)) {
       if (!(await isModelDownloaded(m.modelId))) return false;
     }
-    if ((await getTextEngine()) === 'native') {
-      return (await nativeEngineAvailability()).available;
-    }
+    if (isBuiltInEngine(engine)) return (await builtInAvailability()).available;
     return true;
   }
   const manifest = await readManifest(modelId);

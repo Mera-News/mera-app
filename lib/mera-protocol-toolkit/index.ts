@@ -4,7 +4,16 @@
 // ============================================================
 
 // === Core Inference ===
-export { infer, inferStream, decide } from './core/inference';
+export {
+  infer,
+  inferStream,
+  inferStructured,
+  contextSize,
+  decide,
+  StructuredOutputError,
+} from './core/inference';
+export type { StructuredParams } from './core/inference';
+export type { JsonSchema } from './core/structured-json';
 
 // === Base Model Lifecycle ===
 export {
@@ -33,16 +42,18 @@ export {
 } from './core/model-catalog';
 export type { ModelCatalogEntry, ModelRole } from './core/model-catalog';
 
-// === Text engine (Qwen or the platform's own on-device model) ===
+// === Text engine (Qwen, or the platform's built-in model: AFM or Gemini Nano) ===
 export {
   getTextEngine,
   setTextEngine,
   peekTextEngine,
   useTextEngine,
-  nativeEngineAvailability,
+  builtInEngine,
+  builtInAvailability,
+  isBuiltInEngine,
   DEFAULT_TEXT_ENGINE,
 } from './core/text-engine';
-export type { TextEngine } from './core/text-engine';
+export type { TextEngine, BuiltInEngine } from './core/text-engine';
 
 // === Download Service ===
 export {

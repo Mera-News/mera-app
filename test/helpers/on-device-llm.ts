@@ -1,5 +1,7 @@
-// Scripted Apple Foundation Models (the local `mera-on-device-llm` Expo module). The native module is the
-// edge; the module's own JS types and error helpers stay real.
+// Scripted built-in model (the local `mera-on-device-llm` Expo module: Apple Foundation Models or Gemini
+// Nano). The native module is the edge; the module's own JS types and error helpers stay real.
+// `platformModel` defaults to 'afm' (pass `platformModel: 'nano'` or null); structured calls answer from
+// the same `reply` script and record the schema text.
 //
 //   jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 //   beforeEach(() => installOnDeviceLlm({ reply: 'Hello.' }));
@@ -15,8 +17,10 @@ export interface OnDeviceLlmCall {
   instructions: string;
   prompt: string;
   options: OnDeviceLlmOptions;
-  kind: 'respond' | 'stream';
+  kind: 'respond' | 'stream' | 'structured';
   cancelled: boolean;
+  /** The JSON Schema text, for a structured call. */
+  schemaJson?: string;
 }
 
 type Reply = string | string[] | { error: OnDeviceLlmErrorCode };
@@ -27,8 +31,12 @@ const state: {
   calls: OnDeviceLlmCall[];
   availabilityReads: string[];
   prewarms: number;
+  platformModel: 'afm' | 'nano' | null;
+  contextSize: number | null;
 } = {
   availability: { available: true, reason: null },
+  platformModel: 'afm',
+  contextSize: 4096,
   reply: () => 'ok',
   calls: [],
   availabilityReads: [],
@@ -45,8 +53,12 @@ export const onDeviceLlmPrewarms = (): number => state.prewarms;
 export function installOnDeviceLlm(opts: {
   availability?: OnDeviceLlmAvailability;
   reply?: Reply | ((call: OnDeviceLlmCall) => Reply);
+  platformModel?: 'afm' | 'nano' | null;
+  contextSize?: number | null;
 } = {}): void {
   state.availability = opts.availability ?? { available: true, reason: null };
+  state.platformModel = opts.platformModel === undefined ? 'afm' : opts.platformModel;
+  state.contextSize = opts.contextSize === undefined ? 4096 : opts.contextSize;
   const reply = opts.reply ?? 'ok';
   state.reply = typeof reply === 'function' ? reply : () => reply;
   state.calls = [];
@@ -57,6 +69,14 @@ export function installOnDeviceLlm(opts: {
 /** Changes availability mid-test (Apple Intelligence switched on, the model finished downloading). */
 export function setOnDeviceLlmAvailability(availability: OnDeviceLlmAvailability): void {
   state.availability = availability;
+}
+
+async function answer(call: OnDeviceLlmCall): Promise<string> {
+  state.calls.push(call);
+  await new Promise((r) => setImmediate(r));
+  const reply = state.reply(call);
+  if (typeof reply === 'object' && !Array.isArray(reply)) throw new actual.OnDeviceLlmError(reply.error);
+  return Array.isArray(reply) ? reply.join('') : reply;
 }
 
 const actual = jest.requireActual('@/modules/mera-on-device-llm') as typeof import('@/modules/mera-on-device-llm');
@@ -70,14 +90,16 @@ export const onDeviceLlmModule = {
   prewarm: () => {
     state.prewarms += 1;
   },
-  respond: async (instructions: string, prompt: string, options: OnDeviceLlmOptions = {}): Promise<string> => {
-    const call: OnDeviceLlmCall = { instructions, prompt, options, kind: 'respond', cancelled: false };
-    state.calls.push(call);
-    await new Promise((r) => setImmediate(r));
-    const reply = state.reply(call);
-    if (typeof reply === 'object' && !Array.isArray(reply)) throw new actual.OnDeviceLlmError(reply.error);
-    return Array.isArray(reply) ? reply.join('') : reply;
-  },
+  platformModel: (): 'afm' | 'nano' | null => state.platformModel,
+  contextSize: async (): Promise<number | null> => state.contextSize,
+  respond: async (instructions: string, prompt: string, options: OnDeviceLlmOptions = {}): Promise<string> =>
+    answer({ instructions, prompt, options, kind: 'respond', cancelled: false }),
+  respondStructured: async (
+    instructions: string,
+    prompt: string,
+    schemaJson: string,
+    options: OnDeviceLlmOptions = {},
+  ): Promise<string> => answer({ instructions, prompt, options, kind: 'structured', cancelled: false, schemaJson }),
   stream: (
     instructions: string,
     prompt: string,

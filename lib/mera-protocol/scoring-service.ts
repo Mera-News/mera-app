@@ -9,6 +9,7 @@
 // injecting the app logger + default config so behaviour is unchanged.
 
 import { completeLocal } from '../llm/completeLocal';
+import { isOnDeviceDeferrable } from '../inference/job-defer';
 import { cloudComplete, cloudBatchComplete } from '../llm/cloudComplete';
 import { SMALL_MODEL } from '../llm/constants';
 import logger from '../logger';
@@ -1019,6 +1020,10 @@ async function writeNotesOnDevice(): Promise<number> {
       await saveReason(candidate.id, reason);
       written += 1;
     } catch (err) {
+      // The built-in model is busy (quota, background) or gone: every next
+      // note would fail the same way. Stop; the rest stay reason_pending for
+      // the next sweep.
+      if (isOnDeviceDeferrable(err)) break;
       logger.warn('[writeNotesOnDevice] note failed', {
         id: candidate.id,
         error: err instanceof Error ? err.message : String(err),

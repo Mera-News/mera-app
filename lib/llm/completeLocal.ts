@@ -2,7 +2,7 @@
 // Extracted from LocalInferenceEngine.complete() after engine deletion in Phase 5.
 // Calls infer() from mera-protocol-toolkit directly.
 
-import { infer as localInfer } from '../mera-protocol-toolkit';
+import { infer as localInfer, inferStructured, type JsonSchema, type TextEngine } from '../mera-protocol-toolkit';
 import type { InferenceLabel } from '../mera-protocol-toolkit/core/inference-stats';
 import logger from '../logger';
 
@@ -25,6 +25,8 @@ export interface LocalCompleteRequest {
   enableThinking?: boolean;
   /** Tags the call for the in-memory speed readout in Mera Protocol settings. */
   label?: InferenceLabel;
+  /** The engine the prompt was built for; the one in force when omitted. */
+  engine?: TextEngine;
 }
 
 export async function completeLocal(request: LocalCompleteRequest): Promise<string> {
@@ -37,6 +39,7 @@ export async function completeLocal(request: LocalCompleteRequest): Promise<stri
     responseFormat: request.responseFormat === 'json' ? 'json' : undefined,
     enableThinking: request.enableThinking,
     label: request.label,
+    engine: request.engine,
   });
 
   // Reasoning-trace handling. `enableThinking` makes the model emit a <think>
@@ -89,4 +92,34 @@ export async function completeLocal(request: LocalCompleteRequest): Promise<stri
   }
 
   return output;
+}
+
+export interface LocalStructuredRequest {
+  systemPrompt: string;
+  prompt: string;
+  /** The reply's shape; its root is an object or an array. */
+  schema: JsonSchema;
+  maxTokens?: number;
+  temperature?: number;
+  label?: InferenceLabel;
+  /** The engine the prompt was built for; the one in force when omitted. */
+  engine?: TextEngine;
+}
+
+/**
+ * A JSON value fitting `schema`, from the on-device text engine: the entry point
+ * for every on-device flow that needs structured output. Throws
+ * StructuredOutputError when no reply fits after one retry, and passes engine
+ * errors (busy, unavailable) through untouched so a queue job can defer.
+ */
+export function completeLocalStructured<T = unknown>(request: LocalStructuredRequest): Promise<T> {
+  return inferStructured<T>({
+    system: request.systemPrompt,
+    prompt: request.prompt,
+    schema: request.schema,
+    maxTokens: request.maxTokens ?? 512,
+    temperature: request.temperature ?? 0.3,
+    label: request.label,
+    engine: request.engine,
+  });
 }

@@ -14,10 +14,11 @@ import {
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
 import { deleteOnDeviceModels } from '@/lib/mera-protocol-toolkit/core/modelManager';
 import {
-    nativeEngineAvailability,
+    builtInAvailability,
     setTextEngine,
     useTextEngine,
     getTextEngine,
+    isBuiltInEngine,
     type TextEngine,
 } from '@/lib/mera-protocol-toolkit/core/text-engine';
 import type { OnDeviceLlmAvailability } from '@/modules/mera-on-device-llm';
@@ -61,6 +62,7 @@ export const NATIVE_REASON_KEYS = {
     appLanguageNotSupported: 'meraProtocol.nativeAppLanguage',
     deviceLanguageNotSupported: 'meraProtocol.nativeDeviceLanguage',
     osTooOld: 'meraProtocol.nativeOsTooOld',
+    needsSystemUpdate: 'meraProtocol.nativeUnknown',
     unknown: 'meraProtocol.nativeUnknown',
 } as const;
 
@@ -178,13 +180,13 @@ export function useMeraProtocolSettings() {
     // Apple Intelligence is the chosen engine, nothing is left to download and it cannot run yet.
     // Without a line the section would show files on disk and no way forward.
     const waitingForNative =
-        onDeviceIntent && status != null && textEngine === 'native' && !runnable && missingBytes === 0;
+        onDeviceIntent && status != null && isBuiltInEngine(textEngine) && !runnable && missingBytes === 0;
 
     // Reads what is on disk and whether Apple Intelligence can be used. Pure: changes no mode.
     const readStatus = useCallback(async () => {
         const [next, availability] = await Promise.all([
             onDeviceModelsStatus(),
-            nativeEngineAvailability().catch(
+            builtInAvailability().catch(
                 (): OnDeviceLlmAvailability => ({ available: false, reason: 'unsupportedPlatform' }),
             ),
         ]);

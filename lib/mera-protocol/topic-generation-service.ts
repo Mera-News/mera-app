@@ -11,6 +11,7 @@
 
 import logger from '../logger';
 import { completeLocal } from '../llm/completeLocal';
+import { isOnDeviceDeferrable } from '../inference/job-defer';
 import {
   LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
@@ -133,6 +134,9 @@ export async function generateTopicsForFact(
         responseFormat: 'json',
       });
     } catch (err) {
+      // Busy or unavailable is "not now": the queue defers the job instead of
+      // failing the fact.
+      if (isOnDeviceDeferrable(err)) throw err;
       logger.warn('[topic-gen] local factOnly failed', {
         error: err instanceof Error ? err.message : String(err),
       });
@@ -148,6 +152,7 @@ export async function generateTopicsForFact(
         responseFormat: 'json',
       });
     } catch (err) {
+      if (isOnDeviceDeferrable(err)) throw err;
       logger.warn('[topic-gen] local combo failed', {
         error: err instanceof Error ? err.message : String(err),
       });

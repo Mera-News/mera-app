@@ -93,7 +93,8 @@ const cloudLlmPort: LlmPort = {
 };
 
 /** Local (on-device) port. Relevance goes through Kev (`relevanceScorer`), so only `complete`
- *  (the subscription read) is used; batchComplete is never reached. */
+ *  (the subscription read) is used; batchComplete is never reached. Plain text: the read asks for
+ *  sentences or a bare SKIP, and a JSON grammar would quote that SKIP. */
 const localLlmPort: LlmPort = {
   batchComplete: async (calls) =>
     calls.map((c) => ({ id: c.id, output: '', error: 'on-device relevance runs through Kev' })),
@@ -103,7 +104,6 @@ const localLlmPort: LlmPort = {
       prompt: req.prompt,
       maxTokens: req.maxTokens,
       temperature: req.temperature,
-      responseFormat: 'json',
     }),
 };
 

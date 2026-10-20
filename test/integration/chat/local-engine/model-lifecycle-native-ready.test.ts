@@ -66,7 +66,7 @@ beforeEach(async () => {
         userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
     });
     await signInFixtureAccount();
-    await setTextEngine('native');
+    await setTextEngine('afm');
     installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
     await setProcessingMode('cloud');
     protocol().setModelState('not_downloaded');
@@ -77,7 +77,7 @@ beforeEach(async () => {
 afterEach(async () => {
     await cancelModelDownload();
     setPromoteWhenDone(false);
-    await setTextEngine('mera');
+    await setTextEngine('qwen');
     __resetTextEngineForTests();
     useUserStore.setState({ userPersona: null });
     useAppStateStore.getState().setAppInitialized(false);

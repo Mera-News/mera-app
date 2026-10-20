@@ -454,7 +454,7 @@ describe('Mera Protocol settings', () => {
     describe('Chat and notes engine', () => {
         const available = { available: true, reason: null } as const;
         const spyAvailability = (a: { available: boolean; reason: string | null }) =>
-            jest.spyOn(textEngine, 'nativeEngineAvailability').mockResolvedValue(a as never);
+            jest.spyOn(textEngine, 'builtInAvailability').mockResolvedValue(a as never);
 
         beforeEach(async () => {
             await signInFixtureAccount();
@@ -472,10 +472,10 @@ describe('Mera Protocol settings', () => {
             expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
 
             await act(async () => {
-                await result.current.selectEngine('native');
+                await result.current.selectEngine('afm');
             });
 
-            expect(textEngine.peekTextEngine()).toBe('native');
+            expect(textEngine.peekTextEngine()).toBe('afm');
             expect(promote).toHaveBeenCalledTimes(1);
             // Kev is all that is left to fetch, and it is on disk.
             expect(result.current.missingBytes).toBe(0);
@@ -485,7 +485,7 @@ describe('Mera Protocol settings', () => {
         it('switching to an engine that cannot run falls back to Private cloud locally only and keeps the intent', async () => {
             spyAvailability(available);
             placeDownloadedModel(KEV_ID);
-            await textEngine.setTextEngine('native');
+            await textEngine.setTextEngine('afm');
             serverMode(ProcessingMode.OnDevice);
             const sent = recordModeUpdates();
             const promote = jest.spyOn(downloadService, 'promoteToOnDevice');
@@ -493,10 +493,10 @@ describe('Mera Protocol settings', () => {
             expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
 
             await act(async () => {
-                await result.current.selectEngine('mera');
+                await result.current.selectEngine('qwen');
             });
 
-            expect(textEngine.peekTextEngine()).toBe('mera');
+            expect(textEngine.peekTextEngine()).toBe('qwen');
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(true);
             expect(sent).toEqual([]);
@@ -518,12 +518,12 @@ describe('Mera Protocol settings', () => {
             expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
 
             await act(async () => {
-                await result.current.selectEngine('native');
+                await result.current.selectEngine('afm');
             });
             expect(result.current.missingBytes).toBe(0);
 
             await act(async () => {
-                await result.current.selectEngine('mera');
+                await result.current.selectEngine('qwen');
             });
             expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
             expect(result.current.runnable).toBe(false);
@@ -532,7 +532,7 @@ describe('Mera Protocol settings', () => {
         it('a refresh follows Apple Intelligence going away and coming back, locally only', async () => {
             const availability = spyAvailability(available);
             placeDownloadedModel(KEV_ID);
-            await textEngine.setTextEngine('native');
+            await textEngine.setTextEngine('afm');
             serverMode(ProcessingMode.OnDevice);
             const sent = recordModeUpdates();
             const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
@@ -685,7 +685,7 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
 
             await act(async () => {
-                await result.current.selectEngine('native');
+                await result.current.selectEngine('afm');
             });
 
             expect(hasAnyStat(getInferenceStats())).toBe(false);
@@ -699,7 +699,7 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
 
             await act(async () => {
-                await result.current.selectEngine('mera');
+                await result.current.selectEngine('qwen');
             });
 
             expect(getInferenceStats().genTokPerSec).toBe(20);
@@ -814,7 +814,7 @@ describe('Mera Protocol settings', () => {
         });
 
         it('an engine tap while the delete runs does not promote the phone', async () => {
-            jest.spyOn(textEngine, 'nativeEngineAvailability').mockResolvedValue({ available: true, reason: null } as never);
+            jest.spyOn(textEngine, 'builtInAvailability').mockResolvedValue({ available: true, reason: null } as never);
             const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
             // Only the Apple Intelligence file is on disk: the phone is on Private cloud, the intent is kept,
             // and picking Apple Intelligence would make it runnable (and promote) if the delete did not block it.
@@ -844,7 +844,7 @@ describe('Mera Protocol settings', () => {
             await waitFor(() => expect(result.current.isDeletingModel).toBe(true));
 
             await act(async () => {
-                await result.current.selectEngine('native');
+                await result.current.selectEngine('afm');
             });
             expect(promote).not.toHaveBeenCalled();
 

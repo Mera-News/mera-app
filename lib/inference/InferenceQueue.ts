@@ -19,7 +19,7 @@ import {
   dropPendingComboJobs,
   finishComboPassIfDrained,
 } from '../database/services/combo-pass-service';
-import { deferDelayMs, isDeferrableError } from './job-defer';
+import { deferDelayMs, isDeferrableError, isOnDeviceDeferrable } from './job-defer';
 import { getFacts, markOrphanedFactsAsFailed } from '../database/services/fact-service';
 import { destroyOrphanedTopics, getAllTopicIds } from '../database/services/topic-service';
 import { purgeSuggestionsForDeadTopics } from '../database/services/article-suggestion-lifecycle';
@@ -28,7 +28,9 @@ import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
 import { handleTrackedStoryMigrateJob } from './handlers/tracked-story-migrate-handler';
 import { handleTopicComboJob } from './handlers/topic-combo-handler';
-import { resetContext } from '../mera-protocol-toolkit';
+import { getTextEngine, isBuiltInEngine, resetContext } from '../mera-protocol-toolkit';
+import { useMeraProtocolStore } from '../stores/mera-protocol-store';
+import { ProcessingMode } from '../generated/graphql-types';
 import type { InferenceJobType } from '../database/models/InferenceJob';
 import logger from '../logger';
 
@@ -367,6 +369,16 @@ class InferenceQueueImpl {
         continue;
       }
 
+      // The built-in model works only in the foreground (Gemini Nano refuses
+      // background work, Apple throttles it), so on it nothing starts until the
+      // app is active again. Checked before the dequeue: waiting spends no
+      // attempt. The AppState gate wakes this sleep on return.
+      if (await this.waitsForForeground()) {
+        this.idleDelay = POLL_INTERVAL_MAX;
+        await this.sleep(POLL_INTERVAL_MAX);
+        continue;
+      }
+
       const stats = await getQueueStats();
       if (stats.pending > 0 || stats.running > 0 || stats.failed > 0) {
         logger.debug('[InferenceQueue] Queue stats', stats);
@@ -449,7 +461,7 @@ class InferenceQueueImpl {
           const errorMsg =
             (err as Error)?.message ||
             (err ? String(err) : 'Native crash (no error message)');
-          if (DEFERRABLE_TYPES.has(job.jobType) && isDeferrableError(err)) {
+          if ((DEFERRABLE_TYPES.has(job.jobType) && isDeferrableError(err)) || isOnDeviceDeferrable(err)) {
             deferred = true;
             logger.warn('[InferenceQueue] Job deferred', { jobId: job.id, jobType: job.jobType, error: errorMsg });
             await job.markDeferred(errorMsg);
@@ -483,6 +495,13 @@ class InferenceQueueImpl {
       await jobExec;
       this.currentJobPromise = null;
     }
+  }
+
+  /** On this phone with the built-in text model, while the app is not active. */
+  private async waitsForForeground(): Promise<boolean> {
+    if (AppState.currentState === 'active') return false;
+    if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice) return false;
+    return isBuiltInEngine(await getTextEngine().catch(() => 'qwen' as const));
   }
 
   private sleep(ms: number): Promise<void> {
@@ -522,7 +541,9 @@ class InferenceQueueImpl {
    *
    * In-flight work is untouched — only the empty-queue sleep changes — so
    * `isBusy()` keeps reporting truthfully for background-idle.ts, and a job
-   * enqueued while backgrounded still calls notify() -> wake() and runs at once.
+   * enqueued while backgrounded still calls notify() -> wake() and runs at once,
+   * except on the built-in model, where it waits for the foreground
+   * (`waitsForForeground`).
    */
   private armAppStateGate(): void {
     if (this.appStateSub) return;

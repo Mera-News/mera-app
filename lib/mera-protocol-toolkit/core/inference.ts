@@ -1,8 +1,9 @@
 // Inference Engine: on-device inference.
-//   infer / inferStream  text, on the stored TEXT ENGINE (text-engine.ts): the
-//                        downloaded text model through llama.rn, or the
-//                        platform's own model (Apple Foundation Models) through
-//                        mera-on-device-llm
+//   infer / inferStream  text, on the TEXT ENGINE (text-engine.ts, or the one the
+//                        caller names): 'qwen' through llama.rn, or the
+//                        platform's built-in model ('afm' Apple Foundation
+//                        Models, 'nano' Gemini Nano) through mera-on-device-llm
+//   inferStructured      a JSON value fitting a schema, on the same engines
 //   decide               Kev decisions on the RELEVANCE model (llama.rn)
 // Each takes the llama lock (llama-lock.ts) once. A llama.rn call makes its
 // model resident inside it (modelManager._ensureLoaded), swapping out the other
@@ -14,6 +15,7 @@ import type { InferParams, InferResult } from '../types';
 import { holdRestart } from '../../app-restart';
 import { recordCompletion, recordRefusal } from './inference-stats';
 import { acquireLlamaLock, withLlamaLock } from './llama-lock';
+import { LOCAL_CONTEXT_TOKENS } from './context-size';
 import { RELEVANCE_MODEL, supportsJsonGrammar, TEXT_MODEL } from './model-catalog';
 import {
   _assertOnDeviceMode,
@@ -23,13 +25,21 @@ import {
   _updateInferenceSpeed,
   getModelState,
 } from './modelManager';
-import { getTextEngine } from './text-engine';
+import { readStructured, type JsonSchema } from './structured-json';
+import { getTextEngine, isBuiltInEngine, type TextEngine } from './text-engine';
 import {
+  contextSize as nativeContextSize,
   isOnDeviceLlmRefusal,
   respond as nativeRespond,
+  respondStructured as nativeRespondStructured,
   stream as nativeStream,
   type OnDeviceLlmOptions,
 } from '@/modules/mera-on-device-llm';
+
+/** The engine a call runs on: the one the caller built its prompt for, else the one in force. */
+async function engineFor(params: { engine?: TextEngine }): Promise<TextEngine> {
+  return params.engine ?? (await getTextEngine());
+}
 
 /** What the native engine takes. It has no stop sequences, no grammar and no
  *  thinking switch: the JSON jobs carry the format in words and are parsed from
@@ -139,8 +149,8 @@ export function infer(params: InferParams): Promise<InferResult> {
 // The context lookup and the timing both belong INSIDE the lock: the context can
 // be disposed while a caller queues, and `latencyMs` must measure the completion
 // rather than the time spent waiting for the lock.
-async function inferExclusive(params: InferParams): Promise<InferResult> {
-  if ((await getTextEngine()) === 'native') return inferNative(params);
+async function inferExclusive(params: InferParams, schema?: JsonSchema): Promise<InferResult> {
+  if (isBuiltInEngine(await engineFor(params))) return inferNative(params);
   await _ensureLoaded(TEXT_MODEL.modelId);
   const context = _getContext();
   if (!context) {
@@ -163,9 +173,9 @@ async function inferExclusive(params: InferParams): Promise<InferResult> {
     top_k: 40,
     stop: params.stopSequences,
     enable_thinking: params.enableThinking ?? false,
-    ...(wantsJsonGrammar(params) && {
-      response_format: { type: 'json_object' as const },
-    }),
+    ...(schema
+      ? { response_format: { type: 'json_schema' as const, json_schema: { schema } } }
+      : wantsJsonGrammar(params) && { response_format: { type: 'json_object' as const } }),
   });
 
   const latencyMs = Date.now() - startTime;
@@ -215,7 +225,7 @@ async function* inferStreamExclusive(
 ): AsyncGenerator<string> {
   // The abort may have landed while this call queued for the lock.
   if (signal?.aborted) return;
-  if ((await getTextEngine()) === 'native') {
+  if (isBuiltInEngine(await engineFor(params))) {
     yield* inferStreamNative(params, signal);
     return;
   }
@@ -342,6 +352,92 @@ async function* inferStreamExclusive(
 
   // Ensure the completion promise has settled
   await completionPromise;
+}
+
+export type StructuredParams = {
+  system: string;
+  prompt: string;
+  /** The reply's shape. Its root is an object or an array. */
+  schema: JsonSchema;
+  temperature?: number;
+  maxTokens?: number;
+  /** The engine the prompt was built for; the one in force when omitted. */
+  engine?: TextEngine;
+  label?: InferParams['label'];
+};
+
+/** A structured reply that never fit its schema, after the retry. Not deferrable: the model answered. */
+export class StructuredOutputError extends Error {
+  readonly code = 'ERR_STRUCTURED_OUTPUT';
+  constructor() {
+    super('On-device reply did not match its schema');
+    this.name = 'StructuredOutputError';
+  }
+}
+
+const JSON_REMINDER = 'Reply with only JSON that matches the schema. No other text.';
+
+/** One structured attempt, as text. Unlocked: call only inside the llama lock. */
+async function structuredOnce(engine: TextEngine, params: StructuredParams, prompt: string): Promise<string> {
+  if (!isBuiltInEngine(engine)) {
+    const result = await inferExclusive(
+      {
+        systemPrompt: params.system,
+        prompt,
+        maxTokens: params.maxTokens,
+        temperature: params.temperature,
+        label: params.label,
+        engine,
+      },
+      params.schema,
+    );
+    return result.output;
+  }
+  _assertOnDeviceMode();
+  await _releaseTextModel();
+  const startTime = Date.now();
+  const output = await nativeRespondStructured(
+    params.system,
+    prompt,
+    JSON.stringify(params.schema),
+    nativeOptions({ prompt, temperature: params.temperature, maxTokens: params.maxTokens }),
+  ).catch(countRefusal);
+  recordCompletion({ label: params.label, latencyMs: Date.now() - startTime });
+  return output;
+}
+
+/**
+ * A JSON value fitting `schema`. Qwen runs under a llama.rn json_schema grammar;
+ * the built-in models answer through `respondStructured`. Every reply is read
+ * tolerantly (code fences and prose skipped) and checked against the schema; a
+ * miss is retried once with a short reminder, then throws StructuredOutputError.
+ * Engine errors (busy, unavailable, refusal) are never retried here: they reach
+ * the caller as they are, so a queue job can defer.
+ */
+export function inferStructured<T = unknown>(params: StructuredParams): Promise<T> {
+  return withLlamaLock(async () => {
+    const release = holdRestart('local-inference');
+    try {
+      const engine = await engineFor(params);
+      for (const prompt of [params.prompt, `${params.prompt}\n\n${JSON_REMINDER}`]) {
+        const value = readStructured(await structuredOnce(engine, params, prompt), params.schema);
+        if (value !== undefined) return value as T;
+      }
+      throw new StructuredOutputError();
+    } finally {
+      release();
+    }
+  });
+}
+
+/**
+ * The text engine's context window in tokens, input plus output, so a flow can
+ * size its prompt. The built-in model reports its own (null when it cannot say);
+ * Qwen runs at LOCAL_CONTEXT_TOKENS.
+ */
+export async function contextSize(engine?: TextEngine): Promise<number | null> {
+  const e = engine ?? (await getTextEngine());
+  return isBuiltInEngine(e) ? nativeContextSize() : LOCAL_CONTEXT_TOKENS;
 }
 
 /**

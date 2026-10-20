@@ -1,5 +1,7 @@
-// The on-device model catalogue: the two models "On this phone" runs, and the
-// ids that are retired. There is no user choice: on-device needs BOTH files.
+// The on-device model catalogue: the two downloadable models "On this phone"
+// runs, and the ids that are retired. Kev is always needed; the text model only
+// when it is the chosen text engine (text-engine.ts), since the phone's built-in
+// model can write the text instead.
 //
 //   TEXT       every generative job: chat, notes (reasons), topic generation.
 //   RELEVANCE  Kev, a decision model: pass-1 relevance through llama.rn's
