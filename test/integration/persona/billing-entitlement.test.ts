@@ -8,8 +8,12 @@ import * as billingService from '@/lib/billing-service';
 import {
     fetchUserBilling,
     fetchUserBillingLapseState,
+    fetchUserReading,
     refreshUserBillingAfterPurchase,
 } from '@/lib/billing-service';
+import logger from '@/lib/logger';
+import { useForYouStore } from '@/lib/stores/for-you-store';
+import { _resetNetworkTrackingForTests, useNetworkStore } from '@/lib/stores/network-store';
 import database from '@/lib/database';
 import * as settingService from '@/lib/database/services/setting-service';
 import { getReadHold, isReadHeld, resetReadHold, setReadHold } from '@/lib/subscription/read-hold';
@@ -190,6 +194,51 @@ describe('billing and entitlement', () => {
 
             server.use(mockGqlError('GetUserBillingLapseState', 'GRAPHQL_VALIDATION_FAILED'));
             await expect(fetchUserBillingLapseState()).resolves.toBeNull();
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    // The error link runs BEFORE fetchUserReading's catch, so the query is quiet only through its context.
+    describe('fetchUserReading on a server without the reading fields', () => {
+        let capture: jest.SpyInstance;
+        const banner = () => useForYouStore.getState().syncStatusMessage;
+        const capturedBy = (key: 'type' | 'component', value: string) =>
+            capture.mock.calls.filter(([, ctx]) => (ctx as { tags?: Record<string, string> } | undefined)?.tags?.[key] === value);
+
+        beforeEach(() => {
+            _resetNetworkTrackingForTests();
+            useNetworkStore.setState({ isConnected: true, serverReachable: true, serverSlow: false, internetReachable: true });
+            useForYouStore.getState().setSyncStatusMessage(null);
+            capture = jest.spyOn(logger, 'captureException');
+        });
+
+        it('a 400 GRAPHQL_VALIDATION_FAILED (the real graphql-response+json shape): null, no Sentry, no Feed banner', async () => {
+            server.use(
+                mockGqlError('GetUserReading', 'GRAPHQL_VALIDATION_FAILED', {
+                    message: 'Cannot query field "readingUsed" on type "UserBillingInfo".',
+                    httpStatus: 400,
+                    headers: { 'Content-Type': 'application/graphql-response+json' },
+                }),
+            );
+            await expect(fetchUserReading()).resolves.toBeNull();
+            expect(capture).not.toHaveBeenCalled();
+            expect(banner()).toBeNull();
+        });
+
+        it('a transport failure: null, the service reports nothing and the Feed shows no banner', async () => {
+            fakeClock(NOW);
+            server.use(graphql.query('GetUserReading', () => HttpResponse.error()));
+            await expect(advanceUntilDone(fetchUserReading())).resolves.toBeNull();
+            expect(capturedBy('component', 'billing-service')).toHaveLength(0);
+            expect(banner()).toBeNull();
+        });
+
+        it('GetUserBilling keeps its reporting: the link and the service both capture a GraphQL error', async () => {
+            server.use(mockGqlError('GetUserBilling', 'INTERNAL_SERVER_ERROR'));
+            await expect(fetchUserBilling()).resolves.toBeNull();
+            expect(capturedBy('type', 'graphql')).toHaveLength(1);
+            expect(capturedBy('component', 'billing-service')).toHaveLength(1);
+            expect(banner()?.state).toBe('failed');
         });
     });
 

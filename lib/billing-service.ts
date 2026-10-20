@@ -113,6 +113,10 @@ export async function fetchUserReading(): Promise<UserReading | null> {
         const { data } = await client.query<{ userBilling: UserReading }>({
             query: GET_USER_READING,
             fetchPolicy: 'no-cache',
+            // The error link runs before the catch below, so quiet needs both:
+            // the missing-fields code is a breadcrumb, and no error here is a
+            // Feed sync failure (lib/apollo-client.ts).
+            context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
         });
         const reading = data?.userBilling ?? null;
         if (!reading) return null;
