@@ -1,0 +1,34 @@
+{
+  "description": "On-device fact save: two facts in one message. Both must be offered.",
+  "knownFacts": "- 'location: residence': Lives in Porto, Portugal\n- 'profession: job': Senior software engineer\n- 'interest: topic': Follows Formula 1 racing",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows Formula 1 racing",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f2",
+      "statement": "Senior software engineer",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Porto, Portugal",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "My daughter starts primary school in Utrecht next month, and I follow road cycling."
+    }
+  ],
+  "expect": {
+    "toolCalled": "saveExtractedFacts",
+    "saveMentions": [
+      "school",
+      "cycling"
+    ]
+  }
+}

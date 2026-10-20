@@ -18,6 +18,14 @@
 // the SAME fixture. Treat anything below ~20 runs per arm as indicative only,
 // and always report the run count alongside the rate.
 //
+// --engine afm|qwen-local|nano-proxy replays ON-DEVICE persona chat instead
+// (lib/news-harness/on-device/persona-chat): its prompt and schema, the reply
+// mapped to the executor tools the app would run. `--fixture` then takes a
+// comma list, default every `ondevice-*` fixture, and the run is written to
+// .local-test-data/runs/. Fixtures expecting runCalibration are N/A on-device.
+// On-device expectations may also carry `saveMentions` (each a|b alternative
+// must appear in some saved statement) and `deleteIds` (the exact ids removed).
+//
 // Node-only: never imported by the app bundle. It posts tools/tool_choice
 // directly rather than going through adapters/nearai-llm.ts, whose LlmPort is
 // batch TEXT completion and cannot express tool calling.
@@ -36,6 +44,18 @@ import {
   CHAT_REASONING_HEADROOM_TOKENS,
 } from '../../lib/llm/constants';
 import { buildChatTurnBody } from '../lib/chat-turn';
+import { assertEngineReady, isTransportError, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
+import { createRunWriter } from '../lib/run-writer';
+import {
+  buildPersonaChatPrompt,
+  personaChatInstructions,
+  personaChatSchema,
+  personaChatTurn,
+  shownFactIds,
+  type PersonaChatContext,
+  type PersonaChatReply,
+  type PersonaSurface,
+} from '../../lib/news-harness/on-device/persona-chat';
 
 interface WireMsg {
   role: 'user' | 'assistant';
@@ -52,7 +72,121 @@ interface Fixture {
     toolCalled?: string;
     /** Tool that must NOT be called. */
     toolNotCalled?: string;
+    /** On-device: each entry (a|b alternatives) appears in some saved statement. */
+    saveMentions?: string[];
+    /** On-device: deleteUserFacts names exactly these ids. */
+    deleteIds?: string[];
   };
+  /** On-device context: facts with ids, newest first. Else parsed from knownFacts. */
+  facts?: { id: string; statement: string; attribute?: string }[];
+  /** On-device surface, default CONFIG. */
+  surface?: PersonaSurface;
+  /** Reply language for the on-device instruction, default English. */
+  language?: string;
+}
+
+/** Tools the on-device persona chat can never call: their fixtures are N/A there. */
+const CLOUD_ONLY_TOOLS = new Set(['runCalibration']);
+
+function onDeviceFacts(f: Fixture): PersonaChatContext['facts'] {
+  if (f.facts) return f.facts;
+  // `- 'attribute': statement` lines, oldest first; the context wants newest first.
+  return f.knownFacts
+    .split('\n')
+    .flatMap((line, i) => {
+      const m = /^- (?:'([^']*)': )?(.+)$/.exec(line.trim());
+      return m ? [{ id: `k${i}`, statement: m[2], attribute: m[1] ?? null }] : [];
+    })
+    .reverse();
+}
+
+interface OnDeviceRun {
+  fixture: string;
+  run: number;
+  pass: boolean;
+  why: string;
+  calls: { name: string; input: Record<string, unknown> }[];
+  reply: string;
+  latencyMs: number;
+  error: string | null;
+}
+
+/** The expectation against the executor calls an on-device turn mapped to. */
+export function judgeOnDevice(expect: Fixture['expect'], calls: OnDeviceRun['calls']): { pass: boolean; why: string } {
+  const names = calls.map((c) => c.name);
+  if (expect.toolCalled && !names.includes(expect.toolCalled)) return { pass: false, why: `no ${expect.toolCalled}` };
+  if (expect.toolNotCalled && names.includes(expect.toolNotCalled)) return { pass: false, why: `called ${expect.toolNotCalled}` };
+  const saved = calls
+    .filter((c) => c.name === 'saveExtractedFacts')
+    .flatMap((c) => (c.input.extracted_user_information as { statement: string }[]) ?? [])
+    .map((x) => x.statement.toLowerCase());
+  for (const m of expect.saveMentions ?? []) {
+    const alts = m.toLowerCase().split('|');
+    if (!saved.some((st) => alts.some((a) => st.includes(a)))) return { pass: false, why: `no saved statement names ${m}` };
+  }
+  if (expect.deleteIds) {
+    const ids = calls.filter((c) => c.name === 'deleteUserFacts').flatMap((c) => (c.input.fact_ids as string[]) ?? []);
+    if ([...new Set(ids)].sort().join(',') !== [...expect.deleteIds].sort().join(',')) return { pass: false, why: `deleted [${ids.join(',')}]` };
+  }
+  return { pass: true, why: 'ok' };
+}
+
+async function mainOnDevice(engine: LocalEngine, argv: string[], runs: number): Promise<number> {
+  await assertEngineReady(engine);
+  const dir = path.resolve(__dirname, '..', 'fixtures', 'persona-chat');
+  const i = argv.indexOf('--fixture');
+  const ids = i === -1
+    ? fs.readdirSync(dir).filter((n) => n.startsWith('ondevice-')).map((n) => n.replace(/\.json$/, '')).sort()
+    : (argv[i + 1] ?? '').split(',').filter(Boolean);
+  const run = createRunWriter({ label: `persona-chat-${engine}` });
+  const rowsPath = path.join(run.dir, 'rows.jsonl');
+  const summary: Record<string, { pass: number; n: number; modelFails: number; na?: string }> = {};
+  console.log(`engine  : ${engine} (on-device persona chat)\nruns    : ${runs} per fixture\nrun dir : ${run.dir}\n`);
+  for (const id of ids) {
+    const fixture = JSON.parse(fs.readFileSync(path.join(dir, `${id}.json`), 'utf8')) as Fixture;
+    const named = fixture.expect.toolCalled ?? fixture.expect.toolNotCalled ?? '';
+    if (CLOUD_ONLY_TOOLS.has(named)) {
+      summary[id] = { pass: 0, n: 0, modelFails: 0, na: `${named} is cloud-only` };
+      console.log(`${id}: N/A on-device (${named} is cloud-only)`);
+      continue;
+    }
+    const surface = fixture.surface ?? 'CONFIG';
+    const context: PersonaChatContext = { facts: onDeviceFacts(fixture), topicPlanNotes: null, pending: null };
+    const system = personaChatInstructions(surface, fixture.language ?? 'English');
+    const s = (summary[id] = { pass: 0, n: 0, modelFails: 0 });
+    for (let r = 0; r < runs; r++) {
+      const started = Date.now();
+      const out = await onDeviceChatTurn<PersonaChatReply>(engine, system, personaChatSchema(surface), (b) =>
+        buildPersonaChatPrompt(surface, context, fixture.wire, b),
+      );
+      const turn = out.value ? personaChatTurn(out.value, { factIds: shownFactIds(context), hasPending: false }) : null;
+      const row: OnDeviceRun = {
+        fixture: id, run: r, pass: false, why: '', calls: turn?.calls ?? [], reply: turn?.reply ?? '',
+        latencyMs: Date.now() - started, error: out.error,
+      };
+      if (out.error && isTransportError(out.error)) {
+        row.why = `transport: ${out.error}`;
+      } else {
+        s.n++;
+        if (out.error) {
+          row.why = out.error;
+          s.modelFails++;
+        } else {
+          Object.assign(row, judgeOnDevice(fixture.expect, row.calls));
+          if (row.pass) s.pass++;
+        }
+      }
+      fs.appendFileSync(rowsPath, `${JSON.stringify(row)}\n`);
+      console.log(`  ${id} run ${String(r + 1).padStart(2)}: ${row.pass ? 'PASS' : 'FAIL'} ${row.latencyMs}ms ${row.why} calls=[${row.calls.map((c) => `${c.name} ${JSON.stringify(c.input).slice(0, 140)}`).join(' | ')}]`);
+    }
+    console.log(`RESULT ${id}: ${s.pass}/${s.n}${s.modelFails ? ` (${s.modelFails} model-outcome fails)` : ''}\n`);
+  }
+  const scored = Object.values(summary).filter((x) => !x.na);
+  const pass = scored.reduce((a, x) => a + x.pass, 0);
+  const n = scored.reduce((a, x) => a + x.n, 0);
+  console.log(`FACT-SAVE ACCURACY ${engine}: ${pass}/${n} (${n ? Math.round((pass / n) * 100) : 0}%)`);
+  run.writeJson('summary', { engine, runs, fixtures: summary, pass, n });
+  return 0;
 }
 
 interface Args {
@@ -295,6 +429,8 @@ async function readStream(res: Response, startedAt: number): Promise<RunResult> 
 
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
+  const engine = parseEngine(process.argv.slice(2));
+  if (engine !== 'cloud') return mainOnDevice(engine, process.argv.slice(2), args.runs);
   const env = loadHarnessEnv();
 
   const fixturePath = path.resolve(
