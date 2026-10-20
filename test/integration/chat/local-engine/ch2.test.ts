@@ -10,9 +10,9 @@
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import { initBaseModel } from '@/lib/mera-protocol-toolkit';
 import { signInFixtureAccount } from '@/test/helpers';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
 import {
   installLlama,
-  llamaCalls,
   resetChatModules,
   resetFileSystem,
   setProcessingMode,
@@ -22,6 +22,7 @@ import { attachLocal, local, personaAgent, personaReply, saveFactReply, settle, 
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 jest.setTimeout(30_000);
 
@@ -41,9 +42,10 @@ beforeEach(async () => {
   await setProcessingMode('on-device');
   toolStarted = false;
   // Turn 1 offers a fact; every later completion is a plain reply.
-  installLlama((call) =>
-    llamaCalls().indexOf(call) === 0 ? [saveFactReply()] : [personaReply({ reply: 'Second reply.' })],
-  );
+  installLlama([]);
+  installOnDeviceLlm({
+    reply: (call) => (onDeviceLlmCalls().indexOf(call) === 0 ? saveFactReply() : personaReply({ reply: 'Second reply.' })),
+  });
   await initBaseModel();
   await inferenceQueue.start();
 });
@@ -76,14 +78,14 @@ describe('a send while the first turn runs its tools', () => {
     await new Promise((r) => setTimeout(r, 150));
 
     // Refused: no second completion, no second user message, and the turn is still busy.
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     expect(userTexts()).toEqual(['first']);
     expect(local().turnBusy).toBe(true);
     expect(streamHolds()).toBe(1);
 
     openGate();
     await turnDone();
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     expect(local().messages.find((m) => m.role === 'assistant')?.toolCalls?.[0].status).toBe('done');
   });
 });

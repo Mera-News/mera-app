@@ -1,6 +1,7 @@
 // The on-device chat engine driven through the chat session: the real createLocalEngine, the real
 // mera-protocol-toolkit (model manager, inference lock), the real inference queue, the in-memory DB
-// and the real stores. Only llama.rn (scripted) and expo-file-system (in-memory) are faked.
+// and the real stores. Only the built-in model module (scripted: it writes the text since D37),
+// llama.rn (Kev only) and expo-file-system (in-memory) are faked.
 // Replaces the on-device half of lib/chat-session/__tests__/chat-session.test.ts and proves what
 // its mocked engines could not: that a real on-device turn produces the busy window, the hold and
 // the rows the session promises.
@@ -9,18 +10,12 @@ import { fetchMessagesForConversation } from '@/lib/database/services/conversati
 import { enqueueJob, getQueueStats } from '@/lib/database/services/inference-job-service';
 import { __setJobHandlerForTests, inferenceQueue } from '@/lib/inference/InferenceQueue';
 import { stopChatTurn } from '@/lib/chat-session/chat-session';
-import {
-  decide,
-  disposeModel,
-  initBaseModel,
-  isTextModelResident,
-  RELEVANCE_MODEL,
-  TEXT_MODEL,
-} from '@/lib/mera-protocol-toolkit';
+import { decide, disposeModel, initBaseModel, RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import '@/test/helpers';
-import { llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
+import { llamaLoads } from '@/test/helpers/llama';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
 import {
   installLlama,
   llamaCalls,
@@ -43,8 +38,10 @@ import {
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
-const initLlama = () => (jest.requireMock('llama.rn') as { initLlama: jest.Mock }).initLlama;
+/** Scripts the built-in model's replies. */
+const text = (reply: NonNullable<Parameters<typeof installOnDeviceLlm>[0]>['reply']) => installOnDeviceLlm({ reply });
 
 jest.setTimeout(30_000);
 
@@ -58,11 +55,13 @@ beforeEach(async () => {
   resetChatModules();
   resetFileSystem();
   await setProcessingMode('on-device');
+  // Kev on disk; a llama.rn completion fails the test.
+  installLlama(() => ({ tokens: [], error: 'llama.rn completion on Kev' }));
 });
 
 describe('a plain turn', () => {
   beforeEach(async () => {
-    installLlama(['Hello', ' there', '.']);
+    text(['Hello', ' there', '.']);
     await initBaseModel();
   });
 
@@ -108,7 +107,7 @@ describe('a plain turn', () => {
   it('writes the user message and the finished reply as rows, once each', async () => {
     // A few ms between tokens: rows are ordered by created_at (id breaks ties), so a turn
     // faster than a millisecond would order them by their random ids.
-    installLlama({ tokens: ['Hello', ' there', '.'], tokenDelayMs: 5 });
+    text({ tokens: ['Hello', ' there', '.'], tokenDelayMs: 5 });
     const { engine, conversationId } = await attachLocal();
     engine.send('hi');
     await turnDone();
@@ -142,36 +141,14 @@ describe('a plain turn', () => {
     first.engine.send('into the void');
     expect(local().messages).toEqual([]);
     expect(local().turnBusy).toBe(false);
-    expect(llamaCalls()).toHaveLength(0);
+    expect(onDeviceLlmCalls()).toHaveLength(0);
   });
 });
 
 describe('the wait line', () => {
-  it('a cold model publishes deviceLoading until the first token; inferStream loads the text model once and chat writes no model state', async () => {
-    installLlama(['Hello', ' there', '.']);
+  it('preparing, then thinking, then released: the built-in model loads nothing and chat writes no model state', async () => {
+    text(['Hello', ' there', '.']);
     await disposeModel();
-    const states: string[] = [];
-    const unsub = useMeraProtocolStore.subscribe((s) => {
-      if (states.at(-1) !== s.modelState) states.push(s.modelState);
-    });
-    const phases = samplePhases();
-    const { engine } = await attachLocal();
-
-    engine.send('hi');
-    await turnDone();
-    unsub();
-    phases.stop();
-
-    expect(phases.seen).toEqual(['deviceLoading', 'released']);
-    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId]);
-    expect(states).toEqual([]);
-    expect(lastAssistant()?.content).toBe('Hello there.');
-    expectNothingLeftTheDevice();
-  });
-
-  it('a loaded model skips deviceLoading and leaves the model state alone', async () => {
-    installLlama(['Hello', ' there', '.']);
-    await initBaseModel();
     const states: string[] = [];
     const unsub = useMeraProtocolStore.subscribe((s) => states.push(s.modelState));
     const phases = samplePhases();
@@ -183,75 +160,74 @@ describe('the wait line', () => {
     phases.stop();
 
     expect(phases.seen).toEqual(['devicePreparing', 'deviceThinking', 'released']);
+    expect(llamaLoads()).toEqual([]);
     expect(states).toEqual([]);
+    expect(lastAssistant()?.content).toBe('Hello there.');
+    expectNothingLeftTheDevice();
   });
 });
 
-describe('the relevance model swapped in between turns', () => {
+describe('Kev resident between turns', () => {
   beforeEach(async () => {
     await disposeModel();
   });
 
-  it('the second turn completes on the text context; kev completion() is never called and two contexts are never live', async () => {
-    installLlama(['Hello', ' there', '.']);
+  it('a scoring pass between two turns leaves Kev loaded; the turns never touch llama.rn', async () => {
+    text(['Hello', ' there', '.']);
     const { engine } = await attachLocal();
     engine.send('hi');
     await turnDone();
-    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId]);
+    expect(llamaLoads()).toEqual([]);
 
-    // A scoring pass steps in between the turns and leaves kev resident.
     await decide({ state: {}, questions: { rel: { type: 'score' } } } as never);
-    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId, RELEVANCE_MODEL.modelId]);
-    expect(isTextModelResident()).toBe(false);
-
     engine.send('again');
     await turnDone();
 
     expect(local().error).toBeNull();
     expect(lastAssistant()?.content).toBe('Hello there.');
-    expect(llamaCalls()).toHaveLength(2);
-    expect(llamaLoads()).toEqual([TEXT_MODEL.modelId, RELEVANCE_MODEL.modelId, TEXT_MODEL.modelId]);
-    expect(llamaMaxLive()).toBe(1);
+    expect(onDeviceLlmCalls()).toHaveLength(2);
+    expect(llamaCalls()).toHaveLength(0);
+    expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId]);
   });
 
-  it('Stop pressed during the text-model load starts no completion, ends the turn stopped, and the next turn runs', async () => {
-    installLlama(['Fine', '.']);
-    const real = initLlama().getMockImplementation()!;
-    let openGate!: () => void;
-    const gate = new Promise<void>((r) => { openGate = r; });
-    initLlama().mockImplementationOnce(async (p: unknown) => {
-      await gate;
-      return real(p);
+  it('Stop pressed while the queue pauses starts no call, ends the turn stopped, and the next turn runs', async () => {
+    text(['Fine', '.']);
+    let releasePause!: () => void;
+    const held = new Promise<void>((r) => { releasePause = r; });
+    const realPause = inferenceQueue.pause.bind(inferenceQueue);
+    const pause = jest.spyOn(inferenceQueue, 'pause').mockImplementationOnce(async () => {
+      await held;
+      return realPause();
     });
     const { engine } = await attachLocal();
 
     engine.send('hi');
-    await until(() => initLlama().mock.calls.length === 1, 5000, 'model load started');
+    await until(() => pause.mock.calls.length === 1, 5000, 'queue pause started');
     stopChatTurn();
-    openGate();
+    releasePause();
     await turnDone();
 
-    expect(llamaCalls()).toHaveLength(0);
+    expect(onDeviceLlmCalls()).toHaveLength(0);
     expect(local()).toMatchObject({ status: 'idle', turnBusy: false });
     expect(streamHolds()).toBe(0);
     expect(inferenceQueue.getState()).not.toBe('paused');
+    pause.mockRestore();
 
     engine.send('again');
     await turnDone();
     expect(lastAssistant()?.content).toBe('Fine.');
-    expect(llamaCalls()).toHaveLength(1);
-    expect(llamaMaxLive()).toBe(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
   });
 });
 
 describe('the inference queue', () => {
   it('is paused for the turn and resumed after: a job enqueued mid-turn runs only once the turn is over', async () => {
     // Slow tokens on real timers keep the turn open long enough to enqueue behind it.
-    installLlama({ tokens: ['One', ' two', ' three'], tokenDelayMs: 150 });
+    text({ tokens: ['One', ' two', ' three'], tokenDelayMs: 150 });
     await initBaseModel();
     const order: string[] = [];
     __setJobHandlerForTests('topic_gen', async () => {
-      order.push(`job (busy=${local().turnBusy}, completions=${llamaCalls().length})`);
+      order.push(`job (busy=${local().turnBusy}, completions=${onDeviceLlmCalls().length})`);
       return {};
     });
     await inferenceQueue.start();
@@ -280,7 +256,7 @@ describe('the inference queue', () => {
 
 describe('a failing completion', () => {
   it('sets the error, releases the line, clears busy, resumes the queue, and the next turn still runs', async () => {
-    installLlama((call) => (llamaCalls().indexOf(call) === 0 ? { tokens: [], error: 'boom' } : ['Fine.']));
+    text((call) => (onDeviceLlmCalls().indexOf(call) === 0 ? { error: 'ERR_AFM_CONTEXT' } : ['Fine.']));
     await initBaseModel();
     await inferenceQueue.start();
     const phases = samplePhases();
@@ -290,7 +266,7 @@ describe('a failing completion', () => {
     await turnDone();
     phases.stop();
 
-    expect(local().error).toBe('Inference failed: boom');
+    expect(local().error).toMatch(/^Inference failed: .*ERR_AFM_CONTEXT/);
     expect(local().status).toBe('idle');
     expect(local().turnBusy).toBe(false);
     expect(phases.seen.at(-1)).toBe('released');
@@ -310,13 +286,13 @@ describe('a failing completion', () => {
   // A completion that rejects in the same tick as its last token has no waiting reader to reject;
   // the failure must still surface as an error, not as a finished half reply.
   test('a completion that fails right after its last token is reported as an error', async () => {
-    installLlama({ tokens: ['Half', ' a'], error: 'boom' });
+    text({ tokens: ['Half', ' a'], error: 'ERR_AFM_CONTEXT' });
     await initBaseModel();
     const { engine } = await attachLocal();
 
     engine.send('hi');
     await turnDone();
 
-    expect(local().error).toBe('Inference failed: boom');
+    expect(local().error).toMatch(/^Inference failed: .*ERR_AFM_CONTEXT/);
   });
 });

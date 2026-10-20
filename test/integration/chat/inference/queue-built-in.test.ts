@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// The queue on the phone's built-in model (Apple Foundation Models, Gemini Nano). Nano refuses
-// background work and has a per-app quota, Apple throttles, and the model can be mid-download:
-//   - on-device with a built-in engine, nothing starts while the app is not active;
+// The queue on the phone's built-in model (Apple Foundation Models, Gemini Nano), the only on-device
+// text engine since D37. Nano refuses background work and has a per-app quota, Apple throttles, and
+// the model can be mid-download:
+//   - on-device, nothing starts while the app is not active;
 //   - "busy" and "unavailable" defer ANY job type (no attempt spent), and a topic job reaches the
 //     queue with them instead of failing its fact ("please delete and retry").
 // Real queue, real topic_gen handler and toolkit; the native module and the file system are faked.
@@ -10,7 +11,6 @@ import { getTrackedStoryById, trackStory } from '@/lib/database/services/tracked
 import { startTopicGeneration } from '@/lib/chat-tools/tool-handlers';
 import { inferenceQueue, __setJobHandlerForTests } from '@/lib/inference/InferenceQueue';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
-import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { setAppState } from '@/test/helpers';
 import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
@@ -28,15 +28,12 @@ beforeEach(async () => {
   await disposeModel();
   installOnDeviceLlm();
   await prepare();
-  await driveDone(setTextEngine('afm'));
   useMeraProtocolStore.getState().setModelState('ready');
   await setMode('on-device');
 });
 afterEach(async () => {
   setAppState('active');
   await cleanup();
-  await setTextEngine('qwen');
-  __resetTextEngineForTests();
 });
 
 describe('the foreground gate', () => {
@@ -55,12 +52,8 @@ describe('the foreground gate', () => {
     expect((await untilJob(id, ['done']))?.status).toBe('done');
   });
 
-  it.each([
-    ['the downloaded text model', 'on-device' as const, 'qwen' as const],
-    ['cloud mode, even with a built-in engine stored', 'cloud' as const, 'afm' as const],
-  ])('%s runs in the background at once', async (_label, mode, engine) => {
-    await driveDone(setTextEngine(engine));
-    await setMode(mode);
+  it('cloud mode runs in the background at once', async () => {
+    await setMode('cloud');
     const handler = jest.fn(async () => ({}));
     __setJobHandlerForTests('persona_summary', handler);
     setAppState('background');

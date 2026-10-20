@@ -30,17 +30,20 @@ import { disposeModel } from '@/lib/mera-protocol-toolkit';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { STORY_SCOPE_SYSTEM } from '@/lib/news-harness/on-device/story-scope/prompt';
 import { gatewayCalls, mockGateway, server } from '@/test/helpers';
-import { installLlama, llamaCalls, resetFileSystem } from '@/test/integration/chat/_helpers';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
+import { installLlama, resetFileSystem } from '@/test/integration/chat/_helpers';
 import { cleanup, driveDone, prepare, tick, untilJob, watchBodies, setMode } from './kit';
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 beforeEach(async () => {
   resetFileSystem();
   await disposeModel();
   useMeraProtocolStore.getState().setModelState('downloaded');
-  installLlama([]); // a clean call log: llamaCalls() counts this test's completions only
+  installLlama([]); // Kev on disk; the text runs on the built-in model
+  installOnDeviceLlm(); // a clean call log: onDeviceLlmCalls() counts this test's calls only
   await prepare();
 });
 afterEach(cleanup);
@@ -88,18 +91,19 @@ describe('persona_summary', () => {
       ['Works in AI', [ai.id], [t2.id], 'v1:2:x'],
       ['Lives in Pune', [pune.id], [t1.id], 'v1:2:x'],
     ]);
-    expect(llamaCalls()).toHaveLength(0);
+    expect(onDeviceLlmCalls()).toHaveLength(0);
   });
 
   it('on-device: the local engine writes the strings and the gateway hears nothing', async () => {
     await seedPersona();
     await setMode('on-device');
-    installLlama(['[{"text":"Works in AI","facts":[1]}]']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '[{"text":"Works in AI","facts":[1]}]' });
 
     const out = await driveDone(handlePersonaSummaryJob({ useCloud: false, personaVersion: 'v' }));
 
     expect(out).toEqual({ count: 1 });
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     noGateway();
     expect((await getAllSummaryStrings()).map((r) => r.text)).toEqual(['Works in AI']);
   });
@@ -107,11 +111,12 @@ describe('persona_summary', () => {
   it('a payload queued for the cloud runs locally once the mode is on-device (never the cloud AI)', async () => {
     await seedPersona();
     await setMode('on-device');
-    installLlama(['{"strings":[]}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"strings":[]}' });
 
     await driveDone(handlePersonaSummaryJob({ useCloud: true }));
 
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     noGateway();
   });
 
@@ -188,12 +193,13 @@ describe('story_headline', () => {
 
   it('on-device (the default when useCloud is absent): the local engine writes it, zero gateway calls', async () => {
     const story = await legacyStory();
-    installLlama(['{"headline":"Assam floods"}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"headline":"Assam floods"}' });
 
     const out = await driveDone(handleStoryHeadlineJob({ trackedStoryId: story.id, titles: TITLES }));
 
     expect(out).toEqual({ ok: true });
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     noGateway();
     expect((await getTrackedStoryById(story.id))?.llmHeadline).toBe('Assam floods');
   });
@@ -201,11 +207,12 @@ describe('story_headline', () => {
   it('a cloud-queued payload runs locally once the mode is on-device', async () => {
     const story = await legacyStory();
     await setMode('on-device');
-    installLlama(['{"headline":"Assam floods"}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"headline":"Assam floods"}' });
 
     await driveDone(handleStoryHeadlineJob({ trackedStoryId: story.id, titles: TITLES, useCloud: true }));
 
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     noGateway();
   });
 
@@ -215,7 +222,7 @@ describe('story_headline', () => {
   ])('an invalid payload (%s) asks no model and writes nothing', async (_label, payload) => {
     expect(await driveDone(handleStoryHeadlineJob({ ...payload, useCloud: true }))).toEqual({ ok: false });
     noGateway();
-    expect(llamaCalls()).toHaveLength(0);
+    expect(onDeviceLlmCalls()).toHaveLength(0);
   });
 
   it('a transport failure keeps the fallback title', async () => {
@@ -296,7 +303,8 @@ describe('tracked_story_migrate', () => {
 
   it('on-device: the local engine performs the same writes, zero gateway calls', async () => {
     const story = await legacyStory();
-    installLlama([SCOPE_JSON]);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: SCOPE_JSON });
 
     const out = await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES }));
 
@@ -306,41 +314,42 @@ describe('tracked_story_migrate', () => {
     expect((await getAllByNormalizedText('assam floods displacement')).length).toBe(1);
   });
 
-  it('on-device: its own prompt and a {label, search} json_schema grammar, never the cloud prompt', async () => {
+  it('on-device: its own prompt and the {label, search} schema, never the cloud prompt', async () => {
     const story = await legacyStory();
-    installLlama([SCOPE_JSON]);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: SCOPE_JSON });
 
     await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES }));
 
-    const [call] = llamaCalls();
-    expect(call.messages[0]).toEqual({ role: 'system', content: STORY_SCOPE_SYSTEM });
-    expect(call.messages.at(-1)!.content).toContain(`1. ${TITLES[0]}`);
-    expect(call.params).toMatchObject({
-      n_predict: 128,
-      temperature: 0.3,
-      response_format: { type: 'json_schema', json_schema: { schema: { required: ['label', 'search'] } } },
-    });
+    const [call] = onDeviceLlmCalls();
+    expect(call.instructions).toBe(STORY_SCOPE_SYSTEM);
+    expect(call.prompt).toContain(`1. ${TITLES[0]}`);
+    expect(call).toMatchObject({ kind: 'structured', options: { maxTokens: 128, temperature: 0.3 } });
+    expect(JSON.parse(call.schemaJson ?? '')).toMatchObject({ required: ['label', 'search'] });
   });
 
   it('on-device: output that never fits the schema is retried once, then the story stays legacy', async () => {
     const story = await legacyStory();
-    installLlama(['sorry, I cannot help with that']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: 'sorry, I cannot help with that' });
 
     const out = await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES }));
 
     expect(out).toEqual({ ok: false });
-    expect(llamaCalls()).toHaveLength(2);
+    expect(onDeviceLlmCalls()).toHaveLength(2);
     expect(await unmigrated(story)).toEqual({ topicId: null, topicText: null, headline: null });
   });
 
   it('on-device: a blank field falls back to the other; both blank leaves the story legacy', async () => {
     const story = await legacyStory();
-    installLlama(['{"label":"  ","search":"Assam floods"}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"label":"  ","search":"Assam floods"}' });
     await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES }));
     expect((await unmigrated(story)).headline).toBe('Assam floods');
 
     const other = await trackStory({ articleId: 'a3', title: 'Assam floods again', originSurface: 'feed' });
-    installLlama(['{"label":"","search":" "}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"label":"","search":" "}' });
     expect(await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: other.id, titles: TITLES }))).toEqual({ ok: false });
     expect((await unmigrated(other)).headline).toBeNull();
   });
@@ -348,11 +357,12 @@ describe('tracked_story_migrate', () => {
   it('a cloud-queued payload runs locally once the mode is on-device', async () => {
     const story = await legacyStory();
     await setMode('on-device');
-    installLlama([SCOPE_JSON]);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: SCOPE_JSON });
 
     await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES, useCloud: true }));
 
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     noGateway();
   });
 

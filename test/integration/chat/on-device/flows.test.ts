@@ -11,7 +11,6 @@ import { ArticleFeedbackOnDeviceAgent } from '@/lib/llm/agents/on-device/Article
 import { FollowStoryOnDeviceAgent } from '@/lib/llm/agents/on-device/FollowStoryOnDeviceAgent';
 import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
 import type { OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
-import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 import { FOLLOW_STORY_SURFACE } from '@/lib/news-harness/follow-story';
 import { countTokens, IDENTITY_LINE } from '@/lib/news-harness/on-device/shared';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -48,11 +47,9 @@ beforeEach(async () => {
   await resetAgentWorld();
   await setProcessingMode('on-device');
   installOnDeviceLlm();
-  await setTextEngine('afm');
 });
 afterEach(async () => {
   await settle();
-  __resetTextEngineForTests();
 });
 
 /** The built-in model answers every structured call with this value. */

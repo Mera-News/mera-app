@@ -5,9 +5,9 @@ import { fetchMessagesForConversation } from '@/lib/database/services/conversati
 import { addFact, getFacts } from '@/lib/database/services/fact-service';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import '@/test/helpers';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
 import {
   installLlama,
-  llamaCalls,
   resetChatModules,
   resetFileSystem,
   setProcessingMode,
@@ -27,6 +27,7 @@ import {
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 jest.setTimeout(30_000);
 
@@ -36,18 +37,23 @@ beforeEach(async () => {
   resetChatModules();
   resetFileSystem();
   await setProcessingMode('on-device');
+  // Kev on disk; the text comes from the built-in model.
+  installLlama(() => ({ tokens: [], error: 'llama.rn completion on Kev' }));
 });
+
+/** Scripts the built-in model's replies. */
+const text = (reply: NonNullable<Parameters<typeof installOnDeviceLlm>[0]>['reply']) => installOnDeviceLlm({ reply });
+const calls = onDeviceLlmCalls;
 
 const stagedFacts = () => {
   const tc = lastAssistant()?.toolCalls?.find((t) => t.name === 'saveExtractedFacts');
   return (tc?.result as { pendingFacts?: { options: string[] }[] } | undefined)?.pendingFacts;
 };
 const schemaOf = (i: number) =>
-  (llamaCalls()[i].params.response_format as { json_schema: { schema: { properties: Record<string, unknown> } } })
-    .json_schema.schema;
+  JSON.parse(calls()[i].schemaJson ?? '{}') as { properties: Record<string, unknown> };
 
 describe('a structured persona turn', () => {
-  beforeEach(() => installLlama([saveFactReply()]));
+  beforeEach(() => text(saveFactReply()));
   let clock: jest.SpyInstance | undefined;
   afterEach(() => clock?.mockRestore());
 
@@ -86,9 +92,9 @@ describe('a structured persona turn', () => {
     await settle();
 
     // One structured completion under the persona schema; no <tool_call> text anywhere.
-    expect(llamaCalls()).toHaveLength(1);
+    expect(calls()).toHaveLength(1);
     expect(Object.keys(schemaOf(0).properties)).toEqual(['reply', 'save', 'delete', 'confirm', 'cancel']);
-    expect(llamaCalls()[0].messages[0].content).not.toContain('<tool_call>');
+    expect(calls()[0].instructions).not.toContain('<tool_call>');
 
     expect(lastAssistant()?.content).toBe('Did I get that right?');
     expect(lastAssistant()?.toolCalls?.map((t) => [t.name, t.status])).toEqual([['saveExtractedFacts', 'done']]);
@@ -108,13 +114,13 @@ describe('the persona fields to the executors', () => {
   it('deletes only fact ids the context showed; an invented id is dropped', async () => {
     const kept = await addFact('Works as a <job>');
     const gone = await addFact('Lives in <old place>');
-    installLlama([personaReply({ reply: 'Removed.', delete: [gone.id, 'invented-id'] })]);
+    text([personaReply({ reply: 'Removed.', delete: [gone.id, 'invented-id'] })]);
     const { engine } = await attachLocal(personaAgent());
 
     engine.send('I moved, forget the old place');
     await turnDone();
 
-    expect(llamaCalls()[0].messages[1].content).toContain(`[${gone.id}] Lives in <old place>`);
+    expect(calls()[0].prompt).toContain(`[${gone.id}] Lives in <old place>`);
     expect(lastAssistant()?.toolCalls?.map((t) => [t.name, t.input])).toEqual([
       ['deleteUserFacts', { fact_ids: [gone.id] }],
     ]);
@@ -122,7 +128,7 @@ describe('the persona fields to the executors', () => {
   });
 
   it('with nothing waiting, confirm and cancel do nothing; cancel discards a waiting change', async () => {
-    installLlama([personaReply({ confirm: true, cancel: true })]);
+    text([personaReply({ confirm: true, cancel: true })]);
     const { engine } = await attachLocal(personaAgent());
     engine.send('yes');
     await turnDone();
@@ -134,32 +140,32 @@ describe('the persona fields to the executors', () => {
       expectedEffects: 'Less of it.',
       actions: [{ type: 'add_suppression', pattern: '<topic>', strength: 0.9 } as never],
     });
-    installLlama([personaReply({ cancel: true })]);
+    text([personaReply({ cancel: true })]);
     engine.send('no thanks');
     await turnDone();
-    expect(llamaCalls()[0].messages[1].content).toContain("A change is waiting for the user's yes or no: Hide <topic>.");
+    expect(calls()[0].prompt).toContain("A change is waiting for the user's yes or no: Hide <topic>.");
     expect(lastAssistant()?.toolCalls?.map((t) => t.name)).toEqual(['cancelProposal']);
     expect(useFloatingChatStore.getState().proposal).toBeNull();
   });
 
   it('onboarding has no delete field, and its context carries the questions to ask', async () => {
-    installLlama([personaReply({ reply: 'Where do you live?' })]);
+    text([personaReply({ reply: 'Where do you live?' })]);
     const { engine } = await attachLocal(personaAgent('ONBOARDING'));
     engine.send('hi');
     await turnDone();
 
     expect(Object.keys(schemaOf(0).properties)).toEqual(['reply', 'save', 'confirm', 'cancel']);
-    expect(llamaCalls()[0].messages[1].content).toContain('Questions you can ask');
+    expect(calls()[0].prompt).toContain('Questions you can ask');
     expect(lastAssistant()?.content).toBe('Where do you live?');
   });
 
   it('a reply that never fits the schema fails the turn after one retry; nothing runs', async () => {
-    installLlama(['Sure, I can help with that.']);
+    text(['Sure, I can help with that.']);
     const { engine } = await attachLocal(personaAgent());
     engine.send('hi');
     await turnDone();
 
-    expect(llamaCalls()).toHaveLength(2);
+    expect(calls()).toHaveLength(2);
     expect(local().error).toBe('Inference failed: On-device reply did not match its schema');
     expect(lastAssistant()?.toolCalls ?? []).toEqual([]);
     expect(local().turnBusy).toBe(false);
@@ -168,7 +174,7 @@ describe('the persona fields to the executors', () => {
 
 describe('reasoning tags on the streamed flow', () => {
   it('a <think> block never shows', async () => {
-    installLlama(['<thi', 'nk>planning</th', 'ink>The ', 'guide ', 'explains it.']);
+    text(['<thi', 'nk>planning</th', 'ink>The ', 'guide ', 'explains it.']);
     const { engine } = await attachLocal();
     const watch = sampleLocal();
 
@@ -181,7 +187,7 @@ describe('reasoning tags on the streamed flow', () => {
   });
 
   it('a stray </think> does not swallow the reply', async () => {
-    installLlama(['It is the ', 'feed.</think>', ' It updates hourly.']);
+    text(['It is the ', 'feed.</think>', ' It updates hourly.']);
     const { engine } = await attachLocal();
 
     engine.send('what is this?');
@@ -193,9 +199,7 @@ describe('reasoning tags on the streamed flow', () => {
 
 describe('the prompt', () => {
   it('renders the history as User:/Mera: lines after the context, ending on the last user turn', async () => {
-    installLlama((call) =>
-      llamaCalls().indexOf(call) === 0 ? [saveFactReply()] : [personaReply({ reply: 'Anything else?' })],
-    );
+    text((call) => (calls().indexOf(call) === 0 ? saveFactReply() : personaReply({ reply: 'Anything else?' })));
     const { engine } = await attachLocal(personaAgent());
 
     engine.send('I live somewhere new');
@@ -203,21 +207,21 @@ describe('the prompt', () => {
     engine.send('thanks');
     await turnDone();
 
-    const prompt = llamaCalls()[1].messages[1].content;
+    const prompt = calls()[1].prompt;
     const conversation = prompt.slice(prompt.indexOf('Conversation:\n') + 'Conversation:\n'.length).split('\n');
     expect(conversation).toEqual(['User: I live somewhere new', 'Mera: Did I get that right?', 'User: thanks']);
     expect(prompt.indexOf('Known facts:')).toBeLessThan(prompt.indexOf('Conversation:'));
   });
 
   it('a hidden turn is a user turn to the model and never shown or written', async () => {
-    installLlama(['Understood.']);
+    text(['Understood.']);
     const { engine, conversationId } = await attachLocal();
 
     engine.sendHidden('The reader discarded the topics.');
     await turnDone();
     await settle();
 
-    const prompt = llamaCalls()[0].messages[1].content;
+    const prompt = calls()[0].prompt;
     expect(prompt.endsWith('User: The reader discarded the topics.')).toBe(true);
     expect(local().messages[0]).toMatchObject({ role: 'user', hidden: true });
     const rows = await fetchMessagesForConversation(conversationId);

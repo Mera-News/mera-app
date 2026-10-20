@@ -25,11 +25,13 @@ import { EMPTY_RETRY_NUDGE } from '@/lib/mera-harness/core/topic-call';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { gatewayCalls, mockGateway, server } from '@/test/helpers';
-import { installLlama, llamaCalls, resetFileSystem } from '@/test/integration/chat/_helpers';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
+import { installLlama, resetFileSystem } from '@/test/integration/chat/_helpers';
 import { cleanup, driveDone, jobRows, prepare, untilJob, watchBodies, setMode } from './kit';
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 const HOME = 'location: neighborhood/area, city, and country (preserve specifics)';
 const JOB = 'Works as a paediatric nurse';
@@ -38,7 +40,8 @@ beforeEach(async () => {
   resetFileSystem();
   await disposeModel();
   useMeraProtocolStore.getState().setModelState('downloaded');
-  installLlama([]); // a clean call log: llamaCalls() counts this test's completions only
+  installLlama([]); // Kev on disk; the text runs on the built-in model
+  installOnDeviceLlm(); // a clean call log: onDeviceLlmCalls() counts this test's calls only
   await prepare();
 });
 afterEach(cleanup);
@@ -323,12 +326,13 @@ describe('on-device: the local engine, isolated too', () => {
     await pendingFact('Lives in Porto, Portugal, EU', HOME);
     await createTopics([{ factId: nurse.id, text: 'Paediatric wards', weight: 1, provenance: 'llm' }]);
     await recordDecline('Nurse pay', null);
-    installLlama(['{"topics":["Nurse staffing"]}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"topics":["Nurse staffing"]}' });
 
     const out = await run({ factId: nurse.id, factStatement: JOB, useCloud: false });
 
     expect(out.topics).toEqual(['Nurse staffing']);
-    const user = llamaCalls()[0].messages.at(-1)!.content;
+    const user = onDeviceLlmCalls()[0].prompt;
     expect(user).toContain('paediatric nurse');
     expect(user).toContain('Paediatric wards');
     expect(user.toLowerCase()).toContain('nurse pay');
@@ -346,12 +350,13 @@ describe('on-device: the local engine, isolated too', () => {
     const [job] = await jobRows('topic_gen');
     expect(job.payload.useCloud).toBe(true);
     await setMode('on-device');
-    installLlama(['{"topics":["Chess openings"]}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"topics":["Chess openings"]}' });
 
     await inferenceQueue.start();
     await untilJob(job.id, ['done']);
 
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     expect(gatewayCalls()).toHaveLength(0);
     expect(await texts(fact.id)).toEqual(['Chess openings']);
     expect(await getTopicsStatus(fact.id)).toBe('done');
@@ -360,7 +365,8 @@ describe('on-device: the local engine, isolated too', () => {
   it('a first run with nothing usable settles as an ERROR (Retry), never an empty done, and is reported with its own fingerprint', async () => {
     const captured = jest.spyOn(logger, 'captureMessage');
     const fact = await pendingFact(JOB, 'profession: job role and industry');
-    installLlama(['{"topics":[]}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"topics":[]}' });
 
     const out = await run({ factId: fact.id, factStatement: JOB, useCloud: false });
 
@@ -373,7 +379,8 @@ describe('on-device: the local engine, isolated too', () => {
   it('"Generate more" is queued as an append job and merges into the fact\'s topics', async () => {
     const fact = await pendingFact(JOB, 'profession: job role and industry');
     await createTopics([{ factId: fact.id, text: 'Paediatric wards', weight: 1, provenance: 'llm' }]);
-    installLlama(['{"topics":["Nurse staffing"]}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"topics":["Nurse staffing"]}' });
 
     const out = await generateMoreTopicsForFact(fact.id, JOB);
     expect(out).toEqual({ mode: 'queued', added: 0 });
@@ -390,7 +397,8 @@ describe('on-device: the local engine, isolated too', () => {
   it('an append run with nothing new settles instead of failing', async () => {
     const fact = await pendingFact(JOB, 'profession: job role and industry');
     await createTopics([{ factId: fact.id, text: 'Paediatric wards', weight: 1, provenance: 'llm' }]);
-    installLlama(['{"topics":["paediatric wards"]}']);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"topics":["paediatric wards"]}' });
 
     await run({ factId: fact.id, factStatement: JOB, useCloud: false, mode: 'append' });
 

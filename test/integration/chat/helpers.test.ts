@@ -1,6 +1,6 @@
 // The chat helpers do what the chat seam tests rely on: scripted tool calls parse with the app's
-// own parser, the module reset clears what it claims, and the llama.rn + file-system fakes run the
-// real on-device engine end to end with zero network.
+// own parser, the module reset clears what it claims, and the built-in model + file-system fakes run
+// the real on-device engine end to end with zero network.
 import { attachChatSession } from '@/lib/chat-session/chat-session';
 import { useLocalChatStore } from '@/lib/chat-session/local-chat-store';
 import { createConversation, fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
@@ -9,9 +9,9 @@ import { getCachedAttestation, setCachedAttestation } from '@/lib/e2ee/e2ee-cach
 import { parseToolCallsFromText } from '@/lib/llm/text-tool-protocol';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { FIXTURE_ACCOUNT, gatewayCalls, attestationRequests } from '@/test/helpers';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
 import {
   installLlama,
-  llamaCalls,
   personMessage,
   resetChatModules,
   resetFileSystem,
@@ -21,6 +21,7 @@ import {
 } from './_helpers';
 
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 beforeEach(() => {
   resetChatModules();
@@ -66,7 +67,8 @@ describe('resetChatModules', () => {
 describe('on-device fakes', () => {
   it('run the real local engine through the chat session with zero network', async () => {
     await setProcessingMode('on-device');
-    installLlama(['Hello', ' there', '.']);
+    installLlama([]);
+    installOnDeviceLlm({ reply: ['Hello', ' there', '.'] });
     const conversationId = await createConversation('CONFIG' as never);
     const engine = attachChatSession({
       conversationId,
@@ -76,12 +78,12 @@ describe('on-device fakes', () => {
     });
 
     engine.send('hi');
-    await until(() => useLocalChatStore.getState().turnBusy === false && llamaCalls().length > 0, 10_000, 'turn end');
+    await until(() => useLocalChatStore.getState().turnBusy === false && onDeviceLlmCalls().length > 0, 10_000, 'turn end');
 
     const last = useLocalChatStore.getState().messages.at(-1);
     expect(last).toMatchObject({ role: 'assistant', content: 'Hello there.' });
-    expect(llamaCalls()).toHaveLength(1);
-    expect(llamaCalls()[0].messages.map((m) => m.content).join('\n')).toContain('hi');
+    expect(onDeviceLlmCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()[0].prompt).toContain('hi');
     expect(gatewayCalls()).toHaveLength(0);
     expect(attestationRequests()).toBe(0);
     await until(() => true);

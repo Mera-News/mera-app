@@ -15,7 +15,6 @@ import {
     setPromoteWhenDone,
     startModelDownloads,
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
-import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 import { useAppStateStore } from '@/lib/stores/app-state-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
@@ -28,9 +27,8 @@ jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModul
 jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 jest.mock('@/lib/mera-protocol-toolkit/core/model-catalog', () => {
     const actual = jest.requireActual('@/lib/mera-protocol-toolkit/core/model-catalog');
-    const TEXT = { ...actual.TEXT_MODEL, sizeBytes: 4 };
     const KEV = { ...actual.RELEVANCE_MODEL, sizeBytes: 4 };
-    return { ...actual, TEXT_MODEL: TEXT, RELEVANCE_MODEL: KEV, MODEL_CATALOG: [TEXT, KEV] };
+    return { ...actual, RELEVANCE_MODEL: KEV, MODEL_CATALOG: [KEV] };
 });
 // Every download lands at once with a valid 4-byte file.
 jest.mock('expo-file-system/legacy', () => ({
@@ -66,7 +64,6 @@ beforeEach(async () => {
         userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
     });
     await signInFixtureAccount();
-    await setTextEngine('afm');
     installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
     await setProcessingMode('cloud');
     protocol().setModelState('not_downloaded');
@@ -77,8 +74,6 @@ beforeEach(async () => {
 afterEach(async () => {
     await cancelModelDownload();
     setPromoteWhenDone(false);
-    await setTextEngine('qwen');
-    __resetTextEngineForTests();
     useUserStore.setState({ userPersona: null });
     useAppStateStore.getState().setAppInitialized(false);
     await inferenceQueue.stop();
