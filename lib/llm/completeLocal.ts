@@ -1,6 +1,8 @@
-// completeLocal — standalone local LLM completion.
-// Extracted from LocalInferenceEngine.complete() after engine deletion in Phase 5.
-// Calls infer() from mera-protocol-toolkit directly.
+// completeLocal — standalone local LLM completion on the phone's built-in model
+// (Apple Intelligence, Gemini Nano). Calls infer() from mera-protocol-toolkit.
+// The reasoning-trace handling below dates from the downloadable text model; the
+// built-in models emit no <think> blocks and never report `truncated`, so it is a
+// no-op for them and stays only as a guard.
 
 import { infer as localInfer, inferStructured, type JsonSchema, type TextEngine } from '../mera-protocol-toolkit';
 import type { InferenceLabel } from '../mera-protocol-toolkit/core/inference-stats';
@@ -30,7 +32,6 @@ export interface LocalCompleteRequest {
 }
 
 export async function completeLocal(request: LocalCompleteRequest): Promise<string> {
-  // infer() loads the text model inside the toolkit's lock.
   const result = await localInfer({
     systemPrompt: request.systemPrompt,
     prompt: request.prompt,
@@ -48,7 +49,7 @@ export async function completeLocal(request: LocalCompleteRequest): Promise<stri
   // 1. Strip well-formed <think>…</think> pairs (the normal case).
   let stripped = result.output.replace(/<think>[\s\S]*?<\/think>/g, '');
 
-  // 2. Prefill case: the Qwen3 chat template can inject the OPENING <think> into
+  // 2. Prefill case: a chat template can inject the OPENING <think> into
   //    the prompt, so a successful generation comes back as `reasoning</think>
   //    answer` — a closer with no opener, which step 1 cannot match. Drop
   //    everything up to and including the last closer; the remainder is the

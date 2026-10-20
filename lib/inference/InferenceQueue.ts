@@ -28,7 +28,7 @@ import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
 import { handleTrackedStoryMigrateJob } from './handlers/tracked-story-migrate-handler';
 import { handleTopicComboJob } from './handlers/topic-combo-handler';
-import { getTextEngine, isBuiltInEngine, resetContext } from '../mera-protocol-toolkit';
+import { resetContext } from '../mera-protocol-toolkit';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import type { InferenceJobType } from '../database/models/InferenceJob';
@@ -497,11 +497,10 @@ class InferenceQueueImpl {
     }
   }
 
-  /** On this phone with the built-in text model, while the app is not active. */
+  /** On this phone (the built-in text model), while the app is not active. */
   private async waitsForForeground(): Promise<boolean> {
     if (AppState.currentState === 'active') return false;
-    if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice) return false;
-    return isBuiltInEngine(await getTextEngine().catch(() => 'qwen' as const));
+    return useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
   }
 
   private sleep(ms: number): Promise<void> {

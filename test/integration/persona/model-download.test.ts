@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // The on-device model download: `startModelDownloads` / `cancelModelDownload` (downloadService) over the REAL
-// modelManager, store, app-restart holds and i18n, on the in-memory expo-file-system. Both catalogue models download
-// one after the other; the catalogue's sizes are shrunk to the 4 bytes a fake download writes. The download task itself
+// modelManager, store, app-restart holds and i18n, on the in-memory expo-file-system. The catalogue holds Kev only
+// (D37); a test-only SECOND entry is added in front of it so the serial queue (one model at a time, per-model state,
+// cancel, retry) stays covered. Sizes are shrunk to the 4 bytes a fake download writes. The download task itself
 // is the one native edge chat's fake does not cover, so `expo-file-system/legacy` is faked per file: each
 // `createDownloadResumable` call becomes a download the test settles by hand (a finished file lands on the
 // in-memory disk, as it would on the device). expo-notifications is the setup's native fake.
@@ -24,13 +25,12 @@ import {
     isModelDownloaded,
     purgeAllBaseModels,
 } from '@/lib/mera-protocol-toolkit/core/modelManager';
-import { RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
+import { MODEL_CATALOG, RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useUserStore } from '@/lib/stores/user-store';
 import { retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 import { placeDownloadedModel } from '@/test/helpers/fs';
-import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 import { installOnDeviceLlm, setOnDeviceLlmAvailability } from '@/test/helpers/on-device-llm';
 import { __resetAppRestartForTests, activeHolds } from '@/lib/app-restart';
 import logger from '@/lib/logger';
@@ -42,9 +42,9 @@ jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModul
 jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 jest.mock('@/lib/mera-protocol-toolkit/core/model-catalog', () => {
     const actual = jest.requireActual('@/lib/mera-protocol-toolkit/core/model-catalog');
-    const TEXT = { ...actual.TEXT_MODEL, sizeBytes: 4 };
     const KEV = { ...actual.RELEVANCE_MODEL, sizeBytes: 4 };
-    return { ...actual, TEXT_MODEL: TEXT, RELEVANCE_MODEL: KEV, MODEL_CATALOG: [TEXT, KEV] };
+    const SECOND = { ...KEV, modelId: 'test-second-model', modelUrl: 'https://models.example/second.gguf' };
+    return { ...actual, RELEVANCE_MODEL: KEV, MODEL_CATALOG: [SECOND, KEV] };
 });
 
 interface FakeDownload {
@@ -93,9 +93,11 @@ jest.mock('expo-file-system/legacy', () => ({
     createDownloadResumable: (...args: unknown[]) => (mockCreateDownloadResumable as (...a: unknown[]) => unknown)(...args),
 }));
 
+/** The test-only catalogue entry queued in front of Kev. */
+const SECOND = MODEL_CATALOG[0];
 const scheduled = Notifications.scheduleNotificationAsync as unknown as jest.Mock;
 const protocol = () => useMeraProtocolStore.getState();
-const config = () => ({ modelId: TEXT_MODEL.modelId, modelUrl: 'https://models.example/m.gguf', sizeBytes: 4 });
+const config = () => ({ modelId: SECOND.modelId, modelUrl: 'https://models.example/m.gguf', sizeBytes: 4 });
 const last = () => downloads[downloads.length - 1];
 /** Lets the download task start (the directory is created first) and the permission check settle. */
 const started = (count = 1) => until(() => downloads.length === count, 2000, `download ${count} started`);
@@ -108,8 +110,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-    // The engine in force is pinned: with no row it is derived from what is on disk.
-    await setTextEngine('qwen');
+    installOnDeviceLlm({ availability: { available: true, reason: null } });
     downloads.length = 0;
     resetFileSystem();
     __resetAppRestartForTests();
@@ -150,34 +151,34 @@ const completeBody = (modelId: string) =>
     scheduled.mock.calls.find((c) => (c[0] as { identifier: string }).identifier === `model-download-complete:${modelId}`)?.[0].content.body;
 
 describe('startModelDownloads: a serial queue, one model at a time', () => {
-    it('downloads the text model, THEN Kev, under one hold, with per-model state and queue-wide progress, and never touches modelState', async () => {
+    it('downloads SECOND, THEN Kev, under one hold, with per-model state and queue-wide progress, and never touches modelState', async () => {
         useMeraProtocolStore.setState({ modelState: 'ready' });
         startModelDownloads();
         expect(isDownloadInProgress()).toBe(true);
         expect(activeHolds()).toEqual(['model-download']);
         await started();
 
-        // Sequential: Kev waits its turn while the text model downloads.
+        // Sequential: Kev waits its turn while SECOND downloads.
         expect(downloads).toHaveLength(1);
-        expect(last().url).toBe(TEXT_MODEL.modelUrl);
-        expect(last().path).toContain(`${TEXT_MODEL.modelId}/model.gguf`);
+        expect(last().url).toBe(SECOND.modelUrl);
+        expect(last().path).toContain(`${SECOND.modelId}/model.gguf`);
         expect(last().options).toEqual({ sessionType: 0 });
         expect((RNFS as unknown as { downloadFile: jest.Mock }).downloadFile).not.toHaveBeenCalled();
-        expect(downloadsOf()[TEXT_MODEL.modelId]).toMatchObject({ status: 'downloading', doneBytes: 0, totalBytes: 4 });
+        expect(downloadsOf()[SECOND.modelId]).toMatchObject({ status: 'downloading', doneBytes: 0, totalBytes: 4 });
         expect(downloadsOf()[RELEVANCE_MODEL.modelId]).toMatchObject({ status: 'queued', totalBytes: 4 });
 
         last().onProgress({ totalBytesWritten: 2, totalBytesExpectedToWrite: 4 });
-        expect(downloadsOf()[TEXT_MODEL.modelId].doneBytes).toBe(2);
+        expect(downloadsOf()[SECOND.modelId].doneBytes).toBe(2);
         expect(getDownloadBytes()).toEqual({ doneBytes: 2, totalBytes: 8 });
         expect(protocol().downloadProgress).toBe(25);
         last().finish();
         await started(2);
 
         expect(last().url).toBe(RELEVANCE_MODEL.modelUrl);
-        expect(downloadsOf()[TEXT_MODEL.modelId]).toBeUndefined();
+        expect(downloadsOf()[SECOND.modelId]).toBeUndefined();
         expect(activeHolds()).toEqual(['model-download']);
         last().onProgress({ totalBytesWritten: 2, totalBytesExpectedToWrite: 4 });
-        // The landed text model still counts, so the overall figure never jumps back.
+        // The landed model still counts, so the overall figure never jumps back.
         expect(getDownloadBytes()).toEqual({ doneBytes: 6, totalBytes: 8 });
         expect(protocol().downloadProgress).toBe(75);
         last().finish();
@@ -192,11 +193,11 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         // One notification per model, each with its own id, Beta in the title's words.
         await until(() => notificationIds().length === 2);
         expect(notificationIds()).toEqual([
-            `model-download-complete:${TEXT_MODEL.modelId}`,
+            `model-download-complete:${SECOND.modelId}`,
             `model-download-complete:${RELEVANCE_MODEL.modelId}`,
         ]);
         expect(scheduled.mock.calls[0][0].content.title).toBe('Download complete (Beta)');
-        expect(completeBody(TEXT_MODEL.modelId)).toBe('The Mera text model is on this phone.');
+        expect(completeBody(SECOND.modelId)).toBe('The Mera relevance model is on this phone.');
         expect(completeBody(RELEVANCE_MODEL.modelId)).toBe('The Mera relevance model is on this phone.');
     });
 
@@ -204,21 +205,21 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         startModelDownloads({ modelIds: [RELEVANCE_MODEL.modelId] });
         await started();
         expect(last().url).toBe(RELEVANCE_MODEL.modelUrl);
-        startModelDownloads({ modelIds: [TEXT_MODEL.modelId, RELEVANCE_MODEL.modelId] });
-        expect(downloadsOf()[TEXT_MODEL.modelId]).toMatchObject({ status: 'queued' });
+        startModelDownloads({ modelIds: [SECOND.modelId, RELEVANCE_MODEL.modelId] });
+        expect(downloadsOf()[SECOND.modelId]).toMatchObject({ status: 'queued' });
         await new Promise((r) => setImmediate(r));
-        // Kev is not queued twice and the text model waits its turn.
+        // Kev is not queued twice and SECOND waits its turn.
         expect(downloads).toHaveLength(1);
         last().finish();
         await started(2);
-        expect(last().url).toBe(TEXT_MODEL.modelUrl);
+        expect(last().url).toBe(SECOND.modelUrl);
         last().finish();
         await until(() => !isDownloadInProgress());
         expect(downloads).toHaveLength(2);
     });
 
     it('a retry downloads only what is still missing', async () => {
-        placeDownloadedModel(TEXT_MODEL.modelId);
+        placeDownloadedModel(SECOND.modelId);
         startModelDownloads();
         await started();
         expect(last().url).toBe(RELEVANCE_MODEL.modelUrl);
@@ -239,7 +240,7 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         await started();
         last().finish();
         await started(2);
-        // The text model alone cannot run: still Private cloud.
+        // SECOND alone cannot run (no Kev): still Private cloud.
         expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
         last().finish();
         await until(() => protocol().processingMode === ProcessingMode.OnDevice);
@@ -250,55 +251,41 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         // The cached persona the boot purge reads now carries the intent too.
         expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.OnDevice);
         await until(() => notificationIds().length === 2);
-        expect(completeBody(TEXT_MODEL.modelId)).toBe('The Mera text model is on this phone.');
+        expect(completeBody(SECOND.modelId)).toBe('The Mera relevance model is on this phone.');
         expect(completeBody(RELEVANCE_MODEL.modelId)).toBe('Mera now runs on this phone.');
     });
 
-    it('Kev landing with a ready built-in model chosen promotes on its own, with no text model download', async () => {
+    it('Kev landing with Gemini Nano ready promotes on its own', async () => {
         useUserStore.setState({
             userId: FIXTURE_ACCOUNT.userId,
             userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
         });
         await signInFixtureAccount();
         recordModeUpdates();
-        await setTextEngine('nano');
-        try {
-            installOnDeviceLlm({ platformModel: 'nano', availability: { available: true, reason: null } });
-            startModelDownloads({ modelIds: [RELEVANCE_MODEL.modelId], promote: true });
-            await started();
-            last().finish();
-            await until(() => protocol().processingMode === ProcessingMode.OnDevice);
-            expect(downloads).toHaveLength(1);
-            await until(() => notificationIds().length === 1);
-            expect(completeBody(RELEVANCE_MODEL.modelId)).toBe('Mera now runs on this phone.');
-        } finally {
-            await setTextEngine('qwen');
-            __resetTextEngineForTests();
-        }
+        installOnDeviceLlm({ platformModel: 'nano', availability: { available: true, reason: null } });
+        startModelDownloads({ modelIds: [RELEVANCE_MODEL.modelId], promote: true });
+        await started();
+        last().finish();
+        await until(() => protocol().processingMode === ProcessingMode.OnDevice);
+        expect(downloads).toHaveLength(1);
+        await until(() => notificationIds().length === 1);
+        expect(completeBody(RELEVANCE_MODEL.modelId)).toBe('Mera now runs on this phone.');
     });
 
-    it('a phone already running on the built-in model keeps running while the text model downloads, and is not promoted again', async () => {
+    it('a phone already running keeps running while another model downloads, and is not promoted again', async () => {
         useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
         await signInFixtureAccount();
         const sent = recordModeUpdates();
-        await setTextEngine('afm');
-        try {
-            installOnDeviceLlm({ availability: { available: true, reason: null } });
-            placeDownloadedModel(RELEVANCE_MODEL.modelId);
-            useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice, modelState: 'ready' });
-            startModelDownloads({ modelIds: [TEXT_MODEL.modelId], promote: true });
-            await started();
-            expect(protocol()).toMatchObject({ processingMode: ProcessingMode.OnDevice, modelState: 'ready' });
-            last().finish();
-            await until(() => notificationIds().length === 1);
-            expect(completeBody(TEXT_MODEL.modelId)).toBe('The Mera text model is on this phone.');
-            expect(protocol()).toMatchObject({ processingMode: ProcessingMode.OnDevice, modelState: 'ready' });
-            // Only the start's intent write: nothing to promote.
-            expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: ProcessingMode.OnDevice }]);
-        } finally {
-            await setTextEngine('qwen');
-            __resetTextEngineForTests();
-        }
+        placeDownloadedModel(RELEVANCE_MODEL.modelId);
+        useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice, modelState: 'ready' });
+        startModelDownloads({ modelIds: [SECOND.modelId], promote: true });
+        await started();
+        expect(protocol()).toMatchObject({ processingMode: ProcessingMode.OnDevice, modelState: 'ready' });
+        last().finish();
+        await until(() => notificationIds().length === 1);
+        expect(protocol()).toMatchObject({ processingMode: ProcessingMode.OnDevice, modelState: 'ready' });
+        // Only the start's intent write: nothing to promote.
+        expect(sent).toEqual([{ userId: FIXTURE_ACCOUNT.userId, mode: ProcessingMode.OnDevice }]);
     });
 
     it('an intent withdrawn mid-download promotes nothing', async () => {
@@ -318,15 +305,15 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
     });
 
-    it('with the built-in engine not ready, the landing keeps the intent and says Mera waits for it', async () => {
+    it('with the built-in model not ready, the landing keeps the intent and says Mera waits for it', async () => {
         useUserStore.setState({
             userId: FIXTURE_ACCOUNT.userId,
             userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode: ProcessingMode.Cloud }),
         });
         await signInFixtureAccount();
         const sent = recordModeUpdates();
-        await setTextEngine('afm');
-        try {
+        placeDownloadedModel(SECOND.modelId);
+        {
             installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
             startModelDownloads({ promote: true });
             await started();
@@ -347,9 +334,6 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
             // The next cold boot sees local Cloud and runs the purge: the file stays.
             await purgeAllBaseModels();
             await expect(isModelDownloaded(RELEVANCE_MODEL.modelId)).resolves.toBe(true);
-        } finally {
-            await setTextEngine('qwen');
-            __resetTextEngineForTests();
         }
     });
 
@@ -369,7 +353,7 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
 
         // The app dies here; the next cold boot is on Cloud locally and runs the purge.
         await purgeAllBaseModels();
-        await expect(isModelDownloaded(TEXT_MODEL.modelId)).resolves.toBe(true);
+        await expect(isModelDownloaded(SECOND.modelId)).resolves.toBe(true);
     });
 
     it('picking On this phone mid-download saves the intent, since the screen sends no write while it cannot run', async () => {
@@ -417,7 +401,7 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         await started();
         last().fail(new Error('network down'));
         await started(2);
-        expect(downloadsOf()[TEXT_MODEL.modelId]).toMatchObject({ status: 'failed', failure: 'connection' });
+        expect(downloadsOf()[SECOND.modelId]).toMatchObject({ status: 'failed', failure: 'connection' });
         expect(last().url).toBe(RELEVANCE_MODEL.modelUrl);
         last().finish();
         await until(() => !isDownloadInProgress());
@@ -428,27 +412,27 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         expect(protocol().modelState).toBe('not_downloaded');
         expect(protocol().modelError).toBeNull();
         expect(await isModelDownloaded(RELEVANCE_MODEL.modelId)).toBe(true);
-        expect(await isModelDownloaded()).toBe(false);
+        expect(await isModelDownloaded(SECOND.modelId)).toBe(false);
         await until(() => notificationIds().length === 2);
-        expect(notificationIds()[0]).toBe(`model-download-error:${TEXT_MODEL.modelId}`);
+        expect(notificationIds()[0]).toBe(`model-download-error:${SECOND.modelId}`);
         expect(scheduled.mock.calls[0][0].content).toMatchObject({ title: 'Download failed (Beta)', body: 'Check your connection and try again.' });
 
         // Try again queues the failed model afresh.
-        startModelDownloads({ modelIds: [TEXT_MODEL.modelId] });
-        expect(downloadsOf()[TEXT_MODEL.modelId]).toMatchObject({ status: 'queued', failure: null });
+        startModelDownloads({ modelIds: [SECOND.modelId] });
+        expect(downloadsOf()[SECOND.modelId]).toMatchObject({ status: 'queued', failure: null });
         await started(3);
         last().finish();
         await until(() => !isDownloadInProgress());
-        expect(await isModelDownloaded()).toBe(true);
+        expect(await isModelDownloaded(SECOND.modelId)).toBe(true);
     });
 
     it('a server error removes the partial file and says the server had a problem', async () => {
-        startModelDownloads({ modelIds: [TEXT_MODEL.modelId] });
+        startModelDownloads({ modelIds: [SECOND.modelId] });
         await started();
         last().finish(503);
-        await until(() => downloadsOf()[TEXT_MODEL.modelId]?.status === 'failed');
+        await until(() => downloadsOf()[SECOND.modelId]?.status === 'failed');
 
-        expect(downloadsOf()[TEXT_MODEL.modelId].failure).toBe('server');
+        expect(downloadsOf()[SECOND.modelId].failure).toBe('server');
         expect(new fileSystemModule.File(last().path).exists).toBe(false);
         expect(downloads).toHaveLength(1);
         await until(() => scheduled.mock.calls.length === 1);
@@ -462,10 +446,10 @@ describe('cancelModelDownload', () => {
         await started();
         last().onProgress({ totalBytesWritten: 3, totalBytesExpectedToWrite: 4 });
         const text = last();
-        await cancelModelDownload(TEXT_MODEL.modelId);
+        await cancelModelDownload(SECOND.modelId);
 
         expect(text.cancelAsync).toHaveBeenCalledTimes(1);
-        expect(downloadsOf()[TEXT_MODEL.modelId]).toBeUndefined();
+        expect(downloadsOf()[SECOND.modelId]).toBeUndefined();
         await started(2);
         expect(last().url).toBe(RELEVANCE_MODEL.modelUrl);
         expect(activeHolds()).toEqual(['model-download']);
@@ -474,7 +458,7 @@ describe('cancelModelDownload', () => {
         text.fail(new Error('Download has been aborted'));
         await new Promise((r) => setImmediate(r));
         await new Promise((r) => setImmediate(r));
-        expect(downloadsOf()[TEXT_MODEL.modelId]).toBeUndefined();
+        expect(downloadsOf()[SECOND.modelId]).toBeUndefined();
         expect(downloadsOf()[RELEVANCE_MODEL.modelId]).toMatchObject({ status: 'downloading' });
         expect(captured).not.toHaveBeenCalled();
         expect(scheduled).not.toHaveBeenCalled();
@@ -527,7 +511,7 @@ describe('cancelModelDownload', () => {
         await new Promise((r) => setImmediate(r));
 
         expect(isDownloadInProgress()).toBe(true);
-        expect(downloadsOf()[TEXT_MODEL.modelId]).toMatchObject({ status: 'downloading' });
+        expect(downloadsOf()[SECOND.modelId]).toMatchObject({ status: 'downloading' });
         expect(activeHolds()).toEqual(['model-download']);
 
         last().finish();
@@ -640,7 +624,6 @@ describe('restoreOnDeviceIfRunnable: a local Cloud fallback ends once On this ph
     beforeEach(async () => {
         useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
         await signInFixtureAccount();
-        await setTextEngine('afm');
         placeDownloadedModel(RELEVANCE_MODEL.modelId);
         cachedPersona(ProcessingMode.OnDevice);
         serverMode(ProcessingMode.OnDevice);
@@ -652,8 +635,6 @@ describe('restoreOnDeviceIfRunnable: a local Cloud fallback ends once On this ph
     });
 
     afterEach(async () => {
-        await setTextEngine('qwen');
-        __resetTextEngineForTests();
         useUserStore.setState({ userPersona: null });
     });
 
@@ -685,9 +666,9 @@ describe('restoreOnDeviceIfRunnable: a local Cloud fallback ends once On this ph
         expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.Cloud);
     });
 
-    it('moves back even while the text model downloads: the phone can already run on the built-in model', async () => {
+    it('moves back even while another model downloads: the phone can already run', async () => {
         setOnDeviceLlmAvailability({ available: true, reason: null });
-        startModelDownloads({ modelIds: [TEXT_MODEL.modelId] });
+        startModelDownloads({ modelIds: [SECOND.modelId] });
         await started();
         await expect(restoreOnDeviceIfRunnable()).resolves.toBe(true);
         expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);

@@ -1,11 +1,9 @@
 // Model Manager: on-device model files (download, manifest, delete) and the ONE
-// resident llama.rn context.
+// llama.rn context, which only ever holds Kev (the relevance model).
 //
-// On this phone runs two models (model-catalog.ts) and holds at most one in
-// memory. The resident one is swapped on demand inside the llama lock: infer /
-// inferStream need the TEXT model, decide needs the RELEVANCE model, and each
-// calls `_ensureLoaded` while holding the lock. A swap releases the old context
-// before loading the new one and never writes the UI modelState; only the public
+// The text is written by the phone's built-in model, out of process, so nothing
+// is ever swapped: `decide` calls `_ensureLoaded` inside the llama lock, and Kev
+// stays resident. A load never writes the UI modelState; only the public
 // `initBaseModel` does.
 
 import { Directory, File, Paths } from 'expo-file-system';
@@ -27,8 +25,8 @@ import { LOCAL_CONTEXT_TOKENS } from './context-size';
 import { holdRestart } from '../../app-restart';
 import { recordModelLoad } from './inference-stats';
 import { withLlamaLock } from './llama-lock';
-import { MODEL_CATALOG, RELEVANCE_MODEL, RETIRED_MODEL_IDS, TEXT_MODEL, type ModelCatalogEntry } from './model-catalog';
-import { builtInAvailability, getTextEngine, isBuiltInEngine, peekTextEngine, type TextEngine } from './text-engine';
+import { RELEVANCE_MODEL, RETIRED_MODEL_IDS } from './model-catalog';
+import { builtInAvailability } from './text-engine';
 import { prewarm as prewarmNative } from '@/modules/mera-on-device-llm';
 import type {
   BaseModelDownloadConfig,
@@ -198,27 +196,23 @@ export async function _releaseModel(): Promise<void> {
   if (context) await context.release();
 }
 
-function initParamsFor(modelId: string, uri: string) {
-  const isRelevance = modelId === RELEVANCE_MODEL.modelId;
+function initParamsFor(uri: string) {
   return {
     model: uri,
     n_ctx: LOCAL_CONTEXT_TOKENS,
     n_gpu_layers: 999, // Offload all layers to Metal
     n_threads: 4, // A-series: 2P + 4E cores; 4 threads avoids stalling on slow E-cores
-    // Off for both models: two ~3 GB models are swapped in and out, and wired
-    // (mlocked) pages count in full against iOS's per-app memory limit. mmap
-    // lets iOS page weights in and out instead of killing the app.
+    // Wired (mlocked) pages count in full against iOS's per-app memory limit,
+    // and Kev is ~3 GB. mmap lets iOS page weights in and out instead of killing
+    // the app.
     use_mlock: false,
     use_mmap: true,
     // `decide()` evaluates the read part of its prompt in one batch, and Kev
     // reads every option's hidden state; give it the whole context as one batch.
-    n_batch: isRelevance ? LOCAL_CONTEXT_TOKENS : 512,
+    n_batch: LOCAL_CONTEXT_TOKENS,
     flash_attn_type: 'on' as const,
-    // f16 KV. Both models are Qwen3.5 hybrids with only a few full-attention
-    // layers, so the KV cache is small at this n_ctx even in f16. For the text
-    // model, llama.rn's prompt-state cache for hybrid models is on by default
-    // (160 MiB, 8 checkpoints), so a run of note calls sharing system prompt +
-    // facts re-prefills only each article's block. `decide()` gets no such
+    // f16 KV. Kev is a hybrid with only a few full-attention layers, so the KV
+    // cache is small at this n_ctx even in f16. `decide()` gets no prompt-state
     // reuse: a hybrid's recurrent state cannot be rolled back, so every Kev call
     // evaluates its whole prompt.
     cache_type_k: 'f16' as const,
@@ -285,7 +279,7 @@ async function loadModel(
     });
   }
 
-  const initParams = initParamsFor(modelId, modelFile.uri);
+  const initParams = initParamsFor(modelFile.uri);
   logger.info('[ModelManager] Calling initLlama with params', initParams);
 
   let context: LlamaContext;
@@ -312,7 +306,7 @@ async function loadModel(
     toggleNativeLog(false).catch(() => {});
   }
 
-  if (modelId === RELEVANCE_MODEL.modelId && context.model?.decision?.type !== 'kev') {
+  if (context.model?.decision?.type !== 'kev') {
     const decision = context.model?.decision;
     await context.release().catch(() => {});
     throw new Error(
@@ -321,7 +315,7 @@ async function loadModel(
   }
 
   llamaContext = context;
-  recordModelLoad(modelId === RELEVANCE_MODEL.modelId ? 'relevance' : 'text', Date.now() - loadStartedAt);
+  recordModelLoad(Date.now() - loadStartedAt);
 
   currentModelState = {
     modelId,
@@ -344,15 +338,10 @@ export function _assertOnDeviceMode(): void {
   }
 }
 
-/** Releases the TEXT model if it is the resident one. Unlocked. */
-export async function _releaseTextModel(): Promise<void> {
-  if (currentModelState?.modelId === TEXT_MODEL.modelId) await _releaseModel();
-}
-
 /**
- * Makes `modelId` the resident model, swapping if another one is loaded.
- * Unlocked: call only while holding the llama lock. Refuses outside on-device
- * mode, so nothing can pull ~3 GB into memory for a Cloud user.
+ * Makes `modelId` (Kev) the resident model. Unlocked: call only while holding
+ * the llama lock. Refuses outside on-device mode, so nothing can pull ~3 GB into
+ * memory for a Cloud user.
  */
 export async function _ensureLoaded(
   modelId: string,
@@ -367,7 +356,7 @@ export async function _ensureLoaded(
 // Public lifecycle: each takes the llama lock exactly once.
 // ---------------------------------------------------------------------------
 
-/** What `initBaseModel` reports when the built-in model writes the text. */
+/** What `initBaseModel` reports: the built-in model writes the text and loads nothing. */
 export const NATIVE_ENGINE_STATE: ModelState = {
   modelId: 'native',
   loaded: true,
@@ -378,39 +367,20 @@ export const NATIVE_ENGINE_STATE: ModelState = {
 };
 
 /**
- * Makes the text engine ready and reports it in the UI modelState: `loading`,
- * then `ready`, or the error. With 'qwen' it loads the TEXT model (a no-op when
- * it already is resident); with a built-in model it loads nothing (the model runs
- * out of process), only prewarms it, and still writes `ready`: the queue and the
- * chat loader start only on it. Callers never need this for correctness
- * (infer / inferStream get their engine ready themselves); it is a preload.
- * The relevance model loads only inside `decide`.
+ * Makes the text engine ready and reports `ready` in the UI modelState: the
+ * built-in model loads nothing (it runs out of process), so this only prewarms
+ * it. The queue and the chat loader start only on `ready`. Kev loads only inside
+ * `decide`. The arguments are the old text-model load's and are ignored.
  */
 export async function initBaseModel(
-  modelId: string = TEXT_MODEL.modelId,
-  onProgress?: (progress: number) => void,
+  _modelId?: string,
+  _onProgress?: (progress: number) => void,
 ): Promise<ModelState> {
-  const engine = await getTextEngine();
   return withLlamaLock(async () => {
     _assertOnDeviceMode();
-    if (isBuiltInEngine(engine) && modelId === TEXT_MODEL.modelId) {
-      await _releaseTextModel();
-      prewarmNative();
-      useMeraProtocolStore.getState().setModelState('ready');
-      return NATIVE_ENGINE_STATE;
-    }
-    const resident = currentModelState?.modelId === modelId && llamaContext;
-    if (!resident) useMeraProtocolStore.getState().setModelState('loading');
-    try {
-      const state = await _ensureLoaded(modelId, onProgress);
-      useMeraProtocolStore.getState().setModelState('ready');
-      return state;
-    } catch (err) {
-      if (!(err instanceof LocalModelsOffError)) {
-        useMeraProtocolStore.getState().setModelError(String(err));
-      }
-      throw err;
-    }
+    prewarmNative();
+    useMeraProtocolStore.getState().setModelState('ready');
+    return NATIVE_ENGINE_STATE;
   });
 }
 
@@ -430,16 +400,6 @@ export function disposeModel(): Promise<void> {
 /** Returns the resident model's state, or null if none is loaded. */
 export function getModelState(): ModelState | null {
   return currentModelState;
-}
-
-/**
- * True when a text call can start without loading a model first: the native
- * engine is chosen (it loads nothing), or the TEXT model is resident. Sync, for
- * UI wait lines.
- */
-export function isTextModelResident(): boolean {
-  if (isBuiltInEngine(peekTextEngine())) return true;
-  return llamaContext !== null && currentModelState?.modelId === TEXT_MODEL.modelId;
 }
 
 /** Deletes one model's files. Refuses while that model is loaded. */
@@ -502,32 +462,14 @@ export function cancelActiveDownload(): void {
 }
 
 /**
- * The model files On this phone needs for the text engine in force: the
- * relevance model always, plus the text model unless the built-in model writes
- * the text. Download order.
- */
-export async function requiredModels(): Promise<ModelCatalogEntry[]> {
-  return modelsFor(await getTextEngine());
-}
-
-function modelsFor(engine: TextEngine): ModelCatalogEntry[] {
-  return isBuiltInEngine(engine) ? [RELEVANCE_MODEL] : [...MODEL_CATALOG];
-}
-
-/**
- * Whether a model is downloaded and ready. With no argument, the runnable rule:
- * whether On this phone can run. The relevance model on disk AND the chosen text
- * option ready: the text model on disk for 'qwen', or the built-in model
- * available right now for 'afm' / 'nano'. Availability is asked fresh every time.
+ * Whether a model is downloaded and ready. With no argument, the runnable rule
+ * (D37): whether On this phone can run, which is Kev on disk AND the built-in
+ * model available right now. Availability is asked fresh every time.
  */
 export async function isModelDownloaded(modelId?: string): Promise<boolean> {
   if (modelId === undefined) {
-    const engine = await getTextEngine();
-    for (const m of modelsFor(engine)) {
-      if (!(await isModelDownloaded(m.modelId))) return false;
-    }
-    if (isBuiltInEngine(engine)) return (await builtInAvailability()).available;
-    return true;
+    if (!(await isModelDownloaded(RELEVANCE_MODEL.modelId))) return false;
+    return (await builtInAvailability()).available;
   }
   const manifest = await readManifest(modelId);
   return manifest?.ready === true;

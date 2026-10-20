@@ -23,8 +23,6 @@ export {
   resetContext,
   getModelState,
   isModelDownloaded,
-  isTextModelResident,
-  requiredModels,
   deleteBaseModel,
   purgeAllBaseModels,
   LocalModelsOffError,
@@ -33,26 +31,20 @@ export {
 // === Model Catalogue ===
 export {
   MODEL_CATALOG,
-  TEXT_MODEL,
   RELEVANCE_MODEL,
   DEFAULT_MODEL_ID,
   RETIRED_MODEL_IDS,
   isRetiredModelId,
 } from './core/model-catalog';
-export type { ModelCatalogEntry, ModelRole } from './core/model-catalog';
+export type { ModelCatalogEntry } from './core/model-catalog';
 
-// === Text engine (Qwen, or the platform's built-in model: AFM or Gemini Nano) ===
+// === Text engine (the platform's built-in model: AFM or Gemini Nano) ===
 export {
   getTextEngine,
-  setTextEngine,
-  peekTextEngine,
-  useTextEngine,
   builtInEngine,
   builtInAvailability,
-  isBuiltInEngine,
-  DEFAULT_TEXT_ENGINE,
 } from './core/text-engine';
-export type { TextEngine, BuiltInEngine } from './core/text-engine';
+export type { TextEngine } from './core/text-engine';
 
 // === Download Service ===
 export {

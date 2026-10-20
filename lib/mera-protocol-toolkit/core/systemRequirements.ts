@@ -6,6 +6,7 @@ import * as Device from 'expo-device';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 
 import type { SystemRequirementsResult, RequirementCheckId } from '../types';
+import { builtInAvailability, CANNOT_RUN_REASONS } from './text-engine';
 
 // ---------------------------------------------------------------------------
 // Thresholds
@@ -15,8 +16,8 @@ const MIN_RAM_BYTES = 6 * 1024 * 1024 * 1024; // 6 GB
 const MIN_IOS_VERSION = 16; // Metal compute shaders
 const MIN_ANDROID_API_LEVEL = 29; // Android 10
 // Free space needed beyond the bytes still to download, in decimal bytes (what
-// iOS Settings shows). Only what is MISSING counts: once both models are on
-// disk, low free space must never make the phone read as unsupported.
+// iOS Settings shows). Only what is MISSING counts: once Kev is on disk, low
+// free space must never make the phone read as unsupported.
 export const STORAGE_MARGIN_BYTES = 500_000_000;
 
 // ---------------------------------------------------------------------------
@@ -69,13 +70,13 @@ function checkIOSChip(
 // ---------------------------------------------------------------------------
 
 /**
- * Whether this phone can run on-device processing: the relevance model AND at
- * least one text option. The checks below are the relevance model's; the Mera
- * text model has the same bar (a 4B model of about the same size), so a phone
- * that passes always has that option, and a built-in model only adds one. The
- * Mera Protocol screen, the Feed's "Read on phone" pill and the reading meter
- * all read this one answer. `bytesToDownload`: storage still needed, for a
- * caller that judges space here (the screen judges it per model row).
+ * Whether this phone can run on-device processing (D37): Kev's requirements AND
+ * a built-in text model (Apple Intelligence, Gemini Nano). A built-in model the
+ * phone can still fix (downloading, switched off in Settings) passes: the screen
+ * shows its reason instead of "This phone can't run it". The Mera
+ * Protocol screen, the Feed's "Read on phone" pill and the reading meter all
+ * read this one answer. `bytesToDownload`: storage still needed, for a caller
+ * that judges space here (the screen judges it per model row).
  */
 export async function checkRequirements(
   { bytesToDownload = 0 }: { bytesToDownload?: number } = {},
@@ -162,7 +163,13 @@ export async function checkRequirements(
     }
   }
 
-  // --- Check 4: Storage (only for what is still to download) ---
+  // --- Check 4: A built-in text model. Only a reason the phone cannot fix fails. ---
+  const builtIn = await builtInAvailability().catch(() => null);
+  if (!builtIn || (!builtIn.available && (builtIn.reason == null || CANNOT_RUN_REASONS.has(builtIn.reason)))) {
+    return fail(`Requires a built-in text model (${builtIn?.reason ?? 'unknown'}).`, 'built_in');
+  }
+
+  // --- Check 5: Storage (only for what is still to download) ---
   const neededBytes = bytesToDownload > 0 ? bytesToDownload + STORAGE_MARGIN_BYTES : 0;
   if (freeBytes !== null && freeBytes < neededBytes) {
     return fail(

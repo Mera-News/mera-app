@@ -10,11 +10,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { BUILT_IN_MODEL_NAME } from '@/lib/mera-protocol-toolkit/core/downloadService';
-import {
-    averageMs,
-    hasAnyStat,
-    totalLoadMs,
-} from '@/lib/mera-protocol-toolkit/core/inference-stats';
+import { averageMs, hasAnyStat } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import { Switch } from '@/components/ui/switch';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
 import { onDeviceSubtitleKind } from '@/components/custom/config-mera/on-device-subtitle';
@@ -43,10 +39,9 @@ import {
     bgRefreshDescriptionKey,
 } from '@/lib/background/bg-refresh-ui';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import { gbText, useMeraProtocolSettings, type ModelRowState, type TextOption } from './useMeraProtocolSettings';
-import { isBuiltInEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
+import { gbText, useMeraProtocolSettings, type ModelRowState } from './useMeraProtocolSettings';
 
-/** Both downloadable models are Apache 2.0 (one ships no LICENSE file), so each row links the licence text. */
+/** The downloadable model is Apache 2.0 (it ships no LICENSE file), so its row links the licence text. */
 const MODELS_LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 
 const secondsText = (ms: number): string => (ms / 1000).toFixed(1);
@@ -77,16 +72,15 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         onDeviceIntent,
         bgRefreshEnabled,
         toggleBgRefresh,
-        onDeviceNotes,
-        toggleNotes,
+        skipNotes,
+        toggleSkipNotes,
         selectMode,
         refresh,
         runnable,
         waitingLine,
         relevanceModel,
-        textOptions,
-        textEngine,
-        selectEngine,
+        builtInStatus,
+        builtInName,
         handleDownload,
         handleCancelDownload,
         handleDeleteModel,
@@ -301,48 +295,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         );
     };
 
-    // One Text model radio, ONE accessible element (a disabled row's label carries its reason).
-    // The Mera text model's row also carries its own download.
-    const textOptionRow = (o: TextOption) => {
-        const line = o.model ? modelStatusLine(o.model) : null;
-        const sub = o.reason ?? line?.text ?? null;
-        return (
-            <View key={o.engine}>
-                <Pressable
-                    testID={`text-option-${o.engine}`}
-                    onPress={() => { void selectEngine(o.engine); }}
-                    disabled={o.disabled}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: o.selected, checked: o.selected, disabled: o.disabled }}
-                    accessibilityLabel={[o.title, o.beta ? t('common.beta') : null, sub].filter(Boolean).join(', ')}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16, opacity: o.disabled && !o.model ? 0.45 : 1 }}
-                >
-                    <MaterialIcons
-                        name={o.selected ? 'radio-button-checked' : 'radio-button-unchecked'}
-                        size={22}
-                        color={o.selected ? colors.accent : colors.ink3}
-                        style={{ opacity: o.disabled && o.model ? 0.45 : 1 }}
-                    />
-                    <View style={{ flex: 1 }}>
-                        <Text style={{ color: colors.ink, fontSize: 16 }}>{o.title}</Text>
-                        {o.beta ? <BetaBadge variant="subtext" /> : null}
-                        {sub ? (
-                            <Text style={{ color: line?.negative ? colors.negative : colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{sub}</Text>
-                        ) : null}
-                    </View>
-                    {o.model?.onDisk ? (
-                        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 20, alignItems: 'center' }}>
-                            <MaterialIcons name="check" size={20} color={colors.positive} />
-                        </View>
-                    ) : null}
-                </Pressable>
-                {o.model ? <View style={{ paddingHorizontal: 12, paddingBottom: 8 }}>{modelControls(o.model, o.title)}</View> : null}
-            </View>
-        );
-    };
-
     const showModels = onDeviceIntent && deviceSupported === true;
-    const refusedBy = isBuiltInEngine(textEngine) ? BUILT_IN_MODEL_NAME[textEngine] : null;
+    // The built-in model this platform would use, for the requirements list even when this phone has none.
+    const platformBuiltInName = builtInName ?? BUILT_IN_MODEL_NAME[Platform.OS === 'android' ? 'nano' : 'afm'];
 
     const renderContent = () => (
         <>
@@ -377,46 +332,68 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </View>
             )}
 
-            {/* Text model: which model writes chat replies, notes and topics. A built-in model
-                shows only on its own platform and never needs a download. */}
-            {showModels && (
+            {/* Text model: the phone's built-in model writes chat replies, notes and topics (D37).
+                A status row with its availability reason; nothing to pick, nothing to download. */}
+            {showModels && builtInStatus && (
                 <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-text-model">
                     <GroupLabel>{t('meraProtocol.textTitle')}</GroupLabel>
                     <View style={{ marginBottom: 8 }}>
                         <Help>{t('meraProtocol.textHelp')}</Help>
                     </View>
-                    <Group>{textOptions.map(textOptionRow)}</Group>
-                    <View style={{ marginTop: 12 }}>
-                        <Group>
-                            <Row
-                                title={t('meraProtocol.notesTitle')}
-                                subtitle={t('meraProtocol.notesHelp')}
-                                trailing={
-                                    <Switch
-                                        value={onDeviceNotes}
-                                        onToggle={toggleNotes}
-                                        size="md"
-                                        testID="mera-protocol-notes-switch"
-                                    />
-                                }
-                            />
-                        </Group>
-                    </View>
+                    <Group>
+                        <View
+                            testID="built-in-model-row"
+                            accessible
+                            accessibilityLabel={[
+                                builtInStatus.name,
+                                t('common.beta'),
+                                builtInStatus.reason ?? t('meraProtocol.builtInReady'),
+                            ].join(', ')}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16 }}
+                        >
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: colors.ink, fontSize: 16 }}>{builtInStatus.name}</Text>
+                                <BetaBadge variant="subtext" />
+                                <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>
+                                    {builtInStatus.reason ?? t('meraProtocol.builtInReady')}
+                                </Text>
+                            </View>
+                            {builtInStatus.available ? (
+                                <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 20, alignItems: 'center' }}>
+                                    <MaterialIcons name="check" size={20} color={colors.positive} />
+                                </View>
+                            ) : null}
+                        </View>
+                    </Group>
                 </View>
             )}
+
+            {/* Skip notes (D42): shown in both modes, off by default. */}
+            <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-notes">
+                <GroupLabel>{t('meraProtocol.notesGroup')}</GroupLabel>
+                <Group>
+                    <Row
+                        title={t('meraProtocol.skipNotesTitle')}
+                        subtitle={t('meraProtocol.skipNotesHelp')}
+                        trailing={
+                            <Switch
+                                value={skipNotes}
+                                onToggle={toggleSkipNotes}
+                                size="md"
+                                testID="mera-protocol-skip-notes-switch"
+                            />
+                        }
+                    />
+                </Group>
+            </View>
 
             {/* Speed on this device: in memory only, never stored or sent. */}
             {showModels && hasAnyStat(inferenceStats) && (
                 <VStack space="xs" className="mb-5 px-[14px]" testID="mera-protocol-speed">
                     <GroupLabel>{t('meraProtocol.speedTitle')}</GroupLabel>
-                    {totalLoadMs(inferenceStats) != null && (
+                    {inferenceStats.loadMs != null && (
                         <Text size="xs" className="text-ink-2">
-                            {t('meraProtocol.speedLoad', { seconds: secondsText(totalLoadMs(inferenceStats) ?? 0) })}
-                        </Text>
-                    )}
-                    {!isBuiltInEngine(textEngine) && inferenceStats.genTokPerSec != null && (
-                        <Text size="xs" className="text-ink-2">
-                            {t('meraProtocol.speedGeneration', { tokPerSec: inferenceStats.genTokPerSec })}
+                            {t('meraProtocol.speedLoad', { seconds: secondsText(inferenceStats.loadMs) })}
                         </Text>
                     )}
                     {averageMs(inferenceStats.relevance) != null && (
@@ -429,9 +406,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             {t('meraProtocol.speedNotes', { seconds: secondsText(averageMs(inferenceStats.reason) ?? 0) })}
                         </Text>
                     )}
-                    {refusedBy && inferenceStats.refused > 0 && (
+                    {builtInName && inferenceStats.refused > 0 && (
                         <Text size="xs" className="text-ink-2">
-                            {t('meraProtocol.speedRefused', { name: refusedBy, count: inferenceStats.refused })}
+                            {t('meraProtocol.speedRefused', { name: builtInName, count: inferenceStats.refused })}
                         </Text>
                     )}
                     <Text size="xs" className="text-ink-3">
@@ -578,6 +555,16 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                         <Text className="text-ink-2 text-sm">{t('meraProtocol.chipLabel')}</Text>
                                     </HStack>
                                 )}
+                                <HStack space="sm" className="items-center" testID="requirement-built-in">
+                                    <MaterialIcons
+                                        name={requirementsResult.failedCheck === 'built_in' ? 'cancel' : 'check-circle'}
+                                        size={16}
+                                        color={requirementsResult.failedCheck === 'built_in' ? colors.negative : colors.positive}
+                                    />
+                                    <Text className="text-ink-2 text-sm">
+                                        {t('meraProtocol.builtInRequirement', { name: platformBuiltInName })}
+                                    </Text>
+                                </HStack>
                             </VStack>
                         )}
                     </Box>

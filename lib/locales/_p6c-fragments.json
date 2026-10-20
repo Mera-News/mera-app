@@ -1,0 +1,222 @@
+{
+  "ar": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "ميرا ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "ميرا uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then بروتوكول ميرا, to see why."
+    }
+  },
+  "de": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "en": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "es": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "fr": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "hi": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "मेरा ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "मेरा uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then मेरा प्रोटोकॉल, to see why."
+    }
+  },
+  "id": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "it": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "ja": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "メラ ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "メラ uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then メラ・プロトコル, to see why."
+    }
+  },
+  "ko": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "메라 ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "메라 uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then 메라 프로토콜, to see why."
+    }
+  },
+  "nl": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "pl": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "pt-BR": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "ru": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Мера ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Мера uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Протокол Мера, to see why."
+    }
+  },
+  "th": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "เมร่า ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "เมร่า uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then เมร่า โปรโตคอล, to see why."
+    }
+  },
+  "tr": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "uk": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Мера ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Мера uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Протокол Мера, to see why."
+    }
+  },
+  "vi": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "Mera uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then Mera Protocol, to see why."
+    }
+  },
+  "zh-CN": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "梅拉 ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "梅拉 uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then 梅拉协议, to see why."
+    }
+  },
+  "zh-TW": {
+    "meraProtocol": {
+      "builtInReady": "Ready on this phone",
+      "builtInRequirement": "{{name}} on this phone",
+      "notesGroup": "Notes",
+      "skipNotesTitle": "Skip notes",
+      "skipNotesHelp": "梅拉 ranks your news without writing why each article is in your Feed. New articles show up faster.",
+      "fallbackNoticeTitle": "梅拉 uses Private cloud for now",
+      "fallbackNoticeBody": "This phone can't run On this phone right now. Open Settings, then 梅拉協定, to see why."
+    }
+  }
+}

@@ -10,7 +10,6 @@
 
 import type { ChatEngine } from '@/lib/chat-session/engine';
 import { useLocalChatStore, type LocalChatState } from '@/lib/chat-session/local-chat-store';
-import { isTextModelResident } from '../mera-protocol-toolkit';
 import { inferenceQueue } from '../inference/InferenceQueue';
 import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
 import { applyChatPhase, useChatPhaseStore } from './chat-phase-store';
@@ -71,14 +70,12 @@ export function createLocalEngine(initialAgent: OnDeviceAgent): ChatEngine<OnDev
   const phaseSinkRef: { current: PhaseSink | null } = { current: null };
 
   const runInference = async (conversationMessages: ConversationMessage[]): Promise<void> => {
-      // Chosen SYNCHRONOUSLY, before the first await. `inferenceQueue.pause()`
-      // waits for whatever job holds the model to finish, and on a cold turn
-      // the toolkit then loads the text model inside its lock: both are real
-      // seconds the user sits through, and publishing after them would miss the
-      // part of the wait that most needs a sentence.
-      const coldModel = !isTextModelResident();
+      // Published SYNCHRONOUSLY, before the first await: `inferenceQueue.pause()`
+      // waits for whatever job holds the model to finish, real seconds the user
+      // sits through. The text runs on the phone's built-in model, which loads
+      // nothing, so there is no cold-model line.
       const phase = phaseSinkRef.current;
-      phase?.(coldModel ? 'deviceLoading' : 'devicePreparing');
+      phase?.('devicePreparing');
       await inferenceQueue.pause();
       try {
         // Stop pressed while the queue paused: end the turn, start no completion.
@@ -96,9 +93,7 @@ export function createLocalEngine(initialAgent: OnDeviceAgent): ChatEngine<OnDev
         const setContent = (content: string, extra: Partial<ConversationMessage> = {}) =>
           setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content, ...extra } : m)));
 
-        // A cold turn is still loading inside the toolkit, so it keeps
-        // deviceLoading until the reply (the sink only moves forward).
-        if (!coldModel) phase?.('deviceThinking');
+        phase?.('deviceThinking');
 
         // Stop must end the turn NOW, but a structured call cannot be cut short
         // and a stream only ends once the model has unwound. So the turn races

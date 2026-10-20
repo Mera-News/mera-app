@@ -1,12 +1,12 @@
 // Download Service: fetches on-device model files, one model at a time, in a
-// serial queue. The screen shows one row per model ("Mera relevance model",
-// "Mera text model"), each with its own download, progress, cancel and retry.
+// serial queue. Since D37 the catalogue holds Kev only ("Mera relevance model");
+// the text is written by the phone's built-in model, which needs no download. The
+// screen shows the row with its download, progress, cancel and retry.
 //
 // The download state lives HERE, per model, apart from the store's runtime
-// `modelState`: a phone can already run (relevance model plus a built-in text
-// model) while the text model downloads, and a download writing `modelState`
-// would stop the inference queue and make a load failure read as a download
-// failure. The whole queue runs under ONE `model-download` restart hold.
+// `modelState`: a download writing `modelState` would stop the inference queue
+// and make a load failure read as a download failure. The whole queue runs under
+// ONE `model-download` restart hold.
 //
 // After EACH model lands the phone is promoted to OnDevice when On this phone
 // can now run (isModelDownloaded()) and the reader asked for on-device
@@ -25,13 +25,12 @@ import {
   cancelActiveDownload,
   downloadBaseModel,
   isModelDownloaded,
-  requiredModels,
   type DownloadProgressInfo,
 } from './modelManager';
-import { getTextEngine, isBuiltInEngine, type BuiltInEngine } from './text-engine';
+import { getTextEngine, type TextEngine } from './text-engine';
 
 /** The built-in text models by name. Proper nouns, never translated; the only model names the UI shows. */
-export const BUILT_IN_MODEL_NAME: Readonly<Record<BuiltInEngine, string>> = {
+export const BUILT_IN_MODEL_NAME: Readonly<Record<TextEngine, string>> = {
   afm: 'Apple Intelligence',
   nano: 'Gemini Nano',
 };
@@ -140,7 +139,7 @@ export function useDownloadBytes(): DownloadBytes {
 
 /**
  * What the screen shows: for each catalogue model, whether it is on disk and its
- * size, and whether On this phone can run now with the chosen text option.
+ * size, and whether On this phone can run now (Kev on disk and the built-in model available).
  */
 export async function onDeviceModelsStatus(): Promise<{
   models: Record<string, { onDisk: boolean; sizeBytes: number }>;
@@ -153,10 +152,10 @@ export async function onDeviceModelsStatus(): Promise<{
   return { models, runnable: await isModelDownloaded().catch(() => false) };
 }
 
-/** The models the chosen text engine needs that are not on disk yet, in download order. */
+/** The catalogue models that are not on disk yet, in download order. */
 export async function missingModels(): Promise<ModelCatalogEntry[]> {
   const missing: ModelCatalogEntry[] = [];
-  for (const m of await requiredModels()) {
+  for (const m of MODEL_CATALOG) {
     if (!(await isModelDownloaded(m.modelId).catch(() => false))) missing.push(m);
   }
   return missing;
@@ -293,8 +292,6 @@ export async function restoreOnDeviceIfRunnable(): Promise<boolean> {
   const cached = useUserStore.getState().userPersona;
   if (cached?.processingMode !== ProcessingMode.OnDevice) return false;
   if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.Cloud) return false;
-  // Not gated on a running download: with the text model a separate download, a
-  // phone can already run on the built-in model while the text model downloads.
   if (!(await isModelDownloaded().catch(() => false))) return false;
   try {
     /* eslint-disable @typescript-eslint/no-require-imports */
@@ -345,7 +342,7 @@ const catalogEntry = (modelId: string): ModelCatalogEntry | undefined =>
 
 /**
  * Queues model downloads; they run one after the other. `modelIds`: which models
- * (default: what the chosen text engine still needs). A model already queued or
+ * (default: what is still missing). A model already queued or
  * downloading is not queued twice; a failed one is queued again (Try again).
  * `promote`: switch the phone to OnDevice once a landing makes it runnable (the
  * reader's on-device intent); while a queue runs, the latest start sets it.
@@ -380,7 +377,7 @@ function addToQueue(modelIds: string[]): boolean {
   return added;
 }
 
-/** Starts a runner unless one runs. `resolveMissing`: first queue what the chosen engine still needs. */
+/** Starts a runner unless one runs. `resolveMissing`: first queue what is still missing. */
 function startRunner(resolveMissing: boolean): void {
   if (running) return;
   running = true;
@@ -449,8 +446,8 @@ async function runQueue(myRun: number, resolveMissing: boolean): Promise<void> {
 
 /**
  * After each model lands: promote when the phone can now run and the reader wants
- * On this phone, so the relevance model landing with a ready built-in model
- * promotes on its own. Then one notification for this model.
+ * On this phone, so Kev landing with a ready built-in model promotes on its own.
+ * Then one notification for this model.
  */
 async function afterModelLanded(
   model: ModelCatalogEntry,
@@ -467,15 +464,12 @@ async function afterModelLanded(
   // foreground promotes once it can run.
   if (promoteWhenDone && !runnable && last) await writeOnDeviceIntent(() => promoteWhenDone);
   if (!canNotify || !isCurrent()) return;
-  let body = i18next.t(model.role === 'relevance' ? 'download.relevanceDone' : 'download.textDone');
+  let body = i18next.t('download.relevanceDone');
   if (promoted) {
     body = i18next.t('download.onDeviceReady');
-  } else if (promoteWhenDone && !runnable && last) {
+  } else if (promoteWhenDone && !runnable && last && (await missingModels()).length === 0) {
     // Everything is on disk and it still cannot run: the built-in model is not ready. Never say "ready".
-    const engine = await getTextEngine();
-    if (isBuiltInEngine(engine) && (await missingModels()).length === 0) {
-      body = i18next.t('meraProtocol.modelsWaitingNative', { name: BUILT_IN_MODEL_NAME[engine] });
-    }
+    body = i18next.t('meraProtocol.modelsWaitingNative', { name: BUILT_IN_MODEL_NAME[await getTextEngine()] });
   }
   await notify('model-download-complete', model.modelId, 'download.completeTitle', body);
 }

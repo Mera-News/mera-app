@@ -14,17 +14,8 @@ import {
     type ModelDownload,
 } from '@/lib/mera-protocol-toolkit/core/downloadService';
 import { deleteDownloadedModel } from '@/lib/mera-protocol-toolkit/core/modelManager';
-import { RELEVANCE_MODEL, TEXT_MODEL, type ModelCatalogEntry } from '@/lib/mera-protocol-toolkit/core/model-catalog';
-import {
-    builtInAvailability,
-    builtInEngine,
-    setTextEngine,
-    useTextEngine,
-    getTextEngine,
-    isBuiltInEngine,
-    type BuiltInEngine,
-    type TextEngine,
-} from '@/lib/mera-protocol-toolkit/core/text-engine';
+import { RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
+import { builtInAvailability, builtInEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 import type { OnDeviceLlmAvailability } from '@/modules/mera-on-device-llm';
 import {
     checkRequirements,
@@ -35,10 +26,10 @@ import {
     useInferenceStats,
 } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import type { SystemRequirementsResult } from '@/lib/mera-protocol-toolkit/types';
-import { rependOnDeviceNotes } from '@/lib/mera-protocol/scoring-service';
+import { rependSkippedNotes } from '@/lib/mera-protocol/scoring-service';
 import {
     useMeraProtocolStore,
-    useOnDeviceNotes,
+    useSkipNotes,
     useProcessingMode,
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
@@ -58,7 +49,7 @@ import {
 export const gbText = (bytes: number): string => (bytes / 1e9).toFixed(1);
 
 /**
- * Why the built-in model (Apple Intelligence, Gemini Nano) cannot be picked, by
+ * Why the built-in model (Apple Intelligence, Gemini Nano) cannot run now, by
  * availability code. Every line takes the model's name as `{{name}}`.
  * `unsupportedPlatform` has no line: the row is not shown there.
  */
@@ -82,9 +73,13 @@ export const MODELS_SECTION_KEYS = [
     'meraProtocol.relevanceHelp',
     'meraProtocol.textTitle',
     'meraProtocol.textHelp',
-    'meraProtocol.textMera',
-    'meraProtocol.notesTitle',
-    'meraProtocol.notesHelp',
+    'meraProtocol.builtInReady',
+    'meraProtocol.builtInRequirement',
+    'meraProtocol.notesGroup',
+    'meraProtocol.skipNotesTitle',
+    'meraProtocol.skipNotesHelp',
+    'meraProtocol.fallbackNoticeTitle',
+    'meraProtocol.fallbackNoticeBody',
     'meraProtocol.modelsHelp',
     'meraProtocol.modelsWaitingNative',
     'meraProtocol.modelReady',
@@ -99,10 +94,7 @@ export const MODELS_SECTION_KEYS = [
     'meraProtocol.deleteModelLabel',
     'meraProtocol.deleteModelTitle',
     'meraProtocol.deleteRelevanceBody',
-    'meraProtocol.deleteTextBody',
     'meraProtocol.deleteFailedDescription',
-    'meraProtocol.textModelGoneTitle',
-    'meraProtocol.textModelGoneBody',
     'meraProtocol.cellularTitle',
     'meraProtocol.cellularBody',
     'meraProtocol.cellularConfirm',
@@ -113,14 +105,12 @@ export const MODELS_SECTION_KEYS = [
     'meraProtocol.errorSpace',
     'meraProtocol.speedTitle',
     'meraProtocol.speedLoad',
-    'meraProtocol.speedGeneration',
     'meraProtocol.speedRanking',
     'meraProtocol.speedNotes',
     'meraProtocol.speedRefused',
     'meraProtocol.speedResetNote',
     'download.onDeviceReady',
     'download.relevanceDone',
-    'download.textDone',
     'download.modelDownloading',
     ...Object.values(NATIVE_REASON_KEYS),
 ] as const;
@@ -133,10 +123,10 @@ function cacheProcessingMode(mode: ProcessingMode): void {
 
 type ModelsStatus = Awaited<ReturnType<typeof onDeviceModelsStatus>>;
 
-/** One downloadable model's row: Mera relevance model, or Mera text model. Every on-device row is Beta (D30). */
+/** The downloadable model's row: the Mera relevance model. Every on-device row is Beta (D30). */
 export type ModelRowState = {
     modelId: string;
-    titleKey: 'meraProtocol.relevanceTitle' | 'meraProtocol.textMera';
+    titleKey: 'meraProtocol.relevanceTitle';
     sizeBytes: number;
     onDisk: boolean;
     /** Queued, downloading or failed; null when nothing is happening to it. */
@@ -148,17 +138,13 @@ export type ModelRowState = {
     beta: true;
 };
 
-/** One Text model radio: the Mera text model (a download), or this phone's built-in model. */
-export type TextOption = {
-    engine: TextEngine;
-    /** "Mera text model", "Apple Intelligence" or "Gemini Nano". */
-    title: string;
-    selected: boolean;
-    disabled: boolean;
-    /** Why a built-in model cannot be picked (already translated); null when it can. */
+/** The built-in text model's status row (no picker, no download, D37). */
+export type BuiltInStatus = {
+    /** "Apple Intelligence" or "Gemini Nano". */
+    name: string;
+    available: boolean;
+    /** Why it cannot run now (already translated); null when it can. */
     reason: string | null;
-    /** The download row, for the Mera text model only. */
-    model: ModelRowState | null;
     beta: true;
 };
 
@@ -173,7 +159,6 @@ export function useMeraProtocolSettings() {
     const [status, setStatus] = useState<ModelsStatus | null>(null);
     // The built-in model's availability, re-read on every focus (it can change while the app runs).
     const [native, setNative] = useState<OnDeviceLlmAvailability | null>(null);
-    const textEngine = useTextEngine();
     // This platform's built-in model, if the native module is there: 'afm' on iOS, 'nano' on Android.
     const builtIn = builtInEngine();
 
@@ -181,7 +166,7 @@ export function useMeraProtocolSettings() {
     const isOnDevice = processingMode === ProcessingMode.OnDevice;
     const store = useMeraProtocolStore();
     const webSearchInChat = useWebSearchInChat();
-    const onDeviceNotes = useOnDeviceNotes();
+    const skipNotes = useSkipNotes();
     const inferenceStats = useInferenceStats();
     const downloads = useModelDownloads();
 
@@ -195,7 +180,7 @@ export function useMeraProtocolSettings() {
     const onDeviceAvailable = deviceSupported !== false && runnable;
     const freeGb = requirementsResult?.deviceInfo.freeStorageGB ?? null;
 
-    const modelRow = (m: ModelCatalogEntry, titleKey: ModelRowState['titleKey']): ModelRowState => {
+    const modelRow = (m: typeof RELEVANCE_MODEL, titleKey: ModelRowState['titleKey']): ModelRowState => {
         const onDisk = status?.models[m.modelId]?.onDisk ?? false;
         // GB to free: the file plus the margin, less what is free.
         const shortfall = freeGb == null ? 0 : Math.max(0, m.sizeBytes + STORAGE_MARGIN_BYTES - freeGb * 1e9);
@@ -211,7 +196,6 @@ export function useMeraProtocolSettings() {
         };
     };
     const relevanceModel = modelRow(RELEVANCE_MODEL, 'meraProtocol.relevanceTitle');
-    const textModel = modelRow(TEXT_MODEL, 'meraProtocol.textMera');
 
     // Drives which sections are visible. The user can express intent to run
     // on-device even when the runtime preconditions (device + models) aren't
@@ -227,45 +211,23 @@ export function useMeraProtocolSettings() {
     // Set for the whole delete: nothing may promote the phone while its files are being removed.
     const deletingRef = useRef(false);
 
-    // The Text model radios. The Mera text model is picked only once its file is on disk (its row
-    // downloads it first), so a pick never drops a running phone to Private cloud for 2.7 GB. The
-    // built-in model is shown only on its platform, and never needs a download.
-    const showBuiltIn = builtIn != null && native != null && native.reason !== 'unsupportedPlatform';
-    const textOptions: TextOption[] = [
-        {
-            engine: 'qwen',
-            title: t('meraProtocol.textMera'),
-            selected: textEngine === 'qwen',
-            disabled: isDeletingModel || !textModel.onDisk,
-            reason: null,
-            model: textModel,
-            beta: true,
-        },
-        ...(showBuiltIn && builtIn && builtInName
-            ? [
-                  {
-                      engine: builtIn,
-                      title: builtInName,
-                      selected: textEngine === builtIn,
-                      disabled: isDeletingModel || !nativeAvailable,
-                      reason:
-                          !nativeAvailable && native?.reason && native.reason !== 'unsupportedPlatform'
-                              ? t(NATIVE_REASON_KEYS[native.reason], { name: builtInName })
-                              : null,
-                      model: null,
-                      beta: true as const,
-                  },
-              ]
-            : []),
-    ];
+    // The built-in model writes the text: a status row with its availability reason, shown only on
+    // its platform. It never needs a download.
+    const builtInStatus: BuiltInStatus | null =
+        builtInName && native != null && native.reason !== 'unsupportedPlatform'
+            ? {
+                  name: builtInName,
+                  available: nativeAvailable,
+                  reason:
+                      !nativeAvailable && native.reason ? t(NATIVE_REASON_KEYS[native.reason], { name: builtInName }) : null,
+                  beta: true,
+              }
+            : null;
 
-    // The built-in model is the choice, its file need is met and it cannot run yet: without a line
-    // the section would show everything downloaded and no way forward.
-    const waitingForNative =
-        onDeviceIntent && status != null && isBuiltInEngine(textEngine) && !runnable && relevanceModel.onDisk;
-    const waitingLine = waitingForNative
-        ? t('meraProtocol.modelsWaitingNative', { name: BUILT_IN_MODEL_NAME[textEngine as BuiltInEngine] })
-        : null;
+    // Kev is on disk and the built-in model cannot run yet: without a line the section would show
+    // everything downloaded and no way forward.
+    const waitingForNative = onDeviceIntent && status != null && !runnable && relevanceModel.onDisk;
+    const waitingLine = waitingForNative && builtInName ? t('meraProtocol.modelsWaitingNative', { name: builtInName }) : null;
 
     // Reads what is on disk and whether the built-in model can be used. Pure: changes no mode.
     const readStatus = useCallback(async () => {
@@ -308,10 +270,6 @@ export function useMeraProtocolSettings() {
         });
         return () => sub.remove();
     }, [refresh]);
-
-    useEffect(() => {
-        void getTextEngine();
-    }, []);
 
     // Whether this phone can run On this phone at all. Storage is judged per model row.
     useEffect(() => {
@@ -356,16 +314,23 @@ export function useMeraProtocolSettings() {
         });
     }, [bgRefreshEnabled]);
 
-    // Write notes (D35). Back on, rows finalised without a note are owed one again.
-    const toggleNotes = useCallback(() => {
-        const next = !onDeviceNotes;
-        useMeraProtocolStore.getState().setOnDeviceNotes(next);
-        if (next) {
-            rependOnDeviceNotes().catch((err) =>
-                logger.captureException(err, { tags: { component: 'MeraProtocolSettings', method: 'rependOnDeviceNotes' } }),
-            );
-        }
-    }, [onDeviceNotes]);
+    // Skip notes (D42), both modes. Turned off, rows finalised without a note are owed one again;
+    // in the cloud the orphaned-reasons sweep is kicked now rather than at the next sync.
+    const toggleSkipNotes = useCallback(() => {
+        const next = !skipNotes;
+        useMeraProtocolStore.getState().setSkipNotes(next);
+        if (next) return;
+        void (async () => {
+            await rependSkippedNotes();
+            if (useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice) return;
+            // Lazy: the cloud pipeline reaches the database and the gateway at import.
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const pipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
+            await pipeline.enqueueOrphanedReasons();
+        })().catch((err) =>
+            logger.captureException(err, { tags: { component: 'MeraProtocolSettings', method: 'rependSkippedNotes' } }),
+        );
+    }, [skipNotes]);
 
     useEffect(() => {
         loadSettings();
@@ -464,23 +429,11 @@ export function useMeraProtocolSettings() {
         }
     };
 
-    // The text model for chat, notes and topics. refresh() applies the On this phone intent to it.
-    const selectEngine = useCallback(
-        async (engine: TextEngine) => {
-            if (engine === textEngine) return;
-            await setTextEngine(engine);
-            // The figures are the previous engine's: start clean rather than mix them in.
-            resetInferenceStats();
-            await refresh();
-        },
-        [textEngine, refresh],
-    );
-
-    // One model's download, queued behind any other. A landing promotes the phone
-    // when it can then run, if the reader's intent says so.
+    // The model's download. A landing promotes the phone when it can then run, if the reader's
+    // intent says so.
     const handleDownload = useCallback(
         async (modelId: string) => {
-            const model = modelId === RELEVANCE_MODEL.modelId ? RELEVANCE_MODEL : TEXT_MODEL;
+            const model = RELEVANCE_MODEL;
             const net = await NetInfo.fetch().catch(() => null);
             if (net?.type === 'cellular') {
                 const ok = await showDialog({
@@ -515,39 +468,12 @@ export function useMeraProtocolSettings() {
         useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.Cloud);
     }, []);
 
-    // Deleting the Mera text model while it writes the text: the built-in model takes over when it can
-    // run, else the phone uses Private cloud on this phone only, with a toast. The intent is kept.
-    const moveOffTextModel = useCallback(async () => {
-        if (textEngine !== 'qwen') return;
-        if (builtIn && nativeAvailable) {
-            await setTextEngine(builtIn);
-            resetInferenceStats();
-            return;
-        }
-        if (useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice || intentRef.current) {
-            useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.Cloud);
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="info" variant="solid">
-                        <ToastTitle>{t('meraProtocol.textModelGoneTitle')}</ToastTitle>
-                        <ToastDescription>{t('meraProtocol.textModelGoneBody')}</ToastDescription>
-                    </Toast>
-                ),
-            });
-        }
-    }, [textEngine, builtIn, nativeAvailable, toast, t]);
-
     const handleDeleteModel = useCallback(
         async (modelId: string) => {
-            const relevance = modelId === RELEVANCE_MODEL.modelId;
-            const model = relevance ? RELEVANCE_MODEL : TEXT_MODEL;
-            const name = t(relevance ? 'meraProtocol.relevanceTitle' : 'meraProtocol.textMera');
+            const name = t('meraProtocol.relevanceTitle');
             const ok = await showDialog({
                 title: t('meraProtocol.deleteModelTitle', { name }),
-                body: t(relevance ? 'meraProtocol.deleteRelevanceBody' : 'meraProtocol.deleteTextBody', {
-                    size: `${gbText(model.sizeBytes)} GB`,
-                }),
+                body: t('meraProtocol.deleteRelevanceBody', { size: `${gbText(RELEVANCE_MODEL.sizeBytes)} GB` }),
                 confirmLabel: t('common.delete'),
                 cancelLabel: t('common.cancel'),
                 destructive: true,
@@ -556,14 +482,10 @@ export function useMeraProtocolSettings() {
             deletingRef.current = true;
             setIsDeletingModel(true);
             try {
-                if (relevance) {
-                    await fallBackToCloud();
-                    setOnDeviceIntent(false);
-                    setPromoteWhenDone(false);
-                    resetInferenceStats();
-                } else {
-                    await moveOffTextModel();
-                }
+                await fallBackToCloud();
+                setOnDeviceIntent(false);
+                setPromoteWhenDone(false);
+                resetInferenceStats();
                 await deleteDownloadedModel(modelId);
             } catch {
                 toast.show({
@@ -579,10 +501,9 @@ export function useMeraProtocolSettings() {
                 deletingRef.current = false;
                 setIsDeletingModel(false);
             }
-            // The built-in model may now run where the text model did.
             await refresh();
         },
-        [fallBackToCloud, moveOffTextModel, refresh, toast, t],
+        [fallBackToCloud, refresh, toast, t],
     );
 
     return {
@@ -601,18 +522,16 @@ export function useMeraProtocolSettings() {
         onDeviceIntent,
         bgRefreshEnabled,
         toggleBgRefresh,
-        onDeviceNotes,
-        toggleNotes,
+        skipNotes,
+        toggleSkipNotes,
         selectMode,
         refresh,
         runnable,
         waitingForNative,
         waitingLine,
         relevanceModel,
-        textOptions,
-        textEngine,
+        builtInStatus,
         builtInName,
-        selectEngine,
         nativeAvailable,
         handleDownload,
         handleCancelDownload,

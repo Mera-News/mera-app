@@ -6,24 +6,19 @@
 // models, measured from calls the app already makes, and they die with the
 // process. A restart (a pending OTA applied on a foreground return) clears them.
 //
-// The two models swap in and out of memory during a sync, so load times are
-// kept per role and a swap never clears a reading.
+// Kev is the only model loaded (the built-in text model runs out of process and
+// reports no speed), so there is one load time.
 
 import { useSyncExternalStore } from 'react';
-import type { ModelRole } from './model-catalog';
 
-/** Which caller a call belongs to. Unlabelled calls count only toward tok/s. */
+/** Which caller a call belongs to. Unlabelled calls are not counted. */
 export type InferenceLabel = 'relevance' | 'reason';
 
 type Average = { count: number; totalMs: number };
 
 export type InferenceStats = {
-  /** Most recent load time per model role. */
-  loadMs: Record<ModelRole, number | null>;
-  /** Prefill speed of the most recent text completion. */
-  promptTokPerSec: number | null;
-  /** Generation speed of the most recent text completion. */
-  genTokPerSec: number | null;
+  /** Most recent Kev load time. */
+  loadMs: number | null;
   /** Kev `decide()` calls, one per article. */
   relevance: Average;
   /** Text-model note (reason) completions. */
@@ -33,9 +28,7 @@ export type InferenceStats = {
 };
 
 const EMPTY: InferenceStats = {
-  loadMs: { text: null, relevance: null },
-  promptTokPerSec: null,
-  genTokPerSec: null,
+  loadMs: null,
   relevance: { count: 0, totalMs: 0 },
   reason: { count: 0, totalMs: 0 },
   refused: 0,
@@ -60,9 +53,7 @@ export function resetInferenceStats(): void {
 /** True once any figure has been measured this process. */
 export function hasAnyStat(s: InferenceStats): boolean {
   return (
-    s.loadMs.text != null ||
-    s.loadMs.relevance != null ||
-    s.genTokPerSec != null ||
+    s.loadMs != null ||
     s.relevance.count > 0 ||
     s.reason.count > 0 ||
     s.refused > 0
@@ -74,35 +65,18 @@ export function recordRefusal(): void {
   emit({ ...stats, refused: stats.refused + 1 });
 }
 
-/** Called once a model has loaded. Keeps every other figure. */
-export function recordModelLoad(role: ModelRole, loadMs: number): void {
-  emit({ ...stats, loadMs: { ...stats.loadMs, [role]: Math.round(loadMs) } });
+/** Called once Kev has loaded. Keeps every other figure. */
+export function recordModelLoad(loadMs: number): void {
+  emit({ ...stats, loadMs: Math.round(loadMs) });
 }
 
-export function recordCompletion(input: {
-  label?: InferenceLabel;
-  latencyMs: number;
-  promptTokPerSec?: number;
-  genTokPerSec?: number;
-}): void {
+export function recordCompletion(input: { label?: InferenceLabel; latencyMs: number }): void {
   const next: InferenceStats = { ...stats };
-  if (input.promptTokPerSec && Number.isFinite(input.promptTokPerSec)) {
-    next.promptTokPerSec = Math.round(input.promptTokPerSec);
-  }
-  if (input.genTokPerSec && Number.isFinite(input.genTokPerSec)) {
-    next.genTokPerSec = Math.round(input.genTokPerSec);
-  }
   if (input.label && Number.isFinite(input.latencyMs) && input.latencyMs >= 0) {
     const prev = stats[input.label];
     next[input.label] = { count: prev.count + 1, totalMs: prev.totalMs + input.latencyMs };
   }
   emit(next);
-}
-
-/** Load time of every model loaded so far, summed (the screen shows one figure, never per model). */
-export function totalLoadMs(s: InferenceStats): number | null {
-  const parts = [s.loadMs.text, s.loadMs.relevance].filter((v): v is number => v != null);
-  return parts.length > 0 ? parts.reduce((a, b) => a + b, 0) : null;
 }
 
 /** Average milliseconds per call for `label`, or null before the first call. */

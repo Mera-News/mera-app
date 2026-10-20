@@ -84,8 +84,8 @@ const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
 const isOnDeviceMode = () =>
   useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
-/** The Write notes switch (D35). On this phone only; cloud always writes notes. */
-const onDeviceNotesOn = () => useMeraProtocolStore.getState().onDeviceNotes !== false;
+/** The Skip notes switch (D42) is off. This module gates on-device notes; the cloud gate is in scoring-pipeline. */
+const notesOn = () => !useMeraProtocolStore.getState().skipNotes;
 
 // --- Re-exports (canonical homes moved to the harness) ---
 
@@ -942,11 +942,11 @@ async function scoreUnscoredRows(
         // REASON_THRESHOLD = 0 → reasons generated for every row, including
         // sub-DISCARD-floor low-relevance ones. Skip flag now only fires if
         // phase-2 was bypassed entirely.
-        // On this phone a note costs a model swap and seconds, so a row below the feed's gate
-        // (0.4) is never written one, and with notes switched off no row is: `complete`
-        // with no note, never `reason_skipped`, which the feed does not show.
+        // On this phone a note costs seconds, so a row below the feed's gate (0.4) is never
+        // written one, and with Skip notes on no row is: `complete` with no note, never
+        // `reason_skipped`, which the feed does not show.
         const reasonSkipped = isOnDeviceMode()
-          ? !onDeviceNotesOn() || relevance < ARTICLE_CFG.lowPriorityScore
+          ? !notesOn() || relevance < ARTICLE_CFG.lowPriorityScore
           : relevance < REASON_THRESHOLD;
         try {
           await saveScoringResult(candidate.id, {
@@ -1022,8 +1022,8 @@ async function scoreUnscoredRows(
 async function writeNotesOnDevice(): Promise<number> {
   const all = await getScoredSuggestionsWithoutReasons();
   if (all.length === 0) return 0;
-  // Notes switched off: every row still owed one is finalised without it.
-  if (!onDeviceNotesOn()) {
+  // Skip notes on: every row still owed one is finalised without it.
+  if (!notesOn()) {
     await batchMarkReasonSkipped(all.map((c) => c.id));
     return 0;
   }
@@ -1038,8 +1038,8 @@ async function writeNotesOnDevice(): Promise<number> {
   const fullUserContext = buildUserContext(await loadAllFactStatements());
   let written = 0;
   for (const candidate of owed) {
-    // Switched off mid-sweep: stop; the next sweep finalises what is left.
-    if (!onDeviceNotesOn()) break;
+    // Skip notes turned on mid-sweep: stop; the next sweep finalises what is left.
+    if (!notesOn()) break;
     // isScorableCandidate covers both the text and the fact test. A pure TOP-HEADLINE row is
     // factless by design and must still get its note.
     if (!isScorableCandidate(candidate)) continue;
@@ -1067,10 +1067,13 @@ async function writeNotesOnDevice(): Promise<number> {
 }
 
 /**
- * Notes switched back on, on this phone: rows at or above the feed's gate that
- * were finalised without a note are owed one again; the next sweep writes them.
+ * Skip notes turned off (D42), in either mode: rows at or above the feed's gate
+ * that were finalised without a note are owed one again (`reason_pending`). Each
+ * mode's sweep writes them: on this phone the notes sweep at the end of the next
+ * scoring pass, in the cloud the orphaned-reasons sweep (`enqueueOrphanedReasons`)
+ * of the next scoring cycle. The cloud gate equals this one (REASON_RELEVANCE_THRESHOLD, 0.4).
  */
-export function rependOnDeviceNotes(): Promise<number> {
+export function rependSkippedNotes(): Promise<number> {
   return rependNotelessRows(ARTICLE_CFG.lowPriorityScore);
 }
 

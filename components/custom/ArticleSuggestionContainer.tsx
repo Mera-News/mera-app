@@ -32,7 +32,6 @@ import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
 import { showsChipOnly } from '@/components/custom/cards/note-pending-mode';
-import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { useReadHeld } from '@/components/custom/cards/use-read-held';
 import { noteHeldLineKey, notReadLineKey } from '@/components/custom/cards/not-read-line';
@@ -183,9 +182,8 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     // the same input and rule (`notePendingMode`) as the Feed card.
     const readHeld = useReadHeld();
     const pendingMode = suggestion ? notePendingMode(suggestion, readHeld.held) : undefined;
-    // Notes off on this phone: the chip alone, the same rule as the Feed card.
-    const isOnDevice = useIsOnDeviceProcessing();
-    const chipOnly = suggestion ? showsChipOnly(suggestion, isOnDevice) : false;
+    // A row with no note (Skip notes): the chip alone, the same rule as the Feed card.
+    const chipOnly = suggestion ? showsChipOnly(suggestion) : false;
 
     const isCard = variant === 'card';
     const displayTitle = titleEnglish || t('feed.newsCluster');

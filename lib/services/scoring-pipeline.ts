@@ -840,6 +840,19 @@ export async function enqueueOrphanedReasons(): Promise<void> {
       c.relevance >= REASON_RELEVANCE_THRESHOLD &&
       !covered.has(c.id),
   );
+  // Skip notes (D42): nothing is owed a note. Finalise the rows without one,
+  // `complete` (never `reason_skipped`, which hides them), and send no reasons batch.
+  if (useMeraProtocolStore.getState().skipNotes) {
+    if (qualified.length > 0) {
+      await batchMarkReasonSkipped(qualified.map((c) => c.id));
+      await refreshUi();
+    }
+    if (snap) {
+      await drain('foreground');
+      ensurePoller();
+    }
+    return;
+  }
   if (qualified.length === 0) {
     if (snap) {
       await drain('foreground');
@@ -1981,6 +1994,11 @@ async function handleRelevanceResults(
     }
   }
 
+  // Skip notes (D42), read once for the batch: the relevance pass is the whole
+  // pass. Rows save `complete` with no note and the batch ends below with no
+  // reasons phase. Off, every line below runs exactly as it always has.
+  const skipNotes = useMeraProtocolStore.getState().skipNotes;
+
   // DB writes FIRST (so the impactful subset query sees reason_pending rows),
   // then a single CAS storing the maps + next phase.
   const relevanceMap: Record<string, number> = {};
@@ -1993,7 +2011,7 @@ async function handleRelevanceResults(
       await saveScoringResult(id, {
         relevance,
         reason: '',
-        reasonSkipped: false,
+        reasonSkipped: skipNotes,
       });
     } catch (err) {
       if (isRecordNotFoundError(err)) continue;
@@ -2019,11 +2037,13 @@ async function handleRelevanceResults(
     });
   }
 
-  const impactfulIds = Object.keys(relevanceMap).filter(
-    (id) =>
-      relevanceMap[id] >= REASON_RELEVANCE_THRESHOLD &&
-      (rawRelevanceMap[id] ?? 0) >= REASON_MIN_RAW_SCORE,
-  );
+  const impactfulIds = skipNotes
+    ? []
+    : Object.keys(relevanceMap).filter(
+        (id) =>
+          relevanceMap[id] >= REASON_RELEVANCE_THRESHOLD &&
+          (rawRelevanceMap[id] ?? 0) >= REASON_MIN_RAW_SCORE,
+      );
 
   logger.debug(
     `${TAG} batch ${batch.batchId} relevance decoded: scored=${Object.keys(relevanceMap).length} impactful=${impactfulIds.length}`,

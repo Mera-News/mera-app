@@ -56,8 +56,6 @@ import { decideCalls, installDecide, installLlama, llamaCalls } from '@/test/hel
 import { resetFileSystem } from '@/test/helpers/fs';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
 import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
-import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
-import { deleteSetting } from '@/lib/database/services/setting-service';
 import { SUBSCRIPTION_READ_SYSTEM } from '@/lib/news-harness/on-device/subscription-read/prompt';
 
 // Hoisted above the imports by babel-jest.
@@ -80,7 +78,7 @@ beforeEach(async () => {
   resetFileSystem();
   resetInferenceStats();
   await disposeModel();
-  installOnDeviceLlm({ platformModel: null });
+  installOnDeviceLlm();
   useMeraProtocolStore.getState().setModelState('downloaded');
   mode('cloud');
   await signInFixtureAccount();
@@ -239,13 +237,15 @@ describe('on-device relevance - Kev', () => {
     expect(llamaCalls()).toHaveLength(0);
   });
 
-  it('the local port completes the subscription read as plain text: no JSON grammar to quote its SKIP', async () => {
-    installLlama(['SKIP']);
+  it('the local port completes the subscription read as plain text on the built-in model: no schema to quote its SKIP', async () => {
+    installLlama([]);
+    installOnDeviceLlm({ reply: 'SKIP' });
 
     const out = await run(getScoringLlmPort().complete({ systemPrompt: 's', prompt: 'p', maxTokens: 10, temperature: 0 }));
 
     expect(out).toBe('SKIP');
-    expect(llamaCalls()[0].params.response_format).toBeUndefined();
+    expect(onDeviceLlmCalls()[0]).toMatchObject({ kind: 'respond', instructions: 's', prompt: 'p' });
+    expect(llamaCalls()).toHaveLength(0);
   });
 });
 
@@ -843,33 +843,38 @@ describe('runSubscriptionReadStage', () => {
 
   it('reads on the on-device model when the person runs on device, with no gateway call', async () => {
     mode('on-device');
-    installLlama(['Leads with the coalition talks.']);
+    installLlama([]);
+    installOnDeviceLlm({ reply: 'Leads with the coalition talks.' });
     await subscribe();
     await seedStory();
 
     expect(await run(runSubscriptionReadStage())).toBe(1);
 
     expect(gatewayCalls()).toHaveLength(0);
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     expect((await stamp('anchor')).read).toBe('Leads with the coalition talks.');
   });
 
   describe('on device: its own prompt and reader', () => {
-    const userOf = () => llamaCalls()[0].messages.at(-1)!.content;
+    const userOf = () => onDeviceLlmCalls()[0].prompt;
+    const reads = (reply: string) => {
+      installLlama([]);
+      installOnDeviceLlm({ reply });
+    };
 
     it('sends the on-device instruction and the outlet\'s fields', async () => {
-      installLlama(['Leads with the coalition talks.']);
+      reads('Leads with the coalition talks.');
       await subscribe();
       await seedStory();
 
       await run(runSubscriptionReadStage());
 
-      expect(llamaCalls()[0].messages[0]).toEqual({ role: 'system', content: SUBSCRIPTION_READ_SYSTEM });
+      expect(onDeviceLlmCalls()[0].instructions).toBe(SUBSCRIPTION_READ_SYSTEM);
       expect(userOf()).toContain('The reader is looking at this story: Cabinet falls over nitrogen plan');
       expect(userOf()).toContain('Their subscribed outlet: Het Parool');
       expect(userOf()).toContain('Its headline: Coalition talks collapse');
       expect(userOf()).toContain('Its description: The coalition failed to agree on nitrogen limits.');
-      expect(llamaCalls()[0].params.response_format).toBeUndefined();
+      expect(onDeviceLlmCalls()[0].kind).toBe('respond');
     });
 
     // A small model dresses its SKIP up. Each of these must be stamped like a bare SKIP, or the
@@ -877,7 +882,7 @@ describe('runSubscriptionReadStage', () => {
     it.each(['SKIP.', '"SKIP"', 'skip', '```\nSKIP\n```', 'SKIP. The text is too thin to say more.'])(
       '%j is a SKIP: stamped, no read, never re-asked',
       async (reply) => {
-        installLlama([reply]);
+        reads(reply);
         await subscribe();
         await seedStory();
 
@@ -885,12 +890,12 @@ describe('runSubscriptionReadStage', () => {
         expect(await stamp('anchor')).toMatchObject({ read: '' });
         expect((await stamp('anchor')).at).not.toBeNull();
         await run(runSubscriptionReadStage());
-        expect(llamaCalls()).toHaveLength(1);
+        expect(onDeviceLlmCalls()).toHaveLength(1);
       },
     );
 
     it('drops quotes around a real read', async () => {
-      installLlama(['"Leads with the coalition talks."']);
+      reads('"Leads with the coalition talks."');
       await subscribe();
       await seedStory();
 
@@ -899,15 +904,9 @@ describe('runSubscriptionReadStage', () => {
     });
 
     describe('on the built-in model', () => {
-      afterEach(async () => {
-        await deleteSetting('mera_text_engine');
-        __resetTextEngineForTests();
-      });
-
       it('stops on busy: no row is stamped and the next row is never asked', async () => {
         installLlama([]);
         installOnDeviceLlm({ reply: { error: 'ERR_AFM_BUSY' } });
-        await setTextEngine('afm');
         await subscribe();
         await seedStory(['a', 'b']);
 

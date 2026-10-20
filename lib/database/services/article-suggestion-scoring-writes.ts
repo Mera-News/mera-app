@@ -215,10 +215,11 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
 }
 
 /**
- * Notes back on, on this phone (D35): rows finalised `complete` without a note at
- * or above `gate` go back to `reason_pending`, so the next notes sweep writes them.
- * No column records which scorer wrote a row. Besides the notes switch, the only
- * writer of that combination is a cloud reasons batch that failed for good
+ * Skip notes turned off (D42), cloud or on this phone: rows finalised `complete`
+ * without a note at or above `gate` go back to `reason_pending`, so the mode's
+ * sweep writes them (the on-device notes sweep, or the cloud orphaned-reasons
+ * sweep). No column records which scorer wrote a row. Besides the switch, the
+ * only writer of that combination is a cloud reasons batch that failed for good
  * (scoring-pipeline marks its rows reason-skipped), and owing such a row a note
  * again is what it lacked anyway. Returns how many rows went back.
  */

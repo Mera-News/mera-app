@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // You > Settings > Mera Protocol through `useMeraProtocolSettings`: loading the persona's processing mode,
-// switching it, the two model rows and their downloads, the Text model choice per platform, Write notes, and
-// deleting a model. Real hook, stores, Apollo over MSW, auth client, in-memory DB, the REAL modelManager on
+// switching it, the Kev row and its download, the built-in model's status row per platform (D37), Skip notes
+// (D42), and deleting Kev. Real hook, stores, Apollo over MSW, auth client, in-memory DB, the REAL modelManager on
 // chat's in-memory file system (the model "on disk" is a manifest the manager reads) and the real toast queue.
 // Mocked: the file system module (an expo-* edge), the built-in model module (scripted per platform) and the
 // llama.rn / device natives from the setup.
@@ -11,14 +11,7 @@ import {
     NATIVE_REASON_KEYS,
     useMeraProtocolSettings,
 } from '@/components/custom/config-mera/useMeraProtocolSettings';
-import * as textEngine from '@/lib/mera-protocol-toolkit/core/text-engine';
-import {
-    getInferenceStats,
-    hasAnyStat,
-    recordCompletion,
-    recordModelLoad,
-    resetInferenceStats,
-} from '@/lib/mera-protocol-toolkit/core/inference-stats';
+import { resetInferenceStats } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import i18n from '@/lib/i18n';
 import database from '@/lib/database';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
@@ -76,10 +69,10 @@ configure({ asyncUtilTimeout: 20_000 });
 
 const protocol = () => useMeraProtocolStore.getState();
 
-const TEXT_ID = MODEL_CATALOG[0].modelId;
-const KEV_ID = MODEL_CATALOG[1].modelId;
+const KEV_ID = MODEL_CATALOG[0].modelId;
+const available = { available: true, reason: null } as const;
 
-/** Puts both on-device models on disk the way finished downloads leave them. */
+/** Puts the on-device model (Kev) on disk the way a finished download leaves it. */
 function putModelsOnDisk(): void {
     MODEL_CATALOG.forEach((m) => placeDownloadedModel(m.modelId));
 }
@@ -156,9 +149,8 @@ describe('Mera Protocol settings', () => {
     beforeEach(() => {
         mockTotalMemory = undefined;
         resetFileSystem();
-        textEngine.__resetTextEngineForTests();
-        // No built-in model unless a test installs one: the text option is the Mera text model.
-        installOnDeviceLlm({ platformModel: null });
+        // Apple Intelligence, available, unless a test installs otherwise.
+        installOnDeviceLlm({ platformModel: 'afm', availability: available });
         resetToastQueue();
         useMeraProtocolStore.setState(initialProtocol);
         useUserStore.setState({ userId: null, userPersona: null });
@@ -256,9 +248,8 @@ describe('Mera Protocol settings', () => {
         });
 
         it('split state (server on-device, phone on Private cloud): picking Private cloud writes CLOUD, clears the intent and the promote flag', async () => {
-            // Only one file on disk: the phone is on Private cloud locally while the server keeps the intent.
-            resetFileSystem();
-            placeDownloadedModel(KEV_ID);
+            // The built-in model not ready: the phone is on Private cloud locally while the server keeps the intent.
+            installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
             const sent = recordModeUpdates();
             const promoteFlag = jest.spyOn(downloadService, 'setPromoteWhenDone');
             const { result } = await mountLoaded();
@@ -278,8 +269,7 @@ describe('Mera Protocol settings', () => {
         });
 
         it('a failed write in the split state keeps the on-device intent the server still holds', async () => {
-            resetFileSystem();
-            placeDownloadedModel(KEV_ID);
+            installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
             const { result } = await mountLoaded();
             server.use(mockGqlError('UpdateProcessingMode', 'INTERNAL_SERVER_ERROR'));
 
@@ -344,14 +334,15 @@ describe('Mera Protocol settings', () => {
             });
         });
 
-        it('one row per downloadable model, each with its own size and state, and Beta on every one', async () => {
+        it('one download row, Kev, with its size and state, Beta; the built-in model is a status row with no download', async () => {
             placeDownloadedModel(KEV_ID);
             const { result } = await mountLoaded();
-            const { relevanceModel, textOptions } = result.current;
-            expect(relevanceModel).toMatchObject({ modelId: KEV_ID, sizeBytes: MODEL_CATALOG[1].sizeBytes, onDisk: true, download: null, beta: true });
-            expect(textOptions[0]).toMatchObject({ engine: 'qwen', title: 'Mera text model', beta: true });
-            expect(textOptions[0].model).toMatchObject({ modelId: TEXT_ID, sizeBytes: MODEL_CATALOG[0].sizeBytes, onDisk: false, beta: true });
-            expect(textOptions.every((o) => o.beta)).toBe(true);
+            const { relevanceModel, builtInStatus } = result.current;
+            expect(MODEL_CATALOG).toHaveLength(1);
+            expect(relevanceModel).toMatchObject({ modelId: KEV_ID, sizeBytes: MODEL_CATALOG[0].sizeBytes, onDisk: true, download: null, beta: true });
+            expect(builtInStatus).toEqual({ name: 'Apple Intelligence', available: true, reason: null, beta: true });
+            expect(result.current).not.toHaveProperty('textOptions');
+            expect(result.current).not.toHaveProperty('selectEngine');
         });
 
         it('Download on a row downloads that model only, with the reader\'s on-device intent as promote', async () => {
@@ -366,9 +357,9 @@ describe('Mera Protocol settings', () => {
             serverMode(ProcessingMode.Cloud);
             const { result } = await mountLoaded();
             await act(async () => {
-                await result.current.handleDownload(TEXT_ID);
+                await result.current.handleDownload(KEV_ID);
             });
-            expect(started).toEqual([{ modelIds: [TEXT_ID], promote: false }]);
+            expect(started).toEqual([{ modelIds: [KEV_ID], promote: false }]);
         });
 
         it('a row follows its own download: queued, downloading, failed, and back to idle', async () => {
@@ -376,14 +367,12 @@ describe('Mera Protocol settings', () => {
             const resolveDownload = jest.spyOn(require('@/lib/mera-protocol-toolkit/core/modelManager'), 'downloadBaseModel')
                 .mockImplementation(() => new Promise(() => {}));
             const { result } = await mountLoaded();
-            act(() => downloadService.startModelDownloads({ modelIds: [KEV_ID, TEXT_ID] }));
+            act(() => downloadService.startModelDownloads({ modelIds: [KEV_ID] }));
             await waitFor(() => expect(result.current.relevanceModel.download?.status).toBe('downloading'));
-            expect(result.current.textOptions[0].model?.download?.status).toBe('queued');
             await act(async () => {
                 await downloadService.cancelModelDownload();
             });
             expect(result.current.relevanceModel.download).toBeNull();
-            expect(result.current.textOptions[0].model?.download).toBeNull();
             resolveDownload.mockRestore();
         });
 
@@ -392,7 +381,6 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
             act(() => protocol().setModelError('Failed to load model'));
             expect(result.current.relevanceModel.download).toBeNull();
-            expect(result.current.textOptions[0].model?.download).toBeNull();
         });
 
         it('picking Private cloud mid-download tells the download not to promote', async () => {
@@ -433,15 +421,15 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
             let pending!: Promise<void>;
             act(() => {
-                pending = result.current.handleDownload(TEXT_ID);
+                pending = result.current.handleDownload(KEV_ID);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
-            expect(useDialogQueue.getState().queue[0].body).toBe('This uses 2.7 GB of data.');
+            expect(useDialogQueue.getState().queue[0].body).toBe('This uses 3.0 GB of data.');
             await act(async () => {
                 settleDialog(useDialogQueue.getState().queue[0].id, true);
                 await pending;
             });
-            expect(started).toEqual([{ modelIds: [TEXT_ID], promote: true }]);
+            expect(started).toEqual([{ modelIds: [KEV_ID], promote: true }]);
         });
 
         it('on Wi-Fi: no question', async () => {
@@ -457,59 +445,60 @@ describe('Mera Protocol settings', () => {
     });
 
     // ---------------------------------------------------------------------------------------------
-    describe('the Text model choice, per platform', () => {
-        const available = { available: true, reason: null } as const;
-
+    describe('the built-in model status row, per platform (no picker, D37)', () => {
         beforeEach(async () => {
             await signInFixtureAccount();
         });
 
-        it('iOS: Mera text model and Apple Intelligence, both Beta; a built-in pick needs no download', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: available });
+        it('iOS: Apple Intelligence, ready, Beta', async () => {
             serverMode(ProcessingMode.Cloud);
             const { result } = await mountLoaded();
-            expect(result.current.textOptions.map((o) => [o.engine, o.title, o.beta])).toEqual([
-                ['qwen', 'Mera text model', true],
-                ['afm', 'Apple Intelligence', true],
-            ]);
-            const apple = result.current.textOptions[1];
-            expect(apple).toMatchObject({ disabled: false, reason: null, model: null });
+            expect(result.current.builtInStatus).toEqual({ name: 'Apple Intelligence', available: true, reason: null, beta: true });
         });
 
-        it('Android: Mera text model and Gemini Nano', async () => {
+        it('Android: Gemini Nano', async () => {
             installOnDeviceLlm({ platformModel: 'nano', availability: available });
             serverMode(ProcessingMode.Cloud);
             const { result } = await mountLoaded();
-            expect(result.current.textOptions.map((o) => [o.engine, o.title])).toEqual([
-                ['qwen', 'Mera text model'],
-                ['nano', 'Gemini Nano'],
-            ]);
+            expect(result.current.builtInStatus?.name).toBe('Gemini Nano');
         });
 
-        it('a phone with neither: only the Mera text model', async () => {
-            installOnDeviceLlm({ platformModel: null });
+        it('a phone with neither: no row, and the phone cannot run On this phone', async () => {
+            installOnDeviceLlm({ platformModel: null, availability: { available: false, reason: 'unsupportedPlatform' } });
             serverMode(ProcessingMode.Cloud);
             const { result } = await mountLoaded();
-            expect(result.current.textOptions.map((o) => o.engine)).toEqual(['qwen']);
-            // The derived default: the only option there is.
-            expect(result.current.textOptions[0].selected).toBe(true);
+            expect(result.current.builtInStatus).toBeNull();
+            await waitFor(() => expect(result.current.deviceSupported).toBe(false));
+            expect(result.current.requirementsResult?.failedCheck).toBe('built_in');
         });
 
-        it('unsupportedPlatform hides the built-in row too', async () => {
+        it('unsupportedPlatform hides the row too', async () => {
             installOnDeviceLlm({ platformModel: 'afm', availability: { available: false, reason: 'unsupportedPlatform' } });
             serverMode(ProcessingMode.Cloud);
             const { result } = await mountLoaded();
-            expect(result.current.textOptions.map((o) => o.engine)).toEqual(['qwen']);
+            expect(result.current.builtInStatus).toBeNull();
         });
 
-        it.each(Object.entries(NATIVE_REASON_KEYS))('%s: the built-in row is disabled with its reason, naming that model', async (code, key) => {
+        it.each(Object.entries(NATIVE_REASON_KEYS))('%s: the row shows its reason, naming that model', async (code, key) => {
             installOnDeviceLlm({ platformModel: 'nano', availability: { available: false, reason: code as never } });
             serverMode(ProcessingMode.Cloud);
             const { result } = await mountLoaded();
-            const nano = result.current.textOptions[1];
-            expect(nano.disabled).toBe(true);
+            const nano = result.current.builtInStatus!;
+            expect(nano.available).toBe(false);
             expect(nano.reason).toBe(i18n.t(key, { name: 'Gemini Nano' }));
             expect(nano.reason).toContain('Gemini Nano');
+        });
+
+        it('a reason the phone can fix (switched off) is not "this phone can\'t run it"; one it cannot (not eligible) is', async () => {
+            installOnDeviceLlm({ availability: { available: false, reason: 'appleIntelligenceNotEnabled' } });
+            serverMode(ProcessingMode.Cloud);
+            const first = await mountLoaded();
+            await waitFor(() => expect(first.result.current.deviceSupported).toBe(true));
+            first.unmount();
+
+            installOnDeviceLlm({ availability: { available: false, reason: 'deviceNotEligible' } });
+            const second = await mountLoaded();
+            await waitFor(() => expect(second.result.current.deviceSupported).toBe(false));
         });
 
         it('the reason lines read as designed, on either platform', () => {
@@ -524,46 +513,8 @@ describe('Mera Protocol settings', () => {
             expect(line('unknown')).toBe("Apple Intelligence isn't available right now.");
         });
 
-        it('the Mera text model cannot be picked until its file is on disk, so a pick never drops a running phone to Private cloud', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: available });
-            await textEngine.setTextEngine('afm');
-            placeDownloadedModel(KEV_ID);
-            serverMode(ProcessingMode.OnDevice);
-            const { result } = await mountLoaded();
-            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
-            expect(result.current.textOptions[0].disabled).toBe(true);
-
-            placeDownloadedModel(TEXT_ID);
-            await act(async () => {
-                await result.current.refresh();
-            });
-            expect(result.current.textOptions[0].disabled).toBe(false);
-        });
-
-        it('Apple Intelligence available and the reader wants On this phone: switching to it promotes when it can run', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: available });
-            await textEngine.setTextEngine('qwen');
-            placeDownloadedModel(KEV_ID);
-            serverMode(ProcessingMode.OnDevice);
-            const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
-            const { result } = await mountLoaded();
-            // Kev alone cannot run with the Mera text model: Private cloud locally, intent kept.
-            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            expect(result.current.onDeviceIntent).toBe(true);
-
-            await act(async () => {
-                await result.current.selectEngine('afm');
-            });
-
-            expect(textEngine.peekTextEngine()).toBe('afm');
-            expect(promote).toHaveBeenCalledTimes(1);
-            expect(result.current.runnable).toBe(true);
-        });
-
         it('a refresh follows the built-in model going away and coming back, locally only', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: available });
             placeDownloadedModel(KEV_ID);
-            await textEngine.setTextEngine('afm');
             serverMode(ProcessingMode.OnDevice);
             const sent = recordModeUpdates();
             const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
@@ -590,10 +541,8 @@ describe('Mera Protocol settings', () => {
             expect(result.current.waitingForNative).toBe(false);
         });
 
-        it('a phone running on the built-in model stays on it while the text model downloads', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: available });
+        it('a phone that can run stays on On this phone while a download runs', async () => {
             placeDownloadedModel(KEV_ID);
-            await textEngine.setTextEngine('afm');
             serverMode(ProcessingMode.OnDevice);
             jest.spyOn(downloadService, 'isDownloadInProgress').mockReturnValue(true);
             const { result } = await mountLoaded();
@@ -621,35 +570,6 @@ describe('Mera Protocol settings', () => {
             await waitFor(() => expect(result.current.nativeAvailable).toBe(true));
         });
 
-        it('switching engines drops the figures measured on the previous one', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: available });
-            await textEngine.setTextEngine('qwen');
-            serverMode(ProcessingMode.Cloud);
-            recordModelLoad('text', 1200);
-            recordCompletion({ label: 'reason', latencyMs: 900, genTokPerSec: 20 });
-            expect(hasAnyStat(getInferenceStats())).toBe(true);
-            const { result } = await mountLoaded();
-
-            await act(async () => {
-                await result.current.selectEngine('afm');
-            });
-
-            expect(hasAnyStat(getInferenceStats())).toBe(false);
-            expect(result.current.inferenceStats.genTokPerSec).toBeNull();
-        });
-
-        it('choosing the engine already in force keeps the figures', async () => {
-            installOnDeviceLlm({ platformModel: null });
-            serverMode(ProcessingMode.Cloud);
-            recordCompletion({ label: 'reason', latencyMs: 900, genTokPerSec: 20 });
-            const { result } = await mountLoaded();
-
-            await act(async () => {
-                await result.current.selectEngine('qwen');
-            });
-
-            expect(getInferenceStats().genTokPerSec).toBe(20);
-        });
     });
 
     // ---------------------------------------------------------------------------------------------
@@ -679,7 +599,7 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
             const wording = (d: { title: string; body?: string; confirmLabel?: string; cancelLabel?: string }) =>
                 `${d.title} ${d.body} ${d.confirmLabel} ${d.cancelLabel}`;
-            for (const run of [() => result.current.handleDownload(TEXT_ID), () => result.current.handleDeleteModel(KEV_ID), () => result.current.handleDeleteModel(TEXT_ID)]) {
+            for (const run of [() => result.current.handleDownload(KEV_ID), () => result.current.handleDeleteModel(KEV_ID)]) {
                 let pending!: Promise<void>;
                 act(() => {
                     pending = run();
@@ -696,36 +616,52 @@ describe('Mera Protocol settings', () => {
     });
 
     // ---------------------------------------------------------------------------------------------
-    describe('Write notes (D35)', () => {
+    describe('Skip notes (D42), shown in both modes', () => {
         beforeEach(async () => {
             await signInFixtureAccount();
-            serverMode(ProcessingMode.OnDevice);
         });
         afterEach(() => {
-            protocol().setOnDeviceNotes(true);
+            protocol().setSkipNotes(false);
         });
 
-        it('is on by default; off and on again flips the store, and on re-pends rows finalised without a note', async () => {
-            const scoring = require('@/lib/mera-protocol/scoring-service') as typeof import('@/lib/mera-protocol/scoring-service');
-            const repend = jest.spyOn(scoring, 'rependOnDeviceNotes').mockResolvedValue(0);
-            const { result } = await mountLoaded();
-            expect(result.current.onDeviceNotes).toBe(true);
+        it.each([ProcessingMode.OnDevice, ProcessingMode.Cloud])(
+            '%s: off by default; on flips the store and re-pends nothing; off re-pends rows finalised without a note',
+            async (mode) => {
+                serverMode(mode);
+                putModelsOnDisk();
+                const scoring = require('@/lib/mera-protocol/scoring-service') as typeof import('@/lib/mera-protocol/scoring-service');
+                const pipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
+                const repend = jest.spyOn(scoring, 'rependSkippedNotes').mockResolvedValue(2);
+                const sweep = jest.spyOn(pipeline, 'enqueueOrphanedReasons').mockResolvedValue();
+                const { result } = await mountLoaded();
+                expect(protocol().processingMode).toBe(mode);
+                expect(result.current.skipNotes).toBe(false);
 
-            act(() => result.current.toggleNotes());
-            expect(protocol().onDeviceNotes).toBe(false);
-            expect(repend).not.toHaveBeenCalled();
+                act(() => result.current.toggleSkipNotes());
+                expect(protocol().skipNotes).toBe(true);
+                expect(repend).not.toHaveBeenCalled();
 
-            act(() => result.current.toggleNotes());
-            expect(protocol().onDeviceNotes).toBe(true);
-            expect(repend).toHaveBeenCalledTimes(1);
-        });
+                act(() => result.current.toggleSkipNotes());
+                expect(protocol().skipNotes).toBe(false);
+                await waitFor(() => expect(repend).toHaveBeenCalledTimes(1));
+                // The cloud's orphaned-reasons sweep is kicked now; on this phone the next pass's notes sweep writes them.
+                if (mode === ProcessingMode.Cloud) await waitFor(() => expect(sweep).toHaveBeenCalledTimes(1));
+                else expect(sweep).not.toHaveBeenCalled();
+            },
+        );
 
-        it('the switch is stored, and a stored off survives a hydrate', async () => {
-            protocol().setOnDeviceNotes(false);
-            await waitFor(async () => expect(await getSetting('mera_on_device_notes')).toBe('false'));
-            useMeraProtocolStore.setState({ onDeviceNotes: true });
+        it('the switch is stored under its own row, and a stored on survives a hydrate', async () => {
+            protocol().setSkipNotes(true);
+            await waitFor(async () => expect(await getSetting('mera_skip_notes')).toBe('true'));
+            useMeraProtocolStore.setState({ skipNotes: false });
             await protocol().hydrateFromDb();
-            expect(protocol().onDeviceNotes).toBe(false);
+            expect(protocol().skipNotes).toBe(true);
+        });
+
+        it('an absent row is off', async () => {
+            useMeraProtocolStore.setState({ skipNotes: true });
+            await protocol().hydrateFromDb();
+            expect(protocol().skipNotes).toBe(false);
         });
     });
 
@@ -746,11 +682,10 @@ describe('Mera Protocol settings', () => {
 
             // Not "this phone can't run it".
             expect(result.current.deviceSupported).toBe(true);
-            // 3.0 GB + margin does not fit; 2.7 GB + margin does.
+            // 3.0 GB + margin does not fit.
             expect(result.current.relevanceModel.storageShort).toBe(true);
-            const needed = MODEL_CATALOG[1].sizeBytes + STORAGE_MARGIN_BYTES;
+            const needed = MODEL_CATALOG[0].sizeBytes + STORAGE_MARGIN_BYTES;
             expect(result.current.relevanceModel.freeUpSize).toBe(`${(Math.ceil((needed - 3.4e9) / 1e8) / 10).toFixed(1)} GB`);
-            expect(result.current.textOptions[0].model?.storageShort).toBe(false);
         });
 
         it('a model already on disk is never short of space', async () => {
@@ -831,60 +766,13 @@ describe('Mera Protocol settings', () => {
             expect(dialog.destructive).toBe(true);
             expect(diskAtSwitch).toEqual([true]);
             await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
-            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(true);
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(false);
             expect(result.current.relevanceModel.onDisk).toBe(false);
         });
 
-        it('the text model while it writes the text, with the built-in model available: the built-in model takes over', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: { available: true, reason: null } });
-            await textEngine.setTextEngine('qwen');
-            const sent = recordModeUpdates();
-            const { result } = await mountLoaded();
-            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
-
-            const dialog = await deleteAnswering(result, TEXT_ID, true);
-
-            expect(dialog.title).toBe('Delete Mera text model?');
-            expect(dialog.body).toBe('This removes it (2.7 GB) from this phone.');
-            expect(textEngine.peekTextEngine()).toBe('afm');
-            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
-            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
-            expect(sent).toEqual([]);
-            expect(toastTitles()).toEqual([]);
-        });
-
-        it('the text model while it writes the text, with no built-in model: Private cloud on this phone only, with a toast', async () => {
-            installOnDeviceLlm({ platformModel: null });
-            const sent = recordModeUpdates();
-            const { result } = await mountLoaded();
-            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
-
-            await deleteAnswering(result, TEXT_ID, true);
-
-            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            // The intent is kept: downloading it again brings On this phone back.
-            expect(result.current.onDeviceIntent).toBe(true);
-            expect(sent).toEqual([]);
-            expect(toastTitles()).toEqual(['Mera uses Private cloud for now']);
-            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
-            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(true);
-        });
-
-        it('the text model while the built-in model writes the text: nothing else changes', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: { available: true, reason: null } });
-            await textEngine.setTextEngine('afm');
-            const { result } = await mountLoaded();
-            await deleteAnswering(result, TEXT_ID, true);
-            expect(textEngine.peekTextEngine()).toBe('afm');
-            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
-            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
-        });
-
-        it('an engine tap while the relevance delete runs does not promote the phone', async () => {
-            installOnDeviceLlm({ platformModel: 'afm', availability: { available: true, reason: null } });
-            await textEngine.setTextEngine('qwen');
+        it('a refresh while the relevance delete runs does not promote the phone', async () => {
+            installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
             const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
             resetFileSystem();
             placeDownloadedModel(KEV_ID);
@@ -910,8 +798,9 @@ describe('Mera Protocol settings', () => {
             });
             await waitFor(() => expect(result.current.isDeletingModel).toBe(true));
 
+            setOnDeviceLlmAvailability(available);
             await act(async () => {
-                await result.current.selectEngine('afm');
+                await result.current.refresh();
             });
             expect(promote).not.toHaveBeenCalled();
 
@@ -955,8 +844,7 @@ describe('Mera Protocol settings', () => {
         });
 
         it('with the phone on Private cloud only because it cannot run: the server still hears CLOUD', async () => {
-            resetFileSystem();
-            placeDownloadedModel(KEV_ID);
+            installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
             const sent = recordModeUpdates();
             const { result } = await mountLoaded();
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);

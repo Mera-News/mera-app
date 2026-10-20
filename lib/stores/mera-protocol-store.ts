@@ -31,9 +31,10 @@ interface MeraProtocolState {
   // an off toggle costs zero prompt tokens and can make zero network calls.
   webSearchInChat: boolean;
 
-  // Notes (reasons) on this phone. Off: rows keep their relevance and get no
-  // note, which saves the text model's work. Cloud mode never reads it.
-  onDeviceNotes: boolean;
+  // Skip notes (D42), cloud AND on this phone. On: scoring is one pass,
+  // relevance only; rows end `complete` with no note. Off (the default): notes
+  // are written exactly as before.
+  skipNotes: boolean;
 
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
@@ -51,7 +52,7 @@ interface MeraProtocolState {
   setProcessingMode: (mode: ProcessingMode) => void;
   setInjectNoise: (enabled: boolean) => void;
   setWebSearchInChat: (enabled: boolean) => void;
-  setOnDeviceNotes: (enabled: boolean) => void;
+  setSkipNotes: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -74,8 +75,8 @@ const DEFAULT_PROCESSING_MODE: ProcessingMode = ProcessingMode.Cloud;
 const SETTING_PROCESSING_MODE = 'mera_processing_mode';
 const SETTING_INJECT_NOISE = 'mera_inject_noise';
 const SETTING_WEB_SEARCH_IN_CHAT = 'mera_web_search_in_chat';
-/** Absent means on. Carried by backup: it is a preference the reader set. */
-export const SETTING_ON_DEVICE_NOTES = 'mera_on_device_notes';
+/** Absent means off. Carried by backup: it is a preference the reader set. */
+export const SETTING_SKIP_NOTES = 'mera_skip_notes';
 // RETIRED. Fact checking is part of the product now rather than an opt-in, so
 // this key is no longer READ — only swept, so a device that once stored 'false'
 // does not keep a row implying a preference the app no longer honours.
@@ -117,7 +118,7 @@ const initialState = {
   // `hydrateFromDb` — must agree, or the hydrate overwrites this on every
   // existing device and the feature ships dark.
   webSearchInChat: true,
-  onDeviceNotes: true,
+  skipNotes: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -146,9 +147,9 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     setSetting(SETTING_WEB_SEARCH_IN_CHAT, webSearchInChat ? 'true' : 'false').catch(() => { });
   },
 
-  setOnDeviceNotes: (onDeviceNotes) => {
-    set({ onDeviceNotes });
-    setSetting(SETTING_ON_DEVICE_NOTES, onDeviceNotes ? 'true' : 'false').catch(() => { });
+  setSkipNotes: (skipNotes) => {
+    set({ skipNotes });
+    setSetting(SETTING_SKIP_NOTES, skipNotes ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -192,7 +193,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting('mera_selected_model_id').catch(() => { });
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
     deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
-    deleteSetting(SETTING_ON_DEVICE_NOTES).catch(() => { });
+    deleteSetting(SETTING_SKIP_NOTES).catch(() => { });
     // The marker goes too. A reset device is a fresh device, and a fresh device
     // gets the current default — leaving the marker behind would make the next
     // hydrate honour an absent row as "on" anyway, but leaving it AND a stale
@@ -214,7 +215,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         injectNoiseValue,
         webSearchValue,
         webSearchForcedOnValue,
-        onDeviceNotesValue,
+        skipNotesValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
         getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
@@ -222,7 +223,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(SETTING_INJECT_NOISE),
         getSetting(SETTING_WEB_SEARCH_IN_CHAT),
         getSetting(SETTING_WEB_SEARCH_FORCED_ON),
-        getSetting(SETTING_ON_DEVICE_NOTES),
+        getSetting(SETTING_SKIP_NOTES),
       ]);
       // One-shot cleanup: the retired v2 key is never read, just swept so it
       // doesn't linger.
@@ -277,7 +278,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else {
         updates.webSearchInChat = webSearchValue !== 'false';
       }
-      updates.onDeviceNotes = onDeviceNotesValue !== 'false';
+      updates.skipNotes = skipNotesValue === 'true';
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
@@ -297,8 +298,8 @@ export const useIsOnDeviceProcessing = () =>
 export const useWebSearchInChat = () =>
   useMeraProtocolStore((state) => state.webSearchInChat);
 
-export const useOnDeviceNotes = () =>
-  useMeraProtocolStore((state) => state.onDeviceNotes);
+export const useSkipNotes = () =>
+  useMeraProtocolStore((state) => state.skipNotes);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

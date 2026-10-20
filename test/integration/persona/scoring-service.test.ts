@@ -24,7 +24,7 @@ import { ProcessingMode, type ArticleWithClusters } from '@/lib/generated/graphq
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
-import { RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
+import { RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import logger from '@/lib/logger';
 import {
   CLOUD_SCORE_CHUNK_SIZE,
@@ -36,7 +36,7 @@ import {
   decodeCloudBatchResults,
   decodeResults,
   processAllUnscored,
-  rependOnDeviceNotes,
+  rependSkippedNotes,
   retryMissingReasons,
   runFeedVerifierPass,
 } from '@/lib/mera-protocol/scoring-service';
@@ -55,11 +55,9 @@ import {
   type GatewayCall,
   type GatewayResponder,
 } from '@/test/helpers';
-import { decideCalls, installDecide, installLlama, llamaCalls, llamaLoads, llamaMaxLive, type LlamaCall } from '@/test/helpers/llama';
+import { decideCalls, installDecide, installLlama, llamaCalls, llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
 import { resetFileSystem } from '@/test/helpers/fs';
-import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
-import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
-import { deleteSetting } from '@/lib/database/services/setting-service';
+import { installOnDeviceLlm, onDeviceLlmCalls, type OnDeviceLlmCall } from '@/test/helpers/on-device-llm';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
 
 // Hoisted above the imports by babel-jest.
@@ -85,8 +83,8 @@ async function useMode(mode: 'cloud' | 'on-device'): Promise<void> {
 beforeEach(async () => {
   resetChatModules();
   resetFileSystem();
-  // No built-in model unless a test asks for one: the text engine stays the downloaded model.
-  installOnDeviceLlm({ platformModel: null });
+  // The built-in model (Apple Intelligence) writes the on-device notes.
+  installOnDeviceLlm();
   await disposeModel();
   seededTopic = null;
   useMeraProtocolStore.getState().setModelState('downloaded');
@@ -205,8 +203,8 @@ const fenceCount = (call: GatewayCall) => (userOf(call).match(/<<ARTICLE [a-f0-9
 
 // --- local lane ------------------------------------------------------------
 
-const localSystemOf = (c: LlamaCall) => c.messages.find((m) => m.role === 'system')?.content ?? '';
-const localUserOf = (c: LlamaCall) => c.messages.find((m) => m.role === 'user')?.content ?? '';
+const localSystemOf = (c: OnDeviceLlmCall) => c.instructions;
+const localUserOf = (c: OnDeviceLlmCall) => c.prompt;
 const LOCAL_TITLE = /News Title: Story (\S+) saga/;
 
 interface LocalScript {
@@ -215,17 +213,21 @@ interface LocalScript {
   notes?: Record<string, string | { error: string }>;
 }
 
-/** Everything the two on-device models did, in order: 'decide:<id>' and 'note:<id>'. */
+/** Everything the on-device models did, in order: 'decide:<id>' (Kev) and 'note:<id>' (the built-in model). */
 let events: string[] = [];
 
-/** On-device models: Kev answers a level per article, the text model writes a note. */
+/** On-device models: Kev answers a level per article, the built-in model writes a note. */
 function installLocal(script: LocalScript = {}): void {
   events = [];
-  installLlama((call) => {
-    const id = LOCAL_TITLE.exec(localUserOf(call))?.[1] ?? '';
-    events.push(`note:${id}`);
-    const note = script.notes?.[id] ?? `Local note on story ${id}.`;
-    return typeof note === 'string' ? [note] : { tokens: [], error: note.error };
+  // llama.rn holds Kev only: a completion on it would fail the test.
+  installLlama(() => ({ tokens: [], error: 'llama.rn completion on Kev' }));
+  installOnDeviceLlm({
+    reply: (call) => {
+      const id = LOCAL_TITLE.exec(localUserOf(call))?.[1] ?? '';
+      events.push(`note:${id}`);
+      const note = script.notes?.[id] ?? `Local note on story ${id}.`;
+      return typeof note === 'string' ? note : { error: 'ERR_AFM_CONTEXT' };
+    },
   });
   installDecide((call) => {
     const id = /Story (\w+) saga/.exec(JSON.stringify(call.request.state))?.[1] ?? '';
@@ -1011,7 +1013,7 @@ describe('processAllUnscored - on-device pass', () => {
 
   afterEach(() => jest.restoreAllMocks());
 
-  it('decides every article before the first note, loads each model once and never holds two', async () => {
+  it('decides every article before the first note; llama.rn loads Kev once and nothing else', async () => {
     installLocal();
     queue();
     await seed(['a', 'b', 'c']);
@@ -1023,8 +1025,9 @@ describe('processAllUnscored - on-device pass', () => {
     expect(lastDecide).toBeGreaterThanOrEqual(2);
     expect(lastDecide).toBeLessThan(firstNote);
     expect(events.filter((e) => e.startsWith('note:'))).toHaveLength(3);
-    expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId, TEXT_MODEL.modelId]);
+    expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId]);
     expect(llamaMaxLive()).toBe(1);
+    expect(llamaCalls()).toHaveLength(0);
     const rows = await stored();
     expect(rows.a.reason).toBe('Local note on story a.');
   });
@@ -1296,18 +1299,30 @@ describe('retryMissingReasons - cloud path', () => {
   });
 });
 
-describe('the Write notes switch on this phone (D35)', () => {
+describe('Skip notes on this phone (D42)', () => {
   beforeEach(async () => {
     await useMode('on-device');
   });
 
   afterEach(() => {
-    useMeraProtocolStore.getState().setOnDeviceNotes(true);
+    useMeraProtocolStore.getState().setSkipNotes(false);
     jest.restoreAllMocks();
   });
 
-  it('off: a pass saves every row complete with its relevance and no note, above the gate too', async () => {
-    useMeraProtocolStore.getState().setOnDeviceNotes(false);
+  it('off (the default): the same pass writes a note for every row at or above the gate, as before', async () => {
+    installLocal({ levels: { a: 3, b: 0 } });
+    jest.spyOn(inferenceQueue, 'getState').mockReturnValue('stopped');
+    await seed(['a', 'b']);
+
+    expect(await run(processAllUnscored())).toBe(2);
+
+    const rows = await stored();
+    expect([rows.a.status, rows.a.reason]).toEqual(['complete', 'Local note on story a.']);
+    expect(events.filter((e) => e.startsWith('note:'))).toEqual(['note:a']);
+  });
+
+  it('on: one pass, Kev only and no note call; every row complete with its relevance and no note, above the gate too', async () => {
+    useMeraProtocolStore.getState().setSkipNotes(true);
     installLocal({ levels: { a: 3, b: 0 } });
     jest.spyOn(inferenceQueue, 'getState').mockReturnValue('stopped');
     await seed(['a', 'b']);
@@ -1320,28 +1335,30 @@ describe('the Write notes switch on this phone (D35)', () => {
     expect([rows.a.status, rows.a.reason ?? '']).toEqual(['complete', '']);
     expect(rows.b.status).toBe('complete');
     expect(events.filter((e) => e.startsWith('note:'))).toEqual([]);
+    expect(onDeviceLlmCalls()).toEqual([]);
+    expect(decideCalls()).toHaveLength(2);
   });
 
-  it('off: the sweep finalises rows still owed a note and writes none', async () => {
+  it('on: the sweep finalises rows still owed a note and writes none', async () => {
     installLocal();
     await seedOwed(['a', 'b'], {}, 0.8);
-    useMeraProtocolStore.getState().setOnDeviceNotes(false);
+    useMeraProtocolStore.getState().setSkipNotes(true);
 
     expect(await run(retryMissingReasons())).toBe(0);
 
     const rows = await stored();
     expect([rows.a.status, rows.b.status]).toEqual(['complete', 'complete']);
-    expect(llamaCalls()).toHaveLength(0);
+    expect(onDeviceLlmCalls()).toHaveLength(0);
   });
 
-  it('switched off mid-sweep: the sweep stops at the next row and leaves the rest owed', async () => {
+  it('turned on mid-sweep: the sweep stops at the next row and leaves the rest owed', async () => {
     installLocal();
     await seedOwed(['top'], {}, 1);
     await seedOwed(['next'], {}, 0.6);
     const save = scoringWrites.saveReason;
     jest.spyOn(scoringWrites, 'saveReason').mockImplementation(async (id, reason) => {
       await save(id, reason);
-      useMeraProtocolStore.getState().setOnDeviceNotes(false);
+      useMeraProtocolStore.getState().setSkipNotes(true);
     });
 
     expect(await run(retryMissingReasons())).toBe(1);
@@ -1350,14 +1367,14 @@ describe('the Write notes switch on this phone (D35)', () => {
     expect((await stored()).next.status).toBe('reason_pending');
   });
 
-  it('on again: rows at or above the gate finalised without a note are owed one, and the sweep writes them', async () => {
+  it('off again: rows at or above the gate finalised without a note are owed one, and the sweep writes them', async () => {
     installLocal();
     await seed(['high', 'low', 'noted']);
     await saveScoringResult('high', { relevance: 0.8, reason: '', reasonSkipped: true });
     await saveScoringResult('low', { relevance: 0.3, reason: '', reasonSkipped: true });
     await saveScoringResult('noted', { relevance: 0.8, reason: 'Already explained, saga noted.', reasonSkipped: false });
 
-    expect(await rependOnDeviceNotes()).toBe(1);
+    expect(await rependSkippedNotes()).toBe(1);
 
     let rows = await stored();
     expect(rows.high.status).toBe('reason_pending');
@@ -1383,7 +1400,7 @@ describe('retryMissingReasons - on-device path', () => {
 
     expect((await stored()).a.reason).toBe('Local note on story a.');
     expect(gatewayCalls()).toHaveLength(0);
-    const calls = llamaCalls();
+    const calls = onDeviceLlmCalls();
     expect(calls.map(localSystemOf)).toEqual([NOTE_SYSTEM]);
     // The local builder leads with the fact bank so llama.cpp can reuse it across the sweep.
     expect(localUserOf(calls[0]).startsWith('User Context: ')).toBe(true);
@@ -1418,7 +1435,7 @@ describe('retryMissingReasons - on-device path', () => {
     await seedOwed(['a'], { factless: true });
 
     expect(await run(retryMissingReasons())).toBe(0);
-    expect(llamaCalls()).toHaveLength(0);
+    expect(onDeviceLlmCalls()).toHaveLength(0);
   });
 
   it('logs a warning but continues when local reason generation throws', async () => {
@@ -1430,14 +1447,8 @@ describe('retryMissingReasons - on-device path', () => {
   });
 
   describe('on the built-in model', () => {
-    afterEach(async () => {
-      await deleteSetting('mera_text_engine');
-      __resetTextEngineForTests();
-    });
-
     it('stops the sweep on busy and leaves every remaining row reason_pending', async () => {
       installOnDeviceLlm({ reply: ({ prompt }) => (prompt.includes('Story top saga') ? 'Local note on story top.' : { error: 'ERR_AFM_BUSY' }) });
-      await setTextEngine('afm');
       await seedOwed(['top'], {}, 1);
       await seedOwed(['mid'], {}, 0.8);
       await seedOwed(['low'], {}, 0.6);

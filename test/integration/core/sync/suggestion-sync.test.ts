@@ -33,9 +33,10 @@ import {
   useFakeClock,
 } from '@/test/helpers';
 import { resetFileSystem } from '@/test/helpers/fs';
-import { installLlama, llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
+import { installLlama, llamaCalls, llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
 import * as suggestionReads from '@/lib/database/services/article-suggestion-reads';
-import { RELEVANCE_MODEL, TEXT_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
+import { RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { initLlama } from 'llama.rn';
 import {
@@ -50,8 +51,10 @@ import {
   suggestionRows,
 } from './seed';
 
-// The edges: llama.rn (scripted by installLlama), expo-file-system (the model file), expo-keep-awake.
+// The edges: llama.rn (Kev, scripted by installLlama), the built-in model (the notes), expo-file-system
+// (the model file), expo-keep-awake.
 jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 jest.mock('expo-keep-awake', () => ({
   activateKeepAwakeAsync: jest.fn(async () => {}),
   deactivateKeepAwake: jest.fn(),
@@ -212,7 +215,8 @@ describe('SuggestionSyncService', () => {
     beforeEach(() => {
       useFakeClock('2026-10-09T09:00:00Z');
       resetFileSystem();
-      installLlama(['A short note.']);
+      installLlama([]);
+      installOnDeviceLlm({ reply: 'A short note.' });
       useMeraProtocolStore.setState({
         processingMode: ProcessingMode.OnDevice,
         modelState: 'ready',
@@ -256,13 +260,15 @@ describe('SuggestionSyncService', () => {
       expect(useMeraProtocolStore.getState().modelState).toBe('downloaded');
     });
 
-    it('loads each model once per sync, Kev for scoring then the text model for notes, never two at once', async () => {
+    it('loads Kev once per sync for scoring; the notes run on the built-in model, never on llama.rn', async () => {
       await seedScorableStories();
 
       await advanceUntilDone(runScoringPass(2));
 
-      expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId, TEXT_MODEL.modelId]);
+      expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId]);
       expect(llamaMaxLive()).toBe(1);
+      expect(llamaCalls()).toHaveLength(0);
+      expect(onDeviceLlmCalls().length).toBeGreaterThan(0);
     });
 
     it('does not load the model when it is already ready and there is nothing to score', async () => {
