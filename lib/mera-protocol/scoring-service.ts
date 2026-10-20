@@ -16,7 +16,9 @@ import logger from '../logger';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
+  LOCAL_REASON_SYSTEM_PROMPT,
   buildBatchScoringUserMessage,
+  buildLocalReasonUserMessage,
   buildReasonUserMessage,
 } from '@/lib/news-harness/prompts/prompts';
 import { buildNotePrompt } from '@/lib/news-harness/on-device/notes/prompt';
@@ -170,28 +172,28 @@ function buildScoreCallForChunk(
  * ONE reason call for ONE candidate, on whichever lane this device is using.
  *
  * Returns the pass-2 score alongside the sentence on the CLOUD lane only. The
- * on-device lane writes a plain sentence from its own prompt
- * (news-harness/on-device/notes), which states no score contract, so only the
- * sentence is kept. `parseReasonResult` reads both.
+ * on-device GGUF lane keeps its plain-string contract: `LOCAL_REASON_SYSTEM_PROMPT`
+ * is built on a different base, states its own voice rule, and is exercised by
+ * no runner, so giving it an unmeasured output contract would be a change
+ * nobody could check. `parseReasonResult` fails open on a plain string anyway,
+ * so this is belt and braces — and it is the braces that say so out loud.
  */
 async function generateReasonForCandidate(
   candidate: ScoringCandidate,
   userContext: string,
   relevance: number,
 ): Promise<{ reason: string; rescore?: ReasonRescore }> {
-  const article = {
-    userContext,
-    articleTitle: candidate.titleEn ?? '',
-    articleDescription: candidate.descriptionEn ?? '',
-    articleCountry: resolveCountryName(candidate.countryCode),
-    relevance,
-    relatedFacts: candidate.relatedFacts.map((f) => f.statement),
-  };
   if (isOnDeviceMode()) {
-    // The on-device message leads with `User Context` so llama.cpp's prefix
-    // cache reuses the fact bank across the sweep; the cloud builder below is
-    // pinned byte-for-byte by golden-prompts.test.ts.
-    const { system, prompt } = buildNotePrompt(article);
+    // On-device notes have their own prompt (news-harness/on-device/notes): a
+    // plain sentence, no score contract, so only the sentence is kept.
+    const { system, prompt } = buildNotePrompt({
+      userContext,
+      articleTitle: candidate.titleEn ?? '',
+      articleDescription: candidate.descriptionEn ?? '',
+      articleCountry: resolveCountryName(candidate.countryCode),
+      relevance,
+      relatedFacts: candidate.relatedFacts.map((f) => f.statement),
+    });
     const output = await completeLocal({
       systemPrompt: system,
       prompt,
@@ -202,21 +204,47 @@ async function generateReasonForCandidate(
     });
     return { reason: parseReasonResult(output, candidate.id, prompt, appHarnessLogger).reason };
   }
-  const userMessage = buildReasonUserMessage({
-    ...article,
+  const onDevice = isOnDeviceMode();
+  // The two builders differ ONLY in field order. Local leads with `User Context`
+  // so llama.cpp's prefix cache can reuse the fact bank across a batch instead
+  // of re-prefilling it per article; cloud keeps the shared builder byte-for-byte,
+  // because `golden-prompts.test.ts` pins it and cloud quality is calibrated
+  // against it. This is the only place the two paths diverge on the user message.
+  const buildUserMessage = onDevice
+    ? buildLocalReasonUserMessage
+    : buildReasonUserMessage;
+  const userMessage = buildUserMessage({
+    userContext,
+    articleTitle: candidate.titleEn ?? '',
+    articleDescription: candidate.descriptionEn ?? '',
+    articleCountry: resolveCountryName(candidate.countryCode),
     publication: buildPublicationLabel(
       candidate.publicationName ?? candidate.meta?.publicationName,
       candidate.languageCode,
     ),
+    relevance,
+    relatedFacts: candidate.relatedFacts.map((f) => f.statement),
   });
-  const output = await cloudComplete({
-    systemPrompt: CLOUD_REASON_SYSTEM_PROMPT,
-    prompt: userMessage,
-    maxTokens: ARTICLE_CFG.reasonMaxTokens,
-    temperature: ARTICLE_CFG.reasonTemperature,
-    model: SMALL_MODEL,
-  });
-  return parseReasonResult(output, candidate.id, userMessage, appHarnessLogger);
+  const output = onDevice
+    ? await completeLocal({
+        systemPrompt: LOCAL_REASON_SYSTEM_PROMPT,
+        prompt: userMessage,
+        maxTokens: ARTICLE_CFG.reasonMaxTokens,
+        temperature: ARTICLE_CFG.reasonTemperature,
+        // LOCAL_REASON_SYSTEM_PROMPT asks for "a single plain string". A
+        // JSON-object grammar contradicted it (and breaks the LFM family).
+        responseFormat: 'text',
+        label: 'reason',
+      })
+    : await cloudComplete({
+        systemPrompt: CLOUD_REASON_SYSTEM_PROMPT,
+        prompt: userMessage,
+        maxTokens: ARTICLE_CFG.reasonMaxTokens,
+        temperature: ARTICLE_CFG.reasonTemperature,
+        model: SMALL_MODEL,
+      });
+  const decoded = parseReasonResult(output, candidate.id, userMessage, appHarnessLogger);
+  return onDevice ? { reason: decoded.reason } : decoded;
 }
 
 /**

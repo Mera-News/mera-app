@@ -120,24 +120,33 @@ export async function runSubscriptionReadStage(
         const sibling = await findPrimarySubscribedSibling(anchor, subscribedNames);
         if (!sibling) continue;
 
-        const anchorTitle = anchor.titleEn ?? anchor.titleOriginal;
-        const { systemPrompt, prompt } = onDevice
-          ? onDevicePrompt(sibling, anchorTitle)
-          : { systemPrompt: SYSTEM_PROMPT, prompt: buildPrompt(sibling, anchorTitle) };
-        const raw = await llm.complete({ systemPrompt, prompt, maxTokens: 160, temperature: 0 });
+        if (onDevice) {
+          // Its own prompt, and a reader that also takes the SKIP a small
+          // model dresses up ("SKIP.", quoted, fenced). Stamped like any other.
+          const { systemPrompt, prompt } = onDevicePrompt(sibling, anchor.titleEn ?? anchor.titleOriginal);
+          const stored = parseSubscriptionRead(await llm.complete({ systemPrompt, prompt, maxTokens: 160, temperature: 0 }));
+          await saveSubscriptionRead(anchor.id, stored);
+          if (stored) written += 1;
+          continue;
+        }
 
-        // A SKIP is a real answer, and it is stamped like any other so the row
-        // is not re-asked on every sync for the rest of its 48 hours. A small
-        // model dresses its SKIP up ("SKIP.", quoted, fenced); the on-device
-        // reader catches those.
+        const raw = await llm.complete({
+          systemPrompt: SYSTEM_PROMPT,
+          prompt: buildPrompt(sibling, anchor.titleEn ?? anchor.titleOriginal),
+          maxTokens: 160,
+          temperature: 0,
+        });
+
         const read = (raw ?? '').trim();
-        const stored = onDevice ? parseSubscriptionRead(read) : !read || read === 'SKIP' ? '' : read;
+        // A SKIP is a real answer, and it is stamped like any other so the row
+        // is not re-asked on every sync for the rest of its 48 hours.
+        const stored = !read || read === 'SKIP' ? '' : read;
         await saveSubscriptionRead(anchor.id, stored);
         if (stored) written += 1;
       } catch (error) {
         // The built-in model is busy or gone: every next row would fail the
         // same way. Stop; the rest stay unread for the next sync.
-        if (isOnDeviceDeferrable(error)) break;
+        if (onDevice && isOnDeviceDeferrable(error)) break;
         logger.warn('[subscription-read] one row failed, continuing', {
           suggestionId: anchor.id,
           error: String(error),

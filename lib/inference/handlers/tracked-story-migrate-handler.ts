@@ -21,7 +21,6 @@ import { isOnDeviceDeferrable } from '../job-defer';
 import { buildStoryScopePrompt, parseStoryScopeOutput } from '../../news-harness/story-scope';
 import { buildOnDeviceStoryScopePrompt } from '../../news-harness/on-device/story-scope/prompt';
 import { STORY_SCOPE_SCHEMA, type StoryScopeReply } from '../../news-harness/on-device/story-scope/schema';
-import { storyScopeFromReply } from '../../news-harness/on-device/story-scope/parse';
 import logger from '../../logger';
 
 /** Seed weight for a topic minted from a legacy follow — mirrors the interactive
@@ -65,12 +64,9 @@ export async function handleTrackedStoryMigrateJob(
 
   // Real clock supplied HERE — buildStoryScopePrompt takes the date as a
   // parameter so its prompt stays deterministic/pinnable.
-  const now = Date.now();
-  const { system, user } = buildStoryScopePrompt(titles, now);
+  const { system, user } = buildStoryScopePrompt(titles, Date.now());
 
   let raw = '';
-  /** The on-device branch's structured reply (its own prompt and schema). */
-  let onDeviceReply: StoryScopeReply | null = null;
   try {
     // A job queued in cloud mode runs locally if the mode has since changed.
     if (payload.useCloud && !(await isOnDeviceMode())) {
@@ -81,14 +77,17 @@ export async function handleTrackedStoryMigrateJob(
         temperature: 0.3,
       });
     } else {
-      const local = buildOnDeviceStoryScopePrompt(titles, now);
-      onDeviceReply = await completeLocalStructured<StoryScopeReply>({
-        systemPrompt: local.system,
-        prompt: local.prompt,
-        schema: STORY_SCOPE_SCHEMA,
-        maxTokens: 128,
-        temperature: 0.3,
-      });
+      // Its own prompt and schema; the reply goes through the same parser.
+      const local = buildOnDeviceStoryScopePrompt(titles, Date.now());
+      raw = JSON.stringify(
+        await completeLocalStructured<StoryScopeReply>({
+          systemPrompt: local.system,
+          prompt: local.prompt,
+          schema: STORY_SCOPE_SCHEMA,
+          maxTokens: 128,
+          temperature: 0.3,
+        }),
+      );
     }
   } catch (err) {
     // The built-in model said "not now" (busy, unavailable): the queue defers the job.
@@ -101,7 +100,7 @@ export async function handleTrackedStoryMigrateJob(
   let label: string;
   let search: string;
   try {
-    ({ label, search } = onDeviceReply ? storyScopeFromReply(onDeviceReply) : parseStoryScopeOutput(raw));
+    ({ label, search } = parseStoryScopeOutput(raw));
   } catch (err) {
     // Model produced non-JSON garbage — leave the story unmigrated.
     logger.warn('[tracked-story-migrate] parse failed', { error: String(err) });
