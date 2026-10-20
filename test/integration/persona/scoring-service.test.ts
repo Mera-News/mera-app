@@ -36,6 +36,7 @@ import {
   decodeCloudBatchResults,
   decodeResults,
   processAllUnscored,
+  rependOnDeviceNotes,
   retryMissingReasons,
   runFeedVerifierPass,
 } from '@/lib/mera-protocol/scoring-service';
@@ -1292,6 +1293,80 @@ describe('retryMissingReasons - cloud path', () => {
 
     const row = (await stored()).a;
     expect([row.relevance, row.status, row.reason]).toEqual([0.6, 'complete', 'Why story a matters here.']);
+  });
+});
+
+describe('the Write notes switch on this phone (D35)', () => {
+  beforeEach(async () => {
+    await useMode('on-device');
+  });
+
+  afterEach(() => {
+    useMeraProtocolStore.getState().setOnDeviceNotes(true);
+    jest.restoreAllMocks();
+  });
+
+  it('off: a pass saves every row complete with its relevance and no note, above the gate too', async () => {
+    useMeraProtocolStore.getState().setOnDeviceNotes(false);
+    installLocal({ levels: { a: 3, b: 0 } });
+    jest.spyOn(inferenceQueue, 'getState').mockReturnValue('stopped');
+    await seed(['a', 'b']);
+
+    expect(await run(processAllUnscored())).toBe(2);
+
+    const rows = await stored();
+    expect(rows.a.relevance).toBeGreaterThanOrEqual(0.4);
+    // `complete`, never `reason_skipped`: the feed shows a complete row, with its chip.
+    expect([rows.a.status, rows.a.reason ?? '']).toEqual(['complete', '']);
+    expect(rows.b.status).toBe('complete');
+    expect(events.filter((e) => e.startsWith('note:'))).toEqual([]);
+  });
+
+  it('off: the sweep finalises rows still owed a note and writes none', async () => {
+    installLocal();
+    await seedOwed(['a', 'b'], {}, 0.8);
+    useMeraProtocolStore.getState().setOnDeviceNotes(false);
+
+    expect(await run(retryMissingReasons())).toBe(0);
+
+    const rows = await stored();
+    expect([rows.a.status, rows.b.status]).toEqual(['complete', 'complete']);
+    expect(llamaCalls()).toHaveLength(0);
+  });
+
+  it('switched off mid-sweep: the sweep stops at the next row and leaves the rest owed', async () => {
+    installLocal();
+    await seedOwed(['top'], {}, 1);
+    await seedOwed(['next'], {}, 0.6);
+    const save = scoringWrites.saveReason;
+    jest.spyOn(scoringWrites, 'saveReason').mockImplementation(async (id, reason) => {
+      await save(id, reason);
+      useMeraProtocolStore.getState().setOnDeviceNotes(false);
+    });
+
+    expect(await run(retryMissingReasons())).toBe(1);
+
+    expect(events).toEqual(['note:top']);
+    expect((await stored()).next.status).toBe('reason_pending');
+  });
+
+  it('on again: rows at or above the gate finalised without a note are owed one, and the sweep writes them', async () => {
+    installLocal();
+    await seed(['high', 'low', 'noted']);
+    await saveScoringResult('high', { relevance: 0.8, reason: '', reasonSkipped: true });
+    await saveScoringResult('low', { relevance: 0.3, reason: '', reasonSkipped: true });
+    await saveScoringResult('noted', { relevance: 0.8, reason: 'Already explained, saga noted.', reasonSkipped: false });
+
+    expect(await rependOnDeviceNotes()).toBe(1);
+
+    let rows = await stored();
+    expect(rows.high.status).toBe('reason_pending');
+    expect(rows.low.status).toBe('complete');
+    expect(rows.noted.status).toBe('complete');
+
+    expect(await run(retryMissingReasons())).toBe(1);
+    rows = await stored();
+    expect([rows.high.status, rows.high.reason]).toEqual(['complete', 'Local note on story high.']);
   });
 });
 

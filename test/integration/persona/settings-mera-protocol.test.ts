@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // You > Settings > Mera Protocol through `useMeraProtocolSettings`: loading the persona's processing mode,
-// switching it, the one Mera AI models download, the Chat and notes engine choice, and deleting the files. Real hook,
-// stores, Apollo over MSW, auth client, in-memory DB, the REAL modelManager on chat's in-memory file system
-// (the model "on disk" is a manifest the manager reads) and the real toast queue. Mocked: the file system
-// module (an expo-* edge) and the llama.rn / device natives from the setup.
+// switching it, the two model rows and their downloads, the Text model choice per platform, Write notes, and
+// deleting a model. Real hook, stores, Apollo over MSW, auth client, in-memory DB, the REAL modelManager on
+// chat's in-memory file system (the model "on disk" is a manifest the manager reads) and the real toast queue.
+// Mocked: the file system module (an expo-* edge), the built-in model module (scripted per platform) and the
+// llama.rn / device natives from the setup.
 import { act, configure, renderHook, waitFor } from '@testing-library/react-native';
 import {
     MODELS_SECTION_KEYS,
@@ -20,7 +21,7 @@ import {
 } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import i18n from '@/lib/i18n';
 import database from '@/lib/database';
-import { setSetting } from '@/lib/database/services/setting-service';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import * as downloadService from '@/lib/mera-protocol-toolkit/core/downloadService';
 import { MODEL_CATALOG } from '@/lib/mera-protocol-toolkit/core/model-catalog';
@@ -33,6 +34,7 @@ import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { resetToastQueue, useToastQueue } from '@/lib/toast/toast-queue';
 import { placeDownloadedModel, resetFileSystem } from '@/test/helpers/fs';
+import { installOnDeviceLlm, setOnDeviceLlmAvailability } from '@/test/helpers/on-device-llm';
 import {
     FIXTURE_ACCOUNT,
     graphql,
@@ -67,6 +69,7 @@ jest.mock('@dr.pogodin/react-native-fs', () => ({
     stopDownload: jest.fn(),
 }));
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 // MSW answers on real I/O while the fake clock ticks, so the default one-second wait is too tight.
 configure({ asyncUtilTimeout: 20_000 });
@@ -154,6 +157,8 @@ describe('Mera Protocol settings', () => {
         mockTotalMemory = undefined;
         resetFileSystem();
         textEngine.__resetTextEngineForTests();
+        // No built-in model unless a test installs one: the text option is the Mera text model.
+        installOnDeviceLlm({ platformModel: null });
         resetToastQueue();
         useMeraProtocolStore.setState(initialProtocol);
         useUserStore.setState({ userId: null, userPersona: null });
@@ -178,7 +183,6 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
 
             expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
-            expect(protocol().modelState).toBe('downloaded');
             expect(result.current.onDeviceIntent).toBe(true);
             expect(toastTitles()).toEqual([]);
         });
@@ -189,8 +193,7 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
 
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            expect(protocol().modelState).toBe('not_downloaded');
-            // Kept, so the picker and the download section show.
+            // Kept, so the picker and the download rows show.
             expect(result.current.onDeviceIntent).toBe(true);
         });
 
@@ -330,8 +333,8 @@ describe('Mera Protocol settings', () => {
     });
 
     // ---------------------------------------------------------------------------------------------
-    describe('the download', () => {
-        let started: Array<{ promote?: boolean } | undefined>;
+    describe('the model rows and their downloads', () => {
+        let started: Array<{ modelIds?: string[]; promote?: boolean } | undefined>;
         beforeEach(async () => {
             await signInFixtureAccount();
             serverMode(ProcessingMode.OnDevice);
@@ -341,76 +344,79 @@ describe('Mera Protocol settings', () => {
             });
         });
 
-        it('with neither file on disk: the whole pair is missing and the reader\'s on-device intent is passed as promote', async () => {
+        it('one row per downloadable model, each with its own size and state, and Beta on every one', async () => {
+            placeDownloadedModel(KEV_ID);
             const { result } = await mountLoaded();
-            expect(result.current.runnable).toBe(false);
-            expect(result.current.onDiskBytes).toBe(0);
-            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes + MODEL_CATALOG[1].sizeBytes);
+            const { relevanceModel, textOptions } = result.current;
+            expect(relevanceModel).toMatchObject({ modelId: KEV_ID, sizeBytes: MODEL_CATALOG[1].sizeBytes, onDisk: true, download: null, beta: true });
+            expect(textOptions[0]).toMatchObject({ engine: 'qwen', title: 'Mera text model', beta: true });
+            expect(textOptions[0].model).toMatchObject({ modelId: TEXT_ID, sizeBytes: MODEL_CATALOG[0].sizeBytes, onDisk: false, beta: true });
+            expect(textOptions.every((o) => o.beta)).toBe(true);
+        });
 
+        it('Download on a row downloads that model only, with the reader\'s on-device intent as promote', async () => {
+            const { result } = await mountLoaded();
             await act(async () => {
-                await result.current.handleDownload();
+                await result.current.handleDownload(KEV_ID);
             });
-
-            expect(started).toEqual([{ promote: true }]);
-        });
-
-        it('with one file on disk: the button size is only what is still missing, and the row is ready', async () => {
-            placeDownloadedModel(TEXT_ID);
-            const { result } = await mountLoaded();
-
-            expect(result.current.onDiskBytes).toBe(MODEL_CATALOG[0].sizeBytes);
-            expect(result.current.missingBytes).toBe(MODEL_CATALOG[1].sizeBytes);
-            // One row: the size is what is still missing while something is.
-            expect(result.current.modelsSizeBytes).toBe(MODEL_CATALOG[1].sizeBytes);
-            expect(result.current.runnable).toBe(false);
-            // One file is not enough: the persona stays on Private cloud.
-            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-        });
-
-        it('with both files on disk: nothing is missing', async () => {
-            putModelsOnDisk();
-            const { result } = await mountLoaded();
-            // Nothing missing: the Download button is hidden (it shows only for missingBytes > 0)
-            // and the one row shows what the files take, checked.
-            expect(result.current.missingBytes).toBe(0);
-            expect(result.current.runnable).toBe(true);
-            expect(result.current.modelsSizeBytes).toBe(MODEL_CATALOG[0].sizeBytes + MODEL_CATALOG[1].sizeBytes);
-            expect(result.current.modelsSizeBytes).toBe(result.current.onDiskBytes);
+            expect(started).toEqual([{ modelIds: [KEV_ID], promote: true }]);
         });
 
         it('a cloud reader downloads without promote', async () => {
             serverMode(ProcessingMode.Cloud);
             const { result } = await mountLoaded();
             await act(async () => {
-                await result.current.handleDownload();
+                await result.current.handleDownload(TEXT_ID);
             });
-            expect(started).toEqual([{ promote: false }]);
+            expect(started).toEqual([{ modelIds: [TEXT_ID], promote: false }]);
+        });
+
+        it('a row follows its own download: queued, downloading, failed, and back to idle', async () => {
+            (downloadService.startModelDownloads as jest.Mock).mockRestore();
+            const resolveDownload = jest.spyOn(require('@/lib/mera-protocol-toolkit/core/modelManager'), 'downloadBaseModel')
+                .mockImplementation(() => new Promise(() => {}));
+            const { result } = await mountLoaded();
+            act(() => downloadService.startModelDownloads({ modelIds: [KEV_ID, TEXT_ID] }));
+            await waitFor(() => expect(result.current.relevanceModel.download?.status).toBe('downloading'));
+            expect(result.current.textOptions[0].model?.download?.status).toBe('queued');
+            await act(async () => {
+                await downloadService.cancelModelDownload();
+            });
+            expect(result.current.relevanceModel.download).toBeNull();
+            expect(result.current.textOptions[0].model?.download).toBeNull();
+            resolveDownload.mockRestore();
+        });
+
+        it('a load failure of a model on disk is not a download failure', async () => {
+            putModelsOnDisk();
+            const { result } = await mountLoaded();
+            act(() => protocol().setModelError('Failed to load model'));
+            expect(result.current.relevanceModel.download).toBeNull();
+            expect(result.current.textOptions[0].model?.download).toBeNull();
         });
 
         it('picking Private cloud mid-download tells the download not to promote', async () => {
             const promoteFlag = jest.spyOn(downloadService, 'setPromoteWhenDone');
             const { result } = await mountLoaded();
-
             await act(async () => {
                 await result.current.selectMode(ProcessingMode.Cloud);
             });
-
             expect(promoteFlag).toHaveBeenLastCalledWith(false);
         });
 
-        it('on mobile data: asks first, and a "Wait for Wi-Fi" starts nothing', async () => {
+        it('on mobile data: asks first with that model\'s size, and "Wait for Wi-Fi" starts nothing', async () => {
             jest.spyOn(NetInfo, 'fetch').mockResolvedValue({ type: 'cellular', isConnected: true } as never);
             useDialogQueue.setState({ queue: [] });
             const { result } = await mountLoaded();
 
             let pending!: Promise<void>;
             act(() => {
-                pending = result.current.handleDownload();
+                pending = result.current.handleDownload(KEV_ID);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
             const dialog = useDialogQueue.getState().queue[0];
             expect(dialog.title).toBe('Download on mobile data?');
-            expect(dialog.body).toBe('This uses 5.8 GB of data.');
+            expect(dialog.body).toBe('This uses 3.0 GB of data.');
             expect(dialog.confirmLabel).toBe('Download');
             expect(dialog.cancelLabel).toBe('Wait for Wi-Fi');
 
@@ -425,17 +431,17 @@ describe('Mera Protocol settings', () => {
             jest.spyOn(NetInfo, 'fetch').mockResolvedValue({ type: 'cellular', isConnected: true } as never);
             useDialogQueue.setState({ queue: [] });
             const { result } = await mountLoaded();
-
             let pending!: Promise<void>;
             act(() => {
-                pending = result.current.handleDownload();
+                pending = result.current.handleDownload(TEXT_ID);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+            expect(useDialogQueue.getState().queue[0].body).toBe('This uses 2.7 GB of data.');
             await act(async () => {
                 settleDialog(useDialogQueue.getState().queue[0].id, true);
                 await pending;
             });
-            expect(started).toEqual([{ promote: true }]);
+            expect(started).toEqual([{ modelIds: [TEXT_ID], promote: true }]);
         });
 
         it('on Wi-Fi: no question', async () => {
@@ -443,7 +449,7 @@ describe('Mera Protocol settings', () => {
             useDialogQueue.setState({ queue: [] });
             const { result } = await mountLoaded();
             await act(async () => {
-                await result.current.handleDownload();
+                await result.current.handleDownload(KEV_ID);
             });
             expect(useDialogQueue.getState().queue).toEqual([]);
             expect(started).toHaveLength(1);
@@ -451,25 +457,99 @@ describe('Mera Protocol settings', () => {
     });
 
     // ---------------------------------------------------------------------------------------------
-    describe('Chat and notes engine', () => {
+    describe('the Text model choice, per platform', () => {
         const available = { available: true, reason: null } as const;
-        const spyAvailability = (a: { available: boolean; reason: string | null }) =>
-            jest.spyOn(textEngine, 'builtInAvailability').mockResolvedValue(a as never);
 
         beforeEach(async () => {
             await signInFixtureAccount();
         });
 
+        it('iOS: Mera text model and Apple Intelligence, both Beta; a built-in pick needs no download', async () => {
+            installOnDeviceLlm({ platformModel: 'afm', availability: available });
+            serverMode(ProcessingMode.Cloud);
+            const { result } = await mountLoaded();
+            expect(result.current.textOptions.map((o) => [o.engine, o.title, o.beta])).toEqual([
+                ['qwen', 'Mera text model', true],
+                ['afm', 'Apple Intelligence', true],
+            ]);
+            const apple = result.current.textOptions[1];
+            expect(apple).toMatchObject({ disabled: false, reason: null, model: null });
+        });
+
+        it('Android: Mera text model and Gemini Nano', async () => {
+            installOnDeviceLlm({ platformModel: 'nano', availability: available });
+            serverMode(ProcessingMode.Cloud);
+            const { result } = await mountLoaded();
+            expect(result.current.textOptions.map((o) => [o.engine, o.title])).toEqual([
+                ['qwen', 'Mera text model'],
+                ['nano', 'Gemini Nano'],
+            ]);
+        });
+
+        it('a phone with neither: only the Mera text model', async () => {
+            installOnDeviceLlm({ platformModel: null });
+            serverMode(ProcessingMode.Cloud);
+            const { result } = await mountLoaded();
+            expect(result.current.textOptions.map((o) => o.engine)).toEqual(['qwen']);
+            // The derived default: the only option there is.
+            expect(result.current.textOptions[0].selected).toBe(true);
+        });
+
+        it('unsupportedPlatform hides the built-in row too', async () => {
+            installOnDeviceLlm({ platformModel: 'afm', availability: { available: false, reason: 'unsupportedPlatform' } });
+            serverMode(ProcessingMode.Cloud);
+            const { result } = await mountLoaded();
+            expect(result.current.textOptions.map((o) => o.engine)).toEqual(['qwen']);
+        });
+
+        it.each(Object.entries(NATIVE_REASON_KEYS))('%s: the built-in row is disabled with its reason, naming that model', async (code, key) => {
+            installOnDeviceLlm({ platformModel: 'nano', availability: { available: false, reason: code as never } });
+            serverMode(ProcessingMode.Cloud);
+            const { result } = await mountLoaded();
+            const nano = result.current.textOptions[1];
+            expect(nano.disabled).toBe(true);
+            expect(nano.reason).toBe(i18n.t(key, { name: 'Gemini Nano' }));
+            expect(nano.reason).toContain('Gemini Nano');
+        });
+
+        it('the reason lines read as designed, on either platform', () => {
+            const line = (code: keyof typeof NATIVE_REASON_KEYS, name = 'Apple Intelligence') => i18n.t(NATIVE_REASON_KEYS[code], { name });
+            expect(line('deviceNotEligible')).toBe("This phone doesn't support Apple Intelligence.");
+            expect(line('appleIntelligenceNotEnabled')).toBe('Turn on Apple Intelligence in Settings to use it.');
+            expect(line('modelNotReady', 'Gemini Nano')).toBe('Gemini Nano is still getting ready. Try again later.');
+            expect(line('appLanguageNotSupported')).toBe("Apple Intelligence doesn't support Mera's current language yet.");
+            expect(line('deviceLanguageNotSupported', 'Gemini Nano')).toBe("Gemini Nano doesn't support this phone's language yet.");
+            expect(line('osTooOld')).toBe("Apple Intelligence needs a newer version of this phone's software.");
+            expect(line('needsSystemUpdate', 'Gemini Nano')).toBe('Gemini Nano needs a system update. Check for updates in Settings.');
+            expect(line('unknown')).toBe("Apple Intelligence isn't available right now.");
+        });
+
+        it('the Mera text model cannot be picked until its file is on disk, so a pick never drops a running phone to Private cloud', async () => {
+            installOnDeviceLlm({ platformModel: 'afm', availability: available });
+            await textEngine.setTextEngine('afm');
+            placeDownloadedModel(KEV_ID);
+            serverMode(ProcessingMode.OnDevice);
+            const { result } = await mountLoaded();
+            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
+            expect(result.current.textOptions[0].disabled).toBe(true);
+
+            placeDownloadedModel(TEXT_ID);
+            await act(async () => {
+                await result.current.refresh();
+            });
+            expect(result.current.textOptions[0].disabled).toBe(false);
+        });
+
         it('Apple Intelligence available and the reader wants On this phone: switching to it promotes when it can run', async () => {
-            spyAvailability(available);
+            installOnDeviceLlm({ platformModel: 'afm', availability: available });
+            await textEngine.setTextEngine('qwen');
             placeDownloadedModel(KEV_ID);
             serverMode(ProcessingMode.OnDevice);
             const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
             const { result } = await mountLoaded();
-            // Kev alone cannot run with the Mera engine: Private cloud locally, intent kept.
+            // Kev alone cannot run with the Mera text model: Private cloud locally, intent kept.
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(true);
-            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
 
             await act(async () => {
                 await result.current.selectEngine('afm');
@@ -477,60 +557,11 @@ describe('Mera Protocol settings', () => {
 
             expect(textEngine.peekTextEngine()).toBe('afm');
             expect(promote).toHaveBeenCalledTimes(1);
-            // Kev is all that is left to fetch, and it is on disk.
-            expect(result.current.missingBytes).toBe(0);
             expect(result.current.runnable).toBe(true);
         });
 
-        it('switching to an engine that cannot run falls back to Private cloud locally only and keeps the intent', async () => {
-            spyAvailability(available);
-            placeDownloadedModel(KEV_ID);
-            await textEngine.setTextEngine('afm');
-            serverMode(ProcessingMode.OnDevice);
-            const sent = recordModeUpdates();
-            const promote = jest.spyOn(downloadService, 'promoteToOnDevice');
-            const { result } = await mountLoaded();
-            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
-
-            await act(async () => {
-                await result.current.selectEngine('qwen');
-            });
-
-            expect(textEngine.peekTextEngine()).toBe('qwen');
-            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            expect(result.current.onDeviceIntent).toBe(true);
-            expect(sent).toEqual([]);
-            expect(promote).not.toHaveBeenCalled();
-            // Setting the engine deleted nothing.
-            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(true);
-            // The text model shows as still to download.
-            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
-            expect(result.current.modelsSizeBytes).toBe(MODEL_CATALOG[0].sizeBytes);
-            expect(result.current.runnable).toBe(false);
-        });
-
-        it('round trip: Apple Intelligence then Mera AI models again brings the text model download back', async () => {
-            spyAvailability(available);
-            placeDownloadedModel(KEV_ID);
-            serverMode(ProcessingMode.Cloud);
-            jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
-            const { result } = await mountLoaded();
-            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
-
-            await act(async () => {
-                await result.current.selectEngine('afm');
-            });
-            expect(result.current.missingBytes).toBe(0);
-
-            await act(async () => {
-                await result.current.selectEngine('qwen');
-            });
-            expect(result.current.missingBytes).toBe(MODEL_CATALOG[0].sizeBytes);
-            expect(result.current.runnable).toBe(false);
-        });
-
-        it('a refresh follows Apple Intelligence going away and coming back, locally only', async () => {
-            const availability = spyAvailability(available);
+        it('a refresh follows the built-in model going away and coming back, locally only', async () => {
+            installOnDeviceLlm({ platformModel: 'afm', availability: available });
             placeDownloadedModel(KEV_ID);
             await textEngine.setTextEngine('afm');
             serverMode(ProcessingMode.OnDevice);
@@ -539,21 +570,19 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
             expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
 
-            availability.mockResolvedValue({ available: false, reason: 'appleIntelligenceNotEnabled' } as never);
+            setOnDeviceLlmAvailability({ available: false, reason: 'appleIntelligenceNotEnabled' });
             await act(async () => {
                 await result.current.refresh();
             });
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(true);
-            expect(result.current.nativeReasonKey).toBe(NATIVE_REASON_KEYS.appleIntelligenceNotEnabled);
-            // Nothing is missing, yet it cannot run: the section says Mera is on Private cloud.
-            expect(result.current.missingBytes).toBe(0);
+            // Everything needed is on disk, yet it cannot run: the section says Mera is on Private cloud.
             expect(result.current.waitingForNative).toBe(true);
-            expect(i18n.t('meraProtocol.modelsWaitingNative')).toBe('Mera uses Private cloud until Apple Intelligence is ready.');
+            expect(result.current.waitingLine).toBe('Mera uses Private cloud until Apple Intelligence is ready.');
             expect(sent).toEqual([]);
             expect(promote).not.toHaveBeenCalled();
 
-            availability.mockResolvedValue(available as never);
+            setOnDeviceLlmAvailability(available);
             await act(async () => {
                 await result.current.refresh();
             });
@@ -561,123 +590,40 @@ describe('Mera Protocol settings', () => {
             expect(result.current.waitingForNative).toBe(false);
         });
 
-        it('coming back to the app re-reads Apple Intelligence', async () => {
+        it('a phone running on the built-in model stays on it while the text model downloads', async () => {
+            installOnDeviceLlm({ platformModel: 'afm', availability: available });
+            placeDownloadedModel(KEV_ID);
+            await textEngine.setTextEngine('afm');
+            serverMode(ProcessingMode.OnDevice);
+            jest.spyOn(downloadService, 'isDownloadInProgress').mockReturnValue(true);
+            const { result } = await mountLoaded();
+            await act(async () => {
+                await result.current.refresh();
+            });
+            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
+        });
+
+        it('coming back to the app re-reads the built-in model', async () => {
             let onChange: ((state: string) => void) | undefined;
             jest.spyOn(AppState, 'addEventListener').mockImplementation(((_: string, cb: (state: string) => void) => {
                 onChange = cb;
                 return { remove: jest.fn() };
             }) as never);
-            const availability = spyAvailability({ available: false, reason: 'appleIntelligenceNotEnabled' });
+            installOnDeviceLlm({ platformModel: 'afm', availability: { available: false, reason: 'appleIntelligenceNotEnabled' } });
             serverMode(ProcessingMode.Cloud);
             const { result } = await mountLoaded();
             expect(result.current.nativeAvailable).toBe(false);
 
-            availability.mockResolvedValue(available as never);
+            setOnDeviceLlmAvailability(available);
             await act(async () => {
                 onChange?.('active');
             });
             await waitFor(() => expect(result.current.nativeAvailable).toBe(true));
         });
 
-        it.each(Object.entries(NATIVE_REASON_KEYS))('%s: the Apple Intelligence row is unavailable with its reason', async (code, key) => {
-            spyAvailability({ available: false, reason: code });
-            serverMode(ProcessingMode.Cloud);
-            const { result } = await mountLoaded();
-            expect(result.current.showEngineGroup).toBe(true);
-            expect(result.current.nativeAvailable).toBe(false);
-            expect(result.current.nativeReasonKey).toBe(key);
-        });
-
-        it('the reason lines read as designed', () => {
-            const line = (code: keyof typeof NATIVE_REASON_KEYS) => i18n.t(NATIVE_REASON_KEYS[code]);
-            expect(line('deviceNotEligible')).toBe("This iPhone doesn't support Apple Intelligence.");
-            expect(line('appleIntelligenceNotEnabled')).toBe('Turn on Apple Intelligence in Settings to use it.');
-            expect(line('modelNotReady')).toBe('Apple Intelligence is still getting ready. Try again later.');
-            expect(line('appLanguageNotSupported')).toBe("Apple Intelligence doesn't support Mera's current language yet.");
-            expect(line('deviceLanguageNotSupported')).toBe("Apple Intelligence doesn't support this iPhone's language yet.");
-            expect(line('osTooOld')).toBe('Apple Intelligence needs iOS 26 or later.');
-            expect(line('unknown')).toBe("Apple Intelligence isn't available right now.");
-        });
-
-        it('unsupportedPlatform hides the whole group', async () => {
-            spyAvailability({ available: false, reason: 'unsupportedPlatform' });
-            serverMode(ProcessingMode.Cloud);
-            const { result } = await mountLoaded();
-            expect(result.current.showEngineGroup).toBe(false);
-            expect(result.current.nativeReasonKey).toBeNull();
-        });
-
-        it('available: no reason line, the group shows', async () => {
-            spyAvailability(available);
-            serverMode(ProcessingMode.Cloud);
-            const { result } = await mountLoaded();
-            expect(result.current.showEngineGroup).toBe(true);
-            expect(result.current.nativeAvailable).toBe(true);
-            expect(result.current.nativeReasonKey).toBeNull();
-        });
-
-        it('no string the section can show names a model or says there are two', () => {
-            const forbidden = /kev|qwen|two models|2 models/i;
-            const args = { size: '5.8 GB', done: '1.1', total: '5.8', seconds: '1.2', tokPerSec: 20, count: 3 };
-            for (const key of MODELS_SECTION_KEYS) {
-                expect({ key, text: i18n.t(key, args) }).toEqual({ key, text: expect.not.stringMatching(forbidden) });
-            }
-        });
-
-        it('the delete confirm and the cellular confirm name no model', async () => {
-            const wording = (d: { title: string; body?: string; confirmLabel?: string; cancelLabel?: string }) =>
-                `${d.title} ${d.body} ${d.confirmLabel} ${d.cancelLabel}`;
-            // The cellular confirm: raised by a download on mobile data with files still missing.
-            jest.spyOn(NetInfo, 'fetch').mockResolvedValue({ type: 'cellular', isConnected: true } as never);
-            const started = jest.spyOn(downloadService, 'startModelDownloads').mockImplementation(() => {});
-            serverMode(ProcessingMode.OnDevice);
-            useDialogQueue.setState({ queue: [] });
-            const missing = await mountLoaded();
-            let download!: Promise<void>;
-            act(() => {
-                download = missing.result.current.handleDownload();
-            });
-            await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
-            const cellular = useDialogQueue.getState().queue[0];
-            expect(cellular.title).toBe('Download on mobile data?');
-            expect(wording(cellular)).not.toMatch(/kev|qwen|two models/i);
-            await act(async () => {
-                settleDialog(cellular.id, false);
-                await download;
-            });
-            expect(started).not.toHaveBeenCalled();
-            missing.unmount();
-
-            // The delete confirm: raised with both files on disk.
-            placeDownloadedModel(TEXT_ID);
-            placeDownloadedModel(KEV_ID);
-            useDialogQueue.setState({ queue: [] });
-            const { result } = await mountLoaded();
-            let pending!: Promise<void>;
-            act(() => {
-                pending = result.current.handleDeleteModels();
-            });
-            await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
-            const dialog = useDialogQueue.getState().queue[0];
-            expect(dialog.title).toBe('Delete Mera AI models?');
-            expect(wording(dialog)).not.toMatch(/kev|qwen|two models/i);
-            await act(async () => {
-                settleDialog(dialog.id, false);
-                await pending;
-            });
-        });
-
-        it('the declined-request line reads in the singular for one', () => {
-            expect(i18n.t('meraProtocol.speedRefused', { count: 1 })).toBe('Apple Intelligence declined 1 request');
-            expect(i18n.t('meraProtocol.speedRefused', { count: 3 })).toBe('Apple Intelligence declined 3 requests');
-        });
-
-        it('the engine reason for a download names no model', () => {
-            expect(i18n.t('meraProtocol.engineUnavailableDownloading')).toBe('Unavailable while Mera AI models download');
-        });
-
         it('switching engines drops the figures measured on the previous one', async () => {
-            spyAvailability(available);
+            installOnDeviceLlm({ platformModel: 'afm', availability: available });
+            await textEngine.setTextEngine('qwen');
             serverMode(ProcessingMode.Cloud);
             recordModelLoad('text', 1200);
             recordCompletion({ label: 'reason', latencyMs: 900, genTokPerSec: 20 });
@@ -693,7 +639,7 @@ describe('Mera Protocol settings', () => {
         });
 
         it('choosing the engine already in force keeps the figures', async () => {
-            spyAvailability(available);
+            installOnDeviceLlm({ platformModel: null });
             serverMode(ProcessingMode.Cloud);
             recordCompletion({ label: 'reason', latencyMs: 900, genTokPerSec: 20 });
             const { result } = await mountLoaded();
@@ -707,6 +653,83 @@ describe('Mera Protocol settings', () => {
     });
 
     // ---------------------------------------------------------------------------------------------
+    describe('names and Beta', () => {
+        it('no string the model sections can show names a downloaded model; only Apple Intelligence or Gemini Nano', () => {
+            const forbidden = /kev|qwen|two models|2 models/i;
+            for (const name of ['Apple Intelligence', 'Gemini Nano']) {
+                const args = { name, size: '3.0 GB', done: '1.1', total: '3.0', seconds: '1.2', tokPerSec: 20, count: 3 };
+                for (const key of MODELS_SECTION_KEYS) {
+                    expect({ key, text: i18n.t(key, args) }).toEqual({ key, text: expect.not.stringMatching(forbidden) });
+                }
+            }
+        });
+
+        it('the declined-request line names the built-in model and reads in the singular for one', () => {
+            expect(i18n.t('meraProtocol.speedRefused', { name: 'Gemini Nano', count: 1 })).toBe('Gemini Nano declined 1 request');
+            expect(i18n.t('meraProtocol.speedRefused', { name: 'Apple Intelligence', count: 3 })).toBe('Apple Intelligence declined 3 requests');
+        });
+
+        it('the delete and cellular confirms name no downloaded model', async () => {
+            await signInFixtureAccount();
+            putModelsOnDisk();
+            serverMode(ProcessingMode.OnDevice);
+            jest.spyOn(NetInfo, 'fetch').mockResolvedValue({ type: 'cellular', isConnected: true } as never);
+            jest.spyOn(downloadService, 'startModelDownloads').mockImplementation(() => {});
+            useDialogQueue.setState({ queue: [] });
+            const { result } = await mountLoaded();
+            const wording = (d: { title: string; body?: string; confirmLabel?: string; cancelLabel?: string }) =>
+                `${d.title} ${d.body} ${d.confirmLabel} ${d.cancelLabel}`;
+            for (const run of [() => result.current.handleDownload(TEXT_ID), () => result.current.handleDeleteModel(KEV_ID), () => result.current.handleDeleteModel(TEXT_ID)]) {
+                let pending!: Promise<void>;
+                act(() => {
+                    pending = run();
+                });
+                await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+                const dialog = useDialogQueue.getState().queue[0];
+                expect(wording(dialog)).not.toMatch(/kev|qwen|two models/i);
+                await act(async () => {
+                    settleDialog(dialog.id, false);
+                    await pending;
+                });
+            }
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    describe('Write notes (D35)', () => {
+        beforeEach(async () => {
+            await signInFixtureAccount();
+            serverMode(ProcessingMode.OnDevice);
+        });
+        afterEach(() => {
+            protocol().setOnDeviceNotes(true);
+        });
+
+        it('is on by default; off and on again flips the store, and on re-pends rows finalised without a note', async () => {
+            const scoring = require('@/lib/mera-protocol/scoring-service') as typeof import('@/lib/mera-protocol/scoring-service');
+            const repend = jest.spyOn(scoring, 'rependOnDeviceNotes').mockResolvedValue(0);
+            const { result } = await mountLoaded();
+            expect(result.current.onDeviceNotes).toBe(true);
+
+            act(() => result.current.toggleNotes());
+            expect(protocol().onDeviceNotes).toBe(false);
+            expect(repend).not.toHaveBeenCalled();
+
+            act(() => result.current.toggleNotes());
+            expect(protocol().onDeviceNotes).toBe(true);
+            expect(repend).toHaveBeenCalledTimes(1);
+        });
+
+        it('the switch is stored, and a stored off survives a hydrate', async () => {
+            protocol().setOnDeviceNotes(false);
+            await waitFor(async () => expect(await getSetting('mera_on_device_notes')).toBe('false'));
+            useMeraProtocolStore.setState({ onDeviceNotes: true });
+            await protocol().hydrateFromDb();
+            expect(protocol().onDeviceNotes).toBe(false);
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
     describe('storage and support', () => {
         beforeEach(async () => {
             await signInFixtureAccount();
@@ -716,27 +739,39 @@ describe('Mera Protocol settings', () => {
             mockFreeBytes = 100e9;
         });
 
-        it('too little free space: the row stays enabled, Download is blocked, and the shortfall is named', async () => {
-            mockFreeBytes = 3e9;
+        it('too little free space for one model: only that row is blocked, with its shortfall named', async () => {
+            mockFreeBytes = 3.4e9;
             const { result } = await mountLoaded();
-            await waitFor(() => expect(result.current.storageShort).toBe(true));
+            await waitFor(() => expect(result.current.requirementsResult).not.toBeNull());
 
             // Not "this phone can't run it".
             expect(result.current.deviceSupported).toBe(true);
-            const needed = result.current.missingBytes + STORAGE_MARGIN_BYTES;
-            expect(result.current.freeUpSize).toBe(`${(Math.ceil((needed - 3e9) / 1e8) / 10).toFixed(1)} GB`);
+            // 3.0 GB + margin does not fit; 2.7 GB + margin does.
+            expect(result.current.relevanceModel.storageShort).toBe(true);
+            const needed = MODEL_CATALOG[1].sizeBytes + STORAGE_MARGIN_BYTES;
+            expect(result.current.relevanceModel.freeUpSize).toBe(`${(Math.ceil((needed - 3.4e9) / 1e8) / 10).toFixed(1)} GB`);
+            expect(result.current.textOptions[0].model?.storageShort).toBe(false);
         });
 
-        it('an unsupported phone (RAM) is not supported, with no storage message', async () => {
+        it('a model already on disk is never short of space', async () => {
+            mockFreeBytes = 0.1e9;
+            putModelsOnDisk();
+            const { result } = await mountLoaded();
+            await waitFor(() => expect(result.current.requirementsResult).not.toBeNull());
+            expect(result.current.relevanceModel.storageShort).toBe(false);
+            expect(result.current.deviceSupported).toBe(true);
+        });
+
+        it('an unsupported phone (RAM) is not supported', async () => {
             mockTotalMemory = 2 * 1024 * 1024 * 1024;
             const { result } = await mountLoaded();
             await waitFor(() => expect(result.current.deviceSupported).toBe(false));
-            expect(result.current.storageShort).toBe(false);
         });
 
         it('an unsupported device is never switched to on-device', async () => {
             mockTotalMemory = 2 * 1024 * 1024 * 1024;
             putModelsOnDisk();
+            serverMode(ProcessingMode.Cloud);
             const sent = recordModeUpdates();
             const { result } = await mountLoaded();
             await waitFor(() => expect(result.current.deviceSupported).toBe(false));
@@ -745,20 +780,10 @@ describe('Mera Protocol settings', () => {
             });
             expect(sent).toEqual([]);
         });
-
-        it('a failed download reads its kind from the error', async () => {
-            const { result } = await mountLoaded();
-            act(() => protocol().setModelError('Download failed: checksum mismatch'));
-            expect(result.current.failureKind).toBe('damaged');
-            act(() => protocol().setModelError('HTTP status 503'));
-            expect(result.current.failureKind).toBe('server');
-            act(() => protocol().setModelError('ENOSPC: no space left'));
-            expect(result.current.failureKind).toBe('space');
-        });
     });
 
     // ---------------------------------------------------------------------------------------------
-    describe('deleting the models', () => {
+    describe('deleting a model', () => {
         beforeEach(async () => {
             await signInFixtureAccount();
             putModelsOnDisk();
@@ -767,10 +792,14 @@ describe('Mera Protocol settings', () => {
         });
 
         /** Starts the delete, answers its confirm, and waits for it to finish. */
-        async function deleteAnswering(result: { current: { handleDeleteModels: () => Promise<void> } }, confirmed: boolean) {
+        async function deleteAnswering(
+            result: { current: { handleDeleteModel: (id: string) => Promise<void> } },
+            modelId: string,
+            confirmed: boolean,
+        ) {
             let pending!: Promise<void>;
             act(() => {
-                pending = result.current.handleDeleteModels();
+                pending = result.current.handleDeleteModel(modelId);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
             const dialog = useDialogQueue.getState().queue[0];
@@ -781,15 +810,12 @@ describe('Mera Protocol settings', () => {
             return dialog;
         }
 
-        it('confirms in words, then switches to Private cloud BEFORE removing both files', async () => {
-            // The state of the disk at the moment the server hears "CLOUD".
+        it('the relevance model: confirms in words, switches to Private cloud BEFORE removing only its file, and clears the intent', async () => {
             const diskAtSwitch: boolean[] = [];
             server.use(
                 graphql.mutation('UpdateProcessingMode', async ({ variables }) => {
                     const input = (variables as { input: { userId: string; mode: string } }).input;
-                    diskAtSwitch.push(
-                        (await isModelDownloaded(TEXT_ID)) && (await isModelDownloaded(KEV_ID)),
-                    );
+                    diskAtSwitch.push(await isModelDownloaded(KEV_ID));
                     return HttpResponse.json({
                         data: { updateProcessingMode: personaFor(Date.now(), { userId: input.userId, processingMode: input.mode as ProcessingMode }) },
                     });
@@ -798,29 +824,70 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
             expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
 
-            const dialog = await deleteAnswering(result, true);
+            const dialog = await deleteAnswering(result, KEV_ID, true);
 
-            expect(dialog.title).toBe('Delete Mera AI models?');
-            expect(dialog.body).toBe('This removes Mera AI models (5.8 GB) from this phone. Mera will use Private cloud.');
+            expect(dialog.title).toBe('Delete Mera relevance model?');
+            expect(dialog.body).toBe('This removes it (3.0 GB) from this phone. Mera will use Private cloud.');
             expect(dialog.destructive).toBe(true);
             expect(diskAtSwitch).toEqual([true]);
-            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
             await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
-            expect(protocol().modelState).toBe('not_downloaded');
-            expect(protocol().downloadProgress).toBe(0);
+            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(true);
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(false);
-            expect(result.current.onDiskBytes).toBe(0);
+            expect(result.current.relevanceModel.onDisk).toBe(false);
         });
 
-        it('an engine tap while the delete runs does not promote the phone', async () => {
-            jest.spyOn(textEngine, 'builtInAvailability').mockResolvedValue({ available: true, reason: null } as never);
+        it('the text model while it writes the text, with the built-in model available: the built-in model takes over', async () => {
+            installOnDeviceLlm({ platformModel: 'afm', availability: { available: true, reason: null } });
+            await textEngine.setTextEngine('qwen');
+            const sent = recordModeUpdates();
+            const { result } = await mountLoaded();
+            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
+
+            const dialog = await deleteAnswering(result, TEXT_ID, true);
+
+            expect(dialog.title).toBe('Delete Mera text model?');
+            expect(dialog.body).toBe('This removes it (2.7 GB) from this phone.');
+            expect(textEngine.peekTextEngine()).toBe('afm');
+            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
+            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
+            expect(sent).toEqual([]);
+            expect(toastTitles()).toEqual([]);
+        });
+
+        it('the text model while it writes the text, with no built-in model: Private cloud on this phone only, with a toast', async () => {
+            installOnDeviceLlm({ platformModel: null });
+            const sent = recordModeUpdates();
+            const { result } = await mountLoaded();
+            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
+
+            await deleteAnswering(result, TEXT_ID, true);
+
+            expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
+            // The intent is kept: downloading it again brings On this phone back.
+            expect(result.current.onDeviceIntent).toBe(true);
+            expect(sent).toEqual([]);
+            expect(toastTitles()).toEqual(['Mera uses Private cloud for now']);
+            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
+            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(true);
+        });
+
+        it('the text model while the built-in model writes the text: nothing else changes', async () => {
+            installOnDeviceLlm({ platformModel: 'afm', availability: { available: true, reason: null } });
+            await textEngine.setTextEngine('afm');
+            const { result } = await mountLoaded();
+            await deleteAnswering(result, TEXT_ID, true);
+            expect(textEngine.peekTextEngine()).toBe('afm');
+            expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
+            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
+        });
+
+        it('an engine tap while the relevance delete runs does not promote the phone', async () => {
+            installOnDeviceLlm({ platformModel: 'afm', availability: { available: true, reason: null } });
+            await textEngine.setTextEngine('qwen');
             const promote = jest.spyOn(downloadService, 'promoteToOnDevice').mockResolvedValue(true);
-            // Only the Apple Intelligence file is on disk: the phone is on Private cloud, the intent is kept,
-            // and picking Apple Intelligence would make it runnable (and promote) if the delete did not block it.
             resetFileSystem();
             placeDownloadedModel(KEV_ID);
-            // Hold the server write so the delete is mid-flight.
             let release!: () => void;
             const gate = new Promise<void>((r) => { release = r; });
             server.use(
@@ -835,7 +902,7 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
             let pending!: Promise<void>;
             act(() => {
-                pending = result.current.handleDeleteModels();
+                pending = result.current.handleDeleteModel(KEV_ID);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
             await act(async () => {
@@ -861,11 +928,10 @@ describe('Mera Protocol settings', () => {
             const sent = recordModeUpdates();
             const { result } = await mountLoaded();
 
-            await deleteAnswering(result, false);
+            await deleteAnswering(result, KEV_ID, false);
 
             expect(sent).toEqual([]);
             expect(protocol().processingMode).toBe(ProcessingMode.OnDevice);
-            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(true);
             await expect(isModelDownloaded(KEV_ID)).resolves.toBe(true);
         });
 
@@ -873,7 +939,7 @@ describe('Mera Protocol settings', () => {
             recordModeUpdates();
             const { result } = await mountLoaded();
             cachePersonaMode(ProcessingMode.OnDevice);
-            await deleteAnswering(result, true);
+            await deleteAnswering(result, KEV_ID, true);
             expect(cachedMode()).toBe(ProcessingMode.Cloud);
 
             putModelsOnDisk();
@@ -881,45 +947,34 @@ describe('Mera Protocol settings', () => {
             server.use(mockGqlError('UpdateProcessingMode', 'INTERNAL_SERVER_ERROR'));
             const again = await mountLoaded();
             cachePersonaMode(ProcessingMode.OnDevice);
-            await deleteAnswering(again.result, true);
+            await deleteAnswering(again.result, KEV_ID, true);
             // The server never heard CLOUD, so the cache still says what the server holds.
             expect(cachedMode()).toBe(ProcessingMode.OnDevice);
-        });
-
-        it('falls back to cloud locally even when the mutation fails', async () => {
-            const { result } = await mountLoaded();
-            server.use(mockGqlError('UpdateProcessingMode', 'INTERNAL_SERVER_ERROR'));
-
-            await deleteAnswering(result, true);
-
+            // And the phone still falls back locally.
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-            await expect(isModelDownloaded(TEXT_ID)).resolves.toBe(false);
-            await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
         });
 
-        it('with the phone on Private cloud only because the models cannot run: the server still hears CLOUD', async () => {
-            // Server OnDevice but only one of the two files on disk: local Cloud, intent kept, trash shown.
+        it('with the phone on Private cloud only because it cannot run: the server still hears CLOUD', async () => {
             resetFileSystem();
             placeDownloadedModel(KEV_ID);
             const sent = recordModeUpdates();
             const { result } = await mountLoaded();
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(result.current.onDeviceIntent).toBe(true);
-            expect(result.current.onDiskBytes).toBeGreaterThan(0);
 
-            await deleteAnswering(result, true);
+            await deleteAnswering(result, KEV_ID, true);
 
             expect(sent.map((s) => s.mode)).toEqual(['CLOUD']);
             await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
             expect(result.current.onDeviceIntent).toBe(false);
         });
 
-        it('while on cloud: both files leave the disk and no mutation is sent', async () => {
+        it('while on cloud: the file leaves the disk and no mutation is sent', async () => {
             serverMode(ProcessingMode.Cloud);
             const sent = recordModeUpdates();
             const { result } = await mountLoaded();
 
-            await deleteAnswering(result, true);
+            await deleteAnswering(result, KEV_ID, true);
 
             await expect(isModelDownloaded(KEV_ID)).resolves.toBe(false);
             expect(sent).toEqual([]);
@@ -934,13 +989,13 @@ describe('Mera Protocol settings', () => {
             await setSetting('cached_user_id', FIXTURE_ACCOUNT.userId);
             useUserStore.setState({ userId: FIXTURE_ACCOUNT.userId });
             putModelsOnDisk();
-            protocol().setModelState('not_downloaded');
             return mountLoaded();
         }
 
         test('B5 Mera Protocol settings load from the local identity when the session is gone', async () => {
-            await loadWithoutSession();
-            expect(protocol().modelState).toBe('downloaded');
+            const { result } = await loadWithoutSession();
+            expect(toastTitles()).toEqual([]);
+            expect(result.current.relevanceModel.onDisk).toBe(true);
         });
     });
 });

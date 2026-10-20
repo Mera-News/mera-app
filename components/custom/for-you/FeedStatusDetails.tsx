@@ -15,6 +15,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import BetaBadge from '@/components/custom/BetaBadge';
 import { useFeedSyncRefresh } from '@/components/custom/FeedSyncIndicator';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
@@ -185,10 +186,18 @@ export const FeedStatusActions: React.FC<{ readonly mode: FeedStatusMode }> = ({
         };
     }, []);
     if (mode !== 'limited' && mode !== 'error') return null;
-    const pill = (label: string, onPress: () => void, testID: string, outline = false) => (
-        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} testID={testID} style={styles.pillFrame}>
-            <View style={outline ? styles.pillOutline : styles.pill}>
+    // `beta`: the pill leads to something that runs on this phone, so it says Beta in red (D30).
+    const pill = (label: string, onPress: () => void, testID: string, outline = false, beta = false) => (
+        <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={beta ? `${label}, ${t('common.beta')}` : label}
+            testID={testID}
+            style={styles.pillFrame}
+        >
+            <View style={[outline ? styles.pillOutline : styles.pill, beta ? styles.pillRow : null]}>
                 <Text style={[ROW_TYPE, { color: outline ? colors.ink : colors.onAccent, fontWeight: '600' }]}>{label}</Text>
+                {beta ? <BetaBadge tone="negative" testID={`${testID}-beta`} /> : null}
             </View>
         </Pressable>
     );
@@ -208,6 +217,7 @@ export const FeedStatusActions: React.FC<{ readonly mode: FeedStatusMode }> = ({
                               t('feedStatus.readOnPhone'),
                               () => navigateToTabScreen('you', 'mera-protocol', { params: { focus: 'on-device' } }),
                               'feed-status-read-on-phone',
+                              true,
                               true,
                           )
                         : null}
@@ -241,6 +251,7 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     pillFrame: { minHeight: 44, justifyContent: 'center', marginVertical: -7 },
     pill: { backgroundColor: c.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
     pillOutline: { borderColor: c.ink, borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
+    pillRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 }));
 
 export default FeedStatusDetails;

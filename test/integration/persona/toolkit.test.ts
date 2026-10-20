@@ -205,6 +205,40 @@ describe('the two-model lifecycle through the barrel', () => {
         expect(await toolkit.isModelDownloaded(KEV)).toBe(false);
     });
 
+    it('deleteDownloadedModel releases the model when it is resident and removes only its files', async () => {
+        installLlama(['ok']);
+        placeDownloadedModel(TEXT);
+        placeDownloadedModel(KEV);
+        await toolkit.initBaseModel();
+        expect(toolkit.getModelState()?.modelId).toBe(TEXT);
+
+        await modelManager.deleteDownloadedModel(TEXT);
+        expect(toolkit.getModelState()).toBeNull();
+        expect(await toolkit.isModelDownloaded(TEXT)).toBe(false);
+        expect(await toolkit.isModelDownloaded(KEV)).toBe(true);
+
+        // A model that is not resident is deleted without touching the resident one.
+        await toolkit.decide(REQUEST);
+        placeDownloadedModel(TEXT);
+        await modelManager.deleteDownloadedModel(TEXT);
+        expect(toolkit.getModelState()?.modelId).toBe(KEV);
+    });
+
+    it('the boot purge deletes retired files for a phone that keeps the on-device intent (the purge trap)', async () => {
+        const { useUserStore } = require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
+        const { personaFor } = require('@/test/mock-backend/fixtures/graphql/persona') as typeof import('@/test/mock-backend/fixtures/graphql/persona');
+        useUserStore.setState({ userPersona: personaFor(Date.now(), { processingMode: ProcessingMode.OnDevice }) as never });
+        try {
+            placeDownloadedModel(KEV);
+            placeDownloadedModel('mera-qwen3.5-2b');
+            await toolkit.purgeAllBaseModels();
+            expect(await toolkit.isModelDownloaded('mera-qwen3.5-2b')).toBe(false);
+            expect(await toolkit.isModelDownloaded(KEV)).toBe(true);
+        } finally {
+            useUserStore.setState({ userPersona: null });
+        }
+    });
+
     it('reports an idle download service', () => {
         expect(toolkit.isDownloadInProgress()).toBe(false);
     });
@@ -400,21 +434,19 @@ describe("the built-in text engine (Apple Foundation Models, Gemini Nano)", () =
         useAppLanguageStore.setState({ appLanguage: 'en' });
     });
 
-    it('onDeviceModelsStatus is name-free: bytes still to download for the chosen engine, bytes on disk, runnable', async () => {
-        const total = modelCatalog.TEXT_MODEL.sizeBytes + modelCatalog.RELEVANCE_MODEL.sizeBytes;
-        expect(await toolkit.onDeviceModelsStatus()).toEqual({ missingBytes: total, onDiskBytes: 0, runnable: false });
+    it('onDeviceModelsStatus: each model on disk or not with its size, and whether the chosen engine can run', async () => {
+        const T = modelCatalog.TEXT_MODEL;
+        const K = modelCatalog.RELEVANCE_MODEL;
+        const status = (textOnDisk: boolean, kevOnDisk: boolean, runnable: boolean) => ({
+            models: { [T.modelId]: { onDisk: textOnDisk, sizeBytes: T.sizeBytes }, [K.modelId]: { onDisk: kevOnDisk, sizeBytes: K.sizeBytes } },
+            runnable,
+        });
+        expect(await toolkit.onDeviceModelsStatus()).toEqual(status(false, false, false));
         await toolkit.setTextEngine('afm');
-        expect(await toolkit.onDeviceModelsStatus()).toEqual({
-            missingBytes: modelCatalog.RELEVANCE_MODEL.sizeBytes,
-            onDiskBytes: 0,
-            runnable: false,
-        });
         placeDownloadedModel(KEV);
-        expect(await toolkit.onDeviceModelsStatus()).toEqual({
-            missingBytes: 0,
-            onDiskBytes: modelCatalog.RELEVANCE_MODEL.sizeBytes,
-            runnable: true,
-        });
+        expect(await toolkit.onDeviceModelsStatus()).toEqual(status(false, true, true));
+        await toolkit.setTextEngine('qwen');
+        expect(await toolkit.onDeviceModelsStatus()).toEqual(status(false, true, false));
     });
 
     it('Gemini Nano follows the same rule: Kev on disk and Nano available', async () => {

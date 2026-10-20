@@ -1,5 +1,6 @@
 // Article Suggestion Service: scoring writes.
 
+import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import { ArticleSuggestionStatus } from '../article-suggestion-status';
 import type ArticleSuggestionModel from '../models/ArticleSuggestion';
@@ -211,6 +212,35 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
       ),
     );
   });
+}
+
+/**
+ * Notes back on, on this phone (D35): rows finalised `complete` without a note at
+ * or above `gate` go back to `reason_pending`, so the next notes sweep writes them.
+ * No column records which scorer wrote a row. Besides the notes switch, the only
+ * writer of that combination is a cloud reasons batch that failed for good
+ * (scoring-pipeline marks its rows reason-skipped), and owing such a row a note
+ * again is what it lacked anyway. Returns how many rows went back.
+ */
+export async function rependNotelessRows(gate: number): Promise<number> {
+  const rows = await articleSuggestionsCol
+    .query(
+      Q.where('status', ArticleSuggestionStatus.Complete),
+      Q.where('relevance', Q.gte(gate)),
+      Q.or(Q.where('reason', ''), Q.where('reason', null)),
+    )
+    .fetch();
+  if (rows.length === 0) return 0;
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.status = ArticleSuggestionStatus.ReasonPending;
+        }),
+      ),
+    );
+  });
+  return rows.length;
 }
 
 /**

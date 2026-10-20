@@ -1,3 +1,4 @@
+import BetaBadge from '@/components/custom/BetaBadge';
 import { Text } from '@/components/ui/text';
 import { fetchUserReading } from '@/lib/billing-service';
 import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
@@ -126,7 +127,12 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, multiplier, s
                 {m.multiplierKey === 'base' ? t('you.settings.planMultiplierBase') : t('you.settings.planMultiplier', { mb: m.planMb, n: m.multiplier })}
             </Text>
             {m.showUnlimitedLine ? <Text style={small}>{t('you.settings.onDeviceUnlimited')}</Text> : null}
-            {m.showOnPhoneLine ? <Text style={small}>{t('you.settings.readingOnPhone')}</Text> : null}
+            {m.showOnPhoneLine ? (
+                <View>
+                    <Text style={small}>{t('you.settings.readingOnPhone')}</Text>
+                    <BetaBadge variant="subtext" testID="reading-on-phone-beta" />
+                </View>
+            ) : null}
             {m.showNewPlan ? <Text style={small}>{t('you.settings.newPlanApplies')}</Text> : null}
         </View>
     );

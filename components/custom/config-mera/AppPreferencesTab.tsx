@@ -113,6 +113,7 @@ const AppPreferencesTab: React.FC = () => {
                     testID="settings-row-mera-protocol"
                     leadingIcon="verified-user"
                     title={t('preferences.meraProtocol')}
+                    beta={processingMode === ProcessingMode.OnDevice}
                     trailing={
                         <Badge
                             tone="positive"

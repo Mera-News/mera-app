@@ -1,14 +1,17 @@
-// Download Service: fetches the model files the chosen text engine needs that
-// are not on disk yet (the relevance model always; the text model unless the
-// native engine writes text). User-facing, this is ONE download, "Mera AI
-// models": nothing here exposes a model name or a per-model size for display.
+// Download Service: fetches on-device model files, one model at a time, in a
+// serial queue. The screen shows one row per model ("Mera relevance model",
+// "Mera text model"), each with its own download, progress, cancel and retry.
 //
-// SEQUENTIAL (text model, then Kev), under ONE download generation and ONE
-// `model-download` restart hold for the whole set. Progress is byte-weighted
-// over what is missing. A retry fetches only what is still missing. When the set
-// lands, On this phone can run (isModelDownloaded()), and the reader asked for
-// on-device processing, the phone is promoted to OnDevice here, from the
-// download path, so it happens even when the settings screen is no longer open.
+// The download state lives HERE, per model, apart from the store's runtime
+// `modelState`: a phone can already run (relevance model plus a built-in text
+// model) while the text model downloads, and a download writing `modelState`
+// would stop the inference queue and make a load failure read as a download
+// failure. The whole queue runs under ONE `model-download` restart hold.
+//
+// After EACH model lands the phone is promoted to OnDevice when On this phone
+// can now run (isModelDownloaded()) and the reader asked for on-device
+// processing, here in the download path, so it happens even when the settings
+// screen is no longer open.
 
 import { useSyncExternalStore } from 'react';
 import * as Notifications from 'expo-notifications';
@@ -25,29 +28,52 @@ import {
   requiredModels,
   type DownloadProgressInfo,
 } from './modelManager';
+import { getTextEngine, isBuiltInEngine, type BuiltInEngine } from './text-engine';
+
+/** The built-in text models by name. Proper nouns, never translated; the only model names the UI shows. */
+export const BUILT_IN_MODEL_NAME: Readonly<Record<BuiltInEngine, string>> = {
+  afm: 'Apple Intelligence',
+  nano: 'Gemini Nano',
+};
 
 // ---------------------------------------------------------------------------
-// Module-level state
+// Per-model download state
 // ---------------------------------------------------------------------------
 
-let downloadPromise: Promise<void> | null = null;
+/** One model's download. A model with no entry is idle: on disk or not, nothing is happening to it. */
+export type ModelDownload = {
+  status: 'queued' | 'downloading' | 'failed';
+  doneBytes: number;
+  totalBytes: number;
+  /** Set when failed. */
+  failure: DownloadFailureKind | null;
+};
 
-// Bumped by every start AND every cancel. A download settles only while it is
-// still the current generation: cancelling makes the native task reject a moment
-// later, and without this that rejection overwrote the cancel's clean
-// `not_downloaded` with an error state plus a "Download Failed" notification,
-// and its `finally` could clear the handle of a download started right after.
-let downloadGeneration = 0;
+let downloads: Readonly<Record<string, ModelDownload>> = {};
+const listeners = new Set<() => void>();
+
+/** Model ids waiting their turn, in order. The running one is not in here. */
+let queue: string[] = [];
+let activeId: string | null = null;
+// The current queue runner. Bumped to DETACH a runner (cancelling the model it is
+// on): the cancelled native task rejects a moment later, and a detached runner
+// then changes nothing, so it can neither fail the cancel nor touch a queue that
+// a new runner has taken over.
+let run = 0;
+let running = false;
+// Bytes of models that landed in this run, so the queue's overall progress
+// ("Downloading 1.2 of 5.7 GB" in the banner) does not jump back when one lands.
+let landedBytes = 0;
 
 // The download runs in a native background URLSession, which a JS reload does
 // not stop: a reloaded app would forget it while the file is still being
-// written. The restart is held for the whole pair, as a purchase or a streaming
+// written. The restart is held for the whole queue, as a purchase or a streaming
 // chat holds it. A blocked restart is deferred, never lost.
 let releaseRestartHold: (() => void) | null = null;
 
-// Whether to switch the phone to OnDevice when the pair lands. Set by the
-// screen from the reader's on-device intent; the screen clears it when the
-// reader picks Private cloud mid-download.
+// Whether to switch the phone to OnDevice when a landing makes it runnable. Set
+// from the reader's on-device intent; the screen clears it when the reader picks
+// Private cloud mid-download.
 let promoteWhenDone = false;
 
 function releaseDownloadHold(): void {
@@ -55,58 +81,76 @@ function releaseDownloadHold(): void {
   releaseRestartHold = null;
 }
 
-// ---------------------------------------------------------------------------
-// Byte progress, for "Downloading 1.2 of 5.8 GB"
-// ---------------------------------------------------------------------------
-
 export type DownloadBytes = { doneBytes: number; totalBytes: number };
 
 const IDLE_BYTES: DownloadBytes = { doneBytes: 0, totalBytes: 0 };
 let bytes: DownloadBytes = IDLE_BYTES;
-const bytesListeners = new Set<() => void>();
 
-function setBytes(next: DownloadBytes): void {
-  bytes = next;
-  bytesListeners.forEach((l) => l());
+function totals(): DownloadBytes {
+  let done = landedBytes;
+  let total = landedBytes;
+  for (const d of Object.values(downloads)) {
+    if (d.status === 'failed') continue;
+    done += d.doneBytes;
+    total += d.totalBytes;
+  }
+  return total === 0 ? IDLE_BYTES : { doneBytes: done, totalBytes: total };
 }
 
+function emit(): void {
+  bytes = totals();
+  // Observability and the Sentry scope read the overall percent from the store.
+  const pct = bytes.totalBytes > 0 ? Math.min(99, Math.round((bytes.doneBytes / bytes.totalBytes) * 100)) : 0;
+  useMeraProtocolStore.getState().setDownloadProgress(pct);
+  listeners.forEach((l) => l());
+}
+
+function setEntry(modelId: string, entry: ModelDownload | null): void {
+  const next = { ...downloads };
+  if (entry) next[modelId] = entry;
+  else delete next[modelId];
+  downloads = next;
+  emit();
+}
+
+function subscribe(l: () => void): () => void {
+  listeners.add(l);
+  return () => {
+    listeners.delete(l);
+  };
+}
+
+/** Every model with a download queued, running or failed, by model id. */
+export function getModelDownloads(): Readonly<Record<string, ModelDownload>> {
+  return downloads;
+}
+
+export function useModelDownloads(): Readonly<Record<string, ModelDownload>> {
+  return useSyncExternalStore(subscribe, getModelDownloads, getModelDownloads);
+}
+
+/** The queue's overall progress, landed models included; zero when nothing downloads. */
 export function getDownloadBytes(): DownloadBytes {
   return bytes;
 }
 
 export function useDownloadBytes(): DownloadBytes {
-  return useSyncExternalStore(
-    (l) => {
-      bytesListeners.add(l);
-      return () => {
-        bytesListeners.delete(l);
-      };
-    },
-    getDownloadBytes,
-    getDownloadBytes,
-  );
+  return useSyncExternalStore(subscribe, getDownloadBytes, getDownloadBytes);
 }
 
 /**
- * What the screen shows, name-free: the bytes still to download for the chosen
- * text engine, the bytes of model files on disk (any, for the delete confirm),
- * and whether On this phone can run now.
+ * What the screen shows: for each catalogue model, whether it is on disk and its
+ * size, and whether On this phone can run now with the chosen text option.
  */
 export async function onDeviceModelsStatus(): Promise<{
-  missingBytes: number;
-  onDiskBytes: number;
+  models: Record<string, { onDisk: boolean; sizeBytes: number }>;
   runnable: boolean;
 }> {
-  const missing = await missingModels();
-  let onDiskBytes = 0;
+  const models: Record<string, { onDisk: boolean; sizeBytes: number }> = {};
   for (const m of MODEL_CATALOG) {
-    if (await isModelDownloaded(m.modelId).catch(() => false)) onDiskBytes += m.sizeBytes;
+    models[m.modelId] = { onDisk: await isModelDownloaded(m.modelId).catch(() => false), sizeBytes: m.sizeBytes };
   }
-  return {
-    missingBytes: missing.reduce((sum, m) => sum + m.sizeBytes, 0),
-    onDiskBytes,
-    runnable: await isModelDownloaded().catch(() => false),
-  };
+  return { models, runnable: await isModelDownloaded().catch(() => false) };
 }
 
 /** The models the chosen text engine needs that are not on disk yet, in download order. */
@@ -157,11 +201,25 @@ async function hasNotificationPermission(): Promise<boolean> {
   }
 }
 
-async function notify(identifier: string, title: string, body: string): Promise<void> {
+/**
+ * One notification per model (`<kind>:<modelId>`), so the second model's never
+ * replaces the first's. The title says Beta in words: a notification cannot
+ * draw the badge.
+ */
+async function notify(
+  kind: string,
+  modelId: string,
+  titleKey: 'download.failedTitle' | 'download.completeTitle',
+  body: string,
+): Promise<void> {
   try {
     await Notifications.scheduleNotificationAsync({
-      identifier,
-      content: { title, body, data: { type: identifier } },
+      identifier: `${kind}:${modelId}`,
+      content: {
+        title: i18next.t('download.betaTitle', { title: i18next.t(titleKey) }),
+        body,
+        data: { type: kind },
+      },
       trigger: null,
     });
   } catch {
@@ -222,11 +280,11 @@ export async function promoteToOnDevice(): Promise<boolean> {
 /**
  * Undoes a local Private cloud fallback once On this phone can run again (Apple
  * Intelligence finished getting ready, say), without the settings screen. For the
- * app's foreground handler. Acts only when the phone is on Cloud locally, nothing
- * downloads (a download promotes by itself), the phone is runnable and the cached
- * persona says OnDevice; the server persona then confirms the intent, since a
- * Private cloud pick does not rewrite the cached copy. Sends no mutation: the
- * server already says OnDevice. Returns whether the phone moved to OnDevice.
+ * app's foreground handler. Acts only when the phone is on Cloud locally, the
+ * phone is runnable and the cached persona says OnDevice; the server persona then
+ * confirms the intent, since a Private cloud pick does not rewrite the cached
+ * copy. Sends no mutation: the server already says OnDevice. Returns whether the
+ * phone moved to OnDevice.
  */
 export async function restoreOnDeviceIfRunnable(): Promise<boolean> {
   /* eslint-disable @typescript-eslint/no-require-imports */
@@ -235,7 +293,8 @@ export async function restoreOnDeviceIfRunnable(): Promise<boolean> {
   const cached = useUserStore.getState().userPersona;
   if (cached?.processingMode !== ProcessingMode.OnDevice) return false;
   if (useMeraProtocolStore.getState().processingMode !== ProcessingMode.Cloud) return false;
-  if (isDownloadInProgress()) return false;
+  // Not gated on a running download: with the text model a separate download, a
+  // phone can already run on the built-in model while the text model downloads.
   if (!(await isModelDownloaded().catch(() => false))) return false;
   try {
     /* eslint-disable @typescript-eslint/no-require-imports */
@@ -246,14 +305,12 @@ export async function restoreOnDeviceIfRunnable(): Promise<boolean> {
     const persona = await AccountService.getUserPersona(await resolveCurrentUserId());
     if (!persona) return false;
     useUserStore.getState().setUserPersona(persona);
-    // Re-checked after the awaits: the reader may have switched or started a download meanwhile.
+    // Re-checked after the awaits: the reader may have switched meanwhile.
     const store = useMeraProtocolStore.getState();
-    if (persona.processingMode !== ProcessingMode.OnDevice || store.processingMode !== ProcessingMode.Cloud || isDownloadInProgress()) {
+    if (persona.processingMode !== ProcessingMode.OnDevice || store.processingMode !== ProcessingMode.Cloud) {
       return false;
     }
     store.setProcessingMode(ProcessingMode.OnDevice);
-    store.setModelState('downloaded');
-    store.setDownloadProgress(100);
     return true;
   } catch {
     // Offline or signed out: stay on Cloud; the next foreground tries again.
@@ -266,112 +323,196 @@ export function setPromoteWhenDone(value: boolean): void {
   const turnedOn = value && !promoteWhenDone;
   promoteWhenDone = value;
   // A mid-download pick of On this phone sends no write of its own while it cannot run yet.
-  if (turnedOn && downloadPromise) saveIntentForDownload();
+  if (turnedOn && running) saveIntentForDownload();
 }
 
 /** Whether a running download will switch the phone to OnDevice when it lands. */
 export function willPromoteWhenDone(): boolean {
-  return downloadPromise !== null && promoteWhenDone;
+  return running && promoteWhenDone;
 }
 
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-/** Returns true if a download is currently in progress. */
+/** Returns true while any model downloads or waits to. */
 export function isDownloadInProgress(): boolean {
-  return downloadPromise !== null;
+  return running;
 }
 
+const catalogEntry = (modelId: string): ModelCatalogEntry | undefined =>
+  MODEL_CATALOG.find((m) => m.modelId === modelId);
+
 /**
- * Downloads every on-device model not on disk yet, one after the other. Does
- * nothing while a download runs. `promote`: switch the phone to OnDevice once
- * both files are on disk (the reader's on-device intent).
+ * Queues model downloads; they run one after the other. `modelIds`: which models
+ * (default: what the chosen text engine still needs). A model already queued or
+ * downloading is not queued twice; a failed one is queued again (Try again).
+ * `promote`: switch the phone to OnDevice once a landing makes it runnable (the
+ * reader's on-device intent); while a queue runs, the latest start sets it.
  */
-export function startModelDownloads(opts: { promote?: boolean } = {}): void {
-  if (downloadPromise) return;
-  promoteWhenDone = opts.promote ?? false;
-  if (promoteWhenDone) saveIntentForDownload();
+export function startModelDownloads(opts: { modelIds?: string[]; promote?: boolean } = {}): void {
+  const wasPromoting = running && promoteWhenDone;
+  promoteWhenDone = opts.promote ?? (running ? promoteWhenDone : false);
+  if (opts.modelIds) {
+    if (addToQueue(opts.modelIds)) startRunner(false);
+  } else if (!running) {
+    startRunner(true);
+  } else {
+    void missingModels()
+      .catch(() => [] as ModelCatalogEntry[])
+      .then((missing) => {
+        if (addToQueue(missing.map((m) => m.modelId))) startRunner(false);
+      });
+  }
+  if (promoteWhenDone && !wasPromoting && running) saveIntentForDownload();
+}
 
-  const store = useMeraProtocolStore.getState();
-  store.setModelState('downloading');
-  store.setDownloadProgress(0);
+/** Queues what is not queued or running yet. Returns whether anything was added. */
+function addToQueue(modelIds: string[]): boolean {
+  let added = false;
+  for (const id of modelIds) {
+    const model = catalogEntry(id);
+    if (!model || id === activeId || queue.includes(id)) continue;
+    queue.push(id);
+    setEntry(id, { status: 'queued', doneBytes: 0, totalBytes: model.sizeBytes, failure: null });
+    added = true;
+  }
+  return added;
+}
 
-  const generation = ++downloadGeneration;
-  const isCurrent = () => generation === downloadGeneration;
+/** Starts a runner unless one runs. `resolveMissing`: first queue what the chosen engine still needs. */
+function startRunner(resolveMissing: boolean): void {
+  if (running) return;
+  running = true;
+  const myRun = ++run;
   releaseDownloadHold();
   releaseRestartHold = holdRestart('model-download');
+  void runQueue(myRun, resolveMissing);
+}
 
-  downloadPromise = (async () => {
+async function runQueue(myRun: number, resolveMissing: boolean): Promise<void> {
+  const isCurrent = () => myRun === run;
+  try {
     const canNotify = await hasNotificationPermission();
-    try {
-      const missing = await missingModels();
-      const totalBytes = missing.reduce((sum, m) => sum + m.sizeBytes, 0);
-      let doneBefore = 0;
-      if (isCurrent()) setBytes({ doneBytes: 0, totalBytes });
-
-      for (const model of missing) {
-        if (!isCurrent()) return;
+    if (resolveMissing) {
+      const missing = await missingModels().catch(() => [] as ModelCatalogEntry[]);
+      if (!isCurrent()) return;
+      addToQueue(missing.map((m) => m.modelId));
+    }
+    while (isCurrent() && queue.length > 0) {
+      const id = queue.shift() as string;
+      const model = catalogEntry(id) as ModelCatalogEntry;
+      activeId = id;
+      const entry = (doneBytes: number): ModelDownload => ({
+        status: 'downloading',
+        doneBytes,
+        totalBytes: model.sizeBytes,
+        failure: null,
+      });
+      setEntry(id, entry(0));
+      try {
         await downloadBaseModel(
           { modelId: model.modelId, modelUrl: model.modelUrl, sizeBytes: model.sizeBytes },
           (info: DownloadProgressInfo) => {
-            if (!isCurrent()) return;
-            const done = doneBefore + Math.min(info.bytesWritten, model.sizeBytes);
-            setBytes({ doneBytes: done, totalBytes });
-            const pct = totalBytes > 0 ? (done / totalBytes) * 100 : 0;
-            useMeraProtocolStore.getState().setDownloadProgress(Math.min(Math.round(pct), 99));
+            if (isCurrent() && activeId === id) setEntry(id, entry(Math.min(info.bytesWritten, model.sizeBytes)));
           },
         );
-        doneBefore += model.sizeBytes;
-        if (isCurrent()) setBytes({ doneBytes: doneBefore, totalBytes });
+      } catch (error) {
+        // Cancelled (or superseded): the cancel already cleared the state. Not a failure.
+        if (!isCurrent()) return;
+        activeId = null;
+        const message = error instanceof Error ? error.message : 'Download failed';
+        logger.captureException(error, {
+          tags: { source: 'DownloadService', method: 'startModelDownloads' },
+          extra: { modelId: id },
+        });
+        setEntry(id, { status: 'failed', doneBytes: 0, totalBytes: model.sizeBytes, failure: downloadFailureKind(message) });
+        if (canNotify) await notify('model-download-error', id, 'download.failedTitle', downloadFailureBody(message));
+        continue;
       }
-
       if (!isCurrent()) return;
-      useMeraProtocolStore.getState().setModelState('downloaded');
-      useMeraProtocolStore.getState().setDownloadProgress(100);
-
-      const runnable = await isModelDownloaded().catch(() => false);
-      const shouldPromote =
-        promoteWhenDone && runnable && useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
-      const promoted = shouldPromote ? await promoteToOnDevice() : false;
-      // Cannot run yet: the intent stays saved (again, in case the write at the start failed) so the
-      // boot purge keeps the files and the next foreground promotes once it can run.
-      if (promoteWhenDone && !runnable) await writeOnDeviceIntent(() => promoteWhenDone);
-      // Landed but cannot run yet (the native engine is still unavailable): never say "ready".
-      const body = promoted
-        ? 'download.onDeviceReady'
-        : promoteWhenDone && !runnable
-          ? 'meraProtocol.modelsWaitingNative'
-          : 'download.completeBody';
-      if (canNotify && isCurrent()) {
-        await notify('model-download-complete', i18next.t('download.completeTitle'), i18next.t(body));
-      }
-    } catch (error) {
-      // Cancelled (or superseded): the cancel already set the state. Not a failure.
-      if (!isCurrent()) return;
-      const message = error instanceof Error ? error.message : 'Download failed';
-      logger.captureException(error, { tags: { source: 'DownloadService', method: 'startModelDownloads' } });
-      useMeraProtocolStore.getState().setModelError(message);
-      if (canNotify) {
-        await notify('model-download-error', i18next.t('download.failedTitle'), downloadFailureBody(message));
-      }
-    } finally {
-      if (isCurrent()) {
-        downloadPromise = null;
-        setBytes(IDLE_BYTES);
-        releaseDownloadHold();
-      }
+      activeId = null;
+      landedBytes += model.sizeBytes;
+      setEntry(id, null);
+      await afterModelLanded(model, canNotify, isCurrent);
     }
-  })();
+  } finally {
+    if (isCurrent()) {
+      running = false;
+      activeId = null;
+      landedBytes = 0;
+      emit();
+      releaseDownloadHold();
+    }
+  }
 }
 
-/** Cancels the running download. Files already finished stay on disk. */
-export async function cancelModelDownload(): Promise<void> {
-  downloadGeneration++;
-  releaseDownloadHold();
-  cancelActiveDownload();
-  downloadPromise = null;
-  setBytes(IDLE_BYTES);
-  useMeraProtocolStore.getState().setModelState('not_downloaded');
-  useMeraProtocolStore.getState().setDownloadProgress(0);
+/**
+ * After each model lands: promote when the phone can now run and the reader wants
+ * On this phone, so the relevance model landing with a ready built-in model
+ * promotes on its own. Then one notification for this model.
+ */
+async function afterModelLanded(
+  model: ModelCatalogEntry,
+  canNotify: boolean,
+  isCurrent: () => boolean,
+): Promise<void> {
+  const runnable = await isModelDownloaded().catch(() => false);
+  const shouldPromote =
+    promoteWhenDone && runnable && useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
+  const promoted = shouldPromote ? await promoteToOnDevice() : false;
+  const last = queue.length === 0;
+  // The last landing and it cannot run yet: the intent stays saved (again, in case
+  // the write at the start failed) so the boot purge keeps the files and the next
+  // foreground promotes once it can run.
+  if (promoteWhenDone && !runnable && last) await writeOnDeviceIntent(() => promoteWhenDone);
+  if (!canNotify || !isCurrent()) return;
+  let body = i18next.t(model.role === 'relevance' ? 'download.relevanceDone' : 'download.textDone');
+  if (promoted) {
+    body = i18next.t('download.onDeviceReady');
+  } else if (promoteWhenDone && !runnable && last) {
+    // Everything is on disk and it still cannot run: the built-in model is not ready. Never say "ready".
+    const engine = await getTextEngine();
+    if (isBuiltInEngine(engine) && (await missingModels()).length === 0) {
+      body = i18next.t('meraProtocol.modelsWaitingNative', { name: BUILT_IN_MODEL_NAME[engine] });
+    }
+  }
+  await notify('model-download-complete', model.modelId, 'download.completeTitle', body);
+}
+
+/**
+ * Cancels one model's download (or its place in the queue, or dismisses its
+ * failure); with no id, every download. Files already finished stay on disk.
+ */
+export async function cancelModelDownload(modelId?: string): Promise<void> {
+  if (modelId === undefined) {
+    run++;
+    cancelActiveDownload();
+    queue = [];
+    activeId = null;
+    running = false;
+    landedBytes = 0;
+    downloads = {};
+    emit();
+    releaseDownloadHold();
+    return;
+  }
+  if (modelId === activeId) {
+    // Detach this runner; a new one takes over whatever is still queued.
+    run++;
+    cancelActiveDownload();
+    activeId = null;
+    running = false;
+    setEntry(modelId, null);
+    if (queue.length > 0) {
+      startRunner(false);
+    } else {
+      landedBytes = 0;
+      emit();
+      releaseDownloadHold();
+    }
+    return;
+  }
+  queue = queue.filter((id) => id !== modelId);
+  if (downloads[modelId]) setEntry(modelId, null);
 }

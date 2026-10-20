@@ -176,6 +176,13 @@ describe('intro message', () => {
     expect(result.current.introMessage).toBeNull();
   });
 
+  it('on this phone, the intro says On this phone is Beta', () => {
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
+    const { result } = mount();
+    expect(result.current.introMessage).toBe(`${t('personaChat.introMessage')}\n\n${t('chat.onDeviceBetaNote')}`);
+    expect(t('chat.onDeviceBetaNote')).toBe('On this phone is in Beta, so replies can be slower or less accurate.');
+  });
+
   it('picks articleFeedback.intro for a suggestion', () => {
     const { result } = mount({ context: ARTICLE_CONTEXT });
     expect(result.current.introMessage).toBe(t('articleFeedback.intro'));

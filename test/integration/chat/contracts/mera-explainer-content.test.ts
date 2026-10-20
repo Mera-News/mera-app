@@ -121,13 +121,22 @@ describe('mera-explainer-content — pipeline confidentiality', () => {
   // The public surface is exactly: WHICH feeds (the registry repo) and THAT we
   // pre-process them. Not a stage list, not a model, not a matching method, not
   // a threshold, not an expiry window, not the infrastructure.
+  // "Gemini Nano" is the one exception: it is the model built into Android phones, a choice the
+  // reader makes in Settings, so the on-device section names it (D29).
   const MECHANISM_TERMS =
-    /hdbscan|jina|gemini|embedding|vector|cluster|cosine|cld3|bullmq|cloud run|mongo|redis/i;
+    /hdbscan|jina|gemini(?! nano)|embedding|vector|cluster|cosine|cld3|bullmq|cloud run|mongo|redis/i;
 
   it('names no processing mechanism anywhere in the file', () => {
     const hit = source.match(MECHANISM_TERMS);
     expect(hit ? `${hit[0]} @ "${source.slice(Math.max(0, hit.index! - 60), hit.index! + 60)}"` : null)
       .toBeNull();
+  });
+
+  it('names no downloaded on-device model; only the built-in ones may be named (D29)', () => {
+    expect(source).not.toMatch(/kev|qwen/i);
+    expect(MERA_EXPLAINER_SECTIONS.encryption_and_inference).toContain('Apple Intelligence');
+    expect(MERA_EXPLAINER_SECTIONS.encryption_and_inference).toContain('Gemini Nano');
+    expect(MERA_EXPLAINER_SECTIONS.encryption_and_inference).toMatch(/Beta/);
   });
 
   it('points at the public feed registry instead', () => {

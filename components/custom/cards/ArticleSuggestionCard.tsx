@@ -3,6 +3,7 @@ import CardActionBar from '@/components/custom/cards/CardActionBar';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
 import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
+import { showsChipOnly } from '@/components/custom/cards/note-pending-mode';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
@@ -272,7 +273,9 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   // row is writing, or under the reading hold says when it will be. Surfaces
   // that pass no `noteHeldLine` (Saved, the fact feed) show writing.
   const pendingMode = notePendingMode(suggestion, noteHeldLine != null);
-  const reasonBoxEl = relevanceReady && (reason || pendingMode) ? (
+  // Notes off on this phone: the chip alone, with no space held for a note that never comes.
+  const chipOnly = showsChipOnly(suggestion);
+  const reasonBoxEl = relevanceReady && (reason || pendingMode || chipOnly) ? (
     <ReasonNote
       relevance={relevance}
       reason={reason}
@@ -283,7 +286,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       pendingSpokenByHost
       topicIds={suggestion.userTopicIds}
       maxNoteLines={FEED_NOTE_LINES}
-      reserveNoteLines={reserveNoteSpace ? FEED_NOTE_LINES : undefined}
+      reserveNoteLines={reserveNoteSpace && !chipOnly ? FEED_NOTE_LINES : undefined}
     />
   ) : isNotRead(suggestion) ? (
     <Text size="sm" className="text-ink-3" testID="card-not-read">

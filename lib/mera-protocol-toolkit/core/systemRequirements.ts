@@ -69,9 +69,13 @@ function checkIOSChip(
 // ---------------------------------------------------------------------------
 
 /**
- * Whether this phone can run on-device processing. `bytesToDownload` is what
- * the models still need on disk (the settings screen passes it); other callers
- * only ask whether the phone can run it and pass nothing.
+ * Whether this phone can run on-device processing: the relevance model AND at
+ * least one text option. The checks below are the relevance model's; the Mera
+ * text model has the same bar (a 4B model of about the same size), so a phone
+ * that passes always has that option, and a built-in model only adds one. The
+ * Mera Protocol screen, the Feed's "Read on phone" pill and the reading meter
+ * all read this one answer. `bytesToDownload`: storage still needed, for a
+ * caller that judges space here (the screen judges it per model row).
  */
 export async function checkRequirements(
   { bytesToDownload = 0 }: { bytesToDownload?: number } = {},

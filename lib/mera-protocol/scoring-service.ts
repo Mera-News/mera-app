@@ -25,6 +25,7 @@ import { buildNotePrompt } from '@/lib/news-harness/on-device/notes/prompt';
 import {
   batchMarkExcluded,
   batchMarkReasonSkipped,
+  rependNotelessRows,
   saveReason,
   saveScoringResult,
 } from '../database/services/article-suggestion-scoring-writes';
@@ -83,6 +84,8 @@ const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
 const isOnDeviceMode = () =>
   useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
+/** The Write notes switch (D35). On this phone only; cloud always writes notes. */
+const onDeviceNotesOn = () => useMeraProtocolStore.getState().onDeviceNotes !== false;
 
 // --- Re-exports (canonical homes moved to the harness) ---
 
@@ -940,9 +943,10 @@ async function scoreUnscoredRows(
         // sub-DISCARD-floor low-relevance ones. Skip flag now only fires if
         // phase-2 was bypassed entirely.
         // On this phone a note costs a model swap and seconds, so a row below the feed's gate
-        // (0.4) is never written one.
+        // (0.4) is never written one, and with notes switched off no row is: `complete`
+        // with no note, never `reason_skipped`, which the feed does not show.
         const reasonSkipped = isOnDeviceMode()
-          ? relevance < ARTICLE_CFG.lowPriorityScore
+          ? !onDeviceNotesOn() || relevance < ARTICLE_CFG.lowPriorityScore
           : relevance < REASON_THRESHOLD;
         try {
           await saveScoringResult(candidate.id, {
@@ -1018,6 +1022,11 @@ async function scoreUnscoredRows(
 async function writeNotesOnDevice(): Promise<number> {
   const all = await getScoredSuggestionsWithoutReasons();
   if (all.length === 0) return 0;
+  // Notes switched off: every row still owed one is finalised without it.
+  if (!onDeviceNotesOn()) {
+    await batchMarkReasonSkipped(all.map((c) => c.id));
+    return 0;
+  }
   // Rows below the feed's gate get no note on this phone. A row saved pending before that rule
   // (an earlier pass, or an update from the single-model build) is finalized here, or it would be
   // read on every sweep for its 48 hours.
@@ -1029,6 +1038,8 @@ async function writeNotesOnDevice(): Promise<number> {
   const fullUserContext = buildUserContext(await loadAllFactStatements());
   let written = 0;
   for (const candidate of owed) {
+    // Switched off mid-sweep: stop; the next sweep finalises what is left.
+    if (!onDeviceNotesOn()) break;
     // isScorableCandidate covers both the text and the fact test. A pure TOP-HEADLINE row is
     // factless by design and must still get its note.
     if (!isScorableCandidate(candidate)) continue;
@@ -1053,6 +1064,14 @@ async function writeNotesOnDevice(): Promise<number> {
     }
   }
   return written;
+}
+
+/**
+ * Notes switched back on, on this phone: rows at or above the feed's gate that
+ * were finalised without a note are owed one again; the next sweep writes them.
+ */
+export function rependOnDeviceNotes(): Promise<number> {
+  return rependNotelessRows(ARTICLE_CFG.lowPriorityScore);
 }
 
 // --- Reason retry: regenerate reasons for rows where the first pass returned empty ---

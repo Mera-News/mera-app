@@ -27,7 +27,7 @@ import { LOCAL_CONTEXT_TOKENS } from './context-size';
 import { holdRestart } from '../../app-restart';
 import { recordModelLoad } from './inference-stats';
 import { withLlamaLock } from './llama-lock';
-import { MODEL_CATALOG, RELEVANCE_MODEL, TEXT_MODEL, type ModelCatalogEntry } from './model-catalog';
+import { MODEL_CATALOG, RELEVANCE_MODEL, RETIRED_MODEL_IDS, TEXT_MODEL, type ModelCatalogEntry } from './model-catalog';
 import { builtInAvailability, getTextEngine, isBuiltInEngine, peekTextEngine, type TextEngine } from './text-engine';
 import { prewarm as prewarmNative } from '@/modules/mera-on-device-llm';
 import type {
@@ -454,6 +454,20 @@ export function deleteBaseModel(modelId: string): Promise<void> {
 }
 
 /**
+ * Deletes one model's files, releasing it first when it is the resident one, in
+ * ONE lock hold, so nothing can load it between the release and the delete. The
+ * caller moves the engine or the mode off this model first, so nothing asks for
+ * it again afterwards.
+ */
+export function deleteDownloadedModel(modelId: string): Promise<void> {
+  return withLlamaLock(async () => {
+    if (currentModelState?.modelId === modelId) await _releaseModel();
+    const modelDir = getModelDir(modelId);
+    if (modelDir.exists) await modelDir.delete();
+  });
+}
+
+/**
  * Releases the resident model and deletes every on-device model's files, in ONE
  * lock hold, so nothing can load a model between the release and the delete.
  */
@@ -471,13 +485,21 @@ export function deleteOnDeviceModels(): Promise<void> {
  * Wipes the whole `mera-models/` cache directory, every model id, for a reader
  * with no on-device intent. Used by the boot-time purge for Cloud users.
  *
- * A no-op while the cached persona says OnDevice: that is the local Cloud
- * fallback (D6), where the intent is kept and the files must survive so a retry
- * fetches only what is missing. Refuses while a model is loaded.
+ * While the cached persona says OnDevice (the local Cloud fallback, D6) only the
+ * retired models' files go: the intent is kept and the current files must survive
+ * so a retry fetches only what is missing. retireLegacyModels runs for OnDevice
+ * phones only, so without this a phone in that split state kept retired files for
+ * good. Refuses while a model is loaded.
  */
 export function purgeAllBaseModels(): Promise<void> {
   return withLlamaLock(async () => {
-    if (useUserStore.getState().userPersona?.processingMode === ProcessingMode.OnDevice) return;
+    if (useUserStore.getState().userPersona?.processingMode === ProcessingMode.OnDevice) {
+      for (const modelId of RETIRED_MODEL_IDS) {
+        const dir = getModelDir(modelId);
+        if (dir.exists) await dir.delete();
+      }
+      return;
+    }
     if (llamaContext) {
       throw new Error('Cannot purge models while one is loaded. Dispose it first.');
     }

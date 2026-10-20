@@ -9,9 +9,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import {
-    cancelModelDownload,
-} from '@/lib/mera-protocol-toolkit/core/downloadService';
+import { BUILT_IN_MODEL_NAME } from '@/lib/mera-protocol-toolkit/core/downloadService';
 import {
     averageMs,
     hasAnyStat,
@@ -45,10 +43,10 @@ import {
     bgRefreshDescriptionKey,
 } from '@/lib/background/bg-refresh-ui';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import { gbText, useMeraProtocolSettings } from './useMeraProtocolSettings';
-import { builtInEngine, isBuiltInEngine, type TextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
+import { gbText, useMeraProtocolSettings, type ModelRowState, type TextOption } from './useMeraProtocolSettings';
+import { isBuiltInEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 
-/** Both model files are Apache 2.0, so one link covers them. */
+/** Both downloadable models are Apache 2.0 (one ships no LICENSE file), so each row links the licence text. */
 const MODELS_LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 
 const secondsText = (ms: number): string => (ms / 1000).toFixed(1);
@@ -79,28 +77,21 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         onDeviceIntent,
         bgRefreshEnabled,
         toggleBgRefresh,
+        onDeviceNotes,
+        toggleNotes,
         selectMode,
         refresh,
-        missingBytes,
-        onDiskBytes,
         runnable,
-        modelsSizeBytes,
+        waitingLine,
+        relevanceModel,
+        textOptions,
         textEngine,
         selectEngine,
-        showEngineGroup,
-        waitingForNative,
-        nativeAvailable,
-        nativeReasonKey,
-        isDownloading,
-        downloadBytes,
-        failureKind,
-        storageShort,
-        freeUpSize,
         handleDownload,
-        handleDeleteModels,
+        handleCancelDownload,
+        handleDeleteModel,
     } = useMeraProtocolSettings();
     const insets = useSafeAreaInsets();
-    const modelsSize = `${gbText(modelsSizeBytes)} GB`;
 
     // Apple Intelligence can be switched on while the app runs: ask again on every focus.
     useFocusEffect(
@@ -150,8 +141,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
     // "Where Mera reads your news" (FinalSettings #11): On this phone is
     // always shown, for transparency, and disabled with the reason when the
-    // phone can't run it; Private cloud says what it is. Beta stays on
-    // On this phone (owner Y8).
+    // phone can't run it; Private cloud says what it is. On this phone carries
+    // the red Beta subtext, like every on-device row (D30).
     const modeRow = (mode: ProcessingMode) => {
         const onDevice = mode === ProcessingMode.OnDevice;
         const selected = onDevice ? onDeviceIntent : !onDeviceIntent;
@@ -174,45 +165,184 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             >
                 <MaterialIcons name={selected ? 'radio-button-checked' : 'radio-button-unchecked'} size={22} color={selected ? colors.accent : colors.ink3} />
                 <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={{ color: colors.ink, fontSize: 16 }}>{title}</Text>
-                        {onDevice ? <BetaBadge /> : null}
-                    </View>
+                    <Text style={{ color: colors.ink, fontSize: 16 }}>{title}</Text>
+                    {onDevice ? <BetaBadge variant="subtext" testID="mode-on-device-beta" /> : null}
                     {subtitle ? <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{subtitle}</Text> : null}
                 </View>
             </Pressable>
         );
     };
 
-    // One radio per engine, each ONE accessible element (a disabled row's label carries its reason).
-    const engineRow = (engine: TextEngine) => {
-        const apple = isBuiltInEngine(engine);
-        const selected = textEngine === engine;
-        // Not while a download runs: it keeps the file set it started with.
-        const disabled = isDownloading || isDeletingModel || (apple && !nativeAvailable);
-        const title = apple ? t('meraProtocol.engineApple') : t('meraProtocol.engineMera');
-        const reason = apple && nativeReasonKey ? t(nativeReasonKey) : null;
-        // A radio disabled by a running download says why, for a screen reader.
-        const busyReason = isDownloading ? t('meraProtocol.engineUnavailableDownloading') : null;
+    // A downloadable model's state line, under its title: queued, downloading, failed, on disk, or its size.
+    const modelStatusLine = (m: ModelRowState): { text: string; negative: boolean } => {
+        const d = m.download;
+        if (d?.status === 'queued') return { text: t('meraProtocol.modelQueued'), negative: false };
+        if (d?.status === 'downloading') {
+            return { text: t('meraProtocol.downloadingOf', { done: gbText(d.doneBytes), total: gbText(d.totalBytes) }), negative: false };
+        }
+        if (d?.status === 'failed') {
+            return {
+                text: d.failure === 'space'
+                    ? t('meraProtocol.errorSpace', { size: m.freeUpSize })
+                    : t(d.failure === 'damaged' ? 'meraProtocol.errorFile' : 'meraProtocol.errorFinish'),
+                negative: true,
+            };
+        }
+        if (m.onDisk) return { text: t('meraProtocol.modelReady'), negative: false };
+        if (m.storageShort) return { text: t('meraProtocol.freeUpToDownload', { size: m.freeUpSize }), negative: true };
+        return { text: `${gbText(m.sizeBytes)} GB`, negative: false };
+    };
+
+    // A downloadable model's controls, below its row: Download, progress and Cancel, Try again, or the
+    // trash once it is on disk, then its licence link. Siblings of the row, never inside it: a button
+    // nested in a row steals the row's accessibility activation.
+    const modelControls = (m: ModelRowState, name: string) => {
+        const d = m.download;
+        const size = `${gbText(m.sizeBytes)} GB`;
+        const busy = d?.status === 'queued' || d?.status === 'downloading';
         return (
-            <Pressable
-                key={engine}
-                testID={apple ? 'engine-native' : 'engine-mera'}
-                onPress={() => { void selectEngine(engine); }}
-                disabled={disabled}
-                accessibilityRole="radio"
-                accessibilityState={{ selected, checked: selected, disabled }}
-                accessibilityLabel={[title, reason ?? busyReason].filter(Boolean).join(', ')}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16, opacity: disabled ? 0.45 : 1 }}
-            >
-                <MaterialIcons name={selected ? 'radio-button-checked' : 'radio-button-unchecked'} size={22} color={selected ? colors.accent : colors.ink3} />
-                <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.ink, fontSize: 16 }}>{title}</Text>
-                    {reason ? <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{reason}</Text> : null}
+            <VStack space="sm" className="mt-2" testID={`model-controls-${m.modelId}`}>
+                {busy ? (
+                    <>
+                        {d?.status === 'downloading' ? (
+                            <Progress value={d.totalBytes > 0 ? (d.doneBytes / d.totalBytes) * 100 : 0} size="sm">
+                                <ProgressFilledTrack />
+                            </Progress>
+                        ) : null}
+                        <Button
+                            action="negative"
+                            variant="outline"
+                            size="md"
+                            onPress={() => { void handleCancelDownload(m.modelId); }}
+                            accessibilityLabel={t('meraProtocol.cancelDownloadAction')}
+                        >
+                            <MaterialIcons name="close" size={18} color={colors.negative} style={{ marginRight: 8 }} />
+                            <ButtonText className="text-negative">{t('meraProtocol.cancelDownloadAction')}</ButtonText>
+                        </Button>
+                    </>
+                ) : !m.onDisk ? (
+                    <Button
+                        action="primary"
+                        variant="solid"
+                        size="md"
+                        onPress={() => { void handleDownload(m.modelId); }}
+                        isDisabled={m.storageShort || isDeletingModel}
+                        testID={`model-download-${m.modelId}`}
+                        accessibilityLabel={d?.status === 'failed' ? t('meraProtocol.tryAgain') : t('meraProtocol.downloadAction', { size })}
+                    >
+                        <MaterialIcons name={d?.status === 'failed' ? 'refresh' : 'cloud-download'} size={18} color={colors.ink} style={{ marginRight: 8 }} />
+                        <ButtonText>{d?.status === 'failed' ? t('meraProtocol.tryAgain') : t('meraProtocol.downloadAction', { size })}</ButtonText>
+                    </Button>
+                ) : null}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Pressable
+                        testID={`model-license-${m.modelId}`}
+                        onPress={() => { void Linking.openURL(MODELS_LICENSE_URL); }}
+                        accessibilityRole="link"
+                        style={{ flex: 1, minHeight: 44, justifyContent: 'center', marginHorizontal: 4 }}
+                    >
+                        <Text size="xs" className="text-ink-3 underline">
+                            {t('meraProtocol.modelLicenseLink')}
+                        </Text>
+                    </Pressable>
+                    {m.onDisk && !busy ? (
+                        <View style={{ width: 44, height: 44 }}>
+                            {/* The visual is hidden and the labelled Pressable has no children,
+                                so a screen reader never reads the icon font's glyph. */}
+                            <View
+                                pointerEvents="none"
+                                accessibilityElementsHidden
+                                importantForAccessibility="no-hide-descendants"
+                                style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
+                            >
+                                <MaterialIcons name="delete-outline" size={22} color={colors.negative} />
+                            </View>
+                            <Pressable
+                                testID={`model-delete-${m.modelId}`}
+                                onPress={() => { void handleDeleteModel(m.modelId); }}
+                                disabled={isDeletingModel}
+                                accessibilityRole="button"
+                                accessibilityState={{ disabled: isDeletingModel }}
+                                accessibilityLabel={t('meraProtocol.deleteModelLabel', { name })}
+                                style={StyleSheet.absoluteFill}
+                            />
+                        </View>
+                    ) : null}
                 </View>
-            </Pressable>
+            </VStack>
         );
     };
+
+    // The row itself: one accessible element (title, Beta, state) with a check once on disk.
+    const modelRowBody = (m: ModelRowState, name: string) => {
+        const line = modelStatusLine(m);
+        return (
+            <View
+                testID={`model-row-${m.modelId}`}
+                accessible
+                accessibilityLabel={[
+                    t(m.onDisk ? 'meraProtocol.modelRowReady' : 'meraProtocol.modelRowMissing', { name, size: `${gbText(m.sizeBytes)} GB` }),
+                    t('common.beta'),
+                    m.onDisk ? null : line.text,
+                ].filter(Boolean).join(', ')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16 }}
+            >
+                <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.ink, fontSize: 16 }}>{name}</Text>
+                    {m.beta ? <BetaBadge variant="subtext" /> : null}
+                    <Text style={{ color: line.negative ? colors.negative : colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{line.text}</Text>
+                </View>
+                {m.onDisk ? (
+                    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 20, alignItems: 'center' }}>
+                        <MaterialIcons name="check" size={20} color={colors.positive} />
+                    </View>
+                ) : null}
+            </View>
+        );
+    };
+
+    // One Text model radio, ONE accessible element (a disabled row's label carries its reason).
+    // The Mera text model's row also carries its own download.
+    const textOptionRow = (o: TextOption) => {
+        const line = o.model ? modelStatusLine(o.model) : null;
+        const sub = o.reason ?? line?.text ?? null;
+        return (
+            <View key={o.engine}>
+                <Pressable
+                    testID={`text-option-${o.engine}`}
+                    onPress={() => { void selectEngine(o.engine); }}
+                    disabled={o.disabled}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: o.selected, checked: o.selected, disabled: o.disabled }}
+                    accessibilityLabel={[o.title, o.beta ? t('common.beta') : null, sub].filter(Boolean).join(', ')}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16, opacity: o.disabled && !o.model ? 0.45 : 1 }}
+                >
+                    <MaterialIcons
+                        name={o.selected ? 'radio-button-checked' : 'radio-button-unchecked'}
+                        size={22}
+                        color={o.selected ? colors.accent : colors.ink3}
+                        style={{ opacity: o.disabled && o.model ? 0.45 : 1 }}
+                    />
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ color: colors.ink, fontSize: 16 }}>{o.title}</Text>
+                        {o.beta ? <BetaBadge variant="subtext" /> : null}
+                        {sub ? (
+                            <Text style={{ color: line?.negative ? colors.negative : colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{sub}</Text>
+                        ) : null}
+                    </View>
+                    {o.model?.onDisk ? (
+                        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 20, alignItems: 'center' }}>
+                            <MaterialIcons name="check" size={20} color={colors.positive} />
+                        </View>
+                    ) : null}
+                </Pressable>
+                {o.model ? <View style={{ paddingHorizontal: 12, paddingBottom: 8 }}>{modelControls(o.model, o.title)}</View> : null}
+            </View>
+        );
+    };
+
+    const showModels = onDeviceIntent && deviceSupported === true;
+    const refusedBy = isBuiltInEngine(textEngine) ? BUILT_IN_MODEL_NAME[textEngine] : null;
 
     const renderContent = () => (
         <>
@@ -232,163 +362,51 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </View>
             </View>
 
-            {/* Mera AI models: one row, one download. Only relevant when the reader
+            {/* Mera relevance model: always needed on this phone. Only relevant when the reader
                 wants on-device AND the phone can run it; otherwise it is detail. */}
-            {onDeviceIntent && deviceSupported === true && (
-                <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-models">
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={{ flex: 1 }}>
-                            <GroupLabel>{t('meraProtocol.modelsTitle')}</GroupLabel>
-                        </View>
-                        {onDiskBytes > 0 && !isDownloading ? (
-                            <View style={{ width: 44, height: 44 }}>
-                                {/* The visual is hidden and the labelled Pressable has no children,
-                                    so a screen reader never reads the icon font's glyph. */}
-                                <View
-                                    pointerEvents="none"
-                                    accessibilityElementsHidden
-                                    importantForAccessibility="no-hide-descendants"
-                                    style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
-                                >
-                                    <MaterialIcons name="delete-outline" size={22} color={colors.negative} />
-                                </View>
-                                <Pressable
-                                    testID="mera-protocol-delete-models"
-                                    onPress={handleDeleteModels}
-                                    disabled={isDeletingModel}
-                                    accessibilityRole="button"
-                                    accessibilityState={{ disabled: isDeletingModel }}
-                                    accessibilityLabel={t('meraProtocol.deleteModelsLabel')}
-                                    style={StyleSheet.absoluteFill}
-                                />
-                            </View>
-                        ) : null}
+            {showModels && (
+                <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-relevance">
+                    <GroupLabel>{t('meraProtocol.relevanceTitle')}</GroupLabel>
+                    <View style={{ marginBottom: 8 }}>
+                        <Help>
+                            {waitingLine ?? (runnable ? t('meraProtocol.relevanceHelp') : `${t('meraProtocol.relevanceHelp')} ${t('meraProtocol.modelsHelp')}`)}
+                        </Help>
                     </View>
-                    {(!runnable && missingBytes > 0) || waitingForNative ? (
-                        <View style={{ marginBottom: 8 }}>
-                            <Help>{t(waitingForNative ? 'meraProtocol.modelsWaitingNative' : 'meraProtocol.modelsHelp')}</Help>
-                        </View>
-                    ) : null}
-                    <Group>
-                        <View
-                            testID="mera-protocol-models-row"
-                            accessible
-                            accessibilityLabel={t(runnable ? 'meraProtocol.modelRowReady' : 'meraProtocol.modelRowMissing', { size: modelsSize })}
-                        >
-                            <Row
-                                title={t('meraProtocol.modelsRowTitle')}
-                                subtitle={t('meraProtocol.modelsRowSubtitle')}
-                                value={modelsSize}
-                                trailing={
-                                    runnable ? (
-                                        <View
-                                            accessibilityElementsHidden
-                                            importantForAccessibility="no-hide-descendants"
-                                            style={{ width: 20, alignItems: 'center' }}
-                                        >
-                                            <MaterialIcons name="check" size={20} color={colors.positive} />
-                                        </View>
-                                    ) : null
-                                }
-                            />
-                        </View>
-                    </Group>
-                    {/* A sibling of the row, never inside it: a link nested in a row
-                        steals the row's accessibility activation. */}
-                    <Pressable
-                        testID="mera-protocol-license"
-                        onPress={() => { void Linking.openURL(MODELS_LICENSE_URL); }}
-                        accessibilityRole="link"
-                        style={{ minHeight: 44, justifyContent: 'center', marginHorizontal: 4 }}
-                    >
-                        <Text size="xs" className="text-ink-3 underline">
-                            {t('meraProtocol.modelLicenseLink')}
-                        </Text>
-                    </Pressable>
-
-                    <VStack space="md" className="mt-2">
-                        {isDownloading ? (
-                            <>
-                                <Text size="sm" className="text-ink-2">
-                                    {t('meraProtocol.downloadingOf', {
-                                        done: gbText(downloadBytes.doneBytes),
-                                        total: gbText(downloadBytes.totalBytes),
-                                    })}
-                                </Text>
-                                <Progress
-                                    value={downloadBytes.totalBytes > 0 ? (downloadBytes.doneBytes / downloadBytes.totalBytes) * 100 : 0}
-                                    size="sm"
-                                >
-                                    <ProgressFilledTrack />
-                                </Progress>
-                                <Button
-                                    action="negative"
-                                    variant="outline"
-                                    size="md"
-                                    onPress={cancelModelDownload}
-                                    accessibilityLabel={t('meraProtocol.cancelDownloadAction')}
-                                >
-                                    <MaterialIcons name="close" size={18} color={colors.negative} style={{ marginRight: 8 }} />
-                                    <ButtonText className="text-negative">{t('meraProtocol.cancelDownloadAction')}</ButtonText>
-                                </Button>
-                            </>
-                        ) : failureKind ? (
-                            <>
-                                <Text size="sm" className="text-negative" testID="mera-protocol-download-error">
-                                    {failureKind === 'space'
-                                        ? t('meraProtocol.errorSpace', { size: freeUpSize })
-                                        : t(failureKind === 'damaged' ? 'meraProtocol.errorFile' : 'meraProtocol.errorFinish')}
-                                </Text>
-                                <Button
-                                    action="primary"
-                                    variant="solid"
-                                    size="md"
-                                    onPress={handleDownload}
-                                    isDisabled={storageShort}
-                                    accessibilityLabel={t('meraProtocol.tryAgain')}
-                                >
-                                    <MaterialIcons name="refresh" size={18} color={colors.ink} style={{ marginRight: 8 }} />
-                                    <ButtonText>{t('meraProtocol.tryAgain')}</ButtonText>
-                                </Button>
-                            </>
-                        ) : missingBytes > 0 ? (
-                            <>
-                                {storageShort ? (
-                                    <Text size="sm" className="text-negative" testID="mera-protocol-free-up">
-                                        {t('meraProtocol.freeUpToDownload', { size: freeUpSize })}
-                                    </Text>
-                                ) : null}
-                                <Button
-                                    action="primary"
-                                    variant="solid"
-                                    size="md"
-                                    onPress={handleDownload}
-                                    isDisabled={storageShort}
-                                    testID="mera-protocol-download"
-                                    accessibilityLabel={t('meraProtocol.downloadAction', { size: modelsSize })}
-                                >
-                                    <MaterialIcons name="cloud-download" size={18} color={colors.ink} style={{ marginRight: 8 }} />
-                                    <ButtonText>{t('meraProtocol.downloadAction', { size: modelsSize })}</ButtonText>
-                                </Button>
-                            </>
-                        ) : null}
-                    </VStack>
+                    <Group>{modelRowBody(relevanceModel, t('meraProtocol.relevanceTitle'))}</Group>
+                    {modelControls(relevanceModel, t('meraProtocol.relevanceTitle'))}
                 </View>
             )}
 
-            {/* Chat and notes: which engine writes them. iOS only; Android has one choice. */}
-            {onDeviceIntent && deviceSupported === true && showEngineGroup && (
-                <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-engine">
-                    <GroupLabel>{t('meraProtocol.chatNotesTitle')}</GroupLabel>
-                    <Group>
-                        {engineRow('qwen')}
-                        {engineRow(builtInEngine() ?? 'afm')}
-                    </Group>
+            {/* Text model: which model writes chat replies, notes and topics. A built-in model
+                shows only on its own platform and never needs a download. */}
+            {showModels && (
+                <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-text-model">
+                    <GroupLabel>{t('meraProtocol.textTitle')}</GroupLabel>
+                    <View style={{ marginBottom: 8 }}>
+                        <Help>{t('meraProtocol.textHelp')}</Help>
+                    </View>
+                    <Group>{textOptions.map(textOptionRow)}</Group>
+                    <View style={{ marginTop: 12 }}>
+                        <Group>
+                            <Row
+                                title={t('meraProtocol.notesTitle')}
+                                subtitle={t('meraProtocol.notesHelp')}
+                                trailing={
+                                    <Switch
+                                        value={onDeviceNotes}
+                                        onToggle={toggleNotes}
+                                        size="md"
+                                        testID="mera-protocol-notes-switch"
+                                    />
+                                }
+                            />
+                        </Group>
+                    </View>
                 </View>
             )}
 
             {/* Speed on this device: in memory only, never stored or sent. */}
-            {onDeviceIntent && deviceSupported === true && hasAnyStat(inferenceStats) && (
+            {showModels && hasAnyStat(inferenceStats) && (
                 <VStack space="xs" className="mb-5 px-[14px]" testID="mera-protocol-speed">
                     <GroupLabel>{t('meraProtocol.speedTitle')}</GroupLabel>
                     {totalLoadMs(inferenceStats) != null && (
@@ -411,9 +429,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             {t('meraProtocol.speedNotes', { seconds: secondsText(averageMs(inferenceStats.reason) ?? 0) })}
                         </Text>
                     )}
-                    {inferenceStats.refused > 0 && (
+                    {refusedBy && inferenceStats.refused > 0 && (
                         <Text size="xs" className="text-ink-2">
-                            {t('meraProtocol.speedRefused', { count: inferenceStats.refused })}
+                            {t('meraProtocol.speedRefused', { name: refusedBy, count: inferenceStats.refused })}
                         </Text>
                     )}
                     <Text size="xs" className="text-ink-3">
