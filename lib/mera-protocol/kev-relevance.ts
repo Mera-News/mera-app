@@ -33,6 +33,14 @@ export const KEV_QUESTIONS = {
 export const KEV_CUT = 0.29;
 
 const DESCRIPTION_CHARS = 500;
+
+/** Characters of facts per list (the fact bank, and the facts this article matched). Kev's whole
+ *  prompt must fit n_ctx 4096 tokens, or decide fails with "(error 1)". Measured on the Mac with
+ *  harness-local/adapters/kev-local.ts: English runs about 5 characters a token, so two full lists,
+ *  a long title and the description stay near 3,000 tokens; a 7-fact bank is far below the cap.
+ *  ponytail: a character budget; a non-Latin fact bank tokenizes denser and can still overflow.
+ *  Count tokens (context.tokenize) if one does. */
+export const KEV_FACT_CHARS = 6000;
 const LEVELS_MAX = KEV_QUESTIONS.rel.criteria.length - 1;
 
 /** Piecewise linear: [0, KEV_CUT] onto [0, 0.4], [KEV_CUT, 1] onto [0.4, 1]. */
@@ -43,11 +51,23 @@ export function kevToRelevance(k: number): number {
 
 type KevCandidate = Parameters<RelevanceScorer>[0][number];
 
+/** The leading facts (the newest: getFacts sorts newest first) that fit KEV_FACT_CHARS. */
+function withinBudget(facts: string[]): string[] {
+  let used = 0;
+  const kept: string[] = [];
+  for (const f of facts) {
+    used += f.length;
+    if (used > KEV_FACT_CHARS) break;
+    kept.push(f);
+  }
+  return kept;
+}
+
 export function kevState(candidate: KevCandidate, facts: string[]) {
   const country = candidate.countryCode === 'GLOBAL' ? undefined : resolveCountryName(candidate.countryCode);
   return {
-    reader: facts,
-    reader_facts_this_article_matched: candidate.relatedFacts.map((f) => f.statement),
+    reader: withinBudget(facts),
+    reader_facts_this_article_matched: withinBudget(candidate.relatedFacts.map((f) => f.statement)),
     article: {
       title: candidate.titleEn,
       description: candidate.descriptionEn?.slice(0, DESCRIPTION_CHARS) ?? null,
@@ -56,15 +76,40 @@ export function kevState(candidate: KevCandidate, facts: string[]) {
   };
 }
 
+/** The error's first 160 characters with every piece of the request's text taken out (the
+ *  article and each fact), then anything quoted: llama.rn errors can echo the prompt. */
+function scrubbed(error: unknown, state: ReturnType<typeof kevState>): string {
+  let message = error instanceof Error ? error.message : String(error);
+  const texts = [state.article.title, state.article.description, ...state.reader, ...state.reader_facts_this_article_matched];
+  for (const text of texts) if (text && text.length > 2) message = message.split(text).join('…');
+  return message.replace(/"[^"]*"|'[^']*'/g, '"…"').slice(0, 160);
+}
+
+/** A KevBusyError (lib/mera-protocol-toolkit/core/inference.ts): the app went to the background
+ *  or the GPU failed twice, so every later article would fail too. */
+const isKevBusy = (e: unknown) => (e as { code?: unknown } | null)?.code === 'ERR_AFM_BUSY';
+
+/**
+ * Kev's relevance per article. An error about one article (its prompt too long, a template
+ * failure) keeps that row on its math score. Busy (background, or a GPU that will not recover)
+ * throws instead, so batchScoreAndReason marks the whole batch failed and its rows stay unscored
+ * for the next pass, rather than landing on math scores Kev never saw.
+ */
 export const scoreWithKev: RelevanceScorer = async (candidates, factStatements) => {
   const out = new Map<string, number>();
   for (const c of candidates) {
+    const state = kevState(c, factStatements);
     try {
-      const result = await decide({ state: kevState(c, factStatements), questions: KEV_QUESTIONS });
+      const result = await decide({ state, questions: KEV_QUESTIONS });
       out.set(c.id, kevToRelevance(result.answers.rel.score / LEVELS_MAX));
     } catch (e) {
-      // Ids and the error class only: the error text can quote the persona.
-      logger.warn('kev_decide_failed', { id: c.id, error: e instanceof Error ? e.name : typeof e });
+      if (isKevBusy(e)) throw e;
+      logger.warn('kev_decide_failed', {
+        id: c.id,
+        error: e instanceof Error ? e.name : typeof e,
+        message: scrubbed(e, state),
+        stateChars: JSON.stringify(state).length,
+      });
     }
   }
   return out;

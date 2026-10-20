@@ -25,7 +25,8 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { placeDownloadedModel, resetFileSystem } from '@/test/helpers/fs';
-import { decideCalls, installDecide, installLlama, llamaCalls, llamaLoads, llamaMaxLive, llamaReleases } from '@/test/helpers/llama';
+import { decideCalls, installDecide, installLlama, KEV_GPU_FAILED, llamaCalls, llamaLoads, llamaMaxLive, llamaReleases } from '@/test/helpers/llama';
+import { setAppState } from '@/test/helpers/app-state';
 
 jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModule);
 jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
@@ -79,6 +80,7 @@ describe('Kev on llama.rn, the text on the built-in model, through the barrel', 
     });
 
     afterEach(() => {
+        setAppState('active');
         jest.restoreAllMocks();
     });
 
@@ -137,6 +139,76 @@ describe('Kev on llama.rn, the text on the built-in model, through the barrel', 
         await Promise.all([chat, kev]);
         expect(order).toEqual(['token:a', 'token:b', 'token:c', 'decided']);
         expect(llamaLoads()).toEqual([KEV]);
+    });
+
+    describe('Kev and the GPU: iOS refuses GPU work in the background, and ggml-metal keeps that failure', () => {
+        const BUSY = { code: 'ERR_AFM_BUSY' };
+
+        it('refuses in the background without loading or calling Kev: a deferrable busy, never a native call', async () => {
+            installLlama(['never']);
+            setAppState('background');
+            await expect(toolkit.decide(REQUEST)).rejects.toMatchObject(BUSY);
+            expect(llamaLoads()).toEqual([]);
+            expect(decideCalls()).toHaveLength(0);
+        });
+
+        it('a failed GPU backend is released and Kev reloaded, and the request answered once', async () => {
+            installLlama(['never']);
+            let n = 0;
+            installDecide(() => (++n === 1 ? { error: KEV_GPU_FAILED } : { scores: { rel: 1 } }));
+
+            const answer = await toolkit.decide(REQUEST);
+
+            expect(answer.answers.rel).toMatchObject({ score: 1 });
+            expect(llamaLoads()).toEqual([KEV, KEV]);
+            expect(llamaReleases()).toBe(1);
+            expect(llamaMaxLive()).toBe(1);
+            // Later requests run on the fresh context.
+            await toolkit.decide(REQUEST);
+            expect(llamaLoads()).toEqual([KEV, KEV]);
+        });
+
+        it('a GPU failure that survives the reload is a deferrable busy, and the broken context is gone', async () => {
+            installLlama(['never']);
+            installDecide({ error: KEV_GPU_FAILED });
+
+            await expect(toolkit.decide(REQUEST)).rejects.toMatchObject(BUSY);
+
+            expect(decideCalls()).toHaveLength(2);
+            expect(llamaLoads()).toEqual([KEV, KEV]);
+            expect(llamaReleases()).toBe(2);
+            expect(toolkit.getModelState()).toBeNull();
+        });
+
+        it('a decide the app backgrounded under releases the context and defers, with no retry in the background', async () => {
+            installLlama(['never']);
+            installDecide(() => {
+                setAppState('background');
+                return { error: KEV_GPU_FAILED };
+            });
+
+            await expect(toolkit.decide(REQUEST)).rejects.toMatchObject(BUSY);
+
+            expect(decideCalls()).toHaveLength(1);
+            expect(llamaReleases()).toBe(1);
+            expect(toolkit.getModelState()).toBeNull();
+
+            // Back on screen, the next request loads a fresh Kev and is answered.
+            setAppState('active');
+            installDecide({ scores: { rel: 2 } });
+            await expect(toolkit.decide(REQUEST)).resolves.toMatchObject({ answers: { rel: { score: 2 } } });
+        });
+
+        it('any other Kev error reaches the caller as it is and keeps Kev resident', async () => {
+            installLlama(['never']);
+            installDecide({ error: 'failed to evaluate the decision prompt (error 1)' });
+
+            await expect(toolkit.decide(REQUEST)).rejects.toThrow('(error 1)');
+
+            expect(decideCalls()).toHaveLength(1);
+            expect(llamaReleases()).toBe(0);
+            expect(toolkit.getModelState()?.modelId).toBe(KEV);
+        });
     });
 
     it('a file that is not a Kev decision model is released and refused', async () => {

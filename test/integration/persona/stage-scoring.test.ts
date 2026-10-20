@@ -53,6 +53,7 @@ import {
   type GatewayResponder,
 } from '@/test/helpers';
 import { decideCalls, installDecide, installLlama, llamaCalls } from '@/test/helpers/llama';
+import { setAppState } from '@/test/helpers/app-state';
 import { resetFileSystem } from '@/test/helpers/fs';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
 import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
@@ -214,15 +215,36 @@ describe('on-device relevance - Kev', () => {
     expect(stage.rawScoreMap.get('mid')).toBeGreaterThan(0.4);
   });
 
-  it('a Kev failure leaves the math score standing and logs the id and error class only', async () => {
+  it('a Kev failure leaves the math score standing and logs a scrubbed message and the prompt size, never the article or a fact', async () => {
     installLlama([]);
-    installDecide({ error: 'secret persona text in the message' });
+    await addFact('Lives in Hoorn');
+    installDecide({ error: 'system_one template failed to render: Story a sagaa / Lives in Hoorn / "x"' });
     const [c] = await seedAndLoad(['a']);
 
     const stage = await run(computeAndScoreForCandidates([c]));
 
     expect(stage.rawScoreMap.get('a')).toBe(stage.computedScoreMap.get('a'));
-    expect(logger.warn).toHaveBeenCalledWith('kev_decide_failed', { id: 'a', error: 'Error' });
+    expect(logger.warn).toHaveBeenCalledWith('kev_decide_failed', {
+      id: 'a',
+      error: 'Error',
+      message: 'system_one template failed to render: … / … / "…"',
+      stateChars: expect.any(Number),
+    });
+    const logged = JSON.stringify((logger.warn as jest.Mock).mock.calls);
+    expect(logged).not.toContain('Hoorn');
+    expect(logged).not.toContain('saga');
+  });
+
+  it('in the background the stage throws a busy instead of scoring, so the batch stays unscored', async () => {
+    installLlama([]);
+    const [c] = await seedAndLoad(['a']);
+    setAppState('background');
+    try {
+      await expect(run(computeAndScoreForCandidates([c]))).rejects.toMatchObject({ code: 'ERR_AFM_BUSY' });
+      expect(decideCalls()).toHaveLength(0);
+    } finally {
+      setAppState('active');
+    }
   });
 
   it('is the cloud port in cloud mode', async () => {

@@ -78,6 +78,11 @@ export const llamaMaxLive = (): number => state.maxLive;
 /** Every Kev `decide()` so far, in order. */
 export const decideCalls = (): DecideCall[] => state.decideCalls;
 
+/** What llama.rn's decide() throws once ggml-metal has failed a command buffer (iOS refuses GPU
+ *  work from the background). Sticky, as in ggml-metal: that context throws it on every later
+ *  decide until it is released and a new one is loaded. */
+export const KEV_GPU_FAILED = 'failed to evaluate the decision prompt (error -3)';
+
 /** Scripts Kev's answers for the next `decide()` calls (default: score 2 for `rel`). */
 export function installDecide(script: DecideScript | ((call: DecideCall) => DecideScript)): void {
   state.decideScript = typeof script === 'function' ? script : () => script;
@@ -91,6 +96,7 @@ const modelIdOf = (path: string): string => path.split('/').slice(-2)[0];
 function makeContext(modelPath: string) {
   let current: { call: LlamaCall; wake: (() => void) | null } | null = null;
   let released = false;
+  let gpuFailed = false;
   const isKev = modelIdOf(modelPath) === RELEVANCE_MODEL.modelId;
   state.loads.push(modelIdOf(modelPath));
   state.live += 1;
@@ -105,8 +111,12 @@ function makeContext(modelPath: string) {
       const call: DecideCall = { request };
       state.decideCalls.push(call);
       await nextTick();
+      if (gpuFailed) throw new Error(KEV_GPU_FAILED);
       const answer = state.decideScript(call);
-      if ('error' in answer) throw new Error(answer.error);
+      if ('error' in answer) {
+        if (answer.error === KEV_GPU_FAILED) gpuFailed = true;
+        throw new Error(answer.error);
+      }
       const answers: Record<string, unknown> = {};
       if ('choices' in answer) {
         for (const [id, probabilities] of Object.entries(answer.choices)) {

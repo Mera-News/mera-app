@@ -55,7 +55,8 @@ import {
   type GatewayCall,
   type GatewayResponder,
 } from '@/test/helpers';
-import { decideCalls, installDecide, installLlama, llamaCalls, llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
+import { decideCalls, installDecide, installLlama, KEV_GPU_FAILED, llamaCalls, llamaLoads, llamaMaxLive } from '@/test/helpers/llama';
+import { setAppState } from '@/test/helpers/app-state';
 import { resetFileSystem } from '@/test/helpers/fs';
 import { installOnDeviceLlm, onDeviceLlmCalls, type OnDeviceLlmCall } from '@/test/helpers/on-device-llm';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
@@ -1030,6 +1031,56 @@ describe('processAllUnscored - on-device pass', () => {
     expect(llamaCalls()).toHaveLength(0);
     const rows = await stored();
     expect(rows.a.reason).toBe('Local note on story a.');
+  });
+
+  it('the app leaving the screen mid-pass leaves the rest unscored, never on the math score, and the next pass ranks them', async () => {
+    installLocal();
+    queue();
+    // The app goes to the background during the second decide: iOS fails the GPU work.
+    let decides = 0;
+    installDecide(() => {
+      if (++decides !== 2) return { scores: { rel: 3 } };
+      setAppState('background');
+      return { error: KEV_GPU_FAILED };
+    });
+    await seed(['a', 'b', 'c']);
+    const statuses = async () => Object.values(await stored()).map((r) => r.status);
+
+    try {
+      expect(await run(processAllUnscored(undefined, 1))).toBe(1);
+      expect((await statuses()).filter((st) => st === 'unscored')).toHaveLength(2);
+      for (const row of Object.values(await stored())) {
+        if (row.status === 'unscored') expect(row.rawScore ?? null).toBeNull();
+      }
+
+      // Back on screen: the next pass loads a fresh Kev and ranks both on Kev's score.
+      setAppState('active');
+      installLocal();
+      expect(await run(processAllUnscored(undefined, 1))).toBe(2);
+      for (const row of Object.values(await stored())) expect(row.rawScore).toBeCloseTo(1, 5);
+    } finally {
+      setAppState('active');
+    }
+  });
+
+  it('a Kev error about one article keeps that row on its math score and ranks the others', async () => {
+    installLocal();
+    queue();
+    installDecide((call) => {
+      const id = /Story (\w+) saga/.exec(JSON.stringify(call.request.state))?.[1] ?? '';
+      return id === 'b' ? { error: 'failed to evaluate the decision prompt (error 1)' } : { scores: { rel: 3 } };
+    });
+    await seed(['a', 'b', 'c']);
+
+    expect(await run(processAllUnscored())).toBe(3);
+
+    const rows = await stored();
+    expect(rows.b.status).not.toBe('unscored');
+    // The math score: defined, and not Kev's top level (1).
+    expect(rows.b.rawScore).toBeGreaterThan(0);
+    expect(rows.b.rawScore).not.toBeCloseTo(1, 2);
+    expect(rows.a.rawScore).toBeCloseTo(1, 5);
+    expect(rows.c.rawScore).toBeCloseTo(1, 5);
   });
 
   it('saves a row below the 0.4 gate as reasonSkipped and writes it no note', async () => {

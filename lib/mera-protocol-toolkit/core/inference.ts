@@ -10,12 +10,13 @@
 // stays resident (D37: llama.rn holds Kev only, nothing is swapped).
 
 import type { DecisionRequest, DecisionResult } from 'llama.rn';
+import { AppState } from 'react-native';
 import type { InferParams, InferResult } from '../types';
 import { holdRestart } from '../../app-restart';
 import { recordCompletion, recordRefusal } from './inference-stats';
 import { acquireLlamaLock, withLlamaLock } from './llama-lock';
 import { RELEVANCE_MODEL } from './model-catalog';
-import { _assertOnDeviceMode, _ensureLoaded, _getContext } from './modelManager';
+import { _assertOnDeviceMode, _ensureLoaded, _getContext, _releaseModel } from './modelManager';
 import { readStructured, type JsonSchema } from './structured-json';
 import type { TextEngine } from './text-engine';
 import {
@@ -213,21 +214,56 @@ export async function contextSize(_engine?: TextEngine): Promise<number | null> 
 }
 
 /**
+ * Kev could not run now: the app is in the background, or the GPU failed twice.
+ * Carries the built-in model's busy code, so the queue defers it (job-defer.ts)
+ * and the relevance pass leaves its rows unscored for the next pass.
+ */
+export class KevBusyError extends Error {
+  readonly code = 'ERR_AFM_BUSY';
+  constructor(message: string) {
+    super(message);
+    this.name = 'KevBusyError';
+  }
+}
+
+/** llama_decode's -3: ggml-metal failed a command buffer (iOS refuses GPU work
+ *  from the background). ggml-metal keeps that error: every later decode on the
+ *  context fails the same way until the context is recreated. */
+const GPU_FAILED = /\(error -3\)/;
+
+/** `=== 'background'`, never `!== 'active'`: iOS reports `inactive` for the app
+ *  switcher and Control Center, where the GPU still runs (app-restart.ts). */
+const inBackground = () => AppState.currentState === 'background';
+
+/**
  * One Kev decision (`context.decide()`, the TypeSafe `/v1/systemone` shape) on
  * the RELEVANCE model. The lock is taken per request, so a chat turn can step in
  * between two articles; Kev stays resident, so it costs no reload.
+ *
+ * In the background it refuses (KevBusyError) without touching the GPU. A GPU
+ * failure releases the context, because it would fail every later call; in the
+ * foreground Kev is reloaded and the request asked once more.
  */
 export function decide<R extends DecisionRequest>(request: R): Promise<DecisionResult<R['questions']>> {
   return withLlamaLock(async () => {
     const release = holdRestart('local-inference');
     try {
-      await _ensureLoaded(RELEVANCE_MODEL.modelId);
-      const context = _getContext();
-      if (!context) throw new Error('No model loaded.');
-      const startTime = Date.now();
-      const result = await context.decide(request);
-      recordCompletion({ label: 'relevance', latencyMs: Date.now() - startTime });
-      return result as DecisionResult<R['questions']>;
+      for (let attempt = 1; ; attempt++) {
+        if (inBackground()) throw new KevBusyError('Kev does not run in the background');
+        await _ensureLoaded(RELEVANCE_MODEL.modelId);
+        const context = _getContext();
+        if (!context) throw new Error('No model loaded.');
+        const startTime = Date.now();
+        try {
+          const result = await context.decide(request);
+          recordCompletion({ label: 'relevance', latencyMs: Date.now() - startTime });
+          return result as DecisionResult<R['questions']>;
+        } catch (error) {
+          if (!(error instanceof Error) || !GPU_FAILED.test(error.message)) throw error;
+          await _releaseModel();
+          if (attempt > 1) throw new KevBusyError('Kev failed on the GPU twice');
+        }
+      }
     } finally {
       release();
     }

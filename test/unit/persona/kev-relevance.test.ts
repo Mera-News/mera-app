@@ -1,4 +1,4 @@
-import { KEV_CUT, KEV_QUESTIONS, kevState, kevToRelevance } from '@/lib/mera-protocol/kev-relevance';
+import { KEV_CUT, KEV_FACT_CHARS, KEV_QUESTIONS, kevState, kevToRelevance } from '@/lib/mera-protocol/kev-relevance';
 
 // The pure half of kev-relevance; the toolkit (llama.rn) and the logger are never reached here.
 jest.mock('@/lib/mera-protocol-toolkit', () => ({ decide: jest.fn() }));
@@ -54,6 +54,18 @@ describe('kevState', () => {
   it('caps the description at 500 characters', () => {
     const state = kevState(candidate({ descriptionEn: 'x'.repeat(900) }), []);
     expect(state.article.description).toHaveLength(500);
+  });
+
+  it('keeps the newest facts that fit the budget, so a big fact bank never overflows Kev\'s 4096-token context', () => {
+    // 120 facts of 200 characters is about 7,000 tokens; Kev's context holds 4096.
+    const facts = Array.from({ length: 120 }, (_, i) => `${String(i).padStart(3, '0')} ${'f'.repeat(196)}`);
+    const relatedFacts = facts.map((statement, i) => ({ id: `f${i}`, statement }));
+    const state = kevState(candidate({ relatedFacts }), facts);
+    for (const kept of [state.reader, state.reader_facts_this_article_matched]) {
+      expect(kept.length).toBeGreaterThan(0);
+      expect(kept).toEqual(facts.slice(0, kept.length));
+      expect(kept.join('').length).toBeLessThanOrEqual(KEV_FACT_CHARS);
+    }
   });
 
   it.each([[null], ['GLOBAL']])('omits the country for %s', (countryCode) => {
