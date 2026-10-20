@@ -46,6 +46,7 @@ import {
 import { buildChatTurnBody } from '../lib/chat-turn';
 import { assertEngineReady, isTransportError, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
 import { createRunWriter } from '../lib/run-writer';
+import { filterFactChoiceGroups, normalizeStatement, type FactEntry } from '../../lib/news-harness/persona-management/fact-rules';
 import {
   buildPersonaChatPrompt,
   personaChatInstructions,
@@ -131,6 +132,21 @@ export function judgeOnDevice(expect: Fixture['expect'], calls: OnDeviceRun['cal
   return { pass: true, why: 'ok' };
 }
 
+/**
+ * The calls as the user sees them: saves through the app's filterFactChoiceGroups
+ * against the known facts, so a word-for-word repeat is dropped as it is on the
+ * phone. A save left with nothing to offer is removed.
+ */
+export function afterFactFilter(calls: OnDeviceRun['calls'], known: string[]): OnDeviceRun['calls'] {
+  return calls.flatMap((c) => {
+    if (c.name !== 'saveExtractedFacts') return [c];
+    const entries = (c.input.extracted_user_information as FactEntry[]) ?? [];
+    const { groups } = filterFactChoiceGroups(entries, known.map(normalizeStatement));
+    const kept = groups.map((g) => g.options[0]).filter(Boolean).map((statement) => ({ statement }));
+    return kept.length > 0 ? [{ ...c, input: { extracted_user_information: kept } }] : [];
+  });
+}
+
 async function mainOnDevice(engine: LocalEngine, argv: string[], runs: number): Promise<number> {
   await assertEngineReady(engine);
   const dir = path.resolve(__dirname, '..', 'fixtures', 'persona-chat');
@@ -140,20 +156,20 @@ async function mainOnDevice(engine: LocalEngine, argv: string[], runs: number): 
     : (argv[i + 1] ?? '').split(',').filter(Boolean);
   const run = createRunWriter({ label: `persona-chat-${engine}` });
   const rowsPath = path.join(run.dir, 'rows.jsonl');
-  const summary: Record<string, { pass: number; n: number; modelFails: number; na?: string }> = {};
+  const summary: Record<string, { pass: number; postFilterPass: number; n: number; modelFails: number; na?: string }> = {};
   console.log(`engine  : ${engine} (on-device persona chat)\nruns    : ${runs} per fixture\nrun dir : ${run.dir}\n`);
   for (const id of ids) {
     const fixture = JSON.parse(fs.readFileSync(path.join(dir, `${id}.json`), 'utf8')) as Fixture;
     const named = fixture.expect.toolCalled ?? fixture.expect.toolNotCalled ?? '';
     if (CLOUD_ONLY_TOOLS.has(named)) {
-      summary[id] = { pass: 0, n: 0, modelFails: 0, na: `${named} is cloud-only` };
+      summary[id] = { pass: 0, postFilterPass: 0, n: 0, modelFails: 0, na: `${named} is cloud-only` };
       console.log(`${id}: N/A on-device (${named} is cloud-only)`);
       continue;
     }
     const surface = fixture.surface ?? 'CONFIG';
     const context: PersonaChatContext = { facts: onDeviceFacts(fixture), topicPlanNotes: null, pending: null };
     const system = personaChatInstructions(surface, fixture.language ?? 'English');
-    const s = (summary[id] = { pass: 0, n: 0, modelFails: 0 });
+    const s = (summary[id] = { pass: 0, postFilterPass: 0, n: 0, modelFails: 0 });
     for (let r = 0; r < runs; r++) {
       const started = Date.now();
       const out = await onDeviceChatTurn<PersonaChatReply>(engine, system, personaChatSchema(surface), (b) =>
@@ -174,18 +190,21 @@ async function mainOnDevice(engine: LocalEngine, argv: string[], runs: number): 
         } else {
           Object.assign(row, judgeOnDevice(fixture.expect, row.calls));
           if (row.pass) s.pass++;
+          const known = context.facts.map((f) => f.statement);
+          if (judgeOnDevice(fixture.expect, afterFactFilter(row.calls, known)).pass) s.postFilterPass++;
         }
       }
       fs.appendFileSync(rowsPath, `${JSON.stringify(row)}\n`);
       console.log(`  ${id} run ${String(r + 1).padStart(2)}: ${row.pass ? 'PASS' : 'FAIL'} ${row.latencyMs}ms ${row.why} calls=[${row.calls.map((c) => `${c.name} ${JSON.stringify(c.input).slice(0, 140)}`).join(' | ')}]`);
     }
-    console.log(`RESULT ${id}: ${s.pass}/${s.n}${s.modelFails ? ` (${s.modelFails} model-outcome fails)` : ''}\n`);
+    console.log(`RESULT ${id}: ${s.pass}/${s.n} (after the fact filter ${s.postFilterPass}/${s.n})${s.modelFails ? ` (${s.modelFails} model-outcome fails)` : ''}\n`);
   }
   const scored = Object.values(summary).filter((x) => !x.na);
   const pass = scored.reduce((a, x) => a + x.pass, 0);
   const n = scored.reduce((a, x) => a + x.n, 0);
-  console.log(`FACT-SAVE ACCURACY ${engine}: ${pass}/${n} (${n ? Math.round((pass / n) * 100) : 0}%)`);
-  run.writeJson('summary', { engine, runs, fixtures: summary, pass, n });
+  const postFilterPass = scored.reduce((a, x) => a + x.postFilterPass, 0);
+  console.log(`FACT-SAVE ACCURACY ${engine}: ${pass}/${n} (${n ? Math.round((pass / n) * 100) : 0}%), after the app's fact filter ${postFilterPass}/${n}`);
+  run.writeJson('summary', { engine, runs, fixtures: summary, pass, postFilterPass, n });
   return 0;
 }
 

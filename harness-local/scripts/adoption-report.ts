@@ -19,6 +19,7 @@ import { join, resolve } from 'node:path';
 
 import { optionQuality } from './score-option-quality';
 import { topicGates } from './score-topic-run';
+import { NO_USABLE_SET_GATE } from '../../lib/mera-harness/eval/topic-metrics';
 
 type Kind = 'singleshot' | 'persona-chat' | 'topicgen' | 'notes';
 
@@ -98,8 +99,14 @@ function main(): number {
   console.log(`  ${'metric'.padEnd(30)} candidate  baseline  holds`);
   let missing = 0;
   let lost = 0;
+  // The gates read in order: a side that fails G1b scores G3 over a different set of facts.
+  const g3Comparable = (c.g1b ?? 1) <= NO_USABLE_SET_GATE && (b.g1b ?? 1) <= NO_USABLE_SET_GATE;
   for (const [name, cv, bv, better] of rowsOut) {
     const known = cv !== undefined && bv !== undefined && !Number.isNaN(cv) && !Number.isNaN(bv);
+    if (known && name.includes('G3') && !g3Comparable) {
+      console.log(`  ${name.padEnd(30)} ${pctOf(cv)}    ${pctOf(bv)}   not comparable (a side fails G1b)`);
+      continue;
+    }
     const holds = known ? (better === 'higher' ? cv >= bv : cv <= bv) : null;
     if (holds === null) missing++;
     else if (!holds) lost++;
