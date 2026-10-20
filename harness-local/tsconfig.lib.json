@@ -38,6 +38,8 @@
     "config/local-data.ts",
     "adapters/auth.ts",
     "adapters/gateway-e2ee-llm.ts",
+    "adapters/afm-llm.ts",
+    "lib/engine.ts",
     "scripts/selftest.ts",
     "scripts/replay-persona-chat.ts",
     "scripts/run-newsharness-corpus.ts",

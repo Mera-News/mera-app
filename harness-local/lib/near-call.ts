@@ -136,6 +136,12 @@ export interface NearRequest {
   tools?: unknown[];
   toolChoice?: 'auto' | 'none';
   timeoutMs?: number;
+  /** llama-server only (the on-device Qwen lane): `response_format`, e.g. a
+   *  json_schema grammar, and the app's sampling knobs. Sent only when set, so
+   *  a cloud body is unchanged. */
+  responseFormat?: unknown;
+  topP?: number;
+  topK?: number;
 }
 
 interface RawResponse {
@@ -183,6 +189,9 @@ export async function postCompletion(req: NearRequest): Promise<NearResult> {
   };
   if (req.temperature !== undefined) body.temperature = req.temperature;
   if (req.maxTokens !== undefined) body.max_tokens = req.maxTokens;
+  if (req.topP !== undefined) body.top_p = req.topP;
+  if (req.topK !== undefined) body.top_k = req.topK;
+  if (req.responseFormat !== undefined) body.response_format = req.responseFormat;
   if (req.tools) {
     body.tools = req.tools;
     body.tool_choice = req.toolChoice ?? 'auto';
