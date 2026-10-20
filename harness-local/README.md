@@ -280,12 +280,13 @@ to the engine's window). No staging credentials, no cost.
 | Engine | What | Setup |
 |---|---|---|
 | `afm` | Apple's on-device model via `harness-local/afm/main.swift` (JSONL over stdin) | macOS with Apple Intelligence on. Built to `~/.cache/mera-harness/afm-bridge` on first use. |
-| `qwen-local` | The pinned Qwen3.5-4B Q4_K_M, the phone's Mera text model | `llama-server -m ~/.cache/mera-harness/models/Qwen3.5-4B-Q4_K_M.gguf -c 4096 -np 1 --jinja --port 8080` |
+| `qwen-local` | The pinned Qwen3.5-4B Q4_K_M, the retired Mera text model. A reference only: the app no longer ships it (D37) | `llama-server -m ~/.cache/mera-harness/models/Qwen3.5-4B-Q4_K_M.gguf -c 4096 -np 1 --jinja --port 8080` |
 | `nano-proxy` | Gemma 4 E4B Q4_0 (ggml-org, Apache 2.0). A PROXY for Gemini Nano, never Nano: same 4000-token input and JSON-in-text output, a different model. | `llama-server -m ~/.cache/mera-harness/models/gemma-4-E4B-it-Q4_0.gguf -c 4096 -np 1 --jinja --port 8081` |
 
 Setup: `brew install llama.cpp`, then download with `curl -L -C - -o <file> <url>`
-(resume-safe) into `~/.cache/mera-harness/models/`. The Qwen URL is `TEXT_MODEL.modelUrl`
-in `lib/mera-protocol-toolkit/core/model-catalog.ts`; Gemma is
+(resume-safe) into `~/.cache/mera-harness/models/`. The Qwen URL is
+`https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/e87f176479d0855a907a41277aca2f8ee7a09523/Qwen3.5-4B-Q4_K_M.gguf`
+(2,740,937,888 bytes); Gemma is
 `ggml-org/gemma-4-E4B-it-GGUF` at `a69f018d`. `-np 1` matters: the server splits `-c`
 across slots. `NEWS_HARNESS_QWEN_URL` / `NEWS_HARNESS_NANO_PROXY_URL` move the servers.
 
