@@ -26,7 +26,6 @@ export {
   isTextModelResident,
   requiredModels,
   deleteBaseModel,
-  deleteOnDeviceModels,
   purgeAllBaseModels,
   LocalModelsOffError,
 } from './core/modelManager';

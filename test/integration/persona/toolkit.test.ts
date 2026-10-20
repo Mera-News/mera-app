@@ -42,7 +42,7 @@ const EXPORTS: [string, Record<string, unknown>, string[]][] = [
         modelManager,
         [
             'downloadBaseModel', 'initBaseModel', 'disposeModel', 'resetContext', 'getModelState', 'isModelDownloaded',
-            'isTextModelResident', 'requiredModels', 'deleteBaseModel', 'deleteOnDeviceModels', 'purgeAllBaseModels', 'LocalModelsOffError',
+            'isTextModelResident', 'requiredModels', 'deleteBaseModel', 'purgeAllBaseModels', 'LocalModelsOffError',
         ],
     ],
     ['model catalogue', modelCatalog, ['MODEL_CATALOG', 'TEXT_MODEL', 'RELEVANCE_MODEL', 'DEFAULT_MODEL_ID', 'RETIRED_MODEL_IDS', 'isRetiredModelId']],
@@ -191,18 +191,13 @@ describe('the two-model lifecycle through the barrel', () => {
         expect(await toolkit.isModelDownloaded()).toBe(true);
     });
 
-    it('refuses to delete or purge a loaded model; deleteOnDeviceModels releases and removes both', async () => {
+    it('refuses to delete or purge a loaded model', async () => {
         installLlama(['ok']);
         placeDownloadedModel(TEXT);
         placeDownloadedModel(KEV);
         await toolkit.initBaseModel();
         await expect(toolkit.deleteBaseModel(TEXT)).rejects.toThrow('currently loaded');
         await expect(toolkit.purgeAllBaseModels()).rejects.toThrow('while one is loaded');
-
-        await toolkit.deleteOnDeviceModels();
-        expect(toolkit.getModelState()).toBeNull();
-        expect(await toolkit.isModelDownloaded(TEXT)).toBe(false);
-        expect(await toolkit.isModelDownloaded(KEV)).toBe(false);
     });
 
     it('deleteDownloadedModel releases the model when it is resident and removes only its files', async () => {

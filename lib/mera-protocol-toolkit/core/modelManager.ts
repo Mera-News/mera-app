@@ -468,20 +468,6 @@ export function deleteDownloadedModel(modelId: string): Promise<void> {
 }
 
 /**
- * Releases the resident model and deletes every on-device model's files, in ONE
- * lock hold, so nothing can load a model between the release and the delete.
- */
-export function deleteOnDeviceModels(): Promise<void> {
-  return withLlamaLock(async () => {
-    await _releaseModel();
-    for (const m of MODEL_CATALOG) {
-      const dir = getModelDir(m.modelId);
-      if (dir.exists) await dir.delete();
-    }
-  });
-}
-
-/**
  * Wipes the whole `mera-models/` cache directory, every model id, for a reader
  * with no on-device intent. Used by the boot-time purge for Cloud users.
  *
