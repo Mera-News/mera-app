@@ -216,11 +216,11 @@ export async function getAuthHeaders(env: HarnessEnv): Promise<Record<string, st
     );
   }
   // A test account first: headless, and the only path that works on BOTH
-  // staging and prod. Cached per handle, never across handles.
+  // staging and prod. Cached per handle in its own file, never over the OTP one.
   const testToken = process.env.NEWS_HARNESS_TEST_ACCOUNT_TOKEN?.trim();
   const testHandle = process.env.NEWS_HARNESS_TEST_ACCOUNT_HANDLE?.trim();
   if (testToken && testHandle) {
-    const testCachePath = authCachePath(env.target);
+    const testCachePath = authCachePath(env.target, testHandle);
     const cachedTest = loadCache(testCachePath);
     if (cachedTest && isCacheFresh(cachedTest, TEST_SESSION_MAX_AGE_MS) && cachedTest.method === 'test-account' && cachedTest.handle === testHandle) {
       if (cachedTest.cookie) return { Cookie: cachedTest.cookie };
