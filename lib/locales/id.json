@@ -2398,7 +2398,6 @@
     "removing": "Menghapus yang kamu minta",
     "asking": "Mengajukan pertanyaan untukmu",
     "working": "Sedang dikerjakan",
-    "slow": "Masih berjalan, koneksi lambat",
     "legCapSentence": "Itu butuh lebih banyak langkah daripada yang bisa Mera lakukan sekaligus. Tanya lagi untuk melanjutkan.",
     "interrupted": "Ini terhenti. Tanya lagi untuk melanjutkan.",
     "summaryFailed": "Ada yang tidak berhasil",
@@ -2418,7 +2417,6 @@
     "noProposalSentence": "Mera tidak menemukan apa pun untuk ditambahkan dari ini.",
     "unknownToolSentence": "Ada yang bermasalah di sisi Mera. Tanya lagi untuk melanjutkan.",
     "malformedChoiceSentence": "Mera tidak bisa menampilkan pilihannya. Tanya lagi untuk melanjutkan.",
-    "boxTitle": "Mera sedang bekerja",
     "doneInSteps_one": "Selesai dalam {{count}} langkah",
     "doneInSteps_other": "Selesai dalam {{count}} langkah",
     "doneInStepsShow_one": "Selesai dalam {{count}} langkah, tampilkan langkah",
@@ -2437,9 +2435,7 @@
     "interests": "minatmu",
     "origin": "asalmu",
     "family": "keluargamu",
-    "feedTuning": "feed Anda",
-    "followStory": "cerita yang ingin diikuti",
-    "factCheck": "klaim yang perlu diperiksa"
+    "feedTuning": "feed Anda"
   },
   "askChoice": {
     "answeredA11y": "sudah dijawab",
@@ -2477,10 +2473,10 @@
       "Menyiapkan ponsel Anda untuk menjawab."
     ],
     "deviceThinking": [
-      "Memikirkannya di ponsel Anda. Tidak ada yang keluar dari perangkat."
+      "Memikirkannya di ponsel Anda."
     ],
     "webSearch": [
-      "Mencari di web dari perangkat Anda…"
+      "Mencari di web melalui server Mera…"
     ]
   },
   "savedExport": {

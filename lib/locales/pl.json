@@ -2459,7 +2459,6 @@
     "removing": "Usuwam to, o co prosiłeś",
     "asking": "Zadaję ci pytanie",
     "working": "Pracuję nad tym",
-    "slow": "Wciąż trwa, wolne połączenie",
     "legCapSentence": "To wymagało więcej kroków, niż Mera może wykonać naraz. Zapytaj ponownie, aby kontynuować.",
     "interrupted": "To zostało przerwane. Zapytaj ponownie, aby kontynuować.",
     "summaryFailed": "Coś nie zadziałało",
@@ -2479,7 +2478,6 @@
     "noProposalSentence": "Mera nie znalazła w tym nic do dodania.",
     "unknownToolSentence": "Coś poszło nie tak po stronie Mery. Zapytaj ponownie, aby kontynuować.",
     "malformedChoiceSentence": "Mera nie mogła pokazać opcji. Zapytaj ponownie, aby kontynuować.",
-    "boxTitle": "Mera pracuje",
     "doneInSteps_one": "Gotowe w {{count}} kroku",
     "doneInSteps_few": "Gotowe w {{count}} krokach",
     "doneInSteps_many": "Gotowe w {{count}} krokach",
@@ -2502,9 +2500,7 @@
     "interests": "twoje zainteresowania",
     "origin": "skąd pochodzisz",
     "family": "twoją rodzinę",
-    "feedTuning": "twój Kanał",
-    "followStory": "historię do śledzenia",
-    "factCheck": "twierdzenie do sprawdzenia"
+    "feedTuning": "twój Kanał"
   },
   "askChoice": {
     "answeredA11y": "już odpowiedziano",
@@ -2542,10 +2538,10 @@
       "Przygotowuję telefon do odpowiedzi."
     ],
     "deviceThinking": [
-      "Przemyślam to na Twoim telefonie. Nic nie opuszcza urządzenia."
+      "Przemyślam to na Twoim telefonie."
     ],
     "webSearch": [
-      "Szukam w internecie z Twojego urządzenia…"
+      "Szukam w internecie przez serwer Mera…"
     ]
   },
   "savedExport": {

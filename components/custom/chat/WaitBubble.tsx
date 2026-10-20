@@ -1,92 +1,105 @@
-// The wait bubble: outlined, unfilled, and breathing.
+// The wait row: the encryption strip and, optionally, the phase words. A
+// borderless row that holds a fixed height (`useWaitRowHeight`) so the reply
+// takes its slot without moving the thread.
 //
-// ## Why the animation lives here and not in `components/ui/chat-ai`
-//
-// A glowing outline needs a Reanimated `Animated.View`. Putting that import in
-// the shared chat primitives forces EVERY present and future test that renders
-// any chat primitive to mock a native module; it broke
-// `components/ui/chat-ai/__tests__/prompt-input-a11y.test.tsx` the moment it
-// was tried, with "Native part of Worklets doesn't seem to be initialized".
-// `chat-ai` keeps the static look as `variant="transient"` and exposes an
-// `as` / `style` seam, and the one feature that wants motion pays for it.
-//
-// ## Why it is its own component rather than a hook in ChatThread
-//
-// The loop runs only while this is mounted, which is only while a turn is
-// waiting. A hook at the thread's top level would breathe forever behind a
-// settled conversation.
+// The row View is the SINGLE accessible element and carries the phase line as
+// its label. There is no live region anywhere: `useAnnounce` speaks a status
+// only once it has held, a retry at once.
 
-import { useMotionAllowed } from '@/lib/motion-gate';
-import { GLOW_BRIGHT, GLOW_DIM, MessageContent } from '@/components/ui/chat-ai';
-import React, { useEffect } from 'react';
-import Animated, {
-  cancelAnimation,
-  Easing,
-  interpolateColor,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
-
-/** One direction of the pulse. Reversed, so a full breath is twice this. */
-export const GLOW_MS = 1400;
+import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
+import React, { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { DEVICE_WORD_LINES, WAIT_ROW_WIDTH } from './chat-phases';
+import ChatPhaseLine, { usePhaseLine } from './ChatPhaseLine';
+import EncryptionStrip from './EncryptionStrip';
+import { useAnnounce } from './phase-announcer';
+import { stripRests } from './strip-display';
+import { useWaitRowHeight } from './use-wait-row-height';
 
 export interface WaitBubbleProps {
   testID?: string;
-  children: React.ReactNode;
+  /** The phase words under or beside the strip. Default on. */
+  showWords?: boolean;
+  /** The loop's acknowledgement is on screen above this row. */
+  ackShowing?: boolean;
+  engine?: 'cloud' | 'local';
 }
 
 export const WaitBubble: React.FC<WaitBubbleProps> = ({
   testID = 'chat-wait-bubble',
-  children,
+  showWords = true,
+  ackShowing = false,
+  engine: engineProp,
 }) => {
-  // Lite or Reduce Motion: the outline holds still, at the bright end.
-  const reduceMotion = !useMotionAllowed();
-  const glow = useSharedValue(0);
+  const onDevice = useIsOnDeviceProcessing();
+  const engine = engineProp ?? (onDevice ? 'local' : 'cloud');
+  const local = engine === 'local';
+  const minHeight = useWaitRowHeight(showWords, engine);
+  const sealedSeq = useChatPhaseStore((s) => s.sealedSeq);
+  const liveTool = useChatPhaseStore((s) => s.liveTool !== null);
+  const { phaseId, line } = usePhaseLine();
+  useAnnounce(line, phaseId === 'retrying');
 
+  // The acknowledgement's rising edge asks the strip for one `return`; the ack
+  // "streams" until a new seal happens after that edge.
+  const [playReturn, setPlayReturn] = useState(0);
+  const [ackSeq, setAckSeq] = useState<number | null>(ackShowing ? sealedSeq : null);
+  const wasShowing = useRef(false);
   useEffect(() => {
-    if (reduceMotion) {
-      // Parked at the BRIGHT end, not the dim one. Someone who asked for less
-      // motion still has to be able to see the outline, and resting it at the
-      // dim end would leave the wait bubble faintest for exactly the people
-      // least likely to catch a subtle one.
-      cancelAnimation(glow);
-      glow.value = 1;
-      return;
+    if (ackShowing && !wasShowing.current) {
+      setPlayReturn((n) => n + 1);
+      setAckSeq(sealedSeq);
+    } else if (!ackShowing) {
+      setAckSeq(null);
     }
-    glow.value = withRepeat(
-      withTiming(1, { duration: GLOW_MS, easing: Easing.inOut(Easing.quad) }),
-      -1,
-      // Reversed, so the outline fades back down instead of snapping dark and
-      // restarting, which reads as a blink rather than a breath.
-      true,
-    );
-    return () => cancelAnimation(glow);
-  }, [reduceMotion, glow]);
+    wasShowing.current = ackShowing;
+  }, [ackShowing, sealedSeq]);
+  const ackStreaming = ackShowing && ackSeq !== null && sealedSeq === ackSeq;
+  // ponytail: `landing` (step rows landing) is the steps box's signal, not wired here yet.
+  const rest = stripRests({ liveTool, landing: false, ackStreaming });
 
-  // Two layers, and the halo is a progressive enhancement rather than a
-  // platform fork: `borderColor` breathes on BOTH platforms and is the whole
-  // effect on Android, while the bloom underneath is iOS-only because Android
-  // tints nothing from `shadowColor` and takes its depth from `elevation`,
-  // which `bubbleTransient` pins at 0 on purpose. Android gets a quieter
-  // version of the same idea, not a different one.
-  const glowStyle = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(glow.value, [0, 1], [GLOW_DIM, GLOW_BRIGHT]),
-    shadowOpacity: 0.1 + glow.value * 0.35,
-  }));
-
+  const strip = <EncryptionStrip host="row" rest={rest} playReturn={playReturn} />;
   return (
-    <MessageContent
-      role="assistant"
-      variant="transient"
-      as={Animated.View}
-      style={glowStyle}
+    <View
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={line ?? undefined}
       testID={testID}
+      style={[styles.row, { minHeight }, local && styles.localRow]}
     >
-      {children}
-    </MessageContent>
+      {local ? (
+        <>
+          {strip}
+          {showWords && (
+            <View style={styles.words}>
+              <ChatPhaseLine lines={DEVICE_WORD_LINES} />
+            </View>
+          )}
+        </>
+      ) : (
+        <>
+          {strip}
+          {showWords && (
+            <View style={styles.cloudWords}>
+              <ChatPhaseLine />
+            </View>
+          )}
+        </>
+      )}
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  // A WIDTH OF ITS OWN. The assistant message row aligns its child to the
+  // start, so a row without one shrink-wraps its content, and the strip's
+  // `width: '100%'` (and the device words' `flex: 1`) resolved to 0: the
+  // strip never drew. The wait row is the board's 272pt strip plus its insets.
+  row: { width: '100%', maxWidth: WAIT_ROW_WIDTH, paddingVertical: 8, paddingHorizontal: 14, justifyContent: 'center' },
+  localRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  words: { flex: 1, justifyContent: 'center' },
+  cloudWords: { marginTop: 6 },
+});
 
 export default WaitBubble;

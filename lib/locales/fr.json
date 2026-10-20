@@ -2409,7 +2409,6 @@
     "removing": "Je supprime ce que tu as demandé",
     "asking": "Je te pose une question",
     "working": "Je m'en occupe",
-    "slow": "Toujours en cours, connexion lente",
     "legCapSentence": "Cela a demandé plus d'étapes que Mera peut faire d'un coup. Repose la question pour continuer.",
     "interrupted": "Cela a été interrompu. Repose la question pour continuer.",
     "summaryFailed": "Quelque chose n'a pas marché",
@@ -2429,7 +2428,6 @@
     "noProposalSentence": "Mera n'a rien trouvé à ajouter à partir de cela.",
     "unknownToolSentence": "Quelque chose a échoué du côté de Mera. Repose la question pour continuer.",
     "malformedChoiceSentence": "Mera n'a pas pu t'afficher les options. Repose la question pour continuer.",
-    "boxTitle": "Mera travaille",
     "doneInSteps_one": "Terminé en {{count}} étape",
     "doneInSteps_other": "Terminé en {{count}} étapes",
     "doneInStepsShow_one": "Terminé en {{count}} étape, afficher les étapes",
@@ -2448,9 +2446,7 @@
     "interests": "tes centres d'intérêt",
     "origin": "d'où tu viens",
     "family": "ta famille",
-    "feedTuning": "votre fil",
-    "followStory": "un sujet à suivre",
-    "factCheck": "une affirmation à vérifier"
+    "feedTuning": "votre fil"
   },
   "askChoice": {
     "answeredA11y": "déjà répondu",
@@ -2488,10 +2484,10 @@
       "Préparation de votre téléphone pour répondre."
     ],
     "deviceThinking": [
-      "Réflexion sur votre téléphone. Rien ne quitte votre appareil."
+      "Réflexion sur votre téléphone."
     ],
     "webSearch": [
-      "Recherche sur le web depuis votre appareil…"
+      "Recherche sur le web via le serveur de Mera…"
     ]
   },
   "savedExport": {

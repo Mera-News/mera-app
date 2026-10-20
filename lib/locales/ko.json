@@ -2398,7 +2398,6 @@
     "removing": "요청하신 내용을 삭제하고 있어요",
     "asking": "질문을 드리고 있어요",
     "working": "처리하고 있어요",
-    "slow": "아직 진행 중이에요. 연결이 느립니다",
     "legCapSentence": "한 번에 처리할 수 있는 단계를 넘었어요. 계속하려면 다시 물어봐 주세요.",
     "interrupted": "중간에 중단됐어요. 계속하려면 다시 물어봐 주세요.",
     "summaryFailed": "일부가 처리되지 않았어요",
@@ -2418,7 +2417,6 @@
     "noProposalSentence": "여기에서 추가할 만한 내용을 찾지 못했어요.",
     "unknownToolSentence": "메라 쪽에서 문제가 생겼어요. 계속하려면 다시 물어봐 주세요.",
     "malformedChoiceSentence": "메라가 선택지를 보여 주지 못했어요. 계속하려면 다시 물어봐 주세요.",
-    "boxTitle": "메라가 작업 중입니다",
     "doneInSteps_one": "{{count}}단계 만에 완료",
     "doneInSteps_other": "{{count}}단계 만에 완료",
     "doneInStepsShow_one": "{{count}}단계 만에 완료, 단계 보기",
@@ -2437,9 +2435,7 @@
     "interests": "관심사",
     "origin": "출신지",
     "family": "가족",
-    "feedTuning": "맞춤 피드",
-    "followStory": "팔로우할 스토리",
-    "factCheck": "팩트체크할 주장"
+    "feedTuning": "맞춤 피드"
   },
   "askChoice": {
     "answeredA11y": "이미 답변함",
@@ -2477,10 +2473,10 @@
       "휴대폰이 답변을 준비하는 중입니다."
     ],
     "deviceThinking": [
-      "휴대폰에서 생각하는 중입니다. 기기 밖으로 나가는 것은 없습니다."
+      "휴대폰에서 생각하는 중입니다."
     ],
     "webSearch": [
-      "기기에서 웹을 검색하는 중…"
+      "메라 서버를 통해 웹을 검색하는 중…"
     ]
   },
   "savedExport": {

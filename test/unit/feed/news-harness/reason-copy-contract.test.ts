@@ -10,7 +10,11 @@
 // The interesting cases are all the ones where a dash is NOT clause
 // punctuation. Those are what a naive global replace gets wrong, and each of
 // them is a shape that really turns up in reasons.
-import { parseReasonResponse } from '@/lib/news-harness/article-pipeline/scoring-decode';
+import {
+  decodeV3NoteResults,
+  parseReasonResponse,
+} from '@/lib/news-harness/article-pipeline/scoring-decode';
+import { parseV3NoteResponse } from '@/lib/news-harness/prompts/prompts';
 import SCORE_FIXTURE from '@/test/fixtures/feed/news-harness/reason-names-score.json';
 
 const decode = (s: string) => parseReasonResponse(s, 'id');
@@ -195,6 +199,62 @@ describe('a reason may not tell the reader about the score', () => {
     expect(decode('Relevance Score: 0.62 Dutch tax vote affects your work.')).toBe(
       'Dutch tax vote affects your work.',
     );
+  });
+
+  it.each([
+    // The stored fragment was "...warranting a high-": the label strip ate "relevance score."
+    // out of the prose before this guard ran, so nothing was left for it to catch.
+    "Russia's missile and drone attack on Ukraine directly impacts the conflict you follow, warranting a high-relevance score.",
+    "Russia's missile and drone attack on Ukraine directly impacts the conflict you follow, warranting a high-relevance score 0.8.",
+    // Space-preceded, mid-sentence: still prose, not an echoed label.
+    "Russia's missile and drone attack on Ukraine directly impacts the conflict you follow, warranting a relevance score 0.8.",
+    // Opens a sentence but has no colon: prose. Stripping it left "work. reflects that."
+    'Dutch tax vote affects your work. Relevance score 0.8 reflects that.',
+  ])('rejects prose naming the score whole, never trims it: %s', (text) => {
+    expect(decode(text)).toBe('');
+  });
+
+  it('strips an echoed label wherever the prompt put it: first, bold, or last', () => {
+    // One builder puts `Relevance Score: N` LAST, so the model can echo it at the end.
+    expect(decode('**Relevance Score: 0.82** Dutch tax vote affects your work.')).toBe(
+      'Dutch tax vote affects your work.',
+    );
+    expect(decode('Dutch tax vote affects your work. Relevance Score: 0.8')).toBe(
+      'Dutch tax vote affects your work.',
+    );
+    expect(decode('Dutch tax vote affects your work.\n\nRelevance Score: 0.8')).toBe(
+      'Dutch tax vote affects your work.',
+    );
+  });
+
+  it.each([
+    '## Relevance Score: 0.8\nDutch tax vote affects your work.',
+    '- Relevance Score: 0.8\nDutch tax vote affects your work.',
+    'Why this matters to you: Relevance Score: 0.7 Dutch tax vote affects your work.',
+  ])('strips an echoed label behind a heading, bullet or echoed prefix: %s', (text) => {
+    expect(decode(text)).toBe('Dutch tax vote affects your work.');
+  });
+
+  it('the legacy v3 note decoder applies the same label rule and cuts at a word', () => {
+    const why = (s: string) => parseV3NoteResponse(JSON.stringify({ keep: true, why: s }))?.why;
+    expect(why('**Relevance Score: 0.82** Dutch tax vote affects your work.')).toBe(
+      'Dutch tax vote affects your work.',
+    );
+    // Not trimmed by the strip, so the note fence sees the whole sentence and drops it.
+    const scored = decodeV3NoteResults([
+      {
+        id: 'reason:a',
+        output: JSON.stringify({
+          keep: true,
+          why: 'Ukraine strikes touch the conflict you follow, warranting a high-relevance score.',
+        }),
+      },
+    ]);
+    expect(scored.reasons.has('a')).toBe(false);
+    expect(scored.demoteIds).toEqual([]);
+    const long = why('word '.repeat(30) + 'abcdefghijklmnopqrstuvwxyz '.repeat(4)) ?? '';
+    expect(long.length).toBeLessThanOrEqual(200);
+    expect(long.split(' ').every((w) => w === 'word' || w === 'abcdefghijklmnopqrstuvwxyz')).toBe(true);
   });
 
   it('is non-vacuous: the fixture really does contain what it claims', () => {

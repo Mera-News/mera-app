@@ -39,10 +39,13 @@ import os
 import sys
 
 from lib_bodymovin import (
-    ACCENT, WHITE, CX, CY,
+    ACCENT, WHITE,
     comp, stat, keys, bell, dot, ring, bar, outline, tr, fill, stroke,
     ellipse, rect,
 )
+
+# The 1000 x 1000 family's centre. Every piece here is drawn around it.
+CX = CY = 500
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "out"
 os.makedirs(OUT, exist_ok=True)

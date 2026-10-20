@@ -136,9 +136,18 @@ export function getReadHoldUpdatedAt(): number | null {
   return state.updatedAt;
 }
 
-function subscribe(listener: () => void): () => void {
+/** Where the current hold ends on this device's clock, or null when none was set. */
+export function readHoldEndsAt(): number | null {
+  return state.holdUntil;
+}
+
+/** Called on every write (a hold set, a hold cleared by a plan rise, a hydrate, a reset).
+ *  Expiry emits nothing. */
+export function subscribeReadHold(listener: () => void): () => void {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 function getSnapshot(): ReadHold {
@@ -152,7 +161,7 @@ function getSnapshot(): ReadHold {
 /** Re-renders on every write. Expiry is time-based and emits nothing: a screen
  *  that must flip at the hold end runs its own timer. */
 export function useReadHold(): ReadHold {
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  return useSyncExternalStore(subscribeReadHold, getSnapshot, getSnapshot);
 }
 
 function emit(): void {

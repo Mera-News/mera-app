@@ -2398,7 +2398,6 @@
     "removing": "正在刪除你要求刪除的內容",
     "asking": "正在向你提問",
     "working": "正在處理",
-    "slow": "仍在處理，網路較慢",
     "legCapSentence": "這需要的步驟超過梅拉一次能完成的數量。再問一次即可繼續。",
     "interrupted": "這次處理中斷了。再問一次即可繼續。",
     "summaryFailed": "有一項沒有成功",
@@ -2418,7 +2417,6 @@
     "noProposalSentence": "梅拉沒有從中找到可以新增的內容。",
     "unknownToolSentence": "梅拉這邊出了點問題。再問一次即可繼續。",
     "malformedChoiceSentence": "梅拉無法顯示選項。再問一次即可繼續。",
-    "boxTitle": "梅拉正在工作",
     "doneInSteps_one": "已完成，共 {{count}} 步",
     "doneInSteps_other": "已完成，共 {{count}} 步",
     "doneInStepsShow_one": "已完成，共 {{count}} 步，顯示步驟",
@@ -2437,9 +2435,7 @@
     "interests": "你的興趣",
     "origin": "你來自哪裡",
     "family": "你的家人",
-    "feedTuning": "你的資訊流",
-    "followStory": "要追蹤的新聞",
-    "factCheck": "要查核的說法"
+    "feedTuning": "你的資訊流"
   },
   "askChoice": {
     "answeredA11y": "已回答",
@@ -2477,10 +2473,10 @@
       "正在讓手機準備回答。"
     ],
     "deviceThinking": [
-      "正在手機上思考。沒有任何內容離開你的裝置。"
+      "正在手機上思考。"
     ],
     "webSearch": [
-      "正在從你的裝置搜尋網頁…"
+      "正在透過梅拉的伺服器搜尋網頁…"
     ]
   },
   "savedExport": {

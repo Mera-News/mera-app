@@ -12,6 +12,7 @@ import {
 } from '@/lib/chat-tools/fact-choice-resolution';
 import { isFactPickChoice, joinFactPick } from '@/lib/mera-harness/core/fact-pick';
 import { stripThinkTags } from '@/lib/algorithms/think-strip';
+import type { LiveTool } from '@/lib/llm/chat-phase-store';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 import type {
   AgentTerminal,
@@ -88,6 +89,13 @@ function appliedByTyping(tc: ToolCallRecord): string[] | null {
  * Emits a message item (if non-placeholder) followed by any fact cards.
  * `keyPrefix` distinguishes history (`hist`) from live (`live`) sources.
  */
+interface StreamingInfo {
+  id: string;
+  showWords: boolean;
+  engine: 'cloud' | 'local';
+  handover: boolean;
+}
+
 function emitMessage(
   out: ChatThreadItem[],
   message: ConversationMessage,
@@ -96,7 +104,7 @@ function emitMessage(
   stale = false,
   boxes?: Map<string, AgentStepsItem>,
   answeredAsk = false,
-  streamingMessageId: string | null = null,
+  streaming: StreamingInfo | null = null,
 ): void {
   // A hidden turn is the model's business only — it produces no bubble and no
   // cards. Filtered here rather than at the call sites so every source (live,
@@ -294,7 +302,14 @@ function emitMessage(
       message,
       // The Mera mark rides the live streaming bubble, so it does not blink
       // out the moment the first token lands.
-      ...(streamingMessageId === message.id ? { streaming: true } : {}),
+      ...(streaming?.id === message.id
+        ? {
+            streaming: true,
+            showWords: streaming.showWords,
+            engine: streaming.engine,
+            handover: streaming.handover,
+          }
+        : {}),
     });
   }
 
@@ -379,8 +394,12 @@ export function deriveThreadItems(opts: {
   turnActive?: boolean;
   /** Why the latest agent turn stopped, when the user needs telling. */
   agentTerminal?: AgentTerminal | null;
-  /** The wait line's current phase, when one is published. */
-  waitPhase?: string | null;
+  /** Which engine runs this turn. Local always shows the words. */
+  engine?: 'cloud' | 'local';
+  /** The tool the phone is running between two model calls. */
+  liveTool?: LiveTool | null;
+  /** A `retrying` phase was shown this turn. */
+  retriedThisTurn?: boolean;
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
@@ -479,8 +498,25 @@ export function deriveThreadItems(opts: {
     false,
     opts.turnActive,
     opts.agentTerminal ?? null,
-    opts.waitPhase ?? null,
+    { liveTool: opts.liveTool ?? null, retried: opts.retriedThisTurn ?? false },
   );
+  const engine = opts.engine ?? 'cloud';
+  const lastUserIdx = (() => {
+    for (let i = liveSequence.length - 1; i >= 0; i--) {
+      if (liveSequence[i].role === 'user' && !liveSequence[i].hidden) return i;
+    }
+    return -1;
+  })();
+  const lastUserId = lastUserIdx >= 0 ? liveSequence[lastUserIdx].id : null;
+  // Words show on a turn's first message only (history excluded), on device,
+  // or after a retry.
+  const userCount = liveSequence.filter((m) => m.role === 'user' && !m.hidden).length;
+  const showWords = engine === 'local' || (opts.retriedThisTurn ?? false) || userCount < 2;
+  const ackShowing = liveSequence
+    .slice(lastUserIdx + 1)
+    .some((m) => m.role === 'assistant' && m.content.trim().length > 0);
+  // The typing item sits right after the last user message and its box.
+  let typingAt: number | null = null;
   for (const persisted of sortedResume) {
     // Resumed CURRENT-conversation messages are live for this purpose: their
     // cards are still answerable, so they are not stale.
@@ -493,6 +529,7 @@ export function deriveThreadItems(opts: {
       liveBoxes,
       answeredAskIds.has(persisted.id),
     );
+    if (persisted.id === lastUserId) typingAt = out.length;
   }
 
   // --- Intro pseudo-message: suppressed once the conversation has resumed
@@ -510,8 +547,11 @@ export function deriveThreadItems(opts: {
   // and only while the turn is running. Tracked here rather than in the
   // component because only the deriver sees the whole ordered list.
   const lastLiveMsg = live[live.length - 1];
-  const streamingMessageId =
-    isStreaming && lastLiveMsg?.role === 'assistant' ? lastLiveMsg.id : null;
+  const liveBox = lastUserId ? liveBoxes.get(lastUserId) : undefined;
+  const streaming: StreamingInfo | null =
+    isStreaming && lastLiveMsg?.role === 'assistant'
+      ? { id: lastLiveMsg.id, showWords, engine, handover: !(liveBox && keepBox(liveBox)) }
+      : null;
 
   // --- Live session (skip anything already rendered via resume) ---
   for (const message of live) {
@@ -524,8 +564,9 @@ export function deriveThreadItems(opts: {
       false,
       liveBoxes,
       answeredAskIds.has(message.id),
-      streamingMessageId,
+      streaming,
     );
+    if (message.id === lastUserId) typingAt = out.length;
   }
 
   // --- Typing indicator ---
@@ -545,7 +586,9 @@ export function deriveThreadItems(opts: {
       lastLive.role === 'user' ||
       (lastLive.role === 'assistant' && lastLive.content.trim().length === 0));
   if (showTyping) {
-    out.push({ kind: 'typing', key: 'typing' });
+    const typing: ChatThreadItem = { kind: 'typing', key: 'typing', showWords, ackShowing, engine };
+    if (typingAt === null) out.push(typing);
+    else out.splice(typingAt, 0, typing);
   }
 
   // --- Quick fact checks (always last: they answer the newest tap) ---
