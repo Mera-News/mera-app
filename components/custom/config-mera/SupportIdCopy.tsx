@@ -37,13 +37,13 @@ export function useAccountHandle(): AccountHandle | null {
 interface Props {
     /** The text's testID; the button beside it is `${testID}-copy` or `${testID}-move`. */
     testID: string;
-    /** The Settings footer's small grey line instead of the card's body text. */
-    footer?: boolean;
+    /** A row's sub-line: one text line tall, the button's 44pt target kept by hitSlop. */
+    compact?: boolean;
 }
 
 /** "Support ID: 1234567" with a copy button, or, for an email account that has
  *  no Support ID yet, its masked email with a "!" that opens the move dialog. */
-const SupportIdCopy: React.FC<Props> = ({ testID, footer = false }) => {
+const SupportIdCopy: React.FC<Props> = ({ testID, compact = false }) => {
     const { t } = useTranslation();
     const colors = useColors();
     const handle = useAccountHandle();
@@ -72,10 +72,13 @@ const SupportIdCopy: React.FC<Props> = ({ testID, footer = false }) => {
 
     const isEmail = handle.kind === 'email';
     const label = isEmail ? maskEmail(handle.value) : t('support.supportId', { id: handle.value });
+    const target = compact
+        ? { style: { minHeight: 20, minWidth: 44 }, hitSlop: { top: 12, bottom: 12 } }
+        : { style: { minHeight: 44, minWidth: 44 } };
     return (
-        <HStack accessible={false} space="sm" className={footer ? 'items-center justify-center' : 'items-center'}>
-            {footer ? (
-                <Text testID={testID} selectable={!isEmail} style={{ color: colors.ink3, fontSize: 12 }}>
+        <HStack accessible={false} space="sm" className="items-center">
+            {compact ? (
+                <Text testID={testID} selectable={!isEmail} style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>
                     {label}
                 </Text>
             ) : (
@@ -91,9 +94,9 @@ const SupportIdCopy: React.FC<Props> = ({ testID, footer = false }) => {
                     accessibilityRole="button"
                     accessibilityLabel={t('moveToPhone.settingsRow')}
                     className="items-center justify-center"
-                    style={{ minHeight: 44, minWidth: 44 }}
+                    {...target}
                 >
-                    <MaterialIcons name="error-outline" size={footer ? 16 : 18} color={colors.accentMark} />
+                    <MaterialIcons name="error-outline" size={18} color={colors.accentMark} />
                 </Pressable>
             ) : (
                 <Pressable
@@ -105,14 +108,14 @@ const SupportIdCopy: React.FC<Props> = ({ testID, footer = false }) => {
                     accessibilityRole="button"
                     accessibilityLabel={copied ? t('support.copied') : t('support.copySupportId')}
                     className="items-center justify-center"
-                    style={{ minHeight: 44, minWidth: 44 }}
+                    {...target}
                 >
                     {copied ? (
                         <Text size="sm" className="text-primary-400">
                             {t('support.copied')}
                         </Text>
                     ) : (
-                        <MaterialIcons name="content-copy" size={footer ? 14 : 16} color={footer ? colors.ink3 : colors.ink2} />
+                        <MaterialIcons name="content-copy" size={16} color={colors.ink2} />
                     )}
                 </Pressable>
             )}

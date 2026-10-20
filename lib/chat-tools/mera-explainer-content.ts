@@ -9,8 +9,7 @@
 //   mera-promo-website/public/assets/privacy-policy.md    (2, 7, 10, 11)
 //   mera-app/README.md
 //   mera-app/lib/locales/en.json                          (configPanel.privacy*, meraProtocol.*,
-//                                                          subscription.readingExplainer,
-//                                                          you.settings.planMultiplier, feed.notRead.*)
+//                                                          you.settings.processingMode, feed.notRead.*)
 //
 // plans_and_limits and the daily reading record in privacy_what_we_store move
 // with any plan or privacy change: they went stale once, when plans moved from
@@ -138,7 +137,7 @@ None of that is finished. It is described in the future tense on purpose.`,
   // ---------------------------------------------------------------------------
   plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not expire. Starter includes 10 MB of cloud reading a day, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
 
-Every article that matches your interests reaches your Feed, on every plan. Mera reads them, sets aside the noise and lifts what matters. What a plan sets is how much Mera reads for you in the cloud each day: Starter 10 MB, Individual 50 MB (5 times Starter) and Professional 200 MB (20 times Starter). Settings in the app shows your plan's figure and how much of today's reading is used.
+Every article that matches your interests reaches your Feed, on every plan. Mera reads them, sets aside the noise and lifts what matters. What a plan sets is how much Mera reads for you in the cloud each day: Starter 10 MB, Individual 50 MB (5 times Starter) and Professional 200 MB (20 times Starter). Settings in the app shows how much of today's cloud reading is used; when Mera reads on the phone instead, it shows that reading is unlimited.
 
 Why megabytes and not articles: Mera reads for you through end-to-end encryption, so it cannot see which articles it reads or how many. What it can measure is how much encrypted text it was sent to read, so that is what a plan counts.
 

@@ -1,5 +1,6 @@
 import { Group, GroupLabel, Row, Badge } from '@/components/custom/you/rows';
 import { Pressable } from '@/components/ui/pressable';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
@@ -17,15 +18,40 @@ import { useTranslation } from 'react-i18next';
 import { Platform, View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import SettingsUsageCard from './SettingsUsageCard';
-import SupportIdCopy from './SupportIdCopy';
+import SupportIdCopy, { useAccountHandle } from './SupportIdCopy';
 import { useAppPreferences } from './useAppPreferences';
-import { useRestorePurchases } from './useRestorePurchases';
 import { emailCutoffLabel, isEmailAccount, requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
 type YouSettingsScreen = 'display' | 'notifications' | 'mera-protocol' | 'app-lock' | 'data';
 const youScreen = (screen: YouSettingsScreen) => `/logged-in/app_container/you/${screen}` as Href;
+
+/** The account row: how this account signs in, with the Support ID and its
+ *  copy button as the sub-line (the only place Settings shows it). A Row's
+ *  subtitle is text only, so this mirrors Row's look. `reserveSubLine` keeps
+ *  the line's height while the cached id loads, so the row never jumps. */
+const AccountRow: React.FC<{ testID: string; icon: keyof typeof MaterialIcons.glyphMap; title: string; reserveSubLine: boolean }> = ({
+    testID,
+    icon,
+    title,
+    reserveSubLine,
+}) => {
+    const colors = useColors();
+    const handle = useAccountHandle();
+    return (
+        <View testID={testID} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, paddingHorizontal: 16 }}>
+            <MaterialIcons name={icon} size={20} color={colors.ink2} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ color: colors.ink, fontSize: 16, lineHeight: 21 }}>{title}</Text>
+                {/* An email account with no Support ID yet: its "!" already has the Move to phone row. */}
+                <View style={{ minHeight: reserveSubLine ? 20 : 0, marginTop: 2 }}>
+                    {handle?.kind === 'supportId' ? <SupportIdCopy testID="settings-support-id" compact /> : null}
+                </View>
+            </View>
+        </View>
+    );
+};
 
 
 /**
@@ -57,7 +83,6 @@ const AppPreferencesTab: React.FC = () => {
         openFaq,
     } = useAppPreferences();
     useFocusEffect(refreshOnFocus);
-    const { restoring, restore } = useRestorePurchases();
     // The move row is for accounts that still have an email (a displayed one, or the stored row / session).
     const [emailAccount, setEmailAccount] = useState(false);
     useEffect(() => {
@@ -183,14 +208,9 @@ const AppPreferencesTab: React.FC = () => {
             <GroupLabel testID="settings-group-account">{t('settings.groupAccount')}</GroupLabel>
             <Group>
                 {displayEmail ? (
-                    <Row testID="settings-row-email" leadingIcon="mail-outline" title={maskEmail(displayEmail)} />
+                    <AccountRow testID="settings-row-email" icon="mail-outline" title={maskEmail(displayEmail)} reserveSubLine={false} />
                 ) : (
-                    <Row
-                        testID="settings-row-phone"
-                        leadingIcon="smartphone"
-                        title={t('you.settings.signedInPhone')}
-                        subtitle={t('you.settings.noEmailNeeded')}
-                    />
+                    <AccountRow testID="settings-row-phone" icon="smartphone" title={t('you.settings.signedInPhone')} reserveSubLine />
                 )}
                 {showMoveRow ? (
                     <Row
@@ -201,17 +221,9 @@ const AppPreferencesTab: React.FC = () => {
                         onPress={() => void requestMoveToPhone()}
                     />
                 ) : null}
-                <Row
-                    testID="settings-row-restore-purchases"
-                    leadingIcon="restore"
-                    title={t('you.settings.restorePurchases')}
-                    onPress={() => void restore()}
-                    trailing={restoring ? busy : undefined}
-                />
             </Group>
-            {/* Under Restore purchases (owner mockup): where a plan lives and who sends receipts. */}
-            <View style={{ paddingHorizontal: 4, paddingTop: 8, paddingBottom: 12, gap: 8 }}>
-                <Text style={{ color: colors.ink3, fontSize: 13 }}>{t('subscription.platformSwitch')}</Text>
+            {/* Under the account card: who sends receipts. Restore purchases lives on Manage plan. */}
+            <View style={{ paddingHorizontal: 4, paddingTop: 8, paddingBottom: 12 }}>
                 <Text style={{ color: colors.ink3, fontSize: 13 }}>
                     {t(Platform.OS === 'ios' ? 'subscription.invoicesAppStore' : 'subscription.invoicesPlayStore')}
                 </Text>
@@ -264,8 +276,6 @@ const AppPreferencesTab: React.FC = () => {
                     {link(t('preferences.contentPolicy'), withAppLanguage(CONTENT_POLICY_URL), 'settings-link-content')}
                     {link(t('auth.sourceCode'), GITHUB_URL, 'settings-link-source-code')}
                 </View>
-                {/* Always shown when known, so anyone can quote it to support. */}
-                <SupportIdCopy testID="settings-support-id" footer />
                 {/* Three taps here within 1.5 s toggle developer mode. */}
                 <Pressable testID="settings-version" onPress={onVersionTap} accessible={false} style={{ minHeight: 44, justifyContent: 'center' }}>
                     <Text style={{ color: colors.ink3, fontSize: 12 }}>{versionText}</Text>

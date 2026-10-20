@@ -13,8 +13,6 @@ const base: ReadingMeterInput = {
   online: true,
   updatedAt: null,
   onDevice: false,
-  onDeviceSupported: false,
-  multiplier: 1,
   planRaised: false,
 };
 const m = (o: Partial<ReadingMeterInput> = {}) => readingMeterModel({ ...base, ...o });
@@ -62,22 +60,15 @@ describe('readingMeterModel', () => {
     expect(m({ online: false, used: null, held: true, holdResetAt: NOON + 1 }).showOfflineOnly).toBe(false);
   });
 
-  it('on-device dims and says so; support shows the unlimited line', () => {
-    expect(m({ onDevice: true })).toMatchObject({ dimmed: true, showOnPhoneLine: true });
-    expect(m()).toMatchObject({ dimmed: false, showOnPhoneLine: false, showUnlimitedLine: false });
-    expect(m({ onDeviceSupported: true }).showUnlimitedLine).toBe(true);
+  it('cloud mode names the cloud', () => {
+    expect(m().mode).toBe('cloud');
   });
 
-  it('states each plan in MB: 10 x the multiplier, Starter (and anything below) at 10', () => {
-    expect(m({ multiplier: 1 })).toMatchObject({ multiplierKey: 'base', planMb: 10, multiplier: 1 });
-    expect(m({ multiplier: 5 })).toMatchObject({ multiplierKey: 'n', planMb: 50, multiplier: 5 });
-    expect(m({ multiplier: 20 })).toMatchObject({ multiplierKey: 'n', planMb: 200, multiplier: 20 });
-    expect(m({ multiplier: 0 })).toMatchObject({ multiplierKey: 'base', planMb: 10, multiplier: 1 });
-  });
-
-  it('multiplier key is base at 1 or less, n above', () => {
-    expect(m({ multiplier: 1 }).multiplierKey).toBe('base');
-    expect(m({ multiplier: 5 }).multiplierKey).toBe('n');
+  it('on device is unlimited: never held, never offline-only, no new-plan line', () => {
+    expect(m({ onDevice: true })).toMatchObject({ mode: 'onDevice', done: false, showOfflineOnly: false });
+    expect(m({ onDevice: true, held: true, used: 1 })).toMatchObject({ mode: 'onDevice', done: false });
+    expect(m({ onDevice: true, online: false, used: null })).toMatchObject({ mode: 'onDevice', showOfflineOnly: false });
+    expect(m({ onDevice: true, planRaised: true }).showNewPlan).toBe(false);
   });
 
   it('shows the new-plan line only when the plan rose', () => {

@@ -8,7 +8,7 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 
-/** Settings > Restore purchases: ask the store, refresh the entitlement, say what happened. */
+/** Manage plan > Restore purchases: ask the store, refresh the entitlement, say what happened. */
 export function useRestorePurchases() {
     const { t } = useTranslation();
     const [restoring, setRestoring] = useState(false);
