@@ -22,7 +22,7 @@ describe('classifyConsent', () => {
     },
   );
 
-  it.each(['', '   ', 'yes, and I also follow F1', 'keep it', 'please', 'ja', 'what does this do?', 'I live in Porto'])(
+  it.each(['', '   ', 'yes, and I also follow F1', 'no problem, go ahead', 'sure, why not', 'keep it', 'please', 'ja', 'what does this do?', 'I live in Porto'])(
     '%p defers to Kev',
     (text) => {
       expect(classifyConsent(text)).toBe('none');
@@ -39,7 +39,7 @@ describe('negates', () => {
     expect(negates(text)).toBe(true);
   });
 
-  it.each(['yes, add that one', 'go ahead', 'I know about it', 'notes are fine', 'nothing else, apply it'])('%p does not', (text) => {
+  it.each(['yes, add that one', 'go ahead', 'I know about it', 'notes are fine', 'nothing else, apply it', 'no problem, go ahead', 'no worries, do it', 'sure, why not', 'not bad'])('%p does not', (text) => {
     expect(negates(text)).toBe(false);
   });
 });

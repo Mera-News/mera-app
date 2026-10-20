@@ -13,6 +13,8 @@ const DECLINE = /^(?:(?:no|nope|nah|please)[ ,]+)?(?:no|nope|nah|cancel|cancel i
 // A "no" anywhere in the message. Not a decline on its own ("yes, and no more
 // F1" is a yes), but Kev may never turn such a message into an apply.
 const NEGATION = /(?:^|[^a-z'])(?:no|not|nope|nah|never|don'?t|do not|cancel|stop|wait|hold on)(?![a-z'])/;
+// Ways of saying yes that contain a no: removed before the test, so they reach Kev unvetoed.
+const YES_IDIOMS = /\b(?:no problem|no worries|not a problem|why not|not bad)\b/g;
 
 function plain(text: string): string {
   return (text ?? '')
@@ -46,7 +48,7 @@ export function classifyConsent(message: string): Consent {
  * don't apply that yet" must not apply a change).
  */
 export function negates(message: string): boolean {
-  return NEGATION.test(plain(message));
+  return NEGATION.test(plain(message).replace(YES_IDIOMS, ' '));
 }
 
 /** True when `statement` says what a saved fact already says (the cloud's "already on file" form). */
