@@ -233,10 +233,12 @@ export async function runPersonaKevTurn(
   let tapTarget: string | null = null;
   const lines: string[] = [];
   if (chat.tap) {
-    const [tapIntent, tapFact] = chat.tap.split(':') as [PersonaIntent, string | undefined];
+    // `intent` or `intent:<fact id>`: the real id, so a fact saved between the ask and the tap cannot shift it.
+    const sep = chat.tap.indexOf(':');
+    const tapIntent = (sep === -1 ? chat.tap : chat.tap.slice(0, sep)) as PersonaIntent;
     if ((PERSONA_INTENTS as readonly string[]).includes(tapIntent)) {
       intent = tapIntent;
-      tapTarget = tapFact ?? null;
+      tapTarget = sep === -1 ? null : chat.tap.slice(sep + 1);
       trace.source = 'tap';
     }
   }
@@ -272,9 +274,11 @@ export async function runPersonaKevTurn(
   if (intent === 'remove_fact' || intent === 'correct_fact') {
     const which = intent;
     let answer: Pick<DecisionChoiceAnswer, 'probabilities'>;
-    if (tapTarget) {
-      answer = { probabilities: { [tapTarget]: 1 } };
-      lines.push(`The fact they mean: "${facts[Number(tapTarget.slice(1)) - 1]?.statement ?? ''}"`);
+    // A tapped fact that is gone since the ask is asked about again.
+    const tapped = tapTarget ? facts.findIndex((f) => f.id === tapTarget) : -1;
+    if (tapped !== -1) {
+      answer = { probabilities: { [factKey(tapped)]: 1 } };
+      lines.push(`The fact they mean: "${facts[tapped].statement}"`);
     } else {
       const run = await timedDecide(trace, () => runDecision(personaTargetSpec, { ...base, intent: which }, ports.decide));
       answer = run.decision;
@@ -282,12 +286,17 @@ export async function runPersonaKevTurn(
     }
     const factAt = (key: string) => (/^f\d+$/.test(key) ? facts[Number(key.slice(1)) - 1] : undefined);
     const best = top(answer);
-    const factLabels = Object.fromEntries(
-      facts.map((f, i) => [`${which}:${factKey(i)}`, f.statement]),
-    ) as Record<string, string>;
+    const factLabels = Object.fromEntries(facts.map((f) => [`${which}:${f.id}`, f.statement])) as Record<string, string>;
     const askFact = () => {
-      // The chips carry intent and fact, so a tap needs no second Kev call.
-      const scoped = { probabilities: Object.fromEntries(ranked(answer).filter((r) => r.key !== NONE).map((r) => [`${which}:${r.key}`, r.p])) };
+      // The chips carry intent and fact id, so a tap needs no second Kev call.
+      const scoped = {
+        probabilities: Object.fromEntries(
+          ranked(answer).flatMap((r) => {
+            const f = factAt(r.key);
+            return f ? [[`${which}:${f.id}`, r.p]] : [];
+          }),
+        ),
+      };
       return askCall(scoped, factLabels, ports.t('kevChat.askFact'));
     };
     const noneSure = best?.key === NONE && !isUnsure(answer);

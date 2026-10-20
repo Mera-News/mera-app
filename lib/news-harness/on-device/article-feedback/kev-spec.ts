@@ -216,10 +216,12 @@ export async function runArticleKevTurn(
   let tapTopic: string | null = null;
   const lines: string[] = [];
   if (chat.tap) {
-    const [tapIntent, tapKey] = chat.tap.split(':') as [ArticleKevIntent, string | undefined];
+    // `intent` or `intent:<topic text>`: the text, so a changed topic list cannot shift it.
+    const sep = chat.tap.indexOf(':');
+    const tapIntent = (sep === -1 ? chat.tap : chat.tap.slice(0, sep)) as ArticleKevIntent;
     if ((ARTICLE_KEV_INTENTS as readonly string[]).includes(tapIntent)) {
       intent = tapIntent;
-      tapTopic = tapKey ?? null;
+      tapTopic = sep === -1 ? null : chat.tap.slice(sep + 1);
       trace.source = 'tap';
     }
   }
@@ -253,13 +255,18 @@ export async function runArticleKevTurn(
   let topic: string | null = null;
   if (intent === 'see_less' || intent === 'see_more') {
     const which = intent;
-    if (tapTopic) topic = shown[Number(tapTopic.slice(1)) - 1] ?? null;
+    if (tapTopic && shown.includes(tapTopic)) topic = tapTopic;
     else if (shown.length === 1) topic = shown[0];
     else if (shown.length > 1) {
       const run = await timedDecide(trace, () => runDecision(articleTopicSpec, { ...base, intent: which }, ports.decide));
-      const labels = Object.fromEntries(shown.map((t, i) => [`${which}:${topicKey(i)}`, t]));
+      const labels = Object.fromEntries(shown.map((t) => [`${which}:${t}`, t]));
       const scoped = {
-        probabilities: Object.fromEntries(Object.entries(run.decision.probabilities).map(([k, p]) => [`${which}:${k}`, p])),
+        probabilities: Object.fromEntries(
+          Object.entries(run.decision.probabilities).flatMap(([k, p]) => {
+            const t = shown[Number(k.slice(1)) - 1];
+            return t ? [[`${which}:${t}`, p]] : [];
+          }),
+        ),
       };
       const ask = askIfUnsure(scoped, labels, ports.t('kevChat.askTopic'));
       if (ask) {
@@ -270,7 +277,7 @@ export async function runArticleKevTurn(
       topic = best ? shown[Number(best.key.slice(1)) - 1] ?? null : null;
       lines.push(formatDecision(run.questions, run.answers, { labels: { topic: 'The topic they mean' } }));
     }
-    if (topic && tapTopic) lines.push(`The topic they mean: ${topic}`);
+    if (topic && topic === tapTopic) lines.push(`The topic they mean: ${topic}`);
   }
 
   // --- Explain, write, act ---------------------------------------------------

@@ -265,19 +265,35 @@ describe('persona chat on Kev', () => {
     const agent = persona();
     const asked = await turn(agent, thread, 'I do not do that anymore');
 
-    const shown = (await getFacts()).map((f) => f.statement);
+    const shown = await getFacts();
     expect(asked.toolCalls[0].input).toMatchObject({
       question: 'kevChat.askFact',
-      options: shown,
-      readings: ['remove_fact:f1', 'remove_fact:f2'],
+      options: shown.map((f) => f.statement),
+      // Real ids, never positions.
+      readings: shown.map((f) => `remove_fact:${f.id}`),
     });
     expect(cards(thread)).toEqual([expect.objectContaining({ kind: 'ask-choice-card', saveAll: null, somethingElse: true })]);
     expect((await getFacts())).toHaveLength(2);
 
+    // A fact saved between the ask and the tap must not shift which fact the chip names.
+    await addFact('Works as a <job>');
     const tapped = await turn(agent, thread, ' follows <SPORT ONE> ');
     expect(decideRequests).toHaveLength(2);
     expect(tapped.toolCalls.map((t) => [t.name, t.input])).toEqual([['deleteUserFacts', { fact_ids: [a.id] }]]);
-    expect((await getFacts())).toHaveLength(2);
+    expect((await getFacts())).toHaveLength(3);
+  });
+
+  it('a correction chip tap names the fact by id, so a fact saved in between cannot become the one replaced', async () => {
+    const home = await addFact('Lives in <town>');
+    await addFact('Works in <town>');
+    kevScript = { intent: { correct_fact: 0.9, share_new_fact: 0.1 }, target: { f1: 0.45, f2: 0.45, none: 0.1 } };
+    const thread: ConversationMessage[] = [];
+    const agent = persona();
+    await turn(agent, thread, 'it is <new town> now');
+    await addFact('Follows <club>');
+    writerReply = { statement: 'Lives in <new town>', reply: 'Update it?' };
+    const { toolCalls } = await turn(agent, thread, 'Lives in <town>');
+    expect(toolCalls[0].input).toMatchObject({ extracted_user_information: [{ statement: 'Lives in <new town>', replaces: home.id }] });
   });
 
   describe('a waiting change', () => {
@@ -398,7 +414,10 @@ describe('article chat on Kev', () => {
     const thread: ConversationMessage[] = [];
     const agent = await article();
     const asked = await turn(agent, thread, 'more like this');
-    expect(asked.toolCalls[0].input).toMatchObject({ options: ['<place> local news', '<place> transport'], readings: ['see_more:t1', 'see_more:t2'] });
+    expect(asked.toolCalls[0].input).toMatchObject({
+      options: ['<place> local news', '<place> transport'],
+      readings: ['see_more:<place> local news', 'see_more:<place> transport'],
+    });
     expect(proposal()).toBeNull();
 
     writerReply = { reply: 'More of these?', expected_effects: 'More transport.' };
@@ -443,6 +462,16 @@ describe('article chat on Kev', () => {
     expect(toolCalls[0].result).toMatchObject({ applied: expect.any(Number) });
     expect(proposal()).toBeNull();
     expect(decideRequests).toHaveLength(0);
+  });
+
+  it('decline_card: Kev reads a longer no and the waiting change is cancelled', async () => {
+    const agent = await article();
+    stageChange();
+    kevScript = { intent: { decline_card: 0.9, answer_question: 0.1 } };
+    const { names } = await turn(agent, [], 'no, leave it as it is');
+    expect(offeredIntents()).toEqual(expect.arrayContaining(['agree_to_card', 'decline_card']));
+    expect(names).toEqual(['cancelProposal']);
+    expect(proposal()).toBeNull();
   });
 
   it('follow_story is not offered once the story is followed', async () => {
@@ -503,6 +532,23 @@ describe('follow-story on Kev', () => {
     expect(out.reply).toBe('This chat only starts following a story.');
   });
 
+  it('follow_this_story writes options like a named story', async () => {
+    kevScript = { intent: { follow_this_story: 0.9, question_or_other: 0.1 } };
+    writerReply = { reply: 'Pick one below.', options: [{ label: 'The Narrow Event', search: 'event' }, { label: 'The Broad Story', search: 'story' }] };
+    const { names, out } = await turn(follow(), [], 'yes, that one');
+    expect(names).toEqual(['proposeTrack']);
+    expect(out.trace.intent).toBe('follow_this_story');
+  });
+
+  it('agree and decline on a card a typed answer can apply', async () => {
+    stageChange();
+    expect((await turn(follow(), [], 'go ahead')).names).toEqual(['applyProposal']);
+    stageChange();
+    kevScript = { intent: { decline_card: 0.85, question_or_other: 0.15 } };
+    expect((await turn(follow(), [], 'actually no, skip that')).names).toEqual(['cancelProposal']);
+    expect(proposal()).toBeNull();
+  });
+
   it('a typed yes on the story options (tap only) applies nothing', async () => {
     stageChange(true);
     const { names, out } = await turn(follow(), [], 'yes');
@@ -523,5 +569,38 @@ describe('follow-story on Kev', () => {
     const { out } = await turn(follow({ route: 'single' }), [], 'I want to follow a story');
     expect(out.reply).toBe('Which story?');
     expect(decideRequests).toHaveLength(0);
+  });
+});
+
+// ================================================================================================
+// The writer prompts
+// ================================================================================================
+
+describe('every Kev writer prompt', () => {
+  it('opens with the identity line, stays under 150 words of instructions and carries Kev\'s decision as text', async () => {
+    await addFact('Works as a <job>');
+    const { topics } = await seedFactWithTopics('Lives in <place>', ['<place> local news', '<place> transport']);
+    const seeded = await seedSuggestion({ articleId: 'art-2', title_en: 'A headline', matchedTopics: topics, relevance: 0.5 });
+    const article = new ArticleFeedbackOnDeviceAgent(USER, { articleId: seeded.articleId, suggestionId: seeded.suggestionId }, null, kevRoute);
+    const runs: [OnDeviceAgent, Probabilities, Record<string, unknown>][] = [
+      [new PersonaOnDeviceAgent(USER, 'CONFIG', kevRoute), { share_new_fact: 1 }, { reply: 'Hi.', facts: [{ statement: 'Has a dog', attribute: 'pets' }] }],
+      [new PersonaOnDeviceAgent(USER, 'ONBOARDING', kevRoute), { question_or_chat: 1 }, { reply: 'Hi.' }],
+      [article, { answer_question: 1 }, { reply: 'Hi.' }],
+      [article, { follow_story: 1 }, { reply: 'Pick.', options: [{ label: 'A Story', search: 'story' }] }],
+      [new FollowStoryOnDeviceAgent(USER, kevRoute), { follow_a_named_story: 1 }, { reply: 'Pick.', options: [{ label: 'A Story', search: 'story' }] }],
+      [new FollowStoryOnDeviceAgent(USER, kevRoute), { question_or_other: 1 }, { reply: 'Hi.' }],
+    ];
+    for (const [agent, intent, reply] of runs) {
+      kevScript = { intent };
+      writerReply = reply;
+      await turn(agent, [], 'hello');
+    }
+    expect(writes).toHaveLength(runs.length);
+    for (const { system, prompt } of writes) {
+      expect(system.startsWith('You are Mera, made by Mera.')).toBe(true);
+      expect(system.split(/\s+/).filter(Boolean).length).toBeLessThan(150);
+      expect(prompt).toContain('How Mera read the message:\nWhat the user wants: ');
+      expect(`${system}\n${prompt}`).not.toMatch(/\b(?:Kev|Qwen|probabilit|confidence)\b/i);
+    }
   });
 });
