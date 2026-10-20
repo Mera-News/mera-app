@@ -34,8 +34,13 @@ export function notePendingMode(
 /**
  * A scored row finalised with no note (Write notes off on this phone, D35):
  * the card shows the relevance chip alone. Not `reason_skipped` (its fact chips
- * show instead) and not a zero relevance (never scored, or excluded).
+ * show instead) and not a zero relevance (never scored, or excluded). On this
+ * phone only: in Private cloud a note-less row (a reasons batch that failed for
+ * good) keeps showing its fact chips alone, as it always has.
  */
-export function showsChipOnly(s: Pick<ForYouSuggestion, 'status' | 'reason' | 'relevance'>): boolean {
-    return s.status === ArticleSuggestionStatus.Complete && !s.reason && (s.relevance ?? 0) > 0;
+export function showsChipOnly(
+    s: Pick<ForYouSuggestion, 'status' | 'reason' | 'relevance'>,
+    onDevice: boolean,
+): boolean {
+    return onDevice && s.status === ArticleSuggestionStatus.Complete && !s.reason && (s.relevance ?? 0) > 0;
 }

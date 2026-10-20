@@ -25,7 +25,10 @@ describe('notePendingMode', () => {
 
 describe('showsChipOnly', () => {
   it('is true for a complete row with a relevance and no note (notes off on this phone)', () => {
-    expect(showsChipOnly({ status: S.Complete, reason: '', relevance: 0.6 })).toBe(true);
+    expect(showsChipOnly({ status: S.Complete, reason: '', relevance: 0.6 }, true)).toBe(true);
+  });
+  it('is false in Private cloud: a note-less cloud row keeps its fact chips only, as before', () => {
+    expect(showsChipOnly({ status: S.Complete, reason: '', relevance: 0.6 }, false)).toBe(false);
   });
   it.each([
     ['a row with its note', { status: S.Complete, reason: 'Why.', relevance: 0.6 }],
@@ -34,6 +37,6 @@ describe('showsChipOnly', () => {
     ['reason_skipped (its fact chips show)', { status: S.ReasonSkipped, reason: '', relevance: 0.6 }],
     ['unscored', { status: S.Unscored, reason: '', relevance: 0 }],
   ])('is false for %s', (_name, row) => {
-    expect(showsChipOnly(row as never)).toBe(false);
+    expect(showsChipOnly(row as never, true)).toBe(false);
   });
 });

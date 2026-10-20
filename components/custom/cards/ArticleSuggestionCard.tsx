@@ -22,6 +22,7 @@ import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle } from '@/lib/hooks/useShareArticle';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -274,7 +275,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   // that pass no `noteHeldLine` (Saved, the fact feed) show writing.
   const pendingMode = notePendingMode(suggestion, noteHeldLine != null);
   // Notes off on this phone: the chip alone, with no space held for a note that never comes.
-  const chipOnly = showsChipOnly(suggestion);
+  const isOnDevice = useIsOnDeviceProcessing();
+  const chipOnly = showsChipOnly(suggestion, isOnDevice);
   const reasonBoxEl = relevanceReady && (reason || pendingMode || chipOnly) ? (
     <ReasonNote
       relevance={relevance}
