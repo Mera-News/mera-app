@@ -132,11 +132,16 @@ describe('mera-explainer-content — pipeline confidentiality', () => {
       .toBeNull();
   });
 
-  it('names no downloaded on-device model; only the built-in ones may be named (D29)', () => {
+  it('names no downloaded on-device model; only Apple Intelligence may be named (D29, D44)', () => {
     expect(source).not.toMatch(/kev|qwen/i);
     expect(MERA_EXPLAINER_SECTIONS.encryption_and_inference).toContain('Apple Intelligence');
-    expect(MERA_EXPLAINER_SECTIONS.encryption_and_inference).toContain('Gemini Nano');
     expect(MERA_EXPLAINER_SECTIONS.encryption_and_inference).toMatch(/Beta/);
+  });
+
+  it('says On this phone is an iPhone-only beta, not offered on Android yet (D44)', () => {
+    const text = MERA_EXPLAINER_SECTIONS.encryption_and_inference;
+    expect(text).toMatch(/iPhone with Apple Intelligence only/);
+    expect(text).not.toMatch(/Gemini Nano/);
   });
 
   it('points at the public feed registry instead', () => {
