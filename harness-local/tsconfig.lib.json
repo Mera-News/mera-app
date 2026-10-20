@@ -60,6 +60,10 @@
     "scripts/run-singleshot-corpus.ts",
     "scripts/score-option-quality.ts",
     "scripts/adoption-report.ts",
-    "scripts/kev-parity.ts"
+    "scripts/kev-parity.ts",
+    "../lib/news-harness/on-device/kev/index.ts",
+    "../lib/news-harness/on-device/persona-chat/kev-spec.ts",
+    "../lib/news-harness/on-device/article-feedback/kev-spec.ts",
+    "../lib/news-harness/on-device/follow-story/kev-spec.ts"
   ]
 }
