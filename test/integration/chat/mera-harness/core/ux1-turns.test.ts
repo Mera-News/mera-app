@@ -1300,3 +1300,402 @@ describe('follow-this: pointing at a fact card still waiting', () => {
     expect(out.reply).toBe('Tap Add on the card above to follow Artemis.');
   });
 });
+
+describe('stagefix P1b: an empty save blocks forcing only on a turn that states no fact', () => {
+  const UKR: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [{ id: 'ukr', statement: 'Follows the war in Ukraine', attribute: 'topics: general interests' }],
+  };
+  const BER: Place = { locality: 'Berlin', admin1: 'Berlin', countryCode: 'DE', countryName: 'Germany', bloc: 'EU' };
+
+  // Measured (stagefix eval): the model answered a genuine origin-and-home
+  // message with a placeholder empty save and no reply; the forced leg used
+  // to rescue it.
+  it('a genuine multi-fact turn whose leg saves [] and then says nothing still gets the forced offer', async () => {
+    const h = harness([
+      res({ content: 'Got it.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [] })] }),
+      res({ content: '' }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'From India', questionnaire_attribute: ORIGIN_KEY },
+      ] })] }),
+      res({ content: 'Here they are.' }),
+    ], { lookupPlace: async () => ({ status: 'resolved', places: [BER] }) });
+    const out = await runAgentTurn({
+      state: createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] }),
+      userMessage: "I'm originally from India and I live in Berlin now",
+      deps: h.deps,
+    });
+    expect(h.calls.map((c) => c.toolChoice)).toContain('required');
+    expect(out.forcedProposal).toBe(true);
+    expect(h.saves.flat().map((e) => e.statement)).toContain('From India');
+  });
+
+  it.each([
+    ['stop showing me cricket news', 'No longer follows cricket news'],
+    ['stop showing me cricket news', 'Does not want cricket news'],
+    ['मुझे क्रिकेट की खबरें मत दिखाओ', 'Dislikes cricket news'],
+  ])('"%s": a forced "%s" is never offered, the prose stands', async (userMessage, invented) => {
+    const persona: AgentPersona = { ...UKR, facts: [...UKR.facts, { id: 'cr', statement: 'Follows cricket', attribute: 'topics: general interests' }] };
+    const h = harness([
+      res({ content: 'Okay.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ content: 'Okay, no more cricket.' }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: invented, questionnaire_attribute: 'topics: general interests', replaces: 'cr' },
+      ] })] }),
+      res({ content: 'Offered.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(persona), userMessage, deps: h.deps });
+    expect(h.saves.flat()).toEqual([]);
+    expect(out.reply).toBe('Okay, no more cricket.');
+    expect(out.terminalReason).toBe('settled');
+  });
+
+  it.each(['nice', 'thanks', 'cool'])('"%s" gets no forced leg, after an empty save or without one', async (ack) => {
+    for (const script of [
+      [
+        res({ content: 'Glad.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [] })] }),
+        res({ content: 'Glad you like it.' }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Follows the war in Ukraine news' }] })] }),
+      ],
+      [
+        res({ content: 'Glad.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+        res({ content: 'Glad you like it.' }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Follows the war in Ukraine news' }] })] }),
+      ],
+    ]) {
+      const h = harness(script);
+      const out = await runAgentTurn({ state: createAgentState(UKR), userMessage: ack, deps: h.deps });
+      expect(h.calls.map((c) => c.toolChoice)).not.toContain('required');
+      expect(h.saves.flat()).toEqual([]);
+      expect(out.forcedProposal).toBe(false);
+      expect(out.reply).toBe('Glad you like it.');
+    }
+  });
+});
+
+describe('stagefix P1c: acknowledgements, see-less turns and waiting cards', () => {
+  const UKR: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [
+      { id: 'ukr', statement: 'Follows the war in Ukraine', attribute: 'topics: general interests' },
+      { id: 'cr', statement: 'Follows cricket', attribute: 'topics: general interests' },
+    ],
+  };
+  const CARD = "Follows NASA's Artemis lunar program";
+  const artemisState = () => {
+    const state = createAgentState(UKR);
+    state.pendingCardStatements = [CARD];
+    state.turn.recentExchanges = [{ user: 'What is happening with the Artemis program?', reply: 'Want me to track Artemis updates for you?' }];
+    state.turn.lastSubjects = [CARD];
+    return state;
+  };
+
+  // Measured (stagefix2 eval): beside a waiting Artemis card, "follow this"
+  // saved [] and the forced leg then staged "Follows the Artemis program".
+  it.each(['yes', 'follow this'])('"%s" beside a waiting card: an empty save is final, no forced leg', async (userMessage) => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [] })] }),
+      res({ content: 'Tap Add on the card above.' }),
+      // The bait a forced leg would stage. For "yes" this is the tool-free
+      // leg that points at the card (P1d), which drops the call.
+      res({ content: 'Tap Add on the card above.', toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Follows the Artemis program' }] })] }),
+    ]);
+    const out = await runAgentTurn({ state: artemisState(), userMessage, deps: h.deps });
+    expect(h.calls.map((c) => c.toolChoice)).not.toContain('required');
+    expect(h.saves.flat()).toEqual([]);
+    expect(out.forcedProposal).toBe(false);
+    expect(out.reply).toBe('Tap Add on the card above.');
+  });
+
+  // Owner ruling: ok and thanks only acknowledge, in every app language.
+  it.each(['धन्यवाद', 'ठीक है', 'danke', 'ありがとう', '谢谢'])('"%s" gets no forced leg after an empty save', async (ack) => {
+    const h = harness([
+      res({ content: 'Glad.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [] })] }),
+      res({ content: 'Glad you like it.' }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Follows the war in Ukraine news' }] })] }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(UKR), userMessage: ack, deps: h.deps });
+    expect(h.calls.map((c) => c.toolChoice)).not.toContain('required');
+    expect(h.saves.flat()).toEqual([]);
+    expect(out.reply).toBe('Glad you like it.');
+  });
+
+  // Owner ruling: stop, less, mute and hide stage a filter, never a negative
+  // fact card, forced or not (stagefix2: unforced "Does not want The Hindu
+  // included in news updates" on "Mute The Hindu").
+  it.each([
+    ['Mute The Hindu', 'Does not want The Hindu included in news updates'],
+    ['Stop showing me cricket news', 'Is not interested in cricket'],
+    ['The Hindu की खबरें मत दिखाओ', 'Dislikes The Hindu'],
+  ])('"%s": an UNFORCED "%s" is dropped, the prose stands', async (userMessage, negative) => {
+    const h = harness([
+      res({ content: 'Okay.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ content: 'Okay, less of that.', toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: negative, questionnaire_attribute: 'topics: general interests' },
+      ] })] }),
+      res({ content: 'Offered.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(UKR), userMessage, deps: h.deps });
+    expect(h.saves).toEqual([]);
+    expect(h.calls.map((c) => c.toolChoice)).not.toContain('required');
+    expect(out.reply).toBe('Okay, less of that.');
+    expect(out.terminalReason).toBe('settled');
+  });
+
+  // stagefix2 feed-tuning t13: "ok" resumed the question asked after "Mute The
+  // Hindu", and an unforced leg staged "Does not want The Hindu as a source".
+  it('a typed ok resuming a see-less turn drops the negative offer too', async () => {
+    const state = createAgentState(UKR);
+    state.turn.lastQuestion = 'Do you want me to remove a saved fact instead?';
+    state.turn.lastSkill = 'facts/interest';
+    state.turn.lastUserMessage = 'Mute The Hindu';
+    const h = harness([
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'Does not want The Hindu as a source', questionnaire_attribute: 'topics: general interests' },
+      ] })] }),
+      res({ content: 'Okay, nothing changes on your profile.' }),
+    ]);
+    const out = await runAgentTurn({ state, userMessage: 'ok', deps: h.deps });
+    expect(h.saves).toEqual([]);
+    // A silent leg has no prose to settle on: the next leg writes the reply.
+    expect(out.reply).toBe('Okay, nothing changes on your profile.');
+  });
+
+  // Owner ruling: "I'm not interested in X" is a fact, so its card stands;
+  // any other negative shape on a forced leg is still dropped.
+  it.each([
+    ['Not interested in golf', ['Not interested in golf']],
+    ['Is not interested in golf', ['Is not interested in golf']],
+    ['Does not want golf news', []],
+  ])('"I am not interested in golf": a forced "%s" is offered only in the not-interested shape', async (statement, saved) => {
+    const h = harness([
+      res({ content: 'Noted.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ content: 'Got it, golf is not for you.' }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement, questionnaire_attribute: 'topics: general interests' },
+      ] })] }),
+      res({ content: 'Here it is.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(UKR), userMessage: 'I am not interested in golf', deps: h.deps });
+    expect(h.calls.map((c) => c.toolChoice)).toContain('required');
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(saved);
+  });
+
+  // Reviewer: the dropped-negative settle used to run BEFORE the waiting-card
+  // branch, so the reply never pointed at the card.
+  it('a forced call carrying a waiting card AND a dropped negative still points at the card', async () => {
+    const h = harness([
+      res({ content: 'One moment.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ content: 'Sure thing.' }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: CARD }, { statement: 'No longer follows cricket news' },
+      ] })] }),
+      res({ content: 'Tap Add on the card above to follow Artemis.' }),
+    ]);
+    const out = await runAgentTurn({ state: artemisState(), userMessage: 'follow this', deps: h.deps });
+    expect(h.calls[2].toolChoice).toBe('required');
+    expect(h.saves).toEqual([]);
+    expect(h.calls).toHaveLength(4);
+    expect(h.calls[3].tools).toEqual([]);
+    const saveResult = out.legs.flatMap((l) => l.toolResults).find((r) => r.name === 'saveExtractedFacts');
+    expect(saveResult?.result).toMatchObject({ alreadyWaiting: [CARD] });
+    expect(out.reply).toBe('Tap Add on the card above to follow Artemis.');
+  });
+});
+
+describe('stagefix P1d: see-less offers, real negative facts, reworded and acknowledged waiting cards', () => {
+  const UKR: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [
+      { id: 'ukr', statement: 'Follows the war in Ukraine', attribute: 'topics: general interests' },
+      { id: 'cr', statement: 'Follows cricket', attribute: 'topics: general interests' },
+    ],
+  };
+  const CARD = "Follows NASA's Artemis lunar program";
+  const artemisState = () => {
+    const state = createAgentState(UKR);
+    state.pendingCardStatements = [CARD];
+    state.turn.recentExchanges = [{ user: 'What is happening with the Artemis program?', reply: 'Want me to track Artemis updates for you?' }];
+    state.turn.lastSubjects = [CARD];
+    return state;
+  };
+
+  // Reviewer: these carry no interest word, so the narrow predicate let them
+  // through as cards beside "Stop showing me cricket".
+  it.each([
+    'Does not want cricket', 'Is not into cricket', 'Not a fan of cricket', 'Wants to see less cricket',
+    'Unfollowed cricket', 'Has no interest in cricket',
+  ])('"Stop showing me cricket": an unforced "%s" is dropped', async (negative) => {
+    const h = harness([
+      res({ content: 'Okay.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ content: 'Okay, less cricket.', toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: negative, questionnaire_attribute: 'topics: general interests' },
+      ] })] }),
+      res({ content: 'Offered.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(UKR), userMessage: 'Stop showing me cricket', deps: h.deps });
+    expect(h.saves).toEqual([]);
+    expect(out.reply).toBe('Okay, less cricket.');
+  });
+
+  it('a compound see-less message keeps the real fact beside it', async () => {
+    const h = harness([
+      res({ content: 'Okay.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ content: 'Here is your move.', toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'Lives in Berlin', questionnaire_attribute: 'location: residence' },
+        { statement: 'Does not want cricket', questionnaire_attribute: 'topics: general interests' },
+      ] })] }),
+      res({ content: 'Done.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(UKR), userMessage: 'Stop showing me cricket, I moved to Berlin', deps: h.deps });
+    const saved = h.saves.flat().map((e) => String(e.statement));
+    expect(saved.some((s) => s.includes('Berlin'))).toBe(true);
+    expect(saved.some((s) => /cricket/i.test(s))).toBe(false);
+  });
+
+  // Reviewer: DISLIKE_LEAD needed no interest word, so a genuine fact was
+  // dropped from a forced leg on an ordinary turn.
+  it.each([
+    ['I avoid gluten', 'Avoids gluten'],
+    ['I am no longer interested in F1', 'No longer interested in F1'],
+  ])('"%s": a forced "%s" is offered', async (userMessage, statement) => {
+    const h = harness([
+      res({ content: 'Noted.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ content: 'Got it.' }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement, questionnaire_attribute: 'topics: general interests' },
+      ] })] }),
+      res({ content: 'Here it is.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(UKR), userMessage, deps: h.deps });
+    expect(h.calls.map((c) => c.toolChoice)).toContain('required');
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([statement]);
+  });
+
+  // stagefix2 NEW r0 t4: an UNFORCED reworded copy of the waiting card was
+  // staged as a second card on the same subject.
+  it('a reworded copy of a waiting card points at the card instead of staging it', async () => {
+    const h = harness([
+      res({ content: 'One moment.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ content: "I'll follow Artemis for you.", toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'Follows the NASA Artemis lunar program' },
+      ] })] }),
+      res({ content: 'Tap Add on the card above to follow Artemis.' }),
+    ]);
+    const out = await runAgentTurn({ state: artemisState(), userMessage: 'follow this', deps: h.deps });
+    expect(h.saves).toEqual([]);
+    const saveResult = out.legs.flatMap((l) => l.toolResults).find((r) => r.name === 'saveExtractedFacts');
+    expect(saveResult?.result).toMatchObject({ alreadyWaiting: [CARD] });
+    expect(h.calls[2].tools).toEqual([]);
+    expect(out.reply).toBe('Tap Add on the card above to follow Artemis.');
+  });
+
+  // Owner ruling: an acknowledgement applies nothing and Mera points at the
+  // waiting card. stagefix2: "thanks" answered "You're welcome" 6 of 8 times,
+  // and once shipped a skill-body line as the whole reply to "ok".
+  it.each(['thanks', 'ok', 'yes', 'धन्यवाद'])('"%s" beside a waiting card ends on a leg that points at it', async (userMessage) => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: "You're welcome! What else can I help with?" }),
+      res({ content: 'Tap Add on the card above if you want it.' }),
+    ]);
+    const out = await runAgentTurn({ state: artemisState(), userMessage, deps: h.deps });
+    expect(h.saves).toEqual([]);
+    expect(h.calls).toHaveLength(3);
+    expect(h.calls[2].tools).toEqual([]);
+    expect(out.legs[2].messages.map((m) => m.content).join('\n')).toMatch(/tap/i);
+    expect(out.reply).toBe('Tap Add on the card above if you want it.');
+  });
+
+  it('"thanks" with no card waiting keeps its own reply', async () => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: "You're welcome! What else can I help with?" }),
+      res({ content: 'unused' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(UKR), userMessage: 'thanks', deps: h.deps });
+    expect(h.calls).toHaveLength(2);
+    expect(out.reply).toBe("You're welcome! What else can I help with?");
+  });
+
+  // Reviewer (scope): on device every untapped card in the thread waits, so a
+  // genuine new fact beside an unrelated card must still get the forced offer
+  // after a placeholder empty save.
+  it('a genuine new fact beside an unrelated waiting card still gets the forced offer', async () => {
+    const BER: Place = { locality: 'Berlin', admin1: 'Berlin', countryCode: 'DE', countryName: 'Germany', bloc: 'EU' };
+    const h = harness([
+      res({ content: 'Got it.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [] })] }),
+      res({ content: '' }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'From India', questionnaire_attribute: ORIGIN_KEY },
+      ] })] }),
+      res({ content: 'Here they are.' }),
+    ], { lookupPlace: async () => ({ status: 'resolved', places: [BER] }) });
+    const out = await runAgentTurn({ state: artemisState(), userMessage: "I'm originally from India and I live in Berlin now", deps: h.deps });
+    expect(h.calls.map((c) => c.toolChoice)).toContain('required');
+    expect(out.forcedProposal).toBe(true);
+    expect(h.saves.flat().map((e) => e.statement)).toContain('From India');
+  });
+});
+
+describe('stagefix P1d review: the waiting-card twin and the yes leg keep their guards', () => {
+  const NW = 'Lives in Nieuw-West, Amsterdam, North Holland, Netherlands, EU';
+  const residenceTurn = (offer: string, card: string) => {
+    const state = createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] });
+    state.pendingCardStatements = [card];
+    const h = harness([
+      res({ content: 'Okay.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ content: 'Here it is.', toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: offer, questionnaire_attribute: 'location: residence' },
+      ] })] }),
+      res({ content: 'Done.' }),
+    ]);
+    return { state, h };
+  };
+
+  // The near-twin rule skips homes and needs subject agreement; the waiting
+  // card version must too, or a corrected district is silently dropped.
+  it('a corrected district beside a waiting home card is its own card', async () => {
+    const offer = 'Lives in Noord, Amsterdam, North Holland, Netherlands, EU';
+    const { state, h } = residenceTurn(offer, NW);
+    await runAgentTurn({ state, userMessage: 'Sorry, I live in Noord, Amsterdam', deps: h.deps });
+    expect(h.saves.flat().map((e) => String(e.statement))).toEqual([offer]);
+  });
+
+  it("a relative's place beside the user's own waiting card is its own card", async () => {
+    const card = 'Teaches in Bhopal';
+    const offer = 'Father teaches in Bhopal';
+    const state = createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] });
+    state.pendingCardStatements = [card];
+    const h = harness([
+      res({ content: 'Okay.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      res({ content: 'Here it is.', toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: offer }] })] }),
+      res({ content: 'Done.' }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'My father teaches in Bhopal', deps: h.deps });
+    expect(h.saves.flat().map((e) => String(e.statement))).toEqual([offer]);
+  });
+
+  // A yes to a conversation question routes normally; its answer must not be
+  // replaced by "tap the card" because an older card still waits.
+  it('"yes" answering a conversation question beside an unrelated card keeps its answer', async () => {
+    const state = createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] });
+    state.pendingCardStatements = ['Works as a nurse at a hospital'];
+    state.turn.lastQuestion = 'Want me to look up the latest on Artemis?';
+    state.turn.lastSkill = 'conversation/question';
+    state.turn.lastUserMessage = 'What is happening with the Artemis program?';
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'Artemis III is now planned for mid-2027.' }),
+      res({ content: 'Tap Add on the card above.' }),
+    ]);
+    const out = await runAgentTurn({ state, userMessage: 'yes', deps: h.deps });
+    expect(h.calls).toHaveLength(2);
+    expect(out.reply).toBe('Artemis III is now planned for mid-2027.');
+  });
+});

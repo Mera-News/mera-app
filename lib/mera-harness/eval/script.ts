@@ -163,11 +163,20 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
     fail(scriptId, `turn ${i} must carry exactly one of 'user' or 'chooses'.`);
   }
 
+  const pendingCards = rec.pendingCards;
+  if (
+    pendingCards !== undefined
+    && (!Array.isArray(pendingCards) || pendingCards.some((c) => typeof c !== 'string' || c.trim() === ''))
+  ) {
+    fail(scriptId, `turn ${i} pendingCards must be an array of non-empty statements, or absent.`);
+  }
+
   const ex = asRecord(rec.expect);
   if (!ex) fail(scriptId, `turn ${i} has no expect block.`);
 
-  const routeKind = typeof ex.routeKind === 'string' ? ex.routeKind : '';
-  if (!opts.routeKinds.includes(routeKind)) {
+  // routeKind, skill and legs are optional; a value that IS written must be real.
+  const routeKind = typeof ex.routeKind === 'string' ? ex.routeKind : ex.routeKind === undefined ? undefined : '';
+  if (routeKind !== undefined && !opts.routeKinds.includes(routeKind)) {
     fail(
       scriptId,
       `turn ${i} expects routeKind '${routeKind}', which the agent core does not export. ` +
@@ -175,8 +184,8 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
     );
   }
 
-  const skill = typeof ex.skill === 'string' ? ex.skill : '';
-  if (!opts.skillIds.includes(skill)) {
+  const skill = typeof ex.skill === 'string' ? ex.skill : ex.skill === undefined ? undefined : '';
+  if (skill !== undefined && !opts.skillIds.includes(skill)) {
     fail(
       scriptId,
       `turn ${i} expects skill '${skill}', which does not exist. ` +
@@ -185,8 +194,8 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
     );
   }
 
-  const legs = typeof ex.legs === 'number' ? ex.legs : NaN;
-  if (!Number.isInteger(legs) || legs < 1) {
+  const legs = typeof ex.legs === 'number' ? ex.legs : ex.legs === undefined ? undefined : NaN;
+  if (legs !== undefined && (!Number.isInteger(legs) || legs < 1)) {
     fail(scriptId, `turn ${i} needs an integer expect.legs (exact, not a ceiling).`);
   }
 
@@ -194,11 +203,12 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
     index: typeof rec.index === 'number' ? rec.index : i,
     user,
     chooses,
+    ...(pendingCards !== undefined ? { pendingCards: pendingCards as string[] } : {}),
     expect: {
-      routeKind,
-      skill,
+      ...(routeKind !== undefined ? { routeKind } : {}),
+      ...(skill !== undefined ? { skill } : {}),
       tools: asStringArray(ex.tools),
-      legs,
+      ...(legs !== undefined ? { legs } : {}),
       endedOn: (ex.endedOn as ScriptTurn['expect']['endedOn']) ?? 'settled',
       proposals: (ex.proposals as ScriptTurn['expect']['proposals']) ?? undefined,
       replyScript: parseReplyScript(scriptId, i, ex.replyScript),

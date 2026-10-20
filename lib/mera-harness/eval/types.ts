@@ -160,8 +160,9 @@ export interface EvalRow {
    */
   routeKind: string | null;
   skillLoaded: string | null;
-  expectedRouteKind: string;
-  expectedSkill: string;
+  /** Null when the fixture turn does not expect a route (see ScriptExpect). */
+  expectedRouteKind: string | null;
+  expectedSkill: string | null;
   /** Topic-gen rows only: the fact this call served, and the kind that selected
    *  its guideline. `items` mirrors the shape run-topicgen-corpus already uses,
    *  so a downstream join is by key rather than by parsing titles back out. */
@@ -194,19 +195,22 @@ export interface EvalToolCall {
 // ---------------------------------------------------------------------------
 
 export interface ScriptExpect {
-  routeKind: string;
+  /** `routeKind`, `skill` and `legs` may be left out on a turn scored only on
+   *  its outcome (noOffer, card, reply checks); that turn is then left out of
+   *  the router, skill and leg reports, never scored as a miss. */
+  routeKind?: string;
   /** A SKILL ID, written out per turn, never derived from the route kind: five
    *  intents map onto thirteen ids, `chat` collapses into
    *  conversation/question and `fact_update` splits between facts/<subject> and
    *  conversation/correction. Validated at load against the ids the agent core
    *  actually exports. */
-  skill: string;
+  skill?: string;
   tools: string[];
   /** EXACT leg count, not a ceiling. The normal residence turn is 3 legs, so a
    *  leg-cap hit there is a planted failure and the metric counts it as one;
    *  writing a ceiling would have made it invisible on the one fixture whose
    *  leg count is known. */
-  legs: number;
+  legs?: number;
   /** Defaults to 'settled'. A transport failure ends the turn, so a failure
    *  fixture expects FEWER legs and ending early there is correct. */
   endedOn?: TurnEnd;
@@ -291,6 +295,10 @@ export interface ScriptTurn {
    *  a mismatch is counted, never followed, so every arm keeps answering the
    *  same question and stays comparable. */
   chooses?: string;
+  /** Fact cards still waiting on screen when this turn is typed, fed to the
+   *  loop as `state.pendingCardStatements` for this turn only (the device
+   *  derives them from the thread before every turn). */
+  pendingCards?: string[];
   expect: ScriptExpect;
   fakeTools?: {
     lookup_place?: FakeLookupPlaceAnswer[];
