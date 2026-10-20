@@ -712,7 +712,8 @@
     "mayMistakes": "梅拉可能會出錯，因此請到原始來源查證重要的新聞。",
     "cardWaitingHint": "點選上方選項，或輸入「是」",
     "cardCancelled": "好的，沒有任何變更",
-    "changeUndone": "已復原"
+    "changeUndone": "已復原",
+    "cardTapHint": "點選上方選項。"
   },
   "articleFeedback": {
     "thumbsUpMessage": "我喜歡這篇文章:「{{title}}」。我想看到更多類似的建議。",

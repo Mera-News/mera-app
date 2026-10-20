@@ -1,0 +1,102 @@
+{
+  "en": {
+    "floatingChat": {
+      "cardTapHint": "Tap an option above."
+    }
+  },
+  "ar": {
+    "floatingChat": {
+      "cardTapHint": "اختر خيارًا من الأعلى."
+    }
+  },
+  "de": {
+    "floatingChat": {
+      "cardTapHint": "Tippe oben auf eine Option."
+    }
+  },
+  "es": {
+    "floatingChat": {
+      "cardTapHint": "Toca una opción de arriba."
+    }
+  },
+  "fr": {
+    "floatingChat": {
+      "cardTapHint": "Appuyez sur une option ci-dessus."
+    }
+  },
+  "hi": {
+    "floatingChat": {
+      "cardTapHint": "ऊपर कोई विकल्प चुनें।"
+    }
+  },
+  "id": {
+    "floatingChat": {
+      "cardTapHint": "Ketuk salah satu pilihan di atas."
+    }
+  },
+  "it": {
+    "floatingChat": {
+      "cardTapHint": "Tocca un'opzione qui sopra."
+    }
+  },
+  "ja": {
+    "floatingChat": {
+      "cardTapHint": "上の選択肢をタップしてください。"
+    }
+  },
+  "ko": {
+    "floatingChat": {
+      "cardTapHint": "위 옵션을 누르세요."
+    }
+  },
+  "nl": {
+    "floatingChat": {
+      "cardTapHint": "Tik hierboven op een optie."
+    }
+  },
+  "pl": {
+    "floatingChat": {
+      "cardTapHint": "Wybierz opcję powyżej."
+    }
+  },
+  "pt-BR": {
+    "floatingChat": {
+      "cardTapHint": "Toque em uma opção acima."
+    }
+  },
+  "ru": {
+    "floatingChat": {
+      "cardTapHint": "Выберите вариант выше."
+    }
+  },
+  "th": {
+    "floatingChat": {
+      "cardTapHint": "แตะตัวเลือกด้านบน"
+    }
+  },
+  "tr": {
+    "floatingChat": {
+      "cardTapHint": "Yukarıdan bir seçeneğe dokun."
+    }
+  },
+  "uk": {
+    "floatingChat": {
+      "cardTapHint": "Виберіть варіант вище."
+    }
+  },
+  "vi": {
+    "floatingChat": {
+      "cardTapHint": "Chọn một tùy chọn phía trên."
+    }
+  },
+  "zh-CN": {
+    "floatingChat": {
+      "cardTapHint": "点选上方的选项。"
+    }
+  },
+  "zh-TW": {
+    "floatingChat": {
+      "cardTapHint": "點選上方選項。"
+    }
+  }
+}

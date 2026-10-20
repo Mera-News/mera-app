@@ -712,7 +712,8 @@
     "mayMistakes": "메라는 실수할 수 있으니 중요한 뉴스는 원문에서 확인하세요.",
     "cardWaitingHint": "위 옵션을 누르거나 '네'라고 입력하세요",
     "cardCancelled": "알겠어요, 아무것도 바뀌지 않았어요",
-    "changeUndone": "되돌렸어요"
+    "changeUndone": "되돌렸어요",
+    "cardTapHint": "위 옵션을 누르세요."
   },
   "articleFeedback": {
     "thumbsUpMessage": "이 기사가 마음에 들었어요: \"{{title}}\". 이런 추천을 더 보고 싶어요.",

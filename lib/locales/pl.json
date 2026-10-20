@@ -742,7 +742,8 @@
     "mayMistakes": "Mera może popełniać błędy, dlatego sprawdzaj ważne wiadomości u źródła.",
     "cardWaitingHint": "Wybierz opcję powyżej albo napisz „tak”",
     "cardCancelled": "Dobrze, nic się nie zmieniło",
-    "changeUndone": "Cofnięto"
+    "changeUndone": "Cofnięto",
+    "cardTapHint": "Wybierz opcję powyżej."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Podobał mi się ten artykuł: \"{{title}}\". Chciałbym widzieć więcej takich sugestii.",

@@ -712,7 +712,8 @@
     "mayMistakes": "梅拉可能会出错，因此请在原始来源核实重要新闻。",
     "cardWaitingHint": "点选上方的选项，或输入“是”",
     "cardCancelled": "好的，没有任何更改",
-    "changeUndone": "已撤销"
+    "changeUndone": "已撤销",
+    "cardTapHint": "点选上方的选项。"
   },
   "articleFeedback": {
     "thumbsUpMessage": "我喜欢这篇文章:「{{title}}」。我想看到更多类似的推荐。",

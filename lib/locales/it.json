@@ -716,7 +716,8 @@
     "mayMistakes": "Mera può commettere errori, quindi controlla le notizie importanti alla fonte.",
     "cardWaitingHint": "Tocca un'opzione qui sopra, oppure scrivi sì",
     "cardCancelled": "Va bene, non è cambiato nulla",
-    "changeUndone": "Annullato"
+    "changeUndone": "Annullato",
+    "cardTapHint": "Tocca un'opzione qui sopra."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Mi è piaciuto questo articolo: \"{{title}}\". Vorrei vedere altri suggerimenti come questo.",

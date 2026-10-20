@@ -602,8 +602,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       : proposalCardWaiting
         ? typedYesApplies
           ? t('floatingChat.cardWaitingHint')
-          : // Lands with the next locale splice; the cast goes with it.
-            t('floatingChat.cardTapHint' as 'floatingChat.cardWaitingHint')
+          : t('floatingChat.cardTapHint')
         : null;
 
   // A card resolved by TYPING (the turn carried applyProposal or cancelProposal)

@@ -716,7 +716,8 @@
     "mayMistakes": "Mera kann Fehler machen, prüfe wichtige Nachrichten daher an der Quelle.",
     "cardWaitingHint": "Tippe oben auf eine Option oder schreib ja",
     "cardCancelled": "Okay, nichts hat sich geändert",
-    "changeUndone": "Rückgängig gemacht"
+    "changeUndone": "Rückgängig gemacht",
+    "cardTapHint": "Tippe oben auf eine Option."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Mir hat dieser Artikel gefallen: \"{{title}}\". Ich würde gerne mehr solcher Vorschläge sehen.",

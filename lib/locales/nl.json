@@ -716,7 +716,8 @@
     "mayMistakes": "Mera kan fouten maken, dus controleer belangrijk nieuws bij de bron.",
     "cardWaitingHint": "Tik hierboven op een optie, of typ ja",
     "cardCancelled": "Oké, er is niets veranderd",
-    "changeUndone": "Ongedaan gemaakt"
+    "changeUndone": "Ongedaan gemaakt",
+    "cardTapHint": "Tik hierboven op een optie."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Ik vond dit artikel leuk: \"{{title}}\". Ik zou graag meer van dit soort suggesties zien.",

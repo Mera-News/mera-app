@@ -716,7 +716,8 @@
     "mayMistakes": "Mera puede cometer errores, así que comprueba las noticias importantes en su fuente.",
     "cardWaitingHint": "Toca una opción de arriba, o escribe sí",
     "cardCancelled": "Vale, no cambié nada",
-    "changeUndone": "Deshecho"
+    "changeUndone": "Deshecho",
+    "cardTapHint": "Toca una opción de arriba."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Me gustó este artículo: \"{{title}}\". Me gustaría ver más sugerencias como esta.",

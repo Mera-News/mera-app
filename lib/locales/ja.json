@@ -712,7 +712,8 @@
     "mayMistakes": "メラは間違えることがあるので、重要なニュースは情報源で確認してください。",
     "cardWaitingHint": "上の選択肢をタップするか、「はい」と入力してください",
     "cardCancelled": "わかりました。何も変更していません",
-    "changeUndone": "元に戻しました"
+    "changeUndone": "元に戻しました",
+    "cardTapHint": "上の選択肢をタップしてください。"
   },
   "articleFeedback": {
     "thumbsUpMessage": "この記事が気に入りました:「{{title}}」。このような提案をもっと見たいです。",

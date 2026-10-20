@@ -716,7 +716,8 @@
     "mayMistakes": "A Mera pode cometer erros, então confira as notícias importantes na fonte original.",
     "cardWaitingHint": "Toque em uma opção acima ou digite sim",
     "cardCancelled": "Tudo bem, nada mudou",
-    "changeUndone": "Desfeito"
+    "changeUndone": "Desfeito",
+    "cardTapHint": "Toque em uma opção acima."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Gostei deste artigo: \"{{title}}\". Gostaria de ver mais sugestões como essa.",

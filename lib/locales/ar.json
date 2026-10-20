@@ -768,7 +768,8 @@
     "mayMistakes": "قد يرتكب ميرا أخطاء، لذا تحقق من الأخبار المهمة من مصدرها.",
     "cardWaitingHint": "اختر خيارًا من الأعلى، أو اكتب نعم",
     "cardCancelled": "حسنًا، لم يتغير شيء",
-    "changeUndone": "تم التراجع"
+    "changeUndone": "تم التراجع",
+    "cardTapHint": "اختر خيارًا من الأعلى."
   },
   "articleFeedback": {
     "thumbsUpMessage": "أعجبني هذا المقال: \"{{title}}\". أود رؤية اقتراحات أخرى مثل هذا.",

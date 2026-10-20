@@ -716,7 +716,8 @@
     "mayMistakes": "Mera hata yapabilir, bu yüzden önemli haberleri kaynağından kontrol edin.",
     "cardWaitingHint": "Yukarıdan bir seçeneğe dokun ya da evet yaz",
     "cardCancelled": "Tamam, hiçbir şey değişmedi",
-    "changeUndone": "Geri alındı"
+    "changeUndone": "Geri alındı",
+    "cardTapHint": "Yukarıdan bir seçeneğe dokun."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Bu makaleyi beğendim: \"{{title}}\". Bunun gibi daha fazla öneri görmek isterim.",

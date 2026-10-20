@@ -1066,7 +1066,8 @@
     "mayMistakes": "Mera may make mistakes, so check important news at the source.",
     "cardWaitingHint": "Tap an option above, or type yes",
     "cardCancelled": "Okay, nothing changed",
-    "changeUndone": "Undone"
+    "changeUndone": "Undone",
+    "cardTapHint": "Tap an option above."
   },
   "articleFeedback": {
     "likeLabel": "I like it",

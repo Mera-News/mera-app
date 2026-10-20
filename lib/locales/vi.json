@@ -712,7 +712,8 @@
     "mayMistakes": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra các tin quan trọng tại nguồn gốc.",
     "cardWaitingHint": "Chọn một tùy chọn phía trên, hoặc gõ “có”",
     "cardCancelled": "Được rồi, chưa có gì thay đổi",
-    "changeUndone": "Đã hoàn tác"
+    "changeUndone": "Đã hoàn tác",
+    "cardTapHint": "Chọn một tùy chọn phía trên."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Tôi thích bài viết này: \"{{title}}\". Tôi muốn xem thêm gợi ý như thế này.",

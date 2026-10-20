@@ -712,7 +712,8 @@
     "mayMistakes": "Mera bisa membuat kesalahan, jadi periksa berita penting di sumbernya.",
     "cardWaitingHint": "Ketuk salah satu pilihan di atas, atau ketik ya",
     "cardCancelled": "Baik, tidak ada yang berubah",
-    "changeUndone": "Diurungkan"
+    "changeUndone": "Diurungkan",
+    "cardTapHint": "Ketuk salah satu pilihan di atas."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Saya suka artikel ini: \"{{title}}\". Saya ingin melihat lebih banyak saran seperti ini.",
