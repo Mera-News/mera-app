@@ -93,10 +93,11 @@ describe('parseTopicsFromOutput', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it('returns [] and warns for an object with no list in it, or no JSON at all', () => {
-    expect(parse('{"note": "none"}')).toEqual([]);
+  it('returns [] and warns for an object with no topics list (another key\'s list is not topics), or no JSON at all', () => {
+    expect(parse('{"items": ["a"]}')).toEqual([]);
+    expect(parse('```json\n{"rejected": ["a"], "kept": ["b"]}\n```')).toEqual([]);
     expect(parse('no json here')).toEqual([]);
-    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledTimes(3);
   });
 
   it.each([[''], ['[]'], ['{"topics": []}']])('returns [] for %j', (output) => {

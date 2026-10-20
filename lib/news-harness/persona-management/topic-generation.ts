@@ -243,24 +243,29 @@ function topicArray(value: unknown): unknown[] | undefined {
   return Array.isArray(topics) ? topics : undefined;
 }
 
+function tryParse(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * The topics in a model reply: a JSON array, or `{"topics": [...]}`, alone or
  * inside a code fence or prose. The whole reply is tried first, then every
- * balanced object, then every balanced array.
+ * balanced object, then every balanced array that is not part of an object (a
+ * list under another key, `{"rejected": [...]}`, is not topics).
  */
 export function parseTopicsFromOutput(
   output: string,
   factStatement: string,
   logger: HarnessLogger = NOOP_LOGGER,
 ): string[] {
-  for (const candidate of [output.trim(), ...jsonCandidates(output, '{'), ...jsonCandidates(output, '[')]) {
-    let value: unknown;
-    try {
-      value = JSON.parse(candidate);
-    } catch {
-      continue;
-    }
-    const topics = topicArray(value);
+  const objects = jsonCandidates(output, '{').filter((o) => tryParse(o) !== undefined);
+  const arrays = jsonCandidates(output, '[').filter((a) => !objects.some((o) => o.includes(a)));
+  for (const candidate of [output.trim(), ...objects, ...arrays]) {
+    const topics = topicArray(tryParse(candidate));
     if (topics) return cleanTopicList(topics);
   }
 
