@@ -72,6 +72,67 @@ export function isLocationKey(attribute: string | null | undefined): boolean {
   return LOCATION_KEYS.has(attributeKey(attribute));
 }
 
+/** The multi-valued interest keys (facts/interest's table). A person holds many
+ *  facts under each, so a shared key alone says nothing about which one a new
+ *  fact would replace. */
+const INTEREST_KEYS = new Set([
+  'hobbies', 'sports_playing', 'teams_following', 'entertainment_genres', 'artists_creators_following', 'topics',
+]);
+
+export function isInterestKey(attribute: string | null | undefined): boolean {
+  return INTEREST_KEYS.has(attributeKey(attribute));
+}
+
+/** The verbs an interest fact is phrased with. Never its subject: "Supports
+ *  Ajax" and "Supports Feyenoord" share only the verb, and `namesFact` keeps
+ *  every word outside its own frame list. */
+const INTEREST_FRAME = /\b(?:no longer|plays|playing|supports|supporting|listens|listening|watches|watching|interested|fan|fans)\b/gi;
+
+/** The statement with its interest verbs removed, for a subject check. */
+export function interestSubject(statement: string): string {
+  return statement.replace(INTEREST_FRAME, ' ');
+}
+
+/**
+ * A NEGATIVE interest ("No longer follows cricket news", "Does not want
+ * celebrity gossip topics", "Mutes The Hindu"), dropped from a FORCED leg on
+ * an ordinary turn. Facts are stored in English, so this reads the OFFER
+ * whatever language the user wrote in. Precision first, because a hit loses a
+ * card: a negation or a dislike needs an interest word too ("Does not want
+ * children", "Dislikes spicy food", "Avoids gluten", "Does not read German"
+ * are facts), and "follow a(n)" is not one ("Does not follow a diet"). A
+ * seeing verb counts only with "about" after it ("Does not want to be shown
+ * anything about Bollywood"). "Mutes" needs nothing more.
+ */
+const NEGATIVE_LEAD = /^(?:does not|doesn['’]t|do not|don['’]t|is not|isn['’]t|no longer|not|never|no|prefers not|wants no|wants less|wants fewer|dislikes|avoids|hates|blocks)\b/i;
+const INTEREST_WORD = /\bfollow\w*\b(?!\s+an?\b)|\b(?:interest\w*|news|gossip|content|topics?|stories|updates|coverage|articles|headlines|sources?|recommend\w*)\b|\b(?:see|hear|read|watch|shown?|showing|receive|get)\b(?:\s+\S+){0,3}?\s+about\b/i;
+
+export function isNegativeInterest(statement: string): boolean {
+  const s = (statement ?? '').trim();
+  return /^mutes\b/i.test(s) || (NEGATIVE_LEAD.test(s) && INTEREST_WORD.test(s));
+}
+
+/**
+ * Any negative or reduced interest, interest word or not ("Does not want
+ * cricket", "Not a fan of cricket", "Wants to see less cricket", "Unfollowed
+ * cricket"). Read only on a see-less turn, where stop / less / mute / hide
+ * stage a filter and never a card (owner ruling), so nothing narrower holds.
+ * A home, a job or a study stays: "Stop cricket, I no longer live in Paris".
+ */
+const SEE_LESS_LEAD = /^(?:does not|doesn['’]t|do not|don['’]t|is not|isn['’]t|is no longer|no longer|not|never|no|has no|has lost|lost|prefers not|prefers less|prefers fewer|wants no|wants less|wants fewer|wants to see (?:less|fewer)|dislikes|avoids|hates|blocks|mutes|hides|unfollow\w*|stopped|stops)\b(?!\s+(?:longer\s+)?(?:lives?|lived|living|works?|worked|working|stud(?:y|ies|ied|ying))\b)/i;
+
+export function isSeeLessOffer(statement: string): boolean {
+  const s = (statement ?? '').trim();
+  return isNegativeInterest(s) || SEE_LESS_LEAD.test(s);
+}
+
+/** "Not interested in golf": the negative shape that IS a fact when the user
+ *  said so (owner ruling), unlike a stop, mute or hide request. "No longer
+ *  interested" and "no interest in" read the same. */
+export function isNotInterested(statement: string): boolean {
+  return /^(?:(?:is )?(?:not|no longer)|isn['’]t) interested\b|^(?:has )?no interest in\b/i.test((statement ?? '').trim());
+}
+
 /**
  * May a fact under `candidateAttribute` REPLACE one under `targetAttribute`?
  *

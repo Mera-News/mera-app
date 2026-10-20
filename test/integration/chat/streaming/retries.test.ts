@@ -7,6 +7,7 @@
 //   harness/gateway.test.ts > chat: faults > "502 surfaces as E2EE chat failed with the body on responseBody only"
 //   harness/gateway.test.ts > chat: faults > "429 with Retry-After 1s ..." and "... a long Retry-After is not waited out"
 //   harness/gateway.test.ts > chat: fake clock > a gap above / just under STREAM_IDLE_TIMEOUT_MS after the first chunk
+import { http, HttpResponse } from 'msw';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
 import { cloudChatStream, STREAM_IDLE_TIMEOUT_MS, UPSTREAM_ALIGNED_TIMEOUT_MS } from '@/lib/llm/cloudComplete';
@@ -174,6 +175,23 @@ describe('the stream dies', () => {
       'NEAR primary model failing — session fallback engaged',
       expect.objectContaining({ fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL] }),
     );
+  });
+
+  it('as an empty 2xx body (MERA-APP-8Q): model evidence, so the retry goes to the session fallback', async () => {
+    let empties = 0;
+    server.use(
+      http.post('*/v1/chat/completions', () => {
+        empties += 1;
+        return new HttpResponse('', { status: 200, headers: { 'content-type': 'application/json' } });
+      }, { once: true }),
+      ...mockGateway(respond('second try')),
+    );
+    const events = await run();
+
+    expect(textOf(events)).toBe('second try');
+    expect(empties).toBe(1);
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([FALLBACK]);
   });
 
   it('a corrupt chunk (decrypt failure) before any text retries on the PRIMARY and never engages the fallback', async () => {

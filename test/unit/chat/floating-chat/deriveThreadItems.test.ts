@@ -385,21 +385,28 @@ describe('deriveThreadItems', () => {
     expect(items.some((i) => i.key === 'div-live')).toBe(false);
   });
 
-  it('appends a typing item when streaming and no assistant text yet', () => {
+  it('puts a typing item right after the user message when streaming and no assistant text yet', () => {
     const items = deriveThreadItems(
       base({ live: [userMsg('u1', 'question')], isStreaming: true }),
     );
-    expect(items[items.length - 1]).toMatchObject({ kind: 'typing', key: 'typing' });
+    expect(keys(items)).toEqual(['live-u1', 'typing']);
+    expect(items[1]).toMatchObject({
+      kind: 'typing',
+      key: 'typing',
+      showWords: true,
+      ackShowing: false,
+      engine: 'cloud',
+    });
   });
 
-  it('appends typing when last live assistant message is empty', () => {
+  it('shows typing when last live assistant message is empty', () => {
     const items = deriveThreadItems(
       base({
         live: [userMsg('u1'), assistantMsg('a1', '')],
         isStreaming: true,
       }),
     );
-    expect(items[items.length - 1]).toMatchObject({ kind: 'typing' });
+    expect(keys(items)).toEqual(['live-u1', 'typing']);
   });
 
   it('does NOT append typing when the assistant already has streaming text', () => {
@@ -911,5 +918,156 @@ describe('renderableTerminal', () => {
     for (const r of ['settled', 'awaiting-user', 'transport-error', null]) {
       expect(renderableTerminal(r)).toBeNull();
     }
+  });
+});
+
+describe('typing item inputs (securewait B-U1)', () => {
+  const typingOf = (items: ChatThreadItem[]) => {
+    const t = items.find((i) => i.kind === 'typing');
+    return t && t.kind === 'typing' ? t : null;
+  };
+
+  it('showWords is true with one user message', () => {
+    const items = deriveThreadItems(base({ live: [userMsg('u1')], isStreaming: true }));
+    expect(typingOf(items)?.showWords).toBe(true);
+  });
+
+  it('showWords is false when an earlier user message is in the resume', () => {
+    const items = deriveThreadItems(
+      base({
+        resume: [persisted('r1', 'c1', 'user', 'first', 1)],
+        live: [userMsg('u2')],
+        isStreaming: true,
+      }),
+    );
+    expect(typingOf(items)?.showWords).toBe(false);
+  });
+
+  it('showWords is true again when this turn retried', () => {
+    const items = deriveThreadItems(
+      base({
+        resume: [persisted('r1', 'c1', 'user', 'first', 1)],
+        live: [userMsg('u2')],
+        isStreaming: true,
+        retriedThisTurn: true,
+      }),
+    );
+    expect(typingOf(items)?.showWords).toBe(true);
+  });
+
+  it('a hidden user message before the first does not count', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [{ id: 'h1', role: 'user', content: 'note', hidden: true }, userMsg('u1')],
+        isStreaming: true,
+      }),
+    );
+    expect(typingOf(items)?.showWords).toBe(true);
+  });
+
+  it('history never counts toward showWords', () => {
+    const items = deriveThreadItems(
+      base({
+        history: [persisted('h1', 'c0', 'user', 'old', 1)],
+        live: [userMsg('u1')],
+        isStreaming: true,
+      }),
+    );
+    expect(typingOf(items)?.showWords).toBe(true);
+  });
+
+  it('engine local forces showWords and is carried', () => {
+    const items = deriveThreadItems(
+      base({
+        resume: [persisted('r1', 'c1', 'user', 'first', 1)],
+        live: [userMsg('u2')],
+        isStreaming: true,
+        engine: 'local',
+      }),
+    );
+    expect(typingOf(items)).toMatchObject({ showWords: true, engine: 'local' });
+  });
+
+  it('ackShowing is true once a non-empty acknowledgement exists', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1-ack', 'Got it'), assistantMsg('a1', '')],
+        isStreaming: true,
+      }),
+    );
+    expect(typingOf(items)?.ackShowing).toBe(true);
+  });
+
+  it('places typing after the user message and before the acknowledgement', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1-ack', 'Got it'), assistantMsg('a1', '')],
+        isStreaming: true,
+      }),
+    );
+    expect(keys(items)).toEqual(['live-u1', 'typing', 'live-a1-ack']);
+  });
+
+  it('places typing after a folded single-shot box, before the reply', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [
+          userMsg('u1'),
+          assistantMsg('a1-ack', 'Looking', [
+            { id: 't', name: 'find_similar_facts', input: {}, status: 'done' },
+          ]),
+          assistantMsg('a1', ''),
+        ],
+        isStreaming: true,
+      }),
+    );
+    expect(keys(items)).toEqual(['live-u1', 'agent-steps-u1', 'typing', 'live-a1-ack']);
+  });
+
+  it('the streaming message carries showWords, engine and handover', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', 'partial')],
+        isStreaming: true,
+      }),
+    );
+    const m = items.find((i) => i.key === 'live-a1');
+    expect(m).toMatchObject({ streaming: true, showWords: true, engine: 'cloud', handover: true });
+  });
+
+  it('handover is false when the turn has a live box', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [
+          userMsg('u1'),
+          assistantMsg('a0', '', [{ id: 't', name: 'find_similar_facts', input: {}, status: 'done' }]),
+          assistantMsg('a1', 'partial'),
+        ],
+        isStreaming: true,
+        turnActive: true,
+      }),
+    );
+    const m = items.find((i) => i.key === 'live-a1');
+    expect(m).toMatchObject({ streaming: true, handover: false });
+  });
+
+  it('a non-streaming message carries none of them', () => {
+    const items = deriveThreadItems(base({ live: [userMsg('u1'), assistantMsg('a1', 'done')] }));
+    const m = items.find((i) => i.key === 'live-a1');
+    expect(m).not.toHaveProperty('showWords');
+    expect(m).not.toHaveProperty('handover');
+  });
+});
+
+describe('agent-steps answered flag', () => {
+  it('is true for a settled turn without a terminal and false for a terminal one', () => {
+    const live = [
+      userMsg('u1'),
+      assistantMsg('a1', 'ok', [{ id: 't', name: 'saveExtractedFacts', input: {}, status: 'done' }]),
+    ];
+    const ok = deriveThreadItems(base({ live, turnActive: false }));
+    expect(ok.find((i) => i.kind === 'agent-steps')).toMatchObject({ answered: true });
+    const capped = deriveThreadItems(base({ live, turnActive: false, agentTerminal: 'leg-cap' }));
+    expect(capped.find((i) => i.kind === 'agent-steps')).toMatchObject({ answered: false });
   });
 });

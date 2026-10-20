@@ -8,7 +8,9 @@ import {
   legReport,
   proposalReport,
   proseReport,
+  routeOutcomes,
   routerReport,
+  skillOutcomes,
   skillReport,
   thinkingGearReport,
   toolValidityReport,
@@ -265,5 +267,16 @@ describe('proposal expectations (ux2 D8)', () => {
     const r = proposalReport(turns, expectFor);
     expect(r.met).toBe(0);
     expect(r.misses).toHaveLength(1);
+  });
+});
+
+describe('a turn with no routing or leg expectation', () => {
+  it('is left out of route, skill and leg scoring', () => {
+    const turns = groupTurns([row({ legIndex: 0, endedOn: 'settled', expectedRouteKind: null, expectedSkill: null })]);
+    expect(routeOutcomes(turns)).toEqual([]);
+    expect(skillOutcomes(turns)).toEqual([]);
+    const r = legReport(turns, () => ({ tools: [] }));
+    expect(r.legCountMismatches).toEqual([]);
+    expect(r.cappedBelowExpectation).toEqual([]);
   });
 });

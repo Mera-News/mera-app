@@ -1,0 +1,1982 @@
+{
+  "ar": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "إذا كان لهذا البريد الإلكتروني حساب في ميرا، فقد أرسلنا إليه رمزًا. جديد في ميرا؟ استخدم \"تسجيل الدخول بهذا الهاتف\".",
+        "noCodeUsePhone": "لم يصلك الرمز؟ استخدم \"تسجيل الدخول بهذا الهاتف\".",
+        "beginWithoutEmail": "تسجيل الدخول بهذا الهاتف",
+        "beginCaption": "لا بريد إلكتروني ولا رقم هاتف ولا كلمة مرور. لا شيء تحتاج إلى تذكّره."
+      },
+      "emailLegacyHint": "للأشخاص الذين سجّلوا الدخول بالبريد الإلكتروني من قبل فقط. لم يعد بإمكان المستخدمين الجدد تسجيل الدخول بالبريد الإلكتروني.",
+      "phoneCheckTemporary": "تعذّر التحقق من هذا الهاتف. تحقّق من اتصالك وحاول مرة أخرى.",
+      "phoneUnsupportedAndroid": "يحتاج ميرا إلى Google Play على هذا الهاتف لتسجيل دخولك. الهواتف التي لا تحتويه غير مدعومة.",
+      "phoneUnsupportedIos": "هذا الآيفون لا يمكنه استخدام تسجيل الدخول بالهاتف.",
+      "supportedPhones": "الهواتف المدعومة",
+      "emailEnded": {
+        "title": "انتهى تسجيل الدخول بالبريد الإلكتروني",
+        "bodyIos": "انتهى تسجيل الدخول بالبريد الإلكتروني في {{date}}. سجّل الدخول بهذا الهاتف لتبدأ من جديد. تعود خطتك من App Store، وتعود مقالاتك المحفوظة من نسختك الاحتياطية.",
+        "bodyAndroid": "انتهى تسجيل الدخول بالبريد الإلكتروني في {{date}}. سجّل الدخول بهذا الهاتف لتبدأ من جديد. تعود خطتك من Google Play، وتعود مقالاتك المحفوظة من نسختك الاحتياطية."
+      },
+      "phoneNotSupported": "هذا الهاتف غير مدعوم",
+      "signInWithoutEmail": "تسجيل الدخول بهذا الهاتف",
+      "differentAccount": {
+        "title": "تسجيل الدخول بهذا الهاتف؟"
+      },
+      "deviceSignInFailed": "حدث خطأ ما. حاول مرة أخرى.",
+      "deviceSignInDenied": "تعذّر التحقق من هذا الجهاز. حاول مرة أخرى."
+    },
+    "moveToPhone": {
+      "dialogTitle": "سجّل الدخول بهذا الهاتف بدلًا من ذلك",
+      "dialogBody": "سنسجّل دخولك بهذا الهاتف، وننقل حسابك إليه، ونحذف بريدك الإلكتروني من قاعدة بياناتنا.",
+      "dialogSettingsHint": "يمكنك فعل ذلك في الإعدادات حتى {{date}}.",
+      "confirm": "نقل الحساب",
+      "cancel": "ليس الآن",
+      "progressTitle": "جارٍ نقل حسابك إلى هذا الهاتف",
+      "steps": {
+        "checking": "جارٍ التحقق من هذا الهاتف",
+        "linking": "جارٍ ربط حسابك",
+        "removing": "جارٍ حذف بريدك الإلكتروني",
+        "done": "تم"
+      },
+      "failed": "لم تكتمل العملية. حسابك ما زال يعمل. حاول مرة أخرى بعد قليل.",
+      "unsupportedIos": "لا يمكن لهذا الهاتف استخدام تسجيل الدخول بالهاتف، لذا يتوقف ميرا عن العمل فيه في {{date}}. إذا كنت تدفع مقابل ميرا، فألغِ خطتك في App Store قبل ذلك.",
+      "unsupportedAndroid": "لا يمكن لهذا الهاتف استخدام تسجيل الدخول بالهاتف، لذا يتوقف ميرا عن العمل فيه في {{date}}. إذا كنت تدفع مقابل ميرا، فألغِ خطتك في Google Play قبل ذلك.",
+      "success": "سجّلت الدخول بهذا الهاتف. تم حذف بريدك الإلكتروني.",
+      "close": "إغلاق",
+      "inboxTitle": "ينتهي تسجيل الدخول بالبريد الإلكتروني في {{date}}",
+      "inboxBody": "انتقل إلى تسجيل الدخول بالهاتف للاحتفاظ بحسابك.",
+      "settingsRow": "الانتقال إلى تسجيل الدخول بالهاتف",
+      "settingsRowHint": "ينتهي تسجيل الدخول بالبريد الإلكتروني في {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "استعادة المشتريات"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "هل تنتقل بين iPhone وAndroid؟ تبقى خطتك مع متجرك القديم. ألغِها هناك، ثم اشترك هنا. لا يستطيع ميرا رؤية الخطط في المتاجر الأخرى، لذا لا يمكنه استرداد أي تداخل.",
+      "invoicesAppStore": "ليس لدى ميرا طريقة لمراسلتك، لذا يرسل Apple إيصالاتك وفواتيرك إلى البريد الإلكتروني في حساب Apple الخاص بك.",
+      "invoicesPlayStore": "ليس لدى ميرا طريقة لمراسلتك، لذا يرسل Google Play إيصالاتك إلى البريد الإلكتروني في حساب Google الخاص بك.",
+      "planBack": "عادت خطتك.",
+      "restoreNoneApple": "لم نعثر على أي خطة في حساب Apple هذا.",
+      "restoreNoneGoogle": "لم نعثر على أي خطة في حساب Google هذا.",
+      "restoreFailedAppStore": "تعذّر الوصول إلى App Store. حاول مرة أخرى.",
+      "restoreFailedPlayStore": "تعذّر الوصول إلى Google Play. حاول مرة أخرى."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "يسجّل ميرا دخولك بهذا الهاتف. تؤكد Apple أن هذا تطبيق ميرا الحقيقي على iPhone حقيقي، لمنع الحسابات المزيفة. نحتفظ بسجل تسجيل دخول ما دام لديك حساب.",
+        "playIntegrity": "يسجّل ميرا دخولك بهذا الهاتف. تؤكد Google أن هذا تطبيق ميرا الحقيقي على هاتف Android حقيقي، لمنع الحسابات المزيفة. نحتفظ بسجل تسجيل دخول، وليس بمعرّف هاتفك.",
+        "generic": "تسجّل ميرا دخولك بهذا الهاتف. نحتفظ بسجل تسجيل دخول لهذا الهاتف ما دام لديك حساب."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "بريدك الإلكتروني، حتى تنتقل إلى تسجيل الدخول بالهاتف أو حتى يُحذف في 30 أكتوبر 2026، وكذلك خطتك. نحتفظ بسجلات الفوترة من App Store أو Google Play طوال المدة التي يفرضها القانون.",
+        "emailIfAdded": "خطتك. لا يطلب ميرا بريدًا إلكترونيًا أبدًا، وأي بريد إلكتروني من قبل يُحذف في 30 أكتوبر 2026. نحتفظ بسجلات الفوترة من App Store أو Google Play طوال المدة التي يفرضها القانون.",
+        "signInRecordGeneric": "سجل تسجيل دخول لهذا الهاتف، يُحذف مع حسابك. لا نحتفظ بفحص Apple أو Google الذي يؤكد أن هذا هو التطبيق الحقيقي."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "الخطة التي تستخدمها. بريد إلكتروني فقط لحساب سجّل الدخول بواحد من قبل، ويُحذف في 30 أكتوبر 2026. عدد يومي للمقالات المرسلة إليك، وحجم النص المشفّر الذي أرسلته ميرا لتُقرأ لك وعدد الطلبات (لا النص نفسه أبدًا)، ومتى وصلت إلى القراءة اليومية لخطتك، والأيام التي استخدمت فيها ميرا، يُحفظ لمدة 90 يومًا. أوقات إشعاراتك ولغتك وخيار المعالجة. الإجابات التي ترسلها على أسئلة فريق ميرا. سجل تسجيل دخول لهذا الهاتف، يُحذف مع حسابك. تُخزَّن عبارات المواضيع مؤقتًا بنصها وحده، من دون تسجيل من طلبها، وتُحذف بعد أربعة عشر يومًا من عدم الاستخدام."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "طريقة تسجيل دخولك، وهي هذا الهاتف (أو، حتى 30 أكتوبر 2026، بريد إلكتروني من قبل)، والخطة التي تستخدمها."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "ستتم جدولة حسابك للحذف، وسيُحذف نهائيًا بعد 30 يومًا. لا يمكن لهذا الهاتف تسجيل الدخول إليه مجددًا. لا يمكن التراجع عن هذا.",
+      "accountDeletionScheduledDescription": "سيُحذف حسابك نهائيًا خلال 30 يومًا."
+    }
+  },
+  "de": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Wenn zu dieser E-Mail ein Mera-Konto gehört, haben wir dir einen Code geschickt. Neu bei Mera? Tippe auf „Mit diesem Telefon anmelden“.",
+        "noCodeUsePhone": "Keinen Code bekommen? Tippe auf „Mit diesem Telefon anmelden“.",
+        "beginWithoutEmail": "Mit diesem Telefon anmelden",
+        "beginCaption": "Keine E-Mail, Telefonnummer oder Passwort. Nichts, was du dir merken musst."
+      },
+      "emailLegacyHint": "Nur für Personen, die sich früher mit E-Mail angemeldet haben. Neue Nutzer können sich nicht mehr mit E-Mail anmelden.",
+      "phoneCheckTemporary": "Dieses Telefon konnte nicht geprüft werden. Prüfe deine Verbindung und versuche es erneut.",
+      "phoneUnsupportedAndroid": "Mera braucht Google Play auf diesem Telefon, um dich anzumelden. Telefone ohne Google Play werden nicht unterstützt.",
+      "phoneUnsupportedIos": "Dieses iPhone kann die Anmeldung mit Telefon nicht nutzen.",
+      "supportedPhones": "Unterstützte Telefone",
+      "emailEnded": {
+        "title": "Anmeldung mit E-Mail ist beendet",
+        "bodyIos": "Die Anmeldung mit E-Mail endete am {{date}}. Melde dich mit diesem Telefon an, um neu anzufangen. Dein Tarif kommt über den App Store zurück, und deine gespeicherten Artikel kommen aus deinem Backup zurück.",
+        "bodyAndroid": "Die Anmeldung mit E-Mail endete am {{date}}. Melde dich mit diesem Telefon an, um neu anzufangen. Dein Tarif kommt über Google Play zurück, und deine gespeicherten Artikel kommen aus deinem Backup zurück."
+      },
+      "phoneNotSupported": "Dieses Telefon wird nicht unterstützt",
+      "signInWithoutEmail": "Mit diesem Telefon anmelden",
+      "differentAccount": {
+        "title": "Mit diesem Telefon anmelden?"
+      },
+      "deviceSignInFailed": "Etwas ist schiefgelaufen. Versuche es erneut.",
+      "deviceSignInDenied": "Dieses Gerät konnte nicht bestätigt werden. Versuche es erneut."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Stattdessen mit diesem Telefon anmelden",
+      "dialogBody": "Wir melden dich mit diesem Telefon an, verschieben dein Konto auf dieses Telefon und löschen deine E-Mail aus unserer Datenbank.",
+      "dialogSettingsHint": "Du kannst das bis {{date}} in den Einstellungen tun.",
+      "confirm": "Konto verschieben",
+      "cancel": "Nicht jetzt",
+      "progressTitle": "Dein Konto wird auf dieses Telefon verschoben",
+      "steps": {
+        "checking": "Dieses Telefon wird geprüft",
+        "linking": "Dein Konto wird verknüpft",
+        "removing": "Deine E-Mail wird entfernt",
+        "done": "Fertig"
+      },
+      "failed": "Das hat nicht geklappt. Dein Konto funktioniert weiterhin. Versuche es in einem Moment noch einmal.",
+      "unsupportedIos": "Auf diesem Telefon ist die Anmeldung mit Telefon nicht möglich, daher funktioniert Mera hier ab {{date}} nicht mehr. Wenn du für Mera bezahlst, kündige deinen Tarif vorher im App Store.",
+      "unsupportedAndroid": "Auf diesem Telefon ist die Anmeldung mit Telefon nicht möglich, daher funktioniert Mera hier ab {{date}} nicht mehr. Wenn du für Mera bezahlst, kündige deinen Tarif vorher bei Google Play.",
+      "success": "Du bist mit diesem Telefon angemeldet. Deine E-Mail wurde gelöscht.",
+      "close": "Schließen",
+      "inboxTitle": "Anmeldung mit E-Mail endet am {{date}}",
+      "inboxBody": "Wechsle zur Anmeldung mit Telefon, um dein Konto zu behalten.",
+      "settingsRow": "Zur Anmeldung mit Telefon wechseln",
+      "settingsRowHint": "Die Anmeldung mit E-Mail endet am {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Käufe wiederherstellen"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Wechselst du zwischen iPhone und Android? Dein Tarif bleibt bei deinem alten Store. Kündige ihn dort und abonniere dann hier. Mera kann Tarife in anderen Stores nicht sehen und deshalb auch keine doppelten Zahlungen erstatten.",
+      "invoicesAppStore": "Mera kann dir keine E-Mails schicken, daher sendet Apple deine Belege und Rechnungen an die E-Mail-Adresse deines Apple-Accounts.",
+      "invoicesPlayStore": "Mera kann dir keine E-Mails schicken, daher sendet Google Play deine Belege an die E-Mail-Adresse deines Google-Kontos.",
+      "planBack": "Dein Tarif ist wieder da.",
+      "restoreNoneApple": "Auf diesem Apple-Account wurde kein Tarif gefunden.",
+      "restoreNoneGoogle": "Auf diesem Google-Konto wurde kein Tarif gefunden.",
+      "restoreFailedAppStore": "Der App Store ist nicht erreichbar. Versuche es erneut.",
+      "restoreFailedPlayStore": "Google Play ist nicht erreichbar. Versuche es erneut."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera meldet dich mit diesem Telefon an. Apple bestätigt, dass dies die echte Mera App auf einem echten iPhone ist, gegen Fake-Konten. Solange du ein Konto hast, speichern wir einen Anmeldeeintrag.",
+        "playIntegrity": "Mera meldet dich mit diesem Telefon an. Google bestätigt, dass dies die echte Mera App auf einem echten Android-Telefon ist, gegen Fake-Konten. Wir speichern einen Anmeldeeintrag, nicht die ID deines Telefons.",
+        "generic": "Mera meldet dich mit diesem Telefon an. Solange du ein Konto hast, speichern wir einen Anmeldeeintrag für dieses Telefon."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Deine E-Mail, bis du zur Anmeldung mit Telefon wechselst oder sie am 30. Oktober 2026 gelöscht wird, und dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
+        "emailIfAdded": "Dein Tarif. Mera fragt nie nach einer E-Mail, und eine E-Mail von früher wird am 30. Oktober 2026 gelöscht. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
+        "signInRecordGeneric": "Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Prüfung von Apple oder Google, ob dies die echte App ist, wird nicht gespeichert."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Welchen Tarif du hast. Eine E-Mail nur für ein Konto, das sich früher mit E-Mail angemeldet hat, wird am 30. Oktober 2026 gelöscht. Eine tägliche Zahl der an dich gesendeten Artikel, wie viel verschlüsselter Text Mera zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast, 90 Tage aufbewahrt. Deine Benachrichtigungszeiten, deine Sprache und deine Verarbeitungswahl. Antworten, die du auf Fragen des Mera-Teams schickst. Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenphrasen werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Wie du dich anmeldest, nämlich mit diesem Telefon (oder bis 30. Oktober 2026 mit einer E-Mail von früher), und welchen Tarif du hast."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Dein Konto wird zum Löschen vorgemerkt und nach 30 Tagen endgültig gelöscht. Dieses Telefon kann sich nicht mehr damit anmelden. Das kann nicht rückgängig gemacht werden.",
+      "accountDeletionScheduledDescription": "Dein Konto wird in 30 Tagen endgültig gelöscht."
+    }
+  },
+  "en": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
+        "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone.",
+        "beginWithoutEmail": "Sign in with this phone",
+        "beginCaption": "No email, phone number or password. Nothing to remember."
+      },
+      "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+      "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+      "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+      "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+      "supportedPhones": "Supported phones",
+      "emailEnded": {
+        "title": "Email sign-in has ended",
+        "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+        "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+      },
+      "phoneNotSupported": "This phone isn't supported",
+      "signInWithoutEmail": "Sign in with this phone",
+      "differentAccount": {
+        "title": "Sign in with this phone?"
+      },
+      "deviceSignInFailed": "Something went wrong. Try again.",
+      "deviceSignInDenied": "We couldn't verify this device. Try again."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Sign in with this phone instead",
+      "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+      "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+      "confirm": "Move account",
+      "cancel": "Not now",
+      "progressTitle": "Moving your account to this phone",
+      "steps": {
+        "checking": "Checking this phone",
+        "linking": "Linking your account",
+        "removing": "Removing your email",
+        "done": "Done"
+      },
+      "failed": "This didn't finish. Your account still works. Try again in a moment.",
+      "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
+      "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
+      "success": "Signed in with this phone. Your email is deleted.",
+      "close": "Close",
+      "inboxTitle": "Email sign-in ends {{date}}",
+      "inboxBody": "Switch to phone sign-in to keep your account.",
+      "settingsRow": "Move to phone sign-in",
+      "settingsRowHint": "Email sign-in ends {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Restore purchases"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Switching between iPhone and Android? Your plan stays with your old store. Cancel it there, then subscribe here. Mera can't see plans on other stores, so it can't refund any overlap.",
+      "invoicesAppStore": "Mera has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+      "invoicesPlayStore": "Mera has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+      "planBack": "Your plan is back.",
+      "restoreNoneApple": "No plan found on this Apple Account.",
+      "restoreNoneGoogle": "No plan found on this Google Account.",
+      "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+      "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera signs you in with this phone. Apple confirms it's the real Mera app on a real iPhone, to stop fake accounts. We keep a sign-in record while you have an account.",
+        "playIntegrity": "Mera signs you in with this phone. Google confirms it's the real Mera app on a real Android phone, to stop fake accounts. We keep a sign-in record, not your phone's ID.",
+        "generic": "Mera signs you in with this phone. We keep a sign-in record for this phone while you have an account."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Your email, until you switch to phone sign-in or until it is deleted on 30 October 2026, and your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
+        "emailIfAdded": "Your plan. Mera never asks for an email, and any email from before is deleted on 30 October 2026. Billing records from the App Store or Google Play are kept as long as the law requires.",
+        "signInRecordGeneric": "A sign-in record for this phone, deleted with your account. The Apple or Google check that this is the real app is not kept."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Which plan you are on. An email only for an account that signed in with one before, deleted on 30 October 2026. A per-day count of articles sent to you, how much encrypted text Mera sent to be read for you and in how many requests (never the text itself), when you reached your plan's daily reading, and which days you used Mera, kept for 90 days. Your notification times, language and processing choice. Answers you send to Mera team questions. A sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "How you sign in, which is this phone (or, until 30 October 2026, an email from before), and which plan you are on."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Your account will be scheduled for deletion and deleted for good after 30 days. This phone can't sign in to it again. You can't undo this.",
+      "accountDeletionScheduledDescription": "Your account will be permanently deleted in 30 days."
+    }
+  },
+  "es": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Si este correo tiene una cuenta de Mera, hemos enviado un código a esa dirección. ¿Eres nuevo en Mera? Usa \"Iniciar sesión con este teléfono\".",
+        "noCodeUsePhone": "¿No recibiste un código? Usa \"Iniciar sesión con este teléfono\".",
+        "beginWithoutEmail": "Iniciar sesión con este teléfono",
+        "beginCaption": "Sin correo, sin número de teléfono ni contraseña. Nada que recordar."
+      },
+      "emailLegacyHint": "Solo para quienes iniciaron sesión con correo antes. Los usuarios nuevos ya no pueden iniciar sesión con correo.",
+      "phoneCheckTemporary": "No pudimos comprobar este teléfono. Revisa tu conexión e inténtalo de nuevo.",
+      "phoneUnsupportedAndroid": "Mera necesita Google Play en este teléfono para iniciar tu sesión. Los teléfonos sin Google Play no son compatibles.",
+      "phoneUnsupportedIos": "Este iPhone no puede usar el inicio de sesión con teléfono.",
+      "supportedPhones": "Teléfonos compatibles",
+      "emailEnded": {
+        "title": "El inicio de sesión con correo ha terminado",
+        "bodyIos": "El inicio de sesión con correo terminó el {{date}}. Inicia sesión con este teléfono para empezar de nuevo. Tu plan vuelve desde la App Store, y tus artículos guardados vuelven desde tu copia de seguridad.",
+        "bodyAndroid": "El inicio de sesión con correo terminó el {{date}}. Inicia sesión con este teléfono para empezar de nuevo. Tu plan vuelve desde Google Play, y tus artículos guardados vuelven desde tu copia de seguridad."
+      },
+      "phoneNotSupported": "Este teléfono no es compatible",
+      "signInWithoutEmail": "Iniciar sesión con este teléfono",
+      "differentAccount": {
+        "title": "¿Iniciar sesión con este teléfono?"
+      },
+      "deviceSignInFailed": "Algo salió mal. Vuelve a intentarlo.",
+      "deviceSignInDenied": "No pudimos verificar este dispositivo. Vuelve a intentarlo."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Inicia sesión con este teléfono en su lugar",
+      "dialogBody": "Te iniciaremos sesión con este teléfono, pasaremos tu cuenta a él y eliminaremos tu correo de nuestra base de datos.",
+      "dialogSettingsHint": "Puedes hacerlo en Ajustes hasta el {{date}}.",
+      "confirm": "Mover cuenta",
+      "cancel": "Ahora no",
+      "progressTitle": "Pasando tu cuenta a este teléfono",
+      "steps": {
+        "checking": "Comprobando este teléfono",
+        "linking": "Vinculando tu cuenta",
+        "removing": "Eliminando tu correo",
+        "done": "Listo"
+      },
+      "failed": "No se pudo terminar. Tu cuenta sigue funcionando. Inténtalo de nuevo en un momento.",
+      "unsupportedIos": "Este teléfono no puede usar el inicio de sesión con teléfono, así que Mera dejará de funcionar en él el {{date}}. Si pagas por Mera, cancela tu plan en la App Store antes de esa fecha.",
+      "unsupportedAndroid": "Este teléfono no puede usar el inicio de sesión con teléfono, así que Mera dejará de funcionar en él el {{date}}. Si pagas por Mera, cancela tu plan en Google Play antes de esa fecha.",
+      "success": "Has iniciado sesión con este teléfono. Tu correo ha sido eliminado.",
+      "close": "Cerrar",
+      "inboxTitle": "El inicio de sesión con correo termina el {{date}}",
+      "inboxBody": "Cambia al inicio de sesión con teléfono para conservar tu cuenta.",
+      "settingsRow": "Pasar al inicio de sesión con teléfono",
+      "settingsRowHint": "El inicio de sesión con correo termina el {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Restaurar compras"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "¿Cambias entre iPhone y Android? Tu plan se queda en la tienda anterior. Cancélalo allí y luego suscríbete aquí. Mera no puede ver los planes de otras tiendas, así que no puede reembolsar ningún solapamiento.",
+      "invoicesAppStore": "Mera no tiene forma de enviarte correos, así que Apple envía tus recibos y facturas al correo de tu cuenta de Apple.",
+      "invoicesPlayStore": "Mera no tiene forma de enviarte correos, así que Google Play envía tus recibos al correo de tu cuenta de Google.",
+      "planBack": "Tu plan ha vuelto.",
+      "restoreNoneApple": "No se encontró ningún plan en esta cuenta de Apple.",
+      "restoreNoneGoogle": "No se encontró ningún plan en esta cuenta de Google.",
+      "restoreFailedAppStore": "No se pudo conectar con la App Store. Inténtalo de nuevo.",
+      "restoreFailedPlayStore": "No se pudo conectar con Google Play. Inténtalo de nuevo."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera inicia tu sesión con este teléfono. Apple confirma que es la app real de Mera en un iPhone real, para frenar las cuentas falsas. Guardamos un registro de inicio de sesión mientras tengas una cuenta.",
+        "playIntegrity": "Mera inicia tu sesión con este teléfono. Google confirma que es la app real de Mera en un teléfono Android real, para frenar las cuentas falsas. Guardamos un registro de inicio de sesión, no el ID de tu teléfono.",
+        "generic": "Mera inicia tu sesión con este teléfono. Guardamos un registro de inicio de sesión de este teléfono mientras tengas una cuenta."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Tu correo, hasta que pases al inicio de sesión con teléfono o hasta que se elimine el 30 de octubre de 2026, y tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
+        "emailIfAdded": "Tu plan. Mera nunca pide un correo, y cualquier correo de antes se elimina el 30 de octubre de 2026. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
+        "signInRecordGeneric": "Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple o Google de que es la app real no se guarda."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Qué plan tienes. Un correo solo para las cuentas que iniciaron sesión con correo antes, eliminado el 30 de octubre de 2026. Un recuento diario de artículos enviados a ti, cuánto texto cifrado envió Mera para que lo leyera por ti y en cuántas solicitudes (nunca el texto en sí), cuándo alcanzaste la lectura diaria de tu plan, y los días en que usaste Mera, que se conserva durante 90 días. Tus horarios de notificaciones, tu idioma y tu modo de procesamiento. Las respuestas que envías a las preguntas del equipo de Mera. Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. Las frases de temas se guardan en caché solo por su texto, sin nada que registre quién las pidió, y se eliminan tras catorce días sin uso."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Cómo inicias sesión, que es este teléfono (o, hasta el 30 de octubre de 2026, un correo de antes), y qué plan tienes."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Tu cuenta se programará para eliminarse y se borrará para siempre después de 30 días. Este teléfono no podrá volver a iniciar sesión en ella. Esto no se puede deshacer.",
+      "accountDeletionScheduledDescription": "Tu cuenta se eliminará de forma permanente en 30 días."
+    }
+  },
+  "fr": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Si cet e-mail correspond à un compte Mera, nous lui avons envoyé un code. Vous débutez avec Mera ? Utilisez « Se connecter avec ce téléphone ».",
+        "noCodeUsePhone": "Vous n'avez pas reçu de code ? Utilisez « Se connecter avec ce téléphone ».",
+        "beginWithoutEmail": "Se connecter avec ce téléphone",
+        "beginCaption": "Pas d'e-mail, de numéro ni de mot de passe. Rien à retenir."
+      },
+      "emailLegacyHint": "Réservé aux personnes qui se sont connectées par e-mail auparavant. Les nouveaux utilisateurs ne peuvent plus se connecter par e-mail.",
+      "phoneCheckTemporary": "Impossible de vérifier ce téléphone. Vérifiez votre connexion, puis réessayez.",
+      "phoneUnsupportedAndroid": "Mera a besoin de Google Play sur ce téléphone pour vous connecter. Les téléphones qui n'en ont pas ne sont pas pris en charge.",
+      "phoneUnsupportedIos": "Cet iPhone ne peut pas utiliser la connexion par téléphone.",
+      "supportedPhones": "Téléphones pris en charge",
+      "emailEnded": {
+        "title": "La connexion par e-mail a pris fin",
+        "bodyIos": "La connexion par e-mail a pris fin le {{date}}. Connectez-vous avec ce téléphone pour recommencer. Votre forfait revient depuis l'App Store, et vos articles enregistrés reviennent depuis votre sauvegarde.",
+        "bodyAndroid": "La connexion par e-mail a pris fin le {{date}}. Connectez-vous avec ce téléphone pour recommencer. Votre forfait revient depuis Google Play, et vos articles enregistrés reviennent depuis votre sauvegarde."
+      },
+      "phoneNotSupported": "Ce téléphone n'est pas pris en charge",
+      "signInWithoutEmail": "Se connecter avec ce téléphone",
+      "differentAccount": {
+        "title": "Se connecter avec ce téléphone ?"
+      },
+      "deviceSignInFailed": "Un problème est survenu. Réessayez.",
+      "deviceSignInDenied": "Impossible de vérifier cet appareil. Réessayez."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Se connecter avec ce téléphone à la place",
+      "dialogBody": "Nous vous connecterons avec ce téléphone, transférerons votre compte sur lui et supprimerons votre e-mail de notre base de données.",
+      "dialogSettingsHint": "Vous pouvez le faire dans Paramètres jusqu'au {{date}}.",
+      "confirm": "Transférer le compte",
+      "cancel": "Pas maintenant",
+      "progressTitle": "Transfert de votre compte sur ce téléphone",
+      "steps": {
+        "checking": "Vérification de ce téléphone",
+        "linking": "Association de votre compte",
+        "removing": "Suppression de votre e-mail",
+        "done": "Terminé"
+      },
+      "failed": "Cela n'a pas abouti. Votre compte fonctionne toujours. Réessayez dans un instant.",
+      "unsupportedIos": "Ce téléphone ne peut pas utiliser la connexion par téléphone, donc Mera cessera d'y fonctionner le {{date}}. Si vous payez pour Mera, annulez votre forfait dans l'App Store avant cette date.",
+      "unsupportedAndroid": "Ce téléphone ne peut pas utiliser la connexion par téléphone, donc Mera cessera d'y fonctionner le {{date}}. Si vous payez pour Mera, annulez votre forfait dans Google Play avant cette date.",
+      "success": "Vous êtes connecté avec ce téléphone. Votre e-mail est supprimé.",
+      "close": "Fermer",
+      "inboxTitle": "La connexion par e-mail prend fin le {{date}}",
+      "inboxBody": "Passez à la connexion par téléphone pour garder votre compte.",
+      "settingsRow": "Passer à la connexion par téléphone",
+      "settingsRowHint": "La connexion par e-mail prend fin le {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Restaurer les achats"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Vous passez de l'iPhone à Android, ou inversement ? Votre forfait reste dans votre ancien magasin. Annulez-le là-bas, puis abonnez-vous ici. Mera ne voit pas les forfaits des autres magasins, donc Mera ne peut rien rembourser en cas de chevauchement.",
+      "invoicesAppStore": "Mera n'a aucun moyen de vous écrire par e-mail, donc Apple envoie vos reçus et factures à l'e-mail de votre compte Apple.",
+      "invoicesPlayStore": "Mera n'a aucun moyen de vous écrire par e-mail, donc Google Play envoie vos reçus à l'e-mail de votre compte Google.",
+      "planBack": "Votre forfait est de retour.",
+      "restoreNoneApple": "Aucun forfait trouvé sur ce compte Apple.",
+      "restoreNoneGoogle": "Aucun forfait trouvé sur ce compte Google.",
+      "restoreFailedAppStore": "Impossible de joindre l'App Store. Réessayez.",
+      "restoreFailedPlayStore": "Impossible de joindre Google Play. Réessayez."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera vous connecte avec ce téléphone. Apple confirme qu'il s'agit de la vraie app Mera sur un vrai iPhone, pour bloquer les faux comptes. Nous gardons une trace de connexion tant que vous avez un compte.",
+        "playIntegrity": "Mera vous connecte avec ce téléphone. Google confirme qu'il s'agit de la vraie app Mera sur un vrai téléphone Android, pour bloquer les faux comptes. Nous gardons une trace de connexion, pas l'identifiant de votre téléphone.",
+        "generic": "Mera vous connecte avec ce téléphone. Nous gardons une trace de connexion pour ce téléphone tant que vous avez un compte."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Votre e-mail, jusqu'à ce que vous passiez à la connexion par téléphone ou jusqu'à sa suppression le 30 octobre 2026, ainsi que votre forfait. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
+        "emailIfAdded": "Votre forfait. Mera ne demande jamais d'e-mail, et tout e-mail ajouté auparavant est supprimé le 30 octobre 2026. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
+        "signInRecordGeneric": "Une trace de connexion pour ce téléphone, supprimée avec votre compte. La vérification d'Apple ou de Google indiquant qu'il s'agit de la vraie app n'est pas conservée."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Le forfait que vous avez. Un e-mail seulement pour un compte qui s'est connecté par e-mail auparavant, supprimé le 30 octobre 2026. Un décompte quotidien des articles qui vous sont envoyés, le volume de texte chiffré que Mera a envoyé pour être lu pour vous et en combien de requêtes (jamais le texte lui-même), le moment où vous avez atteint la lecture quotidienne de votre forfait, et les jours où vous avez utilisé Mera, conservé 90 jours. Vos horaires de notification, votre langue et votre choix de traitement. Les réponses que vous envoyez aux questions de l'équipe Mera. Une trace de connexion pour ce téléphone, supprimée avec votre compte. Les expressions de sujet sont mises en cache par leur seul texte, sans rien qui indique qui les a demandées, et supprimées après quatorze jours sans utilisation."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Votre façon de vous connecter, qui est ce téléphone (ou, jusqu'au 30 octobre 2026, un e-mail ajouté auparavant), et le forfait que vous avez."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Votre compte sera programmé pour suppression et supprimé définitivement après 30 jours. Ce téléphone ne pourra plus le connecter. Cette action ne peut pas être annulée.",
+      "accountDeletionScheduledDescription": "Votre compte sera définitivement supprimé dans 30 jours."
+    }
+  },
+  "hi": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "अगर इस ईमेल का मेरा ऐप खाता है, तो हमने उस पर एक कोड भेजा है। पहली बार मेरा ऐप इस्तेमाल कर रहे हैं? “इस फ़ोन से साइन इन करें” इस्तेमाल करें।",
+        "noCodeUsePhone": "कोड नहीं मिला? “इस फ़ोन से साइन इन करें” इस्तेमाल करें।",
+        "beginWithoutEmail": "इस फ़ोन से साइन इन करें",
+        "beginCaption": "कोई ईमेल, फ़ोन नंबर या पासवर्ड नहीं। कुछ भी याद रखने की ज़रूरत नहीं।"
+      },
+      "emailLegacyHint": "सिर्फ़ उन लोगों के लिए जो पहले ईमेल से साइन इन करते थे। नए उपयोगकर्ता अब ईमेल से साइन इन नहीं कर सकते।",
+      "phoneCheckTemporary": "इस फ़ोन की जाँच नहीं हो सकी। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
+      "phoneUnsupportedAndroid": "मेरा ऐप को आपको साइन इन करने के लिए इस फ़ोन पर Google Play चाहिए। जिन फ़ोन में यह नहीं है, वे समर्थित नहीं हैं।",
+      "phoneUnsupportedIos": "इस iPhone पर फ़ोन से साइन इन नहीं हो सकता।",
+      "supportedPhones": "समर्थित फ़ोन",
+      "emailEnded": {
+        "title": "ईमेल से साइन इन समाप्त हो गया है",
+        "bodyIos": "{{date}} को ईमेल से साइन इन समाप्त हो गया। फिर से शुरू करने के लिए इस फ़ोन से साइन इन करें। आपका प्लान App Store से वापस आता है, और आपके सहेजे गए लेख आपके बैकअप से वापस आते हैं।",
+        "bodyAndroid": "{{date}} को ईमेल से साइन इन समाप्त हो गया। फिर से शुरू करने के लिए इस फ़ोन से साइन इन करें। आपका प्लान Google Play से वापस आता है, और आपके सहेजे गए लेख आपके बैकअप से वापस आते हैं।"
+      },
+      "phoneNotSupported": "यह फ़ोन समर्थित नहीं है",
+      "signInWithoutEmail": "इस फ़ोन से साइन इन करें",
+      "differentAccount": {
+        "title": "इस फ़ोन से साइन इन करें?"
+      },
+      "deviceSignInFailed": "कुछ गड़बड़ हो गई। फिर से कोशिश करें।",
+      "deviceSignInDenied": "हम इस डिवाइस की पुष्टि नहीं कर सके। फिर से कोशिश करें।"
+    },
+    "moveToPhone": {
+      "dialogTitle": "इसकी बजाय इस फ़ोन से साइन इन करें",
+      "dialogBody": "हम आपको इस फ़ोन से साइन इन कराएँगे, आपका खाता इस फ़ोन पर ले जाएँगे और हमारे डेटाबेस से आपका ईमेल हटा देंगे।",
+      "dialogSettingsHint": "आप यह {{date}} तक सेटिंग्स में कर सकते हैं।",
+      "confirm": "खाता ले जाएं",
+      "cancel": "अभी नहीं",
+      "progressTitle": "आपका खाता इस फ़ोन पर ले जाया जा रहा है",
+      "steps": {
+        "checking": "इस फ़ोन की जाँच हो रही है",
+        "linking": "आपका खाता जोड़ा जा रहा है",
+        "removing": "आपका ईमेल हटाया जा रहा है",
+        "done": "हो गया"
+      },
+      "failed": "यह पूरा नहीं हो सका। आपका खाता अब भी काम करता है। थोड़ी देर बाद फिर से कोशिश करें।",
+      "unsupportedIos": "इस फ़ोन पर फ़ोन नंबर से साइन इन नहीं हो सकता, इसलिए {{date}} को मेरा ऐप इस पर काम करना बंद कर देगा। अगर आप मेरा ऐप के लिए भुगतान करते हैं, तो उससे पहले App Store में अपना प्लान रद्द करें।",
+      "unsupportedAndroid": "इस फ़ोन पर फ़ोन नंबर से साइन इन नहीं हो सकता, इसलिए {{date}} को मेरा ऐप इस पर काम करना बंद कर देगा। अगर आप मेरा ऐप के लिए भुगतान करते हैं, तो उससे पहले Google Play में अपना प्लान रद्द करें।",
+      "success": "फ़ोन से साइन इन हो गया। आपका ईमेल हटा दिया गया है।",
+      "close": "बंद करें",
+      "inboxTitle": "ईमेल से साइन इन {{date}} को समाप्त हो रहा है",
+      "inboxBody": "अपना खाता रखने के लिए फ़ोन से साइन इन पर जाएं।",
+      "settingsRow": "फ़ोन से साइन इन पर जाएं",
+      "settingsRowHint": "ईमेल से साइन इन {{date}} को समाप्त हो रहा है।"
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "खरीदारी पुनर्स्थापित करें"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "iPhone और Android के बीच बदल रहे हैं? आपका प्लान आपके पुराने स्टोर पर ही रहता है। उसे वहीं रद्द करें, फिर यहाँ सब्सक्राइब करें। मेरा ऐप दूसरे स्टोर के प्लान नहीं देख सकता, इसलिए किसी भी ओवरलैप का रिफ़ंड नहीं कर सकता।",
+      "invoicesAppStore": "मेरा ऐप आपको ईमेल नहीं कर सकता, इसलिए Apple आपकी रसीदें और इनवॉइस आपके Apple खाते के ईमेल पर भेजता है।",
+      "invoicesPlayStore": "मेरा ऐप आपको ईमेल नहीं कर सकता, इसलिए Google Play आपकी रसीदें आपके Google खाते के ईमेल पर भेजता है।",
+      "planBack": "आपका प्लान वापस आ गया है।",
+      "restoreNoneApple": "इस Apple खाते पर कोई प्लान नहीं मिला।",
+      "restoreNoneGoogle": "इस Google खाते पर कोई प्लान नहीं मिला।",
+      "restoreFailedAppStore": "App Store तक नहीं पहुँच सके। फिर से कोशिश करें।",
+      "restoreFailedPlayStore": "Google Play तक नहीं पहुँच सके। फिर से कोशिश करें।"
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "मेरा ऐप इसी फ़ोन से आपको साइन इन करता है। नकली खातों को रोकने के लिए Apple पुष्टि करता है कि यह असली iPhone पर असली मेरा ऐप है। जब तक आपका खाता है, हम एक साइन-इन रिकॉर्ड रखते हैं।",
+        "playIntegrity": "मेरा ऐप इसी फ़ोन से आपको साइन इन करता है। नकली खातों को रोकने के लिए Google पुष्टि करता है कि यह असली Android फ़ोन पर असली मेरा ऐप है। हम एक साइन-इन रिकॉर्ड रखते हैं, आपके फ़ोन की ID नहीं।",
+        "generic": "मेरा ऐप इसी फ़ोन से आपको साइन इन करता है। जब तक आपका खाता है, हम इस फ़ोन का एक साइन-इन रिकॉर्ड रखते हैं।"
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "आपका ईमेल, जब तक आप फ़ोन से साइन इन पर न जाएं या वह 30 अक्टूबर 2026 को हटा न दिया जाए, और आपकी योजना। App Store या Google Play के बिलिंग रिकॉर्ड उतने समय तक रखे जाते हैं जितना कानून कहता है।",
+        "emailIfAdded": "आपकी योजना। मेरा ऐप कभी ईमेल नहीं माँगता, और पहले का कोई भी ईमेल 30 अक्टूबर 2026 को हटा दिया जाता है। App Store या Google Play के बिलिंग रिकॉर्ड उतने समय तक रखे जाते हैं जितना कानून कहता है।",
+        "signInRecordGeneric": "इस फ़ोन का एक साइन इन रिकॉर्ड, जो आपके खाते के साथ हट जाता है। Apple या Google की यह जांच कि यह असली ऐप है, रखी नहीं जाती।"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "आप किस प्लान पर हैं। सिर्फ़ उस खाते का ईमेल, जिसने पहले ईमेल से साइन इन किया था, और वह 30 अक्टूबर 2026 को हटा दिया जाएगा। आपको भेजे गए लेखों की रोज़ की गिनती, आपके लिए पढ़ने के लिए हर दिन कितना एन्क्रिप्टेड टेक्स्ट और कितने अनुरोधों में भेजा गया (टेक्स्ट खुद कभी नहीं), कब आपने अपने प्लान की रोज़ की रीडिंग पूरी की, और आपने मेरा ऐप किन दिनों इस्तेमाल किया, जो 90 दिन तक रखा जाता है। आपके नोटिफ़िकेशन के समय, भाषा और प्रोसेसिंग का चुनाव। मेरा ऐप टीम के सवालों पर आपके भेजे जवाब। इस फ़ोन का एक साइन-इन रिकॉर्ड, जो आपके खाते के साथ हट जाता है। विषय-वाक्यांश सिर्फ़ उनके टेक्स्ट से कैश होते हैं, किसने माँगा इसका कोई रिकॉर्ड नहीं होता, और चौदह दिन इस्तेमाल न होने पर हटा दिए जाते हैं।"
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "आप कैसे साइन इन करते हैं, यानी इस फ़ोन से (या 30 अक्टूबर 2026 तक, पहले का कोई ईमेल), और आप किस प्लान पर हैं।"
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "आपका खाता 30 दिनों के बाद हमेशा के लिए हटाने के लिए शेड्यूल किया जाएगा। इस फ़ोन से उसमें दोबारा साइन इन नहीं किया जा सकता। इसे पूर्ववत नहीं किया जा सकता।",
+      "accountDeletionScheduledDescription": "आपका खाता 30 दिनों में स्थायी रूप से हटा दिया जाएगा।"
+    }
+  },
+  "id": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Jika email ini punya akun Mera, kami sudah mengirimkan kodenya. Baru di Mera? Gunakan “Masuk dengan ponsel ini”.",
+        "noCodeUsePhone": "Tidak menerima kode? Gunakan “Masuk dengan ponsel ini”.",
+        "beginWithoutEmail": "Masuk dengan ponsel ini",
+        "beginCaption": "Tanpa email, nomor ponsel, atau kata sandi. Tidak ada yang perlu diingat."
+      },
+      "emailLegacyHint": "Hanya untuk yang dulu masuk dengan email. Pengguna baru tidak bisa lagi masuk dengan email.",
+      "phoneCheckTemporary": "Ponsel ini tidak bisa diperiksa. Periksa koneksi Anda lalu coba lagi.",
+      "phoneUnsupportedAndroid": "Mera memerlukan Google Play di ponsel ini untuk memasukkan Anda. Ponsel tanpa Google Play tidak didukung.",
+      "phoneUnsupportedIos": "iPhone ini tidak bisa memakai masuk dengan ponsel.",
+      "supportedPhones": "Ponsel yang didukung",
+      "emailEnded": {
+        "title": "Masuk dengan email sudah berakhir",
+        "bodyIos": "Masuk dengan email berakhir pada {{date}}. Masuk dengan ponsel ini untuk mulai lagi. Paket Anda kembali dari App Store, dan artikel tersimpan Anda kembali dari cadangan.",
+        "bodyAndroid": "Masuk dengan email berakhir pada {{date}}. Masuk dengan ponsel ini untuk mulai lagi. Paket Anda kembali dari Google Play, dan artikel tersimpan Anda kembali dari cadangan."
+      },
+      "phoneNotSupported": "Ponsel ini tidak didukung",
+      "signInWithoutEmail": "Masuk dengan ponsel ini",
+      "differentAccount": {
+        "title": "Masuk dengan ponsel ini?"
+      },
+      "deviceSignInFailed": "Terjadi kesalahan. Coba lagi.",
+      "deviceSignInDenied": "Kami tidak dapat memverifikasi perangkat ini. Coba lagi."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Masuk dengan ponsel ini saja",
+      "dialogBody": "Kami akan memasukkan Anda dengan ponsel ini, memindahkan akun Anda ke ponsel ini, dan menghapus email Anda dari database kami.",
+      "dialogSettingsHint": "Anda bisa melakukannya di Pengaturan sampai {{date}}.",
+      "confirm": "Pindahkan akun",
+      "cancel": "Nanti saja",
+      "progressTitle": "Memindahkan akun Anda ke ponsel ini",
+      "steps": {
+        "checking": "Memeriksa ponsel ini",
+        "linking": "Menautkan akun Anda",
+        "removing": "Menghapus email Anda",
+        "done": "Selesai"
+      },
+      "failed": "Proses ini belum selesai. Akun Anda tetap berfungsi. Coba lagi sebentar lagi.",
+      "unsupportedIos": "Ponsel ini tidak bisa memakai masuk dengan ponsel, jadi Mera berhenti berfungsi di ponsel ini pada {{date}}. Jika Anda membayar Mera, batalkan paket Anda di App Store sebelum tanggal itu.",
+      "unsupportedAndroid": "Ponsel ini tidak bisa memakai masuk dengan ponsel, jadi Mera berhenti berfungsi di ponsel ini pada {{date}}. Jika Anda membayar Mera, batalkan paket Anda di Google Play sebelum tanggal itu.",
+      "success": "Anda sudah masuk dengan ponsel ini. Email Anda telah dihapus.",
+      "close": "Tutup",
+      "inboxTitle": "Masuk dengan email berakhir {{date}}",
+      "inboxBody": "Beralih ke masuk dengan ponsel untuk menyimpan akun Anda.",
+      "settingsRow": "Pindah ke masuk dengan ponsel",
+      "settingsRowHint": "Masuk dengan email berakhir {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Pulihkan pembelian"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Pindah antara iPhone dan Android? Paket Anda tetap di toko lama. Batalkan di sana, lalu berlangganan di sini. Mera tidak bisa melihat paket di toko lain, jadi tidak bisa mengembalikan pembayaran yang tumpang tindih.",
+      "invoicesAppStore": "Mera tidak bisa mengirim email kepada Anda, jadi Apple mengirim kuitansi dan faktur ke email di Akun Apple Anda.",
+      "invoicesPlayStore": "Mera tidak bisa mengirim email kepada Anda, jadi Google Play mengirim kuitansi ke email di Akun Google Anda.",
+      "planBack": "Paket Anda sudah kembali.",
+      "restoreNoneApple": "Tidak ada paket di Akun Apple ini.",
+      "restoreNoneGoogle": "Tidak ada paket di Akun Google ini.",
+      "restoreFailedAppStore": "Tidak bisa menghubungi App Store. Coba lagi.",
+      "restoreFailedPlayStore": "Tidak bisa menghubungi Google Play. Coba lagi."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera membuat Anda masuk dengan ponsel ini. Apple memastikan ini aplikasi Mera asli di iPhone asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk selama Anda punya akun.",
+        "playIntegrity": "Mera membuat Anda masuk dengan ponsel ini. Google memastikan ini aplikasi Mera asli di ponsel Android asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk, bukan ID ponsel Anda.",
+        "generic": "Mera membuat Anda masuk dengan ponsel ini. Kami menyimpan catatan masuk untuk ponsel ini selama Anda punya akun."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Email Anda sampai Anda beralih ke masuk dengan ponsel atau sampai dihapus pada 30 Oktober 2026, dan paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
+        "emailIfAdded": "Paket Anda. Mera tidak pernah meminta email, dan email dari sebelumnya dihapus pada 30 Oktober 2026. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
+        "signInRecordGeneric": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple atau Google bahwa ini aplikasi asli tidak disimpan."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Paket yang Anda pakai. Email hanya untuk akun yang dulu masuk dengan email, dihapus pada 30 Oktober 2026. Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim kepada Anda setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Cara Anda masuk, yaitu ponsel ini (atau email dari sebelumnya sampai 30 Oktober 2026), dan paket yang Anda pakai."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk dihapus permanen setelah 30 hari. Ponsel ini tidak bisa masuk lagi ke akun ini. Tindakan ini tidak dapat dibatalkan.",
+      "accountDeletionScheduledDescription": "Akun Anda akan dihapus permanen dalam 30 hari."
+    }
+  },
+  "it": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Se questa email ha un account Mera, ti abbiamo inviato un codice. Sei nuovo su Mera? Usa «Accedi con questo telefono».",
+        "noCodeUsePhone": "Non hai ricevuto il codice? Usa «Accedi con questo telefono».",
+        "beginWithoutEmail": "Accedi con questo telefono",
+        "beginCaption": "Nessuna email, numero di telefono o password. Nulla da ricordare."
+      },
+      "emailLegacyHint": "Solo per chi ha già effettuato l'accesso con l'email. I nuovi utenti non possono più accedere con l'email.",
+      "phoneCheckTemporary": "Impossibile verificare questo telefono. Controlla la connessione e riprova.",
+      "phoneUnsupportedAndroid": "Mera ha bisogno di Google Play su questo telefono per farti accedere. I telefoni senza Google Play non sono supportati.",
+      "phoneUnsupportedIos": "Questo iPhone non può usare l'accesso con il telefono.",
+      "supportedPhones": "Telefoni supportati",
+      "emailEnded": {
+        "title": "L'accesso con email è terminato",
+        "bodyIos": "L'accesso con email è terminato il {{date}}. Accedi con questo telefono per ricominciare. Il tuo piano torna dall'App Store, e i tuoi articoli salvati tornano dal tuo backup.",
+        "bodyAndroid": "L'accesso con email è terminato il {{date}}. Accedi con questo telefono per ricominciare. Il tuo piano torna da Google Play, e i tuoi articoli salvati tornano dal tuo backup."
+      },
+      "phoneNotSupported": "Questo telefono non è supportato",
+      "signInWithoutEmail": "Accedi con questo telefono",
+      "differentAccount": {
+        "title": "Accedere con questo telefono?"
+      },
+      "deviceSignInFailed": "Si è verificato un problema. Riprova.",
+      "deviceSignInDenied": "Impossibile verificare questo dispositivo. Riprova."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Accedi invece con questo telefono",
+      "dialogBody": "Ti facciamo accedere con questo telefono, spostiamo il tuo account su di esso ed eliminiamo la tua email dal nostro database.",
+      "dialogSettingsHint": "Puoi farlo nelle Impostazioni fino al {{date}}.",
+      "confirm": "Sposta account",
+      "cancel": "Non ora",
+      "progressTitle": "Spostamento del tuo account su questo telefono",
+      "steps": {
+        "checking": "Verifica di questo telefono",
+        "linking": "Collegamento del tuo account",
+        "removing": "Rimozione della tua email",
+        "done": "Fatto"
+      },
+      "failed": "Non è stato completato. Il tuo account funziona ancora. Riprova tra poco.",
+      "unsupportedIos": "Questo telefono non può usare l'accesso con il telefono, quindi Mera smette di funzionare su di esso il {{date}}. Se paghi per Mera, annulla il tuo piano nell'App Store prima di quella data.",
+      "unsupportedAndroid": "Questo telefono non può usare l'accesso con il telefono, quindi Mera smette di funzionare su di esso il {{date}}. Se paghi per Mera, annulla il tuo piano in Google Play prima di quella data.",
+      "success": "Hai effettuato l'accesso con questo telefono. La tua email è stata eliminata.",
+      "close": "Chiudi",
+      "inboxTitle": "L'accesso con email termina il {{date}}",
+      "inboxBody": "Passa all'accesso con il telefono per conservare il tuo account.",
+      "settingsRow": "Passa all'accesso con il telefono",
+      "settingsRowHint": "L'accesso con email termina il {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Ripristina acquisti"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Passi da iPhone ad Android o viceversa? Il tuo piano resta con il vecchio store. Annullalo lì, poi abbonati qui. Mera non può vedere i piani degli altri store, quindi non può rimborsare eventuali sovrapposizioni.",
+      "invoicesAppStore": "Mera non ha modo di inviarti un'email, quindi Apple invia le tue ricevute e fatture all'email del tuo Account Apple.",
+      "invoicesPlayStore": "Mera non ha modo di inviarti un'email, quindi Google Play invia le tue ricevute all'email del tuo Account Google.",
+      "planBack": "Il tuo piano è tornato.",
+      "restoreNoneApple": "Nessun piano trovato su questo Account Apple.",
+      "restoreNoneGoogle": "Nessun piano trovato su questo Account Google.",
+      "restoreFailedAppStore": "Impossibile raggiungere l'App Store. Riprova.",
+      "restoreFailedPlayStore": "Impossibile raggiungere Google Play. Riprova."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera ti fa accedere con questo telefono. Apple conferma che è la vera app Mera su un vero iPhone, per fermare gli account falsi. Conserviamo un record di accesso finché hai un account.",
+        "playIntegrity": "Mera ti fa accedere con questo telefono. Google conferma che è la vera app Mera su un vero telefono Android, per fermare gli account falsi. Conserviamo un record di accesso, non l'ID del tuo telefono.",
+        "generic": "Mera ti fa accedere con questo telefono. Conserviamo un record di accesso per questo telefono finché hai un account."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "La tua email, fino al passaggio all'accesso con il telefono o fino all'eliminazione il 30 ottobre 2026, e il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
+        "emailIfAdded": "Il tuo piano. Mera non chiede mai un'email, e ogni email di prima viene eliminata il 30 ottobre 2026. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
+        "signInRecordGeneric": "Un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple o Google che si tratta della vera app non viene conservato."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Quale piano hai. Un'email solo per un account che in precedenza ha effettuato l'accesso con una, eliminata il 30 ottobre 2026. Un conteggio giornaliero degli articoli inviati a te, quanto testo cifrato Mera ha inviato per essere letto per te e in quante richieste (mai il testo stesso), quando hai raggiunto la lettura giornaliera del tuo piano e i giorni in cui hai usato Mera, conservato per 90 giorni. Gli orari delle notifiche, la lingua e la modalità di elaborazione. Le risposte che invii alle domande del team di Mera. Un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Come accedi, cioè con questo telefono (o, fino al 30 ottobre 2026, con un'email di prima), e quale piano hai."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Il tuo account sarà programmato per l'eliminazione e cancellato definitivamente dopo 30 giorni. Questo telefono non può più accedervi. Non si può annullare.",
+      "accountDeletionScheduledDescription": "Il tuo account sarà eliminato definitivamente tra 30 giorni."
+    }
+  },
+  "ja": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "このメールアドレスにメラのアカウントがあれば、コードを送信しました。メラを初めて使う方ですか？その場合は「この電話でサインイン」を使ってください。",
+        "noCodeUsePhone": "コードが届きませんか？「この電話でサインイン」を使ってください。",
+        "beginWithoutEmail": "この電話でサインイン",
+        "beginCaption": "メールアドレス、電話番号、パスワードは不要です。覚えておくことは何もありません。"
+      },
+      "emailLegacyHint": "メールでサインインしたことがある方だけが対象です。新しく登録する方は、もうメールでサインインできません。",
+      "phoneCheckTemporary": "この電話を確認できませんでした。接続を確認して、もう一度お試しください。",
+      "phoneUnsupportedAndroid": "メラでサインインするには、この電話にGoogle Playが必要です。Google Playがない電話は対応していません。",
+      "phoneUnsupportedIos": "このiPhoneでは電話でのサインインを使えません。",
+      "supportedPhones": "対応端末",
+      "emailEnded": {
+        "title": "メールでのサインインは終了しました",
+        "bodyIos": "メールでのサインインは{{date}}に終了しました。「この電話でサインイン」からやり直してください。プランは App Store から戻り、保存した記事はバックアップから戻ります。",
+        "bodyAndroid": "メールでのサインインは{{date}}に終了しました。「この電話でサインイン」からやり直してください。プランは Google Play から戻り、保存した記事はバックアップから戻ります。"
+      },
+      "phoneNotSupported": "この電話は対応していません",
+      "signInWithoutEmail": "この電話でサインイン",
+      "differentAccount": {
+        "title": "この電話でサインインしますか？"
+      },
+      "deviceSignInFailed": "エラーが発生しました。もう一度お試しください。",
+      "deviceSignInDenied": "このデバイスを確認できませんでした。もう一度お試しください。"
+    },
+    "moveToPhone": {
+      "dialogTitle": "代わりにこの電話でサインイン",
+      "dialogBody": "この電話でサインインし、アカウントをこの電話に移して、データベースからメールアドレスを削除します。",
+      "dialogSettingsHint": "{{date}}までであれば、設定からこの操作ができます。",
+      "confirm": "アカウントを移行",
+      "cancel": "今はしない",
+      "progressTitle": "アカウントをこの電話に移しています",
+      "steps": {
+        "checking": "この電話を確認しています",
+        "linking": "アカウントを連携しています",
+        "removing": "メールアドレスを削除しています",
+        "done": "完了"
+      },
+      "failed": "完了しませんでした。アカウントは今も使えます。しばらくしてから、もう一度お試しください。",
+      "unsupportedIos": "この電話は電話でのサインインに対応していないため、{{date}}からこの電話でメラが使えなくなります。有料プランをご利用の場合は、それまでに App Store でプランを解約してください。",
+      "unsupportedAndroid": "この電話は電話でのサインインに対応していないため、{{date}}からこの電話でメラが使えなくなります。有料プランをご利用の場合は、それまでに Google Play でプランを解約してください。",
+      "success": "この電話でサインインしました。メールアドレスは削除されました。",
+      "close": "閉じる",
+      "inboxTitle": "メールでのサインインは{{date}}に終了します",
+      "inboxBody": "アカウントを残すには、電話でのサインインに切り替えてください。",
+      "settingsRow": "電話でのサインインに切り替える",
+      "settingsRowHint": "メールでのサインインは{{date}}に終了します。"
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "購入を復元"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "iPhoneとAndroidの間で切り替える場合は？プランは以前のストアに残ります。そこで解約してから、ここで加入してください。メラは他のストアのプランを確認できないため、重複分の返金もできません。",
+      "invoicesAppStore": "メラにはメールを送る手段がないため、領収書と請求書は Apple が、Apple アカウントに登録されたメールアドレス宛てに送信します。",
+      "invoicesPlayStore": "メラにはメールを送る手段がないため、領収書は Google Play が、Google アカウントに登録されたメールアドレス宛てに送信します。",
+      "planBack": "プランが元に戻りました。",
+      "restoreNoneApple": "このApple アカウントでプランが見つかりませんでした。",
+      "restoreNoneGoogle": "このGoogle アカウントでプランが見つかりませんでした。",
+      "restoreFailedAppStore": "App Store に接続できませんでした。もう一度お試しください。",
+      "restoreFailedPlayStore": "Google Play に接続できませんでした。もう一度お試しください。"
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "メラはこの電話でサインインします。偽のアカウントを防ぐため、Appleが、本物のiPhone上の本物のメラアプリであることを確認します。アカウントがある間は、サインインの記録を保持します。",
+        "playIntegrity": "メラはこの電話でサインインします。偽のアカウントを防ぐため、Googleが、本物のAndroidスマートフォン上の本物のメラアプリであることを確認します。保持するのはサインインの記録で、電話のIDではありません。",
+        "generic": "メラはこの電話でサインインします。アカウントがある間、この電話のサインイン記録を保持します。"
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "メールアドレス（電話でのサインインに切り替えるまで、または2026年10月30日に削除されるまで）と、プラン。App Store または Google Play からの請求記録は、法律で定められた期間保持します。",
+        "emailIfAdded": "利用中のプラン。メラがメールアドレスを求めることは一切なく、それ以前のメールアドレスは2026年10月30日に削除されます。App Store または Google Play からの請求記録は、法律で定められた期間保持します。",
+        "signInRecordGeneric": "この電話のログイン記録は、アカウントと一緒に削除されます。本物のアプリかどうかを確かめる Apple または Google のチェック結果は保持しません。"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "利用中のプラン。以前メールでサインインしたアカウントのメールアドレスのみで、2026年10月30日に削除されます。あなたに送られた1日あたりの記事数、あなたのためにメラが読むよう送った暗号化テキストの量とそのリクエスト数（テキスト自体は含みません）、プランの1日の読書量に達した時点、メラを使った日（90日間保存）。通知の時間、言語、処理方法の選択。メラのチームからの質問に送った回答。この電話のログイン記録は、アカウントと一緒に削除されます。トピックのフレーズは、テキストだけでキャッシュされ、誰が求めたかは記録されず、14日間使われないと削除されます。"
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "サインイン方法（この電話、または2026年10月30日までは以前のメールアドレス）と、利用中のプラン。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "アカウントは削除予定となり、30日後に完全に削除されます。この電話からは再びサインインできません。この操作は元に戻せません。",
+      "accountDeletionScheduledDescription": "アカウントは30日後に完全に削除されます。"
+    }
+  },
+  "ko": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "이 이메일에 메라 계정이 있다면 코드를 보냈습니다. 메라가 처음이신가요? '이 휴대폰으로 로그인'을 누르세요.",
+        "noCodeUsePhone": "코드를 받지 못하셨나요? '이 휴대폰으로 로그인'을 누르세요.",
+        "beginWithoutEmail": "이 휴대폰으로 로그인",
+        "beginCaption": "이메일, 전화번호, 비밀번호가 필요 없습니다. 기억할 것은 없습니다."
+      },
+      "emailLegacyHint": "이메일로 전에 로그인했던 분만 해당합니다. 새 사용자는 더 이상 이메일로 로그인할 수 없습니다.",
+      "phoneCheckTemporary": "이 휴대폰을 확인할 수 없습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.",
+      "phoneUnsupportedAndroid": "메라에 로그인하려면 이 휴대폰에 Google Play가 필요합니다. Google Play가 없는 휴대폰은 지원되지 않습니다.",
+      "phoneUnsupportedIos": "이 iPhone에서는 휴대폰 로그인을 사용할 수 없습니다.",
+      "supportedPhones": "지원되는 휴대폰",
+      "emailEnded": {
+        "title": "이메일 로그인이 종료되었습니다",
+        "bodyIos": "이메일 로그인은 {{date}}에 종료되었습니다. 이 휴대폰으로 로그인하면 다시 시작할 수 있습니다. 요금제는 App Store에서 돌아오고, 저장한 기사는 백업에서 돌아옵니다.",
+        "bodyAndroid": "이메일 로그인은 {{date}}에 종료되었습니다. 이 휴대폰으로 로그인하면 다시 시작할 수 있습니다. 요금제는 Google Play에서 돌아오고, 저장한 기사는 백업에서 돌아옵니다."
+      },
+      "phoneNotSupported": "이 휴대폰은 지원되지 않습니다",
+      "signInWithoutEmail": "이 휴대폰으로 로그인",
+      "differentAccount": {
+        "title": "이 휴대폰으로 로그인할까요?"
+      },
+      "deviceSignInFailed": "문제가 발생했습니다. 다시 시도해 주세요.",
+      "deviceSignInDenied": "이 기기를 확인할 수 없습니다. 다시 시도해 주세요."
+    },
+    "moveToPhone": {
+      "dialogTitle": "대신 이 휴대폰으로 로그인",
+      "dialogBody": "이 휴대폰으로 로그인하고, 계정을 이 휴대폰으로 옮긴 뒤, 회원님의 이메일을 메라 데이터베이스에서 삭제합니다.",
+      "dialogSettingsHint": "{{date}}까지 설정에서 이 작업을 할 수 있습니다.",
+      "confirm": "계정 옮기기",
+      "cancel": "나중에",
+      "progressTitle": "계정을 이 휴대폰으로 옮기는 중",
+      "steps": {
+        "checking": "이 휴대폰 확인 중",
+        "linking": "계정 연결 중",
+        "removing": "이메일 삭제 중",
+        "done": "완료"
+      },
+      "failed": "완료되지 않았습니다. 계정은 여전히 사용할 수 있습니다. 잠시 후 다시 시도해 주세요.",
+      "unsupportedIos": "이 휴대폰은 휴대폰 로그인을 지원하지 않아 {{date}}에 메라를 사용할 수 없게 됩니다. 메라 요금제를 결제하고 있다면, 그 전에 App Store에서 요금제를 취소하세요.",
+      "unsupportedAndroid": "이 휴대폰은 휴대폰 로그인을 지원하지 않아 {{date}}에 메라를 사용할 수 없게 됩니다. 메라 요금제를 결제하고 있다면, 그 전에 Google Play에서 요금제를 취소하세요.",
+      "success": "이 휴대폰으로 로그인했습니다. 이메일은 삭제되었습니다.",
+      "close": "닫기",
+      "inboxTitle": "이메일 로그인은 {{date}}에 끝납니다",
+      "inboxBody": "휴대폰 로그인으로 바꾸면 계정을 계속 사용할 수 있습니다.",
+      "settingsRow": "휴대폰 로그인으로 전환",
+      "settingsRowHint": "이메일 로그인은 {{date}}에 끝납니다."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "구입 항목 복원"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "iPhone과 Android 사이를 오가시나요? 요금제는 이전 스토어에 남아 있습니다. 거기서 취소한 다음 여기서 구독하세요. 메라는 다른 스토어의 요금제를 볼 수 없으므로 겹치는 금액을 환불할 수 없습니다.",
+      "invoicesAppStore": "메라는 회원님께 이메일을 보낼 방법이 없으므로, 영수증과 청구서는 Apple이 Apple 계정의 이메일로 보냅니다.",
+      "invoicesPlayStore": "메라는 회원님께 이메일을 보낼 방법이 없으므로, 영수증은 Google Play가 Google 계정의 이메일로 보냅니다.",
+      "planBack": "요금제가 돌아왔습니다.",
+      "restoreNoneApple": "이 Apple 계정에서 요금제를 찾을 수 없습니다.",
+      "restoreNoneGoogle": "이 Google 계정에서 요금제를 찾을 수 없습니다.",
+      "restoreFailedAppStore": "App Store에 연결할 수 없습니다. 다시 시도해 주세요.",
+      "restoreFailedPlayStore": "Google Play에 연결할 수 없습니다. 다시 시도해 주세요."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "메라가 이 휴대폰으로 로그인해 드립니다. 가짜 계정을 막기 위해 Apple이 실제 iPhone의 진짜 메라 앱인지 확인합니다. 계정이 있는 동안 로그인 기록을 보관합니다.",
+        "playIntegrity": "메라가 이 휴대폰으로 로그인해 드립니다. 가짜 계정을 막기 위해 Google이 실제 Android 휴대폰의 진짜 메라 앱인지 확인합니다. 휴대폰 ID가 아닌 로그인 기록만 보관합니다.",
+        "generic": "메라가 이 휴대폰으로 로그인해 드립니다. 계정이 있는 동안 이 휴대폰의 로그인 기록을 보관합니다."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "이메일은 휴대폰 로그인으로 바꾸거나 2026년 10월 30일에 삭제되기 전까지 보관하고, 요금제도 보관합니다. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
+        "emailIfAdded": "요금제. 메라는 이메일을 요구하지 않으며, 이전에 추가한 이메일은 2026년 10월 30일에 삭제됩니다. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
+        "signInRecordGeneric": "이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Apple 또는 Google의 검사 결과는 보관하지 않습니다."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "이전에 이메일로 로그인한 계정에만 이메일이 있으며, 2026년 10월 30일에 삭제됩니다. 사용 중인 요금제. 회원님께 보낸 기사 수를 하루 단위로 센 값, 메라가 회원님을 위해 읽도록 보낸 암호화된 텍스트의 양과 요청 횟수(텍스트 내용 자체는 제외), 요금제의 하루 읽기 분량에 도달한 시점, 메라를 사용한 날짜를 90일 동안 보관. 알림 시간, 언어, 처리 방식 선택. 메라 팀의 질문에 보낸 답변. 이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 주제 문구는 텍스트로만 캐시되고 누가 요청했는지는 기록되지 않으며, 14일 동안 쓰이지 않으면 삭제됩니다."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "로그인 방법(이 휴대폰, 또는 2026년 10월 30일까지는 이전에 쓰던 이메일)과 사용 중인 요금제."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "계정은 30일의 유예 기간이 지난 뒤 영구적으로 삭제되도록 예약됩니다. 이 휴대폰으로는 다시 로그인할 수 없습니다. 이 작업은 되돌릴 수 없습니다.",
+      "accountDeletionScheduledDescription": "계정은 30일 후 영구적으로 삭제됩니다."
+    }
+  },
+  "nl": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Als dit e-mailadres een Mera-account heeft, hebben we er een code naartoe gestuurd. Nieuw bij Mera? Kies \"Inloggen met deze telefoon\".",
+        "noCodeUsePhone": "Geen code gekregen? Kies \"Inloggen met deze telefoon\".",
+        "beginWithoutEmail": "Inloggen met deze telefoon",
+        "beginCaption": "Geen e-mail, telefoonnummer of wachtwoord. Niets om te onthouden."
+      },
+      "emailLegacyHint": "Alleen voor mensen die eerder met e-mail zijn ingelogd. Nieuwe gebruikers kunnen niet meer met e-mail inloggen.",
+      "phoneCheckTemporary": "We konden deze telefoon niet controleren. Controleer je verbinding en probeer het opnieuw.",
+      "phoneUnsupportedAndroid": "Mera heeft Google Play op deze telefoon nodig om je in te loggen. Telefoons zonder Google Play worden niet ondersteund.",
+      "phoneUnsupportedIos": "Deze iPhone kan niet inloggen met een telefoonnummer.",
+      "supportedPhones": "Ondersteunde telefoons",
+      "emailEnded": {
+        "title": "Inloggen met e-mail is gestopt",
+        "bodyIos": "Inloggen met e-mail is gestopt op {{date}}. Log in met deze telefoon om opnieuw te beginnen. Je abonnement komt terug via de App Store, en je opgeslagen artikelen komen terug uit je back-up.",
+        "bodyAndroid": "Inloggen met e-mail is gestopt op {{date}}. Log in met deze telefoon om opnieuw te beginnen. Je abonnement komt terug via Google Play, en je opgeslagen artikelen komen terug uit je back-up."
+      },
+      "phoneNotSupported": "Deze telefoon wordt niet ondersteund",
+      "signInWithoutEmail": "Inloggen met deze telefoon",
+      "differentAccount": {
+        "title": "Inloggen met deze telefoon?"
+      },
+      "deviceSignInFailed": "Er is iets misgegaan. Probeer het opnieuw.",
+      "deviceSignInDenied": "We konden dit apparaat niet verifiëren. Probeer het opnieuw."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Inloggen met deze telefoon in plaats daarvan",
+      "dialogBody": "We loggen je in met deze telefoon, zetten je account erop over en verwijderen je e-mailadres uit onze database.",
+      "dialogSettingsHint": "Dit kan in Instellingen tot {{date}}.",
+      "confirm": "Account verplaatsen",
+      "cancel": "Niet nu",
+      "progressTitle": "Je account wordt naar deze telefoon verplaatst",
+      "steps": {
+        "checking": "Deze telefoon controleren",
+        "linking": "Je account koppelen",
+        "removing": "Je e-mailadres verwijderen",
+        "done": "Klaar"
+      },
+      "failed": "Dit is niet gelukt. Je account werkt nog steeds. Probeer het zo dadelijk opnieuw.",
+      "unsupportedIos": "Deze telefoon kan niet inloggen met een telefoonnummer, dus Mera stopt op {{date}} met werken op deze telefoon. Als je voor Mera betaalt, zeg je je abonnement vóór die datum op in de App Store.",
+      "unsupportedAndroid": "Deze telefoon kan niet inloggen met een telefoonnummer, dus Mera stopt op {{date}} met werken op deze telefoon. Als je voor Mera betaalt, zeg je je abonnement vóór die datum op in Google Play.",
+      "success": "Je bent ingelogd met deze telefoon. Je e-mailadres is verwijderd.",
+      "close": "Sluiten",
+      "inboxTitle": "Inloggen met e-mail eindigt op {{date}}",
+      "inboxBody": "Schakel over naar inloggen met telefoon om je account te behouden.",
+      "settingsRow": "Overschakelen naar inloggen met telefoon",
+      "settingsRowHint": "Inloggen met e-mail eindigt op {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Aankopen herstellen"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Wissel je tussen iPhone en Android? Je abonnement blijft bij je oude store. Zeg het daar op, en neem daarna hier een abonnement. Mera kan abonnementen in andere stores niet zien, dus kan geen dubbele betaling terugbetalen.",
+      "invoicesAppStore": "Mera kan je geen e-mail sturen, dus Apple stuurt je bonnetjes en facturen naar het e-mailadres van je Apple-account.",
+      "invoicesPlayStore": "Mera kan je geen e-mail sturen, dus Google Play stuurt je bonnetjes naar het e-mailadres van je Google-account.",
+      "planBack": "Je abonnement is terug.",
+      "restoreNoneApple": "Geen abonnement gevonden op deze Apple-account.",
+      "restoreNoneGoogle": "Geen abonnement gevonden op deze Google-account.",
+      "restoreFailedAppStore": "De App Store kon niet worden bereikt. Probeer het opnieuw.",
+      "restoreFailedPlayStore": "Google Play kon niet worden bereikt. Probeer het opnieuw."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera logt je in met deze telefoon. Apple bevestigt dat dit de echte Mera app is op een echte iPhone, om nepaccounts tegen te houden. We bewaren een inlogregistratie zolang je een account hebt.",
+        "playIntegrity": "Mera logt je in met deze telefoon. Google bevestigt dat dit de echte Mera app is op een echte Android-telefoon, om nepaccounts tegen te houden. We bewaren een inlogregistratie, niet de ID van je telefoon.",
+        "generic": "Mera logt je in met deze telefoon. We bewaren een inlogregistratie voor deze telefoon zolang je een account hebt."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Je e-mailadres, tot je overschakelt naar inloggen met telefoon of tot het op 30 oktober 2026 wordt verwijderd, en je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
+        "emailIfAdded": "Je abonnement. Mera vraagt nooit om een e-mailadres, en een e-mailadres van vroeger wordt op 30 oktober 2026 verwijderd. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
+        "signInRecordGeneric": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple of Google dat dit de echte app is, bewaren we niet."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Een e-mailadres is er alleen voor een account dat eerder met e-mail is ingelogd, en dat wordt op 30 oktober 2026 verwijderd. Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd, hoeveel versleutelde tekst Mera naar het lezen voor je heeft gestuurd en in hoeveel verzoeken (nooit de tekst zelf), wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Hoe je inlogt, namelijk met deze telefoon (of, tot 30 oktober 2026, een e-mailadres van vroeger), en welk abonnement je hebt."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Je account wordt ingepland voor verwijdering en na 30 dagen definitief verwijderd. Deze telefoon kan er niet meer mee inloggen. Dit kan niet ongedaan worden gemaakt.",
+      "accountDeletionScheduledDescription": "Je account wordt over 30 dagen definitief verwijderd."
+    }
+  },
+  "pl": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Jeśli ten e-mail ma konto w Mera, wysłaliśmy na niego kod. Nowy w Mera? Użyj przycisku „Zaloguj się tym telefonem”.",
+        "noCodeUsePhone": "Kod nie przyszedł? Użyj przycisku „Zaloguj się tym telefonem”.",
+        "beginWithoutEmail": "Zaloguj się tym telefonem",
+        "beginCaption": "Bez e-maila, numeru telefonu ani hasła. Nie trzeba niczego pamiętać."
+      },
+      "emailLegacyHint": "Tylko dla osób, które wcześniej logowały się e-mailem. Nowi użytkownicy nie mogą już logować się e-mailem.",
+      "phoneCheckTemporary": "Nie udało się sprawdzić tego telefonu. Sprawdź połączenie i spróbuj ponownie.",
+      "phoneUnsupportedAndroid": "Mera potrzebuje Google Play na tym telefonie, żeby Cię zalogować. Telefony bez niego nie są obsługiwane.",
+      "phoneUnsupportedIos": "Ten iPhone nie może logować się telefonem.",
+      "supportedPhones": "Obsługiwane telefony",
+      "emailEnded": {
+        "title": "Logowanie e-mailem zostało zakończone",
+        "bodyIos": "Logowanie e-mailem zakończyło się {{date}}. Zaloguj się tym telefonem, aby zacząć od nowa. Twój plan wróci z App Store, a zapisane artykuły wrócą z kopii zapasowej.",
+        "bodyAndroid": "Logowanie e-mailem zakończyło się {{date}}. Zaloguj się tym telefonem, aby zacząć od nowa. Twój plan wróci z Google Play, a zapisane artykuły wrócą z kopii zapasowej."
+      },
+      "phoneNotSupported": "Ten telefon nie jest obsługiwany",
+      "signInWithoutEmail": "Zaloguj się tym telefonem",
+      "differentAccount": {
+        "title": "Zalogować się tym telefonem?"
+      },
+      "deviceSignInFailed": "Coś poszło nie tak. Spróbuj ponownie.",
+      "deviceSignInDenied": "Nie udało się zweryfikować tego urządzenia. Spróbuj ponownie."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Zaloguj się zamiast tego tym telefonem",
+      "dialogBody": "Zalogujemy Cię tym telefonem, przeniesiemy Twoje konto na ten telefon i usuniemy Twój e-mail z naszej bazy danych.",
+      "dialogSettingsHint": "Możesz to zrobić w Ustawieniach do {{date}}.",
+      "confirm": "Przenieś konto",
+      "cancel": "Nie teraz",
+      "progressTitle": "Przenoszenie konta na ten telefon",
+      "steps": {
+        "checking": "Sprawdzanie tego telefonu",
+        "linking": "Łączenie konta",
+        "removing": "Usuwanie e-maila",
+        "done": "Gotowe"
+      },
+      "failed": "To się nie udało. Twoje konto nadal działa. Spróbuj ponownie za chwilę.",
+      "unsupportedIos": "Ten telefon nie może logować się telefonem, więc Mera przestanie na nim działać {{date}}. Jeśli płacisz za Mera, anuluj plan w App Store przed tą datą.",
+      "unsupportedAndroid": "Ten telefon nie może logować się telefonem, więc Mera przestanie na nim działać {{date}}. Jeśli płacisz za Mera, anuluj plan w Google Play przed tą datą.",
+      "success": "Zalogowano tym telefonem. Twój e-mail został usunięty.",
+      "close": "Zamknij",
+      "inboxTitle": "Logowanie e-mailem kończy się {{date}}",
+      "inboxBody": "Przejdź na logowanie telefonem, aby zachować konto.",
+      "settingsRow": "Przejdź na logowanie telefonem",
+      "settingsRowHint": "Logowanie e-mailem kończy się {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Przywróć zakupy"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Zmieniasz telefon między iPhone a Androidem? Twój plan zostaje w starym sklepie. Anuluj go tam, a potem zasubskrybuj tutaj. Mera nie widzi planów w innych sklepach, więc nie może zwrócić pieniędzy za ewentualne nakładanie się.",
+      "invoicesAppStore": "Mera nie ma sposobu, żeby wysłać Ci e-mail, więc Apple wysyła paragony i faktury na e-mail z Twojego konta Apple.",
+      "invoicesPlayStore": "Mera nie ma sposobu, żeby wysłać Ci e-mail, więc Google Play wysyła paragony na e-mail z Twojego konta Google.",
+      "planBack": "Twój plan wrócił.",
+      "restoreNoneApple": "Nie znaleziono planu na tym koncie Apple.",
+      "restoreNoneGoogle": "Nie znaleziono planu na tym koncie Google.",
+      "restoreFailedAppStore": "Nie udało się połączyć z App Store. Spróbuj ponownie.",
+      "restoreFailedPlayStore": "Nie udało się połączyć z Google Play. Spróbuj ponownie."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera loguje Cię tym telefonem. Apple potwierdza, że to prawdziwa aplikacja Mera na prawdziwym iPhonie, aby blokować fałszywe konta. Przechowujemy zapis logowania, dopóki masz konto.",
+        "playIntegrity": "Mera loguje Cię tym telefonem. Google potwierdza, że to prawdziwa aplikacja Mera na prawdziwym telefonie z Androidem, aby blokować fałszywe konta. Przechowujemy zapis logowania, a nie identyfikator Twojego telefonu.",
+        "generic": "Mera loguje Cię tym telefonem. Przechowujemy zapis logowania dla tego telefonu, dopóki masz konto."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Twój e-mail, do czasu przejścia na logowanie telefonem albo do jego usunięcia 30 października 2026, i Twój plan. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
+        "emailIfAdded": "Twój plan. Mera nigdy nie prosi o e-mail, a każdy stary e-mail zostanie usunięty 30 października 2026. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
+        "signInRecordGeneric": "Zapis logowania dla tego telefonu, usuwany razem z kontem. Nie przechowujemy sprawdzenia Apple lub Google, że to prawdziwa aplikacja."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Jaki masz plan. E-mail tylko dla konta, które wcześniej logowało się e-mailem, usuwany 30 października 2026. Dzienna liczba artykułów wysłanych do Ciebie, ile zaszyfrowanego tekstu Mera wysłała do przeczytania dla Ciebie i w ilu żądaniach (nigdy sam tekst), kiedy wyczerpano dzienne czytanie w Twoim planie oraz dni, w których korzystasz z Mera, przechowywane przez 90 dni. Godziny powiadomień, język i wybrany tryb przetwarzania. Odpowiedzi wysyłane na pytania zespołu Mera. Zapis logowania dla tego telefonu, usuwany razem z kontem. Frazy tematów są przechowywane w pamięci podręcznej tylko jako tekst, bez zapisu, kto o nie prosił, i usuwane po czternastu dniach nieużywania."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Jak się logujesz, czyli tym telefonem (albo, do 30 października 2026, e-mailem z wcześniejszego konta), i jaki masz plan."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Twoje konto zostanie zaplanowane do usunięcia i usunięte na dobre po 30 dniach. Ten telefon nie może się już na nie zalogować. Nie można tego cofnąć.",
+      "accountDeletionScheduledDescription": "Twoje konto zostanie trwale usunięte za 30 dni."
+    }
+  },
+  "pt-BR": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Se este e-mail tiver uma conta na Mera, enviamos um código para ele. Novo na Mera? Use “Entrar com este celular”.",
+        "noCodeUsePhone": "Não recebeu o código? Use “Entrar com este celular”.",
+        "beginWithoutEmail": "Entrar com este celular",
+        "beginCaption": "Sem e-mail, número de telefone ou senha. Nada para lembrar."
+      },
+      "emailLegacyHint": "Só para quem entrou com e-mail antes. Novos usuários não podem mais entrar com e-mail.",
+      "phoneCheckTemporary": "Não foi possível verificar este celular. Verifique sua conexão e tente novamente.",
+      "phoneUnsupportedAndroid": "A Mera precisa do Google Play neste celular para entrar com você. Celulares sem ele não são compatíveis.",
+      "phoneUnsupportedIos": "Este iPhone não pode usar o login por celular.",
+      "supportedPhones": "Celulares compatíveis",
+      "emailEnded": {
+        "title": "O login por e-mail foi encerrado",
+        "bodyIos": "O login por e-mail foi encerrado em {{date}}. Entre com este celular para começar de novo. Seu plano volta pela App Store, e seus artigos salvos voltam do seu backup.",
+        "bodyAndroid": "O login por e-mail foi encerrado em {{date}}. Entre com este celular para começar de novo. Seu plano volta pelo Google Play, e seus artigos salvos voltam do seu backup."
+      },
+      "phoneNotSupported": "Este celular não é compatível",
+      "signInWithoutEmail": "Entrar com este celular",
+      "differentAccount": {
+        "title": "Entrar com este celular?"
+      },
+      "deviceSignInFailed": "Algo deu errado. Tente novamente.",
+      "deviceSignInDenied": "Não foi possível verificar este dispositivo. Tente novamente."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Entrar com este celular",
+      "dialogBody": "Vamos fazer seu login com este celular, mover sua conta para ele e apagar seu e-mail do nosso banco de dados.",
+      "dialogSettingsHint": "Você pode fazer isso em Configurações até {{date}}.",
+      "confirm": "Mover conta",
+      "cancel": "Agora não",
+      "progressTitle": "Movendo sua conta para este celular",
+      "steps": {
+        "checking": "Verificando este celular",
+        "linking": "Vinculando sua conta",
+        "removing": "Removendo seu e-mail",
+        "done": "Concluído"
+      },
+      "failed": "Não foi concluído. Sua conta continua funcionando. Tente novamente em instantes.",
+      "unsupportedIos": "Este celular não pode usar o login por celular, então a Mera deixa de funcionar nele em {{date}}. Se você paga pela Mera, cancele seu plano na App Store antes disso.",
+      "unsupportedAndroid": "Este celular não pode usar o login por celular, então a Mera deixa de funcionar nele em {{date}}. Se você paga pela Mera, cancele seu plano no Google Play antes disso.",
+      "success": "Você entrou com este celular. Seu e-mail foi apagado.",
+      "close": "Fechar",
+      "inboxTitle": "O login por e-mail termina em {{date}}",
+      "inboxBody": "Mude para o login por celular para manter sua conta.",
+      "settingsRow": "Mudar para o login por celular",
+      "settingsRowHint": "O login por e-mail termina em {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Restaurar compras"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Trocando entre iPhone e Android? Seu plano continua na loja antiga. Cancele-o lá e assine aqui. A Mera não consegue ver planos de outras lojas, então não pode reembolsar qualquer sobreposição.",
+      "invoicesAppStore": "A Mera não tem como enviar e-mails para você, então a Apple envia seus recibos e faturas para o e-mail da sua Conta Apple.",
+      "invoicesPlayStore": "A Mera não tem como enviar e-mails para você, então o Google Play envia seus recibos para o e-mail da sua Conta do Google.",
+      "planBack": "Seu plano voltou.",
+      "restoreNoneApple": "Nenhum plano encontrado nesta Conta Apple.",
+      "restoreNoneGoogle": "Nenhum plano encontrado nesta Conta do Google.",
+      "restoreFailedAppStore": "Não foi possível acessar a App Store. Tente novamente.",
+      "restoreFailedPlayStore": "Não foi possível acessar o Google Play. Tente novamente."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "O Mera faz seu login com este celular. A Apple confirma que é o app Mera de verdade em um iPhone de verdade, para barrar contas falsas. Guardamos um registro de acesso enquanto você tiver uma conta.",
+        "playIntegrity": "O Mera faz seu login com este celular. O Google confirma que é o app Mera de verdade em um celular Android de verdade, para barrar contas falsas. Guardamos um registro de acesso, não o ID do seu celular.",
+        "generic": "O Mera faz seu login com este celular. Guardamos um registro de acesso deste celular enquanto você tiver uma conta."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Seu e-mail, até você mudar para o login por celular ou até ele ser apagado em 30 de outubro de 2026, e seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
+        "emailIfAdded": "Seu plano. A Mera nunca pede um e-mail, e qualquer e-mail de antes é apagado em 30 de outubro de 2026. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
+        "signInRecordGeneric": "Um registro de acesso deste celular, apagado junto com sua conta. A verificação da Apple ou do Google de que este é o app de verdade não é guardada."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Qual plano você tem. Um e-mail só para uma conta que entrou com um antes, apagado em 30 de outubro de 2026. Uma contagem diária de artigos enviados a você, quanto texto criptografado o Mera enviou para ser lido por você e em quantas solicitações (nunca o texto em si), quando você atingiu a leitura diária do seu plano e em quais dias você usou a Mera, guardada por 90 dias. Seus horários de notificação, idioma e escolha de processamento. As respostas que você envia às perguntas da equipe da Mera. Um registro de acesso deste celular, apagado junto com sua conta. As frases de tópicos ficam em cache só pelo texto, sem nada que registre quem pediu, e são apagadas após catorze dias sem uso."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Como você entra, que é este celular (ou, até 30 de outubro de 2026, um e-mail de antes), e qual plano você tem."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Sua conta será agendada para exclusão e apagada definitivamente após 30 dias. Este celular não consegue mais entrar nela. Isso não dá para desfazer.",
+      "accountDeletionScheduledDescription": "Sua conta será excluída permanentemente em 30 dias."
+    }
+  },
+  "ru": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Если на эту почту зарегистрирован аккаунт Меры, мы отправили на неё код. Впервые в Мере? Нажмите «Войти с этим телефоном».",
+        "noCodeUsePhone": "Код не пришёл? Попробуйте «Войти с этим телефоном».",
+        "beginWithoutEmail": "Войти с этим телефоном",
+        "beginCaption": "Без почты, номера телефона и пароля. Ничего запоминать не нужно."
+      },
+      "emailLegacyHint": "Только для тех, кто входил по почте раньше. Новые пользователи больше не могут войти по почте.",
+      "phoneCheckTemporary": "Не удалось проверить этот телефон. Проверьте подключение и попробуйте ещё раз.",
+      "phoneUnsupportedAndroid": "Чтобы войти, Мере нужен Google Play на этом телефоне. Телефоны без него не поддерживаются.",
+      "phoneUnsupportedIos": "На этом iPhone нельзя войти по телефону.",
+      "supportedPhones": "Поддерживаемые телефоны",
+      "emailEnded": {
+        "title": "Вход по почте больше не работает",
+        "bodyIos": "Вход по почте закрыт {{date}}. Чтобы начать заново, войдите с этим телефоном. Ваш тариф вернётся из App Store, а сохранённые статьи вернутся из резервной копии.",
+        "bodyAndroid": "Вход по почте закрыт {{date}}. Чтобы начать заново, войдите с этим телефоном. Ваш тариф вернётся из Google Play, а сохранённые статьи вернутся из резервной копии."
+      },
+      "phoneNotSupported": "Этот телефон не поддерживается",
+      "signInWithoutEmail": "Войти с этим телефоном",
+      "differentAccount": {
+        "title": "Войти с этим телефоном?"
+      },
+      "deviceSignInFailed": "Что-то пошло не так. Повторите попытку.",
+      "deviceSignInDenied": "Не удалось подтвердить это устройство. Повторите попытку."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Войти с этим телефоном вместо почты",
+      "dialogBody": "Мы войдём в аккаунт с этим телефоном, перенесём аккаунт на него и удалим вашу почту из нашей базы данных.",
+      "dialogSettingsHint": "Это можно сделать в Настройках до {{date}}.",
+      "confirm": "Перенести аккаунт",
+      "cancel": "Не сейчас",
+      "progressTitle": "Переносим ваш аккаунт на этот телефон",
+      "steps": {
+        "checking": "Проверяем этот телефон",
+        "linking": "Привязываем ваш аккаунт",
+        "removing": "Удаляем вашу почту",
+        "done": "Готово"
+      },
+      "failed": "Не получилось завершить. Ваш аккаунт по-прежнему работает. Попробуйте ещё раз через минуту.",
+      "unsupportedIos": "На этом телефоне нельзя войти по телефону, поэтому Мера перестанет работать на нём {{date}}. Если вы платите за Меру, отмените тариф в App Store до этого срока.",
+      "unsupportedAndroid": "На этом телефоне нельзя войти по телефону, поэтому Мера перестанет работать на нём {{date}}. Если вы платите за Меру, отмените тариф в Google Play до этого срока.",
+      "success": "Вы вошли с этим телефоном. Ваша почта удалена.",
+      "close": "Закрыть",
+      "inboxTitle": "Вход по почте заканчивается {{date}}",
+      "inboxBody": "Перейдите на вход по телефону, чтобы сохранить аккаунт.",
+      "settingsRow": "Перейти на вход по телефону",
+      "settingsRowHint": "Вход по почте заканчивается {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Восстановить покупки"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Переходите между iPhone и Android? Ваш тариф остаётся в прежнем магазине. Отмените его там, а потом оформите подписку здесь. Мера не видит тарифы в других магазинах, поэтому не может вернуть деньги за пересекающийся период.",
+      "invoicesAppStore": "Мера не может писать вам на почту, поэтому Apple присылает чеки и счета на почту, привязанную к вашему аккаунту Apple.",
+      "invoicesPlayStore": "Мера не может писать вам на почту, поэтому Google Play присылает чеки на почту, привязанную к вашему аккаунту Google.",
+      "planBack": "Ваш тариф вернулся.",
+      "restoreNoneApple": "На этом аккаунте Apple тариф не найден.",
+      "restoreNoneGoogle": "На этом аккаунте Google тариф не найден.",
+      "restoreFailedAppStore": "Не удалось связаться с App Store. Попробуйте ещё раз.",
+      "restoreFailedPlayStore": "Не удалось связаться с Google Play. Попробуйте ещё раз."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Мера входит в аккаунт с помощью этого телефона. Apple подтверждает, что это настоящее приложение Меры на настоящем iPhone, чтобы не допускать фейковых аккаунтов. Мы храним запись входа, пока у вас есть аккаунт.",
+        "playIntegrity": "Мера входит в аккаунт с помощью этого телефона. Google подтверждает, что это настоящее приложение Меры на настоящем телефоне Android, чтобы не допускать фейковых аккаунтов. Мы храним запись входа, а не идентификатор вашего телефона.",
+        "generic": "Мера входит в аккаунт с помощью этого телефона. Мы храним запись входа для этого телефона, пока у вас есть аккаунт."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Ваша почта, пока вы не перейдёте на вход по телефону или пока её не удалят 30 октября 2026 года, и ваш тариф. Платёжные записи из App Store или Google Play хранятся столько, сколько требует закон.",
+        "emailIfAdded": "Ваш тариф. Мера никогда не запрашивает почту, а вся почта, добавленная раньше, будет удалена 30 октября 2026 года. Платёжные записи из App Store или Google Play хранятся столько, сколько требует закон.",
+        "signInRecordGeneric": "Запись входа для этого телефона, которая удаляется вместе с аккаунтом. Проверку Apple или Google, что это настоящее приложение, мы не храним."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Какой у вас тариф. Почта есть только у аккаунта, который раньше входил по почте, и её удалят 30 октября 2026 года. Ежедневное число статей, отправленных вам, сколько зашифрованного текста Мера отправляла на чтение для вас каждый день и сколько было запросов (но не сам текст), когда вы исчерпали дневное чтение по тарифу, и дни, в которые вы пользовались Мерой, хранятся 90 дней. Время уведомлений, язык и выбранный режим обработки. Ответы, которые вы отправляете на вопросы команды Меры. Запись входа для этого телефона, которая удаляется вместе с аккаунтом. Фразы тем кэшируются только по их тексту, без записи о том, кто их запросил, и удаляются через четырнадцать дней без использования."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Как вы входите: с этим телефоном или, до 30 октября 2026 года, по почте, которую вы добавили раньше, и какой у вас тариф."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Ваш аккаунт будет запланирован на удаление и удалён навсегда через 30 дней. Войти в него с этого телефона больше нельзя. Это нельзя отменить.",
+      "accountDeletionScheduledDescription": "Ваш аккаунт будет удалён навсегда через 30 дней."
+    }
+  },
+  "th": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "หากอีเมลนี้มีบัญชีเมร่า เราได้ส่งรหัสให้แล้ว ยังไม่เคยใช้เมร่าใช่ไหม ให้ใช้ “ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้”",
+        "noCodeUsePhone": "ไม่ได้รับรหัสใช่ไหม ให้ใช้ “ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้”",
+        "beginWithoutEmail": "ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้",
+        "beginCaption": "ไม่ต้องใช้อีเมล เบอร์โทรศัพท์ หรือรหัสผ่าน ไม่มีอะไรให้จำ"
+      },
+      "emailLegacyHint": "สำหรับคนที่เคยลงชื่อเข้าใช้ด้วยอีเมลเท่านั้น ผู้ใช้ใหม่จะลงชื่อเข้าใช้ด้วยอีเมลไม่ได้อีกแล้ว",
+      "phoneCheckTemporary": "ตรวจสอบโทรศัพท์เครื่องนี้ไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+      "phoneUnsupportedAndroid": "เมร่าต้องใช้ Google Play บนโทรศัพท์เครื่องนี้เพื่อลงชื่อเข้าใช้ให้คุณ โทรศัพท์ที่ไม่มี Google Play ไม่รองรับ",
+      "phoneUnsupportedIos": "iPhone เครื่องนี้ใช้การลงชื่อเข้าใช้ด้วยโทรศัพท์ไม่ได้",
+      "supportedPhones": "โทรศัพท์ที่รองรับ",
+      "emailEnded": {
+        "title": "การลงชื่อเข้าใช้ด้วยอีเมลสิ้นสุดแล้ว",
+        "bodyIos": "การลงชื่อเข้าใช้ด้วยอีเมลสิ้นสุดเมื่อ {{date}} ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้เพื่อเริ่มใหม่ แพ็กเกจของคุณจะกลับมาจาก App Store และบทความที่บันทึกไว้จะกลับมาจากข้อมูลสำรองของคุณ",
+        "bodyAndroid": "การลงชื่อเข้าใช้ด้วยอีเมลสิ้นสุดเมื่อ {{date}} ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้เพื่อเริ่มใหม่ แพ็กเกจของคุณจะกลับมาจาก Google Play และบทความที่บันทึกไว้จะกลับมาจากข้อมูลสำรองของคุณ"
+      },
+      "phoneNotSupported": "โทรศัพท์เครื่องนี้ไม่รองรับ",
+      "signInWithoutEmail": "ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้",
+      "differentAccount": {
+        "title": "ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้ใช่ไหม"
+      },
+      "deviceSignInFailed": "เกิดข้อผิดพลาด ลองอีกครั้ง",
+      "deviceSignInDenied": "เรายืนยันอุปกรณ์นี้ไม่ได้ ลองอีกครั้ง"
+    },
+    "moveToPhone": {
+      "dialogTitle": "ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้แทน",
+      "dialogBody": "เมร่าจะลงชื่อเข้าใช้คุณด้วยโทรศัพท์เครื่องนี้ ย้ายบัญชีของคุณมาที่โทรศัพท์เครื่องนี้ และลบอีเมลของคุณออกจากฐานข้อมูลของเรา",
+      "dialogSettingsHint": "คุณทำได้ในการตั้งค่าจนถึง {{date}}",
+      "confirm": "ย้ายบัญชี",
+      "cancel": "ไว้ทีหลัง",
+      "progressTitle": "กำลังย้ายบัญชีของคุณมาที่โทรศัพท์เครื่องนี้",
+      "steps": {
+        "checking": "กำลังตรวจสอบโทรศัพท์เครื่องนี้",
+        "linking": "กำลังเชื่อมบัญชีของคุณ",
+        "removing": "กำลังลบอีเมลของคุณ",
+        "done": "เสร็จแล้ว"
+      },
+      "failed": "ยังไม่สำเร็จ บัญชีของคุณยังใช้ได้ ลองอีกครั้งในอีกสักครู่",
+      "unsupportedIos": "โทรศัพท์เครื่องนี้ใช้การลงชื่อเข้าใช้ด้วยโทรศัพท์ไม่ได้ เมร่าจะหยุดทำงานบนเครื่องนี้ในวันที่ {{date}} หากคุณจ่ายเงินให้เมร่า ให้ยกเลิกแผนของคุณใน App Store ก่อนถึงวันนั้น",
+      "unsupportedAndroid": "โทรศัพท์เครื่องนี้ใช้การลงชื่อเข้าใช้ด้วยโทรศัพท์ไม่ได้ เมร่าจะหยุดทำงานบนเครื่องนี้ในวันที่ {{date}} หากคุณจ่ายเงินให้เมร่า ให้ยกเลิกแผนของคุณใน Google Play ก่อนถึงวันนั้น",
+      "success": "ลงชื่อเข้าใช้ด้วยโทรศัพท์เครื่องนี้แล้ว อีเมลของคุณถูกลบแล้ว",
+      "close": "ปิด",
+      "inboxTitle": "การลงชื่อเข้าใช้ด้วยอีเมลจะสิ้นสุดวันที่ {{date}}",
+      "inboxBody": "เปลี่ยนไปลงชื่อเข้าใช้ด้วยโทรศัพท์เพื่อเก็บบัญชีของคุณไว้",
+      "settingsRow": "ย้ายไปลงชื่อเข้าใช้ด้วยโทรศัพท์",
+      "settingsRowHint": "การลงชื่อเข้าใช้ด้วยอีเมลจะสิ้นสุดวันที่ {{date}}"
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "คืนค่าการซื้อ"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "กำลังเปลี่ยนระหว่าง iPhone กับ Android ใช่ไหม แพ็กเกจของคุณยังคงอยู่กับร้านเดิม ให้ยกเลิกที่นั่น แล้วสมัครที่นี่ เมร่ามองไม่เห็นแพ็กเกจในร้านอื่น จึงคืนเงินส่วนที่ซ้อนกันไม่ได้",
+      "invoicesAppStore": "เมร่าไม่มีทางส่งอีเมลถึงคุณได้ ดังนั้น Apple จะส่งใบเสร็จและใบแจ้งหนี้ไปยังอีเมลในบัญชี Apple ของคุณ",
+      "invoicesPlayStore": "เมร่าไม่มีทางส่งอีเมลถึงคุณได้ ดังนั้น Google Play จะส่งใบเสร็จไปยังอีเมลในบัญชี Google ของคุณ",
+      "planBack": "แผนของคุณกลับมาแล้ว",
+      "restoreNoneApple": "ไม่พบแผนในบัญชี Apple นี้",
+      "restoreNoneGoogle": "ไม่พบแผนในบัญชี Google นี้",
+      "restoreFailedAppStore": "เชื่อมต่อกับ App Store ไม่ได้ ลองอีกครั้ง",
+      "restoreFailedPlayStore": "เชื่อมต่อกับ Google Play ไม่ได้ ลองอีกครั้ง"
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "เมร่า ลงชื่อเข้าใช้ให้คุณด้วยโทรศัพท์เครื่องนี้ Apple ยืนยันว่านี่คือแอป เมร่า ของจริงบน iPhone ของจริง เพื่อหยุดบัญชีปลอม เราเก็บบันทึกการลงชื่อเข้าใช้ไว้ตราบที่คุณยังมีบัญชี",
+        "playIntegrity": "เมร่า ลงชื่อเข้าใช้ให้คุณด้วยโทรศัพท์เครื่องนี้ Google ยืนยันว่านี่คือแอป เมร่า ของจริงบนโทรศัพท์ Android ของจริง เพื่อหยุดบัญชีปลอม เราเก็บบันทึกการลงชื่อเข้าใช้ ไม่ใช่รหัสของโทรศัพท์คุณ",
+        "generic": "เมร่า ลงชื่อเข้าใช้ให้คุณด้วยโทรศัพท์เครื่องนี้ เราเก็บบันทึกการลงชื่อเข้าใช้สำหรับโทรศัพท์เครื่องนี้ไว้ตราบที่คุณยังมีบัญชี"
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "อีเมลของคุณ จนกว่าคุณจะเปลี่ยนไปลงชื่อเข้าใช้ด้วยโทรศัพท์ หรือจนกว่าจะถูกลบในวันที่ 30 ตุลาคม 2569 และแพ็กเกจของคุณ บันทึกการเรียกเก็บเงินจาก App Store หรือ Google Play จะเก็บไว้นานเท่าที่กฎหมายกำหนด",
+        "emailIfAdded": "แพ็กเกจของคุณ เมร่าไม่เคยขออีเมล และอีเมลจากก่อนหน้านี้ทั้งหมดจะถูกลบในวันที่ 30 ตุลาคม 2569 บันทึกการเรียกเก็บเงินจาก App Store หรือ Google Play จะเก็บไว้นานเท่าที่กฎหมายกำหนด",
+        "signInRecordGeneric": "บันทึกการลงชื่อเข้าใช้สำหรับโทรศัพท์เครื่องนี้ ซึ่งจะถูกลบพร้อมบัญชีของคุณ ผลการตรวจสอบของ Apple หรือ Google ว่านี่คือแอปของจริงจะไม่ถูกเก็บไว้"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "แพ็กเกจที่คุณใช้ อีเมลเฉพาะบัญชีที่เคยลงชื่อเข้าใช้ด้วยอีเมลก่อนหน้านี้ ซึ่งจะถูกลบในวันที่ 30 ตุลาคม 2569 จำนวนบทความที่ส่งถึงคุณต่อวัน ปริมาณข้อความที่เข้ารหัสซึ่งเมร่าส่งไปให้อ่านแทนคุณ และจำนวนคำขอ (ไม่รวมตัวข้อความ) เมื่อใดที่คุณใช้การอ่านรายวันตามแผนของคุณจนครบ และวันที่คุณใช้ เมร่า เก็บไว้ 90 วัน เวลาแจ้งเตือน ภาษา และตัวเลือกการประมวลผลของคุณ คำตอบที่คุณส่งถึงคำถามของทีม เมร่า บันทึกการลงชื่อเข้าใช้สำหรับโทรศัพท์เครื่องนี้ ซึ่งจะถูกลบพร้อมบัญชีของคุณ วลีหัวข้อถูกแคชไว้ด้วยข้อความเพียงอย่างเดียว โดยไม่มีการบันทึกว่าใครขอ และจะถูกลบหลังจากไม่ได้ใช้สิบสี่วัน"
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "วิธีที่คุณลงชื่อเข้าใช้ ซึ่งคือโทรศัพท์เครื่องนี้ (หรืออีเมลจากก่อนหน้านี้ จนถึงวันที่ 30 ตุลาคม 2569) และแพ็กเกจที่คุณใช้"
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "บัญชีของคุณจะถูกกำหนดให้ลบ และจะถูกลบถาวรหลัง 30 วัน โทรศัพท์เครื่องนี้ลงชื่อเข้าใช้บัญชีนี้อีกไม่ได้ การดำเนินการนี้ยกเลิกไม่ได้",
+      "accountDeletionScheduledDescription": "บัญชีของคุณจะถูกลบถาวรใน 30 วัน"
+    }
+  },
+  "tr": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Bu e-posta bir Mera hesabına aitse, ona bir kod gönderdik. Mera'da yeni misin? \"Bu telefonla giriş yap\"ı kullan.",
+        "noCodeUsePhone": "Kod gelmedi mi? \"Bu telefonla giriş yap\"ı kullan.",
+        "beginWithoutEmail": "Bu telefonla giriş yap",
+        "beginCaption": "E-posta, telefon numarası veya şifre yok. Hatırlanacak bir şey yok."
+      },
+      "emailLegacyHint": "Yalnızca daha önce e-postayla giriş yapanlar için. Yeni kullanıcılar artık e-posta ile devam edemez.",
+      "phoneCheckTemporary": "Bu telefon kontrol edilemedi. Bağlantını kontrol edip tekrar dene.",
+      "phoneUnsupportedAndroid": "Mera'nın seni giriş yaptırabilmesi için bu telefonda Google Play gerekir. Google Play olmayan telefonlar desteklenmiyor.",
+      "phoneUnsupportedIos": "Bu iPhone telefonla giriş yapamaz.",
+      "supportedPhones": "Desteklenen telefonlar",
+      "emailEnded": {
+        "title": "E-posta ile giriş sona erdi",
+        "bodyIos": "E-posta ile giriş {{date}} tarihinde sona erdi. Yeniden başlamak için bu telefonla giriş yap. Planın App Store'dan geri gelir, kaydettiğin makaleler de yedeğinden geri gelir.",
+        "bodyAndroid": "E-posta ile giriş {{date}} tarihinde sona erdi. Yeniden başlamak için bu telefonla giriş yap. Planın Google Play'den geri gelir, kaydettiğin makaleler de yedeğinden geri gelir."
+      },
+      "phoneNotSupported": "Bu telefon desteklenmiyor",
+      "signInWithoutEmail": "Bu telefonla giriş yap",
+      "differentAccount": {
+        "title": "Bu telefonla giriş yapılsın mı?"
+      },
+      "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin.",
+      "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Bunun yerine bu telefonla giriş yap",
+      "dialogBody": "Bu telefonla giriş yapmanı sağlayacağız, hesabını bu telefona taşıyacağız ve e-postanı veritabanımızdan sileceğiz.",
+      "dialogSettingsHint": "{{date}} tarihine kadar bunu Ayarlar'dan yapabilirsin.",
+      "confirm": "Hesabı taşı",
+      "cancel": "Şimdi değil",
+      "progressTitle": "Hesabın bu telefona taşınıyor",
+      "steps": {
+        "checking": "Bu telefon kontrol ediliyor",
+        "linking": "Hesabın bağlanıyor",
+        "removing": "E-postan kaldırılıyor",
+        "done": "Tamam"
+      },
+      "failed": "Bu işlem tamamlanamadı. Hesabın hâlâ çalışıyor. Birazdan tekrar dene.",
+      "unsupportedIos": "Bu telefon telefonla giriş yapamaz, bu yüzden Mera {{date}} tarihinde bu telefonda çalışmayı bırakır. Mera için ödeme yapıyorsan, bundan önce planını App Store'dan iptal et.",
+      "unsupportedAndroid": "Bu telefon telefonla giriş yapamaz, bu yüzden Mera {{date}} tarihinde bu telefonda çalışmayı bırakır. Mera için ödeme yapıyorsan, bundan önce planını Google Play'den iptal et.",
+      "success": "Bu telefonla giriş yapıldı. E-postan silindi.",
+      "close": "Kapat",
+      "inboxTitle": "E-posta ile giriş {{date}} tarihinde sona eriyor",
+      "inboxBody": "Hesabını korumak için telefonla girişe geç.",
+      "settingsRow": "Telefonla girişe geç",
+      "settingsRowHint": "E-posta ile giriş {{date}} tarihinde sona eriyor."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Satın alımları geri yükle"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "iPhone ile Android arasında mı geçiş yapıyorsun? Planın eski mağazanda kalır. Onu orada iptal et, sonra burada abone ol. Mera diğer mağazalardaki planları göremez, bu yüzden çakışan ücretleri geri ödeyemez.",
+      "invoicesAppStore": "Mera sana e-posta gönderemez, bu yüzden makbuzlarını ve faturalarını Apple, Apple Hesabındaki e-postaya gönderir.",
+      "invoicesPlayStore": "Mera sana e-posta gönderemez, bu yüzden makbuzlarını Google Play, Google Hesabındaki e-postaya gönderir.",
+      "planBack": "Planın geri geldi.",
+      "restoreNoneApple": "Bu Apple Hesabında plan bulunamadı.",
+      "restoreNoneGoogle": "Bu Google Hesabında plan bulunamadı.",
+      "restoreFailedAppStore": "App Store'a ulaşılamadı. Tekrar dene.",
+      "restoreFailedPlayStore": "Google Play'e ulaşılamadı. Tekrar dene."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Apple, bunun gerçek bir iPhone'daki gerçek Mera uygulaması olduğunu onaylar. Hesabınız olduğu sürece bir giriş kaydı saklarız.",
+        "playIntegrity": "Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Google, bunun gerçek bir Android telefondaki gerçek Mera uygulaması olduğunu onaylar. Telefonunuzun kimliğini değil, bir giriş kaydı saklarız.",
+        "generic": "Mera bu telefonla oturumunuzu açar. Hesabınız olduğu sürece bu telefon için bir giriş kaydı saklarız."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "E-postanız, telefonla girişe geçene ya da 30 Ekim 2026'da silinene kadar, bir de planınız saklanır. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+        "emailIfAdded": "Planınız. Mera hiçbir zaman e-posta istemez, önceden eklenmiş her e-posta 30 Ekim 2026'da silinir. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+        "signInRecordGeneric": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Yalnızca daha önce e-postayla giriş yapmış bir hesabın e-postası, 30 Ekim 2026'da silinir. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Giriş yöntemin, bu telefon (ya da 30 Ekim 2026'ya kadar, daha önce kalmış bir e-posta) ve hangi planda olduğun."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Hesabınız 30 günlük bir bekleme süresiyle silinmek üzere planlanır. Bu telefon bu hesaba bir daha giriş yapamaz. Bu geri alınamaz.",
+      "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek."
+    }
+  },
+  "uk": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Якщо для цієї пошти є обліковий запис Мери, ми надіслали на неї код. Вперше в Мері? Натисніть «Увійти через цей телефон». Цей вхід не потребує пошти.",
+        "noCodeUsePhone": "Не отримали код? Натисніть «Увійти через цей телефон».",
+        "beginWithoutEmail": "Увійти через цей телефон",
+        "beginCaption": "Без пошти, номера телефону чи пароля. Нічого запам'ятовувати не треба."
+      },
+      "emailLegacyHint": "Лише для тих, хто раніше входив через електронну пошту. Нові користувачі більше не можуть увійти через пошту.",
+      "phoneCheckTemporary": "Не вдалося перевірити цей телефон. Перевірте з'єднання і спробуйте ще раз.",
+      "phoneUnsupportedAndroid": "Для входу в Меру на цьому телефоні потрібен Google Play. Телефони без нього не підтримуються.",
+      "phoneUnsupportedIos": "Цей iPhone не може входити за допомогою телефона.",
+      "supportedPhones": "Підтримувані телефони",
+      "emailEnded": {
+        "title": "Вхід через пошту завершено",
+        "bodyIos": "Вхід через пошту завершився {{date}}. Щоб почати знову, увійдіть через цей телефон. Ваш тариф повернеться з App Store, а збережені статті повернуться з резервної копії.",
+        "bodyAndroid": "Вхід через пошту завершився {{date}}. Щоб почати знову, увійдіть через цей телефон. Ваш тариф повернеться з Google Play, а збережені статті повернуться з резервної копії."
+      },
+      "phoneNotSupported": "Цей телефон не підтримується",
+      "signInWithoutEmail": "Увійти через цей телефон",
+      "differentAccount": {
+        "title": "Увійти через цей телефон?"
+      },
+      "deviceSignInFailed": "Щось пішло не так. Спробуйте ще раз.",
+      "deviceSignInDenied": "Не вдалося підтвердити цей пристрій. Спробуйте ще раз."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Увійти через цей телефон натомість",
+      "dialogBody": "Ми увійдемо за допомогою цього телефона, перенесемо ваш обліковий запис на нього та видалимо вашу пошту з нашої бази даних.",
+      "dialogSettingsHint": "Це можна зробити в Налаштуваннях до {{date}}.",
+      "confirm": "Перенести обліковий запис",
+      "cancel": "Не зараз",
+      "progressTitle": "Переносимо ваш обліковий запис на цей телефон",
+      "steps": {
+        "checking": "Перевіряємо цей телефон",
+        "linking": "Прив'язуємо ваш обліковий запис",
+        "removing": "Видаляємо вашу пошту",
+        "done": "Готово"
+      },
+      "failed": "Це не вдалося завершити. Ваш обліковий запис і далі працює. Спробуйте ще раз трохи пізніше.",
+      "unsupportedIos": "Цей телефон не може входити за допомогою телефона, тож Мера на ньому перестане працювати {{date}}. Якщо ви платите за Меру, до того скасуйте тариф в App Store.",
+      "unsupportedAndroid": "Цей телефон не може входити за допомогою телефона, тож Мера на ньому перестане працювати {{date}}. Якщо ви платите за Меру, до того скасуйте тариф у Google Play.",
+      "success": "Ви увійшли через цей телефон. Вашу пошту видалено.",
+      "close": "Закрити",
+      "inboxTitle": "Вхід через пошту завершується {{date}}",
+      "inboxBody": "Перейдіть на вхід через телефон, щоб зберегти свій обліковий запис.",
+      "settingsRow": "Перейти на вхід через телефон",
+      "settingsRowHint": "Вхід через пошту завершується {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Відновити покупки"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Переходите між iPhone і Android? Ваш тариф залишається в старому магазині. Скасуйте його там, а потім оформіть передплату тут. Мера не бачить тарифів в інших магазинах, тому не може повернути кошти за збіг.",
+      "invoicesAppStore": "Мера не може надіслати вам листи, тож Apple надсилає чеки та рахунки на пошту, вказану в обліковому записі Apple.",
+      "invoicesPlayStore": "Мера не може надіслати вам листи, тож Google Play надсилає чеки на пошту, вказану в обліковому записі Google.",
+      "planBack": "Ваш тариф повернуто.",
+      "restoreNoneApple": "Тарифу на цьому обліковому записі Apple не знайдено.",
+      "restoreNoneGoogle": "Тарифу на цьому обліковому записі Google не знайдено.",
+      "restoreFailedAppStore": "Не вдалося зв'язатися з App Store. Спробуйте ще раз.",
+      "restoreFailedPlayStore": "Не вдалося зв'язатися з Google Play. Спробуйте ще раз."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Мера входить в обліковий запис за допомогою цього телефона. Apple підтверджує, що це справжній застосунок Мера на справжньому iPhone, щоб не допускати фейкових облікових записів. Ми зберігаємо запис входу, поки у вас є обліковий запис.",
+        "playIntegrity": "Мера входить в обліковий запис за допомогою цього телефона. Google підтверджує, що це справжній застосунок Мера на справжньому телефоні Android, щоб не допускати фейкових облікових записів. Ми зберігаємо запис входу, а не ідентифікатор вашого телефона.",
+        "generic": "Мера входить в обліковий запис за допомогою цього телефона. Ми зберігаємо запис входу для цього телефона, поки у вас є обліковий запис."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Ваша пошта, доки ви не перейдете на вхід через телефон або її не буде видалено 30 жовтня 2026 року, і ваш тариф. Платіжні записи з App Store або Google Play зберігаються стільки, скільки вимагає закон.",
+        "emailIfAdded": "Ваш тариф. Мера ніколи не просить пошти, а будь-яку пошту з минулого буде видалено 30 жовтня 2026 року. Платіжні записи з App Store або Google Play зберігаються стільки, скільки вимагає закон.",
+        "signInRecordGeneric": "Запис входу для цього телефона, який видаляється разом з обліковим записом. Перевірку Apple або Google, що це справжній застосунок, ми не зберігаємо."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Який у вас тариф. Пошта лише для облікових записів, які раніше входили через пошту, видаляється 30 жовтня 2026 року. Щоденна кількість статей, надісланих вам, скільки зашифрованого тексту Мера надсилала, щоб прочитати для вас, і в скількох запитах (але ніколи не сам текст), коли ви досягли щоденного читання за своїм тарифом і в які дні ви користувалися Мерою, зберігаються 90 днів. Час ваших сповіщень, мова та вибір обробки. Відповіді, які ви надсилаєте на запитання команди Мери. Запис входу для цього телефона, який видаляється разом з обліковим записом. Фрази тем кешуються лише за їхнім текстом, без запису про те, хто їх запитував, і видаляються через чотирнадцять днів без використання."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Як ви входите, це цей телефон або (до 30 жовтня 2026 року) пошта, додана раніше, а також який у вас тариф."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Ваш обліковий запис буде заплановано на видалення і остаточно видалено через 30 днів. Цей телефон більше не зможе увійти до нього. Це не можна скасувати.",
+      "accountDeletionScheduledDescription": "Ваш обліковий запис буде остаточно видалено через 30 днів."
+    }
+  },
+  "vi": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "Nếu email này có tài khoản Mera, chúng tôi đã gửi mã đến email đó. Mới dùng Mera? Hãy dùng “Đăng nhập bằng điện thoại này”.",
+        "noCodeUsePhone": "Chưa nhận được mã? Hãy dùng “Đăng nhập bằng điện thoại này”.",
+        "beginWithoutEmail": "Đăng nhập bằng điện thoại này",
+        "beginCaption": "Không cần email, số điện thoại hay mật khẩu. Không có gì để nhớ."
+      },
+      "emailLegacyHint": "Chỉ dành cho những người từng đăng nhập bằng email. Người dùng mới không thể đăng nhập bằng email nữa.",
+      "phoneCheckTemporary": "Không thể kiểm tra điện thoại này. Hãy kiểm tra kết nối và thử lại.",
+      "phoneUnsupportedAndroid": "Mera cần Google Play trên điện thoại này để đăng nhập cho bạn. Điện thoại không có Google Play chưa được hỗ trợ.",
+      "phoneUnsupportedIos": "iPhone này không thể dùng đăng nhập bằng điện thoại.",
+      "supportedPhones": "Điện thoại được hỗ trợ",
+      "emailEnded": {
+        "title": "Đăng nhập bằng email đã kết thúc",
+        "bodyIos": "Đăng nhập bằng email đã kết thúc vào {{date}}. Hãy đăng nhập bằng điện thoại này để bắt đầu lại. Gói của bạn sẽ quay lại từ App Store, và các bài viết đã lưu sẽ quay lại từ bản sao lưu.",
+        "bodyAndroid": "Đăng nhập bằng email đã kết thúc vào {{date}}. Hãy đăng nhập bằng điện thoại này để bắt đầu lại. Gói của bạn sẽ quay lại từ Google Play, và các bài viết đã lưu sẽ quay lại từ bản sao lưu."
+      },
+      "phoneNotSupported": "Điện thoại này không được hỗ trợ",
+      "signInWithoutEmail": "Đăng nhập bằng điện thoại này",
+      "differentAccount": {
+        "title": "Đăng nhập bằng điện thoại này?"
+      },
+      "deviceSignInFailed": "Đã xảy ra lỗi. Hãy thử lại.",
+      "deviceSignInDenied": "Không thể xác minh thiết bị này. Hãy thử lại."
+    },
+    "moveToPhone": {
+      "dialogTitle": "Thay vào đó, đăng nhập bằng điện thoại này",
+      "dialogBody": "Chúng tôi sẽ đăng nhập bạn bằng điện thoại này, chuyển tài khoản của bạn sang điện thoại này và xóa email của bạn khỏi cơ sở dữ liệu của chúng tôi.",
+      "dialogSettingsHint": "Bạn có thể làm việc này trong Cài đặt cho đến {{date}}.",
+      "confirm": "Chuyển tài khoản",
+      "cancel": "Để sau",
+      "progressTitle": "Đang chuyển tài khoản của bạn sang điện thoại này",
+      "steps": {
+        "checking": "Đang kiểm tra điện thoại này",
+        "linking": "Đang liên kết tài khoản của bạn",
+        "removing": "Đang xóa email của bạn",
+        "done": "Xong"
+      },
+      "failed": "Việc này chưa hoàn tất. Tài khoản của bạn vẫn hoạt động. Hãy thử lại sau ít phút.",
+      "unsupportedIos": "Điện thoại này không thể dùng đăng nhập bằng điện thoại, nên Mera sẽ ngừng hoạt động trên đó vào {{date}}. Nếu bạn đang trả phí cho Mera, hãy hủy gói trên App Store trước thời điểm đó.",
+      "unsupportedAndroid": "Điện thoại này không thể dùng đăng nhập bằng điện thoại, nên Mera sẽ ngừng hoạt động trên đó vào {{date}}. Nếu bạn đang trả phí cho Mera, hãy hủy gói trên Google Play trước thời điểm đó.",
+      "success": "Bạn đã đăng nhập bằng điện thoại này. Email của bạn đã bị xóa.",
+      "close": "Đóng",
+      "inboxTitle": "Đăng nhập bằng email kết thúc vào {{date}}",
+      "inboxBody": "Chuyển sang đăng nhập bằng điện thoại để giữ tài khoản của bạn.",
+      "settingsRow": "Chuyển sang đăng nhập bằng điện thoại",
+      "settingsRowHint": "Đăng nhập bằng email kết thúc vào {{date}}."
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "Khôi phục giao dịch mua"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "Chuyển giữa iPhone và Android? Gói của bạn vẫn thuộc cửa hàng cũ. Hãy hủy gói ở đó, rồi đăng ký ở đây. Mera không thể thấy gói trên các cửa hàng khác, nên không thể hoàn tiền cho phần trùng lặp.",
+      "invoicesAppStore": "Mera không có cách nào gửi email cho bạn, nên Apple gửi biên lai và hóa đơn của bạn đến email trong Tài khoản Apple.",
+      "invoicesPlayStore": "Mera không có cách nào gửi email cho bạn, nên Google Play gửi biên lai của bạn đến email trong Tài khoản Google.",
+      "planBack": "Gói của bạn đã trở lại.",
+      "restoreNoneApple": "Không tìm thấy gói nào trên Tài khoản Apple này.",
+      "restoreNoneGoogle": "Không tìm thấy gói nào trên Tài khoản Google này.",
+      "restoreFailedAppStore": "Không thể kết nối với App Store. Hãy thử lại.",
+      "restoreFailedPlayStore": "Không thể kết nối với Google Play. Hãy thử lại."
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "Mera đăng nhập cho bạn bằng điện thoại này. Apple xác nhận đây là ứng dụng Mera thật trên iPhone thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập khi bạn còn tài khoản.",
+        "playIntegrity": "Mera đăng nhập cho bạn bằng điện thoại này. Google xác nhận đây là ứng dụng Mera thật trên điện thoại Android thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập, không phải ID điện thoại của bạn.",
+        "generic": "Mera đăng nhập cho bạn bằng điện thoại này. Chúng tôi giữ một bản ghi đăng nhập cho điện thoại này khi bạn còn tài khoản."
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "Email của bạn, cho đến khi bạn chuyển sang đăng nhập bằng điện thoại hoặc cho đến khi email bị xóa vào ngày 30 tháng 10 năm 2026, và gói của bạn. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
+        "emailIfAdded": "Gói của bạn. Mera không bao giờ yêu cầu email, và mọi email từ trước đó sẽ bị xóa vào ngày 30 tháng 10 năm 2026. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
+        "signInRecordGeneric": "Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple hoặc Google rằng đây là ứng dụng thật không được giữ lại."
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "Bạn đang dùng gói nào. Email chỉ dành cho tài khoản đã đăng nhập bằng email trước đây, và sẽ bị xóa vào ngày 30 tháng 10 năm 2026. Số bài viết được gửi đến bạn mỗi ngày, lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng."
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "Cách bạn đăng nhập, là điện thoại này (hoặc, cho đến ngày 30 tháng 10 năm 2026, một email từ trước đó), và gói bạn đang dùng."
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "Tài khoản của bạn sẽ được lên lịch xóa và bị xóa vĩnh viễn sau 30 ngày. Điện thoại này không thể đăng nhập lại vào tài khoản đó. Không thể hoàn tác.",
+      "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn sau 30 ngày."
+    }
+  },
+  "zh-CN": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "如果这个邮箱有梅拉账号，我们已向它发送了验证码。第一次使用梅拉吗？请点按“用这部手机登录”。",
+        "noCodeUsePhone": "没有收到验证码？请点按“用这部手机登录”。",
+        "beginWithoutEmail": "用这部手机登录",
+        "beginCaption": "无需邮箱、电话号码或密码。无需记住任何东西。"
+      },
+      "emailLegacyHint": "仅适用于之前用邮箱登录过的人。新用户已无法再用邮箱登录。",
+      "phoneCheckTemporary": "无法检查这部手机。请检查网络连接后重试。",
+      "phoneUnsupportedAndroid": "梅拉需要这部手机上有 Google Play 才能为你登录。没有 Google Play 的手机不受支持。",
+      "phoneUnsupportedIos": "这部 iPhone 无法使用手机登录。",
+      "supportedPhones": "支持的手机",
+      "emailEnded": {
+        "title": "邮箱登录已结束",
+        "bodyIos": "邮箱登录已于{{date}}结束。请用这部手机登录以重新开始。你的套餐会从 App Store 恢复，已保存的文章会从备份中恢复。",
+        "bodyAndroid": "邮箱登录已于{{date}}结束。请用这部手机登录以重新开始。你的套餐会从 Google Play 恢复，已保存的文章会从备份中恢复。"
+      },
+      "phoneNotSupported": "这部手机不受支持",
+      "signInWithoutEmail": "用这部手机登录",
+      "differentAccount": {
+        "title": "改用这部手机登录？"
+      },
+      "deviceSignInFailed": "出了点问题。请重试。",
+      "deviceSignInDenied": "无法验证此设备。请重试。"
+    },
+    "moveToPhone": {
+      "dialogTitle": "改用这部手机登录",
+      "dialogBody": "我们会让你用这部手机登录，把你的账号转到这部手机上，并从我们的数据库中删除你的邮箱。",
+      "dialogSettingsHint": "你可以在{{date}}前到“设置”里完成此操作。",
+      "confirm": "转移账号",
+      "cancel": "暂不",
+      "progressTitle": "正在将你的账号转移到这部手机",
+      "steps": {
+        "checking": "正在检查这部手机",
+        "linking": "正在关联你的账号",
+        "removing": "正在删除你的邮箱",
+        "done": "完成"
+      },
+      "failed": "这次没有完成。你的账号仍可使用。请稍后再试。",
+      "unsupportedIos": "这部手机无法使用手机登录，因此梅拉将于{{date}}起无法在此设备上使用。如果你为梅拉付费，请在此之前到 App Store 取消你的套餐。",
+      "unsupportedAndroid": "这部手机无法使用手机登录，因此梅拉将于{{date}}起无法在此设备上使用。如果你为梅拉付费，请在此之前到 Google Play 取消你的套餐。",
+      "success": "已用这部手机登录。你的邮箱已被删除。",
+      "close": "关闭",
+      "inboxTitle": "邮箱登录将于{{date}}结束",
+      "inboxBody": "切换到手机登录，即可保留你的账号。",
+      "settingsRow": "改用手机登录",
+      "settingsRowHint": "邮箱登录将于{{date}}结束。"
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "恢复购买"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "在 iPhone 和 Android 之间切换？你的套餐仍留在原来的商店。请先在那里取消，再在这里订阅。梅拉无法查看其他商店的套餐，因此无法退还任何重叠的费用。",
+      "invoicesAppStore": "梅拉无法给你发送邮件，因此 Apple 会把收据和发票发送到你的 Apple 账户中的邮箱。",
+      "invoicesPlayStore": "梅拉无法给你发送邮件，因此 Google Play 会把收据发送到你的 Google 账号中的邮箱。",
+      "planBack": "你的套餐已恢复。",
+      "restoreNoneApple": "在这个 Apple 账户上没有找到套餐。",
+      "restoreNoneGoogle": "在这个 Google 账号上没有找到套餐。",
+      "restoreFailedAppStore": "无法连接 App Store。请重试。",
+      "restoreFailedPlayStore": "无法连接 Google Play。请重试。"
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "梅拉用这部手机为你登录。为了阻止虚假账号，Apple 会确认这是真实 iPhone 上的正版梅拉应用。在你拥有账号期间，我们会保留一条登录记录。",
+        "playIntegrity": "梅拉用这部手机为你登录。为了阻止虚假账号，Google 会确认这是真实 Android 手机上的正版梅拉应用。我们保留的是登录记录，而不是你手机的 ID。",
+        "generic": "梅拉用这部手机为你登录。在你拥有账号期间，我们会为这部手机保留一条登录记录。"
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "你的邮箱将保留到你改用手机登录为止，或直到2026年10月30日被删除，你的套餐也会保留。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
+        "emailIfAdded": "你的套餐。梅拉从不要求提供邮箱，之前留下的任何邮箱都会在2026年10月30日被删除。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
+        "signInRecordGeneric": "这部手机的一条登录记录，会随账号一起删除。Apple 或 Google 确认正版应用的检查结果不会保留。"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "只有之前用邮箱登录过的账号会保留邮箱，该邮箱将于2026年10月30日删除。你使用的套餐。每日发送给你的文章数量，梅拉每天为你发送阅读的加密文本量及请求次数（不含文本本身），你用完方案每日阅读量的时间，以及你使用梅拉的日期，保留 90 天。你的通知时间、语言和处理方式选择。你回答梅拉团队问题时发送的内容。这部手机的一条登录记录，会随账户一起删除。主题短语只按文本缓存，不记录是谁请求的，十四天未使用即删除。"
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "你的登录方式（这部手机，或在2026年10月30日前用过的邮箱），以及你使用的套餐。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "你的账号将被安排删除，并在 30 天后永久删除。这部手机无法再次登录该账号。此操作无法撤消。",
+      "accountDeletionScheduledDescription": "你的账号将在 30 天后被永久删除。"
+    }
+  },
+  "zh-TW": {
+    "auth": {
+      "track": {
+        "sentToIfAccount": "如果這個電子郵件有梅拉帳號，我們已寄出驗證碼。第一次使用梅拉？請點選「使用這支手機登入」。",
+        "noCodeUsePhone": "沒有收到驗證碼？請點選「使用這支手機登入」。",
+        "beginWithoutEmail": "使用這支手機登入",
+        "beginCaption": "不需要電子郵件、電話號碼或密碼。沒有任何東西需要記住。"
+      },
+      "emailLegacyHint": "只適用於之前用電子郵件登入的人。新使用者已無法再用電子郵件登入。",
+      "phoneCheckTemporary": "無法檢查這支手機。請檢查網路連線後再試一次。",
+      "phoneUnsupportedAndroid": "梅拉需要這支手機上有 Google Play 才能為你登入。不支援沒有 Google Play 的手機。",
+      "phoneUnsupportedIos": "這支 iPhone 無法使用手機登入。",
+      "supportedPhones": "支援的手機",
+      "emailEnded": {
+        "title": "電子郵件登入已結束",
+        "bodyIos": "電子郵件登入已於 {{date}} 結束。請使用這支手機登入以重新開始。你的方案會從 App Store 恢復，你儲存的文章則會從備份恢復。",
+        "bodyAndroid": "電子郵件登入已於 {{date}} 結束。請使用這支手機登入以重新開始。你的方案會從 Google Play 恢復，你儲存的文章則會從備份恢復。"
+      },
+      "phoneNotSupported": "這支手機不支援",
+      "signInWithoutEmail": "使用這支手機登入",
+      "differentAccount": {
+        "title": "要使用這支手機登入嗎？"
+      },
+      "deviceSignInFailed": "發生錯誤。請再試一次。",
+      "deviceSignInDenied": "無法驗證此裝置。請再試一次。"
+    },
+    "moveToPhone": {
+      "dialogTitle": "改用這支手機登入",
+      "dialogBody": "我們會用這支手機為你登入、把你的帳號移到這支手機上，並從我們的資料庫刪除你的電子郵件。",
+      "dialogSettingsHint": "你可以在「設定」中於 {{date}} 前完成此操作。",
+      "confirm": "移動帳號",
+      "cancel": "暫不",
+      "progressTitle": "正在將你的帳號移到這支手機",
+      "steps": {
+        "checking": "正在檢查這支手機",
+        "linking": "正在連結你的帳號",
+        "removing": "正在刪除你的電子郵件",
+        "done": "完成"
+      },
+      "failed": "這次沒有完成。你的帳號仍可使用。請稍後再試一次。",
+      "unsupportedIos": "這支手機無法使用手機登入，因此梅拉將於 {{date}} 停止在這支手機上運作。如果你有付費購買梅拉，請在那之前於 App Store 取消你的方案。",
+      "unsupportedAndroid": "這支手機無法使用手機登入，因此梅拉將於 {{date}} 停止在這支手機上運作。如果你有付費購買梅拉，請在那之前於 Google Play 取消你的方案。",
+      "success": "已使用這支手機登入。你的電子郵件已刪除。",
+      "close": "關閉",
+      "inboxTitle": "電子郵件登入將於 {{date}} 結束",
+      "inboxBody": "改用手機登入，即可保留你的帳號。",
+      "settingsRow": "改用手機登入",
+      "settingsRowHint": "電子郵件登入將於 {{date}} 結束。"
+    },
+    "you": {
+      "settings": {
+        "restorePurchases": "恢復購買項目"
+      }
+    },
+    "subscription": {
+      "platformSwitch": "在 iPhone 與 Android 之間切換？你的方案仍保留在原本的商店。請先在那裡取消，然後在這裡訂閱。梅拉看不到其他商店的方案，因此無法退還任何重複的費用。",
+      "invoicesAppStore": "梅拉無法寄信給你，因此 Apple 會把收據和發票寄到你的 Apple 帳戶所使用的電子郵件。",
+      "invoicesPlayStore": "梅拉無法寄信給你，因此 Google Play 會把收據寄到你的 Google 帳戶所使用的電子郵件。",
+      "planBack": "你的方案已恢復。",
+      "restoreNoneApple": "在這個 Apple 帳戶上找不到方案。",
+      "restoreNoneGoogle": "在這個 Google 帳戶上找不到方案。",
+      "restoreFailedAppStore": "無法連上 App Store。請再試一次。",
+      "restoreFailedPlayStore": "無法連上 Google Play。請再試一次。"
+    },
+    "consent": {
+      "deviceNotice": {
+        "appAttest": "梅拉會用這支手機為你登入。為了阻擋假帳號，Apple 會確認這是真正 iPhone 上的正版梅拉 App。只要你擁有帳號，我們就會保留一筆登入紀錄。",
+        "playIntegrity": "梅拉會用這支手機為你登入。為了阻擋假帳號，Google 會確認這是真正 Android 手機上的正版梅拉 App。我們保存的是登入紀錄，而不是你手機的 ID。",
+        "generic": "梅拉會用這支手機為你登入。只要你擁有帳號，我們就會為這支手機保留一筆登入紀錄。"
+      }
+    },
+    "manageData": {
+      "keeps": {
+        "emailAndPlan": "你的電子郵件（直到你改用手機登入，或於 2026 年 10 月 30 日刪除為止）和你的方案。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
+        "emailIfAdded": "你的方案。梅拉從不要求電子郵件，以前留下的任何電子郵件都會在 2026 年 10 月 30 日刪除。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
+        "signInRecordGeneric": "這支手機的一筆登入紀錄，會隨帳號一起刪除。Apple 或 Google 確認正版 App 的檢查結果不會保留。"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-we-keep": {
+              "body": "你使用的方案。只有之前用電子郵件登入的帳號才會保留電子郵件，並於 2026 年 10 月 30 日刪除。每天傳送給你的文章數量、梅拉為你送去閱讀的加密文字量與請求次數（不含文字本身）、你達到方案每日閱讀額度的時間，以及你使用梅拉的日期，保留 90 天。你的通知時間、語言和處理方式選擇。你回覆梅拉團隊問題的答案。這支手機的一筆登入紀錄，會隨帳號一起刪除。主題短語只依文字本身快取，不記錄是誰提出的，十四天沒有使用就會刪除。"
+            },
+            "what-leaves": {
+              "steps": {
+                "1": "你的登入方式是這支手機（或在 2026 年 10 月 30 日之前，是之前的電子郵件），以及你使用的方案。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "deleteAccountConfirmGrace": "你的帳號將排定刪除，30 天後會永久刪除。這支手機無法再次登入這個帳號。此操作無法復原。",
+      "accountDeletionScheduledDescription": "你的帳號將在 30 天後被永久刪除。"
+    }
+  }
+}

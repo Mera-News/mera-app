@@ -18,7 +18,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MeraLogo from '@/components/custom/MeraLogo';
 import ModalMaterial from '@/components/custom/ModalMaterial';
 import { authClient } from '@/lib/auth-client';
-import { emailLooksAnonymous } from '@/lib/subscription/email-capture';
 import { readSupportIdFromUser } from '@/lib/support-id';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useFeedbackStore, useFeedbackVisible } from '@/lib/stores/feedback-store';
@@ -74,22 +73,11 @@ const FeedbackWidgetModal: React.FC = () => {
     const visible = useFeedbackVisible();
     const hide = useFeedbackStore((s) => s.hide);
 
-    // Local-first, same rule as Settings (config-mera/AppPreferencesTab) and the
-    // launch gate. A bug report is most likely to be filed when something is
-    // wrong — which is exactly when /get-session is least likely to answer — and
-    // reading identity off the session meant those reports arrived with no
-    // Sentry user id and an empty email box, the ones we can least afford to
-    // lose. The persisted values survive a session we cannot reach; the session
-    // stays as the fallback for installs that pre-date the cached_user_email row.
+    // Local-first identity (the session is unreachable exactly when a bug is filed).
+    // No email is read or prefilled: the optional field below starts empty.
     const { data: session } = authClient.useSession();
     const localUserId = useUserStore((s) => s.userId);
-    const localUserEmail = useUserStore((s) => s.userEmail);
     const userId = localUserId ?? session?.user?.id;
-    // The fabricated @anon.mera.news address must never be shown or prefilled
-    // as if it were the user's — an anonymous account simply has no email here.
-    const sessionEmail = session?.user?.email;
-    const userEmail =
-        localUserEmail ?? (sessionEmail && !emailLooksAnonymous(sessionEmail) ? sessionEmail : undefined);
     // The support handle rides the feedback payload so a report from an
     // anonymous account is traceable without an email.
     const supportId = readSupportIdFromUser(session?.user);
@@ -156,8 +144,8 @@ const FeedbackWidgetModal: React.FC = () => {
                         bounces={false}
                     >
                         <FeedbackWidget
-                            // Message-only form: no name field, email prefilled from
-                            // the signed-in session (still editable), on-device
+                            // Message-only form: no name field, an optional email field
+                            // that starts empty, on-device
                             // screenshot capture only. Sentry branding hidden — our
                             // header carries the Mera logo instead.
                             showName={false}
@@ -165,7 +153,7 @@ const FeedbackWidgetModal: React.FC = () => {
                             isEmailRequired={false}
                             showBranding={false}
                             enableTakeScreenshot
-                            useSentryUser={{ email: userEmail ?? '', name: '' }}
+                            useSentryUser={{ email: '', name: '' }}
                             // Drop the widget's own `flex: 1` (it would collapse to
                             // zero height inside a ScrollView), make it transparent so
                             // the card supplies the background, and hide the built-in

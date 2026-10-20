@@ -28,7 +28,6 @@
     "otpPlaceholder": "Voer 6-cijferige code in",
     "invalidEmailDescription": "Voer een geldig e-mailadres in",
     "networkError": "Netwerkfout. Probeer het opnieuw.",
-    "sentTo": "We hebben een code gestuurd naar",
     "invalidOtp": "Voer een geldige 6-cijferige OTP-code in",
     "invalidOtpServer": "Ongeldige OTP-code. Probeer het opnieuw.",
     "otpError": "Er is een fout opgetreden tijdens de verificatie. Probeer het opnieuw.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Opnieuw proberen",
     "identitySwitchSignOut": "Uitloggen en opnieuw beginnen",
     "deviceSignInWorking": "Je wordt aangemeld",
-    "deviceSignInFailed": "Er is iets misgegaan. Probeer het opnieuw of log in met e-mail.",
-    "deviceSignInDenied": "We konden dit apparaat niet verifiëren. Probeer het opnieuw of log in met e-mail.",
-    "deviceSignInUnavailable": "Inloggen is nu even niet mogelijk. Probeer het over een paar minuten opnieuw of log in met e-mail.",
+    "deviceSignInFailed": "Er is iets misgegaan. Probeer het opnieuw.",
+    "deviceSignInDenied": "We konden dit apparaat niet verifiëren. Probeer het opnieuw.",
     "tryAgain": "Opnieuw proberen",
     "learnAboutMera": "Maak kennis met Mera",
-    "alreadyHaveAccount": "Inloggen met e-mail",
     "continue": "Doorgaan",
     "sourceCode": "Broncode",
     "failedToSendBody": "Kan OTP niet verzenden",
     "signingYouIn": "Je wordt ingelogd…",
-    "signInWithoutEmail": "Inloggen zonder e-mail",
+    "signInWithoutEmail": "Inloggen met deze telefoon",
     "differentAccount": {
-      "title": "Inloggen zonder e-mail?",
+      "title": "Inloggen met deze telefoon?",
       "body": "We wissen alles wat Mera op deze telefoon bewaart voor {{email}}. Het account zelf wordt niet verwijderd. Weet je het zeker?",
       "continue": "Verwijderen en doorgaan",
       "useEmail": "Mijn account behouden",
       "bodyGeneric": "We wissen alles wat Mera op deze telefoon bewaart voor dit account. Het account zelf wordt niet verwijderd. Weet je het zeker?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Je account is gekoppeld aan deze telefoon. Als je Mera verwijdert of de telefoon kwijtraakt, begin je met een nieuw account. Back-up en herstel in Instellingen kan je gegevens bewaren.",
-      "reset": "Je account is gekoppeld aan deze telefoon. Als je de telefoon reset of kwijtraakt, begin je met een nieuw account. Back-up en herstel in Instellingen kan je gegevens bewaren."
-    },
     "track": {
       "beforeYouStart": "Voordat je begint",
-      "beginCaption": "Mera logt je in met deze telefoon. Niets om te onthouden.",
+      "beginCaption": "Geen e-mail, telefoonnummer of wachtwoord. Niets om te onthouden.",
       "beginMera": "Mera starten",
       "beginTitle": "Hoe wil je beginnen?",
-      "beginWithoutEmail": "Begin zonder e-mail",
+      "beginWithoutEmail": "Inloggen met deze telefoon",
       "checkEmailTitle": "Controleer je e-mail",
       "chooseLanguage": "Kies je taal",
       "codeA11y": "Code van 6 cijfers",
@@ -82,13 +75,25 @@
       "notHereTitle": "{{language}} staat nog niet op deze telefoon",
       "phoneLanguage": "De taal van je telefoon",
       "sendCode": "Code versturen",
-      "sentTo": "We hebben een code van 6 cijfers naar {{email}} gestuurd.",
       "useDifferentEmail": "Gebruik een ander e-mailadres",
       "welcome": "Welkom bij Mera",
       "wrongCode": "Die code werkte niet. Controleer hem of vraag een nieuwe aan.",
       "noSheetTitle": "Je iPhone heeft de download niet geopend",
-      "noSheetBody": "Probeer het opnieuw of open Instellingen op je iPhone, ga naar Algemeen, dan naar Taal en regio, en dan naar Vertaaltalen om {{language}} te downloaden."
-    }
+      "noSheetBody": "Probeer het opnieuw of open Instellingen op je iPhone, ga naar Algemeen, dan naar Taal en regio, en dan naar Vertaaltalen om {{language}} te downloaden.",
+      "sentToIfAccount": "Als dit e-mailadres een Mera-account heeft, hebben we er een code naartoe gestuurd. Nieuw bij Mera? Kies \"Inloggen met deze telefoon\".",
+      "noCodeUsePhone": "Geen code gekregen? Kies \"Inloggen met deze telefoon\"."
+    },
+    "emailLegacyHint": "Alleen voor mensen die eerder met e-mail zijn ingelogd. Nieuwe gebruikers kunnen niet meer met e-mail inloggen.",
+    "phoneCheckTemporary": "We konden deze telefoon niet controleren. Controleer je verbinding en probeer het opnieuw.",
+    "phoneUnsupportedAndroid": "Mera heeft Google Play op deze telefoon nodig om je in te loggen. Telefoons zonder Google Play worden niet ondersteund.",
+    "phoneUnsupportedIos": "Deze iPhone kan niet inloggen met een telefoonnummer.",
+    "supportedPhones": "Ondersteunde telefoons",
+    "emailEnded": {
+      "title": "Inloggen met e-mail is gestopt",
+      "bodyIos": "Inloggen met e-mail is gestopt op {{date}}. Log in met deze telefoon om opnieuw te beginnen. Je abonnement komt terug via de App Store, en je opgeslagen artikelen komen terug uit je back-up.",
+      "bodyAndroid": "Inloggen met e-mail is gestopt op {{date}}. Log in met deze telefoon om opnieuw te beginnen. Je abonnement komt terug via Google Play, en je opgeslagen artikelen komen terug uit je back-up."
+    },
+    "phoneNotSupported": "Deze telefoon wordt niet ondersteund"
   },
   "account": {
     "contactSupport": "Praat met support"
@@ -523,12 +528,12 @@
     "exportHistoryEmptyDescription": "Je hebt de afgelopen 30 dagen geen artikelen gelezen.",
     "keeps": {
       "title": "Wat Mera over je bewaart",
-      "emailAndPlan": "Je e-mailadres en je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
+      "emailAndPlan": "Je e-mailadres, tot je overschakelt naar inloggen met telefoon of tot het op 30 oktober 2026 wordt verwijderd, en je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
       "plan": "Je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
-      "emailIfAdded": "Je e-mailadres als je er een hebt toegevoegd, en je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
+      "emailIfAdded": "Je abonnement. Mera vraagt nooit om een e-mailadres, en een e-mailadres van vroeger wordt op 30 oktober 2026 verwijderd. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
       "signInRecordIos": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple dat dit de echte app is, bewaren we niet.",
       "signInRecordAndroid": "Een inlogregistratie voor deze telefoon, niet de ID van je telefoon, die met je account wordt verwijderd. De controle van Google dat dit de echte app is, bewaren we niet.",
-      "signInRecordGeneric": "Zonder e-mail een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple of Google dat dit de echte app is, bewaren we niet.",
+      "signInRecordGeneric": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple of Google dat dit de echte app is, bewaren we niet.",
       "usage": "Hoeveel versleutelde tekst Mera per dag naar het lezen voor je heeft gestuurd en in hoeveel verzoeken (nooit de tekst zelf), hoeveel artikelen er per dag naar deze telefoon zijn gestuurd, wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt. Bewaard gedurende 90 dagen. Bij inloggen bewaren we geen IP-adres of browsergegevens.",
       "topics": "Onderwerpzinnen, alleen op hun tekst opgeslagen zonder iets dat ze aan jou koppelt, en verwijderd na 14 dagen zonder gebruik.",
       "privacyLink": "Lees het privacybeleid"
@@ -572,11 +577,11 @@
     "contentPolicy": "Inhoudsbeleid",
     "faq": "FAQ",
     "reportBug": "Een bug melden",
-    "deleteAccountConfirmGrace": "Je account wordt ingepland voor verwijdering, met een bedenktijd van 30 dagen. Heeft je account een e-mailadres, log daar dan binnen deze 30 dagen mee in om te annuleren. Een account zonder e-mail kan niet meer inloggen, dus de verwijdering ervan kan niet worden geannuleerd.",
+    "deleteAccountConfirmGrace": "Je account wordt ingepland voor verwijdering en na 30 dagen definitief verwijderd. Deze telefoon kan er niet meer mee inloggen. Dit kan niet ongedaan worden gemaakt.",
     "deleteAccountWarningGrace": "⚠️ Na 30 dagen worden je accountgegevens permanent verwijderd. Factuurgegevens worden 7 jaar bewaard voor de boekhouding. Dit kan niet ongedaan worden gemaakt.",
     "finalConfirmationBodyGrace": "Dit plant je account voor permanente verwijdering over 30 dagen in.",
     "accountDeletionScheduledTitle": "Verwijdering gepland",
-    "accountDeletionScheduledDescription": "Je account wordt over 30 dagen definitief verwijderd. Heeft het een e-mailadres, log daar dan eerder mee in om te annuleren."
+    "accountDeletionScheduledDescription": "Je account wordt over 30 dagen definitief verwijderd."
   },
   "configPanel": {
     "factDeletedTitle": "Feit verwijderd",
@@ -728,7 +733,8 @@
     "mayMistakes": "Mera kan fouten maken, dus controleer belangrijk nieuws bij de bron.",
     "cardWaitingHint": "Tik hierboven op een optie, of typ ja",
     "cardCancelled": "Oké, er is niets veranderd",
-    "changeUndone": "Ongedaan gemaakt"
+    "changeUndone": "Ongedaan gemaakt",
+    "cardTapHint": "Tik hierboven op een optie."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Ik vond dit artikel leuk: \"{{title}}\". Ik zou graag meer van dit soort suggesties zien.",
@@ -882,12 +888,9 @@
     "activatedTitle": "{{plan}} is actief",
     "planPending": "{{plan}} · activering",
     "perMonth": "/maand",
-    "starterFreeTitle": "Je zit op Starter, gratis",
-    "starterFreeBody": "Elk account bevat het volledige Starter-abonnement zonder kosten: al je interesses, chat, factchecks en gevolgde verhalen. Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Op ondersteunde telefoons is lezen op de telefoon onbeperkt, bij elk abonnement.",
     "analysedForYou": "Gelezen door Mera",
     "available24h": "Beschikbaar, laatste 24 uur",
     "discarded": "Weggegooid",
-    "localOnly": "Berekend op deze telefoon uit wat Mera al bewaart. Er wordt niets extra vastgelegd.",
     "promoEndsNoRenew": "Promotietoegang · eindigt op {{date}}, wordt niet verlengd",
     "relevantSoFar": "Tot nu toe relevant",
     "billedAppStore": "Betaald via de App Store. Je kunt op elk moment opzeggen in je Apple-account.",
@@ -897,7 +900,13 @@
     "confirmTimeoutTitle": "We konden je aankoop nog niet bevestigen",
     "confirmTimeoutBody": "Heb je al betaald? Praat dan met support, dan regelen we het.",
     "checkAgain": "Opnieuw controleren",
-    "readingExplainer": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Je abonnement bepaalt hoeveel Mera per dag in de cloud leest: Starter 10 MB, Individueel 50 MB, Professioneel 200 MB. Mera leest voor je via end-to-endversleuteling, dus het kan niet zien welke artikelen het leest of hoeveel. Daarom worden abonnementen in megabytes gemeten, niet in artikelen. Op ondersteunde telefoons is lezen op de telefoon onbeperkt, bij elk abonnement."
+    "invoicesAppStore": "Mera kan je geen e-mail sturen, dus Apple stuurt je bonnetjes en facturen naar het e-mailadres van je Apple-account.",
+    "invoicesPlayStore": "Mera kan je geen e-mail sturen, dus Google Play stuurt je bonnetjes naar het e-mailadres van je Google-account.",
+    "planBack": "Je abonnement is terug.",
+    "restoreNoneApple": "Geen abonnement gevonden op deze Apple-account.",
+    "restoreNoneGoogle": "Geen abonnement gevonden op deze Google-account.",
+    "restoreFailedAppStore": "De App Store kon niet worden bereikt. Probeer het opnieuw.",
+    "restoreFailedPlayStore": "Google Play kon niet worden bereikt. Probeer het opnieuw."
   },
   "tabs": {
     "deck": "Feed",
@@ -1548,9 +1557,9 @@
     "retry": "Opnieuw proberen",
     "welcomeBody": "Tik op \"Akkoord en doorgaan\" om onze Servicevoorwaarden en ons Privacybeleid te accepteren.",
     "deviceNotice": {
-      "appAttest": "Geen e-mail nodig. Mera logt je in met deze telefoon. Apple bevestigt dat dit de echte Mera app is op een echte iPhone, om nepaccounts tegen te houden. We bewaren een inlogregistratie zolang je een account hebt.",
-      "playIntegrity": "Geen e-mail nodig. Mera logt je in met deze telefoon. Google bevestigt dat dit de echte Mera app is op een echte Android-telefoon, om nepaccounts tegen te houden. We bewaren een inlogregistratie, niet de ID van je telefoon.",
-      "generic": "Geen e-mail nodig. Mera logt je in met deze telefoon. We bewaren een inlogregistratie voor deze telefoon zolang je een account hebt."
+      "appAttest": "Mera logt je in met deze telefoon. Apple bevestigt dat dit de echte Mera app is op een echte iPhone, om nepaccounts tegen te houden. We bewaren een inlogregistratie zolang je een account hebt.",
+      "playIntegrity": "Mera logt je in met deze telefoon. Google bevestigt dat dit de echte Mera app is op een echte Android-telefoon, om nepaccounts tegen te houden. We bewaren een inlogregistratie, niet de ID van je telefoon.",
+      "generic": "Mera logt je in met deze telefoon. We bewaren een inlogregistratie voor deze telefoon zolang je een account hebt."
     }
   },
   "tutorials": {
@@ -1846,7 +1855,7 @@
             "body": "De belangrijkste dingen, en waarom elk ervan de deur uit gaat.",
             "steps": {
               "0": "Korte onderwerpsfrasen, dus er is iets om verhalen tegenaan te passen.",
-              "1": "Hoe je inlogt, met e-mail of met deze telefoon, en welk abonnement je hebt.",
+              "1": "Hoe je inlogt, namelijk met deze telefoon (of, tot 30 oktober 2026, een e-mailadres van vroeger), en welk abonnement je hebt.",
               "2": "De artikelen die je telefoon opvraagt, en de versleutelde tekst die Mera naar het lezen voor je stuurt, per dag geteld om je abonnement toe te passen."
             },
             "ask": "Wat stuurt de app naar jullie servers?"
@@ -1865,7 +1874,7 @@
           },
           "what-we-keep": {
             "headline": "Wat we houden",
-            "body": "Je inlog-e-mailadres, als je er een hebt toegevoegd. Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd, hoeveel versleutelde tekst Mera naar het lezen voor je heeft gestuurd en in hoeveel verzoeken (nooit de tekst zelf), wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Als je Mera zonder e-mail gebruikt, een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
+            "body": "Een e-mailadres is er alleen voor een account dat eerder met e-mail is ingelogd, en dat wordt op 30 oktober 2026 verwijderd. Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd, hoeveel versleutelde tekst Mera naar het lezen voor je heeft gestuurd en in hoeveel verzoeken (nooit de tekst zelf), wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
             "ask": "Wat slaat Mera op haar servers over mij op?"
           }
         }
@@ -2219,20 +2228,6 @@
     "mailFailedBody": "Kopieer ons supportadres en stuur ons een e-mail vanuit een willekeurige mail-app.",
     "copyAddress": "Adres kopiëren"
   },
-  "emailCapture": {
-    "title": "Voeg je e-mailadres toe",
-    "subtitle": "Ontvang bonnen per e-mail en herstel je account als je van telefoon wisselt.",
-    "continue": "Doorgaan",
-    "notNow": "Niet nu",
-    "confirm": "Bevestigen",
-    "added": "E-mailadres toegevoegd",
-    "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}.",
-    "skip": "Doorgaan zonder e-mail",
-    "skipTitle": "Doorgaan zonder e-mail?",
-    "skipBody1": "Zonder e-mail kan je account niet naar een ander platform verhuizen. Als je wisselt tussen iOS en Android, begin je daar met een nieuw account.",
-    "skipBody2": "Support kan je aankoop alleen vinden met je support-ID. Kopieer het en bewaar het op een veilige plek.",
-    "skipConfirm": "Doorgaan naar betaling"
-  },
   "videoPlayer": {
     "closeA11y": "Video sluiten",
     "openInBrowser": "Openen in browser",
@@ -2416,7 +2411,6 @@
     "removing": "Ik verwijder wat je gevraagd hebt",
     "asking": "Ik stel je een vraag",
     "working": "Ik ben ermee bezig",
-    "slow": "Nog bezig, trage verbinding",
     "legCapSentence": "Dat kostte meer stappen dan Mera in één keer aankan. Vraag het opnieuw om verder te gaan.",
     "interrupted": "Dit is onderbroken. Vraag het opnieuw om verder te gaan.",
     "summaryFailed": "Iets is niet gelukt",
@@ -2436,7 +2430,6 @@
     "noProposalSentence": "Mera heeft hier niets uit gevonden om toe te voegen.",
     "unknownToolSentence": "Er ging iets mis aan Mera's kant. Vraag het opnieuw om verder te gaan.",
     "malformedChoiceSentence": "Mera kon de opties niet tonen. Vraag het opnieuw om verder te gaan.",
-    "boxTitle": "Mera is aan het werk",
     "doneInSteps_one": "Klaar in {{count}} stap",
     "doneInSteps_other": "Klaar in {{count}} stappen",
     "doneInStepsShow_one": "Klaar in {{count}} stap, toon stappen",
@@ -2455,9 +2448,7 @@
     "interests": "je interesses",
     "origin": "waar je vandaan komt",
     "family": "je gezin",
-    "feedTuning": "je feed",
-    "followStory": "een verhaal om te volgen",
-    "factCheck": "een bewering om te controleren"
+    "feedTuning": "je feed"
   },
   "askChoice": {
     "answeredA11y": "al beantwoord",
@@ -2496,10 +2487,10 @@
       "Je telefoon wordt klaargemaakt om te antwoorden."
     ],
     "deviceThinking": [
-      "Wordt op je telefoon overdacht. Niets verlaat je apparaat."
+      "Wordt op je telefoon overdacht."
     ],
     "webSearch": [
-      "Op het web zoeken vanaf je apparaat…"
+      "Op het web zoeken via de server van Mera…"
     ]
   },
   "savedExport": {
@@ -2532,7 +2523,8 @@
     },
     "stories": {
       "privacy": "De verhalen die je volgt blijven op deze telefoon."
-    }
+    },
+    "sourcesLink": "Bekijk elke bron die Mera leest"
   },
   "articleMenu": {
     "openA11y": "Meer acties",
@@ -2677,11 +2669,10 @@
       "privacy": "Mera koppelt je zoekopdrachten niet aan je account."
     },
     "explainer": {
-      "country1": "Verhalen staan hoger naarmate de eigen uitgevers van dit land er meer over schrijven.",
-      "countrySame": "Deze pagina is voor iedereen hetzelfde. Niets over jou wordt hier gebruikt.",
-      "same": "Wereld is voor iedereen hetzelfde. Niets over jou wordt hier gebruikt.",
-      "top1": "Verhalen die in veel landen en door veel verschillende uitgevers worden behandeld, staan het hoogst. Eén druk land kan de pagina niet vullen, en veel artikelen van één uitgever tellen één keer.",
-      "window": "De tijdschakelaar bepaalt hoe ver de pagina terugkijkt: 6, 12, 24 of 48 uur. Elke lijst telt alleen artikelen die binnen dat venster zijn gepubliceerd."
+      "window": "De tijdschakelaar bepaalt hoe ver de pagina terugkijkt: 6, 12, 24 of 48 uur. Elke lijst telt alleen artikelen die binnen dat venster zijn gepubliceerd.",
+      "justMath": "Gewoon rekenwerk. Geen AI rangschikt deze pagina, en hij ziet er voor iedereen hetzelfde uit.",
+      "mathWorld": "Elk land dat een verhaal behandelt, geeft het 1 punt, plus een beetje meer voor elke extra uitgever daar, tot maximaal 4 punten per land. Tel alle landen op, en het hoogste totaal staat bovenaan.",
+      "mathCountry": "Tel de artikelen die de uitgevers van dit land in de afgelopen 24 uur over een verhaal schreven. Het verhaal met de meeste artikelen staat bovenaan."
     }
   },
   "library": {
@@ -2782,8 +2773,6 @@
     "settings": {
       "yourPlan": "Jouw abonnement",
       "usageOffline": "Gebruik wordt getoond als je online bent",
-      "addEmail": "E-mailadres toevoegen",
-      "addEmailHint": "Optioneel. Alleen als je je account naar een andere telefoon wilt verhuizen of Mera's e-mails wilt ontvangen.",
       "appLock": "App-vergrendeling",
       "backupOff": "Back-up uit",
       "backupOn": "Back-up aan",
@@ -2793,7 +2782,6 @@
       "developerOn": "Ontwikkelaarsmodus aan",
       "groupGeneral": "Algemeen",
       "groupPrivacy": "Privacy en beveiliging",
-      "noEmailNeeded": "Geen e-mail nodig.",
       "observabilityHint": "Wat de database op het apparaat bevat, voor foutopsporing",
       "off": "Uit",
       "on": "Aan",
@@ -2808,11 +2796,10 @@
       "resetsTodayAt": "Wordt vandaag om {{time}} gereset",
       "resetsTomorrowAt": "Wordt morgen om {{time}} gereset",
       "lastUpdated": "Laatst bijgewerkt {{time}}",
-      "onDeviceUnlimited": "Lezen op deze telefoon: onbeperkt",
-      "readingOnPhone": "Mera leest op deze telefoon.",
       "newPlanApplies": "Je nieuwe abonnement geldt nu.",
-      "planMultiplierBase": "10 MB lezen in de cloud per dag",
-      "planMultiplier": "{{mb}} MB lezen in de cloud per dag, {{n}}x Starter"
+      "restorePurchases": "Aankopen herstellen",
+      "processingMode": "Verwerkingsmodus",
+      "unlimited": "Onbeperkt"
     },
     "notifications": {
       "push": "Pushmeldingen",
@@ -2924,6 +2911,29 @@
     "relevance": "Beste match",
     "oldest": "Oudste eerst",
     "newest": "Nieuwste eerst"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Inloggen met deze telefoon in plaats daarvan",
+    "dialogBody": "We loggen je in met deze telefoon, zetten je account erop over en verwijderen je e-mailadres uit onze database.",
+    "dialogSettingsHint": "Dit kan in Instellingen tot {{date}}.",
+    "confirm": "Account verplaatsen",
+    "cancel": "Niet nu",
+    "progressTitle": "Je account wordt naar deze telefoon verplaatst",
+    "steps": {
+      "checking": "Deze telefoon controleren",
+      "linking": "Je account koppelen",
+      "removing": "Je e-mailadres verwijderen",
+      "done": "Klaar"
+    },
+    "failed": "Dit is niet gelukt. Je account werkt nog steeds. Probeer het zo dadelijk opnieuw.",
+    "unsupportedIos": "Deze telefoon kan niet inloggen met een telefoonnummer, dus Mera stopt op {{date}} met werken op deze telefoon. Als je voor Mera betaalt, zeg je je abonnement vóór die datum op in de App Store.",
+    "unsupportedAndroid": "Deze telefoon kan niet inloggen met een telefoonnummer, dus Mera stopt op {{date}} met werken op deze telefoon. Als je voor Mera betaalt, zeg je je abonnement vóór die datum op in Google Play.",
+    "success": "Je bent ingelogd met deze telefoon. Je e-mailadres is verwijderd.",
+    "close": "Sluiten",
+    "inboxTitle": "Inloggen met e-mail eindigt op {{date}}",
+    "inboxBody": "Schakel over naar inloggen met telefoon om je account te behouden.",
+    "settingsRow": "Overschakelen naar inloggen met telefoon",
+    "settingsRowHint": "Inloggen met e-mail eindigt op {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

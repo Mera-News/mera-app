@@ -81,6 +81,15 @@ export const DEVICE_ID_STORE_KEY = `${APP_SLUG}_device_attest_device_id`;
  *  leftover. */
 const RETIRED_DEVICE_REF_STORE_KEY = `${APP_SLUG}_device_ref`;
 
+/** Keychain slot for the TEST account handle this device signs in to (dev
+ *  builds with EXPO_PUBLIC_TEST_ACCOUNT_TOKEN only). Severed with the other
+ *  device credentials, never by logout or the account-switch wipe. */
+export const TEST_ACCOUNT_HANDLE_STORE_KEY = `${APP_SLUG}_test_account_handle`;
+
+/** The server's handle rule, verbatim. The handle is the ONLY way into a test
+ *  account: no route takes a user id. */
+export const TEST_ACCOUNT_HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]{1,39}$/;
+
 /**
  * Sever this device's ACCOUNT binding. Called on account DELETION
  * (ManageDataScreen) and by the refusal recovery below — never on logout:
@@ -97,6 +106,7 @@ export async function clearDeviceAuthCredentials(): Promise<void> {
     APP_ATTEST_KEY_PROVEN_STORE_KEY,
     DEVICE_ID_STORE_KEY,
     RETIRED_DEVICE_REF_STORE_KEY,
+    TEST_ACCOUNT_HANDLE_STORE_KEY,
   ]) {
     try {
       await secureStore.deleteItemAsync(key);
@@ -112,8 +122,24 @@ export async function clearDeviceAuthCredentials(): Promise<void> {
 
 // Read at call time, not module scope: Metro inlines EXPO_PUBLIC_* wherever it
 // appears, and call-time reads keep the module testable without resetModules.
+// Dev builds only: a release build never takes the bypass, even with the token
+// in its env, and a phone that cannot attest shows "not supported" instead.
+// When set in a dev build it wins over native attestation (the route exists
+// only on a server with DEVICE_ATTESTATION_DEV_BYPASS_TOKEN, i.e. staging).
 function readDevBypassToken(): string {
-  return process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN || '';
+  return __DEV__ ? process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN || '' : '';
+}
+
+// Test accounts (staging and prod): DEV BUILDS ONLY, same shape as the dev
+// bypass. A release build reads '' here and the minifier drops every branch
+// that needs the token, so neither the token nor the route ships.
+function readTestAccountToken(): string {
+  return __DEV__ ? process.env.EXPO_PUBLIC_TEST_ACCOUNT_TOKEN || '' : '';
+}
+
+/** True in a dev build carrying a test-account token. */
+export function hasTestAccountToken(): boolean {
+  return Boolean(readTestAccountToken());
 }
 
 function readPlayIntegrityProject(): string | null {
@@ -141,9 +167,12 @@ export type DeviceSignInResult =
        *  sends it on every sign-in and it is worth having in a log, not
        *  because anything branches on it. */
       trialAvailable: boolean | null;
+      /** True only when this call CREATED the account. A mint owes the new
+       *  account a store purchases sync (lib/revenuecat.ts). */
+      minted: boolean;
     }
-  /** No native attestation on this device and no dev bypass configured —
-   *  callers route to the email sign-in path. */
+  /** No native attestation on this device and no dev bypass configured.
+   *  There is no email fallback for a new user: the phone isn't supported. */
   | { status: 'unsupported' }
   /** Every failure is retryable: a retry re-enters the whole flow and fetches
    *  a fresh nonce. */
@@ -151,11 +180,12 @@ export type DeviceSignInResult =
 
 export type DeviceSignInAvailability = 'native' | 'dev-bypass' | 'unavailable';
 
-/** What the sign-in screen consults at mount, so an unsupported device renders
- *  the email view instead of a dead CTA. Never rejects. */
+/** What the sign-in screen consults at mount, so an unsupported device says
+ *  so instead of showing a dead CTA. Same order as `signInWithDevice`. Never
+ *  rejects. */
 export async function deviceSignInAvailability(): Promise<DeviceSignInAvailability> {
+  if (readTestAccountToken() || readDevBypassToken()) return 'dev-bypass';
   if (await isSupported()) return 'native';
-  if (readDevBypassToken()) return 'dev-bypass';
   return 'unavailable';
 }
 
@@ -175,9 +205,8 @@ export type DeviceSignInPath =
   | 'unavailable';
 
 export async function deviceSignInPath(): Promise<DeviceSignInPath> {
-  if (!(await isSupported())) {
-    return readDevBypassToken() ? 'dev-bypass' : 'unavailable';
-  }
+  if (readTestAccountToken() || readDevBypassToken()) return 'dev-bypass';
+  if (!(await isSupported())) return 'unavailable';
   if (Platform.OS === 'ios') return 'app-attest';
   if (Platform.OS === 'android') {
     return readAndroidHardwareId() ? 'play-integrity' : 'play-integrity-uuid';
@@ -228,6 +257,36 @@ async function fetchNonce(purpose: NoncePurpose): Promise<string> {
     throw new ServerRejection('/device/nonce', undefined, 'MALFORMED_NONCE_RESPONSE');
   }
   return data.nonce;
+}
+
+type AttestPlatform = 'ios' | 'android' | 'dev';
+
+/**
+ * Where a flow's LAST post goes. Sign-in posts to the platform's own route;
+ * the move to phone sign-in posts the very same fields (fresh nonce plus
+ * attestation) to `/device/convert`, signed in, with the platform named in the
+ * body. `onPost` fires when the attestation is done and the post is about to
+ * leave, which is where the move's progress steps from "checking" to "linking".
+ */
+type FlowTarget = { kind: 'sign-in' } | { kind: 'convert'; bindOnly?: boolean; onPost?: () => void };
+
+interface FlowResponse {
+  path: string;
+  data: unknown;
+}
+
+async function finalPost(
+  target: FlowTarget,
+  platform: AttestPlatform,
+  body: Record<string, unknown>,
+): Promise<FlowResponse> {
+  if (target.kind === 'sign-in') {
+    const path = `/device/sign-in/${platform}`;
+    return { path, data: await post(path, body) };
+  }
+  target.onPost?.();
+  const convertBody = target.bindOnly ? { platform, bindOnly: true, ...body } : { platform, ...body };
+  return { path: '/device/convert', data: await post('/device/convert', convertBody) };
 }
 
 /** Fields read off a sign-in response. Anything else is ignored, which is
@@ -350,37 +409,33 @@ async function enrollIos(): Promise<string> {
   return keyId;
 }
 
-/** Fresh nonce → assertion over the nonce → POST sign-in/ios. The nonce IS
+/** Fresh nonce → assertion over the nonce → the final POST. The nonce IS
  *  the client data (final S2 contract): the body carries it raw, and only the
  *  native call receives its hash. */
-async function assertAndSignInIos(keyId: string): Promise<ParsedSignIn> {
+async function assertAndSignInIos(keyId: string, target: FlowTarget): Promise<FlowResponse> {
   const nonce = await fetchNonce('assert');
   const clientDataHash = await sha256Base64(nonce);
   const assertion = await generateAssertion(keyId, clientDataHash);
-  const data = await post<SessionResponseLike>('/device/sign-in/ios', {
-    keyId,
-    assertion,
-    nonce,
-  });
-  const parsed = parseSignIn('/device/sign-in/ios', data);
-  // The key has now completed a full assert + sign-in round trip: PROVEN.
-  // Best-effort — an unproven marker only means one extra recovery is armed.
+  const response = await finalPost(target, 'ios', { keyId, assertion, nonce });
+  // The key has now completed a full assert round trip the server accepted:
+  // PROVEN. Best-effort — an unproven marker only means one extra recovery is
+  // armed.
   try {
     await secureStore.setItemAsync(APP_ATTEST_KEY_PROVEN_STORE_KEY, keyId);
   } catch {
     // Non-fatal.
   }
-  return parsed;
+  return response;
 }
 
-async function signInIos(): Promise<ParsedSignIn> {
+async function signInIos(target: FlowTarget): Promise<FlowResponse> {
   const storedKeyId = await readStoredKeyId();
   if (!storedKeyId) {
     const keyId = await enrollIos();
-    return assertAndSignInIos(keyId);
+    return assertAndSignInIos(keyId, target);
   }
   try {
-    return await assertAndSignInIos(storedKeyId);
+    return await assertAndSignInIos(storedKeyId, target);
   } catch (error) {
     // Recovery 1: the stored key vanished (reinstall, device migration,
     // restore — App Attest keys survive none of them).
@@ -409,11 +464,11 @@ async function signInIos(): Promise<ParsedSignIn> {
     if (!recoverable) throw error;
     await clearStoredKeyId();
     const keyId = await enrollIos();
-    return assertAndSignInIos(keyId);
+    return assertAndSignInIos(keyId, target);
   }
 }
 
-async function signInAndroid(): Promise<ParsedSignIn> {
+async function signInAndroid(target: FlowTarget): Promise<FlowResponse> {
   const nonce = await fetchNonce('integrity');
   // Resolved BEFORE the token request: it is an input to the bound nonce.
   // ANDROID_ID survives reinstall, which the stored UUID cannot; the fallback
@@ -422,24 +477,106 @@ async function signInAndroid(): Promise<ParsedSignIn> {
   const bound = await bindIntegrityNonce(nonce, deviceId);
   const integrityToken = await requestIntegrityToken(bound, readPlayIntegrityProject());
   // The body is unchanged: the RAW server nonce and the same deviceId.
-  const data = await post<SessionResponseLike>('/device/sign-in/android', {
-    integrityToken,
-    nonce,
-    deviceId,
-  });
-  return parseSignIn('/device/sign-in/android', data);
+  return finalPost(target, 'android', { integrityToken, nonce, deviceId });
 }
 
 /** Staging-only bypass: the route exists only where the server has
  *  DEVICE_ATTESTATION_DEV_BYPASS_TOKEN set (404 elsewhere). Keeps the stored
  *  UUID deviceId. */
-async function signInDev(token: string): Promise<ParsedSignIn> {
+async function signInDev(token: string, target: FlowTarget): Promise<FlowResponse> {
   const deviceId = await readOrCreateDeviceId();
-  const data = await post<SessionResponseLike>('/device/sign-in/dev', {
-    token,
-    deviceId,
-  });
-  return parseSignIn('/device/sign-in/dev', data);
+  return finalPost(target, 'dev', { token, deviceId });
+}
+
+// ─── Test accounts (dev builds only) ─────────────────────────────────────────
+
+/** POST to a test-account route. The path and the call sit INSIDE the
+ *  `__DEV__` block so a release bundle carries neither. */
+async function testAccountPost<T>(route: 'sign-in' | 'delete' | 'list', body: Record<string, unknown>): Promise<T> {
+  if (__DEV__) {
+    return post<T>(`/test-account/${route}`, body);
+  }
+  throw new Error('Test accounts exist only in dev builds');
+}
+
+/** The handle this device signs in to: the slot's, else a throwaway derived
+ *  from the stored device UUID (stable per install). */
+export async function currentTestAccountHandle(): Promise<string> {
+  const stored = await secureStore.getItemAsync(TEST_ACCOUNT_HANDLE_STORE_KEY).catch(() => null);
+  if (stored && TEST_ACCOUNT_HANDLE_PATTERN.test(stored)) return stored;
+  const deviceId = await readOrCreateDeviceId();
+  return `tmp-${deviceId.replace(/-/g, '').toLowerCase().slice(0, 12)}`;
+}
+
+/** Point this device at a handle (null: back to its throwaway). Throws on a
+ *  handle the server would refuse, so nothing invalid is ever stored. */
+export async function setTestAccountHandle(handle: string | null): Promise<void> {
+  if (handle === null) {
+    await secureStore.deleteItemAsync(TEST_ACCOUNT_HANDLE_STORE_KEY);
+    return;
+  }
+  if (!TEST_ACCOUNT_HANDLE_PATTERN.test(handle)) throw new Error('Invalid test account handle');
+  await secureStore.setItemAsync(TEST_ACCOUNT_HANDLE_STORE_KEY, handle);
+}
+
+async function signInTestAccount(token: string): Promise<FlowResponse> {
+  const handle = await currentTestAccountHandle();
+  return { path: 'test-account', data: await testAccountPost('sign-in', { token, handle }) };
+}
+
+/** Delete a test account now (a tombstone server side; the handle mints
+ *  fresh next time). `not-found` covers a handle with no account, and also a
+ *  wrong or disabled token, which the server answers with the same 404. */
+export async function deleteTestAccount(handle: string): Promise<'deleted' | 'not-found' | 'failed'> {
+  const token = readTestAccountToken();
+  if (!token || !TEST_ACCOUNT_HANDLE_PATTERN.test(handle)) return 'failed';
+  try {
+    await testAccountPost('delete', { token, handle });
+    return 'deleted';
+  } catch (error) {
+    if (error instanceof ServerRejection && error.status === 404) return 'not-found';
+    logger.warn('[device-auth] test account delete failed', {
+      ...(error instanceof ServerRejection ? { httpStatus: error.status, code: error.code } : {}),
+    });
+    return 'failed';
+  }
+}
+
+export interface TestAccountSummary {
+  handle: string;
+  userId: string | null;
+}
+
+/** The test accounts the server holds, or null when the call failed. */
+export async function listTestAccounts(): Promise<TestAccountSummary[] | null> {
+  const token = readTestAccountToken();
+  if (!token) return null;
+  try {
+    const data = await testAccountPost<{ accounts?: unknown }>('list', { token });
+    if (!Array.isArray(data?.accounts)) return null;
+    return data.accounts.flatMap((row: { handle?: unknown; userId?: unknown }) =>
+      typeof row?.handle === 'string'
+        ? [{ handle: row.handle, userId: typeof row.userId === 'string' ? row.userId : null }]
+        : [],
+    );
+  } catch {
+    return null;
+  }
+}
+
+/** The flow this device runs, in the one decision order every reader shares:
+ *  a test account (dev builds with its token, sign-in only: a test session is
+ *  never moved or bound), the dev bypass (dev builds with the token), then
+ *  native attestation. Null when the phone cannot attest at all. */
+async function pickFlow(target: FlowTarget): Promise<(() => Promise<FlowResponse>) | null> {
+  const testToken = target.kind === 'sign-in' ? readTestAccountToken() : '';
+  if (testToken) return () => signInTestAccount(testToken);
+  const token = readDevBypassToken();
+  if (token) return () => signInDev(token, target);
+  if (!(await isSupported())) return null;
+  if (Platform.OS === 'ios') return () => signInIos(target);
+  if (Platform.OS === 'android') return () => signInAndroid(target);
+  return null;
 }
 
 /** 403 refusal of a STORED credential: the server no longer honors this
@@ -456,13 +593,13 @@ function isServerRefusal(error: unknown): boolean {
 
 // ─── Classification ──────────────────────────────────────────────────────────
 
-function classifyFailure(error: unknown): DeviceSignInResult {
+function classifyFailure(error: unknown, what: 'sign-in' | 'convert' = 'sign-in'): DeviceSignInResult {
   const result = classify(error);
   // One structured console line per failed attempt (F4). Fields only — never
   // an error message and never a body, so no nonce or token can leak into it.
   const server = error instanceof ServerRejection ? error : undefined;
   const nativeCode = (error as { code?: unknown } | null)?.code;
-  logger.warn('[device-auth] sign-in failed', {
+  logger.warn(`[device-auth] ${what} failed`, {
     status: result.status,
     ...(result.status === 'failed' ? { reason: result.reason } : {}),
     ...(server
@@ -499,8 +636,8 @@ function classify(error: unknown): DeviceSignInResult {
   }
   // MERA-APP-6P: Play Integrity codes meaning this environment can
   // structurally never attest (no/old Play Store, non-GMS) — the same quiet
-  // path as isSupported() === false: the welcome view skips to the email
-  // view. Deliberately BEFORE the capture below: an environment fact, not an
+  // path as isSupported() === false: the phone isn't supported. Deliberately
+  // BEFORE the capture below: an environment fact, not an
   // error; classifyFailure's single warn line is the only telemetry.
   // Transient integrity codes fall through and stay retryable.
   if (isIntegrityUnavailableError(error)) {
@@ -539,19 +676,12 @@ function classify(error: unknown): DeviceSignInResult {
  */
 export async function signInWithDevice(): Promise<DeviceSignInResult> {
   try {
-    const supported = await isSupported();
-    let runFlow: (() => Promise<ParsedSignIn>) | null = null;
-    if (!supported) {
-      const token = readDevBypassToken();
-      if (!token) return { status: 'unsupported' };
-      runFlow = () => signInDev(token);
-    } else if (Platform.OS === 'ios') {
-      runFlow = signInIos;
-    } else if (Platform.OS === 'android') {
-      runFlow = signInAndroid;
-    } else {
-      return { status: 'unsupported' };
-    }
+    const flow = await pickFlow({ kind: 'sign-in' });
+    if (!flow) return { status: 'unsupported' };
+    const runFlow = async (): Promise<ParsedSignIn> => {
+      const { path, data } = await flow();
+      return parseSignIn(path, data as SessionResponseLike);
+    };
 
     // Snapshot BEFORE the attempt. Best-effort reads: this drives the
     // refusal-recovery gate, not the strict
@@ -563,7 +693,10 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
       secureStore.getItemAsync(APP_ATTEST_KEY_ID_STORE_KEY).catch(() => null),
       secureStore.getItemAsync(DEVICE_ID_STORE_KEY).catch(() => null),
     ]);
-    const hadStoredCredentials = Boolean(storedKey || storedDeviceId);
+    // A test account has no binding to recover: a refusal there (a wrong
+    // token's 404 included) must never sever this device's credentials.
+    const testFlow = hasTestAccountToken();
+    const hadStoredCredentials = !testFlow && Boolean(storedKey || storedDeviceId);
 
     let parsed: ParsedSignIn;
     try {
@@ -586,12 +719,89 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
     // Best-effort session-atom refresh. The recorder is what routing trusts.
     void authClient.getSession().catch(() => {});
 
+    // A brand-new account takes any plan the store account holds (owner: at
+    // mint and after a move only, never on resume). It runs once RevenueCat
+    // is identified as this account. Lazy: revenuecat is not needed here.
+    // A test account never takes the store plan.
+    if (parsed.minted && !testFlow) {
+      (require('@/lib/revenuecat') as typeof import('@/lib/revenuecat')).requestStorePurchasesSync(parsed.userId);
+    }
+
     return {
       status: 'success',
       userId: parsed.userId,
       trialAvailable: parsed.trialAvailable,
+      minted: parsed.minted,
     };
   } catch (error) {
     return classifyFailure(error);
+  }
+}
+
+// ─── Move to phone sign-in ───────────────────────────────────────────────────
+
+export type DeviceConvertStep = 'checking' | 'linking';
+
+const CONVERT_OK = ['converted', 'already-converted', 'bound', 'already-bound'] as const;
+type ConvertOk = (typeof CONVERT_OK)[number];
+
+export type DeviceConvertResult =
+  /** The move: the account is now bound to this phone and its email is gone
+   *  server side (`already-converted`: done before, on this or another phone;
+   *  treated the same). The silent bind (`bindOnly`): this phone is bound to
+   *  the account and the email is left alone. */
+  | { status: ConvertOk; supportId: string | null }
+  | { status: 'unsupported' }
+  /** Nothing changed. `step` is where it stopped: the phone check (nonce or
+   *  attestation) or the convert call itself. */
+  | { status: 'failed'; reason: DeviceSignInFailureReason; step: DeviceConvertStep };
+
+function parseConvert(data: unknown): Extract<DeviceConvertResult, { status: ConvertOk }> {
+  const body = data as { status?: unknown; supportId?: unknown } | null;
+  const status = CONVERT_OK.find((s) => s === body?.status);
+  if (!status) throw new ServerRejection('/device/convert', undefined, 'MALFORMED_CONVERT_RESPONSE');
+  return { status, supportId: typeof body?.supportId === 'string' ? body.supportId : null };
+}
+
+/**
+ * Move the SIGNED-IN account to this phone: the same nonce and attestation as
+ * a sign-in, posted to `/device/convert`. With `bindOnly` (the silent launch
+ * bind) the server only binds this phone and keeps the email. The server binds this phone to the
+ * account (rebinding a phone that belonged to another account, by owner
+ * decision), deletes the email and re-sets the session cookie for the same
+ * user, so nothing local is wiped. Never throws.
+ *
+ * No S10 refusal recovery here: a convert never severs a stored credential.
+ * The iOS key-local recoveries (invalid key, virgin key) still apply, since
+ * they only concern this phone's own key.
+ */
+export async function convertWithDevice(
+  onStep?: (step: DeviceConvertStep) => void,
+  { bindOnly = false }: { bindOnly?: boolean } = {},
+): Promise<DeviceConvertResult> {
+  let step: DeviceConvertStep = 'checking';
+  onStep?.(step);
+  try {
+    const flow = await pickFlow({
+      kind: 'convert',
+      bindOnly,
+      onPost: () => {
+        step = 'linking';
+        onStep?.(step);
+      },
+    });
+    if (!flow) return { status: 'unsupported' };
+    return parseConvert((await flow()).data);
+  } catch (error) {
+    // A server without the route yet (deploys land server first, same day):
+    // temporary, retried, and not worth a Sentry event.
+    if (error instanceof ServerRejection && error.status === 404) {
+      logger.warn('[device-auth] convert route missing', { path: error.path });
+      return { status: 'failed', reason: 'attestation-unavailable', step };
+    }
+    const result = classifyFailure(error, 'convert');
+    if (result.status === 'unsupported') return result;
+    if (result.status === 'failed') return { status: 'failed', reason: result.reason, step };
+    return { status: 'failed', reason: 'unknown', step };
   }
 }

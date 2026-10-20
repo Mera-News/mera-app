@@ -28,7 +28,6 @@
     "otpPlaceholder": "6 haneli kodu girin",
     "invalidEmailDescription": "Lütfen geçerli bir e-posta adresi girin",
     "networkError": "Ağ hatası. Lütfen tekrar deneyin.",
-    "sentTo": "Şu adrese bir kod gönderdik:",
     "invalidOtp": "Lütfen geçerli bir 6 haneli OTP kodu girin",
     "invalidOtpServer": "Geçersiz OTP kodu. Lütfen tekrar deneyin.",
     "otpError": "Doğrulama sırasında bir hata oluştu. Lütfen tekrar deneyin.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Tekrar dene",
     "identitySwitchSignOut": "Çıkış yap ve baştan başla",
     "deviceSignInWorking": "Giriş yapılıyor",
-    "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin veya e-posta ile giriş yapın.",
-    "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin veya e-posta ile giriş yapın.",
-    "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
+    "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin.",
+    "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin.",
     "tryAgain": "Tekrar dene",
     "learnAboutMera": "Mera'yı tanıyın",
-    "alreadyHaveAccount": "E-posta ile giriş yap",
     "continue": "Devam et",
     "sourceCode": "Kaynak kodu",
     "failedToSendBody": "OTP gönderilemedi",
     "signingYouIn": "Giriş yapılıyor…",
-    "signInWithoutEmail": "E-posta olmadan giriş yap",
+    "signInWithoutEmail": "Bu telefonla giriş yap",
     "differentAccount": {
-      "title": "E-posta olmadan giriş yapılsın mı?",
+      "title": "Bu telefonla giriş yapılsın mı?",
       "body": "Mera'nın bu telefonda {{email}} için tuttuğu her şeyi sileceğiz. Hesabın kendisi silinmez. Emin misin?",
       "continue": "Kaldır ve devam et",
       "useEmail": "Hesabımı koru",
       "bodyGeneric": "Mera'nın bu telefonda bu hesap için tuttuğu her şeyi sileceğiz. Hesabın kendisi silinmez. Emin misin?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Hesabınız bu telefona bağlıdır. Mera'yı silerseniz veya telefonu kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir.",
-      "reset": "Hesabınız bu telefona bağlıdır. Telefonu sıfırlarsanız veya kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir."
-    },
     "track": {
       "beforeYouStart": "Başlamadan önce",
-      "beginCaption": "Mera, bu telefonla giriş yapmanı sağlar. Hatırlanacak bir şey yok.",
+      "beginCaption": "E-posta, telefon numarası veya şifre yok. Hatırlanacak bir şey yok.",
       "beginMera": "Mera'yı başlat",
       "beginTitle": "Nasıl başlamak istersiniz?",
-      "beginWithoutEmail": "E-posta olmadan başla",
+      "beginWithoutEmail": "Bu telefonla giriş yap",
       "checkEmailTitle": "E-postanızı kontrol edin",
       "chooseLanguage": "Dilinizi seçin",
       "codeA11y": "6 haneli kod",
@@ -82,13 +75,25 @@
       "notHereTitle": "{{language}} henüz bu telefonda yok",
       "phoneLanguage": "Telefonunuzun dili",
       "sendCode": "Kodu gönder",
-      "sentTo": "{{email}} adresine 6 haneli bir kod gönderdik.",
       "useDifferentEmail": "Başka bir e-posta kullan",
       "welcome": "Mera'ya hoş geldiniz",
       "wrongCode": "Bu kod işe yaramadı. Kontrol edin ya da yeni bir kod isteyin.",
       "noSheetTitle": "iPhone'unuz indirmeyi açamadı",
-      "noSheetBody": "Tekrar deneyin ya da iPhone'unuzda Ayarlar'ı açın, ardından Genel, Dil ve Bölge, Çeviri Dilleri bölümüne gidip {{language}} dilini indirin."
-    }
+      "noSheetBody": "Tekrar deneyin ya da iPhone'unuzda Ayarlar'ı açın, ardından Genel, Dil ve Bölge, Çeviri Dilleri bölümüne gidip {{language}} dilini indirin.",
+      "sentToIfAccount": "Bu e-posta bir Mera hesabına aitse, ona bir kod gönderdik. Mera'da yeni misin? \"Bu telefonla giriş yap\"ı kullan.",
+      "noCodeUsePhone": "Kod gelmedi mi? \"Bu telefonla giriş yap\"ı kullan."
+    },
+    "emailLegacyHint": "Yalnızca daha önce e-postayla giriş yapanlar için. Yeni kullanıcılar artık e-posta ile devam edemez.",
+    "phoneCheckTemporary": "Bu telefon kontrol edilemedi. Bağlantını kontrol edip tekrar dene.",
+    "phoneUnsupportedAndroid": "Mera'nın seni giriş yaptırabilmesi için bu telefonda Google Play gerekir. Google Play olmayan telefonlar desteklenmiyor.",
+    "phoneUnsupportedIos": "Bu iPhone telefonla giriş yapamaz.",
+    "supportedPhones": "Desteklenen telefonlar",
+    "emailEnded": {
+      "title": "E-posta ile giriş sona erdi",
+      "bodyIos": "E-posta ile giriş {{date}} tarihinde sona erdi. Yeniden başlamak için bu telefonla giriş yap. Planın App Store'dan geri gelir, kaydettiğin makaleler de yedeğinden geri gelir.",
+      "bodyAndroid": "E-posta ile giriş {{date}} tarihinde sona erdi. Yeniden başlamak için bu telefonla giriş yap. Planın Google Play'den geri gelir, kaydettiğin makaleler de yedeğinden geri gelir."
+    },
+    "phoneNotSupported": "Bu telefon desteklenmiyor"
   },
   "account": {
     "contactSupport": "Destek ekibiyle görüşün"
@@ -523,12 +528,12 @@
     "exportHistoryEmptyDescription": "Son 30 gün içinde hiçbir makale okumadınız.",
     "keeps": {
       "title": "Mera sizinle ilgili neleri saklar",
-      "emailAndPlan": "E-postanız ve planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+      "emailAndPlan": "E-postanız, telefonla girişe geçene ya da 30 Ekim 2026'da silinene kadar, bir de planınız saklanır. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
       "plan": "Planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
-      "emailIfAdded": "Eklediyseniz e-postanız ve planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+      "emailIfAdded": "Planınız. Mera hiçbir zaman e-posta istemez, önceden eklenmiş her e-posta 30 Ekim 2026'da silinir. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
       "signInRecordIos": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "signInRecordAndroid": "Bu telefon için telefonunuzun kimliği olmayan, hesabınızla birlikte silinen bir giriş kaydı. Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
-      "signInRecordGeneric": "E-posta yoksa, bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
+      "signInRecordGeneric": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "usage": "Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), her gün bu telefona kaç makale gönderildiği, planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın. 90 gün saklanır. Girişlerde IP adresi veya tarayıcı bilgisi saklanmaz.",
       "topics": "Konu ifadeleri, yalnızca metinleriyle ve sizinle hiçbir bağlantı olmadan saklanır, 14 gün kullanılmazsa silinir.",
       "privacyLink": "Gizlilik politikasını okuyun"
@@ -572,11 +577,11 @@
     "contentPolicy": "İçerik Politikası",
     "faq": "SSS",
     "reportBug": "Hata bildir",
-    "deleteAccountConfirmGrace": "Hesabınız 30 günlük bir bekleme süresiyle silinmek üzere planlanır. Hesabınızın e-postası varsa, iptal etmek için bu 30 gün içinde onunla giriş yapın. E-postası olmayan bir hesaba tekrar giriş yapılamaz, bu yüzden silinmesi iptal edilemez.",
+    "deleteAccountConfirmGrace": "Hesabınız 30 günlük bir bekleme süresiyle silinmek üzere planlanır. Bu telefon bu hesaba bir daha giriş yapamaz. Bu geri alınamaz.",
     "deleteAccountWarningGrace": "⚠️ 30 gün sonra hesap verilerin kalıcı olarak kaldırılır. Faturalama kayıtları muhasebe için 7 yıl saklanır. Bu geri alınamaz.",
     "finalConfirmationBodyGrace": "Bu, hesabınızı 30 gün içinde kalıcı silme için planlar.",
     "accountDeletionScheduledTitle": "Silme Planlandı",
-    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek. E-postası varsa, iptal etmek için daha önce onunla giriş yapın."
+    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek."
   },
   "configPanel": {
     "factDeletedTitle": "Gerçek silindi",
@@ -728,7 +733,8 @@
     "mayMistakes": "Mera hata yapabilir, bu yüzden önemli haberleri kaynağından kontrol edin.",
     "cardWaitingHint": "Yukarıdan bir seçeneğe dokun ya da evet yaz",
     "cardCancelled": "Tamam, hiçbir şey değişmedi",
-    "changeUndone": "Geri alındı"
+    "changeUndone": "Geri alındı",
+    "cardTapHint": "Yukarıdan bir seçeneğe dokun."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Bu makaleyi beğendim: \"{{title}}\". Bunun gibi daha fazla öneri görmek isterim.",
@@ -882,12 +888,9 @@
     "activatedTitle": "{{plan}} aktif",
     "planPending": "{{plan}} · etkinleştiriliyor",
     "perMonth": "/ay",
-    "starterFreeTitle": "Starter kullanıyorsunuz, ücretsiz",
-    "starterFreeBody": "Her hesap, tam Starter planını ücretsiz içerir: tüm ilgi alanların, sohbet, doğruluk kontrolleri ve takip ettiğin haberler. İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır.",
     "analysedForYou": "Mera tarafından okundu",
     "available24h": "Kullanılabilir, son 24 saat",
     "discarded": "Atılan",
-    "localOnly": "Mera'nın zaten tuttuklarından bu telefonda hesaplandı. Ayrıca hiçbir şey kaydedilmez.",
     "promoEndsNoRenew": "Promosyon erişimi · {{date}} tarihinde biter, yenilenmez",
     "relevantSoFar": "Şimdiye kadar ilgili",
     "billedAppStore": "Ödeme App Store üzerinden alınır. İstediğiniz zaman Apple hesabınızdan iptal edebilirsiniz.",
@@ -897,7 +900,13 @@
     "confirmTimeoutTitle": "Satın alımınız henüz onaylanamadı",
     "confirmTimeoutBody": "Ödeme yaptıysanız destek ekibimize ulaşın, sorunu çözelim.",
     "checkAgain": "Tekrar kontrol et",
-    "readingExplainer": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Planın, Mera'nın bulutta her gün ne kadar okuyacağını belirler: Başlangıç 10 MB, Bireysel 50 MB, Profesyonel 200 MB. Mera, okumayı uçtan uca şifreleme üzerinden yapar, bu yüzden hangi haberleri ya da kaç tane okuduğunu göremez. Bu nedenle planlar haber sayısıyla değil, megabayt (MB) ile ölçülür. Desteklenen telefonlarda, telefonda okuma her planda sınırsızdır."
+    "invoicesAppStore": "Mera sana e-posta gönderemez, bu yüzden makbuzlarını ve faturalarını Apple, Apple Hesabındaki e-postaya gönderir.",
+    "invoicesPlayStore": "Mera sana e-posta gönderemez, bu yüzden makbuzlarını Google Play, Google Hesabındaki e-postaya gönderir.",
+    "planBack": "Planın geri geldi.",
+    "restoreNoneApple": "Bu Apple Hesabında plan bulunamadı.",
+    "restoreNoneGoogle": "Bu Google Hesabında plan bulunamadı.",
+    "restoreFailedAppStore": "App Store'a ulaşılamadı. Tekrar dene.",
+    "restoreFailedPlayStore": "Google Play'e ulaşılamadı. Tekrar dene."
   },
   "tabs": {
     "deck": "Akış",
@@ -1550,9 +1559,9 @@
     "retry": "Tekrar Dene",
     "welcomeBody": "Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmek için \"Kabul et ve devam et\"e dokunun.",
     "deviceNotice": {
-      "appAttest": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Apple, bunun gerçek bir iPhone'daki gerçek Mera uygulaması olduğunu onaylar. Hesabınız olduğu sürece bir giriş kaydı saklarız.",
-      "playIntegrity": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Google, bunun gerçek bir Android telefondaki gerçek Mera uygulaması olduğunu onaylar. Telefonunuzun kimliğini değil, bir giriş kaydı saklarız.",
-      "generic": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Hesabınız olduğu sürece bu telefon için bir giriş kaydı saklarız."
+      "appAttest": "Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Apple, bunun gerçek bir iPhone'daki gerçek Mera uygulaması olduğunu onaylar. Hesabınız olduğu sürece bir giriş kaydı saklarız.",
+      "playIntegrity": "Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Google, bunun gerçek bir Android telefondaki gerçek Mera uygulaması olduğunu onaylar. Telefonunuzun kimliğini değil, bir giriş kaydı saklarız.",
+      "generic": "Mera bu telefonla oturumunuzu açar. Hesabınız olduğu sürece bu telefon için bir giriş kaydı saklarız."
     }
   },
   "tutorials": {
@@ -1848,7 +1857,7 @@
             "body": "Başlıca şeyler ve her birinin neden dışarı çıktığı.",
             "steps": {
               "0": "Kısa konu ifadeleri, böylece hikayelerle eşleşecek bir şey var.",
-              "1": "Nasıl giriş yaptığınız, e-postayla veya bu telefonla, ve hangi planda olduğunuz.",
+              "1": "Giriş yöntemin, bu telefon (ya da 30 Ekim 2026'ya kadar, daha önce kalmış bir e-posta) ve hangi planda olduğun.",
               "2": "Telefonunun istediği makaleler ve Mera'nın senin için okunmak üzere gönderdiği şifreli metin, planını uygulamak için günlük olarak sayılır."
             },
             "ask": "Uygulama sunucularınıza ne gönderiyor?"
@@ -1867,7 +1876,7 @@
           },
           "what-we-keep": {
             "headline": "Ne tuttuğumuz",
-            "body": "Eklediysen giriş e-postan. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Mera'yı e-posta olmadan kullanıyorsan, bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
+            "body": "Yalnızca daha önce e-postayla giriş yapmış bir hesabın e-postası, 30 Ekim 2026'da silinir. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
             "ask": "Mera sunucularında benim hakkımda ne saklıyor?"
           }
         }
@@ -2221,20 +2230,6 @@
     "mailFailedBody": "Destek adresimizi kopyala ve herhangi bir e-posta uygulamasından bize yaz.",
     "copyAddress": "Adresi kopyala"
   },
-  "emailCapture": {
-    "title": "E-postanı ekle",
-    "subtitle": "Makbuzları e-postayla al ve telefon değiştirirsen hesabını kurtar.",
-    "continue": "Devam",
-    "notNow": "Şimdi değil",
-    "confirm": "Onayla",
-    "added": "E-posta eklendi",
-    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak.",
-    "skip": "E-posta olmadan devam et",
-    "skipTitle": "E-posta olmadan devam edilsin mi?",
-    "skipBody1": "E-posta olmadan hesabınız başka bir platforma taşınamaz. iOS ile Android arasında geçiş yaparsanız orada yeni bir hesapla başlarsınız.",
-    "skipBody2": "Destek, satın alımınızı yalnızca destek kimliğinizle bulabilir. Kopyalayın ve güvenli bir yerde saklayın.",
-    "skipConfirm": "Ödemeye devam et"
-  },
   "videoPlayer": {
     "closeA11y": "Videoyu kapat",
     "openInBrowser": "Tarayıcıda aç",
@@ -2418,7 +2413,6 @@
     "removing": "İstediğin şeyi kaldırıyorum",
     "asking": "Sana bir soru soruyorum",
     "working": "Üzerinde çalışıyorum",
-    "slow": "Hâlâ sürüyor, bağlantı yavaş",
     "legCapSentence": "Bu, Mera'nın bir seferde yapabileceğinden fazla adım gerektirdi. Devam etmek için tekrar sor.",
     "interrupted": "Bu yarıda kaldı. Devam etmek için tekrar sor.",
     "summaryFailed": "Bir şey çalışmadı",
@@ -2438,7 +2432,6 @@
     "noProposalSentence": "Mera bundan ekleyecek bir şey bulamadı.",
     "unknownToolSentence": "Mera tarafında bir şeyler ters gitti. Devam etmek için tekrar sor.",
     "malformedChoiceSentence": "Mera seçenekleri gösteremedi. Devam etmek için tekrar sor.",
-    "boxTitle": "Mera çalışıyor",
     "doneInSteps_one": "{{count}} adımda tamamlandı",
     "doneInSteps_other": "{{count}} adımda tamamlandı",
     "doneInStepsShow_one": "{{count}} adımda tamamlandı, adımları göster",
@@ -2457,9 +2450,7 @@
     "interests": "ilgi alanlarını",
     "origin": "nereli olduğunu",
     "family": "aileni",
-    "feedTuning": "akışını",
-    "followStory": "takip edilecek bir haberi",
-    "factCheck": "kontrol edilecek bir iddiayı"
+    "feedTuning": "akışını"
   },
   "askChoice": {
     "answeredA11y": "zaten yanıtlandı",
@@ -2498,10 +2489,10 @@
       "Telefonun yanıt vermeye hazırlanıyor."
     ],
     "deviceThinking": [
-      "Telefonunda düşünülüyor. Hiçbir şey cihazından çıkmaz."
+      "Telefonunda düşünülüyor."
     ],
     "webSearch": [
-      "Cihazından web'de aranıyor…"
+      "Mera'nın sunucusu üzerinden web'de aranıyor…"
     ]
   },
   "savedExport": {
@@ -2534,7 +2525,8 @@
     },
     "stories": {
       "privacy": "Takip ettiğiniz hikayeler bu telefonda tutulur."
-    }
+    },
+    "sourcesLink": "Mera'nın okuduğu tüm kaynakları görün"
   },
   "articleMenu": {
     "openA11y": "Diğer işlemler",
@@ -2679,11 +2671,10 @@
       "privacy": "Mera aramalarınızı hesabınızla ilişkilendirmez."
     },
     "explainer": {
-      "country1": "Bir ülkenin kendi yayıncıları bir haber hakkında ne kadar çok yazarsa, o haber o kadar üst sıralarda çıkar.",
-      "countrySame": "Bu sayfa herkes için aynıdır. Burada sizinle ilgili hiçbir şey kullanılmaz.",
-      "same": "Dünya herkes için aynıdır. Burada sizinle ilgili hiçbir şey kullanılmaz.",
-      "top1": "Birçok ülkede, birçok farklı yayıncının yazdığı haberler en üstte çıkar. Tek bir hareketli ülke sayfayı dolduramaz ve bir yayıncıdan gelen çok sayıda makale tek sayılır.",
-      "window": "Zaman anahtarı sayfanın ne kadar geriye baktığını belirler: 6, 12, 24 ya da 48 saat. Her liste yalnızca o aralıkta yayımlanan makaleleri sayar."
+      "window": "Zaman anahtarı sayfanın ne kadar geriye baktığını belirler: 6, 12, 24 ya da 48 saat. Her liste yalnızca o aralıkta yayımlanan makaleleri sayar.",
+      "justMath": "Sadece matematik. Bu sayfayı hiçbir yapay zeka sıralamaz ve herkes için aynı görünür.",
+      "mathWorld": "Bir haberi ele alan her ülke habere 1 puan verir. O ülkedeki her ek yayıncı için biraz daha eklenir, ama her ülke en fazla 4 puanla sınırlıdır. Tüm ülkeler toplanır ve en yüksek toplam en üstte yer alır.",
+      "mathCountry": "Bu ülkenin yayıncılarının son 24 saatte bir habere dair yazdığı makaleleri sayın. En çok makalesi olan haber en üstte yer alır."
     }
   },
   "library": {
@@ -2784,8 +2775,6 @@
     "settings": {
       "yourPlan": "Planınız",
       "usageOffline": "Kullanım çevrimiçi olduğunuzda görünür",
-      "addEmail": "E-posta ekleyin",
-      "addEmailHint": "İsteğe bağlı. Yalnızca hesabınızı ve planınızı başka bir telefona taşımak ya da Mera'nın e-postalarını almak isterseniz.",
       "appLock": "Uygulama kilidi",
       "backupOff": "Yedekleme kapalı",
       "backupOn": "Yedekleme açık",
@@ -2795,7 +2784,6 @@
       "developerOn": "Geliştirici modu açık",
       "groupGeneral": "Genel",
       "groupPrivacy": "Gizlilik ve güvenlik",
-      "noEmailNeeded": "E-posta gerekmez.",
       "observabilityHint": "Hata ayıklama için cihaz üzerindeki veritabanında ne var",
       "off": "Kapalı",
       "on": "Açık",
@@ -2810,11 +2798,10 @@
       "resetsTodayAt": "Bugün {{time}} saatinde sıfırlanır",
       "resetsTomorrowAt": "Yarın {{time}} saatinde sıfırlanır",
       "lastUpdated": "Son güncelleme: {{time}}",
-      "onDeviceUnlimited": "Telefonda okuma: sınırsız",
-      "readingOnPhone": "Mera bu telefonda okuyor.",
       "newPlanApplies": "Yeni planın hemen geçerli.",
-      "planMultiplierBase": "Günde 10 MB bulut okuması",
-      "planMultiplier": "Günde {{mb}} MB bulut okuması, Başlangıç'ın {{n}}x okuması"
+      "restorePurchases": "Satın alımları geri yükle",
+      "processingMode": "İşleme modu",
+      "unlimited": "Sınırsız"
     },
     "notifications": {
       "push": "Anlık bildirimler",
@@ -2926,6 +2913,29 @@
     "relevance": "En iyi eşleşme",
     "oldest": "Eski olanlar ilk",
     "newest": "Yeni olanlar ilk"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Bunun yerine bu telefonla giriş yap",
+    "dialogBody": "Bu telefonla giriş yapmanı sağlayacağız, hesabını bu telefona taşıyacağız ve e-postanı veritabanımızdan sileceğiz.",
+    "dialogSettingsHint": "{{date}} tarihine kadar bunu Ayarlar'dan yapabilirsin.",
+    "confirm": "Hesabı taşı",
+    "cancel": "Şimdi değil",
+    "progressTitle": "Hesabın bu telefona taşınıyor",
+    "steps": {
+      "checking": "Bu telefon kontrol ediliyor",
+      "linking": "Hesabın bağlanıyor",
+      "removing": "E-postan kaldırılıyor",
+      "done": "Tamam"
+    },
+    "failed": "Bu işlem tamamlanamadı. Hesabın hâlâ çalışıyor. Birazdan tekrar dene.",
+    "unsupportedIos": "Bu telefon telefonla giriş yapamaz, bu yüzden Mera {{date}} tarihinde bu telefonda çalışmayı bırakır. Mera için ödeme yapıyorsan, bundan önce planını App Store'dan iptal et.",
+    "unsupportedAndroid": "Bu telefon telefonla giriş yapamaz, bu yüzden Mera {{date}} tarihinde bu telefonda çalışmayı bırakır. Mera için ödeme yapıyorsan, bundan önce planını Google Play'den iptal et.",
+    "success": "Bu telefonla giriş yapıldı. E-postan silindi.",
+    "close": "Kapat",
+    "inboxTitle": "E-posta ile giriş {{date}} tarihinde sona eriyor",
+    "inboxBody": "Hesabını korumak için telefonla girişe geç.",
+    "settingsRow": "Telefonla girişe geç",
+    "settingsRowHint": "E-posta ile giriş {{date}} tarihinde sona eriyor."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

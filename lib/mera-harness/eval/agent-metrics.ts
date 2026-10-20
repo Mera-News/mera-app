@@ -84,7 +84,7 @@ export function routeOutcomes(turns: readonly TurnRows[]): RouteOutcome[] {
   const out: RouteOutcome[] = [];
   for (const t of turns) {
     const last = t.legs[t.legs.length - 1];
-    if (!last) continue;
+    if (!last || last.expectedRouteKind === null) continue;
     const actual = last.routeKind;
     out.push({
       cohort: t.cohort,
@@ -106,7 +106,7 @@ export function skillOutcomes(
   const out: { expectedSkill: string; loaded: string | null; routeCorrect: boolean }[] = [];
   for (const t of turns) {
     const last = t.legs[t.legs.length - 1];
-    if (!last) continue;
+    if (!last || last.expectedSkill === null) continue;
     out.push({
       expectedSkill: last.expectedSkill,
       loaded: last.skillLoaded,
@@ -233,7 +233,7 @@ export function legReport(
       continue;
     }
     const expect = expectFor(t.scriptId, t.turnIndex);
-    if (!expect) continue;
+    if (!expect || expect.legs === undefined) continue;
     if (t.endedOn === 'leg_cap' && expect.legs < 4) {
       cappedBelowExpectation.push({
         scriptId: t.scriptId,

@@ -64,6 +64,8 @@ export interface PageExplainer {
   readonly chapter?: ChapterId;
   /** The card in that chapter; absent: its first. */
   readonly slide?: string;
+  /** Ends the card with a link to the public list of every source Mera reads. */
+  readonly sourcesLink?: boolean;
 }
 
 export interface PageMeta {
@@ -88,6 +90,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       titleKey: 'feed.forYouTitle',
       paragraphKeys: ['explainer.feed.p1', 'explainer.feed.p2', 'tabExplainer.feed.privacy'],
       chapter: 'feed',
+      sourcesLink: true,
     },
   },
   stories: {
@@ -108,8 +111,9 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       titleKey: 'sources.topHeadlines',
       // 'world.explainer.window' (the time switch) is out while WorldPages' window chip is
       // commented out; put it back with the chip.
-      paragraphKeys: ['world.explainer.top1', 'world.explainer.same'],
+      paragraphKeys: ['world.explainer.justMath', 'world.explainer.mathWorld'],
       chapter: 'explore',
+      sourcesLink: true,
     },
   },
   saved: { tab: 'library', labelKey: 'nav.page.saved', keepMounted: false, explainer: null },
@@ -136,8 +140,9 @@ const COUNTRY_PAGE_META: PageMeta = {
   explainer: {
     titleKey: 'sources.topHeadlines',
     // 'world.explainer.window' returns with the window chip (see PAGE_META.world).
-    paragraphKeys: ['world.explainer.country1', 'world.explainer.countrySame'],
+    paragraphKeys: ['world.explainer.justMath', 'world.explainer.mathCountry'],
     chapter: 'explore',
+    sourcesLink: true,
   },
 };
 

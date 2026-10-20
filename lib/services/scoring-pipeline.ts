@@ -79,7 +79,12 @@ import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/c
 import { useUserStore } from '@/lib/stores/user-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { hydrateReadHold, isReadHeld } from '@/lib/subscription/read-hold';
+import {
+  hydrateReadHold,
+  isReadHeld,
+  readHoldEndsAt,
+  subscribeReadHold,
+} from '@/lib/subscription/read-hold';
 import {
   discardLowRelevance,
   fetchResults,
@@ -395,6 +400,10 @@ let pollerTimer: ReturnType<typeof setInterval> | null = null;
  *  `pollerTimer` so start/stop/reset can clear both unambiguously. */
 let pollerKickTimer: ReturnType<typeof setTimeout> | null = null;
 let appStateSub: { remove: () => void } | null = null;
+/** While the poller is parked under the read hold: the hold-cleared subscription
+ *  and the one-shot wake at the hold end. See parkPollerWhileHeld. */
+let holdUnsub: (() => void) | null = null;
+let holdWakeTimer: ReturnType<typeof setTimeout> | null = null;
 let pollTickRunning = false;
 /** Consecutive runPollerTick throws; reset on any clean tick. See
  *  POLLER_FAILURE_ABORT_THRESHOLD. Reset by _resetForTests. */
@@ -3097,8 +3106,37 @@ function stopPollerTimer(): void {
   }
 }
 
+/** Held with nothing in flight: there is nothing to poll or submit, and every
+ *  tick re-reads the run (SQLite + keychain), so stop ticking until the hold
+ *  ends. A plan rise clears it early and emits; expiry emits nothing, so one
+ *  timer wakes the poller at the hold end. A foreground return ticks once and
+ *  parks again. */
+function parkPollerWhileHeld(): void {
+  stopPollerTimer();
+  holdUnsub ??= subscribeReadHold(() => {
+    if (isReadHeld()) return;
+    unparkPoller();
+    ensurePoller();
+  });
+  holdWakeTimer ??= setTimeout(
+    () => {
+      unparkPoller();
+      ensurePoller();
+    },
+    Math.max(0, (readHoldEndsAt() ?? 0) - Date.now()) + 1,
+  );
+}
+
+function unparkPoller(): void {
+  holdUnsub?.();
+  holdUnsub = null;
+  if (holdWakeTimer) clearTimeout(holdWakeTimer);
+  holdWakeTimer = null;
+}
+
 function stopPoller(): void {
   stopPollerTimer();
+  unparkPoller();
   if (appStateSub) {
     appStateSub.remove();
     appStateSub = null;
@@ -3126,13 +3164,17 @@ async function runPollerTick(): Promise<void> {
   if (pollTickRunning) return;
   pollTickRunning = true;
   try {
-    const status = await getPipelineStatus();
-    if (status === 'idle') {
+    const snap = await getPipeline();
+    if (!snap || snap.run.batches.every((b) => isTerminal(b.phase))) {
       stopPoller();
       return;
     }
     if (AppState.currentState !== 'active') {
       stopPollerTimer();
+      return;
+    }
+    if (isReadHeld() && !snap.run.batches.some((b) => isInFlight(b.phase))) {
+      parkPollerWhileHeld();
       return;
     }
     await pollTick('foreground');
@@ -3489,6 +3531,7 @@ export function _resetForTests(): void {
     clearInterval(pollerTimer);
     pollerTimer = null;
   }
+  unparkPoller();
   if (appStateSub) {
     appStateSub.remove();
     appStateSub = null;

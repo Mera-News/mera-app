@@ -1,0 +1,202 @@
+{
+  "en": {
+    "chatPhases": {
+      "webSearch": [
+        "Searching the web through Mera’s server…"
+      ],
+      "deviceThinking": [
+        "Thinking it through on your phone."
+      ]
+    }
+  },
+  "ar": {
+    "chatPhases": {
+      "webSearch": [
+        "جارٍ البحث في الويب عبر خادم ميرا…"
+      ],
+      "deviceThinking": [
+        "جارٍ التفكير على هاتفك."
+      ]
+    }
+  },
+  "de": {
+    "chatPhases": {
+      "webSearch": [
+        "Suche im Web über den Server von Mera…"
+      ],
+      "deviceThinking": [
+        "Wird auf deinem Handy durchdacht."
+      ]
+    }
+  },
+  "es": {
+    "chatPhases": {
+      "webSearch": [
+        "Buscando en la web a través del servidor de Mera…"
+      ],
+      "deviceThinking": [
+        "Pensándolo en tu teléfono."
+      ]
+    }
+  },
+  "fr": {
+    "chatPhases": {
+      "webSearch": [
+        "Recherche sur le web via le serveur de Mera…"
+      ],
+      "deviceThinking": [
+        "Réflexion sur votre téléphone."
+      ]
+    }
+  },
+  "hi": {
+    "chatPhases": {
+      "webSearch": [
+        "मेरा के सर्वर से होकर वेब पर खोजा जा रहा है…"
+      ],
+      "deviceThinking": [
+        "आपके फ़ोन पर सोचा जा रहा है।"
+      ]
+    }
+  },
+  "id": {
+    "chatPhases": {
+      "webSearch": [
+        "Mencari di web melalui server Mera…"
+      ],
+      "deviceThinking": [
+        "Memikirkannya di ponsel Anda."
+      ]
+    }
+  },
+  "it": {
+    "chatPhases": {
+      "webSearch": [
+        "Ricerca sul web tramite il server di Mera…"
+      ],
+      "deviceThinking": [
+        "Ci penso sul tuo telefono."
+      ]
+    }
+  },
+  "ja": {
+    "chatPhases": {
+      "webSearch": [
+        "メラのサーバー経由でウェブを検索しています…"
+      ],
+      "deviceThinking": [
+        "スマホで考えています。"
+      ]
+    }
+  },
+  "ko": {
+    "chatPhases": {
+      "webSearch": [
+        "메라 서버를 통해 웹을 검색하는 중…"
+      ],
+      "deviceThinking": [
+        "휴대폰에서 생각하는 중입니다."
+      ]
+    }
+  },
+  "nl": {
+    "chatPhases": {
+      "webSearch": [
+        "Op het web zoeken via de server van Mera…"
+      ],
+      "deviceThinking": [
+        "Wordt op je telefoon overdacht."
+      ]
+    }
+  },
+  "pl": {
+    "chatPhases": {
+      "webSearch": [
+        "Szukam w internecie przez serwer Mera…"
+      ],
+      "deviceThinking": [
+        "Przemyślam to na Twoim telefonie."
+      ]
+    }
+  },
+  "pt-BR": {
+    "chatPhases": {
+      "webSearch": [
+        "Pesquisando na web pelo servidor da Mera…"
+      ],
+      "deviceThinking": [
+        "Pensando no seu celular."
+      ]
+    }
+  },
+  "ru": {
+    "chatPhases": {
+      "webSearch": [
+        "Ищем в интернете через сервер Мера…"
+      ],
+      "deviceThinking": [
+        "Обдумываем на вашем телефоне."
+      ]
+    }
+  },
+  "th": {
+    "chatPhases": {
+      "webSearch": [
+        "กำลังค้นหาบนเว็บผ่านเซิร์ฟเวอร์ของเมร่า…"
+      ],
+      "deviceThinking": [
+        "กำลังคิดบนโทรศัพท์ของคุณ"
+      ]
+    }
+  },
+  "tr": {
+    "chatPhases": {
+      "webSearch": [
+        "Mera'nın sunucusu üzerinden web'de aranıyor…"
+      ],
+      "deviceThinking": [
+        "Telefonunda düşünülüyor."
+      ]
+    }
+  },
+  "uk": {
+    "chatPhases": {
+      "webSearch": [
+        "Шукаємо в інтернеті через сервер Мера…"
+      ],
+      "deviceThinking": [
+        "Обмірковуємо на вашому телефоні."
+      ]
+    }
+  },
+  "vi": {
+    "chatPhases": {
+      "webSearch": [
+        "Đang tìm trên web qua máy chủ của Mera…"
+      ],
+      "deviceThinking": [
+        "Đang suy nghĩ trên điện thoại của bạn."
+      ]
+    }
+  },
+  "zh-CN": {
+    "chatPhases": {
+      "webSearch": [
+        "正在通过梅拉的服务器搜索网页…"
+      ],
+      "deviceThinking": [
+        "正在手机上思考。"
+      ]
+    }
+  },
+  "zh-TW": {
+    "chatPhases": {
+      "webSearch": [
+        "正在透過梅拉的伺服器搜尋網頁…"
+      ],
+      "deviceThinking": [
+        "正在手機上思考。"
+      ]
+    }
+  }
+}

@@ -8,19 +8,21 @@ import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, recent
 import { pointsBack, renderRecentBlock, subjectsOf, withExchange } from './back-reference';
 import { brandRule, buildRouterPrompt, fixBrandSpelling, voiceRules, type PersonaSurface } from './router-prompt';
 import {
+  asksForLess,
   claimsChangeHappened,
   claimsSaveHappened,
   cleanProse,
   comparableStatement,
   declaresNothingToAdd,
   endAtLastSentence,
+  isAcknowledgement,
   isPlainNo,
   isPlainYes,
   leaksInternals,
   narratesProcess,
   trailingQuestion,
 } from './prose';
-import { isLocationKey, isRelationalStatement, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
+import { interestSubject, isInterestKey, isLocationKey, isNegativeInterest, isNotInterested, isRelationalStatement, isSeeLessOffer, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
 import {
   CANONICAL_LOCATION_KEY,
   EXPAT_KEY,
@@ -87,6 +89,21 @@ export const MAX_AGENT_LEGS = 4;
 const CLOSING_LINE_NOTE =
   'You offered the card above. Nothing is saved until the user taps it. '
   + 'Write ONE short sentence to the user about what you offered. Do not ask a question. Do not call a tool.';
+
+/** The tool-free leg after an offer that was already a card on screen. */
+const WAITING_CARD_NOTE =
+  'What they asked for is already on the card waiting above, and only their tap adds it. '
+  + 'Write ONE short sentence telling them to tap Add on that card. Do not say it is done. Do not call a tool.';
+
+/** The tool-free leg after an acknowledgement (or a plain yes with no
+ *  question outstanding) beside a waiting fact card (owner ruling: it applies
+ *  nothing, Mera points at the card). Without it "thanks" pointed at the card
+ *  in only 2 of 8 runs (stagefix2), and once a skill-body line shipped as the
+ *  whole reply to "ok". */
+const ACK_WAITING_CARD_NOTE =
+  'Their message only acknowledges. Nothing was saved or applied, and the fact card waiting above is added only by their tap. '
+  + 'Write ONE short sentence, in the language of their message, that acknowledges them and points them to the card above. '
+  + 'Do not say anything is done. Do not call a tool.';
 
 /**
  * THE ABOUT-MERA ANSWER LEG (hindifix F). Pushed AFTER the explainMera result,
@@ -700,6 +717,36 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
   /** True for the ONE forced leg. */
   let forcingProposalNow = false;
+  /** A message that only acknowledges states no fact (a typed yes resuming a
+   *  question is not one: its subject is the question's). */
+  const onlyAcknowledges = isAcknowledgement(userMessage) && !resumedSkill;
+  /** A see-less request (stop, less, mute, hide): a filter, never a fact card.
+   *  A typed ok resuming the question asked after one carries its subject. */
+  const seeLess = asksForLess(userMessage) || (resumedSkill && asksForLess(turn.lastUserMessage ?? ''));
+  /** "No new card" is the answer: an acknowledgement, an explicit empty save
+   *  on a see-less request or beside a waiting card, or an offer that was a
+   *  card still waiting on screen. Never forced after it: a forced leg after "stop showing me
+   *  cricket" invented "No longer follows cricket news" as a replace of an
+   *  unrelated fact. */
+  let noOfferIsTheAnswer = onlyAcknowledges;
+  /** Waiting cards by their compared form, so the note quotes them as shown. */
+  const waitingCards = new Map(pendingCardList.map((s) => [s.trim().toLowerCase(), s]));
+  /** A waiting card that is a REWORDING of `statement` (the near-twin rule,
+   *  with its guards: never a home, and the subject must agree): stagefix2
+   *  staged "Follows the NASA Artemis lunar program" beside the waiting
+   *  "Follows NASA's Artemis lunar program". Two Amsterdam districts share
+   *  most words and are two homes; "Father teaches in Bhopal" is not the
+   *  user's "Teaches in Bhopal". */
+  const waitingTwinOf = (statement: string): string | undefined => {
+    const a = comparableStatement(statement);
+    return pendingCardList.find((card) => {
+      if (/^lives in\b/i.test(card.trim()) || !mayReplace(statement, card)) return false;
+      const b = comparableStatement(card);
+      return contentJaccard(a, b) >= NEAR_TWIN_JACCARD || isSubsetTopic(a, b) || isSubsetTopic(b, a);
+    });
+  };
+  /** One closing leg per turn points at a waiting card, whichever path asked. */
+  let pointedAtCardThisTurn = false;
   /** Everything a forced offer may draw its subject from: this message, the
    *  question it answers and the message that question followed, a tapped
    *  chip, the places looked up this turn, and the facts on file (the loop's
@@ -749,6 +796,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       && isFactSkill(skillLoaded)
       && !proposedSomething
       && !forcingProposalNow
+      && !noOfferIsTheAnswer
     ) {
       forcingProposalNow = true;
       forcedProposal = true;
@@ -770,7 +818,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // still failed the proposal test. Keying only on `proposedSomething`
       // makes every correct refusal look broken.
       terminalReason =
-        proposedSomething || answeredTheUser
+        proposedSomething || answeredTheUser || noOfferIsTheAnswer
           ? 'settled'
           : forcedProposal
             ? 'no-proposal'
@@ -1018,9 +1066,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
 
     let sawContinuationTool = false;
+    /** This leg's whole forced offer was negative interests, all dropped. */
+    let settleOnProse = false;
     let terminatedByChoice = false;
     /** A card was staged on this leg: like ask_choice, it ends the turn. */
     let terminatedByCard = false;
+    /** This leg's offer was a card already waiting (see the save handler). */
+    let pointedAtWaitingCard = false;
 
     for (let call of result.toolCalls) {
       let args = parseArgs(call.argumentsRaw);
@@ -1321,6 +1373,25 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           .map(asThirdPersonFact)
           .flatMap((e) => expandCombinedEntry(e, placeCandidates))
           .map(withExactKey);
+        // AN EXPLICIT EMPTY SAVE ON A SEE-LESS REQUEST, OR BESIDE A WAITING
+        // CARD, IS THE SKILL'S ANSWER: facts/interest offers nothing for "I
+        // stopped following X", and beside a waiting Artemis card a forced leg
+        // after "follow this" staged "Follows the Artemis program" (stagefix2).
+        // Anywhere else it is often a placeholder (measured: "I'm originally
+        // from India and I live in Berlin now" saved [] and wrote nothing), so
+        // the forced leg still rescues it.
+        // Beside a card, only a message that says nothing new or points back
+        // makes it final: on device every untapped card waits, and a genuine
+        // new fact beside an unrelated one still needs the rescue.
+        if (
+          !forcingProposalNow
+          && (seeLess || (pendingCardList.length > 0
+            && (onlyAcknowledges || isPlainYes(userMessage) || pointsBack(userMessage))))
+          && Array.isArray(args.extracted_user_information)
+          && args.extracted_user_information.length === 0
+        ) {
+          noOfferIsTheAnswer = true;
+        }
         // A HOME THE MODEL DID NOT LOOK UP is looked up by the loop, once:
         // an unresolved "Nieuw-West, Amsterdam" has no country, so it can
         // anchor nothing and carries no expat status. Only when the country is
@@ -1382,6 +1453,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // have to land HERE or they are cosmetic. Same failure shape as
         // `runAgentTurn` having no callers and `legCapped` being hardcoded.
         const sanitised: Record<string, unknown>[] = [];
+        /** Offers dropped because that card is still waiting on screen. */
+        const alreadyWaiting: string[] = [];
+        let droppedNegativeOffer = false;
         // ONE CURRENT HOME PER TURN. The model offered "Lives in Porto,
         // Portugal, EU" and "Lives in Porto, Porto, Portugal, EU" as two
         // Replace cards on device (ux1 C1). Within a call the richest chain
@@ -1422,6 +1496,21 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // answer (navx2-fu). Precision first: ONE shared subject word with
           // anything the user or Mera said this exchange keeps the entry.
           if (groundForcedOffer && forcingProposalNow && !namesSomethingSaid(statement, groundingText())) continue;
+          // A NEGATIVE INTEREST IS NEVER OFFERED on a see-less turn, forced
+          // or not ("Does not want The Hindu included in news updates" after
+          // "Mute The Hindu"): stop, less, mute and hide are a filter, not a
+          // fact (owner ruling), so ANY negative or reduced interest goes,
+          // interest word or not ("Not a fan of cricket"). Elsewhere only a
+          // forced leg's is dropped, by the narrow predicate ("Avoids gluten"
+          // is a fact), and "Not interested in X" stays: the user said it.
+          if (
+            seeLess
+              ? isSeeLessOffer(statement)
+              : forcingProposalNow && isNegativeInterest(statement) && !isNotInterested(statement)
+          ) {
+            droppedNegativeOffer = true;
+            continue;
+          }
           // A RE-PROPOSAL. find_similar_facts showed the model this exact
           // statement as something already on file; offering it back is a
           // duplicate card, and on device it read as a "confirmation" of a
@@ -1440,7 +1529,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // twice in one call — got two identical cards, both blocking the
           // composer. Measured from TestFlight: two "Which one did you mean?"
           // cards offering the same two readings of the same Bhopal fact.
-          if (proposedStatements.has(statement.toLowerCase())) {
+          // A rewording of a card still waiting counts as that card.
+          const waiting = waitingCards.get(statement.toLowerCase())
+            ?? (isHomeEntry(entry) ? undefined : waitingTwinOf(statement));
+          if (proposedStatements.has(statement.toLowerCase()) || waiting !== undefined) {
+            if (waiting !== undefined && !alreadyWaiting.includes(waiting)) alreadyWaiting.push(waiting);
             reProposals++;
             continue;
           }
@@ -1460,7 +1553,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // move take two confirmations for one decision. The chip is still
           // required for anything ELSE: a replace across keys is a judgement
           // the user has to make before the card, not on it.
-          const sameKey = !!replaceTarget && sameAttributeKey(entryAttribute, replaceTarget.attribute);
+          // A MULTI-VALUED INTEREST KEY is not consent on its own: a person holds
+          // many facts under `topics`, and "No longer follows cricket news" was
+          // offered as a replace of "Follows the war in Ukraine" on the key
+          // alone. There the new fact must name the old one's subject, its interest verb aside.
+          const sameKey = !!replaceTarget
+            && sameAttributeKey(entryAttribute, replaceTarget.attribute)
+            && (!isInterestKey(entryAttribute)
+              || namesFact(interestSubject(statement), interestSubject(replaceTarget.statement)));
           let replaces = wantsReplace && (turn.resolvedChoice || sameKey) ? wantsReplace : null;
           // THE OLD COMBINED FACT GOES WITH ITS OWN ORIGIN HALF. An origin element
           // offered while a combined origin-and-home fact is on file replaces it
@@ -1613,6 +1713,33 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           offeredThisTurn.push(statement.toLowerCase());
         }
         if (sanitised.length > 0) proposedSomething = true;
+        // THE OFFER IS ALREADY A CARD ON SCREEN ("follow this" after the card
+        // that offers it). The port is not called: its empty-list answer reads
+        // as `staged: true`, and the next leg said "I'm on it". The model is
+        // told to point at the card, on a closing leg (below).
+        if (sanitised.length === 0 && alreadyWaiting.length > 0) {
+          noOfferIsTheAnswer = true;
+          pointedAtWaitingCard = true;
+          const out = { staged: false, alreadyWaiting };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          continue;
+        }
+        // NOTHING LEFT BUT DROPPED NEGATIVE INTERESTS: the port is not called
+        // (its empty-list answer reads as staged) and the turn settles on the
+        // prose written so far. With none (a resumed turn's silent first leg
+        // has no acknowledgement either) the next leg writes it, unforced.
+        // After the waiting-card branch, so a call that also re-offered a
+        // waiting card still points at it.
+        if (sanitised.length === 0 && droppedNegativeOffer) {
+          noOfferIsTheAnswer = true;
+          forcingProposalNow = false;
+          settleOnProse = reply.trim().length > 0;
+          const out = { staged: false };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          continue;
+        }
         const out = await deps.tools.saveExtractedFacts({
           extracted_user_information: sanitised,
           proposals,
@@ -1757,8 +1884,20 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       break;
     }
 
+    // POINTED AT A WAITING CARD: one tool-free leg that reads the note. On
+    // device the dropped offer came with prose written BEFORE the result
+    // ("Sounds good, I'm on it."), so settling on this leg ships that claim.
+    if (pointedAtWaitingCard) {
+      pointedAtCardThisTurn = true;
+      reply = '';
+      forcingProposalNow = false;
+      closingLegNow = true;
+      closingNote = WAITING_CARD_NOTE;
+      maxLegsThisTurn = Math.max(maxLegsThisTurn, nextLegIndex + 1 - formatRetries);
+      continue;
+    }
     if (sawContinuationTool) continue;
-    if (!legText.trim()) {
+    if (!legText.trim() && !settleOnProse) {
       // A leg that acted and said nothing owes the user a closing sentence, and
       // is given exactly ONE leg to write it. Unbounded, this is how a finished
       // turn walks to the cap: the proposal lands, the leg is silent, the loop
@@ -1799,6 +1938,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       isFactSkill(skillLoaded)
       && !proposedSomething
       && !forcingProposalNow
+      && !noOfferIsTheAnswer
       && !declaresNothingToAdd(cleanProse(reply))
     ) {
       forcingProposalNow = true;
@@ -1822,6 +1962,25 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       continue;
     }
 
+    // AN ACKNOWLEDGEMENT BESIDE A WAITING CARD points at the card, on one
+    // tool-free leg (owner ruling). A plain yes with NO question outstanding
+    // reads the same; a yes to a conversation question routes normally and
+    // keeps its answer (an older card can wait in the thread for days).
+    if (
+      !pointedAtCardThisTurn
+      && pendingCardList.length > 0
+      && !proposedSomething
+      && (onlyAcknowledges || (isPlainYes(userMessage) && !resumedSkill && lastQuestion === null))
+    ) {
+      pointedAtCardThisTurn = true;
+      reply = '';
+      forcingProposalNow = false;
+      closingLegNow = true;
+      closingNote = ACK_WAITING_CARD_NOTE;
+      maxLegsThisTurn = Math.max(maxLegsThisTurn, nextLegIndex + 1 - formatRetries);
+      continue;
+    }
+
     // ---- THE REPLY GATE -------------------------------------------------
     // Runs HERE and only here, so it sees the FINAL reply. An intermediate
     // leg's prose is overwritten by the next leg that produces content: 12 of
@@ -1834,7 +1993,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // claim. On a facts turn that has offered nothing, the fix is the offer
     // itself, not better wording: the forced leg runs instead of a re-ask.
     if (!leaksInternals(finalReply) && narratesProcess(finalReply)) {
-      if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow) {
+      if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow && !noOfferIsTheAnswer) {
         forcingProposalNow = true;
         forcedProposal = true;
         continue;
@@ -1917,6 +2076,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         closingNote = null;
         answeredTheUser = false;
         proposedSomething = false;
+        noOfferIsTheAnswer = onlyAcknowledges;
         reply = '';
         formatErrorNote = null;
         terminalReason = 'settled';

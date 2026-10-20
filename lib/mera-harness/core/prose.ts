@@ -435,6 +435,223 @@ export function isPlainYes(text: string): boolean {
   return PLAIN_YES.test(t);
 }
 
+/**
+ * A message that only acknowledges (owner ruling: ok, cool, thanks, nice,
+ * great and hmm only acknowledge, in every app language). It states no fact,
+ * so no forced offer runs on it: one put "Expat in The Netherlands" under
+ * "nice". WHOLE MESSAGE only, one or more of these phrases and nothing else
+ * ("ठीक है, धन्यवाद" is one; "ठीक है, इसे फॉलो करो" is not). A plain yes is
+ * not here: it resumes a question (`isPlainYes`).
+ */
+const ACK_PHRASES: readonly string[] = [
+  // en
+  'ok', 'okay', 'ok then', 'okay then', 'k', 'cool', 'nice', 'great', 'good', 'fine', 'alright', 'all right',
+  'got it', 'perfect', 'awesome', 'hmm', 'thanks', 'thank you', 'thx', 'ty', 'sounds good', 'thanks a lot',
+  'thanks so much', 'thank you so much', 'many thanks',
+  // ar
+  'حسنا', 'حسناً', 'تمام', 'طيب', 'اوكي', 'أوكي', 'شكرا', 'شكراً', 'شكرا جزيلا', 'شكراً جزيلاً', 'مشكور', 'مشكورا',
+  'ممتاز', 'رائع', 'جميل', 'فهمت',
+  // de
+  'danke', 'danke schön', 'danke dir', 'vielen dank', 'super', 'toll', 'gut', 'alles klar', 'klar', 'prima',
+  'perfekt', 'schön', 'passt', 'verstanden', 'hm',
+  // es
+  'vale', 'gracias', 'muchas gracias', 'genial', 'bien', 'perfecto', 'guay', 'de acuerdo', 'entendido', 'estupendo',
+  // fr
+  "d'accord", 'merci', 'merci beaucoup', 'génial', 'parfait', 'très bien', 'compris', 'entendu', 'top',
+  // hi
+  'ठीक है', 'ठीक', 'धन्यवाद', 'शुक्रिया', 'बढ़िया', 'बहुत बढ़िया', 'अच्छा', 'अच्छा है', 'बहुत अच्छा', 'समझ गया',
+  'समझ गई', 'सही है', 'ओके', 'थैंक्स', 'थैंक यू', 'हम्म',
+  // id
+  'oke', 'sip', 'makasih', 'terima kasih', 'terima kasih banyak', 'mantap', 'bagus', 'baik', 'keren', 'siap', 'paham',
+  // it
+  'va bene', 'grazie', 'grazie mille', 'perfetto', 'ottimo', 'bene', 'fantastico', 'capito',
+  // ja
+  'オッケー', 'ありがとう', 'ありがとうございます', 'どうも', '了解', '了解です', '了解しました', 'わかった',
+  'わかりました', 'いいね', 'すごい', 'なるほど',
+  // ko
+  '오케이', '알겠어', '알겠어요', '알겠습니다', '고마워', '고마워요', '감사합니다', '감사해요', '좋아', '좋아요', '좋네요',
+  // nl
+  'oké', 'oke', 'dank je', 'dank je wel', 'dankjewel', 'dank u', 'dank u wel', 'bedankt', 'mooi', 'leuk', 'goed',
+  'begrepen', 'helemaal goed',
+  // pl
+  'okej', 'dzięki', 'dziękuję', 'świetnie', 'fajnie', 'dobrze', 'rozumiem', 'spoko', 'jasne',
+  // pt-BR
+  'tá', 'tá bom', 'ta bom', 'beleza', 'obrigado', 'obrigada', 'muito obrigado', 'muito obrigada', 'valeu', 'legal',
+  'ótimo', 'perfeito', 'show', 'entendi', 'certo',
+  // ru
+  'ок', 'окей', 'хорошо', 'ладно', 'спасибо', 'большое спасибо', 'понятно', 'отлично', 'класс', 'супер', 'круто',
+  'ясно',
+  // th
+  'โอเค', 'ขอบคุณ', 'ขอบคุณครับ', 'ขอบคุณค่ะ', 'ครับ', 'ค่ะ', 'ดีมาก', 'เยี่ยม', 'เข้าใจแล้ว',
+  // tr
+  'tamam', 'teşekkürler', 'teşekkür ederim', 'sağ ol', 'sağol', 'harika', 'süper', 'güzel', 'anladım', 'peki',
+  // uk
+  'добре', 'гаразд', 'дякую', 'дуже дякую', 'зрозуміло', 'чудово', 'клас',
+  // vi
+  'được', 'được rồi', 'cảm ơn', 'cám ơn', 'cảm ơn bạn', 'tuyệt', 'tuyệt vời', 'hay', 'tốt', 'hiểu rồi',
+  // zh-CN
+  '好', '好的', '好吧', '行', '谢谢', '谢谢你', '多谢', '太好了', '不错', '明白了', '知道了', '收到', '嗯',
+  // zh-TW
+  '謝謝', '謝謝你', '多謝', '不錯', '了解',
+].map((p) => p.normalize('NFC'))
+  // Longest first, so "thank you" is taken before "thank" could be.
+  .sort((a, b) => b.length - a.length);
+
+/** Scripts written without spaces: a phrase there may run straight on. */
+const NO_SPACE_SCRIPT = /[\u0E00-\u0E7F\u3040-\u30FF\u3400-\u9FFF]$/;
+
+/** Emoji with their skin-tone, joiner and variation marks: "ok 👍" and a lone
+ *  "👍" acknowledge too. */
+const EMOJI = /[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u200D\uFE0F]/gu;
+
+export function isAcknowledgement(text: string): boolean {
+  const raw = (text ?? '').normalize('NFC').trim();
+  // A trailing "?" asks something ("ok?"), so only . ! ~ are peeled.
+  let t = raw.replace(EMOJI, ' ').toLowerCase()
+    .replace(/[.!。！~～\s]+$/u, '')
+    .replace(/\bhm+\b/g, (m) => (m.length > 2 ? 'hmm' : m))
+    .trim();
+  if (!t) return /\p{Extended_Pictographic}/u.test(raw);
+  // Peel known phrases off the front until nothing is left.
+  while (t) {
+    const p = ACK_PHRASES.find((x) => t.startsWith(x)
+      && (t.length === x.length || NO_SPACE_SCRIPT.test(x) || /^[\s,،、，]/.test(t.slice(x.length))));
+    if (!p) return false;
+    t = t.slice(p.length).replace(/^[\s,،、，.!。！]+/u, '');
+  }
+  return true;
+}
+
+/**
+ * A request to see less of something: a feed filter, never a fact (owner
+ * ruling: stop, less, mute and hide stage a filter). facts/interest offers
+ * nothing for it, and a forced leg after that empty answer invented "No
+ * longer follows cricket news". Phrases, never a bare "stop" or "less": "I no
+ * longer live in Paris" and "tengo menos de 30 años" state facts. "Not
+ * interested in X" is NOT here: owner ruling, it is a fact.
+ * Every app language, the way `pointsBack` reads them. PRECISION FIRST: a
+ * false hit makes an empty save final and drops a "Not interested" card, so a
+ * genuine fact is lost; a miss only leaves the old behaviour. Three tiers:
+ *  - phrases that only ever ask (`LESS_PHRASES`, whole words; substrings for
+ *    ja / ko / th / zh, whose words run together or take particles);
+ *  - a SINGLE verb that doubles as an adjective, a noun or another person
+ *    ("hide and seek", "I am mute", "mi pasión oculta"): only at the start of
+ *    a clause, after an optional please / can you (`LESS_LEAD`);
+ *  - the same verb at the END of a clause in a verb-final language ("The
+ *    Hindu ausblenden", "kriket haberlerini gizle") (`LESS_TAIL`).
+ */
+const ASKS_FOR_LESS = /\b(?:stop(?:ped)? (?:showing|sending|following)|(?:show|send|give) me (?:less|fewer|no)|see (?:less|fewer)|less of (?:this|that|these|those|it)|(?:don['’]?t|do not|never) (?:show|send) me|no longer follow\w*)\b/i;
+
+const LESS_PHRASES: readonly string[] = [
+  // ar
+  'أظهر أقل', 'اعرض أقل', 'توقف عن عرض', 'توقف عن إظهار', 'لا تعرض', 'لا تظهر', 'لا تُظهر',
+  'إلغاء المتابعة', 'ألغ المتابعة', 'إلغاء متابعة',
+  // de
+  'zeig mir weniger', 'zeige mir weniger', 'zeig weniger', 'weniger davon', 'nicht mehr zeigen', 'zeig mir keine',
+  'zeige mir keine', 'zeig keine', 'nicht mehr folgen',
+  // es
+  'muéstrame menos', 'muestra menos', 'menos noticias', 'deja de mostrar', 'deja de mostrarme', 'no me muestres',
+  'no muestres', 'dejar de seguir', 'deja de seguir',
+  // fr
+  'montre-moi moins', 'montre moins', 'arrête de montrer', 'arrête de me montrer', 'ne me montre plus',
+  'ne montre plus', 'ne me montre pas', 'mettre en sourdine', 'mets en sourdine', 'ne plus suivre', 'arrête de suivre',
+  // hi
+  'कम दिखाओ', 'कम दिखाएं', 'कम दिखाइए', 'दिखाना बंद', 'मत दिखाओ', 'मत दिखाना', 'मत दिखाएं', 'न दिखाएं',
+  'छिपाओ', 'छुपाओ', 'छिपा दो', 'छुपा दो', 'म्यूट करो', 'म्यूट कर दो', 'म्यूट करें', 'अनफ़ॉलो करो', 'अनफॉलो करो',
+  'अनफ़ॉलो कर दो', 'अनफॉलो कर दो', 'अनफ़ॉलो करें', 'अनफॉलो करें', 'फ़ॉलो करना बंद', 'फॉलो करना बंद',
+  // id
+  'tampilkan lebih sedikit', 'berhenti menampilkan', 'jangan tampilkan', 'jangan tunjukkan', 'berhenti mengikuti',
+  'batal ikuti', 'berhenti ikuti',
+  // it
+  'mostrami meno', 'mostra meno', 'smetti di mostrare', 'smetti di mostrarmi', 'non mostrarmi', 'non mostrare',
+  'smetti di seguire', 'non seguire più',
+  // nl
+  'laat minder', 'toon minder', 'minder van', 'minder over', 'niet meer tonen', 'laat geen', 'toon geen',
+  'niet meer volgen',
+  // pl
+  'pokazuj mniej', 'pokaż mniej', 'przestań pokazywać', 'nie pokazuj', 'przestań obserwować', 'przestań śledzić',
+  // pt-BR
+  'mostre menos', 'me mostre menos', 'mostra menos', 'pare de mostrar', 'para de mostrar', 'não mostre',
+  'não me mostre', 'deixar de seguir', 'deixe de seguir', 'pare de seguir', 'parar de seguir',
+  // ru
+  'показывай меньше', 'покажи меньше', 'меньше показывай', 'перестань показывать', 'не показывай', 'не показывать',
+  'перестань следить',
+  // tr
+  'daha az göster', 'göstermeyi bırak', 'sessize al', 'takibi bırak', 'takip etmeyi bırak', 'takipten çık',
+  // uk
+  'показуй менше', 'покажи менше', 'перестань показувати', 'не показуй', 'не показувати',
+  // vi
+  'hiển thị ít hơn', 'ngừng hiển thị', 'đừng hiển thị', 'đừng cho tôi xem', 'ẩn đi', 'tắt tiếng', 'bỏ theo dõi',
+  'ngừng theo dõi',
+].map((p) => p.normalize('NFC'));
+
+/** Single verbs, a request only at the start of a clause. */
+const LESS_LEAD: readonly string[] = [
+  'mute', 'hide', 'unfollow', "don't show", 'do not show', "don't send", 'do not send',
+  'أخف', 'اخف', 'إخفاء', 'كتم', 'اكتم',
+  'stummschalten', 'ausblenden', 'verbergen', 'entfolgen', 'blende', 'verberge',
+  'silenciar', 'silencia', 'ocultar', 'oculta', 'esconde', 'esconder',
+  'masquer', 'masquez', 'cacher', 'cachez',
+  'sembunyikan', 'bisukan',
+  'silenzia', 'nascondi', 'nascondere',
+  'dempen', 'demp', 'verberg', 'ontvolgen', 'ontvolg',
+  'wycisz', 'ukryj',
+  'скрой', 'скрыть', 'отпишись', 'отписаться',
+  'gizle',
+  'приховай', 'приховати', 'сховай', 'відпишись', 'відписатися',
+  'ẩn',
+].map((p) => p.normalize('NFC'));
+
+/** Verb-final languages put the same request at the END of the clause. Never
+ *  "verbergen": "Ich habe nichts zu verbergen" states a fact. */
+const LESS_TAIL: readonly string[] = [
+  'stummschalten', 'ausblenden', 'entfolgen', 'dempen', 'ontvolgen', 'gizle', 'gösterme',
+];
+
+/** Politeness and auxiliaries that may come before a clause-initial verb. */
+const LESS_PREFIX = /^(?:please|pls|plz|kindly|just|also|now|can you|could you|would you|will you|i want to|i'd like to|i would like to|i wanna|let's|por favor|puedes|podrías|bitte|kannst du|s'il te plaît|s'il vous plaît|stp|svp|peux-tu|pouvez-vous|per favore|puoi|potresti|proszę|пожалуйста|можешь|будь ласка|lütfen|tolong|alsjeblieft|alstublieft|kun je|làm ơn|hãy|من فضلك|لو سمحت|कृपया)\s+/u;
+const LESS_SUFFIX = /\s+(?:please|pls|bitte|por favor|s'il te plaît|stp|per favore|proszę|пожалуйста|lütfen|alsjeblieft|graag|tolong)$/u;
+
+const LESS_SUBSTRINGS: readonly string[] = [
+  // ja
+  '表示しないで', '表示を減らし', '見せないで', '非表示', 'ミュート', 'フォロー解除', 'フォローをやめ', '表示をやめ',
+  '表示するのをやめ',
+  // ko: the imperative only; "숨겨진" is "hidden"
+  '덜 보여', '적게 보여', '보여주지 마', '보여 주지 마', '표시하지 마', '그만 보여', '숨겨줘', '숨겨 줘', '숨겨주세요',
+  '숨겨 주세요', '음소거', '뮤트', '언팔로우', '팔로우 취소', '팔로우 해제',
+  // th: never a bare ซ่อน, which also starts "hide and seek" and "hidden"
+  'แสดงน้อยลง', 'ไม่ต้องแสดง', 'อย่าแสดง', 'หยุดแสดง', 'ช่วยซ่อน', 'ซ่อนข่าว', 'ซ่อนเรื่อง', 'ปิดเสียง', 'เลิกติดตาม',
+  // zh-CN
+  '少推', '少显示', '少给我看', '别再推', '不要再推', '别推', '不要显示', '别显示', '停止显示', '不要给我看',
+  '屏蔽', '静音', '取消关注', '不再关注',
+  // zh-TW
+  '少顯示', '別再推', '不要顯示', '別顯示', '停止顯示', '封鎖', '靜音', '取消關注', '取消追蹤', '不再追蹤',
+  '不再關注',
+];
+/** zh "hide", but not as the adjective before 的 ("隐藏的小餐馆"). */
+const ZH_HIDE = /[隐隱]藏(?!的)/u;
+
+export function asksForLess(text: string): boolean {
+  const raw = (text ?? '').normalize('NFC');
+  if (ASKS_FOR_LESS.test(raw)) return true;
+  const lower = raw.toLowerCase().replace(/’/g, "'");
+  if (LESS_SUBSTRINGS.some((p) => lower.includes(p)) || ZH_HIDE.test(lower)) return true;
+  const words = ` ${lower.split(/[\s,.!?;:"“”()।،]+/u).filter(Boolean).join(' ')} `;
+  if (LESS_PHRASES.some((p) => words.includes(` ${p} `))) return true;
+  return lower
+    .replace(/\bhide[- ]and[- ]seek\b/g, ' ')
+    .split(/[,.;:!?¿¡،。！？\n।]+/u)
+    .map((c) => c.trim().replace(/\s+/g, ' '))
+    .filter(Boolean)
+    .some((clause) => {
+      let c = clause;
+      for (let m = LESS_PREFIX.exec(c); m; m = LESS_PREFIX.exec(c)) c = c.slice(m[0].length);
+      c = c.replace(LESS_SUFFIX, '');
+      return LESS_LEAD.some((v) => c === v || c.startsWith(`${v} `))
+        || LESS_TAIL.some((v) => c === v || c.endsWith(` ${v}`));
+    });
+}
+
 const PLAIN_NO = /^(?:no|nope|nah|no thanks|no thank you|not really|not now|skip it|don'?t|do not)(?:[ ,]+(?:thanks|thank you))*[.!]*$/i;
 
 /** A plain no to Mera's last question, from the same closed register as

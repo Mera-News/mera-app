@@ -1,12 +1,12 @@
 import BetaBadge from '@/components/custom/BetaBadge';
 import { Text } from '@/components/ui/text';
 import { fetchUserReading } from '@/lib/billing-service';
-import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { formatClockTime } from '@/lib/subscription/clock-time';
-import { getPlanRaisedAt, tierMultiplier } from '@/lib/subscription/plan-rise';
+import { getPlanRaisedAt } from '@/lib/subscription/plan-rise';
 import { getReadHoldUpdatedAt, isReadHeld, useReadHold } from '@/lib/subscription/read-hold';
 import { useColors } from '@/lib/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,8 +18,8 @@ import { readingMeterModel } from './reading-meter-model';
  * mounted). `online` is whether that fetch answered; the hold itself is
  * written by `fetchUserReading` and read back by ReadingMeter.
  */
-export function useReadingFetch(tier: string | null | undefined): ReadingMeterProps {
-    const [reading, setReading] = useState<{ used: number | null; multiplier: number } | null>(null);
+export function useReadingFetch(): ReadingMeterProps {
+    const [used, setUsed] = useState<number | null>(null);
     // null until the first answer: unknown is drawn as online (the stored figure, no
     // "Last updated"), or every focus would flash the offline line before the fetch lands.
     const [online, setOnline] = useState<boolean | null>(null);
@@ -29,43 +29,51 @@ export function useReadingFetch(tier: string | null | undefined): ReadingMeterPr
             void fetchUserReading().then((r) => {
                 if (!live) return;
                 setOnline(r !== null);
-                setReading(r ? { used: r.readingUsed, multiplier: r.planMultiplier } : null);
+                setUsed(r ? r.readingUsed : null);
             });
             return () => {
                 live = false;
             };
         }, []),
     );
-    return { used: reading?.used ?? null, online: online !== false, multiplier: reading?.multiplier ?? tierMultiplier(tier) };
+    return { used, online: online !== false };
 }
 
 export interface ReadingMeterProps {
     /** The server's share used (0..1) from the latest answer; null when none. */
     used: number | null;
     online: boolean;
-    multiplier: number;
     size?: 'card' | 'screen';
 }
 
-/** Text only: the day's reading as a bar, when it resets, and what the plan means. */
-const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, multiplier, size = 'card' }) => {
+/** One line with a glyph: "Processing mode  [glyph] Private cloud". Read as one element, glyph hidden. */
+const GlyphRow: React.FC<{ icon: keyof typeof MaterialIcons.glyphMap; label?: string; value: string; testID?: string }> = ({ icon, label, value, testID }) => {
+    const colors = useColors();
+    return (
+        <View
+            testID={testID}
+            accessible
+            accessibilityLabel={label ? `${label}, ${value}` : value}
+            // Without a label the glyph and value sit under the mode's value, on the trailing side.
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: label ? undefined : 'flex-end', gap: 8 }}
+        >
+            {label ? <Text style={{ flex: 1, color: colors.ink2, fontSize: 14 }}>{label}</Text> : null}
+            <MaterialIcons name={icon} size={18} color={colors.ink} />
+            <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '600', flexShrink: 1 }}>{value}</Text>
+        </View>
+    );
+};
+
+/** The processing mode, then in the cloud the day's reading as a bar and when it resets; on device, unlimited. */
+const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, size = 'card' }) => {
     const { t, i18n } = useTranslation();
     const colors = useColors();
     const hold = useReadHold();
     const onDevice = useIsOnDeviceProcessing();
-    const [supported, setSupported] = useState(false);
     const [, tick] = useState(0);
 
-    useEffect(() => {
-        let live = true;
-        void checkRequirements().then((r) => live && setSupported(r.supported)).catch(() => {});
-        return () => {
-            live = false;
-        };
-    }, []);
-
-    // Expiry emits nothing, so while held, look again until the hold ends.
-    const held = isReadHeld();
+    // Expiry emits nothing, so while held, look again until the hold ends. On device is never held.
+    const held = !onDevice && isReadHeld();
     useEffect(() => {
         if (!held) return;
         const id = setInterval(() => {
@@ -84,13 +92,41 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, multiplier, s
         online,
         updatedAt: getReadHoldUpdatedAt(),
         onDevice,
-        onDeviceSupported: supported,
-        multiplier,
         planRaised: getPlanRaisedAt() != null,
     });
 
+    const modeRow = (
+        <GlyphRow
+            testID="reading-mode"
+            icon={m.mode === 'onDevice' ? 'smartphone' : 'cloud'}
+            label={t('you.settings.processingMode')}
+            value={m.mode === 'onDevice' ? t('you.settings.onThisPhone') : t('you.settings.privateCloud')}
+        />
+    );
+
+    // Checked before the offline-only line: on device needs no figure.
+    if (m.mode === 'onDevice') {
+        return (
+            <View testID="reading-meter" style={{ gap: 8 }}>
+                <View>
+                    {modeRow}
+                    {/* On this phone is in Beta (D30): the red subtext under its value. */}
+                    <View style={{ alignItems: 'flex-end' }}>
+                        <BetaBadge variant="subtext" testID="reading-on-phone-beta" />
+                    </View>
+                </View>
+                <GlyphRow testID="reading-unlimited" icon="all-inclusive" value={t('you.settings.unlimited')} />
+            </View>
+        );
+    }
+
     if (m.showOfflineOnly) {
-        return <Text style={{ color: colors.muted, fontSize: 13 }}>{t('you.settings.usageOffline')}</Text>;
+        return (
+            <View testID="reading-meter" style={{ gap: 8 }}>
+                {modeRow}
+                <Text style={{ color: colors.muted, fontSize: 13 }}>{t('you.settings.usageOffline')}</Text>
+            </View>
+        );
     }
 
     const lang = i18n?.language;
@@ -105,7 +141,8 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, multiplier, s
 
     return (
         <View testID="reading-meter" style={{ gap: 8 }}>
-            <View style={{ gap: 8, opacity: m.dimmed ? 0.5 : 1 }}>
+            {modeRow}
+            <View style={{ gap: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
                     <Text style={{ color: colors.ink, fontSize: size === 'screen' ? 16 : 14, fontWeight: '600', flexShrink: 1 }}>{title}</Text>
                     <Text testID="reading-percent" style={{ color: colors.ink2, fontSize: 13, fontVariant: ['tabular-nums'] }}>{percentText}</Text>
@@ -122,16 +159,6 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, multiplier, s
             <Text style={small}>{t(m.resetDay === 'today' ? 'you.settings.resetsTodayAt' : 'you.settings.resetsTomorrowAt', { time })}</Text>
             {m.lastUpdatedAt != null ? (
                 <Text style={small}>{t('you.settings.lastUpdated', { time: formatClockTime(m.lastUpdatedAt, lang) ?? '' })}</Text>
-            ) : null}
-            <Text style={small}>
-                {m.multiplierKey === 'base' ? t('you.settings.planMultiplierBase') : t('you.settings.planMultiplier', { mb: m.planMb, n: m.multiplier })}
-            </Text>
-            {m.showUnlimitedLine ? <Text style={small}>{t('you.settings.onDeviceUnlimited')}</Text> : null}
-            {m.showOnPhoneLine ? (
-                <View>
-                    <Text style={small}>{t('you.settings.readingOnPhone')}</Text>
-                    <BetaBadge variant="subtext" testID="reading-on-phone-beta" />
-                </View>
             ) : null}
             {m.showNewPlan ? <Text style={small}>{t('you.settings.newPlanApplies')}</Text> : null}
         </View>

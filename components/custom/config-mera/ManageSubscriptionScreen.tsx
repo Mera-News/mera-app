@@ -12,6 +12,7 @@ import { useSupportAction } from '@/lib/intercom';
 import { useColors } from '@/lib/theme/tokens';
 import ReadingMeter, { useReadingFetch } from './ReadingMeter';
 import { useManageSubscription } from './useManageSubscription';
+import { useRestorePurchases } from './useRestorePurchases';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 
 interface ManageSubscriptionScreenProps {
@@ -19,7 +20,11 @@ interface ManageSubscriptionScreenProps {
 }
 
 /**
- * Subscription details + actions: plan and daily article limit from our DB
+ * Manage plan, kept lean (owner): the plan and its one line, the usage card,
+ * the four numbers, View plans, Restore purchases, and for a store
+ * subscription the Customer Center and where it is billed.
+ *
+ * Subscription details + actions: plan and daily reading from our DB
  * (the source of truth), entitlement details and price from RevenueCat, and
  * the two RevenueCat UI flows (paywall to view/upgrade plans, Customer Center
  * to manage/cancel). Each data source degrades independently — a failed
@@ -32,6 +37,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const counts = useFeedCounts();
     const insets = useSafeAreaInsets();
     const { openSupport } = useSupportAction();
+    const { restoring, restore } = useRestorePurchases();
     const {
         priceString,
         loading,
@@ -77,8 +83,9 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
 
     // The plan's one line: "Promo access · ends 17 Oct, won't renew", "Renews
     // on ...", or "Expires on ..." (FinalSettings #4).
+    // A granted Starter (no store entitlement) says it is free; with no plan the title already does.
     const planLine: string | null = (() => {
-        if (!activeEntitlement) return isPaid ? t('subscription.active') : null;
+        if (!activeEntitlement) return !isPaid ? null : isPremium ? t('subscription.active') : t('subscription.freePlan');
         const date = formatDate(activeEntitlement.expirationDate);
         if (!date) return t('subscription.lifetime');
         if (activeEntitlement.store === 'PROMOTIONAL' && !activeEntitlement.willRenew) {
@@ -87,7 +94,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         return `${activeEntitlement.willRenew ? t('subscription.renewsOn') : t('subscription.expiresOn')} ${date}`;
     })();
 
-    const reading = useReadingFetch(effectiveTier);
+    const reading = useReadingFetch();
     const discarded = Math.max(0, counts.analysedCount - counts.relevantCount);
     const number = (n: number) => n.toLocaleString(i18n?.language);
 
@@ -153,16 +160,6 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             </View>
                         ) : null}
 
-                        {/* Keyed on `isPremium` (a real store entitlement), NOT
-                            the tier: the server reports `starter` for a granted
-                            account exactly as for a bought one. */}
-                        {!isPremium ? (
-                            <View testID="manage-starter-free" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-                                <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('subscription.starterFreeTitle')}</Text>
-                                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('subscription.starterFreeBody')}</Text>
-                            </View>
-                        ) : null}
-
                         {/* The plan, named once. */}
                         <View style={{ gap: 2, marginHorizontal: 4 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
@@ -175,7 +172,6 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
 
                         <View testID="manage-usage" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
                             <ReadingMeter size="screen" {...reading} />
-                            <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('subscription.readingExplainer')}</Text>
                         </View>
 
                         {/* The last 24 hours: the same four numbers the Feed's
@@ -188,7 +184,6 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             {tile(discarded, t('subscription.discarded'), 'manage-discarded')}
                             {tile(counts.relevantCount, t('subscription.relevantSoFar'), 'manage-relevant')}
                         </View>
-                        <Text style={{ color: colors.ink3, fontSize: 13, lineHeight: 18, marginHorizontal: 4 }}>{t('subscription.localOnly')}</Text>
 
                         <Pressable
                             testID="manage-view-plans"
@@ -206,6 +201,19 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             ]}
                         >
                             <Text style={{ color: confirming ? colors.ink3 : colors.onAccent, fontSize: 16, fontWeight: '600' }}>{t('subscription.viewPlans')}</Text>
+                        </Pressable>
+                        {/* Tertiary, under View plans. The testID predates the move from Settings. */}
+                        <Pressable
+                            testID="settings-row-restore-purchases"
+                            onPress={() => void restore()}
+                            disabled={restoring}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('you.settings.restorePurchases')}
+                            accessibilityState={{ busy: restoring, disabled: restoring }}
+                            style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                        >
+                            {restoring ? <Spinner size="small" /> : <MaterialIcons name="restore" size={18} color={colors.accentText} />}
+                            <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('you.settings.restorePurchases')}</Text>
                         </Pressable>
                         {/* Only with a store subscription: the Customer Center
                             opens onto nothing for a granted Starter account. */}

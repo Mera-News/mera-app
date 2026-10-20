@@ -1,0 +1,155 @@
+{
+  "en": {},
+  "ar": {
+    "you": {
+      "settings": {
+        "processingMode": "وضع المعالجة",
+        "unlimited": "غير محدود"
+      }
+    }
+  },
+  "de": {
+    "you": {
+      "settings": {
+        "processingMode": "Verarbeitungsmodus",
+        "unlimited": "Unbegrenzt"
+      }
+    }
+  },
+  "es": {
+    "you": {
+      "settings": {
+        "processingMode": "Modo de procesamiento",
+        "unlimited": "Ilimitado"
+      }
+    }
+  },
+  "fr": {
+    "you": {
+      "settings": {
+        "processingMode": "Mode de traitement",
+        "unlimited": "Illimité"
+      }
+    }
+  },
+  "hi": {
+    "you": {
+      "settings": {
+        "processingMode": "प्रोसेसिंग मोड",
+        "unlimited": "असीमित"
+      }
+    }
+  },
+  "id": {
+    "you": {
+      "settings": {
+        "processingMode": "Mode pemrosesan",
+        "unlimited": "Tanpa batas"
+      }
+    }
+  },
+  "it": {
+    "you": {
+      "settings": {
+        "processingMode": "Modalità di elaborazione",
+        "unlimited": "Illimitato"
+      }
+    }
+  },
+  "ja": {
+    "you": {
+      "settings": {
+        "processingMode": "処理モード",
+        "unlimited": "無制限"
+      }
+    }
+  },
+  "ko": {
+    "you": {
+      "settings": {
+        "processingMode": "처리 모드",
+        "unlimited": "무제한"
+      }
+    }
+  },
+  "nl": {
+    "you": {
+      "settings": {
+        "processingMode": "Verwerkingsmodus",
+        "unlimited": "Onbeperkt"
+      }
+    }
+  },
+  "pl": {
+    "you": {
+      "settings": {
+        "processingMode": "Tryb przetwarzania",
+        "unlimited": "Bez limitu"
+      }
+    }
+  },
+  "pt-BR": {
+    "you": {
+      "settings": {
+        "processingMode": "Modo de processamento",
+        "unlimited": "Ilimitado"
+      }
+    }
+  },
+  "ru": {
+    "you": {
+      "settings": {
+        "processingMode": "Режим обработки",
+        "unlimited": "Без ограничений"
+      }
+    }
+  },
+  "th": {
+    "you": {
+      "settings": {
+        "processingMode": "โหมดการประมวลผล",
+        "unlimited": "ไม่จำกัด"
+      }
+    }
+  },
+  "tr": {
+    "you": {
+      "settings": {
+        "processingMode": "İşleme modu",
+        "unlimited": "Sınırsız"
+      }
+    }
+  },
+  "uk": {
+    "you": {
+      "settings": {
+        "processingMode": "Режим обробки",
+        "unlimited": "Без обмежень"
+      }
+    }
+  },
+  "vi": {
+    "you": {
+      "settings": {
+        "processingMode": "Chế độ xử lý",
+        "unlimited": "Không giới hạn"
+      }
+    }
+  },
+  "zh-CN": {
+    "you": {
+      "settings": {
+        "processingMode": "处理模式",
+        "unlimited": "无限制"
+      }
+    }
+  },
+  "zh-TW": {
+    "you": {
+      "settings": {
+        "processingMode": "處理模式",
+        "unlimited": "無限制"
+      }
+    }
+  }
+}

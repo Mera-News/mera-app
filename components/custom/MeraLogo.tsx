@@ -172,8 +172,9 @@ interface LayeredProps {
     still: boolean;
 }
 
-/** The layered mark. Exported only for the P2 kit gallery's frozen tile (it
- *  passes `still`); everything else goes through `MeraLogo`. */
+/** The layered mark. Exported for the kit gallery's frozen tile and the chat
+ *  encryption strip, which keeps ONE tree and toggles `still`, so the cone
+ *  never jumps between legs; everything else goes through `MeraLogo`. */
 export const LayeredMark: React.FC<LayeredProps> = ({ size, color, cone, cards, still }) => {
     const active = useAnimationsActive();
     const motion = useMotionAllowed();

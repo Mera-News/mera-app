@@ -2,6 +2,7 @@
 // (NotificationsScreen) and the notice's button (NotifiedToast), so a notice
 // and its inbox row can never do different things.
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
+import { requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { markActioned, markRead } from '@/lib/database/services/notification-service';
 import logger from '@/lib/logger';
@@ -102,6 +103,9 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
         case 'review-hygiene':
             // The suggestions are cards at the top of the inbox.
             navigateToPage('notifications');
+            return;
+        case 'move-to-phone':
+            requestMoveToPhone();
             return;
         case 'review-plan':
             useFloatingChatStore.getState().openOptimisationPlan();

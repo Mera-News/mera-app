@@ -2,7 +2,6 @@ import { gql } from '@apollo/client';
 import client from './apollo-client';
 import { UserBillingInfo } from './generated/graphql-types';
 import logger from './logger';
-import { maybeRequestEmailCaptureAfterPurchase } from './subscription/email-capture';
 import { noteBillingTier } from './subscription/plan-rise';
 import { setReadHold } from './subscription/read-hold';
 
@@ -64,6 +63,10 @@ export async function fetchUserBillingLapseState(): Promise<UserBillingInfo | nu
         const { data } = await client.query<UserBillingResponse>({
             query: GET_USER_BILLING_LAPSE_STATE,
             fetchPolicy: 'no-cache',
+            // The error link runs before the catch below, so quiet needs both:
+            // the missing-fields code is a breadcrumb, and no error here is a
+            // Feed sync failure (lib/apollo-client.ts).
+            context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
         });
         return data?.userBilling ?? null;
     } catch {
@@ -113,6 +116,10 @@ export async function fetchUserReading(): Promise<UserReading | null> {
         const { data } = await client.query<{ userBilling: UserReading }>({
             query: GET_USER_READING,
             fetchPolicy: 'no-cache',
+            // The error link runs before the catch below, so quiet needs both:
+            // the missing-fields code is a breadcrumb, and no error here is a
+            // Feed sync failure (lib/apollo-client.ts).
+            context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
         });
         const reading = data?.userBilling ?? null;
         if (!reading) return null;
@@ -261,12 +268,6 @@ export async function refreshUserBillingAfterPurchase(
         if (billing) {
             latest = billing;
             if (purchaseConfirmed(billing, before, options.purchasedTier)) {
-                // This is the one chokepoint every purchase surface converges
-                // on, which is what makes it the email-at-purchase trigger: an
-                // anonymous (device sign-in) account that just paid is offered
-                // a real email for receipts and recovery. Fire-and-forget — an
-                // email nag must never delay or fail the purchase refresh.
-                void maybeRequestEmailCaptureAfterPurchase();
                 return { billing, confirmed: true };
             }
         }

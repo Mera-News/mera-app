@@ -202,6 +202,15 @@ export class StreamIdleError extends Error {
   }
 }
 
+/** The provider answered 2xx with an empty body: nothing to parse, and model
+ *  evidence like a stall (MERA-APP-8Q, twice in a row on the same model). */
+export class EmptyReplyError extends Error {
+  constructor() {
+    super('[CloudLLM] chat reply was empty');
+    this.name = 'EmptyReplyError';
+  }
+}
+
 /**
  * The provider returned a tool call in CLEAR (`delta.tool_calls` or
  * `message.tool_calls`), outside the E2EE envelope. Nothing proves the model

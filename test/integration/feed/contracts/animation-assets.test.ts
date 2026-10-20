@@ -13,6 +13,10 @@
 import fs from 'fs';
 import path from 'path';
 
+import {
+  CHAT_ANIMATIONS,
+  CHAT_ONE_SHOT_IDS,
+} from '@/components/custom/chat/animation-registry';
 import { PROCESSING_ANIMATIONS } from '@/components/custom/processing/animation-registry';
 import {
   GAME_ANIMATIONS,
@@ -36,15 +40,16 @@ const MAX_BYTES = 150 * 1024;
 // and stops, so the loop contract's 2.0-4.0 s band does not describe it; it is
 // held to 0.3-2.0 s instead, checked separately below.
 //
-// DERIVED from the kit registry's `GAME_REWARD_IDS` rather than retyped,
-// because that array is also what the `GameRewardId` type is pinned to. One
-// list, three readers: the type, this gate, and validate.py. Only the Python
-// copy is a hand-kept mirror, and it is the one a `tsc` run cannot reach.
+// DERIVED from the two registries' own lists rather than retyped: the game
+// registry's `GAME_REWARD_IDS` and the chat registry's `CHAT_ONE_SHOT_IDS`.
+// Each array is also what its id type is pinned to. One list, three readers:
+// the type, this gate, and validate.py. Only the Python copy is a hand-kept
+// mirror, and it is the one a `tsc` run cannot reach.
 //
 // An id in NEITHER list is validated as a loop and fails loud on duration, in
 // both languages. That is the designed failure: forgetting to declare a new
 // one-shot cannot silently pass under the relaxed band.
-const ONE_SHOT_IDS = new Set<string>(GAME_REWARD_IDS);
+const ONE_SHOT_IDS = new Set<string>([...GAME_REWARD_IDS, ...CHAT_ONE_SHOT_IDS]);
 const ONE_SHOT_LO = 0.3;
 const ONE_SHOT_HI = 2.0;
 
@@ -59,6 +64,9 @@ interface Bodymovin {
 
 const assetFiles = () =>
   fs.readdirSync(ASSET_DIR).filter((f) => f.endsWith('.json'));
+
+// Exact prefixes, never plain `chat-`: chat-where-mera-is.json is a tutorial hero.
+const isChatFile = (f: string) => f.startsWith('chat-strip-') || f.startsWith('chat-step-');
 
 const read = (file: string): Bodymovin =>
   JSON.parse(fs.readFileSync(path.join(ASSET_DIR, file), 'utf8')) as Bodymovin;
@@ -117,6 +125,19 @@ describe('animation assets — the registries point at real files', () => {
     expect(onDisk.sort()).toEqual(Object.keys(GAME_ANIMATIONS).sort());
   });
 
+  it('has every chat registry entry on disk', () => {
+    for (const id of Object.keys(CHAT_ANIMATIONS)) {
+      expect(fs.existsSync(path.join(ASSET_DIR, `${id}.json`))).toBe(true);
+    }
+  });
+
+  it('claims every chat-strip-/chat-step- file on disk in the registry', () => {
+    const onDisk = assetFiles()
+      .filter(isChatFile)
+      .map((f) => f.replace(/\.json$/, ''));
+    expect(onDisk.sort()).toEqual(Object.keys(CHAT_ANIMATIONS).sort());
+  });
+
   // The reward/loop split is by MEASURED duration, and the one-shot band was
   // written for a different reason (the asset contract) yet agrees with it
   // independently. That agreement is what makes the split worth asserting
@@ -139,6 +160,7 @@ describe('animation assets — the registries point at real files', () => {
       ...PROCESSING_STAGE_IDS.map((s) => `processing-${s}.json`),
       ...Object.keys(TUTORIAL_ANIMATIONS).map((id) => `${id}.json`),
       ...Object.keys(GAME_ANIMATIONS).map((id) => `${id}.json`),
+      ...Object.keys(CHAT_ANIMATIONS).map((id) => `${id}.json`),
     ]);
     expect(assetFiles().filter((f) => !claimed.has(f))).toEqual([]);
   });
@@ -149,10 +171,18 @@ describe('animation assets — the mechanical contract lines', () => {
     for (const file of assetFiles()) expect(() => read(file)).not.toThrow();
   });
 
-  it('every canvas is 1000 x 1000', () => {
+  // Exact id FIRST: the device strip shares the chat-strip- prefix.
+  const canvasFor = (file: string) => {
+    if (file === 'chat-strip-device.json') return [140, 160];
+    if (file.startsWith('chat-strip-')) return [1360, 160];
+    if (file.startsWith('chat-step-')) return [100, 100];
+    return [1000, 1000];
+  };
+
+  it('every canvas matches its family', () => {
     for (const file of assetFiles()) {
       const doc = read(file);
-      expect([file, doc.w, doc.h]).toEqual([file, 1000, 1000]);
+      expect([file, doc.w, doc.h]).toEqual([file, ...canvasFor(file)]);
     }
   });
 
@@ -220,6 +250,32 @@ describe('animation assets — the mechanical contract lines', () => {
 
   it('paints no full-canvas background, since the app shows its own through it', () => {
     const offenders: string[] = [];
+    const walk = (node: unknown, file: string, doc: Bodymovin) => {
+      if (Array.isArray(node)) {
+        for (const item of node) walk(item, file, doc);
+        return;
+      }
+      if (!node || typeof node !== 'object') return;
+      const obj = node as Record<string, any>;
+      if ((obj.ty === 'rc' || obj.ty === 'el') && Array.isArray(obj.s?.k)) {
+        const [w, h] = obj.s.k as number[];
+        if (w >= 0.9 * doc.w && h >= 0.9 * doc.h) offenders.push(`${file}: ${w}x${h}`);
+      }
+      for (const v of Object.values(obj)) walk(v, file, doc);
+    };
+    for (const file of assetFiles()) {
+      const doc = read(file);
+      walk(doc.layers, file, doc);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  // The app recolours chat layers with colorFilters keyed on layer name, so an
+  // unnamed drawn layer would stay the wrong colour in one theme. A matte source
+  // (td === 1) draws nothing and is exempt. An ANIMATED fill colour would fight
+  // the filter, so none may animate (c.a === 1).
+  it('themes every chat layer by role', () => {
+    const offenders: string[] = [];
     const walk = (node: unknown, file: string) => {
       if (Array.isArray(node)) {
         for (const item of node) walk(item, file);
@@ -227,13 +283,18 @@ describe('animation assets — the mechanical contract lines', () => {
       }
       if (!node || typeof node !== 'object') return;
       const obj = node as Record<string, any>;
-      if ((obj.ty === 'rc' || obj.ty === 'el') && Array.isArray(obj.s?.k)) {
-        const [w, h] = obj.s.k as number[];
-        if (w >= 900 && h >= 900) offenders.push(`${file}: ${w}x${h}`);
-      }
+      if ((obj.ty === 'fl' || obj.ty === 'st') && obj.c?.a === 1) offenders.push(`${file}: animated colour`);
       for (const v of Object.values(obj)) walk(v, file);
     };
-    for (const file of assetFiles()) walk(read(file).layers, file);
+    for (const file of assetFiles().filter(isChatFile)) {
+      const doc = read(file);
+      for (const l of doc.layers as { td?: number; nm?: string }[]) {
+        if (l.td !== 1 && !['ink', 'ink3', 'accent'].includes(l.nm ?? '')) {
+          offenders.push(`${file}: layer "${l.nm}"`);
+        }
+      }
+      walk(doc.layers, file);
+    }
     expect(offenders).toEqual([]);
   });
 });

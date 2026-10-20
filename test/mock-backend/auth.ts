@@ -167,6 +167,10 @@ export const authHandlers: RequestHandler[] = [
         signedIn({ trialAvailable: false, minted: false }),
     ),
     http.post('*/api/auth/device/attest/ios', () => HttpResponse.json({ ok: true })),
+    // Test accounts (dev builds only; the e2e release build never calls them).
+    http.post('*/api/auth/test-account/sign-in', () => signedIn({ trialAvailable: false, minted: false })),
+    http.post('*/api/auth/test-account/delete', () => HttpResponse.json({ status: 'deleted' })),
+    http.post('*/api/auth/test-account/list', () => HttpResponse.json({ accounts: [] })),
     http.post('*/api/auth/device/email/request', () => HttpResponse.json({ ok: true })),
     http.post('*/api/auth/device/email/confirm', async ({ request }) =>
         (await bodyOf(request)).otp === FIXTURE_ACCOUNT.otp

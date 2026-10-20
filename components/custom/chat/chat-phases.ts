@@ -39,35 +39,15 @@ export type PhaseDef = (typeof CHAT_PHASES)[number];
  * ITS POOL MUST STAY ENGINE-NEUTRAL. It is a cloud-ordered id, but the `idle`
  * view renders it on the on-device engine too, where a line mentioning
  * encryption or a server would be a false claim. The device honesty check in
- * `__tests__/chat-phases.test.ts` covers the three `device*` pools, so this
+ * `test/unit/chat/chat-phases.test.ts` covers the three `device*` pools, so this
  * one needs its own assertion and has one.
  */
 export const OPENING_PHASE_ID: ChatPhaseId = 'preparing';
 
-/**
- * The rotation rhythm, stated as the two numbers a reader actually cares about
- * rather than as one period they have to do arithmetic on.
- *
- * A sentence is fully legible for `PHASE_LINE_HOLD_MS`, then the swap to the
- * next one takes `PHASE_TRANSITION_MS` end to end: half fading the old line
- * out, half fading the new one in. `PHASE_CYCLE_MS` is derived, so changing
- * either number cannot leave the interval and the fade disagreeing.
- *
- * A full second of crossfade is unusually slow for a UI transition and that is
- * the point: this text is read, not glanced at, and a quick swap under a
- * reader's eye is what makes cycling copy feel like a flickering spinner.
- */
-export const PHASE_LINE_HOLD_MS = 2000;
-export const PHASE_TRANSITION_MS = 1000;
-/** Each half of the crossfade. */
-export const FADE_MS = PHASE_TRANSITION_MS / 2;
-/** Interval between swaps: the legible hold plus both halves of the fade. */
-export const PHASE_CYCLE_MS = PHASE_LINE_HOLD_MS + PHASE_TRANSITION_MS;
-
 export function chatPhaseDef(id: ChatPhaseId): PhaseDef {
   const found = CHAT_PHASES.find((p) => p.id === id);
   // Unreachable: `ChatPhaseId` is a closed union and the table is exhaustive
-  // over it, asserted in `__tests__/chat-phases.test.ts` ("the registry covers
+  // over it, asserted in `test/unit/chat/chat-phases.test.ts` ("the registry covers
   // every phase id").
   if (!found) throw new Error(`[chat-phase] unknown phase ${id}`);
   return found;
@@ -83,11 +63,51 @@ export { CHAT_PHASE_IDS };
  */
 export const WAIT_LINE_MAX_LINES = 3;
 
-/**
- * The wait row's text height: two lines of the wait line's 21pt line height.
- * `ChatPhaseLine` reserves it, and a STREAMING reply bubble holds at least it,
- * so the reply takes the wait row's slot without moving the thread at the
- * first token (ux1 C2).
- */
+/** The wait line's line height for most scripts (see `phaseLineHeight`). */
 export const WAIT_LINE_HEIGHT = 21;
-export const WAIT_ROW_TEXT_HEIGHT = WAIT_LINE_HEIGHT * 2;
+
+/**
+ * The wait line's line height per script. Devanagari and Thai stack marks
+ * above and below the line, and Arabic carries marks too, so 21pt clips them.
+ */
+const TALL_SCRIPT_LINE_HEIGHT: Readonly<Record<string, number>> = { hi: 25, th: 25, ar: 24 };
+
+export function phaseLineHeight(language: string): number {
+  return TALL_SCRIPT_LINE_HEIGHT[language.split('-')[0]] ?? WAIT_LINE_HEIGHT;
+}
+
+/** The strip's drawn height. It never scales vertically (width scales only
+ *  below 272pt), so every height below can assume it. */
+export const STRIP_HEIGHT = 32;
+/** The wait row's width: the 272pt strip plus the bubble's 14pt text insets. */
+export const WAIT_ROW_WIDTH = 272 + 28;
+const ROW_PAD = 8;
+const WORDS_GAP = 6;
+/** Lines reserved for the words: three under the cloud strip, two beside the
+ *  phone on device. */
+export const CLOUD_WORD_LINES = 3;
+export const DEVICE_WORD_LINES = 2;
+
+/**
+ * The wait row's height, which a streaming reply also holds so the thread
+ * never moves at the first token. Computed, never a constant: the words grow
+ * with the reader's text size and with the script.
+ *
+ * Cloud: pad + strip + [gap + 3 lines] + pad, so 117 with words and 48
+ * without at 1x in English. Device: one row, the phone beside two lines of
+ * words, so 58 at 1x.
+ */
+export function waitRowHeight(input: {
+  showWords: boolean;
+  engine: 'cloud' | 'local';
+  /** The effective text scale (OS font scale, capped, times the app's own). */
+  textScale: number;
+  language: string;
+}): number {
+  const line = phaseLineHeight(input.language) * input.textScale;
+  if (input.engine === 'local') {
+    return ROW_PAD * 2 + Math.max(STRIP_HEIGHT, DEVICE_WORD_LINES * line);
+  }
+  const words = input.showWords ? WORDS_GAP + CLOUD_WORD_LINES * line : 0;
+  return ROW_PAD * 2 + STRIP_HEIGHT + words;
+}

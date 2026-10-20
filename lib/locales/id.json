@@ -28,7 +28,6 @@
     "otpPlaceholder": "Masukkan kode 6 digit",
     "invalidEmailDescription": "Silakan masukkan alamat email yang valid",
     "networkError": "Kesalahan jaringan. Silakan coba lagi.",
-    "sentTo": "Kami telah mengirim kode ke",
     "invalidOtp": "Silakan masukkan kode OTP 6 digit yang valid",
     "invalidOtpServer": "Kode OTP tidak valid. Silakan coba lagi.",
     "otpError": "Terjadi kesalahan saat verifikasi. Silakan coba lagi.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Coba lagi",
     "identitySwitchSignOut": "Keluar dan mulai lagi",
     "deviceSignInWorking": "Sedang masuk",
-    "deviceSignInFailed": "Terjadi kesalahan. Coba lagi atau masuk dengan email.",
-    "deviceSignInDenied": "Kami tidak dapat memverifikasi perangkat ini. Coba lagi atau masuk dengan email.",
-    "deviceSignInUnavailable": "Login tidak tersedia saat ini. Coba lagi dalam beberapa menit atau masuk dengan email.",
+    "deviceSignInFailed": "Terjadi kesalahan. Coba lagi.",
+    "deviceSignInDenied": "Kami tidak dapat memverifikasi perangkat ini. Coba lagi.",
     "tryAgain": "Coba lagi",
     "learnAboutMera": "Pelajari Mera",
-    "alreadyHaveAccount": "Masuk dengan email",
     "continue": "Lanjutkan",
     "sourceCode": "Kode sumber",
     "failedToSendBody": "Gagal mengirim kode OTP",
     "signingYouIn": "Sedang masuk…",
-    "signInWithoutEmail": "Masuk tanpa email",
+    "signInWithoutEmail": "Masuk dengan ponsel ini",
     "differentAccount": {
-      "title": "Masuk tanpa email?",
+      "title": "Masuk dengan ponsel ini?",
       "body": "Kami akan menghapus semua yang disimpan Mera di ponsel ini untuk {{email}}. Akunnya sendiri tidak dihapus. Yakin?",
       "continue": "Hapus dan lanjutkan",
       "useEmail": "Simpan akun saya",
       "bodyGeneric": "Kami akan menghapus semua yang disimpan Mera di ponsel ini untuk akun ini. Akunnya sendiri tidak dihapus. Yakin?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Akun Anda terikat ke ponsel ini. Jika Anda menghapus Mera atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda.",
-      "reset": "Akun Anda terikat ke ponsel ini. Jika Anda mereset atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda."
-    },
     "track": {
       "beforeYouStart": "Sebelum Anda mulai",
-      "beginCaption": "Mera memasukkan Anda dengan ponsel ini. Tidak ada yang perlu diingat.",
+      "beginCaption": "Tanpa email, nomor ponsel, atau kata sandi. Tidak ada yang perlu diingat.",
       "beginMera": "Mulai Mera",
       "beginTitle": "Bagaimana Anda ingin memulai?",
-      "beginWithoutEmail": "Mulai tanpa email",
+      "beginWithoutEmail": "Masuk dengan ponsel ini",
       "checkEmailTitle": "Periksa email Anda",
       "chooseLanguage": "Pilih bahasa Anda",
       "codeA11y": "Kode 6 digit",
@@ -82,13 +75,25 @@
       "notHereTitle": "{{language}} belum ada di ponsel ini",
       "phoneLanguage": "Bahasa ponsel Anda",
       "sendCode": "Kirim kode",
-      "sentTo": "Kami telah mengirim kode 6 digit ke {{email}}.",
       "useDifferentEmail": "Gunakan email lain",
       "welcome": "Selamat datang di Mera",
       "wrongCode": "Kode itu tidak berhasil. Periksa lagi, atau kirim kode baru.",
       "noSheetTitle": "iPhone Anda tidak membuka unduhan",
-      "noSheetBody": "Coba lagi, atau buka Pengaturan di iPhone Anda, lalu Umum, lalu Bahasa & Wilayah, lalu Bahasa Terjemahan untuk mengunduh {{language}}."
-    }
+      "noSheetBody": "Coba lagi, atau buka Pengaturan di iPhone Anda, lalu Umum, lalu Bahasa & Wilayah, lalu Bahasa Terjemahan untuk mengunduh {{language}}.",
+      "sentToIfAccount": "Jika email ini punya akun Mera, kami sudah mengirimkan kodenya. Baru di Mera? Gunakan “Masuk dengan ponsel ini”.",
+      "noCodeUsePhone": "Tidak menerima kode? Gunakan “Masuk dengan ponsel ini”."
+    },
+    "emailLegacyHint": "Hanya untuk yang dulu masuk dengan email. Pengguna baru tidak bisa lagi masuk dengan email.",
+    "phoneCheckTemporary": "Ponsel ini tidak bisa diperiksa. Periksa koneksi Anda lalu coba lagi.",
+    "phoneUnsupportedAndroid": "Mera memerlukan Google Play di ponsel ini untuk memasukkan Anda. Ponsel tanpa Google Play tidak didukung.",
+    "phoneUnsupportedIos": "iPhone ini tidak bisa memakai masuk dengan ponsel.",
+    "supportedPhones": "Ponsel yang didukung",
+    "emailEnded": {
+      "title": "Masuk dengan email sudah berakhir",
+      "bodyIos": "Masuk dengan email berakhir pada {{date}}. Masuk dengan ponsel ini untuk mulai lagi. Paket Anda kembali dari App Store, dan artikel tersimpan Anda kembali dari cadangan.",
+      "bodyAndroid": "Masuk dengan email berakhir pada {{date}}. Masuk dengan ponsel ini untuk mulai lagi. Paket Anda kembali dari Google Play, dan artikel tersimpan Anda kembali dari cadangan."
+    },
+    "phoneNotSupported": "Ponsel ini tidak didukung"
   },
   "account": {
     "contactSupport": "Hubungi dukungan"
@@ -519,12 +524,12 @@
     "exportHistoryEmptyDescription": "Anda belum membaca artikel apa pun dalam 30 hari terakhir.",
     "keeps": {
       "title": "Yang disimpan Mera tentang Anda",
-      "emailAndPlan": "Email dan paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
+      "emailAndPlan": "Email Anda sampai Anda beralih ke masuk dengan ponsel atau sampai dihapus pada 30 Oktober 2026, dan paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
       "plan": "Paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
-      "emailIfAdded": "Email Anda jika Anda menambahkannya, dan paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
+      "emailIfAdded": "Paket Anda. Mera tidak pernah meminta email, dan email dari sebelumnya dihapus pada 30 Oktober 2026. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
       "signInRecordIos": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple bahwa ini aplikasi asli tidak disimpan.",
       "signInRecordAndroid": "Catatan masuk untuk ponsel ini, bukan ID ponsel Anda, dihapus bersama akun Anda. Pemeriksaan Google bahwa ini aplikasi asli tidak disimpan.",
-      "signInRecordGeneric": "Tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple atau Google bahwa ini aplikasi asli tidak disimpan.",
+      "signInRecordGeneric": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple atau Google bahwa ini aplikasi asli tidak disimpan.",
       "usage": "Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim ke ponsel ini setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera. Disimpan selama 90 hari. Proses masuk tidak menyimpan alamat IP atau detail browser.",
       "topics": "Frasa topik, disimpan hanya berdasarkan teksnya tanpa apa pun yang mengaitkannya dengan Anda, dan dihapus setelah 14 hari tidak dipakai.",
       "privacyLink": "Baca kebijakan privasi"
@@ -567,11 +572,11 @@
     "contentPolicy": "Kebijakan Konten",
     "faq": "FAQ",
     "reportBug": "Laporkan bug",
-    "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk dihapus, dengan masa tenggang 30 hari. Jika akun Anda punya email, masuklah dengan email itu dalam 30 hari tersebut untuk membatalkan. Akun tanpa email tidak bisa dimasuki lagi, jadi penghapusannya tidak bisa dibatalkan.",
+    "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk dihapus permanen setelah 30 hari. Ponsel ini tidak bisa masuk lagi ke akun ini. Tindakan ini tidak dapat dibatalkan.",
     "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, data akun Anda dihapus secara permanen. Catatan penagihan disimpan selama 7 tahun untuk pembukuan. Tindakan ini tidak dapat dibatalkan.",
     "finalConfirmationBodyGrace": "Ini menjadwalkan akun Anda untuk penghapusan permanen dalam 30 hari.",
     "accountDeletionScheduledTitle": "Penghapusan Dijadwalkan",
-    "accountDeletionScheduledDescription": "Akun Anda akan dihapus permanen dalam 30 hari. Jika akun punya email, masuklah dengan email itu sebelumnya untuk membatalkan."
+    "accountDeletionScheduledDescription": "Akun Anda akan dihapus permanen dalam 30 hari."
   },
   "configPanel": {
     "factDeletedTitle": "Fakta Dihapus",
@@ -723,7 +728,8 @@
     "mayMistakes": "Mera bisa membuat kesalahan, jadi periksa berita penting di sumbernya.",
     "cardWaitingHint": "Ketuk salah satu pilihan di atas, atau ketik ya",
     "cardCancelled": "Baik, tidak ada yang berubah",
-    "changeUndone": "Diurungkan"
+    "changeUndone": "Diurungkan",
+    "cardTapHint": "Ketuk salah satu pilihan di atas."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Saya suka artikel ini: \"{{title}}\". Saya ingin melihat lebih banyak saran seperti ini.",
@@ -877,12 +883,9 @@
     "activatedTitle": "{{plan}} aktif",
     "planPending": "{{plan}} · sedang diaktifkan",
     "perMonth": "/bulan",
-    "starterFreeTitle": "Anda memakai Starter, gratis",
-    "starterFreeBody": "Setiap akun mendapat paket Pemula lengkap tanpa biaya: semua minat Anda, chat, cek fakta, dan cerita yang diikuti. Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket.",
     "analysedForYou": "Dibaca oleh Mera",
     "available24h": "Tersedia, 24 jam terakhir",
     "discarded": "Dibuang",
-    "localOnly": "Dihitung di ponsel ini dari yang sudah disimpan Mera. Tidak ada yang dicatat tambahan.",
     "promoEndsNoRenew": "Akses promo · berakhir {{date}}, tidak diperpanjang",
     "relevantSoFar": "Relevan sejauh ini",
     "billedAppStore": "Ditagih melalui App Store. Batalkan kapan saja di akun Apple Anda.",
@@ -892,7 +895,13 @@
     "confirmTimeoutTitle": "Pembelian Anda belum bisa dikonfirmasi",
     "confirmTimeoutBody": "Jika Anda sudah membayar, hubungi dukungan dan kami akan membereskannya.",
     "checkAgain": "Periksa lagi",
-    "readingExplainer": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Paket Anda menentukan seberapa banyak Mera membaca di cloud setiap hari: Pemula 10 MB, Individu 50 MB, Profesional 200 MB. Mera membaca untuk Anda melalui enkripsi ujung-ke-ujung, jadi Mera tidak bisa melihat artikel mana saja yang dibacanya atau berapa banyak. Itu sebabnya paket diukur dalam megabyte, bukan artikel. Di ponsel yang didukung, membaca di ponsel tidak terbatas di semua paket."
+    "invoicesAppStore": "Mera tidak bisa mengirim email kepada Anda, jadi Apple mengirim kuitansi dan faktur ke email di Akun Apple Anda.",
+    "invoicesPlayStore": "Mera tidak bisa mengirim email kepada Anda, jadi Google Play mengirim kuitansi ke email di Akun Google Anda.",
+    "planBack": "Paket Anda sudah kembali.",
+    "restoreNoneApple": "Tidak ada paket di Akun Apple ini.",
+    "restoreNoneGoogle": "Tidak ada paket di Akun Google ini.",
+    "restoreFailedAppStore": "Tidak bisa menghubungi App Store. Coba lagi.",
+    "restoreFailedPlayStore": "Tidak bisa menghubungi Google Play. Coba lagi."
   },
   "tabs": {
     "deck": "Umpan",
@@ -1542,9 +1551,9 @@
     "retry": "Coba lagi",
     "welcomeBody": "Ketuk \"Setuju dan lanjutkan\" untuk menerima Ketentuan Layanan dan Kebijakan Privasi kami.",
     "deviceNotice": {
-      "appAttest": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Apple memastikan ini aplikasi Mera asli di iPhone asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk selama Anda punya akun.",
-      "playIntegrity": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Google memastikan ini aplikasi Mera asli di ponsel Android asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk, bukan ID ponsel Anda.",
-      "generic": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Kami menyimpan catatan masuk untuk ponsel ini selama Anda punya akun."
+      "appAttest": "Mera membuat Anda masuk dengan ponsel ini. Apple memastikan ini aplikasi Mera asli di iPhone asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk selama Anda punya akun.",
+      "playIntegrity": "Mera membuat Anda masuk dengan ponsel ini. Google memastikan ini aplikasi Mera asli di ponsel Android asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk, bukan ID ponsel Anda.",
+      "generic": "Mera membuat Anda masuk dengan ponsel ini. Kami menyimpan catatan masuk untuk ponsel ini selama Anda punya akun."
     }
   },
   "tutorials": {
@@ -1840,7 +1849,7 @@
             "body": "Hal-hal utamanya, dan mengapa masing-masing keluar.",
             "steps": {
               "0": "Frasa topik pendek, jadi ada sesuatu untuk mencocokkan cerita.",
-              "1": "Cara Anda masuk, lewat email atau ponsel ini, dan paket yang Anda pakai.",
+              "1": "Cara Anda masuk, yaitu ponsel ini (atau email dari sebelumnya sampai 30 Oktober 2026), dan paket yang Anda pakai.",
               "2": "Artikel yang diminta ponsel Anda, serta teks terenkripsi yang Mera kirim untuk dibaca bagi Anda, dihitung per hari untuk menerapkan paket Anda."
             },
             "ask": "Apa yang dikirim aplikasi ke server Anda?"
@@ -1859,7 +1868,7 @@
           },
           "what-we-keep": {
             "headline": "Apa yang kami simpan",
-            "body": "Email masuk Anda, jika Anda menambahkannya. Paket yang Anda pakai. Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim kepada Anda setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Jika Anda memakai Mera tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
+            "body": "Paket yang Anda pakai. Email hanya untuk akun yang dulu masuk dengan email, dihapus pada 30 Oktober 2026. Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim kepada Anda setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
             "ask": "Apa yang disimpan Mera tentang saya di servernya?"
           }
         }
@@ -2213,20 +2222,6 @@
     "mailFailedBody": "Salin alamat dukungan kami lalu kirim email dari aplikasi email apa pun.",
     "copyAddress": "Salin alamat"
   },
-  "emailCapture": {
-    "title": "Tambahkan email Anda",
-    "subtitle": "Dapatkan tanda terima lewat email dan pulihkan akun Anda jika berganti ponsel.",
-    "continue": "Lanjutkan",
-    "notNow": "Nanti saja",
-    "confirm": "Konfirmasi",
-    "added": "Email ditambahkan",
-    "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}.",
-    "skip": "Lanjutkan tanpa email",
-    "skipTitle": "Lanjutkan tanpa email?",
-    "skipBody1": "Tanpa email, akun Anda tidak dapat pindah ke platform lain. Jika Anda beralih antara iOS dan Android, Anda akan memulai dengan akun baru di sana.",
-    "skipBody2": "Dukungan hanya dapat menemukan pembelian Anda dengan ID dukungan Anda. Salin dan simpan di tempat yang aman.",
-    "skipConfirm": "Lanjutkan ke pembayaran"
-  },
   "videoPlayer": {
     "closeA11y": "Tutup video",
     "openInBrowser": "Buka di browser",
@@ -2410,7 +2405,6 @@
     "removing": "Menghapus yang kamu minta",
     "asking": "Mengajukan pertanyaan untukmu",
     "working": "Sedang dikerjakan",
-    "slow": "Masih berjalan, koneksi lambat",
     "legCapSentence": "Itu butuh lebih banyak langkah daripada yang bisa Mera lakukan sekaligus. Tanya lagi untuk melanjutkan.",
     "interrupted": "Ini terhenti. Tanya lagi untuk melanjutkan.",
     "summaryFailed": "Ada yang tidak berhasil",
@@ -2430,7 +2424,6 @@
     "noProposalSentence": "Mera tidak menemukan apa pun untuk ditambahkan dari ini.",
     "unknownToolSentence": "Ada yang bermasalah di sisi Mera. Tanya lagi untuk melanjutkan.",
     "malformedChoiceSentence": "Mera tidak bisa menampilkan pilihannya. Tanya lagi untuk melanjutkan.",
-    "boxTitle": "Mera sedang bekerja",
     "doneInSteps_one": "Selesai dalam {{count}} langkah",
     "doneInSteps_other": "Selesai dalam {{count}} langkah",
     "doneInStepsShow_one": "Selesai dalam {{count}} langkah, tampilkan langkah",
@@ -2449,9 +2442,7 @@
     "interests": "minatmu",
     "origin": "asalmu",
     "family": "keluargamu",
-    "feedTuning": "feed Anda",
-    "followStory": "cerita yang ingin diikuti",
-    "factCheck": "klaim yang perlu diperiksa"
+    "feedTuning": "feed Anda"
   },
   "askChoice": {
     "answeredA11y": "sudah dijawab",
@@ -2490,10 +2481,10 @@
       "Menyiapkan ponsel Anda untuk menjawab."
     ],
     "deviceThinking": [
-      "Memikirkannya di ponsel Anda. Tidak ada yang keluar dari perangkat."
+      "Memikirkannya di ponsel Anda."
     ],
     "webSearch": [
-      "Mencari di web dari perangkat Anda…"
+      "Mencari di web melalui server Mera…"
     ]
   },
   "savedExport": {
@@ -2526,7 +2517,8 @@
     },
     "stories": {
       "privacy": "Cerita yang Anda ikuti disimpan di ponsel ini."
-    }
+    },
+    "sourcesLink": "Lihat semua sumber yang dibaca Mera"
   },
   "articleMenu": {
     "openA11y": "Tindakan lain",
@@ -2670,11 +2662,10 @@
       "privacy": "Mera tidak menautkan pencarian Anda ke akun Anda."
     },
     "explainer": {
-      "country1": "Cerita naik peringkat semakin banyak media di negara ini sendiri yang menulis tentangnya.",
-      "countrySame": "Halaman ini sama untuk semua orang. Tidak ada hal tentang Anda yang digunakan di sini.",
-      "same": "Dunia sama untuk semua orang. Tidak ada hal tentang Anda yang digunakan di sini.",
-      "top1": "Cerita yang diliput di banyak negara, oleh banyak penerbit berbeda, naik peringkat paling tinggi. Satu negara yang sibuk tidak bisa memenuhi halaman, dan banyak artikel dari satu penerbit dihitung sekali.",
-      "window": "Tombol waktu menentukan seberapa jauh halaman melihat ke belakang: 6, 12, 24 atau 48 jam. Setiap daftar hanya menghitung artikel yang terbit dalam rentang itu."
+      "window": "Tombol waktu menentukan seberapa jauh halaman melihat ke belakang: 6, 12, 24 atau 48 jam. Setiap daftar hanya menghitung artikel yang terbit dalam rentang itu.",
+      "justMath": "Hanya hitungan. Tidak ada AI yang mengurutkan halaman ini, dan tampilannya sama untuk semua orang.",
+      "mathWorld": "Setiap negara yang meliput sebuah berita mendapat 1 poin, ditambah sedikit lagi untuk setiap penerbit tambahan di negara itu, dengan batas 4 poin per negara. Semua poin dari semua negara dijumlahkan, dan total tertinggi tampil paling atas.",
+      "mathCountry": "Hitung artikel yang ditulis penerbit di negara ini tentang sebuah berita dalam 24 jam terakhir. Berita dengan artikel terbanyak tampil paling atas."
     }
   },
   "library": {
@@ -2775,8 +2766,6 @@
     "settings": {
       "yourPlan": "Paket Anda",
       "usageOffline": "Penggunaan tampil saat Anda online",
-      "addEmail": "Tambah email",
-      "addEmailHint": "Opsional. Hanya jika Anda ingin memindahkan akun dan paket ke ponsel lain, atau menerima email dari Mera.",
       "appLock": "Kunci aplikasi",
       "backupOff": "Cadangan mati",
       "backupOn": "Cadangan aktif",
@@ -2786,7 +2775,6 @@
       "developerOn": "Mode pengembang aktif",
       "groupGeneral": "Umum",
       "groupPrivacy": "Privasi dan keamanan",
-      "noEmailNeeded": "Tidak perlu email.",
       "observabilityHint": "Isi database di perangkat, untuk debugging",
       "off": "Mati",
       "on": "Aktif",
@@ -2801,11 +2789,10 @@
       "resetsTodayAt": "Direset hari ini pukul {{time}}",
       "resetsTomorrowAt": "Direset besok pukul {{time}}",
       "lastUpdated": "Terakhir diperbarui {{time}}",
-      "onDeviceUnlimited": "Pembacaan di ponsel: tanpa batas",
-      "readingOnPhone": "Mera sedang membaca di ponsel ini.",
       "newPlanApplies": "Paket baru Anda berlaku sekarang.",
-      "planMultiplierBase": "Pembacaan cloud 10 MB sehari",
-      "planMultiplier": "Pembacaan cloud {{mb}} MB sehari, {{n}}x Pemula"
+      "restorePurchases": "Pulihkan pembelian",
+      "processingMode": "Mode pemrosesan",
+      "unlimited": "Tanpa batas"
     },
     "notifications": {
       "push": "Notifikasi push",
@@ -2917,6 +2904,29 @@
     "relevance": "Kecocokan terbaik",
     "oldest": "Paling lama pertama",
     "newest": "Terbaru pertama"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Masuk dengan ponsel ini saja",
+    "dialogBody": "Kami akan memasukkan Anda dengan ponsel ini, memindahkan akun Anda ke ponsel ini, dan menghapus email Anda dari database kami.",
+    "dialogSettingsHint": "Anda bisa melakukannya di Pengaturan sampai {{date}}.",
+    "confirm": "Pindahkan akun",
+    "cancel": "Nanti saja",
+    "progressTitle": "Memindahkan akun Anda ke ponsel ini",
+    "steps": {
+      "checking": "Memeriksa ponsel ini",
+      "linking": "Menautkan akun Anda",
+      "removing": "Menghapus email Anda",
+      "done": "Selesai"
+    },
+    "failed": "Proses ini belum selesai. Akun Anda tetap berfungsi. Coba lagi sebentar lagi.",
+    "unsupportedIos": "Ponsel ini tidak bisa memakai masuk dengan ponsel, jadi Mera berhenti berfungsi di ponsel ini pada {{date}}. Jika Anda membayar Mera, batalkan paket Anda di App Store sebelum tanggal itu.",
+    "unsupportedAndroid": "Ponsel ini tidak bisa memakai masuk dengan ponsel, jadi Mera berhenti berfungsi di ponsel ini pada {{date}}. Jika Anda membayar Mera, batalkan paket Anda di Google Play sebelum tanggal itu.",
+    "success": "Anda sudah masuk dengan ponsel ini. Email Anda telah dihapus.",
+    "close": "Tutup",
+    "inboxTitle": "Masuk dengan email berakhir {{date}}",
+    "inboxBody": "Beralih ke masuk dengan ponsel untuk menyimpan akun Anda.",
+    "settingsRow": "Pindah ke masuk dengan ponsel",
+    "settingsRowHint": "Masuk dengan email berakhir {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

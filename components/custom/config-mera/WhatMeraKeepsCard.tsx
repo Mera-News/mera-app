@@ -5,17 +5,15 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { PRIVACY_URL } from '@/lib/config/branding';
-import { hapticLight } from '@/lib/haptics';
 import { useUserStore } from '@/lib/stores/user-store';
 import { emailLooksAnonymous } from '@/lib/subscription/email-capture';
-import { readSupportIdFromUser } from '@/lib/support-id';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
 import { useColors } from '@/lib/theme/tokens';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
+import SupportIdCopy from './SupportIdCopy';
 
 /** Which account the card describes. `unknown` covers a store that has not
  *  hydrated and an offline launch with no session: the card then shows the
@@ -102,28 +100,6 @@ const WhatMeraKeepsCard: React.FC = () => {
 
     const kind = keepsAccountKind(storedEmail, sessionUser);
     const lines = keepsLineKeys(kind, Platform.OS);
-    const supportId = readSupportIdFromUser(session?.user);
-
-    const [copied, setCopied] = useState(false);
-    const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    useEffect(
-        () => () => {
-            if (copyTimer.current) clearTimeout(copyTimer.current);
-        },
-        [],
-    );
-    const handleCopy = async () => {
-        if (!supportId) return;
-        try {
-            await Clipboard.setStringAsync(supportId);
-        } catch {
-            return;
-        }
-        void hapticLight();
-        setCopied(true);
-        if (copyTimer.current) clearTimeout(copyTimer.current);
-        copyTimer.current = setTimeout(() => setCopied(false), 1800);
-    };
 
     const title = t('manageData.keeps.title');
 
@@ -163,32 +139,7 @@ const WhatMeraKeepsCard: React.FC = () => {
                         </Text>
                     ))}
 
-                    {supportId ? (
-                        <HStack accessible={false} space="sm" className="items-center">
-                            <Text testID="manage-data-keeps-support-id" size="sm" className="text-ink">
-                                {t('support.supportId', { id: supportId })}
-                            </Text>
-                            <Pressable
-                                testID="manage-data-keeps-support-id-copy"
-                                onPress={() => {
-                                    void handleCopy();
-                                }}
-                                accessible
-                                accessibilityRole="button"
-                                accessibilityLabel={copied ? t('support.copied') : t('support.copySupportId')}
-                                className="items-center justify-center"
-                                style={{ minHeight: 44, minWidth: 44 }}
-                            >
-                                {copied ? (
-                                    <Text size="sm" className="text-primary-400">
-                                        {t('support.copied')}
-                                    </Text>
-                                ) : (
-                                    <MaterialIcons name="content-copy" size={16} color={colors.ink2} />
-                                )}
-                            </Pressable>
-                        </HStack>
-                    ) : null}
+                    <SupportIdCopy testID="manage-data-keeps-support-id" />
 
                     <Pressable
                         testID="manage-data-keeps-privacy"

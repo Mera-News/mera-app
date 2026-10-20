@@ -276,7 +276,7 @@ export async function presentIntercomMessenger(): Promise<boolean> {
 
     // Second tap onward only needs the refreshed token, not a full re-login.
     if (!(await Intercom.isUserLoggedIn())) {
-      const { userId, userEmail } = require('@/lib/stores/user-store')
+      const { userId } = require('@/lib/stores/user-store')
         .useUserStore.getState();
       if (!userId || moved()) return false;
       // Attach the support handle as a custom attribute at login so support
@@ -293,7 +293,6 @@ export async function presentIntercomMessenger(): Promise<boolean> {
       if (moved()) return false;
       await Intercom.loginUserWithUserAttributes({
         userId,
-        ...(userEmail ? { email: userEmail } : {}),
         ...(supportId ? { customAttributes: { support_id: supportId } } : {}),
       });
     }

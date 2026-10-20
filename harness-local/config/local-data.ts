@@ -44,9 +44,10 @@ let legacyWarned = false;
  * that window after a prod run therefore presented the PROD session and
  * queried prod while reporting itself as staging — a silent wrong-environment
  * read, not a visible failure. The target is part of the identity of a cached
- * session, so it is part of the filename.
+ * session, so it is part of the filename. So is a test-account handle: a
+ * test session written over the OTP file costs the owner a fresh OTP.
  */
-export function authCachePath(target: 'local' | 'staging' | 'prod'): string {
+export function authCachePath(target: 'local' | 'staging' | 'prod', testHandle?: string): string {
   const legacy = path.join(localDataRoot(), LEGACY_AUTH_CACHE);
   if (!legacyWarned && fs.existsSync(legacy)) {
     legacyWarned = true;
@@ -56,7 +57,7 @@ export function authCachePath(target: 'local' | 'staging' | 'prod'): string {
         'Delete it once you have signed in again; sessions are now cached per target.',
     );
   }
-  return path.join(localDataRoot(), `.auth-cache.${target}.json`);
+  return path.join(localDataRoot(), `.auth-cache.${target}${testHandle ? `.test-${testHandle}` : ''}.json`);
 }
 
 /**

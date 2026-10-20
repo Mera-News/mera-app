@@ -1,0 +1,109 @@
+{
+  "id": "waiting-card",
+  "cohort": "waiting-card",
+  "note": "stagefix P1b. A fact card is still waiting on screen (pendingCards). An ack, a plain yes and thanks never save or apply anything and point at the card; 'follow this' after an answer whose subject is already on the waiting card points at that card instead of re-offering it. No turn carries routeKind, skill, legs or tools: none of them was ever measured here, so the card turns are scored on noOffer, card.noApply and replyMatches, and the Artemis question on noOffer.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Utrecht, Utrecht, Netherlands, EU",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "English"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "ok",
+      "pendingCards": [
+        "Works as a nurse at a hospital"
+      ],
+      "expect": {
+        "endedOn": "settled",
+        "noOffer": true,
+        "card": {
+          "noApply": true
+        },
+        "replyMatches": [
+          "card"
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "yes",
+      "pendingCards": [
+        "Works as a nurse at a hospital"
+      ],
+      "expect": {
+        "endedOn": "settled",
+        "noOffer": true,
+        "card": {
+          "noApply": true
+        },
+        "replyMatches": [
+          "card"
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "thanks",
+      "pendingCards": [
+        "Works as a nurse at a hospital"
+      ],
+      "expect": {
+        "endedOn": "settled",
+        "noOffer": true,
+        "card": {
+          "noApply": true
+        },
+        "replyMatches": [
+          "card"
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "What is happening with the Artemis program?",
+      "expect": {
+        "endedOn": "settled",
+        "noOffer": true
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "NASA sets new date for Artemis III crewed lunar landing",
+                "url": "https://news.example.org/artemis",
+                "snippet": "NASA said on Monday the Artemis III mission to land astronauts near the Moon's south pole is now planned for mid-2027."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "follow this",
+      "pendingCards": [
+        "Follows NASA's Artemis lunar program"
+      ],
+      "expect": {
+        "endedOn": "settled",
+        "noOffer": true,
+        "card": {
+          "noApply": true
+        },
+        "replyMatches": [
+          "card"
+        ]
+      }
+    }
+  ]
+}

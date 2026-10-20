@@ -29,7 +29,6 @@
     "invalidEmailDescription": "Please enter a valid email address",
     "networkError": "Network error. Please try again.",
     "faq": "FAQ",
-    "sentTo": "We've sent a code to",
     "invalidOtp": "Please enter a valid 6-digit OTP code",
     "invalidOtpServer": "Invalid OTP code. Please try again.",
     "otpError": "An error occurred during verification. Please try again.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Try again",
     "identitySwitchSignOut": "Sign out and start over",
     "deviceSignInWorking": "Signing you in",
-    "deviceSignInFailed": "Something went wrong. Try again, or sign in with email.",
-    "deviceSignInDenied": "We couldn't verify this device. Try again, or sign in with email.",
-    "deviceSignInUnavailable": "Sign-in isn't available right now. Try again in a few minutes, or sign in with email.",
+    "deviceSignInFailed": "Something went wrong. Try again.",
+    "deviceSignInDenied": "We couldn't verify this device. Try again.",
     "tryAgain": "Try again",
     "learnAboutMera": "Learn about Mera",
-    "alreadyHaveAccount": "Sign in with email",
     "continue": "Continue",
     "sourceCode": "Source code",
     "failedToSendBody": "Failed to send OTP",
     "signingYouIn": "Signing you in…",
-    "signInWithoutEmail": "Sign in without email",
+    "signInWithoutEmail": "Sign in with this phone",
     "differentAccount": {
-      "title": "Sign in without email?",
+      "title": "Sign in with this phone?",
       "body": "We'll wipe everything Mera keeps on this phone for {{email}}. The account itself is not deleted. Are you sure?",
       "continue": "Remove and continue",
       "useEmail": "Keep my account",
       "bodyGeneric": "We'll wipe everything Mera keeps on this phone for this account. The account itself is not deleted. Are you sure?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Your account is tied to this phone. If you delete Mera or lose the phone, you'll start a new account. Backup and restore in Settings can keep your data.",
-      "reset": "Your account is tied to this phone. If you reset or lose the phone, you'll start a new account. Backup and restore in Settings can keep your data."
-    },
     "track": {
       "beforeYouStart": "Before you start",
-      "beginCaption": "Mera signs you in with this phone. Nothing to remember.",
+      "beginCaption": "No email, phone number or password. Nothing to remember.",
       "beginMera": "Begin Mera",
       "beginTitle": "How do you want to begin?",
-      "beginWithoutEmail": "Begin without email",
+      "beginWithoutEmail": "Sign in with this phone",
       "checkEmailTitle": "Check your email",
       "chooseLanguage": "Choose your language",
       "codeA11y": "6-digit code",
@@ -82,13 +75,25 @@
       "notHereTitle": "{{language}} isn't on this phone yet",
       "phoneLanguage": "Your phone's language",
       "sendCode": "Send code",
-      "sentTo": "We sent a 6-digit code to {{email}}.",
       "useDifferentEmail": "Use a different email",
       "welcome": "Welcome to Mera",
       "wrongCode": "That code didn't work. Check it, or resend a new one.",
       "noSheetTitle": "Your iPhone didn't open the download",
-      "noSheetBody": "Try again, or open Settings on your iPhone and go to General, then Language & Region, then Translation Languages to download {{language}}."
-    }
+      "noSheetBody": "Try again, or open Settings on your iPhone and go to General, then Language & Region, then Translation Languages to download {{language}}.",
+      "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
+      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+    },
+    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
+    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
+    "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
+    "supportedPhones": "Supported phones",
+    "emailEnded": {
+      "title": "Email sign-in has ended",
+      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
+      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
+    },
+    "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
     "contactSupport": "Talk to support"
@@ -110,12 +115,9 @@
     "freePlan": "Free plan",
     "active": "Active",
     "planPending": "{{plan}} · activating",
-    "starterFreeTitle": "You're on Starter, free",
-    "starterFreeBody": "Every account includes the full Starter plan at no cost: all your interests, chat, fact checks and followed stories. Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. On supported phones, reading on the phone is unlimited on every plan.",
     "analysedForYou": "Read by Mera",
     "available24h": "Available, last 24 hours",
     "discarded": "Discarded",
-    "localOnly": "Worked out on this phone from what Mera already keeps. Nothing extra is recorded.",
     "promoEndsNoRenew": "Promo access · ends {{date}}, won't renew",
     "relevantSoFar": "Relevant so far",
     "billedAppStore": "Billed through the App Store. Cancel any time in your Apple account.",
@@ -125,7 +127,13 @@
     "confirmTimeoutTitle": "We couldn't confirm your purchase yet",
     "confirmTimeoutBody": "If you paid, talk to support and we'll sort it out.",
     "checkAgain": "Check again",
-    "readingExplainer": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Your plan sets how much Mera reads in the cloud each day: Starter 10 MB, Individual 50 MB, Professional 200 MB. Mera reads for you through end-to-end encryption, so it can't see which articles it reads or how many. That's why plans are measured in megabytes, not articles. On supported phones, reading on the phone is unlimited on every plan."
+    "invoicesAppStore": "Mera has no way to email you, so Apple sends your receipts and invoices to the email on your Apple Account.",
+    "invoicesPlayStore": "Mera has no way to email you, so Google Play sends your receipts to the email on your Google Account.",
+    "planBack": "Your plan is back.",
+    "restoreNoneApple": "No plan found on this Apple Account.",
+    "restoreNoneGoogle": "No plan found on this Google Account.",
+    "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
   },
   "feed": {
     "allCaughtUp": "You're all caught up with what impacts you.",
@@ -782,12 +790,12 @@
     "errorDescription": "Failed to delete data. Please try again.",
     "keeps": {
       "title": "What Mera keeps about you",
-      "emailAndPlan": "Your email and your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
+      "emailAndPlan": "Your email, until you switch to phone sign-in or until it is deleted on 30 October 2026, and your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
       "plan": "Your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
-      "emailIfAdded": "Your email if you added one, and your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
+      "emailIfAdded": "Your plan. Mera never asks for an email, and any email from before is deleted on 30 October 2026. Billing records from the App Store or Google Play are kept as long as the law requires.",
       "signInRecordIos": "A sign-in record for this phone, deleted with your account. Apple's check that this is the real app is not kept.",
       "signInRecordAndroid": "A sign-in record for this phone, not your phone's ID, deleted with your account. Google's check that this is the real app is not kept.",
-      "signInRecordGeneric": "Without an email, a sign-in record for this phone, deleted with your account. The Apple or Google check that this is the real app is not kept.",
+      "signInRecordGeneric": "A sign-in record for this phone, deleted with your account. The Apple or Google check that this is the real app is not kept.",
       "usage": "How much encrypted text Mera sent to be read for you each day and in how many requests (never the text itself), how many articles were sent to this phone each day, when you reached your plan's daily reading, and which days you used Mera. Kept for 90 days. Sign-ins keep no IP address or browser details.",
       "topics": "Topic phrases, stored by their text alone with nothing linking them to you, and deleted after 14 days unused.",
       "privacyLink": "Read the privacy policy"
@@ -913,11 +921,11 @@
     "yesDeleteAccount": "Yes, Delete Account",
     "deletionFailedTitle": "Deletion Failed",
     "deletionFailedDescription": "There was an issue deleting your account. Please try again.",
-    "deleteAccountConfirmGrace": "Your account will be scheduled for deletion, with a 30-day grace period. If your account has an email, sign in with it within those 30 days to cancel. An account without email can't be signed in to again, so its deletion can't be canceled.",
+    "deleteAccountConfirmGrace": "Your account will be scheduled for deletion and deleted for good after 30 days. This phone can't sign in to it again. You can't undo this.",
     "deleteAccountWarningGrace": "⚠️ After 30 days, your account data is permanently removed. Billing records are kept for 7 years for bookkeeping. You can't undo this.",
     "finalConfirmationBodyGrace": "This schedules your account for permanent deletion in 30 days.",
     "accountDeletionScheduledTitle": "Deletion Scheduled",
-    "accountDeletionScheduledDescription": "Your account will be permanently deleted in 30 days. If it has an email, sign in with it before then to cancel.",
+    "accountDeletionScheduledDescription": "Your account will be permanently deleted in 30 days.",
     "signedOutTitle": "Signed Out",
     "signedOutDescription": "You have been successfully signed out.",
     "logoutFailedTitle": "Logout Failed",
@@ -1078,7 +1086,8 @@
     "mayMistakes": "Mera may make mistakes, so check important news at the source.",
     "cardWaitingHint": "Tap an option above, or type yes",
     "cardCancelled": "Okay, nothing changed",
-    "changeUndone": "Undone"
+    "changeUndone": "Undone",
+    "cardTapHint": "Tap an option above."
   },
   "articleFeedback": {
     "likeLabel": "I like it",
@@ -1667,9 +1676,9 @@
     "retry": "Try again",
     "welcomeBody": "Tap \"Agree and continue\" to accept our Terms of Service and Privacy Policy.",
     "deviceNotice": {
-      "appAttest": "No email needed. Mera signs you in with this phone. Apple confirms it's the real Mera app on a real iPhone, to stop fake accounts. We keep a sign-in record while you have an account.",
-      "playIntegrity": "No email needed. Mera signs you in with this phone. Google confirms it's the real Mera app on a real Android phone, to stop fake accounts. We keep a sign-in record, not your phone's ID.",
-      "generic": "No email needed. Mera signs you in with this phone. We keep a sign-in record for this phone while you have an account."
+      "appAttest": "Mera signs you in with this phone. Apple confirms it's the real Mera app on a real iPhone, to stop fake accounts. We keep a sign-in record while you have an account.",
+      "playIntegrity": "Mera signs you in with this phone. Google confirms it's the real Mera app on a real Android phone, to stop fake accounts. We keep a sign-in record, not your phone's ID.",
+      "generic": "Mera signs you in with this phone. We keep a sign-in record for this phone while you have an account."
     }
   },
   "tutorials": {
@@ -1965,7 +1974,7 @@
             "body": "The main things, and why each one goes out.",
             "steps": {
               "0": "Short topic phrases, so there is something to match stories against.",
-              "1": "How you sign in, by email or by this phone, and which plan you are on.",
+              "1": "How you sign in, which is this phone (or, until 30 October 2026, an email from before), and which plan you are on.",
               "2": "The articles your phone asks for, and the encrypted text Mera sends to be read for you, counted per day to apply your plan."
             },
             "ask": "What does the app send to your servers?"
@@ -1984,7 +1993,7 @@
           },
           "what-we-keep": {
             "headline": "What we do keep",
-            "body": "Your login email, if you added one. Which plan you are on. A per-day count of articles sent to you, how much encrypted text Mera sent to be read for you and in how many requests (never the text itself), when you reached your plan's daily reading, and which days you used Mera, kept for 90 days. Your notification times, language and processing choice. Answers you send to Mera team questions. If you use Mera without an email, a sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
+            "body": "Which plan you are on. An email only for an account that signed in with one before, deleted on 30 October 2026. A per-day count of articles sent to you, how much encrypted text Mera sent to be read for you and in how many requests (never the text itself), when you reached your plan's daily reading, and which days you used Mera, kept for 90 days. Your notification times, language and processing choice. Answers you send to Mera team questions. A sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
             "ask": "What does Mera store about me on its servers?"
           }
         }
@@ -2338,20 +2347,6 @@
     "mailFailedBody": "Copy our support address and send us an email from any mail app.",
     "copyAddress": "Copy address"
   },
-  "emailCapture": {
-    "title": "Add your email",
-    "subtitle": "Get receipts by email and recover your account if you switch phones.",
-    "continue": "Continue",
-    "notNow": "Not now",
-    "confirm": "Confirm",
-    "added": "Email added",
-    "addedDetail": "Receipts and account recovery will use {{email}}.",
-    "skip": "Continue without email",
-    "skipTitle": "Continue without an email?",
-    "skipBody1": "Without an email, your account can't move to another platform. If you switch between iOS and Android, you'll start with a new account there.",
-    "skipBody2": "Support can only find your purchase with your Support ID. Copy it and keep it somewhere safe.",
-    "skipConfirm": "Continue to payment"
-  },
   "videoPlayer": {
     "closeA11y": "Close video",
     "openInBrowser": "Open in browser",
@@ -2418,7 +2413,6 @@
     "removing": "Removing what you asked me to remove",
     "asking": "Putting a question to you",
     "working": "Working on it",
-    "slow": "Still working, slow connection",
     "legCapSentence": "That took more steps than Mera can do at once. Ask again to carry on.",
     "interrupted": "This was interrupted. Ask again to carry on.",
     "summaryFailed": "Something didn't work",
@@ -2438,7 +2432,6 @@
     "noProposalSentence": "Mera didn't find anything to add from that.",
     "unknownToolSentence": "Something went wrong on Mera's side. Ask again to carry on.",
     "malformedChoiceSentence": "Mera couldn't show you the options. Ask again to carry on.",
-    "boxTitle": "Mera is working",
     "doneInSteps_one": "Done in {{count}} step",
     "doneInSteps_other": "Done in {{count}} steps",
     "doneInStepsShow_one": "Done in {{count}} step, show steps",
@@ -2457,9 +2450,7 @@
     "interests": "your interests",
     "origin": "where you're from",
     "family": "your family",
-    "feedTuning": "your feed",
-    "followStory": "a story to follow",
-    "factCheck": "a claim to check"
+    "feedTuning": "your feed"
   },
   "askChoice": {
     "answeredA11y": "already answered",
@@ -2498,10 +2489,10 @@
       "Getting your phone ready to answer."
     ],
     "deviceThinking": [
-      "Thinking it through on your phone. Nothing leaves your device."
+      "Thinking it through on your phone."
     ],
     "webSearch": [
-      "Searching the web from your device…"
+      "Searching the web through Mera’s server…"
     ]
   },
   "savedExport": {
@@ -2534,7 +2525,8 @@
     },
     "stories": {
       "privacy": "The stories you follow are kept on this phone."
-    }
+    },
+    "sourcesLink": "See every source Mera reads"
   },
   "articleMenu": {
     "openA11y": "More actions",
@@ -2679,11 +2671,10 @@
       "privacy": "Mera doesn't link your searches to your account."
     },
     "explainer": {
-      "country1": "Stories rank higher the more this country's own publishers are writing about them.",
-      "countrySame": "This page is the same for everyone. Nothing about you is used here.",
-      "same": "World is the same for everyone. Nothing about you is used here.",
-      "top1": "Stories covered in many countries, by many different publishers, rank highest. One busy country can't fill the page, and many articles from one publisher count once.",
-      "window": "The time switch sets how far back the page looks: 6, 12, 24 or 48 hours. Each list only counts articles published inside that window."
+      "window": "The time switch sets how far back the page looks: 6, 12, 24 or 48 hours. Each list only counts articles published inside that window.",
+      "justMath": "Just math. No AI ranks this page, and it looks the same for everyone.",
+      "mathWorld": "Each country covering a story gives it 1 point, plus a little more for each extra publisher there, up to 4 points per country. Add up all the countries, and the highest total comes first.",
+      "mathCountry": "Count the articles this country's publishers wrote about a story in the last 24 hours. The story with the most comes first."
     }
   },
   "library": {
@@ -2784,8 +2775,6 @@
     "settings": {
       "yourPlan": "Your plan",
       "usageOffline": "Usage shows when you're online",
-      "addEmail": "Add an email",
-      "addEmailHint": "Optional. Only if you want to move your account and plan to another phone, or get Mera's emails.",
       "appLock": "App lock",
       "backupOff": "Backup off",
       "backupOn": "Backup on",
@@ -2795,7 +2784,6 @@
       "developerOn": "Developer mode on",
       "groupGeneral": "General",
       "groupPrivacy": "Privacy and security",
-      "noEmailNeeded": "No email needed.",
       "observabilityHint": "What the on-device database holds, for debugging",
       "off": "Off",
       "on": "On",
@@ -2810,11 +2798,10 @@
       "resetsTodayAt": "Resets today at {{time}}",
       "resetsTomorrowAt": "Resets tomorrow at {{time}}",
       "lastUpdated": "Last updated {{time}}",
-      "onDeviceUnlimited": "On-device reading: unlimited",
-      "readingOnPhone": "Mera is reading on this phone.",
       "newPlanApplies": "Your new plan applies now.",
-      "planMultiplierBase": "10 MB of cloud reading a day",
-      "planMultiplier": "{{mb}} MB of cloud reading a day, {{n}}x Starter"
+      "restorePurchases": "Restore purchases",
+      "processingMode": "Processing mode",
+      "unlimited": "Unlimited"
     },
     "notifications": {
       "push": "Push notifications",
@@ -2926,6 +2913,29 @@
     "relevance": "Best match",
     "oldest": "Oldest first",
     "newest": "Newest first"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Sign in with this phone instead",
+    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
+    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
+    "confirm": "Move account",
+    "cancel": "Not now",
+    "progressTitle": "Moving your account to this phone",
+    "steps": {
+      "checking": "Checking this phone",
+      "linking": "Linking your account",
+      "removing": "Removing your email",
+      "done": "Done"
+    },
+    "failed": "This didn't finish. Your account still works. Try again in a moment.",
+    "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
+    "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
+    "success": "Signed in with this phone. Your email is deleted.",
+    "close": "Close",
+    "inboxTitle": "Email sign-in ends {{date}}",
+    "inboxBody": "Switch to phone sign-in to keep your account.",
+    "settingsRow": "Move to phone sign-in",
+    "settingsRowHint": "Email sign-in ends {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

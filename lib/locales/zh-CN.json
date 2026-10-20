@@ -28,7 +28,6 @@
     "otpPlaceholder": "请输入6位验证码",
     "invalidEmailDescription": "请输入有效的电子邮箱地址",
     "networkError": "网络错误，请重试。",
-    "sentTo": "我们已向以下邮箱发送了验证码",
     "invalidOtp": "请输入有效的6位 OTP 验证码",
     "invalidOtpServer": "OTP 验证码无效，请重试。",
     "otpError": "验证过程中发生错误，请重试。",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "重试",
     "identitySwitchSignOut": "退出登录并重新开始",
     "deviceSignInWorking": "正在登录",
-    "deviceSignInFailed": "出了点问题。请重试，或使用电子邮件登录。",
-    "deviceSignInDenied": "无法验证此设备。请重试，或使用电子邮件登录。",
-    "deviceSignInUnavailable": "目前无法登录。请几分钟后重试，或使用电子邮件登录。",
+    "deviceSignInFailed": "出了点问题。请重试。",
+    "deviceSignInDenied": "无法验证此设备。请重试。",
     "tryAgain": "重试",
     "learnAboutMera": "了解梅拉",
-    "alreadyHaveAccount": "使用电子邮件登录",
     "continue": "继续",
     "sourceCode": "源代码",
     "failedToSendBody": "OTP 发送失败",
     "signingYouIn": "正在登录…",
-    "signInWithoutEmail": "不使用电子邮件登录",
+    "signInWithoutEmail": "用这部手机登录",
     "differentAccount": {
-      "title": "不使用电子邮件登录？",
+      "title": "改用这部手机登录？",
       "body": "我们将清除梅拉在这部手机上为 {{email}} 保存的所有内容。账户本身不会被删除。确定要继续吗？",
       "continue": "删除并继续",
       "useEmail": "保留我的账户",
       "bodyGeneric": "我们将清除梅拉在这部手机上为此账户保存的所有内容。账户本身不会被删除。确定要继续吗？"
     },
-    "deviceSignInCaption": {
-      "uninstall": "你的账号与这部手机绑定。如果你删除梅拉或丢失手机，就需要从新账号开始。设置中的“备份与恢复”可以保留你的数据。",
-      "reset": "你的账号与这部手机绑定。如果你重置或丢失手机，就需要从新账号开始。设置中的“备份与恢复”可以保留你的数据。"
-    },
     "track": {
       "beforeYouStart": "开始之前",
-      "beginCaption": "梅拉通过这部手机为你登录。无需记住任何东西。",
+      "beginCaption": "无需邮箱、电话号码或密码。无需记住任何东西。",
       "beginMera": "开始使用梅拉",
       "beginTitle": "你想如何开始？",
-      "beginWithoutEmail": "不使用电子邮件开始",
+      "beginWithoutEmail": "用这部手机登录",
       "checkEmailTitle": "请查看你的电子邮件",
       "chooseLanguage": "选择你的语言",
       "codeA11y": "6位验证码",
@@ -82,13 +75,25 @@
       "notHereTitle": "这部手机还没有{{language}}",
       "phoneLanguage": "手机的语言",
       "sendCode": "发送验证码",
-      "sentTo": "我们已向 {{email}} 发送了6位验证码。",
       "useDifferentEmail": "使用其他电子邮件",
       "welcome": "欢迎使用梅拉",
       "wrongCode": "验证码不正确。请检查，或重新发送新的验证码。",
       "noSheetTitle": "你的 iPhone 未能开始下载",
-      "noSheetBody": "请重试，或在 iPhone 上打开“设置”，依次前往“通用”、“语言与地区”、“翻译语言”，下载 {{language}}。"
-    }
+      "noSheetBody": "请重试，或在 iPhone 上打开“设置”，依次前往“通用”、“语言与地区”、“翻译语言”，下载 {{language}}。",
+      "sentToIfAccount": "如果这个邮箱有梅拉账号，我们已向它发送了验证码。第一次使用梅拉吗？请点按“用这部手机登录”。",
+      "noCodeUsePhone": "没有收到验证码？请点按“用这部手机登录”。"
+    },
+    "emailLegacyHint": "仅适用于之前用邮箱登录过的人。新用户已无法再用邮箱登录。",
+    "phoneCheckTemporary": "无法检查这部手机。请检查网络连接后重试。",
+    "phoneUnsupportedAndroid": "梅拉需要这部手机上有 Google Play 才能为你登录。没有 Google Play 的手机不受支持。",
+    "phoneUnsupportedIos": "这部 iPhone 无法使用手机登录。",
+    "supportedPhones": "支持的手机",
+    "emailEnded": {
+      "title": "邮箱登录已结束",
+      "bodyIos": "邮箱登录已于{{date}}结束。请用这部手机登录以重新开始。你的套餐会从 App Store 恢复，已保存的文章会从备份中恢复。",
+      "bodyAndroid": "邮箱登录已于{{date}}结束。请用这部手机登录以重新开始。你的套餐会从 Google Play 恢复，已保存的文章会从备份中恢复。"
+    },
+    "phoneNotSupported": "这部手机不受支持"
   },
   "account": {
     "contactSupport": "联系支持团队"
@@ -519,12 +524,12 @@
     "exportHistoryEmptyDescription": "您在过去30天内没有阅读任何文章。",
     "keeps": {
       "title": "梅拉保留的关于你的信息",
-      "emailAndPlan": "你的邮箱和套餐。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
+      "emailAndPlan": "你的邮箱将保留到你改用手机登录为止，或直到2026年10月30日被删除，你的套餐也会保留。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
       "plan": "你的套餐。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
-      "emailIfAdded": "你的邮箱（如果添加过）和套餐。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
+      "emailIfAdded": "你的套餐。梅拉从不要求提供邮箱，之前留下的任何邮箱都会在2026年10月30日被删除。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
       "signInRecordIos": "这部手机的一条登录记录，会随账号一起删除。Apple 确认正版应用的检查结果不会保留。",
       "signInRecordAndroid": "这部手机的一条登录记录，不是手机的 ID，会随账号一起删除。Google 确认正版应用的检查结果不会保留。",
-      "signInRecordGeneric": "没有邮箱时，这部手机的一条登录记录，会随账号一起删除。Apple 或 Google 确认正版应用的检查结果不会保留。",
+      "signInRecordGeneric": "这部手机的一条登录记录，会随账号一起删除。Apple 或 Google 确认正版应用的检查结果不会保留。",
       "usage": "梅拉每天为你发送阅读的加密文本量及请求次数（不含文本本身），每日发送到这部手机的文章数量，你用完方案每日阅读量的时间，以及你使用梅拉的日期。保留 90 天。登录不会保留 IP 地址或浏览器信息。",
       "topics": "话题短语，只按文本存储，没有任何信息把它们和你联系起来，14 天未使用即删除。",
       "privacyLink": "阅读隐私政策"
@@ -567,11 +572,11 @@
     "contentPolicy": "内容政策",
     "faq": "常见问题",
     "reportBug": "报告问题",
-    "deleteAccountConfirmGrace": "你的账号将被安排删除，有 30 天宽限期。如果你的账号有邮箱，请在这 30 天内用该邮箱登录以取消。没有邮箱的账号无法再次登录，因此其删除无法取消。",
+    "deleteAccountConfirmGrace": "你的账号将被安排删除，并在 30 天后永久删除。这部手机无法再次登录该账号。此操作无法撤消。",
     "deleteAccountWarningGrace": "⚠️ 30 天后，你的账户数据将被永久删除。账单记录会保留 7 年，用于记账。此操作无法撤消。",
     "finalConfirmationBodyGrace": "这将在30天内安排您的账户永久删除。",
     "accountDeletionScheduledTitle": "删除已安排",
-    "accountDeletionScheduledDescription": "你的账号将在 30 天后被永久删除。如果账号有邮箱，请在此之前用该邮箱登录以取消。"
+    "accountDeletionScheduledDescription": "你的账号将在 30 天后被永久删除。"
   },
   "configPanel": {
     "factDeletedTitle": "事实已删除",
@@ -723,7 +728,8 @@
     "mayMistakes": "梅拉可能会出错，因此请在原始来源核实重要新闻。",
     "cardWaitingHint": "点选上方的选项，或输入“是”",
     "cardCancelled": "好的，没有任何更改",
-    "changeUndone": "已撤销"
+    "changeUndone": "已撤销",
+    "cardTapHint": "点选上方的选项。"
   },
   "articleFeedback": {
     "thumbsUpMessage": "我喜欢这篇文章:「{{title}}」。我想看到更多类似的推荐。",
@@ -877,12 +883,9 @@
     "activatedTitle": "{{plan}} 已激活",
     "planPending": "{{plan}} · 激活中",
     "perMonth": "/月",
-    "starterFreeTitle": "你正在使用 Starter，免费",
-    "starterFreeBody": "每个账号都免费包含完整的入门版方案：你的所有兴趣、聊天、事实核查和已关注的报道。每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。在支持的手机上，所有方案的手机端阅读都不限量。",
     "analysedForYou": "梅拉已阅读",
     "available24h": "可用，过去24小时",
     "discarded": "已丢弃",
-    "localOnly": "根据梅拉已保存的内容在这部手机上计算。不记录任何额外信息。",
     "promoEndsNoRenew": "促销权益 · {{date}}结束，不会续订",
     "relevantSoFar": "目前相关",
     "billedAppStore": "通过 App Store 扣费。你可以随时在 Apple 账号中取消。",
@@ -892,7 +895,13 @@
     "confirmTimeoutTitle": "暂时无法确认你的购买",
     "confirmTimeoutBody": "如果你已经付款，请联系客服，我们会帮你处理。",
     "checkAgain": "再次检查",
-    "readingExplainer": "每一篇符合你兴趣的文章都会进入你的信息流。梅拉会阅读这些文章，过滤掉噪音，把重要的内容推到前面。你的方案决定梅拉每天在云端阅读多少：入门版 10 MB，个人版 50 MB，专业版 200 MB。梅拉的阅读经过端到端加密，因此它无法看到自己读了哪些文章，也无法统计数量。这就是方案以 MB 计量、而不是按文章计量的原因。在支持的手机上，所有方案的手机端阅读都不限量。"
+    "invoicesAppStore": "梅拉无法给你发送邮件，因此 Apple 会把收据和发票发送到你的 Apple 账户中的邮箱。",
+    "invoicesPlayStore": "梅拉无法给你发送邮件，因此 Google Play 会把收据发送到你的 Google 账号中的邮箱。",
+    "planBack": "你的套餐已恢复。",
+    "restoreNoneApple": "在这个 Apple 账户上没有找到套餐。",
+    "restoreNoneGoogle": "在这个 Google 账号上没有找到套餐。",
+    "restoreFailedAppStore": "无法连接 App Store。请重试。",
+    "restoreFailedPlayStore": "无法连接 Google Play。请重试。"
   },
   "tabs": {
     "deck": "信息流",
@@ -1542,9 +1551,9 @@
     "retry": "重试",
     "welcomeBody": "点按\"同意并继续\"即表示您接受我们的服务条款和隐私政策。",
     "deviceNotice": {
-      "appAttest": "无需邮箱。梅拉用这部手机为你登录。为了阻止虚假账号，Apple 会确认这是真实 iPhone 上的正版梅拉应用。在你拥有账号期间，我们会保留一条登录记录。",
-      "playIntegrity": "无需邮箱。梅拉用这部手机为你登录。为了阻止虚假账号，Google 会确认这是真实 Android 手机上的正版梅拉应用。我们保留的是登录记录，而不是你手机的 ID。",
-      "generic": "无需邮箱。梅拉用这部手机为你登录。在你拥有账号期间，我们会为这部手机保留一条登录记录。"
+      "appAttest": "梅拉用这部手机为你登录。为了阻止虚假账号，Apple 会确认这是真实 iPhone 上的正版梅拉应用。在你拥有账号期间，我们会保留一条登录记录。",
+      "playIntegrity": "梅拉用这部手机为你登录。为了阻止虚假账号，Google 会确认这是真实 Android 手机上的正版梅拉应用。我们保留的是登录记录，而不是你手机的 ID。",
+      "generic": "梅拉用这部手机为你登录。在你拥有账号期间，我们会为这部手机保留一条登录记录。"
     }
   },
   "tutorials": {
@@ -1840,7 +1849,7 @@
             "body": "主要的几项，以及每一项为什么会发出。",
             "steps": {
               "0": "简短的话题短语，这样才有东西可以用来匹配报道。",
-              "1": "你的登录方式（邮箱或这部手机），以及你使用的套餐。",
+              "1": "你的登录方式（这部手机，或在2026年10月30日前用过的邮箱），以及你使用的套餐。",
               "2": "你的手机请求的文章，以及梅拉为你发送阅读的加密文本，按天计数，用来执行该套餐的限额。"
             },
             "ask": "应用向您的服务器发送什么？"
@@ -1859,7 +1868,7 @@
           },
           "what-we-keep": {
             "headline": "我们确实保留什么",
-            "body": "你的登录邮箱（如果添加过）。你使用的套餐。每日发送给你的文章数量，梅拉每天为你发送阅读的加密文本量及请求次数（不含文本本身），你用完方案每日阅读量的时间，以及你使用梅拉的日期，保留 90 天。你的通知时间、语言和处理方式选择。你回答梅拉团队问题时发送的内容。如果你不用邮箱使用梅拉，还有这部手机的一条登录记录，会随账户一起删除。主题短语只按文本缓存，不记录是谁请求的，十四天未使用即删除。",
+            "body": "只有之前用邮箱登录过的账号会保留邮箱，该邮箱将于2026年10月30日删除。你使用的套餐。每日发送给你的文章数量，梅拉每天为你发送阅读的加密文本量及请求次数（不含文本本身），你用完方案每日阅读量的时间，以及你使用梅拉的日期，保留 90 天。你的通知时间、语言和处理方式选择。你回答梅拉团队问题时发送的内容。这部手机的一条登录记录，会随账户一起删除。主题短语只按文本缓存，不记录是谁请求的，十四天未使用即删除。",
             "ask": "梅拉在其服务器上存储关于我什么？"
           }
         }
@@ -2213,20 +2222,6 @@
     "mailFailedBody": "复制我们的支持邮箱地址，然后用任意邮件应用给我们发邮件。",
     "copyAddress": "复制地址"
   },
-  "emailCapture": {
-    "title": "添加电子邮件",
-    "subtitle": "通过电子邮件接收收据，换手机时也能找回帐号。",
-    "continue": "继续",
-    "notNow": "以后再说",
-    "confirm": "确认",
-    "added": "已添加电子邮件",
-    "addedDetail": "收据和帐号找回将使用 {{email}}。",
-    "skip": "不填邮箱继续",
-    "skipTitle": "不填写邮箱就继续吗？",
-    "skipBody1": "没有邮箱，您的账号无法迁移到其他平台。如果您在 iOS 和 Android 之间切换，将需要在新平台上使用新账号。",
-    "skipBody2": "支持团队只能通过您的支持 ID 找到您的购买记录。请复制并妥善保存。",
-    "skipConfirm": "继续付款"
-  },
   "videoPlayer": {
     "closeA11y": "关闭视频",
     "openInBrowser": "在浏览器中打开",
@@ -2410,7 +2405,6 @@
     "removing": "正在删除你要求删除的内容",
     "asking": "正在向你提问",
     "working": "正在处理",
-    "slow": "仍在处理，网络较慢",
     "legCapSentence": "这超出了梅拉一次能完成的步骤数。再问一次即可继续。",
     "interrupted": "这次处理中断了。再问一次即可继续。",
     "summaryFailed": "有一项没有成功",
@@ -2430,7 +2424,6 @@
     "noProposalSentence": "梅拉没有从中找到可以添加的内容。",
     "unknownToolSentence": "梅拉这边出了点问题。再问一次即可继续。",
     "malformedChoiceSentence": "梅拉没能显示选项。再问一次即可继续。",
-    "boxTitle": "梅拉正在工作",
     "doneInSteps_one": "已完成 {{count}} 步",
     "doneInSteps_other": "已完成 {{count}} 步",
     "doneInStepsShow_one": "已完成 {{count}} 步，显示步骤",
@@ -2449,9 +2442,7 @@
     "interests": "你的兴趣",
     "origin": "你来自哪里",
     "family": "你的家人",
-    "feedTuning": "你的信息流",
-    "followStory": "一个要关注的故事",
-    "factCheck": "一项需要核实的说法"
+    "feedTuning": "你的信息流"
   },
   "askChoice": {
     "answeredA11y": "已回答",
@@ -2490,10 +2481,10 @@
       "正在让手机准备回答。"
     ],
     "deviceThinking": [
-      "正在手机上思考。没有任何内容离开你的设备。"
+      "正在手机上思考。"
     ],
     "webSearch": [
-      "正在从你的设备搜索网页…"
+      "正在通过梅拉的服务器搜索网页…"
     ]
   },
   "savedExport": {
@@ -2526,7 +2517,8 @@
     },
     "stories": {
       "privacy": "你关注的报道只保存在这部手机上。"
-    }
+    },
+    "sourcesLink": "查看梅拉读取的所有新闻来源"
   },
   "articleMenu": {
     "openA11y": "更多操作",
@@ -2670,11 +2662,10 @@
       "privacy": "梅拉不会将你的搜索与你的账户关联。"
     },
     "explainer": {
-      "country1": "这个国家自己的媒体对某条报道的报道越多，该报道的排名就越靠前。",
-      "countrySame": "此页面对所有人都相同。这里不会使用任何关于你的信息。",
-      "same": "全球页面对所有人都相同。这里不会使用任何关于你的信息。",
-      "top1": "被许多不同国家、许多不同媒体报道的报道排名最高。一个报道频繁的国家无法占满页面，同一媒体的多篇文章只计一次。",
-      "window": "时间切换决定页面回溯的范围：6、12、24 或 48 小时。每个列表只统计该时间段内发布的文章。"
+      "window": "时间切换决定页面回溯的范围：6、12、24 或 48 小时。每个列表只统计该时间段内发布的文章。",
+      "justMath": "只是简单的计算。没有 AI 为这个页面排序，每个人看到的结果都一样。",
+      "mathWorld": "每个报道某条新闻的国家得 1 分，该国每多一家媒体再加一点，每个国家最多 4 分。把所有国家的分数加起来，总分最高的排在最前面。",
+      "mathCountry": "数一数这个国家的媒体在过去 24 小时里写了多少篇关于某条新闻的文章。文章最多的新闻排在最前面。"
     }
   },
   "library": {
@@ -2775,8 +2766,6 @@
     "settings": {
       "yourPlan": "你的方案",
       "usageOffline": "联网后才会显示用量",
-      "addEmail": "添加电子邮箱",
-      "addEmailHint": "可选。只有在你想将账户迁移到另一部手机，或接收梅拉的邮件时才需要。",
       "appLock": "应用锁",
       "backupOff": "备份已关闭",
       "backupOn": "备份已开启",
@@ -2786,7 +2775,6 @@
       "developerOn": "开发者模式已开启",
       "groupGeneral": "通用",
       "groupPrivacy": "隐私与安全",
-      "noEmailNeeded": "无需电子邮箱。",
       "observabilityHint": "设备数据库中保存的内容，用于调试",
       "off": "关",
       "on": "开",
@@ -2801,11 +2789,10 @@
       "resetsTodayAt": "今天 {{time}} 重置",
       "resetsTomorrowAt": "明天 {{time}} 重置",
       "lastUpdated": "上次更新于 {{time}}",
-      "onDeviceUnlimited": "设备端阅读：不限量",
-      "readingOnPhone": "梅拉正在这部手机上阅读。",
       "newPlanApplies": "你的新方案现已生效。",
-      "planMultiplierBase": "每天 10 MB 的云端阅读量",
-      "planMultiplier": "每天 {{mb}} MB 的云端阅读量，是入门版的 {{n}} 倍"
+      "restorePurchases": "恢复购买",
+      "processingMode": "处理模式",
+      "unlimited": "无限制"
     },
     "notifications": {
       "push": "推送通知",
@@ -2917,6 +2904,29 @@
     "relevance": "最佳匹配",
     "oldest": "最早优先",
     "newest": "最新优先"
+  },
+  "moveToPhone": {
+    "dialogTitle": "改用这部手机登录",
+    "dialogBody": "我们会让你用这部手机登录，把你的账号转到这部手机上，并从我们的数据库中删除你的邮箱。",
+    "dialogSettingsHint": "你可以在{{date}}前到“设置”里完成此操作。",
+    "confirm": "转移账号",
+    "cancel": "暂不",
+    "progressTitle": "正在将你的账号转移到这部手机",
+    "steps": {
+      "checking": "正在检查这部手机",
+      "linking": "正在关联你的账号",
+      "removing": "正在删除你的邮箱",
+      "done": "完成"
+    },
+    "failed": "这次没有完成。你的账号仍可使用。请稍后再试。",
+    "unsupportedIos": "这部手机无法使用手机登录，因此梅拉将于{{date}}起无法在此设备上使用。如果你为梅拉付费，请在此之前到 App Store 取消你的套餐。",
+    "unsupportedAndroid": "这部手机无法使用手机登录，因此梅拉将于{{date}}起无法在此设备上使用。如果你为梅拉付费，请在此之前到 Google Play 取消你的套餐。",
+    "success": "已用这部手机登录。你的邮箱已被删除。",
+    "close": "关闭",
+    "inboxTitle": "邮箱登录将于{{date}}结束",
+    "inboxBody": "切换到手机登录，即可保留你的账号。",
+    "settingsRow": "改用手机登录",
+    "settingsRowHint": "邮箱登录将于{{date}}结束。"
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

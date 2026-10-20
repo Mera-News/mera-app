@@ -1,24 +1,11 @@
 // The key->text tables of the steps box, tested pure (no render): each new
 // key must resolve to its OWN text, never fall through to "Working on it".
-// The tables are pure; the heavy view imports (Reanimated, the Mera mark) are
-// stubbed so the module loads in the unit project.
-jest.mock('react-native-reanimated', () => ({
-  __esModule: true,
-  default: { View: 'View' },
-  FadeIn: { duration: () => ({}) },
-  withTiming: () => 0,
-}));
-jest.mock('@/components/custom/chat/StatusIndicator', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/lib/theme/tokens', () => ({
-  themedStyles: () => () => ({}),
-  useColors: () => ({}),
-}));
-jest.mock('@/components/custom/floating-chat/glyph-safe', () => ({ GlyphSafeButton: () => null }));
-jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
-jest.mock('@/lib/hooks/use-is-focused-safe', () => ({ useAnimationsActive: () => true }));
-
-import { stepLabel, stepTables } from '@/components/custom/floating-chat/AgentStepsBox';
-import { labelForToolCall, stepsForMessage } from '@/components/custom/floating-chat/agent-step-labels';
+import {
+  labelForToolCall,
+  stepLabel,
+  stepTables,
+  stepsForMessage,
+} from '@/components/custom/floating-chat/agent-step-labels';
 
 // Echoes the key, so a wrong or missing table entry is visible in the output.
 const fakeT = ((key: string, opts?: Record<string, unknown>) =>
@@ -28,7 +15,7 @@ const tables = stepTables(fakeT);
 const textOf = (tool: string, input: unknown = {}) => {
   const { labelKey, labelValues } = labelForToolCall(tool, input);
   return stepLabel(
-    { id: 'x', kind: 'tool', toolName: tool, labelKey, labelValues, status: 'done' },
+    { id: 'x', kind: 'tool', glyph: 'working', toolName: tool, labelKey, labelValues, status: 'done' },
     fakeT,
     tables,
   );
@@ -51,8 +38,6 @@ describe('steps box tables', () => {
     ['facts/profession', 'skillPhrase.work'],
     ['facts/interest', 'skillPhrase.interests'],
     ['conversation/feed-tuning', 'skillPhrase.feedTuning'],
-    ['conversation/follow-story', 'skillPhrase.followStory'],
-    ['conversation/fact-check', 'skillPhrase.factCheck'],
   ])('load_skill %s shows %s, not the generic line', (id, phrase) => {
     expect(textOf('load_skill', { id })).toBe(`[agentSteps.loadSkill]([${phrase}])`);
   });
@@ -66,7 +51,12 @@ describe('steps box tables', () => {
   });
 
   it('the dead skill phrases are gone from the table', () => {
-    expect(tables.SKILL_PHRASE['skillPhrase.newFact']).toBeUndefined();
-    expect(tables.SKILL_PHRASE['skillPhrase.topics']).toBeUndefined();
+    for (const dead of ['skillPhrase.newFact', 'skillPhrase.topics', 'skillPhrase.followStory', 'skillPhrase.factCheck']) {
+      expect(tables.SKILL_PHRASE[dead]).toBeUndefined();
+    }
+  });
+
+  it('a retry in a tool turn shows the retry words on the trailing row', () => {
+    expect(tables.PLAIN_LABEL['chatPhases.retrying']).toBe('[chatPhases.retrying]');
   });
 });

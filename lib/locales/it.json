@@ -28,7 +28,6 @@
     "otpPlaceholder": "Inserisci il codice a 6 cifre",
     "invalidEmailDescription": "Per favore inserisci un indirizzo email valido",
     "networkError": "Errore di rete. Per favore riprova.",
-    "sentTo": "Abbiamo inviato un codice a",
     "invalidOtp": "Per favore inserisci un codice OTP valido a 6 cifre",
     "invalidOtpServer": "Codice OTP non valido. Per favore riprova.",
     "otpError": "Si è verificato un errore durante la verifica. Per favore riprova.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Riprova",
     "identitySwitchSignOut": "Esci e ricomincia",
     "deviceSignInWorking": "Accesso in corso",
-    "deviceSignInFailed": "Si è verificato un problema. Riprova o accedi con l'email.",
-    "deviceSignInDenied": "Impossibile verificare questo dispositivo. Riprova o accedi con l'email.",
-    "deviceSignInUnavailable": "L'accesso non è al momento disponibile. Riprova tra qualche minuto o accedi con l'email.",
+    "deviceSignInFailed": "Si è verificato un problema. Riprova.",
+    "deviceSignInDenied": "Impossibile verificare questo dispositivo. Riprova.",
     "tryAgain": "Riprova",
     "learnAboutMera": "Scopri Mera",
-    "alreadyHaveAccount": "Accedi con l'email",
     "continue": "Continua",
     "sourceCode": "Codice sorgente",
     "failedToSendBody": "Invio del codice OTP non riuscito",
     "signingYouIn": "Accesso in corso…",
-    "signInWithoutEmail": "Accedi senza email",
+    "signInWithoutEmail": "Accedi con questo telefono",
     "differentAccount": {
-      "title": "Accedere senza email?",
+      "title": "Accedere con questo telefono?",
       "body": "Cancelleremo tutto ciò che Mera conserva su questo telefono per {{email}}. L'account in sé non viene eliminato. Sei sicuro?",
       "continue": "Rimuovi e continua",
       "useEmail": "Mantieni il mio account",
       "bodyGeneric": "Cancelleremo tutto ciò che Mera conserva su questo telefono per questo account. L'account in sé non viene eliminato. Sei sicuro?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Il tuo account è legato a questo telefono. Se elimini Mera o perdi il telefono, ripartirai con un nuovo account. Backup e ripristino, in Impostazioni, può conservare i tuoi dati.",
-      "reset": "Il tuo account è legato a questo telefono. Se resetti o perdi il telefono, ripartirai con un nuovo account. Backup e ripristino, in Impostazioni, può conservare i tuoi dati."
-    },
     "track": {
       "beforeYouStart": "Prima di iniziare",
-      "beginCaption": "Mera ti accede con questo telefono. Non devi ricordare nulla.",
+      "beginCaption": "Nessuna email, numero di telefono o password. Nulla da ricordare.",
       "beginMera": "Inizia con Mera",
       "beginTitle": "Come vuoi iniziare?",
-      "beginWithoutEmail": "Inizia senza email",
+      "beginWithoutEmail": "Accedi con questo telefono",
       "checkEmailTitle": "Controlla la tua email",
       "chooseLanguage": "Scegli la tua lingua",
       "codeA11y": "Codice a 6 cifre",
@@ -82,13 +75,25 @@
       "notHereTitle": "{{language}} non è ancora su questo telefono",
       "phoneLanguage": "La lingua del tuo telefono",
       "sendCode": "Invia codice",
-      "sentTo": "Abbiamo inviato un codice a 6 cifre a {{email}}.",
       "useDifferentEmail": "Usa un'altra email",
       "welcome": "Benvenuto in Mera",
       "wrongCode": "Il codice non funziona. Controllalo, oppure richiedine uno nuovo.",
       "noSheetTitle": "Il tuo iPhone non ha aperto il download",
-      "noSheetBody": "Riprova, oppure apri Impostazioni sul tuo iPhone, poi Generali, poi Lingua e regione, poi Lingue di traduzione, e scarica {{language}}."
-    }
+      "noSheetBody": "Riprova, oppure apri Impostazioni sul tuo iPhone, poi Generali, poi Lingua e regione, poi Lingue di traduzione, e scarica {{language}}.",
+      "sentToIfAccount": "Se questa email ha un account Mera, ti abbiamo inviato un codice. Sei nuovo su Mera? Usa «Accedi con questo telefono».",
+      "noCodeUsePhone": "Non hai ricevuto il codice? Usa «Accedi con questo telefono»."
+    },
+    "emailLegacyHint": "Solo per chi ha già effettuato l'accesso con l'email. I nuovi utenti non possono più accedere con l'email.",
+    "phoneCheckTemporary": "Impossibile verificare questo telefono. Controlla la connessione e riprova.",
+    "phoneUnsupportedAndroid": "Mera ha bisogno di Google Play su questo telefono per farti accedere. I telefoni senza Google Play non sono supportati.",
+    "phoneUnsupportedIos": "Questo iPhone non può usare l'accesso con il telefono.",
+    "supportedPhones": "Telefoni supportati",
+    "emailEnded": {
+      "title": "L'accesso con email è terminato",
+      "bodyIos": "L'accesso con email è terminato il {{date}}. Accedi con questo telefono per ricominciare. Il tuo piano torna dall'App Store, e i tuoi articoli salvati tornano dal tuo backup.",
+      "bodyAndroid": "L'accesso con email è terminato il {{date}}. Accedi con questo telefono per ricominciare. Il tuo piano torna da Google Play, e i tuoi articoli salvati tornano dal tuo backup."
+    },
+    "phoneNotSupported": "Questo telefono non è supportato"
   },
   "account": {
     "contactSupport": "Parla con l'assistenza"
@@ -523,12 +528,12 @@
     "exportHistoryEmptyDescription": "Non hai letto alcun articolo negli ultimi 30 giorni.",
     "keeps": {
       "title": "Cosa conserva Mera su di te",
-      "emailAndPlan": "La tua email e il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
+      "emailAndPlan": "La tua email, fino al passaggio all'accesso con il telefono o fino all'eliminazione il 30 ottobre 2026, e il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
       "plan": "Il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
-      "emailIfAdded": "La tua email se ne hai aggiunta una, e il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
+      "emailIfAdded": "Il tuo piano. Mera non chiede mai un'email, e ogni email di prima viene eliminata il 30 ottobre 2026. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
       "signInRecordIos": "Un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple che si tratta della vera app non viene conservato.",
       "signInRecordAndroid": "Un record di accesso per questo telefono, non l'ID del tuo telefono, eliminato con il tuo account. Il controllo di Google che si tratta della vera app non viene conservato.",
-      "signInRecordGeneric": "Senza email, un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple o Google che si tratta della vera app non viene conservato.",
+      "signInRecordGeneric": "Un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple o Google che si tratta della vera app non viene conservato.",
       "usage": "Quanto testo cifrato Mera ha inviato per essere letto per te ogni giorno e in quante richieste (mai il testo stesso), un conteggio giornaliero degli articoli inviati a questo telefono, quando hai raggiunto la lettura giornaliera del tuo piano e i giorni in cui hai usato Mera. Conservato per 90 giorni. Gli accessi non conservano indirizzo IP né dati del browser.",
       "topics": "Frasi di argomento, salvate solo in base al testo senza nulla che le colleghi a te, ed eliminate dopo 14 giorni di inutilizzo.",
       "privacyLink": "Leggi l'informativa sulla privacy"
@@ -572,11 +577,11 @@
     "contentPolicy": "Norme sui contenuti",
     "faq": "FAQ",
     "reportBug": "Segnala un bug",
-    "deleteAccountConfirmGrace": "Il tuo account sarà programmato per l'eliminazione, con un periodo di tolleranza di 30 giorni. Se il tuo account ha un'email, accedi con quella entro questi 30 giorni per annullare. Un account senza email non può più accedere, quindi la sua eliminazione non si può annullare.",
+    "deleteAccountConfirmGrace": "Il tuo account sarà programmato per l'eliminazione e cancellato definitivamente dopo 30 giorni. Questo telefono non può più accedervi. Non si può annullare.",
     "deleteAccountWarningGrace": "⚠️ Dopo 30 giorni, i dati del tuo account vengono rimossi in modo permanente. I documenti di fatturazione vengono conservati per 7 anni per la contabilità. Non si può annullare.",
     "finalConfirmationBodyGrace": "Questo programma il tuo account per l'eliminazione permanente tra 30 giorni.",
     "accountDeletionScheduledTitle": "Eliminazione programmata",
-    "accountDeletionScheduledDescription": "Il tuo account sarà eliminato definitivamente tra 30 giorni. Se ha un'email, accedi con quella prima di allora per annullare."
+    "accountDeletionScheduledDescription": "Il tuo account sarà eliminato definitivamente tra 30 giorni."
   },
   "configPanel": {
     "factDeletedTitle": "Fatto eliminato",
@@ -728,7 +733,8 @@
     "mayMistakes": "Mera può commettere errori, quindi controlla le notizie importanti alla fonte.",
     "cardWaitingHint": "Tocca un'opzione qui sopra, oppure scrivi sì",
     "cardCancelled": "Va bene, non è cambiato nulla",
-    "changeUndone": "Annullato"
+    "changeUndone": "Annullato",
+    "cardTapHint": "Tocca un'opzione qui sopra."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Mi è piaciuto questo articolo: \"{{title}}\". Vorrei vedere altri suggerimenti come questo.",
@@ -882,12 +888,9 @@
     "activatedTitle": "{{plan}} è attivo",
     "planPending": "{{plan}} · attivazione",
     "perMonth": "/mese",
-    "starterFreeTitle": "Sei su Starter, gratis",
-    "starterFreeBody": "Ogni account include il piano Base completo senza costi: tutti i tuoi interessi, chat, fact check e storie seguite. Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta. Sui telefoni supportati, la lettura sul telefono è illimitata in ogni piano.",
     "analysedForYou": "Letto da Mera",
     "available24h": "Disponibili, ultime 24 ore",
     "discarded": "Scartati",
-    "localOnly": "Calcolato su questo telefono a partire da ciò che Mera già conserva. Non viene registrato nulla in più.",
     "promoEndsNoRenew": "Accesso promo · finisce il {{date}}, non si rinnova",
     "relevantSoFar": "Pertinenti finora",
     "billedAppStore": "Addebitato tramite App Store. Annulla quando vuoi dal tuo account Apple.",
@@ -897,7 +900,13 @@
     "confirmTimeoutTitle": "Non siamo ancora riusciti a confermare il tuo acquisto",
     "confirmTimeoutBody": "Se hai già pagato, contatta l'assistenza e sistemeremo tutto.",
     "checkAgain": "Controlla di nuovo",
-    "readingExplainer": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta. Il tuo piano stabilisce quanto Mera legge nel cloud ogni giorno: Base 10 MB, Individuale 50 MB, Professionale 200 MB. Mera legge per te tramite crittografia end-to-end, quindi non può vedere quali articoli legge né quanti. Per questo i piani si misurano in megabyte, non in articoli. Sui telefoni supportati, la lettura sul telefono è illimitata in ogni piano."
+    "invoicesAppStore": "Mera non ha modo di inviarti un'email, quindi Apple invia le tue ricevute e fatture all'email del tuo Account Apple.",
+    "invoicesPlayStore": "Mera non ha modo di inviarti un'email, quindi Google Play invia le tue ricevute all'email del tuo Account Google.",
+    "planBack": "Il tuo piano è tornato.",
+    "restoreNoneApple": "Nessun piano trovato su questo Account Apple.",
+    "restoreNoneGoogle": "Nessun piano trovato su questo Account Google.",
+    "restoreFailedAppStore": "Impossibile raggiungere l'App Store. Riprova.",
+    "restoreFailedPlayStore": "Impossibile raggiungere Google Play. Riprova."
   },
   "tabs": {
     "deck": "Notizie",
@@ -1548,9 +1557,9 @@
     "retry": "Riprova",
     "welcomeBody": "Tocca \"Accetta e continua\" per accettare i nostri Termini di servizio e l'Informativa sulla privacy.",
     "deviceNotice": {
-      "appAttest": "Nessuna email necessaria. Mera ti fa accedere con questo telefono. Apple conferma che è la vera app Mera su un vero iPhone, per fermare gli account falsi. Conserviamo un record di accesso finché hai un account.",
-      "playIntegrity": "Nessuna email necessaria. Mera ti fa accedere con questo telefono. Google conferma che è la vera app Mera su un vero telefono Android, per fermare gli account falsi. Conserviamo un record di accesso, non l'ID del tuo telefono.",
-      "generic": "Nessuna email necessaria. Mera ti fa accedere con questo telefono. Conserviamo un record di accesso per questo telefono finché hai un account."
+      "appAttest": "Mera ti fa accedere con questo telefono. Apple conferma che è la vera app Mera su un vero iPhone, per fermare gli account falsi. Conserviamo un record di accesso finché hai un account.",
+      "playIntegrity": "Mera ti fa accedere con questo telefono. Google conferma che è la vera app Mera su un vero telefono Android, per fermare gli account falsi. Conserviamo un record di accesso, non l'ID del tuo telefono.",
+      "generic": "Mera ti fa accedere con questo telefono. Conserviamo un record di accesso per questo telefono finché hai un account."
     }
   },
   "tutorials": {
@@ -1846,7 +1855,7 @@
             "body": "Le cose principali, e perché ognuna esce.",
             "steps": {
               "0": "Brevi frasi di argomenti, così c'è qualcosa con cui abbinare le storie.",
-              "1": "Come accedi, con l'email o con questo telefono, e quale piano hai.",
+              "1": "Come accedi, cioè con questo telefono (o, fino al 30 ottobre 2026, con un'email di prima), e quale piano hai.",
               "2": "Gli articoli che il tuo telefono richiede e il testo cifrato che Mera invia per essere letto per te, conteggiati ogni giorno per applicare il tuo piano."
             },
             "ask": "Cosa invia l'app ai tuoi server?"
@@ -1865,7 +1874,7 @@
           },
           "what-we-keep": {
             "headline": "Cosa conserviamo",
-            "body": "La tua email di accesso, se ne hai aggiunta una. Quale piano hai. Un conteggio giornaliero degli articoli inviati a te, quanto testo cifrato Mera ha inviato per essere letto per te e in quante richieste (mai il testo stesso), quando hai raggiunto la lettura giornaliera del tuo piano e i giorni in cui hai usato Mera, conservato per 90 giorni. Gli orari delle notifiche, la lingua e la modalità di elaborazione. Le risposte che invii alle domande del team di Mera. Se usi Mera senza email, un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo.",
+            "body": "Quale piano hai. Un'email solo per un account che in precedenza ha effettuato l'accesso con una, eliminata il 30 ottobre 2026. Un conteggio giornaliero degli articoli inviati a te, quanto testo cifrato Mera ha inviato per essere letto per te e in quante richieste (mai il testo stesso), quando hai raggiunto la lettura giornaliera del tuo piano e i giorni in cui hai usato Mera, conservato per 90 giorni. Gli orari delle notifiche, la lingua e la modalità di elaborazione. Le risposte che invii alle domande del team di Mera. Un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo.",
             "ask": "Cosa conserva Mera su di me sui suoi server?"
           }
         }
@@ -2219,20 +2228,6 @@
     "mailFailedBody": "Copia il nostro indirizzo di supporto e scrivici da qualsiasi app di posta.",
     "copyAddress": "Copia indirizzo"
   },
-  "emailCapture": {
-    "title": "Aggiungi la tua email",
-    "subtitle": "Ricevi le ricevute via email e recupera il tuo account se cambi telefono.",
-    "continue": "Continua",
-    "notNow": "Non ora",
-    "confirm": "Conferma",
-    "added": "Email aggiunta",
-    "addedDetail": "Le ricevute e il recupero dell'account useranno {{email}}.",
-    "skip": "Continua senza email",
-    "skipTitle": "Continuare senza email?",
-    "skipBody1": "Senza un'email, il tuo account non può passare a un'altra piattaforma. Se passi da iOS ad Android o viceversa, lì ripartirai con un nuovo account.",
-    "skipBody2": "L'assistenza può trovare il tuo acquisto solo con il tuo ID assistenza. Copialo e conservalo in un posto sicuro.",
-    "skipConfirm": "Continua al pagamento"
-  },
   "videoPlayer": {
     "closeA11y": "Chiudi video",
     "openInBrowser": "Apri nel browser",
@@ -2416,7 +2411,6 @@
     "removing": "Rimuovo quello che mi hai chiesto",
     "asking": "Ti faccio una domanda",
     "working": "Ci sto lavorando",
-    "slow": "Ancora in corso, connessione lenta",
     "legCapSentence": "Ci sono voluti più passaggi di quanti Mera possa farne in una volta. Chiedi di nuovo per continuare.",
     "interrupted": "È stato interrotto. Chiedi di nuovo per continuare.",
     "summaryFailed": "Qualcosa non ha funzionato",
@@ -2436,7 +2430,6 @@
     "noProposalSentence": "Mera non ha trovato nulla da aggiungere da questo.",
     "unknownToolSentence": "Qualcosa è andato storto da parte di Mera. Chiedi di nuovo per continuare.",
     "malformedChoiceSentence": "Mera non è riuscita a mostrarti le opzioni. Chiedi di nuovo per continuare.",
-    "boxTitle": "Mera sta lavorando",
     "doneInSteps_one": "Completato in {{count}} passaggio",
     "doneInSteps_other": "Completato in {{count}} passaggi",
     "doneInStepsShow_one": "Completato in {{count}} passaggio, mostra i passaggi",
@@ -2455,9 +2448,7 @@
     "interests": "i tuoi interessi",
     "origin": "da dove vieni",
     "family": "la tua famiglia",
-    "feedTuning": "il tuo Feed",
-    "followStory": "una storia da seguire",
-    "factCheck": "un'affermazione da verificare"
+    "feedTuning": "il tuo Feed"
   },
   "askChoice": {
     "answeredA11y": "già risposto",
@@ -2496,10 +2487,10 @@
       "Preparo il telefono a rispondere."
     ],
     "deviceThinking": [
-      "Ci penso sul tuo telefono. Nulla lascia il dispositivo."
+      "Ci penso sul tuo telefono."
     ],
     "webSearch": [
-      "Ricerca sul web dal tuo dispositivo…"
+      "Ricerca sul web tramite il server di Mera…"
     ]
   },
   "savedExport": {
@@ -2532,7 +2523,8 @@
     },
     "stories": {
       "privacy": "Le storie che segui restano su questo telefono."
-    }
+    },
+    "sourcesLink": "Vedi tutte le fonti che Mera legge"
   },
   "articleMenu": {
     "openA11y": "Altre azioni",
@@ -2677,11 +2669,10 @@
       "privacy": "Mera non collega le tue ricerche al tuo account."
     },
     "explainer": {
-      "country1": "Le storie salgono di posizione più le testate di questo paese ne scrivono.",
-      "countrySame": "Questa pagina è uguale per tutti. Nulla di te viene usato qui.",
-      "same": "Mondo è uguale per tutti. Nulla di te viene usato qui.",
-      "top1": "Le storie coperte da molti paesi, da molte testate diverse, salgono in cima. Un solo paese molto attivo non può riempire la pagina, e molti articoli di una stessa testata contano una volta sola.",
-      "window": "Il selettore del tempo stabilisce quanto indietro guarda la pagina: 6, 12, 24 o 48 ore. Ogni elenco conta solo gli articoli pubblicati entro quella finestra."
+      "window": "Il selettore del tempo stabilisce quanto indietro guarda la pagina: 6, 12, 24 o 48 ore. Ogni elenco conta solo gli articoli pubblicati entro quella finestra.",
+      "justMath": "Solo calcoli. Nessuna IA classifica questa pagina, e appare uguale per tutti.",
+      "mathWorld": "Ogni paese che copre una notizia le assegna 1 punto, più un po' in più per ogni altra testata di quel paese, fino a un massimo di 4 punti per paese. Si sommano tutti i paesi e il totale più alto viene per primo.",
+      "mathCountry": "Si contano gli articoli che le testate di questo paese hanno scritto su una notizia nelle ultime 24 ore. La notizia con più articoli viene per prima."
     }
   },
   "library": {
@@ -2782,8 +2773,6 @@
     "settings": {
       "yourPlan": "Il tuo piano",
       "usageOffline": "L'utilizzo compare quando sei online",
-      "addEmail": "Aggiungi un'email",
-      "addEmailHint": "Facoltativo. Solo se vuoi trasferire il tuo account e il piano su un altro telefono, o ricevere le email di Mera.",
       "appLock": "Blocco app",
       "backupOff": "Backup disattivato",
       "backupOn": "Backup attivo",
@@ -2793,7 +2782,6 @@
       "developerOn": "Modalità sviluppatore attiva",
       "groupGeneral": "Generali",
       "groupPrivacy": "Privacy e sicurezza",
-      "noEmailNeeded": "Nessuna email richiesta.",
       "observabilityHint": "Cosa contiene il database del dispositivo, per il debug",
       "off": "Disattivato",
       "on": "Attivo",
@@ -2808,11 +2796,10 @@
       "resetsTodayAt": "Si azzera oggi alle {{time}}",
       "resetsTomorrowAt": "Si azzera domani alle {{time}}",
       "lastUpdated": "Ultimo aggiornamento {{time}}",
-      "onDeviceUnlimited": "Lettura su questo telefono: illimitata",
-      "readingOnPhone": "Mera sta leggendo su questo telefono.",
       "newPlanApplies": "Il tuo nuovo piano è già attivo.",
-      "planMultiplierBase": "10 MB di lettura nel cloud al giorno",
-      "planMultiplier": "{{mb}} MB di lettura nel cloud al giorno, {{n}}x Base"
+      "restorePurchases": "Ripristina acquisti",
+      "processingMode": "Modalità di elaborazione",
+      "unlimited": "Illimitato"
     },
     "notifications": {
       "push": "Notifiche push",
@@ -2924,6 +2911,29 @@
     "relevance": "Miglior corrispondenza",
     "oldest": "Meno recente prima",
     "newest": "Più recente prima"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Accedi invece con questo telefono",
+    "dialogBody": "Ti facciamo accedere con questo telefono, spostiamo il tuo account su di esso ed eliminiamo la tua email dal nostro database.",
+    "dialogSettingsHint": "Puoi farlo nelle Impostazioni fino al {{date}}.",
+    "confirm": "Sposta account",
+    "cancel": "Non ora",
+    "progressTitle": "Spostamento del tuo account su questo telefono",
+    "steps": {
+      "checking": "Verifica di questo telefono",
+      "linking": "Collegamento del tuo account",
+      "removing": "Rimozione della tua email",
+      "done": "Fatto"
+    },
+    "failed": "Non è stato completato. Il tuo account funziona ancora. Riprova tra poco.",
+    "unsupportedIos": "Questo telefono non può usare l'accesso con il telefono, quindi Mera smette di funzionare su di esso il {{date}}. Se paghi per Mera, annulla il tuo piano nell'App Store prima di quella data.",
+    "unsupportedAndroid": "Questo telefono non può usare l'accesso con il telefono, quindi Mera smette di funzionare su di esso il {{date}}. Se paghi per Mera, annulla il tuo piano in Google Play prima di quella data.",
+    "success": "Hai effettuato l'accesso con questo telefono. La tua email è stata eliminata.",
+    "close": "Chiudi",
+    "inboxTitle": "L'accesso con email termina il {{date}}",
+    "inboxBody": "Passa all'accesso con il telefono per conservare il tuo account.",
+    "settingsRow": "Passa all'accesso con il telefono",
+    "settingsRowHint": "L'accesso con email termina il {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

@@ -11,6 +11,44 @@ import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
+ * The ordered local cleanup after the server accepted a deletion: sign out,
+ * sever the device binding, route to the logout screen, then wipe. Shared by
+ * Delete account and Observability's test-account Delete. Each step runs on
+ * its own, so one failing (a keychain hiccup, a sign-out that throws) cannot
+ * skip the steps after it, and each failure is reported by name rather than
+ * swallowed. Never throws.
+ */
+export async function finishAccountDeletion(): Promise<void> {
+    const cleanupStep = async (step: string, run: () => Promise<void> | void) => {
+        try {
+            await run();
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { component: 'useDeleteAccount', method: 'deleteAccount', step },
+            });
+        }
+    };
+    // clearAuthStorage() owns the (guarded, bounded) server sign-out, see its
+    // header. A direct signOut here once let a network failure skip the whole
+    // local cleanup silently.
+    await cleanupStep('sign-out', () => clearAuthStorage());
+    // DELETION SEVERS the device binding (S10). Logout preserves it so login
+    // resumes the account; deletion must not. The server deletes the device
+    // record too, so this is the client half.
+    await cleanupStep('device-credentials', () => clearDeviceAuthCredentials());
+    await cleanupStep('route', () => {
+        router.dismissAll();
+        // The LOGOUT route, not '/': the launch gate counts the still-stale
+        // better-auth session atom as identity and re-entered the app with a
+        // dead session (BUG 4). signedOut suppresses login.tsx's mirror-image
+        // shortcut until the atom actually clears.
+        router.replace({ pathname: '/login', params: { signedOut: '1' } });
+    });
+    await yieldToEventLoop();
+    await cleanupStep('wipe', () => wipeAllLocalUserData());
+}
+
+/**
  * Delete account: asks twice, then requests the 30-day deletion, signs out,
  * severs the device binding and wipes. Its row sits above Log out in
  * Settings › Account. Returns the handler that starts the two confirmations.
@@ -37,38 +75,7 @@ export function useDeleteAccount(): () => Promise<void> {
             if (error) throw error;
             serverDeleteSucceeded = true;
 
-            // Local cleanup after the server accepted the deletion. Each step
-            // runs on its own, so one failing (a keychain hiccup, a sign-out
-            // that throws) cannot skip the steps after it, and each failure is
-            // reported by name rather than swallowed.
-            const cleanupStep = async (step: string, run: () => Promise<void> | void) => {
-                try {
-                    await run();
-                } catch (error) {
-                    logger.captureException(error, {
-                        tags: { component: 'useDeleteAccount', method: 'deleteAccount', step },
-                    });
-                }
-            };
-            // clearAuthStorage() owns the (guarded, bounded) server sign-out,
-            // see its header. A direct signOut here once let a network failure
-            // skip the whole local cleanup silently.
-            await cleanupStep('sign-out', () => clearAuthStorage());
-            // DELETION SEVERS the device binding (S10). Logout preserves it so
-            // login resumes the account; deletion must not. The server deletes
-            // the device record too, so this is the client half.
-            await cleanupStep('device-credentials', () => clearDeviceAuthCredentials());
-            await cleanupStep('route', () => {
-                router.dismissAll();
-                // The LOGOUT route, not '/': the launch gate counts the
-                // still-stale better-auth session atom as identity and
-                // re-entered the app with a dead session (BUG 4). signedOut
-                // suppresses login.tsx's mirror-image shortcut until the atom
-                // actually clears.
-                router.replace({ pathname: '/login', params: { signedOut: '1' } });
-            });
-            await yieldToEventLoop();
-            await cleanupStep('wipe', () => wipeAllLocalUserData());
+            await finishAccountDeletion();
 
             toast.show({
                 placement: 'top',

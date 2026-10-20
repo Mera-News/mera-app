@@ -118,3 +118,42 @@ describe('offer guards', () => {
     expect(offerGuardReport(groupTurns(rows), () => s.turns[0].expect)).toMatchObject({ checked: 1, passed: 0 });
   });
 });
+
+describe('a fact card waiting on screen (fixture pendingCards)', () => {
+  const CARD = "Follows NASA's Artemis lunar program";
+  const ACK = { index: 0, user: 'ok', pendingCards: [CARD], expect: { routeKind: 'question', skill: 'conversation/question', tools: [], legs: 2, noOffer: true } };
+  const NEXT = { index: 1, user: 'thanks', expect: { routeKind: 'question', skill: 'conversation/question', tools: [], legs: 2 } };
+
+  it('reaches the loop as state.pendingCardStatements for that turn only', async () => {
+    const turn = [res({ toolCalls: [tc('load_skill', { id: 'conversation/question' })] }), res({ content: 'Tap Add on the card above.' })];
+    // "ok" beside the card gets one more tool-free leg that points at it.
+    const { requests } = await drive(script([ACK, NEXT]), [...turn, res({ content: 'Tap Add on the card above.' }), ...turn]);
+    const said = (r: EvalModelRequest) => r.messages.map((m) => m.content).join('\n');
+    expect(said(requests[0])).toContain(`Cards already waiting for the user: "${CARD}"`);
+    expect(requests[2].tools ?? []).toEqual([]);
+    expect(said(requests[3])).not.toContain('Cards already waiting');
+  });
+
+  it('a malformed pendingCards is a load error', () => {
+    expect(() => script([{ ...ACK, pendingCards: [''] }])).toThrow(/pendingCards/);
+    expect(() => script([{ ...ACK, pendingCards: CARD }])).toThrow(/pendingCards/);
+  });
+});
+
+describe('a turn scored only on its outcome', () => {
+  // waiting-card.json: routing and leg count beside a waiting card were never
+  // measured, so the turn carries only noOffer, card.noApply and replyMatches.
+  it('loads with no routeKind, skill or legs, and scores no route for it', async () => {
+    const s = script([{ index: 0, user: 'ok', pendingCards: ['Works as a nurse'], expect: { noOffer: true, card: { noApply: true }, replyMatches: ['card'] } }]);
+    expect(s.turns[0].expect.routeKind).toBeUndefined();
+    expect(s.turns[0].expect.legs).toBeUndefined();
+    const { rows } = await drive(s, [res({ toolCalls: [tc('load_skill', { id: 'conversation/question' })] }), res({ content: 'Tap the card above.' })]);
+    expect(rows.every((r) => r.expectedRouteKind === null && r.expectedSkill === null)).toBe(true);
+  });
+
+  it('a routeKind or skill that IS written must still exist', () => {
+    expect(() => script([{ index: 0, user: 'ok', expect: { routeKind: 'nonsense' } }])).toThrow(/routeKind/);
+    expect(() => script([{ index: 0, user: 'ok', expect: { skill: 'facts/nonsense' } }])).toThrow(/skill/);
+    expect(() => script([{ index: 0, user: 'ok', expect: { legs: 0 } }])).toThrow(/legs/);
+  });
+});

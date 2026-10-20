@@ -32,6 +32,7 @@ import {
   authFetch,
   CallerAbortError,
   CleartextToolCallError,
+  EmptyReplyError,
   getAuthHeaders,
   isAbortLike,
   isCallerAbort,
@@ -501,17 +502,17 @@ export async function* cloudChatStream(
   const textTools = (request.tools ?? []) as TextToolDefinition[];
 
   const buildChatRequest = async (sendModel: string) => {
-    buildAttempts += 1;
-    if (buildAttempts > 1) {
-      phase('retrying');
-    } else {
-      // A cache hit makes the key fetch free, so `attesting` would be a line
-      // about work that is not happening. A miss means a second interactive
-      // grant 1000ms behind the one just spent, plus the attestation round
-      // trip: on a cold launch this is the phase, and it is why the first
-      // message of a session feels different from the tenth.
-      phase(getCachedAttestation(sendModel) ? 'securing' : 'attesting');
-    }
+    // A LOCAL copy: a hedge leg can bump the shared counter while a cold
+    // attestation below is still in flight.
+    const attempt = ++buildAttempts;
+    // A cache hit makes the key fetch free, so `attesting` would be a line
+    // about work that is not happening. A miss means a second interactive
+    // grant 1000ms behind the one just spent, plus the attestation round
+    // trip: on a cold launch this is the phase, and it is why the first
+    // message of a session feels different from the tenth.
+    const cold = attempt === 1 && !getCachedAttestation(sendModel);
+    if (attempt > 1) phase('retrying');
+    else phase(cold ? 'attesting' : 'securing');
     // NO TOOL FIELD LEAVES THE DEVICE. The schema joins the system prompt,
     // replayed calls and results become text, and all of it is encrypted with
     // the rest of the content (text-tool-protocol). Rebuilt per attempt, so a
@@ -525,6 +526,9 @@ export async function* cloudChatStream(
     // INTERACTIVE all the way down: a cold attestation cache makes this a real
     // gateway request on the critical path of a user's turn.
     const attemptCtx = await encryptMessages(messages, sendModel, 'interactive');
+    // The fetched key has just sealed the message: a cold first build shows
+    // both steps, never only the key fetch.
+    if (cold) phase('securing');
 
     // Dev-only timing: JWT fetch on the first-chat path (cache hit ≈ 0ms, miss
     // = real auth round-trip). getAuthHeaders' only awaited work is getJwtToken.
@@ -576,10 +580,25 @@ export async function* cloudChatStream(
   // genuinely has to wait: on a warm, idle device this is 0 and the phase is
   // skipped entirely rather than shown for its minimum dwell over nothing.
   if (gatewayRateLimiter.interactiveWaitMs() > QUEUE_PHASE_FLOOR_MS) phase('queued');
+  // A BUFFERED answer's headers arrive only once the whole answer is done, so
+  // the headers route below would hold the line on `securing` for the model's
+  // entire think time. It says `thinking` once the request is built instead:
+  // on the hedged path the grant is already held, so the POST leaves at once.
+  // On the sequential path (session fallback engaged) the grant is taken
+  // after the build, so this can lead the send by up to one grant wait.
+  let sendAnnounced = false;
+  const buildAndAnnounce = async (sendModel: string) => {
+    const built = await buildChatRequest(sendModel);
+    if (request.stream === false && !sendAnnounced) {
+      sendAnnounced = true;
+      phase('thinking');
+    }
+    return built;
+  };
   const { response, ctx, model: sentModel } = await sendWithModelFallback(
     CHAT_API,
     primary,
-    buildChatRequest,
+    buildAndAnnounce,
     // Chat has always used the gateway-aligned budget; every other cloud call
     // now shares it (plan A). Chat is the only user-facing path, so it is also
     // the only one that hedges and the only one that streams its body.
@@ -707,7 +726,8 @@ export async function* cloudChatStream(
   // persona loop sends `enable_thinking: false` on every leg and so emits no
   // reasoning at all. Gating on that event froze the line on "encrypted" for
   // the whole window, which is the failure this line exists to remove.
-  phase('thinking');
+  // A buffered request already said it when it was sent.
+  if (request.stream !== false) phase('thinking');
 
   let textYielded = false;
   try {
@@ -728,10 +748,16 @@ export async function* cloudChatStream(
     // Already on the fallback (session-engaged, or a hedge winner) — there is
     // no healthier model left to try.
     if (sentModel !== primary) throw err;
-    // Only an abort-class death (idle stall, cancelled body) is model-evidence.
-    // A decrypt failure is NOT: model-fallback.ts is explicit that "4xx, auth,
-    // E2EE/decrypt and plain network errors say nothing about the model".
-    if ((isAbortLike(err) || err instanceof StreamIdleError) && !isCallerAbort(err)) reportModelFailure(primary);
+    // Only an abort-class death (idle stall, cancelled body) or an empty 2xx
+    // reply is model-evidence. A decrypt failure is NOT: model-fallback.ts is
+    // explicit that "4xx, auth, E2EE/decrypt and plain network errors say
+    // nothing about the model".
+    if (
+      (isAbortLike(err) || err instanceof StreamIdleError || err instanceof EmptyReplyError) &&
+      !isCallerAbort(err)
+    ) {
+      reportModelFailure(primary);
+    }
     // The decrypt-failure path above already spent this generator's one retry.
     // Without this check a re-attested request that then died mid-stream would
     // issue a THIRD upstream call for a single user turn.

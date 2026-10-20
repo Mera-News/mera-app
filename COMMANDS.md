@@ -181,12 +181,11 @@ eas branch:list
 
 > Because runtime version = `appVersion` (`1.2.0`), an OTA update is only delivered to installs whose native build has the **same** app version. After bumping `version` in `app.json`, ship a new native build before OTA updates reach it.
 
-**Source maps for OTA updates:** `eas update` does not upload source maps on its own (only the native build phases do, via Xcode/Gradle), so JS stack traces from OTA bundles arrive at Sentry unsymbolicated and get mis-grouped. Use the `npm run update:*` scripts instead of a bare `eas update`: they chain `eas update --channel <channel>` with `npx sentry-expo-upload-sourcemaps dist` (the `dist/` dir is what `eas update` writes its bundle + source maps to), so every OTA publish stays symbolicated in Sentry:
+**Always publish with `npm run update:*`, never a bare `eas update`.** `scripts/ota-publish.js` exports under the EAS environment of the same name (`eas env:exec <env> 'EXPO_NO_DOTENV=1 npx expo export ...'`, iOS + Android, source maps), refuses the bundle if any file holds a test-account token (the `mera_tsk_` prefix or any local `EXPO_PUBLIC_TEST_ACCOUNT_TOKEN` value, from the shell or a `.env*` file), then runs `eas update --skip-bundler --input-dir dist --environment <env>` and uploads the source maps to Sentry (`eas update` uploads none itself, and an unsymbolicated OTA mis-groups in Sentry). Each `update:*` script already passes `--environment` (development, preview, production); the script refuses a run with none or with two different ones. The export must run under `env:exec`: with `--skip-bundler`, `eas update --environment` only labels the update and never reaches the bundle, so a plain export would ship the local `.env` and none of the EAS-hosted keys. Extra `eas update` flags go after `--`:
 
 ```bash
-npm run update:development   # eas update --channel development + sourcemap upload
-npm run update:preview       # eas update --channel preview + sourcemap upload
-npm run update:production    # eas update --channel production + sourcemap upload
+npm run update:production -- --message "..."   # same for development, preview
+node scripts/ota-publish.js --scan dist        # the leak gate alone
 ```
 
 Requires `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` to be set (see README's Backend Requirements table).

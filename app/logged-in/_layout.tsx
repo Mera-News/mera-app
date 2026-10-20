@@ -8,8 +8,8 @@ import FeedbackRequestAutoShowHost from '@/components/custom/feedback-request/Fe
 import ReauthOnReturn from '@/components/custom/auth/ReauthOnReturn';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
-import EmailCaptureHost from '@/components/custom/subscription/EmailCaptureSheet';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
+import MoveToPhoneHost from '@/components/custom/auth/MoveToPhoneHost';
 import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
 
 export default function LoggedInLayout() {
@@ -192,6 +192,9 @@ export default function LoggedInLayout() {
       {/* Renders nothing. Pops a live feedback request up once per request
           when nothing else is on screen; see its header for what it waits on. */}
       <FeedbackRequestAutoShowHost />
+      {/* Renders nothing until asked: the email account's move to phone sign-in
+          (inbox offer, confirm dialog, full-screen progress). */}
+      <MoveToPhoneHost />
       {/* Renders nothing — a mounted effect, and the catch-all for an account
           switch that got past the gates. It has to live HERE rather than on a
           screen: the gates unmount as soon as they route, and the case this
@@ -199,13 +202,6 @@ export default function LoggedInLayout() {
           unresolved session unconditionally (that is the offline path) and
           fires at most once per process. */}
       <IdentitySwitchWatcher />
-      {/* Renders nothing until the email-capture registry raises a request —
-          post-purchase for an anonymous (device sign-in) account. Mounted
-          here, once, so it survives tab switches. (The lapse and first-open
-          paywall gates that used to sit here died with the standalone paywall
-          screen, 2026-08-19 — Mera News Free plus FreeTierCard is the whole
-          unentitled experience now.) */}
-      <EmailCaptureHost />
       {/* MUST be last: renders an in-place full-screen overlay (not a
           navigation, unlike the two gates above) when the session user's
           accepted terms/privacy versions are missing or stale, and needs to

@@ -77,7 +77,7 @@ const SettingsUsageCard: React.FC = () => {
                 return planDisplay.pending ? t('subscription.planPending', { plan: name }) : name;
             })();
 
-    const reading = useReadingFetch(billing?.subscriptionTier);
+    const reading = useReadingFetch();
 
     return (
         <View

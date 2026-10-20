@@ -1,6 +1,6 @@
 // Support-id plumbing (lib/support-id.ts): session extraction, the bounded best-effort fetch, and the mailto
 // body builder every support surface uses. getSupportId runs through the real auth-client against MSW.
-import { buildSupportMailtoUrl, getSupportId, readSupportIdFromUser, supportIdLine } from '@/lib/support-id';
+import { accountHandle, buildSupportMailtoUrl, getSupportId, readSupportIdFromUser, resolveSupportId, supportIdLine } from '@/lib/support-id';
 import { advanceUntilDone, delay, http, HttpResponse, server, useFakeClock } from '@/test/helpers';
 
 /** The session as the auth client reads it, with `user` extended by the given fields. */
@@ -88,5 +88,37 @@ describe('mailto builder', () => {
 
     it('falls back to a bare mailto when no id is known', () => {
         expect(buildSupportMailtoUrl('contact@mera.news', null)).toBe('mailto:contact@mera.news');
+    });
+});
+
+describe('resolveSupportId', () => {
+    it('prefers the session id, so a fresh session always wins over the saved copy', () => {
+        expect(resolveSupportId({ supportId: '7654321' }, '1234567')).toBe('7654321');
+    });
+
+    it('falls back to the id saved on the phone when there is no session (offline, dead session)', () => {
+        expect(resolveSupportId(null, '1234567')).toBe('1234567');
+        expect(resolveSupportId({}, '1234567')).toBe('1234567');
+    });
+
+    it('validates the saved copy the same way and hides on anything invalid', () => {
+        expect(resolveSupportId(null, '01234567')).toBeNull();
+        expect(resolveSupportId(null, 'support-1')).toBeNull();
+        expect(resolveSupportId(null, null)).toBeNull();
+    });
+});
+
+describe('accountHandle', () => {
+    it('shows the Support ID whenever the account has one, even an email account', () => {
+        expect(accountHandle('1234567', 'a@b.com')).toEqual({ kind: 'supportId', value: '1234567' });
+    });
+
+    it('falls back to the email for an old email account with no Support ID', () => {
+        expect(accountHandle(null, 'a@b.com')).toEqual({ kind: 'email', value: 'a@b.com' });
+    });
+
+    it('never shows the placeholder address, and shows nothing when neither is known', () => {
+        expect(accountHandle(null, '1234567@anon.mera.news')).toBeNull();
+        expect(accountHandle(null, null)).toBeNull();
     });
 });

@@ -2,7 +2,10 @@
 //
 // target 'local'  → mera-server's GraphQL service runs as a dev-user when
 //                    NODE_ENV !== 'production' (no auth headers needed).
-// target 'staging'/'prod' → runs the real Better Auth email-OTP flow
+// target 'staging'/'prod' → a TEST account when NEWS_HARNESS_TEST_ACCOUNT_TOKEN
+//                    and NEWS_HARNESS_TEST_ACCOUNT_HANDLE are set (headless,
+//                    both environments), else the staging dev bypass, else
+//                    the real Better Auth email-OTP flow
 //                    (mera-server/apps/mera-server-auth/src/auth.ts:
 //                    basePath '/api/auth', emailOTP + bearer() plugins) and
 //                    caches the resulting session for ~6 days (Better Auth's
@@ -16,6 +19,8 @@ import type { HarnessEnv } from '../config/env';
 import { authCachePath } from '../config/local-data';
 
 const SESSION_MAX_AGE_MS = 6 * 24 * 60 * 60 * 1000; // 6 days
+/** Test-account sessions live 24h server side; reuse a cached one for less. */
+const TEST_SESSION_MAX_AGE_MS = 20 * 60 * 60 * 1000;
 
 interface AuthCache {
   cookie?: string;
@@ -23,7 +28,70 @@ interface AuthCache {
   savedAt: string;
   /** How the session was obtained, so a cache written by one path is not
    *  silently reused by a run that asked for the other. */
-  method?: 'otp' | 'dev-bypass';
+  method?: 'otp' | 'dev-bypass' | 'test-account';
+  /** The test-account handle a 'test-account' cache belongs to. */
+  handle?: string;
+}
+
+/** The server's handle rule, verbatim (lib/device-auth.ts holds the app's copy). */
+export const TEST_ACCOUNT_HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]{1,39}$/;
+
+export type TestAccountRoute = 'sign-in' | 'delete' | 'list';
+
+export interface TestAccountResponse {
+  status: number;
+  body: unknown;
+  /** The session cookie a sign-in set. */
+  cookie?: string;
+}
+
+/**
+ * One call to the test-account routes (POST /api/auth/test-account/<route>,
+ * staging and prod). The token travels in the body only; nothing here ever
+ * puts it in an error or a log. A wrong, missing or disabled token is an
+ * identical 404, by design: the server offers no oracle.
+ */
+export async function callTestAccountRoute(
+  authEndpoint: string,
+  token: string,
+  route: TestAccountRoute,
+  handle?: string,
+): Promise<TestAccountResponse> {
+  if (handle !== undefined && !TEST_ACCOUNT_HANDLE_PATTERN.test(handle)) {
+    throw new Error(`harness-local: invalid test account handle '${handle}' (want ${TEST_ACCOUNT_HANDLE_PATTERN}).`);
+  }
+  const res = await fetch(`${authEndpoint}/api/auth/test-account/${route}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(handle === undefined ? { token } : { token, handle }),
+  });
+  let body: unknown = null;
+  try {
+    body = await res.json();
+  } catch {
+    // An empty or non-JSON body; the status says enough.
+  }
+  return { status: res.status, body, cookie: extractSetCookie(res) };
+}
+
+async function signInWithTestAccount(
+  authEndpoint: string,
+  token: string,
+  handle: string,
+): Promise<{ cookie?: string; bearer?: string }> {
+  const { status, body, cookie } = await callTestAccountRoute(authEndpoint, token, 'sign-in', handle);
+  if (status < 200 || status >= 300) {
+    throw new Error(
+      `harness-local: test-account sign-in failed: ${status}. ` +
+        (status === 404
+          ? 'A 404 means a wrong or missing token, test accounts disabled, or the route not deployed (the server answers all four the same).'
+          : 'See the auth service logs.'),
+    );
+  }
+  const typed = body as { token?: string; session?: { token?: string } } | null;
+  const bearer = typed?.token ?? typed?.session?.token;
+  if (!cookie && !bearer) throw new Error('harness-local: test-account sign-in returned neither a cookie nor a token.');
+  return { cookie, bearer };
 }
 
 /**
@@ -111,10 +179,10 @@ function saveCache(cachePath: string, cache: AuthCache): void {
   fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2) + '\n', 'utf-8');
 }
 
-function isCacheFresh(cache: AuthCache): boolean {
+function isCacheFresh(cache: AuthCache, maxAgeMs = SESSION_MAX_AGE_MS): boolean {
   const savedAt = Date.parse(cache.savedAt);
   if (Number.isNaN(savedAt)) return false;
-  return Date.now() - savedAt < SESSION_MAX_AGE_MS;
+  return Date.now() - savedAt < maxAgeMs;
 }
 
 function promptForOtp(): Promise<string> {
@@ -147,6 +215,23 @@ export async function getAuthHeaders(env: HarnessEnv): Promise<Record<string, st
       'harness-local: NEWS_HARNESS_AUTH_ENDPOINT is required when NEWS_HARNESS_TARGET is staging/prod.',
     );
   }
+  // A test account first: headless, and the only path that works on BOTH
+  // staging and prod. Cached per handle in its own file, never over the OTP one.
+  const testToken = process.env.NEWS_HARNESS_TEST_ACCOUNT_TOKEN?.trim();
+  const testHandle = process.env.NEWS_HARNESS_TEST_ACCOUNT_HANDLE?.trim();
+  if (testToken && testHandle) {
+    const testCachePath = authCachePath(env.target, testHandle);
+    const cachedTest = loadCache(testCachePath);
+    if (cachedTest && isCacheFresh(cachedTest, TEST_SESSION_MAX_AGE_MS) && cachedTest.method === 'test-account' && cachedTest.handle === testHandle) {
+      if (cachedTest.cookie) return { Cookie: cachedTest.cookie };
+      if (cachedTest.bearer) return { Authorization: `Bearer ${cachedTest.bearer}` };
+    }
+    const { cookie, bearer } = await signInWithTestAccount(env.authEndpoint, testToken, testHandle);
+    saveCache(testCachePath, { cookie, bearer, savedAt: new Date().toISOString(), method: 'test-account', handle: testHandle });
+    console.log(`harness-local: signed in to ${env.target} test account '${testHandle}'.`);
+    return cookie ? { Cookie: cookie } : { Authorization: `Bearer ${bearer}` };
+  }
+
   if (!env.authEmail) {
     throw new Error(
       'harness-local: NEWS_HARNESS_AUTH_EMAIL is required when NEWS_HARNESS_TARGET is staging/prod, ' +

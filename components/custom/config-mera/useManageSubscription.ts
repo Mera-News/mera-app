@@ -2,7 +2,6 @@ import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing
 import { resolvePlanDisplay } from '@/lib/algorithms/plan-display';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { ensureEmailBeforeCheckout } from '@/lib/subscription/email-capture';
 import { holdRestartAcrossPurchase } from '@/lib/subscriptions/subscribe-flow';
 import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
@@ -24,7 +23,7 @@ export function useManageSubscription() {
     const [loading, setLoading] = useState(true);
     const [purchaseStatus, setPurchaseStatus] = useState<PurchaseStatus>('idle');
     // What a `checkAgain` needs to rerun the polls: the tier held before paying and the tier the store sold.
-    const purchase = useRef<{ before: string | null; purchasedTier: string | null } | null>(null);
+    const purchase = useRef<{ before: string | null; purchasedTier: string | null; restored: boolean } | null>(null);
     // A purchase completed but the server has not confirmed the new tier yet.
     const activationPending = purchaseStatus === 'confirming';
     const customerInfo = useSubscriptionStore((s) => s.customerInfo);
@@ -71,13 +70,13 @@ export function useManageSubscription() {
      * commits its last snapshot even when unconfirmed, on purpose: it is the server's truth, and a DEFERRED
      * App Store plan change never changes the tier at all.
      */
-    const pollPurchase = useCallback(async (before: string | null, purchasedTier: string | null) => {
+    const pollPurchase = useCallback(async (before: string | null, purchasedTier: string | null, restored: boolean) => {
         setPurchaseStatus('confirming');
         const confirm = (confirmedBilling: UserBillingInfo) => {
             setBilling(confirmedBilling);
             useSubscriptionStore.getState().setServerBilling(confirmedBilling);
             void rememberLastKnownTier(confirmedBilling.subscriptionTier ?? 'none');
-            showSubscriptionActivatedToast(confirmedBilling.subscriptionTier);
+            showSubscriptionActivatedToast(confirmedBilling.subscriptionTier, restored);
             setPurchaseStatus('confirmed');
         };
         const first = await refreshUserBillingAfterPurchase(before, { purchasedTier });
@@ -100,11 +99,11 @@ export function useManageSubscription() {
 
     /** After PURCHASED/RESTORED: read what the store sold, then poll for the server to agree. */
     const confirmPurchase = useCallback(
-        async (before: string | null) => {
+        async (before: string | null, restored: boolean) => {
             const [info, offering] = await Promise.all([getCustomerInfoSafe(), getOfferingSafe()]);
             applyStoreInfo(info, offering);
-            purchase.current = { before, purchasedTier: getActiveTier(info) };
-            await pollPurchase(before, purchase.current.purchasedTier);
+            purchase.current = { before, purchasedTier: getActiveTier(info), restored };
+            await pollPurchase(before, purchase.current.purchasedTier, restored);
         },
         [applyStoreInfo, pollPurchase],
     );
@@ -112,7 +111,7 @@ export function useManageSubscription() {
     /** From `timed-out`: rerun both polls for the same purchase. */
     const checkAgain = async () => {
         if (purchaseStatus !== 'timed-out' || !purchase.current) return;
-        await pollPurchase(purchase.current.before, purchase.current.purchasedTier);
+        await pollPurchase(purchase.current.before, purchase.current.purchasedTier, purchase.current.restored);
     };
 
     useEffect(() => {
@@ -132,10 +131,7 @@ export function useManageSubscription() {
         // return that throws away the entitlement refresh below, mid-flight:
         // they paid and the app does not know.
         //
-        // TAKEN AHEAD OF `ensureEmailBeforeCheckout()`, not just ahead of the
-        // paywall. That gate sends the user to their mail app for a code, which
-        // is a true departure on both platforms — and the one that arrives back
-        // with a half-finished checkout behind it.
+        // TAKEN AHEAD OF the paywall, which hands off to the store's purchase sheet.
         //
         // NOT RELEASED HERE, and deliberately not in a `finally`. The release is
         // timer-owned (see holdRestartAcrossPurchase): this function returns
@@ -147,9 +143,6 @@ export function useManageSubscription() {
         // uncalled and the two timers own it.
         holdRestartAcrossPurchase('purchase');
         try {
-            // S10: verified email is required before checkout for anonymous
-            // accounts; a dismissed sheet aborts quietly.
-            if (!(await ensureEmailBeforeCheckout())) return;
             const offering = await getOfferingSafe();
             // Browsing/upgrading from settings — show a close button so the user
             // can dismiss without purchasing (unlike the hard gate).
@@ -160,7 +153,7 @@ export function useManageSubscription() {
             // A purchase is a discrete event — refresh on it rather than making
             // the user wait for the next time this screen mounts.
             if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
-                await confirmPurchase(billing?.subscriptionTier ?? null);
+                await confirmPurchase(billing?.subscriptionTier ?? null, result === PAYWALL_RESULT.RESTORED);
             }
         } catch (error) {
             logger.captureException(error, {

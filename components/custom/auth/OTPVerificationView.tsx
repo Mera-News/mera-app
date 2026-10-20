@@ -11,7 +11,6 @@ import logger from '@/lib/logger';
 import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useColors } from '@/lib/theme/tokens';
-import { maskEmail } from '@/lib/algorithms/mask-email';
 
 interface OTPVerificationViewProps {
     email: string;
@@ -28,6 +27,10 @@ interface OTPVerificationViewProps {
     expectedUserId?: string | null;
     /** The code was right but for a different account (the gate only). */
     onAccountMismatch?: () => void;
+    /** First launch: once the first resend wait is over with no code, offer
+     *  "Didn't get a code? Use Sign in with this phone." (email sign-up is
+     *  closed, so a new address never gets one). */
+    onUsePhone?: () => void;
 }
 
 const RESEND_COOLDOWN_S = 30;
@@ -53,6 +56,7 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({
     footer,
     expectedUserId,
     onAccountMismatch,
+    onUsePhone,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
@@ -62,6 +66,13 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({
     const [resendCooldown, setResendCooldown] = useState(RESEND_COOLDOWN_S);
     const [resending, setResending] = useState(false);
     const verifying = useRef(false);
+
+    // The first wait passed with no code: the phone hint stays from here on,
+    // even while a resend restarts the countdown.
+    const [waited, setWaited] = useState(false);
+    useEffect(() => {
+        if (resendCooldown <= 0) setWaited(true);
+    }, [resendCooldown]);
 
     useEffect(() => {
         if (resendCooldown <= 0) return;
@@ -140,7 +151,9 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({
                 {title ?? t('auth.track.checkEmailTitle')}
             </Text>
             <Text style={[styles.body, { color: colors.ink2 }]}>
-                {t('auth.track.sentTo', { email: maskEmail(email) })}
+                {/* One line for every email code send (owner): the server never says
+                    whether an address has an account, and email sign-up is closed. */}
+                {t('auth.track.sentToIfAccount')}
             </Text>
 
             <View style={styles.boxes}>
@@ -185,6 +198,12 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({
                 ) : null}
             </View>
 
+            {onUsePhone && waited ? (
+                <Pressable onPress={onUsePhone} hitSlop={12} accessibilityRole="button" style={styles.noCode} testID="auth-otp-use-phone">
+                    <Text style={[styles.link, { color: colors.accentText }]}>{t('auth.track.noCodeUsePhone')}</Text>
+                </Pressable>
+            ) : null}
+
             {footer ? <View style={styles.footer}>{footer}</View> : null}
         </View>
     );
@@ -200,6 +219,7 @@ const styles = StyleSheet.create({
     links: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
     muted: { fontSize: 14 },
     link: { fontSize: 14, fontWeight: '600' },
+    noCode: { marginTop: 20, minHeight: 44, justifyContent: 'center' },
     footer: { marginTop: 28, gap: 12 },
 });
 

@@ -1,14 +1,14 @@
 # Animations
 
-Eighteen bodymovin files: twelve tutorial chapter heroes and six feed
-processing stages. They are agent-authored, written straight against the
-bodymovin schema, and every one of them is gated by a script before it lands
-(see "Validating one", below).
+The app's bodymovin files, in four families: tutorial heroes and gesture
+hints, feed processing stages, game pieces, and the chat secure-wait strips and
+step glyphs. They are agent-authored, written straight against the bodymovin
+schema, and every one of them is gated by a script before it lands (see
+"Validating one", below).
 
 **The runtime is in the binary.** `lottie-react-native ~7.3.4` was banked in
-`baff527` and that commit is an ancestor of the 1.3.1 version bump, so every
-1.3.1 binary carries the native module and this whole directory ships over the
-air. Prove it the same way before trusting it again, because a binary cut
+`baff527`, an ancestor of the 1.3.1 version bump, so the 1.3.1 and 1.3.4
+binaries carry the native module and this whole directory ships over the air. Prove it the same way before trusting it again, because a binary cut
 BEFORE the banking would crash on an OTA that references Lottie:
 
 ```
@@ -17,7 +17,8 @@ git merge-base --is-ancestor <that hash> <the binary's commit> ; echo $?
 ```
 
 Exit 0 or it is not in that binary. `runtimeVersion` is `{policy: 'appVersion'}`,
-so one channel serves every 1.3.1 device.
+so every app version is its own runtime and an OTA is published once per live
+runtime.
 
 ## The contract
 
@@ -26,15 +27,16 @@ so one channel serves every 1.3.1 device.
 | Filename, tutorials | `<chapter>-<slide>.json` — exactly `animationIdFor()` in `lib/algorithms/tutorial-keys.ts` |
 | Filename, processing | `processing-<stageId>.json` — the six ids in `components/custom/processing/types.ts` |
 | Filename, game | `game-<surface>-<moment>.json` — `components/custom/game-ui/animation-registry.ts` |
+| Filename, chat | `chat-strip-<state>.json` and `chat-step-<kind>.json` — `components/custom/chat/animation-registry.ts`. Match these exact prefixes, never `chat-`: `chat-where-mera-is.json` is a tutorial hero |
 | Format | bodymovin `.json`. **Not** `.lottie` — that needs a Metro `assetExts` change and a dotLottie runtime |
-| Canvas | 1000 × 1000, square |
-| Background | transparent — the app is `#000`, dark-only, and these play over the gradient backdrop |
+| Canvas | 1000 × 1000 square; `chat-strip-*` 1360 × 160 (the 272 × 32 strip at 5x); `chat-strip-device` 140 × 160 (28 × 32 at 5x); `chat-step-*` 100 × 100 (20 × 20 at 5x) |
+| Background | transparent: no shape covering 90% of the canvas. The app shows its own surface through it, in the light and the dark theme |
 | Loop | 2–4s, seamless |
 | One-shot | 0.3–2.0s, no seam requirement — and only for an id DECLARED as one, see below |
-| Accent | `rgb(231, 138, 83)` (primary-400, `TUTORIAL_ACCENT`) — the ONLY chromatic colour. Everything secondary is white at a reduced opacity, never a second hue |
+| Accent | `rgb(231, 138, 83)` (primary-400, `TUTORIAL_ACCENT`) — the ONLY chromatic colour. Everything secondary is greyscale, never a second hue |
 | Size | ≤ 150 KB each. The largest here is 29 KB |
 | Contents | vector only — no embedded rasters, no expressions |
-| Subject | inside the middle 70%, i.e. 150..850 on both axes |
+| Subject | 1000 family: inside the middle 70%, i.e. 150..850 on both axes. Chat families render at exact size, so the box is the whole canvas, measured on geometry plus half the stroke width |
 | Occupancy | fill roughly half the canvas. Not machine-checked — see below |
 
 A scene block is `SCENE_HEIGHT` (200pt) tall and `contentFit`-style contained,
@@ -51,6 +53,34 @@ invisible while passing every check. The pieces here sit between 42% and 68%;
 match that band, and compare against the pieces yours renders beside rather than
 against the canvas.
 
+## Chat pieces and the light theme
+
+The chat strips and glyphs are recoloured at runtime, so they follow rules the
+other families do not. `validate.py` and the asset gate enforce each one.
+
+- **Every drawn layer is named exactly `ink`, `ink3` or `accent`.** The app
+  passes lottie-react-native `colorFilters` keyed on those names (native code
+  builds the keypath `<name>.**`), mapping `ink` to the theme's ink2, `ink3`
+  to ink3 and `accent` to accentMark. What a layer draws is its group's name.
+- **Filter colours must be opaque.** Android applies the filter as SRC_ATOP,
+  so a translucent colour tints the shape instead of fading it. Flatten an
+  alpha token against the surface behind the strip; dims live in the file as
+  layer opacity. On iOS one malformed filter entry drops every entry after it.
+- **No colour animates.** A filter replaces the whole colour property, so a
+  highlight is an accent shape fading in over an ink3 one.
+- **No painted knockouts.** A panel-coloured fill shows as a patch on the other
+  theme's surface. A static overlap is a broken path; a moving one (the sealed
+  letter over the line, a lens over the globe) is an alpha-inverted track matte
+  (`td: 1` source directly above a `tt: 2` layer).
+- **The model end of a cloud strip stays empty** (x 244..266 of 272), and so
+  does the device phone screen apart from its loading fill: the app lays the
+  real MeraLogo there (`CHAT_STRIP_MARK_BOX`, `CHAT_DEVICE_SCREEN_BOX`).
+- **Resting frames.** Loops (`phone`, `think`, `device`, every glyph) rest on
+  frame 0 = their last frame. The strip one-shots (`attest`, `secure`, `retry`,
+  `return`) rest on their LAST frame, so motion off is progress 1 for them and
+  0 for everything else. `chat-strip-device` plays only during model loading
+  and holds frame 0 (the phone alone) otherwise.
+
 ## One-shots
 
 A piece that plays once and stops has nothing to return to, so seam closure does
@@ -63,8 +93,9 @@ It is an **allowlist, not a flag**. The real gate runs over one directory holdin
 both kinds, so a one-shot id must be declared in all three of:
 
 - `ONE_SHOT_IDS` in `scripts/animations/validate.py`
-- `GAME_REWARD_IDS` in `components/custom/game-ui/animation-registry.ts`
-- (the asset gate derives its own list from that array, so it needs no third edit)
+- `GAME_REWARD_IDS` in `components/custom/game-ui/animation-registry.ts`, or
+  `CHAT_ONE_SHOT_IDS` in `components/custom/chat/animation-registry.ts`
+- (the asset gate derives its own list from those arrays, so it needs no third edit)
 
 An id in none of them is validated as a loop and fails loud on duration. That is
 the designed failure: forgetting to declare a one-shot cannot silently pass under
@@ -98,15 +129,16 @@ The seam is already in place and nothing about it needs inventing.
 1. Drop `<id>.json` into this directory.
 2. Uncomment that id's line in the matching registry —
    `components/custom/tutorials/animation-registry.ts`,
-   `components/custom/processing/animation-registry.ts` or
-   `components/custom/game-ui/animation-registry.ts`. One family, one registry:
+   `components/custom/processing/animation-registry.ts`,
+   `components/custom/game-ui/animation-registry.ts` or
+   `components/custom/chat/animation-registry.ts`. One family, one registry:
    a second `require()` site for the same file is two homes for one thing.
    **An entry may exist
    there only once its file is on disk**: Metro resolves `require()` at bundle
    time, so an entry pointing at a missing file is a build error no runtime
    guard can catch. That trap is the entire reason each registry is one file.
 
-Nothing else changes, at any N from 0 to 18. A tutorial slide with no entry
+Nothing else changes. A tutorial slide with no entry
 keeps its `ScenePlaceholder`; a processing stage with no entry keeps its
 Reanimated/SVG fallback. The two coexist indefinitely.
 
@@ -148,3 +180,14 @@ or never.
 logo** (explicit user instruction, asserted in `chapters.test.ts`). The mera
 mark is a spotlight cone over a circle, so nothing cone-shaped appears in
 `welcome-what`.
+
+| Chat piece | Plays | Reads as |
+|---|---|---|
+| `chat-strip-phone` | loop | the phone breathes; line and gateway ring dim; nothing crosses |
+| `chat-strip-attest` | once | the line marches in dashes and the key travels to the phone |
+| `chat-strip-secure` | once | the message bars break into cipher dots and the sealed letter travels to the model end |
+| `chat-strip-think` | loop, still | the letter rests by the model end; the app's MeraLogo cone moves |
+| `chat-strip-retry` | once | the letter fades and travels again |
+| `chat-strip-return` | once, 0.5 s | the letter travels back to the phone (350 ms) and its lock opens |
+| `chat-strip-device` | loop | the phone alone; its screen fills while the model loads |
+| `chat-step-{think,skill,facts,place,write,remove,ask,web}` | loop | the step's own work: dots light, a page turns, a lens slides, a pin lifts, a line is written, a card slides out, a question mark bobs, a lens sweeps a globe |

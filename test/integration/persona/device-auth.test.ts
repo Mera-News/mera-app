@@ -131,7 +131,7 @@ describe('iOS first-run enrollment', () => {
 
         const result = await signInWithDevice();
 
-        expect(result).toEqual({ status: 'success', userId: ME, trialAvailable: false });
+        expect(result).toEqual({ status: 'success', userId: ME, trialAvailable: false, minted: false });
 
         // Enrollment used one nonce (purpose attest); sign-in used another (purpose assert).
         expect(await noncePurposes()).toEqual(['attest', 'assert']);
@@ -426,7 +426,7 @@ describe('the sign-in response', () => {
     it('an older server that omits trialAvailable reads as null, and the optional fields are ignored', async () => {
         server.use(http.post(SIGN_IN('ios'), () => HttpResponse.json({ user: { id: OTHER } })));
 
-        await expect(signInWithDevice()).resolves.toEqual({ status: 'success', userId: OTHER, trialAvailable: null });
+        await expect(signInWithDevice()).resolves.toEqual({ status: 'success', userId: OTHER, trialAvailable: null, minted: false });
     });
 });
 
@@ -593,12 +593,12 @@ describe('dev bypass', () => {
         mockAttest.isSupported.mockResolvedValue(false);
     });
 
-    it('is used only when unsupported AND the env token is set; persists a stable deviceId', async () => {
+    it('is used when the env token is set in a dev build; persists a stable deviceId', async () => {
         process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
 
         const result = await signInWithDevice();
 
-        expect(result).toEqual({ status: 'success', userId: ME, trialAvailable: false });
+        expect(result).toEqual({ status: 'success', userId: ME, trialAvailable: false, minted: false });
         const [body] = await bodiesTo('/device/sign-in/dev');
         expect(body).toEqual({ token: 'dev-token', deviceId: expect.stringMatching(/^[0-9a-f-]{36}$/) });
         expect(dump()[DEVICE_ID_STORE_KEY]).toBe(body.deviceId);
@@ -618,6 +618,44 @@ describe('dev bypass', () => {
     it('unsupported with NO token reports unsupported and never touches the network', async () => {
         await expect(signInWithDevice()).resolves.toEqual({ status: 'unsupported' });
         expect(sent).toHaveLength(0);
+    });
+
+    it('wins over native attestation in a dev build: the token decides, not the phone', async () => {
+        mockAttest.isSupported.mockResolvedValue(true);
+        process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
+
+        await expect(signInWithDevice()).resolves.toMatchObject({ status: 'success', userId: ME });
+
+        expect(countTo('/device/sign-in/dev')).toBe(1);
+        expect(countTo('/device/sign-in/ios')).toBe(0);
+        expect(mockAttest.generateAssertion).not.toHaveBeenCalled();
+        await expect(deviceSignInPath()).resolves.toBe('dev-bypass');
+        await expect(deviceSignInAvailability()).resolves.toBe('dev-bypass');
+    });
+
+    describe('in a release build (__DEV__ false)', () => {
+        const g = globalThis as unknown as { __DEV__: boolean };
+        beforeEach(() => {
+            g.__DEV__ = false;
+            process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
+        });
+        afterEach(() => {
+            g.__DEV__ = true;
+        });
+
+        it('ignores the token: a phone that cannot attest is unsupported, with no network', async () => {
+            await expect(signInWithDevice()).resolves.toEqual({ status: 'unsupported' });
+            await expect(deviceSignInPath()).resolves.toBe('unavailable');
+            await expect(deviceSignInAvailability()).resolves.toBe('unavailable');
+            expect(sent).toHaveLength(0);
+        });
+
+        it('ignores the token on a phone that can attest: native sign-in', async () => {
+            mockAttest.isSupported.mockResolvedValue(true);
+            await expect(signInWithDevice()).resolves.toMatchObject({ status: 'success' });
+            expect(countTo('/device/sign-in/dev')).toBe(0);
+            expect(countTo('/device/sign-in/ios')).toBe(1);
+        });
     });
 });
 
@@ -675,8 +713,7 @@ describe('server error handling', () => {
         await expect(signInWithDevice()).resolves.toEqual({ status: 'failed', reason: 'network' });
     });
 
-    it('every failure logs ONE structured line, with no nonce or token in it (F4)', async () => {
-        process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'super-secret-dev-token';
+    it('every failure logs ONE structured line, with no nonce in it (F4)', async () => {
         await seed({ [KEY_SLOT]: 'stored-key', [PROVEN_SLOT]: 'stored-key' });
         server.use(http.post(SIGN_IN('ios'), () => rejection(400, 'DEVICE_ATTESTATION_FAILED')));
 
@@ -695,7 +732,18 @@ describe('server error handling', () => {
         const [{ nonce }] = await bodiesTo('/device/sign-in/ios');
         const serialized = JSON.stringify(log.warn.mock.calls[0]);
         expect(serialized).not.toContain(nonce);
-        expect(serialized).not.toContain('super-secret-dev-token');
+    });
+
+    it('a failed dev-bypass sign-in never logs the token (F4)', async () => {
+        mockAttest.isSupported.mockResolvedValue(false);
+        process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'super-secret-dev-token';
+        server.use(http.post(SIGN_IN('dev'), () => rejection(400, 'DEVICE_ATTESTATION_FAILED')));
+
+        await signInWithDevice();
+
+        expect(log.warn).toHaveBeenCalledTimes(1);
+        expect(log.warn.mock.calls[0][1]).toMatchObject({ path: '/device/sign-in/dev', httpStatus: 400 });
+        expect(JSON.stringify(log.warn.mock.calls[0])).not.toContain('super-secret-dev-token');
     });
 
     it('a retry starts over with a FRESH nonce', async () => {

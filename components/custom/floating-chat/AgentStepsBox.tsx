@@ -2,71 +2,48 @@
 //
 // Presentational: every decision about WHICH steps exist, whether the box is
 // collapsed, and whether the turn was interrupted is made in deriveThreadItems.
-// This file renders that and owns exactly one piece of state of its own: the
-// "still working" line that appears when a step has been pending a while.
+// It owns three pieces of view state: which rows are landing (glyph, then the
+// tick draws), the `return` it plays before folding, and the reopened fold.
+//
+// ONE SLOT PER TURN. The box takes the wait row's place: its fixed 32pt header
+// holds the encryption strip while the turn runs and the "Done in N steps"
+// fold once it settled. No title, no slide-in. ONE MOVING THING: while a row's
+// glyph loops (a tool runs on the phone) or rows land, the strip rests.
 
+import EncryptionStrip from '@/components/custom/chat/EncryptionStrip';
 import StatusIndicator from '@/components/custom/chat/StatusIndicator';
+import StepGlyph from '@/components/custom/chat/StepGlyph';
+import { useAnnounce } from '@/components/custom/chat/phase-announcer';
+import { STRIP_HEIGHT } from '@/components/custom/chat/chat-phases';
+import { stripRests } from '@/components/custom/chat/strip-display';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { Text } from '@/components/ui/text';
-import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, withTiming } from 'react-native-reanimated';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { GlyphSafeButton } from './glyph-safe';
-import type { TFunction } from 'i18next';
+import { stepLabel, stepTables } from './agent-step-labels';
+import { landingPlan } from './landing';
 import { useTranslation } from 'react-i18next';
 import type { AgentStep, AgentTerminal } from './types';
-
-/**
- * How long one step may sit pending before the box says so.
- *
- * Purely additive: it never changes a status, never retries, and never turns
- * into an error. A slow connection is not a failure, and saying "still working"
- * is the difference between a wait that reads as progress and one that reads as
- * a hang.
- */
-export const SLOW_STEP_MS = 8_000;
-
-// THIS FILE IS THE ONE PLACE A STEP KEY BECOMES TEXT.
-//
-// Every key below is a LITERAL inside a `t()` call, so tsc checks it against
-// the union generated from en.json: a key that never reached the dictionaries
-// is a build error, not a raw dot-path rendered at a user. That is also why
-// the key tables live here rather than in the pure label module — `t()`'s
-// overloads pin the option shape per key, so a key held in a variable cannot
-// be passed to it at all.
-
-function boxEntering() {
-  'worklet';
-  const duration = 240;
-  return {
-    initialValues: { opacity: 0, transform: [{ translateY: 8 }] },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [{ translateY: withTiming(0, { duration }) }],
-    },
-  };
-}
-
-/** A new step slides up 8pt and fades in (FinalMeraChat #7). */
-function stepEntering() {
-  'worklet';
-  const duration = 180;
-  return {
-    initialValues: { opacity: 0, transform: [{ translateY: 8 }] },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [{ translateY: withTiming(0, { duration }) }],
-    },
-  };
-}
 
 /** A finished step behind the live one. */
 const DONE_DIM = 0.6;
 /** The fold opening again on a tap. */
 const REOPEN_MS = 220;
+/** The fold row's touch frame grows past its 32pt slot without moving it. */
+const FOLD_HIT_SLOP = Platform.OS === 'ios' ? 6 : 8;
+/** If the strip never reports its `return` finished, fold anyway. */
+const FOLD_FALLBACK_MS = 1500;
+
+// ponytail: one short id per landed row for the session. A row lands once,
+// ever: the chat view unmounts on close, and a reopened chat, a recycled row
+// or a reopened fold must show ticks only.
+const landedIds = new Set<string>();
 
 export interface AgentStepsBoxProps {
   steps: AgentStep[];
@@ -75,82 +52,8 @@ export interface AgentStepsBoxProps {
   failedCount: number;
   terminal: AgentTerminal | null;
   interrupted: boolean;
-}
-
-export /** The first line of a phrase pool, or the value itself when it is a string. */
-function firstLine(value: unknown): string {
-  if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : '';
-  return typeof value === 'string' ? value : '';
-}
-
-type TFn = TFunction;
-
-/** The three key->text tables, built once per language. Pure given `t`, so a
- *  table test needs no render. */
-export function stepTables(t: TFn) {
-  /** Step labels with no interpolation. A key absent here renders the generic
-   *  line, which is what keeps an unmapped tool from showing a dot-path. */
-  const PLAIN_LABEL: Record<string, string> = {
-    'agentSteps.legStart': t('agentSteps.legStart'),
-    'agentSteps.loadSkillGeneric': t('agentSteps.loadSkillGeneric'),
-    'agentSteps.findSimilarFacts': t('agentSteps.findSimilarFacts'),
-    'agentSteps.writeUp': t('agentSteps.writeUp'),
-    'agentSteps.removing': t('agentSteps.removing'),
-    'agentSteps.asking': t('agentSteps.asking'),
-    'agentSteps.working': t('agentSteps.working'),
-    'agentSteps.proposeChanges': t('agentSteps.proposeChanges'),
-    'agentSteps.applyProposal': t('agentSteps.applyProposal'),
-    'agentSteps.cancelProposal': t('agentSteps.cancelProposal'),
-    'agentSteps.proposeTrack': t('agentSteps.proposeTrack'),
-    'agentSteps.proposeFactCheck': t('agentSteps.proposeFactCheck'),
-    'agentSteps.searchNews': t('agentSteps.searchNews'),
-    // The wait line's own copy, so the box says the same thing the line
-    // would (ux2 batch 25, D6). A pool: its first line.
-    'chatPhases.webSearch': firstLine(t('chatPhases.webSearch', { returnObjects: true })),
-  };
-
-  const SKILL_PHRASE: Record<string, string> = {
-    'skillPhrase.residence': t('skillPhrase.residence'),
-    'skillPhrase.work': t('skillPhrase.work'),
-    'skillPhrase.interests': t('skillPhrase.interests'),
-    'skillPhrase.origin': t('skillPhrase.origin'),
-    'skillPhrase.family': t('skillPhrase.family'),
-    'skillPhrase.feedTuning': t('skillPhrase.feedTuning'),
-    'skillPhrase.followStory': t('skillPhrase.followStory'),
-    'skillPhrase.factCheck': t('skillPhrase.factCheck'),
-  };
-
-  const CONSEQUENCE: Record<string, string> = {
-    'agentSteps.consequence.generic': t('agentSteps.consequence.generic'),
-    'agentSteps.consequence.interrupted': t('agentSteps.consequence.interrupted'),
-    'agentSteps.consequence.lookupPlace': t('agentSteps.consequence.lookupPlace'),
-    'agentSteps.consequence.findSimilarFacts': t('agentSteps.consequence.findSimilarFacts'),
-    'agentSteps.consequence.loadSkill': t('agentSteps.consequence.loadSkill'),
-    'agentSteps.consequence.writeUp': t('agentSteps.consequence.writeUp'),
-    'agentSteps.consequence.removing': t('agentSteps.consequence.removing'),
-    'agentSteps.cardRefused': t('agentSteps.cardRefused'),
-  };
-  return { PLAIN_LABEL, SKILL_PHRASE, CONSEQUENCE };
-}
-
-/** A step's label. The two interpolating keys are handled explicitly; every
- *  other key comes from the table, and an unknown one falls back rather than
- *  rendering its own name. */
-export function stepLabel(
-  step: AgentStep,
-  t: TFn,
-  tables: Pick<ReturnType<typeof stepTables>, 'PLAIN_LABEL' | 'SKILL_PHRASE'>,
-): string {
-  const values = step.labelValues;
-  if (step.labelKey === 'agentSteps.loadSkill' && values?.topicKey) {
-    const phrase = tables.SKILL_PHRASE[values.topicKey];
-    if (phrase) return t('agentSteps.loadSkill', { topic: phrase });
-    return tables.PLAIN_LABEL['agentSteps.loadSkillGeneric'];
-  }
-  if (step.labelKey === 'agentSteps.lookupPlace' && values?.query) {
-    return t('agentSteps.lookupPlace', { query: values.query });
-  }
-  return tables.PLAIN_LABEL[step.labelKey] ?? tables.PLAIN_LABEL['agentSteps.working'];
+  /** The turn ended normally, so an answer was decrypted: play `return`. */
+  answered: boolean;
 }
 
 const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
@@ -160,36 +63,75 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   failedCount,
   terminal,
   interrupted,
+  answered,
 }) => {
   const styles = useStyles();
   const { t } = useTranslation();
   const colors = useColors();
+  const motion = useMotionAllowed();
+  const liveTool = useChatPhaseStore((s) => s.liveTool);
   // A folded box opens again on a tap (FinalMeraChat #9). Local: it is a view
   // of a finished turn, nothing about the turn changes.
   const [reopened, setReopened] = useState(false);
 
   const { PLAIN_LABEL, SKILL_PHRASE, CONSEQUENCE } = useMemo(() => stepTables(t), [t]);
-
-  // Gates the one-shot COLLAPSE/entry transition only. Deliberately not the
-  // pending spinner: `use-is-focused-safe`'s own docstring says this hook must
-  // not gate a liveness signal for an in-flight operation, because a paused one
-  // reads as a hung request. A transition is not a liveness signal.
-  const animationsActive = useAnimationsActive();
-
-  const firstPending = steps.find((s) => s.status === 'pending');
-  const pendingId = firstPending?.id ?? null;
-  const [slow, setSlow] = useState(false);
-
-  // Keyed on WHICH step is pending, so the clock restarts per step rather than
-  // carrying a stale "slow" over to the next one.
-  useEffect(() => {
-    setSlow(false);
-    if (pendingId === null) return;
-    const timer = setTimeout(() => setSlow(true), SLOW_STEP_MS);
-    return () => clearTimeout(timer);
-  }, [pendingId]);
-
   const labelFor = (step: AgentStep): string => stepLabel(step, t, { PLAIN_LABEL, SKILL_PHRASE });
+
+  // ── Landings ──────────────────────────────────────────────────────────────
+  // A box that mounts folded is history: its rows count as landed already.
+  const baselined = useRef(false);
+  if (!baselined.current) {
+    baselined.current = true;
+    if (collapsed) for (const s of steps) landedIds.add(s.id);
+  }
+  const [landing, setLanding] = useState<ReadonlyMap<string, number>>(new Map());
+  // A ref, not the effect's cleanup: `steps` is a new array on every derive,
+  // and a cleanup would cancel the end of a landing that is still running.
+  const landTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (landTimer.current) clearTimeout(landTimer.current);
+  }, []);
+  useEffect(() => {
+    const plan = landingPlan(landedIds, steps);
+    for (const id of plan.delays.keys()) landedIds.add(id);
+    if (!motion || plan.totalMs === 0) return;
+    // A newer batch cuts in; the rows still landing show their tick.
+    if (landTimer.current) clearTimeout(landTimer.current);
+    setLanding(plan.delays);
+    landTimer.current = setTimeout(() => setLanding(new Map()), plan.totalMs);
+  }, [steps, motion]);
+
+  // ── The return before the fold ────────────────────────────────────────────
+  // When the turn settles with an answer, the header plays `return` once and
+  // only then becomes the fold. Never on a stop, an error or a terminal.
+  const [folding, setFolding] = useState(false);
+  const [returnRequest, setReturnRequest] = useState(0);
+  // Decided DURING render (React's derived-state pattern), not in an effect:
+  // an effect would commit one frame of the fold, unmount the strip and lose
+  // the request.
+  const [prevCollapsed, setPrevCollapsed] = useState(collapsed);
+  if (collapsed !== prevCollapsed) {
+    setPrevCollapsed(collapsed);
+    if (collapsed && answered && motion) {
+      setFolding(true);
+      setReturnRequest((n) => n + 1);
+    }
+  }
+  useEffect(() => {
+    if (!folding) return;
+    const fallback = setTimeout(() => setFolding(false), FOLD_FALLBACK_MS);
+    return () => clearTimeout(fallback);
+  }, [folding]);
+
+  const live = !collapsed || folding;
+  const rest = stripRests({ liveTool: liveTool !== null, landing: landing.size > 0, ackStreaming: false });
+
+  // ── Speech ────────────────────────────────────────────────────────────────
+  // No live region on the box: the running row's words go through the one
+  // announcer, and one hidden status node carries them for a focused reader.
+  const running = live ? steps.find((s) => s.status === 'pending') : undefined;
+  const runningText = running ? `${labelFor(running)}, ${t('agentSteps.statePending')}` : null;
+  useAnnounce(running ? labelFor(running) : null);
 
   // ONE sentence per terminal, and the terminal outranks the step tally: a turn
   // whose every step succeeded and which then routed nothing is a failure the
@@ -219,12 +161,21 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   // turn and had nothing to add, which is a normal answer.
   const terminalIsError = terminal !== null && terminal !== 'no-proposal';
 
-  const live = !collapsed;
-  const fold = (
+  const header = live ? (
+    <View style={styles.header}>
+      <EncryptionStrip
+        host="box"
+        rest={rest}
+        playReturn={returnRequest}
+        onReturnDone={() => setFolding(false)}
+      />
+    </View>
+  ) : (
     <GlyphSafeButton
       onPress={() => setReopened((v) => !v)}
       accessibilityLabel={foldLabel}
       accessibilityState={{ expanded: reopened }}
+      hitSlop={{ top: FOLD_HIT_SLOP, bottom: FOLD_HIT_SLOP }}
       visualStyle={styles.foldRow}
       testID="agent-steps-summary"
     >
@@ -242,21 +193,23 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
 
   const stepRows = (
     <>
-      {live && (
-        <Text size="xs" style={[styles.title, { color: colors.ink3 }]} testID="agent-steps-title">
-          {t('agentSteps.boxTitle')}
-        </Text>
-      )}
       {steps.map((step) => (
-        <Animated.View
+        <View
           key={step.id}
-          entering={live && animationsActive ? stepEntering : undefined}
           style={live && step.status === 'done' && step.id !== steps[steps.length - 1]?.id ? styles.dim : undefined}
         >
           <StatusIndicator
-            live={live}
             status={step.status}
             label={labelFor(step)}
+            glyph={
+              step.status === 'error' ? undefined : (
+                <StepGlyph
+                  kind={step.glyph}
+                  state={step.status === 'pending' ? 'pending' : landing.has(step.id) ? 'landing' : 'done'}
+                  delayMs={landing.get(step.id) ?? 0}
+                />
+              )
+            }
             errorText={
               step.consequenceKey
                 ? (CONSEQUENCE[step.consequenceKey] ??
@@ -265,12 +218,7 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
             }
             testID={`agent-step-${step.id}`}
           />
-          {slow && step.id === pendingId && (
-            <Text size="xs" style={styles.slow} testID="agent-steps-slow" numberOfLines={2}>
-              {t('agentSteps.slow')}
-            </Text>
-          )}
-        </Animated.View>
+        </View>
       ))}
       {/* An interrupted or capped turn states it even while expanded: the
           terminal sentence is the part that tells the user what to do next. */}
@@ -282,29 +230,24 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
     </>
   );
 
-  const body = collapsed ? (
-    <>
-      {fold}
-      {reopened && (
-        <Animated.View entering={animationsActive ? FadeIn.duration(REOPEN_MS) : undefined}>
-          {stepRows}
-        </Animated.View>
-      )}
-    </>
-  ) : (
-    stepRows
-  );
-
   return (
-    <Animated.View
-      entering={animationsActive ? boxEntering : undefined}
-      style={styles.box}
-      accessible={false}
-      accessibilityLiveRegion="polite"
-      testID="agent-steps"
-    >
-      {body}
-    </Animated.View>
+    <View style={styles.box} accessible={false} testID="agent-steps">
+      {runningText !== null && (
+        <View
+          accessible
+          accessibilityLabel={runningText}
+          style={styles.statusNode}
+          testID="agent-steps-status"
+        />
+      )}
+      {header}
+      {live ? (
+        stepRows
+      ) : reopened ? (
+        // Reanimated's own gate: Lite lands this at once.
+        <Animated.View entering={FadeIn.duration(REOPEN_MS)}>{stepRows}</Animated.View>
+      ) : null}
+    </View>
   );
 };
 
@@ -318,10 +261,13 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     paddingVertical: 8,
     gap: 2,
   },
-  slow: { color: c.ink3, marginLeft: 24, marginTop: 1 },
-  title: { marginBottom: 4 },
+  // The strip's slot and the fold's: the same 32pt, so settling swaps one for
+  // the other in place.
+  header: { height: STRIP_HEIGHT, justifyContent: 'center' },
+  // A hidden status node still needs a frame: VoiceOver skips a 0x0 element.
+  statusNode: { position: 'absolute', width: 1, height: 1, overflow: 'hidden' },
   dim: { opacity: DONE_DIM },
-  foldRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  foldRow: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: STRIP_HEIGHT },
   foldStatus: { flex: 1 },
   terminal: { color: c.ink2, marginTop: 4 },
 }));

@@ -245,6 +245,8 @@ export async function runAgentScript(
     // device's screen: a card staged on turn N is still waiting on turn N+1.
     state.pendingProposal = fakes.pendingProposal();
     state.activeFilters = fakes.activeFilters();
+    // Fact cards the fixture says are waiting, this turn only.
+    state.pendingCardStatements = turn.pendingCards ?? [];
 
     const turnStartedAtMs = now();
     const captured: CapturedRequest[] = [];
@@ -344,8 +346,8 @@ export async function runAgentScript(
         awaitingUser: isLast && endedOn === 'awaiting_user',
         routeKind: result.routeKind,
         skillLoaded: result.skillLoaded,
-        expectedRouteKind: turn.expect.routeKind,
-        expectedSkill: turn.expect.skill,
+        expectedRouteKind: turn.expect.routeKind ?? null,
+        expectedSkill: turn.expect.skill ?? null,
         items: null,
         factKind: null,
         topics: null,

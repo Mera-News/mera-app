@@ -297,3 +297,35 @@ describe('unmount', () => {
     expect(after.topicPlanTurnRequest).toBeNull();
   });
 });
+
+describe('typing item inputs', () => {
+  const typing = (items: { kind: string }[]) =>
+    items.find((i) => i.kind === 'typing') as
+      | { kind: 'typing'; engine: string; showWords: boolean; ackShowing: boolean }
+      | undefined;
+
+  it('on-device processing marks the typing item local and shows words', () => {
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
+    const { result } = mount({
+      status: 'streaming',
+      messages: [
+        { id: 'u0', role: 'user', content: 'first' },
+        { id: 'a0', role: 'assistant', content: 'ok' },
+        { id: 'u1', role: 'user', content: 'second' },
+      ],
+    });
+    expect(typing(result.current.items)).toMatchObject({ engine: 'local', showWords: true });
+  });
+
+  it('cloud keeps words off from the second message on', () => {
+    const { result } = mount({
+      status: 'streaming',
+      messages: [
+        { id: 'u0', role: 'user', content: 'first' },
+        { id: 'a0', role: 'assistant', content: 'ok' },
+        { id: 'u1', role: 'user', content: 'second' },
+      ],
+    });
+    expect(typing(result.current.items)).toMatchObject({ engine: 'cloud', showWords: false });
+  });
+});

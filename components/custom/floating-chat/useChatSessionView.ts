@@ -167,8 +167,11 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   const quickFactChecks = useFloatingChatQuickFactChecks();
   const toolCallResults = useFloatingChatToolCallResults();
 
-  // The wait line's phase, for the steps box's live row (ux2 batch 25, D6).
-  const waitPhase = useChatPhaseStore((st) => (st.view.kind === 'phase' ? st.view.id : null));
+  // The live tool and retry flag, for the steps box's live row and the typing
+  // item. The strip subscribes to its own state, so none of it lands in items.
+  const liveTool = useChatPhaseStore((st) => st.liveTool);
+  const retriedThisTurn = useChatPhaseStore((st) => st.retriedThisTurn);
+  const engine = isOnDevice ? 'local' : 'cloud';
 
   const items = useMemo(
     () =>
@@ -185,10 +188,14 @@ export function useChatSessionView(props: ChatSessionViewProps) {
         toolCallResults,
         turnActive,
         agentTerminal,
-        waitPhase,
+        engine,
+        liveTool,
+        retriedThisTurn,
       }),
     [
-      waitPhase,
+      engine,
+      liveTool,
+      retriedThisTurn,
       messages,
       history,
       introMessage,
@@ -598,8 +605,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       : proposalCardWaiting
         ? typedYesApplies
           ? t('floatingChat.cardWaitingHint')
-          : // Lands with the next locale splice; the cast goes with it.
-            t('floatingChat.cardTapHint' as 'floatingChat.cardWaitingHint')
+          : t('floatingChat.cardTapHint')
         : null;
 
   // A card resolved by TYPING (the turn carried applyProposal or cancelProposal)

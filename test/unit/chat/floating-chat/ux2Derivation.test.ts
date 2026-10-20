@@ -268,16 +268,35 @@ describe('ux2 batch 25 D6: a live search is narrated on the steps box', () => {
     { id: 'u1', role: 'user', content: 'what is Porto Santo' },
     { id: 'a1', role: 'assistant', content: '', toolCalls: [{ id: 't', name: 'load_skill', input: { id: 'conversation/question' }, status: 'done', result: {} }] },
   ];
-  const liveRow = (waitPhase?: string) => {
-    const box = derive(pendingTurn, { turnActive: true, isStreaming: true, ...(waitPhase ? { waitPhase } : {}) } as never)
+  const liveRow = (extra: Record<string, unknown> = {}) => {
+    const box = derive(pendingTurn, { turnActive: true, isStreaming: true, ...extra } as never)
       .find((i) => i.kind === 'agent-steps');
     return box && box.kind === 'agent-steps' ? box.steps[box.steps.length - 1] : null;
   };
-  it('the pending row reads the search line while the search runs', () => {
-    expect(liveRow('webSearch')).toMatchObject({ status: 'pending', labelKey: 'chatPhases.webSearch' });
+  it('the pending row reads the search line while a web search runs', () => {
+    expect(
+      liveRow({ liveTool: { kind: 'web', toolName: 'webSearch', args: { queries: ['x'] } } }),
+    ).toMatchObject({ status: 'pending', labelKey: 'chatPhases.webSearch', glyph: 'web' });
   });
-  it('and the ordinary working line otherwise', () => {
-    expect(liveRow('thinking')?.labelKey).toBe('agentSteps.working');
+  it('the pending row names a running place lookup, same id', () => {
+    expect(
+      liveRow({ liveTool: { kind: 'place', toolName: 'lookup_place', args: { query: 'manhattan' } } }),
+    ).toMatchObject({
+      id: 'u1::continuing',
+      status: 'pending',
+      labelKey: 'agentSteps.lookupPlace',
+      labelValues: { query: 'manhattan' },
+      glyph: 'place',
+    });
+  });
+  it('the ordinary working line otherwise', () => {
+    expect(liveRow()).toMatchObject({ labelKey: 'agentSteps.working', glyph: 'working' });
+  });
+  it('a retried turn with no live tool says so', () => {
+    expect(liveRow({ retriedThisTurn: true })).toMatchObject({
+      labelKey: 'chatPhases.retrying',
+      glyph: 'working',
+    });
   });
 });
 

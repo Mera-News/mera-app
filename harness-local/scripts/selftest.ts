@@ -114,6 +114,11 @@ async function main(): Promise<number> {
   ck('cache paths distinct', new Set(paths).size === 3, paths.join(' | '));
   ck('staging cache path named', paths[1].endsWith('.auth-cache.staging.json'), paths[1]);
   ck('no path is the legacy name', paths.every((p) => !p.endsWith('/.auth-cache.json')));
+  // A test-account session never lands on the OTP/dev-bypass file: one headless
+  // run would otherwise cost the owner a fresh OTP. One file per handle.
+  const testPaths = [authCachePath('prod', 'resident-ios'), authCachePath('prod', 'tmp-abc')];
+  ck('test-account cache is not the OTP cache', testPaths.every((p) => p !== paths[2]), testPaths.join(' | '));
+  ck('test-account cache is per handle', testPaths[0] !== testPaths[1] && testPaths[0].endsWith('.auth-cache.prod.test-resident-ios.json'), testPaths[0]);
 
 
   console.log('\n== env loading ==');

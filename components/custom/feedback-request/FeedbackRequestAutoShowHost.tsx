@@ -13,8 +13,8 @@
 //
 // NEVER OVER SOMETHING ELSE. It waits while the PIN lock is up, before the
 // startup gate has passed, on the onboarding, verify-otp and PIN routes and
-// the modal itself, while the bug-report modal, the email-capture sheet, the
-// What's new sheet or the floating chat is open, while ConsentGate is showing,
+// the modal itself, while the bug-report modal, the
+// What's new sheet, the move to phone dialog or the floating chat is open, while ConsentGate is showing,
 // and while a notification tap for a feedback request is stashed and about to
 // be opened by the startup gate or the tap handler (it would push the same
 // modal). Each check runs after a settle delay. A deferred show simply retries
@@ -27,7 +27,6 @@ import { AppState } from 'react-native';
 
 import type { ConsentSessionUser } from '@/components/custom/auth/legal-consent';
 import { isWhatsNewSheetActive } from '@/components/custom/for-you/WhatsNewSheet';
-import { isEmailCaptureVisible } from '@/components/custom/subscription/EmailCaptureSheet';
 import { authClient } from '@/lib/auth-client';
 import {
     markFeedbackRequestShown,
@@ -43,6 +42,7 @@ import {
     isStartupGatePassed,
 } from '@/lib/stores/pending-notification-route';
 import { usePinStore } from '@/lib/stores/pin-store';
+import { isMoveToPhoneVisible } from '@/components/custom/auth/move-to-phone';
 import { consentBlocksFeedbackRequest } from './feedback-request-consent';
 
 /** Long enough for the startup gate to open a stashed notification route and
@@ -65,8 +65,8 @@ function storesBlock(): boolean {
     if (usePinStore.getState().locked) return true;
     if (useFeedbackStore.getState().visible) return true;
     if (useFloatingChatStore.getState().isExpanded) return true;
-    if (isEmailCaptureVisible()) return true;
     if (isWhatsNewSheetActive()) return true;
+    if (isMoveToPhoneVisible()) return true;
     return false;
 }
 

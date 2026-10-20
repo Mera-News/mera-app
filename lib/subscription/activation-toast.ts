@@ -30,6 +30,8 @@
 // builds plain RN `Text` instead of ToastTitle/ToastDescription.
 
 import i18next from 'i18next';
+import { Platform } from 'react-native';
+import { showDialog } from '@/lib/dialog';
 import { toastManager } from '@/lib/toast-manager';
 
 /**
@@ -68,15 +70,45 @@ function planName(tier: string): string | null {
  * a deferred App Store plan change), which is why the callers refuse to commit
  * it either.
  */
-export function showSubscriptionActivatedToast(newTier: string | null | undefined): void {
+export function showSubscriptionActivatedToast(
+    newTier: string | null | undefined,
+    restored = false,
+): void {
     if (newTier == null) return;
 
     const plan = planName(newTier);
     if (plan === null) return;
 
     const t = i18next.t as unknown as (k: string, o?: Record<string, unknown>) => string;
+    // A restore brings an old plan back; it is not a purchase, so no receipts note.
+    if (restored) {
+        toastManager.showSuccess(t('subscription.planBack'), '');
+        return;
+    }
     toastManager.showSuccess(
         t('subscription.activatedTitle', { plan }),
         t('subscription.activatedBody'),
     );
+    void showInvoicesNoteOnce(plan, t);
+}
+
+const INVOICES_NOTE_KEY = 'invoices_note_shown';
+
+/** Where receipts go, told once per device after the first confirmed purchase. */
+async function showInvoicesNoteOnce(plan: string, t: (k: string, o?: Record<string, unknown>) => string): Promise<void> {
+    try {
+        // Lazy: this module sits on the paywall import path of six surfaces, and a
+        // static settings import would open the database in all their suites.
+        const { getSetting, setSetting } =
+            require('@/lib/database/services/setting-service') as typeof import('@/lib/database/services/setting-service');
+        if (await getSetting(INVOICES_NOTE_KEY)) return;
+        await setSetting(INVOICES_NOTE_KEY, '1');
+        await showDialog({
+            title: t('subscription.activatedTitle', { plan }),
+            body: t(Platform.OS === 'ios' ? 'subscription.invoicesAppStore' : 'subscription.invoicesPlayStore'),
+            confirmLabel: t('common.ok'),
+        });
+    } catch {
+        // A missing note must never break the purchase announcement.
+    }
 }

@@ -23,7 +23,8 @@ import { findSimilarFacts } from '../database/services/fact-similarity-service';
 import { PLACE_CANDIDATE_LIMIT, lookupPlace, searchPlaces } from '../place-service';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { REQUIRED_TOOL_REASK } from '../llm/text-tool-protocol';
-import type { PhaseSignal } from '@/lib/services/chat-phase';
+import { stepKindForTool, type PhaseSignal } from '@/lib/services/chat-phase';
+import type { LiveTool } from '@/lib/llm/chat-phase-store';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
 import { handleDeleteUserFacts, handleExplainMera, handleSaveExtractedFacts } from './tool-handlers';
 import { handleWebSearch } from './web-search-handler';
@@ -323,11 +324,34 @@ export interface CardToolDeps {
   pending(): PendingProposalView | null;
 }
 
+/** The live step row. `start` as a device tool begins, `end` in a `finally`.
+ *  A TRAILING parameter and never a field on `AgentToolPort`: the harness may
+ *  not know about the app's rows (boundary.test.ts). */
+export type ToolSignal = (event: 'start' | 'end', tool: LiveTool) => void;
+
 export function makeAgentToolPort(
   userMessage: string,
   onPhase?: (signal: PhaseSignal) => void,
   cards?: CardToolDeps,
+  onTool?: ToolSignal,
 ): AgentToolPort {
+  // Fired HERE, inside the port, so `haltable` answers a stopped turn before
+  // any `start`. `toolName` is the CONTRACT name the row labels key on. The
+  // args can hold fact text: they go to the in-memory row, never to a log.
+  const live = async <T,>(toolName: string, args: unknown, run: () => Promise<T>): Promise<T> => {
+    if (!onTool) return run();
+    const tool: LiveTool = {
+      kind: stepKindForTool(toolName),
+      toolName,
+      args: (args && typeof args === 'object' ? args : {}) as Record<string, unknown>,
+    };
+    onTool('start', tool);
+    try {
+      return await run();
+    } finally {
+      onTool('end', tool);
+    }
+  };
   const runCard = async (name: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
     const { result, sideEffects } = await cards!.execute(name, args);
     cards!.onSideEffects(sideEffects);
@@ -343,56 +367,56 @@ export function makeAgentToolPort(
           cancelProposal: () => runCard('cancelProposal', {}),
         }
       : {}),
-    async findSimilarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult> {
-      const similar = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
-      // THE CURRENT HOME, always, on a residence lookup. Similarity is word
-      // overlap with the user's message, and "I moved to Porto" shares no
-      // word with "Lives in Berlin...", so the model was told there was no
-      // home to replace and offered a plain Add (ux1 batch 5).
-      const homes = HOME_KINDS.has((args.kind ?? '').toLowerCase())
-        ? (await getFacts()).filter(isOwnHomeFact)
-        : [];
-      const rows = [
-        ...homes.map((f) => ({
-          id: f.id,
-          statement: f.statement,
-          questionnaireAttribute: f.questionnaireAttribute ?? null,
-          score: 1,
-        })),
-        ...similar.filter((r) => !homes.some((h) => h.id === r.id)),
-      ];
-      return {
-        candidates: rows.map((r) => ({
-          factId: r.id,
-          statement: r.statement,
-          attribute: r.questionnaireAttribute ?? null,
-          overlap: r.score,
-        })),
-      };
-    },
-    lookupPlace: (args: LookupPlaceArgs) => lookupPlaceWithFallback(args),
-    saveExtractedFacts(args) {
-      return handleSaveExtractedFacts(args);
-    },
-    deleteUserFacts(args) {
-      return handleDeleteUserFacts(args as unknown as Record<string, unknown>);
-    },
-    // Mera's own reference text; pure and lazy, no network.
+    findSimilarFacts: (args: FindSimilarFactsArgs) => live('find_similar_facts', args, () => similarFacts(args)),
+    lookupPlace: (args: LookupPlaceArgs) => live('lookup_place', args, () => lookupPlaceWithFallback(args)),
+    saveExtractedFacts: (args) => live('saveExtractedFacts', args, () => handleSaveExtractedFacts(args)),
+    deleteUserFacts: (args) =>
+      live('deleteUserFacts', args, () => handleDeleteUserFacts(args as unknown as Record<string, unknown>)),
+    // Mera's own reference text; pure and lazy, no network, so no live row.
     explainMera: (a: { topics: string[] }) => handleExplainMera(a),
     // GATE 1: offered only while "Web search in chat" is on, so the loop never
     // declares the tool otherwise. `handleWebSearch` re-checks the setting
     // before any await (gate 2), for a switch flipped mid-turn.
     ...(useMeraProtocolStore.getState().webSearchInChat
       ? {
-          webSearch: (args: { queries: string[] }) => {
-            // "Searching the web from your device…" while it runs (ux2 D10).
-            // The next model call opens with 'reset', which moves the line on.
-            onPhase?.('webSearch');
-            return handleWebSearch(args);
-          },
+          webSearch: (args: { queries: string[] }) =>
+            live('webSearch', args, () => {
+              // The wait line's phase for the same search. The next model call
+              // opens with 'reset', which moves the line on; the row ends here.
+              onPhase?.('webSearch');
+              return handleWebSearch(args);
+            }),
         }
       : {}),
   };
+
+  async function similarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult> {
+    const similar = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
+    // THE CURRENT HOME, always, on a residence lookup. Similarity is word
+    // overlap with the user's message, and "I moved to Porto" shares no
+    // word with "Lives in Berlin...", so the model was told there was no
+    // home to replace and offered a plain Add (ux1 batch 5).
+    const homes = HOME_KINDS.has((args.kind ?? '').toLowerCase())
+      ? (await getFacts()).filter(isOwnHomeFact)
+      : [];
+    const rows = [
+      ...homes.map((f) => ({
+        id: f.id,
+        statement: f.statement,
+        questionnaireAttribute: f.questionnaireAttribute ?? null,
+        score: 1,
+      })),
+      ...similar.filter((r) => !homes.some((h) => h.id === r.id)),
+    ];
+    return {
+      candidates: rows.map((r) => ({
+        factId: r.id,
+        statement: r.statement,
+        attribute: r.questionnaireAttribute ?? null,
+        overlap: r.score,
+      })),
+    };
+  }
 }
 
 /**
@@ -532,8 +556,9 @@ export function makeAgentDeps(
    *  loop sees a resolved `error` and ends the turn with no new legs. */
   stop?: AbortSignal,
   cards?: CardToolDeps,
+  onTool?: ToolSignal,
 ): AgentDeps {
-  const tools = makeAgentToolPort(userMessage, onPhase, cards);
+  const tools = makeAgentToolPort(userMessage, onPhase, cards, onTool);
   return {
     // Only the leg the loop marks `streamToUser` reaches the bubble. Passing
     // `onDelta` on every leg streamed each later leg's text into the

@@ -1,7 +1,9 @@
 import {
+  asksForLess,
   claimsSaveHappened,
   cleanProse,
   collapseRepetitionLoop,
+  isAcknowledgement,
   leaksInternals,
   looksLikeSerialisedPayload,
   replaceClauseDashes,
@@ -309,4 +311,80 @@ describe('a tool call written out as prose', () => {
     expect(leaksInternals('I will put questionnaire_attribute on it.')).toBe(true);
     expect(leaksInternals('sending extracted_user_information now')).toBe(true);
   });
+});
+
+describe('a message that states no fact', () => {
+  // Owner ruling: ok, okay, cool, thanks, nice, great and hmm only acknowledge,
+  // in every app language. Whole message only.
+  it.each([
+    'ok', 'Okay.', 'nice', 'cool!', 'thanks', 'thank you', 'got it, thanks', 'hmm',
+    'مشكورا', 'شكراً', 'حسناً',
+    'danke', 'Alles klar!', 'ok danke',
+    'gracias', 'vale, gracias',
+    'merci', "d'accord, merci",
+    'ठीक है', 'धन्यवाद', 'ठीक है, धन्यवाद', 'बढ़िया',
+    'terima kasih', 'oke',
+    'grazie', 'va bene',
+    'ありがとう', '了解です。', 'なるほど',
+    '고마워요', '알겠어요',
+    'bedankt', 'oké, dank je wel',
+    'dzięki', 'super',
+    'obrigado', 'valeu!',
+    'спасибо', 'хорошо',
+    'ขอบคุณครับ', 'โอเค',
+    'teşekkürler', 'tamam',
+    'дякую', 'добре',
+    'cảm ơn', 'được rồi',
+    '好的', '谢谢！', '好的谢谢',
+    '謝謝', '了解',
+    // Emoji replies acknowledge too (reviewer).
+    'ok 👍', '👍', 'thanks 🙏', '👍🏽',
+  ])('"%s" only acknowledges', (m) => expect(isAcknowledgement(m)).toBe(true));
+  it.each([
+    'yes', 'yes please', 'okay, I want to follow this', 'nice city, I live there', 'I am a nurse',
+    'ठीक है, इसे फॉलो करो', 'danke, ich wohne jetzt in Berlin', '好的，我住在北京', 'ありがとう、私は看護師です',
+    'merci, je suis infirmière', 'спасибо, я живу в Москве', '',
+    // A trailing question mark asks something.
+    'ok?',
+  ])('"%s" does more', (m) => expect(isAcknowledgement(m)).toBe(false));
+
+  // Owner ruling: stop, less, mute and hide stage a FILTER; "not interested"
+  // is a fact and is NOT a see-less request.
+  it.each([
+    'Stop showing me celebrity gossip', 'See less of a topic', 'Mute The Hindu', "don't show me crypto", 'I stopped following F1',
+    'unfollow Bollywood',
+    'لا تعرض لي أخبار المشاهير',
+    'Zeig mir weniger Promi-Klatsch', 'The Hindu stummschalten',
+    'deja de mostrarme noticias de famosos',
+    'ne me montre plus les potins',
+    'क्रिकेट की खबरें मत दिखाओ', 'मुझे क्रिकेट की खबरें कम दिखाओ',
+    'jangan tampilkan gosip selebriti',
+    'smetti di mostrarmi il gossip',
+    'ゴシップは表示しないで', 'The Hinduをミュートして',
+    '연예 뉴스 보여주지 마', 'The Hindu 음소거',
+    'laat minder roddels zien', 'verberg The Hindu',
+    'nie pokazuj plotek',
+    'pare de mostrar fofocas',
+    'не показывай мне сплетни',
+    'อย่าแสดงข่าวซุบซิบ',
+    'magazin haberlerini gösterme',
+    'не показуй мені плітки',
+    'đừng hiển thị tin đồn',
+    '别再推娱乐八卦', '屏蔽The Hindu',
+    '不要顯示八卦', '隱藏The Hindu',
+    // A single verb at the start of a clause, after an optional please.
+    'Please hide celebrity gossip', 'Can you mute The Hindu?', 'ok, hide cricket', 'show me less of this',
+    'oculta las noticias de famosos', 'Por favor, silencia The Hindu', 'Bitte The Hindu ausblenden',
+    'kriket haberlerini gizle', 'The Hindu 숨겨줘', '帮我隐藏八卦',
+  ])('"%s" asks for less', (m) => expect(asksForLess(m)).toBe(true));
+  it.each([
+    'I am not interested in golf', 'मुझे गोल्फ़ में दिलचस्पी नहीं है', 'No longer interested in F1',
+    'I no longer live in Paris, now Lyon', 'I stopped working last year', 'I also follow the national football team',
+    'tengo menos de 30 años', 'Ich bin vor zwei Jahren nach Berlin gezogen', '我住在北京',
+    // A verb that doubles as an adjective, a noun or another person (reviewer
+    // probes): a request only at the start of a clause.
+    'hide and seek is my hobby', 'I play hide and seek with my kids', 'I am mute', 'I work as a hide tanner',
+    'I never send letters', "I don't show my dogs anymore", 'less of a fan now', 'mi pasión oculta es el jazz',
+    '숨겨진 맛집을 좋아해요', '我喜欢隐藏的小餐馆', 'Ich habe nichts zu verbergen',
+  ])('"%s" states a fact', (m) => expect(asksForLess(m)).toBe(false));
 });

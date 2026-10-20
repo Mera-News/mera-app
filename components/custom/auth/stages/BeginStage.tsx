@@ -7,6 +7,7 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import { Button, ButtonText } from '@/components/ui/button';
 import { useColors } from '@/lib/theme/tokens';
 
+import { LegacyEmailLink, PhoneUnsupported } from './parts';
 import { LOGO_TOP, styles } from './styles';
 
 // ── 4 · How do you want to begin? ────────────────────────────────────────────
@@ -16,8 +17,11 @@ function BeginStage({
     onWithoutEmail,
     onWithEmail,
     onLogoSlot,
+    emailEnded,
 }: {
     canUsePhone: boolean;
+    /** After the cutoff the legacy email link is gone. */
+    emailEnded: boolean;
     onWithoutEmail: () => void;
     onWithEmail: () => void;
     /** Where the logo belongs in this stack (window y), for the hoisted logo. */
@@ -58,16 +62,12 @@ function BeginStage({
                         {t('auth.track.beginCaption')}
                     </Text>
                 </>
-            ) : null}
-            <Button
-                variant={canUsePhone ? 'outline' : 'solid'}
-                action={canUsePhone ? 'secondary' : 'primary'}
-                onPress={onWithEmail}
-                style={canUsePhone ? styles.beginSecondary : styles.beginPrimary}
-                testID="auth-begin-with-email"
-            >
-                <ButtonText>{t('auth.track.continueWithEmail')}</ButtonText>
-            </Button>
+            ) : (
+                <PhoneUnsupported testID="auth-begin-unsupported" />
+            )}
+            {emailEnded ? null : (
+                <LegacyEmailLink label={t('auth.track.continueWithEmail')} onPress={onWithEmail} testID="auth-begin-with-email" />
+            )}
         </ScrollView>
     );
 }

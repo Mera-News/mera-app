@@ -9,7 +9,7 @@ import logger from '@/lib/logger';
 import { useColors } from '@/lib/theme/tokens';
 import { maskEmail } from '@/lib/algorithms/mask-email';
 
-import { GateIcon } from './parts';
+import { GateIcon, LegacyEmailLink } from './parts';
 import { styles } from './styles';
 
 // ── The gate: an account with an email ──────────────────────────────────────
@@ -58,15 +58,24 @@ function ReauthEmailStage({
             {error ? <Text style={[styles.text, styles.centerText, { color: colors.negative }]}>{error}</Text> : null}
             <View style={styles.flex} />
             <View style={styles.actions}>
-                <Button action="primary" onPress={() => void send()} isDisabled={sending} testID="reauth-send-code">
-                    {sending ? <ButtonSpinner /> : null}
-                    <ButtonText>{t('auth.track.sendCode')}</ButtonText>
-                </Button>
                 {onWithoutEmail ? (
-                    <Button variant="outline" action="secondary" onPress={onWithoutEmail} testID="reauth-without-email">
-                        <ButtonText>{t('auth.signInWithoutEmail')}</ButtonText>
+                    <>
+                        <Button action="primary" onPress={onWithoutEmail} testID="reauth-without-email">
+                            <ButtonText>{t('auth.signInWithoutEmail')}</ButtonText>
+                        </Button>
+                        <LegacyEmailLink
+                            label={t('auth.track.sendCode')}
+                            onPress={() => void send()}
+                            disabled={sending}
+                            testID="reauth-send-code"
+                        />
+                    </>
+                ) : (
+                    <Button action="primary" onPress={() => void send()} isDisabled={sending} testID="reauth-send-code">
+                        {sending ? <ButtonSpinner /> : null}
+                        <ButtonText>{t('auth.track.sendCode')}</ButtonText>
                     </Button>
-                ) : null}
+                )}
             </View>
         </View>
     );

@@ -1,29 +1,57 @@
 import { Group, GroupLabel, Row, Badge } from '@/components/custom/you/rows';
 import { Pressable } from '@/components/ui/pressable';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { requestEmailCapture } from '@/lib/subscription/email-capture';
 import { useColors } from '@/lib/theme/tokens';
 import { getNativeLanguageName } from '@/lib/translation-service';
 import { maskEmail } from '@/lib/algorithms/mask-email';
 import { getAppVersion, getGitCommit } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import SettingsUsageCard from './SettingsUsageCard';
+import SupportIdCopy, { useAccountHandle } from './SupportIdCopy';
 import { useAppPreferences } from './useAppPreferences';
+import { emailCutoffLabel, isEmailAccount, requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
 type YouSettingsScreen = 'display' | 'notifications' | 'mera-protocol' | 'app-lock' | 'data';
 const youScreen = (screen: YouSettingsScreen) => `/logged-in/app_container/you/${screen}` as Href;
+
+/** The account row: how this account signs in, with the Support ID and its
+ *  copy button as the sub-line (the only place Settings shows it). A Row's
+ *  subtitle is text only, so this mirrors Row's look. `reserveSubLine` keeps
+ *  the line's height while the cached id loads, so the row never jumps. */
+const AccountRow: React.FC<{ testID: string; icon: keyof typeof MaterialIcons.glyphMap; title: string; reserveSubLine: boolean }> = ({
+    testID,
+    icon,
+    title,
+    reserveSubLine,
+}) => {
+    const colors = useColors();
+    const handle = useAccountHandle();
+    return (
+        <View testID={testID} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, paddingHorizontal: 16 }}>
+            <MaterialIcons name={icon} size={20} color={colors.ink2} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ color: colors.ink, fontSize: 16, lineHeight: 21 }}>{title}</Text>
+                {/* An email account with no Support ID yet: its "!" already has the Move to phone row. */}
+                <View style={{ minHeight: reserveSubLine ? 20 : 0, marginTop: 2 }}>
+                    {handle?.kind === 'supportId' ? <SupportIdCopy testID="settings-support-id" compact /> : null}
+                </View>
+            </View>
+        </View>
+    );
+};
 
 
 /**
@@ -34,7 +62,7 @@ const youScreen = (screen: YouSettingsScreen) => `/logged-in/app_container/you/$
  */
 const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const colors = useColors();
     const {
         supportBusy,
@@ -55,6 +83,14 @@ const AppPreferencesTab: React.FC = () => {
         openFaq,
     } = useAppPreferences();
     useFocusEffect(refreshOnFocus);
+    // The move row is for accounts that still have an email (a displayed one, or the stored row / session).
+    const [emailAccount, setEmailAccount] = useState(false);
+    useEffect(() => {
+        let live = true;
+        void isEmailAccount().then((yes) => { if (live) setEmailAccount(yes); });
+        return () => { live = false; };
+    }, [displayEmail]);
+    const showMoveRow = emailAccount || !!displayEmail;
 
     const busy = <Spinner size="small" />;
     const version = getAppVersion();
@@ -173,25 +209,27 @@ const AppPreferencesTab: React.FC = () => {
             <GroupLabel testID="settings-group-account">{t('settings.groupAccount')}</GroupLabel>
             <Group>
                 {displayEmail ? (
-                    <Row testID="settings-row-email" leadingIcon="mail-outline" title={maskEmail(displayEmail)} />
+                    <AccountRow testID="settings-row-email" icon="mail-outline" title={maskEmail(displayEmail)} reserveSubLine={false} />
                 ) : (
+                    <AccountRow testID="settings-row-phone" icon="smartphone" title={t('you.settings.signedInPhone')} reserveSubLine />
+                )}
+                {showMoveRow ? (
                     <Row
-                        testID="settings-row-phone"
+                        testID="settings-row-move-to-phone"
                         leadingIcon="smartphone"
-                        title={t('you.settings.signedInPhone')}
-                        subtitle={t('you.settings.noEmailNeeded')}
+                        title={t('moveToPhone.settingsRow')}
+                        subtitle={t('moveToPhone.settingsRowHint', { date: emailCutoffLabel(i18n.language) })}
+                        onPress={() => void requestMoveToPhone()}
                     />
-                )}
-                {/* Optional, says what it is for, never nudged (owner). */}
-                {displayEmail ? null : (
-                    <Row
-                        testID="settings-row-add-email"
-                        leadingIcon="alternate-email"
-                        title={t('you.settings.addEmail')}
-                        subtitle={t('you.settings.addEmailHint')}
-                        onPress={() => requestEmailCapture('settings')}
-                    />
-                )}
+                ) : null}
+            </Group>
+            {/* Under the account card: who sends receipts. Restore purchases lives on Manage plan. */}
+            <View style={{ paddingHorizontal: 4, paddingTop: 8, paddingBottom: 12 }}>
+                <Text style={{ color: colors.ink3, fontSize: 13 }}>
+                    {t(Platform.OS === 'ios' ? 'subscription.invoicesAppStore' : 'subscription.invoicesPlayStore')}
+                </Text>
+            </View>
+            <Group>
                 <Row
                     testID="settings-row-delete-account"
                     leadingIcon="delete-forever"

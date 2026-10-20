@@ -1,7 +1,7 @@
 // news-harness: pure decoders for the cloud scoring, reason and verifier
 // responses. Split verbatim from scoring.ts, which keeps the call builders.
 
-import { parseV3NoteResponse } from '../prompts/prompts';
+import { ECHOED_SCORE_LABEL, cutAtWordBoundary, parseV3NoteResponse } from '../prompts/prompts';
 import {
   DEFAULT_HARNESS_CONFIG,
   type ArticlePipelineConfig,
@@ -168,7 +168,8 @@ export function decodeV3NoteResults(
       continue;
     }
     if (!verdict.keep) demoteIds.push(id);
-    else if (verdict.why) reasons.set(id, verdict.why);
+    // Same fence as parseReasonResponse: a note narrating its score is dropped whole.
+    else if (verdict.why && !REASON_NAMES_A_SCORE.test(verdict.why)) reasons.set(id, verdict.why);
   }
 
   return { demoteIds, reasons, unusableIds };
@@ -653,22 +654,6 @@ function replaceClauseDashes(text: string): string {
 }
 
 /**
- * Cut to `max` characters at a word boundary.
- *
- * The prompt asks for 25 words or fewer, so reaching the cap already means
- * something went wrong upstream. The old `slice(0, max)` then made it visibly
- * broken by cutting mid-word. No ellipsis: a trailing "…" dresses a failure up
- * as an intentional summary. A single token longer than the cap has no boundary
- * to cut at, so it is hard-cut rather than emptied.
- */
-function cutAtWordBoundary(text: string, max: number): string {
-  if (text.length <= max) return text;
-  const slice = text.slice(0, max);
-  const lastSpace = slice.lastIndexOf(' ');
-  return (lastSpace > 0 ? slice.slice(0, lastSpace) : slice).trimEnd();
-}
-
-/**
  * Openers that mean the model is DELIBERATING rather than answering.
  *
  * A backstop, not the main defence — the structural checks in
@@ -902,8 +887,8 @@ export function parseReasonResult(
 
   text = text
     .replace(/\*?\*?\[User facts\]\*?\*?.*$/gm, '')
-    .replace(/\*?\*?Relevance Score:?\s*[\d.]+\*?\*?/gi, '')
     .replace(/\*?\*?Why this matters to you:?\*?\*?\s*/gi, '')
+    .replace(ECHOED_SCORE_LABEL, '$1')
     .replace(/[*#]+/g, '')
     .replace(/\n+/g, ' ');
   // Dashes are replaced BEFORE the whitespace collapse on purpose: ", " emitted

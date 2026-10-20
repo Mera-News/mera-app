@@ -4,7 +4,8 @@
 import { makeAgentDeps } from '@/lib/chat-tools/agent-device-port';
 import { REQUIRED_TOOL_REASK } from '@/lib/llm/text-tool-protocol';
 import { createAgentState, runAgentTurn, type AgentModelRequest } from '@/lib/mera-harness';
-import { gatewayCalls, mockGateway, server, signInFixtureAccount, type GatewayCall } from '@/test/helpers';
+import type { LiveTool } from '@/lib/llm/chat-phase-store';
+import { gatewayCalls, mockGateway, mockGql, server, signInFixtureAccount, type GatewayCall } from '@/test/helpers';
 import { reply, resetChatModules, seedFacts, setWebSearchInChat, toolCall } from '@/test/integration/chat/_helpers';
 
 jest.setTimeout(30_000);
@@ -293,5 +294,132 @@ describe('buildAgentPersona pins the app language', () => {
     await runAgentTurn({ state, userMessage: 'नमस्ते', deps: makeAgentDeps('नमस्ते', jest.fn()) });
 
     expect(gatewayCalls('chat')[0].messages[0].content).toContain('**Hindi**');
+  });
+});
+
+// The live tool row: the port brackets every device tool with start and end, under the CONTRACT
+// name the step labels key on, so the strip can rest on the phone while the tool really runs.
+describe('onTool: the tool the phone is running', () => {
+  function recorder() {
+    const events: string[] = [];
+    const tools: LiveTool[] = [];
+    const onTool = (event: 'start' | 'end', tool: LiveTool) => {
+      events.push(`${event}:${tool.toolName}:${tool.kind}`);
+      tools.push(tool);
+    };
+    return { events, tools, onTool };
+  }
+
+  it('brackets each device tool with start and end under its contract name and kind', async () => {
+    await setWebSearchInChat(true);
+    server.use(mockGql('PlaceSearch', () => ({ placeSearch: [] })));
+    const { events, onTool } = recorder();
+    const deps = makeAgentDeps('msg', jest.fn(), undefined, undefined, undefined, onTool);
+
+    await deps.tools.findSimilarFacts({});
+    await deps.tools.lookupPlace({ query: 'Porto' });
+    await deps.tools.saveExtractedFacts({ extracted_user_information: [] });
+    await deps.tools.deleteUserFacts({ fact_ids: [] });
+    await deps.tools.webSearch?.({ queries: ['Porto'] });
+
+    expect(events).toEqual([
+      'start:find_similar_facts:facts', 'end:find_similar_facts:facts',
+      'start:lookup_place:place', 'end:lookup_place:place',
+      'start:saveExtractedFacts:write', 'end:saveExtractedFacts:write',
+      'start:deleteUserFacts:remove', 'end:deleteUserFacts:remove',
+      'start:webSearch:web', 'end:webSearch:web',
+    ]);
+  });
+
+  it('carries the own arguments of the call, which the row label reads (the place word)', async () => {
+    let release!: () => void;
+    const held = new Promise<void>((r) => { release = r; });
+    server.use(mockGql('PlaceSearch', async () => { await held; return { placeSearch: [] }; }));
+    const { events, tools, onTool } = recorder();
+    const deps = makeAgentDeps('msg', jest.fn(), undefined, undefined, undefined, onTool);
+
+    const lookup = deps.tools.lookupPlace({ query: 'Porto' });
+    // The lookup is still on the wire: the row must already say so, and not yet be over.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(events).toEqual(['start:lookup_place:place']);
+    expect(tools[0].args).toEqual({ query: 'Porto' });
+    release();
+    await lookup;
+    expect(events).toEqual(['start:lookup_place:place', 'end:lookup_place:place']);
+  });
+
+  it('a web search starts its row, then narrates, then sends, then ends', async () => {
+    await setWebSearchInChat(true);
+    const seen: string[] = [];
+    server.events.on('request:start', ({ request }) => {
+      if (request.url.endsWith('/v1/web-search')) seen.push('request');
+    });
+    const deps = makeAgentDeps(
+      'what is porto santo',
+      jest.fn(),
+      (p) => seen.push(String(p)),
+      undefined,
+      undefined,
+      (event, tool) => seen.push(`${event}:${tool.kind}`),
+    );
+
+    await deps.tools.webSearch?.({ queries: ['Porto Santo'] });
+
+    expect(seen).toEqual(['start:web', 'webSearch', 'request', 'end:web']);
+  });
+
+  it('explainMera is no live step: pure, local text', async () => {
+    const { events, onTool } = recorder();
+    const deps = makeAgentDeps('how does mera handle my data', jest.fn(), undefined, undefined, undefined, onTool);
+    await deps.tools.explainMera?.({ topics: ['privacy'] });
+    expect(events).toEqual([]);
+  });
+
+  it('ends the row when the tool throws', async () => {
+    const { events, onTool } = recorder();
+    const deps = makeAgentDeps('msg', jest.fn(), undefined, undefined, undefined, onTool);
+
+    await expect(deps.tools.deleteUserFacts(null as never)).rejects.toThrow();
+
+    expect(events).toEqual(['start:deleteUserFacts:remove', 'end:deleteUserFacts:remove']);
+  });
+
+  it('starts nothing after Stop', async () => {
+    await setWebSearchInChat(true);
+    const { events, onTool } = recorder();
+    const stop = new AbortController();
+    const deps = makeAgentDeps('msg', jest.fn(), undefined, stop.signal, undefined, onTool);
+    stop.abort();
+
+    await deps.tools.findSimilarFacts({});
+    await deps.tools.lookupPlace({ query: 'Porto' });
+    await deps.tools.saveExtractedFacts({ extracted_user_information: ['Lives in Porto'] });
+    await deps.tools.deleteUserFacts({ fact_ids: ['f1'] });
+    await deps.tools.webSearch?.({ queries: ['Porto'] });
+
+    expect(events.filter((e) => e.startsWith('start:'))).toEqual([]);
+  });
+
+  it('an untapped delete never reaches the port: the card is the confirmation, so no remove row runs', async () => {
+    const [fact] = await seedFacts(['Plays chess']);
+    server.use(...mockGateway((c) =>
+      c.index === 0
+        ? reply('One moment.', toolCall('load_skill', { id: 'conversation/correction' }))
+        : c.index === 1
+          ? reply('', toolCall('deleteUserFacts', { fact_ids: [fact.id] }))
+          : 'Shall I remove it?'));
+    const { events, onTool } = recorder();
+    const deps = makeAgentDeps('forget that I play chess', jest.fn(), undefined, undefined, undefined, onTool);
+    const state = createAgentState({
+      surface: 'CONFIG',
+      languageName: 'English',
+      facts: [{ id: fact.id, statement: 'Plays chess', attribute: null }],
+    });
+
+    const out = await runAgentTurn({ state, userMessage: 'forget that I play chess', deps });
+
+    // The loop did see the call (precondition), and staged it instead of running it.
+    expect(out.legs.some((l) => l.toolCalls.some((c) => c.name === 'deleteUserFacts'))).toBe(true);
+    expect(events.filter((e) => e.includes('deleteUserFacts'))).toEqual([]);
   });
 });

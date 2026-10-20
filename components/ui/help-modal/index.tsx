@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
     AccessibilityInfo,
     Modal,
+    Platform,
     Pressable,
     StyleSheet,
     View,
@@ -25,11 +26,13 @@ import { Text } from '@/components/ui/text';
 import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
 
+import { closedOn } from './closed-on';
+
 export interface HelpModalProps {
     open: boolean;
     /** The X, a scrim tap or Android back. The parent sets `open` to false. */
     onClose: () => void;
-    /** The card is fully gone: open what the help pointed to here. */
+    /** The card is fully gone (iOS: the Modal's onDismiss, see `closed-on.ts`): open what the help pointed to here. */
     onClosed?: () => void;
     title: string;
     children: React.ReactNode;
@@ -74,7 +77,7 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
     const finish = useCallback(() => {
         setShown(false);
         setCardHeight(0);
-        onClosedRef.current?.();
+        if (closedOn(Platform.OS) === 'fadeEnd') onClosedRef.current?.();
     }, []);
 
     // In: once shown and the card has its height.
@@ -116,7 +119,16 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
     };
 
     return (
-        <Modal visible={shown} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+        <Modal
+            visible={shown}
+            transparent
+            animationType="none"
+            statusBarTranslucent
+            onRequestClose={onClose}
+            onDismiss={() => {
+                if (closedOn(Platform.OS) === 'dismiss') onClosedRef.current?.();
+            }}
+        >
             <View style={styles.fill}>
                 <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }, scrimStyle]} />
                 <Pressable

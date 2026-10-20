@@ -28,7 +28,6 @@
     "otpPlaceholder": "Digite o código de 6 dígitos",
     "invalidEmailDescription": "Por favor, insira um endereço de e-mail válido",
     "networkError": "Erro de rede. Por favor, tente novamente.",
-    "sentTo": "Enviamos um código para",
     "invalidOtp": "Por favor, insira um código OTP válido de 6 dígitos",
     "invalidOtpServer": "Código OTP inválido. Por favor, tente novamente.",
     "otpError": "Ocorreu um erro durante a verificação. Por favor, tente novamente.",
@@ -42,34 +41,28 @@
     "identitySwitchRetry": "Tentar novamente",
     "identitySwitchSignOut": "Sair e começar de novo",
     "deviceSignInWorking": "Fazendo login",
-    "deviceSignInFailed": "Algo deu errado. Tente novamente ou entre com e-mail.",
-    "deviceSignInDenied": "Não foi possível verificar este dispositivo. Tente novamente ou entre com e-mail.",
-    "deviceSignInUnavailable": "O login não está disponível no momento. Tente novamente em alguns minutos ou entre com e-mail.",
+    "deviceSignInFailed": "Algo deu errado. Tente novamente.",
+    "deviceSignInDenied": "Não foi possível verificar este dispositivo. Tente novamente.",
     "tryAgain": "Tentar novamente",
     "learnAboutMera": "Conheça o Mera",
-    "alreadyHaveAccount": "Entrar com e-mail",
     "continue": "Continuar",
     "sourceCode": "Código-fonte",
     "failedToSendBody": "Falha ao enviar o código OTP",
     "signingYouIn": "Fazendo login…",
-    "signInWithoutEmail": "Entrar sem e-mail",
+    "signInWithoutEmail": "Entrar com este celular",
     "differentAccount": {
-      "title": "Entrar sem e-mail?",
+      "title": "Entrar com este celular?",
       "body": "Vamos apagar tudo que a Mera guarda neste celular para {{email}}. A conta em si não é excluída. Tem certeza?",
       "continue": "Remover e continuar",
       "useEmail": "Manter minha conta",
       "bodyGeneric": "Vamos apagar tudo que a Mera guarda neste celular para esta conta. A conta em si não é excluída. Tem certeza?"
     },
-    "deviceSignInCaption": {
-      "uninstall": "Sua conta está ligada a este celular. Se você apagar o Mera ou perder o celular, vai começar uma conta nova. Backup e restauração, em Configurações, pode guardar seus dados.",
-      "reset": "Sua conta está ligada a este celular. Se você redefinir ou perder o celular, vai começar uma conta nova. Backup e restauração, em Configurações, pode guardar seus dados."
-    },
     "track": {
       "beforeYouStart": "Antes de começar",
-      "beginCaption": "A Mera entra com este celular. Nada para lembrar.",
+      "beginCaption": "Sem e-mail, número de telefone ou senha. Nada para lembrar.",
       "beginMera": "Começar com a Mera",
       "beginTitle": "Como você quer começar?",
-      "beginWithoutEmail": "Começar sem e-mail",
+      "beginWithoutEmail": "Entrar com este celular",
       "checkEmailTitle": "Verifique seu e-mail",
       "chooseLanguage": "Escolha seu idioma",
       "codeA11y": "Código de 6 dígitos",
@@ -82,13 +75,25 @@
       "notHereTitle": "{{language}} ainda não está neste celular",
       "phoneLanguage": "Idioma do seu celular",
       "sendCode": "Enviar código",
-      "sentTo": "Enviamos um código de 6 dígitos para {{email}}.",
       "useDifferentEmail": "Usar outro e-mail",
       "welcome": "Bem-vindo à Mera",
       "wrongCode": "Esse código não funcionou. Confira ou peça um novo.",
       "noSheetTitle": "Seu iPhone não abriu o download",
-      "noSheetBody": "Tente novamente ou abra Ajustes no seu iPhone, depois Geral, depois Idioma e Região, depois Idiomas de tradução para baixar {{language}}."
-    }
+      "noSheetBody": "Tente novamente ou abra Ajustes no seu iPhone, depois Geral, depois Idioma e Região, depois Idiomas de tradução para baixar {{language}}.",
+      "sentToIfAccount": "Se este e-mail tiver uma conta na Mera, enviamos um código para ele. Novo na Mera? Use “Entrar com este celular”.",
+      "noCodeUsePhone": "Não recebeu o código? Use “Entrar com este celular”."
+    },
+    "emailLegacyHint": "Só para quem entrou com e-mail antes. Novos usuários não podem mais entrar com e-mail.",
+    "phoneCheckTemporary": "Não foi possível verificar este celular. Verifique sua conexão e tente novamente.",
+    "phoneUnsupportedAndroid": "A Mera precisa do Google Play neste celular para entrar com você. Celulares sem ele não são compatíveis.",
+    "phoneUnsupportedIos": "Este iPhone não pode usar o login por celular.",
+    "supportedPhones": "Celulares compatíveis",
+    "emailEnded": {
+      "title": "O login por e-mail foi encerrado",
+      "bodyIos": "O login por e-mail foi encerrado em {{date}}. Entre com este celular para começar de novo. Seu plano volta pela App Store, e seus artigos salvos voltam do seu backup.",
+      "bodyAndroid": "O login por e-mail foi encerrado em {{date}}. Entre com este celular para começar de novo. Seu plano volta pelo Google Play, e seus artigos salvos voltam do seu backup."
+    },
+    "phoneNotSupported": "Este celular não é compatível"
   },
   "account": {
     "contactSupport": "Falar com o suporte"
@@ -523,12 +528,12 @@
     "exportHistoryEmptyDescription": "Você não leu nenhum artigo nos últimos 30 dias.",
     "keeps": {
       "title": "O que o Mera guarda sobre você",
-      "emailAndPlan": "Seu e-mail e seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
+      "emailAndPlan": "Seu e-mail, até você mudar para o login por celular ou até ele ser apagado em 30 de outubro de 2026, e seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
       "plan": "Seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
-      "emailIfAdded": "Seu e-mail, se você adicionou um, e seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
+      "emailIfAdded": "Seu plano. A Mera nunca pede um e-mail, e qualquer e-mail de antes é apagado em 30 de outubro de 2026. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
       "signInRecordIos": "Um registro de acesso deste celular, apagado junto com sua conta. A verificação da Apple de que este é o app de verdade não é guardada.",
       "signInRecordAndroid": "Um registro de acesso deste celular, não o ID do seu celular, apagado junto com sua conta. A verificação do Google de que este é o app de verdade não é guardada.",
-      "signInRecordGeneric": "Sem e-mail, um registro de acesso deste celular, apagado junto com sua conta. A verificação da Apple ou do Google de que este é o app de verdade não é guardada.",
+      "signInRecordGeneric": "Um registro de acesso deste celular, apagado junto com sua conta. A verificação da Apple ou do Google de que este é o app de verdade não é guardada.",
       "usage": "Quanto texto criptografado o Mera enviou para ser lido por você a cada dia e em quantas solicitações (nunca o texto em si), quantos artigos foram enviados a este celular a cada dia, quando você atingiu a leitura diária do seu plano e em quais dias você usou a Mera. Guardado por 90 dias. Os acessos não guardam endereço IP nem dados do navegador.",
       "topics": "Frases de tópicos, guardadas só pelo texto, sem nada que as ligue a você, e apagadas após 14 dias sem uso.",
       "privacyLink": "Ler a política de privacidade"
@@ -572,11 +577,11 @@
     "contentPolicy": "Política de conteúdo",
     "faq": "Perguntas frequentes",
     "reportBug": "Relatar um bug",
-    "deleteAccountConfirmGrace": "Sua conta será agendada para exclusão, com um período de carência de 30 dias. Se sua conta tem e-mail, entre com ele nesses 30 dias para cancelar. Uma conta sem e-mail não pode mais ser acessada, então a exclusão dela não pode ser cancelada.",
+    "deleteAccountConfirmGrace": "Sua conta será agendada para exclusão e apagada definitivamente após 30 dias. Este celular não consegue mais entrar nela. Isso não dá para desfazer.",
     "deleteAccountWarningGrace": "⚠️ Após 30 dias, os dados da sua conta são removidos permanentemente. Os registros de cobrança são guardados por 7 anos para fins contábeis. Isso não pode ser desfeito.",
     "finalConfirmationBodyGrace": "Isto agenda sua conta para exclusão permanente em 30 dias.",
     "accountDeletionScheduledTitle": "Exclusão Agendada",
-    "accountDeletionScheduledDescription": "Sua conta será excluída permanentemente em 30 dias. Se ela tem e-mail, entre com ele antes disso para cancelar."
+    "accountDeletionScheduledDescription": "Sua conta será excluída permanentemente em 30 dias."
   },
   "configPanel": {
     "factDeletedTitle": "Fato Excluído",
@@ -728,7 +733,8 @@
     "mayMistakes": "A Mera pode cometer erros, então confira as notícias importantes na fonte original.",
     "cardWaitingHint": "Toque em uma opção acima ou digite sim",
     "cardCancelled": "Tudo bem, nada mudou",
-    "changeUndone": "Desfeito"
+    "changeUndone": "Desfeito",
+    "cardTapHint": "Toque em uma opção acima."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Gostei deste artigo: \"{{title}}\". Gostaria de ver mais sugestões como essa.",
@@ -882,12 +888,9 @@
     "activatedTitle": "{{plan}} está ativo",
     "planPending": "{{plan}} · ativando",
     "perMonth": "/mês",
-    "starterFreeTitle": "Você está no Starter, grátis",
-    "starterFreeBody": "Toda conta inclui o plano Starter completo sem custo: todos os seus interesses, chat, checagens e histórias acompanhadas. Cada artigo que combina com seus interesses chega ao seu Feed. O Mera lê, deixa de lado o que é ruído e destaca o que importa. Em celulares compatíveis, a leitura neste celular é ilimitada em todos os planos.",
     "analysedForYou": "Lido pelo Mera",
     "available24h": "Disponível, últimas 24 horas",
     "discarded": "Descartados",
-    "localOnly": "Calculado neste celular a partir do que a Mera já guarda. Nada extra é registrado.",
     "promoEndsNoRenew": "Acesso promocional · termina em {{date}}, não renova",
     "relevantSoFar": "Relevantes até agora",
     "billedAppStore": "Cobrado pela App Store. Cancele quando quiser na sua conta da Apple.",
@@ -897,7 +900,13 @@
     "confirmTimeoutTitle": "Ainda não conseguimos confirmar sua compra",
     "confirmTimeoutBody": "Se você pagou, fale com o suporte e vamos resolver isso.",
     "checkAgain": "Verificar novamente",
-    "readingExplainer": "Cada artigo que combina com seus interesses chega ao seu Feed. O Mera lê, deixa de lado o que é ruído e destaca o que importa. Seu plano define quanto o Mera lê na nuvem por dia: Starter 10 MB, Individual 50 MB, Profissional 200 MB. O Mera lê para você por meio de criptografia de ponta a ponta, então não consegue saber quais artigos lê nem quantos. Por isso os planos são medidos em megabytes, e não em artigos. Em celulares compatíveis, a leitura neste celular é ilimitada em todos os planos."
+    "invoicesAppStore": "A Mera não tem como enviar e-mails para você, então a Apple envia seus recibos e faturas para o e-mail da sua Conta Apple.",
+    "invoicesPlayStore": "A Mera não tem como enviar e-mails para você, então o Google Play envia seus recibos para o e-mail da sua Conta do Google.",
+    "planBack": "Seu plano voltou.",
+    "restoreNoneApple": "Nenhum plano encontrado nesta Conta Apple.",
+    "restoreNoneGoogle": "Nenhum plano encontrado nesta Conta do Google.",
+    "restoreFailedAppStore": "Não foi possível acessar a App Store. Tente novamente.",
+    "restoreFailedPlayStore": "Não foi possível acessar o Google Play. Tente novamente."
   },
   "tabs": {
     "deck": "Feed",
@@ -1548,9 +1557,9 @@
     "retry": "Tentar novamente",
     "welcomeBody": "Toque em \"Concordar e continuar\" para aceitar nossos Termos de Serviço e nossa Política de Privacidade.",
     "deviceNotice": {
-      "appAttest": "Sem precisar de e-mail. O Mera faz seu login com este celular. A Apple confirma que é o app Mera de verdade em um iPhone de verdade, para barrar contas falsas. Guardamos um registro de acesso enquanto você tiver uma conta.",
-      "playIntegrity": "Sem precisar de e-mail. O Mera faz seu login com este celular. O Google confirma que é o app Mera de verdade em um celular Android de verdade, para barrar contas falsas. Guardamos um registro de acesso, não o ID do seu celular.",
-      "generic": "Sem precisar de e-mail. O Mera faz seu login com este celular. Guardamos um registro de acesso deste celular enquanto você tiver uma conta."
+      "appAttest": "O Mera faz seu login com este celular. A Apple confirma que é o app Mera de verdade em um iPhone de verdade, para barrar contas falsas. Guardamos um registro de acesso enquanto você tiver uma conta.",
+      "playIntegrity": "O Mera faz seu login com este celular. O Google confirma que é o app Mera de verdade em um celular Android de verdade, para barrar contas falsas. Guardamos um registro de acesso, não o ID do seu celular.",
+      "generic": "O Mera faz seu login com este celular. Guardamos um registro de acesso deste celular enquanto você tiver uma conta."
     }
   },
   "tutorials": {
@@ -1846,7 +1855,7 @@
             "body": "As principais coisas, e por que cada uma sai.",
             "steps": {
               "0": "Frases de tópico curtas, para ter algo para combinar com histórias.",
-              "1": "Como você faz login, por e-mail ou com este celular, e qual plano você tem.",
+              "1": "Como você entra, que é este celular (ou, até 30 de outubro de 2026, um e-mail de antes), e qual plano você tem.",
               "2": "Os artigos que seu celular pede e o texto criptografado que o Mera envia para ser lido por você, contados por dia para aplicar seu plano."
             },
             "ask": "O que o app envia aos seus servidores?"
@@ -1865,7 +1874,7 @@
           },
           "what-we-keep": {
             "headline": "O que mantemos",
-            "body": "Seu e-mail de acesso, se você adicionou um. Qual plano você tem. Uma contagem diária de artigos enviados a você, quanto texto criptografado o Mera enviou para ser lido por você e em quantas solicitações (nunca o texto em si), quando você atingiu a leitura diária do seu plano e em quais dias você usou a Mera, guardada por 90 dias. Seus horários de notificação, idioma e escolha de processamento. As respostas que você envia às perguntas da equipe da Mera. Se você usa a Mera sem e-mail, um registro de acesso deste celular, apagado junto com sua conta. As frases de tópicos ficam em cache só pelo texto, sem nada que registre quem pediu, e são apagadas após catorze dias sem uso.",
+            "body": "Qual plano você tem. Um e-mail só para uma conta que entrou com um antes, apagado em 30 de outubro de 2026. Uma contagem diária de artigos enviados a você, quanto texto criptografado o Mera enviou para ser lido por você e em quantas solicitações (nunca o texto em si), quando você atingiu a leitura diária do seu plano e em quais dias você usou a Mera, guardada por 90 dias. Seus horários de notificação, idioma e escolha de processamento. As respostas que você envia às perguntas da equipe da Mera. Um registro de acesso deste celular, apagado junto com sua conta. As frases de tópicos ficam em cache só pelo texto, sem nada que registre quem pediu, e são apagadas após catorze dias sem uso.",
             "ask": "O que Mera armazena sobre mim em seus servidores?"
           }
         }
@@ -2219,20 +2228,6 @@
     "mailFailedBody": "Copie nosso endereço de suporte e envie um e-mail de qualquer app.",
     "copyAddress": "Copiar endereço"
   },
-  "emailCapture": {
-    "title": "Adicione seu e-mail",
-    "subtitle": "Receba recibos por e-mail e recupere sua conta se trocar de celular.",
-    "continue": "Continuar",
-    "notNow": "Agora não",
-    "confirm": "Confirmar",
-    "added": "E-mail adicionado",
-    "addedDetail": "Recibos e recuperação da conta usarão {{email}}.",
-    "skip": "Continuar sem e-mail",
-    "skipTitle": "Continuar sem e-mail?",
-    "skipBody1": "Sem um e-mail, sua conta não pode migrar para outra plataforma. Se você trocar entre iOS e Android, começará com uma conta nova lá.",
-    "skipBody2": "O suporte só consegue encontrar sua compra pelo seu ID de suporte. Copie e guarde em um lugar seguro.",
-    "skipConfirm": "Continuar para o pagamento"
-  },
   "videoPlayer": {
     "closeA11y": "Fechar vídeo",
     "openInBrowser": "Abrir no navegador",
@@ -2416,7 +2411,6 @@
     "removing": "Removendo o que você pediu",
     "asking": "Preparando uma pergunta para você",
     "working": "Trabalhando nisso",
-    "slow": "Ainda em andamento, conexão lenta",
     "legCapSentence": "Isso exigiu mais etapas do que a Mera faz de uma vez. Pergunte de novo para continuar.",
     "interrupted": "Isso foi interrompido. Pergunte de novo para continuar.",
     "summaryFailed": "Algo não funcionou",
@@ -2436,7 +2430,6 @@
     "noProposalSentence": "A Mera não encontrou nada para adicionar a partir disso.",
     "unknownToolSentence": "Algo deu errado do lado da Mera. Pergunte de novo para continuar.",
     "malformedChoiceSentence": "Não foi possível mostrar as opções. Pergunte de novo para continuar.",
-    "boxTitle": "A Mera está trabalhando",
     "doneInSteps_one": "Concluído em {{count}} passo",
     "doneInSteps_other": "Concluído em {{count}} passos",
     "doneInStepsShow_one": "Concluído em {{count}} passo, mostrar passos",
@@ -2455,9 +2448,7 @@
     "interests": "seus interesses",
     "origin": "de onde você é",
     "family": "sua família",
-    "feedTuning": "o ajuste do seu feed",
-    "followStory": "o acompanhamento de uma notícia",
-    "factCheck": "a checagem de uma afirmação"
+    "feedTuning": "o ajuste do seu feed"
   },
   "askChoice": {
     "answeredA11y": "já respondido",
@@ -2496,10 +2487,10 @@
       "Preparando seu celular para responder."
     ],
     "deviceThinking": [
-      "Pensando no seu celular. Nada sai do seu aparelho."
+      "Pensando no seu celular."
     ],
     "webSearch": [
-      "Pesquisando na web a partir do seu aparelho…"
+      "Pesquisando na web pelo servidor da Mera…"
     ]
   },
   "savedExport": {
@@ -2532,7 +2523,8 @@
     },
     "stories": {
       "privacy": "As histórias que você acompanha ficam guardadas neste celular."
-    }
+    },
+    "sourcesLink": "Veja todas as fontes que a Mera lê"
   },
   "articleMenu": {
     "openA11y": "Mais ações",
@@ -2677,11 +2669,10 @@
       "privacy": "A Mera não liga suas buscas à sua conta."
     },
     "explainer": {
-      "country1": "As histórias sobem mais quanto mais os veículos deste país estão escrevendo sobre elas.",
-      "countrySame": "Esta página é igual para todos. Nada sobre você é usado aqui.",
-      "same": "O Mundo é igual para todos. Nada sobre você é usado aqui.",
-      "top1": "Histórias cobertas em muitos países, por muitos veículos diferentes, ficam no topo. Um país muito ativo não consegue preencher a página sozinho, e muitos artigos de um mesmo veículo contam uma vez só.",
-      "window": "O seletor de tempo define até onde a página olha: 6, 12, 24 ou 48 horas. Cada lista só conta artigos publicados dentro dessa janela."
+      "window": "O seletor de tempo define até onde a página olha: 6, 12, 24 ou 48 horas. Cada lista só conta artigos publicados dentro dessa janela.",
+      "justMath": "Só matemática. Nenhuma IA ordena esta página, e ela é igual para todo mundo.",
+      "mathWorld": "Cada país que cobre uma notícia dá 1 ponto a ela, mais um pouco por cada veículo extra de lá, com limite de 4 pontos por país. Some todos os países, e o maior total aparece primeiro.",
+      "mathCountry": "Conte os artigos que os veículos deste país publicaram sobre uma notícia nas últimas 24 horas. A notícia com mais artigos aparece primeiro."
     }
   },
   "library": {
@@ -2782,8 +2773,6 @@
     "settings": {
       "yourPlan": "Seu plano",
       "usageOffline": "O uso aparece quando você está on-line",
-      "addEmail": "Adicionar um e-mail",
-      "addEmailHint": "Opcional. Só se você quiser levar sua conta e seu plano para outro celular, ou receber e-mails da Mera.",
       "appLock": "Bloqueio do app",
       "backupOff": "Backup desativado",
       "backupOn": "Backup ativado",
@@ -2793,7 +2782,6 @@
       "developerOn": "Modo desenvolvedor ativado",
       "groupGeneral": "Geral",
       "groupPrivacy": "Privacidade e segurança",
-      "noEmailNeeded": "Sem precisar de e-mail.",
       "observabilityHint": "O que o banco de dados do celular guarda, para depuração",
       "off": "Desativado",
       "on": "Ativado",
@@ -2808,11 +2796,10 @@
       "resetsTodayAt": "Renova hoje às {{time}}",
       "resetsTomorrowAt": "Renova amanhã às {{time}}",
       "lastUpdated": "Última atualização {{time}}",
-      "onDeviceUnlimited": "Leitura neste celular: ilimitada",
-      "readingOnPhone": "O Mera está lendo neste celular.",
       "newPlanApplies": "Seu novo plano já está valendo.",
-      "planMultiplierBase": "10 MB de leitura na nuvem por dia",
-      "planMultiplier": "{{mb}} MB de leitura na nuvem por dia, {{n}}x o Starter"
+      "restorePurchases": "Restaurar compras",
+      "processingMode": "Modo de processamento",
+      "unlimited": "Ilimitado"
     },
     "notifications": {
       "push": "Notificações push",
@@ -2924,6 +2911,29 @@
     "relevance": "Melhor correspondência",
     "oldest": "Mais antigos primeiro",
     "newest": "Mais recentes primeiro"
+  },
+  "moveToPhone": {
+    "dialogTitle": "Entrar com este celular",
+    "dialogBody": "Vamos fazer seu login com este celular, mover sua conta para ele e apagar seu e-mail do nosso banco de dados.",
+    "dialogSettingsHint": "Você pode fazer isso em Configurações até {{date}}.",
+    "confirm": "Mover conta",
+    "cancel": "Agora não",
+    "progressTitle": "Movendo sua conta para este celular",
+    "steps": {
+      "checking": "Verificando este celular",
+      "linking": "Vinculando sua conta",
+      "removing": "Removendo seu e-mail",
+      "done": "Concluído"
+    },
+    "failed": "Não foi concluído. Sua conta continua funcionando. Tente novamente em instantes.",
+    "unsupportedIos": "Este celular não pode usar o login por celular, então a Mera deixa de funcionar nele em {{date}}. Se você paga pela Mera, cancele seu plano na App Store antes disso.",
+    "unsupportedAndroid": "Este celular não pode usar o login por celular, então a Mera deixa de funcionar nele em {{date}}. Se você paga pela Mera, cancele seu plano no Google Play antes disso.",
+    "success": "Você entrou com este celular. Seu e-mail foi apagado.",
+    "close": "Fechar",
+    "inboxTitle": "O login por e-mail termina em {{date}}",
+    "inboxBody": "Mude para o login por celular para manter sua conta.",
+    "settingsRow": "Mudar para o login por celular",
+    "settingsRowHint": "O login por e-mail termina em {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

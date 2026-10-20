@@ -31,12 +31,13 @@ import { useColors } from '@/lib/theme/tokens';
 import { BeginStage } from './stages/BeginStage';
 import { ConsentStage } from './stages/ConsentStage';
 import { DifferentAccountSheet } from './stages/DifferentAccountSheet';
+import { EmailEndedStage } from './stages/EmailEndedStage';
 import { EmailStage } from './stages/EmailStage';
 import { ReauthEmailStage } from './stages/ReauthEmailStage';
 import { ReauthMismatchStage } from './stages/ReauthMismatchStage';
 import { ReauthNoEmailStage } from './stages/ReauthNoEmailStage';
 import { LOGO_TOP, styles } from './stages/styles';
-import { signInWithPhone, useAuthScreen, type AuthScreenProps, type Stage } from './useAuthScreen';
+import { signInWithPhone, unsupportedExit, useAuthScreen, type AuthScreenProps, type Stage } from './useAuthScreen';
 
 /** The one logo: where and how big it sits on each stage (FinalJourney "One logo"). */
 const LOGO_FULL = 150;
@@ -86,6 +87,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         tourOpen,
         setTourOpen,
         canSignInWithoutEmail,
+        emailEnded,
         finishDeviceSignIn,
         askSwitch,
         handleVerificationSuccess,
@@ -160,6 +162,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
             body = (
                 <BeginStage
                     onLogoSlot={setSlot}
+                    emailEnded={emailEnded}
                     canUsePhone={availability !== 'unavailable'}
                     onWithoutEmail={() => {
                         setConsentFor('device');
@@ -186,10 +189,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                         askSwitch(r);
                         go(consentFrom);
                     }}
-                    onUseEmail={() => {
-                        setConsentFor('email');
-                        go(cachedEmail ? 'reauth-email' : 'email');
-                    }}
+                    onUnsupportedToEmail={unsupportedExit(cachedEmail) ? () => go('reauth-email') : undefined}
                     onBack={() => go(consentFrom)}
                 />
             );
@@ -213,6 +213,15 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                     onVerificationSuccess={handleVerificationSuccess}
                     onBack={() => go('email')}
                     onUseDifferentEmail={() => go('email')}
+                    onUsePhone={
+                        canSignInWithoutEmail
+                            ? () => {
+                                  setConsentFor('device');
+                                  setConsentFrom('begin');
+                                  go('consent');
+                              }
+                            : undefined
+                    }
                 />
             );
             break;
@@ -235,6 +244,21 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                     }
                 />
             ) : null;
+            break;
+        case 'email-ended':
+            body = (
+                <EmailEndedStage
+                    onUsePhone={
+                        canSignInWithoutEmail
+                            ? () => {
+                                  setConsentFor('device');
+                                  setConsentFrom('email-ended');
+                                  go('consent');
+                              }
+                            : undefined
+                    }
+                />
+            );
             break;
         case 'reauth-otp':
             body = (

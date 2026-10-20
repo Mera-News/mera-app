@@ -5,6 +5,7 @@
 // feeds it. Everything here is presentational — no data fetching, no stores.
 
 import type { ReactNode } from 'react';
+import type { StepKind } from '@/lib/services/chat-phase';
 import type { AgentTurnResult } from '@/lib/mera-harness';
 import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
@@ -116,6 +117,9 @@ export interface AgentStep {
    *  `local-tc-${n}` on the local engine and collides across messages. */
   id: string;
   kind: 'leg-start' | 'tool';
+  /** Which glyph the row draws. A separate field from `kind`, which
+   *  `mergeRepeatedSteps` compares. */
+  glyph: StepKind;
   toolName?: string;
   /** Resolved to text by AgentStepsBox's key table, never rendered raw. */
   labelKey: string;
@@ -143,6 +147,12 @@ export type ChatThreadItem =
       /** The live assistant message currently streaming: keeps the Mera mark
        *  in the left gutter until the turn settles. */
       streaming?: boolean;
+      /** Set ONLY on the streaming item. */
+      showWords?: boolean;
+      engine?: 'cloud' | 'local';
+      /** No live steps box for the current turn, so the reply takes the wait
+       *  row's slot. */
+      handover?: boolean;
     }
   | {
       kind: 'fact-card';
@@ -301,6 +311,8 @@ export type ChatThreadItem =
       /** The most recent turn of the live conversation. Its folded box stays
        *  ("Done in N steps") until the next message is sent. */
       latest: boolean;
+      /** The turn finished normally: not interrupted and no terminal sentence. */
+      answered: boolean;
     }
   /**
    * 2 or 3 tap chips from an `ask_choice` call.
@@ -333,7 +345,13 @@ export type ChatThreadItem =
       answered: boolean;
     }
   | { kind: 'divider'; key: string; label: string }
-  | { kind: 'typing'; key: string }
+  | {
+      kind: 'typing';
+      key: 'typing';
+      showWords: boolean;
+      ackShowing: boolean;
+      engine: 'cloud' | 'local';
+    }
   // "View previous messages". An ITEM, the oldest one, so it draws at the TOP
   // of the inverted list. It used to be the list header, which an inverted
   // list draws at the bottom, between the newest reply and the composer.
