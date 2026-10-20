@@ -258,7 +258,11 @@ private func handle(_ req: [String: Any]) async -> [String: Any] {
     let response = try await session.respond(to: prompt, options: options)
     return ["id": id, "text": response.content]
   } catch {
-    return ["id": id, "error": code(error)]
+    let mapped = code(error)
+    // The harness keeps the framework's own words for an unmapped error; the app never sends them.
+    return mapped == "ERR_AFM_UNKNOWN"
+      ? ["id": id, "error": mapped, "detail": String(describing: error).prefix(300).description]
+      : ["id": id, "error": mapped]
   }
 }
 

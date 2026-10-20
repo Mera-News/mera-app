@@ -98,7 +98,8 @@ export async function afmAvailability(): Promise<AfmAvailability> {
 export async function afmCall(req: AfmRequest): Promise<NearResult> {
   const started = Date.now();
   const r = await send({ ...req });
-  const error = typeof r.error === 'string' ? r.error : null;
+  const error =
+    typeof r.error !== 'string' ? null : typeof r.detail === 'string' ? `${r.error}: ${r.detail}` : r.error;
   return {
     content: typeof r.text === 'string' ? r.text : '',
     toolCalls: [],
