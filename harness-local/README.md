@@ -307,6 +307,39 @@ Scorers: `score-option-quality.ts <singleshot dir>` (copied example, 3 to 4 opti
 the article, widens, no ended season) and `adoption-report.ts --candidate <dirs>
 --baseline <dirs>` (the D34 table). Unit test: `npx tsx --test harness-local/lib/option-quality.test.ts`.
 
+## Kev on this Mac
+
+`adapters/kev-local.ts` runs Kev through llama.rn's own C++. It builds `kev/` (CMake) from
+`node_modules/llama.rn`: the vendored llama.cpp it pins, plus `rn-decision.cpp`, built for
+Metal into `~/.cache/mera-harness/kev-build/kev-decide`. The context is the app's
+(`initParamsFor`), and every request goes through `llama_rn_context::decide()`. It is built
+on first use and rebuilt when `kev/` or the llama.rn version changes. `startKevLocal()`
+returns `{ label, decide, stop }`; `decide` has the toolkit's `decide()` shape (the kev
+core's DecidePort) and runs one request at a time.
+
+Setup: `brew install cmake`, then the pinned GGUF (`RELEVANCE_MODEL.modelUrl` in
+`lib/mera-protocol-toolkit/core/model-catalog.ts`):
+`curl -L -C - -o ~/.cache/mera-harness/models/Kev-4B-Q4_K_M.gguf <url>`. It must be exactly
+3,033,489,824 bytes, sha256 `33ae6b18…a19eff9`.
+
+`--kev-url <base>` swaps in any `/v1/systemone` server. It is a labelled fallback and never
+the default:
+- brew's `llama-server -m <Kev gguf> -c 4096 -b 4096 -ub 4096 -fa on -ctk f16 -ctv f16 -np 1
+  --cache-ram 0 --port 8090` serves the same answers, within 3e-8.
+- `https://api.redpill.ai/v1` is cloud kev-4b at full precision. It needs `REDPILL_API_KEY`
+  in `.env.harness`.
+
+Smoke and parity:
+`npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/kev-parity.ts --rows 3`.
+It runs the app's relevance question on goldset rows and checks the following:
+- that A, then B, then A gives identical answers;
+- the k distribution;
+- `--compare-url`: per-row deltas against a second backend;
+- per-row deltas against the 2026-10-16 cloud run.
+
+Kev's `systemone` template writes no `{{ sep }}` and does not use the question id, so llama.rn
+and upstream render the same prompt. The temperature (2.406) comes from the GGUF.
+
 ## Known limits and follow-ups
 
 **Reason-gated metrics cannot compare arms, and nothing in the runner stops you
