@@ -831,30 +831,20 @@ type BatchUpdates = { id: string; relevance: number; reason: string | null }[];
 
 /**
  * On this phone the pass is two phases: Kev scores every unscored row, then the built-in
- * model writes the notes (the sweep at the end; none with Skip notes on). Queued background
- * jobs are held off for the whole pass, and the sweep runs even when nothing was unscored, since
- * an earlier pass may have left notes owed.
+ * model writes the notes (the sweep at the end; none with Skip notes on). The sweep runs even
+ * when nothing was unscored, since an earlier pass may have left notes owed.
+ *
+ * Queued background jobs (topic generation after a saved fact) are NOT held off: the built-in
+ * model runs out of process and Kev stays loaded, so there is no model swap to protect, and
+ * every call already takes the llama lock, so a job slots in between two articles or two notes.
+ * Holding the queue for the pass made a new fact wait minutes for its topics (owner, 2026-10-21).
  */
 export async function processAllUnscored(
   onProgress?: (completed: number, total: number) => void,
   batchSize = 20,
   onBatchComplete?: (updates: BatchUpdates) => void,
 ): Promise<number> {
-  if (!isOnDeviceMode()) return scoreUnscoredRows(onProgress, batchSize, onBatchComplete);
-
-  // Lazy require, like stage-subscription-read below: the queue reaches the database at import.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { inferenceQueue } = require('@/lib/inference/InferenceQueue') as typeof import('@/lib/inference/InferenceQueue');
-  // The pause is ref-counted, so hold it even when a chat turn already paused the queue: that
-  // turn's resume must not hand llama back to queued jobs in the middle of this pass. A stopped
-  // queue takes no pause (and gets no resume).
-  const holds = inferenceQueue.getState() !== 'stopped';
-  try {
-    if (holds) await inferenceQueue.pause();
-    return await scoreUnscoredRows(onProgress, batchSize, onBatchComplete);
-  } finally {
-    if (holds) inferenceQueue.resume();
-  }
+  return scoreUnscoredRows(onProgress, batchSize, onBatchComplete);
 }
 
 async function sweepNotes(batchSize: number): Promise<void> {

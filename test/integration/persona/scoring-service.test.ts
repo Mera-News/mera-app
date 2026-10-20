@@ -1047,26 +1047,9 @@ describe('processAllUnscored - on-device pass', () => {
     expect(rows.b.reason).toBe('Local note on story b.');
   });
 
-  it('holds the queue for the pass and resumes it afterwards, even when the pass throws', async () => {
+  it('never pauses the queue for the pass, so a new fact\'s topics are not held behind ranking and notes', async () => {
     installLocal();
     const { pause, resume } = queue();
-    await seed(['a']);
-
-    await run(processAllUnscored());
-
-    expect(pause).toHaveBeenCalledTimes(1);
-    expect(resume).toHaveBeenCalledTimes(1);
-    expect(events[0]).toBe('pause');
-    expect(events.at(-1)).toBe('resume');
-
-    jest.spyOn(suggestionReads, 'countUnscoredSuggestions').mockRejectedValueOnce(new Error('db'));
-    await expect(run(processAllUnscored())).rejects.toThrow('db');
-    expect(resume).toHaveBeenCalledTimes(2);
-  });
-
-  it('leaves a queue that was not running alone', async () => {
-    installLocal();
-    const { pause, resume } = queue('stopped');
     await seed(['a']);
 
     await run(processAllUnscored());
@@ -1075,15 +1058,15 @@ describe('processAllUnscored - on-device pass', () => {
     expect(resume).not.toHaveBeenCalled();
   });
 
-  it('holds the queue even when a chat turn already paused it (the pause is ref-counted)', async () => {
+  it('leaves a chat turn\'s pause to that turn', async () => {
     installLocal();
     const { pause, resume } = queue('paused');
     await seed(['a']);
 
     await run(processAllUnscored());
 
-    expect(pause).toHaveBeenCalledTimes(1);
-    expect(resume).toHaveBeenCalledTimes(1);
+    expect(pause).not.toHaveBeenCalled();
+    expect(resume).not.toHaveBeenCalled();
   });
 
   it('runs the notes sweep when nothing was unscored', async () => {
