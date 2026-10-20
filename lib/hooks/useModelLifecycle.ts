@@ -7,7 +7,6 @@ import { AppState } from 'react-native';
 import {
   disposeModel,
   initBaseModel,
-  isDownloadInProgress,
   isModelDownloaded,
   restoreOnDeviceIfRunnable,
 } from '@/lib/mera-protocol-toolkit';
@@ -77,10 +76,12 @@ export function useModelLifecycle(): void {
 
     const subscription = AppState.addEventListener('change', async (nextState) => {
       if (nextState === 'active') {
-        // Ends a local Private cloud fallback once On this phone can run again. A
-        // running download promotes by itself. Fire and forget: when it flips the
+        // Ends a local Private cloud fallback once On this phone can run again. Not
+        // held off by a running download: a phone on the built-in model can run while
+        // the text model downloads, and a model still downloading is not on disk, so
+        // it cannot make the phone look runnable. Fire and forget: when it flips the
         // mode, Effect 1 loads the model.
-        if (!isDownloadInProgress()) void restoreOnDeviceIfRunnable().catch(() => false);
+        void restoreOnDeviceIfRunnable().catch(() => false);
         // If model should be loaded but somehow isn't (e.g. native context was
         // invalidated by the OS), reload it.
         if (

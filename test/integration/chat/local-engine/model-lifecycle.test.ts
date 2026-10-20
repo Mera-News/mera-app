@@ -21,6 +21,8 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { FIXTURE_ACCOUNT, graphql, HttpResponse, server, setAppState, signInFixtureAccount } from '@/test/helpers';
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 import { placeDownloadedModel } from '@/test/helpers/fs';
+import { installOnDeviceLlm } from '@/test/helpers/on-device-llm';
+import { setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 import {
   installLlama,
   llamaReleases,
@@ -31,6 +33,7 @@ import {
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 // A model download that never lands: the foreground restore must wait it out.
 jest.mock('expo-file-system/legacy', () => ({
   FileSystemSessionType: { BACKGROUND: 0, FOREGROUND: 1 },
@@ -50,6 +53,8 @@ const settleTicks = () => new Promise((r) => setTimeout(r, 100));
 beforeEach(async () => {
   resetChatModules();
   resetFileSystem();
+  // No built-in model unless a test installs one: the downloaded text model writes the text.
+  installOnDeviceLlm({ platformModel: null, availability: { available: false, reason: 'unsupportedPlatform' } });
   await disposeModel();
   // After the dispose, so the release counter starts at zero.
   installLlama(['unused']);
@@ -295,20 +300,21 @@ describe('returning to the foreground after a local Private cloud fallback', () 
     expect(initLlama()).toHaveBeenCalledTimes(1);
   });
 
-  it('does nothing while a download runs, even when On this phone could run', async () => {
-    placeDownloadedModel(TEXT_MODEL.modelId);
-    startModelDownloads();
-    expect(isDownloadInProgress()).toBe(true);
-    // Only the running download stands in the way now.
+  it('restores while the text model downloads, when the built-in model writes the text', async () => {
+    // The built-in model can run with the relevance model on disk; the Mera text model downloading
+    // beside it must not hold the phone on Private cloud.
+    installOnDeviceLlm({ availability: { available: true, reason: null } });
+    await setTextEngine('afm');
     placeDownloadedModel(RELEVANCE_MODEL.modelId);
+    startModelDownloads({ modelIds: [TEXT_MODEL.modelId] });
+    expect(isDownloadInProgress()).toBe(true);
     renderHook(() => useModelLifecycle());
 
     setAppState('background');
     setAppState('active');
-    await settleTicks();
 
-    expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
-    expect(personaReads).toBe(0);
-    expect(initLlama()).not.toHaveBeenCalled();
+    await waitFor(() => expect(protocol().processingMode).toBe(ProcessingMode.OnDevice));
+    expect(personaReads).toBe(1);
+    await setTextEngine('qwen');
   });
 });
