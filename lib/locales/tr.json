@@ -2518,7 +2518,8 @@
     },
     "stories": {
       "privacy": "Takip ettiğiniz hikayeler bu telefonda tutulur."
-    }
+    },
+    "sourcesLink": "Mera'nın okuduğu tüm kaynakları görün"
   },
   "articleMenu": {
     "openA11y": "Diğer işlemler",
@@ -2663,11 +2664,10 @@
       "privacy": "Mera aramalarınızı hesabınızla ilişkilendirmez."
     },
     "explainer": {
-      "country1": "Bir ülkenin kendi yayıncıları bir haber hakkında ne kadar çok yazarsa, o haber o kadar üst sıralarda çıkar.",
-      "countrySame": "Bu sayfa herkes için aynıdır. Burada sizinle ilgili hiçbir şey kullanılmaz.",
-      "same": "Dünya herkes için aynıdır. Burada sizinle ilgili hiçbir şey kullanılmaz.",
-      "top1": "Birçok ülkede, birçok farklı yayıncının yazdığı haberler en üstte çıkar. Tek bir hareketli ülke sayfayı dolduramaz ve bir yayıncıdan gelen çok sayıda makale tek sayılır.",
-      "window": "Zaman anahtarı sayfanın ne kadar geriye baktığını belirler: 6, 12, 24 ya da 48 saat. Her liste yalnızca o aralıkta yayımlanan makaleleri sayar."
+      "window": "Zaman anahtarı sayfanın ne kadar geriye baktığını belirler: 6, 12, 24 ya da 48 saat. Her liste yalnızca o aralıkta yayımlanan makaleleri sayar.",
+      "justMath": "Sadece matematik. Bu sayfayı hiçbir yapay zeka sıralamaz ve herkes için aynı görünür.",
+      "mathWorld": "Bir haberi ele alan her ülke habere 1 puan verir. O ülkedeki her ek yayıncı için biraz daha eklenir, ama her ülke en fazla 4 puanla sınırlıdır. Tüm ülkeler toplanır ve en yüksek toplam en üstte yer alır.",
+      "mathCountry": "Bu ülkenin yayıncılarının son 24 saatte bir habere dair yazdığı makaleleri sayın. En çok makalesi olan haber en üstte yer alır."
     }
   },
   "library": {

@@ -1,0 +1,242 @@
+{
+  "en": {
+    "world": {
+      "explainer": {
+        "justMath": "Just math. No AI ranks this page, and it looks the same for everyone.",
+        "mathWorld": "Each country covering a story gives it 1 point, plus a little more for each extra publisher there, up to 4 points per country. Add up all the countries, and the highest total comes first.",
+        "mathCountry": "Count the articles this country's publishers wrote about a story in the last 24 hours. The story with the most comes first."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "See every source Mera reads"
+    }
+  },
+  "ar": {
+    "world": {
+      "explainer": {
+        "justMath": "مجرد حساب. لا يرتّب الذكاء الاصطناعي هذه الصفحة، وتظهر بالشكل نفسه للجميع.",
+        "mathWorld": "تحصل كل دولة تغطي خبراً على نقطة واحدة، ومع كل ناشر إضافي فيها تُضاف نقاط صغيرة، بحد أقصى 4 نقاط لكل دولة. تُجمع النقاط لكل الدول، ويأتي الإجمالي الأعلى أولاً.",
+        "mathCountry": "احسب عدد المقالات التي كتبها ناشرو هذه الدولة عن الخبر خلال آخر 24 ساعة. الخبر الذي له أكبر عدد يأتي أولاً."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "اطلع على كل مصدر تقرأه ميرا"
+    }
+  },
+  "de": {
+    "world": {
+      "explainer": {
+        "justMath": "Nur Mathematik. Keine KI sortiert diese Seite, und sie sieht für alle gleich aus.",
+        "mathWorld": "Jedes Land, das über eine Geschichte berichtet, gibt ihr 1 Punkt, dazu ein bisschen mehr für jeden weiteren Verlag dort, maximal 4 Punkte pro Land. Alle Länder werden zusammengezählt, und die höchste Summe steht ganz oben.",
+        "mathCountry": "Gezählt werden die Artikel, die Verlage dieses Landes in den letzten 24 Stunden über eine Geschichte geschrieben haben. Die Geschichte mit den meisten Artikeln steht ganz oben."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Alle Quellen ansehen, die Mera liest"
+    }
+  },
+  "es": {
+    "world": {
+      "explainer": {
+        "justMath": "Solo matemáticas. Ninguna IA ordena esta página, y se ve igual para todo el mundo.",
+        "mathWorld": "Cada país que cubre una noticia le da 1 punto, más un poco más por cada medio extra de ese país, hasta 4 puntos por país. Se suman todos los países, y el total más alto aparece primero.",
+        "mathCountry": "Se cuentan los artículos que los medios de este país escribieron sobre una noticia en las últimas 24 horas. La noticia con más artículos aparece primero."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Ver todas las fuentes que Mera lee"
+    }
+  },
+  "fr": {
+    "world": {
+      "explainer": {
+        "justMath": "Juste des calculs. Aucune IA ne classe cette page, et elle est la même pour tout le monde.",
+        "mathWorld": "Chaque pays qui couvre un sujet lui donne 1 point, plus un peu pour chaque autre éditeur présent dans ce pays, jusqu'à 4 points par pays. On additionne les points de tous les pays, et le total le plus élevé arrive en premier.",
+        "mathCountry": "On compte les articles que les éditeurs de ce pays ont écrits sur un sujet au cours des dernières 24 heures. Le sujet qui en a le plus arrive en premier."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Voir toutes les sources que Mera lit"
+    }
+  },
+  "hi": {
+    "world": {
+      "explainer": {
+        "justMath": "बस गिनती है। इस पेज का क्रम कोई AI तय नहीं करता, और यह सबके लिए एक जैसा दिखता है।",
+        "mathWorld": "हर देश, जो किसी खबर को कवर करता है, उसे 1 अंक मिलता है। उस देश के हर अतिरिक्त प्रकाशक के लिए थोड़ा और जुड़ता है, पर एक देश को ज़्यादा से ज़्यादा 4 अंक मिलते हैं। सभी देशों के अंक जोड़े जाते हैं, और सबसे ज़्यादा कुल अंक वाली खबर सबसे ऊपर आती है।",
+        "mathCountry": "उस देश के प्रकाशकों ने पिछले 24 घंटों में किसी खबर पर जितने लेख लिखे, उन्हें गिना जाता है। जिस खबर पर सबसे ज़्यादा लेख होते हैं, वह सबसे ऊपर आती है।"
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "मेरा के सभी स्रोत देखें"
+    }
+  },
+  "id": {
+    "world": {
+      "explainer": {
+        "justMath": "Hanya hitungan. Tidak ada AI yang mengurutkan halaman ini, dan tampilannya sama untuk semua orang.",
+        "mathWorld": "Setiap negara yang meliput sebuah berita mendapat 1 poin, ditambah sedikit lagi untuk setiap penerbit tambahan di negara itu, dengan batas 4 poin per negara. Semua poin dari semua negara dijumlahkan, dan total tertinggi tampil paling atas.",
+        "mathCountry": "Hitung artikel yang ditulis penerbit di negara ini tentang sebuah berita dalam 24 jam terakhir. Berita dengan artikel terbanyak tampil paling atas."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Lihat semua sumber yang dibaca Mera"
+    }
+  },
+  "it": {
+    "world": {
+      "explainer": {
+        "justMath": "Solo calcoli. Nessuna IA classifica questa pagina, e appare uguale per tutti.",
+        "mathWorld": "Ogni paese che copre una notizia le assegna 1 punto, più un po' in più per ogni altra testata di quel paese, fino a un massimo di 4 punti per paese. Si sommano tutti i paesi e il totale più alto viene per primo.",
+        "mathCountry": "Si contano gli articoli che le testate di questo paese hanno scritto su una notizia nelle ultime 24 ore. La notizia con più articoli viene per prima."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Vedi tutte le fonti che Mera legge"
+    }
+  },
+  "ja": {
+    "world": {
+      "explainer": {
+        "justMath": "ただの計算です。AIがこのページを並べ替えることはありません。どなたに対しても同じ内容が表示されます。",
+        "mathWorld": "ストーリーを報じている国ごとに1点が入ります。その国にほかの報道機関があれば、少しずつ加点されます。ただし1か国あたり最大4点までです。すべての国の点数を合計し、合計点が最も高いものが一番上に来ます。",
+        "mathCountry": "その国の報道機関が過去24時間にそのストーリーについて書いた記事の数を数えます。記事が最も多いストーリーが一番上に来ます。"
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "メラが読むすべてのニュースソースを見る"
+    }
+  },
+  "ko": {
+    "world": {
+      "explainer": {
+        "justMath": "그냥 계산일 뿐이에요. AI는 이 페이지의 순위를 매기지 않고, 누구에게나 똑같이 보여요.",
+        "mathWorld": "이야기를 다루는 나라마다 1점을 줘요. 그 나라에 발행사가 더 있으면 조금씩 더 줘요. 나라당 최대 4점까지예요. 모든 나라의 점수를 더하고, 총점이 가장 높은 이야기가 맨 위에 와요.",
+        "mathCountry": "이 나라 발행사들이 지난 24시간 동안 어떤 이야기를 다룬 기사를 세어 봐요. 기사가 가장 많은 이야기가 맨 위에 와요."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "메라가 읽는 모든 뉴스 소스 보기"
+    }
+  },
+  "nl": {
+    "world": {
+      "explainer": {
+        "justMath": "Gewoon rekenwerk. Geen AI rangschikt deze pagina, en hij ziet er voor iedereen hetzelfde uit.",
+        "mathWorld": "Elk land dat een verhaal behandelt, geeft het 1 punt, plus een beetje meer voor elke extra uitgever daar, tot maximaal 4 punten per land. Tel alle landen op, en het hoogste totaal staat bovenaan.",
+        "mathCountry": "Tel de artikelen die de uitgevers van dit land in de afgelopen 24 uur over een verhaal schreven. Het verhaal met de meeste artikelen staat bovenaan."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Bekijk elke bron die Mera leest"
+    }
+  },
+  "pl": {
+    "world": {
+      "explainer": {
+        "justMath": "Tylko matematyka. Żadna AI nie układa tej strony, a dla każdego wygląda tak samo.",
+        "mathWorld": "Każdy kraj, w którym pojawia się dana historia, daje jej 1 punkt, plus trochę więcej za każdego kolejnego wydawcę w tym kraju, najwyżej 4 punkty na kraj. Sumujemy punkty ze wszystkich krajów, a najwyższy wynik jest na górze.",
+        "mathCountry": "Liczymy artykuły, które wydawcy z tego kraju napisali o danej historii w ciągu ostatnich 24 godzin. Historia z największą liczbą artykułów jest na górze."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Zobacz wszystkie źródła, które Mera czyta"
+    }
+  },
+  "pt-BR": {
+    "world": {
+      "explainer": {
+        "justMath": "Só matemática. Nenhuma IA ordena esta página, e ela é igual para todo mundo.",
+        "mathWorld": "Cada país que cobre uma notícia dá 1 ponto a ela, mais um pouco por cada veículo extra de lá, com limite de 4 pontos por país. Some todos os países, e o maior total aparece primeiro.",
+        "mathCountry": "Conte os artigos que os veículos deste país publicaram sobre uma notícia nas últimas 24 horas. A notícia com mais artigos aparece primeiro."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Veja todas as fontes que a Mera lê"
+    }
+  },
+  "ru": {
+    "world": {
+      "explainer": {
+        "justMath": "Просто математика. ИИ не ранжирует эту страницу, и для всех она выглядит одинаково.",
+        "mathWorld": "Каждая страна, где пишут об истории, даёт ей 1 балл, плюс немного за каждое дополнительное издание в этой стране, но не больше 4 баллов с одной страны. Баллы всех стран складываются, и выше всех стоит история с наибольшей суммой.",
+        "mathCountry": "Считаем статьи, которые издания этой страны написали об истории за последние 24 часа. Первой идёт история с самым большим числом статей."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Все источники, которые читает Мера"
+    }
+  },
+  "th": {
+    "world": {
+      "explainer": {
+        "justMath": "แค่การนับเท่านั้น ไม่มี AI มาจัดอันดับหน้านี้ และทุกคนเห็นผลเหมือนกัน",
+        "mathWorld": "ทุกประเทศที่รายงานข่าวจะได้ 1 คะแนน และได้เพิ่มอีกนิดสำหรับสำนักข่าวอื่นในประเทศเดียวกันแต่ละแห่ง โดยได้สูงสุดไม่เกิน 4 คะแนนต่อประเทศ จากนั้นรวมคะแนนของทุกประเทศ เรื่องที่มีคะแนนรวมสูงสุดจะขึ้นก่อน",
+        "mathCountry": "นับจำนวนบทความที่สำนักข่าวของประเทศนี้เขียนถึงเรื่องหนึ่งในช่วง 24 ชั่วโมงที่ผ่านมา เรื่องที่มีบทความมากที่สุดจะขึ้นก่อน"
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "ดูแหล่งข่าวทั้งหมดที่เมร่าอ่าน"
+    }
+  },
+  "tr": {
+    "world": {
+      "explainer": {
+        "justMath": "Sadece matematik. Bu sayfayı hiçbir yapay zeka sıralamaz ve herkes için aynı görünür.",
+        "mathWorld": "Bir haberi ele alan her ülke habere 1 puan verir. O ülkedeki her ek yayıncı için biraz daha eklenir, ama her ülke en fazla 4 puanla sınırlıdır. Tüm ülkeler toplanır ve en yüksek toplam en üstte yer alır.",
+        "mathCountry": "Bu ülkenin yayıncılarının son 24 saatte bir habere dair yazdığı makaleleri sayın. En çok makalesi olan haber en üstte yer alır."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Mera'nın okuduğu tüm kaynakları görün"
+    }
+  },
+  "uk": {
+    "world": {
+      "explainer": {
+        "justMath": "Просто математика. Жодний ШІ не ранжує цю сторінку, і вона однакова для всіх.",
+        "mathWorld": "Кожна країна, що висвітлює новину, дає їй 1 бал, плюс трохи більше за кожне додаткове видання в цій країні, але не більше 4 балів з однієї країни. Додайте бали всіх країн, і найвища сума йде першою.",
+        "mathCountry": "Порахуйте статті, які видання цієї країни написали про новину за останні 24 години. Новина з найбільшою кількістю статей іде першою."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Усі джерела, які читає Мера"
+    }
+  },
+  "vi": {
+    "world": {
+      "explainer": {
+        "justMath": "Chỉ là phép đếm. Không có AI nào xếp hạng trang này, và trang trông giống nhau với mọi người.",
+        "mathWorld": "Mỗi quốc gia đưa tin về một câu chuyện được 1 điểm, cộng thêm một chút cho mỗi báo khác ở quốc gia đó, tối đa 4 điểm cho mỗi quốc gia. Cộng tất cả các quốc gia lại, tổng điểm cao nhất sẽ đứng đầu.",
+        "mathCountry": "Đếm số bài mà các báo của quốc gia này viết về một câu chuyện trong 24 giờ qua. Câu chuyện có nhiều bài nhất sẽ đứng đầu."
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "Xem mọi nguồn tin Mera đọc"
+    }
+  },
+  "zh-CN": {
+    "world": {
+      "explainer": {
+        "justMath": "只是简单的计算。没有 AI 为这个页面排序，每个人看到的结果都一样。",
+        "mathWorld": "每个报道某条新闻的国家得 1 分，该国每多一家媒体再加一点，每个国家最多 4 分。把所有国家的分数加起来，总分最高的排在最前面。",
+        "mathCountry": "数一数这个国家的媒体在过去 24 小时里写了多少篇关于某条新闻的文章。文章最多的新闻排在最前面。"
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "查看梅拉读取的所有新闻来源"
+    }
+  },
+  "zh-TW": {
+    "world": {
+      "explainer": {
+        "justMath": "只是數學。沒有 AI 在排這個頁面，每個人看到的排序都一樣。",
+        "mathWorld": "每個報導這則新聞的國家各得 1 分，該國每多一家媒體，再多加一點分數，每個國家最多 4 分。把所有國家的分數加總，總分最高的排第一。",
+        "mathCountry": "計算這個國家的媒體在過去 24 小時內，寫了多少則關於某則新聞的報導。報導數最多的新聞排第一。"
+      }
+    },
+    "tabExplainer": {
+      "sourcesLink": "查看梅拉讀取的所有新聞來源"
+    }
+  }
+}

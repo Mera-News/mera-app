@@ -2518,7 +2518,8 @@
     },
     "stories": {
       "privacy": "The stories you follow are kept on this phone."
-    }
+    },
+    "sourcesLink": "See every source Mera reads"
   },
   "articleMenu": {
     "openA11y": "More actions",
@@ -2663,11 +2664,10 @@
       "privacy": "Mera doesn't link your searches to your account."
     },
     "explainer": {
-      "country1": "Stories rank higher the more this country's own publishers are writing about them.",
-      "countrySame": "This page is the same for everyone. Nothing about you is used here.",
-      "same": "World is the same for everyone. Nothing about you is used here.",
-      "top1": "Stories covered in many countries, by many different publishers, rank highest. One busy country can't fill the page, and many articles from one publisher count once.",
-      "window": "The time switch sets how far back the page looks: 6, 12, 24 or 48 hours. Each list only counts articles published inside that window."
+      "window": "The time switch sets how far back the page looks: 6, 12, 24 or 48 hours. Each list only counts articles published inside that window.",
+      "justMath": "Just math. No AI ranks this page, and it looks the same for everyone.",
+      "mathWorld": "Each country covering a story gives it 1 point, plus a little more for each extra publisher there, up to 4 points per country. Add up all the countries, and the highest total comes first.",
+      "mathCountry": "Count the articles this country's publishers wrote about a story in the last 24 hours. The story with the most comes first."
     }
   },
   "library": {

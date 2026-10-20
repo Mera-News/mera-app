@@ -51,8 +51,8 @@ describe('page-registry', () => {
   it('puts country pages in World with their own explainer', () => {
     expect(tabOfPage('country:FR')).toBe('world');
     expect(pageMeta('country:FR').tab).toBe('world');
-    expect(pageMeta('country:FR').explainer?.paragraphKeys).toContain('world.explainer.country1');
-    expect(pageMeta('world').explainer?.paragraphKeys).toContain('world.explainer.top1');
+    expect(pageMeta('country:FR').explainer?.paragraphKeys).toContain('world.explainer.mathCountry');
+    expect(pageMeta('world').explainer?.paragraphKeys).toContain('world.explainer.mathWorld');
   });
 
   it('maps surfaces to tabs, Search to none', () => {

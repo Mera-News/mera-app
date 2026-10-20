@@ -2576,7 +2576,8 @@
     },
     "stories": {
       "privacy": "Historie, które śledzisz, są przechowywane na tym telefonie."
-    }
+    },
+    "sourcesLink": "Zobacz wszystkie źródła, które Mera czyta"
   },
   "articleMenu": {
     "openA11y": "Więcej działań",
@@ -2725,11 +2726,10 @@
       "privacy": "Mera nie łączy Twoich wyszukiwań z Twoim kontem."
     },
     "explainer": {
-      "country1": "Historie wyżej, im więcej piszą o nich wydawcy z tego kraju.",
-      "countrySame": "Ta strona jest taka sama dla wszystkich. Nic o Tobie tu nie jest używane.",
-      "same": "Świat jest taki sam dla wszystkich. Nic o Tobie tu nie jest używane.",
-      "top1": "Najwyżej są historie opisane w wielu krajach, przez wielu różnych wydawców. Jeden aktywny kraj nie zapełni strony, a wiele artykułów jednego wydawcy liczy się jako jeden.",
-      "window": "Przełącznik czasu ustawia, jak daleko wstecz patrzy strona: 6, 12, 24 lub 48 godzin. Każda lista liczy tylko artykuły opublikowane w tym oknie."
+      "window": "Przełącznik czasu ustawia, jak daleko wstecz patrzy strona: 6, 12, 24 lub 48 godzin. Każda lista liczy tylko artykuły opublikowane w tym oknie.",
+      "justMath": "Tylko matematyka. Żadna AI nie układa tej strony, a dla każdego wygląda tak samo.",
+      "mathWorld": "Każdy kraj, w którym pojawia się dana historia, daje jej 1 punkt, plus trochę więcej za każdego kolejnego wydawcę w tym kraju, najwyżej 4 punkty na kraj. Sumujemy punkty ze wszystkich krajów, a najwyższy wynik jest na górze.",
+      "mathCountry": "Liczymy artykuły, które wydawcy z tego kraju napisali o danej historii w ciągu ostatnich 24 godzin. Historia z największą liczbą artykułów jest na górze."
     }
   },
   "library": {
