@@ -28,6 +28,7 @@ import { handleStoryHeadlineJob, storyHeadlineDedupeKey } from '@/lib/inference/
 import { handleTrackedStoryMigrateJob, trackedStoryMigrateDedupeKey } from '@/lib/inference/handlers/tracked-story-migrate-handler';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { STORY_SCOPE_SYSTEM } from '@/lib/news-harness/on-device/story-scope/prompt';
 import { gatewayCalls, mockGateway, server } from '@/test/helpers';
 import { installLlama, llamaCalls, resetFileSystem } from '@/test/integration/chat/_helpers';
 import { cleanup, driveDone, prepare, tick, untilJob, watchBodies, setMode } from './kit';
@@ -303,6 +304,45 @@ describe('tracked_story_migrate', () => {
     noGateway();
     expect((await unmigrated(story)).headline).toBe('Assam floods');
     expect((await getAllByNormalizedText('assam floods displacement')).length).toBe(1);
+  });
+
+  it('on-device: its own prompt and a {label, search} json_schema grammar, never the cloud prompt', async () => {
+    const story = await legacyStory();
+    installLlama([SCOPE_JSON]);
+
+    await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES }));
+
+    const [call] = llamaCalls();
+    expect(call.messages[0]).toEqual({ role: 'system', content: STORY_SCOPE_SYSTEM });
+    expect(call.messages.at(-1)!.content).toContain(`1. ${TITLES[0]}`);
+    expect(call.params).toMatchObject({
+      n_predict: 128,
+      temperature: 0.3,
+      response_format: { type: 'json_schema', json_schema: { schema: { required: ['label', 'search'] } } },
+    });
+  });
+
+  it('on-device: output that never fits the schema is retried once, then the story stays legacy', async () => {
+    const story = await legacyStory();
+    installLlama(['sorry, I cannot help with that']);
+
+    const out = await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES }));
+
+    expect(out).toEqual({ ok: false });
+    expect(llamaCalls()).toHaveLength(2);
+    expect(await unmigrated(story)).toEqual({ topicId: null, topicText: null, headline: null });
+  });
+
+  it('on-device: a blank field falls back to the other; both blank leaves the story legacy', async () => {
+    const story = await legacyStory();
+    installLlama(['{"label":"  ","search":"Assam floods"}']);
+    await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES }));
+    expect((await unmigrated(story)).headline).toBe('Assam floods');
+
+    const other = await trackStory({ articleId: 'a3', title: 'Assam floods again', originSurface: 'feed' });
+    installLlama(['{"label":"","search":" "}']);
+    expect(await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: other.id, titles: TITLES }))).toEqual({ ok: false });
+    expect((await unmigrated(other)).headline).toBeNull();
   });
 
   it('a cloud-queued payload runs locally once the mode is on-device', async () => {

@@ -40,7 +40,7 @@ import {
   runFeedVerifierPass,
 } from '@/lib/mera-protocol/scoring-service';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import { LOCAL_REASON_SYSTEM_PROMPT } from '@/lib/news-harness/prompts/prompts';
+import { NOTE_SYSTEM } from '@/lib/news-harness/on-device/notes/prompt';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import {
   advanceUntilDone,
@@ -1300,7 +1300,7 @@ describe('retryMissingReasons - on-device path', () => {
     await useMode('on-device');
   });
 
-  it('asks the local model for each owed row and stores the note, built with the LOCAL builder', async () => {
+  it('asks the local model for each owed row and stores the note, built with the on-device note prompt', async () => {
     installLocal();
     await seedOwed(['a']);
 
@@ -1309,7 +1309,7 @@ describe('retryMissingReasons - on-device path', () => {
     expect((await stored()).a.reason).toBe('Local note on story a.');
     expect(gatewayCalls()).toHaveLength(0);
     const calls = llamaCalls();
-    expect(calls.map(localSystemOf)).toEqual([LOCAL_REASON_SYSTEM_PROMPT]);
+    expect(calls.map(localSystemOf)).toEqual([NOTE_SYSTEM]);
     // The local builder leads with the fact bank so llama.cpp can reuse it across the sweep.
     expect(localUserOf(calls[0]).startsWith('User Context: ')).toBe(true);
   });

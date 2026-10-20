@@ -3,7 +3,8 @@
 // It LLM-generates a `{label, search}` scope from the story's known titles, mints
 // a tracked TOPIC from the `search` query, binds it onto the story, and writes the
 // display `label` as the story's headline. Cloud path = one E2EE completion;
-// on-device path = one local completion. Mirrors the story_headline handler's
+// on-device path = one structured local completion with its own prompt
+// (news-harness/on-device/story-scope). Mirrors the story_headline handler's
 // shape (titles → LLM → strict JSON → write) and reuses the queue's retry
 // mechanics. Non-destructive: any transport/parse failure leaves the row
 // unmigrated (still legacy) so a later wave can retry.
@@ -15,9 +16,12 @@ import {
 } from '../../database/services/tracked-story-service';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
-import { completeLocal } from '../../llm/completeLocal';
+import { completeLocalStructured } from '../../llm/completeLocal';
 import { isOnDeviceDeferrable } from '../job-defer';
-import { buildStoryScopePrompt, parseStoryScopeOutput } from '../../news-harness/story-scope';
+import { buildStoryScopePrompt, parseStoryScopeOutput, type StoryScope } from '../../news-harness/story-scope';
+import { buildOnDeviceStoryScopePrompt } from '../../news-harness/on-device/story-scope/prompt';
+import { STORY_SCOPE_SCHEMA, type StoryScopeReply } from '../../news-harness/on-device/story-scope/schema';
+import { storyScopeFromReply } from '../../news-harness/on-device/story-scope/parse';
 import logger from '../../logger';
 
 /** Seed weight for a topic minted from a legacy follow — mirrors the interactive
@@ -59,47 +63,40 @@ export async function handleTrackedStoryMigrateJob(
     return { ok: false };
   }
 
-  // Real clock supplied HERE — buildStoryScopePrompt takes the date as a
-  // parameter so its prompt stays deterministic/pinnable.
-  const { system, user } = buildStoryScopePrompt(titles, Date.now());
-
-  let raw = '';
+  // Real clock supplied HERE: both prompt builders take the date as a
+  // parameter so their prompts stay deterministic/pinnable.
+  const now = Date.now();
+  let scope: StoryScope;
   try {
     // A job queued in cloud mode runs locally if the mode has since changed.
     if (payload.useCloud && !(await isOnDeviceMode())) {
-      raw = await cloudComplete({
+      const { system, user } = buildStoryScopePrompt(titles, now);
+      const raw = await cloudComplete({
         systemPrompt: system,
         prompt: user,
         maxTokens: 128,
         temperature: 0.3,
       });
+      scope = parseStoryScopeOutput(raw);
     } else {
-      raw = await completeLocal({
+      const { system, prompt } = buildOnDeviceStoryScopePrompt(titles, now);
+      const reply = await completeLocalStructured<StoryScopeReply>({
         systemPrompt: system,
-        prompt: user,
+        prompt,
+        schema: STORY_SCOPE_SCHEMA,
         maxTokens: 128,
         temperature: 0.3,
-        responseFormat: 'json',
-        enableThinking: false,
       });
+      scope = storyScopeFromReply(reply);
     }
   } catch (err) {
     // The built-in model said "not now" (busy, unavailable): the queue defers the job.
     if (isOnDeviceDeferrable(err)) throw err;
-    // Transport failure — leave the story unmigrated (no write).
-    logger.warn('[tracked-story-migrate] completion failed', { error: String(err) });
+    // Transport failure or unusable output: leave the story unmigrated (no write).
+    logger.warn('[tracked-story-migrate] no scope', { error: String(err) });
     return { ok: false };
   }
-
-  let label: string;
-  let search: string;
-  try {
-    ({ label, search } = parseStoryScopeOutput(raw));
-  } catch (err) {
-    // Model produced non-JSON garbage — leave the story unmigrated.
-    logger.warn('[tracked-story-migrate] parse failed', { error: String(err) });
-    return { ok: false };
-  }
+  const { label, search } = scope;
 
   // Mint (or resolve an existing) 'tracked' topic from the generated search
   // query, bind it onto the story, and set the display label as its headline.

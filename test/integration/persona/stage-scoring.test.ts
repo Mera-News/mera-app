@@ -55,9 +55,14 @@ import {
 import { decideCalls, installDecide, installLlama, llamaCalls } from '@/test/helpers/llama';
 import { resetFileSystem } from '@/test/helpers/fs';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
+import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
+import { deleteSetting } from '@/lib/database/services/setting-service';
+import { SUBSCRIPTION_READ_SYSTEM } from '@/lib/news-harness/on-device/subscription-read/prompt';
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 jest.setTimeout(30_000);
 
@@ -75,6 +80,7 @@ beforeEach(async () => {
   resetFileSystem();
   resetInferenceStats();
   await disposeModel();
+  installOnDeviceLlm({ platformModel: null });
   useMeraProtocolStore.getState().setModelState('downloaded');
   mode('cloud');
   await signInFixtureAccount();
@@ -846,6 +852,73 @@ describe('runSubscriptionReadStage', () => {
     expect(gatewayCalls()).toHaveLength(0);
     expect(llamaCalls()).toHaveLength(1);
     expect((await stamp('anchor')).read).toBe('Leads with the coalition talks.');
+  });
+
+  describe('on device: its own prompt and reader', () => {
+    const userOf = () => llamaCalls()[0].messages.at(-1)!.content;
+
+    it('sends the on-device instruction and the outlet\'s fields', async () => {
+      installLlama(['Leads with the coalition talks.']);
+      await subscribe();
+      await seedStory();
+
+      await run(runSubscriptionReadStage());
+
+      expect(llamaCalls()[0].messages[0]).toEqual({ role: 'system', content: SUBSCRIPTION_READ_SYSTEM });
+      expect(userOf()).toContain('The reader is looking at this story: Cabinet falls over nitrogen plan');
+      expect(userOf()).toContain('Their subscribed outlet: Het Parool');
+      expect(userOf()).toContain('Its headline: Coalition talks collapse');
+      expect(userOf()).toContain('Its description: The coalition failed to agree on nitrogen limits.');
+      expect(llamaCalls()[0].params.response_format).toBeUndefined();
+    });
+
+    // A small model dresses its SKIP up. Each of these must be stamped like a bare SKIP, or the
+    // row shows the word to the reader or is re-asked on every sync.
+    it.each(['SKIP.', '"SKIP"', 'skip', '```\nSKIP\n```', 'SKIP. The text is too thin to say more.'])(
+      '%j is a SKIP: stamped, no read, never re-asked',
+      async (reply) => {
+        installLlama([reply]);
+        await subscribe();
+        await seedStory();
+
+        expect(await run(runSubscriptionReadStage())).toBe(0);
+        expect(await stamp('anchor')).toMatchObject({ read: '' });
+        expect((await stamp('anchor')).at).not.toBeNull();
+        await run(runSubscriptionReadStage());
+        expect(llamaCalls()).toHaveLength(1);
+      },
+    );
+
+    it('drops quotes around a real read', async () => {
+      installLlama(['"Leads with the coalition talks."']);
+      await subscribe();
+      await seedStory();
+
+      expect(await run(runSubscriptionReadStage())).toBe(1);
+      expect((await stamp('anchor')).read).toBe('Leads with the coalition talks.');
+    });
+
+    describe('on the built-in model', () => {
+      afterEach(async () => {
+        await deleteSetting('mera_text_engine');
+        __resetTextEngineForTests();
+      });
+
+      it('stops on busy: no row is stamped and the next row is never asked', async () => {
+        installLlama([]);
+        installOnDeviceLlm({ reply: { error: 'ERR_AFM_BUSY' } });
+        await setTextEngine('afm');
+        await subscribe();
+        await seedStory(['a', 'b']);
+
+        expect(await run(runSubscriptionReadStage())).toBe(0);
+
+        expect(onDeviceLlmCalls()).toHaveLength(1);
+        expect((await stamp('a')).at).toBeNull();
+        expect((await stamp('b')).at).toBeNull();
+        expect(logger.warn).not.toHaveBeenCalledWith('[subscription-read] one row failed, continuing', expect.anything());
+      });
+    });
   });
 
   describe('the prompt', () => {

@@ -31,9 +31,6 @@ import {
   CLOUD_TOPIC_GEN_RULES_SNIPPET,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-  LOCAL_TOPIC_GEN_RULES_SNIPPET,
-  LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
-  LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   TOPIC_SANITY_SYSTEM_PROMPT,
   TOPIC_GENERATION_SYSTEM_PROMPT,
   NOISE_GENERATION_SYSTEM_PROMPT,
@@ -53,12 +50,6 @@ const PINNED_TOKENS: Record<string, [string, number]> = {
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT: [
     CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
     3113,
-  ],
-  LOCAL_TOPIC_GEN_RULES_SNIPPET: [LOCAL_TOPIC_GEN_RULES_SNIPPET, 1883],
-  LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT: [LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT, 1937],
-  LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT: [
-    LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-    1601,
   ],
   TOPIC_SANITY_SYSTEM_PROMPT: [TOPIC_SANITY_SYSTEM_PROMPT, 518],
   NOISE_GENERATION_SYSTEM_PROMPT: [NOISE_GENERATION_SYSTEM_PROMPT, 1109],
@@ -80,21 +71,6 @@ describe('persona prompts — measured sizes', () => {
       expect(prompt.length).toBeGreaterThan(0);
       expect(name.length).toBeGreaterThan(0);
     }
-  });
-
-  it('keeps the LOCAL topic prompts smaller than their CLOUD twins', () => {
-    // The on-device model loses calibration on a prompt the cloud model holds
-    // fine, so the local family is deliberately the shorter one. A local prompt
-    // that grew past its cloud twin is a real regression, not a style change.
-    expect(estimateTokens(LOCAL_TOPIC_GEN_RULES_SNIPPET)).toBeLessThan(
-      estimateTokens(CLOUD_TOPIC_GEN_RULES_SNIPPET),
-    );
-    expect(estimateTokens(LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT)).toBeLessThan(
-      estimateTokens(CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT),
-    );
-    expect(estimateTokens(LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT)).toBeLessThan(
-      estimateTokens(CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT),
-    );
   });
 });
 

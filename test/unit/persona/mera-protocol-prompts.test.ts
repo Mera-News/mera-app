@@ -18,15 +18,10 @@ import {
   buildPersonaUpdateStaticPrompt,
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
-  LOCAL_RELEVANCE_SYSTEM_PROMPT,
-  LOCAL_REASON_SYSTEM_PROMPT,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-  LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
-  LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   NOISE_GENERATION_SYSTEM_PROMPT,
   CLOUD_TOPIC_GEN_RULES_SNIPPET,
-  LOCAL_TOPIC_GEN_RULES_SNIPPET,
 } from '@/lib/news-harness/prompts/prompts';
 
 // ============================================================
@@ -536,37 +531,6 @@ describe('CLOUD_REASON_SYSTEM_PROMPT', () => {
   });
 });
 
-describe('LOCAL_RELEVANCE_SYSTEM_PROMPT', () => {
-  it('is distinct from CLOUD_RELEVANCE_SYSTEM_PROMPT', () => {
-    expect(LOCAL_RELEVANCE_SYSTEM_PROMPT).not.toBe(CLOUD_RELEVANCE_SYSTEM_PROMPT);
-  });
-
-  it('instructs returning a JSON array of 1 number', () => {
-    expect(LOCAL_RELEVANCE_SYSTEM_PROMPT).toContain('JSON array of 1 number');
-  });
-});
-
-describe('LOCAL_REASON_SYSTEM_PROMPT', () => {
-  it('is a non-empty string', () => {
-    expect(typeof LOCAL_REASON_SYSTEM_PROMPT).toBe('string');
-    expect(LOCAL_REASON_SYSTEM_PROMPT.length).toBeGreaterThan(50);
-  });
-
-  it('pins the second-person voice rule (QA 2026-07-28 third-person leak)', () => {
-    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
-      'Voice: write TO the user — "you"/"your", never "the user", "User …", or third person, in every band.',
-    );
-    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
-      'Wrong: "User follows F1; the race matches this interest." Right: "The race matches your F1 interest."',
-    );
-    // The ≤0.25 exemplar was pronoun-free ("no Dutch tie") — the band the leak
-    // came from now anchors the voice too.
-    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
-      "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.",
-    );
-  });
-});
-
 describe('CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
   it('is a non-empty string', () => {
     expect(typeof CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT).toBe('string');
@@ -581,18 +545,6 @@ describe('CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
 describe('CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
   it('mentions Other user facts requirement', () => {
     expect(CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT).toContain('Other user facts');
-  });
-});
-
-describe('LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
-  it('is distinct from CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
-    expect(LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT).not.toBe(CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT);
-  });
-});
-
-describe('LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
-  it('mentions Combo rule', () => {
-    expect(LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT).toContain('Combo rule');
   });
 });
 
@@ -664,13 +616,6 @@ describe('CLOUD_TOPIC_GEN_RULES_SNIPPET', () => {
   it('contains anchoring steps', () => {
     expect(CLOUD_TOPIC_GEN_RULES_SNIPPET).toContain('Step 1');
     expect(CLOUD_TOPIC_GEN_RULES_SNIPPET).toContain('Step 2');
-  });
-});
-
-describe('LOCAL_TOPIC_GEN_RULES_SNIPPET', () => {
-  it('is a non-empty string', () => {
-    expect(typeof LOCAL_TOPIC_GEN_RULES_SNIPPET).toBe('string');
-    expect(LOCAL_TOPIC_GEN_RULES_SNIPPET.length).toBeGreaterThan(50);
   });
 });
 

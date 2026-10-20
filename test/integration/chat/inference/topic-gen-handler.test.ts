@@ -323,7 +323,7 @@ describe('on-device: the local engine, isolated too', () => {
     await pendingFact('Lives in Porto, Portugal, EU', HOME);
     await createTopics([{ factId: nurse.id, text: 'Paediatric wards', weight: 1, provenance: 'llm' }]);
     await recordDecline('Nurse pay', null);
-    installLlama(['["Nurse staffing"]']);
+    installLlama(['{"topics":["Nurse staffing"]}']);
 
     const out = await run({ factId: nurse.id, factStatement: JOB, useCloud: false });
 
@@ -346,7 +346,7 @@ describe('on-device: the local engine, isolated too', () => {
     const [job] = await jobRows('topic_gen');
     expect(job.payload.useCloud).toBe(true);
     await setMode('on-device');
-    installLlama(['["Chess openings"]']);
+    installLlama(['{"topics":["Chess openings"]}']);
 
     await inferenceQueue.start();
     await untilJob(job.id, ['done']);
@@ -360,7 +360,7 @@ describe('on-device: the local engine, isolated too', () => {
   it('a first run with nothing usable settles as an ERROR (Retry), never an empty done, and is reported with its own fingerprint', async () => {
     const captured = jest.spyOn(logger, 'captureMessage');
     const fact = await pendingFact(JOB, 'profession: job role and industry');
-    installLlama(['[]']);
+    installLlama(['{"topics":[]}']);
 
     const out = await run({ factId: fact.id, factStatement: JOB, useCloud: false });
 
@@ -373,7 +373,7 @@ describe('on-device: the local engine, isolated too', () => {
   it('"Generate more" is queued as an append job and merges into the fact\'s topics', async () => {
     const fact = await pendingFact(JOB, 'profession: job role and industry');
     await createTopics([{ factId: fact.id, text: 'Paediatric wards', weight: 1, provenance: 'llm' }]);
-    installLlama(['["Nurse staffing"]']);
+    installLlama(['{"topics":["Nurse staffing"]}']);
 
     const out = await generateMoreTopicsForFact(fact.id, JOB);
     expect(out).toEqual({ mode: 'queued', added: 0 });
@@ -390,7 +390,7 @@ describe('on-device: the local engine, isolated too', () => {
   it('an append run with nothing new settles instead of failing', async () => {
     const fact = await pendingFact(JOB, 'profession: job role and industry');
     await createTopics([{ factId: fact.id, text: 'Paediatric wards', weight: 1, provenance: 'llm' }]);
-    installLlama(['["paediatric wards"]']);
+    installLlama(['{"topics":["paediatric wards"]}']);
 
     await run({ factId: fact.id, factStatement: JOB, useCloud: false, mode: 'append' });
 

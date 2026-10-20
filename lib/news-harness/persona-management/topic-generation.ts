@@ -16,6 +16,7 @@ import {
   asUntrusted,
 } from '../prompts/prompts';
 import { normalizeKey } from '@/lib/algorithms/normalize-key';
+import { jsonCandidates } from '@/lib/mera-protocol-toolkit/core/structured-json';
 import { buildAttributeTextToIdMap, isLocationAttribute } from '../prompts/questionnaire-data';
 import { DEFAULT_HARNESS_CONFIG, type TopicGenConfig } from '../core/config';
 import { NOOP_LOGGER, type HarnessLogger } from '../core/ports';
@@ -226,40 +227,41 @@ export function planLlmTopicRows(
   return out;
 }
 
+/** The usable topics in a model's list: trimmed, non-empty strings, at most 20. */
+export function cleanTopicList(items: unknown[]): string[] {
+  return items
+    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    .map((s) => s.trim())
+    .slice(0, 20);
+}
+
+/** A topic list is a bare array or an object's `topics` array (the on-device schema's shape). */
+function topicArray(value: unknown): unknown[] | undefined {
+  if (Array.isArray(value)) return value;
+  if (value === null || typeof value !== 'object') return undefined;
+  const topics = (value as { topics?: unknown }).topics;
+  return Array.isArray(topics) ? topics : undefined;
+}
+
+/**
+ * The topics in a model reply: a JSON array, or `{"topics": [...]}`, alone or
+ * inside a code fence or prose. The whole reply is tried first, then every
+ * balanced object, then every balanced array.
+ */
 export function parseTopicsFromOutput(
   output: string,
   factStatement: string,
   logger: HarnessLogger = NOOP_LOGGER,
 ): string[] {
-  try {
-    const parsed: unknown = JSON.parse(output);
-    if (Array.isArray(parsed)) {
-      return parsed
-        .filter(
-          (item): item is string =>
-            typeof item === 'string' && item.trim().length > 0,
-        )
-        .map((s) => s.trim())
-        .slice(0, 20);
+  for (const candidate of [output.trim(), ...jsonCandidates(output, '{'), ...jsonCandidates(output, '[')]) {
+    let value: unknown;
+    try {
+      value = JSON.parse(candidate);
+    } catch {
+      continue;
     }
-  } catch {
-    const arrayMatch = output.match(/\[[\s\S]*?\]/);
-    if (arrayMatch) {
-      try {
-        const extracted: unknown = JSON.parse(arrayMatch[0]);
-        if (Array.isArray(extracted)) {
-          return extracted
-            .filter(
-              (item): item is string =>
-                typeof item === 'string' && item.trim().length > 0,
-            )
-            .map((s) => s.trim())
-            .slice(0, 20);
-        }
-      } catch {
-        // Fall through
-      }
-    }
+    const topics = topicArray(value);
+    if (topics) return cleanTopicList(topics);
   }
 
   logger.warn('Topic generation: failed to parse output', { output, factStatement });

@@ -88,11 +88,11 @@ describe('busy and unavailable defer, never fail', () => {
       expect(deferred).toMatchObject({ status: 'pending', attempts: 0 });
       expect(deferred?.errorMessage).toContain(code);
       expect(await getTopicsStatus(fact.id)).toBe('pending');
-      // Busy stops the job at the first call: the combo call is never tried.
+      // Busy stops the job at its one call: no retry inside the job.
       expect(onDeviceLlmCalls()).toHaveLength(1);
 
       // A return to the foreground lifts the deferral at once.
-      installOnDeviceLlm({ reply: '["Chess openings"]' });
+      installOnDeviceLlm({ reply: '{"topics":["Chess openings"]}' });
       setAppState('background');
       setAppState('active');
       expect((await untilJob(job.id, ['done']))?.status).toBe('done');

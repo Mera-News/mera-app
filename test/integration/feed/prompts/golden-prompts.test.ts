@@ -25,8 +25,6 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   CLOUD_V3_NOTE_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
-  LOCAL_RELEVANCE_SYSTEM_PROMPT,
-  LOCAL_REASON_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
   RULE_NAME_BAN,
 } from '@/lib/news-harness/prompts/prompts';
@@ -193,15 +191,9 @@ describe('golden — measured prompt sizes', () => {
   //   - CLOUD_V3_NOTE_SYSTEM_PROMPT is built ON CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   //     so a verifier edit moves it transitively. Pinning the note alone would
   //     say it moved without saying why; pinning both separates the two causes.
-  //   - The LOCAL pair is pinned because the on-device family is deliberately
-  //     OUT OF SCOPE for prompt experiments and nothing exercises it —
-  //     eval:golden scores relevance and never runs a reason prompt at all. An
-  //     unmeasured path with no pin is one where a change ships invisibly.
   it('pins the estimated token size of the prompts nothing else guards', () => {
     expect(estimateTokens(CLOUD_V3_NOTE_SYSTEM_PROMPT)).toBe(1903);
     expect(estimateTokens(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT)).toBe(1539);
-    expect(estimateTokens(LOCAL_RELEVANCE_SYSTEM_PROMPT)).toBe(1104);
-    expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1558);
   });
 
   // THE GATEWAY WIRE CAP. A PROD 400 lives behind these numbers.
@@ -234,8 +226,6 @@ describe('golden — measured prompt sizes', () => {
     ['CLOUD_HEADLINE_REASON_SYSTEM_PROMPT', CLOUD_HEADLINE_REASON_SYSTEM_PROMPT],
     ['CLOUD_FEED_VERIFIER_SYSTEM_PROMPT', CLOUD_FEED_VERIFIER_SYSTEM_PROMPT],
     ['CLOUD_V3_NOTE_SYSTEM_PROMPT', CLOUD_V3_NOTE_SYSTEM_PROMPT],
-    ['LOCAL_RELEVANCE_SYSTEM_PROMPT', LOCAL_RELEVANCE_SYSTEM_PROMPT],
-    ['LOCAL_REASON_SYSTEM_PROMPT', LOCAL_REASON_SYSTEM_PROMPT],
   ];
 
   it('proves the wire formula against the REAL encryptContent, not a guess', () => {
@@ -275,8 +265,6 @@ describe('golden — measured prompt sizes', () => {
       'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 57260',
       'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12528',
       'CLOUD_V3_NOTE_SYSTEM_PROMPT 15460',
-      'LOCAL_RELEVANCE_SYSTEM_PROMPT 9106',
-      'LOCAL_REASON_SYSTEM_PROMPT 12788',
     ]);
   });
 
@@ -315,18 +303,6 @@ describe('golden — measured prompt sizes', () => {
     );
     expect(estimateTokens(CLOUD_V3_NOTE_SYSTEM_PROMPT)).toBeGreaterThan(
       estimateTokens(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT),
-    );
-  });
-
-  it('keeps every LOCAL prompt smaller than its CLOUD counterpart', () => {
-    // The on-device model loses calibration on a prompt the cloud model holds
-    // fine, which is why the two families exist at all. A local prompt that grew
-    // past its cloud twin has lost the only reason it is a separate string.
-    expect(estimateTokens(LOCAL_RELEVANCE_SYSTEM_PROMPT)).toBeLessThan(
-      estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT),
-    );
-    expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBeLessThan(
-      estimateTokens(CLOUD_REASON_SYSTEM_PROMPT),
     );
   });
 
@@ -523,7 +499,6 @@ describe('golden — reason prompts never teach the rubric labels as prose', () 
   const REASON_PROMPTS: [string, string][] = [
     ['CLOUD_REASON_SYSTEM_PROMPT', CLOUD_REASON_SYSTEM_PROMPT],
     ['CLOUD_HEADLINE_REASON_SYSTEM_PROMPT', CLOUD_HEADLINE_REASON_SYSTEM_PROMPT],
-    ['LOCAL_REASON_SYSTEM_PROMPT', LOCAL_REASON_SYSTEM_PROMPT],
   ];
 
   it.each(REASON_PROMPTS)('%s has no example sentence using "foreign-domestic"', (_n, p) => {

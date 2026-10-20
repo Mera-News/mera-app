@@ -7,7 +7,12 @@ import {
   saveSubscriptionRead,
 } from '../database/services/subscribed-sibling-service';
 import { getSubscribedSourceNameSet } from '../database/services/user-publication-subscription-service';
+import { ProcessingMode } from '../generated/graphql-types';
+import { isOnDeviceDeferrable } from '../inference/job-defer';
 import logger from '../logger';
+import { buildSubscriptionReadPrompt } from '../news-harness/on-device/subscription-read/prompt';
+import { parseSubscriptionRead } from '../news-harness/on-device/subscription-read/parse';
+import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { getScoringLlmPort } from './stage-scoring';
 
 /**
@@ -58,6 +63,19 @@ function buildPrompt(sibling: ArticleSuggestionModel, anchorTitle: string | null
   return lines.join('\n');
 }
 
+/** The on-device prompt (news-harness/on-device/subscription-read) for the same fields. */
+function onDevicePrompt(sibling: ArticleSuggestionModel, anchorTitle: string | null) {
+  const { system, prompt } = buildSubscriptionReadPrompt({
+    anchorTitle,
+    publicationName: sibling.publicationName ?? null,
+    title: sibling.titleEn ?? sibling.titleOriginal ?? null,
+    description: sibling.descriptionEn ?? null,
+    category: sibling.category ?? null,
+    eventType: sibling.eventType ?? null,
+  });
+  return { systemPrompt: system, prompt };
+}
+
 /**
  * Rows eligible for a read: scored, and not already carrying one.
  *
@@ -94,6 +112,7 @@ export async function runSubscriptionReadStage(
     if (candidates.length === 0) return 0;
 
     const llm = getScoringLlmPort();
+    const onDevice = useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
     let written = 0;
 
     for (const anchor of candidates) {
@@ -101,20 +120,24 @@ export async function runSubscriptionReadStage(
         const sibling = await findPrimarySubscribedSibling(anchor, subscribedNames);
         if (!sibling) continue;
 
-        const raw = await llm.complete({
-          systemPrompt: SYSTEM_PROMPT,
-          prompt: buildPrompt(sibling, anchor.titleEn ?? anchor.titleOriginal),
-          maxTokens: 160,
-          temperature: 0,
-        });
+        const anchorTitle = anchor.titleEn ?? anchor.titleOriginal;
+        const { systemPrompt, prompt } = onDevice
+          ? onDevicePrompt(sibling, anchorTitle)
+          : { systemPrompt: SYSTEM_PROMPT, prompt: buildPrompt(sibling, anchorTitle) };
+        const raw = await llm.complete({ systemPrompt, prompt, maxTokens: 160, temperature: 0 });
 
-        const read = (raw ?? '').trim();
         // A SKIP is a real answer, and it is stamped like any other so the row
-        // is not re-asked on every sync for the rest of its 48 hours.
-        const stored = !read || read === 'SKIP' ? '' : read;
+        // is not re-asked on every sync for the rest of its 48 hours. A small
+        // model dresses its SKIP up ("SKIP.", quoted, fenced); the on-device
+        // reader catches those.
+        const read = (raw ?? '').trim();
+        const stored = onDevice ? parseSubscriptionRead(read) : !read || read === 'SKIP' ? '' : read;
         await saveSubscriptionRead(anchor.id, stored);
         if (stored) written += 1;
       } catch (error) {
+        // The built-in model is busy or gone: every next row would fail the
+        // same way. Stop; the rest stay unread for the next sync.
+        if (isOnDeviceDeferrable(error)) break;
         logger.warn('[subscription-read] one row failed, continuing', {
           suggestionId: anchor.id,
           error: String(error),
