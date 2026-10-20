@@ -59,5 +59,7 @@ export function useAccountProblem({ onReset }: { onReset: () => void }) {
         }
     }, [onReset, t]);
 
-    return { contactSupport: openSupport, resetThisPhone, supportBusy, resetting };
+    // Development builds: Contact support is off (owner, 2026-10-21); it only has to work in
+    // production, where the signed-out fallback mails support with the Support ID.
+    return { contactSupport: openSupport, supportEnabled: !__DEV__, resetThisPhone, supportBusy, resetting };
 }

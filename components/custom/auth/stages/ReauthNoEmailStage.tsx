@@ -16,7 +16,7 @@ import { styles } from './styles';
 function ReauthNoEmailStage({ supportId, onReset }: { supportId: string | null; onReset: () => void }) {
     const { t } = useTranslation();
     const colors = useColors();
-    const { contactSupport, resetThisPhone, supportBusy, resetting } = useAccountProblem({ onReset });
+    const { contactSupport, supportEnabled, resetThisPhone, supportBusy, resetting } = useAccountProblem({ onReset });
     const [copied, setCopied] = useState(false);
 
     const copy = async () => {
@@ -53,7 +53,7 @@ function ReauthNoEmailStage({ supportId, onReset }: { supportId: string | null; 
             ) : null}
             <View style={styles.flex} />
             <View style={styles.actions}>
-                <Button action="primary" onPress={() => void contactSupport()} isDisabled={supportBusy || resetting} testID="reauth-contact-support">
+                <Button action="primary" onPress={() => void contactSupport()} isDisabled={!supportEnabled || supportBusy || resetting} testID="reauth-contact-support">
                     {supportBusy ? <ButtonSpinner /> : null}
                     <ButtonText>{t('gate.contactSupport')}</ButtonText>
                 </Button>

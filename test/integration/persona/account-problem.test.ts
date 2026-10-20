@@ -171,6 +171,24 @@ it('the gate offers exactly two actions: contact support and reset this phone', 
 });
 
 describe('contact support', () => {
+    it('is off in a development build and on in a release build (owner, 2026-10-21)', async () => {
+        await seedStuckPhone();
+        const dev = (global as { __DEV__?: boolean }).__DEV__;
+        try {
+            (global as { __DEV__?: boolean }).__DEV__ = true;
+            const devHook = mountGate();
+            await waitFor(() => expect(devHook.result.current.screen.stage).toBe('reauth-no-email'));
+            expect(devHook.result.current.gate.supportEnabled).toBe(false);
+
+            (global as { __DEV__?: boolean }).__DEV__ = false;
+            const releaseHook = mountGate();
+            await waitFor(() => expect(releaseHook.result.current.screen.stage).toBe('reauth-no-email'));
+            expect(releaseHook.result.current.gate.supportEnabled).toBe(true);
+        } finally {
+            (global as { __DEV__?: boolean }).__DEV__ = dev;
+        }
+    });
+
     it('with a live session (the server mints the identity), opens the Intercom Messenger', async () => {
         await seedStuckPhone();
         const hook = mountGate();
