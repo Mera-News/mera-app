@@ -161,6 +161,7 @@
         }
       ],
       "./plugins/withMlKit16kb",
+      "./plugins/withOnDeviceLlmMinSdk",
       "./plugins/withWatermelonJsi",
       [
         "@intercom/intercom-react-native",

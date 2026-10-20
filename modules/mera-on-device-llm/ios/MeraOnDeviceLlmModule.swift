@@ -34,6 +34,112 @@ private func unavailableException() -> OnDeviceLlmException {
   OnDeviceLlmException("ERR_AFM_UNAVAILABLE", "The on-device Apple model is not available")
 }
 
+private func schemaException() -> OnDeviceLlmException {
+  OnDeviceLlmException("ERR_AFM_UNKNOWN", "The output schema is not supported")
+}
+
+// A JSON value that keeps object keys in source order (see Afm.schema).
+private indirect enum Json {
+  case object([(String, Json)])
+  case array([Json])
+  case string(String)
+  case number(Double)
+  case literal
+
+  subscript(key: String) -> Json? {
+    if case .object(let fields) = self { return fields.first { $0.0 == key }?.1 }
+    return nil
+  }
+
+  var string: String? {
+    if case .string(let value) = self { return value }
+    return nil
+  }
+
+  var int: Int? {
+    if case .number(let value) = self { return Int(exactly: value) }
+    return nil
+  }
+}
+
+private struct JsonReader {
+  private let bytes: [UInt8]
+  private var i = 0
+
+  init(_ text: String) { bytes = Array(text.utf8) }
+
+  private mutating func skipSpace() {
+    while i < bytes.count, bytes[i] == 0x20 || bytes[i] == 0x0A || bytes[i] == 0x0D || bytes[i] == 0x09 { i += 1 }
+  }
+
+  // After an element: true on a comma, false on the closing bracket.
+  private mutating func more(_ close: UInt8) throws -> Bool {
+    skipSpace()
+    guard i < bytes.count else { throw schemaException() }
+    i += 1
+    if bytes[i - 1] == UInt8(ascii: ",") { return true }
+    if bytes[i - 1] == close { return false }
+    throw schemaException()
+  }
+
+  private mutating func isEmpty(_ close: UInt8) -> Bool {
+    skipSpace()
+    guard i < bytes.count, bytes[i] == close else { return false }
+    i += 1
+    return true
+  }
+
+  // One value and nothing after it.
+  mutating func document() throws -> Json {
+    let root = try value()
+    skipSpace()
+    guard i == bytes.count else { throw schemaException() }
+    return root
+  }
+
+  mutating func value() throws -> Json {
+    skipSpace()
+    guard i < bytes.count else { throw schemaException() }
+    switch bytes[i] {
+    case UInt8(ascii: "{"):
+      i += 1
+      var fields: [(String, Json)] = []
+      if isEmpty(UInt8(ascii: "}")) { return .object(fields) }
+      repeat {
+        guard case .string(let key) = try value() else { throw schemaException() }
+        skipSpace()
+        guard i < bytes.count, bytes[i] == UInt8(ascii: ":") else { throw schemaException() }
+        i += 1
+        fields.append((key, try value()))
+      } while try more(UInt8(ascii: "}"))
+      return .object(fields)
+    case UInt8(ascii: "["):
+      i += 1
+      var items: [Json] = []
+      if isEmpty(UInt8(ascii: "]")) { return .array(items) }
+      repeat { items.append(try value()) } while try more(UInt8(ascii: "]"))
+      return .array(items)
+    case UInt8(ascii: "\""):
+      // Find the closing quote, then let JSONSerialization decode the escapes.
+      let start = i
+      i += 1
+      while i < bytes.count, bytes[i] != UInt8(ascii: "\"") { i += bytes[i] == UInt8(ascii: "\\") ? 2 : 1 }
+      guard i < bytes.count else { throw schemaException() }
+      i += 1
+      let decoded = try? JSONSerialization.jsonObject(with: Data(bytes[start..<i]), options: .fragmentsAllowed)
+      guard let text = decoded as? String else { throw schemaException() }
+      return .string(text)
+    default:
+      let start = i
+      while i < bytes.count, !",]} \n\r\t".utf8.contains(bytes[i]) { i += 1 }
+      let token = String(decoding: bytes[start..<i], as: UTF8.self)
+      if token == "true" || token == "false" || token == "null" { return .literal }
+      guard let number = Double(token) else { throw schemaException() }
+      return .number(number)
+    }
+  }
+}
+
 internal struct GenerationArgs: Record {
   @Field var temperature: Double? = nil
   @Field var maxTokens: Int? = nil
@@ -53,6 +159,62 @@ private enum Afm {
     options.temperature = args.temperature
     options.maximumResponseTokens = args.maxTokens
     return options
+  }
+
+  // The JSON Schema subset the app sends (object with properties + required,
+  // string with optional enum, integer, number, boolean, array with items and
+  // minItems/maxItems) as a guided-generation schema. Read with JsonReader
+  // because the model fills properties in schema order and both
+  // JSONSerialization and GeneratedContent(json:) lose the key order. Every
+  // object and enum is named by its path, so names never collide.
+  static func schema(_ json: String) throws -> GenerationSchema {
+    var reader = JsonReader(json)
+    let root = try reader.document()
+    return try GenerationSchema(root: node(root, path: "root"), dependencies: [])
+  }
+
+  private static func node(_ json: Json, path: String) throws -> DynamicGenerationSchema {
+    let description = json["description"]?.string
+    switch json["type"]?.string {
+    case "object":
+      guard case .object(let properties)? = json["properties"] else { throw schemaException() }
+      var required: Set<String> = []
+      if case .array(let names)? = json["required"] {
+        required = Set(names.compactMap { $0.string })
+      }
+      return DynamicGenerationSchema(
+        name: path,
+        description: description,
+        properties: try properties.map { key, child in
+          DynamicGenerationSchema.Property(
+            name: key,
+            description: child["description"]?.string,
+            schema: try node(child, path: "\(path).\(key)"),
+            isOptional: !required.contains(key)
+          )
+        }
+      )
+    case "string":
+      if case .array(let choices)? = json["enum"] {
+        return DynamicGenerationSchema(name: path, description: description, anyOf: choices.compactMap { $0.string })
+      }
+      return DynamicGenerationSchema(type: String.self)
+    case "integer":
+      return DynamicGenerationSchema(type: Int.self)
+    case "number":
+      return DynamicGenerationSchema(type: Double.self)
+    case "boolean":
+      return DynamicGenerationSchema(type: Bool.self)
+    case "array":
+      guard let items = json["items"] else { throw schemaException() }
+      return DynamicGenerationSchema(
+        arrayOf: try node(items, path: "\(path)[]"),
+        minimumElements: json["minItems"]?.int,
+        maximumElements: json["maxItems"]?.int
+      )
+    default:
+      throw schemaException()
+    }
   }
 
   static func reason(_ reason: SystemLanguageModel.Availability.UnavailableReason) -> String {
@@ -208,6 +370,43 @@ public class MeraOnDeviceLlmModule: Module {
       }
       #endif
       throw unavailableException()
+    }
+
+    // Guided generation: the reply is constrained to `schemaJson` (the subset
+    // Afm.schema reads) and returned as JSON text.
+    AsyncFunction("respondStructured") { (instructions: String, prompt: String, schemaJson: String, args: GenerationArgs) async throws -> String in
+      #if canImport(FoundationModels)
+      if #available(iOS 26.0, *) {
+        let schema: GenerationSchema
+        do {
+          schema = try Afm.schema(schemaJson)
+        } catch {
+          throw schemaException()
+        }
+        do {
+          let response = try await Afm.session(instructions).respond(
+            to: prompt, schema: schema, includeSchemaInPrompt: true, options: Afm.options(args))
+          return response.content.jsonString
+        } catch {
+          throw Afm.map(error)
+        }
+      }
+      #endif
+      throw unavailableException()
+    }
+
+    // Context window in tokens (input plus output), null when the model cannot
+    // run. Below iOS 27 the framework answers a fixed 4096. The property is
+    // back-deployed but missing from SDKs before 26.4, so it is compiled only
+    // with the Xcode 27 toolchain (Swift 6.4); older toolchains answer null.
+    AsyncFunction("contextSize") { () -> Int? in
+      #if canImport(FoundationModels) && compiler(>=6.4)
+      if #available(iOS 26.0, *) {
+        let model = SystemLanguageModel.default
+        if case .available = model.availability { return model.contextSize }
+      }
+      #endif
+      return nil
     }
 
     // Streams deltas as `onToken { id, delta }`, then `onDone { id }` or
