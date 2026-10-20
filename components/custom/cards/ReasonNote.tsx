@@ -222,10 +222,13 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
         // The chip stands where the moving logo used to (owner, 2026-10-21): the
         // score is already known, so it is the anchor while the note is written.
         return (
-            <Box testID={testID} className="rounded-lg px-3 pb-3" style={boxStyle}>
+            // Natural height (owner, 2026-10-21): the fixed note box left empty
+            // space under the waiting line. The card grows by the badge row
+            // when the note lands.
+            <Box testID={testID} className="rounded-lg px-3 pb-3" style={{ backgroundColor: note.box, paddingTop: 12 - BADGE_ROW_PADDING }}>
                 <HStack
                     space="md"
-                    style={{ flex: boxHeight ? 1 : undefined, alignItems: 'flex-start', paddingVertical: BADGE_ROW_PADDING }}
+                    style={{ alignItems: 'center', paddingVertical: BADGE_ROW_PADDING }}
                     testID={testID ? `${testID}-badge-row` : undefined}
                 >
                     <RelevanceChip relevance={relevance} />
