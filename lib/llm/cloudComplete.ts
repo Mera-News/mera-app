@@ -32,6 +32,7 @@ import {
   authFetch,
   CallerAbortError,
   CleartextToolCallError,
+  EmptyReplyError,
   getAuthHeaders,
   isAbortLike,
   isCallerAbort,
@@ -747,10 +748,16 @@ export async function* cloudChatStream(
     // Already on the fallback (session-engaged, or a hedge winner) — there is
     // no healthier model left to try.
     if (sentModel !== primary) throw err;
-    // Only an abort-class death (idle stall, cancelled body) is model-evidence.
-    // A decrypt failure is NOT: model-fallback.ts is explicit that "4xx, auth,
-    // E2EE/decrypt and plain network errors say nothing about the model".
-    if ((isAbortLike(err) || err instanceof StreamIdleError) && !isCallerAbort(err)) reportModelFailure(primary);
+    // Only an abort-class death (idle stall, cancelled body) or an empty 2xx
+    // reply is model-evidence. A decrypt failure is NOT: model-fallback.ts is
+    // explicit that "4xx, auth, E2EE/decrypt and plain network errors say
+    // nothing about the model".
+    if (
+      (isAbortLike(err) || err instanceof StreamIdleError || err instanceof EmptyReplyError) &&
+      !isCallerAbort(err)
+    ) {
+      reportModelFailure(primary);
+    }
     // The decrypt-failure path above already spent this generator's one retry.
     // Without this check a re-attested request that then died mid-stream would
     // issue a THIRD upstream call for a single user turn.

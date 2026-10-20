@@ -15,6 +15,7 @@ import { sseEvents } from '../algorithms/sse';
 import {
   CallerAbortError,
   CleartextToolCallError,
+  EmptyReplyError,
   isCallerAbort,
   StreamIdleError,
   takeStreamHandle,
@@ -278,7 +279,9 @@ async function* consumeBufferedChat(
   privateKey: Uint8Array,
   algo: SigningAlgo,
 ): AsyncGenerator<SseEvent> {
-  const data = (await response.json()) as ChatCompletionResponse;
+  const raw = await response.text();
+  if (!raw.trim()) throw new EmptyReplyError();
+  const data = JSON.parse(raw) as ChatCompletionResponse;
   const choice = data.choices?.[0];
   if (!choice) {
     yield { type: 'finish', reason: 'stop' };
