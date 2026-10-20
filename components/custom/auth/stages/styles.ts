@@ -69,7 +69,9 @@ const styles = StyleSheet.create({
     },
     sheet: { paddingHorizontal: 20, paddingTop: 4, gap: 12 },
     sheetTitle: { fontSize: 20, fontWeight: '700' },
-    sheetActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
+    // Stacked, full width: side by side, a long label ("Remove and continue",
+    // longer in German) was clipped mid-word. Same order as ConfirmDialog.
+    sheetActions: { gap: 10, marginTop: 8 },
 });
 
 export { LOGO_TOP, styles };
