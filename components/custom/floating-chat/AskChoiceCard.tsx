@@ -36,9 +36,7 @@ function cardEntering() {
   };
 }
 
-// Spliced into the dictionaries with the other kev fragments; the cast keeps
-// tsc green until then and is harmless after.
-const SOMETHING_ELSE = 'askChoice.somethingElse' as 'askChoice.saveAll';
+const SOMETHING_ELSE = 'askChoice.somethingElse';
 
 export interface AskChoiceCardProps {
   question: string | null;

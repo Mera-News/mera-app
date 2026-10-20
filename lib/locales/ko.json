@@ -441,7 +441,6 @@
     "loadFailedDescription": "메라 프로토콜 설정을 불러오지 못했습니다.",
     "loadFailedTitle": "불러오기 실패",
     "speedTitle": "이 기기에서의 속도",
-    "speedGeneration": "생성 속도: {{tokPerSec}}토큰/초",
     "speedResetNote": "마지막 동기화 중에 측정되었습니다. 앱을 다시 시작하면 초기화됩니다.",
     "bgRefreshTitle": "백그라운드 새로 고침",
     "bgRefreshCloudIos": "메라는 앱이 닫혀 있는 동안 새 기사를 가져와 순위를 매기기 시작합니다. 휴대폰이 이 작업을 언제 할지 결정합니다. 저전력 모드일 때나 백그라운드 앱 새로 고침이 꺼져 있을 때는 실행되지 않을 수 있습니다. 배터리와 데이터를 약간 사용하며, 메라가 하루에 읽는 분량 중 일부를 사용합니다. 백업에는 영향을 주지 않습니다. 앱이 열려 있을 때 메라가 이미 사용하는 것 이상은 공유되지 않습니다.",
@@ -491,18 +490,19 @@
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
     "textHelp": "Writes chat replies, notes and topics.",
-    "textMera": "메라 text model",
-    "notesTitle": "Write notes",
-    "notesHelp": "메라 explains why each article is in your Feed. Turn this off to save battery.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
     "deleteModelTitle": "Delete {{name}}?",
     "deleteRelevanceBody": "This removes it ({{size}}) from this phone. 메라 will use Private cloud.",
-    "deleteTextBody": "This removes it ({{size}}) from this phone.",
-    "textModelGoneTitle": "메라 uses Private cloud for now",
-    "textModelGoneBody": "Download the 메라 text model to use On this phone again.",
-    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings."
+    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
+    "builtInReady": "Ready on this phone",
+    "builtInRequirement": "{{name}} on this phone",
+    "notesGroup": "Notes",
+    "skipNotesTitle": "Skip notes",
+    "skipNotesHelp": "메라 ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "fallbackNoticeTitle": "메라 uses Private cloud for now",
+    "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then 메라 Protocol, to see why."
   },
   "manageData": {
     "viewingHistoryModalDescription": "열어본 기사의 로컬 기록을 지웁니다. 소스 탭의 '읽은 발행사' 카드와 발행사별 기록이 비어 있는 상태로 초기화됩니다. 다른 항목에는 영향이 없으며, 메라 서버에는 이 데이터가 없었으므로 서버 데이터도 변경되지 않습니다.",
@@ -631,8 +631,7 @@
     "onDeviceReady": "메라 now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again.",
     "betaTitle": "{{title}} (Beta)",
-    "relevanceDone": "The 메라 relevance model is on this phone.",
-    "textDone": "The 메라 text model is on this phone."
+    "relevanceDone": "The 메라 relevance model is on this phone."
   },
   "chat": {
     "startingChat": "채팅 시작 중...",
@@ -2456,7 +2455,8 @@
   },
   "askChoice": {
     "answeredA11y": "이미 답변함",
-    "saveAll": "모두 저장"
+    "saveAll": "모두 저장",
+    "somethingElse": "Something else"
   },
   "chatPhases": {
     "preparing": [
@@ -2917,5 +2917,44 @@
     "relevance": "최고 일치도",
     "oldest": "가장 오래된 순",
     "newest": "최신순"
+  },
+  "kevChat": {
+    "askIntent": "What would you like to do?",
+    "askFact": "Which fact do you mean?",
+    "askTopic": "Which topic do you mean?",
+    "persona": {
+      "share": "Add this as a new fact",
+      "remove": "Remove a saved fact",
+      "correct": "Update a saved fact",
+      "chat": "Just chatting"
+    },
+    "card": {
+      "agree": "Apply the change",
+      "decline": "Leave it as it is"
+    },
+    "article": {
+      "answer": "Answer a question",
+      "follow": "Follow this story",
+      "less": "Show less like this",
+      "more": "Show more like this",
+      "mute": "Mute this publication"
+    },
+    "follow": {
+      "follow": "Follow a story",
+      "other": "Ask something else"
+    },
+    "reply": {
+      "pickOnCard": "Tap the one you want on the card.",
+      "saveFailed": "I couldn't catch that. Could you say it another way?",
+      "alreadyKnown": "I already have that in your profile.",
+      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+      "notFound": "I couldn't find that in your profile.",
+      "applied": "Done.",
+      "cancelled": "Okay, I left it as it is.",
+      "ack": "Anytime.",
+      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+      "followFailed": "Which story would you like to follow?",
+      "changeCard": "Tap the card to confirm the change."
+    }
   }
 }

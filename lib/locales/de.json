@@ -444,7 +444,6 @@
     "loadFailedDescription": "Die Mera Protocol-Einstellungen konnten nicht geladen werden.",
     "loadFailedTitle": "Laden fehlgeschlagen",
     "speedTitle": "Geschwindigkeit auf diesem Gerät",
-    "speedGeneration": "Schreibgeschwindigkeit: {{tokPerSec}} Tokens/s",
     "speedResetNote": "Bei der letzten Synchronisierung gemessen. Wird beim Neustart der App gelöscht.",
     "bgRefreshTitle": "Hintergrundaktualisierung",
     "bgRefreshCloudIos": "Mera lädt neue Artikel, wenn die App geschlossen ist, und beginnt sie für dich zu bewerten. Dein Telefon entscheidet, wann dies geschieht. Es funktioniert möglicherweise nicht im Stromsparmodus oder wenn die Hintergrundaktualisierung aus ist. Nutzt etwas Akku und Daten und einen Teil des täglichen Lesekontingents von Mera für dich. Das ändert nichts am Backup. Nichts wird über das hinaus geteilt, was Mera bereits nutzt, wenn die App offen ist.",
@@ -495,18 +494,19 @@
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
     "textHelp": "Writes chat replies, notes and topics.",
-    "textMera": "Mera text model",
-    "notesTitle": "Write notes",
-    "notesHelp": "Mera explains why each article is in your Feed. Turn this off to save battery.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
     "deleteModelTitle": "Delete {{name}}?",
     "deleteRelevanceBody": "This removes it ({{size}}) from this phone. Mera will use Private cloud.",
-    "deleteTextBody": "This removes it ({{size}}) from this phone.",
-    "textModelGoneTitle": "Mera uses Private cloud for now",
-    "textModelGoneBody": "Download the Mera text model to use On this phone again.",
-    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings."
+    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
+    "builtInReady": "Ready on this phone",
+    "builtInRequirement": "{{name}} on this phone",
+    "notesGroup": "Notes",
+    "skipNotesTitle": "Skip notes",
+    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "fallbackNoticeTitle": "Mera uses Private cloud for now",
+    "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Löscht das lokale Protokoll der von dir geöffneten Artikel. Die Karte \"Zuletzt gelesene Publikationen\" im Tab \"Quellen\" sowie der Verlauf pro Publikation werden zurückgesetzt. Nichts anderes ist betroffen, und es werden keine Serverdaten berührt, da die Server von Mera diese Daten nie hatten.",
@@ -636,8 +636,7 @@
     "onDeviceReady": "Mera now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again.",
     "betaTitle": "{{title}} (Beta)",
-    "relevanceDone": "The Mera relevance model is on this phone.",
-    "textDone": "The Mera text model is on this phone."
+    "relevanceDone": "The Mera relevance model is on this phone."
   },
   "chat": {
     "startingChat": "Chat wird gestartet...",
@@ -2462,7 +2461,8 @@
   },
   "askChoice": {
     "answeredA11y": "bereits beantwortet",
-    "saveAll": "Alle speichern"
+    "saveAll": "Alle speichern",
+    "somethingElse": "Something else"
   },
   "chatPhases": {
     "preparing": [
@@ -2924,5 +2924,44 @@
     "relevance": "Beste Übereinstimmung",
     "oldest": "Älteste zuerst",
     "newest": "Neueste zuerst"
+  },
+  "kevChat": {
+    "askIntent": "What would you like to do?",
+    "askFact": "Which fact do you mean?",
+    "askTopic": "Which topic do you mean?",
+    "persona": {
+      "share": "Add this as a new fact",
+      "remove": "Remove a saved fact",
+      "correct": "Update a saved fact",
+      "chat": "Just chatting"
+    },
+    "card": {
+      "agree": "Apply the change",
+      "decline": "Leave it as it is"
+    },
+    "article": {
+      "answer": "Answer a question",
+      "follow": "Follow this story",
+      "less": "Show less like this",
+      "more": "Show more like this",
+      "mute": "Mute this publication"
+    },
+    "follow": {
+      "follow": "Follow a story",
+      "other": "Ask something else"
+    },
+    "reply": {
+      "pickOnCard": "Tap the one you want on the card.",
+      "saveFailed": "I couldn't catch that. Could you say it another way?",
+      "alreadyKnown": "I already have that in your profile.",
+      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+      "notFound": "I couldn't find that in your profile.",
+      "applied": "Done.",
+      "cancelled": "Okay, I left it as it is.",
+      "ack": "Anytime.",
+      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+      "followFailed": "Which story would you like to follow?",
+      "changeCard": "Tap the card to confirm the change."
+    }
   }
 }

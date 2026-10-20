@@ -441,7 +441,6 @@
     "loadFailedDescription": "无法加载梅拉协议设置。",
     "loadFailedTitle": "加载失败",
     "speedTitle": "此设备上的速度",
-    "speedGeneration": "生成速度：{{tokPerSec}} 个 token/秒",
     "speedResetNote": "在您上次同步时测得。应用重启后清除。",
     "bgRefreshTitle": "后台刷新",
     "bgRefreshCloudIos": "当应用关闭时，梅拉会获取新文章并开始为你排序。你的手机决定何时执行此操作。在低电量模式下或关闭后台 App 刷新时可能无法运行。消耗少量电量和流量，以及梅拉每日为你阅读量的一部分。这不会改变备份。除了梅拉在应用打开时已使用的内容外，不会分享任何内容。",
@@ -491,18 +490,19 @@
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
     "textHelp": "Writes chat replies, notes and topics.",
-    "textMera": "梅拉 text model",
-    "notesTitle": "Write notes",
-    "notesHelp": "梅拉 explains why each article is in your Feed. Turn this off to save battery.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
     "deleteModelTitle": "Delete {{name}}?",
     "deleteRelevanceBody": "This removes it ({{size}}) from this phone. 梅拉 will use Private cloud.",
-    "deleteTextBody": "This removes it ({{size}}) from this phone.",
-    "textModelGoneTitle": "梅拉 uses Private cloud for now",
-    "textModelGoneBody": "Download the 梅拉 text model to use On this phone again.",
-    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings."
+    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
+    "builtInReady": "Ready on this phone",
+    "builtInRequirement": "{{name}} on this phone",
+    "notesGroup": "Notes",
+    "skipNotesTitle": "Skip notes",
+    "skipNotesHelp": "梅拉 ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "fallbackNoticeTitle": "梅拉 uses Private cloud for now",
+    "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then 梅拉 Protocol, to see why."
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你已打开文章的本地记录。「来源」标签中的「你正在阅读的出版物」卡片及各出版物的历史记录将重置为空。其他内容不受影响，也不会触及任何服务器数据，因为梅拉的服务器从未有过这些数据。",
@@ -631,8 +631,7 @@
     "onDeviceReady": "梅拉 now runs on this phone.",
     "failedSpace": "Not enough space on this phone. Free up space and try again.",
     "betaTitle": "{{title}} (Beta)",
-    "relevanceDone": "The 梅拉 relevance model is on this phone.",
-    "textDone": "The 梅拉 text model is on this phone."
+    "relevanceDone": "The 梅拉 relevance model is on this phone."
   },
   "chat": {
     "startingChat": "正在启动对话...",
@@ -2456,7 +2455,8 @@
   },
   "askChoice": {
     "answeredA11y": "已回答",
-    "saveAll": "全部保存"
+    "saveAll": "全部保存",
+    "somethingElse": "Something else"
   },
   "chatPhases": {
     "preparing": [
@@ -2917,5 +2917,44 @@
     "relevance": "最佳匹配",
     "oldest": "最早优先",
     "newest": "最新优先"
+  },
+  "kevChat": {
+    "askIntent": "What would you like to do?",
+    "askFact": "Which fact do you mean?",
+    "askTopic": "Which topic do you mean?",
+    "persona": {
+      "share": "Add this as a new fact",
+      "remove": "Remove a saved fact",
+      "correct": "Update a saved fact",
+      "chat": "Just chatting"
+    },
+    "card": {
+      "agree": "Apply the change",
+      "decline": "Leave it as it is"
+    },
+    "article": {
+      "answer": "Answer a question",
+      "follow": "Follow this story",
+      "less": "Show less like this",
+      "more": "Show more like this",
+      "mute": "Mute this publication"
+    },
+    "follow": {
+      "follow": "Follow a story",
+      "other": "Ask something else"
+    },
+    "reply": {
+      "pickOnCard": "Tap the one you want on the card.",
+      "saveFailed": "I couldn't catch that. Could you say it another way?",
+      "alreadyKnown": "I already have that in your profile.",
+      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+      "notFound": "I couldn't find that in your profile.",
+      "applied": "Done.",
+      "cancelled": "Okay, I left it as it is.",
+      "ack": "Anytime.",
+      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+      "followFailed": "Which story would you like to follow?",
+      "changeCard": "Tap the card to confirm the change."
+    }
   }
 }
