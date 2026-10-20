@@ -94,7 +94,6 @@ const topics = (input: ArticleKevInput) => input.context.matchedTopics.slice(0, 
 function intentKeys(input: ArticleKevInput): ArticleKevIntent[] {
   const c = input.context;
   return ARTICLE_KEV_INTENTS.filter((k) => {
-    if (k === 'follow_story') return !c.alreadyFollowing;
     if (k === 'mute_source') return Boolean(c.publication);
     if (k === 'agree_to_card') return c.pending != null && !input.pendingTapOnly;
     if (k === 'decline_card') return c.pending != null;
@@ -188,6 +187,8 @@ const TASK: Record<ArticleKevIntent, string> = {
   agree_to_card: 'The waiting change is being applied now. Confirm it in one short sentence.',
   decline_card: 'The waiting change was dropped. Say so in one short sentence.',
 };
+
+const ALREADY_FOLLOWING_TASK = 'The user already follows this story, so nothing changes. Say so in one short sentence.';
 
 function writerSystem(task: string, languageName?: string): string {
   return `${IDENTITY_LINE}
@@ -287,6 +288,18 @@ export async function runArticleKevTurn(
   }
 
   // --- Explain, write, act ---------------------------------------------------
+  // Follow stays an option once the story is followed: left out, Kev read "follow this"
+  // as the next best act (more of this). It now gets a reply and stages nothing.
+  if (intent === 'follow_story' && input.context.alreadyFollowing) {
+    const value = await write<{ reply?: string }>(ports, trace, {
+      system: writerSystem(ALREADY_FOLLOWING_TASK, input.languageName),
+      schema: REPLY_SCHEMA,
+      context: `${decisionBlock(lines.join('\n'))}\n\n${articleChatContext(input.context)}`,
+      history: chat.history,
+    });
+    trace.intent = 'answer_question'; // the act: an answer, nothing staged
+    return done('answer_question', replyOr(value, ports.t('kevChat.reply.chat')));
+  }
   // Less or more with no matched topic stages nothing: the old first-topic guess is gone.
   const noTopic = (intent === 'see_less' || intent === 'see_more') && !topic;
   const task = noTopic ? TASK.answer_question : TASK[intent];

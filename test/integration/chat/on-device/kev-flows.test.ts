@@ -502,12 +502,17 @@ describe('article chat on Kev', () => {
     expect(proposal()).toBeNull();
   });
 
-  it('follow_story is not offered once the story is followed', async () => {
+  it('follow_story once the story is followed: a reply that says so, no story card', async () => {
     const agent = await article();
     jest.spyOn(require('@/lib/tracking/track-actions'), 'isSubjectTracked').mockResolvedValue(true);
-    kevScript = { intent: { answer_question: 1 } };
-    await turn(agent, [], 'follow this');
-    expect(offeredIntents()).not.toContain('follow_story');
+    kevScript = { intent: { follow_story: 0.9, answer_question: 0.1 } };
+    writerReply = { reply: 'You already follow this story.' };
+    const { names, out } = await turn(agent, [], 'follow this');
+    expect(offeredIntents()).toContain('follow_story');
+    expect(names).toEqual([]);
+    expect(proposal()).toBeNull();
+    expect(out.reply).toBe('You already follow this story.');
+    expect(writes[0].system).toContain('already follows this story');
     jest.restoreAllMocks();
   });
 
