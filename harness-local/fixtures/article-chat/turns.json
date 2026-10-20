@@ -112,6 +112,62 @@
     ]
   },
   {
+    "id": "art-follow-mortgage",
+    "agent": "article",
+    "description": "Follow the article's story.",
+    "category": "follow",
+    "clear": true,
+    "message": "I want to follow where this goes",
+    "expect": "proposeTrack",
+    "intent": "follow_story",
+    "ask": "no",
+    "search": [
+      "Bank of Canada signals more cuts possible",
+      "Canadian home sales rise after rate cut"
+    ],
+    "article": {
+      "title": "Bank of Canada cuts rate, lenders lower mortgage offers",
+      "publication": "CBC News",
+      "description": "The central bank cut its policy rate by a quarter point, and the big lenders lowered five-year fixed offers within hours.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Bank of Canada",
+      "Canadian mortgage rates"
+    ],
+    "producingFacts": [
+      "Interested in personal finance"
+    ]
+  },
+  {
+    "id": "art-follow-heat",
+    "agent": "article",
+    "description": "Follow, said another way.",
+    "category": "follow",
+    "clear": true,
+    "message": "Track this story for me",
+    "expect": "proposeTrack",
+    "intent": "follow_story",
+    "ask": "no",
+    "search": [
+      "Leipzig utility picks site for river heat pump",
+      "German cities plan large heat pumps for district heating"
+    ],
+    "article": {
+      "title": "Leipzig district heating to switch to large heat pumps",
+      "publication": "Leipziger Volkszeitung",
+      "description": "The city utility will replace a gas boiler plant with river-water heat pumps by 2028, covering a fifth of district heating demand.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Leipzig local news",
+      "Heat pumps and home heating"
+    ],
+    "producingFacts": [
+      "Interested in renewable energy policy"
+    ]
+  },
+  {
     "id": "art-less-energy-drinks",
     "agent": "article",
     "description": "Less of one named topic, not the first listed.",

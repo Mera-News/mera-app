@@ -12,6 +12,7 @@
     "article-summary",
     "art-answer-short",
     "art-follow-port",
+    "art-follow-mortgage",
     "art-less-energy-drinks",
     "art-less-crypto-fines",
     "art-more-climate",
@@ -27,6 +28,7 @@
   "test": [
     "art-answer-renters",
     "art-follow-keep-posted",
+    "art-follow-heat",
     "art-less-crypto",
     "art-more-ai-act",
     "art-mute-paper",

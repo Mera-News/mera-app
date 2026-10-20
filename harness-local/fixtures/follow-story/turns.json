@@ -149,6 +149,162 @@
     ]
   },
   {
+    "id": "fs-named-heat-pumps",
+    "agent": "follow-story",
+    "description": "The user names a story: 3 or 4 options from the narrow event to the broad story.",
+    "category": "named",
+    "clear": true,
+    "message": "the German heat pump subsidy fight",
+    "expect": "proposeTrack",
+    "intent": "follow_a_named_story",
+    "ask": "no",
+    "search": [
+      "Berlin coalition splits over heat pump subsidy cuts",
+      "German heat pump sales fall after subsidy freeze",
+      "Economy ministry drafts new heating law"
+    ],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
+    "id": "fs-named-pune-metro",
+    "agent": "follow-story",
+    "description": "The user names a story: 3 or 4 options from the narrow event to the broad story.",
+    "category": "named",
+    "clear": true,
+    "message": "Pune metro line 3 construction",
+    "expect": "proposeTrack",
+    "intent": "follow_a_named_story",
+    "ask": "no",
+    "search": [
+      "Pune metro line 3 misses opening deadline",
+      "Hinjewadi metro work causes traffic diversions",
+      "Maharashtra approves more funds for Pune metro"
+    ],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
+    "id": "fs-named-raptors-rebuild",
+    "agent": "follow-story",
+    "description": "The user names a story: 3 or 4 options from the narrow event to the broad story.",
+    "category": "named",
+    "clear": true,
+    "message": "can you track how the Raptors rebuild goes this season",
+    "expect": "proposeTrack",
+    "intent": "follow_a_named_story",
+    "ask": "no",
+    "search": [
+      "Raptors trade for veteran guard before deadline",
+      "Young Raptors core struggles in road trip",
+      "Raptors front office signals patience with rebuild"
+    ],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
+    "id": "fs-named-utrecht-tram",
+    "agent": "follow-story",
+    "description": "The user names a story: 3 or 4 options from the narrow event to the broad story.",
+    "category": "named",
+    "clear": true,
+    "message": "Utrecht Uithof tram line extension",
+    "expect": "proposeTrack",
+    "intent": "follow_a_named_story",
+    "ask": "no",
+    "search": [
+      "Utrecht tram extension to Nieuwegein delayed",
+      "Province and city clash over Utrecht tram costs",
+      "Utrecht science park tram ridership hits record"
+    ],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
+    "id": "fs-named-kenya-protests",
+    "agent": "follow-story",
+    "description": "The user names a story: 3 or 4 options from the narrow event to the broad story.",
+    "category": "named",
+    "clear": true,
+    "message": "I would like to keep up with the protests over the finance bill in Kenya",
+    "expect": "proposeTrack",
+    "intent": "follow_a_named_story",
+    "ask": "no",
+    "search": [
+      "Kenyan police clash with finance bill protesters in Nairobi",
+      "Kenya parliament delays vote on tax measures",
+      "Kenyan president meets youth groups after protests"
+    ],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
+    "id": "fs-named-airbus-strike",
+    "agent": "follow-story",
+    "description": "The user names a story: 3 or 4 options from the narrow event to the broad story.",
+    "category": "named",
+    "clear": true,
+    "message": "airbus engineers strike in toulouse",
+    "expect": "proposeTrack",
+    "intent": "follow_a_named_story",
+    "ask": "no",
+    "search": [
+      "Airbus engineers in Toulouse vote to extend strike",
+      "Airbus delivery targets at risk as strike continues",
+      "French unions and Airbus resume wage talks"
+    ],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
     "id": "fs-question-following",
     "agent": "follow-story",
     "description": "A question, not a story: answered, no options.",
