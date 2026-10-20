@@ -10,7 +10,9 @@ import logger from '../logger';
 import { completeLocalStructured } from '../llm/completeLocal';
 import { isOnDeviceDeferrable } from '../inference/job-defer';
 import type { RealTopicGenInputs } from '@/lib/news-harness/persona-management/topic-generation';
-import { buildTopicGenPrompt } from '@/lib/news-harness/on-device/topic-gen/prompt';
+import { buildTopicGenPrompt, TOPIC_GEN_SYSTEM } from '@/lib/news-harness/on-device/topic-gen/prompt';
+import { promptBudgetTokens } from '@/lib/news-harness/on-device/shared';
+import { contextSize, getTextEngine } from '../mera-protocol-toolkit';
 import { topicGenSchema, type TopicGenReply } from '@/lib/news-harness/on-device/topic-gen/schema';
 import { topicsFromReply } from '@/lib/news-harness/on-device/topic-gen/parse';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -39,14 +41,27 @@ const LOCAL_TOPIC_GEN_MAX_TOKENS = 1024;
  */
 export async function generateTopicsForFact(inputs: RealTopicGenInputs): Promise<string[]> {
   const count = inputs.totalCount ?? DEFAULT_TOTAL_LOCAL;
-  const { system, prompt } = buildTopicGenPrompt(inputs, count);
+  const schema = topicGenSchema(count);
+  const maxTokens = Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, count * 30);
   try {
+    // Sized to the engine's input: Gemini Nano refuses an oversized prompt, and
+    // that refusal is not deferrable, so a long exclusion list would fail the
+    // fact on every retry.
+    const engine = await getTextEngine();
+    const budget = promptBudgetTokens({
+      contextSize: await contextSize(engine),
+      maxTokens,
+      system: TOPIC_GEN_SYSTEM,
+      schemaJson: JSON.stringify(schema),
+    });
+    const { system, prompt } = buildTopicGenPrompt(inputs, count, budget);
     const reply = await completeLocalStructured<TopicGenReply>({
       systemPrompt: system,
       prompt,
-      schema: topicGenSchema(count),
-      maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, count * 30),
+      schema,
+      maxTokens,
       temperature: 0.3,
+      engine,
     });
     return topicsFromReply(reply);
   } catch (err) {

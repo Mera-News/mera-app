@@ -4,6 +4,7 @@
 // instruction (Gemini Nano wants it under ~150 words); the rules lead the user
 // message so a prefix cache keeps them across facts.
 import { buildBaseUserPrompt, type RealTopicGenInputs } from '../../persona-management/topic-generation';
+import { countTokens, largestFitting } from '../shared';
 
 export const TOPIC_GEN_SYSTEM = `You suggest news search topics for one fact about a user. Each topic is a search phrase of 1 to 5 words that news articles about the user's life would match. Follow the rules in the message. Reply with JSON only: {"topics": ["..."]}.`;
 
@@ -21,13 +22,27 @@ const TOPIC_GEN_RULES = `Rules
 4. Never use the words "industry trends", "career development", "awards" or "festivals". Never give two topics about the same thing. Never use a person's name; use their role. Never use a nationality label or a visa code; say "expats", "diaspora" or "overseas citizens".
 5. Give at most the number of topics asked for. If the fact gives nothing to search for, reply {"topics": []}.`;
 
-/** The instruction and the message for one fact. `count` is the most topics to ask for. */
+/**
+ * The instruction and the message for one fact. `count` is the most topics to ask for.
+ * `budgetTokens` (countTokens) bounds the message: the exclusion list is cut from its end until it
+ * fits, so the caller puts the fact's own topics first. Cutting it is safe: the handler drops a
+ * repeated or declined topic after the call anyway.
+ */
 export function buildTopicGenPrompt(
   inputs: Pick<RealTopicGenInputs, 'factStatement' | 'excludeTopics'>,
   count: number,
+  budgetTokens = Infinity,
 ): { system: string; prompt: string } {
   // The fact alone: a location or other facts drawn from the rest of the
   // persona would be a combination.
-  const facts = buildBaseUserPrompt({ ...inputs, userLocation: null, otherFacts: [] }, false);
-  return { system: TOPIC_GEN_SYSTEM, prompt: `${TOPIC_GEN_RULES}\n\n${facts}\nGenerate ${count} topics.` };
+  const exclude = inputs.excludeTopics ?? [];
+  const build = (n: number) => {
+    const facts = buildBaseUserPrompt(
+      { factStatement: inputs.factStatement, excludeTopics: exclude.slice(0, n), userLocation: null, otherFacts: [] },
+      false,
+    );
+    return `${TOPIC_GEN_RULES}\n\n${facts}\nGenerate ${count} topics.`;
+  };
+  const kept = largestFitting(exclude.length, (n) => countTokens(build(n)) <= budgetTokens);
+  return { system: TOPIC_GEN_SYSTEM, prompt: build(kept) };
 }

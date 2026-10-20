@@ -3,9 +3,9 @@
 // worked example into its answer (Apple Intelligence printed the follow-story example's options on
 // the first device run), so no on-device prompt may carry a real-world entity; Gemini Nano wants a
 // system instruction under ~150 words and takes about 4000 tokens of input.
-import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import { buildNotePrompt, NOTE_CONTEXT_MAX_CHARS } from '@/lib/news-harness/on-device/notes/prompt';
+import { buildNotePrompt, NOTE_CONTEXT_MAX_TOKENS } from '@/lib/news-harness/on-device/notes/prompt';
+import { countTokens } from '@/lib/news-harness/on-device/shared';
 import { buildOnDeviceStoryScopePrompt } from '@/lib/news-harness/on-device/story-scope/prompt';
 import { buildSubscriptionReadPrompt } from '@/lib/news-harness/on-device/subscription-read/prompt';
 import { buildTopicGenPrompt } from '@/lib/news-harness/on-device/topic-gen/prompt';
@@ -71,21 +71,31 @@ describe('on-device background prompts', () => {
     expect(system.split(/\s+/).filter(Boolean).length).toBeLessThan(150);
   });
 
-  it('notes: a long fact bank is cut at a whole fact, so the input fits under 4000 tokens minus the reply', () => {
-    const facts = Array.from({ length: 600 }, (_, i) => `Fact number ${i} about the reader`);
-    const { system, prompt } = buildNotePrompt({
+  const replyTokens = DEFAULT_HARNESS_CONFIG.articlePipeline.reasonMaxTokens;
+  const longNote = (facts: string[]) =>
+    buildNotePrompt({
       ...NOTE_INPUT,
       userContext: `[User facts] ${facts.join('. ')}.`,
       articleTitle: 'x'.repeat(2000),
       articleDescription: 'y'.repeat(2000),
     });
 
-    const replyTokens = DEFAULT_HARNESS_CONFIG.articlePipeline.reasonMaxTokens;
-    expect(estimateTokens(system) + estimateTokens(prompt)).toBeLessThan(4000 - replyTokens);
+  it('notes: a long fact bank is cut at a whole fact, so the input fits under 4000 tokens minus the reply', () => {
+    const { system, prompt } = longNote(Array.from({ length: 600 }, (_, i) => `Fact number ${i} about the reader`));
+
+    expect(countTokens(system) + countTokens(prompt)).toBeLessThan(4000 - replyTokens);
     const context = prompt.slice(0, prompt.indexOf('\n'));
-    expect(context.length).toBeLessThanOrEqual('User Context: '.length + NOTE_CONTEXT_MAX_CHARS);
+    expect(countTokens(context)).toBeLessThanOrEqual(countTokens('User Context: ') + NOTE_CONTEXT_MAX_TOKENS);
     expect(context).toMatch(/about the reader\.$/);
     // A short bank is left alone.
     expect(buildNotePrompt(NOTE_INPUT).prompt.startsWith('User Context: [User facts] Works as a nurse.\n')).toBe(true);
+  });
+
+  it('notes: a fact bank in another script is cut by its token cost, not its length', () => {
+    // A character outside ASCII costs about a token on the built-in models' tokenizers.
+    const { system, prompt } = longNote(Array.from({ length: 600 }, (_, i) => `तथ्य ${i} पाठक के बारे में`));
+
+    expect(countTokens(system) + countTokens(prompt)).toBeLessThan(4000 - replyTokens);
+    expect(prompt.slice(0, prompt.indexOf('\n'))).toMatch(/बारे में\.$/);
   });
 });

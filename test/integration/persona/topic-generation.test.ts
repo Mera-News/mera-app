@@ -12,6 +12,7 @@ import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-to
 import { generateTopicsForFact } from '@/lib/mera-protocol/topic-generation-service';
 import { parseTopicsFromOutput } from '@/lib/news-harness/persona-management/topic-generation';
 import { TOPIC_GEN_SYSTEM } from '@/lib/news-harness/on-device/topic-gen/prompt';
+import { countTokens } from '@/lib/news-harness/on-device/shared';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { gatewayCalls } from '@/test/helpers';
@@ -193,6 +194,24 @@ describe('generateTopicsForFact on the built-in model', () => {
     expect(call).toMatchObject({ kind: 'structured', instructions: TOPIC_GEN_SYSTEM });
     expect(JSON.parse(call.schemaJson ?? '')).toMatchObject({ required: ['topics'] });
     expect(llamaCalls()).toHaveLength(0);
+  });
+
+  it('a long exclusion list is cut to fit the model input: own topics first, one call, topics back', async () => {
+    // Gemini Nano refuses 4000 input tokens or more, and that refusal is not deferrable: an uncut
+    // list of every declined topic would fail this fact on every retry.
+    installOnDeviceLlm({ platformModel: 'nano', contextSize: 4000, reply: '{"topics": ["Chess clubs"]}' });
+    await setTextEngine('nano');
+    const declined = Array.from({ length: 600 }, (_, i) => `declined topic number ${i} about something`);
+
+    const topics = await generateTopicsForFact(inputs({ factStatement: 'Plays chess', excludeTopics: ['Chess openings', ...declined] }));
+
+    expect(topics).toEqual(['Chess clubs']);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
+    const [call] = onDeviceLlmCalls();
+    const input = countTokens(call.instructions ?? '') + countTokens(call.prompt) + countTokens(call.schemaJson ?? '');
+    expect(input).toBeLessThan(4000 - 1024);
+    expect(call.prompt).toContain('- Chess openings\n- declined topic number 0 about something');
+    expect(call.prompt).not.toContain('declined topic number 599');
   });
 
   it.each(['ERR_AFM_BUSY', 'ERR_AFM_UNAVAILABLE'] as const)('%s reaches the caller, so the queue defers the job', async (code) => {

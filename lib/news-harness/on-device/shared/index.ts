@@ -36,6 +36,18 @@ export function countTokens(text: string): number {
   return Math.ceil(ascii / 3) + other;
 }
 
+/** The largest n in 0..max with fits(n), for a `fits` that stays true below any n where it holds. */
+export function largestFitting(max: number, fits: (n: number) => boolean): number {
+  let lo = 0;
+  let hi = max;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (fits(mid)) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
+}
+
 /**
  * Tokens left for the prompt (context plus conversation) once the system
  * instructions, the schema and the reply are paid for. `contextSize` is the
