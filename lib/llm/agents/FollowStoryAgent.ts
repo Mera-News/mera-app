@@ -12,7 +12,6 @@
 // This is the thin RN adapter: prompt/context/tool construction all live in the
 // RN-free brain at lib/news-harness/follow-story.
 
-import { ProcessingMode } from '../../generated/graphql-types';
 import { handleSearchNews } from '../../chat-tools/news-search-handler';
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
 import { decideProposeTrack } from '../../news-harness/article-feedback/agent-core';
@@ -44,57 +43,42 @@ export class FollowStoryAgent implements IAgent {
   // --- IAgent: system prompt (static — cacheable by KV cache) ---
 
   private cachedSystemPrompt: string | null = null;
-  private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
-  private lastCanSearch: boolean | null = null;
   private lastWebSearch: boolean | null = null;
 
-  /**
-   * The retrieval gates, read from the store and shared by `buildSystemPrompt`
-   * and `getToolDefinitions` so the prompt and the tool payload for one turn
-   * always agree.
-   */
-  private searchGates(): { mode: 'CLOUD' | 'LOCAL'; canSearch: boolean; webSearch: boolean } {
-    const protocol = useMeraProtocolStore.getState();
-    const mode: 'CLOUD' | 'LOCAL' =
-      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
-    return {
-      mode,
-      canSearch: mode === 'CLOUD',
-      webSearch: mode === 'CLOUD' && protocol.webSearchInChat === true,
-    };
+  /** The user's "Web search in chat" toggle, read from the store and shared by
+   *  `buildSystemPrompt` and `getToolDefinitions` so the prompt and the tool
+   *  payload for one turn always agree. Cloud-only: on-device runs its own
+   *  agent (FollowStoryOnDeviceAgent). */
+  private webSearch(): boolean {
+    return useMeraProtocolStore.getState().webSearchInChat === true;
   }
 
-  async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
+  async buildSystemPrompt(): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
     const languageName =
       SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage)?.name ?? 'English';
-    const { canSearch, webSearch } = this.searchGates();
+    const webSearch = this.webSearch();
 
-    // canSearch and webSearch ARE PART OF THE CACHE KEY. Without them a prompt
-    // built while the toggle was off keeps telling the model it cannot look
-    // anything up after the user turns it on, while getToolDefinitions() hands
-    // over the tool — the "toggle on, still refuses" bug ArticleFeedbackAgent
-    // already had reported against it.
+    // webSearch IS PART OF THE CACHE KEY. Without it a prompt built while the
+    // toggle was off keeps telling the model it cannot look anything up after
+    // the user turns it on, while getToolDefinitions() hands over the tool —
+    // the "toggle on, still refuses" bug ArticleFeedbackAgent already had
+    // reported against it.
     if (
       this.cachedSystemPrompt
-      && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
-      && this.lastCanSearch === canSearch
       && this.lastWebSearch === webSearch
     ) {
       return this.cachedSystemPrompt;
     }
 
     this.cachedSystemPrompt = buildFollowStorySystemPrompt({
-      needsToolFormat,
       languageName,
-      canSearch,
+      canSearch: true,
       webSearch,
     });
-    this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
-    this.lastCanSearch = canSearch;
     this.lastWebSearch = webSearch;
     return this.cachedSystemPrompt;
   }
@@ -114,8 +98,7 @@ export class FollowStoryAgent implements IAgent {
   // --- IAgent: tool definitions ---
 
   getToolDefinitions(): ToolDefinition[] {
-    const { mode, webSearch } = this.searchGates();
-    return getFollowStoryToolDefinitions(mode, webSearch);
+    return getFollowStoryToolDefinitions('CLOUD', this.webSearch());
   }
 
   // --- IAgent: tool execution ---

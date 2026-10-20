@@ -1,6 +1,6 @@
 // The Stop button on the on-device engine: stopChatTurn() while text is arriving.
 // The token loop leaves, the toolkit halts llama and awaits it BEFORE it frees the inference lock,
-// the partial reply stays, and the turn's tool calls are dropped.
+// the partial reply stays, and a structured reply that lands after Stop is dropped.
 import { stopChatTurn } from '@/lib/chat-session/chat-session';
 import { fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
 import { getFacts } from '@/lib/database/services/fact-service';
@@ -21,8 +21,9 @@ import {
   expectNothingLeftTheDevice,
   lastAssistant,
   local,
+  personaAgent,
   sampleLocal,
-  saveFactsCall,
+  saveFactReply,
   settle,
   streamHolds,
   turnDone,
@@ -96,23 +97,26 @@ describe('stopChatTurn', () => {
     expectNothingLeftTheDevice();
   });
 
-  it('drops a tool call that was already parsed from the partial text', async () => {
-    const filler = Array.from({ length: 60 }, (_, i) => `w${i} `);
-    installLlama({ tokens: ['Saving. ', saveFactsCall(), ...filler], tokenDelayMs: 10 });
-    const { engine } = await attachLocal();
+  // A structured turn cannot be cut short: the reply lands after Stop and must be dropped whole.
+  it('drops a structured reply that lands after Stop: nothing staged, nothing run', async () => {
+    installLlama({ tokens: [saveFactReply()], tokenDelayMs: 300 });
+    const { engine } = await attachLocal(personaAgent());
     const watch = sampleLocal();
 
-    engine.send('I live in Porto');
-    await until(() => (lastAssistant()?.toolCalls?.length ?? 0) > 0, 5000, 'the call parsed');
+    engine.send('I live somewhere new');
+    await until(() => llamaCalls().length === 1, 5000, 'the structured call started');
     stopChatTurn();
     await turnDone();
+    expect(local()).toMatchObject({ status: 'idle', turnBusy: false });
+    // The reply arrives after the turn ended, and changes nothing.
+    await until(() => llamaCalls()[0].delivered.length === 1, 5000, 'the late reply');
+    await settle();
     watch.stop();
 
-    expect(lastAssistant()).toMatchObject({ stopped: true, toolCalls: undefined });
-    // The call was never run: no sample ever showed it done, and nothing was staged or written.
-    expect(watch.samples.flatMap((s) => s.tools).map((t) => t.status)).not.toContain('done');
+    expect(lastAssistant()).toMatchObject({ content: '', stopped: true, toolCalls: undefined });
+    expect(watch.samples.flatMap((s) => s.tools)).toEqual([]);
+    expect(useFloatingChatStore.getState().proposal).toBeNull();
     expect(await getFacts()).toEqual([]);
-    expect(llamaCalls()[0].stopped).toBe(true);
   });
 
   it('does nothing when no turn is running: the next turn is not pre-stopped', async () => {

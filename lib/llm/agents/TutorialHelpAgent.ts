@@ -20,7 +20,6 @@
 // this class is not offering is still refused below.
 
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
-import { ProcessingMode } from '../../generated/graphql-types';
 import {
   buildTutorialHelpContext,
   buildTutorialHelpPrompt,
@@ -49,14 +48,10 @@ export class TutorialHelpAgent implements IAgent {
   private lastLanguageName: string | null = null;
   private lastWebSearch: boolean | null = null;
 
-  /** CLOUD + the user's toggle. The LOCAL turn is one-shot (`useLocalLLM` never
-   *  pushes a `role:'tool'` message back), so a search the model can never read
-   *  is strictly worse than no tool. */
+  /** The user's toggle. Cloud-only: on-device runs TutorialHelpOnDeviceAgent,
+   *  which has no tools at all. */
   private webSearchEnabled(): boolean {
-    const protocol = useMeraProtocolStore.getState();
-    return (
-      protocol.processingMode !== ProcessingMode.OnDevice && protocol.webSearchInChat === true
-    );
+    return useMeraProtocolStore.getState().webSearchInChat === true;
   }
 
   async buildSystemPrompt(): Promise<string> {
@@ -77,10 +72,6 @@ export class TutorialHelpAgent implements IAgent {
       return this.cachedSystemPrompt;
     }
 
-    // `needsToolFormat` is deliberately ignored. On LOCAL there are no tools at
-    // all, so there is no XML tool-call block to append — and teaching a model
-    // a call format it has nothing to call with is the fastest way to get a
-    // hallucinated tool call.
     this.cachedSystemPrompt = buildTutorialHelpPrompt({ languageName, webSearch });
     this.lastLanguageName = languageName;
     this.lastWebSearch = webSearch;
@@ -95,7 +86,7 @@ export class TutorialHelpAgent implements IAgent {
 
   // --- IAgent: tools ---
 
-  /** `webSearch` and nothing else, and only on CLOUD with the toggle on. Every
+  /** `webSearch` and nothing else, and only with the toggle on. Every
    *  MUTATING tool stays absent — see the class comment. */
   getToolDefinitions(): ToolDefinition[] {
     return getTutorialHelpToolDefinitions(this.webSearchEnabled());

@@ -877,7 +877,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             await runAgentLoopTurn(assistantId, trimmed);
             logger.debug(`${TAG} agent loop completed`);
           } else {
-            const systemPrompt = await agentRef.current.buildSystemPrompt(false);
+            const systemPrompt = await agentRef.current.buildSystemPrompt();
             logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
 
             const tools = agentRef.current.getToolDefinitions?.() ?? [];

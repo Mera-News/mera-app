@@ -24,7 +24,6 @@ import logger from '../../logger';
 import { useAppLanguageStore } from '../../stores/app-language-store';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
-import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import { isSubjectTracked } from '../../tracking/track-actions';
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
@@ -99,7 +98,8 @@ export class ArticleFeedbackAgent implements IAgent {
    *  Failure → []. */
   private relatedCoveragePromise: Promise<string[]> | null = null;
 
-  private getRelatedCoverage(): Promise<string[]> {
+  /** Also read by the on-device article agent. */
+  getRelatedCoverage(): Promise<string[]> {
     if (this.relatedCoveragePromise) return this.relatedCoveragePromise;
     // Gate on the EXPLICIT trackSubject (not resolveTrackSubject's minimal
     // fallback) — sibling titles only ground the multi-option track proposal.
@@ -161,7 +161,7 @@ export class ArticleFeedbackAgent implements IAgent {
    *  `linkedFacts` pass through raw ON PURPOSE - they are the user's own topics
    *  and persona facts, not publisher text, and branding them would assert
    *  something false about where they came from. */
-  private async loadArticleContext(): Promise<SuggestionFeedbackContext | null> {
+  async loadArticleContext(): Promise<SuggestionFeedbackContext | null> {
     const ctx = await getSuggestionFeedbackContext(this.target);
     if (!ctx) return null;
     return {
@@ -210,7 +210,7 @@ export class ArticleFeedbackAgent implements IAgent {
 
   /** Resolve the subject the follow tool tracks against: the explicit
    *  trackSubject, else a minimal one built from the target + store title. */
-  private resolveTrackSubject(): TrackFeedbackSubject | null {
+  resolveTrackSubject(): TrackFeedbackSubject | null {
     if (this.trackSubject) return this.trackSubject;
     const articleId = this.target.articleId;
     if (!articleId) return null;
@@ -223,55 +223,40 @@ export class ArticleFeedbackAgent implements IAgent {
   // --- IAgent: system prompt (static — cacheable by KV cache) ---
 
   private cachedSystemPrompt: string | null = null;
-  private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
-  private lastMode: 'CLOUD' | 'LOCAL' | null = null;
   private lastWebSearch: boolean | null = null;
 
-  async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
+  async buildSystemPrompt(): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
     const languageName =
       SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage)?.name ?? 'English';
     // Read ONCE, non-reactively, at turn-build time (same seam as
     // PersonaUpdateAgent.buildSystemPrompt) so the prompt and the tool payload
-    // this turn agree with each other.
-    const protocol = useMeraProtocolStore.getState();
-    const mode: 'CLOUD' | 'LOCAL' =
-      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
-    // Gates the SAME prose getToolDefinitions gates the tool declaration with —
-    // see agent-core's buildArticleFeedbackSystemPrompt. Must be part of the
-    // cache key: without it, a prompt built while the toggle was off (or CLOUD
-    // flipped to LOCAL) would keep serving stale text after the user flips the
-    // toggle on, so getToolDefinitions() would declare `webSearch` while the
-    // cached prompt still tells the model it has no way to look beyond the
-    // metadata — reproducing the exact "toggle on, still refuses" bug reported.
-    const webSearch = mode === 'CLOUD' && protocol.webSearchInChat === true;
+    // this turn agree with each other. Gates the SAME prose getToolDefinitions
+    // gates the tool declaration with — see agent-core's
+    // buildArticleFeedbackSystemPrompt. Must be part of the cache key: without
+    // it, a prompt built while the toggle was off would keep serving stale text
+    // after the user flips the toggle on, so getToolDefinitions() would declare
+    // `webSearch` while the cached prompt still tells the model it has no way to
+    // look beyond the metadata — reproducing the exact "toggle on, still
+    // refuses" bug reported. Cloud-only: on-device runs
+    // ArticleFeedbackOnDeviceAgent.
+    const webSearch = useMeraProtocolStore.getState().webSearchInChat === true;
 
-    // Static content depends only on needsToolFormat + languageName + mode +
-    // webSearch — all fixed per session unless the user changes app language,
-    // processing mode, or the web-search toggle.
     if (
       this.cachedSystemPrompt
-      && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
-      && this.lastMode === mode
       && this.lastWebSearch === webSearch
     ) {
       return this.cachedSystemPrompt;
     }
 
     this.cachedSystemPrompt = buildArticleFeedbackSystemPrompt({
-      needsToolFormat,
       languageName,
       webSearch,
-      // Same gate as getToolDefinitions' `proposeFactCheck` declaration, and
-      // part of the cache key below for the same reason webSearch is: a prompt
-      // built in one mode must not keep serving after the user switches.
-      factCheck: mode === 'CLOUD',
+      factCheck: true,
     });
-    this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
-    this.lastMode = mode;
     this.lastWebSearch = webSearch;
     return this.cachedSystemPrompt;
   }
@@ -280,11 +265,6 @@ export class ArticleFeedbackAgent implements IAgent {
 
   async buildContext(): Promise<string> {
     const context = await this.loadArticleContext();
-    // Same CLOUD gate as the prompt section and the tool declaration — a fourth
-    // place it must agree, because it decides how much of the article the claim
-    // picker actually gets to read.
-    const factCheck =
-      useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
     const facts = await getFacts(); // newest-first (sorted created_at desc)
 
     const storeContext = useFloatingChatStore.getState().context;
@@ -328,7 +308,8 @@ export class ArticleFeedbackAgent implements IAgent {
       verdict,
       tappedOptions,
       activeSuppressions,
-      factCheck,
+      // The claim picker reads the longer description.
+      factCheck: true,
     });
   }
 
@@ -336,14 +317,14 @@ export class ArticleFeedbackAgent implements IAgent {
 
   getToolDefinitions(): ToolDefinition[] {
     // Read fresh (not the buildSystemPrompt cache) — this method is also called
-    // standalone (tool-name resolution) on a turn whose prompt was never rebuilt. Same gate as the
-    // prompt's webSearchLine: CLOUD mode AND the user's toggle. The handler
+    // standalone (tool-name resolution) on a turn whose prompt was never
+    // rebuilt. Same gate as the prompt's webSearchLine. The handler
     // (web-search-handler.ts) re-checks the toggle regardless — belt-and-braces
     // for a persisted conversation replaying a call made while it was on.
-    const protocol = useMeraProtocolStore.getState();
-    const mode: 'CLOUD' | 'LOCAL' =
-      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
-    return getArticleFeedbackToolDefinitions(mode, protocol.webSearchInChat === true);
+    return getArticleFeedbackToolDefinitions(
+      'CLOUD',
+      useMeraProtocolStore.getState().webSearchInChat === true,
+    );
   }
 
   // --- IAgent: tool execution ---

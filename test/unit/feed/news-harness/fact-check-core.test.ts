@@ -38,7 +38,7 @@ const ARTICLE_OPTION_LABEL = 'The Article (async)';
 // input budget is ~3,072 — see article-feedback-core.test.ts, which pins that
 // gate and the budget it defends.
 describe('the claim-picker section is spliced into the ARTICLE agent prompt', () => {
-  const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, factCheck: true });
+  const prompt = buildArticleFeedbackSystemPrompt({ factCheck: true });
 
   it('carries the section verbatim — one copy of the measured text', () => {
     expect(prompt).toContain(buildFactCheckPromptSection());
@@ -79,24 +79,11 @@ describe('the claim-picker section is spliced into the ARTICLE agent prompt', ()
     expect(prompt).toContain('Claim labels and claim texts stay ENGLISH');
   });
 
-  // The XML block is the LOCAL path's only tool surface, so the line only
-  // appears on a prompt that is both local-format AND fact-check-enabled — a
-  // combination the adapter never builds today, and pinned here so the two
-  // gates cannot drift into each other.
-  it('lists the tool in the XML format block only when both gates are on', () => {
-    expect(
-      buildArticleFeedbackSystemPrompt({ needsToolFormat: true, factCheck: true }),
-    ).toContain('- proposeFactCheck: {"options": [{"label": string, "claim": string}]}');
-    expect(prompt).not.toContain('<tool_call>');
-  });
 });
 
 describe('the article agent declares proposeFactCheck', () => {
-  it('declares it on the cloud path only', () => {
+  it('declares it on the cloud path', () => {
     expect(getArticleFeedbackToolDefinitions('CLOUD').map((t) => t.function.name)).toContain(
-      'proposeFactCheck',
-    );
-    expect(getArticleFeedbackToolDefinitions('LOCAL').map((t) => t.function.name)).not.toContain(
       'proposeFactCheck',
     );
   });

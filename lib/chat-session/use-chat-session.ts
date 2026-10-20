@@ -3,13 +3,13 @@
 // child's effect (the auto-send of a seeded message) runs before ours.
 
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
-import type { IAgent } from '@/lib/llm/types';
+import type { ChatAgent } from '@/lib/llm/types';
 import { useCallback, useEffect, useRef } from 'react';
 import { attachChatSession, type EngineKind } from './chat-session';
 
 export function useChatSession(
     kind: EngineKind,
-    agent: IAgent,
+    agent: ChatAgent,
     conversationId: string | null,
     resumeMessages: readonly PersistedMessage[] | undefined,
 ): { send: (text: string) => void; sendHidden: (text: string) => void } {

@@ -4,7 +4,7 @@
 import { attachChatSession } from '@/lib/chat-session/chat-session';
 import { useLocalChatStore } from '@/lib/chat-session/local-chat-store';
 import { createConversation, fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
-import { PersonaUpdateAgent } from '@/lib/llm/agents/PersonaUpdateAgent';
+import { TutorialHelpOnDeviceAgent } from '@/lib/llm/agents/on-device/TutorialHelpOnDeviceAgent';
 import { getCachedAttestation, setCachedAttestation } from '@/lib/e2ee/e2ee-cache';
 import { parseToolCallsFromText } from '@/lib/llm/text-tool-protocol';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -71,7 +71,7 @@ describe('on-device fakes', () => {
     const engine = attachChatSession({
       conversationId,
       kind: 'local',
-      agent: new PersonaUpdateAgent(FIXTURE_ACCOUNT.userId, 'CONFIG'),
+      agent: new TutorialHelpOnDeviceAgent(FIXTURE_ACCOUNT.userId, null),
       persistedIds: [],
     });
 

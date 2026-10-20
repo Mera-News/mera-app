@@ -50,25 +50,15 @@ describe('constructor', () => {
 });
 
 describe('buildSystemPrompt', () => {
-  it('includes the XML tool format block only when needsToolFormat', async () => {
-    const agent = makeAgent();
-    const withFormat = await agent.buildSystemPrompt(true);
-    const withoutFormat = await agent.buildSystemPrompt(false);
-
-    expect(withFormat).toContain('<tool_call>');
-    expect(withFormat).toContain('proposeChanges');
-    expect(withoutFormat).not.toContain('<tool_call>');
-  });
-
   it('states the capability boundaries and feature-request escape hatch', async () => {
-    const prompt = await makeAgent().buildSystemPrompt(false);
+    const prompt = await makeAgent().buildSystemPrompt();
     expect(prompt).toContain('CANNOT');
     expect(prompt).toContain('submit_feature_request');
   });
 
   it('honours the app language', async () => {
     setLanguage('fr');
-    const prompt = await makeAgent().buildSystemPrompt(false);
+    const prompt = await makeAgent().buildSystemPrompt();
     expect(prompt).toContain('French');
   });
 
@@ -77,11 +67,9 @@ describe('buildSystemPrompt', () => {
     const agent = makeAgent();
     const build = jest.spyOn(feedbackCore, 'buildArticleFeedbackSystemPrompt');
     try {
-      const first = await agent.buildSystemPrompt(false);
-      expect(await agent.buildSystemPrompt(false)).toBe(first);
+      const first = await agent.buildSystemPrompt();
+      expect(await agent.buildSystemPrompt()).toBe(first);
       expect(build).toHaveBeenCalledTimes(1);
-      await agent.buildSystemPrompt(true);
-      expect(build).toHaveBeenCalledTimes(2);
     } finally {
       build.mockRestore();
     }
@@ -93,20 +81,21 @@ describe('buildSystemPrompt', () => {
   it('rebuilds (does not serve a stale cache) when the toggle flips, and teaches search once on', async () => {
     const agent = makeAgent();
     await setWebSearchInChat(false);
-    const off = await agent.buildSystemPrompt(false);
+    const off = await agent.buildSystemPrompt();
     expect(off).not.toContain('WEB SEARCH');
 
     await setWebSearchInChat(true);
-    const on = await agent.buildSystemPrompt(false);
+    const on = await agent.buildSystemPrompt();
     expect(on).not.toBe(off);
     expect(on).toContain('WEB SEARCH');
   });
 
-  it('does not teach search prose when the toggle is on but mode is LOCAL', async () => {
+  // On-device runs ArticleFeedbackOnDeviceAgent; this agent is cloud-only whatever the mode says.
+  it('builds the same cloud prompt when the mode is on-device', async () => {
     await setWebSearchInChat(true);
+    const cloud = await makeAgent().buildSystemPrompt();
     await setProcessingMode('on-device');
-    const prompt = await makeAgent().buildSystemPrompt(false);
-    expect(prompt).not.toContain('WEB SEARCH');
+    expect(await makeAgent().buildSystemPrompt()).toBe(cloud);
   });
 });
 
@@ -229,14 +218,6 @@ describe('getToolDefinitions', () => {
     ]);
   });
 
-  // CLOUD-only: its prompt section is ~1,200 measured tokens against a ~3,072-token local input
-  // budget, and the check it proposes needs the cloud regardless.
-  it('never declares proposeFactCheck in LOCAL mode', async () => {
-    await setProcessingMode('on-device');
-    await setWebSearchInChat(false);
-    expect(toolNames(makeAgent())).not.toContain('proposeFactCheck');
-  });
-
   // pivot P6 (F4): this surface never declared webSearch at all, so the toggle was inert here. These
   // pin BOTH directions of the fix.
   it('omits webSearch when the toggle is off', async () => {
@@ -249,10 +230,12 @@ describe('getToolDefinitions', () => {
     expect(toolNames(makeAgent())).toContain('webSearch');
   });
 
-  it('never declares webSearch in LOCAL mode, even with the toggle on', async () => {
-    await setProcessingMode('on-device');
+  it('keeps the cloud tool set when the mode is on-device', async () => {
     await setWebSearchInChat(true);
-    expect(toolNames(makeAgent())).not.toContain('webSearch');
+    const cloud = toolNames(makeAgent());
+    await setProcessingMode('on-device');
+    expect(toolNames(makeAgent())).toEqual(cloud);
+    expect(cloud).toEqual(expect.arrayContaining(['proposeFactCheck', 'webSearch']));
   });
 });
 

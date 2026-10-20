@@ -76,7 +76,7 @@ function scoredContext(overrides: Partial<SuggestionFeedbackContext['suggestion'
 // F34: see follow-story-core.test.ts. The article chat stages the same card.
 describe('article-feedback follow card copy (F34)', () => {
   it('asks for the fixed line and bans "scope", in the prompt and the tool description', () => {
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+    const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
     expect(prompt).toContain('"Pick the story to follow below."');
     expect(prompt).toContain('Never use the word "scope" in anything the user reads');
     const track = getArticleFeedbackToolDefinitions().find((t) => t.function.name === 'proposeTrack')!;
@@ -85,28 +85,20 @@ describe('article-feedback follow card copy (F34)', () => {
 });
 
 describe('buildArticleFeedbackSystemPrompt', () => {
-  it('includes the XML tool-call format block only when needsToolFormat', () => {
-    const withFormat = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
-    const withoutFormat = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
-    expect(withFormat).toContain('<tool_call>');
-    expect(withFormat).toContain('proposeChanges');
-    expect(withoutFormat).not.toContain('<tool_call>');
-  });
-
   it('states capability boundaries and the feature-request escape hatch', () => {
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+    const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
     expect(prompt).toContain('CANNOT');
     expect(prompt).toContain('submit_feature_request');
   });
 
   it('carries the limited-article-access disclosure', () => {
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+    const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
     expect(prompt).toContain('NEVER the full article text');
     expect(prompt).toContain('source of truth');
   });
 
   it('documents retire_topic, choose_one, and the suppression-strength scale', () => {
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
     expect(prompt).toContain('retire_topic');
     expect(prompt).toContain('choose_one');
     expect(prompt).toContain('0.9');
@@ -119,8 +111,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
   // 2026-07-29: 2080 tokens for the XML path with the D9 suppression wording;
   // the ceiling leaves ~120 tokens of drift room before it fails.
   it('stays under the measured system-prompt token ceiling', () => {
-    // The XML-format path (local) is the larger of the two.
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
     expect(estimateTokens(prompt)).toBeLessThan(ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING);
   });
 
@@ -131,16 +122,14 @@ describe('buildArticleFeedbackSystemPrompt', () => {
   // saturated context from 2,740 to 4,145 — i.e. straight through the budget the
   // test below exists to defend, silently truncating a surface that was already
   // living inside it.
-  it('adds the claim-picker section on CLOUD only, and not one byte on LOCAL', () => {
-    const local = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
-    const cloudOff = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+  it('adds the claim-picker section only with factCheck on', () => {
+    const cloudOff = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
     const cloudOn = buildArticleFeedbackSystemPrompt({
-      needsToolFormat: false,
+      
       languageName: 'English',
       factCheck: true,
     });
 
-    expect(local).not.toContain('proposeFactCheck');
     expect(cloudOff).not.toContain('proposeFactCheck');
     expect(cloudOn).toContain('proposeFactCheck');
     // The cloud path enforces no hard input budget (see
@@ -213,52 +202,19 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     expect(without.length).toBeLessThan(withFactCheck.length);
   });
 
-  it('never lists proposeFactCheck in the local XML tool format', () => {
-    const localWithFlag = buildArticleFeedbackSystemPrompt({
-      needsToolFormat: true,
-      languageName: 'English',
-      factCheck: false,
-    });
-    expect(localWithFlag).toContain('- proposeTrack:');
-    expect(localWithFlag).not.toContain('- proposeFactCheck:');
-  });
-
-  // not-interested P4a — new: the YOUR FILTERS block is the only unbounded
-  // addition to this surface's context, so pin system + a saturated context
-  // (full article, 12 long facts, filters at MAX_ACTIVE_FILTERS) against the
-  // on-device input budget. MEASURED 2026-07-29: 2080 + 660 = 2740.
-  it('system + a filter-saturated context fits the ~3072-token input budget', () => {
-    const system = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
-    const context = buildFeedbackContext({
-      nowMs: NOW_MS,
-      facts: Array.from({ length: 12 }, (_, i) => fact(`f${i}`, 'A'.repeat(199), ['alpha', 'beta', 'gamma'])),
-      context: scoredContext(),
-      proposal: null,
-      activeSuppressions: Array.from({ length: 12 }, (_, i) => ({
-        id: `abcdefgh1234567${i % 10}`,
-        pattern: 'celebrity gossip and reality television',
-        kind: 'keyword' as const,
-      })),
-    });
-    expect(estimateTokens(system) + estimateTokens(context)).toBeLessThan(3072);
-  });
-
   it('documents the verbatim-value rule and retire_suppression', () => {
     // not-interested P4a — contract delta: D9 wording must survive edits. A
     // structured filter matches by EXACT equality, so an invented value is a
     // filter that silently never fires; the prompt must say so in both paths.
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
     expect(prompt).toContain('COPY THE VALUE VERBATIM');
     expect(prompt).toContain('matches NOTHING');
     expect(prompt).toContain('retire_suppression');
     expect(prompt).toContain('YOUR FILTERS');
-    // The XML tool-format block (local path) repeats the rule — the JSON-Schema
-    // descriptions the cloud path reads are NOT sent on that path.
-    expect(prompt).toContain('copy VERBATIM from <context>');
   });
 
   it('forbids dated track scopes and points at the <context> dates', () => {
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+    const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
     expect(prompt).toContain('NEVER name an already-ended year, season or edition');
     expect(prompt).toContain('Today / Published dates in <context>');
     expect(prompt).toContain('UNDATED');
@@ -272,7 +228,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
   // scope to keep it "matchable" must not take the place anchor or the capitals
   // with it.
   it('keeps the place anchor in the search for a single localised incident', () => {
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false });
+    const prompt = buildArticleFeedbackSystemPrompt({});
     expect(prompt).toContain('ONE incident in ONE place');
     expect(prompt).toContain('venue, street, building or town name');
     expect(prompt).toContain('A place is not a date');
@@ -282,7 +238,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     // The server's geo gate detects a place by its uppercase first letter, so a
     // lowercase-mandated query is silently un-geo-filterable. Do not "tidy" the
     // prompt back to "a plain lowercase retrieval query".
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true });
+    const prompt = buildArticleFeedbackSystemPrompt({});
     expect(prompt).toContain('KEEP THE CAPITALS');
     expect(prompt).toContain('recognises a place by its capital letter');
     expect(prompt).not.toMatch(/plain lowercase|lowercase (search|retrieval) query/);
@@ -305,12 +261,12 @@ describe('buildArticleFeedbackSystemPrompt', () => {
   });
 
   it('pins the language name when provided', () => {
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'French' });
+    const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'French' });
     expect(prompt).toContain('**French**');
   });
 
   it('falls back to a match-the-user language rule when no language given', () => {
-    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false });
+    const prompt = buildArticleFeedbackSystemPrompt({});
     expect(prompt).toContain("Match the user's language");
   });
 
@@ -323,21 +279,21 @@ describe('buildArticleFeedbackSystemPrompt', () => {
   // even once declared, an unchanged prompt would still teach refusal first.
   describe('webSearch prose gate', () => {
     it('is byte-identical to the pre-existing text when webSearch is omitted (default false)', () => {
-      const withParam = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English', webSearch: false });
-      const withoutParam = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+      const withParam = buildArticleFeedbackSystemPrompt({ languageName: 'English', webSearch: false });
+      const withoutParam = buildArticleFeedbackSystemPrompt({ languageName: 'English' });
       expect(withParam).toBe(withoutParam);
       expect(withoutParam).not.toContain('WEB SEARCH');
       expect(withoutParam).not.toContain('webSearch');
     });
 
     it('still carries the honest metadata-only disclosure when webSearch is on', () => {
-      const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true });
+      const prompt = buildArticleFeedbackSystemPrompt({ languageName: 'English', webSearch: true });
       expect(prompt).toContain('NEVER the full article text');
     });
 
     it('teaches searching instead of refusing when webSearch is on', () => {
-      const off = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: false });
-      const on = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true });
+      const off = buildArticleFeedbackSystemPrompt({ languageName: 'English', webSearch: false });
+      const on = buildArticleFeedbackSystemPrompt({ languageName: 'English', webSearch: true });
       expect(off).not.toContain('WEB SEARCH');
       expect(on).toContain('WEB SEARCH');
       expect(on).toContain('webSearch');
@@ -701,14 +657,8 @@ describe('getArticleFeedbackToolDefinitions', () => {
   // chip and the article tick both send into THIS thread), CLOUD-only: it costs
   // ~1,200 tokens of measured prompt text that the local path's ~3,072-token
   // input budget has no room for, and the check it proposes needs the cloud
-  // anyway. The LOCAL list is therefore the four it always was.
+  // anyway. On-device runs its own flow (on-device/article-feedback).
   it('exposes the proposal + follow tools in order', () => {
-    expect(getArticleFeedbackToolDefinitions('LOCAL').map((t) => t.function.name)).toEqual([
-      'proposeChanges',
-      'proposeTrack',
-      'applyProposal',
-      'cancelProposal',
-    ]);
     expect(getArticleFeedbackToolDefinitions().map((t) => t.function.name)).toEqual([
       'proposeChanges',
       'proposeTrack',
@@ -790,11 +740,6 @@ describe('getArticleFeedbackToolDefinitions', () => {
       const tool = getArticleFeedbackToolDefinitions('CLOUD', true).find((t) => t.function.name === 'webSearch')!;
       expect(tool.function.parameters.properties.queries).toBeDefined();
       expect(tool.function.parameters.required).toEqual(['queries']);
-    });
-
-    it('never declares webSearch in LOCAL, even with the toggle on — the one-shot path cannot read a tool result', () => {
-      const names = getArticleFeedbackToolDefinitions('LOCAL', true).map((t) => t.function.name);
-      expect(names).not.toContain('webSearch');
     });
 
     it('leaves the other tools and their order untouched when webSearch is appended', () => {

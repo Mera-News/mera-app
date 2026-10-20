@@ -24,7 +24,6 @@ const filterPatterns = async () => (await getActiveFilters()).map((f) => f.patte
 const ONBOARDING_ONLY = 'Onboard the user';
 const CONFIG_ONLY = "Update the user's news profile";
 const CLOUD_ONLY = 'Per-turn order';
-const LOCAL_ONLY = '## Per turn';
 const DEEP_BANK = 'What would you regret not hearing about?';
 
 beforeEach(async () => {
@@ -51,8 +50,8 @@ describe('constructor', () => {
     const onboarding = make('ONBOARDING');
 
     expect(config.id).toBe('persona-user-123-CONFIG');
-    const configPrompt = await config.buildSystemPrompt(false);
-    const onboardingPrompt = await onboarding.buildSystemPrompt(false);
+    const configPrompt = await config.buildSystemPrompt();
+    const onboardingPrompt = await onboarding.buildSystemPrompt();
 
     expect(configPrompt).toContain(CONFIG_ONLY);
     expect(configPrompt).not.toContain(ONBOARDING_ONLY);
@@ -67,7 +66,7 @@ describe('constructor', () => {
 
 describe('buildSystemPrompt', () => {
   it('builds the cloud prompt for the surface: English, cloud wording, no tool-format block', async () => {
-    const result = await make('ONBOARDING').buildSystemPrompt(false);
+    const result = await make('ONBOARDING').buildSystemPrompt();
 
     expect(result).toContain(ONBOARDING_ONLY);
     expect(result).toContain('**English**');
@@ -81,38 +80,28 @@ describe('buildSystemPrompt', () => {
     ['never stored', {}],
   ])('always asks the deeper questions (%s)', async (_label, stored) => {
     useMeraProtocolStore.setState(stored as never);
-    await setProcessingMode('on-device');
 
-    const prompt = await make().buildSystemPrompt(true);
+    const prompt = await make().buildSystemPrompt();
 
     expect(prompt).toContain(DEEP_BANK);
   });
 
-  it('asks the deeper questions in the cloud prompt too', async () => {
-    expect(await make().buildSystemPrompt(false)).toContain(DEEP_BANK);
-  });
-
-  it('maps ON_DEVICE processingMode to the LOCAL prompt', async () => {
+  // On-device runs PersonaOnDeviceAgent; this agent is cloud-only whatever the mode says.
+  it('builds the CLOUD prompt, whatever the processing mode', async () => {
+    const cloud = await make().buildSystemPrompt();
+    expect(cloud).toContain(CLOUD_ONLY);
     await setProcessingMode('on-device');
-    const prompt = await make().buildSystemPrompt(true);
-    expect(prompt).toContain(LOCAL_ONLY);
-    expect(prompt).not.toContain(CLOUD_ONLY);
-  });
-
-  it('maps CLOUD processingMode to the CLOUD prompt', async () => {
-    const prompt = await make().buildSystemPrompt(false);
-    expect(prompt).toContain(CLOUD_ONLY);
-    expect(prompt).not.toContain(LOCAL_ONLY);
+    expect(await make().buildSystemPrompt()).toBe(cloud);
   });
 
   it('resolves language name from appLanguage code', async () => {
     setLanguage('fr');
-    expect(await make().buildSystemPrompt(false)).toContain('**French**');
+    expect(await make().buildSystemPrompt()).toContain('**French**');
   });
 
   it('defaults to English for unknown language codes', async () => {
     setLanguage('zz');
-    expect(await make().buildSystemPrompt(false)).toContain('**English**');
+    expect(await make().buildSystemPrompt()).toContain('**English**');
   });
 
   // The cache is observed by counting calls into the REAL builder (a spy, no replacement).
@@ -120,42 +109,23 @@ describe('buildSystemPrompt', () => {
     const agent = make();
     const build = jest.spyOn(personaPrompts, 'buildPersonaUpdateStaticPrompt');
     try {
-      const first = await agent.buildSystemPrompt(false);
-      expect(await agent.buildSystemPrompt(false)).toBe(first);
+      const first = await agent.buildSystemPrompt();
+      expect(await agent.buildSystemPrompt()).toBe(first);
       expect(build).toHaveBeenCalledTimes(1);
-      await agent.buildSystemPrompt(true);
-      expect(build).toHaveBeenCalledTimes(2);
     } finally {
       build.mockRestore();
     }
   });
 
-  it('rebuilds when needsToolFormat changes', async () => {
-    const agent = make();
-    const without = await agent.buildSystemPrompt(false);
-    const withFormat = await agent.buildSystemPrompt(true);
-
-    expect(withFormat).not.toBe(without);
-    expect(withFormat).toContain('<tool_call>');
-  });
-
-  it('passes includeToolFormat=true for local LLM', async () => {
-    await setProcessingMode('on-device');
-    expect(await make().buildSystemPrompt(true)).toContain('<tool_call>');
-  });
-
-  it('rebuilds when the web-search toggle flips, and teaches search only on cloud with it on', async () => {
+  it('rebuilds when the web-search toggle flips, and teaches search with it on', async () => {
     const agent = make('CONFIG');
     await setWebSearchInChat(false);
-    const off = await agent.buildSystemPrompt(false);
+    const off = await agent.buildSystemPrompt();
     expect(off).not.toContain('WEB SEARCH');
 
     await setWebSearchInChat(true);
-    const on = await agent.buildSystemPrompt(false);
+    const on = await agent.buildSystemPrompt();
     expect(on).toContain('WEB SEARCH');
-
-    await setProcessingMode('on-device');
-    expect(await agent.buildSystemPrompt(false)).not.toContain('WEB SEARCH');
   });
 });
 
@@ -191,7 +161,7 @@ describe('buildContext', () => {
       }),
     );
     const agent = make('CONFIG');
-    await agent.buildSystemPrompt(false);
+    await agent.buildSystemPrompt();
 
     const ctx = await agent.buildContext();
 
@@ -204,11 +174,11 @@ describe('buildContext', () => {
   it('degrades the filter variant and drops the block when the facts leave no room', async () => {
     await addSuppression({ pattern: 'celebrity gossip', strength: 0.9, source: 'chat' as never });
     // With room to spare the agent carries the whole feature: filter documentation in the system prompt.
-    const roomy = await make('CONFIG').buildSystemPrompt(false);
+    const roomy = await make('CONFIG').buildSystemPrompt();
 
     for (let i = 0; i < 22; i += 1) await addFact('A'.repeat(199), undefined, { attribute: 'location: residence' });
     const agent = make('CONFIG');
-    const squeezed = await agent.buildSystemPrompt(false);
+    const squeezed = await agent.buildSystemPrompt();
     const ctx = await agent.buildContext();
 
     expect(squeezed.length).toBeLessThan(roomy.length);
@@ -226,7 +196,7 @@ describe('buildContext', () => {
     const filter = await addSuppression({ pattern: 'celebrity gossip', strength: 0.9, source: 'chat' as never });
     await addFact('Lives in Berlin');
     const agent = make('CONFIG');
-    await agent.buildSystemPrompt(false);
+    await agent.buildSystemPrompt();
 
     expect(await agent.buildContext()).toContain(`[${filter.id}]`);
     expect(toolNames(agent)).toEqual(expect.arrayContaining(['proposeChanges', 'applyProposal', 'cancelProposal']));
@@ -235,7 +205,7 @@ describe('buildContext', () => {
   it('does NOT read filters on the ONBOARDING surface', async () => {
     await addSuppression({ pattern: 'celebrity gossip', strength: 0.9, source: 'chat' as never });
     const agent = make('ONBOARDING');
-    await agent.buildSystemPrompt(false);
+    await agent.buildSystemPrompt();
 
     const ctx = await agent.buildContext();
 
@@ -277,14 +247,12 @@ describe('getToolDefinitions', () => {
     expect(names).toContain('searchNews');
   });
 
-  it('declares webSearch once the user toggle is on, and never on-device', async () => {
+  it('declares webSearch once the user toggle is on, whatever the processing mode', async () => {
     await setWebSearchInChat(true);
     expect(toolNames(make('CONFIG'))).toContain('webSearch');
 
     await setProcessingMode('on-device');
-    const names = toolNames(make('CONFIG'));
-    expect(names).not.toContain('webSearch');
-    expect(names).not.toContain('searchNews');
+    expect(toolNames(make('CONFIG'))).toEqual(expect.arrayContaining(['webSearch', 'searchNews']));
   });
 });
 

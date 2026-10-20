@@ -29,8 +29,8 @@ const trackProposal = (labels: string[]): StagedProposal => ({
 // beside the card is fixed, and the word is banned, in the prompt and in the
 // cloud tool description alike.
 describe('follow-story card copy (F34)', () => {
-  it('asks for the fixed line and bans "scope" in the local prompt', () => {
-    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: true });
+  it('asks for the fixed line and bans "scope" in the prompt', () => {
+    const prompt = buildFollowStorySystemPrompt({});
     expect(prompt).toContain('"Pick the story to follow below."');
     expect(prompt).toContain('Never use the word "scope" in anything the user reads');
   });
@@ -44,7 +44,7 @@ describe('follow-story card copy (F34)', () => {
 
 describe('buildFollowStorySystemPrompt', () => {
   it('states the article-less framing and the 3–4 widening scopes rule', () => {
-    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: false });
+    const prompt = buildFollowStorySystemPrompt({});
 
     expect(prompt).toContain('NO article');
     expect(prompt).toContain('3–4 scope OPTIONS');
@@ -52,23 +52,18 @@ describe('buildFollowStorySystemPrompt', () => {
   });
 
   it('pins the conversational language when one is given', () => {
-    expect(buildFollowStorySystemPrompt({ needsToolFormat: false, languageName: 'Hindi' }))
+    expect(buildFollowStorySystemPrompt({ languageName: 'Hindi' }))
       .toContain('**Hindi**');
     // Scope text is retrieval input against an English corpus — never localized.
-    expect(buildFollowStorySystemPrompt({ needsToolFormat: false, languageName: 'Hindi' }))
+    expect(buildFollowStorySystemPrompt({ languageName: 'Hindi' }))
       .toContain('stay English');
-  });
-
-  it('appends the XML tool-call block only for the local path', () => {
-    expect(buildFollowStorySystemPrompt({ needsToolFormat: true })).toContain('<tool_call>');
-    expect(buildFollowStorySystemPrompt({ needsToolFormat: false })).not.toContain('<tool_call>');
   });
 
   // Precision rules. These pull in the OPPOSITE direction from "keep the scope
   // generic so it stays matchable", so they are pinned explicitly: an edit that
   // widens the scope must not take the place anchor or the capitals with it.
   it('keeps the place anchor in the search for a single localised incident', () => {
-    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: false });
+    const prompt = buildFollowStorySystemPrompt({});
     expect(prompt).toContain('ONE incident in ONE place');
     expect(prompt).toContain('venue, street, building or town name');
     expect(prompt).toContain('A place is not a date');
@@ -78,17 +73,15 @@ describe('buildFollowStorySystemPrompt', () => {
     // The server's geo gate detects a place by its uppercase first letter, so a
     // lowercase-mandated query is silently un-geo-filterable. Do not "tidy" the
     // prompt back to "a plain lowercase retrieval query".
-    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: true });
+    const prompt = buildFollowStorySystemPrompt({});
     expect(prompt).toContain('KEEP THE CAPITALS');
     expect(prompt).toContain('recognises a place by its capital letter');
     expect(prompt).not.toMatch(/plain lowercase|lowercase (search|retrieval) query/);
-    // The worked example has to obey its own rule or the model copies its case.
-    expect(prompt).toContain('"search": "Russia Ukraine war"');
   });
 
   // The card is the consent gate — the prompt must not invite a typed "yes".
   it('does not offer applyProposal anywhere', () => {
-    expect(buildFollowStorySystemPrompt({ needsToolFormat: true })).not.toContain('applyProposal');
+    expect(buildFollowStorySystemPrompt({})).not.toContain('applyProposal');
   });
 });
 
@@ -166,16 +159,6 @@ describe('getFollowStoryToolDefinitions', () => {
     expect(getFollowStoryToolDefinitions('CLOUD', false).map((t) => t.function.name)).not.toContain(
       'webSearch',
     );
-  });
-
-  // The LOCAL turn is one-shot — useLocalLLM never pushes a `role:'tool'`
-  // message back — so a search whose result the model can never read is
-  // strictly worse than no tool, and the 3072-token budget cannot spare it.
-  it('offers NO retrieval on LOCAL, whatever the toggle says', () => {
-    expect(getFollowStoryToolDefinitions('LOCAL', true).map((t) => t.function.name)).toEqual([
-      'proposeTrack',
-      'cancelProposal',
-    ]);
   });
 
   it('requires both label and search on every option', () => {

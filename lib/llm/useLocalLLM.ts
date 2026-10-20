@@ -1,268 +1,35 @@
-// The on-device chat engine (persona update, local path). The file keeps its
-// old name; it is no longer a hook. `createLocalEngine` is owned by the chat
-// session (lib/chat-session), so a turn survives the chat being closed.
-// Direct llama.rn inference via inferStream. No tool-call loop, no retry.
+// The on-device chat engine. The file keeps its old name; it is no longer a
+// hook. `createLocalEngine` is owned by the chat session (lib/chat-session), so
+// a turn survives the chat being closed.
+//
+// The turn itself belongs to the on-device agent (lib/llm/agents/on-device):
+// it builds its prompt, runs the model (structured output, or a plain stream
+// for tutorial help) and names the executor tools its reply maps to. This file
+// shows the reply and runs those tools exactly as cloud tool calls run, so the
+// cards (fact choices, proposals, story options) are the same ones.
 
 import type { ChatEngine } from '@/lib/chat-session/engine';
 import { useLocalChatStore, type LocalChatState } from '@/lib/chat-session/local-chat-store';
-import { CHAT_MAX_OUTPUT_TOKENS } from './constants';
-import { inferStream, isTextModelResident } from '../mera-protocol-toolkit';
-import { LOCAL_CONTEXT_TOKENS } from '../mera-protocol-toolkit/core/context-size';
+import { isTextModelResident } from '../mera-protocol-toolkit';
 import { inferenceQueue } from '../inference/InferenceQueue';
 import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
 import { applyChatPhase, useChatPhaseStore } from './chat-phase-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
-import type { ConversationMessage, IAgent, ToolCallRecord } from './types';
-import { estimateTokens } from '../algorithms/estimate-tokens';
-import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
-import { normalizeToolName } from '../news-harness/persona-management/tool-names';
-import { createThinkStripper } from '../algorithms/think-strip';
-import {
-  HISTORY_RESERVE_TOKENS,
-  MAX_HISTORY_USER_TURNS,
-} from '../news-harness/persona-management/persona-agent-core';
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-// Local LLM carries a TOKEN-BUDGETED window of recent turns, matching the cloud
-// path (same selector, same invariants) but with the budget derived by
-// subtraction against this path's hard 3072-token input ceiling rather than
-// from a fixed cap. Fresh facts are re-loaded from the `facts` table each turn
-// via buildContext() and prepended to the LAST user message, so a wider window
-// cannot make the LLM hallucinate persisted state from a stale assistant claim.
-const TOOL_CALL_OPEN = '<tool_call>';
-const TOOL_CALL_CLOSE = '</tool_call>';
-const TOTAL_TOKEN_LIMIT = Math.min(4096, LOCAL_CONTEXT_TOKENS);
-// Shared with the CLOUD chat path (lib/llm/constants) so a conversation can't be
-// cut at two different lengths depending on which engine served the turn.
-const MAX_OUTPUT_TOKENS = CHAT_MAX_OUTPUT_TOKENS;
-const INPUT_TOKEN_BUDGET = TOTAL_TOKEN_LIMIT - MAX_OUTPUT_TOKENS; // 3072
+import type { ConversationMessage, OnDeviceAgent, ToolCallRecord } from './types';
 
 const TAG = '[LocalLLM]';
-
-/**
- * The tool names this turn will accept, taken from the AGENT'S OWN definitions.
- *
- * This used to be a hardcoded Set, which had already drifted: it carried the
- * misspelling `saveExtractedsFacts` as a literal member while the real repair
- * lived elsewhere, and it listed both agents' tools regardless of which agent
- * was actually driving the turn. Deriving it removes both problems, and
- * normalizeToolName handles casing/separator/typo variants.
- */
-function knownToolNames(agent: IAgent): string[] {
-  return (agent.getToolDefinitions?.() ?? []).map((d) => d.function.name);
-}
-
-/** Resolve a model-emitted name to a real tool, or null to reject it. */
-function resolveToolName(raw: string, known: string[]): string | null {
-  return normalizeToolName(raw, known);
-}
 
 // Module-level counter ensures unique tool call IDs across all inference runs.
 let toolCallCounter = 0;
 
-// ---------------------------------------------------------------------------
-// Local types
-// ---------------------------------------------------------------------------
-
 type LocalLLMStatus = LocalChatState['status'];
-
-type InferenceEvent =
-  | { type: 'text-delta'; delta: string }
-  | { type: 'tool-call'; id: string; name: string; input: unknown }
-  | { type: 'finish'; reason: 'stop' | 'error' }
-  | { type: 'error'; message: string };
-
-// ---------------------------------------------------------------------------
-// Helper functions (absorbed from LocalInferenceEngine)
-// ---------------------------------------------------------------------------
-
-/** Token cost of one conversation message as this file renders it — content
- *  PLUS the inline <tool_call> blocks, which is what buildPromptFromMessages
- *  actually emits. Counting content alone would under-count exactly the turns
- *  that cost the most, and the budget would stop being a budget. */
-function messageTokens(msg: ConversationMessage): number {
-  let text = msg.content ?? '';
-  for (const tc of msg.toolCalls ?? []) {
-    text += JSON.stringify({ name: tc.name, arguments: tc.input ?? {} });
-  }
-  return estimateTokens(text);
-}
-
-/**
- * Converts ConversationMessage[] to a formatted prompt string for local LLM.
- * Carries as much recent history as `historyBudgetTokens` allows (see
- * history-window.ts), guarantees the first message is a user turn, and prepends
- * fresh `context` (from buildContext) onto that last user message.
- */
-function buildPromptFromMessages(
-  messages: ConversationMessage[],
-  context?: string,
-  historyBudgetTokens = 0,
-): string {
-  const startIdx = selectHistoryWindow<ConversationMessage>({
-    entries: messages,
-    budgetTokens: historyBudgetTokens,
-    maxUserTurns: MAX_HISTORY_USER_TURNS,
-    roleOf: (m) => m.role,
-    tokensOf: messageTokens,
-  });
-  let limited = messages.slice(startIdx);
-  if (limited[0]?.role !== 'user') {
-    const lastUser = [...messages].reverse().find((m) => m.role === 'user');
-    if (lastUser) limited = [lastUser, ...limited];
-  }
-
-  let lastUserIdx = -1;
-  for (let i = limited.length - 1; i >= 0; i--) {
-    if (limited[i].role === 'user') { lastUserIdx = i; break; }
-  }
-
-  const parts: string[] = [];
-  for (let i = 0; i < limited.length; i++) {
-    const msg = limited[i];
-    if (msg.role === 'user') {
-      const content = (i === lastUserIdx && context) ? `${context}\n\n${msg.content}` : msg.content;
-      parts.push(`User: ${content}`);
-    } else {
-      let text = `Assistant: ${msg.content}`;
-      if (msg.toolCalls) {
-        for (const tc of msg.toolCalls) {
-          text += `\n<tool_call>${JSON.stringify({ name: tc.name, arguments: tc.input ?? {} })}</tool_call>`;
-        }
-      }
-      parts.push(text);
-    }
-  }
-
-  return parts.join('\n\n');
-}
-
-/**
- * Processes a streaming token buffer.
- * Emits text-delta events for visible text and tool-call events for parsed <tool_call> blocks.
- */
-function flushBuffer(
-  buffer: string,
-  insideToolCall: boolean,
-  toolCallBuffer: string,
-): {
-  remaining: string;
-  insideToolCall: boolean;
-  toolCallBuffer: string;
-  events: InferenceEvent[];
-} {
-  const events: InferenceEvent[] = [];
-  let remaining = buffer;
-
-  while (true) {
-    if (insideToolCall) {
-      // Search the buffered call text PLUS the new chunk: a tag split across tokens
-      // ("</tool" + "_call>") is only whole in the combined text.
-      const combined = toolCallBuffer + remaining;
-      const closeIdx = combined.indexOf(TOOL_CALL_CLOSE);
-      // Check if a new <tool_call> appears before the closing tag — LLM sometimes
-      // omits </tool_call> between consecutive tool calls.
-      const nextOpenIdx = combined.indexOf(TOOL_CALL_OPEN);
-      const implicitClose = nextOpenIdx >= 0 && (closeIdx < 0 || nextOpenIdx < closeIdx);
-      const splitIdx = implicitClose ? nextOpenIdx : closeIdx;
-
-      if (splitIdx >= 0) {
-        toolCallBuffer = combined.substring(0, splitIdx);
-        remaining = implicitClose
-          ? combined.substring(splitIdx) // keep the <tool_call> opener for next iteration
-          : combined.substring(splitIdx + TOOL_CALL_CLOSE.length);
-        insideToolCall = false;
-        try {
-          const parsed = JSON.parse(toolCallBuffer.trim()) as {
-            name: string;
-            arguments?: Record<string, unknown>;
-          };
-          if (parsed.name) {
-            events.push({
-              type: 'tool-call',
-              id: `local-tc-${toolCallCounter++}`,
-              name: parsed.name,
-              input: parsed.arguments ?? {},
-            });
-          }
-        } catch {
-          // Malformed tool call — skip
-        }
-        toolCallBuffer = '';
-      } else {
-        toolCallBuffer = combined;
-        return { remaining: '', insideToolCall, toolCallBuffer, events };
-      }
-    } else {
-      const openIdx = remaining.indexOf(TOOL_CALL_OPEN);
-      if (openIdx >= 0) {
-        if (openIdx > 0) {
-          events.push({ type: 'text-delta', delta: remaining.substring(0, openIdx) });
-        }
-        remaining = remaining.substring(openIdx + TOOL_CALL_OPEN.length);
-        insideToolCall = true;
-        toolCallBuffer = '';
-      } else if (remaining.includes('<')) {
-        const lastLt = remaining.lastIndexOf('<');
-        if (lastLt > 0) {
-          events.push({ type: 'text-delta', delta: remaining.substring(0, lastLt) });
-          return { remaining: remaining.substring(lastLt), insideToolCall, toolCallBuffer, events };
-        }
-        return { remaining, insideToolCall, toolCallBuffer, events };
-      } else {
-        events.push({ type: 'text-delta', delta: remaining });
-        return { remaining: '', insideToolCall, toolCallBuffer, events };
-      }
-    }
-  }
-}
-
-/** Detects bare JSON tool calls (without tags) that the LLM sometimes emits. */
-function* extractBareJsonToolCalls(text: string, known: string[]): Iterable<InferenceEvent> {
-  let searchFrom = 0;
-  while (searchFrom < text.length) {
-    const braceIdx = text.indexOf('{', searchFrom);
-    if (braceIdx === -1) break;
-    let depth = 0;
-    let endIdx = -1;
-    for (let i = braceIdx; i < text.length; i++) {
-      if (text[i] === '{') depth++;
-      else if (text[i] === '}') {
-        depth--;
-        if (depth === 0) { endIdx = i; break; }
-      }
-    }
-    if (endIdx === -1) break;
-    const jsonStr = text.substring(braceIdx, endIdx + 1);
-    try {
-      const parsed = JSON.parse(jsonStr) as { name?: string; arguments?: Record<string, unknown> };
-      const resolvedBare = parsed.name ? resolveToolName(parsed.name, known) : null;
-      if (resolvedBare) {
-        yield {
-          type: 'tool-call',
-          id: `local-tc-${toolCallCounter++}`,
-          name: resolvedBare,
-          input: parsed.arguments ?? {},
-        };
-        searchFrom = endIdx + 1;
-        continue;
-      }
-    } catch {
-      // Not valid JSON
-    }
-    searchFrom = braceIdx + 1;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Engine
 // ---------------------------------------------------------------------------
 
-export function createLocalEngine(initialAgent: IAgent): ChatEngine {
+export function createLocalEngine(initialAgent: OnDeviceAgent): ChatEngine<OnDeviceAgent> {
   // State lives in useLocalChatStore so it outlives every component. Writes
   // stop once the engine is replaced (a new chat), so a turn still finishing
   // in the background can never touch the next conversation's thread.
@@ -285,11 +52,11 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
 
   const agentRef = { current: initialAgent };
   const isStreamingRef = { current: false };
-  /** THE STOP BUTTON, for the turn in flight. Read by the token loop and at the
+  /** THE STOP BUTTON, for the turn in flight. Read by the text sink and at the
    *  early-exit points before a completion starts. */
   const stopRef = { requested: false };
-  /** Aborted by Stop: wakes the turn at once and tells the toolkit to halt llama,
-   *  neither of which waits for a token. One per turn. */
+  /** Aborted by Stop: wakes the turn at once and tells the toolkit to halt a
+   *  stream, neither of which waits for a token. One per turn. */
   const abortRef = { current: new AbortController() };
 
   /**
@@ -304,11 +71,10 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
 
   const runInference = async (conversationMessages: ConversationMessage[]): Promise<void> => {
       // Chosen SYNCHRONOUSLY, before the first await. `inferenceQueue.pause()`
-      // waits for whatever job holds llama.rn's single context to finish, and
-      // on a cold turn `inferStream` then loads the text model inside the
-      // toolkit's lock: both are real seconds the user sits through, and
-      // publishing after them would miss the part of the wait that most needs
-      // a sentence.
+      // waits for whatever job holds the model to finish, and on a cold turn
+      // the toolkit then loads the text model inside its lock: both are real
+      // seconds the user sits through, and publishing after them would miss the
+      // part of the wait that most needs a sentence.
       const coldModel = !isTextModelResident();
       const phase = phaseSinkRef.current;
       phase?.(coldModel ? 'deviceLoading' : 'devicePreparing');
@@ -317,63 +83,8 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
         // Stop pressed while the queue paused: end the turn, start no completion.
         if (stopRef.requested) return;
 
-        // Build system prompt (needsToolFormatInPrompt=true for local LLM)
-        let systemPrompt: string;
-        try {
-          systemPrompt = await agentRef.current.buildSystemPrompt(true);
-          logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
-        } catch (err) {
-          throw new Error(`Failed to build system prompt: ${String(err)}`);
-        }
-
-        // Build context and inject into prompt
-        let context: string | undefined;
-        if (agentRef.current.buildContext) {
-          try {
-            context = await agentRef.current.buildContext();
-            logger.debug(`${TAG} context built`, { length: context.length });
-          } catch (err) {
-            logger.warn(`${TAG} buildContext failed, proceeding without context`, {
-              error: String(err),
-            });
-          }
-        }
-
-        // Derive the history budget from what the fixed costs leave behind, so
-        // history SHRINKS to fit instead of pushing the turn over the hard
-        // ceiling below. Measured 2026-08-03: a CONFIG turn's system prompt
-        // (~1,769 tok with the XML tool format) plus a full 22-fact <context>
-        // (~1,156 tok) already leaves ~19 tokens — a heavy user gets one turn of
-        // history, which is correct. A typical fact bank leaves ~1,150.
-        const systemTokens = estimateTokens(systemPrompt);
-        const contextTokens = context ? estimateTokens(context) : 0;
-        const historyBudget =
-          INPUT_TOKEN_BUDGET - systemTokens - contextTokens - HISTORY_RESERVE_TOKENS;
-
-        const prompt = buildPromptFromMessages(conversationMessages, context, historyBudget);
-
-        // Token budget check. Now only reachable when the system prompt +
-        // <context> + the CURRENT user turn alone exceed the budget (a
-        // facts-too-large problem), never because history grew.
-        const promptTokens = estimateTokens(prompt);
-        const totalInputTokens = systemTokens + promptTokens;
-        logger.debug('[LocalLLM:chat] Token estimate', { systemTokens, promptTokens, totalInputTokens, budget: INPUT_TOKEN_BUDGET });
-
-        if (totalInputTokens > INPUT_TOKEN_BUDGET) {
-          const overflowBy = totalInputTokens - INPUT_TOKEN_BUDGET;
-          logger.captureMessage('[LocalLLM:chat] TOKEN BUDGET EXCEEDED', {
-            level: 'warning',
-            tags: { component: 'useLocalLLM' },
-            extra: { totalInputTokens, inputTokenBudget: INPUT_TOKEN_BUDGET, totalTokenLimit: TOTAL_TOKEN_LIMIT, overflowBy },
-          });
-          setError('Context too long — please reduce facts or shorten the conversation.');
-          return;
-        }
-
-        // Add placeholder assistant message
         const assistantId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
         let accContent = '';
-        const accToolCalls: ToolCallRecord[] = [];
         const placeholder: ConversationMessage = {
           id: assistantId,
           role: 'assistant',
@@ -381,196 +92,54 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
           toolCalls: [],
         };
         setMessages([...conversationMessages, placeholder]);
+        const setContent = (content: string, extra: Partial<ConversationMessage> = {}) =>
+          setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content, ...extra } : m)));
 
-        // Stream inference
-        logger.debug(`${TAG} LLM input`, { systemPromptLength: systemPrompt.length, promptLength: prompt.length });
-        logger.debug(`${TAG} starting inference stream`, { messageCount: conversationMessages.length, maxTokens: MAX_OUTPUT_TOKENS });
-        let pendingBuffer = '';
-        let insideToolCall = false;
-        let toolCallBuffer = '';
-        let fullResponse = '';
-        const thinkStripper = createThinkStripper();
-
-        // Generation has started and no token has been flushed yet. A cold turn is
-        // still loading inside inferStream, so it keeps deviceLoading until the
-        // first text (the sink only moves forward, and the first delta releases it).
+        // A cold turn is still loading inside the toolkit, so it keeps
+        // deviceLoading until the reply (the sink only moves forward).
         if (!coldModel) phase?.('deviceThinking');
 
-        // Driven by hand rather than `for await`: Stop must end the turn NOW, but the
-        // generator only ends once llama has unwound (it holds the lock until then).
-        // So each step races the abort, and on abort the generator is returned
-        // WITHOUT being awaited; the toolkit finishes releasing in the background.
+        // Stop must end the turn NOW, but a structured call cannot be cut short
+        // and a stream only ends once the model has unwound. So the turn races
+        // the abort, and an abandoned turn finishes (and is ignored) in the
+        // background; the toolkit releases its lock on its own.
         const signal = abortRef.current.signal;
         const aborted = new Promise<'aborted'>((resolve) => {
           if (signal.aborted) resolve('aborted');
           else signal.addEventListener('abort', () => resolve('aborted'), { once: true });
         });
-        const it = inferStream({
-          systemPrompt,
-          prompt,
-          maxTokens: MAX_OUTPUT_TOKENS,
-          temperature: 0.4,
-        }, signal)[Symbol.asyncIterator]();
-        let finished = false;
-        try {
-          while (true) {
-            const pending = it.next();
-            pending.catch(() => {}); // an abandoned step may reject later; nobody is waiting
-            const step = await Promise.race([pending, aborted]);
-            if (step === 'aborted' || stopRef.requested) break;
-            if (step.done) { finished = true; break; }
-            const token = step.value;
-            // Think tags go BEFORE the tool-call parser: its `<` holdback plus the
-            // end-of-stream `startsWith('<')` discard would otherwise swallow the
-            // reply after a stray tag, and a <tool_call> inside a think block
-            // must never run. `fullResponse` feeds the rescan, so it is stripped too.
-            const visibleToken = thinkStripper.push(token);
-            if (!visibleToken) continue;
-            fullResponse += visibleToken;
-            pendingBuffer += visibleToken;
+        const turn = agentRef.current.respond(conversationMessages, {
+          signal,
+          onText: (delta) => {
+            if (stopRef.requested) return;
+            // Real text. The bubble is the liveness signal from here; the sink
+            // swallows a repeat, so this costs one store write on the first delta.
+            phase?.(null);
+            accContent += delta;
+            setContent(accContent);
+          },
+        });
+        turn.catch(() => {}); // an abandoned turn may reject later; nobody is waiting
+        const outcome = await Promise.race([turn, aborted]);
 
-            const flushed = flushBuffer(pendingBuffer, insideToolCall, toolCallBuffer);
-            pendingBuffer = flushed.remaining;
-            insideToolCall = flushed.insideToolCall;
-            toolCallBuffer = flushed.toolCallBuffer;
-
-            for (const event of flushed.events) {
-              if (event.type === 'text-delta') {
-                // Real text. The bubble is the liveness signal from here.
-                // NOT a second store write per token: the sink swallows a repeat,
-                // so this costs one `set` on the first delta and nothing after.
-                // That matters more here than on the cloud path, which has no rAF
-                // batching on this loop at all.
-                phase?.(null);
-                accContent += event.delta;
-                setMessages((prev) =>
-                  prev.map((m) => m.id === assistantId ? { ...m, content: accContent } : m),
-                );
-              } else if (event.type === 'tool-call') {
-                logger.debug(`${TAG} tool call detected (XML)`, { name: event.name, inputKeys: Object.keys(event.input as Record<string, unknown>) });
-                const tc: ToolCallRecord = {
-                  id: event.id,
-                  name: event.name,
-                  input: event.input,
-                  status: 'pending',
-                };
-                accToolCalls.push(tc);
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantId
-                      ? { ...m, toolCalls: [...(m.toolCalls ?? []), tc] }
-                      : m,
-                  ),
-                );
-              }
-            }
-          }
-        } finally {
-          if (!finished) {
-            const left = it.return(undefined).catch(() => {});
-            if (!stopRef.requested) await left;
-          }
-        }
-
-        if (stopRef.requested) {
-          // STOPPED: the partial reply stays; no tool call (running or merely
-          // parsed from the partial text) is kept or executed.
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantId
-                ? { ...m, content: accContent, toolCalls: undefined, stopped: true }
-                : m,
-            ),
-          );
+        if (outcome === 'aborted' || stopRef.requested) {
+          // STOPPED: the partial reply stays; nothing is staged or run.
+          setContent(accContent, { toolCalls: undefined, stopped: true });
           return;
         }
 
-        const thinkTail = thinkStripper.flush();
-        if (thinkTail) {
-          fullResponse += thinkTail;
-          pendingBuffer += thinkTail;
-          const flushed = flushBuffer(pendingBuffer, insideToolCall, toolCallBuffer);
-          pendingBuffer = flushed.remaining;
-          insideToolCall = flushed.insideToolCall;
-          toolCallBuffer = flushed.toolCallBuffer;
-          // Tool calls in the tail are left to the rescan below.
-          for (const event of flushed.events) {
-            if (event.type === 'text-delta') accContent += event.delta;
-          }
-          setMessages((prev) =>
-            prev.map((m) => m.id === assistantId ? { ...m, content: accContent } : m),
-          );
-        }
-
-        // Flush remaining buffer (discard incomplete <tool_call> openers)
-        if (pendingBuffer.length > 0 && !insideToolCall && !pendingBuffer.startsWith('<')) {
-          accContent += pendingBuffer;
-          setMessages((prev) =>
-            prev.map((m) => m.id === assistantId ? { ...m, content: accContent } : m),
-          );
-        }
-
-        // Pass 2: re-scan fullResponse for tool calls missed during streaming.
-        // The streaming parser can miss tool calls when <tool_call> tags arrive
-        // split across tokens. Split on the open tag to reliably find all blocks.
-        logger.debug(`${TAG} LLM output — fullResponse`, { fullResponse });
-        logger.debug(`${TAG} stream complete`, { responseLength: fullResponse.length, toolCallsSoFar: accToolCalls.length });
-        const known = knownToolNames(agentRef.current);
-        const detectedInputs = new Set(accToolCalls.map(tc => JSON.stringify(tc.input)));
-        const segments = fullResponse.split(TOOL_CALL_OPEN).slice(1); // each segment starts after a <tool_call>
-        for (const segment of segments) {
-          // Strip closing tag if present; take only the JSON before any next text
-          const jsonStr = segment.split(TOOL_CALL_CLOSE)[0].trim();
-          try {
-            const parsed = JSON.parse(jsonStr) as { name: string; arguments?: Record<string, unknown> };
-            const resolved = parsed.name ? resolveToolName(parsed.name, known) : null;
-            if (resolved) {
-              const input = parsed.arguments ?? {};
-              // Skip if already detected during streaming
-              if (detectedInputs.has(JSON.stringify(input))) continue;
-              logger.debug(`${TAG} tool call detected (rescan)`, { name: resolved, inputKeys: Object.keys(input) });
-              const tc: ToolCallRecord = {
-                id: `local-tc-${toolCallCounter++}`,
-                name: resolved,
-                input,
-                status: 'pending',
-              };
-              accToolCalls.push(tc);
-              detectedInputs.add(JSON.stringify(input));
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? { ...m, toolCalls: [...(m.toolCalls ?? []), tc] }
-                    : m,
-                ),
-              );
-            }
-          } catch {
-            // JSON in this segment may be truncated — try bare JSON extraction as fallback
-            for (const event of extractBareJsonToolCalls(jsonStr, known)) {
-              if (event.type === 'tool-call') {
-                const input = event.input as Record<string, unknown>;
-                if (detectedInputs.has(JSON.stringify(input))) continue;
-                logger.debug(`${TAG} tool call detected (bare JSON)`, { name: event.name, inputKeys: Object.keys(input) });
-                const tc: ToolCallRecord = {
-                  id: event.id,
-                  name: event.name,
-                  input,
-                  status: 'pending',
-                };
-                accToolCalls.push(tc);
-                detectedInputs.add(JSON.stringify(input));
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantId
-                      ? { ...m, toolCalls: [...(m.toolCalls ?? []), tc] }
-                      : m,
-                  ),
-                );
-              }
-            }
-          }
-        }
+        phase?.(null);
+        const accToolCalls: ToolCallRecord[] = outcome.calls.map((c) => ({
+          id: `local-tc-${toolCallCounter++}`,
+          name: c.name,
+          input: c.input,
+          status: 'pending',
+        }));
+        logger.debug(`${TAG} turn complete`, {
+          replyLength: outcome.reply.length,
+          tools: accToolCalls.map((t) => t.name),
+        });
+        setContent(outcome.reply, { toolCalls: accToolCalls });
 
         // Release input before tool execution — tools are background work,
         // the user can start typing their next message immediately.
@@ -660,10 +229,9 @@ export function createLocalEngine(initialAgent: IAgent): ChatEngine {
    * One turn. `hidden` makes it invisible to the user and unpersisted, while the
    * model still reads it as an ordinary trailing `user` turn.
    *
-   * It HAS to be a user turn on this path: buildPromptFromMessages flattens the
-   * thread to `User:` / `Assistant:` and injects <context> onto the last USER
-   * turn, so a prompt ending on `Assistant:` makes a 4B model continue its own
-   * previous message.
+   * It HAS to be a user turn on this path: the on-device flows render the
+   * thread as `User:` / `Mera:` lines, and one ending on Mera's own line makes
+   * a small model continue its previous message.
    */
   const startTurn = (text: string, hidden: boolean): void => {
       if (isStreamingRef.current || st().turnBusy || st().isBlocked) return;
