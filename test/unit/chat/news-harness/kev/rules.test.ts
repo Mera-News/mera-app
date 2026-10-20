@@ -1,4 +1,4 @@
-import { classifyConsent, dropKnownFacts, existingIds, isKnownFact, negates } from '@/lib/news-harness/on-device/kev';
+import { classifyConsent, dropKnownFacts, dropUngrounded, existingIds, isKnownFact, negates, restates } from '@/lib/news-harness/on-device/kev';
 
 describe('classifyConsent', () => {
   it.each(['yes', 'Yes!', 'yeah', 'sure', 'do it', 'Go ahead.', 'please do', 'apply it', 'yes please', 'yes, thanks', 'ok, do it', 'okay go ahead', 'Sure thing'])(
@@ -52,6 +52,11 @@ describe('isKnownFact', () => {
     expect(isKnownFact('Works as a Nurse', known)).toBe(true);
   });
 
+  it('matches a restated fact written with a subject', () => {
+    expect(isKnownFact('You live in Porto', known)).toBe(true);
+    expect(isKnownFact('You work as a nurse', known)).toBe(true);
+  });
+
   it('does not match a different fact', () => {
     expect(isKnownFact('Lives in Lisbon', known)).toBe(false);
   });
@@ -63,6 +68,74 @@ describe('isKnownFact', () => {
   });
 });
 
+describe('restates', () => {
+  // A stand-in for the owner's profile: a long location, a multi-word job, one-word interests.
+  it.each([
+    ['You live in Gràcia, Barcelona, Catalonia, Spain, EU', 'Lives in Gràcia, Barcelona, Catalonia, Spain, EU'],
+    ['You are a founder building a solar energy startup', 'Founder building a solar energy startup'],
+    ['You are interested in astronomy', 'Interested in astronomy'],
+    ["You're interested in astronomy.", 'Interested in astronomy'],
+    ['I am interested in astronomy', 'Interested in astronomy'],
+    ['The user is interested in astronomy', 'Interested in astronomy'],
+    ['User lives in Porto now', 'Lives in Porto'],
+    ['Living in Gracia, Barcelona', 'Lives in Gràcia, Barcelona, Catalonia, Spain, EU'],
+    ['Lives in Porto', 'Lives in Porto, Portugal'],
+    ['Based in Porto', 'Lives in Porto, Portugal'],
+    ['Resides in Porto', 'Lives in Porto'],
+    ['Has two young kids', 'Has two young kids.'],
+  ])('%p restates %p', (statement, saved) => {
+    expect(restates(statement, saved)).toBe(true);
+  });
+
+  it.each([
+    ['Interested in blockchain', 'Works in blockchain'],
+    ['Lives in Amsterdam', 'Lives in Utrecht'],
+    ['Lives in Noord, Amsterdam, North Holland, The Netherlands', 'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands'],
+    ['Lives in North Holland', 'Lives in South Holland'],
+    ['Interested in local politics', 'Interested in local news'],
+    ['Interested in AI safety', 'Interested in AI'],
+    ['Lives in Brazil', 'From Brazil'],
+    ['Has a dog', 'Afraid of dogs'],
+    ['Interested in electric cars', 'Interested in electric vehicles'],
+  ])('%p is not %p', (statement, saved) => {
+    expect(restates(statement, saved)).toBe(false);
+  });
+
+  it('is false for an empty side', () => {
+    expect(restates('', 'Lives in Porto')).toBe(false);
+    expect(restates('You are', 'Lives in Porto')).toBe(false);
+  });
+});
+
+describe('dropUngrounded', () => {
+  const saved = ['Lives in Gràcia, Barcelona, Catalonia, Spain, EU', 'Founder building a solar energy startup', 'Works as a pharmacist'];
+
+  it('drops a fact copied from the saved facts that the message never mentions', () => {
+    const facts = [
+      { statement: 'You live in Gràcia, Barcelona, Catalonia, Spain' },
+      { statement: 'Runs a solar energy startup in Barcelona' },
+      { statement: 'Interested in astronomy' },
+    ];
+    expect(dropUngrounded(facts, "I'm interested in astronomy", saved)).toEqual([
+      { statement: 'Runs a solar energy startup in Barcelona' },
+      { statement: 'Interested in astronomy' },
+    ]);
+  });
+
+  it('keeps a fact in English for a message in another language', () => {
+    expect(dropUngrounded([{ statement: 'Works as a teacher' }], 'Ich arbeite jetzt als Lehrer', saved)).toEqual([
+      { statement: 'Works as a teacher' },
+    ]);
+    expect(dropUngrounded([{ statement: 'Sings in a choir' }], 'Ik zing sinds kort in een koor', saved)).toEqual([
+      { statement: 'Sings in a choir' },
+    ]);
+  });
+
+  it('keeps everything when nothing is saved yet', () => {
+    expect(dropUngrounded([{ statement: 'Lives in Porto' }], 'hello', [])).toEqual([{ statement: 'Lives in Porto' }]);
+  });
+});
+
 describe('dropKnownFacts', () => {
   it('drops restated, repeated and empty facts and keeps order and extra fields', () => {
     const facts = [
@@ -71,6 +144,8 @@ describe('dropKnownFacts', () => {
       { statement: 'plays chess!', attribute: 'interest' },
       { statement: '  ', attribute: 'interest' },
       { statement: 'Has two kids', attribute: 'family' },
+      { statement: 'You live in Porto', attribute: 'residence' },
+      { statement: 'You play chess', attribute: 'interest' },
     ];
     expect(dropKnownFacts(facts, ['lives in porto'])).toEqual([
       { statement: 'Plays chess', attribute: 'interest' },

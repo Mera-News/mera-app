@@ -28,7 +28,11 @@
     "pc-pending-ok",
     "pc-pending-no",
     "pc-ambig-anymore",
-    "pc-ambig-single-word"
+    "pc-ambig-single-word",
+    "pc-restated-interest-exact",
+    "pc-restated-location",
+    "pc-restated-job",
+    "pc-restated-interest-reworded"
   ],
   "test": [
     "pc-delete-one-of-two",

@@ -14,6 +14,7 @@ import {
   conversationState,
   decisionBlock,
   dropKnownFacts,
+  dropUngrounded,
   formatDecision,
   isKnownFact,
   isUnsure,
@@ -21,6 +22,7 @@ import {
   ranked,
   readChat,
   replyOr,
+  restates,
   runDecision,
   timedDecide,
   top,
@@ -37,6 +39,7 @@ import type { PersonaSurface } from './schema';
 
 export const PERSONA_INTENTS = [
   'share_new_fact',
+  'repeats_saved_fact',
   'remove_fact',
   'correct_fact',
   'agree_to_card',
@@ -49,6 +52,7 @@ export type PersonaIntent = (typeof PERSONA_INTENTS)[number];
 const INTENT_CRITERIA: Record<PersonaIntent, string> = {
   share_new_fact:
     'tells Mera something about their own life: where they live, work, family, health, beliefs, plans, hobbies or the news they want',
+  repeats_saved_fact: 'only says again what the saved_facts already say, and tells nothing new',
   remove_fact: 'asks Mera to delete, remove or forget one of the saved_facts',
   correct_fact: 'says one of the saved_facts has changed, and says what it is now',
   agree_to_card: 'agrees to the change on the waiting card',
@@ -57,7 +61,7 @@ const INTENT_CRITERIA: Record<PersonaIntent, string> = {
   thanks_or_ack: 'only says thanks, ok or similar',
 };
 
-/** Chip text per reading (i18n keys). thanks_or_ack has none: it merges into chatting. */
+/** Chip text per reading (i18n keys). thanks_or_ack has none: it merges into chatting; repeats_saved_fact merges into a new fact. */
 const INTENT_LABEL_KEYS: Partial<Record<PersonaIntent, string>> = {
   share_new_fact: 'kevChat.persona.share',
   remove_fact: 'kevChat.persona.remove',
@@ -67,8 +71,12 @@ const INTENT_LABEL_KEYS: Partial<Record<PersonaIntent, string>> = {
   question_or_chat: 'kevChat.persona.chat',
 };
 
-/** Both only reply, so a close call between them is not a reason to ask. */
-const SAME_ACT: Partial<Record<PersonaIntent, PersonaIntent>> = { thanks_or_ack: 'question_or_chat' };
+/**
+ * A close call within a pair is not a reason to ask. thanks and chat both only
+ * reply; a repeat and a new fact end the same when the facts are restated, since
+ * the rules drop saved facts from what the writer wrote. The act is Kev's top reading.
+ */
+const SAME_ACT: Partial<Record<PersonaIntent, PersonaIntent>> = { thanks_or_ack: 'question_or_chat', repeats_saved_fact: 'share_new_fact' };
 
 /** ponytail: the plan's fixed floor; every fact at or above it goes on the Remove / Keep card. Tune on dev. */
 export const DELETE_CARD_MIN_P = 0.25;
@@ -99,6 +107,7 @@ function intentKeys(input: PersonaKevInput): PersonaIntent[] {
   const canEdit = input.surface === 'CONFIG' && shownFacts(input).length > 0;
   return PERSONA_INTENTS.filter((k) => {
     if (k === 'remove_fact' || k === 'correct_fact') return canEdit;
+    if (k === 'repeats_saved_fact') return shownFacts(input).length > 0;
     if (k === 'agree_to_card') return input.pending != null && !input.pending.tapOnly;
     if (k === 'decline_card') return input.pending != null;
     return true;
@@ -190,8 +199,12 @@ const REPLY_SCHEMA: JsonSchema = {
 };
 
 const TASK: Record<PersonaIntent | 'not_found', string> = {
+  // No style rule ("no subject", "last message"): on AFM each one made replies echo saved facts and
+  // statements come out in German (kev P7a, dev). The rules strip "You" / "I" before comparing instead.
   share_new_fact:
     'Write each new fact the user just shared as a short statement in English, keeping their names and places, with an attribute. Leave out anything the saved facts already say. The user taps to save, so never say saved.',
+  repeats_saved_fact:
+    'The user said again what a saved fact already says. Say in one short sentence that you already have it, naming it. Offer nothing to save.',
   correct_fact:
     'Write the fact as it is now, one short statement in English that replaces the quoted fact. The user taps to save, so never say saved.',
   remove_fact: 'A card lists the fact for the user to tap Remove or Keep. Point to the card; never say it is removed.',
@@ -351,7 +364,8 @@ export async function runPersonaKevTurn(
     case 'share_new_fact': {
       if (!value) return done(intent, ports.t('kevChat.reply.saveFailed'));
       const wrote = (value.facts ?? []).map((f) => ({ statement: text(f?.statement), attribute: text(f?.attribute) }));
-      const fresh = dropKnownFacts(wrote, known);
+      // Saved facts reworded ("You live in ...") and facts the message never states go.
+      const fresh = dropUngrounded(dropKnownFacts(wrote, known), chat.subject, known);
       if (fresh.length === 0) {
         return done(intent, wrote.length > 0 ? ports.t('kevChat.reply.alreadyKnown') : replyOr(value, ports.t('kevChat.reply.chat')));
       }
@@ -370,7 +384,10 @@ export async function runPersonaKevTurn(
       const old = targets[0];
       const statement = text(value?.statement);
       if (!statement) return done(intent, ports.t('kevChat.reply.saveFailed'));
-      if (isKnownFact(statement, known)) return done(intent, ports.t('kevChat.reply.alreadyKnown'));
+      // Loosely against the other facts; against the one it replaces only when nearly the same, so a one-part change stays.
+      const others = known.filter((k) => k !== old.statement);
+      const same = isKnownFact(statement, others) || (restates(statement, old.statement) && restates(old.statement, statement));
+      if (same) return done(intent, ports.t('kevChat.reply.alreadyKnown'));
       return done(intent, replyOr(value, ports.t('kevChat.reply.changeCard')), [
         {
           name: 'saveExtractedFacts',
@@ -391,6 +408,8 @@ export async function runPersonaKevTurn(
       return done(intent, replyOr(value, ports.t('kevChat.reply.applied')), [{ name: 'applyProposal', input: {} }]);
     case 'decline_card':
       return done(intent, replyOr(value, ports.t('kevChat.reply.cancelled')), [{ name: 'cancelProposal', input: {} }]);
+    case 'repeats_saved_fact':
+      return done(intent, replyOr(value, ports.t('kevChat.reply.alreadyKnown')));
     case 'thanks_or_ack':
       return done(intent, replyOr(value, ports.t('kevChat.reply.ack')));
     default:

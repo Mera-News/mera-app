@@ -39,6 +39,7 @@
   "expect": {
     "toolNotCalled": "saveExtractedFacts",
     "intent": [
+      "repeats_saved_fact",
       "share_new_fact",
       "question_or_chat",
       "thanks_or_ack"

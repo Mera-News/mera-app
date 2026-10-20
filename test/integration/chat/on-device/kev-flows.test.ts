@@ -156,6 +156,93 @@ describe('persona chat on Kev', () => {
     expect(out.trace).toMatchObject({ intent: 'share_new_fact', source: 'kev', asked: false, wrote: true });
   });
 
+  describe('a fact the user already has saved (kev P7a)', () => {
+    // A stand-in for the owner's profile on 2026-10-21: a long location, a multi-word job, one-word interests.
+    const PROFILE = [
+      'Lives in Gràcia, Barcelona, Catalonia, Spain, EU',
+      'Expat in Spain',
+      'From Brazil',
+      'Founder building a solar energy startup',
+      'Interested in quantum computing',
+      'Interested in astronomy',
+    ];
+    const pendingFacts = (toolCalls: ToolCallRecord[]) =>
+      toolCalls.flatMap((t) => (t.result as { pendingFacts?: { options: string[] }[] })?.pendingFacts ?? []);
+
+    it('Kev reads a new fact, the writer copies saved facts as "You ...": nothing is staged and the reply says it is known', async () => {
+      for (const statement of PROFILE) await addFact(statement);
+      kevScript = { intent: { share_new_fact: 0.9, question_or_chat: 0.1 } };
+      writerReply = {
+        reply: 'What new project are you focusing on next?',
+        facts: [
+          { statement: 'You live in Gràcia, Barcelona, Catalonia, Spain, EU', attribute: 'location' },
+          { statement: 'You are a founder building a solar energy startup', attribute: 'profession' },
+          { statement: 'You are interested in astronomy', attribute: 'interest' },
+          // Not close enough to "Expat in Spain" to match, but nothing in it is in the message.
+          { statement: 'You are an expat living in Spain', attribute: 'location' },
+        ],
+      };
+      const thread: ConversationMessage[] = [];
+      const { names, out, toolCalls } = await turn(persona(), thread, "I'm interested in astronomy");
+
+      expect(names).toEqual([]);
+      expect(pendingFacts(toolCalls)).toEqual([]);
+      expect(cards(thread)).toEqual([]);
+      expect(out.reply).toBe('kevChat.reply.alreadyKnown');
+      expect((await getFacts()).map((f) => f.statement).sort()).toEqual([...PROFILE].sort());
+    });
+
+    it('Kev reads a repeat: a short reply that it is already saved, no card', async () => {
+      for (const statement of PROFILE) await addFact(statement);
+      kevScript = { intent: { repeats_saved_fact: 0.8, share_new_fact: 0.2 } };
+      writerReply = { reply: 'I already have that you are interested in astronomy.' };
+      const { names, out } = await turn(persona(), [], "I'm interested in astronomy");
+
+      expect(offeredIntents()).toContain('repeats_saved_fact');
+      expect(names).toEqual([]);
+      expect(out.reply).toBe('I already have that you are interested in astronomy.');
+      expect(Object.keys(writes[0].schema.properties)).toEqual(['reply']);
+      expect(out.trace).toMatchObject({ intent: 'repeats_saved_fact', asked: false });
+    });
+
+    it('a close call between a repeat and a new fact is not a reason to ask; a writer failure says it is known', async () => {
+      await addFact('Interested in astronomy');
+      kevScript = { intent: { repeats_saved_fact: 0.5, share_new_fact: 0.45, question_or_chat: 0.05 } };
+      writerReply = new Error('SensitiveContentAnalysis');
+      const { names, out } = await turn(persona(), [], 'astronomy, like I said');
+      expect(names).toEqual([]);
+      expect(out.reply).toBe('kevChat.reply.alreadyKnown');
+      expect(out.trace.asked).toBe(false);
+    });
+
+    it('a new fact in German is still staged in English', async () => {
+      await addFact('Works as a pharmacist');
+      kevScript = { intent: { share_new_fact: 0.9, question_or_chat: 0.1 } };
+      writerReply = { reply: 'Schön!', facts: [{ statement: 'Works as a teacher', attribute: 'profession: job' }] };
+      const { names, toolCalls } = await turn(persona(), [], 'Ich arbeite jetzt als Lehrer');
+      expect(names).toEqual(['saveExtractedFacts']);
+      expect(pendingFacts(toolCalls).map((g) => g.options)).toEqual([['Works as a teacher']]);
+    });
+
+    it('"Works in blockchain" is new next to "Interested in blockchain"', async () => {
+      await addFact('Interested in blockchain');
+      kevScript = { intent: { share_new_fact: 0.9, question_or_chat: 0.1 } };
+      writerReply = { reply: 'Nice!', facts: [{ statement: 'Works in blockchain', attribute: 'profession: job' }] };
+      const { names, toolCalls } = await turn(persona(), [], 'I work in blockchain');
+      expect(names).toEqual(['saveExtractedFacts']);
+      expect(pendingFacts(toolCalls).map((g) => g.options)).toEqual([['Works in blockchain']]);
+    });
+
+    it('a correction that only narrows the fact it replaces is staged, not "already known"', async () => {
+      const old = await addFact('Works as a head nurse', undefined, { attribute: 'profession: job' });
+      kevScript = { intent: { correct_fact: 0.9, share_new_fact: 0.1 }, target: { f1: 0.9, none: 0.1 } };
+      writerReply = { statement: 'Works as a nurse', reply: 'Should I update it?' };
+      const { toolCalls } = await turn(persona(), [], "I'm not head nurse anymore, just a nurse");
+      expect(toolCalls.map((t) => t.name)).toEqual(['saveExtractedFacts']);
+      expect((toolCalls[0].input as { extracted_user_information: { replaces: string }[] }).extracted_user_information[0].replaces).toBe(old.id);
+    });
+  });
+
   it('remove_fact: a second Kev question picks the fact; the Remove / Keep card is staged and nothing is deleted', async () => {
     const keep = await addFact('Works as a <job>');
     const gone = await addFact('Follows <sport>');

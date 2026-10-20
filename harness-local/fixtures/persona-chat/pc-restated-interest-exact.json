@@ -1,0 +1,55 @@
+{
+  "description": "The user restates a one-word interest that is already saved, with other long facts on file: nothing is offered (the writer tends to copy saved facts as 'You ...').",
+  "category": "no-action",
+  "clear": true,
+  "knownFacts": "- 'location: residence': Lives in Gràcia, Barcelona, Catalonia, Spain, EU\n- 'location: expat': Expat in Spain\n- 'origin: country': From Brazil\n- 'profession: job': Founder building a solar energy startup\n- 'interest: topic': Interested in quantum computing\n- 'interest: topic': Interested in astronomy",
+  "facts": [
+    {
+      "id": "f6",
+      "statement": "Interested in astronomy",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f5",
+      "statement": "Interested in quantum computing",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f4",
+      "statement": "Founder building a solar energy startup",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f3",
+      "statement": "From Brazil",
+      "attribute": "origin: country"
+    },
+    {
+      "id": "f2",
+      "statement": "Expat in Spain",
+      "attribute": "location: expat"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Gràcia, Barcelona, Catalonia, Spain, EU",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "I'm interested in astronomy"
+    }
+  ],
+  "expect": {
+    "toolNotCalled": "saveExtractedFacts",
+    "intent": [
+      "repeats_saved_fact",
+      "share_new_fact",
+      "question_or_chat",
+      "thanks_or_ack"
+    ],
+    "calls": [],
+    "ask": "no"
+  }
+}
