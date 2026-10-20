@@ -83,8 +83,10 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, on
                         {t('videoPlayer.playbackError')}
                     </Text>
                     <Pressable
+                        // Present the browser OVER this Modal and leave it open: closing
+                        // first lets iOS put the Safari view on the leaving Modal, which
+                        // then never dismisses and swallows every tap (see HelpModal).
                         onPress={() => {
-                            onClose();
                             openInAppBrowser(uri).catch(() => {});
                         }}
                         className="mt-4 bg-gray-800 rounded-full px-5 py-3"

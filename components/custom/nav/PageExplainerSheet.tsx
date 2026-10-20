@@ -5,9 +5,10 @@
 // The surface, title, X, scrim and fade are HelpModal's; this file is only
 // the content. A card opened from inside a tab survives a tab switch, so its
 // host (TabPages) closes it on blur. Learn more closes the card and pushes the
-// tutorial only once it is fully gone (`onClosed`): an RN Modal paints above a
-// root push. The sources link opens the same way: iOS drops a browser
-// presented while a Modal is dismissing.
+// tutorial only once it is fully gone (`onClosed`, on iOS the Modal's real
+// dismissal): an RN Modal paints above a root push. The sources link opens the
+// same way: a browser presented on a Modal still leaving keeps that Modal,
+// invisible, over the whole app.
 
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -18,7 +19,7 @@ import { StyleSheet, View } from 'react-native';
 import { HelpModal } from '@/components/ui/help-modal';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { WEBSITE_URL } from '@/lib/config/branding';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { useColors } from '@/lib/theme/tokens';
 import type { PageExplainer } from './page-registry';
 
@@ -29,7 +30,7 @@ interface PageExplainerSheetProps {
 }
 
 const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open, onClose }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const colors = useColors();
   const afterClose = useRef<'tutorial' | 'sources' | null>(null);
   // Keep the last copy while the sheet slides away after its host clears it.
@@ -45,9 +46,9 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
     const next = afterClose.current;
     afterClose.current = null;
     if (next === 'tutorial' && shown.chapter) openTutorial(shown.chapter, shown.slide);
-    // The site serves the app's 20 language codes, so the reader lands in their own language.
+    // withAppLanguage maps the app code to the site's (pt-BR, zh-CN, zh-TW are spelled differently there).
     if (next === 'sources') {
-      void openInAppBrowser(`${WEBSITE_URL}/${i18n.resolvedLanguage ?? 'en'}/publications`).catch(() => undefined);
+      void openInAppBrowser(withAppLanguage(`${WEBSITE_URL}/publications`)).catch(() => undefined);
     }
   };
 
