@@ -14,7 +14,6 @@ import {
   buildLocalReasonUserMessage,
   buildPersonaUpdateContext,
   buildToolDefinitions,
-  buildToolFormatSection,
   buildPersonaUpdateStaticPrompt,
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
@@ -380,36 +379,6 @@ describe('buildToolDefinitions', () => {
 });
 
 // ============================================================
-// buildToolFormatSection
-// ============================================================
-
-describe('buildToolFormatSection', () => {
-  it('includes tool names from buildToolDefinitions', () => {
-    const section = buildToolFormatSection('ONBOARDING');
-    expect(section).toContain('saveExtractedFacts');
-    expect(section).toContain('updateUserConfig');
-    expect(section).toContain('issueWarning');
-  });
-
-  it('includes examples block', () => {
-    const section = buildToolFormatSection('ONBOARDING');
-    expect(section).toContain('<examples>');
-  });
-
-  it('returns different content for CONFIG vs ONBOARDING', () => {
-    const onboarding = buildToolFormatSection('ONBOARDING');
-    const config = buildToolFormatSection('CONFIG');
-    expect(onboarding).not.toBe(config);
-    expect(config).toContain('deleteUserFacts');
-  });
-
-  it('includes saveExtractedFacts fields section', () => {
-    const section = buildToolFormatSection('ONBOARDING');
-    expect(section).toContain('saveExtractedFacts');
-  });
-});
-
-// ============================================================
 // buildPersonaUpdateStaticPrompt
 // ============================================================
 
@@ -430,26 +399,15 @@ describe('buildPersonaUpdateStaticPrompt', () => {
     expect(prompt.toLowerCase()).toMatch(/profile|update/);
   });
 
-  it('includes tool format section when includeToolFormat=true (default)', () => {
+  it('names the tools and carries no <tool_call> text format (the cloud calls tools natively)', () => {
     const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING' });
     expect(prompt).toContain('saveExtractedFacts');
-  });
-
-  it('omits tool format section when includeToolFormat=false', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', includeToolFormat: false });
     expect(prompt).not.toContain('<tool_call>');
   });
 
   it('includes language rule when languageName is provided', () => {
     const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', languageName: 'Hindi' });
     expect(prompt).toContain('Hindi');
-  });
-
-  it('uses LOCAL variant when mode=LOCAL', () => {
-    const cloudPrompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'CLOUD' });
-    const localPrompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'LOCAL' });
-    // They should differ — local is shorter/different
-    expect(cloudPrompt).not.toBe(localPrompt);
   });
 
   it('includes the example-questions approach', () => {
@@ -560,47 +518,10 @@ describe('NOISE_GENERATION_SYSTEM_PROMPT', () => {
 });
 
 // ============================================================
-// buildToolFormatSection — schemaTypeToString edge cases
-// (exercised indirectly via the tool listing which uses schemaToCompactSignature)
+// buildPersonaUpdateStaticPrompt — surface branches
 // ============================================================
 
-describe('buildToolFormatSection — compact signature edge cases', () => {
-  it('renders array-of-object fields as bracket notation', () => {
-    // saveExtractedFacts has items.type = 'object' (the extracted_user_information field)
-    const section = buildToolFormatSection('ONBOARDING');
-    // The compact signature for extracted_user_information should contain nested {}
-    expect(section).toContain('[{');
-  });
-
-  it('renders string[] fields using type[]', () => {
-    // language_codes is string[]
-    const section = buildToolFormatSection('ONBOARDING');
-    expect(section).toContain('string[]');
-  });
-});
-
-// ============================================================
-// buildPersonaUpdateStaticPrompt — LOCAL / CLOUD surface branches
-// ============================================================
-
-describe('buildPersonaUpdateStaticPrompt — LOCAL/CLOUD surface branches', () => {
-  it('uses the example-questions list for LOCAL mode', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'LOCAL' });
-    expect(prompt).toContain('Questions to explore');
-  });
-
-  it('LOCAL CONFIG responds directly rather than using the onboarding start', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'CONFIG', mode: 'LOCAL' });
-    // Asserts the BEHAVIOUR the name describes — no onboarding opener — rather
-    // than the presence of a "Respond directly" line. r14 deleted that line as
-    // redundant (the "Save first, then ask" rule directly above it already says
-    // "Acknowledge briefly, then ask one follow-up or the next question") while
-    // reclaiming LOCAL token budget. The onboarding branch is what actually
-    // distinguishes the two surfaces, and it must stay absent here.
-    expect(prompt).not.toContain('welcome message');
-    expect(prompt).toContain('Save first, then ask');
-  });
-
+describe('buildPersonaUpdateStaticPrompt — surface branches', () => {
   it('CLOUD ONBOARDING uses the welcome message start', () => {
     const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'CLOUD' });
     expect(prompt).toContain('welcome message');

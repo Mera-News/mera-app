@@ -45,10 +45,11 @@ import {
 countries.registerLocale(en);
 
 export type PersonaSurface = 'ONBOARDING' | 'CONFIG';
-export type PersonaMode = 'CLOUD' | 'LOCAL';
+/** Always CLOUD: on-device runs its own flow (on-device/persona-chat). */
+export type PersonaMode = 'CLOUD';
 
-/** Caps facts injected into <context> to stay within the on-device 4096-token
- *  input budget. Mirrors PersonaUpdateAgent's original MAX_FACTS_IN_CONTEXT. */
+/** Caps facts injected into <context>. Mirrors PersonaUpdateAgent's original
+ *  MAX_FACTS_IN_CONTEXT. */
 export const MAX_FACTS_IN_CONTEXT = 22;
 
 /**
@@ -56,8 +57,8 @@ export const MAX_FACTS_IN_CONTEXT = 22;
  * P4a). MEASURED, not guessed: `persona-agent-core.test.ts` pins the marginal
  * cost of the rendered block at this cap against
  * FILTERS_BLOCK_TOKEN_CEILING, and asserts the whole worst-case prompt
- * (CONFIG + LOCAL + XML tool format + 22 maximum-length facts + this many
- * filters) still fits the ~3072-token on-device input budget. Newest-first, so
+ * (CONFIG + 22 maximum-length facts + this many filters) still fits
+ * PERSONA_INPUT_TOKEN_BUDGET. Newest-first, so
  * what this drops is what the user touched longest ago.
  */
 export const MAX_FILTERS_IN_CONTEXT = 10;
@@ -71,10 +72,9 @@ export const MAX_FILTERS_IN_CONTEXT = 10;
 export const FILTERS_BLOCK_TOKEN_CEILING = 200;
 
 /**
- * Mirror of `INPUT_TOKEN_BUDGET` in lib/llm/useLocalLLM.ts (4096 total − 1024
- * max output). Over it, the local path does NOT degrade — it hard-errors the
- * turn with "Context too long". Mirrored here so the harness stays free of the
- * lib/llm import graph; if that constant moves, move this one.
+ * The persona planner's input budget (planPersonaPrompt). It was the old
+ * on-device window (4096 total − 1024 max output); the prompt it plans is now
+ * cloud-only, and the number stays as the ladder's ceiling.
  */
 export const PERSONA_INPUT_TOKEN_BUDGET = 3072;
 
@@ -119,19 +119,8 @@ export const MAX_HISTORY_USER_TURNS = 6;
  * = ~4.3k input tokens, a small fraction of the smallest context window in the
  * fallback chain. 1,500 stands.
  *
- * The LOCAL path derives its own budget by subtraction against a hard 3,072
- * ceiling and does NOT use this constant — necessarily, because the same
- * measurement shows a local CONFIG turn (system prompt WITH the XML tool format,
- * ~1,769 tok) plus a full 22-fact <context> (~1,156 tok) already leaves only
- * ~19 tokens. A heavy on-device user gets roughly one turn of history and that
- * is correct: the alternative is the hard "Context too long" error that the
- * subtraction exists to make unreachable.
  */
 export const CLOUD_HISTORY_BUDGET_TOKENS = 1500;
-
-/** Headroom reserved for the user's own message when deriving the LOCAL
- *  history budget by subtraction. Mirrors PERSONA_TURN_RESERVE_TOKENS. */
-export const HISTORY_RESERVE_TOKENS = 128;
 
 /** Defensive trim on a rendered filter phrase (a pattern is user/LLM text). */
 const FILTER_PATTERN_TRUNC = 60;
@@ -142,17 +131,16 @@ const FILTER_PATTERN_TRUNC = 60;
 
 export interface PersonaSystemPromptInput {
   surface: PersonaSurface;
-  /** When false, omits XML tool format instructions (AI SDK handles tool calling natively). */
-  includeToolFormat: boolean;
+  /** Always false: the cloud calls tools natively. */
+  includeToolFormat: false;
   /** Human-readable name of the user's app language (e.g. "Hindi", "Spanish"). */
   languageName: string;
-  /** Inference path — CLOUD (large MoE) vs LOCAL (on-device). */
   mode: PersonaMode;
   /** not-interested P4a: how much of the FILTERS feature this turn can afford
    *  (planPersonaPrompt). Defaults to `full`. */
   filterTools?: FilterToolsVariant;
   /** item 17 — the user's "Deeper questions" toggle. Swaps the interview's
-   *  question bank; the answers are ordinary LOCAL facts. */
+   *  question bank; the answers are ordinary facts. */
   deepMode?: boolean;
   /** item 13 — the user's "Web search in chat" toggle. Adds one CLOUD-only
    *  prose line telling the model the tool exists. */
@@ -369,8 +357,7 @@ function describeFilterAction(a: ProposalAction): string {
 
 /**
  * Renders the in-flight staged proposal for <context>. Re-injected EVERY turn
- * so the one-shot LOCAL path (no re-inference) can still resolve a confirm —
- * the same reason the article-feedback agent re-injects it.
+ * so a confirm can resolve it, as the article-feedback agent does.
  */
 export function formatPendingProposal(
   proposal: StagedProposal | null | undefined,
@@ -634,8 +621,8 @@ export function buildPersonaContext(
   // against what the rest of <context> already costs.
   const base = { knownFactsList };
 
-  // A pending proposal is NEVER dropped — without it the one-shot LOCAL path
-  // cannot resolve a confirm at all, and it is a handful of tokens.
+  // A pending proposal is NEVER dropped — a confirm needs it, and it is a
+  // handful of tokens.
   const pendingProposal = formatPendingProposal(input.proposal);
   // Returns undefined when the user has answered no cards, which is what keeps
   // the call args below byte-identical for everyone else.
@@ -721,20 +708,8 @@ export const KNOWLEDGE_TOOL_NAMES: ReadonlySet<string> = new Set([
   'webSearch',
 ]);
 
-/**
- * CLOUD ONLY, and that is structural rather than a preference.
- *
- * The LOCAL path (lib/llm/useLocalLLM.ts) executes tool calls but never pushes a
- * `role:'tool'` message back to the model — the local turn is one-shot. A
- * knowledge tool the model calls but whose answer it can never read is strictly
- * worse than no tool at all: it spends output tokens and returns nothing.
- *
- * Appended at THIS seam rather than inside `buildToolDefinitions` for a second
- * reason: `buildToolFormatSection` derives the LOCAL XML tool block straight
- * from that builder, and the LOCAL path has a hard 3072-token input budget that
- * errors the turn when exceeded. Adding the tool here means the LOCAL prompt
- * gains exactly zero bytes, by construction.
- */
+/** Appended at this seam, not built by `buildToolDefinitions`, so the injected
+ *  builder call stays `buildDefs(surface)` (see getPersonaToolDefinitions). */
 const EXPLAIN_MERA_TOOL: ToolDefinition = {
   type: 'function',
   function: {
@@ -756,12 +731,8 @@ const EXPLAIN_MERA_TOOL: ToolDefinition = {
 };
 
 /**
- * `searchNews` — Mera's OWN article index (item 12b). CLOUD only, appended at
- * this seam for both of EXPLAIN_MERA_TOOL's reasons: the LOCAL turn is one-shot
- * (a search whose results the model can never read is strictly worse than no
- * search) and the LOCAL XML prompt derived from `buildToolDefinitions` has a
- * hard 3072-token budget that ERRORS the turn when exceeded. Appending here
- * means the LOCAL prompt gains exactly zero bytes, by construction.
+ * `searchNews` — Mera's OWN article index (item 12b), appended at this seam
+ * like EXPLAIN_MERA_TOOL.
  *
  * The description tells the model what it will NOT get back — no body text, no
  * link — because the failure mode of a headline-only search tool is a model
@@ -792,8 +763,6 @@ const SEARCH_NEWS_TOOL: ToolDefinition = {
  * prompt on every turn, paying tokens for a feature the user declined. The
  * handler re-checks the toggle anyway (a persisted conversation can replay a
  * call made while it was on) — both gates are load-bearing.
- *
- * CLOUD only, for EXPLAIN_MERA_TOOL's reasons.
  */
 const WEB_SEARCH_TOOL: ToolDefinition = {
   type: 'function',
@@ -823,10 +792,8 @@ const WEB_SEARCH_TOOL: ToolDefinition = {
  *  exactly `buildDefs(surface)`, which the frozen PersonaUpdateAgent.test.ts
  *  asserts on with an exact-arity toHaveBeenCalledWith.
  *
- *  `mode` is applied the same way, and for the same reason: `explainMera` is
- *  APPENDED to the builder's output rather than built by it. Defaults to
- *  'CLOUD' — the one production caller passes it explicitly, and tests that
- *  predate the parameter keep observing the cloud payload.
+ *  `_mode` is always CLOUD (on-device runs its own flow); it stays positional
+ *  so callers' `webSearchEnabled` stays fifth.
  *
  *  `webSearchEnabled` defaults to FALSE, and that default is the privacy
  *  guarantee in code: every caller that does not deliberately pass the user's
@@ -838,22 +805,19 @@ export function getPersonaToolDefinitions(
   surface: PersonaSurface,
   buildDefs: BuildToolDefinitionsFn = buildToolDefinitions,
   filterTools: FilterToolsVariant = 'full',
-  mode: PersonaMode = 'CLOUD',
+  _mode: PersonaMode = 'CLOUD',
   webSearchEnabled: boolean = false,
 ): ToolDefinition[] {
   const built = buildDefs(surface).map(withStagedCalibrationDescription);
   // Both surfaces: "how do you handle my data?" gets asked in settings chat too.
   // searchNews rides along on both surfaces too — an onboarding user asking
   // "what's happening with X" should get real headlines, not a redirect.
-  const defs =
-    mode === 'CLOUD'
-      ? [
-          ...built,
-          EXPLAIN_MERA_TOOL,
-          SEARCH_NEWS_TOOL,
-          ...(webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
-        ]
-      : built;
+  const defs = [
+    ...built,
+    EXPLAIN_MERA_TOOL,
+    SEARCH_NEWS_TOOL,
+    ...(webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
+  ];
   if (filterTools !== 'off') return defs;
   return defs.filter((d) => !FILTER_TOOL_NAMES.has(d.function.name));
 }

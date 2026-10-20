@@ -55,51 +55,30 @@ function saturatedFilters(n = MAX_FILTERS_IN_CONTEXT): ActiveSuppressionView[] {
   }));
 }
 
-/** The LARGEST persona system prompt: CONFIG (has the filter tools) + LOCAL
- *  (the path INPUT_TOKEN_BUDGET actually governs) + the XML tool-format block +
- *  a pinned language. */
+/** The LARGEST persona system prompt: CONFIG (has the filter tools) + a pinned
+ *  language. */
 function worstCaseSystemPrompt(
   filterTools: FilterToolsVariant = 'full',
   deepMode = false,
 ): string {
   return buildPersonaSystemPrompt({
     surface: 'CONFIG',
-    includeToolFormat: true,
+    includeToolFormat: false,
     languageName: 'French',
-    mode: 'LOCAL',
+    mode: 'CLOUD',
     filterTools,
     ...(deepMode ? { deepMode: true } : {}),
   });
 }
 
 /**
- * The PRE-P4a worst case, measured on 647bffb: the CONFIG/LOCAL/XML system
- * prompt (1497) + <context> at 22 facts of the prompt's own 199-char limit
- * (1511) = 3008, which fit the 3072 budget with 64 to spare. This wave must not
- * make that user's turn cost MORE — over budget, useLocalLLM does not degrade,
- * it hard-errors with "Context too long".
- *
- * WHAT THIS NUMBER IS, for whoever it fails on next. It is NOT the hard limit —
- * `INPUT_TOKEN_BUDGET` (3072 = n_ctx 4096 − 1024 max output) is. This is a
- * RATCHET: the heaviest real on-device turn we have ever shipped. It exists
- * because 3072 alone is too loose to protect anyone — a change can eat all 64
- * remaining tokens, pass, and leave the NEXT change with nowhere to go and no
- * signal about why. Holding the line at the pre-P4a figure keeps a permanent
- * margin under the real ceiling.
- *
- * So: **do not raise this constant to make a red test green.** Going up means
- * shipping a heavier prompt to a device that cannot degrade. Find the tokens in
- * the LOCAL prompt instead — it accumulates duplicated rules (the same
- * instruction stated in the wrapper AND the shared tool section) and examples
- * that teach the same lesson twice, which is where r14 recovered ~114 tokens.
- * Only raise it with a measured argument that the extra cost buys more than the
- * margin is worth.
- *
- * MEASURED r14 (topic-plan / identity-composition wave), after that recovery:
- * the saturated worst case is 2898 (110 under this ratchet) and the absolute
- * budget case is 2939 (133 under the 3072 hard limit).
+ * An explicit planner budget that spans every rung of the CLOUD worst case (22
+ * facts of 88 to 199 characters, filters at the cap), so the ladder's order is
+ * observable. The planner's default PERSONA_INPUT_TOKEN_BUDGET (3072) was sized
+ * for the on-device prompt, which no longer exists; on-device persona chat runs
+ * its own flow (lib/news-harness/on-device/persona-chat).
  */
-const PRE_WAVE_WORST_CASE_TOKENS = 3008;
+const LADDER_BUDGET = 3940;
 
 describe('MAX_FACTS_IN_CONTEXT', () => {
   it('is 22', () => {
@@ -180,7 +159,7 @@ describe('buildPersonaSystemPrompt', () => {
     const result = buildPersonaSystemPrompt(
       {
         surface: 'ONBOARDING',
-        includeToolFormat: true,
+        includeToolFormat: false,
         languageName: 'French',
         mode: 'CLOUD',
       },
@@ -189,7 +168,7 @@ describe('buildPersonaSystemPrompt', () => {
 
     expect(mockBuild).toHaveBeenCalledWith({
       surface: 'ONBOARDING',
-      includeToolFormat: true,
+      includeToolFormat: false,
       languageName: 'French',
       mode: 'CLOUD',
     });
@@ -235,31 +214,20 @@ describe('getPersonaToolDefinitions', () => {
     const result = getPersonaToolDefinitions('CONFIG', mockBuildDefs as never);
 
     expect(mockBuildDefs).toHaveBeenCalledWith('CONFIG');
-    // The builder's own output passes through untouched; the CLOUD-only
-    // knowledge tool is APPENDED here (it is not built by buildToolDefinitions,
-    // so the LOCAL XML prompt block derived from that builder gains no bytes).
+    // The builder's own output passes through untouched; the knowledge tool is
+    // APPENDED here (it is not built by buildToolDefinitions).
     expect(result[0]).toEqual({ type: 'function', function: { name: 'x' } });
     // `webSearch` is absent: it is gated on the user's toggle, which defaults
     // to false — see the "web search is off by default" block below.
     expect(result.map((d) => d.function.name)).toEqual(['x', 'explainMera', 'searchNews']);
   });
 
-  // The LOCAL path executes tools but never pushes a role:'tool' message back to
-  // the model, so a knowledge tool there is called and never read.
   describe('explainMera (knowledge tool)', () => {
     it('is present on CLOUD, for BOTH surfaces', () => {
       for (const surface of ['ONBOARDING', 'CONFIG'] as const) {
         const names = getPersonaToolDefinitions(surface, buildToolDefinitions, 'full', 'CLOUD')
           .map((d) => d.function.name);
         expect(names).toContain('explainMera');
-      }
-    });
-
-    it('is absent on LOCAL, for BOTH surfaces', () => {
-      for (const surface of ['ONBOARDING', 'CONFIG'] as const) {
-        const names = getPersonaToolDefinitions(surface, buildToolDefinitions, 'full', 'LOCAL')
-          .map((d) => d.function.name);
-        expect(names).not.toContain('explainMera');
       }
     });
 
@@ -304,18 +272,6 @@ describe('getPersonaToolDefinitions', () => {
       }
     });
 
-    // Same structural argument as explainMera: the LOCAL turn is one-shot (it
-    // never pushes a role:'tool' message back), so a search whose results the
-    // model can never read is strictly worse than no search — and the LOCAL XML
-    // prompt has a hard budget that ERRORS the turn when exceeded.
-    it('is absent on LOCAL, for BOTH surfaces', () => {
-      for (const surface of ['ONBOARDING', 'CONFIG'] as const) {
-        const names = getPersonaToolDefinitions(surface, buildToolDefinitions, 'full', 'LOCAL')
-          .map((d) => d.function.name);
-        expect(names).not.toContain('searchNews');
-      }
-    });
-
     it('takes a required query and is a KNOWLEDGE tool', () => {
       const def = getPersonaToolDefinitions('CONFIG')
         .find((d) => d.function.name === 'searchNews')!;
@@ -346,12 +302,6 @@ describe('getPersonaToolDefinitions', () => {
       const names = getPersonaToolDefinitions('CONFIG', buildToolDefinitions, 'full', 'CLOUD', true)
         .map((d) => d.function.name);
       expect(names).toContain('webSearch');
-    });
-
-    it('stays absent on LOCAL even when the toggle is on', () => {
-      const names = getPersonaToolDefinitions('CONFIG', buildToolDefinitions, 'full', 'LOCAL', true)
-        .map((d) => d.function.name);
-      expect(names).not.toContain('webSearch');
     });
 
     // MULTI-QUERY IS THE ADVERTISED SHAPE. Every gateway call goes through a
@@ -568,23 +518,6 @@ describe('buildPersonaContext — filters + pending proposal', () => {
 });
 
 describe('persona prompt token budget', () => {
-  // The gate: lib/llm/useLocalLLM.ts caps system + prompt at INPUT_TOKEN_BUDGET
-  // = 4096 − 1024 = 3072 and hard-errors the turn above it.
-  const INPUT_TOKEN_BUDGET = 3072;
-
-  it('worst-case system + context (22 long facts + filters at cap) fits the budget', () => {
-    const system = worstCaseSystemPrompt();
-    const context = buildPersonaContext({
-      facts: saturatedFacts(),
-      suppressions: saturatedFilters(),
-    });
-    // MEASURED 2026-07-31 (legacy-questionnaire removal): system 1768 +
-    // context 1263 = 3031 (41 to spare). The legacy-capable prompt this
-    // replaced measured 1786 + 1263 = 3049, so removing the dead branches
-    // bought back 18 tokens.
-    expect(estimateTokens(system) + estimateTokens(context)).toBeLessThan(INPUT_TOKEN_BUDGET);
-  });
-
   it('pins the marginal cost of the filters block against its named ceiling', () => {
     // This is what MAX_FILTERS_IN_CONTEXT is DERIVED from — the cap is a
     // measurement, not a guess. MEASURED 2026-07-29: 187 tokens for 10 rows.
@@ -613,10 +546,11 @@ describe('persona prompt token budget', () => {
       systemTokensFor: (v) => estimateTokens(worstCaseSystemPrompt(v)),
       baseContextTokens: estimateTokens(formatKnownFactsList(facts)),
       filtersBlockTokens: block ? estimateTokens(block) : 0,
+      budgetTokens: LADDER_BUDGET,
     });
   }
 
-  /** What the planned turn actually costs, worst case (CONFIG/LOCAL/XML). */
+  /** What the planned turn actually costs, worst case (CONFIG). */
   function plannedTotal(factChars: number, filterCount = MAX_FILTERS_IN_CONTEXT) {
     const plan = planFor(factChars, filterCount);
     const facts = saturatedFacts(factChars);
@@ -644,10 +578,8 @@ describe('persona prompt token budget', () => {
   });
 
   it('yields the whole feature rather than overflow, at every fact length', () => {
-    // 22 facts at the prompt's own 199-char limit: the pre-wave prompt fit with
-    // 64 to spare, so the post-wave one must too.
-    expect(plannedTotal(199)).toBeLessThanOrEqual(PRE_WAVE_WORST_CASE_TOKENS);
-    expect(plannedTotal(199)).toBeLessThan(PERSONA_INPUT_TOKEN_BUDGET);
+    // 22 facts at the prompt's own 199-char limit: only the `off` rung fits.
+    expect(plannedTotal(199)).toBeLessThanOrEqual(LADDER_BUDGET - PERSONA_TURN_RESERVE_TOKENS);
     expect(planFor(199).filterTools).toBe('off');
     expect(planFor(199).includeFiltersBlock).toBe(false);
   });
@@ -664,20 +596,17 @@ describe('persona prompt token budget', () => {
     expect(ranks[ranks.length - 1]).toBe(0);
     // Every rung stays inside the budget.
     for (const n of [88, 120, 150, 170, 199]) {
-      expect(plannedTotal(n)).toBeLessThan(PERSONA_INPUT_TOKEN_BUDGET);
+      expect(plannedTotal(n)).toBeLessThanOrEqual(LADDER_BUDGET - PERSONA_TURN_RESERVE_TOKENS);
     }
   });
 
   // --- item 17: deep mode must not cost budget -----------------------------
   //
   // The filters ladder CANNOT rescue a deep-mode user: its last rung still
-  // carries the question bank, so a bank that merely APPENDED would push the
-  // measured worst case (~3008 of 3072) straight over the line into
-  // useLocalLLM's hard error. That is why DEEP_EXAMPLE_QUESTIONS replaces the
-  // standard bank rather than extending it — and why this is measured on
-  // LOCAL, the path the budget actually governs.
+  // carries the question bank. That is why DEEP_EXAMPLE_QUESTIONS replaces the
+  // standard bank rather than extending it.
   describe('deep mode (item 17)', () => {
-    it('never makes the worst-case LOCAL prompt larger, at any rung', () => {
+    it('never makes the worst-case prompt larger, at any rung', () => {
       for (const rung of ['full', 'compact', 'off'] as const) {
         expect(estimateTokens(worstCaseSystemPrompt(rung, true)))
           .toBeLessThanOrEqual(estimateTokens(worstCaseSystemPrompt(rung, false)));
@@ -689,8 +618,7 @@ describe('persona prompt token budget', () => {
       const total =
         estimateTokens(worstCaseSystemPrompt('off', true))
         + estimateTokens(formatKnownFactsList(facts));
-      expect(total).toBeLessThanOrEqual(PRE_WAVE_WORST_CASE_TOKENS);
-      expect(total).toBeLessThan(PERSONA_INPUT_TOKEN_BUDGET);
+      expect(total).toBeLessThanOrEqual(LADDER_BUDGET - PERSONA_TURN_RESERVE_TOKENS);
     });
 
     it('swaps the question bank rather than appending to it', () => {
@@ -749,7 +677,7 @@ describe('persona prompt token budget', () => {
       + (plan.includeFiltersBlock
         ? estimateTokens(formatActiveFiltersList(saturatedFilters())!)
         : 0);
-    expect(total).toBeLessThanOrEqual(PERSONA_INPUT_TOKEN_BUDGET - PERSONA_TURN_RESERVE_TOKENS);
+    expect(total).toBeLessThanOrEqual(LADDER_BUDGET - PERSONA_TURN_RESERVE_TOKENS);
   });
 
   it('returns the `off` rung rather than throwing when nothing fits at all', () => {

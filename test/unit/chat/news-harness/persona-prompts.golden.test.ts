@@ -36,7 +36,6 @@ import {
   NOISE_GENERATION_SYSTEM_PROMPT,
   LOCAL_NOISE_GENERATION_SYSTEM_PROMPT,
   buildToolDefinitions,
-  buildToolFormatSection,
   buildPersonaUpdateStaticPrompt,
   type FilterToolsVariant,
 } from '@/lib/news-harness/prompts/persona-prompts';
@@ -120,7 +119,6 @@ describe('persona prompts — re-export identity', () => {
 
   it('re-exports the persona builders too', () => {
     expect(viaBarrel.buildToolDefinitions).toBe(buildToolDefinitions);
-    expect(viaBarrel.buildToolFormatSection).toBe(buildToolFormatSection);
     expect(viaBarrel.buildPersonaUpdateStaticPrompt).toBe(buildPersonaUpdateStaticPrompt);
     expect(viaBarrel.TOPIC_GENERATION_SYSTEM_PROMPT).toBe(TOPIC_GENERATION_SYSTEM_PROMPT);
   });
@@ -139,13 +137,10 @@ describe('persona prompts — tool builders are deterministic per variant', () =
       const b = buildToolDefinitions(surface, variant);
       expect(JSON.stringify(a)).toBe(JSON.stringify(b));
       expect(a.length).toBeGreaterThan(0);
-
-      const fa = buildToolFormatSection(surface, variant);
-      expect(buildToolFormatSection(surface, variant)).toBe(fa);
     }
   });
 
-  it("'off' is the smallest rung on both axes, on both surfaces", () => {
+  it("'off' is the smallest rung, on both surfaces", () => {
     // The `off` rung exists to be byte-identical to the pre-filters prompt, so
     // it must never carry more tools or more text than a richer rung.
     for (const surface of SURFACES) {
@@ -154,10 +149,6 @@ describe('persona prompts — tool builders are deterministic per variant', () =
       const full = buildToolDefinitions(surface, 'full');
       expect(off.length).toBeLessThanOrEqual(compact.length);
       expect(compact.length).toBeLessThanOrEqual(full.length);
-
-      expect(buildToolFormatSection(surface, 'off').length).toBeLessThanOrEqual(
-        buildToolFormatSection(surface, 'full').length,
-      );
     }
   });
 });

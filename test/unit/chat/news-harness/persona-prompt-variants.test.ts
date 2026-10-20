@@ -19,9 +19,7 @@ afterEach(() => resetPromptVariantsForTest());
 
 const MODES = [
   ['CONFIG', 'CLOUD'],
-  ['CONFIG', 'LOCAL'],
   ['ONBOARDING', 'CLOUD'],
-  ['ONBOARDING', 'LOCAL'],
 ] as const;
 
 describe('baseline is a no-op', () => {
@@ -43,7 +41,7 @@ describe('baseline is a no-op', () => {
 });
 
 describe('an arm replaces exactly its own slot', () => {
-  it('personaStatic overrides both CLOUD and LOCAL, so the two cannot drift', () => {
+  it('personaStatic overrides the persona prompt on both surfaces', () => {
     registerPromptVariant({
       id: 'arm-persona',
       description: 'test',
